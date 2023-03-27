@@ -53,6 +53,19 @@ jobs:
             find bazel-bin/ -executable -type f -name "*_test"  -print0 | xargs -0 tar -cvzf test_binary.tar.gz
             find bazel-testlogs/ -type f -name "test.log"  -print0 | xargs -0 tar -cvzf test_logs.tar.gz
             exit ${test_status}
+      - run:
+          name: "SCDB Test"
+          command: |
+            set +e
+            mkdir -p $WORKSPACE/result
+            make
+            go mod tidy
+            go test -timeout=30m -v -coverprofile cover.out ./... | tee $WORKSPACE/result/test.log
+            cat $WORKSPACE/result/test.log | go-junit-report > $WORKSPACE/result/TEST-all.xml  # --> junit-report
+            go tool cover -html=cover.out -o $WORKSPACE/result/coverage.html
+            go tool cover -func=cover.out -o $WORKSPACE/result/func.out
+            cat cover.out | gocover-cobertura > $WORKSPACE/result/cover.xml
+            echo test func-coverage $(tail -1 $WORKSPACE/result/func.out | awk '{print $3}')
       - save_cache:
           key: scql-build-comp-{{ arch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
           paths:
@@ -84,7 +97,7 @@ jobs:
           name: "build"
           command: bazel build //engine/... -c opt --ui_event_filters=-info,-debug,-warning --disk_cache=~/.cache/scql_build_cache
       - run:
-          name: "EngineTest"
+          name: "Engine Test"
           command: |
             set +e
             declare -i test_status
@@ -93,6 +106,19 @@ jobs:
             find bazel-bin/ -perm +111 -type f -name "*_test"  -print0 | xargs -0 tar -cvzf test_binary.tar.gz
             find bazel-testlogs/ -type f -name "test.log"  -print0 | xargs -0 tar -cvzf test_logs.tar.gz
             exit ${test_status}
+      - run:
+          name: "SCDB Test"
+          command: |
+            set +e
+            mkdir -p $WORKSPACE/result
+            make
+            go mod tidy
+            go test -timeout=30m -v -coverprofile cover.out ./... | tee $WORKSPACE/result/test.log
+            cat $WORKSPACE/result/test.log | go-junit-report > $WORKSPACE/result/TEST-all.xml  # --> junit-report
+            go tool cover -html=cover.out -o $WORKSPACE/result/coverage.html
+            go tool cover -func=cover.out -o $WORKSPACE/result/func.out
+            cat cover.out | gocover-cobertura > $WORKSPACE/result/cover.xml
+            echo test func-coverage $(tail -1 $WORKSPACE/result/func.out | awk '{print $3}')
       - save_cache:
           key: scql-build-comp-{{ arch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
           paths:
