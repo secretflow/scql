@@ -3,7 +3,7 @@
 rm -rf test-results
 mkdir -p test-results
 
-# renaming junit xml file to satisfy ACI's requirement
+# renaming junit xml file to satisfy CI's requirement
 for path in $(find bazel-testlogs/ -name "test.xml"); do
     dir_name=$(dirname ${path})
     file_name=$(basename ${path})
