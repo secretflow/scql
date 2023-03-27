@@ -1,0 +1,221 @@
+[
+  {
+    "name": "TestPlanBuilderSimple",
+    "cases": [
+      "select alice.plain_long_0 from alice.tbl_0 alice join bob.tbl_0 bob on alice.plain_long_1 = bob.plain_long_1",
+      "select alice.plain_long_0, bob.plain_string_0 from alice.tbl_0 alice join bob.tbl_0 bob on alice.plain_long_1 = bob.plain_long_1 and alice.plain_string_1 = bob.plain_string_1",
+      "select plain_long_0 from alice.tbl_0",
+      "select (plain_long_0 = plain_long_1) as f from alice.tbl_0",
+      "select plain_long_0 < plain_long_1 from alice.tbl_0",
+      "select plain_long_0 <= plain_long_1 from alice.tbl_0",
+      "select plain_long_0 > plain_long_1 from alice.tbl_0",
+      "select plain_long_0 >= plain_long_1 from alice.tbl_0",
+      "select plain_long_0 != plain_long_1 from alice.tbl_0",
+      "select plain_long_0 <> plain_long_1 from alice.tbl_0",
+      "select plain_string_0 = plain_string_1 from alice.tbl_0",
+      "select plain_string_0 > plain_string_1 from alice.tbl_0",
+      "select plain_string_0 >= plain_string_1 from alice.tbl_0",
+      "select plain_string_0 < plain_string_1 from alice.tbl_0",
+      "select plain_string_0 <= plain_string_1 from alice.tbl_0",
+      "select plain_string_0 != plain_string_1 from alice.tbl_0",
+      "select plain_string_0 <> plain_string_1 from alice.tbl_0",
+      "select plain_long_0 + 1 from alice.tbl_0",
+      "select plain_long_0 - 1 from alice.tbl_0",
+      "select plain_long_0 % 3 from alice.tbl_0",
+      "select plain_long_0 + plain_long_1 - 1 from alice.tbl_0",
+      "select plain_long_0 - plain_long_1 + 1 from alice.tbl_0",
+      "select plain_long_0 % plain_long_1 % 3 from alice.tbl_0",
+      "select plain_long_0 - (plain_long_1 - 1) from alice.tbl_0",
+      "select plain_long_0 * plain_long_0 from alice.tbl_0",
+      "select plain_long_0 * 10 from alice.tbl_0",
+      "select plain_long_0 / plain_long_1 from alice.tbl_0",
+      "select plain_long_0 / 10 from alice.tbl_0",
+      "select plain_long_0, sum(plain_long_1) as new_long from alice.tbl_0 group by plain_long_0 having new_long > 0"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderSelection",
+    "cases": [
+      "select plain_long_0 from (select plain_long_0, sum(plain_long_1) as new_long1 from alice.tbl_0 group by plain_long_0) new_tbl where new_long1 > 0;",
+      "select plain_long_0 from (select plain_long_0, sum(plain_long_1) as new_long1 from alice.tbl_0 group by plain_long_0) new_tbl order by new_long1;",
+      "select plain_long_0, sum(plain_long_1) as new_long1 from (select plain_long_0, plain_long_1 from alice.tbl_0 where alice.tbl_0.plain_long_0 > 10) new_tbl group by new_tbl.plain_long_0;"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderWindow",
+    "cases": [
+      "select plain_long_0, rank() over (order by plain_long_1) from alice.tbl_0"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderSubQuery",
+    "cases": [
+      "select plain_long_0 in (select plain_long_1 from alice.tbl_0) from alice.tbl_0;",
+      "select t0.plain_long_0 in (select plain_long_1 from alice.tbl_0) as f1 from alice.tbl_0 t0 join alice.tbl_1 t1 where t0.plain_long_0=1234 and t1.plain_long_1=3456"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderInOp",
+    "cases": [
+      "select plain_long_0 in (1,2,3) from alice.tbl_0",
+      "select plain_long_0 in (select plain_long_0 from alice.tbl_1) from alice.tbl_0",
+      "select plain_long_0 from alice.tbl_0 where plain_long_0 in (select plain_long_0 from alice.tbl_1)"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderLowerUpperOp",
+    "cases": [
+      "select lower(plain_string_0) from alice.tbl_0",
+      "select upper(plain_string_0) from alice.tbl_0"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderCoalesceOp",
+    "cases": ["select coalesce(plain_long_0, plain_long_1) from alice.tbl_0"]
+  },
+  {
+    "name": "TestPlanBuilderLengthOp",
+    "cases": ["select length(plain_long_0) from alice.tbl_0"]
+  },
+  {
+    "name": "TestPlanBuilderReplaceOp",
+    "cases": ["select replace(plain_string_0, 'old', 'new') from alice.tbl_0"]
+  },
+  {
+    "name": "TestPlanBuildeLikeRlikeOp",
+    "cases": [
+      "select plain_string_0 from alice.tbl_0 where plain_string_0 like '%xxx';",
+      "select plain_string_0 from alice.tbl_0 where plain_string_0 rlike 'f[a-d].*';"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderSubstringOp",
+    "cases": [
+      "select substring(plain_string_0, 2, 3) from alice.tbl_0 where substring(plain_string_0, 2, 3) = 'xxx';",
+      "select substring(plain_string_0, 2) from alice.tbl_0 where substring(plain_string_0, 2) = 'xxx';"
+    ]
+  },
+  {
+    "name": "TestPlanBuildeLimitOp",
+    "cases": ["select plain_long_0 from alice.tbl_0 limit 5;"]
+  },
+  {
+    "name": "TestPlanBuilderInstrOp",
+    "cases": ["select instr(plain_string_0, plain_string_1) from alice.tbl_0"]
+  },
+  {
+    "name": "TestPlanBuilderGreatestLeastOp",
+    "cases": [
+      "select greatest(plain_long_0, plain_long_1, plain_long_2) from alice.tbl_0",
+      "select least(plain_long_0, plain_long_1, plain_long_2) from alice.tbl_0"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderLogicalOp",
+    "cases": [
+      "select (plain_long_0 in (1,2) and plain_long_1 in (2,3)) as f1 from alice.tbl_0",
+      "select (plain_long_0 in (1,2) or plain_long_1 in (2,3)) as f1 from alice.tbl_0",
+      "select (plain_long_0 in (1,2) xor plain_long_1 in (2,3)) as f1 from alice.tbl_0",
+      "select not(plain_long_0 in (1,2)) as f1 from alice.tbl_0"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderMathOp",
+    "cases": [
+      "select sin(plain_long_0) as f1 from alice.tbl_0",
+      "select cos(plain_long_0) as f1 from alice.tbl_0",
+      "select tan(plain_long_0) as f1 from alice.tbl_0",
+      "select abs(plain_long_0) as f1 from alice.tbl_0",
+      "select acos(plain_long_0) as f1 from alice.tbl_0",
+      "select atan(plain_long_0) as f1 from alice.tbl_0",
+      "select atan(plain_long_0, 3) as f1 from alice.tbl_0",
+      "select ceil(plain_long_0) as f1 from alice.tbl_0",
+      "select ceiling(plain_long_0) as f1 from alice.tbl_0",
+      "select conv(plain_long_0, 2, 10) as f1 from alice.tbl_0",
+      "select cos(plain_long_0) as f1 from alice.tbl_0",
+      "select cot(plain_long_0) as f1 from alice.tbl_0",
+      "select crc32(plain_long_0) as f1 from alice.tbl_0",
+      "select degrees(plain_long_0) as f1 from alice.tbl_0",
+      "select exp(plain_long_0) as f1 from alice.tbl_0",
+      "select floor(plain_long_0) as f1 from alice.tbl_0",
+      "select ln(plain_long_0) as f1 from alice.tbl_0",
+      "select log(2,plain_long_0) as f1 from alice.tbl_0",
+      "select log2(plain_long_0), pi() as f1 from alice.tbl_0",
+      "select log10(plain_long_0) as f1 from alice.tbl_0",
+      "select pow(2, plain_long_0) as f1 from alice.tbl_0",
+      "select power(2, plain_long_0) as f1 from alice.tbl_0",
+      "select radians(plain_long_0) as f1 from alice.tbl_0",
+      "select rand() as f1 from alice.tbl_0",
+      "select sign(plain_long_0) as f1 from alice.tbl_0",
+      "select sqrt(plain_long_0) as f1 from alice.tbl_0",
+      "select truncate(plain_long_0, 1) as f1 from alice.tbl_0"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderCast",
+    "cases": ["select cast(plain_long_0 as float) from alice.tbl_0;"]
+  },
+  {
+    "name": "TestPlanBuilderSimpleWithOptimization",
+    "cases": [
+      "select plain_long_0 from alice.tbl_0 into outfile '/tmp/result.txt'",
+      "select plain_float_0 < plain_float_1 from alice.tbl_0",
+      "select plain_long_0 from alice.tbl_0 where plain_long_0 not in (select plain_long_1 from alice.tbl_0)",
+      "select case when plain_long_0 < 1 then 0 else 1 end from alice.tbl_0",
+      "select case when plain_long_0 in (select plain_long_1 from alice.tbl_0) then 0 else 1 end from alice.tbl_0",
+      "select case when plain_long_0 < 0 then -1 when plain_long_0 = 0 then 0 else 1 end from alice.tbl_0",
+      "select plain_long_0 in (select plain_long_1 from alice.tbl_0 where plain_long_2 = 3) from alice.tbl_0",
+      "select 1 from alice.tbl_0",
+      // selection
+      "select alice.plain_long_0 from alice.tbl_0 alice join bob.tbl_0 bob on alice.plain_long_1 = bob.plain_long_1 where bob.plain_long_2",
+      // group by
+      "select distinct plain_long_0, plain_long_1 from alice.tbl_0",
+      "select count(plain_long_1) from alice.tbl_0 group by plain_long_1",
+      "select sum(plain_long_1) from alice.tbl_0 group by plain_long_1",
+      "select count(plain_long_0) div count(plain_long_0) from alice.tbl_0 group by plain_long_0",
+      "select max(plain_long_0), min(plain_long_0), median(plain_long_0) from alice.tbl_0 group by plain_long_1",
+      // order by
+      "select plain_long_0 from alice.tbl_0 order by plain_long_0",
+      "select plain_long_0 from alice.tbl_0 order by plain_long_0 desc",
+      "select plain_long_0 from alice.tbl_0 order by plain_long_0 desc, plain_long_1 asc",
+      "select plain_long_0 from alice.tbl_0 limit 1",
+      // union
+      "select plain_long_0 from alice.tbl_0 union select plain_long_1 from alice.tbl_1",
+      "select plain_long_0 from alice.tbl_0 union all select plain_long_1 from alice.tbl_1",
+      "select plain_long_0 from alice.tbl_0 union select plain_long_1 from alice.tbl_1 union all select plain_long_2 from alice.tbl_2",
+      "(select plain_long_0 from alice.tbl_0 where plain_long_0=10 and plain_long_1=1) union (select plain_long_0 from alice.tbl_1 where plain_long_0=11 and plain_long_1=2) order by plain_long_0 limit 10",
+      "(select plain_long_0 from alice.tbl_0 where plain_long_1=2 limit 9) union (select plain_long_0 from alice.tbl_1 where plain_long_1=1 limit 10) limit 15",
+      "select alice.plain_string_0 as str0, alice.plain_string_1 as str1, count(*) as cnt, sum(bob.plain_string_0) as sum from alice.tbl_0 as alice, bob.tbl_0 as bob where alice.plain_long_0=bob.plain_long_0 group by alice.plain_string_0, alice.plain_string_1",
+      "select count(*), sum(plain_long_1), min(plain_long_1), max(plain_long_1), avg(plain_long_1) from alice.tbl_0",
+      "select sum(plain_long_0) from (select plain_long_0 from alice.tbl_0 union all select plain_long_1 from alice.tbl_1) alice",
+      "select plain_long_1, sum(plain_long_0) from (select plain_long_0, plain_long_1 from alice.tbl_1 union all select plain_long_0, plain_long_1 from alice.tbl_2) J group by plain_long_1",
+      "select plain_long_1, max(plain_long_0) from (select plain_long_0, plain_long_1 from alice.tbl_1 union all select plain_long_0, plain_long_1 from alice.tbl_2) J group by plain_long_1",
+      "select plain_long_1, min(plain_long_0) from (select plain_long_0, plain_long_1 from alice.tbl_1 union all select plain_long_0, plain_long_1 from alice.tbl_2) J group by plain_long_1",
+      "select plain_long_1, avg(plain_long_0) from (select plain_long_0, plain_long_1 from alice.tbl_1 union all select plain_long_0, plain_long_1 from alice.tbl_2) J group by plain_long_1",
+      "select plain_long_1, median(plain_long_0) from (select plain_long_0, plain_long_1 from alice.tbl_1 union all select plain_long_0, plain_long_1 from alice.tbl_2) J group by plain_long_1",
+      "select plain_long_1, count(*) from (select plain_long_0, plain_long_1 from alice.tbl_0 union all select plain_long_0, plain_long_1 from alice.tbl_0) J group by plain_long_1",
+      "select plain_long_0 from (select plain_long_0, sum(plain_long_1) as new_long from alice.tbl_1 group by plain_long_0) new_tbl order by new_long;"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderSelectionWithOptimization",
+    "cases": [
+      "select plain_long_0 from (select plain_long_0, sum(plain_long_1) as new_long1 from alice.tbl_0 group by plain_long_0) new_tbl where new_long1 > 0;",
+      "select plain_long_0 from (select plain_long_0, sum(plain_long_1) as new_long1 from alice.tbl_0 group by plain_long_0) new_tbl order by new_long1;",
+      "select plain_long_0, sum(plain_long_1) as new_long1 from (select plain_long_0, plain_long_1 from alice.tbl_0 where alice.tbl_0.plain_long_0 > 10) new_tbl group by new_tbl.plain_long_0;"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderWindowWithOptimization",
+    "cases": [
+      "select plain_long_0, rank() over (order by plain_long_1) from alice.tbl_0"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderSubQueryWithOptimization",
+    "cases": [
+      "select plain_long_0 in (select plain_long_1 from alice.tbl_0) from alice.tbl_0;",
+      "select t0.plain_long_0 in (select plain_long_1 from alice.tbl_0) as f1 from alice.tbl_0 t0 join alice.tbl_1 t1 where t0.plain_long_0=1234 and t1.plain_long_1=3456"
+    ]
+  }
+]

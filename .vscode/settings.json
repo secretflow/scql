@@ -1,0 +1,6 @@
+{
+    "editor.formatOnSave": true,
+    "gopls": {
+        "formatting.local": "github.com/secretflow/scql"
+    }
+}

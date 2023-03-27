@@ -1,0 +1,139 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include "engine/operator/constant.h"
+
+#include "gtest/gtest.h"
+
+#include "engine/core/tensor_from_json.h"
+#include "engine/operator/test_util.h"
+#include "engine/util/spu_io.h"
+#include "engine/util/tensor_util.h"
+
+namespace scql::engine::op {
+
+struct ConstantTestCase {
+  test::NamedTensor scalar;
+  pb::TensorStatus output_status;
+};
+
+class ConstantTest : public ::testing::TestWithParam<
+                         std::tuple<spu::ProtocolKind, ConstantTestCase>> {
+ protected:
+  static pb::ExecNode MakeConstantExecNode(const ConstantTestCase& tc);
+};
+
+INSTANTIATE_TEST_SUITE_P(
+    ConstantPrivateTest, ConstantTest,
+    testing::Combine(
+        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        testing::Values(
+            ConstantTestCase{.scalar = {test::NamedTensor(
+                                 "x", TensorFromJSON(arrow::int64(), "[3]"))},
+                             .output_status = pb::TENSORSTATUS_PRIVATE},
+            ConstantTestCase{
+                .scalar = {test::NamedTensor(
+                    "y", TensorFromJSON(arrow::utf8(),
+                                        R"json(["2022-11-22"])json"))},
+                .output_status = pb::TENSORSTATUS_PRIVATE},
+            ConstantTestCase{
+                .scalar = {test::NamedTensor(
+                    "z", TensorFromJSON(arrow::boolean(), "[true]"))},
+                .output_status = pb::TENSORSTATUS_PRIVATE},
+            ConstantTestCase{
+                .scalar = {test::NamedTensor(
+                    "zz", TensorFromJSON(arrow::float32(), "[3.1415]"))},
+                .output_status = pb::TENSORSTATUS_PRIVATE})),
+    TestParamNameGenerator(ConstantTest));
+
+INSTANTIATE_TEST_SUITE_P(
+    ConstantPublicTest, ConstantTest,
+    testing::Combine(
+        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        testing::Values(
+            ConstantTestCase{.scalar = {test::NamedTensor(
+                                 "x", TensorFromJSON(arrow::int64(), "[3]"))},
+                             .output_status = pb::TENSORSTATUS_PUBLIC},
+            ConstantTestCase{
+                .scalar = {test::NamedTensor(
+                    "y", TensorFromJSON(arrow::boolean(), "[true]"))},
+                .output_status = pb::TENSORSTATUS_PUBLIC},
+            ConstantTestCase{
+                .scalar = {test::NamedTensor(
+                    "z", TensorFromJSON(arrow::float32(), "[3.1415]"))},
+                .output_status = pb::TENSORSTATUS_PUBLIC})),
+    TestParamNameGenerator(ConstantTest));
+
+TEST_P(ConstantTest, Works) {
+  // Given
+  auto parm = GetParam();
+  auto tc = std::get<1>(parm);
+  auto node = MakeConstantExecNode(tc);
+
+  std::vector<Session> sessions = test::Make2PCSession(std::get<0>(parm));
+
+  ExecContext alice_ctx(node, &sessions[0]);
+  ExecContext bob_ctx(node, &sessions[1]);
+
+  // When
+  test::OperatorTestRunner<Constant> alice;
+  test::OperatorTestRunner<Constant> bob;
+
+  alice.Start(&alice_ctx);
+  bob.Start(&bob_ctx);
+
+  // Then
+  EXPECT_NO_THROW({ alice.Wait(); });
+  EXPECT_NO_THROW({ bob.Wait(); });
+  // check alice output
+  auto expect_arr = tc.scalar.tensor->ToArrowChunkedArray();
+  TensorPtr out;
+  if (tc.output_status == pb::TENSORSTATUS_PRIVATE) {
+    out = alice_ctx.GetTensorTable()->GetTensor(tc.scalar.name);
+  } else {
+    auto hctx = alice_ctx.GetSession()->GetSpuHalContext();
+    auto device_symbols = alice_ctx.GetSession()->GetDeviceSymbols();
+    util::SpuOutfeedHelper outfeed_helper(hctx, device_symbols);
+    out = outfeed_helper.DumpPublic(tc.scalar.name);
+  }
+  ASSERT_TRUE(out);
+  EXPECT_TRUE(out->ToArrowChunkedArray()->ApproxEquals(*expect_arr))
+      << "expect type = " << expect_arr->type()->ToString()
+      << ", got type = " << out->ToArrowChunkedArray()->type()->ToString()
+      << "\nexpect result = " << expect_arr->ToString()
+      << "\nbut actual got result = " << out->ToArrowChunkedArray()->ToString();
+}
+
+/// ===========================
+/// ConstantTest impl
+/// ===========================
+
+pb::ExecNode ConstantTest::MakeConstantExecNode(const ConstantTestCase& tc) {
+  test::ExecNodeBuilder builder(Constant::kOpType);
+
+  builder.SetNodeName("constant-test");
+
+  auto pb_tensor = std::make_shared<pb::Tensor>();
+  pb_tensor->set_elem_type(tc.scalar.tensor->Type());
+  util::CopyValuesToProto(tc.scalar.tensor, pb_tensor.get());
+  builder.AddAttr(Constant::kScalarAttr, *pb_tensor);
+
+  auto t = test::MakeTensorReference(tc.scalar.name, pb_tensor->elem_type(),
+                                     tc.output_status);
+  builder.AddOutput(Constant::kOut, {t});
+
+  return builder.Build();
+}
+
+}  // namespace scql::engine::op

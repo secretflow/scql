@@ -1,0 +1,212 @@
+# Copyright 2023 Ant Group Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_cc//cc:defs.bzl", "cc_proto_library")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "datasource_adaptor",
+    hdrs = ["datasource_adaptor.h"],
+    deps = [
+        "//api:core_cc_proto",
+        "//engine/core:tensor",
+    ],
+)
+
+cc_library(
+    name = "odbc_adaptor",
+    srcs = ["odbc_adaptor.cc"],
+    hdrs = ["odbc_adaptor.h"],
+    deps = [
+        ":datasource_adaptor",
+        ":datasource_cc_proto",
+        "//engine/core:primitive_builder",
+        "//engine/core:string_tensor_builder",
+        "@org_pocoproject_poco//:poco",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+cc_test(
+    name = "odbc_adaptor_sqlite_test",
+    srcs = ["odbc_adaptor_sqlite_test.cc"],
+    deps = [
+        ":odbc_adaptor",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+# binary for integration test
+# run odbc_adaptor_mysql_test with `/engine/datasource/run_odbc_adaptor_mysql_test.sh`
+cc_binary(
+    name = "odbc_adaptor_mysql_test",
+    srcs = ["odbc_adaptor_mysql_test.cc"],
+    deps = [
+        ":odbc_adaptor",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/flags:parse",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+proto_library(
+    name = "datasource_proto",
+    srcs = ["datasource.proto"],
+)
+
+cc_proto_library(
+    name = "datasource_cc_proto",
+    deps = [":datasource_proto"],
+)
+
+cc_library(
+    name = "router",
+    hdrs = ["router.h"],
+    deps = [":datasource_cc_proto"],
+)
+
+proto_library(
+    name = "router_proto",
+    srcs = ["router.proto"],
+    deps = [":datasource_proto"],
+)
+
+cc_proto_library(
+    name = "router_cc_proto",
+    deps = [":router_proto"],
+)
+
+cc_library(
+    name = "embed_router",
+    srcs = ["embed_router.cc"],
+    hdrs = ["embed_router.h"],
+    deps = [
+        ":router",
+        ":router_cc_proto",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/strings",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+cc_test(
+    name = "embed_router_test",
+    srcs = ["embed_router_test.cc"],
+    deps = [
+        ":embed_router",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "datasource_adaptor_mgr",
+    srcs = ["datasource_adaptor_mgr.cc"],
+    hdrs = ["datasource_adaptor_mgr.h"],
+    deps = [
+        ":csvdb_adaptor_factory",
+        ":datasource_adaptor",
+        ":datasource_cc_proto",
+        ":odbc_adaptor_factory",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/synchronization",
+    ],
+)
+
+cc_library(
+    name = "datasource_adaptor_factory",
+    hdrs = ["datasource_adaptor_factory.h"],
+    deps = [
+        ":datasource_adaptor",
+        ":datasource_cc_proto",
+    ],
+)
+
+cc_library(
+    name = "odbc_adaptor_factory",
+    srcs = ["odbc_adaptor_factory.cc"],
+    hdrs = ["odbc_adaptor_factory.h"],
+    deps = [
+        ":datasource_adaptor_factory",
+        ":odbc_adaptor",
+    ],
+)
+
+proto_library(
+    name = "csvdb_conf_proto",
+    srcs = ["csvdb_conf.proto"],
+)
+
+cc_proto_library(
+    name = "csvdb_conf_cc_proto",
+    deps = [":csvdb_conf_proto"],
+)
+
+cc_library(
+    name = "duckdb_wrapper",
+    srcs = ["duckdb_wrapper.cc"],
+    hdrs = ["duckdb_wrapper.h"],
+    deps = [
+        ":csvdb_conf_cc_proto",
+        "@com_github_duckdb//:duckdb",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+cc_test(
+    name = "duckdb_wrapper_test",
+    srcs = ["duckdb_wrapper_test.cc"],
+    deps = [
+        ":duckdb_wrapper",
+        "@com_github_brpc_brpc//:butil",
+        "@com_github_fmtlib_fmt//:fmtlib",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "csvdb_adaptor",
+    srcs = ["csvdb_adaptor.cc"],
+    hdrs = ["csvdb_adaptor.h"],
+    deps = [
+        ":datasource_adaptor",
+        ":datasource_cc_proto",
+        ":duckdb_wrapper",
+        "//engine/core:arrow_helper",
+        "//engine/util:spu_io",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+cc_test(
+    name = "csvdb_adaptor_test",
+    srcs = ["csvdb_adaptor_test.cc"],
+    deps = [
+        ":csvdb_adaptor",
+        "//engine/core:tensor_from_json",
+        "@com_github_brpc_brpc//:butil",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "csvdb_adaptor_factory",
+    srcs = ["csvdb_adaptor_factory.cc"],
+    hdrs = ["csvdb_adaptor_factory.h"],
+    deps = [
+        ":csvdb_adaptor",
+        ":datasource_adaptor_factory",
+    ],
+)

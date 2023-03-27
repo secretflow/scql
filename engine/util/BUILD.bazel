@@ -1,0 +1,113 @@
+# Copyright 2023 Ant Group Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "copy_to_proto_vistor",
+    hdrs = ["copy_to_proto_vistor.h"],
+    deps = [
+        "@org_apache_arrow//:arrow",
+    ],
+)
+
+cc_library(
+    name = "logging",
+    srcs = ["logging.cc"],
+    hdrs = ["logging.h"],
+    deps = [
+        "@com_github_brpc_brpc//:butil",
+        "@com_github_gabime_spdlog//:spdlog",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+cc_library(
+    name = "psi_helper",
+    srcs = ["psi_helper.cc"],
+    hdrs = ["psi_helper.h"],
+    deps = [
+        ":stringify_visitor",
+        "//engine/core:primitive_builder",
+        "//engine/core:string_tensor_builder",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_set",
+        "@spulib//libspu/psi/utils:batch_provider",
+        "@spulib//libspu/psi/utils:cipher_store",
+    ],
+)
+
+cc_library(
+    name = "tensor_util",
+    srcs = ["tensor_util.cc"],
+    hdrs = ["tensor_util.h"],
+    deps = [
+        ":copy_to_proto_vistor",
+        "//engine/core:arrow_helper",
+        "//engine/core:tensor",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+cc_test(
+    name = "psi_helper_test",
+    srcs = ["psi_helper_test.cc"],
+    deps = [
+        ":psi_helper",
+        "//engine/core:primitive_builder",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "stringify_visitor",
+    srcs = ["stringify_visitor.cc"],
+    hdrs = ["stringify_visitor.h"],
+    deps = [
+        "//engine/core:arrow_helper",
+        "//engine/core:tensor",
+        "//engine/core:tensor_chunk",
+    ],
+)
+
+cc_library(
+    name = "spu_io",
+    srcs = ["spu_io.cc"],
+    hdrs = ["spu_io.h"],
+    deps = [
+        ":ndarray_to_arrow",
+        "//engine/core:arrow_helper",
+        "//engine/core:tensor",
+        "//engine/core:type",
+        "@org_apache_arrow//:arrow",
+        "@spulib//libspu/core:xt_helper",
+        "@spulib//libspu/device:io",
+        "@spulib//libspu/kernel/hal:constants",
+        "@spulib//libspu/kernel/hal:public_helper",
+        "@spulib//libspu/kernel/hlo:casting",
+    ],
+)
+
+cc_library(
+    name = "ndarray_to_arrow",
+    srcs = ["ndarray_to_arrow.cc"],
+    hdrs = ["ndarray_to_arrow.h"],
+    deps = [
+        "//engine/core:arrow_helper",
+        "//engine/core:type",
+        "@org_apache_arrow//:arrow",
+        "@spulib//libspu/core:ndarray_ref",
+        "@spulib//libspu/core:xt_helper",
+    ],
+)

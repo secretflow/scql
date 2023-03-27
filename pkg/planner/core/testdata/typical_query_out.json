@@ -1,0 +1,227 @@
+[
+  {
+    "Name": "TestPlanBuilderSimple",
+    "Cases": [
+      "Join{DataScan(alice)->DataScan(bob)}([eq(alice.tbl_0.plain_long_1, bob.tbl_0.plain_long_1)],)->Projection([alice.tbl_0.plain_long_0])",
+      "Join{DataScan(alice)->DataScan(bob)}([eq(alice.tbl_0.plain_long_1, bob.tbl_0.plain_long_1) eq(alice.tbl_0.plain_string_1, bob.tbl_0.plain_string_1)],)->Projection([alice.tbl_0.plain_long_0 bob.tbl_0.plain_string_0])",
+      "DataScan(tbl_0)->Projection([alice.tbl_0.plain_long_0])",
+      "DataScan(tbl_0)->Projection([eq(alice.tbl_0.plain_long_0, alice.tbl_0.plain_long_1)])",
+      "DataScan(tbl_0)->Projection([lt(alice.tbl_0.plain_long_0, alice.tbl_0.plain_long_1)])",
+      "DataScan(tbl_0)->Projection([le(alice.tbl_0.plain_long_0, alice.tbl_0.plain_long_1)])",
+      "DataScan(tbl_0)->Projection([gt(alice.tbl_0.plain_long_0, alice.tbl_0.plain_long_1)])",
+      "DataScan(tbl_0)->Projection([ge(alice.tbl_0.plain_long_0, alice.tbl_0.plain_long_1)])",
+      "DataScan(tbl_0)->Projection([ne(alice.tbl_0.plain_long_0, alice.tbl_0.plain_long_1)])",
+      "DataScan(tbl_0)->Projection([ne(alice.tbl_0.plain_long_0, alice.tbl_0.plain_long_1)])",
+      "DataScan(tbl_0)->Projection([eq(alice.tbl_0.plain_string_0, alice.tbl_0.plain_string_1)])",
+      "DataScan(tbl_0)->Projection([gt(alice.tbl_0.plain_string_0, alice.tbl_0.plain_string_1)])",
+      "DataScan(tbl_0)->Projection([ge(alice.tbl_0.plain_string_0, alice.tbl_0.plain_string_1)])",
+      "DataScan(tbl_0)->Projection([lt(alice.tbl_0.plain_string_0, alice.tbl_0.plain_string_1)])",
+      "DataScan(tbl_0)->Projection([le(alice.tbl_0.plain_string_0, alice.tbl_0.plain_string_1)])",
+      "DataScan(tbl_0)->Projection([ne(alice.tbl_0.plain_string_0, alice.tbl_0.plain_string_1)])",
+      "DataScan(tbl_0)->Projection([ne(alice.tbl_0.plain_string_0, alice.tbl_0.plain_string_1)])",
+      "DataScan(tbl_0)->Projection([plus(alice.tbl_0.plain_long_0, 1)])",
+      "DataScan(tbl_0)->Projection([minus(alice.tbl_0.plain_long_0, 1)])",
+      "DataScan(tbl_0)->Projection([mod(alice.tbl_0.plain_long_0, 3)])",
+      "DataScan(tbl_0)->Projection([minus(plus(alice.tbl_0.plain_long_0, alice.tbl_0.plain_long_1), 1)])",
+      "DataScan(tbl_0)->Projection([plus(minus(alice.tbl_0.plain_long_0, alice.tbl_0.plain_long_1), 1)])",
+      "DataScan(tbl_0)->Projection([mod(mod(alice.tbl_0.plain_long_0, alice.tbl_0.plain_long_1), 3)])",
+      "DataScan(tbl_0)->Projection([minus(alice.tbl_0.plain_long_0, minus(alice.tbl_0.plain_long_1, 1))])",
+      "DataScan(tbl_0)->Projection([mul(alice.tbl_0.plain_long_0, alice.tbl_0.plain_long_0)])",
+      "DataScan(tbl_0)->Projection([mul(alice.tbl_0.plain_long_0, 10)])",
+      "DataScan(tbl_0)->Projection([div(alice.tbl_0.plain_long_0, alice.tbl_0.plain_long_1)])",
+      "DataScan(tbl_0)->Projection([div(alice.tbl_0.plain_long_0, 10)])",
+      "DataScan(tbl_0)->Aggr(sum(alice.tbl_0.plain_long_1),firstrow(alice.tbl_0.aggregate_float_0),firstrow(alice.tbl_0.aggregate_float_1),firstrow(alice.tbl_0.aggregate_float_2),firstrow(alice.tbl_0.aggregate_long_0),firstrow(alice.tbl_0.aggregate_long_1),firstrow(alice.tbl_0.aggregate_long_2),firstrow(alice.tbl_0.aggregate_string_0),firstrow(alice.tbl_0.aggregate_string_1),firstrow(alice.tbl_0.aggregate_string_2),firstrow(alice.tbl_0.compare_float_0),firstrow(alice.tbl_0.compare_float_1),firstrow(alice.tbl_0.compare_float_2),firstrow(alice.tbl_0.compare_long_0),firstrow(alice.tbl_0.compare_long_1),firstrow(alice.tbl_0.compare_long_2),firstrow(alice.tbl_0.compare_string_0),firstrow(alice.tbl_0.compare_string_1),firstrow(alice.tbl_0.compare_string_2),firstrow(alice.tbl_0.encrypt_float_0),firstrow(alice.tbl_0.encrypt_float_1),firstrow(alice.tbl_0.encrypt_float_2),firstrow(alice.tbl_0.encrypt_long_0),firstrow(alice.tbl_0.encrypt_long_1),firstrow(alice.tbl_0.encrypt_long_2),firstrow(alice.tbl_0.encrypt_string_0),firstrow(alice.tbl_0.encrypt_string_1),firstrow(alice.tbl_0.encrypt_string_2),firstrow(alice.tbl_0.groupby_float_0),firstrow(alice.tbl_0.groupby_float_1),firstrow(alice.tbl_0.groupby_float_2),firstrow(alice.tbl_0.groupby_long_0),firstrow(alice.tbl_0.groupby_long_1),firstrow(alice.tbl_0.groupby_long_2),firstrow(alice.tbl_0.groupby_string_0),firstrow(alice.tbl_0.groupby_string_1),firstrow(alice.tbl_0.groupby_string_2),firstrow(alice.tbl_0.join_float_0),firstrow(alice.tbl_0.join_float_1),firstrow(alice.tbl_0.join_float_2),firstrow(alice.tbl_0.join_long_0),firstrow(alice.tbl_0.join_long_1),firstrow(alice.tbl_0.join_long_2),firstrow(alice.tbl_0.join_string_0),firstrow(alice.tbl_0.join_string_1),firstrow(alice.tbl_0.join_string_2),firstrow(alice.tbl_0.plain_float_0),firstrow(alice.tbl_0.plain_float_1),firstrow(alice.tbl_0.plain_float_2),firstrow(alice.tbl_0.plain_long_0),firstrow(alice.tbl_0.plain_long_1),firstrow(alice.tbl_0.plain_long_2),firstrow(alice.tbl_0.plain_string_0),firstrow(alice.tbl_0.plain_string_1),firstrow(alice.tbl_0.plain_string_2))->Projection([alice.tbl_0.plain_long_0 Column#55])->Sel([gt(Column#55, 0)])"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderSelection",
+    "cases": [
+      "DataScan(tbl_0)->Aggr(sum(alice.tbl_0.plain_long_1),firstrow(alice.tbl_0.aggregate_float_0),firstrow(alice.tbl_0.aggregate_float_1),firstrow(alice.tbl_0.aggregate_float_2),firstrow(alice.tbl_0.aggregate_long_0),firstrow(alice.tbl_0.aggregate_long_1),firstrow(alice.tbl_0.aggregate_long_2),firstrow(alice.tbl_0.aggregate_string_0),firstrow(alice.tbl_0.aggregate_string_1),firstrow(alice.tbl_0.aggregate_string_2),firstrow(alice.tbl_0.compare_float_0),firstrow(alice.tbl_0.compare_float_1),firstrow(alice.tbl_0.compare_float_2),firstrow(alice.tbl_0.compare_long_0),firstrow(alice.tbl_0.compare_long_1),firstrow(alice.tbl_0.compare_long_2),firstrow(alice.tbl_0.compare_string_0),firstrow(alice.tbl_0.compare_string_1),firstrow(alice.tbl_0.compare_string_2),firstrow(alice.tbl_0.encrypt_float_0),firstrow(alice.tbl_0.encrypt_float_1),firstrow(alice.tbl_0.encrypt_float_2),firstrow(alice.tbl_0.encrypt_long_0),firstrow(alice.tbl_0.encrypt_long_1),firstrow(alice.tbl_0.encrypt_long_2),firstrow(alice.tbl_0.encrypt_string_0),firstrow(alice.tbl_0.encrypt_string_1),firstrow(alice.tbl_0.encrypt_string_2),firstrow(alice.tbl_0.groupby_float_0),firstrow(alice.tbl_0.groupby_float_1),firstrow(alice.tbl_0.groupby_float_2),firstrow(alice.tbl_0.groupby_long_0),firstrow(alice.tbl_0.groupby_long_1),firstrow(alice.tbl_0.groupby_long_2),firstrow(alice.tbl_0.groupby_string_0),firstrow(alice.tbl_0.groupby_string_1),firstrow(alice.tbl_0.groupby_string_2),firstrow(alice.tbl_0.join_float_0),firstrow(alice.tbl_0.join_float_1),firstrow(alice.tbl_0.join_float_2),firstrow(alice.tbl_0.join_long_0),firstrow(alice.tbl_0.join_long_1),firstrow(alice.tbl_0.join_long_2),firstrow(alice.tbl_0.join_string_0),firstrow(alice.tbl_0.join_string_1),firstrow(alice.tbl_0.join_string_2),firstrow(alice.tbl_0.plain_float_0),firstrow(alice.tbl_0.plain_float_1),firstrow(alice.tbl_0.plain_float_2),firstrow(alice.tbl_0.plain_long_0),firstrow(alice.tbl_0.plain_long_1),firstrow(alice.tbl_0.plain_long_2),firstrow(alice.tbl_0.plain_string_0),firstrow(alice.tbl_0.plain_string_1),firstrow(alice.tbl_0.plain_string_2))->Projection([alice.tbl_0.plain_long_0 Column#55])->Sel([gt(Column#55, 0)])->Projection([alice.tbl_0.plain_long_0])",
+      "DataScan(tbl_0)->Aggr(sum(alice.tbl_0.plain_long_1),firstrow(alice.tbl_0.aggregate_float_0),firstrow(alice.tbl_0.aggregate_float_1),firstrow(alice.tbl_0.aggregate_float_2),firstrow(alice.tbl_0.aggregate_long_0),firstrow(alice.tbl_0.aggregate_long_1),firstrow(alice.tbl_0.aggregate_long_2),firstrow(alice.tbl_0.aggregate_string_0),firstrow(alice.tbl_0.aggregate_string_1),firstrow(alice.tbl_0.aggregate_string_2),firstrow(alice.tbl_0.compare_float_0),firstrow(alice.tbl_0.compare_float_1),firstrow(alice.tbl_0.compare_float_2),firstrow(alice.tbl_0.compare_long_0),firstrow(alice.tbl_0.compare_long_1),firstrow(alice.tbl_0.compare_long_2),firstrow(alice.tbl_0.compare_string_0),firstrow(alice.tbl_0.compare_string_1),firstrow(alice.tbl_0.compare_string_2),firstrow(alice.tbl_0.encrypt_float_0),firstrow(alice.tbl_0.encrypt_float_1),firstrow(alice.tbl_0.encrypt_float_2),firstrow(alice.tbl_0.encrypt_long_0),firstrow(alice.tbl_0.encrypt_long_1),firstrow(alice.tbl_0.encrypt_long_2),firstrow(alice.tbl_0.encrypt_string_0),firstrow(alice.tbl_0.encrypt_string_1),firstrow(alice.tbl_0.encrypt_string_2),firstrow(alice.tbl_0.groupby_float_0),firstrow(alice.tbl_0.groupby_float_1),firstrow(alice.tbl_0.groupby_float_2),firstrow(alice.tbl_0.groupby_long_0),firstrow(alice.tbl_0.groupby_long_1),firstrow(alice.tbl_0.groupby_long_2),firstrow(alice.tbl_0.groupby_string_0),firstrow(alice.tbl_0.groupby_string_1),firstrow(alice.tbl_0.groupby_string_2),firstrow(alice.tbl_0.join_float_0),firstrow(alice.tbl_0.join_float_1),firstrow(alice.tbl_0.join_float_2),firstrow(alice.tbl_0.join_long_0),firstrow(alice.tbl_0.join_long_1),firstrow(alice.tbl_0.join_long_2),firstrow(alice.tbl_0.join_string_0),firstrow(alice.tbl_0.join_string_1),firstrow(alice.tbl_0.join_string_2),firstrow(alice.tbl_0.plain_float_0),firstrow(alice.tbl_0.plain_float_1),firstrow(alice.tbl_0.plain_float_2),firstrow(alice.tbl_0.plain_long_0),firstrow(alice.tbl_0.plain_long_1),firstrow(alice.tbl_0.plain_long_2),firstrow(alice.tbl_0.plain_string_0),firstrow(alice.tbl_0.plain_string_1),firstrow(alice.tbl_0.plain_string_2))->Projection([alice.tbl_0.plain_long_0 Column#55])->Projection([alice.tbl_0.plain_long_0 Column#55])->Sort(Column#55)->Projection([alice.tbl_0.plain_long_0])",
+      "DataScan(tbl_0)->Sel([gt(alice.tbl_0.plain_long_0, 10)])->Projection([alice.tbl_0.plain_long_0 alice.tbl_0.plain_long_1])->Aggr(sum(alice.tbl_0.plain_long_1),firstrow(alice.tbl_0.plain_long_0),firstrow(alice.tbl_0.plain_long_1))->Projection([alice.tbl_0.plain_long_0 Column#55])"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderWindow",
+    "cases": [
+      "DataScan(tbl_0)->Projection([alice.tbl_0.plain_long_0 0 alice.tbl_0.plain_long_1])->Projection([alice.tbl_0.plain_long_0 Column#55 alice.tbl_0.plain_long_1])->Window(rank()->Column#56)->Projection([alice.tbl_0.plain_long_0 Column#56 alice.tbl_0.plain_long_1])->Projection([alice.tbl_0.plain_long_0 Column#56])"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderSubQuery",
+    "cases": [
+      "Apply{DataScan(tbl_0)->DataScan(tbl_0)->Projection([alice.tbl_0.plain_long_1])}(o[eq(alice.tbl_0.plain_long_0, alice.tbl_0.plain_long_1)])->Projection([Column#109])",
+      "Apply{Join{DataScan(t0)->DataScan(t1)}->Sel([eq(alice.tbl_0.plain_long_0, 1234) eq(alice.tbl_1.plain_long_1, 3456)])->DataScan(tbl_0)->Projection([alice.tbl_0.plain_long_1])}(o[eq(alice.tbl_0.plain_long_0, alice.tbl_0.plain_long_1)])->Projection([Column#163])"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderInOp",
+    "cases": [
+      "DataScan(tbl_0)->Projection([or(eq(alice.tbl_0.plain_long_0, 1), or(eq(alice.tbl_0.plain_long_0, 2), eq(alice.tbl_0.plain_long_0, 3)))])",
+      "Apply{DataScan(tbl_0)->DataScan(tbl_1)->Projection([alice.tbl_1.plain_long_0])}(o[eq(alice.tbl_0.plain_long_0, alice.tbl_1.plain_long_0)])->Projection([Column#109])",
+      "Apply{DataScan(tbl_0)->DataScan(tbl_1)->Projection([alice.tbl_1.plain_long_0])}([eq(alice.tbl_0.plain_long_0, alice.tbl_1.plain_long_0)])->Projection([alice.tbl_0.plain_long_0])"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderLowerUpperOp",
+    "cases": [
+      "DataScan(tbl_0)->Projection([lower(alice.tbl_0.plain_string_0)])",
+      "DataScan(tbl_0)->Projection([upper(alice.tbl_0.plain_string_0)])"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderCoalesceOp",
+    "cases": [
+      "DataScan(tbl_0)->Projection([coalesce(alice.tbl_0.plain_long_0, alice.tbl_0.plain_long_1)])"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderLengthOp",
+    "cases": ["DataScan(tbl_0)->Projection([length(alice.tbl_0.plain_long_0)])"]
+  },
+  {
+    "name": "TestPlanBuilderReplaceOp",
+    "cases": [
+      "DataScan(tbl_0)->Projection([replace(alice.tbl_0.plain_string_0, old, new)])"
+    ]
+  },
+  {
+    "name": "TestPlanBuildeLikeRlikeOp",
+    "cases": [
+      "DataScan(tbl_0)->Sel([like(alice.tbl_0.plain_string_0, %xxx, 92)])->Projection([alice.tbl_0.plain_string_0])",
+      "DataScan(tbl_0)->Sel([regexp(alice.tbl_0.plain_string_0, f[a-d].*)])->Projection([alice.tbl_0.plain_string_0])"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderSubstringOp",
+    "cases": [
+      "DataScan(tbl_0)->Sel([eq(substring(alice.tbl_0.plain_string_0, 2, 3), xxx)])->Projection([substring(alice.tbl_0.plain_string_0, 2, 3)])",
+      "DataScan(tbl_0)->Sel([eq(substring(alice.tbl_0.plain_string_0, 2), xxx)])->Projection([substring(alice.tbl_0.plain_string_0, 2)])"
+    ]
+  },
+  {
+    "name": "TestPlanBuildeLimitOp",
+    "cases": ["DataScan(tbl_0)->Projection([alice.tbl_0.plain_long_0])->Limit"]
+  },
+  {
+    "name": "TestPlanBuilderInstrOp",
+    "cases": [
+      "DataScan(tbl_0)->Projection([instr(alice.tbl_0.plain_string_0, alice.tbl_0.plain_string_1)])"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderGreatestLeastOp",
+    "cases": [
+      "DataScan(tbl_0)->Projection([greatest(alice.tbl_0.plain_long_0, alice.tbl_0.plain_long_1, alice.tbl_0.plain_long_2)])",
+      "DataScan(tbl_0)->Projection([least(alice.tbl_0.plain_long_0, alice.tbl_0.plain_long_1, alice.tbl_0.plain_long_2)])"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderLogicalOp",
+    "cases": [
+      "DataScan(tbl_0)->Projection([and(or(eq(alice.tbl_0.plain_long_0, 1), eq(alice.tbl_0.plain_long_0, 2)), or(eq(alice.tbl_0.plain_long_1, 2), eq(alice.tbl_0.plain_long_1, 3)))])",
+      "DataScan(tbl_0)->Projection([or(or(eq(alice.tbl_0.plain_long_0, 1), eq(alice.tbl_0.plain_long_0, 2)), or(eq(alice.tbl_0.plain_long_1, 2), eq(alice.tbl_0.plain_long_1, 3)))])",
+      "DataScan(tbl_0)->Projection([xor(or(eq(alice.tbl_0.plain_long_0, 1), eq(alice.tbl_0.plain_long_0, 2)), or(eq(alice.tbl_0.plain_long_1, 2), eq(alice.tbl_0.plain_long_1, 3)))])",
+      "DataScan(tbl_0)->Projection([not(or(eq(alice.tbl_0.plain_long_0, 1), eq(alice.tbl_0.plain_long_0, 2)))])"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderMathOp",
+    "cases": [
+      "DataScan(tbl_0)->Projection([sin(alice.tbl_0.plain_long_0)])",
+      "DataScan(tbl_0)->Projection([cos(alice.tbl_0.plain_long_0)])",
+      "DataScan(tbl_0)->Projection([tan(alice.tbl_0.plain_long_0)])",
+      "DataScan(tbl_0)->Projection([abs(alice.tbl_0.plain_long_0)])",
+      "DataScan(tbl_0)->Projection([acos(alice.tbl_0.plain_long_0)])",
+      "DataScan(tbl_0)->Projection([atan(alice.tbl_0.plain_long_0)])",
+      "DataScan(tbl_0)->Projection([atan(alice.tbl_0.plain_long_0, 3)])",
+      "DataScan(tbl_0)->Projection([ceil(alice.tbl_0.plain_long_0)])",
+      "DataScan(tbl_0)->Projection([ceiling(alice.tbl_0.plain_long_0)])",
+      "DataScan(tbl_0)->Projection([conv(alice.tbl_0.plain_long_0, 2, 10)])",
+      "DataScan(tbl_0)->Projection([cos(alice.tbl_0.plain_long_0)])",
+      "DataScan(tbl_0)->Projection([cot(alice.tbl_0.plain_long_0)])",
+      "DataScan(tbl_0)->Projection([crc32(alice.tbl_0.plain_long_0)])",
+      "DataScan(tbl_0)->Projection([degrees(alice.tbl_0.plain_long_0)])",
+      "DataScan(tbl_0)->Projection([exp(alice.tbl_0.plain_long_0)])",
+      "DataScan(tbl_0)->Projection([floor(alice.tbl_0.plain_long_0)])",
+      "DataScan(tbl_0)->Projection([ln(alice.tbl_0.plain_long_0)])",
+      "DataScan(tbl_0)->Projection([log(2, alice.tbl_0.plain_long_0)])",
+      "DataScan(tbl_0)->Projection([log2(alice.tbl_0.plain_long_0) pi()])",
+      "DataScan(tbl_0)->Projection([log10(alice.tbl_0.plain_long_0)])",
+      "DataScan(tbl_0)->Projection([pow(2, alice.tbl_0.plain_long_0)])",
+      "DataScan(tbl_0)->Projection([power(2, alice.tbl_0.plain_long_0)])",
+      "DataScan(tbl_0)->Projection([radians(alice.tbl_0.plain_long_0)])",
+      "DataScan(tbl_0)->Projection([rand()])",
+      "DataScan(tbl_0)->Projection([sign(alice.tbl_0.plain_long_0)])",
+      "DataScan(tbl_0)->Projection([sqrt(alice.tbl_0.plain_long_0)])",
+      "DataScan(tbl_0)->Projection([truncate(alice.tbl_0.plain_long_0, 1)])"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderCast",
+    "cases": ["DataScan(tbl_0)->Projection([cast(alice.tbl_0.plain_long_0)])"]
+  },
+  {
+    "Name": "TestPlanBuilderSimpleWithOptimization",
+    "Cases": [
+      "DataScan(tbl_0)->Projection([alice.tbl_0.plain_long_0])",
+      "DataScan(tbl_0)->Projection([lt(alice.tbl_0.plain_float_0, alice.tbl_0.plain_float_1)])",
+      "Apply{DataScan(tbl_0)->DataScan(tbl_0)}(o[eq(alice.tbl_0.plain_long_0, alice.tbl_0.plain_long_1)])->Projection([alice.tbl_0.plain_long_0])",
+      "DataScan(tbl_0)->Projection([case(lt(alice.tbl_0.plain_long_0, 1), 0, 1)])",
+      "Apply{DataScan(tbl_0)->DataScan(tbl_0)}(o[eq(alice.tbl_0.plain_long_0, alice.tbl_0.plain_long_1)])->Projection([case(Column#109, 0, 1)])",
+      "DataScan(tbl_0)->Projection([case(lt(alice.tbl_0.plain_long_0, 0), unaryminus(1), eq(alice.tbl_0.plain_long_0, 0), 0, 1)])",
+      "Apply{DataScan(tbl_0)->DataScan(tbl_0)->Sel([eq(alice.tbl_0.plain_long_2, 3)])->Projection([alice.tbl_0.plain_long_1])}(o[eq(alice.tbl_0.plain_long_0, alice.tbl_0.plain_long_1)])->Projection([Column#109])",
+      "DataScan(tbl_0)->Projection([1])",
+      // selection
+      "Join{DataScan(alice)->DataScan(bob)->Sel([bob.tbl_0.plain_long_2])}([eq(alice.tbl_0.plain_long_1, bob.tbl_0.plain_long_1)],)->Projection([alice.tbl_0.plain_long_0])",
+      // group by
+      "DataScan(tbl_0)->Aggr(firstrow(alice.tbl_0.plain_long_0),firstrow(alice.tbl_0.plain_long_1))",
+      "DataScan(tbl_0)->Aggr(count(alice.tbl_0.plain_long_1))->Projection([Column#55])",
+      "DataScan(tbl_0)->Aggr(sum(alice.tbl_0.plain_long_1),count(1))->Projection([Column#55])",
+      "DataScan(tbl_0)->Aggr(count(alice.tbl_0.plain_long_0))->Projection([intdiv(Column#55, Column#55)])",
+      "DataScan(tbl_0)->Aggr(max(alice.tbl_0.plain_long_0),min(alice.tbl_0.plain_long_0),median(alice.tbl_0.plain_long_0),count(1))->Projection([Column#55 Column#56 Column#57])",
+      // order by
+      "DataScan(tbl_0)->Projection([alice.tbl_0.plain_long_0])->Sort(alice.tbl_0.plain_long_0)",
+      "DataScan(tbl_0)->Projection([alice.tbl_0.plain_long_0])->Sort(alice.tbl_0.plain_long_0 desc)",
+      "DataScan(tbl_0)->Sort(alice.tbl_0.plain_long_0 desc,alice.tbl_0.plain_long_1)->Projection([alice.tbl_0.plain_long_0])",
+      "DataScan(tbl_0)->Projection([alice.tbl_0.plain_long_0])->Limit",
+      // union
+      "UnionAll{DataScan(tbl_0)->Aggr(firstrow(alice.tbl_0.plain_long_0))->DataScan(tbl_1)->Aggr(firstrow(alice.tbl_1.plain_long_1))}->Aggr(firstrow(Column#110))",
+      "UnionAll{DataScan(tbl_0)->Projection([alice.tbl_0.plain_long_0])->DataScan(tbl_1)->Projection([alice.tbl_1.plain_long_1])}",
+      "UnionAll{UnionAll{DataScan(tbl_0)->Aggr(firstrow(alice.tbl_0.plain_long_0))->DataScan(tbl_1)->Aggr(firstrow(alice.tbl_1.plain_long_1))}->Aggr(firstrow(Column#165))->Projection([Column#163])->DataScan(tbl_2)->Projection([alice.tbl_2.plain_long_2])}",
+      "UnionAll{DataScan(tbl_0)->Sel([eq(alice.tbl_0.plain_long_0, 10) eq(alice.tbl_0.plain_long_1, 1)])->Aggr(firstrow(alice.tbl_0.plain_long_0))->DataScan(tbl_1)->Sel([eq(alice.tbl_1.plain_long_0, 11) eq(alice.tbl_1.plain_long_1, 2)])->Aggr(firstrow(alice.tbl_1.plain_long_0))}->Aggr(firstrow(Column#110))->Sort(Column#109)->Limit",
+      "UnionAll{DataScan(tbl_0)->Sel([eq(alice.tbl_0.plain_long_1, 2)])->Projection([alice.tbl_0.plain_long_0])->Limit->Aggr(firstrow(alice.tbl_0.plain_long_0))->DataScan(tbl_1)->Sel([eq(alice.tbl_1.plain_long_1, 1)])->Projection([alice.tbl_1.plain_long_0])->Limit->Aggr(firstrow(alice.tbl_1.plain_long_0))}->Aggr(firstrow(Column#110))->Limit",
+      "Join{DataScan(alice)->DataScan(bob)}([eq(alice.tbl_0.plain_long_0, bob.tbl_0.plain_long_0)],)->Aggr(count(1),sum(bob.tbl_0.plain_string_0),firstrow(alice.tbl_0.plain_string_0),firstrow(alice.tbl_0.plain_string_1))->Projection([alice.tbl_0.plain_string_0 alice.tbl_0.plain_string_1 Column#109 Column#110])",
+      "DataScan(tbl_0)->Aggr(count(1),sum(alice.tbl_0.plain_long_1),min(alice.tbl_0.plain_long_1),max(alice.tbl_0.plain_long_1),avg(alice.tbl_0.plain_long_1))->Projection([Column#55 Column#56 Column#57 Column#58 Column#59])",
+      "UnionAll{DataScan(tbl_0)->Aggr(sum(alice.tbl_0.plain_long_0))->DataScan(tbl_1)->Aggr(sum(alice.tbl_1.plain_long_1))}->Aggr(sum(Column#111))->Projection([Column#110])",
+      "UnionAll{DataScan(tbl_1)->Aggr(sum(alice.tbl_1.plain_long_0),firstrow(alice.tbl_1.plain_long_1),count(1))->DataScan(tbl_2)->Aggr(sum(alice.tbl_2.plain_long_0),firstrow(alice.tbl_2.plain_long_1),count(1))}->Aggr(sum(Column#113),firstrow(Column#114),count(Column#115))->Projection([Column#110 Column#111])",
+      "UnionAll{DataScan(tbl_1)->Aggr(max(alice.tbl_1.plain_long_0),firstrow(alice.tbl_1.plain_long_1),count(1))->DataScan(tbl_2)->Aggr(max(alice.tbl_2.plain_long_0),firstrow(alice.tbl_2.plain_long_1),count(1))}->Aggr(max(Column#113),firstrow(Column#114),count(Column#115))->Projection([Column#110 Column#111])",
+      "UnionAll{DataScan(tbl_1)->Aggr(min(alice.tbl_1.plain_long_0),firstrow(alice.tbl_1.plain_long_1),count(1))->DataScan(tbl_2)->Aggr(min(alice.tbl_2.plain_long_0),firstrow(alice.tbl_2.plain_long_1),count(1))}->Aggr(min(Column#113),firstrow(Column#114),count(Column#115))->Projection([Column#110 Column#111])",
+      "UnionAll{DataScan(tbl_1)->Projection([alice.tbl_1.plain_long_0 alice.tbl_1.plain_long_1])->DataScan(tbl_2)->Projection([alice.tbl_2.plain_long_0 alice.tbl_2.plain_long_1])}->Aggr(avg(Column#109),firstrow(Column#110),count(1))->Projection([Column#110 Column#111])",
+      "UnionAll{DataScan(tbl_1)->Projection([alice.tbl_1.plain_long_0 alice.tbl_1.plain_long_1])->DataScan(tbl_2)->Projection([alice.tbl_2.plain_long_0 alice.tbl_2.plain_long_1])}->Aggr(median(Column#109),firstrow(Column#110),count(1))->Projection([Column#110 Column#111])",
+      "UnionAll{DataScan(tbl_0)->Aggr(count(1),firstrow(alice.tbl_0.plain_long_1))->DataScan(tbl_0)->Aggr(count(1),firstrow(alice.tbl_0.plain_long_1))}->Aggr(count(Column#112),firstrow(Column#113))->Projection([Column#110 Column#111])",
+      "DataScan(tbl_1)->Aggr(sum(alice.tbl_1.plain_long_1),firstrow(alice.tbl_1.plain_long_0),count(1))->Sort(Column#55)->Projection([alice.tbl_1.plain_long_0])"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderSelectionWithOptimization",
+    "cases": [
+      "DataScan(tbl_0)->Aggr(sum(alice.tbl_0.plain_long_1),firstrow(alice.tbl_0.plain_long_0),count(1))->Sel([gt(Column#55, 0)])->Projection([alice.tbl_0.plain_long_0])",
+      "DataScan(tbl_0)->Aggr(sum(alice.tbl_0.plain_long_1),firstrow(alice.tbl_0.plain_long_0),count(1))->Sort(Column#55)->Projection([alice.tbl_0.plain_long_0])",
+      "DataScan(tbl_0)->Sel([gt(alice.tbl_0.plain_long_0, 10)])->Aggr(sum(alice.tbl_0.plain_long_1),firstrow(alice.tbl_0.plain_long_0),count(1))->Projection([alice.tbl_0.plain_long_0 Column#55])"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderWindowWithOptimization",
+    "cases": [
+      "DataScan(tbl_0)->Window(rank()->Column#56)->Projection([alice.tbl_0.plain_long_0 Column#56])"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderSubQueryWithOptimization",
+    "cases": [
+      "Apply{DataScan(tbl_0)->DataScan(tbl_0)}(o[eq(alice.tbl_0.plain_long_0, alice.tbl_0.plain_long_1)])->Projection([Column#109])",
+      "Apply{Join{DataScan(t0)->Sel([eq(alice.tbl_0.plain_long_0, 1234)])->DataScan(t1)->Sel([eq(alice.tbl_1.plain_long_1, 3456)])}->DataScan(tbl_0)}(o[eq(alice.tbl_0.plain_long_0, alice.tbl_0.plain_long_1)])->Projection([Column#163])"
+    ]
+  }
+]

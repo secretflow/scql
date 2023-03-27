@@ -1,0 +1,34 @@
+{
+  "queries": [
+    {
+      "name": "join on",
+      "query": "select alice.encrypt_float_1 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0 join scdb.carol_tbl_0 as carol on bob.join_long_1 = carol.join_long_1;",
+      "mysql_query": "select alice.encrypt_float_1 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0 join carol.tbl_0 as carol on bob.join_long_1 = carol.join_long_1;"
+    },
+    {
+      "name": "join where",
+      "query": "select alice.encrypt_float_1 from scdb.alice_tbl_0 as alice, scdb.bob_tbl_0 as bob, scdb.carol_tbl_0 as carol where alice.join_long_0 = bob.join_long_0 and bob.join_long_1 = carol.join_long_1;",
+      "mysql_query": "select alice.encrypt_float_1 from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_long_0 = bob.join_long_0 and bob.join_long_1 = carol.join_long_1;"
+    },
+    {
+      "name": "join where arithmetics",
+      "query": "select alice.plain_long_0 + bob.join_long_0 + carol.join_long_0 as add_res, alice.plain_long_0 - bob.join_long_0 - carol.join_long_0 as minus_res, alice.plain_long_0 * bob.join_long_0 * carol.join_long_0 as multi_res, alice.plain_long_0 / (bob.join_long_0 * bob.join_long_0+ 1)/ (carol.join_long_0 * carol.join_long_0+ 1) as div_res from scdb.alice_tbl_0 as alice, scdb.bob_tbl_0 as bob, scdb.carol_tbl_0 as carol where alice.join_long_0 = bob.join_long_0 and bob.join_long_0 = carol.join_long_0;",
+      "mysql_query": "select alice.plain_long_0 + bob.join_long_0 + carol.join_long_0 as add_res, alice.plain_long_0 - bob.join_long_0 - carol.join_long_0 as minus_res, alice.plain_long_0 * bob.join_long_0 * carol.join_long_0 as multi_res, alice.plain_long_0 / (bob.join_long_0 * bob.join_long_0 + 1) / (carol.join_long_0 * carol.join_long_0 + 1) as div_res from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_long_0 = bob.join_long_0 and bob.join_long_0 = carol.join_long_0;"
+    },
+    {
+      "name": "join where compare",
+      "query": "select alice.plain_long_0 > bob.join_long_0 as greater_res, alice.plain_long_0 < carol.join_long_0 as less_res, alice.plain_long_0 = carol.join_long_0 as equal_res, alice.plain_long_0 != carol.join_long_0 as unequal_res from scdb.alice_tbl_0 as alice, scdb.bob_tbl_0 as bob, scdb.carol_tbl_0 as carol where alice.join_long_0 = bob.join_long_0 and bob.join_long_0 = carol.join_long_0;",
+      "mysql_query": "select alice.plain_long_0 > bob.join_long_0 as greater_res, alice.plain_long_0 < carol.join_long_0 as less_res, alice.plain_long_0 = carol.join_long_0 as equal_res, alice.plain_long_0 != carol.join_long_0 as unequal_res from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_long_0 = bob.join_long_0 and bob.join_long_0 = carol.join_long_0;"
+    },
+    {
+      "name": "join group by",
+      "query": "select count(*) as c, count(distinct bob.encrypt_long_0) as cd, sum(bob.aggregate_long_0) as sb, sum(carol.aggregate_long_0) as sc from scdb.alice_tbl_0 as alice, scdb.bob_tbl_0 as bob, scdb.carol_tbl_0 as carol where alice.join_long_0 = bob.join_long_0 and bob.join_long_0 = carol.join_long_0 group by alice.groupby_long_0 + bob.groupby_long_0, carol.groupby_long_0 + bob.groupby_long_0;",
+      "mysql_query": "select count(*) as c, count(distinct bob.encrypt_long_0) as cd, sum(bob.aggregate_long_0) as sb, sum(carol.aggregate_long_0) as sc from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_long_0 = bob.join_long_0 and bob.join_long_0 = carol.join_long_0 group by alice.groupby_long_0 + bob.groupby_long_0, carol.groupby_long_0 + bob.groupby_long_0 having count(*) > 3;"
+    },
+    {
+      "name": "join group by",
+      "query": "select count(*) as c, count(distinct bob.encrypt_long_0) as cd, sum(bob.aggregate_long_0) as sb, sum(carol.aggregate_long_0) as sc from scdb.alice_tbl_0 as alice, scdb.bob_tbl_0 as bob, scdb.carol_tbl_0 as carol where alice.join_long_0 = bob.join_long_0 and bob.join_long_0 = carol.join_long_0 group by alice.groupby_long_0, bob.groupby_long_0, carol.groupby_long_0, carol.groupby_string_0;",
+      "mysql_query": "select count(*) as c, count(distinct bob.encrypt_long_0) as cd, sum(bob.aggregate_long_0) as sb, sum(carol.aggregate_long_0) as sc from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_long_0 = bob.join_long_0 and bob.join_long_0 = carol.join_long_0 group by alice.groupby_long_0, bob.groupby_long_0, carol.groupby_long_0, carol.groupby_string_0 having count(*) > 3;"
+    }
+  ]
+}

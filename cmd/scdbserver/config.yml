@@ -1,0 +1,25 @@
+scdb_host: http://localhost:8080
+port: 8080
+protocol: "http"
+query_result_callback_timeout_ms: 200
+session_expire_ms: 3600
+check_session_expire_interval_ms: 100
+log_level: debug
+storage:
+  type: sqlite
+  conn_str: scdb.db
+  max_idle_conns: 10
+  max_open_conns: 100
+  conn_max_idle_time: 2m
+  conn_max_lifetime: 5m
+grm:
+  grm_mode: toygrm
+  toy_grm_conf: pkg/grm/toygrm/testdata/toy_grm.json
+engine:
+  timeout: 120 # second
+  protocol: "http"
+  content_type: application/json
+  spu:
+    protocol: SEMI2K
+    field: FM64
+    sigmoid_mode: SIGMOID_REAL

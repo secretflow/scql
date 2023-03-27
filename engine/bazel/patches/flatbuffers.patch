@@ -1,0 +1,31 @@
+diff --git a/BUILD.bazel b/BUILD.bazel
+index 4a14450f..ecbc979b 100644
+--- a/BUILD.bazel
++++ b/BUILD.bazel
+@@ -24,6 +24,13 @@ config_setting(
+     ],
+ )
+ 
++config_setting(
++    name = "platform_linux",
++    constraint_values = [
++        "@platforms//os:linux",
++    ],
++)
++
+ # Public flatc library to compile flatbuffer files at runtime.
+ cc_library(
+     name = "flatbuffers",
+diff --git a/src/BUILD.bazel b/src/BUILD.bazel
+index 28bc5513..9bda7d8a 100644
+--- a/src/BUILD.bazel
++++ b/src/BUILD.bazel
+@@ -24,6 +24,8 @@ cc_library(
+         # https://github.com/bazelbuild/bazel/issues/12023.
+         "//:platform_freebsd": ["-lm"],
+         "//:platform_openbsd": ["-lm"],
++        # Fix undefined reference to 'sin' error on centos
++        "//:platform_linux":   ["-lm"],
+         "//conditions:default": [],
+     }),
+     strip_include_prefix = "/include",
