@@ -1,0 +1,71 @@
+//
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+package scql.engine.link.pb;
+
+option cc_generic_services = true;
+
+// Multiplexing Receiver Service
+service MuxReceiverService {
+  // push the data to receiver's local database.
+  rpc Push(MuxPushRequest) returns (MuxPushResponse);
+}
+
+message MuxPushRequest {
+  // uuid, for multi link context multiplexing
+  // usually, it is session id
+  string link_id = 1;
+
+  Message msg = 2;
+}
+
+message MuxPushResponse {
+  ErrorCode error_code = 1;
+  string error_msg = 2;
+}
+
+// Message pushed to receiver
+message Message {
+  uint64 sender_rank = 1;
+  // key of the message.
+  string key = 2;
+  // value of the message.
+  bytes value = 3;
+  // chunk related.
+  TransType trans_type = 4;
+  ChunkInfo chunk_info = 5;
+}
+
+enum TransType {
+  MONO = 0;
+  CHUNKED = 1;
+}
+
+enum ErrorCode {
+  SUCCESS = 0;
+  UNEXPECTED_ERROR = 1;
+  INVALID_REQUEST = 2;
+  INVALID_RESOURCE = 3;
+  NETWORK_ERROR = 4;
+  LINKID_NOT_FOUND = 5;
+}
+
+message ChunkInfo {
+  uint64 message_length = 1;
+  uint64 chunk_offset = 2;
+}

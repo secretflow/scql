@@ -1,0 +1,22 @@
+{
+  "alice": {
+    "UserName": "alice",
+    "Password": "alice123",
+    "GrmToken": "token_alice"
+  },
+  "bob": {
+    "UserName": "bob",
+    "Password": "bob123",
+    "GrmToken": "token_bob"
+  },
+  "carol": {
+    "UserName": "carol",
+    "Password": "carol123",
+    "GrmToken": "token_carol"
+  },
+  "root": {
+    "UserName": "root",
+    "Password": "root",
+    "GrmToken": ""
+  }
+}

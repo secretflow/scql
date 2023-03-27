@@ -1,0 +1,60 @@
+{
+  "engine": {
+    "read_token": ["my_alice", "my_bob"],
+    "engines_info": [
+      {
+        "party": "alice",
+        "url": ["alice.com"],
+        "credential": ["alice_credential"]
+      },
+      { "party": "bob", "url": ["bob.com"], "credential": ["bob_credential"] },
+      {
+        "party": "carol",
+        "url": ["carol.com"],
+        "credential": ["carol_credential"]
+      }
+    ]
+  },
+  "table": {
+    "read_token": ["my_alice", "my_bob"],
+    "ownerships": [
+      { "tids": ["tid1", "tid2"], "token": "my_alice" },
+      { "tids": ["tid3"], "token": "my_bob" }
+    ],
+    "table_schema": [
+      {
+        "tid": "tid1",
+        "schema": {
+          "ref_db_name": "d1",
+          "ref_table_name": "t1",
+          "columns": [
+            { "column_name": "c1", "column_type": "long" },
+            { "column_name": "c2", "column_type": "long" }
+          ]
+        }
+      },
+      {
+        "tid": "tid2",
+        "schema": {
+          "ref_db_name": "d1",
+          "ref_table_name": "t2",
+          "columns": [
+            { "column_name": "c1", "column_type": "string" },
+            { "column_name": "c2", "column_type": "long" }
+          ]
+        }
+      },
+      {
+        "tid": "tid3",
+        "schema": {
+          "ref_db_name": "d1",
+          "ref_table_name": "t3",
+          "columns": [
+            { "column_name": "c1", "column_type": "string" },
+            { "column_name": "c2", "column_type": "long" }
+          ]
+        }
+      }
+    ]
+  }
+}

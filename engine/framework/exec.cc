@@ -1,0 +1,76 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include "engine/framework/exec.h"
+
+#include "yacl/base/exception.h"
+
+#include "engine/util/tensor_util.h"
+
+namespace scql::engine {
+
+ExecContext::ExecContext(const pb::ExecNode& node, Session* session)
+    : node_(node), session_(session) {}
+
+const std::string& ExecContext::GetNodeName() const {
+  return node_.node_name();
+}
+
+const std::string& ExecContext::GetOpType() const { return node_.op_type(); }
+
+const google::protobuf::RepeatedPtrField<pb::Tensor>& ExecContext::GetInput(
+    const std::string& name) const {
+  YACL_ENFORCE(node_.inputs().count(name) > 0,
+               "the input {} of op {} does not exist", name, node_.op_type());
+  return node_.inputs().at(name).tensors();
+}
+
+const google::protobuf::RepeatedPtrField<pb::Tensor>& ExecContext::GetOutput(
+    const std::string& name) const {
+  YACL_ENFORCE(node_.outputs().count(name) > 0,
+               "the output {} of op {} does not exist", name, node_.op_type());
+  return node_.outputs().at(name).tensors();
+}
+
+const pb::AttributeValue& ExecContext::GetAttribute(
+    const std::string& name) const {
+  YACL_ENFORCE(node_.attributes().count(name) > 0,
+               "The attribute {} of op {} does not exist", name,
+               node_.op_type());
+  return node_.attributes().at(name);
+}
+
+std::vector<std::string> ExecContext::GetStringValuesFromAttribute(
+    const std::string& name) const {
+  const auto& attr = GetAttribute(name);
+  return util::GetStringValues(attr.t());
+}
+
+std::string ExecContext::GetStringValueFromAttribute(
+    const std::string& name) const {
+  const auto& attr = GetAttribute(name);
+  return util::GetStringValue(attr.t());
+}
+
+int64_t ExecContext::GetInt64ValueFromAttribute(const std::string& name) const {
+  const auto& attr = GetAttribute(name);
+  return util::GetInt64Value(attr.t());
+}
+
+bool ExecContext::GetBooleanValueFromAttribute(const std::string& name) const {
+  const auto& attr = GetAttribute(name);
+  return util::GetBooleanValue(attr.t());
+}
+
+}  // namespace scql::engine

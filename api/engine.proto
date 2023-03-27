@@ -1,0 +1,154 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+package scql.pb;
+
+option go_package = "proto-gen/scql";
+
+import "google/protobuf/empty.proto";
+import "libspu/spu.proto";
+import "api/common.proto";
+import "api/core.proto";
+import "api/status.proto";
+
+option cc_generic_services = true;
+
+service SCQLEngineService {
+  // Start session
+  rpc StartSession(StartSessionRequest) returns (StartSessionResponse);
+  // Submit run-dag task and return, task result will be reported via callback
+  // later.
+  rpc RunDag(RunDagRequest) returns (RunDagResponse);
+  // Stop session
+  rpc StopSession(StopSessionRequest) returns (StopSessionResponse);
+  // Run the whole execution plan
+  rpc RunExecutionPlan(RunExecutionPlanRequest)
+      returns (RunExecutionPlanResponse);
+};
+
+// EngineResultCallback
+service EngineResultCallback {
+  // Engine report the RunDag result to SCDB.
+  rpc Report(ReportRequest) returns (google.protobuf.Empty);
+}
+
+message StartSessionRequest {
+  SessionStartParams session_params = 1;
+}
+
+message StartSessionResponse {
+  Status status = 1;
+}
+
+message RunDagRequest {
+  repeated ExecNode nodes = 1;
+  string session_id = 2;
+  // ID of this sub DAG.
+  int32 dag_id = 3;
+  // Callback host, e.g.: "alice.com:8080", used to report run-dag result later.
+  string callback_host = 4;
+  // Callback uri, e.g.: "/a/b".
+  string callback_uri = 5;
+}
+
+message RunDagResponse {
+  Status status = 1;
+}
+
+message StopSessionRequest {
+  string session_id = 1;
+  // session stop reason, it maybe
+  // - "Finish". Session ended normally.
+  // - "Timeout". Session timeout.
+  // - "Canceled". Session canceled by client, maybe triggered by CTRL+C
+  // - "Error". Exception caught when running.
+  // - "Killed". Killed by client.
+  // - or something else.
+  string reason = 2;
+}
+
+message StopSessionResponse {
+  Status status = 1;
+}
+
+// A message carries all session-level (execution plan level) information.
+message SessionStartParams {
+  message Party {
+    // party code
+    string code = 1;
+    // party name
+    string name = 2;
+    // party host
+    string host = 3;
+    // party rank
+    int32 rank = 4;
+  }
+
+  // This party code.
+  // It may be used to get this party information from <parties> below.
+  string party_code = 1;
+
+  // All parties that would jointly complete an execution plan.
+  repeated Party parties = 2;
+
+  // The session id
+  string session_id = 3;
+
+  // The spu runtime configuration.
+  spu.RuntimeConfig spu_runtime_cfg = 4;
+}
+
+message SubDAG {
+  message Job {
+    int32 worker_id = 1;
+    repeated string node_ids = 2;
+  }
+
+  repeated Job jobs = 1;
+  // a barrier to sync among parties
+  bool need_call_barrier_after_jobs = 2;
+  bool need_sync_symbol_before_jobs = 3;
+}
+
+message SchedulingPolicy {
+  int32 worker_num = 1;
+  repeated SubDAG subdags = 2;
+}
+
+message RunExecutionPlanRequest {
+  SessionStartParams session_params = 1;
+
+  map<string, ExecNode> nodes = 2;  // json only takes string as key
+
+  SchedulingPolicy policy = 3;
+
+  // Whether the whole execution plan on the engine should be executed
+  // synchronously or asynchronously. By default, the execution plan is executed
+  // synchronously.
+  bool async = 4;
+}
+
+message RunExecutionPlanResponse {
+  Status status = 1;
+  // Output columns used to store result datas.
+  repeated Tensor out_columns = 2;
+  string session_id = 3;
+  // Code of party which finished the execution plan.
+  string party_code = 4;
+  // The number of rows affected by a select into, update, insert, or delete.
+  int64 num_rows_affected = 5;
+}

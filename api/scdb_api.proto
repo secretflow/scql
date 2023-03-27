@@ -1,0 +1,127 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+package scql.pb;
+
+import "api/core.proto";
+import "google/protobuf/empty.proto";
+import "api/common.proto";
+import "api/status.proto";
+
+option go_package = "proto-gen/scql";
+
+// SCDBService provides a collection of APIs,
+// that client-user can connect to the SCQL system, execute queries and fetch
+// results.
+service SCDBService {
+  // Asynchronous query interface.
+  // Submit the query (DDL/DML/DQL) to SCQL, and return immediately.
+  // It will allocate a new `scdb_session_id` for the query, and set it in
+  // response.
+  rpc Submit(SCDBQueryRequest) returns (SCDBSubmitResponse);
+  // Fetch the result of the query submitted asynchronously.
+  // It will return `NOT_READY` status code if the query is still running.
+  rpc Fetch(SCDBFetchRequest) returns (SCDBQueryResultResponse);
+
+  // The synchronous query interface allows users to submit a query,
+  // wait for it to finish, and get the query result in one RPC.
+  // This interface is suitable for executing fast queries,
+  // such as DDL, DML, and simple DQL. However,
+  // if the query takes a long time to run, it may result in a timeout.
+  // Therefore, it is recommended to use the synchronous query API to run complex queries.
+  rpc SubmitAndGet(SCDBQueryRequest) returns (SCDBQueryResultResponse);
+}
+
+// SCDBQueryResultCallback defines an API that SCQL could use it to notify the
+// caller when the query result is ready, either because it has finished successfully or an error has occurred.
+service SCDBQueryResultCallback {
+  // ReportQueryResult reports the query result once the query job done.
+  rpc ReportQueryResult(SCDBQueryResultResponse)
+      returns (google.protobuf.Empty);
+}
+
+// SCDBQueryRequest designed for Client(Biz Service) which allow callback url
+// and traceid
+message SCDBQueryRequest {
+  RequestHeader header = 1;
+  SCDBCredential user = 2;
+  // SCQL query to be run.
+  string query = 3;
+  // Optional call back URL to report query result.
+  // If provided, it should implements the
+  // `SCDBQueryResultCallback.ReportQueryResult` method.
+  string query_result_callback_url = 4;
+  // Biz request id(trace_id provided by the biz client), which often be unique
+  // per biz action, e.g. can be value of order_id, transaction_id, etc.
+  string biz_request_id = 5;
+
+  // Current database name
+  string db_name = 6;
+}
+
+message SCDBSubmitResponse {
+  // Status of response
+  Status status = 1;
+  // scdb session id
+  string scdb_session_id = 2;
+}
+
+message SCDBFetchRequest {
+  RequestHeader header = 1;
+  SCDBCredential user = 2;
+  // scdb session id
+  string scdb_session_id = 3;
+}
+
+// SCDB query result representation (table view by columns).
+message SCDBQueryResultResponse {
+  // Status of response
+  Status status = 1;
+  // Output columns.
+  repeated Tensor out_columns = 2;
+  // scdb session id
+  string scdb_session_id = 3;
+
+  // the number of rows affected by a select into, update, insert, or delete
+  int64 affected_rows = 4;
+
+  ExecutionProgress execution_process = 5;
+}
+
+message User {
+  enum AccountSystemType {
+    UNKNOWN = 0;
+    NATIVE_USER = 1;
+  }
+
+  message NativeUser {
+    // e.g. "zhang_san"
+    string name = 1;
+    // e.g. "123456"
+    string password = 2;
+  }
+
+  AccountSystemType account_system_type = 1;
+  oneof user {
+    NativeUser native_user = 2;
+  }
+}
+
+message SCDBCredential {
+  User user = 1;
+  string grm_token = 2;
+}

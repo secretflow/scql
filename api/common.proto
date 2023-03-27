@@ -1,0 +1,45 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+import "api/core.proto";
+import "api/status.proto";
+
+package scql.pb;
+option go_package = "proto-gen/scql";
+
+// RequestHeader carries the user custom headers.
+message RequestHeader {
+  // Custom headers used to record custom information.
+  map<string, string> custom_headers = 1;
+}
+
+// After finishing running a DAG, the Engine sends a ReportRequest
+// to SCDB to return the results.
+message ReportRequest {
+  // Status including whether the dag run was handled successfully,
+  // if not, error message and some more information included.
+  Status status = 1;
+  // Output columns.
+  repeated Tensor out_columns = 2;
+  // The id of finished sub DAG.
+  int32 dag_id = 3;
+  // The session_id that this sub dag belongs to.
+  string session_id = 4;
+  // Code of party which finished the dag run.
+  string party_code = 5;
+  // The number of rows affected by a select into, update, insert, or delete.
+  int64 num_rows_affected = 6;
+}

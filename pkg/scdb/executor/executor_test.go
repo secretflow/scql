@@ -1,0 +1,1521 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package executor
+
+import (
+	"fmt"
+	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
+
+	"github.com/secretflow/scql/pkg/grm/toygrm"
+	"github.com/secretflow/scql/pkg/infoschema"
+	"github.com/secretflow/scql/pkg/parser/ast"
+	"github.com/secretflow/scql/pkg/parser/auth"
+	"github.com/secretflow/scql/pkg/parser/model"
+	"github.com/secretflow/scql/pkg/parser/mysql"
+	"github.com/secretflow/scql/pkg/privilege"
+	"github.com/secretflow/scql/pkg/privilege/privileges"
+	"github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/scdb/storage"
+	"github.com/secretflow/scql/pkg/sessionctx"
+	"github.com/secretflow/scql/pkg/sessionctx/stmtctx"
+	"github.com/secretflow/scql/pkg/types"
+)
+
+type userAuth struct {
+	hostName string
+	userName string
+	password string
+	grmToken string
+}
+
+var (
+	userRoot = &userAuth{
+		hostName: `%`,
+		userName: `root`,
+		password: `root`,
+		grmToken: `my_root`,
+	}
+	userAlice = &userAuth{
+		hostName: `%`,
+		userName: `alice`,
+		password: `some_pwd`,
+		grmToken: `my_alice`,
+	}
+	userBob = &userAuth{
+		hostName: `%`,
+		userName: `bob`,
+		password: `some_pwd`,
+		grmToken: `my_bob`,
+	}
+)
+
+func (u *userAuth) encodedPassword() string {
+	spec := &ast.UserSpec{
+		User: &auth.UserIdentity{
+			Username: u.userName,
+			Hostname: u.hostName,
+		},
+		AuthOpt: &ast.AuthOption{
+			ByAuthString: true,
+			AuthString:   u.password,
+		},
+	}
+	encodedPwd, _ := spec.EncodedPassword()
+	return encodedPwd
+}
+
+func (u *userAuth) toUserIdentity() *auth.UserIdentity {
+	return &auth.UserIdentity{Username: u.userName, Hostname: u.hostName}
+}
+
+func mockStorage() (*gorm.DB, error) {
+	db, err := storage.NewMemoryStorage()
+	if err != nil {
+		return nil, err
+	}
+
+	// Bootstrap
+	result := db.Create(&storage.User{
+		Host:           `%`,
+		User:           `root`,
+		Password:       userRoot.encodedPassword(),
+		CreatePriv:     true,
+		CreateUserPriv: true,
+		GrantPriv:      true,
+		DropPriv:       true,
+		DescribePriv:   true,
+		ShowPriv:       true,
+		CreateViewPriv: true,
+	})
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	// check if bootstrap succeeded
+	if exist, err := storage.CheckUserExist(db, "root", `%`); err != nil || !exist {
+		if err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf("bootstrap failed")
+	}
+
+	return db, nil
+}
+
+func mockUserSession(ctx sessionctx.Context, user *userAuth, storage *gorm.DB) error {
+	ctx.GetSessionVars().Storage = storage
+	toyGrmClient, err := toygrm.New("../../grm/toygrm/testdata/toy_grm.json")
+	if err != nil {
+		return fmt.Errorf("user creat grm error")
+	}
+	ctx.GetSessionVars().GrmClient = toyGrmClient
+	return switchUser(ctx, user)
+}
+
+func mockContext() sessionctx.Context {
+	ctx := sessionctx.NewContext()
+	ctx.GetSessionVars().StmtCtx = &stmtctx.StatementContext{}
+	return ctx
+}
+
+func switchUser(ctx sessionctx.Context, user *userAuth) error {
+	pm := &privileges.UserPrivileges{
+		Handle: privileges.NewHandle(ctx),
+	}
+	if _, _, ok := pm.ConnectionVerification(user.userName, user.hostName, user.password, nil, nil); !ok {
+		return fmt.Errorf("user verification error")
+	}
+	privilege.BindPrivilegeManager(ctx, pm)
+
+	ctx.GetSessionVars().User = user.toUserIdentity()
+	ctx.GetSessionVars().GrmToken = user.grmToken
+	return nil
+}
+
+func columnPrivilegesExists(store *gorm.DB, user, dbName, tblName, colName string, priv mysql.PrivilegeType) (bool, error) {
+	var colPrivRecord storage.ColumnPriv
+	result := store.Where(&storage.ColumnPriv{User: user, Host: "%", Db: dbName, TableName: tblName, ColumnName: colName}).Find(&colPrivRecord)
+	if result.Error != nil {
+		return false, result.Error
+	}
+	if result.RowsAffected != 1 {
+		return false, nil
+	}
+
+	if colPrivRecord.User != user || colPrivRecord.Db != dbName || colPrivRecord.ColumnName != colName || colPrivRecord.VisibilityPriv != priv {
+		return false, nil
+	}
+	return true, nil
+}
+
+// setupTestEnv setup test environment and login as root user
+func setupTestEnv(t *testing.T) sessionctx.Context {
+	r := require.New(t)
+
+	db, err := mockStorage()
+	r.NoError(err)
+
+	ctx := mockContext()
+
+	err = mockUserSession(ctx, userRoot, db)
+	r.NoError(err)
+
+	return ctx
+}
+
+func runSQL(ctx sessionctx.Context, stmt string) ([]*scql.Tensor, error) {
+	is := infoschema.MockInfoSchema(map[string][]*model.TableInfo{})
+	return Run(ctx, stmt, is)
+}
+
+func runSQLWithInfoschema(ctx sessionctx.Context, stmt string, is infoschema.InfoSchema) ([]*scql.Tensor, error) {
+	return Run(ctx, stmt, is)
+}
+
+func TestCreateUser(t *testing.T) {
+	r := require.New(t)
+
+	db, err := mockStorage()
+	r.NoError(err)
+
+	t.Run("NormalCreateUserTest", func(t *testing.T) {
+		ctx := mockContext()
+		r.NoError(mockUserSession(ctx, userRoot, db))
+
+		// success
+		_, err := runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
+		r.NoError(err)
+
+		// success
+		_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+
+		// failed due to user exists
+		_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.Error(err)
+
+		users := []storage.User{}
+		result := ctx.GetSessionVars().Storage.Order(`id`).Find(&users)
+		r.NoError(result.Error)
+		r.Equal(3, len(users))
+		r.Equal("root", users[0].User)
+		r.Equal("alice", users[1].User)
+		r.Equal("party_A", users[1].PartyCode)
+		r.Equal("bob", users[2].User)
+	})
+
+	t.Run("CreateUserFailedTest", func(t *testing.T) {
+		ctx := mockContext()
+		r.NoError(mockUserSession(ctx, userBob, db))
+
+		// failed due to no create user privilege
+		_, err := runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.Error(err)
+	})
+}
+
+func TestDropUser(t *testing.T) {
+	r := require.New(t)
+
+	db, err := mockStorage()
+	r.NoError(err)
+
+	t.Run("NormalDropUserTest", func(t *testing.T) {
+		ctx := mockContext()
+		r.NoError(mockUserSession(ctx, userRoot, db))
+
+		// create user `bob` before dropping it
+		_, err := runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+
+		// failed since user bob has no create user privilege
+		r.NoError(switchUser(ctx, userBob))
+		_, err = runSQL(ctx, `DROP USER alice`)
+		r.Error(err)
+		r.NoError(switchUser(ctx, userRoot))
+
+		// success
+		_, err = runSQL(ctx, `DROP USER bob`)
+		r.NoError(err)
+
+		// error since user bob no longer exists
+		r.Error(mockUserSession(ctx, userBob, db))
+
+		// failed due to drop an non-existed user
+		_, err = runSQL(ctx, `DROP USER bob`)
+		r.Error(err)
+
+		// success to drop a non-existed user with `IF EXISTS`
+		_, err = runSQL(ctx, `DROP USER IF EXISTS bob`)
+		r.NoError(err)
+	})
+
+	t.Run("DropUserAndDeleteAllPriv", func(t *testing.T) {
+		// root> create user alice
+		// root> grant create on *.* to alice
+		// alice> create database da;  -- success
+		// root> grant delete on da.* to alice
+		// root> drop user alice
+		// root> create user alice
+		ctx := mockContext()
+		r.NoError(mockUserSession(ctx, userRoot, db))
+
+		// root> create user alice
+		_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+
+		// root> grant create on *.* to alice
+		_, err = runSQL(ctx, `GRANT CREATE ON *.* TO alice`)
+		r.NoError(err)
+
+		// switch to user alice
+		r.NoError(switchUser(ctx, userAlice))
+
+		// alice> create database da
+		_, err = runSQL(ctx, `CREATE DATABASE da`)
+		r.NoError(err)
+
+		// switch to user root
+		r.NoError(switchUser(ctx, userRoot))
+
+		// root> grant drop privilege
+		_, err = runSQL(ctx, `GRANT DROP ON da.* TO alice`)
+		r.NoError(err)
+
+		// switch to user root
+		r.NoError(switchUser(ctx, userRoot))
+
+		// root> drop user alice
+		_, err = runSQL(ctx, `DROP USER alice`)
+		r.NoError(err)
+
+		// root> create user alice
+		_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+
+		// switch to user alice
+		r.NoError(switchUser(ctx, userAlice))
+	})
+}
+
+func TestCreateDatabase(t *testing.T) {
+	r := require.New(t)
+
+	db, err := mockStorage()
+	r.NoError(err)
+
+	t.Run("NormalCreateDatabaseTest", func(t *testing.T) {
+		ctx := mockContext()
+		r.NoError(mockUserSession(ctx, userRoot, db))
+
+		// success
+		_, err := runSQL(ctx, `CREATE DATABASE test`)
+		r.NoError(err)
+
+		// success
+		_, err = runSQL(ctx, `CREATE DATABASE IF NOT EXISTS test`)
+		r.NoError(err)
+
+		// failed due to database exists
+		_, err = runSQL(ctx, `CREATE DATABASE test`)
+		r.Error(err)
+
+	})
+
+	t.Run("CreateDatabaseFailedTest", func(t *testing.T) {
+		ctx := mockContext()
+		r.NoError(mockUserSession(ctx, userRoot, db))
+
+		// create user success
+		_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+
+		ctx.GetSessionVars().User = &auth.UserIdentity{Username: `alice`}
+		// failed due to lack of privilege
+		_, err = runSQL(ctx, `CREATE DATABASE test2`)
+		r.Error(err)
+	})
+}
+
+func TestDropDatabase(t *testing.T) {
+	r := require.New(t)
+
+	db, err := mockStorage()
+	r.NoError(err)
+
+	t.Run("NormalDropDatabaseTest", func(t *testing.T) {
+		ctx := mockContext()
+		r.NoError(mockUserSession(ctx, userRoot, db))
+
+		// success
+		_, err := runSQL(ctx, `DROP DATABASE IF EXISTS test`)
+		r.NoError(err)
+
+		// failed due to database test not exists
+		_, err = runSQL(ctx, `DROP DATABASE test`)
+		r.Error(err)
+	})
+
+	t.Run("DropDatabaseAndDeletePrivTest", func(t *testing.T) {
+		// testcase: Drop database will delete related privileges
+		// root> CREATE DATABASE da;
+		// root> CREATE USER alice...
+		// root> GRANT CREATE ON da.* TO alice...
+		// root> DROP DATABASE da;
+		// root> CREATE DATABASE da;
+		ctx := mockContext()
+		r.NoError(mockUserSession(ctx, userRoot, db))
+
+		// root> create database
+		_, err := runSQL(ctx, `CREATE DATABASE da`)
+		r.NoError(err)
+
+		// root> create user alice
+		_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+
+		// root> grant create on da.* to alice...
+		_, err = runSQL(ctx, `GRANT CREATE ON da.* TO alice`)
+		r.NoError(err)
+
+		// switch to user root
+		r.NoError(switchUser(ctx, userRoot))
+
+		// root> drop database da
+		_, err = runSQL(ctx, `DROP DATABASE da`)
+		r.NoError(err)
+
+		// root> create database da
+		_, err = runSQL(ctx, `CREATE DATABASE da`)
+		r.NoError(err)
+	})
+
+}
+
+func TestCreateView(t *testing.T) {
+	r := require.New(t)
+
+	db, err := mockStorage()
+	r.NoError(err)
+
+	{
+		ctx := mockContext()
+		r.NoError(mockUserSession(ctx, userRoot, db))
+
+		// root> create user alice
+		_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+
+		// root> grant create on *.* to alice
+		_, err = runSQL(ctx, `GRANT CREATE ON *.* TO alice`)
+		r.NoError(err)
+
+		// root> grant create view on *.* to alice
+		_, err = runSQL(ctx, `GRANT CREATE VIEW ON *.* TO alice`)
+		r.NoError(err)
+
+		// root> grant drop view on *.* to alice
+		_, err = runSQL(ctx, `GRANT DROP ON *.* TO alice`)
+		r.NoError(err)
+
+		// switch to user alice
+		r.NoError(switchUser(ctx, userAlice))
+
+		// success
+		_, err = runSQL(ctx, `CREATE DATABASE test`)
+		r.NoError(err)
+
+		// success
+		_, err = runSQL(ctx, `CREATE TABLE test.new_table tid = "tid1"`)
+		r.NoError(err)
+
+		is1, err := storage.QueryDBInfoSchema(db, "test")
+		r.NoError(err)
+
+		// NOTE: create view does not support a table has two column like c1 and C1
+		_, err = runSQLWithInfoschema(ctx, `CREATE VIEW test.view1 AS SELECT tn.c1 + tn.c2 as view1_c1 FROM test.new_table as tn`, is1)
+		r.NoError(err)
+		_, err = runSQLWithInfoschema(ctx, `CREATE VIEW test.view2 AS SELECT new_table.c2 FROM test.new_table`, is1)
+		r.NoError(err)
+
+		// create view with same name, failed
+		_, err = runSQLWithInfoschema(ctx, `CREATE VIEW test.view2 AS SELECT new_table.c2 FROM test.new_table`, is1)
+		r.Error(err)
+
+		// create or replace view the same name, success
+		_, err = runSQLWithInfoschema(ctx, `CREATE OR REPLACE VIEW test.view2 AS SELECT new_table.c2 as view2_c1 FROM test.new_table`, is1)
+		r.NoError(err)
+
+		// create view from views
+		is2, err := storage.QueryDBInfoSchema(db, "test")
+		r.NoError(err)
+		_, err = runSQLWithInfoschema(ctx, `CREATE VIEW test.view3 AS SELECT view1.view1_c1 + view2.view2_c1 as c4 FROM test.view1 JOIN test.view2`, is2)
+		r.NoError(err)
+
+		// show full table
+		rt, err := runSQL(ctx, `SHOW FULL TABLES FROM test`)
+		r.NoError(err)
+		r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+		r.Equal(int64(4), rt[0].GetShape().GetDim()[0].GetDimValue())
+		r.Equal("Tables_in_test", rt[0].GetName())
+		r.Equal("new_table", rt[0].GetSs().GetSs()[0])
+		r.Equal("view1", rt[0].GetSs().GetSs()[1])
+		r.Equal("view2", rt[0].GetSs().GetSs()[2])
+		r.Equal("view3", rt[0].GetSs().GetSs()[3])
+		r.Equal("Table_type", rt[1].GetName())
+		r.Equal(TableTypeBase, rt[1].GetSs().GetSs()[0])
+		r.Equal(TableTypeView, rt[1].GetSs().GetSs()[1])
+		r.Equal(TableTypeView, rt[1].GetSs().GetSs()[2])
+		r.Equal(TableTypeView, rt[1].GetSs().GetSs()[3])
+
+		is3, err := storage.QueryDBInfoSchema(db, "test")
+		r.NoError(err)
+
+		// describe view
+		rt, err = runSQLWithInfoschema(ctx, `DESCRIBE test.view3`, is3)
+		r.NoError(err)
+		r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
+		r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+		r.Equal("Field", rt[0].GetName())
+		r.Equal("c4", rt[0].GetSs().GetSs()[0])
+		r.Equal("Type", rt[1].GetName())
+		r.Equal("int", rt[1].GetSs().GetSs()[0])
+
+		// drop view
+		_, err = runSQL(ctx, `DROP VIEW test.view2`)
+		r.NoError(err)
+
+		// show full table again
+		rt, err = runSQL(ctx, `SHOW FULL TABLES FROM test`)
+		r.NoError(err)
+		r.Equal(int64(3), rt[0].GetShape().GetDim()[0].GetDimValue())
+	}
+}
+
+func TestCreateTable(t *testing.T) {
+	r := require.New(t)
+
+	db, err := mockStorage()
+	r.NoError(err)
+
+	{
+		ctx := mockContext()
+		r.NoError(mockUserSession(ctx, userRoot, db))
+
+		// root> create user alice
+		_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+
+		// root> grant create on *.* to alice
+		_, err = runSQL(ctx, `GRANT CREATE ON *.* TO alice`)
+		r.NoError(err)
+
+		// switch to user alice
+		r.NoError(switchUser(ctx, userAlice))
+
+		// success
+		_, err = runSQL(ctx, `CREATE DATABASE test`)
+		r.NoError(err)
+
+		// success
+		_, err = runSQL(ctx, `CREATE TABLE test.new_table tid = "tid1"`)
+		r.NoError(err)
+
+		// failed due to database doesn't exists
+		_, err = runSQL(ctx, `CREATE TABLE i_dont_exists.new_table tid = "tid1"`)
+		r.Error(err)
+
+		// failed due to table already exists
+		_, err = runSQL(ctx, `CREATE TABLE test.new_table tid = "tid1"`)
+		r.Error(err)
+
+		// success on if not exists
+		_, err = runSQL(ctx, `CREATE TABLE IF NOT EXISTS test.new_table tid = "tid1"`)
+		r.NoError(err)
+
+		// failed due to missing db_name
+		_, err = runSQL(ctx, `CREATE TABLE new_table_2 tid = "tid2"`)
+		r.Error(err)
+
+		// use database test
+		ctx.GetSessionVars().CurrentDB = "test"
+		_, err = runSQL(ctx, `CREATE TABLE new_table_2 tid = "tid2"`)
+		r.NoError(err)
+	}
+
+	{
+		ctx := mockContext()
+		r.NoError(mockUserSession(ctx, userRoot, db))
+
+		// create user success
+		_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+
+		// switch to user alice
+		r.NoError(switchUser(ctx, userBob))
+
+		// failed due to lack of privilege
+		_, err = runSQL(ctx, `CREATE TABLE test.ant_table tid = "tid1"`)
+		r.Error(err)
+	}
+}
+
+func TestDropTable(t *testing.T) {
+	r := require.New(t)
+
+	db, err := mockStorage()
+	r.NoError(err)
+
+	ctx := mockContext()
+	r.NoError(mockUserSession(ctx, userRoot, db))
+
+	// root> create user alice
+	_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	r.NoError(err)
+
+	// root> create user alice
+	_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	r.NoError(err)
+
+	// success
+	_, err = runSQL(ctx, `CREATE DATABASE test`)
+	r.NoError(err)
+
+	// root> grant create priv on test.* to alice
+	_, err = runSQL(ctx, `GRANT CREATE, GRANT OPTION, DROP ON test.* TO alice`)
+	r.NoError(err)
+
+	// root> grant create priv on test.* to bob
+	_, err = runSQL(ctx, `GRANT CREATE, GRANT OPTION, DROP ON test.* TO bob`)
+	r.NoError(err)
+
+	// switch to user alice
+	r.NoError(switchUser(ctx, userAlice))
+
+	// success
+	_, err = runSQL(ctx, `CREATE TABLE test.t1 tid = "tid1"`)
+	r.NoError(err)
+
+	// switch to user bob
+	r.NoError(switchUser(ctx, userBob))
+
+	// success
+	_, err = runSQL(ctx, `CREATE TABLE test.t3 tid = "tid3"`)
+	r.NoError(err)
+
+	// switch to user alice
+	r.NoError(switchUser(ctx, userAlice))
+
+	// success
+	_, err = runSQL(ctx, `DROP TABLE test.t1`)
+	r.NoError(err)
+
+	// failed due to alice is not the owner of test.t3
+	_, err = runSQL(ctx, `DROP TABLE test.t3`)
+	r.Error(err)
+
+	// failed due to new_table doesn't exist
+	_, err = runSQL(ctx, `DROP TABLE test.new_table`)
+	r.Error(err)
+
+	// success
+	_, err = runSQL(ctx, `DROP TABLE IF EXISTS test.new_table`)
+	r.NoError(err)
+}
+
+func TestGrantDbScope(t *testing.T) {
+
+	t.Run("NormalGrantTest", func(t *testing.T) {
+		r := require.New(t)
+		ctx := setupTestEnv(t)
+
+		// failed due to user `alice` not exists, not allowed create user with GRANT
+		_, err := runSQL(ctx, "GRANT CREATE ON da.* TO alice")
+		r.Error(err)
+
+		// 1. create user alice before granting privilege
+		_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+		// 2. grant CREATE PRIV to `alice`
+		_, err = runSQL(ctx, "GRANT CREATE ON da.* TO alice")
+		r.NoError(err)
+
+		// 3. grant multiple privileges to `alice`
+		_, err = runSQL(ctx, "GRANT CREATE, DROP, GRANT OPTION, DESCRIBE, SHOW ON da.* TO alice")
+		r.NoError(err)
+	})
+
+	t.Run("CreateTableBeforeAndAfterGrantCreatePrivilege", func(t *testing.T) {
+		r := require.New(t)
+		ctx := setupTestEnv(t)
+
+		// root> create user alice
+		_, err := runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+
+		// success
+		_, err = runSQL(ctx, `CREATE DATABASE test`)
+		r.NoError(err)
+
+		// switch to user alice
+		r.NoError(switchUser(ctx, userAlice))
+
+		// switch back to user root
+		r.NoError(switchUser(ctx, userRoot))
+
+		// grant create privilege to alice on database test
+		_, err = runSQL(ctx, `GRANT CREATE ON test.* TO alice`)
+		r.NoError(err)
+
+		// switch to user alice
+		r.NoError(switchUser(ctx, userAlice))
+
+	})
+
+	t.Run("GrantALL", func(t *testing.T) {
+		r := require.New(t)
+		ctx := setupTestEnv(t)
+
+		// root> create user alice
+		_, err := runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+
+		// root> create database da.*
+		_, err = runSQL(ctx, `CREATE DATABASE da`)
+		r.NoError(err)
+
+		// root> grant all on da.* to alice
+		_, err = runSQL(ctx, `GRANT ALL ON da.* to alice`)
+		r.NoError(err)
+	})
+}
+
+func TestGrantGlobalScope(t *testing.T) {
+	t.Run("GrantAll", func(t *testing.T) {
+		r := require.New(t)
+		ctx := setupTestEnv(t)
+
+		// root> create user alice
+		_, err := runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+
+		// switch to user alice
+		r.NoError(switchUser(ctx, userAlice))
+
+		// alice> create database da -- failed due to no create privilege
+		_, err = runSQL(ctx, `CREATE DATABASE da`)
+		r.Error(err)
+
+		// switch to user root
+		r.NoError(switchUser(ctx, userRoot))
+
+		// root> GRANT ALL on *.* to alice
+		_, err = runSQL(ctx, `GRANT ALL ON *.* to alice`)
+		r.NoError(err)
+
+		// switch to user alice
+		r.NoError(switchUser(ctx, userAlice))
+
+		// alice> create database da -- success
+		_, err = runSQL(ctx, `CREATE DATABASE da`)
+		r.NoError(err)
+
+		// alice> create table da.t1 -- success
+		_, err = runSQL(ctx, `CREATE TABLE da.t1 tid ="tid1"`)
+		r.NoError(err)
+
+		// alice> create table da.t1 -- failed due to wrong tid
+		_, err = runSQL(ctx, `CREATE TABLE da.t1 tid ="tid3"`)
+		r.Error(err)
+
+		// alice> delete table da.t1 -- success
+		_, err = runSQL(ctx, `DROP TABLE da.t1`)
+		r.NoError(err)
+
+		// alice> create user bob -- success
+		_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+	})
+}
+
+func TestGrantTableScope(t *testing.T) {
+	t.Run("GrantCreateDropOnTable", func(t *testing.T) {
+		r := require.New(t)
+		ctx := setupTestEnv(t)
+
+		// root> create database da
+		_, err := runSQL(ctx, `CREATE DATABASE da`)
+		r.NoError(err)
+
+		// root> create user alice
+		_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+
+		// root> create user bob
+		_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+
+		// root> grant create, grant option priv on *.* to alice
+		_, err = runSQL(ctx, `GRANT CREATE, DROP, GRANT OPTION ON da.* TO alice`)
+		r.NoError(err)
+
+		// switch to user alice
+		r.NoError(switchUser(ctx, userAlice))
+
+		// alice> create table da.t1
+		_, err = runSQL(ctx, `CREATE TABLE da.t1 tid = "tid1"`)
+		r.NoError(err)
+
+		// switch to user Bob
+		r.NoError(switchUser(ctx, userBob))
+
+		// alice> drop table da.t1 -- failed due to no drop privilege on da.t1
+		_, err = runSQL(ctx, `DROP TABLE da.t1`)
+		r.Error(err)
+
+		// switch to user alice
+		r.NoError(switchUser(ctx, userAlice))
+
+		// alice> grant CREATE,DROP on da.t1 TO alice
+		_, err = runSQL(ctx, `GRANT CREATE, DROP ON da.t1 TO bob`)
+		r.NoError(err)
+
+		// switch user bob
+		r.NoError(switchUser(ctx, userBob))
+
+		// bob> drop table da.t1 -- failed due to bob is not the owner of table da.t1
+		_, err = runSQL(ctx, `DROP TABLE da.t1`)
+		r.Error(err)
+
+		// alice> create table da.t2 -- failed due to no create privilege on da.t2
+		_, err = runSQL(ctx, `CREATE TABLE da.t3 tid = "tid3"`)
+		r.Error(err)
+	})
+	t.Run("GrantVisibilityPrivilege", func(t *testing.T) {
+		r := require.New(t)
+		ctx := setupTestEnv(t)
+
+		// root> create user alice
+		_, err := runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+
+		// root> create user bob
+		_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+
+		// root> create database da
+		_, err = runSQL(ctx, `CREATE DATABASE da`)
+		r.NoError(err)
+
+		// root> grant create, grant option priv on *.* to alice
+		_, err = runSQL(ctx, `GRANT CREATE, GRANT OPTION ON *.* TO alice`)
+		r.NoError(err)
+
+		// switch to user alice
+		r.NoError(switchUser(ctx, userAlice))
+
+		// alice> create table da.t1
+		_, err = runSQL(ctx, `CREATE TABLE da.t1 tid = "tid1"`)
+		r.NoError(err)
+
+		// alice> GRANT SELECT PLAINTEXT on da.t1 to bob
+		_, err = runSQL(ctx, `GRANT SELECT PLAINTEXT ON da.t1 TO bob`)
+		r.NoError(err)
+
+		// switch to user root
+		r.NoError(switchUser(ctx, userRoot))
+
+		// root grant multiple privileges to `bob`
+		_, err = runSQL(ctx, "GRANT CREATE, DROP, GRANT OPTION, DESCRIBE, SHOW ON da.* TO bob")
+		r.NoError(err)
+
+		// root> (switch to user bob)
+		r.NoError(switchUser(ctx, userBob))
+
+		// bob> GRANT SELECT PLAINTEXT(c1) on da.t1 to bob
+		_, err = runSQL(ctx, `GRANT SELECT(c1) PLAINTEXT ON da.t1 TO bob`)
+		r.Error(err) // error: bob is not the table owner
+
+		// bob> GRANT SELECT PLAINTEXT on da.t1 to bob
+		_, err = runSQL(ctx, `GRANT SELECT PLAINTEXT ON da.t1 TO bob`)
+		r.Error(err) // error: bob is not the table owner
+	})
+}
+
+func TestRevokeTableScope(t *testing.T) {
+	t.Run("RevokeColumnPrivilege", func(t *testing.T) {
+		r := require.New(t)
+		ctx := setupTestEnv(t)
+
+		// root> create user alice
+		_, err := runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+
+		// root> create user bob
+		_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+
+		// root> create database da
+		_, err = runSQL(ctx, `CREATE DATABASE da`)
+		r.NoError(err)
+
+		// root> grant create, grant option priv on *.* to alice
+		_, err = runSQL(ctx, `GRANT CREATE, GRANT OPTION ON *.* TO alice`)
+		r.NoError(err)
+
+		// switch to user alice
+		r.NoError(switchUser(ctx, userAlice))
+
+		// alice> create table da.t1
+		_, err = runSQL(ctx, `CREATE TABLE da.t1 tid = "tid1"`)
+		r.NoError(err)
+
+		_, err = runSQL(ctx, `GRANT SELECT PLAINTEXT(c1) ON da.t1 TO bob`)
+		r.NoError(err)
+
+		_, err = runSQL(ctx, `REVOKE SELECT PLAINTEXT_AFTER_AGGREGATE(c1) ON da.t1 FROM bob`)
+		r.Error(err) // error: there is no SELECT PLAINTEXT_AFTER_AGGREGATE defined for user 'bob' on host '%' on table 't1'
+
+		rt, err := runSQL(ctx, `SHOW GRANTS ON da FOR bob`)
+		r.NoError(err)
+		r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+		r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
+		r.Equal("Grants on da for bob@%", rt[0].GetName())
+		r.Equal("GRANT SELECT PLAINTEXT(c1) ON da.t1 TO bob", rt[0].GetSs().GetSs()[0])
+
+		_, err = runSQL(ctx, `REVOKE SELECT PLAINTEXT(c1) ON da.t1 FROM bob`)
+		r.NoError(err)
+		rt, err = runSQL(ctx, `SHOW GRANTS ON da FOR bob`)
+		r.NoError(err)
+		r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+		r.Equal(int64(0), rt[0].GetShape().GetDim()[0].GetDimValue())
+		r.Equal("Grants on da for bob@%", rt[0].GetName())
+	})
+	t.Run("RevokeColumnPrivilegeCheckTableOwner", func(t *testing.T) {
+		r := require.New(t)
+		ctx := setupTestEnv(t)
+
+		// root> create user alice
+		_, err := runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+
+		// root> create user bob
+		_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+
+		// root> create database da
+		_, err = runSQL(ctx, `CREATE DATABASE da`)
+		r.NoError(err)
+
+		// root> grant create, grant priv on *.* to alice
+		_, err = runSQL(ctx, `GRANT CREATE, GRANT OPTION ON da.* TO alice`)
+		r.NoError(err)
+
+		// switch to user alice
+		r.NoError(switchUser(ctx, userAlice))
+
+		// alice> create table da.t1
+		_, err = runSQL(ctx, `CREATE TABLE da.t1 tid = "tid1"`)
+		r.NoError(err)
+		_, err = runSQL(ctx, `GRANT SELECT PLAINTEXT(c1) ON da.t1 TO bob`)
+		r.NoError(err)
+
+		// alice> (switch to user root)
+		r.NoError(switchUser(ctx, userRoot))
+
+		_, err = runSQL(ctx, `GRANT CREATE, DROP, GRANT OPTION ON da.* TO bob`)
+		r.NoError(err)
+
+		// alice> (switch to user bob)
+		r.NoError(switchUser(ctx, userBob))
+
+		// bob> REVOKE SELECT PLAINTEXT(c1) ON da.t1 FROM bob
+		_, err = runSQL(ctx, `REVOKE SELECT PLAINTEXT(c1) ON da.t1 FROM bob`)
+		r.Error(err) // error: user bob is not the owner of table da.t1
+	})
+}
+
+func TestShowDatabase(t *testing.T) {
+	r := require.New(t)
+	ctx := setupTestEnv(t)
+
+	rt, err := runSQL(ctx, `SHOW DATABASES`)
+	r.NoError(err)
+	r.Equal(int64(0), rt[0].GetShape().GetDim()[0].GetDimValue())
+
+	_, err = runSQL(ctx, `CREATE DATABASE da`)
+	r.NoError(err)
+	_, err = runSQL(ctx, `CREATE DATABASE db`)
+	r.NoError(err)
+
+	rt, err = runSQL(ctx, `SHOW DATABASES`)
+	r.NoError(err)
+	r.Equal(int64(2), rt[0].GetShape().GetDim()[0].GetDimValue())
+	r.Equal("Database", rt[0].GetName())
+	r.Equal("da", rt[0].GetSs().GetSs()[0])
+	r.Equal("db", rt[0].GetSs().GetSs()[1])
+
+	// root> (create user alice before granting privilege)
+	_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	r.NoError(err)
+	_, err = runSQL(ctx, `GRANT CREATE ON da.* to alice`)
+	r.NoError(err)
+
+	// root> (switch to user alice)
+	r.NoError(switchUser(ctx, userAlice))
+
+	// alice>
+	rt, err = runSQL(ctx, `SHOW DATABASES`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
+	r.Equal("Database", rt[0].GetName())
+	r.Equal("da", rt[0].GetSs().GetSs()[0])
+}
+
+func TestShow(t *testing.T) {
+	r := require.New(t)
+	ctx := setupTestEnv(t)
+
+	_, err := runSQL(ctx, `CREATE DATABASE da`)
+	r.NoError(err)
+	_, err = runSQL(ctx, `CREATE DATABASE db`)
+	r.NoError(err)
+
+	_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	r.NoError(err)
+	_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	r.NoError(err)
+
+	_, err = runSQL(ctx, `GRANT CREATE ON da.* to alice`)
+	r.NoError(err)
+	_, err = runSQL(ctx, `GRANT SHOW ON db.* to bob`)
+	r.NoError(err)
+
+	// root> (switch to user alice)
+	r.NoError(switchUser(ctx, userAlice))
+
+	rt, err := runSQL(ctx, `SHOW DATABASES`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
+	r.Equal("Database", rt[0].GetName())
+	r.Equal("da", rt[0].GetSs().GetSs()[0])
+
+	rt, err = runSQL(ctx, `SHOW GRANTS ON da;`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
+
+	rt, err = runSQL(ctx, `SHOW GRANTS ON db;`)
+	r.NoError(err)
+	r.Equal(int64(0), rt[0].GetShape().GetDim()[0].GetDimValue())
+
+	// root> (switch to user bob)
+	r.NoError(switchUser(ctx, userBob))
+
+	// bob>
+	rt, err = runSQL(ctx, `SHOW DATABASES`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
+	r.Equal("Database", rt[0].GetName())
+	r.Equal("db", rt[0].GetSs().GetSs()[0])
+
+	rt, err = runSQL(ctx, `SHOW GRANTS ON db;`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
+
+	rt, err = runSQL(ctx, `SHOW GRANTS ON da;`)
+	r.NoError(err)
+	r.Equal(int64(0), rt[0].GetShape().GetDim()[0].GetDimValue())
+}
+
+func TestDescribe(t *testing.T) {
+	is := infoschema.MockInfoSchema(
+		map[string][]*model.TableInfo{
+			"da": {
+				{
+					Name: model.NewCIStr("t1"),
+					Columns: []*model.ColumnInfo{
+						{
+							Name:      model.NewCIStr("c1"),
+							FieldType: *types.NewFieldType(mysql.TypeString),
+							Comment:   "string value",
+						},
+						{
+							Name:      model.NewCIStr("c2"),
+							FieldType: *types.NewFieldType(mysql.TypeLong),
+							Comment:   "long value",
+						},
+					},
+				},
+			},
+			"db": {
+				{
+					Name: model.NewCIStr("t1"),
+					Columns: []*model.ColumnInfo{
+						{
+							Name:      model.NewCIStr("c1"),
+							FieldType: *types.NewFieldType(mysql.TypeString),
+							Comment:   "string value",
+						},
+						{
+							Name:      model.NewCIStr("c2"),
+							FieldType: *types.NewFieldType(mysql.TypeLong),
+							Comment:   "long value",
+						},
+					},
+				},
+			},
+		})
+	r := require.New(t)
+	ctx := setupTestEnv(t)
+
+	_, err := runSQL(ctx, `CREATE DATABASE da`)
+	r.NoError(err)
+	_, err = runSQL(ctx, `CREATE DATABASE db`)
+	r.NoError(err)
+
+	_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	r.NoError(err)
+	_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	r.NoError(err)
+
+	_, err = runSQL(ctx, `GRANT CREATE ON da.* to alice`)
+	r.NoError(err)
+	_, err = runSQL(ctx, `GRANT SHOW ON db.* to alice`)
+	r.NoError(err)
+	_, err = runSQL(ctx, `GRANT DESCRIBE ON db.* to bob`)
+	r.NoError(err)
+
+	// switch to user alice
+	r.NoError(switchUser(ctx, userAlice))
+
+	_, err = runSQL(ctx, `CREATE TABLE da.t1 tid = "tid1"`)
+	r.NoError(err)
+
+	// alice>
+	rt, err := Run(ctx, `DESCRIBE da.t1`, is)
+	r.NoError(err)
+	r.Equal(int64(2), rt[0].GetShape().GetDim()[0].GetDimValue())
+
+	_, err = Run(ctx, `DESCRIBE db.t1`, is)
+	r.Error(err)
+
+	// alice> (switch to user bob)
+	r.NoError(switchUser(ctx, userBob))
+	// bob>
+	rt, err = Run(ctx, `DESCRIBE db.t1`, is)
+	r.NoError(err)
+	r.Equal(int64(2), rt[0].GetShape().GetDim()[0].GetDimValue())
+
+	_, err = Run(ctx, `DESCRIBE da.t1`, is)
+	r.Error(err)
+}
+
+func TestShowTables(t *testing.T) {
+	r := require.New(t)
+	ctx := setupTestEnv(t)
+
+	_, err := runSQL(ctx, `CREATE DATABASE da`)
+	r.NoError(err)
+	// root> create user alice
+	_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	r.NoError(err)
+
+	// root> grant create priv on da.* to alice
+	_, err = runSQL(ctx, `GRANT CREATE ON da.* TO alice`)
+	r.NoError(err)
+
+	// switch to user alice
+	r.NoError(switchUser(ctx, userAlice))
+
+	// NO DB selected
+	_, err = runSQL(ctx, `SHOW TABLES`)
+	r.Error(err)
+
+	rt, err := runSQL(ctx, `SHOW TABLES FROM da`)
+	r.NoError(err)
+	r.Equal(int64(0), rt[0].GetShape().GetDim()[0].GetDimValue())
+
+	_, err = runSQL(ctx, `CREATE TABLE da.t1 tid = "tid1"`)
+	r.NoError(err)
+
+	rt, err = runSQL(ctx, `SHOW TABLES FROM da`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
+	r.Equal("Tables_in_da", rt[0].GetName())
+	r.Equal("t1", rt[0].GetSs().GetSs()[0])
+
+	rt, err = runSQL(ctx, `SHOW FULL TABLES FROM da`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
+	r.Equal("Tables_in_da", rt[0].GetName())
+	r.Equal("t1", rt[0].GetSs().GetSs()[0])
+	r.Equal("Table_type", rt[1].GetName())
+	r.Equal(TableTypeBase, rt[1].GetSs().GetSs()[0])
+
+	// with current db set
+	ctx.GetSessionVars().CurrentDB = `da`
+	rt, err = runSQL(ctx, `SHOW TABLES`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
+	r.Equal("Tables_in_da", rt[0].GetName())
+	r.Equal("t1", rt[0].GetSs().GetSs()[0])
+
+	r.NoError(switchUser(ctx, userRoot))
+	// root> (create bob alice before granting privilege)
+	_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	r.NoError(err)
+	// root> (switch to user bob)
+	r.NoError(switchUser(ctx, userBob))
+
+	// bob>
+	rt, err = runSQL(ctx, `SHOW TABLES FROM da`)
+	r.Error(err)
+}
+
+func TestShowGrants(t *testing.T) {
+	r := require.New(t)
+	ctx := setupTestEnv(t)
+
+	// Report error when database not existing
+	rt, err := runSQL(ctx, `SHOW GRANTS ON da FOR root`)
+	r.Error(err)
+
+	_, err = runSQL(ctx, `CREATE DATABASE da`)
+	r.NoError(err)
+	_, err = runSQL(ctx, `CREATE DATABASE db`)
+	r.NoError(err)
+	_, err = runSQL(ctx, `CREATE DATABASE dc`)
+	r.NoError(err)
+
+	// Report grants on da for root
+	rt, err = runSQL(ctx, `SHOW GRANTS ON da FOR root`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
+	r.Equal("Grants on da for root@%", rt[0].GetName())
+	r.Equal("GRANT CREATE, CREATE USER, DROP, GRANT OPTION, DESCRIBE, SHOW ON *.* TO root", rt[0].GetSs().GetSs()[0])
+
+	_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	r.NoError(err)
+	_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	r.NoError(err)
+
+	_, err = runSQL(ctx, `GRANT CREATE, DROP, GRANT OPTION ON da.* TO alice`)
+	r.NoError(err)
+	_, err = runSQL(ctx, `GRANT CREATE, DROP, GRANT OPTION ON db.* TO alice`)
+	r.NoError(err)
+	rt, err = runSQL(ctx, `SHOW GRANTS ON da FOR alice`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
+	r.Equal("Grants on da for alice@%", rt[0].GetName())
+	r.Equal("GRANT CREATE, DROP, GRANT OPTION ON da.* TO alice", rt[0].GetSs().GetSs()[0])
+
+	// Report error when database not existing
+	_, err = runSQL(ctx, `SHOW GRANTS ON dd FOR root`)
+	r.Error(err)
+
+	// Return empty: invoker has no privilege on database db
+	rt, err = runSQL(ctx, `SHOW GRANTS ON dc FOR alice`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+	r.Equal(int64(0), rt[0].GetShape().GetDim()[0].GetDimValue())
+	r.Equal("Grants on dc for alice@%", rt[0].GetName())
+
+	// Return empty: invoker has privilege on database da, but destination user bob not
+	rt, err = runSQL(ctx, `SHOW GRANTS ON da FOR bob`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+	r.Equal(int64(0), rt[0].GetShape().GetDim()[0].GetDimValue())
+	r.Equal("Grants on da for bob@%", rt[0].GetName())
+
+	// Return empty for or no privilege
+	rt, err = runSQL(ctx, `SHOW GRANTS ON da FOR alice`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
+	r.Equal("Grants on da for alice@%", rt[0].GetName())
+	r.Equal("GRANT CREATE, DROP, GRANT OPTION ON da.* TO alice", rt[0].GetSs().GetSs()[0])
+
+	// switch to user alice
+	r.NoError(switchUser(ctx, userAlice))
+
+	rt, err = runSQL(ctx, `SHOW GRANTS ON da FOR alice`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
+	r.Equal("Grants on da for alice@%", rt[0].GetName())
+	r.Equal("GRANT CREATE, DROP, GRANT OPTION ON da.* TO alice", rt[0].GetSs().GetSs()[0])
+
+	rt, err = runSQL(ctx, `SHOW GRANTS ON db FOR alice`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
+	r.Equal("Grants on db for alice@%", rt[0].GetName())
+	r.Equal("GRANT CREATE, DROP, GRANT OPTION ON db.* TO alice", rt[0].GetSs().GetSs()[0])
+
+	rt, err = runSQL(ctx, `SHOW GRANTS ON db`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
+	r.Equal("Grants on db for User", rt[0].GetName())
+	r.Equal("GRANT CREATE, DROP, GRANT OPTION ON db.* TO alice", rt[0].GetSs().GetSs()[0])
+
+	// Return empty: invoker has privilege on database da, but destination user bob not
+	rt, err = runSQL(ctx, `SHOW GRANTS ON da FOR bob`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+	r.Equal(int64(0), rt[0].GetShape().GetDim()[0].GetDimValue())
+	r.Equal("Grants on da for bob@%", rt[0].GetName())
+
+	rt, err = runSQL(ctx, `SHOW GRANTS ON da FOR bob`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+	r.Equal(int64(0), rt[0].GetShape().GetDim()[0].GetDimValue())
+	r.Equal("Grants on da for bob@%", rt[0].GetName())
+
+	// root has no explicit privilege on da
+	rt, err = runSQL(ctx, `SHOW GRANTS ON da FOR root`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+	r.Equal(int64(0), rt[0].GetShape().GetDim()[0].GetDimValue())
+	r.Equal("Grants on da for root@%", rt[0].GetName())
+}
+
+func TestDescribeTable(t *testing.T) {
+	r := require.New(t)
+	ctx := setupTestEnv(t)
+
+	is := infoschema.MockInfoSchema(
+		map[string][]*model.TableInfo{
+			"da": {
+				{
+					Name: model.NewCIStr("t1"),
+					Columns: []*model.ColumnInfo{
+						{
+							Name:      model.NewCIStr("c1"),
+							FieldType: *types.NewFieldType(mysql.TypeString),
+							Comment:   "string value",
+						},
+						{
+							Name:      model.NewCIStr("c2"),
+							FieldType: *types.NewFieldType(mysql.TypeLong),
+							Comment:   "long value",
+						},
+					},
+				},
+			},
+		})
+
+	// fail due to scdb not support explain stmt
+	_, err := Run(ctx, "EXPLAIN SELECT * from da.t1", is)
+	r.Error(err)
+
+	result, err := Run(ctx, "DESCRIBE da.t1", is)
+	r.NoError(err)
+	r.Equal(2, len(result))
+
+	r.Equal("Field", result[0].GetName())
+	r.ElementsMatch([]string{"c1", "c2"}, result[0].GetSs().GetSs())
+
+	r.Equal("Type", result[1].GetName())
+	r.Equal(2, len(result[1].GetSs().GetSs()))
+	r.ElementsMatch([]string{"string", "int"}, result[1].GetSs().GetSs())
+}
+
+func TestGrantColumnScope(t *testing.T) {
+	t.Run("GrantVisibilityPrivilege", func(t *testing.T) {
+		r := require.New(t)
+		ctx := setupTestEnv(t)
+
+		// root> create user alice
+		_, err := runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+
+		// root> create user bob
+		_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+
+		// root> create database da
+		_, err = runSQL(ctx, `CREATE DATABASE da`)
+		r.NoError(err)
+
+		// root> grant create grant, priv on da.* to alice
+		_, err = runSQL(ctx, `GRANT CREATE, GRANT OPTION ON da.* TO alice`)
+		r.NoError(err)
+
+		// switch to user alice
+		r.NoError(switchUser(ctx, userAlice))
+
+		// alice> create table da.t1
+		_, err = runSQL(ctx, `CREATE TABLE da.t1 tid = "tid1"`)
+		r.NoError(err)
+
+		// alice> GRANT SELECT PLAINTEXT(c1), ENCRYPTED_ONLY(c2) on da.t1 to bob
+		_, err = runSQL(ctx, `GRANT SELECT PLAINTEXT(C1), SELECT ENCRYPTED_ONLY(C2) ON da.t1 TO bob`)
+		r.NoError(err)
+
+		// check granted privileges
+		exists, err := columnPrivilegesExists(ctx.GetSessionVars().Storage, "bob", "da", "t1", "c1", mysql.PlaintextPriv)
+		r.NoError(err)
+		r.True(exists)
+
+		exists, err = columnPrivilegesExists(ctx.GetSessionVars().Storage, "bob", "da", "t1", "c2", mysql.EncryptedOnlyPriv)
+		r.NoError(err)
+		r.True(exists)
+
+		// alice> GRANT SELECT PLAINTEXT(c3) on da.t1 to alice -- failed due to no column named `bob`
+		_, err = runSQL(ctx, `GRANT SELECT PLAINTEXT(c3) ON da.t1 TO bob`)
+		r.Error(err)
+
+		// check granted privileges -- should be false
+		exists, err = columnPrivilegesExists(ctx.GetSessionVars().Storage, "bob", "da", "t1", "c3", mysql.PlaintextPriv)
+		r.NoError(err)
+		r.False(exists)
+
+		// alice> GRANT SELECT PLAINTEXT_AFTER_JOIN(c1), SELECT PLAINTEXT_AFTER_GROUP_BY(c2) ON da.t1 TO alice
+		_, err = runSQL(ctx, `GRANT SELECT PLAINTEXT_AFTER_JOIN(c1), SELECT PLAINTEXT_AFTER_GROUP_BY(c2) ON da.t1 TO bob`)
+		r.NoError(err)
+		// check granted privileges
+		exists, err = columnPrivilegesExists(ctx.GetSessionVars().Storage, "bob", "da", "t1", "c1", mysql.PlaintextAfterJoinPriv)
+		r.NoError(err)
+		r.True(exists)
+		exists, err = columnPrivilegesExists(ctx.GetSessionVars().Storage, "bob", "da", "t1", "c2", mysql.PlaintextAfterGroupByPriv)
+		r.NoError(err)
+		r.True(exists)
+	})
+	t.Run("VisibilityPrivilegeOverride", func(t *testing.T) {
+		r := require.New(t)
+		ctx := setupTestEnv(t)
+
+		// root> create user alice
+		_, err := runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+
+		// root> create user bob
+		_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		r.NoError(err)
+
+		// root> create database da
+		_, err = runSQL(ctx, `CREATE DATABASE da`)
+		r.NoError(err)
+
+		// root> grant create, grant priv on da.* to alice
+		_, err = runSQL(ctx, `GRANT CREATE, GRANT OPTION ON da.* TO alice`)
+		r.NoError(err)
+
+		// switch to user alice
+		r.NoError(switchUser(ctx, userAlice))
+
+		// root> create table da.t1
+		_, err = runSQL(ctx, `CREATE TABLE da.t1 tid = "tid1"`)
+		r.NoError(err)
+
+		// check privileges before grant
+		exists, err := columnPrivilegesExists(ctx.GetSessionVars().Storage, "bob", "da", "t1", "c1", mysql.EncryptedOnlyPriv)
+		r.NoError(err)
+		r.False(exists)
+
+		// alice> GRANT SELECT PLAINTEXT(c1,c2), ENCRYPTED_ONLY(c1) on da.t1 to bob
+		_, err = runSQL(ctx, `GRANT SELECT PLAINTEXT(c1,c2), SELECT ENCRYPTED_ONLY(c1) ON da.t1 TO bob`)
+		r.NoError(err)
+
+		// check granted privileges
+		// c1 will be override by ENCRYPTED_ONLY
+		exists, err = columnPrivilegesExists(ctx.GetSessionVars().Storage, "bob", "da", "t1", "c1", mysql.EncryptedOnlyPriv)
+		r.NoError(err)
+		r.True(exists)
+
+		exists, err = columnPrivilegesExists(ctx.GetSessionVars().Storage, "bob", "da", "t1", "c2", mysql.PlaintextPriv)
+		r.NoError(err)
+		r.True(exists)
+	})
+}
+
+func TestPlatformSecurityConfig(t *testing.T) {
+	r := require.New(t)
+	ctx := setupTestEnv(t)
+
+	// root> create user alice
+	_, err := runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	r.NoError(err)
+
+	// root> create user bob
+	_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	r.NoError(err)
+
+	// root> create database da
+	_, err = runSQL(ctx, `CREATE DATABASE da`)
+	r.NoError(err)
+
+	// root> grant create grant priv on da.* to alice
+	_, err = runSQL(ctx, `GRANT CREATE, GRANT OPTION ON da.* TO alice`)
+	r.NoError(err)
+
+	// switch to user alice
+	r.NoError(switchUser(ctx, userAlice))
+
+	// alice> create table da.t1
+	_, err = runSQL(ctx, `CREATE TABLE da.t1 tid = "tid1"`)
+	r.NoError(err)
+
+	states := []mysql.PrivilegeType{
+		mysql.PlaintextPriv,
+		mysql.PlaintextAfterComparePriv,
+		mysql.PlaintextAfterGroupByPriv,
+	}
+	grantOrRevoke := func(s mysql.PrivilegeType, isGrant bool) {
+		privs := []string{fmt.Sprintf("%s(c1)", mysql.Priv2Str[s])}
+		if isGrant {
+			stmt := fmt.Sprintf(`GRANT %s ON da.t1 TO bob`, strings.Join(privs, ","))
+			_, err = runSQL(ctx, stmt)
+			r.NoError(err, stmt)
+		} else {
+			stmt := fmt.Sprintf(`REVOKE %s ON da.t1 FROM bob`, strings.Join(privs, ","))
+			_, err = runSQL(ctx, stmt)
+			r.NoError(err, stmt)
+		}
+	}
+	checkState := func(s mysql.PrivilegeType) {
+		c := &storage.ColumnPriv{}
+		ctx.GetSessionVars().Storage.Where(storage.ColumnPriv{
+			Host:       "%",
+			Db:         "da",
+			User:       "bob",
+			TableName:  "t1",
+			ColumnName: "c1",
+		}).Find(&c)
+		r.Equal(s, c.VisibilityPriv)
+	}
+	for _, from := range states {
+		for _, to := range states {
+			if from == to {
+				continue
+			}
+			grantOrRevoke(from, true)
+			grantOrRevoke(from, false)
+			grantOrRevoke(to, true)
+			checkState(to)
+			grantOrRevoke(to, false)
+		}
+	}
+}

@@ -1,0 +1,125 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package translator
+
+import (
+	"fmt"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
+
+func TestPartyInfos(t *testing.T) {
+	r := require.New(t)
+	partyInfo, err := NewPartyInfo([]string{"alice", "bob"}, []string{"alice.com", "bob.com"}, []string{"alice_credential", "bob_credential"})
+	r.NoError(err)
+	r.Equal([]string{"alice", "bob"}, partyInfo.GetParties())
+	r.Equal([]string{"alice.com", "bob.com"}, partyInfo.GetUrls())
+	url, err := partyInfo.GetUrlByParty("alice")
+	r.NoError(err)
+	r.Equal("alice.com", url)
+	url, err = partyInfo.GetUrlByParty("bob")
+	r.NoError(err)
+	r.Equal("bob.com", url)
+	_, err = partyInfo.GetUrlByParty("jojo")
+	r.Error(err)
+}
+
+func TestEnginesInfo(t *testing.T) {
+	r := require.New(t)
+	mockPartyA := &MockPartyAndTableInfos{
+		party:     "alice",
+		tables:    []string{"dba.ta", "dba.tb"},
+		refTables: []string{"dbar.tar", "dbar.tbr"},
+	}
+	mockPartyB := &MockPartyAndTableInfos{
+		party:     "bob",
+		tables:    []string{"dbb.ta", "dbb.tb"},
+		refTables: []string{"dbbr.tar", "dbbr.tbr"},
+	}
+	mockEnginesInfo, err := MockEnginesInfo([]*MockPartyAndTableInfos{mockPartyA, mockPartyB})
+	r.NoError(err)
+	r.Equal([]string{"alice", "bob"}, mockEnginesInfo.GetParties())
+	url, err := mockEnginesInfo.GetUrlByParty("alice")
+	r.NoError(err)
+	r.Equal("alice.com", url)
+	url, err = mockEnginesInfo.GetUrlByParty("bob")
+	r.NoError(err)
+	r.Equal("bob.com", url)
+	tb, err := mockEnginesInfo.GetRefTableName("dba.ta")
+	r.NoError(err)
+	r.Equal(DbTable{dbName: "dbar", tableName: "tar"}, tb)
+	tb, err = mockEnginesInfo.GetRefTableName("dbb.tb")
+	r.NoError(err)
+	r.Equal(DbTable{dbName: "dbbr", tableName: "tbr"}, tb)
+	r.Equal(2, len(mockEnginesInfo.GetTablesByParty("alice")))
+	r.Equal(2, len(mockEnginesInfo.GetTablesByParty("bob")))
+	r.Equal("alice", mockEnginesInfo.GetPartyByTable(DbTable{dbName: "dbar", tableName: "tar"}))
+	r.Equal("bob", mockEnginesInfo.GetPartyByTable(DbTable{dbName: "dbbr", tableName: "tbr"}))
+}
+
+type MockPartyAndTableInfos struct {
+	party     string
+	tables    []string
+	refTables []string
+}
+
+func MockEnginesInfo(mockInfos []*MockPartyAndTableInfos) (*EnginesInfo, error) {
+	if len(mockInfos) != 2 {
+		return nil, fmt.Errorf("unsupported party number %d", len(mockInfos))
+	}
+	var parties []string
+	var partyUrls []string
+	var partyCredentials []string
+	for _, info := range mockInfos {
+		parties = append(parties, info.party)
+		partyUrls = append(partyUrls, fmt.Sprintf("%s.com", info.party))
+		partyCredentials = append(partyCredentials, fmt.Sprintf("%s_credential", info.party))
+	}
+	partyInfo, err := NewPartyInfo(parties, partyUrls, partyCredentials)
+	if err != nil {
+		return nil, err
+	}
+	tableNum := len(mockInfos[0].tables)
+	party2Tables := make(map[string][]DbTable)
+	mockRefTables := make([]DbTable, 0)
+	mockTables := make([]DbTable, 0)
+	for _, info := range mockInfos {
+		for _, qualifiedTable := range info.refTables {
+			dt, err := newDbTable(qualifiedTable)
+			if err != nil {
+				return nil, err
+			}
+			mockRefTables = append(mockRefTables, dt)
+		}
+		for _, refQualifiedTable := range info.tables {
+			dt, err := newDbTable(refQualifiedTable)
+			if err != nil {
+				return nil, err
+			}
+			mockTables = append(mockTables, dt)
+		}
+	}
+	party2Tables[mockInfos[0].party] = mockRefTables[:tableNum]
+	party2Tables[mockInfos[1].party] = mockRefTables[tableNum:]
+	mockEnginesInfo := NewEnginesInfo(partyInfo, party2Tables)
+	tableToRefs := make(map[DbTable]DbTable)
+	for i, tbl := range mockRefTables {
+		tableToRefs[mockTables[i]] = tbl
+	}
+
+	mockEnginesInfo.UpdateTableToRefs(tableToRefs)
+	return mockEnginesInfo, nil
+}

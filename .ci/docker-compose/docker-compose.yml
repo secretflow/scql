@@ -1,0 +1,60 @@
+version: '3.8'
+services:
+  scdb:
+    image: scql:${SCQL_IMAGE_TAG:-latest}
+    command:
+      - /home/admin/bin/scdbserver
+      - -config=/home/admin/configs/config.yml
+    restart: always
+    ports:
+      - mode: host
+        protocol: tcp
+        published: ${SCDB_PORT:-8080}
+        target: 8080
+    volumes:
+      - ./scdb/conf/:/home/admin/configs/
+  engine_alice:
+    command:
+      - /home/admin/bin/scqlengine
+      - --flagfile=/home/admin/engine/conf/gflags.conf
+    image: scql:${SCQL_IMAGE_TAG:-latest}
+    volumes:
+      - ./engine/alice/conf/gflags.conf:/home/admin/engine/conf/gflags.conf
+  engine_bob:
+    command:
+      - /home/admin/bin/scqlengine
+      - --flagfile=/home/admin/engine/conf/gflags.conf
+    image: scql:${SCQL_IMAGE_TAG:-latest}
+    volumes:
+      - ./engine/bob/conf/gflags.conf:/home/admin/engine/conf/gflags.conf
+  engine_carol:
+    command:
+      - /home/admin/bin/scqlengine
+      - --flagfile=/home/admin/engine/conf/gflags.conf
+    image: scql:${SCQL_IMAGE_TAG:-latest}
+    volumes:
+      - ./engine/carol/conf/gflags.conf:/home/admin/engine/conf/gflags.conf
+  mysql:
+    image: mysql:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=testpass
+      - TZ=Asia/Shanghai
+    healthcheck:
+      retries: 10
+      test:
+        - CMD
+        - mysqladmin
+        - ping
+        - -h
+        - mysql
+      timeout: 20s
+    expose:
+      - "3306"
+    ports:
+      - mode: host
+        protocol: tcp
+        published: ${MYSQL_PORT:-13306}
+        target: 3306
+    restart: always
+    volumes:
+      - ./mysql/initdb:/docker-entrypoint-initdb.d

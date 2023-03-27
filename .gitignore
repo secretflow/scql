@@ -1,0 +1,21 @@
+# docs
+docs/_build
+
+# bazel
+/bazel-*
+
+# go
+bin/*
+tool-bin/*
+
+# cloudide
+.cloudide/
+
+/compile_commands.json
+
+# clangd cache
+/external
+/.cache/
+scdb.db
+.vscode/launch.json
+logs/scdbserver.log

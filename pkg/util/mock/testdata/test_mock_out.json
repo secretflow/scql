@@ -1,0 +1,22 @@
+{
+  "mock_table_schema": {
+    "db_name": "test",
+    "table_name": "dt1",
+    "columns": [
+      ["c1", "float"],
+      ["c2", "int(11)"],
+      ["c3", "char(1)"]
+    ]
+  },
+  "mock_ccl": [
+    ["test.dt1.c1", "alice", "PLAINTEXT"],
+    ["test.dt1.c2", "alice", "PLAINTEXT"],
+    ["test.dt1.c3", "alice", "PLAINTEXT"],
+    ["test.dt1.c1", "bob", "PLAINTEXT"],
+    ["test.dt1.c2", "bob", "PLAINTEXT_AFTER_JOIN"],
+    ["test.dt1.c3", "bob", "PLAINTEXT_AFTER_GROUP_BY"],
+    ["test.dt1.c1", "carol", "PLAINTEXT"],
+    ["test.dt1.c2", "carol", "PLAINTEXT_AFTER_JOIN"],
+    ["test.dt1.c3", "carol", "PLAINTEXT_AFTER_GROUP_BY"]
+  ]
+}

@@ -1,0 +1,115 @@
+# Copyright 2023 Ant Group Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "tensor",
+    srcs = ["tensor.cc"],
+    hdrs = ["tensor.h"],
+    deps = [
+        ":type",
+        "//api:core_cc_proto",
+        "@org_apache_arrow//:arrow",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+cc_library(
+    name = "tensor_chunk",
+    srcs = ["tensor_chunk.cc"],
+    hdrs = ["tensor_chunk.h"],
+    deps = [":tensor"],
+)
+
+cc_library(
+    name = "tensor_builder",
+    srcs = ["tensor_builder.cc"],
+    hdrs = ["tensor_builder.h"],
+    deps = [
+        ":arrow_helper",
+        ":tensor",
+    ],
+)
+
+cc_library(
+    name = "primitive_builder",
+    srcs = ["primitive_builder.cc"],
+    hdrs = ["primitive_builder.h"],
+    deps = [
+        ":arrow_helper",
+        ":tensor_builder",
+        "@org_apache_arrow//:arrow",
+    ],
+)
+
+cc_test(
+    name = "primitive_builder_test",
+    srcs = ["primitive_builder_test.cc"],
+    linkopts = [
+        "-ldl",
+    ],
+    deps = [
+        ":primitive_builder",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "string_tensor_builder",
+    srcs = ["string_tensor_builder.cc"],
+    hdrs = ["string_tensor_builder.h"],
+    deps = [":tensor_builder"],
+)
+
+cc_test(
+    name = "string_tensor_builder_test",
+    srcs = ["string_tensor_builder_test.cc"],
+    linkopts = [
+        "-ldl",
+    ],
+    deps = [
+        ":string_tensor_builder",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "arrow_helper",
+    hdrs = ["arrow_helper.h"],
+    deps = [
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+cc_library(
+    name = "tensor_from_json",
+    srcs = ["tensor_from_json.cc"],
+    hdrs = ["tensor_from_json.h"],
+    deps = [
+        ":arrow_helper",
+        ":tensor",
+    ],
+)
+
+cc_library(
+    name = "type",
+    srcs = ["type.cc"],
+    hdrs = ["type.h"],
+    deps = [
+        "//api:core_cc_proto",
+        "@org_apache_arrow//:arrow",
+        "@spulib//libspu:spu_cc_proto",
+    ],
+)
