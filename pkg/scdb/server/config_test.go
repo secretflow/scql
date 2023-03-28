@@ -29,9 +29,10 @@ func TestNewConfig(t *testing.T) {
 	yamlContent := `
 scdb_host: http://example.com
 port: 8080
-query_result_callback_timeout_ms: 200
-session_expire_ms: 2
-check_session_expire_interval_ms: 3
+protocol: http
+query_result_callback_timeout: 1m
+session_expire_time: 1h
+session_expire_check_time: 20s
 password_check: true
 log_level: debug
 storage:
@@ -42,9 +43,17 @@ storage:
   conn_max_idle_time: 2m
   conn_max_lifetime: 5m
 grm:
-  host: http://example.com
-  timeout_ms: 5
   grm_mode: stdgrm
+  host: http://example.com
+  timeout: 5s
+engine:
+  timeout: 120s
+  protocol: http
+  content_type: application/json
+  spu:
+    protocol: SEMI2K
+    field: FM64
+    sigmoid_mode: SIGMOID_REAL
 `
 	tmpFile, err := os.CreateTemp("", "*.yaml")
 	r.NoError(err)
@@ -64,13 +73,14 @@ grm:
 
 	// then
 	expectedCfg := &Config{
-		SCDBHost:                     "http://example.com",
-		Port:                         "8080",
-		QueryResultCbTimeoutMs:       200,
-		SessionExpireMs:              2,
-		CheckSessionExpireIntervalMs: 3,
-		LogLevel:                     "debug",
-		PasswordCheck:                true,
+		SCDBHost:             "http://example.com",
+		Port:                 8080,
+		Protocol:             "http",
+		QueryResultCbTimeout: 1 * time.Minute,
+		SessionExpireTime:    1 * time.Hour,
+		SessionCheckInterval: 20 * time.Second,
+		LogLevel:             "debug",
+		PasswordCheck:        true,
 		Storage: StorageConf{
 			Type:            "sqlite",
 			ConnStr:         ":memory:",
@@ -80,9 +90,19 @@ grm:
 			ConnMaxLifetime: time.Duration(5) * time.Minute,
 		},
 		GRM: GRMConf{
-			Host:      "http://example.com",
-			TimeoutMs: 5,
-			GrmMode:   "stdgrm",
+			GrmMode: "stdgrm",
+			Host:    "http://example.com",
+			Timeout: 5 * time.Second,
+		},
+		Engine: EngineConfig{
+			ClientTimeout: 120 * time.Second,
+			Protocol:      "http",
+			ContentType:   "application/json",
+			SpuRuntimeCfg: &RuntimeCfg{
+				Protocol:    "SEMI2K",
+				Field:       "FM64",
+				SigmoidMode: "SIGMOID_REAL",
+			},
 		},
 	}
 	r.Equal(expectedCfg, cfg)
@@ -95,9 +115,11 @@ func TestNewConfigWithEnv(t *testing.T) {
 	yamlContent := `
 scdb_host: http://example.com
 port: 8080
-query_result_callback_timeout_ms: 200
-session_expire_ms: 2
-check_session_expire_interval_ms: 3
+protocol: http
+query_result_callback_timeout: 1m
+session_expire_time: 1h
+session_expire_check_time: 20s
+log_level: info
 storage:
   type: sqlite
   conn_str: ":memory:"
@@ -106,10 +128,16 @@ storage:
   conn_max_idle_time: 2m
   conn_max_lifetime: 5m
 grm:
-  host: http://example.com
-  timeout_ms: 5
   grm_mode: toygrm
   toy_grm_conf: testdata/toy_grm.json
+engine:
+  timeout: 120s
+  protocol: http
+  content_type: application/json
+  spu:
+    protocol: SEMI2K
+    field: FM64
+    sigmoid_mode: SIGMOID_REAL
 `
 	tmpFile, err := os.CreateTemp("", "*.yaml")
 	r.NoError(err)
@@ -129,25 +157,35 @@ grm:
 
 	// then
 	expectedCfg := &Config{
-		SCDBHost:                     "http://example.com",
-		Port:                         "8080",
-		QueryResultCbTimeoutMs:       200,
-		SessionExpireMs:              2,
-		CheckSessionExpireIntervalMs: 3,
-		PasswordCheck:                false,
+		SCDBHost:             "http://example.com",
+		Port:                 8080,
+		Protocol:             "http",
+		QueryResultCbTimeout: 1 * time.Minute,
+		SessionExpireTime:    1 * time.Hour,
+		SessionCheckInterval: 20 * time.Second,
+		PasswordCheck:        false,
+		LogLevel:             "info",
 		Storage: StorageConf{
 			Type:            "sqlite",
 			ConnStr:         "db-str-from-env",
 			MaxIdleConns:    10,
 			MaxOpenConns:    100,
-			ConnMaxIdleTime: time.Duration(2) * time.Minute,
-			ConnMaxLifetime: time.Duration(5) * time.Minute,
+			ConnMaxIdleTime: 2 * time.Minute,
+			ConnMaxLifetime: 5 * time.Minute,
 		},
 		GRM: GRMConf{
-			Host:       "http://example.com",
-			TimeoutMs:  5,
 			GrmMode:    "toygrm",
 			ToyGrmConf: "testdata/toy_grm.json",
+		},
+		Engine: EngineConfig{
+			ClientTimeout: 120 * time.Second,
+			Protocol:      "http",
+			ContentType:   "application/json",
+			SpuRuntimeCfg: &RuntimeCfg{
+				Protocol:    "SEMI2K",
+				Field:       "FM64",
+				SigmoidMode: "SIGMOID_REAL",
+			},
 		},
 	}
 	r.Equal(expectedCfg, cfg)

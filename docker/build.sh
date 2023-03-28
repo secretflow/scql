@@ -16,11 +16,8 @@
 #
 set -eu
 
-LATEST_COMMIT_HASH=$(git log -1 --pretty="format:%h")
-DATETIME=$(date +"%Y%m%d%H%M%S")
-REVISION="${DATETIME}-${LATEST_COMMIT_HASH}"
-IMAGE_TAG=$REVISION
 SCQL_IMAGE=scql
+IMAGE_TAG=latest
 
 # get work dir
 SCRIPT_DIR=$(
@@ -32,6 +29,14 @@ WORK_DIR=$(
   cd $SCRIPT_DIR/..
   pwd
 )
+
+if [[ $# -eq 2 ]]; then
+  SCQL_IMAGE=$1
+  IMAGE_TAG=$2
+elif [[ $# -eq 1 ]]; then
+  IMAGE_TAG=$1
+fi
+echo "build image $SCQL_IMAGE:$IMAGE_TAG"
 
 # prepare temporary path /tmp/$IMAGE_TAG for file copies
 echo "copy files to dir: /tmp/$IMAGE_TAG"
@@ -75,7 +80,7 @@ cp $SCRIPT_DIR/scql.Dockerfile /tmp/$IMAGE_TAG
 # build docker image
 cd /tmp/$IMAGE_TAG
 echo "start to build scql image in $(pwd)"
-#docker build -f  scql.Dockerfile -t $SCQL_IMAGE:$IMAGE_TAG .
-docker build -f scql.Dockerfile -t scql:latest .
+
+docker build -f scql.Dockerfile -t $SCQL_IMAGE:$IMAGE_TAG .
 
 rm -rf /tmp/$IMAGE_TAG

@@ -138,17 +138,16 @@ void In::PsiIn(ExecContext* ctx) {
         (in_tensor->Length() + options.batch_size - 1) / options.batch_size);
 
     spu::psi::RunEcdhPsi(options, batch_provider, in_cipher_store);
-
-    SPDLOG_INFO(
-        "my_party_code:{}, my_rank:{}, total self_item_count:{}, "
-        "total peer_item_count:{}",
-        ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
-        in_cipher_store->GetSelfItemCount(),
-        in_cipher_store->GetPeerItemCount());
   }
   // reveal to me
   if (reveal_to == my_party_code) {
     auto result = in_cipher_store->FinalizeAndComputeInResult(is_left);
+    SPDLOG_INFO(
+        "my_party_code:{}, my_rank:{}, total self_item_count:{}, "
+        "total peer_item_count:{}, result size:{}",
+        ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
+        in_cipher_store->GetSelfItemCount(),
+        in_cipher_store->GetPeerItemCount(), result->Length());
 
     const auto& output_pb = ctx->GetOutput(kOut)[0];
     ctx->GetSession()->GetTensorTable()->AddTensor(output_pb.name(),

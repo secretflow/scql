@@ -65,23 +65,12 @@ type ExecutionPlanInfo struct {
 }
 
 func NewApp(config *Config, grmClient grm.Grm, storage *gorm.DB, engineClient executor.EngineClient) (*App, error) {
-	// set up default value
-	if config.QueryResultCbTimeoutMs == 0 {
-		config.QueryResultCbTimeoutMs = DefaultQueryResultCbTimeoutMs
-	}
-	if config.SessionExpireMs == 0 {
-		config.SessionExpireMs = DefaultSessionExpireMs
-	}
-	if config.CheckSessionExpireIntervalMs == 0 {
-		config.CheckSessionExpireIntervalMs = DefaultCheckSessionExpireIntervalMs
-	}
-
 	app := &App{
 		config:    config,
 		grmClient: grmClient,
 		storage:   storage,
-		sessions: cache.New(time.Duration(config.SessionExpireMs)*time.Millisecond,
-			time.Duration(config.CheckSessionExpireIntervalMs)*time.Millisecond),
+		sessions: cache.New(time.Duration(config.SessionExpireTime),
+			time.Duration(config.SessionCheckInterval)),
 		queryDoneChan: make(chan string, defaultCallbackQueueSize),
 	}
 	app.startQueryJobFinishHandler()
@@ -89,7 +78,7 @@ func NewApp(config *Config, grmClient grm.Grm, storage *gorm.DB, engineClient ex
 	return app, nil
 }
 
-func (app *App) Port() string {
+func (app *App) Port() int {
 	return app.config.Port
 }
 
@@ -148,7 +137,7 @@ func (app *App) onQueryJobDone(sid string) {
 		return
 	}
 
-	timeout := time.Duration(app.config.QueryResultCbTimeoutMs) * time.Millisecond
+	timeout := time.Duration(app.config.QueryResultCbTimeout) * time.Millisecond
 	if err := invokeQueryResultCb(session.queryResultCbURL, session.result, timeout); err != nil {
 		logEntry.Reason = constant.ReasonCallbackFrontendFail
 		logEntry.ErrorMsg = fmt.Sprintf("Failed to request query result callback URL=%s: %v", session.queryResultCbURL, err)

@@ -28,7 +28,7 @@ TEST_F(EmbedRouterTest, FromJsonStr) {
             "id": "ds001",
             "name": "mysql db",
             "kind": "MYSQL",
-            "connection_str": "host=127.0.0.1 db=test user=root password='qwerty'"
+            "connection_str": "host=127.0.0.1 db=test"
         },
         {
             "id": "ds002",
@@ -104,8 +104,7 @@ TEST_F(EmbedRouterTest, FromJsonStr) {
 
 TEST_F(EmbedRouterTest, FromConnectionStr) {
   // Given
-  const std::string connection_str =
-      "host=127.0.0.1 db=test user=root password='qwerty'";
+  const std::string connection_str = "host=127.0.0.1 db=test";
 
   // When
   std::unique_ptr<EmbedRouter> router;

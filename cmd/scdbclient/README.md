@@ -42,7 +42,7 @@ To use the SCDBClient, simply run the client with a command and some relevant fl
 
 ### Configure user from config file
 
-To submit a query to SCDB, the client needs to provide necessary [user information](../../docs/development/scql_api.md#scdbcredential), we can use usersConfFileName parameter to refer to a file, such as [user.json](users.json), which contains pre-filled user information that correspond to the user information stored in the SCQL system.
+To submit a query to SCDB, the client needs to provide necessary [user information](../../api/scdb_api.proto), we can use usersConfFileName parameter to refer to a file, such as [user.json](users.json), which contains pre-filled user information that correspond to the user information stored in the SCQL system.
 
 ``` bash
 $ ./scdbclient prompt --host=http://example.com --usersConfFileName=/path/to/user.json

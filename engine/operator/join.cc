@@ -74,15 +74,14 @@ void Join::Execute(ExecContext* ctx) {
     }
 
     spu::psi::RunEcdhPsi(options, batch_provider, join_cipher_store);
-
-    SPDLOG_INFO(
-        "my_party_code:{}, my_rank:{}, total self_item_count:{}, "
-        "total peer_item_count:{}",
-        ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
-        join_cipher_store->GetSelfItemCount(),
-        join_cipher_store->GetPeerItemCount());
   }
   auto join_indices = join_cipher_store->FinalizeAndComputeJoinIndices(is_left);
+  SPDLOG_INFO(
+      "my_party_code:{}, my_rank:{}, total self_item_count:{}, "
+      "total peer_item_count:{}, result_size:{}",
+      ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
+      join_cipher_store->GetSelfItemCount(),
+      join_cipher_store->GetPeerItemCount(), join_indices->Length());
 
   SetJoinIndices(ctx, is_left, std::move(join_indices));
 }

@@ -113,6 +113,14 @@ html_css_files = [
 html_js_files = ["js/custom.js"]
 
 html_theme_options = {
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/secretflow/scql",
+            "icon": "fab fa-github-square",
+            "type": "fontawesome",
+        },
+    ],
     "logo": {
         "text": "SCQL",
         "image_light": "logo-light.png",

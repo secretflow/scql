@@ -1,8 +1,9 @@
 scdb_host: scdb:8080
 port: 8080
-query_result_callback_timeout_ms: 180000
-session_expire_ms: 180000
-check_session_expire_interval_ms: 100
+protocol: http
+query_result_callback_timeout: 3m
+session_expire_time: 3m
+session_expire_check_time: 100ms
 log_level: debug
 storage:
   type: mysql
@@ -15,8 +16,8 @@ grm:
   grm_mode: toygrm
   toy_grm_conf: /home/admin/configs/toy_grm.json
 engine:
-  timeout: 120 # second
-  protocol: "http"
+  timeout: 120s
+  protocol: http
   content_type: application/json
   spu:
     protocol: SEMI2K

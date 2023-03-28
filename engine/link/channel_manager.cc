@@ -31,16 +31,6 @@ void ChannelManager::AddChannelOptions(const RemoteRole role,
 
 std::shared_ptr<google::protobuf::RpcChannel> ChannelManager::Create(
     const std::string& remote_addr, RemoteRole role) {
-  auto remote_pair = std::pair(role, remote_addr);
-  {
-    absl::ReaderMutexLock lock(&mu_);
-
-    auto iter = channels_.find(remote_pair);
-    if (iter != channels_.end()) {
-      return iter->second;
-    }
-  }
-
   brpc::ChannelOptions option;
   auto iter = options_.find(role);
   if (iter != options_.end()) {
@@ -57,12 +47,6 @@ std::shared_ptr<google::protobuf::RpcChannel> ChannelManager::Create(
         "BrpcChannel Init failed, ret={}, remote_addr={}, role={}, protocal={}",
         init_result, remote_addr, static_cast<int>(role), option.protocol);
   }
-
-  {
-    absl::MutexLock lock(&mu_);
-    channels_[remote_pair] = result;
-  }
-
   return result;
 }
 

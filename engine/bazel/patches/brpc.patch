@@ -1,0 +1,135 @@
+diff --git a/src/brpc/policy/http_rpc_protocol.cpp b/src/brpc/policy/http_rpc_protocol.cpp
+index 7bd06ec5..68b1a58d 100644
+--- a/src/brpc/policy/http_rpc_protocol.cpp
++++ b/src/brpc/policy/http_rpc_protocol.cpp
+@@ -617,12 +617,12 @@ void SerializeHttpRequest(butil::IOBuf* /*not used*/,
+ 
+     Span* span = accessor.span();
+     if (span) {
+-        hreq.SetHeader("x-bd-trace-id", butil::string_printf(
+-                           "%llu", (unsigned long long)span->trace_id()));
+-        hreq.SetHeader("x-bd-span-id", butil::string_printf(
+-                           "%llu", (unsigned long long)span->span_id()));
+-        hreq.SetHeader("x-bd-parent-span-id", butil::string_printf(
+-                           "%llu", (unsigned long long)span->parent_span_id()));
++        hreq.SetHeader("x-b3-traceid", butil::string_printf(
++                           "%016llx", (unsigned long long)span->trace_id()));
++        hreq.SetHeader("x-b3-spanid", butil::string_printf(
++                           "%016llx", (unsigned long long)span->span_id()));
++        hreq.SetHeader("x-b3-parentspanid", butil::string_printf(
++                           "%016llx", (unsigned long long)span->parent_span_id()));
+     }
+ }
+ 
+@@ -1282,22 +1282,22 @@ void ProcessHttpRequest(InputMessageBase *msg) {
+ 
+     Span* span = NULL;
+     const std::string& path = req_header.uri().path();
+-    const std::string* trace_id_str = req_header.GetHeader("x-bd-trace-id");
++    const std::string* trace_id_str = req_header.GetHeader("x-b3-traceid");
+     if (IsTraceable(trace_id_str)) {
+         uint64_t trace_id = 0;
+         if (trace_id_str) {
+-            trace_id = strtoull(trace_id_str->c_str(), NULL, 10);
++            trace_id = strtoull(trace_id_str->c_str(), NULL, 16);
+         }
+         uint64_t span_id = 0;
+-        const std::string* span_id_str = req_header.GetHeader("x-bd-span-id");
++        const std::string* span_id_str = req_header.GetHeader("x-b3-spanid");
+         if (span_id_str) {
+-            span_id = strtoull(span_id_str->c_str(), NULL, 10);
++            span_id = strtoull(span_id_str->c_str(), NULL, 16);
+         }
+         uint64_t parent_span_id = 0;
+         const std::string* parent_span_id_str =
+-            req_header.GetHeader("x-bd-parent-span-id");
++            req_header.GetHeader("x-b3-parentspanid");
+         if (parent_span_id_str) {
+-            parent_span_id = strtoull(parent_span_id_str->c_str(), NULL, 10);
++            parent_span_id = strtoull(parent_span_id_str->c_str(), NULL, 16);
+         }
+         span = Span::CreateServerSpan(
+             path, trace_id, span_id, parent_span_id, msg->base_real_us());
+diff --git a/src/bvar/default_variables.cpp b/src/bvar/default_variables.cpp
+index be02c50a..172dcbe4 100644
+--- a/src/bvar/default_variables.cpp
++++ b/src/bvar/default_variables.cpp
+@@ -110,8 +110,9 @@ static bool read_proc_status(ProcStat &stat) {
+         return -1;
+     }
+     const std::string& result = oss.str();
++    // macOS flags is actually a hex, ref https://github.com/apache/incubator-brpc/issues/1106
+     if (sscanf(result.c_str(), "%d %d %d %d"
+-                              "%d %u %ld %ld",
++                              "%d %x %ld %ld",
+                &stat.pid, &stat.ppid, &stat.pgrp, &stat.session,
+                &stat.tpgid, &stat.flags, &stat.priority, &stat.nice) != 8) {
+         PLOG(WARNING) << "Fail to sscanf";
+diff --git a/BUILD.bazel b/BUILD.bazel
+index 5e59bd1c..9df99bfc 100644
+--- a/BUILD.bazel
++++ b/BUILD.bazel
+@@ -48,7 +48,7 @@ LINKOPTS = [
+     "-pthread",
+     "-ldl",
+ ] + select({
+-    "@bazel_tools//tools/osx:darwin": [
++    "@bazel_tools//src/conditions:darwin": [
+         "-framework CoreFoundation",
+         "-framework CoreGraphics",
+         "-framework CoreData",
+@@ -206,7 +206,7 @@ BUTIL_SRCS = [
+     "src/butil/recordio.cc",
+     "src/butil/popen.cpp",
+ ] + select({
+-    "@bazel_tools//tools/osx:darwin": [
++    "@bazel_tools//src/conditions:darwin": [
+         "src/butil/time/time_mac.cc",
+         "src/butil/mac/scoped_mach_port.cc",
+     ],
+@@ -314,15 +314,14 @@ cc_library(
+     visibility = ["//visibility:public"],
+     deps = [
+         "@com_github_gflags_gflags//:gflags",
+-        "@com_github_madler_zlib//:zlib",
++        "@zlib//:zlib",
+         "@com_google_protobuf//:protobuf",
+-        "@openssl//:crypto",
+-        "@openssl//:ssl",
++        "@com_github_openssl_openssl//:openssl",
+     ] + select({
+         "//bazel/config:brpc_with_glog": ["@com_github_google_glog//:glog"],
+         "//conditions:default": [],
+     }) + select({
+-        "@bazel_tools//tools/osx:darwin": [":macos_lib"],
++        "@bazel_tools//src/conditions:darwin": [":macos_lib"],
+         "//conditions:default": [],
+     }),
+ )
+diff --git a/bazel/config/BUILD.bazel b/bazel/config/BUILD.bazel
+index 4471bad1..d9cc6bd6 100644
+--- a/bazel/config/BUILD.bazel
++++ b/bazel/config/BUILD.bazel
+@@ -94,6 +94,8 @@ config_setting(
+ 
+ config_setting(
+     name = "darwin",
+-    values = {"cpu": "darwin"},
++    constraint_values = [
++        "@platforms//os:macos",
++    ],
+     visibility = ["//:__subpkgs__"],
+ )
+diff --git a/test/BUILD.bazel b/test/BUILD.bazel
+index a2eea9cf..d5c7372f 100644
+--- a/test/BUILD.bazel
++++ b/test/BUILD.bazel
+@@ -140,7 +140,7 @@ TEST_BUTIL_SOURCES = [
+     "bounded_queue_unittest.cc",
+     "butil_unittest_main.cpp",
+ ] + select({
+-    "@bazel_tools//tools/osx:darwin": [],
++    "@bazel_tools//src/conditions:darwin": [],
+     "//conditions:default": [
+         "test_file_util_linux.cc",
+         "proc_maps_linux_unittest.cc",

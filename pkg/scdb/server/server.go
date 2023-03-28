@@ -68,7 +68,7 @@ func NewServer(conf *Config, grmClient grm.Grm, storage *gorm.DB, engineClient e
 	router.POST(engineCallbackPath, app.EngineHandler)
 
 	return &http.Server{
-		Addr:           fmt.Sprintf(":%s", app.Port()),
+		Addr:           fmt.Sprintf(":%v", app.Port()),
 		Handler:        router,
 		ReadTimeout:    30 * time.Second,
 		MaxHeaderBytes: 1 << 20,
@@ -105,16 +105,6 @@ func NewDbConnWithBootstrap(conf *StorageConf) (*gorm.DB, error) {
 	sqlDB, err := db.DB()
 	if err != nil {
 		return nil, err
-	}
-
-	if conf.MaxIdleConns == 0 {
-		conf.MaxIdleConns = 1
-	}
-	if conf.MaxOpenConns == 0 {
-		conf.MaxOpenConns = 1
-	}
-	if conf.ConnMaxLifetime == 0 {
-		conf.ConnMaxLifetime = -1
 	}
 
 	sqlDB.SetMaxIdleConns(conf.MaxIdleConns)

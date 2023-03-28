@@ -17,11 +17,11 @@ Example for SCDB
   scdb_host: http://localhost:8080
   port: 8080
   protocol: http
-  query_result_callback_timeout_ms: 200
-  session_expire_ms: 3600000
-  check_session_expire_interval_ms: 100
+  query_result_callback_timeout: 200ms
+  session_expire_time: 1h
+  session_expire_check_time: 100ms
   password_check: true
-  log_level: info
+  log_level: debug
   storage:
     type: sqlite
     conn_str: scdb.db
@@ -32,9 +32,9 @@ Example for SCDB
   grm:
     grm_mode: stdgrm
     host: http://your-grm-host
-    timeout_ms: 5000
+    timeout: 5s
   engine:
-      timeout: 120
+      timeout: 120s
       protocol: http
       content_type: application/json
       spu:
@@ -46,61 +46,61 @@ Example for SCDB
 Config in SCDB
 --------------
 
-+----------------------------------+-----------+-------------------------------------------------------------+
-| Name                             | Default   | Description                                                 |
-+==================================+===========+=============================================================+
-| scdb_host                        | none      | The callback URL for the engine to notify SCDB.             |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| port                             | none      | The listening port of the SCDB server.                         |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| protocol                         | http      | The transfer protocol of SCDB server, supports HTTP/HTTPS.  |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| query_result_callback_timeout_ms | 200       | Timeout for SCDB to notify the query result.                |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| session_expire_ms                | 172800000 | The expiration duration of a session.                       |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| check_session_expire_interval_ms | 3600000   | The cleanup interval of expired session.                    |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| password_check                   | true      | Whether to validate password strength when create a user.   |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| log_level                        | info      | The type and severity of a logged event.                    |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| tls.cert_file                    | none      | Certificate file path to enable TSL, supports crt/pem type. |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| tls.key_file                     | none      | Private key file path to enable TSL, supports key/pem type. |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| storage.type                     | none      | Database Kind in SCDB, supports mysql/sqlite.               |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| storage.conn_str                 | none      | Used to connect to a database .                             |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| storage.max_idle_conns           | 1         | Maximum number of connections in idle connection pool.      |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| storage.max_open_conns           | 1         | Maximum number of open connections to the database.         |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| storage.conn_max_idle_time       | -1s       | Maximum amount of time a connection may be idle.            |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| storage.conn_max_lifetime        | -1s       | Maximum amount of time a connection may be reused.          |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| grm.grm_mode                     | none      | The grm service type, support toygrm/stdgrm.                |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| grm.host                         | none      | The host of stdgrm.                                         |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| grm.timeout                      | none      | Timeout for SCDB to get info from stdgrm.                   |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| grm.toy_grm_conf                 | none      | The config file path of toygrm.                             |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| engine.timeout                   | none      | Timeout for SCDB to send message to engine.                 |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| engine.protocol                  | https     | The transfer protocol of Engine, support http/https.        |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| engine.content_type              | none      | The original media type in post body from SCDB to engine.   |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| engine.spu.protocol              | none      | The mpc protocol for engine to work with.                   |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| engine.spu.field                 | none      | A security parameter type for engine to work with.          |
-+----------------------------------+-----------+-------------------------------------------------------------+
-| engine.spu.sigmoid_mode          | none      | The sigmoid approximation method for engine to work with.   |
-+----------------------------------+-----------+-------------------------------------------------------------+
++-------------------------------+---------+------------------------------------------------------------+
+| Name                          | Default | Description                                                |
++===============================+=========+============================================================+
+| scdb_host                     | none    | The callback URL for the engine to notify SCDB             |
++-------------------------------+---------+------------------------------------------------------------+
+| port                          | none    | The listening port of the SCDB server                      |
++-------------------------------+---------+------------------------------------------------------------+
+| protocol                      | http    | The transfer protocol of SCDB server, supports HTTP/HTTPS  |
++-------------------------------+---------+------------------------------------------------------------+
+| query_result_callback_timeout | 200ms   | Timeout for SCDB to notify the query result                |
++-------------------------------+---------+------------------------------------------------------------+
+| session_expire_time           | 48h     | The expiration duration of a session                       |
++-------------------------------+---------+------------------------------------------------------------+
+| session_expire_check_time     | 1h      | The cleanup interval of expired session                    |
++-------------------------------+---------+------------------------------------------------------------+
+| password_check                | true    | Whether to validate password strength when create a user   |
++-------------------------------+---------+------------------------------------------------------------+
+| log_level                     | info    | The type and severity of a logged event                    |
++-------------------------------+---------+------------------------------------------------------------+
+| tls.cert_file                 | none    | Certificate file path to enable TSL, supports crt/pem type |
++-------------------------------+---------+------------------------------------------------------------+
+| tls.key_file                  | none    | Private key file path to enable TSL, supports key/pem type |
++-------------------------------+---------+------------------------------------------------------------+
+| storage.type                  | none    | Database Kind in SCDB, supports mysql/sqlite               |
++-------------------------------+---------+------------------------------------------------------------+
+| storage.conn_str              | none    | Used to connect to a database                              |
++-------------------------------+---------+------------------------------------------------------------+
+| storage.max_idle_conns        | 1       | Maximum number of connections in idle connection pool      |
++-------------------------------+---------+------------------------------------------------------------+
+| storage.max_open_conns        | 1       | Maximum number of open connections to the database         |
++-------------------------------+---------+------------------------------------------------------------+
+| storage.conn_max_idle_time    | -1s     | Maximum amount of time a connection may be idle            |
++-------------------------------+---------+------------------------------------------------------------+
+| storage.conn_max_lifetime     | -1s     | Maximum amount of time a connection may be reused          |
++-------------------------------+---------+------------------------------------------------------------+
+| grm.grm_mode                  | none    | The grm service type, support toygrm/stdgrm                |
++-------------------------------+---------+------------------------------------------------------------+
+| grm.host                      | none    | The host of stdgrm                                         |
++-------------------------------+---------+------------------------------------------------------------+
+| grm.timeout                   | none    | Timeout for SCDB to get info from stdgrm                   |
++-------------------------------+---------+------------------------------------------------------------+
+| grm.toy_grm_conf              | none    | The config file path of toygrm                             |
++-------------------------------+---------+------------------------------------------------------------+
+| engine.timeout                | none    | Timeout for SCDB to send message to engine                 |
++-------------------------------+---------+------------------------------------------------------------+
+| engine.protocol               | https   | The transfer protocol of Engine, support http/https        |
++-------------------------------+---------+------------------------------------------------------------+
+| engine.content_type           | none    | The original media type in post body from SCDB to engine   |
++-------------------------------+---------+------------------------------------------------------------+
+| engine.spu.protocol           | none    | The mpc protocol for engine to work with                   |
++-------------------------------+---------+------------------------------------------------------------+
+| engine.spu.field              | none    | A security parameter type for engine to work with          |
++-------------------------------+---------+------------------------------------------------------------+
+| engine.spu.sigmoid_mode       | none    | The sigmoid approximation method for engine to work with   |
++-------------------------------+---------+------------------------------------------------------------+
 
 
 Config for GRM
@@ -109,18 +109,18 @@ In addition to being provided by developers, GRM services can also be simulated 
 
 1. stdgrm
 
-If you want to use your own developed GRM service, grm_mode need to be set as stdgrm
+If you want to use your own developed GRM service, grm_mode need to be set as stdgrm.
 
 .. code-block:: yaml
   
   grm:
     grm_mode: stdgrm  
     host: ${host of grm service} # eg. http://localhost:8080
-    timeout: ${timeout of grm service} # eg. 2min
+    timeout: ${timeout of grm service} # eg. 2m
 
 2. toygrm
 
-If you want to directly mock a GRM service from a json file, except set grm_mode as toygrm, toy_grm_conf also need to be set
+If you want to directly mock a GRM service from a json file, except set grm_mode as toygrm, toy_grm_conf also need to be set.
 
 .. code-block:: yaml
 
@@ -146,7 +146,7 @@ If you need to enable TLS in SCDB, please refer to the following configuration.
   engine:
     protocol: https
 
-Additionally, it is necessary to configure the engine to work with SSL, please refer `Config for SSL`_
+Additionally, it is necessary to configure the engine to work with SSL, please refer `Config for SSL`_.
 
 
 Config for SPU
@@ -195,7 +195,7 @@ Config in Engine
 +--------------------------------------------+--------------+-------------------------------------------------------------------------------+
 | peer_engine_max_retry                      | 3            | Rpc max retries(not including the first rpc) between engine and engine        |
 +--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| peer_engine_enable_ssl_as_client           | false        | Whether enable ssl encryption when send message to another engine             |
+| peer_engine_enable_ssl_as_client           | true         | Whether enable ssl encryption when send message to another engine             |
 +--------------------------------------------+--------------+-------------------------------------------------------------------------------+
 | peer_engine_enable_ssl_client_verification | false        | Whether enable certificate verification when send message to another engine   |
 +--------------------------------------------+--------------+-------------------------------------------------------------------------------+
@@ -211,7 +211,7 @@ Config in Engine
 +--------------------------------------------+--------------+-------------------------------------------------------------------------------+
 | scdb_max_retry                             | 3            | Rpc max retries(not including the first rpc) between engine and SCDB          |
 +--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| scdb_enable_ssl_as_client                  | false        | Whether enable ssl encryption when send message to SCDB                       |
+| scdb_enable_ssl_as_client                  | true         | Whether enable ssl encryption when send message to SCDB                       |
 +--------------------------------------------+--------------+-------------------------------------------------------------------------------+
 | scdb_enable_ssl_client_verification        | false        | Whether enable certificate verification when send message to SCDB             |
 +--------------------------------------------+--------------+-------------------------------------------------------------------------------+
@@ -225,7 +225,7 @@ Config in Engine
 +--------------------------------------------+--------------+-------------------------------------------------------------------------------+
 | idle_timeout_s                             | 30           | Idle connection close delay in seconds between the engine and SCDB, unit: s   |
 +--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| server_enable_ssl                          | false        | Whether enable SSL when engine work as a server                               |
+| server_enable_ssl                          | true         | Whether enable SSL when engine work as a server                               |
 +--------------------------------------------+--------------+-------------------------------------------------------------------------------+
 | server_ssl_certificate                     | none         | Certificate file path to enable SSL when engine work as a server              |
 +--------------------------------------------+--------------+-------------------------------------------------------------------------------+
@@ -283,11 +283,11 @@ datasources in embed_router_conf contain information for connecting MYSQL/SQLite
   
   id: unique id of datasource.
 
-  name: custom description help to distinguish datasources
+  name: custom description help to distinguish datasources.
 
-  kind: datasource type, currently support MYSQL/SQLite3
+  kind: datasource type, currently support MYSQL/SQLite3.
 
-  connection_str: string used to connect MYSQL/SQLite3
+  connection_str: string used to connect MYSQL/SQLite3.
 
     MYSQL Connection string format::
 
@@ -318,7 +318,7 @@ embed_router will route to the corresponding datasource by::
     2. try the database_name:* rules;
     3. try *:table_name in the end.
 
-Once found, SCQLEngine will try to connect database with datasource's information correspond to the *datasource_id*
+Once found, SCQLEngine will try to connect database with datasource's information correspond to the *datasource_id*.
 
 Config for Brpc server
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -334,7 +334,7 @@ SCQLEngine uses **Brpc** to communicate with SCDB and other peer SCQLEngines, ea
 
 Config for SSL
 ^^^^^^^^^^^^^^
-If you want to enable SSL in Engine, add FLAGS as follows. Additionally, it may be necessary to configure SCDB work with TLS please refer `Config for TLS`_
+If you want to enable SSL in Engine, add FLAGS as follows. Additionally, it may be necessary to configure SCDB work with TLS please refer `Config for TLS`_.
 
 .. code-block::
 
