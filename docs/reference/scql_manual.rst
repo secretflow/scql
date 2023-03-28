@@ -89,7 +89,7 @@ CREATE/DROP TABLE Statement
     DROP TABLE [IF EXISTS] tbl_name
 
 .. note::
-    Create table here means mapping 'tbl_name' to the existing physic table, which is specified by 'TID' and located on the relevant parties..
+    Create table here means mapping 'tbl_name' to the existing physic table, which is specified by 'TID' and located on the relevant parties.
     In SCQL, user runs queries on virtual table, which helps simplify privilege control and usage.
 
 Examples:
