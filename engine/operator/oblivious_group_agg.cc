@@ -25,8 +25,8 @@
 #include "libspu/kernel/hlo/basic_ternary.h"
 #include "libspu/kernel/hlo/casting.h"
 #include "libspu/kernel/hlo/const.h"
-#include "libspu/kernel/hlo/dynamic_slice.h"
 #include "libspu/kernel/hlo/geometrical.h"
+#include "libspu/kernel/hlo/indexing.h"
 
 #include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
