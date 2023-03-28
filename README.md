@@ -72,4 +72,4 @@ Non-release versions of SCQL are prohibited to use in any production environment
 
 ## Acknowledgments
 
-- Thanks, [TiDB](https://github.com/pingcap/tidb) for providing a powerful SQL parser and planner.
+- Thanks [TiDB](https://github.com/pingcap/tidb) for providing a powerful SQL parser and planner.

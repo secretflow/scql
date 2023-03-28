@@ -6,7 +6,7 @@ This document will give some examples on CCL settings in typical scenarios. You 
 Pre-knowledge
 -------------
 
-What is SCQL CCL? Please read :ref:`/reference/scql_ccl_intro_cn.rst`.
+What is SCQL CCL? Please read :ref:`/reference/scql_ccl_intro.rst`.
 
 Grant CCL syntax, please read :ref:`Grant/Revoke CCL<scql_grant_revoke>`.
 
