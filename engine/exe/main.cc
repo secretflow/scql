@@ -37,11 +37,11 @@ DEFINE_string(peer_engine_connection_type, "single", "connection type");
 DEFINE_int32(peer_engine_timeout_ms, 300000, "rpc timeout in milliseconds.");
 DEFINE_int32(peer_engine_max_retry, 3,
              "rpc max retries(not including the first rpc)");
-DEFINE_bool(peer_engine_enable_ssl_as_client, false,
+DEFINE_bool(peer_engine_enable_ssl_as_client, true,
             "enable ssl encryption as client");
 DEFINE_bool(peer_engine_enable_ssl_client_verification, false,
             "enable ssl client verification");
-DEFINE_string(peer_engine_ssl_client_ca_certificate, "ca-crt.pem",
+DEFINE_string(peer_engine_ssl_client_ca_certificate, "",
               "certificate Authority file path to verify SSL as client");
 DEFINE_int32(link_recv_timeout_ms, 30 * 1000,
              "the max time that a party will wait for a given event");
@@ -50,11 +50,10 @@ DEFINE_string(scdb_protocol, "http:proto", "rpc protocol");
 DEFINE_string(scdb_connection_type, "pooled", "connection type");
 DEFINE_int32(scdb_timeout_ms, 5000, "rpc timeout in milliseconds.");
 DEFINE_int32(scdb_max_retry, 3, "rpc max retries(not including the first rpc)");
-DEFINE_bool(scdb_enable_ssl_as_client, false,
-            "enable ssl encryption as client");
+DEFINE_bool(scdb_enable_ssl_as_client, true, "enable ssl encryption as client");
 DEFINE_bool(scdb_enable_ssl_client_verification, false,
             "enable ssl client verification");
-DEFINE_string(scdb_ssl_client_ca_certificate, "ca-crt.pem",
+DEFINE_string(scdb_ssl_client_ca_certificate, "",
               "certificate Authority file path to verify SSL as client");
 // Brpc server flags.
 DEFINE_int32(listen_port, 8003, "");
@@ -62,11 +61,11 @@ DEFINE_bool(enable_builtin_service, false,
             "whether brpc builtin service is enable/disable");
 DEFINE_int32(internal_port, 9527, "which port the builtin services server on");
 DEFINE_int32(idle_timeout_s, 30, "connections idle close delay in seconds");
-DEFINE_bool(server_enable_ssl, false,
+DEFINE_bool(server_enable_ssl, true,
             "whether brpc server's ssl enable/disable");
-DEFINE_string(server_ssl_certificate, "cert.pem",
+DEFINE_string(server_ssl_certificate, "",
               "Certificate file path to enable SSL");
-DEFINE_string(server_ssl_private_key, "key.pem",
+DEFINE_string(server_ssl_private_key, "",
               "Private key file path to enable SSL");
 // Common flags for Brpc server and channel of peer engine.
 DEFINE_bool(enable_client_authorization, false,
@@ -100,6 +99,9 @@ void AddChannelOptions(scql::engine::ChannelManager* channel_manager) {
     if (FLAGS_peer_engine_enable_ssl_as_client) {
       options.mutable_ssl_options()->ciphers = "";
       if (FLAGS_peer_engine_enable_ssl_client_verification) {
+        if (FLAGS_peer_engine_ssl_client_ca_certificate.empty()) {
+          SPDLOG_WARN("peer_engine_ssl_client_ca_certificate is empty");
+        }
         // All certificate are directly signed by our CA, depth = 1 is enough.
         options.mutable_ssl_options()->verify.verify_depth = 1;
         options.mutable_ssl_options()->verify.ca_file_path =
@@ -202,6 +204,10 @@ brpc::ServerOptions BuildServerOptions() {
   options.internal_port = FLAGS_internal_port;
   options.idle_timeout_sec = FLAGS_idle_timeout_s;
   if (FLAGS_server_enable_ssl) {
+    if (FLAGS_server_ssl_certificate.empty() ||
+        FLAGS_server_ssl_private_key.empty()) {
+      SPDLOG_WARN("server ssl cert or key file is empty");
+    }
     auto ssl_options = options.mutable_ssl_options();
     ssl_options->default_cert.certificate = FLAGS_server_ssl_certificate;
     ssl_options->default_cert.private_key = FLAGS_server_ssl_private_key;

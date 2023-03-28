@@ -56,8 +56,8 @@ You could start SCQL service via `docker-compose <https://github.com/secretflow/
 .. code-block:: bash
 
     # startup docker-compose
+    # If you install docker with Compose V1, pleas use `docker-compose` instead of `docker compose`
     (cd examples/docker-compose && docker compose up -d)
-
 
 SCDBServer is listening on ``http://localhost:8080``, you could send queries to it via scdbclient.
 

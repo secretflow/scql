@@ -16,8 +16,6 @@
 
 #include <memory>
 
-#include "absl/container/flat_hash_map.h"
-#include "absl/synchronization/mutex.h"
 #include "brpc/channel.h"
 
 namespace scql::engine {
@@ -38,10 +36,6 @@ class ChannelManager {
 
  private:
   std::map<RemoteRole, brpc::ChannelOptions> options_;
-  absl::Mutex mu_;
-  absl::flat_hash_map<std::pair<RemoteRole, std::string>,
-                      std::shared_ptr<google::protobuf::RpcChannel>>
-      channels_;
 };
 
 }  // namespace scql::engine

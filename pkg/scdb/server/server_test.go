@@ -71,16 +71,20 @@ func TestSCDBServer(t *testing.T) {
 	listener, err := net.Listen("tcp", ":0")
 	r.NoError(err)
 
-	port := fmt.Sprint(listener.Addr().(*net.TCPAddr).Port)
-	log.Printf("SCDB is listening on :%s\n", port)
+	port := listener.Addr().(*net.TCPAddr).Port
+	log.Printf("SCDB is listening on :%v\n", port)
 
 	config := &server.Config{
 		Port:          port,
-		SCDBHost:      fmt.Sprintf("http://localhost:%s", port),
+		SCDBHost:      fmt.Sprintf("http://localhost:%v", port),
 		PasswordCheck: true,
 		Storage: server.StorageConf{
-			Type:    server.StorageTypeSQLite,
-			ConnStr: ":memory:",
+			Type:            server.StorageTypeSQLite,
+			ConnStr:         ":memory:",
+			MaxIdleConns:    1,
+			MaxOpenConns:    1,
+			ConnMaxIdleTime: -1,
+			ConnMaxLifetime: -1,
 		},
 	}
 	os.Setenv("SCQL_ROOT_PASSWORD", userRootPassword)
@@ -118,14 +122,14 @@ func TestSCDBServer(t *testing.T) {
 
 	// Wait one second for HTTP server to start
 	time.Sleep(time.Second)
-	serverHealthURL := "http://localhost:" + port + "/public/health_check"
+	serverHealthURL := "http://localhost:" + fmt.Sprint(port) + "/public/health_check"
 	caseHealthCheck(r, serverHealthURL)
 
-	serverSubmitURL := "http://localhost:" + port + client.SubmitPath
-	serverFetchURL := "http://localhost:" + port + client.FetchPath
+	serverSubmitURL := "http://localhost:" + fmt.Sprint(port) + client.SubmitPath
+	serverFetchURL := "http://localhost:" + fmt.Sprint(port) + client.FetchPath
 	caseInvalidRequest(r, serverSubmitURL, serverFetchURL)
 
-	stub := client.NewClient("http://localhost:"+port, &http.Client{Timeout: 3 * time.Second}, 50, 200*time.Millisecond)
+	stub := client.NewClient("http://localhost:"+fmt.Sprint(port), &http.Client{Timeout: 3 * time.Second}, 50, 200*time.Millisecond)
 	caseSubmit(r, stub)
 	caseSubmitAndGet(r, stub)
 	caseFetch(r, stub)
@@ -321,11 +325,15 @@ func TestSCDBServerForPipeline(t *testing.T) {
 	r := require.New(t)
 
 	config := &server.Config{
-		Port:          "0", // pick an available port to avoid port conflicts
+		Port:          0,
 		PasswordCheck: true,
 		Storage: server.StorageConf{
-			Type:    server.StorageTypeSQLite,
-			ConnStr: ":memory:",
+			Type:            server.StorageTypeSQLite,
+			ConnStr:         ":memory:",
+			MaxIdleConns:    1,
+			MaxOpenConns:    1,
+			ConnMaxIdleTime: -1,
+			ConnMaxLifetime: -1,
 		},
 	}
 	os.Setenv("SCQL_ROOT_PASSWORD", userRootPassword)

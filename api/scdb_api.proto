@@ -42,12 +42,14 @@ service SCDBService {
   // This interface is suitable for executing fast queries,
   // such as DDL, DML, and simple DQL. However,
   // if the query takes a long time to run, it may result in a timeout.
-  // Therefore, it is recommended to use the synchronous query API to run complex queries.
+  // Therefore, it is recommended to use the synchronous query API to run
+  // complex queries.
   rpc SubmitAndGet(SCDBQueryRequest) returns (SCDBQueryResultResponse);
 }
 
 // SCDBQueryResultCallback defines an API that SCQL could use it to notify the
-// caller when the query result is ready, either because it has finished successfully or an error has occurred.
+// caller when the query result is ready, either because it has finished
+// successfully or an error has occurred.
 service SCDBQueryResultCallback {
   // ReportQueryResult reports the query result once the query job done.
   rpc ReportQueryResult(SCDBQueryResultResponse)
@@ -98,8 +100,6 @@ message SCDBQueryResultResponse {
 
   // the number of rows affected by a select into, update, insert, or delete
   int64 affected_rows = 4;
-
-  ExecutionProgress execution_process = 5;
 }
 
 message User {

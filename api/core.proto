@@ -161,15 +161,6 @@ message TensorList {
   repeated Tensor tensors = 1;
 }
 
-message ExecutionProgress {
-  // Total number of steps (or sub jobs)
-  int32 total = 1;
-  // Finished number of steps (or sub jobs)
-  int32 success_count = 2;
-  // Description
-  string description = 3;
-}
-
 // An execution node
 message ExecNode {
   // Node name, should be unique in an execution plan,
@@ -197,7 +188,6 @@ message FormalAttribute {
   // A complete attribute definition string.
   string definition = 2;
 }
-
 
 // Formal parameter options.
 enum FormalParameterOptions {

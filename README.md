@@ -1,4 +1,5 @@
 # SCQL
+
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/secretflow/scql/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/secretflow/scql/tree/main)
 
 Secure Collaborative Query Language (SCQL) is a system that translates SQL statements into Secure Multiparty Computation (SMC) primitives and executes them on a federation of database systems.
@@ -71,4 +72,4 @@ Non-release versions of SCQL are prohibited to use in any production environment
 
 ## Acknowledgments
 
--Thanks, [TiDB](https://github.com/pingcap/tidb) for providing a powerful SQL parser and planner.
+- Thanks, [TiDB](https://github.com/pingcap/tidb) for providing a powerful SQL parser and planner.

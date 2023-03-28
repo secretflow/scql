@@ -28,10 +28,12 @@ import (
 )
 
 const (
-	DefaultQueryResultCbTimeoutMs       = 200
-	DefaultSessionExpireMs              = 2 * 24 * 60 * 60 * 1000 // two days
-	DefaultCheckSessionExpireIntervalMs = 60 * 60 * 1000          // check every hour
-	SecondsToMs                         = 1000
+	DefaultQueryResultCbTimeout = 200 * time.Millisecond // 200s
+	DefaultSessionExpireTime    = 2 * 24 * time.Hour     // 2 days
+	DefaultSessionCheckInterval = 1 * time.Hour          // 1 hours
+	DefaultClientTimeout        = 120 * time.Second      // 120s
+	DefaultProtocol             = "https"
+	DefaultLogLevel             = "info"
 )
 
 type EngineConfig struct {
@@ -53,7 +55,7 @@ type RuntimeCfg struct {
 	EnablePphloProfile     bool   `yaml:"enable_pphlo_profile"`
 	EnableHalProfile       bool   `yaml:"enable_hal_profile"`
 	RevealSecretCondition  bool   `yaml:"reveal_secret_condition"`
-	RevealSecretIndicies   bool   `yaml:"reveal_secret_indicies"`
+	RevealSecretIndices    bool   `yaml:"reveal_secret_indices"`
 	PublicRandomSeed       uint64 `yaml:"public_random_seed"`
 	FxpDivGoldschmidtIters int64  `yaml:"fxp_div_goldschmidt_iters"`
 	FxpExpMode             string `yaml:"fxp_exp_mode"`
@@ -74,18 +76,18 @@ type TlsConf struct {
 // Config contains bootstrap configuration for SCDB
 type Config struct {
 	// SCDBHost is used as callback url for engine worked in async mode
-	SCDBHost                     string       `yaml:"scdb_host"`
-	Protocol                     string       `yaml:"protocol"`
-	QueryResultCbTimeoutMs       int64        `yaml:"query_result_callback_timeout_ms"`
-	SessionExpireMs              int64        `yaml:"session_expire_ms"`
-	CheckSessionExpireIntervalMs int64        `yaml:"check_session_expire_interval_ms"`
-	Port                         string       `yaml:"port"`
-	PasswordCheck                bool         `yaml:"password_check"`
-	LogLevel                     string       `yaml:"log_level"`
-	TlsConfig                    TlsConf      `yaml:"tls"`
-	Storage                      StorageConf  `yaml:"storage"`
-	GRM                          GRMConf      `yaml:"grm"`
-	Engine                       EngineConfig `yaml:"engine"`
+	SCDBHost             string        `yaml:"scdb_host"`
+	Port                 int           `yaml:"port"`
+	Protocol             string        `yaml:"protocol"`
+	QueryResultCbTimeout time.Duration `yaml:"query_result_callback_timeout"`
+	SessionExpireTime    time.Duration `yaml:"session_expire_time"`
+	SessionCheckInterval time.Duration `yaml:"session_expire_check_time"`
+	PasswordCheck        bool          `yaml:"password_check"`
+	LogLevel             string        `yaml:"log_level"`
+	TlsConfig            TlsConf       `yaml:"tls"`
+	Storage              StorageConf   `yaml:"storage"`
+	GRM                  GRMConf       `yaml:"grm"`
+	Engine               EngineConfig  `yaml:"engine"`
 }
 
 const (
@@ -116,10 +118,10 @@ var GrmModeType = map[string]GrmType{
 
 type GRMConf struct {
 	// if GRM work in toy mod, scdb will construct grm service from json file located in ToyGrmConf
-	GrmMode    string `yaml:"grm_mode"`
-	Host       string `yaml:"host"`
-	TimeoutMs  int64  `yaml:"timeout_ms"`
-	ToyGrmConf string `yaml:"toy_grm_conf"`
+	GrmMode    string        `yaml:"grm_mode"`
+	Host       string        `yaml:"host"`
+	Timeout    time.Duration `yaml:"timeout"`
+	ToyGrmConf string        `yaml:"toy_grm_conf"`
 }
 
 // NewConfig constructs Config from YAML file
@@ -137,7 +139,51 @@ func NewConfig(configPath string) (*Config, error) {
 	if conStr := os.Getenv("SCDB_CONN_STR"); conStr != "" {
 		config.Storage.ConnStr = conStr
 	}
-	return &config, nil
+	return SetDefaultValues(&config)
+}
+
+func SetDefaultValues(config *Config) (*Config, error) {
+	if config.QueryResultCbTimeout == 0 {
+		config.QueryResultCbTimeout = DefaultQueryResultCbTimeout
+	}
+	if config.SessionExpireTime == 0 {
+		config.SessionExpireTime = DefaultSessionExpireTime
+	}
+	if config.SessionCheckInterval == 0 {
+		config.SessionCheckInterval = DefaultSessionCheckInterval
+	}
+	if config.Protocol == "" {
+		config.Protocol = DefaultProtocol
+	}
+	if config.LogLevel == "" {
+		config.LogLevel = DefaultLogLevel
+	}
+	if config.Protocol == DefaultProtocol && (config.TlsConfig.CertFile == "" || config.TlsConfig.KeyFile == "") {
+		return nil, fmt.Errorf("SCDB work in https, cert_file or key_file couldn't be empty")
+	}
+	if config.Storage.MaxIdleConns == 0 {
+		config.Storage.MaxIdleConns = 1
+	}
+	if config.Storage.MaxOpenConns == 0 {
+		config.Storage.MaxOpenConns = 1
+	}
+	if config.Storage.ConnMaxIdleTime == 0 {
+		config.Storage.ConnMaxIdleTime = -1
+	}
+	if config.Storage.ConnMaxLifetime == 0 {
+		config.Storage.ConnMaxLifetime = -1
+	}
+	if config.Engine.ClientTimeout == 0 {
+		config.Engine.ClientTimeout = DefaultClientTimeout
+	}
+	if config.Engine.Protocol == "" {
+		config.Engine.Protocol = DefaultProtocol
+	}
+	if config.Engine.SpuRuntimeCfg == nil {
+		return nil, fmt.Errorf("SpuRuntimeCfg is empty")
+	}
+
+	return config, nil
 }
 
 func NewSpuRuntimeCfg(config *RuntimeCfg) (*spu.RuntimeConfig, error) {
@@ -154,7 +200,7 @@ func NewSpuRuntimeCfg(config *RuntimeCfg) (*spu.RuntimeConfig, error) {
 		EnablePphloProfile:     config.EnablePphloProfile,
 		EnableHalProfile:       config.EnableHalProfile,
 		RevealSecretCondition:  config.RevealSecretCondition,
-		RevealSecretIndicies:   config.RevealSecretIndicies,
+		RevealSecretIndices:    config.RevealSecretIndices,
 		FxpDivGoldschmidtIters: config.FxpDivGoldschmidtIters,
 		FxpExpIters:            config.FxpExpIters,
 		FxpLogIters:            config.FxpLogIters,

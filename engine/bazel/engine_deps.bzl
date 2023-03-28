@@ -41,6 +41,8 @@ def engine_deps():
     _org_sqlite()
     _com_github_duckdb()
 
+    _com_github_brpc_brpc()
+
     maybe(
         git_repository,
         name = "spulib",
@@ -253,4 +255,21 @@ def _com_github_duckdb():
         sha256 = "ea9bba89ae3e461f3fc9f83911b2f3b6c386c23463bcf7b1ed6bb4cc13e822a4",
         strip_prefix = "duckdb-0.6.1",
         build_file = "@scql//engine/bazel:duckdb.BUILD",
+    )
+
+def _com_github_brpc_brpc():
+    maybe(
+        http_archive,
+        name = "com_github_brpc_brpc",
+        sha256 = "6ea39d8984217f62ef954b7ebc0dfa724c62472a5ae7033ed189f994f28b9e30",
+        strip_prefix = "brpc-1.4.0",
+        type = "tar.gz",
+        patch_args = ["-p1"],
+        patches = [
+            "@scql//engine/bazel:patches/brpc.patch",
+            "@scql//engine/bazel:patches/brpc_ssl.patch",
+        ],
+        urls = [
+            "https://github.com/apache/incubator-brpc/archive/refs/tags/1.4.0.tar.gz",
+        ],
     )

@@ -337,13 +337,6 @@ func fetchResult(user *scql.SCDBCredential, sessionId string, maxFetchNum int, f
 			return nil, err
 		}
 		if response.Status.Code == int32(scql.Code_NOT_READY) {
-			if response != nil && response.ExecutionProcess != nil {
-				fmt.Fprintf(os.Stdout, "\rsuccess_count/total:%d/%d",
-					response.ExecutionProcess.SuccessCount, response.ExecutionProcess.Total)
-			}
-			if count == 1 {
-				defer fmt.Fprint(os.Stdout, "\n")
-			}
 			continue
 		}
 		return response, nil

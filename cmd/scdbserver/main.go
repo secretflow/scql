@@ -139,7 +139,7 @@ func newGrmClient(cfg server.GRMConf) grm.Grm {
 		}
 		return grmClient
 	case server.StdGrmMode:
-		httpClient := &http.Client{Timeout: time.Duration(cfg.TimeoutMs) * time.Millisecond}
+		httpClient := &http.Client{Timeout: cfg.Timeout}
 		return stdgrm.New(httpClient, cfg.Host)
 	default:
 		log.Fatalf("unknown grm mode %v ", grmMode)
