@@ -44,11 +44,8 @@ jobs:
           name: "SCDB Test"
           command: |
             set +e
-            mkdir -p result
             go mod tidy
-            go test -timeout=30m -v -coverprofile cover.out ./... | tee ./result/test.log
-      - store_test_results:
-          path: ./result/test.log
+            go test -timeout=30m -v  ./...
   linux_engine_ut:
     docker:
       - image: registry.hub.docker.com/secretflow/scql-ci:0.4
@@ -104,11 +101,8 @@ jobs:
           name: "SCDB Test"
           command: |
             set +e
-            mkdir -p result
             go mod tidy
-            go test -timeout=30m -v -coverprofile cover.out ./... | tee ./result/test.log
-      - store_test_results:
-          path: ./result/test.log
+            go test -timeout=30m -v ./...
   macOS_engine_ut:
     macos:
       xcode: 14.2
