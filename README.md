@@ -45,9 +45,6 @@ bazel build //engine/exe:scqlengine -c opt
 # run unittests for SCQL engine
 bazel test //engine/...
 
-# update scdb proto
-make pb
-
 # build scdb code
 make
 

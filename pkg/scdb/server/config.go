@@ -54,8 +54,6 @@ type RuntimeCfg struct {
 	ProcessorDumpDir       string `yaml:"processor_dump_dir"`
 	EnablePphloProfile     bool   `yaml:"enable_pphlo_profile"`
 	EnableHalProfile       bool   `yaml:"enable_hal_profile"`
-	RevealSecretCondition  bool   `yaml:"reveal_secret_condition"`
-	RevealSecretIndices    bool   `yaml:"reveal_secret_indices"`
 	PublicRandomSeed       uint64 `yaml:"public_random_seed"`
 	FxpDivGoldschmidtIters int64  `yaml:"fxp_div_goldschmidt_iters"`
 	FxpExpMode             string `yaml:"fxp_exp_mode"`
@@ -199,8 +197,6 @@ func NewSpuRuntimeCfg(config *RuntimeCfg) (*spu.RuntimeConfig, error) {
 		ProcessorDumpDir:       config.ProcessorDumpDir,
 		EnablePphloProfile:     config.EnablePphloProfile,
 		EnableHalProfile:       config.EnableHalProfile,
-		RevealSecretCondition:  config.RevealSecretCondition,
-		RevealSecretIndices:    config.RevealSecretIndices,
 		FxpDivGoldschmidtIters: config.FxpDivGoldschmidtIters,
 		FxpExpIters:            config.FxpExpIters,
 		FxpLogIters:            config.FxpLogIters,
