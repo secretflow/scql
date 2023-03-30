@@ -182,7 +182,6 @@ jobs:
             set +e
             sleep 1m
             export $(grep -v '^#' .ci/docker-compose/.env | xargs)
-            export SKIP_CONCURRENT_TEST=true
             go test ./cmd/regtest/... -v -count=1 -timeout=30m
 
 # Invoke jobs via workflows
