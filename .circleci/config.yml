@@ -181,6 +181,7 @@ jobs:
           command: |
             set +e
             sleep 1m
+            export SKIP_CONCURRENT_TEST=true
             export $(grep -v '^#' .ci/docker-compose/.env | xargs)
             go test ./cmd/regtest/... -v -count=1 -timeout=30m
 
