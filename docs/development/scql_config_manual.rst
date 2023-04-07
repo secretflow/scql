@@ -4,6 +4,8 @@ SCQL Config Manual
 
 This configuration manual is designed to help users understand the various configuration options available for the SCQL system. It can be divided into two parts: SCDB configuration options and Engine configuration options.
 
+.. _scdb_config_options:
+
 SCDB configuration options
 ==========================
 
@@ -160,6 +162,7 @@ SCQL supports different mpc protocol powered by SPU, you can choose different mp
     field: FM64
     sigmoid_mode: SIGMOID_REAL
 
+.. _engine_config_options:
 
 Engine configuration options
 ============================
