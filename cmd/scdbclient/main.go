@@ -296,7 +296,7 @@ func runSql(dbName, sql string, userAuth *UserCredential, sync bool) (err error)
 		}
 	}
 
-	if result.Status.Code == int32(scql.Code_OK) {
+	if result.GetStatus().GetCode() == int32(scql.Code_OK) {
 		if len(result.OutColumns) > 0 {
 			fmt.Fprintf(os.Stdout, "[fetch]\n")
 			// table view
@@ -315,7 +315,7 @@ func runSql(dbName, sql string, userAuth *UserCredential, sync bool) (err error)
 		}
 		fmt.Fprintf(os.Stdout, "[fetch] OK for DDL/DML\n")
 	} else {
-		fmt.Fprintf(os.Stdout, "[fetch]err: Code: %v, message:%v\n", result.Status.Code, result.Status.Message)
+		fmt.Fprintf(os.Stdout, "[fetch]err: Code: %v, message:%v\n", result.GetStatus().GetCode(), result.GetStatus().GetMessage())
 	}
 
 	return nil
@@ -336,7 +336,7 @@ func fetchResult(user *scql.SCDBCredential, sessionId string, maxFetchNum int, f
 		if err != nil {
 			return nil, err
 		}
-		if response.Status.Code == int32(scql.Code_NOT_READY) {
+		if response.GetStatus().GetCode() == int32(scql.Code_NOT_READY) {
 			continue
 		}
 		return response, nil
