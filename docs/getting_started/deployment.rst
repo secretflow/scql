@@ -296,7 +296,7 @@ Create a file called ``docker-compose.yaml`` in your workspace and paste the fol
         - __SCDB_PORT__:8080
       volumes:
         - ./config.yml:/home/admin/configs/config.yml
-        - ./toy_grm.json:/home/admin/configs/toy_grm.yml
+        - ./toy_grm.json:/home/admin/configs/toy_grm.json
     mysql:
       image: mysql:latest
       environment:
