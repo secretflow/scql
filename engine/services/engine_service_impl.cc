@@ -243,7 +243,11 @@ void EngineServiceImpl::RunExecutionPlan(
 
   // 2. run jobs in plan and add result to response.
   try {
+    YACL_ENFORCE(session_mgr_->SetSessionState(session_id, SessionState::IDLE,
+                                               SessionState::RUNNING));
     RunPlan(*request, session, response);
+    YACL_ENFORCE(session_mgr_->SetSessionState(
+        session_id, SessionState::RUNNING, SessionState::IDLE));
   } catch (const std::exception& e) {
     std::string err_msg = fmt::format(
         "RunExecutionPlan run jobs({}) failed, catch std::exception={} ",
