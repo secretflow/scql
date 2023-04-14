@@ -16,12 +16,37 @@
 # See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
 
+parameters:
+  run-regtest:
+    type: boolean
+    default: false
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
-  linux_ut:
+  linux_scdb_ut:
     # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
     # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
+    docker:
+      - image: registry.hub.docker.com/secretflow/scql-ci:0.4
+    resource_class: 2xlarge
+    # Add steps to the job
+    # See: https://circleci.com/docs/2.0/configuration-reference/#steps
+    steps:
+      - run:
+          name: Cancel build after set time
+          background: true
+          command: |
+            sleep 3600
+            echo "Canceling workflow as too much time has elapsed"
+            curl -X POST --header "Content-Type: application/json" "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/cancel?circle-token=${BUILD_TIMER_TOKEN}"
+      - checkout
+      - run:
+          name: "SCDB Test"
+          command: |
+            set +e
+            go mod tidy
+            go test -timeout=30m -v  ./...
+  linux_engine_ut:
     docker:
       - image: registry.hub.docker.com/secretflow/scql-ci:0.4
     resource_class: 2xlarge
@@ -38,46 +63,47 @@ jobs:
             curl -X POST --header "Content-Type: application/json" "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/cancel?circle-token=${BUILD_TIMER_TOKEN}"
       - checkout
       - restore_cache:
-          name: "Restore build cache"
-          key: scql-build-comp-{{ arch }}-
-      - run:
-          name: "build"
-          command: bazel build //engine/... -c opt --ui_event_filters=-info,-debug,-warning --disk_cache=~/.cache/scql_build_cache
+          name: "Restore build engine cache"
+          key: scql-engine-build-{{ arch }}-
       - run:
           name: "Engine Test"
           command: |
             set +e
             declare -i test_status
-            bazel test //engine/... -c opt --ui_event_filters=-info,-debug,-warning --test_output=errors --disk_cache=~/.cache/scql_build_cache | tee test_result.log; test_status=${PIPESTATUS[0]}
-            sh .ci/rename-junit-xml.sh
+            bazel test //engine/... -c opt --ui_event_filters=-info,-debug,-warning --test_output=errors --disk_cache=~/.cache/engine_cache | tee test_result.log; test_status=${PIPESTATUS[0]}
+            sh .ci/script/rename_junit_xml.sh
             find bazel-bin/ -executable -type f -name "*_test"  -print0 | xargs -0 tar -cvzf test_binary.tar.gz
             find bazel-testlogs/ -type f -name "test.log"  -print0 | xargs -0 tar -cvzf test_logs.tar.gz
             exit ${test_status}
-      - run:
-          name: "SCDB Test"
-          command: |
-            set +e
-            mkdir -p $WORKSPACE/result
-            make
-            go mod tidy
-            go test -timeout=30m -v -coverprofile cover.out ./... | tee $WORKSPACE/result/test.log
-            cat $WORKSPACE/result/test.log | go-junit-report > $WORKSPACE/result/TEST-all.xml  # --> junit-report
-            go tool cover -html=cover.out -o $WORKSPACE/result/coverage.html
-            go tool cover -func=cover.out -o $WORKSPACE/result/func.out
-            cat cover.out | gocover-cobertura > $WORKSPACE/result/cover.xml
-            echo test func-coverage $(tail -1 $WORKSPACE/result/func.out | awk '{print $3}')
       - save_cache:
-          key: scql-build-comp-{{ arch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
+          key: scql-engine-build-{{ arch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
           paths:
-            - /root/.cache/scql_build_cache
-          when: always
+            - ~/.cache/engine_cache
       - store_test_results:
           path: test-results
       - store_artifacts:
           path: test_binary.tar.gz
       - store_artifacts:
           path: test_logs.tar.gz
-  macOS_ut:
+  macOS_scdb_ut:
+    macos:
+      xcode: 14.2
+    environment:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+    resource_class: macos.m1.large.gen1
+    steps:
+      - checkout
+      - run:
+          name: "Install homebrew dependencies"
+          command: |
+            brew install wget go
+      - run:
+          name: "SCDB Test"
+          command: |
+            set +e
+            go mod tidy
+            go test -timeout=30m -v ./...
+  macOS_engine_ut:
     macos:
       xcode: 14.2
     environment:
@@ -86,44 +112,27 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          name: "Restore build cache"
-          key: scql-build-comp-{{ arch }}-
+          name: "Restore engine cache"
+          key: scql-engine-build-{{ arch }}-
       - run:
           name: "Install homebrew dependencies"
           command: |
             brew install bazel cmake ninja libomp wget go md5sha1sum
             (cd /opt/homebrew/Cellar/bazel/*.*.*/libexec/bin && curl -fLO https://github.com/bazelbuild/bazel/releases/download/5.4.0/bazel-5.4.0-darwin-arm64 && chmod +x bazel-5.4.0-darwin-arm64)
       - run:
-          name: "build"
-          command: bazel build //engine/... -c opt --ui_event_filters=-info,-debug,-warning --disk_cache=~/.cache/scql_build_cache
-      - run:
           name: "Engine Test"
           command: |
             set +e
             declare -i test_status
-            bazel test //engine/... -c opt --ui_event_filters=-info,-debug,-warning --test_output=errors --disk_cache=~/.cache/scql_build_cache | tee test_result.log; test_status=${PIPESTATUS[0]}
-            sh .ci/rename-junit-xml.sh
+            bazel test //engine/... -c opt --ui_event_filters=-info,-debug,-warning --test_output=errors --disk_cache=~/.cache/engine_cache | tee test_result.log; test_status=${PIPESTATUS[0]}
+            sh .ci/script/rename_junit_xml.sh
             find bazel-bin/ -perm +111 -type f -name "*_test"  -print0 | xargs -0 tar -cvzf test_binary.tar.gz
             find bazel-testlogs/ -type f -name "test.log"  -print0 | xargs -0 tar -cvzf test_logs.tar.gz
             exit ${test_status}
-      - run:
-          name: "SCDB Test"
-          command: |
-            set +e
-            mkdir -p $WORKSPACE/result
-            make
-            go mod tidy
-            go test -timeout=30m -v -coverprofile cover.out ./... | tee $WORKSPACE/result/test.log
-            cat $WORKSPACE/result/test.log | go-junit-report > $WORKSPACE/result/TEST-all.xml  # --> junit-report
-            go tool cover -html=cover.out -o $WORKSPACE/result/coverage.html
-            go tool cover -func=cover.out -o $WORKSPACE/result/func.out
-            cat cover.out | gocover-cobertura > $WORKSPACE/result/cover.xml
-            echo test func-coverage $(tail -1 $WORKSPACE/result/func.out | awk '{print $3}')
       - save_cache:
-          key: scql-build-comp-{{ arch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
+          key: scql-engine-build-{{ arch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
           paths:
-            - ~/.cache/scql_build_cache
-          when: always
+            - ~/.cache/engine_cache
       - store_test_results:
           path: test-results
       - store_artifacts:
@@ -131,10 +140,62 @@ jobs:
       - store_artifacts:
           path: test_logs.tar.gz
 
+  linux_regtest:
+    machine:
+      image: ubuntu-2004:2022.07.1
+    resource_class: 2xlarge
+    steps:
+      - checkout
+      - restore_cache:
+          name: "Restore engine cache"
+          key: scql-engine-build-{{ arch }}-
+      - run:
+          name: "Build binary"
+          command: |
+            set +e 
+            mkdir -p image
+            cp docker/scql.Dockerfile image
+            docker run --name scql-dev --mount type=bind,source="$(pwd)",target=/home/admin/dev/ -w /home/admin/dev --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --cap-add=NET_ADMIN --privileged=true secretflow/scql-ci:0. \
+              sh -c "make && bazel build //engine/... -c opt --ui_event_filters=-info,-debug,-warning --disk_cache=/home/admin/dev/.cache/engine_cache"
+            docker cp scql-dev:/home/admin/dev/bazel-bin/engine/exe/scqlengine image
+            docker cp scql-dev:/home/admin/dev/bin/scdbserver image
+            docker cp scql-dev:/home/admin/dev/bin/scdbclient image
+      - save_cache:
+          key: scql-engine-build-{{ arch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
+          paths:
+            - .cache/engine_cache
+      - run:
+          name: "Build image"
+          command: |
+            cd image
+            docker build -f scql.Dockerfile -t scql:latest .
+      - run:
+          name: "Deploy image"
+          command: |
+            set +e
+            cd .ci/docker-compose
+            docker compose -p regtest up -d 
+            docker ps | grep regtest
+      - run:
+          name: "Run regtest"
+          command: |
+            set +e
+            sleep 1m
+            export SKIP_CONCURRENT_TEST=true
+            export $(grep -v '^#' .ci/docker-compose/.env | xargs)
+            go test ./cmd/regtest/... -v -count=1 -timeout=30m
+
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  ut:
+  run_ut:
     jobs:
-      - linux_ut
-      - macOS_ut
+      - linux_scdb_ut
+      - linux_engine_ut
+      - macOS_scdb_ut
+      - macOS_engine_ut
+
+  run_regtest:
+    when: << pipeline.parameters.run-regtest >>
+    jobs:
+      - linux_regtest
