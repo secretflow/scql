@@ -27,7 +27,7 @@ jobs:
     # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
     # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
     docker:
-      - image: registry.hub.docker.com/secretflow/scql-ci:0.4
+      - image: registry.hub.docker.com/secretflow/scql-ci:0.5
     resource_class: 2xlarge
     # Add steps to the job
     # See: https://circleci.com/docs/2.0/configuration-reference/#steps
@@ -48,7 +48,7 @@ jobs:
             go test -timeout=30m -v  ./...
   linux_engine_ut:
     docker:
-      - image: registry.hub.docker.com/secretflow/scql-ci:0.4
+      - image: registry.hub.docker.com/secretflow/scql-ci:0.5
     resource_class: 2xlarge
     # Add steps to the job
     # See: https://circleci.com/docs/2.0/configuration-reference/#steps
@@ -118,7 +118,7 @@ jobs:
           name: "Install homebrew dependencies"
           command: |
             brew install bazel cmake ninja libomp wget go md5sha1sum
-            (cd /opt/homebrew/Cellar/bazel/*.*.*/libexec/bin && curl -fLO https://github.com/bazelbuild/bazel/releases/download/5.4.0/bazel-5.4.0-darwin-arm64 && chmod +x bazel-5.4.0-darwin-arm64)
+            (cd /opt/homebrew/Cellar/bazel/*.*.*/libexec/bin && curl -fLO https://github.com/bazelbuild/bazel/releases/download/5.4.1/bazel-5.4.1-darwin-arm64 && chmod +x bazel-5.4.1-darwin-arm64)
       - run:
           name: "Engine Test"
           command: |
@@ -155,7 +155,7 @@ jobs:
             set +e 
             mkdir -p image
             cp docker/scql.Dockerfile image
-            docker run --name scql-dev --mount type=bind,source="$(pwd)",target=/home/admin/dev/ -w /home/admin/dev --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --cap-add=NET_ADMIN --privileged=true secretflow/scql-ci:0.4 \
+            docker run --name scql-dev --mount type=bind,source="$(pwd)",target=/home/admin/dev/ -w /home/admin/dev --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --cap-add=NET_ADMIN --privileged=true secretflow/scql-ci:0.5 \
               sh -c "make && bazel build //engine/... -c opt --ui_event_filters=-info,-debug,-warning --disk_cache=/home/admin/dev/.cache/engine_cache"
             docker cp scql-dev:/home/admin/dev/bazel-bin/engine/exe/scqlengine image
             docker cp scql-dev:/home/admin/dev/bin/scdbserver image
