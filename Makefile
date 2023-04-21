@@ -2,7 +2,7 @@ export GO111MODULE=on
 GOPATH := ${GOPATH}:${PWD}
 TOOLBIN := ${PWD}/tool-bin
 export PATH := ${TOOLBIN}:$(PATH)
-export GOFLAGS=-buildmode=pie
+export GOFLAGS=-buildmode=pie -buildvcs=false
 export CGO_CPPFLAGS=-fstack-protector-strong -D_FORTIFY_SOURCE=2
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
