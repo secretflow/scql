@@ -148,7 +148,7 @@ jobs:
       - checkout
       - restore_cache:
           name: "Restore engine cache"
-          key: scql-engine-build-{{ arch }}-
+          key: scql-engine-regtest-build-{{ arch }}-
       - run:
           name: "Build binary"
           command: |
@@ -161,7 +161,7 @@ jobs:
             docker cp scql-dev:/home/admin/dev/bin/scdbserver image
             docker cp scql-dev:/home/admin/dev/bin/scdbclient image
       - save_cache:
-          key: scql-engine-build-{{ arch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
+          key: scql-engine-regtest-build-{{ arch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
           paths:
             - .cache/engine_cache
       - run:
