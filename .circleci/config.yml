@@ -180,7 +180,17 @@ jobs:
           command: git clone https://github.com/secretflow/devtools.git
       - run:
           name: Decompress cache
-          command: sh devtools/decompress-build-cache.sh engine_regtest_cache
+          command: |
+            set +e
+            if test -f .cache/engine_regtest_cache.tar.gz; then 
+              echo "cache file exists." 
+              cd .cache
+              tar -xzf engine_regtest_cache.tar.gz
+              rm -f engine_regtest_cache.tar.gz
+            else
+                echo "$CACHE_FILE does not exist"
+            fi
+          sh devtools/decompress-build-cache.sh engine_regtest_cache
       - run:
           name: "Build binary"
           command: |
