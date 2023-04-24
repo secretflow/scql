@@ -196,7 +196,7 @@ jobs:
           name: Cleanup and compress cache
           command: |
             sh devtools/clean_disk_cache.sh .cache/engine_regtest_cache
-            cd .cache && tar -zcf engine_regtest_cache.tar.gz engine_regtest_cache
+            cd .cache && sudo tar -zcf engine_regtest_cache.tar.gz engine_regtest_cache
       - save_cache:
           key: engine-regtest-build-{{ arch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
           paths:
