@@ -180,36 +180,27 @@ jobs:
           command: git clone https://github.com/secretflow/devtools.git
       - run:
           name: Decompress cache
-          command: |
-            set +e
-            if test -f .cache/engine_regtest_cache.tar.gz; then 
-              echo "cache file exists." 
-              cd .cache
-              tar -xzf engine_regtest_cache.tar.gz
-              rm -f engine_regtest_cache.tar.gz
-            else
-              echo "cache file does not exist"
-            fi
+          command: sh devtools/decompress-build-cache.sh engine_regtest_cache
       - run:
           name: "Build binary"
           command: |
             set +e 
             mkdir -p image
             cp docker/scql.Dockerfile image
-            docker run --name scql-dev --mount type=bind,source="$(pwd)",target=/home/admin/dev/ -w /home/admin/dev --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --cap-add=NET_ADMIN --privileged=true secretflow/release-ci:latest \
-              sh -c "make && bazel build //engine/... -c opt --ui_event_filters=-info,-debug,-warning --disk_cache=/home/admin/dev/.cache/engine_regtest_cache"
+            docker run --name scql-dev -v $(pwd):/home/admin/dev/ -v ~/.cache/engine_regtest_cache:/root/.cache/engine_regtest_cache -w /home/admin/dev --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --cap-add=NET_ADMIN --privileged=true secretflow/release-ci:latest \
+              sh -c "make && bazel build //engine/... -c opt --ui_event_filters=-info,-debug,-warning --disk_cache=~/.cache/engine_regtest_cache"
             docker cp scql-dev:/home/admin/dev/bazel-bin/engine/exe/scqlengine image
             docker cp scql-dev:/home/admin/dev/bin/scdbserver image
             docker cp scql-dev:/home/admin/dev/bin/scdbclient image
       - run:
           name: Cleanup and compress cache
           command: |
-            sh devtools/clean_disk_cache.sh .cache/engine_regtest_cache
-            cd .cache && sudo tar -zcf engine_regtest_cache.tar.gz engine_regtest_cache
+            sh devtools/clean_disk_cache.sh ~/.cache/engine_regtest_cache
+            sh devtools/compress-build-cache.sh engine_regtest_cache
       - save_cache:
           key: engine-regtest-build-{{ arch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
           paths:
-            - .cache/engine_regtest_cache.tar.gz
+            - ~/.cache/engine_regtest_cache.tar.gz
       - run:
           name: "Build image"
           command: |
