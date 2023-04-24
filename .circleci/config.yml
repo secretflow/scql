@@ -188,9 +188,8 @@ jobs:
               tar -xzf engine_regtest_cache.tar.gz
               rm -f engine_regtest_cache.tar.gz
             else
-                echo "$CACHE_FILE does not exist"
+              echo "cache file does not exist"
             fi
-          sh devtools/decompress-build-cache.sh engine_regtest_cache
       - run:
           name: "Build binary"
           command: |
