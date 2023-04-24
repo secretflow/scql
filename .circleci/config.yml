@@ -174,7 +174,13 @@ jobs:
       - checkout
       - restore_cache:
           name: "Restore engine cache"
-          key: scql-engine-regtest-build-{{ arch }}-
+          key: engine-regtest-build-{{ arch }}-
+      - run:
+          name: "Checkout devtools"
+          command: git clone https://github.com/secretflow/devtools.git
+      - run:
+          name: Decompress cache
+          command: sh devtools/decompress-build-cache.sh engine_regtest_cache
       - run:
           name: "Build binary"
           command: |
@@ -186,10 +192,15 @@ jobs:
             docker cp scql-dev:/home/admin/dev/bazel-bin/engine/exe/scqlengine image
             docker cp scql-dev:/home/admin/dev/bin/scdbserver image
             docker cp scql-dev:/home/admin/dev/bin/scdbclient image
+      - run:
+          name: Cleanup and compress cache
+          command: |
+            sh devtools/clean_disk_cache.sh ~/.cache/engine_regtest_cache
+            sh devtools/compress-build-cache.sh engine_regtest_cache
       - save_cache:
-          key: scql-engine-regtest-build-{{ arch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
+          key: engine-regtest-build-{{ arch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
           paths:
-            - .cache/engine_regtest_cache
+            - .cache/engine_regtest_cache.tar.gz
       - run:
           name: "Build image"
           command: |
