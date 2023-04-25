@@ -1,4 +1,4 @@
-FROM registry.openanolis.cn/openanolis/anolisos:8.6
+FROM openanolis/anolisos:8.6
 
 ENV TZ=Asia/Shanghai
 

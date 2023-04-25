@@ -64,21 +64,34 @@ jobs:
       - checkout
       - restore_cache:
           name: "Restore build engine cache"
-          key: scql-engine-build-{{ arch }}-
+          key: engine-ut-build-{{ arch }}-
+      - run:
+          name: "Checkout devtools"
+          command: git clone https://github.com/secretflow/devtools.git
+      - run:
+          name: Decompress cache
+          command: sh devtools/decompress-build-cache.sh engine_ut_cache
       - run:
           name: "Engine Test"
           command: |
             set +e
             declare -i test_status
-            bazel test //engine/... -c opt --ui_event_filters=-info,-debug,-warning --test_output=errors --disk_cache=~/.cache/engine_cache | tee test_result.log; test_status=${PIPESTATUS[0]}
+            bazel test //engine/... -c opt --ui_event_filters=-info,-debug,-warning --test_output=errors --disk_cache=~/.cache/engine_ut_cache | tee test_result.log; test_status=${PIPESTATUS[0]}
             sh .ci/script/rename_junit_xml.sh
             find bazel-bin/ -executable -type f -name "*_test"  -print0 | xargs -0 tar -cvzf test_binary.tar.gz
             find bazel-testlogs/ -type f -name "test.log"  -print0 | xargs -0 tar -cvzf test_logs.tar.gz
             exit ${test_status}
+      - run:
+          name: Cleanup and compress cache
+          command: |
+            sh devtools/clean_disk_cache.sh ~/.cache/engine_ut_cache
+            sh devtools/compress-build-cache.sh engine_ut_cache
+          when: always
       - save_cache:
-          key: scql-engine-build-{{ arch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
+          key: engine-ut-build-{{ arch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
           paths:
-            - ~/.cache/engine_cache
+            - ~/.cache/engine_ut_cache.tar.gz
+          when: always
       - store_test_results:
           path: test-results
       - store_artifacts:
@@ -113,7 +126,13 @@ jobs:
       - checkout
       - restore_cache:
           name: "Restore engine cache"
-          key: scql-engine-build-{{ arch }}-
+          key: engine-ut-build-{{ arch }}-
+      - run:
+          name: "Checkout devtools"
+          command: git clone https://github.com/secretflow/devtools.git
+      - run:
+          name: Decompress cache
+          command: sh devtools/decompress-build-cache.sh engine_ut_cache
       - run:
           name: "Install homebrew dependencies"
           command: |
@@ -124,15 +143,22 @@ jobs:
           command: |
             set +e
             declare -i test_status
-            bazel test //engine/... -c opt --ui_event_filters=-info,-debug,-warning --test_output=errors --disk_cache=~/.cache/engine_cache | tee test_result.log; test_status=${PIPESTATUS[0]}
+            bazel test //engine/... -c opt --ui_event_filters=-info,-debug,-warning --test_output=errors --disk_cache=~/.cache/engine_ut_cache | tee test_result.log; test_status=${PIPESTATUS[0]}
             sh .ci/script/rename_junit_xml.sh
             find bazel-bin/ -perm +111 -type f -name "*_test"  -print0 | xargs -0 tar -cvzf test_binary.tar.gz
             find bazel-testlogs/ -type f -name "test.log"  -print0 | xargs -0 tar -cvzf test_logs.tar.gz
             exit ${test_status}
+      - run:
+          name: Cleanup and compress cache
+          command: |
+            sh devtools/clean_disk_cache.sh ~/.cache/engine_ut_cache
+            sh devtools/compress-build-cache.sh engine_ut_cache
+          when: always
       - save_cache:
-          key: scql-engine-build-{{ arch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
+          key: engine-ut-build-{{ arch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
           paths:
-            - ~/.cache/engine_cache
+            - ~/.cache/engine_ut_cache.tar.gz
+          when: always
       - store_test_results:
           path: test-results
       - store_artifacts:
@@ -148,22 +174,33 @@ jobs:
       - checkout
       - restore_cache:
           name: "Restore engine cache"
-          key: scql-engine-regtest-build-{{ arch }}-
+          key: engine-regtest-build-{{ arch }}-
+      - run:
+          name: "Checkout devtools"
+          command: git clone https://github.com/secretflow/devtools.git
+      - run:
+          name: Decompress cache
+          command: sh devtools/decompress-build-cache.sh engine_regtest_cache
       - run:
           name: "Build binary"
           command: |
             set +e 
             mkdir -p image
             cp docker/scql.Dockerfile image
-            docker run --name scql-dev --mount type=bind,source="$(pwd)",target=/home/admin/dev/ -w /home/admin/dev --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --cap-add=NET_ADMIN --privileged=true secretflow/release-ci:latest \
-              sh -c "make && bazel build //engine/... -c opt --ui_event_filters=-info,-debug,-warning --disk_cache=/home/admin/dev/.cache/engine_regtest_cache"
+            docker run --name scql-dev -v $(pwd):/home/admin/dev/ -v ~/.cache/engine_regtest_cache:/root/.cache/engine_regtest_cache -w /home/admin/dev --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --cap-add=NET_ADMIN --privileged=true secretflow/release-ci:latest \
+              sh -c "make && bazel build //engine/... -c opt --ui_event_filters=-info,-debug,-warning --disk_cache=~/.cache/engine_regtest_cache"
             docker cp scql-dev:/home/admin/dev/bazel-bin/engine/exe/scqlengine image
             docker cp scql-dev:/home/admin/dev/bin/scdbserver image
             docker cp scql-dev:/home/admin/dev/bin/scdbclient image
+      - run:
+          name: Cleanup and compress cache
+          command: |
+            sh devtools/clean_disk_cache.sh ~/.cache/engine_regtest_cache
+            sh devtools/compress-build-cache.sh engine_regtest_cache
       - save_cache:
-          key: scql-engine-regtest-build-{{ arch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
+          key: engine-regtest-build-{{ arch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
           paths:
-            - .cache/engine_regtest_cache
+            - ~/.cache/engine_regtest_cache.tar.gz
       - run:
           name: "Build image"
           command: |
