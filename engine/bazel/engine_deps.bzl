@@ -16,7 +16,6 @@ load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-
 SECRETFLOW_GROUP_GIT = "https://github.com/secretflow"
 
 SPU_GIT = "https://github.com/secretflow/spu.git"
@@ -204,7 +203,7 @@ def _com_mysql():
         urls = [
             "https://github.com/mysql/mysql-server/archive/refs/tags/mysql-8.0.29.tar.gz",
         ],
-        sha256 = "cedc0ab865c8451dfb45e7e871b1b581ff43cfc846c2cbbedd12d84c20a41ec9",
+        sha256 = "fc02246f39764b7b2b7815bb260d52983296919ba13246f3de8873b3e86dc579",
         strip_prefix = "mysql-server-mysql-8.0.29",
         build_file = "@scql//engine/bazel:mysql.BUILD",
     )
