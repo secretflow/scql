@@ -29,6 +29,13 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sphinx.util.tags import Tags
+
+    # Sphinx injects this during eval
+    tags: Tags = None
 
 # -- Project information -----------------------------------------------------
 
@@ -52,15 +59,11 @@ extensions = [
     "sphinx.ext.autosectionlabel",
     "myst_parser",
     "nbsphinx",
-    "sphinxcontrib.actdiag",
-    "sphinxcontrib.blockdiag",
-    "sphinxcontrib.mermaid",
-    "sphinxcontrib.nwdiag",
-    "sphinxcontrib.packetdiag",
-    "sphinxcontrib.rackdiag",
-    "sphinxcontrib.seqdiag",
     "sphinx_design",
 ]
+
+if tags.has("mdx"):
+    extensions.append("sphinx_mdx")
 
 # Make sure the target is unique
 autosectionlabel_prefix_document = True
@@ -75,8 +78,8 @@ templates_path = ["_templates"]
 # Usually you set "language" from the command line for these cases.
 # multi-language docs
 
-language = 'en'
-locale_dirs = ['./locales/']  # path is example but recommended.
+language = "en"
+locale_dirs = ["./locales/"]  # path is example but recommended.
 gettext_compact = False  # optional.
 gettext_uuid = False  # optional.
 
@@ -89,7 +92,8 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # Enable TODO
 todo_include_todos = True
 
-# The output format for Graphviz when building HTML files. This must be either 'png' or 'svg'; the default is 'png'.
+# The output format for Graphviz when building HTML files. This must be either
+# 'png' or 'svg'; the default is 'png'.
 graphviz_output_format = "svg"
 
 # -- Options for HTML output -------------------------------------------------
@@ -149,6 +153,7 @@ suppress_warnings = ["myst.header"]
 myst_gfm_only = True
 myst_heading_anchors = 1
 myst_title_to_header = True
+
 
 # app setup hook
 def setup(app):

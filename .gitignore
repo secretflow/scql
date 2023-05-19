@@ -19,3 +19,12 @@ tool-bin/*
 scdb.db
 .vscode/launch.json
 logs/scdbserver.log
+
+# Python
+
+.venv
+venv
+
+# gettext
+
+.mo
