@@ -249,12 +249,12 @@ Response
         },
        "engine_infos": [
             {
-                "endpoints": "party1_url",
-                "credential": "party1_credential"
+                "endpoints": ["party1_url"],
+                "credential": ["party1_credential"]
             },
             {
-                "endpoints": "party2_url",
-                "credential": "party2_credential"
+                "endpoints": ["party2_url"],
+                "credential": ["party2_credential"]
             }
        ]
     }

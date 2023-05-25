@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-set -eu
+set -eux
 
 SCQL_IMAGE=scql
 IMAGE_TAG=latest
@@ -38,49 +38,34 @@ elif [[ $# -eq 1 ]]; then
 fi
 echo "build image $SCQL_IMAGE:$IMAGE_TAG"
 
-# prepare temporary path /tmp/$IMAGE_TAG for file copies
-echo "copy files to dir: /tmp/$IMAGE_TAG"
-rm -rf /tmp/$IMAGE_TAG
-mkdir -p /tmp/$IMAGE_TAG
+# prepare temporary path $TMP_PATH for file copies
+TMP_PATH=$WORK_DIR/.buildtmp/$IMAGE_TAG
+echo "copy files to dir: $TMP_PATH"
+rm -rf $TMP_PATH
+mkdir -p $TMP_PATH
+trap "rm -rf $TMP_PATH" EXIT
 
-# check whether build container exists, create it if not exits
-devbox=scql-dev-$(whoami)
+container_id=$(docker run -it --rm --detach \
+  --mount type=bind,source="${WORK_DIR}",target=/home/admin/dev/ \
+  -w /home/admin/dev \
+  secretflow/release-ci:latest)
 
-if [[ -n $(docker ps -a -f "status=exited" | grep ${devbox}) ]]; then
-  docker rm ${devbox}
-  echo "remove container"
-fi
-
-rm_devbox=false
-if [[ -z $(docker ps -q -f "name=^${devbox}$") ]]; then
-  rm_devbox=true
-  docker run -d -it --name ${devbox} \
-    --mount type=bind,source="${WORK_DIR}",target=/home/admin/dev/ \
-    -w /home/admin/dev \
-    secretflow/scql-ci:latest
-fi
+trap "docker stop ${container_id}" EXIT
 
 # build engine binary
-docker exec -it ${devbox} bash -c "cd /home/admin/dev && bazel build //engine/exe:scqlengine -c opt"
-docker cp ${devbox}:/home/admin/dev/bazel-bin/engine/exe/scqlengine /tmp/$IMAGE_TAG
+docker exec -it ${container_id} bash -c "cd /home/admin/dev && bazel build //engine/exe:scqlengine -c opt"
+docker cp ${container_id}:/home/admin/dev/bazel-bin/engine/exe/scqlengine $TMP_PATH
 
 # build scdbserver + scdbclient binary
-docker exec -it ${devbox} bash -c "cd /home/admin/dev && make"
-docker cp ${devbox}:/home/admin/dev/bin/scdbserver /tmp/$IMAGE_TAG
-docker cp ${devbox}:/home/admin/dev/bin/scdbclient /tmp/$IMAGE_TAG
-
-# clean build container on-demand
-if [ "$rm_devbox" = true ]; then
-  docker stop ${devbox} && docker rm ${devbox}
-fi
+docker exec -it ${container_id} bash -c "cd /home/admin/dev && make"
+docker cp ${container_id}:/home/admin/dev/bin/scdbserver $TMP_PATH
+docker cp ${container_id}:/home/admin/dev/bin/scdbclient $TMP_PATH
 
 # copy dockerfile
-cp $SCRIPT_DIR/scql.Dockerfile /tmp/$IMAGE_TAG
+cp $SCRIPT_DIR/scql.Dockerfile $TMP_PATH
 
 # build docker image
-cd /tmp/$IMAGE_TAG
+cd $TMP_PATH
 echo "start to build scql image in $(pwd)"
 
 docker build -f scql.Dockerfile -t $SCQL_IMAGE:$IMAGE_TAG .
-
-rm -rf /tmp/$IMAGE_TAG

@@ -105,7 +105,7 @@ size_t CryptoHash(const std::string& str) {
 
   size_t ret;
   std::memcpy(&ret, hash.data(), sizeof(ret));
-  return ret;
+  return ret >> 1;  // spu FM64 only used 63 bit to calculate
 }
 
 class StringToHashConverter {
@@ -169,11 +169,10 @@ class HashToStringConverter {
       const auto& hash_value = array.GetView(i);
       auto iter = hash_to_string_->find(hash_value);
       if (iter == hash_to_string_->end()) {
-        return arrow::Status::Invalid(fmt::format(
-            "get string for hash={} failed, not found", hash_value));
+        builder_->Append(kStringPlaceHolder);
+      } else {
+        builder_->Append(iter->second);
       }
-
-      builder_->Append(iter->second);
     }
     return arrow::Status::OK();
   }
@@ -181,6 +180,7 @@ class HashToStringConverter {
  private:
   absl::flat_hash_map<size_t, std::string>* hash_to_string_;
   std::unique_ptr<StringTensorBuilder> builder_;
+  static constexpr char kStringPlaceHolder[] = "__null__";
 };
 
 }  // namespace
