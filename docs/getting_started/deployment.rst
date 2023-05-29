@@ -318,7 +318,7 @@ Create a file called ``docker-compose.yaml`` in your workspace and paste the fol
 
 .. note::
 
-  ``__SCDB_PORT__`` is the published port on the host machine which is used for engine service to listen on , you need to replace it with an accessible port number. Here, it's set as 8080
+  ``__SCDB_PORT__`` is the published port on the host machine which is used for scdb service to listen on, you need to replace it with an accessible port number. Here, it's set as 8080
 
 2.5 Start SCDB Service
 ----------------------
