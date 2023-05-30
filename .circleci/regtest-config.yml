@@ -16,18 +16,15 @@
 # See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
 
-orbs:
-  path-filtering: circleci/path-filtering@0.1.4
-
 parameters:
-  run-regtest:
+  build-and-run:
     type: boolean
     default: false
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
-linux_regtest:
+  linux_regtest:
     machine:
       image: ubuntu-2004:2022.07.1
     resource_class: 2xlarge
@@ -84,33 +81,11 @@ linux_regtest:
             export $(grep -v '^#' .ci/docker-compose/.env | xargs)
             go test ./cmd/regtest/... -v -count=1 -timeout=30m
 
+
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  run_ut:
-    when:
-      not: << pipeline.parameters.run-regtest >>
+  unittest:
+    when: << pipeline.parameters.build-and-run >>
     jobs:
-      - path-filtering/filter:
-          base-revision: main
-          config-path: .circleci/unittest-config.yml
-          mapping: |
-            api/.* build-and-run true
-            bazel/.* build-and-run true
-            cmd/.* build-and-run true
-            engine/.* build-and-run true
-            pkg/.* build-and-run true
-            .bazelrc build-and-run true
-  run_regtest:
-    when: << pipeline.parameters.run-regtest >>
-    jobs:
-      - path-filtering/filter:
-          base-revision: main
-          config-path: .circleci/regtest-config.yml
-          mapping: |
-            api/.* build-and-run true
-            bazel/.* build-and-run true
-            cmd/.* build-and-run true
-            engine/.* build-and-run true
-            pkg/.* build-and-run true
-            .bazelrc build-and-run true
+      - linux_regtest
