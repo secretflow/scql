@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-30 20:12+0800\n"
+"POT-Creation-Date: 2023-05-31 11:16+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -247,26 +247,30 @@ msgid ""
 "converts it into a Logical Plan."
 msgstr ""
 
-#: ../../getting_started/scql_intro.rst:127
+#: ../../getting_started/scql_intro.rst:-1
+msgid "Logical Plan for Q"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:113
 msgid "Step3. Translate"
 msgstr ""
 
-#: ../../getting_started/scql_intro.rst:130
+#: ../../getting_started/scql_intro.rst:116
 msgid "Step3.1 Build and Check CCL"
 msgstr ""
 
-#: ../../getting_started/scql_intro.rst:132
+#: ../../getting_started/scql_intro.rst:118
 msgid ""
 "Translator needs to retrieve CCL from CCL manager, it will build CCL "
 "along the logical plan and verify the CCL of root node to ensure Q is "
 "legal on data owners' constraints."
 msgstr ""
 
-#: ../../getting_started/scql_intro.rst:136
+#: ../../getting_started/scql_intro.rst:122
 msgid "Step3.2 Translate"
 msgstr ""
 
-#: ../../getting_started/scql_intro.rst:138
+#: ../../getting_started/scql_intro.rst:124
 msgid ""
 "The translator takes the logical plan and CCL as inputs and generates an "
 "execution graph for the query Q as follows."
@@ -276,11 +280,11 @@ msgstr ""
 msgid "Execution Graph for Q"
 msgstr ""
 
-#: ../../getting_started/scql_intro.rst:145
+#: ../../getting_started/scql_intro.rst:131
 msgid "Step4. Optimize and Split Graph"
 msgstr ""
 
-#: ../../getting_started/scql_intro.rst:147
+#: ../../getting_started/scql_intro.rst:133
 msgid ""
 "The graph optimizer will optimize the execution graph, such as node "
 "fusion and replicated node elimination. The optimized execution graph is "
@@ -292,11 +296,11 @@ msgstr ""
 msgid "subgraphs"
 msgstr ""
 
-#: ../../getting_started/scql_intro.rst:155
+#: ../../getting_started/scql_intro.rst:141
 msgid "Step5. Execute"
 msgstr ""
 
-#: ../../getting_started/scql_intro.rst:157
+#: ../../getting_started/scql_intro.rst:143
 msgid ""
 "SCDB sends the subgraphs to corresponding SCQLEngine nodes, SCQLEngine "
 "cooperates with peers to run the execution graph and reports the final "
