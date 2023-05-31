@@ -33,7 +33,7 @@
 # -- Project information -----------------------------------------------------
 
 project = "SCQL"
-copyright = "2022 Ant Group Co., Ltd."
+copyright = "2023 Ant Group Co., Ltd."
 author = "SCQL authors"
 
 
