@@ -1,0 +1,125 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SCQL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: SCQL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-05-30 20:12+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.11.0\n"
+
+#: ../../getting_started/quickstart.rst:2
+msgid "Quickstart"
+msgstr ""
+
+#: ../../getting_started/quickstart.rst:6
+msgid "TL;DR"
+msgstr ""
+
+#: ../../getting_started/quickstart.rst:8
+msgid ""
+"Use ``docker-compose`` to deploy a standalone SCQL, then use scdbclient "
+"to query"
+msgstr ""
+
+#: ../../getting_started/quickstart.rst:12
+msgid "Prerequisites"
+msgstr ""
+
+#: ../../getting_started/quickstart.rst:16
+msgid "Build scdbclient"
+msgstr ""
+
+#: ../../getting_started/quickstart.rst:18
+msgid ""
+"``scdbclient`` is a command-line client for SCDBServer, we would use it "
+"to submit queries to SCDBServer and fetch the query results back."
+msgstr ""
+
+#: ../../getting_started/quickstart.rst:31
+msgid "Register user information"
+msgstr ""
+
+#: ../../getting_started/quickstart.rst:33
+msgid ""
+"Before starting the SCQL service, you need to initialize tokens and "
+"credentials in ToyGRM and put this information into user.json and "
+"engine's config file."
+msgstr ""
+
+#: ../../getting_started/quickstart.rst:40
+msgid "Start SCQL Service"
+msgstr ""
+
+#: ../../getting_started/quickstart.rst:42
+msgid ""
+"You could start SCQL service via `docker-compose "
+"<https://github.com/secretflow/scql/tree/main/examples/docker-compose>`_,"
+" it would deploy and start services as shown in the following figure, it "
+"contains a SCDBServer and two SCQLEngines from party ``alice``, ``bob``."
+msgstr ""
+
+#: ../../getting_started/quickstart.rst:-1
+msgid "docker-compose deployment for quickstart example"
+msgstr ""
+
+#: ../../getting_started/quickstart.rst:49
+msgid "To demonstrate SCQL, we conducted the following simplified operations:"
+msgstr ""
+
+#: ../../getting_started/quickstart.rst:51
+msgid ""
+"The SCDBServer and two other SCQLEngines use the same database server but"
+" are separated by distinct database names."
+msgstr ""
+
+#: ../../getting_started/quickstart.rst:52
+msgid ""
+"The SCDBServer is served through the HTTP protocol. However, for "
+"production environments, it is recommended to use HTTPS instead. Please "
+"check :ref:`TLS Configuration <scdb-tls>` for details."
+msgstr ""
+
+#: ../../getting_started/quickstart.rst:53
+msgid ""
+"Please note that while we used ToyGRM for the demo, it should not be used"
+" in production environments."
+msgstr ""
+
+#: ../../getting_started/quickstart.rst:62
+msgid ""
+"SCDBServer is listening on ``http://localhost:8080``, you could send "
+"queries to it via scdbclient."
+msgstr ""
+
+#: ../../getting_started/quickstart.rst:65
+msgid ""
+"Please checkout `examples/docker-compose/README.md "
+"<https://github.com/secretflow/scql/tree/main/examples/docker-"
+"compose/README.md>`_ troubleshooting section for help if you encounter "
+"any problems."
+msgstr ""
+
+#: ../../getting_started/quickstart.rst:70
+msgid "Create database, user and tables"
+msgstr ""
+
+#: ../../getting_started/quickstart.rst:151
+msgid "Grant CCL"
+msgstr ""
+
+#: ../../getting_started/quickstart.rst:202
+msgid "Do query"
+msgstr ""
+

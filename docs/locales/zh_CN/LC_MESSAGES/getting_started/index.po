@@ -1,0 +1,51 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SCQL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: SCQL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-05-30 20:12+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.11.0\n"
+
+#: ../../getting_started/index.rst:4
+msgid "Getting started"
+msgstr ""
+
+#: ../../getting_started/index.rst:6
+msgid "New to SCQL? This is the Beginner's Guide."
+msgstr ""
+
+#: ../../getting_started/index.rst:8
+msgid ""
+"If you don't know anything about SCQL, please read "
+":ref:`/getting_started/scql_intro.rst` first."
+msgstr ""
+
+#: ../../getting_started/index.rst:10
+msgid ""
+"After that, you can follow :ref:`/getting_started/quickstart.rst` to get "
+"started with SCQL."
+msgstr ""
+
+#: ../../getting_started/index.rst:12
+msgid "For all SCQL users, please check :ref:`/reference/index.rst` for details."
+msgstr ""
+
+#: ../../getting_started/index.rst:14
+msgid ""
+"For advanced users and contributors, we encourage you to investigate "
+":ref:`/development/index.rst`."
+msgstr ""
+

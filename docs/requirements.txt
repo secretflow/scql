@@ -8,3 +8,4 @@ sphinx-markdown-parser
 pytablewriter
 linkify-it-py
 sphinx_design
+sphinx-intl

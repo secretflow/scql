@@ -1,0 +1,178 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SCQL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: SCQL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-05-30 20:12+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.11.0\n"
+
+#: ../../reference/scql_status.rst:2
+msgid "SCQL Implementation Status"
+msgstr ""
+
+#: ../../reference/scql_status.rst:5
+msgid "SELECT Statement"
+msgstr ""
+
+#: ../../reference/scql_status.rst:8
+msgid "syntax"
+msgstr ""
+
+#: ../../reference/scql_status.rst:8 ../../reference/scql_status.rst:31
+msgid "supported(fully/partial/no)"
+msgstr ""
+
+#: ../../reference/scql_status.rst:8 ../../reference/scql_status.rst:31
+msgid "notes"
+msgstr ""
+
+#: ../../reference/scql_status.rst:10
+msgid "join"
+msgstr ""
+
+#: ../../reference/scql_status.rst:10 ../../reference/scql_status.rst:47
+#: ../../reference/scql_status.rst:51
+msgid "partial"
+msgstr ""
+
+#: ../../reference/scql_status.rst:10
+msgid "currently only inner join is supported"
+msgstr ""
+
+#: ../../reference/scql_status.rst:11
+msgid "keyword ``using`` is not supported yet"
+msgstr ""
+
+#: ../../reference/scql_status.rst:13
+msgid "where clause"
+msgstr ""
+
+#: ../../reference/scql_status.rst:13 ../../reference/scql_status.rst:15
+#: ../../reference/scql_status.rst:17 ../../reference/scql_status.rst:33
+#: ../../reference/scql_status.rst:35 ../../reference/scql_status.rst:37
+#: ../../reference/scql_status.rst:39 ../../reference/scql_status.rst:41
+#: ../../reference/scql_status.rst:43 ../../reference/scql_status.rst:45
+#: ../../reference/scql_status.rst:49
+msgid "fully"
+msgstr ""
+
+#: ../../reference/scql_status.rst:15
+msgid "group by clause"
+msgstr ""
+
+#: ../../reference/scql_status.rst:17
+msgid "having clause"
+msgstr ""
+
+#: ../../reference/scql_status.rst:19
+msgid "union"
+msgstr ""
+
+#: ../../reference/scql_status.rst:19 ../../reference/scql_status.rst:21
+#: ../../reference/scql_status.rst:23
+msgid "no"
+msgstr ""
+
+#: ../../reference/scql_status.rst:19
+msgid "coming soon"
+msgstr ""
+
+#: ../../reference/scql_status.rst:21
+msgid "limit clause"
+msgstr ""
+
+#: ../../reference/scql_status.rst:23
+msgid "order by clause"
+msgstr ""
+
+#: ../../reference/scql_status.rst:28 ../../reference/scql_status.rst:31
+msgid "Functions and Operators"
+msgstr ""
+
+#: ../../reference/scql_status.rst:31
+msgid "Category"
+msgstr ""
+
+#: ../../reference/scql_status.rst:33 ../../reference/scql_status.rst:35
+#: ../../reference/scql_status.rst:37 ../../reference/scql_status.rst:39
+#: ../../reference/scql_status.rst:41
+msgid "aggregation"
+msgstr ""
+
+#: ../../reference/scql_status.rst:33
+msgid "sum"
+msgstr ""
+
+#: ../../reference/scql_status.rst:35
+msgid "count"
+msgstr ""
+
+#: ../../reference/scql_status.rst:37
+msgid "avg"
+msgstr ""
+
+#: ../../reference/scql_status.rst:39
+msgid "min"
+msgstr ""
+
+#: ../../reference/scql_status.rst:41
+msgid "max"
+msgstr ""
+
+#: ../../reference/scql_status.rst:43
+msgid "arithmetic"
+msgstr ""
+
+#: ../../reference/scql_status.rst:43
+msgid "add,minus,mul,div,intdiv"
+msgstr ""
+
+#: ../../reference/scql_status.rst:45
+msgid "logical"
+msgstr ""
+
+#: ../../reference/scql_status.rst:45
+msgid "logical_and,logical_or,not"
+msgstr ""
+
+#: ../../reference/scql_status.rst:47 ../../reference/scql_status.rst:49
+msgid "compare"
+msgstr ""
+
+#: ../../reference/scql_status.rst:47
+msgid "<,<=,>,>="
+msgstr ""
+
+#: ../../reference/scql_status.rst:47
+msgid "string data comparison is not supported"
+msgstr ""
+
+#: ../../reference/scql_status.rst:49
+msgid "=, !="
+msgstr ""
+
+#: ../../reference/scql_status.rst:51
+msgid "in"
+msgstr ""
+
+#: ../../reference/scql_status.rst:51
+msgid "in, not in"
+msgstr ""
+
+#: ../../reference/scql_status.rst:51
+msgid "all arguments should be of the same type"
+msgstr ""
+

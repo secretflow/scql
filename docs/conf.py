@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 # -- Project information -----------------------------------------------------
 
 project = "SCQL"
-copyright = "2022 Ant Group Co., Ltd."
+copyright = "2023 Ant Group Co., Ltd."
 author = "SCQL authors"
 
 
@@ -52,7 +52,6 @@ author = "SCQL authors"
 extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.autodoc",
-    "sphinx.ext.graphviz",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinx.ext.extlinks",

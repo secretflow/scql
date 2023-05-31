@@ -1,8 +1,6 @@
 SCQL CCL
 ========
 
-:ref:`中文版 </reference/scql_ccl_intro_cn.rst>`
-
 Due to the flexibility of the SCQL syntax, the query issuer may be able to infer some of the original data from the results using a delicately constructed query. Therefore, it is generally necessary to obtain permission from all data owners before executing a query submitted by the issuer.
 
 Manual review of queries allows data owners to confirm how the data is used and whether there is any leakage of sensitive information. However, manual review has the following two problems: 1. There are high requirements for reviewers, who need to have query analysis capabilities and be able to identify potential information leakage problems; 2. The waiting time for approval before execution is long. Authorizations from all data owners involved in the Query is required.

@@ -1,0 +1,325 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SCQL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: SCQL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-05-30 20:12+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.11.0\n"
+
+#: ../../getting_started/how_to_set_ccl.rst:2
+msgid "CCL Setting Suggestions"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:4
+msgid ""
+"This document will give some examples on CCL settings in typical "
+"scenarios. You can set CCL according to your needs in practical "
+"scenarios."
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:7
+msgid "Pre-knowledge"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:9
+msgid "What is SCQL CCL? Please read :ref:`/reference/scql_ccl_intro.rst`."
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:11
+msgid "Grant CCL syntax, please read :ref:`Grant/Revoke CCL<scql_grant_revoke>`."
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:14
+msgid "Examples"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:16
+msgid ""
+"This part will give suggestions for CCL settings based on different query"
+" scenario examples."
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:18
+msgid ""
+"Let's take the joint analysis between party Alice and Bob as examples to "
+"illustrate. Party Alice owns table ``t1`` which has fields ``id``, "
+"``credit_rank``, ``income``, ``join_date`` and ``age``.  Party Bob owns "
+"table ``t2`` which has fields ``id``, ``age``, ``order_amount``, "
+"``is_active``, ``admin_date``, ``out_date``."
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:20
+msgid "We represent the CCL settings with a 3-tuple form as follows."
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:22
+msgid "``<src_column, dest_party, constraint>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:24
+msgid ""
+"It means ``src_column`` is accessible to ``dest_party`` with the "
+"``constraint``. If multiple columns have the same CCL for a party, it "
+"will be abbreviated as follows."
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:27
+msgid "``<[src_column1,src_column2,...], dest_party, constraint>``."
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:30
+msgid "Get Intersection Case"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:33
+msgid "Get the intersection of ids using join"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:37
+#: ../../getting_started/how_to_set_ccl.rst:53
+#: ../../getting_started/how_to_set_ccl.rst:71
+#: ../../getting_started/how_to_set_ccl.rst:92
+#: ../../getting_started/how_to_set_ccl.rst:114
+#: ../../getting_started/how_to_set_ccl.rst:129
+#: ../../getting_started/how_to_set_ccl.rst:156
+#: ../../getting_started/how_to_set_ccl.rst:177
+#: ../../getting_started/how_to_set_ccl.rst:198
+#: ../../getting_started/how_to_set_ccl.rst:222
+msgid "CCL settings of table t1 at Alice"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:36
+#: ../../getting_started/how_to_set_ccl.rst:89
+#: ../../getting_started/how_to_set_ccl.rst:111
+#: ../../getting_started/how_to_set_ccl.rst:127
+#: ../../getting_started/how_to_set_ccl.rst:152
+#: ../../getting_started/how_to_set_ccl.rst:175
+msgid "``<id, Bob, PLAINTEXT_AFTER_JOIN>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:37
+#: ../../getting_started/how_to_set_ccl.rst:53
+#: ../../getting_started/how_to_set_ccl.rst:71
+msgid "``<id, Alice, PLAINTEXT>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:41
+#: ../../getting_started/how_to_set_ccl.rst:57
+#: ../../getting_started/how_to_set_ccl.rst:75
+#: ../../getting_started/how_to_set_ccl.rst:98
+#: ../../getting_started/how_to_set_ccl.rst:134
+#: ../../getting_started/how_to_set_ccl.rst:163
+#: ../../getting_started/how_to_set_ccl.rst:183
+#: ../../getting_started/how_to_set_ccl.rst:202
+#: ../../getting_started/how_to_set_ccl.rst:226
+msgid "CCL settings of table t2 at Bob"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:40
+#: ../../getting_started/how_to_set_ccl.rst:95
+#: ../../getting_started/how_to_set_ccl.rst:132
+#: ../../getting_started/how_to_set_ccl.rst:159
+#: ../../getting_started/how_to_set_ccl.rst:180
+msgid "``<id, Alice, PLAINTEXT_AFTER_JOIN>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:41
+#: ../../getting_started/how_to_set_ccl.rst:57
+#: ../../getting_started/how_to_set_ccl.rst:75
+msgid "``<id, Bob, PLAINTEXT>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:49
+msgid "Get ids both in t1.id and in t2.id using in"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:52
+msgid "``<id, Bob, PLAINTEXT_AFTER_COMPARE>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:56
+#: ../../getting_started/how_to_set_ccl.rst:74
+msgid "``<id, Alice, PLAINTEXT_AFTER_COMPARE>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:67
+#: ../../getting_started/how_to_set_ccl.rst:106
+msgid "**More restricted CCL**"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:70
+msgid "``<id, Bob, ENCRYPTED_ONLY>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:83
+msgid "Aggregation Case"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:86
+msgid "Analyze data using aggregation functions with group by"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:90
+#: ../../getting_started/how_to_set_ccl.rst:112
+#: ../../getting_started/how_to_set_ccl.rst:153
+#: ../../getting_started/how_to_set_ccl.rst:197
+#: ../../getting_started/how_to_set_ccl.rst:221
+msgid "``<[id, age, income, credit_rank], Alice, PLAINTEXT>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:91
+#: ../../getting_started/how_to_set_ccl.rst:129
+msgid "``<[age, income], Bob, PLAINTEXT_AFTER_AGGREGATE>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:92
+#: ../../getting_started/how_to_set_ccl.rst:114
+#: ../../getting_started/how_to_set_ccl.rst:156
+msgid "``<credit_rank, Bob, PLAINTEXT_AFTER_GROUP_BY>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:96
+#: ../../getting_started/how_to_set_ccl.rst:160
+#: ../../getting_started/how_to_set_ccl.rst:202
+#: ../../getting_started/how_to_set_ccl.rst:226
+msgid "``<[id, age, order_amount, is_active], Bob, PLAINTEXT>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:97
+#: ../../getting_started/how_to_set_ccl.rst:134
+msgid "``<[age, order_amount], Alice, PLAINTEXT_AFTER_AGGREGATE>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:98
+#: ../../getting_started/how_to_set_ccl.rst:163
+msgid "``<is_active, Alice, PLAINTEXT_AFTER_GROUP_BY>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:108
+msgid ""
+"If Alice don't want to reveal age/income info to Bob, just set group "
+"keys' CCL constraint to ``ENCRYPTED_ONLY``. Bob's CCL settings remain the"
+" same as before, modify the CCL settings of Alice to the following "
+"configuration"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:113
+msgid "``<[age, income], Bob, ENCRYPTED_ONLY>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:124
+msgid "Analyze data using aggregation functions without group by"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:128
+msgid "``<[id, age, income], Alice, PLAINTEXT>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:133
+msgid "``<[id, age, order_amount], Bob, PLAINTEXT>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:136
+msgid "**Queries without group by**"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:146
+msgid "Filter data before analyzing it"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:149
+msgid "Case 1: Filter data"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:154
+msgid "``<age, Bob, PLAINTEXT_AFTER_COMPARE>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:155
+msgid "``<income, Bob, PLAINTEXT_AFTER_AGGREGATE>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:161
+msgid "``<age, Alice, PLAINTEXT_AFTER_COMPARE>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:162
+msgid "``<order_amount, Alice, PLAINTEXT_AFTER_AGGREGATE>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:172
+msgid "Case 2: Get the results of compare operators"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:176
+msgid "``<[id, income, join_date], Alice, PLAINTEXT>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:177
+msgid "``<[join_date, income], Bob, PLAINTEXT_AFTER_COMPARE>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:181
+msgid "``<[id, age, order_amount, admin_date, out_date], Bob, PLAINTEXT>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:182
+msgid "``<[age, admin_date, out_date], Alice, ENCRYPTED_ONLY>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:183
+msgid "``<order_amount, Alice, PLAINTEXT_AFTER_COMPARE>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:192
+msgid "Data Insensitive Case/Test Case"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:194
+msgid ""
+"If the data is not sensitive or test case, you can set all data to "
+"PLAINTEXT, then almost all queries will not be rejected by checking CCL. "
+"But you have to be careful, otherwise other users can easily select all "
+"your data."
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:198
+msgid "``<[id, age, income, credit_rank], Bob, PLAINTEXT>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:201
+msgid "``<[id, age, order_amount, is_active], Alice, PLAINTEXT>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:216
+msgid "Encrypt Case"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:218
+msgid ""
+"If you think the data is very sensitive, then you can set them as "
+"``ENCRYPTED_ONLY``, then only aggregation function count can be "
+"performed."
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:222
+msgid "``<[id, age, income, credit_rank], Bob, ENCRYPTED_ONLY>``"
+msgstr ""
+
+#: ../../getting_started/how_to_set_ccl.rst:225
+msgid "``<[id, age, order_amount, is_active], Alice, ENCRYPTED_ONLY>``"
+msgstr ""
+

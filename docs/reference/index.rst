@@ -12,6 +12,4 @@ Reference
     scql_status
     mysql_compatibility
     scql_security_statement
-    scql_security_statement_cn
     scql_ccl_intro
-    SCQL CCL(中文版)<scql_ccl_intro_cn>

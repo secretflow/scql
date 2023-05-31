@@ -1,8 +1,6 @@
 SCQL Security Statement
 =======================
 
-:ref:`中文版 </reference/scql_security_statement_cn.rst>`
-
 Security Guarantees and Threat Model
 ------------------------------------
 

@@ -1,0 +1,309 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SCQL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: SCQL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-05-31 11:16+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.11.0\n"
+
+#: ../../getting_started/scql_intro.rst:2
+msgid "SCQL Introduction"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:5
+msgid "Overview"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:7
+msgid ""
+"Secure Collaborative Query Language (SCQL) is a system that allows "
+"multiple distrusting parties to run joint analysis without revealing "
+"their private data."
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:10
+msgid "Key Features"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:12
+msgid "Semi-honest security. SCQL assumes that all parties are semi-honest."
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:13
+msgid "Support multiple parties (N >= 2)."
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:14
+msgid ""
+"Support common SQL select syntax and functions to meet the needs of most "
+"scenarios. Please check :ref:`/reference/scql_status.rst` for details."
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:15
+msgid ""
+"Practical performance.  SCQL has multiple levels of performance "
+"optimization."
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:16
+msgid "Easy to use. SCQL provides relation SQL-like interface."
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:17
+msgid ""
+"Data usage authorization. SCQL provides a mechanism named CCL (Column "
+"Control List) for data owner to define their data usage restrictions."
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:20
+msgid "Architecture"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:22
+msgid "An SCQL system consists of an SCDB server and multiple SCQLEngines."
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:24
+msgid ""
+"SCDB server is responsible for translating SQL query into a hybrid MPC-"
+"plaintext execution graph and dispatching the execution graph to "
+"SCQLEngine of participants."
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:25
+msgid ""
+"SCQLEngine is a hybrid MPC-plaintext execution engine, which collaborates"
+" with peers to run the execution graph and reports the query result to "
+"SCDB server. SCQLEngine is implemented on top of state-of-the-art MPC "
+"framework `secretflow/spu`_."
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:26
+msgid ""
+"GRM is the abbreviation of :ref:`Global Resource Manager <grm>`, which "
+"manages the information of the participants and the shared table schemas."
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:-1
+msgid "SCQL Architecture"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:34
+msgid "How SCQL Works"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:36
+msgid ""
+"We will show how SCQL works through the life of the following sample SCQL"
+" query Q."
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:38
+msgid "SCQL query Q"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:-1
+#: ../../getting_started/scql_intro.rst:48
+msgid "Table schema"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:50
+msgid "Let's have a look at the schema of tables involved in the above query Q."
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:55
+msgid "``bank_1``"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:56
+msgid ""
+"Party Bank1 owns the table ``bank_1`` in its local database ``DB1``, "
+"which has two columns ``customer_id`` and ``deposit``."
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:59
+msgid "``bank_2``"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:58
+msgid ""
+"Party Bank2 owns the table ``bank_2`` in its local database ``DB2``, "
+"which has two columns ``customer_id`` and ``loan``."
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:62
+msgid ""
+"The table metadata, such as the table owner and table schema, needs to be"
+" registered in GRM, so that SCDB could retrieve the table schema and "
+"resolve the table reference. For example, SCDB would resolve ``table_1`` "
+"into ``DB1.bank_1`` in party Bank1."
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:66
+msgid "Column Control List (CCL)"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:68
+msgid "CCL Form: ``<src_column, dest_party, constraint>``"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:70
+msgid ""
+"It means ``src_column`` is accessible to ``dest_party`` with the "
+"``constraint``."
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:72
+msgid ""
+"To make the query Q pass the CCL validation, data owner should grant the "
+"following CCL."
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:78
+msgid "Bank1"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:75
+msgid "``<bank_1.customer_id, Bank1, PLAINTEXT>``"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:76
+msgid "``<bank_1.deposit, Bank1, PLAINTEXT>``"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:77
+msgid "``<bank_1.customer_id, Bank2, PLAINTEXT_AFTER_JOIN>``"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:78
+msgid "``<bank_1.deposit, Bank2, PLAINTEXT_AFTER_AGGREGATE>``"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:84
+msgid "Bank2"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:81
+msgid "``<bank_2.customer_id, Bank2, PLAINTEXT>``"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:82
+msgid "``<bank_2.loan, Bank2, PLAINTEXT>``"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:83
+msgid "``<bank_2.customer_id, Bank1, PLAINTEXT_AFTER_JOIN>``"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:84
+msgid "``<bank_2.loan, Bank1, PLAINTEXT_AFTER_AGGREGATE>``"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:87
+msgid ""
+"To learn more about CCL, please read the doc "
+":ref:`/reference/scql_ccl_intro.rst`."
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:92
+msgid "Lifetime of SCQL query"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:-1
+msgid "SCQL Workflow"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:98
+msgid "Step1. Initialize a Session"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:100
+msgid ""
+"SCDB creates a new session for the incoming query, and then authenticates"
+" the identity of the query issuer. It will reject the request if "
+"authentication fails."
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:104
+msgid "Step2. Parse and Plan Q"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:106
+msgid ""
+"Parser will parse Q into an AST(Abstract Syntax Tree), and then Planner "
+"converts it into a Logical Plan."
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:-1
+msgid "Logical Plan for Q"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:113
+msgid "Step3. Translate"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:116
+msgid "Step3.1 Build and Check CCL"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:118
+msgid ""
+"Translator needs to retrieve CCL from CCL manager, it will build CCL "
+"along the logical plan and verify the CCL of root node to ensure Q is "
+"legal on data owners' constraints."
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:122
+msgid "Step3.2 Translate"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:124
+msgid ""
+"The translator takes the logical plan and CCL as inputs and generates an "
+"execution graph for the query Q as follows."
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:-1
+msgid "Execution Graph for Q"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:131
+msgid "Step4. Optimize and Split Graph"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:133
+msgid ""
+"The graph optimizer will optimize the execution graph, such as node "
+"fusion and replicated node elimination. The optimized execution graph is "
+"still a whole graph, graph splitter will split the whole graph into "
+"subgraphs based on the parties of the nodes."
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:-1
+msgid "subgraphs"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:141
+msgid "Step5. Execute"
+msgstr ""
+
+#: ../../getting_started/scql_intro.rst:143
+msgid ""
+"SCDB sends the subgraphs to corresponding SCQLEngine nodes, SCQLEngine "
+"cooperates with peers to run the execution graph and reports the final "
+"result of Q to SCDB."
+msgstr ""
+

@@ -1,0 +1,374 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SCQL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: SCQL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-05-30 20:26+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.11.0\n"
+
+#: ../../reference/scql_ccl_intro.rst:2
+msgid "SCQL CCL"
+msgstr ""
+
+#: ../../reference/scql_ccl_intro.rst:4
+msgid ""
+"Due to the flexibility of the SCQL syntax, the query issuer may be able "
+"to infer some of the original data from the results using a delicately "
+"constructed query. Therefore, it is generally necessary to obtain "
+"permission from all data owners before executing a query submitted by the"
+" issuer."
+msgstr "由于 SCQL 语法灵活多变，查询者可以通过精巧地构造 Query 以从结果中尽可能地推测原始数据敏感信息。因此，在执行查询者提交 Query 前，一般需要获得数据 owner 的审核授权。"
+
+#: ../../reference/scql_ccl_intro.rst:6
+msgid ""
+"Manual review of queries allows data owners to confirm how the data is "
+"used and whether there is any leakage of sensitive information. However, "
+"manual review has the following two problems: 1. There are high "
+"requirements for reviewers, who need to have query analysis capabilities "
+"and be able to identify potential information leakage problems; 2. The "
+"waiting time for approval before execution is long. Authorizations from "
+"all data owners involved in the Query is required."
+msgstr "人工审核 Query 的方式可以让数据 owner 对数据如何被使用以及结果中是否包含敏感信息泄露等问题进行人工确认。但人工审核方式有如下两方面的问题：1、对审核者有较高的要求，审核者需要具备 Query 分析能力，能够分析出潜在的信息泄露问题；2、执行前审批等待时间长，Query 执行前需要获得 Query 涉及的所有数据 owner 的授权。"
+
+#: ../../reference/scql_ccl_intro.rst:8
+msgid ""
+"SCQL provides a Column Control List (CCL) mechanism that allows data "
+"owners to define data usage and disclosure restrictions. Queries that do "
+"not pass the CCL check are prohibited from execution. For queries that "
+"pass the CCL check, with the assistance of CCL, reviewers could focus on "
+"whether the query results can be used to infer sensitive data, which "
+"reduces the review burden and improves review efficiency. It should be "
+"noted that while CCL can help alleviate the problem of data abuse to some"
+" extent, it cannot completely eliminate the risk of inferring sensitive "
+"data from query results. It is recommended to combine it with pre-"
+"approval to reduce the risk of inferring results."
+msgstr "SCQL 提供了 Column Control List(CCL) 机制，让数据 owner 可以定义数据的使用方式和披露限制，未通过 CCL 检查的 Query 不允许执行。对于通过 CCL 检查的 Query，审核人员可以在 CCL 的辅助下专注审核 Query 结果是否可以反推原始敏感数据的问题，从而降低审核负担，提高审核效率。需要注意的是，CCL 可以一定程度上缓解数据被滥用的问题，但无法杜绝从查询结果反推原始敏感数据的风险，建议结合事前审批一起，降低结果反推风险。"
+
+#: ../../reference/scql_ccl_intro.rst:11
+msgid "What is CCL?"
+msgstr ""
+
+#: ../../reference/scql_ccl_intro.rst:13
+msgid ""
+"The CCL (Column Control List) constrains the revelation policy and "
+"operations allowed to be performed on columns. SCQL promises to comply "
+"with these constraints, reject queries that do not meet CCL requirements,"
+" and ensure that the execution process doesn't violate the data "
+"revelation policy specified by CCL. CCL can be represented as a triplet "
+"``<src_column, dest_party, constraint>``, which means the constraint type"
+" of src_column on dest_party."
+msgstr "CCL(Column Control List) 限定了列的披露策略，以及允许在列上执行的操作。SCQL承诺遵守这些限定，拒绝执行不满足CCL要求的 query，并保证执行过程不会违背 CCL 规定的数据披露策略。CCL 可以表示为一个三元组 <src_column, dest_party, constraint>，其含义为 src_column 对于 dest_party 的约束策略。"
+
+#: ../../reference/scql_ccl_intro.rst:16
+msgid ""
+"Currently, only one CCL constraint can be set for a column on a given "
+"participant."
+msgstr "一列数据对于一个参与方当前只能设置一种 CCL constraint。"
+
+#: ../../reference/scql_ccl_intro.rst:19
+msgid "Types of CCL Constraints"
+msgstr ""
+
+#: ../../reference/scql_ccl_intro.rst:21
+msgid ""
+"CCL Constraints are currently divided into the following seven types. "
+"Among them, the first six constraints describe the circumstances under "
+"which data can be revealed"
+msgstr "根据当前已经实现的语法，目前 CCL constraints 一共分为如下 7 个类型。其中前 6 个 constraints 说明数据在何种情况下可以披露出去。"
+
+#: ../../reference/scql_ccl_intro.rst:23
+msgid ""
+"``PLAINTEXT``: Computation and revelation of data in any form, including "
+"clear text, is permitted without any restrictions on use. Typically used "
+"for non-sensitive data. ``PLAINTEXT`` needs to be used with caution."
+msgstr "``PLAINTEXT``: 允许以任何形式（包括明文）进行计算和披露，没有任何使用上的限制，通常用于非敏感数据，请谨慎使用。"
+
+#: ../../reference/scql_ccl_intro.rst:24
+msgid ""
+"``PLAINTEXT_AFTER_JOIN``: The data is allowed to be used as the key of "
+"INNER JOIN, and can be revealed in plaintext after JOIN."
+msgstr "``PLAINTEXT_AFTER_JOIN``: 允许作为 INNER JOIN 的 key，经过 JOIN 后可以明文披露。"
+
+#: ../../reference/scql_ccl_intro.rst:25
+msgid ""
+"``PLAINTEXT_AFTER_GROUP_BY``: When the constrained column is used as "
+"GROUP BY key, it can be revealed in plaintext after GROUP BY. CCL also "
+"limits the rows of the results obtained by GROUP BY, and filters out the "
+"groups whose number of rows does not meet the requirement of more than "
+"three."
+msgstr "``PLAINTEXT_AFTER_GROUP_BY``: 被约束的列经过 GROUP BY 分组后可以明文披露。"
+
+#: ../../reference/scql_ccl_intro.rst:26
+msgid ""
+"``PLAINTEXT_AFTER_AGGREGATE``: When the constrained column is used as the"
+" input parameter of aggregation functions (such as SUM, AVG, MIN, MAX, "
+"COUNT), the calculated results can be revealed in plaintext."
+msgstr "``PLAINTEXT_AFTER_AGGREGATE``: 被约束的列经过 Aggregation 操作（如：SUM、AVG、MIN、MAX、COUNT）后的结果可以明文披露。CCL 还限制了 GROUP BY 分组的结果行数，记录行数小于等于3的分组，会被过滤掉，不会出现在最终结果中。"
+
+#: ../../reference/scql_ccl_intro.rst:27
+msgid ""
+"``PLAINTEXT_AFTER_COMPARE``: When the constrained column is used as an "
+"input parameter of Compare (such as <, >, >=, =, !=, etc.), the result "
+"obtained can be revealed in plaintext."
+msgstr "``PLAINTEXT_AFTER_COMPARE``: 被约束的列经过 Compare 操作（如：<, >, >=, =, != 等等）后的结果可以明文披露。"
+
+#: ../../reference/scql_ccl_intro.rst:28
+msgid ""
+"``ENCRYPTED_ONLY``: Always compute in a secret state, used to mark very "
+"sensitive data. Except for count (SCQL does not protect the size of the "
+"calculation intermediate results), can't be revealed in any form."
+msgstr "``ENCRYPTED_ONLY``: 始终以密态的形式参与计算，用于标记非常敏感数据，除了 COUNT 外（SCQL 不保护计算中间结果的size），不允许任何形式的披露。"
+
+#: ../../reference/scql_ccl_intro.rst:29
+msgid ""
+"``UNKNOWN``: Not defined, currently refuses to be revealed in any form by"
+" default."
+msgstr "``UNKNOWN``: 未定义，目前默认拒绝以任何形式披露。"
+
+#: ../../reference/scql_ccl_intro.rst:32
+msgid ""
+"User is advised to set the CCL according to the scenario and privacy "
+"protection needs. The attacker may construct a query that satisfies the "
+"CCL constraint, and infer the sensitive information of the original data "
+"from the result through complex query or multiple query methods. For "
+"related risk descriptions and suggestions, see :ref:`SCQL Security "
+"Statement </reference/scql_security_statement.rst>`."
+msgstr "请用户根据自己的场景需求和隐私保护需要设置 CCL。攻击者可能会构造满足 CCL 约束的 Query，通过复杂查询或者多次查询方式，从结果推测原始数据敏感信息，相关风险描述和建议见 :ref:`SCQL 安全声明 </reference/scql_security_statement.rst>`。"
+
+#: ../../reference/scql_ccl_intro.rst:35
+msgid "Advantages of CCL"
+msgstr ""
+
+#: ../../reference/scql_ccl_intro.rst:37
+msgid ""
+"The primary role of CCL is to provide data owners with the ability to "
+"restrict how their data is used. Another benefit brought by CCL is that "
+"it can provide hints for SCQL execution optimization."
+msgstr "CCL 的首要作用是，给数据 OWNER 提供约束自己数据如何被使用的能力。CCL 带来的另外一个好处是，可以为 SCQL 执行优化提供 hints。"
+
+#: ../../reference/scql_ccl_intro.rst:39
+msgid ""
+"For example, when the CCL constraint of the column is "
+"``PLAINTEXT_AFTER_AGGREGATE``, the result of the SUM of the column can "
+"participate in the next calculation in plaintext state, which can speed "
+"up the overall execution efficiency."
+msgstr "比如当某一列的 CCL constraint 为 ``PLAINTEXT_AFTER_AGGREGATE`` 时，该列数据经过 SUM 聚合计算后，就可以以明文的状态参与接下里的计算，加快整体的执行效率。"
+
+#: ../../reference/scql_ccl_intro.rst:42
+msgid "How CCL Works?"
+msgstr ""
+
+#: ../../reference/scql_ccl_intro.rst:44
+msgid ""
+"Translator takes the Logical Plan generated by the query and CCL settings"
+" as input, and then builds a Logical Plan with CCL. Translator will check"
+" the CCL of the the result contained in the root node, and only allow the"
+" query to execute if the CCL constraints of the result for the issuer is "
+"``PLAINTEXT``, otherwise, reject the query."
+msgstr "Translator 把 query 翻译得到的 Logical Plan 和 CCL 作为输入，经过 CCL 推导构建出带 CCL 的 Logical Plan。Translator 将检查根节点即结果的CCL，仅当结果对 query 发起者的约束为 ``PLAINTEXT`` 时，才允许 query 继续执行，否则拒绝此 query 的执行。"
+
+#: ../../reference/scql_ccl_intro.rst:-1
+msgid "Logical Plan with CCL"
+msgstr ""
+
+#: ../../reference/scql_ccl_intro.rst:49
+msgid ""
+"The following is a brief introduction and explanation of the derivation "
+"process and principle of CCL."
+msgstr "下面将对 CCL 的推导过程及原理进行简单介绍和说明。"
+
+#: ../../reference/scql_ccl_intro.rst:51
+msgid ""
+"The derivation is based on the CCL set by the user. The derivation "
+"strategy is divided into two categories, one is the derivation of "
+"specific operations, such as relational algebra operations and specific "
+"functions; the other is the derivation of general expressions."
+msgstr "推导以用户设置的 CCL 为基础，推导方法分为两类，一类是特定操作的推导，比如关系代数操作、特定的函数；另一类是通用表达式推导。"
+
+#: ../../reference/scql_ccl_intro.rst:54
+msgid "Specific Operators Derivation"
+msgstr "特定操作推导"
+
+#: ../../reference/scql_ccl_intro.rst:56
+msgid ""
+"The following explains the derivation of specific operations, taking "
+"operations such as JOIN and GROUP BY as examples."
+msgstr "下面以 JOIN, GROUP BY 等操作为例，讲解特定操作的推导。"
+
+#: ../../reference/scql_ccl_intro.rst:58
+msgid "**Join**"
+msgstr ""
+
+#: ../../reference/scql_ccl_intro.rst:60
+msgid ""
+"When the CCL constraints of the JOIN keys are both "
+"``PLAINTEXT_AFTER_JOIN`` or ``PLAINTEXT``, the CCL constraint type of the"
+" intersection result is ``PLAINTEXT``."
+msgstr "当 JOIN keys 的 CCL constraint 均为 ``PLAINTEXT_AFTER_JOIN`` 或 ``PLAINTEXT`` 时，则 JOIN keys 的交集的 CCL constraint 类型为 ``PLAINTEXT``。"
+
+#: ../../reference/scql_ccl_intro.rst:62
+msgid "**Group By**"
+msgstr ""
+
+#: ../../reference/scql_ccl_intro.rst:64
+msgid ""
+"When the CCL constraints of GROUP BY keys are "
+"``PLAINTEXT_AFTER_GROUP_BY`` or ``PLAINTEXT``, the CCL constraints of the"
+" group by keys after GROUP BY are ``PLAINTEXT``."
+msgstr "当 GROUP BY key 的 CCL constraint 均为 ``PLAINTEXT_AFTER_GROUP_BY`` 或 ``PLAINTEXT`` 时，则 GROUP BY key 经过 GROUP BY 操作后的结果的 CCL constraint 为 ``PLAINTEXT``。"
+
+#: ../../reference/scql_ccl_intro.rst:66
+msgid "**Aggregate**"
+msgstr ""
+
+#: ../../reference/scql_ccl_intro.rst:68
+msgid ""
+"When the CCL constraints of the input parameters of the aggregation "
+"functions (such as SUM, AVG, MIN, MAX, COUNT) are "
+"``PLAINTEXT_AFTER_AGGREGATE`` or ``PLAINTEXT``, the CCL constraints of "
+"the results of the aggregation function are ``PLAINTEXT``"
+msgstr "当 aggregation functions（如：SUM、AVG、MIN、MAX、COUNT）的入参 CCL constraint 为 ``PLAINTEXT_AFTER_AGGREGATE`` 或 ``PLAINTEXT`` 时，则 aggregation function 的 results 的 CCL constraint 为 ``PLAINTEXT``。"
+
+#: ../../reference/scql_ccl_intro.rst:70
+msgid "**Compare**"
+msgstr ""
+
+#: ../../reference/scql_ccl_intro.rst:72
+msgid ""
+"When the CCL constraints of the input parameters of the compare function "
+"(> < = >= <= !=) are set to ``PLAINTEXT_AFTER_COMPARE`` or ``PLAINTEXT``,"
+" the CCL constraints of the results of the compare function will be set "
+"to ``PLAINTEXT``"
+msgstr "当 compare function（> < = >= <= !=）的入参 CCL constraint 均为 ``PLAINTEXT_AFTER_COMPARE`` 或 ``PLAINTEXT`` 时，则 compare function 的 results 的 CCL constraint 为 ``PLAINTEXT``。"
+
+#: ../../reference/scql_ccl_intro.rst:75
+msgid "General Operators Derivation"
+msgstr "通用表达式推导"
+
+#: ../../reference/scql_ccl_intro.rst:77
+msgid ""
+"For a general operator/function, CCL derives the CCL constraints of the "
+"results according to the CCL constraints of the input parameters. CCL "
+"derivation can be divided into the following situations (UNKNOWN "
+"indicates that the derivation process is abnormal, which will not be "
+"discussed here):"
+msgstr "对于通用 operator/function，根据入参的 CCL constraint 推导其结果的 CCL constraint，可以分为以下几种情况（ ``UNKNOWN`` 属于异常情况，不在此处讨论）："
+
+#: ../../reference/scql_ccl_intro.rst:79
+msgid ""
+"When one of the input parameters' CCL constraint is ``PLAINTEXT``, the "
+"influence of this input parameter on the CCL constraint of the result can"
+" be ignored during the derivation of the CCL constraint."
+msgstr "当其中一个入参的 CCL constraint 为 ``PLAINTEXT`` 时，在 CCL constraint 推导时可以忽略该参数不影响结果的 CCL constraint。"
+
+#: ../../reference/scql_ccl_intro.rst:80
+msgid ""
+"When one of the input parameters' CCL constraint is ``ENCRYPTED_ONLY``, "
+"the CCL constraint of the result is ``ENCRYPTED_ONLY``."
+msgstr "当其中一个入参的 CCL constraint 为 ``ENCRYPTED_ONLY`` 时，则结果的 CCL constraint 为 ``ENCRYPTED_ONLY``。"
+
+#: ../../reference/scql_ccl_intro.rst:81
+msgid ""
+"When the CCL constraints of the input parameters are the same, return "
+"this CCL constraint."
+msgstr "当入参的 CCL constraint 相同时，返回这个 constraint。"
+
+#: ../../reference/scql_ccl_intro.rst:82
+msgid ""
+"For operators without input parameters, such as CURDATE(), NOW() and "
+"other functions, the CCL constraint of the result is ``PLAINTEXT``."
+msgstr "对于无入参的 operators，比如 CURDATE(), NOW() 等函数，结果的 CCL constraint 为 ``PLAINTEXT``。"
+
+#: ../../reference/scql_ccl_intro.rst:84
+msgid ""
+"For the constants in the query, it can be considered that the CCL "
+"constraints for all parties are ``PLAINTEXT``."
+msgstr "对于 query 中的常量可以认为对所有参与方的 CCL constraint 为 ``PLAINTEXT``。"
+
+#: ../../reference/scql_ccl_intro.rst:86
+msgid ""
+"For situations other than above, it is currently considered impossible to"
+" derive, and the CCL constraint of the result is ``UNKNOWN``."
+msgstr "对于不在上述情况的，目前认为无法进行推导，返回的结果的 CCL constraint 为 ``UNKNOWN``。"
+
+#: ../../reference/scql_ccl_intro.rst:89
+msgid "Examples"
+msgstr "CCL 使用示例"
+
+#: ../../reference/scql_ccl_intro.rst:91
+msgid ""
+"Assume that there are two parties, Alice and Bob. Alice holds the data "
+"table ta, while Bob holds the data table tb, and both of them collaborate"
+" to execute a query task. The table ta held by Alice contains the fields "
+"id and rank, and the table tb held by Bob contains the fields id and "
+"rank."
+msgstr "假设当前有两个参与方 Alice 和 Bob，其中 Alice 持有数据 table ta，Bob 持有数据 table tb，两者共同执行一次 sql 查询任务。其中 Alice 持有的 table ta 包含字段 id 和 rank，Bob 持有的 table tb 包含字段 id 和 rank。"
+
+#: ../../reference/scql_ccl_intro.rst:93
+msgid "CCL settings of table ta at Alice:"
+msgstr "Alice 设置 CCL 如下："
+
+#: ../../reference/scql_ccl_intro.rst:95
+msgid "``<ta.id, Alice, PLAINTEXT>``"
+msgstr ""
+
+#: ../../reference/scql_ccl_intro.rst:96
+msgid "``<ta.id, Bob, PLAINTEXT_AFTER_JOIN>``"
+msgstr ""
+
+#: ../../reference/scql_ccl_intro.rst:97
+msgid "``<ta.rank, Alice, PLAINTEXT>``"
+msgstr ""
+
+#: ../../reference/scql_ccl_intro.rst:98
+msgid "``<ta.rank, Bob, PLAINTEXT_AFTER_COMPARE>``"
+msgstr ""
+
+#: ../../reference/scql_ccl_intro.rst:100
+msgid "CCL settings of table tb at Bob:"
+msgstr "Bob 设置 CCL 如下："
+
+#: ../../reference/scql_ccl_intro.rst:102
+msgid "``<tb.id, Bob, PLAINTEXT>``"
+msgstr ""
+
+#: ../../reference/scql_ccl_intro.rst:103
+msgid "``<tb.id, Alice, PLAINTEXT_AFTER_JOIN>``"
+msgstr ""
+
+#: ../../reference/scql_ccl_intro.rst:104
+msgid "``<tb.rank, Bob, PLAINTEXT>``"
+msgstr ""
+
+#: ../../reference/scql_ccl_intro.rst:105
+msgid "``<tb.rank, Alice, PLAINTEXT_AFTER_COMPARE>``"
+msgstr ""
+
+#: ../../reference/scql_ccl_intro.rst:107
+msgid ""
+"When Alice executes query ``select tb.rank from ta join tb on ta.id = "
+"tb.id``, SCQL will verify the CCL and generate a verification failure "
+"error: tb.rank is not ``PLAINTEXT`` for Alice's CCL constraint."
+msgstr "当 Alice 执行 query ``select tb.rank from ta join tb on ta.id = tb.id``，SCQL 会校验 CCL 失败产生并返回错误：tb.rank 对于 Alice 的 CCL constraint 不是 ``PLAINTEXT``。"
+
+#: ../../reference/scql_ccl_intro.rst:109
+msgid ""
+"When Alice executes query ``select ta.rank > tb.rank from ta join tb on "
+"ta.id = tb.id``, SCQL CCL verification passes, the query can be executed "
+"normally and the result can be obtained, since the CCL constraint of the "
+"result of ``ta.rank > tb.rank`` for Alice is ``PLAINTEXT``."
+msgstr "而当 Alice 执行 query ``select ta.rank > tb.rank from ta join tb on ta.id = tb.id``，这时 CCL 推导得到 ta.rank > tb.rank 对于 Alice 的 CCL constraint 为 ``PLAINTEXT``，校验 CCL 通过，则 query 可以正常执行。"
+

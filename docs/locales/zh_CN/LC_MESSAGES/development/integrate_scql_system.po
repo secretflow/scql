@@ -1,0 +1,141 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SCQL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: SCQL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-05-30 20:12+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.11.0\n"
+
+#: ../../development/integrate_scql_system.rst:2
+msgid "How To Integrate SCQL System"
+msgstr ""
+
+#: ../../development/integrate_scql_system.rst:5
+msgid "Overview"
+msgstr ""
+
+#: ../../development/integrate_scql_system.rst:7
+msgid "As shown in FIG, SCQL System needs to work with **Client** and **GRM**:"
+msgstr ""
+
+#: ../../development/integrate_scql_system.rst:9
+msgid "Client: user interface designed for query submission and result retrieval."
+msgstr ""
+
+#: ../../development/integrate_scql_system.rst:11
+msgid "GRM: help to manage schema information and identify parties."
+msgstr ""
+
+#: ../../development/integrate_scql_system.rst:14
+msgid "please read :doc:`../reference/grm` to know more about GRM."
+msgstr ""
+
+#: ../../development/integrate_scql_system.rst:18
+msgid ""
+"Therefore the platform should support Client and GRM to integrate SCQL "
+"System."
+msgstr ""
+
+#: ../../development/integrate_scql_system.rst:20
+msgid ""
+"Specifically, the Client interact with SCDB through Query API,  while GRM"
+" interact with SCDB through GRM API."
+msgstr ""
+
+#: ../../development/integrate_scql_system.rst:23
+msgid "Query API"
+msgstr ""
+
+#: ../../development/integrate_scql_system.rst:24
+msgid "For SQL query, SCDB support services:"
+msgstr ""
+
+#: ../../development/integrate_scql_system.rst:26
+msgid ""
+"Submit: async API, just submit SQL query and return, server listen on "
+"``${SCDBHost}/public/submit_query``"
+msgstr ""
+
+#: ../../development/integrate_scql_system.rst:27
+msgid ""
+"Fetch: async API, try to get the result of a SQL query, server listen on "
+"``${SCDBHost}/public/fetch_result``"
+msgstr ""
+
+#: ../../development/integrate_scql_system.rst:28
+msgid ""
+"SubmitAndGet: sync API, submit query and wait to get the query result, "
+"server listen on ``${SCDBHost}/public/submit_and_get``"
+msgstr ""
+
+#: ../../development/integrate_scql_system.rst:30
+msgid "Please refer to :doc:`../development/scql_api` for details."
+msgstr ""
+
+#: ../../development/integrate_scql_system.rst:33
+msgid ""
+"Client can choose to support either async or sync API according to "
+"business scenarios:"
+msgstr ""
+
+#: ../../development/integrate_scql_system.rst:35
+msgid ""
+"If the SQL query task might take too much time, it is recommended to use "
+"the async API, otherwise use the sync API for simplicity."
+msgstr ""
+
+#: ../../development/integrate_scql_system.rst:38
+msgid ""
+"In a word, the custom Client should construct HTTP request for user's "
+"SQL, post to SCDB and parse the response from SCDB."
+msgstr ""
+
+#: ../../development/integrate_scql_system.rst:41
+msgid "GRM API"
+msgstr ""
+
+#: ../../development/integrate_scql_system.rst:42
+msgid "SCQL uses rpc API to communicate with GRM:"
+msgstr ""
+
+#: ../../development/integrate_scql_system.rst:44
+msgid ""
+"GetTableMeta: fetch metadata of table, GRM server should listen on "
+"``${GRMServerHost}/GetTableMeta``"
+msgstr ""
+
+#: ../../development/integrate_scql_system.rst:45
+msgid ""
+"GetEngines: get endpoints for specific SCQLEngines(parties), GRM server "
+"should listen on ``${GRMServerHost}/GetEngines``"
+msgstr ""
+
+#: ../../development/integrate_scql_system.rst:46
+msgid ""
+"VerifyTableOwnership: check whether user has ownership of table, GRM "
+"server should listen on ``${GRMServerHost}/VerifyTableOwnership``"
+msgstr ""
+
+#: ../../development/integrate_scql_system.rst:48
+msgid "Please refer to :doc:`../reference/grm` for details."
+msgstr ""
+
+#: ../../development/integrate_scql_system.rst:50
+msgid ""
+"The custom GRM Server needs to support above services corresponding to "
+"the GRM API."
+msgstr ""
+
