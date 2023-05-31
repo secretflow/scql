@@ -19,3 +19,7 @@ tool-bin/*
 scdb.db
 .vscode/launch.json
 logs/scdbserver.log
+
+# Translations
+*.mo
+*.pot

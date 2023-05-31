@@ -105,22 +105,8 @@ Step2. Parse and Plan Q
 
 Parser will parse Q into an AST(Abstract Syntax Tree), and then Planner converts it into a Logical Plan.
 
-.. graphviz:: 
-
-    digraph G {
-        node [shape=record]
-
-        tablescan_1 [label="{TableScan|DB1.bank_1}"]
-        tablescan_2 [label="{TableScan|DB2.bank_2}"]
-        join [label="{Join| bank_1.customer_id = bank_2.customer_id }"]
-        aggregation [label="{Aggregation|AVG(bank_1.deposit)\nAVG(bank_2.loan)}"]
-        projection [label="{Projection}"]
-
-        tablescan_1 -> join;
-        tablescan_2 -> join;
-        join -> aggregation;
-        aggregation -> projection;
-    }
+.. image:: ../imgs/logicalplan_for_Q.png
+    :alt: Logical Plan for Q
 
 
 Step3. Translate

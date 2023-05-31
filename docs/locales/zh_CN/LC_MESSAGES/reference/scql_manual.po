@@ -1,0 +1,159 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2022 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SCQL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: SCQL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-05-30 20:12+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.11.0\n"
+
+#: ../../reference/scql_manual.rst:2
+msgid "SCQL Manual"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:8
+msgid "SCQL Data Types"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:10
+msgid ""
+"SCQL supports frequently-used data types, as illustrated in the following"
+" table."
+msgstr ""
+
+#: ../../reference/scql_manual.rst:13
+msgid "Data Type"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:13
+msgid "Alias"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:13
+msgid "Description"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:15
+msgid "``integer``"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:15
+msgid "``int``, ``long``, ``int64``"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:17
+msgid "``float``"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:17
+msgid "``double``"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:17
+msgid "both storage and computation are done in type float32"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:19
+msgid "``string``"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:19
+msgid "``str``"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:21
+msgid "``datetime``"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:21 ../../reference/scql_manual.rst:23
+msgid "not supported yet, coming soon"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:23
+msgid "``timestamp``"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:29
+msgid "SCQL Statements"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:31
+msgid ""
+"SCQL is compatible with most MySQL syntax, which makes it easy to use. "
+"For syntax differences between SCQL and MySQL, please read "
+":doc:`mysql_compatibility`."
+msgstr ""
+
+#: ../../reference/scql_manual.rst:34
+msgid "CREATE/DROP USER Statement"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:46 ../../reference/scql_manual.rst:69
+#: ../../reference/scql_manual.rst:95 ../../reference/scql_manual.rst:130
+msgid "Examples:"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:60
+msgid "CREATE/DROP DATABASE Statement"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:83
+msgid "CREATE/DROP TABLE Statement"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:92
+msgid ""
+"Create table here means mapping 'tbl_name' to the existing physic table, "
+"which is specified by 'TID' and located on the relevant parties. In SCQL,"
+" user runs queries on virtual table, which helps simplify privilege "
+"control and usage."
+msgstr ""
+
+#: ../../reference/scql_manual.rst:109
+msgid "GRANT/REVOKE Statement"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:145
+msgid "SHOW/DESCRIBE Statement"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:159
+msgid "SELECT Statement"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:221
+msgid "**Limitation:**"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:223
+msgid "``JOIN`` only supports"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:225
+msgid "``INNER JOIN``"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:228
+msgid "Functions and Operators"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:230
+msgid "Todo"
+msgstr ""
+
+#: ../../reference/scql_manual.rst:230
+msgid "this part is not ready, please check later"
+msgstr ""
+

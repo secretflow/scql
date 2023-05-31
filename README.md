@@ -59,8 +59,11 @@ go test ./...
 pip3 install -U -r docs/requirements.txt
 
 # Build HTML docs, and the result is placed in directory 'docs/_build/html'
-cd docs
-make html
+# Build documentation in English
+make doc
+
+# Build documentation in Chinese
+make doc-cn
 ```
 
 ## Disclaimer

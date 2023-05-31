@@ -1,0 +1,355 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2022 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SCQL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: SCQL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-05-30 20:12+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.11.0\n"
+
+#: ../../getting_started/deployment.rst:3
+msgid "Deployment"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:5
+msgid ""
+"This document describes how to deploy a SCQL system with docker, and use "
+"scdbclient to query, it's basically same with :doc:`quickstart`, but "
+"deployed in multi-machine."
+msgstr ""
+
+#: ../../getting_started/deployment.rst:7
+msgid ""
+"Before start this doc, we assume that the reader has some experience "
+"using the docker-compose utility. If you are new to Docker Compose, "
+"please consider reviewing the `official Docker Compose overview "
+"<https://docs.docker.com/compose/>`_, or checking out the `Getting "
+"Started guide <https://docs.docker.com/compose/gettingstarted/>`_."
+msgstr ""
+
+#: ../../getting_started/deployment.rst:10
+msgid "Deployment Diagram"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:12
+msgid ""
+"The deployment diagram of the SCQL system that we plan to deploy is shown"
+" as the following figure, it involves a total of three party, including a"
+" trusted third-party and two data owner parties named ``Alice`` and "
+"``Bob``. We use three machines to simulate different parties."
+msgstr ""
+
+#: ../../getting_started/deployment.rst:17
+msgid ""
+"The SCDB is served through the HTTP protocol. It is recommended to use "
+"HTTPS instead in production environments. Please check :ref:`TLS "
+"Configuration <scdb-tls>` for details."
+msgstr ""
+
+#: ../../getting_started/deployment.rst:18
+msgid ""
+"Please note that while we used ToyGRM for the demo, it should not be used"
+" in production environments."
+msgstr ""
+
+#: ../../getting_started/deployment.rst:21
+msgid "Step 1: Deploy SCQLEngine"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:23
+msgid ""
+"Here we displayed how to deploy engine in party Alice, it's same with "
+"party Bob."
+msgstr ""
+
+#: ../../getting_started/deployment.rst:26
+msgid "1.1 Create a Workspace"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:34
+msgid "1.2 Set Dataset"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:36
+msgid ""
+"The database in Engine is use to storage the origin data. In this "
+"document we will use MySQL as the database service, and simulate a "
+"dataset. However, if you prefer, you can use your preferred database "
+"service."
+msgstr ""
+
+#: ../../getting_started/deployment.rst:38
+msgid ""
+"To simulate a dataset, you need create a sql init file named "
+"alice_init.sql in your workspace, which corresponds to `alice_init.sql "
+"<https://github.com/secretflow/scql/tree/main/examples/docker-"
+"compose/mysql/initdb/alice_init.sql>`_. For Bob, please use `bob_init.sql"
+" <https://github.com/secretflow/scql/tree/main/examples/docker-"
+"compose/mysql/initdb/bob_init.sql>`_ instead."
+msgstr ""
+
+#: ../../getting_started/deployment.rst:40
+msgid ""
+"This file can also be obtained via the command-line with either curl, "
+"wget or another similar tool."
+msgstr ""
+
+#: ../../getting_started/deployment.rst:48
+msgid "1.3 Set Engine Config"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:50
+msgid ""
+"Create a file called ``gflags.conf`` in your workspace and paste the "
+"following code in:"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:63
+msgid ""
+"See :ref:`Engine configuration options <engine_config_options>` for more "
+"config information"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:67
+msgid ""
+"The ``connection_str`` specified in ``embed_router_conf`` is utilized to "
+"connect database named alice as set in `1.2 Set Dataset`_, For Bob it "
+"should be set to connect database named bob."
+msgstr ""
+
+#: ../../getting_started/deployment.rst:69
+msgid ""
+"``__ALICE_CREDENTIAL__`` is used to authenticate SCDB, you need replace "
+"it with your own credential, same with Bob. In our example, we have "
+"simply set it as ``credential_alice`` for Alice, and ``credential_bob`` "
+"for Bob."
+msgstr ""
+
+#: ../../getting_started/deployment.rst:73
+msgid "1.4 Create docker-compose file"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:75
+#: ../../getting_started/deployment.rst:281
+msgid ""
+"Create a file called ``docker-compose.yaml`` in your workspace and paste "
+"the following code in:"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:115
+msgid ""
+"``__ALICE_PORT__``  is the published port on the host machine which is "
+"used for engine service to listen on, you need to replace it with an "
+"accessible port number. In this case, we have designated it as ``8080``"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:117
+msgid ""
+"Container *mysql* is init by ``alice_init.sql`` as set in `1.2 Set "
+"Dataset`_ , it should be ``bob_init.sql`` for Bob. If you use your own "
+"database service, container *mysql* can be deleted"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:121
+msgid "1.5 Start Engine Service"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:123
+#: ../../getting_started/deployment.rst:326
+msgid "The file your workspace should be as follows:"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:132
+#: ../../getting_started/deployment.rst:336
+msgid "Then you can start engine service by running docker compose up"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:143
+#: ../../getting_started/deployment.rst:346
+msgid "You can use docker logs to check whether engine works well"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:151
+msgid "SCQLEngine is listening on ``8080``."
+msgstr ""
+
+#: ../../getting_started/deployment.rst:155
+msgid "Step 2: Deploy SCDB"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:157
+msgid "This chapter will demonstrate how to deploy SCDB in a Third-Party"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:160
+msgid "2.1 Create a Workspace"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:168
+msgid "2.2 Set ToyGRM"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:170
+msgid ""
+"We use toygrm instead of stdgrm for demo, which means the GRM services is"
+" simulated by reading local JSON files, it's not recommend in production "
+"environments. See :ref:`Global Resource Manager <grm>` for more "
+"information about GRM"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:172
+msgid ""
+"Create a json file named ``toy_grm.json`` in your workspace, which should"
+" look like as follows:"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:230
+msgid ""
+"``__ALICE_TOKEN__`` and ``__BOB_TOKEN__`` is a string token used to "
+"authenticate the user, you should replace them with your own token "
+"information. Here it's set as ``token_alice`` and ``token_bob``."
+msgstr ""
+
+#: ../../getting_started/deployment.rst:232
+msgid ""
+"``__ENGINE_ALICE_HOST__`` and ``__ENGINE_BOB_HOST__`` represent the IP "
+"addresses of Alice and Bob, you should replace these placeholders with "
+"your own IP address information."
+msgstr ""
+
+#: ../../getting_started/deployment.rst:234
+msgid ""
+"``__ALICE_PORT__`` and ``__BOB_PORT__`` represent the listening ports of "
+"engine services and should match the published port specified in `1.4 "
+"Create docker-compose file`_. In this case it should be 8080."
+msgstr ""
+
+#: ../../getting_started/deployment.rst:236
+msgid ""
+"``__ALICE_CREDENTIAL__`` and ``__BOB_CREDENTIAL__`` are used to identify "
+"SCDB when send request to engine, it should match the "
+"``engine_credential`` specified in `1.3 Set Engine Config`_.  In this "
+"case it should be ``credential_alice`` and ``credential_bob``."
+msgstr ""
+
+#: ../../getting_started/deployment.rst:240
+msgid "2.3 Set SCDB Config"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:242
+msgid ""
+"Create a file called ``config.yml`` in your workspace and paste the "
+"following code in:"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:272
+msgid ""
+"See :ref:`SCDB configuration options <scdb_config_options>` for more "
+"config information"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:276
+msgid ""
+"``conn_str`` is utilized to connect database named scdb which will be "
+"deployed in next step, if you prefer, you can also use your own database "
+"service."
+msgstr ""
+
+#: ../../getting_started/deployment.rst:279
+msgid "2.4 Create docker-compose file"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:321
+msgid ""
+"``__SCDB_PORT__`` is the published port on the host machine which is used"
+" for scdb service to listen on, you need to replace it with an accessible"
+" port number. Here, it's set as 8080"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:324
+msgid "2.5 Start SCDB Service"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:354
+msgid "SCDB is listening on ``8080``, waiting for connection"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:358
+msgid "Step 3: SCQL Test"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:360
+msgid ""
+"Here we use scdbclient to submit a query to SCDB for testing, you can "
+"also submit queries directly to SCDB by sending a POST request. This step"
+" can be completed on any machine that has access to the SCDB ip address."
+msgstr ""
+
+#: ../../getting_started/deployment.rst:362
+msgid ""
+"You can read `How to use SCDBClient "
+"<https://github.com/secretflow/scql/tree/main/cmd/scdbclient/README.md>`_"
+" for more information about scdbclient."
+msgstr ""
+
+#: ../../getting_started/deployment.rst:365
+msgid "3.1 Build scdbclient"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:382
+msgid "3.2 Set Client Config"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:384
+msgid "Create a json file named as ``users.json`` as follows:"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:409
+msgid ""
+"The ``root`` user is the admin user of SCDB which is init when scdb "
+"container set up, ``alice`` and ``bob`` are the user belong to party "
+"Alice and Bob,"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:411
+msgid ""
+"The user information for ``alice`` and ``bob`` should be same with the "
+"user information you will create."
+msgstr ""
+
+#: ../../getting_started/deployment.rst:413
+msgid ""
+"``__ALICE_TOKEN__`` and ``__BOB_TOKEN__`` is correspond to the token "
+"information set in `2.2 Set ToyGRM`_. In this case, it should be set as "
+"``token_alice`` and ``token_bob``."
+msgstr ""
+
+#: ../../getting_started/deployment.rst:416
+msgid "3.3 Submit Query"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:418
+msgid ""
+"You can start to use scdbclient to submit queries to SCDBServer and fetch"
+" the query results back. it's same as what you can do in "
+":doc:`quickstart`"
+msgstr ""
+
+#: ../../getting_started/deployment.rst:439
+msgid ""
+"``__SCDB_URL__`` is the url (eg:http://127.0.0.1:8080) where scdb service"
+" is listen on, you need to replace it with scdb service url."
+msgstr ""
+

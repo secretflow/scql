@@ -41,6 +41,11 @@ vet:
 
 doc:
 	go run ./cmd/docgen/main.go
+	cd docs && rm -rf _build && PYTHONPATH=$PWD/../ sh build.sh -l en
+
+doc-cn:
+	go run ./cmd/docgen/main.go
+	cd docs && rm -rf _build && PYTHONPATH=$PWD/../ sh build.sh -l zh_CN
 
 lint: GOLINT-exists
 	-${TOOLBIN}/golangci-lint run ./pkg/scdb/...
