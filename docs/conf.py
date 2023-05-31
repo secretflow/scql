@@ -45,7 +45,6 @@ author = "SCQL authors"
 extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.autodoc",
-    "sphinx.ext.graphviz",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinx.ext.extlinks",
@@ -54,7 +53,6 @@ extensions = [
     "nbsphinx",
     "sphinxcontrib.actdiag",
     "sphinxcontrib.blockdiag",
-    "sphinxcontrib.mermaid",
     "sphinxcontrib.nwdiag",
     "sphinxcontrib.packetdiag",
     "sphinxcontrib.rackdiag",
@@ -75,8 +73,8 @@ templates_path = ["_templates"]
 # Usually you set "language" from the command line for these cases.
 # multi-language docs
 
-language = 'en'
-locale_dirs = ['./locales/']  # path is example but recommended.
+language = "en"
+locale_dirs = ["./locales/"]  # path is example but recommended.
 gettext_compact = False  # optional.
 gettext_uuid = False  # optional.
 
@@ -88,9 +86,6 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # Enable TODO
 todo_include_todos = True
-
-# The output format for Graphviz when building HTML files. This must be either 'png' or 'svg'; the default is 'png'.
-graphviz_output_format = "svg"
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -149,6 +144,7 @@ suppress_warnings = ["myst.header"]
 myst_gfm_only = True
 myst_heading_anchors = 1
 myst_title_to_header = True
+
 
 # app setup hook
 def setup(app):
