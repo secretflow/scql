@@ -181,7 +181,7 @@ msgid ""
 "MySQL), and then dispatch it directly to the corresponding database for "
 "execution. Thus, for a single-party query, its type conversion rules are "
 "generally consistent with the database used by the participant."
-msgstr "如果只有一方查询，SCQL 会将查询语句转换成符合参与者数据库（如 MySQL）的语法，然后直接分派到相应的数据库中执行。 因此对于单方查询，其类型转换规则一般与参与方使用的数据库一致。"
+msgstr "如果只有一方查询，SCQL 会将查询语句转换成符合参与者数据库（如 MySQL）的语法，然后直接分派到相应的数据库中执行。 因此对于单方查询，其类型转换规则一般与参与方使用的数据库类型一致。"
 
 #: ../../reference/mysql_compatibility.rst:84
 msgid "multi-party query"
