@@ -168,7 +168,7 @@ msgstr "考虑兼容性，当使用运算符操作不同类型的数据时，会
 
 #: ../../reference/mysql_compatibility.rst:73
 msgid "The following rules describe how conversion occurs in SCQL."
-msgstr "以下规则描述了如何在 SCQL 中进行累心转换。"
+msgstr "以下规则描述了如何在 SCQL 中进行类型转换。"
 
 #: ../../reference/mysql_compatibility.rst:78
 msgid "single-party query"
