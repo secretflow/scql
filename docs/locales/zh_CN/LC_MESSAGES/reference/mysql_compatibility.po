@@ -217,7 +217,7 @@ msgstr "算术运算 (+, -, \\*, /, %)"
 
 #: ../../reference/mysql_compatibility.rst:95
 msgid "Both arguments in a arithmetic operation shouldn't be string"
-msgstr "算术运算中的两个参数都不应该是字符串类型。"
+msgstr "算术运算中的两个参数都不能是字符串类型。"
 
 #: ../../reference/mysql_compatibility.rst:96
 msgid "If both arguments are long, they are calculated as long."
