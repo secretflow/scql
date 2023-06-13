@@ -199,7 +199,7 @@ msgstr "比较大小 (>, <, <=, >=, <>, =, !=)"
 
 #: ../../reference/mysql_compatibility.rst:89
 msgid "Both arguments in a comparison operation shouldn't be string"
-msgstr "比较操作中的两个参数都不能是字符串类型。"
+msgstr "比较操作中的两个参数都不能是 类型。"
 
 #: ../../reference/mysql_compatibility.rst:90
 msgid "If both arguments are long, they are compared as long."
