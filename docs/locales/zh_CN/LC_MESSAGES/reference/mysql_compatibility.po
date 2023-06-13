@@ -63,7 +63,7 @@ msgstr "DDL（数据定义语言）"
 
 #: ../../reference/mysql_compatibility.rst:22
 msgid "CREATE Table"
-msgstr "创建表格"
+msgstr "创建表"
 
 #: ../../reference/mysql_compatibility.rst:23
 msgid ""
