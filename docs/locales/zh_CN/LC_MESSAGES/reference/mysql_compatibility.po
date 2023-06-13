@@ -55,7 +55,7 @@ msgstr "DML（数据操作语言）"
 
 #: ../../reference/mysql_compatibility.rst:16
 msgid "Features that are different from MySQL"
-msgstr "与 MySQL 不同的功能"
+msgstr "与 MySQL 存在语法差异的功能"
 
 #: ../../reference/mysql_compatibility.rst:19
 msgid "DDL(Data Definition Language)"
@@ -70,7 +70,7 @@ msgid ""
 "SCQL get table schemas from GRM, so CREATE TABLE statement must include "
 "keyword TID which uniquely identifies a table in GRM. For more "
 "information, please read :doc:`scql_manual`"
-msgstr "SCQL 从 GRM 获取表格模式，所以 CREATE TABLE 的语句必须包含关键字 TID，该关键字在 GRM 中标识一个唯一的表格。有关更多信息，请阅读：doc:`scql_manual`。"
+msgstr "SCQL 从 GRM 中获取表规格，所以 CREATE TABLE 的语句必须包含关键字 TID，该关键字在 GRM 中标识一个唯一的表格。有关更多信息，请阅读：doc:`scql_manual`。"
 
 #: ../../reference/mysql_compatibility.rst:26
 msgid "DQL(Data Query Language)"
@@ -116,11 +116,11 @@ msgstr "SUM(INT) 整数求和"
 
 #: ../../reference/mysql_compatibility.rst:41
 msgid "returns int"
-msgstr "返回整型"
+msgstr "返回整型 int"
 
 #: ../../reference/mysql_compatibility.rst:41
 msgid "returns Decimal/Double"
-msgstr "返回小数/双精度"
+msgstr "返回小数 Decimal /双精度 Double"
 
 #: ../../reference/mysql_compatibility.rst:43
 msgid "Aggregation Functions With Group BY"
@@ -172,7 +172,7 @@ msgstr "以下规则描述了如何在 SCQL 中进行类型转换。"
 
 #: ../../reference/mysql_compatibility.rst:78
 msgid "single-party query"
-msgstr "单方的查询"
+msgstr "单方查询"
 
 #: ../../reference/mysql_compatibility.rst:79
 msgid ""
@@ -203,7 +203,7 @@ msgstr "比较操作中的两个参数都不能是字符串类型。"
 
 #: ../../reference/mysql_compatibility.rst:90
 msgid "If both arguments are long, they are compared as long."
-msgstr "如果两个参数都是长整型，则使用长整型的方式比较。"
+msgstr "如果两个参数都是 long 类型，则使用 long 的方式比较。"
 
 #: ../../reference/mysql_compatibility.rst:91
 msgid ""
@@ -217,11 +217,11 @@ msgstr "算术运算 (+, -, \\*, /, %)"
 
 #: ../../reference/mysql_compatibility.rst:95
 msgid "Both arguments in a arithmetic operation shouldn't be string"
-msgstr "算术运算中的两个参数都不能是字符串类型。"
+msgstr "算术运算中的两个参数都不能是 string 类型。"
 
 #: ../../reference/mysql_compatibility.rst:96
 msgid "If both arguments are long, they are calculated as long."
-msgstr "如果两个参数都是长整型，则使用长整型的方式比较。"
+msgstr "如果两个参数都是 long 类型，则使用 long 的方式比较。"
 
 #: ../../reference/mysql_compatibility.rst:97
 #: ../../reference/mysql_compatibility.rst:103
@@ -236,11 +236,11 @@ msgstr "累加操作 (sum, count, avg, min, max)"
 
 #: ../../reference/mysql_compatibility.rst:101
 msgid "All arguments in a aggregation function shouldn't be string"
-msgstr "累加操作中的所有参数都不能是字符串类型。"
+msgstr "累加操作中的所有参数都不能是 string 类型。"
 
 #: ../../reference/mysql_compatibility.rst:102
 msgid "If all arguments are long, they are calculated as long."
-msgstr "如果所有参数都是长整型，则按照长整型的方式进行计算。"
+msgstr "如果所有参数都是 long 类型，则按照 long 类型的方式进行计算。"
 
 #: ../../reference/mysql_compatibility.rst:103
 msgid "If one of the arguments is float32, the other argument will be calculated as float32."
