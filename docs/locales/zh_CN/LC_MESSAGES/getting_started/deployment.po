@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../getting_started/deployment.rst:3
 msgid "Deployment"
-msgstr ""
+msgstr "部署"
 
 #: ../../getting_started/deployment.rst:5
 msgid ""
@@ -29,6 +29,8 @@ msgid ""
 "scdbclient to query, it's basically same with :doc:`quickstart`, but "
 "deployed in multi-machine."
 msgstr ""
+"本文描述了如何使用 Docker 部署一个 SCQL 系统，并且使用 scdbclient 进行查询，"
+"它与 :doc:`quickstart` 基本相同只不过是部署在多台机器上。"
 
 #: ../../getting_started/deployment.rst:7
 msgid ""
@@ -37,11 +39,13 @@ msgid ""
 "please consider reviewing the `official Docker Compose overview "
 "<https://docs.docker.com/compose/>`_, or checking out the `Getting "
 "Started guide <https://docs.docker.com/compose/gettingstarted/>`_."
-msgstr ""
+msgstr "在开始阅读这篇文档前，我们假设读者已经具备一定的 docker-compose 使用经验。"
+"如果您对 Docker Compose 不熟悉，请参阅 `Docker Compose 官方概述 <https://docs.docker.com/compose/>`_，"
+"或者查看 `入门指南 <https://docs.docker.com/compose/gettingstarted/>`_。"
 
 #: ../../getting_started/deployment.rst:10
 msgid "Deployment Diagram"
-msgstr ""
+msgstr "部署图"
 
 #: ../../getting_started/deployment.rst:12
 msgid ""
@@ -49,38 +53,41 @@ msgid ""
 " as the following figure, it involves a total of three party, including a"
 " trusted third-party and two data owner parties named ``Alice`` and "
 "``Bob``. We use three machines to simulate different parties."
-msgstr ""
+msgstr "我们计划部署的 SCQL 系统如下图所示，它涉及到三个参与方，"
+"包括一个可信的第三方和两个名为 ``Alice`` 和 ``Bob`` 的数据所有方。"
+"我们使用三台机器来模拟不同的参与方。"
 
 #: ../../getting_started/deployment.rst:17
 msgid ""
 "The SCDB is served through the HTTP protocol. It is recommended to use "
 "HTTPS instead in production environments. Please check :ref:`TLS "
 "Configuration <scdb-tls>` for details."
-msgstr ""
+msgstr "SCDB 使用 HTTP 协议提供服务。在生产环境建议使用 HTTPS。"
+"详情请查看 :ref:`配置 TLS <scdb-tls>`。"
 
 #: ../../getting_started/deployment.rst:18
 msgid ""
 "Please note that while we used ToyGRM for the demo, it should not be used"
 " in production environments."
-msgstr ""
+msgstr "请注意，虽然我们在演示中使用 ToyGRM，但它不应该被应用在生产环境。"
 
 #: ../../getting_started/deployment.rst:21
 msgid "Step 1: Deploy SCQLEngine"
-msgstr ""
+msgstr "步骤一：部署 SCQLEngine"
 
 #: ../../getting_started/deployment.rst:23
 msgid ""
 "Here we displayed how to deploy engine in party Alice, it's same with "
 "party Bob."
-msgstr ""
+msgstr "在这里，我们将展示如何在参与方 Alice 中部署引擎，Bob 同理。"
 
 #: ../../getting_started/deployment.rst:26
 msgid "1.1 Create a Workspace"
-msgstr ""
+msgstr "1.1 创建工作区"
 
 #: ../../getting_started/deployment.rst:34
 msgid "1.2 Set Dataset"
-msgstr ""
+msgstr "1.2 设置数据集"
 
 #: ../../getting_started/deployment.rst:36
 msgid ""
@@ -88,7 +95,8 @@ msgid ""
 "document we will use MySQL as the database service, and simulate a "
 "dataset. However, if you prefer, you can use your preferred database "
 "service."
-msgstr ""
+msgstr "引擎中的数据库用于存储原始数据。在本文档中我们将使用 MYSQL 作为数据库服务并模拟一个数据集，"
+"当然，如果您愿意，也可以使用您喜欢的数据库服务。"
 
 #: ../../getting_started/deployment.rst:38
 msgid ""
@@ -98,36 +106,39 @@ msgid ""
 "compose/mysql/initdb/alice_init.sql>`_. For Bob, please use `bob_init.sql"
 " <https://github.com/secretflow/scql/tree/main/examples/docker-"
 "compose/mysql/initdb/bob_init.sql>`_ instead."
-msgstr ""
+msgstr "要模拟一个数据集，你需要在你的工作区中创建一个名为 alice_init.sql 的 SQL 初始化文件，"
+"该文件对应于 `alice_init.sql <https://github.com/secretflow/scql/tree/main/examples/docker-compose/mysql/initdb/alice_init.sql>`_。"
+"对于 Bob 请使用 `bob_init.sql <https://github.com/secretflow/scql/tree/main/examples/docker-compose/mysql/initdb/bob_init.sql>`_。"
 
 #: ../../getting_started/deployment.rst:40
 msgid ""
 "This file can also be obtained via the command-line with either curl, "
 "wget or another similar tool."
-msgstr ""
+msgstr "此文件也可以在命令行使用 curl、wget 或其它类似工具获取。"
 
 #: ../../getting_started/deployment.rst:48
 msgid "1.3 Set Engine Config"
-msgstr ""
+msgstr "1.3 配置引擎"
 
 #: ../../getting_started/deployment.rst:50
 msgid ""
 "Create a file called ``gflags.conf`` in your workspace and paste the "
 "following code in:"
-msgstr ""
+msgstr "在您的工作区中创建一个名为 ``gflags.conf`` 的文件，并粘贴以下代码："
 
 #: ../../getting_started/deployment.rst:63
 msgid ""
 "See :ref:`Engine configuration options <engine_config_options>` for more "
 "config information"
-msgstr ""
+msgstr "更多配置信息请查看 :ref:`引擎配置项 <engine_config_options>`"
 
 #: ../../getting_started/deployment.rst:67
 msgid ""
 "The ``connection_str`` specified in ``embed_router_conf`` is utilized to "
 "connect database named alice as set in `1.2 Set Dataset`_, For Bob it "
 "should be set to connect database named bob."
-msgstr ""
+msgstr "``embed_router_conf`` 中指定的 ``connection_str`` 用于连接 `1.2 设置数据集`_ 中设置的 alice 的数据库，"
+"对于 Bob，应该连接 bob 的数据库。"
 
 #: ../../getting_started/deployment.rst:69
 msgid ""
@@ -135,71 +146,76 @@ msgid ""
 "it with your own credential, same with Bob. In our example, we have "
 "simply set it as ``credential_alice`` for Alice, and ``credential_bob`` "
 "for Bob."
-msgstr ""
+msgstr "``__ALICE_CREDENTIAL__`` 用于验证 SCDB，您需要用自己的凭据替换它，对于 Bob 同样如此。"
+"在我们的示例中，我们简单的将 Alice 的凭据设置为 ``credential_alice``，将 Bob 的凭据设置为 ``credential_bob``。"
 
 #: ../../getting_started/deployment.rst:73
 msgid "1.4 Create docker-compose file"
-msgstr ""
+msgstr "1.4 创建 docker-compose 文件"
 
 #: ../../getting_started/deployment.rst:75
 #: ../../getting_started/deployment.rst:281
 msgid ""
 "Create a file called ``docker-compose.yaml`` in your workspace and paste "
 "the following code in:"
-msgstr ""
+msgstr "在您的工作区中创建一个名为 ``docker-compose.yaml`` 的文件，并粘贴以下代码："
 
 #: ../../getting_started/deployment.rst:115
 msgid ""
 "``__ALICE_PORT__``  is the published port on the host machine which is "
 "used for engine service to listen on, you need to replace it with an "
 "accessible port number. In this case, we have designated it as ``8080``"
-msgstr ""
+msgstr "``__ALICE_PORT__`` 是发布到宿主机上的端口，用于引擎服务的监听，"
+"您需要替换为一个可访问的端口。"
+"这里我们将其指定为 8080"
 
 #: ../../getting_started/deployment.rst:117
 msgid ""
 "Container *mysql* is init by ``alice_init.sql`` as set in `1.2 Set "
 "Dataset`_ , it should be ``bob_init.sql`` for Bob. If you use your own "
 "database service, container *mysql* can be deleted"
-msgstr ""
+msgstr "*mysql* 容器通过 `1.2 设置数据集`_ 设置的 ``alice_init.sql`` 进行初始化，"
+"对于 Bob 应该使用 ``bob_init.sql``。"
+"如果您有自己的数据库服务，可以删除 *mysql* 容器"
 
 #: ../../getting_started/deployment.rst:121
 msgid "1.5 Start Engine Service"
-msgstr ""
+msgstr "1.5 启动引擎"
 
 #: ../../getting_started/deployment.rst:123
 #: ../../getting_started/deployment.rst:326
 msgid "The file your workspace should be as follows:"
-msgstr ""
+msgstr "您工作区的文件应如下所示："
 
 #: ../../getting_started/deployment.rst:132
 #: ../../getting_started/deployment.rst:336
 msgid "Then you can start engine service by running docker compose up"
-msgstr ""
+msgstr "然后您可以运行 docker compose up 来启动引擎服务"
 
 #: ../../getting_started/deployment.rst:143
 #: ../../getting_started/deployment.rst:346
 msgid "You can use docker logs to check whether engine works well"
-msgstr ""
+msgstr "您可以使用 docker logs 检查引擎是否正常工作"
 
 #: ../../getting_started/deployment.rst:151
 msgid "SCQLEngine is listening on ``8080``."
-msgstr ""
+msgstr "SCQLEngine 正在监听 ``8080``。"
 
 #: ../../getting_started/deployment.rst:155
 msgid "Step 2: Deploy SCDB"
-msgstr ""
+msgstr "步骤二：部署 SCDB"
 
 #: ../../getting_started/deployment.rst:157
 msgid "This chapter will demonstrate how to deploy SCDB in a Third-Party"
-msgstr ""
+msgstr "本章将演示如何在第三方部署 SCDB"
 
 #: ../../getting_started/deployment.rst:160
 msgid "2.1 Create a Workspace"
-msgstr ""
+msgstr "2.1 创建工作区"
 
 #: ../../getting_started/deployment.rst:168
 msgid "2.2 Set ToyGRM"
-msgstr ""
+msgstr "2.2 配置 ToyGRM"
 
 #: ../../getting_started/deployment.rst:170
 msgid ""
@@ -207,34 +223,39 @@ msgid ""
 " simulated by reading local JSON files, it's not recommend in production "
 "environments. See :ref:`Global Resource Manager <grm>` for more "
 "information about GRM"
-msgstr ""
+msgstr "我们在演示中使用 toygrm 取代 stdgrm，这意味着 GRM 服务是通过读取本地 JSON 文件进行模拟，"
+"不建议在生产环境中使用，了解有关 GRM 的更多信息请查看 :ref:`全局资源管理器 <grm>`。"
 
 #: ../../getting_started/deployment.rst:172
 msgid ""
 "Create a json file named ``toy_grm.json`` in your workspace, which should"
 " look like as follows:"
-msgstr ""
+msgstr "在您的工作区创建一个名为 ``toy_grm.json`` 的 JSON 文件，其内容应如下所示："
 
 #: ../../getting_started/deployment.rst:230
 msgid ""
 "``__ALICE_TOKEN__`` and ``__BOB_TOKEN__`` is a string token used to "
 "authenticate the user, you should replace them with your own token "
 "information. Here it's set as ``token_alice`` and ``token_bob``."
-msgstr ""
+msgstr "``__ALICE_TOKEN__`` 和 ``__BOB_TOKEN__`` 是用于验证用户身份的字符串令牌，"
+"您应该用自己的令牌信息替换他们。在这里，它们被设置为 ``token_alice`` 和 ``token_bob``。"
 
 #: ../../getting_started/deployment.rst:232
 msgid ""
 "``__ENGINE_ALICE_HOST__`` and ``__ENGINE_BOB_HOST__`` represent the IP "
 "addresses of Alice and Bob, you should replace these placeholders with "
 "your own IP address information."
-msgstr ""
+msgstr "``__ENGINE_ALICE_HOST__`` 和 ``__ENGINE_BOB_HOST__`` 代表了 Alice 和 Bob 的 IP 地址，"
+"您应该使用自己的 IP 地址信息替换这些占位符。"
 
 #: ../../getting_started/deployment.rst:234
 msgid ""
 "``__ALICE_PORT__`` and ``__BOB_PORT__`` represent the listening ports of "
 "engine services and should match the published port specified in `1.4 "
 "Create docker-compose file`_. In this case it should be 8080."
-msgstr ""
+msgstr "``__ALICE_PORT__`` 和 ``__BOB_PORT__`` 代表引擎服务的监听端口，"
+"并且应该于 `1.4 创建 docker-compose 文件`_ 中指定的发布端口相匹配。"
+"这里应该是 8080。"
 
 #: ../../getting_started/deployment.rst:236
 msgid ""
@@ -242,114 +263,124 @@ msgid ""
 "SCDB when send request to engine, it should match the "
 "``engine_credential`` specified in `1.3 Set Engine Config`_.  In this "
 "case it should be ``credential_alice`` and ``credential_bob``."
-msgstr ""
+msgstr "``__ALICE_CREDENTIAL__`` 和 ``__BOB_CREDENTIAL__`` 用于在向引擎发送请求时识别 SCDB，"
+"并且应该与 `1.3 配置引擎`_ 中指定的 ``engine_credential`` 相匹配。"
+"这里应该是 ``credential_alice`` and ``credential_bob``。"
 
 #: ../../getting_started/deployment.rst:240
 msgid "2.3 Set SCDB Config"
-msgstr ""
+msgstr "2.3 配置 SCDB"
 
 #: ../../getting_started/deployment.rst:242
 msgid ""
 "Create a file called ``config.yml`` in your workspace and paste the "
 "following code in:"
-msgstr ""
+msgstr "在您的工作区创建一个名为 ``config.yml`` 的文件，并将以下代码粘贴进去："
 
 #: ../../getting_started/deployment.rst:272
 msgid ""
 "See :ref:`SCDB configuration options <scdb_config_options>` for more "
 "config information"
-msgstr ""
+msgstr "更多配置信息请查看 :ref:`SCDB 配置项 <scdb_config_options>` "
 
 #: ../../getting_started/deployment.rst:276
 msgid ""
 "``conn_str`` is utilized to connect database named scdb which will be "
 "deployed in next step, if you prefer, you can also use your own database "
 "service."
-msgstr ""
+msgstr "``conn_str`` 用于连接 scdb 的数据库，该数据库将在下一步中部署，"
+"如果您愿意，可以使用自己的数据库服务。"
 
 #: ../../getting_started/deployment.rst:279
 msgid "2.4 Create docker-compose file"
-msgstr ""
+msgstr "2.4 创建 docker-compose 文件"
 
 #: ../../getting_started/deployment.rst:321
 msgid ""
 "``__SCDB_PORT__`` is the published port on the host machine which is used"
 " for scdb service to listen on, you need to replace it with an accessible"
 " port number. Here, it's set as 8080"
-msgstr ""
+msgstr "``__SCDB_PORT__`` 用于监听 scdb 服务的发布端口，您需要用一个可访问的端口号替换它。"
+"这里设置为 8080。"
 
 #: ../../getting_started/deployment.rst:324
 msgid "2.5 Start SCDB Service"
-msgstr ""
+msgstr "2.5 启动 SCDB"
 
 #: ../../getting_started/deployment.rst:354
 msgid "SCDB is listening on ``8080``, waiting for connection"
-msgstr ""
+msgstr "SCDB 正在监听 ``8080``，等待连接。"
 
 #: ../../getting_started/deployment.rst:358
 msgid "Step 3: SCQL Test"
-msgstr ""
+msgstr "步骤三：测试 SCQL"
 
 #: ../../getting_started/deployment.rst:360
 msgid ""
 "Here we use scdbclient to submit a query to SCDB for testing, you can "
 "also submit queries directly to SCDB by sending a POST request. This step"
 " can be completed on any machine that has access to the SCDB ip address."
-msgstr ""
+msgstr "这里我们使用 scdbclient 向 SCDB 提交测试查询，"
+"您也可以通过发送 POST 请求直接向 SCDB 提交查询。"
+"此步骤可以在具备访问 SCDB IP 条件的任何计算机上完成。"
 
 #: ../../getting_started/deployment.rst:362
 msgid ""
 "You can read `How to use SCDBClient "
 "<https://github.com/secretflow/scql/tree/main/cmd/scdbclient/README.md>`_"
 " for more information about scdbclient."
-msgstr ""
+msgstr "关于 scdbclient 更多信息请阅读 `如何使用 SCDBClient <https://github.com/secretflow/scql/tree/main/cmd/scdbclient/README.md>`_"
 
 #: ../../getting_started/deployment.rst:365
 msgid "3.1 Build scdbclient"
-msgstr ""
+msgstr "3.1 构建 scdbclient"
 
 #: ../../getting_started/deployment.rst:382
 msgid "3.2 Set Client Config"
-msgstr ""
+msgstr "配置客户端"
 
 #: ../../getting_started/deployment.rst:384
 msgid "Create a json file named as ``users.json`` as follows:"
-msgstr ""
+msgstr "创建一个名为 ``users.json`` 的 JSON 文件，内容如下："
 
 #: ../../getting_started/deployment.rst:409
 msgid ""
 "The ``root`` user is the admin user of SCDB which is init when scdb "
 "container set up, ``alice`` and ``bob`` are the user belong to party "
 "Alice and Bob,"
-msgstr ""
+msgstr "``root`` 用户是在 scdb 容器初始化时设置的 SCDB 管理员用户，"
+"``alice`` 和 ``bob`` 分别属于 Alice 和 Bob。"
 
 #: ../../getting_started/deployment.rst:411
 msgid ""
 "The user information for ``alice`` and ``bob`` should be same with the "
 "user information you will create."
-msgstr ""
+msgstr "``alice`` 和 ``bob`` 的用户信息应该与您将要创建的用户信息保持一致。"
 
 #: ../../getting_started/deployment.rst:413
 msgid ""
 "``__ALICE_TOKEN__`` and ``__BOB_TOKEN__`` is correspond to the token "
 "information set in `2.2 Set ToyGRM`_. In this case, it should be set as "
 "``token_alice`` and ``token_bob``."
-msgstr ""
+msgstr "``__ALICE_TOKEN__`` 和 ``__BOB_TOKEN__`` 应该与 `2.2 配置 ToyGRM`_ 中设置的令牌信息保持一致。"
+"这里应该设置为 ``token_alice`` 和 ``token_bob``。"
 
 #: ../../getting_started/deployment.rst:416
 msgid "3.3 Submit Query"
-msgstr ""
+msgstr "3.3 提交查询"
 
 #: ../../getting_started/deployment.rst:418
 msgid ""
 "You can start to use scdbclient to submit queries to SCDBServer and fetch"
 " the query results back. it's same as what you can do in "
 ":doc:`quickstart`"
-msgstr ""
+msgstr "您可以开始使用 scdbclient 向 SCDBServer 提交查询并获取查询结果。"
+"您可以与在 :doc:`quickstart` 中执行的操作相同"
 
 #: ../../getting_started/deployment.rst:439
 msgid ""
 "``__SCDB_URL__`` is the url (eg:http://127.0.0.1:8080) where scdb service"
 " is listen on, you need to replace it with scdb service url."
-msgstr ""
+msgstr "``__SCDB_URL__`` 是 scdb 服务监听的 url（例如：http://127.0.0.1:8080），"
+"您需要用 scdb 服务的 url 替换它。"
 
