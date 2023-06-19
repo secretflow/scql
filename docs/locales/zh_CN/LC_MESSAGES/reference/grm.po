@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../reference/grm.rst:3
 msgid "Global Resource Manager"
-msgstr "全局资源管理器"
+msgstr "全局资源管理器 (GRM)"
 
 #: ../../reference/grm.rst:8
 msgid "Overview"
@@ -32,7 +32,7 @@ msgid ""
 "Global Resource Manager (GRM) is used to manage global data in a secure "
 "collaborative system. The global data managed by GRM includes information"
 " about parties, table schemas, SCQL engine endpoints, and etc."
-msgstr "全局资源管理器（GRM）用于管理安全协作系统中的全局数据。由 GRM 管理的全局数据包括有关各方、表模式、SCQL 引擎端点等信息。"
+msgstr "全局资源管理器（GRM）用于管理安全协作系统中的全局数据。 GRM 管理的全局数据包括参与方、表模式、SCQL 引擎端点等信息。"
 
 #: ../../reference/grm.rst:13
 msgid "Why GRM?"
@@ -52,15 +52,15 @@ msgstr "在执行查询时，SCQL 需要知道以下信息。"
 msgid ""
 "The schema information of the tables involved in the query includes "
 "detailed information such as the table columns and the data source type."
-msgstr "查询中涉及的表的模式信息包括详细的信息，如表列和数据源类型。"
+msgstr "查询中涉及的表的模式信息包括表的列和数据源类型等详细的信息。"
 
 #: ../../reference/grm.rst:20
 msgid "Data owner party node metadata, such as SCQLEngine endpoints."
-msgstr "数据所有者方的节点元数据，如 SCQL 引擎端点。"
+msgstr "数据拥有方的节点元数据，如 SCQL 引擎端点。"
 
 #: ../../reference/grm.rst:21
 msgid "Party identity management."
-msgstr "缔约方身份管理。"
+msgstr "参与方身份管理。"
 
 #: ../../reference/grm.rst:25
 msgid "API"
@@ -282,7 +282,7 @@ msgstr "db_name"
 
 #: ../../reference/grm.rst:130
 msgid "The name of the database that the table belongs to"
-msgstr "该表所属的数据库的名称"
+msgstr "表所属的数据库的名称"
 
 #: ../../reference/grm.rst:132
 msgid "table_name"
@@ -348,7 +348,7 @@ msgstr "获取引擎"
 msgid ""
 "During executing the DQL submitted by the user holding the token, SCQL "
 "needs to get the engine information of the relevant parties."
-msgstr "在执行持有令牌的用户提交的 DQL 时，SCQL 需要获得相关方的引擎信息。"
+msgstr "在执行持有令牌 (token) 的用户提交的 DQL 时，SCQL 需要获得相关方的引擎信息。"
 
 #: ../../reference/grm.rst:201
 msgid "party_codes"
@@ -377,7 +377,7 @@ msgstr "EngineInfo_ list"
 
 #: ../../reference/grm.rst:214
 msgid "engine_infos[i] is engine info for party request.party_codes[i]"
-msgstr "[i] 是请求方的 .party_codes[i] 的引擎信息。"
+msgstr "engine_infos[i] 是请求方的 .party_codes[i] 的引擎信息。"
 
 #: ../../reference/grm.rst:218
 msgid "EngineInfo"
@@ -389,7 +389,7 @@ msgstr "endpoints"
 
 #: ../../reference/grm.rst:223
 msgid "The url of engine"
-msgstr "引擎的网址"
+msgstr "引擎的统一资源定位符（URL）"
 
 #: ../../reference/grm.rst:225
 msgid "credential"
