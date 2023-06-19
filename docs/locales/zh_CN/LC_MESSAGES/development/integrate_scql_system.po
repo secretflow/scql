@@ -29,15 +29,15 @@ msgstr "概述"
 
 #: ../../development/integrate_scql_system.rst:7
 msgid "As shown in FIG, SCQL System needs to work with **Client** and **GRM**:"
-msgstr "如图所示，SCQL 系统需要与**客户端**和**全局资源管理器**配合工作："
+msgstr "如图所示，SCQL 系统需要与**客户端（Client）**和**全局资源管理器（GRM）**配合工作："
 
 #: ../../development/integrate_scql_system.rst:9
 msgid "Client: user interface designed for query submission and result retrieval."
-msgstr "客户端：被设计成用于查询提交和结果检索的用户界面。"
+msgstr "客户端（Client）：被设计成用于查询提交和结果检索的用户接口。"
 
 #: ../../development/integrate_scql_system.rst:11
 msgid "GRM: help to manage schema information and identify parties."
-msgstr "全局资源管理器：有助于管理模式信息和识别各方。"
+msgstr "全局资源管理器（GRM）：有助于管理模式信息和识别各方。"
 
 #: ../../development/integrate_scql_system.rst:14
 msgid "please read :doc:`../reference/grm` to know more about GRM."
@@ -47,13 +47,13 @@ msgstr "请阅读:doc:`../reference/grm`了解更多关于 GRM 的信息。"
 msgid ""
 "Therefore the platform should support Client and GRM to integrate SCQL "
 "System."
-msgstr "因此，平台应该支持客户端和全局资源管理器来集成 SCQL 系统。"
+msgstr "因此，平台应该支持客户端（Client）和全局资源管理器（GRM）来集成 SCQL 系统。"
 
 #: ../../development/integrate_scql_system.rst:20
 msgid ""
 "Specifically, the Client interact with SCDB through Query API,  while GRM"
 " interact with SCDB through GRM API."
-msgstr "具体来说，客户端通过查询 API 与 SCDB 互动，而全局资源管理器通过全局资源管理器 API 与 SCDB 互动。"
+msgstr "具体来说，客户端（Client）通过查询 API 与 SCDB 互动，而全局资源管理器（GRM）通过GRM API 与 SCDB 互动。"
 
 #: ../../development/integrate_scql_system.rst:23
 msgid "Query API"
@@ -89,7 +89,7 @@ msgstr "请参考:doc:`../development/scql_api`了解详情。"
 msgid ""
 "Client can choose to support either async or sync API according to "
 "business scenarios:"
-msgstr "客户端可以根据业务场景选择支持异步或同步 API："
+msgstr "客户端（Client）可以根据业务场景选择支持异步或同步 API："
 
 #: ../../development/integrate_scql_system.rst:35
 msgid ""
@@ -101,7 +101,7 @@ msgstr "如果 SQL 查询任务可能需要太多时间，建议使用异步 API
 msgid ""
 "In a word, the custom Client should construct HTTP request for user's "
 "SQL, post to SCDB and parse the response from SCDB."
-msgstr "简单来说，自定义客户端应该为用户的 SQL 构建 HTTP 请求，提交到 SCDB 并解析 SCDB 的响应。"
+msgstr "简单来说，自定义客户端（Custom Client）应该为用户的 SQL 构建 HTTP 请求，提交到 SCDB 并解析 SCDB 的响应。"
 
 #: ../../development/integrate_scql_system.rst:41
 msgid "GRM API"
@@ -109,25 +109,25 @@ msgstr "全局资源管理器 API"
 
 #: ../../development/integrate_scql_system.rst:42
 msgid "SCQL uses rpc API to communicate with GRM:"
-msgstr "SCQL 使用 rpc API 与全局资源管理器通信："
+msgstr "SCQL 使用 rpc API 与全局资源管理器（GRM）通信："
 
 #: ../../development/integrate_scql_system.rst:44
 msgid ""
 "GetTableMeta: fetch metadata of table, GRM server should listen on "
 "``${GRMServerHost}/GetTableMeta``"
-msgstr "GetTableMeta：获取表的元数据，全局资源管理器服务器应监听``${GRMServerHost}/GetTableMeta``"
+msgstr "GetTableMeta：获取表的元数据，全局资源管理器服务器（GRM server）应监听``${GRMServerHost}/GetTableMeta``"
 
 #: ../../development/integrate_scql_system.rst:45
 msgid ""
 "GetEngines: get endpoints for specific SCQLEngines(parties), GRM server "
 "should listen on ``${GRMServerHost}/GetEngines``"
-msgstr "GetEngines：获取特定 SCQLEngines（参与者）的端点，全局资源管理器服务器应监听``${GRMServerHost}/GetEngines``"
+msgstr "GetEngines：获取特定 SCQLEngines（参与者）的端点，全局资源管理器服务器（GRM server）应监听``${GRMServerHost}/GetEngines``"
 
 #: ../../development/integrate_scql_system.rst:46
 msgid ""
 "VerifyTableOwnership: check whether user has ownership of table, GRM "
 "server should listen on ``${GRMServerHost}/VerifyTableOwnership``"
-msgstr "VerifyTableOwnership：检查用户是否拥有表的所有权，全局资源管理器服务器应监听``${GRMServerHost}/VerifyTableOwnership``"
+msgstr "VerifyTableOwnership：检查用户是否拥有表的所有权，全局资源管理器服务器（GRM server）应监听``${GRMServerHost}/VerifyTableOwnership``"
 
 #: ../../development/integrate_scql_system.rst:48
 msgid "Please refer to :doc:`../reference/grm` for details."
@@ -137,5 +137,5 @@ msgstr "请参考:doc:`../reference/grm`了解详情。"
 msgid ""
 "The custom GRM Server needs to support above services corresponding to "
 "the GRM API."
-msgstr "自定义的全局资源管理器服务器需要支持上述与全局资源管理器 API 对应的服务。"
+msgstr "自定义的全局资源管理器服务器（Custom GRM server）需要支持上述与GRM API 对应的服务。"
 
