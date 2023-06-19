@@ -160,7 +160,7 @@ msgstr "用来验证用户身份的 token"
 #: ../../reference/grm.rst:114 ../../reference/grm.rst:207
 #: ../../reference/grm.rst:240
 msgid "Response"
-msgstr "回应"
+msgstr "响应"
 
 #: ../../reference/grm.rst:49 ../../reference/grm.rst:119
 #: ../../reference/grm.rst:212
@@ -174,7 +174,7 @@ msgstr "Status_"
 
 #: ../../reference/grm.rst:49
 msgid "Status of response"
-msgstr "回应情况"
+msgstr "响应情况"
 
 #: ../../reference/grm.rst:51
 msgid "is_owner"
@@ -236,7 +236,7 @@ msgstr "事例"
 
 #: ../../reference/grm.rst:96
 msgid "GetTableMeta"
-msgstr "读取表格"
+msgstr "读取元表格"
 
 #: ../../reference/grm.rst:98
 msgid ""
@@ -254,11 +254,11 @@ msgstr "request_party"
 
 #: ../../reference/grm.rst:108
 msgid "The party code of request issuer"
-msgstr "请求发布方的代码"
+msgstr "请求发起方的代码"
 
 #: ../../reference/grm.rst:119 ../../reference/grm.rst:212
 msgid "The status of response"
-msgstr "回应情况"
+msgstr "响应情况"
 
 #: ../../reference/grm.rst:121
 msgid "schema"
@@ -270,11 +270,11 @@ msgstr "TableSchema_"
 
 #: ../../reference/grm.rst:121
 msgid "The schema of the table"
-msgstr "表的格式"
+msgstr "表的结构"
 
 #: ../../reference/grm.rst:125
 msgid "TableSchema"
-msgstr "表的格式"
+msgstr "表的结构"
 
 #: ../../reference/grm.rst:130
 msgid "db_name"
@@ -338,7 +338,7 @@ msgstr "请求"
 
 #: ../../reference/grm.rst:163
 msgid "response"
-msgstr "回应"
+msgstr "响应"
 
 #: ../../reference/grm.rst:191
 msgid "GetEngines"
