@@ -39,7 +39,7 @@ msgstr "先决条件"
 
 #: ../../getting_started/quickstart.rst:16
 msgid "Build scdbclient"
-msgstr "建立 scdbclient"
+msgstr "构建 scdbclient"
 
 #: ../../getting_started/quickstart.rst:18
 msgid ""
@@ -56,11 +56,11 @@ msgid ""
 "Before starting the SCQL service, you need to initialize tokens and "
 "credentials in ToyGRM and put this information into user.json and "
 "engine's config file."
-msgstr "在启动 SCQL 服务之前，您需要在 ToyGRM 中初始化令牌和凭证，并将这些信息放入 user.json 和引擎的配置文件中。"
+msgstr "在启动 SCQL 服务之前，您需要在 ToyGRM 中初始化令牌和凭证，并将这些信息写入 user.json 和引擎的配置文件中。"
 
 #: ../../getting_started/quickstart.rst:40
 msgid "Start SCQL Service"
-msgstr "启动SCQL服务"
+msgstr "启动 SCQL 服务"
 
 #: ../../getting_started/quickstart.rst:42
 msgid ""
@@ -68,7 +68,7 @@ msgid ""
 "<https://github.com/secretflow/scql/tree/main/examples/docker-compose>`_,"
 " it would deploy and start services as shown in the following figure, it "
 "contains a SCDBServer and two SCQLEngines from party ``alice``, ``bob``."
-msgstr "你可以通过 `docker-compose <https://github.com/secretflow/scql/tree/main/examples/docker-compose>`_ 来启动 SCQL 服务 ，它将部署和启动服务，如下图所示，它包含一个 SCDBServer 和两个来自 ``alice`` 方、 ``bob`` 的 SCQLEngines 。"
+msgstr "你可以通过 `docker-compose <https://github.com/secretflow/scql/tree/main/examples/docker-compose>`_ 来启动 SCQL 服务 ，它将部署和启动服务，如下图所示，它包含一个 SCDBServer 和两个分别来自参与方 ``alice`` 、 ``bob`` 的 SCQLEngines 。"
 
 #: ../../getting_started/quickstart.rst:-1
 msgid "docker-compose deployment for quickstart example"
@@ -89,7 +89,7 @@ msgid ""
 "The SCDBServer is served through the HTTP protocol. However, for "
 "production environments, it is recommended to use HTTPS instead. Please "
 "check :ref:`TLS Configuration <scdb-tls>` for details."
-msgstr "SCDBServer 是通过 HTTP 协议提供的。然而，对于生产环境，建议使用 HTTPS 来代替。请查看 :ref:`TLS 配置 <scdb-tls>` 以了解详情。"
+msgstr "SCDBServer 是通过 HTTP 协议提供服务的。然而，对于生产环境，建议使用 HTTPS 协议来代替。请查看 :ref:`TLS 配置 <scdb-tls>` 以了解详情。"
 
 #: ../../getting_started/quickstart.rst:53
 msgid ""
@@ -113,7 +113,7 @@ msgstr "如果你遇到任何问题，请查看 `examples/docker-compose/README.
 
 #: ../../getting_started/quickstart.rst:70
 msgid "Create database, user and tables"
-msgstr "创建数据库、用户和表格"
+msgstr "创建数据库、用户和数据表"
 
 #: ../../getting_started/quickstart.rst:151
 msgid "Grant CCL"
