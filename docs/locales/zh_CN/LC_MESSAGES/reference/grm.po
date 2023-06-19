@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-30 20:12+0800\n"
+"POT-Creation-Date: 2023-06-18 16:50+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -17,70 +17,70 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.11.0\n"
+"Generated-By: Babel 2.12.1\n"
 
 #: ../../reference/grm.rst:3
 msgid "Global Resource Manager"
-msgstr ""
+msgstr "全局资源管理器"
 
 #: ../../reference/grm.rst:8
 msgid "Overview"
-msgstr ""
+msgstr "概述"
 
 #: ../../reference/grm.rst:10
 msgid ""
 "Global Resource Manager (GRM) is used to manage global data in a secure "
 "collaborative system. The global data managed by GRM includes information"
 " about parties, table schemas, SCQL engine endpoints, and etc."
-msgstr ""
+msgstr "全局资源管理器（GRM）用于管理安全协作系统中的全局数据。由 GRM 管理的全局数据包括有关各方、表模式、SCQL 引擎端点等信息。"
 
 #: ../../reference/grm.rst:13
 msgid "Why GRM?"
-msgstr ""
+msgstr "为什么选择 GRM？"
 
 #: ../../reference/grm.rst:15
 msgid ""
 "The SCQL system is only responsible for secure collaborative analytics, "
 "it does not own or manage data."
-msgstr ""
+msgstr "SCQL 系统只负责安全协作分析，它不拥有或管理数据。"
 
 #: ../../reference/grm.rst:17
 msgid "SCQL needs to know the following information when executing a query."
-msgstr ""
+msgstr "在执行查询时，SCQL 需要知道以下信息。"
 
 #: ../../reference/grm.rst:19
 msgid ""
 "The schema information of the tables involved in the query includes "
 "detailed information such as the table columns and the data source type."
-msgstr ""
+msgstr "查询中涉及的表的模式信息包括详细的信息，如表列和数据源类型。"
 
 #: ../../reference/grm.rst:20
 msgid "Data owner party node metadata, such as SCQLEngine endpoints."
-msgstr ""
+msgstr "数据所有者方的节点元数据，如 SCQL 引擎端点。"
 
 #: ../../reference/grm.rst:21
 msgid "Party identity management."
-msgstr ""
+msgstr "缔约方身份管理。"
 
 #: ../../reference/grm.rst:25
 msgid "API"
-msgstr ""
+msgstr "API"
 
 #: ../../reference/grm.rst:28
 msgid "VerifyTableOwnership"
-msgstr ""
+msgstr "验证表的所有权"
 
 #: ../../reference/grm.rst:30
 msgid ""
 "When creating table, SCQL needs to verify whether the user holding the "
 "token owns the table specified by TID"
-msgstr ""
+msgstr "当创建表时，SCQL 需要验证持有 token 的用户是否拥有 TID 指定的表。"
 
 #: ../../reference/grm.rst:33 ../../reference/grm.rst:72
 #: ../../reference/grm.rst:101 ../../reference/grm.rst:196
 #: ../../reference/grm.rst:231
 msgid "Request"
-msgstr ""
+msgstr "请求"
 
 #: ../../reference/grm.rst:36 ../../reference/grm.rst:47
 #: ../../reference/grm.rst:58 ../../reference/grm.rst:104
@@ -88,7 +88,7 @@ msgstr ""
 #: ../../reference/grm.rst:141 ../../reference/grm.rst:199
 #: ../../reference/grm.rst:210 ../../reference/grm.rst:221
 msgid "Field"
-msgstr ""
+msgstr "字段"
 
 #: ../../reference/grm.rst:36 ../../reference/grm.rst:47
 #: ../../reference/grm.rst:58 ../../reference/grm.rst:104
@@ -96,7 +96,7 @@ msgstr ""
 #: ../../reference/grm.rst:141 ../../reference/grm.rst:199
 #: ../../reference/grm.rst:210 ../../reference/grm.rst:221
 msgid "Type"
-msgstr ""
+msgstr "类型"
 
 #: ../../reference/grm.rst:36 ../../reference/grm.rst:47
 #: ../../reference/grm.rst:58 ../../reference/grm.rst:104
@@ -104,7 +104,7 @@ msgstr ""
 #: ../../reference/grm.rst:141 ../../reference/grm.rst:199
 #: ../../reference/grm.rst:210 ../../reference/grm.rst:221
 msgid "Required"
-msgstr ""
+msgstr "需要"
 
 #: ../../reference/grm.rst:36 ../../reference/grm.rst:47
 #: ../../reference/grm.rst:58 ../../reference/grm.rst:104
@@ -112,11 +112,11 @@ msgstr ""
 #: ../../reference/grm.rst:141 ../../reference/grm.rst:199
 #: ../../reference/grm.rst:210 ../../reference/grm.rst:221
 msgid "Description"
-msgstr ""
+msgstr "描述"
 
 #: ../../reference/grm.rst:38 ../../reference/grm.rst:106
 msgid "tid"
-msgstr ""
+msgstr "tid"
 
 #: ../../reference/grm.rst:38 ../../reference/grm.rst:40
 #: ../../reference/grm.rst:62 ../../reference/grm.rst:106
@@ -124,9 +124,8 @@ msgstr ""
 #: ../../reference/grm.rst:130 ../../reference/grm.rst:132
 #: ../../reference/grm.rst:143 ../../reference/grm.rst:145
 #: ../../reference/grm.rst:147 ../../reference/grm.rst:203
-#: ../../reference/grm.rst:223 ../../reference/grm.rst:225
 msgid "string"
-msgstr ""
+msgstr "string"
 
 #: ../../reference/grm.rst:38 ../../reference/grm.rst:40
 #: ../../reference/grm.rst:49 ../../reference/grm.rst:51
@@ -140,252 +139,266 @@ msgstr ""
 #: ../../reference/grm.rst:214 ../../reference/grm.rst:223
 #: ../../reference/grm.rst:225
 msgid "Y"
-msgstr ""
+msgstr "是"
 
 #: ../../reference/grm.rst:38
 msgid ""
 "Table identifier provided by user when create table, read :ref:`Create "
 "table<create_table>` for more information"
-msgstr ""
+msgstr "用户在创建表时提供的表标识符，更多信息请阅读 :ref:`Create table<create_table>`"
 
 #: ../../reference/grm.rst:40 ../../reference/grm.rst:110
 #: ../../reference/grm.rst:203
 msgid "token"
-msgstr ""
+msgstr "token"
 
 #: ../../reference/grm.rst:40 ../../reference/grm.rst:110
 msgid "The token used to authenticate the user"
-msgstr ""
+msgstr "用来验证用户身份的 token"
 
 #: ../../reference/grm.rst:44 ../../reference/grm.rst:81
 #: ../../reference/grm.rst:114 ../../reference/grm.rst:207
 #: ../../reference/grm.rst:240
 msgid "Response"
-msgstr ""
+msgstr "回应"
 
 #: ../../reference/grm.rst:49 ../../reference/grm.rst:119
 #: ../../reference/grm.rst:212
 msgid "status"
-msgstr ""
+msgstr "status"
 
 #: ../../reference/grm.rst:49 ../../reference/grm.rst:119
 #: ../../reference/grm.rst:212
 msgid "Status_"
-msgstr ""
+msgstr "Status_"
 
 #: ../../reference/grm.rst:49
 msgid "Status of response"
-msgstr ""
+msgstr "回应情况"
 
 #: ../../reference/grm.rst:51
 msgid "is_owner"
-msgstr ""
+msgstr "is_owner"
 
 #: ../../reference/grm.rst:51
 msgid "bool"
-msgstr ""
+msgstr "bool"
 
 #: ../../reference/grm.rst:51
 msgid "True: user is the owner of the table"
-msgstr ""
+msgstr "当 bool 为真时：用户是表的所有者"
 
 #: ../../reference/grm.rst:55
 msgid "Status"
-msgstr ""
+msgstr "状态"
 
 #: ../../reference/grm.rst:60
 msgid "code"
-msgstr ""
+msgstr "code"
 
 #: ../../reference/grm.rst:60
 msgid "int32"
-msgstr ""
+msgstr "int32"
 
 #: ../../reference/grm.rst:60
 msgid "The status code, 0 means success"
-msgstr ""
+msgstr "状态代码，0 表示成功"
 
 #: ../../reference/grm.rst:62
 msgid "Messages"
-msgstr ""
+msgstr "Messages"
 
 #: ../../reference/grm.rst:62 ../../reference/grm.rst:64
 #: ../../reference/grm.rst:147
 msgid "N"
-msgstr ""
+msgstr "否"
 
 #: ../../reference/grm.rst:62
 msgid "Message for recording the error information."
-msgstr ""
+msgstr "用于记录错误信息的消息。"
 
 #: ../../reference/grm.rst:64
 msgid "details"
-msgstr ""
+msgstr "details"
 
 #: ../../reference/grm.rst:64
 msgid "protobuf.Any list"
-msgstr ""
+msgstr "protobuf.Any list"
 
 #: ../../reference/grm.rst:64
 msgid "A list of messages for error details"
-msgstr ""
+msgstr "有关错误细节的信息列表"
 
 #: ../../reference/grm.rst:70 ../../reference/grm.rst:151
 #: ../../reference/grm.rst:229
 msgid "Example"
-msgstr ""
+msgstr "事例"
 
 #: ../../reference/grm.rst:96
 msgid "GetTableMeta"
-msgstr ""
+msgstr "读取表格"
 
 #: ../../reference/grm.rst:98
 msgid ""
 "During creating table, after ensuring the ownership, SCQL needs to Get "
 "table schema from grm service."
-msgstr ""
+msgstr "在创建表的过程中，在确保所有权后，SCQL 需要从 grm 服务中获取表结构。"
 
 #: ../../reference/grm.rst:106
 msgid "Unique table identifier"
-msgstr ""
+msgstr "独特的表标识符"
 
 #: ../../reference/grm.rst:108
 msgid "request_party"
-msgstr ""
+msgstr "request_party"
 
-#: ../../reference/grm.rst:108 ../../reference/grm.rst:121
-#: ../../reference/grm.rst:132
+#: ../../reference/grm.rst:108
 msgid "The party code of request issuer"
-msgstr ""
+msgstr "请求发布方的代码"
 
-#: ../../reference/grm.rst:119 ../../reference/grm.rst:130
-#: ../../reference/grm.rst:212
+#: ../../reference/grm.rst:119 ../../reference/grm.rst:212
 msgid "The status of response"
-msgstr ""
+msgstr "回应情况"
 
 #: ../../reference/grm.rst:121
 msgid "schema"
-msgstr ""
+msgstr "schema"
 
 #: ../../reference/grm.rst:121
 msgid "TableSchema_"
-msgstr ""
+msgstr "TableSchema_"
+
+#: ../../reference/grm.rst:121
+msgid "The schema of the table"
+msgstr "表的格式"
 
 #: ../../reference/grm.rst:125
 msgid "TableSchema"
-msgstr ""
+msgstr "表的格式"
 
 #: ../../reference/grm.rst:130
 msgid "db_name"
-msgstr ""
+msgstr "db_name"
+
+#: ../../reference/grm.rst:130
+msgid "The name of the database that the table belongs to"
+msgstr "该表所属的数据库的名称"
 
 #: ../../reference/grm.rst:132
 msgid "table_name"
-msgstr ""
+msgstr "table_name"
+
+#: ../../reference/grm.rst:132
+msgid "The name of the table"
+msgstr "表的名称"
 
 #: ../../reference/grm.rst:134
 msgid "columns"
-msgstr ""
+msgstr "columns"
 
 #: ../../reference/grm.rst:134
 msgid "ColumnDesc_ list"
-msgstr ""
+msgstr "ColumnDesc_ list"
 
 #: ../../reference/grm.rst:134
-msgid "The column info in the table"
-msgstr ""
+msgid "The column information in the table"
+msgstr "表中的列信息"
 
 #: ../../reference/grm.rst:138
 msgid "ColumnDesc"
-msgstr ""
+msgstr "ColumnDesc"
 
 #: ../../reference/grm.rst:143
 msgid "name"
-msgstr ""
+msgstr "name"
 
 #: ../../reference/grm.rst:143
 msgid "The column name"
-msgstr ""
+msgstr "列的名称"
 
 #: ../../reference/grm.rst:145
 msgid "type"
-msgstr ""
+msgstr "type"
 
 #: ../../reference/grm.rst:145
 msgid "The type of column value"
-msgstr ""
+msgstr "列值的类型"
 
 #: ../../reference/grm.rst:147
 msgid "description"
-msgstr ""
+msgstr "描述"
 
 #: ../../reference/grm.rst:147
 msgid "The description of the column"
-msgstr ""
+msgstr "列的描述"
 
 #: ../../reference/grm.rst:153
 msgid "request"
-msgstr ""
+msgstr "请求"
 
 #: ../../reference/grm.rst:163
 msgid "response"
-msgstr ""
+msgstr "回应"
 
 #: ../../reference/grm.rst:191
 msgid "GetEngines"
-msgstr ""
+msgstr "获取引擎"
 
 #: ../../reference/grm.rst:193
 msgid ""
 "During executing the DQL submitted by the user holding the token, SCQL "
 "needs to get the engine information of the relevant parties."
-msgstr ""
+msgstr "在执行持有令牌的用户提交的 DQL 时，SCQL 需要获得相关方的引擎信息。"
 
 #: ../../reference/grm.rst:201
 msgid "party_codes"
-msgstr ""
+msgstr "party_codes"
 
-#: ../../reference/grm.rst:201
+#: ../../reference/grm.rst:201 ../../reference/grm.rst:223
+#: ../../reference/grm.rst:225
 msgid "string list"
-msgstr ""
+msgstr "string list"
 
 #: ../../reference/grm.rst:201
 msgid "Parties whose engine info need to be obtained"
-msgstr ""
+msgstr "需要获得引擎信息的各方"
 
 #: ../../reference/grm.rst:203
 msgid "Token used to authenticate the user"
-msgstr ""
+msgstr "用来验证用户身份的 token"
 
 #: ../../reference/grm.rst:214
 msgid "engine_infos"
-msgstr ""
+msgstr "engine_infos"
 
 #: ../../reference/grm.rst:214
 msgid "EngineInfo_ list"
-msgstr ""
+msgstr "EngineInfo_ list"
 
 #: ../../reference/grm.rst:214
 msgid "engine_infos[i] is engine info for party request.party_codes[i]"
-msgstr ""
+msgstr "[i] 是请求方的 .party_codes[i] 的引擎信息。"
 
 #: ../../reference/grm.rst:218
 msgid "EngineInfo"
-msgstr ""
+msgstr "EngineInfo"
 
 #: ../../reference/grm.rst:223
 msgid "endpoints"
-msgstr ""
+msgstr "endpoints"
 
 #: ../../reference/grm.rst:223
 msgid "The url of engine"
-msgstr ""
+msgstr "引擎的网址"
 
 #: ../../reference/grm.rst:225
 msgid "credential"
-msgstr ""
+msgstr "credential"
 
 #: ../../reference/grm.rst:225
 msgid "Credential used for engine to authenticate SCDB"
-msgstr ""
+msgstr "用于引擎验证 SCDB 的凭证"
+
+#~ msgid "The column info in the table"
+#~ msgstr "表中的列信息"
 
