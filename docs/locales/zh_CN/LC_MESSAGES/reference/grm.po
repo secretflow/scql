@@ -32,11 +32,11 @@ msgid ""
 "Global Resource Manager (GRM) is used to manage global data in a secure "
 "collaborative system. The global data managed by GRM includes information"
 " about parties, table schemas, SCQL engine endpoints, and etc."
-msgstr "全局资源管理器（GRM）用于管理安全协作系统中的全局数据。 GRM 管理的全局数据包括参与方、表模式、SCQL 引擎端点等信息。"
+msgstr "全局资源管理器（GRM）用于管理安全协作系统中的全局数据。 GRM 管理的全局数据包括参与方、表规格、SCQL 引擎 endpoints 等信息。"
 
 #: ../../reference/grm.rst:13
 msgid "Why GRM?"
-msgstr "为什么选择 GRM？"
+msgstr "为什么需要 GRM？"
 
 #: ../../reference/grm.rst:15
 msgid ""
@@ -52,11 +52,11 @@ msgstr "在执行查询时，SCQL 需要知道以下信息。"
 msgid ""
 "The schema information of the tables involved in the query includes "
 "detailed information such as the table columns and the data source type."
-msgstr "查询中涉及的表的模式信息包括表的列和数据源类型等详细的信息。"
+msgstr "查询中涉及的表规格信息包括表的列和数据源类型等详细的信息。"
 
 #: ../../reference/grm.rst:20
 msgid "Data owner party node metadata, such as SCQLEngine endpoints."
-msgstr "数据拥有方的节点元数据，如 SCQL 引擎端点。"
+msgstr "数据拥有方的节点元数据，如 SCQL 引擎 endpoints 。"
 
 #: ../../reference/grm.rst:21
 msgid "Party identity management."
@@ -174,7 +174,7 @@ msgstr "Status_"
 
 #: ../../reference/grm.rst:49
 msgid "Status of response"
-msgstr "响应情况"
+msgstr "响应的状态"
 
 #: ../../reference/grm.rst:51
 msgid "is_owner"
@@ -186,7 +186,7 @@ msgstr "bool"
 
 #: ../../reference/grm.rst:51
 msgid "True: user is the owner of the table"
-msgstr "当 bool 为真时：用户是表的所有者"
+msgstr "当 bool 值为 true 时：用户是表的所有者"
 
 #: ../../reference/grm.rst:55
 msgid "Status"
@@ -274,7 +274,7 @@ msgstr "表的结构"
 
 #: ../../reference/grm.rst:125
 msgid "TableSchema"
-msgstr "表的结构"
+msgstr "表结构"
 
 #: ../../reference/grm.rst:130
 msgid "db_name"
