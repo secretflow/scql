@@ -54,7 +54,7 @@ msgid ""
 " trusted third-party and two data owner parties named ``Alice`` and "
 "``Bob``. We use three machines to simulate different parties."
 msgstr "SCQL 系统的部署图如下图所示，它涉及到三个参与方，"
-"包括一个可信的第三方和两个名为 ``Alice`` 和 ``Bob`` 的数据所有方。"
+"包括一个可信的第三方和两个名为 ``Alice`` 和 ``Bob`` 的数据提供方。"
 "我们使用三台机器来模拟不同的参与方。"
 
 #: ../../getting_started/deployment.rst:17
