@@ -68,7 +68,7 @@ msgstr "API"
 
 #: ../../reference/grm.rst:28
 msgid "VerifyTableOwnership"
-msgstr "验证表的所有权"
+msgstr "VerifyTableOwnership"
 
 #: ../../reference/grm.rst:30
 msgid ""
@@ -104,7 +104,7 @@ msgstr "类型"
 #: ../../reference/grm.rst:141 ../../reference/grm.rst:199
 #: ../../reference/grm.rst:210 ../../reference/grm.rst:221
 msgid "Required"
-msgstr "需要"
+msgstr "必填"
 
 #: ../../reference/grm.rst:36 ../../reference/grm.rst:47
 #: ../../reference/grm.rst:58 ../../reference/grm.rst:104
@@ -236,17 +236,17 @@ msgstr "事例"
 
 #: ../../reference/grm.rst:96
 msgid "GetTableMeta"
-msgstr "读取元表格"
+msgstr "GetTableMeta"
 
 #: ../../reference/grm.rst:98
 msgid ""
 "During creating table, after ensuring the ownership, SCQL needs to Get "
 "table schema from grm service."
-msgstr "在创建表的过程中，在确保所有权后，SCQL 需要从 grm 服务中获取表结构。"
+msgstr "在创建表的过程中，在确认所有权后，SCQL 需要从 grm 服务中获取表结构。"
 
 #: ../../reference/grm.rst:106
 msgid "Unique table identifier"
-msgstr "独特的表标识符"
+msgstr "唯一的表标识符"
 
 #: ../../reference/grm.rst:108
 msgid "request_party"
@@ -258,7 +258,7 @@ msgstr "请求发起方的代码"
 
 #: ../../reference/grm.rst:119 ../../reference/grm.rst:212
 msgid "The status of response"
-msgstr "响应情况"
+msgstr "响应的状态"
 
 #: ../../reference/grm.rst:121
 msgid "schema"
@@ -342,7 +342,7 @@ msgstr "响应"
 
 #: ../../reference/grm.rst:191
 msgid "GetEngines"
-msgstr "获取引擎"
+msgstr "GetEngines"
 
 #: ../../reference/grm.rst:193
 msgid ""
