@@ -58,7 +58,7 @@ msgstr "关键字 ``using`` 暂不支持"
 
 #: ../../reference/scql_status.rst:13
 msgid "where clause"
-msgstr "where clause"
+msgstr "where 子句"
 
 #: ../../reference/scql_status.rst:13 ../../reference/scql_status.rst:15
 #: ../../reference/scql_status.rst:17 ../../reference/scql_status.rst:33
@@ -71,11 +71,11 @@ msgstr "完全"
 
 #: ../../reference/scql_status.rst:15
 msgid "group by clause"
-msgstr "group by clause"
+msgstr "group by 子句"
 
 #: ../../reference/scql_status.rst:17
 msgid "having clause"
-msgstr "having clause"
+msgstr "having 子句"
 
 #: ../../reference/scql_status.rst:19
 msgid "union"
@@ -92,11 +92,11 @@ msgstr "即将支持"
 
 #: ../../reference/scql_status.rst:21
 msgid "limit clause"
-msgstr "limit clause"
+msgstr "limit 子句"
 
 #: ../../reference/scql_status.rst:23
 msgid "order by clause"
-msgstr "order by clause"
+msgstr "order by 子句"
 
 #: ../../reference/scql_status.rst:28 ../../reference/scql_status.rst:31
 msgid "Functions and Operators"
