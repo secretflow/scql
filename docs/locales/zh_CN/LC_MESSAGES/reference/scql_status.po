@@ -158,7 +158,7 @@ msgstr "<,<=,>,>="
 
 #: ../../reference/scql_status.rst:47
 msgid "string data comparison is not supported"
-msgstr "不支持字符串类型比较"
+msgstr "不支持字符串类型数据比较"
 
 #: ../../reference/scql_status.rst:49
 msgid "=, !="
