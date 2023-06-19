@@ -1,6 +1,4 @@
 #!/bin/bash
-
-#!/bin/bash
 mkdir -p _build/gettext &&
 make gettext &&
 sphinx-intl update -p _build/gettext -l zh_CN &&
