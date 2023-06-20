@@ -67,13 +67,13 @@ msgstr "对于 SQL 查询，SCDB 支持服务如下："
 msgid ""
 "Submit: async API, just submit SQL query and return, server listen on "
 "``${SCDBHost}/public/submit_query``"
-msgstr "Submit：异步 API，用于提交 SQL 查询并返回，服务器监听``${SCDBHost}/public/submit_query``"
+msgstr "Submit：异步 API，用于提交 SQL 查询并返回，服务器监听 ``${SCDBHost}/public/submit_query``"
 
 #: ../../development/integrate_scql_system.rst:27
 msgid ""
 "Fetch: async API, try to get the result of a SQL query, server listen on "
 "``${SCDBHost}/public/fetch_result``"
-msgstr "Fetch：异步 API，尝试获取 SQL 查询的结果，服务器监听``${SCDBHost}/public/fetch_result``"
+msgstr "Fetch：异步 API，尝试获取 SQL 查询的结果，服务器监听 ``${SCDBHost}/public/fetch_result``"
 
 #: ../../development/integrate_scql_system.rst:28
 msgid ""
@@ -81,7 +81,7 @@ msgid ""
 "server listen on ``${SCDBHost}/public/submit_and_get``"
 msgstr ""
 "SubmitAndGet：同步 "
-"API，提交查询并等待获取查询结果，服务器监听``${SCDBHost}/public/submit_and_get``"
+"API，提交查询并等待获取查询结果，服务器监听 ``${SCDBHost}/public/submit_and_get``"
 
 #: ../../development/integrate_scql_system.rst:30
 msgid "Please refer to :doc:`../development/scql_api` for details."
