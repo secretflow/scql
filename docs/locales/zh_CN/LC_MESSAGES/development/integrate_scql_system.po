@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-30 20:12+0800\n"
+"POT-Creation-Date: 2023-06-20 14:39+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -17,7 +17,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.11.0\n"
+"Generated-By: Babel 2.12.1\n"
 
 #: ../../development/integrate_scql_system.rst:2
 msgid "How To Integrate SCQL System"
@@ -79,7 +79,9 @@ msgstr "Fetch：异步 API，尝试获取 SQL 查询的结果，服务器监听`
 msgid ""
 "SubmitAndGet: sync API, submit query and wait to get the query result, "
 "server listen on ``${SCDBHost}/public/submit_and_get``"
-msgstr "SubmitAndGet：同步 API，提交查询并等待获取查询结果，服务器监听``${SCDBHost}/public/submit_and_get``"
+msgstr ""
+"SubmitAndGet：同步 "
+"API，提交查询并等待获取查询结果，服务器监听``${SCDBHost}/public/submit_and_get``"
 
 #: ../../development/integrate_scql_system.rst:30
 msgid "Please refer to :doc:`../development/scql_api` for details."
@@ -112,22 +114,31 @@ msgid "SCQL uses rpc API to communicate with GRM:"
 msgstr "SCQL 使用 rpc API 与全局资源管理器（GRM）通信："
 
 #: ../../development/integrate_scql_system.rst:44
+#, fuzzy
 msgid ""
-"GetTableMeta: fetch metadata of table, GRM server should listen on "
+"/GetTableMeta: fetch metadata of table, GRM server should listen on "
 "``${GRMServerHost}/GetTableMeta``"
-msgstr "GetTableMeta：获取表的元数据，全局资源管理器服务器（GRM server）应监听``${GRMServerHost}/GetTableMeta``"
+msgstr ""
+"GetTableMeta：获取表的元数据，全局资源管理器服务器（GRM "
+"server）应监听 ``${GRMServerHost}/GetTableMeta``"
 
 #: ../../development/integrate_scql_system.rst:45
+#, fuzzy
 msgid ""
-"GetEngines: get endpoints for specific SCQLEngines(parties), GRM server "
+"/GetEngines: get endpoints for specific SCQLEngines(parties), GRM server "
 "should listen on ``${GRMServerHost}/GetEngines``"
-msgstr "GetEngines：获取特定 SCQLEngines（参与者）的端点，全局资源管理器服务器（GRM server）应监听``${GRMServerHost}/GetEngines``"
+msgstr ""
+"GetEngines：获取特定 SCQLEngines（参与者）的端点，全局资源管理器服务器（GRM "
+"server）应监听 ``${GRMServerHost}/GetEngines``"
 
 #: ../../development/integrate_scql_system.rst:46
+#, fuzzy
 msgid ""
-"VerifyTableOwnership: check whether user has ownership of table, GRM "
+"/VerifyTableOwnership: check whether user has ownership of table, GRM "
 "server should listen on ``${GRMServerHost}/VerifyTableOwnership``"
-msgstr "VerifyTableOwnership：检查用户是否拥有表的所有权，全局资源管理器服务器（GRM server）应监听``${GRMServerHost}/VerifyTableOwnership``"
+msgstr ""
+"VerifyTableOwnership：检查用户是否拥有表的所有权，全局资源管理器服务器（GRM "
+"server）应监听 ``${GRMServerHost}/VerifyTableOwnership``"
 
 #: ../../development/integrate_scql_system.rst:48
 msgid "Please refer to :doc:`../reference/grm` for details."

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-06-18 16:50+0800\n"
+"POT-Creation-Date: 2023-06-20 14:34+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -66,336 +66,353 @@ msgstr "参与方身份管理。"
 msgid "API"
 msgstr "API"
 
-#: ../../reference/grm.rst:28
-msgid "VerifyTableOwnership"
-msgstr "VerifyTableOwnership"
+#: ../../reference/grm.rst:27
+msgid ""
+"The GRM service is an HTTP service and can be implemented in any language"
+" like C++/Java/Go/Python/..., where request and response are in JSON "
+"format(corresponding to their `Protocol Buffer definition "
+"<https://github.com/secretflow/scql/blob/main/api/grm.proto>`_)."
+msgstr "GRM 服务是一个 HTTP 服务，可以用 C++/Java/Go/Python/... 等任何语言实现，其 request 和 response 均为 JSON 格式（对应的 `Protocol Buffer definition <https://github.com/secretflow/scql/blob/main/api/grm.proto>`_)。"
 
-#: ../../reference/grm.rst:30
+#: ../../reference/grm.rst:29
+msgid ""
+"The GRM service will be called by `client "
+"<https://github.com/secretflow/scql/blob/main/pkg/grm/stdgrm/standard_grm.go>`_."
+msgstr "GRM 服务将在 `client <https://github.com/secretflow/scql/blob/main/pkg/grm/stdgrm/standard_grm.go>`_ 调用"
+
+#: ../../reference/grm.rst:33
+#, fuzzy
+msgid "/VerifyTableOwnership"
+msgstr "/VerifyTableOwnership"
+
+#: ../../reference/grm.rst:35
 msgid ""
 "When creating table, SCQL needs to verify whether the user holding the "
 "token owns the table specified by TID"
 msgstr "当创建表时，SCQL 需要验证持有 token 的用户是否拥有 TID 指定的表。"
 
-#: ../../reference/grm.rst:33 ../../reference/grm.rst:72
-#: ../../reference/grm.rst:101 ../../reference/grm.rst:196
-#: ../../reference/grm.rst:231
+#: ../../reference/grm.rst:38 ../../reference/grm.rst:77
+#: ../../reference/grm.rst:106 ../../reference/grm.rst:201
+#: ../../reference/grm.rst:236
 msgid "Request"
 msgstr "请求"
 
-#: ../../reference/grm.rst:36 ../../reference/grm.rst:47
-#: ../../reference/grm.rst:58 ../../reference/grm.rst:104
-#: ../../reference/grm.rst:117 ../../reference/grm.rst:128
-#: ../../reference/grm.rst:141 ../../reference/grm.rst:199
-#: ../../reference/grm.rst:210 ../../reference/grm.rst:221
+#: ../../reference/grm.rst:41 ../../reference/grm.rst:52
+#: ../../reference/grm.rst:63 ../../reference/grm.rst:109
+#: ../../reference/grm.rst:122 ../../reference/grm.rst:133
+#: ../../reference/grm.rst:146 ../../reference/grm.rst:204
+#: ../../reference/grm.rst:215 ../../reference/grm.rst:226
 msgid "Field"
 msgstr "字段"
 
-#: ../../reference/grm.rst:36 ../../reference/grm.rst:47
-#: ../../reference/grm.rst:58 ../../reference/grm.rst:104
-#: ../../reference/grm.rst:117 ../../reference/grm.rst:128
-#: ../../reference/grm.rst:141 ../../reference/grm.rst:199
-#: ../../reference/grm.rst:210 ../../reference/grm.rst:221
+#: ../../reference/grm.rst:41 ../../reference/grm.rst:52
+#: ../../reference/grm.rst:63 ../../reference/grm.rst:109
+#: ../../reference/grm.rst:122 ../../reference/grm.rst:133
+#: ../../reference/grm.rst:146 ../../reference/grm.rst:204
+#: ../../reference/grm.rst:215 ../../reference/grm.rst:226
 msgid "Type"
 msgstr "类型"
 
-#: ../../reference/grm.rst:36 ../../reference/grm.rst:47
-#: ../../reference/grm.rst:58 ../../reference/grm.rst:104
-#: ../../reference/grm.rst:117 ../../reference/grm.rst:128
-#: ../../reference/grm.rst:141 ../../reference/grm.rst:199
-#: ../../reference/grm.rst:210 ../../reference/grm.rst:221
+#: ../../reference/grm.rst:41 ../../reference/grm.rst:52
+#: ../../reference/grm.rst:63 ../../reference/grm.rst:109
+#: ../../reference/grm.rst:122 ../../reference/grm.rst:133
+#: ../../reference/grm.rst:146 ../../reference/grm.rst:204
+#: ../../reference/grm.rst:215 ../../reference/grm.rst:226
 msgid "Required"
 msgstr "必填"
 
-#: ../../reference/grm.rst:36 ../../reference/grm.rst:47
-#: ../../reference/grm.rst:58 ../../reference/grm.rst:104
-#: ../../reference/grm.rst:117 ../../reference/grm.rst:128
-#: ../../reference/grm.rst:141 ../../reference/grm.rst:199
-#: ../../reference/grm.rst:210 ../../reference/grm.rst:221
+#: ../../reference/grm.rst:41 ../../reference/grm.rst:52
+#: ../../reference/grm.rst:63 ../../reference/grm.rst:109
+#: ../../reference/grm.rst:122 ../../reference/grm.rst:133
+#: ../../reference/grm.rst:146 ../../reference/grm.rst:204
+#: ../../reference/grm.rst:215 ../../reference/grm.rst:226
 msgid "Description"
 msgstr "描述"
 
-#: ../../reference/grm.rst:38 ../../reference/grm.rst:106
+#: ../../reference/grm.rst:43 ../../reference/grm.rst:111
 msgid "tid"
 msgstr "tid"
 
-#: ../../reference/grm.rst:38 ../../reference/grm.rst:40
-#: ../../reference/grm.rst:62 ../../reference/grm.rst:106
-#: ../../reference/grm.rst:108 ../../reference/grm.rst:110
-#: ../../reference/grm.rst:130 ../../reference/grm.rst:132
-#: ../../reference/grm.rst:143 ../../reference/grm.rst:145
-#: ../../reference/grm.rst:147 ../../reference/grm.rst:203
+#: ../../reference/grm.rst:43 ../../reference/grm.rst:45
+#: ../../reference/grm.rst:67 ../../reference/grm.rst:111
+#: ../../reference/grm.rst:113 ../../reference/grm.rst:115
+#: ../../reference/grm.rst:135 ../../reference/grm.rst:137
+#: ../../reference/grm.rst:148 ../../reference/grm.rst:150
+#: ../../reference/grm.rst:152 ../../reference/grm.rst:208
 msgid "string"
 msgstr "string"
 
-#: ../../reference/grm.rst:38 ../../reference/grm.rst:40
-#: ../../reference/grm.rst:49 ../../reference/grm.rst:51
-#: ../../reference/grm.rst:60 ../../reference/grm.rst:106
-#: ../../reference/grm.rst:108 ../../reference/grm.rst:110
-#: ../../reference/grm.rst:119 ../../reference/grm.rst:121
-#: ../../reference/grm.rst:130 ../../reference/grm.rst:132
-#: ../../reference/grm.rst:134 ../../reference/grm.rst:143
-#: ../../reference/grm.rst:145 ../../reference/grm.rst:201
-#: ../../reference/grm.rst:203 ../../reference/grm.rst:212
-#: ../../reference/grm.rst:214 ../../reference/grm.rst:223
-#: ../../reference/grm.rst:225
+#: ../../reference/grm.rst:43 ../../reference/grm.rst:45
+#: ../../reference/grm.rst:54 ../../reference/grm.rst:56
+#: ../../reference/grm.rst:65 ../../reference/grm.rst:111
+#: ../../reference/grm.rst:113 ../../reference/grm.rst:115
+#: ../../reference/grm.rst:124 ../../reference/grm.rst:126
+#: ../../reference/grm.rst:135 ../../reference/grm.rst:137
+#: ../../reference/grm.rst:139 ../../reference/grm.rst:148
+#: ../../reference/grm.rst:150 ../../reference/grm.rst:206
+#: ../../reference/grm.rst:208 ../../reference/grm.rst:217
+#: ../../reference/grm.rst:219 ../../reference/grm.rst:228
+#: ../../reference/grm.rst:230
 msgid "Y"
 msgstr "是"
 
-#: ../../reference/grm.rst:38
+#: ../../reference/grm.rst:43
 msgid ""
 "Table identifier provided by user when create table, read :ref:`Create "
 "table<create_table>` for more information"
 msgstr "用户在创建表时提供的表标识符，更多信息请阅读 :ref:`Create table<create_table>`"
 
-#: ../../reference/grm.rst:40 ../../reference/grm.rst:110
-#: ../../reference/grm.rst:203
+#: ../../reference/grm.rst:45 ../../reference/grm.rst:115
+#: ../../reference/grm.rst:208
 msgid "token"
 msgstr "token"
 
-#: ../../reference/grm.rst:40 ../../reference/grm.rst:110
+#: ../../reference/grm.rst:45 ../../reference/grm.rst:115
 msgid "The token used to authenticate the user"
 msgstr "用来验证用户身份的 token"
 
-#: ../../reference/grm.rst:44 ../../reference/grm.rst:81
-#: ../../reference/grm.rst:114 ../../reference/grm.rst:207
-#: ../../reference/grm.rst:240
+#: ../../reference/grm.rst:49 ../../reference/grm.rst:86
+#: ../../reference/grm.rst:119 ../../reference/grm.rst:212
+#: ../../reference/grm.rst:245
 msgid "Response"
 msgstr "响应"
 
-#: ../../reference/grm.rst:49 ../../reference/grm.rst:119
-#: ../../reference/grm.rst:212
+#: ../../reference/grm.rst:54 ../../reference/grm.rst:124
+#: ../../reference/grm.rst:217
 msgid "status"
 msgstr "status"
 
-#: ../../reference/grm.rst:49 ../../reference/grm.rst:119
-#: ../../reference/grm.rst:212
+#: ../../reference/grm.rst:54 ../../reference/grm.rst:124
+#: ../../reference/grm.rst:217
 msgid "Status_"
 msgstr "Status_"
 
-#: ../../reference/grm.rst:49
+#: ../../reference/grm.rst:54
 msgid "Status of response"
 msgstr "响应的状态"
 
-#: ../../reference/grm.rst:51
+#: ../../reference/grm.rst:56
 msgid "is_owner"
 msgstr "is_owner"
 
-#: ../../reference/grm.rst:51
+#: ../../reference/grm.rst:56
 msgid "bool"
 msgstr "bool"
 
-#: ../../reference/grm.rst:51
+#: ../../reference/grm.rst:56
 msgid "True: user is the owner of the table"
 msgstr "当 bool 值为 true 时：用户是表的所有者"
 
-#: ../../reference/grm.rst:55
+#: ../../reference/grm.rst:60
 msgid "Status"
 msgstr "状态"
 
-#: ../../reference/grm.rst:60
+#: ../../reference/grm.rst:65
 msgid "code"
 msgstr "code"
 
-#: ../../reference/grm.rst:60
+#: ../../reference/grm.rst:65
 msgid "int32"
 msgstr "int32"
 
-#: ../../reference/grm.rst:60
+#: ../../reference/grm.rst:65
 msgid "The status code, 0 means success"
 msgstr "状态代码，0 表示成功"
 
-#: ../../reference/grm.rst:62
+#: ../../reference/grm.rst:67
 msgid "Messages"
 msgstr "Messages"
 
-#: ../../reference/grm.rst:62 ../../reference/grm.rst:64
-#: ../../reference/grm.rst:147
+#: ../../reference/grm.rst:67 ../../reference/grm.rst:69
+#: ../../reference/grm.rst:152
 msgid "N"
 msgstr "否"
 
-#: ../../reference/grm.rst:62
+#: ../../reference/grm.rst:67
 msgid "Message for recording the error information."
 msgstr "用于记录错误信息的消息。"
 
-#: ../../reference/grm.rst:64
+#: ../../reference/grm.rst:69
 msgid "details"
 msgstr "details"
 
-#: ../../reference/grm.rst:64
+#: ../../reference/grm.rst:69
 msgid "protobuf.Any list"
 msgstr "protobuf.Any list"
 
-#: ../../reference/grm.rst:64
+#: ../../reference/grm.rst:69
 msgid "A list of messages for error details"
 msgstr "有关错误细节的信息列表"
 
-#: ../../reference/grm.rst:70 ../../reference/grm.rst:151
-#: ../../reference/grm.rst:229
+#: ../../reference/grm.rst:75 ../../reference/grm.rst:156
+#: ../../reference/grm.rst:234
 msgid "Example"
 msgstr "示例"
 
-#: ../../reference/grm.rst:96
-msgid "GetTableMeta"
-msgstr "GetTableMeta"
+#: ../../reference/grm.rst:101
+#, fuzzy
+msgid "/GetTableMeta"
+msgstr "/GetTableMeta"
 
-#: ../../reference/grm.rst:98
+#: ../../reference/grm.rst:103
 msgid ""
 "During creating table, after ensuring the ownership, SCQL needs to Get "
 "table schema from grm service."
 msgstr "在创建表的过程中，在确认所有权后，SCQL 需要从 grm 服务中获取表结构。"
 
-#: ../../reference/grm.rst:106
+#: ../../reference/grm.rst:111
 msgid "Unique table identifier"
 msgstr "唯一的表标识符"
 
-#: ../../reference/grm.rst:108
+#: ../../reference/grm.rst:113
 msgid "request_party"
 msgstr "request_party"
 
-#: ../../reference/grm.rst:108
+#: ../../reference/grm.rst:113
 msgid "The party code of request issuer"
 msgstr "请求发起方的代码"
 
-#: ../../reference/grm.rst:119 ../../reference/grm.rst:212
+#: ../../reference/grm.rst:124 ../../reference/grm.rst:217
 msgid "The status of response"
 msgstr "响应的状态"
 
-#: ../../reference/grm.rst:121
+#: ../../reference/grm.rst:126
 msgid "schema"
 msgstr "schema"
 
-#: ../../reference/grm.rst:121
+#: ../../reference/grm.rst:126
 msgid "TableSchema_"
 msgstr "TableSchema_"
 
-#: ../../reference/grm.rst:121
+#: ../../reference/grm.rst:126
 msgid "The schema of the table"
 msgstr "表的结构"
 
-#: ../../reference/grm.rst:125
+#: ../../reference/grm.rst:130
 msgid "TableSchema"
 msgstr "表结构"
 
-#: ../../reference/grm.rst:130
+#: ../../reference/grm.rst:135
 msgid "db_name"
 msgstr "db_name"
 
-#: ../../reference/grm.rst:130
+#: ../../reference/grm.rst:135
 msgid "The name of the database that the table belongs to"
 msgstr "表所属的数据库的名称"
 
-#: ../../reference/grm.rst:132
+#: ../../reference/grm.rst:137
 msgid "table_name"
 msgstr "table_name"
 
-#: ../../reference/grm.rst:132
+#: ../../reference/grm.rst:137
 msgid "The name of the table"
 msgstr "表的名称"
 
-#: ../../reference/grm.rst:134
+#: ../../reference/grm.rst:139
 msgid "columns"
 msgstr "columns"
 
-#: ../../reference/grm.rst:134
+#: ../../reference/grm.rst:139
 msgid "ColumnDesc_ list"
 msgstr "ColumnDesc_ list"
 
-#: ../../reference/grm.rst:134
+#: ../../reference/grm.rst:139
 msgid "The column information in the table"
 msgstr "表中的列信息"
 
-#: ../../reference/grm.rst:138
+#: ../../reference/grm.rst:143
 msgid "ColumnDesc"
 msgstr "ColumnDesc"
 
-#: ../../reference/grm.rst:143
+#: ../../reference/grm.rst:148
 msgid "name"
 msgstr "name"
 
-#: ../../reference/grm.rst:143
+#: ../../reference/grm.rst:148
 msgid "The column name"
 msgstr "列的名称"
 
-#: ../../reference/grm.rst:145
+#: ../../reference/grm.rst:150
 msgid "type"
 msgstr "type"
 
-#: ../../reference/grm.rst:145
+#: ../../reference/grm.rst:150
 msgid "The type of column value"
 msgstr "列值的类型"
 
-#: ../../reference/grm.rst:147
+#: ../../reference/grm.rst:152
 msgid "description"
 msgstr "描述"
 
-#: ../../reference/grm.rst:147
+#: ../../reference/grm.rst:152
 msgid "The description of the column"
 msgstr "列的描述"
 
-#: ../../reference/grm.rst:153
+#: ../../reference/grm.rst:158
 msgid "request"
 msgstr "请求"
 
-#: ../../reference/grm.rst:163
+#: ../../reference/grm.rst:168
 msgid "response"
 msgstr "响应"
 
-#: ../../reference/grm.rst:191
-msgid "GetEngines"
-msgstr "GetEngines"
+#: ../../reference/grm.rst:196
+#, fuzzy
+msgid "/GetEngines"
+msgstr "/GetEngines"
 
-#: ../../reference/grm.rst:193
+#: ../../reference/grm.rst:198
 msgid ""
 "During executing the DQL submitted by the user holding the token, SCQL "
 "needs to get the engine information of the relevant parties."
 msgstr "在执行持有令牌 (token) 的用户提交的 DQL 时，SCQL 需要获得相关方的引擎信息。"
 
-#: ../../reference/grm.rst:201
+#: ../../reference/grm.rst:206
 msgid "party_codes"
 msgstr "party_codes"
 
-#: ../../reference/grm.rst:201 ../../reference/grm.rst:223
-#: ../../reference/grm.rst:225
+#: ../../reference/grm.rst:206 ../../reference/grm.rst:228
+#: ../../reference/grm.rst:230
 msgid "string list"
 msgstr "string list"
 
-#: ../../reference/grm.rst:201
+#: ../../reference/grm.rst:206
 msgid "Parties whose engine info need to be obtained"
 msgstr "需要获得引擎信息的各方"
 
-#: ../../reference/grm.rst:203
+#: ../../reference/grm.rst:208
 msgid "Token used to authenticate the user"
 msgstr "用来验证用户身份的 token"
 
-#: ../../reference/grm.rst:214
+#: ../../reference/grm.rst:219
 msgid "engine_infos"
 msgstr "engine_infos"
 
-#: ../../reference/grm.rst:214
+#: ../../reference/grm.rst:219
 msgid "EngineInfo_ list"
 msgstr "EngineInfo_ list"
 
-#: ../../reference/grm.rst:214
+#: ../../reference/grm.rst:219
 msgid "engine_infos[i] is engine info for party request.party_codes[i]"
 msgstr "engine_infos[i] 是请求方的 .party_codes[i] 的引擎信息。"
 
-#: ../../reference/grm.rst:218
+#: ../../reference/grm.rst:223
 msgid "EngineInfo"
 msgstr "EngineInfo"
 
-#: ../../reference/grm.rst:223
+#: ../../reference/grm.rst:228
 msgid "endpoints"
 msgstr "endpoints"
 
-#: ../../reference/grm.rst:223
+#: ../../reference/grm.rst:228
 msgid "The url of engine"
 msgstr "引擎的统一资源定位符（URL）"
 
-#: ../../reference/grm.rst:225
+#: ../../reference/grm.rst:230
 msgid "credential"
 msgstr "credential"
 
-#: ../../reference/grm.rst:225
+#: ../../reference/grm.rst:230
 msgid "Credential used for engine to authenticate SCDB"
 msgstr "用于引擎验证 SCDB 的凭证"
 
