@@ -59,15 +59,15 @@ Response
 Status
 """"""
 
-+----------+-------------------+----------+----------------------------------------------+
-| Field    | Type              | Required | Description                                  |
-+==========+===================+==========+==============================================+
-| code     | int32             | Y        | The status code, 0 means success             |
-+----------+-------------------+----------+----------------------------------------------+
-| Messages | string            | N        | Message for recording the error information. |
-+----------+-------------------+----------+----------------------------------------------+
-| details  | protobuf.Any list | N        | A list of messages for error details         |
-+----------+-------------------+----------+----------------------------------------------+
++---------+-------------------+----------+----------------------------------------------+
+|  Field  |       Type        | Required |                 Description                  |
++=========+===================+==========+==============================================+
+| code    | int32             | Y        | The status code, 0 means success             |
++---------+-------------------+----------+----------------------------------------------+
+| message | string            | N        | Message for recording the error information. |
++---------+-------------------+----------+----------------------------------------------+
+| details | protobuf.Any list | N        | A list of messages for error details         |
++---------+-------------------+----------+----------------------------------------------+
 
 
 
@@ -100,7 +100,7 @@ Response
 /GetTableMeta
 -------------
 
-During creating table, after ensuring the ownership, SCQL needs to Get table schema from grm service. 
+During creating table, after ensuring the ownership, SCQL needs to Get table schema from GRM service.
 
 Request
 ^^^^^^^

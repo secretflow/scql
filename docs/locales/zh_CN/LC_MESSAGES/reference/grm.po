@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-06-20 14:34+0800\n"
+"POT-Creation-Date: 2023-06-20 15:23+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -72,13 +72,19 @@ msgid ""
 " like C++/Java/Go/Python/..., where request and response are in JSON "
 "format(corresponding to their `Protocol Buffer definition "
 "<https://github.com/secretflow/scql/blob/main/api/grm.proto>`_)."
-msgstr "GRM 服务是一个 HTTP 服务，可以用 C++/Java/Go/Python/... 等任何语言实现，其 request 和 response 均为 JSON 格式（对应的 `Protocol Buffer definition <https://github.com/secretflow/scql/blob/main/api/grm.proto>`_)。"
+msgstr ""
+"GRM 服务是一个 HTTP 服务，可以用 C++/Java/Go/Python/... 等任何语言实现，其 request 和 response"
+" 均为 JSON 格式（对应的 `Protocol Buffer definition "
+"<https://github.com/secretflow/scql/blob/main/api/grm.proto>`_)。"
 
 #: ../../reference/grm.rst:29
 msgid ""
 "The GRM service will be called by `client "
 "<https://github.com/secretflow/scql/blob/main/pkg/grm/stdgrm/standard_grm.go>`_."
-msgstr "GRM 服务将在 `client <https://github.com/secretflow/scql/blob/main/pkg/grm/stdgrm/standard_grm.go>`_ 调用"
+msgstr ""
+"GRM 服务将在 `client "
+"<https://github.com/secretflow/scql/blob/main/pkg/grm/stdgrm/standard_grm.go>`_"
+" 调用"
 
 #: ../../reference/grm.rst:33
 #, fuzzy
@@ -209,19 +215,19 @@ msgstr "状态"
 
 #: ../../reference/grm.rst:65
 msgid "code"
-msgstr "code"
+msgstr ""
 
 #: ../../reference/grm.rst:65
 msgid "int32"
-msgstr "int32"
+msgstr ""
 
 #: ../../reference/grm.rst:65
 msgid "The status code, 0 means success"
-msgstr "状态代码，0 表示成功"
+msgstr ""
 
 #: ../../reference/grm.rst:67
-msgid "Messages"
-msgstr "Messages"
+msgid "message"
+msgstr ""
 
 #: ../../reference/grm.rst:67 ../../reference/grm.rst:69
 #: ../../reference/grm.rst:152
@@ -230,19 +236,19 @@ msgstr "否"
 
 #: ../../reference/grm.rst:67
 msgid "Message for recording the error information."
-msgstr "用于记录错误信息的消息。"
+msgstr ""
 
 #: ../../reference/grm.rst:69
 msgid "details"
-msgstr "details"
+msgstr ""
 
 #: ../../reference/grm.rst:69
 msgid "protobuf.Any list"
-msgstr "protobuf.Any list"
+msgstr ""
 
 #: ../../reference/grm.rst:69
 msgid "A list of messages for error details"
-msgstr "有关错误细节的信息列表"
+msgstr ""
 
 #: ../../reference/grm.rst:75 ../../reference/grm.rst:156
 #: ../../reference/grm.rst:234
@@ -255,9 +261,10 @@ msgid "/GetTableMeta"
 msgstr "/GetTableMeta"
 
 #: ../../reference/grm.rst:103
+#, fuzzy
 msgid ""
 "During creating table, after ensuring the ownership, SCQL needs to Get "
-"table schema from grm service."
+"table schema from GRM service."
 msgstr "在创建表的过程中，在确认所有权后，SCQL 需要从 grm 服务中获取表结构。"
 
 #: ../../reference/grm.rst:111
@@ -418,4 +425,28 @@ msgstr "用于引擎验证 SCDB 的凭证"
 
 #~ msgid "The column info in the table"
 #~ msgstr "表中的列信息"
+
+#~ msgid "code"
+#~ msgstr "code"
+
+#~ msgid "int32"
+#~ msgstr "int32"
+
+#~ msgid "The status code, 0 means success"
+#~ msgstr "状态代码，0 表示成功"
+
+#~ msgid "Messages"
+#~ msgstr "Messages"
+
+#~ msgid "Message for recording the error information."
+#~ msgstr "用于记录错误信息的消息。"
+
+#~ msgid "details"
+#~ msgstr "details"
+
+#~ msgid "protobuf.Any list"
+#~ msgstr "protobuf.Any list"
+
+#~ msgid "A list of messages for error details"
+#~ msgstr "有关错误细节的信息列表"
 
