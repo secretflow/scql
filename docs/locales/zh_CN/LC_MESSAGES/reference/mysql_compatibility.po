@@ -195,7 +195,7 @@ msgstr "如果涉及多方查询，SCQL 将通过以下规则进行类型转换�
 
 #: ../../reference/mysql_compatibility.rst:88
 msgid "Compare(>, <, <=, >=, <>, =, !=)"
-msgstr "比较大小 (>, <, <=, >=, <>, =, !=)"
+msgstr "比较运算 (>, <, <=, >=, <>, =, !=)"
 
 #: ../../reference/mysql_compatibility.rst:89
 msgid "Both arguments in a comparison operation shouldn't be string"
@@ -232,7 +232,7 @@ msgstr "如果其中一个参数是 float32 类型，则会将另一个参数转
 
 #: ../../reference/mysql_compatibility.rst:100
 msgid "Aggregation(sum, count, avg, min, max)"
-msgstr "累加操作 (sum, count, avg, min, max)"
+msgstr "聚合操作 (sum, count, avg, min, max)"
 
 #: ../../reference/mysql_compatibility.rst:101
 msgid "All arguments in a aggregation function shouldn't be string"
