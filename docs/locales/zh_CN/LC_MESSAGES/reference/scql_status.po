@@ -21,44 +21,44 @@ msgstr ""
 
 #: ../../reference/scql_status.rst:2
 msgid "SCQL Implementation Status"
-msgstr ""
+msgstr "SCQL 实现进度"
 
 #: ../../reference/scql_status.rst:5
 msgid "SELECT Statement"
-msgstr ""
+msgstr "SELECT 语句"
 
 #: ../../reference/scql_status.rst:8
 msgid "syntax"
-msgstr ""
+msgstr "语法"
 
 #: ../../reference/scql_status.rst:8 ../../reference/scql_status.rst:31
 msgid "supported(fully/partial/no)"
-msgstr ""
+msgstr "支持程度(完全/部分/未支持)"
 
 #: ../../reference/scql_status.rst:8 ../../reference/scql_status.rst:31
 msgid "notes"
-msgstr ""
+msgstr "说明"
 
 #: ../../reference/scql_status.rst:10
 msgid "join"
-msgstr ""
+msgstr "join"
 
 #: ../../reference/scql_status.rst:10 ../../reference/scql_status.rst:47
 #: ../../reference/scql_status.rst:51
 msgid "partial"
-msgstr ""
+msgstr "部分"
 
 #: ../../reference/scql_status.rst:10
 msgid "currently only inner join is supported"
-msgstr ""
+msgstr "当前仅支持 inner join"
 
 #: ../../reference/scql_status.rst:11
 msgid "keyword ``using`` is not supported yet"
-msgstr ""
+msgstr "暂不支持关键字 ``using``"
 
 #: ../../reference/scql_status.rst:13
 msgid "where clause"
-msgstr ""
+msgstr "where 子句"
 
 #: ../../reference/scql_status.rst:13 ../../reference/scql_status.rst:15
 #: ../../reference/scql_status.rst:17 ../../reference/scql_status.rst:33
@@ -67,112 +67,112 @@ msgstr ""
 #: ../../reference/scql_status.rst:43 ../../reference/scql_status.rst:45
 #: ../../reference/scql_status.rst:49
 msgid "fully"
-msgstr ""
+msgstr "完全"
 
 #: ../../reference/scql_status.rst:15
 msgid "group by clause"
-msgstr ""
+msgstr "group by 子句"
 
 #: ../../reference/scql_status.rst:17
 msgid "having clause"
-msgstr ""
+msgstr "having 子句"
 
 #: ../../reference/scql_status.rst:19
 msgid "union"
-msgstr ""
+msgstr "union"
 
 #: ../../reference/scql_status.rst:19 ../../reference/scql_status.rst:21
 #: ../../reference/scql_status.rst:23
 msgid "no"
-msgstr ""
+msgstr "未支持"
 
 #: ../../reference/scql_status.rst:19
 msgid "coming soon"
-msgstr ""
+msgstr "即将支持"
 
 #: ../../reference/scql_status.rst:21
 msgid "limit clause"
-msgstr ""
+msgstr "limit 子句"
 
 #: ../../reference/scql_status.rst:23
 msgid "order by clause"
-msgstr ""
+msgstr "order by 子句"
 
 #: ../../reference/scql_status.rst:28 ../../reference/scql_status.rst:31
 msgid "Functions and Operators"
-msgstr ""
+msgstr "函数和运算符"
 
 #: ../../reference/scql_status.rst:31
 msgid "Category"
-msgstr ""
+msgstr "类别"
 
 #: ../../reference/scql_status.rst:33 ../../reference/scql_status.rst:35
 #: ../../reference/scql_status.rst:37 ../../reference/scql_status.rst:39
 #: ../../reference/scql_status.rst:41
 msgid "aggregation"
-msgstr ""
+msgstr "聚合运算"
 
 #: ../../reference/scql_status.rst:33
 msgid "sum"
-msgstr ""
+msgstr "sum"
 
 #: ../../reference/scql_status.rst:35
 msgid "count"
-msgstr ""
+msgstr "count"
 
 #: ../../reference/scql_status.rst:37
 msgid "avg"
-msgstr ""
+msgstr "avg"
 
 #: ../../reference/scql_status.rst:39
 msgid "min"
-msgstr ""
+msgstr "min"
 
 #: ../../reference/scql_status.rst:41
 msgid "max"
-msgstr ""
+msgstr "max"
 
 #: ../../reference/scql_status.rst:43
 msgid "arithmetic"
-msgstr ""
+msgstr "算术运算"
 
 #: ../../reference/scql_status.rst:43
 msgid "add,minus,mul,div,intdiv"
-msgstr ""
+msgstr "add,minus,mul,div,intdiv"
 
 #: ../../reference/scql_status.rst:45
 msgid "logical"
-msgstr ""
+msgstr "逻辑运算"
 
 #: ../../reference/scql_status.rst:45
 msgid "logical_and,logical_or,not"
-msgstr ""
+msgstr "logical_and,logical_or,not"
 
 #: ../../reference/scql_status.rst:47 ../../reference/scql_status.rst:49
 msgid "compare"
-msgstr ""
+msgstr "比较运算"
 
 #: ../../reference/scql_status.rst:47
 msgid "<,<=,>,>="
-msgstr ""
+msgstr "<,<=,>,>="
 
 #: ../../reference/scql_status.rst:47
 msgid "string data comparison is not supported"
-msgstr ""
+msgstr "不支持字符串类型数据比较"
 
 #: ../../reference/scql_status.rst:49
 msgid "=, !="
-msgstr ""
+msgstr "=, !="
 
 #: ../../reference/scql_status.rst:51
 msgid "in"
-msgstr ""
+msgstr "in"
 
 #: ../../reference/scql_status.rst:51
 msgid "in, not in"
-msgstr ""
+msgstr "in, not in"
 
 #: ../../reference/scql_status.rst:51
 msgid "all arguments should be of the same type"
-msgstr ""
+msgstr "所有参数应为同一类型"
 
