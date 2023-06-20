@@ -95,7 +95,7 @@ msgid ""
 "document we will use MySQL as the database service, and simulate a "
 "dataset. However, if you prefer, you can use your preferred database "
 "service."
-msgstr "引擎中的数据库用于存储原始数据。在本文档中我们将使用 MYSQL 作为数据库服务并模拟一个数据集，"
+msgstr "引擎中的数据库用于存储原始数据。在本文档中我们将使用 MySQL 作为数据库服务并模拟一个数据集，"
 "当然，如果您愿意，也可以使用您喜欢的数据库服务。"
 
 #: ../../getting_started/deployment.rst:38
