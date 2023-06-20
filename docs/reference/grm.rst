@@ -24,8 +24,13 @@ SCQL needs to know the following information when executing a query.
 API
 ===
 
-VerifyTableOwnership
---------------------
+The GRM service is an HTTP service and can be implemented in any language like C++/Java/Go/Python/..., where request and response are in JSON format(corresponding to their `Protocol Buffer definition <https://github.com/secretflow/scql/blob/main/api/grm.proto>`_).
+
+The GRM service will be called by `client <https://github.com/secretflow/scql/blob/main/pkg/grm/stdgrm/standard_grm.go>`_.
+
+
+/VerifyTableOwnership
+---------------------
 
 When creating table, SCQL needs to verify whether the user holding the token owns the table specified by TID
 
@@ -92,8 +97,8 @@ Response
     }
 
 
-GetTableMeta
-------------
+/GetTableMeta
+-------------
 
 During creating table, after ensuring the ownership, SCQL needs to Get table schema from grm service. 
 
@@ -187,8 +192,8 @@ response
     }
 
 
-GetEngines
-----------
+/GetEngines
+-----------
 
 During executing the DQL submitted by the user holding the token, SCQL needs to get the engine information of the relevant parties.
 

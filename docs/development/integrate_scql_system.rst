@@ -41,9 +41,9 @@ GRM API
 --------
 SCQL uses rpc API to communicate with GRM:
 
-* GetTableMeta: fetch metadata of table, GRM server should listen on ``${GRMServerHost}/GetTableMeta``
-* GetEngines: get endpoints for specific SCQLEngines(parties), GRM server should listen on ``${GRMServerHost}/GetEngines``
-* VerifyTableOwnership: check whether user has ownership of table, GRM server should listen on ``${GRMServerHost}/VerifyTableOwnership``
+* /GetTableMeta: fetch metadata of table, GRM server should listen on ``${GRMServerHost}/GetTableMeta``
+* /GetEngines: get endpoints for specific SCQLEngines(parties), GRM server should listen on ``${GRMServerHost}/GetEngines``
+* /VerifyTableOwnership: check whether user has ownership of table, GRM server should listen on ``${GRMServerHost}/VerifyTableOwnership``
 
 Please refer to :doc:`../reference/grm` for details.
 
