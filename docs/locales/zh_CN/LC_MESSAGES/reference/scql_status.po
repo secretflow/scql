@@ -54,7 +54,7 @@ msgstr "当前仅支持 inner join"
 
 #: ../../reference/scql_status.rst:11
 msgid "keyword ``using`` is not supported yet"
-msgstr "关键字 ``using`` 暂不支持"
+msgstr "暂不支持关键字 ``using``"
 
 #: ../../reference/scql_status.rst:13
 msgid "where clause"
