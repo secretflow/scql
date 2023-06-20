@@ -232,7 +232,7 @@ msgstr "有关错误细节的信息列表"
 #: ../../reference/grm.rst:70 ../../reference/grm.rst:151
 #: ../../reference/grm.rst:229
 msgid "Example"
-msgstr "事例"
+msgstr "示例"
 
 #: ../../reference/grm.rst:96
 msgid "GetTableMeta"

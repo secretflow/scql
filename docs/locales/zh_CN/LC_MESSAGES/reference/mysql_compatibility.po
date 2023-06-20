@@ -70,7 +70,7 @@ msgid ""
 "SCQL get table schemas from GRM, so CREATE TABLE statement must include "
 "keyword TID which uniquely identifies a table in GRM. For more "
 "information, please read :doc:`scql_manual`"
-msgstr "SCQL 从 GRM 中获取表规格，所以 CREATE TABLE 的语句必须包含关键字 TID，该关键字在 GRM 中标识一个唯一的表格。有关更多信息，请阅读：doc:`scql_manual`。"
+msgstr "SCQL 从 GRM 中获取表规格，所以 CREATE TABLE 的语句必须包含关键字 TID，该关键字在 GRM 中标识一个唯一的表格。有关更多信息，请阅读 :doc:`scql_manual`。"
 
 #: ../../reference/mysql_compatibility.rst:26
 msgid "DQL(Data Query Language)"
@@ -144,7 +144,7 @@ msgstr "DCL（数据控制语言）"
 
 #: ../../reference/mysql_compatibility.rst:51
 msgid "GRANT/REVOKE"
-msgstr "授权/撤回"
+msgstr "GRANT/REVOKE"
 
 #: ../../reference/mysql_compatibility.rst:53
 msgid ""
