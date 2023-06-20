@@ -4,7 +4,7 @@ How To Integrate SCQL System
 Overview
 --------
 
-As shown in FIG, SCQL System needs to work with **Client** and **GRM**:
+As shown in FIG, SCQL System needs to work with **Client** and **GRM** :
 
 * Client: user interface designed for query submission and result retrieval.
 

@@ -28,7 +28,8 @@ msgid "Overview"
 msgstr "概述"
 
 #: ../../development/integrate_scql_system.rst:7
-msgid "As shown in FIG, SCQL System needs to work with **Client** and **GRM**:"
+#, fuzzy
+msgid "As shown in FIG, SCQL System needs to work with **Client** and **GRM** :"
 msgstr "如图所示，SCQL 系统需要与 **客户端（Client）** 和 **全局资源管理器（GRM）**配合工作："
 
 #: ../../development/integrate_scql_system.rst:9
