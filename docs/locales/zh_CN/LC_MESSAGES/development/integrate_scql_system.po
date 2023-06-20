@@ -33,11 +33,11 @@ msgstr "如图所示，SCQL 系统需要与**客户端（Client）**和**全局�
 
 #: ../../development/integrate_scql_system.rst:9
 msgid "Client: user interface designed for query submission and result retrieval."
-msgstr "客户端（Client）：被设计成用于查询提交和结果检索的用户接口。"
+msgstr "客户端（Client）：为提交查询、获取结果而设计的用户接口。"
 
 #: ../../development/integrate_scql_system.rst:11
 msgid "GRM: help to manage schema information and identify parties."
-msgstr "全局资源管理器（GRM）：有助于管理模式信息和识别各方。"
+msgstr "全局资源管理器（GRM）：负责管理表规格信息、校验参与方身份。"
 
 #: ../../development/integrate_scql_system.rst:14
 msgid "please read :doc:`../reference/grm` to know more about GRM."
@@ -47,7 +47,7 @@ msgstr "请阅读:doc:`../reference/grm`了解更多关于 GRM 的信息。"
 msgid ""
 "Therefore the platform should support Client and GRM to integrate SCQL "
 "System."
-msgstr "因此，平台应该支持客户端（Client）和全局资源管理器（GRM）来集成 SCQL 系统。"
+msgstr "因此，平台应该提供客户端（Client）和全局资源管理器（GRM）来集成 SCQL 系统。"
 
 #: ../../development/integrate_scql_system.rst:20
 msgid ""
@@ -67,7 +67,7 @@ msgstr "对于 SQL 查询，SCDB 支持服务如下："
 msgid ""
 "Submit: async API, just submit SQL query and return, server listen on "
 "``${SCDBHost}/public/submit_query``"
-msgstr "Submit：异步 API，只需提交 SQL 查询并返回，服务器监听``${SCDBHost}/public/submit_query``"
+msgstr "Submit：异步 API，用于提交 SQL 查询并返回，服务器监听``${SCDBHost}/public/submit_query``"
 
 #: ../../development/integrate_scql_system.rst:27
 msgid ""
