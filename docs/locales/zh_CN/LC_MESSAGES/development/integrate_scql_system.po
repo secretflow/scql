@@ -29,7 +29,7 @@ msgstr "概述"
 
 #: ../../development/integrate_scql_system.rst:7
 msgid "As shown in FIG, SCQL System needs to work with **Client** and **GRM**:"
-msgstr "如图所示，SCQL 系统需要与**客户端（Client）**和**全局资源管理器（GRM）**配合工作："
+msgstr "如图所示，SCQL 系统需要与 **客户端（Client）** 和 **全局资源管理器（GRM）**配合工作："
 
 #: ../../development/integrate_scql_system.rst:9
 msgid "Client: user interface designed for query submission and result retrieval."
@@ -41,7 +41,7 @@ msgstr "全局资源管理器（GRM）：负责管理表规格信息、校验参
 
 #: ../../development/integrate_scql_system.rst:14
 msgid "please read :doc:`../reference/grm` to know more about GRM."
-msgstr "请阅读:doc:`../reference/grm`了解更多关于 GRM 的信息。"
+msgstr "请阅读 :doc:`../reference/grm` 了解更多关于 GRM 的信息。"
 
 #: ../../development/integrate_scql_system.rst:18
 msgid ""
@@ -83,7 +83,7 @@ msgstr "SubmitAndGet：同步 API，提交查询并等待获取查询结果，�
 
 #: ../../development/integrate_scql_system.rst:30
 msgid "Please refer to :doc:`../development/scql_api` for details."
-msgstr "请参考:doc:`../development/scql_api`了解详情。"
+msgstr "请参考 :doc:`../development/scql_api` 了解详情。"
 
 #: ../../development/integrate_scql_system.rst:33
 msgid ""
@@ -131,11 +131,11 @@ msgstr "VerifyTableOwnership：检查用户是否拥有表的所有权，全局�
 
 #: ../../development/integrate_scql_system.rst:48
 msgid "Please refer to :doc:`../reference/grm` for details."
-msgstr "请参考:doc:`../reference/grm`了解详情。"
+msgstr "请参考 :doc:`../reference/grm` 了解详情。"
 
 #: ../../development/integrate_scql_system.rst:50
 msgid ""
 "The custom GRM Server needs to support above services corresponding to "
 "the GRM API."
-msgstr "自定义的全局资源管理器服务器（Custom GRM server）需要支持上述与GRM API 对应的服务。"
+msgstr "自定义的全局资源管理器服务器（Custom GRM server）需要支持上述与 GRM API 对应的服务。"
 
