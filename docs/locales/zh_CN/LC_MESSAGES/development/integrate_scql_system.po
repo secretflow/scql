@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-06-20 14:39+0800\n"
+"POT-Creation-Date: 2023-06-20 15:57+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -116,29 +116,29 @@ msgstr "SCQL 使用 rpc API 与全局资源管理器（GRM）通信："
 #: ../../development/integrate_scql_system.rst:44
 #, fuzzy
 msgid ""
-"/GetTableMeta: fetch metadata of table, GRM server should listen on "
+"``/GetTableMeta``: fetch metadata of table, GRM server should listen on "
 "``${GRMServerHost}/GetTableMeta``"
 msgstr ""
-"GetTableMeta：获取表的元数据，全局资源管理器服务器（GRM "
-"server）应监听 ``${GRMServerHost}/GetTableMeta``"
+"``/GetTableMeta`` ：获取表的元数据，全局资源管理器服务器（GRM server）应监听 "
+"``${GRMServerHost}/GetTableMeta``"
 
 #: ../../development/integrate_scql_system.rst:45
 #, fuzzy
 msgid ""
-"/GetEngines: get endpoints for specific SCQLEngines(parties), GRM server "
-"should listen on ``${GRMServerHost}/GetEngines``"
+"``/GetEngines``: get endpoints for specific SCQLEngines(parties), GRM "
+"server should listen on ``${GRMServerHost}/GetEngines``"
 msgstr ""
-"GetEngines：获取特定 SCQLEngines（参与者）的端点，全局资源管理器服务器（GRM "
-"server）应监听 ``${GRMServerHost}/GetEngines``"
+"``/GetEngines`` ：获取特定 SCQLEngines（参与者）的端点，全局资源管理器服务器（GRM server）应监听 "
+"``${GRMServerHost}/GetEngines``"
 
 #: ../../development/integrate_scql_system.rst:46
 #, fuzzy
 msgid ""
-"/VerifyTableOwnership: check whether user has ownership of table, GRM "
-"server should listen on ``${GRMServerHost}/VerifyTableOwnership``"
+"``/VerifyTableOwnership``: check whether user has ownership of table, GRM"
+" server should listen on ``${GRMServerHost}/VerifyTableOwnership``"
 msgstr ""
-"VerifyTableOwnership：检查用户是否拥有表的所有权，全局资源管理器服务器（GRM "
-"server）应监听 ``${GRMServerHost}/VerifyTableOwnership``"
+"``/VerifyTableOwnership`` ：检查用户是否拥有表的所有权，全局资源管理器服务器（GRM server）应监听 "
+"``${GRMServerHost}/VerifyTableOwnership``"
 
 #: ../../development/integrate_scql_system.rst:48
 msgid "Please refer to :doc:`../reference/grm` for details."

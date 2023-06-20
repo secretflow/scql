@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-06-20 15:23+0800\n"
+"POT-Creation-Date: 2023-06-20 16:26+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -28,10 +28,11 @@ msgid "Overview"
 msgstr "概述"
 
 #: ../../reference/grm.rst:10
+#, fuzzy
 msgid ""
 "Global Resource Manager (GRM) is used to manage global data in a secure "
 "collaborative system. The global data managed by GRM includes information"
-" about parties, table schemas, SCQL engine endpoints, and etc."
+" about parties, table schemas, SCQLEngine endpoints, and etc."
 msgstr "全局资源管理器（GRM）用于管理安全协作系统中的全局数据。 GRM 管理的全局数据包括参与方、表规格、SCQL 引擎 endpoints 等信息。"
 
 #: ../../reference/grm.rst:13
@@ -369,10 +370,11 @@ msgid "/GetEngines"
 msgstr "/GetEngines"
 
 #: ../../reference/grm.rst:198
+#, fuzzy
 msgid ""
 "During executing the DQL submitted by the user holding the token, SCQL "
-"needs to get the engine information of the relevant parties."
-msgstr "在执行持有令牌 (token) 的用户提交的 DQL 时，SCQL 需要获得相关方的引擎信息。"
+"needs to get the SCQLEngine information of the relevant parties."
+msgstr "在执行持有令牌 (token) 的用户提交的 DQL 时，SCQL 需要获得相关方的 SCQL 引擎信息。"
 
 #: ../../reference/grm.rst:206
 msgid "party_codes"
@@ -380,28 +382,32 @@ msgstr "party_codes"
 
 #: ../../reference/grm.rst:206 ../../reference/grm.rst:228
 #: ../../reference/grm.rst:230
+#, fuzzy
 msgid "string list"
 msgstr "string list"
 
 #: ../../reference/grm.rst:206
-msgid "Parties whose engine info need to be obtained"
-msgstr "需要获得引擎信息的各方"
+msgid "Parties whose SCQLEngine info need to be obtained"
+msgstr "需要获得 SCQL 引擎信息的参与方"
 
 #: ../../reference/grm.rst:208
+#, fuzzy
 msgid "Token used to authenticate the user"
 msgstr "用来验证用户身份的 token"
 
 #: ../../reference/grm.rst:219
+#, fuzzy
 msgid "engine_infos"
 msgstr "engine_infos"
 
 #: ../../reference/grm.rst:219
+#, fuzzy
 msgid "EngineInfo_ list"
 msgstr "EngineInfo_ list"
 
 #: ../../reference/grm.rst:219
-msgid "engine_infos[i] is engine info for party request.party_codes[i]"
-msgstr "engine_infos[i] 是请求方的 .party_codes[i] 的引擎信息。"
+msgid "engine_infos[i] is SCQLEngine info for party request.party_codes[i]"
+msgstr "engine_infos[i] 对应请求中 .party_codes[i] 的参与方的 SCQL 引擎信息"
 
 #: ../../reference/grm.rst:223
 msgid "EngineInfo"
@@ -412,16 +418,16 @@ msgid "endpoints"
 msgstr "endpoints"
 
 #: ../../reference/grm.rst:228
-msgid "The url of engine"
-msgstr "引擎的统一资源定位符（URL）"
+msgid "The url of SCQLEngine"
+msgstr "SCQL 引擎的统一资源定位符（URL）"
 
 #: ../../reference/grm.rst:230
 msgid "credential"
 msgstr "credential"
 
 #: ../../reference/grm.rst:230
-msgid "Credential used for engine to authenticate SCDB"
-msgstr "用于引擎验证 SCDB 的凭证"
+msgid "Credential used for SCQLEngine to authenticate SCDB"
+msgstr "用于 SCQL 引擎验证 SCDB 身份的凭证"
 
 #~ msgid "The column info in the table"
 #~ msgstr "表中的列信息"
@@ -449,4 +455,49 @@ msgstr "用于引擎验证 SCDB 的凭证"
 
 #~ msgid "A list of messages for error details"
 #~ msgstr "有关错误细节的信息列表"
+
+#~ msgid "party_codes"
+#~ msgstr "party_codes"
+
+#~ msgid "string list"
+#~ msgstr "string list"
+
+#~ msgid "Parties whose engine info need to be obtained"
+#~ msgstr "需要获得引擎信息的各方"
+
+#~ msgid "Token used to authenticate the user"
+#~ msgstr "用来验证用户身份的 token"
+
+#~ msgid "engine_infos"
+#~ msgstr "engine_infos"
+
+#~ msgid "EngineInfo_ list"
+#~ msgstr "EngineInfo_ list"
+
+#~ msgid "engine_infos[i] is engine info for party request.party_codes[i]"
+#~ msgstr "engine_infos[i] 是请求方的 .party_codes[i] 的引擎信息。"
+
+#~ msgid "endpoints"
+#~ msgstr "endpoints"
+
+#~ msgid "The url of engine"
+#~ msgstr "引擎的统一资源定位符（URL）"
+
+#~ msgid "credential"
+#~ msgstr "credential"
+
+#~ msgid "Credential used for engine to authenticate SCDB"
+#~ msgstr "用于引擎验证 SCDB 的凭证"
+
+#~ msgid "Global Resource Manager"
+#~ msgstr "全局资源管理器 (GRM)"
+
+#~ msgid "Global"
+#~ msgstr ""
+
+#~ msgid "Resource"
+#~ msgstr "响应"
+
+#~ msgid "Manager"
+#~ msgstr ""
 

@@ -7,7 +7,7 @@ Global Resource Manager
 Overview
 ========
 
-Global Resource Manager (GRM) is used to manage global data in a secure collaborative system. The global data managed by GRM includes information about parties, table schemas, SCQL engine endpoints, and etc.
+Global Resource Manager (GRM) is used to manage global data in a secure collaborative system. The global data managed by GRM includes information about parties, table schemas, SCQLEngine endpoints, and etc.
 
 Why GRM?
 --------
@@ -38,7 +38,7 @@ Request
 ^^^^^^^
 
 +-------+--------+----------+------------------------------------------------------------------------------------------------------------------+
-| Field | Type   | Required | Description                                                                                                      |
+| Field |  Type  | Required |                                                   Description                                                    |
 +=======+========+==========+==================================================================================================================+
 | tid   | string | Y        | Table identifier provided by user when create table, read :ref:`Create table<create_table>` for more information |
 +-------+--------+----------+------------------------------------------------------------------------------------------------------------------+
@@ -49,7 +49,7 @@ Response
 ^^^^^^^^
 
 +----------+---------+----------+--------------------------------------+
-| Field    | Type    | Required | Description                          |
+|  Field   |  Type   | Required |             Description              |
 +==========+=========+==========+======================================+
 | status   | Status_ | Y        | Status of response                   |
 +----------+---------+----------+--------------------------------------+
@@ -106,7 +106,7 @@ Request
 ^^^^^^^
 
 +---------------+--------+----------+-----------------------------------------+
-| Field         | Type   | Required | Description                             |
+|     Field     |  Type  | Required |               Description               |
 +===============+========+==========+=========================================+
 | tid           | string | Y        | Unique table identifier                 |
 +---------------+--------+----------+-----------------------------------------+
@@ -119,7 +119,7 @@ Response
 ^^^^^^^^
 
 +--------+--------------+----------+-------------------------+
-| Field  | Type         | Required | Description             |
+| Field  |     Type     | Required |       Description       |
 +========+==============+==========+=========================+
 | status | Status_      | Y        | The status of response  |
 +--------+--------------+----------+-------------------------+
@@ -130,7 +130,7 @@ TableSchema
 """""""""""
 
 +------------+------------------+----------+----------------------------------------------------+
-| Field      | Type             | Required | Description                                        |
+|   Field    |       Type       | Required |                    Description                     |
 +============+==================+==========+====================================================+
 | db_name    | string           | Y        | The name of the database that the table belongs to |
 +------------+------------------+----------+----------------------------------------------------+
@@ -143,7 +143,7 @@ ColumnDesc
 **********
 
 +-------------+--------+----------+-------------------------------+
-| Field       | Type   | Required | Description                   |
+|    Field    |  Type  | Required |          Description          |
 +=============+========+==========+===============================+
 | name        | string | Y        | The column name               |
 +-------------+--------+----------+-------------------------------+
@@ -195,40 +195,40 @@ response
 /GetEngines
 -----------
 
-During executing the DQL submitted by the user holding the token, SCQL needs to get the engine information of the relevant parties.
+During executing the DQL submitted by the user holding the token, SCQL needs to get the SCQLEngine information of the relevant parties.
 
 Request
 ^^^^^^^
 
-+-------------+-------------+----------+-----------------------------------------------+
-| Field       | Type        | Required | Description                                   |
-+=============+=============+==========+===============================================+
-| party_codes | string list | Y        | Parties whose engine info need to be obtained |
-+-------------+-------------+----------+-----------------------------------------------+
-| token       | string      | Y        | Token used to authenticate the user           |
-+-------------+-------------+----------+-----------------------------------------------+
++-------------+-------------+----------+---------------------------------------------------+
+|    Field    |    Type     | Required |                    Description                    |
++=============+=============+==========+===================================================+
+| party_codes | string list | Y        | Parties whose SCQLEngine info need to be obtained |
++-------------+-------------+----------+---------------------------------------------------+
+| token       | string      | Y        | Token used to authenticate the user               |
++-------------+-------------+----------+---------------------------------------------------+
 
 Response
 ^^^^^^^^
 
-+--------------+------------------+----------+-----------------------------------------------------------------+
-| Field        | Type             | Required | Description                                                     |
-+==============+==================+==========+=================================================================+
-| status       | Status_          | Y        | The status of response                                          |
-+--------------+------------------+----------+-----------------------------------------------------------------+
-| engine_infos | EngineInfo_ list | Y        | engine_infos[i] is engine info for party request.party_codes[i] |
-+--------------+------------------+----------+-----------------------------------------------------------------+
++--------------+------------------+----------+---------------------------------------------------------------------+
+|    Field     |       Type       | Required |                             Description                             |
++==============+==================+==========+=====================================================================+
+| status       | Status_          | Y        | The status of response                                              |
++--------------+------------------+----------+---------------------------------------------------------------------+
+| engine_infos | EngineInfo_ list | Y        | engine_infos[i] is SCQLEngine info for party request.party_codes[i] |
++--------------+------------------+----------+---------------------------------------------------------------------+
 
 EngineInfo
 """"""""""
 
-+------------+-------------+----------+-------------------------------------------------+
-| Field      | Type        | Required | Description                                     |
-+============+=============+==========+=================================================+
-| endpoints  | string list | Y        | The url of engine                               |
-+------------+-------------+----------+-------------------------------------------------+
-| credential | string list | Y        | Credential used for engine to authenticate SCDB |
-+------------+-------------+----------+-------------------------------------------------+
++------------+-------------+----------+-----------------------------------------------------+
+|   Field    |    Type     | Required |                     Description                     |
++============+=============+==========+=====================================================+
+| endpoints  | string list | Y        | The url of SCQLEngine                               |
++------------+-------------+----------+-----------------------------------------------------+
+| credential | string list | Y        | Credential used for SCQLEngine to authenticate SCDB |
++------------+-------------+----------+-----------------------------------------------------+
 
 Example
 ^^^^^^^
