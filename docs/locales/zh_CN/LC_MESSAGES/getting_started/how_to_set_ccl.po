@@ -21,36 +21,36 @@ msgstr ""
 
 #: ../../getting_started/how_to_set_ccl.rst:2
 msgid "CCL Setting Suggestions"
-msgstr ""
+msgstr "CCL 配置建议"
 
 #: ../../getting_started/how_to_set_ccl.rst:4
 msgid ""
 "This document will give some examples on CCL settings in typical "
 "scenarios. You can set CCL according to your needs in practical "
 "scenarios."
-msgstr ""
+msgstr "本文档将给出一些典型场景下 CCL 配置示例。在实际场景中您可以根据您的需求进行 CCL 配置。"
 
 #: ../../getting_started/how_to_set_ccl.rst:7
 msgid "Pre-knowledge"
-msgstr ""
+msgstr "预备知识"
 
 #: ../../getting_started/how_to_set_ccl.rst:9
 msgid "What is SCQL CCL? Please read :ref:`/reference/scql_ccl_intro.rst`."
-msgstr ""
+msgstr "什么是 SCQL CCL？请参阅 :ref:`/reference/scql_ccl_intro.rst`。"
 
 #: ../../getting_started/how_to_set_ccl.rst:11
 msgid "Grant CCL syntax, please read :ref:`Grant/Revoke CCL<scql_grant_revoke>`."
-msgstr ""
+msgstr "获取 CCL 语法，请参阅 :ref:`Grant/Revoke CCL<scql_grant_revoke>`。"
 
 #: ../../getting_started/how_to_set_ccl.rst:14
 msgid "Examples"
-msgstr ""
+msgstr "示例"
 
 #: ../../getting_started/how_to_set_ccl.rst:16
 msgid ""
 "This part will give suggestions for CCL settings based on different query"
 " scenario examples."
-msgstr ""
+msgstr "本小节将根据不同的查询场景示例给出 CCL 配置建议。"
 
 #: ../../getting_started/how_to_set_ccl.rst:18
 msgid ""
@@ -59,34 +59,34 @@ msgid ""
 "``credit_rank``, ``income``, ``join_date`` and ``age``.  Party Bob owns "
 "table ``t2`` which has fields ``id``, ``age``, ``order_amount``, "
 "``is_active``, ``admin_date``, ``out_date``."
-msgstr ""
+msgstr "下面以 Alice 和 Bob 的联合分析为例进行说明，参与方 Alice 拥有表 ``t1``，该表包含字段 ``id``，``credit_rank``，``income``，``join_date`` 和 ``age``。参与方 Bob 拥有表 ``t2``，该表包含字段 ``id``，``age``，``order_amount``，``is_active``，``admin_date``，``out_date``。"
 
 #: ../../getting_started/how_to_set_ccl.rst:20
 msgid "We represent the CCL settings with a 3-tuple form as follows."
-msgstr ""
+msgstr "如下所示，我们以三元组的形式展示 CCL 配置。"
 
 #: ../../getting_started/how_to_set_ccl.rst:22
 msgid "``<src_column, dest_party, constraint>``"
-msgstr ""
+msgstr "``<src_column, dest_party, constraint>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:24
 msgid ""
 "It means ``src_column`` is accessible to ``dest_party`` with the "
 "``constraint``. If multiple columns have the same CCL for a party, it "
 "will be abbreviated as follows."
-msgstr ""
+msgstr "这意味着拥有 ``constraint`` 的 ``dest_party`` 有权访问 ``src_column``。若参与方存在多列相同的 CCL，它将缩写为如下形式。"
 
 #: ../../getting_started/how_to_set_ccl.rst:27
 msgid "``<[src_column1,src_column2,...], dest_party, constraint>``."
-msgstr ""
+msgstr "``<[src_column1,src_column2,...], dest_party, constraint>``。"
 
 #: ../../getting_started/how_to_set_ccl.rst:30
 msgid "Get Intersection Case"
-msgstr ""
+msgstr "求交场景"
 
 #: ../../getting_started/how_to_set_ccl.rst:33
 msgid "Get the intersection of ids using join"
-msgstr ""
+msgstr "使用 join 获取 ids 的交集"
 
 #: ../../getting_started/how_to_set_ccl.rst:37
 #: ../../getting_started/how_to_set_ccl.rst:53
@@ -99,7 +99,7 @@ msgstr ""
 #: ../../getting_started/how_to_set_ccl.rst:198
 #: ../../getting_started/how_to_set_ccl.rst:222
 msgid "CCL settings of table t1 at Alice"
-msgstr ""
+msgstr "Alice 表 t1 的 CCL 配置"
 
 #: ../../getting_started/how_to_set_ccl.rst:36
 #: ../../getting_started/how_to_set_ccl.rst:89
@@ -108,13 +108,13 @@ msgstr ""
 #: ../../getting_started/how_to_set_ccl.rst:152
 #: ../../getting_started/how_to_set_ccl.rst:175
 msgid "``<id, Bob, PLAINTEXT_AFTER_JOIN>``"
-msgstr ""
+msgstr "``<id, Bob, PLAINTEXT_AFTER_JOIN>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:37
 #: ../../getting_started/how_to_set_ccl.rst:53
 #: ../../getting_started/how_to_set_ccl.rst:71
 msgid "``<id, Alice, PLAINTEXT>``"
-msgstr ""
+msgstr "``<id, Alice, PLAINTEXT>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:41
 #: ../../getting_started/how_to_set_ccl.rst:57
@@ -126,7 +126,7 @@ msgstr ""
 #: ../../getting_started/how_to_set_ccl.rst:202
 #: ../../getting_started/how_to_set_ccl.rst:226
 msgid "CCL settings of table t2 at Bob"
-msgstr ""
+msgstr "Bob 表 t2 的 CCL 配置"
 
 #: ../../getting_started/how_to_set_ccl.rst:40
 #: ../../getting_started/how_to_set_ccl.rst:95
@@ -134,43 +134,43 @@ msgstr ""
 #: ../../getting_started/how_to_set_ccl.rst:159
 #: ../../getting_started/how_to_set_ccl.rst:180
 msgid "``<id, Alice, PLAINTEXT_AFTER_JOIN>``"
-msgstr ""
+msgstr "``<id, Alice, PLAINTEXT_AFTER_JOIN>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:41
 #: ../../getting_started/how_to_set_ccl.rst:57
 #: ../../getting_started/how_to_set_ccl.rst:75
 msgid "``<id, Bob, PLAINTEXT>``"
-msgstr ""
+msgstr "``<id, Bob, PLAINTEXT>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:49
 msgid "Get ids both in t1.id and in t2.id using in"
-msgstr ""
+msgstr "使用 in 获取 t1.id 和 t2.id 中均存在的 ids"
 
 #: ../../getting_started/how_to_set_ccl.rst:52
 msgid "``<id, Bob, PLAINTEXT_AFTER_COMPARE>``"
-msgstr ""
+msgstr "``<id, Bob, PLAINTEXT_AFTER_COMPARE>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:56
 #: ../../getting_started/how_to_set_ccl.rst:74
 msgid "``<id, Alice, PLAINTEXT_AFTER_COMPARE>``"
-msgstr ""
+msgstr "``<id, Alice, PLAINTEXT_AFTER_COMPARE>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:67
 #: ../../getting_started/how_to_set_ccl.rst:106
 msgid "**More restricted CCL**"
-msgstr ""
+msgstr "**更多的受约束的 CCL**"
 
 #: ../../getting_started/how_to_set_ccl.rst:70
 msgid "``<id, Bob, ENCRYPTED_ONLY>``"
-msgstr ""
+msgstr "``<id, Bob, ENCRYPTED_ONLY>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:83
 msgid "Aggregation Case"
-msgstr ""
+msgstr "聚合场景"
 
 #: ../../getting_started/how_to_set_ccl.rst:86
 msgid "Analyze data using aggregation functions with group by"
-msgstr ""
+msgstr "使用带有 group by 的聚合函数进行数据分析"
 
 #: ../../getting_started/how_to_set_ccl.rst:90
 #: ../../getting_started/how_to_set_ccl.rst:112
@@ -178,35 +178,35 @@ msgstr ""
 #: ../../getting_started/how_to_set_ccl.rst:197
 #: ../../getting_started/how_to_set_ccl.rst:221
 msgid "``<[id, age, income, credit_rank], Alice, PLAINTEXT>``"
-msgstr ""
+msgstr "``<[id, age, income, credit_rank], Alice, PLAINTEXT>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:91
 #: ../../getting_started/how_to_set_ccl.rst:129
 msgid "``<[age, income], Bob, PLAINTEXT_AFTER_AGGREGATE>``"
-msgstr ""
+msgstr "``<[age, income], Bob, PLAINTEXT_AFTER_AGGREGATE>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:92
 #: ../../getting_started/how_to_set_ccl.rst:114
 #: ../../getting_started/how_to_set_ccl.rst:156
 msgid "``<credit_rank, Bob, PLAINTEXT_AFTER_GROUP_BY>``"
-msgstr ""
+msgstr "``<credit_rank, Bob, PLAINTEXT_AFTER_GROUP_BY>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:96
 #: ../../getting_started/how_to_set_ccl.rst:160
 #: ../../getting_started/how_to_set_ccl.rst:202
 #: ../../getting_started/how_to_set_ccl.rst:226
 msgid "``<[id, age, order_amount, is_active], Bob, PLAINTEXT>``"
-msgstr ""
+msgstr "``<[id, age, order_amount, is_active], Bob, PLAINTEXT>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:97
 #: ../../getting_started/how_to_set_ccl.rst:134
 msgid "``<[age, order_amount], Alice, PLAINTEXT_AFTER_AGGREGATE>``"
-msgstr ""
+msgstr "``<[age, order_amount], Alice, PLAINTEXT_AFTER_AGGREGATE>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:98
 #: ../../getting_started/how_to_set_ccl.rst:163
 msgid "``<is_active, Alice, PLAINTEXT_AFTER_GROUP_BY>``"
-msgstr ""
+msgstr "``<is_active, Alice, PLAINTEXT_AFTER_GROUP_BY>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:108
 msgid ""
@@ -214,79 +214,79 @@ msgid ""
 "keys' CCL constraint to ``ENCRYPTED_ONLY``. Bob's CCL settings remain the"
 " same as before, modify the CCL settings of Alice to the following "
 "configuration"
-msgstr ""
+msgstr "如果 Alice 不希望将 age/income 信息泄露给 Bob，那么 Alice 仅需将群组密钥的 CCL 约束设置为 ``ENCRYPTED_ONLY``。Bob 的 CCL 配置与先前配置保持一致，并按照如下设定修改 Alice 的 CCL 配置。"
 
 #: ../../getting_started/how_to_set_ccl.rst:113
 msgid "``<[age, income], Bob, ENCRYPTED_ONLY>``"
-msgstr ""
+msgstr "``<[age, income], Bob, ENCRYPTED_ONLY>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:124
 msgid "Analyze data using aggregation functions without group by"
-msgstr ""
+msgstr "使用不带有 group by 的聚合函数进行数据分析"
 
 #: ../../getting_started/how_to_set_ccl.rst:128
 msgid "``<[id, age, income], Alice, PLAINTEXT>``"
-msgstr ""
+msgstr "``<[id, age, income], Alice, PLAINTEXT>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:133
 msgid "``<[id, age, order_amount], Bob, PLAINTEXT>``"
-msgstr ""
+msgstr "``<[id, age, order_amount], Bob, PLAINTEXT>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:136
 msgid "**Queries without group by**"
-msgstr ""
+msgstr "**不使用 group by 的查询**"
 
 #: ../../getting_started/how_to_set_ccl.rst:146
 msgid "Filter data before analyzing it"
-msgstr ""
+msgstr "在分析之前进行数据过滤"
 
 #: ../../getting_started/how_to_set_ccl.rst:149
 msgid "Case 1: Filter data"
-msgstr ""
+msgstr "场景 1：数据过滤"
 
 #: ../../getting_started/how_to_set_ccl.rst:154
 msgid "``<age, Bob, PLAINTEXT_AFTER_COMPARE>``"
-msgstr ""
+msgstr "``<age, Bob, PLAINTEXT_AFTER_COMPARE>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:155
 msgid "``<income, Bob, PLAINTEXT_AFTER_AGGREGATE>``"
-msgstr ""
+msgstr "``<income, Bob, PLAINTEXT_AFTER_AGGREGATE>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:161
 msgid "``<age, Alice, PLAINTEXT_AFTER_COMPARE>``"
-msgstr ""
+msgstr "``<age, Alice, PLAINTEXT_AFTER_COMPARE>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:162
 msgid "``<order_amount, Alice, PLAINTEXT_AFTER_AGGREGATE>``"
-msgstr ""
+msgstr "``<order_amount, Alice, PLAINTEXT_AFTER_AGGREGATE>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:172
 msgid "Case 2: Get the results of compare operators"
-msgstr ""
+msgstr "场景 2：获取比较运算操作的结果"
 
 #: ../../getting_started/how_to_set_ccl.rst:176
 msgid "``<[id, income, join_date], Alice, PLAINTEXT>``"
-msgstr ""
+msgstr "``<[id, income, join_date], Alice, PLAINTEXT>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:177
 msgid "``<[join_date, income], Bob, PLAINTEXT_AFTER_COMPARE>``"
-msgstr ""
+msgstr "``<[join_date, income], Bob, PLAINTEXT_AFTER_COMPARE>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:181
 msgid "``<[id, age, order_amount, admin_date, out_date], Bob, PLAINTEXT>``"
-msgstr ""
+msgstr "``<[id, age, order_amount, admin_date, out_date], Bob, PLAINTEXT>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:182
 msgid "``<[age, admin_date, out_date], Alice, ENCRYPTED_ONLY>``"
-msgstr ""
+msgstr "``<[age, admin_date, out_date], Alice, ENCRYPTED_ONLY>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:183
 msgid "``<order_amount, Alice, PLAINTEXT_AFTER_COMPARE>``"
-msgstr ""
+msgstr "``<order_amount, Alice, PLAINTEXT_AFTER_COMPARE>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:192
 msgid "Data Insensitive Case/Test Case"
-msgstr ""
+msgstr "非敏感数据场景/测试场景"
 
 #: ../../getting_started/how_to_set_ccl.rst:194
 msgid ""
@@ -294,32 +294,32 @@ msgid ""
 "PLAINTEXT, then almost all queries will not be rejected by checking CCL. "
 "But you have to be careful, otherwise other users can easily select all "
 "your data."
-msgstr ""
+msgstr "如果数据并非敏感或者仅是测试用例，您可以将所有数据设置为 PLAINTEXT，那么几乎所有的查询都不会被 CCL checking 所拒绝。但是进行这样的配置时应该格外小心，否则其他用户可以很容易选择到您的所有数据。"
 
 #: ../../getting_started/how_to_set_ccl.rst:198
 msgid "``<[id, age, income, credit_rank], Bob, PLAINTEXT>``"
-msgstr ""
+msgstr "``<[id, age, income, credit_rank], Bob, PLAINTEXT>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:201
 msgid "``<[id, age, order_amount, is_active], Alice, PLAINTEXT>``"
-msgstr ""
+msgstr "``<[id, age, order_amount, is_active], Alice, PLAINTEXT>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:216
 msgid "Encrypt Case"
-msgstr ""
+msgstr "加密场景"
 
 #: ../../getting_started/how_to_set_ccl.rst:218
 msgid ""
 "If you think the data is very sensitive, then you can set them as "
 "``ENCRYPTED_ONLY``, then only aggregation function count can be "
 "performed."
-msgstr ""
+msgstr "如果您认为数据极度敏感，那么您应当将这些数据设置为 ``ENCRYPTED_ONLY``， 这样的设定下仅能执行聚合函数的 count 操作。"
 
 #: ../../getting_started/how_to_set_ccl.rst:222
 msgid "``<[id, age, income, credit_rank], Bob, ENCRYPTED_ONLY>``"
-msgstr ""
+msgstr "``<[id, age, income, credit_rank], Bob, ENCRYPTED_ONLY>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:225
 msgid "``<[id, age, order_amount, is_active], Alice, ENCRYPTED_ONLY>``"
-msgstr ""
+msgstr "``<[id, age, order_amount, is_active], Alice, ENCRYPTED_ONLY>``"
 
