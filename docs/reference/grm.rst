@@ -7,7 +7,7 @@ Global Resource Manager
 Overview
 ========
 
-Global Resource Manager (GRM) is used to manage global data in a secure collaborative system. The global data managed by GRM includes information about parties, table schemas, SCQL engine endpoints, and etc.
+Global Resource Manager (GRM) is used to manage global data in a secure collaborative system. The global data managed by GRM includes information about parties, table schemas, SCQLEngine endpoints, and etc.
 
 Why GRM?
 --------
@@ -24,8 +24,13 @@ SCQL needs to know the following information when executing a query.
 API
 ===
 
-VerifyTableOwnership
---------------------
+The GRM service is an HTTP service and can be implemented in any language like C++/Java/Go/Python/..., where request and response are in JSON format(corresponding to their `Protocol Buffer definition <https://github.com/secretflow/scql/blob/main/api/grm.proto>`_).
+
+The GRM service will be called by `client <https://github.com/secretflow/scql/blob/main/pkg/grm/stdgrm/standard_grm.go>`_.
+
+
+/VerifyTableOwnership
+---------------------
 
 When creating table, SCQL needs to verify whether the user holding the token owns the table specified by TID
 
@@ -33,7 +38,7 @@ Request
 ^^^^^^^
 
 +-------+--------+----------+------------------------------------------------------------------------------------------------------------------+
-| Field | Type   | Required | Description                                                                                                      |
+| Field |  Type  | Required |                                                   Description                                                    |
 +=======+========+==========+==================================================================================================================+
 | tid   | string | Y        | Table identifier provided by user when create table, read :ref:`Create table<create_table>` for more information |
 +-------+--------+----------+------------------------------------------------------------------------------------------------------------------+
@@ -44,7 +49,7 @@ Response
 ^^^^^^^^
 
 +----------+---------+----------+--------------------------------------+
-| Field    | Type    | Required | Description                          |
+|  Field   |  Type   | Required |             Description              |
 +==========+=========+==========+======================================+
 | status   | Status_ | Y        | Status of response                   |
 +----------+---------+----------+--------------------------------------+
@@ -54,15 +59,15 @@ Response
 Status
 """"""
 
-+----------+-------------------+----------+----------------------------------------------+
-| Field    | Type              | Required | Description                                  |
-+==========+===================+==========+==============================================+
-| code     | int32             | Y        | The status code, 0 means success             |
-+----------+-------------------+----------+----------------------------------------------+
-| Messages | string            | N        | Message for recording the error information. |
-+----------+-------------------+----------+----------------------------------------------+
-| details  | protobuf.Any list | N        | A list of messages for error details         |
-+----------+-------------------+----------+----------------------------------------------+
++---------+-------------------+----------+----------------------------------------------+
+|  Field  |       Type        | Required |                 Description                  |
++=========+===================+==========+==============================================+
+| code    | int32             | Y        | The status code, 0 means success             |
++---------+-------------------+----------+----------------------------------------------+
+| message | string            | N        | Message for recording the error information. |
++---------+-------------------+----------+----------------------------------------------+
+| details | protobuf.Any list | N        | A list of messages for error details         |
++---------+-------------------+----------+----------------------------------------------+
 
 
 
@@ -92,16 +97,16 @@ Response
     }
 
 
-GetTableMeta
-------------
+/GetTableMeta
+-------------
 
-During creating table, after ensuring the ownership, SCQL needs to Get table schema from grm service. 
+During creating table, after ensuring the ownership, SCQL needs to Get table schema from GRM service.
 
 Request
 ^^^^^^^
 
 +---------------+--------+----------+-----------------------------------------+
-| Field         | Type   | Required | Description                             |
+|     Field     |  Type  | Required |               Description               |
 +===============+========+==========+=========================================+
 | tid           | string | Y        | Unique table identifier                 |
 +---------------+--------+----------+-----------------------------------------+
@@ -114,7 +119,7 @@ Response
 ^^^^^^^^
 
 +--------+--------------+----------+-------------------------+
-| Field  | Type         | Required | Description             |
+| Field  |     Type     | Required |       Description       |
 +========+==============+==========+=========================+
 | status | Status_      | Y        | The status of response  |
 +--------+--------------+----------+-------------------------+
@@ -125,7 +130,7 @@ TableSchema
 """""""""""
 
 +------------+------------------+----------+----------------------------------------------------+
-| Field      | Type             | Required | Description                                        |
+|   Field    |       Type       | Required |                    Description                     |
 +============+==================+==========+====================================================+
 | db_name    | string           | Y        | The name of the database that the table belongs to |
 +------------+------------------+----------+----------------------------------------------------+
@@ -138,7 +143,7 @@ ColumnDesc
 **********
 
 +-------------+--------+----------+-------------------------------+
-| Field       | Type   | Required | Description                   |
+|    Field    |  Type  | Required |          Description          |
 +=============+========+==========+===============================+
 | name        | string | Y        | The column name               |
 +-------------+--------+----------+-------------------------------+
@@ -187,43 +192,43 @@ response
     }
 
 
-GetEngines
-----------
+/GetEngines
+-----------
 
-During executing the DQL submitted by the user holding the token, SCQL needs to get the engine information of the relevant parties.
+During executing the DQL submitted by the user holding the token, SCQL needs to get the SCQLEngine information of the relevant parties.
 
 Request
 ^^^^^^^
 
-+-------------+-------------+----------+-----------------------------------------------+
-| Field       | Type        | Required | Description                                   |
-+=============+=============+==========+===============================================+
-| party_codes | string list | Y        | Parties whose engine info need to be obtained |
-+-------------+-------------+----------+-----------------------------------------------+
-| token       | string      | Y        | Token used to authenticate the user           |
-+-------------+-------------+----------+-----------------------------------------------+
++-------------+-------------+----------+---------------------------------------------------+
+|    Field    |    Type     | Required |                    Description                    |
++=============+=============+==========+===================================================+
+| party_codes | string list | Y        | Parties whose SCQLEngine info need to be obtained |
++-------------+-------------+----------+---------------------------------------------------+
+| token       | string      | Y        | Token used to authenticate the user               |
++-------------+-------------+----------+---------------------------------------------------+
 
 Response
 ^^^^^^^^
 
-+--------------+------------------+----------+-----------------------------------------------------------------+
-| Field        | Type             | Required | Description                                                     |
-+==============+==================+==========+=================================================================+
-| status       | Status_          | Y        | The status of response                                          |
-+--------------+------------------+----------+-----------------------------------------------------------------+
-| engine_infos | EngineInfo_ list | Y        | engine_infos[i] is engine info for party request.party_codes[i] |
-+--------------+------------------+----------+-----------------------------------------------------------------+
++--------------+------------------+----------+---------------------------------------------------------------------+
+|    Field     |       Type       | Required |                             Description                             |
++==============+==================+==========+=====================================================================+
+| status       | Status_          | Y        | The status of response                                              |
++--------------+------------------+----------+---------------------------------------------------------------------+
+| engine_infos | EngineInfo_ list | Y        | engine_infos[i] is SCQLEngine info for party request.party_codes[i] |
++--------------+------------------+----------+---------------------------------------------------------------------+
 
 EngineInfo
 """"""""""
 
-+------------+-------------+----------+-------------------------------------------------+
-| Field      | Type        | Required | Description                                     |
-+============+=============+==========+=================================================+
-| endpoints  | string list | Y        | The url of engine                               |
-+------------+-------------+----------+-------------------------------------------------+
-| credential | string list | Y        | Credential used for engine to authenticate SCDB |
-+------------+-------------+----------+-------------------------------------------------+
++------------+-------------+----------+-----------------------------------------------------+
+|   Field    |    Type     | Required |                     Description                     |
++============+=============+==========+=====================================================+
+| endpoints  | string list | Y        | The url of SCQLEngine                               |
++------------+-------------+----------+-----------------------------------------------------+
+| credential | string list | Y        | Credential used for SCQLEngine to authenticate SCDB |
++------------+-------------+----------+-----------------------------------------------------+
 
 Example
 ^^^^^^^
