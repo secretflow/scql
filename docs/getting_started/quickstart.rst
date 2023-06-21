@@ -34,7 +34,7 @@ Before starting the SCQL service, you need to initialize tokens and credentials 
 
 .. code-block:: bash
 
-    sh examples/docker-compose/register.sh
+    bash examples/docker-compose/register.sh
 
 Start SCQL Service
 ------------------
