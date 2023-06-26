@@ -40,7 +40,7 @@ msgstr "什么是 SCQL CCL？请参阅 :ref:`/reference/scql_ccl_intro.rst`。"
 
 #: ../../getting_started/how_to_set_ccl.rst:11
 msgid "Grant CCL syntax, please read :ref:`Grant/Revoke CCL<scql_grant_revoke>`."
-msgstr "获取 CCL 语法，请参阅 :ref:`Grant/Revoke CCL<scql_grant_revoke>`。"
+msgstr "Grant CCL 语法，请参阅 :ref:`Grant/Revoke CCL<scql_grant_revoke>`。"
 
 #: ../../getting_started/how_to_set_ccl.rst:14
 msgid "Examples"
@@ -74,7 +74,7 @@ msgid ""
 "It means ``src_column`` is accessible to ``dest_party`` with the "
 "``constraint``. If multiple columns have the same CCL for a party, it "
 "will be abbreviated as follows."
-msgstr "这意味着拥有 ``constraint`` 的 ``dest_party`` 有权访问 ``src_column``。若参与方存在多列相同的 CCL，它将缩写为如下形式。"
+msgstr "这意味着 ``dest_party`` 对 ``src_column`` 的访问约束为 ``constraint``。若参与方存在多列相同的 CCL，它将缩写为如下形式。"
 
 #: ../../getting_started/how_to_set_ccl.rst:27
 msgid "``<[src_column1,src_column2,...], dest_party, constraint>``."
@@ -144,7 +144,7 @@ msgstr "``<id, Bob, PLAINTEXT>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:49
 msgid "Get ids both in t1.id and in t2.id using in"
-msgstr "使用 in 获取 t1.id 和 t2.id 中均存在的 ids"
+msgstr "使用 in 获取 t1.id 和 t2.id 中均存在的 id"
 
 #: ../../getting_started/how_to_set_ccl.rst:52
 msgid "``<id, Bob, PLAINTEXT_AFTER_COMPARE>``"
@@ -158,7 +158,7 @@ msgstr "``<id, Alice, PLAINTEXT_AFTER_COMPARE>``"
 #: ../../getting_started/how_to_set_ccl.rst:67
 #: ../../getting_started/how_to_set_ccl.rst:106
 msgid "**More restricted CCL**"
-msgstr "**更多的受约束的 CCL**"
+msgstr "**更严格的 CCL**"
 
 #: ../../getting_started/how_to_set_ccl.rst:70
 msgid "``<id, Bob, ENCRYPTED_ONLY>``"
@@ -214,7 +214,7 @@ msgid ""
 "keys' CCL constraint to ``ENCRYPTED_ONLY``. Bob's CCL settings remain the"
 " same as before, modify the CCL settings of Alice to the following "
 "configuration"
-msgstr "如果 Alice 不希望将 age/income 信息泄露给 Bob，那么 Alice 仅需将群组密钥的 CCL 约束设置为 ``ENCRYPTED_ONLY``。Bob 的 CCL 配置与先前配置保持一致，并按照如下设定修改 Alice 的 CCL 配置。"
+msgstr "如果 Alice 不希望将 age/income 信息泄露给 Bob，那么 Alice 仅需将 group by key 的 CCL 约束设置为 ``ENCRYPTED_ONLY``。Bob 的 CCL 配置与先前配置保持一致，并按照如下设定修改 Alice 的 CCL 配置即可。"
 
 #: ../../getting_started/how_to_set_ccl.rst:113
 msgid "``<[age, income], Bob, ENCRYPTED_ONLY>``"
@@ -306,7 +306,7 @@ msgstr "``<[id, age, order_amount, is_active], Alice, PLAINTEXT>``"
 
 #: ../../getting_started/how_to_set_ccl.rst:216
 msgid "Encrypt Case"
-msgstr "加密场景"
+msgstr "Encrypt CCL 场景"
 
 #: ../../getting_started/how_to_set_ccl.rst:218
 msgid ""
