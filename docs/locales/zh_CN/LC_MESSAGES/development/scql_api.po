@@ -30,7 +30,7 @@ msgid ""
 "DDL, DML, and simple DQL. Meanwhile, the asynchronous interface is "
 "recommended when the query may take a long time to run."
 msgstr "SCQL 支持两种类型的 API：同步和异步。同步接口适用于执行快速查询，"
-"例如 DDL、DML 和简单的 DQL。而异步接口则推荐用于可能需要较长时间运行的查询。"
+"例如 DDL、DML 和简单的 DQL。而异步接口则推荐用于耗时较多的 DQL。"
 
 #: ../../development/scql_api.rst:10
 msgid "Asynchronous"
@@ -45,7 +45,7 @@ msgid ""
 "Submit the query (DDL/DML/DQL) to SCQL, SCQL will return a session ID "
 "immediately which can be used to fetch result, and processes the query in"
 " the background."
-msgstr "将查询（DDL/DML/DQL）提交给 SCQL，SCQL 将立即返回一个可用于获取结果的会话 ID，"
+msgstr "将 query（DDL/DML/DQL）提交给 SCQL，SCQL 将立即返回一个可用于获取结果的会话 ID，"
 "并在后台处理查询。"
 
 #: ../../development/scql_api.rst:18 ../../development/scql_api.rst:92
@@ -173,7 +173,7 @@ msgstr "string"
 
 #: ../../development/scql_api.rst:27 ../../development/scql_api.rst:227
 msgid "SCQL query to be run"
-msgstr "将要执行的 SCQL 查询"
+msgstr "待执行的 SQL 语句"
 
 #: ../../development/scql_api.rst:31
 msgid "query_result_callback_url"
@@ -260,12 +260,12 @@ msgid ""
 "Fetch result of the query submitted via the \"submit_query\" method "
 "before, if the query is still running, It will return `NOT_READY` status "
 "code."
-msgstr "获取通过 \"submit_query\" 方法提交的查询的结果，若提交的查询仍在运行中，"
-"将返回 `NOT_READY` 状态码。"
+msgstr "通过 session ID 获取之前提交的 query 的结果，如果之前的提交的查询还在运行中，"
+"返回 `NOT_READY`。"
 
 #: ../../development/scql_api.rst:101 ../../development/scql_api.rst:204
 msgid "Given by scdb when submit the query before, same with session_id_"
-msgstr "在 SCDB 中提交查询时返回的会话 ID，与 session_id_ 相同。"
+msgstr "在 SCDB 中提交查询时返回的会话 ID，与 submit_query 中的 response 中的 session_id_ 一致。"
 
 #: ../../development/scql_api.rst:112 ../../development/scql_api.rst:202
 #: ../../development/scql_api.rst:242
@@ -279,11 +279,11 @@ msgstr "Tensor_ list"
 
 #: ../../development/scql_api.rst:112
 msgid "Query result"
-msgstr "查询结果"
+msgstr "query 的运行结果"
 
 #: ../../development/scql_api.rst:114
 msgid "Same with session_id_"
-msgstr "与 session_id_ 相同"
+msgstr "与 submit_query 中的 response 中的 session_id_ 一致"
 
 #: ../../development/scql_api.rst:116 ../../development/scql_api.rst:206
 #: ../../development/scql_api.rst:246
@@ -323,8 +323,8 @@ msgid ""
 "Automatically send the result to the user by post the following message "
 "when the result is available. To accomplish this, "
 ":ref:`query_result_callback_url <callback_url>` should be set."
-msgstr "当结果可用时，通过发送以下消息将其自动发送给用户。如需实现此功能，"
-"应设置 :ref:`query_result_callback_url <callback_url>` 。"
+msgstr "如果用户配置了 :ref:`query_result_callback_url <callback_url>`， "
+"SCDB 在获取到结果后会主动向用户发送消息，返回之前查询的结果。"
 
 #: ../../development/scql_api.rst:202
 msgid "Query result, See Tensor_ for more information"
@@ -346,7 +346,7 @@ msgstr "向 SCQL 提交查询，SCQL 将等待所有任务完成后再将结果�
 
 #: ../../development/scql_api.rst:242
 msgid "Query result, See `Tensor` for more information"
-msgstr "查询结果，更多信息请参见 `Tensor` "
+msgstr "Query 结果，更多信息请参见 `Tensor` "
 
 #: ../../development/scql_api.rst:244
 msgid "SCDB session id"
@@ -364,7 +364,7 @@ msgstr "如果成功，将收到以下响应："
 
 #: ../../development/scql_api.rst:309
 msgid "Message Structure"
-msgstr "消息结构"
+msgstr "Message Structure"
 
 #: ../../development/scql_api.rst:312
 msgid "RequestHeader"
@@ -1088,7 +1088,7 @@ msgstr "Code_GRM_RESOURCE_PERMISSION_DENIED"
 
 #: ../../development/scql_api.rst:548
 msgid "User has no required permissions on grm resources"
-msgstr "用户在 grm 资源上无所需权限"
+msgstr "用户在 grm 上权限不足"
 
 #: ../../development/scql_api.rst:550
 msgid "140"
@@ -1124,7 +1124,7 @@ msgstr "Code_CCL_CHECK_FAILED"
 
 #: ../../development/scql_api.rst:554
 msgid "Query CCL check failed"
-msgstr "查询 CCL 检查失败"
+msgstr "CCL 校验失败"
 
 #: ../../development/scql_api.rst:556
 msgid "201"
