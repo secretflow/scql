@@ -108,7 +108,7 @@ msgstr "CREATE/DROP USER 语句"
 #: ../../reference/scql_manual.rst:46 ../../reference/scql_manual.rst:69
 #: ../../reference/scql_manual.rst:95 ../../reference/scql_manual.rst:130
 msgid "Examples:"
-msgstr "例子："
+msgstr "样例："
 
 #: ../../reference/scql_manual.rst:60
 msgid "CREATE/DROP DATABASE Statement"
@@ -126,8 +126,8 @@ msgid ""
 "control and usage."
 msgstr ""
 "此处创建表意味着将 'tbl_name' 映射到现有的物理表，"
-"该物理表由 'TID' 指定且位于相关方上。在 SCQL 中，"
-"用户在虚拟表上运行查询可以有助于简化特权"
+"该物理表由 'TID' 指定且位于相关参与方上。在 SCQL 中，"
+"用户在虚拟表上运行查询可以有助于简化权限"
 "控制和使用。"
 
 #: ../../reference/scql_manual.rst:109
@@ -164,5 +164,5 @@ msgstr "待办"
 
 #: ../../reference/scql_manual.rst:230
 msgid "this part is not ready, please check later"
-msgstr "该部分尚未准备好，请稍后查看"
+msgstr "该部分尚未准备好，请之后查看"
 
