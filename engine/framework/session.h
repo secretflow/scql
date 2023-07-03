@@ -40,6 +40,7 @@ enum class SessionState {
 
 struct SessionOptions {
   uint32_t link_recv_timeout_ms = 30 * 1000;  // 30s
+  size_t link_throttle_window_size = 0;
 };
 
 /// @brief Session holds everything needed to run the execution plan.
