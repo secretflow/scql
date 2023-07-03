@@ -65,6 +65,7 @@ void Session::InitLink() {
     }
   }
   lctx_ = link_factory_->CreateContext(ctx_desc, parties_.SelfRank());
+  lctx_->SetThrottleWindowSize(session_opt_.link_throttle_window_size);
   lctx_->ConnectToMesh();
 }
 
