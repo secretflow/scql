@@ -45,6 +45,10 @@ DEFINE_string(peer_engine_ssl_client_ca_certificate, "",
               "certificate Authority file path to verify SSL as client");
 DEFINE_int32(link_recv_timeout_ms, 30 * 1000,
              "the max time that a party will wait for a given event");
+DEFINE_int32(
+    link_throttle_window_size, 16,
+    "throttle window size for channel, set to limit the number of messages "
+    "sent asynchronously to avoid network congestion, set 0 to disable");
 // Brpc channel flags for Scdb
 DEFINE_string(scdb_protocol, "http:proto", "rpc protocol");
 DEFINE_string(scdb_connection_type, "pooled", "connection type");
@@ -187,6 +191,9 @@ std::unique_ptr<scql::engine::EngineServiceImpl> BuildEngineService(
 
   scql::engine::SessionOptions session_opt;
   session_opt.link_recv_timeout_ms = FLAGS_link_recv_timeout_ms;
+  if (FLAGS_link_throttle_window_size > 0) {
+    session_opt.link_throttle_window_size = FLAGS_link_throttle_window_size;
+  }
   auto session_manager = std::make_unique<scql::engine::SessionManager>(
       session_opt, listener_manager, std::move(link_factory),
       std::move(ds_router), std::move(ds_mgr), FLAGS_session_timeout_s);
