@@ -45,9 +45,6 @@ bazel build //engine/exe:scqlengine -c opt
 # run unittests for SCQL engine
 bazel test //engine/...
 
-# update scdb proto
-make pb
-
 # build scdb code
 make
 
@@ -62,8 +59,11 @@ go test ./...
 pip3 install -U -r docs/requirements.txt
 
 # Build HTML docs, and the result is placed in directory 'docs/_build/html'
-cd docs
-make html
+# Build documentation in English
+make doc
+
+# Build documentation in Chinese
+make doc-cn
 ```
 
 ## Disclaimer
