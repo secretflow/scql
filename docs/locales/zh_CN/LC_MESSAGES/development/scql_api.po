@@ -121,7 +121,7 @@ msgstr "否"
 #: ../../development/scql_api.rst:23 ../../development/scql_api.rst:97
 #: ../../development/scql_api.rst:223
 msgid "Common request header"
-msgstr "一般请求头"
+msgstr "共同的请求头"
 
 #: ../../development/scql_api.rst:25 ../../development/scql_api.rst:99
 #: ../../development/scql_api.rst:225 ../../development/scql_api.rst:329
@@ -260,7 +260,7 @@ msgid ""
 "Fetch result of the query submitted via the \"submit_query\" method "
 "before, if the query is still running, It will return `NOT_READY` status "
 "code."
-msgstr "通过 session ID 获取之前提交的 query 的结果，如果之前的提交的查询还在运行中，"
+msgstr "通过 session ID 获取之前提交的 query 的结果，如果之前的提交的 query 还在运行中，"
 "返回 `NOT_READY`。"
 
 #: ../../development/scql_api.rst:101 ../../development/scql_api.rst:204
