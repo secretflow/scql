@@ -17,6 +17,8 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -39,6 +41,20 @@ const (
 	submitQueryPath    = "/submit_query"
 	submitAndGetPath   = "/submit_and_get"
 )
+
+type LogFormatter struct {
+}
+
+func (f *LogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
+	var fileWithLine string
+	if entry.HasCaller() {
+		fileWithLine = fmt.Sprintf("%s:%d", filepath.Base(entry.Caller.File), entry.Caller.Line)
+	} else {
+		fileWithLine = ":"
+	}
+	return []byte(fmt.Sprintf("%s %s %s %s\n", entry.Time.Format("2006-01-02 15:04:05.123"),
+		strings.ToUpper(entry.Level.String()), fileWithLine, entry.Message)), nil
+}
 
 func NewServer(conf *Config, grmClient grm.Grm, storage *gorm.DB, engineClient executor.EngineClient) (*http.Server, error) {
 	app, err := NewApp(conf, grmClient, storage, engineClient)

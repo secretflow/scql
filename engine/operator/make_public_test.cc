@@ -28,8 +28,9 @@ struct MakePublicTestCase {
   std::vector<std::string> output_names;
 };
 
-class MakePublicTest : public testing::TestWithParam<
-                           std::tuple<spu::ProtocolKind, MakePublicTestCase>> {
+class MakePublicTest
+    : public testing::TestWithParam<
+          std::tuple<test::SpuRuntimeTestCase, MakePublicTestCase>> {
  protected:
   static pb::ExecNode MakeExecNode(const MakePublicTestCase& tc);
   static void FeedInputs(const std::vector<ExecContext*>& ctxs,
@@ -39,7 +40,7 @@ class MakePublicTest : public testing::TestWithParam<
 INSTANTIATE_TEST_SUITE_P(
     MakePublicBatchTest, MakePublicTest,
     testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             MakePublicTestCase{
                 .inputs =
@@ -47,12 +48,14 @@ INSTANTIATE_TEST_SUITE_P(
                                        TensorFromJSON(arrow::int64(),
                                                       "[1,2,3,4,5,6,7,8]")),
                      test::NamedTensor(
-                         "y",
-                         TensorFromJSON(
-                             arrow::float32(),
-                             "[1.1025, 100.245, -10.2, 0.34, 3.1415926]"))},
+                         "y", TensorFromJSON(
+                                  arrow::float32(),
+                                  "[1.1025, 100.245, -10.2, 0.34, 3.1415926]")),
+                     test::NamedTensor(
+                         "z", TensorFromJSON(arrow::utf8(),
+                                             R"json(["A", "B", "C"])json"))},
                 .input_status = pb::TENSORSTATUS_PRIVATE,
-                .output_names = {"x_hat", "y_hat"}},
+                .output_names = {"x_hat", "y_hat", "z_hat"}},
             MakePublicTestCase{
                 .inputs =
                     {test::NamedTensor(
@@ -72,35 +75,37 @@ TEST_P(MakePublicTest, works) {
   auto parm = GetParam();
   auto tc = std::get<1>(parm);
   auto node = MakeExecNode(tc);
-  std::vector<Session> sessions = test::Make2PCSession(std::get<0>(parm));
+  std::vector<Session> sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
-  ExecContext alice_ctx(node, &sessions[0]);
-  ExecContext bob_ctx(node, &sessions[1]);
+  std::vector<ExecContext> exec_ctxs;
+  for (size_t idx = 0; idx < sessions.size(); ++idx) {
+    exec_ctxs.emplace_back(node, &sessions[idx]);
+  }
 
   // feed inputs
-  FeedInputs({&alice_ctx, &bob_ctx}, tc);
+  std::vector<ExecContext*> ctx_ptrs;
+  for (size_t idx = 0; idx < exec_ctxs.size(); ++idx) {
+    ctx_ptrs.emplace_back(&exec_ctxs[idx]);
+  }
+  FeedInputs(ctx_ptrs, tc);
 
   // When
-  test::OperatorTestRunner<MakePublic> alice;
-  test::OperatorTestRunner<MakePublic> bob;
-
-  alice.Start(&alice_ctx);
-  bob.Start(&bob_ctx);
-
-  // Then
-  EXPECT_NO_THROW({ alice.Wait(); });
-  EXPECT_NO_THROW({ bob.Wait(); });
+  EXPECT_NO_THROW(test::RunAsync<MakePublic>(ctx_ptrs));
 
   auto check_out = [&](ExecContext* ctx, TensorPtr in,
                        const std::string& out_name) {
     auto input_arr = in->ToArrowChunkedArray();
     ASSERT_NE(nullptr, input_arr);
 
-    auto hctx = ctx->GetSession()->GetSpuHalContext();
+    auto sctx = ctx->GetSession()->GetSpuContext();
     auto device_symbols = ctx->GetSession()->GetDeviceSymbols();
-    util::SpuOutfeedHelper outfeed_helper(hctx, device_symbols);
+    util::SpuOutfeedHelper outfeed_helper(sctx, device_symbols);
     auto output = outfeed_helper.DumpPublic(out_name);
     ASSERT_NE(nullptr, output) << "Output name: " << out_name;
+    // convert hash to string for string tensor in spu
+    if (in->Type() == pb::PrimitiveDataType::STRING) {
+      output = ctx->GetSession()->HashToString(*output);
+    }
     auto output_arr = output->ToArrowChunkedArray();
     ASSERT_NE(nullptr, output_arr);
 
@@ -112,8 +117,13 @@ TEST_P(MakePublicTest, works) {
 
   for (size_t i = 0; i < tc.output_names.size(); ++i) {
     const auto& output_name = tc.output_names[i];
-    check_out(&alice_ctx, tc.inputs[i].tensor, output_name);
-    check_out(&bob_ctx, tc.inputs[i].tensor, output_name);
+    for (size_t idx = 0; idx < ctx_ptrs.size(); ++idx) {
+      if (tc.inputs[i].tensor->Type() == pb::PrimitiveDataType::STRING &&
+          idx > 0) {
+        continue;  // only alice know the origin string of hash
+      }
+      check_out(ctx_ptrs[idx], tc.inputs[i].tensor, output_name);
+    }
   }
 }
 

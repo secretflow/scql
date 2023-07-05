@@ -109,13 +109,13 @@ void Filter::FilterSecret(ExecContext* ctx, const pb::Tensor& filter_pb,
                           const pb::Tensor& data_pb,
                           const std::string& output_name) {
   auto symbols = ctx->GetSession()->GetDeviceSymbols();
-  auto hctx = ctx->GetSession()->GetSpuHalContext();
+  auto sctx = ctx->GetSession()->GetSpuContext();
 
   const auto filter_value_name =
       util::SpuVarNameEncoder::GetValueName(filter_pb.name());
   auto filter_value = symbols->getVar(filter_value_name);
   spu::NdArrayRef filter_arr =
-      spu::kernel::hal::dump_public(hctx, filter_value);
+      spu::kernel::hal::dump_public(sctx, filter_value);
   auto filter_span = absl::MakeSpan(static_cast<uint8_t*>(filter_arr.data()),
                                     filter_arr.numel());
 #ifdef SCQL_WITH_NULL
@@ -123,7 +123,7 @@ void Filter::FilterSecret(ExecContext* ctx, const pb::Tensor& filter_pb,
       util::SpuVarNameEncoder::GetValidityName(filter_pb.name());
   auto filter_validity = symbols->getVar(filter_validity_name);
   spu::NdArrayRef filter_validity_arr =
-      spu::kernel::hal::dump_public(hctx, filter_validity);
+      spu::kernel::hal::dump_public(sctx, filter_validity);
   YACL_ENFORCE(filter_validity_arr.numel() == filter_span.size());
   for (int i = 0; i < filter_validity_arr.numel(); ++i) {
     filter_span[i] = filter_span[i] && filter_validity_arr.at<bool>({i});
@@ -134,7 +134,7 @@ void Filter::FilterSecret(ExecContext* ctx, const pb::Tensor& filter_pb,
       util::SpuVarNameEncoder::GetValueName(data_pb.name());
   auto data_value = symbols->getVar(data_value_name);
 
-  auto result = spu::kernel::hlo::FilterByMask(hctx, data_value, filter_span);
+  auto result = spu::kernel::hlo::FilterByMask(sctx, data_value, filter_span);
 
   symbols->setVar(util::SpuVarNameEncoder::GetValueName(output_name), result);
 
@@ -144,7 +144,7 @@ void Filter::FilterSecret(ExecContext* ctx, const pb::Tensor& filter_pb,
   auto data_validity = symbols->getVar(data_validity_name);
 
   auto result_validity =
-      spu::kernel::hlo::FilterByMask(hctx, data_validity, filter_span);
+      spu::kernel::hlo::FilterByMask(sctx, data_validity, filter_span);
 
   symbols->setVar(util::SpuVarNameEncoder::GetValidityName(output_name),
                   result_validity);
@@ -160,7 +160,7 @@ TensorPtr Filter::GetPrivateOrPublicTensor(ExecContext* ctx,
     ret = ctx->GetTensorTable()->GetTensor(input_pb.name());
   } else if (util::IsTensorStatusMatched(input_pb, pb::TENSORSTATUS_PUBLIC)) {
     // read public tensor from spu device symbol table
-    auto spu_io = util::SpuOutfeedHelper(ctx->GetSession()->GetSpuHalContext(),
+    auto spu_io = util::SpuOutfeedHelper(ctx->GetSession()->GetSpuContext(),
                                          ctx->GetSession()->GetDeviceSymbols());
     ret = spu_io.DumpPublic(input_pb.name());
   } else {

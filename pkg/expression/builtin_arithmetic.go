@@ -323,7 +323,10 @@ func (c *arithmeticModFunctionClass) getFunction(ctx sessionctx.Context, args []
 	if err := c.verifyArgs(args); err != nil {
 		return nil, err
 	}
-	lhsTp, _ := args[0].GetType(), args[1].GetType()
+	lhsTp, rhsTp := args[0].GetType(), args[1].GetType()
+	if rhsTp.Tp == mysql.TypeFloat || rhsTp.Tp == mysql.TypeDouble || rhsTp.Tp == mysql.TypeNewDecimal {
+		return nil, fmt.Errorf("getFunction: not support mod float")
+	}
 	bf := newBaseBuiltinFuncWithTp(ctx, args, types.ETInt, types.ETInt, types.ETInt)
 	if mysql.HasUnsignedFlag(lhsTp.Flag) {
 		bf.tp.Flag |= mysql.UnsignedFlag

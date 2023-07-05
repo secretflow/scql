@@ -26,13 +26,15 @@ import (
 	"github.com/secretflow/scql/pkg/interpreter/optimizer"
 	"github.com/secretflow/scql/pkg/interpreter/translator"
 	proto "github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/util/message"
 )
 
 type TestWebClient struct {
 }
 
 func (client TestWebClient) Post(ctx context.Context, url string, credential string, content_type string, body string) (string, error) {
-	return "", nil
+	resp := &proto.Status{Code: int32(proto.Code_OK)}
+	return message.SerializeTo(resp, message.EncodingTypeProtobuf)
 }
 
 func TestExecutor(t *testing.T) {
@@ -143,11 +145,15 @@ func TestExecutor_MergeQueryResults(t *testing.T) {
 					SessionId: eid,
 					OutColumns: []*proto.Tensor{
 						{
-							Name:     "c1.0",
-							ElemType: proto.PrimitiveDataType_STRING,
-							Value: &proto.Tensor_Ss{
-								Ss: &proto.Strings{Ss: mockValue},
-							}}},
+							Name:       "c1.0",
+							ElemType:   proto.PrimitiveDataType_STRING,
+							StringData: mockValue,
+							Shape: &proto.TensorShape{
+								Dim: []*proto.TensorShape_Dimension{{
+									Value: &proto.TensorShape_Dimension_DimValue{DimValue: int64(len(mockValue))},
+								}},
+							},
+						}},
 				},
 			},
 		}
@@ -155,7 +161,7 @@ func TestExecutor_MergeQueryResults(t *testing.T) {
 		a.Nil(err)
 		a.Equal(eid, result.ScdbSessionId)
 		a.Equal(1, len(result.OutColumns))
-		a.Equal(mockValue, result.OutColumns[0].GetSs().GetSs())
+		a.Equal(mockValue, result.OutColumns[0].GetStringData())
 	}
 
 	// merge partial published mockValue1 & mockValue2 -> mockValue
@@ -173,22 +179,30 @@ func TestExecutor_MergeQueryResults(t *testing.T) {
 					SessionId: eid,
 					OutColumns: []*proto.Tensor{
 						{
-							Name:     "c1.0",
-							ElemType: proto.PrimitiveDataType_STRING,
-							Value: &proto.Tensor_Ss{
-								Ss: &proto.Strings{Ss: mockValue1},
-							}}},
+							Name:       "c1.0",
+							ElemType:   proto.PrimitiveDataType_STRING,
+							StringData: mockValue1,
+							Shape: &proto.TensorShape{
+								Dim: []*proto.TensorShape_Dimension{{
+									Value: &proto.TensorShape_Dimension_DimValue{DimValue: int64(len(mockValue1))},
+								}},
+							},
+						}},
 				},
 				{
 					Status:    status,
 					SessionId: eid,
 					OutColumns: []*proto.Tensor{
 						{
-							Name:     "c1.0",
-							ElemType: proto.PrimitiveDataType_STRING,
-							Value: &proto.Tensor_Ss{
-								Ss: &proto.Strings{Ss: mockValue2},
-							}}},
+							Name:       "c1.0",
+							ElemType:   proto.PrimitiveDataType_STRING,
+							StringData: mockValue2,
+							Shape: &proto.TensorShape{
+								Dim: []*proto.TensorShape_Dimension{{
+									Value: &proto.TensorShape_Dimension_DimValue{DimValue: int64(len(mockValue2))},
+								}},
+							},
+						}},
 				},
 			},
 		}
@@ -196,7 +210,7 @@ func TestExecutor_MergeQueryResults(t *testing.T) {
 		a.Nil(err)
 		a.Equal(eid, result.ScdbSessionId)
 		a.Equal(1, len(result.OutColumns))
-		a.Equal(mockValue, result.OutColumns[0].GetSs().GetSs())
+		a.Equal(mockValue, result.OutColumns[0].GetStringData())
 	}
 }
 

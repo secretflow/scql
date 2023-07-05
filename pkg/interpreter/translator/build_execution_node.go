@@ -352,20 +352,45 @@ func (t *translator) buildSelection(ln *SelectionNode) (err error) {
 	privateIdsMap := make(map[string][]int64)
 	for _, columnId := range sliceutil.SortMapKeyForDeterminism(colIdToTensor) {
 		it := colIdToTensor[columnId]
-		switch it.Status {
-		case proto.TensorStatus_TENSORSTATUS_SECRET:
-			shareTensors = append(shareTensors, it)
-			shareIds = append(shareIds, columnId)
-		case proto.TensorStatus_TENSORSTATUS_PRIVATE:
-			privateTensorsMap[it.OwnerPartyCode] = append(privateTensorsMap[it.OwnerPartyCode], it)
-			privateIdsMap[it.OwnerPartyCode] = append(privateIdsMap[it.OwnerPartyCode], columnId)
-		default:
-			return fmt.Errorf("unsupported tensor status for selection node: %+v", it)
+		if len(filter.cc.GetVisibleParties()) == len(t.ep.partyInfo.GetParties()) {
+			switch it.Status {
+			case proto.TensorStatus_TENSORSTATUS_SECRET:
+				shareTensors = append(shareTensors, it)
+				shareIds = append(shareIds, columnId)
+			case proto.TensorStatus_TENSORSTATUS_PRIVATE:
+				privateTensorsMap[it.OwnerPartyCode] = append(privateTensorsMap[it.OwnerPartyCode], it)
+				privateIdsMap[it.OwnerPartyCode] = append(privateIdsMap[it.OwnerPartyCode], columnId)
+			default:
+				return fmt.Errorf("unsupported tensor status for selection node: %+v", it)
+			}
+		} else {
+			if it.Status == proto.TensorStatus_TENSORSTATUS_PRIVATE && filter.cc.IsVisibleFor(it.OwnerPartyCode) {
+				privateTensorsMap[it.OwnerPartyCode] = append(privateTensorsMap[it.OwnerPartyCode], it)
+				privateIdsMap[it.OwnerPartyCode] = append(privateIdsMap[it.OwnerPartyCode], columnId)
+				continue
+			}
+			foundParty := false
+			for _, party := range it.cc.GetVisibleParties() {
+				if filter.cc.IsVisibleFor(party) {
+					foundParty = true
+					newT, err := t.ep.converter.convertTo(it, &privatePlacement{partyCode: party})
+					if err != nil {
+						return err
+					}
+					privateTensorsMap[party] = append(privateTensorsMap[party], newT)
+					privateIdsMap[party] = append(privateIdsMap[party], columnId)
+					break
+				}
+			}
+			if !foundParty {
+				return fmt.Errorf("failed to find a party can see filter(%+v) and tensor(%+v)", filter, it)
+			}
 		}
 	}
+
 	if len(shareTensors) > 0 {
 		// convert filter to public here, so filter must be visible to all parties
-		publicFilter, err := t.ep.addTensorStatusConversion(filter, &publicPlacement{partyCodes: t.enginesInfo.partyInfo.GetParties()})
+		publicFilter, err := t.ep.converter.convertTo(filter, &publicPlacement{partyCodes: t.enginesInfo.partyInfo.GetParties()})
 		if err != nil {
 			return fmt.Errorf("buildSelection: %v", err)
 		}
@@ -382,10 +407,7 @@ func (t *translator) buildSelection(ln *SelectionNode) (err error) {
 	if len(privateTensorsMap) > 0 {
 		for _, p := range sliceutil.SortMapKeyForDeterminism(privateTensorsMap) {
 			ts := privateTensorsMap[p]
-			if !filter.cc.IsVisibleFor(p) {
-				return fmt.Errorf("failed to check ccl: filter (%+v) is not visible to %s", filter, p)
-			}
-			newFilter, err := t.ep.addTensorStatusConversion(filter, &privatePlacement{partyCode: p})
+			newFilter, err := t.ep.converter.convertTo(filter, &privatePlacement{partyCode: p})
 			if err != nil {
 				return fmt.Errorf("buildSelection: %v", err)
 			}
@@ -445,7 +467,7 @@ func (t *translator) buildAggregation(ln *AggregationNode) (err error) {
 		return fmt.Errorf("buildAggregation: failed to check number of children %v != 1", len(ln.children))
 	}
 	if len(agg.GroupByItems) > 0 {
-		return t.buildObliviousGroupAggregation(ln)
+		return t.buildGroupAggregation(ln)
 	}
 	child := ln.children[0]
 	colIdToTensor := map[int64]*Tensor{}
@@ -455,11 +477,9 @@ func (t *translator) buildAggregation(ln *AggregationNode) (err error) {
 		}
 		err = setResultTable(ln, colIdToTensor)
 	}()
-	childColIdToTensor := map[int64]*Tensor{}
-	for i, c := range child.Schema().Columns {
-		childColIdToTensor[c.UniqueID] = child.ResultTable()[i]
-	}
+
 	// Aggregation Function
+	childColIdToTensor := t.getNodeResultTensor(child)
 	for i, aggFunc := range agg.AggFuncs {
 		if len(aggFunc.Args) != 1 {
 			return fmt.Errorf("buildAggregation: unsupported aggregation function %v", aggFunc)
@@ -562,6 +582,174 @@ func (t *translator) buildAggregation(ln *AggregationNode) (err error) {
 	return nil
 }
 
+func (t *translator) buildGroupAggregation(ln *AggregationNode) (err error) {
+	party, err := t.findPartySeeingAll(ln)
+	if err != nil {
+		return fmt.Errorf("buildGroupAggregation: %v", err)
+	}
+	if party != "" {
+		return t.buildPrivateGroupAggregation(ln, party)
+	} else {
+		return t.buildObliviousGroupAggregation(ln)
+	}
+}
+
+// find a party who owns plaintext ccl for all group-by keys and agg items, return "" if not exist
+// NOTE(jingshi): currently only private string is supported in private group by
+func (t *translator) findPartySeeingAll(ln *AggregationNode) (string, error) {
+	agg, ok := ln.lp.(*core.LogicalAggregation)
+	if !ok {
+		return "", fmt.Errorf("findPartySeeingAll: assert failed expected *core.LogicalAggregation, get %T", ln.LP())
+	}
+	child := ln.Children()[0]
+
+	partyCandidate := map[string]bool{}
+	for _, pc := range t.ep.partyInfo.GetParties() {
+		partyCandidate[pc] = true
+	}
+	// filter partyCandidate with groupby keys
+	for _, item := range agg.GroupByItems {
+		cc, err := ccl.InferExpressionCCL(item, child.CCL())
+		if err != nil {
+			return "", fmt.Errorf("findPartySeeingAll: %v", err)
+		}
+		for _, pc := range t.ep.partyInfo.GetParties() {
+			if !cc.IsVisibleFor(pc) {
+				delete(partyCandidate, pc)
+			}
+		}
+	}
+	// filter with agg items
+	partyCandidateSlice := sliceutil.SortMapKeyForDeterminism(partyCandidate)
+	for _, party_candidate := range partyCandidateSlice {
+		areAggsVisible := true
+		for _, aggFunc := range agg.AggFuncs {
+			if len(aggFunc.Args) != 1 {
+				return "", fmt.Errorf("findPartySeeingAll: args length > 1 for %v", aggFunc)
+			}
+			cc, err := ccl.InferExpressionCCL(aggFunc.Args[0], child.CCL())
+			if err != nil {
+				return "", fmt.Errorf("findPartySeeingAll: %v", err)
+			}
+
+			if !cc.IsVisibleFor(party_candidate) {
+				areAggsVisible = false
+				break
+			}
+		}
+		if areAggsVisible {
+			return party_candidate, nil
+		}
+	}
+
+	return "", nil
+}
+
+func (t *translator) getNodeResultTensor(ln logicalNode) map[int64]*Tensor {
+	colIdToTensor := map[int64]*Tensor{}
+	for i, tensor := range ln.ResultTable() {
+		colIdToTensor[ln.Schema().Columns[i].UniqueID] = tensor
+	}
+	return colIdToTensor
+}
+
+func (t *translator) buildPrivateGroupAggregation(ln *AggregationNode, party string) (err error) {
+	colIdToTensor := map[int64]*Tensor{}
+	defer func() {
+		if err != nil {
+			return
+		}
+		err = setResultTable(ln, colIdToTensor)
+	}()
+
+	// 1. build group id
+	groupId, groupNum, err := t.buildGroupId(ln, party)
+	if err != nil {
+		return fmt.Errorf("buildPrivateGroupAggregation: %v", err)
+	}
+
+	// 2. build aggs
+	agg, ok := ln.lp.(*core.LogicalAggregation)
+	if !ok {
+		return fmt.Errorf("buildPrivateGroupAggregation: cast to LogicalAggregation failed")
+	}
+	childColIdToTensor := t.getNodeResultTensor(ln.Children()[0])
+	for i, aggFunc := range agg.AggFuncs {
+		if len(aggFunc.Args) != 1 {
+			return fmt.Errorf("buildPrivateGroupAggregation: unsupported aggregation function %v, expect len(aggFunc.Args)=1, but got %v", aggFunc, len(aggFunc.Args))
+		}
+		// deal with complete count, except count(distinct)
+		if aggFunc.Name == ast.AggFuncCount && aggFunc.Mode == aggregation.CompleteMode && !aggFunc.HasDistinct {
+			outputs, err := t.ep.AddGroupAggNode(ast.AggFuncCount, operator.OpNameGroupCount, groupId, groupNum, []*Tensor{groupId}, party)
+			if err != nil {
+				return fmt.Errorf("buildPrivateGroupAggregation: count(*): %v", err)
+			}
+			colIdToTensor[ln.Schema().Columns[i].UniqueID] = outputs[0]
+			continue
+		}
+
+		colT, err := t.buildExpression(aggFunc.Args[0], childColIdToTensor, false, ln)
+		if err != nil {
+			return fmt.Errorf("buildPrivateGroupAggregation: %v", err)
+		}
+		switch aggFunc.Name {
+		case ast.AggFuncCount:
+			switch aggFunc.Mode {
+			case aggregation.CompleteMode:
+				if aggFunc.HasDistinct {
+					outputs, err := t.ep.AddGroupAggNode("count_distinct", operator.OpNameGroupCountDistinct, groupId, groupNum, []*Tensor{colT}, party)
+					if err != nil {
+						return fmt.Errorf("buildPrivateGroupAggregation: count distinct complete mode: %v", err)
+					}
+					colIdToTensor[ln.Schema().Columns[i].UniqueID] = outputs[0]
+				} else {
+					return fmt.Errorf("buildPrivateGroupAggregation: count(*) should not reach here")
+				}
+			case aggregation.FinalMode:
+				switch aggFunc.Args[0].(type) {
+				case *expression.Column:
+					outputs, err := t.ep.AddGroupAggNode(ast.AggFuncSum, operator.OpNameGroupSum, groupId, groupNum, []*Tensor{colT}, party)
+					if err != nil {
+						return fmt.Errorf("buildPrivateGroupAggregation: count final mode: %v", err)
+					}
+					colIdToTensor[ln.Schema().Columns[i].UniqueID] = outputs[0]
+				default:
+					return fmt.Errorf("buildPrivateGroupAggregation: unsupported count final type %v", aggFunc)
+				}
+			default:
+				return fmt.Errorf("buildPrivateGroupAggregation: aggFunc.Mode %v", aggFunc.Mode)
+			}
+		case ast.AggFuncFirstRow, ast.AggFuncSum, ast.AggFuncMin, ast.AggFuncMax, ast.AggFuncAvg:
+			outputs, err := t.ep.AddGroupAggNode(aggFunc.Name, operator.GroupAggOp[aggFunc.Name], groupId, groupNum, []*Tensor{colT}, party)
+			if err != nil {
+				return fmt.Errorf("buildPrivateGroupAggregation: %v", err)
+			}
+			colIdToTensor[ln.Schema().Columns[i].UniqueID] = outputs[0]
+		default:
+			return fmt.Errorf("buildPrivateGroupAggregation: unsupported aggregation function %v", aggFunc)
+		}
+	}
+
+	return err
+}
+
+func (t *translator) buildGroupId(ln *AggregationNode, partyCode string) (*Tensor, *Tensor, error) {
+	groupCol := []*Tensor{}
+	agg, ok := ln.lp.(*core.LogicalAggregation)
+	if !ok {
+		return nil, nil, fmt.Errorf("buildGroupId: cast to LogicalAggregation failed")
+	}
+	childColIdToTensor := t.getNodeResultTensor(ln.Children()[0])
+	for _, item := range agg.GroupByItems {
+		tensor, err := t.getTensorFromExpression(item, childColIdToTensor)
+		if err != nil {
+			return nil, nil, fmt.Errorf("buildGroupId: %v", err)
+		}
+		groupCol = append(groupCol, tensor)
+	}
+	return t.ep.AddGroupNode("group", groupCol, partyCode)
+}
+
 func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err error) {
 	agg, ok := ln.lp.(*core.LogicalAggregation)
 	if !ok {
@@ -569,22 +757,15 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 	}
 	child := ln.Children()[0]
 
-	childColIdToTensor := map[int64]*Tensor{}
-	for i, tensor := range child.ResultTable() {
-		childColIdToTensor[child.Schema().Columns[i].UniqueID] = tensor
-	}
-
 	// sort group by keys
 	keyTs := []*Tensor{}
+	childColIdToTensor := t.getNodeResultTensor(ln.Children()[0])
 	for _, key := range agg.GroupByItems {
 		keyT, err := t.getTensorFromExpression(key, childColIdToTensor)
 		if err != nil {
 			return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 		}
 		keyTs = append(keyTs, keyT)
-		if keyT.DType == proto.PrimitiveDataType_STRING {
-			t.flagJointPublishString = true
-		}
 	}
 
 	in := []*Tensor{}
@@ -711,7 +892,7 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 	for _, p := range t.enginesInfo.partyInfo.GetParties() {
 		groupMarkShuffled.cc.SetLevelForParty(p, ccl.Plain)
 	}
-	groupMarkPub, err := t.ep.addTensorStatusConversion(groupMarkShuffled, &publicPlacement{partyCodes: t.enginesInfo.partyInfo.GetParties()})
+	groupMarkPub, err := t.ep.converter.convertTo(groupMarkShuffled, &publicPlacement{partyCodes: t.enginesInfo.partyInfo.GetParties()})
 	if err != nil {
 		return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 	}
@@ -745,12 +926,6 @@ func (t *translator) buildUnion(ln *UnionAllNode) (err error) {
 			return fmt.Errorf("buildUnion: %v", err)
 		}
 		colIdToTensor[c.UniqueID] = ot
-	}
-
-	for _, tensor := range colIdToTensor {
-		if tensor.DType == proto.PrimitiveDataType_STRING {
-			t.flagJointPublishString = true
-		}
 	}
 
 	return nil

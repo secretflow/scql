@@ -81,7 +81,6 @@ jobs:
             export $(grep -v '^#' .ci/docker-compose/.env | xargs)
             go test ./cmd/regtest/... -v -count=1 -timeout=30m
 
-
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:

@@ -20,7 +20,7 @@ DDL(Data Definition Language)
 
 CREATE Table
 `````````````
-SCQL get table schemas from GRM, so CREATE TABLE statement must include keyword TID which uniquely identifies a table in GRM. For more information, please read :doc:`scql_manual`
+SCQL get table schemas from GRM, so CREATE TABLE statement must include keyword TID which uniquely identifies a table in GRM. For more information, please read :doc:`scql_manual`.
 
 DQL(Data Query Language)
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -50,7 +50,7 @@ DCL(Data Control Language)
 GRANT/REVOKE
 ````````````
 
-Except permissions same with mysql such as read/write/create/drop..., ccl settings are also required before executing a query. You can change CCL settings via GRANT/REVOKE. About GRANT/REVOKE in SCQL, please read :doc:`scql_manual`
+Except permissions same with mysql such as read/write/create/drop..., ccl settings are also required before executing a query. You can change CCL settings via GRANT/REVOKE. About GRANT/REVOKE in SCQL, please read :doc:`scql_manual`.
 
 Type Conversion Rule
 ~~~~~~~~~~~~~~~~~~~~
@@ -58,10 +58,9 @@ Type Conversion Rule
 Type conversion takes place when using an operator with operands of different types, to make them compatible. Some conversions occur implicitly.
 For example, SCQL automatically converts int to float as necessary
 
-.. code-block:: SQL
+.. code-block:: bash
 
-    SCQL> SELECT alice.plain_long AS alice_long, bob.plain_float AS bob_float, alice.plain_long + bob.plain_float AS sum_result 
-        FROM alice INNER JOIN bob ON alice.id = bob.id;
+    user> SELECT alice.plain_long AS alice_long, bob.plain_float AS bob_float, alice.plain_long + bob.plain_float AS sum_result FROM alice INNER JOIN bob ON alice.id = bob.id;
     +------------+-----------+------------+
     | alice_long | bob_float | sum_result |
     +------------+-----------+------------+
@@ -86,18 +85,18 @@ If a query involves multiple participants, SCQL will execute type conversion by 
 
 Compare(>, <, <=, >=, <>, =, !=)
 """"""""""""""""""""""""""""""""
-* Both arguments in a comparison operation shouldn't be string
+* Both arguments in a comparison operation shouldn't be string.
 * If both arguments are long, they are compared as long.
 * If one of the arguments is float32, the other argument will be compared as float32.
 
 Arithmetic(+, -, \*, /, %)
 """"""""""""""""""""""""""
-* Both arguments in a arithmetic operation shouldn't be string
+* Both arguments in a arithmetic operation shouldn't be string.
 * If both arguments are long, they are calculated as long.
 * If one of the arguments is float32, the other argument will be calculated as float32.
 
 Aggregation(sum, count, avg, min, max)
 """"""""""""""""""""""""""""""""""""""
-* All arguments in a aggregation function shouldn't be string
+* All arguments in a aggregation function shouldn't be string.
 * If all arguments are long, they are calculated as long.
 * If one of the arguments is float32, the other argument will be calculated as float32.

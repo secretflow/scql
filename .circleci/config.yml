@@ -30,61 +30,61 @@ parameters:
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
 linux_regtest:
-    machine:
-      image: ubuntu-2004:2022.07.1
-    resource_class: 2xlarge
-    steps:
-      - checkout
-      - restore_cache:
-          name: "Restore engine cache"
-          key: engine-regtest-build-{{ arch }}-
-      - run:
-          name: "Checkout devtools"
-          command: git clone https://github.com/secretflow/devtools.git
-      - run:
-          name: Decompress cache
-          command: sh devtools/decompress-build-cache.sh engine_regtest_cache
-      - run:
-          name: "Build binary"
-          command: |
-            set +e 
-            mkdir -p image
-            cp docker/scql.Dockerfile image
-            docker run -d -it --name scql-dev -v $(pwd):/home/admin/dev/ -v ~/.cache/engine_regtest_cache:/root/.cache/engine_regtest_cache -w /home/admin/dev --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --cap-add=NET_ADMIN --privileged=true secretflow/release-ci:latest
-            docker exec -it scql-dev bash -c "make && bazel build //engine/... -c opt --ui_event_filters=-info,-debug,-warning --disk_cache=~/.cache/engine_regtest_cache" 
-            docker cp scql-dev:/home/admin/dev/bazel-bin/engine/exe/scqlengine image
-            docker cp scql-dev:/home/admin/dev/bin/scdbserver image
-            docker cp scql-dev:/home/admin/dev/bin/scdbclient image
-            docker stop scql-dev &&  docker rm scql-dev
-      - run:
-          name: Cleanup and compress cache
-          command: |
-            sh devtools/clean_disk_cache.sh ~/.cache/engine_regtest_cache
-            sh devtools/compress-build-cache.sh engine_regtest_cache
-      - save_cache:
-          key: engine-regtest-build-{{ arch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
-          paths:
-            - ~/.cache/engine_regtest_cache.tar.gz
-      - run:
-          name: "Build image"
-          command: |
-            cd image
-            docker build -f scql.Dockerfile -t scql:latest .
-      - run:
-          name: "Deploy image"
-          command: |
-            set +e
-            cd .ci/docker-compose
-            docker compose -p regtest up -d 
-            docker ps | grep regtest
-      - run:
-          name: "Run regtest"
-          command: |
-            set +e
-            sleep 1m
-            export SKIP_CONCURRENT_TEST=true
-            export $(grep -v '^#' .ci/docker-compose/.env | xargs)
-            go test ./cmd/regtest/... -v -count=1 -timeout=30m
+  machine:
+    image: ubuntu-2004:2022.07.1
+  resource_class: 2xlarge
+  steps:
+    - checkout
+    - restore_cache:
+        name: "Restore engine cache"
+        key: engine-regtest-build-{{ arch }}-
+    - run:
+        name: "Checkout devtools"
+        command: git clone https://github.com/secretflow/devtools.git
+    - run:
+        name: Decompress cache
+        command: sh devtools/decompress-build-cache.sh engine_regtest_cache
+    - run:
+        name: "Build binary"
+        command: |
+          set +e
+          mkdir -p image
+          cp docker/scql.Dockerfile image
+          docker run -d -it --name scql-dev -v $(pwd):/home/admin/dev/ -v ~/.cache/engine_regtest_cache:/root/.cache/engine_regtest_cache -w /home/admin/dev --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --cap-add=NET_ADMIN --privileged=true secretflow/release-ci:latest
+          docker exec -it scql-dev bash -c "make && bazel build //engine/... -c opt --ui_event_filters=-info,-debug,-warning --disk_cache=~/.cache/engine_regtest_cache"
+          docker cp scql-dev:/home/admin/dev/bazel-bin/engine/exe/scqlengine image
+          docker cp scql-dev:/home/admin/dev/bin/scdbserver image
+          docker cp scql-dev:/home/admin/dev/bin/scdbclient image
+          docker stop scql-dev &&  docker rm scql-dev
+    - run:
+        name: Cleanup and compress cache
+        command: |
+          sh devtools/clean_disk_cache.sh ~/.cache/engine_regtest_cache
+          sh devtools/compress-build-cache.sh engine_regtest_cache
+    - save_cache:
+        key: engine-regtest-build-{{ arch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
+        paths:
+          - ~/.cache/engine_regtest_cache.tar.gz
+    - run:
+        name: "Build image"
+        command: |
+          cd image
+          docker build -f scql.Dockerfile -t scql:latest .
+    - run:
+        name: "Deploy image"
+        command: |
+          set +e
+          cd .ci/docker-compose
+          docker compose -p regtest up -d
+          docker ps | grep regtest
+    - run:
+        name: "Run regtest"
+        command: |
+          set +e
+          sleep 1m
+          export SKIP_CONCURRENT_TEST=true
+          export $(grep -v '^#' .ci/docker-compose/.env | xargs)
+          go test ./cmd/regtest/... -v -count=1 -timeout=30m
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows

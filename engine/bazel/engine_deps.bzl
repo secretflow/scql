@@ -16,6 +16,7 @@ load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
+
 SECRETFLOW_GROUP_GIT = "https://github.com/secretflow"
 
 SPU_GIT = "https://github.com/secretflow/spu.git"
@@ -41,11 +42,11 @@ def engine_deps():
     _com_github_duckdb()
 
     _com_github_brpc_brpc()
-
+    _org_postgres()
     maybe(
         git_repository,
         name = "spulib",
-        tag = "0.3.2b8",
+        tag = "0.4.1a0",
         remote = SPU_GIT,
     )
 
@@ -206,6 +207,18 @@ def _com_mysql():
         sha256 = "fc02246f39764b7b2b7815bb260d52983296919ba13246f3de8873b3e86dc579",
         strip_prefix = "mysql-server-mysql-8.0.29",
         build_file = "@scql//engine/bazel:mysql.BUILD",
+    )
+
+def _org_postgres():
+    maybe(
+        http_archive,
+        name = "org_postgres",
+        urls = [
+            "https://ftp.postgresql.org/pub/source/v15.2/postgresql-15.2.tar.gz",
+        ],
+        sha256 = "eccd208f3e7412ad7bc4c648ecc87e0aa514e02c24a48f71bf9e46910bf284ca",
+        strip_prefix = "postgresql-15.2",
+        build_file = "@scql//engine/bazel:postgres.BUILD",
     )
 
 def _org_pocoproject_poco():

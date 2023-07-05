@@ -33,7 +33,7 @@ struct JoinTestCase {
 };
 
 class JoinTest : public ::testing::TestWithParam<
-                     std::tuple<spu::ProtocolKind, JoinTestCase>> {
+                     std::tuple<test::SpuRuntimeTestCase, JoinTestCase>> {
  protected:
   static pb::ExecNode MakeJoinExecNode(const JoinTestCase& tc);
 
@@ -47,7 +47,7 @@ class JoinTest : public ::testing::TestWithParam<
 INSTANTIATE_TEST_SUITE_P(
     JoinBatchTest, JoinTest,
     testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValues2PC,
         testing::Values(
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
@@ -119,7 +119,7 @@ TEST_P(JoinTest, works) {
   auto parm = GetParam();
   auto test_case = std::get<1>(parm);
   pb::ExecNode node = MakeJoinExecNode(test_case);
-  std::vector<Session> sessions = test::Make2PCSession(std::get<0>(parm));
+  std::vector<Session> sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
   ExecContext alice_ctx(node, &sessions[0]);
   ExecContext bob_ctx(node, &sessions[1]);
@@ -129,16 +129,9 @@ TEST_P(JoinTest, works) {
   FeedInputs(&bob_ctx, test_case.right_inputs);
 
   // When
-  test::OperatorTestRunner<Join> alice;
-  test::OperatorTestRunner<Join> bob;
-
-  alice.Start(&alice_ctx);
-  bob.Start(&bob_ctx);
+  EXPECT_NO_THROW(test::RunAsync<Join>({&alice_ctx, &bob_ctx}));
 
   // Then
-  EXPECT_NO_THROW({ alice.Wait(); });
-  EXPECT_NO_THROW({ bob.Wait(); });
-
   // left output
   auto left_output = alice_ctx.GetTensorTable()->GetTensor(kOutLeft);
   EXPECT_TRUE(left_output != nullptr);

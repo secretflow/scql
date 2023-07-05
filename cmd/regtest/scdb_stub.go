@@ -17,19 +17,18 @@ package regtest
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/secretflow/scql/pkg/parser/model"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
+	proto "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/scdb/client"
+	"github.com/secretflow/scql/pkg/util/mock"
 )
 
 var (
 	dbName = "scdb"
-)
-
-var (
-	SCDBAddr string
 )
 
 const (
@@ -37,7 +36,7 @@ const (
 	userNameAlice  = "alice"
 	userNameBob    = "bob"
 	userNameCarol  = "carol"
-	stubTimeoutSec = 120
+	stubTimeoutMin = 5
 )
 
 var userMapPassword = map[string]string{
@@ -66,18 +65,6 @@ var userMapGrmToken = map[string]string{
 	userNameAlice: "token_alice",
 	userNameBob:   "token_bob",
 	userNameCarol: "token_carol",
-}
-
-var tableMapTid = map[string]string{
-	"alice_tbl_0": "tid0",
-	"alice_tbl_1": "tid1",
-	"alice_tbl_2": "tid2",
-	"bob_tbl_0":   "tid3",
-	"bob_tbl_1":   "tid4",
-	"bob_tbl_2":   "tid5",
-	"carol_tbl_0": "tid6",
-	"carol_tbl_1": "tid7",
-	"carol_tbl_2": "tid8",
 }
 
 var (
@@ -117,9 +104,9 @@ func fillTableToPartyCodeMap(dbTables map[string][]*model.TableInfo) {
 	}
 }
 
-func runSql(user *scql.SCDBCredential, sql string, sync bool) ([]*scql.Tensor, error) {
-	httpClient := &http.Client{Timeout: stubTimeoutSec * time.Second}
-	stub := client.NewDefaultClient(SCDBAddr, httpClient)
+func runSql(user *scql.SCDBCredential, sql, addr string, sync bool) ([]*scql.Tensor, error) {
+	httpClient := &http.Client{Timeout: stubTimeoutMin * time.Minute}
+	stub := client.NewDefaultClient(addr, httpClient)
 	if sync {
 		resp, err := stub.SubmitAndGet(user, sql)
 		if err != nil {
@@ -153,7 +140,7 @@ func runSql(user *scql.SCDBCredential, sql string, sync bool) ([]*scql.Tensor, e
 	}
 }
 
-func createUserAndCcl(cclList []*scql.SecurityConfig_ColumnControl, skipCreate bool) error {
+func createUserAndCcl(cclList []*scql.SecurityConfig_ColumnControl, addr string, skipCreate bool) error {
 	if skipCreate {
 		fmt.Println("skip createUserAndCcl")
 		return nil
@@ -161,7 +148,8 @@ func createUserAndCcl(cclList []*scql.SecurityConfig_ColumnControl, skipCreate b
 	// create user
 	for _, user := range userNames {
 		sql := fmt.Sprintf(`CREATE USER IF NOT EXISTS %s PARTY_CODE "%s" IDENTIFIED BY "%s"`, user, userMapPartyCode[user], userMapPassword[user])
-		if _, err := runSql(userMapCredential[userNameRoot], sql, true); err != nil {
+		fmt.Println(sql)
+		if _, err := runSql(userMapCredential[userNameRoot], sql, addr, true); err != nil {
 			return err
 		}
 	}
@@ -169,21 +157,29 @@ func createUserAndCcl(cclList []*scql.SecurityConfig_ColumnControl, skipCreate b
 	// create database
 	{
 		sql := fmt.Sprintf(`CREATE DATABASE IF NOT EXISTS %s`, dbName)
-		if _, err := runSql(userMapCredential[userNameRoot], sql, true); err != nil {
+		fmt.Println(sql)
+		if _, err := runSql(userMapCredential[userNameRoot], sql, addr, true); err != nil {
 			return err
 		}
 	}
 	// grant base auth
 	for _, user := range userNames {
 		sql := fmt.Sprintf(`GRANT CREATE, CREATE VIEW, GRANT OPTION ON %s.* TO %s`, dbName, user)
-		if _, err := runSql(userMapCredential[userNameRoot], sql, true); err != nil {
+		fmt.Println(sql)
+		if _, err := runSql(userMapCredential[userNameRoot], sql, addr, true); err != nil {
 			return err
 		}
 	}
 
 	// grant ccl
 	tableExistMap := map[string]bool{}
-	for i, ccl := range cclList {
+	// map db_table to party to ccl to columns
+	grantMap := map[string]map[string]map[string][]string{}
+	tableTIDs, err := mock.MockTableTIDs()
+	if err != nil {
+		return err
+	}
+	for _, ccl := range cclList {
 		findTable := false
 		dbTableName := fmt.Sprintf(`%s_%s`, ccl.DatabaseName, ccl.TableName)
 		if _, exist := tableExistMap[dbTableName]; exist {
@@ -191,20 +187,41 @@ func createUserAndCcl(cclList []*scql.SecurityConfig_ColumnControl, skipCreate b
 		}
 		tableOwner := partyCodeToUser[tableToPartyCode[dbTableName]]
 		if !findTable {
-			sql := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s.%s tid="%s"`, dbName, dbTableName, tableMapTid[dbTableName])
-			if _, err := runSql(userMapCredential[tableOwner], sql, true); err != nil {
+			sql := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s.%s tid="%s"`, dbName, dbTableName, tableTIDs[dbTableName])
+			fmt.Println(sql)
+			if _, err := runSql(userMapCredential[tableOwner], sql, addr, true); err != nil {
 				return err
 			}
 			tableExistMap[dbTableName] = true
 		}
-
-		sql := fmt.Sprintf(`GRANT SELECT %s(%s) ON %s.%s TO %s;`, ccl.Visibility, ccl.ColumnName, dbName, dbTableName, partyCodeToUser[ccl.PartyCode])
-		if _, err := runSql(userMapCredential[tableOwner], sql, true); err != nil {
-			return fmt.Errorf("query failed: %v, with error:%v", sql, err)
+		grantTo := fmt.Sprintf("%s.%s", dbName, dbTableName)
+		cclStr := proto.SecurityConfig_ColumnControl_Visibility_name[int32(ccl.Visibility)]
+		if grantMap[grantTo] == nil {
+			grantMap[grantTo] = map[string]map[string][]string{}
 		}
-		percent := int64(float32(i+1) / float32(len(cclList)) * 100)
-		fmt.Printf("createUserAndCcl %d%% (%v/%v)\r", percent, i+1, len(cclList))
+		if grantMap[grantTo][partyCodeToUser[ccl.PartyCode]] == nil {
+			grantMap[grantTo][partyCodeToUser[ccl.PartyCode]] = map[string][]string{}
+		}
+		if len(grantMap[grantTo][partyCodeToUser[ccl.PartyCode]][cclStr]) == 0 {
+			grantMap[grantTo][partyCodeToUser[ccl.PartyCode]][cclStr] = []string{}
+		}
+		grantMap[grantTo][partyCodeToUser[ccl.PartyCode]][cclStr] = append(grantMap[grantTo][partyCodeToUser[ccl.PartyCode]][cclStr], ccl.ColumnName)
 	}
+	fmt.Println("Grant CCL...")
+	for dbTable, userGrantMap := range grantMap {
+		for user, cclGrantMap := range userGrantMap {
+			var cclColumns []string
+			for cc, columns := range cclGrantMap {
+				cclColumns = append(cclColumns, fmt.Sprintf("SELECT %s(%s)", cc, strings.Join(columns, ", ")))
+			}
+			sql := fmt.Sprintf("GRANT %s ON %s TO %s", strings.Join(cclColumns, ", "), dbTable, user)
+			tableOwner := partyCodeToUser[tableToPartyCode[strings.Split(dbTable, ".")[1]]]
+			if _, err := runSql(userMapCredential[tableOwner], sql, addr, true); err != nil {
+				return fmt.Errorf("query failed: %v, with error:%v", sql, err)
+			}
+		}
+	}
+	fmt.Println("Grant Complete!")
 	fmt.Println()
 	return nil
 }

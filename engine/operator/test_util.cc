@@ -14,6 +14,8 @@
 
 #include "engine/operator/test_util.h"
 
+#include "libspu/core/config.h"
+
 #include "engine/framework/session.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
@@ -49,6 +51,8 @@ spu::RuntimeConfig MakeSpuRuntimeConfigForTest(
   config.set_protocol(protocol_kind);
   config.set_field(spu::FieldType::FM64);
   config.set_sigmoid_mode(spu::RuntimeConfig::SIGMOID_REAL);
+
+  spu::populateRuntimeConfig(config);
   return config;
 }
 
@@ -68,38 +72,28 @@ Session Make1PCSession(Router* ds_router, DatasourceAdaptorMgr* ds_mgr) {
                  ds_mgr);
 }
 
-std::vector<Session> Make2PCSession(const spu::ProtocolKind protocol_kind) {
-  auto alice = BuildParty(kPartyAlice, 0);
-  auto bob = BuildParty(kPartyBob, 1);
-
+std::vector<Session> MakeMultiPCSession(const SpuRuntimeTestCase test_case) {
   pb::SessionStartParams common_params;
-  common_params.set_session_id("session_2pc");
-  {
-    auto p1 = common_params.add_parties();
-    p1->CopyFrom(alice);
-    auto p2 = common_params.add_parties();
-    p2->CopyFrom(bob);
+  common_params.set_session_id("session_multi_pc");
+  for (size_t i = 0; i < test_case.party_size; ++i) {
+    auto party = BuildParty(kPartyCodes[i], i);
+    auto p = common_params.add_parties();
+    p->CopyFrom(party);
   }
   common_params.mutable_spu_runtime_cfg()->CopyFrom(
-      MakeSpuRuntimeConfigForTest(protocol_kind));
+      MakeSpuRuntimeConfigForTest(test_case.protocol));
 
-  std::vector<std::future<Session>> futures(2);
+  std::vector<std::future<Session>> futures;
   SessionOptions options;
   auto create_session = [&](const pb::SessionStartParams& params) {
     return Session(options, params, &g_mem_link_factory, nullptr, nullptr,
                    nullptr);
   };
-  {
+  for (size_t i = 0; i < test_case.party_size; ++i) {
     pb::SessionStartParams params;
     params.CopyFrom(common_params);
-    params.set_party_code(kPartyAlice);
-    futures[0] = std::async(create_session, params);
-  }
-  {
-    pb::SessionStartParams params;
-    params.CopyFrom(common_params);
-    params.set_party_code(kPartyBob);
-    futures[1] = std::async(create_session, params);
+    params.set_party_code(kPartyCodes[i]);
+    futures.push_back(std::async(create_session, params));
   }
 
   std::vector<Session> results;
@@ -217,7 +211,7 @@ void FeedInputAsShares(const std::vector<ExecContext*>& ctxs,
                        const test::NamedTensor& input, spu::Visibility vtype) {
   auto proc = [](ExecContext* ctx, const test::NamedTensor& input,
                  spu::Visibility vtype) {
-    spu::device::ColocatedIo cio(ctx->GetSession()->GetSpuHalContext());
+    spu::device::ColocatedIo cio(ctx->GetSession()->GetSpuContext());
 
     util::SpuInfeedHelper infeed_helper(&cio);
     if (ctx->GetSession()->GetLink()->Rank() == 0) {
@@ -267,7 +261,7 @@ void FeedInputsAsPublic(const std::vector<ExecContext*>& ctxs,
 TensorPtr RevealSecret(const std::vector<ExecContext*>& ctxs,
                        const std::string& name) {
   auto reveal = [](ExecContext* ctx, const std::string& name) -> TensorPtr {
-    util::SpuOutfeedHelper io(ctx->GetSession()->GetSpuHalContext(),
+    util::SpuOutfeedHelper io(ctx->GetSession()->GetSpuContext(),
                               ctx->GetSession()->GetDeviceSymbols());
     // reveal to rank 0: alice
     return io.RevealTo(name, 0);
@@ -282,6 +276,24 @@ TensorPtr RevealSecret(const std::vector<ExecContext*>& ctxs,
     futures[i].wait();
   }
   return futures[0].get();
+}
+
+void RunOpAsync(const std::vector<ExecContext*>& exec_ctxs,
+                OpCreator create_op_fn) {
+  std::vector<std::future<void>> futures(exec_ctxs.size());
+  for (size_t idx = 0; idx < exec_ctxs.size(); ++idx) {
+    futures[idx] = std::async(
+        std::launch::async,
+        [&](ExecContext* ectx) {
+          auto op = create_op_fn();
+          op->Run(ectx);
+        },
+        exec_ctxs[idx]);
+  }
+
+  for (size_t idx = 0; idx < futures.size(); ++idx) {
+    futures[idx].wait();
+  }
 }
 
 }  // namespace scql::engine::op::test

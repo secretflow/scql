@@ -27,8 +27,7 @@ namespace scql::engine::op {
 INSTANTIATE_TEST_SUITE_P(
     EqualBatchTest, BinaryComputeInSecretTest,
     testing::Combine(
-        testing::Values(
-            spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             BinaryTestCase{
                 .op_type = Equal::kOpType,
@@ -88,8 +87,7 @@ INSTANTIATE_TEST_SUITE_P(
 INSTANTIATE_TEST_SUITE_P(
     EqualBatchTest, BinaryComputeInPlainTest,
     testing::Combine(
-        testing::Values(
-            spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             BinaryTestCase{
                 .op_type = Equal::kOpType,
@@ -154,8 +152,7 @@ INSTANTIATE_TEST_SUITE_P(
 INSTANTIATE_TEST_SUITE_P(
     NotEqualBatchTest, BinaryComputeInSecretTest,
     testing::Combine(
-        testing::Values(
-            spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             BinaryTestCase{
                 .op_type = NotEqual::kOpType,
@@ -215,8 +212,7 @@ INSTANTIATE_TEST_SUITE_P(
 INSTANTIATE_TEST_SUITE_P(
     NotEqualBatchTest, BinaryComputeInPlainTest,
     testing::Combine(
-        testing::Values(
-            spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             BinaryTestCase{
                 .op_type = NotEqual::kOpType,
@@ -269,8 +265,7 @@ INSTANTIATE_TEST_SUITE_P(
 INSTANTIATE_TEST_SUITE_P(
     LessBatchTest, BinaryComputeInSecretTest,
     testing::Combine(
-        testing::Values(
-            spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             BinaryTestCase{
                 .op_type = Less::kOpType,
@@ -316,8 +311,7 @@ INSTANTIATE_TEST_SUITE_P(
 INSTANTIATE_TEST_SUITE_P(
     LessBatchTest, BinaryComputeInPlainTest,
     testing::Combine(
-        testing::Values(
-            spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             BinaryTestCase{
                 .op_type = Less::kOpType,
@@ -355,8 +349,7 @@ INSTANTIATE_TEST_SUITE_P(
 INSTANTIATE_TEST_SUITE_P(
     LessEqualBatchTest, BinaryComputeInSecretTest,
     testing::Combine(
-        testing::Values(
-            spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             BinaryTestCase{
                 .op_type = LessEqual::kOpType,
@@ -402,8 +395,7 @@ INSTANTIATE_TEST_SUITE_P(
 INSTANTIATE_TEST_SUITE_P(
     LessEqualBatchTest, BinaryComputeInPlainTest,
     testing::Combine(
-        testing::Values(
-            spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             BinaryTestCase{
                 .op_type = LessEqual::kOpType,
@@ -441,8 +433,7 @@ INSTANTIATE_TEST_SUITE_P(
 INSTANTIATE_TEST_SUITE_P(
     GreaterEqualBatchTest, BinaryComputeInSecretTest,
     testing::Combine(
-        testing::Values(
-            spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             BinaryTestCase{
                 .op_type = GreaterEqual::kOpType,
@@ -488,7 +479,7 @@ INSTANTIATE_TEST_SUITE_P(
 INSTANTIATE_TEST_SUITE_P(
     GreaterEqualBatchTest, BinaryComputeInPlainTest,
     testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             BinaryTestCase{
                 .op_type = GreaterEqual::kOpType,
@@ -526,8 +517,7 @@ INSTANTIATE_TEST_SUITE_P(
 INSTANTIATE_TEST_SUITE_P(
     GreaterBatchTest, BinaryComputeInSecretTest,
     testing::Combine(
-        testing::Values(
-            spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             BinaryTestCase{
                 .op_type = Greater::kOpType,
@@ -573,7 +563,7 @@ INSTANTIATE_TEST_SUITE_P(
 INSTANTIATE_TEST_SUITE_P(
     GreaterBatchTest, BinaryComputeInPlainTest,
     testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             BinaryTestCase{
                 .op_type = Greater::kOpType,

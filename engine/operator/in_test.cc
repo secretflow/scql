@@ -36,7 +36,7 @@ struct InTestCase {
 };
 
 class InTest : public ::testing::TestWithParam<
-                   std::tuple<spu::ProtocolKind, InTestCase>> {
+                   std::tuple<test::SpuRuntimeTestCase, InTestCase>> {
  protected:
   static pb::ExecNode MakeExecNode(const InTestCase& tc);
 
@@ -47,7 +47,7 @@ class InTest : public ::testing::TestWithParam<
 INSTANTIATE_TEST_SUITE_P(
     InBatchTest, InTest,
     ::testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValues2PC,
         testing::Values(
             InTestCase{
                 .left_input = test::NamedTensor(
@@ -117,7 +117,7 @@ TEST_P(InTest, Works) {
   auto parm = GetParam();
   auto tc = std::get<1>(parm);
   auto node = MakeExecNode(tc);
-  std::vector<Session> sessions = test::Make2PCSession(std::get<0>(parm));
+  std::vector<Session> sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
   ExecContext alice_ctx(node, &sessions[0]);
   ExecContext bob_ctx(node, &sessions[1]);
@@ -125,16 +125,9 @@ TEST_P(InTest, Works) {
   FeedInputs({&alice_ctx, &bob_ctx}, tc);
 
   // When
-  test::OperatorTestRunner<In> alice;
-  test::OperatorTestRunner<In> bob;
-
-  alice.Start(&alice_ctx);
-  bob.Start(&bob_ctx);
+  EXPECT_NO_THROW(test::RunAsync<In>({&alice_ctx, &bob_ctx}));
 
   // Then
-  EXPECT_NO_THROW({ alice.Wait(); });
-  EXPECT_NO_THROW({ bob.Wait(); });
-
   if (tc.in_algo == kPsiIn) {
     auto tensor_table = alice_ctx.GetSession()->GetTensorTable();
     if (tc.reveal_to != test::kPartyAlice) {

@@ -281,7 +281,7 @@ func (ft *FieldType) RestoreAsCastType(ctx *format.RestoreCtx) {
 			ctx.WritePlainf("(%d)", ft.Decimal)
 		}
 	case mysql.TypeNewDecimal:
-		ctx.WriteKeyWord("DECIMAL")
+		ctx.WriteKeyWord(ctx.Dialect.GetCastFieldType("DECIMAL"))
 		if ft.Flen > 0 && ft.Decimal > 0 {
 			ctx.WritePlainf("(%d, %d)", ft.Flen, ft.Decimal)
 		} else if ft.Flen > 0 {
@@ -301,9 +301,9 @@ func (ft *FieldType) RestoreAsCastType(ctx *format.RestoreCtx) {
 	case mysql.TypeJSON:
 		ctx.WriteKeyWord("JSON")
 	case mysql.TypeDouble:
-		ctx.WriteKeyWord("DOUBLE")
+		ctx.WriteKeyWord(ctx.Dialect.GetCastFieldType("DOUBLE"))
 	case mysql.TypeFloat:
-		ctx.WriteKeyWord("FLOAT")
+		ctx.WriteKeyWord(ctx.Dialect.GetCastFieldType("FLOAT"))
 	}
 }
 

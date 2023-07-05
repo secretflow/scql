@@ -48,7 +48,7 @@ class LogicalAnd : public LogicalBase {
   const std::string& Type() const override;
 
  protected:
-  spu::Value ComputeOnSpu(spu::HalContext* hctx, const spu::Value& lhs,
+  spu::Value ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
                           const spu::Value& rhs) override;
 
   TensorPtr ComputeInPlain(const Tensor& lhs, const Tensor& rhs) override;
@@ -60,7 +60,7 @@ class LogicalOr : public LogicalBase {
   const std::string& Type() const override;
 
  protected:
-  spu::Value ComputeOnSpu(spu::HalContext* hctx, const spu::Value& lhs,
+  spu::Value ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
                           const spu::Value& rhs) override;
 
   TensorPtr ComputeInPlain(const Tensor& lhs, const Tensor& rhs) override;

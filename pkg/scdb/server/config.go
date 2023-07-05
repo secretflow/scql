@@ -24,6 +24,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/secretflow/scql/pkg/audit"
 	"github.com/secretflow/scql/pkg/proto-gen/spu"
 )
 
@@ -34,6 +35,16 @@ const (
 	DefaultClientTimeout        = 120 * time.Second      // 120s
 	DefaultProtocol             = "https"
 	DefaultLogLevel             = "info"
+)
+
+const (
+	DefaultEnableAudit             = true
+	DefaultAuditLogFile            = "audit/audit.log"
+	DefaultAudiDetailFile          = "audit/detail.log"
+	DefaultAuditMaxSizeInMegaBytes = 500
+	DefaultAuditMaxBackupsCount    = 10
+	DefaultAuditMaxAgeInDays       = 180
+	DefaultAuditMaxCompress        = false
 )
 
 type EngineConfig struct {
@@ -74,18 +85,19 @@ type TlsConf struct {
 // Config contains bootstrap configuration for SCDB
 type Config struct {
 	// SCDBHost is used as callback url for engine worked in async mode
-	SCDBHost             string        `yaml:"scdb_host"`
-	Port                 int           `yaml:"port"`
-	Protocol             string        `yaml:"protocol"`
-	QueryResultCbTimeout time.Duration `yaml:"query_result_callback_timeout"`
-	SessionExpireTime    time.Duration `yaml:"session_expire_time"`
-	SessionCheckInterval time.Duration `yaml:"session_expire_check_time"`
-	PasswordCheck        bool          `yaml:"password_check"`
-	LogLevel             string        `yaml:"log_level"`
-	TlsConfig            TlsConf       `yaml:"tls"`
-	Storage              StorageConf   `yaml:"storage"`
-	GRM                  GRMConf       `yaml:"grm"`
-	Engine               EngineConfig  `yaml:"engine"`
+	SCDBHost             string          `yaml:"scdb_host"`
+	Port                 int             `yaml:"port"`
+	Protocol             string          `yaml:"protocol"`
+	QueryResultCbTimeout time.Duration   `yaml:"query_result_callback_timeout"`
+	SessionExpireTime    time.Duration   `yaml:"session_expire_time"`
+	SessionCheckInterval time.Duration   `yaml:"session_expire_check_time"`
+	PasswordCheck        bool            `yaml:"password_check"`
+	LogLevel             string          `yaml:"log_level"`
+	AuditConfig          audit.AuditConf `yaml:"audit"`
+	TlsConfig            TlsConf         `yaml:"tls"`
+	Storage              StorageConf     `yaml:"storage"`
+	GRM                  GRMConf         `yaml:"grm"`
+	Engine               EngineConfig    `yaml:"engine"`
 }
 
 const (
@@ -128,8 +140,11 @@ func NewConfig(configPath string) (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file %s: %v", configPath, err)
 	}
-	var config Config
+	config := NewDefaultConfig()
 	if err = yaml.Unmarshal(content, &config); err != nil {
+		return nil, err
+	}
+	if err := CheckConfigValues(config); err != nil {
 		return nil, err
 	}
 	// get conn str from env
@@ -137,51 +152,45 @@ func NewConfig(configPath string) (*Config, error) {
 	if conStr := os.Getenv("SCDB_CONN_STR"); conStr != "" {
 		config.Storage.ConnStr = conStr
 	}
-	return SetDefaultValues(&config)
+	return config, nil
 }
 
-func SetDefaultValues(config *Config) (*Config, error) {
-	if config.QueryResultCbTimeout == 0 {
-		config.QueryResultCbTimeout = DefaultQueryResultCbTimeout
-	}
-	if config.SessionExpireTime == 0 {
-		config.SessionExpireTime = DefaultSessionExpireTime
-	}
-	if config.SessionCheckInterval == 0 {
-		config.SessionCheckInterval = DefaultSessionCheckInterval
-	}
-	if config.Protocol == "" {
-		config.Protocol = DefaultProtocol
-	}
-	if config.LogLevel == "" {
-		config.LogLevel = DefaultLogLevel
-	}
+func CheckConfigValues(config *Config) error {
 	if config.Protocol == DefaultProtocol && (config.TlsConfig.CertFile == "" || config.TlsConfig.KeyFile == "") {
-		return nil, fmt.Errorf("SCDB work in https, cert_file or key_file couldn't be empty")
-	}
-	if config.Storage.MaxIdleConns == 0 {
-		config.Storage.MaxIdleConns = 1
-	}
-	if config.Storage.MaxOpenConns == 0 {
-		config.Storage.MaxOpenConns = 1
-	}
-	if config.Storage.ConnMaxIdleTime == 0 {
-		config.Storage.ConnMaxIdleTime = -1
-	}
-	if config.Storage.ConnMaxLifetime == 0 {
-		config.Storage.ConnMaxLifetime = -1
-	}
-	if config.Engine.ClientTimeout == 0 {
-		config.Engine.ClientTimeout = DefaultClientTimeout
-	}
-	if config.Engine.Protocol == "" {
-		config.Engine.Protocol = DefaultProtocol
+		return fmt.Errorf("SCDB work in https, cert_file or key_file couldn't be empty")
 	}
 	if config.Engine.SpuRuntimeCfg == nil {
-		return nil, fmt.Errorf("SpuRuntimeCfg is empty")
+		return fmt.Errorf("SpuRuntimeCfg is empty")
 	}
+	return nil
+}
 
-	return config, nil
+func NewDefaultConfig() *Config {
+	var config Config
+	config.AuditConfig = audit.AuditConf{
+		EnableAuditLog:          DefaultEnableAudit,
+		AuditLogFile:            DefaultAuditLogFile,
+		AuditDetailFile:         DefaultAudiDetailFile,
+		AuditMaxSizeInMegaBytes: DefaultAuditMaxSizeInMegaBytes,
+		AuditMaxBackupsCount:    DefaultAuditMaxBackupsCount,
+		AuditMaxAgeInDays:       DefaultAuditMaxAgeInDays,
+		AuditMaxCompress:        DefaultAuditMaxCompress,
+	}
+	config.QueryResultCbTimeout = DefaultQueryResultCbTimeout
+	config.SessionExpireTime = DefaultSessionExpireTime
+	config.SessionCheckInterval = DefaultSessionCheckInterval
+	config.Protocol = DefaultProtocol
+	config.Storage = StorageConf{
+		MaxIdleConns:    1,
+		MaxOpenConns:    1,
+		ConnMaxIdleTime: -1,
+		ConnMaxLifetime: -1,
+	}
+	config.Engine = EngineConfig{
+		ClientTimeout: DefaultClientTimeout,
+		Protocol:      DefaultProtocol,
+	}
+	return &config
 }
 
 func NewSpuRuntimeCfg(config *RuntimeCfg) (*spu.RuntimeConfig, error) {

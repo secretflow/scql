@@ -32,8 +32,9 @@ struct MakeShareTestCase {
   std::vector<std::string> output_names;
 };
 
-class MakeShareTest : public testing::TestWithParam<
-                          std::tuple<spu::ProtocolKind, MakeShareTestCase>> {
+class MakeShareTest
+    : public testing::TestWithParam<
+          std::tuple<test::SpuRuntimeTestCase, MakeShareTestCase>> {
  protected:
   static pb::ExecNode MakeExecNode(const MakeShareTestCase& tc);
   static void FeedInputs(ExecContext* ctx, const MakeShareTestCase& tc);
@@ -42,7 +43,7 @@ class MakeShareTest : public testing::TestWithParam<
 INSTANTIATE_TEST_SUITE_P(
     MakeShareBatchTest, MakeShareTest,
     testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             MakeShareTestCase{
                 .inputs =
@@ -90,34 +91,30 @@ TEST_P(MakeShareTest, works) {
   auto parm = GetParam();
   auto tc = std::get<1>(parm);
   auto node = MakeExecNode(tc);
-  std::vector<Session> sessions = test::Make2PCSession(std::get<0>(parm));
+  std::vector<Session> sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
-  ExecContext alice_ctx(node, &sessions[0]);
-  ExecContext bob_ctx(node, &sessions[1]);
+  std::vector<ExecContext> exec_ctxs;
+  for (size_t idx = 0; idx < sessions.size(); ++idx) {
+    exec_ctxs.emplace_back(node, &sessions[idx]);
+  }
 
   // feed inputs
-  FeedInputs(&alice_ctx, tc);
-  FeedInputs(&bob_ctx, tc);
+  std::vector<ExecContext*> ctx_ptrs;
+  for (size_t idx = 0; idx < exec_ctxs.size(); ++idx) {
+    ctx_ptrs.emplace_back(&exec_ctxs[idx]);
+  }
+  FeedInputs(ctx_ptrs[0], tc);
+  FeedInputs(ctx_ptrs[1], tc);
 
   // When
-  test::OperatorTestRunner<MakeShare> alice;
-  test::OperatorTestRunner<MakeShare> bob;
-
-  alice.Start(&alice_ctx);
-  bob.Start(&bob_ctx);
-
-  // Then
-  EXPECT_NO_THROW({ alice.Wait(); });
-  EXPECT_NO_THROW({ bob.Wait(); });
+  EXPECT_NO_THROW(test::RunAsync<MakeShare>(ctx_ptrs));
 
   for (size_t i = 0; i < tc.output_names.size(); ++i) {
     TensorPtr t = nullptr;
-    EXPECT_NO_THROW({
-      t = test::RevealSecret({&alice_ctx, &bob_ctx}, tc.output_names[i]);
-    });
+    EXPECT_NO_THROW({ t = test::RevealSecret(ctx_ptrs, tc.output_names[i]); });
     // convert hash to string for string tensor in spu
     if (tc.inputs[i].tensor->Type() == pb::PrimitiveDataType::STRING) {
-      auto ctx = tc.owners[i] == 0 ? alice_ctx : bob_ctx;
+      auto ctx = tc.owners[i] == 0 ? exec_ctxs[0] : exec_ctxs[1];
       t = ctx.GetSession()->HashToString(*t);
     }
 

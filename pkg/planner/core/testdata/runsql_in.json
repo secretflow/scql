@@ -4,208 +4,287 @@
     "cases": [
       {
         "sql": "select * from alice.tbl_1",
-        "skipProjection": true,
-        "rewrittenSql": "select aggregate_float_0, aggregate_float_1, aggregate_float_2, aggregate_long_0, aggregate_long_1, aggregate_long_2, aggregate_string_0, aggregate_string_1, aggregate_string_2, compare_float_0, compare_float_1, compare_float_2, compare_long_0, compare_long_1, compare_long_2, compare_string_0, compare_string_1, compare_string_2, encrypt_float_0, encrypt_float_1, encrypt_float_2, encrypt_long_0, encrypt_long_1, encrypt_long_2, encrypt_string_0, encrypt_string_1, encrypt_string_2, groupby_float_0, groupby_float_1, groupby_float_2, groupby_long_0, groupby_long_1, groupby_long_2, groupby_string_0, groupby_string_1, groupby_string_2, join_float_0, join_float_1, join_float_2, join_long_0, join_long_1, join_long_2, join_string_0, join_string_1, join_string_2, plain_float_0, plain_float_1, plain_float_2, plain_long_0, plain_long_1, plain_long_2, plain_string_0, plain_string_1, plain_string_2 from alice.tbl_1"
+        "skip_projection": true,
+        "rewritten_sql": "select tbl_1.aggregate_float_0,tbl_1.aggregate_float_1,tbl_1.aggregate_float_2,tbl_1.aggregate_long_0,tbl_1.aggregate_long_1,tbl_1.aggregate_long_2,tbl_1.aggregate_string_0,tbl_1.aggregate_string_1,tbl_1.aggregate_string_2,tbl_1.compare_float_0,tbl_1.compare_float_1,tbl_1.compare_float_2,tbl_1.compare_long_0,tbl_1.compare_long_1,tbl_1.compare_long_2,tbl_1.compare_string_0,tbl_1.compare_string_1,tbl_1.compare_string_2,tbl_1.encrypt_float_0,tbl_1.encrypt_float_1,tbl_1.encrypt_float_2,tbl_1.encrypt_long_0,tbl_1.encrypt_long_1,tbl_1.encrypt_long_2,tbl_1.encrypt_string_0,tbl_1.encrypt_string_1,tbl_1.encrypt_string_2,tbl_1.groupby_float_0,tbl_1.groupby_float_1,tbl_1.groupby_float_2,tbl_1.groupby_long_0,tbl_1.groupby_long_1,tbl_1.groupby_long_2,tbl_1.groupby_string_0,tbl_1.groupby_string_1,tbl_1.groupby_string_2,tbl_1.join_float_0,tbl_1.join_float_1,tbl_1.join_float_2,tbl_1.join_long_0,tbl_1.join_long_1,tbl_1.join_long_2,tbl_1.join_string_0,tbl_1.join_string_1,tbl_1.join_string_2,tbl_1.plain_float_0,tbl_1.plain_float_1,tbl_1.plain_float_2,tbl_1.plain_long_0,tbl_1.plain_long_1,tbl_1.plain_long_2,tbl_1.plain_string_0,tbl_1.plain_string_1,tbl_1.plain_string_2 from alice.tbl_1"
       },
       {
         "sql": "select * from alice.tbl_1",
-        "skipProjection": false,
-        "rewrittenSql": "select alice.tbl_1.aggregate_float_0, alice.tbl_1.aggregate_float_1, alice.tbl_1.aggregate_float_2, alice.tbl_1.aggregate_long_0, alice.tbl_1.aggregate_long_1, alice.tbl_1.aggregate_long_2, alice.tbl_1.aggregate_string_0, alice.tbl_1.aggregate_string_1, alice.tbl_1.aggregate_string_2, alice.tbl_1.compare_float_0, alice.tbl_1.compare_float_1, alice.tbl_1.compare_float_2, alice.tbl_1.compare_long_0, alice.tbl_1.compare_long_1, alice.tbl_1.compare_long_2, alice.tbl_1.compare_string_0, alice.tbl_1.compare_string_1, alice.tbl_1.compare_string_2, alice.tbl_1.encrypt_float_0, alice.tbl_1.encrypt_float_1, alice.tbl_1.encrypt_float_2, alice.tbl_1.encrypt_long_0, alice.tbl_1.encrypt_long_1, alice.tbl_1.encrypt_long_2, alice.tbl_1.encrypt_string_0, alice.tbl_1.encrypt_string_1, alice.tbl_1.encrypt_string_2, alice.tbl_1.groupby_float_0, alice.tbl_1.groupby_float_1, alice.tbl_1.groupby_float_2, alice.tbl_1.groupby_long_0, alice.tbl_1.groupby_long_1, alice.tbl_1.groupby_long_2, alice.tbl_1.groupby_string_0, alice.tbl_1.groupby_string_1, alice.tbl_1.groupby_string_2, alice.tbl_1.join_float_0, alice.tbl_1.join_float_1, alice.tbl_1.join_float_2, alice.tbl_1.join_long_0, alice.tbl_1.join_long_1, alice.tbl_1.join_long_2, alice.tbl_1.join_string_0, alice.tbl_1.join_string_1, alice.tbl_1.join_string_2, alice.tbl_1.plain_float_0, alice.tbl_1.plain_float_1, alice.tbl_1.plain_float_2, alice.tbl_1.plain_long_0, alice.tbl_1.plain_long_1, alice.tbl_1.plain_long_2, alice.tbl_1.plain_string_0, alice.tbl_1.plain_string_1, alice.tbl_1.plain_string_2 from alice.tbl_1"
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_1.aggregate_float_0,tbl_1.aggregate_float_1,tbl_1.aggregate_float_2,tbl_1.aggregate_long_0,tbl_1.aggregate_long_1,tbl_1.aggregate_long_2,tbl_1.aggregate_string_0,tbl_1.aggregate_string_1,tbl_1.aggregate_string_2,tbl_1.compare_float_0,tbl_1.compare_float_1,tbl_1.compare_float_2,tbl_1.compare_long_0,tbl_1.compare_long_1,tbl_1.compare_long_2,tbl_1.compare_string_0,tbl_1.compare_string_1,tbl_1.compare_string_2,tbl_1.encrypt_float_0,tbl_1.encrypt_float_1,tbl_1.encrypt_float_2,tbl_1.encrypt_long_0,tbl_1.encrypt_long_1,tbl_1.encrypt_long_2,tbl_1.encrypt_string_0,tbl_1.encrypt_string_1,tbl_1.encrypt_string_2,tbl_1.groupby_float_0,tbl_1.groupby_float_1,tbl_1.groupby_float_2,tbl_1.groupby_long_0,tbl_1.groupby_long_1,tbl_1.groupby_long_2,tbl_1.groupby_string_0,tbl_1.groupby_string_1,tbl_1.groupby_string_2,tbl_1.join_float_0,tbl_1.join_float_1,tbl_1.join_float_2,tbl_1.join_long_0,tbl_1.join_long_1,tbl_1.join_long_2,tbl_1.join_string_0,tbl_1.join_string_1,tbl_1.join_string_2,tbl_1.plain_float_0,tbl_1.plain_float_1,tbl_1.plain_float_2,tbl_1.plain_long_0,tbl_1.plain_long_1,tbl_1.plain_long_2,tbl_1.plain_string_0,tbl_1.plain_string_1,tbl_1.plain_string_2 from alice.tbl_1"
       },
       {
         "sql": "select plain_float_0 from alice.tbl_1",
-        "skipProjection": false,
-        "rewrittenSql": "select alice.tbl_1.plain_float_0 from alice.tbl_1"
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_1.plain_float_0 from alice.tbl_1"
       },
       {
         "sql": "select plain_float_0, plain_float_0 from alice.tbl_1",
-        "skipProjection": false,
-        "rewrittenSql": "select alice.tbl_1.plain_float_0, alice.tbl_1.plain_float_0 from alice.tbl_1"
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_1.plain_float_0,tbl_1.plain_float_0 from alice.tbl_1"
       },
       {
         "sql": "select fl, fl from (select plain_float_0 as fl, plain_float_0 as fl2 from alice.tbl_1 as alice1) as alice2;",
-        "skipProjection": false,
-        "rewrittenSql": "select alice1.plain_float_0 as fl, alice1.plain_float_0 as fl from alice.tbl_1 as alice1"
+        "skip_projection": false,
+        "rewritten_sql": "select alice1.plain_float_0 as fl,alice1.plain_float_0 as fl from alice.tbl_1 as alice1"
       },
       {
         "sql": "select plain_float_0 as fl from alice.tbl_1",
-        "skipProjection": false,
-        "rewrittenSql": "select alice.tbl_1.plain_float_0 as fl from alice.tbl_1"
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1"
       },
       {
         "sql": "select plain_float_0 as fl from alice.tbl_1 as alice",
-        "skipProjection": false,
-        "rewrittenSql": "select alice.plain_float_0 as fl from alice.tbl_1 as alice"
+        "skip_projection": false,
+        "rewritten_sql": "select alice.plain_float_0 as fl from alice.tbl_1 as alice"
+      },
+      {
+        "sql": "select ifnull(plain_float_0, plain_float_1) as fl from alice.tbl_1 as alice",
+        "skip_projection": false,
+        "rewritten_sql": "select ifnull(alice.plain_float_0, alice.plain_float_1) as fl from alice.tbl_1 as alice",
+        "rewritten_sql_pg": "select coalesce(alice.plain_float_0, alice.plain_float_1) as fl from alice.tbl_1 as alice"
+      },
+      {
+        "sql": "select if(plain_float_0 > 0, plain_float_0, plain_float_1) as fl from alice.tbl_1 as alice",
+        "skip_projection": false,
+        "rewritten_sql": "select if(alice.plain_float_0>0, alice.plain_float_0, alice.plain_float_1) as fl from alice.tbl_1 as alice",
+        "skip_pg_test": true
+      },
+      {
+        "sql": "select plain_float_0 + plain_float_1 as fl from alice.tbl_1",
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_1.plain_float_0+tbl_1.plain_float_1 as fl from alice.tbl_1"
+      },
+      {
+        "sql": "select plain_float_0 % plain_long_0 as fl from alice.tbl_1 where tbl_1.plain_long_0 != 0",
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_1.plain_float_0%tbl_1.plain_long_0 as fl from alice.tbl_1 where tbl_1.plain_long_0!=0"
       },
       {
         "sql": "select plain_float_0 + plain_float_1 as fl from alice.tbl_1 where plain_float_0 + plain_float_1 > 0",
-        "skipProjection": false,
-        "rewrittenSql": "select (plain_float_0 + plain_float_1) as fl from alice.tbl_1 where ((plain_float_0 + plain_float_1)>0)"
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_1.plain_float_0+tbl_1.plain_float_1 as fl from alice.tbl_1 where (tbl_1.plain_float_0+tbl_1.plain_float_1)>0"
       },
       {
         "sql": "select plain_float_0 as fl from alice.tbl_1 where plain_string_0 = '{\"a\":\"b\"}'",
-        "skipProjection": false,
-        "rewrittenSql": "select plain_float_0 as fl from alice.tbl_1 where (plain_string_0=\"{\\\"a\\\":\\\"b\\\"}\")"
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1 where tbl_1.plain_string_0='{\"a\":\"b\"}'"
       },
       {
         "sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_long_0 = tbl_2.plain_long_0",
-        "skipProjection": false,
-        "rewrittenSql": "select alice.tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on (alice.tbl_1.plain_long_0=alice.tbl_2.plain_long_0)"
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_long_0=tbl_2.plain_long_0"
       },
       {
         "sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_long_0 = tbl_2.plain_long_0",
-        "skipProjection": true,
-        "rewrittenSql": "select alice.tbl_1.plain_float_0, alice.tbl_1.plain_long_0, alice.tbl_2.plain_long_0 from alice.tbl_1 join alice.tbl_2 on (alice.tbl_1.plain_long_0=alice.tbl_2.plain_long_0)"
+        "skip_projection": true,
+        "rewritten_sql": "select tbl_1.plain_float_0,tbl_1.plain_long_0,tbl_2.plain_long_0 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_long_0=tbl_2.plain_long_0"
       },
       {
         "sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_long_0 = tbl_2.plain_long_0 limit 1,2",
-        "skipProjection": false,
-        "rewrittenSql": "select alice.tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on (alice.tbl_1.plain_long_0=alice.tbl_2.plain_long_0) limit 2 offset 1"
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_long_0=tbl_2.plain_long_0 limit 1,2"
       },
       {
         "sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_long_0 = tbl_2.plain_long_0 order by fl limit 1,2",
-        "skipProjection": false,
-        "rewrittenSql": "select alice.tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on (alice.tbl_1.plain_long_0=alice.tbl_2.plain_long_0) order by fl limit 2 offset 1"
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_long_0=tbl_2.plain_long_0 order by tbl_1.plain_float_0 limit 1,2"
       },
       {
         "sql": "select count(*) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_long_0 = tbl_2.plain_long_0 group by tbl_1.plain_float_0 having count(*) > 3",
-        "skipProjection": false,
-        "rewrittenSql": "select count(1) as c from alice.tbl_1 join alice.tbl_2 on (alice.tbl_1.plain_long_0=alice.tbl_2.plain_long_0) group by alice.tbl_1.plain_float_0 having (count(1)>3)"
+        "skip_projection": false,
+        "rewritten_sql": "select count(1) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_long_0=tbl_2.plain_long_0 group by tbl_1.plain_float_0 having count(1)>3"
       },
       {
         "sql": "select sum(tbl_1.plain_float_0) as ss from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_long_0 = tbl_2.plain_long_0 group by tbl_1.plain_float_0 having count(*) > 3",
-        "skipProjection": false,
-        "rewrittenSql": "select sum(alice.tbl_1.plain_float_0) as ss from alice.tbl_1 join alice.tbl_2 on (alice.tbl_1.plain_long_0=alice.tbl_2.plain_long_0) group by alice.tbl_1.plain_float_0 having (count(1)>3)"
+        "skip_projection": false,
+        "rewritten_sql": "select sum(tbl_1.plain_float_0) as ss from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_long_0=tbl_2.plain_long_0 group by tbl_1.plain_float_0 having count(1)>3"
       },
       {
         "sql": "select sum(distinct(tbl_1.compare_float_0)) as ss, count(distinct(tbl_1.compare_float_0)) as ss from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_long_0 = tbl_2.plain_long_0 group by tbl_1.plain_float_0",
-        "skipProjection": false,
-        "rewrittenSql": "select sum(distinct(alice.tbl_1.compare_float_0)) as ss, count(distinct(alice.tbl_1.compare_float_0)) as ss from alice.tbl_1 join alice.tbl_2 on (alice.tbl_1.plain_long_0=alice.tbl_2.plain_long_0) group by alice.tbl_1.plain_float_0"
+        "skip_projection": false,
+        "rewritten_sql": "select sum(distinct tbl_1.compare_float_0) as ss,count(distinct tbl_1.compare_float_0) as ss from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_long_0=tbl_2.plain_long_0 group by tbl_1.plain_float_0"
       },
       {
         "sql": "select tbl_1.plain_float_0 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_long_0 = tbl_2.plain_long_0 group by tbl_1.plain_float_0 having count(*) > 0",
-        "skipProjection": false,
-        "rewrittenSql": "select alice.tbl_1.plain_float_0 from alice.tbl_1 join alice.tbl_2 on (alice.tbl_1.plain_long_0=alice.tbl_2.plain_long_0) group by alice.tbl_1.plain_float_0 having (count(1)>0)"
+        "skip_projection": false,
+        "rewritten_sql": "select any_value(tbl_1.plain_float_0) as expr_110 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_long_0=tbl_2.plain_long_0 group by tbl_1.plain_float_0 having count(1)>0",
+        "rewritten_sql_pg": "select tbl_1.plain_float_0 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_long_0=tbl_2.plain_long_0 group by tbl_1.plain_float_0 having count(1)>0"
       },
       {
         "sql": "select tbl_1.plain_float_0 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_long_0 = tbl_2.plain_long_0 group by tbl_1.plain_float_0 having count(*) > 0 and sum(tbl_1.plain_float_0) > 100 and tbl_1.plain_float_0 > 3",
-        "skipProjection": false,
-        "rewrittenSql": "select t_LogicalSelection.plain_float_0 from (select plain_float_0, plain_long_0 from alice.tbl_1 where (plain_float_0>3)) as t_LogicalSelection join alice.tbl_2 on (t_LogicalSelection.plain_long_0=alice.tbl_2.plain_long_0) group by t_LogicalSelection.plain_float_0 having (count(1)>0) and (sum(t_LogicalSelection.plain_float_0)>100)"
+        "skip_projection": false,
+        "rewritten_sql": "select any_value(t_0.plain_float_0) as expr_111 from (select tbl_1.plain_float_0,tbl_1.plain_long_0 from alice.tbl_1 where tbl_1.plain_float_0>3) as t_0 join alice.tbl_2 on t_0.plain_long_0=tbl_2.plain_long_0 group by t_0.plain_float_0 having (count(1)>0) and (sum(t_0.plain_float_0)>100)",
+        "rewritten_sql_pg": "select t_0.plain_float_0 from (select tbl_1.plain_float_0,tbl_1.plain_long_0 from alice.tbl_1 where tbl_1.plain_float_0>3) as t_0 join alice.tbl_2 on t_0.plain_long_0=tbl_2.plain_long_0 group by t_0.plain_float_0 having (count(1)>0) and (sum(t_0.plain_float_0)>100)"
       },
       {
         "sql": "select count(*) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_long_0 = tbl_2.plain_long_0 group by tbl_1.plain_float_0",
-        "skipProjection": false,
-        "rewrittenSql": "select count(1) as c from alice.tbl_1 join alice.tbl_2 on (alice.tbl_1.plain_long_0=alice.tbl_2.plain_long_0) group by alice.tbl_1.plain_float_0"
+        "skip_projection": false,
+        "rewritten_sql": "select count(1) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_long_0=tbl_2.plain_long_0 group by tbl_1.plain_float_0"
       },
       {
         "sql": "select count(*) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_long_0 = tbl_2.plain_long_0 group by tbl_1.plain_float_0 having c > 1",
-        "skipProjection": false,
-        "rewrittenSql": "select count(1) as c from alice.tbl_1 join alice.tbl_2 on (alice.tbl_1.plain_long_0=alice.tbl_2.plain_long_0) group by alice.tbl_1.plain_float_0 having (c>1)"
-      },
-      {
-        "sql": "select count(*) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_long_0 = tbl_2.plain_long_0 group by tbl_1.plain_float_0 having c > 1",
-        "skipProjection": false,
-        "rewrittenSql": "select count(1) as c from alice.tbl_1 join alice.tbl_2 on (alice.tbl_1.plain_long_0=alice.tbl_2.plain_long_0) group by alice.tbl_1.plain_float_0 having (c>1)"
+        "skip_projection": false,
+        "rewritten_sql": "select count(1) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_long_0=tbl_2.plain_long_0 group by tbl_1.plain_float_0 having count(1)>1"
       },
       {
         "sql": "select count(distinct (alice.tbl_1.plain_float_0)) as co,sum(distinct (alice.tbl_1.plain_long_0)) as su from alice.tbl_1",
-        "skipProjection": false,
-        "rewrittenSql": "select count(distinct(alice.tbl_1.plain_float_0)) as co, sum(distinct(alice.tbl_1.plain_long_0)) as su from alice.tbl_1"
+        "skip_projection": false,
+        "rewritten_sql": "select count(distinct tbl_1.plain_float_0) as co,sum(distinct tbl_1.plain_long_0) as su from alice.tbl_1"
       },
       {
         "sql": "select plain_long_0 from alice.tbl_1 union all select plain_long_0 from alice.tbl_2",
-        "skipProjection": false,
-        "rewrittenSql": "(select plain_long_0 from alice.tbl_1) union all (select plain_long_0 from alice.tbl_2)"
+        "skip_projection": false,
+        "rewritten_sql": "select t_0.plain_long_0 from ((select tbl_1.plain_long_0 from alice.tbl_1) union all (select tbl_2.plain_long_0 from alice.tbl_2)) as t_0"
+      },
+      {
+        "sql": "select plain_long_0 as p from alice.tbl_1 union all select plain_long_0 from alice.tbl_2",
+        "skip_projection": false,
+        "rewritten_sql": "select t_0.plain_long_0 as p from ((select tbl_1.plain_long_0 from alice.tbl_1) union all (select tbl_2.plain_long_0 from alice.tbl_2)) as t_0"
       },
       {
         "sql": "select plain_long_0 as l from alice.tbl_1 union all select plain_long_1 as l from alice.tbl_1 union all select plain_long_2 as l from alice.tbl_1",
-        "skipProjection": false,
-        "rewrittenSql": "(select alice.tbl_1.plain_long_0 as l from alice.tbl_1) union all (select alice.tbl_1.plain_long_1 as l from alice.tbl_1) union all (select alice.tbl_1.plain_long_2 as l from alice.tbl_1)"
+        "skip_projection": false,
+        "rewritten_sql": "select t_0.plain_long_0 as l from ((select tbl_1.plain_long_0 from alice.tbl_1) union all (select tbl_1.plain_long_1 from alice.tbl_1) union all (select tbl_1.plain_long_2 from alice.tbl_1)) as t_0"
       },
       {
         "sql": "select cnt from (select count(*) as cnt from alice.tbl_1 union all select count(*) as cnt from alice.tbl_2 union all select count(*) as cnt from alice.tbl_0) as a",
-        "skipProjection": false,
-        "rewrittenSql": "select cnt from ((select count(1) as cnt from alice.tbl_1) union all (select count(1) as cnt from alice.tbl_2) union all (select count(1) as cnt from alice.tbl_0)) as a"
+        "skip_projection": false,
+        "rewritten_sql": "select a.expr_166 as cnt from ((select count(1) as expr_166 from alice.tbl_1) union all (select count(1) as expr_166 from alice.tbl_2) union all (select count(1) as expr_166 from alice.tbl_0)) as a"
       },
       {
         "sql": "select tbl_1.plain_long_0, '123' as constStr, 123 as constInt from alice.tbl_1",
-        "skipProjection": false,
-        "rewrittenSql": "select alice.tbl_1.plain_long_0, \"123\" as constStr, 123 as constInt from alice.tbl_1"
-      },
-      {
-        "sql": "select plain_long_0, rank() over (partition by plain_long_0, plain_long_1 order by plain_long_0, plain_long_1) my_rank from alice.tbl_1",
-        "skipProjection": false,
-        "rewrittenSql": "select alice.tbl_1.plain_long_0, rank() over (partition by alice.tbl_1.plain_long_0, alice.tbl_1.plain_long_1 order by alice.tbl_1.plain_long_0, alice.tbl_1.plain_long_1) as my_rank from alice.tbl_1"
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_1.plain_long_0,'123' as constStr,123 as constInt from alice.tbl_1"
       },
       {
         "sql": "select plain_long_0 in (select plain_long_0 from alice.tbl_1) from alice.tbl_0",
-        "skipProjection": false,
-        "rewrittenSql": "select alice.tbl_0.plain_long_0 in (select plain_long_0 from alice.tbl_1) from alice.tbl_0"
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_0.plain_long_0 in (select tbl_1.plain_long_0 from alice.tbl_1) as expr_109 from alice.tbl_0"
       },
       {
         "sql": "select plain_long_1, plain_long_0 not in (select plain_long_0 from alice.tbl_1) as tt from alice.tbl_0",
-        "skipProjection": false,
-        "rewrittenSql": "select plain_long_1, alice.tbl_0.plain_long_0 not in (select plain_long_0 from alice.tbl_1) as tt from alice.tbl_0"
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_0.plain_long_1,tbl_0.plain_long_0 not in (select tbl_1.plain_long_0 from alice.tbl_1) as tt from alice.tbl_0"
       },
       {
         "sql": "select plain_long_0 from alice.tbl_0 where plain_long_0 in (select plain_long_0 from alice.tbl_1)",
-        "skipProjection": false,
-        "rewrittenSql": "select plain_long_0 from alice.tbl_0 where (alice.tbl_0.plain_long_0 in (select plain_long_0 from alice.tbl_1))"
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_0.plain_long_0 from alice.tbl_0 where tbl_0.plain_long_0 in (select tbl_1.plain_long_0 from alice.tbl_1)"
+      },
+      {
+        "sql": "select plain_long_0 from alice.tbl_0 where (plain_long_0 in (select plain_long_0 from alice.tbl_1)) and plain_long_0 > 0",
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_0.plain_long_0 from alice.tbl_0 where (tbl_0.plain_long_0>0) and (tbl_0.plain_long_0 in (select tbl_1.plain_long_0 from alice.tbl_1))"
       },
       {
         "sql": "select plain_long_0 from alice.tbl_0 where plain_long_0 not in (select plain_long_0 from alice.tbl_1)",
-        "skipProjection": false,
-        "rewrittenSql": "select plain_long_0 from alice.tbl_0 where (alice.tbl_0.plain_long_0 not in (select plain_long_0 from alice.tbl_1))"
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_0.plain_long_0 from alice.tbl_0 where tbl_0.plain_long_0 not in (select tbl_1.plain_long_0 from alice.tbl_1)"
       },
       {
         "sql": "select t1.plain_long_0 from alice.tbl_0 as t1 join alice.tbl_1 as t2 on t1.plain_long_0 = t2.plain_long_0",
-        "skipProjection": false,
-        "rewrittenSql": "select t1.plain_long_0 from alice.tbl_0 as t1 join alice.tbl_1 as t2 on (t1.plain_long_0=t2.plain_long_0)"
+        "skip_projection": false,
+        "rewritten_sql": "select t1.plain_long_0 from alice.tbl_0 as t1 join alice.tbl_1 as t2 on t1.plain_long_0=t2.plain_long_0"
       },
       {
         "sql": "select alice.tbl_0.plain_long_0 from alice.tbl_0 join alice.tbl_1 on alice.tbl_0.plain_long_0 = alice.tbl_1.plain_long_0",
-        "skipProjection": false,
-        "rewrittenSql": "select alice.tbl_0.plain_long_0 from alice.tbl_0 join alice.tbl_1 on (alice.tbl_0.plain_long_0=alice.tbl_1.plain_long_0)"
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_0.plain_long_0 from alice.tbl_0 join alice.tbl_1 on tbl_0.plain_long_0=tbl_1.plain_long_0"
       },
       {
         "sql": "select concat(alice.tbl_0.plain_string_0, alice.tbl_0.plain_string_1) as tg, (alice.tbl_0.plain_long_0 + alice.tbl_1.plain_long_0) as tt from alice.tbl_0 join alice.tbl_1 on alice.tbl_0.plain_long_0 = alice.tbl_1.plain_long_0",
-        "skipProjection": false,
-        "rewrittenSql": "select concat(alice.tbl_0.plain_string_0,alice.tbl_0.plain_string_1) as tg, (alice.tbl_0.plain_long_0 + alice.tbl_1.plain_long_0) as tt from alice.tbl_0 join alice.tbl_1 on (alice.tbl_0.plain_long_0=alice.tbl_1.plain_long_0)"
+        "skip_projection": false,
+        "rewritten_sql": "select concat(tbl_0.plain_string_0, tbl_0.plain_string_1) as tg,tbl_0.plain_long_0+tbl_1.plain_long_0 as tt from alice.tbl_0 join alice.tbl_1 on tbl_0.plain_long_0=tbl_1.plain_long_0"
       },
       {
         "sql": "select concat(alice.tbl_0.plain_string_0, alice.tbl_0.plain_string_1) as tt from alice.tbl_0",
-        "skipProjection": false,
-        "rewrittenSql": "select concat(alice.tbl_0.plain_string_0,alice.tbl_0.plain_string_1) as tt from alice.tbl_0"
+        "skip_projection": false,
+        "rewritten_sql": "select concat(tbl_0.plain_string_0, tbl_0.plain_string_1) as tt from alice.tbl_0"
       },
       {
         "sql": "select concat(alice.tbl_0.plain_string_0, alice.tbl_0.plain_string_1) as tt from alice.tbl_0",
-        "skipProjection": true,
-        "rewrittenSql": "select plain_string_0, plain_string_1 from alice.tbl_0"
+        "skip_projection": true,
+        "rewritten_sql": "select tbl_0.plain_string_0,tbl_0.plain_string_1 from alice.tbl_0"
+      },
+      {
+        "sql": "select count(*), sum(sumId), max(minId), min(maxId) from (select t.plain_long_0, sum(t.plain_long_1) as sumId, max(t.plain_long_1) as maxId, min(t.plain_long_2) as minId from alice.tbl_0 as t group by t.plain_long_0) as hp",
+        "skip_projection": false,
+        "rewritten_sql": "select count(1) as expr_58,sum(t_0.expr_55) as expr_59,max(t_0.expr_57) as expr_60,min(t_0.expr_56) as expr_61 from (select sum(t.plain_long_1) as expr_55,max(t.plain_long_1) as expr_56,min(t.plain_long_2) as expr_57,count(1) as expr_62 from alice.tbl_0 as t group by t.plain_long_0) as t_0"
+      },
+      {
+        "sql": "select count(*) from (select encrypt_float_0, encrypt_float_1 from alice.tbl_1 as t union all select encrypt_float_0, encrypt_float_1 from alice.tbl_1 as t1) as tt group by tt.encrypt_float_0",
+        "skip_projection": false,
+        "rewritten_sql": "select count(tt.expr_112) as expr_111 from ((select count(1) as expr_112,any_value(t.encrypt_float_0) as expr_109 from alice.tbl_1 as t group by t.encrypt_float_0) union all (select count(1) as expr_112,any_value(t1.encrypt_float_0) as expr_109 from alice.tbl_1 as t1 group by t1.encrypt_float_0)) as tt group by tt.expr_109",
+        "rewritten_sql_pg": "select count(tt.expr_112) as expr_111 from ((select count(1) as expr_112,t.encrypt_float_0 from alice.tbl_1 as t group by t.encrypt_float_0) union all (select count(1) as expr_112,t1.encrypt_float_0 from alice.tbl_1 as t1 group by t1.encrypt_float_0)) as tt group by tt.encrypt_float_0"
       },
       {
         "sql": "select min(alice.compare_float_0*alice.compare_float_1) as m from alice.tbl_0 as alice;",
-        "skipProjection": false,
-        "rewrittenSql": "select min(cast((alice.compare_float_0 * alice.compare_float_1) as decimal(64, 30))) as m from alice.tbl_0 as alice"
+        "skip_projection": false,
+        "rewritten_sql": "select min(alice.compare_float_0*alice.compare_float_1) as m from alice.tbl_0 as alice",
+        "rewritten_sql_pg": "select min(alice.compare_float_0*alice.compare_float_1) as m from alice.tbl_0 as alice"
       },
       {
         "sql": "select cast(alice.compare_float_0 as decimal(11,2)) as m from alice.tbl_0 as alice;",
-        "skipProjection": false,
-        "rewrittenSql": "select cast(alice.compare_float_0 as decimal(11, 2)) as m from alice.tbl_0 as alice"
+        "skip_projection": false,
+        "rewritten_sql": "select cast(alice.compare_float_0 as decimal(11, 2)) as m from alice.tbl_0 as alice",
+        "rewritten_sql_pg": "select cast(alice.compare_float_0 as numeric(11, 2)) as m from alice.tbl_0 as alice"
       },
       {
         "sql": "select cast(alice.compare_string_0 as CHAR(100)) as m from alice.tbl_0 as alice;",
-        "skipProjection": false,
-        "rewrittenSql": "select cast(alice.compare_string_0 as char(100)) as m from alice.tbl_0 as alice"
+        "skip_projection": false,
+        "rewritten_sql": "select cast(alice.compare_string_0 as char(100)) as m from alice.tbl_0 as alice"
       },
       {
         "sql": "select cast(alice.compare_float_0 as double) as m from alice.tbl_0 as alice;",
-        "skipProjection": false,
-        "rewrittenSql": "select cast(alice.compare_float_0 as decimal(64, 30)) as m from alice.tbl_0 as alice"
+        "skip_projection": false,
+        "rewritten_sql": "select cast(alice.compare_float_0 as decimal(64,30)) as m from alice.tbl_0 as alice",
+        "rewritten_sql_pg": "select cast(alice.compare_float_0 as numeric) as m from alice.tbl_0 as alice"
       },
       {
         "sql": "select cast(alice.compare_float_0 as decimal(11)) as m from alice.tbl_0 as alice;",
-        "skipProjection": false,
-        "rewrittenSql": "select cast(alice.compare_float_0 as decimal(11, 0)) as m from alice.tbl_0 as alice"
+        "skip_projection": false,
+        "rewritten_sql": "select cast(alice.compare_float_0 as decimal(11)) as m from alice.tbl_0 as alice",
+        "rewritten_sql_pg": "select cast(alice.compare_float_0 as numeric(11)) as m from alice.tbl_0 as alice"
+      },
+      {
+        "sql": "SELECT 'David!' LIKE 'David\\_' as tt from alice.tbl_0 as alice;",
+        "skip_projection": false,
+        "rewritten_sql": "select 'David!'='David_' as tt from alice.tbl_0 as alice"
+      },
+      {
+        "sql": "SELECT 'David_' LIKE 'David|_' ESCAPE '|' as  tt from alice.tbl_0 as alice;",
+        "skip_projection": false,
+        "rewritten_sql": "select 'David_'='David_' as tt from alice.tbl_0 as alice"
+      },
+      {
+        "sql": "SELECT alice.plain_string_0 LIKE '%str%' as tt from alice.tbl_0 as alice;",
+        "skip_projection": false,
+        "rewritten_sql": "select alice.plain_string_0 like '%str%' as tt from alice.tbl_0 as alice"
+      },
+      {
+        "sql": "select plain_long_0 from alice.tbl_1 where plain_long_0 in (2, 5, 15) and plain_long_1 not in (2, 5, 15);",
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_1.plain_long_0 from alice.tbl_1 where ((tbl_1.plain_long_0=2) or ((tbl_1.plain_long_0=5) or (tbl_1.plain_long_0=15))) and (not((tbl_1.plain_long_1=2) or ((tbl_1.plain_long_1=5) or (tbl_1.plain_long_1=15))))"
+      },
+      {
+        "sql": "select plain_long_0 + plain_long_0 + 5, (plain_long_1 + plain_long_2 + plain_long_0) > plain_long_1 and plain_long_1 > plain_long_0 and plain_long_1 < plain_long_0 from alice.tbl_1 ;",
+        "skip_projection": false,
+        "rewritten_sql": "select (tbl_1.plain_long_0+tbl_1.plain_long_0)+5 as expr_55,((((tbl_1.plain_long_1+tbl_1.plain_long_2)+tbl_1.plain_long_0)>tbl_1.plain_long_1) and (tbl_1.plain_long_1>tbl_1.plain_long_0)) and (tbl_1.plain_long_1<tbl_1.plain_long_0) as expr_56 from alice.tbl_1"
+      },
+      {
+        "sql": "select plain_long_0 > if(plain_long_0, plain_long_1, plain_long_2) as res from alice.tbl_1;",
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_1.plain_long_0>if(tbl_1.plain_long_0, tbl_1.plain_long_1, tbl_1.plain_long_2) as res from alice.tbl_1"
+      },
+      {
+        "sql": "select plain_long_0, plain_long_0 > 1 and plain_long_0 >= 1 as and_log, not (plain_long_0 < 5) as not_log, (plain_long_0 <= 5) or (plain_long_0 <> 8) as or_log from carol.tbl_1",
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_1.plain_long_0,(tbl_1.plain_long_0>1) and (tbl_1.plain_long_0>=1) as and_log,not(tbl_1.plain_long_0<5) as not_log,(tbl_1.plain_long_0<=5) or (tbl_1.plain_long_0!=8) as or_log from carol.tbl_1"
+      },
+      {
+        "sql": "select -(plain_long_0 + plain_long_2) * plain_long_1 as res from carol.tbl_1",
+        "skip_projection": false,
+        "rewritten_sql": "select (-(tbl_1.plain_long_0+tbl_1.plain_long_2))*tbl_1.plain_long_1 as res from carol.tbl_1"
       }
     ]
   }

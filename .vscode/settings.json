@@ -1,6 +1,7 @@
 {
-    "editor.formatOnSave": true,
-    "gopls": {
-        "formatting.local": "github.com/secretflow/scql"
-    }
+  "editor.formatOnSave": true,
+  "gopls": {
+    "formatting.local": "github.com/secretflow/scql"
+  },
+  "esbonio.sphinx.confDir": "${workspaceFolder}/docs/"
 }

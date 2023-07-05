@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-30 20:12+0800\n"
+"POT-Creation-Date: 2023-07-03 10:12+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -17,7 +17,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.11.0\n"
+"Generated-By: Babel 2.12.1\n"
 
 #: ../../development/scql_config_manual.rst:3
 msgid "SCQL Config Manual"
@@ -48,17 +48,17 @@ msgid "Config in SCDB"
 msgstr ""
 
 #: ../../development/scql_config_manual.rst:52
-#: ../../development/scql_config_manual.rst:187
+#: ../../development/scql_config_manual.rst:233
 msgid "Name"
 msgstr ""
 
 #: ../../development/scql_config_manual.rst:52
-#: ../../development/scql_config_manual.rst:187
+#: ../../development/scql_config_manual.rst:233
 msgid "Default"
 msgstr ""
 
 #: ../../development/scql_config_manual.rst:52
-#: ../../development/scql_config_manual.rst:187
+#: ../../development/scql_config_manual.rst:233
 msgid "Description"
 msgstr ""
 
@@ -81,14 +81,14 @@ msgstr ""
 #: ../../development/scql_config_manual.rst:100
 #: ../../development/scql_config_manual.rst:102
 #: ../../development/scql_config_manual.rst:104
-#: ../../development/scql_config_manual.rst:205
-#: ../../development/scql_config_manual.rst:221
-#: ../../development/scql_config_manual.rst:233
-#: ../../development/scql_config_manual.rst:235
-#: ../../development/scql_config_manual.rst:239
-#: ../../development/scql_config_manual.rst:243
-#: ../../development/scql_config_manual.rst:249
 #: ../../development/scql_config_manual.rst:251
+#: ../../development/scql_config_manual.rst:267
+#: ../../development/scql_config_manual.rst:279
+#: ../../development/scql_config_manual.rst:281
+#: ../../development/scql_config_manual.rst:285
+#: ../../development/scql_config_manual.rst:289
+#: ../../development/scql_config_manual.rst:295
+#: ../../development/scql_config_manual.rst:297
 msgid "none"
 msgstr ""
 
@@ -157,10 +157,10 @@ msgid "password_check"
 msgstr ""
 
 #: ../../development/scql_config_manual.rst:66
-#: ../../development/scql_config_manual.rst:191
-#: ../../development/scql_config_manual.rst:201
-#: ../../development/scql_config_manual.rst:217
-#: ../../development/scql_config_manual.rst:231
+#: ../../development/scql_config_manual.rst:237
+#: ../../development/scql_config_manual.rst:247
+#: ../../development/scql_config_manual.rst:263
+#: ../../development/scql_config_manual.rst:277
 msgid "true"
 msgstr ""
 
@@ -201,7 +201,7 @@ msgid "storage.type"
 msgstr ""
 
 #: ../../development/scql_config_manual.rst:74
-msgid "Database Kind in SCDB, supports mysql/sqlite"
+msgid "Database kind in SCDB, supports MYSQL/SQLite3"
 msgstr ""
 
 #: ../../development/scql_config_manual.rst:76
@@ -338,58 +338,142 @@ msgstr ""
 msgid "The sigmoid approximation method for engine to work with"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:109
-msgid "Config for GRM"
+#: ../../development/scql_config_manual.rst:108
+msgid "Config for Storage"
 msgstr ""
 
 #: ../../development/scql_config_manual.rst:110
+msgid ""
+"Database in SCDB is used to storage the SCQL system data, such as CCL and"
+" user information, currently SCDB support MySQL/SQLite3. You can connect "
+"to a database by setting `conn_str` and `type` in the storage config."
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:113
+msgid "type"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:113
+msgid ""
+"The database type, which can be set as mysql/sqlite. And MySQL is "
+"recommended, which has been fully tested."
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:131
+msgid "conn_str"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:116
+msgid "MySQL string format:"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst
+msgid "[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst
+msgid "*see* `dsn-data-source-name`_ *for more infos*."
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:121
+msgid "MySQL string example:"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:123
+msgid "user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:125
+msgid "SQLite3 string format:"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:127
+msgid "more infos: https://github.com/mattn/go-sqlite3#connection-string."
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:129
+msgid "SQLite3 string example:"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:131
+msgid "scdb.db"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:135
+msgid "A typical config of storage can be like:"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:148
+msgid ""
+"To handle time.Time correctly, you need to include parseTime as a "
+"parameter. To fully support UTF-8 encoding, you need to change "
+"charset=utf8 to charset=utf8mb4"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:153
+msgid "PassWord Check"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:154
+msgid ""
+"``password_check`` serves to validate password strength. For ALTER USER, "
+"CREATE USER statements, if it's true, the password should be at least 16 "
+"characters which including a number, a lowercase letter, a uppercase "
+"letter and a special character."
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:157
+msgid "Config for GRM"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:158
 msgid ""
 "In addition to being provided by developers, GRM services can also be "
 "simulated by reading local JSON files, which is used for testing and "
 "development, you can choose them as follows."
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:112
+#: ../../development/scql_config_manual.rst:161
 msgid "stdgrm"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:114
+#: ../../development/scql_config_manual.rst:161
 msgid ""
 "If you want to use your own developed GRM service, grm_mode need to be "
 "set as stdgrm."
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:123
+#: ../../development/scql_config_manual.rst:171
 msgid "toygrm"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:125
+#: ../../development/scql_config_manual.rst:171
 msgid ""
 "If you want to directly mock a GRM service from a json file, except set "
 "grm_mode as toygrm, toy_grm_conf also need to be set."
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:137
+#: ../../development/scql_config_manual.rst:183
 msgid "Config for TLS"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:139
+#: ../../development/scql_config_manual.rst:185
 msgid ""
 "If you need to enable TLS in SCDB, please refer to the following "
 "configuration."
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:151
+#: ../../development/scql_config_manual.rst:197
 msgid ""
 "Additionally, it is necessary to configure the engine to work with SSL, "
 "please refer `Config for SSL`_."
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:155
+#: ../../development/scql_config_manual.rst:201
 msgid "Config for SPU"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:156
+#: ../../development/scql_config_manual.rst:202
 msgid ""
 "SCQL supports different mpc protocol powered by SPU, you can choose "
 "different mpc protocol by setting SPU runtime config. Protocol **SEMI2K**"
@@ -399,401 +483,490 @@ msgid ""
 " to get more information."
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:168
+#: ../../development/scql_config_manual.rst:214
 msgid "Engine configuration options"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:169
+#: ../../development/scql_config_manual.rst:215
 msgid "SCQLEngine uses Gflags to manage configurations when SCQLEngine set up."
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:172
+#: ../../development/scql_config_manual.rst:218
 msgid "Example for Engine"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:184
+#: ../../development/scql_config_manual.rst:230
 msgid "Config in Engine"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:189
+#: ../../development/scql_config_manual.rst:235
 msgid "log_dir"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:189
+#: ../../development/scql_config_manual.rst:235
 msgid "logs"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:189
+#: ../../development/scql_config_manual.rst:235
 msgid "The directory to save log file"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:191
+#: ../../development/scql_config_manual.rst:237
 msgid "log_enable_console_logger"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:191
+#: ../../development/scql_config_manual.rst:237
 msgid "Whether logging to stdout while logging to file"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:193
+#: ../../development/scql_config_manual.rst:239
 msgid "peer_engine_protocol"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:193
-#: ../../development/scql_config_manual.rst:209
+#: ../../development/scql_config_manual.rst:239
+#: ../../development/scql_config_manual.rst:255
 msgid "`http:proto`"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:193
+#: ../../development/scql_config_manual.rst:239
 msgid "The rpc protocol between engine and engine"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:195
+#: ../../development/scql_config_manual.rst:241
 msgid "peer_engine_connection_type"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:195
-#: ../../development/scql_config_manual.rst:211
+#: ../../development/scql_config_manual.rst:241
+#: ../../development/scql_config_manual.rst:257
 msgid "pooled"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:195
+#: ../../development/scql_config_manual.rst:241
 msgid "The rpc connection type between engine and engine"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:197
+#: ../../development/scql_config_manual.rst:243
 msgid "peer_engine_timeout_ms"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:197
+#: ../../development/scql_config_manual.rst:243
 msgid "300000"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:197
+#: ../../development/scql_config_manual.rst:243
 msgid "The rpc timeout between engine and engine, unit: ms"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:199
+#: ../../development/scql_config_manual.rst:245
 msgid "peer_engine_max_retry"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:199
-#: ../../development/scql_config_manual.rst:215
+#: ../../development/scql_config_manual.rst:245
+#: ../../development/scql_config_manual.rst:261
 msgid "3"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:199
+#: ../../development/scql_config_manual.rst:245
 msgid "Rpc max retries(not including the first rpc) between engine and engine"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:201
+#: ../../development/scql_config_manual.rst:247
 msgid "peer_engine_enable_ssl_as_client"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:201
+#: ../../development/scql_config_manual.rst:247
 msgid "Whether enable ssl encryption when send message to another engine"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:203
+#: ../../development/scql_config_manual.rst:249
 msgid "peer_engine_enable_ssl_client_verification"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:203
-#: ../../development/scql_config_manual.rst:219
-#: ../../development/scql_config_manual.rst:225
-#: ../../development/scql_config_manual.rst:237
-#: ../../development/scql_config_manual.rst:241
+#: ../../development/scql_config_manual.rst:249
+#: ../../development/scql_config_manual.rst:265
+#: ../../development/scql_config_manual.rst:271
+#: ../../development/scql_config_manual.rst:283
+#: ../../development/scql_config_manual.rst:287
 msgid "false"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:203
+#: ../../development/scql_config_manual.rst:249
 msgid ""
 "Whether enable certificate verification when send message to another "
 "engine"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:205
+#: ../../development/scql_config_manual.rst:251
 msgid "peer_engine_ssl_client_ca_certificate"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:205
+#: ../../development/scql_config_manual.rst:251
 msgid ""
 "The trusted CA file to verify certificate when send message to another "
 "engine"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:207
+#: ../../development/scql_config_manual.rst:253
 msgid "link_recv_timeout_ms"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:207
+#: ../../development/scql_config_manual.rst:253
 msgid "30000"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:207
+#: ../../development/scql_config_manual.rst:253
 msgid "The max time that engine will wait for message come from another engine"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:209
+#: ../../development/scql_config_manual.rst:255
 msgid "scdb_protocol"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:209
+#: ../../development/scql_config_manual.rst:255
 msgid "The rpc protocol between engine and SCDB"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:211
+#: ../../development/scql_config_manual.rst:257
 msgid "scdb_connection_type"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:211
+#: ../../development/scql_config_manual.rst:257
 msgid "The rpc connection type between engine and SCDB"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:213
+#: ../../development/scql_config_manual.rst:259
 msgid "scdb_timeout_ms"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:213
+#: ../../development/scql_config_manual.rst:259
 msgid "5000"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:213
+#: ../../development/scql_config_manual.rst:259
 msgid "The rpc timeout between engine and SCDB, unit: ms"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:215
+#: ../../development/scql_config_manual.rst:261
 msgid "scdb_max_retry"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:215
+#: ../../development/scql_config_manual.rst:261
 msgid "Rpc max retries(not including the first rpc) between engine and SCDB"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:217
+#: ../../development/scql_config_manual.rst:263
 msgid "scdb_enable_ssl_as_client"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:217
+#: ../../development/scql_config_manual.rst:263
 msgid "Whether enable ssl encryption when send message to SCDB"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:219
+#: ../../development/scql_config_manual.rst:265
 msgid "scdb_enable_ssl_client_verification"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:219
+#: ../../development/scql_config_manual.rst:265
 msgid "Whether enable certificate verification when send message to SCDB"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:221
+#: ../../development/scql_config_manual.rst:267
 msgid "scdb_ssl_client_ca_certificate"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:221
+#: ../../development/scql_config_manual.rst:267
 msgid "The trusted CA file to verify certificate when send message to SCDB"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:223
+#: ../../development/scql_config_manual.rst:269
 msgid "listen_port"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:223
+#: ../../development/scql_config_manual.rst:269
 msgid "8003"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:223
+#: ../../development/scql_config_manual.rst:269
 msgid "The listening port of engine service"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:225
+#: ../../development/scql_config_manual.rst:271
 msgid "enable_builtin_service"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:225
+#: ../../development/scql_config_manual.rst:271
 msgid "Whether enable brpc builtin service"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:227
+#: ../../development/scql_config_manual.rst:273
 msgid "internal_port"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:227
+#: ../../development/scql_config_manual.rst:273
 msgid "9527"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:227
+#: ../../development/scql_config_manual.rst:273
 msgid "The listening port of brpc builtin services"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:229
+#: ../../development/scql_config_manual.rst:275
 msgid "idle_timeout_s"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:229
+#: ../../development/scql_config_manual.rst:275
 msgid "30"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:229
+#: ../../development/scql_config_manual.rst:275
 msgid ""
 "Idle connection close delay in seconds between the engine and SCDB, unit:"
 " s"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:231
+#: ../../development/scql_config_manual.rst:277
 msgid "server_enable_ssl"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:231
+#: ../../development/scql_config_manual.rst:277
 msgid "Whether enable SSL when engine work as a server"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:233
+#: ../../development/scql_config_manual.rst:279
 msgid "server_ssl_certificate"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:233
+#: ../../development/scql_config_manual.rst:279
 msgid "Certificate file path to enable SSL when engine work as a server"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:235
+#: ../../development/scql_config_manual.rst:281
 msgid "server_ssl_private_key"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:235
+#: ../../development/scql_config_manual.rst:281
 msgid "Private key file path to enable SSL when engine work as a server"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:237
+#: ../../development/scql_config_manual.rst:283
 msgid "enable_client_authorization"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:237
+#: ../../development/scql_config_manual.rst:283
 msgid "Whether check requests' http header when engine work as a server"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:239
+#: ../../development/scql_config_manual.rst:285
 msgid "auth_credential"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:239
+#: ../../development/scql_config_manual.rst:285
 msgid "Authorization credential used to check requests' http header"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:241
+#: ../../development/scql_config_manual.rst:287
 msgid "enable_scdb_authorization"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:241
+#: ../../development/scql_config_manual.rst:287
 msgid "Whether to authenticate the identity of SCDB"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:243
+#: ../../development/scql_config_manual.rst:289
 msgid "engine_credential"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:243
+#: ../../development/scql_config_manual.rst:289
 msgid "Credential used to authenticate SCDB"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:245
+#: ../../development/scql_config_manual.rst:291
 msgid "session_timeout_s"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:245
+#: ../../development/scql_config_manual.rst:291
 msgid "1800"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:245
+#: ../../development/scql_config_manual.rst:291
 msgid "Expiration duration of a session between engine and SCDB, unit: s"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:247
+#: ../../development/scql_config_manual.rst:293
 msgid "datasource_router"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:247
+#: ../../development/scql_config_manual.rst:293
 msgid "embed"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:247
+#: ../../development/scql_config_manual.rst:293
 msgid "The datasource router type"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:249
+#: ../../development/scql_config_manual.rst:295
 msgid "embed_router_conf"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:249
+#: ../../development/scql_config_manual.rst:295
 msgid "Configuration for embed router in json format"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:251
+#: ../../development/scql_config_manual.rst:297
 msgid "db_connection_info"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:251
+#: ../../development/scql_config_manual.rst:297
 msgid "Connection string used to connect to mysql"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:257
+#: ../../development/scql_config_manual.rst:303
 msgid "Config for datasource"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:258
-msgid "datasources(MYSQL/SQLite3) are where the SCQLEngine gets its data from."
+#: ../../development/scql_config_manual.rst:304
+msgid ""
+"datasources(MySQL/SQLite3/PostgreSQL/CSVDB) are where the SCQLEngine gets"
+" its data from."
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:260
+#: ../../development/scql_config_manual.rst:306
 msgid ""
 "*datasource_router* is design to support multi datasources, currently "
 "only supported: embed."
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:262
+#: ../../development/scql_config_manual.rst:308
 msgid ""
 "embed_router is initialized with *embed_router_conf* first, a json string"
 " like::"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:280
+#: ../../development/scql_config_manual.rst:326
 msgid ""
 "if *embed_router_conf* is empty, embed_router will try to initialized "
 "with *db_connection_info*."
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:283
+#: ../../development/scql_config_manual.rst:329
 msgid "Embed router"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:285
+#: ../../development/scql_config_manual.rst:331
 msgid ""
-"datasources in embed_router_conf contain information for connecting "
-"MYSQL/SQLite3::"
+"datasources in embed_router_conf contain informations for connecting "
+"MySQL/SQLite3/PostgreSQL/CSVDB:"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:316
+#: ../../development/scql_config_manual.rst:333
+msgid "id: unique id of datasource."
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:335
+msgid "name: custom description help to distinguish datasources."
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:337
+msgid "kind: datasource type, currently support MySQL/SQLite3/PostgreSQL/CSVDB."
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:339
+msgid "connection_str: string used to connect MySQL/SQLite3/PostgreSQL/CSVDB."
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:345
+msgid "MySQL Connection string format:"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:342
+msgid ""
+"<str> == <assignment> | <assignment> ';' <str> <assignment> == <name> '='"
+" <value> <name> == 'host' | 'port' | 'user' | 'password' | 'db' | "
+"'compress' | 'auto-reconnect' | 'reset' | 'fail-readonly' <value> == "
+"[~;]*"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:348
+msgid "MySQL Connection string e.g:"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:348
+#: ../../development/scql_config_manual.rst:363
+msgid "\"db=${db};user=${user};password=${password};host=${host}\""
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:351
+msgid "SQLite3 Connection string format:"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:351
+msgid "more infos: https://www.sqlite.org/c3ref/open.html"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:354
+msgid "SQLite3 Connection string e.g:"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:354
+msgid "\"file:data_test.db?mode=memory&cache=shared\""
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:360
+msgid "PostgreSQL Connection string format:"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:357
+msgid ""
+"<str> == <assignment> | <assignment> ' ' <str> <assignment> == <name> '='"
+" <value> <name> == 'host' | 'port' | 'user' | 'password' | 'dbname' | "
+"'connect_timeout' <value> == [~;]*"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:363
+msgid "PostgreSQL Connection string e.g:"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:366
+msgid "CSVDB Connection string format:"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:366
+msgid ""
+"Since connection_str is an object in another json object, the format is a"
+" converted json string corresponding to `CsvdbConf "
+"<https://github.com/secretflow/scql/tree/main/engine/datasource/csvdb_conf.proto>`_"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:369
+msgid "CSVDB Connection string e.g:"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:369
+msgid "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:372
 msgid "Routing rules"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:317
+#: ../../development/scql_config_manual.rst:373
 msgid ""
 "embed_router's rules support wildcard '*', when given a table in format: "
 "*database_name:table_name*, embed_router will route to the corresponding "
 "datasource by::"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:324
+#: ../../development/scql_config_manual.rst:380
 msgid ""
 "Once found, SCQLEngine will try to connect database with datasource's "
 "information correspond to the *datasource_id*."
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:327
+#: ../../development/scql_config_manual.rst:383
 msgid "Config for Brpc server"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:328
+#: ../../development/scql_config_manual.rst:384
 msgid ""
 "SCQLEngine uses **Brpc** to communicate with SCDB and other peer "
 "SCQLEngines, each SCQLEngine will start a Brpc service on *local-"
@@ -801,14 +974,24 @@ msgid ""
 "Brpc builtin services, add FLAGS:"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:339
+#: ../../development/scql_config_manual.rst:395
 msgid "Config for SSL"
 msgstr ""
 
-#: ../../development/scql_config_manual.rst:340
+#: ../../development/scql_config_manual.rst:396
 msgid ""
 "If you want to enable SSL in Engine, add FLAGS as follows. Additionally, "
 "it may be necessary to configure SCDB work with TLS please refer `Config "
 "for TLS`_."
 msgstr ""
 
+#~ msgid "Database Kind in SCDB, supports mysql/sqlite"
+#~ msgstr ""
+
+#~ msgid "datasources(MYSQL/SQLite3) are where the SCQLEngine gets its data from."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "datasources in embed_router_conf contain "
+#~ "information for connecting MYSQL/SQLite3::"
+#~ msgstr ""

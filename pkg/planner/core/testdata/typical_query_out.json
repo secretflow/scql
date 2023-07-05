@@ -180,6 +180,7 @@
       "DataScan(tbl_0)->Aggr(sum(alice.tbl_0.plain_long_1),count(1))->Projection([Column#55])",
       "DataScan(tbl_0)->Aggr(count(alice.tbl_0.plain_long_0))->Projection([intdiv(Column#55, Column#55)])",
       "DataScan(tbl_0)->Aggr(max(alice.tbl_0.plain_long_0),min(alice.tbl_0.plain_long_0),median(alice.tbl_0.plain_long_0),count(1))->Projection([Column#55 Column#56 Column#57])",
+      "DataScan(tbl_0)->Aggr(firstrow(plus(alice.tbl_0.plain_long_0, alice.tbl_0.plain_long_1)),count(1))->Projection([Column#55])",
       // order by
       "DataScan(tbl_0)->Projection([alice.tbl_0.plain_long_0])->Sort(alice.tbl_0.plain_long_0)",
       "DataScan(tbl_0)->Projection([alice.tbl_0.plain_long_0])->Sort(alice.tbl_0.plain_long_0 desc)",
@@ -200,7 +201,8 @@
       "UnionAll{DataScan(tbl_1)->Projection([alice.tbl_1.plain_long_0 alice.tbl_1.plain_long_1])->DataScan(tbl_2)->Projection([alice.tbl_2.plain_long_0 alice.tbl_2.plain_long_1])}->Aggr(avg(Column#109),firstrow(Column#110),count(1))->Projection([Column#110 Column#111])",
       "UnionAll{DataScan(tbl_1)->Projection([alice.tbl_1.plain_long_0 alice.tbl_1.plain_long_1])->DataScan(tbl_2)->Projection([alice.tbl_2.plain_long_0 alice.tbl_2.plain_long_1])}->Aggr(median(Column#109),firstrow(Column#110),count(1))->Projection([Column#110 Column#111])",
       "UnionAll{DataScan(tbl_0)->Aggr(count(1),firstrow(alice.tbl_0.plain_long_1))->DataScan(tbl_0)->Aggr(count(1),firstrow(alice.tbl_0.plain_long_1))}->Aggr(count(Column#112),firstrow(Column#113))->Projection([Column#110 Column#111])",
-      "DataScan(tbl_1)->Aggr(sum(alice.tbl_1.plain_long_1),firstrow(alice.tbl_1.plain_long_0),count(1))->Sort(Column#55)->Projection([alice.tbl_1.plain_long_0])"
+      "DataScan(tbl_1)->Aggr(sum(alice.tbl_1.plain_long_1),firstrow(alice.tbl_1.plain_long_0),count(1))->Sort(Column#55)->Projection([alice.tbl_1.plain_long_0])",
+      "UnionAll{DataScan(ta)->Aggr(firstrow(1),firstrow(alice.tbl_0.groupby_string_0))->DataScan(tb)->Aggr(firstrow(1),firstrow(bob.tbl_0.groupby_string_0))->DataScan(tc)->Aggr(firstrow(1),firstrow(carol.tbl_0.groupby_string_0))}->Aggr(firstrow(Column#166))->Aggr(count(1))->Projection([Column#164])"
     ]
   },
   {

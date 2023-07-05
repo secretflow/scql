@@ -33,6 +33,7 @@ type Tensor struct {
 	// TODO add more data types
 	StringS  []string
 	FloatS   []float32
+	DoubleS  []float64
 	Int32S   []int32
 	Int64S   []int64
 	BooleanS []bool
@@ -43,6 +44,8 @@ type Tensor struct {
 	skipDTypeCheck bool
 	// `OwnerPartyCode` make sense only when tensor is in private status
 	OwnerPartyCode string
+	// used to record parties who convert string into secret, they may need to participate revealing secret string later.
+	SecretStringOwners []string
 
 	// `isConstScalar` is true when the tensor's data is constant scalar,
 	// or the result of expression which only contains constant scalar.
@@ -109,39 +112,31 @@ func newTensorFromProto(pb *proto.Tensor) *Tensor {
 		t.Status = pb.Annotation.Status
 	}
 
-	if x := pb.GetI64S(); x != nil {
-		dst := make([]int64, len(x.I64S))
-		copy(dst, x.I64S)
-		t.Int64S = dst
-		return t
-	}
-
-	if x := pb.GetSs(); x != nil {
-		dst := make([]string, len(x.Ss))
-		copy(dst, x.Ss)
-		t.StringS = dst
-		return t
-	}
-
-	if x := pb.GetBs(); x != nil {
-		dst := make([]bool, len(x.Bs))
-		copy(dst, x.Bs)
+	switch pb.ElemType {
+	case proto.PrimitiveDataType_BOOL:
+		dst := make([]bool, len(pb.BoolData))
+		copy(dst, pb.BoolData)
 		t.BooleanS = dst
-		return t
-	}
-
-	if x := pb.GetIs(); x != nil {
-		dst := make([]int32, len(x.Is))
-		copy(dst, x.Is)
+	case proto.PrimitiveDataType_STRING:
+		dst := make([]string, len(pb.StringData))
+		copy(dst, pb.StringData)
+		t.StringS = dst
+	case proto.PrimitiveDataType_INT8, proto.PrimitiveDataType_INT16, proto.PrimitiveDataType_INT32:
+		dst := make([]int32, len(pb.Int32Data))
+		copy(dst, pb.Int32Data)
 		t.Int32S = dst
-		return t
-	}
-
-	if x := pb.GetFs(); x != nil {
-		dst := make([]float32, len(x.Fs))
-		copy(dst, x.Fs)
-		t.FloatS = x.Fs
-		return t
+	case proto.PrimitiveDataType_INT64:
+		dst := make([]int64, len(pb.Int64Data))
+		copy(dst, pb.Int64Data)
+		t.Int64S = dst
+	case proto.PrimitiveDataType_FLOAT32:
+		dst := make([]float32, len(pb.FloatData))
+		copy(dst, pb.FloatData)
+		t.FloatS = dst
+	case proto.PrimitiveDataType_FLOAT64:
+		dst := make([]float64, len(pb.DoubleData))
+		copy(dst, pb.DoubleData)
+		t.DoubleS = dst
 	}
 
 	if x := pb.Shape; x != nil {
@@ -180,33 +175,27 @@ func (t *Tensor) ToProto() *proto.Tensor {
 	}
 
 	if t.StringS != nil {
-		pb.Value = &proto.Tensor_Ss{
-			Ss: &proto.Strings{Ss: t.StringS},
-		}
+		pb.StringData = t.StringS
 	}
 
 	if t.FloatS != nil {
-		pb.Value = &proto.Tensor_Fs{
-			Fs: &proto.Floats{Fs: t.FloatS},
-		}
+		pb.FloatData = t.FloatS
+	}
+
+	if t.DoubleS != nil {
+		pb.DoubleData = t.DoubleS
 	}
 
 	if t.Int32S != nil {
-		pb.Value = &proto.Tensor_Is{
-			Is: &proto.Int32S{Is: t.Int32S},
-		}
+		pb.Int32Data = t.Int32S
 	}
 
 	if t.Int64S != nil {
-		pb.Value = &proto.Tensor_I64S{
-			I64S: &proto.Int64S{I64S: t.Int64S},
-		}
+		pb.Int64Data = t.Int64S
 	}
 
 	if t.BooleanS != nil {
-		pb.Value = &proto.Tensor_Bs{
-			Bs: &proto.Booleans{Bs: t.BooleanS},
-		}
+		pb.BoolData = t.BooleanS
 	}
 
 	return pb

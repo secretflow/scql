@@ -38,72 +38,64 @@ class CopyToProtoVistor {
   }
 
   arrow::Status Visit(const arrow::StringArray& array) {
-    auto ss = to_proto_->mutable_ss();
     for (int64_t i = 0; i < array.length(); i++) {
-      ss->add_ss(array.GetString(i));
+      to_proto_->add_string_data(array.GetString(i));
     }
     return arrow::Status::OK();
   }
 
   arrow::Status Visit(const arrow::BooleanArray& array) {
-    auto bs = to_proto_->mutable_bs();
     for (int64_t i = 0; i < array.length(); i++) {
-      bs->add_bs(array.GetView(i));
+      to_proto_->add_bool_data(array.GetView(i));
     }
     return arrow::Status::OK();
   }
 
   arrow::Status Visit(const arrow::NumericArray<arrow::FloatType>& array) {
-    auto fs = to_proto_->mutable_fs();
     for (int64_t i = 0; i < array.length(); i++) {
-      fs->add_fs(array.GetView(i));
+      to_proto_->add_float_data(array.GetView(i));
     }
     return arrow::Status::OK();
   }
 
   arrow::Status Visit(const arrow::NumericArray<arrow::DoubleType>& array) {
-    auto fs = to_proto_->mutable_fs();
     for (int64_t i = 0; i < array.length(); i++) {
-      fs->add_fs(array.GetView(i));
+      to_proto_->add_double_data(array.GetView(i));
     }
     return arrow::Status::OK();
   }
 
   arrow::Status Visit(const arrow::NumericArray<arrow::Int32Type>& array) {
-    auto is = to_proto_->mutable_is();
     for (int64_t i = 0; i < array.length(); i++) {
-      is->add_is(array.GetView(i));
+      to_proto_->add_int32_data(array.GetView(i));
     }
     return arrow::Status::OK();
   }
 
   // store uint32 to int64
   arrow::Status Visit(const arrow::NumericArray<arrow::UInt32Type>& array) {
-    auto i64s = to_proto_->mutable_i64s();
     for (int64_t i = 0; i < array.length(); i++) {
-      i64s->add_i64s(array.GetView(i));
+      to_proto_->add_int64_data(array.GetView(i));
     }
     return arrow::Status::OK();
   }
 
   arrow::Status Visit(const arrow::NumericArray<arrow::Int64Type>& array) {
-    auto i64s = to_proto_->mutable_i64s();
     for (int64_t i = 0; i < array.length(); i++) {
-      i64s->add_i64s(array.GetView(i));
+      to_proto_->add_int64_data(array.GetView(i));
     }
     return arrow::Status::OK();
   }
 
   // NOTE: cast uint64 to int64
   arrow::Status Visit(const arrow::NumericArray<arrow::UInt64Type>& array) {
-    auto i64s = to_proto_->mutable_i64s();
     for (int64_t i = 0; i < array.length(); i++) {
       if (array.GetView(i) > INT64_MAX) {
         return arrow::Status::Invalid(
             fmt::format("overflow while casting uint64 to int64, number#{}={}",
                         i, array.GetView(i)));
       }
-      i64s->add_i64s(array.GetView(i));
+      to_proto_->add_int64_data(array.GetView(i));
     }
     return arrow::Status::OK();
   }

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-30 20:12+0800\n"
+"POT-Creation-Date: 2023-07-03 10:11+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -17,508 +17,414 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.11.0\n"
+"Generated-By: Babel 2.12.1\n"
 
 #: ../../reference/scql_operators.md:2
-msgid "`RunSQL`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:4
-msgid "Run a SQL statement and return a list of tensors in private status"
-msgstr ""
-
-#: ../../reference/scql_operators.md:6 ../../reference/scql_operators.md:38
-#: ../../reference/scql_operators.md:64 ../../reference/scql_operators.md:94
-#: ../../reference/scql_operators.md:124 ../../reference/scql_operators.md:154
-#: ../../reference/scql_operators.md:184 ../../reference/scql_operators.md:214
-#: ../../reference/scql_operators.md:244 ../../reference/scql_operators.md:274
-#: ../../reference/scql_operators.md:304 ../../reference/scql_operators.md:334
-#: ../../reference/scql_operators.md:364 ../../reference/scql_operators.md:394
-#: ../../reference/scql_operators.md:424 ../../reference/scql_operators.md:454
-#: ../../reference/scql_operators.md:484 ../../reference/scql_operators.md:510
-#: ../../reference/scql_operators.md:542 ../../reference/scql_operators.md:578
-#: ../../reference/scql_operators.md:631 ../../reference/scql_operators.md:657
-#: ../../reference/scql_operators.md:698 ../../reference/scql_operators.md:734
-#: ../../reference/scql_operators.md:773 ../../reference/scql_operators.md:814
-#: ../../reference/scql_operators.md:866 ../../reference/scql_operators.md:897
-#: ../../reference/scql_operators.md:928 ../../reference/scql_operators.md:962
-#: ../../reference/scql_operators.md:993 ../../reference/scql_operators.md:1039
-#: ../../reference/scql_operators.md:1071
-#: ../../reference/scql_operators.md:1120
-#: ../../reference/scql_operators.md:1152
-#: ../../reference/scql_operators.md:1186
-#: ../../reference/scql_operators.md:1220
-#: ../../reference/scql_operators.md:1254
-#: ../../reference/scql_operators.md:1288
-#: ../../reference/scql_operators.md:1321
-#: ../../reference/scql_operators.md:1353
-#: ../../reference/scql_operators.md:1383
-#: ../../reference/scql_operators.md:1414
-msgid "**Inputs:**"
-msgstr ""
-
-#: ../../reference/scql_operators.md:8 ../../reference/scql_operators.md:736
-msgid "No input parameter."
-msgstr ""
-
-#: ../../reference/scql_operators.md:11 ../../reference/scql_operators.md:43
-#: ../../reference/scql_operators.md:71 ../../reference/scql_operators.md:101
-#: ../../reference/scql_operators.md:131 ../../reference/scql_operators.md:161
-#: ../../reference/scql_operators.md:191 ../../reference/scql_operators.md:221
-#: ../../reference/scql_operators.md:251 ../../reference/scql_operators.md:281
-#: ../../reference/scql_operators.md:311 ../../reference/scql_operators.md:341
-#: ../../reference/scql_operators.md:371 ../../reference/scql_operators.md:401
-#: ../../reference/scql_operators.md:431 ../../reference/scql_operators.md:461
-#: ../../reference/scql_operators.md:489 ../../reference/scql_operators.md:515
-#: ../../reference/scql_operators.md:547 ../../reference/scql_operators.md:585
-#: ../../reference/scql_operators.md:638 ../../reference/scql_operators.md:662
-#: ../../reference/scql_operators.md:705 ../../reference/scql_operators.md:739
-#: ../../reference/scql_operators.md:778 ../../reference/scql_operators.md:821
-#: ../../reference/scql_operators.md:871 ../../reference/scql_operators.md:902
-#: ../../reference/scql_operators.md:933 ../../reference/scql_operators.md:967
-#: ../../reference/scql_operators.md:998 ../../reference/scql_operators.md:1044
-#: ../../reference/scql_operators.md:1078
-#: ../../reference/scql_operators.md:1125
-#: ../../reference/scql_operators.md:1159
-#: ../../reference/scql_operators.md:1193
-#: ../../reference/scql_operators.md:1227
-#: ../../reference/scql_operators.md:1261
-#: ../../reference/scql_operators.md:1295
-#: ../../reference/scql_operators.md:1326
-#: ../../reference/scql_operators.md:1360
-#: ../../reference/scql_operators.md:1388
-#: ../../reference/scql_operators.md:1419
-msgid "**Outputs:**"
-msgstr ""
-
-#: ../../reference/scql_operators.md:13
-msgid "`Out`(variadic, T): Result tensors of the SQL statement."
-msgstr ""
-
-#: ../../reference/scql_operators.md:17 ../../reference/scql_operators.md:521
-#: ../../reference/scql_operators.md:593 ../../reference/scql_operators.md:668
-#: ../../reference/scql_operators.md:745 ../../reference/scql_operators.md:784
-#: ../../reference/scql_operators.md:827 ../../reference/scql_operators.md:1004
-#: ../../reference/scql_operators.md:1084
-#: ../../reference/scql_operators.md:1425
-msgid "**Attributes:**"
-msgstr ""
-
-#: ../../reference/scql_operators.md:19
-msgid "`sql`: SQL statement"
-msgstr ""
-
-#: ../../reference/scql_operators.md:21
-msgid "`table_refs`: tables referenced by query"
-msgstr ""
-
-#: ../../reference/scql_operators.md:28 ../../reference/scql_operators.md:52
-#: ../../reference/scql_operators.md:80 ../../reference/scql_operators.md:110
-#: ../../reference/scql_operators.md:140 ../../reference/scql_operators.md:170
-#: ../../reference/scql_operators.md:200 ../../reference/scql_operators.md:230
-#: ../../reference/scql_operators.md:260 ../../reference/scql_operators.md:290
-#: ../../reference/scql_operators.md:320 ../../reference/scql_operators.md:350
-#: ../../reference/scql_operators.md:380 ../../reference/scql_operators.md:410
-#: ../../reference/scql_operators.md:440 ../../reference/scql_operators.md:470
-#: ../../reference/scql_operators.md:498 ../../reference/scql_operators.md:530
-#: ../../reference/scql_operators.md:556 ../../reference/scql_operators.md:611
-#: ../../reference/scql_operators.md:647 ../../reference/scql_operators.md:679
-#: ../../reference/scql_operators.md:714 ../../reference/scql_operators.md:763
-#: ../../reference/scql_operators.md:795 ../../reference/scql_operators.md:847
-#: ../../reference/scql_operators.md:880 ../../reference/scql_operators.md:911
-#: ../../reference/scql_operators.md:942 ../../reference/scql_operators.md:976
-#: ../../reference/scql_operators.md:1020
-#: ../../reference/scql_operators.md:1053
-#: ../../reference/scql_operators.md:1100
-#: ../../reference/scql_operators.md:1134
-#: ../../reference/scql_operators.md:1168
-#: ../../reference/scql_operators.md:1202
-#: ../../reference/scql_operators.md:1236
-#: ../../reference/scql_operators.md:1270
-#: ../../reference/scql_operators.md:1304
-#: ../../reference/scql_operators.md:1335
-#: ../../reference/scql_operators.md:1369
-#: ../../reference/scql_operators.md:1397
-#: ../../reference/scql_operators.md:1441
-msgid "**TensorStatus(ShareType) Constraints:**"
-msgstr ""
-
-#: ../../reference/scql_operators.md:30 ../../reference/scql_operators.md:649
-#: ../../reference/scql_operators.md:797 ../../reference/scql_operators.md:849
-#: ../../reference/scql_operators.md:1055
-msgid "`T`: private"
-msgstr ""
-
-#: ../../reference/scql_operators.md:34
-msgid "`Publish`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:36
-msgid "This operator publishes the DAG results."
-msgstr ""
-
-#: ../../reference/scql_operators.md:40
-msgid "`In`(variadic, T1): Tensors to be published."
-msgstr ""
-
-#: ../../reference/scql_operators.md:45
-msgid ""
-"`Out`(variadic, T2): Result tensors of the publish op. Tensors are in "
-"TensorOption VALUE."
-msgstr ""
-
-#: ../../reference/scql_operators.md:54 ../../reference/scql_operators.md:718
-msgid "`T1`: public,private"
-msgstr ""
-
-#: ../../reference/scql_operators.md:56
-msgid "`T2`: unknown"
-msgstr ""
-
-#: ../../reference/scql_operators.md:60
-msgid "`Less`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:62
-msgid "Out = Left `Less` Right"
-msgstr ""
-
-#: ../../reference/scql_operators.md:66 ../../reference/scql_operators.md:96
-#: ../../reference/scql_operators.md:126 ../../reference/scql_operators.md:156
-#: ../../reference/scql_operators.md:186 ../../reference/scql_operators.md:216
-#: ../../reference/scql_operators.md:246 ../../reference/scql_operators.md:276
-#: ../../reference/scql_operators.md:306 ../../reference/scql_operators.md:336
-#: ../../reference/scql_operators.md:366 ../../reference/scql_operators.md:396
-#: ../../reference/scql_operators.md:426 ../../reference/scql_operators.md:456
-msgid "`Left`(variadic, T): First operand."
-msgstr ""
-
-#: ../../reference/scql_operators.md:68 ../../reference/scql_operators.md:98
-#: ../../reference/scql_operators.md:128 ../../reference/scql_operators.md:158
-#: ../../reference/scql_operators.md:188 ../../reference/scql_operators.md:218
-#: ../../reference/scql_operators.md:248 ../../reference/scql_operators.md:278
-#: ../../reference/scql_operators.md:308 ../../reference/scql_operators.md:338
-#: ../../reference/scql_operators.md:368 ../../reference/scql_operators.md:398
-#: ../../reference/scql_operators.md:428 ../../reference/scql_operators.md:458
-msgid "`Right`(variadic, T1): Second operand."
-msgstr ""
-
-#: ../../reference/scql_operators.md:73 ../../reference/scql_operators.md:103
-#: ../../reference/scql_operators.md:133 ../../reference/scql_operators.md:163
-#: ../../reference/scql_operators.md:193 ../../reference/scql_operators.md:223
-#: ../../reference/scql_operators.md:253 ../../reference/scql_operators.md:283
-#: ../../reference/scql_operators.md:313 ../../reference/scql_operators.md:343
-#: ../../reference/scql_operators.md:373 ../../reference/scql_operators.md:403
-#: ../../reference/scql_operators.md:433 ../../reference/scql_operators.md:463
-msgid "`Out`(variadic, T2): Output Tensor."
-msgstr ""
-
-#: ../../reference/scql_operators.md:82 ../../reference/scql_operators.md:112
-#: ../../reference/scql_operators.md:142 ../../reference/scql_operators.md:172
-#: ../../reference/scql_operators.md:202 ../../reference/scql_operators.md:232
-#: ../../reference/scql_operators.md:262 ../../reference/scql_operators.md:292
-#: ../../reference/scql_operators.md:322 ../../reference/scql_operators.md:352
-#: ../../reference/scql_operators.md:382 ../../reference/scql_operators.md:412
-#: ../../reference/scql_operators.md:442 ../../reference/scql_operators.md:472
-#: ../../reference/scql_operators.md:1022
-#: ../../reference/scql_operators.md:1399
-msgid "`T`: public,private,secret"
-msgstr ""
-
-#: ../../reference/scql_operators.md:84 ../../reference/scql_operators.md:114
-#: ../../reference/scql_operators.md:144 ../../reference/scql_operators.md:174
-#: ../../reference/scql_operators.md:204 ../../reference/scql_operators.md:234
-#: ../../reference/scql_operators.md:264 ../../reference/scql_operators.md:294
-#: ../../reference/scql_operators.md:324 ../../reference/scql_operators.md:354
-#: ../../reference/scql_operators.md:384 ../../reference/scql_operators.md:414
-#: ../../reference/scql_operators.md:444 ../../reference/scql_operators.md:474
-#: ../../reference/scql_operators.md:1373
-msgid "`T1`: public,private,secret"
-msgstr ""
-
-#: ../../reference/scql_operators.md:86 ../../reference/scql_operators.md:116
-#: ../../reference/scql_operators.md:146 ../../reference/scql_operators.md:176
-#: ../../reference/scql_operators.md:206 ../../reference/scql_operators.md:236
-#: ../../reference/scql_operators.md:266 ../../reference/scql_operators.md:296
-#: ../../reference/scql_operators.md:326 ../../reference/scql_operators.md:356
-#: ../../reference/scql_operators.md:386 ../../reference/scql_operators.md:416
-#: ../../reference/scql_operators.md:446 ../../reference/scql_operators.md:476
-msgid "`T2`: private,secret"
-msgstr ""
-
-#: ../../reference/scql_operators.md:90
-msgid "`LessEqual`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:92
-msgid "Out = Left `LessEqual` Right"
-msgstr ""
-
-#: ../../reference/scql_operators.md:120
-msgid "`Greater`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:122
-msgid "Out = Left `Greater` Right"
-msgstr ""
-
-#: ../../reference/scql_operators.md:150
-msgid "`GreaterEqual`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:152
-msgid "Out = Left `GreaterEqual` Right"
-msgstr ""
-
-#: ../../reference/scql_operators.md:180
-msgid "`Equal`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:182
-msgid "Out = Left `Equal` Right"
-msgstr ""
-
-#: ../../reference/scql_operators.md:210
-msgid "`NotEqual`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:212
-msgid "Out = Left `NotEqual` Right"
-msgstr ""
-
-#: ../../reference/scql_operators.md:240
-msgid "`LogicalAnd`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:242
-msgid "Out = Left `LogicalAnd` Right"
-msgstr ""
-
-#: ../../reference/scql_operators.md:270
-msgid "`LogicalOr`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:272
-msgid "Out = Left `LogicalOr` Right"
-msgstr ""
-
-#: ../../reference/scql_operators.md:300
 msgid "`Add`"
 msgstr ""
 
-#: ../../reference/scql_operators.md:302
+#: ../../reference/scql_operators.md:4
 msgid "Out = Left `Add` Right"
 msgstr ""
 
-#: ../../reference/scql_operators.md:330
-msgid "`Minus`"
+#: ../../reference/scql_operators.md:6 ../../reference/scql_operators.md:44
+#: ../../reference/scql_operators.md:81 ../../reference/scql_operators.md:126
+#: ../../reference/scql_operators.md:165 ../../reference/scql_operators.md:197
+#: ../../reference/scql_operators.md:227 ../../reference/scql_operators.md:259
+#: ../../reference/scql_operators.md:298 ../../reference/scql_operators.md:334
+#: ../../reference/scql_operators.md:360 ../../reference/scql_operators.md:390
+#: ../../reference/scql_operators.md:428 ../../reference/scql_operators.md:463
+#: ../../reference/scql_operators.md:500 ../../reference/scql_operators.md:537
+#: ../../reference/scql_operators.md:574 ../../reference/scql_operators.md:611
+#: ../../reference/scql_operators.md:648 ../../reference/scql_operators.md:685
+#: ../../reference/scql_operators.md:722 ../../reference/scql_operators.md:767
+#: ../../reference/scql_operators.md:807 ../../reference/scql_operators.md:852
+#: ../../reference/scql_operators.md:882 ../../reference/scql_operators.md:912
+#: ../../reference/scql_operators.md:942 ../../reference/scql_operators.md:972
+#: ../../reference/scql_operators.md:1004
+#: ../../reference/scql_operators.md:1030
+#: ../../reference/scql_operators.md:1056
+#: ../../reference/scql_operators.md:1086
+#: ../../reference/scql_operators.md:1116
+#: ../../reference/scql_operators.md:1146
+#: ../../reference/scql_operators.md:1170
+#: ../../reference/scql_operators.md:1208
+#: ../../reference/scql_operators.md:1242
+#: ../../reference/scql_operators.md:1278
+#: ../../reference/scql_operators.md:1310
+#: ../../reference/scql_operators.md:1344
+#: ../../reference/scql_operators.md:1378
+#: ../../reference/scql_operators.md:1404
+#: ../../reference/scql_operators.md:1438
+#: ../../reference/scql_operators.md:1469
+#: ../../reference/scql_operators.md:1500
+#: ../../reference/scql_operators.md:1531
+#: ../../reference/scql_operators.md:1555
+#: ../../reference/scql_operators.md:1594
+#: ../../reference/scql_operators.md:1640
+#: ../../reference/scql_operators.md:1672
+#: ../../reference/scql_operators.md:1718
+msgid "**Inputs:**"
 msgstr ""
 
-#: ../../reference/scql_operators.md:332
-msgid "Out = Left `Minus` Right"
+#: ../../reference/scql_operators.md:8 ../../reference/scql_operators.md:199
+#: ../../reference/scql_operators.md:261 ../../reference/scql_operators.md:362
+#: ../../reference/scql_operators.md:392 ../../reference/scql_operators.md:769
+#: ../../reference/scql_operators.md:854 ../../reference/scql_operators.md:884
+#: ../../reference/scql_operators.md:914 ../../reference/scql_operators.md:944
+#: ../../reference/scql_operators.md:1058
+#: ../../reference/scql_operators.md:1088
+#: ../../reference/scql_operators.md:1118
+#: ../../reference/scql_operators.md:1172
+msgid "`Left`(variadic, T): First operand."
 msgstr ""
 
-#: ../../reference/scql_operators.md:360
-msgid "`Mul`"
+#: ../../reference/scql_operators.md:10 ../../reference/scql_operators.md:201
+#: ../../reference/scql_operators.md:263 ../../reference/scql_operators.md:364
+#: ../../reference/scql_operators.md:394 ../../reference/scql_operators.md:771
+#: ../../reference/scql_operators.md:856 ../../reference/scql_operators.md:886
+#: ../../reference/scql_operators.md:916 ../../reference/scql_operators.md:946
+#: ../../reference/scql_operators.md:1060
+#: ../../reference/scql_operators.md:1090
+#: ../../reference/scql_operators.md:1120
+#: ../../reference/scql_operators.md:1174
+msgid "`Right`(variadic, T1): Second operand."
 msgstr ""
 
-#: ../../reference/scql_operators.md:362
-msgid "Out = Left `Mul` Right"
-msgstr ""
-
-#: ../../reference/scql_operators.md:390
-msgid "`Div`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:392
-msgid "Out = Left `Div` Right"
-msgstr ""
-
-#: ../../reference/scql_operators.md:420
-msgid "`IntDiv`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:422
-msgid "Out = Left `IntDiv` Right"
-msgstr ""
-
-#: ../../reference/scql_operators.md:450
-msgid "`Mod`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:452
-msgid "Out = Left `Mod` Right"
-msgstr ""
-
-#: ../../reference/scql_operators.md:480
-msgid "`MakePublic`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:482
-msgid "Convert In tensor from share/private status to public status."
-msgstr ""
-
-#: ../../reference/scql_operators.md:486 ../../reference/scql_operators.md:512
-#: ../../reference/scql_operators.md:544
-msgid "`In`(variadic, T1): Input tensors."
-msgstr ""
-
-#: ../../reference/scql_operators.md:491 ../../reference/scql_operators.md:517
-#: ../../reference/scql_operators.md:549
-msgid "`Out`(variadic, T2): Output tensors."
-msgstr ""
-
-#: ../../reference/scql_operators.md:500
-msgid "`T1`: private,secret"
-msgstr ""
-
-#: ../../reference/scql_operators.md:502
-msgid "`T2`: public"
-msgstr ""
-
-#: ../../reference/scql_operators.md:506
-msgid "`MakePrivate`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:508
-msgid "Convert In tensor from share status to private status."
-msgstr ""
-
-#: ../../reference/scql_operators.md:523
-msgid ""
-"`reveal_to`: List of parties to see the private data. If it is revealed "
-"to one party only, the other party also needs to run the op, but does not"
-" have an output. Only the reveal_to party gets the output."
-msgstr ""
-
-#: ../../reference/scql_operators.md:532
-msgid "`T1`: secret"
-msgstr ""
-
-#: ../../reference/scql_operators.md:534 ../../reference/scql_operators.md:615
-msgid "`T2`: private"
-msgstr ""
-
-#: ../../reference/scql_operators.md:538
-msgid "`MakeShare`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:540
-msgid "Convert In tensor from private status to share status."
-msgstr ""
-
-#: ../../reference/scql_operators.md:558 ../../reference/scql_operators.md:613
-#: ../../reference/scql_operators.md:681 ../../reference/scql_operators.md:851
-#: ../../reference/scql_operators.md:1024
-msgid "`T1`: private"
-msgstr ""
-
-#: ../../reference/scql_operators.md:560
-msgid "`T2`: secret"
-msgstr ""
-
-#: ../../reference/scql_operators.md:564
-msgid "`Join`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:566
-msgid ""
-"Definition: Create Join Index based on EQ-Join, return result's "
-"corresponding rows index in the original input. Example:"
-msgstr ""
-
-#: ../../reference/scql_operators.md:580
-msgid "`Left`(single, T1): Left vector(shape [M][1])"
-msgstr ""
-
-#: ../../reference/scql_operators.md:582
-msgid "`Right`(single, T1): Right vector(shape [N][1])"
-msgstr ""
-
-#: ../../reference/scql_operators.md:587
-msgid ""
-"`LeftJoinIndex`(single, T2): Joined rows index for left vector(shape "
-"[K][1])"
-msgstr ""
-
-#: ../../reference/scql_operators.md:589
-msgid ""
-"`RightJoinIndex`(single, T2): Joined rows index for right vector(shape "
-"[K][1])"
-msgstr ""
-
-#: ../../reference/scql_operators.md:595
-msgid ""
-"`input_party_codes`: List of parties the inputs belong to([PartyCodeLeft,"
-" PartyCodeRight])."
-msgstr ""
-
-#: ../../reference/scql_operators.md:597
-msgid "`join_type`: Int64. 0: inner join;"
-msgstr ""
-
-#: ../../reference/scql_operators.md:604 ../../reference/scql_operators.md:756
-#: ../../reference/scql_operators.md:840 ../../reference/scql_operators.md:1013
+#: ../../reference/scql_operators.md:13 ../../reference/scql_operators.md:51
+#: ../../reference/scql_operators.md:86 ../../reference/scql_operators.md:131
+#: ../../reference/scql_operators.md:170 ../../reference/scql_operators.md:204
+#: ../../reference/scql_operators.md:232 ../../reference/scql_operators.md:266
+#: ../../reference/scql_operators.md:305 ../../reference/scql_operators.md:341
+#: ../../reference/scql_operators.md:367 ../../reference/scql_operators.md:397
+#: ../../reference/scql_operators.md:433 ../../reference/scql_operators.md:472
+#: ../../reference/scql_operators.md:509 ../../reference/scql_operators.md:546
+#: ../../reference/scql_operators.md:583 ../../reference/scql_operators.md:620
+#: ../../reference/scql_operators.md:657 ../../reference/scql_operators.md:694
+#: ../../reference/scql_operators.md:729 ../../reference/scql_operators.md:774
+#: ../../reference/scql_operators.md:814 ../../reference/scql_operators.md:859
+#: ../../reference/scql_operators.md:889 ../../reference/scql_operators.md:919
+#: ../../reference/scql_operators.md:949 ../../reference/scql_operators.md:977
+#: ../../reference/scql_operators.md:1009
+#: ../../reference/scql_operators.md:1035
+#: ../../reference/scql_operators.md:1063
 #: ../../reference/scql_operators.md:1093
-#: ../../reference/scql_operators.md:1434
+#: ../../reference/scql_operators.md:1123
+#: ../../reference/scql_operators.md:1151
+#: ../../reference/scql_operators.md:1177
+#: ../../reference/scql_operators.md:1215
+#: ../../reference/scql_operators.md:1249
+#: ../../reference/scql_operators.md:1283
+#: ../../reference/scql_operators.md:1317
+#: ../../reference/scql_operators.md:1351
+#: ../../reference/scql_operators.md:1385
+#: ../../reference/scql_operators.md:1409
+#: ../../reference/scql_operators.md:1443
+#: ../../reference/scql_operators.md:1474
+#: ../../reference/scql_operators.md:1505
+#: ../../reference/scql_operators.md:1536
+#: ../../reference/scql_operators.md:1560
+#: ../../reference/scql_operators.md:1599
+#: ../../reference/scql_operators.md:1645
+#: ../../reference/scql_operators.md:1679
+#: ../../reference/scql_operators.md:1723
+msgid "**Outputs:**"
+msgstr ""
+
+#: ../../reference/scql_operators.md:15 ../../reference/scql_operators.md:206
+#: ../../reference/scql_operators.md:268 ../../reference/scql_operators.md:369
+#: ../../reference/scql_operators.md:399 ../../reference/scql_operators.md:776
+#: ../../reference/scql_operators.md:861 ../../reference/scql_operators.md:891
+#: ../../reference/scql_operators.md:921 ../../reference/scql_operators.md:951
+#: ../../reference/scql_operators.md:1065
+#: ../../reference/scql_operators.md:1095
+#: ../../reference/scql_operators.md:1125
+#: ../../reference/scql_operators.md:1179
+msgid "`Out`(variadic, T2): Output Tensor."
+msgstr ""
+
+#: ../../reference/scql_operators.md:22 ../../reference/scql_operators.md:60
+#: ../../reference/scql_operators.md:108 ../../reference/scql_operators.md:155
+#: ../../reference/scql_operators.md:187 ../../reference/scql_operators.md:213
+#: ../../reference/scql_operators.md:249 ../../reference/scql_operators.md:275
+#: ../../reference/scql_operators.md:314 ../../reference/scql_operators.md:350
+#: ../../reference/scql_operators.md:376 ../../reference/scql_operators.md:406
+#: ../../reference/scql_operators.md:444 ../../reference/scql_operators.md:481
+#: ../../reference/scql_operators.md:518 ../../reference/scql_operators.md:555
+#: ../../reference/scql_operators.md:592 ../../reference/scql_operators.md:629
+#: ../../reference/scql_operators.md:666 ../../reference/scql_operators.md:703
+#: ../../reference/scql_operators.md:755 ../../reference/scql_operators.md:783
+#: ../../reference/scql_operators.md:840 ../../reference/scql_operators.md:868
+#: ../../reference/scql_operators.md:898 ../../reference/scql_operators.md:928
+#: ../../reference/scql_operators.md:958 ../../reference/scql_operators.md:992
+#: ../../reference/scql_operators.md:1018
+#: ../../reference/scql_operators.md:1044
+#: ../../reference/scql_operators.md:1072
+#: ../../reference/scql_operators.md:1102
+#: ../../reference/scql_operators.md:1132
+#: ../../reference/scql_operators.md:1160
+#: ../../reference/scql_operators.md:1186
+#: ../../reference/scql_operators.md:1224
+#: ../../reference/scql_operators.md:1258
+#: ../../reference/scql_operators.md:1292
+#: ../../reference/scql_operators.md:1326
+#: ../../reference/scql_operators.md:1360
+#: ../../reference/scql_operators.md:1394
+#: ../../reference/scql_operators.md:1418
+#: ../../reference/scql_operators.md:1452
+#: ../../reference/scql_operators.md:1483
+#: ../../reference/scql_operators.md:1514
+#: ../../reference/scql_operators.md:1545
+#: ../../reference/scql_operators.md:1577
+#: ../../reference/scql_operators.md:1621
+#: ../../reference/scql_operators.md:1654
+#: ../../reference/scql_operators.md:1701
+#: ../../reference/scql_operators.md:1732
+msgid "**TensorStatus(ShareType) Constraints:**"
+msgstr ""
+
+#: ../../reference/scql_operators.md:24 ../../reference/scql_operators.md:215
+#: ../../reference/scql_operators.md:277 ../../reference/scql_operators.md:378
+#: ../../reference/scql_operators.md:408 ../../reference/scql_operators.md:785
+#: ../../reference/scql_operators.md:870 ../../reference/scql_operators.md:900
+#: ../../reference/scql_operators.md:930 ../../reference/scql_operators.md:960
+#: ../../reference/scql_operators.md:1074
+#: ../../reference/scql_operators.md:1104
+#: ../../reference/scql_operators.md:1134
+#: ../../reference/scql_operators.md:1162
+#: ../../reference/scql_operators.md:1188
+#: ../../reference/scql_operators.md:1623
+msgid "`T`: public,private,secret"
+msgstr ""
+
+#: ../../reference/scql_operators.md:26 ../../reference/scql_operators.md:64
+#: ../../reference/scql_operators.md:217 ../../reference/scql_operators.md:279
+#: ../../reference/scql_operators.md:380 ../../reference/scql_operators.md:410
+#: ../../reference/scql_operators.md:787 ../../reference/scql_operators.md:872
+#: ../../reference/scql_operators.md:902 ../../reference/scql_operators.md:932
+#: ../../reference/scql_operators.md:962 ../../reference/scql_operators.md:1076
+#: ../../reference/scql_operators.md:1106
+#: ../../reference/scql_operators.md:1136
+#: ../../reference/scql_operators.md:1190
+msgid "`T1`: public,private,secret"
+msgstr ""
+
+#: ../../reference/scql_operators.md:28 ../../reference/scql_operators.md:219
+#: ../../reference/scql_operators.md:281 ../../reference/scql_operators.md:382
+#: ../../reference/scql_operators.md:412 ../../reference/scql_operators.md:789
+#: ../../reference/scql_operators.md:874 ../../reference/scql_operators.md:904
+#: ../../reference/scql_operators.md:934 ../../reference/scql_operators.md:964
+#: ../../reference/scql_operators.md:1078
+#: ../../reference/scql_operators.md:1108
+#: ../../reference/scql_operators.md:1138
+#: ../../reference/scql_operators.md:1192
+msgid "`T2`: private,secret"
+msgstr ""
+
+#: ../../reference/scql_operators.md:32
+msgid "`BroadcastTo`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:34
+msgid ""
+"Definition: Broadcast Input tensor `In` to the same shape as "
+"`ShapeRefTensor`.  Example:"
+msgstr ""
+
+#: ../../reference/scql_operators.md:46
+msgid "`In`(variadic, T): Input tensor"
+msgstr ""
+
+#: ../../reference/scql_operators.md:48
+msgid "`ShapeRefTensor`(single, T1): Shape reference tensor"
+msgstr ""
+
+#: ../../reference/scql_operators.md:53
+msgid "`Out`(variadic, T2): Result tensor"
+msgstr ""
+
+#: ../../reference/scql_operators.md:62
+msgid "`T`: public"
+msgstr ""
+
+#: ../../reference/scql_operators.md:66
+msgid "`T2`: public,private"
+msgstr ""
+
+#: ../../reference/scql_operators.md:70
+msgid "`Concat`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:72
+msgid ""
+"Definition: Given a number of tensors In (variadic, each tensor's shape "
+"must be the same except for the axis), concat the In tensors along the "
+"axis. Example:"
+msgstr ""
+
+#: ../../reference/scql_operators.md:83
+msgid "`In`(variadic, T): Tensors to be concat."
+msgstr ""
+
+#: ../../reference/scql_operators.md:88
+msgid "`Out`(single, T): Concated Tensor."
+msgstr ""
+
+#: ../../reference/scql_operators.md:92 ../../reference/scql_operators.md:137
+#: ../../reference/scql_operators.md:176 ../../reference/scql_operators.md:238
+#: ../../reference/scql_operators.md:735 ../../reference/scql_operators.md:822
+#: ../../reference/scql_operators.md:983 ../../reference/scql_operators.md:1566
+#: ../../reference/scql_operators.md:1605
+#: ../../reference/scql_operators.md:1685
+msgid "**Attributes:**"
+msgstr ""
+
+#: ../../reference/scql_operators.md:94
+msgid "`axis`: Int64. Dimension along which to concatenate."
+msgstr ""
+
+#: ../../reference/scql_operators.md:101 ../../reference/scql_operators.md:148
+#: ../../reference/scql_operators.md:748 ../../reference/scql_operators.md:833
+#: ../../reference/scql_operators.md:1614
+#: ../../reference/scql_operators.md:1694
 msgid "**Default Attribute Values:**"
 msgstr ""
 
-#: ../../reference/scql_operators.md:606
-msgid "`join_type`: 0"
+#: ../../reference/scql_operators.md:103
+msgid "`axis`: 0"
 msgstr ""
 
-#: ../../reference/scql_operators.md:619
-msgid "`FilterByIndex`"
+#: ../../reference/scql_operators.md:110 ../../reference/scql_operators.md:1226
+#: ../../reference/scql_operators.md:1260
+#: ../../reference/scql_operators.md:1328
+#: ../../reference/scql_operators.md:1362
+#: ../../reference/scql_operators.md:1396
+#: ../../reference/scql_operators.md:1656
+msgid "`T`: secret"
 msgstr ""
 
-#: ../../reference/scql_operators.md:621
-msgid "Definition: Filter by rows index. Example:"
+#: ../../reference/scql_operators.md:114
+msgid "`Constant`"
 msgstr ""
 
-#: ../../reference/scql_operators.md:633
-msgid "`RowsIndexFilter`(single, T): Rows index filter vector(shape [K][1])."
+#: ../../reference/scql_operators.md:116
+msgid "Definition: Make constant from attribute. Example:"
 msgstr ""
 
-#: ../../reference/scql_operators.md:635
-msgid "`Data`(variadic, T): Input data tensor(shape [M][N])."
+#: ../../reference/scql_operators.md:128 ../../reference/scql_operators.md:1557
+msgid "No input parameter."
 msgstr ""
 
-#: ../../reference/scql_operators.md:640
-msgid "`Out`(variadic, T): Output data tensor(shape [X][N])."
+#: ../../reference/scql_operators.md:133
+msgid "`Out`(single, T): output tensor(shape [M]) from constant."
 msgstr ""
 
-#: ../../reference/scql_operators.md:653
+#: ../../reference/scql_operators.md:139
+msgid "`scalar`: scalar attribute(with shape [M])"
+msgstr ""
+
+#: ../../reference/scql_operators.md:141
+msgid "`to_status`: int64. to status, 0: to private, 1: to public."
+msgstr ""
+
+#: ../../reference/scql_operators.md:150
+msgid "`to_status`: 0"
+msgstr ""
+
+#: ../../reference/scql_operators.md:157
+msgid "`T`: public,private"
+msgstr ""
+
+#: ../../reference/scql_operators.md:161
 msgid "`Copy`"
 msgstr ""
 
-#: ../../reference/scql_operators.md:655
+#: ../../reference/scql_operators.md:163
 msgid ""
 "Definition: Copy source tensor \"In\" to new tensor \"Out\" on target "
 "party"
 msgstr ""
 
-#: ../../reference/scql_operators.md:659
+#: ../../reference/scql_operators.md:167
 msgid "`In`(single, T1): source tensor"
 msgstr ""
 
-#: ../../reference/scql_operators.md:664
+#: ../../reference/scql_operators.md:172
 msgid "`Out`(single, T1): target tensor"
 msgstr ""
 
-#: ../../reference/scql_operators.md:670
+#: ../../reference/scql_operators.md:178
 msgid "`input_party_codes`: Input tensor `In` belongs to"
 msgstr ""
 
-#: ../../reference/scql_operators.md:672
+#: ../../reference/scql_operators.md:180
 msgid "`output_party_codes`: Output tensor `Out` belongs to"
 msgstr ""
 
-#: ../../reference/scql_operators.md:685
+#: ../../reference/scql_operators.md:189 ../../reference/scql_operators.md:759
+#: ../../reference/scql_operators.md:842 ../../reference/scql_operators.md:1046
+#: ../../reference/scql_operators.md:1625
+msgid "`T1`: private"
+msgstr ""
+
+#: ../../reference/scql_operators.md:193
+msgid "`Div`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:195
+msgid "Out = Left `Div` Right"
+msgstr ""
+
+#: ../../reference/scql_operators.md:223
+msgid "`DumpFile`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:225
+msgid ""
+"Definition: Dump the input tensor. Note: This op will change the affected"
+" rows in the session"
+msgstr ""
+
+#: ../../reference/scql_operators.md:229
+msgid "`In`(variadic, T): Tensors to be dumped."
+msgstr ""
+
+#: ../../reference/scql_operators.md:234
+msgid "`Out`(variadic, T): Tensors have been dumped."
+msgstr ""
+
+#: ../../reference/scql_operators.md:240
+msgid "`file_path`: String. Absolute file path to dump the tensors."
+msgstr ""
+
+#: ../../reference/scql_operators.md:242
+msgid "`deliminator`: String. Column deliminator, e.g. comma `,`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:251 ../../reference/scql_operators.md:352
+#: ../../reference/scql_operators.md:446 ../../reference/scql_operators.md:483
+#: ../../reference/scql_operators.md:520 ../../reference/scql_operators.md:557
+#: ../../reference/scql_operators.md:594 ../../reference/scql_operators.md:631
+#: ../../reference/scql_operators.md:668 ../../reference/scql_operators.md:705
+#: ../../reference/scql_operators.md:757 ../../reference/scql_operators.md:1420
+#: ../../reference/scql_operators.md:1579
+#: ../../reference/scql_operators.md:1734
+msgid "`T`: private"
+msgstr ""
+
+#: ../../reference/scql_operators.md:255
+msgid "`Equal`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:257
+msgid "Out = Left `Equal` Right"
+msgstr ""
+
+#: ../../reference/scql_operators.md:285
 msgid "`Filter`"
 msgstr ""
 
-#: ../../reference/scql_operators.md:687
+#: ../../reference/scql_operators.md:287
 msgid ""
 "Given a boolean tensor Filter (its shape is [M]), and a number of tensors"
 " In (variadic, each tensor's shape must be [M]), for i in [0, M-1], keep "
@@ -526,84 +432,159 @@ msgid ""
 "filter result tensors Out (variadic). Example:"
 msgstr ""
 
-#: ../../reference/scql_operators.md:700
+#: ../../reference/scql_operators.md:300
 msgid "`Filter`(single, T1): Filter tensor."
 msgstr ""
 
-#: ../../reference/scql_operators.md:702
+#: ../../reference/scql_operators.md:302
 msgid "`In`(variadic, T): Tensors to be filtered."
 msgstr ""
 
-#: ../../reference/scql_operators.md:707
+#: ../../reference/scql_operators.md:307
 msgid "`Out`(variadic, T): Output tensor."
 msgstr ""
 
-#: ../../reference/scql_operators.md:716 ../../reference/scql_operators.md:882
-#: ../../reference/scql_operators.md:913 ../../reference/scql_operators.md:944
-#: ../../reference/scql_operators.md:978 ../../reference/scql_operators.md:1102
-#: ../../reference/scql_operators.md:1136
+#: ../../reference/scql_operators.md:316 ../../reference/scql_operators.md:1294
+#: ../../reference/scql_operators.md:1454
+#: ../../reference/scql_operators.md:1485
+#: ../../reference/scql_operators.md:1516
+#: ../../reference/scql_operators.md:1547
+#: ../../reference/scql_operators.md:1703
 msgid "`T`: private,secret"
 msgstr ""
 
-#: ../../reference/scql_operators.md:722
-msgid "`Constant`"
+#: ../../reference/scql_operators.md:318
+msgid "`T1`: public,private"
 msgstr ""
 
-#: ../../reference/scql_operators.md:724
-msgid "Definition: Make constant from attribute. Example:"
+#: ../../reference/scql_operators.md:322
+msgid "`FilterByIndex`"
 msgstr ""
 
-#: ../../reference/scql_operators.md:741
-msgid "`Out`(single, T): output tensor(shape [M]) from constant."
+#: ../../reference/scql_operators.md:324
+msgid "Definition: Filter by rows index. Example:"
 msgstr ""
 
-#: ../../reference/scql_operators.md:747
-msgid "`scalar`: scalar attribute(with shape [M])"
+#: ../../reference/scql_operators.md:336
+msgid "`RowsIndexFilter`(single, T): Rows index filter vector(shape [K][1])."
 msgstr ""
 
-#: ../../reference/scql_operators.md:749
-msgid "`to_status`: int64. to status, 0: to private, 1: to public."
+#: ../../reference/scql_operators.md:338
+msgid "`Data`(variadic, T): Input data tensor(shape [M][N])."
 msgstr ""
 
-#: ../../reference/scql_operators.md:758
-msgid "`to_status`: 0"
+#: ../../reference/scql_operators.md:343
+msgid "`Out`(variadic, T): Output data tensor(shape [X][N])."
 msgstr ""
 
-#: ../../reference/scql_operators.md:765
-msgid "`T`: public,private"
+#: ../../reference/scql_operators.md:356
+msgid "`Greater`"
 msgstr ""
 
-#: ../../reference/scql_operators.md:769
-msgid "`DumpFile`"
+#: ../../reference/scql_operators.md:358
+msgid "Out = Left `Greater` Right"
 msgstr ""
 
-#: ../../reference/scql_operators.md:771
+#: ../../reference/scql_operators.md:386
+msgid "`GreaterEqual`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:388
+msgid "Out = Left `GreaterEqual` Right"
+msgstr ""
+
+#: ../../reference/scql_operators.md:416
+msgid "`Group`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:418
 msgid ""
-"Definition: Dump the input tensor. Note: This op will change the affected"
-" rows in the session"
+"Definition: Assign a group id(start from 0) for each input element. "
+"Example:"
 msgstr ""
 
-#: ../../reference/scql_operators.md:775
-msgid "`In`(variadic, T): Tensors to be dumped."
+#: ../../reference/scql_operators.md:430
+msgid "`Key`(variadic, T): input key tensors(shape [M][1])."
 msgstr ""
 
-#: ../../reference/scql_operators.md:780
-msgid "`Out`(variadic, T): Tensors have been dumped."
+#: ../../reference/scql_operators.md:435
+msgid "`GroupId`(single, T): group id vector(shape [M][1])."
 msgstr ""
 
-#: ../../reference/scql_operators.md:786
-msgid "`file_path`: String. Absolute file path to dump the tensors."
+#: ../../reference/scql_operators.md:437
+msgid "`GroupNum`(single, T): number of groups vector(shape [1][1])"
 msgstr ""
 
-#: ../../reference/scql_operators.md:788
-msgid "`deliminator`: String. Column deliminator, e.g. comma `,`"
+#: ../../reference/scql_operators.md:450
+msgid "`GroupAvg`"
 msgstr ""
 
-#: ../../reference/scql_operators.md:801
+#: ../../reference/scql_operators.md:452 ../../reference/scql_operators.md:489
+#: ../../reference/scql_operators.md:526 ../../reference/scql_operators.md:563
+#: ../../reference/scql_operators.md:600 ../../reference/scql_operators.md:637
+#: ../../reference/scql_operators.md:674
+msgid "Definition: Aggregate `Data` for each group. Example:"
+msgstr ""
+
+#: ../../reference/scql_operators.md:465 ../../reference/scql_operators.md:502
+#: ../../reference/scql_operators.md:539 ../../reference/scql_operators.md:576
+#: ../../reference/scql_operators.md:613 ../../reference/scql_operators.md:650
+#: ../../reference/scql_operators.md:687
+msgid "`GroupId`(single, T): Input group id vector(shape [M][1])."
+msgstr ""
+
+#: ../../reference/scql_operators.md:467 ../../reference/scql_operators.md:504
+#: ../../reference/scql_operators.md:541 ../../reference/scql_operators.md:578
+#: ../../reference/scql_operators.md:615 ../../reference/scql_operators.md:652
+#: ../../reference/scql_operators.md:689
+msgid "`GroupNum`(single, T): Input number of groups vector(shape [1][1])."
+msgstr ""
+
+#: ../../reference/scql_operators.md:469 ../../reference/scql_operators.md:506
+#: ../../reference/scql_operators.md:543 ../../reference/scql_operators.md:580
+#: ../../reference/scql_operators.md:617 ../../reference/scql_operators.md:654
+#: ../../reference/scql_operators.md:691
+msgid "`In`(variadic, T): Input data tensor(shape [M][1])."
+msgstr ""
+
+#: ../../reference/scql_operators.md:474 ../../reference/scql_operators.md:511
+#: ../../reference/scql_operators.md:548 ../../reference/scql_operators.md:585
+#: ../../reference/scql_operators.md:622 ../../reference/scql_operators.md:659
+#: ../../reference/scql_operators.md:696
+msgid ""
+"`Out`(variadic, T): Output data tensors(shape [K][1], K equals to number "
+"of groups), Out[i] is the agg result for i-th group."
+msgstr ""
+
+#: ../../reference/scql_operators.md:487
+msgid "`GroupCount`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:524
+msgid "`GroupCountDistinct`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:561
+msgid "`GroupFirstOf`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:598
+msgid "`GroupMax`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:635
+msgid "`GroupMin`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:672
+msgid "`GroupSum`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:709
 msgid "`In`"
 msgstr ""
 
-#: ../../reference/scql_operators.md:803
+#: ../../reference/scql_operators.md:711
 msgid ""
 "Definition: Given an input tensor Left (its shape is [M]), and another "
 "input tensor Right (its shape is [N]), check whether Left's element "
@@ -611,348 +592,516 @@ msgid ""
 "[M]). Left and Right must be the same type. Example:"
 msgstr ""
 
-#: ../../reference/scql_operators.md:816
+#: ../../reference/scql_operators.md:724
 msgid "`Left`(single, T): First operand."
 msgstr ""
 
-#: ../../reference/scql_operators.md:818
+#: ../../reference/scql_operators.md:726
 msgid "`Right`(single, T1): Second operand."
 msgstr ""
 
-#: ../../reference/scql_operators.md:823
+#: ../../reference/scql_operators.md:731
 msgid "`Out`(single, T): Output Tensor."
 msgstr ""
 
-#: ../../reference/scql_operators.md:829
+#: ../../reference/scql_operators.md:737
 msgid "`algorithm`: Int64. Algorithm to use for the op. 1: PSI"
 msgstr ""
 
-#: ../../reference/scql_operators.md:831
+#: ../../reference/scql_operators.md:739
 msgid ""
 "`input_party_codes`: List of parties the inputs belong to. This attribute"
 " is required if algorithm = PSI."
 msgstr ""
 
-#: ../../reference/scql_operators.md:833
+#: ../../reference/scql_operators.md:741
 msgid ""
 "`reveal_to`: A party can see the result. This attribute is required if "
 "algorithm = PSI."
 msgstr ""
 
-#: ../../reference/scql_operators.md:842
+#: ../../reference/scql_operators.md:750
 msgid "`algorithm`: 0"
 msgstr ""
 
-#: ../../reference/scql_operators.md:855
-msgid "`ReduceSum`"
+#: ../../reference/scql_operators.md:763
+msgid "`IntDiv`"
 msgstr ""
 
-#: ../../reference/scql_operators.md:857
+#: ../../reference/scql_operators.md:765
+msgid "Out = Left `IntDiv` Right"
+msgstr ""
+
+#: ../../reference/scql_operators.md:793
+msgid "`Join`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:795
 msgid ""
-"Definition: Given an input tensor In, return the sum of input tensor's "
-"elements. Example:"
+"Definition: Create Join Index based on EQ-Join, return result's "
+"corresponding rows index in the original input. Example:"
 msgstr ""
 
-#: ../../reference/scql_operators.md:868
-msgid "`In`(single, T): Tensor to be summed (shape [M])."
+#: ../../reference/scql_operators.md:809
+msgid "`Left`(single, T1): Left vector(shape [M][1])"
 msgstr ""
 
-#: ../../reference/scql_operators.md:873
-msgid "`Out`(single, T): The summed Tensor (shape [1])."
+#: ../../reference/scql_operators.md:811
+msgid "`Right`(single, T1): Right vector(shape [N][1])"
 msgstr ""
 
-#: ../../reference/scql_operators.md:886
-msgid "`ReduceMax`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:888
+#: ../../reference/scql_operators.md:816
 msgid ""
-"Definition: Given a input tensor In, return the max of input tensor's "
-"elements. Example:"
+"`LeftJoinIndex`(single, T2): Joined rows index for left vector(shape "
+"[K][1])"
 msgstr ""
 
-#: ../../reference/scql_operators.md:899
-msgid "`In`(single, T): Tensor to be maxed (shape [M])."
-msgstr ""
-
-#: ../../reference/scql_operators.md:904
-msgid "`Out`(single, T): The maxed Tensor (shape [1])."
-msgstr ""
-
-#: ../../reference/scql_operators.md:917
-msgid "`ReduceMin`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:919
+#: ../../reference/scql_operators.md:818
 msgid ""
-"Definition: Given a input tensor In, return the min of input tensor's "
-"elements. Example:"
+"`RightJoinIndex`(single, T2): Joined rows index for right vector(shape "
+"[K][1])"
 msgstr ""
 
-#: ../../reference/scql_operators.md:930
-msgid "`In`(single, T): Tensor to be mined (shape [M])."
+#: ../../reference/scql_operators.md:824
+msgid ""
+"`input_party_codes`: List of parties the inputs belong to([PartyCodeLeft,"
+" PartyCodeRight])."
 msgstr ""
 
-#: ../../reference/scql_operators.md:935
-msgid "`Out`(single, T): The mined Tensor (shape [1])."
+#: ../../reference/scql_operators.md:826
+msgid "`join_type`: Int64. 0: inner join;"
 msgstr ""
 
-#: ../../reference/scql_operators.md:948
+#: ../../reference/scql_operators.md:835
+msgid "`join_type`: 0"
+msgstr ""
+
+#: ../../reference/scql_operators.md:844 ../../reference/scql_operators.md:996
+msgid "`T2`: private"
+msgstr ""
+
+#: ../../reference/scql_operators.md:848
+msgid "`Less`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:850
+msgid "Out = Left `Less` Right"
+msgstr ""
+
+#: ../../reference/scql_operators.md:878
+msgid "`LessEqual`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:880
+msgid "Out = Left `LessEqual` Right"
+msgstr ""
+
+#: ../../reference/scql_operators.md:908
+msgid "`LogicalAnd`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:910
+msgid "Out = Left `LogicalAnd` Right"
+msgstr ""
+
+#: ../../reference/scql_operators.md:938
+msgid "`LogicalOr`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:940
+msgid "Out = Left `LogicalOr` Right"
+msgstr ""
+
+#: ../../reference/scql_operators.md:968
+msgid "`MakePrivate`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:970
+msgid "Convert In tensor from share status to private status."
+msgstr ""
+
+#: ../../reference/scql_operators.md:974 ../../reference/scql_operators.md:1006
+#: ../../reference/scql_operators.md:1032
+msgid "`In`(variadic, T1): Input tensors."
+msgstr ""
+
+#: ../../reference/scql_operators.md:979 ../../reference/scql_operators.md:1011
+#: ../../reference/scql_operators.md:1037
+msgid "`Out`(variadic, T2): Output tensors."
+msgstr ""
+
+#: ../../reference/scql_operators.md:985
+msgid ""
+"`reveal_to`: List of parties to see the private data. If it is revealed "
+"to one party only, the other party also needs to run the op, but does not"
+" have an output. Only the reveal_to party gets the output."
+msgstr ""
+
+#: ../../reference/scql_operators.md:994
+msgid "`T1`: secret,public"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1000
+msgid "`MakePublic`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1002
+msgid "Convert In tensor from share/private status to public status."
+msgstr ""
+
+#: ../../reference/scql_operators.md:1020
+msgid "`T1`: private,secret"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1022
+msgid "`T2`: public"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1026
+msgid "`MakeShare`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1028
+msgid "Convert In tensor from private status to share status."
+msgstr ""
+
+#: ../../reference/scql_operators.md:1048
+msgid "`T2`: secret"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1052
+msgid "`Minus`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1054
+msgid "Out = Left `Minus` Right"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1082
+msgid "`Mod`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1084
+msgid "Out = Left `Mod` Right"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1112
+msgid "`Mul`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1114
+msgid "Out = Left `Mul` Right"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1142
+msgid "`Not`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1144
+msgid "Out = Not In"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1148
+msgid "`In`(single, T): Input tensor."
+msgstr ""
+
+#: ../../reference/scql_operators.md:1153
+msgid "`Out`(single, T): Output tensor."
+msgstr ""
+
+#: ../../reference/scql_operators.md:1166
+msgid "`NotEqual`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1168
+msgid "Out = Left `NotEqual` Right"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1196
+msgid "`ObliviousGroupAvg`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1198
+#: ../../reference/scql_operators.md:1232
+#: ../../reference/scql_operators.md:1300
+#: ../../reference/scql_operators.md:1334
+#: ../../reference/scql_operators.md:1368
+msgid ""
+"Definition: partially aggregate `In` according to end of group indicator."
+" Example:"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1210
+#: ../../reference/scql_operators.md:1244
+#: ../../reference/scql_operators.md:1285
+#: ../../reference/scql_operators.md:1312
+#: ../../reference/scql_operators.md:1346
+#: ../../reference/scql_operators.md:1380
+msgid ""
+"`Group`(single, T): End of group indicator(shape [M][1]). Element 1 means"
+" the row is the last element of the group, 0 is not."
+msgstr ""
+
+#: ../../reference/scql_operators.md:1212
+#: ../../reference/scql_operators.md:1246
+#: ../../reference/scql_operators.md:1314
+#: ../../reference/scql_operators.md:1348
+#: ../../reference/scql_operators.md:1382
+msgid "`In`(variadic, T): Values to be aggregated (shape [M][1])."
+msgstr ""
+
+#: ../../reference/scql_operators.md:1217
+#: ../../reference/scql_operators.md:1251
+#: ../../reference/scql_operators.md:1319
+#: ../../reference/scql_operators.md:1353
+#: ../../reference/scql_operators.md:1387
+msgid "`Out`(variadic, T): Partially aggregated values (shape [M][1])."
+msgstr ""
+
+#: ../../reference/scql_operators.md:1230
+msgid "`ObliviousGroupCount`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1264
+msgid "`ObliviousGroupMark`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1266
+msgid ""
+"Definition: generate end of group indicator `Group` based on `Key`. The "
+"operator calculates Group[i] = not_eq(Key[i+1], Key[i]). Example:"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1280
+msgid "`Key`(variadic, T): Pre-sorted group keys (shape [M][1])."
+msgstr ""
+
+#: ../../reference/scql_operators.md:1298
+msgid "`ObliviousGroupMax`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1332
+msgid "`ObliviousGroupMin`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1366
+msgid "`ObliviousGroupSum`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1400
+msgid "`Publish`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1402
+msgid "This operator publishes the DAG results."
+msgstr ""
+
+#: ../../reference/scql_operators.md:1406
+msgid "`In`(variadic, T): Tensors to be published."
+msgstr ""
+
+#: ../../reference/scql_operators.md:1411
+msgid ""
+"`Out`(variadic, T): Result tensors of the publish op. Tensors are in "
+"TensorOption VALUE."
+msgstr ""
+
+#: ../../reference/scql_operators.md:1424
 msgid "`ReduceAvg`"
 msgstr ""
 
-#: ../../reference/scql_operators.md:950
+#: ../../reference/scql_operators.md:1426
 msgid ""
 "Definition: Given a input tensor In, return the average of input tensor's"
 " elements. Example:"
 msgstr ""
 
-#: ../../reference/scql_operators.md:964
+#: ../../reference/scql_operators.md:1440
 msgid "`In`(single, T): Tensor to be reduced (shape [M])."
 msgstr ""
 
-#: ../../reference/scql_operators.md:969
+#: ../../reference/scql_operators.md:1445
 msgid "`Out`(single, T): The average Tensor (shape [1])."
 msgstr ""
 
-#: ../../reference/scql_operators.md:982
+#: ../../reference/scql_operators.md:1458
+msgid "`ReduceMax`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1460
+msgid ""
+"Definition: Given a input tensor In, return the max of input tensor's "
+"elements. Example:"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1471
+msgid "`In`(single, T): Tensor to be maxed (shape [M])."
+msgstr ""
+
+#: ../../reference/scql_operators.md:1476
+msgid "`Out`(single, T): The maxed Tensor (shape [1])."
+msgstr ""
+
+#: ../../reference/scql_operators.md:1489
+msgid "`ReduceMin`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1491
+msgid ""
+"Definition: Given a input tensor In, return the min of input tensor's "
+"elements. Example:"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1502
+msgid "`In`(single, T): Tensor to be mined (shape [M])."
+msgstr ""
+
+#: ../../reference/scql_operators.md:1507
+msgid "`Out`(single, T): The mined Tensor (shape [1])."
+msgstr ""
+
+#: ../../reference/scql_operators.md:1520
+msgid "`ReduceSum`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1522
+msgid ""
+"Definition: Given an input tensor In, return the sum of input tensor's "
+"elements. Example:"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1533
+msgid "`In`(single, T): Tensor to be summed (shape [M])."
+msgstr ""
+
+#: ../../reference/scql_operators.md:1538
+msgid "`Out`(single, T): The summed Tensor (shape [1])."
+msgstr ""
+
+#: ../../reference/scql_operators.md:1551
+msgid "`RunSQL`"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1553
+msgid "Run a SQL statement and return a list of tensors in private status"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1562
+msgid "`Out`(variadic, T): Result tensors of the SQL statement."
+msgstr ""
+
+#: ../../reference/scql_operators.md:1568
+msgid "`sql`: SQL statement"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1570
+msgid "`table_refs`: tables referenced by query"
+msgstr ""
+
+#: ../../reference/scql_operators.md:1583
 msgid "`Shape`"
 msgstr ""
 
-#: ../../reference/scql_operators.md:984
+#: ../../reference/scql_operators.md:1585
 msgid ""
 "Definition: Given tensors In, return shapes of each tensor. Axis starts "
 "from 0. If axis is set, dimensions of each shape are returned. If axis is"
 " not set(default -1), shapes are returned. Example:"
 msgstr ""
 
-#: ../../reference/scql_operators.md:995
+#: ../../reference/scql_operators.md:1596
 msgid "`In`(variadic, T): Input Tensors"
 msgstr ""
 
-#: ../../reference/scql_operators.md:1000
+#: ../../reference/scql_operators.md:1601
 msgid "`Out`(variadic, T1): Shape Tensors"
 msgstr ""
 
-#: ../../reference/scql_operators.md:1006
-msgid "`axis`: Int. Specific dimension of the shape."
+#: ../../reference/scql_operators.md:1607
+msgid "`axis`: Int64. Specific dimension of the shape."
 msgstr ""
 
-#: ../../reference/scql_operators.md:1015
+#: ../../reference/scql_operators.md:1616
 msgid "`axis`: -1"
 msgstr ""
 
-#: ../../reference/scql_operators.md:1028
-msgid "`Unique`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:1030
-msgid "Definition: Unique of Key tensor. Example:"
-msgstr ""
-
-#: ../../reference/scql_operators.md:1041
-msgid "`Key`(single, T): Input key tensors(shape [M][1])."
-msgstr ""
-
-#: ../../reference/scql_operators.md:1046
-msgid "`UniqueKey`(single, T): Output unique key tensor(shape [K][1])."
-msgstr ""
-
-#: ../../reference/scql_operators.md:1059
-msgid "`Sort`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:1061
-msgid "Definition: sort `In` using `Key`. Example:"
-msgstr ""
-
-#: ../../reference/scql_operators.md:1073
-msgid "`Key`(variadic, T): Sort Key(shape [M][1])."
-msgstr ""
-
-#: ../../reference/scql_operators.md:1075
-msgid "`In`(variadic, T): Sort Value(shape [M][1])."
-msgstr ""
-
-#: ../../reference/scql_operators.md:1080
-msgid "`Out`(variadic, T): Sorted Value(shape [M][1])"
-msgstr ""
-
-#: ../../reference/scql_operators.md:1086
-msgid "`reverse`: Bool. If True, the sorted tensor in descending order."
-msgstr ""
-
-#: ../../reference/scql_operators.md:1095
-msgid "`reverse`: false"
-msgstr ""
-
-#: ../../reference/scql_operators.md:1106
-msgid "`ObliviousGroupMark`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:1108
-msgid ""
-"Definition: generate end of group indicator `Group` based on `Key`. The "
-"operator calculates Group[i] = not_eq(Key[i+1], Key[i]). Example:"
-msgstr ""
-
-#: ../../reference/scql_operators.md:1122
-msgid "`Key`(variadic, T): Pre-sorted group keys (shape [M][1])."
-msgstr ""
-
-#: ../../reference/scql_operators.md:1127
-#: ../../reference/scql_operators.md:1154
-#: ../../reference/scql_operators.md:1188
-#: ../../reference/scql_operators.md:1222
-#: ../../reference/scql_operators.md:1256
-#: ../../reference/scql_operators.md:1290
-msgid ""
-"`Group`(single, T): End of group indicator(shape [M][1]). Element 1 means"
-" the row is the last element of the group, 0 is not."
-msgstr ""
-
-#: ../../reference/scql_operators.md:1140
-msgid "`ObliviousGroupSum`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:1142
-#: ../../reference/scql_operators.md:1176
-#: ../../reference/scql_operators.md:1210
-#: ../../reference/scql_operators.md:1244
-#: ../../reference/scql_operators.md:1278
-msgid ""
-"Definition: partially aggregate `In` according to end of group indicator."
-" Example:"
-msgstr ""
-
-#: ../../reference/scql_operators.md:1156
-#: ../../reference/scql_operators.md:1190
-#: ../../reference/scql_operators.md:1224
-#: ../../reference/scql_operators.md:1258
-#: ../../reference/scql_operators.md:1292
-msgid "`In`(variadic, T): Values to be aggregated (shape [M][1])."
-msgstr ""
-
-#: ../../reference/scql_operators.md:1161
-#: ../../reference/scql_operators.md:1195
-#: ../../reference/scql_operators.md:1229
-#: ../../reference/scql_operators.md:1263
-#: ../../reference/scql_operators.md:1297
-msgid "`Out`(variadic, T): Partially aggregated values (shape [M][1])."
-msgstr ""
-
-#: ../../reference/scql_operators.md:1170
-#: ../../reference/scql_operators.md:1204
-#: ../../reference/scql_operators.md:1238
-#: ../../reference/scql_operators.md:1272
-#: ../../reference/scql_operators.md:1306
-#: ../../reference/scql_operators.md:1337
-#: ../../reference/scql_operators.md:1443
-msgid "`T`: secret"
-msgstr ""
-
-#: ../../reference/scql_operators.md:1174
-msgid "`ObliviousGroupCount`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:1208
-msgid "`ObliviousGroupMax`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:1242
-msgid "`ObliviousGroupMin`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:1276
-msgid "`ObliviousGroupAvg`"
-msgstr ""
-
-#: ../../reference/scql_operators.md:1310
+#: ../../reference/scql_operators.md:1629
 msgid "`Shuffle`"
 msgstr ""
 
-#: ../../reference/scql_operators.md:1312
+#: ../../reference/scql_operators.md:1631
 msgid "Definition: Shuffle `In`. Example:"
 msgstr ""
 
-#: ../../reference/scql_operators.md:1323
+#: ../../reference/scql_operators.md:1642
 msgid "`In`(variadic, T): Input Value(shape [M][1])."
 msgstr ""
 
-#: ../../reference/scql_operators.md:1328
+#: ../../reference/scql_operators.md:1647
 msgid "`Out`(variadic, T): Output Value(shape [M][1])"
 msgstr ""
 
-#: ../../reference/scql_operators.md:1341
-msgid "`BroadcastTo`"
+#: ../../reference/scql_operators.md:1660
+msgid "`Sort`"
 msgstr ""
 
-#: ../../reference/scql_operators.md:1343
-msgid ""
-"Definition: Broadcast Input tensor `In` to the same shape as "
-"`ShapeRefTensor`.  Example:"
+#: ../../reference/scql_operators.md:1662
+msgid "Definition: sort `In` using `Key`. Example:"
 msgstr ""
 
-#: ../../reference/scql_operators.md:1355
-msgid "`In`(variadic, T): Input tensor"
+#: ../../reference/scql_operators.md:1674
+msgid "`Key`(variadic, T): Sort Key(shape [M][1])."
 msgstr ""
 
-#: ../../reference/scql_operators.md:1357
-msgid "`ShapeRefTensor`(single, T1): Shape reference tensor"
+#: ../../reference/scql_operators.md:1676
+msgid "`In`(variadic, T): Sort Value(shape [M][1])."
 msgstr ""
 
-#: ../../reference/scql_operators.md:1362
-msgid "`Out`(variadic, T2): Result tensor"
+#: ../../reference/scql_operators.md:1681
+msgid "`Out`(variadic, T): Sorted Value(shape [M][1])"
 msgstr ""
 
-#: ../../reference/scql_operators.md:1371
-msgid "`T`: public"
+#: ../../reference/scql_operators.md:1687
+msgid "`reverse`: Bool. If True, the sorted tensor in descending order."
 msgstr ""
 
-#: ../../reference/scql_operators.md:1375
-msgid "`T2`: public,private"
+#: ../../reference/scql_operators.md:1696
+msgid "`reverse`: false"
 msgstr ""
 
-#: ../../reference/scql_operators.md:1379
-msgid "`Not`"
+#: ../../reference/scql_operators.md:1707
+msgid "`Unique`"
 msgstr ""
 
-#: ../../reference/scql_operators.md:1381
-msgid "Out = Not In"
+#: ../../reference/scql_operators.md:1709
+msgid "Definition: Unique of Key tensor. Example:"
 msgstr ""
 
-#: ../../reference/scql_operators.md:1385
-msgid "`In`(single, T): Input tensor."
+#: ../../reference/scql_operators.md:1720
+msgid "`Key`(single, T): Input key tensors(shape [M][1])."
 msgstr ""
 
-#: ../../reference/scql_operators.md:1390
-msgid "`Out`(single, T): Output tensor."
+#: ../../reference/scql_operators.md:1725
+msgid "`UniqueKey`(single, T): Output unique key tensor(shape [K][1])."
 msgstr ""
 
-#: ../../reference/scql_operators.md:1403
-msgid "`Concat`"
-msgstr ""
+#~ msgid "`In`(variadic, T1): Tensors to be published."
+#~ msgstr ""
 
-#: ../../reference/scql_operators.md:1405
-msgid ""
-"Definition: Given a number of tensors In (variadic, each tensor's shape "
-"must be the same except for the axis), concat the In tensors along the "
-"axis. Example:"
-msgstr ""
+#~ msgid ""
+#~ "`Out`(variadic, T2): Result tensors of "
+#~ "the publish op. Tensors are in "
+#~ "TensorOption VALUE."
+#~ msgstr ""
 
-#: ../../reference/scql_operators.md:1416
-msgid "`In`(variadic, T): Tensors to be concat."
-msgstr ""
+#~ msgid "`T2`: unknown"
+#~ msgstr ""
 
-#: ../../reference/scql_operators.md:1421
-msgid "`Out`(single, T): Concated Tensor."
-msgstr ""
+#~ msgid "`T1`: secret"
+#~ msgstr ""
 
-#: ../../reference/scql_operators.md:1427
-msgid "`axis`: Int. Dimension along which to concatenate."
-msgstr ""
+#~ msgid "`axis`: Int. Specific dimension of the shape."
+#~ msgstr ""
 
-#: ../../reference/scql_operators.md:1436
-msgid "`axis`: 0"
-msgstr ""
-
+#~ msgid "`axis`: Int. Dimension along which to concatenate."
+#~ msgstr ""

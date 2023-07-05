@@ -28,6 +28,7 @@ The GRM service is an HTTP service and can be implemented in any language like C
 
 The GRM service will be called by `client <https://github.com/secretflow/scql/blob/main/pkg/grm/stdgrm/standard_grm.go>`_.
 
+.. _verify_table_ownership:
 
 /VerifyTableOwnership
 ---------------------
@@ -38,7 +39,7 @@ Request
 ^^^^^^^
 
 +-------+--------+----------+------------------------------------------------------------------------------------------------------------------+
-| Field |  Type  | Required |                                                   Description                                                    |
+| Field | Type   | Required | Description                                                                                                      |
 +=======+========+==========+==================================================================================================================+
 | tid   | string | Y        | Table identifier provided by user when create table, read :ref:`Create table<create_table>` for more information |
 +-------+--------+----------+------------------------------------------------------------------------------------------------------------------+
@@ -49,7 +50,7 @@ Response
 ^^^^^^^^
 
 +----------+---------+----------+--------------------------------------+
-|  Field   |  Type   | Required |             Description              |
+| Field    | Type    | Required | Description                          |
 +==========+=========+==========+======================================+
 | status   | Status_ | Y        | Status of response                   |
 +----------+---------+----------+--------------------------------------+
@@ -59,15 +60,15 @@ Response
 Status
 """"""
 
-+---------+-------------------+----------+----------------------------------------------+
-|  Field  |       Type        | Required |                 Description                  |
-+=========+===================+==========+==============================================+
-| code    | int32             | Y        | The status code, 0 means success             |
-+---------+-------------------+----------+----------------------------------------------+
-| message | string            | N        | Message for recording the error information. |
-+---------+-------------------+----------+----------------------------------------------+
-| details | protobuf.Any list | N        | A list of messages for error details         |
-+---------+-------------------+----------+----------------------------------------------+
++----------+-------------------+----------+----------------------------------------------+
+| Field    | Type              | Required | Description                                  |
++==========+===================+==========+==============================================+
+| code     | int32             | Y        | The status code, 0 means success             |
++----------+-------------------+----------+----------------------------------------------+
+| Messages | string            | N        | Message for recording the error information. |
++----------+-------------------+----------+----------------------------------------------+
+| details  | protobuf.Any list | N        | A list of messages for error details         |
++----------+-------------------+----------+----------------------------------------------+
 
 
 
@@ -96,17 +97,18 @@ Response
         "is_owner": true
     }
 
+.. _get_table_meta:
 
 /GetTableMeta
 -------------
 
-During creating table, after ensuring the ownership, SCQL needs to Get table schema from GRM service.
+During creating table, after ensuring the ownership, SCQL needs to Get table schema from grm service.
 
 Request
 ^^^^^^^
 
 +---------------+--------+----------+-----------------------------------------+
-|     Field     |  Type  | Required |               Description               |
+| Field         | Type   | Required | Description                             |
 +===============+========+==========+=========================================+
 | tid           | string | Y        | Unique table identifier                 |
 +---------------+--------+----------+-----------------------------------------+
@@ -119,7 +121,7 @@ Response
 ^^^^^^^^
 
 +--------+--------------+----------+-------------------------+
-| Field  |     Type     | Required |       Description       |
+| Field  | Type         | Required | Description             |
 +========+==============+==========+=========================+
 | status | Status_      | Y        | The status of response  |
 +--------+--------------+----------+-------------------------+
@@ -129,21 +131,23 @@ Response
 TableSchema
 """""""""""
 
-+------------+------------------+----------+----------------------------------------------------+
-|   Field    |       Type       | Required |                    Description                     |
-+============+==================+==========+====================================================+
-| db_name    | string           | Y        | The name of the database that the table belongs to |
-+------------+------------------+----------+----------------------------------------------------+
-| table_name | string           | Y        | The name of the table                              |
-+------------+------------------+----------+----------------------------------------------------+
-| columns    | ColumnDesc_ list | Y        | The column information in the table                |
-+------------+------------------+----------+----------------------------------------------------+
++------------+------------------+----------+----------------------------------------------------------------------+
+| Field      | Type             | Required | Description                                                          |
++============+==================+==========+======================================================================+
+| db_name    | string           | Y        | The name of the database that the table belongs to                   |
++------------+------------------+----------+----------------------------------------------------------------------+
+| table_name | string           | Y        | The name of the table                                                |
++------------+------------------+----------+----------------------------------------------------------------------+
+| columns    | ColumnDesc_ list | Y        | The column information in the table                                  |
++------------+------------------+----------+----------------------------------------------------------------------+
+| db_type    | DataSourceKind_  | N        | The type of backend data source. Supported values in DataSourceKind_ |
++------------+------------------+----------+----------------------------------------------------------------------+
 
 ColumnDesc
 **********
 
 +-------------+--------+----------+-------------------------------+
-|    Field    |  Type  | Required |          Description          |
+| Field       | Type   | Required | Description                   |
 +=============+========+==========+===============================+
 | name        | string | Y        | The column name               |
 +-------------+--------+----------+-------------------------------+
@@ -151,6 +155,24 @@ ColumnDesc
 +-------------+--------+----------+-------------------------------+
 | description | string | N        | The description of the column |
 +-------------+--------+----------+-------------------------------+
+
+DataSourceKind
+**************
+
++------------+------------------+
+| Value      | Description      |
++============+==================+
+| UNKNOWN    | Default MySQL    |
++------------+------------------+
+| MYSQL      | MySQL backend    |
++------------+------------------+
+| SQLITE     | SQLite backend   |
++------------+------------------+
+| POSTGRESQL | Postgres backend |
++------------+------------------+
+| CSVDB      | CSV backend      |
++------------+------------------+
+
 
 Example
 ^^^^^^^
@@ -177,6 +199,7 @@ response
         },
         "schema" {
             "db_name": "some_da_name",
+            "db_type": 1,
             "table_name": "some_table_name"
             "columns": [
                 {
@@ -191,6 +214,7 @@ response
         }
     }
 
+.. _get_engines:
 
 /GetEngines
 -----------

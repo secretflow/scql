@@ -30,7 +30,7 @@ struct ShapeTestCase {
 };
 
 class ShapeTest : public testing::TestWithParam<
-                      std::tuple<spu::ProtocolKind, ShapeTestCase>> {
+                      std::tuple<test::SpuRuntimeTestCase, ShapeTestCase>> {
  protected:
   static pb::ExecNode MakeExecNode(const ShapeTestCase& tc);
   static void FeedInputs(const std::vector<ExecContext*>& ctxs,
@@ -40,7 +40,7 @@ class ShapeTest : public testing::TestWithParam<
 INSTANTIATE_TEST_SUITE_P(
     ShapeBatchTest, ShapeTest,
     testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             ShapeTestCase{
                 .inputs =
@@ -104,22 +104,29 @@ TEST_P(ShapeTest, works) {
   auto parm = GetParam();
   auto tc = std::get<1>(parm);
   auto node = MakeExecNode(tc);
-  std::vector<Session> sessions = test::Make2PCSession(std::get<0>(parm));
+  std::vector<Session> sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
-  ExecContext alice_ctx(node, &sessions[0]);
-  ExecContext bob_ctx(node, &sessions[1]);
+  std::vector<ExecContext> exec_ctxs;
+  for (size_t idx = 0; idx < sessions.size(); ++idx) {
+    exec_ctxs.emplace_back(node, &sessions[idx]);
+  }
 
-  FeedInputs({&alice_ctx, &bob_ctx}, tc);
+  // feed inputs
+  std::vector<ExecContext*> ctx_ptrs;
+  for (size_t idx = 0; idx < exec_ctxs.size(); ++idx) {
+    ctx_ptrs.emplace_back(&exec_ctxs[idx]);
+  }
+  FeedInputs(ctx_ptrs, tc);
 
   // When
   Shape op;
-  EXPECT_NO_THROW(op.Run(&alice_ctx));
+  EXPECT_NO_THROW(op.Run(ctx_ptrs[0]));
 
   // Then
   // check alice output
   for (const auto& expect_t : tc.expect_outs) {
     auto expect_arr = expect_t.tensor->ToArrowChunkedArray();
-    auto out = alice_ctx.GetTensorTable()->GetTensor(expect_t.name);
+    auto out = ctx_ptrs[0]->GetTensorTable()->GetTensor(expect_t.name);
     ASSERT_TRUE(out);
     auto out_arr = out->ToArrowChunkedArray();
     // compare tensor content

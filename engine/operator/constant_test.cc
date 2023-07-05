@@ -28,8 +28,9 @@ struct ConstantTestCase {
   pb::TensorStatus output_status;
 };
 
-class ConstantTest : public ::testing::TestWithParam<
-                         std::tuple<spu::ProtocolKind, ConstantTestCase>> {
+class ConstantTest
+    : public ::testing::TestWithParam<
+          std::tuple<test::SpuRuntimeTestCase, ConstantTestCase>> {
  protected:
   static pb::ExecNode MakeConstantExecNode(const ConstantTestCase& tc);
 };
@@ -37,7 +38,7 @@ class ConstantTest : public ::testing::TestWithParam<
 INSTANTIATE_TEST_SUITE_P(
     ConstantPrivateTest, ConstantTest,
     testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             ConstantTestCase{.scalar = {test::NamedTensor(
                                  "x", TensorFromJSON(arrow::int64(), "[3]"))},
@@ -60,7 +61,7 @@ INSTANTIATE_TEST_SUITE_P(
 INSTANTIATE_TEST_SUITE_P(
     ConstantPublicTest, ConstantTest,
     testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             ConstantTestCase{.scalar = {test::NamedTensor(
                                  "x", TensorFromJSON(arrow::int64(), "[3]"))},
@@ -81,30 +82,30 @@ TEST_P(ConstantTest, Works) {
   auto tc = std::get<1>(parm);
   auto node = MakeConstantExecNode(tc);
 
-  std::vector<Session> sessions = test::Make2PCSession(std::get<0>(parm));
+  std::vector<Session> sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
-  ExecContext alice_ctx(node, &sessions[0]);
-  ExecContext bob_ctx(node, &sessions[1]);
+  std::vector<ExecContext> exec_ctxs;
+  for (size_t idx = 0; idx < sessions.size(); ++idx) {
+    exec_ctxs.emplace_back(node, &sessions[idx]);
+  }
+
+  std::vector<ExecContext*> ctx_ptrs;
+  for (size_t idx = 0; idx < exec_ctxs.size(); ++idx) {
+    ctx_ptrs.emplace_back(&exec_ctxs[idx]);
+  }
 
   // When
-  test::OperatorTestRunner<Constant> alice;
-  test::OperatorTestRunner<Constant> bob;
+  EXPECT_NO_THROW(test::RunAsync<Constant>(ctx_ptrs));
 
-  alice.Start(&alice_ctx);
-  bob.Start(&bob_ctx);
-
-  // Then
-  EXPECT_NO_THROW({ alice.Wait(); });
-  EXPECT_NO_THROW({ bob.Wait(); });
   // check alice output
   auto expect_arr = tc.scalar.tensor->ToArrowChunkedArray();
   TensorPtr out;
   if (tc.output_status == pb::TENSORSTATUS_PRIVATE) {
-    out = alice_ctx.GetTensorTable()->GetTensor(tc.scalar.name);
+    out = exec_ctxs[0].GetTensorTable()->GetTensor(tc.scalar.name);
   } else {
-    auto hctx = alice_ctx.GetSession()->GetSpuHalContext();
-    auto device_symbols = alice_ctx.GetSession()->GetDeviceSymbols();
-    util::SpuOutfeedHelper outfeed_helper(hctx, device_symbols);
+    auto sctx = exec_ctxs[0].GetSession()->GetSpuContext();
+    auto device_symbols = exec_ctxs[0].GetSession()->GetDeviceSymbols();
+    util::SpuOutfeedHelper outfeed_helper(sctx, device_symbols);
     out = outfeed_helper.DumpPublic(tc.scalar.name);
   }
   ASSERT_TRUE(out);

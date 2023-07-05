@@ -27,12 +27,12 @@
 #endif  // not defined(THROW_IF_ARROW_NOT_OK)
 
 #ifndef ASSIGN_OR_THROW_ARROW_STATUS
-#define ASSIGN_OR_THROW_ARROW_STATUS(lhs, rexpr)    \
-  do {                                              \
-    auto&& result = (rexpr);                        \
-    if (!result.ok()) {                             \
-      YACL_THROW("{}", result.status().ToString()); \
-    }                                               \
-    lhs = std::move(result).ValueUnsafe();          \
+#define ASSIGN_OR_THROW_ARROW_STATUS(lhs, rexpr)  \
+  do {                                            \
+    auto&& _tmp = (rexpr);                        \
+    if (!_tmp.ok()) {                             \
+      YACL_THROW("{}", _tmp.status().ToString()); \
+    }                                             \
+    lhs = std::move(_tmp).ValueUnsafe();          \
   } while (0)
 #endif  // ASSIGN_OR_THROW_ARROW_STATUS

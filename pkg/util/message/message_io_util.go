@@ -39,7 +39,7 @@ var maxPrintContentLength = 1000
 
 func DeserializeFrom(in io.ReadCloser, request proto.Message) (ContentEncodingType, error) {
 	if request == nil {
-		return EncodingTypeUnknown, fmt.Errorf("unexpected nil request")
+		return EncodingTypeUnknown, fmt.Errorf("unexpected empty message")
 	}
 	body, err := io.ReadAll(in)
 	if err != nil {
@@ -62,6 +62,9 @@ func DeserializeFrom(in io.ReadCloser, request proto.Message) (ContentEncodingTy
 }
 
 func SerializeTo(response proto.Message, encodingType ContentEncodingType) (content string, err error) {
+	if response == nil {
+		return "", fmt.Errorf("unexpected empty message")
+	}
 	switch encodingType {
 	case EncodingTypeProtobuf:
 		c, err := proto.Marshal(response)

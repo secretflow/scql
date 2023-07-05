@@ -50,7 +50,7 @@ func NewDefaultClient(host string, c httpClientI) *Client {
 	return &Client{
 		serverHost:    host,
 		c:             c,
-		maxFetchNum:   180,
+		maxFetchNum:   300,
 		fetchInterval: time.Second,
 	}
 }

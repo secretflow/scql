@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-30 20:12+0800\n"
+"POT-Creation-Date: 2023-07-03 10:12+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -17,7 +17,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.11.0\n"
+"Generated-By: Babel 2.12.1\n"
 
 #: ../../development/scql_api.rst:3
 msgid "SCQL API"
@@ -27,1158 +27,1199 @@ msgstr ""
 msgid ""
 "SCQL supports two types of APIs: synchronous and asynchronous. The "
 "synchronous interface is suitable for executing fast queries, such as "
-"DDL, DML, and simple DQL. Meanwhile, the asynchronous interface is "
+"DDL, DCL, and simple DQL. Meanwhile, the asynchronous interface is "
 "recommended when the query may take a long time to run."
 msgstr ""
 
-#: ../../development/scql_api.rst:10
+#: ../../development/scql_api.rst:11
 msgid "Asynchronous"
 msgstr ""
 
-#: ../../development/scql_api.rst:13
+#: ../../development/scql_api.rst:16
 msgid "public/submit_query"
 msgstr ""
 
-#: ../../development/scql_api.rst:15
+#: ../../development/scql_api.rst:18
 msgid ""
-"Submit the query (DDL/DML/DQL) to SCQL, SCQL will return a session ID "
+"Submit the query (DDL/DCL/DQL) to SCQL, SCQL will return a session ID "
 "immediately which can be used to fetch result, and processes the query in"
 " the background."
 msgstr ""
 
-#: ../../development/scql_api.rst:18 ../../development/scql_api.rst:92
-#: ../../development/scql_api.rst:218
+#: ../../development/scql_api.rst:21 ../../development/scql_api.rst:97
+#: ../../development/scql_api.rst:227
 msgid "Request"
 msgstr ""
 
-#: ../../development/scql_api.rst:21 ../../development/scql_api.rst:42
-#: ../../development/scql_api.rst:95 ../../development/scql_api.rst:108
-#: ../../development/scql_api.rst:198 ../../development/scql_api.rst:221
-#: ../../development/scql_api.rst:238 ../../development/scql_api.rst:315
-#: ../../development/scql_api.rst:327 ../../development/scql_api.rst:338
-#: ../../development/scql_api.rst:349 ../../development/scql_api.rst:360
-#: ../../development/scql_api.rst:379 ../../development/scql_api.rst:390
-#: ../../development/scql_api.rst:400 ../../development/scql_api.rst:410
-#: ../../development/scql_api.rst:428
+#: ../../development/scql_api.rst:24 ../../development/scql_api.rst:45
+#: ../../development/scql_api.rst:100 ../../development/scql_api.rst:113
+#: ../../development/scql_api.rst:203 ../../development/scql_api.rst:230
+#: ../../development/scql_api.rst:247 ../../development/scql_api.rst:324
+#: ../../development/scql_api.rst:336 ../../development/scql_api.rst:347
+#: ../../development/scql_api.rst:358 ../../development/scql_api.rst:369
+#: ../../development/scql_api.rst:388 ../../development/scql_api.rst:399
+#: ../../development/scql_api.rst:410 ../../development/scql_api.rst:421
+#: ../../development/scql_api.rst:439
 msgid "Field"
 msgstr ""
 
-#: ../../development/scql_api.rst:21 ../../development/scql_api.rst:42
-#: ../../development/scql_api.rst:95 ../../development/scql_api.rst:108
-#: ../../development/scql_api.rst:198 ../../development/scql_api.rst:221
-#: ../../development/scql_api.rst:238 ../../development/scql_api.rst:315
-#: ../../development/scql_api.rst:327 ../../development/scql_api.rst:338
-#: ../../development/scql_api.rst:349 ../../development/scql_api.rst:360
-#: ../../development/scql_api.rst:379 ../../development/scql_api.rst:390
-#: ../../development/scql_api.rst:400 ../../development/scql_api.rst:410
-#: ../../development/scql_api.rst:428
+#: ../../development/scql_api.rst:24 ../../development/scql_api.rst:45
+#: ../../development/scql_api.rst:100 ../../development/scql_api.rst:113
+#: ../../development/scql_api.rst:203 ../../development/scql_api.rst:230
+#: ../../development/scql_api.rst:247 ../../development/scql_api.rst:324
+#: ../../development/scql_api.rst:336 ../../development/scql_api.rst:347
+#: ../../development/scql_api.rst:358 ../../development/scql_api.rst:369
+#: ../../development/scql_api.rst:388 ../../development/scql_api.rst:399
+#: ../../development/scql_api.rst:410 ../../development/scql_api.rst:421
+#: ../../development/scql_api.rst:439
 msgid "Type"
 msgstr ""
 
-#: ../../development/scql_api.rst:21 ../../development/scql_api.rst:95
-#: ../../development/scql_api.rst:198 ../../development/scql_api.rst:221
-#: ../../development/scql_api.rst:315 ../../development/scql_api.rst:327
-#: ../../development/scql_api.rst:338 ../../development/scql_api.rst:349
-#: ../../development/scql_api.rst:360 ../../development/scql_api.rst:379
-#: ../../development/scql_api.rst:400 ../../development/scql_api.rst:428
+#: ../../development/scql_api.rst:24 ../../development/scql_api.rst:100
+#: ../../development/scql_api.rst:203 ../../development/scql_api.rst:230
+#: ../../development/scql_api.rst:324 ../../development/scql_api.rst:336
+#: ../../development/scql_api.rst:347 ../../development/scql_api.rst:358
+#: ../../development/scql_api.rst:369 ../../development/scql_api.rst:388
+#: ../../development/scql_api.rst:410 ../../development/scql_api.rst:439
 msgid "Required"
 msgstr ""
 
-#: ../../development/scql_api.rst:21 ../../development/scql_api.rst:42
-#: ../../development/scql_api.rst:95 ../../development/scql_api.rst:108
-#: ../../development/scql_api.rst:198 ../../development/scql_api.rst:221
-#: ../../development/scql_api.rst:238 ../../development/scql_api.rst:315
-#: ../../development/scql_api.rst:327 ../../development/scql_api.rst:338
-#: ../../development/scql_api.rst:349 ../../development/scql_api.rst:360
-#: ../../development/scql_api.rst:379 ../../development/scql_api.rst:400
-#: ../../development/scql_api.rst:410 ../../development/scql_api.rst:428
-#: ../../development/scql_api.rst:445 ../../development/scql_api.rst:457
-#: ../../development/scql_api.rst:502 ../../development/scql_api.rst:515
-#: ../../development/scql_api.rst:532
+#: ../../development/scql_api.rst:24 ../../development/scql_api.rst:45
+#: ../../development/scql_api.rst:100 ../../development/scql_api.rst:113
+#: ../../development/scql_api.rst:203 ../../development/scql_api.rst:230
+#: ../../development/scql_api.rst:247 ../../development/scql_api.rst:324
+#: ../../development/scql_api.rst:336 ../../development/scql_api.rst:347
+#: ../../development/scql_api.rst:358 ../../development/scql_api.rst:369
+#: ../../development/scql_api.rst:388 ../../development/scql_api.rst:410
+#: ../../development/scql_api.rst:421 ../../development/scql_api.rst:439
+#: ../../development/scql_api.rst:456 ../../development/scql_api.rst:468
+#: ../../development/scql_api.rst:513 ../../development/scql_api.rst:526
+#: ../../development/scql_api.rst:543
 msgid "Description"
 msgstr ""
 
-#: ../../development/scql_api.rst:23 ../../development/scql_api.rst:97
-#: ../../development/scql_api.rst:223
+#: ../../development/scql_api.rst:26 ../../development/scql_api.rst:102
+#: ../../development/scql_api.rst:232
 msgid "header"
 msgstr ""
 
-#: ../../development/scql_api.rst:23 ../../development/scql_api.rst:97
-#: ../../development/scql_api.rst:223
+#: ../../development/scql_api.rst:26 ../../development/scql_api.rst:102
+#: ../../development/scql_api.rst:232
 msgid "RequestHeader_"
 msgstr ""
 
-#: ../../development/scql_api.rst:23 ../../development/scql_api.rst:30
-#: ../../development/scql_api.rst:33 ../../development/scql_api.rst:35
-#: ../../development/scql_api.rst:97 ../../development/scql_api.rst:223
-#: ../../development/scql_api.rst:229 ../../development/scql_api.rst:370
-#: ../../development/scql_api.rst:432 ../../development/scql_api.rst:434
+#: ../../development/scql_api.rst:26 ../../development/scql_api.rst:33
+#: ../../development/scql_api.rst:36 ../../development/scql_api.rst:38
+#: ../../development/scql_api.rst:102 ../../development/scql_api.rst:232
+#: ../../development/scql_api.rst:238 ../../development/scql_api.rst:379
+#: ../../development/scql_api.rst:443 ../../development/scql_api.rst:445
 msgid "N"
 msgstr ""
 
-#: ../../development/scql_api.rst:23 ../../development/scql_api.rst:97
-#: ../../development/scql_api.rst:223
+#: ../../development/scql_api.rst:26 ../../development/scql_api.rst:102
+#: ../../development/scql_api.rst:232
 msgid "Common request header"
 msgstr ""
 
-#: ../../development/scql_api.rst:25 ../../development/scql_api.rst:99
-#: ../../development/scql_api.rst:225 ../../development/scql_api.rst:329
+#: ../../development/scql_api.rst:28 ../../development/scql_api.rst:104
+#: ../../development/scql_api.rst:234 ../../development/scql_api.rst:338
 msgid "user"
 msgstr ""
 
-#: ../../development/scql_api.rst:25 ../../development/scql_api.rst:99
-#: ../../development/scql_api.rst:225
+#: ../../development/scql_api.rst:28 ../../development/scql_api.rst:104
+#: ../../development/scql_api.rst:234
 msgid "SCDBCredential_"
 msgstr ""
 
-#: ../../development/scql_api.rst:25 ../../development/scql_api.rst:27
-#: ../../development/scql_api.rst:99 ../../development/scql_api.rst:101
-#: ../../development/scql_api.rst:200 ../../development/scql_api.rst:202
-#: ../../development/scql_api.rst:204 ../../development/scql_api.rst:206
-#: ../../development/scql_api.rst:225 ../../development/scql_api.rst:227
-#: ../../development/scql_api.rst:231 ../../development/scql_api.rst:317
-#: ../../development/scql_api.rst:329 ../../development/scql_api.rst:331
-#: ../../development/scql_api.rst:340 ../../development/scql_api.rst:342
-#: ../../development/scql_api.rst:351 ../../development/scql_api.rst:353
-#: ../../development/scql_api.rst:362 ../../development/scql_api.rst:364
-#: ../../development/scql_api.rst:366 ../../development/scql_api.rst:368
-#: ../../development/scql_api.rst:372 ../../development/scql_api.rst:381
-#: ../../development/scql_api.rst:402 ../../development/scql_api.rst:430
+#: ../../development/scql_api.rst:28 ../../development/scql_api.rst:30
+#: ../../development/scql_api.rst:104 ../../development/scql_api.rst:106
+#: ../../development/scql_api.rst:205 ../../development/scql_api.rst:207
+#: ../../development/scql_api.rst:209 ../../development/scql_api.rst:211
+#: ../../development/scql_api.rst:234 ../../development/scql_api.rst:236
+#: ../../development/scql_api.rst:240 ../../development/scql_api.rst:326
+#: ../../development/scql_api.rst:338 ../../development/scql_api.rst:340
+#: ../../development/scql_api.rst:349 ../../development/scql_api.rst:351
+#: ../../development/scql_api.rst:360 ../../development/scql_api.rst:362
+#: ../../development/scql_api.rst:371 ../../development/scql_api.rst:373
+#: ../../development/scql_api.rst:375 ../../development/scql_api.rst:377
+#: ../../development/scql_api.rst:381 ../../development/scql_api.rst:390
+#: ../../development/scql_api.rst:412 ../../development/scql_api.rst:441
 msgid "Y"
 msgstr ""
 
-#: ../../development/scql_api.rst:25 ../../development/scql_api.rst:99
-#: ../../development/scql_api.rst:225
+#: ../../development/scql_api.rst:28 ../../development/scql_api.rst:104
+#: ../../development/scql_api.rst:234
 msgid "User information"
 msgstr ""
 
-#: ../../development/scql_api.rst:27 ../../development/scql_api.rst:227
+#: ../../development/scql_api.rst:30 ../../development/scql_api.rst:236
 msgid "query"
 msgstr ""
 
-#: ../../development/scql_api.rst:27 ../../development/scql_api.rst:30
-#: ../../development/scql_api.rst:33 ../../development/scql_api.rst:35
-#: ../../development/scql_api.rst:47 ../../development/scql_api.rst:101
-#: ../../development/scql_api.rst:114 ../../development/scql_api.rst:204
-#: ../../development/scql_api.rst:227 ../../development/scql_api.rst:229
-#: ../../development/scql_api.rst:231 ../../development/scql_api.rst:244
-#: ../../development/scql_api.rst:331 ../../development/scql_api.rst:351
-#: ../../development/scql_api.rst:353 ../../development/scql_api.rst:362
-#: ../../development/scql_api.rst:394 ../../development/scql_api.rst:432
-#: ../../development/scql_api.rst:475
+#: ../../development/scql_api.rst:30 ../../development/scql_api.rst:33
+#: ../../development/scql_api.rst:36 ../../development/scql_api.rst:38
+#: ../../development/scql_api.rst:50 ../../development/scql_api.rst:106
+#: ../../development/scql_api.rst:119 ../../development/scql_api.rst:209
+#: ../../development/scql_api.rst:236 ../../development/scql_api.rst:238
+#: ../../development/scql_api.rst:240 ../../development/scql_api.rst:253
+#: ../../development/scql_api.rst:340 ../../development/scql_api.rst:360
+#: ../../development/scql_api.rst:362 ../../development/scql_api.rst:371
+#: ../../development/scql_api.rst:403 ../../development/scql_api.rst:443
+#: ../../development/scql_api.rst:486
 msgid "string"
 msgstr ""
 
-#: ../../development/scql_api.rst:27 ../../development/scql_api.rst:227
+#: ../../development/scql_api.rst:30 ../../development/scql_api.rst:236
 msgid "SCQL query to be run"
 msgstr ""
 
-#: ../../development/scql_api.rst:31
+#: ../../development/scql_api.rst:34
 msgid "query_result_callback_url"
 msgstr ""
 
-#: ../../development/scql_api.rst:30
+#: ../../development/scql_api.rst:33
 msgid ""
 "callback URL to report query result. See `Asynchronous send result`_ for "
 "more"
 msgstr ""
 
-#: ../../development/scql_api.rst:33 ../../development/scql_api.rst:229
+#: ../../development/scql_api.rst:36 ../../development/scql_api.rst:238
 msgid "biz_request_id"
 msgstr ""
 
-#: ../../development/scql_api.rst:33 ../../development/scql_api.rst:229
+#: ../../development/scql_api.rst:36 ../../development/scql_api.rst:238
 msgid "Biz request id which often be unique per biz action"
 msgstr ""
 
-#: ../../development/scql_api.rst:35 ../../development/scql_api.rst:231
+#: ../../development/scql_api.rst:38 ../../development/scql_api.rst:240
 msgid "db_name"
 msgstr ""
 
-#: ../../development/scql_api.rst:35 ../../development/scql_api.rst:231
+#: ../../development/scql_api.rst:38 ../../development/scql_api.rst:240
 msgid "Current database name"
 msgstr ""
 
-#: ../../development/scql_api.rst:39 ../../development/scql_api.rst:105
-#: ../../development/scql_api.rst:235
+#: ../../development/scql_api.rst:42 ../../development/scql_api.rst:110
+#: ../../development/scql_api.rst:244
 msgid "Response"
 msgstr ""
 
-#: ../../development/scql_api.rst:44 ../../development/scql_api.rst:110
-#: ../../development/scql_api.rst:200 ../../development/scql_api.rst:240
-#: ../../development/scql_api.rst:402
+#: ../../development/scql_api.rst:47 ../../development/scql_api.rst:115
+#: ../../development/scql_api.rst:205 ../../development/scql_api.rst:249
+#: ../../development/scql_api.rst:412
 msgid "status"
 msgstr ""
 
-#: ../../development/scql_api.rst:44 ../../development/scql_api.rst:110
-#: ../../development/scql_api.rst:200 ../../development/scql_api.rst:240
+#: ../../development/scql_api.rst:47 ../../development/scql_api.rst:115
+#: ../../development/scql_api.rst:205 ../../development/scql_api.rst:249
 msgid "Status_"
 msgstr ""
 
-#: ../../development/scql_api.rst:44 ../../development/scql_api.rst:110
-#: ../../development/scql_api.rst:200 ../../development/scql_api.rst:240
+#: ../../development/scql_api.rst:47 ../../development/scql_api.rst:115
+#: ../../development/scql_api.rst:205 ../../development/scql_api.rst:249
 msgid "See `Status code`_ for more information"
 msgstr ""
 
-#: ../../development/scql_api.rst:48 ../../development/scql_api.rst:101
-#: ../../development/scql_api.rst:114 ../../development/scql_api.rst:204
-#: ../../development/scql_api.rst:244
+#: ../../development/scql_api.rst:51 ../../development/scql_api.rst:106
+#: ../../development/scql_api.rst:119 ../../development/scql_api.rst:209
+#: ../../development/scql_api.rst:253
 msgid "scdb_session_id"
 msgstr ""
 
-#: ../../development/scql_api.rst:47
+#: ../../development/scql_api.rst:50
 msgid "Unique ID of a session"
 msgstr ""
 
-#: ../../development/scql_api.rst:53 ../../development/scql_api.rst:120
-#: ../../development/scql_api.rst:251
+#: ../../development/scql_api.rst:56 ../../development/scql_api.rst:125
+#: ../../development/scql_api.rst:260
 msgid "Example"
 msgstr ""
 
-#: ../../development/scql_api.rst:55
+#: ../../development/scql_api.rst:58
 msgid ""
 "If you want execute `show databases`, the request and response message "
 "should be structured as follows:"
 msgstr ""
 
-#: ../../development/scql_api.rst:57
+#: ../../development/scql_api.rst:60
 msgid "request"
 msgstr ""
 
-#: ../../development/scql_api.rst:73
+#: ../../development/scql_api.rst:76
 msgid "response"
 msgstr ""
 
-#: ../../development/scql_api.rst:87
+#: ../../development/scql_api.rst:92
 msgid "public/fetch_result"
 msgstr ""
 
-#: ../../development/scql_api.rst:89
+#: ../../development/scql_api.rst:94
 msgid ""
 "Fetch result of the query submitted via the \"submit_query\" method "
 "before, if the query is still running, It will return `NOT_READY` status "
 "code."
 msgstr ""
 
-#: ../../development/scql_api.rst:101 ../../development/scql_api.rst:204
+#: ../../development/scql_api.rst:106 ../../development/scql_api.rst:209
 msgid "Given by scdb when submit the query before, same with session_id_"
 msgstr ""
 
-#: ../../development/scql_api.rst:112 ../../development/scql_api.rst:202
-#: ../../development/scql_api.rst:242
+#: ../../development/scql_api.rst:117 ../../development/scql_api.rst:207
+#: ../../development/scql_api.rst:251
 msgid "out_columns"
 msgstr ""
 
-#: ../../development/scql_api.rst:112 ../../development/scql_api.rst:202
-#: ../../development/scql_api.rst:242
+#: ../../development/scql_api.rst:117 ../../development/scql_api.rst:207
+#: ../../development/scql_api.rst:251
 msgid "Tensor_ list"
 msgstr ""
 
-#: ../../development/scql_api.rst:112
+#: ../../development/scql_api.rst:117
 msgid "Query result"
 msgstr ""
 
-#: ../../development/scql_api.rst:114
+#: ../../development/scql_api.rst:119
 msgid "Same with session_id_"
 msgstr ""
 
-#: ../../development/scql_api.rst:116 ../../development/scql_api.rst:206
-#: ../../development/scql_api.rst:246
+#: ../../development/scql_api.rst:121 ../../development/scql_api.rst:211
+#: ../../development/scql_api.rst:255
 msgid "affected_rows"
 msgstr ""
 
-#: ../../development/scql_api.rst:116 ../../development/scql_api.rst:206
-#: ../../development/scql_api.rst:246 ../../development/scql_api.rst:392
+#: ../../development/scql_api.rst:121 ../../development/scql_api.rst:211
+#: ../../development/scql_api.rst:255 ../../development/scql_api.rst:401
 msgid "int64"
 msgstr ""
 
-#: ../../development/scql_api.rst:116 ../../development/scql_api.rst:206
-#: ../../development/scql_api.rst:246
+#: ../../development/scql_api.rst:121 ../../development/scql_api.rst:211
+#: ../../development/scql_api.rst:255
 msgid "The num of rows affected"
 msgstr ""
 
-#: ../../development/scql_api.rst:122
+#: ../../development/scql_api.rst:127
 msgid ""
 "If you want to get the result of the query `show databases`, you can send"
 " a request like this."
 msgstr ""
 
-#: ../../development/scql_api.rst:138
+#: ../../development/scql_api.rst:143
 msgid "If succeed, a response will be received with status code 0 like this:"
 msgstr ""
 
-#: ../../development/scql_api.rst:176
+#: ../../development/scql_api.rst:181
 msgid "If result is not ready, the response can be show as follows:"
 msgstr ""
 
-#: ../../development/scql_api.rst:193
+#: ../../development/scql_api.rst:198
 msgid "Asynchronous send result"
 msgstr ""
 
-#: ../../development/scql_api.rst:195
+#: ../../development/scql_api.rst:200
 msgid ""
 "Automatically send the result to the user by post the following message "
 "when the result is available. To accomplish this, "
 ":ref:`query_result_callback_url <callback_url>` should be set."
 msgstr ""
 
-#: ../../development/scql_api.rst:202
+#: ../../development/scql_api.rst:207
 msgid "Query result, See Tensor_ for more information"
 msgstr ""
 
-#: ../../development/scql_api.rst:210
+#: ../../development/scql_api.rst:217
 msgid "Synchronous"
 msgstr ""
 
-#: ../../development/scql_api.rst:213
+#: ../../development/scql_api.rst:222
 msgid "public/submit_and_get"
 msgstr ""
 
-#: ../../development/scql_api.rst:215
+#: ../../development/scql_api.rst:224
 msgid ""
 "Submit a query to SCQL, SCQL will wait for all tasks to complete before "
 "returning the result to the use."
 msgstr ""
 
-#: ../../development/scql_api.rst:242
+#: ../../development/scql_api.rst:251
 msgid "Query result, See `Tensor` for more information"
 msgstr ""
 
-#: ../../development/scql_api.rst:244
+#: ../../development/scql_api.rst:253
 msgid "SCDB session id"
 msgstr ""
 
-#: ../../development/scql_api.rst:253
+#: ../../development/scql_api.rst:262
 msgid ""
 "If you want submit a query `show databases`, you can send a request as "
 "follows:"
 msgstr ""
 
-#: ../../development/scql_api.rst:270
+#: ../../development/scql_api.rst:279
 msgid "If successful, a response will be received like this:"
 msgstr ""
 
-#: ../../development/scql_api.rst:309
+#: ../../development/scql_api.rst:318
 msgid "Message Structure"
 msgstr ""
 
-#: ../../development/scql_api.rst:312
+#: ../../development/scql_api.rst:321
 msgid "RequestHeader"
 msgstr ""
 
-#: ../../development/scql_api.rst:317
+#: ../../development/scql_api.rst:326
 msgid "custom_headers"
 msgstr ""
 
-#: ../../development/scql_api.rst:317
+#: ../../development/scql_api.rst:326
 msgid "map<string, string>"
 msgstr ""
 
-#: ../../development/scql_api.rst:317
+#: ../../development/scql_api.rst:326
 msgid "Custom headers used to record custom information"
 msgstr ""
 
-#: ../../development/scql_api.rst:324
+#: ../../development/scql_api.rst:333
 msgid "SCDBCredential"
 msgstr ""
 
-#: ../../development/scql_api.rst:329
+#: ../../development/scql_api.rst:338
 msgid "User_"
 msgstr ""
 
-#: ../../development/scql_api.rst:329
+#: ../../development/scql_api.rst:338
 msgid "User information, contains password and name"
 msgstr ""
 
-#: ../../development/scql_api.rst:331
+#: ../../development/scql_api.rst:340
 msgid "grm_token"
 msgstr ""
 
-#: ../../development/scql_api.rst:331
+#: ../../development/scql_api.rst:340
 msgid "The unique identifier of the user in GRM"
 msgstr ""
 
-#: ../../development/scql_api.rst:335
+#: ../../development/scql_api.rst:344
 msgid "User"
 msgstr ""
 
-#: ../../development/scql_api.rst:340
+#: ../../development/scql_api.rst:349
 msgid "account_system_type"
 msgstr ""
 
-#: ../../development/scql_api.rst:340
+#: ../../development/scql_api.rst:349
 msgid "AccountSystemType_"
 msgstr ""
 
-#: ../../development/scql_api.rst:340
+#: ../../development/scql_api.rst:349
 msgid "Account Type"
 msgstr ""
 
-#: ../../development/scql_api.rst:342
+#: ../../development/scql_api.rst:351
 msgid "native_user"
 msgstr ""
 
-#: ../../development/scql_api.rst:342 ../../development/scql_api.rst:346
-msgid "NativeUser"
-msgstr ""
-
-#: ../../development/scql_api.rst:342
-msgid "Native user information"
-msgstr ""
-
-#: ../../development/scql_api.rst:351 ../../development/scql_api.rst:362
-msgid "name"
+#: ../../development/scql_api.rst:351
+msgid "NativeUser_"
 msgstr ""
 
 #: ../../development/scql_api.rst:351
+msgid "Native user information"
+msgstr ""
+
+#: ../../development/scql_api.rst:355
+msgid "NativeUser"
+msgstr ""
+
+#: ../../development/scql_api.rst:360 ../../development/scql_api.rst:371
+msgid "name"
+msgstr ""
+
+#: ../../development/scql_api.rst:360
 msgid "username"
 msgstr ""
 
-#: ../../development/scql_api.rst:353
+#: ../../development/scql_api.rst:362
 msgid "password"
 msgstr ""
 
-#: ../../development/scql_api.rst:357
+#: ../../development/scql_api.rst:366
 msgid "Tensor"
 msgstr ""
 
-#: ../../development/scql_api.rst:362
+#: ../../development/scql_api.rst:371
 msgid "Tensor name"
 msgstr ""
 
-#: ../../development/scql_api.rst:364
+#: ../../development/scql_api.rst:373
 msgid "shape"
 msgstr ""
 
-#: ../../development/scql_api.rst:364
+#: ../../development/scql_api.rst:373
 msgid "TensorShape_"
 msgstr ""
 
-#: ../../development/scql_api.rst:364
+#: ../../development/scql_api.rst:373
 msgid "It's normally [M] (a vector with M elements)"
 msgstr ""
 
-#: ../../development/scql_api.rst:366
+#: ../../development/scql_api.rst:375
 msgid "elem_type"
 msgstr ""
 
-#: ../../development/scql_api.rst:366
+#: ../../development/scql_api.rst:375
 msgid "PrimitiveDataType_"
 msgstr ""
 
-#: ../../development/scql_api.rst:366
+#: ../../development/scql_api.rst:375
 msgid "Type of date"
 msgstr ""
 
-#: ../../development/scql_api.rst:368
+#: ../../development/scql_api.rst:377
 msgid "option"
 msgstr ""
 
-#: ../../development/scql_api.rst:368
+#: ../../development/scql_api.rst:377
 msgid "TensorOptions_"
 msgstr ""
 
-#: ../../development/scql_api.rst:368
+#: ../../development/scql_api.rst:377
 msgid "Tensor options"
 msgstr ""
 
-#: ../../development/scql_api.rst:370
+#: ../../development/scql_api.rst:379
 msgid "annotation"
 msgstr ""
 
-#: ../../development/scql_api.rst:370
+#: ../../development/scql_api.rst:379
 msgid "TensorAnnotation_"
 msgstr ""
 
-#: ../../development/scql_api.rst:370
+#: ../../development/scql_api.rst:379
 msgid ""
 "Carries physical status information, It MUST be there if the <option> is "
 "\"Reference\""
 msgstr ""
 
-#: ../../development/scql_api.rst:372
+#: ../../development/scql_api.rst:381
 msgid "value"
 msgstr ""
 
-#: ../../development/scql_api.rst:372
-msgid "one of TensorValue"
-msgstr ""
-
-#: ../../development/scql_api.rst:372
-msgid "The tensor value, could be string bool float or int"
-msgstr ""
-
-#: ../../development/scql_api.rst:376
-msgid "TensorShape"
+#: ../../development/scql_api.rst:381
+msgid "TensorValue_"
 msgstr ""
 
 #: ../../development/scql_api.rst:381
-msgid "dim"
-msgstr ""
-
-#: ../../development/scql_api.rst:381
-msgid "TensorShape_Dimension list"
+msgid "The tensor value, could be string, bool, float or int"
 msgstr ""
 
 #: ../../development/scql_api.rst:385
-msgid "TensorShape_Dimension"
+msgid "TensorShape"
 msgstr ""
 
-#: ../../development/scql_api.rst:387
-msgid "TensorShape_Dimension could be one of dim_value or dim_param."
+#: ../../development/scql_api.rst:390
+msgid "dim"
 msgstr ""
 
-#: ../../development/scql_api.rst:392
-msgid "dim_value"
+#: ../../development/scql_api.rst:390
+msgid "TensorShape_Dimension_ list"
 msgstr ""
 
 #: ../../development/scql_api.rst:394
+msgid "TensorShape_Dimension"
+msgstr ""
+
+#: ../../development/scql_api.rst:396
+msgid "TensorShape_Dimension could be dim_value or dim_param."
+msgstr ""
+
+#: ../../development/scql_api.rst:401
+msgid "dim_value"
+msgstr ""
+
+#: ../../development/scql_api.rst:403
 msgid "dim_param"
 msgstr ""
 
-#: ../../development/scql_api.rst:398
+#: ../../development/scql_api.rst:407
 msgid "TensorAnnotation"
 msgstr ""
 
-#: ../../development/scql_api.rst:402 ../../development/scql_api.rst:512
-msgid "TensorStatus"
+#: ../../development/scql_api.rst:412
+msgid "TensorStatus_"
 msgstr ""
 
-#: ../../development/scql_api.rst:402
+#: ../../development/scql_api.rst:412
 msgid "Status of tensor"
 msgstr ""
 
-#: ../../development/scql_api.rst:406
+#: ../../development/scql_api.rst:416
 msgid "TensorValue"
 msgstr ""
 
-#: ../../development/scql_api.rst:407
-msgid "TensorValue could be one of ss bs fs is or i64s."
+#: ../../development/scql_api.rst:418
+msgid "TensorValue could be any of the following values: ss, bs, fs, is, or i64s."
 msgstr ""
 
-#: ../../development/scql_api.rst:412
+#: ../../development/scql_api.rst:423
 msgid "ss"
 msgstr ""
 
-#: ../../development/scql_api.rst:412
+#: ../../development/scql_api.rst:423
 msgid "strings"
 msgstr ""
 
-#: ../../development/scql_api.rst:412
+#: ../../development/scql_api.rst:423
 msgid "string list"
 msgstr ""
 
-#: ../../development/scql_api.rst:414
+#: ../../development/scql_api.rst:425
 msgid "bs"
 msgstr ""
 
-#: ../../development/scql_api.rst:414
+#: ../../development/scql_api.rst:425
 msgid "booleans"
 msgstr ""
 
-#: ../../development/scql_api.rst:414
+#: ../../development/scql_api.rst:425
 msgid "bool list"
 msgstr ""
 
-#: ../../development/scql_api.rst:416
+#: ../../development/scql_api.rst:427
 msgid "fs"
 msgstr ""
 
-#: ../../development/scql_api.rst:416
+#: ../../development/scql_api.rst:427
 msgid "floats"
 msgstr ""
 
-#: ../../development/scql_api.rst:416
+#: ../../development/scql_api.rst:427
 msgid "float list"
 msgstr ""
 
-#: ../../development/scql_api.rst:418
+#: ../../development/scql_api.rst:429
 msgid "is"
 msgstr ""
 
-#: ../../development/scql_api.rst:418
+#: ../../development/scql_api.rst:429
 msgid "int32s"
 msgstr ""
 
-#: ../../development/scql_api.rst:418
+#: ../../development/scql_api.rst:429
 msgid "int32 list"
 msgstr ""
 
-#: ../../development/scql_api.rst:420
+#: ../../development/scql_api.rst:431
 msgid "i64s"
 msgstr ""
 
-#: ../../development/scql_api.rst:420
+#: ../../development/scql_api.rst:431
 msgid "int64s"
 msgstr ""
 
-#: ../../development/scql_api.rst:420
+#: ../../development/scql_api.rst:431
 msgid "int64 list"
 msgstr ""
 
-#: ../../development/scql_api.rst:425
+#: ../../development/scql_api.rst:436
 msgid "Status"
 msgstr ""
 
-#: ../../development/scql_api.rst:430
+#: ../../development/scql_api.rst:441
 msgid "code"
 msgstr ""
 
-#: ../../development/scql_api.rst:430
+#: ../../development/scql_api.rst:441
 msgid "int32"
 msgstr ""
 
-#: ../../development/scql_api.rst:430
+#: ../../development/scql_api.rst:441
 msgid "The status code, see `Status code`_ for more information"
 msgstr ""
 
-#: ../../development/scql_api.rst:432
+#: ../../development/scql_api.rst:443
 msgid "Messages"
 msgstr ""
 
-#: ../../development/scql_api.rst:432
+#: ../../development/scql_api.rst:443
 msgid "Message for recording the error information"
 msgstr ""
 
-#: ../../development/scql_api.rst:434
+#: ../../development/scql_api.rst:445
 msgid "details"
 msgstr ""
 
-#: ../../development/scql_api.rst:434
+#: ../../development/scql_api.rst:445
 msgid "protobuf.Any list"
 msgstr ""
 
-#: ../../development/scql_api.rst:434
+#: ../../development/scql_api.rst:445
 msgid "A list of messages that carry the additional supplementary error details"
 msgstr ""
 
-#: ../../development/scql_api.rst:439
+#: ../../development/scql_api.rst:450
 msgid "Enum Values"
 msgstr ""
 
-#: ../../development/scql_api.rst:442
+#: ../../development/scql_api.rst:453
 msgid "AccountSystemType"
 msgstr ""
 
-#: ../../development/scql_api.rst:445 ../../development/scql_api.rst:457
-#: ../../development/scql_api.rst:502 ../../development/scql_api.rst:515
+#: ../../development/scql_api.rst:456 ../../development/scql_api.rst:468
+#: ../../development/scql_api.rst:513 ../../development/scql_api.rst:526
 msgid "Name"
 msgstr ""
 
-#: ../../development/scql_api.rst:445 ../../development/scql_api.rst:457
-#: ../../development/scql_api.rst:502 ../../development/scql_api.rst:515
+#: ../../development/scql_api.rst:456 ../../development/scql_api.rst:468
+#: ../../development/scql_api.rst:513 ../../development/scql_api.rst:526
 msgid "Number"
 msgstr ""
 
-#: ../../development/scql_api.rst:447
+#: ../../development/scql_api.rst:458
 msgid "UNKNOWN"
 msgstr ""
 
-#: ../../development/scql_api.rst:447 ../../development/scql_api.rst:459
-#: ../../development/scql_api.rst:504 ../../development/scql_api.rst:517
-#: ../../development/scql_api.rst:534
+#: ../../development/scql_api.rst:458 ../../development/scql_api.rst:470
+#: ../../development/scql_api.rst:515 ../../development/scql_api.rst:528
+#: ../../development/scql_api.rst:545
 msgid "0"
 msgstr ""
 
-#: ../../development/scql_api.rst:447
+#: ../../development/scql_api.rst:458
 msgid "Unknown account type"
 msgstr ""
 
-#: ../../development/scql_api.rst:449
+#: ../../development/scql_api.rst:460
 msgid "NATIVE_USER"
 msgstr ""
 
-#: ../../development/scql_api.rst:449 ../../development/scql_api.rst:461
-#: ../../development/scql_api.rst:506 ../../development/scql_api.rst:519
+#: ../../development/scql_api.rst:460 ../../development/scql_api.rst:472
+#: ../../development/scql_api.rst:517 ../../development/scql_api.rst:530
 msgid "1"
 msgstr ""
 
-#: ../../development/scql_api.rst:449
+#: ../../development/scql_api.rst:460
 msgid "Native user type"
 msgstr ""
 
-#: ../../development/scql_api.rst:454
+#: ../../development/scql_api.rst:465
 msgid "PrimitiveDataType"
 msgstr ""
 
-#: ../../development/scql_api.rst:459
+#: ../../development/scql_api.rst:470
 msgid "UNDEFINED"
 msgstr ""
 
-#: ../../development/scql_api.rst:461
+#: ../../development/scql_api.rst:472
 msgid "FLOAT"
 msgstr ""
 
-#: ../../development/scql_api.rst:461
+#: ../../development/scql_api.rst:472
 msgid "float"
 msgstr ""
 
-#: ../../development/scql_api.rst:463
+#: ../../development/scql_api.rst:474
 msgid "UINT8"
 msgstr ""
 
-#: ../../development/scql_api.rst:463 ../../development/scql_api.rst:508
-#: ../../development/scql_api.rst:521
+#: ../../development/scql_api.rst:474 ../../development/scql_api.rst:519
+#: ../../development/scql_api.rst:532
 msgid "2"
 msgstr ""
 
-#: ../../development/scql_api.rst:463
+#: ../../development/scql_api.rst:474
 msgid "uint8_t"
 msgstr ""
 
-#: ../../development/scql_api.rst:465
+#: ../../development/scql_api.rst:476
 msgid "INT8"
 msgstr ""
 
-#: ../../development/scql_api.rst:465 ../../development/scql_api.rst:523
+#: ../../development/scql_api.rst:476 ../../development/scql_api.rst:534
 msgid "3"
 msgstr ""
 
-#: ../../development/scql_api.rst:465
+#: ../../development/scql_api.rst:476
 msgid "int8_t"
 msgstr ""
 
-#: ../../development/scql_api.rst:467
+#: ../../development/scql_api.rst:478
 msgid "UINT16"
 msgstr ""
 
-#: ../../development/scql_api.rst:467 ../../development/scql_api.rst:525
+#: ../../development/scql_api.rst:478 ../../development/scql_api.rst:536
 msgid "4"
 msgstr ""
 
-#: ../../development/scql_api.rst:467
+#: ../../development/scql_api.rst:478
 msgid "uint16_t"
 msgstr ""
 
-#: ../../development/scql_api.rst:469
+#: ../../development/scql_api.rst:480
 msgid "INT16"
 msgstr ""
 
-#: ../../development/scql_api.rst:469
+#: ../../development/scql_api.rst:480
 msgid "5"
 msgstr ""
 
-#: ../../development/scql_api.rst:469
+#: ../../development/scql_api.rst:480
 msgid "int16_t"
 msgstr ""
 
-#: ../../development/scql_api.rst:471
+#: ../../development/scql_api.rst:482
 msgid "INT32"
 msgstr ""
 
-#: ../../development/scql_api.rst:471
+#: ../../development/scql_api.rst:482
 msgid "6"
 msgstr ""
 
-#: ../../development/scql_api.rst:471
+#: ../../development/scql_api.rst:482
 msgid "int32_t"
 msgstr ""
 
-#: ../../development/scql_api.rst:473
+#: ../../development/scql_api.rst:484
 msgid "INT64"
 msgstr ""
 
-#: ../../development/scql_api.rst:473
+#: ../../development/scql_api.rst:484
 msgid "7"
 msgstr ""
 
-#: ../../development/scql_api.rst:473
+#: ../../development/scql_api.rst:484
 msgid "int64_t"
 msgstr ""
 
-#: ../../development/scql_api.rst:475
+#: ../../development/scql_api.rst:486
 msgid "STRING"
 msgstr ""
 
-#: ../../development/scql_api.rst:475
+#: ../../development/scql_api.rst:486
 msgid "8"
 msgstr ""
 
-#: ../../development/scql_api.rst:477
+#: ../../development/scql_api.rst:488
 msgid "BOOL"
 msgstr ""
 
-#: ../../development/scql_api.rst:477
+#: ../../development/scql_api.rst:488
 msgid "9"
 msgstr ""
 
-#: ../../development/scql_api.rst:477
+#: ../../development/scql_api.rst:488
 msgid "bool"
 msgstr ""
 
-#: ../../development/scql_api.rst:479
+#: ../../development/scql_api.rst:490
 msgid "FLOAT16"
 msgstr ""
 
-#: ../../development/scql_api.rst:479
+#: ../../development/scql_api.rst:490
 msgid "10"
 msgstr ""
 
-#: ../../development/scql_api.rst:479
+#: ../../development/scql_api.rst:490
 msgid "float16"
 msgstr ""
 
-#: ../../development/scql_api.rst:481
+#: ../../development/scql_api.rst:492
 msgid "DOUBLE"
 msgstr ""
 
-#: ../../development/scql_api.rst:481
+#: ../../development/scql_api.rst:492
 msgid "11"
 msgstr ""
 
-#: ../../development/scql_api.rst:481
+#: ../../development/scql_api.rst:492
 msgid "double"
 msgstr ""
 
-#: ../../development/scql_api.rst:483
+#: ../../development/scql_api.rst:494
 msgid "UINT32"
 msgstr ""
 
-#: ../../development/scql_api.rst:483
+#: ../../development/scql_api.rst:494
 msgid "12"
 msgstr ""
 
-#: ../../development/scql_api.rst:483
+#: ../../development/scql_api.rst:494
 msgid "uint32_t"
 msgstr ""
 
-#: ../../development/scql_api.rst:485
+#: ../../development/scql_api.rst:496
 msgid "UINT64"
 msgstr ""
 
-#: ../../development/scql_api.rst:485
+#: ../../development/scql_api.rst:496
 msgid "13"
 msgstr ""
 
-#: ../../development/scql_api.rst:485
+#: ../../development/scql_api.rst:496
 msgid "uint64_t"
 msgstr ""
 
-#: ../../development/scql_api.rst:487
+#: ../../development/scql_api.rst:498
 msgid "COMPLEX64"
 msgstr ""
 
-#: ../../development/scql_api.rst:487
+#: ../../development/scql_api.rst:498
 msgid "14"
 msgstr ""
 
-#: ../../development/scql_api.rst:487
+#: ../../development/scql_api.rst:498
 msgid "complex with float32 real and imaginary components"
 msgstr ""
 
-#: ../../development/scql_api.rst:489
+#: ../../development/scql_api.rst:500
 msgid "COMPLEX128"
 msgstr ""
 
-#: ../../development/scql_api.rst:489
+#: ../../development/scql_api.rst:500
 msgid "15"
 msgstr ""
 
-#: ../../development/scql_api.rst:489
+#: ../../development/scql_api.rst:500
 msgid "complex with float64 real and imaginary components"
 msgstr ""
 
-#: ../../development/scql_api.rst:491
+#: ../../development/scql_api.rst:502
 msgid "BFLOAT16"
 msgstr ""
 
-#: ../../development/scql_api.rst:491
+#: ../../development/scql_api.rst:502
 msgid "16"
 msgstr ""
 
-#: ../../development/scql_api.rst:491
+#: ../../development/scql_api.rst:502
 msgid "1 sign bit, 8 exponent bits, and 7 mantissa bits"
 msgstr ""
 
-#: ../../development/scql_api.rst:493
+#: ../../development/scql_api.rst:504
 msgid "DATETIME"
 msgstr ""
 
-#: ../../development/scql_api.rst:493
+#: ../../development/scql_api.rst:504
 msgid "17"
 msgstr ""
 
-#: ../../development/scql_api.rst:493
+#: ../../development/scql_api.rst:504
 msgid "datetime"
 msgstr ""
 
-#: ../../development/scql_api.rst:495
+#: ../../development/scql_api.rst:506
 msgid "TIMESTAMP"
 msgstr ""
 
-#: ../../development/scql_api.rst:495
+#: ../../development/scql_api.rst:506
 msgid "18"
 msgstr ""
 
-#: ../../development/scql_api.rst:495
+#: ../../development/scql_api.rst:506
 msgid "timestamp"
 msgstr ""
 
-#: ../../development/scql_api.rst:499
+#: ../../development/scql_api.rst:510
 msgid "TensorOptions"
 msgstr ""
 
-#: ../../development/scql_api.rst:504
+#: ../../development/scql_api.rst:515
 msgid "VALUE"
 msgstr ""
 
-#: ../../development/scql_api.rst:504
+#: ../../development/scql_api.rst:515
 msgid "A tensor with data"
 msgstr ""
 
-#: ../../development/scql_api.rst:506
+#: ../../development/scql_api.rst:517
 msgid "REFERENCE"
 msgstr ""
 
-#: ../../development/scql_api.rst:506
+#: ../../development/scql_api.rst:517
 msgid "A tensor with reference (URI)"
 msgstr ""
 
-#: ../../development/scql_api.rst:508
+#: ../../development/scql_api.rst:519
 msgid "VARIABLE"
 msgstr ""
 
-#: ../../development/scql_api.rst:508
+#: ../../development/scql_api.rst:519
 msgid "A tensor variable (declaration)"
 msgstr ""
 
-#: ../../development/scql_api.rst:517
+#: ../../development/scql_api.rst:523
+msgid "TensorStatus"
+msgstr ""
+
+#: ../../development/scql_api.rst:528
 msgid "TENSORSTATUS_UNKNOWN"
 msgstr ""
 
-#: ../../development/scql_api.rst:517
+#: ../../development/scql_api.rst:528
 msgid "Unknown"
 msgstr ""
 
-#: ../../development/scql_api.rst:519
+#: ../../development/scql_api.rst:530
 msgid "TENSORSTATUS_PRIVATE"
 msgstr ""
 
-#: ../../development/scql_api.rst:519
+#: ../../development/scql_api.rst:530
 msgid "Private"
 msgstr ""
 
-#: ../../development/scql_api.rst:521
+#: ../../development/scql_api.rst:532
 msgid "TENSORSTATUS_SECRET"
 msgstr ""
 
-#: ../../development/scql_api.rst:521
+#: ../../development/scql_api.rst:532
 msgid "Secret, usually in the form of secret sharing"
 msgstr ""
 
-#: ../../development/scql_api.rst:523
+#: ../../development/scql_api.rst:534
 msgid "TENSORSTATUS_CIPHER"
 msgstr ""
 
-#: ../../development/scql_api.rst:523
+#: ../../development/scql_api.rst:534
 msgid "Ciphertext, usually in the form of homomorphic encryption ciphertext"
 msgstr ""
 
-#: ../../development/scql_api.rst:525
+#: ../../development/scql_api.rst:536
 msgid "TENSORSTATUS_PUBLIC"
 msgstr ""
 
-#: ../../development/scql_api.rst:525
+#: ../../development/scql_api.rst:536
 msgid "Public"
 msgstr ""
 
-#: ../../development/scql_api.rst:529
+#: ../../development/scql_api.rst:540
 msgid "Status code"
 msgstr ""
 
-#: ../../development/scql_api.rst:532
+#: ../../development/scql_api.rst:543
 msgid "Error code"
 msgstr ""
 
-#: ../../development/scql_api.rst:532
+#: ../../development/scql_api.rst:543
 msgid "Status Code"
 msgstr ""
 
-#: ../../development/scql_api.rst:534
+#: ../../development/scql_api.rst:545
 msgid "Code_OK"
 msgstr ""
 
-#: ../../development/scql_api.rst:534
+#: ../../development/scql_api.rst:545
 msgid "Success"
 msgstr ""
 
-#: ../../development/scql_api.rst:536
+#: ../../development/scql_api.rst:547
 msgid "100"
 msgstr ""
 
-#: ../../development/scql_api.rst:536
+#: ../../development/scql_api.rst:547
 msgid "Code_BAD_REQUEST"
 msgstr ""
 
-#: ../../development/scql_api.rst:536
+#: ../../development/scql_api.rst:547
 msgid "Invalid request body"
 msgstr ""
 
-#: ../../development/scql_api.rst:538
+#: ../../development/scql_api.rst:549
 msgid "101"
 msgstr ""
 
-#: ../../development/scql_api.rst:538
+#: ../../development/scql_api.rst:549
 msgid "Code_UNAUTHENTICATED"
 msgstr ""
 
-#: ../../development/scql_api.rst:538
+#: ../../development/scql_api.rst:549
 msgid "User authentication failed"
 msgstr ""
 
-#: ../../development/scql_api.rst:540
+#: ../../development/scql_api.rst:551
 msgid "102"
 msgstr ""
 
-#: ../../development/scql_api.rst:540
+#: ../../development/scql_api.rst:551
 msgid "Code_SQL_PARSE_ERROR"
 msgstr ""
 
-#: ../../development/scql_api.rst:540
+#: ../../development/scql_api.rst:551
 msgid "Invalid SCQL statement"
 msgstr ""
 
-#: ../../development/scql_api.rst:542
+#: ../../development/scql_api.rst:553
 msgid "103"
 msgstr ""
 
-#: ../../development/scql_api.rst:542
+#: ../../development/scql_api.rst:553
 msgid "Code_INVALID_ARGUMENT"
 msgstr ""
 
-#: ../../development/scql_api.rst:542
+#: ../../development/scql_api.rst:553
 msgid "Invalid parameter in Request"
 msgstr ""
 
-#: ../../development/scql_api.rst:544
+#: ../../development/scql_api.rst:555
 msgid "104"
 msgstr ""
 
-#: ../../development/scql_api.rst:544
+#: ../../development/scql_api.rst:555
 msgid "Code_NOT_READY"
 msgstr ""
 
-#: ../../development/scql_api.rst:544
+#: ../../development/scql_api.rst:555
 msgid "Result not ready"
 msgstr ""
 
-#: ../../development/scql_api.rst:546
+#: ../../development/scql_api.rst:557
 msgid "131"
 msgstr ""
 
-#: ../../development/scql_api.rst:546
+#: ../../development/scql_api.rst:557
 msgid "Code_DDL_PERMISSION_DENIED"
 msgstr ""
 
-#: ../../development/scql_api.rst:546
+#: ../../development/scql_api.rst:557
 msgid "User does not have permission to execute the DDL"
 msgstr ""
 
-#: ../../development/scql_api.rst:548
+#: ../../development/scql_api.rst:559
 msgid "132"
 msgstr ""
 
-#: ../../development/scql_api.rst:548
+#: ../../development/scql_api.rst:559
 msgid "Code_GRM_RESOURCE_PERMISSION_DENIED"
 msgstr ""
 
-#: ../../development/scql_api.rst:548
+#: ../../development/scql_api.rst:559
 msgid "User has no required permissions on grm resources"
 msgstr ""
 
-#: ../../development/scql_api.rst:550
+#: ../../development/scql_api.rst:561
 msgid "140"
 msgstr ""
 
-#: ../../development/scql_api.rst:550
+#: ../../development/scql_api.rst:561
 msgid "Code_NOT_FOUND"
 msgstr ""
 
-#: ../../development/scql_api.rst:550
+#: ../../development/scql_api.rst:561
 msgid "General not found error"
 msgstr ""
 
-#: ../../development/scql_api.rst:552
+#: ../../development/scql_api.rst:563
 msgid "141"
 msgstr ""
 
-#: ../../development/scql_api.rst:552
+#: ../../development/scql_api.rst:563
 msgid "Code_SESSION_NOT_FOUND"
 msgstr ""
 
-#: ../../development/scql_api.rst:552
+#: ../../development/scql_api.rst:563
 msgid "SCDB session not found"
 msgstr ""
 
-#: ../../development/scql_api.rst:554
+#: ../../development/scql_api.rst:565
 msgid "160"
 msgstr ""
 
-#: ../../development/scql_api.rst:554
+#: ../../development/scql_api.rst:565
 msgid "Code_CCL_CHECK_FAILED"
 msgstr ""
 
-#: ../../development/scql_api.rst:554
+#: ../../development/scql_api.rst:565
 msgid "Query CCL check failed"
 msgstr ""
 
-#: ../../development/scql_api.rst:556
+#: ../../development/scql_api.rst:567
 msgid "201"
 msgstr ""
 
-#: ../../development/scql_api.rst:556
+#: ../../development/scql_api.rst:567
 msgid "Code_STORAGE_ERROR"
 msgstr ""
 
-#: ../../development/scql_api.rst:556
+#: ../../development/scql_api.rst:567
 msgid "SCDB DB error"
 msgstr ""
 
-#: ../../development/scql_api.rst:558
+#: ../../development/scql_api.rst:569
 msgid "300"
 msgstr ""
 
-#: ../../development/scql_api.rst:558
+#: ../../development/scql_api.rst:569
 msgid "Code_INTERNAL"
 msgstr ""
 
-#: ../../development/scql_api.rst:558
+#: ../../development/scql_api.rst:569
 msgid "Server Internal Error"
 msgstr ""
 
-#: ../../development/scql_api.rst:560
+#: ../../development/scql_api.rst:571
 msgid "320"
 msgstr ""
 
-#: ../../development/scql_api.rst:560
+#: ../../development/scql_api.rst:571
 msgid "Code_UNKNOWN_ENGINE_ERROR"
 msgstr ""
 
-#: ../../development/scql_api.rst:560
+#: ../../development/scql_api.rst:571
 msgid "Unknown error occurs in Engine"
 msgstr ""
 
-#: ../../development/scql_api.rst:562
+#: ../../development/scql_api.rst:573
 msgid "332"
 msgstr ""
 
-#: ../../development/scql_api.rst:562
+#: ../../development/scql_api.rst:573
 msgid "Code_ENGINE_RUNSQL_ERROR"
 msgstr ""
 
-#: ../../development/scql_api.rst:562
+#: ../../development/scql_api.rst:573
 msgid "Unknown error occurs in Engine during RunSQL"
 msgstr ""
 
-#: ../../development/scql_api.rst:564
+#: ../../development/scql_api.rst:575
 msgid "340"
 msgstr ""
 
-#: ../../development/scql_api.rst:564
+#: ../../development/scql_api.rst:575
 msgid "Code_NOT_SUPPORTED"
 msgstr ""
 
-#: ../../development/scql_api.rst:564
+#: ../../development/scql_api.rst:575
 msgid "Feature not supported"
 msgstr ""
 
+#~ msgid ""
+#~ "SCQL supports two types of APIs: "
+#~ "synchronous and asynchronous. The synchronous"
+#~ " interface is suitable for executing "
+#~ "fast queries, such as DDL, DML, "
+#~ "and simple DQL. Meanwhile, the "
+#~ "asynchronous interface is recommended when "
+#~ "the query may take a long time "
+#~ "to run."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Submit the query (DDL/DML/DQL) to SCQL,"
+#~ " SCQL will return a session ID "
+#~ "immediately which can be used to "
+#~ "fetch result, and processes the query"
+#~ " in the background."
+#~ msgstr ""
+
+#~ msgid "one of TensorValue"
+#~ msgstr ""
+
+#~ msgid "The tensor value, could be string bool float or int"
+#~ msgstr ""
+
+#~ msgid "TensorShape_Dimension list"
+#~ msgstr ""
+
+#~ msgid "TensorShape_Dimension could be one of dim_value or dim_param."
+#~ msgstr ""
+
+#~ msgid "TensorValue could be one of ss bs fs is or i64s."
+#~ msgstr ""

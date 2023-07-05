@@ -23,6 +23,7 @@ type schema struct {
 	RefDbName    string   `json:"ref_db_name"`
 	RefTableName string   `json:"ref_table_name"`
 	Columns      []column `json:"columns"`
+	DBType       string   `json:"db_type"`
 }
 
 type tableSchema struct {

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-30 20:12+0800\n"
+"POT-Creation-Date: 2023-07-03 10:11+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -17,7 +17,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.11.0\n"
+"Generated-By: Babel 2.12.1\n"
 
 #: ../../reference/mysql_compatibility.rst:2
 msgid "MySQL Compatibility"
@@ -66,11 +66,14 @@ msgid "CREATE Table"
 msgstr "创建表"
 
 #: ../../reference/mysql_compatibility.rst:23
+#, fuzzy
 msgid ""
 "SCQL get table schemas from GRM, so CREATE TABLE statement must include "
 "keyword TID which uniquely identifies a table in GRM. For more "
-"information, please read :doc:`scql_manual`"
-msgstr "SCQL 从 GRM 中获取表规格，所以 CREATE TABLE 的语句必须包含关键字 TID，该关键字在 GRM 中标识一个唯一的表格。有关更多信息，请阅读 :doc:`scql_manual`。"
+"information, please read :doc:`scql_manual`."
+msgstr ""
+"SCQL 从 GRM 中获取表规格，所以 CREATE TABLE 的语句必须包含关键字 TID，该关键字在 GRM "
+"中标识一个唯一的表格。有关更多信息，请阅读 :doc:`scql_manual`。"
 
 #: ../../reference/mysql_compatibility.rst:26
 msgid "DQL(Data Query Language)"
@@ -147,12 +150,15 @@ msgid "GRANT/REVOKE"
 msgstr "GRANT/REVOKE"
 
 #: ../../reference/mysql_compatibility.rst:53
+#, fuzzy
 msgid ""
 "Except permissions same with mysql such as read/write/create/drop..., ccl"
 " settings are also required before executing a query. You can change CCL "
 "settings via GRANT/REVOKE. About GRANT/REVOKE in SCQL, please read "
-":doc:`scql_manual`"
-msgstr "除了读、写、创建表格、删除数据等与 mysql 相同的权限之外，在执行查询之前还需要设置 ccl。 可以通过 GRANT/REVOKE 更改 CCL 的设置。 关于 SCQL 中的 GRANT/REVOKE 的操作，请阅读 :doc:`scql_manual`"
+":doc:`scql_manual`."
+msgstr ""
+"除了读、写、创建表格、删除数据等与 mysql 相同的权限之外，在执行查询之前还需要设置 ccl。 可以通过 GRANT/REVOKE 更改 "
+"CCL 的设置。 关于 SCQL 中的 GRANT/REVOKE 的操作，请阅读 :doc:`scql_manual`"
 
 #: ../../reference/mysql_compatibility.rst:56
 msgid "Type Conversion Rule"
@@ -166,82 +172,84 @@ msgid ""
 "necessary"
 msgstr "考虑兼容性，当使用运算符操作不同类型的数据时，会发生类型转换。有些转换是隐式发生的。例如，SCQL 会根据需要自动将 int 转换为 float。"
 
-#: ../../reference/mysql_compatibility.rst:73
+#: ../../reference/mysql_compatibility.rst:72
 msgid "The following rules describe how conversion occurs in SCQL."
 msgstr "以下规则描述了如何在 SCQL 中进行类型转换。"
 
-#: ../../reference/mysql_compatibility.rst:78
+#: ../../reference/mysql_compatibility.rst:77
 msgid "single-party query"
 msgstr "单方查询"
 
-#: ../../reference/mysql_compatibility.rst:79
+#: ../../reference/mysql_compatibility.rst:78
 msgid ""
 "If a query only involves one participant, SCQL will convert the query "
 "into a syntax that conforms to the participant's database (such as "
 "MySQL), and then dispatch it directly to the corresponding database for "
 "execution. Thus, for a single-party query, its type conversion rules are "
 "generally consistent with the database used by the participant."
-msgstr "如果只有一方查询，SCQL 会将查询语句转换成符合参与者数据库（如 MySQL）的语法，然后直接分派到相应的数据库中执行。 因此对于单方查询，其类型转换规则一般与参与方使用的数据库类型一致。"
+msgstr ""
+"如果只有一方查询，SCQL 会将查询语句转换成符合参与者数据库（如 MySQL）的语法，然后直接分派到相应的数据库中执行。 "
+"因此对于单方查询，其类型转换规则一般与参与方使用的数据库类型一致。"
 
-#: ../../reference/mysql_compatibility.rst:84
+#: ../../reference/mysql_compatibility.rst:83
 msgid "multi-party query"
 msgstr "多方查询"
 
-#: ../../reference/mysql_compatibility.rst:85
+#: ../../reference/mysql_compatibility.rst:84
 msgid ""
 "If a query involves multiple participants, SCQL will execute type "
 "conversion by applying the following rules."
 msgstr "如果涉及多方查询，SCQL 将通过以下规则进行类型转换。"
 
-#: ../../reference/mysql_compatibility.rst:88
+#: ../../reference/mysql_compatibility.rst:87
 msgid "Compare(>, <, <=, >=, <>, =, !=)"
 msgstr "比较运算 (>, <, <=, >=, <>, =, !=)"
 
-#: ../../reference/mysql_compatibility.rst:89
-msgid "Both arguments in a comparison operation shouldn't be string"
+#: ../../reference/mysql_compatibility.rst:88
+#, fuzzy
+msgid "Both arguments in a comparison operation shouldn't be string."
 msgstr "比较操作中的两个参数都不能是 string 类型。"
 
-#: ../../reference/mysql_compatibility.rst:90
+#: ../../reference/mysql_compatibility.rst:89
 msgid "If both arguments are long, they are compared as long."
 msgstr "如果两个参数都是 long 类型，则使用 long 的方式比较。"
 
-#: ../../reference/mysql_compatibility.rst:91
+#: ../../reference/mysql_compatibility.rst:90
 msgid ""
 "If one of the arguments is float32, the other argument will be compared "
 "as float32."
 msgstr "如果其中一个参数是 float32 类型，则会将另一个参数转换为 float32 进行比较。"
 
-#: ../../reference/mysql_compatibility.rst:94
+#: ../../reference/mysql_compatibility.rst:93
 msgid "Arithmetic(+, -, \\*, /, %)"
 msgstr "算术运算 (+, -, \\*, /, %)"
 
-#: ../../reference/mysql_compatibility.rst:95
-msgid "Both arguments in a arithmetic operation shouldn't be string"
+#: ../../reference/mysql_compatibility.rst:94
+#, fuzzy
+msgid "Both arguments in a arithmetic operation shouldn't be string."
 msgstr "算术运算中的两个参数都不能是 string 类型。"
 
-#: ../../reference/mysql_compatibility.rst:96
+#: ../../reference/mysql_compatibility.rst:95
 msgid "If both arguments are long, they are calculated as long."
 msgstr "如果两个参数都是 long 类型，则使用 long 的方式比较。"
 
-#: ../../reference/mysql_compatibility.rst:97
-#: ../../reference/mysql_compatibility.rst:103
+#: ../../reference/mysql_compatibility.rst:96
+#: ../../reference/mysql_compatibility.rst:102
 msgid ""
 "If one of the arguments is float32, the other argument will be calculated"
 " as float32."
 msgstr "如果其中一个参数是 float32 类型，则会将另一个参数转换为 float32 进行计算。"
 
-#: ../../reference/mysql_compatibility.rst:100
+#: ../../reference/mysql_compatibility.rst:99
 msgid "Aggregation(sum, count, avg, min, max)"
 msgstr "聚合操作 (sum, count, avg, min, max)"
 
-#: ../../reference/mysql_compatibility.rst:101
-msgid "All arguments in a aggregation function shouldn't be string"
+#: ../../reference/mysql_compatibility.rst:100
+#, fuzzy
+msgid "All arguments in a aggregation function shouldn't be string."
 msgstr "累加操作中的所有参数都不能是 string 类型。"
 
-#: ../../reference/mysql_compatibility.rst:102
+#: ../../reference/mysql_compatibility.rst:101
 msgid "If all arguments are long, they are calculated as long."
 msgstr "如果所有参数都是 long 类型，则按照 long 类型的方式进行计算。"
 
-#: ../../reference/mysql_compatibility.rst:103
-msgid "If one of the arguments is float32, the other argument will be calculated as float32."
-msgstr "如果其中一个参数是 float32 类型，则会将另一个参数转换为 float32 进行计算。"

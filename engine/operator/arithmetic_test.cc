@@ -24,8 +24,7 @@ namespace scql::engine::op {
 INSTANTIATE_TEST_SUITE_P(
     ArithmeticBatchTest, BinaryComputeInSecretTest,
     testing::Combine(
-        testing::Values(
-            spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             BinaryTestCase{
                 .op_type = Add::kOpType,
@@ -71,10 +70,8 @@ INSTANTIATE_TEST_SUITE_P(
                 .right_inputs = {test::NamedTensor(
                     "y", TensorFromJSON(arrow::int64(), "[3,3]"))},
                 .right_input_status = pb::TENSORSTATUS_SECRET,
-                // NOTE(shunde.csd): we could only get float32 for
-                // floating-point number from spu
                 .outputs = {test::NamedTensor(
-                    "z", TensorFromJSON(arrow::float32(), "[33.33,3.0]"))},
+                    "z", TensorFromJSON(arrow::float64(), "[33.33,3.0]"))},
                 .output_status = pb::TENSORSTATUS_SECRET,
             },
             BinaryTestCase{
@@ -134,10 +131,8 @@ INSTANTIATE_TEST_SUITE_P(
                 .right_inputs = {test::NamedTensor(
                     "y", TensorFromJSON(arrow::int64(), "[]"))},
                 .right_input_status = pb::TENSORSTATUS_SECRET,
-                // NOTE(shunde.csd): we could only get float32 for
-                // floating-point number from spu
                 .outputs = {test::NamedTensor(
-                    "z", TensorFromJSON(arrow::float32(), "[]"))},
+                    "z", TensorFromJSON(arrow::float64(), "[]"))},
                 .output_status = pb::TENSORSTATUS_SECRET,
             },
             BinaryTestCase{
@@ -157,7 +152,7 @@ INSTANTIATE_TEST_SUITE_P(
 INSTANTIATE_TEST_SUITE_P(
     ArithmeticBatchTest, BinaryComputeInPlainTest,
     testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             BinaryTestCase{
                 .op_type = Add::kOpType,

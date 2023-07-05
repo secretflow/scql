@@ -111,3 +111,25 @@ cc_library(
         "@spulib//libspu/core:xt_helper",
     ],
 )
+
+cc_library(
+    name = "filepath_helper",
+    srcs = ["filepath_helper.cc"],
+    hdrs = ["filepath_helper.h"],
+    deps = [
+        "@com_google_absl//absl/strings",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+cc_test(
+    name = "filepath_helper_test",
+    srcs = ["filepath_helper_test.cc"],
+    linkopts = [
+        "-lm",
+    ],
+    deps = [
+        ":filepath_helper",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

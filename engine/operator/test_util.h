@@ -14,8 +14,11 @@
 
 #pragma once
 
+#include <functional>
 #include <future>
 #include <vector>
+
+#include "gtest/gtest.h"
 
 #include "engine/datasource/datasource_adaptor_mgr.h"
 #include "engine/datasource/router.h"
@@ -24,10 +27,11 @@
 #include "engine/framework/session.h"
 
 #ifndef TestParamNameGenerator
-#define TestParamNameGenerator(TestCaseClass)                        \
-  [](const testing::TestParamInfo<TestCaseClass::ParamType>& info) { \
-    return std::to_string(info.index) +                              \
-           spu::ProtocolKind_Name(std::get<0>(info.param));          \
+#define TestParamNameGenerator(TestCaseClass)                               \
+  [](const testing::TestParamInfo<TestCaseClass::ParamType>& info) {        \
+    return std::to_string(info.index) +                                     \
+           spu::ProtocolKind_Name(std::get<0>(info.param).protocol) + "p" + \
+           std::to_string(std::get<0>(info.param).party_size);              \
   }
 #endif
 
@@ -37,16 +41,31 @@ namespace scql::engine::op::test {
 constexpr char kPartyAlice[] = "alice";
 constexpr char kPartyBob[] = "bob";
 constexpr char kPartyCarol[] = "carol";
+constexpr const char* kPartyCodes[] = {"alice", "bob", "carol"};
 
 spu::RuntimeConfig GetSpuRuntimeConfigForTest();
+
+struct SpuRuntimeTestCase {
+  spu::ProtocolKind protocol;
+  size_t party_size;
+};
+
+static const auto SpuTestValues2PC =
+    testing::Values(test::SpuRuntimeTestCase{spu::ProtocolKind::CHEETAH, 2},
+                    test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 2});
+
+static const auto SpuTestValuesMultiPC =
+    testing::Values(test::SpuRuntimeTestCase{spu::ProtocolKind::CHEETAH, 2},
+                    test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 2},
+                    test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 3},
+                    test::SpuRuntimeTestCase{spu::ProtocolKind::ABY3, 3});
 
 // make single party session
 Session Make1PCSession(Router* ds_router = nullptr,
                        DatasourceAdaptorMgr* ds_mgr = nullptr);
 
-// Make 2PC session
-std::vector<Session> Make2PCSession(
-    const spu::ProtocolKind protocol_kind = spu::ProtocolKind::SEMI2K);
+// Make Multi PC session
+std::vector<Session> MakeMultiPCSession(const SpuRuntimeTestCase test_case);
 
 class ExecNodeBuilder {
  public:
@@ -116,43 +135,18 @@ void FeedInputsAsPublic(const std::vector<ExecContext*>& ctxs,
 void FeedInputsAsSecret(const std::vector<ExecContext*>& ctxs,
                         const std::vector<test::NamedTensor>& ts);
 
-template <typename Operator>
-class OperatorTestRunner {
- public:
-  // start to run async
-  void Start(ExecContext* ctx) {
-    future_ = std::async(
-        std::launch::async, [&](ExecContext* ectx) { op_.Run(ectx); }, ctx);
-  }
-
-  // wait for running complete
-  void Wait() { future_.get(); }
-
- private:
-  Operator op_;
-  std::future<void> future_;
-};
-
-class OpAsyncRunner {
- public:
-  OpAsyncRunner(Operator* op) : op_(op) {}
-
-  // start to run async
-  void Start(ExecContext* ctx) {
-    future_ = std::async(
-        std::launch::async, [&](ExecContext* ectx) { op_->Run(ectx); }, ctx);
-  }
-
-  // wait for running complete
-  void Wait() { future_.get(); }
-
- private:
-  Operator* op_;
-  std::future<void> future_;
-};
-
 // assume ctxs[0] is ExecContext for rank 0
 TensorPtr RevealSecret(const std::vector<ExecContext*>& ctxs,
                        const std::string& name);
+
+using OpCreator = std::function<std::unique_ptr<Operator>()>;
+
+void RunOpAsync(const std::vector<ExecContext*>& exec_ctxs,
+                OpCreator create_op_fn);
+
+template <class Op>
+void RunAsync(const std::vector<ExecContext*>& exec_ctxs) {
+  RunOpAsync(exec_ctxs, []() { return std::make_unique<Op>(); });
+}
 
 }  // namespace scql::engine::op::test

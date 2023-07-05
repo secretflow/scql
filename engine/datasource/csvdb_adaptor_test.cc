@@ -16,6 +16,7 @@
 
 #include "arrow/type.h"
 #include "butil/files/temp_file.h"
+#include "gflags/gflags.h"
 #include "google/protobuf/util/json_util.h"
 #include "gtest/gtest.h"
 
@@ -25,9 +26,12 @@
 
 namespace scql::engine {
 
+DECLARE_string(restricted_read_path);
+
 class CsvdbAdaptorTest : public ::testing::Test {
  protected:
   void SetUp() override {
+    FLAGS_restricted_read_path = "./";
     temp_file_ = std::make_unique<butil::TempFile>("csv");
     temp_file_->save(csv_content_.c_str());
 
@@ -87,7 +91,7 @@ TEST_F(CsvdbAdaptorTest, NormalQuery) {
   std::vector<ColumnDesc> outputs{{"id", pb::PrimitiveDataType::INT64},
                                   {"age", pb::PrimitiveDataType::INT64},
                                   {"name", pb::PrimitiveDataType::STRING},
-                                  {"salary", pb::PrimitiveDataType::DOUBLE}};
+                                  {"salary", pb::PrimitiveDataType::FLOAT64}};
 
   // When
   auto results = csvdb_adaptor.ExecQuery(query, outputs);
@@ -111,7 +115,7 @@ TEST_F(CsvdbAdaptorTest, QueryWithPredicate) {
       "select age, name, salary from csvdb.staff where age > 30";
   std::vector<ColumnDesc> outputs{{"age", pb::PrimitiveDataType::INT64},
                                   {"name", pb::PrimitiveDataType::STRING},
-                                  {"salary", pb::PrimitiveDataType::DOUBLE}};
+                                  {"salary", pb::PrimitiveDataType::FLOAT64}};
 
   // When
   auto results = csvdb_adaptor.ExecQuery(query, outputs);

@@ -33,6 +33,10 @@ class MakePrivate : public Operator {
  protected:
   void Validate(ExecContext* ctx) override;
   void Execute(ExecContext* ctx) override;
+
+ private:
+  TensorPtr RevealPublicString(ExecContext* ctx, TensorPtr t, bool reveal_to_me,
+                               size_t reveal_to_rank);
 };
 
 }  // namespace scql::engine::op
