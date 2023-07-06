@@ -38,9 +38,9 @@ const std::string Add::kOpType("Add");
 
 const std::string& Add::Type() const { return kOpType; }
 
-spu::Value Add::ComputeOnSpu(spu::HalContext* hctx, const spu::Value& lhs,
+spu::Value Add::ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
                              const spu::Value& rhs) {
-  return spu::kernel::hlo::Add(hctx, lhs, rhs);
+  return spu::kernel::hlo::Add(sctx, lhs, rhs);
 }
 
 TensorPtr Add::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
@@ -61,9 +61,9 @@ const std::string Minus::kOpType("Minus");
 
 const std::string& Minus::Type() const { return kOpType; }
 
-spu::Value Minus::ComputeOnSpu(spu::HalContext* hctx, const spu::Value& lhs,
+spu::Value Minus::ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
                                const spu::Value& rhs) {
-  return spu::kernel::hlo::Sub(hctx, lhs, rhs);
+  return spu::kernel::hlo::Sub(sctx, lhs, rhs);
 }
 
 TensorPtr Minus::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
@@ -84,9 +84,9 @@ const std::string Mul::kOpType("Mul");
 
 const std::string& Mul::Type() const { return kOpType; }
 
-spu::Value Mul::ComputeOnSpu(spu::HalContext* hctx, const spu::Value& lhs,
+spu::Value Mul::ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
                              const spu::Value& rhs) {
-  return spu::kernel::hlo::Mul(hctx, lhs, rhs);
+  return spu::kernel::hlo::Mul(sctx, lhs, rhs);
 }
 
 TensorPtr Mul::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
@@ -107,15 +107,15 @@ const std::string Div::kOpType("Div");
 
 const std::string& Div::Type() const { return kOpType; }
 
-spu::Value Div::ComputeOnSpu(spu::HalContext* hctx, const spu::Value& lhs,
+spu::Value Div::ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
                              const spu::Value& rhs) {
   if (lhs.isInt() && rhs.isInt()) {
     // if lhs and rhs are both integers, the result will be integer.
     // so we convert lhs to float here.
-    const auto lhs_f = spu::kernel::hal::dtype_cast(hctx, lhs, spu::DT_FXP);
-    return spu::kernel::hlo::Div(hctx, lhs_f, rhs);
+    const auto lhs_f = spu::kernel::hal::dtype_cast(sctx, lhs, spu::DT_F64);
+    return spu::kernel::hlo::Div(sctx, lhs_f, rhs);
   }
-  return spu::kernel::hlo::Div(hctx, lhs, rhs);
+  return spu::kernel::hlo::Div(sctx, lhs, rhs);
 }
 
 TensorPtr Div::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
@@ -147,11 +147,11 @@ const std::string IntDiv::kOpType("IntDiv");
 
 const std::string& IntDiv::Type() const { return kOpType; }
 
-spu::Value IntDiv::ComputeOnSpu(spu::HalContext* hctx, const spu::Value& lhs,
+spu::Value IntDiv::ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
                                 const spu::Value& rhs) {
   // NOTE(shunde.csd): if lhs and rhs are both integers,
   // `spu::kernel::hlo::Div` will behave like `IntDiv`
-  return spu::kernel::hlo::Div(hctx, lhs, rhs);
+  return spu::kernel::hlo::Div(sctx, lhs, rhs);
 }
 
 TensorPtr IntDiv::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
@@ -174,7 +174,7 @@ const std::string Mod::kOpType("Mod");
 
 const std::string& Mod::Type() const { return kOpType; }
 
-spu::Value Mod::ComputeOnSpu(spu::HalContext* hctx, const spu::Value& lhs,
+spu::Value Mod::ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
                              const spu::Value& rhs) {
   YACL_THROW("unimplemented");
 }

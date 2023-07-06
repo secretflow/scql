@@ -83,7 +83,7 @@ void BinaryBase::ExecuteInSecret(ExecContext* ctx) {
   const auto& out_pbs = ctx->GetOutput(kOut);
 
   auto device_symbols = ctx->GetSession()->GetDeviceSymbols();
-  auto hctx = ctx->GetSession()->GetSpuHalContext();
+  auto sctx = ctx->GetSession()->GetSpuContext();
 
   // TODO(shunde.csd): possible optimization
   // maybe we should concatenate values together to reduce communication
@@ -97,7 +97,7 @@ void BinaryBase::ExecuteInSecret(ExecContext* ctx) {
         util::SpuVarNameEncoder::GetValueName(left_param.name()));
     auto right_value = device_symbols->getVar(
         util::SpuVarNameEncoder::GetValueName(right_param.name()));
-    auto result_value = ComputeOnSpu(hctx, left_value, right_value);
+    auto result_value = ComputeOnSpu(sctx, left_value, right_value);
     device_symbols->setVar(
         util::SpuVarNameEncoder::GetValueName(out_param.name()), result_value);
 
@@ -137,7 +137,7 @@ TensorPtr BinaryBase::GetPrivateOrPublicTensor(ExecContext* ctx,
   TensorPtr ret;
   if (util::IsTensorStatusMatched(t, pb::TENSORSTATUS_PUBLIC)) {
     // read public tensor from spu device symbol table
-    auto spu_io = util::SpuOutfeedHelper(ctx->GetSession()->GetSpuHalContext(),
+    auto spu_io = util::SpuOutfeedHelper(ctx->GetSession()->GetSpuContext(),
                                          ctx->GetSession()->GetDeviceSymbols());
     ret = spu_io.DumpPublic(t.name());
 
@@ -150,10 +150,10 @@ TensorPtr BinaryBase::GetPrivateOrPublicTensor(ExecContext* ctx,
   return ret;
 }
 
-spu::Value BinaryBase::PropagateNulls(spu::HalContext* hctx,
+spu::Value BinaryBase::PropagateNulls(spu::SPUContext* sctx,
                                       const spu::Value& left,
                                       const spu::Value& right) {
-  return spu::kernel::hlo::And(hctx, left, right);
+  return spu::kernel::hlo::And(sctx, left, right);
 }
 
 }  // namespace scql::engine::op

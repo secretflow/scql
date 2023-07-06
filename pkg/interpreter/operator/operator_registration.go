@@ -65,8 +65,8 @@ func registerAllOpDef() {
 	var statusPublic = []proto.TensorStatus{proto.TensorStatus_TENSORSTATUS_PUBLIC}
 	var statusPrivateOrPublic = []proto.TensorStatus{proto.TensorStatus_TENSORSTATUS_PUBLIC, proto.TensorStatus_TENSORSTATUS_PRIVATE}
 	var statusPrivateOrSecret = []proto.TensorStatus{proto.TensorStatus_TENSORSTATUS_PRIVATE, proto.TensorStatus_TENSORSTATUS_SECRET}
+	var statusSecretOrPublic = []proto.TensorStatus{proto.TensorStatus_TENSORSTATUS_SECRET, proto.TensorStatus_TENSORSTATUS_PUBLIC}
 	var statusPrivateOrSecretOrPublic = []proto.TensorStatus{proto.TensorStatus_TENSORSTATUS_PUBLIC, proto.TensorStatus_TENSORSTATUS_PRIVATE, proto.TensorStatus_TENSORSTATUS_SECRET}
-	var statusUnknown = []proto.TensorStatus{proto.TensorStatus_TENSORSTATUS_UNKNOWN}
 
 	{
 		opDef := &OperatorDef{}
@@ -84,12 +84,11 @@ func registerAllOpDef() {
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNamePublish)
 		opDef.AddInput("In", "Tensors to be published.",
-			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T1)
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.AddOutput("Out", "Result tensors of the publish op. Tensors are in TensorOption VALUE.",
-			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T2)
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.SetDefinition("This operator publishes the DAG results.")
-		opDef.SetParamTypeConstraint(T1, statusPrivateOrPublic)
-		opDef.SetParamTypeConstraint(T2, statusUnknown)
+		opDef.SetParamTypeConstraint(T, statusPrivate)
 		check(opDef.err)
 		AllOpDef = append(AllOpDef, opDef)
 	}
@@ -134,7 +133,7 @@ func registerAllOpDef() {
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T2)
 		opDef.AddAttribute(RevealToAttr, "List of parties to see the private data. If it is revealed to one party only, the other party also needs to run the op, but does not have an output. Only the reveal_to party gets the output.")
 		opDef.SetDefinition("Convert In tensor from share status to private status.")
-		opDef.SetParamTypeConstraint(T1, statusSecret)
+		opDef.SetParamTypeConstraint(T1, statusSecretOrPublic)
 		opDef.SetParamTypeConstraint(T2, statusPrivate)
 		check(opDef.err)
 		AllOpDef = append(AllOpDef, opDef)
@@ -396,13 +395,13 @@ Out = {2.5}
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.AddOutput("Out", "Shape Tensors",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T1)
-		opDef.AddAttribute(AxisAttr, "Int. Specific dimension of the shape.")
+		opDef.AddAttribute(AxisAttr, "Int64. Specific dimension of the shape.")
 		opDef.AddDefaultAttributeValue(AxisAttr, CreateIntAttribute(-1))
 		opDef.SetDefinition(`Definition: Given tensors In, return shapes of each tensor. Axis starts from 0. If axis is set, dimensions of each shape are returned. If axis is not set(default -1), shapes are returned.
 Example:
 ` + "\n```python" + `
-In = {{1, 2}, {2, 3}, {4, 3, 3}} # {1, 2} here is a column vector
-Out = {{2, 1}, {2, 1}, {3, 1}}
+In = { {1, 2}, {2, 3}, {4, 3, 3} } # {1, 2} here is a column vector
+Out = { {2, 1}, {2, 1}, {3, 1} }
 ` + "```\n")
 		opDef.SetParamTypeConstraint(T, statusPrivateOrSecretOrPublic)
 		opDef.SetParamTypeConstraint(T1, statusPrivate)
@@ -564,17 +563,76 @@ Out = BroadcastTo(In, ShapeRefTensor) = [1, 1, 1]
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.AddOutput("Out", "Concated Tensor.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
-		opDef.AddAttribute("axis", "Int. Dimension along which to concatenate.")
+		opDef.AddAttribute("axis", "Int64. Dimension along which to concatenate.")
 		opDef.AddDefaultAttributeValue("axis", CreateIntAttribute(0))
 		opDef.SetDefinition(`Definition: Given a number of tensors In (variadic, each tensor's shape must be the same except for the axis), concat the In tensors along the axis.
 Example:
 ` + "\n```python" + `
-In = {{1, 2}, {2, 3, 4}, {3, 4, 5, 6}}
+In = { {1, 2}, {2, 3, 4}, {3, 4, 5, 6} }
 Out = {1, 2, 2, 3, 4, 3, 4, 5, 6}
 ` + "```\n")
 		opDef.SetParamTypeConstraint(T, statusSecret)
 		check(opDef.err)
 		AllOpDef = append(AllOpDef, opDef)
+	}
+
+	{
+		opDef := &OperatorDef{}
+		opDef.SetName(OpNameGroup)
+		opDef.AddInput("Key", "input key tensors(shape [M][1]).",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.AddOutput("GroupId", "group id vector(shape [M][1]).",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.AddOutput("GroupNum", "number of groups vector(shape [1][1])",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.SetDefinition(`Definition: Assign a group id(start from 0) for each input element.
+Example:
+` + "\n```python" + `
+Key = [{"a", "c", "a", "d"}, {0, 2, 0, 3}]
+GroupId = {0, 1, 0, 2}
+GroupNum = {3}
+` + "```\n")
+		opDef.SetParamTypeConstraint(T, statusPrivate)
+		check(opDef.err)
+		AllOpDef = append(AllOpDef, opDef)
+	}
+
+	{
+		type tmpl struct {
+			opName    string
+			aggResult string
+		}
+		for _, t := range []tmpl{
+			{opName: OpNameGroupFirstOf, aggResult: `[{0, 1, 4}, {9, 8, 5}]`},
+			{opName: OpNameGroupCount, aggResult: `[{2, 2, 1}, {2, 2, 1}]`},
+			{opName: OpNameGroupCountDistinct, aggResult: `[{2, 2, 1}, {2, 2, 1}]`},
+			{opName: OpNameGroupSum, aggResult: `[{2, 4, 4}, {16, 14, 5}]`},
+			{opName: OpNameGroupAvg, aggResult: `[{1, 2, 4}, {8, 7, 5}]`},
+			{opName: OpNameGroupMin, aggResult: `[{0, 1, 4}, {7, 6, 5}]`},
+			{opName: OpNameGroupMax, aggResult: `[{2, 3, 4}, {9, 8, 5}]`},
+		} {
+			opDef := &OperatorDef{}
+			opDef.SetName(t.opName)
+			opDef.AddInput("GroupId", "Input group id vector(shape [M][1]).",
+				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+			opDef.AddInput("GroupNum", "Input number of groups vector(shape [1][1]).",
+				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+			opDef.AddInput("In", "Input data tensor(shape [M][1]).",
+				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+			opDef.AddOutput("Out", "Output data tensors(shape [K][1], K equals to number of groups), Out[i] is the agg result for i-th group.",
+				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+			opDef.SetDefinition("Definition: Aggregate `Data` for each group." + fmt.Sprintf(`
+Example:
+`+"\n```python"+`
+GroupId = {0, 1, 0, 1, 2}
+GroupNum = {3}
+In = [{0, 1, 2, 3, 4}, {9, 8, 7, 6, 5}]
+Out = %s
+`, t.aggResult) + "```\n")
+			opDef.SetParamTypeConstraint(T, statusPrivate)
+			check(opDef.err)
+			AllOpDef = append(AllOpDef, opDef)
+		}
 	}
 }
 

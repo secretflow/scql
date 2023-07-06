@@ -19,20 +19,23 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/secretflow/scql/pkg/parser"
+	"github.com/secretflow/scql/pkg/grm"
 	"github.com/secretflow/scql/pkg/parser/ast"
 	"github.com/secretflow/scql/pkg/parser/format"
 	"github.com/secretflow/scql/pkg/parser/model"
+	"github.com/secretflow/scql/pkg/planner/core"
 )
 
 type DbTable struct {
 	dbName    string
 	tableName string
+	dbType    grm.DatabaseType // db type of table stored
 }
 
 func (dt *DbTable) String() string {
 	return fmt.Sprintf("%s.%s", dt.dbName, dt.tableName)
 }
+
 func NewDbTable(db, table string) DbTable {
 	return DbTable{dbName: db, tableName: table}
 }
@@ -42,53 +45,90 @@ func newDbTable(dbTableName string) (DbTable, error) {
 	if len(ss) != 2 {
 		return DbTable{}, fmt.Errorf("newDbTable: invalid dbTableName %v", dbTableName)
 	}
-	return DbTable{strings.ToLower(ss[0]), strings.ToLower(ss[1])}, nil
+	return DbTable{dbName: strings.ToLower(ss[0]), tableName: strings.ToLower(ss[1])}, nil
 }
 
-// rewriteTableRefs rewrites the tableRefs with local db_dbname.table_name
-func rewriteTableRefs(m map[DbTable]DbTable, tableRefs []string) ([]string, error) {
+func (dt *DbTable) SetDBType(dbType grm.DatabaseType) {
+	dt.dbType = dbType
+}
+
+// rewriteTableRefsAndGetDBType rewrites the tableRefs with local db_dbname.table_name and get db type of
+func rewriteTableRefsAndGetDBType(m map[DbTable]DbTable, tableRefs []string) ([]string, grm.DatabaseType, error) {
+	dbType := grm.DBUnknown
 	newTableRefs := make([]string, 0, len(tableRefs))
 	for _, dbTableName := range tableRefs {
 		DbTable, err := newDbTable(dbTableName)
 		if err != nil {
-			return nil, err
+			return nil, grm.DBUnknown, err
 		}
 		newDbTable, ok := m[DbTable]
 		if !ok {
-			return nil, fmt.Errorf("table %s.%s not found", DbTable.dbName, DbTable.tableName)
+			return nil, grm.DBUnknown, fmt.Errorf("table %s not found", DbTable.String())
 		}
-		newTableRefs = append(newTableRefs, fmt.Sprintf("%s.%s", newDbTable.dbName, newDbTable.tableName))
+		newTableRefs = append(newTableRefs, newDbTable.String())
+		if newDbTable.dbType == grm.DBUnknown {
+			continue
+		}
+		if dbType != grm.DBUnknown && newDbTable.dbType != dbType {
+			return nil, grm.DBUnknown, fmt.Errorf("table %s has wrong db type %+v", DbTable.String(), newDbTable.dbType)
+		}
+		dbType = newDbTable.dbType
 	}
-	return newTableRefs, nil
+	if dbType == grm.DBUnknown {
+		dbType = grm.DBMySQL
+	}
+	return newTableRefs, dbType, nil
 }
 
-// rewrite rewrites the query with local db_name.table_name
-func rewrite(sql string, tableRefs []string, enginesInfo *EnginesInfo, skipDb bool) (string, []string, error) {
+// runSQLString create sql string from lp with dialect
+func runSQLString(lp core.LogicalPlan, enginesInfo *EnginesInfo, skipDb bool) (sql string, newTableRefs []string, err error) {
+	var dialect core.Dialect
+	dialect = core.NewMySQLDialect()
+	// use MySQL as default dialect to get ref tables
+	ctx, err := core.BuildChildCtx(dialect, lp)
+	if err != nil {
+		return "", nil, err
+	}
+	stmt, err := ctx.GetSQLStmt()
+	if err != nil {
+		return "", nil, err
+	}
+	tableRefs := ctx.GetTableRefs()
+	dbType := grm.DBMySQL
 	needRewrite := false
-	var newTableRefs []string
 	for _, party := range enginesInfo.GetParties() {
 		if len(enginesInfo.GetTablesByParty(party)) > 0 {
 			needRewrite = true
 		}
 	}
 
-	p := parser.New()
-	stmt, err := p.ParseOneStmt(sql, "", "")
-	if err != nil {
-		return "", nil, err
-	}
-
 	if needRewrite {
 		m := enginesInfo.GetDBTableMap()
-		newTableRefs, err = rewriteTableRefs(m, tableRefs)
+		newTableRefs, dbType, err = rewriteTableRefsAndGetDBType(m, tableRefs)
 		if err != nil {
-			return "", nil, err
+			return
+		}
+		if dbType != grm.DBMySQL {
+			ok := true
+			dialect, ok = core.DBDialectMap[dbType]
+			if !ok {
+				return "", nil, fmt.Errorf("failed to find dialect for db type %v", dbType)
+			}
+			ctx, err := core.BuildChildCtx(dialect, lp)
+			if err != nil {
+				return "", nil, err
+			}
+			stmt, err = ctx.GetSQLStmt()
+			if err != nil {
+				return "", nil, err
+			}
 		}
 
 		r := newRewriter(m)
 		stmt.Accept(r)
 		if r.err != nil {
-			return "", nil, err
+			err = r.err
+			return
 		}
 	} else {
 		newTableRefs = tableRefs
@@ -100,9 +140,7 @@ func rewrite(sql string, tableRefs []string, enginesInfo *EnginesInfo, skipDb bo
 	}
 
 	b := new(bytes.Buffer)
-	// TODO(xiaoyuan) check flag here
-	f := format.RestoreStringSingleQuotes | format.RestoreKeyWordLowercase | format.RestoreNameBackQuotes
-	if err := stmt.Restore(format.NewRestoreCtx(f, b)); err != nil {
+	if err := stmt.Restore(format.NewRestoreCtxWithDialect(dialect.GetRestoreFlags(), b, dialect.GetFormatDialect())); err != nil {
 		return "", nil, err
 	}
 
@@ -172,9 +210,9 @@ func (r *dbNameRemover) Enter(in ast.Node) (ast.Node, bool) {
 func (r *dbNameRemover) Leave(in ast.Node) (ast.Node, bool) {
 	switch x := in.(type) {
 	case *ast.ColumnNameExpr:
-		x.Name.Schema.O = ""
+		x.Name.Schema = model.NewCIStr("")
 	case *ast.ColumnName:
-		x.Schema.O = ""
+		x.Schema = model.NewCIStr("")
 	}
 	return in, r.err == nil
 }

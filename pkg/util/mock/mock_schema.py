@@ -16,43 +16,66 @@
 import json
 import os
 from pathlib import Path
+from typing import List
 
-DATABASES = ["alice", "bob", "carol"]
-PARTY_CODES = ["alice", "bob", "carol"]
+DATABASES = {
+    "alice": {
+        "db_name": "alice",
+        "party_code": "alice",
+        "engine": ["engine_alice:8003"],
+        "credentials": ["alice_credential"],
+        "token": "alice_token",
+    },
+    "bob": {
+        "db_name": "bob",
+        "party_code": "bob",
+        "engine": ["engine_bob:8003"],
+        "credentials": ["bob_credential"],
+        "token": "bob_token",
+    },
+    "carol": {
+        "db_name": "carol",
+        "party_code": "carol",
+        "engine": ["engine_carol:8003"],
+        "credentials": ["carol_credential"],
+        "token": "carol_token",
+    },
+}
 COLUMN_COPY_NUM = 3
 TABLE_COPY_NUM = 3
 DATA_TYPE = ["long", "float", "string"]
 CCL_LEVEL = ["plain", "join", "groupby", "compare", "aggregate", "encrypt"]
 CUR_PATH = Path(__file__).parent.resolve()
+tid_index = 0
 
 
-def create_db(db_name, party_code):
-    db = dict()
-    db["db_name"] = db_name
-    db["tables"] = list()
+def create_db(db_info):
     for i in range(TABLE_COPY_NUM):
-        db["tables"].append(create_table(party_code, i))
-    return db
+        name, table_info = create_table(i)
+        db_info["tables"][name] = table_info
 
 
-def create_table(party_code, pos):
+def create_table(pos):
     table_name_prefix = "tbl"
     table = dict()
-    table["party_code"] = party_code
-    table["table_name"] = f"{table_name_prefix}_{pos}"
+    table_name = f"{table_name_prefix}_{pos}"
     table["columns"] = list()
+    global tid_index
+    table["tid"] = f"tid{tid_index}"
+    tid_index = tid_index + 1
     for i in range(COLUMN_COPY_NUM):
         for dtype in DATA_TYPE:
             for level in CCL_LEVEL:
-                table["columns"].append(create_column(dtype, level, i))
-    return table
+                table["columns"].append(create_column(dtype, [level], i))
+    return table_name, table
 
 
-def create_column(data_type: str, level: str, pos: int):
+def create_column(data_type: str, levels: List[str], pos: int):
     column = dict()
-    column["column_name"] = f"{level}_{data_type}_{pos}"
+    level_strs = "-".join(levels)
+    column["column_name"] = f"{level_strs}_{data_type}_{pos}"
     column["dtype"] = data_type
-    column["ccl"] = level
+    column["ccl"] = levels
     return column
 
 
@@ -67,6 +90,14 @@ def write_json(data, file_name):
 
 
 if __name__ == "__main__":
-    for i, db_name in enumerate(DATABASES):
-        db = create_db(db_name, PARTY_CODES[i])
-        write_json(db, f"db_{db_name}")
+    for key in DATABASES:
+        db_info = DATABASES[key]
+        dest_file = f"db_{db_info['db_name']}"
+        db_info["tables"] = {}
+        if os.path.exists(dest_file):
+            with open(dest_file, "r") as f:
+                old_info = json.dump(dest_file)
+                if "tables" in old_info:
+                    db_info["tables"] = old_info["tables"]
+        create_db(db_info)
+        write_json(db_info, dest_file)

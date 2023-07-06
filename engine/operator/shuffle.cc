@@ -48,8 +48,8 @@ void Shuffle::Execute(ExecContext* ctx) {
     inputs.push_back(std::move(val));
   }
 
-  auto hctx = ctx->GetSession()->GetSpuHalContext();
-  auto outputs = spu::kernel::hlo::Shuffle(hctx, inputs, 0);
+  auto sctx = ctx->GetSession()->GetSpuContext();
+  auto outputs = spu::kernel::hlo::Shuffle(sctx, inputs, 0);
 
   const auto& output_pbs = ctx->GetOutput(kOut);
   for (int i = 0; i < output_pbs.size(); ++i) {

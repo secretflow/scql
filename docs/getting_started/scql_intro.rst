@@ -143,5 +143,4 @@ Step5. Execute
 SCDB sends the subgraphs to corresponding SCQLEngine nodes, SCQLEngine cooperates with peers to run the execution graph and reports the final result of Q to SCDB.
 
 
-
 .. _secretflow/spu: https://github.com/secretflow/spu

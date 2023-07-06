@@ -16,6 +16,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/secretflow/scql/pkg/parser/ast"
 	"github.com/secretflow/scql/pkg/parser/mysql"
@@ -336,6 +337,9 @@ func (a *aggregationPushDownSolver) optimize(ctx context.Context, p LogicalPlan)
 	if err := a.MarkAggCountFunc(p); err != nil {
 		return nil, err
 	}
+	if err := CheckAggFuncArgInGroupByItems(p); err != nil {
+		return nil, err
+	}
 	return a.aggPushDown(p)
 }
 
@@ -358,6 +362,39 @@ func (a *aggregationPushDownSolver) tryAggPushDownForUnion(union *LogicalUnionAl
 	}
 	union.SetSchema(expression.NewSchema(newChildren[0].Schema().Columns...))
 	union.SetChildren(newChildren...)
+	return nil
+}
+
+func CheckAggFuncArgInGroupByItems(p LogicalPlan) error {
+	for _, child := range p.Children() {
+		err := CheckAggFuncArgInGroupByItems(child)
+		if err != nil {
+			return err
+		}
+	}
+	agg, ok := p.(*LogicalAggregation)
+	if !ok {
+		return nil
+	}
+	for _, aggFunc := range agg.AggFuncs {
+		if aggFunc.Name == ast.AggFuncFirstRow {
+			IsArgInGroupKeys := false
+			if _, ok := aggFunc.Args[0].(*expression.Constant); ok {
+				IsArgInGroupKeys = true
+			}
+			if !IsArgInGroupKeys {
+				for _, item := range agg.GroupByItems {
+					if ok := aggFunc.Args[0].Equal(agg.ctx, item); ok {
+						IsArgInGroupKeys = true
+						break
+					}
+				}
+			}
+			if !IsArgInGroupKeys {
+				return fmt.Errorf("failed to check aggregate function: select column (%+v) is not in group by items %+v", aggFunc.Args[0], agg.GroupByItems)
+			}
+		}
+	}
 	return nil
 }
 

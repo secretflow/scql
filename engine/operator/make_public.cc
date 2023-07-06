@@ -56,7 +56,7 @@ void MakePublic::Execute(ExecContext* ctx) {
 
 void MakePublic::PrivateToPublic(ExecContext* ctx, const RepeatedTensor& inputs,
                                  const RepeatedTensor& outputs) {
-  spu::device::ColocatedIo cio(ctx->GetSession()->GetSpuHalContext());
+  spu::device::ColocatedIo cio(ctx->GetSession()->GetSpuContext());
   util::SpuInfeedHelper infeed_helper(&cio);
 
   for (int i = 0; i < inputs.size(); ++i) {
@@ -64,6 +64,11 @@ void MakePublic::PrivateToPublic(ExecContext* ctx, const RepeatedTensor& inputs,
     auto in_t = ctx->GetTensorTable()->GetTensor(in_name);
 
     if (in_t != nullptr) {
+      // NOTE: if tensor' type is string, we should convert it to
+      // integer first, currently use hash value of string.
+      if (in_t->Type() == pb::PrimitiveDataType::STRING) {
+        in_t = ctx->GetSession()->StringToHash(*in_t);
+      }
       const auto& out_name = outputs[i].name();
       infeed_helper.InfeedTensorAsPublic(out_name, *in_t);
     }
@@ -83,8 +88,8 @@ void MakePublic::SecretToPublic(ExecContext* ctx, const RepeatedTensor& inputs,
     auto secret_in_value =
         symbols->getVar(util::SpuVarNameEncoder::GetValueName(in_name));
 
-    auto hctx = ctx->GetSession()->GetSpuHalContext();
-    auto public_out_value = spu::kernel::hal::reveal(hctx, secret_in_value);
+    auto sctx = ctx->GetSession()->GetSpuContext();
+    auto public_out_value = spu::kernel::hal::reveal(sctx, secret_in_value);
 
     const auto& out_name = outputs[i].name();
     symbols->setVar(util::SpuVarNameEncoder::GetValueName(out_name),
@@ -95,7 +100,7 @@ void MakePublic::SecretToPublic(ExecContext* ctx, const RepeatedTensor& inputs,
         symbols->getVar(util::SpuVarNameEncoder::GetValidityName(in_name));
 
     auto public_out_validity =
-        spu::kernel::hal::reveal(hctx, secret_in_validity);
+        spu::kernel::hal::reveal(sctx, secret_in_validity);
 
     symbols->setVar(util::SpuVarNameEncoder::GetValidityName(
         out_name, public_out_validity));

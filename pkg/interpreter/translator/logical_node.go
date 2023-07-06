@@ -116,13 +116,13 @@ func (n *baseNode) SetResultTableWithDTypeCheck(rt []*Tensor) error {
 	// check tensor date type matches the logical node's column data type
 	for i, t := range rt {
 		col := n.Schema().Columns[i]
-		typ, err := convertDataType(col.RetType)
+		expectTp, err := convertDataType(col.RetType)
 		if err != nil {
 			return fmt.Errorf("fail to set result table: %v", err)
 		}
-		if !t.skipDTypeCheck && t.DType != typ {
-			return fmt.Errorf("fail to set result table: type doesn't match (%v != %v) for tensor %v in node %v ",
-				typ, t.DType, t.UniqueName(), n.Type())
+		if !t.skipDTypeCheck && t.DType != expectTp {
+			return fmt.Errorf("fail to set result table: tensor %v type(=%v) doesn't match scheme type(=%v) in node %v ",
+				t.UniqueName(), t.DType, expectTp, n.Type())
 		}
 		t.cc = n.ccl[col.UniqueID]
 	}

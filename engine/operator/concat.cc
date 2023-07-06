@@ -53,9 +53,9 @@ void Concat::Execute(ExecContext* ctx) {
     values.push_back(value);
   }
 
-  auto hctx = ctx->GetSession()->GetSpuHalContext();
+  auto sctx = ctx->GetSession()->GetSpuContext();
   int64_t axis = ctx->GetInt64ValueFromAttribute(kAxis);
-  auto result_value = spu::kernel::hlo::Concatenate(hctx, values, axis);
+  auto result_value = spu::kernel::hlo::Concatenate(sctx, values, axis);
 
   const auto& output_pb = ctx->GetOutput(kOut)[0];
   symbols->setVar(util::SpuVarNameEncoder::GetValueName(output_pb.name()),
@@ -70,7 +70,7 @@ void Concat::Execute(ExecContext* ctx) {
     validities.push_back(validity);
   }
 
-  auto result_validity = spu::kernel::hlo::Concatenate(hctx, validities, axis);
+  auto result_validity = spu::kernel::hlo::Concatenate(sctx, validities, axis);
 
   symbols->setVar(util::SpuVarNameEncoder::GetValidityName(output_pb.name()),
                   result_validity);

@@ -145,7 +145,7 @@ func (b *PlanBuilder) Build(ctx context.Context, node ast.Node) (Plan, error) {
 		return b.buildSelect(ctx, x)
 	case *ast.UnionStmt:
 		return b.buildUnion(ctx, x)
-	case *ast.CreateUserStmt, *ast.DropUserStmt, *ast.GrantStmt, *ast.RevokeStmt:
+	case *ast.CreateUserStmt, *ast.DropUserStmt, *ast.GrantStmt, *ast.RevokeStmt, *ast.AlterUserStmt:
 		return b.buildSimple(node.(ast.StmtNode))
 	case ast.DDLNode:
 		return b.buildDDL(ctx, x)
@@ -186,8 +186,7 @@ func (b *PlanBuilder) buildSimple(node ast.StmtNode) (Plan, error) {
 	p := &Simple{Statement: node}
 
 	switch raw := node.(type) {
-	case *ast.AlterUserStmt, *ast.FlushStmt,
-		*ast.GrantRoleStmt, *ast.RevokeRoleStmt,
+	case *ast.FlushStmt, *ast.GrantRoleStmt, *ast.RevokeRoleStmt,
 		*ast.KillStmt, *ast.UseStmt, *ast.ShutdownStmt:
 		// TODO(yang.y): the above nodes may need to be ported
 		return nil, fmt.Errorf("buildSimple: un-ported node %v", raw)
@@ -497,18 +496,18 @@ func collectVisitInfoFromRevokeStmt(sctx sessionctx.Context, vi []visitInfo, stm
 	for _, item := range stmt.Privs {
 		// NOTE(yang.y): skip visibility privilege here
 		// it will be checked in revoke executor
-		if _, ok := storage.VisibilityPriv2UserCol[item.Priv]; ok {
+		if _, ok := storage.VisibilityPrivColName[item.Priv]; ok {
 			continue
 		}
 
 		if item.Priv == mysql.AllPriv {
 			switch stmt.Level.Level {
 			case ast.GrantLevelGlobal:
-				allPrivs = mysql.AllGlobalPrivs
+				allPrivs = storage.AllGlobalPrivs
 			case ast.GrantLevelDB:
-				allPrivs = mysql.AllDBPrivs
+				allPrivs = storage.AllDBPrivs
 			case ast.GrantLevelTable:
-				allPrivs = mysql.AllTablePrivs
+				allPrivs = storage.AllTablePrivs
 			}
 			break
 		}
@@ -741,7 +740,7 @@ func collectVisitInfoFromGrantStmt(sctx sessionctx.Context, vi []visitInfo, stmt
 	for _, item := range stmt.Privs {
 		// NOTE(shunde.csd): skip visibility privilege here
 		// it will be checked in grant executor
-		if _, ok := storage.VisibilityPriv2UserCol[item.Priv]; ok {
+		if _, ok := storage.VisibilityPrivColName[item.Priv]; ok {
 			continue
 		}
 

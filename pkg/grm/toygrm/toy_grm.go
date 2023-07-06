@@ -23,6 +23,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"github.com/secretflow/scql/pkg/grm"
+	grmproto "github.com/secretflow/scql/pkg/proto-gen/grm"
 )
 
 var (
@@ -127,6 +128,7 @@ func New(path string) (res *ToyGrmInfo, err error) {
 			DbName:    tableInfo.Schema.RefDbName,
 			TableName: tableInfo.Schema.RefTableName,
 			Columns:   schemaDesc,
+			DBType:    grmproto.DataSourceKind(grmproto.DataSourceKind_value[tableInfo.Schema.DBType]),
 		}
 
 	}

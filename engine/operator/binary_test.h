@@ -36,7 +36,7 @@ struct BinaryTestCase {
 };
 
 class BinaryTest : public testing::TestWithParam<
-                       std::tuple<spu::ProtocolKind, BinaryTestCase>> {
+                       std::tuple<test::SpuRuntimeTestCase, BinaryTestCase>> {
  protected:
   void SetUp() override { RegisterAllOps(); }
 
@@ -57,35 +57,27 @@ TEST_P(BinaryComputeInSecretTest, Works) {
   auto parm = GetParam();
   auto tc = std::get<1>(parm);
   auto node = MakeExecNode(tc);
-  std::vector<Session> sessions = test::Make2PCSession(std::get<0>(parm));
+  std::vector<Session> sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
-  ExecContext alice_ctx(node, &sessions[0]);
-  ExecContext bob_ctx(node, &sessions[1]);
+  std::vector<ExecContext> exec_ctxs;
+  for (size_t idx = 0; idx < sessions.size(); ++idx) {
+    exec_ctxs.emplace_back(node, &sessions[idx]);
+  }
 
-  FeedInputs(std::vector<ExecContext*>{&alice_ctx, &bob_ctx}, tc);
+  // feed inputs
+  std::vector<ExecContext*> ctx_ptrs;
+  for (size_t idx = 0; idx < exec_ctxs.size(); ++idx) {
+    ctx_ptrs.emplace_back(&exec_ctxs[idx]);
+  }
+  FeedInputs(ctx_ptrs, tc);
 
   // When
-  auto alice_op = CreateOp(node.op_type());
-  auto bob_op = CreateOp(node.op_type());
-  ASSERT_TRUE(alice_op != nullptr)
-      << "failed to create operator for op_type = " << node.op_type();
-  ASSERT_TRUE(bob_op != nullptr);
-
-  test::OpAsyncRunner alice(alice_op.get());
-  test::OpAsyncRunner bob(bob_op.get());
-
-  alice.Start(&alice_ctx);
-  bob.Start(&bob_ctx);
-
-  // Then
-  EXPECT_NO_THROW({ alice.Wait(); });
-  EXPECT_NO_THROW({ bob.Wait(); });
+  EXPECT_NO_THROW(
+      test::RunOpAsync(ctx_ptrs, [&]() { return CreateOp(node.op_type()); }));
 
   for (const auto& named_tensor : tc.outputs) {
     TensorPtr t = nullptr;
-    EXPECT_NO_THROW({
-      t = test::RevealSecret({&alice_ctx, &bob_ctx}, named_tensor.name);
-    });
+    EXPECT_NO_THROW({ t = test::RevealSecret(ctx_ptrs, named_tensor.name); });
     ASSERT_TRUE(t != nullptr);
     EXPECT_TRUE(t->ToArrowChunkedArray()->ApproxEquals(
         *named_tensor.tensor->ToArrowChunkedArray(),
@@ -103,12 +95,19 @@ TEST_P(BinaryComputeInPlainTest, Works) {
   auto parm = GetParam();
   auto tc = std::get<1>(parm);
   auto node = MakeExecNode(tc);
-  std::vector<Session> sessions = test::Make2PCSession(std::get<0>(parm));
+  std::vector<Session> sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
-  ExecContext alice_ctx(node, &sessions[0]);
-  ExecContext bob_ctx(node, &sessions[1]);
+  std::vector<ExecContext> exec_ctxs;
+  for (size_t idx = 0; idx < sessions.size(); ++idx) {
+    exec_ctxs.emplace_back(node, &sessions[idx]);
+  }
 
-  FeedInputs(std::vector<ExecContext*>{&alice_ctx, &bob_ctx}, tc);
+  // feed inputs
+  std::vector<ExecContext*> ctx_ptrs;
+  for (size_t idx = 0; idx < exec_ctxs.size(); ++idx) {
+    ctx_ptrs.emplace_back(&exec_ctxs[idx]);
+  }
+  FeedInputs(ctx_ptrs, tc);
 
   // When
   auto alice_op = CreateOp(node.op_type());
@@ -116,9 +115,9 @@ TEST_P(BinaryComputeInPlainTest, Works) {
       << "failed to create operator for op_type = " << node.op_type();
 
   // Then
-  EXPECT_NO_THROW({ alice_op->Run(&alice_ctx); });
+  EXPECT_NO_THROW({ alice_op->Run(ctx_ptrs[0]); });
 
-  auto tensor_table = alice_ctx.GetTensorTable();
+  auto tensor_table = ctx_ptrs[0]->GetTensorTable();
   for (const auto& named_tensor : tc.outputs) {
     auto t = tensor_table->GetTensor(named_tensor.name);
     EXPECT_TRUE(t != nullptr) << named_tensor.name << " not found";

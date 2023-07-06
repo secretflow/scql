@@ -102,6 +102,7 @@ func (c *GrmInfoStd) GetTableMeta(tid, requestParty, token string) (*grm.TableSc
 		DbName:    response.GetSchema().DbName,
 		TableName: response.GetSchema().TableName,
 		Columns:   columnDesc,
+		DBType:    response.GetDbType(),
 	}, nil
 }
 

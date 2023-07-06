@@ -55,7 +55,7 @@ INSTANTIATE_TEST_SUITE_P(
                            "x2", TensorFromJSON(arrow::boolean(),
                                                 "[true,false,false,true]"))},
             .output_names = {"x1_dump", "x2_dump"},
-            .output_file_path = "dumpfile_out.1",
+            .output_file_path = "./dumpfile_out.1",
             .output_file_content = R"csv("x1_dump","x2_dump"
 -3.1415,true
 0.1,false
@@ -93,7 +93,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_P(DumpFileTest, works) {
   // Given
-  FLAGS_restricted_write_path = std::filesystem::temp_directory_path();
+  FLAGS_restricted_write_path = std::filesystem::current_path().string();
   auto tc = GetParam();
   auto node = MakeDumpFileExecNode(tc);
   auto session = test::Make1PCSession();
@@ -141,9 +141,8 @@ pb::ExecNode DumpFileTest::MakeDumpFileExecNode(const DumpFileTestCase& tc) {
   for (size_t i = 0; i < tc.output_names.size(); ++i) {
     auto out = test::MakeTensorAs(tc.output_names[i], input_datas[i]);
     out.set_option(pb::TensorOptions::VALUE);
-    auto ss = out.mutable_ss();
-    ss->clear_ss();
-    ss->add_ss(tc.output_names[i]);
+    out.add_string_data(tc.output_names[i]);
+    out.set_elem_type(pb::PrimitiveDataType::STRING);
     outputs.push_back(std::move(out));
   }
   builder.AddOutput(DumpFile::kOut, outputs);

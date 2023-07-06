@@ -17,8 +17,8 @@ syntax = "proto3";
 
 package grm.pb;
 
-import "api/common.proto";
 import "api/status.proto";
+import "api/datasource.proto";
 
 option go_package = "proto-gen/grm";
 
@@ -48,6 +48,7 @@ message GetTableMetaRequest {
 message GetTableMetaResponse {
   scql.pb.Status status = 1;
   TableSchema schema = 2;
+  scql.engine.DataSourceKind db_type = 3;
 }
 
 message ColumnDesc {

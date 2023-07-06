@@ -174,7 +174,7 @@ func TestQueryUserPartyCode(t *testing.T) {
 		r.NoError(mock.MockStorage(store)) // user already create here
 
 		partyCode, err := storage.QueryUserPartyCode(store, "root", "%")
-		r.NoError(err)
+		r.Equal(err.Error(), "there is no party code for user root@%")
 		r.Equal(partyCode, "")
 
 		partyCode, err = storage.QueryUserPartyCode(store, "alice", "%")

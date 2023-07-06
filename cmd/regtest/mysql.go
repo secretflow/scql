@@ -46,11 +46,11 @@ type ResultTable struct {
 }
 
 type ResultColumn struct {
-	Name   string    `json:"name"`
-	Ss     []string  `json:"string"`
-	Int64s []int64   `json:"int"`
-	Bools  []bool    `json:"bool"`
-	Floats []float32 `json:"float"`
+	Name    string    `json:"name"`
+	Ss      []string  `json:"string"`
+	Int64s  []int64   `json:"int"`
+	Bools   []bool    `json:"bool"`
+	Doubles []float64 `json:"float"`
 }
 
 type StringWithId struct {
@@ -89,7 +89,7 @@ func (t *ResultTable) ConvertToRows() StringWithIds {
 }
 
 func IsColumnNil(col *ResultColumn) bool {
-	if len(col.Bools) == 0 && len(col.Floats) == 0 && len(col.Int64s) == 0 && len(col.Ss) == 0 {
+	if len(col.Bools) == 0 && len(col.Doubles) == 0 && len(col.Int64s) == 0 && len(col.Ss) == 0 {
 		return true
 	}
 	return false
@@ -133,12 +133,12 @@ func (c *ResultColumn) changeOrders(orders []int) {
 		}
 		c.Bools = newBools
 	}
-	if c.Floats != nil {
-		newFloats := make([]float32, len(c.Floats))
+	if c.Doubles != nil {
+		newDoubles := make([]float64, len(c.Doubles))
 		for i, order := range orders {
-			newFloats[i] = c.Floats[order]
+			newDoubles[i] = c.Doubles[order]
 		}
-		c.Floats = newFloats
+		c.Doubles = newDoubles
 	}
 }
 
@@ -154,8 +154,8 @@ func (c *ResultColumn) toStringSlice() []string {
 			res = append(res, fmt.Sprintf(`"%v"b`, b))
 		}
 		return res
-	} else if c.Floats != nil {
-		for _, f := range c.Floats {
+	} else if c.Doubles != nil {
+		for _, f := range c.Doubles {
 			// NOTE(@yang.y): SCQL handles float differently from MySQL
 			res = append(res, fmt.Sprintf(`"%-.4f"f`, f))
 		}
@@ -209,11 +209,11 @@ func (c *ResultColumn) EqualTo(o *ResultColumn) bool {
 		}
 		logrus.Info("unexpected data type for bool")
 		return false
-	} else if c.Floats != nil || o.Floats != nil {
-		if c.Floats != nil && o.Floats != nil {
-			for i, d := range c.Floats {
-				if !AlmostEqual(d, o.Floats[i]) {
-					logrus.Infof("line number %d floats error float32(%f) != float32(%f)", i, d, o.Floats[i])
+	} else if c.Doubles != nil || o.Doubles != nil {
+		if c.Doubles != nil && o.Doubles != nil {
+			for i, d := range c.Doubles {
+				if !AlmostEqual(d, o.Doubles[i]) {
+					logrus.Infof("line number %d floats error float64(%f) != float64(%f)", i, d, o.Doubles[i])
 					return false
 				}
 			}
@@ -221,9 +221,9 @@ func (c *ResultColumn) EqualTo(o *ResultColumn) bool {
 		}
 
 		if o.Int64s != nil {
-			for i, d := range c.Floats {
-				if !AlmostEqual(d, float32(o.Int64s[i])) {
-					logrus.Infof("line number %d floats error float32(%f) != int(%d)", i, d, o.Int64s[i])
+			for i, d := range c.Doubles {
+				if !AlmostEqual(d, float64(o.Int64s[i])) {
+					logrus.Infof("line number %d floats error float64(%f) != int(%d)", i, d, o.Int64s[i])
 					return false
 				}
 			}
@@ -231,8 +231,8 @@ func (c *ResultColumn) EqualTo(o *ResultColumn) bool {
 		}
 
 		if c.Int64s != nil {
-			for i, d := range o.Floats {
-				if !AlmostEqual(d, float32(c.Int64s[i])) {
+			for i, d := range o.Doubles {
+				if !AlmostEqual(d, float64(c.Int64s[i])) {
 					logrus.Infof("line number %d floats error int(%d) != float32(%f)", i, c.Int64s[i], d)
 					return false
 				}
@@ -255,8 +255,8 @@ func (c *ResultColumn) EqualTo(o *ResultColumn) bool {
 	}
 }
 
-func AlmostEqual(a, b float32) bool {
-	return math.Abs(float64(a-b)) < NumericalPrecision
+func AlmostEqual(a, b float64) bool {
+	return math.Abs(a-b) < NumericalPrecision
 }
 
 type TestDataSource struct {
@@ -356,7 +356,7 @@ func (ds *TestDataSource) GetQueryResultFromMySQL(query string) (curCaseResult *
 				if x.Valid {
 					data = x.Float64
 				}
-				curCaseResult.Column[colIndex].Floats = append(curCaseResult.Column[colIndex].Floats, float32(data))
+				curCaseResult.Column[colIndex].Doubles = append(curCaseResult.Column[colIndex].Doubles, data)
 			default:
 				return nil, fmt.Errorf("unknown type:%T", x)
 			}

@@ -14,6 +14,8 @@
 
 #include "engine/framework/session_manager.h"
 
+#include <memory>
+
 namespace scql::engine {
 
 SessionManager::SessionManager(
@@ -53,10 +55,18 @@ void SessionManager::CreateSession(const pb::SessionStartParams& params) {
   const std::string& session_id = params.session_id();
   YACL_ENFORCE(!session_id.empty(), "session_id is empty.");
 
-  // TODO(jingshi) : Add logger for Session if necessary.
-  auto new_session =
-      std::make_unique<Session>(session_opt_, params, link_factory_.get(),
-                                nullptr, ds_router_.get(), ds_mgr_.get());
+  // setup logger for new session
+  // sinks should be the same as the default logger
+  // If different loggers aim to write to the same output file all of them
+  // must share the same sink. Otherwise there will be strange results.
+  const auto& sinks = spdlog::default_logger()->sinks();
+  std::string logger_name = "session(" + session_id + ")";
+  auto session_logger =
+      std::make_shared<spdlog::logger>(logger_name, sinks.begin(), sinks.end());
+
+  auto new_session = std::make_unique<Session>(
+      session_opt_, params, link_factory_.get(), session_logger,
+      ds_router_.get(), ds_mgr_.get());
   {
     std::unique_lock<std::mutex> lock(mutex_);
     if (id_to_session_.find(session_id) != id_to_session_.end()) {
@@ -76,7 +86,6 @@ void SessionManager::CreateSession(const pb::SessionStartParams& params) {
         "create session({}) succ, cost({}ms), current running session={}",
         session_id, time_cost, id_to_session_.size());
   }
-  return;
 }
 
 Session* SessionManager::GetSession(const std::string& session_id) {
@@ -102,6 +111,7 @@ void SessionManager::RemoveSession(const std::string& session_id) {
 
   {
     std::unique_lock<std::mutex> lock(mutex_);
+
     auto iter = id_to_session_.find(session_id);
     if (iter == id_to_session_.end()) {
       SPDLOG_WARN("session({}) not exists.", session_id);
@@ -114,19 +124,24 @@ void SessionManager::RemoveSession(const std::string& session_id) {
                              static_cast<size_t>(iter->second->GetState()));
     }
 
+    auto node_handle = id_to_session_.extract(iter);
+    // unlock in time, since the following WaitLinkTaskFinish() may take a while
+    // to run
+    lock.unlock();
+
+    auto lctx = node_handle.mapped()->GetLink();
+    if (lctx) {
+      lctx->WaitLinkTaskFinish();
+    }
     auto end = std::chrono::system_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-        end - iter->second->GetStartTime());
-
-    id_to_session_.erase(iter);
-
+        end - node_handle.mapped()->GetStartTime());
     SPDLOG_INFO(
         "session({}) removed, running_cost({}ms), current running session={}",
         session_id, duration.count(), id_to_session_.size());
   }
 
   listener_manager_->RemoveListener(session_id);
-  return;
 }
 
 bool SessionManager::SetSessionState(const std::string& session_id,
@@ -161,15 +176,17 @@ void SessionManager::WatchSessionTimeoutThread() {
     // 1.get next check time.
     auto next_check_time = NextCheckTime();
 
-    // 2.sleep until next check time and break if is_stop_ marked.
+    // 2.sleep until next check time and break if to_stop_ marked.
     {
       std::unique_lock<std::mutex> lock(mutex_);
-      if (std::chrono::system_clock::now() < next_check_time) {
+
+      while (!to_stop_ && std::chrono::system_clock::now() < next_check_time) {
         cv_stop_.wait_until(lock, next_check_time);
-        if (to_stop_) {
-          break;
-        }
       }
+    }
+
+    if (to_stop_) {
+      break;
     }
 
     // 3.find one timeout session.

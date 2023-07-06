@@ -29,7 +29,7 @@ struct NotTestCase {
 };
 
 class NotTest : public testing::TestWithParam<
-                    std::tuple<spu::ProtocolKind, NotTestCase>> {
+                    std::tuple<test::SpuRuntimeTestCase, NotTestCase>> {
  public:
   static pb::ExecNode MakeExecNode(const NotTestCase& tc);
 
@@ -40,7 +40,7 @@ class NotTest : public testing::TestWithParam<
 INSTANTIATE_TEST_SUITE_P(
     NotBatchTest, NotTest,
     testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             NotTestCase{
                 .inputs = {test::NamedTensor(
@@ -74,18 +74,25 @@ TEST_P(NotTest, Works) {
   auto parm = GetParam();
   auto tc = std::get<1>(parm);
   auto node = MakeExecNode(tc);
-  std::vector<Session> sessions = test::Make2PCSession(std::get<0>(parm));
+  std::vector<Session> sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
-  ExecContext alice_ctx(node, &sessions[0]);
-  ExecContext bob_ctx(node, &sessions[1]);
+  std::vector<ExecContext> exec_ctxs;
+  for (size_t idx = 0; idx < sessions.size(); ++idx) {
+    exec_ctxs.emplace_back(node, &sessions[idx]);
+  }
 
-  FeedInputs({&alice_ctx, &bob_ctx}, tc);
+  // feed inputs
+  std::vector<ExecContext*> ctx_ptrs;
+  for (size_t idx = 0; idx < exec_ctxs.size(); ++idx) {
+    ctx_ptrs.emplace_back(&exec_ctxs[idx]);
+  }
+  FeedInputs(ctx_ptrs, tc);
 
   if (tc.input_status == pb::TENSORSTATUS_PRIVATE) {
     Not alice_op;
-    EXPECT_NO_THROW({ alice_op.Run(&alice_ctx); });
+    EXPECT_NO_THROW({ alice_op.Run(ctx_ptrs[0]); });
 
-    auto tensor_table = alice_ctx.GetTensorTable();
+    auto tensor_table = ctx_ptrs[0]->GetTensorTable();
     for (const auto& named_tensor : tc.outputs) {
       auto t = tensor_table->GetTensor(named_tensor.name);
       ASSERT_TRUE(t != nullptr) << named_tensor.name << " not found";
@@ -97,20 +104,11 @@ TEST_P(NotTest, Works) {
           << "\nbut actual got result = " << actual_out_arr->ToString();
     }
   } else {
-    test::OperatorTestRunner<Not> alice;
-    test::OperatorTestRunner<Not> bob;
-
-    alice.Start(&alice_ctx);
-    bob.Start(&bob_ctx);
-
-    EXPECT_NO_THROW({ alice.Wait(); });
-    EXPECT_NO_THROW({ bob.Wait(); });
+    EXPECT_NO_THROW(test::RunAsync<Not>(ctx_ptrs));
 
     for (const auto& named_tensor : tc.outputs) {
       TensorPtr t = nullptr;
-      EXPECT_NO_THROW({
-        t = test::RevealSecret({&alice_ctx, &bob_ctx}, named_tensor.name);
-      });
+      EXPECT_NO_THROW({ t = test::RevealSecret(ctx_ptrs, named_tensor.name); });
       ASSERT_TRUE(t != nullptr);
       auto expect_out_arr = named_tensor.tensor->ToArrowChunkedArray();
       auto actual_out_arr = t->ToArrowChunkedArray();
@@ -157,7 +155,7 @@ void NotTest::FeedInputs(const std::vector<ExecContext*>& ctxs,
 INSTANTIATE_TEST_SUITE_P(
     LogicalBatchTest, BinaryComputeInSecretTest,
     testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             BinaryTestCase{
                 .op_type = LogicalAnd::kOpType,
@@ -225,7 +223,7 @@ INSTANTIATE_TEST_SUITE_P(
 INSTANTIATE_TEST_SUITE_P(
     LogicalBatchTest, BinaryComputeInPlainTest,
     testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             BinaryTestCase{
                 .op_type = LogicalAnd::kOpType,

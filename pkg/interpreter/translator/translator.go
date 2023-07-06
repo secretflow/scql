@@ -56,10 +56,6 @@ type translator struct {
 	issuerPartyCode string
 	enginesInfo     *EnginesInfo
 	sc              *proto.SecurityConfig
-	// if flagJointPublishString = true, the string tensor's hash value is made public
-	// to all computation engine during publishing. Each computation engine publish
-	// the original string by looking up the hash value at its private dictionary.
-	flagJointPublishString bool
 	// if true, table in RunSQL string will skip database name
 	skipDbName bool
 }
@@ -187,8 +183,7 @@ func (t *translator) translateInternal(ln logicalNode) error {
 		return fmt.Errorf("translate: DataSource %s is invisible to all party. Please check your security configuration. Detailed visibility: %+v",
 			fmt.Sprintf("%s.%s", ds.DBName, ds.TableInfo().Name), x.CCL())
 	case *UnionAllNode:
-		// return t.buildUnion(x)
-		return fmt.Errorf("union all node is unimplemented")
+		return t.buildUnion(x)
 	case *WindowNode:
 		// TODO(xiaoyuan) add more code here
 		return fmt.Errorf("window node is unimplemented")
@@ -224,18 +219,10 @@ func (t *translator) addPublishNode(ln logicalNode) error {
 	output := []*Tensor{}
 	for _, it := range ln.ResultTable() {
 		var err error
-		if it.DType == proto.PrimitiveDataType_STRING && t.flagJointPublishString {
-			// ccl checked in AddMakePublicNode
-			it, err = t.ep.addTensorStatusConversion(it, &publicPlacement{partyCodes: t.enginesInfo.partyInfo.GetParties()})
-			if err != nil {
-				return fmt.Errorf("addPublishNode: %v", err)
-			}
-		} else {
-			// Reveal tensor to issuerPartyCode
-			it, err = t.ep.addTensorStatusConversion(it, &privatePlacement{partyCode: t.issuerPartyCode})
-			if err != nil {
-				return err
-			}
+		// Reveal tensor to issuerPartyCode
+		it, err = t.ep.converter.convertTo(it, &privatePlacement{partyCode: t.issuerPartyCode})
+		if err != nil {
+			return err
 		}
 		input = append(input, it)
 
@@ -258,39 +245,11 @@ func (t *translator) addPublishNode(ln logicalNode) error {
 		t.ep.outputName = append(t.ep.outputName, ot.UniqueName())
 	}
 
-	partyToInputTensos := make(map[string][]*Tensor)
-	partyToOutputTensos := make(map[string][]*Tensor)
-	for i, it := range input {
-		if it.Status == proto.TensorStatus_TENSORSTATUS_PUBLIC {
-			for _, partyCode := range t.ep.partyInfo.GetParties() {
-				partyToInputTensos[partyCode] = append(partyToInputTensos[partyCode], it)
-				partyToOutputTensos[partyCode] = append(partyToOutputTensos[partyCode], output[i])
-			}
-			continue
-		}
-		partyCode := it.OwnerPartyCode
-		partyToInputTensos[partyCode] = append(partyToInputTensos[partyCode], it)
-
-		ot := output[i]
-		partyToOutputTensos[partyCode] = append(partyToOutputTensos[partyCode], ot)
+	err := t.ep.AddPublishNode("publish", input, output, []string{t.issuerPartyCode})
+	if err != nil {
+		return fmt.Errorf("addPublishNode: %v", err)
 	}
 
-	// NOTE(yang.y): sort party codes to enforce determinism
-	var partyCodes []string
-	for k := range partyToInputTensos {
-		partyCodes = append(partyCodes, k)
-	}
-	sort.Strings(partyCodes)
-
-	for _, party := range partyCodes {
-		for _, ot := range partyToOutputTensos[party] {
-			ot.Status = proto.TensorStatus_TENSORSTATUS_UNKNOWN
-		}
-		err := t.ep.AddPublishNode("publish", partyToInputTensos[party], partyToOutputTensos[party], []string{party})
-		if err != nil {
-			return fmt.Errorf("addPublishNode: %v", err)
-		}
-	}
 	return nil
 }
 
@@ -316,6 +275,7 @@ func (t *translator) addDumpFileNode(ln logicalNode) error {
 			colName = ln.OutputNames()[i].ColName.String()
 		}
 		ot.Name = colName
+		ot.DType = proto.PrimitiveDataType_STRING
 		ot.StringS = []string{colName}
 		output = append(output, ot)
 	}
@@ -330,20 +290,14 @@ func (t *translator) buildRunSQL(ln logicalNode, partyCode string) error {
 			return fmt.Errorf("ccl check failed: the %dth column %s in the result is not visibile (%s) to party %s", i+1, col.OrigName, cc.LevelFor(partyCode).String(), partyCode)
 		}
 	}
-
-	sql, tableRefs, err := core.ToSqlString(ln.LP())
-	if err != nil {
-		return err
-	}
-	return t.addRunSQLNode(sql, tableRefs, ln, partyCode)
-}
-
-func (t *translator) addRunSQLNode(sql string, tableRefs []string, ln logicalNode, partyCode string) error {
-	newSQL, newTableRefs, err := rewrite(sql, tableRefs, t.enginesInfo, t.skipDbName)
+	sql, newTableRefs, err := runSQLString(ln.LP(), t.enginesInfo, t.skipDbName)
 	if err != nil {
 		return fmt.Errorf("addRunSQLNode: failed to rewrite sql=\"%s\", err: %w", sql, err)
 	}
-	newSQL = strings.ReplaceAll(newSQL, "`", "")
+	return t.addRunSQLNode(ln, sql, newTableRefs, partyCode)
+}
+
+func (t *translator) addRunSQLNode(ln logicalNode, sql string, tableRefs []string, partyCode string) error {
 	tensors := []*Tensor{}
 	for i, column := range ln.Schema().Columns {
 		tp, err := convertDataType(ln.Schema().Columns[i].RetType)
@@ -359,7 +313,7 @@ func (t *translator) addRunSQLNode(sql string, tableRefs []string, ln logicalNod
 		}
 		tensors = append(tensors, tensor)
 	}
-	err = t.ep.AddRunSQLNode("runsql", tensors, newSQL, newTableRefs, partyCode)
+	err := t.ep.AddRunSQLNode("runsql", tensors, sql, tableRefs, partyCode)
 	if err != nil {
 		return fmt.Errorf("addRunSQLNode: %v", err)
 	}
@@ -422,7 +376,7 @@ func (t *translator) buildExpression(expr expression.Expression, tensors map[int
 	}
 }
 
-// for now, support data type: bool int float and string
+// for now, support data type: bool/int/float/double/string
 func convertDataType(typ *types.FieldType) (proto.PrimitiveDataType, error) {
 	switch typ.Tp {
 	case mysql.TypeLonglong:
@@ -436,8 +390,10 @@ func convertDataType(typ *types.FieldType) (proto.PrimitiveDataType, error) {
 		return proto.PrimitiveDataType_STRING, nil
 	case mysql.TypeTiny:
 		return proto.PrimitiveDataType_BOOL, nil
-	case mysql.TypeFloat, mysql.TypeDouble, mysql.TypeNewDecimal:
-		return proto.PrimitiveDataType_FLOAT, nil
+	case mysql.TypeFloat:
+		return proto.PrimitiveDataType_FLOAT32, nil
+	case mysql.TypeDouble, mysql.TypeNewDecimal:
+		return proto.PrimitiveDataType_FLOAT64, nil
 	}
 	return proto.PrimitiveDataType_PrimitiveDataType_UNDEFINED, fmt.Errorf("convertDataType doesn't support type %v", typ.Tp)
 }
@@ -545,7 +501,7 @@ func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors m
 		if len(inputs) != 1 {
 			return nil, fmt.Errorf("buildScalarFunction:err input for %s expected for %d got %d", f.FuncName.L, 1, len(inputs))
 		}
-		if inputs[0].DType == proto.PrimitiveDataType_FLOAT && slices.Contains([]byte{mysql.TypeFloat, mysql.TypeDouble, mysql.TypeNewDecimal}, f.RetType.Tp) {
+		if inputs[0].DType == proto.PrimitiveDataType_FLOAT32 && slices.Contains([]byte{mysql.TypeFloat, mysql.TypeDouble, mysql.TypeNewDecimal}, f.RetType.Tp) {
 			return inputs[0], nil
 		}
 		return nil, fmt.Errorf("buildScalarFunction: unimplemented %s with type %v cast as %v", f.FuncName.L, inputs[0].DType, f.RetType)
@@ -594,7 +550,7 @@ func (t *translator) addFilterNode(filter *Tensor, tensorToFilter map[int64]*Ten
 	resultIdToTensor := make(map[int64]*Tensor)
 	if len(shareTensors) > 0 {
 		// convert filter to public here, so filter must be visible to all parties
-		publicFilter, err := t.ep.addTensorStatusConversion(filter, &publicPlacement{partyCodes: t.enginesInfo.partyInfo.GetParties()})
+		publicFilter, err := t.ep.converter.convertTo(filter, &publicPlacement{partyCodes: t.enginesInfo.partyInfo.GetParties()})
 		if err != nil {
 			return nil, fmt.Errorf("buildSelection: %v", err)
 		}
@@ -614,7 +570,7 @@ func (t *translator) addFilterNode(filter *Tensor, tensorToFilter map[int64]*Ten
 			if !filter.cc.IsVisibleFor(p) {
 				return nil, fmt.Errorf("failed to check ccl: filter (%+v) is not visible to %s", filter, p)
 			}
-			newFilter, err := t.ep.addTensorStatusConversion(filter, &privatePlacement{partyCode: p})
+			newFilter, err := t.ep.converter.convertTo(filter, &privatePlacement{partyCode: p})
 			if err != nil {
 				return nil, fmt.Errorf("buildSelection: %v", err)
 			}

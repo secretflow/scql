@@ -154,13 +154,12 @@ func (n *JoinNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 				leftCc.SetLevelForParty(p, ccl.Plain)
 			}
 		}
+		leftCc.UpdateMoreRestrictedCCLFrom(rightCc)
 		// left/right column must have same ccl level
 		for _, p := range leftCc.Parties() {
-			lv := leftCc.LevelFor(p)
-			rv := rightCc.LevelFor(p)
-			if lv == ccl.Unknown || rv != lv {
-				return fmt.Errorf("joinNode.buildCCL: failed to check condition (%s) ccl level for party(%s) left ccl level(%v), right ccl level(%v)", equalCondition.String(), p, lv.String(), rv.String())
-			}
+			level := ccl.LookUpVis(leftCc.LevelFor(p), rightCc.LevelFor(p))
+			leftCc.SetLevelForParty(p, level)
+			rightCc.SetLevelForParty(p, level)
 		}
 		// check ccl
 		for _, p := range colTracer.FindSourceParties(rightId) {
@@ -371,8 +370,12 @@ func (n *AggregationNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 			}
 			for _, cc := range groupKeyCC {
 				for _, p := range cc.Parties() {
+					if cc.LevelFor(p) == ccl.Unknown {
+						outputCCL.SetLevelForParty(p, cc.LevelFor(p))
+						break
+					}
 					if cc.LevelFor(p) == ccl.Encrypt {
-						outputCCL.SetLevelForParty(p, ccl.Encrypt)
+						outputCCL.SetLevelForParty(p, cc.LevelFor(p))
 					}
 				}
 			}
@@ -380,21 +383,12 @@ func (n *AggregationNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 			// if column is not one of group keys, refuse the query. for example:
 			// select t.a, count(t.b) from t group by t.b ->
 			// DataScan(t)->Aggr(count(test.t.b),firstrow(test.t.a))->Projection([test.t.a Column#16])
-			IsArgInGroupKeys := false
-			for _, expr := range agg.GroupByItems {
-				if expr.Equal(n.LP().SCtx(), aggFunc.Args[0]) {
-					IsArgInGroupKeys = true
-					break
-				}
-			}
-			if !IsArgInGroupKeys {
-				return fmt.Errorf("failed to check first row arg: %+v", aggFunc.Args[0])
-			}
 			for _, cc := range groupKeyCC {
 				outputCCL.UpdateMoreRestrictedCCLFrom(cc)
 			}
+
 		// TODO(xiaoyuan) support AggFuncStddevPop, AggFuncMedian later
-		// sum,avg,max,min are all reduce operators
+		// sum,avg,max,min are all aggregate operators
 		case ast.AggFuncSum, ast.AggFuncAvg, ast.AggFuncMax, ast.AggFuncMin:
 			for _, cc := range groupKeyCC {
 				outputCCL.UpdateMoreRestrictedCCLFrom(cc)
@@ -414,44 +408,42 @@ func (n *AggregationNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 }
 
 func (n *UnionAllNode) buildCCL(colTracer *ccl.ColumnTracer) error {
-	// TODO(xiaoyuan): uncomment if union all is supported
-	// if err := n.buildChildCCL(colTracer); err != nil {
-	// 	return err
-	// }
-	// childCCL := extractChildCCL(n)
-	// union, ok := n.lp.(*core.LogicalUnionAll)
-	// if !ok {
-	// 	return fmt.Errorf("assert failed while buildCCL, expected: *core.LogicalUnionAll, actual: %T", n.lp)
-	// }
-	// result := map[int64]*ccl.CCL{}
-	// var ccls []*ccl.CCL
-	// for _, cc := range childCCL {
-	// 	ccls = append(ccls, cc)
-	// }
-	// parties := ccl.ExtractPartyCodes(ccls)
-	// for i, c := range union.Schema().Columns {
-	// 	newCC := ccl.CreateAllPlainCCL(parties)
-	// 	for _, child := range n.Children() {
-	// 		cc, exist := childCCL[child.Schema().Columns[i].UniqueID]
-	// 		if !exist {
-	// 			return fmt.Errorf("failed to find ccl for column %+v", c)
-	// 		}
-	// 		newCC.UpdateMoreRestrictedCCLFrom(cc)
-	// 	}
-	// 	for _, p := range parties {
-	// 		if newCC.LevelFor(p) == ccl.Unknown {
-	// 			childCCLStr := "failed to check union ccl: "
-	// 			for _, child := range n.Children() {
-	// 				childCCLStr += fmt.Sprintf(" ccl of child %d is (%v)", i, childCCL[child.Schema().Columns[i].UniqueID])
-	// 			}
-	// 			return fmt.Errorf(childCCLStr)
-	// 		}
-	// 	}
-	// 	result[c.UniqueID] = newCC
-	// }
-	// n.ccl = result
-	// return nil
-	return fmt.Errorf("union all node is unimplemented")
+	if err := n.buildChildCCL(colTracer); err != nil {
+		return err
+	}
+	childCCL := extractChildCCL(n)
+	union, ok := n.lp.(*core.LogicalUnionAll)
+	if !ok {
+		return fmt.Errorf("assert failed while buildCCL, expected: *core.LogicalUnionAll, actual: %T", n.lp)
+	}
+	result := map[int64]*ccl.CCL{}
+	var ccls []*ccl.CCL
+	for _, cc := range childCCL {
+		ccls = append(ccls, cc)
+	}
+	parties := ccl.ExtractPartyCodes(ccls)
+	for i, c := range union.Schema().Columns {
+		newCC := ccl.CreateAllPlainCCL(parties)
+		for _, child := range n.Children() {
+			cc, exist := childCCL[child.Schema().Columns[i].UniqueID]
+			if !exist {
+				return fmt.Errorf("failed to find ccl for column %+v", c)
+			}
+			newCC.UpdateMoreRestrictedCCLFrom(cc)
+		}
+		for _, p := range parties {
+			if newCC.LevelFor(p) == ccl.Unknown {
+				childCCLStr := "failed to check union ccl: "
+				for _, child := range n.Children() {
+					childCCLStr += fmt.Sprintf(" ccl of child %d is (%v)", i, childCCL[child.Schema().Columns[i].UniqueID])
+				}
+				return fmt.Errorf(childCCLStr)
+			}
+		}
+		result[c.UniqueID] = newCC
+	}
+	n.ccl = result
+	return nil
 }
 
 func (n *LimitNode) buildCCL(colTracer *ccl.ColumnTracer) error {

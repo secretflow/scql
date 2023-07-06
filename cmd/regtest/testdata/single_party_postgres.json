@@ -1,0 +1,234 @@
+{
+  "queries": [
+    {
+      "name": "plain select",
+      "query": "select plain_long_0 from scdb.carol_tbl_1;",
+      "mysql_query": "select plain_long_0 from carol.tbl_1"
+    },
+    {
+      "name": "compare (less)",
+      "query": "select plain_long_0 < 1 as res0, plain_long_0 < 1.5 as res1, plain_float_0 < 1.5 as res2, plain_long_0 < plain_long_1 as res3, plain_long_0 < plain_float_1 as res4, plain_float_0 < plain_float_1 as res5 from scdb.carol_tbl_1;",
+      "mysql_query": "select plain_long_0 < 1 as res0, plain_long_0 < 1.5 as res1, plain_float_0 < 1.5 as res2, plain_long_0 < plain_long_1 as res3, plain_long_0 < plain_float_1 as res4, plain_float_0 < plain_float_1 as res5 from carol.tbl_1;"
+    },
+    {
+      "name": "compare (greater)",
+      "query": "select plain_long_0 > 1 as res0, plain_long_0 > 1.5 as res1, plain_float_0 > 1.5 as res2, plain_long_0 > plain_long_1 as res3, plain_long_0 > plain_float_1 as res4, plain_float_0 > plain_float_1 as res5 from scdb.carol_tbl_1;",
+      "mysql_query": "select plain_long_0 > 1 as res0, plain_long_0 > 1.5 as res1, plain_float_0 > 1.5 as res2, plain_long_0 > plain_long_1 as res3, plain_long_0 > plain_float_1 as res4, plain_float_0 > plain_float_1 as res5 from carol.tbl_1;"
+    },
+    {
+      "name": "compare (less or equal)",
+      "query": "select plain_long_0 <= 1 as res0, plain_long_0 <= 1.5 as res1, plain_float_0 <= 1.5 as res2, plain_long_0 <= plain_long_1 as res3, plain_long_0 <= plain_float_1 as res4, plain_float_0 <= plain_float_1 as res5 from scdb.carol_tbl_1;",
+      "mysql_query": "select plain_long_0 <= 1 as res0, plain_long_0 <= 1.5 as res1, plain_float_0 <= 1.5 as res2, plain_long_0 <= plain_long_1 as res3, plain_long_0 <= plain_float_1 as res4, plain_float_0 <= plain_float_1 as res5 from carol.tbl_1;"
+    },
+    {
+      "name": "compare (greater or equal)",
+      "query": "select plain_long_0 >= 1 as res0, plain_long_0 >= 1.5 as res1, plain_float_0 >= 1.5 as res2, plain_long_0 >= plain_long_1 as res3, plain_long_0 >= plain_float_1 as res4, plain_float_0 >= plain_float_1 as res5 from scdb.carol_tbl_1;",
+      "mysql_query": "select plain_long_0 >= 1 as res0, plain_long_0 >= 1.5 as res1, plain_float_0 >= 1.5 as res2, plain_long_0 >= plain_long_1 as res3, plain_long_0 >= plain_float_1 as res4, plain_float_0 >= plain_float_1 as res5 from carol.tbl_1;"
+    },
+    {
+      "name": "compare (not equal)",
+      "query": "select plain_long_0 <> 1 as res0, plain_long_0 <> 1.5 as res1, plain_float_0 <> 1.5 as res2, plain_long_0 <> plain_long_1 as res3, plain_long_0 <> plain_float_1 as res4, plain_float_0 <> plain_float_1 as res5 from scdb.carol_tbl_1;",
+      "mysql_query": "select plain_long_0 <> 1 as res0, plain_long_0 <> 1.5 as res1, plain_float_0 <> 1.5 as res2, plain_long_0 <> plain_long_1 as res3, plain_long_0 <> plain_float_1 as res4, plain_float_0 <> plain_float_1 as res5 from carol.tbl_1;"
+    },
+    {
+      "name": "arithmetic (plus)",
+      "query": "select plain_long_0 + 1 as res0, plain_long_0 + 1.5 as res1, plain_float_0 + 1.5 as res2, plain_long_0 + plain_long_1 as res3, plain_long_0 + plain_float_0 as res4, plain_float_0 + plain_float_1 as res5 from scdb.carol_tbl_1;",
+      "mysql_query": "select plain_long_0 + 1 as res0, plain_long_0 + 1.5 as res1, plain_float_0 + 1.5 as res2, plain_long_0 + plain_long_1 as res3, plain_long_0 + plain_float_0 as res4, plain_float_0 + plain_float_1 as res5 from carol.tbl_1;"
+    },
+    {
+      "name": "arithmetic (subtract)",
+      "query": "select plain_long_0 - 1 as res0, plain_long_0 - 1.5 as res1, plain_float_0 - 1.5 as res2, plain_long_0 - plain_long_1 as res3, plain_long_0 - plain_float_0 as res4, plain_float_0 - plain_float_1 as res5 from scdb.carol_tbl_1;",
+      "mysql_query": "select plain_long_0 - 1 as res0, plain_long_0 - 1.5 as res1, plain_float_0 - 1.5 as res2, plain_long_0 - plain_long_1 as res3, plain_long_0 - plain_float_0 as res4, plain_float_0 - plain_float_1 as res5 from carol.tbl_1;"
+    },
+    {
+      "name": "arithmetic (multiply)",
+      "query": "select plain_long_0 * 1 as res0, plain_long_0 * 1.5 as res1, plain_float_0 * 1.5 as res2, plain_long_0 * plain_long_1 as res3, plain_long_0 * plain_float_0 as res4, plain_float_0 * plain_float_1 as res5 from scdb.carol_tbl_1;",
+      "mysql_query": "select plain_long_0 * 1 as res0, plain_long_0 * 1.5 as res1, plain_float_0 * 1.5 as res2, plain_long_0 * plain_long_1 as res3, plain_long_0 * plain_float_0 as res4, plain_float_0 * plain_float_1 as res5 from carol.tbl_1;"
+    },
+    {
+      "name": "arithmetic (divide)",
+      "query": "select plain_long_0 / 1 as res0, plain_long_0 / 1.5 as res1, plain_float_0 / 1.5 as res2, plain_long_0 / plain_float_0 as res4, plain_float_0 / plain_float_1 as res5 from scdb.carol_tbl_1 where plain_long_0 != 0 and plain_long_1 != 0;",
+      "mysql_query": "select plain_long_0 / 1 as res0, plain_long_0 / 1.5 as res1, plain_float_0 / 1.5 as res2, plain_long_0 / plain_float_0 as res4, plain_float_0 / plain_float_1 as res5 from carol.tbl_1 where plain_long_0 != 0 and plain_long_1 != 0;"
+    },
+    {
+      "name": "max",
+      "query": "select max(carol.plain_long_0) as res0, max(carol.plain_float_0) as res1 from scdb.carol_tbl_0 as carol;",
+      "mysql_query": "select max(carol.plain_long_0) as res0, max(carol.plain_float_0) as res1 from carol.tbl_0 as carol;"
+    },
+    {
+      "name": "max & arithmetic",
+      "query": "select max(carol.plain_long_0 + carol.plain_long_0) as res0, max(carol.plain_float_0 - carol.plain_float_1) as res1, max(carol.plain_float_0 * carol.plain_float_0) as res2, max(carol.plain_float_0 / carol.plain_float_0) as res3 from scdb.carol_tbl_0 as carol;",
+      "mysql_query": "select max(carol.plain_long_0 + carol.plain_long_0) as res0, max(carol.plain_float_0 - carol.plain_float_1) as res1, max(carol.plain_float_0 * carol.plain_float_0) as res2, max(carol.plain_float_0 / carol.plain_float_0) as res3 from carol.tbl_0 as carol;"
+    },
+    {
+      "name": "max & compare",
+      "query": "select max(carol.plain_long_0) > max(carol.plain_long_0) as res0, max(carol.plain_float_0) < max(carol.plain_float_1) as res1, max(carol.plain_long_0) >= max(carol.plain_float_0) as res2, max(carol.plain_float_0) <= max(carol.plain_float_0) as res3 from scdb.carol_tbl_0 as carol;",
+      "mysql_query": "select max(carol.plain_long_0) > max(carol.plain_long_0) as res0, max(carol.plain_float_0) < max(carol.plain_float_1) as res1, max(carol.plain_long_0) >= max(carol.plain_float_0) as res2, max(carol.plain_float_0) <= max(carol.plain_float_0) as res3 from carol.tbl_0 as carol;"
+    },
+    {
+      "name": "min",
+      "query": "select min(carol.plain_long_0) as res0, min(carol.plain_float_0) as res1 from scdb.carol_tbl_0 as carol;",
+      "mysql_query": "select min(carol.plain_long_0) as res0, min(carol.plain_float_0) as res1 from carol.tbl_0 as carol;"
+    },
+    {
+      "name": "min & arithmetic",
+      "query": "select min(carol.plain_long_0 + carol.plain_long_0) as res0, min(carol.plain_long_0 - carol.plain_float_1) as res1, min(carol.plain_float_0 * carol.plain_float_0) as res2, min(carol.plain_float_0 / carol.plain_float_0) as res3 from scdb.carol_tbl_0 as carol;",
+      "mysql_query": "select min(carol.plain_long_0 + carol.plain_long_0) as res0, min(carol.plain_long_0 - carol.plain_float_1) as res1, min(carol.plain_float_0 * carol.plain_float_0) as res2, min(carol.plain_float_0 / carol.plain_float_0) as res3 from carol.tbl_0 as carol;"
+    },
+    {
+      "name": "min & compare",
+      "query": "select min(carol.plain_long_0) > min(carol.plain_long_0) as res0, min(carol.plain_float_0) < min(carol.plain_float_1) as res1, min(carol.plain_long_0) >= min(carol.plain_float_0) as res2, min(carol.plain_float_0) <= min(carol.plain_float_0) as res3 from scdb.carol_tbl_0 as carol;",
+      "mysql_query": "select min(carol.plain_long_0) > min(carol.plain_long_0) as res0, min(carol.plain_float_0) < min(carol.plain_float_1) as res1, min(carol.plain_long_0) >= min(carol.plain_float_0) as res2, min(carol.plain_float_0) <= min(carol.plain_float_0) as res3 from carol.tbl_0 as carol;"
+    },
+    {
+      "name": "avg",
+      "query": "select avg(carol.plain_long_0) as res0, avg(carol.plain_float_0) as res1 from scdb.carol_tbl_0 as carol;",
+      "mysql_query": "select avg(carol.plain_long_0) as res0, avg(carol.plain_float_0) as res1 from carol.tbl_0 as carol;"
+    },
+    {
+      "name": "avg & arithmetic",
+      "query": "select avg(carol.plain_long_0 + carol.plain_long_0) as res0, avg(carol.plain_long_0 - carol.plain_float_1) as res1, avg(carol.plain_float_0 * carol.plain_float_0) as res2, avg(carol.plain_float_0 / carol.plain_float_0) as res3 from scdb.carol_tbl_0 as carol;",
+      "mysql_query": "select avg(carol.plain_long_0 + carol.plain_long_0) as res0, avg(carol.plain_long_0 - carol.plain_float_1) as res1, avg(carol.plain_float_0 * carol.plain_float_0) as res2, avg(carol.plain_float_0 / carol.plain_float_0) as res3 from carol.tbl_0 as carol;"
+    },
+    {
+      "name": "avg & compare",
+      "query": "select avg(carol.plain_long_0) > avg(carol.plain_long_0) as res0, avg(carol.plain_long_0) < avg(carol.plain_float_1) as res1, avg(carol.plain_long_0) >= avg(carol.plain_float_0) as res2, avg(carol.plain_float_0) <= avg(carol.plain_float_0) as res3 from scdb.carol_tbl_0 as carol;",
+      "mysql_query": "select avg(carol.plain_long_0) > avg(carol.plain_long_0) as res0, avg(carol.plain_long_0) < avg(carol.plain_float_1) as res1, avg(carol.plain_long_0) >= avg(carol.plain_float_0) as res2, avg(carol.plain_float_0) <= avg(carol.plain_float_0) as res3 from carol.tbl_0 as carol;"
+    },
+    {
+      "name": "sum",
+      "query": "select sum(carol.plain_long_0) as res0, sum(carol.plain_float_0) as res1 from scdb.carol_tbl_0 as carol;",
+      "mysql_query": "select sum(carol.plain_long_0) as res0, sum(carol.plain_float_0) as res1 from carol.tbl_0 as carol;"
+    },
+    {
+      "name": "sum & compare",
+      "query": "select sum(carol.plain_long_0) > sum(carol.plain_long_0) as res0, sum(carol.plain_long_0) < sum(carol.plain_float_1) as res1, sum(carol.plain_long_0) >= sum(carol.plain_float_0) as res2, sum(carol.plain_float_0) <= sum(carol.plain_float_0) as res3 from scdb.carol_tbl_0 as carol;",
+      "mysql_query": "select sum(carol.plain_long_0) > sum(carol.plain_long_0) as res0, sum(carol.plain_long_0) < sum(carol.plain_float_1) as res1, sum(carol.plain_long_0) >= sum(carol.plain_float_0) as res2, sum(carol.plain_float_0) <= sum(carol.plain_float_0) as res3 from carol.tbl_0 as carol;"
+    },
+    {
+      "name": "count",
+      "query": "select count(carol.plain_long_0) as res0, count(carol.plain_float_0) as res1, count(carol.plain_string_0) as res2 from scdb.carol_tbl_0 as carol;",
+      "mysql_query": "select count(carol.plain_long_0) as res0, count(carol.plain_float_0) as res1, count(carol.plain_string_0) as res2 from carol.tbl_0 as carol;"
+    },
+    {
+      "name": "count & distinct",
+      "query": "select count(distinct carol.plain_long_0) as res0, count(distinct carol.plain_float_0) as res1, count(distinct carol.plain_string_0) as res2 from scdb.carol_tbl_0 as carol;",
+      "mysql_query": "select count(distinct carol.plain_long_0) as res0, count(distinct carol.plain_float_0) as res1, count(distinct carol.plain_string_0) as res2 from carol.tbl_0 as carol;"
+    },
+    {
+      "name": "logic",
+      "query": "select plain_long_0, plain_long_0 > 1 and plain_long_0 >= 1 as and_log, not (plain_long_0 < 5) as not_log, (plain_long_0 <= 5) or (plain_long_0 <> 8) as or_log from scdb.carol_tbl_1;",
+      "mysql_query": "select plain_long_0, plain_long_0 > 1 and plain_long_0 >= 1 as and_log, not (plain_long_0 < 5) as not_log, (plain_long_0 <= 5) or (plain_long_0 <> 8) as or_log from carol.tbl_1;"
+    },
+    {
+      "name": "in & not in",
+      "query": "select plain_long_0 in (2,4,6,8) as in_column, plain_long_0 not in (2,4,6,8) as not_in from scdb.carol_tbl_1;",
+      "mysql_query": "select plain_long_0 in (2,4,6,8) as in_column, plain_long_0 not in (2,4,6,8) as not_in from carol.tbl_1;"
+    },
+    {
+      "name": "apply",
+      "query": "select carol.plain_long_0 from (select plain_long_0 from scdb.carol_tbl_1) as carol;",
+      "mysql_query": "select carol.plain_long_0 from (select plain_long_0 from carol.tbl_1) as carol;"
+    },
+    {
+      "name": "where condition(arithmetic compare logical)",
+      "query": "select plain_long_0, plain_long_1 from scdb.carol_tbl_1  where plain_long_0 + plain_long_1 > 0 or plain_long_0 - plain_long_1 < 0 or plain_long_0 * plain_long_1 = 4 or plain_long_0 / plain_long_1 <> 1;",
+      "mysql_query": "select plain_long_0, plain_long_1 from carol.tbl_1  where plain_long_0 + plain_long_1 > 0 or plain_long_0 - plain_long_1 < 0 or plain_long_0 * plain_long_1 = 4 or plain_long_0 / plain_long_1 <> 1;"
+    },
+    {
+      "name": "where condition(null, not null)",
+      "query": "select plain_string_0, plain_string_1 from scdb.carol_tbl_1 where plain_string_0 is null or plain_string_1 is not null;",
+      "mysql_query": "select plain_string_0, plain_string_1 from carol.tbl_1 where plain_string_0 is null or plain_string_1 is not null;"
+    },
+    {
+      "name": "where condition(in & not in)",
+      "query": "select plain_long_0 from scdb.carol_tbl_1 where plain_long_0 in (2, 5, 15) and plain_long_1 not in (2, 5, 15);",
+      "mysql_query": "select plain_long_0 from carol.tbl_1 where plain_long_0 in (2, 5, 15) and plain_long_1 not in (2, 5, 15);"
+    },
+    {
+      "name": "where",
+      "query": "select carol.plain_long_0 from scdb.carol_tbl_0 as carol where carol.plain_long_0 > carol.plain_long_1;",
+      "mysql_query": "select carol.plain_long_0 from carol.tbl_0 as carol where carol.plain_long_0 > carol.plain_long_1;"
+    },
+    {
+      "name": "compare (less) where",
+      "query": "select plain_long_0 < 1 as res0, plain_long_0 < 1.5 as res1, plain_float_0 < 1.5 as res2, plain_long_0 < plain_long_1 as res3, plain_long_0 < plain_float_1 as res4, plain_float_0 < plain_float_1 as res5 from scdb.carol_tbl_1 as carol where carol.plain_long_0 > carol.plain_long_1;",
+      "mysql_query": "select plain_long_0 < 1 as res0, plain_long_0 < 1.5 as res1, plain_float_0 < 1.5 as res2, plain_long_0 < plain_long_1 as res3, plain_long_0 < plain_float_1 as res4, plain_float_0 < plain_float_1 as res5 from carol.tbl_1 as carol where carol.plain_long_0 > carol.plain_long_1;"
+    },
+    {
+      "name": "compare (greater) where",
+      "query": "select plain_long_0 > 1 as res0, plain_long_0 > 1.5 as res1, plain_float_0 > 1.5 as res2, plain_long_0 > plain_long_1 as res3, plain_long_0 > plain_float_1 as res4, plain_float_0 > plain_float_1 as res5 from scdb.carol_tbl_1 as carol where carol.plain_long_0 > carol.plain_long_1;",
+      "mysql_query": "select plain_long_0 > 1 as res0, plain_long_0 > 1.5 as res1, plain_float_0 > 1.5 as res2, plain_long_0 > plain_long_1 as res3, plain_long_0 > plain_float_1 as res4, plain_float_0 > plain_float_1 as res5 from carol.tbl_1 as carol where carol.plain_long_0 > carol.plain_long_1;"
+    },
+    {
+      "name": "compare (less or equal) where",
+      "query": "select plain_long_0 <= 1 as res0, plain_long_0 <= 1.5 as res1, plain_float_0 <= 1.5 as res2, plain_long_0 <= plain_long_1 as res3, plain_long_0 <= plain_float_1 as res4, plain_float_0 <= plain_float_1 as res5 from scdb.carol_tbl_1 as carol where carol.plain_long_0 > carol.plain_long_1;",
+      "mysql_query": "select plain_long_0 <= 1 as res0, plain_long_0 <= 1.5 as res1, plain_float_0 <= 1.5 as res2, plain_long_0 <= plain_long_1 as res3, plain_long_0 <= plain_float_1 as res4, plain_float_0 <= plain_float_1 as res5 from carol.tbl_1 as carol where carol.plain_long_0 > carol.plain_long_1;"
+    },
+    {
+      "name": "compare (greater or equal) where",
+      "query": "select plain_long_0 >= 1 as res0, plain_long_0 >= 1.5 as res1, plain_float_0 >= 1.5 as res2, plain_long_0 >= plain_long_1 as res3, plain_long_0 >= plain_float_1 as res4, plain_float_0 >= plain_float_1 as res5 from scdb.carol_tbl_1 as carol where carol.plain_long_0 > carol.plain_long_1;",
+      "mysql_query": "select plain_long_0 >= 1 as res0, plain_long_0 >= 1.5 as res1, plain_float_0 >= 1.5 as res2, plain_long_0 >= plain_long_1 as res3, plain_long_0 >= plain_float_1 as res4, plain_float_0 >= plain_float_1 as res5 from carol.tbl_1 as carol where carol.plain_long_0 > carol.plain_long_1;"
+    },
+    {
+      "name": "compare (not equal) where",
+      "query": "select plain_long_0 <> 1 as res0, plain_long_0 <> 1.5 as res1, plain_float_0 <> 1.5 as res2, plain_long_0 <> plain_long_1 as res3, plain_long_0 <> plain_float_1 as res4, plain_float_0 <> plain_float_1 as res5 from scdb.carol_tbl_1 as carol where carol.plain_long_0 > carol.plain_long_1;",
+      "mysql_query": "select plain_long_0 <> 1 as res0, plain_long_0 <> 1.5 as res1, plain_float_0 <> 1.5 as res2, plain_long_0 <> plain_long_1 as res3, plain_long_0 <> plain_float_1 as res4, plain_float_0 <> plain_float_1 as res5 from carol.tbl_1 as carol where carol.plain_long_0 > carol.plain_long_1;"
+    },
+    {
+      "name": "arithmetic (plus) where",
+      "query": "select plain_long_0 + 1 as res0, plain_long_0 + 1.5 as res1, plain_float_0 + 1.5 as res2, plain_long_0 + plain_long_1 as res3, plain_long_0 + plain_float_0 as res4, plain_float_0 + plain_float_1 as res5 from scdb.carol_tbl_1 as carol where carol.plain_long_0 > carol.plain_long_1;",
+      "mysql_query": "select plain_long_0 + 1 as res0, plain_long_0 + 1.5 as res1, plain_float_0 + 1.5 as res2, plain_long_0 + plain_long_1 as res3, plain_long_0 + plain_float_0 as res4, plain_float_0 + plain_float_1 as res5 from carol.tbl_1 as carol where carol.plain_long_0 > carol.plain_long_1;"
+    },
+    {
+      "name": "arithmetic (subtract) where",
+      "query": "select plain_long_0 - 1 as res0, plain_long_0 - 1.5 as res1, plain_float_0 - 1.5 as res2, plain_long_0 - plain_long_1 as res3, plain_long_0 - plain_float_0 as res4, plain_float_0 - plain_float_1 as res5 from scdb.carol_tbl_1 as carol where carol.plain_long_0 > carol.plain_long_1;",
+      "mysql_query": "select plain_long_0 - 1 as res0, plain_long_0 - 1.5 as res1, plain_float_0 - 1.5 as res2, plain_long_0 - plain_long_1 as res3, plain_long_0 - plain_float_0 as res4, plain_float_0 - plain_float_1 as res5 from carol.tbl_1 as carol where carol.plain_long_0 > carol.plain_long_1;"
+    },
+    {
+      "name": "arithmetic (multiply) where",
+      "query": "select plain_long_0 * 1 as res0, plain_long_0 * 1.5 as res1, plain_float_0 * 1.5 as res2, plain_long_0 * plain_long_1 as res3, plain_long_0 * plain_float_0 as res4, plain_float_0 * plain_float_1 as res5 from scdb.carol_tbl_1 as carol where carol.plain_long_0 > carol.plain_long_1;",
+      "mysql_query": "select plain_long_0 * 1 as res0, plain_long_0 * 1.5 as res1, plain_float_0 * 1.5 as res2, plain_long_0 * plain_long_1 as res3, plain_long_0 * plain_float_0 as res4, plain_float_0 * plain_float_1 as res5 from carol.tbl_1 as carol where carol.plain_long_0 > carol.plain_long_1;"
+    },
+    {
+      "name": "case when",
+      "query": "select plain_long_0, plain_long_1, case when plain_long_0 >= 5  then -1 else plain_long_1 end as r from scdb.carol_tbl_1;",
+      "mysql_query": "select plain_long_0, plain_long_1, case when plain_long_0 >= 5  then -1 else plain_long_1 end as r from carol.tbl_1;"
+    },
+    {
+      "name": "sum & arithmetic",
+      "query": "select sum(carol.plain_long_0 + carol.plain_long_0) as res0, sum(carol.plain_long_0 - carol.plain_float_1) as res1, sum(carol.plain_float_0 * carol.plain_float_0) as res2, sum(carol.plain_float_0 / carol.plain_float_0) as res3 from scdb.carol_tbl_0 as carol;",
+      "mysql_query": "select sum(carol.plain_long_0 + carol.plain_long_0) as res0, sum(carol.plain_long_0 - carol.plain_float_1) as res1, sum(carol.plain_float_0 * carol.plain_float_0) as res2, sum(carol.plain_float_0 / carol.plain_float_0) as res3 from carol.tbl_0 as carol;"
+    },
+    {
+      "name": "concat",
+      "query": "select concat(plain_string_0, plain_string_1) as concat_col from scdb.carol_tbl_1;",
+      "mysql_query": "select concat(plain_string_0, plain_string_1) as concat_col from carol.tbl_1;"
+    },
+    {
+      "name": "substring",
+      "query": "select substring(plain_string_0, 2, 3) as t from scdb.carol_tbl_1 where substring(plain_string_0, 2) != '';",
+      "mysql_query": "select substring(plain_string_0, 2, 3) as t from carol.tbl_1 where substring(plain_string_0, 2) != '';"
+    },
+    {
+      "name": "ifnull",
+      "query": "select plain_long_0, plain_string_0, ifnull(plain_string_0, plain_string_1) as mul from scdb.carol_tbl_1;",
+      "mysql_query": "select plain_long_0, plain_string_0, ifnull(plain_string_0, plain_string_1) as mul from carol.tbl_1;"
+    },
+    {
+      "name": "apply in",
+      "query": "select plain_long_0 in (select plain_long_0 from scdb.carol_tbl_1) as tt, plain_long_0 not in (select plain_long_0 from scdb.carol_tbl_1) as ff from scdb.carol_tbl_0",
+      "mysql_query": "select plain_long_0 in (select plain_long_0 from carol.tbl_1) as tt, plain_long_0 not in (select plain_long_0 from carol.tbl_1) as ff from carol.tbl_0"
+    },
+    {
+      "name": "where in subquery",
+      "query": "select plain_long_0 from scdb.carol_tbl_0 as carol where plain_long_0 in (select plain_long_0 from scdb.carol_tbl_1)",
+      "mysql_query": "select plain_long_0 from carol.tbl_0 where plain_long_0 in (select plain_long_0 from carol.tbl_1)"
+    },
+    {
+      "name": "where in subquery",
+      "query": "select plain_long_0 from scdb.carol_tbl_0 as carol where (plain_long_0 in (select plain_long_0 from scdb.carol_tbl_1 as carol)) and plain_long_0 > 0",
+      "mysql_query": "select plain_long_0 from carol.tbl_0 where (plain_long_0 in (select plain_long_0 from carol.tbl_1)) and plain_long_0 > 0"
+    }
+  ]
+}

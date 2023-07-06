@@ -24,6 +24,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
+	"github.com/secretflow/scql/pkg/audit"
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/util/logutil"
@@ -79,7 +80,7 @@ func engineHandlerCore(app *App, c *gin.Context) (report *scql.ReportRequest, er
 			errCode = scql.Code_ENGINE_RUNSQL_ERROR
 		}
 
-		frontendCallbackResult := newErrorCallbackResult(session.id, errCode, err, errMsg)
+		frontendCallbackResult := newErrorCallbackResult(session.id, errCode, err)
 		app.finishSession(session, frontendCallbackResult, constant.ReasonSessionAbnormalQuit)
 		return request, err
 	}
@@ -90,9 +91,10 @@ func engineHandlerCore(app *App, c *gin.Context) (report *scql.ReportRequest, er
 		if err != nil {
 			// node callback order is wrong in sequential executor
 			// just notify frontEnd and ignore it's reason
-			frontendCallbackResult := newErrorCallbackResult(session.id, scql.Code_INTERNAL, err,
-				fmt.Sprintf("job failed: session.next error. job[%s] DAG[%v] party[%s]",
-					request.GetSessionId(), request.GetDagId(), request.GetPartyCode()))
+			errMsg = fmt.Sprintf("job failed: session.next error. job[%s] DAG[%v] party[%s] err info[%s]",
+				request.GetSessionId(), request.GetDagId(), request.GetPartyCode(), err.Error())
+			err = fmt.Errorf(errMsg)
+			frontendCallbackResult := newErrorCallbackResult(session.id, scql.Code_INTERNAL, err)
 			app.finishSession(session, frontendCallbackResult, constant.ReasonSessionAbnormalQuit)
 			return
 		}
@@ -101,7 +103,7 @@ func engineHandlerCore(app *App, c *gin.Context) (report *scql.ReportRequest, er
 			frontendCallbackResult, err := session.mergeQueryResults()
 			destroyReason := constant.ReasonSessionNormalQuit
 			if err != nil {
-				frontendCallbackResult = newErrorCallbackResult(session.id, scql.Code_INTERNAL, err, "")
+				frontendCallbackResult = newErrorCallbackResult(session.id, scql.Code_INTERNAL, err)
 				destroyReason = constant.ReasonSessionAbnormalQuit
 			}
 			app.finishSession(session, frontendCallbackResult, destroyReason)
@@ -111,23 +113,18 @@ func engineHandlerCore(app *App, c *gin.Context) (report *scql.ReportRequest, er
 	return request, err
 }
 
-func newErrorCallbackResult(sessionId string, code scql.Code, err error, extraErrMsg string) *scql.SCDBQueryResultResponse {
-	var errMsg string
-	if extraErrMsg != "" {
-		errMsg = extraErrMsg
-	} else if err != nil {
-		errMsg = err.Error()
-	}
+func newErrorCallbackResult(sessionId string, code scql.Code, err error) *scql.SCDBQueryResultResponse {
 	return &scql.SCDBQueryResultResponse{
 		Status: &scql.Status{
 			Code:    int32(code),
-			Message: errMsg,
+			Message: err.Error(),
 		},
 		ScdbSessionId: sessionId,
 	}
 }
 
 func (app *App) finishSession(session *session, result *scql.SCDBQueryResultResponse, sessionDestroyReason string) {
+	audit.RecordAsyncCompleteEvent(result)
 	if session.queryResultCbURL != "" {
 		_, err := callbackFrontend(session.ctx, result, session.queryResultCbURL)
 		// rewrite local copy of sessionDestroyReason even on callback error

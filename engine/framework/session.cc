@@ -14,8 +14,12 @@
 
 #include "engine/framework/session.h"
 
+#include <memory>
+
 #include "arrow/array.h"
 #include "arrow/visit_array_inline.h"
+#include "libspu/core/config.h"
+#include "libspu/mpc/factory.h"
 #include "openssl/sha.h"
 
 #include "engine/core/arrow_helper.h"
@@ -38,16 +42,20 @@ Session::Session(const SessionOptions& session_opt,
       router_(router),
       ds_mgr_(ds_mgr) {
   start_time_ = std::chrono::system_clock::now();
+
   if (logger_ == nullptr) {
     logger_ = spdlog::default_logger();
   }
+
   tensor_table_ = std::make_unique<TensorTable>();
 
   InitLink();
   if (lctx_->WorldSize() >= 2) {
-    // spu HalContext valid only when world_size >= 2
-    spu_hctx_ =
-        std::make_unique<spu::HalContext>(params.spu_runtime_cfg(), lctx_);
+    // spu SPUContext valid only when world_size >= 2
+    auto config = params.spu_runtime_cfg();
+    spu::populateRuntimeConfig(config);
+    spu_ctx_ = std::make_unique<spu::SPUContext>(config, lctx_);
+    spu::mpc::Factory::RegisterProtocol(spu_ctx_.get(), lctx_);
   }
 }
 
@@ -65,6 +73,7 @@ void Session::InitLink() {
     }
   }
   lctx_ = link_factory_->CreateContext(ctx_desc, parties_.SelfRank());
+  lctx_->SetThrottleWindowSize(session_opt_.link_throttle_window_size);
   lctx_->ConnectToMesh();
 }
 

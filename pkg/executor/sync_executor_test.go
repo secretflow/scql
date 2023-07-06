@@ -90,19 +90,25 @@ func TestSyncExecutor(t *testing.T) {
 			responses: map[string][]*proto.Tensor{
 				fmt.Sprintf("http://alice.url%v", runExecutionPlanPath): {
 					{
-						Name:     t1.UniqueName(),
-						ElemType: proto.PrimitiveDataType_STRING,
-						Value: &proto.Tensor_Ss{
-							Ss: &proto.Strings{Ss: mockValue},
+						Name:       t1.UniqueName(),
+						ElemType:   proto.PrimitiveDataType_STRING,
+						StringData: mockValue,
+						Shape: &proto.TensorShape{
+							Dim: []*proto.TensorShape_Dimension{{
+								Value: &proto.TensorShape_Dimension_DimValue{DimValue: int64(len(mockValue))},
+							}},
 						},
 					},
 				},
 				fmt.Sprintf("http://bob.url%v", runExecutionPlanPath): {
 					{
-						Name:     t2.UniqueName(),
-						ElemType: proto.PrimitiveDataType_STRING,
-						Value: &proto.Tensor_Ss{
-							Ss: &proto.Strings{Ss: mockValue},
+						Name:       t2.UniqueName(),
+						ElemType:   proto.PrimitiveDataType_STRING,
+						StringData: mockValue,
+						Shape: &proto.TensorShape{
+							Dim: []*proto.TensorShape_Dimension{{
+								Value: &proto.TensorShape_Dimension_DimValue{DimValue: int64(len(mockValue))},
+							}},
 						},
 					},
 				},
@@ -118,7 +124,7 @@ func TestSyncExecutor(t *testing.T) {
 		for i, name := range executor.OutputNames {
 			out := resp.OutColumns[i]
 			a.Equal(translator.TensorNameFromUniqueName(name), out.Name)
-			a.Equal(mockValue, out.GetSs().GetSs())
+			a.Equal(mockValue, out.GetStringData())
 		}
 	}
 
@@ -135,33 +141,45 @@ func TestSyncExecutor(t *testing.T) {
 			responses: map[string][]*proto.Tensor{
 				fmt.Sprintf("http://alice.url%v", runExecutionPlanPath): {
 					{
-						Name:     t1.UniqueName(),
-						ElemType: proto.PrimitiveDataType_STRING,
-						Value: &proto.Tensor_Ss{
-							Ss: &proto.Strings{Ss: mockValue1},
+						Name:       t1.UniqueName(),
+						ElemType:   proto.PrimitiveDataType_STRING,
+						StringData: mockValue1,
+						Shape: &proto.TensorShape{
+							Dim: []*proto.TensorShape_Dimension{{
+								Value: &proto.TensorShape_Dimension_DimValue{DimValue: int64(len(mockValue1))},
+							}},
 						},
 					},
 					{
-						Name:     t2.UniqueName(),
-						ElemType: proto.PrimitiveDataType_STRING,
-						Value: &proto.Tensor_Ss{
-							Ss: &proto.Strings{Ss: mockValue1},
+						Name:       t2.UniqueName(),
+						ElemType:   proto.PrimitiveDataType_STRING,
+						StringData: mockValue1,
+						Shape: &proto.TensorShape{
+							Dim: []*proto.TensorShape_Dimension{{
+								Value: &proto.TensorShape_Dimension_DimValue{DimValue: int64(len(mockValue1))},
+							}},
 						},
 					},
 				},
 				fmt.Sprintf("http://bob.url%v", runExecutionPlanPath): {
 					{
-						Name:     t1.UniqueName(),
-						ElemType: proto.PrimitiveDataType_STRING,
-						Value: &proto.Tensor_Ss{
-							Ss: &proto.Strings{Ss: mockValue2},
+						Name:       t1.UniqueName(),
+						ElemType:   proto.PrimitiveDataType_STRING,
+						StringData: mockValue2,
+						Shape: &proto.TensorShape{
+							Dim: []*proto.TensorShape_Dimension{{
+								Value: &proto.TensorShape_Dimension_DimValue{DimValue: int64(len(mockValue2))},
+							}},
 						},
 					},
 					{
-						Name:     t2.UniqueName(),
-						ElemType: proto.PrimitiveDataType_STRING,
-						Value: &proto.Tensor_Ss{
-							Ss: &proto.Strings{Ss: mockValue2},
+						Name:       t2.UniqueName(),
+						ElemType:   proto.PrimitiveDataType_STRING,
+						StringData: mockValue2,
+						Shape: &proto.TensorShape{
+							Dim: []*proto.TensorShape_Dimension{{
+								Value: &proto.TensorShape_Dimension_DimValue{DimValue: int64(len(mockValue2))},
+							}},
 						},
 					},
 				},
@@ -177,7 +195,7 @@ func TestSyncExecutor(t *testing.T) {
 		for i, name := range executor.OutputNames {
 			out := resp.OutColumns[i]
 			a.Equal(translator.TensorNameFromUniqueName(name), out.Name)
-			a.Equal(mockValue, out.GetSs().GetSs())
+			a.Equal(mockValue, out.GetStringData())
 		}
 	}
 }

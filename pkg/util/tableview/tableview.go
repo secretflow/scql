@@ -43,24 +43,27 @@ func ConvertToTable(tensors []*scql.Tensor, table *tablewriter.Table) error {
 	for i := int64(0); i < rows; i++ {
 		var curRow []string
 		for _, t := range tensors {
-			switch x := t.Value.(type) {
-			case *scql.Tensor_Ss:
-				curRow = append(curRow, t.GetSs().Ss[i])
+			switch t.ElemType {
+			case scql.PrimitiveDataType_STRING:
+				curRow = append(curRow, t.GetStringData()[i])
 				break
-			case *scql.Tensor_Fs:
-				curRow = append(curRow, fmt.Sprint(t.GetFs().Fs[i]))
+			case scql.PrimitiveDataType_FLOAT32:
+				curRow = append(curRow, fmt.Sprint(t.GetFloatData()[i]))
 				break
-			case *scql.Tensor_Bs:
-				curRow = append(curRow, fmt.Sprint(t.GetBs().Bs[i]))
+			case scql.PrimitiveDataType_FLOAT64:
+				curRow = append(curRow, fmt.Sprint(t.GetDoubleData()[i]))
 				break
-			case *scql.Tensor_Is:
-				curRow = append(curRow, fmt.Sprint(t.GetIs().Is[i]))
+			case scql.PrimitiveDataType_BOOL:
+				curRow = append(curRow, fmt.Sprint(t.GetBoolData()[i]))
 				break
-			case *scql.Tensor_I64S:
-				curRow = append(curRow, fmt.Sprint(t.GetI64S().I64S[i]))
+			case scql.PrimitiveDataType_INT8, scql.PrimitiveDataType_INT16, scql.PrimitiveDataType_INT32:
+				curRow = append(curRow, fmt.Sprint(t.GetInt32Data()[i]))
+				break
+			case scql.PrimitiveDataType_INT64:
+				curRow = append(curRow, fmt.Sprint(t.GetInt64Data()[i]))
 				break
 			default:
-				return fmt.Errorf("unsupported type:%T", x)
+				return fmt.Errorf("unsupported type:%T", t.ElemType)
 			}
 		}
 		table.Append(curRow)

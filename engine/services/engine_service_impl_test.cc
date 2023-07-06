@@ -104,38 +104,38 @@ TEST_F(EngineServiceImplTest, StartSession) {
   std::string session_id = global_session_id;
   pb::StartSessionRequest request;
   request.mutable_session_params()->CopyFrom(global_params);
-  pb::StartSessionResponse response;
+  pb::Status response;
   // When
   EXPECT_NO_THROW(
       impl->StartSession(&global_cntl, &request, &response, nullptr));
   // Then
   EXPECT_NE(nullptr, listener_manager.GetListener(session_id));
-  EXPECT_EQ(pb::Code::OK, response.status().code());
+  EXPECT_EQ(pb::Code::OK, response.code());
 
   // When CreateSession with the same session id.
   EXPECT_NO_THROW(
       impl->StartSession(&global_cntl, &request, &response, nullptr));
   // Then
-  EXPECT_EQ(pb::Code::UNKNOWN_ENGINE_ERROR, response.status().code());
+  EXPECT_EQ(pb::Code::UNKNOWN_ENGINE_ERROR, response.code());
 
   // When session_id is empty.
   request.mutable_session_params()->clear_session_id();
   EXPECT_NO_THROW(
       impl->StartSession(&global_cntl, &request, &response, nullptr));
   // Then
-  EXPECT_EQ(pb::Code::INVALID_ARGUMENT, response.status().code());
+  EXPECT_EQ(pb::Code::INVALID_ARGUMENT, response.code());
 
   // When CreateSession with wrong credential.
   global_cntl.http_request().SetHeader("Credential", "err_credential");
   EXPECT_NO_THROW(
       impl->StartSession(&global_cntl, &request, &response, nullptr));
-  EXPECT_EQ(pb::Code::UNAUTHENTICATED, response.status().code());
+  EXPECT_EQ(pb::Code::UNAUTHENTICATED, response.code());
 
   // When CreateSession with empty credential.
   global_cntl.http_request().SetHeader("Credential", "");
   EXPECT_NO_THROW(
       impl->StartSession(&global_cntl, &request, &response, nullptr));
-  EXPECT_EQ(pb::Code::UNAUTHENTICATED, response.status().code());
+  EXPECT_EQ(pb::Code::UNAUTHENTICATED, response.code());
 }
 
 TEST_F(EngineServiceImplTest, StopSession) {
@@ -146,7 +146,7 @@ TEST_F(EngineServiceImplTest, StopSession) {
     pb::StartSessionRequest request;
     request.mutable_session_params()->CopyFrom(global_params);
 
-    pb::StartSessionResponse response;
+    pb::Status response;
     EXPECT_NO_THROW(
         impl->StartSession(&global_cntl, &request, &response, nullptr));
     EXPECT_NE(nullptr, listener_manager.GetListener(session_id));
@@ -154,13 +154,13 @@ TEST_F(EngineServiceImplTest, StopSession) {
   // prepare request.
   pb::StopSessionRequest request;
   request.set_session_id(session_id);
-  pb::StopSessionResponse response;
+  pb::Status response;
   // When
   EXPECT_NO_THROW(
       impl->StopSession(&global_cntl, &request, &response, nullptr));
   // Then
   EXPECT_EQ(nullptr, listener_manager.GetListener(session_id));
-  EXPECT_EQ(pb::Code::OK, response.status().code());
+  EXPECT_EQ(pb::Code::OK, response.code());
 }
 
 TEST_F(EngineServiceImplTest, RunDag) {
@@ -178,7 +178,7 @@ TEST_F(EngineServiceImplTest, RunDag) {
     // start session.
     pb::StartSessionRequest request;
     request.mutable_session_params()->CopyFrom(global_params);
-    pb::StartSessionResponse response;
+    pb::Status response;
     EXPECT_NO_THROW(
         impl->StartSession(&global_cntl, &request, &response, nullptr));
     EXPECT_NE(nullptr, listener_manager.GetListener(session_id));
@@ -189,11 +189,11 @@ TEST_F(EngineServiceImplTest, RunDag) {
   request.set_callback_host(
       butil::endpoint2str(recv_server.listen_address()).c_str());
   request.set_callback_uri("/MockReportService/Report");
-  pb::RunDagResponse response;
+  pb::Status response;
   // When
   EXPECT_NO_THROW(impl->RunDag(&global_cntl, &request, &response, nullptr));
   // Then
-  EXPECT_EQ(pb::Code::OK, response.status().code());
+  EXPECT_EQ(pb::Code::OK, response.code());
   sleep(1);  // wait async run finished.
 
   EXPECT_EQ(session_id, service.req_id);
@@ -382,8 +382,8 @@ TEST_P(EngineServiceImpl2PartiesTest, RunExecutionPlan) {
   auto check_equal = [](const pb::Tensor& actual_result,
                         std::vector<std::string>& expect_result) {
     std::vector<std::string> tmp;
-    tmp.reserve(actual_result.ss().ss_size());
-    for (auto item : actual_result.ss().ss()) {
+    tmp.reserve(actual_result.string_data_size());
+    for (auto item : actual_result.string_data()) {
       tmp.push_back(item);
     }
     std::sort(tmp.begin(), tmp.end());

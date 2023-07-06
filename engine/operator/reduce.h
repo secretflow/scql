@@ -30,20 +30,20 @@ class ReduceBase : public Operator {
  protected:
   virtual std::string GetArrowFunName() = 0;
 
-  spu::Value SecretReduceImpl(spu::HalContext* hctx, const spu::Value& in);
+  spu::Value SecretReduceImpl(spu::SPUContext* sctx, const spu::Value& in);
 
   virtual spu::Value HandleEmptyInput(const spu::Value& in) { return in; }
 
-  virtual void AggregateInit(spu::HalContext* hctx, const spu::Value& in) {}
+  virtual void AggregateInit(spu::SPUContext* sctx, const spu::Value& in) {}
   /// @returns reduce init value
-  virtual spu::Value GetInitValue(spu::HalContext* hctx) = 0;
+  virtual spu::Value GetInitValue(spu::SPUContext* sctx) = 0;
 
   using ReduceFn =
       std::function<spu::Value(const spu::Value& lhs, const spu::Value& rhs)>;
 
-  virtual ReduceFn GetReduceFn(spu::HalContext* hctx) = 0;
+  virtual ReduceFn GetReduceFn(spu::SPUContext* sctx) = 0;
 
-  virtual spu::Value AggregateFinalize(spu::HalContext* hctx,
+  virtual spu::Value AggregateFinalize(spu::SPUContext* sctx,
                                        const spu::Value& value) {
     return value;
   }
@@ -58,8 +58,8 @@ class ReduceSum : public ReduceBase {
  protected:
   std::string GetArrowFunName() override { return "sum"; }
 
-  spu::Value GetInitValue(spu::HalContext* hctx) override;
-  ReduceFn GetReduceFn(spu::HalContext* hctx) override;
+  spu::Value GetInitValue(spu::SPUContext* sctx) override;
+  ReduceFn GetReduceFn(spu::SPUContext* sctx) override;
 };
 
 class ReduceAvg : public ReduceBase {
@@ -73,12 +73,12 @@ class ReduceAvg : public ReduceBase {
 
   spu::Value HandleEmptyInput(const spu::Value& in) override;
 
-  void AggregateInit(spu::HalContext* hctx, const spu::Value& in) override;
+  void AggregateInit(spu::SPUContext* sctx, const spu::Value& in) override;
 
-  spu::Value GetInitValue(spu::HalContext* hctx) override;
-  ReduceFn GetReduceFn(spu::HalContext* hctx) override;
+  spu::Value GetInitValue(spu::SPUContext* sctx) override;
+  ReduceFn GetReduceFn(spu::SPUContext* sctx) override;
 
-  spu::Value AggregateFinalize(spu::HalContext* hctx,
+  spu::Value AggregateFinalize(spu::SPUContext* sctx,
                                const spu::Value& sum) override;
 
  private:
@@ -94,10 +94,10 @@ class ReduceMin : public ReduceBase {
  protected:
   std::string GetArrowFunName() override { return "min"; }
 
-  void AggregateInit(spu::HalContext* hctx, const spu::Value& in) override;
+  void AggregateInit(spu::SPUContext* sctx, const spu::Value& in) override;
 
-  spu::Value GetInitValue(spu::HalContext* hctx) override;
-  ReduceFn GetReduceFn(spu::HalContext* hctx) override;
+  spu::Value GetInitValue(spu::SPUContext* sctx) override;
+  ReduceFn GetReduceFn(spu::SPUContext* sctx) override;
 
  private:
   spu::Value init_value_;
@@ -112,10 +112,10 @@ class ReduceMax : public ReduceBase {
  protected:
   std::string GetArrowFunName() override { return "max"; }
 
-  void AggregateInit(spu::HalContext* hctx, const spu::Value& in) override;
+  void AggregateInit(spu::SPUContext* sctx, const spu::Value& in) override;
 
-  spu::Value GetInitValue(spu::HalContext* hctx) override;
-  ReduceFn GetReduceFn(spu::HalContext* hctx) override;
+  spu::Value GetInitValue(spu::SPUContext* sctx) override;
+  ReduceFn GetReduceFn(spu::SPUContext* sctx) override;
 
  private:
   spu::Value init_value_;

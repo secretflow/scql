@@ -2,17 +2,20 @@
 SCQL API
 ========
 
-SCQL supports two types of APIs: synchronous and asynchronous. The synchronous interface is suitable for executing fast queries, such as DDL, DML, and simple DQL. 
+SCQL supports two types of APIs: synchronous and asynchronous. The synchronous interface is suitable for executing fast queries, such as DDL, DCL, and simple DQL.
 Meanwhile, the asynchronous interface is recommended when the query may take a long time to run.
 
+.. _async_api:
 
 Asynchronous
 ============
 
+.. _submit_query:
+
 public/submit_query
 -------------------
 
-Submit the query (DDL/DML/DQL) to SCQL, SCQL will return a session ID immediately which can be used to fetch result, and processes the query in the background.
+Submit the query (DDL/DCL/DQL) to SCQL, SCQL will return a session ID immediately which can be used to fetch result, and processes the query in the background.
 
 Request
 ^^^^^^^
@@ -82,6 +85,8 @@ If you want execute `show databases`, the request and response message should be
         },
         "scdb_session_id": "some_session_id"
     }
+
+.. _fetch_result:
 
 public/fetch_result
 ---------------------
@@ -206,8 +211,12 @@ Automatically send the result to the user by post the following message when the
 | affected_rows     | int64              | Y        | The num of rows affected                                          |
 +-------------------+--------------------+----------+-------------------------------------------------------------------+
 
+.. _sync_api:
+
 Synchronous
 ===========
+
+.. _submit_and_get:
 
 public/submit_and_get
 ---------------------
@@ -335,11 +344,11 @@ User
 ^^^^
 
 +---------------------+--------------------+----------+-------------------------+
-|        Field        |        Type        | Required |       Description       |
+| Field               | Type               | Required | Description             |
 +=====================+====================+==========+=========================+
 | account_system_type | AccountSystemType_ | Y        | Account Type            |
 +---------------------+--------------------+----------+-------------------------+
-| native_user         | NativeUser         | Y        | Native user information |
+| native_user         | NativeUser_        | Y        | Native user information |
 +---------------------+--------------------+----------+-------------------------+
 
 NativeUser
@@ -369,22 +378,22 @@ Tensor
 +------------+--------------------+----------+--------------------------------------------------------------------------------------+
 | annotation | TensorAnnotation_  | N        | Carries physical status information, It MUST be there if the <option> is "Reference" |
 +------------+--------------------+----------+--------------------------------------------------------------------------------------+
-| value      | one of TensorValue | Y        | The tensor value, could be string bool float or int                                  |
+| value      | TensorValue_       | Y        | The tensor value, could be string, bool, float or int                                |
 +------------+--------------------+----------+--------------------------------------------------------------------------------------+
 
 TensorShape
 ^^^^^^^^^^^
 
-+-------+----------------------------+----------+-------------+
-| Field | Type                       | Required | Description |
-+=======+============================+==========+=============+
-| dim   | TensorShape_Dimension list | Y        |             |
-+-------+----------------------------+----------+-------------+
++-------+-----------------------------+----------+-------------+
+| Field | Type                        | Required | Description |
++=======+=============================+==========+=============+
+| dim   | TensorShape_Dimension_ list | Y        |             |
++-------+-----------------------------+----------+-------------+
 
 TensorShape_Dimension
 """""""""""""""""""""
 
-TensorShape_Dimension could be one of dim_value or dim_param.
+TensorShape_Dimension could be dim_value or dim_param.
 
 +-----------+--------+
 | Field     | Type   |
@@ -396,15 +405,17 @@ TensorShape_Dimension could be one of dim_value or dim_param.
 
 TensorAnnotation
 ^^^^^^^^^^^^^^^^
-+--------+--------------+----------+------------------+
-| Field  | Type         | Required | Description      |
-+========+==============+==========+==================+
-| status | TensorStatus | Y        | Status of tensor |
-+--------+--------------+----------+------------------+
+
++--------+---------------+----------+------------------+
+| Field  | Type          | Required | Description      |
++========+===============+==========+==================+
+| status | TensorStatus_ | Y        | Status of tensor |
++--------+---------------+----------+------------------+
 
 TensorValue
 ^^^^^^^^^^^
-TensorValue could be one of ss bs fs is or i64s.
+
+TensorValue could be any of the following values: ss, bs, fs, is, or i64s.
 
 +-------+----------+-------------+
 | Field | Type     | Description |

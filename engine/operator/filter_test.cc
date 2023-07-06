@@ -30,7 +30,7 @@ struct FilterTestCase {
 };
 
 class FilterTest : public ::testing::TestWithParam<
-                       std::tuple<spu::ProtocolKind, FilterTestCase>> {
+                       std::tuple<test::SpuRuntimeTestCase, FilterTestCase>> {
  protected:
   static pb::ExecNode MakeFilterExecNode(const FilterTestCase& tc);
 
@@ -41,7 +41,7 @@ class FilterTest : public ::testing::TestWithParam<
 INSTANTIATE_TEST_SUITE_P(
     FilterPrivateTest, FilterTest,
     testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             FilterTestCase{
                 .filter = test::NamedTensor(
@@ -100,42 +100,39 @@ TEST_P(FilterTest, works) {
   auto parm = GetParam();
   auto tc = std::get<1>(parm);
   auto node = MakeFilterExecNode(tc);
-  std::vector<Session> sessions = test::Make2PCSession(std::get<0>(parm));
+  std::vector<Session> sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
-  ExecContext alice_ctx(node, &sessions[0]);
-  ExecContext bob_ctx(node, &sessions[1]);
+  std::vector<ExecContext> exec_ctxs;
+  for (size_t idx = 0; idx < sessions.size(); ++idx) {
+    exec_ctxs.emplace_back(node, &sessions[idx]);
+  }
 
   // feed inputs
-  FeedInputs({&alice_ctx, &bob_ctx}, tc);
+  std::vector<ExecContext*> ctx_ptrs;
+  for (size_t idx = 0; idx < exec_ctxs.size(); ++idx) {
+    ctx_ptrs.emplace_back(&exec_ctxs[idx]);
+  }
+  FeedInputs(ctx_ptrs, tc);
 
   // When
-  test::OperatorTestRunner<Filter> alice;
-  test::OperatorTestRunner<Filter> bob;
-
-  alice.Start(&alice_ctx);
-  if (tc.data_status == pb::TENSORSTATUS_SECRET) {
-    bob.Start(&bob_ctx);
+  if (tc.data_status == pb::TENSORSTATUS_PRIVATE) {
+    EXPECT_NO_THROW(test::RunAsync<Filter>({ctx_ptrs[0]}));
+  } else {
+    EXPECT_NO_THROW(test::RunAsync<Filter>(ctx_ptrs));
   }
 
-  // Then
-  EXPECT_NO_THROW({ alice.Wait(); });
-  if (tc.data_status == pb::TENSORSTATUS_SECRET) {
-    EXPECT_NO_THROW({ bob.Wait(); });
-  }
-
-  // check alice's outputs
-  auto tensor_table = alice_ctx.GetTensorTable();
+  // Then check alice's outputs
+  auto tensor_table = ctx_ptrs[0]->GetTensorTable();
   for (const auto& expect_t : tc.expect_outs) {
     TensorPtr out;
     if (tc.data_status == pb::TENSORSTATUS_PRIVATE) {
       EXPECT_NO_THROW(out = tensor_table->GetTensor(expect_t.name));
 
     } else {
-      EXPECT_NO_THROW(
-          out = test::RevealSecret({&alice_ctx, &bob_ctx}, expect_t.name));
+      EXPECT_NO_THROW(out = test::RevealSecret(ctx_ptrs, expect_t.name));
       // convert hash to string for string tensor in spu
       if (expect_t.tensor->Type() == pb::PrimitiveDataType::STRING) {
-        out = alice_ctx.GetSession()->HashToString(*out);
+        out = ctx_ptrs[0]->GetSession()->HashToString(*out);
       }
     }
     EXPECT_TRUE(out != nullptr);

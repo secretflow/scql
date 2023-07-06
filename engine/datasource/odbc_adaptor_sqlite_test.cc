@@ -58,7 +58,7 @@ TEST_F(OdbcAdaptorSQLiteTest, works) {
   const std::string query = "SELECT name, age, credit FROM person";
   std::vector<ColumnDesc> outputs{{"name", pb::PrimitiveDataType::STRING},
                                   {"age", pb::PrimitiveDataType::INT32},
-                                  {"credit", pb::PrimitiveDataType::DOUBLE}};
+                                  {"credit", pb::PrimitiveDataType::FLOAT64}};
 
   auto results = adaptor.ExecQuery(query, outputs);
 

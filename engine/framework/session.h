@@ -19,8 +19,8 @@
 #include <string>
 
 #include "absl/container/flat_hash_map.h"
+#include "libspu/core/context.h"
 #include "libspu/device/symbol_table.h"
-#include "libspu/kernel/context.h"
 #include "yacl/link/link.h"
 
 #include "engine/datasource/datasource_adaptor_mgr.h"
@@ -40,6 +40,7 @@ enum class SessionState {
 
 struct SessionOptions {
   uint32_t link_recv_timeout_ms = 30 * 1000;  // 30s
+  size_t link_throttle_window_size = 0;
 };
 
 /// @brief Session holds everything needed to run the execution plan.
@@ -74,7 +75,7 @@ class Session {
 
   TensorTable* GetTensorTable() const { return tensor_table_.get(); }
 
-  spu::HalContext* GetSpuHalContext() const { return spu_hctx_.get(); }
+  spu::SPUContext* GetSpuContext() const { return spu_ctx_.get(); }
 
   spu::device::SymbolTable* GetDeviceSymbols() { return &device_symbols_; }
 
@@ -104,7 +105,7 @@ class Session {
     affected_rows_ = affected_rows;
   }
 
-  int64_t GetAffectedRows() { return affected_rows_; }
+  int64_t GetAffectedRows() const { return affected_rows_; }
 
  private:
   void InitLink();
@@ -125,13 +126,13 @@ class Session {
   std::unique_ptr<TensorTable> tensor_table_;
 
   std::shared_ptr<yacl::link::Context> lctx_;
-  std::unique_ptr<spu::HalContext> spu_hctx_;  // spu HalContext
-  spu::device::SymbolTable device_symbols_;    // spu device symbols table
+  std::unique_ptr<spu::SPUContext> spu_ctx_;  // SPUContext
+  spu::device::SymbolTable device_symbols_;   // spu device symbols table
 
   absl::flat_hash_map<size_t, std::string> hash_to_string_values_;
 
   std::vector<std::shared_ptr<pb::Tensor>> publish_results_;
-  int64_t affected_rows_;
+  int64_t affected_rows_ = 0;
 };
 
 }  // namespace scql::engine

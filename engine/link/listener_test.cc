@@ -19,32 +19,6 @@
 
 namespace scql::engine {
 
-TEST(ListenerTest, Works) {
-  // Given
-  Listener listener;
-  size_t self_rank = 0;
-  size_t peer_rank = 1;
-  size_t not_exist_rank = 100;
-  const std::string kAckKey = {'A', 'C', 'K', '\x01', '\x00'};
-  // When
-  EXPECT_NO_THROW(listener.AddChannel(
-      peer_rank,
-      std::make_shared<yacl::link::ChannelMem>(self_rank, peer_rank)));
-  // Then
-  EXPECT_THROW(
-      listener.AddChannel(peer_rank, std::make_shared<yacl::link::ChannelMem>(
-                                         self_rank, peer_rank)),
-      ::yacl::EnforceNotMet);
-
-  EXPECT_THROW(listener.OnMessage(not_exist_rank, kAckKey, "value"),
-               ::yacl::EnforceNotMet);
-  EXPECT_NO_THROW(listener.OnMessage(peer_rank, kAckKey, "value"));
-
-  EXPECT_THROW(listener.OnChunkedMessage(not_exist_rank, "key", "value", 0, 10),
-               ::yacl::EnforceNotMet);
-  EXPECT_NO_THROW(listener.OnChunkedMessage(peer_rank, "key", "value", 0, 10));
-}
-
 TEST(ListenerManagerTest, works) {
   // Given
   auto listener = std::make_shared<Listener>();

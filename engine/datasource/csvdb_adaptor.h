@@ -16,8 +16,8 @@
 
 #include "engine/datasource/datasource_adaptor.h"
 
+#include "api/datasource.pb.h"
 #include "engine/datasource/csvdb_conf.pb.h"
-#include "engine/datasource/datasource.pb.h"
 
 namespace scql::engine {
 

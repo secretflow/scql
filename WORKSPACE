@@ -18,12 +18,6 @@ load("//bazel:repositories.bzl", "scql_deps")
 
 scql_deps()
 
-load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
-
-go_rules_dependencies()
-
-go_register_toolchains(version = "host")
-
 #
 # spulib
 #
@@ -49,9 +43,13 @@ rules_foreign_cc_dependencies(
     register_preinstalled_tools = True,
 )
 
-load("@spulib//bazel:llvm.bzl", "llvm_setup")
+load("@xla//third_party/llvm:workspace.bzl", llvm = "repo")
 
-llvm_setup(name = "llvm-project")
+llvm("llvm-raw")
+
+load("@xla//third_party/llvm:setup.bzl", "llvm_setup")
+
+llvm_setup("llvm-project")
 
 #
 # boost
@@ -59,3 +57,10 @@ llvm_setup(name = "llvm-project")
 load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
 
 boost_deps()
+
+# register go toolchains
+load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
+
+go_rules_dependencies()
+
+go_register_toolchains(version = "host")

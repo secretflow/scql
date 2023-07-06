@@ -24,13 +24,15 @@ import (
 	"time"
 
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
-	"github.com/pingcap/errors"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/secretflow/scql/pkg/audit"
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/interpreter/optimizer"
 	"github.com/secretflow/scql/pkg/interpreter/translator"
 	enginePb "github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/status"
 	"github.com/secretflow/scql/pkg/util/logutil"
 	"github.com/secretflow/scql/pkg/util/message"
 )
@@ -173,12 +175,18 @@ func (stub *EngineStub) runSubDAGCore(ctx context.Context, subDAG map[string]*op
 		partyCodes = append(partyCodes, code)
 		partyCredentials = append(partyCredentials, partySubDAG.Credential)
 		dagIDs = append(dagIDs, id)
+		audit.RecordDagDetail(code, dagURL, pb)
 	}
 	partyInfo, err := translator.NewPartyInfo(partyCodes, dagURLs, partyCredentials)
 	if err != nil {
 		return err
 	}
-	return stub.postRequests(ctx, constant.ActionNameEnginePostForRunDag, bodies, *partyInfo, dagIDs)
+
+	respBodies, err := stub.postRequests(ctx, constant.ActionNameEnginePostForRunDag, bodies, *partyInfo, dagIDs)
+	if err != nil {
+		return err
+	}
+	return checkCommonRespStatus(respBodies)
 }
 
 func (stub *EngineStub) StartSession(ctx context.Context, sessionStartReq *enginePb.StartSessionRequest, partyInfo *translator.PartyInfo) error {
@@ -224,10 +232,15 @@ func (stub *EngineStub) startSessionCore(ctx context.Context, sessionStartReq *e
 		}
 		sessionURL := url.String()
 		sessionStartURLs = append(sessionStartURLs, sessionURL)
+		audit.RecordSessionParameters(sessionStartReq.GetSessionParams(), sessionURL, false)
 	}
 	partyInfo.UpdateUrls(sessionStartURLs)
 
-	return stub.postRequests(ctx, constant.ActionNameEnginePostForStartSession, bodies, partyInfo, nil)
+	respBodies, err := stub.postRequests(ctx, constant.ActionNameEnginePostForStartSession, bodies, partyInfo, nil)
+	if err != nil {
+		return err
+	}
+	return checkCommonRespStatus(respBodies)
 }
 
 func (stub *EngineStub) EndSession(ctx context.Context, sessionEndParams *enginePb.StopSessionRequest, partyInfo *translator.PartyInfo) error {
@@ -275,23 +288,40 @@ func (stub *EngineStub) endSessionCore(ctx context.Context, sessionEndParams *en
 			return err
 		}
 		postBodies = append(postBodies, string(postBody))
-
 	}
 
 	partyInfo.UpdateUrls(sessionEndURLs)
-	return stub.postRequests(ctx, constant.ActionNameEnginePostForEndSession, postBodies, partyInfo, nil)
+	respBodies, err := stub.postRequests(ctx, constant.ActionNameEnginePostForEndSession, postBodies, partyInfo, nil)
+	if err != nil {
+		return err
+	}
+	return checkCommonRespStatus(respBodies)
 }
 
-func (stub *EngineStub) postRequests(ctx context.Context, actionName string, postBodies []string, partyInfo translator.PartyInfo, dagIDs []int) error {
+func checkCommonRespStatus(respBodies []string) error {
+	for _, respBody := range respBodies {
+		resp := &enginePb.StatusResponse{}
+		_, err := message.DeserializeFrom(io.NopCloser(strings.NewReader(respBody)), resp)
+		if err != nil {
+			return fmt.Errorf("failed to parse response: %v", err)
+		}
+		if resp.GetStatus().GetCode() != int32(enginePb.Code_OK) {
+			return status.NewStatusFromProto(resp.GetStatus())
+		}
+	}
+	return nil
+}
+
+func (stub *EngineStub) postRequests(ctx context.Context, actionName string, postBodies []string, partyInfo translator.PartyInfo, dagIDs []int) ([]string, error) {
 	partyURLs := partyInfo.GetUrls()
 	partyCodes := partyInfo.GetParties()
 	partyCredentials := partyInfo.GetCredentials()
-	c := make(chan error, len(partyURLs))
+	c := make(chan ResponseInfo, len(partyURLs))
 	for i, url := range partyURLs {
 		var dagID string
 		if len(dagIDs) != 0 {
 			if len(dagIDs) != len(partyURLs) {
-				return fmt.Errorf("invalid request, input params for size mismatch for dagIDs:%v, partyURLs:%v", partyURLs, dagIDs)
+				return nil, fmt.Errorf("invalid request, input params for size mismatch for dagIDs:%v, partyURLs:%v", partyURLs, dagIDs)
 			}
 			dagID = fmt.Sprint(dagIDs[i])
 		}
@@ -302,7 +332,7 @@ func (stub *EngineStub) postRequests(ctx context.Context, actionName string, pos
 				ActionName: actionName,
 				RawRequest: postBody,
 			}
-			_, err := stub.webClient.Post(ctx, url, partyCredential, contentType, postBody)
+			respBody, err := stub.webClient.Post(ctx, url, partyCredential, contentType, postBody)
 			logEntry.CostTime = time.Since(timeStart)
 			if err != nil {
 				logEntry.ErrorMsg = err.Error()
@@ -310,15 +340,20 @@ func (stub *EngineStub) postRequests(ctx context.Context, actionName string, pos
 			} else {
 				log.Infof("%v|PartyCode:%v|DagID:%v|Url:%v", logEntry, partyCode, dagID, url)
 			}
+			c <- ResponseInfo{
+				ResponseBody: respBody,
+				Err:          err,
+			}
 
-			c <- err
 		}(stub, partyCodes[i], url, partyCredentials[i], stub.contentType, postBodies[i], dagID)
 	}
+	var respBody []string
 	for i := 0; i < len(partyURLs); i++ {
-		err := <-c
-		if err != nil {
-			return err
+		respInfo := <-c
+		if respInfo.Err != nil {
+			return nil, respInfo.Err
 		}
+		respBody = append(respBody, respInfo.ResponseBody)
 	}
-	return nil
+	return respBody, nil
 }

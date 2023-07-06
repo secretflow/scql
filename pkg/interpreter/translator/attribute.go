@@ -77,7 +77,7 @@ func (attr *Attribute) SetInts(ints []int) {
 func (attr *Attribute) SetFloat(v float32) {
 	attr.TensorValue = &Tensor{
 		FloatS: []float32{v},
-		DType:  proto.PrimitiveDataType_FLOAT,
+		DType:  proto.PrimitiveDataType_FLOAT32,
 	}
 }
 

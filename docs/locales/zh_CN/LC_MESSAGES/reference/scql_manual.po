@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-30 20:12+0800\n"
+"POT-Creation-Date: 2023-07-03 10:11+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -17,7 +17,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.11.0\n"
+"Generated-By: Babel 2.12.1\n"
 
 #: ../../reference/scql_manual.rst:2
 msgid "SCQL Manual"
@@ -97,28 +97,30 @@ msgid ""
 "For syntax differences between SCQL and MySQL, please read "
 ":doc:`mysql_compatibility`."
 msgstr ""
-"SCQL 兼容大多数MySQL语法，这使得它易于使用。"
+"SCQL 兼容大多数 MySQL 语法，这使得它易于使用。"
 "关于 SCQL 和 MySQL 之间的语法差异，请阅读"
 ":doc:`mysql_compatibility`。"
 
-#: ../../reference/scql_manual.rst:34
-msgid "CREATE/DROP USER Statement"
-msgstr "CREATE/DROP USER 语句"
+
+#: ../../reference/scql_manual.rst:36
+msgid "CREATE/DROP/ALTER USER Statement"
+msgstr "CREATE/DROP/ALTER USER 语句"
 
-#: ../../reference/scql_manual.rst:46 ../../reference/scql_manual.rst:69
-#: ../../reference/scql_manual.rst:95 ../../reference/scql_manual.rst:130
+
+#: ../../reference/scql_manual.rst:47 ../../reference/scql_manual.rst:74
+#: ../../reference/scql_manual.rst:100 ../../reference/scql_manual.rst:135
 msgid "Examples:"
 msgstr "样例："
 
-#: ../../reference/scql_manual.rst:60
+#: ../../reference/scql_manual.rst:65
 msgid "CREATE/DROP DATABASE Statement"
 msgstr "CREATE/DROP DATABASE 语句"
 
-#: ../../reference/scql_manual.rst:83
+#: ../../reference/scql_manual.rst:88
 msgid "CREATE/DROP TABLE Statement"
 msgstr "CREATE/DROP TABLE 语句"
 
-#: ../../reference/scql_manual.rst:92
+#: ../../reference/scql_manual.rst:97
 msgid ""
 "Create table here means mapping 'tbl_name' to the existing physic table, "
 "which is specified by 'TID' and located on the relevant parties. In SCQL,"
@@ -130,39 +132,41 @@ msgstr ""
 "用户在虚拟表上运行查询可以有助于简化权限"
 "控制和使用。"
 
-#: ../../reference/scql_manual.rst:109
+#: ../../reference/scql_manual.rst:114
 msgid "GRANT/REVOKE Statement"
 msgstr "GRANT/REVOKE 语句"
 
-#: ../../reference/scql_manual.rst:145
+#: ../../reference/scql_manual.rst:150
 msgid "SHOW/DESCRIBE Statement"
 msgstr "SHOW/DESCRIBE 语句"
 
-#: ../../reference/scql_manual.rst:159
+#: ../../reference/scql_manual.rst:164
 msgid "SELECT Statement"
 msgstr "SELECT 语句"
 
-#: ../../reference/scql_manual.rst:221
+#: ../../reference/scql_manual.rst:226
 msgid "**Limitation:**"
 msgstr "**限制：**"
 
-#: ../../reference/scql_manual.rst:223
+#: ../../reference/scql_manual.rst:228
 msgid "``JOIN`` only supports"
 msgstr "JOIN 仅仅支持"
 
-#: ../../reference/scql_manual.rst:225
+#: ../../reference/scql_manual.rst:230
 msgid "``INNER JOIN``"
 msgstr "``INNER JOIN``"
 
-#: ../../reference/scql_manual.rst:228
+#: ../../reference/scql_manual.rst:233
 msgid "Functions and Operators"
 msgstr "函数与操作符"
 
-#: ../../reference/scql_manual.rst:230
+#: ../../reference/scql_manual.rst:235
 msgid "Todo"
 msgstr "待办"
 
-#: ../../reference/scql_manual.rst:230
+#: ../../reference/scql_manual.rst:235
 msgid "this part is not ready, please check later"
 msgstr "该部分尚未准备好，请之后查看"
 
+#~ msgid "CREATE/DROP USER Statement"
+#~ msgstr ""

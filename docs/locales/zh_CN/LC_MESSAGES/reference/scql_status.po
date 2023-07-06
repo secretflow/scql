@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-30 20:12+0800\n"
+"POT-Creation-Date: 2023-07-03 10:11+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -17,7 +17,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.11.0\n"
+"Generated-By: Babel 2.12.1\n"
 
 #: ../../reference/scql_status.rst:2
 msgid "SCQL Implementation Status"
@@ -31,29 +31,34 @@ msgstr "SELECT 语句"
 msgid "syntax"
 msgstr "语法"
 
-#: ../../reference/scql_status.rst:8 ../../reference/scql_status.rst:31
+#: ../../reference/scql_status.rst:8 ../../reference/scql_status.rst:33
+#: ../../reference/scql_status.rst:60
 msgid "supported(fully/partial/no)"
 msgstr "支持程度(完全/部分/未支持)"
 
-#: ../../reference/scql_status.rst:8 ../../reference/scql_status.rst:31
+#: ../../reference/scql_status.rst:8 ../../reference/scql_status.rst:33
+#: ../../reference/scql_status.rst:60
 msgid "notes"
 msgstr "说明"
 
-#: ../../reference/scql_status.rst:10
+#: ../../reference/scql_status.rst
 msgid "join"
 msgstr "join"
 
-#: ../../reference/scql_status.rst:10 ../../reference/scql_status.rst:47
-#: ../../reference/scql_status.rst:51
+#: ../../reference/scql_status.rst ../../reference/scql_status.rst:49
+#: ../../reference/scql_status.rst:53 ../../reference/scql_status.rst:64
+#: ../../reference/scql_status.rst:66
 msgid "partial"
 msgstr "部分"
 
-#: ../../reference/scql_status.rst:10
-msgid "currently only inner join is supported"
+#: ../../reference/scql_status.rst
+#, fuzzy
+msgid "- currently only inner join is supported"
 msgstr "当前仅支持 inner join"
 
-#: ../../reference/scql_status.rst:11
-msgid "keyword ``using`` is not supported yet"
+#: ../../reference/scql_status.rst
+#, fuzzy
+msgid "- keyword ``using`` is not supported yet"
 msgstr "暂不支持关键字 ``using``"
 
 #: ../../reference/scql_status.rst:13
@@ -61,11 +66,12 @@ msgid "where clause"
 msgstr "where 子句"
 
 #: ../../reference/scql_status.rst:13 ../../reference/scql_status.rst:15
-#: ../../reference/scql_status.rst:17 ../../reference/scql_status.rst:33
-#: ../../reference/scql_status.rst:35 ../../reference/scql_status.rst:37
-#: ../../reference/scql_status.rst:39 ../../reference/scql_status.rst:41
-#: ../../reference/scql_status.rst:43 ../../reference/scql_status.rst:45
-#: ../../reference/scql_status.rst:49
+#: ../../reference/scql_status.rst:17 ../../reference/scql_status.rst:19
+#: ../../reference/scql_status.rst:21 ../../reference/scql_status.rst:35
+#: ../../reference/scql_status.rst:37 ../../reference/scql_status.rst:39
+#: ../../reference/scql_status.rst:41 ../../reference/scql_status.rst:43
+#: ../../reference/scql_status.rst:45 ../../reference/scql_status.rst:47
+#: ../../reference/scql_status.rst:51 ../../reference/scql_status.rst:62
 msgid "fully"
 msgstr "完全"
 
@@ -78,101 +84,144 @@ msgid "having clause"
 msgstr "having 子句"
 
 #: ../../reference/scql_status.rst:19
-msgid "union"
-msgstr "union"
-
-#: ../../reference/scql_status.rst:19 ../../reference/scql_status.rst:21
-#: ../../reference/scql_status.rst:23
-msgid "no"
-msgstr "未支持"
-
-#: ../../reference/scql_status.rst:19
-msgid "coming soon"
-msgstr "即将支持"
+msgid "union/union all clause"
+msgstr ""
 
 #: ../../reference/scql_status.rst:21
-msgid "limit clause"
+#, fuzzy
+msgid "distinct clause"
 msgstr "limit 子句"
 
 #: ../../reference/scql_status.rst:23
+msgid "limit clause"
+msgstr "limit 子句"
+
+#: ../../reference/scql_status.rst:23 ../../reference/scql_status.rst:25
+msgid "no"
+msgstr "未支持"
+
+#: ../../reference/scql_status.rst:25
 msgid "order by clause"
 msgstr "order by 子句"
 
-#: ../../reference/scql_status.rst:28 ../../reference/scql_status.rst:31
+#: ../../reference/scql_status.rst:30 ../../reference/scql_status.rst:33
 msgid "Functions and Operators"
 msgstr "函数和运算符"
 
-#: ../../reference/scql_status.rst:31
+#: ../../reference/scql_status.rst:33
 msgid "Category"
 msgstr "类别"
 
-#: ../../reference/scql_status.rst:33 ../../reference/scql_status.rst:35
-#: ../../reference/scql_status.rst:37 ../../reference/scql_status.rst:39
-#: ../../reference/scql_status.rst:41
+#: ../../reference/scql_status.rst:35 ../../reference/scql_status.rst:37
+#: ../../reference/scql_status.rst:39 ../../reference/scql_status.rst:41
+#: ../../reference/scql_status.rst:43
 msgid "aggregation"
 msgstr "聚合运算"
 
-#: ../../reference/scql_status.rst:33
+#: ../../reference/scql_status.rst:35
 msgid "sum"
 msgstr "sum"
 
-#: ../../reference/scql_status.rst:35
+#: ../../reference/scql_status.rst:37
 msgid "count"
 msgstr "count"
 
-#: ../../reference/scql_status.rst:37
+#: ../../reference/scql_status.rst:39
 msgid "avg"
 msgstr "avg"
 
-#: ../../reference/scql_status.rst:39
+#: ../../reference/scql_status.rst:41
 msgid "min"
 msgstr "min"
 
-#: ../../reference/scql_status.rst:41
+#: ../../reference/scql_status.rst:43
 msgid "max"
 msgstr "max"
 
-#: ../../reference/scql_status.rst:43
+#: ../../reference/scql_status.rst:45
 msgid "arithmetic"
 msgstr "算术运算"
 
-#: ../../reference/scql_status.rst:43
-msgid "add,minus,mul,div,intdiv"
-msgstr "add,minus,mul,div,intdiv"
+#: ../../reference/scql_status.rst:45
+msgid "+,-,*,/,div"
+msgstr ""
 
 #: ../../reference/scql_status.rst:45
+msgid "div means ``integer division``"
+msgstr ""
+
+#: ../../reference/scql_status.rst:47
 msgid "logical"
 msgstr "逻辑运算"
 
-#: ../../reference/scql_status.rst:45
+#: ../../reference/scql_status.rst:47
 msgid "logical_and,logical_or,not"
 msgstr "logical_and,logical_or,not"
 
-#: ../../reference/scql_status.rst:47 ../../reference/scql_status.rst:49
+#: ../../reference/scql_status.rst:49 ../../reference/scql_status.rst:51
 msgid "compare"
 msgstr "比较运算"
 
-#: ../../reference/scql_status.rst:47
+#: ../../reference/scql_status.rst:49
 msgid "<,<=,>,>="
 msgstr "<,<=,>,>="
 
-#: ../../reference/scql_status.rst:47
+#: ../../reference/scql_status.rst:49
 msgid "string data comparison is not supported"
 msgstr "不支持字符串类型数据比较"
 
-#: ../../reference/scql_status.rst:49
+#: ../../reference/scql_status.rst:51
 msgid "=, !="
 msgstr "=, !="
 
-#: ../../reference/scql_status.rst:51
+#: ../../reference/scql_status.rst:53
 msgid "in"
 msgstr "in"
 
-#: ../../reference/scql_status.rst:51
+#: ../../reference/scql_status.rst:53
 msgid "in, not in"
 msgstr "in, not in"
 
-#: ../../reference/scql_status.rst:51
+#: ../../reference/scql_status.rst:53
 msgid "all arguments should be of the same type"
 msgstr "所有参数应为同一类型"
 
+#: ../../reference/scql_status.rst:57
+msgid "Data Source"
+msgstr ""
+
+#: ../../reference/scql_status.rst:60
+msgid "Database Type"
+msgstr ""
+
+#: ../../reference/scql_status.rst:62
+msgid "MySQL"
+msgstr ""
+
+#: ../../reference/scql_status.rst:64
+msgid "PostgreSQL"
+msgstr ""
+
+#: ../../reference/scql_status.rst:66
+msgid "CSV"
+msgstr ""
+
+#: ../../reference/scql_status.rst:66
+msgid "Data stored in csv files"
+msgstr ""
+
+#: ../../reference/scql_status.rst:70
+msgid ""
+"SCQL supports different databases as data source, but there may be minor "
+"differences in the results due to data type differences built in "
+"databases. Please choose backend database with caution."
+msgstr ""
+
+#~ msgid "union"
+#~ msgstr "union"
+
+#~ msgid "coming soon"
+#~ msgstr "即将支持"
+
+#~ msgid "add,minus,mul,div,intdiv"
+#~ msgstr "add,minus,mul,div,intdiv"

@@ -14,12 +14,14 @@
 
 #include "engine/services/engine_service_impl.h"
 
+#include <cstddef>
 #include <utility>
 
 #include "brpc/channel.h"
 #include "brpc/closure_guard.h"
 #include "google/protobuf/util/json_util.h"
 
+#include "engine/audit/audit_log.h"
 #include "engine/framework/exec.h"
 #include "engine/framework/executor.h"
 #include "engine/operator/all_ops_register.h"
@@ -27,14 +29,14 @@
 
 #include "api/status_code.pb.h"
 
-#ifndef LOG_ERROR_AND_SET_RESPONSE
-#define LOG_ERROR_AND_SET_RESPONSE(err_code, err_msg) \
-  do {                                                \
-    SPDLOG_ERROR(err_msg);                            \
-    response->mutable_status()->set_code(err_code);   \
-    response->mutable_status()->set_message(err_msg); \
+#ifndef LOG_ERROR_AND_SET_STATUS
+#define LOG_ERROR_AND_SET_STATUS(status, err_code, err_msg) \
+  do {                                                      \
+    SPDLOG_ERROR(err_msg);                                  \
+    status->set_code(err_code);                             \
+    status->set_message(err_msg);                           \
   } while (false)
-#endif  // LOG_ERROR_AND_SET_RESPONSE
+#endif  // LOG_ERROR_AND_SET_STATUS
 
 namespace {
 
@@ -88,67 +90,86 @@ bool EngineServiceImpl::CheckSCDBCredential(
 
 void EngineServiceImpl::StartSession(::google::protobuf::RpcController* cntl,
                                      const pb::StartSessionRequest* request,
-                                     pb::StartSessionResponse* response,
+                                     pb::Status* status,
                                      ::google::protobuf::Closure* done) {
   brpc::ClosureGuard done_guard(done);
   // TODO(jingshi): Add opentelemetry.
   // check illegal request.
   auto controller = static_cast<brpc::Controller*>(cntl);
+  std::string source_ip =
+      butil::endpoint2str(controller->remote_side()).c_str();
+  auto session_id = request->session_params().session_id();
   if (!CheckSCDBCredential(controller->http_request())) {
     std::string err_msg = "scdb authentication failed";
-    LOG_ERROR_AND_SET_RESPONSE(pb::Code::UNAUTHENTICATED, err_msg);
+    LOG_ERROR_AND_SET_STATUS(status, pb::Code::UNAUTHENTICATED, err_msg);
+    audit::RecordUncategorizedEvent(*status, session_id, source_ip,
+                                    "StartSession");
     return;
   }
-  if (request->session_params().session_id().empty()) {
+  if (session_id.empty()) {
     std::string err_msg = "session_id in request is empty";
-    LOG_ERROR_AND_SET_RESPONSE(pb::Code::INVALID_ARGUMENT, err_msg);
+    LOG_ERROR_AND_SET_STATUS(status, pb::Code::INVALID_ARGUMENT, err_msg);
+    audit::RecordUncategorizedEvent(*status, session_id, source_ip,
+                                    "StartSession");
     return;
   }
 
   SPDLOG_INFO("EngineServiceImpl::StartSession with session id: {}",
-              request->session_params().session_id());
+              session_id);
   try {
     session_mgr_->CreateSession(request->session_params());
-
-    response->mutable_status()->set_code(pb::Code::OK);
-    response->mutable_status()->set_message("ok");
+    status->set_code(pb::Code::OK);
+    audit::RecordCreateSessionEvent(*status, request->session_params(), false,
+                                    source_ip);
     return;
   } catch (const std::exception& e) {
     std::string err_msg = fmt::format(
         "StartSession for session_id={} failed, catch std::exception={} ",
-        request->session_params().session_id(), e.what());
-    LOG_ERROR_AND_SET_RESPONSE(pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
+        session_id, e.what());
+    LOG_ERROR_AND_SET_STATUS(status, pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
+    audit::RecordCreateSessionEvent(*status, request->session_params(), false,
+                                    source_ip);
     return;
   }
 }
 
 void EngineServiceImpl::RunDag(::google::protobuf::RpcController* cntl,
                                const pb::RunDagRequest* request,
-                               pb::RunDagResponse* response,
+                               pb::Status* status,
                                ::google::protobuf::Closure* done) {
   brpc::ClosureGuard done_guard(done);
+  auto start_time = std::chrono::system_clock::now();
   // check illegal request.
   auto controller = static_cast<brpc::Controller*>(cntl);
+  std::string source_ip =
+      butil::endpoint2str(controller->remote_side()).c_str();
   if (!CheckSCDBCredential(controller->http_request())) {
     std::string err_msg = "scdb authentication failed";
-    LOG_ERROR_AND_SET_RESPONSE(pb::Code::UNAUTHENTICATED, err_msg);
+    LOG_ERROR_AND_SET_STATUS(status, pb::Code::UNAUTHENTICATED, err_msg);
+    audit::RecordUncategorizedEvent(*status, request->session_id(), source_ip,
+                                    "RunDag");
     return;
   }
   if (request->session_id().empty()) {
     std::string err_msg = "session_id in request is empty";
-    LOG_ERROR_AND_SET_RESPONSE(pb::Code::INVALID_ARGUMENT, err_msg);
+    LOG_ERROR_AND_SET_STATUS(status, pb::Code::INVALID_ARGUMENT, err_msg);
+    audit::RecordUncategorizedEvent(*status, request->session_id(), source_ip,
+                                    "RunDag");
     return;
   }
   if (request->callback_uri().empty() || request->callback_host().empty()) {
     std::string err_msg = "callback uri/host cannot be null";
-    LOG_ERROR_AND_SET_RESPONSE(pb::Code::INVALID_ARGUMENT, err_msg);
+    LOG_ERROR_AND_SET_STATUS(status, pb::Code::INVALID_ARGUMENT, err_msg);
+    audit::RecordUncategorizedEvent(*status, request->session_id(), source_ip,
+                                    "RunDag");
     return;
   }
   auto session = session_mgr_->GetSession(request->session_id());
   if (session == nullptr) {
     std::string err_msg = fmt::format("no exist session for session_id({})",
                                       request->session_id());
-    LOG_ERROR_AND_SET_RESPONSE(pb::Code::INVALID_ARGUMENT, err_msg);
+    LOG_ERROR_AND_SET_STATUS(status, pb::Code::INVALID_ARGUMENT, err_msg);
+    audit::RecordRunSubDagEvent(*request, *status, start_time, source_ip);
     return;
   }
 
@@ -157,54 +178,59 @@ void EngineServiceImpl::RunDag(::google::protobuf::RpcController* cntl,
   if (!ret) {
     std::string err_msg =
         fmt::format("session({}) running before RunDag", request->session_id());
-    LOG_ERROR_AND_SET_RESPONSE(pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
+    LOG_ERROR_AND_SET_STATUS(status, pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
+    audit::RecordRunSubDagEvent(*request, *status, start_time, source_ip);
     return;
   }
 
   // Copy 'request' to avoid deconstruction before async call finished.
   worker_pool_.Submit(&EngineServiceImpl::RunDagWithSession, this, *request,
-                      session);
+                      session, source_ip);
   SPDLOG_INFO("submit rundag for session({}), dag queue length={}",
               request->session_id(), worker_pool_.GetQueueLength());
 
-  response->mutable_status()->set_code(pb::Code::OK);
-  response->mutable_status()->set_message("ok");
+  status->set_code(pb::Code::OK);
   return;
 }
 
 void EngineServiceImpl::StopSession(::google::protobuf::RpcController* cntl,
                                     const pb::StopSessionRequest* request,
-                                    pb::StopSessionResponse* response,
+                                    pb::Status* status,
                                     ::google::protobuf::Closure* done) {
   brpc::ClosureGuard done_guard(done);
   // check illegal request.
   auto controller = static_cast<brpc::Controller*>(cntl);
+  std::string source_ip =
+      butil::endpoint2str(controller->remote_side()).c_str();
+  auto session_id = request->session_id();
   if (!CheckSCDBCredential(controller->http_request())) {
     std::string err_msg = "scdb authentication failed";
-    LOG_ERROR_AND_SET_RESPONSE(pb::Code::UNAUTHENTICATED, err_msg);
+    LOG_ERROR_AND_SET_STATUS(status, pb::Code::UNAUTHENTICATED, err_msg);
+    audit::RecordUncategorizedEvent(*status, session_id, source_ip,
+                                    "StopSession");
     return;
   }
-  if (request->session_id().empty()) {
+  if (session_id.empty()) {
     std::string err_msg = "session_id in request is empty";
-    LOG_ERROR_AND_SET_RESPONSE(pb::Code::INVALID_ARGUMENT, err_msg);
+    LOG_ERROR_AND_SET_STATUS(status, pb::Code::INVALID_ARGUMENT, err_msg);
+    audit::RecordUncategorizedEvent(*status, session_id, source_ip,
+                                    "StopSession");
     return;
   }
-  SPDLOG_INFO("EngineServiceImpl::StopSession({}), reason({})",
-              request->session_id(), request->reason());
+  SPDLOG_INFO("EngineServiceImpl::StopSession({}), reason({})", session_id,
+              request->reason());
   try {
-    session_mgr_->RemoveSession(request->session_id());
+    session_mgr_->RemoveSession(session_id);
 
-    response->mutable_status()->set_code(pb::Code::OK);
-    response->mutable_status()->set_message("ok");
+    status->set_code(pb::Code::OK);
+    audit::RecordStopSessionEvent(*request, *status, source_ip);
     return;
   } catch (const std::exception& e) {
     std::string err_msg =
         fmt::format("StopSession({}) failed, catch std::exception={} ",
-                    request->session_id(), e.what());
-    SPDLOG_WARN(err_msg);
-
-    response->mutable_status()->set_code(pb::Code::UNKNOWN_ENGINE_ERROR);
-    response->mutable_status()->set_message(err_msg);
+                    session_id, e.what());
+    LOG_ERROR_AND_SET_STATUS(status, pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
+    audit::RecordStopSessionEvent(*request, *status, source_ip);
     return;
   }
 }
@@ -214,11 +240,17 @@ void EngineServiceImpl::RunExecutionPlan(
     const pb::RunExecutionPlanRequest* request,
     pb::RunExecutionPlanResponse* response, ::google::protobuf::Closure* done) {
   brpc::ClosureGuard done_guard(done);
-
+  auto start_time = std::chrono::system_clock::now();
   auto controller = static_cast<brpc::Controller*>(cntl);
+  std::string source_ip =
+      butil::endpoint2str(controller->remote_side()).c_str();
   if (!CheckSCDBCredential(controller->http_request())) {
     std::string err_msg = "scdb authentication failed";
-    LOG_ERROR_AND_SET_RESPONSE(pb::Code::UNAUTHENTICATED, err_msg);
+    LOG_ERROR_AND_SET_STATUS(response->mutable_status(),
+                             pb::Code::UNAUTHENTICATED, err_msg);
+    audit::RecordUncategorizedEvent(response->status(),
+                                    request->session_params().session_id(),
+                                    source_ip, "RunExecutionPlan");
     return;
   }
 
@@ -232,12 +264,19 @@ void EngineServiceImpl::RunExecutionPlan(
     session_mgr_->CreateSession(request->session_params());
     session = session_mgr_->GetSession(session_id);
     YACL_ENFORCE(session, "get session failed");
+    ::scql::pb::Status status;
+    status.set_code(0);
+    audit::RecordCreateSessionEvent(status, request->session_params(), true,
+                                    source_ip);
   } catch (const std::exception& e) {
     std::string err_msg = fmt::format(
         "RunExecutionPlan create session({}) failed, catch "
         "std::exception={} ",
         session_id, e.what());
-    LOG_ERROR_AND_SET_RESPONSE(pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
+    LOG_ERROR_AND_SET_STATUS(response->mutable_status(),
+                             pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
+    audit::RecordCreateSessionEvent(response->status(),
+                                    request->session_params(), true, source_ip);
     return;
   }
 
@@ -252,8 +291,10 @@ void EngineServiceImpl::RunExecutionPlan(
     std::string err_msg = fmt::format(
         "RunExecutionPlan run jobs({}) failed, catch std::exception={} ",
         session_id, e.what());
-    LOG_ERROR_AND_SET_RESPONSE(pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
+    LOG_ERROR_AND_SET_STATUS(response->mutable_status(),
+                             pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
     response->mutable_out_columns()->Clear();
+    audit::RecordRunExecPlanEvent(*request, *response, start_time, source_ip);
     return;
   }
 
@@ -265,19 +306,24 @@ void EngineServiceImpl::RunExecutionPlan(
         "RunExecutionPlan remove session({}) failed, catch "
         "std::exception={} ",
         session_id, e.what());
-    LOG_ERROR_AND_SET_RESPONSE(pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
+    LOG_ERROR_AND_SET_STATUS(response->mutable_status(),
+                             pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
     response->mutable_out_columns()->Clear();
+    audit::RecordRunExecPlanEvent(*request, *response, start_time, source_ip);
     return;
   }
 
   SPDLOG_INFO("RunExecutionPlan success, request info:\n{} ",
               MessageToJsonString(*request));
+  audit::RecordRunExecPlanEvent(*request, *response, start_time, source_ip);
   return;
 }
 
 void EngineServiceImpl::RunDagWithSession(const pb::RunDagRequest request,
-                                          Session* session) {
+                                          Session* session,
+                                          const std::string& source_ip) {
   pb::Status status;
+  auto start_time = std::chrono::system_clock::now();
   try {
     // TODO(jingshi): support async run SubDag's nodes.
     for (int idx = 0; idx < request.nodes_size(); ++idx) {
@@ -317,6 +363,7 @@ void EngineServiceImpl::RunDagWithSession(const pb::RunDagRequest request,
 
   std::string report_info_str = ConstructReportInfo(status, request, session);
   ReportToScdb(request, report_info_str);
+  audit::RecordRunSubDagEvent(request, status, start_time, source_ip);
   return;
 }
 
@@ -437,7 +484,6 @@ void EngineServiceImpl::RunPlan(const pb::RunExecutionPlanRequest& request,
 
   SPDLOG_INFO("session({}) run plan policy succ", session->Id());
   response->mutable_status()->set_code(pb::Code::OK);
-  response->mutable_status()->set_message("ok");
   return;
 }
 

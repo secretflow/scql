@@ -25,6 +25,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
+	"github.com/secretflow/scql/pkg/audit"
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/executor"
 	"github.com/secretflow/scql/pkg/grm"
@@ -163,9 +164,11 @@ func (app *App) compile(lpInfo *LogicalPlanInfo, s *session) (*ExecutionPlanInfo
 	if err != nil {
 		return nil, err
 	}
-
+	graphChecker := translator.NewGraphChecker(ep)
+	if err := graphChecker.Check(); err != nil {
+		return nil, err
+	}
 	logrus.Infof("[Translator] execution plan: \n%s\n", ep.DumpGraphviz())
-
 	p := optimizer.NewGraphPartitioner(ep)
 	p.NaivePartition()
 
@@ -185,6 +188,9 @@ func (app *App) compilePrepare(ctx context.Context, s *session) (*LogicalPlanInf
 	// step1. find out issuer's party code
 	issuer := s.GetSessionVars().User
 
+	if issuer.Username == storage.DefaultRootName && issuer.Hostname == storage.DefaultHostName {
+		return nil, fmt.Errorf("user root has no privilege to execute dql")
+	}
 	issuerPartyCode, err := storage.QueryUserPartyCode(s.GetSessionVars().Storage, issuer.Username, issuer.Hostname)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query issuer party code: %v", err)
@@ -276,6 +282,7 @@ func (app *App) compilePrepare(ctx context.Context, s *session) (*LogicalPlanInf
 	}
 
 	logrus.Debugf("CCL: %v", ccl)
+	audit.RecordSecurityConfig(&scql.SecurityConfig{ColumnControlList: ccl}, s.id)
 	return &LogicalPlanInfo{
 		lp:          lp,
 		issuer:      issuerPartyCode,

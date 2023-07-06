@@ -16,17 +16,19 @@
 
 #include <mutex>
 
-#include "Poco/Data/MySQL/Connector.h"
-#ifdef ENABLE_POSTGRESQL
-#include "Poco/Data/PostgreSQL/Connector.h"
-#endif  // defined(ENABLE_POSTGRESQL)
 #include "Poco/Data/MetaColumn.h"
+#include "Poco/Data/MySQL/Connector.h"
+#include "Poco/Data/PostgreSQL/Connector.h"
 #include "Poco/Data/RecordSet.h"
 #include "Poco/Data/SQLite/Connector.h"
+#include "arrow/compute/cast.h"
 #include "yacl/base/exception.h"
 
+#include "engine/core/arrow_helper.h"
 #include "engine/core/primitive_builder.h"
 #include "engine/core/string_tensor_builder.h"
+#include "engine/core/type.h"
+#include "engine/util/spu_io.h"
 
 namespace scql::engine {
 
@@ -98,11 +100,15 @@ std::vector<TensorPtr> OdbcAdaptor::ExecQueryImpl(
         builder = std::make_unique<Int64TensorBuilder>();
         break;
       case MetaColumn::ColumnDataType::FDT_FLOAT:
+        builder = std::make_unique<FloatTensorBuilder>();
+        break;
       case MetaColumn::ColumnDataType::FDT_DOUBLE:
         builder = std::make_unique<DoubleTensorBuilder>();
         break;
       case MetaColumn::ColumnDataType::FDT_STRING:
       case MetaColumn::ColumnDataType::FDT_WSTRING:
+      case MetaColumn::ColumnDataType::FDT_BLOB:
+      case MetaColumn::ColumnDataType::FDT_CLOB:
         builder = std::make_unique<StringTensorBuilder>();
         break;
       default:
@@ -123,7 +129,7 @@ std::vector<TensorPtr> OdbcAdaptor::ExecQueryImpl(
 
       switch (rs.columnType(col_index)) {
         case MetaColumn::ColumnDataType::FDT_BOOL: {
-          BooleanTensorBuilder* builder =
+          auto* builder =
               static_cast<BooleanTensorBuilder*>(builders[col_index].get());
           builder->Append(var.convert<bool>());
           break;
@@ -136,21 +142,28 @@ std::vector<TensorPtr> OdbcAdaptor::ExecQueryImpl(
         case MetaColumn::ColumnDataType::FDT_UINT32:
         case MetaColumn::ColumnDataType::FDT_INT64:
         case MetaColumn::ColumnDataType::FDT_UINT64: {
-          Int64TensorBuilder* builder =
+          auto* builder =
               static_cast<Int64TensorBuilder*>(builders[col_index].get());
           builder->Append(var.convert<int64_t>());
           break;
         }
         case MetaColumn::ColumnDataType::FDT_STRING:
-        case MetaColumn::ColumnDataType::FDT_WSTRING: {
-          StringTensorBuilder* builder =
+        case MetaColumn::ColumnDataType::FDT_WSTRING:
+        case MetaColumn::ColumnDataType::FDT_BLOB:
+        case MetaColumn::ColumnDataType::FDT_CLOB: {
+          auto* builder =
               static_cast<StringTensorBuilder*>(builders[col_index].get());
           builder->Append(var.convert<std::string>());
           break;
         }
-        case MetaColumn::ColumnDataType::FDT_FLOAT:
+        case MetaColumn::ColumnDataType::FDT_FLOAT: {
+          auto* builder =
+              static_cast<FloatTensorBuilder*>(builders[col_index].get());
+          builder->Append(var.convert<float>());
+          break;
+        }
         case MetaColumn::ColumnDataType::FDT_DOUBLE: {
-          DoubleTensorBuilder* builder =
+          auto* builder =
               static_cast<DoubleTensorBuilder*>(builders[col_index].get());
           builder->Append(var.convert<double>());
           break;
@@ -165,6 +178,22 @@ std::vector<TensorPtr> OdbcAdaptor::ExecQueryImpl(
   std::vector<TensorPtr> results(column_cnt);
   for (std::size_t i = 0; i < column_cnt; ++i) {
     builders[i]->Finish(&results[i]);
+    if (results[i]->Type() != expected_outputs[i].dtype) {
+      SPDLOG_WARN("column#{} '{}' type mismatch, convert from {} to {}", i,
+                  expected_outputs[i].name,
+                  pb::PrimitiveDataType_Name(results[i]->Type()),
+                  pb::PrimitiveDataType_Name(expected_outputs[i].dtype));
+
+      auto origin_arr =
+          util::ConcatenateChunkedArray(results[i]->ToArrowChunkedArray());
+      auto to_type = ToArrowDataType(expected_outputs[i].dtype);
+      std::shared_ptr<arrow::Array> array;
+      ASSIGN_OR_THROW_ARROW_STATUS(array,
+                                   arrow::compute::Cast(*origin_arr, to_type));
+
+      auto chunked_arr = std::make_shared<arrow::ChunkedArray>(array);
+      results[i] = std::make_shared<Tensor>(std::move(chunked_arr));
+    }
   }
 
   return results;
@@ -193,12 +222,10 @@ void OdbcAdaptor::Init() {
       connector_ = "sqlite";
       Poco::Data::SQLite::Connector::registerConnector();
       break;
-#ifdef ENABLE_POSTGRESQL
     case DataSourceKind::POSTGRESQL:
       connector_ = "postgresql";
       Poco::Data::PostgreSQL::Connector::registerConnector();
       break;
-#endif  // defined(ENABLE_POSTGRESQL)
     default:
       YACL_THROW("unsupported DataSourceKind: {}",
                  DataSourceKind_Name(options_.kind));
