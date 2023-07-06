@@ -48,11 +48,11 @@ class BinaryBase : public Operator {
 
   virtual TensorPtr ComputeInPlain(const Tensor& lhs, const Tensor& rhs) = 0;
 
-  virtual spu::Value ComputeOnSpu(spu::HalContext* hctx, const spu::Value& lhs,
+  virtual spu::Value ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
                                   const spu::Value& rhs) = 0;
 
   // propagate nulls for arithmetic op
-  static spu::Value PropagateNulls(spu::HalContext* hctx, const spu::Value& lhs,
+  static spu::Value PropagateNulls(spu::SPUContext* sctx, const spu::Value& lhs,
                                    const spu::Value& rhs);
 
   static TensorPtr GetPrivateOrPublicTensor(ExecContext* ctx,

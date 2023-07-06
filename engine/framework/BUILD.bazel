@@ -74,8 +74,10 @@ cc_library(
         "//engine/datasource:datasource_adaptor_mgr",
         "//engine/datasource:router",
         "@com_github_openssl_openssl//:openssl",
+        "@spulib//libspu/core:config",
+        "@spulib//libspu/core:context",
         "@spulib//libspu/device:symbol_table",
-        "@spulib//libspu/kernel:context",
+        "@spulib//libspu/mpc:factory",
         "@yacl//yacl/link",
     ],
 )

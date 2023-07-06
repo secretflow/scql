@@ -313,7 +313,7 @@ func runSql(dbName, sql string, userAuth *UserCredential, sync bool) (err error)
 			fmt.Printf("[fetch] %v rows affected\n", result.AffectedRows)
 			return nil
 		}
-		fmt.Fprintf(os.Stdout, "[fetch] OK for DDL/DML\n")
+		fmt.Fprintf(os.Stdout, "[fetch] OK for DDL/DCL\n")
 	} else {
 		fmt.Fprintf(os.Stdout, "[fetch]err: Code: %v, message:%v\n", result.GetStatus().GetCode(), result.GetStatus().GetMessage())
 	}

@@ -154,9 +154,11 @@ func QueryUserPartyCode(store *gorm.DB, userName, host string) (string, error) {
 		return "", result.Error
 	}
 	if result.RowsAffected == 0 {
-		return "", fmt.Errorf("user \"`%s`@`%s`\" not found", userName, host)
+		return "", fmt.Errorf("user %s@%s not found", userName, host)
 	}
-
+	if user.PartyCode == "" {
+		return "", fmt.Errorf("there is no party code for user %s@%s", userName, host)
+	}
 	return user.PartyCode, nil
 }
 

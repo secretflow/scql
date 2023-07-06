@@ -18,6 +18,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/secretflow/scql/pkg/grm"
 )
 
 func TestGetToyGRMInfo(t *testing.T) {
@@ -41,6 +43,7 @@ func TestGetToyGRMInfo(t *testing.T) {
 		r.Equal("long", tableSchema.Columns[0].Type)
 		r.Equal("c2", tableSchema.Columns[1].Name)
 		r.Equal("long", tableSchema.Columns[1].Type)
+		r.Equal(grm.DBMySQL, tableSchema.DBType)
 
 		engines, err = info.GetEngines([]string{"bob"}, "my_bob")
 		r.Nil(err)
@@ -49,6 +52,9 @@ func TestGetToyGRMInfo(t *testing.T) {
 		r.Equal("bob_credential", engines[0].Credential[0])
 		_, err = info.GetTableMeta("tid2", "", "my_carol")
 		r.NotNil(err)
+		schema2, err := info.GetTableMeta("tid2", "", "my_alice")
+		r.Nil(err)
+		r.Equal(grm.DBPostgres, schema2.DBType)
 
 		_, err = info.GetTableMeta("tid1", "", "my_carol")
 		r.NotNil(err)
@@ -59,5 +65,9 @@ func TestGetToyGRMInfo(t *testing.T) {
 		isOwner, err = info.VerifyTableOwnership("tid1", "my_bob")
 		r.Nil(err)
 		r.Equal(false, isOwner)
+
+		schema3, err := info.GetTableMeta("tid3", "", "my_bob")
+		r.Nil(err)
+		r.Equal(grm.DBCSV, schema3.DBType)
 	}
 }

@@ -26,6 +26,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/secretflow/scql/pkg/executor"
+	"github.com/secretflow/scql/pkg/grm"
 	grmproto "github.com/secretflow/scql/pkg/proto-gen/grm"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/util/message"
@@ -69,6 +70,7 @@ func TestGetTableSchema(t *testing.T) {
 				},
 			},
 		},
+		DbType: grm.DBMySQL,
 	}
 	httpresp200 := httptest.ResponseRecorder{
 		Code: 200,
@@ -82,6 +84,34 @@ func TestGetTableSchema(t *testing.T) {
 	r.Equal(1, len(res.Columns))
 	r.Equal("c1", res.Columns[0].Name)
 	r.Equal("long", res.Columns[0].Type)
+	r.Equal(grm.DBMySQL, res.DBType)
+
+	NilDBTypeResponse := &grmproto.GetTableMetaResponse{
+		Status: &scql.Status{
+			Code:    int32(scql.Code_OK),
+			Message: "",
+		},
+		Schema: &grmproto.TableSchema{
+			DbName:    "d1",
+			TableName: "t1",
+			Columns: []*grmproto.ColumnDesc{
+				&grmproto.ColumnDesc{
+					Name:        "c1",
+					Type:        "long",
+					Description: "dddd",
+				},
+			},
+		},
+	}
+	httpNilDBType := httptest.ResponseRecorder{
+		Code: 200,
+		Body: bytes.NewBuffer([]byte(toJson(t, NilDBTypeResponse))),
+	}
+	m.EXPECT().Do(gomock.Any()).Return(httpNilDBType.Result(), nil)
+	res, err = client.GetTableMeta("fake id", "", "fake token")
+	r.Nil(err)
+	r.Equal(grm.DBUnknown, res.DBType)
+
 }
 
 func TestGetEngines(t *testing.T) {

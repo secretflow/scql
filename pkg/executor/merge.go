@@ -41,7 +41,7 @@ func mergeStringTensorsToFirstTensor(tensors []*proto.Tensor) error {
 		if t.ElemType != proto.PrimitiveDataType_STRING {
 			return fmt.Errorf("mergeStringTensors: invaild tensor element type %v", t.ElemType)
 		}
-		stringsList = append(stringsList, t.GetSs().GetSs())
+		stringsList = append(stringsList, t.GetStringData())
 	}
 
 	// check shapes
@@ -55,7 +55,7 @@ func mergeStringTensorsToFirstTensor(tensors []*proto.Tensor) error {
 	for _, ss := range stringsList {
 		for i, s := range ss {
 			if s != constant.StringElementPlaceHolder {
-				tensors[0].GetSs().GetSs()[i] = s
+				tensors[0].GetStringData()[i] = s
 			}
 		}
 	}

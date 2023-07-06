@@ -80,7 +80,8 @@ TEST_F(RunSQLTest, normal) {
   node_builder.AddStringsAttr(RunSQL::kTableRefsAttr, table_refs);
   auto out0 = test::MakeTensorReference(out_name, pb::PrimitiveDataType::STRING,
                                         pb::TensorStatus::TENSORSTATUS_PRIVATE);
-  auto out1 = test::MakeTensorReference(out_age, pb::PrimitiveDataType::INT64,
+  // test type cast: INT64 -> INT32
+  auto out1 = test::MakeTensorReference(out_age, pb::PrimitiveDataType::INT32,
                                         pb::TensorStatus::TENSORSTATUS_PRIVATE);
   node_builder.AddOutput(RunSQL::kOut, {out0, out1});
   auto node = node_builder.Build();
@@ -101,7 +102,7 @@ TEST_F(RunSQLTest, normal) {
 
   out_tensor = ctx.GetTensorTable()->GetTensor(out_age);
   ASSERT_NE(nullptr, out_tensor);
-  EXPECT_EQ(out_tensor->Type(), pb::PrimitiveDataType::INT64);
+  EXPECT_EQ(out_tensor->Type(), pb::PrimitiveDataType::INT32);
   EXPECT_EQ(out_tensor->Length(), 4);
   EXPECT_EQ(out_tensor->GetNullCount(), 2);
 }

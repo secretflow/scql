@@ -97,7 +97,7 @@ void Not::ExecuteInSecret(ExecContext* ctx) {
   const auto& input_pbs = ctx->GetInput(kIn);
   const auto& output_pbs = ctx->GetOutput(kOut);
 
-  auto hctx = ctx->GetSession()->GetSpuHalContext();
+  auto sctx = ctx->GetSession()->GetSpuContext();
   auto symbols = ctx->GetSession()->GetDeviceSymbols();
   for (int i = 0; i < input_pbs.size(); ++i) {
     const auto input_pb = input_pbs[i];
@@ -106,7 +106,7 @@ void Not::ExecuteInSecret(ExecContext* ctx) {
     auto in_val =
         symbols->getVar(util::SpuVarNameEncoder::GetValueName(input_pb.name()));
 
-    auto out_val = spu::kernel::hlo::Not(hctx, in_val);
+    auto out_val = spu::kernel::hlo::Not(sctx, in_val);
 
     symbols->setVar(util::SpuVarNameEncoder::GetValueName(output_pb.name()),
                     out_val);
@@ -141,10 +141,10 @@ void LogicalBase::ValidateIoDataTypes(ExecContext* ctx) {
 const std::string LogicalAnd::kOpType("LogicalAnd");
 const std::string& LogicalAnd::Type() const { return kOpType; }
 
-spu::Value LogicalAnd::ComputeOnSpu(spu::HalContext* hctx,
+spu::Value LogicalAnd::ComputeOnSpu(spu::SPUContext* sctx,
                                     const spu::Value& lhs,
                                     const spu::Value& rhs) {
-  return spu::kernel::hlo::And(hctx, lhs, rhs);
+  return spu::kernel::hlo::And(sctx, lhs, rhs);
 }
 
 TensorPtr LogicalAnd::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
@@ -163,9 +163,9 @@ TensorPtr LogicalAnd::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
 const std::string LogicalOr::kOpType("LogicalOr");
 const std::string& LogicalOr::Type() const { return kOpType; }
 
-spu::Value LogicalOr::ComputeOnSpu(spu::HalContext* hctx, const spu::Value& lhs,
+spu::Value LogicalOr::ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
                                    const spu::Value& rhs) {
-  return spu::kernel::hlo::Or(hctx, lhs, rhs);
+  return spu::kernel::hlo::Or(sctx, lhs, rhs);
 }
 
 TensorPtr LogicalOr::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {

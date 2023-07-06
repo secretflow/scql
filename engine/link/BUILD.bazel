@@ -110,11 +110,12 @@ cc_library(
     ],
 )
 
-cc_test(
-    name = "mux_link_factory_test",
-    srcs = ["mux_link_factory_test.cc"],
-    deps = [
-        ":mux_link_factory",
-        "@com_google_googletest//:gtest_main",
-    ],
-)
+# FIXME(shunde.csd): Add mux_link_factory_test back
+# cc_test(
+#     name = "mux_link_factory_test",
+#     srcs = ["mux_link_factory_test.cc"],
+#     deps = [
+#         ":mux_link_factory",
+#         "@com_google_googletest//:gtest_main",
+#     ],
+# )

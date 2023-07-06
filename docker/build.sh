@@ -14,10 +14,41 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-set -eux
+
+set -eu
 
 SCQL_IMAGE=scql
 IMAGE_TAG=latest
+ENABLE_CACHE=false
+
+usage() {
+  echo "Usage: $0 [-n Name] [-t Tag] [-c]"
+  echo ""
+  echo "Options:"
+  echo "  -n name, image name, default is \"scql\""
+  echo "  -t tag, image tag, default is \"latest\""
+  echo "  -c, enable host disk bazel cache to speedup build process"
+}
+
+while getopts "n:t:c" options; do
+  case "${options}" in
+  n)
+    SCQL_IMAGE=${OPTARG}
+    ;;
+  t)
+    IMAGE_TAG=${OPTARG}
+    ;;
+  c)
+    ENABLE_CACHE=true
+    ;;
+  *)
+    usage
+    exit 1
+    ;;
+  esac
+done
+
+set -x
 
 # get work dir
 SCRIPT_DIR=$(
@@ -30,34 +61,37 @@ WORK_DIR=$(
   pwd
 )
 
-if [[ $# -eq 2 ]]; then
-  SCQL_IMAGE=$1
-  IMAGE_TAG=$2
-elif [[ $# -eq 1 ]]; then
-  IMAGE_TAG=$1
-fi
 echo "build image $SCQL_IMAGE:$IMAGE_TAG"
 
-# prepare temporary path $TMP_PATH for file copies
-TMP_PATH=$WORK_DIR/.buildtmp/$IMAGE_TAG
-echo "copy files to dir: $TMP_PATH"
-rm -rf $TMP_PATH
-mkdir -p $TMP_PATH
-trap "rm -rf $TMP_PATH" EXIT
+MOUNT_OPTIONS=""
+if $ENABLE_CACHE; then
+  MOUNT_OPTIONS="--mount type=volume,source=scql-rel-build-cache,target=/root/.cache"
+fi
 
 container_id=$(docker run -it --rm --detach \
-  --mount type=bind,source="${WORK_DIR}",target=/home/admin/dev/ \
-  -w /home/admin/dev \
+  -w /home/admin/dev ${MOUNT_OPTIONS} \
   secretflow/release-ci:latest)
 
 trap "docker stop ${container_id}" EXIT
 
+# copy code to docker container
+dirs=("pkg" "engine" "api" "bazel" "cmd" ".bazelrc" ".bazelversion" "BUILD.bazel" "go.mod" "go.sum" "Makefile" "WORKSPACE")
+for dir in ${dirs[@]}; do
+  docker cp ${WORK_DIR}/${dir} ${container_id}:/home/admin/dev
+done
+
 # build engine binary
 docker exec -it ${container_id} bash -c "cd /home/admin/dev && bazel build //engine/exe:scqlengine -c opt"
-docker cp ${container_id}:/home/admin/dev/bazel-bin/engine/exe/scqlengine $TMP_PATH
-
 # build scdbserver + scdbclient binary
 docker exec -it ${container_id} bash -c "cd /home/admin/dev && make"
+
+# prepare temporary path $TMP_PATH for file copies
+TMP_PATH=$WORK_DIR/.buildtmp/$IMAGE_TAG
+rm -rf $TMP_PATH
+mkdir -p $TMP_PATH
+echo "copy files to dir: $TMP_PATH"
+
+docker cp ${container_id}:/home/admin/dev/bazel-bin/engine/exe/scqlengine $TMP_PATH
 docker cp ${container_id}:/home/admin/dev/bin/scdbserver $TMP_PATH
 docker cp ${container_id}:/home/admin/dev/bin/scdbclient $TMP_PATH
 
@@ -69,3 +103,6 @@ cd $TMP_PATH
 echo "start to build scql image in $(pwd)"
 
 docker build -f scql.Dockerfile -t $SCQL_IMAGE:$IMAGE_TAG .
+
+# cleanup
+rm -rf ${TMP_PATH}

@@ -15,6 +15,9 @@
 package translator
 
 import (
+	"flag"
+	"fmt"
+	"os"
 	"testing"
 
 	. "github.com/pingcap/check"
@@ -26,6 +29,12 @@ import (
 )
 
 var _ = Suite(&testTranslatorSuite{})
+
+var recordTestOutput bool
+
+func init() {
+	flag.BoolVar(&recordTestOutput, "recordTestOutput", false, "used for output dot for translator test and ignore dot check")
+}
 
 func TestT(t *testing.T) {
 	CustomVerboseFlag = true
@@ -41,6 +50,8 @@ type testTranslatorSuite struct {
 	engineInfo *EnginesInfo
 
 	issuerParty string
+
+	recordFile *os.File
 }
 
 func (s *testTranslatorSuite) SetUpSuite(c *C) {
@@ -55,6 +66,19 @@ func (s *testTranslatorSuite) SetUpSuite(c *C) {
 	c.Assert(err, IsNil)
 
 	s.issuerParty = "alice"
+
+	if recordTestOutput {
+		var err error
+		s.recordFile, err = os.CreateTemp("", "recordFile_*.txt")
+		c.Assert(err, IsNil)
+		fmt.Println("record file: ", s.recordFile.Name())
+	}
+}
+
+func (s *testTranslatorSuite) TearDownSuite(c *C) {
+	if recordTestOutput {
+		s.recordFile.Close()
+	}
 }
 
 type sPair struct {

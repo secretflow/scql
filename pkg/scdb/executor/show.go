@@ -248,10 +248,23 @@ func (e *ShowExec) getDatabaseGrants(db *gorm.DB, userName string, dbName string
 			return nil, result.Error
 		}
 		for _, tp := range tablePrivs {
+			var privs []string
+			if tp.CreatePriv {
+				privs = append(privs, "CREATE")
+			}
+			if tp.GrantPriv {
+				privs = append(privs, "GRANT")
+			}
+			if tp.DropPriv {
+				privs = append(privs, "DROP")
+			}
 			if tp.VisibilityPriv != 0 {
+				privs = append(privs, mysql.Priv2Str[tp.VisibilityPriv])
+			}
+			if len(privs) > 0 {
 				grants = append(grants,
 					fmt.Sprintf("GRANT %s ON %s.%s TO %s",
-						mysql.Priv2Str[tp.VisibilityPriv], tp.Db, tp.TableName, userName))
+						strings.Join(privs, ", "), tp.Db, tp.TableName, userName))
 			}
 		}
 	}

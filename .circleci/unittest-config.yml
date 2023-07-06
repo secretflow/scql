@@ -28,7 +28,7 @@ jobs:
     # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
     # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
     docker:
-      - image: registry.hub.docker.com/secretflow/scql-ci:0.5
+      - image: registry.hub.docker.com/secretflow/scql-ci:0.6
     resource_class: 2xlarge
     # Add steps to the job
     # See: https://circleci.com/docs/2.0/configuration-reference/#steps
@@ -49,7 +49,7 @@ jobs:
             go test -timeout=30m -v  ./...
   linux_engine_ut:
     docker:
-      - image: registry.hub.docker.com/secretflow/scql-ci:0.5
+      - image: registry.hub.docker.com/secretflow/scql-ci:0.6
     resource_class: 2xlarge
     # Add steps to the job
     # See: https://circleci.com/docs/2.0/configuration-reference/#steps

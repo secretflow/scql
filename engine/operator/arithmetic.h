@@ -31,7 +31,7 @@ class Add : public ArithmeticBase {
   const std::string& Type() const override;
 
  protected:
-  spu::Value ComputeOnSpu(spu::HalContext* hctx, const spu::Value& lhs,
+  spu::Value ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
                           const spu::Value& rhs) override;
 
   TensorPtr ComputeInPlain(const Tensor& lhs, const Tensor& rhs) override;
@@ -44,7 +44,7 @@ class Minus : public ArithmeticBase {
   const std::string& Type() const override;
 
  protected:
-  spu::Value ComputeOnSpu(spu::HalContext* hctx, const spu::Value& lhs,
+  spu::Value ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
                           const spu::Value& rhs) override;
 
   TensorPtr ComputeInPlain(const Tensor& lhs, const Tensor& rhs) override;
@@ -57,7 +57,7 @@ class Mul : public ArithmeticBase {
   const std::string& Type() const override;
 
  protected:
-  spu::Value ComputeOnSpu(spu::HalContext* hctx, const spu::Value& lhs,
+  spu::Value ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
                           const spu::Value& rhs) override;
 
   TensorPtr ComputeInPlain(const Tensor& lhs, const Tensor& rhs) override;
@@ -70,7 +70,7 @@ class Div : public ArithmeticBase {
   const std::string& Type() const override;
 
  protected:
-  spu::Value ComputeOnSpu(spu::HalContext* hctx, const spu::Value& lhs,
+  spu::Value ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
                           const spu::Value& rhs) override;
 
   TensorPtr ComputeInPlain(const Tensor& lhs, const Tensor& rhs) override;
@@ -83,7 +83,7 @@ class IntDiv : public ArithmeticBase {
   const std::string& Type() const override;
 
  protected:
-  spu::Value ComputeOnSpu(spu::HalContext* hctx, const spu::Value& lhs,
+  spu::Value ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
                           const spu::Value& rhs) override;
 
   TensorPtr ComputeInPlain(const Tensor& lhs, const Tensor& rhs) override;
@@ -96,7 +96,7 @@ class Mod : public ArithmeticBase {
   const std::string& Type() const override;
 
  protected:
-  spu::Value ComputeOnSpu(spu::HalContext* hctx, const spu::Value& lhs,
+  spu::Value ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
                           const spu::Value& rhs) override;
 
   TensorPtr ComputeInPlain(const Tensor& lhs, const Tensor& rhs) override;

@@ -28,6 +28,8 @@ cc_library(
         ":dump_file",
         ":filter",
         ":filter_by_index",
+        ":group",
+        ":group_agg",
         ":in",
         ":join",
         ":logical",
@@ -60,7 +62,10 @@ cc_library(
     name = "run_sql",
     srcs = ["run_sql.cc"],
     hdrs = ["run_sql.h"],
-    deps = ["//engine/framework:operator"],
+    deps = [
+        "//engine/audit:audit_log",
+        "//engine/framework:operator",
+    ],
 )
 
 cc_test(
@@ -84,6 +89,7 @@ cc_library(
     srcs = ["join.cc"],
     hdrs = ["join.h"],
     deps = [
+        "//engine/audit:audit_log",
         "//engine/framework:operator",
         "//engine/util:psi_helper",
         "@spulib//libspu/psi/core:ecdh_psi",
@@ -114,6 +120,8 @@ cc_library(
         "//engine/framework:session",
         "//engine/util:spu_io",
         "//engine/util:tensor_util",
+        "@com_google_googletest//:gtest",
+        "@spulib//libspu/core:config",
     ],
 )
 
@@ -165,6 +173,7 @@ cc_library(
     srcs = ["publish.cc"],
     hdrs = ["publish.h"],
     deps = [
+        "//engine/audit:audit_log",
         "//engine/framework:operator",
         "//engine/util:spu_io",
     ],
@@ -229,6 +238,7 @@ cc_library(
     srcs = ["make_private.cc"],
     hdrs = ["make_private.h"],
     deps = [
+        "//engine/core:string_tensor_builder",
         "//engine/framework:operator",
         "//engine/util:spu_io",
         "//engine/util:tensor_util",
@@ -363,6 +373,7 @@ cc_library(
     srcs = ["in.cc"],
     hdrs = ["in.h"],
     deps = [
+        "//engine/audit:audit_log",
         "//engine/framework:operator",
         "//engine/util:psi_helper",
         "@spulib//libspu/psi/core:ecdh_psi",
@@ -410,7 +421,9 @@ cc_library(
     srcs = ["dump_file.cc"],
     hdrs = ["dump_file.h"],
     deps = [
+        "//engine/audit:audit_log",
         "//engine/framework:operator",
+        "//engine/util:filepath_helper",
         "//engine/util:tensor_util",
     ],
 )
@@ -633,6 +646,52 @@ cc_test(
     srcs = ["concat_test.cc"],
     deps = [
         ":concat",
+        ":test_util",
+        "//engine/core:tensor_from_json",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "group",
+    srcs = ["group.cc"],
+    hdrs = ["group.h"],
+    deps = [
+        "//engine/core:primitive_builder",
+        "//engine/framework:operator",
+        "//engine/util:spu_io",
+        "//engine/util:tensor_util",
+    ],
+)
+
+cc_test(
+    name = "group_test",
+    srcs = ["group_test.cc"],
+    deps = [
+        ":group",
+        ":test_util",
+        "//engine/core:tensor_from_json",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "group_agg",
+    srcs = ["group_agg.cc"],
+    hdrs = ["group_agg.h"],
+    deps = [
+        "//engine/framework:operator",
+        "//engine/util:spu_io",
+        "//engine/util:tensor_util",
+    ],
+)
+
+cc_test(
+    name = "group_agg_test",
+    srcs = ["group_agg_test.cc"],
+    deps = [
+        ":all_ops_register",
+        ":group_agg",
         ":test_util",
         "//engine/core:tensor_from_json",
         "@com_google_googletest//:gtest_main",

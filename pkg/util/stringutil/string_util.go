@@ -16,6 +16,7 @@ package stringutil
 import (
 	"bytes"
 	"fmt"
+	"regexp"
 	"strings"
 	"unicode/utf8"
 
@@ -310,4 +311,12 @@ type StringerStr string
 // String implements fmt.Stringer
 func (i StringerStr) String() string {
 	return string(i)
+}
+
+func RemoveSensitiveInfo(sqlStr string) string {
+	exp := regexp.MustCompile(`(?i)\s+IDENTIFIED\s+`)
+	if match := exp.FindStringIndex(sqlStr); match != nil {
+		return sqlStr[:match[1]] + "***"
+	}
+	return sqlStr
 }

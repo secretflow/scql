@@ -31,7 +31,7 @@ struct ObliviousGroupAggTestCase {
 
 class ObliviousGroupAggTest
     : public testing::TestWithParam<
-          std::tuple<spu::ProtocolKind, ObliviousGroupAggTestCase>> {
+          std::tuple<test::SpuRuntimeTestCase, ObliviousGroupAggTestCase>> {
  protected:
   void SetUp() override { RegisterAllOps(); }
 
@@ -43,40 +43,30 @@ TEST_P(ObliviousGroupAggTest, works) {
   auto parm = GetParam();
   auto tc = std::get<1>(parm);
   auto node = MakeExecNode(tc);
-  std::vector<Session> sessions = test::Make2PCSession(std::get<0>(parm));
+  std::vector<Session> sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
-  ExecContext alice_ctx(node, &sessions[0]);
-  ExecContext bob_ctx(node, &sessions[1]);
+  std::vector<ExecContext> exec_ctxs;
+  for (size_t idx = 0; idx < sessions.size(); ++idx) {
+    exec_ctxs.emplace_back(node, &sessions[idx]);
+  }
 
   // feed inputs
-  test::FeedInputsAsSecret({&alice_ctx, &bob_ctx}, tc.inputs);
-  test::FeedInputsAsSecret({&alice_ctx, &bob_ctx}, {tc.group});
+  std::vector<ExecContext*> ctx_ptrs;
+  for (size_t idx = 0; idx < exec_ctxs.size(); ++idx) {
+    ctx_ptrs.emplace_back(&exec_ctxs[idx]);
+  }
+  test::FeedInputsAsSecret(ctx_ptrs, tc.inputs);
+  test::FeedInputsAsSecret(ctx_ptrs, {tc.group});
 
   // When
-  auto create_op = [](const std::string& op_type) {
-    return GetOpRegistry()->GetOperator(op_type);
-  };
-  auto alice_op = create_op(node.op_type());
-  auto bob_op = create_op(node.op_type());
-  ASSERT_TRUE(alice_op != nullptr)
-      << "failed to create operator for op_type = " << node.op_type();
-  ASSERT_TRUE(bob_op != nullptr);
+  EXPECT_NO_THROW(test::RunOpAsync(ctx_ptrs, [&]() {
+    return GetOpRegistry()->GetOperator(node.op_type());
+  }));
 
-  test::OpAsyncRunner alice(alice_op.get());
-  test::OpAsyncRunner bob(bob_op.get());
-
-  alice.Start(&alice_ctx);
-  bob.Start(&bob_ctx);
-
-  // Then
-  EXPECT_NO_THROW({ alice.Wait(); });
-  EXPECT_NO_THROW({ bob.Wait(); });
   for (size_t i = 0; i < tc.inputs.size(); ++i) {
     TensorPtr actual_output = nullptr;
-    EXPECT_NO_THROW({
-      actual_output =
-          test::RevealSecret({&alice_ctx, &bob_ctx}, tc.outputs[i].name);
-    });
+    EXPECT_NO_THROW(
+        { actual_output = test::RevealSecret(ctx_ptrs, tc.outputs[i].name); });
     ASSERT_TRUE(actual_output != nullptr);
     auto actual_arr = actual_output->ToArrowChunkedArray();
     auto expect_arr = tc.outputs[i].tensor->ToArrowChunkedArray();
@@ -127,7 +117,10 @@ pb::ExecNode ObliviousGroupAggTest::MakeExecNode(
 INSTANTIATE_TEST_SUITE_P(
     ObliviousGroupSumTest, ObliviousGroupAggTest,
     testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        testing::Values(test::SpuRuntimeTestCase{spu::ProtocolKind::CHEETAH, 2},
+                        test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 2},
+                        test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 3},
+                        test::SpuRuntimeTestCase{spu::ProtocolKind::ABY3, 3}),
         testing::Values(
             ObliviousGroupAggTestCase{
                 .op_type = ObliviousGroupSum::kOpType,
@@ -184,7 +177,7 @@ INSTANTIATE_TEST_SUITE_P(
 INSTANTIATE_TEST_SUITE_P(
     ObliviousGroupCountTest, ObliviousGroupAggTest,
     testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             ObliviousGroupAggTestCase{
                 .op_type = ObliviousGroupCount::kOpType,
@@ -222,7 +215,7 @@ INSTANTIATE_TEST_SUITE_P(
 INSTANTIATE_TEST_SUITE_P(
     ObliviousGroupAvgTest, ObliviousGroupAggTest,
     testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             ObliviousGroupAggTestCase{
                 .op_type = ObliviousGroupAvg::kOpType,
@@ -233,7 +226,7 @@ INSTANTIATE_TEST_SUITE_P(
                                                           "[1, 0, 0, 1, 1]")),
                 .outputs = {test::NamedTensor(
                     "out",
-                    TensorFromJSON(arrow::float32(), "[1, 2, 2.5, 3, 5]"))}},
+                    TensorFromJSON(arrow::float64(), "[1, 2, 2.5, 3, 5]"))}},
             ObliviousGroupAggTestCase{
                 .op_type = ObliviousGroupAvg::kOpType,
                 .inputs = {test::NamedTensor(
@@ -244,7 +237,7 @@ INSTANTIATE_TEST_SUITE_P(
                                                           "[1, 0, 0, 1, 1]")),
                 .outputs = {test::NamedTensor(
                     "out",
-                    TensorFromJSON(arrow::float32(),
+                    TensorFromJSON(arrow::float64(),
                                    "[-3.14, 1.3, 5.65, 37.1, 314.08]"))}},
             ObliviousGroupAggTestCase{
                 .op_type = ObliviousGroupAvg::kOpType,
@@ -253,7 +246,7 @@ INSTANTIATE_TEST_SUITE_P(
                 .group = test::NamedTensor(
                     "group", TensorFromJSON(arrow::boolean(), "[]")),
                 .outputs = {test::NamedTensor(
-                    "out", TensorFromJSON(arrow::float32(), "[]"))}})),
+                    "out", TensorFromJSON(arrow::float64(), "[]"))}})),
     TestParamNameGenerator(ObliviousGroupAggTest));
 
 // =====================
@@ -263,7 +256,7 @@ INSTANTIATE_TEST_SUITE_P(
 INSTANTIATE_TEST_SUITE_P(
     ObliviousGroupMaxTest, ObliviousGroupAggTest,
     testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             ObliviousGroupAggTestCase{
                 .op_type = ObliviousGroupMax::kOpType,
@@ -302,7 +295,7 @@ INSTANTIATE_TEST_SUITE_P(
 INSTANTIATE_TEST_SUITE_P(
     ObliviousGroupMinTest, ObliviousGroupAggTest,
     testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             ObliviousGroupAggTestCase{
                 .op_type = ObliviousGroupMin::kOpType,

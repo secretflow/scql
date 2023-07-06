@@ -19,26 +19,6 @@ package scql.pb;
 
 option go_package = "proto-gen/scql";
 
-message strings {
-  repeated string ss = 1;
-}
-
-message booleans {
-  repeated bool bs = 1;
-}
-
-message floats {
-  repeated float fs = 1;
-}
-
-message int32s {
-  repeated int32 is = 1;
-}
-
-message int64s {
-  repeated int64 i64s = 1;
-}
-
 // Defines a tensor shape. A dimension can be either an integer value
 // or a symbolic variable. A symbolic variable represents an unknown
 // dimension.
@@ -55,34 +35,20 @@ message TensorShape {
 enum PrimitiveDataType {
   PrimitiveDataType_UNDEFINED = 0;
 
-  // Basic types.
-  FLOAT = 1;   // float
-  UINT8 = 2;   // uint8_t
-  INT8 = 3;    // int8_t
-  UINT16 = 4;  // uint16_t
-  INT16 = 5;   // int16_t
-  INT32 = 6;   // int32_t
-  INT64 = 7;   // int64_t
-  STRING = 8;  // string
-  BOOL = 9;    // bool
+  // Numeric types
+  INT8 = 1; // the 8-bit signed integer type
+  INT16 = 2; // the 16-bit signed integer type
+  INT32 = 3; // the 32-bit signed integer type
+  INT64 = 4; // the 64-bit signed integer type
+  FLOAT32 = 5; // the 32-bit binary floating point type
+  FLOAT64 = 6; // the 64-bit binary floating point type
 
-  // IEEE754 half-precision floating-point format (16 bits wide).
-  // This format has 1 sign bit, 5 exponent bits, and 10 mantissa bits.
-  FLOAT16 = 10;
-
-  DOUBLE = 11;
-  UINT32 = 12;
-  UINT64 = 13;
-  COMPLEX64 = 14;   // complex with float32 real and imaginary components
-  COMPLEX128 = 15;  // complex with float64 real and imaginary components
-
-  // Non-IEEE floating-point format based on IEEE754 single-precision
-  // floating-point number truncated to 16 bits.
-  // This format has 1 sign bit, 8 exponent bits, and 7 mantissa bits.
-  BFLOAT16 = 16;
+  // Other types
+  BOOL = 7;
+  STRING = 8;
   // DATETIME and TIMESTAMP
-  DATETIME = 17;   // https://dev.mysql.com/doc/refman/8.0/en/datetime.html
-  TIMESTAMP = 18;  // seconds since '1970-01-01 00:00:00' UTC
+  DATETIME = 9;   // https://dev.mysql.com/doc/refman/8.0/en/datetime.html
+  TIMESTAMP = 10;  // seconds since '1970-01-01 00:00:00' UTC
 }
 
 // Tensor options.
@@ -135,17 +101,20 @@ message Tensor {
   // It MUST be there if the <option> is "Reference"
   TensorAnnotation annotation = 5;
 
-  // Tensor value if the <option> is "Value". It may be floats, integers, bools
-  // or strings.
-  oneof value {
-    strings ss = 6;
-    booleans bs = 7;
-    floats fs = 8;
-    int32s is = 9;
-    int64s i64s = 10;
+  // tensor content
 
-    // More types may be added as needed.
-  }
+  // For int8, int16, int32 data types
+  repeated int32 int32_data = 6 [packed = true];
+  // For int64 and timestamp data types
+  repeated int64 int64_data = 7 [packed = true];
+  // For float32 data type
+  repeated float float_data = 8 [packed = true];
+  // For float64 data type
+  repeated double double_data = 9 [packed = true];
+  // For bool data type
+  repeated bool bool_data = 10 [packed = true];
+  // For string and datetime data types
+  repeated string string_data = 11;
 }
 
 // Attribute value, it may be a tensor.

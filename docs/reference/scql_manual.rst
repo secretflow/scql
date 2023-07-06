@@ -30,17 +30,18 @@ SCQL Statements
 
 SCQL is compatible with most MySQL syntax, which makes it easy to use. For syntax differences between SCQL and MySQL, please read :doc:`mysql_compatibility`.
 
-CREATE/DROP USER Statement
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. _create_user_stm:
+
+CREATE/DROP/ALTER USER Statement
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: SQL
 
-    CREATE USER [IF NOT EXISTS] user party_code_option IDENTIFIED BY 'auth_string'
+    CREATE USER [IF NOT EXISTS] user PARTY_CODE party_code IDENTIFIED BY 'auth_string'
 
-    party_code_option:
-        PARTY_CODE party_code
-    
     DROP USER [IF EXISTS] user
+
+    ALTER USER [IF EXISTS] user IDENTIFIED BY 'new_auth_string'
 
 
 Examples:
@@ -55,6 +56,10 @@ Examples:
     -- drop user alice
     DROP USER alice;
 
+    -- change user alice password
+    ALTER USER alice IDENTIFIED BY "new_password";
+
+.. _create_database_stm:
 
 CREATE/DROP DATABASE Statement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -41,7 +41,7 @@ void MakeShare::Validate(ExecContext* ctx) {
 }
 
 void MakeShare::Execute(ExecContext* ctx) {
-  spu::device::ColocatedIo cio(ctx->GetSession()->GetSpuHalContext());
+  spu::device::ColocatedIo cio(ctx->GetSession()->GetSpuContext());
   util::SpuInfeedHelper infeed_helper(&cio);
 
   const auto& input_pbs = ctx->GetInput(kIn);

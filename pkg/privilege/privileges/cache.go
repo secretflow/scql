@@ -144,6 +144,10 @@ func (p *SCDBPrivilege) RequestVerification(activeRoles []*auth.RoleIdentity, us
 		return true, nil
 	}
 
+	if db == "" {
+		return false, nil
+	}
+
 	var dbPriv mysql.PrivilegeType
 	for _, r := range roleList {
 		dbRecord, err := p.matchDb(r.Username, r.Hostname, db)
@@ -157,6 +161,10 @@ func (p *SCDBPrivilege) RequestVerification(activeRoles []*auth.RoleIdentity, us
 	}
 	if dbPriv&priv > 0 {
 		return true, nil
+	}
+
+	if table == "" {
+		return false, nil
 	}
 
 	var tablePriv mysql.PrivilegeType
@@ -176,8 +184,10 @@ func (p *SCDBPrivilege) RequestVerification(activeRoles []*auth.RoleIdentity, us
 
 	// NOTICE(shunde.csd): we do not check the column visibility privileges here
 	// it will be checked in scql-interpreter or related executor
-
-	return priv == 0, nil
+	if priv == 0 {
+		return true, nil
+	}
+	return false, fmt.Errorf("user %v need privilege %v to do this operation", user, mysql.Priv2UserCol[priv])
 }
 
 // DBIsVisible checks whether the user can see the db for privilege `priv`
@@ -200,6 +210,9 @@ func (p *SCDBPrivilege) DBIsVisible(user, host, db string, priv mysql.PrivilegeT
 	}
 
 	// 2. check database
+	if db == "" {
+		return false, nil
+	}
 	dbRecord, err := p.matchDb(user, host, db)
 	if err != nil {
 		return false, errors.Wrap(err, "SCDBPrivilege.DBIsVisible error")

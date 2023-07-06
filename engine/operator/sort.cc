@@ -81,34 +81,34 @@ void Sort::SortInSecret(ExecContext* ctx) {
     inputs.push_back(value);
   }
 
-  auto hctx = ctx->GetSession()->GetSpuHalContext();
-  auto scalar_cmp = [reverse](spu::HalContext* hctx, const spu::Value& lhs,
+  auto sctx = ctx->GetSession()->GetSpuContext();
+  auto scalar_cmp = [reverse](spu::SPUContext* sctx, const spu::Value& lhs,
                               const spu::Value& rhs) {
     if (reverse) {
-      return spu::kernel::hlo::Greater(hctx, lhs, rhs);
+      return spu::kernel::hlo::Greater(sctx, lhs, rhs);
     }
-    return spu::kernel::hlo::Less(hctx, lhs, rhs);
+    return spu::kernel::hlo::Less(sctx, lhs, rhs);
   };
 
   spu::kernel::hlo::CompFn comp_fn =
-      [hctx, sort_key_num,
+      [sctx, sort_key_num,
        &scalar_cmp](absl::Span<const spu::Value> values) -> spu::Value {
     spu::Value pre_equal =
-        spu::kernel::hlo::Constant(hctx, true, values[0].shape());
-    spu::Value result = scalar_cmp(hctx, values[0], values[1]);
+        spu::kernel::hlo::Constant(sctx, true, values[0].shape());
+    spu::Value result = scalar_cmp(sctx, values[0], values[1]);
     for (size_t idx = 2; idx < sort_key_num * 2; idx += 2) {
       pre_equal = spu::kernel::hlo::And(
-          hctx, pre_equal,
-          spu::kernel::hlo::Equal(hctx, values[idx - 2], values[idx - 1]));
-      auto current = scalar_cmp(hctx, values[idx], values[idx + 1]);
-      current = spu::kernel::hlo::And(hctx, pre_equal, current);
-      result = spu::kernel::hlo::Or(hctx, result, current);
+          sctx, pre_equal,
+          spu::kernel::hlo::Equal(sctx, values[idx - 2], values[idx - 1]));
+      auto current = scalar_cmp(sctx, values[idx], values[idx + 1]);
+      current = spu::kernel::hlo::And(sctx, pre_equal, current);
+      result = spu::kernel::hlo::Or(sctx, result, current);
     }
     return result;
   };
   // NOTE: spu doesn't support stable sort when sorting secret value
   auto results =
-      spu::kernel::hlo::Sort(hctx, inputs, 0, false, comp_fn, spu::VIS_SECRET);
+      spu::kernel::hlo::Sort(sctx, inputs, 0, false, comp_fn, spu::VIS_SECRET);
 
   for (int i = 0; i < out_pbs.size(); ++i) {
     auto idx = sort_key_num + i;

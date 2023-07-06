@@ -30,7 +30,7 @@ struct ShuffleTestCase {
 };
 
 class ShuffleTest : public testing::TestWithParam<
-                        std::tuple<spu::ProtocolKind, ShuffleTestCase>> {
+                        std::tuple<test::SpuRuntimeTestCase, ShuffleTestCase>> {
  protected:
   static pb::ExecNode MakeExecNode(const ShuffleTestCase& tc);
 
@@ -41,7 +41,7 @@ class ShuffleTest : public testing::TestWithParam<
 INSTANTIATE_TEST_SUITE_P(
     ShuffleBatchTest, ShuffleTest,
     testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             ShuffleTestCase{
                 .inputs = {test::NamedTensor("x1",
@@ -68,27 +68,26 @@ TEST_P(ShuffleTest, Works) {
 
   auto node = MakeExecNode(tc);
 
-  std::vector<Session> sessions = test::Make2PCSession(std::get<0>(parm));
+  std::vector<Session> sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
-  ExecContext alice_ctx(node, &sessions[0]);
-  ExecContext bob_ctx(node, &sessions[1]);
+  std::vector<ExecContext> exec_ctxs;
+  for (size_t idx = 0; idx < sessions.size(); ++idx) {
+    exec_ctxs.emplace_back(node, &sessions[idx]);
+  }
 
-  FeedInputs({&alice_ctx, &bob_ctx}, tc);
+  // feed inputs
+  std::vector<ExecContext*> ctx_ptrs;
+  for (size_t idx = 0; idx < exec_ctxs.size(); ++idx) {
+    ctx_ptrs.emplace_back(&exec_ctxs[idx]);
+  }
+  FeedInputs(ctx_ptrs, tc);
 
-  test::OperatorTestRunner<Shuffle> alice;
-  test::OperatorTestRunner<Shuffle> bob;
-
-  alice.Start(&alice_ctx);
-  bob.Start(&bob_ctx);
-
-  // Then
-  EXPECT_NO_THROW({ alice.Wait(); });
-  EXPECT_NO_THROW({ bob.Wait(); });
+  EXPECT_NO_THROW(test::RunAsync<Shuffle>(ctx_ptrs));
 
   std::vector<TensorPtr> outs;
   EXPECT_NO_THROW({
     for (const auto& val_name : tc.output_names) {
-      auto t = test::RevealSecret({&alice_ctx, &bob_ctx}, val_name);
+      auto t = test::RevealSecret(ctx_ptrs, val_name);
       ASSERT_TRUE(t != nullptr);
       EXPECT_EQ(t->Length(), tc.output_values.size());
       outs.push_back(t);

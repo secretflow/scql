@@ -20,3 +20,4 @@ For advanced users and contributors, we encourage you to investigate :ref:`/deve
     quickstart
     how_to_set_ccl
     deployment
+    how_to_use_scql

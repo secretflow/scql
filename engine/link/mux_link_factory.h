@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <atomic>
 #include <memory>
 
@@ -43,74 +44,36 @@ class MuxLinkFactory : public yacl::link::ILinkFactory {
   ListenerManager* listener_manager_;
 };
 
-class MuxLinkChannel : public yacl::link::ChannelBase,
-                       public std::enable_shared_from_this<MuxLinkChannel> {
+class MuxLinkChannel : public yacl::link::ChannelBase {
  public:
   MuxLinkChannel(size_t self_rank, size_t peer_rank,
-                 size_t http_max_payload_size, const std::string& link_id,
+                 size_t http_max_payload_size, std::string link_id,
                  std::shared_ptr<::google::protobuf::RpcChannel> channel)
-      : ChannelBase(self_rank, peer_rank),
+      : ChannelBase(self_rank, peer_rank, false),
         http_max_payload_size_(http_max_payload_size),
-        link_id_(link_id),
-        rpc_channel_(channel) {}
+        link_id_(std::move(link_id)),
+        rpc_channel_(std::move(channel)) {}
 
   MuxLinkChannel(size_t self_rank, size_t peer_rank, size_t recv_timeout_ms,
-                 size_t http_max_payload_size, const std::string& link_id,
+                 size_t http_max_payload_size, std::string link_id,
                  std::shared_ptr<::google::protobuf::RpcChannel> channel)
-      : ChannelBase(self_rank, peer_rank, recv_timeout_ms),
+      : ChannelBase(self_rank, peer_rank, recv_timeout_ms, false),
         http_max_payload_size_(http_max_payload_size),
-        link_id_(link_id),
-        rpc_channel_(channel) {}
-
- public:
-  // Note: temporarily keep the same realization with yacl/channel_brpc. need to
-  // reduce duplication of code.
-  void SendChunked(const std::string& key, yacl::ByteContainerView value);
-
-  void WaitAsyncSendToFinish() override {
-    std::unique_lock<std::mutex> lock(wait_async_mutex_);
-    wait_async_cv_.wait(lock, [&] { return running_async_count_ == 0; });
-  }
-
-  void AddAsyncCount() {
-    std::unique_lock<std::mutex> lock(wait_async_mutex_);
-    running_async_count_++;
-  }
-
-  void SubAsyncCount() {
-    std::unique_lock<std::mutex> lock(wait_async_mutex_);
-    YACL_ENFORCE(running_async_count_ > 0);
-    running_async_count_--;
-    if (running_async_count_ == 0) {
-      wait_async_cv_.notify_all();
-    }
-  }
+        link_id_(std::move(link_id)),
+        rpc_channel_(std::move(channel)) {}
 
  private:
-  // NOTE: If meet send failures, SendAsyncImpl will not throw errors, while
-  // SendImpl will throw errors.
-  void SendAsyncImpl(const std::string& key,
-                     yacl::ByteContainerView value) override {
-    SendAsyncInternal(key, value);
-  }
-
-  void SendAsyncImpl(const std::string& key, yacl::Buffer&& value) override {
-    SendAsyncInternal(key, std::move(value));
-  }
+  void SendChunked(const std::string& key, yacl::ByteContainerView value);
 
   void SendImpl(const std::string& key, yacl::ByteContainerView value) override;
 
-  template <class ValueType>
-  void SendAsyncInternal(const std::string& key, ValueType&& value);
+  void SendImpl(const std::string& key, yacl::ByteContainerView value,
+                uint32_t timeout_ms) override;
 
  private:
   size_t http_max_payload_size_;
   std::string link_id_;
   const std::shared_ptr<::google::protobuf::RpcChannel> rpc_channel_;
-  // for async send impl.
-  std::condition_variable wait_async_cv_;
-  std::mutex wait_async_mutex_;
-  int64_t running_async_count_ = 0;
 };
 
 }  // namespace scql::engine

@@ -29,12 +29,12 @@ option cc_generic_services = true;
 
 service SCQLEngineService {
   // Start session
-  rpc StartSession(StartSessionRequest) returns (StartSessionResponse);
+  rpc StartSession(StartSessionRequest) returns (Status);
   // Submit run-dag task and return, task result will be reported via callback
   // later.
-  rpc RunDag(RunDagRequest) returns (RunDagResponse);
+  rpc RunDag(RunDagRequest) returns (Status);
   // Stop session
-  rpc StopSession(StopSessionRequest) returns (StopSessionResponse);
+  rpc StopSession(StopSessionRequest) returns (Status);
   // Run the whole execution plan
   rpc RunExecutionPlan(RunExecutionPlanRequest)
       returns (RunExecutionPlanResponse);
@@ -50,10 +50,6 @@ message StartSessionRequest {
   SessionStartParams session_params = 1;
 }
 
-message StartSessionResponse {
-  Status status = 1;
-}
-
 message RunDagRequest {
   repeated ExecNode nodes = 1;
   string session_id = 2;
@@ -63,10 +59,6 @@ message RunDagRequest {
   string callback_host = 4;
   // Callback uri, e.g.: "/a/b".
   string callback_uri = 5;
-}
-
-message RunDagResponse {
-  Status status = 1;
 }
 
 message StopSessionRequest {
@@ -79,10 +71,6 @@ message StopSessionRequest {
   // - "Killed". Killed by client.
   // - or something else.
   string reason = 2;
-}
-
-message StopSessionResponse {
-  Status status = 1;
 }
 
 // A message carries all session-level (execution plan level) information.

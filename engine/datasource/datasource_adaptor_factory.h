@@ -16,7 +16,7 @@
 
 #include "engine/datasource/datasource_adaptor.h"
 
-#include "engine/datasource/datasource.pb.h"
+#include "api/datasource.pb.h"
 
 namespace scql::engine {
 

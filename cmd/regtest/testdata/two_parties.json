@@ -217,8 +217,13 @@
     },
     {
       "name": "arithmetic(divide) before join ",
-      "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_0 / bob.compare_long_0 > bob.compare_long_0 or alice.compare_long_0 /(bob.compare_float_0 * bob.compare_float_0 + 1) > bob.compare_long_0 or alice.compare_float_0 /(bob.compare_float_0 * bob.compare_float_0 + 1) > bob.compare_long_0;",
-      "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_0 / bob.compare_long_0 > bob.compare_long_0 or alice.compare_long_0 /(bob.compare_float_0 * bob.compare_float_0 + 1) > bob.compare_long_0 or alice.compare_float_0 /(bob.compare_float_0 * bob.compare_float_0 + 1) > bob.compare_long_0;"
+      "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_0 / (bob.compare_long_0 * bob.compare_long_0 + 1) > bob.compare_long_0 or alice.compare_long_0 /(bob.compare_float_0 * bob.compare_float_0 + 1) > bob.compare_long_0 or alice.compare_float_0 /(bob.compare_float_0 * bob.compare_float_0 + 1) > bob.compare_long_0;",
+      "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_0 / (bob.compare_long_0 * bob.compare_long_0 + 1) > bob.compare_long_0 or alice.compare_long_0 /(bob.compare_float_0 * bob.compare_float_0 + 1) > bob.compare_long_0 or alice.compare_float_0 /(bob.compare_float_0 * bob.compare_float_0 + 1) > bob.compare_long_0;"
+    },
+    {
+      "name": "arithmetic(intdiv) before join ",
+      "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_0 div (bob.compare_long_0 + 200) > bob.compare_long_0;",
+      "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_0 div (bob.compare_long_0 + 200) > bob.compare_long_0;"
     },
     {
       "name": "null before join",
@@ -321,6 +326,16 @@
       "mysql_query": "select ta.groupby_long_0, sum(ta.aggregate_float_0) as b, max(ta.aggregate_float_0 + ta.aggregate_float_0) as a, min(ta.aggregate_float_0) as d from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_long_0 having count(*) >= 4"
     },
     {
+      "name": "agg with group by(string)",
+      "query": "select ta.groupby_string_0, count(*) as c from scdb.alice_tbl_0 as ta join scdb.bob_tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_string_0",
+      "mysql_query": "select ta.groupby_string_0, count(*) as c from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_string_0 having count(*) >= 4"
+    },
+    {
+      "name": "agg with group by(string2)",
+      "query": "select ta.groupby_string_0,tb.groupby_string_0, count(*) as c from scdb.alice_tbl_0 as ta join scdb.bob_tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_string_0,tb.groupby_string_0",
+      "mysql_query": "select ta.groupby_string_0,tb.groupby_string_0, count(*) as c from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_string_0,tb.groupby_string_0 having count(*) >= 4"
+    },
+    {
       "name": "select plain data from another party",
       "query": "select plain_long_0, plain_string_0, plain_float_0 from scdb.bob_tbl_0",
       "mysql_query": "select plain_long_0, plain_string_0, plain_float_0 from bob.tbl_0"
@@ -329,6 +344,31 @@
       "name": "issuer party not in party infos",
       "query": "select tb.plain_long_0 from scdb.bob_tbl_0 as tb join scdb.carol_tbl_0 as tc on tb.join_long_0 = tc.join_long_0",
       "mysql_query": "select tb.plain_long_0 from bob.tbl_0 as tb join carol.tbl_0 as tc on tb.join_long_0 = tc.join_long_0"
+    },
+    {
+      "name": "union all tests",
+      "query": "select ta.plain_long_0 from scdb.alice_tbl_0 as ta union all select tb.plain_long_0 from scdb.bob_tbl_0 as tb",
+      "mysql_query": "select ta.plain_long_0 from alice.tbl_0 as ta union all select tb.plain_long_0 from bob.tbl_0 as tb"
+    },
+    {
+      "name": "union tests",
+      "query": "select ta.plain_long_0 from scdb.alice_tbl_0 as ta union select tb.plain_long_0 from scdb.bob_tbl_0 as tb",
+      "mysql_query": "select ta.plain_long_0 from alice.tbl_0 as ta union select tb.plain_long_0 from bob.tbl_0 as tb"
+    },
+    {
+      "name": "distinct tests",
+      "query": "select distinct plain_long_0 from (select ta.plain_long_0 from scdb.alice_tbl_0 as ta union all select tb.plain_long_0 from scdb.bob_tbl_0 as tb) as u",
+      "mysql_query": "select distinct plain_long_0 from (select ta.plain_long_0 from alice.tbl_0 as ta union all select tb.plain_long_0 from bob.tbl_0 as tb) as u"
+    },
+    {
+      "name": "agg func after union all tests",
+      "query": "select count(*) as cc, max(aggregate_long_0) as mm from (select aggregate_long_0, groupby_long_0 from scdb.alice_tbl_0 union all select aggregate_long_0, groupby_long_0 from scdb.bob_tbl_1) as u",
+      "mysql_query": "select count(*) as cc, max(aggregate_long_0) as mm from (select aggregate_long_0, groupby_long_0 from alice.tbl_0 union all select aggregate_long_0, groupby_long_0 from bob.tbl_1) as u having count(*) >= 4"
+    },
+    {
+      "name": "group by/agg after union all tests",
+      "query": "select count(*) as cc, max(groupby_long_0) as mm from (select aggregate_long_0, groupby_long_0 from scdb.alice_tbl_0 union all select aggregate_long_0, groupby_long_0 from scdb.bob_tbl_1) as u group by u.groupby_long_0",
+      "mysql_query": "select count(*) as cc, max(groupby_long_0) as mm from (select aggregate_long_0, groupby_long_0 from alice.tbl_0 union all select aggregate_long_0, groupby_long_0 from bob.tbl_1) as u group by u.groupby_long_0 having count(*) >= 4"
     }
   ]
 }

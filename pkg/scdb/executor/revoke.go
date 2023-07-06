@@ -75,37 +75,30 @@ func (e *RevokeExec) Next(ctx context.Context, req *chunk.Chunk) (err error) {
 		e.Level.DBName = e.ctx.GetSessionVars().CurrentDB
 	}
 
-	// Revoke for each user.
-	for _, user := range e.Users {
-		// Check if user exists.
-		if exist, err := storage.CheckUserExist(tx, user.User.Username, user.User.Hostname); err != nil || !exist {
-			if err != nil {
-				return err
-			}
-			return errors.Errorf("Unknown user: %s", user.User)
-		}
-
-		err = e.revokeOneUser(tx, user.User.Username, user.User.Hostname)
-		if err != nil {
-			return err
-		}
+	if len(e.Users) != 1 {
+		return fmt.Errorf("revoke statement only supports revoke privileges from one user at one time")
 	}
-	return nil
-}
 
-func (e *RevokeExec) revokeOneUser(tx *gorm.DB, user, host string) (err error) {
+	user := e.Users[0]
+
+	if err := CheckUserGrantPriv(tx, e.ctx.GetSessionVars().User, user.User, e.Privs); err != nil {
+		return fmt.Errorf("revoke privilege failed: %v", err)
+	}
+
+	userName := user.User.Username
+	hostName := user.User.Hostname
 
 	switch e.Level.Level {
 	case ast.GrantLevelGlobal:
-		if err = e.revokeGlobalLevelPriv(tx, user, host); err != nil {
+		if err = e.revokeGlobalLevelPriv(tx, userName, hostName); err != nil {
 			return err
 		}
 	case ast.GrantLevelDB:
-		if err = e.revokeDBLevelPriv(tx, user, host); err != nil {
+		if err = e.revokeDBLevelPriv(tx, userName, hostName); err != nil {
 			return err
 		}
 	case ast.GrantLevelTable:
-		if err = e.revokeTableLevelPriv(tx, user, host); err != nil {
+		if err = e.revokeTableLevelPriv(tx, userName, hostName); err != nil {
 			return err
 		}
 	default:
@@ -114,15 +107,85 @@ func (e *RevokeExec) revokeOneUser(tx *gorm.DB, user, host string) (err error) {
 	return nil
 }
 
-func (e *RevokeExec) revokeGlobalLevelPriv(tx *gorm.DB, user, host string) error {
-	return fmt.Errorf("unsupported revokeGlobalPriv")
+func (e *RevokeExec) revokeGlobalLevelPriv(tx *gorm.DB, user, host string) (err error) {
+	for _, priv := range e.Privs {
+		if err = e.revokeGlobalPriv(tx, priv, user, host); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
-func (e *RevokeExec) revokeDBLevelPriv(tx *gorm.DB, user, host string) error {
-	return fmt.Errorf("unsupported revokeDBPriv")
+func (e *RevokeExec) revokeGlobalPriv(tx *gorm.DB, priv *ast.PrivElem, user, host string) error {
+	condition := storage.User{
+		Host: host,
+		User: user,
+	}
+
+	attributes := make(map[string]interface{})
+	if priv.Priv == mysql.AllPriv {
+		if err := SetAllGrantPrivTo(e.Level.Level, attributes, false); err != nil {
+			return err
+		}
+	} else if v, exist := storage.GlobalPrivColName[priv.Priv]; exist {
+		attributes[v] = false
+	} else {
+		return fmt.Errorf("unknown global priv: %v", mysql.Priv2UserCol[priv.Priv])
+	}
+
+	result := transaction.AddExclusiveLock(tx).Model(&storage.User{}).Where(condition).Updates(attributes)
+
+	if result.Error != nil {
+		return fmt.Errorf("revoke global priv failed: %v", result.Error)
+	}
+	return nil
+}
+
+func (e *RevokeExec) revokeDBLevelPriv(tx *gorm.DB, user, host string) (err error) {
+	for _, priv := range e.Privs {
+		if err = e.revokeDBPriv(tx, priv, user, host); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (e *RevokeExec) revokeDBPriv(tx *gorm.DB, priv *ast.PrivElem, user, host string) error {
+	condition := storage.DatabasePriv{
+		Db:   e.Level.DBName,
+		Host: host,
+		User: user,
+	}
+
+	attributes := make(map[string]interface{})
+	if priv.Priv == mysql.AllPriv {
+		if err := SetAllGrantPrivTo(e.Level.Level, attributes, false); err != nil {
+			return err
+		}
+	} else if v, exist := storage.DbPrivColName[priv.Priv]; exist {
+		attributes[v] = false
+	} else {
+		return fmt.Errorf("unknown db priv: %v", mysql.Priv2UserCol[priv.Priv])
+	}
+
+	result := transaction.AddExclusiveLock(tx).Model(&storage.DatabasePriv{}).Where(condition).Updates(attributes)
+
+	if result.Error != nil {
+		return fmt.Errorf("revoke database priv failed: %v", result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("there is no such grant %v defined for user: %v", mysql.Priv2UserCol[priv.Priv], user)
+	}
+	return nil
 }
 
 func (e *RevokeExec) revokeTableLevelPriv(tx *gorm.DB, user, host string) (err error) {
+	issuerUserName := e.ctx.GetSessionVars().User.Username
+	issuerHostName := e.ctx.GetSessionVars().User.Hostname
+	if err := storage.CheckTableOwner(tx, e.Level.DBName, e.Level.TableName, issuerUserName, issuerHostName); err != nil {
+		return err
+	}
+
 	for _, priv := range e.Privs {
 		if len(priv.Cols) == 0 {
 			err = e.revokeTablePriv(tx, priv, user, host)
@@ -137,27 +200,45 @@ func (e *RevokeExec) revokeTableLevelPriv(tx *gorm.DB, user, host string) (err e
 }
 
 func (e *RevokeExec) revokeTablePriv(tx *gorm.DB, priv *ast.PrivElem, user, host string) error {
-	return fmt.Errorf("unsupported revokeTablePriv")
+
+	condition := storage.TablePriv{
+		Host:      host,
+		Db:        e.Level.DBName,
+		User:      user,
+		TableName: e.Level.TableName,
+	}
+
+	attributes := make(map[string]interface{})
+	if priv.Priv == mysql.AllPriv {
+		if err := SetAllGrantPrivTo(e.Level.Level, attributes, false); err != nil {
+			return err
+		}
+	} else if v, exist := storage.VisibilityPrivColName[priv.Priv]; exist {
+		condition.VisibilityPriv = priv.Priv
+		attributes[v] = 0
+	} else if v, exist := storage.TablePrivColName[priv.Priv]; exist {
+		attributes[v] = false
+	} else {
+		return fmt.Errorf("unknown table priv: %v", mysql.Priv2UserCol[priv.Priv])
+	}
+
+	result := transaction.AddExclusiveLock(tx).Model(&storage.TablePriv{}).Where(condition).Updates(attributes)
+	return result.Error
 }
 
 func (e *RevokeExec) revokeColumnPriv(tx *gorm.DB, priv *ast.PrivElem, user, host string) error {
-	tblName := e.Level.TableName
-	userName := e.ctx.GetSessionVars().User.Username
-	hostName := e.ctx.GetSessionVars().User.Hostname
-	if err := storage.CheckTableOwner(tx, e.Level.DBName, tblName, userName, hostName); err != nil {
-		return err
-	}
 
 	var colNames []string
 	for _, c := range priv.Cols {
 		colNames = append(colNames, c.Name.L)
 	}
 
+	tblName := e.Level.TableName
 	if err := storage.CheckColumnsExist(tx, e.Level.DBName, tblName, colNames); err != nil {
 		return err
 	}
 
-	_, ok := storage.VisibilityPriv2UserCol[priv.Priv]
+	_, ok := storage.VisibilityPrivColName[priv.Priv]
 	if !ok {
 		return fmt.Errorf("revokeColumnPriv: doesn't support privType %s", mysql.Priv2Str[priv.Priv])
 	}

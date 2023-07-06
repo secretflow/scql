@@ -83,7 +83,7 @@ std::vector<IndexTuple> GenScanIndex(std::size_t n) {
 // OUT GroupMask: 0 means start of the group while 1 means other conditions.
 // e.g. IN: [0, 0, 1, 0, 0, 1, 0, 1, 0, 1]
 //      OUT:[0, 1, 1, 0, 1, 1, 0, 1, 0, 1]
-spu::Value TransferGroupMask(spu::HalContext* ctx, const spu::Value& in) {
+spu::Value TransferGroupMask(spu::SPUContext* ctx, const spu::Value& in) {
   const int64_t row_cnt = in.shape()[0];
   spu::Value in_not = spu::kernel::hlo::Sub(
       ctx, spu::kernel::hlo::Constant(ctx, 1, in.shape()), in);
@@ -102,25 +102,23 @@ using ScanFn = std::function<std::pair<spu::Value, spu::Value>(
     const spu::Value&, const spu::Value&, const spu::Value&,
     const spu::Value&)>;
 
-// Referrence: "Scape: Scalable Collaborative Analytics System on Private
+// Reference: "Scape: Scalable Collaborative Analytics System on Private
 // Database with Malicious Security", Fig. 13
 //
-spu::Value Scan(spu::HalContext* ctx, const spu::Value& origin_value,
+spu::Value Scan(spu::SPUContext* ctx, const spu::Value& origin_value,
                 const spu::Value& origin_group_mask, const ScanFn& scan_fn) {
   const int64_t row_cnt = origin_value.shape()[0];
   spu::Value group_mask = TransferGroupMask(ctx, origin_group_mask);
   spu::Value value = origin_value.clone();
   const std::vector<IndexTuple> indices = GenScanIndex(row_cnt);
   for (const auto& index_tuple : indices) {
-    spu::Value lhs_v(value.data().linear_gather(index_tuple.first),
-                     value.dtype());
-    spu::Value lhs_gm(group_mask.data().linear_gather(index_tuple.first),
-                      group_mask.dtype());
+    auto lhs_v = spu::kernel::hlo::LinearGather(ctx, value, index_tuple.first);
+    auto lhs_gm =
+        spu::kernel::hlo::LinearGather(ctx, group_mask, index_tuple.first);
 
-    spu::Value rhs_v(value.data().linear_gather(index_tuple.second),
-                     value.dtype());
-    spu::Value rhs_gm(group_mask.data().linear_gather(index_tuple.second),
-                      group_mask.dtype());
+    auto rhs_v = spu::kernel::hlo::LinearGather(ctx, value, index_tuple.second);
+    auto rhs_gm =
+        spu::kernel::hlo::LinearGather(ctx, group_mask, index_tuple.second);
 
     const auto [new_v, new_gm] = scan_fn(lhs_v, lhs_gm, rhs_v, rhs_gm);
 
@@ -130,8 +128,10 @@ spu::Value Scan(spu::HalContext* ctx, const spu::Value& origin_value,
     YACL_ENFORCE_EQ(group_mask.dtype(), new_gm.dtype());
     YACL_ENFORCE_EQ(group_mask.vtype(), new_gm.vtype());
 
-    value.data().linear_scatter(new_v.data(), index_tuple.first);
-    group_mask.data().linear_scatter(new_gm.data(), index_tuple.first);
+    spu::kernel::hlo::LinearScatterInPlace(ctx, value, new_v,
+                                           index_tuple.first);
+    spu::kernel::hlo::LinearScatterInPlace(ctx, group_mask, new_gm,
+                                           index_tuple.first);
   }
 
   return value;
@@ -162,7 +162,7 @@ void ObliviousGroupAggBase::Execute(ExecContext* ctx) {
   const auto& output_pbs = ctx->GetOutput(kOut);
 
   auto symbols = ctx->GetSession()->GetDeviceSymbols();
-  auto hctx = ctx->GetSession()->GetSpuHalContext();
+  auto sctx = ctx->GetSession()->GetSpuContext();
 
   const auto& group = ctx->GetInput(kGroup)[0];
   auto group_value =
@@ -176,7 +176,7 @@ void ObliviousGroupAggBase::Execute(ExecContext* ctx) {
     if (RowCount(value) == 0) {
       result = HandleEmptyInput(value);
     } else {
-      result = CalculateResult(hctx, value, group_value);
+      result = CalculateResult(sctx, value, group_value);
     }
 
     symbols->setVar(util::SpuVarNameEncoder::GetValueName(output_pbs[i].name()),
@@ -192,7 +192,7 @@ const std::string ObliviousGroupSum::kOpType("ObliviousGroupSum");
 
 const std::string& ObliviousGroupSum::Type() const { return kOpType; }
 
-spu::Value ObliviousGroupSum::CalculateResult(spu::HalContext* hctx,
+spu::Value ObliviousGroupSum::CalculateResult(spu::SPUContext* sctx,
                                               const spu::Value& value,
                                               const spu::Value& group) {
   int64_t row_count = RowCount(value);
@@ -202,17 +202,17 @@ spu::Value ObliviousGroupSum::CalculateResult(spu::HalContext* hctx,
 
   // NOTE: hack for boolean value.
   if (value.dtype() == spu::DT_I1) {
-    value_hat = spu::kernel::hlo::Cast(hctx, value, value.vtype(), spu::DT_I64);
+    value_hat = spu::kernel::hlo::Cast(sctx, value, value.vtype(), spu::DT_I64);
   } else {
     value_hat = value;
   }
 
-  return Scan(hctx, value_hat, group,
+  return Scan(sctx, value_hat, group,
               [&](const spu::Value& lhs_v, const spu::Value& lhs_gm,
                   const spu::Value& rhs_v, const spu::Value& rhs_gm) {
                 spu::Value new_v = spu::kernel::hlo::Add(
-                    hctx, lhs_v, spu::kernel::hlo::Mul(hctx, lhs_gm, rhs_v));
-                spu::Value new_gm = spu::kernel::hlo::Mul(hctx, lhs_gm, rhs_gm);
+                    sctx, lhs_v, spu::kernel::hlo::Mul(sctx, lhs_gm, rhs_v));
+                spu::Value new_gm = spu::kernel::hlo::Mul(sctx, lhs_gm, rhs_gm);
 
                 return std::make_pair(new_v, new_gm);
               });
@@ -226,21 +226,21 @@ const std::string ObliviousGroupCount::kOpType("ObliviousGroupCount");
 
 const std::string& ObliviousGroupCount::Type() const { return kOpType; }
 
-spu::Value ObliviousGroupCount::CalculateResult(spu::HalContext* hctx,
+spu::Value ObliviousGroupCount::CalculateResult(spu::SPUContext* sctx,
                                                 const spu::Value& value,
                                                 const spu::Value& group) {
   int64_t row_count = RowCount(value);
   YACL_ENFORCE(row_count == RowCount(group));
 
   spu::Value ones = spu::kernel::hlo::Seal(
-      hctx, spu::kernel::hlo::Constant(hctx, int64_t(1), value.shape()));
+      sctx, spu::kernel::hlo::Constant(sctx, int64_t(1), value.shape()));
 
-  return Scan(hctx, ones, group,
+  return Scan(sctx, ones, group,
               [&](const spu::Value& lhs_v, const spu::Value& lhs_gm,
                   const spu::Value& rhs_v, const spu::Value& rhs_gm) {
                 spu::Value new_v = spu::kernel::hlo::Add(
-                    hctx, lhs_v, spu::kernel::hlo::Mul(hctx, lhs_gm, rhs_v));
-                spu::Value new_gm = spu::kernel::hlo::Mul(hctx, lhs_gm, rhs_gm);
+                    sctx, lhs_v, spu::kernel::hlo::Mul(sctx, lhs_gm, rhs_v));
+                spu::Value new_gm = spu::kernel::hlo::Mul(sctx, lhs_gm, rhs_gm);
 
                 return std::make_pair(new_v, new_gm);
               });
@@ -254,18 +254,18 @@ const std::string ObliviousGroupAvg::kOpType("ObliviousGroupAvg");
 
 const std::string& ObliviousGroupAvg::Type() const { return kOpType; }
 
-spu::Value ObliviousGroupAvg::CalculateResult(spu::HalContext* hctx,
+spu::Value ObliviousGroupAvg::CalculateResult(spu::SPUContext* sctx,
                                               const spu::Value& value,
                                               const spu::Value& group) {
-  auto sum_result = ObliviousGroupSum().CalculateResult(hctx, value, group);
-  auto count_result = ObliviousGroupCount().CalculateResult(hctx, value, group);
+  auto sum_result = ObliviousGroupSum().CalculateResult(sctx, value, group);
+  auto count_result = ObliviousGroupCount().CalculateResult(sctx, value, group);
 
-  if (sum_result.isInt()) {
-    const auto sum_result_f = spu::kernel::hlo::Cast(
-        hctx, sum_result, sum_result.vtype(), spu::DT_FXP);
-    return spu::kernel::hlo::Div(hctx, sum_result_f, count_result);
+  if (sum_result.dtype() != spu::DT_F64) {
+    const auto sum_result_f64 = spu::kernel::hlo::Cast(
+        sctx, sum_result, sum_result.vtype(), spu::DT_F64);
+    return spu::kernel::hlo::Div(sctx, sum_result_f64, count_result);
   } else {
-    return spu::kernel::hlo::Div(hctx, sum_result, count_result);
+    return spu::kernel::hlo::Div(sctx, sum_result, count_result);
   }
 }
 
@@ -277,19 +277,19 @@ const std::string ObliviousGroupMax::kOpType("ObliviousGroupMax");
 
 const std::string& ObliviousGroupMax::Type() const { return kOpType; }
 
-spu::Value ObliviousGroupMax::CalculateResult(spu::HalContext* hctx,
+spu::Value ObliviousGroupMax::CalculateResult(spu::SPUContext* sctx,
                                               const spu::Value& value,
                                               const spu::Value& group) {
   int64_t row_count = RowCount(value);
   YACL_ENFORCE(row_count == RowCount(group));
 
-  return Scan(hctx, value, group,
+  return Scan(sctx, value, group,
               [&](const spu::Value& lhs_v, const spu::Value& lhs_gm,
                   const spu::Value& rhs_v, const spu::Value& rhs_gm) {
                 spu::Value new_v = spu::kernel::hlo::Select(
-                    hctx, lhs_gm, spu::kernel::hlo::Max(hctx, lhs_v, rhs_v),
+                    sctx, lhs_gm, spu::kernel::hlo::Max(sctx, lhs_v, rhs_v),
                     lhs_v);
-                spu::Value new_gm = spu::kernel::hlo::Mul(hctx, lhs_gm, rhs_gm);
+                spu::Value new_gm = spu::kernel::hlo::Mul(sctx, lhs_gm, rhs_gm);
 
                 return std::make_pair(new_v, new_gm);
               });
@@ -303,19 +303,19 @@ const std::string ObliviousGroupMin::kOpType("ObliviousGroupMin");
 
 const std::string& ObliviousGroupMin::Type() const { return kOpType; }
 
-spu::Value ObliviousGroupMin::CalculateResult(spu::HalContext* hctx,
+spu::Value ObliviousGroupMin::CalculateResult(spu::SPUContext* sctx,
                                               const spu::Value& value,
                                               const spu::Value& group) {
   int64_t row_count = RowCount(value);
   YACL_ENFORCE(row_count == RowCount(group));
 
-  return Scan(hctx, value, group,
+  return Scan(sctx, value, group,
               [&](const spu::Value& lhs_v, const spu::Value& lhs_gm,
                   const spu::Value& rhs_v, const spu::Value& rhs_gm) {
                 spu::Value new_v = spu::kernel::hlo::Select(
-                    hctx, lhs_gm, spu::kernel::hlo::Min(hctx, lhs_v, rhs_v),
+                    sctx, lhs_gm, spu::kernel::hlo::Min(sctx, lhs_v, rhs_v),
                     lhs_v);
-                spu::Value new_gm = spu::kernel::hlo::Mul(hctx, lhs_gm, rhs_gm);
+                spu::Value new_gm = spu::kernel::hlo::Mul(sctx, lhs_gm, rhs_gm);
 
                 return std::make_pair(new_v, new_gm);
               });

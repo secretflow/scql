@@ -14,6 +14,7 @@
 
 #include "engine/operator/publish.h"
 
+#include "engine/audit/audit_log.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
 
@@ -30,53 +31,38 @@ void Publish::Validate(ExecContext* ctx) {
   YACL_ENFORCE(inputs.size() == outputs.size(),
                "input size={} and output size={} not equal", inputs.size(),
                outputs.size());
-  for (const auto& input : inputs) {
-    YACL_ENFORCE(util::IsTensorStatusMatched(
-                     input, pb::TensorStatus::TENSORSTATUS_PRIVATE) ||
-                     util::IsTensorStatusMatched(
-                         input, pb::TensorStatus::TENSORSTATUS_PUBLIC),
-                 "input tensor status should be private or public");
-  }
+
+  YACL_ENFORCE(util::AreTensorsStatusMatched(
+                   inputs, pb::TensorStatus::TENSORSTATUS_PRIVATE),
+               "input tensors status should be private");
 }
 
 void Publish::Execute(ExecContext* ctx) {
+  const auto start_time = std::chrono::system_clock::now();
   const auto& input_pbs = ctx->GetInput(kIn);
   const auto& output_pbs = ctx->GetOutput(kOut);
+  int64_t num_rows = 0;
   for (int i = 0; i < input_pbs.size(); ++i) {
     const auto& input_pb = input_pbs[i];
     const auto& output_name = output_pbs[i].name();
 
-    auto from_tensor = GetPrivateOrPublicTensor(ctx, input_pb);
-    YACL_ENFORCE(from_tensor, "get private or public tensor failed");
+    auto from_tensor = ctx->GetTensorTable()->GetTensor(input_pb.name());
+    YACL_ENFORCE(from_tensor, "get private tensor={} failed", input_pb.name());
 
     auto proto_result = std::make_shared<pb::Tensor>();
     SetProtoMeta(from_tensor, output_name, proto_result);
 
     util::CopyValuesToProto(from_tensor, proto_result.get());
+    auto dim_value = proto_result->shape().dim(0).dim_value();
+    if (num_rows == 0 && dim_value != 0) {
+      num_rows = dim_value;
+    }
+    YACL_ENFORCE_EQ(num_rows, dim_value, "num rows in result not matched {},{}",
+                    num_rows, dim_value);
 
     ctx->GetSession()->AddPublishResult(proto_result);
   }
-}
-
-TensorPtr Publish::GetPrivateOrPublicTensor(ExecContext* ctx,
-                                            const pb::Tensor& input_pb) {
-  TensorPtr ret;
-  if (util::IsTensorStatusMatched(input_pb, pb::TENSORSTATUS_PRIVATE)) {
-    ret = ctx->GetTensorTable()->GetTensor(input_pb.name());
-  } else if (util::IsTensorStatusMatched(input_pb, pb::TENSORSTATUS_PUBLIC)) {
-    // read public tensor from spu device symbol table
-    auto spu_io = util::SpuOutfeedHelper(ctx->GetSession()->GetSpuHalContext(),
-                                         ctx->GetSession()->GetDeviceSymbols());
-    ret = spu_io.DumpPublic(input_pb.name());
-
-    if (input_pb.elem_type() == pb::PrimitiveDataType::STRING) {
-      ret = ctx->GetSession()->HashToString(*ret);
-    }
-  } else {
-    YACL_THROW("status (\"{}\") must be either private or public",
-               input_pb.name());
-  }
-  return ret;
+  audit::RecordPublishNodeDetail(*ctx, num_rows, start_time);
 }
 
 void Publish::SetProtoMeta(const std::shared_ptr<Tensor> from_tensor,

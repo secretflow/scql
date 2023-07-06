@@ -28,7 +28,7 @@ struct CopyTestCase {
 };
 
 class CopyTest : public ::testing::TestWithParam<
-                     std::tuple<spu::ProtocolKind, CopyTestCase>> {
+                     std::tuple<test::SpuRuntimeTestCase, CopyTestCase>> {
  protected:
   static pb::ExecNode MakeCopyExecNode(const CopyTestCase& tc);
 
@@ -38,7 +38,7 @@ class CopyTest : public ::testing::TestWithParam<
 INSTANTIATE_TEST_SUITE_P(
     CopyPrivateTest, CopyTest,
     testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValues2PC,
         testing::Values(
             CopyTestCase{
                 .datas =
@@ -65,7 +65,7 @@ TEST_P(CopyTest, works) {
   auto parm = GetParam();
   auto tc = std::get<1>(parm);
   auto node = MakeCopyExecNode(tc);
-  std::vector<Session> sessions = test::Make2PCSession(std::get<0>(parm));
+  std::vector<Session> sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
   ExecContext alice_ctx(node, &sessions[0]);
   ExecContext bob_ctx(node, &sessions[1]);
@@ -74,17 +74,9 @@ TEST_P(CopyTest, works) {
   FeedInputs(&alice_ctx, tc);
 
   // When
-  test::OperatorTestRunner<Copy> alice;
-  test::OperatorTestRunner<Copy> bob;
+  EXPECT_NO_THROW(test::RunAsync<Copy>({&alice_ctx, &bob_ctx}));
 
-  alice.Start(&alice_ctx);
-  bob.Start(&bob_ctx);
-
-  // Then
-  EXPECT_NO_THROW({ alice.Wait(); });
-  EXPECT_NO_THROW({ bob.Wait(); });
-
-  // check bob output
+  // Then check bob output
   auto tensor_table = bob_ctx.GetTensorTable();
   for (size_t i = 0; i < tc.output_names.size(); ++i) {
     auto in_arr = tc.datas[i].tensor->ToArrowChunkedArray();

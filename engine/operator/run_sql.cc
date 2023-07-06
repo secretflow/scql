@@ -17,6 +17,8 @@
 #include "spdlog/spdlog.h"
 #include "yacl/base/exception.h"
 
+#include "engine/audit/audit_log.h"
+
 namespace scql::engine::op {
 
 const std::string RunSQL::kOpType("RunSQL");
@@ -24,6 +26,7 @@ const std::string RunSQL::kOpType("RunSQL");
 const std::string& RunSQL::Type() const { return kOpType; }
 
 void RunSQL::Execute(ExecContext* ctx) {
+  const auto start_time = std::chrono::system_clock::now();
   std::string select = ctx->GetStringValueFromAttribute(kSQLAttr);
 
   std::vector<std::string> table_refs =
@@ -70,6 +73,9 @@ void RunSQL::Execute(ExecContext* ctx) {
   }
   SPDLOG_INFO("get result row={}, column={}", results[0]->Length(),
               results.size());
+
+  audit::RecordSqlNodeDetail(*ctx, select, results[0]->Length(), results.size(),
+                             start_time);
 }
 
 }  // namespace scql::engine::op
