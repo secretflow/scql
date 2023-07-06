@@ -37,6 +37,7 @@ type GraphBuilder struct {
 	Tensors        []*Tensor
 	tensorNum      int
 	outputName     []string
+	converter      *statusConverter
 }
 
 // NewGraphBuilder returns a graph builder instance
@@ -46,6 +47,7 @@ func NewGraphBuilder(partyInfo *PartyInfo) *GraphBuilder {
 		ExecutionNodes: make([]*ExecutionNode, 0),
 		Tensors:        make([]*Tensor, 0),
 	}
+	result.converter = newStatusConverter(result)
 	return result
 }
 
@@ -64,6 +66,7 @@ func (plan *GraphBuilder) AddTensorAs(it *Tensor) *Tensor {
 	t.Option = it.Option
 	t.Status = it.Status
 	t.OwnerPartyCode = it.OwnerPartyCode
+	t.SecretStringOwners = it.SecretStringOwners
 	t.cc = it.cc.Clone()
 	t.skipDTypeCheck = it.skipDTypeCheck
 	t.isConstScalar = it.isConstScalar
@@ -294,7 +297,7 @@ func (plan *GraphBuilder) AddPublishNode(name string, input []*Tensor, output []
 func (plan *GraphBuilder) AddDumpFileNode(name string, in []*Tensor, out []*Tensor, filepath, deliminator, partyCode string) error {
 	newIn := []*Tensor{}
 	for _, it := range in {
-		ot, err := plan.addTensorStatusConversion(
+		ot, err := plan.converter.convertTo(
 			it, &privatePlacement{partyCode: partyCode})
 		if err != nil {
 			return fmt.Errorf("addDumpFileNode: %v", err)
@@ -349,6 +352,7 @@ func (plan *GraphBuilder) AddMakePrivateNode(name string, input *Tensor, revealT
 	output := plan.AddTensorAs(input)
 	output.Status = proto.TensorStatus_TENSORSTATUS_PRIVATE
 	output.OwnerPartyCode = revealTo
+	output.SecretStringOwners = nil
 	attr := &Attribute{}
 	attr.SetString(revealTo)
 	if _, err := plan.AddExecutionNode(name, operator.OpNameMakePrivate, map[string][]*Tensor{"In": []*Tensor{input}},
@@ -363,6 +367,9 @@ func (plan *GraphBuilder) AddMakeShareNode(name string, input *Tensor, partyCode
 	output := plan.AddTensorAs(input)
 	output.Status = proto.TensorStatus_TENSORSTATUS_SECRET
 	output.OwnerPartyCode = ""
+	if input.DType == proto.PrimitiveDataType_STRING {
+		output.SecretStringOwners = []string{input.OwnerPartyCode}
+	}
 	if _, err := plan.AddExecutionNode(name, operator.OpNameMakeShare, map[string][]*Tensor{"In": []*Tensor{input}},
 		map[string][]*Tensor{"Out": []*Tensor{output}}, map[string]*Attribute{}, partyCodes); err != nil {
 		return nil, err
@@ -484,6 +491,10 @@ var arithOpMap = map[string]bool{
 	operator.OpNameMod:    true,
 }
 
+func isFloatOrDoubleType(tp proto.PrimitiveDataType) bool {
+	return tp == proto.PrimitiveDataType_FLOAT32 || tp == proto.PrimitiveDataType_FLOAT64
+}
+
 func inferBinaryOpOutputType(opType string, left, right *Tensor) (proto.PrimitiveDataType, error) {
 	if _, ok := binaryOpBoolOutputMap[opType]; ok {
 		return proto.PrimitiveDataType_BOOL, nil
@@ -501,17 +512,23 @@ func inferBinaryOpOutputType(opType string, left, right *Tensor) (proto.Primitiv
 	}
 	if _, ok := arithOpMap[opType]; ok {
 		if opType == operator.OpNameDiv {
-			return proto.PrimitiveDataType_FLOAT, nil
+			return proto.PrimitiveDataType_FLOAT64, nil
 		}
 		if opType == operator.OpNameIntDiv || opType == operator.OpNameMod {
 			return proto.PrimitiveDataType_INT64, nil
 		}
+
+		// prompt result to double if any arguments is float data types (float/double/...)
+		if isFloatOrDoubleType(left.DType) || isFloatOrDoubleType(right.DType) {
+			return proto.PrimitiveDataType_FLOAT64, nil
+		}
+
 		// for op +/-/*
 		if left.DType == right.DType {
 			return left.DType, nil
 		}
-		// int {+,-,*} float will produce float output
-		return proto.PrimitiveDataType_FLOAT, nil
+
+		return proto.PrimitiveDataType_INT64, nil
 	}
 	return proto.PrimitiveDataType_PrimitiveDataType_UNDEFINED, fmt.Errorf("cannot infer output type for opType=%s", opType)
 }
@@ -539,10 +556,10 @@ func (plan *GraphBuilder) AddBinaryNode(name string, opType string,
 		return nil, err
 	}
 	// Convert Tensor Status if needed
-	if left, err = plan.addTensorStatusConversion(left, bestAlg.inputPlacement[Left][0]); err != nil {
+	if left, err = plan.converter.convertTo(left, bestAlg.inputPlacement[Left][0]); err != nil {
 		return nil, fmt.Errorf("addBinaryNode: %v", err)
 	}
-	if right, err = plan.addTensorStatusConversion(right, bestAlg.inputPlacement[Right][0]); err != nil {
+	if right, err = plan.converter.convertTo(right, bestAlg.inputPlacement[Right][0]); err != nil {
 		return nil, fmt.Errorf("addBinaryNode: %v", err)
 	}
 	output := plan.AddTensor(name + "_out")
@@ -576,12 +593,8 @@ func (plan *GraphBuilder) getBestAlg(opType string, inputs map[string][]*Tensor,
 		for _, key := range sliceutil.SortMapKeyForDeterminism(inputs) {
 			tensors := inputs[key]
 			for i, tensor := range tensors {
-				placement, err := plan.findTensorPlacement(tensor)
-				if err != nil {
-					return nil, err
-				}
 				newPlacement := alg.inputPlacement[key][i]
-				cost, err := getStatusConversionCost(placement, newPlacement)
+				cost, err := plan.converter.getStatusConversionCost(tensor, newPlacement)
 				if err != nil {
 					unsupportedAlgFlag = true
 					break
@@ -634,7 +647,7 @@ func (plan *GraphBuilder) AddConstantNode(name string, value *types.Datum, party
 	attr := &Attribute{}
 	switch value.Kind() {
 	case types.KindFloat32, types.KindFloat64:
-		dType = proto.PrimitiveDataType_FLOAT
+		dType = proto.PrimitiveDataType_FLOAT32
 		attr.SetFloat(float32(value.GetFloat64()))
 	case types.KindInt64:
 		dType = proto.PrimitiveDataType_INT64
@@ -643,7 +656,7 @@ func (plan *GraphBuilder) AddConstantNode(name string, value *types.Datum, party
 		// NOTE(shunde.csd): SCQL Internal does not distinguish decimal and float,
 		// It handles decimal as float.
 		// If users have requirements for precision, they should use integers.
-		dType = proto.PrimitiveDataType_FLOAT
+		dType = proto.PrimitiveDataType_FLOAT32
 		v, err := value.GetMysqlDecimal().ToFloat64()
 		if err != nil {
 			return nil, fmt.Errorf("addConstantNode: convert decimal to float error: %v", err)
@@ -711,10 +724,10 @@ func (plan *GraphBuilder) AddInNode(left *Tensor, right *Tensor, outCCL *ccl.CCL
 		return nil, err
 	}
 	// Convert Tensor Status if needed
-	if left, err = plan.addTensorStatusConversion(left, bestAlg.inputPlacement[Left][0]); err != nil {
+	if left, err = plan.converter.convertTo(left, bestAlg.inputPlacement[Left][0]); err != nil {
 		return nil, fmt.Errorf("addBinaryNode: %v", err)
 	}
-	if right, err = plan.addTensorStatusConversion(right, bestAlg.inputPlacement[Right][0]); err != nil {
+	if right, err = plan.converter.convertTo(right, bestAlg.inputPlacement[Right][0]); err != nil {
 		return nil, fmt.Errorf("addBinaryNode: %v", err)
 	}
 	// TODO(xiaoyuan) add share in/local in later
@@ -756,10 +769,12 @@ func (plan *GraphBuilder) AddReduceAggNode(aggName string, in *Tensor) (*Tensor,
 	}
 	out := plan.AddTensorAs(in)
 	if aggName == ast.AggFuncAvg {
-		out.DType = proto.PrimitiveDataType_FLOAT
+		out.DType = proto.PrimitiveDataType_FLOAT64
 	} else if aggName == ast.AggFuncSum {
-		if out.DType == proto.PrimitiveDataType_BOOL {
+		if in.DType == proto.PrimitiveDataType_BOOL {
 			out.DType = proto.PrimitiveDataType_INT64
+		} else if isFloatOrDoubleType(in.DType) {
+			out.DType = proto.PrimitiveDataType_FLOAT64
 		}
 	}
 	if _, err := plan.AddExecutionNode("reduce_"+aggName, opType,
@@ -771,7 +786,7 @@ func (plan *GraphBuilder) AddReduceAggNode(aggName string, in *Tensor) (*Tensor,
 }
 
 func (plan *GraphBuilder) AddUniqueNode(name string, input *Tensor, partyCode string) (*Tensor, error) {
-	inputP, err := plan.addTensorStatusConversion(input, &privatePlacement{partyCode: partyCode})
+	inputP, err := plan.converter.convertTo(input, &privatePlacement{partyCode: partyCode})
 	if err != nil {
 		return nil, fmt.Errorf("addUniqueNode: %v", err)
 	}
@@ -826,7 +841,7 @@ func (plan *GraphBuilder) AddSortNode(name string, key, in []*Tensor) ([]*Tensor
 	// convert inputs to share
 	if makeShareFlag {
 		for _, in := range key {
-			out, err := plan.addTensorStatusConversion(
+			out, err := plan.converter.convertTo(
 				in, &sharePlacement{partyCodes: plan.partyInfo.GetParties()})
 			if err != nil {
 				return nil, fmt.Errorf("addSortNode: %v", err)
@@ -834,7 +849,7 @@ func (plan *GraphBuilder) AddSortNode(name string, key, in []*Tensor) ([]*Tensor
 			keyA = append(keyA, out)
 		}
 		for _, in := range in {
-			out, err := plan.addTensorStatusConversion(
+			out, err := plan.converter.convertTo(
 				in, &sharePlacement{partyCodes: plan.partyInfo.GetParties()})
 			if err != nil {
 				return nil, fmt.Errorf("addSortNode: %v", err)
@@ -872,7 +887,7 @@ func (plan *GraphBuilder) AddObliviousGroupMarkNode(name string, key []*Tensor) 
 	var keyA []*Tensor
 	// convert inputs to share
 	for _, in := range key {
-		out, err := plan.addTensorStatusConversion(
+		out, err := plan.converter.convertTo(
 			in, &sharePlacement{partyCodes: plan.partyInfo.GetParties()})
 		if err != nil {
 			return nil, fmt.Errorf("addObliviousGroupMarkNode: %v", err)
@@ -921,7 +936,7 @@ func (plan *GraphBuilder) AddObliviousGroupAggNode(funcName string, group *Tenso
 	}
 
 	// convert inputs to share
-	inA, err := plan.addTensorStatusConversion(
+	inA, err := plan.converter.convertTo(
 		in, &sharePlacement{partyCodes: plan.partyInfo.GetParties()})
 	if err != nil {
 		return nil, fmt.Errorf("addObliviousGroupAggNode: %v", err)
@@ -929,11 +944,15 @@ func (plan *GraphBuilder) AddObliviousGroupAggNode(funcName string, group *Tenso
 
 	outA := plan.AddTensorAs(inA)
 	if funcName == ast.AggFuncAvg {
-		outA.DType = proto.PrimitiveDataType_FLOAT
+		outA.DType = proto.PrimitiveDataType_FLOAT64
 	} else if funcName == ast.AggFuncCount {
 		outA.DType = proto.PrimitiveDataType_INT64
-	} else if funcName == ast.AggFuncSum && inA.DType == proto.PrimitiveDataType_BOOL {
-		outA.DType = proto.PrimitiveDataType_INT64
+	} else if funcName == ast.AggFuncSum {
+		if inA.DType == proto.PrimitiveDataType_BOOL {
+			outA.DType = proto.PrimitiveDataType_INT64
+		} else if isFloatOrDoubleType(inA.DType) {
+			outA.DType = proto.PrimitiveDataType_FLOAT64
+		}
 	}
 	if _, err := plan.AddExecutionNode(funcName, opName,
 		map[string][]*Tensor{"Group": {group}, "In": {inA}}, map[string][]*Tensor{"Out": {outA}},
@@ -944,11 +963,11 @@ func (plan *GraphBuilder) AddObliviousGroupAggNode(funcName string, group *Tenso
 	return outA, nil
 }
 
-func (plan *GraphBuilder) AddShuffleNode(name string, in []*Tensor) ([]*Tensor, error) {
+func (plan *GraphBuilder) AddShuffleNode(name string, inTs []*Tensor) ([]*Tensor, error) {
 	var inA []*Tensor
 	// convert inputs to share
-	for _, in := range in {
-		out, err := plan.addTensorStatusConversion(
+	for _, in := range inTs {
+		out, err := plan.converter.convertTo(
 			in, &sharePlacement{partyCodes: plan.partyInfo.GetParties()})
 		if err != nil {
 			return nil, fmt.Errorf("addSortNode: %v", err)
@@ -956,7 +975,7 @@ func (plan *GraphBuilder) AddShuffleNode(name string, in []*Tensor) ([]*Tensor, 
 		inA = append(inA, out)
 	}
 	outA := []*Tensor{}
-	for _, in := range in {
+	for _, in := range inA {
 		outA = append(outA, plan.AddTensorAs(in))
 	}
 	if _, err := plan.AddExecutionNode(name, operator.OpNameShuffle,
@@ -972,7 +991,7 @@ func (plan *GraphBuilder) AddConcatNode(name string, in []*Tensor) (*Tensor, err
 	for _, it := range in {
 		// concat tensors coming from different party by default
 		// make share before adding concat node
-		ot, err := plan.addTensorStatusConversion(
+		ot, err := plan.converter.convertTo(
 			it, &sharePlacement{partyCodes: plan.partyInfo.GetParties()})
 		if err != nil {
 			return nil, fmt.Errorf("addConcatNode: %v", err)
@@ -981,6 +1000,7 @@ func (plan *GraphBuilder) AddConcatNode(name string, in []*Tensor) (*Tensor, err
 	}
 	out := plan.AddTensorAs(newIn[0])
 	for _, t := range newIn {
+		out.SecretStringOwners = append(out.SecretStringOwners, t.SecretStringOwners...)
 		if t.DType != out.DType {
 			return nil, fmt.Errorf("unimplemented: fix here after supporting cast")
 		}
@@ -991,4 +1011,76 @@ func (plan *GraphBuilder) AddConcatNode(name string, in []*Tensor) (*Tensor, err
 		return nil, fmt.Errorf("addConcatNode: %v", err)
 	}
 	return out, nil
+}
+
+func (plan *GraphBuilder) AddGroupNode(name string, inputs []*Tensor, partyCode string) (*Tensor, *Tensor, error) {
+	newInputs := []*Tensor{}
+	for _, it := range inputs {
+		ot, err := plan.converter.convertTo(it, &privatePlacement{partyCode: partyCode})
+		if err != nil {
+			return nil, nil, fmt.Errorf("AddGroupNode: %v", err)
+		}
+		newInputs = append(newInputs, ot)
+	}
+	outputId := plan.AddColumn("group_id", proto.TensorStatus_TENSORSTATUS_PRIVATE,
+		proto.TensorOptions_REFERENCE, proto.PrimitiveDataType_INT64)
+	cc := inputs[0].cc.Clone()
+	for _, i := range inputs[1:] {
+		cc.UpdateMoreRestrictedCCLFrom(i.cc)
+	}
+	outputId.OwnerPartyCode = partyCode
+	outputId.cc = cc
+	outputNum := plan.AddTensorAs(outputId)
+	outputNum.Name = "group_num"
+	if _, err := plan.AddExecutionNode(name, operator.OpNameGroup, map[string][]*Tensor{"Key": newInputs},
+		map[string][]*Tensor{"GroupId": {outputId}, "GroupNum": {outputNum}}, map[string]*Attribute{}, []string{partyCode}); err != nil {
+		return nil, nil, err
+	}
+	return outputId, outputNum, nil
+}
+
+func (plan *GraphBuilder) AddGroupAggNode(name string, opType string, groupId, groupNum *Tensor, in []*Tensor, partyCode string) ([]*Tensor, error) {
+	placement := &privatePlacement{partyCode: partyCode}
+	inP := []*Tensor{}
+	for i, it := range in {
+		ot, err := plan.converter.convertTo(it, placement)
+		if err != nil {
+			return nil, fmt.Errorf("AddGroupAggNode: name %v, opType %v, convert in#%v err: %v", name, opType, i, err)
+		}
+		inP = append(inP, ot)
+	}
+	groupIdP, err := plan.converter.convertTo(groupId, placement)
+	if err != nil {
+		return nil, fmt.Errorf("AddGroupAggNode: name %v, opType %v, convert group id err: %v", name, opType, err)
+	}
+	groupNumP, err := plan.converter.convertTo(groupNum, placement)
+	if err != nil {
+		return nil, fmt.Errorf("AddGroupAggNode: name %v, opType %v, convert group num err: %v", name, opType, err)
+	}
+
+	outputs := []*Tensor{}
+	for _, it := range inP {
+		output := plan.AddTensorAs(it)
+		output.Name = output.Name + "_" + name
+		if opType == operator.OpNameGroupAvg {
+			output.DType = proto.PrimitiveDataType_FLOAT64
+		} else if opType == operator.OpNameGroupSum {
+			if isFloatOrDoubleType(it.DType) {
+				output.DType = proto.PrimitiveDataType_FLOAT64
+			} else {
+				output.DType = proto.PrimitiveDataType_INT64
+			}
+		}
+		outputs = append(outputs, output)
+	}
+	if _, err := plan.AddExecutionNode(name, opType,
+		map[string][]*Tensor{
+			"GroupId":  {groupIdP},
+			"GroupNum": {groupNumP},
+			"In":       inP,
+		}, map[string][]*Tensor{"Out": outputs},
+		map[string]*Attribute{}, []string{partyCode}); err != nil {
+		return nil, fmt.Errorf("AddGroupAggNode: name %v, opType %v, err %v", name, opType, err)
+	}
+	return outputs, nil
 }

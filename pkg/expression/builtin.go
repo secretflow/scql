@@ -274,9 +274,9 @@ func newBaseBuiltinFuncWithTp(ctx sessionctx.Context, args []Expression, retType
 		}
 	case types.ETReal:
 		fieldType = &types.FieldType{
-			Tp:      mysql.TypeFloat,
-			Flen:    11,
-			Decimal: 0,
+			Tp:      mysql.TypeDouble,
+			Flen:    mysql.MaxRealWidth,
+			Decimal: types.UnspecifiedLength,
 			Flag:    mysql.BinaryFlag,
 		}
 	case types.ETDatetime:

@@ -20,8 +20,19 @@ import (
 	"github.com/secretflow/scql/pkg/parser/mysql"
 )
 
+const (
+	VisibilityPrivColumnName = "visibility_priv"
+)
+
 // AllGlobalPrivs is all the privileges in global scope in scdb.
 var AllGlobalPrivs = []mysql.PrivilegeType{mysql.CreatePriv, mysql.CreateUserPriv, mysql.DropPriv, mysql.GrantPriv}
+
+var GlobalPrivColName = map[mysql.PrivilegeType]string{
+	mysql.CreatePriv:     mysql.Priv2UserCol[mysql.CreatePriv],
+	mysql.CreateUserPriv: mysql.Priv2UserCol[mysql.CreateUserPriv],
+	mysql.DropPriv:       mysql.Priv2UserCol[mysql.DropPriv],
+	mysql.GrantPriv:      mysql.Priv2UserCol[mysql.GrantPriv],
+}
 
 // User Table stores the metadata of a user.
 // `CREATE USER` statement will add a row in this table.
@@ -81,6 +92,12 @@ func (user *User) Privs() mysql.PrivilegeType {
 // AllDBPrivs is all the privileges in database scope in scdb.
 var AllDBPrivs = []mysql.PrivilegeType{mysql.CreatePriv, mysql.DropPriv, mysql.GrantPriv}
 
+var DbPrivColName = map[mysql.PrivilegeType]string{
+	mysql.CreatePriv: mysql.Priv2UserCol[mysql.CreatePriv],
+	mysql.DropPriv:   mysql.Priv2UserCol[mysql.DropPriv],
+	mysql.GrantPriv:  mysql.Priv2UserCol[mysql.GrantPriv],
+}
+
 // DatabasePriv Table stores the metadata of a database level user privilege.
 // `GRANT ... ON db_name.* TO user_name` statement will add a row in this table.
 // This table mimics `mysql.db` in MySQL
@@ -133,18 +150,20 @@ func (dbPriv *DatabasePriv) Privs() mysql.PrivilegeType {
 // AllTablePrivs is all the privileges in table scope in scdb.
 var AllTablePrivs = []mysql.PrivilegeType{mysql.CreatePriv, mysql.DropPriv, mysql.GrantPriv}
 
-const (
-	VisibilityPrivColumnName = "visibility_priv"
-)
-
-// VisibilityPriv2UserCol is the privilege to scdb.tables_priv and scdb.columns_priv table column name.
-var VisibilityPriv2UserCol = map[mysql.PrivilegeType]string{
+// VisibilityPrivColName is the privilege to scdb.tables_priv and scdb.columns_priv table column name.
+var VisibilityPrivColName = map[mysql.PrivilegeType]string{
 	mysql.PlaintextPriv:               VisibilityPrivColumnName,
 	mysql.PlaintextAfterComparePriv:   VisibilityPrivColumnName,
 	mysql.PlaintextAfterAggregatePriv: VisibilityPrivColumnName,
 	mysql.EncryptedOnlyPriv:           VisibilityPrivColumnName,
 	mysql.PlaintextAfterJoinPriv:      VisibilityPrivColumnName,
 	mysql.PlaintextAfterGroupByPriv:   VisibilityPrivColumnName,
+}
+
+var TablePrivColName = map[mysql.PrivilegeType]string{
+	mysql.CreatePriv: mysql.Priv2UserCol[mysql.CreatePriv],
+	mysql.DropPriv:   mysql.Priv2UserCol[mysql.DropPriv],
+	mysql.GrantPriv:  mysql.Priv2UserCol[mysql.GrantPriv],
 }
 
 // TablePriv Table stores the metadata of a table level user privilege.

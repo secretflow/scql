@@ -28,7 +28,7 @@ struct ConcatTestCase {
 };
 
 class ConcatTest : public testing::TestWithParam<
-                       std::tuple<spu::ProtocolKind, ConcatTestCase>> {
+                       std::tuple<test::SpuRuntimeTestCase, ConcatTestCase>> {
  protected:
   static pb::ExecNode MakeExecNode(const ConcatTestCase& tc);
   static void FeedInputs(const std::vector<ExecContext*>& ctxs,
@@ -38,7 +38,7 @@ class ConcatTest : public testing::TestWithParam<
 INSTANTIATE_TEST_SUITE_P(
     ConcatBatchTest, ConcatTest,
     testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             ConcatTestCase{
                 .inputs = {test::NamedTensor("a", TensorFromJSON(arrow::int64(),
@@ -64,33 +64,31 @@ TEST_P(ConcatTest, works) {
   auto parm = GetParam();
   auto tc = std::get<1>(parm);
   auto node = MakeExecNode(tc);
-  std::vector<Session> sessions = test::Make2PCSession(std::get<0>(parm));
+  std::vector<Session> sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
-  ExecContext alice_ctx(node, &sessions[0]);
-  ExecContext bob_ctx(node, &sessions[1]);
+  std::vector<ExecContext> exec_ctxs;
+  for (size_t idx = 0; idx < sessions.size(); ++idx) {
+    exec_ctxs.emplace_back(node, &sessions[idx]);
+  }
 
-  FeedInputs({&alice_ctx, &bob_ctx}, tc);
+  // feed inputs
+  std::vector<ExecContext*> ctx_ptrs;
+  for (size_t idx = 0; idx < exec_ctxs.size(); ++idx) {
+    ctx_ptrs.emplace_back(&exec_ctxs[idx]);
+  }
+  FeedInputs(ctx_ptrs, tc);
 
   // When
-  test::OperatorTestRunner<Concat> alice;
-  test::OperatorTestRunner<Concat> bob;
-
-  alice.Start(&alice_ctx);
-  bob.Start(&bob_ctx);
-
-  // Then
-  EXPECT_NO_THROW({ alice.Wait(); });
-  EXPECT_NO_THROW({ bob.Wait(); });
+  EXPECT_NO_THROW(test::RunAsync<Concat>(ctx_ptrs));
 
   // Then
   // check alice output
   TensorPtr t = nullptr;
-  EXPECT_NO_THROW(
-      t = test::RevealSecret({&alice_ctx, &bob_ctx}, tc.expect_out.name));
+  EXPECT_NO_THROW(t = test::RevealSecret(ctx_ptrs, tc.expect_out.name));
   ASSERT_TRUE(t);
   // convert hash to string for string tensor in spu
   if (tc.expect_out.tensor->Type() == pb::PrimitiveDataType::STRING) {
-    t = alice_ctx.GetSession()->HashToString(*t);
+    t = ctx_ptrs[0]->GetSession()->HashToString(*t);
   }
   auto out_arr = t->ToArrowChunkedArray();
 

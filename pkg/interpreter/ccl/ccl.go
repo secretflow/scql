@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	proto "github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
 
 type CCL struct {
@@ -61,10 +62,20 @@ func (cc *CCL) IsVisibleFor(party string) bool {
 	return false
 }
 
+func (cc *CCL) GetVisibleParties() []string {
+	var visibleParties []string
+	for _, party := range cc.Parties() {
+		if cc.IsVisibleFor(party) {
+			visibleParties = append(visibleParties, party)
+		}
+	}
+	return visibleParties
+}
+
 func (cc *CCL) String() string {
 	levelString := ""
-	for p, level := range cc.partyLevels {
-		levelString += fmt.Sprintf("%s->%s,", p, level.String())
+	for _, p := range sliceutil.SortMapKeyForDeterminism(cc.partyLevels) {
+		levelString += fmt.Sprintf("%s->%s,", p, cc.partyLevels[p].String())
 	}
 	return fmt.Sprintf("{ccl level: %v}", levelString)
 }

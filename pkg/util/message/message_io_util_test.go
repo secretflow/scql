@@ -168,3 +168,17 @@ func TestSerializeResponseToUnknown(t *testing.T) {
 	// THEN
 	a.NotNil(err)
 }
+
+func TestDeserializeResponseFromEmpty(t *testing.T) {
+	a := require.New(t)
+	body, err := SerializeTo(nil, EncodingTypeProtobuf)
+	a.NotNil(err)
+	a.Equal(body, "")
+
+	var response scql.SCDBSubmitResponse
+
+	in := io.NopCloser(strings.NewReader(body))
+	encodingType, err := DeserializeFrom(in, &response)
+	a.Nil(err)
+	a.Equal(EncodingTypeProtobuf, encodingType)
+}

@@ -23,13 +23,14 @@ namespace scql::engine::op {
 
 struct MakePrivateTestCase {
   std::vector<test::NamedTensor> inputs;
+  pb::TensorStatus input_status;
   std::string reveal_to;
   std::vector<std::string> output_names;
 };
 
 class MakePrivateTest
     : public testing::TestWithParam<
-          std::tuple<spu::ProtocolKind, MakePrivateTestCase>> {
+          std::tuple<test::SpuRuntimeTestCase, MakePrivateTestCase>> {
  protected:
   static pb::ExecNode MakeExecNode(const MakePrivateTestCase& tc);
   static void FeedInputs(std::vector<ExecContext*> ctxs,
@@ -39,7 +40,7 @@ class MakePrivateTest
 INSTANTIATE_TEST_SUITE_P(
     MakePrivateBatchTest, MakePrivateTest,
     testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             MakePrivateTestCase{
                 .inputs =
@@ -47,10 +48,25 @@ INSTANTIATE_TEST_SUITE_P(
                          "x", TensorFromJSON(arrow::utf8(),
                                              R"json(["A", "B", "C"])json")),
                      test::NamedTensor(
-                         "y", TensorFromJSON(arrow::utf8(),
-                                             R"json(["X", "Y", "Z"])json"))},
-                .reveal_to = "alice",
+                         "y", TensorFromJSON(arrow::int64(),
+                                             "[42, -121, 9527, 1498672]"))},
+                .input_status = pb::TENSORSTATUS_PUBLIC,
+                .reveal_to = "bob",
                 .output_names = {"x_hat", "y_hat"}},
+            MakePrivateTestCase{
+                .inputs =
+                    {test::NamedTensor(
+                         "x", TensorFromJSON(arrow::int64(),
+                                             "[42, -121, 9527, 1498672]")),
+                     test::NamedTensor(
+                         "y", TensorFromJSON(arrow::float32(),
+                                             "[1.234, 0, -1.5, 2.75]")),
+                     test::NamedTensor(
+                         "z", TensorFromJSON(arrow::utf8(),
+                                             R"json(["X", "Y", "ZZZ"])json"))},
+                .input_status = pb::TENSORSTATUS_SECRET,
+                .reveal_to = "alice",
+                .output_names = {"x_hat", "y_hat", "z_hat"}},
             MakePrivateTestCase{
                 .inputs = {test::NamedTensor(
                                "x",
@@ -59,16 +75,7 @@ INSTANTIATE_TEST_SUITE_P(
                            test::NamedTensor(
                                "y", TensorFromJSON(arrow::float32(),
                                                    "[1.234, 0, -1.5, 2.75]"))},
-                .reveal_to = "alice",
-                .output_names = {"x_hat", "y_hat"}},
-            MakePrivateTestCase{
-                .inputs = {test::NamedTensor(
-                               "x",
-                               TensorFromJSON(arrow::int64(),
-                                              "[42, -121, 9527, 1498672]")),
-                           test::NamedTensor(
-                               "y", TensorFromJSON(arrow::float32(),
-                                                   "[1.234, 0, -1.5, 2.75]"))},
+                .input_status = pb::TENSORSTATUS_SECRET,
                 .reveal_to = "bob",
                 .output_names = {"x_hat", "y_hat"}})),
     TestParamNameGenerator(MakePrivateTest));
@@ -78,29 +85,29 @@ TEST_P(MakePrivateTest, Works) {
   auto parm = GetParam();
   auto tc = std::get<1>(parm);
   auto node = MakeExecNode(tc);
-  std::vector<Session> sessions = test::Make2PCSession(std::get<0>(parm));
+  std::vector<Session> sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
-  ExecContext alice_ctx(node, &sessions[0]);
-  ExecContext bob_ctx(node, &sessions[1]);
+  std::vector<ExecContext> exec_ctxs;
+  for (size_t idx = 0; idx < sessions.size(); ++idx) {
+    exec_ctxs.emplace_back(node, &sessions[idx]);
+  }
 
   // feed inputs
-  FeedInputs(std::vector<ExecContext*>{&alice_ctx, &bob_ctx}, tc);
+  std::vector<ExecContext*> ctx_ptrs;
+  for (size_t idx = 0; idx < exec_ctxs.size(); ++idx) {
+    ctx_ptrs.emplace_back(&exec_ctxs[idx]);
+  }
+  FeedInputs(ctx_ptrs, tc);
 
   // When
-  MakePrivate alice_op, bob_op;
-  test::OpAsyncRunner alice(&alice_op);
-  test::OpAsyncRunner bob(&bob_op);
-
-  alice.Start(&alice_ctx);
-  bob.Start(&bob_ctx);
+  EXPECT_NO_THROW(test::RunAsync<MakePrivate>(ctx_ptrs));
 
   // Then
-  EXPECT_NO_THROW({ alice.Wait(); });
-  EXPECT_NO_THROW({ bob.Wait(); });
-
-  auto tensor_table = alice_ctx.GetSession()->GetTensorTable();
-  if (tc.reveal_to == bob_ctx.GetSession()->SelfPartyCode()) {
-    tensor_table = bob_ctx.GetSession()->GetTensorTable();
+  auto tensor_table = exec_ctxs[0].GetSession()->GetTensorTable();
+  for (size_t idx = 1; idx < exec_ctxs.size(); ++idx) {
+    if (tc.reveal_to == exec_ctxs[idx].GetSession()->SelfPartyCode()) {
+      tensor_table = exec_ctxs[idx].GetSession()->GetTensorTable();
+    }
   }
   for (size_t i = 0; i < tc.output_names.size(); ++i) {
     auto tensor = tensor_table->GetTensor(tc.output_names[i]);
@@ -123,8 +130,8 @@ pb::ExecNode MakePrivateTest::MakeExecNode(const MakePrivateTestCase& tc) {
 
   std::vector<pb::Tensor> inputs;
   for (const auto& named_tensor : tc.inputs) {
-    auto t = test::MakeSecretTensorReference(named_tensor.name,
-                                             named_tensor.tensor->Type());
+    auto t = test::MakeTensorReference(
+        named_tensor.name, named_tensor.tensor->Type(), tc.input_status);
     inputs.push_back(std::move(t));
   }
   builder.AddInput(MakePrivate::kIn, inputs);
@@ -142,7 +149,11 @@ pb::ExecNode MakePrivateTest::MakeExecNode(const MakePrivateTestCase& tc) {
 
 void MakePrivateTest::FeedInputs(std::vector<ExecContext*> ctxs,
                                  const MakePrivateTestCase& tc) {
-  test::FeedInputsAsSecret(ctxs, tc.inputs);
+  if (tc.input_status == pb::TENSORSTATUS_SECRET) {
+    test::FeedInputsAsSecret(ctxs, tc.inputs);
+  } else {
+    test::FeedInputsAsPublic(ctxs, tc.inputs);
+  }
 }
 
 }  // namespace scql::engine::op

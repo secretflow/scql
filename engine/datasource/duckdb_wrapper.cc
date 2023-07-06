@@ -20,11 +20,20 @@
 #include "duckdb/parser/expression/function_expression.hpp"
 #include "duckdb/parser/parsed_data/create_table_function_info.hpp"
 #include "duckdb/parser/tableref/table_function_ref.hpp"
+#include "gflags/gflags.h"
 #include "yacl/base/exception.h"
+
+#include "engine/util/filepath_helper.h"
 
 #include "engine/datasource/csvdb_conf.pb.h"
 
 namespace scql::engine {
+
+DEFINE_bool(enable_restricted_read_path, true,
+            "whether restrict path for file to read");
+DEFINE_string(
+    restricted_read_path, "./data",
+    "in where the file is allowed to read if enable restricted read path");
 
 namespace {
 
@@ -32,6 +41,8 @@ static duckdb::LogicalType ToLogicalType(csv::ColumnType type) {
   switch (type) {
     case csv::ColumnType::LONG:
       return duckdb::LogicalType::BIGINT;
+    case csv::ColumnType::FLOAT:
+      return duckdb::LogicalType::FLOAT;
     case csv::ColumnType::DOUBLE:
       return duckdb::LogicalType::DOUBLE;
     case csv::ColumnType::STRING:
@@ -70,7 +81,9 @@ static std::unique_ptr<duckdb::TableFunctionRef> CSVTableReplacementScan(
   auto table_function = std::make_unique<duckdb::TableFunctionRef>();
   std::vector<std::unique_ptr<duckdb::ParsedExpression>> children;
   children.push_back(std::make_unique<duckdb::ConstantExpression>(
-      duckdb::Value(csv_tbl->data_path())));
+      duckdb::Value(util::GetAbsolutePath(csv_tbl->data_path(),
+                                          FLAGS_enable_restricted_read_path,
+                                          FLAGS_restricted_read_path))));
   {
     std::vector<duckdb::Value> types;
     std::vector<duckdb::Value> names;
@@ -117,9 +130,19 @@ static std::unique_ptr<duckdb::FunctionData> CSVScanBind(
                                                           return_types, names);
 }
 
+void CheckTablePaths(const csv::CsvdbConf &csvdb_conf) {
+  for (const auto &table_conf : csvdb_conf.tables()) {
+    // If path not illegal, exception will be thrown.
+    util::GetAbsolutePath(table_conf.data_path(),
+                          FLAGS_enable_restricted_read_path,
+                          FLAGS_restricted_read_path);
+  }
+}
+
 }  // namespace
 
 duckdb::DuckDB DuckDBWrapper::CreateDB(const csv::CsvdbConf *csvdb_conf) {
+  CheckTablePaths(*csvdb_conf);
   auto scan_data = std::make_unique<CSVTableReplacementScanData>();
   scan_data->csvdb_conf = csvdb_conf;
 

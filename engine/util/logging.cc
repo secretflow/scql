@@ -29,7 +29,8 @@ namespace scql::engine::util {
 /// https://github.com/gabime/spdlog/wiki/3.-Custom-formatting
 /// example: ```2019-11-29 06:58:54.633 [info] [log_test.cpp:TestBody:16] The answer is 42.```
 // clang-format on
-static const char* kFormatPattern = "%Y-%m-%d %H:%M:%S.%e [%l] [%s:%!:%#] %v";
+static const char* kFormatPattern =
+    "%Y-%m-%d %H:%M:%S.%e [%l] [%s:%!:%#] [%n] %v";
 
 namespace {
 

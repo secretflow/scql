@@ -20,6 +20,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/secretflow/scql/pkg/audit"
 )
 
 func TestNewConfig(t *testing.T) {
@@ -35,6 +37,9 @@ session_expire_time: 1h
 session_expire_check_time: 20s
 password_check: true
 log_level: debug
+audit:
+  audit_log_file: another/audit.log
+  audit_detail_file: another/plan.log
 storage:
   type: sqlite
   conn_str: ":memory:"
@@ -80,7 +85,16 @@ engine:
 		SessionExpireTime:    1 * time.Hour,
 		SessionCheckInterval: 20 * time.Second,
 		LogLevel:             "debug",
-		PasswordCheck:        true,
+		AuditConfig: audit.AuditConf{
+			EnableAuditLog:          true,
+			AuditLogFile:            "another/audit.log",
+			AuditDetailFile:         "another/plan.log",
+			AuditMaxSizeInMegaBytes: DefaultAuditMaxSizeInMegaBytes,
+			AuditMaxBackupsCount:    DefaultAuditMaxBackupsCount,
+			AuditMaxAgeInDays:       DefaultAuditMaxAgeInDays,
+			AuditMaxCompress:        DefaultAuditMaxCompress,
+		},
+		PasswordCheck: true,
 		Storage: StorageConf{
 			Type:            "sqlite",
 			ConnStr:         ":memory:",
@@ -165,6 +179,15 @@ engine:
 		SessionCheckInterval: 20 * time.Second,
 		PasswordCheck:        false,
 		LogLevel:             "info",
+		AuditConfig: audit.AuditConf{
+			EnableAuditLog:          true,
+			AuditLogFile:            DefaultAuditLogFile,
+			AuditDetailFile:         DefaultAudiDetailFile,
+			AuditMaxSizeInMegaBytes: DefaultAuditMaxSizeInMegaBytes,
+			AuditMaxBackupsCount:    DefaultAuditMaxBackupsCount,
+			AuditMaxAgeInDays:       DefaultAuditMaxAgeInDays,
+			AuditMaxCompress:        DefaultAuditMaxCompress,
+		},
 		Storage: StorageConf{
 			Type:            "sqlite",
 			ConnStr:         "db-str-from-env",

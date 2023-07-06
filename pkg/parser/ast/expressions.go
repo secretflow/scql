@@ -454,7 +454,7 @@ type ColumnName struct {
 
 // Restore implements Node interface.
 func (n *ColumnName) Restore(ctx *RestoreCtx) error {
-	if n.Schema.O != "" {
+	if n.Schema.O != "" && ctx.Dialect.NeedShowSchema() {
 		ctx.WriteName(n.Schema.O)
 		ctx.WritePlain(".")
 	}

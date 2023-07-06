@@ -17,6 +17,7 @@
 #include "brpc/server.h"
 #include "gflags/gflags.h"
 
+#include "engine/audit/audit_log.h"
 #include "engine/datasource/datasource_adaptor_mgr.h"
 #include "engine/datasource/embed_router.h"
 #include "engine/exe/version.h"
@@ -31,6 +32,10 @@
 DEFINE_string(log_dir, "logs", "log directory");
 DEFINE_bool(log_enable_console_logger, true,
             "whether logging to stdout while logging to file");
+
+DEFINE_string(audit_log_dir, "audit", "audit log directory");
+DEFINE_bool(enable_audit_logger, true, "whether enable audit log");
+
 // Brpc channel flags for peer engine.
 DEFINE_string(peer_engine_protocol, "baidu_std", "rpc protocol");
 DEFINE_string(peer_engine_connection_type, "single", "connection type");
@@ -246,8 +251,15 @@ int main(int argc, char* argv[]) {
     if (FLAGS_log_enable_console_logger) {
       opts.enable_console_logger = true;
     }
-
     scql::engine::util::SetupLogger(opts);
+
+    scql::engine::audit::AuditOptions auditOpts;
+    auditOpts.audit_log_dir = FLAGS_audit_log_dir;
+    if (FLAGS_enable_audit_logger) {
+      auditOpts.enable_audit_logger = true;
+    }
+    scql::engine::audit::SetupAudit(auditOpts);
+
   } catch (const std::exception& e) {
     SPDLOG_ERROR("Fail to setup logger, msg={}", e.what());
     return -1;

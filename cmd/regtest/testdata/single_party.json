@@ -52,8 +52,8 @@
     },
     {
       "name": "arithmetic (model)",
-      "query": "select plain_long_0 % 1 as res0, plain_long_0 % 1.5 as res1, plain_float_0 % 1.5 as res2, plain_long_0 % plain_long_1 as res3, plain_long_0 % plain_float_0 as res4, plain_float_0 % plain_float_1 as res5 from scdb.alice_tbl_1;",
-      "mysql_query": "select plain_long_0 % 1 as res0, plain_long_0 % 1.5 as res1, plain_float_0 % 1.5 as res2, plain_long_0 % plain_long_1 as res3, plain_long_0 % plain_float_0 as res4, plain_float_0 % plain_float_1 as res5 from alice.tbl_1;"
+      "query": "select plain_long_0 % 1 as res0, plain_long_0 % plain_long_1 as res1 from scdb.alice_tbl_1;",
+      "mysql_query": "select plain_long_0 % 1 as res0, plain_long_0 % plain_long_1 as res1 from alice.tbl_1;"
     },
     {
       "name": "max",
@@ -222,8 +222,8 @@
     },
     {
       "name": "arithmetic (model) where(null)",
-      "query": "select plain_long_0 % 1 as res0, plain_long_0 % 1.5 as res1, plain_float_0 % 1.5 as res2, plain_long_0 % plain_long_1 as res3, plain_long_0 % plain_float_0 as res4, plain_float_0 % plain_float_1 as res5 from scdb.alice_tbl_1 as alice where alice.plain_long_0 > alice.plain_long_1;",
-      "mysql_query": "select plain_long_0 % 1 as res0, plain_long_0 % 1.5 as res1, plain_float_0 % 1.5 as res2, plain_long_0 % plain_long_1 as res3, plain_long_0 % plain_float_0 as res4, plain_float_0 % plain_float_1 as res5 from alice.tbl_1 as alice where alice.plain_long_0 > alice.plain_long_1;"
+      "query": "select plain_long_0 % 1 as res0, plain_long_0 % plain_long_1 as res1 from scdb.alice_tbl_1 as alice where alice.plain_long_0 > alice.plain_long_1;",
+      "mysql_query": "select plain_long_0 % 1 as res0,  plain_long_0 % plain_long_1 as res1 from alice.tbl_1 as alice where alice.plain_long_0 > alice.plain_long_1;"
     },
     {
       "name": "case when",
@@ -231,74 +231,29 @@
       "mysql_query": "select plain_long_0, plain_long_1, case when plain_long_0 >= 5  then -1 else (plain_long_0 / plain_long_1) end as r from alice.tbl_1;"
     },
     {
-      "name": "rlike",
-      "query": "select plain_long_0, plain_string_0, plain_string_0 rlike '^str1' as rlikeOp from scdb.alice_tbl_1 where plain_string_0 rlike '^s';",
-      "mysql_query": "select plain_long_0, plain_string_0, plain_string_0 rlike '^str1' as rlikeOp from alice.tbl_1 where plain_string_0 rlike '^s';"
-    },
-    {
-      "name": "like",
-      "query": "select plain_long_0, plain_string_0, plain_string_0 like 'str1%' as rlikeOp from scdb.alice_tbl_1 where plain_string_0 like 's%';",
-      "mysql_query": "select plain_long_0, plain_string_0, plain_string_0 like 'str1%' as rlikeOp from alice.tbl_1 where plain_string_0 like 's%';"
-    },
-    {
-      "name": "lower upper",
-      "query": "select plain_string_0, lower(plain_string_0) as lw, upper(plain_string_0) as up from scdb.alice_tbl_1 where plain_string_0 is not null;",
-      "mysql_query": "select plain_string_0, lower(plain_string_0) as lw, upper(plain_string_0) as up from alice.tbl_1 where plain_string_0 is not null;"
-    },
-    {
-      "name": "coalesce",
-      "query": "select plain_long_0, plain_string_0, coalesce(plain_string_0, plain_long_0) as coal from scdb.alice_tbl_1;",
-      "mysql_query": "select plain_long_0, plain_string_0, coalesce(plain_string_0, plain_long_0) as coal from alice.tbl_1;"
-    },
-    {
-      "name": "substring",
-      "query": "select plain_long_0, plain_string_0, substring(plain_string_0, 2, 8) as t from scdb.alice_tbl_1;",
-      "mysql_query": "select plain_long_0, plain_string_0, substring(plain_string_0, 2, 8) as t from alice.tbl_1;"
-    },
-    {
-      "name": "least greatest",
-      "query": "select plain_long_0, plain_long_1, least(plain_long_0, plain_long_1) as smallest, greatest(plain_long_0, plain_long_1) as biggest from scdb.alice_tbl_1;",
-      "mysql_query": "select plain_long_0, plain_long_1, least(plain_long_0, plain_long_1) as smallest, greatest(plain_long_0, plain_long_1) as biggest from alice.tbl_1;"
-    },
-    {
       "name": "concat",
       "query": "select concat(plain_string_0, plain_string_1) as concat_col from scdb.alice_tbl_1;",
       "mysql_query": "select concat(plain_string_0, plain_string_1) as concat_col from alice.tbl_1;"
     },
     {
-      "name": "length",
-      "query": "select length(plain_string_0) as len from scdb.alice_tbl_1;",
-      "mysql_query": "select length(plain_string_0) as len from alice.tbl_1;"
+      "name": "substring",
+      "query": "select substring(plain_string_0, 2, 3) as t from scdb.alice_tbl_1 where substring(plain_string_0, 2) != '';",
+      "mysql_query": "select substring(plain_string_0, 2, 3) as t from alice.tbl_1 where substring(plain_string_0, 2) != '';"
     },
     {
-      "name": "replace",
-      "query": "select plain_string_0, replace(plain_string_0, 'string', 'str') as n from scdb.alice_tbl_1;",
-      "mysql_query": "select plain_string_0, replace(plain_string_0, 'string', 'str') as n from alice.tbl_1;"
+      "name": "apply in",
+      "query": "select plain_long_0 in (select plain_long_0 from scdb.alice_tbl_1) as tt, plain_long_0 not in (select plain_long_0 from scdb.alice_tbl_1) as ff from scdb.alice_tbl_0",
+      "mysql_query": "select plain_long_0 in (select plain_long_0 from alice.tbl_1) as tt, plain_long_0 not in (select plain_long_0 from alice.tbl_1) as ff from alice.tbl_0"
     },
     {
-      "name": "sign ceil floor round, abs",
-      "query": "select plain_long_1, sign(plain_long_1) as si, abs(plain_long_1) as ab, ceil(plain_long_1) as c, ceiling(plain_long_1) as ce, round(plain_long_1) as r, floor(plain_long_1) as f from scdb.alice_tbl_1;",
-      "mysql_query": "select plain_long_1, sign(plain_long_1) as si, abs(plain_long_1) as ab, ceil(plain_long_1) as c, ceiling(plain_long_1) as ce, round(plain_long_1) as r, floor(plain_long_1) as f from alice.tbl_1;"
+      "name": "where in subquery",
+      "query": "select plain_long_0 from scdb.alice_tbl_0 as alice where plain_long_0 in (select plain_long_0 from scdb.alice_tbl_1)",
+      "mysql_query": "select plain_long_0 from alice.tbl_0 where plain_long_0 in (select plain_long_0 from alice.tbl_1)"
     },
     {
-      "name": "sin cos tan atan cot degrees",
-      "query": "select plain_long_1, degrees(plain_long_1) as de, sin(plain_long_1) as s, cos(plain_long_1) as c, tan(plain_long_1) as t, atan(plain_long_1) as at from scdb.alice_tbl_1;",
-      "mysql_query": "select plain_long_1, degrees(plain_long_1) as de, sin(plain_long_1) as s, cos(plain_long_1) as c, tan(plain_long_1) as t, atan(plain_long_1) as at from alice.tbl_1;"
-    },
-    {
-      "name": "exp pow math log log2 log10 ln",
-      "query": "select plain_long_0, log(2, plain_long_0) as l, log10(plain_long_0) as l10, log2(plain_long_0) as l2, ln(plain_long_0) as ln from scdb.alice_tbl_1;",
-      "mysql_query": "select plain_long_0, log(2, plain_long_0) as l, log10(plain_long_0) as l10, log2(plain_long_0) as l2, ln(plain_long_0) as ln from alice.tbl_1;"
-    },
-    {
-      "name": "radians sqrt truncate",
-      "query": "select plain_long_0, radians(plain_long_0) as ra, sqrt(plain_long_0) as sq,  truncate(plain_long_0, 1) as tr from scdb.alice_tbl_1;",
-      "mysql_query": "select plain_long_0, radians(plain_long_0) as ra, sqrt(plain_long_0) as sq,  truncate(plain_long_0, 1) as tr from alice.tbl_1;"
-    },
-    {
-      "name": "cast",
-      "query": "select plain_long_0, cast(plain_long_0 as char(32)) as chr, cast(plain_long_0 as decimal(11, 2)) as de, cast(plain_long_1 as signed) as sig from scdb.alice_tbl_1;",
-      "mysql_query": "select plain_long_0, cast(plain_long_0 as char(32)) as chr, cast(plain_long_0 as decimal(11, 2)) as de, cast(plain_long_1 as signed) as sig from alice.tbl_1;"
+      "name": "where in subquery",
+      "query": "select plain_long_0 from scdb.alice_tbl_0 as alice where (plain_long_0 in (select plain_long_0 from scdb.alice_tbl_1 as alice)) and plain_long_0 > 0",
+      "mysql_query": "select plain_long_0 from alice.tbl_0 where (plain_long_0 in (select plain_long_0 from alice.tbl_1)) and plain_long_0 > 0"
     }
   ]
 }

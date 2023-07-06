@@ -29,7 +29,7 @@ option go_package = "proto-gen/scql";
 // results.
 service SCDBService {
   // Asynchronous query interface.
-  // Submit the query (DDL/DML/DQL) to SCQL, and return immediately.
+  // Submit the query (DDL/DCL/DQL) to SCQL, and return immediately.
   // It will allocate a new `scdb_session_id` for the query, and set it in
   // response.
   rpc Submit(SCDBQueryRequest) returns (SCDBSubmitResponse);
@@ -40,7 +40,7 @@ service SCDBService {
   // The synchronous query interface allows users to submit a query,
   // wait for it to finish, and get the query result in one RPC.
   // This interface is suitable for executing fast queries,
-  // such as DDL, DML, and simple DQL. However,
+  // such as DDL, DCL, and simple DQL. However,
   // if the query takes a long time to run, it may result in a timeout.
   // Therefore, it is recommended to use the synchronous query API to run
   // complex queries.

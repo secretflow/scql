@@ -25,8 +25,8 @@ Example for SCDB
   password_check: true
   log_level: debug
   storage:
-    type: sqlite
-    conn_str: scdb.db
+    type: mysql
+    conn_str: user_name:pass_word@tcp(127.0.0.1:3306)/db_name?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true
     max_idle_conns: 10
     max_open_conns: 100
     conn_max_idle_time: 2m
@@ -71,7 +71,7 @@ Config in SCDB
 +-------------------------------+---------+------------------------------------------------------------+
 | tls.key_file                  | none    | Private key file path to enable TSL, supports key/pem type |
 +-------------------------------+---------+------------------------------------------------------------+
-| storage.type                  | none    | Database Kind in SCDB, supports mysql/sqlite               |
+| storage.type                  | none    | Database kind in SCDB, supports MYSQL/SQLite3              |
 +-------------------------------+---------+------------------------------------------------------------+
 | storage.conn_str              | none    | Used to connect to a database                              |
 +-------------------------------+---------+------------------------------------------------------------+
@@ -104,14 +104,61 @@ Config in SCDB
 | engine.spu.sigmoid_mode       | none    | The sigmoid approximation method for engine to work with   |
 +-------------------------------+---------+------------------------------------------------------------+
 
+Config for Storage
+^^^^^^^^^^^^^^^^^^
+
+Database in SCDB is used to storage the SCQL system data, such as CCL and user information, currently SCDB support MySQL/SQLite3. You can connect to a database by setting `conn_str` and `type` in the storage config.
+
+type
+  The database type, which can be set as mysql/sqlite. And MySQL is recommended, which has been fully tested.
+
+conn_str
+  MySQL string format:
+
+    | [username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
+    | *see* `dsn-data-source-name`_ *for more infos*.
+
+  MySQL string example:
+
+    user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true
+
+  SQLite3 string format:
+
+    more infos: https://github.com/mattn/go-sqlite3#connection-string.
+
+  SQLite3 string example:
+
+    scdb.db
+
+.. _dsn-data-source-name: https://github.com/go-sql-driver/mysql#dsn-data-source-name
+
+A typical config of storage can be like:
+
+.. code-block:: yaml
+
+  storage:
+    type: mysql
+    conn_str: user_name:pass_word@tcp(127.0.0.1:3306)/db_name?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true
+    max_idle_conns: 10
+    max_open_conns: 100
+    conn_max_idle_time: 2m
+    conn_max_lifetime: 5m
+
+.. note::
+  To handle time.Time correctly, you need to include parseTime as a parameter. To fully support UTF-8 encoding, you need to change charset=utf8 to charset=utf8mb4
+
+
+
+PassWord Check
+^^^^^^^^^^^^^^
+``password_check`` serves to validate password strength. For ALTER USER, CREATE USER statements, if it's true, the password should be at least 16 characters which including a number, a lowercase letter, a uppercase letter and a special character.
 
 Config for GRM
 ^^^^^^^^^^^^^^
 In addition to being provided by developers, GRM services can also be simulated by reading local JSON files, which is used for testing and development, you can choose them as follows.
 
-1. stdgrm
-
-If you want to use your own developed GRM service, grm_mode need to be set as stdgrm.
+stdgrm
+  If you want to use your own developed GRM service, grm_mode need to be set as stdgrm.
 
 .. code-block:: yaml
   
@@ -120,9 +167,8 @@ If you want to use your own developed GRM service, grm_mode need to be set as st
     host: ${host of grm service} # eg. http://localhost:8080
     timeout: ${timeout of grm service} # eg. 2m
 
-2. toygrm
-
-If you want to directly mock a GRM service from a json file, except set grm_mode as toygrm, toy_grm_conf also need to be set.
+toygrm
+  If you want to directly mock a GRM service from a json file, except set grm_mode as toygrm, toy_grm_conf also need to be set.
 
 .. code-block:: yaml
 
@@ -255,7 +301,7 @@ Config in Engine
 
 Config for datasource
 ^^^^^^^^^^^^^^^^^^^^^
-datasources(MYSQL/SQLite3) are where the SCQLEngine gets its data from.
+datasources(MySQL/SQLite3/PostgreSQL/CSVDB) are where the SCQLEngine gets its data from.
 
 *datasource_router* is design to support multi datasources, currently only supported: embed.
 
@@ -282,35 +328,45 @@ if *embed_router_conf* is empty, embed_router will try to initialized with *db_c
 Embed router
 """"""""""""
 
-datasources in embed_router_conf contain information for connecting MYSQL/SQLite3::
-  
+datasources in embed_router_conf contain informations for connecting MySQL/SQLite3/PostgreSQL/CSVDB:
+
   id: unique id of datasource.
 
   name: custom description help to distinguish datasources.
 
-  kind: datasource type, currently support MYSQL/SQLite3.
+  kind: datasource type, currently support MySQL/SQLite3/PostgreSQL/CSVDB.
 
-  connection_str: string used to connect MYSQL/SQLite3.
+  connection_str: string used to connect MySQL/SQLite3/PostgreSQL/CSVDB.
 
-    MYSQL Connection string format::
-
+    MySQL Connection string format:
       <str> == <assignment> | <assignment> ';' <str>
       <assignment> == <name> '=' <value>
       <name> == 'host' | 'port' | 'user' | 'password' | 'db' | 'compress' | 'auto-reconnect' | 'reset' | 'fail-readonly'
       <value> == [~;]*
-      
-    MYSQL Connection string e.g::
-    
-      "db=${db};user=${user};password=${password};host=${host}"
-      
-    SQLite3 Connection string format::
 
+    MySQL Connection string e.g:
+      "db=${db};user=${user};password=${password};host=${host}"
+
+    SQLite3 Connection string format:
       more infos: https://www.sqlite.org/c3ref/open.html
 
-    SQLite3 Connection string e.g::
-    
-      "file:/tmp/data_test.db"
+    SQLite3 Connection string e.g:
       "file:data_test.db?mode=memory&cache=shared"
+
+    PostgreSQL Connection string format:
+      <str> == <assignment> | <assignment> ' ' <str>
+      <assignment> == <name> '=' <value>
+      <name> == 'host' | 'port' | 'user' | 'password' | 'dbname' | 'connect_timeout'
+      <value> == [~;]*
+
+    PostgreSQL Connection string e.g:
+      "db=${db};user=${user};password=${password};host=${host}"
+
+    CSVDB Connection string format:
+      Since connection_str is an object in another json object, the format is a converted json string corresponding to `CsvdbConf <https://github.com/secretflow/scql/tree/main/engine/datasource/csvdb_conf.proto>`_
+
+    CSVDB Connection string e.g:
+      "{\\\"db_name\\\":\\\"csvdb\\\",\\\"tables\\\":[{\\\"table_name\\\":\\\"staff\\\",\\\"data_path\\\":\\\"test.csv\\\",\\\"columns\\\":[{\\\"column_name\\\":\\\"id\\\",\\\"column_type\\\":\\\"1\\\"}]}]}"
 
 Routing rules
 """""""""""""

@@ -95,8 +95,8 @@ func CreateIntAttribute(data int) *proto.AttributeValue {
 	return &proto.AttributeValue{
 		Value: &proto.AttributeValue_T{
 			T: &proto.Tensor{
-				ElemType: proto.PrimitiveDataType_INT64,
-				Value:    &proto.Tensor_I64S{I64S: &proto.Int64S{I64S: []int64{int64(data)}}},
+				ElemType:  proto.PrimitiveDataType_INT64,
+				Int64Data: []int64{int64(data)},
 			}},
 	}
 }
@@ -105,8 +105,8 @@ func CreateIntsAttribute(datas []int64) *proto.AttributeValue {
 	return &proto.AttributeValue{
 		Value: &proto.AttributeValue_T{
 			T: &proto.Tensor{
-				ElemType: proto.PrimitiveDataType_INT64,
-				Value:    &proto.Tensor_I64S{I64S: &proto.Int64S{I64S: datas}},
+				ElemType:  proto.PrimitiveDataType_INT64,
+				Int64Data: datas,
 				Shape: &proto.TensorShape{
 					Dim: []*proto.TensorShape_Dimension{&proto.TensorShape_Dimension{
 						Value: &proto.TensorShape_Dimension_DimValue{DimValue: int64(len(datas))},
@@ -120,8 +120,8 @@ func CreateFloatAttribute(data float32) *proto.AttributeValue {
 	return &proto.AttributeValue{
 		Value: &proto.AttributeValue_T{
 			T: &proto.Tensor{
-				ElemType: proto.PrimitiveDataType_FLOAT,
-				Value:    &proto.Tensor_Fs{Fs: &proto.Floats{Fs: []float32{data}}},
+				ElemType:  proto.PrimitiveDataType_FLOAT32,
+				FloatData: []float32{data},
 			}},
 	}
 }
@@ -131,7 +131,7 @@ func CreateBoolAttribute(data bool) *proto.AttributeValue {
 		Value: &proto.AttributeValue_T{
 			T: &proto.Tensor{
 				ElemType: proto.PrimitiveDataType_BOOL,
-				Value:    &proto.Tensor_Bs{Bs: &proto.Booleans{Bs: []bool{data}}},
+				BoolData: []bool{data},
 			}},
 	}
 }

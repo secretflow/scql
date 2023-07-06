@@ -16,12 +16,14 @@
 
 #include "butil/files/temp_file.h"
 #include "fmt/format.h"
+#include "gflags/gflags.h"
 #include "gtest/gtest.h"
 
 #include "engine/datasource/csvdb_conf.pb.h"
 
 namespace scql::engine {
 
+DECLARE_string(restricted_read_path);
 namespace {
 
 ::testing::AssertionResult ColumnEquals(
@@ -83,6 +85,7 @@ class DuckdbWrapperTest : public ::testing::Test {
 };
 
 TEST_F(DuckdbWrapperTest, NormalQuery) {
+  FLAGS_restricted_read_path = "./";
   duckdb::DuckDB db = DuckDBWrapper::CreateDB(&csvdb_conf_);
   duckdb::Connection conn(db);
 

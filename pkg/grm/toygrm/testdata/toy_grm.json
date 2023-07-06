@@ -30,7 +30,8 @@
           "columns": [
             { "column_name": "c1", "column_type": "long" },
             { "column_name": "c2", "column_type": "long" }
-          ]
+          ],
+          "db_type": "MYSQL"
         }
       },
       {
@@ -41,7 +42,8 @@
           "columns": [
             { "column_name": "c1", "column_type": "string" },
             { "column_name": "c2", "column_type": "long" }
-          ]
+          ],
+          "db_type": "POSTGRESQL"
         }
       },
       {
@@ -52,7 +54,8 @@
           "columns": [
             { "column_name": "c1", "column_type": "string" },
             { "column_name": "c2", "column_type": "long" }
-          ]
+          ],
+          "db_type": "CSVDB"
         }
       }
     ]

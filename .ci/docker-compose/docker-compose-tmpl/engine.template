@@ -1,0 +1,8 @@
+  engine_${PARTY}:
+    command:
+      - /home/admin/bin/scqlengine
+      - --flagfile=/home/admin/engine/conf/gflags.conf
+    image: scql:${SCQL_IMAGE_TAG}
+    volumes:
+      - ./engine/${PARTY}/conf/gflags.conf:/home/admin/engine/conf/gflags.conf
+      - ./csv/:/data/

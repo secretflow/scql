@@ -14,6 +14,20 @@
 
 package grm
 
+import (
+	grmproto "github.com/secretflow/scql/pkg/proto-gen/grm"
+)
+
+type DatabaseType = grmproto.DataSourceKind
+
+const (
+	DBUnknown  DatabaseType = grmproto.DataSourceKind_UNKNOWN
+	DBMySQL    DatabaseType = grmproto.DataSourceKind_MYSQL
+	DBSQLite   DatabaseType = grmproto.DataSourceKind_SQLITE
+	DBPostgres DatabaseType = grmproto.DataSourceKind_POSTGRESQL
+	DBCSV      DatabaseType = grmproto.DataSourceKind_CSVDB
+)
+
 type ColumnDesc struct {
 	Name        string
 	Type        string
@@ -24,6 +38,7 @@ type TableSchema struct {
 	DbName    string
 	TableName string
 	Columns   []*ColumnDesc
+	DBType    DatabaseType
 }
 
 type EngineInfo struct {

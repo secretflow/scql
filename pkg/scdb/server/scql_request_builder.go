@@ -23,6 +23,7 @@ import (
 	"github.com/secretflow/scql/pkg/grm"
 	"github.com/secretflow/scql/pkg/interpreter/translator"
 	"github.com/secretflow/scql/pkg/parser/mysql"
+	grmproto "github.com/secretflow/scql/pkg/proto-gen/grm"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/scdb/storage"
 	"github.com/secretflow/scql/pkg/util/sliceutil"
@@ -138,6 +139,7 @@ func (app *App) askEngineInfoByTables(s *session, dbName string, tableNames []st
 		}
 
 		refDbTable := translator.NewDbTable(t.RefDb, t.RefTable)
+		refDbTable.SetDBType(grmproto.DataSourceKind(t.DBType))
 		tableToRefs[dbTable] = refDbTable
 	}
 

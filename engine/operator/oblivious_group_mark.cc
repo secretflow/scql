@@ -45,7 +45,7 @@ void ObliviousGroupMark::Execute(ExecContext* ctx) {
   const auto& input_pbs = ctx->GetInput(kIn);
 
   auto symbols = ctx->GetSession()->GetDeviceSymbols();
-  auto hctx = ctx->GetSession()->GetSpuHalContext();
+  auto sctx = ctx->GetSession()->GetSpuContext();
   // TODO(jingshi) : check and calculate validity
   auto first_value = symbols->getVar(
       util::SpuVarNameEncoder::GetValueName(input_pbs[0].name()));
@@ -54,7 +54,7 @@ void ObliviousGroupMark::Execute(ExecContext* ctx) {
   spu::Value result;
   if (row_count <= 1) {
     result = spu::kernel::hlo::Seal(
-        hctx, spu::kernel::hlo::Constant(hctx, true, {row_count}));
+        sctx, spu::kernel::hlo::Constant(sctx, true, {row_count}));
   } else {
     result = GetFullGroupMark(ctx);
   }
@@ -71,17 +71,17 @@ void ObliviousGroupMark::Execute(ExecContext* ctx) {
 spu::Value ObliviousGroupMark::GetFullGroupMark(ExecContext* ctx) {
   const auto& input_pbs = ctx->GetInput(kIn);
   auto symbols = ctx->GetSession()->GetDeviceSymbols();
-  auto hctx = ctx->GetSession()->GetSpuHalContext();
+  auto sctx = ctx->GetSession()->GetSpuContext();
   auto first_value = symbols->getVar(
       util::SpuVarNameEncoder::GetValueName(input_pbs[0].name()));
   int64_t row_count = first_value.shape().size() > 0 ? first_value.shape()[0]
                                                      : first_value.numel();
   auto from_top =
-      spu::kernel::hal::slice(hctx, first_value, {0}, {row_count - 1}, {});
+      spu::kernel::hal::slice(sctx, first_value, {0}, {row_count - 1}, {});
   auto to_bottom =
-      spu::kernel::hal::slice(hctx, first_value, {1}, {row_count}, {});
+      spu::kernel::hal::slice(sctx, first_value, {1}, {row_count}, {});
 
-  auto result = spu::kernel::hlo::NotEqual(hctx, from_top, to_bottom);
+  auto result = spu::kernel::hlo::NotEqual(sctx, from_top, to_bottom);
 
   for (int i = 1; i < input_pbs.size(); ++i) {
     auto cur_value = symbols->getVar(
@@ -92,19 +92,19 @@ spu::Value ObliviousGroupMark::GetFullGroupMark(ExecContext* ctx) {
                  "intput tensor#{} row count not equal to the previous");
 
     auto from_top =
-        spu::kernel::hal::slice(hctx, cur_value, {0}, {row_count - 1}, {});
+        spu::kernel::hal::slice(sctx, cur_value, {0}, {row_count - 1}, {});
     auto to_bottom =
-        spu::kernel::hal::slice(hctx, cur_value, {1}, {row_count}, {});
+        spu::kernel::hal::slice(sctx, cur_value, {1}, {row_count}, {});
 
-    auto cur_result = spu::kernel::hlo::NotEqual(hctx, from_top, to_bottom);
+    auto cur_result = spu::kernel::hlo::NotEqual(sctx, from_top, to_bottom);
 
-    result = spu::kernel::hlo::Or(hctx, result, cur_result);
+    result = spu::kernel::hlo::Or(sctx, result, cur_result);
   }
 
   auto tail =
-      spu::kernel::hlo::Seal(hctx, spu::kernel::hlo::Constant(hctx, true, {1}));
+      spu::kernel::hlo::Seal(sctx, spu::kernel::hlo::Constant(sctx, true, {1}));
 
-  auto full_result = spu::kernel::hlo::Pad(hctx, result, tail, {0}, {1}, {0});
+  auto full_result = spu::kernel::hlo::Pad(sctx, result, tail, {0}, {1}, {0});
   return full_result;
 }
 

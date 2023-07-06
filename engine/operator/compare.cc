@@ -44,9 +44,9 @@ const std::string Equal::kOpType("Equal");
 
 const std::string& Equal::Type() const { return kOpType; }
 
-spu::Value Equal::ComputeOnSpu(spu::HalContext* hctx, const spu::Value& lhs,
+spu::Value Equal::ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
                                const spu::Value& rhs) {
-  return spu::kernel::hlo::Equal(hctx, lhs, rhs);
+  return spu::kernel::hlo::Equal(sctx, lhs, rhs);
 }
 
 TensorPtr Equal::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
@@ -67,9 +67,9 @@ const std::string NotEqual::kOpType("NotEqual");
 
 const std::string& NotEqual::Type() const { return kOpType; }
 
-spu::Value NotEqual::ComputeOnSpu(spu::HalContext* hctx, const spu::Value& lhs,
+spu::Value NotEqual::ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
                                   const spu::Value& rhs) {
-  return spu::kernel::hlo::NotEqual(hctx, lhs, rhs);
+  return spu::kernel::hlo::NotEqual(sctx, lhs, rhs);
 }
 
 TensorPtr NotEqual::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
@@ -90,9 +90,9 @@ const std::string Less::kOpType("Less");
 
 const std::string& Less::Type() const { return kOpType; }
 
-spu::Value Less::ComputeOnSpu(spu::HalContext* hctx, const spu::Value& lhs,
+spu::Value Less::ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
                               const spu::Value& rhs) {
-  return spu::kernel::hlo::Less(hctx, lhs, rhs);
+  return spu::kernel::hlo::Less(sctx, lhs, rhs);
 }
 
 TensorPtr Less::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
@@ -113,9 +113,9 @@ const std::string LessEqual::kOpType("LessEqual");
 
 const std::string& LessEqual::Type() const { return kOpType; }
 
-spu::Value LessEqual::ComputeOnSpu(spu::HalContext* hctx, const spu::Value& lhs,
+spu::Value LessEqual::ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
                                    const spu::Value& rhs) {
-  return spu::kernel::hlo::LessEqual(hctx, lhs, rhs);
+  return spu::kernel::hlo::LessEqual(sctx, lhs, rhs);
 }
 
 TensorPtr LessEqual::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
@@ -136,10 +136,10 @@ const std::string GreaterEqual::kOpType("GreaterEqual");
 
 const std::string& GreaterEqual::Type() const { return kOpType; }
 
-spu::Value GreaterEqual::ComputeOnSpu(spu::HalContext* hctx,
+spu::Value GreaterEqual::ComputeOnSpu(spu::SPUContext* sctx,
                                       const spu::Value& lhs,
                                       const spu::Value& rhs) {
-  return spu::kernel::hlo::GreaterEqual(hctx, lhs, rhs);
+  return spu::kernel::hlo::GreaterEqual(sctx, lhs, rhs);
 }
 
 TensorPtr GreaterEqual::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
@@ -160,9 +160,9 @@ const std::string Greater::kOpType("Greater");
 
 const std::string& Greater::Type() const { return kOpType; }
 
-spu::Value Greater::ComputeOnSpu(spu::HalContext* hctx, const spu::Value& lhs,
+spu::Value Greater::ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
                                  const spu::Value& rhs) {
-  return spu::kernel::hlo::Greater(hctx, lhs, rhs);
+  return spu::kernel::hlo::Greater(sctx, lhs, rhs);
 }
 
 TensorPtr Greater::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {

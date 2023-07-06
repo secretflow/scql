@@ -68,6 +68,9 @@ void DatasourceAdaptorMgr::RegisterBuiltinAdaptorFactories() {
   auto odbc_adaptor_factory = std::make_shared<OdbcAdaptorFactory>();
   factory_maps_.insert({DataSourceKind::MYSQL, odbc_adaptor_factory});
   factory_maps_.insert({DataSourceKind::SQLITE, odbc_adaptor_factory});
+  factory_maps_.insert({DataSourceKind::POSTGRESQL, odbc_adaptor_factory});
+  factory_maps_.insert(
+      {DataSourceKind::CSVDB, std::make_shared<CsvdbAdaptorFactory>()});
 }
 
 }  // namespace scql::engine

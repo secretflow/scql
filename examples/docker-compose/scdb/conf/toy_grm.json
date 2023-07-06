@@ -26,6 +26,7 @@
         "schema": {
           "ref_db_name": "alice",
           "ref_table_name": "user_credit",
+          "db_type": "MYSQL",
           "columns": [
             { "column_name": "ID", "column_type": "string" },
             {
@@ -42,6 +43,7 @@
         "schema": {
           "ref_db_name": "bob",
           "ref_table_name": "user_stats",
+          "db_type": "MYSQL",
           "columns": [
             { "column_name": "ID", "column_type": "string" },
             {

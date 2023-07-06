@@ -80,7 +80,7 @@ void BroadcastTo::BroadcastToPrivate(ExecContext* ctx,
                                      const RepeatedTensor& input_pbs,
                                      const RepeatedTensor& output_pbs,
                                      const int64_t to_length) {
-  auto spu_io = util::SpuOutfeedHelper(ctx->GetSession()->GetSpuHalContext(),
+  auto spu_io = util::SpuOutfeedHelper(ctx->GetSession()->GetSpuContext(),
                                        ctx->GetSession()->GetDeviceSymbols());
   for (int i = 0; i < input_pbs.size(); ++i) {
     auto ret = spu_io.DumpPublic(input_pbs[i].name());
@@ -105,13 +105,13 @@ void BroadcastTo::BroadcastToPublic(ExecContext* ctx,
                                     const RepeatedTensor& output_pbs,
                                     const int64_t to_length) {
   auto symbols = ctx->GetSession()->GetDeviceSymbols();
-  auto hctx = ctx->GetSession()->GetSpuHalContext();
+  auto sctx = ctx->GetSession()->GetSpuContext();
   for (int i = 0; i < input_pbs.size(); ++i) {
     const auto value_name =
         util::SpuVarNameEncoder::GetValueName(input_pbs[i].name());
     auto value = symbols->getVar(value_name);
 
-    auto result = spu::kernel::hal::broadcast_to(hctx, value, {to_length});
+    auto result = spu::kernel::hal::broadcast_to(sctx, value, {to_length});
 
     symbols->setVar(util::SpuVarNameEncoder::GetValueName(output_pbs[i].name()),
                     result);

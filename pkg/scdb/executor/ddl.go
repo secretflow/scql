@@ -206,7 +206,7 @@ func (e *DDLExec) executeCreateTable(s *ast.CreateTableStmt) (err error) {
 		return fmt.Errorf("ddl.executeCreateTable: unexpected marshal failure: %v", err)
 	}
 
-	// creat table
+	// create table
 	result := tx.Create(&storage.Table{
 		Db:       dbName,
 		Table:    tblName,
@@ -215,6 +215,7 @@ func (e *DDLExec) executeCreateTable(s *ast.CreateTableStmt) (err error) {
 		Host:     e.ctx.GetSessionVars().User.Hostname,
 		RefDb:    tableSchema.DbName,
 		RefTable: tableSchema.TableName,
+		DBType:   int(tableSchema.DBType),
 	})
 	if result.Error != nil {
 		return fmt.Errorf("ddl.executeCreateTable: %v", result.Error)

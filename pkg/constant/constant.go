@@ -41,7 +41,8 @@ const (
 
 var StringTypeAlias = map[string]bool{"string": true, "str": true}
 var IntegerTypeAlias = map[string]bool{"int": true, "long": true, "int64": true, "integer": true}
-var FloatTypeAlias = map[string]bool{"float": true, "double": true}
+var FloatTypeAlias = map[string]bool{"float": true}
+var DoubleTypeAlias = map[string]bool{"double": true}
 var DateTimeTypeAlias = map[string]bool{"datetime": true}
 var TimeStampTypeAlias = map[string]bool{"timestamp": true}
 
@@ -55,4 +56,4 @@ func merge(ms ...map[string]bool) map[string]bool {
 	return res
 }
 
-var SupportTypes = merge(StringTypeAlias, IntegerTypeAlias, FloatTypeAlias, DateTimeTypeAlias, TimeStampTypeAlias)
+var SupportTypes = merge(StringTypeAlias, IntegerTypeAlias, FloatTypeAlias, DoubleTypeAlias, DateTimeTypeAlias, TimeStampTypeAlias)

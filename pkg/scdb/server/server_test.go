@@ -186,7 +186,7 @@ func caseInvalidRequest(a *require.Assertions, submitUrl, fetchUrl string) {
 
 func caseSubmit(a *require.Assertions, stub *client.Client) {
 	// invalid user
-	for _, pair := range [][2]string{{`root`, `wrong_password`}, {`i_dont_exists`, ``}} {
+	for _, pair := range [][2]string{{`root`, `wrong_password`}, {`i_dont_exists`, `password`}} {
 		user, pwd := pair[0], pair[1]
 		response, err := stub.Submit(newUserCredential(user, pwd, "token_root"), "")
 		a.Nil(err)
@@ -205,14 +205,14 @@ func caseSubmitAndGet(a *require.Assertions, stub *client.Client) {
 
 	// invalid password
 	{
-		response, err := stub.SubmitAndGet(userRoot, `CREATE USER temp_user1 IDENTIFIED WITH scql_native_password BY "alice123"`)
+		response, err := stub.SubmitAndGet(userRoot, `CREATE USER temp_user1 PARTY_CODE "party_temp" IDENTIFIED BY "alice123"`)
 		a.Nil(err)
 		a.NotEqual(int32(scql.Code_OK), response.Status.Code)
 	}
 
 	// success statement
 	{
-		response, err := stub.SubmitAndGet(userRoot, `CREATE USER temp_user1 IDENTIFIED WITH scql_native_password BY "Alice_password_123"`)
+		response, err := stub.SubmitAndGet(userRoot, `CREATE USER temp_user1 PARTY_CODE "party_temp" IDENTIFIED BY "Alice_password_123"`)
 		a.Nil(err)
 		a.Equal(int32(scql.Code_OK), response.Status.Code)
 	}
@@ -229,11 +229,11 @@ func caseFetch(a *require.Assertions, stub *client.Client) {
 
 	// invalid user
 	{
-		response, err := stub.Submit(userRoot, `CREATE USER if not exists alice IDENTIFIED WITH scql_native_password BY "Alice_password_123"`)
+		response, err := stub.Submit(userRoot, `CREATE USER if not exists alice PARTY_CODE "party_alice" IDENTIFIED BY "Alice_password_123"`)
 		a.Nil(err)
 
 		// invalid user&pwd
-		resp, err := stub.Fetch(newUserCredential("i_dont_exists", "", ""), response.ScdbSessionId)
+		resp, err := stub.Fetch(newUserCredential("i_dont_exists", "password", "token"), response.ScdbSessionId)
 		a.Nil(err)
 		a.NotEqual(int32(scql.Code_OK), resp.Status.Code)
 
@@ -254,7 +254,7 @@ func caseQuery(a *require.Assertions, stub *client.Client) {
 
 	// success statement
 	{
-		response, err := stub.Submit(userRoot, `CREATE USER temp_user  IDENTIFIED WITH scql_native_password BY "Password_123456789"`)
+		response, err := stub.Submit(userRoot, `CREATE USER temp_user PARTY_CODE "another_party" IDENTIFIED BY "Password_123456789"`)
 		a.Nil(err)
 		a.Equal(int32(scql.Code_OK), response.Status.Code)
 

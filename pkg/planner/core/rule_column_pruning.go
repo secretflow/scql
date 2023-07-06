@@ -275,7 +275,7 @@ func (la *LogicalAggregation) PruneColumns(parentUsedCols []*expression.Column) 
 		la.AggFuncs = []*aggregation.AggFuncDesc{one}
 		col := &expression.Column{
 			UniqueID: la.ctx.GetSessionVars().AllocPlanColumnID(),
-			RetType:  types.NewFieldType(mysql.TypeLonglong),
+			RetType:  types.NewFieldType(mysql.TypeTiny),
 		}
 		la.schema.Columns = []*expression.Column{col}
 	}

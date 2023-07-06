@@ -68,11 +68,11 @@ void ReduceBase::Execute(ExecContext* ctx) {
     ctx->GetTensorTable()->AddTensor(output_pb.name(),
                                      std::make_shared<Tensor>(chunked_arr));
   } else {
-    auto hctx = ctx->GetSession()->GetSpuHalContext();
+    auto sctx = ctx->GetSession()->GetSpuContext();
     auto symbols = ctx->GetSession()->GetDeviceSymbols();
     auto in_value =
         symbols->getVar(util::SpuVarNameEncoder::GetValueName(input_pb.name()));
-    auto out_value = SecretReduceImpl(hctx, in_value);
+    auto out_value = SecretReduceImpl(sctx, in_value);
     symbols->setVar(util::SpuVarNameEncoder::GetValueName(output_pb.name()),
                     out_value);
 #ifdef SCQL_WITH_NULL
@@ -81,16 +81,16 @@ void ReduceBase::Execute(ExecContext* ctx) {
   }
 }
 
-spu::Value ReduceBase::SecretReduceImpl(spu::HalContext* hctx,
+spu::Value ReduceBase::SecretReduceImpl(spu::SPUContext* sctx,
                                         const spu::Value& in) {
   if (in.numel() == 0) {
     return HandleEmptyInput(in);
   }
 
-  AggregateInit(hctx, in);
+  AggregateInit(sctx, in);
 
-  const auto& init_value = GetInitValue(hctx);
-  auto reduce_fn = GetReduceFn(hctx);
+  const auto& init_value = GetInitValue(sctx);
+  auto reduce_fn = GetReduceFn(sctx);
 
   spu::kernel::hlo::BatchedValueBinaryFn reducer =
       [reduce_fn](absl::Span<spu::Value const> lhs,
@@ -101,11 +101,11 @@ spu::Value ReduceBase::SecretReduceImpl(spu::HalContext* hctx,
         return out;
       };
 
-  auto results = spu::kernel::hlo::Reduce(hctx, std::vector<spu::Value>{in},
+  auto results = spu::kernel::hlo::Reduce(sctx, std::vector<spu::Value>{in},
                                           std::vector<spu::Value>{init_value},
                                           std::vector<int64_t>{0}, reducer);
 
-  return AggregateFinalize(hctx, results[0]);
+  return AggregateFinalize(sctx, results[0]);
 }
 
 // ================
@@ -116,13 +116,13 @@ const std::string ReduceSum::kOpType("ReduceSum");
 
 const std::string& ReduceSum::Type() const { return kOpType; }
 
-spu::Value ReduceSum::GetInitValue(spu::HalContext* hctx) {
-  return spu::kernel::hlo::Constant(hctx, int64_t(0), {1});
+spu::Value ReduceSum::GetInitValue(spu::SPUContext* sctx) {
+  return spu::kernel::hlo::Constant(sctx, int64_t(0), {1});
 }
 
-ReduceBase::ReduceFn ReduceSum::GetReduceFn(spu::HalContext* hctx) {
-  return [hctx](const spu::Value& lhs, const spu::Value& rhs) -> spu::Value {
-    return spu::kernel::hlo::Add(hctx, lhs, rhs);
+ReduceBase::ReduceFn ReduceSum::GetReduceFn(spu::SPUContext* sctx) {
+  return [sctx](const spu::Value& lhs, const spu::Value& rhs) -> spu::Value {
+    return spu::kernel::hlo::Add(sctx, lhs, rhs);
   };
 }
 
@@ -134,10 +134,10 @@ const std::string ReduceAvg::kOpType("ReduceAvg");
 const std::string& ReduceAvg::Type() const { return kOpType; }
 
 spu::Value ReduceAvg::HandleEmptyInput(const spu::Value& in) {
-  return in.clone().setDtype(spu::DT_FXP, true);
+  return in.clone().setDtype(spu::DT_F64, true);
 }
 
-void ReduceAvg::AggregateInit(spu::HalContext* /*hctx*/, const spu::Value& in) {
+void ReduceAvg::AggregateInit(spu::SPUContext* /*sctx*/, const spu::Value& in) {
   if (in.numel() == 0 || in.shape().size() == 0) {
     count_ = 0;
   } else {
@@ -145,20 +145,20 @@ void ReduceAvg::AggregateInit(spu::HalContext* /*hctx*/, const spu::Value& in) {
   }
 }
 
-spu::Value ReduceAvg::GetInitValue(spu::HalContext* hctx) {
-  return spu::kernel::hlo::Constant(hctx, 0, {1});
+spu::Value ReduceAvg::GetInitValue(spu::SPUContext* sctx) {
+  return spu::kernel::hlo::Constant(sctx, 0, {1});
 }
 
-ReduceBase::ReduceFn ReduceAvg::GetReduceFn(spu::HalContext* hctx) {
-  return [hctx](const spu::Value& lhs, const spu::Value& rhs) -> spu::Value {
-    return spu::kernel::hlo::Add(hctx, lhs, rhs);
+ReduceBase::ReduceFn ReduceAvg::GetReduceFn(spu::SPUContext* sctx) {
+  return [sctx](const spu::Value& lhs, const spu::Value& rhs) -> spu::Value {
+    return spu::kernel::hlo::Add(sctx, lhs, rhs);
   };
 }
 
-spu::Value ReduceAvg::AggregateFinalize(spu::HalContext* hctx,
+spu::Value ReduceAvg::AggregateFinalize(spu::SPUContext* sctx,
                                         const spu::Value& sum) {
-  auto count_f = spu::kernel::hlo::Constant(hctx, count_ * 1.0, {1});
-  return spu::kernel::hlo::Div(hctx, sum, count_f);
+  auto count_f = spu::kernel::hlo::Constant(sctx, count_ * 1.0, {1});
+  return spu::kernel::hlo::Div(sctx, sum, count_f);
 }
 
 // =====================
@@ -168,18 +168,18 @@ spu::Value ReduceAvg::AggregateFinalize(spu::HalContext* hctx,
 const std::string ReduceMin::kOpType("ReduceMin");
 const std::string& ReduceMin::Type() const { return kOpType; }
 
-void ReduceMin::AggregateInit(spu::HalContext* hctx, const spu::Value& in) {
+void ReduceMin::AggregateInit(spu::SPUContext* sctx, const spu::Value& in) {
   // set init_value_ to the first element of in
-  init_value_ = spu::kernel::hal::slice(hctx, in, {0}, {1}, {});
+  init_value_ = spu::kernel::hal::slice(sctx, in, {0}, {1}, {});
 }
 
-spu::Value ReduceMin::GetInitValue(spu::HalContext* hctx) {
+spu::Value ReduceMin::GetInitValue(spu::SPUContext* sctx) {
   return init_value_;
 }
 
-ReduceBase::ReduceFn ReduceMin::GetReduceFn(spu::HalContext* hctx) {
-  return [hctx](const spu::Value& lhs, const spu::Value& rhs) -> spu::Value {
-    return spu::kernel::hlo::Min(hctx, lhs, rhs);
+ReduceBase::ReduceFn ReduceMin::GetReduceFn(spu::SPUContext* sctx) {
+  return [sctx](const spu::Value& lhs, const spu::Value& rhs) -> spu::Value {
+    return spu::kernel::hlo::Min(sctx, lhs, rhs);
   };
 }
 
@@ -190,18 +190,18 @@ ReduceBase::ReduceFn ReduceMin::GetReduceFn(spu::HalContext* hctx) {
 const std::string ReduceMax::kOpType("ReduceMax");
 const std::string& ReduceMax::Type() const { return kOpType; }
 
-void ReduceMax::AggregateInit(spu::HalContext* hctx, const spu::Value& in) {
+void ReduceMax::AggregateInit(spu::SPUContext* sctx, const spu::Value& in) {
   // set init_value_ to the first element of in
-  init_value_ = spu::kernel::hal::slice(hctx, in, {0}, {1}, {});
+  init_value_ = spu::kernel::hal::slice(sctx, in, {0}, {1}, {});
 }
 
-spu::Value ReduceMax::GetInitValue(spu::HalContext* hctx) {
+spu::Value ReduceMax::GetInitValue(spu::SPUContext* sctx) {
   return init_value_;
 }
 
-ReduceBase::ReduceFn ReduceMax::GetReduceFn(spu::HalContext* hctx) {
-  return [hctx](const spu::Value& lhs, const spu::Value& rhs) -> spu::Value {
-    return spu::kernel::hlo::Max(hctx, lhs, rhs);
+ReduceBase::ReduceFn ReduceMax::GetReduceFn(spu::SPUContext* sctx) {
+  return [sctx](const spu::Value& lhs, const spu::Value& rhs) -> spu::Value {
+    return spu::kernel::hlo::Max(sctx, lhs, rhs);
   };
 }
 

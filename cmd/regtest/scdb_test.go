@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -29,16 +30,23 @@ import (
 )
 
 const (
-	SkipCreate     = "SKIP_CREATE_USER_CCL"
-	MySQLPort      = "MYSQL_PORT"
-	SCDBPort       = "SCDB_PORT"
-	SCDBHost       = "SCDB_HOST"
-	MySQLConnStr   = "MYSQL_CONN_STR"
-	SkipConcurrent = "SKIP_CONCURRENT_TEST"
+	SkipCreate           = "SKIP_CREATE_USER_CCL"
+	MySQLPort            = "MYSQL_PORT"
+	SCDBPorts            = "SCDB_PORTS"
+	SCDBHosts            = "SCDB_HOSTS"
+	HttpProtocol         = "HTTP_PROTOCOL"
+	MySQLConnStr         = "MYSQL_CONN_STR"
+	SkipConcurrent       = "SKIP_CONCURRENT_TEST"
+	SkipPlaintextCCLTest = "SKIP_PLAINTEXT_CCL_TEST"
+	Deliminator          = ","
+	Protocols            = "PROTOCOLS"
+	ABY3                 = "ABY3"
+	SEMI2K               = "SEMI2K"
+	CHEETAH              = "CHEETAH"
 )
 
 const (
-	concurrentNum = 10
+	concurrentNum = 5
 )
 
 var (
@@ -58,15 +66,67 @@ type queryTestSuit struct {
 	Queries []queryCase
 }
 
-func TestMain(m *testing.M) {
-	if os.Getenv(SCDBPort) == "" {
-		fmt.Println("Skipping testing due to empty SCDBPort")
-		return
-	}
-	if os.Getenv(SCDBHost) == "" {
-		SCDBAddr = fmt.Sprintf("http://localhost:%s", os.Getenv(SCDBPort))
+type testFlag struct {
+	sync           bool
+	testConcurrent bool
+	testSerial     bool
+}
+
+func getUrlList() ([]string, error) {
+	portStr := os.Getenv(SCDBPorts)
+	ports := strings.Split(portStr, Deliminator)
+	hostStr := os.Getenv(SCDBHosts)
+	httpProtocol := os.Getenv(HttpProtocol)
+	var hostProtocol string
+	if httpProtocol == "https" {
+		hostProtocol = "https"
 	} else {
-		SCDBAddr = fmt.Sprintf("http://%s:%s", os.Getenv(SCDBHost), os.Getenv(SCDBPort))
+		hostProtocol = "http"
+	}
+	var addr []string
+	if hostStr == "" {
+		for i := range ports {
+			addr = append(addr, fmt.Sprintf("%s://localhost:%s", hostProtocol, strings.Trim(ports[i], " ")))
+		}
+	} else {
+		hosts := strings.Split(hostStr, Deliminator)
+		if len(ports) == 1 {
+			for i := range hosts {
+				if i == len(hosts)-1 {
+					break
+				}
+				ports = append(ports, ports[i])
+			}
+		}
+		if len(ports) != len(hosts) {
+			return nil, fmt.Errorf("failed to get scdb address with host %s port %s", hostStr, portStr)
+		}
+		for i := range hosts {
+			addr = append(addr, fmt.Sprintf("%s://%s:%s", hostProtocol, strings.Trim(hosts[i], " "), strings.Trim(ports[i], " ")))
+		}
+	}
+	fmt.Printf("SCDB address: %+v\n", addr)
+	return addr, nil
+}
+
+func getProtocols() ([]string, error) {
+	ps := os.Getenv(Protocols)
+	if ps == "" {
+		return []string{SEMI2K}, nil
+	}
+	protocolList := strings.Split(ps, Deliminator)
+	var trimProtocols []string
+	for _, protocol := range protocolList {
+		trimProtocols = append(trimProtocols, strings.Trim(protocol, " "))
+	}
+	fmt.Printf("test protocols: %+v\n", trimProtocols)
+	return trimProtocols, nil
+}
+
+func TestMain(m *testing.M) {
+	if os.Getenv(SCDBPorts) == "" {
+		fmt.Println("Skipping testing due to empty SCDBPorts")
+		return
 	}
 
 	skipCreateFlag = false
@@ -90,59 +150,80 @@ func TestMain(m *testing.M) {
 		fmt.Printf("connect mysql(%s) failed\n", mysqlConnStr)
 		panic(err)
 	}
-	fmt.Printf("SCDBAddr %s\n", SCDBAddr)
 	os.Exit(m.Run())
 }
 
 func TestSCDBWithNormalCCL(t *testing.T) {
 	r := require.New(t)
-
+	addresses, err := getUrlList()
+	r.NoError(err)
+	protocols, err := getProtocols()
+	r.NoError(err)
 	mockTables, err := mock.MockAllTables()
 	r.NoError(err)
 	fillTableToPartyCodeMap(mockTables)
-
+	skipConcurrent := false
+	if os.Getenv(SkipConcurrent) == "true" {
+		skipConcurrent = true
+	}
 	cclList, err := mock.MockAllCCL()
 	r.NoError(err)
-	r.NoError(createUserAndCcl(cclList, skipCreateFlag))
-
-	r.NoError(runQueryTest(userNameAlice, true))
-	r.NoError(runQueryTest(userNameAlice, false))
+	for i, addr := range addresses {
+		fmt.Printf("test protocol %s\n", protocols[i])
+		r.NoError(createUserAndCcl(cclList, addresses[i], skipCreateFlag))
+		if protocols[i] == SEMI2K {
+			// We are temporarily using a separate file to save postgres test cases. After the complete support
+			// of postgres functions, is it possible to remove this file?
+			r.NoError(testCaseForSerial("testdata/single_party_postgres.json", true, addr, userNameCarol))
+		}
+		r.NoError(runQueryTest(userNameAlice, addr, protocols[i], testFlag{sync: true, testConcurrent: !skipConcurrent, testSerial: true}))
+		r.NoError(runQueryTest(userNameAlice, addr, protocols[i], testFlag{sync: false, testConcurrent: !skipConcurrent, testSerial: false}))
+	}
 }
 
 func TestSCDBWithAllCCLPlaintext(t *testing.T) {
+	if os.Getenv(SkipPlaintextCCLTest) == "true" {
+		fmt.Println("Skipping testing due to set SKIP_PLAINTEXT_CCL_TEST true")
+		return
+	}
 	r := require.New(t)
-
+	addresses, err := getUrlList()
+	r.NoError(err)
+	protocols, err := getProtocols()
+	r.NoError(err)
 	mockTables, err := mock.MockAllTables()
 	r.NoError(err)
 	fillTableToPartyCodeMap(mockTables)
 
 	cclList, err := mock.MockAllCCLPlaintext()
 	r.NoError(err)
-	r.NoError(createUserAndCcl(cclList, skipCreateFlag))
-
-	r.NoError(runQueryTest(userNameAlice, true))
-	r.NoError(runQueryTest(userNameAlice, false))
-	r.NoError(testCaseForSerial("testdata/two_parties.json", true, userNameBob))
-
+	// only test concurrent case for all plaintext ccl
+	for i, addr := range addresses {
+		fmt.Printf("test protocol %s\n", protocols[i])
+		r.NoError(createUserAndCcl(cclList, addresses[i], skipCreateFlag))
+		r.NoError(runQueryTest(userNameAlice, addr, protocols[i], testFlag{sync: true, testConcurrent: true, testSerial: false}))
+		r.NoError(runQueryTest(userNameAlice, addr, protocols[i], testFlag{sync: false, testConcurrent: true, testSerial: false}))
+	}
 }
 
-func runQueryTest(user string, sync bool) (err error) {
-	path := []string{"testdata/single_party.json", "testdata/two_parties.json", "testdata/multi_parties.json", "testdata/view.json"}
-	for _, fileName := range path {
-		if err := testCaseForSerial(fileName, sync, user); err != nil {
-			return err
+func runQueryTest(user, addr string, protocol string, flags testFlag) (err error) {
+	path := map[string][]string{SEMI2K: {"testdata/single_party.json", "testdata/two_parties.json", "testdata/multi_parties.json", "testdata/view.json"}, CHEETAH: {"testdata/two_parties.json"}, ABY3: {"testdata/multi_parties.json"}}
+	for _, fileName := range path[protocol] {
+		if flags.testSerial {
+			if err := testCaseForSerial(fileName, flags.sync, addr, user); err != nil {
+				return err
+			}
 		}
-		if os.Getenv(SkipConcurrent) == "true" {
-			continue
-		}
-		if err := testCaseForConcurrent(fileName, sync, user); err != nil {
-			return err
+		if flags.testConcurrent {
+			if err := testCaseForConcurrent(fileName, flags.sync, addr, user); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
 }
 
-func testCaseForSerial(dataPath string, sync bool, issuerUser string) error {
+func testCaseForSerial(dataPath string, sync bool, addr, issuerUser string) error {
 	var suit queryTestSuit
 	if err := createSuit(dataPath, &suit); err != nil {
 		return nil
@@ -150,12 +231,12 @@ func testCaseForSerial(dataPath string, sync bool, issuerUser string) error {
 	user := userMapCredential[issuerUser]
 	for i, query := range suit.Queries {
 		for _, viewSql := range query.View {
-			if _, err := runSql(user, viewSql, true); err != nil {
+			if _, err := runSql(user, viewSql, addr, true); err != nil {
 				return nil
 			}
 		}
 		comment := fmt.Sprintf("For query='%s', name='%s' in testfile='%s'", query.Query, query.Name, dataPath)
-		answer, err := runSql(user, query.Query, sync)
+		answer, err := runSql(user, query.Query, addr, sync)
 		if err != nil {
 			return fmt.Errorf("%s Error Info (%s)", comment, err)
 		}
@@ -170,53 +251,52 @@ func testCaseForSerial(dataPath string, sync bool, issuerUser string) error {
 	return nil
 }
 
-func testCaseForConcurrent(dataPath string, sync bool, issuerUser string) (err error) {
+func testCaseForConcurrent(dataPath string, sync bool, addr, issuerUser string) (err error) {
 	var suit queryTestSuit
 	err = createSuit(dataPath, &suit)
 	if err != nil {
 		return
 	}
+
+	inChan := make(chan int, concurrentNum)
+	outChan := make(chan error)
 	for i, query := range suit.Queries {
-		inChan := make(chan int, concurrentNum)
-		outChan := make(chan error)
-		for j := 0; j < concurrentNum; j++ {
-			go func(num int) {
-				var err error
-				inChan <- num
-				defer func() {
-					outChan <- err
-					<-inChan
-				}()
-				for _, viewSql := range query.View {
-					comment := fmt.Sprintf("For query='%s', name='%s' in testfile='%s'", viewSql, query.Name, dataPath)
-					if _, err = runSql(userMapCredential[issuerUser], viewSql, sync); err != nil {
-						fmt.Println(comment)
-						return
-					}
-				}
-				comment := fmt.Sprintf("For query='%s', name='%s' in testfile='%s'", query.Query, query.Name, dataPath)
-				answer, err := runSql(userMapCredential[issuerUser], query.Query, sync)
-				if err != nil {
+		go func(num int, testCase queryCase) {
+			var err error
+			inChan <- num
+			defer func() {
+				outChan <- err
+				<-inChan
+			}()
+			for _, viewSql := range testCase.View {
+				comment := fmt.Sprintf("For query='%s', name='%s' in testfile='%s'", viewSql, testCase.Name, dataPath)
+				if _, err = runSql(userMapCredential[issuerUser], viewSql, addr, sync); err != nil {
 					fmt.Println(comment)
 					return
 				}
-				if err = checkResult(query.Result, answer, query.MySQLQuery, comment); err != nil {
-					return
-				}
-			}(j)
-		}
-		for j := 0; j < concurrentNum; j++ {
-			err := <-outChan
-			if err != nil {
-				return err
 			}
+			comment := fmt.Sprintf("For query='%s', name='%s' in testfile='%s'", testCase.Query, testCase.Name, dataPath)
+			answer, err := runSql(userMapCredential[issuerUser], testCase.Query, addr, sync)
+			if err != nil {
+				fmt.Println(comment)
+				return
+			}
+			if err = checkResult(testCase.Result, answer, testCase.MySQLQuery, comment); err != nil {
+				return
+			}
+		}(i, query)
+	}
+	for i := range suit.Queries {
+		err := <-outChan
+		if err != nil {
+			return err
 		}
-		close(inChan)
-		close(outChan)
 		fmt.Printf("testfile: %s, sync: %v, issuerUser: %s, concurrent execution ", dataPath, sync, issuerUser)
 		percent := int64(float32(i+1) / float32(len(suit.Queries)) * 100)
 		fmt.Printf("%d%% (%v/%v)\r", percent, i+1, len(suit.Queries))
 	}
+	close(inChan)
+	close(outChan)
 	fmt.Println()
 	return nil
 }
@@ -252,13 +332,19 @@ func convertTensorToResultTable(ts []*scql.Tensor) (*ResultTable, error) {
 		rc := &ResultColumn{Name: t.GetName()}
 		switch t.ElemType {
 		case scql.PrimitiveDataType_BOOL:
-			rc.Bools = t.GetBs().GetBs()
-		case scql.PrimitiveDataType_INT32, scql.PrimitiveDataType_UINT32, scql.PrimitiveDataType_INT64, scql.PrimitiveDataType_UINT64, scql.PrimitiveDataType_TIMESTAMP:
-			rc.Int64s = t.GetI64S().GetI64S()
+			rc.Bools = t.GetBoolData()
+		case scql.PrimitiveDataType_INT64, scql.PrimitiveDataType_TIMESTAMP:
+			rc.Int64s = t.GetInt64Data()
 		case scql.PrimitiveDataType_STRING, scql.PrimitiveDataType_DATETIME:
-			rc.Ss = t.GetSs().GetSs()
-		case scql.PrimitiveDataType_FLOAT, scql.PrimitiveDataType_DOUBLE:
-			rc.Floats = t.GetFs().GetFs()
+			rc.Ss = t.GetStringData()
+		case scql.PrimitiveDataType_FLOAT32:
+			dst := make([]float64, len(t.GetFloatData()))
+			for i, v := range t.GetFloatData() {
+				dst[i] = float64(v)
+			}
+			rc.Doubles = dst
+		case scql.PrimitiveDataType_FLOAT64:
+			rc.Doubles = t.GetDoubleData()
 		default:
 			return nil, fmt.Errorf("unsupported tensor type %v", t.ElemType)
 		}

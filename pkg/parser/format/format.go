@@ -293,11 +293,17 @@ type RestoreCtx struct {
 	Flags     RestoreFlags
 	In        io.Writer
 	JoinLevel int
+	Dialect   Dialect
 }
 
 // NewRestoreCtx returns a new `RestoreCtx`.
 func NewRestoreCtx(flags RestoreFlags, in io.Writer) *RestoreCtx {
-	return &RestoreCtx{flags, in, 0}
+	return &RestoreCtx{flags, in, 0, &TiDBDialect{}}
+}
+
+// NewRestoreCtx returns a new `RestoreCtx`.
+func NewRestoreCtxWithDialect(flags RestoreFlags, in io.Writer, d Dialect) *RestoreCtx {
+	return &RestoreCtx{flags, in, 0, d}
 }
 
 // WriteKeyWord writes the `keyWord` into writer.

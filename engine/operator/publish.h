@@ -36,9 +36,6 @@ class Publish : public Operator {
   void Execute(ExecContext* ctx) override;
 
  private:
-  TensorPtr GetPrivateOrPublicTensor(ExecContext* ctx,
-                                     const pb::Tensor& input_pb);
-
   void SetProtoMeta(const std::shared_ptr<Tensor> from_tensor,
                     const std::string& name,
                     std::shared_ptr<pb::Tensor> to_proto);

@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"sort"
 	"strings"
 	"text/template"
 
@@ -37,32 +38,38 @@ func check(e error) {
 }
 
 func AttributeToString(attribute *proto.AttributeValue) string {
-	switch x := attribute.GetT().GetValue().(type) {
-	case *proto.Tensor_Bs:
-		if len(x.Bs.Bs) == 1 {
-			return fmt.Sprintf("%v", x.Bs.Bs[0])
+	t := attribute.GetT()
+	switch t.ElemType {
+	case proto.PrimitiveDataType_BOOL:
+		if len(t.BoolData) == 1 {
+			return fmt.Sprintf("%v", t.GetBoolData()[0])
 		}
-		return fmt.Sprintf("%v", x.Bs.Bs)
-	case *proto.Tensor_Ss:
-		if len(x.Ss.Ss) == 1 {
-			return x.Ss.Ss[0]
+		return fmt.Sprintf("%v", t.GetBoolData())
+	case proto.PrimitiveDataType_STRING:
+		if len(t.StringData) == 1 {
+			return t.GetStringData()[0]
 		}
-		return fmt.Sprintf("%v", x.Ss.Ss)
-	case *proto.Tensor_Fs:
-		if len(x.Fs.Fs) == 1 {
-			return fmt.Sprintf("%v", x.Fs.Fs[0])
+		return fmt.Sprintf("%v", t.GetStringData())
+	case proto.PrimitiveDataType_FLOAT32:
+		if len(t.FloatData) == 1 {
+			return fmt.Sprintf("%v", t.GetFloatData()[0])
 		}
-		return fmt.Sprintf("%v", x.Fs.Fs)
-	case *proto.Tensor_Is:
-		if len(x.Is.Is) == 1 {
-			return fmt.Sprintf("%v", x.Is.Is[0])
+		return fmt.Sprintf("%v", t.GetFloatData())
+	case proto.PrimitiveDataType_FLOAT64:
+		if len(t.DoubleData) == 1 {
+			return fmt.Sprintf("%v", t.GetDoubleData()[0])
 		}
-		return fmt.Sprintf("%v", x.Is.Is)
-	case *proto.Tensor_I64S:
-		if len(x.I64S.I64S) == 1 {
-			return fmt.Sprintf("%v", x.I64S.I64S[0])
+		return fmt.Sprintf("%v", t.GetDoubleData())
+	case proto.PrimitiveDataType_INT8, proto.PrimitiveDataType_INT16, proto.PrimitiveDataType_INT32:
+		if len(t.Int32Data) == 1 {
+			return fmt.Sprintf("%v", t.GetInt32Data()[0])
 		}
-		return fmt.Sprintf("%v", x.I64S.I64S)
+		return fmt.Sprintf("%v", t.GetInt32Data())
+	case proto.PrimitiveDataType_INT64:
+		if len(t.Int64Data) == 1 {
+			return fmt.Sprintf("%v", t.GetInt64Data()[0])
+		}
+		return fmt.Sprintf("%v", t.GetInt64Data())
 	default:
 		return "error: unsupported attribute type"
 	}
@@ -108,6 +115,9 @@ func StatusListToString(in *proto.TensorStatusList) string {
 
 func main() {
 	ops, version := operator.GetAllOpDef()
+	sort.Slice(ops, func(i, j int) bool {
+		return ops[i].GetName() < ops[j].GetName()
+	})
 	filler := OpDocFiller{
 		AllOpDef: ops,
 		Version:  version,
