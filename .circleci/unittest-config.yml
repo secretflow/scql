@@ -17,7 +17,10 @@
 version: 2.1
 
 parameters:
-  build-and-run:
+  enable_regtest:
+    type: boolean
+    default: false
+  run_unittest:
     type: boolean
     default: false
 
@@ -179,7 +182,7 @@ jobs:
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
   unittest:
-    when: << pipeline.parameters.build-and-run >>
+    when: << pipeline.parameters.run_unittest >>
     jobs:
       - linux_scdb_ut
       - linux_engine_ut
