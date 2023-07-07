@@ -84,7 +84,8 @@ void Join::Execute(ExecContext* ctx) {
   SPDLOG_INFO(
       "my_party_code:{}, my_rank:{}, total self_item_count:{}, "
       "total peer_item_count:{}, result_size:{}",
-      ctx->GetSession()->SelfPartyCode(), self_size, peer_size, result_size);
+      ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
+      self_size, peer_size, result_size);
 
   SetJoinIndices(ctx, is_left, std::move(join_indices));
   audit::RecordJoinNodeDetail(*ctx, self_size, peer_size, result_size,
