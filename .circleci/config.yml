@@ -42,7 +42,6 @@ workflows:
             cmd/.* run_unittest true
             engine/.* run_unittest true
             pkg/.* run_unittest true
-            .circleci/.* run_unittest true
             .bazelrc run_unittest true
   run_regtest:
     when: << pipeline.parameters.enable_regtest >>
@@ -56,5 +55,4 @@ workflows:
             cmd/.* run_regtest true
             engine/.* run_regtest true
             pkg/.* run_regtest true
-            .circleci/.* run_regtest true
             .bazelrc run_regtest true
