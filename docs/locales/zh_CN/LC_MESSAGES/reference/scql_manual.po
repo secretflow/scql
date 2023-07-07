@@ -21,73 +21,75 @@ msgstr ""
 
 #: ../../reference/scql_manual.rst:2
 msgid "SCQL Manual"
-msgstr ""
+msgstr "SCQL 指南"
 
 #: ../../reference/scql_manual.rst:8
 msgid "SCQL Data Types"
-msgstr ""
+msgstr "SCQL 数据类型"
 
 #: ../../reference/scql_manual.rst:10
 msgid ""
 "SCQL supports frequently-used data types, as illustrated in the following"
 " table."
 msgstr ""
+"SCQL 支持常用的数据类型，如下表所示。"
+
 
 #: ../../reference/scql_manual.rst:13
 msgid "Data Type"
-msgstr ""
+msgstr "数据类型"
 
 #: ../../reference/scql_manual.rst:13
 msgid "Alias"
-msgstr ""
+msgstr "别名"
 
 #: ../../reference/scql_manual.rst:13
 msgid "Description"
-msgstr ""
+msgstr "描述"
 
 #: ../../reference/scql_manual.rst:15
 msgid "``integer``"
-msgstr ""
+msgstr "``integer``"
 
 #: ../../reference/scql_manual.rst:15
 msgid "``int``, ``long``, ``int64``"
-msgstr ""
+msgstr "``int``, ``long``, ``int64``"
 
 #: ../../reference/scql_manual.rst:17
 msgid "``float``"
-msgstr ""
+msgstr "``float``"
 
 #: ../../reference/scql_manual.rst:17
 msgid "``double``"
-msgstr ""
+msgstr "``double``"
 
 #: ../../reference/scql_manual.rst:17
 msgid "both storage and computation are done in type float32"
-msgstr ""
+msgstr "存储和计算都在 float32 类型中完成"
 
 #: ../../reference/scql_manual.rst:19
 msgid "``string``"
-msgstr ""
+msgstr "``string``"
 
 #: ../../reference/scql_manual.rst:19
 msgid "``str``"
-msgstr ""
+msgstr "``str``"
 
 #: ../../reference/scql_manual.rst:21
 msgid "``datetime``"
-msgstr ""
+msgstr "``datetime``"
 
 #: ../../reference/scql_manual.rst:21 ../../reference/scql_manual.rst:23
 msgid "not supported yet, coming soon"
-msgstr ""
+msgstr "暂不支持，即将推出"
 
 #: ../../reference/scql_manual.rst:23
 msgid "``timestamp``"
-msgstr ""
+msgstr "``timestamp``"
 
 #: ../../reference/scql_manual.rst:29
 msgid "SCQL Statements"
-msgstr ""
+msgstr "SCQL 语句"
 
 #: ../../reference/scql_manual.rst:31
 msgid ""
@@ -95,23 +97,28 @@ msgid ""
 "For syntax differences between SCQL and MySQL, please read "
 ":doc:`mysql_compatibility`."
 msgstr ""
+"SCQL 兼容大多数 MySQL 语法，这使得它易于使用。"
+"关于 SCQL 和 MySQL 之间的语法差异，请阅读"
+":doc:`mysql_compatibility`。"
 
+
 #: ../../reference/scql_manual.rst:36
 msgid "CREATE/DROP/ALTER USER Statement"
-msgstr ""
+msgstr "CREATE/DROP/ALTER USER 语句"
+
 
 #: ../../reference/scql_manual.rst:47 ../../reference/scql_manual.rst:74
 #: ../../reference/scql_manual.rst:100 ../../reference/scql_manual.rst:135
 msgid "Examples:"
-msgstr ""
+msgstr "样例："
 
 #: ../../reference/scql_manual.rst:65
 msgid "CREATE/DROP DATABASE Statement"
-msgstr ""
+msgstr "CREATE/DROP DATABASE 语句"
 
 #: ../../reference/scql_manual.rst:88
 msgid "CREATE/DROP TABLE Statement"
-msgstr ""
+msgstr "CREATE/DROP TABLE 语句"
 
 #: ../../reference/scql_manual.rst:97
 msgid ""
@@ -120,42 +127,46 @@ msgid ""
 " user runs queries on virtual table, which helps simplify privilege "
 "control and usage."
 msgstr ""
+"此处创建表意味着将 'tbl_name' 映射到现有的物理表，"
+"该物理表由 'TID' 指定且位于相关参与方上。在 SCQL 中，"
+"用户在虚拟表上运行查询可以有助于简化权限"
+"控制和使用。"
 
 #: ../../reference/scql_manual.rst:114
 msgid "GRANT/REVOKE Statement"
-msgstr ""
+msgstr "GRANT/REVOKE 语句"
 
 #: ../../reference/scql_manual.rst:150
 msgid "SHOW/DESCRIBE Statement"
-msgstr ""
+msgstr "SHOW/DESCRIBE 语句"
 
 #: ../../reference/scql_manual.rst:164
 msgid "SELECT Statement"
-msgstr ""
+msgstr "SELECT 语句"
 
 #: ../../reference/scql_manual.rst:226
 msgid "**Limitation:**"
-msgstr ""
+msgstr "**限制：**"
 
 #: ../../reference/scql_manual.rst:228
 msgid "``JOIN`` only supports"
-msgstr ""
+msgstr "JOIN 仅仅支持"
 
 #: ../../reference/scql_manual.rst:230
 msgid "``INNER JOIN``"
-msgstr ""
+msgstr "``INNER JOIN``"
 
 #: ../../reference/scql_manual.rst:233
 msgid "Functions and Operators"
-msgstr ""
+msgstr "函数与操作符"
 
 #: ../../reference/scql_manual.rst:235
 msgid "Todo"
-msgstr ""
+msgstr "待办"
 
 #: ../../reference/scql_manual.rst:235
 msgid "this part is not ready, please check later"
-msgstr ""
+msgstr "该部分尚未准备好，请之后查看"
 
 #~ msgid "CREATE/DROP USER Statement"
 #~ msgstr ""
