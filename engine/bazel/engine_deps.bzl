@@ -45,7 +45,7 @@ def engine_deps():
     maybe(
         git_repository,
         name = "spulib",
-        tag = "0.4.1b0",
+        tag = "0.4.1b1",
         remote = SPU_GIT,
     )
 
