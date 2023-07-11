@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the SCQL package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../index.rst:7
 msgid "SCQL Documentation"
-msgstr ""
+msgstr "SCQL 文档"
 
 #: ../../index.rst:9
 msgid ""
@@ -30,7 +29,7 @@ msgid ""
 "them on a federation of database systems. The MPC framework is powered by"
 " `SPU <https://github.com/secretflow/spu>`_."
 msgstr ""
-
+"Secure Collaborative Query Language (SCQL) 是一种能够将 SQL 语句转换为明密文混合执行图，并在联合数据库系统上执行的系统。"
+"该系统的 MPC 框架由 `SPU <https://github.com/secretflow/spu>`_ 提供支持。"
 #~ msgid "Content"
-#~ msgstr ""
-
+#~ msgstr "目录"

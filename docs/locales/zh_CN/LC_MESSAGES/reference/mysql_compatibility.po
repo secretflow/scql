@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the SCQL package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
@@ -66,7 +65,6 @@ msgid "CREATE Table"
 msgstr "创建表"
 
 #: ../../reference/mysql_compatibility.rst:23
-#, fuzzy
 msgid ""
 "SCQL get table schemas from GRM, so CREATE TABLE statement must include "
 "keyword TID which uniquely identifies a table in GRM. For more "
@@ -150,7 +148,6 @@ msgid "GRANT/REVOKE"
 msgstr "GRANT/REVOKE"
 
 #: ../../reference/mysql_compatibility.rst:53
-#, fuzzy
 msgid ""
 "Except permissions same with mysql such as read/write/create/drop..., ccl"
 " settings are also required before executing a query. You can change CCL "
@@ -206,32 +203,30 @@ msgid "Compare(>, <, <=, >=, <>, =, !=)"
 msgstr "比较运算 (>, <, <=, >=, <>, =, !=)"
 
 #: ../../reference/mysql_compatibility.rst:88
-#, fuzzy
 msgid "Both arguments in a comparison operation shouldn't be string."
 msgstr "比较操作中的两个参数都不能是 string 类型。"
 
 #: ../../reference/mysql_compatibility.rst:89
 msgid "If both arguments are long, they are compared as long."
-msgstr "如果两个参数都是 long 类型，则使用 long 的方式比较。"
+msgstr "如果两个参数都是 long 类型，则它们将按照 long 类型进行比较。"
 
 #: ../../reference/mysql_compatibility.rst:90
 msgid ""
 "If one of the arguments is float32, the other argument will be compared "
 "as float32."
-msgstr "如果其中一个参数是 float32 类型，则会将另一个参数转换为 float32 进行比较。"
+msgstr "如果其中一个参数是 float32 类型，则会将另一个参数转换为 float32 类型进行比较。"
 
 #: ../../reference/mysql_compatibility.rst:93
 msgid "Arithmetic(+, -, \\*, /, %)"
 msgstr "算术运算 (+, -, \\*, /, %)"
 
 #: ../../reference/mysql_compatibility.rst:94
-#, fuzzy
 msgid "Both arguments in a arithmetic operation shouldn't be string."
 msgstr "算术运算中的两个参数都不能是 string 类型。"
 
 #: ../../reference/mysql_compatibility.rst:95
 msgid "If both arguments are long, they are calculated as long."
-msgstr "如果两个参数都是 long 类型，则使用 long 的方式比较。"
+msgstr "如果两个参数都是 long 类型，则它们将按照 long 类型进行计算。"
 
 #: ../../reference/mysql_compatibility.rst:96
 #: ../../reference/mysql_compatibility.rst:102
@@ -245,11 +240,9 @@ msgid "Aggregation(sum, count, avg, min, max)"
 msgstr "聚合操作 (sum, count, avg, min, max)"
 
 #: ../../reference/mysql_compatibility.rst:100
-#, fuzzy
 msgid "All arguments in a aggregation function shouldn't be string."
-msgstr "累加操作中的所有参数都不能是 string 类型。"
+msgstr "聚合操作中的所有参数都不能是 string 类型。"
 
 #: ../../reference/mysql_compatibility.rst:101
 msgid "If all arguments are long, they are calculated as long."
-msgstr "如果所有参数都是 long 类型，则按照 long 类型的方式进行计算。"
-
+msgstr "如果所有参数都是 long 类型，则它们将按照 long 类型进行计算。"

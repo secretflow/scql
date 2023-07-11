@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the SCQL package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
@@ -52,12 +51,10 @@ msgid "partial"
 msgstr "部分"
 
 #: ../../reference/scql_status.rst
-#, fuzzy
 msgid "- currently only inner join is supported"
 msgstr "当前仅支持 inner join"
 
 #: ../../reference/scql_status.rst
-#, fuzzy
 msgid "- keyword ``using`` is not supported yet"
 msgstr "暂不支持关键字 ``using``"
 
@@ -85,12 +82,11 @@ msgstr "having 子句"
 
 #: ../../reference/scql_status.rst:19
 msgid "union/union all clause"
-msgstr ""
+msgstr "union/union all 子句"
 
 #: ../../reference/scql_status.rst:21
-#, fuzzy
 msgid "distinct clause"
-msgstr "limit 子句"
+msgstr "distinct 子句"
 
 #: ../../reference/scql_status.rst:23
 msgid "limit clause"
@@ -148,7 +144,7 @@ msgstr ""
 
 #: ../../reference/scql_status.rst:45
 msgid "div means ``integer division``"
-msgstr ""
+msgstr "div: 整数除法"
 
 #: ../../reference/scql_status.rst:47
 msgid "logical"
@@ -208,14 +204,14 @@ msgstr ""
 
 #: ../../reference/scql_status.rst:66
 msgid "Data stored in csv files"
-msgstr ""
+msgstr "数据源为 CSV 文件"
 
 #: ../../reference/scql_status.rst:70
 msgid ""
 "SCQL supports different databases as data source, but there may be minor "
 "differences in the results due to data type differences built in "
 "databases. Please choose backend database with caution."
-msgstr ""
+msgstr "SCQL 支持不同的数据库作为数据源，但由于数据库内置的数据类型差异，结果可能会存在细微差异。请谨慎选择后端数据库。"
 
 #~ msgid "union"
 #~ msgstr "union"
