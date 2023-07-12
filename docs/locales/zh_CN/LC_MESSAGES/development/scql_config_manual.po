@@ -994,9 +994,9 @@ msgstr "如果要在 Engine 中启用 SSL，请添加 FLAGS，如下所示。 �
 #~ msgstr "SCDB数据库类型支持mysql/sqlite"
 
 #~ msgid "datasources(MYSQL/SQLite3) are where the SCQLEngine gets its data from."
-#~ msgstr ""
+#~ msgstr "数据源(MYSQL/SQLite3) 是 SCQLEngine 获取数据的位置。"
 
 #~ msgid ""
 #~ "datasources in embed_router_conf contain "
 #~ "information for connecting MYSQL/SQLite3::"
-#~ msgstr ""
+#~ msgstr "embed_router_conf 中的数据源包含连接 MYSQL/SQLite3 的信息："
