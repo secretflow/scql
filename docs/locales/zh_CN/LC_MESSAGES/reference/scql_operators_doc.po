@@ -34,7 +34,7 @@ msgstr "这是 SCQL 算子的规范 (不是内核库),包括算子签名和语�
 
 #: ../../reference/scql_operators_doc.rst:7
 msgid "Op List"
-msgstr "按列表"
+msgstr "算子列表"
 
 #: ../../reference/scql_operators.md:2
 msgid "`RunSQL`"
@@ -109,8 +109,8 @@ msgid "**Outputs:**"
 msgstr "输出："
 
 #: ../../reference/scql_operators.md:13
-msgid "`Out`(variadic, T): Result tensors of the SQL statement."
-msgstr "Out`(variadic, T): SQL 语句的结果 tensors。"
+msgid "`Out`(可变参数, T): Result tensors of the SQL statement."
+msgstr "Out`(可变参数, T): SQL 语句的结果 tensors。"
 
 #: ../../reference/scql_operators.md:17 ../../reference/scql_operators.md:521
 #: ../../reference/scql_operators.md:593 ../../reference/scql_operators.md:668
@@ -123,11 +123,11 @@ msgstr "属性："
 
 #: ../../reference/scql_operators.md:19
 msgid "`sql`: SQL statement"
-msgstr "`sql`：QL 语句"
+msgstr "`sql`：SQL 语句"
 
 #: ../../reference/scql_operators.md:21
 msgid "`table_refs`: tables referenced by query"
-msgstr "`table_refs`：查询引用的表"
+msgstr "`table_refs`：query中引用的表"
 
 #: ../../reference/scql_operators.md:28 ../../reference/scql_operators.md:52
 #: ../../reference/scql_operators.md:80 ../../reference/scql_operators.md:110
@@ -175,14 +175,14 @@ msgid "This operator publishes the DAG results."
 msgstr "该算子披露 DAG 结果。"
 
 #: ../../reference/scql_operators.md:40
-msgid "`In`(variadic, T1): Tensors to be published."
-msgstr "`In`(variadic, T1)：要发布的 Tensors。"
+msgid "`In`(可变参数, T1): Tensors to be published."
+msgstr "`In`(可变参数, T1)：要披露的 Tensors。"
 
 #: ../../reference/scql_operators.md:45
 msgid ""
-"`Out`(variadic, T2): Result tensors of the publish op. Tensors are in "
+"`Out`(可变参数, T2): Result tensors of the publish op. Tensors are in "
 "TensorOption VALUE."
-msgstr "`Out`(variadic, T2)：发布 publish op tensors 结果 。Tensors 位于 TensorOption VALUE 中。"
+msgstr "`Out`(可变参数, T2)：披露 publish op tensors 结果 。Tensors 位于 TensorOption VALUE 中。"
 
 #: ../../reference/scql_operators.md:54 ../../reference/scql_operators.md:718
 msgid "`T1`: public,private"
@@ -207,8 +207,8 @@ msgstr "Out = Left `Less` Right"
 #: ../../reference/scql_operators.md:306 ../../reference/scql_operators.md:336
 #: ../../reference/scql_operators.md:366 ../../reference/scql_operators.md:396
 #: ../../reference/scql_operators.md:426 ../../reference/scql_operators.md:456
-msgid "`Left`(variadic, T): First operand."
-msgstr "`Left`(variadic, T)：第一个算子。"
+msgid "`Left`(可变参数, T): First operand."
+msgstr "`Left`(可变参数, T)：第一个操作数。"
 
 #: ../../reference/scql_operators.md:68 ../../reference/scql_operators.md:98
 #: ../../reference/scql_operators.md:128 ../../reference/scql_operators.md:158
@@ -217,8 +217,8 @@ msgstr "`Left`(variadic, T)：第一个算子。"
 #: ../../reference/scql_operators.md:308 ../../reference/scql_operators.md:338
 #: ../../reference/scql_operators.md:368 ../../reference/scql_operators.md:398
 #: ../../reference/scql_operators.md:428 ../../reference/scql_operators.md:458
-msgid "`Right`(variadic, T1): Second operand."
-msgstr "`Right`(variadic, T1)：第二个算子。"
+msgid "`Right`(可变参数, T1): Second operand."
+msgstr "`Right`(可变参数, T1)：第二个操作数。"
 
 #: ../../reference/scql_operators.md:73 ../../reference/scql_operators.md:103
 #: ../../reference/scql_operators.md:133 ../../reference/scql_operators.md:163
@@ -227,8 +227,8 @@ msgstr "`Right`(variadic, T1)：第二个算子。"
 #: ../../reference/scql_operators.md:313 ../../reference/scql_operators.md:343
 #: ../../reference/scql_operators.md:373 ../../reference/scql_operators.md:403
 #: ../../reference/scql_operators.md:433 ../../reference/scql_operators.md:463
-msgid "`Out`(variadic, T2): Output Tensor."
-msgstr "`Out`(variadic, T2)：输出 tensor 。"
+msgid "`Out`(可变参数, T2): Output Tensor."
+msgstr "`Out`(可变参数, T2)：输出 tensor 。"
 
 #: ../../reference/scql_operators.md:82 ../../reference/scql_operators.md:112
 #: ../../reference/scql_operators.md:142 ../../reference/scql_operators.md:172
@@ -373,17 +373,17 @@ msgstr "`MakePublic`"
 
 #: ../../reference/scql_operators.md:482
 msgid "Convert In tensor from share/private status to public status."
-msgstr "将 tensor 中从共享或私有状态转换为公开状态。"
+msgstr "将 tensor 从共享或私有状态转换为公开状态。"
 
 #: ../../reference/scql_operators.md:486 ../../reference/scql_operators.md:512
 #: ../../reference/scql_operators.md:544
-msgid "`In`(variadic, T1): Input tensors."
-msgstr "`In`(variadic, T1)：输入 tensor 。"
+msgid "`In`(可变参数, T1): Input tensors."
+msgstr "`In`(可变参数, T1)：输入 tensor 。"
 
 #: ../../reference/scql_operators.md:491 ../../reference/scql_operators.md:517
 #: ../../reference/scql_operators.md:549
-msgid "`Out`(variadic, T2): Output tensors."
-msgstr "`Out`(variadic, T2)：输出 tensor 。"
+msgid "`Out`(可变参数, T2): Output tensors."
+msgstr "`Out`(可变参数, T2)：输出 tensor 。"
 
 #: ../../reference/scql_operators.md:500
 msgid "`T1`: private,secret"
@@ -446,23 +446,23 @@ msgstr "定义：基于 EQ-Join 创建连接索引，返回原始输入中结果
 
 #: ../../reference/scql_operators.md:580
 msgid "`Left`(single, T1): Left vector(shape [M][1])"
-msgstr "`Left`(single, T1)：Left vector(shape [M][1])"
+msgstr "`Left`(single, T1)：Left vector"
 
 #: ../../reference/scql_operators.md:582
 msgid "`Right`(single, T1): Right vector(shape [N][1])"
-msgstr "`Right`(single, T1)：Right vector(shape [N][1])"
+msgstr "`Right`(single, T1)：Right vector"
 
 #: ../../reference/scql_operators.md:587
 msgid ""
 "`LeftJoinIndex`(single, T2): Joined rows index for left vector(shape "
 "[K][1])"
-msgstr "`LeftJoinIndex`(single, T2)：左向量连接的联接行索引(shape [K][1])"
+msgstr "`LeftJoinIndex`(single, T2)：参与join操作的左侧向量的行索引。"
 
 #: ../../reference/scql_operators.md:589
 msgid ""
 "`RightJoinIndex`(single, T2): Joined rows index for right vector(shape "
 "[K][1])"
-msgstr "`RightJoinIndex`(single, T2)：右向量连接的联接行索引(shape [K][1])"
+msgstr "`RightJoinIndex`(single, T2)：参与join操作的右向量的行索引。"
 
 #: ../../reference/scql_operators.md:595
 msgid ""
@@ -498,12 +498,12 @@ msgid "`RowsIndexFilter`(single, T): Rows index filter vector(shape [K][1])."
 msgstr "RowsIndexFilter (single, T)：行索引筛选器向量(shape [K][1])"
 
 #: ../../reference/scql_operators.md:635
-msgid "`Data`(variadic, T): Input data tensor(shape [M][N])."
-msgstr "`Data`(variadic, T)：输入数据 tensor (shape [M][N])。"
+msgid "`Data`(可变参数, T): Input data tensor(shape [M][N])."
+msgstr "`Data`(可变参数, T)：输入数据 tensor (shape [M][N])。"
 
 #: ../../reference/scql_operators.md:640
-msgid "`Out`(variadic, T): Output data tensor(shape [X][N])."
-msgstr "`Out`(variadic, T)：输出数据 tensor (shape [X][N])。"
+msgid "`Out`(可变参数, T): Output data tensor(shape [X][N])."
+msgstr "`Out`(可变参数, T)：输出数据 tensor (shape [X][N])。"
 
 #: ../../reference/scql_operators.md:653
 msgid "`Copy`"
@@ -513,7 +513,7 @@ msgstr "`Copy`"
 msgid ""
 "Definition: Copy source tensor \"In\" to new tensor \"Out\" on target "
 "party"
-msgstr "定义：将源 tensor “In”复制到目标方的新 tensor “Out”"
+msgstr "定义：将源 tensor 复制到新的目前 tensor 中。"
 
 #: ../../reference/scql_operators.md:659
 msgid "`In`(single, T1): source tensor"
@@ -521,15 +521,15 @@ msgstr "`In`(single, T1)：源 tensor 。"
 
 #: ../../reference/scql_operators.md:664
 msgid "`Out`(single, T1): target tensor"
-msgstr "`Out`(single, T1)：目标 tensor "
+msgstr "`Out`(single, T1)：目标 tensor 。"
 
 #: ../../reference/scql_operators.md:670
 msgid "`input_party_codes`: Input tensor `In` belongs to"
-msgstr "`input_party_codes`：输入 tensor “In”所属方。"
+msgstr "`input_party_codes`：输入 tensor In 所属方。"
 
 #: ../../reference/scql_operators.md:672
 msgid "`output_party_codes`: Output tensor `Out` belongs to"
-msgstr "`output_party_codes`：输出 tensor “Out”所属方"
+msgstr "`output_party_codes`：输出 tensor Out 所属方。"
 
 #: ../../reference/scql_operators.md:685
 msgid "`Filter`"
@@ -538,22 +538,22 @@ msgstr "`Filter`"
 #: ../../reference/scql_operators.md:687
 msgid ""
 "Given a boolean tensor Filter (its shape is [M]), and a number of tensors"
-" In (variadic, each tensor's shape must be [M]), for i in [0, M-1], keep "
+" In (可变参数, each tensor's shape must be [M]), for i in [0, M-1], keep "
 "the In tensors' element if and only if Filter[i] is True, output the "
-"filter result tensors Out (variadic). Example:"
-msgstr "给定一个boolean tensorsFilter (其shape为[M])，以及一些 tensor In (variadic，每个 tensor 的shape必须为[M])。对于i在[0, M-1]的范围内，仅当Filter[i]为真时，保留In tensor 的元素，并输出过滤结果 tensor Out (variadic)。例:"
+"filter result tensors Out (可变参数). Example:"
+msgstr "给定一个boolean tensorsFilter (其 shape 为[M])，以及一些 tensor In (可变参数，每个 tensor 的shape必须为[M])。对于i在[0, M-1]的范围内，仅当Filter[i]为真时，保留In tensor 的元素，并输出过滤结果 tensor Out (可变参数)。例:"
 
 #: ../../reference/scql_operators.md:700
 msgid "`Filter`(single, T1): Filter tensor."
-msgstr "`Filter`(single, T1)：Filter t  ensor 。"
+msgstr "`Filter`(single, T1)：Filter tensor 。"
 
 #: ../../reference/scql_operators.md:702
-msgid "`In`(variadic, T): Tensors to be filtered."
-msgstr "`In`(variadic, T)：待过滤的 tensor ."
+msgid "`In`(可变参数, T): Tensors to be filtered."
+msgstr "`In`(可变参数, T)：待过滤的 tensor 。"
 
 #: ../../reference/scql_operators.md:707
-msgid "`Out`(variadic, T): Output tensor."
-msgstr "`Out`(variadic, T)：输出 tensor ."
+msgid "`Out`(可变参数, T): Output tensor."
+msgstr "`Out`(可变参数, T)：输出 tensor 。"
 
 #: ../../reference/scql_operators.md:716 ../../reference/scql_operators.md:882
 #: ../../reference/scql_operators.md:913 ../../reference/scql_operators.md:944
@@ -568,15 +568,15 @@ msgstr "`Constant`"
 
 #: ../../reference/scql_operators.md:724
 msgid "Definition: Make constant from attribute. Example:"
-msgstr "定义：从属性生成常量。例如："
+msgstr "定义：根据 Attributes 生成常量。例如："
 
 #: ../../reference/scql_operators.md:741
 msgid "`Out`(single, T): output tensor(shape [M]) from constant."
-msgstr "`Out`(single, T)：从常量输出 tensor (shape [M])"
+msgstr "`Out`(single, T)：从常量输出 tensor "
 
 #: ../../reference/scql_operators.md:747
 msgid "`scalar`: scalar attribute(with shape [M])"
-msgstr "`scalar`：标量属性(shape [M])"
+msgstr "`scalar`：标量属性"
 
 #: ../../reference/scql_operators.md:749
 msgid "`to_status`: int64. to status, 0: to private, 1: to public."
@@ -598,15 +598,15 @@ msgstr "`DumpFile`"
 msgid ""
 "Definition: Dump the input tensor. Note: This op will change the affected"
 " rows in the session"
-msgstr "定义：转储输入 tensor 。注意：此操作将更改会话中受影响的行。"
+msgstr "定义：将输入的 tensor 存储到文件中。注意：此操作将更改会话中受影响的行。"
 
 #: ../../reference/scql_operators.md:775
-msgid "`In`(variadic, T): Tensors to be dumped."
-msgstr "`In`(variadic, T)：要存储的 tensor 。"
+msgid "`In`(可变参数, T): Tensors to be dumped."
+msgstr "`In`(可变参数, T)：要存储的 tensor。"
 
 #: ../../reference/scql_operators.md:780
-msgid "`Out`(variadic, T): Tensors have been dumped."
-msgstr "`Out`(variadic, T)： tensor 已被抛弃。"
+msgid "`Out`(可变参数, T): Tensors have been dumped."
+msgstr "`Out`(可变参数, T)： 已被转储的 tensor。"
 
 #: ../../reference/scql_operators.md:786
 msgid "`file_path`: String. Absolute file path to dump the tensors."
@@ -626,15 +626,15 @@ msgid ""
 "input tensor Right (its shape is [N]), check whether Left's element "
 "exists in Right's elements and output a boolean tensor Out (its shape is "
 "[M]). Left and Right must be the same type. Example:"
-msgstr "定义：给定一个输入 tensor  Left (其shape为 [M]) 和另一个输入 tensor  Right (其shape为 [N])，检查 Left 的元素是否存在于右的元素中，并输出一个布尔 tensor  Out (其shape为 [M])。左和右必须是相同的类型。例："
+msgstr "定义：给定一个名为 Left 的输入 tensor (其 shape 为 [M]) 和另一个名为 Right 的 Tensor (其 shape 为 [N])，检查 Left 的元素是否存在于右的元素中，并输出一名为 Out 的布尔类型的 tensor (其 shape 为 [M])。左和右必须是相同的类型。例："
 
 #: ../../reference/scql_operators.md:816
 msgid "`Left`(single, T): First operand."
-msgstr "`Left`(single, T): 第一个算子。"
+msgstr "`Left`(single, T): 第一个操作数。"
 
 #: ../../reference/scql_operators.md:818
 msgid "`Right`(single, T1): Second operand."
-msgstr "`Right`(single, T1): 第二个算子。"
+msgstr "`Right`(single, T1): 第二个操作数。"
 
 #: ../../reference/scql_operators.md:823
 msgid "`Out`(single, T): Output Tensor."
@@ -642,19 +642,19 @@ msgstr "`Out`(single, T): 输出 tensor 。"
 
 #: ../../reference/scql_operators.md:829
 msgid "`algorithm`: Int64. Algorithm to use for the op. 1: PSI"
-msgstr "`algorithm`：Int64. 用于操作 1 的算法：PSI"
+msgstr "`algorithm`：Int64类型， 用于 IN 操作的算法，1表示使用PSI算法。"
 
 #: ../../reference/scql_operators.md:831
 msgid ""
 "`input_party_codes`: List of parties the inputs belong to. This attribute"
 " is required if algorithm = PSI."
-msgstr "`input_party_codes`：输入所属的参与方列表。如果 algorithm = PSI，则需要此属性。"
+msgstr "`input_party_codes`：参与In操作的输入，其所属的参与方的列表。如果采用 PSI 算法，则需要此属性。"
 
 #: ../../reference/scql_operators.md:833
 msgid ""
 "`reveal_to`: A party can see the result. This attribute is required if "
 "algorithm = PSI."
-msgstr "`reveal_to`：参与方可以看到结果。如果 algorithm = PSI，则此属性是必需的。"
+msgstr "`reveal_to`：可以看到结果的参与方。如果采用 PSI 算法，则需要此属性。"
 
 #: ../../reference/scql_operators.md:842
 msgid "`algorithm`: 0"
@@ -672,11 +672,11 @@ msgstr "定义：给定一个输入 tensor ，返回输入 tensor 元素的总�
 
 #: ../../reference/scql_operators.md:868
 msgid "`In`(single, T): Tensor to be summed (shape [M])."
-msgstr "`In`(single, T)：要求和的 tensor  (shape [M])"
+msgstr "`In`(single, T)：要求和的 tensor 。"
 
 #: ../../reference/scql_operators.md:873
 msgid "`Out`(single, T): The summed Tensor (shape [1])."
-msgstr "`Out`(single, T)： tensor 和 (shape [1])"
+msgstr "`Out`(single, T)： tensor 的和。"
 
 #: ../../reference/scql_operators.md:886
 msgid "`ReduceMax`"
@@ -690,11 +690,11 @@ msgstr "定义：给定一个输入 tensor ，返回输入 tensor 元素的最�
 
 #: ../../reference/scql_operators.md:899
 msgid "`In`(single, T): Tensor to be maxed (shape [M])."
-msgstr "`In`(single, T): 需要最大化的 tensor  (shape [M])"
+msgstr "`In`(single, T): 需要计算最大值的 tensor。"
 
 #: ../../reference/scql_operators.md:904
 msgid "`Out`(single, T): The maxed Tensor (shape [1])."
-msgstr "`Out`(single, T)： tensor 最大化 (shape [1])"
+msgstr "`Out`(single, T)：最大值的 tensor。"
 
 #: ../../reference/scql_operators.md:917
 msgid "`ReduceMin`"
@@ -708,11 +708,11 @@ msgstr "定义：给定一个输入 tensor ，返回输入 tensor 元素的最�
 
 #: ../../reference/scql_operators.md:930
 msgid "`In`(single, T): Tensor to be mined (shape [M])."
-msgstr "`In`(single, T)：需要最小化的 tensor  (shape [M])."
+msgstr "`In`(single, T)：需要计算最小值的 tensor。"
 
 #: ../../reference/scql_operators.md:935
 msgid "`Out`(single, T): The mined Tensor (shape [1])."
-msgstr "`Out`(single, T)： tensor 最小化 (shape [1])."
+msgstr "`Out`(single, T)：最小值的tensor。"
 
 #: ../../reference/scql_operators.md:948
 msgid "`ReduceAvg`"
@@ -726,11 +726,11 @@ msgstr "定义：给定一个输入 tensor ，返回输入 tensor 元素的平�
 
 #: ../../reference/scql_operators.md:964
 msgid "`In`(single, T): Tensor to be reduced (shape [M])."
-msgstr "`In`(single, T)：需要求平均的 tensor  (shape [M])"
+msgstr "`In`(single, T)：需要求平均的 tensor。"
 
 #: ../../reference/scql_operators.md:969
 msgid "`Out`(single, T): The average Tensor (shape [1])."
-msgstr "`Out`(single, T)：平均 tensor  (shape [1])."
+msgstr "`Out`(single, T)：平均 tensor 。"
 
 #: ../../reference/scql_operators.md:982
 msgid "`Shape`"
@@ -744,12 +744,12 @@ msgid ""
 msgstr "定义：给定 tensor ，返回每个 tensor 的 shapes，Axis从 0 开始。如果设置了 Axis，则返回每个 shapes 的维度。如果未设置 Axis (默认为 -1)，则返回 shapes 。例："
 
 #: ../../reference/scql_operators.md:995
-msgid "`In`(variadic, T): Input Tensors"
-msgstr "`In`(variadic, T): 输入 tensor "
+msgid "`In`(可变参数, T): Input Tensors"
+msgstr "`In`(可变参数, T): 输入 tensor "
 
 #: ../../reference/scql_operators.md:1000
-msgid "`Out`(variadic, T1): Shape Tensors"
-msgstr "`Out`(variadic, T1): 输出 Shape"
+msgid "`Out`(可变参数, T1): Shape Tensors"
+msgstr "`Out`(可变参数, T1): 输出 Shape"
 
 #: ../../reference/scql_operators.md:1006
 msgid "`axis`: Int. Specific dimension of the shape."
@@ -784,16 +784,16 @@ msgid "Definition: sort `In` using `Key`. Example:"
 msgstr "定义: 使用 `Key` 对输入内容进行排序。例："
 
 #: ../../reference/scql_operators.md:1073
-msgid "`Key`(variadic, T): Sort Key(shape [M][1])."
-msgstr "`Key`(variadic, T): 排序键(shape [M][1])"
+msgid "`Key`(可变参数, T): Sort Key(shape [M][1])."
+msgstr "`Key`(可变参数, T): 排序键"
 
 #: ../../reference/scql_operators.md:1075
-msgid "`In`(variadic, T): Sort Value(shape [M][1])."
-msgstr "`In`(variadic, T): 排序值(shape [M][1])"
+msgid "`In`(可变参数, T): Sort Value(shape [M][1])."
+msgstr "`In`(可变参数, T): 所需排序的值。"
 
 #: ../../reference/scql_operators.md:1080
-msgid "`Out`(variadic, T): Sorted Value(shape [M][1])"
-msgstr "`Out`(variadic, T):排序值(shape [M][1])"
+msgid "`Out`(可变参数, T): Sorted Value(shape [M][1])"
+msgstr "`Out`(可变参数, T):排序后的结果。"
 
 #: ../../reference/scql_operators.md:1086
 msgid "`reverse`: Bool. If True, the sorted tensor in descending order."
@@ -811,11 +811,11 @@ msgstr "`ObliviousGroupMark`"
 msgid ""
 "Definition: generate end of group indicator `Group` based on `Key`. The "
 "operator calculates Group[i] = not_eq(Key[i+1], Key[i]). Example:"
-msgstr "定义：基于 Key 生成 end of group indicator Group , operator calculates Group[i] = not_eq(Key[i+1], Key[i])。例"
+msgstr "定义：根据输入的 key 生成一个 group ，group 的计算规则为 Group[i] = not_eq(Key[i+1], Key[i])。例："
 
 #: ../../reference/scql_operators.md:1122
-msgid "`Key`(variadic, T): Pre-sorted group keys (shape [M][1])."
-msgstr "`Key`(variadic, T): 预排序的组键 (shape [M][1])"
+msgid "`Key`(可变参数, T): Pre-sorted group keys (shape [M][1])."
+msgstr "`Key`(可变参数, T): 排序过的 group key。"
 
 #: ../../reference/scql_operators.md:1127
 #: ../../reference/scql_operators.md:1154
@@ -826,7 +826,7 @@ msgstr "`Key`(variadic, T): 预排序的组键 (shape [M][1])"
 msgid ""
 "`Group`(single, T): End of group indicator(shape [M][1]). Element 1 means"
 " the row is the last element of the group, 0 is not."
-msgstr "`Group`(single, T): End of group indicator(shape [M][1]), 元素 1 表示行是组的最后一个元素，0 不是"
+msgstr "`Group`(single, T): 生成的 groupMark (shape [M][1])，其中1表示是该分组中的最后一元素，0则表示不是最后一个元素"
 
 #: ../../reference/scql_operators.md:1140
 msgid "`ObliviousGroupSum`"
@@ -840,23 +840,23 @@ msgstr "`ObliviousGroupSum`"
 msgid ""
 "Definition: partially aggregate `In` according to end of group indicator."
 " Example:"
-msgstr "定义: 根据 end of group indicator 部分聚合输入内容。"
+msgstr "定义: 根据 group mask 来对输入进行分组求和。"
 
 #: ../../reference/scql_operators.md:1156
 #: ../../reference/scql_operators.md:1190
 #: ../../reference/scql_operators.md:1224
 #: ../../reference/scql_operators.md:1258
 #: ../../reference/scql_operators.md:1292
-msgid "`In`(variadic, T): Values to be aggregated (shape [M][1])."
-msgstr "`In`(variadic, T): 要聚合的值 (shape [M][1])。"
+msgid "`In`(可变参数, T): Values to be aggregated (shape [M][1])."
+msgstr "`In`(可变参数, T): 需要聚合的值。"
 
 #: ../../reference/scql_operators.md:1161
 #: ../../reference/scql_operators.md:1195
 #: ../../reference/scql_operators.md:1229
 #: ../../reference/scql_operators.md:1263
 #: ../../reference/scql_operators.md:1297
-msgid "`Out`(variadic, T): Partially aggregated values (shape [M][1])."
-msgstr "`Out`(variadic, T): 部分聚合的值(shape [M][1])。"
+msgid "`Out`(可变参数, T): Partially aggregated values (shape [M][1])."
+msgstr "`Out`(可变参数, T): 部分聚合的值。"
 
 #: ../../reference/scql_operators.md:1170
 #: ../../reference/scql_operators.md:1204
@@ -893,12 +893,12 @@ msgid "Definition: Shuffle `In`. Example:"
 msgstr "定义：Shuffle `In`。例："
 
 #: ../../reference/scql_operators.md:1323
-msgid "`In`(variadic, T): Input Value(shape [M][1])."
-msgstr "`In`(variadic, T)：输入值(shape [M][1])."
+msgid "`In`(可变参数, T): Input Value(shape [M][1])."
+msgstr "`In`(可变参数, T)：输入值。"
 
 #: ../../reference/scql_operators.md:1328
-msgid "`Out`(variadic, T): Output Value(shape [M][1])"
-msgstr "`Out`(variadic, T)：输出值(shape [M][1])"
+msgid "`Out`(可变参数, T): Output Value(shape [M][1])"
+msgstr "`Out`(可变参数, T)：输出值。"
 
 #: ../../reference/scql_operators.md:1341
 msgid "`BroadcastTo`"
@@ -911,16 +911,16 @@ msgid ""
 msgstr "将输入的 tensor `In` 广播转变为与 ShapeRefTensor 相同的 shape。例："
 
 #: ../../reference/scql_operators.md:1355
-msgid "`In`(variadic, T): Input tensor"
-msgstr "`In`(variadic, T)：输入 tensor "
+msgid "`In`(可变参数, T): Input tensor"
+msgstr "`In`(可变参数, T)：输入 tensor "
 
 #: ../../reference/scql_operators.md:1357
 msgid "`ShapeRefTensor`(single, T1): Shape reference tensor"
 msgstr "`ShapeRefTensor`(single, T1)：Shape reference tensor"
 
 #: ../../reference/scql_operators.md:1362
-msgid "`Out`(variadic, T2): Result tensor"
-msgstr "`Out`(variadic, T2)： tensor 结果"
+msgid "`Out`(可变参数, T2): Result tensor"
+msgstr "`Out`(可变参数, T2)： tensor 结果"
 
 #: ../../reference/scql_operators.md:1371
 msgid "`T`: public"
@@ -952,14 +952,14 @@ msgstr "`Concat`"
 
 #: ../../reference/scql_operators.md:1405
 msgid ""
-"Definition: Given a number of tensors In (variadic, each tensor's shape "
+"Definition: Given a number of tensors In (可变参数, each tensor's shape "
 "must be the same except for the axis), concat the In tensors along the "
 "axis. Example:"
 msgstr "定义：给定多个 tensor  (可以有多个，但每个 tensor 的 shape 必须相同，除了某一个轴)，将它们沿着这个轴拼接起来。例如："
 
 #: ../../reference/scql_operators.md:1416
-msgid "`In`(variadic, T): Tensors to be concat."
-msgstr "`In`(variadic, T)：要连接的 tensor 。"
+msgid "`In`(可变参数, T): Tensors to be concat."
+msgstr "`In`(可变参数, T)：要连接的 tensor 。"
 
 #: ../../reference/scql_operators.md:1421
 msgid "`Out`(single, T): Concated Tensor."
