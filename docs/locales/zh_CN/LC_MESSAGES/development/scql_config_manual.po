@@ -41,11 +41,11 @@ msgstr "在 SCDB 中配置参数以 yaml 文件形式提供。"
 
 #: ../../development/scql_config_manual.rst:15
 msgid "Example for SCDB"
-msgstr "比如SCDB"
+msgstr "SCDB 配置示例"
 
 #: ../../development/scql_config_manual.rst:49
 msgid "Config in SCDB"
-msgstr "SCDB 中配置"
+msgstr "SCDB 配置项"
 
 #: ../../development/scql_config_manual.rst:52
 #: ../../development/scql_config_manual.rst:233
@@ -55,7 +55,7 @@ msgstr "名称"
 #: ../../development/scql_config_manual.rst:52
 #: ../../development/scql_config_manual.rst:233
 msgid "Default"
-msgstr "默认"
+msgstr "默认值"
 
 #: ../../development/scql_config_manual.rst:52
 #: ../../development/scql_config_manual.rst:233
@@ -64,7 +64,7 @@ msgstr "描述"
 
 #: ../../development/scql_config_manual.rst:54
 msgid "scdb_host"
-msgstr "scdb_host主机"
+msgstr "scdb_host"
 
 #: ../../development/scql_config_manual.rst:54
 #: ../../development/scql_config_manual.rst:56
@@ -90,7 +90,7 @@ msgstr "scdb_host主机"
 #: ../../development/scql_config_manual.rst:295
 #: ../../development/scql_config_manual.rst:297
 msgid "none"
-msgstr "没有"
+msgstr "无"
 
 #: ../../development/scql_config_manual.rst:54
 msgid "The callback URL for the engine to notify SCDB"
@@ -118,7 +118,7 @@ msgstr "SCDB服务器传输协议支持HTTP/HTTPS"
 
 #: ../../development/scql_config_manual.rst:60
 msgid "query_result_callback_timeout"
-msgstr "查询结果返回超时"
+msgstr "query_result_callback_timeout"
 
 #: ../../development/scql_config_manual.rst:60
 msgid "200ms"
@@ -174,7 +174,7 @@ msgstr "log_level"
 
 #: ../../development/scql_config_manual.rst:68
 msgid "info"
-msgstr "信息"
+msgstr "info"
 
 #: ../../development/scql_config_manual.rst:68
 msgid "The type and severity of a logged event"
@@ -408,7 +408,7 @@ msgid ""
 "To handle time.Time correctly, you need to include parseTime as a "
 "parameter. To fully support UTF-8 encoding, you need to change "
 "charset=utf8 to charset=utf8mb4"
-msgstr "正确处理 time.Time需要包含 parseTime 参数。为了完全支持UTF-8编码，需要更改“字符集 = utf8 到 字符集 = utf8mb4” "
+msgstr "正确处理 time.Time需要包含 parseTime 参数。为了完全支持UTF-8编码，需要更改 “charset=utf8 to charset=utf8mb4” "
 
 #: ../../development/scql_config_manual.rst:153
 msgid "PassWord Check"
@@ -481,7 +481,7 @@ msgid ""
 "runtime config "
 "<https://www.secretflow.org.cn/docs/spu/en/reference/runtime_config.html>`_"
 " to get more information."
-msgstr "SCQL 支持 SPU 支持的不同 mpc 协议，您可以通过设置 SPU 运行时配置来选择不同的 mpc 协议，建议使用经过充分测试并支持多方的SEMI2K协议。 请参阅“SPU 配置”<https://www.secretflow.org.cn/docs/spu/en/reference/runtime_config.html>获得更多信息"
+msgstr "SCQL 支持 SPU 支持的不同 mpc 协议，您可以通过设置 SPU 运行时配置来选择不同的 mpc 协议，建议使用经过充分测试并支持多方的 SEMI2K 协议。 请参阅“ SPU 配置”<https://www.secretflow.org.cn/docs/spu/en/reference/runtime_config.html>获得更多信息"
 
 #: ../../development/scql_config_manual.rst:214
 msgid "Engine configuration options"
@@ -539,7 +539,7 @@ msgstr "peer_engine_connection_type"
 #: ../../development/scql_config_manual.rst:241
 #: ../../development/scql_config_manual.rst:257
 msgid "pooled"
-msgstr "汇聚"
+msgstr "pooled"
 
 #: ../../development/scql_config_manual.rst:241
 msgid "The rpc connection type between engine and engine"
@@ -588,7 +588,7 @@ msgstr "peer_engine_enable_ssl_client_verification"
 #: ../../development/scql_config_manual.rst:283
 #: ../../development/scql_config_manual.rst:287
 msgid "false"
-msgstr "错误"
+msgstr "false"
 
 #: ../../development/scql_config_manual.rst:249
 msgid ""
@@ -770,7 +770,7 @@ msgstr "enable_scdb_authorization"
 
 #: ../../development/scql_config_manual.rst:287
 msgid "Whether to authenticate the identity of SCDB"
-msgstr "是否SCDB的身份认证"
+msgstr "是否启动SCDB身份认证"
 
 #: ../../development/scql_config_manual.rst:289
 msgid "engine_credential"
@@ -828,7 +828,7 @@ msgstr "数据源配置"
 msgid ""
 "datasources(MySQL/SQLite3/PostgreSQL/CSVDB) are where the SCQLEngine gets"
 " its data from."
-msgstr "数据源(MySQL/SQLite3/PostgreSQL/CSVDB) 是 SCQLEngine 获取数据的位置。"
+msgstr "SCQLEngine 支持多种数据源，包括 MySQL/SQLite3/PostgreSQL/CSVDB 。"
 
 #: ../../development/scql_config_manual.rst:306
 msgid ""
@@ -856,7 +856,7 @@ msgstr "嵌入式路由"
 msgid ""
 "datasources in embed_router_conf contain informations for connecting "
 "MySQL/SQLite3/PostgreSQL/CSVDB:"
-msgstr "embed_router_conf 中的数据源包含用于连接 MySQL/SQLite3/PostgreSQL/CSVDB:"
+msgstr "embed_router_conf 中的 datasources 包含用于连接 MySQL/SQLite3/PostgreSQL/CSVDB 数据源的信息:"
 
 #: ../../development/scql_config_manual.rst:333
 msgid "id: unique id of datasource."
