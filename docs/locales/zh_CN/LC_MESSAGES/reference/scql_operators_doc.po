@@ -209,7 +209,7 @@ msgstr "Out = Left `Less` Right"
 #: ../../reference/scql_operators.md:426 ../../reference/scql_operators.md:456
 #, fuzzy
 msgid "`Left`(variadic, T): First operand."
-msgstr "`Left`(single, T): 第一个操作数。"
+msgstr "`Left`(variadic, T): 第一个操作数。"
 
 #: ../../reference/scql_operators.md:68 ../../reference/scql_operators.md:98
 #: ../../reference/scql_operators.md:128 ../../reference/scql_operators.md:158
@@ -220,7 +220,7 @@ msgstr "`Left`(single, T): 第一个操作数。"
 #: ../../reference/scql_operators.md:428 ../../reference/scql_operators.md:458
 #, fuzzy
 msgid "`Right`(variadic, T1): Second operand."
-msgstr "`Right`(single, T1): 第二个操作数。"
+msgstr "`Right`(variadic, T1): 第二个操作数。"
 
 #: ../../reference/scql_operators.md:73 ../../reference/scql_operators.md:103
 #: ../../reference/scql_operators.md:133 ../../reference/scql_operators.md:163
@@ -231,7 +231,7 @@ msgstr "`Right`(single, T1): 第二个操作数。"
 #: ../../reference/scql_operators.md:433 ../../reference/scql_operators.md:463
 #, fuzzy
 msgid "`Out`(variadic, T2): Output Tensor."
-msgstr "`Out`(可变参数, T2)：输出 tensor 。"
+msgstr "`Out`(variadic, T2)：输出 tensor 。"
 
 #: ../../reference/scql_operators.md:82 ../../reference/scql_operators.md:112
 #: ../../reference/scql_operators.md:142 ../../reference/scql_operators.md:172
@@ -568,7 +568,7 @@ msgstr "`In`(可变参数, T)：待过滤的 tensor 。"
 #: ../../reference/scql_operators.md:707
 #, fuzzy
 msgid "`Out`(variadic, T): Output tensor."
-msgstr "`Out`(single, T)：输出 tensor 。"
+msgstr "`Out`(variadic, T)：输出 tensor 。"
 
 #: ../../reference/scql_operators.md:716 ../../reference/scql_operators.md:882
 #: ../../reference/scql_operators.md:913 ../../reference/scql_operators.md:944
@@ -857,8 +857,7 @@ msgid ""
 "`Group`(single, T): End of group indicator(shape [M][1]). Element 1 means"
 " the row is the last element of the group, 0 is not."
 msgstr ""
-"`Group`(single, T): 生成的 groupMark (shape "
-"[M][1])，其中1表示是该分组中的最后一元素，0则表示不是最后一个元素"
+"`Group`(single, T): 生成的 groupMark (shape [M][1])，其中1表示是该分组中的最后一元素，0则表示不是最后一个元素"
 
 #: ../../reference/scql_operators.md:1140
 msgid "`ObliviousGroupSum`"
@@ -994,7 +993,7 @@ msgid ""
 "Definition: Given a number of tensors In (variadic, each tensor's shape "
 "must be the same except for the axis), concat the In tensors along the "
 "axis. Example:"
-msgstr "定义：给定多个 tensor  (可以有多个，但每个 tensor 的 shape 必须相同，除了某一个轴)，将它们沿着这个轴拼接起来。例如："
+msgstr "定义：给定多个 tensor (可以有多个，但每个 tensor 的 shape 必须相同，除了某一个轴)，将它们沿着这个轴拼接起来。例如："
 
 #: ../../reference/scql_operators.md:1416
 #, fuzzy
