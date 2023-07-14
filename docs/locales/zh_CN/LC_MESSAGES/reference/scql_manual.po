@@ -97,7 +97,7 @@ msgid ""
 ":doc:`mysql_compatibility`."
 msgstr ""
 "SCQL 兼容大多数 MySQL 语法，这使得它易于使用。"
-"关于 SCQL 和 MySQL 之间的语法差异，请阅读"
+"关于 SCQL 和 MySQL 之间的语法差异，请阅读 "
 ":doc:`mysql_compatibility`。"
 
 
