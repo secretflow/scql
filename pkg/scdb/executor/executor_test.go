@@ -203,11 +203,25 @@ func TestCreateUser(t *testing.T) {
 		r.NoError(err)
 
 		// success
-		_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err = runSQL(ctx, `CREATE USER bob PARTY_CODE "party_B" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 
 		// failed due to user exists
-		_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err = runSQL(ctx, `CREATE USER bob PARTY_CODE "party_B" IDENTIFIED BY "some_pwd"`)
+		r.Error(err)
+
+		// success
+		_, err = runSQL(ctx, `CREATE USER IF NOT EXISTS bob PARTY_CODE "party_B" IDENTIFIED BY "some_pwd"`)
+		r.NoError(err)
+
+		// only one user is allowed to exist in a party
+		_, err = runSQL(ctx, `CREATE USER another PARTY_CODE "party_B" IDENTIFIED BY "some_pwd"`)
+		r.Error(err)
+
+		r.NoError(switchUser(ctx, userAlice))
+
+		// failed due to no privilege
+		_, err = runSQL(ctx, `CREATE USER carol PARTY_CODE "party_C" IDENTIFIED BY "some_pwd"`)
 		r.Error(err)
 
 		users := []storage.User{}
@@ -225,9 +239,43 @@ func TestCreateUser(t *testing.T) {
 		r.NoError(mockUserSession(ctx, userBob, db))
 
 		// failed due to no create user privilege
-		_, err := runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err := runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
 		r.Error(err)
 	})
+}
+
+func TestAlterUser(t *testing.T) {
+	r := require.New(t)
+	ctx := setupTestEnv(t)
+
+	userCarol := &userAuth{
+		hostName: `%`,
+		userName: `carol`,
+		password: `some_pwd`,
+		grmToken: `my_carol`,
+	}
+
+	// root> create user carol
+	_, err := runSQL(ctx, `CREATE USER carol PARTY_CODE "party_C" IDENTIFIED BY "some_pwd"`)
+	r.NoError(err)
+
+	// root> alter user carol, failed due to no privilege
+	_, err = runSQL(ctx, `ALTER USER carol IDENTIFIED BY 'new-password'`)
+	r.Equal(err.Error(), "only support user themselves to execute alter user")
+
+	r.NoError(switchUser(ctx, userCarol))
+
+	// carol> carol user alice, success
+	_, err = runSQL(ctx, `ALTER USER carol IDENTIFIED BY 'new-password'`)
+	r.NoError(err)
+
+	// switch to user carol, failed due to password changed
+	r.Error(switchUser(ctx, userCarol))
+
+	// switch to user alice
+	userCarol.password = "new-password"
+	r.NoError(switchUser(ctx, userCarol))
+
 }
 
 func TestDropUser(t *testing.T) {
@@ -241,7 +289,7 @@ func TestDropUser(t *testing.T) {
 		r.NoError(mockUserSession(ctx, userRoot, db))
 
 		// create user `bob` before dropping it
-		_, err := runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err := runSQL(ctx, `CREATE USER bob PARTY_CODE "party_B" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 
 		// failed since user bob has no create user privilege
@@ -277,7 +325,7 @@ func TestDropUser(t *testing.T) {
 		r.NoError(mockUserSession(ctx, userRoot, db))
 
 		// root> create user alice
-		_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err = runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 
 		// root> grant create on *.* to alice
@@ -306,7 +354,7 @@ func TestDropUser(t *testing.T) {
 		r.NoError(err)
 
 		// root> create user alice
-		_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err = runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 
 		// switch to user alice
@@ -343,7 +391,7 @@ func TestCreateDatabase(t *testing.T) {
 		r.NoError(mockUserSession(ctx, userRoot, db))
 
 		// create user success
-		_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err = runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 
 		ctx.GetSessionVars().User = &auth.UserIdentity{Username: `alice`}
@@ -387,7 +435,7 @@ func TestDropDatabase(t *testing.T) {
 		r.NoError(err)
 
 		// root> create user alice
-		_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err = runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 
 		// root> grant create on da.* to alice...
@@ -419,7 +467,7 @@ func TestCreateView(t *testing.T) {
 		r.NoError(mockUserSession(ctx, userRoot, db))
 
 		// root> create user alice
-		_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err = runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 
 		// root> grant create on *.* to alice
@@ -474,15 +522,15 @@ func TestCreateView(t *testing.T) {
 		r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
 		r.Equal(int64(4), rt[0].GetShape().GetDim()[0].GetDimValue())
 		r.Equal("Tables_in_test", rt[0].GetName())
-		r.Equal("new_table", rt[0].GetSs().GetSs()[0])
-		r.Equal("view1", rt[0].GetSs().GetSs()[1])
-		r.Equal("view2", rt[0].GetSs().GetSs()[2])
-		r.Equal("view3", rt[0].GetSs().GetSs()[3])
+		r.Equal("new_table", rt[0].GetStringData()[0])
+		r.Equal("view1", rt[0].GetStringData()[1])
+		r.Equal("view2", rt[0].GetStringData()[2])
+		r.Equal("view3", rt[0].GetStringData()[3])
 		r.Equal("Table_type", rt[1].GetName())
-		r.Equal(TableTypeBase, rt[1].GetSs().GetSs()[0])
-		r.Equal(TableTypeView, rt[1].GetSs().GetSs()[1])
-		r.Equal(TableTypeView, rt[1].GetSs().GetSs()[2])
-		r.Equal(TableTypeView, rt[1].GetSs().GetSs()[3])
+		r.Equal(TableTypeBase, rt[1].GetStringData()[0])
+		r.Equal(TableTypeView, rt[1].GetStringData()[1])
+		r.Equal(TableTypeView, rt[1].GetStringData()[2])
+		r.Equal(TableTypeView, rt[1].GetStringData()[3])
 
 		is3, err := storage.QueryDBInfoSchema(db, "test")
 		r.NoError(err)
@@ -493,9 +541,9 @@ func TestCreateView(t *testing.T) {
 		r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
 		r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
 		r.Equal("Field", rt[0].GetName())
-		r.Equal("c4", rt[0].GetSs().GetSs()[0])
+		r.Equal("c4", rt[0].GetStringData()[0])
 		r.Equal("Type", rt[1].GetName())
-		r.Equal("int", rt[1].GetSs().GetSs()[0])
+		r.Equal("int", rt[1].GetStringData()[0])
 
 		// drop view
 		_, err = runSQL(ctx, `DROP VIEW test.view2`)
@@ -519,7 +567,7 @@ func TestCreateTable(t *testing.T) {
 		r.NoError(mockUserSession(ctx, userRoot, db))
 
 		// root> create user alice
-		_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err = runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 
 		// root> grant create on *.* to alice
@@ -557,6 +605,10 @@ func TestCreateTable(t *testing.T) {
 		ctx.GetSessionVars().CurrentDB = "test"
 		_, err = runSQL(ctx, `CREATE TABLE new_table_2 tid = "tid2"`)
 		r.NoError(err)
+
+		// failed due to not the owner of the table
+		_, err = runSQL(ctx, `CREATE TABLE test.t3 tid = "tid3"`)
+		r.Error(err)
 	}
 
 	{
@@ -564,15 +616,26 @@ func TestCreateTable(t *testing.T) {
 		r.NoError(mockUserSession(ctx, userRoot, db))
 
 		// create user success
-		_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err = runSQL(ctx, `CREATE USER bob PARTY_CODE "party_B" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 
-		// switch to user alice
+		// switch to user bob
 		r.NoError(switchUser(ctx, userBob))
 
 		// failed due to lack of privilege
-		_, err = runSQL(ctx, `CREATE TABLE test.ant_table tid = "tid1"`)
+		_, err = runSQL(ctx, `CREATE TABLE test.ant_table tid = "tid3"`)
 		r.Error(err)
+
+		r.NoError(switchUser(ctx, userRoot))
+
+		_, err = runSQL(ctx, `GRANT CREATE ON test.* TO bob`)
+		r.NoError(err)
+
+		r.NoError(switchUser(ctx, userBob))
+
+		_, err = runSQL(ctx, `CREATE TABLE test.ant_table tid = "tid3"`)
+		r.NoError(err)
+
 	}
 }
 
@@ -586,11 +649,11 @@ func TestDropTable(t *testing.T) {
 	r.NoError(mockUserSession(ctx, userRoot, db))
 
 	// root> create user alice
-	_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	_, err = runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
 	r.NoError(err)
 
 	// root> create user alice
-	_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	_, err = runSQL(ctx, `CREATE USER bob PARTY_CODE "party_B" IDENTIFIED BY "some_pwd"`)
 	r.NoError(err)
 
 	// success
@@ -649,16 +712,38 @@ func TestGrantDbScope(t *testing.T) {
 		_, err := runSQL(ctx, "GRANT CREATE ON da.* TO alice")
 		r.Error(err)
 
-		// 1. create user alice before granting privilege
-		_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err = runSQL(ctx, "GRANT UNKNOWN ON da.* TO alice")
+		r.Error(err)
+
+		_, err = runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
-		// 2. grant CREATE PRIV to `alice`
+
+		_, err = runSQL(ctx, `CREATE USER bob PARTY_CODE "party_B" IDENTIFIED BY "some_pwd"`)
+		r.NoError(err)
+
+		// failed due to grant priv to not exist database
+		_, err = runSQL(ctx, "GRANT CREATE ON not_exist.* TO alice")
+		r.Error(err)
+
+		_, err = runSQL(ctx, "CREATE DATABASE da")
+		r.NoError(err)
+
 		_, err = runSQL(ctx, "GRANT CREATE ON da.* TO alice")
 		r.NoError(err)
 
-		// 3. grant multiple privileges to `alice`
 		_, err = runSQL(ctx, "GRANT CREATE, DROP, GRANT OPTION, DESCRIBE, SHOW ON da.* TO alice")
 		r.NoError(err)
+
+		r.NoError(switchUser(ctx, userAlice))
+
+		// failed due to grant priv to root who doesn't belong to any party
+		_, err = runSQL(ctx, "GRANT CREATE ON da.* TO root")
+		r.Error(err)
+
+		// failed due to grant priv to another party
+		_, err = runSQL(ctx, "GRANT CREATE ON da.* TO bob")
+		r.Error(err)
+
 	})
 
 	t.Run("CreateTableBeforeAndAfterGrantCreatePrivilege", func(t *testing.T) {
@@ -666,7 +751,7 @@ func TestGrantDbScope(t *testing.T) {
 		ctx := setupTestEnv(t)
 
 		// root> create user alice
-		_, err := runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err := runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 
 		// success
@@ -693,7 +778,7 @@ func TestGrantDbScope(t *testing.T) {
 		ctx := setupTestEnv(t)
 
 		// root> create user alice
-		_, err := runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err := runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 
 		// root> create database da.*
@@ -712,7 +797,10 @@ func TestGrantGlobalScope(t *testing.T) {
 		ctx := setupTestEnv(t)
 
 		// root> create user alice
-		_, err := runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err := runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
+		r.NoError(err)
+
+		_, err = runSQL(ctx, `CREATE USER bob PARTY_CODE "party_B" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 
 		// switch to user alice
@@ -732,6 +820,14 @@ func TestGrantGlobalScope(t *testing.T) {
 		// switch to user alice
 		r.NoError(switchUser(ctx, userAlice))
 
+		// failed due to grant to root who doesn't belong to any party
+		_, err = runSQL(ctx, "GRANT CREATE ON *.* TO root")
+		r.Error(err)
+
+		// failed due to grant priv to another party
+		_, err = runSQL(ctx, "GRANT CREATE ON *.* TO bob")
+		r.Error(err)
+
 		// alice> create database da -- success
 		_, err = runSQL(ctx, `CREATE DATABASE da`)
 		r.NoError(err)
@@ -749,7 +845,7 @@ func TestGrantGlobalScope(t *testing.T) {
 		r.NoError(err)
 
 		// alice> create user bob -- success
-		_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err = runSQL(ctx, `CREATE USER carol PARTY_CODE "party_c" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 	})
 }
@@ -764,11 +860,11 @@ func TestGrantTableScope(t *testing.T) {
 		r.NoError(err)
 
 		// root> create user alice
-		_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err = runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 
 		// root> create user bob
-		_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err = runSQL(ctx, `CREATE USER bob PARTY_CODE "party_B" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 
 		// root> grant create, grant option priv on *.* to alice
@@ -792,19 +888,8 @@ func TestGrantTableScope(t *testing.T) {
 		// switch to user alice
 		r.NoError(switchUser(ctx, userAlice))
 
-		// alice> grant CREATE,DROP on da.t1 TO alice
+		// failed due to grant priv to another party
 		_, err = runSQL(ctx, `GRANT CREATE, DROP ON da.t1 TO bob`)
-		r.NoError(err)
-
-		// switch user bob
-		r.NoError(switchUser(ctx, userBob))
-
-		// bob> drop table da.t1 -- failed due to bob is not the owner of table da.t1
-		_, err = runSQL(ctx, `DROP TABLE da.t1`)
-		r.Error(err)
-
-		// alice> create table da.t2 -- failed due to no create privilege on da.t2
-		_, err = runSQL(ctx, `CREATE TABLE da.t3 tid = "tid3"`)
 		r.Error(err)
 	})
 	t.Run("GrantVisibilityPrivilege", func(t *testing.T) {
@@ -812,11 +897,11 @@ func TestGrantTableScope(t *testing.T) {
 		ctx := setupTestEnv(t)
 
 		// root> create user alice
-		_, err := runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err := runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 
 		// root> create user bob
-		_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err = runSQL(ctx, `CREATE USER bob PARTY_CODE "party_B" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 
 		// root> create database da
@@ -838,6 +923,20 @@ func TestGrantTableScope(t *testing.T) {
 		_, err = runSQL(ctx, `GRANT SELECT PLAINTEXT ON da.t1 TO bob`)
 		r.NoError(err)
 
+		_, err = runSQL(ctx, `GRANT SELECT PLAINTEXT(c1) ON da.t1 TO bob`)
+		r.NoError(err)
+
+		_, err = runSQL(ctx, `GRANT SELECT PLAINTEXT, SELECT PLAINTEXT(c1) ON da.t1 TO bob`)
+		r.NoError(err)
+
+		// failed due to grant priv to another party
+		_, err = runSQL(ctx, `GRANT CREATE, SELECT PLAINTEXT(c1) ON da.t1 TO bob`)
+		r.Error(err)
+
+		// failed due to grant priv to another party
+		_, err = runSQL(ctx, `GRANT CREATE, SELECT ENCRYPTED_ONLY ON da.t1 TO bob`)
+		r.Error(err)
+
 		// switch to user root
 		r.NoError(switchUser(ctx, userRoot))
 
@@ -849,7 +948,7 @@ func TestGrantTableScope(t *testing.T) {
 		r.NoError(switchUser(ctx, userBob))
 
 		// bob> GRANT SELECT PLAINTEXT(c1) on da.t1 to bob
-		_, err = runSQL(ctx, `GRANT SELECT(c1) PLAINTEXT ON da.t1 TO bob`)
+		_, err = runSQL(ctx, `GRANT SELECT PLAINTEXT(c1) ON da.t1 TO bob`)
 		r.Error(err) // error: bob is not the table owner
 
 		// bob> GRANT SELECT PLAINTEXT on da.t1 to bob
@@ -858,17 +957,17 @@ func TestGrantTableScope(t *testing.T) {
 	})
 }
 
-func TestRevokeTableScope(t *testing.T) {
+func TestRevokeColumnScope(t *testing.T) {
 	t.Run("RevokeColumnPrivilege", func(t *testing.T) {
 		r := require.New(t)
 		ctx := setupTestEnv(t)
 
 		// root> create user alice
-		_, err := runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err := runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 
 		// root> create user bob
-		_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err = runSQL(ctx, `CREATE USER bob PARTY_CODE "party_B" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 
 		// root> create database da
@@ -897,7 +996,7 @@ func TestRevokeTableScope(t *testing.T) {
 		r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
 		r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
 		r.Equal("Grants on da for bob@%", rt[0].GetName())
-		r.Equal("GRANT SELECT PLAINTEXT(c1) ON da.t1 TO bob", rt[0].GetSs().GetSs()[0])
+		r.Equal("GRANT SELECT PLAINTEXT(c1) ON da.t1 TO bob", rt[0].GetStringData()[0])
 
 		_, err = runSQL(ctx, `REVOKE SELECT PLAINTEXT(c1) ON da.t1 FROM bob`)
 		r.NoError(err)
@@ -912,11 +1011,11 @@ func TestRevokeTableScope(t *testing.T) {
 		ctx := setupTestEnv(t)
 
 		// root> create user alice
-		_, err := runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err := runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 
 		// root> create user bob
-		_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err = runSQL(ctx, `CREATE USER bob PARTY_CODE "party_B" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 
 		// root> create database da
@@ -951,6 +1050,207 @@ func TestRevokeTableScope(t *testing.T) {
 	})
 }
 
+func TestRevokeTableScope(t *testing.T) {
+	r := require.New(t)
+	ctx := setupTestEnv(t)
+
+	// root> create user alice
+	_, err := runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
+	r.NoError(err)
+
+	// root> create user bob
+	_, err = runSQL(ctx, `CREATE USER bob PARTY_CODE "party_B" IDENTIFIED BY "some_pwd"`)
+	r.NoError(err)
+
+	// root> create database da
+	_, err = runSQL(ctx, `CREATE DATABASE da`)
+	r.NoError(err)
+
+	// root> grant create, grant option priv on da.* to alice
+	_, err = runSQL(ctx, `GRANT ALL ON da.* TO alice`)
+	r.NoError(err)
+
+	// switch to user alice
+	r.NoError(switchUser(ctx, userAlice))
+
+	// alice> create table da.t1
+	_, err = runSQL(ctx, `CREATE TABLE da.t1 tid = "tid1"`)
+	r.NoError(err)
+
+	// alice> grant SELECT PLAINTEXT priv to alice
+	_, err = runSQL(ctx, `GRANT ALL, SELECT PLAINTEXT on da.t1 TO alice`)
+	r.NoError(err)
+
+	// alice> grant SELECT PLAINTEXT priv to bob
+	_, err = runSQL(ctx, `GRANT SELECT PLAINTEXT on da.t1 TO bob`)
+	r.NoError(err)
+
+	rt, err := runSQL(ctx, `SHOW GRANTS ON da FOR alice`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+	r.Equal(int64(2), rt[0].GetShape().GetDim()[0].GetDimValue())
+	r.Equal("Grants on da for alice@%", rt[0].GetName())
+	r.Equal("GRANT CREATE, DROP, GRANT OPTION ON da.* TO alice", rt[0].GetStringData()[0])
+	r.Equal("GRANT CREATE, GRANT, DROP, SELECT PLAINTEXT ON da.t1 TO alice", rt[0].GetStringData()[1])
+
+	// alice> revoke CREATE from alice, success
+	_, err = runSQL(ctx, `REVOKE CREATE ON da.t1 FROM alice`)
+	r.NoError(err)
+
+	// alice> revoke CREATE from alice again, success even it's not exist
+	_, err = runSQL(ctx, `REVOKE CREATE ON da.t1 FROM alice`)
+	r.NoError(err)
+
+	// alice> revoke ENCRYPTED_ONLY from alice again, success even it's not exist
+	_, err = runSQL(ctx, `REVOKE SELECT ENCRYPTED_ONLY ON da.t1 FROM alice`)
+	r.NoError(err)
+
+	// alice> revoke priv from bob, failed due to not support revoke priv from another party
+	_, err = runSQL(ctx, `REVOKE CREATE ON da.t1 FROM bob`)
+	r.Error(err)
+
+	// alice> revoke SELECT PLAINTEXT priv from bob
+	_, err = runSQL(ctx, `REVOKE SELECT PLAINTEXT ON da.t1 FROM bob`)
+	r.NoError(err)
+}
+
+func TestRevokeDBScope(t *testing.T) {
+	r := require.New(t)
+	ctx := setupTestEnv(t)
+
+	// root> create user alice
+	_, err := runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
+	r.NoError(err)
+
+	// root> create user bob
+	_, err = runSQL(ctx, `CREATE USER bob PARTY_CODE "party_B" IDENTIFIED BY "some_pwd"`)
+	r.NoError(err)
+
+	// root> create database da
+	_, err = runSQL(ctx, `CREATE DATABASE da`)
+	r.NoError(err)
+
+	// root> grant create, grant option priv on da.* to alice
+	_, err = runSQL(ctx, `GRANT ALL ON da.* TO alice`)
+	r.NoError(err)
+
+	// root> grant create, grant option priv on da.* to  bob
+	_, err = runSQL(ctx, `GRANT ALL ON da.* TO bob`)
+	r.NoError(err)
+
+	rt, err := runSQL(ctx, `SHOW GRANTS ON da FOR alice`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
+	r.Equal("Grants on da for alice@%", rt[0].GetName())
+	r.Equal("GRANT CREATE, DROP, GRANT OPTION ON da.* TO alice", rt[0].GetStringData()[0])
+
+	_, err = runSQL(ctx, `REVOKE CREATE ON da.* FROM alice`)
+	r.NoError(err)
+	rt, err = runSQL(ctx, `SHOW GRANTS ON da FOR alice`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
+	r.Equal("GRANT DROP, GRANT OPTION ON da.* TO alice", rt[0].GetStringData()[0])
+
+	r.NoError(switchUser(ctx, userAlice))
+
+	// failed due to not allowed to revoke priv from another party
+	_, err = runSQL(ctx, `REVOKE GRANT OPTION ON da.* FROM bob`)
+	r.Error(err)
+
+	r.NoError(switchUser(ctx, userRoot))
+	_, err = runSQL(ctx, `REVOKE ALL ON da.* FROM alice`)
+	r.NoError(err)
+
+	rt, err = runSQL(ctx, `SHOW GRANTS ON da FOR alice`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+	r.Equal(int64(0), rt[0].GetShape().GetDim()[0].GetDimValue())
+
+}
+
+func TestRevokeGlobalScope(t *testing.T) {
+	r := require.New(t)
+	ctx := setupTestEnv(t)
+
+	// root> create user alice
+	_, err := runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
+	r.NoError(err)
+
+	// root> create user alice
+	_, err = runSQL(ctx, `CREATE USER bob PARTY_CODE "party_B" IDENTIFIED BY "some_pwd"`)
+	r.NoError(err)
+
+	// root> create database da
+	_, err = runSQL(ctx, `CREATE DATABASE da`)
+	r.NoError(err)
+
+	// root> grant create, create user, grant option, drop priv on *.* to alice
+	_, err = runSQL(ctx, `GRANT ALL ON *.* TO alice`)
+	r.NoError(err)
+
+	// root> grant create, grant option, drop priv on da.* to alice
+	_, err = runSQL(ctx, `GRANT ALL ON da.* TO alice`)
+	r.NoError(err)
+
+	// root> grant create, grant option, drop priv on da.* to bob
+	_, err = runSQL(ctx, `GRANT ALL ON *.* TO bob`)
+	r.NoError(err)
+
+	// switch to user alice
+	r.NoError(switchUser(ctx, userAlice))
+
+	rt, err := runSQL(ctx, `SHOW GRANTS ON da FOR alice`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+	r.Equal(int64(2), rt[0].GetShape().GetDim()[0].GetDimValue())
+	r.Equal("Grants on da for alice@%", rt[0].GetName())
+	r.Equal("GRANT CREATE, CREATE USER, DROP, GRANT OPTION ON *.* TO alice", rt[0].GetStringData()[0])
+	r.Equal("GRANT CREATE, DROP, GRANT OPTION ON da.* TO alice", rt[0].GetStringData()[1])
+
+	_, err = runSQL(ctx, `REVOKE CREATE, CREATE USER ON *.* FROM alice`)
+	r.NoError(err)
+	rt, err = runSQL(ctx, `SHOW GRANTS ON da FOR alice`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+	r.Equal(int64(2), rt[0].GetShape().GetDim()[0].GetDimValue())
+	r.Equal("GRANT DROP, GRANT OPTION ON *.* TO alice", rt[0].GetStringData()[0])
+	r.Equal("GRANT CREATE, DROP, GRANT OPTION ON da.* TO alice", rt[0].GetStringData()[1])
+
+	// alice revoke global priv from bob, failed due to no privilege
+	_, err = runSQL(ctx, `REVOKE CREATE ON *.* FROM bob`)
+	r.Error(err)
+
+	// failed due to not allowed to revoke priv from another party
+	_, err = runSQL(ctx, `REVOKE DROP ON *.* FROM bob`)
+	r.Error(err)
+
+	// failed due to alice has no CREATE, CREATE USER  privilege
+	_, err = runSQL(ctx, `REVOKE CREATE, CREATE USER ON *.* FROM alice`)
+	r.Error(err)
+
+	// failed due to not allowed to revoke priv from root
+	_, err = runSQL(ctx, `REVOKE DROP ON *.* FROM root`)
+	r.Error(err)
+
+	// switch to user root
+	r.NoError(switchUser(ctx, userRoot))
+
+	// success even alice has no CREATE, CREATE USER  privilege
+	_, err = runSQL(ctx, `REVOKE CREATE, CREATE USER ON *.* FROM alice`)
+	r.NoError(err)
+
+	_, err = runSQL(ctx, `REVOKE ALL ON *.* FROM alice`)
+	r.NoError(err)
+
+	rt, err = runSQL(ctx, `SHOW GRANTS ON da FOR alice`)
+	r.NoError(err)
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
+	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
+	r.Equal("GRANT CREATE, DROP, GRANT OPTION ON da.* TO alice", rt[0].GetStringData()[0])
+}
+
 func TestShowDatabase(t *testing.T) {
 	r := require.New(t)
 	ctx := setupTestEnv(t)
@@ -968,11 +1268,11 @@ func TestShowDatabase(t *testing.T) {
 	r.NoError(err)
 	r.Equal(int64(2), rt[0].GetShape().GetDim()[0].GetDimValue())
 	r.Equal("Database", rt[0].GetName())
-	r.Equal("da", rt[0].GetSs().GetSs()[0])
-	r.Equal("db", rt[0].GetSs().GetSs()[1])
+	r.Equal("da", rt[0].GetStringData()[0])
+	r.Equal("db", rt[0].GetStringData()[1])
 
 	// root> (create user alice before granting privilege)
-	_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	_, err = runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
 	r.NoError(err)
 	_, err = runSQL(ctx, `GRANT CREATE ON da.* to alice`)
 	r.NoError(err)
@@ -985,7 +1285,7 @@ func TestShowDatabase(t *testing.T) {
 	r.NoError(err)
 	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
 	r.Equal("Database", rt[0].GetName())
-	r.Equal("da", rt[0].GetSs().GetSs()[0])
+	r.Equal("da", rt[0].GetStringData()[0])
 }
 
 func TestShow(t *testing.T) {
@@ -997,9 +1297,9 @@ func TestShow(t *testing.T) {
 	_, err = runSQL(ctx, `CREATE DATABASE db`)
 	r.NoError(err)
 
-	_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	_, err = runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
 	r.NoError(err)
-	_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	_, err = runSQL(ctx, `CREATE USER bob PARTY_CODE "party_B" IDENTIFIED BY "some_pwd"`)
 	r.NoError(err)
 
 	_, err = runSQL(ctx, `GRANT CREATE ON da.* to alice`)
@@ -1014,7 +1314,7 @@ func TestShow(t *testing.T) {
 	r.NoError(err)
 	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
 	r.Equal("Database", rt[0].GetName())
-	r.Equal("da", rt[0].GetSs().GetSs()[0])
+	r.Equal("da", rt[0].GetStringData()[0])
 
 	rt, err = runSQL(ctx, `SHOW GRANTS ON da;`)
 	r.NoError(err)
@@ -1032,7 +1332,7 @@ func TestShow(t *testing.T) {
 	r.NoError(err)
 	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
 	r.Equal("Database", rt[0].GetName())
-	r.Equal("db", rt[0].GetSs().GetSs()[0])
+	r.Equal("db", rt[0].GetStringData()[0])
 
 	rt, err = runSQL(ctx, `SHOW GRANTS ON db;`)
 	r.NoError(err)
@@ -1089,9 +1389,9 @@ func TestDescribe(t *testing.T) {
 	_, err = runSQL(ctx, `CREATE DATABASE db`)
 	r.NoError(err)
 
-	_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	_, err = runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
 	r.NoError(err)
-	_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	_, err = runSQL(ctx, `CREATE USER bob PARTY_CODE "party_B" IDENTIFIED BY "some_pwd"`)
 	r.NoError(err)
 
 	_, err = runSQL(ctx, `GRANT CREATE ON da.* to alice`)
@@ -1133,7 +1433,7 @@ func TestShowTables(t *testing.T) {
 	_, err := runSQL(ctx, `CREATE DATABASE da`)
 	r.NoError(err)
 	// root> create user alice
-	_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	_, err = runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
 	r.NoError(err)
 
 	// root> grant create priv on da.* to alice
@@ -1159,16 +1459,16 @@ func TestShowTables(t *testing.T) {
 	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
 	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
 	r.Equal("Tables_in_da", rt[0].GetName())
-	r.Equal("t1", rt[0].GetSs().GetSs()[0])
+	r.Equal("t1", rt[0].GetStringData()[0])
 
 	rt, err = runSQL(ctx, `SHOW FULL TABLES FROM da`)
 	r.NoError(err)
 	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
 	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
 	r.Equal("Tables_in_da", rt[0].GetName())
-	r.Equal("t1", rt[0].GetSs().GetSs()[0])
+	r.Equal("t1", rt[0].GetStringData()[0])
 	r.Equal("Table_type", rt[1].GetName())
-	r.Equal(TableTypeBase, rt[1].GetSs().GetSs()[0])
+	r.Equal(TableTypeBase, rt[1].GetStringData()[0])
 
 	// with current db set
 	ctx.GetSessionVars().CurrentDB = `da`
@@ -1177,11 +1477,11 @@ func TestShowTables(t *testing.T) {
 	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
 	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
 	r.Equal("Tables_in_da", rt[0].GetName())
-	r.Equal("t1", rt[0].GetSs().GetSs()[0])
+	r.Equal("t1", rt[0].GetStringData()[0])
 
 	r.NoError(switchUser(ctx, userRoot))
 	// root> (create bob alice before granting privilege)
-	_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	_, err = runSQL(ctx, `CREATE USER bob PARTY_CODE "party_B" IDENTIFIED BY "some_pwd"`)
 	r.NoError(err)
 	// root> (switch to user bob)
 	r.NoError(switchUser(ctx, userBob))
@@ -1196,7 +1496,7 @@ func TestShowGrants(t *testing.T) {
 	ctx := setupTestEnv(t)
 
 	// Report error when database not existing
-	rt, err := runSQL(ctx, `SHOW GRANTS ON da FOR root`)
+	_, err := runSQL(ctx, `SHOW GRANTS ON da FOR root`)
 	r.Error(err)
 
 	_, err = runSQL(ctx, `CREATE DATABASE da`)
@@ -1207,16 +1507,16 @@ func TestShowGrants(t *testing.T) {
 	r.NoError(err)
 
 	// Report grants on da for root
-	rt, err = runSQL(ctx, `SHOW GRANTS ON da FOR root`)
+	rt, err := runSQL(ctx, `SHOW GRANTS ON da FOR root`)
 	r.NoError(err)
 	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
 	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
 	r.Equal("Grants on da for root@%", rt[0].GetName())
-	r.Equal("GRANT CREATE, CREATE USER, DROP, GRANT OPTION, DESCRIBE, SHOW ON *.* TO root", rt[0].GetSs().GetSs()[0])
+	r.Equal("GRANT CREATE, CREATE USER, DROP, GRANT OPTION, DESCRIBE, SHOW ON *.* TO root", rt[0].GetStringData()[0])
 
-	_, err = runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	_, err = runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
 	r.NoError(err)
-	_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	_, err = runSQL(ctx, `CREATE USER bob PARTY_CODE "party_B" IDENTIFIED BY "some_pwd"`)
 	r.NoError(err)
 
 	_, err = runSQL(ctx, `GRANT CREATE, DROP, GRANT OPTION ON da.* TO alice`)
@@ -1228,7 +1528,7 @@ func TestShowGrants(t *testing.T) {
 	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
 	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
 	r.Equal("Grants on da for alice@%", rt[0].GetName())
-	r.Equal("GRANT CREATE, DROP, GRANT OPTION ON da.* TO alice", rt[0].GetSs().GetSs()[0])
+	r.Equal("GRANT CREATE, DROP, GRANT OPTION ON da.* TO alice", rt[0].GetStringData()[0])
 
 	// Report error when database not existing
 	_, err = runSQL(ctx, `SHOW GRANTS ON dd FOR root`)
@@ -1254,31 +1554,32 @@ func TestShowGrants(t *testing.T) {
 	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
 	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
 	r.Equal("Grants on da for alice@%", rt[0].GetName())
-	r.Equal("GRANT CREATE, DROP, GRANT OPTION ON da.* TO alice", rt[0].GetSs().GetSs()[0])
+	r.Equal("GRANT CREATE, DROP, GRANT OPTION ON da.* TO alice", rt[0].GetStringData()[0])
 
 	// switch to user alice
 	r.NoError(switchUser(ctx, userAlice))
 
+	userAlice.password = "some_pwd"
 	rt, err = runSQL(ctx, `SHOW GRANTS ON da FOR alice`)
 	r.NoError(err)
 	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
 	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
 	r.Equal("Grants on da for alice@%", rt[0].GetName())
-	r.Equal("GRANT CREATE, DROP, GRANT OPTION ON da.* TO alice", rt[0].GetSs().GetSs()[0])
+	r.Equal("GRANT CREATE, DROP, GRANT OPTION ON da.* TO alice", rt[0].GetStringData()[0])
 
 	rt, err = runSQL(ctx, `SHOW GRANTS ON db FOR alice`)
 	r.NoError(err)
 	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
 	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
 	r.Equal("Grants on db for alice@%", rt[0].GetName())
-	r.Equal("GRANT CREATE, DROP, GRANT OPTION ON db.* TO alice", rt[0].GetSs().GetSs()[0])
+	r.Equal("GRANT CREATE, DROP, GRANT OPTION ON db.* TO alice", rt[0].GetStringData()[0])
 
 	rt, err = runSQL(ctx, `SHOW GRANTS ON db`)
 	r.NoError(err)
 	r.Equal(int64(1), rt[0].GetShape().GetDim()[1].GetDimValue())
 	r.Equal(int64(1), rt[0].GetShape().GetDim()[0].GetDimValue())
 	r.Equal("Grants on db for User", rt[0].GetName())
-	r.Equal("GRANT CREATE, DROP, GRANT OPTION ON db.* TO alice", rt[0].GetSs().GetSs()[0])
+	r.Equal("GRANT CREATE, DROP, GRANT OPTION ON db.* TO alice", rt[0].GetStringData()[0])
 
 	// Return empty: invoker has privilege on database da, but destination user bob not
 	rt, err = runSQL(ctx, `SHOW GRANTS ON da FOR bob`)
@@ -1335,11 +1636,11 @@ func TestDescribeTable(t *testing.T) {
 	r.Equal(2, len(result))
 
 	r.Equal("Field", result[0].GetName())
-	r.ElementsMatch([]string{"c1", "c2"}, result[0].GetSs().GetSs())
+	r.ElementsMatch([]string{"c1", "c2"}, result[0].GetStringData())
 
 	r.Equal("Type", result[1].GetName())
-	r.Equal(2, len(result[1].GetSs().GetSs()))
-	r.ElementsMatch([]string{"string", "int"}, result[1].GetSs().GetSs())
+	r.Equal(2, len(result[1].GetStringData()))
+	r.ElementsMatch([]string{"string", "int"}, result[1].GetStringData())
 }
 
 func TestGrantColumnScope(t *testing.T) {
@@ -1348,11 +1649,11 @@ func TestGrantColumnScope(t *testing.T) {
 		ctx := setupTestEnv(t)
 
 		// root> create user alice
-		_, err := runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err := runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 
 		// root> create user bob
-		_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err = runSQL(ctx, `CREATE USER bob PARTY_CODE "party_B" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 
 		// root> create database da
@@ -1408,11 +1709,11 @@ func TestGrantColumnScope(t *testing.T) {
 		ctx := setupTestEnv(t)
 
 		// root> create user alice
-		_, err := runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err := runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 
 		// root> create user bob
-		_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+		_, err = runSQL(ctx, `CREATE USER bob PARTY_CODE "party_B" IDENTIFIED BY "some_pwd"`)
 		r.NoError(err)
 
 		// root> create database da
@@ -1456,11 +1757,11 @@ func TestPlatformSecurityConfig(t *testing.T) {
 	ctx := setupTestEnv(t)
 
 	// root> create user alice
-	_, err := runSQL(ctx, `CREATE USER alice IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	_, err := runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
 	r.NoError(err)
 
 	// root> create user bob
-	_, err = runSQL(ctx, `CREATE USER bob IDENTIFIED WITH scql_native_password BY "some_pwd"`)
+	_, err = runSQL(ctx, `CREATE USER bob PARTY_CODE "party_B" IDENTIFIED BY "some_pwd"`)
 	r.NoError(err)
 
 	// root> create database da

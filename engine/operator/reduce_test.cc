@@ -31,7 +31,7 @@ struct ReduceTestCase {
 };
 
 class ReduceTest : public ::testing::TestWithParam<
-                       std::tuple<spu::ProtocolKind, ReduceTestCase>> {
+                       std::tuple<test::SpuRuntimeTestCase, ReduceTestCase>> {
  protected:
   void SetUp() override { RegisterAllOps(); }
 
@@ -43,7 +43,7 @@ class ReduceTest : public ::testing::TestWithParam<
 INSTANTIATE_TEST_SUITE_P(
     ReducePrivateTest, ReduceTest,
     ::testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             ReduceTestCase{.op_type = ReduceSum::kOpType,
                            .status = pb::TENSORSTATUS_PRIVATE,
@@ -119,7 +119,7 @@ INSTANTIATE_TEST_SUITE_P(
 INSTANTIATE_TEST_SUITE_P(
     ReduceSecretTest, ReduceTest,
     ::testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             ReduceTestCase{.op_type = ReduceSum::kOpType,
                            .status = pb::TENSORSTATUS_SECRET,
@@ -149,7 +149,7 @@ INSTANTIATE_TEST_SUITE_P(
                 .input = test::NamedTensor(
                     "x", TensorFromJSON(arrow::int64(), "[1, 2, 3, 4, 5, 6]")),
                 .output = test::NamedTensor(
-                    "y", TensorFromJSON(arrow::float32(), "[3.5]"))},
+                    "y", TensorFromJSON(arrow::float64(), "[3.5]"))},
             ReduceTestCase{
                 .op_type = ReduceAvg::kOpType,
                 .status = pb::TENSORSTATUS_SECRET,
@@ -157,7 +157,7 @@ INSTANTIATE_TEST_SUITE_P(
                     "x", TensorFromJSON(arrow::float32(),
                                         "[1.75, 2.34, 4.12, 1.99]")),
                 .output = test::NamedTensor(
-                    "y", TensorFromJSON(arrow::float32(), "[2.55]"))},
+                    "y", TensorFromJSON(arrow::float64(), "[2.55]"))},
             ReduceTestCase{
                 .op_type = ReduceMax::kOpType,
                 .status = pb::TENSORSTATUS_SECRET,
@@ -202,7 +202,7 @@ INSTANTIATE_TEST_SUITE_P(
                            .input = test::NamedTensor(
                                "x", TensorFromJSON(arrow::int64(), "[]")),
                            .output = test::NamedTensor(
-                               "y", TensorFromJSON(arrow::float32(), "[]"))},
+                               "y", TensorFromJSON(arrow::float64(), "[]"))},
             ReduceTestCase{.op_type = ReduceMin::kOpType,
                            .status = pb::TENSORSTATUS_SECRET,
                            .input = test::NamedTensor(
@@ -222,45 +222,37 @@ TEST_P(ReduceTest, Works) {
   auto parm = GetParam();
   auto tc = std::get<1>(parm);
   auto node = MakeExecNode(tc);
-  std::vector<Session> sessions = test::Make2PCSession(std::get<0>(parm));
+  std::vector<Session> sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
-  ExecContext alice_ctx(node, &sessions[0]);
-  ExecContext bob_ctx(node, &sessions[1]);
-
-  FeedInputs({&alice_ctx, &bob_ctx}, tc);
-
-  // When
-  auto create_op = [](const std::string& op_type) {
-    return GetOpRegistry()->GetOperator(op_type);
-  };
-  auto alice_op = create_op(node.op_type());
-  auto bob_op = create_op(node.op_type());
-  ASSERT_TRUE(alice_op != nullptr)
-      << "failed to create operator for op_type = " << node.op_type();
-  ASSERT_TRUE(bob_op != nullptr);
-
-  test::OpAsyncRunner alice(alice_op.get());
-  test::OpAsyncRunner bob(bob_op.get());
-
-  alice.Start(&alice_ctx);
-  if (tc.status == pb::TENSORSTATUS_SECRET) {
-    bob.Start(&bob_ctx);
+  std::vector<ExecContext> exec_ctxs;
+  for (size_t idx = 0; idx < sessions.size(); ++idx) {
+    exec_ctxs.emplace_back(node, &sessions[idx]);
   }
 
-  // Then
-  EXPECT_NO_THROW({ alice.Wait(); });
-  if (tc.status == pb::TENSORSTATUS_SECRET) {
-    EXPECT_NO_THROW({ bob.Wait(); });
+  // feed inputs
+  std::vector<ExecContext*> ctx_ptrs;
+  for (size_t idx = 0; idx < exec_ctxs.size(); ++idx) {
+    ctx_ptrs.emplace_back(&exec_ctxs[idx]);
+  }
+  FeedInputs(ctx_ptrs, tc);
+
+  // When
+  auto op_creator = [&]() {
+    return GetOpRegistry()->GetOperator(node.op_type());
+  };
+
+  if (tc.status == pb::TENSORSTATUS_PRIVATE) {
+    EXPECT_NO_THROW(test::RunOpAsync({ctx_ptrs[0]}, op_creator));
+  } else {
+    EXPECT_NO_THROW(test::RunOpAsync(ctx_ptrs, op_creator));
   }
 
   TensorPtr actual_output = nullptr;
   if (tc.status == pb::TENSORSTATUS_PRIVATE) {
-    actual_output = alice_ctx.GetTensorTable()->GetTensor(tc.output.name);
+    actual_output = ctx_ptrs[0]->GetTensorTable()->GetTensor(tc.output.name);
   } else {
-    EXPECT_NO_THROW({
-      actual_output =
-          test::RevealSecret({&alice_ctx, &bob_ctx}, tc.output.name);
-    });
+    EXPECT_NO_THROW(
+        { actual_output = test::RevealSecret(ctx_ptrs, tc.output.name); });
   }
   ASSERT_TRUE(actual_output != nullptr);
   auto actual_arr = actual_output->ToArrowChunkedArray();

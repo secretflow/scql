@@ -46,6 +46,7 @@ type Table struct {
 	RefTable     string `gorm:"column:ref_table;type:varchar(64);comment:'reference table name'"`
 	IsView       bool   `gorm:"column:is_view;comment:'this table is a view'"`
 	SelectString string `gorm:"column:select_string;comment:'the internal select query in string format'"`
+	DBType       int    `gorm:"column:db_type;comment:'database type where table data stored'"`
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }

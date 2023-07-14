@@ -39,7 +39,7 @@ const (
 	MaxChunkSize  = 1024
 )
 
-// Run runs an DML/DDL statement on SCDB
+// Run runs an DDL/DCL statement on SCDB
 func Run(ctx sessionctx.Context, stmt string, is infoschema.InfoSchema) ([]*scql.Tensor, error) {
 	// Step 1: Parsing
 	p := parser.New()
@@ -95,17 +95,17 @@ func mergeResultFromChunk(ck *chunk.Chunk, p core.Plan, tensors []*scql.Tensor) 
 			return nil, fmt.Errorf("unsupported RetType: %v", p.Schema().Columns[i].RetType)
 		}
 
-		tSs := &scql.Tensor_Ss{Ss: &scql.Strings{}}
+		var ss []string
 		for j := 0; j < ck.NumRows(); j++ {
-			tSs.Ss.Ss = append(tSs.Ss.Ss, ck.Column(i).GetString(j))
+			ss = append(ss, ck.Column(i).GetString(j))
 		}
 
 		tName := p.OutputNames()[i].String()
 		if i < len(tensors) {
 			if tName == tensors[i].GetName() {
-				tensors[i].GetSs().Ss = append(tensors[i].GetSs().Ss, tSs.Ss.Ss...)
+				tensors[i].StringData = append(tensors[i].StringData, ss...)
 				tensors[i].Shape.Dim[0].Value = &scql.TensorShape_Dimension_DimValue{
-					DimValue: int64(len(tensors[i].GetSs().Ss)),
+					DimValue: int64(len(tensors[i].GetStringData())),
 				}
 			} else {
 				return nil, fmt.Errorf("unexpected tensor, expected: %v, but get: %v, ", tensors[i].GetName(), tName)
@@ -113,15 +113,15 @@ func mergeResultFromChunk(ck *chunk.Chunk, p core.Plan, tensors []*scql.Tensor) 
 		} else {
 			tShap := &scql.TensorShape{
 				Dim: []*scql.TensorShape_Dimension{
-					{Value: &scql.TensorShape_Dimension_DimValue{DimValue: int64(len(tSs.Ss.Ss))}},
+					{Value: &scql.TensorShape_Dimension_DimValue{DimValue: int64(len(ss))}},
 					{Value: &scql.TensorShape_Dimension_DimValue{DimValue: 1}},
 				},
 			}
 			tensors = append(tensors, &scql.Tensor{
-				Name:     tName,
-				ElemType: scql.PrimitiveDataType_STRING,
-				Value:    tSs,
-				Shape:    tShap,
+				Name:       tName,
+				ElemType:   scql.PrimitiveDataType_STRING,
+				StringData: ss,
+				Shape:      tShap,
 			})
 		}
 	}

@@ -28,15 +28,15 @@ namespace scql::engine {
 #ifndef THROW_IF_RPC_NOT_OK
 #define THROW_IF_RPC_NOT_OK(cntl, response, request_info)                     \
   do {                                                                        \
-    if (cntl.Failed()) {                                                      \
+    if ((cntl).Failed()) {                                                    \
       YACL_THROW_NETWORK_ERROR("send failed: {}, rpc failed={}, message={}.", \
-                               request_info, cntl.ErrorCode(),                \
-                               cntl.ErrorText());                             \
-    } else if (response.error_code() != link::pb::ErrorCode::SUCCESS) {       \
+                               request_info, (cntl).ErrorCode(),              \
+                               (cntl).ErrorText());                           \
+    } else if ((response).error_code() != link::pb::ErrorCode::SUCCESS) {     \
       std::string error_info = fmt::format(                                   \
           "send failed: {}, peer failed code={}, message={}.", request_info,  \
-          response.error_code(), response.error_msg());                       \
-      if (response.error_code() == link::pb::ErrorCode::LINKID_NOT_FOUND) {   \
+          (response).error_code(), (response).error_msg());                   \
+      if ((response).error_code() == link::pb::ErrorCode::LINKID_NOT_FOUND) { \
         YACL_THROW_NETWORK_ERROR(error_info);                                 \
       }                                                                       \
       YACL_THROW(error_info);                                                 \
@@ -81,6 +81,12 @@ std::shared_ptr<yacl::link::Context> MuxLinkFactory::CreateContext(
 
 void MuxLinkChannel::SendImpl(const std::string& key,
                               yacl::ByteContainerView value) {
+  SendImpl(key, value, 0);
+}
+
+void MuxLinkChannel::SendImpl(const std::string& key,
+                              yacl::ByteContainerView value,
+                              uint32_t timeout_ms) {
   if (value.size() > http_max_payload_size_) {
     SendChunked(key, value);
     return;
@@ -89,7 +95,7 @@ void MuxLinkChannel::SendImpl(const std::string& key,
   link::pb::MuxPushRequest request;
   {
     request.set_link_id(link_id_);
-    auto msg = request.mutable_msg();
+    auto* msg = request.mutable_msg();
     msg->set_sender_rank(self_rank_);
     msg->set_key(key);
     msg->set_value(value.data(), value.size());
@@ -98,125 +104,15 @@ void MuxLinkChannel::SendImpl(const std::string& key,
 
   link::pb::MuxPushResponse response;
   brpc::Controller cntl;
+  if (timeout_ms != 0) {
+    cntl.set_timeout_ms(timeout_ms);
+  }
   link::pb::MuxReceiverService::Stub stub(rpc_channel_.get());
   stub.Push(&cntl, &request, &response, nullptr);
 
   std::string request_info = fmt::format(
       "link_id={} sender_rank={} send key={}", link_id_, self_rank_, key);
   THROW_IF_RPC_NOT_OK(cntl, response, request_info);
-
-  return;
-}
-
-namespace {
-
-class OnPushDone : public google::protobuf::Closure {
- public:
-  OnPushDone(std::shared_ptr<MuxLinkChannel> channel, std::string request_info)
-      : channel_(std::move(channel)), request_info_(std::move(request_info)) {
-    channel_->AddAsyncCount();
-  }
-
-  ~OnPushDone() {
-    try {
-      channel_->SubAsyncCount();
-    } catch (const std::exception& ex) {
-      SPDLOG_WARN(ex.what());
-    }
-  }
-
-  void Run() {
-    std::unique_ptr<OnPushDone> self_guard(this);
-
-    std::string error_msg;
-    if (cntl_.Failed()) {
-      SPDLOG_ERROR("async send failed: {}, rpc failed={}, message={}",
-                   request_info_, cntl_.ErrorCode(), cntl_.ErrorText());
-    } else if (response_.error_code() != link::pb::ErrorCode::SUCCESS) {
-      SPDLOG_ERROR("async send failed: {}, peer failed, message={}",
-                   request_info_, response_.error_code());
-    }
-  }
-
-  link::pb::MuxPushResponse response_;
-  brpc::Controller cntl_;
-  const std::shared_ptr<MuxLinkChannel> channel_;
-  const std::string request_info_;
-};
-
-struct SendChunckedBrpcTask {
-  std::shared_ptr<MuxLinkChannel> channel;
-  std::string key;
-  yacl::Buffer value;
-
-  SendChunckedBrpcTask(std::shared_ptr<MuxLinkChannel> _channel,
-                       std::string _key, yacl::Buffer _value)
-      : channel(std::move(_channel)),
-        key(std::move(_key)),
-        value(std::move(_value)) {
-    channel->AddAsyncCount();
-  }
-
-  ~SendChunckedBrpcTask() {
-    try {
-      channel->SubAsyncCount();
-    } catch (const std::exception& ex) {
-      SPDLOG_WARN(ex.what());
-    }
-  }
-
-  static void* Proc(void* args) {
-    // take ownership of task.
-    std::unique_ptr<SendChunckedBrpcTask> task(
-        static_cast<SendChunckedBrpcTask*>(args));
-
-    try {
-      task->channel->SendChunked(task->key, task->value);
-    } catch (const std::exception& e) {
-      SPDLOG_ERROR("chunked async send failed. key={}, failed={}", task->key,
-                   e.what());
-    }
-
-    return nullptr;
-  }
-};
-
-}  // namespace
-template <class ValueType>
-void MuxLinkChannel::SendAsyncInternal(const std::string& key,
-                                       ValueType&& value) {
-  if (static_cast<size_t>(value.size()) > http_max_payload_size_) {
-    auto btask = std::make_unique<SendChunckedBrpcTask>(
-        this->shared_from_this(), key,
-        yacl::Buffer(std::forward<ValueType>(value)));
-
-    // bthread run in 'detached' mode, we will never wait for it.
-    bthread_t tid;
-    if (bthread_start_background(&tid, nullptr, SendChunckedBrpcTask::Proc,
-                                 btask.get()) == 0) {
-      // bthread takes the ownership, release it.
-      static_cast<void>(btask.release());
-    } else {
-      YACL_THROW("failed to push async sending job to bthread");
-    }
-
-    return;
-  }
-
-  link::pb::MuxPushRequest request;
-  {
-    request.set_link_id(link_id_);
-    auto msg = request.mutable_msg();
-    msg->set_sender_rank(self_rank_);
-    msg->set_key(key);
-    msg->set_value(value.data(), value.size());
-    msg->set_trans_type(link::pb::TransType::MONO);
-  }
-  std::string request_info = fmt::format(
-      "link_id={} sender_rank={} send_key={}", link_id_, self_rank_, key);
-  auto* done = new OnPushDone(shared_from_this(), std::move(request_info));
-  link::pb::MuxReceiverService::Stub stub(rpc_channel_.get());
-  stub.Push(&done->cntl_, &request, &done->response_, done);
 }
 
 namespace {
@@ -276,7 +172,7 @@ void MuxLinkChannel::SendChunked(const std::string& key,
       link::pb::MuxPushRequest request;
       {
         request.set_link_id(link_id_);
-        auto msg = request.mutable_msg();
+        auto* msg = request.mutable_msg();
         msg->set_sender_rank(self_rank_);
         msg->set_key(key);
         msg->set_value(value.data() + chunk_offset,

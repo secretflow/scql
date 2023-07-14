@@ -17,6 +17,7 @@
 #include "libspu/psi/core/ecdh_psi.h"
 #include "libspu/psi/cryptor/cryptor_selector.h"
 
+#include "engine/audit/audit_log.h"
 #include "engine/util/psi_helper.h"
 
 namespace scql::engine::op {
@@ -43,7 +44,7 @@ void Join::Validate(ExecContext* ctx) {
 
 void Join::Execute(ExecContext* ctx) {
   const auto& my_party_code = ctx->GetSession()->SelfPartyCode();
-
+  const auto start_time = std::chrono::system_clock::now();
   std::vector<std::string> input_party_codes =
       ctx->GetStringValuesFromAttribute(kInputPartyCodesAttr);
   bool is_left = my_party_code == input_party_codes.at(0);
@@ -75,15 +76,20 @@ void Join::Execute(ExecContext* ctx) {
 
     spu::psi::RunEcdhPsi(options, batch_provider, join_cipher_store);
   }
+
   auto join_indices = join_cipher_store->FinalizeAndComputeJoinIndices(is_left);
+  auto self_size = join_cipher_store->GetSelfItemCount();
+  auto peer_size = join_cipher_store->GetPeerItemCount();
+  auto result_size = join_indices->Length();
   SPDLOG_INFO(
       "my_party_code:{}, my_rank:{}, total self_item_count:{}, "
       "total peer_item_count:{}, result_size:{}",
       ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
-      join_cipher_store->GetSelfItemCount(),
-      join_cipher_store->GetPeerItemCount(), join_indices->Length());
+      self_size, peer_size, result_size);
 
   SetJoinIndices(ctx, is_left, std::move(join_indices));
+  audit::RecordJoinNodeDetail(*ctx, self_size, peer_size, result_size,
+                              start_time);
 }
 
 std::vector<TensorPtr> Join::GetJoinKeys(ExecContext* ctx, bool is_left) {

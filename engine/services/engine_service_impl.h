@@ -22,6 +22,7 @@
 #include "engine/link/channel_manager.h"
 
 #include "api/engine.pb.h"
+#include "engine/audit/audit.pb.h"
 
 namespace scql::engine {
 
@@ -40,18 +41,17 @@ class EngineServiceImpl : public pb::SCQLEngineService {
 
   void StartSession(::google::protobuf::RpcController* cntl,
                     const pb::StartSessionRequest* request,
-                    pb::StartSessionResponse* response,
+                    pb::Status* response,
                     ::google::protobuf::Closure* done) override;
 
   // Async api, just enqueue RunDag request and return, callback after
   // finished.
   void RunDag(::google::protobuf::RpcController* cntl,
-              const pb::RunDagRequest* request, pb::RunDagResponse* response,
+              const pb::RunDagRequest* request, pb::Status* response,
               ::google::protobuf::Closure* done) override;
 
   void StopSession(::google::protobuf::RpcController* cntl,
-                   const pb::StopSessionRequest* request,
-                   pb::StopSessionResponse* response,
+                   const pb::StopSessionRequest* request, pb::Status* response,
                    ::google::protobuf::Closure* done) override;
 
   void RunExecutionPlan(::google::protobuf::RpcController* cntl,
@@ -60,7 +60,8 @@ class EngineServiceImpl : public pb::SCQLEngineService {
                         ::google::protobuf::Closure* done) override;
 
  private:
-  void RunDagWithSession(const pb::RunDagRequest request, Session* session);
+  void RunDagWithSession(const pb::RunDagRequest request, Session* session,
+                         const std::string& source_ip);
 
   std::string ConstructReportInfo(const pb::Status& status,
                                   const pb::RunDagRequest& request,

@@ -24,6 +24,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
+	"github.com/secretflow/scql/pkg/audit"
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/executor"
 	"github.com/secretflow/scql/pkg/interpreter/optimizer"
@@ -47,6 +48,7 @@ func (app *App) SubmitAndGetHandler(c *gin.Context) {
 		logEntry.CostTime = time.Since(timeStart)
 		logrus.Errorf("%v|ClientIP:%v", logEntry, c.ClientIP())
 		c.String(http.StatusOK, errorResponse(scql.Code_BAD_REQUEST, "invalid request body", message.EncodingTypeJson))
+		audit.RecordUncategorizedEvent(status.New(scql.Code_BAD_REQUEST, "invalid request body"), c.ClientIP(), "submitAndGet")
 		return
 	}
 
@@ -59,6 +61,7 @@ func (app *App) SubmitAndGetHandler(c *gin.Context) {
 	logEntry.RawRequest = SCDBQueryRequestToLogString(request)
 	logEntry.CostTime = time.Since(timeStart)
 
+	audit.RecordRunSyncQueryEvent(request, resp, timeStart, c.ClientIP())
 	if resp.Status.Code != int32(scql.Code_OK) {
 		logEntry.Reason = constant.ReasonInvalidRequest
 		logEntry.ErrorMsg = resp.Status.Message

@@ -64,6 +64,7 @@ void NumericTensorBuilder<T>::AppendNull() {
   THROW_IF_ARROW_NOT_OK(builder_.AppendNull());
 }
 
+using UInt32TensorBuilder = NumericTensorBuilder<arrow::UInt32Type>;
 using Int64TensorBuilder = NumericTensorBuilder<arrow::Int64Type>;
 using UInt64TensorBuilder = NumericTensorBuilder<arrow::UInt64Type>;
 using FloatTensorBuilder = NumericTensorBuilder<arrow::FloatType>;

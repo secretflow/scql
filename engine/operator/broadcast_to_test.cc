@@ -32,7 +32,7 @@ struct BroadcastToTestCase {
 
 class BroadcastToTest
     : public testing::TestWithParam<
-          std::tuple<spu::ProtocolKind, BroadcastToTestCase>> {
+          std::tuple<test::SpuRuntimeTestCase, BroadcastToTestCase>> {
  protected:
   static pb::ExecNode MakeExecNode(const BroadcastToTestCase& tc);
   static void FeedInputs(const std::vector<ExecContext*>& ctxs,
@@ -42,7 +42,7 @@ class BroadcastToTest
 INSTANTIATE_TEST_SUITE_P(
     BroadcastToBatchTest, BroadcastToTest,
     testing::Combine(
-        testing::Values(spu::ProtocolKind::CHEETAH, spu::ProtocolKind::SEMI2K),
+        test::SpuTestValuesMultiPC,
         testing::Values(
             BroadcastToTestCase{
                 .inputs =
@@ -113,27 +113,34 @@ TEST_P(BroadcastToTest, works) {
   auto parm = GetParam();
   auto tc = std::get<1>(parm);
   auto node = MakeExecNode(tc);
-  std::vector<Session> sessions = test::Make2PCSession(std::get<0>(parm));
+  std::vector<Session> sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
-  ExecContext alice_ctx(node, &sessions[0]);
-  ExecContext bob_ctx(node, &sessions[1]);
+  std::vector<ExecContext> exec_ctxs;
+  for (size_t idx = 0; idx < sessions.size(); ++idx) {
+    exec_ctxs.emplace_back(node, &sessions[idx]);
+  }
 
-  FeedInputs({&alice_ctx, &bob_ctx}, tc);
+  // feed inputs
+  std::vector<ExecContext*> ctx_ptrs;
+  for (size_t idx = 0; idx < exec_ctxs.size(); ++idx) {
+    ctx_ptrs.emplace_back(&exec_ctxs[idx]);
+  }
+  FeedInputs(ctx_ptrs, tc);
 
   // When
   BroadcastTo op;
-  EXPECT_NO_THROW(op.Run(&alice_ctx));
+  EXPECT_NO_THROW(op.Run(&exec_ctxs[0]));
 
   // Then
   // check alice output
   for (const auto& expect_t : tc.expect_outs) {
     TensorPtr actual_out;
     if (tc.ref_tensor_status == pb::TENSORSTATUS_PRIVATE) {
-      actual_out = alice_ctx.GetTensorTable()->GetTensor(expect_t.name);
+      actual_out = exec_ctxs[0].GetTensorTable()->GetTensor(expect_t.name);
     } else {
-      auto hctx = alice_ctx.GetSession()->GetSpuHalContext();
-      auto device_symbols = alice_ctx.GetSession()->GetDeviceSymbols();
-      util::SpuOutfeedHelper outfeed_helper(hctx, device_symbols);
+      auto sctx = exec_ctxs[0].GetSession()->GetSpuContext();
+      auto device_symbols = exec_ctxs[0].GetSession()->GetDeviceSymbols();
+      util::SpuOutfeedHelper outfeed_helper(sctx, device_symbols);
 
       actual_out = outfeed_helper.DumpPublic(expect_t.name);
     }

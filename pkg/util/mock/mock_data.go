@@ -55,19 +55,19 @@ var cclString2CCLLevel = map[string]ccl.CCLLevel{
 }
 
 type dbConifg struct {
-	DbName string        `json:"db_name"`
-	Tables []tableConfig `json:"tables"`
+	DbName    string                 `json:"db_name"`
+	PartyCode string                 `json:"party_code"`
+	Tables    map[string]tableConfig `json:"tables"`
 }
 
 type tableConfig struct {
-	PartyCode string         `json:"party_code"`
-	TableName string         `json:"table_name"`
-	Columns   []columnConfig `json:"columns"`
+	Columns []columnConfig `json:"columns"`
+	Tid     string         `json:"tid"`
 }
 type columnConfig struct {
-	ColumnName string `json:"column_name"`
-	Dtype      string `json:"dtype"`
-	CCL        string `json:"ccl"`
+	ColumnName string   `json:"column_name"`
+	Dtype      string   `json:"dtype"`
+	CCL        []string `json:"ccl"`
 }
 
 type MockCCLConfig struct {
@@ -183,13 +183,13 @@ func MockAllTables() (map[string][]*model.TableInfo, error) {
 		if dbTables[db.DbName] == nil {
 			dbTables[db.DbName] = []*model.TableInfo{}
 		}
-		for _, table := range db.Tables {
+		for tableName, table := range db.Tables {
 			columnInfos := map[string]types.FieldType{}
 			for _, column := range table.Columns {
 				columnInfos[column.ColumnName] = dTypeString2FieldType[column.Dtype]
 			}
-			tableSchema := createTableSchema(table.TableName, columnInfos)
-			tableSchema.PartyCode = table.PartyCode
+			tableSchema := createTableSchema(tableName, columnInfos)
+			tableSchema.PartyCode = db.PartyCode
 			dbTables[db.DbName] = append(dbTables[db.DbName], tableSchema)
 		}
 	}
@@ -205,6 +205,24 @@ func MockContext() sessionctx.Context {
 	return ctx
 }
 
+func GetCCLForParty(party, selfParty string, ccls []string) (ccl.CCLLevel, error) {
+	if len(ccls) != len(allPartyCodes) && len(ccls) != 1 {
+		return ccl.Unknown, fmt.Errorf("err ccl conf: ccls(%+v) for parties(%+v)", ccls, allPartyCodes)
+	}
+	if len(ccls) == 1 {
+		if party == selfParty {
+			return ccl.Plain, nil
+		}
+		return cclString2CCLLevel[ccls[0]], nil
+	}
+	for i, p := range allPartyCodes {
+		if p == party {
+			return cclString2CCLLevel[ccls[i]], nil
+		}
+	}
+	return ccl.Unknown, fmt.Errorf("bad party(%s) not in all party codes(%+v)", party, allPartyCodes)
+}
+
 func GetAllCCL() ([]*MockCCLConfig, error) {
 	data, err := getMockData(mockDataPath)
 	if err != nil {
@@ -212,19 +230,19 @@ func GetAllCCL() ([]*MockCCLConfig, error) {
 	}
 	ccls := []*MockCCLConfig{}
 	for _, db := range data {
-		for _, table := range db.Tables {
+		for tableName, table := range db.Tables {
 			for _, column := range table.Columns {
-				if column.CCL == "" {
+				if len(column.CCL) == 0 {
 					continue
 				}
 				for _, p := range allPartyCodes {
-					level := ccl.Plain
-					if table.PartyCode != p {
-						level = cclString2CCLLevel[column.CCL]
+					level, err := GetCCLForParty(p, db.PartyCode, column.CCL)
+					if err != nil {
+						return nil, err
 					}
 					ccls = append(ccls, &MockCCLConfig{
 						dbName:     db.DbName,
-						tableName:  table.TableName,
+						tableName:  tableName,
 						columnName: column.ColumnName,
 						party:      p,
 						level:      level,
@@ -294,13 +312,27 @@ func MockEngines() (*MockEnginesInfo, error) {
 		result.PartyToCredentials[p] = fmt.Sprintf("%s_credential", p)
 	}
 	for _, db := range data {
-		for _, table := range db.Tables {
-			if len(result.PartyToTables[table.PartyCode]) == 0 {
-				result.PartyToTables[table.PartyCode] = make([]string, 0)
+		for tableName := range db.Tables {
+			if len(result.PartyToTables[db.PartyCode]) == 0 {
+				result.PartyToTables[db.PartyCode] = make([]string, 0)
 			}
-			qualifiedName := strings.Join([]string{db.DbName, table.TableName}, ".")
-			result.PartyToTables[table.PartyCode] = append(result.PartyToTables[table.PartyCode], qualifiedName)
+			qualifiedName := strings.Join([]string{db.DbName, tableName}, ".")
+			result.PartyToTables[db.PartyCode] = append(result.PartyToTables[db.PartyCode], qualifiedName)
 			result.TableToRefs[qualifiedName] = qualifiedName
+		}
+	}
+	return result, nil
+}
+
+func MockTableTIDs() (map[string]string, error) {
+	data, err := getMockData(mockDataPath)
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[string]string)
+	for _, db := range data {
+		for tableName, tableConf := range db.Tables {
+			result[fmt.Sprintf(`%s_%s`, db.DbName, tableName)] = tableConf.Tid
 		}
 	}
 	return result, nil

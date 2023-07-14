@@ -24,68 +24,64 @@ namespace scql::engine::util {
 
 std::string GetStringValue(const pb::Tensor& t) {
   if (t.option() != pb::TensorOptions::VALUE ||
-      t.value_case() != pb::Tensor::ValueCase::kSs || t.ss().ss_size() < 1) {
-    YACL_THROW("tensor does not have ss value");
+      t.elem_type() != pb::PrimitiveDataType::STRING ||
+      t.string_data_size() < 1) {
+    YACL_THROW("tensor does not have string value");
   }
-  return t.ss().ss(0);
+  return t.string_data(0);
 }
 
 std::vector<std::string> GetStringValues(const pb::Tensor& t) {
   if (t.option() != pb::TensorOptions::VALUE ||
-      t.value_case() != pb::Tensor::ValueCase::kSs) {
-    YACL_THROW("tensor does not have ss values");
+      t.elem_type() != pb::PrimitiveDataType::STRING) {
+    YACL_THROW("tensor does not have string values");
   }
 
-  const auto& ss = t.ss().ss();
-
-  std::vector<std::string> result(ss.size());
-  for (int i = 0; i < ss.size(); ++i) {
-    result[i] = ss.at(i);
+  std::vector<std::string> result(t.string_data_size());
+  for (int i = 0; i < t.string_data_size(); ++i) {
+    result[i] = t.string_data(i);
   }
   return result;
 }
 
 int64_t GetInt64Value(const pb::Tensor& t) {
   if (t.option() != pb::TensorOptions::VALUE ||
-      t.value_case() != pb::Tensor::ValueCase::kI64S ||
-      t.i64s().i64s_size() < 1) {
+      t.elem_type() != pb::PrimitiveDataType::INT64 ||
+      t.int64_data_size() < 1) {
     YACL_THROW("tensor does not have int64 value");
   }
-  return t.i64s().i64s(0);
+  return t.int64_data(0);
 }
 
 void SetStringValues(pb::Tensor* t, const std::vector<std::string>& values) {
   t->set_option(pb::TensorOptions::VALUE);
   t->set_elem_type(pb::PrimitiveDataType::STRING);
-  auto& ss = *t->mutable_ss();
   for (const auto& value : values) {
-    ss.add_ss(value);
+    t->add_string_data(value);
   }
 }
 
 void SetInt64Values(pb::Tensor* t, const std::vector<int64_t>& values) {
   t->set_option(pb::TensorOptions::VALUE);
   t->set_elem_type(pb::PrimitiveDataType::INT64);
-  auto& i64s = *t->mutable_i64s();
   for (const auto& value : values) {
-    i64s.add_i64s(value);
+    t->add_int64_data(value);
   }
 }
 
 bool GetBooleanValue(const pb::Tensor& t) {
   if (t.option() != pb::TensorOptions::VALUE ||
-      t.value_case() != pb::Tensor::ValueCase::kBs || t.bs().bs_size() < 1) {
+      t.elem_type() != pb::PrimitiveDataType::BOOL || t.bool_data_size() < 1) {
     YACL_THROW("tensor does not have boolean value");
   }
-  return t.bs().bs(0);
+  return t.bool_data(0);
 }
 
 void SetBooleanValues(pb::Tensor* t, const std::vector<bool>& values) {
   t->set_option(pb::TensorOptions::VALUE);
   t->set_elem_type(pb::PrimitiveDataType::BOOL);
-  auto& bs = *t->mutable_bs();
   for (const auto& value : values) {
-    bs.add_bs(value);
+    t->add_bool_data(value);
   }
 }
 

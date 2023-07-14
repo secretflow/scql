@@ -25,6 +25,8 @@
 #include "engine/operator/dump_file.h"
 #include "engine/operator/filter.h"
 #include "engine/operator/filter_by_index.h"
+#include "engine/operator/group.h"
+#include "engine/operator/group_agg.h"
 #include "engine/operator/in.h"
 #include "engine/operator/join.h"
 #include "engine/operator/logical.h"
@@ -101,6 +103,16 @@ void RegisterAllOpsImpl() {
 
   ADD_OPERATOR_TO_REGISTRY(Sort);
   ADD_OPERATOR_TO_REGISTRY(Shuffle);
+
+  // private groupby
+  ADD_OPERATOR_TO_REGISTRY(Group);
+  ADD_OPERATOR_TO_REGISTRY(GroupFirstOf);
+  ADD_OPERATOR_TO_REGISTRY(GroupCountDistinct);
+  ADD_OPERATOR_TO_REGISTRY(GroupCount);
+  ADD_OPERATOR_TO_REGISTRY(GroupSum);
+  ADD_OPERATOR_TO_REGISTRY(GroupAvg);
+  ADD_OPERATOR_TO_REGISTRY(GroupMin);
+  ADD_OPERATOR_TO_REGISTRY(GroupMax);
 
   // oblivious groupby
   ADD_OPERATOR_TO_REGISTRY(ObliviousGroupMark);

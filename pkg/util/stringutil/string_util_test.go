@@ -17,6 +17,7 @@ import (
 	"testing"
 
 	. "github.com/pingcap/check"
+	"github.com/stretchr/testify/require"
 
 	"github.com/secretflow/scql/pkg/util/testleak"
 )
@@ -197,5 +198,33 @@ func BenchmarkMatchSpecial(b *testing.B) {
 		if match {
 			b.Fatal("Unmatch expected.")
 		}
+	}
+}
+
+func TestRemoveSensitiveInfo(t *testing.T) {
+	r := require.New(t)
+	type sPair struct {
+		originSql string
+		expectSql string
+	}
+	testCase := []sPair{
+		{`select plain_long_0 from scdb.alice_tbl_1;`, `select plain_long_0 from scdb.alice_tbl_1;`},
+		{`CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED ***`},
+		{`CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY     "some_pwd"`, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED ***`},
+		{`CREATE USER alice PARTY_CODE "party_A" IDENTIFIED    BY "some_pwd"`, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED    ***`},
+		{`CREATE USER alice PARTY_CODE "party_A"    IDENTIFIED    BY "some_pwd"`, `CREATE USER alice PARTY_CODE "party_A"    IDENTIFIED    ***`},
+		{`CREATE USER alice PARTY_CODE "party_A" IDENTIFIED WITH "some_pwd"`, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED ***`},
+		{`CREATE USER alice PARTY_CODE "party_A" IDENTIFIED WITH    "some_pwd"`, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED ***`},
+		{`CREATE USER alice PARTY_CODE "party_A" IDENTIFIED    WITH "some_pwd"`, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED    ***`},
+		{`CREATE USER alice PARTY_CODE "party_A"   IDENTIFIED WITH "some_pwd"`, `CREATE USER alice PARTY_CODE "party_A"   IDENTIFIED ***`},
+		{`CREATE USER alice PARTY_CODE "party_A"   IDENTIFIED WITH "     some_pwd"`, `CREATE USER alice PARTY_CODE "party_A"   IDENTIFIED ***`},
+		{`ALTER USER alice IDENTIFIED BY "new_password"`, `ALTER USER alice IDENTIFIED ***`},
+		{`ALTER USER alice IDENTIFIED WITH "new_password"`, `ALTER USER alice IDENTIFIED ***`},
+	}
+	for _, ca := range testCase {
+		originSql := ca.originSql
+		expected := ca.expectSql
+		actual := RemoveSensitiveInfo(originSql)
+		r.Equal(expected, actual)
 	}
 }

@@ -17,6 +17,7 @@
 #include "libspu/psi/core/ecdh_psi.h"
 #include "libspu/psi/cryptor/cryptor_selector.h"
 
+#include "engine/audit/audit_log.h"
 #include "engine/util/psi_helper.h"
 #include "engine/util/tensor_util.h"
 
@@ -97,6 +98,7 @@ void In::Execute(ExecContext* ctx) {
 void In::SecretShareIn(ExecContext* ctx) { YACL_THROW("unimplemented"); }
 
 void In::PsiIn(ExecContext* ctx) {
+  const auto start_time = std::chrono::system_clock::now();
   const auto& my_party_code = ctx->GetSession()->SelfPartyCode();
 
   std::vector<std::string> input_party_codes =
@@ -140,19 +142,26 @@ void In::PsiIn(ExecContext* ctx) {
     spu::psi::RunEcdhPsi(options, batch_provider, in_cipher_store);
   }
   // reveal to me
+
+  size_t self_size = 0;
+  size_t peer_size = 0;
+  int64_t result_size = 0;
   if (reveal_to == my_party_code) {
     auto result = in_cipher_store->FinalizeAndComputeInResult(is_left);
+    self_size = in_cipher_store->GetSelfItemCount();
+    peer_size = in_cipher_store->GetPeerItemCount();
+    result_size = result->Length();
     SPDLOG_INFO(
         "my_party_code:{}, my_rank:{}, total self_item_count:{}, "
         "total peer_item_count:{}, result size:{}",
         ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
-        in_cipher_store->GetSelfItemCount(),
-        in_cipher_store->GetPeerItemCount(), result->Length());
-
+        self_size, peer_size, result_size);
     const auto& output_pb = ctx->GetOutput(kOut)[0];
     ctx->GetSession()->GetTensorTable()->AddTensor(output_pb.name(),
                                                    std::move(result));
   }
+  audit::RecordInNodeDetail(*ctx, self_size, peer_size, result_size,
+                            start_time);
 }
 
 void In::LocalIn(ExecContext* ctx) { YACL_THROW("unimplemented"); }

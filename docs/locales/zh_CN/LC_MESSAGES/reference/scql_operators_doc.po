@@ -41,6 +41,7 @@ msgstr "`Add`"
 msgid "Out = Left `Add` Right"
 msgstr "Out = Left `Add` Right"
 
+
 #: ../../reference/scql_operators.md:6 ../../reference/scql_operators.md:44
 #: ../../reference/scql_operators.md:81 ../../reference/scql_operators.md:126
 #: ../../reference/scql_operators.md:165 ../../reference/scql_operators.md:197
@@ -79,7 +80,9 @@ msgstr "Out = Left `Add` Right"
 #: ../../reference/scql_operators.md:1672
 #: ../../reference/scql_operators.md:1718
 msgid "**Inputs:**"
+
 msgstr "输入："
+
 
 #: ../../reference/scql_operators.md:8 ../../reference/scql_operators.md:199
 #: ../../reference/scql_operators.md:261 ../../reference/scql_operators.md:362
@@ -91,6 +94,7 @@ msgstr "输入："
 #: ../../reference/scql_operators.md:1118
 #: ../../reference/scql_operators.md:1172
 msgid "`Left`(variadic, T): First operand."
+
 msgstr "`Left`(可变参数, T): 第一个操作数."
 
 #: ../../reference/scql_operators.md:10 ../../reference/scql_operators.md:201
@@ -604,6 +608,7 @@ msgid ""
 "input tensor Right (its shape is [N]), check whether Left's element "
 "exists in Right's elements and output a boolean tensor Out (its shape is "
 "[M]). Left and Right must be the same type. Example:"
+
 msgstr ""
 "定义：给定一个名为 Left 的输入 tensor (其 shape 为 [M]) 和另一个名为 Right 的 Tensor (其 shape 为 [N])，检查 Left 的元素是否存在于右的元素中，并输出一名为 Out 的布尔类型的 tensor (其 shape 为 [M])。左和右必须是相同的类型。例："
 
@@ -1132,3 +1137,4 @@ msgstr "`UniqueKey`(single, T): 输出唯一 key tensor(shape [K][1])"
 
 #~ msgid "`axis`: Int. Dimension along which to concatenate."
 #~ msgstr "`axis`：要连接的维度。"
+

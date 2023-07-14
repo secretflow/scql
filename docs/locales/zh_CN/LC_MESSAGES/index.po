@@ -3,12 +3,11 @@
 # This file is distributed under the same license as the SCQL package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-30 20:12+0800\n"
+"POT-Creation-Date: 2023-07-03 10:11+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -17,21 +16,20 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.11.0\n"
+"Generated-By: Babel 2.12.1\n"
 
 #: ../../index.rst:7
 msgid "SCQL Documentation"
-msgstr ""
+msgstr "SCQL 文档"
 
-#: ../../index.rst:10
+#: ../../index.rst:9
 msgid ""
 "Secure Collaborative Query Language (SCQL) is a system that translates "
 "SQL statements into a hybrid MPC-plaintext execution graph and executes "
 "them on a federation of database systems. The MPC framework is powered by"
 " `SPU <https://github.com/secretflow/spu>`_."
 msgstr ""
-
-#: ../../index.rst:13
-msgid "Content"
-msgstr ""
-
+"Secure Collaborative Query Language (SCQL) 是一种能够将 SQL 语句转换为明密文混合执行图，并在联合数据库系统上执行的系统。"
+"该系统的 MPC 框架由 `SPU <https://github.com/secretflow/spu>`_ 提供支持。"
+#~ msgid "Content"
+#~ msgstr "目录"

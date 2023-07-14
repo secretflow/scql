@@ -33,9 +33,6 @@ class DumpFile : public Operator {
  protected:
   void Validate(ExecContext* ctx) override;
   void Execute(ExecContext* ctx) override;
-
- private:
-  std::string GetAbsolutePathFile(ExecContext* ctx);
 };
 
 }  // namespace scql::engine::op

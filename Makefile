@@ -31,7 +31,7 @@ build: fmt vet
 
 pb: clean
 	$(RM) -rf pkg/proto-gen/*
-	./api/generate_proto.sh
+	./api/generate_proto.sh && ./pkg/audit/generate_audit.sh
 
 fmt:
 	go fmt ./pkg/...

@@ -20,21 +20,37 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/secretflow/scql/pkg/interpreter/ccl"
+	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	proto "github.com/secretflow/scql/pkg/proto-gen/scql"
 )
 
+func createTenosorFromPlace(place placement) *Tensor {
+	t := NewTensor(0, "")
+	switch x := place.(type) {
+	case *privatePlacement:
+		t.Status = proto.TensorStatus_TENSORSTATUS_PRIVATE
+		t.OwnerPartyCode = x.partyCode
+	case *sharePlacement:
+		t.Status = proto.TensorStatus_TENSORSTATUS_SECRET
+	case *publicPlacement:
+		t.Status = proto.TensorStatus_TENSORSTATUS_PUBLIC
+	}
+	return t
+}
+
 func TestGetStatusConversionCost(t *testing.T) {
 	type testCase struct {
-		old  placement
+		old  *Tensor
 		new  placement
 		pass bool
 	}
+
 	testCases := []testCase{
-		{&privatePlacement{"a"}, &privatePlacement{"b"}, true},
-		{&privatePlacement{"a"}, &privatePlacement{"a"}, true},
-		{&privatePlacement{"a"}, &sharePlacement{[]string{"a", "b"}}, true},
-		{&sharePlacement{[]string{"a", "b"}}, &privatePlacement{"a"}, true},
-		{&sharePlacement{[]string{"a", "b"}}, &sharePlacement{[]string{"a", "b"}}, true},
+		{createTenosorFromPlace(&privatePlacement{"a"}), &privatePlacement{"b"}, true},
+		{createTenosorFromPlace(&privatePlacement{"a"}), &privatePlacement{"a"}, true},
+		{createTenosorFromPlace(&privatePlacement{"a"}), &sharePlacement{[]string{"a", "b"}}, true},
+		{createTenosorFromPlace(&sharePlacement{[]string{"a", "b"}}), &privatePlacement{"a"}, true},
+		{createTenosorFromPlace(&sharePlacement{[]string{"a", "b"}}), &sharePlacement{[]string{"a", "b"}}, true},
 	}
 
 	a := require.New(t)
@@ -62,15 +78,36 @@ func TestAddTensorStatusConversion(t *testing.T) {
 	{
 		e := newSimplePlan()
 		tensor := e.Tensors[0]
-		_, err := e.addTensorStatusConversion(tensor, &privatePlacement{"party2"})
+		_, err := e.converter.convertTo(tensor, &privatePlacement{"party2"})
 		a.NoError(err)
 	}
 
 	{
 		e := newSimplePlan()
 		tensor := e.Tensors[0]
-		t2, err := e.addTensorStatusConversion(tensor, &privatePlacement{"party1"})
+		t2, err := e.converter.convertTo(tensor, &privatePlacement{"party1"})
 		a.NoError(err)
 		a.Equal(tensor, t2)
 	}
+}
+
+func TestConvertTo(t *testing.T) {
+	r := require.New(t)
+	partyInfo, err := NewPartyInfo([]string{"Alice", "Bob"}, []string{"party1.net", "party2.net"}, []string{"party1_credential", "party2_credential"})
+	r.Nil(err)
+	e1 := NewGraphBuilder(partyInfo)
+	mockT1 := e1.AddTensor("t1.1")
+	mockT1.Status = scql.TensorStatus_TENSORSTATUS_PRIVATE
+	mockT1.OwnerPartyCode = "Alice"
+	mockT1.cc = ccl.CreateAllPlainCCL(partyInfo.GetParties())
+
+	convertToBob1, err := e1.converter.convertTo(mockT1, &privatePlacement{partyCode: "Bob"})
+	r.Nil(err)
+	r.NotEqual(convertToBob1.ID, mockT1.ID)
+	convertToBob2, err := e1.converter.convertTo(mockT1, &privatePlacement{partyCode: "Bob"})
+	r.Nil(err)
+	r.Equal(convertToBob1.ID, convertToBob2.ID)
+	convertBobToShare, err := e1.converter.convertTo(convertToBob1, &sharePlacement{partyCodes: []string{"Alice", "Bob"}})
+	r.Nil(err)
+	r.NotEqual(convertBobToShare.ID, convertToBob2.ID)
 }

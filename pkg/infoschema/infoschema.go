@@ -242,6 +242,8 @@ func TypeConversion(tp string) (types.FieldType, error) {
 		return *(types.NewFieldType(mysql.TypeLong)), nil
 	case constant.FloatTypeAlias[tp]:
 		return *(types.NewFieldType(mysql.TypeFloat)), nil
+	case constant.DoubleTypeAlias[tp]:
+		return *(types.NewFieldType(mysql.TypeDouble)), nil
 	case constant.DateTimeTypeAlias[tp]:
 		return *(types.NewFieldType(mysql.TypeDatetime)), nil
 	case constant.TimeStampTypeAlias[tp]:
@@ -264,7 +266,7 @@ func FieldTypeString(tp types.FieldType) (string, error) {
 	case types.ETTimestamp:
 		return "timestamp", nil
 	case types.ETReal:
-		return "float", nil
+		return "double", nil
 	default:
 		return "", fmt.Errorf("unknown type: %v", tp)
 	}
@@ -277,6 +279,8 @@ func TypeDefaultValue(tp string) (interface{}, error) {
 	case constant.IntegerTypeAlias[tp]:
 		return 0, nil
 	case constant.FloatTypeAlias[tp]:
+		return 0.0, nil
+	case constant.DoubleTypeAlias[tp]:
 		return 0.0, nil
 	case constant.DateTimeTypeAlias[tp]:
 		// in mysql default value is current time, this place we set to min datetime

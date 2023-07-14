@@ -83,9 +83,9 @@ class SpuInfeedHelper {
 /// @brief helper class for outfeeding tensors from SPU device
 class SpuOutfeedHelper {
  public:
-  SpuOutfeedHelper(spu::HalContext* hctx,
+  SpuOutfeedHelper(spu::SPUContext* sctx,
                    const spu::device::SymbolTable* symbols)
-      : hctx_(hctx), symbols_(symbols) {}
+      : sctx_(sctx), symbols_(symbols) {}
 
   TensorPtr DumpPublic(const std::string& name);
 
@@ -94,7 +94,7 @@ class SpuOutfeedHelper {
   TensorPtr RevealTo(const std::string& name, size_t rank);
 
  private:
-  spu::HalContext* hctx_;
+  spu::SPUContext* sctx_;
   const spu::device::SymbolTable* symbols_;
 };
 

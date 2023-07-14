@@ -27,6 +27,7 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/secretflow/scql/pkg/audit"
 	"github.com/secretflow/scql/pkg/executor"
 	"github.com/secretflow/scql/pkg/grm"
 	"github.com/secretflow/scql/pkg/grm/stdgrm"
@@ -93,6 +94,10 @@ func main() {
 		if lvl, err := log.ParseLevel(cfg.LogLevel); err == nil {
 			log.SetLevel(lvl)
 		}
+	}
+
+	if err := audit.InitAudit(&cfg.AuditConfig); err != nil {
+		log.Fatalf("Failed to init audit with error: %v", err)
 	}
 
 	log.Info("Starting to connect to database and do bootstrap if necessary...")

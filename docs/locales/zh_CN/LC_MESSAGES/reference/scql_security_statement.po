@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the SCQL package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
@@ -233,5 +232,4 @@ msgid ""
 "triples for efficiency. In the future, we will consider adding a Beaver "
 "provider implementation that does not rely on third parties."
 msgstr "SPU SEMI2K 协议实现时为了效率采用了可信第三方来生成 Beaver triples，将来会考虑增加不依赖第三方的 Beaver provider 实现。"
-
 

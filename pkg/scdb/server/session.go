@@ -94,7 +94,7 @@ func newSession(ctx context.Context, req *scql.SCDBQueryRequest, s *gorm.DB, grm
 	session := &session{
 		id:               sessionId,
 		createdAt:        time.Now(),
-		createdBy:        req.User.User.GetNativeUser().Name,
+		createdBy:        req.GetUser().GetUser().GetNativeUser().GetName(),
 		request:          req,
 		queryResultCbURL: req.QueryResultCallbackUrl,
 		sessionVars:      variable.NewSessionVars(),
@@ -106,7 +106,7 @@ func newSession(ctx context.Context, req *scql.SCDBQueryRequest, s *gorm.DB, grm
 	session.GetSessionVars().Storage = s
 	session.GetSessionVars().StmtCtx = &stmtctx.StatementContext{}
 	session.GetSessionVars().GrmClient = grmClient
-	session.GetSessionVars().GrmToken = req.User.GrmToken
+	session.GetSessionVars().GrmToken = req.GetUser().GetGrmToken()
 	session.GetSessionVars().CurrentDB = req.DbName
 
 	return session, nil
@@ -117,8 +117,11 @@ func (s *session) authenticateUser(user *scql.SCDBCredential) error {
 		Handle: privileges.NewHandle(s),
 	}
 
-	userName := user.User.GetNativeUser().Name
-	password := user.User.GetNativeUser().Password
+	userName := user.GetUser().GetNativeUser().Name
+	password := user.GetUser().GetNativeUser().Password
+	if userName == "" || password == "" {
+		return fmt.Errorf("authentication failed due to empty userName or password")
+	}
 	if _, _, ok := pm.ConnectionVerification(userName, DefaultHostName, password, nil, nil); !ok {
 		return fmt.Errorf("user %s authentication failed", userName)
 	}

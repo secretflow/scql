@@ -129,7 +129,9 @@ func (e *AsyncExecutor) RunNext(ctx context.Context, req *enginePb.ReportRequest
 
 func (e *AsyncExecutor) MergeQueryResults() (*enginePb.SCDBQueryResultResponse, error) {
 	var affectedRows int64 = 0
+	var dimValue int64 = 0
 	outCols := []*enginePb.Tensor{}
+	isFirstCol := true
 	for _, req := range e.intermediateResults {
 		if req.GetNumRowsAffected() != 0 {
 			if affectedRows == 0 {
@@ -139,6 +141,16 @@ func (e *AsyncExecutor) MergeQueryResults() (*enginePb.SCDBQueryResultResponse, 
 			}
 		}
 		for _, col := range req.GetOutColumns() {
+			colShape := col.GetShape()
+			if colShape == nil || len(colShape.GetDim()) == 0 {
+				return nil, fmt.Errorf("unexpected nil TensorShape")
+			}
+			if isFirstCol {
+				dimValue = colShape.GetDim()[0].GetDimValue()
+				isFirstCol = false
+			} else if dimValue != colShape.GetDim()[0].GetDimValue() {
+				return nil, fmt.Errorf("dim shape not matched, peer shape value=%v, self shape value=%v", dimValue, colShape.GetDim()[0].GetDimValue())
+			}
 			if _, err := find(e.OutputNames, col.GetName()); err == nil {
 				outCols = append(outCols, col)
 			}

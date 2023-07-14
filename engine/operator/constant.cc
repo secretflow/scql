@@ -50,8 +50,8 @@ void Constant::Execute(ExecContext* ctx) {
 
     ctx->GetTensorTable()->AddTensor(output.name(), std::move(tensor));
   } else if (output_status == pb::TensorStatus::TENSORSTATUS_PUBLIC) {
-    auto hctx = ctx->GetSession()->GetSpuHalContext();
-    spu::device::ColocatedIo cio(hctx);
+    auto sctx = ctx->GetSession()->GetSpuContext();
+    spu::device::ColocatedIo cio(sctx);
     util::SpuInfeedHelper infeed_helper(&cio);
 
     auto tensor = BuildTensorFromScalar(scalar_attr);
@@ -68,7 +68,7 @@ void Constant::Execute(ExecContext* ctx) {
                          nd_arr.shape(), nd_arr.strides());
 
     auto lctx = ctx->GetSession()->GetLink();
-    spu::device::IoClient io(lctx->WorldSize(), hctx->rt_config());
+    spu::device::IoClient io(lctx->WorldSize(), sctx->config());
     auto shares = io.makeShares(bv, spu::VIS_PUBLIC);
 
     auto device_symbols = ctx->GetSession()->GetDeviceSymbols();
@@ -97,61 +97,54 @@ std::shared_ptr<Tensor> Constant::BuildTensorFromScalar(
   switch (pb_tensor.elem_type()) {
     case pb::PrimitiveDataType::STRING: {
       StringTensorBuilder builder;
-      auto& scalar = pb_tensor.ss();
-      YACL_ENFORCE(scalar.ss_size() == 1, "scalar size={} not equal 1",
-                   scalar.ss_size());
-      builder.Append(scalar.ss(0));
+      YACL_ENFORCE(pb_tensor.string_data_size() == 1,
+                   "scalar size={} not equal 1", pb_tensor.string_data_size());
+      builder.Append(pb_tensor.string_data(0));
       builder.Finish(&result);
       break;
     }
     case pb::PrimitiveDataType::BOOL: {
       BooleanTensorBuilder builder;
-      auto& scalar = pb_tensor.bs();
-      YACL_ENFORCE(scalar.bs_size() == 1, "scalar size={} not equal 1",
-                   scalar.bs_size());
-      builder.Append(scalar.bs(0));
+      YACL_ENFORCE(pb_tensor.bool_data_size() == 1,
+                   "scalar size={} not equal 1", pb_tensor.bool_data_size());
+      builder.Append(pb_tensor.bool_data(0));
       builder.Finish(&result);
       break;
     }
-    case pb::PrimitiveDataType::FLOAT16:
-    case pb::PrimitiveDataType::FLOAT:
-    case pb::PrimitiveDataType::DOUBLE: {
+    case pb::PrimitiveDataType::FLOAT32: {
       FloatTensorBuilder builder;
-      auto& scalar = pb_tensor.fs();
-      YACL_ENFORCE(scalar.fs_size() == 1, "scalar size={} not equal 1",
-                   scalar.fs_size());
-      builder.Append(scalar.fs(0));
+      YACL_ENFORCE(pb_tensor.float_data_size() == 1,
+                   "scalar size={} not equal 1", pb_tensor.float_data_size());
+      builder.Append(pb_tensor.float_data(0));
+      builder.Finish(&result);
+      break;
+    }
+    case pb::PrimitiveDataType::FLOAT64: {
+      DoubleTensorBuilder builder;
+      YACL_ENFORCE(pb_tensor.double_data_size() == 1,
+                   "scalar size={} not equal 1", pb_tensor.double_data_size());
+      builder.Append(pb_tensor.double_data(0));
       builder.Finish(&result);
       break;
     }
     case pb::PrimitiveDataType::INT8:
     case pb::PrimitiveDataType::INT16:
-    case pb::PrimitiveDataType::INT32:
-    case pb::PrimitiveDataType::UINT8:
-    case pb::PrimitiveDataType::UINT16:
-    case pb::PrimitiveDataType::UINT32: {
+    case pb::PrimitiveDataType::INT32: {
       Int64TensorBuilder builder;
-      auto& scalar = pb_tensor.is();
-      YACL_ENFORCE(scalar.is_size() == 1, "scalar size={} not equal 1",
-                   scalar.is_size());
-      builder.Append(scalar.is(0));
+      YACL_ENFORCE(pb_tensor.int32_data_size() == 1,
+                   "scalar size={} not equal 1", pb_tensor.int32_data_size());
+      builder.Append(pb_tensor.int32_data(0));
       builder.Finish(&result);
       break;
     }
-    case pb::PrimitiveDataType::INT64:
-    case pb::PrimitiveDataType::UINT64: {
+    case pb::PrimitiveDataType::INT64: {
       Int64TensorBuilder builder;
-      auto& scalar = pb_tensor.i64s();
-      YACL_ENFORCE(scalar.i64s_size() == 1, "scalar size={} not equal 1",
-                   scalar.i64s_size());
-      builder.Append(scalar.i64s(0));
+      YACL_ENFORCE(pb_tensor.int64_data_size() == 1,
+                   "scalar size={} not equal 1", pb_tensor.int64_data_size());
+      builder.Append(pb_tensor.int64_data(0));
       builder.Finish(&result);
       break;
     }
-    case pb::PrimitiveDataType::BFLOAT16:
-    case pb::PrimitiveDataType::COMPLEX64:
-    case pb::PrimitiveDataType::COMPLEX128:
-      // fall through;
     default:
       YACL_THROW("not supported elem_type:{}", pb_tensor.elem_type());
       break;

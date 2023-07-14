@@ -51,6 +51,18 @@ func (s *Status) ToProto() *scql.Status {
 	}
 }
 
+func NewStatusFromProto(status *scql.Status) *Status {
+	if status == nil {
+		return nil
+	}
+	code := status.GetCode()
+	msg := status.GetMessage()
+	if _, ok := scql.Code_name[code]; !ok {
+		return New(scql.Code_INTERNAL, msg)
+	}
+	return New(scql.Code(code), msg)
+}
+
 func New(code scql.Code, msg string) *Status {
 	return &Status{code: code, err: errors.New(msg)}
 }

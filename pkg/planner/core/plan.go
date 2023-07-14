@@ -83,7 +83,7 @@ type LogicalPlan interface {
 	// SetChild sets the ith child for the plan.
 	SetChild(i int, child LogicalPlan)
 
-	RunSqlString(ctx *RunSqlContext) (string, error)
+	SqlStmt(Dialect) (*runSqlCtx, error)
 
 	// Added for SCQL
 	SetIntoOpt(option *ast.SelectIntoOption)
@@ -220,4 +220,8 @@ func (p *basePlan) SetIntoOpt(option *ast.SelectIntoOption) {
 
 func (p *basePlan) IntoOpt() *ast.SelectIntoOption {
 	return p.intoOpt
+}
+
+func (p *baseLogicalPlan) SqlStmt(d Dialect) (*runSqlCtx, error) {
+	return nil, fmt.Errorf("unsupported logical plan baseLogicalPlan")
 }

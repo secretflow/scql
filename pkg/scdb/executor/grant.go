@@ -80,12 +80,8 @@ func (e *GrantExec) Next(ctx context.Context, req *chunk.Chunk) (err error) {
 
 	user := e.Users[0]
 
-	// Check if user exists.
-	if exist, err := storage.CheckUserExist(transaction.AddExclusiveLock(tx), user.User.Username, user.User.Hostname); err != nil || !exist {
-		if err != nil {
-			return fmt.Errorf("grant failed with err: %v", err)
-		}
-		return fmt.Errorf("user not exist: %v", user)
+	if err := CheckUserGrantPriv(tx, e.ctx.GetSessionVars().User, user.User, e.Privs); err != nil {
+		return fmt.Errorf("grant privilege failed: %v", err)
 	}
 
 	// If there is no privilege entry in corresponding table, insert a new one.
@@ -103,6 +99,12 @@ func (e *GrantExec) Next(ctx context.Context, req *chunk.Chunk) (err error) {
 			return err
 		}
 	case ast.GrantLevelDB:
+		if exist, err := storage.CheckDatabaseExist(tx, e.Level.DBName); !exist || err != nil {
+			if err != nil {
+				return err
+			}
+			return fmt.Errorf("database %v not exists", e.Level.DBName)
+		}
 		if err = e.grantDBLevelPriv(tx, user); err != nil {
 			return err
 		}
@@ -239,29 +241,6 @@ func (e *GrantExec) grantColumnPriv(tx *gorm.DB, priv mysql.PrivilegeType, user 
 	return result.Error
 }
 
-func (e *GrantExec) getAllGrantPriv() (map[string]interface{}, error) {
-	var allPrivs []mysql.PrivilegeType
-	switch e.Level.Level {
-	case ast.GrantLevelDB:
-		allPrivs = storage.AllTablePrivs
-	case ast.GrantLevelTable:
-		allPrivs = storage.AllDBPrivs
-	case ast.GrantLevelGlobal:
-		allPrivs = storage.AllGlobalPrivs
-	default:
-		return nil, errors.Errorf("unknown grant level %v", e.Level.Level)
-	}
-	attributes := make(map[string]interface{})
-	for _, p := range allPrivs {
-		v, ok := mysql.Priv2UserCol[p]
-		if !ok {
-			return nil, errors.Errorf("Unknown db privilege %v", p)
-		}
-		attributes[v] = true
-	}
-	return attributes, nil
-}
-
 func (e *GrantExec) composePrivUpdate() (map[string]interface{}, error) {
 	attributes := make(map[string]interface{})
 	for _, priv := range e.Privs {
@@ -269,7 +248,8 @@ func (e *GrantExec) composePrivUpdate() (map[string]interface{}, error) {
 			continue
 		}
 		if priv.Priv == mysql.AllPriv {
-			return e.getAllGrantPriv()
+			err := SetAllGrantPrivTo(e.Level.Level, attributes, true)
+			return attributes, err
 		}
 		v, ok := mysql.Priv2UserCol[priv.Priv]
 		if !ok {
@@ -287,25 +267,23 @@ func (e *GrantExec) composeTablePrivUpdate() (map[string]interface{}, error) {
 			continue
 		}
 		if priv.Priv == mysql.AllPriv {
-			return e.getAllGrantPriv()
-		}
-		v, ok := storage.VisibilityPriv2UserCol[priv.Priv]
-		if ok {
+			if err := SetAllGrantPrivTo(e.Level.Level, attributes, true); err != nil {
+				return nil, err
+			}
+		} else if v, exist := storage.VisibilityPrivColName[priv.Priv]; exist {
 			attributes[v] = priv.Priv
-			continue
+		} else if v, exist := storage.TablePrivColName[priv.Priv]; exist {
+			attributes[v] = true
+		} else {
+			return nil, errors.Errorf("Unknown table priv: %v", mysql.Priv2UserCol[priv.Priv])
 		}
-		v, ok = mysql.Priv2UserCol[priv.Priv]
-		if !ok {
-			return nil, errors.Errorf("Unknown table priv: %v", priv)
-		}
-		attributes[v] = true
 	}
 	return attributes, nil
 }
 func (e *GrantExec) composeColumnPrivUpdate(priv mysql.PrivilegeType) (map[string]interface{}, error) {
 	attributes := make(map[string]interface{})
 	// only support visibility privilege
-	v, ok := storage.VisibilityPriv2UserCol[priv]
+	v, ok := storage.VisibilityPrivColName[priv]
 	if !ok {
 		return nil, fmt.Errorf("unknown visibility priv: %v", mysql.Priv2Str[priv])
 	}

@@ -25,6 +25,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/encoding/protojson"
 
+	"github.com/secretflow/scql/pkg/audit"
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/interpreter/translator"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
@@ -123,6 +124,8 @@ func (executor *SyncExecutor) RunExecutionPlanCore(ctx context.Context) (string,
 		}
 		urls = append(urls, url.String())
 		partyCredentials = append(partyCredentials, executor.partyCodeToCredential[pb.GetSessionParams().GetPartyCode()])
+		audit.RecordPlanDetail(partyCode, url.String(), pb)
+		audit.RecordSessionParameters(pb.GetSessionParams(), url.String(), true)
 	}
 
 	c := make(chan ResponseInfo, len(urls))
@@ -151,7 +154,9 @@ func (executor *SyncExecutor) RunExecutionPlanCore(ctx context.Context) (string,
 
 	outCols := []*scql.Tensor{}
 	responses := []*scql.RunExecutionPlanResponse{}
-
+	var affectedRows int64 = 0
+	var dimValue int64 = 0
+	isFirstCol := true
 	for i := 0; i < len(urls); i++ {
 		responseInfo := <-c
 		if responseInfo.Err != nil {
@@ -164,12 +169,30 @@ func (executor *SyncExecutor) RunExecutionPlanCore(ctx context.Context) (string,
 			return constant.ReasonInvalidResponse, nil, err
 		}
 		if response.GetStatus().GetCode() != int32(scql.Code_OK) {
-			if response.GetStatus().GetCode() == int32(scql.Code_ENGINE_RUNSQL_ERROR) {
-				return constant.ReasonInvalidResponse, nil, status.Wrap(scql.Code_ENGINE_RUNSQL_ERROR, fmt.Errorf(response.GetStatus().GetMessage()))
-			}
-			return constant.ReasonInvalidResponse, nil, status.Wrap(scql.Code_UNKNOWN_ENGINE_ERROR, fmt.Errorf(response.GetStatus().GetMessage()))
+			return constant.ReasonInvalidResponse, nil, status.NewStatusFromProto(response.GetStatus())
 		}
+
+		if response.GetNumRowsAffected() != 0 {
+			if affectedRows == 0 {
+				affectedRows = response.GetNumRowsAffected()
+			} else if affectedRows != response.GetNumRowsAffected() {
+				errMsg := fmt.Errorf("affected rows not matched, received affectedRows=%v, req.NumRowsAffected=%v", affectedRows, response.GetNumRowsAffected())
+				return constant.ReasonInvalidResponse, nil, status.Wrap(scql.Code_ENGINE_RUNSQL_ERROR, errMsg)
+			}
+		}
+
 		for _, col := range response.GetOutColumns() {
+			colShape := col.GetShape()
+			if colShape == nil || len(colShape.GetDim()) == 0 {
+				return constant.ReasonInvalidResponse, nil, status.Wrap(scql.Code_ENGINE_RUNSQL_ERROR, fmt.Errorf("unexpected nil TensorShape"))
+			}
+			if isFirstCol {
+				dimValue = colShape.GetDim()[0].GetDimValue()
+				isFirstCol = false
+			} else if dimValue != colShape.GetDim()[0].GetDimValue() {
+				errMsg := fmt.Errorf("dim shape not matched, peer shap value=%v, self shap value=%v", dimValue, colShape.GetDim()[0].GetDimValue())
+				return constant.ReasonInvalidResponse, nil, status.Wrap(scql.Code_ENGINE_RUNSQL_ERROR, errMsg)
+			}
 			if _, err := find(executor.OutputNames, col.GetName()); err == nil {
 				outCols = append(outCols, col)
 			}
@@ -191,6 +214,7 @@ func (executor *SyncExecutor) RunExecutionPlanCore(ctx context.Context) (string,
 		Status:        responses[0].GetStatus(),
 		ScdbSessionId: responses[0].GetSessionId(),
 		OutColumns:    results,
+		AffectedRows:  responses[0].GetNumRowsAffected(),
 	}
 
 	return "", res, nil

@@ -150,6 +150,7 @@ CREATE TABLE `tables` (
   `ref_table` varchar(64) DEFAULT NULL COMMENT '''reference table name''',
   `is_view` tinyint(1) DEFAULT NULL COMMENT '''this table is a view''',
   `select_string` longtext COMMENT '''the internal select query in string format''',
+  `db_type` bigint(20) DEFAULT 0 COMMENT '''database type where table data stored''',
   `created_at` datetime(3) DEFAULT NULL,
   `updated_at` datetime(3) DEFAULT NULL,
   PRIMARY KEY (`id`),

@@ -148,6 +148,7 @@ CREATE TABLE `tables` (
   `tid` varchar(1024) DEFAULT NULL COMMENT '''table id in grm''',
   `ref_db` varchar(64) DEFAULT NULL COMMENT '''reference database name''',
   `ref_table` varchar(64) DEFAULT NULL COMMENT '''reference table name''',
+  `db_type` bigint(20) DEFAULT 0 COMMENT '''database type where table data stored''',
   `is_view` tinyint(1) DEFAULT NULL COMMENT '''this table is a view''',
   `select_string` longtext COMMENT '''the internal select query in string format''',
   `created_at` datetime(3) DEFAULT NULL,

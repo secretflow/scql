@@ -27,7 +27,7 @@ class ObliviousGroupAggBase : public Operator {
  public:
   virtual spu::Value HandleEmptyInput(const spu::Value& in) { return in; }
 
-  virtual spu::Value CalculateResult(spu::HalContext* hctx,
+  virtual spu::Value CalculateResult(spu::SPUContext* sctx,
                                      const spu::Value& value,
                                      const spu::Value& group_value) = 0;
 
@@ -53,7 +53,7 @@ class ObliviousGroupSum : public ObliviousGroupAggBase {
     }
   }
 
-  spu::Value CalculateResult(spu::HalContext* hctx, const spu::Value& value,
+  spu::Value CalculateResult(spu::SPUContext* sctx, const spu::Value& value,
                              const spu::Value& group_value) override;
 };
 
@@ -68,7 +68,7 @@ class ObliviousGroupCount : public ObliviousGroupAggBase {
     return in.clone().setDtype(spu::DT_I64, true);
   }
 
-  spu::Value CalculateResult(spu::HalContext* hctx, const spu::Value& value,
+  spu::Value CalculateResult(spu::SPUContext* sctx, const spu::Value& value,
                              const spu::Value& group_value) override;
 };
 
@@ -80,10 +80,10 @@ class ObliviousGroupAvg : public ObliviousGroupAggBase {
 
  public:
   spu::Value HandleEmptyInput(const spu::Value& in) override {
-    return in.clone().setDtype(spu::DT_FXP, true);
+    return in.clone().setDtype(spu::DT_F64, true);
   }
 
-  spu::Value CalculateResult(spu::HalContext* hctx, const spu::Value& value,
+  spu::Value CalculateResult(spu::SPUContext* sctx, const spu::Value& value,
                              const spu::Value& group_value) override;
 };
 
@@ -94,7 +94,7 @@ class ObliviousGroupMax : public ObliviousGroupAggBase {
   const std::string& Type() const override;
 
  public:
-  spu::Value CalculateResult(spu::HalContext* hctx, const spu::Value& value,
+  spu::Value CalculateResult(spu::SPUContext* sctx, const spu::Value& value,
                              const spu::Value& group_value) override;
 };
 
@@ -105,7 +105,7 @@ class ObliviousGroupMin : public ObliviousGroupAggBase {
   const std::string& Type() const override;
 
  public:
-  spu::Value CalculateResult(spu::HalContext* hctx, const spu::Value& value,
+  spu::Value CalculateResult(spu::SPUContext* sctx, const spu::Value& value,
                              const spu::Value& group_value) override;
 };
 // TODO(jingshi) : Add ObliviousGroupMedian.

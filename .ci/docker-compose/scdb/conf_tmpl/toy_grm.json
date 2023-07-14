@@ -1,0 +1,2161 @@
+{
+  "engine": {
+    "read_token": ["token_alice", "token_bob", "token_carol"],
+    "engines_info": [
+      {
+        "party": "alice",
+        "url": ["engine_alice:8003"],
+        "credential": ["alice_credential"]
+      },
+      {
+        "party": "bob",
+        "url": ["engine_bob:8003"],
+        "credential": ["bob_credential"]
+      },
+      {
+        "party": "carol",
+        "url": ["engine_carol:8003"],
+        "credential": ["carol_credential"]
+      }
+    ]
+  },
+  "table": {
+    "read_token": ["token_alice", "token_bob", "token_carol"],
+    "table_schema": [
+      {
+        "tid": "tid0",
+        "schema": {
+          "ref_db_name": "alice",
+          "ref_table_name": "tbl_0",
+          "db_type": "MYSQL",
+          "columns": [
+            {
+              "column_name": "plain_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "plain_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "plain_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_2",
+              "column_type": "string"
+            }
+          ]
+        }
+      },
+      {
+        "tid": "tid1",
+        "schema": {
+          "ref_db_name": "alice",
+          "ref_table_name": "tbl_1",
+          "db_type": "MYSQL",
+          "columns": [
+            {
+              "column_name": "plain_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "plain_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "plain_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_2",
+              "column_type": "string"
+            }
+          ]
+        }
+      },
+      {
+        "tid": "tid2",
+        "schema": {
+          "ref_db_name": "alice",
+          "ref_table_name": "tbl_2",
+          "db_type": "MYSQL",
+          "columns": [
+            {
+              "column_name": "plain_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "plain_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "plain_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_2",
+              "column_type": "string"
+            }
+          ]
+        }
+      },
+      {
+        "tid": "tid3",
+        "schema": {
+          "ref_db_name": "bob",
+          "ref_table_name": "tbl_0",
+          "db_type": "CSVDB",
+          "columns": [
+            {
+              "column_name": "plain_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "plain_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "plain_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_2",
+              "column_type": "string"
+            }
+          ]
+        }
+      },
+      {
+        "tid": "tid4",
+        "schema": {
+          "ref_db_name": "bob",
+          "ref_table_name": "tbl_1",
+          "db_type": "CSVDB",
+          "columns": [
+            {
+              "column_name": "plain_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "plain_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "plain_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_2",
+              "column_type": "string"
+            }
+          ]
+        }
+      },
+      {
+        "tid": "tid5",
+        "schema": {
+          "ref_db_name": "bob",
+          "ref_table_name": "tbl_2",
+          "db_type": "CSVDB",
+          "columns": [
+            {
+              "column_name": "plain_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "plain_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "plain_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_2",
+              "column_type": "string"
+            }
+          ]
+        }
+      },
+      {
+        "tid": "tid6",
+        "schema": {
+          "ref_db_name": "carol",
+          "ref_table_name": "tbl_0",
+          "db_type": "POSTGRESQL",
+          "columns": [
+            {
+              "column_name": "plain_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "plain_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "plain_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_2",
+              "column_type": "string"
+            }
+          ]
+        }
+      },
+      {
+        "tid": "tid7",
+        "schema": {
+          "ref_db_name": "carol",
+          "ref_table_name": "tbl_1",
+          "db_type": "POSTGRESQL",
+          "columns": [
+            {
+              "column_name": "plain_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "plain_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "plain_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_2",
+              "column_type": "string"
+            }
+          ]
+        }
+      },
+      {
+        "tid": "tid8",
+        "schema": {
+          "ref_db_name": "carol",
+          "ref_table_name": "tbl_2",
+          "db_type": "POSTGRESQL",
+          "columns": [
+            {
+              "column_name": "plain_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_0",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_0",
+              "column_type": "string"
+            },
+            {
+              "column_name": "plain_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_1",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_1",
+              "column_type": "string"
+            },
+            {
+              "column_name": "plain_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "join_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "groupby_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "compare_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "aggregate_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "encrypt_long_2",
+              "column_type": "long"
+            },
+            {
+              "column_name": "plain_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "join_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "groupby_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "compare_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "aggregate_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "encrypt_float_2",
+              "column_type": "float"
+            },
+            {
+              "column_name": "plain_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "join_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "groupby_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "compare_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "aggregate_string_2",
+              "column_type": "string"
+            },
+            {
+              "column_name": "encrypt_string_2",
+              "column_type": "string"
+            }
+          ]
+        }
+      },
+      {
+        "tid": "tid9",
+        "schema": {
+          "ref_db_name": "alice",
+          "ref_table_name": "tbl_3",
+          "db_type": "MYSQL",
+          "columns": [
+            {
+              "column_name": "gb_gb_gb_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "cp_cp_cp_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "jn_jn_jn_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "pl_jn_cp_long_0",
+              "column_type": "long"
+            }
+          ]
+        }
+      },
+      {
+        "tid": "tid10",
+        "schema": {
+          "ref_db_name": "bob",
+          "ref_table_name": "tbl_3",
+          "db_type": "CSVDB",
+          "columns": [
+            {
+              "column_name": "cp_pl_jn_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "cp_pl_jn_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "jn_pl_cp_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "jn_pl_cp_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "ag_pl_en_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "gb_pl_en_long_0",
+              "column_type": "long"
+            }
+          ]
+        }
+      },
+      {
+        "tid": "tid11",
+        "schema": {
+          "ref_db_name": "carol",
+          "ref_table_name": "tbl_3",
+          "db_type": "POSTGRESQL",
+          "columns": [
+            {
+              "column_name": "cp_jn_pl_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "cp_jn_pl_long_1",
+              "column_type": "long"
+            },
+            {
+              "column_name": "gb_en_pl_long_0",
+              "column_type": "long"
+            },
+            {
+              "column_name": "agg_en_pl_long_0",
+              "column_type": "long"
+            }
+          ]
+        }
+      }
+    ],
+    "ownerships": [
+      {
+        "token": "token_alice",
+        "tids": ["tid0", "tid1", "tid2", "tid9"]
+      },
+      {
+        "token": "token_bob",
+        "tids": ["tid3", "tid4", "tid5", "tid10"]
+      },
+      {
+        "token": "token_carol",
+        "tids": ["tid6", "tid7", "tid8", "tid11"]
+      }
+    ]
+  }
+}

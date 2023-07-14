@@ -13,7 +13,7 @@ As shown in FIG, SCQL System needs to work with **Client** and **GRM** :
 .. note::
   please read :doc:`../reference/grm` to know more about GRM.
 
-.. image:: ../imgs/scql_system.jpeg
+.. image:: ../imgs/scql_system.png
 
 Therefore the platform should support Client and GRM to integrate SCQL System.
 

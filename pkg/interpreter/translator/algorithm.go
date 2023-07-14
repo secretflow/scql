@@ -57,6 +57,7 @@ type statusConstraint interface {
 type placement interface {
 	status() scql.TensorStatus
 	partyList() []string
+	toString() string
 }
 
 type privatePlacement struct {
@@ -71,6 +72,10 @@ func (p *privatePlacement) partyList() []string {
 	return []string{p.partyCode}
 }
 
+func (p *privatePlacement) toString() string {
+	return fmt.Sprintf("%d-%v", p.status(), p.partyList())
+}
+
 type publicPlacement struct {
 	partyCodes []string
 }
@@ -83,6 +88,10 @@ func (p *publicPlacement) partyList() []string {
 	return p.partyCodes
 }
 
+func (p *publicPlacement) toString() string {
+	return fmt.Sprintf("%d-%v", p.status(), p.partyList())
+}
+
 type sharePlacement struct {
 	partyCodes []string
 }
@@ -93,6 +102,10 @@ func (p *sharePlacement) status() scql.TensorStatus {
 
 func (p *sharePlacement) partyList() []string {
 	return p.partyCodes
+}
+
+func (p *sharePlacement) toString() string {
+	return fmt.Sprintf("%d-%v", p.status(), p.partyList())
 }
 
 type algCreateFunc func(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, allParties []string) ([]*materializedAlgorithm, error)

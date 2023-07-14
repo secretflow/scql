@@ -20,9 +20,9 @@ cc_binary(
     ],
     linkopts = ["-pie"],
     deps = [
-        "//engine/link:rpc_helper",
         "//engine/link:mux_link_factory",
         "//engine/link:mux_receiver_service",
+        "//engine/link:rpc_helper",
         "//engine/services:engine_service_impl",
         "//engine/util:logging",
         "@com_github_brpc_brpc//:brpc",

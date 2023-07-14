@@ -165,11 +165,11 @@ TensorPtr SpuOutfeedHelper::DumpPublic(const std::string& name) {
     return nullptr;
   }
   auto value = symbols_->getVar(value_name);
-  spu::NdArrayRef arr = spu::kernel::hal::dump_public(hctx_, value);
+  spu::NdArrayRef arr = spu::kernel::hal::dump_public(sctx_, value);
 #ifdef SCQL_WITH_NULL
   auto validity_val =
       symbols_->getVar(SpuVarNameEncoder::GetValidityName(name));
-  auto validity = spu::kernel::hal::dump_public(hctx_, validity_val);
+  auto validity = spu::kernel::hal::dump_public(sctx_, validity_val);
   return std::make_shared<Tensor>(NdArrayToArrow(arr, &validity));
 #else
   return std::make_shared<Tensor>(NdArrayToArrow(arr, nullptr));
@@ -177,8 +177,8 @@ TensorPtr SpuOutfeedHelper::DumpPublic(const std::string& name) {
 }
 
 TensorPtr SpuOutfeedHelper::RevealTo(const std::string& name, size_t rank) {
-  const auto& lctx = hctx_->lctx();
-  spu::device::IoClient io(lctx->WorldSize(), hctx_->rt_config());
+  const auto& lctx = sctx_->lctx();
+  spu::device::IoClient io(lctx->WorldSize(), sctx_->config());
 
   auto value = symbols_->getVar(SpuVarNameEncoder::GetValueName(name));
   std::string value_content;

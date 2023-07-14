@@ -1,7 +1,6 @@
 Quickstart
 ==========
 
-
 TL;DR
 -----
 
@@ -35,6 +34,9 @@ Before starting the SCQL service, you need to initialize tokens and credentials 
 .. code-block:: bash
 
     bash examples/docker-compose/register.sh
+
+.. note::
+   The register.sh script will generate random tokens and replace the ``__ALICE_TOKEN__`` and ``__BOB_TOKEN__`` placeholders in `examples/docker-compose/client/users.json <https://github.com/secretflow/scql/tree/main/examples/docker-compose/client/users.json>`_ and `examples/docker-compose/scdb/conf/toy_grm.json <https://github.com/secretflow/scql/tree/main/examples/docker-compose/scdb/conf/toy_grm.json>`_ respectively. If your scdbclient and docker compose containers are running on different machines, please make sure to manually replace these tokens to ensure scdbclient get right tokens.
 
 Start SCQL Service
 ------------------
@@ -84,7 +86,7 @@ Create database, user and tables
     +----------+
     # create our first db demo
     root> create database demo
-    [fetch] OK for DDL/DML
+    [fetch] OK for DDL/DCL
     root> show databases;
     [fetch]
     1 rows in set: (2.945772ms)
@@ -94,17 +96,19 @@ Create database, user and tables
     | demo     |
     +----------+
     # create user "alice" with password "some_password" for party "alice"
+    # note: if you want to use a custom password,
+    # please ensure it is consistent with the one configured in `examples/docker-compose/client/users.json`
     root> create user alice PARTY_CODE "alice" IDENTIFIED BY "some_password"
-    [fetch] OK for DDL/DML
+    [fetch] OK for DDL/DCL
     # create user "bob" with password "another_password" for party "bob"
     root> create user bob PARTY_CODE "bob" IDENTIFIED BY "another_password"
-    [fetch] OK for DDL/DML
+    [fetch] OK for DDL/DCL
     # grant create, grant, drop privileges to user alice
     root> GRANT CREATE, GRANT OPTION, DROP ON demo.* TO alice
-    [fetch] OK for DDL/DML
+    [fetch] OK for DDL/DCL
     # grant create, grant, drop privileges to user bob
     root> GRANT CREATE, GRANT OPTION, DROP ON demo.* TO bob
-    [fetch] OK for DDL/DML
+    [fetch] OK for DDL/DCL
     # switch to user alice
     root> switch alice
     alice> show databases;
@@ -117,7 +121,7 @@ Create database, user and tables
     +----------+
     # create table `ta` reference party alice table `alice.user_credit` with tid="tid0"
     alice> CREATE TABLE demo.ta TID="tid0"
-    [fetch] OK for DDL/DML
+    [fetch] OK for DDL/DCL
     # describe created table
     alice> DESCRIBE demo.ta
     [fetch]
@@ -178,8 +182,8 @@ Grant CCL
     | GRANT SELECT PLAINTEXT(income) ON demo.ta TO alice                         |
     | GRANT SELECT PLAINTEXT(age) ON demo.ta TO alice                            |
     | GRANT SELECT PLAINTEXT_AFTER_JOIN(id) ON demo.tb TO alice                  |
-    | GRANT SELECT PLAINTEXT_AFTER_AGGREGATE(order_amount) ON demo.tb TO alice |
-    | GRANT SELECT PLAINTEXT_AFTER_COMPARE(is_active) ON demo.tb TO alice     |
+    | GRANT SELECT PLAINTEXT_AFTER_AGGREGATE(order_amount) ON demo.tb TO alice   |
+    | GRANT SELECT PLAINTEXT_AFTER_COMPARE(is_active) ON demo.tb TO alice        |
     +----------------------------------------------------------------------------+
     bob> show grants on demo for bob
     [fetch]
@@ -190,8 +194,8 @@ Grant CCL
     | GRANT CREATE, DROP, GRANT OPTION ON demo.* TO bob                    |
     | GRANT SELECT PLAINTEXT_AFTER_JOIN(id) ON demo.ta TO bob              |
     | GRANT SELECT PLAINTEXT_AFTER_GROUP_BY(credit_rank) ON demo.ta TO bob |
-    | GRANT SELECT PLAINTEXT_AFTER_AGGREGATE(income) ON demo.ta TO bob   |
-    | GRANT SELECT PLAINTEXT_AFTER_COMPARE(age) ON demo.ta TO bob       |
+    | GRANT SELECT PLAINTEXT_AFTER_AGGREGATE(income) ON demo.ta TO bob     |
+    | GRANT SELECT PLAINTEXT_AFTER_COMPARE(age) ON demo.ta TO bob          |
     | GRANT SELECT PLAINTEXT(id) ON demo.tb TO bob                         |
     | GRANT SELECT PLAINTEXT(order_amount) ON demo.tb TO bob               |
     | GRANT SELECT PLAINTEXT(is_active) ON demo.tb TO bob                  |
