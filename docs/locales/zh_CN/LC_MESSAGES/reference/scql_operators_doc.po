@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../reference/scql_operators_doc.rst:2
 msgid "SCQL Operators Specification"
-msgstr "SCQL 算子规范"
+msgstr "SCQL 算子规范" 
 
 #: ../../reference/scql_operators_doc.rst:4
 msgid ""
