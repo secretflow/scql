@@ -32,7 +32,7 @@ msgid ""
 "Secure Collaborative Query Language (SCQL) is a system that allows "
 "multiple distrusting parties to run joint analysis without revealing "
 "their private data."
-msgstr "安全协作查询语言（Secure Collaborative Query Language, SCQL）是一个允许多个不信任方运行联合分析而不透露其私有数据的系统。"
+msgstr "安全协作查询语言（Secure Collaborative Query Language, SCQL）是一个允许多个互不信任参与方在不泄露各自隐私数据的条件下进行联合数据分析的系统。"
 
 #: ../../getting_started/scql_intro.rst:10
 msgid "Key Features"
@@ -40,7 +40,7 @@ msgstr "关键特点"
 
 #: ../../getting_started/scql_intro.rst:12
 msgid "Semi-honest security. SCQL assumes that all parties are semi-honest."
-msgstr "半诚实的安全。SCQL 假设所有各方都是半诚实的。"
+msgstr "半诚实安全。SCQL 假设所有参与方都是半诚实的。"
 
 #: ../../getting_started/scql_intro.rst:13
 msgid "Support multiple parties (N >= 2)."
@@ -50,13 +50,13 @@ msgstr "支持多方（N>=2）。"
 msgid ""
 "Support common SQL select syntax and functions to meet the needs of most "
 "scenarios. Please check :ref:`/reference/scql_status.rst` for details."
-msgstr "支持常见的 SQL select 语法和函数以满足大多数情况下的需要。详情请查看 :ref:`/reference/scql_status.rst`。"
+msgstr "支持常见的 SQL select 语法和函数，满足大多数场景的需求。详情请查看 :ref:`/reference/scql_status.rst`。"
 
 #: ../../getting_started/scql_intro.rst:15
 msgid ""
 "Practical performance.  SCQL has multiple levels of performance "
 "optimization."
-msgstr "实际性能。SCQL有多个级别的性能优化。"
+msgstr "可实用的性能。SCQL 有多层次的性能优化。"
 
 #: ../../getting_started/scql_intro.rst:16
 msgid "Easy to use. SCQL provides relation SQL-like interface."
@@ -81,7 +81,7 @@ msgid ""
 "SCDB server is responsible for translating SQL query into a hybrid MPC-"
 "plaintext execution graph and dispatching the execution graph to "
 "SCQLEngine of participants."
-msgstr "SCDB 服务器负责将 SQL 查询翻译成混合 MPC 明文执行图，并将执行图分派给 SCQLEngine 参与者。"
+msgstr "SCDB 服务器负责将 SQL 查询翻译成明密文混合执行图，并将执行图下发给参与方的 SCQLEngine。"
 
 #: ../../getting_started/scql_intro.rst:25
 msgid ""
@@ -89,13 +89,13 @@ msgid ""
 " with peers to run the execution graph and reports the query result to "
 "SCDB server. SCQLEngine is implemented on top of state-of-the-art MPC "
 "framework `secretflow/spu`_."
-msgstr "SCQLEngine 是一个混合 MPC 明文执行引擎，它与参与方协作运行执行图并将查询结果报告给 SCDB 服务器。SCQLEngine 是在最先进的 MPC 框架 `secretflow/spu`_ 的基础上实现的。"
+msgstr "SCQLEngine 是一个明密文混合执行引擎，它与参与方协作运行执行图并将查询结果报告给 SCDB 服务器。SCQLEngine 是在最先进的 MPC 框架 `secretflow/spu`_ 的基础上实现的。"
 
 #: ../../getting_started/scql_intro.rst:26
 msgid ""
 "GRM is the abbreviation of :ref:`Global Resource Manager <grm>`, which "
 "manages the information of the participants and the shared table schemas."
-msgstr "GRM 是 Global Resource Manager 的缩写，它管理着参与者的信息和共享表的结构。"
+msgstr "GRM 是 Global Resource Manager 的缩写，它管理着参与方和共享的表结构信息。"
 
 #: ../../getting_started/scql_intro.rst:-1
 msgid "SCQL Architecture"
@@ -132,7 +132,7 @@ msgstr "``bank_1``"
 msgid ""
 "Party Bank1 owns the table ``bank_1`` in its local database ``DB1``, "
 "which has two columns ``customer_id`` and ``deposit``."
-msgstr "参与方 Bank1 在其本地数据库 ``DB1`` 中拥有表 ``bank_1``，该数据库具有两列 ``customer_id`` 和 ``deposit``。"
+msgstr "参与方 Bank1 在其本地数据库 ``DB1`` 中有张表 ``bank_1``，该数据表有两列分别是 ``customer_id`` 和 ``deposit``。"
 
 #: ../../getting_started/scql_intro.rst:59
 msgid "``bank_2``"
@@ -142,7 +142,7 @@ msgstr "``bank_2``"
 msgid ""
 "Party Bank2 owns the table ``bank_2`` in its local database ``DB2``, "
 "which has two columns ``customer_id`` and ``loan``."
-msgstr "参与方 Bank2 在其本地数据库 ``DB2`` 中拥有表 ``bank_2``，该数据库有两列 ``customer_id`` 和 ``loan``。"
+msgstr "参与方 Bank2 在其本地数据库 ``DB2`` 中有张表 ``bank_2``，该数据表有两列分别是 ``customer_id`` 和 ``loan``。"
 
 #: ../../getting_started/scql_intro.rst:62
 msgid ""
@@ -150,7 +150,7 @@ msgid ""
 " registered in GRM, so that SCDB could retrieve the table schema and "
 "resolve the table reference. For example, SCDB would resolve ``table_1`` "
 "into ``DB1.bank_1`` in party Bank1."
-msgstr "表的元数据，例如表的所有者和表的结构，需要在 GRM 中注册，以便 SCDB 可以检索表的模式并解析表的引用。例如，SCDB 会将 ``table_1`` 解析为参与方 Bank1 中的 ``DB1.bank_1``。"
+msgstr "表的元数据，例如表的所有者和表的结构，需要在 GRM 中注册，以便 SCDB 可以获取表结构并解析表引用。例如，SCDB 会将 ``table_1`` 解析为参与方 Bank1 中的 ``DB1.bank_1``。"
 
 #: ../../getting_started/scql_intro.rst:66
 msgid "Column Control List (CCL)"
@@ -164,7 +164,7 @@ msgstr "CCL 格式: ``<src_column, dest_party, constraint>``"
 msgid ""
 "It means ``src_column`` is accessible to ``dest_party`` with the "
 "``constraint``."
-msgstr "这意味着 ``src_column`` 可以通过约束条件被 ``dest_party`` 访问。"
+msgstr "它表示 ``src_column`` 可以被 ``dest_party`` 在满足 ``constraint`` 的条件下访问。"
 
 #: ../../getting_started/scql_intro.rst:72
 msgid ""
@@ -239,13 +239,13 @@ msgstr "SCDB 为传入的查询创建一个新的会话，然后验证查询发�
 
 #: ../../getting_started/scql_intro.rst:104
 msgid "Step2. Parse and Plan Q"
-msgstr "步骤2. 解析和规划Q"
+msgstr "步骤2. 解析和规划 Q"
 
 #: ../../getting_started/scql_intro.rst:106
 msgid ""
 "Parser will parse Q into an AST(Abstract Syntax Tree), and then Planner "
 "converts it into a Logical Plan."
-msgstr "解析器将 Q 解析为 AST（抽象语法树），然后规划器将其转换为逻辑计划。"
+msgstr "Parser 将 Q 解析为 AST（抽象语法树），然后 Planner 将其转换为逻辑计划。"
 
 #: ../../getting_started/scql_intro.rst:-1
 msgid "Logical Plan for Q"
@@ -264,7 +264,7 @@ msgid ""
 "Translator needs to retrieve CCL from CCL manager, it will build CCL "
 "along the logical plan and verify the CCL of root node to ensure Q is "
 "legal on data owners' constraints."
-msgstr "翻译器需要从 CCL 管理器检索 CCL，它将根据逻辑计划建立 CCL，并验证根节点的 CCL，以确保 Q 在数据所有者的约束下是合法的。"
+msgstr "Translator 需要从 CCL 管理器检索 CCL，它将根据逻辑计划构建 CCL，并验证根节点的 CCL，以确保 Q 在数据所有者的约束下是合法的。"
 
 #: ../../getting_started/scql_intro.rst:122
 msgid "Step3.2 Translate"
@@ -282,7 +282,7 @@ msgstr ""
 
 #: ../../getting_started/scql_intro.rst:131
 msgid "Step4. Optimize and Split Graph"
-msgstr "步骤4. 优化和拆分图形"
+msgstr "步骤4. 图优化和拆分"
 
 #: ../../getting_started/scql_intro.rst:133
 msgid ""
@@ -290,7 +290,7 @@ msgid ""
 "fusion and replicated node elimination. The optimized execution graph is "
 "still a whole graph, graph splitter will split the whole graph into "
 "subgraphs based on the parties of the nodes."
-msgstr "图优化器将对执行图进行优化，如节点融合和复制节点的消除。优化后的执行图仍然是一个整体图，图拆分器会根据节点的各个参与方将整个图拆分为子图。"
+msgstr "图优化器将对执行图进行优化，如节点融合和重复节点的消除。优化后的执行图仍然是一张整图，图拆分器会根据节点的参与方信息将整图拆分为子图。"
 
 #: ../../getting_started/scql_intro.rst:-1
 msgid "subgraphs"
