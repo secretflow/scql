@@ -285,6 +285,11 @@
         "sql": "select -(plain_long_0 + plain_long_2) * plain_long_1 as res from carol.tbl_1",
         "skip_projection": false,
         "rewritten_sql": "select (-(tbl_1.plain_long_0+tbl_1.plain_long_2))*tbl_1.plain_long_1 as res from carol.tbl_1"
+      },
+      {
+        "sql": "select cos(aggregate_float_0) as a from alice.tbl_1",
+        "skip_projection": false,
+        "rewritten_sql": "select cos(tbl_1.aggregate_float_0) as a from alice.tbl_1"
       }
     ]
   }
