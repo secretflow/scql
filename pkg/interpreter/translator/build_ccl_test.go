@@ -100,7 +100,7 @@ func (s *testCCLSuite) testCheckCCL(c *C, testCase TestCaseCCLString) {
 
 	t, err := NewTranslator(
 		s.engineInfo, &scql.SecurityConfig{ColumnControlList: ccl},
-		s.issuerParty, true)
+		s.issuerParty, true, &SecurityCompromiseConf{RevealGroupMark: false})
 	c.Assert(err, IsNil, comment)
 	// preprocessing lp
 	processor := LpPrePocessor{}

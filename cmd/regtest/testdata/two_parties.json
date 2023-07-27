@@ -316,24 +316,29 @@
       "mysql_query": "select alice.compare_long_0 not in (select compare_long_0 from bob.tbl_0) as not_in_column from alice.tbl_0 as alice where alice.compare_long_0 > 1000;"
     },
     {
-      "name": "agg with group by(long)",
+      "name": "agg with group by(long), private group by",
       "query": "select ta.groupby_long_0, sum(ta.aggregate_long_0) as b, max(ta.aggregate_long_0) as a, min(ta.aggregate_long_0) as d from scdb.alice_tbl_0 as ta join scdb.bob_tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_long_0",
       "mysql_query": "select ta.groupby_long_0, sum(ta.aggregate_long_0) as b, max(ta.aggregate_long_0) as a, min(ta.aggregate_long_0) as d from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_long_0 having count(*) >= 4"
     },
     {
-      "name": "agg with group by(float)",
+      "name": "agg with group by(float), private group by",
       "query": "select ta.groupby_long_0, sum(ta.aggregate_float_0) as b, max(ta.aggregate_float_0 + ta.aggregate_float_0) as a, min(ta.aggregate_float_0) as d from scdb.alice_tbl_0 as ta join scdb.bob_tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_long_0",
       "mysql_query": "select ta.groupby_long_0, sum(ta.aggregate_float_0) as b, max(ta.aggregate_float_0 + ta.aggregate_float_0) as a, min(ta.aggregate_float_0) as d from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_long_0 having count(*) >= 4"
     },
     {
-      "name": "agg with group by(string)",
+      "name": "agg with group by(string), private group by",
       "query": "select ta.groupby_string_0, count(*) as c from scdb.alice_tbl_0 as ta join scdb.bob_tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_string_0",
       "mysql_query": "select ta.groupby_string_0, count(*) as c from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_string_0 having count(*) >= 4"
     },
     {
-      "name": "agg with group by(string2)",
+      "name": "agg with group by(string2), oblivious group by",
       "query": "select ta.groupby_string_0,tb.groupby_string_0, count(*) as c from scdb.alice_tbl_0 as ta join scdb.bob_tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_string_0,tb.groupby_string_0",
       "mysql_query": "select ta.groupby_string_0,tb.groupby_string_0, count(*) as c from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_string_0,tb.groupby_string_0 having count(*) >= 4"
+    },
+    {
+      "name": "he group by",
+      "query": "select ta.groupby_string_0, sum(tb.aggregate_long_0) as sl, sum(tb.aggregate_float_0) as sf, sum(ta.compare_long_0 > tb.compare_long_0) as sc, count(tb.encrypt_long_0) as c from scdb.alice_tbl_0 as ta join scdb.bob_tbl_0 as tb on ta.join_long_0 = tb.join_long_0 group by ta.groupby_string_0",
+      "mysql_query": "select ta.groupby_string_0, sum(tb.aggregate_long_0) as sl, sum(tb.aggregate_float_0) as sf, sum(ta.compare_long_0 > tb.compare_long_0) as sc, count(tb.encrypt_long_0) as c from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_long_0 = tb.join_long_0 group by ta.groupby_string_0 having count(*) >= 4;"
     },
     {
       "name": "select plain data from another party",

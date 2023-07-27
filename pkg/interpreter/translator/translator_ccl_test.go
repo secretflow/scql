@@ -44,7 +44,7 @@ func (s *testTranslatorSuite) TestTranslateWithCCL(c *C) {
 
 		t, err := NewTranslator(
 			s.engineInfo, &scql.SecurityConfig{ColumnControlList: ccl},
-			s.issuerParty, true)
+			s.issuerParty, true, &SecurityCompromiseConf{RevealGroupMark: false})
 		c.Assert(err, IsNil)
 		ep, err := t.Translate(lp)
 		c.Assert(err, IsNil, Commentf("for %s", sql))
@@ -76,7 +76,7 @@ func (s *testTranslatorSuite) TestBuildCCL(c *C) {
 
 		t, err := NewTranslator(
 			s.engineInfo, &scql.SecurityConfig{ColumnControlList: ccl},
-			s.issuerParty, false)
+			s.issuerParty, false, &SecurityCompromiseConf{RevealGroupMark: false})
 		c.Assert(err, IsNil)
 		builder, err := newLogicalNodeBuilder(t.issuerPartyCode, t.enginesInfo, convertOriginalCCL(t.sc))
 		if err != nil {

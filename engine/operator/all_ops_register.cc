@@ -27,6 +27,7 @@
 #include "engine/operator/filter_by_index.h"
 #include "engine/operator/group.h"
 #include "engine/operator/group_agg.h"
+#include "engine/operator/group_he_sum.h"
 #include "engine/operator/in.h"
 #include "engine/operator/join.h"
 #include "engine/operator/logical.h"
@@ -113,6 +114,7 @@ void RegisterAllOpsImpl() {
   ADD_OPERATOR_TO_REGISTRY(GroupAvg);
   ADD_OPERATOR_TO_REGISTRY(GroupMin);
   ADD_OPERATOR_TO_REGISTRY(GroupMax);
+  ADD_OPERATOR_TO_REGISTRY(GroupHeSum);
 
   // oblivious groupby
   ADD_OPERATOR_TO_REGISTRY(ObliviousGroupMark);

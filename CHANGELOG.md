@@ -20,13 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+ - Speed up GROUP BY with HEU in some scenarios.
+
 ### Fixed
-
-## [0.1.0] - 2023-03-28
-
-### Added
-
- - SCQL init release
 
 ## [0.2.0] - 2023-07-05
 
@@ -55,3 +51,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed create database failed [#19](https://github.com/secretflow/scql/issues/19).
 - Fixed not support group by string[#48](https://github.com/secretflow/scql/pull/48).
+
+## [0.1.0] - 2023-03-28
+
+### Added
+
+ - SCQL init release

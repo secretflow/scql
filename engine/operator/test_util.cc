@@ -291,8 +291,17 @@ void RunOpAsync(const std::vector<ExecContext*>& exec_ctxs,
         exec_ctxs[idx]);
   }
 
+  bool is_throw = false;
   for (size_t idx = 0; idx < futures.size(); ++idx) {
-    futures[idx].wait();
+    try {
+      futures[idx].get();
+    } catch (const std::exception& e) {
+      SPDLOG_ERROR("catch throw for idx={}, exception={}", idx, e.what());
+      is_throw = true;
+    }
+  }
+  if (is_throw) {
+    YACL_THROW("op async err");
   }
 }
 
