@@ -3,6 +3,7 @@
 # This file is distributed under the same license as the SCQL package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
 #
+#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
@@ -27,6 +28,7 @@ msgid "Overview"
 msgstr "概述"
 
 #: ../../development/integrate_scql_system.rst:7
+#, fuzzy
 msgid "As shown in FIG, SCQL System needs to work with **Client** and **GRM** :"
 msgstr "如图所示，SCQL 系统需要与 **客户端（Client）** 和 **全局资源管理器（GRM）**配合工作："
 
@@ -113,6 +115,7 @@ msgid "SCQL uses rpc API to communicate with GRM:"
 msgstr "SCQL 使用 rpc API 与全局资源管理器（GRM）通信："
 
 #: ../../development/integrate_scql_system.rst:44
+#, fuzzy
 msgid ""
 "``/GetTableMeta``: fetch metadata of table, GRM server should listen on "
 "``${GRMServerHost}/GetTableMeta``"
@@ -121,6 +124,7 @@ msgstr ""
 "``${GRMServerHost}/GetTableMeta``"
 
 #: ../../development/integrate_scql_system.rst:45
+#, fuzzy
 msgid ""
 "``/GetEngines``: get endpoints for specific SCQLEngines(parties), GRM "
 "server should listen on ``${GRMServerHost}/GetEngines``"
@@ -129,6 +133,7 @@ msgstr ""
 "``${GRMServerHost}/GetEngines``"
 
 #: ../../development/integrate_scql_system.rst:46
+#, fuzzy
 msgid ""
 "``/VerifyTableOwnership``: check whether user has ownership of table, GRM"
 " server should listen on ``${GRMServerHost}/VerifyTableOwnership``"
@@ -145,3 +150,4 @@ msgid ""
 "The custom GRM Server needs to support above services corresponding to "
 "the GRM API."
 msgstr "自定义的全局资源管理器服务器（Custom GRM server）需要支持上述与 GRM API 对应的服务。"
+

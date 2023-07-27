@@ -66,5 +66,5 @@ Data Source
 | CSV           | partial                     | Data stored in csv files |
 +---------------+-----------------------------+--------------------------+
 
-.. warning::
+.. warning:: 
     SCQL supports different databases as data source, but there may be minor differences in the results due to data type differences built in databases. Please choose backend database with caution.

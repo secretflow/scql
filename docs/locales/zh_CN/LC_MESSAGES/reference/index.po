@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the SCQL package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
 #
-
+#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
@@ -21,4 +21,5 @@ msgstr ""
 
 #: ../../reference/index.rst:4
 msgid "Reference"
-msgstr "Reference"
+msgstr ""
+

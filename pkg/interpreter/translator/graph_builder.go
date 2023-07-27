@@ -1084,3 +1084,41 @@ func (plan *GraphBuilder) AddGroupAggNode(name string, opType string, groupId, g
 	}
 	return outputs, nil
 }
+
+func (plan *GraphBuilder) AddGroupHeSumNode(name string, groupId, groupNum, in *Tensor, groupParty, inParty string) (*Tensor, error) {
+	partyAttr := &Attribute{}
+	partyAttr.SetStrings([]string{groupParty, inParty})
+
+	placement := &privatePlacement{partyCode: groupParty}
+	groupIdP, err := plan.converter.convertTo(groupId, placement)
+	if err != nil {
+		return nil, fmt.Errorf("AddGroupHeSumNode: name %v, convert group id err: %v", name, err)
+	}
+	groupNumP, err := plan.converter.convertTo(groupNum, placement)
+	if err != nil {
+		return nil, fmt.Errorf("AddGroupHeSumNode: name %v, convert group num err: %v", name, err)
+	}
+	placement = &privatePlacement{partyCode: inParty}
+	inP, err := plan.converter.convertTo(in, placement)
+	if err != nil {
+		return nil, fmt.Errorf("AddGroupHeSumNode: name %v, convert agg err: %v", name, err)
+	}
+
+	output := plan.AddTensorAs(in)
+	output.Name = output.Name + "_sum"
+	if isFloatOrDoubleType(in.DType) {
+		output.DType = proto.PrimitiveDataType_FLOAT64
+	} else {
+		output.DType = proto.PrimitiveDataType_INT64
+	}
+	if _, err := plan.AddExecutionNode(name, operator.OpNameGroupHeSum,
+		map[string][]*Tensor{
+			"GroupId":  {groupIdP},
+			"GroupNum": {groupNumP},
+			"In":       {inP},
+		}, map[string][]*Tensor{"Out": {output}},
+		map[string]*Attribute{operator.InputPartyCodesAttr: partyAttr}, []string{groupParty, inParty}); err != nil {
+		return nil, fmt.Errorf("AddGroupHeSumNode: name %v, opType %v, err %v", name, operator.OpNameGroupHeSum, err)
+	}
+	return output, nil
+}

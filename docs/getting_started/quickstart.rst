@@ -96,7 +96,7 @@ Create database, user and tables
     | demo     |
     +----------+
     # create user "alice" with password "some_password" for party "alice"
-    # note: if you want to use a custom password,
+    # note: if you want to use a custom password, 
     # please ensure it is consistent with the one configured in `examples/docker-compose/client/users.json`
     root> create user alice PARTY_CODE "alice" IDENTIFIED BY "some_password"
     [fetch] OK for DDL/DCL

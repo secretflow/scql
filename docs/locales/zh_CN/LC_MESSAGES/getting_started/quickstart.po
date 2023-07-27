@@ -3,6 +3,7 @@
 # This file is distributed under the same license as the SCQL package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
 #
+#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
@@ -20,7 +21,7 @@ msgstr ""
 
 #: ../../getting_started/quickstart.rst:2
 msgid "Quickstart"
-msgstr "快速开始"
+msgstr "快速入门"
 
 #: ../../getting_started/quickstart.rst:5
 msgid "TL;DR"
@@ -71,13 +72,6 @@ msgid ""
 "sure to manually replace these tokens to ensure scdbclient get right "
 "tokens."
 msgstr ""
-"register.sh 脚本会用随机的字符串替代 "
-"`examples/docker-compose/client/users.json "
-"<https://github.com/secretflow/scql/tree/main/examples/docker-"
-"compose/client/users.json>`_ 中的 ``__ALICE_TOKEN__`` 以及 "
-"`examples/docker-compose/scdb/conf/toy_grm.json "
-"<https://github.com/secretflow/scql/tree/main/examples/docker-"
-"compose/scdb/conf/toy_grm.json>`_ 中的 ``__BOB_TOKEN__``"
 
 #: ../../getting_started/quickstart.rst:42
 msgid "Start SCQL Service"
@@ -152,3 +146,4 @@ msgstr "授权 CCL"
 #: ../../getting_started/quickstart.rst:206
 msgid "Do query"
 msgstr "查询"
+

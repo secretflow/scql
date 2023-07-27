@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+ - Speed up GROUP BY with HEU in some scenarios.
+
 ### Fixed
 
 ## [0.1.0] - 2023-03-28
@@ -28,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
  - SCQL init release
 
-## [0.2.0] - 2023-07-05
+## [0.2.0] - 2023-06-30
 
 ### Changed
 

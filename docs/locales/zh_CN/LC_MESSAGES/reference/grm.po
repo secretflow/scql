@@ -3,6 +3,7 @@
 # This file is distributed under the same license as the SCQL package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
 #
+#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
@@ -86,6 +87,7 @@ msgstr ""
 " 调用"
 
 #: ../../reference/grm.rst:34
+#, fuzzy
 msgid "/VerifyTableOwnership"
 msgstr "/VerifyTableOwnership"
 
@@ -255,6 +257,7 @@ msgid "Example"
 msgstr "示例"
 
 #: ../../reference/grm.rst:103
+#, fuzzy
 msgid "/GetTableMeta"
 msgstr "/GetTableMeta"
 
@@ -325,8 +328,9 @@ msgid "The column information in the table"
 msgstr "表中的列信息"
 
 #: ../../reference/grm.rst:143
+#, fuzzy
 msgid "db_type"
-msgstr "db_type"
+msgstr "type"
 
 #: ../../reference/grm.rst:143
 msgid "DataSourceKind_"
@@ -421,6 +425,7 @@ msgid "response"
 msgstr "响应"
 
 #: ../../reference/grm.rst:220
+#, fuzzy
 msgid "/GetEngines"
 msgstr "/GetEngines"
 
@@ -436,6 +441,7 @@ msgstr "party_codes"
 
 #: ../../reference/grm.rst:230 ../../reference/grm.rst:252
 #: ../../reference/grm.rst:254
+#, fuzzy
 msgid "string list"
 msgstr "string list"
 
@@ -444,14 +450,17 @@ msgid "Parties whose SCQLEngine info need to be obtained"
 msgstr "需要获得 SCQL 引擎信息的参与方"
 
 #: ../../reference/grm.rst:232
+#, fuzzy
 msgid "Token used to authenticate the user"
 msgstr "用来验证用户身份的 token"
 
 #: ../../reference/grm.rst:243
+#, fuzzy
 msgid "engine_infos"
 msgstr "engine_infos"
 
 #: ../../reference/grm.rst:243
+#, fuzzy
 msgid "EngineInfo_ list"
 msgstr "EngineInfo_ list"
 
@@ -553,3 +562,4 @@ msgstr "用于 SCQL 引擎验证 SCDB 身份的凭证"
 
 #~ msgid "message"
 #~ msgstr ""
+

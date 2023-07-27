@@ -156,7 +156,7 @@ func (app *App) compile(lpInfo *LogicalPlanInfo, s *session) (*ExecutionPlanInfo
 			ColumnControlList: lpInfo.ccls,
 		},
 		lpInfo.issuer,
-		s.skipDbName)
+		s.skipDbName, &app.config.SecurityCompromise)
 	if err != nil {
 		return nil, fmt.Errorf("error when translating from logical plan to execution plan: %v", err)
 	}

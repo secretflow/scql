@@ -16,9 +16,11 @@ load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
+
 SECRETFLOW_GROUP_GIT = "https://github.com/secretflow"
 
 SPU_GIT = "https://github.com/secretflow/spu.git"
+
 
 def engine_deps():
     _com_github_nelhage_rules_boost()
@@ -45,8 +47,14 @@ def engine_deps():
     maybe(
         git_repository,
         name = "spulib",
-        tag = "0.4.1b1",
+        tag = "0.4.1a0",
         remote = SPU_GIT,
+    )
+    maybe(
+        git_repository,
+        name = "com_alipay_sf_heu",
+        tag = "v0.4.4b0",
+        remote = "https://github.com/secretflow/heu.git",
     )
 
 def _org_apache_arrow():

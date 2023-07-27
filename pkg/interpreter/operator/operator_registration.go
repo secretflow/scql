@@ -621,7 +621,7 @@ GroupNum = {3}
 				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 			opDef.AddOutput("Out", "Output data tensors(shape [K][1], K equals to number of groups), Out[i] is the agg result for i-th group.",
 				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
-			opDef.SetDefinition("Definition: Aggregate `Data` for each group." + fmt.Sprintf(`
+			opDef.SetDefinition("Definition: Aggregate `In` for each group." + fmt.Sprintf(`
 Example:
 `+"\n```python"+`
 GroupId = {0, 1, 0, 1, 2}
@@ -633,6 +633,31 @@ Out = %s
 			check(opDef.err)
 			AllOpDef = append(AllOpDef, opDef)
 		}
+	}
+
+	{
+		opDef := &OperatorDef{}
+		opDef.SetName(OpNameGroupHeSum)
+		opDef.AddInput("GroupId", "Input group id vector(shape [M][1]).",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.AddInput("GroupNum", "Input number of groups vector(shape [1][1]).",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.AddInput("In", "Input data tensor(shape [M][1]).",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.AddOutput("Out", "Output data tensors(shape [K][1], K equals to number of groups), Out[i] is the agg result for i-th group.",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.AddAttribute(InputPartyCodesAttr, "List of parties the inputs belong to([PartyCodeForGroupId/Num, PartyCodeForIn]).")
+		opDef.SetDefinition(`Definition: Using HE to sum 'In' for each group.
+Example:
+` + "\n```python" + `
+GroupId = {0, 1, 0, 1, 2}
+GroupNum = {3}
+In = {0, 1, 2, 3, 4}
+Out = {2, 4, 4}
+` + "```\n")
+		opDef.SetParamTypeConstraint(T, statusPrivate)
+		check(opDef.err)
+		AllOpDef = append(AllOpDef, opDef)
 	}
 }
 

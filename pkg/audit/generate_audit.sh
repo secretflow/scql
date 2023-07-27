@@ -19,3 +19,4 @@ bazel build //pkg/audit:audit_go_proto
 mkdir -p pkg/proto-gen/audit
 proto_gen_package=github.com/secretflow/scql/pkg/proto-gen
 cp -f bazel-bin/pkg/audit/audit_go_proto_/${proto_gen_package}/audit/* pkg/proto-gen/audit
+

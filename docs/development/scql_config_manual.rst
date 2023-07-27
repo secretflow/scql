@@ -354,9 +354,9 @@ datasources in embed_router_conf contain informations for connecting MySQL/SQLit
       "file:data_test.db?mode=memory&cache=shared"
 
     PostgreSQL Connection string format:
-      <str> == <assignment> | <assignment> ' ' <str>
+      <str> == <assignment> | <assignment> ' ' <str> 
       <assignment> == <name> '=' <value>
-      <name> == 'host' | 'port' | 'user' | 'password' | 'dbname' | 'connect_timeout'
+      <name> == 'host' | 'port' | 'user' | 'password' | 'dbname' | 'connect_timeout' 
       <value> == [~;]*
 
     PostgreSQL Connection string e.g:

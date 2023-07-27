@@ -26,6 +26,13 @@ load("@spulib//bazel:repositories.bzl", "spu_deps")
 spu_deps()
 
 #
+# heu
+#
+load("@com_alipay_sf_heu//third_party/bazel_cpp:repositories.bzl", "heu_cpp_deps")
+
+heu_cpp_deps()
+
+#
 # yacl
 #
 load("@yacl//bazel:repositories.bzl", "yacl_deps")

@@ -66,6 +66,7 @@ const (
 	OpNameGroupMin           string = "GroupMin"
 	OpNameGroupMax           string = "GroupMax"
 	OpNameGroupFirstOf       string = "GroupFirstOf"
+	OpNameGroupHeSum         string = "GroupHeSum"
 
 	OpNameUnique              string = "Unique"
 	OpNameShape               string = "Shape"
@@ -84,7 +85,7 @@ const (
 const (
 	// RevealToAttr, used by MakePrivateOp, PSI_In
 	RevealToAttr = `reveal_to`
-	// InputPartyCodesAttr, used by PSI_In/Join/Replicate/Copy
+	// InputPartyCodesAttr, used by PSI_In/Join/Replicate/Copy/HeSum
 	InputPartyCodesAttr = `input_party_codes`
 	// used by Copy
 	OutputPartyCodesAttr = `output_party_codes`

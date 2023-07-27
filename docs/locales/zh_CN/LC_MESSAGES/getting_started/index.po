@@ -3,6 +3,7 @@
 # This file is distributed under the same license as the SCQL package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
 #
+#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
@@ -20,32 +21,31 @@ msgstr ""
 
 #: ../../getting_started/index.rst:4
 msgid "Getting started"
-msgstr "Getting started"
+msgstr ""
 
 #: ../../getting_started/index.rst:6
 msgid "New to SCQL? This is the Beginner's Guide."
-msgstr "本文档主要用于初学者指南"
+msgstr ""
 
 #: ../../getting_started/index.rst:8
 msgid ""
 "If you don't know anything about SCQL, please read "
 ":ref:`/getting_started/scql_intro.rst` first."
 msgstr ""
-"如果你对 SCQL 系统不了解，请阅读 "
-":ref:`/getting_started/scql_intro.rst`."
 
 #: ../../getting_started/index.rst:10
 msgid ""
 "After that, you can follow :ref:`/getting_started/quickstart.rst` to get "
 "started with SCQL."
-msgstr "在了解完 SCQL 系统后，你可以按照 :ref:`/getting_started/quickstart.rst` 中的指南，快速上手 SCQL 系统"
+msgstr ""
 
 #: ../../getting_started/index.rst:12
 msgid "For all SCQL users, please check :ref:`/reference/index.rst` for details."
-msgstr "你可以通过阅读 :ref:`/reference/index.rst` 以了解更多"
+msgstr ""
 
 #: ../../getting_started/index.rst:14
 msgid ""
 "For advanced users and contributors, we encourage you to investigate "
 ":ref:`/development/index.rst`."
-msgstr "对于高级用户和贡献者，我们推荐你阅读 :ref:`/development/index.rst` 以了解更多有关 SCQL 的设计。"
+msgstr ""
+

@@ -121,8 +121,6 @@ func (c ExprConverter) convertScalarFunction(dialect format.Dialect, expr *Scala
 		return &ast.FuncCallExpr{FnName: model.NewCIStr(dialect.GetSpecialFuncName(ast.Ifnull)), Args: children}, nil
 	case ast.If:
 		return &ast.FuncCallExpr{FnName: model.NewCIStr(ast.If), Args: children}, nil
-	case ast.Cos:
-		return &ast.FuncCallExpr{FnName: model.NewCIStr(expr.FuncName.L), Args: children}, nil
 	}
 	switch expr.Function.(type) {
 	case *builtinUnaryMinusDecimalSig, *builtinUnaryMinusIntSig, *builtinUnaryMinusRealSig:

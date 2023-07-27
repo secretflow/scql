@@ -2587,3 +2587,6 @@ INSERT INTO tbl_3 VALUES (-74, -86, -61, 70, -27, -21);
 INSERT INTO tbl_3 VALUES (-99, -21, 71, 47, 30, -19);
 INSERT INTO tbl_3 VALUES (28, -88, 77, -80, 3, 29);
 INSERT INTO tbl_3 VALUES (63, -6, -52, 35, -59, -5);
+
+
+

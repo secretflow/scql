@@ -102,7 +102,7 @@ Response
 /GetTableMeta
 -------------
 
-During creating table, after ensuring the ownership, SCQL needs to Get table schema from grm service.
+During creating table, after ensuring the ownership, SCQL needs to Get table schema from grm service. 
 
 Request
 ^^^^^^^
