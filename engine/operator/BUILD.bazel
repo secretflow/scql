@@ -30,6 +30,7 @@ cc_library(
         ":filter_by_index",
         ":group",
         ":group_agg",
+        ":group_he_sum",
         ":in",
         ":join",
         ":logical",
@@ -692,6 +693,30 @@ cc_test(
     deps = [
         ":all_ops_register",
         ":group_agg",
+        ":test_util",
+        "//engine/core:tensor_from_json",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "group_he_sum",
+    srcs = ["group_he_sum.cc"],
+    hdrs = ["group_he_sum.h"],
+    deps = [
+        "//engine/framework:operator",
+        "//engine/util:spu_io",
+        "//engine/util:tensor_util",
+        "@com_alipay_sf_heu//heu/library/numpy",
+        "@com_github_gflags_gflags//:gflags",
+    ],
+)
+
+cc_test(
+    name = "group_he_sum_test",
+    srcs = ["group_he_sum_test.cc"],
+    deps = [
+        ":group_he_sum",
         ":test_util",
         "//engine/core:tensor_from_json",
         "@com_google_googletest//:gtest_main",

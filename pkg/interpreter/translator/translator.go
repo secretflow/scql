@@ -57,14 +57,19 @@ type translator struct {
 	enginesInfo     *EnginesInfo
 	sc              *proto.SecurityConfig
 	// if true, table in RunSQL string will skip database name
-	skipDbName bool
+	skipDbName         bool
+	securityCompromise *SecurityCompromiseConf
+}
+
+type SecurityCompromiseConf struct {
+	RevealGroupMark bool `yaml:"reveal_group_mark"`
 }
 
 func NewTranslator(
 	enginesInfo *EnginesInfo,
 	sc *proto.SecurityConfig,
 	issuerPartyCode string,
-	skipDbName bool) (
+	skipDbName bool, securityCompromise *SecurityCompromiseConf) (
 	*translator, error) {
 	if sc == nil {
 		return nil, fmt.Errorf("translate: empty CCL")
@@ -82,11 +87,12 @@ func NewTranslator(
 		}
 	}
 	return &translator{
-		ep:              NewGraphBuilder(enginesInfo.partyInfo),
-		issuerPartyCode: issuerPartyCode,
-		sc:              newSc,
-		enginesInfo:     enginesInfo,
-		skipDbName:      skipDbName,
+		ep:                 NewGraphBuilder(enginesInfo.partyInfo),
+		issuerPartyCode:    issuerPartyCode,
+		sc:                 newSc,
+		enginesInfo:        enginesInfo,
+		skipDbName:         skipDbName,
+		securityCompromise: securityCompromise,
 	}, nil
 }
 

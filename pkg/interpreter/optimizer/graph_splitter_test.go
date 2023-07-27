@@ -131,7 +131,7 @@ func TestSplitComplex(t *testing.T) {
 	lp, _, err := core.BuildLogicalPlanWithOptimization(context.Background(), ctx, stmt, is)
 	r.NoError(err)
 
-	trans, err := translator.NewTranslator(info, &proto.SecurityConfig{ColumnControlList: ccl}, "alice", true)
+	trans, err := translator.NewTranslator(info, &proto.SecurityConfig{ColumnControlList: ccl}, "alice", true, &translator.SecurityCompromiseConf{RevealGroupMark: false})
 	r.NoError(err)
 	ep, err := trans.Translate(lp)
 	r.Nil(err)

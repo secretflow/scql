@@ -583,7 +583,7 @@ func (t *translator) buildAggregation(ln *AggregationNode) (err error) {
 }
 
 func (t *translator) buildGroupAggregation(ln *AggregationNode) (err error) {
-	party, err := t.findPartySeeingAll(ln)
+	party, err := t.findPartyHandleAll(ln)
 	if err != nil {
 		return fmt.Errorf("buildGroupAggregation: %v", err)
 	}
@@ -594,12 +594,15 @@ func (t *translator) buildGroupAggregation(ln *AggregationNode) (err error) {
 	}
 }
 
-// find a party who owns plaintext ccl for all group-by keys and agg items, return "" if not exist
-// NOTE(jingshi): currently only private string is supported in private group by
-func (t *translator) findPartySeeingAll(ln *AggregationNode) (string, error) {
+// find a party who:
+//  1. owns plaintext ccl for all group-by keys so it can calculate the group id;
+//  2. can handle all aggs: a) agg with plaintext ccl; b) simple count; c) HE suitable;
+//
+// return "" if not exist
+func (t *translator) findPartyHandleAll(ln *AggregationNode) (string, error) {
 	agg, ok := ln.lp.(*core.LogicalAggregation)
 	if !ok {
-		return "", fmt.Errorf("findPartySeeingAll: assert failed expected *core.LogicalAggregation, get %T", ln.LP())
+		return "", fmt.Errorf("findPartyHandleAll: assert failed expected *core.LogicalAggregation, get %T", ln.LP())
 	}
 	child := ln.Children()[0]
 
@@ -611,7 +614,7 @@ func (t *translator) findPartySeeingAll(ln *AggregationNode) (string, error) {
 	for _, item := range agg.GroupByItems {
 		cc, err := ccl.InferExpressionCCL(item, child.CCL())
 		if err != nil {
-			return "", fmt.Errorf("findPartySeeingAll: %v", err)
+			return "", fmt.Errorf("findPartyHandleAll: %v", err)
 		}
 		for _, pc := range t.ep.partyInfo.GetParties() {
 			if !cc.IsVisibleFor(pc) {
@@ -622,22 +625,22 @@ func (t *translator) findPartySeeingAll(ln *AggregationNode) (string, error) {
 	// filter with agg items
 	partyCandidateSlice := sliceutil.SortMapKeyForDeterminism(partyCandidate)
 	for _, party_candidate := range partyCandidateSlice {
-		areAggsVisible := true
+		canHandleAggs := true
 		for _, aggFunc := range agg.AggFuncs {
 			if len(aggFunc.Args) != 1 {
-				return "", fmt.Errorf("findPartySeeingAll: args length > 1 for %v", aggFunc)
+				return "", fmt.Errorf("findPartyHandleAll: args length > 1 for %v", aggFunc)
 			}
 			cc, err := ccl.InferExpressionCCL(aggFunc.Args[0], child.CCL())
 			if err != nil {
-				return "", fmt.Errorf("findPartySeeingAll: %v", err)
+				return "", fmt.Errorf("findPartyHandleAll: %v", err)
 			}
 
-			if !cc.IsVisibleFor(party_candidate) {
-				areAggsVisible = false
+			if !cc.IsVisibleFor(party_candidate) && !isSimpleCount(aggFunc) && !isHeSuitable(aggFunc, cc) {
+				canHandleAggs = false
 				break
 			}
 		}
-		if areAggsVisible {
+		if canHandleAggs {
 			return party_candidate, nil
 		}
 	}
@@ -678,8 +681,8 @@ func (t *translator) buildPrivateGroupAggregation(ln *AggregationNode, party str
 		if len(aggFunc.Args) != 1 {
 			return fmt.Errorf("buildPrivateGroupAggregation: unsupported aggregation function %v, expect len(aggFunc.Args)=1, but got %v", aggFunc, len(aggFunc.Args))
 		}
-		// deal with complete count, except count(distinct)
-		if aggFunc.Name == ast.AggFuncCount && aggFunc.Mode == aggregation.CompleteMode && !aggFunc.HasDistinct {
+		// deal with simple count, which no need to buildExpression
+		if isSimpleCount(aggFunc) {
 			outputs, err := t.ep.AddGroupAggNode(ast.AggFuncCount, operator.OpNameGroupCount, groupId, groupNum, []*Tensor{groupId}, party)
 			if err != nil {
 				return fmt.Errorf("buildPrivateGroupAggregation: count(*): %v", err)
@@ -719,12 +722,35 @@ func (t *translator) buildPrivateGroupAggregation(ln *AggregationNode, party str
 			default:
 				return fmt.Errorf("buildPrivateGroupAggregation: aggFunc.Mode %v", aggFunc.Mode)
 			}
-		case ast.AggFuncFirstRow, ast.AggFuncSum, ast.AggFuncMin, ast.AggFuncMax, ast.AggFuncAvg:
+		case ast.AggFuncFirstRow, ast.AggFuncMin, ast.AggFuncMax, ast.AggFuncAvg:
 			outputs, err := t.ep.AddGroupAggNode(aggFunc.Name, operator.GroupAggOp[aggFunc.Name], groupId, groupNum, []*Tensor{colT}, party)
 			if err != nil {
 				return fmt.Errorf("buildPrivateGroupAggregation: %v", err)
 			}
 			colIdToTensor[ln.Schema().Columns[i].UniqueID] = outputs[0]
+		case ast.AggFuncSum: // deal with agg which may run in HE
+			if colT.cc.IsVisibleFor(party) {
+				outputs, err := t.ep.AddGroupAggNode(ast.AggFuncSum, operator.OpNameGroupSum, groupId, groupNum, []*Tensor{colT}, party)
+				if err != nil {
+					return fmt.Errorf("buildPrivateGroupAggregation: %v", err)
+				}
+				colIdToTensor[ln.Schema().Columns[i].UniqueID] = outputs[0]
+			} else {
+				// run in HE
+				var colTParty string
+				if colT.status() == proto.TensorStatus_TENSORSTATUS_PRIVATE {
+					// If colT is Private Tensor, encrypt colT in colT.OwnerPartyCode to avoid colT's copying
+					colTParty = colT.OwnerPartyCode
+				} else {
+					colTParty = colT.cc.GetVisibleParties()[0]
+				}
+				output, err := t.ep.AddGroupHeSumNode("he_sum", groupId, groupNum, colT, party, colTParty)
+				if err != nil {
+					return fmt.Errorf("buildPrivateGroupAggregation: %v", err)
+				}
+				colIdToTensor[ln.Schema().Columns[i].UniqueID] = output
+			}
+
 		default:
 			return fmt.Errorf("buildPrivateGroupAggregation: unsupported aggregation function %v", aggFunc)
 		}
@@ -786,6 +812,7 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 	if err != nil {
 		return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 	}
+
 	// add agg funcs
 	colIdToTensor := map[int64]*Tensor{}
 	for i, aggFunc := range agg.AggFuncs {
@@ -881,23 +908,27 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 	if err != nil {
 		return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 	}
-	// shuffle group mark
-	rt = append(rt, groupMark)
-	rtShuffled, err := t.ep.AddShuffleNode("shuffle", rt)
-	if err != nil {
-		return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+
+	// TODO(jingshi): temporary remove shuffle here for simplicity, make group_mark public and support aggregation with public group_mark later for efficiency
+	if !t.securityCompromise.RevealGroupMark {
+		// shuffle and replace 'rt' and 'groupMark'
+		shuffled, err := t.ep.AddShuffleNode("shuffle", append(rt, groupMark))
+		if err != nil {
+			return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+		}
+		rt, groupMark = shuffled[:len(rt)], shuffled[len(rt)]
 	}
-	rtShuffled, groupMarkShuffled := rtShuffled[:len(rt)-1], rtShuffled[len(rt)-1]
-	// set ccl plain after group mark shuffled
+
+	// set ccl plain if enabled revealGroupMark or after groupMark shuffled
 	for _, p := range t.enginesInfo.partyInfo.GetParties() {
-		groupMarkShuffled.cc.SetLevelForParty(p, ccl.Plain)
+		groupMark.cc.SetLevelForParty(p, ccl.Plain)
 	}
-	groupMarkPub, err := t.ep.converter.convertTo(groupMarkShuffled, &publicPlacement{partyCodes: t.enginesInfo.partyInfo.GetParties()})
+	groupMarkPub, err := t.ep.converter.convertTo(groupMark, &publicPlacement{partyCodes: t.enginesInfo.partyInfo.GetParties()})
 	if err != nil {
 		return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 	}
 	// filter
-	rtFiltered, err := t.ep.AddFilterNode("filter", rtShuffled, groupMarkPub, t.enginesInfo.partyInfo.GetParties())
+	rtFiltered, err := t.ep.AddFilterNode("filter", rt, groupMarkPub, t.enginesInfo.partyInfo.GetParties())
 	if err != nil {
 		return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 	}
@@ -929,4 +960,20 @@ func (t *translator) buildUnion(ln *UnionAllNode) (err error) {
 	}
 
 	return nil
+}
+
+// simpleCount means Complete Count, except count(distinct), e.g: count(colA), count(*), count(1)...
+func isSimpleCount(aggFunc *aggregation.AggFuncDesc) bool {
+	return aggFunc.Name == ast.AggFuncCount && aggFunc.Mode == aggregation.CompleteMode && !aggFunc.HasDistinct
+}
+
+// currently HE only support agg: SUM
+func isHeSuitable(aggFunc *aggregation.AggFuncDesc, cc *ccl.CCL) bool {
+	switch aggFunc.Name {
+	case ast.AggFuncSum:
+		parties := cc.GetVisibleParties()
+		return len(parties) > 0
+	default:
+		return false
+	}
 }
