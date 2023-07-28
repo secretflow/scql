@@ -24,6 +24,8 @@ Example for SCDB
   session_expire_check_time: 100ms
   password_check: true
   log_level: debug
+  security_compromise:
+    reveal_group_mark: false
   storage:
     type: mysql
     conn_str: user_name:pass_word@tcp(127.0.0.1:3306)/db_name?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true
@@ -48,61 +50,79 @@ Example for SCDB
 Config in SCDB
 --------------
 
-+-------------------------------+---------+------------------------------------------------------------+
-| Name                          | Default | Description                                                |
-+===============================+=========+============================================================+
-| scdb_host                     | none    | The callback URL for the engine to notify SCDB             |
-+-------------------------------+---------+------------------------------------------------------------+
-| port                          | none    | The listening port of the SCDB server                      |
-+-------------------------------+---------+------------------------------------------------------------+
-| protocol                      | http    | The transfer protocol of SCDB server, supports HTTP/HTTPS  |
-+-------------------------------+---------+------------------------------------------------------------+
-| query_result_callback_timeout | 200ms   | Timeout for SCDB to notify the query result                |
-+-------------------------------+---------+------------------------------------------------------------+
-| session_expire_time           | 48h     | The expiration duration of a session                       |
-+-------------------------------+---------+------------------------------------------------------------+
-| session_expire_check_time     | 1h      | The cleanup interval of expired session                    |
-+-------------------------------+---------+------------------------------------------------------------+
-| password_check                | true    | Whether to validate password strength when create a user   |
-+-------------------------------+---------+------------------------------------------------------------+
-| log_level                     | info    | The type and severity of a logged event                    |
-+-------------------------------+---------+------------------------------------------------------------+
-| tls.cert_file                 | none    | Certificate file path to enable TSL, supports crt/pem type |
-+-------------------------------+---------+------------------------------------------------------------+
-| tls.key_file                  | none    | Private key file path to enable TSL, supports key/pem type |
-+-------------------------------+---------+------------------------------------------------------------+
-| storage.type                  | none    | Database kind in SCDB, supports MYSQL/SQLite3              |
-+-------------------------------+---------+------------------------------------------------------------+
-| storage.conn_str              | none    | Used to connect to a database                              |
-+-------------------------------+---------+------------------------------------------------------------+
-| storage.max_idle_conns        | 1       | Maximum number of connections in idle connection pool      |
-+-------------------------------+---------+------------------------------------------------------------+
-| storage.max_open_conns        | 1       | Maximum number of open connections to the database         |
-+-------------------------------+---------+------------------------------------------------------------+
-| storage.conn_max_idle_time    | -1s     | Maximum amount of time a connection may be idle            |
-+-------------------------------+---------+------------------------------------------------------------+
-| storage.conn_max_lifetime     | -1s     | Maximum amount of time a connection may be reused          |
-+-------------------------------+---------+------------------------------------------------------------+
-| grm.grm_mode                  | none    | The grm service type, support toygrm/stdgrm                |
-+-------------------------------+---------+------------------------------------------------------------+
-| grm.host                      | none    | The host of stdgrm                                         |
-+-------------------------------+---------+------------------------------------------------------------+
-| grm.timeout                   | none    | Timeout for SCDB to get info from stdgrm                   |
-+-------------------------------+---------+------------------------------------------------------------+
-| grm.toy_grm_conf              | none    | The config file path of toygrm                             |
-+-------------------------------+---------+------------------------------------------------------------+
-| engine.timeout                | none    | Timeout for SCDB to send message to engine                 |
-+-------------------------------+---------+------------------------------------------------------------+
-| engine.protocol               | https   | The transfer protocol of Engine, support http/https        |
-+-------------------------------+---------+------------------------------------------------------------+
-| engine.content_type           | none    | The original media type in post body from SCDB to engine   |
-+-------------------------------+---------+------------------------------------------------------------+
-| engine.spu.protocol           | none    | The mpc protocol for engine to work with                   |
-+-------------------------------+---------+------------------------------------------------------------+
-| engine.spu.field              | none    | A security parameter type for engine to work with          |
-+-------------------------------+---------+------------------------------------------------------------+
-| engine.spu.sigmoid_mode       | none    | The sigmoid approximation method for engine to work with   |
-+-------------------------------+---------+------------------------------------------------------------+
++---------------------------------------+---------+------------------------------------------------------------+
+|                 Name                  | Default |                        Description                         |
++=======================================+=========+============================================================+
+| scdb_host                             | none    | The callback URL for the engine to notify SCDB             |
++---------------------------------------+---------+------------------------------------------------------------+
+| port                                  | none    | The listening port of the SCDB server                      |
++---------------------------------------+---------+------------------------------------------------------------+
+| protocol                              | http    | The transfer protocol of SCDB server, supports HTTP/HTTPS  |
++---------------------------------------+---------+------------------------------------------------------------+
+| query_result_callback_timeout         | 200ms   | Timeout for SCDB to notify the query result                |
++---------------------------------------+---------+------------------------------------------------------------+
+| session_expire_time                   | 48h     | The expiration duration of a session                       |
++---------------------------------------+---------+------------------------------------------------------------+
+| session_expire_check_time             | 1h      | The cleanup interval of expired session                    |
++---------------------------------------+---------+------------------------------------------------------------+
+| password_check                        | true    | Whether to validate password strength when create a user   |
++---------------------------------------+---------+------------------------------------------------------------+
+| log_level                             | info    | The type and severity of a logged event                    |
++---------------------------------------+---------+------------------------------------------------------------+
+| security_compromise.reveal_group_mark | false   | Whether to reveal group_mark directly for group by         |
++---------------------------------------+---------+------------------------------------------------------------+
+| tls.cert_file                         | none    | Certificate file path to enable TSL, supports crt/pem type |
++---------------------------------------+---------+------------------------------------------------------------+
+| tls.key_file                          | none    | Private key file path to enable TSL, supports key/pem type |
++---------------------------------------+---------+------------------------------------------------------------+
+| storage.type                          | none    | Database kind in SCDB, supports MYSQL/SQLite3              |
++---------------------------------------+---------+------------------------------------------------------------+
+| storage.conn_str                      | none    | Used to connect to a database                              |
++---------------------------------------+---------+------------------------------------------------------------+
+| storage.max_idle_conns                | 1       | Maximum number of connections in idle connection pool      |
++---------------------------------------+---------+------------------------------------------------------------+
+| storage.max_open_conns                | 1       | Maximum number of open connections to the database         |
++---------------------------------------+---------+------------------------------------------------------------+
+| storage.conn_max_idle_time            | -1s     | Maximum amount of time a connection may be idle            |
++---------------------------------------+---------+------------------------------------------------------------+
+| storage.conn_max_lifetime             | -1s     | Maximum amount of time a connection may be reused          |
++---------------------------------------+---------+------------------------------------------------------------+
+| grm.grm_mode                          | none    | The grm service type, support toygrm/stdgrm                |
++---------------------------------------+---------+------------------------------------------------------------+
+| grm.host                              | none    | The host of stdgrm                                         |
++---------------------------------------+---------+------------------------------------------------------------+
+| grm.timeout                           | none    | Timeout for SCDB to get info from stdgrm                   |
++---------------------------------------+---------+------------------------------------------------------------+
+| grm.toy_grm_conf                      | none    | The config file path of toygrm                             |
++---------------------------------------+---------+------------------------------------------------------------+
+| engine.timeout                        | none    | Timeout for SCDB to send message to engine                 |
++---------------------------------------+---------+------------------------------------------------------------+
+| engine.protocol                       | https   | The transfer protocol of Engine, support http/https        |
++---------------------------------------+---------+------------------------------------------------------------+
+| engine.content_type                   | none    | The original media type in post body from SCDB to engine   |
++---------------------------------------+---------+------------------------------------------------------------+
+| engine.spu.protocol                   | none    | The mpc protocol for engine to work with                   |
++---------------------------------------+---------+------------------------------------------------------------+
+| engine.spu.field                      | none    | A security parameter type for engine to work with          |
++---------------------------------------+---------+------------------------------------------------------------+
+| engine.spu.sigmoid_mode               | none    | The sigmoid approximation method for engine to work with   |
++---------------------------------------+---------+------------------------------------------------------------+
+
+Config for SecurityCompromise
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+SCDB provides some security compromise options, which can be selectively enabled when the security risk is acceptable to speed up the overall operation.
+
+1. reveal_group_mark:
+  default disable, if enabled, SCDB will expose grouping information(size of each group) when calculating group-by-aggregation, thereby avoiding the overhead caused by pre-shuffle.  ``risk``: group size will be leaked, which is equivalent to the result of count(*)
+
+A typical config of security_compromise can be like:
+
+.. code-block:: yaml
+
+  security_compromise:
+    reveal_group_mark: false
+
 
 Config for Storage
 ^^^^^^^^^^^^^^^^^^
@@ -229,73 +249,75 @@ Example for Engine
 Config in Engine
 ----------------
 
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| Name                                       | Default      | Description                                                                   |
-+============================================+==============+===============================================================================+
-| log_dir                                    | logs         | The directory to save log file                                                |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| log_enable_console_logger                  | true         | Whether logging to stdout while logging to file                               |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| peer_engine_protocol                       | `http:proto` | The rpc protocol between engine and engine                                    |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| peer_engine_connection_type                | pooled       | The rpc connection type between engine and engine                             |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| peer_engine_timeout_ms                     | 300000       | The rpc timeout between engine and engine, unit: ms                           |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| peer_engine_max_retry                      | 3            | Rpc max retries(not including the first rpc) between engine and engine        |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| peer_engine_enable_ssl_as_client           | true         | Whether enable ssl encryption when send message to another engine             |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| peer_engine_enable_ssl_client_verification | false        | Whether enable certificate verification when send message to another engine   |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| peer_engine_ssl_client_ca_certificate      | none         | The trusted CA file to verify certificate when send message to another engine |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| link_recv_timeout_ms                       | 30000        | The max time that engine will wait for message come from another engine       |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| scdb_protocol                              | `http:proto` | The rpc protocol between engine and SCDB                                      |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| scdb_connection_type                       | pooled       | The rpc connection type between engine and SCDB                               |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| scdb_timeout_ms                            | 5000         | The rpc timeout between engine and SCDB, unit: ms                             |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| scdb_max_retry                             | 3            | Rpc max retries(not including the first rpc) between engine and SCDB          |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| scdb_enable_ssl_as_client                  | true         | Whether enable ssl encryption when send message to SCDB                       |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| scdb_enable_ssl_client_verification        | false        | Whether enable certificate verification when send message to SCDB             |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| scdb_ssl_client_ca_certificate             | none         | The trusted CA file to verify certificate when send message to SCDB           |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| listen_port                                | 8003         | The listening port of engine service                                          |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| enable_builtin_service                     | false        | Whether enable brpc builtin service                                           |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| internal_port                              | 9527         | The listening port of brpc builtin services                                   |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| idle_timeout_s                             | 30           | Idle connection close delay in seconds between the engine and SCDB, unit: s   |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| server_enable_ssl                          | true         | Whether enable SSL when engine work as a server                               |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| server_ssl_certificate                     | none         | Certificate file path to enable SSL when engine work as a server              |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| server_ssl_private_key                     | none         | Private key file path to enable SSL when engine work as a server              |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| enable_client_authorization                | false        | Whether check requests' http header when engine work as a server              |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| auth_credential                            | none         | Authorization credential used to check requests' http header                  |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| enable_scdb_authorization                  | false        | Whether to authenticate the identity of SCDB                                  |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| engine_credential                          | none         | Credential used to authenticate SCDB                                          |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| session_timeout_s                          | 1800         | Expiration duration of a session between engine and SCDB, unit: s             |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| datasource_router                          | embed        | The datasource router type                                                    |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| embed_router_conf                          | none         | Configuration for embed router in json format                                 |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
-| db_connection_info                         | none         | Connection string used to connect to mysql                                    |
-+--------------------------------------------+--------------+-------------------------------------------------------------------------------+
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+|                    Name                    |   Default    |                                        Description                                         |
++============================================+==============+============================================================================================+
+| log_dir                                    | logs         | The directory to save log file                                                             |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| log_enable_console_logger                  | true         | Whether logging to stdout while logging to file                                            |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| peer_engine_protocol                       | `http:proto` | The rpc protocol between engine and engine                                                 |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| peer_engine_connection_type                | pooled       | The rpc connection type between engine and engine                                          |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| peer_engine_timeout_ms                     | 300000       | The rpc timeout between engine and engine, unit: ms                                        |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| peer_engine_max_retry                      | 3            | Rpc max retries(not including the first rpc) between engine and engine                     |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| peer_engine_enable_ssl_as_client           | true         | Whether enable ssl encryption when send message to another engine                          |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| peer_engine_enable_ssl_client_verification | false        | Whether enable certificate verification when send message to another engine                |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| peer_engine_ssl_client_ca_certificate      | none         | The trusted CA file to verify certificate when send message to another engine              |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| link_recv_timeout_ms                       | 30000        | The max time that engine will wait for message come from another engine                    |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| scdb_protocol                              | `http:proto` | The rpc protocol between engine and SCDB                                                   |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| scdb_connection_type                       | pooled       | The rpc connection type between engine and SCDB                                            |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| scdb_timeout_ms                            | 5000         | The rpc timeout between engine and SCDB, unit: ms                                          |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| scdb_max_retry                             | 3            | Rpc max retries(not including the first rpc) between engine and SCDB                       |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| scdb_enable_ssl_as_client                  | true         | Whether enable ssl encryption when send message to SCDB                                    |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| scdb_enable_ssl_client_verification        | false        | Whether enable certificate verification when send message to SCDB                          |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| scdb_ssl_client_ca_certificate             | none         | The trusted CA file to verify certificate when send message to SCDB                        |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| listen_port                                | 8003         | The listening port of engine service                                                       |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| enable_builtin_service                     | false        | Whether enable brpc builtin service                                                        |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| internal_port                              | 9527         | The listening port of brpc builtin services                                                |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| idle_timeout_s                             | 30           | Idle connection close delay in seconds between the engine and SCDB, unit: s                |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| server_enable_ssl                          | true         | Whether enable SSL when engine work as a server                                            |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| server_ssl_certificate                     | none         | Certificate file path to enable SSL when engine work as a server                           |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| server_ssl_private_key                     | none         | Private key file path to enable SSL when engine work as a server                           |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| enable_client_authorization                | false        | Whether check requests' http header when engine work as a server                           |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| auth_credential                            | none         | Authorization credential used to check requests' http header                               |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| enable_scdb_authorization                  | false        | Whether to authenticate the identity of SCDB                                               |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| engine_credential                          | none         | Credential used to authenticate SCDB                                                       |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| session_timeout_s                          | 1800         | Expiration duration of a session between engine and SCDB, unit: s                          |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| datasource_router                          | embed        | The datasource router type                                                                 |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| embed_router_conf                          | none         | Configuration for embed router in json format                                              |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| db_connection_info                         | none         | Connection string used to connect to mysql                                                 |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
+| enable_he_schema_type_ou                   | false        | Whether to use OU to speed up HeSum, use ZPaillier by default for security, see: `heu/ou`_ |
++--------------------------------------------+--------------+--------------------------------------------------------------------------------------------+
 
 .. _datasource_router:
 
@@ -402,3 +424,6 @@ If you want to enable SSL in Engine, add FLAGS as follows. Additionally, it may 
   --server_ssl_private_key=${file path of key}
   --peer_engine_enable_ssl_as_client=true
   --scdb_enable_ssl_as_client=true
+
+
+.. _heu/ou: https://www.secretflow.org.cn/docs/heu/latest/zh-Hans/getting_started/algo_choice#ou-paillier
