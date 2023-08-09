@@ -295,6 +295,11 @@
         "sql": "select abs(aggregate_float_0) as a from alice.tbl_1",
         "skip_projection": false,
         "rewritten_sql": "select abs(tbl_1.aggregate_float_0) as a from alice.tbl_1"
+      },
+      {
+        "sql": "select log10(aggregate_float_0) as a from alice.tbl_1",
+        "skip_projection": false,
+        "rewritten_sql": "select log10(tbl_1.aggregate_float_0) as a from alice.tbl_1"
       }
     ]
   }
