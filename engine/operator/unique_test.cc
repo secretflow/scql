@@ -53,9 +53,9 @@ INSTANTIATE_TEST_SUITE_P(
                                                    "[-10.2, 3.14, 0.34]"))},
         UniqueTestCase{
             .input = test::NamedTensor(
-                "a", TensorFromJSON(arrow::utf8(), R"json(["AB","AB"])json")),
+                "a", TensorFromJSON(arrow::large_utf8(), R"json(["AB","AB"])json")),
             .expect_out = test::NamedTensor(
-                "a_out", TensorFromJSON(arrow::utf8(), R"json(["AB"])json"))},
+                "a_out", TensorFromJSON(arrow::large_utf8(), R"json(["AB"])json"))},
         UniqueTestCase{
             .input = test::NamedTensor("a",
                                        TensorFromJSON(arrow::int64(), "[]")),

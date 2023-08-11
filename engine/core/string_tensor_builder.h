@@ -23,7 +23,7 @@ namespace scql::engine {
 /// @brief Builder for UTF8 strings tensor
 class StringTensorBuilder : public TensorBuilder {
  public:
-  StringTensorBuilder() : TensorBuilder(arrow::utf8()) {}
+  StringTensorBuilder() : TensorBuilder(arrow::large_utf8()) {}
   ~StringTensorBuilder() = default;
 
   void AppendNull() override;
@@ -34,7 +34,7 @@ class StringTensorBuilder : public TensorBuilder {
  private:
   arrow::ArrayBuilder* GetBaseBuilder() override { return &builder_; }
 
-  arrow::StringBuilder builder_;
+  arrow::LargeStringBuilder builder_;
 };
 
 }  // namespace scql::engine

@@ -50,7 +50,7 @@ INSTANTIATE_TEST_SUITE_P(
                 .output_names = {"x1_copy", "x2_copy"}},
             CopyTestCase{
                 .datas = {test::NamedTensor(
-                    "x1", TensorFromJSON(arrow::utf8(),
+                    "x1", TensorFromJSON(arrow::large_utf8(),
                                          R"json(["D","C",null,"B","A"])json"))},
                 .output_names = {"x1_copy"}},
             CopyTestCase{

@@ -184,14 +184,13 @@ std::vector<TensorPtr> OdbcAdaptor::ExecQueryImpl(
                   pb::PrimitiveDataType_Name(results[i]->Type()),
                   pb::PrimitiveDataType_Name(expected_outputs[i].dtype));
 
-      auto origin_arr =
-          util::ConcatenateChunkedArray(results[i]->ToArrowChunkedArray());
       auto to_type = ToArrowDataType(expected_outputs[i].dtype);
-      std::shared_ptr<arrow::Array> array;
-      ASSIGN_OR_THROW_ARROW_STATUS(array,
-                                   arrow::compute::Cast(*origin_arr, to_type));
+      auto result =
+          arrow::compute::Cast(results[i]->ToArrowChunkedArray(), to_type);
+      YACL_ENFORCE(result.ok(), "caught error while invoking arrow cast: {}",
+                   result.status().ToString());
 
-      auto chunked_arr = std::make_shared<arrow::ChunkedArray>(array);
+      auto chunked_arr = result.ValueOrDie().chunked_array();
       results[i] = std::make_shared<Tensor>(std::move(chunked_arr));
     }
   }

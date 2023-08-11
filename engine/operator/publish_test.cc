@@ -62,7 +62,7 @@ int64_data: 4
         PublishTestCase{
             .inputs = {test::NamedTensor(
                            "p0", TensorFromJSON(
-                                     arrow::utf8(),
+                                     arrow::large_utf8(),
                                      R"json(["B","A","A","CCC","B"])json")),
                        test::NamedTensor(
                            "p1",

@@ -58,11 +58,11 @@ INSTANTIATE_TEST_SUITE_P(
             BinaryTestCase{
                 .op_type = Equal::kOpType,
                 .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::utf8(),
+                    "x", TensorFromJSON(arrow::large_utf8(),
                                         R"json(["A", "B", "C", "D"])json"))},
                 .left_input_status = pb::TENSORSTATUS_SECRET,
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::utf8(),
+                    "y", TensorFromJSON(arrow::large_utf8(),
                                         R"json(["A", "C", "B", "D"])json"))},
                 .right_input_status = pb::TENSORSTATUS_SECRET,
                 .outputs = {test::NamedTensor(
@@ -120,11 +120,11 @@ INSTANTIATE_TEST_SUITE_P(
             BinaryTestCase{
                 .op_type = Equal::kOpType,
                 .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::utf8(),
+                    "x", TensorFromJSON(arrow::large_utf8(),
                                         R"json(["A", "B", "C", "D"])json"))},
                 .left_input_status = pb::TENSORSTATUS_PRIVATE,
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::utf8(),
+                    "y", TensorFromJSON(arrow::large_utf8(),
                                         R"json(["A", "C", "B", "D"])json"))},
                 .right_input_status = pb::TENSORSTATUS_PUBLIC,
                 .outputs = {test::NamedTensor(
@@ -183,11 +183,11 @@ INSTANTIATE_TEST_SUITE_P(
             BinaryTestCase{
                 .op_type = NotEqual::kOpType,
                 .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::utf8(),
+                    "x", TensorFromJSON(arrow::large_utf8(),
                                         R"json(["A", "B", "C", "D"])json"))},
                 .left_input_status = pb::TENSORSTATUS_SECRET,
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::utf8(),
+                    "y", TensorFromJSON(arrow::large_utf8(),
                                         R"json(["A", "C", "B", "D"])json"))},
                 .right_input_status = pb::TENSORSTATUS_SECRET,
                 .outputs = {test::NamedTensor(
@@ -245,11 +245,11 @@ INSTANTIATE_TEST_SUITE_P(
             BinaryTestCase{
                 .op_type = NotEqual::kOpType,
                 .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::utf8(),
+                    "x", TensorFromJSON(arrow::large_utf8(),
                                         R"json(["A", "B", "C", "D"])json"))},
                 .left_input_status = pb::TENSORSTATUS_PRIVATE,
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::utf8(),
+                    "y", TensorFromJSON(arrow::large_utf8(),
                                         R"json(["A", "C", "B", "D"])json"))},
                 .right_input_status = pb::TENSORSTATUS_PUBLIC,
                 .outputs = {test::NamedTensor(

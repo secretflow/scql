@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
  - Speed up GROUP BY with HEU in some scenarios.
+ - Optimized to support billion-level PSI scenarios.
 
 ### Fixed
 

@@ -55,7 +55,7 @@ INSTANTIATE_TEST_SUITE_P(
                                   arrow::float32(),
                                   "[1.1025, 100.245, -10.2, 0.34, 3.1415926]")),
                      test::NamedTensor(
-                         "d", TensorFromJSON(arrow::utf8(),
+                         "d", TensorFromJSON(arrow::large_utf8(),
                                              R"json(["A","B","C","D"])json")),
                      test::NamedTensor("e",
                                        TensorFromJSON(arrow::int64(), "[]"))},

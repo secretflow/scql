@@ -77,18 +77,19 @@ void ConvertDuckResultToTensors(std::unique_ptr<duckdb::QueryResult> result,
   for (int i = 0; i < table->num_columns(); ++i) {
     auto chunked_arr = table->column(i);
     YACL_ENFORCE(chunked_arr, "get column(idx={}) from table failed", i);
-    if (FromArrowDataType(chunked_arr->type()) != expected_outputs[i].dtype) {
+    if (FromArrowDataType(chunked_arr->type()) != expected_outputs[i].dtype ||
+        // strings from duckdb use arrow::utf8() by default, which limits size
+        // < 2G, so should be converted to large_utf8() to support large scale
+        chunked_arr->type() == arrow::utf8()) {
       auto to_type = ToArrowDataType(expected_outputs[i].dtype);
       SPDLOG_WARN("arrow type mismatch, convert from {} to {}",
                   chunked_arr->type()->ToString(), to_type->ToString());
 
-      auto origin_arr = util::ConcatenateChunkedArray(chunked_arr);
+      auto result = arrow::compute::Cast(chunked_arr, to_type);
+      YACL_ENFORCE(result.ok(), "caught error while invoking arrow cast: {}",
+                   result.status().ToString());
 
-      std::shared_ptr<arrow::Array> array;
-      ASSIGN_OR_THROW_ARROW_STATUS(array,
-                                   arrow::compute::Cast(*origin_arr, to_type));
-
-      chunked_arr = std::make_shared<arrow::ChunkedArray>(array);
+      chunked_arr = result.ValueOrDie().chunked_array();
     }
     auto tensor = std::make_shared<Tensor>(std::move(chunked_arr));
     tensors->push_back(std::move(tensor));

@@ -52,7 +52,7 @@ class StringifyVisitor {
     return arrow::Status::OK();
   }
 
-  arrow::Status Visit(const arrow::StringArray& array) {
+  arrow::Status Visit(const arrow::LargeStringArray& array) {
     for (int64_t i = 0; i < array.length(); i++) {
       strs_.push_back(array.GetString(i));
     }

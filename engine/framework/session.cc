@@ -137,7 +137,7 @@ class StringToHashConverter {
                     array.type()->name()));
   }
 
-  arrow::Status Visit(const arrow::StringArray& array) {
+  arrow::Status Visit(const arrow::LargeStringArray& array) {
     for (int64_t i = 0; i < array.length(); i++) {
       const std::string& cur_str = array.GetString(i);
       size_t hash_value = CryptoHash(cur_str);

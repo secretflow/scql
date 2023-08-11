@@ -54,7 +54,7 @@ INSTANTIATE_TEST_SUITE_P(
                        test::NamedTensor(
                            "in_c",
                            TensorFromJSON(
-                               arrow::utf8(),
+                               arrow::large_utf8(),
                                R"json(["A","B","B","CCC","CCC","CCC"])json"))},
             .group_id = test::NamedTensor("out_id",
                                           TensorFromJSON(arrow::uint32(),
