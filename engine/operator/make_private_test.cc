@@ -45,7 +45,7 @@ INSTANTIATE_TEST_SUITE_P(
             MakePrivateTestCase{
                 .inputs =
                     {test::NamedTensor(
-                         "x", TensorFromJSON(arrow::utf8(),
+                         "x", TensorFromJSON(arrow::large_utf8(),
                                              R"json(["A", "B", "C"])json")),
                      test::NamedTensor(
                          "y", TensorFromJSON(arrow::int64(),
@@ -62,7 +62,7 @@ INSTANTIATE_TEST_SUITE_P(
                          "y", TensorFromJSON(arrow::float32(),
                                              "[1.234, 0, -1.5, 2.75]")),
                      test::NamedTensor(
-                         "z", TensorFromJSON(arrow::utf8(),
+                         "z", TensorFromJSON(arrow::large_utf8(),
                                              R"json(["X", "Y", "ZZZ"])json"))},
                 .input_status = pb::TENSORSTATUS_SECRET,
                 .reveal_to = "alice",

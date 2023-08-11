@@ -67,11 +67,11 @@ INSTANTIATE_TEST_SUITE_P(
             InTestCase{
                 .left_input = test::NamedTensor(
                     "x",
-                    TensorFromJSON(arrow::utf8(),
+                    TensorFromJSON(arrow::large_utf8(),
                                    R"json(["A", "E", "D", "F", "A"])json")),
                 .right_input = test::NamedTensor(
                     "y",
-                    TensorFromJSON(arrow::utf8(),
+                    TensorFromJSON(arrow::large_utf8(),
                                    R"json(["C", "D", "B", "A", "G"])json")),
                 .in_algo = kPsiIn,
                 .left_party = test::kPartyAlice,
@@ -84,10 +84,10 @@ INSTANTIATE_TEST_SUITE_P(
             InTestCase{
                 .left_input = test::NamedTensor(
                     "x",
-                    TensorFromJSON(arrow::utf8(),
+                    TensorFromJSON(arrow::large_utf8(),
                                    R"json(["A", "E", "D", "F", "A"])json")),
                 .right_input = test::NamedTensor(
-                    "y", TensorFromJSON(arrow::utf8(), R"json([])json")),
+                    "y", TensorFromJSON(arrow::large_utf8(), R"json([])json")),
                 .in_algo = kPsiIn,
                 .left_party = test::kPartyAlice,
                 .right_party = test::kPartyBob,
@@ -99,10 +99,10 @@ INSTANTIATE_TEST_SUITE_P(
             // testcase: left input empty
             InTestCase{
                 .left_input = test::NamedTensor(
-                    "x", TensorFromJSON(arrow::utf8(), R"json([])json")),
+                    "x", TensorFromJSON(arrow::large_utf8(), R"json([])json")),
                 .right_input = test::NamedTensor(
                     "y",
-                    TensorFromJSON(arrow::utf8(),
+                    TensorFromJSON(arrow::large_utf8(),
                                    R"json(["A", "E", "D", "F", "A"])json")),
                 .in_algo = kPsiIn,
                 .left_party = test::kPartyAlice,

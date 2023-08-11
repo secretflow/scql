@@ -64,7 +64,7 @@ INSTANTIATE_TEST_SUITE_P(
 )csv"},
         DumpFileTestCase{
             .inputs = {test::NamedTensor(
-                "x1", TensorFromJSON(arrow::utf8(),
+                "x1", TensorFromJSON(arrow::large_utf8(),
                                      R"json(["D","C","B","B","A"])json"))},
             .output_names = {"x1_dump"},
             .output_file_path = "./dumpfile_out.2",

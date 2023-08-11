@@ -45,7 +45,7 @@ INSTANTIATE_TEST_SUITE_P(
                              .output_status = pb::TENSORSTATUS_PRIVATE},
             ConstantTestCase{
                 .scalar = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::utf8(),
+                    "y", TensorFromJSON(arrow::large_utf8(),
                                         R"json(["2022-11-22"])json"))},
                 .output_status = pb::TENSORSTATUS_PRIVATE},
             ConstantTestCase{

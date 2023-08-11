@@ -101,7 +101,7 @@ TEST_F(CsvdbAdaptorTest, NormalQuery) {
   CheckTensorEqual(results[0], TensorFromJSON(arrow::int64(), "[1,2,3,4]"));
   CheckTensorEqual(results[1], TensorFromJSON(arrow::int64(), "[21,42,19,32]"));
   CheckTensorEqual(results[2],
-                   TensorFromJSON(arrow::utf8(),
+                   TensorFromJSON(arrow::large_utf8(),
                                   R"json(["alice","bob","carol","dave"])json"));
   CheckTensorEqual(results[3], TensorFromJSON(arrow::float64(),
                                               "[2100.2,4500.8,1900.5,8900]"));
@@ -125,7 +125,7 @@ TEST_F(CsvdbAdaptorTest, QueryWithPredicate) {
 
   CheckTensorEqual(results[0], TensorFromJSON(arrow::int64(), "[42,32]"));
   CheckTensorEqual(results[1],
-                   TensorFromJSON(arrow::utf8(), R"json(["bob", "dave"])json"));
+                   TensorFromJSON(arrow::large_utf8(), R"json(["bob", "dave"])json"));
   CheckTensorEqual(results[2],
                    TensorFromJSON(arrow::float64(), "[4500.8,8900]"));
 }

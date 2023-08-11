@@ -114,7 +114,7 @@ INSTANTIATE_TEST_SUITE_P(
                                                   "[0, 0, 1.1, 1.1, 2.2]")),
                  test::NamedTensor(
                      "in_c",
-                     TensorFromJSON(arrow::utf8(),
+                     TensorFromJSON(arrow::large_utf8(),
                                     R"json(["A","A","B","B","CCC"])json"))},
             .group_id = test::NamedTensor(
                 "group_id", TensorFromJSON(arrow::uint32(), "[0, 0, 1, 1, 2]")),
@@ -126,7 +126,7 @@ INSTANTIATE_TEST_SUITE_P(
                  test::NamedTensor("out_b", TensorFromJSON(arrow::float32(),
                                                            "[0, 1.1, 2.2]")),
                  test::NamedTensor(
-                     "out_c", TensorFromJSON(arrow::utf8(),
+                     "out_c", TensorFromJSON(arrow::large_utf8(),
                                              R"json(["A","B","CCC"])json"))}},
         GroupAggTestCase{
             .op_type = GroupCountDistinct::kOpType,
@@ -244,7 +244,7 @@ INSTANTIATE_TEST_SUITE_P(
                        test::NamedTensor(
                            "in_b", TensorFromJSON(arrow::float32(), "[]")),
                        test::NamedTensor("in_c",
-                                         TensorFromJSON(arrow::utf8(),
+                                         TensorFromJSON(arrow::large_utf8(),
                                                         R"json([])json"))},
             .group_id = test::NamedTensor(
                 "group_id", TensorFromJSON(arrow::uint32(), "[]")),
@@ -255,7 +255,7 @@ INSTANTIATE_TEST_SUITE_P(
                         test::NamedTensor(
                             "out_b", TensorFromJSON(arrow::float32(), "[]")),
                         test::NamedTensor("out_c",
-                                          TensorFromJSON(arrow::utf8(),
+                                          TensorFromJSON(arrow::large_utf8(),
                                                          R"json([])json"))}},
         GroupAggTestCase{
             .op_type = GroupCountDistinct::kOpType,

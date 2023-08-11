@@ -50,12 +50,12 @@ INSTANTIATE_TEST_SUITE_P(
             ConcatTestCase{
                 .inputs =
                     {test::NamedTensor(
-                         "a", TensorFromJSON(arrow::utf8(),
+                         "a", TensorFromJSON(arrow::large_utf8(),
                                              R"json(["A", "B", "C"])json")),
-                     test::NamedTensor("b", TensorFromJSON(arrow::utf8(),
+                     test::NamedTensor("b", TensorFromJSON(arrow::large_utf8(),
                                                            R"json([])json"))},
                 .expect_out = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::utf8(),
+                    "out", TensorFromJSON(arrow::large_utf8(),
                                           R"json(["A", "B", "C"])json"))})),
     TestParamNameGenerator(ConcatTest));
 

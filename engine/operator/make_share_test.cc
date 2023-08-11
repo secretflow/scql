@@ -48,10 +48,10 @@ INSTANTIATE_TEST_SUITE_P(
             MakeShareTestCase{
                 .inputs =
                     {test::NamedTensor(
-                         "x", TensorFromJSON(arrow::utf8(),
+                         "x", TensorFromJSON(arrow::large_utf8(),
                                              R"json(["A", "B", "C"])json")),
                      test::NamedTensor(
-                         "y", TensorFromJSON(arrow::utf8(),
+                         "y", TensorFromJSON(arrow::large_utf8(),
                                              R"json(["X", "Y", "Z"])json"))},
                 .owners = {0, 1},
                 .output_names = {"x_hat", "y_hat"}},

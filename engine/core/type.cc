@@ -45,6 +45,7 @@ pb::PrimitiveDataType FromArrowDataType(
       ty = pb::PrimitiveDataType::FLOAT64;
       break;
     case arrow::Type::STRING:
+    case arrow::Type::LARGE_STRING:
       ty = pb::PrimitiveDataType::STRING;
       break;
     default:
@@ -78,7 +79,7 @@ std::shared_ptr<arrow::DataType> ToArrowDataType(pb::PrimitiveDataType dtype) {
       dt = arrow::float64();
       break;
     case pb::PrimitiveDataType::STRING:
-      dt = arrow::utf8();
+      dt = arrow::large_utf8();
       break;
     default:
       dt = nullptr;

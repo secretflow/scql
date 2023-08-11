@@ -52,7 +52,7 @@ INSTANTIATE_TEST_SUITE_P(
                                   arrow::float32(),
                                   "[1.1025, 100.245, -10.2, 0.34, 3.1415926]")),
                      test::NamedTensor(
-                         "z", TensorFromJSON(arrow::utf8(),
+                         "z", TensorFromJSON(arrow::large_utf8(),
                                              R"json(["A", "B", "C"])json"))},
                 .input_status = pb::TENSORSTATUS_PRIVATE,
                 .output_names = {"x_hat", "y_hat", "z_hat"}},

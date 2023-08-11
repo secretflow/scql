@@ -83,14 +83,14 @@ INSTANTIATE_TEST_SUITE_P(
                 .left_inputs =
                     {test::NamedTensor(
                          "x_1", TensorFromJSON(
-                                    arrow::utf8(),
+                                    arrow::large_utf8(),
                                     R"json(["A","A","B","B","B","C"])json")),
                      test::NamedTensor("x_2", TensorFromJSON(arrow::int64(),
                                                              "[1,2,1,1,2,1]"))},
                 .right_inputs =
                     {test::NamedTensor(
                          "y_1", TensorFromJSON(
-                                    arrow::utf8(),
+                                    arrow::large_utf8(),
                                     R"json(["B","A","A","B","B","B"])json")),
                      test::NamedTensor("y_2", TensorFromJSON(arrow::int64(),
                                                              "[2,1,2,1,3,2]"))},
@@ -99,17 +99,17 @@ INSTANTIATE_TEST_SUITE_P(
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
                     "x",
-                    TensorFromJSON(arrow::utf8(), R"json(["A","B","C"])json"))},
+                    TensorFromJSON(arrow::large_utf8(), R"json(["A","B","C"])json"))},
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::utf8(),
+                    "y", TensorFromJSON(arrow::large_utf8(),
                                         R"json(["E","F","H","G"])json"))},
                 .join_indices = {}},
             // testcase: empty input
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::utf8(), R"json([])json"))},
+                    "x", TensorFromJSON(arrow::large_utf8(), R"json([])json"))},
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::utf8(),
+                    "y", TensorFromJSON(arrow::large_utf8(),
                                         R"json(["E","F","H","G"])json"))},
                 .join_indices = {}})),
     TestParamNameGenerator(JoinTest));

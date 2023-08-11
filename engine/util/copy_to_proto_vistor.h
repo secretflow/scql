@@ -37,7 +37,7 @@ class CopyToProtoVistor {
                     array.type()->name()));
   }
 
-  arrow::Status Visit(const arrow::StringArray& array) {
+  arrow::Status Visit(const arrow::LargeStringArray& array) {
     for (int64_t i = 0; i < array.length(); i++) {
       to_proto_->add_string_data(array.GetString(i));
     }
