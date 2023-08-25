@@ -13,7 +13,7 @@ SCQL is built on top of the MPC framework `secretflow/spu`_, using a semi-honest
 .. warning:: 
     If you select the SEMI2K as SCQL's underlying mpc protocol, please make sure to use the `TrustedThirdParty beaver provider`_ [#f1]_. The other beaver provider mode `TrustedFirstParty beaver provider`_ should only be used for debugging and may incur significant security problem in the production environment.
 
-Like all cryptography-based privacy computing systems, SCQL at this stage cannot solve the problem of deducing original privacy data based on the results of legal queries. The current academic solution to this problem is generally to add noise into data through differential privacy mechanism. Although the CCL mechanism allows the data owners to restrict the use of their data, which can alleviate risks to a certain extent, it cannot completely eliminate the risks. SCQL also does not solve the problem of participants tampering with their original input to obtain other participants' private information.
+Like all cryptography-based privacy-preserving computing systems, SCQL at this stage cannot solve the problem of deducing original privacy data based on the results of legal queries. The current academic solution to this problem is generally to add noise into data through differential privacy mechanism. Although the CCL mechanism allows the data owners to restrict the use of their data, which can alleviate risks to a certain extent, it cannot completely eliminate the risks. SCQL also does not solve the problem of participants tampering with their original input to obtain other participants' private information.
 
 The following chapters will describe possible attack methods for inferring data from results, and give corresponding suggestions.
 
