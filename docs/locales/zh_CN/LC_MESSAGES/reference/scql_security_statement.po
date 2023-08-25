@@ -60,7 +60,7 @@ msgstr "如果选择使用 SPU SEMI2K 作为 SCQL 的底层 MPC 协议，请务�
 
 #: ../../reference/scql_security_statement.rst:16
 msgid ""
-"Like all cryptography-based privacy computing systems, SCQL at this stage"
+"Like all cryptography-based privacy-preserving computing systems, SCQL at this stage"
 " cannot solve the problem of deducing original privacy data based on the "
 "results of legal queries. The current academic solution to this problem "
 "is generally to add noise into data through differential privacy "
