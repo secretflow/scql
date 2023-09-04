@@ -54,15 +54,48 @@ var cclString2CCLLevel = map[string]ccl.CCLLevel{
 	"encrypt":   ccl.Encrypt,
 }
 
+// TODO: rename PhysicalTableMeta
+type PhysicalTableMeta struct {
+	DbName    string
+	TableName string
+	DBType    string
+	Columns   []columnMeta
+}
+
+type columnMeta struct {
+	Name  string
+	DType string
+}
+
+func (pt *PhysicalTableMeta) ToCreateTableStmt(newTblName string, ifNotExists bool) string {
+	var b strings.Builder
+	b.WriteString("CREATE TABLE")
+	if ifNotExists {
+		b.WriteString(" IF NOT EXISTS")
+	}
+	b.WriteString(" ")
+	b.WriteString(newTblName)
+	b.WriteString(" (")
+	for i, col := range pt.Columns {
+		if i != 0 {
+			b.WriteString(",")
+		}
+		b.WriteString(fmt.Sprintf("%s %s", col.Name, col.DType))
+	}
+	b.WriteString(") ")
+	b.WriteString(fmt.Sprintf("REF_TABLE=%s.%s DB_TYPE='%s'", pt.DbName, pt.TableName, pt.DBType))
+	return b.String()
+}
+
 type dbConifg struct {
 	DbName    string                 `json:"db_name"`
 	PartyCode string                 `json:"party_code"`
 	Tables    map[string]tableConfig `json:"tables"`
+	DBType    string                 `json:"db_type"`
 }
 
 type tableConfig struct {
 	Columns []columnConfig `json:"columns"`
-	Tid     string         `json:"tid"`
 }
 type columnConfig struct {
 	ColumnName string   `json:"column_name"`
@@ -324,15 +357,26 @@ func MockEngines() (*MockEnginesInfo, error) {
 	return result, nil
 }
 
-func MockTableTIDs() (map[string]string, error) {
+func MockPhysicalTableMetas() (map[string]*PhysicalTableMeta, error) {
 	data, err := getMockData(mockDataPath)
 	if err != nil {
 		return nil, err
 	}
-	result := make(map[string]string)
+	result := make(map[string]*PhysicalTableMeta)
 	for _, db := range data {
 		for tableName, tableConf := range db.Tables {
-			result[fmt.Sprintf(`%s_%s`, db.DbName, tableName)] = tableConf.Tid
+			pt := &PhysicalTableMeta{
+				DbName:    db.DbName,
+				TableName: tableName,
+				DBType:    db.DBType,
+			}
+			for _, col := range tableConf.Columns {
+				pt.Columns = append(pt.Columns, columnMeta{
+					Name:  col.ColumnName,
+					DType: col.Dtype,
+				})
+			}
+			result[fmt.Sprintf(`%s_%s`, pt.DbName, pt.TableName)] = pt
 		}
 	}
 	return result, nil
@@ -341,8 +385,8 @@ func MockTableTIDs() (map[string]string, error) {
 func MockStorage(db *gorm.DB) error {
 	// initialize users
 	users := []storage.User{
-		{User: "alice", Host: "%", PartyCode: "alice", Password: auth.EncodePassword("alice123")},
-		{User: "bob", Host: "%", PartyCode: "bob", Password: auth.EncodePassword("bob123")},
+		{User: "alice", Host: "%", PartyCode: "alice", Password: auth.EncodePassword("alice123"), EngineEndpoints: "engine.alice.com", EngineToken: "alice_credential"},
+		{User: "bob", Host: "%", PartyCode: "bob", Password: auth.EncodePassword("bob123"), EngineEndpoints: "engine.bob.com", EngineToken: "bob_credential"},
 	}
 	result := db.Create(&users)
 	if result.Error != nil || result.RowsAffected != 2 {
@@ -376,9 +420,9 @@ func MockStorage(db *gorm.DB) error {
 
 	// initialize tables
 	tables := []storage.Table{
-		{Db: "test", Table: "table_1", Tid: "tid1", Owner: "alice", Host: "%", RefTable: "table_1", RefDb: "test"},
-		{Db: "test", Table: "table_2", Tid: "tid2", Owner: "bob", Host: "%", RefTable: "table_2", RefDb: "test"},
-		{Db: "test", Table: "table_3", Tid: "tid3", Owner: "alice", Host: "%", RefTable: "table_3", RefDb: "test"},
+		{Db: "test", Table: "table_1", Owner: "alice", Host: "%", RefTable: "table_1", RefDb: "test"},
+		{Db: "test", Table: "table_2", Owner: "bob", Host: "%", RefTable: "table_2", RefDb: "test"},
+		{Db: "test", Table: "table_3", Owner: "alice", Host: "%", RefTable: "table_3", RefDb: "test"},
 	}
 	result = db.Create(&tables)
 	if result.Error != nil || result.RowsAffected != 3 {

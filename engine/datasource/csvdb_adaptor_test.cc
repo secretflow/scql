@@ -124,8 +124,8 @@ TEST_F(CsvdbAdaptorTest, QueryWithPredicate) {
   EXPECT_EQ(results.size(), 3);
 
   CheckTensorEqual(results[0], TensorFromJSON(arrow::int64(), "[42,32]"));
-  CheckTensorEqual(results[1],
-                   TensorFromJSON(arrow::large_utf8(), R"json(["bob", "dave"])json"));
+  CheckTensorEqual(results[1], TensorFromJSON(arrow::large_utf8(),
+                                              R"json(["bob", "dave"])json"));
   CheckTensorEqual(results[2],
                    TensorFromJSON(arrow::float64(), "[4500.8,8900]"));
 }

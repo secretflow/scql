@@ -45,7 +45,8 @@ std::shared_ptr<google::protobuf::RpcChannel> ChannelManager::Create(
   if (init_result != 0) {
     YACL_THROW(
         "BrpcChannel Init failed, ret={}, remote_addr={}, role={}, protocal={}",
-        init_result, remote_addr, static_cast<int>(role), option.protocol);
+        init_result, remote_addr, static_cast<int>(role),
+        option.protocol.name());
   }
   return result;
 }

@@ -30,9 +30,14 @@ const (
 
 // input tensors key
 const (
-	Left  string = "Left"
-	Right string = "Right"
-	Out   string = "Out"
+	Left         string = "Left"
+	Right        string = "Right"
+	Condition    string = "Condition"
+	ValueIfTrue  string = "ValueIfTrue"
+	ValueIfFalse string = "ValueIfFalse"
+	Value        string = "Value"
+	ValueElse    string = "ValueElse"
+	Out          string = "Out"
 )
 
 const (

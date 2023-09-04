@@ -20,6 +20,7 @@ cc_binary(
     ],
     linkopts = ["-pie"],
     deps = [
+        "//engine/auth:authenticator",
         "//engine/link:mux_link_factory",
         "//engine/link:mux_receiver_service",
         "//engine/link:rpc_helper",

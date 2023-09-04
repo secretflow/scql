@@ -1089,6 +1089,46 @@ const (
 	MaxUserConnections
 )
 
+type PubKeyAuthOption struct {
+	Message   string
+	Signature string
+	PubKey    string
+}
+
+type TokenAuthOption struct {
+	Token string
+}
+
+type EngineOption struct {
+	// Only one of {TokenAuth, PubKeyAuth} is valid
+	TokenAuth  *TokenAuthOption
+	PubKeyAuth *PubKeyAuthOption
+	Endpoints  []string
+}
+
+func (e *EngineOption) Restore(ctx *RestoreCtx) error {
+	if e.TokenAuth != nil && e.PubKeyAuth != nil {
+		return errors.New("EngineOption fields TokenAuth and PubKeyAuth cannot be valid at the same time")
+	}
+	if e.TokenAuth != nil {
+		ctx.WriteKeyWord("TOKEN ")
+		ctx.WriteString(e.TokenAuth.Token)
+	}
+
+	if e.PubKeyAuth != nil {
+		ctx.WritePlainf("%v %v %v", e.PubKeyAuth.Message, e.PubKeyAuth.Signature, e.PubKeyAuth.PubKey)
+	}
+
+	if len(e.Endpoints) != 0 {
+		ctx.WriteKeyWord(" ENDPOINT")
+		for _, endpoint := range e.Endpoints {
+			ctx.WritePlain(" ")
+			ctx.WriteString(endpoint)
+		}
+	}
+	return nil
+}
+
 type ResourceOption struct {
 	Type  int
 	Count int64
@@ -1152,12 +1192,11 @@ func (p *PasswordOrLockOption) Restore(ctx *RestoreCtx) error {
 type CreateUserStmt struct {
 	stmtNode
 
-	IsCreateRole          bool
-	IfNotExists           bool
-	Specs                 []*UserSpec
-	TLSOptions            []*TLSOption
-	ResourceOptions       []*ResourceOption
-	PasswordOrLockOptions []*PasswordOrLockOption
+	IsCreateRole bool
+	IfNotExists  bool
+	Specs        []*UserSpec
+	TLSOptions   []*TLSOption
+	EngineOpt    *EngineOption
 }
 
 // Restore implements Node interface.
@@ -1192,21 +1231,10 @@ func (n *CreateUserStmt) Restore(ctx *RestoreCtx) error {
 		}
 	}
 
-	if len(n.ResourceOptions) != 0 {
-		ctx.WriteKeyWord(" WITH")
-	}
-
-	for i, v := range n.ResourceOptions {
-		ctx.WritePlain(" ")
-		if err := v.Restore(ctx); err != nil {
-			return errors.Annotatef(err, "An error occurred while restore CreateUserStmt.ResourceOptions[%d]", i)
-		}
-	}
-
-	for i, v := range n.PasswordOrLockOptions {
-		ctx.WritePlain(" ")
-		if err := v.Restore(ctx); err != nil {
-			return errors.Annotatef(err, "An error occurred while restore CreateUserStmt.PasswordOrLockOptions[%d]", i)
+	if n.EngineOpt != nil {
+		ctx.WriteKeyWord(" WITH ")
+		if err := n.EngineOpt.Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore CreateUserStmt.EngineOpt")
 		}
 	}
 	return nil
@@ -1238,12 +1266,11 @@ func (n *CreateUserStmt) SecureText() string {
 type AlterUserStmt struct {
 	stmtNode
 
-	IfExists              bool
-	CurrentAuth           *AuthOption
-	Specs                 []*UserSpec
-	TLSOptions            []*TLSOption
-	ResourceOptions       []*ResourceOption
-	PasswordOrLockOptions []*PasswordOrLockOption
+	IfExists    bool
+	CurrentAuth *AuthOption
+	Specs       []*UserSpec
+	TLSOptions  []*TLSOption
+	EngineOpt   *EngineOption
 }
 
 // Restore implements Node interface.
@@ -1281,21 +1308,10 @@ func (n *AlterUserStmt) Restore(ctx *RestoreCtx) error {
 		}
 	}
 
-	if len(n.ResourceOptions) != 0 {
-		ctx.WriteKeyWord(" WITH")
-	}
-
-	for i, v := range n.ResourceOptions {
-		ctx.WritePlain(" ")
-		if err := v.Restore(ctx); err != nil {
-			return errors.Annotatef(err, "An error occurred while restore AlterUserStmt.ResourceOptions[%d]", i)
-		}
-	}
-
-	for i, v := range n.PasswordOrLockOptions {
-		ctx.WritePlain(" ")
-		if err := v.Restore(ctx); err != nil {
-			return errors.Annotatef(err, "An error occurred while restore AlterUserStmt.PasswordOrLockOptions[%d]", i)
+	if n.EngineOpt != nil {
+		ctx.WriteKeyWord(" WITH ")
+		if err := n.EngineOpt.Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore AlterUserStmt.EngineOpt")
 		}
 	}
 	return nil

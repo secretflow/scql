@@ -30,9 +30,8 @@ import (
 )
 
 var config = &AuditConf{
-	EnableAuditLog:          true,
 	AuditMaxSizeInMegaBytes: 500,
-	AuditMaxBackupsCount:    10,
+	AuditMaxBackupsCount:    0,
 	AuditMaxAgeInDays:       180,
 	AuditMaxCompress:        false,
 }
@@ -238,12 +237,12 @@ func TestRecordAuditLog(t *testing.T) {
 	// GIVE
 	auditLogFile, err := os.CreateTemp("", "*.log")
 	r.NoError(err)
-	planLogFile, err := os.CreateTemp("", "*.log")
+	detailLogFile, err := os.CreateTemp("", "*.log")
 	r.NoError(err)
 	defer os.Remove(auditLogFile.Name())
-	defer os.Remove(planLogFile.Name())
+	defer os.Remove(detailLogFile.Name())
 	config.AuditLogFile = auditLogFile.Name()
-	config.AuditDetailFile = planLogFile.Name()
+	config.AuditDetailFile = detailLogFile.Name()
 	err = InitAudit(config)
 	r.NoError(err)
 

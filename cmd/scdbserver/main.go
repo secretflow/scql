@@ -18,7 +18,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -29,9 +28,7 @@ import (
 
 	"github.com/secretflow/scql/pkg/audit"
 	"github.com/secretflow/scql/pkg/executor"
-	"github.com/secretflow/scql/pkg/grm"
-	"github.com/secretflow/scql/pkg/grm/stdgrm"
-	"github.com/secretflow/scql/pkg/grm/toygrm"
+	"github.com/secretflow/scql/pkg/scdb/config"
 	"github.com/secretflow/scql/pkg/scdb/server"
 	"github.com/secretflow/scql/pkg/scdb/storage"
 
@@ -84,7 +81,7 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 
 	log.Infof("Starting to read config file: %s", *confFile)
-	cfg, err := server.NewConfig(*confFile)
+	cfg, err := config.NewConfig(*confFile)
 	if err != nil {
 		log.Fatalf("Failed to create config from %s: %v", *confFile, err)
 	}
@@ -95,9 +92,10 @@ func main() {
 			log.SetLevel(lvl)
 		}
 	}
-
-	if err := audit.InitAudit(&cfg.AuditConfig); err != nil {
-		log.Fatalf("Failed to init audit with error: %v", err)
+	if cfg.EnableAuditLogger {
+		if err := audit.InitAudit(&cfg.AuditConfig); err != nil {
+			log.Fatalf("Failed to init audit with error: %v", err)
+		}
 	}
 
 	log.Info("Starting to connect to database and do bootstrap if necessary...")
@@ -107,10 +105,8 @@ func main() {
 		log.Fatalf("Failed to connect to database and bootstrap it: %v", err)
 	}
 
-	grmClient := newGrmClient(cfg.GRM)
-
 	engineClient := executor.NewEngineClient(cfg.Engine.ClientTimeout * time.Second)
-	svr, err := server.NewServer(cfg, grmClient, store, engineClient)
+	svr, err := server.NewServer(cfg, store, engineClient)
 	if err != nil {
 		log.Fatalf("Failed to create scdb server: %v", err)
 	}
@@ -129,25 +125,4 @@ func main() {
 			log.Fatalf("Something bad happens to server: %v", err)
 		}
 	}
-}
-
-func newGrmClient(cfg server.GRMConf) grm.Grm {
-	grmMode, exist := server.GrmModeType[cfg.GrmMode]
-	if !exist {
-		log.Fatalf("unknown grm type: %v", cfg.GrmMode)
-	}
-	switch grmMode {
-	case server.ToyGrmMode:
-		grmClient, err := toygrm.New(cfg.ToyGrmConf)
-		if err != nil {
-			log.Fatalf("failed to create grm: %v", err)
-		}
-		return grmClient
-	case server.StdGrmMode:
-		httpClient := &http.Client{Timeout: cfg.Timeout}
-		return stdgrm.New(httpClient, cfg.Host)
-	default:
-		log.Fatalf("unknown grm mode %v ", grmMode)
-	}
-	return nil
 }

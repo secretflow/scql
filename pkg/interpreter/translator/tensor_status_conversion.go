@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	proto "github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
 
 type tensorToStatusPair struct {
@@ -51,6 +52,21 @@ func (b *statusConverter) convertTo(inputT *Tensor, expectPlace placement) (*Ten
 	}
 	b.convertMap[tensorToStatusPair{tensorID: inputT.ID, destStatus: expectPlace.toString()}] = t
 	return t, nil
+}
+
+func (b *statusConverter) convertStatusForMap(inputT map[string][]*Tensor, expect map[string][]placement) (map[string][]*Tensor, error) {
+	result := make(map[string][]*Tensor)
+	for _, key := range sliceutil.SortMapKeyForDeterminism(inputT) {
+		ts := inputT[key]
+		for i, t := range ts {
+			convertedT, err := b.convertTo(t, expect[key][i])
+			if err != nil {
+				return nil, err
+			}
+			result[key] = append(result[key], convertedT)
+		}
+	}
+	return result, nil
 }
 
 func (b *statusConverter) addTensorStatusConversion(tensor *Tensor, placement placement) (*Tensor, error) {
@@ -88,7 +104,14 @@ func (b *statusConverter) addTensorStatusConversion(tensor *Tensor, placement pl
 		}
 	case proto.TensorStatus_TENSORSTATUS_PUBLIC:
 		switch placement.status() {
-		// if tensor is public placement must be public
+		case proto.TensorStatus_TENSORSTATUS_PRIVATE:
+			revealParty := placement.partyList()[0]
+			if tensor.DType == proto.PrimitiveDataType_STRING {
+				return b.revealString(tensor, revealParty)
+			}
+			return b.plan.AddMakePrivateNode("make_private", tensor, revealParty, b.plan.partyInfo.GetParties())
+		case proto.TensorStatus_TENSORSTATUS_SECRET:
+			return b.plan.AddMakeShareNode("make_share", tensor, placement.partyList())
 		case proto.TensorStatus_TENSORSTATUS_PUBLIC:
 			return tensor, nil
 		}
@@ -154,6 +177,10 @@ func getStatusConversionCost(inputT *Tensor, newPlacement placement) (algCost, e
 		}
 	case proto.TensorStatus_TENSORSTATUS_PUBLIC:
 		switch newPlacement.status() {
+		case proto.TensorStatus_TENSORSTATUS_PRIVATE:
+			return newAlgCost(0, 1), nil
+		case proto.TensorStatus_TENSORSTATUS_SECRET:
+			return newAlgCost(len(newPlacement.partyList())-1, 0), nil
 		case proto.TensorStatus_TENSORSTATUS_PUBLIC:
 			return newAlgCost(0, 0), nil
 		}

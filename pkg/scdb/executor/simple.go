@@ -26,6 +26,7 @@ import (
 
 	"github.com/secretflow/scql/pkg/infoschema"
 	"github.com/secretflow/scql/pkg/parser/ast"
+	"github.com/secretflow/scql/pkg/scdb/auth"
 	"github.com/secretflow/scql/pkg/scdb/storage"
 	"github.com/secretflow/scql/pkg/util/chunk"
 	"github.com/secretflow/scql/pkg/util/transaction"
@@ -110,16 +111,39 @@ func (e *SimpleExec) executeCreateUser(store *gorm.DB, s *ast.CreateUserStmt) (e
 	if !ok {
 		return fmt.Errorf("failed to encode password")
 	}
-	result := store.Create(&storage.User{
+
+	if pa := auth.GetPartyAuthenticator(e.ctx); pa != nil {
+		if err := pa.VerifyPartyAuthentication(s.EngineOpt); err != nil {
+			return fmt.Errorf("simpleExec.executeCreateUser: %+v", err)
+		}
+	}
+
+	user := storage.User{
 		Host:      hostName,
 		User:      strings.ToLower(userName),
 		Password:  pwd,
 		PartyCode: spec.PartyCode,
-	})
-	if result.Error != nil {
-		return fmt.Errorf("simpleExec.executeCreateUser: %v", result.Error)
 	}
 
+	if s.EngineOpt != nil {
+		if s.EngineOpt.TokenAuth != nil && s.EngineOpt.PubKeyAuth != nil {
+			return fmt.Errorf("invalid Engine Auth option")
+		}
+		if s.EngineOpt.TokenAuth != nil {
+			user.EngineAuthMethod = int(storage.TokenAuth)
+			user.EngineToken = s.EngineOpt.TokenAuth.Token
+		}
+		if s.EngineOpt.PubKeyAuth != nil {
+			user.EngineAuthMethod = int(storage.PubKeyAuth)
+			user.EnginePubKey = s.EngineOpt.PubKeyAuth.PubKey
+		}
+		// concate multiply endpoints with
+		user.EngineEndpoints = strings.Join(s.EngineOpt.Endpoints, ";")
+	}
+
+	if result := store.Create(&user); result.Error != nil {
+		return fmt.Errorf("simpleExec.executeCreateUser: %v", result.Error)
+	}
 	return nil
 }
 
@@ -190,21 +214,40 @@ func (e *SimpleExec) executeAlterUser(store *gorm.DB, s *ast.AlterUserStmt) (err
 		}
 		return fmt.Errorf("user %v host %v not exists", userName, hostName)
 	}
+
+	updateNeeded := false
+	newUser := &storage.User{}
+
 	if spec.AuthOpt != nil && spec.AuthOpt.ByAuthString && spec.AuthOpt.AuthString != "" {
 		if err := storage.CheckValidPassword(spec.AuthOpt.AuthString); err != nil {
 			return fmt.Errorf("password for use %v is not valid: %v", userName, err)
 		}
-	} else {
-		return fmt.Errorf("no password for user %v", userName)
+		pwd, ok := spec.EncodedPassword()
+		if !ok {
+			return fmt.Errorf("failed to encode password")
+		}
+		updateNeeded = true
+		newUser.Password = pwd
 	}
-	pwd, ok := spec.EncodedPassword()
-	if !ok {
-		return fmt.Errorf("failed to encode password")
+
+	if s.EngineOpt != nil {
+		if s.EngineOpt.TokenAuth != nil || s.EngineOpt.PubKeyAuth != nil {
+			return fmt.Errorf("alterUserStmt don't support alter engine authentication setting")
+		}
+		if len(s.EngineOpt.Endpoints) > 0 {
+			updateNeeded = true
+			newUser.EngineEndpoints = strings.Join(s.EngineOpt.Endpoints, ";")
+		}
 	}
+
+	if !updateNeeded {
+		return fmt.Errorf("no password or endpoint provided for user %v", userName)
+	}
+
 	result := store.Model(&storage.User{}).Where(&storage.User{
 		Host: hostName,
 		User: userName,
-	}).Updates(storage.User{Password: pwd})
+	}).Updates(newUser)
 
 	if result.Error != nil {
 		return result.Error

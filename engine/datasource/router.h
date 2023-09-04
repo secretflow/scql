@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "api/datasource.pb.h"
+#include "engine/datasource/datasource.pb.h"
 
 namespace scql::engine {
 

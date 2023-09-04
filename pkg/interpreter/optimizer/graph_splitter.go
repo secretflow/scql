@@ -22,15 +22,13 @@ import (
 
 // PartySubDAG struct
 type PartySubDAG struct {
-	Nodes      []*translator.ExecutionNode
-	PartyCode  string
-	PartyURL   string
-	Credential string
+	Nodes     []*translator.ExecutionNode
+	PartyCode string
 }
 
 func splitExecutionNode(node *translator.ExecutionNode) map[string]*translator.ExecutionNode {
 	result := make(map[string]*translator.ExecutionNode)
-	for _, party := range node.PartyCodeInfos.GetParties() {
+	for _, party := range node.Parties {
 		result[party] = &translator.ExecutionNode{
 			ID:         node.ID,
 			Name:       node.Name,
@@ -48,7 +46,7 @@ func Split(subDag *SubDAG) (map[string]*PartySubDAG, error) {
 	partyNodes := make([]*translator.ExecutionNode, 0)
 	singlePartyNodes := make([]*translator.ExecutionNode, 0)
 	for node := range subDag.Nodes {
-		if len(node.PartyCodeInfos.GetParties()) == 1 {
+		if len(node.Parties) == 1 {
 			singlePartyNodes = append(singlePartyNodes, node)
 		} else {
 			partyNodes = append(partyNodes, node)
@@ -64,19 +62,9 @@ func Split(subDag *SubDAG) (map[string]*PartySubDAG, error) {
 		for party, n := range nodes {
 			_, ok := result[party]
 			if !ok {
-				url, err := node.PartyCodeInfos.GetUrlByParty(party)
-				if err != nil {
-					return nil, err
-				}
-				credential, err := node.PartyCodeInfos.GetCredentialByParty(party)
-				if err != nil {
-					return nil, err
-				}
 				result[party] = &PartySubDAG{
-					Nodes:      make([]*translator.ExecutionNode, 0),
-					PartyCode:  party,
-					PartyURL:   url,
-					Credential: credential,
+					Nodes:     make([]*translator.ExecutionNode, 0),
+					PartyCode: party,
 				}
 			}
 			result[party].Nodes = append(result[party].Nodes, n)

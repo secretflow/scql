@@ -17,8 +17,10 @@ package(default_visibility = ["//visibility:public"])
 cc_library(
     name = "operator",
     hdrs = ["operator.h"],
+    srcs = ["operator.cc"],
     deps = [
         ":exec",
+        "@com_github_gflags_gflags//:gflags",
     ],
 )
 

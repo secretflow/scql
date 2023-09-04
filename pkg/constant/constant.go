@@ -57,3 +57,8 @@ func merge(ms ...map[string]bool) map[string]bool {
 }
 
 var SupportTypes = merge(StringTypeAlias, IntegerTypeAlias, FloatTypeAlias, DoubleTypeAlias, DateTimeTypeAlias, TimeStampTypeAlias)
+
+const (
+	GMsm3Hash  = "GMSM3"
+	Sha256Hash = "SHA256"
+)

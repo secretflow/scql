@@ -79,7 +79,7 @@ void Filter::Execute(ExecContext* ctx) {
       FilterSecret(ctx, filter_pb, data_pb, output_pb.name());
     } else {
       YACL_THROW("not support to filter data with status={}",
-                 util::GetTensorStatus(data_pb));
+                 pb::TensorStatus_Name(util::GetTensorStatus(data_pb)));
     }
   }
 }

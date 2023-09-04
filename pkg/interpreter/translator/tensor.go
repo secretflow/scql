@@ -50,6 +50,8 @@ type Tensor struct {
 	// `isConstScalar` is true when the tensor's data is constant scalar,
 	// or the result of expression which only contains constant scalar.
 	isConstScalar bool
+
+	RefNum int32
 }
 
 // ToString dumps a debug string of the tensor
@@ -106,6 +108,7 @@ func newTensorFromProto(pb *proto.Tensor) *Tensor {
 		Name:   pb.Name,
 		Option: pb.Option,
 		DType:  pb.ElemType,
+		RefNum: pb.RefNum,
 	}
 
 	if pb.Annotation != nil {
@@ -156,6 +159,7 @@ func (t *Tensor) ToProto() *proto.Tensor {
 		Name:     t.UniqueName(),
 		Option:   t.Option,
 		ElemType: t.DType,
+		RefNum:   t.RefNum,
 	}
 	if t.Status != proto.TensorStatus_TENSORSTATUS_UNKNOWN {
 		pb.Annotation = &proto.TensorAnnotation{
@@ -197,7 +201,6 @@ func (t *Tensor) ToProto() *proto.Tensor {
 	if t.BooleanS != nil {
 		pb.BoolData = t.BooleanS
 	}
-
 	return pb
 }
 

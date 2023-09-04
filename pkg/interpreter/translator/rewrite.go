@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/secretflow/scql/pkg/grm"
 	"github.com/secretflow/scql/pkg/parser/ast"
 	"github.com/secretflow/scql/pkg/parser/format"
 	"github.com/secretflow/scql/pkg/parser/model"
@@ -29,7 +28,7 @@ import (
 type DbTable struct {
 	dbName    string
 	tableName string
-	dbType    grm.DatabaseType // db type of table stored
+	dbType    core.DBType // db type of table stored
 }
 
 func (dt *DbTable) String() string {
@@ -48,40 +47,40 @@ func newDbTable(dbTableName string) (DbTable, error) {
 	return DbTable{dbName: strings.ToLower(ss[0]), tableName: strings.ToLower(ss[1])}, nil
 }
 
-func (dt *DbTable) SetDBType(dbType grm.DatabaseType) {
+func (dt *DbTable) SetDBType(dbType core.DBType) {
 	dt.dbType = dbType
 }
 
 // rewriteTableRefsAndGetDBType rewrites the tableRefs with local db_dbname.table_name and get db type of
-func rewriteTableRefsAndGetDBType(m map[DbTable]DbTable, tableRefs []string) ([]string, grm.DatabaseType, error) {
-	dbType := grm.DBUnknown
+func rewriteTableRefsAndGetDBType(m map[DbTable]DbTable, tableRefs []string) ([]string, core.DBType, error) {
+	dbType := core.DBTypeUnknown
 	newTableRefs := make([]string, 0, len(tableRefs))
 	for _, dbTableName := range tableRefs {
 		DbTable, err := newDbTable(dbTableName)
 		if err != nil {
-			return nil, grm.DBUnknown, err
+			return nil, core.DBTypeUnknown, err
 		}
 		newDbTable, ok := m[DbTable]
 		if !ok {
-			return nil, grm.DBUnknown, fmt.Errorf("table %s not found", DbTable.String())
+			return nil, core.DBTypeUnknown, fmt.Errorf("table %s not found", DbTable.String())
 		}
 		newTableRefs = append(newTableRefs, newDbTable.String())
-		if newDbTable.dbType == grm.DBUnknown {
+		if newDbTable.dbType == core.DBTypeUnknown {
 			continue
 		}
-		if dbType != grm.DBUnknown && newDbTable.dbType != dbType {
-			return nil, grm.DBUnknown, fmt.Errorf("table %s has wrong db type %+v", DbTable.String(), newDbTable.dbType)
+		if dbType != core.DBTypeUnknown && newDbTable.dbType != dbType {
+			return nil, core.DBTypeUnknown, fmt.Errorf("table %s has wrong db type %+v", DbTable.String(), newDbTable.dbType)
 		}
 		dbType = newDbTable.dbType
 	}
-	if dbType == grm.DBUnknown {
-		dbType = grm.DBMySQL
+	if dbType == core.DBTypeUnknown {
+		dbType = core.DBTypeMySQL
 	}
 	return newTableRefs, dbType, nil
 }
 
 // runSQLString create sql string from lp with dialect
-func runSQLString(lp core.LogicalPlan, enginesInfo *EnginesInfo, skipDb bool) (sql string, newTableRefs []string, err error) {
+func runSQLString(lp core.LogicalPlan, enginesInfo *EnginesInfo) (sql string, newTableRefs []string, err error) {
 	var dialect core.Dialect
 	dialect = core.NewMySQLDialect()
 	// use MySQL as default dialect to get ref tables
@@ -94,7 +93,7 @@ func runSQLString(lp core.LogicalPlan, enginesInfo *EnginesInfo, skipDb bool) (s
 		return "", nil, err
 	}
 	tableRefs := ctx.GetTableRefs()
-	dbType := grm.DBMySQL
+	dbType := core.DBTypeMySQL
 	needRewrite := false
 	for _, party := range enginesInfo.GetParties() {
 		if len(enginesInfo.GetTablesByParty(party)) > 0 {
@@ -108,7 +107,7 @@ func runSQLString(lp core.LogicalPlan, enginesInfo *EnginesInfo, skipDb bool) (s
 		if err != nil {
 			return
 		}
-		if dbType != grm.DBMySQL {
+		if dbType != core.DBTypeMySQL {
 			ok := true
 			dialect, ok = core.DBDialectMap[dbType]
 			if !ok {
@@ -132,11 +131,6 @@ func runSQLString(lp core.LogicalPlan, enginesInfo *EnginesInfo, skipDb bool) (s
 		}
 	} else {
 		newTableRefs = tableRefs
-	}
-
-	if skipDb {
-		r := newDbNameRemover()
-		stmt.Accept(r)
 	}
 
 	b := new(bytes.Buffer)
@@ -192,27 +186,4 @@ func (r *rewriter) rewriteDbTableName4Column(t *ast.ColumnName) {
 			t.Table = model.NewCIStr(to.tableName)
 		}
 	}
-}
-
-// remove prefix db name in qualified table name
-type dbNameRemover struct {
-	err error
-}
-
-func newDbNameRemover() *dbNameRemover {
-	return &dbNameRemover{}
-}
-
-func (r *dbNameRemover) Enter(in ast.Node) (ast.Node, bool) {
-	return in, r.err != nil
-}
-
-func (r *dbNameRemover) Leave(in ast.Node) (ast.Node, bool) {
-	switch x := in.(type) {
-	case *ast.ColumnNameExpr:
-		x.Name.Schema = model.NewCIStr("")
-	case *ast.ColumnName:
-		x.Schema = model.NewCIStr("")
-	}
-	return in, r.err == nil
 }

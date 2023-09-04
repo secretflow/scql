@@ -26,27 +26,57 @@ import (
 )
 
 func TestMapSimple(t *testing.T) {
-	partyInfo, err := translator.NewPartyInfo([]string{"p1", "p2", "p3", "alice"},
-		[]string{"p1.net", "p2.net", "p3.net", "alice.net"}, []string{"p1_credential", "p2_credential", "p3_credential", "alice_credential"})
-	assert.NoError(t, err)
+
+	partyInfo := translator.NewPartyInfo([]*translator.Participant{
+		{
+			PartyCode: "p1",
+			Endpoints: []string{"p1.net"},
+			Token:     "p1_credential",
+		},
+		{
+			PartyCode: "p2",
+			Endpoints: []string{"p2.net"},
+			Token:     "p2_credential",
+		},
+		{
+			PartyCode: "p3",
+			Endpoints: []string{"p3.net"},
+			Token:     "p3_credential",
+		},
+		{
+			PartyCode: "alice",
+			Endpoints: []string{"alice.net"},
+			Token:     "alice_credential",
+		},
+	})
+
 	e1 := translator.NewGraphBuilder(partyInfo)
 
 	t0 := e1.AddTensor("t0")
+	t0.OwnerPartyCode = "p1"
 	t0.Status = proto.TensorStatus_TENSORSTATUS_PRIVATE
 	t1 := e1.AddTensorAs(t0)
+	t1.OwnerPartyCode = "p1"
 	t2 := e1.AddTensorAs(t0)
+	t2.OwnerPartyCode = "p1"
 	e1.AddRunSQLNode("RunSQLOp1", []*translator.Tensor{t0, t1, t2},
 		"select sum(test.h1.in_hospital_days), max(test.h1.in_hospital_days), min(test.h1.in_hospital_days) from test.h1", []string{"test.h1"}, "p1")
 
 	t3 := e1.AddTensorAs(t0)
+	t3.OwnerPartyCode = "p2"
 	t4 := e1.AddTensorAs(t0)
+	t4.OwnerPartyCode = "p2"
 	t5 := e1.AddTensorAs(t0)
+	t5.OwnerPartyCode = "p2"
 	e1.AddRunSQLNode("RunSQLOp2", []*translator.Tensor{t3, t4, t5},
 		"select sum(test.h2.in_hospital_days), max(test.h2.in_hospital_days), min(test.h2.in_hospital_days) from test.h2", []string{"test.h2"}, "p2")
 
 	t6 := e1.AddTensorAs(t0)
+	t6.OwnerPartyCode = "p3"
 	t7 := e1.AddTensorAs(t0)
+	t7.OwnerPartyCode = "p3"
 	t8 := e1.AddTensorAs(t0)
+	t8.OwnerPartyCode = "p3"
 	e1.AddRunSQLNode("RunSQLOp3", []*translator.Tensor{t6, t7, t8},
 		"select sum(test.h3.in_hospital_days), max(test.h3.in_hospital_days), min(test.h3.in_hospital_days) from test.h3", []string{"test.h3"}, "p3")
 

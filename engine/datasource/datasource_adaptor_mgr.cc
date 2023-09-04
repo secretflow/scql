@@ -16,6 +16,7 @@
 
 #include "yacl/base/exception.h"
 
+#include "engine/datasource/arrow_sql_adaptor_factory.h"
 #include "engine/datasource/csvdb_adaptor_factory.h"
 #include "engine/datasource/odbc_adaptor_factory.h"
 
@@ -71,6 +72,8 @@ void DatasourceAdaptorMgr::RegisterBuiltinAdaptorFactories() {
   factory_maps_.insert({DataSourceKind::POSTGRESQL, odbc_adaptor_factory});
   factory_maps_.insert(
       {DataSourceKind::CSVDB, std::make_shared<CsvdbAdaptorFactory>()});
+  factory_maps_.insert(
+      {DataSourceKind::ARROWSQL, std::make_shared<ArrowSqlAdaptorFactory>()});
 }
 
 }  // namespace scql::engine

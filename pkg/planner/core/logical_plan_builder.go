@@ -31,7 +31,6 @@ import (
 	"github.com/secretflow/scql/pkg/parser/mysql"
 	"github.com/secretflow/scql/pkg/parser/opcode"
 	"github.com/secretflow/scql/pkg/planner/property"
-	"github.com/secretflow/scql/pkg/planner/util"
 	"github.com/secretflow/scql/pkg/sessionctx"
 	"github.com/secretflow/scql/pkg/types"
 	driver "github.com/secretflow/scql/pkg/types/parser_driver"
@@ -62,9 +61,6 @@ func (b *PlanBuilder) buildDataSource(ctx context.Context, tn *ast.TableName,
 	}
 
 	tableInfo := tbl.Meta()
-	// TODO(tengt): Implement VCL based authentication logic here.
-	// var authErr error
-	// authErr = nil
 
 	if tableInfo.IsView() {
 		return b.BuildDataSourceFromView(ctx, dbName, tableInfo)
@@ -74,16 +70,14 @@ func (b *PlanBuilder) buildDataSource(ctx context.Context, tn *ast.TableName,
 	if tblName.L == "" {
 		tblName = tn.Name
 	}
-	possiblePaths := []*util.AccessPath{&util.AccessPath{IsTablePath: true}}
 	columns := tbl.Cols() // []table.Column
 	ds := DataSource{
-		DBName:              dbName,
-		TableAsName:         asName,
-		table:               tbl,
-		tableInfo:           tableInfo,
-		possibleAccessPaths: possiblePaths,
-		Columns:             make([]*model.ColumnInfo, 0, len(columns)),
-		TblCols:             make([]*expression.Column, 0, len(columns)),
+		DBName:      dbName,
+		TableAsName: asName,
+		table:       tbl,
+		tableInfo:   tableInfo,
+		Columns:     make([]*model.ColumnInfo, 0, len(columns)),
+		TblCols:     make([]*expression.Column, 0, len(columns)),
 	}.Init(b.ctx, b.getSelectOffset())
 
 	schema := expression.NewSchema(make([]*expression.Column, 0, len(columns))...)

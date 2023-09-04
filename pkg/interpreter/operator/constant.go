@@ -33,6 +33,8 @@ const (
 	OpNameIn            string = "In"
 	OpNameReplicate     string = "Replicate"
 	OpNameBroadcastTo   string = "BroadcastTo"
+	OpNameCast          string = "Cast"
+	OpNameLimit         string = "Limit"
 	// binary ops
 	OpNameLess         string = "Less"
 	OpNameLessEqual    string = "LessEqual"
@@ -80,6 +82,9 @@ const (
 	OpNameShuffle             string = "Shuffle"
 	// union all
 	OpNameConcat string = "Concat"
+	// condition ops
+	OpNameCaseWhen string = "CaseWhen"
+	OpNameIf       string = "If"
 )
 
 const (
@@ -89,6 +94,9 @@ const (
 	InputPartyCodesAttr = `input_party_codes`
 	// used by Copy
 	OutputPartyCodesAttr = `output_party_codes`
+	// used by Limit
+	LimitCountAttr  = "count"
+	LimitOffsetAttr = "offset"
 	// AlgorithmAttr
 	AlgorithmAttr   = `algorithm`
 	JoinTypeAttr    = `join_type`

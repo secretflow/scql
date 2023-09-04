@@ -18,6 +18,8 @@
 
 #include "engine/operator/arithmetic.h"
 #include "engine/operator/broadcast_to.h"
+#include "engine/operator/case_when.h"
+#include "engine/operator/cast.h"
 #include "engine/operator/compare.h"
 #include "engine/operator/concat.h"
 #include "engine/operator/constant.h"
@@ -28,8 +30,10 @@
 #include "engine/operator/group.h"
 #include "engine/operator/group_agg.h"
 #include "engine/operator/group_he_sum.h"
+#include "engine/operator/if.h"
 #include "engine/operator/in.h"
 #include "engine/operator/join.h"
+#include "engine/operator/limit.h"
 #include "engine/operator/logical.h"
 #include "engine/operator/make_private.h"
 #include "engine/operator/make_public.h"
@@ -100,10 +104,12 @@ void RegisterAllOpsImpl() {
   ADD_OPERATOR_TO_REGISTRY(ReduceMax);
 
   ADD_OPERATOR_TO_REGISTRY(Shape);
+  ADD_OPERATOR_TO_REGISTRY(Limit);
   ADD_OPERATOR_TO_REGISTRY(Unique);
 
   ADD_OPERATOR_TO_REGISTRY(Sort);
   ADD_OPERATOR_TO_REGISTRY(Shuffle);
+  ADD_OPERATOR_TO_REGISTRY(CaseWhen);
 
   // private groupby
   ADD_OPERATOR_TO_REGISTRY(Group);
@@ -125,6 +131,8 @@ void RegisterAllOpsImpl() {
   ADD_OPERATOR_TO_REGISTRY(ObliviousGroupMin);
 
   ADD_OPERATOR_TO_REGISTRY(Concat);
+  ADD_OPERATOR_TO_REGISTRY(Cast);
+  ADD_OPERATOR_TO_REGISTRY(If);
 }
 
 }  // namespace

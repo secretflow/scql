@@ -24,7 +24,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
-	"github.com/secretflow/scql/pkg/scdb/server"
+	"github.com/secretflow/scql/pkg/scdb/config"
 )
 
 // NumericalPrecision is based on experiment
@@ -264,7 +264,7 @@ type TestDataSource struct {
 }
 
 // connDB creates a connection to the MySQL instance
-func (ds *TestDataSource) ConnDB(conf *server.StorageConf) (err error) {
+func (ds *TestDataSource) ConnDB(conf *config.StorageConf) (err error) {
 	ds.MysqlDb, err = gorm.Open(mysql.Open(conf.ConnStr), &gorm.Config{})
 	if err != nil {
 		return err

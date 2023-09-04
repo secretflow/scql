@@ -20,10 +20,10 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/secretflow/scql/pkg/grm"
+	"github.com/secretflow/scql/pkg/infoschema"
 	"github.com/secretflow/scql/pkg/interpreter/translator"
 	"github.com/secretflow/scql/pkg/parser/mysql"
-	grmproto "github.com/secretflow/scql/pkg/proto-gen/grm"
+	"github.com/secretflow/scql/pkg/planner/core"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/scdb/storage"
 	"github.com/secretflow/scql/pkg/util/sliceutil"
@@ -39,7 +39,7 @@ func findColPriv(colPrivs []storage.ColumnPriv, colName string) (storage.ColumnP
 	return storage.ColumnPriv{}, false
 }
 
-func collectCCLForUser(store *gorm.DB, user, host string, tables []*grm.TableSchema) ([]*scql.SecurityConfig_ColumnControl, error) {
+func collectCCLForUser(store *gorm.DB, user, host string, tables []*infoschema.TableSchema) ([]*scql.SecurityConfig_ColumnControl, error) {
 	var ccl []*scql.SecurityConfig_ColumnControl
 
 	partyCode, err := storage.QueryUserPartyCode(store, user, host)
@@ -139,33 +139,65 @@ func (app *App) askEngineInfoByTables(s *session, dbName string, tableNames []st
 		}
 
 		refDbTable := translator.NewDbTable(t.RefDb, t.RefTable)
-		refDbTable.SetDBType(grmproto.DataSourceKind(t.DBType))
+		refDbTable.SetDBType(core.DBType(t.DBType))
 		tableToRefs[dbTable] = refDbTable
 	}
-
-	grmToken := s.GetSessionVars().GrmToken
-	grmClien := s.GetSessionVars().GrmClient
 
 	// NOTE: sort engines by party code to enforce determinism
 	partyCodes = sliceutil.SliceDeDup(partyCodes)
 
-	engines, err := grmClien.GetEngines(partyCodes, grmToken)
+	participants, err := GetParticipantInfos(store, partyCodes)
 	if err != nil {
-		return nil, fmt.Errorf("askEngineInfo failed to get engineInfo: %v", err)
+		return nil, fmt.Errorf("askEngineInfo failed to get participantInfos: %+v", err)
 	}
-	var partyHosts []string
-	var partyCredentials []string
-	for _, engineInfo := range engines {
-		partyHosts = append(partyHosts, engineInfo.Endpoints[0])
-		partyCredentials = append(partyCredentials, engineInfo.Credential[0])
+
+	if err = ValidateParticipantInfos(participants); err != nil {
+		return nil, fmt.Errorf("invalid participantsInfo: %+v", err)
 	}
-	partyInfo, err := translator.NewPartyInfo(partyCodes, partyHosts, partyCredentials)
-	if err != nil {
-		return nil, fmt.Errorf("askEngineInfo failed to get partyInfo: %v", err)
-	}
+
+	partyInfo := translator.NewPartyInfo(participants)
 	enginesInfo := translator.NewEnginesInfo(partyInfo, party2Tables)
 
 	enginesInfo.UpdateTableToRefs(tableToRefs)
 
 	return enginesInfo, nil
+}
+
+// one-to-one correspondence between in parameter `partyCodes` and return value `[]*translator.Participant` on success
+func GetParticipantInfos(db *gorm.DB, partyCodes []string) ([]*translator.Participant, error) {
+	var users []storage.User
+	if result := db.Model(&storage.User{}).Where("party_code in ?", partyCodes).Find(&users); result.Error != nil {
+		return nil, result.Error
+	}
+	partyMap := make(map[string]*translator.Participant)
+	for _, user := range users {
+		if _, exists := partyMap[user.PartyCode]; exists {
+			return nil, fmt.Errorf("there exists multiply users belong to the same party %v", user.PartyCode)
+		}
+		p := &translator.Participant{
+			PartyCode: user.PartyCode,
+			Endpoints: strings.Split(user.EngineEndpoints, ";"),
+			Token:     user.EngineToken,
+			PubKey:    user.EnginePubKey,
+		}
+		partyMap[user.PartyCode] = p
+	}
+	result := make([]*translator.Participant, 0, len(partyCodes))
+	for _, code := range partyCodes {
+		p, exists := partyMap[code]
+		if !exists {
+			return nil, fmt.Errorf("party %v not found", code)
+		}
+		result = append(result, p)
+	}
+	return result, nil
+}
+
+func ValidateParticipantInfos(participants []*translator.Participant) error {
+	for _, p := range participants {
+		if len(p.Endpoints) == 0 {
+			return fmt.Errorf("no endpoint for party %s", p.PartyCode)
+		}
+	}
+	return nil
 }

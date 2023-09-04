@@ -88,9 +88,8 @@ func (ts *testMiscSuite) TestMiscVisitorCover(c *C) {
 
 func (ts *testMiscSuite) TestDDLVisitorCover(c *C) {
 	sql := `
-create table t (c1 smallint unsigned, c2 int unsigned);
-alter table t add column a smallint unsigned after b;
-alter table t add column (a int, constraint check (a > 0));
+create table t (c1 int, c2 int);
+alter table t add column a int after b;
 create index t_i on t (id);
 create database test character set utf8;
 drop database test;
@@ -98,8 +97,7 @@ drop index t_i on t;
 drop table t;
 truncate t;
 create table t (
-jobAbbr char(4) not null,
-constraint foreign key (jobabbr) references ffxi_jobtype (jobabbr) on delete cascade on update cascade
+jobAbbr string not null
 );
 `
 	parse := parser.New()

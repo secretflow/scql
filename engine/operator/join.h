@@ -14,12 +14,38 @@
 
 #pragma once
 
+#include <cstdint>
+#include <vector>
+
+#include "engine/core/tensor.h"
+#include "engine/framework/exec.h"
 #include "engine/framework/operator.h"
+#include "engine/util/psi_helper.h"
 
 namespace scql::engine::op {
 
 class Join : public Operator {
  public:
+  enum class JoinAlgo : int64_t {
+    kEcdhPsiJoin = 0,
+    kOprfPsiJoin = 1,
+    kAlgoNums,  // Sentinel Value
+  };
+
+  enum class JoinType : int64_t {
+    kInnerJoin = 0,
+    kLeftJoin = 1,
+    kRightJoin = 2,
+    kTypeNums,
+  };
+
+  enum class JoinRole {
+    kInnerJoinParty = 0,
+    kLeftOrRightJoinFullParty = 1,
+    kLeftOrRightJoinNullParty = 2,
+    kInValid
+  };
+
   static const std::string kOpType;
   // input/output names
   static constexpr char kInLeft[] = "Left";
@@ -29,8 +55,10 @@ class Join : public Operator {
   // attributes
   static constexpr char kJoinTypeAttr[] = "join_type";
   static constexpr char kInputPartyCodesAttr[] = "input_party_codes";
-  // join type
-  static constexpr int64_t kInnerJoin = 0;
+
+  static constexpr char kAlgorithmAttr[] = "algorithm";
+
+  static constexpr char kUbPsiServerHint[] = "ub_psi_server_hint";
 
   const std::string& Type() const override;
 
@@ -38,8 +66,44 @@ class Join : public Operator {
   void Validate(ExecContext* ctx) override;
   void Execute(ExecContext* ctx) override;
 
-  std::vector<TensorPtr> GetJoinKeys(ExecContext* ctx, bool is_left);
-  void SetJoinIndices(ExecContext* ctx, bool is_left, TensorPtr indices);
+ private:
+  static void ValidatePsiVisibility(ExecContext* ctx);
+  static void ValidateJoinType(ExecContext* ctx);
+
+  static void EcdhPsiJoin(ExecContext* ctx);
+  static void OprfPsiJoin(ExecContext* ctx, bool is_server,
+                          std::optional<util::PsiSizeInfo> psi_size_info = {});
+
+  static std::vector<TensorPtr> GetJoinKeys(ExecContext* ctx, bool is_left);
+  static void SetJoinResult(ExecContext* ctx, bool is_left,
+                            TensorPtr result_tensor);
+  static JoinRole GetJoinRole(int64_t join_type, bool is_left);
+
+  // oprf psi
+  static bool IsOprfServerAccordToHint(ExecContext* ctx);
+  static void OprfPsiServer(
+      ExecContext* ctx, JoinRole join_role, const std::string& tmp_dir,
+      const spu::psi::EcdhOprfPsiOptions& psi_options,
+      const std::shared_ptr<util::BatchProvider>& batch_provider, bool is_left,
+      int64_t peer_rank, util::PsiExecutionInfoTable* psi_info_table);
+  static void OprfPsiClient(
+      ExecContext* ctx, JoinRole join_role, const std::string& tmp_dir,
+      const spu::psi::EcdhOprfPsiOptions& psi_options,
+      const std::shared_ptr<util::BatchProvider>& batch_provider, bool is_left,
+      int64_t peer_rank, util::PsiExecutionInfoTable* psi_info_table);
+
+  static uint64_t RecvNullCount(ExecContext* ctx, int64_t peer_rank);
+  static void SendNullCount(ExecContext* ctx, int64_t peer_rank,
+                            uint64_t null_count);
+  static std::vector<uint64_t> RecvMatchedSeqs(ExecContext* ctx,
+                                               int64_t peer_rank);
+  static void SendMatchedSeqs(ExecContext* ctx, int64_t peer_rank,
+                              const std::vector<uint64_t>& matched_seqs);
+  static TensorPtr BuildServerResult(
+      const std::vector<uint64_t>& matched_seqs,
+      const std::shared_ptr<util::UbPsiJoinCache>& ub_cache,
+      uint64_t client_unmatched_count, JoinRole join_role,
+      const std::shared_ptr<util::BatchProvider>& batch_provider);
 };
 
 }  // namespace scql::engine::op

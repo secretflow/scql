@@ -306,4 +306,3 @@ msgid ""
 "cooperates with peers to run the execution graph and reports the final "
 "result of Q to SCDB."
 msgstr "SCDB 将子图发送到相应的 SCQLEngine 节点，SCQLEngine 与参与方协助运行执行图，并将 Q 的最终结果报告给 SCDB。"
-

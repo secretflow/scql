@@ -15,6 +15,7 @@
 #include "engine/util/spu_io.h"
 
 #include "arrow/array/util.h"
+#include "gflags/gflags.h"
 #include "libspu/device/io.h"
 #include "libspu/kernel/hal/constants.h"
 #include "libspu/kernel/hal/public_helper.h"
@@ -23,6 +24,9 @@
 #include "engine/core/arrow_helper.h"
 #include "engine/core/type.h"
 #include "engine/util/ndarray_to_arrow.h"
+
+DEFINE_int64(max_chunk_size, 128UL * 1024 * 1024,
+             "max chunk size of value proto");
 
 namespace scql::engine::util {
 
@@ -176,44 +180,60 @@ TensorPtr SpuOutfeedHelper::DumpPublic(const std::string& name) {
 #endif  // SCQL_WITH_NULL
 }
 
+spu::NdArrayRef RevealSpuValue(const spu::SPUContext* sctx,
+                               const spu::Value& value, size_t rank) {
+  const auto& lctx = sctx->lctx();
+  spu::device::IoClient io(lctx->WorldSize(), sctx->config());
+  std::string value_content;
+  auto value_proto = value.toProto(FLAGS_max_chunk_size);
+  std::vector<std::vector<yacl::Buffer>> value_buffers;
+  for (const auto& chunk : value_proto.chunks) {
+    chunk.SerializeToString(&value_content);
+    value_buffers.emplace_back(yacl::link::Gather(
+        lctx, yacl::ByteContainerView(value_content), rank, "reveal_value"));
+  }
+  if (lctx->Rank() != rank) {
+    return {};
+  }
+  std::vector<spu::ValueProto> value_protos(lctx->WorldSize());
+  for (auto& v_proto : value_protos) {
+    v_proto.meta = value_proto.meta;
+    v_proto.chunks =
+        std::vector<spu::ValueChunkProto>(value_proto.chunks.size());
+  }
+
+  for (size_t i = 0; i < value_buffers.size(); i++) {
+    for (size_t j = 0; j < value_buffers[i].size(); j++) {
+      spu::ValueChunkProto v;
+      YACL_ENFORCE(v.ParseFromArray(value_buffers[i][j].data(),
+                                    value_buffers[i][j].size()));
+      value_protos[j].chunks[i] = v;
+    }
+  }
+  std::vector<spu::Value> value_shares;
+  for (size_t i = 0; i < lctx->WorldSize(); i++) {
+    value_shares.push_back(spu::Value::fromProto(value_protos[i]));
+  }
+  return io.combineShares(value_shares);
+}
+
 TensorPtr SpuOutfeedHelper::RevealTo(const std::string& name, size_t rank) {
   const auto& lctx = sctx_->lctx();
   spu::device::IoClient io(lctx->WorldSize(), sctx_->config());
 
   auto value = symbols_->getVar(SpuVarNameEncoder::GetValueName(name));
-  std::string value_content;
-  value.toProto().SerializeToString(&value_content);
-  auto value_buffers = yacl::link::Gather(
-      lctx, yacl::ByteContainerView(value_content), rank, "reveal_value");
+  auto arr = RevealSpuValue(sctx_, value, rank);
 
 #ifdef SCQL_WITH_NULL
   auto validity_val =
       symbols_->getVar(SpuVarNameEncoder::GetValidityName(name));
-  std::string validity_content;
-  validity_val.toProto().SerializeToString(&validity_content);
-  auto validity_buffers = yacl::link::Gather(
-      lctx, yacl::ByteContainerView(validity_content), rank, "reveal_validity");
+  auto validity = RevealSpuValue(sctx_, validity_val, rank);
 #endif  // SCQL_WITH_NULL
 
   if (lctx->Rank() != rank) {
     return nullptr;
   }
-
-  std::vector<spu::Value> value_shares;
-  for (const auto& buffer : value_buffers) {
-    spu::ValueProto value_proto;
-    YACL_ENFORCE(value_proto.ParseFromArray(buffer.data(), buffer.size()));
-    value_shares.push_back(spu::Value::fromProto(value_proto));
-  }
-  auto arr = io.combineShares(value_shares);
 #ifdef SCQL_WITH_NULL
-  std::vector<spu::Value> validity_shares;
-  for (const auto& buffer : validity_buffers) {
-    spu::ValueProto value_proto;
-    YACL_ENFORCE(value_proto.ParseFromArray(buffer.data(), buffer.size()));
-    validity_shares.push_back(spu::Value::fromProto(value_proto));
-  }
-  auto validity = io.combineShares(validity_shares);
   return std::make_shared<Tensor>(NdArrayToArrow(arr, &validity));
 #else
   return std::make_shared<Tensor>(NdArrayToArrow(arr, nullptr));

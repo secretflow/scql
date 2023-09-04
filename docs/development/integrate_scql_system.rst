@@ -4,20 +4,15 @@ How To Integrate SCQL System
 Overview
 --------
 
-As shown in FIG, SCQL System needs to work with **Client** and **GRM** :
+As shown in FIG, SCQL System needs to work with **Client**:
 
 * Client: user interface designed for query submission and result retrieval.
 
-* GRM: help to manage schema information and identify parties.
-
-.. note::
-  please read :doc:`../reference/grm` to know more about GRM.
-
 .. image:: ../imgs/scql_system.png
 
-Therefore the platform should support Client and GRM to integrate SCQL System.
+Therefore the platform should support Client to integrate SCQL System.
 
-Specifically, the Client interact with SCDB through Query API,  while GRM interact with SCDB through GRM API.
+Specifically, the Client interact with SCDB through Query API.
 
 Query API
 ----------
@@ -37,14 +32,3 @@ Please refer to :doc:`../development/scql_api` for details.
 
 In a word, the custom Client should construct HTTP request for user's SQL, post to SCDB and parse the response from SCDB.
 
-GRM API
---------
-SCQL uses rpc API to communicate with GRM:
-
-* ``/GetTableMeta``: fetch metadata of table, GRM server should listen on ``${GRMServerHost}/GetTableMeta``
-* ``/GetEngines``: get endpoints for specific SCQLEngines(parties), GRM server should listen on ``${GRMServerHost}/GetEngines``
-* ``/VerifyTableOwnership``: check whether user has ownership of table, GRM server should listen on ``${GRMServerHost}/VerifyTableOwnership``
-
-Please refer to :doc:`../reference/grm` for details.
-
-The custom GRM Server needs to support above services corresponding to the GRM API.

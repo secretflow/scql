@@ -23,7 +23,6 @@ import (
 	"strings"
 
 	"github.com/secretflow/scql/pkg/constant"
-	"github.com/secretflow/scql/pkg/grm"
 	"github.com/secretflow/scql/pkg/parser/model"
 	"github.com/secretflow/scql/pkg/parser/mysql"
 	"github.com/secretflow/scql/pkg/parser/terror"
@@ -121,7 +120,7 @@ func (is *infoSchema) SchemaByName(schema model.CIStr) (val *model.DBInfo, ok bo
 	return tableNames.dbInfo, true
 }
 
-func FromGRMTableSchema(tableSchema []*grm.TableSchema) (InfoSchema, error) {
+func FromTableSchema(tableSchema []*TableSchema) (InfoSchema, error) {
 	result := &infoSchema{
 		schemaMap:           make(map[string]*schemaTables), // dbname -> []tables
 		sortedTablesBuckets: make([]sortedTables, len(tableSchema)),
@@ -187,8 +186,8 @@ func FromGRMTableSchema(tableSchema []*grm.TableSchema) (InfoSchema, error) {
 	return result, nil
 }
 
-func ConvertToTableSchemas(m map[string][]*model.TableInfo) ([]*grm.TableSchema, error) {
-	result := make([]*grm.TableSchema, 0)
+func ConvertToTableSchemas(m map[string][]*model.TableInfo) ([]*TableSchema, error) {
+	result := make([]*TableSchema, 0)
 
 	// sort to enforce determinism
 	var allDbNames []string
@@ -200,13 +199,13 @@ func ConvertToTableSchemas(m map[string][]*model.TableInfo) ([]*grm.TableSchema,
 	for _, dbName := range allDbNames {
 		v := m[dbName]
 		for _, tbl := range v {
-			columns := make([]*grm.ColumnDesc, 0, len(tbl.Columns))
+			columns := make([]ColumnDesc, 0, len(tbl.Columns))
 			for _, c := range tbl.Columns {
 				typeStr, err := FieldTypeString(c.FieldType)
 				if err != nil {
 					return nil, err
 				}
-				col := &grm.ColumnDesc{
+				col := ColumnDesc{
 					Name:        c.Name.L,
 					Type:        typeStr,
 					Description: c.Comment,
@@ -223,7 +222,7 @@ func ConvertToTableSchemas(m map[string][]*model.TableInfo) ([]*grm.TableSchema,
 			default:
 				shortTableName = s[1]
 			}
-			tblSchema := &grm.TableSchema{
+			tblSchema := &TableSchema{
 				DbName:    dbName,
 				TableName: shortTableName,
 				Columns:   columns,

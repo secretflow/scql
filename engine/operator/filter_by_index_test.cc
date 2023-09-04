@@ -78,7 +78,7 @@ TEST_P(FilterByIndexTest, works) {
   pb::ExecNode node = MakeFilterByIndexExecNode(test_case);
   auto session = test::Make1PCSession();
 
-  ExecContext ctx(node, &session);
+  ExecContext ctx(node, session.get());
 
   FeedInputs(&ctx, test_case);
 

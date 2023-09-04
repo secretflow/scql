@@ -46,16 +46,6 @@ proto_library(
 )
 
 proto_library(
-    name = "grm_proto",
-    srcs = ["grm.proto"],
-    deps = [
-        ":common_proto",
-        ":datasource_proto",
-        ":status_proto",
-    ],
-)
-
-proto_library(
     name = "engine_proto",
     srcs = ["engine.proto"],
     deps = [
@@ -70,14 +60,6 @@ proto_library(
 proto_library(
     name = "status_proto",
     srcs = ["status.proto"],
-    deps = [
-        "@com_google_protobuf//:any_proto",
-    ],
-)
-
-proto_library(
-    name = "datasource_proto",
-    srcs = ["datasource.proto"],
     deps = [
         "@com_google_protobuf//:any_proto",
     ],
@@ -107,11 +89,6 @@ cc_proto_library(
     deps = [":status_code_proto"],
 )
 
-cc_proto_library(
-    name = "datasource_cc_proto",
-    deps = [":datasource_proto"],
-)
-
 go_proto_library(
     name = "spu_go_proto",
     importpath = "github.com/secretflow/scql/pkg/proto-gen/spu",
@@ -131,14 +108,4 @@ go_proto_library(
         ":status_proto",
     ],
     deps = [":spu_go_proto"],
-)
-
-go_proto_library(
-    name = "grm_go_proto",
-    importpath = "github.com/secretflow/scql/pkg/proto-gen/grm",
-    protos = [
-        ":datasource_proto",
-        ":grm_proto",
-    ],
-    deps = [":scql_go_proto"],
 )

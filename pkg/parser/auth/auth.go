@@ -20,10 +20,14 @@ import (
 	"fmt"
 
 	"github.com/pingcap/errors"
+	"github.com/tjfoc/gmsm/sm3"
 
+	"github.com/secretflow/scql/pkg/constant"
 	. "github.com/secretflow/scql/pkg/parser/format"
 	"github.com/secretflow/scql/pkg/parser/terror"
 )
+
+var EncHashType = constant.Sha256Hash
 
 // UserIdentity represents username and hostname.
 type UserIdentity struct {
@@ -122,13 +126,25 @@ func Sha256Hash(bs []byte) []byte {
 	return crypt.Sum(nil)
 }
 
+// SM3Hash is an util function to calculate SM3 hash.
+func SM3Hash(bs []byte) []byte {
+	crypt := sm3.New()
+	_, err := crypt.Write(bs)
+	terror.Log(errors.Trace(err))
+	return crypt.Sum(nil)
+}
+
 // EncodePassword converts plaintext password to hashed hex string.
 func EncodePassword(pwd string) string {
 	if len(pwd) == 0 {
 		return ""
 	}
-	hash1 := Sha256Hash([]byte(pwd))
-	hash2 := Sha256Hash(hash1)
+	hashFunc := Sha256Hash
+	if EncHashType == constant.GMsm3Hash {
+		hashFunc = SM3Hash
+	}
+	hash1 := hashFunc([]byte(pwd))
+	hash2 := hashFunc(hash1)
 
 	return fmt.Sprintf("*%X", hash2)
 }

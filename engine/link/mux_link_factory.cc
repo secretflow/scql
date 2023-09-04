@@ -35,7 +35,7 @@ namespace scql::engine {
     } else if ((response).error_code() != link::pb::ErrorCode::SUCCESS) {     \
       std::string error_info = fmt::format(                                   \
           "send failed: {}, peer failed code={}, message={}.", request_info,  \
-          (response).error_code(), (response).error_msg());                   \
+          static_cast<int>((response).error_code()), (response).error_msg()); \
       if ((response).error_code() == link::pb::ErrorCode::LINKID_NOT_FOUND) { \
         YACL_THROW_NETWORK_ERROR(error_info);                                 \
       }                                                                       \
@@ -51,7 +51,9 @@ std::shared_ptr<yacl::link::Context> MuxLinkFactory::CreateContext(
                "invalid arg: self rank={} not small than world_size={}",
                self_rank, world_size);
   // 1. create channels.
-  std::vector<std::shared_ptr<yacl::link::IChannel>> channels(world_size);
+  std::vector<std::shared_ptr<yacl::link::transport::IChannel>> channels(
+      world_size);
+  auto listener = std::make_shared<Listener>();
   for (size_t rank = 0; rank < world_size; rank++) {
     if (rank == self_rank) {
       continue;
@@ -60,17 +62,14 @@ std::shared_ptr<yacl::link::Context> MuxLinkFactory::CreateContext(
     auto rpc_channel =
         channel_manager_->Create(peer_host, RemoteRole::PeerEngine);
     YACL_ENFORCE(rpc_channel, "create rpc channel failed for rank={}", rank);
-    channels[rank] = std::make_shared<MuxLinkChannel>(
+    auto link_channel = std::make_shared<MuxLinkChannel>(
         self_rank, rank, desc.recv_timeout_ms, desc.http_max_payload_size,
         desc.id, rpc_channel);
-  }
-  // 2. add channels to ListenManager.
-  auto listener = std::make_shared<Listener>();
-  for (size_t rank = 0; rank < world_size; rank++) {
+    channels[rank] = link_channel;
     if (rank == self_rank) {
       continue;
     }
-    listener->AddChannel(rank, channels[rank]);
+    listener->AddChannel(rank, link_channel);
   }
   listener_manager_->AddListener(desc.id, listener);
   // 3. construct Context.

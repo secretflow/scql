@@ -222,11 +222,11 @@ TEST_P(ReduceTest, Works) {
   auto parm = GetParam();
   auto tc = std::get<1>(parm);
   auto node = MakeExecNode(tc);
-  std::vector<Session> sessions = test::MakeMultiPCSession(std::get<0>(parm));
+  auto sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
   std::vector<ExecContext> exec_ctxs;
   for (size_t idx = 0; idx < sessions.size(); ++idx) {
-    exec_ctxs.emplace_back(node, &sessions[idx]);
+    exec_ctxs.emplace_back(node, sessions[idx].get());
   }
 
   // feed inputs

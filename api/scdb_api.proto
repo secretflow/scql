@@ -78,14 +78,14 @@ message SCDBQueryRequest {
 message SCDBSubmitResponse {
   // Status of response
   Status status = 1;
-  // scdb session id
+  // Scdb session id
   string scdb_session_id = 2;
 }
 
 message SCDBFetchRequest {
   RequestHeader header = 1;
   SCDBCredential user = 2;
-  // scdb session id
+  // Scdb session id
   string scdb_session_id = 3;
 }
 
@@ -95,11 +95,13 @@ message SCDBQueryResultResponse {
   Status status = 1;
   // Output columns.
   repeated Tensor out_columns = 2;
-  // scdb session id
+  // Scdb session id
   string scdb_session_id = 3;
 
-  // the number of rows affected by a select into, update, insert, or delete
+  // The number of rows affected by a select into, update, insert, or delete
   int64 affected_rows = 4;
+  // Warnings for the query
+  repeated SQLWarning warnings = 5;
 }
 
 message User {
@@ -123,5 +125,9 @@ message User {
 
 message SCDBCredential {
   User user = 1;
-  string grm_token = 2;
+}
+
+message SQLWarning {
+  // Description of the warning
+  string reason = 1;
 }

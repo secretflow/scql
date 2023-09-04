@@ -89,7 +89,7 @@ TEST_F(RunSQLTest, normal) {
   std::unique_ptr<Router> router = EmbedRouter::FromJsonStr(embed_router_conf_);
   DatasourceAdaptorMgr ds_mgr;
   auto session = test::Make1PCSession(router.get(), &ds_mgr);
-  ExecContext ctx(node, &session);
+  ExecContext ctx(node, session.get());
   // When
   RunSQL op;
   op.Run(&ctx);

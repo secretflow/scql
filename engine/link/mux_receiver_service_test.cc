@@ -69,6 +69,7 @@ TEST_F(MuxReceiverServiceImplTest, Works) {
         yacl::link::Barrier(lc0, "ba-1"));  // simple function works.
 
     // release lc0
+    lc0->WaitLinkTaskFinish();
     lc0.reset();
     // create with a new id.
     link_desc.id = new_id;
@@ -77,6 +78,7 @@ TEST_F(MuxReceiverServiceImplTest, Works) {
     EXPECT_NO_THROW(lc1->ConnectToMesh());
     EXPECT_NO_THROW(
         yacl::link::Barrier(lc1, "ba-2"));  // simple function works.
+    lc1->WaitLinkTaskFinish();
   };
 
   std::vector<std::future<void>> futures(kWorldSize);

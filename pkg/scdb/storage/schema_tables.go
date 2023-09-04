@@ -41,7 +41,6 @@ type Table struct {
 	Schema       string `gorm:"column:table_schema;comment:'table schema'"`
 	Owner        string `gorm:"column:owner;type:varchar(64);comment:'owner user name'"`
 	Host         string `gorm:"column:host;type:varchar(64);comment:'owner user host'"`
-	Tid          string `gorm:"column:tid;type:varchar(1024);comment:'table id in grm'"`
 	RefDb        string `gorm:"column:ref_db;type:varchar(64);comment:'reference database name'"`
 	RefTable     string `gorm:"column:ref_table;type:varchar(64);comment:'reference table name'"`
 	IsView       bool   `gorm:"column:is_view;comment:'this table is a view'"`

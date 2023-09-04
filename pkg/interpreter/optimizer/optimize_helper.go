@@ -70,12 +70,12 @@ func mergeExecutionNodes(nodes []*translator.ExecutionNode) (*translator.Executi
 	}
 
 	return &translator.ExecutionNode{
-		Name:           nodes[0].Name,
-		OpType:         nodes[0].OpType,
-		Inputs:         inputs,
-		Outputs:        outputs,
-		Attributes:     nodes[0].Attributes,
-		PartyCodeInfos: nodes[0].PartyCodeInfos,
+		Name:       nodes[0].Name,
+		OpType:     nodes[0].OpType,
+		Inputs:     inputs,
+		Outputs:    outputs,
+		Attributes: nodes[0].Attributes,
+		Parties:    nodes[0].Parties,
 	}, nil
 }
 
@@ -85,8 +85,8 @@ func mergeExecutionNodes(nodes []*translator.ExecutionNode) (*translator.Executi
 //   - Input Data Type
 //   - Party Codes
 func genBinaryNodeDigest(node *translator.ExecutionNode) string {
-	partyCodes := make([]string, len(node.PartyCodeInfos.GetParties()))
-	copy(partyCodes, node.PartyCodeInfos.GetParties())
+	partyCodes := make([]string, len(node.Parties))
+	copy(partyCodes, node.Parties)
 	sort.Strings(partyCodes)
 
 	var dTypeStrings []string
@@ -185,7 +185,7 @@ func mergePublish(inputDAG *SubDAG) bool {
 		if node.OpType != operator.OpNamePublish {
 			continue
 		}
-		partyCode := node.PartyCodeInfos.GetParties()[0]
+		partyCode := node.Parties[0]
 		_, ok := candidates[partyCode]
 		if !ok {
 			candidates[partyCode] = make([]*translator.ExecutionNode, 0)

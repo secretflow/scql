@@ -31,6 +31,7 @@ import (
 	"github.com/secretflow/scql/pkg/parser"
 	"github.com/secretflow/scql/pkg/parser/ast"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/scdb/config"
 	scdbexecutor "github.com/secretflow/scql/pkg/scdb/executor"
 	"github.com/secretflow/scql/pkg/scdb/storage"
 	"github.com/secretflow/scql/pkg/status"
@@ -95,7 +96,7 @@ func (app *App) SubmitHandler(c *gin.Context) {
 
 // submit implements core logic of SubmitHandler
 func (app *App) submit(ctx context.Context, req *scql.SCDBQueryRequest) *scql.SCDBSubmitResponse {
-	session, err := newSession(ctx, req, app.storage, app.grmClient)
+	session, err := newSession(ctx, req, app.storage)
 	if err != nil {
 		return newErrorSCDBSubmitResponse(scql.Code_INTERNAL, err.Error())
 	}
@@ -139,20 +140,21 @@ func isDQL(sql string) (bool, error) {
 
 // compile and run dql
 func (app *App) runDQL(ctx context.Context, session *session) *scql.SCDBSubmitResponse {
-	session.engineStub = executor.NewEngineStub(session.id,
-		app.config.SCDBHost,
-		engineCallbackPath,
-		app.engineClient,
-		app.config.Engine.Protocol,
-		app.config.Engine.ContentType,
-	)
-
 	elp, err := app.compilePrepare(ctx, session)
 	if err != nil {
 		return newErrorSCDBSubmitResponse(scql.Code_INTERNAL, err.Error())
 	}
 
 	session.fillPartyInfo(elp.engineInfos)
+
+	session.engineStub = executor.NewEngineStub(session.id,
+		app.config.SCDBHost,
+		engineCallbackPath,
+		app.engineClient,
+		app.config.Engine.Protocol,
+		app.config.Engine.ContentType,
+		session.partyInfo,
+	)
 
 	err = app.compileAndKickOff(ctx, session, elp)
 	if err != nil {
@@ -245,7 +247,7 @@ func (app *App) compileAndKickOff(ctx context.Context, s *session, lpInfo *Logic
 	}
 
 	// Build session start request.
-	spuRuntimeCfg, err := NewSpuRuntimeCfg(app.config.Engine.SpuRuntimeCfg)
+	spuRuntimeCfg, err := config.NewSpuRuntimeCfg(app.config.Engine.SpuRuntimeCfg)
 	if err != nil {
 		return err
 	}
@@ -259,7 +261,7 @@ func (app *App) compileAndKickOff(ctx context.Context, s *session, lpInfo *Logic
 	}
 
 	logrus.Infof("party codes: %+v", s.partyInfo.GetParties())
-	err = s.engineStub.StartSession(ctx, sessionStartReq, s.partyInfo)
+	err = s.engineStub.StartSession(ctx, sessionStartReq, s.partyInfo.GetParties())
 	if err != nil {
 		return err
 	}

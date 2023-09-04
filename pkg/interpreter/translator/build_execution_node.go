@@ -31,7 +31,9 @@ import (
 )
 
 var JoinTypeLpToEp = map[core.JoinType]int{
-	core.InnerJoin: InnerJoin,
+	core.InnerJoin:      InnerJoin,
+	core.LeftOuterJoin:  LeftOuterJoin,
+	core.RightOuterJoin: RightOuterJoin,
 }
 
 func (t *translator) buildApply(ln *ApplyNode) (err error) {
@@ -298,6 +300,7 @@ func setResultTable(ln logicalNode, resultIdToTensor map[int64]*Tensor) error {
 
 func (t *translator) buildSelection(ln *SelectionNode) (err error) {
 	selection, ok := ln.lp.(*core.LogicalSelection)
+	t.AffectedByGroupThreshold = selection.AffectedByGroupThreshold
 	if !ok {
 		return fmt.Errorf("assert failed while translator buildSelection, expected: core.LogicalSelection, actual: %T", ln.lp)
 	}
@@ -776,6 +779,41 @@ func (t *translator) buildGroupId(ln *AggregationNode, partyCode string) (*Tenso
 	return t.ep.AddGroupNode("group", groupCol, partyCode)
 }
 
+func (t *translator) MergeKeys(ln *AggregationNode, keyTs []*Tensor) (mergedKeys []*Tensor, err error) {
+	// separate private keyTs to different parties while appending the shared keyTs directly to the result
+	partyToKeys := make(map[string][]*Tensor)
+	var partiesInOrder []string // added to avoid DAG uncertainty caused by map hash
+	for _, key := range keyTs {
+		if key.Status != proto.TensorStatus_TENSORSTATUS_PRIVATE ||
+			key.OwnerPartyCode == "" {
+			mergedKeys = append(mergedKeys, key)
+			continue
+		}
+		_, ok := partyToKeys[key.OwnerPartyCode]
+		if !ok {
+			partyToKeys[key.OwnerPartyCode] = []*Tensor{key}
+			partiesInOrder = append(partiesInOrder, key.OwnerPartyCode)
+		} else {
+			partyToKeys[key.OwnerPartyCode] = append(partyToKeys[key.OwnerPartyCode], key)
+		}
+	}
+
+	// NOTE: we do not build groupId by sort, so the resulting groups maybe not in order
+	for _, party := range partiesInOrder {
+		if len(partyToKeys[party]) > 1 {
+			groupId, _, err := t.ep.AddGroupNode("group", partyToKeys[party], party)
+			if err != nil {
+				return nil, fmt.Errorf("MergeKeys: %v", err)
+			}
+			mergedKeys = append(mergedKeys, groupId)
+		} else {
+			mergedKeys = append(mergedKeys, partyToKeys[party][0])
+		}
+	}
+
+	return mergedKeys, nil
+}
+
 func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err error) {
 	agg, ok := ln.lp.(*core.LogicalAggregation)
 	if !ok {
@@ -794,15 +832,21 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 		keyTs = append(keyTs, keyT)
 	}
 
-	in := []*Tensor{}
-	in = append(in, keyTs...)
-	in = append(in, child.ResultTable()...)
-	out, err := t.ep.AddSortNode("sort", keyTs, in)
+	sortKey, err := t.MergeKeys(ln, keyTs)
 	if err != nil {
 		return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 	}
-	sortedKeys := out[0:len(keyTs)]
-	sortedTensors := out[len(keyTs):]
+
+	var sortPayload []*Tensor
+	sortPayload = append(sortPayload, sortKey...)
+	// TODO(jingshi): remove duplicated payload
+	sortPayload = append(sortPayload, child.ResultTable()...)
+	out, err := t.ep.AddSortNode("sort", sortKey, sortPayload)
+	if err != nil {
+		return fmt.Errorf("buildObliviousGroupAggregation: sort with groupIds err: %v", err)
+	}
+	sortedKeys := out[0:len(sortKey)]
+	sortedTensors := out[len(sortKey):]
 	sortedChildColIdToTensor := map[int64]*Tensor{}
 	for i, tensor := range sortedTensors {
 		sortedChildColIdToTensor[child.Schema().Columns[i].UniqueID] = tensor
@@ -859,23 +903,30 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 					if err != nil {
 						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 					}
-					// Sort with group by key and distinct column.
+					// Sort with group by key(maybe keyTs or groupIds) and distinct column.
 					// Please note that group by key is the major sort key,
 					// so the groupMark is still valid.
-					keyAndDistinct := []*Tensor{}
+					var keyAndDistinct []*Tensor
 					keyAndDistinct = append(keyAndDistinct, sortedKeys...)
 					keyAndDistinct = append(keyAndDistinct, colT)
 
+					// TODO(jingshi): using free column to avoid sort if possible
 					sortedDistinctCol, err := t.ep.AddSortNode("sort", keyAndDistinct, []*Tensor{colT})
 					if err != nil {
 						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 					}
-					// create group mark
+					// Use group by keys and distinctCol to create groupMarkFull,
+					// which is equivalent to the result of groupMark logic or groupMarkDistinct
 					groupMarkDistinct, err := t.ep.AddObliviousGroupMarkNode("group_mark", sortedDistinctCol)
 					if err != nil {
 						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 					}
-					output, err = t.ep.AddObliviousGroupAggNode(ast.AggFuncSum, groupMark, groupMarkDistinct)
+					groupMarkFull, err := t.addBinaryNode(operator.OpNameLogicalOr, operator.OpNameLogicalOr, groupMark, groupMarkDistinct)
+					if err != nil {
+						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+					}
+
+					output, err = t.ep.AddObliviousGroupAggNode(ast.AggFuncSum, groupMark, groupMarkFull)
 					if err != nil {
 						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 					}
@@ -957,6 +1008,64 @@ func (t *translator) buildUnion(ln *UnionAllNode) (err error) {
 			return fmt.Errorf("buildUnion: %v", err)
 		}
 		colIdToTensor[c.UniqueID] = ot
+	}
+
+	return nil
+}
+
+func (t *translator) buildLimit(ln *LimitNode) (err error) {
+	limit, ok := ln.lp.(*core.LogicalLimit)
+	if !ok {
+		return fmt.Errorf("buildLimit: LimitNode contains invalid LogicalPlan type %T", ln.lp)
+	}
+	if len(ln.Children()) != 1 {
+		return fmt.Errorf("buildLimit: unexpected number of children %v != 1", len(ln.children))
+	}
+
+	colIdToTensor := map[int64]*Tensor{}
+	defer func() {
+		if err != nil {
+			return
+		}
+		err = setResultTable(ln, colIdToTensor)
+	}()
+
+	var shareTensors []*Tensor
+	var shareIds []int64
+	privateTensors := make(map[string][]*Tensor)
+	privateIds := make(map[string][]int64)
+	childColIdToTensor := t.getNodeResultTensor(ln.Children()[0])
+	for _, id := range sliceutil.SortMapKeyForDeterminism(childColIdToTensor) {
+		it := childColIdToTensor[id]
+		if it.Status == proto.TensorStatus_TENSORSTATUS_SECRET || it.Status == proto.TensorStatus_TENSORSTATUS_PUBLIC {
+			shareTensors = append(shareTensors, it)
+			shareIds = append(shareIds, id)
+		} else if it.Status == proto.TensorStatus_TENSORSTATUS_PRIVATE {
+			privateTensors[it.OwnerPartyCode] = append(privateTensors[it.OwnerPartyCode], it)
+			privateIds[it.OwnerPartyCode] = append(privateIds[it.OwnerPartyCode], id)
+		} else {
+			return fmt.Errorf("buildLimit: unsupported tensor status for %v", it)
+		}
+	}
+
+	if len(shareTensors) != 0 {
+		output, err := t.ep.AddLimitNode("limit", shareTensors, int(limit.Offset), int(limit.Count), t.ep.partyInfo.GetParties())
+		if err != nil {
+			return fmt.Errorf("buildLimit: %v", err)
+		}
+		for i, t := range output {
+			colIdToTensor[shareIds[i]] = t
+		}
+	}
+
+	for _, party := range sliceutil.SortMapKeyForDeterminism(privateTensors) {
+		output, err := t.ep.AddLimitNode("limit", privateTensors[party], int(limit.Offset), int(limit.Count), []string{party})
+		if err != nil {
+			return fmt.Errorf("buildLimit: %v", err)
+		}
+		for i, t := range output {
+			colIdToTensor[privateIds[party][i]] = t
+		}
 	}
 
 	return nil

@@ -221,3 +221,4 @@ msgstr "SCQL 支持不同的数据库作为数据源，但由于数据库内置�
 
 #~ msgid "add,minus,mul,div,intdiv"
 #~ msgstr "add,minus,mul,div,intdiv"
+

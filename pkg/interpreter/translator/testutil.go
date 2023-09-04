@@ -20,15 +20,13 @@ import (
 )
 
 func ConvertMockEnginesToEnginesInfo(info *mock.MockEnginesInfo) (*EnginesInfo, error) {
-	var parties []string
-	var urls []string
-	var credentials []string
-	for _, p := range sliceutil.SortMapKeyForDeterminism(info.PartyToUrls) {
-		url := info.PartyToUrls[p]
-		credential := info.PartyToCredentials[p]
-		parties = append(parties, p)
-		urls = append(urls, url)
-		credentials = append(credentials, credential)
+	participants := make([]*Participant, 0, len(info.PartyToUrls))
+	for _, code := range sliceutil.SortMapKeyForDeterminism(info.PartyToUrls) {
+		participants = append(participants, &Participant{
+			PartyCode: code,
+			Endpoints: []string{info.PartyToUrls[code]},
+			Token:     info.PartyToCredentials[code],
+		})
 	}
 	partyToTables := make(map[string][]DbTable)
 	tableToRefs := make(map[DbTable]DbTable)
@@ -43,12 +41,8 @@ func ConvertMockEnginesToEnginesInfo(info *mock.MockEnginesInfo) (*EnginesInfo, 
 		}
 		partyToTables[p] = dbTables
 	}
-	pi := &PartyInfo{
-		parties:     parties,
-		urls:        urls,
-		credentials: credentials,
-	}
-	engineInfo := NewEnginesInfo(pi, partyToTables)
+
+	engineInfo := NewEnginesInfo(NewPartyInfo(participants), partyToTables)
 	for table, refTable := range info.TableToRefs {
 		ref, err := newDbTable(refTable)
 		if err != nil {

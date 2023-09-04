@@ -33,6 +33,7 @@ import (
 )
 
 var astName2NodeName = map[string]string{
+	ast.If:       operator.OpNameIf,
 	ast.Greatest: operator.OpNameGreatest,
 	ast.Least:    operator.OpNameLeast,
 	ast.LT:       operator.OpNameLess,
@@ -49,16 +50,17 @@ var astName2NodeName = map[string]string{
 	ast.Div:      operator.OpNameDiv,
 	ast.IntDiv:   operator.OpNameIntDiv,
 	ast.Mod:      operator.OpNameMod,
+	ast.Case:     operator.OpNameCaseWhen,
 }
 
 type translator struct {
-	ep              *GraphBuilder
-	issuerPartyCode string
-	enginesInfo     *EnginesInfo
-	sc              *proto.SecurityConfig
-	// if true, table in RunSQL string will skip database name
-	skipDbName         bool
+	ep                 *GraphBuilder
+	issuerPartyCode    string
+	enginesInfo        *EnginesInfo
+	sc                 *proto.SecurityConfig
 	securityCompromise *SecurityCompromiseConf
+
+	AffectedByGroupThreshold bool
 }
 
 type SecurityCompromiseConf struct {
@@ -68,15 +70,14 @@ type SecurityCompromiseConf struct {
 func NewTranslator(
 	enginesInfo *EnginesInfo,
 	sc *proto.SecurityConfig,
-	issuerPartyCode string,
-	skipDbName bool, securityCompromise *SecurityCompromiseConf) (
+	issuerPartyCode string, securityCompromise *SecurityCompromiseConf) (
 	*translator, error) {
 	if sc == nil {
 		return nil, fmt.Errorf("translate: empty CCL")
 	}
 	// filter out unneeded CCL
 	allPartyCodes := map[string]bool{}
-	for _, p := range enginesInfo.partyInfo.parties {
+	for _, p := range enginesInfo.partyInfo.GetParties() {
 		allPartyCodes[p] = true
 	}
 	allPartyCodes[issuerPartyCode] = true
@@ -91,7 +92,6 @@ func NewTranslator(
 		issuerPartyCode:    issuerPartyCode,
 		sc:                 newSc,
 		enginesInfo:        enginesInfo,
-		skipDbName:         skipDbName,
 		securityCompromise: securityCompromise,
 	}, nil
 }
@@ -194,8 +194,7 @@ func (t *translator) translateInternal(ln logicalNode) error {
 		// TODO(xiaoyuan) add more code here
 		return fmt.Errorf("window node is unimplemented")
 	case *LimitNode:
-		// TODO(xiaoyuan) add more code here
-		return fmt.Errorf("limit node is unimplemented")
+		return t.buildLimit(x)
 	default:
 		return fmt.Errorf("translate: unsupported logical node type %T", ln)
 	}
@@ -296,7 +295,7 @@ func (t *translator) buildRunSQL(ln logicalNode, partyCode string) error {
 			return fmt.Errorf("ccl check failed: the %dth column %s in the result is not visibile (%s) to party %s", i+1, col.OrigName, cc.LevelFor(partyCode).String(), partyCode)
 		}
 	}
-	sql, newTableRefs, err := runSQLString(ln.LP(), t.enginesInfo, t.skipDbName)
+	sql, newTableRefs, err := runSQLString(ln.LP(), t.enginesInfo)
 	if err != nil {
 		return fmt.Errorf("addRunSQLNode: failed to rewrite sql=\"%s\", err: %w", sql, err)
 	}
@@ -478,19 +477,18 @@ func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors m
 			return nil, err
 		}
 	}
+	var inTensorPartyCodes []string
+	if inputs[0].Status == proto.TensorStatus_TENSORSTATUS_PRIVATE {
+		inTensorPartyCodes = []string{inputs[0].OwnerPartyCode}
+	} else {
+		inTensorPartyCodes = t.enginesInfo.partyInfo.GetParties()
+	}
 	switch f.FuncName.L {
 	case ast.UnaryNot:
 		if len(inputs) != 1 {
 			return nil, fmt.Errorf("buildScalarFunction:err input for %s expected for %d got %d", f.FuncName.L, 1, len(inputs))
 		}
-		var partyCodes []string
-		// filter partycodes
-		if inputs[0].Status == proto.TensorStatus_TENSORSTATUS_PRIVATE {
-			partyCodes = []string{inputs[0].OwnerPartyCode}
-		} else {
-			partyCodes = t.enginesInfo.partyInfo.GetParties()
-		}
-		return t.ep.AddNotNode("not", inputs[0], partyCodes)
+		return t.ep.AddNotNode("not", inputs[0], inTensorPartyCodes)
 	// binary function
 	case ast.LT, ast.GT, ast.GE, ast.EQ, ast.LE, ast.NE, ast.LogicOr, ast.LogicAnd, ast.Plus, ast.Minus, ast.Mul, ast.Div, ast.IntDiv, ast.Mod:
 		if len(inputs) != 2 {
@@ -507,12 +505,25 @@ func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors m
 		if len(inputs) != 1 {
 			return nil, fmt.Errorf("buildScalarFunction:err input for %s expected for %d got %d", f.FuncName.L, 1, len(inputs))
 		}
-		if inputs[0].DType == proto.PrimitiveDataType_FLOAT32 && slices.Contains([]byte{mysql.TypeFloat, mysql.TypeDouble, mysql.TypeNewDecimal}, f.RetType.Tp) {
-			return inputs[0], nil
+		tp, err := convertDataType(f.RetType)
+		if err != nil {
+			return nil, fmt.Errorf("buildScalarFunction: %v ", err)
 		}
-		return nil, fmt.Errorf("buildScalarFunction: unimplemented %s with type %v cast as %v", f.FuncName.L, inputs[0].DType, f.RetType)
+		return t.ep.AddCastNode("cast", tp, inputs[0], inTensorPartyCodes)
 	case ast.Greatest, ast.Least:
 		return t.ep.AddCompareNode(astName2NodeName[f.FuncName.L], astName2NodeName[f.FuncName.L], inputs)
+	case ast.Case:
+		if len(inputs)%2 != 1 {
+			return nil, fmt.Errorf("missing else clause for CASE WHEN statement")
+		}
+		var conditions, values []*Tensor
+		for i := 0; i < (len(inputs) / 2); i++ {
+			conditions = append(conditions, inputs[2*i])
+			values = append(values, inputs[2*i+1])
+		}
+		return t.ep.AddCaseWhenNode(astName2NodeName[f.FuncName.L], conditions, values, inputs[len(inputs)-1])
+	case ast.If:
+		return t.ep.AddIfNode(astName2NodeName[f.FuncName.L], inputs[0], inputs[1], inputs[2])
 	}
 	return nil, fmt.Errorf("buildScalarFunction doesn't support %s", f.FuncName.L)
 }

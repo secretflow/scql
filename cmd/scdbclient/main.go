@@ -39,7 +39,6 @@ var (
 	host                       string
 	userName                   string
 	passwd                     string
-	grmToken                   string
 	usersConfFileName          string
 	sync                       bool
 	pollingTimes               int
@@ -52,7 +51,6 @@ var (
 type UserCredential struct {
 	UserName string
 	Password string
-	GrmToken string
 }
 
 var (
@@ -92,7 +90,6 @@ func initFlags() {
 	rootCmd.PersistentFlags().StringVar(&host, "host", "http://localhost:8080", "scdb server host")
 	rootCmd.PersistentFlags().StringVar(&userName, "userName", "", "user name for scdb user")
 	rootCmd.PersistentFlags().StringVar(&passwd, "passwd", "", "user passwd for scdb user")
-	rootCmd.PersistentFlags().StringVar(&grmToken, "grmToken", "", "user grm token for scdb user")
 	rootCmd.PersistentFlags().StringVar(&usersConfFileName, "usersConfFileName", "cmd/scdbclient/users.json", "user conf file name")
 
 	rootCmd.PersistentFlags().BoolVar(&sync, "sync", false, "query in sync or async mode")
@@ -125,7 +122,6 @@ func setupUserConfig() error {
 		userConfMap[userName] = UserCredential{
 			UserName: userName,
 			Password: passwd,
-			GrmToken: grmToken,
 		}
 	}
 	if userName != "" {
@@ -257,7 +253,6 @@ func newUserCredential(user *UserCredential) *scql.SCDBCredential {
 				},
 			},
 		},
-		GrmToken: user.GrmToken,
 	}
 }
 
@@ -297,6 +292,9 @@ func runSql(dbName, sql string, userAuth *UserCredential, sync bool) (err error)
 	}
 
 	if result.GetStatus().GetCode() == int32(scql.Code_OK) {
+		for _, warn := range result.Warnings {
+			fmt.Printf("Warning : %v\n", warn.Reason)
+		}
 		if len(result.OutColumns) > 0 {
 			fmt.Fprintf(os.Stdout, "[fetch]\n")
 			// table view
@@ -345,5 +343,8 @@ func fetchResult(user *scql.SCDBCredential, sessionId string, maxFetchNum int, f
 
 func main() {
 	initFlags()
-	rootCmd.Execute()
+	err := rootCmd.Execute()
+	if err != nil {
+		log.Fatalf("Failed to execute cobra.Command: %v", err)
+	}
 }

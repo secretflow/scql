@@ -25,8 +25,19 @@ import (
 )
 
 func TestGraphSimple(t *testing.T) {
-	partyInfo, err := NewPartyInfo([]string{"party1", "party2"}, []string{"party1.net", "party2.net"}, []string{"party1_credential", "party2_credential"})
-	assert.Nil(t, err)
+	participants := []*Participant{
+		&Participant{
+			PartyCode: "party1",
+			Endpoints: []string{"party1.net"},
+			Token:     "party1_credential",
+		},
+		&Participant{
+			PartyCode: "party2",
+			Endpoints: []string{"party2.net"},
+			Token:     "party2_credential",
+		},
+	}
+	partyInfo := NewPartyInfo(participants)
 	e1 := NewGraphBuilder(partyInfo)
 
 	t1 := e1.AddTensor("alice.t1")

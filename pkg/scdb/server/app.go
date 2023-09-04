@@ -28,12 +28,13 @@ import (
 	"github.com/secretflow/scql/pkg/audit"
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/executor"
-	"github.com/secretflow/scql/pkg/grm"
 	"github.com/secretflow/scql/pkg/interpreter/optimizer"
 	"github.com/secretflow/scql/pkg/interpreter/translator"
 	"github.com/secretflow/scql/pkg/parser"
 	"github.com/secretflow/scql/pkg/planner/core"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/scdb/auth"
+	"github.com/secretflow/scql/pkg/scdb/config"
 	"github.com/secretflow/scql/pkg/scdb/storage"
 	"github.com/secretflow/scql/pkg/util/logutil"
 )
@@ -43,12 +44,12 @@ const (
 )
 
 type App struct {
-	config        *Config
-	grmClient     grm.Grm
-	engineClient  executor.EngineClient
-	storage       *gorm.DB
-	sessions      *cache.Cache
-	queryDoneChan chan string
+	config             *config.Config
+	engineClient       executor.EngineClient
+	storage            *gorm.DB
+	sessions           *cache.Cache
+	queryDoneChan      chan string
+	partyAuthenticator *auth.PartyAuthenticator
 }
 
 type LogicalPlanInfo struct {
@@ -65,17 +66,17 @@ type ExecutionPlanInfo struct {
 	attr    *translator.Attribute
 }
 
-func NewApp(config *Config, grmClient grm.Grm, storage *gorm.DB, engineClient executor.EngineClient) (*App, error) {
+func NewApp(conf *config.Config, storage *gorm.DB, engineClient executor.EngineClient) (*App, error) {
 	app := &App{
-		config:    config,
-		grmClient: grmClient,
-		storage:   storage,
-		sessions: cache.New(time.Duration(config.SessionExpireTime),
-			time.Duration(config.SessionCheckInterval)),
+		config:  conf,
+		storage: storage,
+		sessions: cache.New(time.Duration(conf.SessionExpireTime),
+			time.Duration(conf.SessionCheckInterval)),
 		queryDoneChan: make(chan string, defaultCallbackQueueSize),
 	}
 	app.startQueryJobFinishHandler()
 	app.engineClient = engineClient
+	app.partyAuthenticator = auth.NewPartyAuthenticator(conf.PartyAuth)
 	return app, nil
 }
 
@@ -155,8 +156,7 @@ func (app *App) compile(lpInfo *LogicalPlanInfo, s *session) (*ExecutionPlanInfo
 		&scql.SecurityConfig{
 			ColumnControlList: lpInfo.ccls,
 		},
-		lpInfo.issuer,
-		s.skipDbName, &app.config.SecurityCompromise)
+		lpInfo.issuer, &app.config.SecurityCompromise)
 	if err != nil {
 		return nil, fmt.Errorf("error when translating from logical plan to execution plan: %v", err)
 	}
@@ -164,23 +164,22 @@ func (app *App) compile(lpInfo *LogicalPlanInfo, s *session) (*ExecutionPlanInfo
 	if err != nil {
 		return nil, err
 	}
+	s.GetSessionVars().AffectedByGroupThreshold = t.AffectedByGroupThreshold
+	logrus.Infof("[Translator] execution plan: \n%s\n", ep.DumpGraphviz())
+
 	graphChecker := translator.NewGraphChecker(ep)
 	if err := graphChecker.Check(); err != nil {
 		return nil, err
 	}
-	logrus.Infof("[Translator] execution plan: \n%s\n", ep.DumpGraphviz())
+
 	p := optimizer.NewGraphPartitioner(ep)
 	p.NaivePartition()
 
-	subDAGs := p.SubDAGs
-	graph := p.Graph
-
-	attr := &translator.Attribute{}
 	return &ExecutionPlanInfo{
 		parties: s.parties,
-		subDAGs: subDAGs,
-		graph:   graph,
-		attr:    attr,
+		subDAGs: p.SubDAGs,
+		graph:   p.Graph,
+		attr:    &translator.Attribute{},
 	}, nil
 }
 
@@ -309,7 +308,7 @@ func (app *App) DestroySession(id string, destroyReason string) {
 		&scql.StopSessionRequest{
 			SessionId: session.id,
 		},
-		session.partyInfo)
+		session.partyInfo.GetParties())
 	var errMsg string
 	if engineErr != nil {
 		errMsg = engineErr.Error()

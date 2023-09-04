@@ -91,6 +91,7 @@ void ConvertDuckResultToTensors(std::unique_ptr<duckdb::QueryResult> result,
 
       chunked_arr = result.ValueOrDie().chunked_array();
     }
+
     auto tensor = std::make_shared<Tensor>(std::move(chunked_arr));
     tensors->push_back(std::move(tensor));
   }

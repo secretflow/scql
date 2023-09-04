@@ -12,16 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+package config
 
 import (
 	"os"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/secretflow/scql/pkg/audit"
+	"github.com/secretflow/scql/pkg/proto-gen/spu"
 )
 
 func TestNewConfig(t *testing.T) {
@@ -39,7 +41,7 @@ password_check: true
 log_level: debug
 audit:
   audit_log_file: another/audit.log
-  audit_detail_file: another/plan.log
+  audit_detail_file: another/detail.log
 storage:
   type: sqlite
   conn_str: ":memory:"
@@ -47,18 +49,21 @@ storage:
   max_open_conns: 100
   conn_max_idle_time: 2m
   conn_max_lifetime: 5m
-grm:
-  grm_mode: stdgrm
-  host: http://example.com
-  timeout: 5s
 engine:
   timeout: 120s
   protocol: http
   content_type: application/json
-  spu:
-    protocol: SEMI2K
-    field: FM64
-    sigmoid_mode: SIGMOID_REAL
+  spu: |
+    {
+        "protocol": "SEMI2K",
+        "field": "FM64",
+        "sigmoid_mode": "SIGMOID_REAL",
+        "ttp_beaver_config": {"server_host": "127.0.0.1"}
+    }
+party_auth:
+  method: pubkey
+  enable_timestamp_check: true
+  validity_period: 3m
 `
 	tmpFile, err := os.CreateTemp("", "*.yaml")
 	r.NoError(err)
@@ -85,10 +90,10 @@ engine:
 		SessionExpireTime:    1 * time.Hour,
 		SessionCheckInterval: 20 * time.Second,
 		LogLevel:             "debug",
+		EnableAuditLogger:    true,
 		AuditConfig: audit.AuditConf{
-			EnableAuditLog:          true,
 			AuditLogFile:            "another/audit.log",
-			AuditDetailFile:         "another/plan.log",
+			AuditDetailFile:         "another/detail.log",
 			AuditMaxSizeInMegaBytes: DefaultAuditMaxSizeInMegaBytes,
 			AuditMaxBackupsCount:    DefaultAuditMaxBackupsCount,
 			AuditMaxAgeInDays:       DefaultAuditMaxAgeInDays,
@@ -103,23 +108,32 @@ engine:
 			ConnMaxIdleTime: time.Duration(2) * time.Minute,
 			ConnMaxLifetime: time.Duration(5) * time.Minute,
 		},
-		GRM: GRMConf{
-			GrmMode: "stdgrm",
-			Host:    "http://example.com",
-			Timeout: 5 * time.Second,
-		},
 		Engine: EngineConfig{
 			ClientTimeout: 120 * time.Second,
 			Protocol:      "http",
 			ContentType:   "application/json",
-			SpuRuntimeCfg: &RuntimeCfg{
-				Protocol:    "SEMI2K",
-				Field:       "FM64",
-				SigmoidMode: "SIGMOID_REAL",
-			},
+			SpuRuntimeCfg: `{
+				"protocol": "SEMI2K",
+				"field": "FM64",
+				"sigmoid_mode": "SIGMOID_REAL",
+				"ttp_beaver_config": {"server_host": "127.0.0.1"}
+}
+`,
+		},
+		PartyAuth: PartyAuthConf{
+			Method:               "pubkey",
+			EnableTimestampCheck: true,
+			ValidityPeriod:       time.Minute * 3,
 		},
 	}
+	expectedCfg.Engine.SpuRuntimeCfg = strings.ReplaceAll(expectedCfg.Engine.SpuRuntimeCfg, "\t", " ")
 	r.Equal(expectedCfg, cfg)
+	spuConf, err := NewSpuRuntimeCfg(cfg.Engine.SpuRuntimeCfg)
+	r.NoError(err)
+	r.Equal(spu.ProtocolKind_SEMI2K, spuConf.Protocol)
+	r.Equal(spu.FieldType_FM64, spuConf.Field)
+	r.Equal(spu.RuntimeConfig_SIGMOID_REAL, spuConf.SigmoidMode)
+
 }
 
 func TestNewConfigWithEnv(t *testing.T) {
@@ -141,17 +155,20 @@ storage:
   max_open_conns: 100
   conn_max_idle_time: 2m
   conn_max_lifetime: 5m
-grm:
-  grm_mode: toygrm
-  toy_grm_conf: testdata/toy_grm.json
 engine:
   timeout: 120s
   protocol: http
   content_type: application/json
-  spu:
-    protocol: SEMI2K
-    field: FM64
-    sigmoid_mode: SIGMOID_REAL
+  spu: |
+    {
+        "protocol": "SEMI2K",
+        "field": "FM64",
+        "sigmoid_mode": "SIGMOID_REAL"
+    }
+party_auth:
+  method: token
+  enable_timestamp_check: true
+  validity_period: 3m
 `
 	tmpFile, err := os.CreateTemp("", "*.yaml")
 	r.NoError(err)
@@ -179,8 +196,8 @@ engine:
 		SessionCheckInterval: 20 * time.Second,
 		PasswordCheck:        false,
 		LogLevel:             "info",
+		EnableAuditLogger:    true,
 		AuditConfig: audit.AuditConf{
-			EnableAuditLog:          true,
 			AuditLogFile:            DefaultAuditLogFile,
 			AuditDetailFile:         DefaultAudiDetailFile,
 			AuditMaxSizeInMegaBytes: DefaultAuditMaxSizeInMegaBytes,
@@ -196,20 +213,23 @@ engine:
 			ConnMaxIdleTime: 2 * time.Minute,
 			ConnMaxLifetime: 5 * time.Minute,
 		},
-		GRM: GRMConf{
-			GrmMode:    "toygrm",
-			ToyGrmConf: "testdata/toy_grm.json",
-		},
 		Engine: EngineConfig{
 			ClientTimeout: 120 * time.Second,
 			Protocol:      "http",
 			ContentType:   "application/json",
-			SpuRuntimeCfg: &RuntimeCfg{
-				Protocol:    "SEMI2K",
-				Field:       "FM64",
-				SigmoidMode: "SIGMOID_REAL",
-			},
+			SpuRuntimeCfg: `{
+				"protocol": "SEMI2K",
+				"field": "FM64",
+				"sigmoid_mode": "SIGMOID_REAL"
+}
+`,
+		},
+		PartyAuth: PartyAuthConf{
+			Method:               "token",
+			EnableTimestampCheck: true,
+			ValidityPeriod:       time.Minute * 3,
 		},
 	}
+	expectedCfg.Engine.SpuRuntimeCfg = strings.ReplaceAll(expectedCfg.Engine.SpuRuntimeCfg, "\t", " ")
 	r.Equal(expectedCfg, cfg)
 }

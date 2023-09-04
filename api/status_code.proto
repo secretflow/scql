@@ -20,58 +20,54 @@ package scql.pb;
 option go_package = "proto-gen/scql";
 
 enum Code {
-    // Not an error; returned on success
-    OK = 0;
+  // Not an error; returned on success
+  OK = 0;
 
-    // =====================
-    // 100-199 Request Error
-    // =====================
+  // =====================
+  // 100-199 Request Error
+  // =====================
 
-    // General bad request
-    BAD_REQUEST = 100;
-    // Failed to authenticate user credential
-    UNAUTHENTICATED = 101;
-    // Parsing SQL error, returned on invalid SQL
-    SQL_PARSE_ERROR = 102;
-    INVALID_ARGUMENT = 103;
-    // Query result is not ready, please try again later
-    NOT_READY = 104;
+  // General bad request
+  BAD_REQUEST = 100;
+  // Failed to authenticate user credential
+  UNAUTHENTICATED = 101;
+  // Parsing SQL error, returned on invalid SQL
+  SQL_PARSE_ERROR = 102;
+  INVALID_ARGUMENT = 103;
+  // Query result is not ready, please try again later
+  NOT_READY = 104;
 
-    // The user does not have permission to execute the DDL.
-    // For example, the user try to drop other's table.
-    DDL_PERMISSION_DENIED = 131;
+  // The user does not have permission to execute the DDL.
+  // For example, the user try to drop other's table.
+  DDL_PERMISSION_DENIED = 131;
 
-    // Has no required permissions on grm resources
-    GRM_RESOURCE_PERMISSION_DENIED = 132;
+  // General not found error
+  NOT_FOUND = 140;
+  // SCDB session not found
+  SESSION_NOT_FOUND = 141;
 
-    // General not found error
-    NOT_FOUND = 140;
-    // SCDB session not found
-    SESSION_NOT_FOUND = 141;
+  // Query CCL check failed
+  CCL_CHECK_FAILED = 160;
 
-    // Query CCL check failed
-    CCL_CHECK_FAILED = 160;
+  // =========================
+  // 200-299 Dependence Error
+  // =========================
 
-    // =========================
-    // 200-299 Dependence Error
-    // =========================
+  // SCDB DB error
+  STORAGE_ERROR = 201;
 
-    // SCDB DB error
-    STORAGE_ERROR = 201;
+  // ==============================
+  // 300-399 Server Internal Error
+  // ==============================
 
+  // UNKNOWN Server Internal Error
+  INTERNAL = 300;
 
-    // ==============================
-    // 300-399 Server Internal Error
-    // ==============================
+  // 320-339 executing execution graph error
+  UNKNOWN_ENGINE_ERROR = 320;
 
-    // UNKNOWN Server Internal Error
-    INTERNAL = 300;
+  ENGINE_RUNSQL_ERROR = 332;
 
-    // 320-339 executing execution graph error
-    UNKNOWN_ENGINE_ERROR = 320;
-
-    ENGINE_RUNSQL_ERROR = 332;
-
-    // Feature not supported
-    NOT_SUPPORTED = 340;
+  // Feature not supported
+  NOT_SUPPORTED = 340;
 };

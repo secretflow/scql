@@ -58,6 +58,7 @@ func registerAllOpDef() {
 		T  = "T"
 		T1 = "T1"
 		T2 = "T2"
+		T3 = "T3"
 	)
 
 	var statusPrivate = []proto.TensorStatus{proto.TensorStatus_TENSORSTATUS_PRIVATE}
@@ -74,7 +75,7 @@ func registerAllOpDef() {
 		opDef.AddOutput("Out", "Result tensors of the SQL statement.", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.AddAttribute(SqlAttr, "SQL statement")
 		opDef.AddAttribute(TableRefsAttr, "tables referenced by query")
-		opDef.SetDefinition("Run a SQL statement and return a list of tensors in private status")
+		opDef.SetDefinition("Definition: Run a SQL statement and return a list of tensors in private status")
 		opDef.SetParamTypeConstraint(T, statusPrivate)
 		check(opDef.err)
 		AllOpDef = append(AllOpDef, opDef)
@@ -87,7 +88,7 @@ func registerAllOpDef() {
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.AddOutput("Out", "Result tensors of the publish op. Tensors are in TensorOption VALUE.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
-		opDef.SetDefinition("This operator publishes the DAG results.")
+		opDef.SetDefinition("Definition: This operator publishes the DAG results.")
 		opDef.SetParamTypeConstraint(T, statusPrivate)
 		check(opDef.err)
 		AllOpDef = append(AllOpDef, opDef)
@@ -102,7 +103,7 @@ func registerAllOpDef() {
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T1)
 		opDef.AddOutput("Out", "Output Tensor.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T2)
-		opDef.SetDefinition(fmt.Sprintf("Out = Left `%s` Right", opName))
+		opDef.SetDefinition(fmt.Sprintf("Definition: Out = Left `%s` Right", opName))
 		opDef.SetParamTypeConstraint(T, statusPrivateOrSecretOrPublic)
 		opDef.SetParamTypeConstraint(T1, statusPrivateOrSecretOrPublic)
 		opDef.SetParamTypeConstraint(T2, statusPrivateOrSecret)
@@ -117,7 +118,7 @@ func registerAllOpDef() {
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T1)
 		opDef.AddOutput("Out", "Output tensors.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T2)
-		opDef.SetDefinition("Convert In tensor from share/private status to public status.")
+		opDef.SetDefinition("Definition: Convert In tensor from share/private status to public status.")
 		opDef.SetParamTypeConstraint(T1, statusPrivateOrSecret)
 		opDef.SetParamTypeConstraint(T2, statusPublic)
 		check(opDef.err)
@@ -132,7 +133,7 @@ func registerAllOpDef() {
 		opDef.AddOutput("Out", "Output tensors.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T2)
 		opDef.AddAttribute(RevealToAttr, "List of parties to see the private data. If it is revealed to one party only, the other party also needs to run the op, but does not have an output. Only the reveal_to party gets the output.")
-		opDef.SetDefinition("Convert In tensor from share status to private status.")
+		opDef.SetDefinition("Definition: Convert In tensor from share status to private status.")
 		opDef.SetParamTypeConstraint(T1, statusSecretOrPublic)
 		opDef.SetParamTypeConstraint(T2, statusPrivate)
 		check(opDef.err)
@@ -146,7 +147,7 @@ func registerAllOpDef() {
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T1)
 		opDef.AddOutput("Out", "Output tensors.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T2)
-		opDef.SetDefinition("Convert In tensor from private status to share status.")
+		opDef.SetDefinition("Definition: Convert In tensor from private status to share status.")
 		opDef.SetParamTypeConstraint(T1, statusPrivate)
 		opDef.SetParamTypeConstraint(T2, statusSecret)
 		check(opDef.err)
@@ -166,7 +167,7 @@ func registerAllOpDef() {
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T2)
 		opDef.AddAttribute(InputPartyCodesAttr, "List of parties the inputs belong to([PartyCodeLeft, PartyCodeRight]).")
 		// TODO(xiaoyuan) support outer join later
-		opDef.AddAttribute(JoinTypeAttr, "Int64. 0: inner join;")
+		opDef.AddAttribute(JoinTypeAttr, "Int64. 0: inner join; 1: left join; 2: right join;")
 		opDef.AddDefaultAttributeValue(JoinTypeAttr, CreateIntAttribute(0))
 		opDef.SetDefinition(`Definition: Create Join Index based on EQ-Join, return result's corresponding rows index in the original input.
 Example:
@@ -174,8 +175,24 @@ Example:
 // inner join example
 Left = {4,4,3,2,1} // shape:[M=5]
 Right = {1,3,4,5} // shape: [N=4]
+join_type = 0
 LeftJoinIndex = {4,2,0,1}  // shape:[K=4], rows after applied filter eq-join-list={1,3,4,4}
 RightJoinIndex = {0,1,2,2} // shape:[K=4], rows after applied filter eq-join-list={1,3,4,4}
+
+// Left join example
+Left = {4,4,3,2,1} // shape:[M=5]
+Right = {1,3,4,5} // shape: [N=4]
+join_type = 1
+LeftJoinIndex = {4,2,0,1,3}  // shape:[K=5], rows after applied filter eq-join-list={1,3,4,4,2}
+RightJoinIndex = {0,1,2,2,null} // shape:[K=5], rows after applied filter eq-join-list={1,3,4,4,null}
+
+// Right join example
+Left = {4,4,3,2,1} // shape:[M=5]
+Right = {1,3,4,5} // shape: [N=4]
+join_type = 2
+LeftJoinIndex = {4,2,0,1,null}  // shape:[K=5], rows after applied filter eq-join-list={1,3,4,4,null}
+RightJoinIndex = {0,1,2,2,3} // shape:[K=5], rows after applied filter eq-join-list={1,3,4,4,5}
+
 ` + "```\n")
 		opDef.SetParamTypeConstraint(T1, statusPrivate)
 		opDef.SetParamTypeConstraint(T2, statusPrivate)
@@ -226,7 +243,7 @@ Out = [{"d", "b", "a"}, {3, 1, 0}]
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.AddOutput("Out", "Output tensor.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
-		opDef.SetDefinition(`Given a boolean tensor Filter (its shape is [M]), and a number of tensors In
+		opDef.SetDefinition(`Definition: Given a boolean tensor Filter (its shape is [M]), and a number of tensors In
 (variadic, each tensor's shape must be [M]), for i in [0, M-1], keep the In tensors' element if and only if Filter[i]
 is True, output the filter result tensors Out (variadic). Example:
 ` + "\n```python" + `
@@ -550,7 +567,7 @@ Out = BroadcastTo(In, ShapeRefTensor) = [1, 1, 1]
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 		opDef.AddOutput("Out", "Output tensor.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
-		opDef.SetDefinition(fmt.Sprintf("Out = %s In", opName))
+		opDef.SetDefinition(fmt.Sprintf("Definition:  Out = %s In", opName))
 		opDef.SetParamTypeConstraint(T, statusPrivateOrSecretOrPublic)
 		check(opDef.err)
 		AllOpDef = append(AllOpDef, opDef)
@@ -565,7 +582,7 @@ Out = BroadcastTo(In, ShapeRefTensor) = [1, 1, 1]
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 		opDef.AddAttribute("axis", "Int64. Dimension along which to concatenate.")
 		opDef.AddDefaultAttributeValue("axis", CreateIntAttribute(0))
-		opDef.SetDefinition(`Definition: Given a number of tensors In (variadic, each tensor's shape must be the same except for the axis), concat the In tensors along the axis.
+		opDef.SetDefinition(`Definition: Given a number of tensors In (variadic, each tensor's shape must be the same in every dimension except for the axis), concat the In tensors along the axis.
 Example:
 ` + "\n```python" + `
 In = { {1, 2}, {2, 3, 4}, {3, 4, 5, 6} }
@@ -593,6 +610,62 @@ GroupId = {0, 1, 0, 2}
 GroupNum = {3}
 ` + "```\n")
 		opDef.SetParamTypeConstraint(T, statusPrivate)
+		check(opDef.err)
+		AllOpDef = append(AllOpDef, opDef)
+	}
+
+	{
+		opDef := &OperatorDef{}
+		opDef.SetName(OpNameIf)
+		opDef.AddInput("Condition", "Condition tensor.",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.AddInput("ValueIfTrue", "Value if true tensor.",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T1)
+		opDef.AddInput("ValueIfFalse", "Value if false tensor.",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T2)
+		opDef.AddOutput("Out", "Result tensor.",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T3)
+		opDef.SetDefinition(`The IF operator returns a value if a condition is TRUE, or another value if a condition is FALSE.
+
+			Example:
+			` + "\n```python" + `
+			Condition = [true, false, true, true]
+			ValueIfTrue = [0, 0, 0, 0]
+			ValueIfFalse = [1, 1, 1, 1]
+			Out = [0, 1, 0, 0]
+			` + "```\n")
+		opDef.SetParamTypeConstraint(T, statusPrivateOrSecretOrPublic)
+		opDef.SetParamTypeConstraint(T1, statusPrivateOrSecretOrPublic)
+		opDef.SetParamTypeConstraint(T2, statusPrivateOrSecretOrPublic)
+		opDef.SetParamTypeConstraint(T3, statusPrivateOrSecretOrPublic)
+		check(opDef.err)
+		AllOpDef = append(AllOpDef, opDef)
+	}
+
+	{
+		opDef := &OperatorDef{}
+		opDef.SetName(OpNameCaseWhen)
+		opDef.AddInput("Condition", "Condition tensor.",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.AddInput("Value", "Value if condition tensor is true and all previous conditions are false.",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T1)
+		opDef.AddInput("ValueElse", "Value if all condition tensors are false.",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T2)
+		opDef.AddOutput("Out", "Result tensor.",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T3)
+		opDef.SetDefinition(`The CaseWhen operator goes through conditions and returns a value when the first condition is met (like an if-then-else statement)
+
+Example:
+` + "\n```python" + `
+Condition = [[true, false, false, false], [true, true, false, false]]
+Value = [[0, 0, 0, 0], [1, 1, 1, 1]]
+ValueElse = [2, 2, 2, 2]
+Out = [0, 1, 2, 2]
+` + "```\n")
+		opDef.SetParamTypeConstraint(T, statusPrivateOrSecretOrPublic)
+		opDef.SetParamTypeConstraint(T1, statusPrivateOrSecretOrPublic)
+		opDef.SetParamTypeConstraint(T2, statusPrivateOrSecretOrPublic)
+		opDef.SetParamTypeConstraint(T3, statusPrivateOrSecretOrPublic)
 		check(opDef.err)
 		AllOpDef = append(AllOpDef, opDef)
 	}
@@ -656,6 +729,38 @@ In = {0, 1, 2, 3, 4}
 Out = {2, 4, 4}
 ` + "```\n")
 		opDef.SetParamTypeConstraint(T, statusPrivate)
+		check(opDef.err)
+		AllOpDef = append(AllOpDef, opDef)
+	}
+
+	{
+		opDef := &OperatorDef{}
+		opDef.SetName(OpNameCast)
+		opDef.AddInput("In", "Input tensor.", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.AddOutput("Out", "Output tensor.", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.SetDefinition(`Definition: Cast Input tensor's data type to Output tensor's.`)
+		opDef.SetParamTypeConstraint(T, statusPrivateOrSecretOrPublic)
+		check(opDef.err)
+		AllOpDef = append(AllOpDef, opDef)
+	}
+
+	{
+		opDef := &OperatorDef{}
+		opDef.SetName(OpNameLimit)
+		opDef.AddInput("In", "Tensors to be limited.",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.AddOutput("Out", "Output tensor.",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.SetDefinition(`Limit return part of data, the amount of data depends on limit attr, the offset of data depends on offset attr. Example:
+` + "\n```python" + `
+offset = 1
+count = 2
+In = {a, b, c, d, e}
+Out = {b, c}
+` + "```\n")
+		opDef.AddAttribute(LimitOffsetAttr, "offset in limit")
+		opDef.AddAttribute(LimitCountAttr, "count in limit")
+		opDef.SetParamTypeConstraint(T, statusPrivateOrSecretOrPublic)
 		check(opDef.err)
 		AllOpDef = append(AllOpDef, opDef)
 	}

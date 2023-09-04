@@ -15,6 +15,7 @@
 #include "engine/framework/session.h"
 
 #include <memory>
+#include <mutex>
 
 #include "arrow/array.h"
 #include "arrow/visit_array_inline.h"
@@ -220,4 +221,43 @@ TensorPtr Session::HashToString(const Tensor& hash_tensor) {
   return result;
 }
 
+void Session::DelTensors(const std::vector<std::string>& tensor_names) {
+  for (const auto& name : tensor_names) {
+    SPDLOG_INFO("remove tensor {}", name);
+    if (tensor_table_->GetTensor(name) != nullptr) {
+      tensor_table_->RemoveTensor(name);
+    } else {
+      // FIXME(xiaoyuan), if run dag parallel, there is no lock in SymbolTable,
+      // may cause race condition
+      device_symbols_.delVar(name);
+    }
+  }
+}
+
+// ref_num_ = ref_num_ - 1 when this tensor is consumed
+void Session::UpdateRefName(const std::vector<std::string>& input_ref_names,
+                            const RefNums& output_ref_nums) {
+  std::vector<std::string> remove_tensor_names;
+  {
+    std::unique_lock<std::mutex> lock(mutex_);
+    for (const auto& name : input_ref_names) {
+      auto iter = tensor_ref_nums_.find(name);
+      if (iter != tensor_ref_nums_.end()) {
+        iter->second--;
+        if (iter->second == 0) {
+          remove_tensor_names.emplace_back(name);
+          tensor_ref_nums_.erase(name);
+        }
+      }
+    }
+    for (const auto& ref_tuple : output_ref_nums) {
+      auto name = std::get<0>(ref_tuple);
+      auto iter = tensor_ref_nums_.find(name);
+      YACL_ENFORCE(iter == tensor_ref_nums_.end(),
+                   "ref num of {} was set before created", name);
+      tensor_ref_nums_[name] = std::get<1>(ref_tuple);
+    }
+  }
+  DelTensors(remove_tensor_names);
+}
 }  // namespace scql::engine

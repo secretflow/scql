@@ -197,7 +197,7 @@ func (m *GraphMapper) Map() {
 		sortedNodes := make([]*translator.ExecutionNode, 0)
 		singlePartyNodes := make([]*translator.ExecutionNode, 0)
 		for node := range subDAG.Nodes {
-			if len(node.PartyCodeInfos.GetParties()) == 1 {
+			if len(node.Parties) == 1 {
 				singlePartyNodes = append(singlePartyNodes, node)
 			} else {
 				sortedNodes = append(sortedNodes, node)

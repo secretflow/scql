@@ -71,7 +71,10 @@ func (n *ProjectionNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 	if err := n.buildChildCCL(colTracer); err != nil {
 		return err
 	}
-	childCCL := extractChildCCL(n)
+	childCCL, err := extractChildCCL(n)
+	if err != nil {
+		return fmt.Errorf("buildCCL for ProjectionNode: %v", err)
+	}
 	proj, ok := n.lp.(*core.LogicalProjection)
 	if !ok {
 		return fmt.Errorf("assert failed while projectionNode buildCCL, expected: core.LogicalProjection, actual: %T", n.lp)
@@ -97,7 +100,10 @@ func (n *JoinNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 	if err := n.buildChildCCL(colTracer); err != nil {
 		return err
 	}
-	childCCL := extractChildCCL(n)
+	childCCL, err := extractChildCCL(n)
+	if err != nil {
+		return fmt.Errorf("buildCCL for JoinNode: %v", err)
+	}
 
 	join, ok := n.lp.(*core.LogicalJoin)
 	if !ok {
@@ -142,7 +148,9 @@ func (n *JoinNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 		leftId, rightId := cols[0].UniqueID, cols[1].UniqueID
 		for _, p := range colTracer.FindSourceParties(leftId) {
 			if rightCc.LevelFor(p) == ccl.Join {
-				rightCc.SetLevelForParty(p, ccl.Plain)
+				if join.JoinType == core.InnerJoin || join.JoinType == core.LeftOuterJoin {
+					rightCc.SetLevelForParty(p, ccl.Plain)
+				}
 			}
 		}
 		joinKeyPairs = append(joinKeyPairs, joinKeyPair{
@@ -151,29 +159,32 @@ func (n *JoinNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 		})
 		for _, p := range colTracer.FindSourceParties(rightId) {
 			if leftCc.LevelFor(p) == ccl.Join {
-				leftCc.SetLevelForParty(p, ccl.Plain)
+				if join.JoinType == core.InnerJoin || join.JoinType == core.RightOuterJoin {
+					leftCc.SetLevelForParty(p, ccl.Plain)
+				}
 			}
 		}
-		leftCc.UpdateMoreRestrictedCCLFrom(rightCc)
-		// left/right column must have same ccl level
-		for _, p := range leftCc.Parties() {
-			level := ccl.LookUpVis(leftCc.LevelFor(p), rightCc.LevelFor(p))
-			leftCc.SetLevelForParty(p, level)
-			rightCc.SetLevelForParty(p, level)
+		if join.JoinType == core.InnerJoin {
+			// left/right column must have same ccl level
+			for _, p := range leftCc.Parties() {
+				level := ccl.LookUpVis(leftCc.LevelFor(p), rightCc.LevelFor(p))
+				leftCc.SetLevelForParty(p, level)
+				rightCc.SetLevelForParty(p, level)
+			}
 		}
 		// check ccl
 		for _, p := range colTracer.FindSourceParties(rightId) {
-			if !leftCc.IsVisibleFor(p) {
+			if !leftCc.IsVisibleFor(p) && leftCc.LevelFor(p) != ccl.Join {
 				return fmt.Errorf("joinNode.buildCCL: failed to check condition (%s) left party(%s) ccl(%v)", equalCondition.String(), p, conditionCCLs[0].LevelFor(p).String())
 			}
 		}
 		for _, p := range colTracer.FindSourceParties(leftId) {
-			if !rightCc.IsVisibleFor(p) {
+			if !rightCc.IsVisibleFor(p) && rightCc.LevelFor(p) != ccl.Join {
 				return fmt.Errorf("joinNode.buildCCL: failed to check condition (%s) right party(%s) ccl(%v)", equalCondition.String(), p, conditionCCLs[1].LevelFor(p).String())
 			}
 		}
 		joinKeyCCLs[leftId] = leftCc
-		joinKeyCCLs[rightId] = leftCc
+		joinKeyCCLs[rightId] = rightCc
 	}
 	// update source parties
 	// select * from ta join (select tb.bob_id, tc.carol_id from tb join tc on tb.index = tc.index) as tt on ta.alice_id = tt.bob_id and ta.alice_id = tt.carol_id
@@ -209,7 +220,10 @@ func (n *SelectionNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 	if err := n.buildChildCCL(colTracer); err != nil {
 		return err
 	}
-	childCCL := extractChildCCL(n)
+	childCCL, err := extractChildCCL(n)
+	if err != nil {
+		return fmt.Errorf("buildCCL for SelectionNode: %v", err)
+	}
 
 	sel, ok := n.lp.(*core.LogicalSelection)
 	if !ok {
@@ -226,6 +240,7 @@ func (n *SelectionNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 				return fmt.Errorf("SelectionNode buildCCL: %s", err)
 			}
 			sel.Conditions[i] = newExpr
+			sel.AffectedByGroupThreshold = true
 		}
 	}
 	var conditionCCL *ccl.CCL
@@ -260,21 +275,27 @@ func (n *SelectionNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 	return nil
 }
 
-func extractChildCCL(n logicalNode) map[int64]*ccl.CCL {
+func extractChildCCL(n logicalNode) (map[int64]*ccl.CCL, error) {
 	childCCL := make(map[int64]*ccl.CCL)
 	for _, child := range n.Children() {
 		for id, level := range child.CCL() {
+			if pre, ok := childCCL[id]; ok {
+				return nil, fmt.Errorf("extractChildCCL: child column id %v duplicated set ccl, pre %v, cur %v", id, pre, level)
+			}
 			childCCL[id] = level
 		}
 	}
-	return childCCL
+	return childCCL, nil
 }
 
 func (n *ApplyNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 	if err := n.buildChildCCL(colTracer); err != nil {
 		return err
 	}
-	childCCL := extractChildCCL(n)
+	childCCL, err := extractChildCCL(n)
+	if err != nil {
+		return fmt.Errorf("buildCCL for ApplyNode: %v", err)
+	}
 	apply, ok := n.lp.(*core.LogicalApply)
 	if !ok {
 		return fmt.Errorf("assert failed while applyNode buildCCL, expected: core.LogicalApply, actual: %T", n.lp)
@@ -327,7 +348,10 @@ func (n *AggregationNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 	if err := n.buildChildCCL(colTracer); err != nil {
 		return err
 	}
-	childCCL := extractChildCCL(n)
+	childCCL, err := extractChildCCL(n)
+	if err != nil {
+		return fmt.Errorf("buildCCL for AggregationNode: %v", err)
+	}
 	agg, ok := n.lp.(*core.LogicalAggregation)
 	if !ok {
 		return fmt.Errorf("assert failed while aggregationNode buildCCL, expected: core.LogicalAggregation, actual: %T", n.lp)
@@ -411,21 +435,22 @@ func (n *UnionAllNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 	if err := n.buildChildCCL(colTracer); err != nil {
 		return err
 	}
-	childCCL := extractChildCCL(n)
 	union, ok := n.lp.(*core.LogicalUnionAll)
 	if !ok {
 		return fmt.Errorf("assert failed while buildCCL, expected: *core.LogicalUnionAll, actual: %T", n.lp)
 	}
 	result := map[int64]*ccl.CCL{}
 	var ccls []*ccl.CCL
-	for _, cc := range childCCL {
-		ccls = append(ccls, cc)
+	for _, child := range n.Children() {
+		for _, cc := range child.CCL() {
+			ccls = append(ccls, cc)
+		}
 	}
 	parties := ccl.ExtractPartyCodes(ccls)
 	for i, c := range union.Schema().Columns {
 		newCC := ccl.CreateAllPlainCCL(parties)
 		for _, child := range n.Children() {
-			cc, exist := childCCL[child.Schema().Columns[i].UniqueID]
+			cc, exist := child.CCL()[child.Schema().Columns[i].UniqueID]
 			if !exist {
 				return fmt.Errorf("failed to find ccl for column %+v", c)
 			}
@@ -435,7 +460,7 @@ func (n *UnionAllNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 			if newCC.LevelFor(p) == ccl.Unknown {
 				childCCLStr := "failed to check union ccl: "
 				for _, child := range n.Children() {
-					childCCLStr += fmt.Sprintf(" ccl of child %d is (%v)", i, childCCL[child.Schema().Columns[i].UniqueID])
+					childCCLStr += fmt.Sprintf(" ccl of child %d is (%v)", i, child.CCL()[child.Schema().Columns[i].UniqueID])
 				}
 				return fmt.Errorf(childCCLStr)
 			}
@@ -447,7 +472,17 @@ func (n *UnionAllNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 }
 
 func (n *LimitNode) buildCCL(colTracer *ccl.ColumnTracer) error {
-	return fmt.Errorf("limit function not supported yet")
+	if err := n.buildChildCCL(colTracer); err != nil {
+		return err
+	}
+
+	childCCL, err := extractChildCCL(n)
+	if err != nil {
+		return fmt.Errorf("buildCCL for LimitNode: %v", err)
+	}
+
+	n.ccl = childCCL
+	return nil
 }
 
 func (n *SortNode) buildCCL(colTracer *ccl.ColumnTracer) error {

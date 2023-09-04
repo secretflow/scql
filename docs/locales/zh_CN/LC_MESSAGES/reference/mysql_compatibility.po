@@ -246,3 +246,4 @@ msgstr "聚合操作中的所有参数都不能是 string 类型。"
 #: ../../reference/mysql_compatibility.rst:101
 msgid "If all arguments are long, they are calculated as long."
 msgstr "如果所有参数都是 long 类型，则它们将按照 long 类型进行计算。"
+

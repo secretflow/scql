@@ -17,8 +17,9 @@
 #include "spdlog/spdlog.h"
 
 namespace scql::engine {
-void Listener::AddChannel(const size_t rank,
-                          std::shared_ptr<yacl::link::IChannel> channel) {
+void Listener::AddChannel(
+    const size_t rank,
+    std::shared_ptr<yacl::link::transport::ChannelBase> channel) {
   YACL_ENFORCE(channel, "add channel failed, channel can't be nullptr.");
   YACL_ENFORCE(channels_.count(rank) == 0,
                "add channel failed, rank={} exists before add.", rank);

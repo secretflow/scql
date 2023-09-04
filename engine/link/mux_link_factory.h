@@ -44,7 +44,7 @@ class MuxLinkFactory : public yacl::link::ILinkFactory {
   ListenerManager* listener_manager_;
 };
 
-class MuxLinkChannel : public yacl::link::ChannelBase {
+class MuxLinkChannel : public yacl::link::transport::ChannelBase {
  public:
   MuxLinkChannel(size_t self_rank, size_t peer_rank,
                  size_t http_max_payload_size, std::string link_id,

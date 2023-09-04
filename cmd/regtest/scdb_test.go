@@ -16,6 +16,7 @@ package regtest
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
 	"sort"
@@ -25,8 +26,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
-	"github.com/secretflow/scql/pkg/scdb/server"
+	"github.com/secretflow/scql/pkg/scdb/config"
 	"github.com/secretflow/scql/pkg/util/mock"
+	"github.com/secretflow/scql/pkg/util/sqlbuilder"
 )
 
 const (
@@ -52,6 +54,19 @@ const (
 var (
 	testDataSource TestDataSource
 	skipCreateFlag bool
+)
+
+// TODO: refactor regtest configuration with YAML?
+var (
+	alicePrivateKeyPemPath = flag.String("alicePem", "", "path to alice private key pem")
+	bobPrivateKeyPemPath   = flag.String("bobPem", "", "path to bob private key pem")
+	carolPrivateKeyPemPath = flag.String("carolPem", "", "path to carol private key pem")
+)
+
+var (
+	aliceEngAddr = flag.String("aliceEngAddr", "engine-alice:8003", "endpoint of alice engine")
+	bobEngAddr   = flag.String("bobEngAddr", "engine-bob:8003", "endpoint of bob engine")
+	carolEngAddr = flag.String("carolEngAddr", "engine-carol:8003", "endpoint of carol engine")
 )
 
 type queryCase struct {
@@ -139,7 +154,7 @@ func TestMain(m *testing.M) {
 		mysqlConnStr = fmt.Sprintf("root:testpass@tcp(localhost:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true", os.Getenv(MySQLPort), dbName)
 	}
 
-	mysqlConf := &server.StorageConf{
+	mysqlConf := &config.StorageConf{
 		ConnStr:         mysqlConnStr,
 		MaxOpenConns:    100,
 		MaxIdleConns:    10,
@@ -391,5 +406,114 @@ func createSuit(dataPath string, suit *queryTestSuit) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func createUserAndCcl(cclList []*scql.SecurityConfig_ColumnControl, addr string, skipCreate bool) error {
+	if skipCreate {
+		fmt.Println("skip createUserAndCcl")
+		return nil
+	}
+
+	// TODO: refactor these userMapXxx
+
+	userMapPrivateKeyPath := map[string]string{
+		"alice": *alicePrivateKeyPemPath,
+		"bob":   *bobPrivateKeyPemPath,
+		"carol": *carolPrivateKeyPemPath,
+	}
+
+	userMapEngEndpoint := map[string]string{
+		"alice": *aliceEngAddr,
+		"bob":   *bobEngAddr,
+		"carol": *carolEngAddr,
+	}
+
+	// create user
+	for _, user := range userNames {
+		builder := sqlbuilder.NewCreateUserStmtBuilder()
+		sql, err := builder.IfNotExists().SetUser(user).SetPassword(userMapPassword[user]).SetParty(userMapPartyCode[user]).AuthByPubkeyWithPemFile(userMapPrivateKeyPath[user]).WithEndpoinits([]string{userMapEngEndpoint[user]}).ToSQL()
+		if err != nil {
+			return err
+		}
+		fmt.Println(sql)
+		if _, err := runSql(userMapCredential[userNameRoot], sql, addr, true); err != nil {
+			return err
+		}
+	}
+
+	// create database
+	{
+		sql := fmt.Sprintf(`CREATE DATABASE IF NOT EXISTS %s`, dbName)
+		fmt.Println(sql)
+		if _, err := runSql(userMapCredential[userNameRoot], sql, addr, true); err != nil {
+			return err
+		}
+	}
+	// grant base auth
+	for _, user := range userNames {
+		sql := fmt.Sprintf(`GRANT CREATE, CREATE VIEW, GRANT OPTION ON %s.* TO %s`, dbName, user)
+		fmt.Println(sql)
+		if _, err := runSql(userMapCredential[userNameRoot], sql, addr, true); err != nil {
+			return err
+		}
+	}
+
+	// grant ccl
+	tableExistMap := map[string]bool{}
+	// map db_table to party to ccl to columns
+	grantMap := map[string]map[string]map[string][]string{}
+	physicalTableMetas, err := mock.MockPhysicalTableMetas()
+	if err != nil {
+		return err
+	}
+	for _, ccl := range cclList {
+		findTable := false
+		dbTableName := fmt.Sprintf(`%s_%s`, ccl.DatabaseName, ccl.TableName)
+		if _, exist := tableExistMap[dbTableName]; exist {
+			findTable = true
+		}
+		tableOwner := partyCodeToUser[tableToPartyCode[dbTableName]]
+		if !findTable {
+			pt, ok := physicalTableMetas[dbTableName]
+			if !ok {
+				return fmt.Errorf("%s not found in physicalTableMetas", dbTableName)
+			}
+			sql := pt.ToCreateTableStmt(fmt.Sprintf("%s.%s", dbName, dbTableName), true)
+			fmt.Println(sql)
+			if _, err := runSql(userMapCredential[tableOwner], sql, addr, true); err != nil {
+				return err
+			}
+			tableExistMap[dbTableName] = true
+		}
+		grantTo := fmt.Sprintf("%s.%s", dbName, dbTableName)
+		cclStr := scql.SecurityConfig_ColumnControl_Visibility_name[int32(ccl.Visibility)]
+		if grantMap[grantTo] == nil {
+			grantMap[grantTo] = map[string]map[string][]string{}
+		}
+		if grantMap[grantTo][partyCodeToUser[ccl.PartyCode]] == nil {
+			grantMap[grantTo][partyCodeToUser[ccl.PartyCode]] = map[string][]string{}
+		}
+		if len(grantMap[grantTo][partyCodeToUser[ccl.PartyCode]][cclStr]) == 0 {
+			grantMap[grantTo][partyCodeToUser[ccl.PartyCode]][cclStr] = []string{}
+		}
+		grantMap[grantTo][partyCodeToUser[ccl.PartyCode]][cclStr] = append(grantMap[grantTo][partyCodeToUser[ccl.PartyCode]][cclStr], ccl.ColumnName)
+	}
+	fmt.Println("Grant CCL...")
+	for dbTable, userGrantMap := range grantMap {
+		for user, cclGrantMap := range userGrantMap {
+			var cclColumns []string
+			for cc, columns := range cclGrantMap {
+				cclColumns = append(cclColumns, fmt.Sprintf("SELECT %s(%s)", cc, strings.Join(columns, ", ")))
+			}
+			sql := fmt.Sprintf("GRANT %s ON %s TO %s", strings.Join(cclColumns, ", "), dbTable, user)
+			tableOwner := partyCodeToUser[tableToPartyCode[strings.Split(dbTable, ".")[1]]]
+			if _, err := runSql(userMapCredential[tableOwner], sql, addr, true); err != nil {
+				return fmt.Errorf("query failed: %v, with error:%v", sql, err)
+			}
+		}
+	}
+	fmt.Println("Grant Complete!")
+	fmt.Println()
 	return nil
 }

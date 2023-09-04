@@ -23,8 +23,18 @@ import (
 
 func TestPartyInfos(t *testing.T) {
 	r := require.New(t)
-	partyInfo, err := NewPartyInfo([]string{"alice", "bob"}, []string{"alice.com", "bob.com"}, []string{"alice_credential", "bob_credential"})
-	r.NoError(err)
+	partyInfo := NewPartyInfo([]*Participant{
+		&Participant{
+			PartyCode: "alice",
+			Endpoints: []string{"alice.com"},
+			Token:     "alice_credential",
+		},
+		&Participant{
+			PartyCode: "bob",
+			Endpoints: []string{"bob.com"},
+			Token:     "bob_credential",
+		},
+	})
 	r.Equal([]string{"alice", "bob"}, partyInfo.GetParties())
 	r.Equal([]string{"alice.com", "bob.com"}, partyInfo.GetUrls())
 	url, err := partyInfo.GetUrlByParty("alice")
@@ -80,18 +90,15 @@ func MockEnginesInfo(mockInfos []*MockPartyAndTableInfos) (*EnginesInfo, error) 
 	if len(mockInfos) != 2 {
 		return nil, fmt.Errorf("unsupported party number %d", len(mockInfos))
 	}
-	var parties []string
-	var partyUrls []string
-	var partyCredentials []string
+	var participants []*Participant
 	for _, info := range mockInfos {
-		parties = append(parties, info.party)
-		partyUrls = append(partyUrls, fmt.Sprintf("%s.com", info.party))
-		partyCredentials = append(partyCredentials, fmt.Sprintf("%s_credential", info.party))
+		participants = append(participants, &Participant{
+			PartyCode: info.party,
+			Endpoints: []string{fmt.Sprintf("%s.com", info.party)},
+			Token:     fmt.Sprintf("%s_credential", info.party),
+		})
 	}
-	partyInfo, err := NewPartyInfo(parties, partyUrls, partyCredentials)
-	if err != nil {
-		return nil, err
-	}
+	partyInfo := NewPartyInfo(participants)
 	tableNum := len(mockInfos[0].tables)
 	party2Tables := make(map[string][]DbTable)
 	mockRefTables := make([]DbTable, 0)

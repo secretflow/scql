@@ -85,53 +85,65 @@ func NewEnginesInfo(p *PartyInfo, party2Tables map[string][]DbTable) *EnginesInf
 	}
 }
 
-type PartyInfo struct {
-	parties     []string
-	urls        []string
-	credentials []string
+type Participant struct {
+	PartyCode string
+	Endpoints []string
+	Token     string
+	PubKey    string
 }
 
-func NewPartyInfo(parties []string, urls []string, credentials []string) (*PartyInfo, error) {
-	if len(parties) == 0 || len(parties) != len(urls) || len(parties) != len(credentials) {
-		return nil, fmt.Errorf("invalid party information")
-	}
+type PartyInfo struct {
+	participants []*Participant
+}
+
+func NewPartyInfo(parties []*Participant) *PartyInfo {
 	return &PartyInfo{
-		parties:     parties,
-		urls:        urls,
-		credentials: credentials,
-	}, nil
+		participants: parties,
+	}
+}
+
+func (p *PartyInfo) GetParticipants() []*Participant {
+	return p.participants
 }
 
 func (pi *PartyInfo) GetParties() []string {
-	return pi.parties
+	partyCodes := make([]string, 0, len(pi.participants))
+	for _, p := range pi.participants {
+		partyCodes = append(partyCodes, p.PartyCode)
+	}
+	return partyCodes
 }
 
 func (pi *PartyInfo) GetCredentialByParty(party string) (credential string, err error) {
-	for i, p := range pi.parties {
-		if p == party {
-			return pi.credentials[i], nil
+	for _, p := range pi.participants {
+		if p.PartyCode == party {
+			return p.Token, nil
 		}
 	}
-	return "", fmt.Errorf("no party named %s, all parties include (%+v)", party, pi.parties)
+	return "", fmt.Errorf("no party named %s", party)
 }
 
 func (pi *PartyInfo) GetCredentials() []string {
-	return pi.credentials
+	credentials := make([]string, 0, len(pi.participants))
+	for _, p := range pi.participants {
+		credentials = append(credentials, p.Token)
+	}
+	return credentials
 }
 
 func (pi *PartyInfo) GetUrlByParty(party string) (url string, err error) {
-	for i, p := range pi.parties {
-		if p == party {
-			return pi.urls[i], nil
+	for _, p := range pi.participants {
+		if p.PartyCode == party {
+			return p.Endpoints[0], nil
 		}
 	}
-	return "", fmt.Errorf("no party named %s, all parties include (%+v)", party, pi.parties)
+	return "", fmt.Errorf("no party named %s", party)
 }
 
 func (pi *PartyInfo) GetUrls() []string {
-	return pi.urls
-}
-
-func (pi *PartyInfo) UpdateUrls(urls []string) {
-	pi.urls = urls
+	urls := make([]string, 0, len(pi.participants))
+	for _, p := range pi.participants {
+		urls = append(urls, p.Endpoints[0])
+	}
+	return urls
 }

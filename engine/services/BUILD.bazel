@@ -35,6 +35,7 @@ cc_library(
         "//api:engine_cc_proto",
         "//api:status_cc_proto",
         "//engine/audit:audit_log",
+        "//engine/auth:authenticator",
         "//engine/datasource:datasource_adaptor_mgr",
         "//engine/datasource:embed_router",
         "//engine/framework:exec",

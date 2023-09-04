@@ -1,4 +1,3 @@
-//
 // Copyright 2023 Ant Group Co., Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,29 +11,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
 
-syntax = "proto3";
+#pragma once
 
-package scql.engine;
+#include "engine/datasource/arrow_sql_adaptor.h"
+#include "engine/datasource/datasource_adaptor_factory.h"
 
-option go_package = "proto-gen/grm";
+namespace scql::engine {
 
-enum DataSourceKind {
-  UNKNOWN = 0;
-  MYSQL = 1;
-  SQLITE = 2;
-  POSTGRESQL = 3;
-  CSVDB = 4;
-}
-
-message DataSource {
-  // datasource uuid
-  string id = 1;
-  // human-friendly datasource name
-  string name = 2;
-  DataSourceKind kind = 3;
-  // concrete data source connection string
-  // It is comprehend to related data source adaptor.
-  string connection_str = 4;
+class ArrowSqlAdaptorFactory final : public DatasourceAdaptorFactory {
+ public:
+  std::unique_ptr<DatasourceAdaptor> CreateAdaptor(
+      const DataSource& datasource_spec) override {
+    return std::make_unique<ArrowSqlAdaptor>(datasource_spec.connection_str());
+  }
 };
+
+}  // namespace scql::engine

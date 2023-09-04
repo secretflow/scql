@@ -14,25 +14,39 @@
 
 #include "engine/operator/in.h"
 
+#include <sys/types.h>
+
+#include <cstddef>
+#include <cstdint>
+#include <future>
+#include <memory>
+#include <optional>
+#include <tuple>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+
+#include "butil/files/scoped_temp_dir.h"
+#include "gflags/gflags.h"
+#include "libspu/psi/core/ecdh_oprf_psi.h"
 #include "libspu/psi/core/ecdh_psi.h"
 #include "libspu/psi/cryptor/cryptor_selector.h"
+#include "libspu/psi/utils/cipher_store.h"
+#include "yacl/crypto/utils/rand.h"
 
 #include "engine/audit/audit_log.h"
+#include "engine/core/arrow_helper.h"
+#include "engine/core/primitive_builder.h"
+#include "engine/core/tensor.h"
+#include "engine/framework/exec.h"
 #include "engine/util/psi_helper.h"
 #include "engine/util/tensor_util.h"
 
+DEFINE_int64(shuffle_provider_batch_size, 8192,
+             "batch size used in OprfServerShuffleOnline");
+DECLARE_int32(psi_curve_type);
+
 namespace scql::engine::op {
-
-namespace {
-
-enum InAlgo {
-  SecretShareIn = 0,
-  PsiIn = 1,
-  LocalIn = 2,
-  AlgoNums,  // Sentinel Value
-};
-
-}
 
 const std::string In::kOpType("In");
 
@@ -40,64 +54,304 @@ const std::string& In::Type() const { return kOpType; }
 
 void In::Validate(ExecContext* ctx) {
   int64_t algorithm = ctx->GetInt64ValueFromAttribute(kAlgorithmAttr);
-
-  if (algorithm < 0 || algorithm >= InAlgo::AlgoNums) {
+  if (algorithm < 0 || algorithm >= static_cast<int64_t>(InAlgo::kAlgoNums)) {
     YACL_THROW("Unknown in algorithm value: {}", algorithm);
   }
+
+  static std::unordered_set<int64_t> supported_algos{
+      static_cast<int64_t>(InAlgo::kPsiIn),
+      static_cast<int64_t>(InAlgo::kOprfPsiIn),
+      static_cast<int64_t>(InAlgo::kEcdhPsiIn)};
+  if (supported_algos.count(algorithm) > 0) {
+    ValidateInputAndOutputForPsi(ctx);
+    ValidatePartyCodesForPsi(ctx);
+  } else {
+    // TODO(shunde.csd): implement other in algorithm
+    YACL_THROW("to be implemented");
+  }
+}
+
+void In::Execute(ExecContext* ctx) {
+  int64_t algorithm = ctx->GetInt64ValueFromAttribute(kAlgorithmAttr);
+  switch (algorithm) {
+    case static_cast<int64_t>(InAlgo::kSecretShareIn):
+      SPDLOG_INFO("Execute In, algo = {}", "SecretShareIn");
+      return SecretShareIn(ctx);
+    case static_cast<int64_t>(InAlgo::kPsiIn):
+      // engines will coordinate proper PSI algorithm(EcdhPsi or OprfPsi)
+      // according to the tensor size
+      SPDLOG_INFO("Execute In, algo = {}", "PsiIn");
+      return PsiIn(ctx);
+    case static_cast<int64_t>(InAlgo::kLocalIn):
+      SPDLOG_INFO("Execute In, algo = {}", "LocalIn");
+      return LocalIn(ctx);
+    case static_cast<int64_t>(InAlgo::kOprfPsiIn):
+      SPDLOG_INFO("Execute In, algo = {}", "OprfPsiIn");
+      // Besides letting the engines decide, SCDB can directly choose prefered
+      // PSI algorithm(EcdhPsi or OprfPsi) UbPsiServerHint is indispensable when
+      // SCDB explicitly choose OprfPsiIn
+      return OprfPsiIn(ctx, IsOprfServerAccordToHint(ctx));
+    case static_cast<int64_t>(InAlgo::kEcdhPsiIn):
+      SPDLOG_INFO("Execute In, algo = {}", "EcdhPsiIn");
+      return EcdhPsiIn(ctx);
+    default:
+      YACL_THROW("unsupported in algorithm id: {}", algorithm);
+  }
+}
+
+void In::ValidateInputAndOutputForPsi(ExecContext* ctx) {
   const auto& left = ctx->GetInput(kInLeft);
   const auto& right = ctx->GetInput(kInRight);
   const auto& out = ctx->GetOutput(kOut);
 
+  // operator In only supports the comparison of one column
   YACL_ENFORCE(left.size() == 1 && right.size() == 1,
                "In operator inputs Left and Right both size should be 1, but "
                "got size(Left)={}, size(Right)={}",
                left.size(), right.size());
   YACL_ENFORCE(out.size() == 1,
                "In operator output size should be 1, but got={}", out.size());
-  if (algorithm == InAlgo::PsiIn) {
-    // reveal_to must have one element
-    const auto& input_party_codes =
-        ctx->GetStringValuesFromAttribute(kInputPartyCodesAttr);
-    YACL_ENFORCE(input_party_codes.size() == 2,
-                 "invalid attribute {} value size, expect 2 but got={}",
-                 kInputPartyCodesAttr, input_party_codes.size());
 
-    const auto& reveal_to = ctx->GetStringValuesFromAttribute(kRevealToAttr);
-    YACL_ENFORCE(reveal_to.size() == 1,
-                 "In operator with psi-in algorithm should only reveal to 1 "
-                 "party, but got={}",
-                 reveal_to.size());
-    YACL_ENFORCE(util::AreTensorsStatusMatched(left, pb::TENSORSTATUS_PRIVATE),
-                 "In operator with psi-in algorithm input Left status should "
-                 "be private");
-    YACL_ENFORCE(util::AreTensorsStatusMatched(right, pb::TENSORSTATUS_PRIVATE),
-                 "In operator with psi-in algorithm input Right status should "
-                 "be private");
-    YACL_ENFORCE(util::AreTensorsStatusMatched(out, pb::TENSORSTATUS_PRIVATE),
-                 "In operator with psi-in algorithm output status should "
-                 "be private");
-  } else {
-    // TODO(shunde.csd): implement other in algorithm
-    YACL_THROW("tobe implemented");
-  }
+  // check tensor status
+  YACL_ENFORCE(util::AreTensorsStatusMatched(left, pb::TENSORSTATUS_PRIVATE),
+               "In operator with psi-in algorithm input Left status should "
+               "be private");
+  YACL_ENFORCE(util::AreTensorsStatusMatched(right, pb::TENSORSTATUS_PRIVATE),
+               "In operator with psi-in algorithm input Right status should "
+               "be private");
+  YACL_ENFORCE(util::AreTensorsStatusMatched(out, pb::TENSORSTATUS_PRIVATE),
+               "In operator with psi-in algorithm output status should "
+               "be private");
 }
 
-void In::Execute(ExecContext* ctx) {
-  int64_t algorithm = ctx->GetInt64ValueFromAttribute(kAlgorithmAttr);
-  if (algorithm == InAlgo::SecretShareIn) {
-    return SecretShareIn(ctx);
-  } else if (algorithm == InAlgo::PsiIn) {
-    return PsiIn(ctx);
-  } else if (algorithm == InAlgo::LocalIn) {
-    return LocalIn(ctx);
-  }
+void In::ValidatePartyCodesForPsi(ExecContext* ctx) {
+  // only support 2 party PSI in this implementation
+  const auto& input_party_codes =
+      ctx->GetStringValuesFromAttribute(kInputPartyCodesAttr);
+  YACL_ENFORCE(input_party_codes.size() == 2,
+               "invalid attribute {} value size, expect 2 but got={}",
+               kInputPartyCodesAttr, input_party_codes.size());
 
-  YACL_THROW("unsupported in algorithm: {}", algorithm);
+  const auto& reveal_to = ctx->GetStringValuesFromAttribute(kRevealToAttr);
+  // reveal_to must have one element
+  YACL_ENFORCE(reveal_to.size() == 1,
+               "In operator with psi-in algorithm should only reveal to 1 "
+               "party, but got={}",
+               reveal_to.size());
+  // InAlgo::PsiIn supports revealing only to the right party, but this action
+  // itself is meaningless
+  YACL_ENFORCE(reveal_to[0] == input_party_codes[0],
+               "In result should only reveal to left party");
 }
 
-void In::SecretShareIn(ExecContext* ctx) { YACL_THROW("unimplemented"); }
+bool In::IsOprfServerAccordToHint(ExecContext* ctx) {
+  auto server_hint = ctx->GetInt64ValueFromAttribute(kUbPsiServerHint);
+  YACL_ENFORCE(server_hint >= 0 && server_hint <= 1, "invalid server hint: {}",
+               server_hint);
+
+  const auto& my_party_code = ctx->GetSession()->SelfPartyCode();
+  std::vector<std::string> input_party_codes =
+      ctx->GetStringValuesFromAttribute(kInputPartyCodesAttr);
+  bool is_left = my_party_code == input_party_codes.at(0);
+
+  return (is_left && server_hint == 0) || (!is_left && server_hint == 1);
+}
 
 void In::PsiIn(ExecContext* ctx) {
+  auto psi_plan = util::CoordinatePsiPlan(ctx);
+  if (psi_plan.unbalanced) {
+    SPDLOG_INFO("OprfPsi is chosen");
+    return OprfPsiIn(ctx, psi_plan.is_server, psi_plan.psi_size_info);
+  } else {
+    SPDLOG_INFO("EcdhPsi is chosen");
+    return EcdhPsiIn(ctx);
+  }
+}
+
+void In::OprfPsiIn(ExecContext* ctx, bool is_server,
+                   std::optional<util::PsiSizeInfo> psi_size_info) {
+  util::PsiExecutionInfoTable psi_info_table;
+  psi_info_table.start_time = std::chrono::system_clock::now();
+  // a temporary solution, related SPU-codes need to be modified someday
+  if (psi_size_info.has_value()) {
+    psi_info_table.self_size = psi_size_info->self_size;
+    psi_info_table.peer_size = psi_size_info->peer_size;
+  } else {
+    psi_info_table.self_size = 0;
+    psi_info_table.peer_size = 0;
+  }
+
+  const auto& my_party_code = ctx->GetSession()->SelfPartyCode();
+  std::vector<std::string> input_party_codes =
+      ctx->GetStringValuesFromAttribute(kInputPartyCodesAttr);
+  bool is_left = my_party_code == input_party_codes.at(0);
+
+  // prepare input
+  const auto* input_name = is_left ? kInLeft : kInRight;
+  auto param_name = ctx->GetInput(input_name)[0].name();
+  auto in_tensor = ctx->GetTensorTable()->GetTensor(param_name);
+  YACL_ENFORCE(in_tensor != nullptr, "{} not found in tensor table",
+               param_name);
+  bool items_need_shuffle = is_server;
+  auto batch_provider = std::make_shared<util::BatchProvider>(
+      std::vector<TensorPtr>{in_tensor}, items_need_shuffle);
+
+  // check reveal condition
+  std::string reveal_to_party_code =
+      ctx->GetStringValueFromAttribute(kRevealToAttr);
+  YACL_ENFORCE(reveal_to_party_code == input_party_codes[0],
+               "In result should only reveal to left party");
+  auto target_rank = ctx->GetSession()->GetPartyRank(reveal_to_party_code);
+  YACL_ENFORCE(target_rank != -1, "unknown rank for party {}",
+               reveal_to_party_code);
+  bool reveal_to_me = reveal_to_party_code == my_party_code;
+  bool reveal_to_server =
+      (is_server && reveal_to_me) || (!is_server && !reveal_to_me);
+
+  // set EcdhOprfPsiOptions
+  spu::psi::EcdhOprfPsiOptions psi_options;
+  auto psi_link = ctx->GetSession()->GetLink();
+  if (psi_link->WorldSize() > 2) {
+    psi_link = psi_link->SubWorld(ctx->GetNodeName(), input_party_codes);
+  }
+  psi_options.link0 = psi_link;
+  YACL_ENFORCE(psi_options.link0, "fail to getlink0 for OprfPsiIn");
+  psi_options.link1 = psi_options.link0->Spawn();
+  YACL_ENFORCE(psi_options.link1, "fail to getlink1 for OprfPsiIn");
+  psi_options.curve_type =
+      static_cast<spu::psi::CurveType>(FLAGS_psi_curve_type);
+
+  // create temp dir
+  butil::ScopedTempDir tmp_dir;
+  YACL_ENFORCE(tmp_dir.CreateUniqueTempDir(), "fail to create temp dir");
+
+  if (is_server) {
+    OprfPsiServer(ctx, reveal_to_server, tmp_dir.path().value(), psi_options,
+                  batch_provider, &psi_info_table);
+  } else {
+    OprfPsiClient(ctx, reveal_to_server, tmp_dir.path().value(), psi_options,
+                  batch_provider, &psi_info_table);
+  }
+
+  // audit
+  SPDLOG_INFO(
+      "OPRF PSI In finish, my_party_code:{}, my_rank:{}, total "
+      "self_item_count:{}, total peer_item_count:{}, result size:{}",
+      ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
+      psi_info_table.self_size, psi_info_table.peer_size,
+      psi_info_table.result_size);
+  audit::RecordInNodeDetail(
+      *ctx, static_cast<int64_t>(psi_info_table.self_size),
+      static_cast<int64_t>(psi_info_table.peer_size),
+      psi_info_table.result_size, psi_info_table.start_time);
+}
+
+int64_t In::OprfServerHandleResult(ExecContext* ctx,
+                                   const std::vector<uint64_t>& matched_indices,
+                                   size_t self_item_count) {
+  SPDLOG_DEBUG(
+      "Server handle result, matched_indices size={}, self_item_count={}",
+      matched_indices.size(), self_item_count);
+  std::unordered_set<uint64_t> matched_indices_set(matched_indices.begin(),
+                                                   matched_indices.end());
+  BooleanTensorBuilder result_builder;
+  result_builder.Reserve(static_cast<int64_t>(self_item_count));
+  for (uint64_t indice = 0; indice < self_item_count; ++indice) {
+    if (matched_indices_set.count(indice) > 0) {
+      result_builder.UnsafeAppend(true);
+    } else {
+      result_builder.UnsafeAppend(false);
+    }
+  }
+
+  TensorPtr result_tensor;
+  result_builder.Finish(&result_tensor);
+  int64_t result_size = result_tensor->Length();
+
+  const auto& output_pb = ctx->GetOutput(In::kOut)[0];
+  ctx->GetSession()->GetTensorTable()->AddTensor(output_pb.name(),
+                                                 std::move(result_tensor));
+  return result_size;
+}
+
+void In::OprfPsiServer(
+    ExecContext* ctx, bool reveal_to_server, const std::string& tmp_dir,
+    const spu::psi::EcdhOprfPsiOptions& psi_options,
+    const std::shared_ptr<util::BatchProvider>& batch_provider,
+    util::PsiExecutionInfoTable* psi_info_table) {
+  std::vector<uint8_t> private_key =
+      yacl::crypto::SecureRandBytes(spu::psi::kEccKeySize);
+  auto dh_oprf_psi_server =
+      std::make_shared<spu::psi::EcdhOprfPsiServer>(psi_options, private_key);
+  YACL_ENFORCE(dh_oprf_psi_server, "Fail to create EcdhOprfPsiServer");
+  if (reveal_to_server) {
+    // Create UbPsiCache
+    std::string server_cache_path = fmt::format("{}/tmp-server-cache", tmp_dir);
+    std::shared_ptr<spu::psi::IUbPsiCache> ub_cache;
+    std::vector<std::string> dummy_fields{};
+    ub_cache = std::make_shared<spu::psi::UbPsiCache>(
+        server_cache_path, dh_oprf_psi_server->GetCompareLength(),
+        dummy_fields);
+
+    util::OprfPsiServerTransferServerItems(ctx, batch_provider,
+                                           dh_oprf_psi_server, ub_cache);
+
+    std::vector<uint64_t> matched_indices;
+    size_t self_item_count{};
+    util::OprfServerTransferShuffledClientItems(
+        ctx, dh_oprf_psi_server, server_cache_path,
+        FLAGS_shuffle_provider_batch_size, &matched_indices, &self_item_count);
+    psi_info_table->result_size =
+        OprfServerHandleResult(ctx, matched_indices, self_item_count);
+  } else {
+    auto transfer_server_items_future =
+        std::async(std::launch::async, util::OprfPsiServerTransferServerItems,
+                   ctx, batch_provider, dh_oprf_psi_server, nullptr);
+    util::OprfPsiServerTransferClientItems(ctx, dh_oprf_psi_server);
+    transfer_server_items_future.wait();
+    psi_info_table->result_size = 0;
+  }
+}
+
+void In::OprfPsiClient(
+    ExecContext* ctx, bool reveal_to_server, const std::string& tmp_dir,
+    const spu::psi::EcdhOprfPsiOptions& psi_options,
+    const std::shared_ptr<util::BatchProvider>& batch_provider,
+    util::PsiExecutionInfoTable* psi_info_table) {
+  std::string server_cipher_store_path =
+      fmt::format("{}/tmp-server-cipher-store.csv", tmp_dir);
+  auto cipher_store =
+      std::make_shared<util::UbInCipherStore>(server_cipher_store_path);
+
+  if (reveal_to_server) {
+    util::OprfPsiClientTransferServerItems(ctx, psi_options, cipher_store);
+    util::OprfCLientTransferShuffledClientItems(ctx, batch_provider,
+                                                psi_options, cipher_store);
+    psi_info_table->result_size = 0;
+  } else {
+    auto transfer_server_items_future =
+        std::async(std::launch::async, util::OprfPsiClientTransferServerItems,
+                   ctx, psi_options, cipher_store);
+    OprfPsiClientTransferClientItems(ctx, batch_provider, psi_options,
+                                     cipher_store);
+    transfer_server_items_future.wait();
+    psi_info_table->result_size = OprfClientHandleResult(ctx, cipher_store);
+  }
+}
+
+int64_t In::OprfClientHandleResult(
+    ExecContext* ctx,
+    const std::shared_ptr<util::UbInCipherStore>& cipher_store) {
+  auto result_tensor = cipher_store->FinalizeAndComputeInResult();
+  int64_t result_size = result_tensor->Length();
+
+  const auto& output_pb = ctx->GetOutput(In::kOut)[0];
+  ctx->GetSession()->GetTensorTable()->AddTensor(output_pb.name(),
+                                                 std::move(result_tensor));
+  return result_size;
+}
+
+void In::EcdhPsiIn(ExecContext* ctx) {
   const auto start_time = std::chrono::system_clock::now();
   const auto& my_party_code = ctx->GetSession()->SelfPartyCode();
 
@@ -133,7 +387,8 @@ void In::PsiIn(ExecContext* ctx) {
         target_rank = 1;
       }
     }
-    options.ecc_cryptor = spu::psi::CreateEccCryptor(spu::psi::CURVE_25519);
+    options.ecc_cryptor = spu::psi::CreateEccCryptor(
+        static_cast<spu::psi::CurveType>(FLAGS_psi_curve_type));
     options.target_rank = target_rank;
     options.on_batch_finished = util::BatchFinishedCb(
         ctx->GetSession()->Id(),
@@ -152,18 +407,20 @@ void In::PsiIn(ExecContext* ctx) {
     peer_size = in_cipher_store->GetPeerItemCount();
     result_size = result->Length();
     SPDLOG_INFO(
-        "my_party_code:{}, my_rank:{}, total self_item_count:{}, "
-        "total peer_item_count:{}, result size:{}",
+        "ECDH PSI In finish, my_party_code:{}, my_rank:{}, total "
+        "self_item_count:{}, total peer_item_count:{}, result size:{}",
         ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
         self_size, peer_size, result_size);
     const auto& output_pb = ctx->GetOutput(kOut)[0];
     ctx->GetSession()->GetTensorTable()->AddTensor(output_pb.name(),
                                                    std::move(result));
   }
-  audit::RecordInNodeDetail(*ctx, self_size, peer_size, result_size,
+  audit::RecordInNodeDetail(*ctx, static_cast<int64_t>(self_size),
+                            static_cast<int64_t>(peer_size), result_size,
                             start_time);
 }
 
 void In::LocalIn(ExecContext* ctx) { YACL_THROW("unimplemented"); }
+void In::SecretShareIn(ExecContext* ctx) { YACL_THROW("unimplemented"); }
 
 }  // namespace scql::engine::op

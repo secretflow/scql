@@ -145,7 +145,6 @@ CREATE TABLE `tables` (
   `table_schema` longtext COMMENT '''table schema''',
   `owner` varchar(64) DEFAULT NULL COMMENT '''owner user name''',
   `host` varchar(64) DEFAULT NULL COMMENT '''owner user host''',
-  `tid` varchar(1024) DEFAULT NULL COMMENT '''table id in grm''',
   `ref_db` varchar(64) DEFAULT NULL COMMENT '''reference database name''',
   `ref_table` varchar(64) DEFAULT NULL COMMENT '''reference table name''',
   `db_type` bigint(20) DEFAULT 0 COMMENT '''database type where table data stored''',
@@ -178,6 +177,10 @@ CREATE TABLE `users` (
   `describe_priv` tinyint(1) DEFAULT NULL COMMENT '''describe privilege''',
   `show_priv` tinyint(1) DEFAULT NULL COMMENT '''show privilege''',
   `create_view_priv` tinyint(1) DEFAULT NULL COMMENT '''create view privilege''',
+  `eng_auth_method` smallint DEFAULT NULL,
+  `eng_token` varchar(256) DEFAULT NULL,
+  `eng_pubkey` varchar(256) DEFAULT NULL,
+  `eng_endpoints` varchar(256) DEFAULT NULL,
   `created_at` datetime(3) DEFAULT NULL,
   `updated_at` datetime(3) DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -202,7 +205,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'%','root','*EF722C9187A4F1ABBD33861281A782F22D2DD9882045F4EB2E65294D3D825298','',1,1,1,1,1,1,1,'2022-12-05 19:22:43.657','2022-12-05 19:22:43.657');
+INSERT INTO `users` VALUES (1,'%','root','*EF722C9187A4F1ABBD33861281A782F22D2DD9882045F4EB2E65294D3D825298','',1,1,1,1,1,1,1,0,'','','','2022-12-05 19:22:43.657','2022-12-05 19:22:43.657');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

@@ -30,7 +30,7 @@ import (
 	gormlog "gorm.io/gorm/logger"
 
 	"github.com/secretflow/scql/pkg/executor"
-	"github.com/secretflow/scql/pkg/grm"
+	"github.com/secretflow/scql/pkg/scdb/config"
 	"github.com/secretflow/scql/pkg/scdb/storage"
 )
 
@@ -56,8 +56,8 @@ func (f *LogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		strings.ToUpper(entry.Level.String()), fileWithLine, entry.Message)), nil
 }
 
-func NewServer(conf *Config, grmClient grm.Grm, storage *gorm.DB, engineClient executor.EngineClient) (*http.Server, error) {
-	app, err := NewApp(conf, grmClient, storage, engineClient)
+func NewServer(conf *config.Config, storage *gorm.DB, engineClient executor.EngineClient) (*http.Server, error) {
+	app, err := NewApp(conf, storage, engineClient)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func NewServer(conf *Config, grmClient grm.Grm, storage *gorm.DB, engineClient e
 	}, nil
 }
 
-func NewDbConnWithBootstrap(conf *StorageConf) (*gorm.DB, error) {
+func NewDbConnWithBootstrap(conf *config.StorageConf) (*gorm.DB, error) {
 	var db *gorm.DB
 	var err error
 
@@ -107,9 +107,9 @@ func NewDbConnWithBootstrap(conf *StorageConf) (*gorm.DB, error) {
 	}
 
 	switch conf.Type {
-	case StorageTypeSQLite:
+	case config.StorageTypeSQLite:
 		db, err = gorm.Open(sqlite.Open(conf.ConnStr), gormConfig)
-	case StorageTypeMySQL:
+	case config.StorageTypeMySQL:
 		db, err = gorm.Open(mysql.Open(conf.ConnStr), gormConfig)
 	default:
 		return nil, fmt.Errorf("newApp: invalid config.StorageType %s, should be one of {sqlite,mysql}", conf.Type)

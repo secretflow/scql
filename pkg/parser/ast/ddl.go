@@ -833,7 +833,7 @@ type ColumnDef struct {
 	node
 
 	Name    *ColumnName
-	Tp      *types.FieldType
+	Type    string
 	Options []*ColumnOption
 }
 
@@ -842,12 +842,12 @@ func (n *ColumnDef) Restore(ctx *RestoreCtx) error {
 	if err := n.Name.Restore(ctx); err != nil {
 		return errors.Annotate(err, "An error occurred while splicing ColumnDef Name")
 	}
-	if n.Tp != nil {
+
+	if len(n.Type) > 0 {
 		ctx.WritePlain(" ")
-		if err := n.Tp.Restore(ctx); err != nil {
-			return errors.Annotate(err, "An error occurred while splicing ColumnDef Type")
-		}
+		ctx.WriteKeyWord(n.Type)
 	}
+
 	for i, options := range n.Options {
 		ctx.WritePlain(" ")
 		if err := options.Restore(ctx); err != nil {
@@ -1776,7 +1776,8 @@ const (
 	TableOptionTableCheckSum
 	TableOptionUnion
 	TableOptionEncryption
-	TableOptionTID
+	TableOptionRefTable
+	TableOptionDBType
 )
 
 // RowFormat types
@@ -2013,8 +2014,13 @@ func (n *TableOption) Restore(ctx *RestoreCtx) error {
 		ctx.WriteKeyWord("ENCRYPTION ")
 		ctx.WritePlain("= ")
 		ctx.WriteString(n.StrValue)
-	case TableOptionTID:
-		ctx.WriteKeyWord("TID ")
+	case TableOptionRefTable:
+		ctx.WriteKeyWord("REF_TABLE ")
+		ctx.WritePlain("= ")
+		tn := n.TableNames[0]
+		tn.Restore(ctx)
+	case TableOptionDBType:
+		ctx.WriteKeyWord("DB_TYPE ")
 		ctx.WritePlain("= ")
 		ctx.WriteString(n.StrValue)
 	default:

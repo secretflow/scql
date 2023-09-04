@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+package config
 
 import (
 	"crypto/rand"
@@ -22,10 +22,13 @@ import (
 	"os"
 	"time"
 
+	"google.golang.org/protobuf/encoding/protojson"
 	"gopkg.in/yaml.v2"
 
 	"github.com/secretflow/scql/pkg/audit"
+	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/interpreter/translator"
+	"github.com/secretflow/scql/pkg/parser/auth"
 	"github.com/secretflow/scql/pkg/proto-gen/spu"
 )
 
@@ -52,30 +55,7 @@ type EngineConfig struct {
 	ClientTimeout time.Duration `yaml:"timeout"`
 	Protocol      string        `yaml:"protocol"`
 	ContentType   string        `yaml:"content_type"`
-	SpuRuntimeCfg *RuntimeCfg   `yaml:"spu"`
-}
-
-type RuntimeCfg struct {
-	Protocol               string `yaml:"protocol"`
-	Field                  string `yaml:"field"`
-	FxpFractionBits        int64  `yaml:"fxp_fraction_bits"`
-	EnableActionTrace      bool   `yaml:"enable_action_trace"`
-	EnableTypeChecker      bool   `yaml:"enable_type_checker"`
-	EnablePphloTrace       bool   `yaml:"enable_pphlo_trace"`
-	EnableProcessorDump    bool   `yaml:"enable_processor_dump"`
-	ProcessorDumpDir       string `yaml:"processor_dump_dir"`
-	EnablePphloProfile     bool   `yaml:"enable_pphlo_profile"`
-	EnableHalProfile       bool   `yaml:"enable_hal_profile"`
-	PublicRandomSeed       uint64 `yaml:"public_random_seed"`
-	FxpDivGoldschmidtIters int64  `yaml:"fxp_div_goldschmidt_iters"`
-	FxpExpMode             string `yaml:"fxp_exp_mode"`
-	FxpExpIters            int64  `yaml:"fxp_exp_iters"`
-	FxpLogMode             string `yaml:"fxp_log_mode"`
-	FxpLogIters            int64  `yaml:"fxp_log_iters"`
-	FxpLogOrders           int64  `yaml:"fxp_log_orders"`
-	SigmoidMode            string `yaml:"sigmoid_mode"`
-	BeaverType             string `yaml:"beaver_type"`
-	TtpBeaverHost          string `yaml:"ttp_beaver_host"`
+	SpuRuntimeCfg string        `yaml:"spu"`
 }
 
 type TlsConf struct {
@@ -95,12 +75,13 @@ type Config struct {
 	AuthEncType          string                            `yaml:"auth_enc_type"`
 	PasswordCheck        bool                              `yaml:"password_check"`
 	LogLevel             string                            `yaml:"log_level"`
+	EnableAuditLogger    bool                              `yaml:"enable_audit_logger"`
 	AuditConfig          audit.AuditConf                   `yaml:"audit"`
 	TlsConfig            TlsConf                           `yaml:"tls"`
 	Storage              StorageConf                       `yaml:"storage"`
-	GRM                  GRMConf                           `yaml:"grm"`
 	Engine               EngineConfig                      `yaml:"engine"`
 	SecurityCompromise   translator.SecurityCompromiseConf `yaml:"security_compromise"`
+	PartyAuth            PartyAuthConf                     `yaml:"party_auth"`
 }
 
 const (
@@ -117,24 +98,16 @@ type StorageConf struct {
 	ConnMaxLifetime time.Duration `yaml:"conn_max_lifetime"`
 }
 
-type GrmType int
-
 const (
-	ToyGrmMode GrmType = iota + 1
-	StdGrmMode
+	PartyAuthMethodNone   = "none"
+	PartyAuthMethodToken  = "token"
+	PartyAuthMethodPubKey = "pubkey"
 )
 
-var GrmModeType = map[string]GrmType{
-	"toygrm": ToyGrmMode,
-	"stdgrm": StdGrmMode,
-}
-
-type GRMConf struct {
-	// if GRM work in toy mod, scdb will construct grm service from json file located in ToyGrmConf
-	GrmMode    string        `yaml:"grm_mode"`
-	Host       string        `yaml:"host"`
-	Timeout    time.Duration `yaml:"timeout"`
-	ToyGrmConf string        `yaml:"toy_grm_conf"`
+type PartyAuthConf struct {
+	Method               string        `yaml:"method"`
+	EnableTimestampCheck bool          `yaml:"enable_timestamp_check"`
+	ValidityPeriod       time.Duration `yaml:"validity_period"`
 }
 
 // NewConfig constructs Config from YAML file
@@ -155,6 +128,9 @@ func NewConfig(configPath string) (*Config, error) {
 	if conStr := os.Getenv("SCDB_CONN_STR"); conStr != "" {
 		config.Storage.ConnStr = conStr
 	}
+	if config.AuthEncType == constant.GMsm3Hash {
+		auth.EncHashType = constant.GMsm3Hash
+	}
 	return config, nil
 }
 
@@ -162,7 +138,7 @@ func CheckConfigValues(config *Config) error {
 	if config.Protocol == DefaultProtocol && (config.TlsConfig.CertFile == "" || config.TlsConfig.KeyFile == "") {
 		return fmt.Errorf("SCDB work in https, cert_file or key_file couldn't be empty")
 	}
-	if config.Engine.SpuRuntimeCfg == nil {
+	if config.Engine.SpuRuntimeCfg == "" {
 		return fmt.Errorf("SpuRuntimeCfg is empty")
 	}
 	return nil
@@ -170,8 +146,9 @@ func CheckConfigValues(config *Config) error {
 
 func NewDefaultConfig() *Config {
 	var config Config
+	config.LogLevel = DefaultLogLevel
+	config.EnableAuditLogger = DefaultEnableAudit
 	config.AuditConfig = audit.AuditConf{
-		EnableAuditLog:          DefaultEnableAudit,
 		AuditLogFile:            DefaultAuditLogFile,
 		AuditDetailFile:         DefaultAudiDetailFile,
 		AuditMaxSizeInMegaBytes: DefaultAuditMaxSizeInMegaBytes,
@@ -194,66 +171,29 @@ func NewDefaultConfig() *Config {
 		Protocol:      DefaultProtocol,
 	}
 	config.SecurityCompromise = translator.SecurityCompromiseConf{RevealGroupMark: false}
+	config.PartyAuth = PartyAuthConf{
+		Method:               PartyAuthMethodPubKey,
+		EnableTimestampCheck: true,
+		ValidityPeriod:       30 * time.Second, // 30s
+	}
 	return &config
 }
 
-func NewSpuRuntimeCfg(config *RuntimeCfg) (*spu.RuntimeConfig, error) {
-	if config == nil {
-		return nil, nil
+func NewSpuRuntimeCfg(confStr string) (*spu.RuntimeConfig, error) {
+	if confStr == "" {
+		return nil, fmt.Errorf("nil spu runtime config is unsupported")
 	}
-	RuntimeConfig := &spu.RuntimeConfig{
-		FxpFractionBits:        config.FxpFractionBits,
-		EnableActionTrace:      config.EnableActionTrace,
-		EnableTypeChecker:      config.EnableTypeChecker,
-		EnablePphloTrace:       config.EnablePphloTrace,
-		EnableProcessorDump:    config.EnableProcessorDump,
-		ProcessorDumpDir:       config.ProcessorDumpDir,
-		EnablePphloProfile:     config.EnablePphloProfile,
-		EnableHalProfile:       config.EnableHalProfile,
-		FxpDivGoldschmidtIters: config.FxpDivGoldschmidtIters,
-		FxpExpIters:            config.FxpExpIters,
-		FxpLogIters:            config.FxpLogIters,
-		FxpLogOrders:           config.FxpLogOrders,
-		TtpBeaverConfig:        &spu.TTPBeaverConfig{ServerHost: config.TtpBeaverHost},
-	}
-	val, err := rand.Int(rand.Reader, big.NewInt(int64(math.MaxInt64)))
+	runtimeConf := spu.RuntimeConfig{}
+	err := protojson.Unmarshal([]byte(confStr), &runtimeConf)
 	if err != nil {
 		return nil, err
 	}
-	RuntimeConfig.PublicRandomSeed = val.Uint64()
-	if value, exist := spu.ProtocolKind_value[config.Protocol]; exist {
-		RuntimeConfig.Protocol = spu.ProtocolKind(value)
-	} else if config.Protocol != "" {
-		return nil, fmt.Errorf("unknown protocol kind: %s", config.Protocol)
+	if runtimeConf.PublicRandomSeed == 0 {
+		val, err := rand.Int(rand.Reader, big.NewInt(int64(math.MaxInt64)))
+		if err != nil {
+			return nil, err
+		}
+		runtimeConf.PublicRandomSeed = val.Uint64()
 	}
-	if value, exist := spu.FieldType_value[config.Field]; exist {
-		RuntimeConfig.Field = spu.FieldType(value)
-	} else if config.Field != "" {
-		return nil, fmt.Errorf("unknown field: %s", config.Field)
-	}
-
-	if value, exist := spu.RuntimeConfig_ExpMode_value[config.FxpExpMode]; exist {
-		RuntimeConfig.FxpExpMode = spu.RuntimeConfig_ExpMode(value)
-	} else if config.FxpExpMode != "" {
-		return nil, fmt.Errorf("unknown fxp exp mode: %s", config.FxpExpMode)
-	}
-
-	if value, exist := spu.RuntimeConfig_LogMode_value[config.FxpLogMode]; exist {
-		RuntimeConfig.FxpLogMode = spu.RuntimeConfig_LogMode(value)
-	} else if config.FxpLogMode != "" {
-		return nil, fmt.Errorf("unknown fxp log mode: %s", config.FxpLogMode)
-	}
-
-	if value, exist := spu.RuntimeConfig_SigmoidMode_value[config.SigmoidMode]; exist {
-		RuntimeConfig.SigmoidMode = spu.RuntimeConfig_SigmoidMode(value)
-	} else if config.SigmoidMode != "" {
-		return nil, fmt.Errorf("unknown sigmoid mode: %s", config.SigmoidMode)
-	}
-	if value, exist := spu.RuntimeConfig_BeaverType_value[config.BeaverType]; exist {
-		RuntimeConfig.BeaverType = spu.RuntimeConfig_BeaverType(value)
-	} else if config.BeaverType != "" {
-		return nil, fmt.Errorf("unknown beaver type: %s", config.BeaverType)
-	}
-
-	return RuntimeConfig, nil
+	return &runtimeConf, nil
 }

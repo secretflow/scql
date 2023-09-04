@@ -1,0 +1,8 @@
+{
+    "parties": [
+        {
+            "party_code": "alice",
+            "public_key": "__ALICE_PUBLIC_KEY__"
+        }
+    ]
+}

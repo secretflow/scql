@@ -14,16 +14,15 @@
 
 #include "engine/operator/in.h"
 
+#include <cstdint>
+#include <vector>
+
 #include "gtest/gtest.h"
 
 #include "engine/core/tensor_from_json.h"
 #include "engine/operator/test_util.h"
 
 namespace scql::engine::op {
-
-namespace {
-constexpr int64_t kPsiIn = 1;
-}
 
 struct InTestCase {
   test::NamedTensor left_input;
@@ -33,6 +32,7 @@ struct InTestCase {
   std::string right_party;
   std::string reveal_to;
   test::NamedTensor output;
+  int64_t ub_server;
 };
 
 class InTest : public ::testing::TestWithParam<
@@ -49,6 +49,7 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::Combine(
         test::SpuTestValues2PC,
         testing::Values(
+            // EcdhPsi
             InTestCase{
                 .left_input = test::NamedTensor(
                     "x",
@@ -56,7 +57,7 @@ INSTANTIATE_TEST_SUITE_P(
                 .right_input = test::NamedTensor(
                     "y", TensorFromJSON(arrow::int64(),
                                         "[1, 2, 3, -1, 34, 43, 99]")),
-                .in_algo = kPsiIn,
+                .in_algo = static_cast<int64_t>(In::InAlgo::kEcdhPsiIn),
                 .left_party = test::kPartyAlice,
                 .right_party = test::kPartyBob,
                 .reveal_to = test::kPartyAlice,
@@ -73,10 +74,10 @@ INSTANTIATE_TEST_SUITE_P(
                     "y",
                     TensorFromJSON(arrow::large_utf8(),
                                    R"json(["C", "D", "B", "A", "G"])json")),
-                .in_algo = kPsiIn,
+                .in_algo = static_cast<int64_t>(In::InAlgo::kEcdhPsiIn),
                 .left_party = test::kPartyAlice,
                 .right_party = test::kPartyBob,
-                .reveal_to = test::kPartyBob,
+                .reveal_to = test::kPartyAlice,
                 .output = test::NamedTensor(
                     "z", TensorFromJSON(arrow::boolean(),
                                         "[true, false, true, false, true]"))},
@@ -88,10 +89,10 @@ INSTANTIATE_TEST_SUITE_P(
                                    R"json(["A", "E", "D", "F", "A"])json")),
                 .right_input = test::NamedTensor(
                     "y", TensorFromJSON(arrow::large_utf8(), R"json([])json")),
-                .in_algo = kPsiIn,
+                .in_algo = static_cast<int64_t>(In::InAlgo::kEcdhPsiIn),
                 .left_party = test::kPartyAlice,
                 .right_party = test::kPartyBob,
-                .reveal_to = test::kPartyBob,
+                .reveal_to = test::kPartyAlice,
                 .output = test::NamedTensor(
                     "z",
                     TensorFromJSON(arrow::boolean(),
@@ -104,23 +105,226 @@ INSTANTIATE_TEST_SUITE_P(
                     "y",
                     TensorFromJSON(arrow::large_utf8(),
                                    R"json(["A", "E", "D", "F", "A"])json")),
-                .in_algo = kPsiIn,
+                .in_algo = static_cast<int64_t>(In::InAlgo::kEcdhPsiIn),
                 .left_party = test::kPartyAlice,
                 .right_party = test::kPartyBob,
-                .reveal_to = test::kPartyBob,
+                .reveal_to = test::kPartyAlice,
                 .output = test::NamedTensor(
-                    "z", TensorFromJSON(arrow::boolean(), "[]"))})),
+                    "z", TensorFromJSON(arrow::boolean(), "[]"))},
+
+            // unbalanced PSI
+            // reveal to client
+            InTestCase{
+                .left_input = test::NamedTensor(
+                    "x",
+                    TensorFromJSON(arrow::int64(), "[10, 100, 2, -1, 34, 42]")),
+                .right_input = test::NamedTensor(
+                    "y", TensorFromJSON(arrow::int64(),
+                                        "[1, 2, 3, -1, 34, 43, 99]")),
+                .in_algo = static_cast<int64_t>(In::InAlgo::kOprfPsiIn),
+                .left_party = test::kPartyAlice,
+                .right_party = test::kPartyBob,
+                .reveal_to = test::kPartyAlice,
+                .output = test::NamedTensor(
+                    "z",
+                    TensorFromJSON(arrow::boolean(),
+                                   "[false, false, true, true, true, false]")),
+                .ub_server = 1},
+            InTestCase{
+                .left_input = test::NamedTensor(
+                    "x", TensorFromJSON(
+                             arrow::large_utf8(),
+                             R"json(["A", "E", "D", "F", "D", "A", "C"])json")),
+                .right_input = test::NamedTensor(
+                    "y",
+                    TensorFromJSON(arrow::large_utf8(),
+                                   R"json(["C", "D", "B", "A", "G"])json")),
+                .in_algo = static_cast<int64_t>(In::InAlgo::kOprfPsiIn),
+                .left_party = test::kPartyAlice,
+                .right_party = test::kPartyBob,
+                .reveal_to = test::kPartyAlice,
+                .output = test::NamedTensor(
+                    "z", TensorFromJSON(
+                             arrow::boolean(),
+                             "[true, false, true, false, true, true, true]")),
+                .ub_server = 1},
+            InTestCase{
+                .left_input = test::NamedTensor(
+                    "x",
+                    TensorFromJSON(arrow::large_utf8(),
+                                   R"json(["A", "E", "D", "F", "A"])json")),
+                .right_input = test::NamedTensor(
+                    "y", TensorFromJSON(arrow::large_utf8(), R"json([])json")),
+                .in_algo = static_cast<int64_t>(In::InAlgo::kOprfPsiIn),
+                .left_party = test::kPartyAlice,
+                .right_party = test::kPartyBob,
+                .reveal_to = test::kPartyAlice,
+                .output = test::NamedTensor(
+                    "z", TensorFromJSON(arrow::boolean(),
+                                        "[false, false, false, false, false]")),
+                .ub_server = 1},
+            InTestCase{
+                .left_input = test::NamedTensor(
+                    "x", TensorFromJSON(arrow::large_utf8(), R"json([])json")),
+                .right_input = test::NamedTensor(
+                    "y",
+                    TensorFromJSON(arrow::large_utf8(),
+                                   R"json(["A", "E", "D", "F", "A"])json")),
+                .in_algo = static_cast<int64_t>(In::InAlgo::kOprfPsiIn),
+                .left_party = test::kPartyAlice,
+                .right_party = test::kPartyBob,
+                .reveal_to = test::kPartyAlice,
+                .output = test::NamedTensor(
+                    "z", TensorFromJSON(arrow::boolean(), "[]")),
+                .ub_server = 1},
+
+            // reveal to server
+            InTestCase{
+                .left_input = test::NamedTensor(
+                    "x",
+                    TensorFromJSON(arrow::int64(), "[10, 100, 2, -1, 34, 42]")),
+                .right_input = test::NamedTensor(
+                    "y", TensorFromJSON(arrow::int64(),
+                                        "[1, 2, 3, -1, 34, 43, 99]")),
+                .in_algo = static_cast<int64_t>(In::InAlgo::kOprfPsiIn),
+                .left_party = test::kPartyAlice,
+                .right_party = test::kPartyBob,
+                .reveal_to = test::kPartyAlice,
+                .output = test::NamedTensor(
+                    "z",
+                    TensorFromJSON(arrow::boolean(),
+                                   "[false, false, true, true, true, false]")),
+                .ub_server = 0},
+            InTestCase{
+                .left_input = test::NamedTensor(
+                    "x", TensorFromJSON(
+                             arrow::large_utf8(),
+                             R"json(["A", "E", "D", "F", "D", "A", "C"])json")),
+                .right_input = test::NamedTensor(
+                    "y",
+                    TensorFromJSON(arrow::large_utf8(),
+                                   R"json(["C", "D", "B", "A", "G"])json")),
+                .in_algo = static_cast<int64_t>(In::InAlgo::kOprfPsiIn),
+                .left_party = test::kPartyAlice,
+                .right_party = test::kPartyBob,
+                .reveal_to = test::kPartyAlice,
+                .output = test::NamedTensor(
+                    "z", TensorFromJSON(
+                             arrow::boolean(),
+                             "[true, false, true, false, true, true, true]")),
+                .ub_server = 0},
+            InTestCase{
+                .left_input = test::NamedTensor(
+                    "x",
+                    TensorFromJSON(arrow::large_utf8(),
+                                   R"json(["A", "E", "D", "F", "A"])json")),
+                .right_input = test::NamedTensor(
+                    "y", TensorFromJSON(arrow::large_utf8(), R"json([])json")),
+                .in_algo = static_cast<int64_t>(In::InAlgo::kOprfPsiIn),
+                .left_party = test::kPartyAlice,
+                .right_party = test::kPartyBob,
+                .reveal_to = test::kPartyAlice,
+                .output = test::NamedTensor(
+                    "z", TensorFromJSON(arrow::boolean(),
+                                        "[false, false, false, false, false]")),
+                .ub_server = 0},
+            InTestCase{
+                .left_input = test::NamedTensor(
+                    "x", TensorFromJSON(arrow::large_utf8(), R"json([])json")),
+                .right_input = test::NamedTensor(
+                    "y",
+                    TensorFromJSON(arrow::large_utf8(),
+                                   R"json(["A", "E", "D", "F", "A"])json")),
+                .in_algo = static_cast<int64_t>(In::InAlgo::kOprfPsiIn),
+                .left_party = test::kPartyAlice,
+                .right_party = test::kPartyBob,
+                .reveal_to = test::kPartyAlice,
+                .output = test::NamedTensor(
+                    "z", TensorFromJSON(arrow::boolean(), "[]")),
+                .ub_server = 0},
+
+            // witout hint
+            InTestCase{
+                .left_input = test::NamedTensor(
+                    "x",
+                    TensorFromJSON(arrow::int64(), "[10, 100, 2, -1, 34, 42]")),
+                .right_input = test::NamedTensor(
+                    "y", TensorFromJSON(arrow::int64(),
+                                        "[1, 2, 3, -1, 34, 43, 99]")),
+                .in_algo = static_cast<int64_t>(In::InAlgo::kPsiIn),
+                .left_party = test::kPartyAlice,
+                .right_party = test::kPartyBob,
+                .reveal_to = test::kPartyAlice,
+                .output = test::NamedTensor(
+                    "z",
+                    TensorFromJSON(arrow::boolean(),
+                                   "[false, false, true, true, true, false]")),
+                .ub_server = -1},
+            InTestCase{
+                .left_input = test::NamedTensor(
+                    "x", TensorFromJSON(
+                             arrow::large_utf8(),
+                             R"json(["A", "E", "D", "F", "D", "A", "C"])json")),
+                .right_input = test::NamedTensor(
+                    "y",
+                    TensorFromJSON(arrow::large_utf8(),
+                                   R"json(["C", "D", "B", "A", "G"])json")),
+                .in_algo = static_cast<int64_t>(In::InAlgo::kPsiIn),
+                .left_party = test::kPartyAlice,
+                .right_party = test::kPartyBob,
+                .reveal_to = test::kPartyAlice,
+                .output = test::NamedTensor(
+                    "z", TensorFromJSON(
+                             arrow::boolean(),
+                             "[true, false, true, false, true, true, true]")),
+                .ub_server = -1},
+            InTestCase{
+                .left_input = test::NamedTensor(
+                    "x",
+                    TensorFromJSON(arrow::large_utf8(),
+                                   R"json(["A", "E", "D", "F", "A"])json")),
+                .right_input = test::NamedTensor(
+                    "y", TensorFromJSON(arrow::large_utf8(), R"json([])json")),
+                .in_algo = static_cast<int64_t>(In::InAlgo::kPsiIn),
+                .left_party = test::kPartyAlice,
+                .right_party = test::kPartyBob,
+                .reveal_to = test::kPartyAlice,
+                .output = test::NamedTensor(
+                    "z", TensorFromJSON(arrow::boolean(),
+                                        "[false, false, false, false, false]")),
+                .ub_server = -1},
+            InTestCase{
+                .left_input = test::NamedTensor(
+                    "x", TensorFromJSON(arrow::large_utf8(), R"json([])json")),
+                .right_input = test::NamedTensor(
+                    "y",
+                    TensorFromJSON(arrow::large_utf8(),
+                                   R"json(["A", "E", "D", "F", "A"])json")),
+                .in_algo = static_cast<int64_t>(In::InAlgo::kPsiIn),
+                .left_party = test::kPartyAlice,
+                .right_party = test::kPartyBob,
+                .reveal_to = test::kPartyAlice,
+                .output = test::NamedTensor(
+                    "z", TensorFromJSON(arrow::boolean(), "[]")),
+                .ub_server = -1})),
     TestParamNameGenerator(InTest));
 
 TEST_P(InTest, Works) {
   // Given
   auto parm = GetParam();
   auto tc = std::get<1>(parm);
+  std::unordered_set<int64_t> supported_algos{
+      static_cast<int64_t>(In::InAlgo::kPsiIn),
+      static_cast<int64_t>(In::InAlgo::kOprfPsiIn),
+      static_cast<int64_t>(In::InAlgo::kEcdhPsiIn)};
+  if (supported_algos.count(tc.in_algo) == 0) {
+    FAIL() << "In algorithm " << tc.in_algo << " not supported yet";
+  }
   auto node = MakeExecNode(tc);
-  std::vector<Session> sessions = test::MakeMultiPCSession(std::get<0>(parm));
+  auto sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
-  ExecContext alice_ctx(node, &sessions[0]);
-  ExecContext bob_ctx(node, &sessions[1]);
+  ExecContext alice_ctx(node, sessions[0].get());
+  ExecContext bob_ctx(node, sessions[1].get());
 
   FeedInputs({&alice_ctx, &bob_ctx}, tc);
 
@@ -128,7 +332,7 @@ TEST_P(InTest, Works) {
   EXPECT_NO_THROW(test::RunAsync<In>({&alice_ctx, &bob_ctx}));
 
   // Then
-  if (tc.in_algo == kPsiIn) {
+  if (supported_algos.count(tc.in_algo) > 0) {
     auto tensor_table = alice_ctx.GetSession()->GetTensorTable();
     if (tc.reveal_to != test::kPartyAlice) {
       tensor_table = bob_ctx.GetSession()->GetTensorTable();
@@ -155,42 +359,40 @@ pb::ExecNode InTest::MakeExecNode(const InTestCase& tc) {
 
   builder.SetNodeName("in-test");
 
+  // set in_algo
   builder.AddInt64Attr(In::kAlgorithmAttr, tc.in_algo);
-  if (tc.in_algo == kPsiIn) {
-    // Add input left
-    auto left = test::MakePrivateTensorReference(tc.left_input.name,
-                                                 tc.left_input.tensor->Type());
-    builder.AddInput(In::kInLeft, std::vector<pb::Tensor>{left});
-    // Add input right
-    auto right = test::MakePrivateTensorReference(
-        tc.right_input.name, tc.right_input.tensor->Type());
-    builder.AddInput(In::kInRight, std::vector<pb::Tensor>{right});
-    // Add output
-    auto output = test::MakePrivateTensorReference(tc.output.name,
-                                                   tc.output.tensor->Type());
-    builder.AddOutput(In::kOut, std::vector<pb::Tensor>{output});
 
-    builder.AddStringsAttr(
-        In::kInputPartyCodesAttr,
-        std::vector<std::string>{tc.left_party, tc.right_party});
-    builder.AddStringAttr(In::kRevealToAttr, tc.reveal_to);
-  } else {
-    // TODO: support other in algorithm testcases
-  }
+  // Add input left
+  auto left = test::MakePrivateTensorReference(tc.left_input.name,
+                                               tc.left_input.tensor->Type());
+  builder.AddInput(In::kInLeft, std::vector<pb::Tensor>{left});
+  // Add input right
+  auto right = test::MakePrivateTensorReference(tc.right_input.name,
+                                                tc.right_input.tensor->Type());
+  builder.AddInput(In::kInRight, std::vector<pb::Tensor>{right});
+  // Add output
+  auto output = test::MakePrivateTensorReference(tc.output.name,
+                                                 tc.output.tensor->Type());
+  builder.AddOutput(In::kOut, std::vector<pb::Tensor>{output});
+
+  builder.AddStringsAttr(
+      In::kInputPartyCodesAttr,
+      std::vector<std::string>{tc.left_party, tc.right_party});
+  builder.AddStringAttr(In::kRevealToAttr, tc.reveal_to);
+
+  builder.AddInt64Attr(In::kUbPsiServerHint, tc.ub_server);
 
   return builder.Build();
 }
 
 void InTest::FeedInputs(const std::vector<ExecContext*>& ctxs,
                         const InTestCase& tc) {
-  if (tc.in_algo == kPsiIn) {
-    for (const auto& ctx : ctxs) {
-      auto party_code = ctx->GetSession()->SelfPartyCode();
-      if (party_code == tc.left_party) {
-        test::FeedInputsAsPrivate(ctx, {tc.left_input});
-      } else if (party_code == tc.right_party) {
-        test::FeedInputsAsPrivate(ctx, {tc.right_input});
-      }
+  for (const auto& ctx : ctxs) {
+    auto party_code = ctx->GetSession()->SelfPartyCode();
+    if (party_code == tc.left_party) {
+      test::FeedInputsAsPrivate(ctx, {tc.left_input});
+    } else if (party_code == tc.right_party) {
+      test::FeedInputsAsPrivate(ctx, {tc.right_input});
     }
   }
 }

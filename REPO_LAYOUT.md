@@ -16,7 +16,6 @@
   - [table/](pkg/table/): SCQL table info.
   - [sessionctx/](pkg/sessionctx/): SCQL logical plan context.
   - [util/](pkg/util/): SCQL utils.
-  - [grm/](pkg/grm/): Global Resource Manager.
   - [planner/](pkg/planner/): SCQL planner.
   - [scdb/](pkg/scdb/): SCDB pkg.
   - [interpreter/](pkg/interpreter/): SCQL interpreter.

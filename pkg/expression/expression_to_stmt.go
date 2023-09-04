@@ -31,7 +31,11 @@ import (
 type ExprConverter struct {
 }
 
-func (c ExprConverter) ConvertExpressionToExprNode(dialect format.Dialect, expr Expression, idToExpr map[int64]ast.ExprNode) (ast.ExprNode, error) {
+const (
+	precNonOperatorExpression = 100
+)
+
+func (c ExprConverter) ConvertExpressionToExprNode(dialect format.Dialect, expr Expression, prec int, idToExpr map[int64]ast.ExprNode) (ast.ExprNode, error) {
 	switch x := expr.(type) {
 	case *Constant:
 		return c.convertConst(x)
@@ -41,20 +45,19 @@ func (c ExprConverter) ConvertExpressionToExprNode(dialect format.Dialect, expr 
 		}
 		return c.convertColumn(x)
 	case *ScalarFunction:
-		return c.convertScalarFunction(dialect, x, idToExpr)
+		return c.convertScalarFunction(dialect, x, prec, idToExpr)
 	default:
 		return nil, errors.Errorf("Unknown expression type: %v", expr)
 	}
 }
 
 func (c ExprConverter) isArgScalarFunc(expr Expression) bool {
-	switch x := expr.(type) {
+	switch expr.(type) {
 	case *ScalarFunction:
-		return c.needArgParenthesesExpr(x)
+		return true
 	}
 	return false
 }
-
 func (c ExprConverter) convertConst(constant *Constant) (*driver.ValueExpr, error) {
 	return &driver.ValueExpr{Datum: constant.Value}, nil
 }
@@ -79,50 +82,65 @@ func (c ExprConverter) convertColumn(column *Column) (*ast.ColumnNameExpr, error
 }
 
 // for now binary function need Parentheses
-func (c ExprConverter) needArgParenthesesExpr(expr *ScalarFunction) bool {
+// ref to https://dev.mysql.com/doc/refman/8.0/en/operator-precedence.html
+// TODO: @xiaoyuan we don't support MEMBER OF/IS/BETWEEN......
+func (c ExprConverter) getOpPrecedence(expr *ScalarFunction) int {
 	switch expr.Function.(type) {
-	case *builtinUnaryMinusDecimalSig, *builtinUnaryMinusIntSig, *builtinUnaryMinusRealSig, *builtinArithmeticPlusRealSig,
-		*builtinArithmeticPlusDecimalSig, *builtinArithmeticPlusIntSig, *builtinArithmeticMinusRealSig, *builtinArithmeticMinusDecimalSig,
-		*builtinArithmeticMinusIntSig, *builtinArithmeticMultiplyDecimalSig, *builtinArithmeticMultiplyIntSig,
-		*builtinArithmeticMultiplyIntUnsignedSig, *builtinArithmeticMultiplyRealSig, *builtinArithmeticDivideRealSig, *builtinArithmeticDivideDecimalSig,
-		*builtinArithmeticModIntSig, *builtinArithmeticIntDivideIntSig,
-		*builtinLTIntSig, *builtinLTStringSig, *builtinLTRealSig, *builtinLTDecimalSig,
-		*builtinEQIntSig, *builtinEQStringSig, *builtinEQRealSig, *builtinEQDecimalSig,
-		*builtinLEIntSig, *builtinLEStringSig, *builtinLERealSig, *builtinLEDecimalSig,
+	case *builtinLogicXorSig:
+		return 10
+	case *builtinLogicOrSig:
+		return 15
+	case *builtinLogicAndSig:
+		return 20
+	case *builtinCaseWhenIntSig, *builtinCaseWhenDecimalSig, *builtinCaseWhenRealSig, *builtinCaseWhenStringSig:
+		return 30
+	case *builtinLEIntSig, *builtinLEStringSig, *builtinLERealSig, *builtinLEDecimalSig,
 		*builtinGTIntSig, *builtinGTStringSig, *builtinGTRealSig, *builtinGTDecimalSig,
 		*builtinGEIntSig, *builtinGEStringSig, *builtinGERealSig, *builtinGEDecimalSig,
+		*builtinLTIntSig, *builtinLTStringSig, *builtinLTRealSig, *builtinLTDecimalSig,
+		*builtinEQIntSig, *builtinEQStringSig, *builtinEQRealSig, *builtinEQDecimalSig,
 		*builtinNEIntSig, *builtinNEStringSig, *builtinNERealSig, *builtinNEDecimalSig,
-		*builtinLogicAndSig, *builtinLogicOrSig, *builtinLogicXorSig:
-		return true
+		*builtinLikeSig, *builtinInIntSig, *builtinInStringSig:
+		return 40
+	case *builtinArithmeticPlusRealSig, *builtinArithmeticPlusDecimalSig,
+		*builtinArithmeticPlusIntSig, *builtinArithmeticMinusRealSig,
+		*builtinArithmeticMinusDecimalSig, *builtinArithmeticMinusIntSig:
+		return 50
+	case *builtinArithmeticMultiplyIntUnsignedSig, *builtinArithmeticMultiplyRealSig,
+		*builtinArithmeticMultiplyDecimalSig, *builtinArithmeticMultiplyIntSig,
+		*builtinArithmeticDivideRealSig, *builtinArithmeticDivideDecimalSig,
+		*builtinArithmeticModIntSig, *builtinArithmeticIntDivideIntSig:
+		return 60
+	case *builtinUnaryMinusDecimalSig, *builtinUnaryMinusIntSig, *builtinUnaryMinusRealSig:
+		return 70
 	}
-	return false
+	return precNonOperatorExpression
 }
 
-func (c ExprConverter) convertScalarFunction(dialect format.Dialect, expr *ScalarFunction, idToExpr map[int64]ast.ExprNode) (ast.ExprNode, error) {
+func (c ExprConverter) convertScalarFunction(dialect format.Dialect, expr *ScalarFunction, fatherPrec int, idToExpr map[int64]ast.ExprNode) (result ast.ExprNode, err error) {
 	children := make([]ast.ExprNode, 0, len(expr.GetArgs()))
+	prec := c.getOpPrecedence(expr)
 	for _, arg := range expr.GetArgs() {
-		argExpr, err := c.ConvertExpressionToExprNode(dialect, arg, idToExpr)
+		argExpr, err := c.ConvertExpressionToExprNode(dialect, arg, prec, idToExpr)
 		if err != nil {
 			return nil, fmt.Errorf("convertScalarFunction: %v", err)
 		}
 		children = append(children, argExpr)
 	}
-	if c.needArgParenthesesExpr(expr) {
-		for i, arg := range expr.GetArgs() {
-			if c.isArgScalarFunc(arg) {
-				children[i] = &ast.ParenthesesExpr{Expr: children[i]}
-			}
+	defer func() {
+		if fatherPrec > prec && fatherPrec != precNonOperatorExpression {
+			result = &ast.ParenthesesExpr{Expr: result}
 		}
-	}
+	}()
 	switch expr.FuncName.L {
 	case ast.Cast:
 		return &ast.FuncCastExpr{Expr: children[0], Tp: expr.RetType, FunctionType: ast.CastFunction}, nil
 	case ast.Ifnull:
-		return &ast.FuncCallExpr{FnName: model.NewCIStr(dialect.GetSpecialFuncName(ast.Ifnull)), Args: children}, nil
+		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
 	case ast.If:
-		return &ast.FuncCallExpr{FnName: model.NewCIStr(ast.If), Args: children}, nil
+		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
 	case ast.Cos, ast.Abs, ast.Round, ast.Log10, ast.Ceil, ast.Floor, ast.Instr:
-		return &ast.FuncCallExpr{FnName: model.NewCIStr(expr.FuncName.L), Args: children}, nil
+		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
 	}
 	switch expr.Function.(type) {
 	case *builtinUnaryMinusDecimalSig, *builtinUnaryMinusIntSig, *builtinUnaryMinusRealSig:
@@ -160,13 +178,13 @@ func (c ExprConverter) convertScalarFunction(dialect format.Dialect, expr *Scala
 	case *builtinLikeSig:
 		return &ast.PatternLikeExpr{Expr: children[0], Pattern: children[1], Escape: '\\'}, nil
 	// case *builtinRegexpSig, *builtinRegexpUTF8Sig:
-	// 	return &ast.ColumnNameExpr{Name: &ast.ColumnName{Table: children[0].}}, nil
+	// 	return  &ast.ColumnNameExpr{Name: &ast.ColumnName{Table: children[0].}}, nil
 	case *builtinDecimalIsNullSig, *builtinIntIsNullSig, *builtinRealIsNullSig, *builtinStringIsNullSig:
 		return &ast.IsNullExpr{Expr: children[0], Not: false}, nil
 	case *builtinInIntSig, *builtinInStringSig:
 		return &ast.PatternInExpr{Expr: children[0], List: children[1:]}, nil
 	case *builtinSubstring2ArgsSig, *builtinSubstring2ArgsUTF8Sig, *builtinSubstring3ArgsSig, *builtinSubstring3ArgsUTF8Sig:
-		return &ast.FuncCallExpr{FnName: model.NewCIStr(ast.Substring), Args: children}, nil
+		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
 	case *builtinUnaryNotRealSig, *builtinUnaryNotDecimalSig, *builtinUnaryNotIntSig:
 		// not always need ()
 		return &ast.UnaryOperationExpr{Op: opcode.Not, V: &ast.ParenthesesExpr{Expr: children[0]}}, nil
@@ -181,7 +199,9 @@ func (c ExprConverter) convertScalarFunction(dialect format.Dialect, expr *Scala
 		}
 		return result, nil
 	case *builtinConcatSig:
-		return &ast.FuncCallExpr{FnName: model.NewCIStr(ast.Concat), Args: children}, nil
+		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
+	case *builtinTruncateDecimalSig, *builtinTruncateIntSig, *builtinTruncateRealSig, *builtinTruncateUintSig:
+		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
 	}
 	return nil, errors.Errorf("Unknown expr: %+v", expr.Function)
 }

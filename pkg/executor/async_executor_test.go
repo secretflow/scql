@@ -38,18 +38,30 @@ func (client TestWebClient) Post(ctx context.Context, url string, credential str
 }
 
 func TestExecutor(t *testing.T) {
-	partyInfo, err := translator.NewPartyInfo([]string{"alice", "bob"}, []string{"alice.url", "bob.url"}, []string{"alice_credential", "bob_credential"})
-	assert.Nil(t, err)
+	partyInfo := translator.NewPartyInfo([]*translator.Participant{
+		{
+			PartyCode: "alice",
+			Endpoints: []string{"alice.url"},
+			Token:     "alice_credential",
+		},
+		{
+			PartyCode: "bob",
+			Endpoints: []string{"bob.url"},
+			Token:     "bob_credential",
+		},
+	})
 
 	plan := translator.NewGraphBuilder(partyInfo)
 
 	t1 := plan.AddTensor("alice.t1")
 	t1.Status = proto.TensorStatus_TENSORSTATUS_PRIVATE
+	t1.OwnerPartyCode = "alice"
 	plan.AddRunSQLNode("RunSQLOp1", []*translator.Tensor{t1},
 		"select f1 from alice.t1", []string{"alice.t1"}, "alice")
 
 	t2 := plan.AddTensor("bob.t2")
 	t2.Status = proto.TensorStatus_TENSORSTATUS_PRIVATE
+	t2.OwnerPartyCode = "bob"
 	plan.AddRunSQLNode("RunSQLOp2", []*translator.Tensor{t2},
 		"select * from bob.t2", []string{"bob.t2"}, "bob")
 	t3, err := plan.AddBinaryNode("less", "Less", t1, t2, ccl.CreateAllPlainCCL([]string{"alice", "bob"}), []string{"alice", "bob"})
@@ -59,6 +71,7 @@ func TestExecutor(t *testing.T) {
 
 	stub := &EngineStub{
 		contentType: "application/json",
+		partyInfo:   partyInfo,
 	}
 	stub.webClient = TestWebClient{}
 	// runsql

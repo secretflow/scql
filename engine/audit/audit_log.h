@@ -28,8 +28,9 @@ namespace scql::engine::audit {
 using TimePoint = std::chrono::system_clock::time_point;
 
 struct AuditOptions {
-  bool enable_audit_logger = false;
-  std::string audit_log_dir = "audit";
+  std::string audit_log_file = "audit/audit.log";
+  std::string audit_detail_file = "audit/detail.log";
+  uint16_t audit_max_files = 180;
 };
 
 // Setup audit logger
@@ -54,7 +55,7 @@ void RecordCreateSessionEvent(const ::scql::pb::Status& status,
 
 void RecordStopSessionEvent(const pb::StopSessionRequest& request,
                             const ::scql::pb::Status& status,
-                            std::string source_ip) ;
+                            std::string source_ip);
 
 void RecordDumpFileNodeDetail(const ExecContext& ctx,
                               const std::string& file_path,

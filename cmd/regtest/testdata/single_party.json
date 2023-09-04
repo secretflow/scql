@@ -6,6 +6,11 @@
       "mysql_query": "select plain_long_0 from alice.tbl_1"
     },
     {
+      "name": "left join",
+      "query": "select ta.plain_long_0 from scdb.alice_tbl_1 as ta left join scdb.alice_tbl_2 as tb on ta.plain_long_0 = tb.plain_long_0;",
+      "mysql_query": "select ta.plain_long_0 from alice.tbl_1 as ta left join alice.tbl_2 as tb on ta.plain_long_0 = tb.plain_long_0;"
+    },
+    {
       "name": "compare (less)",
       "query": "select plain_long_0 < 1 as res0, plain_long_0 < 1.5 as res1, plain_float_0 < 1.5 as res2, plain_long_0 < plain_long_1 as res3, plain_long_0 < plain_float_1 as res4, plain_float_0 < plain_float_1 as res5 from scdb.alice_tbl_1;",
       "mysql_query": "select plain_long_0 < 1 as res0, plain_long_0 < 1.5 as res1, plain_float_0 < 1.5 as res2, plain_long_0 < plain_long_1 as res3, plain_long_0 < plain_float_1 as res4, plain_float_0 < plain_float_1 as res5 from alice.tbl_1;"

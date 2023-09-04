@@ -39,7 +39,7 @@ int64_t RowCount(const spu::Value& value) {
   return value.shape().size() > 0 ? value.shape()[0] : value.numel();
 }
 
-using IndexTuple = std::pair<std::vector<int64_t>, std::vector<int64_t>>;
+using IndexTuple = std::pair<spu::Index, spu::Index>;
 
 // Implements the most naive version of prefix sum tree structure.
 // Refer to

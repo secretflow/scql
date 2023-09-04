@@ -84,6 +84,24 @@ message SessionStartParams {
     string host = 3;
     // party rank
     int32 rank = 4;
+
+    // base64 encoded version of the DER encoded public key
+    //
+    // Example:
+    // # 1. generate private key
+    // $ openssl genpkey -algorithm ed25519 -out ed25519key.pem
+    // # 2. generate public key based on above private key
+    // $ openssl pkey -in ed25519key.pem -pubout
+    //
+    // # its output like below:
+    //
+    // -----BEGIN PUBLIC KEY-----
+    // BASE64 ENCODED DATA
+    // -----END PUBLIC KEY-----
+    //
+    // the field `public_key` should be the string between header "-----BEGIN
+    // PUBLIC KEY-----" and footer "-----END PUBLIC KEY-----"
+    string public_key = 5;
   }
 
   // This party code.

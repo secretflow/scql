@@ -52,12 +52,12 @@ void GroupAggBase::Validate(ExecContext* ctx) {
 
 void GroupAggBase::Execute(ExecContext* ctx) {
   auto group_array = GetGroupId(ctx);
+  auto* group_cast = dynamic_cast<const arrow::UInt32Array*>(group_array.get());
+  YACL_ENFORCE(group_cast, "cast group id to uint32_t failed");
   std::shared_ptr<arrow::ListArray> groupings;
   ASSIGN_OR_THROW_ARROW_STATUS(
       groupings,
-      arrow::compute::Grouper::MakeGroupings(
-          *(dynamic_cast<const arrow::UInt32Array*>(group_array.get())),
-          GetGroupNum(ctx)));
+      arrow::compute::Grouper::MakeGroupings(*group_cast, GetGroupNum(ctx)));
 
   const auto& input_pbs = ctx->GetInput(kIn);
   const auto& output_pbs = ctx->GetOutput(kOut);
@@ -95,7 +95,9 @@ uint32_t GroupAggBase::GetGroupNum(ExecContext* ctx) {
   YACL_ENFORCE(group_num_t, "no group_num={}", group_num.name());
   auto num_array =
       util::ConcatenateChunkedArray(group_num_t->ToArrowChunkedArray());
-  auto num_array_ptr = dynamic_cast<const arrow::UInt32Array*>(num_array.get());
+  auto* num_array_ptr =
+      dynamic_cast<const arrow::UInt32Array*>(num_array.get());
+  YACL_ENFORCE(num_array_ptr, "cast group num to uint32_t failed");
   return num_array_ptr->Value(0);
 }
 
@@ -112,7 +114,7 @@ TensorPtr GroupAggBase::BuildTensorFromScalarVector(
   std::unique_ptr<arrow::ArrayBuilder> builder;
   std::shared_ptr<arrow::DataType> type =
       scalars.size() > 0 ? scalars[0]->type : empty_type;
-  YACL_ENFORCE(type, "no arrow type for proto type={}", type);
+  YACL_ENFORCE(type, "no arrow type for proto type={}", type->ToString());
   THROW_IF_ARROW_NOT_OK(
       arrow::MakeBuilder(arrow::default_memory_pool(), type, &builder));
 

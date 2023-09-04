@@ -113,7 +113,7 @@ std::vector<TensorPtr> OdbcAdaptor::ExecQueryImpl(
         break;
       default:
         YACL_THROW("unsupported Poco::Data::MetaColumn::ColumnDataType {}",
-                   rs.columnType(i));
+                   fmt::underlying(rs.columnType(i)));
     }
     builders.push_back(std::move(builder));
   }
@@ -170,7 +170,7 @@ std::vector<TensorPtr> OdbcAdaptor::ExecQueryImpl(
         }
         default:
           YACL_THROW("unsupported Poco::Data::MetaColumn::ColumnDataType {}",
-                     rs.columnType(col_index));
+                     fmt::underlying(rs.columnType(col_index)));
       }
     }
   }

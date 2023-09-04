@@ -46,13 +46,23 @@ func (client mockWebClient) Post(ctx context.Context, url string, credential str
 
 func TestSyncExecutor(t *testing.T) {
 	a := require.New(t)
-	partyInfo, err := translator.NewPartyInfo([]string{"alice", "bob"}, []string{"alice.url", "bob.url"}, []string{"alice_credential", "bob_credential"})
-	a.NoError(err)
+	partyInfo := translator.NewPartyInfo([]*translator.Participant{
+		{
+			PartyCode: "alice",
+			Endpoints: []string{"alice.url"},
+			Token:     "alice_credential",
+		},
+		{
+			PartyCode: "bob",
+			Endpoints: []string{"bob.url"},
+			Token:     "bob_credential",
+		},
+	})
 	plan := translator.NewGraphBuilder(partyInfo)
 
 	t1 := plan.AddTensor("alice.t1")
 	t1.Status = scql.TensorStatus_TENSORSTATUS_PRIVATE
-	err = plan.AddRunSQLNode("RunSQLOp1", []*translator.Tensor{t1},
+	err := plan.AddRunSQLNode("RunSQLOp1", []*translator.Tensor{t1},
 		"select f1 from alice.t1", []string{"alice.t1"}, "alice")
 	a.NoError(err)
 

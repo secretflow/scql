@@ -14,6 +14,8 @@
 
 #include "engine/operator/test_util.h"
 
+#include <memory>
+
 #include "libspu/core/config.h"
 
 #include "engine/framework/session.h"
@@ -58,36 +60,38 @@ spu::RuntimeConfig MakeSpuRuntimeConfigForTest(
 
 }  // namespace
 
-Session Make1PCSession(Router* ds_router, DatasourceAdaptorMgr* ds_mgr) {
+std::shared_ptr<Session> Make1PCSession(Router* ds_router,
+                                        DatasourceAdaptorMgr* ds_mgr) {
   pb::SessionStartParams params;
   params.set_party_code(kPartyAlice);
   params.set_session_id("1PC-session");
   params.mutable_spu_runtime_cfg()->CopyFrom(
       MakeSpuRuntimeConfigForTest(spu::ProtocolKind::REF2K));
   SessionOptions options;
-  auto alice = params.add_parties();
+  auto* alice = params.add_parties();
   alice->CopyFrom(BuildParty(kPartyAlice, 0));
 
-  return Session(options, params, &g_mem_link_factory, nullptr, ds_router,
-                 ds_mgr);
+  return std::make_shared<Session>(options, params, &g_mem_link_factory,
+                                   nullptr, ds_router, ds_mgr);
 }
 
-std::vector<Session> MakeMultiPCSession(const SpuRuntimeTestCase test_case) {
+std::vector<std::shared_ptr<Session>> MakeMultiPCSession(
+    const SpuRuntimeTestCase test_case) {
   pb::SessionStartParams common_params;
   common_params.set_session_id("session_multi_pc");
   for (size_t i = 0; i < test_case.party_size; ++i) {
     auto party = BuildParty(kPartyCodes[i], i);
-    auto p = common_params.add_parties();
+    auto* p = common_params.add_parties();
     p->CopyFrom(party);
   }
   common_params.mutable_spu_runtime_cfg()->CopyFrom(
       MakeSpuRuntimeConfigForTest(test_case.protocol));
 
-  std::vector<std::future<Session>> futures;
+  std::vector<std::future<std::shared_ptr<Session>>> futures;
   SessionOptions options;
   auto create_session = [&](const pb::SessionStartParams& params) {
-    return Session(options, params, &g_mem_link_factory, nullptr, nullptr,
-                   nullptr);
+    return std::make_shared<Session>(options, params, &g_mem_link_factory,
+                                     nullptr, nullptr, nullptr);
   };
   for (size_t i = 0; i < test_case.party_size; ++i) {
     pb::SessionStartParams params;
@@ -96,7 +100,7 @@ std::vector<Session> MakeMultiPCSession(const SpuRuntimeTestCase test_case) {
     futures.push_back(std::async(create_session, params));
   }
 
-  std::vector<Session> results;
+  std::vector<std::shared_ptr<Session>> results;
   for (size_t i = 0; i < futures.size(); i++) {
     results.push_back(futures[i].get());
   }
@@ -179,11 +183,12 @@ pb::ExecNode ExecNodeBuilder::Build() { return node_; }
 
 pb::Tensor MakeTensorReference(const std::string& name,
                                pb::PrimitiveDataType dtype,
-                               pb::TensorStatus visibility) {
+                               pb::TensorStatus visibility, int ref_count) {
   pb::Tensor tensor;
   tensor.set_name(name);
   tensor.set_elem_type(dtype);
   tensor.set_option(pb::TensorOptions::REFERENCE);
+  tensor.set_ref_num(ref_count);
   {
     auto& annotation = *tensor.mutable_annotation();
     annotation.set_status(visibility);

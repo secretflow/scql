@@ -15,29 +15,59 @@
 package core
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/secretflow/scql/pkg/parser/format"
-	"github.com/secretflow/scql/pkg/proto-gen/grm"
 )
+
+type DBType int
+
+const (
+	DBTypeUnknown DBType = iota
+	DBTypeMySQL
+	DBTypeSQLite
+	DBTypePostgres
+	DBTypeCSVDB
+	DBTypeODPS
+)
+
+var dbTypeMap = map[string]DBType{
+	"mysql":      DBTypeMySQL,
+	"sqlite":     DBTypeSQLite,
+	"postgresql": DBTypePostgres,
+	"csvdb":      DBTypeCSVDB,
+	"odps":       DBTypeODPS,
+}
+
+func ParseDBType(tp string) (DBType, error) {
+	if v, ok := dbTypeMap[strings.ToLower(tp)]; ok {
+		return v, nil
+	}
+	return DBTypeUnknown, fmt.Errorf("unknown db type: %s", tp)
+}
 
 var (
 	_ Dialect = &MySQLDialect{}
 	_ Dialect = &PostgresDialect{}
+	_ Dialect = &OdpsDialect{}
 )
 
 var (
-	DBDialectMap = map[grm.DataSourceKind]Dialect{
-		grm.DataSourceKind_UNKNOWN:    NewMySQLDialect(),
-		grm.DataSourceKind_CSVDB:      NewPostgresDialect(),
-		grm.DataSourceKind_MYSQL:      NewMySQLDialect(),
-		grm.DataSourceKind_POSTGRESQL: NewPostgresDialect(),
-		grm.DataSourceKind_SQLITE:     NewMySQLDialect(),
+	DBDialectMap = map[DBType]Dialect{
+		DBTypeUnknown:  NewMySQLDialect(),
+		DBTypeCSVDB:    NewPostgresDialect(),
+		DBTypeMySQL:    NewMySQLDialect(),
+		DBTypePostgres: NewPostgresDialect(),
+		DBTypeSQLite:   NewMySQLDialect(),
+		DBTypeODPS:     NewOdpsDialect(),
 	}
 )
 
 type Dialect interface {
 	GetRestoreFlags() format.RestoreFlags
 	GetFormatDialect() format.Dialect
-	IsSupportAnyValue() bool
+	SupportAnyValue() bool
 }
 
 type MySQLDialect struct {
@@ -60,19 +90,17 @@ func (d *MySQLDialect) GetFormatDialect() format.Dialect {
 	return d.formatDialect
 }
 
-func (d *MySQLDialect) IsSupportAnyValue() bool {
+func (d *MySQLDialect) SupportAnyValue() bool {
 	return true
 }
 
 type PostgresDialect struct {
-	flags         format.RestoreFlags
-	formatDialect format.Dialect
+	MySQLDialect
 }
 
 func NewPostgresDialect() *PostgresDialect {
 	return &PostgresDialect{
-		flags:         format.RestoreStringSingleQuotes | format.RestoreKeyWordLowercase,
-		formatDialect: format.NewPostgresDialect(),
+		MySQLDialect{flags: format.RestoreStringSingleQuotes | format.RestoreKeyWordLowercase, formatDialect: format.NewPostgresDialect()},
 	}
 }
 
@@ -84,6 +112,28 @@ func (d *PostgresDialect) GetFormatDialect() format.Dialect {
 	return d.formatDialect
 }
 
-func (d *PostgresDialect) IsSupportAnyValue() bool {
+func (d *PostgresDialect) SupportAnyValue() bool {
+	return false
+}
+
+type OdpsDialect struct {
+	MySQLDialect
+}
+
+func NewOdpsDialect() *OdpsDialect {
+	return &OdpsDialect{
+		MySQLDialect{flags: format.RestoreStringSingleQuotes | format.RestoreKeyWordLowercase, formatDialect: format.NewOdpsDialect()},
+	}
+}
+
+func (d *OdpsDialect) GetRestoreFlags() format.RestoreFlags {
+	return d.flags
+}
+
+func (d *OdpsDialect) GetFormatDialect() format.Dialect {
+	return d.formatDialect
+}
+
+func (d *OdpsDialect) SupportAnyValue() bool {
 	return false
 }

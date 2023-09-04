@@ -1,10 +1,5 @@
 #!/bin/bash
 
-python mock_from_testdata.py -t=grm -s="testdata/db_alice.json" -dgf="../../../.ci/docker-compose/scdb/conf_tmpl/toy_grm.json"
-python mock_from_testdata.py -t=grm -s="testdata/db_bob.json" -dgf="../../../.ci/docker-compose/scdb/conf_tmpl/toy_grm.json"
-python mock_from_testdata.py -t=grm -s="testdata/db_carol.json" -dgf="../../../.ci/docker-compose/scdb/conf_tmpl/toy_grm.json"
-
-
 python mock_from_testdata.py -t=data -s="testdata/db_alice.json"
 python mock_from_testdata.py -t=data -s="testdata/db_bob.json"
 python mock_from_testdata.py -t=data -s="testdata/db_carol.json"

@@ -339,6 +339,7 @@ type FuncCallExpr struct {
 
 // Restore implements Node interface.
 func (n *FuncCallExpr) Restore(ctx *RestoreCtx) error {
+	n.FnName = model.NewCIStr(ctx.Dialect.GetSpecialFuncName(n.FnName.L))
 	var specialLiteral string
 	switch n.FnName.L {
 	case DateLiteral:
@@ -507,7 +508,10 @@ func (n *FuncCastExpr) Restore(ctx *RestoreCtx) error {
 			return errors.Annotatef(err, "An error occurred while restore FuncCastExpr.Expr")
 		}
 		ctx.WriteKeyWord(" AS ")
-		n.Tp.RestoreAsCastType(ctx)
+		err := n.Tp.RestoreAsCastType(ctx)
+		if err != nil {
+			return err
+		}
 		ctx.WritePlain(")")
 	case CastConvertFunction:
 		ctx.WriteKeyWord("CONVERT")
@@ -516,7 +520,10 @@ func (n *FuncCastExpr) Restore(ctx *RestoreCtx) error {
 			return errors.Annotatef(err, "An error occurred while restore FuncCastExpr.Expr")
 		}
 		ctx.WritePlain(", ")
-		n.Tp.RestoreAsCastType(ctx)
+		err := n.Tp.RestoreAsCastType(ctx)
+		if err != nil {
+			return err
+		}
 		ctx.WritePlain(")")
 	case CastBinaryOperator:
 		ctx.WriteKeyWord("BINARY ")
@@ -682,7 +689,7 @@ type AggregateFuncExpr struct {
 
 // Restore implements Node interface.
 func (n *AggregateFuncExpr) Restore(ctx *RestoreCtx) error {
-	ctx.WriteKeyWord(n.F)
+	ctx.WriteKeyWord(ctx.Dialect.GetSpecialFuncName(n.F))
 	ctx.WritePlain("(")
 	if n.Distinct {
 		ctx.WriteKeyWord("DISTINCT ")

@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <optional>
+
 #include "engine/framework/session.h"
 
 #include "api/core.pb.h"
@@ -47,6 +49,11 @@ class ExecContext {
   const google::protobuf::RepeatedPtrField<pb::Tensor>& GetOutput(
       const std::string& name) const;
 
+  // Input/Output
+  google::protobuf::RepeatedPtrField<pb::Tensor> GetInputTensors() const;
+
+  google::protobuf::RepeatedPtrField<pb::Tensor> GetOutputTensors() const;
+
   // attributes
   // get attribute value by name
   const pb::AttributeValue& GetAttribute(const std::string& name) const;
@@ -55,6 +62,17 @@ class ExecContext {
   std::string GetStringValueFromAttribute(const std::string& name) const;
   int64_t GetInt64ValueFromAttribute(const std::string& name) const;
   bool GetBooleanValueFromAttribute(const std::string& name) const;
+  bool HasAttribute(const std::string& name) const {
+    return node_.attributes().count(name) > 0;
+  }
+  std::optional<std::vector<std::string>> TryGetStringValuesFromAttribute(
+      const std::string& name) const;
+  std::optional<std::string> TryGetStringValueFromAttribute(
+      const std::string& name) const;
+  std::optional<int64_t> TryGetInt64ValueFromAttribute(
+      const std::string& name) const;
+  std::optional<bool> TryGetBooleanValueFromAttribute(
+      const std::string& name) const;
 
  private:
   const pb::ExecNode& node_;

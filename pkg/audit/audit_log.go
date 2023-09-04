@@ -16,6 +16,7 @@ package audit
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -43,7 +44,6 @@ func (f *AuditFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 }
 
 type AuditConf struct {
-	EnableAuditLog          bool   `yaml:"enable_audit"`
 	AuditLogFile            string `yaml:"audit_log_file"`
 	AuditDetailFile         string `yaml:"audit_detail_file"`
 	AuditMaxSizeInMegaBytes int    `yaml:"audit_max_size"`
@@ -53,9 +53,10 @@ type AuditConf struct {
 }
 
 func InitAudit(config *AuditConf) error {
-	enableAudit = config.EnableAuditLog
-	if !enableAudit {
-		return nil
+	if st, err := os.Stat(config.AuditLogFile); err == nil {
+		if st.IsDir() {
+			return fmt.Errorf("can't use directory as log file name")
+		}
 	}
 	auditWriter := &lumberjack.Logger{
 		Filename:   config.AuditLogFile,
@@ -67,6 +68,11 @@ func InitAudit(config *AuditConf) error {
 	auditLogger.SetFormatter(&AuditFormatter{})
 	auditLogger.SetOutput(auditWriter)
 
+	if st, err := os.Stat(config.AuditDetailFile); err == nil {
+		if st.IsDir() {
+			return fmt.Errorf("can't use directory as log file name")
+		}
+	}
 	detailWriter := &lumberjack.Logger{
 		Filename:   config.AuditDetailFile,
 		MaxSize:    config.AuditMaxSizeInMegaBytes, // megabytes
@@ -74,9 +80,9 @@ func InitAudit(config *AuditConf) error {
 		MaxAge:     config.AuditMaxAgeInDays, //days
 		Compress:   config.AuditMaxCompress,
 	}
-
 	detailLogger.SetFormatter(&AuditFormatter{})
 	detailLogger.SetOutput(detailWriter)
+	enableAudit = true
 	return nil
 }
 

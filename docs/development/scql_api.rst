@@ -66,8 +66,7 @@ If you want execute `show databases`, the request and response message should be
             "user": {
                 "account_system_type": "NATIVE_USER",
                 "native_user": { "name": "someuser", "password": "somepassword" }
-            },
-            "grm_token": "sometoken"
+            }
         },
         "query": "show databases;",
         "biz_request_id": "1234"
@@ -133,8 +132,7 @@ If you want to get the result of the query `show databases`, you can send a requ
             "user": {
                 "account_system_type": "NATIVE_USER",
                 "native_user": { "name": "some_user", "password": "some_password" }
-            },
-            "grm_token": "some_token"
+            }
         },
         "scdb_session_id": "some_session_id"
     }
@@ -269,8 +267,7 @@ If you want submit a query `show databases`, you can send a request as follows:
             "user": {
                 "account_system_type": "NATIVE_USER",
                 "native_user": { "name": "someuser", "password": "somepassword" }
-            },
-            "grm_token": "sometoken"
+            }
         },
         "query": "show databases;",
         "biz_request_id": "1234",
@@ -337,8 +334,6 @@ SCDBCredential
 | Field     | Type   | Required | Description                                  |
 +===========+========+==========+==============================================+
 | user      | User_  | Y        | User information, contains password and name |
-+-----------+--------+----------+----------------------------------------------+
-| grm_token | string | Y        | The unique identifier of the user in GRM     |
 +-----------+--------+----------+----------------------------------------------+
 
 User
@@ -531,8 +526,6 @@ Status code
 | 104        | Code_NOT_READY                      | Result not ready                                  |
 +------------+-------------------------------------+---------------------------------------------------+
 | 131        | Code_DDL_PERMISSION_DENIED          | User does not have permission to execute the DDL  |
-+------------+-------------------------------------+---------------------------------------------------+
-| 132        | Code_GRM_RESOURCE_PERMISSION_DENIED | User has no required permissions on grm resources |
 +------------+-------------------------------------+---------------------------------------------------+
 | 140        | Code_NOT_FOUND                      | General not found error                           |
 +------------+-------------------------------------+---------------------------------------------------+

@@ -25,7 +25,6 @@ import (
 	"github.com/sethvargo/go-password/password"
 	"gorm.io/gorm"
 
-	"github.com/secretflow/scql/pkg/grm"
 	"github.com/secretflow/scql/pkg/infoschema"
 	"github.com/secretflow/scql/pkg/parser/auth"
 	"github.com/secretflow/scql/pkg/parser/model"
@@ -174,7 +173,7 @@ func QueryInfoSchema(store *gorm.DB) (result infoschema.InfoSchema, err error) {
 }
 
 func queryInfoSchema(store *gorm.DB) (infoschema.InfoSchema, error) {
-	// FIXME(shunde.csd): use `infoschema.FromGRMTableSchema` to construct infoschema.InfoSchema will lead
+	// FIXME(shunde.csd): use `infoschema.FromTableSchema` to construct infoschema.InfoSchema will lead
 	// empty database missing in infoschema.InfoSchema
 
 	// query database
@@ -208,28 +207,28 @@ func queryInfoSchema(store *gorm.DB) (infoschema.InfoSchema, error) {
 		cols = append(cols, columns...)
 	}
 
-	tableSchemasMap := map[string]*grm.TableSchema{}
+	tableSchemasMap := map[string]*infoschema.TableSchema{}
 	for _, col := range cols {
 		fullTableName := col.Db + "." + col.TableName
 		if _, ok := tableSchemasMap[fullTableName]; !ok {
-			tableSchemasMap[fullTableName] = &grm.TableSchema{
+			tableSchemasMap[fullTableName] = &infoschema.TableSchema{
 				DbName:    col.Db,
 				TableName: col.TableName,
 				Columns:   nil,
 			}
 		}
 		m := tableSchemasMap[fullTableName]
-		m.Columns = append(m.Columns, &grm.ColumnDesc{
+		m.Columns = append(m.Columns, infoschema.ColumnDesc{
 			Name:        col.ColumnName,
 			Type:        col.Type,
 			Description: col.Description,
 		})
 	}
-	var tableSchemas []*grm.TableSchema
+	var tableSchemas []*infoschema.TableSchema
 	for _, v := range tableSchemasMap {
 		tableSchemas = append(tableSchemas, v)
 	}
-	return infoschema.FromGRMTableSchema(tableSchemas)
+	return infoschema.FromTableSchema(tableSchemas)
 }
 
 func QueryDBInfoSchema(store *gorm.DB, dbName string) (result infoschema.InfoSchema, err error) {
@@ -345,7 +344,7 @@ func queryDBInfoSchema(store *gorm.DB, dbName string) (infoschema.InfoSchema, er
 	return infoschema.MockInfoSchema(info), nil
 }
 
-func QueryTableSchemas(store *gorm.DB, dbName string, tableNames []string) (result []*grm.TableSchema, err error) {
+func QueryTableSchemas(store *gorm.DB, dbName string, tableNames []string) (result []*infoschema.TableSchema, err error) {
 	callFc := func(tx *gorm.DB) error {
 		result, err = queryTableSchemas(tx, dbName, tableNames)
 		return err
@@ -356,8 +355,8 @@ func QueryTableSchemas(store *gorm.DB, dbName string, tableNames []string) (resu
 	return result, nil
 }
 
-func queryTableSchemas(store *gorm.DB, dbName string, tableNames []string) ([]*grm.TableSchema, error) {
-	var tableSchemas []*grm.TableSchema
+func queryTableSchemas(store *gorm.DB, dbName string, tableNames []string) ([]*infoschema.TableSchema, error) {
+	var tableSchemas []*infoschema.TableSchema
 	for _, tn := range tableNames {
 		var cols []Column
 		result := store.Where(&Column{Db: dbName, TableName: tn}).Find(&cols)
@@ -368,15 +367,15 @@ func queryTableSchemas(store *gorm.DB, dbName string, tableNames []string) ([]*g
 			return nil, fmt.Errorf("table %s.%s not exists", dbName, tn)
 		}
 
-		var colRecords []*grm.ColumnDesc
+		var colRecords []infoschema.ColumnDesc
 		for _, col := range cols {
-			colRecords = append(colRecords, &grm.ColumnDesc{
+			colRecords = append(colRecords, infoschema.ColumnDesc{
 				Name:        col.ColumnName,
 				Type:        col.Type,
 				Description: col.Description,
 			})
 		}
-		tableSchemas = append(tableSchemas, &grm.TableSchema{
+		tableSchemas = append(tableSchemas, &infoschema.TableSchema{
 			DbName:    dbName,
 			TableName: tn,
 			Columns:   colRecords,

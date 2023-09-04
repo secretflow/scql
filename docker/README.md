@@ -9,6 +9,6 @@ bash build.sh -t image_tag
 bash build.sh -n image_name -t image_tag
 
 # Advanced
-# build image with host bazel cache
+# build image with host bazel cache 
 bash build.sh -c
 ```

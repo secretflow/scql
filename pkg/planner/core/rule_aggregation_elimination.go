@@ -14,7 +14,6 @@
 package core
 
 import (
-	"context"
 	"math"
 
 	"github.com/secretflow/scql/pkg/parser/ast"
@@ -25,10 +24,6 @@ import (
 	"github.com/secretflow/scql/pkg/sessionctx"
 	"github.com/secretflow/scql/pkg/types"
 )
-
-type aggregationEliminator struct {
-	aggregationEliminateChecker
-}
 
 type aggregationEliminateChecker struct {
 }
@@ -136,28 +131,4 @@ func (a *aggregationEliminateChecker) wrapCastFunction(ctx sessionctx.Context, a
 		return arg
 	}
 	return expression.BuildCastFunction(ctx, arg, targetTp)
-}
-
-func (a *aggregationEliminator) optimize(ctx context.Context, p LogicalPlan) (LogicalPlan, error) {
-	newChildren := make([]LogicalPlan, 0, len(p.Children()))
-	for _, child := range p.Children() {
-		newChild, err := a.optimize(ctx, child)
-		if err != nil {
-			return nil, err
-		}
-		newChildren = append(newChildren, newChild)
-	}
-	p.SetChildren(newChildren...)
-	agg, ok := p.(*LogicalAggregation)
-	if !ok {
-		return p, nil
-	}
-	if proj := a.tryToEliminateAggregation(agg); proj != nil {
-		return proj, nil
-	}
-	return p, nil
-}
-
-func (*aggregationEliminator) name() string {
-	return "aggregation_eliminate"
 }

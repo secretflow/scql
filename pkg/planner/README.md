@@ -8,7 +8,7 @@ import (
 
 func main() {
     stmts, _, err := parser.Parse(SQL_STRING)
-    is := getInfoSchema() // TBD: Get info schema from GRM
+    is := getInfoSchema()
     logical_plan, _, err := plannercore.BuildLogicalPlan(stmts[0], is)
     physical_plan, err = plannercore.DoOptimize(
             context.TODO(),
@@ -24,7 +24,7 @@ import (
 
 func main() {
     stmts, _, err := parser.Parse(SQL_STRING)
-    is := getInfoSchema() // TBD: Get info schema from GRM
+    is := getInfoSchema()
     physical_plan, _, err := planner.Optimize(
             context.TODO(),
             sessionctx.Context,

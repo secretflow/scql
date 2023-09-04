@@ -15,7 +15,6 @@ The deployment diagram of the SCQL system that we plan to deploy is shown as the
 
 .. note::
     1. The SCDB is served through the HTTP protocol. It is recommended to use HTTPS instead in production environments. Please check :ref:`TLS Configuration <scdb-tls>` for details.
-    2. Please note that while we used ToyGRM for the demo, it should not be used in production environments.
 
 Step 1: Deploy SCQLEngine
 ==========================
@@ -164,79 +163,7 @@ This chapter will demonstrate how to deploy SCDB in a Third-Party
   mkdir scdb
   cd scdb
 
-2.2 Set ToyGRM
---------------
-
-We use toygrm instead of stdgrm for demo, which means the GRM services is simulated by reading local JSON files, it's not recommend in production environments. See :ref:`Global Resource Manager <grm>` for more information about GRM
-
-Create a json file named ``toy_grm.json`` in your workspace, which should look like as follows:
-
-.. code-block:: json
-
-  {
-    "engine": {
-      "read_token": ["__ALICE_TOKEN__", "__BOB_TOKEN__"],
-      "engines_info": [
-        {
-          "party": "alice",
-          "url": ["__ENGINE_ALICE_HOST__:__ALICE_PORT__"],
-          "credential": ["__ALICE_CREDENTIAL__"]
-        },
-        {
-          "party": "bob",
-          "url": ["__ENGINE_BOB_HOST__:__BOB_PORT__"],
-          "credential": ["__BOB_CREDENTIAL__"]
-        }
-      ]
-    },
-    "table": {
-      "read_token": ["__ALICE_TOKEN__", "__BOB_TOKEN__"],
-      "ownerships": [
-        { "tids": ["tid0"], "token": "__ALICE_TOKEN__" },
-        { "tids": ["tid1"], "token": "__BOB_TOKEN__" }
-      ],
-      "table_schema": [
-        {
-          "tid": "tid0",
-          "schema": {
-            "ref_db_name": "alice",
-            "ref_table_name": "user_credit",
-            "columns": [
-              { "column_name": "ID", "column_type": "string" },
-              { "column_name": "credit_rank", "column_type": "long" },
-              { "column_name": "income", "column_type": "long" },
-              { "column_name": "age", "column_type": "long" }
-            ]
-          }
-        },
-        {
-          "tid": "tid1",
-          "schema": {
-            "ref_db_name": "bob",
-            "ref_table_name": "user_stats",
-            "columns": [
-              { "column_name": "ID", "column_type": "string" },
-              { "column_name": "order_amount", "column_type": "float" },
-              { "column_name": "is_active", "column_type": "long" }
-            ]
-          }
-        }
-      ]
-    }
-  }
-
-.. note::
-
-    ``__ALICE_TOKEN__`` and ``__BOB_TOKEN__`` is a string token used to authenticate the user, you should replace them with your own token information. Here it's set as ``token_alice`` and ``token_bob``.
-
-    ``__ENGINE_ALICE_HOST__`` and ``__ENGINE_BOB_HOST__`` represent the IP addresses of Alice and Bob, you should replace these placeholders with your own IP address information.
-
-    ``__ALICE_PORT__`` and ``__BOB_PORT__`` represent the listening ports of engine services and should match the published port specified in `1.4 Create docker-compose file`_. In this case it should be 8080.
-
-    ``__ALICE_CREDENTIAL__`` and ``__BOB_CREDENTIAL__`` are used to identify SCDB when send request to engine, it should match the ``engine_credential`` specified in `1.3 Set Engine Config`_.  In this case it should be ``credential_alice`` and ``credential_bob``.
-
-
-2.3 Set SCDB Config 
+2.2 Set SCDB Config 
 --------------------
 
 Create a file called ``config.yml`` in your workspace and paste the following code in:
@@ -257,17 +184,16 @@ Create a file called ``config.yml`` in your workspace and paste the following co
     max_open_conns: 100
     conn_max_idle_time: 2m
     conn_max_lifetime: 5m
-  grm:
-    grm_mode: toygrm
-    toy_grm_conf: /home/admin/configs/toy_grm.json
   engine:
     timeout: 120s
     protocol: http
     content_type: application/json
-    spu:
-      protocol: SEMI2K
-      field: FM64
-      sigmoid_mode: SIGMOID_REAL
+    spu: |
+      {
+        "protocol": "SEMI2K",
+        "field": "FM64",
+        "sigmoid_mode": "SIGMOID_REAL"
+      }
 
 See :ref:`SCDB configuration options <scdb_config_options>` for more config information
 
@@ -296,7 +222,6 @@ Create a file called ``docker-compose.yaml`` in your workspace and paste the fol
         - __SCDB_PORT__:8080
       volumes:
         - ./config.yml:/home/admin/configs/config.yml
-        - ./toy_grm.json:/home/admin/configs/toy_grm.json
     mysql:
       image: mysql:latest
       environment:
@@ -330,7 +255,6 @@ The file your workspace should be as follows:
   └── scdb 
     ├── scdb_init.sql
     ├── config.yml
-    ├── toy_grm.json
     └── docker-compose.yaml
 
 Then you can start engine service by running docker compose up
@@ -388,18 +312,15 @@ Create a json file named as ``users.json`` as follows:
   {
     "alice": {
       "UserName": "alice",
-      "Password": "some_password",
-      "GrmToken": "__ALICE_TOKEN__"
+      "Password": "some_password"
     },
     "bob": {
       "UserName": "bob",
-      "Password": "another_password",
-      "GrmToken": "__BOB_TOKEN__"
+      "Password": "another_password"
     },
     "root": {
       "UserName": "root",
-      "Password": "root",
-      "GrmToken": ""
+      "Password": "root"
     }
   }
 
@@ -409,8 +330,7 @@ Create a json file named as ``users.json`` as follows:
     The ``root`` user is the admin user of SCDB which is init when scdb container set up, ``alice`` and ``bob`` are the user belong to party Alice and Bob,
 
     The user information for ``alice`` and ``bob`` should be same with the user information you will create.
-
-    ``__ALICE_TOKEN__`` and ``__BOB_TOKEN__`` is correspond to the token information set in `2.2 Set ToyGRM`_. In this case, it should be set as ``token_alice`` and ``token_bob``.
+    
 
 3.3 Submit Query
 ----------------

@@ -14,12 +14,26 @@
 
 #pragma once
 
+#include <cstdint>
+#include <optional>
+
+#include "engine/framework/exec.h"
 #include "engine/framework/operator.h"
+#include "engine/util/psi_helper.h"
 
 namespace scql::engine::op {
 
 class In : public Operator {
  public:
+  enum class InAlgo : int64_t {
+    kSecretShareIn = 0,
+    kPsiIn = 1,
+    kLocalIn = 2,
+    kEcdhPsiIn = 3,
+    kOprfPsiIn = 4,
+    kAlgoNums,  // Sentinel Value, must be placed last
+  };
+
   static const std::string kOpType;
 
   static constexpr char kInLeft[] = "Left";
@@ -30,6 +44,8 @@ class In : public Operator {
   static constexpr char kInputPartyCodesAttr[] = "input_party_codes";
   static constexpr char kRevealToAttr[] = "reveal_to";
 
+  static constexpr char kUbPsiServerHint[] = "ub_psi_server_hint";
+
   const std::string& Type() const override;
 
  protected:
@@ -37,9 +53,35 @@ class In : public Operator {
   void Execute(ExecContext* ctx) override;
 
  private:
-  void SecretShareIn(ExecContext* ctx);
-  void PsiIn(ExecContext* ctx);
-  void LocalIn(ExecContext* ctx);
+  static void SecretShareIn(ExecContext* ctx);
+  static void PsiIn(ExecContext* ctx);
+  static void LocalIn(ExecContext* ctx);
+  static void EcdhPsiIn(ExecContext* ctx);
+  static void OprfPsiIn(ExecContext* ctx, bool is_server,
+                        std::optional<util::PsiSizeInfo> = {});
+
+  static void ValidateInputAndOutputForPsi(ExecContext* ctx);
+  static void ValidatePartyCodesForPsi(ExecContext* ctx);
+
+  // oprf psi
+  static bool IsOprfServerAccordToHint(ExecContext* ctx);
+  static void OprfPsiServer(
+      ExecContext* ctx, bool reveal_to_server, const std::string& tmp_dir,
+      const spu::psi::EcdhOprfPsiOptions& psi_options,
+      const std::shared_ptr<util::BatchProvider>& batch_provider,
+      util::PsiExecutionInfoTable* psi_info_table);
+  static void OprfPsiClient(
+      ExecContext* ctx, bool reveal_to_server, const std::string& tmp_dir,
+      const spu::psi::EcdhOprfPsiOptions& psi_options,
+      const std::shared_ptr<util::BatchProvider>& batch_provider,
+      util::PsiExecutionInfoTable* psi_info_table);
+
+  static int64_t OprfServerHandleResult(
+      ExecContext* ctx, const std::vector<uint64_t>& matched_indices,
+      size_t self_item_count);
+  static int64_t OprfClientHandleResult(
+      ExecContext* ctx,
+      const std::shared_ptr<util::UbInCipherStore>& cipher_store);
 };
 
 }  // namespace scql::engine::op

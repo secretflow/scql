@@ -1,4 +1,4 @@
-scdb_host: scdb_${PROTOCOL}:8080
+scdb_host: scdb-${PROTOCOL}:8080
 port: 8080
 protocol: http
 query_result_callback_timeout: 3m
@@ -12,14 +12,17 @@ storage:
   max_open_conns: 100
   conn_max_idle_time: 2m
   conn_max_lifetime: 5m
-grm:
-  grm_mode: toygrm
-  toy_grm_conf: /home/admin/configs/toy_grm.json
 engine:
   timeout: 120s
   protocol: http
   content_type: application/json
-  spu:
-    protocol: ${PROTOCOL}
-    field: FM64
-    sigmoid_mode: SIGMOID_REAL
+  spu: |
+    {
+        "protocol": "${PROTOCOL}",
+        "field": "FM64",
+        "sigmoid_mode": "SIGMOID_REAL"
+    }
+party_auth:
+  method: pubkey
+  enable_timestamp_check: true
+  validity_period: 1m

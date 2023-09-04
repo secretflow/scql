@@ -19,7 +19,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/secretflow/scql/pkg/grm"
 	"github.com/secretflow/scql/pkg/parser/auth"
 	"github.com/secretflow/scql/pkg/parser/mysql"
 	"github.com/secretflow/scql/pkg/sessionctx/stmtctx"
@@ -88,12 +87,13 @@ type SessionVars struct {
 	// Storage
 	Storage *gorm.DB
 
-	GrmClient grm.Grm
-	GrmToken  string
 	// PreparedParams params for prepared statements
 	PreparedParams PreparedParams
 
 	SQLMode mysql.SQLMode
+
+	// AffectedByGroupThreshold is used to mark whether GroupByThreshold is applied to protect query results
+	AffectedByGroupThreshold bool
 }
 
 // PreparedParams contains the parameters of the current prepared statement when executing it.

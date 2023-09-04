@@ -18,7 +18,7 @@ syntax = "proto3";
 
 package scql.engine;
 
-import "api/datasource.proto";
+import "engine/datasource/datasource.proto";
 
 // `db.table` --> data source
 // `db` and `table` value can be asterisk wildcard "*"

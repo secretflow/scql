@@ -30,12 +30,14 @@ class Operator {
   void Run(ExecContext* ctx) {
     Validate(ctx);
     Execute(ctx);
+    ManageTensorLifecycle(ctx);
   }
 
  protected:
   // It will throw exception if validation fails
   virtual void Validate(ExecContext* ctx) {}
   virtual void Execute(ExecContext* ctx) = 0;
+  void ManageTensorLifecycle(ExecContext* ctx);
 };
 
 }  // namespace scql::engine
