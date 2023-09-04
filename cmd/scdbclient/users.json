@@ -1,22 +1,18 @@
 {
   "alice": {
     "UserName": "alice",
-    "Password": "alice123",
-    "GrmToken": "token_alice"
+    "Password": "alice123"
   },
   "bob": {
     "UserName": "bob",
-    "Password": "bob123",
-    "GrmToken": "token_bob"
+    "Password": "bob123"
   },
   "carol": {
     "UserName": "carol",
-    "Password": "carol123",
-    "GrmToken": "token_carol"
+    "Password": "carol123"
   },
   "root": {
     "UserName": "root",
-    "Password": "root",
-    "GrmToken": ""
+    "Password": "root"
   }
 }

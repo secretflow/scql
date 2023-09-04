@@ -43,6 +43,16 @@ func (graph *Graph) GetUrlByParty(party string) (string, error) {
 	return graph.PartyInfo.GetUrlByParty(party)
 }
 
+func (graph *Graph) UpdateTensorRefNum() {
+	for node := range graph.Nodes {
+		for _, ts := range node.Inputs {
+			for _, t := range ts {
+				t.RefNum += 1
+			}
+		}
+	}
+}
+
 // TopologicalSort of the dag
 func (graph *Graph) TopologicalSort() ([]*ExecutionNode, error) {
 	var nodes []*ExecutionNode

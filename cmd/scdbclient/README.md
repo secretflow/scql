@@ -28,7 +28,6 @@ The following flags are available in the SCDBClient for customizing its behavior
 --host: SCDB server host (default "http://localhost:8080").
 --userName: User name for SCDB user.
 --passwd: User password for SCDB user.
---grmToken:  User GRM token for SCDB user.
 --usersConfFileName: User conf file name (default "cmd/scdbclient/users.json")
 --sourceFile: scql statement script file
 --sync: Determines whether queries are executed in synchronous or asynchronous mode (default asynchronous).
@@ -56,8 +55,8 @@ alice> select ...
 In addition to read user information from json file, The client also supports filling in user information via the command line.
 
 ``` bash
-# please fill your user name, password and grm token in this command
-$ ./scdbclient prompt --host=http://example.com --userName= --passwd= --grmToken=
+# please fill your user name, password in this command
+$ ./scdbclient prompt --host=http://example.com --userName= --passwd= 
 
 alice> select ...
 ```

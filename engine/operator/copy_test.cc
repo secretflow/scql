@@ -65,10 +65,10 @@ TEST_P(CopyTest, works) {
   auto parm = GetParam();
   auto tc = std::get<1>(parm);
   auto node = MakeCopyExecNode(tc);
-  std::vector<Session> sessions = test::MakeMultiPCSession(std::get<0>(parm));
+  auto sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
-  ExecContext alice_ctx(node, &sessions[0]);
-  ExecContext bob_ctx(node, &sessions[1]);
+  ExecContext alice_ctx(node, sessions[0].get());
+  ExecContext bob_ctx(node, sessions[1].get());
 
   // feed inputs, test copy from alice to bob.
   FeedInputs(&alice_ctx, tc);

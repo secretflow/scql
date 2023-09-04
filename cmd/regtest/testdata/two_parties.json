@@ -6,6 +6,16 @@
       "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
     },
     {
+      "name": "left join on",
+      "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice left join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0;",
+      "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice left join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
+    },
+    {
+      "name": "right join on",
+      "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice right join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0;",
+      "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice right join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
+    },
+    {
       "name": "join where",
       "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice, scdb.bob_tbl_0 as bob where alice.join_long_0 = bob.join_long_0;",
       "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice, bob.tbl_0 as bob where alice.join_long_0 = bob.join_long_0;"
@@ -14,6 +24,16 @@
       "name": "join on multi keys",
       "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0 and alice.join_string_0 = bob.join_string_0;",
       "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0 and alice.join_string_0 = bob.join_string_0;"
+    },
+    {
+      "name": "left join on multi keys",
+      "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice left join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0 and alice.join_string_0 = bob.join_string_0;",
+      "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice left join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0 and alice.join_string_0 = bob.join_string_0;"
+    },
+    {
+      "name": "right join on multi keys",
+      "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice right join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0 and alice.join_string_0 = bob.join_string_0;",
+      "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice right join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0 and alice.join_string_0 = bob.join_string_0;"
     },
     {
       "name": "join three table(alice, alice, bob)",
@@ -159,6 +179,11 @@
       "name": "logic after join",
       "query": "select alice.plain_long_0 as res0, alice.plain_long_0 > bob.plain_long_0 and alice.plain_long_0 >= bob.plain_long_0 as and_log, (alice.plain_long_0 <= bob.plain_long_0) or (alice.plain_long_0 <> bob.plain_long_0) as or_log from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0;",
       "mysql_query": "select alice.plain_long_0 as res0, alice.plain_long_0 > bob.plain_long_0 and alice.plain_long_0 >= bob.plain_long_0 as and_log, (alice.plain_long_0 <= bob.plain_long_0) or (alice.plain_long_0 <> bob.plain_long_0) as or_log from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
+    },
+    {
+      "name": "cast(private) after join",
+      "query": "select cast(alice.plain_long_0 as decimal(64,30)) as df, cast(alice.plain_long_0 as char) as ds from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0;",
+      "mysql_query": "select cast(alice.plain_long_0 as decimal(64,30)) as df, cast(alice.plain_long_0 as char) as ds from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
     },
     {
       "name": "in after join",
@@ -327,13 +352,18 @@
     },
     {
       "name": "agg with group by(string), private group by",
-      "query": "select ta.groupby_string_0, count(*) as c from scdb.alice_tbl_0 as ta join scdb.bob_tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_string_0",
-      "mysql_query": "select ta.groupby_string_0, count(*) as c from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_string_0 having count(*) >= 4"
+      "query": "select ta.groupby_string_0, count(*) as c, count(distinct ta.aggregate_long_0) as cd, sum(ta.aggregate_long_0) as sum, min(ta.aggregate_long_0) as min, max(ta.aggregate_long_0) as max, avg(ta.aggregate_long_0) as avg from scdb.alice_tbl_0 as ta join scdb.bob_tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_string_0",
+      "mysql_query": "select ta.groupby_string_0, count(*) as c, count(distinct ta.aggregate_long_0) as cd, sum(ta.aggregate_long_0) as sum, min(ta.aggregate_long_0) as min, max(ta.aggregate_long_0) as max, avg(ta.aggregate_long_0) as avg from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_string_0 having count(*) >= 4"
     },
     {
       "name": "agg with group by(string2), oblivious group by",
-      "query": "select ta.groupby_string_0,tb.groupby_string_0, count(*) as c from scdb.alice_tbl_0 as ta join scdb.bob_tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_string_0,tb.groupby_string_0",
-      "mysql_query": "select ta.groupby_string_0,tb.groupby_string_0, count(*) as c from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_string_0,tb.groupby_string_0 having count(*) >= 4"
+      "query": "select ta.groupby_string_0,tb.groupby_string_0, count(*) as c, count(distinct ta.aggregate_long_0) as cd, sum(ta.aggregate_long_0) as sum, min(ta.aggregate_long_0) as min, max(ta.aggregate_long_0) as max, avg(ta.aggregate_long_0) as avg from scdb.alice_tbl_0 as ta join scdb.bob_tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_string_0,tb.groupby_string_0",
+      "mysql_query": "select ta.groupby_string_0,tb.groupby_string_0, count(*) as c, count(distinct ta.aggregate_long_0) as cd, sum(ta.aggregate_long_0) as sum, min(ta.aggregate_long_0) as min, max(ta.aggregate_long_0) as max, avg(ta.aggregate_long_0) as avg from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_string_0,tb.groupby_string_0 having count(*) >= 4"
+    },
+    {
+      "name": "key merge, oblivious group by",
+      "query": "select ta.groupby_long_0, ta.groupby_string_0, tb.groupby_string_0 as tbs, count(*) as c, count(distinct ta.aggregate_long_0) as cd, sum(ta.aggregate_long_0) as sum, min(ta.aggregate_long_0) as min, max(ta.aggregate_long_0) as max, avg(ta.aggregate_long_0) as avg  from scdb.alice_tbl_0 as ta join scdb.bob_tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_long_0, ta.groupby_string_0, tb.groupby_string_0;",
+      "mysql_query": "select ta.groupby_long_0, ta.groupby_string_0, tb.groupby_string_0 as tbs, count(*) as c, count(distinct ta.aggregate_long_0) as cd, sum(ta.aggregate_long_0) as sum, min(ta.aggregate_long_0) as min, max(ta.aggregate_long_0) as max, avg(ta.aggregate_long_0) as avg from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_long_0, ta.groupby_string_0, tb.groupby_string_0 having count(*) >= 4"
     },
     {
       "name": "he group by",
@@ -356,6 +386,11 @@
       "mysql_query": "select ta.plain_long_0 from alice.tbl_0 as ta union all select tb.plain_long_0 from bob.tbl_0 as tb"
     },
     {
+      "name": "cast(secret) after union",
+      "query": "select cast(u.plain_long_0 as decimal) as fd from  (select ta.plain_long_0 from scdb.alice_tbl_0 as ta union all select tb.plain_long_0 from scdb.bob_tbl_0 as tb) as u",
+      "mysql_query": "select cast(u.plain_long_0 as decimal) as fd from  (select ta.plain_long_0 from  alice.tbl_0 as ta union all select tb.plain_long_0 from bob.tbl_0 as tb) as u;"
+    },
+    {
       "name": "union tests",
       "query": "select ta.plain_long_0 from scdb.alice_tbl_0 as ta union select tb.plain_long_0 from scdb.bob_tbl_0 as tb",
       "mysql_query": "select ta.plain_long_0 from alice.tbl_0 as ta union select tb.plain_long_0 from bob.tbl_0 as tb"
@@ -374,6 +409,26 @@
       "name": "group by/agg after union all tests",
       "query": "select count(*) as cc, max(groupby_long_0) as mm from (select aggregate_long_0, groupby_long_0 from scdb.alice_tbl_0 union all select aggregate_long_0, groupby_long_0 from scdb.bob_tbl_1) as u group by u.groupby_long_0",
       "mysql_query": "select count(*) as cc, max(groupby_long_0) as mm from (select aggregate_long_0, groupby_long_0 from alice.tbl_0 union all select aggregate_long_0, groupby_long_0 from bob.tbl_1) as u group by u.groupby_long_0 having count(*) >= 4"
+    },
+    {
+      "name": "if after join",
+      "query": "select if(ta.plain_long_0, tb.plain_long_0, ta.plain_long_0) as res from scdb.alice_tbl_0 as ta join scdb.bob_tbl_0 as tb on ta.join_long_0 = tb.join_long_0",
+      "mysql_query": "select if(ta.plain_long_0, tb.plain_long_0, ta.plain_long_0) as res from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_long_0 = tb.join_long_0"
+    },
+    {
+      "name": "if (compare) after join",
+      "query": "select if(ta.compare_long_0 > tb.compare_long_0, ta.plain_long_0, tb.plain_long_0) as res from scdb.alice_tbl_0 as ta join scdb.bob_tbl_0 as tb on ta.join_long_0 = tb.join_long_0",
+      "mysql_query": "select if(ta.compare_long_0 > tb.compare_long_0, ta.plain_long_0, tb.plain_long_0) as res from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_long_0 = tb.join_long_0"
+    },
+    {
+      "name": "case when after join",
+      "query": "select case when alice.compare_long_0 > bob.compare_long_0 then alice.plain_long_0 else bob.plain_long_0 end as case_when1, case when alice.compare_long_0 then 1 else 0 end as case_when2 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0",
+      "mysql_query": "select case when alice.compare_long_0 > bob.compare_long_0 then alice.plain_long_0 else bob.plain_long_0 end as case_when1, case when alice.compare_long_0 then 1 else 0 end as case_when2 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
+    },
+    {
+      "name": "case when(multi condition) after join",
+      "query": "select case when alice.compare_long_0 > bob.compare_long_0 then alice.plain_long_0 when alice.plain_long_0 > 50 then bob.plain_long_0 when alice.plain_long_0 then 1 else 0 end as res1 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0",
+      "mysql_query": "select case when alice.compare_long_0 > bob.compare_long_0 then alice.plain_long_0 when alice.plain_long_0 > 50 then bob.plain_long_0 when alice.plain_long_0 then 1 else 0 end as res1 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
     }
   ]
 }

@@ -17,6 +17,8 @@
 
 # copied from https://github.com/tensorflow/io/blob/master/third_party/arrow.BUILD and made some changes
 
+load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
+
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # Apache 2.0
@@ -39,6 +41,42 @@ genrule(
            "-e 's/cmakedefine ARROW_JEMALLOC_VENDORED/undef ARROW_JEMALLOC_VENDORED/g' " +
            "-e 's/cmakedefine/define/g' " +
            "$< >$@"),
+)
+
+proto_library(
+    name = "flight_proto",
+    srcs = ["cpp/src/arrow/flight/Flight.proto"],
+    deps = ["@com_google_protobuf//:descriptor_proto"],
+)
+
+cc_proto_library(
+    name = "flight_cc_proto",
+    deps = [":flight_proto"],
+)
+
+cc_grpc_library(
+    name = "flight_grpc_cc_proto",
+    srcs = ["flight_proto"],
+    grpc_only = True,
+    deps = [":flight_cc_proto"],
+)
+
+proto_library(
+    name = "flight_sql_proto",
+    srcs = ["cpp/src/arrow/flight/sql/FlightSql.proto"],
+    deps = ["@com_google_protobuf//:descriptor_proto"],
+)
+
+cc_proto_library(
+    name = "flight_sql_cc_proto",
+    deps = [":flight_sql_proto"],
+)
+
+cc_grpc_library(
+    name = "flight_sql_grpc_cc_proto",
+    srcs = ["flight_sql_proto"],
+    grpc_only = True,
+    deps = [":flight_sql_cc_proto"],
 )
 
 genrule(
@@ -77,6 +115,10 @@ cc_library(
             "cpp/src/arrow/c/*.cc",
             "cpp/src/arrow/array/*.cc",
             "cpp/src/arrow/csv/*.cc",
+            "cpp/src/arrow/flight/**/*.cc",
+            "cpp/src/arrow/flight/**/*.h",
+            "cpp/src/arrow/extension/**/*.cc",
+            "cpp/src/arrow/extension/**/*.h",
             "cpp/src/arrow/io/*.cc",
             "cpp/src/arrow/ipc/*.cc",
             "cpp/src/arrow/json/*.cc",
@@ -101,6 +143,10 @@ cc_library(
             "cpp/src/**/*_test.cc",
             "cpp/src/**/test_*.h",
             "cpp/src/**/test_*.cc",
+            "cpp/src/arrow/flight/sql/example/*.h",
+            "cpp/src/arrow/flight/sql/example/*.cc",
+            "cpp/src/arrow/flight/transport/ucx/*.cc",
+            "cpp/src/arrow/flight/transport/ucx/*.h",
             "cpp/src/**/benchmark_util.h",
             "cpp/src/**/benchmark_util.cc",
             "cpp/src/**/*hdfs*.cc",
@@ -117,6 +163,9 @@ cc_library(
             "cpp/src/arrow/util/bpacking_neon.cc",
             "cpp/src/arrow/util/tracing_internal.cc",
             "cpp/src/arrow/compute/**/*_avx2.cc",
+            "cpp/src/arrow/flight/try_compile/*.cc",
+            "cpp/src/arrow/flight/try_compile/*.h",
+            "cpp/src/arrow/flight/perf_server.cc",
         ],
     ),
     hdrs = [
@@ -136,7 +185,8 @@ cc_library(
         "ARROW_EXPORT=",
         "PARQUET_STATIC",
         "PARQUET_EXPORT=",
-        "WIN32_LEAN_AND_MEAN",
+        "ARROW_FLIGHT",
+        "ARROW_FLIGHT_SQL",
     ],
     includes = [
         "cpp/src",
@@ -147,6 +197,10 @@ cc_library(
         "cpp/src/arrow/vendored/xxhash/xxhash.c",
     ],
     deps = [
+        ":flight_cc_proto",
+        ":flight_sql_cc_proto",
+        ":flight_grpc_cc_proto",
+        ":flight_sql_grpc_cc_proto",
         ":arrow_vendored",
         "@boost//:multiprecision",
         "@brotli",
@@ -154,13 +208,13 @@ cc_library(
         "@com_github_facebook_zstd//:zstd",
         "@com_github_google_snappy//:snappy",
         "@com_github_lz4_lz4//:lz4",
-        # use openssl instead of boringssl
-        # "@boringssl//:crypto",
-        "@com_github_openssl_openssl//:openssl",
         "@com_github_tencent_rapidjson//:rapidjson",
         "@com_github_xtensor_xsimd//:xsimd",
         "@com_google_double_conversion//:double-conversion",
         "@org_apache_thrift//:thrift",
         "@zlib",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++_reflection",
+        "@com_github_gflags_gflags//:gflags",
     ],
 )

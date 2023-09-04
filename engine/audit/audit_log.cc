@@ -32,15 +32,15 @@ const std::string detail_logger_name = "detail";
 static bool audit_init_finished = false;
 
 void InitAuditLogger(const AuditOptions& opts) {
-  if (!opts.enable_audit_logger) {
-    return;
-  }
-
-  const butil::FilePath logs_dir{opts.audit_log_dir};
+  const butil::FilePath audit_log_dir{opts.audit_log_file};
+  const butil::FilePath audit_detail_dir{opts.audit_detail_file};
   {
     butil::File::Error error;
-    YACL_ENFORCE(butil::CreateDirectoryAndGetError(logs_dir, &error),
-                 "Failed to create directory={}: {}", logs_dir.value(),
+    YACL_ENFORCE(butil::CreateDirectoryAndGetError(audit_log_dir, &error),
+                 "Failed to create directory={}: {}", audit_log_dir.value(),
+                 butil::File::ErrorToString(error));
+    YACL_ENFORCE(butil::CreateDirectoryAndGetError(audit_detail_dir, &error),
+                 "Failed to create directory={}: {}", audit_detail_dir.value(),
                  butil::File::ErrorToString(error));
   }
 
@@ -48,9 +48,9 @@ void InitAuditLogger(const AuditOptions& opts) {
   // default_sink used to record default audit, detail_sink used to record
   // execution plan info and sub dag info
   auto default_sink = std::make_shared<spdlog::sinks::daily_file_sink_mt>(
-      logs_dir.Append("audit.log").value(), 0, 0, false, 180);
+      opts.audit_log_file, 0, 0, false, opts.audit_max_files);
   auto detail_sink = std::make_shared<spdlog::sinks::daily_file_sink_mt>(
-      logs_dir.Append("detail.log").value(), 0, 0, false, 180);
+      opts.audit_detail_file, 0, 0, false, opts.audit_max_files);
 
   // 2. register audit log
   auto audit_logger =

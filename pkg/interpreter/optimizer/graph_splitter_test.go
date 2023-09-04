@@ -31,9 +31,23 @@ import (
 
 func TestSplitSimple(t *testing.T) {
 	r := require.New(t)
-	partyInfo, err := translator.NewPartyInfo([]string{"hospital1", "hospital2", "hospital3"},
-		[]string{"hospital1.net", "hospital2.net", "hospital3.net"}, []string{"h1_credential", "h2_credential", "h3_credential"})
-	r.NoError(err)
+	partyInfo := translator.NewPartyInfo([]*translator.Participant{
+		{
+			PartyCode: "hospital1",
+			Endpoints: []string{"hospital1.net"},
+			Token:     "h1_credential",
+		},
+		{
+			PartyCode: "hospital2",
+			Endpoints: []string{"hospital2.net"},
+			Token:     "h2_credential",
+		},
+		{
+			PartyCode: "hospital3",
+			Endpoints: []string{"hospital3.net"},
+			Token:     "h3_credential",
+		},
+	})
 	e1 := translator.NewGraphBuilder(partyInfo)
 
 	t0 := e1.AddTensor("t0")
@@ -63,7 +77,9 @@ func TestSplitSimple(t *testing.T) {
 	r.NoError(err)
 	_, err = e1.AddFilterByIndexNode("filter", leftIndex, []*translator.Tensor{t0AfterFilters[0]}, "hospital1")
 	r.NoError(err)
-	_, err = e1.AddFilterByIndexNode("filter", leftIndex, []*translator.Tensor{t1AfterFilters[0]}, "hospital2")
+	copyIndex, err := e1.AddCopyNode("copy", leftIndex, "hospital1", "hospital2")
+	r.NoError(err)
+	_, err = e1.AddFilterByIndexNode("filter", copyIndex, []*translator.Tensor{t1AfterFilters[0]}, "hospital2")
 	r.NoError(err)
 	_, err = e1.AddFilterByIndexNode("filter", rightIndex, []*translator.Tensor{t2}, "hospital3")
 	r.NoError(err)
@@ -71,7 +87,7 @@ func TestSplitSimple(t *testing.T) {
 	graph := e1.Build()
 	nodes, err := graph.TopologicalSort()
 	r.NoError(err)
-	r.Equal(10, len(nodes))
+	r.Equal(11, len(nodes))
 
 	p := NewGraphPartitioner(graph)
 	p.NaivePartition()
@@ -88,19 +104,19 @@ func TestSplitSimple(t *testing.T) {
 		}
 	}
 
-	// hospital1, 3 PartySubDAGs, 1 runsql + 1 make_share + 3 concat
-	r.Equal(5, len(partySubDAGs["hospital1"]))
+	// hospital1, 6 PartySubDAGs, 1 runsql + 2 join + 2 filter + 1 copy
+	r.Equal(6, len(partySubDAGs["hospital1"]))
 	r.Equal(1, len(partySubDAGs["hospital1"][0].Nodes))
 	r.Equal(1, len(partySubDAGs["hospital1"][1].Nodes))
 	r.Equal(1, len(partySubDAGs["hospital1"][2].Nodes))
 
-	// hospital2, 3 PartySubDAGs, 1 runsql + 1 make_share + 3 concat
-	r.Equal(4, len(partySubDAGs["hospital2"]))
+	// hospital2, 5 PartySubDAGs, 1 runsql + 1 join + 2 filter + 1 copy
+	r.Equal(5, len(partySubDAGs["hospital2"]))
 	r.Equal(1, len(partySubDAGs["hospital2"][0].Nodes))
 	r.Equal(1, len(partySubDAGs["hospital2"][1].Nodes))
 	r.Equal(1, len(partySubDAGs["hospital2"][2].Nodes))
 
-	// hospital3, 3 PartySubDAGs, 1 runsql + 1 make_share + 3 concat
+	// hospital3, 3 PartySubDAGs, 1 runsql + 1 join + 1 filter
 	r.Equal(3, len(partySubDAGs["hospital3"]))
 	r.Equal(1, len(partySubDAGs["hospital3"][0].Nodes))
 	r.Equal(1, len(partySubDAGs["hospital3"][1].Nodes))
@@ -131,7 +147,7 @@ func TestSplitComplex(t *testing.T) {
 	lp, _, err := core.BuildLogicalPlanWithOptimization(context.Background(), ctx, stmt, is)
 	r.NoError(err)
 
-	trans, err := translator.NewTranslator(info, &proto.SecurityConfig{ColumnControlList: ccl}, "alice", true, &translator.SecurityCompromiseConf{RevealGroupMark: false})
+	trans, err := translator.NewTranslator(info, &proto.SecurityConfig{ColumnControlList: ccl}, "alice", &translator.SecurityCompromiseConf{RevealGroupMark: false})
 	r.NoError(err)
 	ep, err := trans.Translate(lp)
 	r.Nil(err)

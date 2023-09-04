@@ -12,14 +12,17 @@ storage:
   max_open_conns: 100
   conn_max_idle_time: 2m
   conn_max_lifetime: 5m
-grm:
-  grm_mode: toygrm
-  toy_grm_conf: /home/admin/configs/toy_grm.json
 engine:
   timeout: 120s
   protocol: http
   content_type: application/json
-  spu:
-    protocol: SEMI2K
-    field: FM64
-    sigmoid_mode: SIGMOID_REAL
+  spu: |
+    {
+        "protocol": "SEMI2K",
+        "field": "FM64",
+        "sigmoid_mode": "SIGMOID_REAL"
+    }
+party_auth:
+  method: pubkey
+  enable_timestamp_check: true
+  validity_period: 1m

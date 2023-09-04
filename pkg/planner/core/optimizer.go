@@ -47,7 +47,7 @@ var optRuleList = []logicalOptRule{
 	&columnPruner{},
 	&optPlaceHolder{},
 	&optPlaceHolder{},
-	&aggregationEliminator{},
+	&optPlaceHolder{},
 	&projectionEliminator{},
 	&optPlaceHolder{},
 	&ppdSolver{},

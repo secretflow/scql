@@ -15,14 +15,17 @@
 package executor
 
 import (
+	"crypto/ed25519"
+	"crypto/x509"
+	"encoding/base64"
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
-	"github.com/secretflow/scql/pkg/grm/toygrm"
 	"github.com/secretflow/scql/pkg/infoschema"
 	"github.com/secretflow/scql/pkg/parser/ast"
 	"github.com/secretflow/scql/pkg/parser/auth"
@@ -31,6 +34,8 @@ import (
 	"github.com/secretflow/scql/pkg/privilege"
 	"github.com/secretflow/scql/pkg/privilege/privileges"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
+	partyAuth "github.com/secretflow/scql/pkg/scdb/auth"
+	"github.com/secretflow/scql/pkg/scdb/config"
 	"github.com/secretflow/scql/pkg/scdb/storage"
 	"github.com/secretflow/scql/pkg/sessionctx"
 	"github.com/secretflow/scql/pkg/sessionctx/stmtctx"
@@ -41,7 +46,6 @@ type userAuth struct {
 	hostName string
 	userName string
 	password string
-	grmToken string
 }
 
 var (
@@ -49,19 +53,16 @@ var (
 		hostName: `%`,
 		userName: `root`,
 		password: `root`,
-		grmToken: `my_root`,
 	}
 	userAlice = &userAuth{
 		hostName: `%`,
 		userName: `alice`,
 		password: `some_pwd`,
-		grmToken: `my_alice`,
 	}
 	userBob = &userAuth{
 		hostName: `%`,
 		userName: `bob`,
 		password: `some_pwd`,
-		grmToken: `my_bob`,
 	}
 )
 
@@ -120,11 +121,6 @@ func mockStorage() (*gorm.DB, error) {
 
 func mockUserSession(ctx sessionctx.Context, user *userAuth, storage *gorm.DB) error {
 	ctx.GetSessionVars().Storage = storage
-	toyGrmClient, err := toygrm.New("../../grm/toygrm/testdata/toy_grm.json")
-	if err != nil {
-		return fmt.Errorf("user creat grm error")
-	}
-	ctx.GetSessionVars().GrmClient = toyGrmClient
 	return switchUser(ctx, user)
 }
 
@@ -144,7 +140,6 @@ func switchUser(ctx sessionctx.Context, user *userAuth) error {
 	privilege.BindPrivilegeManager(ctx, pm)
 
 	ctx.GetSessionVars().User = user.toUserIdentity()
-	ctx.GetSessionVars().GrmToken = user.grmToken
 	return nil
 }
 
@@ -242,6 +237,76 @@ func TestCreateUser(t *testing.T) {
 		_, err := runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
 		r.Error(err)
 	})
+
+	t.Run("CreateUserWithEngineOptionTest", func(t *testing.T) {
+		// db isolation
+		db, err := mockStorage()
+		r.NoError(err)
+
+		ctx := mockContext()
+
+		r.NoError(mockUserSession(ctx, userRoot, db))
+
+		// create user with token auth
+		{
+			pa := partyAuth.NewPartyAuthenticator(config.PartyAuthConf{
+				Method: "token",
+			})
+			partyAuth.BindPartyAuthenticator(ctx, pa)
+
+			_, err = runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd" WITH TOKEN "some_token"`)
+			r.NoError(err)
+		}
+
+		// create user with ED25519 auth
+		{
+			pa := partyAuth.NewPartyAuthenticator(config.PartyAuthConf{
+				Method:               "pubkey",
+				EnableTimestampCheck: true,
+				ValidityPeriod:       time.Second,
+			})
+			partyAuth.BindPartyAuthenticator(ctx, pa)
+
+			pub, priv, err := ed25519.GenerateKey(nil)
+			r.NoError(err)
+
+			msg, err := time.Now().MarshalText()
+			r.NoError(err)
+
+			sig := ed25519.Sign(priv, msg)
+
+			pubKeyInDER, err := x509.MarshalPKIXPublicKey(pub)
+			r.NoError(err)
+			query := fmt.Sprintf("CREATE USER bob PARTY_CODE 'party_B' IDENTIFIED BY 'some_pwd' WITH '%s' '%s' '%s'", string(msg), base64.StdEncoding.EncodeToString(sig), base64.StdEncoding.EncodeToString(pubKeyInDER))
+			_, err = runSQL(ctx, query)
+			r.NoError(err)
+		}
+
+		// create user with ED25519 auth with expired timestamp, it should fail
+		{
+			pa := partyAuth.NewPartyAuthenticator(config.PartyAuthConf{
+				Method:               "pubkey",
+				EnableTimestampCheck: true,
+				ValidityPeriod:       time.Second,
+			})
+			partyAuth.BindPartyAuthenticator(ctx, pa)
+
+			pub, priv, err := ed25519.GenerateKey(nil)
+			r.NoError(err)
+
+			msg, err := time.Now().Add(-time.Second).MarshalText()
+			r.NoError(err)
+
+			sig := ed25519.Sign(priv, msg)
+
+			pubKeyInDER, err := x509.MarshalPKIXPublicKey(pub)
+			r.NoError(err)
+			query := fmt.Sprintf("CREATE USER carol PARTY_CODE 'party_C' IDENTIFIED BY 'some_pwd' WITH '%s' '%s' '%s'", string(msg), base64.StdEncoding.EncodeToString(sig), base64.StdEncoding.EncodeToString(pubKeyInDER))
+			_, err = runSQL(ctx, query)
+			r.Error(err)
+		}
+
+	})
 }
 
 func TestAlterUser(t *testing.T) {
@@ -252,7 +317,6 @@ func TestAlterUser(t *testing.T) {
 		hostName: `%`,
 		userName: `carol`,
 		password: `some_pwd`,
-		grmToken: `my_carol`,
 	}
 
 	// root> create user carol
@@ -265,7 +329,7 @@ func TestAlterUser(t *testing.T) {
 
 	r.NoError(switchUser(ctx, userCarol))
 
-	// carol> carol user alice, success
+	// carol> alter user carol, success
 	_, err = runSQL(ctx, `ALTER USER carol IDENTIFIED BY 'new-password'`)
 	r.NoError(err)
 
@@ -276,6 +340,13 @@ func TestAlterUser(t *testing.T) {
 	userCarol.password = "new-password"
 	r.NoError(switchUser(ctx, userCarol))
 
+	// carol> alter endpoint
+	_, err = runSQL(ctx, `ALTER USER carol WITH ENDPOINT 'host1:port1'`)
+	r.NoError(err)
+
+	// carol> alter nothing, failed
+	_, err = runSQL(ctx, `ALTER user carol`)
+	r.Error(err)
 }
 
 func TestDropUser(t *testing.T) {
@@ -490,7 +561,7 @@ func TestCreateView(t *testing.T) {
 		r.NoError(err)
 
 		// success
-		_, err = runSQL(ctx, `CREATE TABLE test.new_table tid = "tid1"`)
+		_, err = runSQL(ctx, `CREATE TABLE test.new_table (c1 long, c2 long) REF_TABLE=d1.c2 DB_TYPE='mysql'`)
 		r.NoError(err)
 
 		is1, err := storage.QueryDBInfoSchema(db, "test")
@@ -582,33 +653,47 @@ func TestCreateTable(t *testing.T) {
 		r.NoError(err)
 
 		// success
-		_, err = runSQL(ctx, `CREATE TABLE test.new_table tid = "tid1"`)
+		_, err = runSQL(ctx, `CREATE TABLE test.new_table (
+			c1 long,
+			c2 long
+		) REF_TABLE=d1.t1 DB_TYPE='MYSQL'`)
 		r.NoError(err)
 
 		// failed due to database doesn't exists
-		_, err = runSQL(ctx, `CREATE TABLE i_dont_exists.new_table tid = "tid1"`)
+		_, err = runSQL(ctx, `CREATE TABLE i_dont_exists.new_table (
+			c1 long,
+			c2 long
+		) REF_TABLE=d1.t1 DB_TYPE='MYSQL'`)
 		r.Error(err)
 
 		// failed due to table already exists
-		_, err = runSQL(ctx, `CREATE TABLE test.new_table tid = "tid1"`)
+		_, err = runSQL(ctx, `CREATE TABLE test.new_table (
+			c1 long,
+			c2 long
+		) REF_TABLE=d1.t1 DB_TYPE='MYSQL'`)
 		r.Error(err)
 
 		// success on if not exists
-		_, err = runSQL(ctx, `CREATE TABLE IF NOT EXISTS test.new_table tid = "tid1"`)
+		_, err = runSQL(ctx, `CREATE TABLE IF NOT EXISTS test.new_table (
+			c1 long,
+			c2 long
+		) REF_TABLE=d1.t1 DB_TYPE='MYSQL'`)
 		r.NoError(err)
 
 		// failed due to missing db_name
-		_, err = runSQL(ctx, `CREATE TABLE new_table_2 tid = "tid2"`)
+		_, err = runSQL(ctx, `CREATE TABLE new_table_2 (
+			c1 string,
+			c2 long,
+		) REF_TABLE=d1.t2 DB_TYPE='POSTGRESQL'`)
 		r.Error(err)
 
 		// use database test
 		ctx.GetSessionVars().CurrentDB = "test"
-		_, err = runSQL(ctx, `CREATE TABLE new_table_2 tid = "tid2"`)
+		_, err = runSQL(ctx, `CREATE TABLE new_table_2 (
+			c1 string,
+			c2 long
+		) REF_TABLE=d1.t2 DB_TYPE='POSTGRESQL'`)
 		r.NoError(err)
-
-		// failed due to not the owner of the table
-		_, err = runSQL(ctx, `CREATE TABLE test.t3 tid = "tid3"`)
-		r.Error(err)
 	}
 
 	{
@@ -623,7 +708,11 @@ func TestCreateTable(t *testing.T) {
 		r.NoError(switchUser(ctx, userBob))
 
 		// failed due to lack of privilege
-		_, err = runSQL(ctx, `CREATE TABLE test.ant_table tid = "tid3"`)
+		_, err = runSQL(ctx, `CREATE TABLE test.ant_table (
+			c1 int64,
+			c2 float,
+			c3 double
+		) REF_TABLE=bob_db.tbl2 DB_TYPE='csvdb'`)
 		r.Error(err)
 
 		r.NoError(switchUser(ctx, userRoot))
@@ -633,7 +722,11 @@ func TestCreateTable(t *testing.T) {
 
 		r.NoError(switchUser(ctx, userBob))
 
-		_, err = runSQL(ctx, `CREATE TABLE test.ant_table tid = "tid3"`)
+		_, err = runSQL(ctx, `CREATE TABLE test.bob_table (
+			c1 int64,
+			c2 float,
+			c3 double
+		) REF_TABLE=bob_db.tbl2 DB_TYPE='csvdb'`)
 		r.NoError(err)
 
 	}
@@ -672,14 +765,20 @@ func TestDropTable(t *testing.T) {
 	r.NoError(switchUser(ctx, userAlice))
 
 	// success
-	_, err = runSQL(ctx, `CREATE TABLE test.t1 tid = "tid1"`)
+	_, err = runSQL(ctx, `CREATE TABLE test.t1 (
+		id str,
+		c2 int
+	) REF_TABLE=d1.t1 DB_TYPE='sqlite'`)
 	r.NoError(err)
 
 	// switch to user bob
 	r.NoError(switchUser(ctx, userBob))
 
 	// success
-	_, err = runSQL(ctx, `CREATE TABLE test.t3 tid = "tid3"`)
+	_, err = runSQL(ctx, `CREATE TABLE test.t3 (
+		id str,
+		c2 int
+	) REF_TABLE=d1.t1 DB_TYPE='sqlite'`)
 	r.NoError(err)
 
 	// switch to user alice
@@ -833,12 +932,8 @@ func TestGrantGlobalScope(t *testing.T) {
 		r.NoError(err)
 
 		// alice> create table da.t1 -- success
-		_, err = runSQL(ctx, `CREATE TABLE da.t1 tid ="tid1"`)
+		_, err = runSQL(ctx, `CREATE TABLE da.t1 (id string) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
 		r.NoError(err)
-
-		// alice> create table da.t1 -- failed due to wrong tid
-		_, err = runSQL(ctx, `CREATE TABLE da.t1 tid ="tid3"`)
-		r.Error(err)
 
 		// alice> delete table da.t1 -- success
 		_, err = runSQL(ctx, `DROP TABLE da.t1`)
@@ -875,7 +970,7 @@ func TestGrantTableScope(t *testing.T) {
 		r.NoError(switchUser(ctx, userAlice))
 
 		// alice> create table da.t1
-		_, err = runSQL(ctx, `CREATE TABLE da.t1 tid = "tid1"`)
+		_, err = runSQL(ctx, `CREATE TABLE da.t1 (id str) REF_TABLE=dba.tbl1 DB_TYPE='mysql'`)
 		r.NoError(err)
 
 		// switch to user Bob
@@ -916,7 +1011,7 @@ func TestGrantTableScope(t *testing.T) {
 		r.NoError(switchUser(ctx, userAlice))
 
 		// alice> create table da.t1
-		_, err = runSQL(ctx, `CREATE TABLE da.t1 tid = "tid1"`)
+		_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 long) REF_TABLE=dba.tbl1 DB_TYPE='mysql'`)
 		r.NoError(err)
 
 		// alice> GRANT SELECT PLAINTEXT on da.t1 to bob
@@ -982,7 +1077,7 @@ func TestRevokeColumnScope(t *testing.T) {
 		r.NoError(switchUser(ctx, userAlice))
 
 		// alice> create table da.t1
-		_, err = runSQL(ctx, `CREATE TABLE da.t1 tid = "tid1"`)
+		_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 long) REF_TABLE=dba.tbl1 DB_TYPE='mysql'`)
 		r.NoError(err)
 
 		_, err = runSQL(ctx, `GRANT SELECT PLAINTEXT(c1) ON da.t1 TO bob`)
@@ -1030,7 +1125,7 @@ func TestRevokeColumnScope(t *testing.T) {
 		r.NoError(switchUser(ctx, userAlice))
 
 		// alice> create table da.t1
-		_, err = runSQL(ctx, `CREATE TABLE da.t1 tid = "tid1"`)
+		_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 long) REF_TABLE=dba.tbl1 DB_TYPE='mysql'`)
 		r.NoError(err)
 		_, err = runSQL(ctx, `GRANT SELECT PLAINTEXT(c1) ON da.t1 TO bob`)
 		r.NoError(err)
@@ -1074,7 +1169,7 @@ func TestRevokeTableScope(t *testing.T) {
 	r.NoError(switchUser(ctx, userAlice))
 
 	// alice> create table da.t1
-	_, err = runSQL(ctx, `CREATE TABLE da.t1 tid = "tid1"`)
+	_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 long, c2 long) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
 	r.NoError(err)
 
 	// alice> grant SELECT PLAINTEXT priv to alice
@@ -1404,7 +1499,7 @@ func TestDescribe(t *testing.T) {
 	// switch to user alice
 	r.NoError(switchUser(ctx, userAlice))
 
-	_, err = runSQL(ctx, `CREATE TABLE da.t1 tid = "tid1"`)
+	_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 long, c2 long) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
 	r.NoError(err)
 
 	// alice>
@@ -1451,7 +1546,7 @@ func TestShowTables(t *testing.T) {
 	r.NoError(err)
 	r.Equal(int64(0), rt[0].GetShape().GetDim()[0].GetDimValue())
 
-	_, err = runSQL(ctx, `CREATE TABLE da.t1 tid = "tid1"`)
+	_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 long, c2 long) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
 	r.NoError(err)
 
 	rt, err = runSQL(ctx, `SHOW TABLES FROM da`)
@@ -1668,7 +1763,7 @@ func TestGrantColumnScope(t *testing.T) {
 		r.NoError(switchUser(ctx, userAlice))
 
 		// alice> create table da.t1
-		_, err = runSQL(ctx, `CREATE TABLE da.t1 tid = "tid1"`)
+		_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 long, c2 long) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
 		r.NoError(err)
 
 		// alice> GRANT SELECT PLAINTEXT(c1), ENCRYPTED_ONLY(c2) on da.t1 to bob
@@ -1728,7 +1823,7 @@ func TestGrantColumnScope(t *testing.T) {
 		r.NoError(switchUser(ctx, userAlice))
 
 		// root> create table da.t1
-		_, err = runSQL(ctx, `CREATE TABLE da.t1 tid = "tid1"`)
+		_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 long, c2 long) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
 		r.NoError(err)
 
 		// check privileges before grant
@@ -1776,7 +1871,7 @@ func TestPlatformSecurityConfig(t *testing.T) {
 	r.NoError(switchUser(ctx, userAlice))
 
 	// alice> create table da.t1
-	_, err = runSQL(ctx, `CREATE TABLE da.t1 tid = "tid1"`)
+	_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 long, c2 long) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
 	r.NoError(err)
 
 	states := []mysql.PrivilegeType{

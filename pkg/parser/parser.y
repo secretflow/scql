@@ -344,7 +344,6 @@ import (
 	disable                 "DISABLE"
 	discard                 "DISCARD"
 	disk                    "DISK"
-	tid                     "TID"
 	do                      "DO"
 	duplicate               "DUPLICATE"
 	dynamic                 "DYNAMIC"
@@ -561,6 +560,10 @@ import (
 	plaintextAfterCompare   "PLAINTEXT_AFTER_COMPARE"
 	plaintextAfterAggregate "PLAINTEXT_AFTER_AGGREGATE"
 	encryptedOnly           "ENCRYPTED_ONLY"
+	tokenWord               "TOKEN"
+	endpoint                "ENDPOINT"
+	refTable                "REF_TABLE"
+	dbType                  "DB_TYPE"
 
 	/* The following tokens belong to NotKeywordToken. Notice: make sure these tokens are contained in NotKeywordToken. */
 	addDate               "ADDDATE"
@@ -1145,6 +1148,9 @@ import (
 	MaxIndexNumOpt                         "MAX_IDXNUM clause"
 	PerTable                               "Max index number PER_TABLE"
 	PerDB                                  "Max index number PER_DB"
+	EngineOpt                              "SCQLEngine credential and endpoint information"
+	EndpointOpt                            "SCQLEngine endpoint information"
+	TypeName                               "Column Type Name"
 
 %type	<ident>
 	AsOpt             "AS or EmptyString"
@@ -2361,23 +2367,9 @@ ColumnDefList:
 	}
 
 ColumnDef:
-	ColumnName Type ColumnOptionListOpt
+	ColumnName TypeName ColumnOptionListOpt
 	{
-		colDef := &ast.ColumnDef{Name: $1.(*ast.ColumnName), Tp: $2.(*types.FieldType), Options: $3.([]*ast.ColumnOption)}
-		if !colDef.Validate() {
-			yylex.AppendError(yylex.Errorf("Invalid column definition"))
-			return 1
-		}
-		$$ = colDef
-	}
-|	ColumnName "SERIAL" ColumnOptionListOpt
-	{
-		// TODO: check flen 0
-		tp := types.NewFieldType(mysql.TypeLonglong)
-		options := []*ast.ColumnOption{{Tp: ast.ColumnOptionNotNull}, {Tp: ast.ColumnOptionAutoIncrement}, {Tp: ast.ColumnOptionUniqKey}}
-		options = append(options, $3.([]*ast.ColumnOption)...)
-		tp.Flag |= mysql.UnsignedFlag
-		colDef := &ast.ColumnDef{Name: $1.(*ast.ColumnName), Tp: tp, Options: options}
+		colDef := &ast.ColumnDef{Name: $1.(*ast.ColumnName), Type: $2.(string), Options: $3.([]*ast.ColumnOption)}
 		if !colDef.Validate() {
 			yylex.AppendError(yylex.Errorf("Invalid column definition"))
 			return 1
@@ -2397,6 +2389,32 @@ ColumnName:
 |	Identifier '.' Identifier '.' Identifier
 	{
 		$$ = &ast.ColumnName{Schema: model.NewCIStr($1), Table: model.NewCIStr($3), Name: model.NewCIStr($5)}
+	}
+
+TypeName:
+	Identifier
+	{
+		$$ = $1
+	}
+|	stringLit
+	{
+		$$ = $1
+	}
+|	"LONG"
+	{
+		$$ = "LONG"
+	}
+|	"INT"
+	{
+		$$ = "INT"
+	}
+|	"FLOAT"
+	{
+		$$ = "FLOAT"
+	}
+|	"DOUBLE"
+	{
+		$$ = "DOUBLE"
 	}
 
 ColumnNameList:
@@ -4639,7 +4657,6 @@ UnReservedKeyword:
 |	"DATETIME"
 |	"DAY"
 |	"DEALLOCATE"
-|	"TID"
 |	"DO"
 |	"DUPLICATE"
 |	"DYNAMIC"
@@ -4884,6 +4901,10 @@ UnReservedKeyword:
 |	"PLAINTEXT_AFTER_AGGREGATE"
 |	"ENCRYPTED_ONLY"
 |	"PARTY_CODE"
+|	"TOKEN"
+|	"ENDPOINT"
+|	"REF_TABLE"
+|	"DB_TYPE"
 
 TiDBKeyword:
 	"ADMIN"
@@ -8944,10 +8965,6 @@ TableElement:
 	{
 		$$ = $1.(*ast.ColumnDef)
 	}
-|	Constraint
-	{
-		$$ = $1.(*ast.Constraint)
-	}
 
 TableElementList:
 	TableElement
@@ -9149,9 +9166,13 @@ TableOption:
 		yylex.AppendError(yylex.Errorf("The ENCRYPTION clause is parsed but ignored by all storage engines."))
 		parser.lastErrorAsWarn()
 	}
-|	"TID" EqOpt stringLit
+|	"REF_TABLE" EqOpt TableName
 	{
-		$$ = &ast.TableOption{Tp: ast.TableOptionTID, StrValue: $3}
+		$$ = &ast.TableOption{Tp: ast.TableOptionRefTable, TableNames: []*ast.TableName{$3.(*ast.TableName)}}
+	}
+|	"DB_TYPE" EqOpt stringLit
+	{
+		$$ = &ast.TableOption{Tp: ast.TableOptionDBType, StrValue: $3}
 	}
 
 StatsPersistentVal:
@@ -9952,16 +9973,15 @@ CommaOpt:
  *  https://dev.mysql.com/doc/refman/5.7/en/account-management-sql.html
  ************************************************************************************/
 CreateUserStmt:
-	"CREATE" "USER" IfNotExists UserSpecList RequireClauseOpt ConnectionOptions PasswordOrLockOptions
+	"CREATE" "USER" IfNotExists UserSpecList RequireClauseOpt EngineOpt
 	{
 		// See https://dev.mysql.com/doc/refman/5.7/en/create-user.html
 		$$ = &ast.CreateUserStmt{
-			IsCreateRole:          false,
-			IfNotExists:           $3.(bool),
-			Specs:                 $4.([]*ast.UserSpec),
-			TLSOptions:            $5.([]*ast.TLSOption),
-			ResourceOptions:       $6.([]*ast.ResourceOption),
-			PasswordOrLockOptions: $7.([]*ast.PasswordOrLockOption),
+			IsCreateRole: false,
+			IfNotExists:  $3.(bool),
+			Specs:        $4.([]*ast.UserSpec),
+			TLSOptions:   $5.([]*ast.TLSOption),
+			EngineOpt:    $6.(*ast.EngineOption),
 		}
 	}
 
@@ -9978,14 +9998,13 @@ CreateRoleStmt:
 
 /* See http://dev.mysql.com/doc/refman/5.7/en/alter-user.html */
 AlterUserStmt:
-	"ALTER" "USER" IfExists UserSpecList RequireClauseOpt ConnectionOptions PasswordOrLockOptions
+	"ALTER" "USER" IfExists UserSpecList RequireClauseOpt EngineOpt
 	{
 		$$ = &ast.AlterUserStmt{
-			IfExists:              $3.(bool),
-			Specs:                 $4.([]*ast.UserSpec),
-			TLSOptions:            $5.([]*ast.TLSOption),
-			ResourceOptions:       $6.([]*ast.ResourceOption),
-			PasswordOrLockOptions: $7.([]*ast.PasswordOrLockOption),
+			IfExists:   $3.(bool),
+			Specs:      $4.([]*ast.UserSpec),
+			TLSOptions: $5.([]*ast.TLSOption),
+			EngineOpt:  $6.(*ast.EngineOption),
 		}
 	}
 |	"ALTER" "USER" IfExists "USER" '(' ')' "IDENTIFIED" "BY" AuthString
@@ -10021,6 +10040,50 @@ UserSpecList:
 |	UserSpecList ',' UserSpec
 	{
 		$$ = append($1.([]*ast.UserSpec), $3.(*ast.UserSpec))
+	}
+
+EngineOpt:
+	{
+		$$ = (*ast.EngineOption)(nil)
+	}
+|	"WITH" "TOKEN" stringLit EndpointOpt
+	{
+		$$ = &ast.EngineOption{
+			TokenAuth:  &ast.TokenAuthOption{Token: $3},
+			PubKeyAuth: nil,
+			Endpoints:  $4.([]string),
+		}
+	}
+|	"WITH" stringLit stringLit stringLit EndpointOpt
+	{
+		$$ = &ast.EngineOption{
+			TokenAuth: nil,
+			PubKeyAuth: &ast.PubKeyAuthOption{
+				Message:   $2,
+				Signature: $3,
+				PubKey:    $4,
+			},
+			Endpoints: $5.([]string),
+		}
+	}
+// NOTE: alter user stmt can only contain endpoint in engineOption
+|	"WITH" "ENDPOINT" StringList
+	{
+		$$ = &ast.EngineOption{
+			TokenAuth:  nil,
+			PubKeyAuth: nil,
+			Endpoints:  $3.([]string),
+		}
+	}
+
+EndpointOpt:
+	{
+		l := []string{}
+		$$ = l
+	}
+|	"ENDPOINT" StringList
+	{
+		$$ = $2
 	}
 
 ConnectionOptions:

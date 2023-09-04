@@ -192,7 +192,7 @@ func (c *runSqlCtx) updateExprNodeFromColumns(d Dialect, columns []*expression.C
 		if col.IsHidden {
 			continue
 		}
-		expr, err := c.exprConverter.ConvertExpressionToExprNode(d.GetFormatDialect(), col, c.colIdToExprNode)
+		expr, err := c.exprConverter.ConvertExpressionToExprNode(d.GetFormatDialect(), col, 0, c.colIdToExprNode)
 		if err != nil {
 			return err
 		}
@@ -267,7 +267,7 @@ func (c *runSqlCtx) WorkAsSub() (*runSqlCtx, error) {
 func (c *runSqlCtx) updateExprNodeFromExpressions(d Dialect, exprs []expression.Expression, columns []*expression.Column) ([]ast.ExprNode, error) {
 	var exprStmts []ast.ExprNode
 	for i, expr := range exprs {
-		exprStmt, err := c.exprConverter.ConvertExpressionToExprNode(d.GetFormatDialect(), expr, c.colIdToExprNode)
+		exprStmt, err := c.exprConverter.ConvertExpressionToExprNode(d.GetFormatDialect(), expr, 0, c.colIdToExprNode)
 		if err != nil {
 			return nil, err
 		}
@@ -287,7 +287,7 @@ func (c *runSqlCtx) convertAggregateFunc(d Dialect, agg *LogicalAggregation) err
 			return err
 		}
 		if f.Name == ast.AggFuncFirstRow {
-			if d.IsSupportAnyValue() {
+			if d.SupportAnyValue() {
 				c.colIdToExprNode[col.UniqueID] = &ast.AggregateFuncExpr{Args: argExpr, F: "any_value", Distinct: f.HasDistinct}
 			} else {
 				c.colIdToExprNode[col.UniqueID] = argExpr[0]

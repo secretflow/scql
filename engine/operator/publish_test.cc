@@ -112,7 +112,7 @@ TEST_P(PublishTest, Works) {
   auto tc = GetParam();
   auto node = MakePublishExecNode(tc);
   auto session = test::Make1PCSession();
-  ExecContext ctx(node, &session);
+  ExecContext ctx(node, session.get());
   FeedInputs(&ctx, tc);
 
   // When
@@ -120,7 +120,7 @@ TEST_P(PublishTest, Works) {
   ASSERT_NO_THROW(op.Run(&ctx););
 
   // Then check output
-  auto result = session.GetPublishResults();
+  auto result = session->GetPublishResults();
   ASSERT_EQ(tc.inputs.size(), result.size());
   for (size_t i = 0; i < result.size(); ++i) {
     EXPECT_EQ(result[i]->DebugString(), tc.out_strs[i]);

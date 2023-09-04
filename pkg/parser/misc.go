@@ -276,7 +276,6 @@ var tokenMap = map[string]int{
 	"DISTINCT":                  distinct,
 	"DISTINCTROW":               distinct,
 	"DIV":                       div,
-	"TID":                       tid,
 	"DO":                        do,
 	"DOUBLE":                    doubleType,
 	"DRAINER":                   drainer,
@@ -710,6 +709,10 @@ var tokenMap = map[string]int{
 	"PLAINTEXT_AFTER_COMPARE":   plaintextAfterCompare,
 	"PLAINTEXT_AFTER_AGGREGATE": plaintextAfterAggregate,
 	"ENCRYPTED_ONLY":            encryptedOnly,
+	"TOKEN":                     tokenWord,
+	"ENDPOINT":                  endpoint,
+	"REF_TABLE":                 refTable,
+	"DB_TYPE":                   dbType,
 }
 
 // See https://dev.mysql.com/doc/refman/5.7/en/function-resolution.html for details

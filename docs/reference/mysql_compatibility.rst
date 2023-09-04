@@ -20,7 +20,8 @@ DDL(Data Definition Language)
 
 CREATE Table
 `````````````
-SCQL get table schemas from GRM, so CREATE TABLE statement must include keyword TID which uniquely identifies a table in GRM. For more information, please read :doc:`scql_manual`.
+The Table created in SCQL is a virtual Table and needs to be mapped to the actual Table, so we extend the statement to transfer the mapping information. For more information, please read :doc:`scql_manual`.
+
 
 DQL(Data Query Language)
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -28,8 +29,6 @@ DQL(Data Query Language)
 About implementation status, please read :doc:`scql_status`
 
 .. note::
-    Since SCQL only supports floating-point numbers of type float32, please pay attention to the problem of precision loss.
-
     Type Null is unsupported in SCQL.
 
 Functions different from MySQL
@@ -87,16 +86,16 @@ Compare(>, <, <=, >=, <>, =, !=)
 """"""""""""""""""""""""""""""""
 * Both arguments in a comparison operation shouldn't be string.
 * If both arguments are long, they are compared as long.
-* If one of the arguments is float32, the other argument will be compared as float32.
+* If one of the arguments is float or double, the other argument will be compared as double.
 
 Arithmetic(+, -, \*, /, %)
 """"""""""""""""""""""""""
 * Both arguments in a arithmetic operation shouldn't be string.
 * If both arguments are long, they are calculated as long.
-* If one of the arguments is float32, the other argument will be calculated as float32.
+* If one of the arguments is float or double, the other argument will be calculated as double.
 
 Aggregation(sum, count, avg, min, max)
 """"""""""""""""""""""""""""""""""""""
 * All arguments in a aggregation function shouldn't be string.
 * If all arguments are long, they are calculated as long.
-* If one of the arguments is float32, the other argument will be calculated as float32.
+* If one of the arguments is float or double, the other argument will be calculated as double.

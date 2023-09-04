@@ -18,8 +18,6 @@ package infoschema_test
 import (
 	"testing"
 
-	"github.com/secretflow/scql/pkg/grm"
-
 	. "github.com/pingcap/check"
 	"github.com/stretchr/testify/require"
 
@@ -62,12 +60,12 @@ func (testSuite) TestMockInfoSchema(c *C) {
 	c.Assert(tbl.Cols()[0].ColumnInfo, Equals, colInfo)
 }
 
-func TestFromGRMTableSchema(t *testing.T) {
-	tables := []*grm.TableSchema{
+func TestFromTableSchema(t *testing.T) {
+	tables := []*infoschema.TableSchema{
 		{
 			DbName:    "d1",
 			TableName: "t1",
-			Columns: []*grm.ColumnDesc{
+			Columns: []infoschema.ColumnDesc{
 				{Name: "c1", Type: "int", Description: "foo"},
 				{Name: "c2", Type: "string", Description: "bar"},
 				{Name: "c3", Type: "int", Description: "foobar"},
@@ -76,21 +74,21 @@ func TestFromGRMTableSchema(t *testing.T) {
 		{
 			DbName:    "d1",
 			TableName: "t2",
-			Columns: []*grm.ColumnDesc{
+			Columns: []infoschema.ColumnDesc{
 				{Name: "c1", Type: "int", Description: "foo"},
 			},
 		},
 		{
 			DbName:    "d2",
 			TableName: "t1",
-			Columns: []*grm.ColumnDesc{
+			Columns: []infoschema.ColumnDesc{
 				{Name: "c1", Type: "int", Description: "foo"},
 			},
 		},
 	}
 
 	a := require.New(t)
-	is, err := infoschema.FromGRMTableSchema(tables)
+	is, err := infoschema.FromTableSchema(tables)
 	a.NoError(err)
 
 	d1, exists := is.SchemaByName(model.NewCIStr("d1"))
@@ -135,11 +133,11 @@ func TestFromGRMTableSchema(t *testing.T) {
 }
 
 func TestConvertToTableSchemas(t *testing.T) {
-	tables := []*grm.TableSchema{
+	tables := []*infoschema.TableSchema{
 		{
 			DbName:    "d1",
 			TableName: "t1",
-			Columns: []*grm.ColumnDesc{
+			Columns: []infoschema.ColumnDesc{
 				{Name: "c1", Type: "int", Description: "foo"},
 				{Name: "c2", Type: "string", Description: "bar"},
 				{Name: "c3", Type: "int", Description: "foobar"},
@@ -148,7 +146,7 @@ func TestConvertToTableSchemas(t *testing.T) {
 		{
 			DbName:    "d2",
 			TableName: "t1",
-			Columns: []*grm.ColumnDesc{
+			Columns: []infoschema.ColumnDesc{
 				{Name: "c1", Type: "int", Description: "foo"},
 			},
 		},

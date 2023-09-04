@@ -91,35 +91,35 @@ func (ts *testDDLSuite) TestDDLIndexExprRestore(c *C) {
 	RunNodeRestoreTest(c, testCases, "CREATE INDEX idx ON t (%s) USING HASH", extractNodeFunc)
 }
 
-func (ts *testDDLSuite) TestDDLOnDeleteRestore(c *C) {
-	testCases := []NodeRestoreTestCase{
-		{"on delete restrict", "ON DELETE RESTRICT"},
-		{"on delete CASCADE", "ON DELETE CASCADE"},
-		{"on delete SET NULL", "ON DELETE SET NULL"},
-		{"on delete no action", "ON DELETE NO ACTION"},
-	}
-	extractNodeFunc := func(node Node) Node {
-		return node.(*CreateTableStmt).Constraints[1].Refer.OnDelete
-	}
-	RunNodeRestoreTest(c, testCases, "CREATE TABLE child (id INT, parent_id INT, INDEX par_ind (parent_id), FOREIGN KEY (parent_id) REFERENCES parent(id) %s)", extractNodeFunc)
-	RunNodeRestoreTest(c, testCases, "CREATE TABLE child (id INT, parent_id INT, INDEX par_ind (parent_id), FOREIGN KEY (parent_id) REFERENCES parent(id) on update CASCADE %s)", extractNodeFunc)
-	RunNodeRestoreTest(c, testCases, "CREATE TABLE child (id INT, parent_id INT, INDEX par_ind (parent_id), FOREIGN KEY (parent_id) REFERENCES parent(id) %s on update CASCADE)", extractNodeFunc)
-}
+// func (ts *testDDLSuite) TestDDLOnDeleteRestore(c *C) {
+// 	testCases := []NodeRestoreTestCase{
+// 		{"on delete restrict", "ON DELETE RESTRICT"},
+// 		{"on delete CASCADE", "ON DELETE CASCADE"},
+// 		{"on delete SET NULL", "ON DELETE SET NULL"},
+// 		{"on delete no action", "ON DELETE NO ACTION"},
+// 	}
+// 	extractNodeFunc := func(node Node) Node {
+// 		return node.(*CreateTableStmt).Constraints[1].Refer.OnDelete
+// 	}
+// 	RunNodeRestoreTest(c, testCases, "CREATE TABLE child (id INT, parent_id INT, INDEX par_ind (parent_id), FOREIGN KEY (parent_id) REFERENCES parent(id) %s)", extractNodeFunc)
+// 	RunNodeRestoreTest(c, testCases, "CREATE TABLE child (id INT, parent_id INT, INDEX par_ind (parent_id), FOREIGN KEY (parent_id) REFERENCES parent(id) on update CASCADE %s)", extractNodeFunc)
+// 	RunNodeRestoreTest(c, testCases, "CREATE TABLE child (id INT, parent_id INT, INDEX par_ind (parent_id), FOREIGN KEY (parent_id) REFERENCES parent(id) %s on update CASCADE)", extractNodeFunc)
+// }
 
-func (ts *testDDLSuite) TestDDLOnUpdateRestore(c *C) {
-	testCases := []NodeRestoreTestCase{
-		{"ON UPDATE RESTRICT", "ON UPDATE RESTRICT"},
-		{"on update CASCADE", "ON UPDATE CASCADE"},
-		{"on update SET NULL", "ON UPDATE SET NULL"},
-		{"on update no action", "ON UPDATE NO ACTION"},
-	}
-	extractNodeFunc := func(node Node) Node {
-		return node.(*CreateTableStmt).Constraints[1].Refer.OnUpdate
-	}
-	RunNodeRestoreTest(c, testCases, "CREATE TABLE child ( id INT, parent_id INT, INDEX par_ind (parent_id), FOREIGN KEY (parent_id) REFERENCES parent(id) ON DELETE CASCADE %s )", extractNodeFunc)
-	RunNodeRestoreTest(c, testCases, "CREATE TABLE child ( id INT, parent_id INT, INDEX par_ind (parent_id), FOREIGN KEY (parent_id) REFERENCES parent(id) %s ON DELETE CASCADE)", extractNodeFunc)
-	RunNodeRestoreTest(c, testCases, "CREATE TABLE child ( id INT, parent_id INT, INDEX par_ind (parent_id), FOREIGN KEY (parent_id) REFERENCES parent(id)  %s )", extractNodeFunc)
-}
+// func (ts *testDDLSuite) TestDDLOnUpdateRestore(c *C) {
+// 	testCases := []NodeRestoreTestCase{
+// 		{"ON UPDATE RESTRICT", "ON UPDATE RESTRICT"},
+// 		{"on update CASCADE", "ON UPDATE CASCADE"},
+// 		{"on update SET NULL", "ON UPDATE SET NULL"},
+// 		{"on update no action", "ON UPDATE NO ACTION"},
+// 	}
+// 	extractNodeFunc := func(node Node) Node {
+// 		return node.(*CreateTableStmt).Constraints[1].Refer.OnUpdate
+// 	}
+// 	RunNodeRestoreTest(c, testCases, "CREATE TABLE child ( id INT, parent_id INT, INDEX par_ind (parent_id), FOREIGN KEY (parent_id) REFERENCES parent(id) ON DELETE CASCADE %s )", extractNodeFunc)
+// 	RunNodeRestoreTest(c, testCases, "CREATE TABLE child ( id INT, parent_id INT, INDEX par_ind (parent_id), FOREIGN KEY (parent_id) REFERENCES parent(id) %s ON DELETE CASCADE)", extractNodeFunc)
+// 	RunNodeRestoreTest(c, testCases, "CREATE TABLE child ( id INT, parent_id INT, INDEX par_ind (parent_id), FOREIGN KEY (parent_id) REFERENCES parent(id)  %s )", extractNodeFunc)
+// }
 
 func (ts *testDDLSuite) TestDDLIndexOption(c *C) {
 	testCases := []NodeRestoreTestCase{
@@ -149,63 +149,63 @@ func (ts *testDDLSuite) TestTableToTableRestore(c *C) {
 	RunNodeRestoreTest(c, testCases, "rename table %s", extractNodeFunc)
 }
 
-func (ts *testDDLSuite) TestDDLReferenceDefRestore(c *C) {
-	testCases := []NodeRestoreTestCase{
-		{"REFERENCES parent(id) ON DELETE CASCADE ON UPDATE RESTRICT", "REFERENCES `parent`(`id`) ON DELETE CASCADE ON UPDATE RESTRICT"},
-		{"REFERENCES parent(id) ON DELETE CASCADE", "REFERENCES `parent`(`id`) ON DELETE CASCADE"},
-		{"REFERENCES parent(id,hello) ON DELETE CASCADE", "REFERENCES `parent`(`id`, `hello`) ON DELETE CASCADE"},
-		{"REFERENCES parent(id,hello(12)) ON DELETE CASCADE", "REFERENCES `parent`(`id`, `hello`(12)) ON DELETE CASCADE"},
-		{"REFERENCES parent(id(8),hello(12)) ON DELETE CASCADE", "REFERENCES `parent`(`id`(8), `hello`(12)) ON DELETE CASCADE"},
-		{"REFERENCES parent(id)", "REFERENCES `parent`(`id`)"},
-		{"REFERENCES parent((id+1))", "REFERENCES `parent`((`id`+1))"},
-	}
-	extractNodeFunc := func(node Node) Node {
-		return node.(*CreateTableStmt).Constraints[1].Refer
-	}
-	RunNodeRestoreTest(c, testCases, "CREATE TABLE child (id INT, parent_id INT, INDEX par_ind (parent_id), FOREIGN KEY (parent_id) %s)", extractNodeFunc)
-}
+// func (ts *testDDLSuite) TestDDLReferenceDefRestore(c *C) {
+// 	testCases := []NodeRestoreTestCase{
+// 		{"REFERENCES parent(id) ON DELETE CASCADE ON UPDATE RESTRICT", "REFERENCES `parent`(`id`) ON DELETE CASCADE ON UPDATE RESTRICT"},
+// 		{"REFERENCES parent(id) ON DELETE CASCADE", "REFERENCES `parent`(`id`) ON DELETE CASCADE"},
+// 		{"REFERENCES parent(id,hello) ON DELETE CASCADE", "REFERENCES `parent`(`id`, `hello`) ON DELETE CASCADE"},
+// 		{"REFERENCES parent(id,hello(12)) ON DELETE CASCADE", "REFERENCES `parent`(`id`, `hello`(12)) ON DELETE CASCADE"},
+// 		{"REFERENCES parent(id(8),hello(12)) ON DELETE CASCADE", "REFERENCES `parent`(`id`(8), `hello`(12)) ON DELETE CASCADE"},
+// 		{"REFERENCES parent(id)", "REFERENCES `parent`(`id`)"},
+// 		{"REFERENCES parent((id+1))", "REFERENCES `parent`((`id`+1))"},
+// 	}
+// 	extractNodeFunc := func(node Node) Node {
+// 		return node.(*CreateTableStmt).Constraints[1].Refer
+// 	}
+// 	RunNodeRestoreTest(c, testCases, "CREATE TABLE child (id INT, parent_id INT, INDEX par_ind (parent_id), FOREIGN KEY (parent_id) %s)", extractNodeFunc)
+// }
 
-func (ts *testDDLSuite) TestDDLConstraintRestore(c *C) {
-	testCases := []NodeRestoreTestCase{
-		{"INDEX par_ind (parent_id)", "INDEX `par_ind`(`parent_id`)"},
-		{"INDEX par_ind (parent_id(6))", "INDEX `par_ind`(`parent_id`(6))"},
-		{"INDEX expr_ind ((id + parent_id))", "INDEX `expr_ind`((`id`+`parent_id`))"},
-		{"INDEX expr_ind ((lower(id)))", "INDEX `expr_ind`((LOWER(`id`)))"},
-		{"key par_ind (parent_id)", "INDEX `par_ind`(`parent_id`)"},
-		{"key expr_ind ((lower(id)))", "INDEX `expr_ind`((LOWER(`id`)))"},
-		{"unique par_ind (parent_id)", "UNIQUE `par_ind`(`parent_id`)"},
-		{"unique key par_ind (parent_id)", "UNIQUE `par_ind`(`parent_id`)"},
-		{"unique index par_ind (parent_id)", "UNIQUE `par_ind`(`parent_id`)"},
-		{"unique expr_ind ((id + parent_id))", "UNIQUE `expr_ind`((`id`+`parent_id`))"},
-		{"unique expr_ind ((lower(id)))", "UNIQUE `expr_ind`((LOWER(`id`)))"},
-		{"unique key expr_ind ((id + parent_id))", "UNIQUE `expr_ind`((`id`+`parent_id`))"},
-		{"unique key expr_ind ((lower(id)))", "UNIQUE `expr_ind`((LOWER(`id`)))"},
-		{"unique index expr_ind ((id + parent_id))", "UNIQUE `expr_ind`((`id`+`parent_id`))"},
-		{"unique index expr_ind ((lower(id)))", "UNIQUE `expr_ind`((LOWER(`id`)))"},
-		{"fulltext key full_id (parent_id)", "FULLTEXT `full_id`(`parent_id`)"},
-		{"fulltext INDEX full_id (parent_id)", "FULLTEXT `full_id`(`parent_id`)"},
-		{"fulltext INDEX full_id ((parent_id+1))", "FULLTEXT `full_id`((`parent_id`+1))"},
-		{"PRIMARY KEY (id)", "PRIMARY KEY(`id`)"},
-		{"PRIMARY KEY (id) key_block_size = 32 using hash comment 'hello'", "PRIMARY KEY(`id`) KEY_BLOCK_SIZE=32 USING HASH COMMENT 'hello'"},
-		{"PRIMARY KEY ((id+1))", "PRIMARY KEY((`id`+1))"},
-		{"CONSTRAINT FOREIGN KEY (parent_id(2),hello(4)) REFERENCES parent(id) ON DELETE CASCADE", "CONSTRAINT FOREIGN KEY (`parent_id`(2), `hello`(4)) REFERENCES `parent`(`id`) ON DELETE CASCADE"},
-		{"CONSTRAINT FOREIGN KEY (parent_id) REFERENCES parent(id) ON DELETE CASCADE ON UPDATE RESTRICT", "CONSTRAINT FOREIGN KEY (`parent_id`) REFERENCES `parent`(`id`) ON DELETE CASCADE ON UPDATE RESTRICT"},
-		{"CONSTRAINT FOREIGN KEY (parent_id(2),hello(4)) REFERENCES parent((id+1)) ON DELETE CASCADE", "CONSTRAINT FOREIGN KEY (`parent_id`(2), `hello`(4)) REFERENCES `parent`((`id`+1)) ON DELETE CASCADE"},
-		{"CONSTRAINT FOREIGN KEY (parent_id) REFERENCES parent((id+1)) ON DELETE CASCADE ON UPDATE RESTRICT", "CONSTRAINT FOREIGN KEY (`parent_id`) REFERENCES `parent`((`id`+1)) ON DELETE CASCADE ON UPDATE RESTRICT"},
-		{"CONSTRAINT fk_123 FOREIGN KEY (parent_id(2),hello(4)) REFERENCES parent(id) ON DELETE CASCADE", "CONSTRAINT `fk_123` FOREIGN KEY (`parent_id`(2), `hello`(4)) REFERENCES `parent`(`id`) ON DELETE CASCADE"},
-		{"CONSTRAINT fk_123 FOREIGN KEY (parent_id) REFERENCES parent(id) ON DELETE CASCADE ON UPDATE RESTRICT", "CONSTRAINT `fk_123` FOREIGN KEY (`parent_id`) REFERENCES `parent`(`id`) ON DELETE CASCADE ON UPDATE RESTRICT"},
-		{"CONSTRAINT fk_123 FOREIGN KEY ((parent_id+1),hello(4)) REFERENCES parent(id) ON DELETE CASCADE", "CONSTRAINT `fk_123` FOREIGN KEY ((`parent_id`+1), `hello`(4)) REFERENCES `parent`(`id`) ON DELETE CASCADE"},
-		{"CONSTRAINT fk_123 FOREIGN KEY ((parent_id+1)) REFERENCES parent(id) ON DELETE CASCADE ON UPDATE RESTRICT", "CONSTRAINT `fk_123` FOREIGN KEY ((`parent_id`+1)) REFERENCES `parent`(`id`) ON DELETE CASCADE ON UPDATE RESTRICT"},
-		{"FOREIGN KEY (parent_id(2),hello(4)) REFERENCES parent(id) ON DELETE CASCADE", "CONSTRAINT FOREIGN KEY (`parent_id`(2), `hello`(4)) REFERENCES `parent`(`id`) ON DELETE CASCADE"},
-		{"FOREIGN KEY (parent_id) REFERENCES parent(id) ON DELETE CASCADE ON UPDATE RESTRICT", "CONSTRAINT FOREIGN KEY (`parent_id`) REFERENCES `parent`(`id`) ON DELETE CASCADE ON UPDATE RESTRICT"},
-		{"FOREIGN KEY ((parent_id+1),hello(4)) REFERENCES parent(id) ON DELETE CASCADE", "CONSTRAINT FOREIGN KEY ((`parent_id`+1), `hello`(4)) REFERENCES `parent`(`id`) ON DELETE CASCADE"},
-		{"FOREIGN KEY ((parent_id+1)) REFERENCES parent(id) ON DELETE CASCADE ON UPDATE RESTRICT", "CONSTRAINT FOREIGN KEY ((`parent_id`+1)) REFERENCES `parent`(`id`) ON DELETE CASCADE ON UPDATE RESTRICT"},
-	}
-	extractNodeFunc := func(node Node) Node {
-		return node.(*CreateTableStmt).Constraints[0]
-	}
-	RunNodeRestoreTest(c, testCases, "CREATE TABLE child (id INT, parent_id INT, %s)", extractNodeFunc)
-}
+// func (ts *testDDLSuite) TestDDLConstraintRestore(c *C) {
+// 	testCases := []NodeRestoreTestCase{
+// 		{"INDEX par_ind (parent_id)", "INDEX `par_ind`(`parent_id`)"},
+// 		{"INDEX par_ind (parent_id(6))", "INDEX `par_ind`(`parent_id`(6))"},
+// 		{"INDEX expr_ind ((id + parent_id))", "INDEX `expr_ind`((`id`+`parent_id`))"},
+// 		{"INDEX expr_ind ((lower(id)))", "INDEX `expr_ind`((LOWER(`id`)))"},
+// 		{"key par_ind (parent_id)", "INDEX `par_ind`(`parent_id`)"},
+// 		{"key expr_ind ((lower(id)))", "INDEX `expr_ind`((LOWER(`id`)))"},
+// 		{"unique par_ind (parent_id)", "UNIQUE `par_ind`(`parent_id`)"},
+// 		{"unique key par_ind (parent_id)", "UNIQUE `par_ind`(`parent_id`)"},
+// 		{"unique index par_ind (parent_id)", "UNIQUE `par_ind`(`parent_id`)"},
+// 		{"unique expr_ind ((id + parent_id))", "UNIQUE `expr_ind`((`id`+`parent_id`))"},
+// 		{"unique expr_ind ((lower(id)))", "UNIQUE `expr_ind`((LOWER(`id`)))"},
+// 		{"unique key expr_ind ((id + parent_id))", "UNIQUE `expr_ind`((`id`+`parent_id`))"},
+// 		{"unique key expr_ind ((lower(id)))", "UNIQUE `expr_ind`((LOWER(`id`)))"},
+// 		{"unique index expr_ind ((id + parent_id))", "UNIQUE `expr_ind`((`id`+`parent_id`))"},
+// 		{"unique index expr_ind ((lower(id)))", "UNIQUE `expr_ind`((LOWER(`id`)))"},
+// 		{"fulltext key full_id (parent_id)", "FULLTEXT `full_id`(`parent_id`)"},
+// 		{"fulltext INDEX full_id (parent_id)", "FULLTEXT `full_id`(`parent_id`)"},
+// 		{"fulltext INDEX full_id ((parent_id+1))", "FULLTEXT `full_id`((`parent_id`+1))"},
+// 		{"PRIMARY KEY (id)", "PRIMARY KEY(`id`)"},
+// 		{"PRIMARY KEY (id) key_block_size = 32 using hash comment 'hello'", "PRIMARY KEY(`id`) KEY_BLOCK_SIZE=32 USING HASH COMMENT 'hello'"},
+// 		{"PRIMARY KEY ((id+1))", "PRIMARY KEY((`id`+1))"},
+// 		{"CONSTRAINT FOREIGN KEY (parent_id(2),hello(4)) REFERENCES parent(id) ON DELETE CASCADE", "CONSTRAINT FOREIGN KEY (`parent_id`(2), `hello`(4)) REFERENCES `parent`(`id`) ON DELETE CASCADE"},
+// 		{"CONSTRAINT FOREIGN KEY (parent_id) REFERENCES parent(id) ON DELETE CASCADE ON UPDATE RESTRICT", "CONSTRAINT FOREIGN KEY (`parent_id`) REFERENCES `parent`(`id`) ON DELETE CASCADE ON UPDATE RESTRICT"},
+// 		{"CONSTRAINT FOREIGN KEY (parent_id(2),hello(4)) REFERENCES parent((id+1)) ON DELETE CASCADE", "CONSTRAINT FOREIGN KEY (`parent_id`(2), `hello`(4)) REFERENCES `parent`((`id`+1)) ON DELETE CASCADE"},
+// 		{"CONSTRAINT FOREIGN KEY (parent_id) REFERENCES parent((id+1)) ON DELETE CASCADE ON UPDATE RESTRICT", "CONSTRAINT FOREIGN KEY (`parent_id`) REFERENCES `parent`((`id`+1)) ON DELETE CASCADE ON UPDATE RESTRICT"},
+// 		{"CONSTRAINT fk_123 FOREIGN KEY (parent_id(2),hello(4)) REFERENCES parent(id) ON DELETE CASCADE", "CONSTRAINT `fk_123` FOREIGN KEY (`parent_id`(2), `hello`(4)) REFERENCES `parent`(`id`) ON DELETE CASCADE"},
+// 		{"CONSTRAINT fk_123 FOREIGN KEY (parent_id) REFERENCES parent(id) ON DELETE CASCADE ON UPDATE RESTRICT", "CONSTRAINT `fk_123` FOREIGN KEY (`parent_id`) REFERENCES `parent`(`id`) ON DELETE CASCADE ON UPDATE RESTRICT"},
+// 		{"CONSTRAINT fk_123 FOREIGN KEY ((parent_id+1),hello(4)) REFERENCES parent(id) ON DELETE CASCADE", "CONSTRAINT `fk_123` FOREIGN KEY ((`parent_id`+1), `hello`(4)) REFERENCES `parent`(`id`) ON DELETE CASCADE"},
+// 		{"CONSTRAINT fk_123 FOREIGN KEY ((parent_id+1)) REFERENCES parent(id) ON DELETE CASCADE ON UPDATE RESTRICT", "CONSTRAINT `fk_123` FOREIGN KEY ((`parent_id`+1)) REFERENCES `parent`(`id`) ON DELETE CASCADE ON UPDATE RESTRICT"},
+// 		{"FOREIGN KEY (parent_id(2),hello(4)) REFERENCES parent(id) ON DELETE CASCADE", "CONSTRAINT FOREIGN KEY (`parent_id`(2), `hello`(4)) REFERENCES `parent`(`id`) ON DELETE CASCADE"},
+// 		{"FOREIGN KEY (parent_id) REFERENCES parent(id) ON DELETE CASCADE ON UPDATE RESTRICT", "CONSTRAINT FOREIGN KEY (`parent_id`) REFERENCES `parent`(`id`) ON DELETE CASCADE ON UPDATE RESTRICT"},
+// 		{"FOREIGN KEY ((parent_id+1),hello(4)) REFERENCES parent(id) ON DELETE CASCADE", "CONSTRAINT FOREIGN KEY ((`parent_id`+1), `hello`(4)) REFERENCES `parent`(`id`) ON DELETE CASCADE"},
+// 		{"FOREIGN KEY ((parent_id+1)) REFERENCES parent(id) ON DELETE CASCADE ON UPDATE RESTRICT", "CONSTRAINT FOREIGN KEY ((`parent_id`+1)) REFERENCES `parent`(`id`) ON DELETE CASCADE ON UPDATE RESTRICT"},
+// 	}
+// 	extractNodeFunc := func(node Node) Node {
+// 		return node.(*CreateTableStmt).Constraints[0]
+// 	}
+// 	RunNodeRestoreTest(c, testCases, "CREATE TABLE child (id INT, parent_id INT, %s)", extractNodeFunc)
+// }
 
 func (ts *testDDLSuite) TestDDLColumnOptionRestore(c *C) {
 	testCases := []NodeRestoreTestCase{
@@ -245,115 +245,115 @@ func (ts *testDDLSuite) TestDDLColumnDefRestore(c *C) {
 	testCases := []NodeRestoreTestCase{
 		// for type
 		{"id json", "`id` JSON"},
-		{"id time(5)", "`id` TIME(5)"},
-		{"id int(5) unsigned", "`id` INT(5) UNSIGNED"},
-		{"id int(5) UNSIGNED ZEROFILL", "`id` INT(5) UNSIGNED ZEROFILL"},
-		{"id float(12,3)", "`id` FLOAT(12,3)"},
+		// {"id time(5)", "`id` TIME(5)"},
+		// {"id int(5) unsigned", "`id` INT(5) UNSIGNED"},
+		// {"id int(5) UNSIGNED ZEROFILL", "`id` INT(5) UNSIGNED ZEROFILL"},
+		// {"id float(12,3)", "`id` FLOAT(12,3)"},
 		{"id float", "`id` FLOAT"},
-		{"id double(22,3)", "`id` DOUBLE(22,3)"},
+		// {"id double(22,3)", "`id` DOUBLE(22,3)"},
 		{"id double", "`id` DOUBLE"},
-		{"id tinyint(4)", "`id` TINYINT(4)"},
-		{"id smallint(6)", "`id` SMALLINT(6)"},
-		{"id mediumint(9)", "`id` MEDIUMINT(9)"},
-		{"id integer(11)", "`id` INT(11)"},
-		{"id bigint(20)", "`id` BIGINT(20)"},
+		// {"id tinyint(4)", "`id` TINYINT(4)"},
+		// {"id smallint(6)", "`id` SMALLINT(6)"},
+		// {"id mediumint(9)", "`id` MEDIUMINT(9)"},
+		// {"id integer(11)", "`id` INT(11)"},
+		// {"id bigint(20)", "`id` BIGINT(20)"},
 		{"id DATE", "`id` DATE"},
 		{"id DATETIME", "`id` DATETIME"},
-		{"id DECIMAL(4,2)", "`id` DECIMAL(4,2)"},
-		{"id char(1)", "`id` CHAR(1)"},
-		{"id varchar(10) BINARY", "`id` VARCHAR(10) BINARY"},
-		{"id binary(1)", "`id` BINARY(1)"},
-		{"id timestamp(2)", "`id` TIMESTAMP(2)"},
+		// {"id DECIMAL(4,2)", "`id` DECIMAL(4,2)"},
+		// {"id char(1)", "`id` CHAR(1)"},
+		// {"id varchar(10) BINARY", "`id` VARCHAR(10) BINARY"},
+		// {"id binary(1)", "`id` BINARY(1)"},
+		// {"id timestamp(2)", "`id` TIMESTAMP(2)"},
 		{"id timestamp", "`id` TIMESTAMP"},
-		{"id datetime(2)", "`id` DATETIME(2)"},
+		// {"id datetime(2)", "`id` DATETIME(2)"},
 		{"id date", "`id` DATE"},
 		{"id year", "`id` YEAR"},
 		{"id INT", "`id` INT"},
 		{"id INT NULL", "`id` INT NULL"},
-		{"id enum('a','b')", "`id` ENUM('a','b')"},
-		{"id enum('''a''','''b''')", "`id` ENUM('''a''','''b''')"},
-		{"id enum('a\\nb','a\\tb','a\\rb')", "`id` ENUM('a\nb','a\tb','a\rb')"},
-		{"id set('a','b')", "`id` SET('a','b')"},
-		{"id set('''a''','''b''')", "`id` SET('''a''','''b''')"},
-		{"id set('a\\nb','a''	\\r\\nb','a\\rb')", "`id` SET('a\nb','a''	\r\nb','a\rb')"},
-		{`id set("a'\nb","a'b\tc")`, "`id` SET('a''\nb','a''b\tc')"},
-		{"id TEXT CHARACTER SET UTF8 COLLATE UTF8_UNICODE_CI", "`id` TEXT CHARACTER SET UTF8 COLLATE utf8_unicode_ci"},
-		{"id text character set UTF8", "`id` TEXT CHARACTER SET UTF8"},
-		{"id text charset UTF8", "`id` TEXT CHARACTER SET UTF8"},
-		{"id varchar(50) collate UTF8MB4_CZECH_CI", "`id` VARCHAR(50) COLLATE utf8mb4_czech_ci"},
-		{"id varchar(50) collate utf8_bin", "`id` VARCHAR(50) COLLATE utf8_bin"},
-		{"id varchar(50) collate utf8_unicode_ci collate utf8mb4_bin", "`id` VARCHAR(50) COLLATE utf8_unicode_ci COLLATE utf8mb4_bin"},
-		{"c1 char(10) character set LATIN1 collate latin1_german1_ci", "`c1` CHAR(10) CHARACTER SET LATIN1 COLLATE latin1_german1_ci"},
+		// {"id enum('a','b')", "`id` ENUM('a','b')"},
+		// {"id enum('''a''','''b''')", "`id` ENUM('''a''','''b''')"},
+		// {"id enum('a\\nb','a\\tb','a\\rb')", "`id` ENUM('a\nb','a\tb','a\rb')"},
+		// {"id set('a','b')", "`id` SET('a','b')"},
+		// {"id set('''a''','''b''')", "`id` SET('''a''','''b''')"},
+		// {"id set('a\\nb','a''	\\r\\nb','a\\rb')", "`id` SET('a\nb','a''	\r\nb','a\rb')"},
+		// {`id set("a'\nb","a'b\tc")`, "`id` SET('a''\nb','a''b\tc')"},
+		// {"id TEXT CHARACTER SET UTF8 COLLATE UTF8_UNICODE_CI", "`id` TEXT CHARACTER SET UTF8 COLLATE utf8_unicode_ci"},
+		// {"id text character set UTF8", "`id` TEXT CHARACTER SET UTF8"},
+		// {"id text charset UTF8", "`id` TEXT CHARACTER SET UTF8"},
+		// {"id varchar(50) collate UTF8MB4_CZECH_CI", "`id` VARCHAR(50) COLLATE utf8mb4_czech_ci"},
+		// {"id varchar(50) collate utf8_bin", "`id` VARCHAR(50) COLLATE utf8_bin"},
+		// {"id varchar(50) collate utf8_unicode_ci collate utf8mb4_bin", "`id` VARCHAR(50) COLLATE utf8_unicode_ci COLLATE utf8mb4_bin"},
+		// {"c1 char(10) character set LATIN1 collate latin1_german1_ci", "`c1` CHAR(10) CHARACTER SET LATIN1 COLLATE latin1_german1_ci"},
 
-		{"id int(11) PRIMARY KEY", "`id` INT(11) PRIMARY KEY"},
-		{"id int(11) NOT NULL", "`id` INT(11) NOT NULL"},
-		{"id INT(11) NULL", "`id` INT(11) NULL"},
-		{"id INT(11) auto_increment", "`id` INT(11) AUTO_INCREMENT"},
-		{"id INT(11) DEFAULT 10", "`id` INT(11) DEFAULT 10"},
-		{"id INT(11) DEFAULT '10'", "`id` INT(11) DEFAULT '10'"},
-		{"id INT(11) DEFAULT 1.1", "`id` INT(11) DEFAULT 1.1"},
-		{"id INT(11) UNIQUE KEY", "`id` INT(11) UNIQUE KEY"},
-		{"id INT(11) COLLATE ascii_bin", "`id` INT(11) COLLATE ascii_bin"},
-		{"id INT(11) collate ascii_bin collate utf8_bin", "`id` INT(11) COLLATE ascii_bin COLLATE utf8_bin"},
-		{"id INT(11) on update CURRENT_TIMESTAMP", "`id` INT(11) ON UPDATE CURRENT_TIMESTAMP()"},
-		{"id INT(11) comment 'hello'", "`id` INT(11) COMMENT 'hello'"},
-		{"id INT(11) generated always as(id + 1)", "`id` INT(11) GENERATED ALWAYS AS(`id`+1) VIRTUAL"},
-		{"id INT(11) REFERENCES parent(id)", "`id` INT(11) REFERENCES `parent`(`id`)"},
+		// {"id int(11) PRIMARY KEY", "`id` INT(11) PRIMARY KEY"},
+		// {"id int(11) NOT NULL", "`id` INT(11) NOT NULL"},
+		// {"id INT(11) NULL", "`id` INT(11) NULL"},
+		// {"id INT(11) auto_increment", "`id` INT(11) AUTO_INCREMENT"},
+		// {"id INT(11) DEFAULT 10", "`id` INT(11) DEFAULT 10"},
+		// {"id INT(11) DEFAULT '10'", "`id` INT(11) DEFAULT '10'"},
+		// {"id INT(11) DEFAULT 1.1", "`id` INT(11) DEFAULT 1.1"},
+		// {"id INT(11) UNIQUE KEY", "`id` INT(11) UNIQUE KEY"},
+		// {"id INT(11) COLLATE ascii_bin", "`id` INT(11) COLLATE ascii_bin"},
+		// {"id INT(11) collate ascii_bin collate utf8_bin", "`id` INT(11) COLLATE ascii_bin COLLATE utf8_bin"},
+		// {"id INT(11) on update CURRENT_TIMESTAMP", "`id` INT(11) ON UPDATE CURRENT_TIMESTAMP()"},
+		// {"id INT(11) comment 'hello'", "`id` INT(11) COMMENT 'hello'"},
+		// {"id INT(11) generated always as(id + 1)", "`id` INT(11) GENERATED ALWAYS AS(`id`+1) VIRTUAL"},
+		// {"id INT(11) REFERENCES parent(id)", "`id` INT(11) REFERENCES `parent`(`id`)"},
 
-		{"id bit", "`id` BIT(1)"},
-		{"id bit(1)", "`id` BIT(1)"},
-		{"id bit(64)", "`id` BIT(64)"},
-		{"id tinyint", "`id` TINYINT"},
-		{"id tinyint(255)", "`id` TINYINT(255)"},
-		{"id bool", "`id` TINYINT(1)"},
-		{"id boolean", "`id` TINYINT(1)"},
-		{"id smallint", "`id` SMALLINT"},
-		{"id smallint(255)", "`id` SMALLINT(255)"},
-		{"id mediumint", "`id` MEDIUMINT"},
-		{"id mediumint(255)", "`id` MEDIUMINT(255)"},
+		{"id bit", "`id` BIT"},
+		// {"id bit(1)", "`id` BIT(1)"},
+		// {"id bit(64)", "`id` BIT(64)"},
+		// {"id tinyint", "`id` TINYINT"},
+		// {"id tinyint(255)", "`id` TINYINT(255)"},
+		{"id bool", "`id` BOOL"},
+		{"id boolean", "`id` BOOLEAN"},
+		// {"id smallint", "`id` SMALLINT"},
+		// {"id smallint(255)", "`id` SMALLINT(255)"},
+		// {"id mediumint", "`id` MEDIUMINT"},
+		// {"id mediumint(255)", "`id` MEDIUMINT(255)"},
 		{"id int", "`id` INT"},
-		{"id int(255)", "`id` INT(255)"},
-		{"id integer", "`id` INT"},
-		{"id integer(255)", "`id` INT(255)"},
-		{"id bigint", "`id` BIGINT"},
-		{"id bigint(255)", "`id` BIGINT(255)"},
-		{"id decimal", "`id` DECIMAL"},
-		{"id decimal(10)", "`id` DECIMAL(10)"},
-		{"id decimal(10,0)", "`id` DECIMAL(10,0)"},
-		{"id decimal(65)", "`id` DECIMAL(65)"},
-		{"id decimal(65,30)", "`id` DECIMAL(65,30)"},
-		{"id dec(10,0)", "`id` DECIMAL(10,0)"},
-		{"id numeric(10,0)", "`id` DECIMAL(10,0)"},
-		{"id float(0)", "`id` FLOAT"},
-		{"id float(24)", "`id` FLOAT"},
-		{"id float(25)", "`id` DOUBLE"},
-		{"id float(53)", "`id` DOUBLE"},
-		{"id float(7,0)", "`id` FLOAT(7,0)"},
-		{"id float(25,0)", "`id` FLOAT(25,0)"},
-		{"id double(15,0)", "`id` DOUBLE(15,0)"},
-		{"id double precision(15,0)", "`id` DOUBLE(15,0)"},
-		{"id real(15,0)", "`id` DOUBLE(15,0)"},
-		{"id year(4)", "`id` YEAR(4)"},
+		// {"id int(255)", "`id` INT(255)"},
+		// {"id integer", "`id` INT"},
+		// {"id integer(255)", "`id` INT(255)"},
+		// {"id bigint", "`id` BIGINT"},
+		// {"id bigint(255)", "`id` BIGINT(255)"},
+		// {"id decimal", "`id` DECIMAL"},
+		// {"id decimal(10)", "`id` DECIMAL(10)"},
+		// {"id decimal(10,0)", "`id` DECIMAL(10,0)"},
+		// {"id decimal(65)", "`id` DECIMAL(65)"},
+		// {"id decimal(65,30)", "`id` DECIMAL(65,30)"},
+		// {"id dec(10,0)", "`id` DECIMAL(10,0)"},
+		// {"id numeric(10,0)", "`id` DECIMAL(10,0)"},
+		// {"id float(0)", "`id` FLOAT"},
+		// {"id float(24)", "`id` FLOAT"},
+		// {"id float(25)", "`id` DOUBLE"},
+		// {"id float(53)", "`id` DOUBLE"},
+		// {"id float(7,0)", "`id` FLOAT(7,0)"},
+		// {"id float(25,0)", "`id` FLOAT(25,0)"},
+		// {"id double(15,0)", "`id` DOUBLE(15,0)"},
+		// {"id double precision(15,0)", "`id` DOUBLE(15,0)"},
+		// {"id real(15,0)", "`id` DOUBLE(15,0)"},
+		// {"id year(4)", "`id` YEAR(4)"},
 		{"id time", "`id` TIME"},
-		{"id char", "`id` CHAR"},
-		{"id char(0)", "`id` CHAR(0)"},
-		{"id char(255)", "`id` CHAR(255)"},
-		{"id national char(0)", "`id` CHAR(0)"},
-		{"id binary", "`id` BINARY"},
-		{"id varbinary(0)", "`id` VARBINARY(0)"},
-		{"id varbinary(65535)", "`id` VARBINARY(65535)"},
-		{"id tinyblob", "`id` TINYBLOB"},
-		{"id tinytext", "`id` TINYTEXT"},
-		{"id blob", "`id` BLOB"},
-		{"id blob(0)", "`id` BLOB(0)"},
-		{"id blob(65535)", "`id` BLOB(65535)"},
-		{"id text(0)", "`id` TEXT(0)"},
-		{"id text(65535)", "`id` TEXT(65535)"},
-		{"id mediumblob", "`id` MEDIUMBLOB"},
-		{"id mediumtext", "`id` MEDIUMTEXT"},
-		{"id longblob", "`id` LONGBLOB"},
-		{"id longtext", "`id` LONGTEXT"},
-		{"id json", "`id` JSON"},
+		// {"id char", "`id` CHAR"},
+		// {"id char(0)", "`id` CHAR(0)"},
+		// {"id char(255)", "`id` CHAR(255)"},
+		// {"id national char(0)", "`id` CHAR(0)"},
+		// {"id binary", "`id` BINARY"},
+		// {"id varbinary(0)", "`id` VARBINARY(0)"},
+		// {"id varbinary(65535)", "`id` VARBINARY(65535)"},
+		// {"id tinyblob", "`id` TINYBLOB"},
+		// {"id tinytext", "`id` TINYTEXT"},
+		// {"id blob", "`id` BLOB"},
+		// {"id blob(0)", "`id` BLOB(0)"},
+		// {"id blob(65535)", "`id` BLOB(65535)"},
+		// {"id text(0)", "`id` TEXT(0)"},
+		// {"id text(65535)", "`id` TEXT(65535)"},
+		// {"id mediumblob", "`id` MEDIUMBLOB"},
+		// {"id mediumtext", "`id` MEDIUMTEXT"},
+		// {"id longblob", "`id` LONGBLOB"},
+		// {"id longtext", "`id` LONGTEXT"},
+		// {"id json", "`id` JSON"},
 	}
 	extractNodeFunc := func(node Node) Node {
 		return node.(*CreateTableStmt).Cols[0]
@@ -396,7 +396,7 @@ func (ts *testDDLSuite) TestColumnPositionRestore(c *C) {
 	extractNodeFunc := func(node Node) Node {
 		return node.(*AlterTableStmt).Specs[0].Position
 	}
-	RunNodeRestoreTest(c, testCases, "alter table t add column a varchar(255) %s", extractNodeFunc)
+	RunNodeRestoreTest(c, testCases, "alter table t add column a string %s", extractNodeFunc)
 }
 
 func (ts *testDDLSuite) TestAlterTableSpecRestore(c *C) {
@@ -458,18 +458,18 @@ func (ts *testDDLSuite) TestAlterTableSpecRestore(c *C) {
 		{"CONVERT TO CHARSET utf8", "CONVERT TO CHARACTER SET UTF8"},
 		{"CONVERT TO CHARACTER SET utf8 COLLATE utf8_bin", "CONVERT TO CHARACTER SET UTF8 COLLATE UTF8_BIN"},
 		{"CONVERT TO CHARSET utf8 COLLATE utf8_bin", "CONVERT TO CHARACTER SET UTF8 COLLATE UTF8_BIN"},
-		{"ADD COLUMN (a SMALLINT UNSIGNED)", "ADD COLUMN (`a` SMALLINT UNSIGNED)"},
-		{"ADD COLUMN (a SMALLINT UNSIGNED, b varchar(255))", "ADD COLUMN (`a` SMALLINT UNSIGNED, `b` VARCHAR(255))"},
-		{"ADD COLUMN a SMALLINT UNSIGNED", "ADD COLUMN `a` SMALLINT UNSIGNED"},
-		{"ADD COLUMN a SMALLINT UNSIGNED FIRST", "ADD COLUMN `a` SMALLINT UNSIGNED FIRST"},
-		{"ADD COLUMN a SMALLINT UNSIGNED AFTER b", "ADD COLUMN `a` SMALLINT UNSIGNED AFTER `b`"},
-		{"ADD COLUMN name mediumtext CHARACTER SET UTF8MB4 COLLATE utf8mb4_unicode_ci NOT NULL", "ADD COLUMN `name` MEDIUMTEXT CHARACTER SET UTF8MB4 COLLATE utf8mb4_unicode_ci NOT NULL"},
-		{"ADD CONSTRAINT INDEX par_ind (parent_id)", "ADD INDEX `par_ind`(`parent_id`)"},
-		{"ADD CONSTRAINT INDEX par_ind (parent_id(6))", "ADD INDEX `par_ind`(`parent_id`(6))"},
+		// {"ADD COLUMN (a SMALLINT UNSIGNED)", "ADD COLUMN (`a` SMALLINT UNSIGNED)"},
+		// {"ADD COLUMN (a SMALLINT UNSIGNED, b varchar(255))", "ADD COLUMN (`a` SMALLINT UNSIGNED, `b` VARCHAR(255))"},
+		// {"ADD COLUMN a SMALLINT UNSIGNED", "ADD COLUMN `a` SMALLINT UNSIGNED"},
+		// {"ADD COLUMN a SMALLINT UNSIGNED FIRST", "ADD COLUMN `a` SMALLINT UNSIGNED FIRST"},
+		// {"ADD COLUMN a SMALLINT UNSIGNED AFTER b", "ADD COLUMN `a` SMALLINT UNSIGNED AFTER `b`"},
+		// {"ADD COLUMN name mediumtext CHARACTER SET UTF8MB4 COLLATE utf8mb4_unicode_ci NOT NULL", "ADD COLUMN `name` MEDIUMTEXT CHARACTER SET UTF8MB4 COLLATE utf8mb4_unicode_ci NOT NULL"},
+		// {"ADD CONSTRAINT INDEX par_ind (parent_id)", "ADD INDEX `par_ind`(`parent_id`)"},
+		// {"ADD CONSTRAINT INDEX par_ind (parent_id(6))", "ADD INDEX `par_ind`(`parent_id`(6))"},
 		{"ADD CONSTRAINT key par_ind (parent_id)", "ADD INDEX `par_ind`(`parent_id`)"},
 		{"ADD CONSTRAINT unique par_ind (parent_id)", "ADD UNIQUE `par_ind`(`parent_id`)"},
 		{"ADD CONSTRAINT unique key par_ind (parent_id)", "ADD UNIQUE `par_ind`(`parent_id`)"},
-		{"ADD CONSTRAINT unique index par_ind (parent_id)", "ADD UNIQUE `par_ind`(`parent_id`)"},
+		// {"ADD CONSTRAINT unique index par_ind (parent_id)", "ADD UNIQUE `par_ind`(`parent_id`)"},
 		{"ADD CONSTRAINT fulltext key full_id (parent_id)", "ADD FULLTEXT `full_id`(`parent_id`)"},
 		{"ADD CONSTRAINT fulltext INDEX full_id (parent_id)", "ADD FULLTEXT `full_id`(`parent_id`)"},
 		{"ADD CONSTRAINT PRIMARY KEY (id)", "ADD PRIMARY KEY(`id`)"},
@@ -484,13 +484,13 @@ func (ts *testDDLSuite) TestAlterTableSpecRestore(c *C) {
 		{"drop index a", "DROP INDEX `a`"},
 		{"drop key a", "DROP INDEX `a`"},
 		{"drop FOREIGN key a", "DROP FOREIGN KEY `a`"},
-		{"MODIFY column a varchar(255)", "MODIFY COLUMN `a` VARCHAR(255)"},
-		{"modify COLUMN a varchar(255) FIRST", "MODIFY COLUMN `a` VARCHAR(255) FIRST"},
-		{"modify COLUMN a varchar(255) AFTER b", "MODIFY COLUMN `a` VARCHAR(255) AFTER `b`"},
-		{"change column a b VARCHAR(255)", "CHANGE COLUMN `a` `b` VARCHAR(255)"},
-		{"change COLUMN a b varchar(255) CHARACTER SET UTF8 BINARY", "CHANGE COLUMN `a` `b` VARCHAR(255) BINARY CHARACTER SET UTF8"},
-		{"CHANGE column a b varchar(255) FIRST", "CHANGE COLUMN `a` `b` VARCHAR(255) FIRST"},
-		{"change COLUMN a b varchar(255) AFTER c", "CHANGE COLUMN `a` `b` VARCHAR(255) AFTER `c`"},
+		// {"MODIFY column a varchar(255)", "MODIFY COLUMN `a` VARCHAR(255)"},
+		// {"modify COLUMN a varchar(255) FIRST", "MODIFY COLUMN `a` VARCHAR(255) FIRST"},
+		// {"modify COLUMN a varchar(255) AFTER b", "MODIFY COLUMN `a` VARCHAR(255) AFTER `b`"},
+		// {"change column a b VARCHAR(255)", "CHANGE COLUMN `a` `b` VARCHAR(255)"},
+		// {"change COLUMN a b varchar(255) CHARACTER SET UTF8 BINARY", "CHANGE COLUMN `a` `b` VARCHAR(255) BINARY CHARACTER SET UTF8"},
+		// {"CHANGE column a b varchar(255) FIRST", "CHANGE COLUMN `a` `b` VARCHAR(255) FIRST"},
+		// {"change COLUMN a b varchar(255) AFTER c", "CHANGE COLUMN `a` `b` VARCHAR(255) AFTER `c`"},
 		{"RENAME db1.t1", "RENAME AS `db1`.`t1`"},
 		{"RENAME to db1.t1", "RENAME AS `db1`.`t1`"},
 		{"RENAME as t1", "RENAME AS `t1`"},
@@ -523,8 +523,7 @@ func (ts *testDDLSuite) TestAlterTableSpecRestore(c *C) {
 func (ts *testDDLSuite) TestAdminRepairTableRestore(c *C) {
 	testCases := []NodeRestoreTestCase{
 		{"ADMIN REPAIR TABLE t CREATE TABLE t (a int)", "ADMIN REPAIR TABLE `t` CREATE TABLE `t` (`a` INT)"},
-		{"ADMIN REPAIR TABLE t CREATE TABLE t (a char(1), b int)", "ADMIN REPAIR TABLE `t` CREATE TABLE `t` (`a` CHAR(1),`b` INT)"},
-		{"ADMIN REPAIR TABLE t CREATE TABLE t (a TINYINT UNSIGNED)", "ADMIN REPAIR TABLE `t` CREATE TABLE `t` (`a` TINYINT UNSIGNED)"},
+		{"ADMIN REPAIR TABLE t CREATE TABLE t (a int, b int)", "ADMIN REPAIR TABLE `t` CREATE TABLE `t` (`a` INT,`b` INT)"},
 	}
 	extractNodeFunc := func(node Node) Node {
 		return node

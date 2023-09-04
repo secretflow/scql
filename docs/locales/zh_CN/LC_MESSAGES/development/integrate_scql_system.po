@@ -145,3 +145,4 @@ msgid ""
 "The custom GRM Server needs to support above services corresponding to "
 "the GRM API."
 msgstr "自定义的全局资源管理器服务器（Custom GRM server）需要支持上述与 GRM API 对应的服务。"
+

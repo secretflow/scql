@@ -58,10 +58,12 @@ namespace scql::engine {
 EngineServiceImpl::EngineServiceImpl(
     const EngineServiceOptions& options,
     std::unique_ptr<SessionManager> session_mgr,
-    ChannelManager* channel_manager)
+    ChannelManager* channel_manager,
+    std::unique_ptr<auth::Authenticator> authenticator)
     : service_options_(options),
       session_mgr_(std::move(session_mgr)),
-      channel_manager_(channel_manager) {
+      channel_manager_(channel_manager),
+      authenticator_(std::move(authenticator)) {
   if (options.enable_authorization && options.credential.empty()) {
     YACL_THROW(
         "credential is empty, you should provide credential for scdb "
@@ -117,6 +119,8 @@ void EngineServiceImpl::StartSession(::google::protobuf::RpcController* cntl,
   SPDLOG_INFO("EngineServiceImpl::StartSession with session id: {}",
               session_id);
   try {
+    VerifyPublicKeys(request->session_params());
+
     session_mgr_->CreateSession(request->session_params());
     status->set_code(pb::Code::OK);
     audit::RecordCreateSessionEvent(*status, request->session_params(), false,
@@ -261,6 +265,8 @@ void EngineServiceImpl::RunExecutionPlan(
   Session* session = nullptr;
   // 1. create session first.
   try {
+    VerifyPublicKeys(request->session_params());
+
     session_mgr_->CreateSession(request->session_params());
     session = session_mgr_->GetSession(session_id);
     YACL_ENFORCE(session, "get session failed");
@@ -485,6 +491,18 @@ void EngineServiceImpl::RunPlan(const pb::RunExecutionPlanRequest& request,
   SPDLOG_INFO("session({}) run plan policy succ", session->Id());
   response->mutable_status()->set_code(pb::Code::OK);
   return;
+}
+
+void EngineServiceImpl::VerifyPublicKeys(
+    const pb::SessionStartParams& start_params) {
+  if (!authenticator_) {
+    return;
+  }
+  std::vector<auth::PartyIdentity> parties;
+  for (const auto& party : start_params.parties()) {
+    parties.emplace_back(auth::PartyIdentity{party.code(), party.public_key()});
+  }
+  authenticator_->Verify(start_params.party_code(), parties);
 }
 
 }  // namespace scql::engine

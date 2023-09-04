@@ -161,32 +161,13 @@ func (plan *GraphBuilder) AddExecutionNode(name string, opType string,
 		return nil, fmt.Errorf("addExecutionNode: %v", err)
 	}
 
-	var partyURLs []string
-	var partyCredentials []string
-	for _, p := range partyCodes {
-		url, err := plan.partyInfo.GetUrlByParty(p)
-		if err != nil {
-			return nil, fmt.Errorf("addExecutionNode: %v", err)
-		}
-		partyURLs = append(partyURLs, url)
-		credential, err := plan.partyInfo.GetCredentialByParty(p)
-		if err != nil {
-			return nil, fmt.Errorf("addExecutionNode: %v", err)
-		}
-		partyCredentials = append(partyCredentials, credential)
-
-	}
-	partyInfo, err := NewPartyInfo(partyCodes, partyURLs, partyCredentials)
-	if err != nil {
-		return nil, fmt.Errorf("addExecutionNode: %v", err)
-	}
 	node := &ExecutionNode{
-		Name:           name,
-		OpType:         opType,
-		Inputs:         make(map[string][]*Tensor),
-		Outputs:        make(map[string][]*Tensor),
-		Attributes:     make(map[string]*Attribute),
-		PartyCodeInfos: partyInfo,
+		Name:       name,
+		OpType:     opType,
+		Inputs:     make(map[string][]*Tensor),
+		Outputs:    make(map[string][]*Tensor),
+		Attributes: make(map[string]*Attribute),
+		Parties:    partyCodes,
 	}
 	for k, is := range inputs {
 		node.Inputs[k] = append([]*Tensor{}, is...)
@@ -471,6 +452,15 @@ func checkBinaryOpInputType(opType string, left, right *Tensor) error {
 	return nil
 }
 
+func checkInputTypeNotString(inputs []*Tensor) error {
+	for _, input := range inputs {
+		if input.DType == proto.PrimitiveDataType_STRING {
+			return fmt.Errorf("input type %v is not supported", input.DType)
+		}
+	}
+	return nil
+}
+
 var binaryOpBoolOutputMap = map[string]bool{
 	operator.OpNameLess:         true,
 	operator.OpNameLessEqual:    true,
@@ -694,6 +684,19 @@ func (plan *GraphBuilder) AddConstantNode(name string, value *types.Datum, party
 func (plan *GraphBuilder) AddNotNode(name string, input *Tensor, partyCodes []string) (*Tensor, error) {
 	output := plan.AddTensorAs(input)
 	if _, err := plan.AddExecutionNode(name, operator.OpNameNot, map[string][]*Tensor{"In": []*Tensor{input}},
+		map[string][]*Tensor{"Out": []*Tensor{output}}, map[string]*Attribute{}, partyCodes); err != nil {
+		return nil, err
+	}
+	return output, nil
+}
+
+func (plan *GraphBuilder) AddCastNode(name string, outputDType proto.PrimitiveDataType, input *Tensor, partyCodes []string) (*Tensor, error) {
+	if len(partyCodes) > 1 && (input.DType == proto.PrimitiveDataType_STRING || outputDType == proto.PrimitiveDataType_STRING) {
+		return nil, fmt.Errorf("AddCastNode: not support cast for string in spu, which exists in hash form")
+	}
+	output := plan.AddTensorAs(input)
+	output.DType = outputDType
+	if _, err := plan.AddExecutionNode(name, operator.OpNameCast, map[string][]*Tensor{"In": []*Tensor{input}},
 		map[string][]*Tensor{"Out": []*Tensor{output}}, map[string]*Attribute{}, partyCodes); err != nil {
 		return nil, err
 	}
@@ -1002,7 +1005,7 @@ func (plan *GraphBuilder) AddConcatNode(name string, in []*Tensor) (*Tensor, err
 	for _, t := range newIn {
 		out.SecretStringOwners = append(out.SecretStringOwners, t.SecretStringOwners...)
 		if t.DType != out.DType {
-			return nil, fmt.Errorf("unimplemented: fix here after supporting cast")
+			return nil, fmt.Errorf("addConcatNode: not support concat different type, please cast before union")
 		}
 	}
 	if _, err := plan.AddExecutionNode(name, operator.OpNameConcat,
@@ -1085,6 +1088,64 @@ func (plan *GraphBuilder) AddGroupAggNode(name string, opType string, groupId, g
 	return outputs, nil
 }
 
+func (plan *GraphBuilder) AddCaseWhenNode(name string, conds, value []*Tensor, valueElse *Tensor) (*Tensor, error) {
+	if err := checkInputTypeNotString(conds); err != nil {
+		return nil, fmt.Errorf("AddCaseWhenNode: %v", err)
+	}
+	// check all value are of the same type
+	for _, v := range value {
+		if v.DType != valueElse.DType {
+			return nil, fmt.Errorf("AddCaseWhenNode: unmatched dtype in CASE WHEN else dtype(%v) != then dtype(%v)",
+				shortStatus(proto.PrimitiveDataType_name[int32(valueElse.DType)]),
+				shortStatus(proto.PrimitiveDataType_name[int32(v.DType)]),
+			)
+		}
+	}
+	out := plan.AddTensorAs(valueElse)
+	var cond_ccl []*ccl.CCL
+	for _, t := range conds {
+		out.cc.UpdateMoreRestrictedCCLFrom(t.cc)
+		cond_ccl = append(cond_ccl, t.cc)
+	}
+	var value_ccl []*ccl.CCL
+	for _, t := range value {
+		out.cc.UpdateMoreRestrictedCCLFrom(t.cc)
+		value_ccl = append(value_ccl, t.cc)
+	}
+
+	creator := algorithmCreator.getCreator(operator.OpNameCaseWhen)
+	if creator == nil {
+		return nil, fmt.Errorf("fail to get algorithm creator for op type %s", operator.OpNameCaseWhen)
+	}
+
+	algs, err := creator(map[string][]*ccl.CCL{Condition: cond_ccl,
+		Value: value_ccl, ValueElse: {valueElse.cc}}, map[string][]*ccl.CCL{Out: {out.cc}}, plan.partyInfo.GetParties())
+	if err != nil {
+		return nil, fmt.Errorf("AddCaseWhenNode: %v", err)
+	}
+
+	inputTs := map[string][]*Tensor{Condition: conds, Value: value, ValueElse: {valueElse}}
+	// select algorithm with the lowest cost
+	bestAlg, err := plan.getBestAlg(operator.OpNameCaseWhen, inputTs, algs)
+	if err != nil {
+		return nil, err
+	}
+	// Convert Tensor Status if needed
+	convertedTs, err := plan.converter.convertStatusForMap(inputTs, bestAlg.inputPlacement)
+	if err != nil {
+		return nil, err
+	}
+	out.Status = bestAlg.outputPlacement[Out][0].status()
+	if out.Status == proto.TensorStatus_TENSORSTATUS_PRIVATE {
+		out.OwnerPartyCode = bestAlg.outputPlacement[Out][0].partyList()[0]
+	}
+
+	if _, err := plan.AddExecutionNode(name, operator.OpNameCaseWhen, convertedTs, map[string][]*Tensor{"Out": {out}}, map[string]*Attribute{}, bestAlg.outputPlacement[Out][0].partyList()); err != nil {
+		return nil, fmt.Errorf("AddIfNode: %v", err)
+	}
+	return out, nil
+}
+
 func (plan *GraphBuilder) AddGroupHeSumNode(name string, groupId, groupNum, in *Tensor, groupParty, inParty string) (*Tensor, error) {
 	partyAttr := &Attribute{}
 	partyAttr.SetStrings([]string{groupParty, inParty})
@@ -1119,6 +1180,66 @@ func (plan *GraphBuilder) AddGroupHeSumNode(name string, groupId, groupNum, in *
 		}, map[string][]*Tensor{"Out": {output}},
 		map[string]*Attribute{operator.InputPartyCodesAttr: partyAttr}, []string{groupParty, inParty}); err != nil {
 		return nil, fmt.Errorf("AddGroupHeSumNode: name %v, opType %v, err %v", name, operator.OpNameGroupHeSum, err)
+	}
+	return output, nil
+}
+
+func (plan *GraphBuilder) AddIfNode(name string, cond, tTrue, tFalse *Tensor) (*Tensor, error) {
+	if tTrue.DType != tFalse.DType {
+		return nil, fmt.Errorf("failed to check data type for true (%s), false (%s)", proto.PrimitiveDataType_name[int32(tTrue.DType)], proto.PrimitiveDataType_name[int32(tFalse.DType)])
+	}
+	if err := checkInputTypeNotString([]*Tensor{cond}); err != nil {
+		return nil, fmt.Errorf("AddIfNode: %v", err)
+	}
+	out := plan.AddTensorAs(tTrue)
+	// inference
+	// result cond -> part of tTrue, part of tFalse
+	// result tTrue -> cond, part of tFalse
+	out.cc.UpdateMoreRestrictedCCLFrom(tFalse.cc)
+	out.cc.UpdateMoreRestrictedCCLFrom(cond.cc)
+	creator := algorithmCreator.getCreator(operator.OpNameIf)
+	if creator == nil {
+		return nil, fmt.Errorf("fail to get algorithm creator for op type %s", operator.OpNameIf)
+	}
+	algs, err := creator(map[string][]*ccl.CCL{Condition: {cond.cc},
+		ValueIfTrue: {tTrue.cc}, ValueIfFalse: {tTrue.cc}}, map[string][]*ccl.CCL{Out: {out.cc}}, plan.partyInfo.GetParties())
+	if err != nil {
+		return nil, fmt.Errorf("AddIfNode: %v", err)
+	}
+	inputTs := map[string][]*Tensor{Condition: {cond}, ValueIfTrue: {tTrue}, ValueIfFalse: {tFalse}}
+	// select algorithm with the lowest cost
+	bestAlg, err := plan.getBestAlg(operator.OpNameIf, inputTs, algs)
+	if err != nil {
+		return nil, err
+	}
+	// Convert Tensor Status if needed
+	convertedTs, err := plan.converter.convertStatusForMap(inputTs, bestAlg.inputPlacement)
+	if err != nil {
+		return nil, err
+	}
+	out.Status = bestAlg.outputPlacement[Out][0].status()
+	if out.Status == proto.TensorStatus_TENSORSTATUS_PRIVATE {
+		out.OwnerPartyCode = bestAlg.outputPlacement[Out][0].partyList()[0]
+	}
+	if _, err := plan.AddExecutionNode(name, operator.OpNameIf, convertedTs, map[string][]*Tensor{"Out": {out}}, map[string]*Attribute{}, bestAlg.outputPlacement[Out][0].partyList()); err != nil {
+		return nil, fmt.Errorf("AddIfNode: %v", err)
+	}
+	return out, nil
+}
+
+func (plan *GraphBuilder) AddLimitNode(name string, input []*Tensor, offset int, count int, partyCodes []string) ([]*Tensor, error) {
+	output := []*Tensor{}
+	for _, it := range input {
+		output = append(output, plan.AddTensorAs(it))
+	}
+	offsetAttr := &Attribute{}
+	offsetAttr.SetInt(offset)
+	countAttr := &Attribute{}
+	countAttr.SetInt(count)
+	_, err := plan.AddExecutionNode(name, operator.OpNameLimit, map[string][]*Tensor{"In": input},
+		map[string][]*Tensor{"Out": output}, map[string]*Attribute{operator.LimitOffsetAttr: offsetAttr, operator.LimitCountAttr: countAttr}, partyCodes)
+	if err != nil {
+		return nil, fmt.Errorf("AddLimitNode: %v", err)
 	}
 	return output, nil
 }

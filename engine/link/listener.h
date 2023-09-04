@@ -28,7 +28,7 @@ class Listener {
   ~Listener() = default;
 
   void AddChannel(const size_t rank,
-                  std::shared_ptr<yacl::link::IChannel> channel);
+                  std::shared_ptr<yacl::link::transport::ChannelBase> channel);
 
   void OnMessage(const size_t rank, const std::string& key,
                  const std::string& value);
@@ -38,7 +38,8 @@ class Listener {
                         const size_t total_length);
 
  private:
-  std::map<size_t, std::shared_ptr<yacl::link::IChannel>> channels_;
+  std::map<size_t, std::shared_ptr<yacl::link::transport::ChannelBase>>
+      channels_;
 };
 
 // thread safe, and will be used cocurrently.

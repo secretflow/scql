@@ -43,7 +43,8 @@ More to say: you may need run `pip install -r requirements.txt` when first time 
 export $(grep -v '^#' .ci/docker-compose/.env | xargs)
 # export SKIP_CONCURRENT_TEST=true if you want to skip current tests
 # export SKIP_PLAINTEXT_CCL_TEST=true if you want to skip all ccl plaintext tests
-go test ./cmd/regtest/... -v -count=1 -timeout=30m
+# go test will use package path as working directory
+go test ./cmd/regtest/... -v -count=1 -timeout=30m -args -alicePem ../../.ci/docker-compose/engine/alice/conf/ed25519key.pem -bobPem ../../.ci/docker-compose/engine/bob/conf/ed25519key.pem -carolPem ../../.ci/docker-compose/engine/carol/conf/ed25519key.pem
 
 # debugging set SKIP_CREATE_USER_CCL true to skip create user ccl ...
 export SKIP_CREATE_USER_CCL=true

@@ -61,11 +61,12 @@ static const auto SpuTestValuesMultiPC =
                     test::SpuRuntimeTestCase{spu::ProtocolKind::ABY3, 3});
 
 // make single party session
-Session Make1PCSession(Router* ds_router = nullptr,
-                       DatasourceAdaptorMgr* ds_mgr = nullptr);
+std::shared_ptr<Session> Make1PCSession(Router* ds_router = nullptr,
+                                        DatasourceAdaptorMgr* ds_mgr = nullptr);
 
 // Make Multi PC session
-std::vector<Session> MakeMultiPCSession(const SpuRuntimeTestCase test_case);
+std::vector<std::shared_ptr<Session> > MakeMultiPCSession(
+    SpuRuntimeTestCase test_case);
 
 class ExecNodeBuilder {
  public:
@@ -102,7 +103,7 @@ class ExecNodeBuilder {
 
 pb::Tensor MakeTensorReference(const std::string& name,
                                pb::PrimitiveDataType dtype,
-                               pb::TensorStatus visibility);
+                               pb::TensorStatus visibility, int ref_count = 0);
 
 inline pb::Tensor MakePrivateTensorReference(const std::string& name,
                                              pb::PrimitiveDataType dtype) {

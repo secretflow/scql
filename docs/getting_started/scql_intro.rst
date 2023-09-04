@@ -23,7 +23,6 @@ An SCQL system consists of an SCDB server and multiple SCQLEngines.
 
 - SCDB server is responsible for translating SQL query into a hybrid MPC-plaintext execution graph and dispatching the execution graph to SCQLEngine of participants. 
 - SCQLEngine is a hybrid MPC-plaintext execution engine, which collaborates with peers to run the execution graph and reports the query result to SCDB server. SCQLEngine is implemented on top of state-of-the-art MPC framework `secretflow/spu`_.
-- GRM is the abbreviation of :ref:`Global Resource Manager <grm>`, which manages the information of the participants and the shared table schemas.
 
 
 .. image:: ../imgs/scql_architecture.png

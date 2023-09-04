@@ -8,7 +8,6 @@ Reference
 
     scql_manual
     scql_operators_doc
-    grm
     scql_status
     mysql_compatibility
     scql_security_statement

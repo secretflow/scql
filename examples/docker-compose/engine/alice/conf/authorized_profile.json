@@ -1,0 +1,8 @@
+{
+    "parties": [
+        {
+            "party_code": "bob",
+            "public_key": "__BOB_PUBLIC_KEY__"
+        }
+    ]
+}

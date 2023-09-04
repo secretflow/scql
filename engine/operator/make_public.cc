@@ -102,8 +102,8 @@ void MakePublic::SecretToPublic(ExecContext* ctx, const RepeatedTensor& inputs,
     auto public_out_validity =
         spu::kernel::hal::reveal(sctx, secret_in_validity);
 
-    symbols->setVar(util::SpuVarNameEncoder::GetValidityName(
-        out_name, public_out_validity));
+    symbols->setVar(util::SpuVarNameEncoder::GetValidityName(out_name),
+                    public_out_validity);
 #endif  // SCQL_WITH_NULL
   }
 }

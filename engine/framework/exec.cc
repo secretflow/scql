@@ -43,6 +43,24 @@ const google::protobuf::RepeatedPtrField<pb::Tensor>& ExecContext::GetOutput(
   return node_.outputs().at(name).tensors();
 }
 
+google::protobuf::RepeatedPtrField<pb::Tensor> ExecContext::GetInputTensors()
+    const {
+  google::protobuf::RepeatedPtrField<pb::Tensor> tensors;
+  for (const auto& pair : node_.inputs()) {
+    tensors.Add(pair.second.tensors().begin(), pair.second.tensors().end());
+  }
+  return tensors;
+}
+
+google::protobuf::RepeatedPtrField<pb::Tensor> ExecContext::GetOutputTensors()
+    const {
+  google::protobuf::RepeatedPtrField<pb::Tensor> tensors;
+  for (const auto& pair : node_.outputs()) {
+    tensors.Add(pair.second.tensors().begin(), pair.second.tensors().end());
+  }
+  return tensors;
+}
+
 const pb::AttributeValue& ExecContext::GetAttribute(
     const std::string& name) const {
   YACL_ENFORCE(node_.attributes().count(name) > 0,
@@ -69,6 +87,42 @@ int64_t ExecContext::GetInt64ValueFromAttribute(const std::string& name) const {
 }
 
 bool ExecContext::GetBooleanValueFromAttribute(const std::string& name) const {
+  const auto& attr = GetAttribute(name);
+  return util::GetBooleanValue(attr.t());
+}
+
+std::optional<std::vector<std::string>>
+ExecContext::TryGetStringValuesFromAttribute(const std::string& name) const {
+  if (!HasAttribute(name)) {
+    return {};
+  }
+  const auto& attr = GetAttribute(name);
+  return util::GetStringValues(attr.t());
+}
+
+std::optional<std::string> ExecContext::TryGetStringValueFromAttribute(
+    const std::string& name) const {
+  if (!HasAttribute(name)) {
+    return {};
+  }
+  const auto& attr = GetAttribute(name);
+  return util::GetStringValue(attr.t());
+}
+
+std::optional<int64_t> ExecContext::TryGetInt64ValueFromAttribute(
+    const std::string& name) const {
+  if (!HasAttribute(name)) {
+    return {};
+  }
+  const auto& attr = GetAttribute(name);
+  return util::GetInt64Value(attr.t());
+}
+
+std::optional<bool> ExecContext::TryGetBooleanValueFromAttribute(
+    const std::string& name) const {
+  if (!HasAttribute(name)) {
+    return {};
+  }
   const auto& attr = GetAttribute(name);
   return util::GetBooleanValue(attr.t());
 }

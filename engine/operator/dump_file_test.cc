@@ -97,7 +97,7 @@ TEST_P(DumpFileTest, works) {
   auto tc = GetParam();
   auto node = MakeDumpFileExecNode(tc);
   auto session = test::Make1PCSession();
-  ExecContext ctx(node, &session);
+  ExecContext ctx(node, session.get());
 
   FeedInputs(&ctx, tc);
 

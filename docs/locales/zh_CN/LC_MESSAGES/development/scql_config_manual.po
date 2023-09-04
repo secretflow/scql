@@ -3,12 +3,11 @@
 # This file is distributed under the same license as the SCQL package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-28 15:34+0800\n"
+"POT-Creation-Date: 2023-07-31 10:20+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -27,13 +26,13 @@ msgstr "SCQL 配置手册"
 msgid ""
 "This configuration manual is designed to help users understand the "
 "various configuration options available for the SCQL system. It can be "
-"divided into two parts: SCDB configuration options and Engine "
+"divided into two parts: SCDB configuration options and SCQLEngine "
 "configuration options."
-msgstr "本配置手册旨在帮助用户了解 SCQL 系统可用的各种配置选项。 它可以分为两部分：SCDB 配置选项和Engine 配置选项。"
+msgstr "本配置手册旨在帮助用户了解 SCQL 系统的各种配置项。 它可以分为两部分：SCDB 配置项和Engine 配置项。"
 
 #: ../../development/scql_config_manual.rst:10
 msgid "SCDB configuration options"
-msgstr "SCDB 配置选项"
+msgstr "SCDB 配置说明"
 
 #: ../../development/scql_config_manual.rst:12
 msgid "In SCDB, configuration parameters are provided as yaml file."
@@ -43,490 +42,628 @@ msgstr "在 SCDB 中配置参数以 yaml 文件形式提供。"
 msgid "Example for SCDB"
 msgstr "SCDB 配置示例"
 
-#: ../../development/scql_config_manual.rst:51
+#: ../../development/scql_config_manual.rst:55
 msgid "Config in SCDB"
 msgstr "SCDB 配置项"
 
-#: ../../development/scql_config_manual.rst:54
-#: ../../development/scql_config_manual.rst:253
+#: ../../development/scql_config_manual.rst:58
+#: ../../development/scql_config_manual.rst:278
 msgid "Name"
 msgstr "名称"
 
-#: ../../development/scql_config_manual.rst:54
-#: ../../development/scql_config_manual.rst:253
+#: ../../development/scql_config_manual.rst:58
+#: ../../development/scql_config_manual.rst:278
 msgid "Default"
 msgstr "默认值"
 
-#: ../../development/scql_config_manual.rst:54
-#: ../../development/scql_config_manual.rst:253
+#: ../../development/scql_config_manual.rst:58
+#: ../../development/scql_config_manual.rst:278
 msgid "Description"
 msgstr "描述"
 
-#: ../../development/scql_config_manual.rst:56
+#: ../../development/scql_config_manual.rst:60
 msgid "scdb_host"
 msgstr "scdb_host"
 
-#: ../../development/scql_config_manual.rst:56
-#: ../../development/scql_config_manual.rst:58
-#: ../../development/scql_config_manual.rst:74
-#: ../../development/scql_config_manual.rst:76
-#: ../../development/scql_config_manual.rst:78
-#: ../../development/scql_config_manual.rst:80
-#: ../../development/scql_config_manual.rst:90
+#: ../../development/scql_config_manual.rst:60
+#: ../../development/scql_config_manual.rst:62
 #: ../../development/scql_config_manual.rst:92
 #: ../../development/scql_config_manual.rst:94
 #: ../../development/scql_config_manual.rst:96
 #: ../../development/scql_config_manual.rst:98
-#: ../../development/scql_config_manual.rst:102
-#: ../../development/scql_config_manual.rst:104
-#: ../../development/scql_config_manual.rst:106
 #: ../../development/scql_config_manual.rst:108
-#: ../../development/scql_config_manual.rst:271
-#: ../../development/scql_config_manual.rst:287
-#: ../../development/scql_config_manual.rst:299
-#: ../../development/scql_config_manual.rst:301
-#: ../../development/scql_config_manual.rst:305
-#: ../../development/scql_config_manual.rst:309
-#: ../../development/scql_config_manual.rst:315
-#: ../../development/scql_config_manual.rst:317
+#: ../../development/scql_config_manual.rst:110
+#: ../../development/scql_config_manual.rst:112
+#: ../../development/scql_config_manual.rst:114
+#: ../../development/scql_config_manual.rst:116
+#: ../../development/scql_config_manual.rst:120
+#: ../../development/scql_config_manual.rst:122
+#: ../../development/scql_config_manual.rst:124
+#: ../../development/scql_config_manual.rst:126
+#: ../../development/scql_config_manual.rst:304
+#: ../../development/scql_config_manual.rst:320
+#: ../../development/scql_config_manual.rst:332
+#: ../../development/scql_config_manual.rst:334
+#: ../../development/scql_config_manual.rst:338
+#: ../../development/scql_config_manual.rst:342
+#: ../../development/scql_config_manual.rst:348
+#: ../../development/scql_config_manual.rst:350
 msgid "none"
 msgstr "无"
 
-#: ../../development/scql_config_manual.rst:56
+#: ../../development/scql_config_manual.rst:60
 msgid "The callback URL for the engine to notify SCDB"
-msgstr "引擎通知SCDB的回调URL"
+msgstr "SCQLEngine通知SCDB的回调URL"
 
-#: ../../development/scql_config_manual.rst:58
+#: ../../development/scql_config_manual.rst:62
 msgid "port"
 msgstr "端口"
 
-#: ../../development/scql_config_manual.rst:58
+#: ../../development/scql_config_manual.rst:62
 msgid "The listening port of the SCDB server"
 msgstr "SCDB服务器监听端口"
 
-#: ../../development/scql_config_manual.rst:60
+#: ../../development/scql_config_manual.rst:64
 msgid "protocol"
 msgstr "协议"
 
-#: ../../development/scql_config_manual.rst:60
-msgid "http"
-msgstr "http"
-
-#: ../../development/scql_config_manual.rst:60
-msgid "The transfer protocol of SCDB server, supports HTTP/HTTPS"
-msgstr "SCDB服务器传输协议支持HTTP/HTTPS"
-
-#: ../../development/scql_config_manual.rst:62
-msgid "query_result_callback_timeout"
-msgstr "query_result_callback_timeout"
-
-#: ../../development/scql_config_manual.rst:62
-msgid "200ms"
-msgstr "200毫秒"
-
-#: ../../development/scql_config_manual.rst:62
-msgid "Timeout for SCDB to notify the query result"
-msgstr ""
-
 #: ../../development/scql_config_manual.rst:64
-msgid "session_expire_time"
-msgstr "session_expire_time"
-
-#: ../../development/scql_config_manual.rst:64
-msgid "48h"
-msgstr "48小时"
-
-#: ../../development/scql_config_manual.rst:64
-msgid "The expiration duration of a session"
-msgstr "会话超时时间"
-
-#: ../../development/scql_config_manual.rst:66
-msgid "session_expire_check_time"
-msgstr "session_expire_check_time"
-
-#: ../../development/scql_config_manual.rst:66
-msgid "1h"
-msgstr "1小时"
-
-#: ../../development/scql_config_manual.rst:66
-msgid "The cleanup interval of expired session"
-msgstr "超时会话的清理间隔"
-
-#: ../../development/scql_config_manual.rst:68
-msgid "password_check"
-msgstr "password_check"
-
-#: ../../development/scql_config_manual.rst:68
-#: ../../development/scql_config_manual.rst:257
-#: ../../development/scql_config_manual.rst:267
-#: ../../development/scql_config_manual.rst:283
-#: ../../development/scql_config_manual.rst:297
-msgid "true"
-msgstr "正确"
-
-#: ../../development/scql_config_manual.rst:68
-msgid "Whether to validate password strength when create a user"
-msgstr "创建用户时是否验证密码强度"
-
-#: ../../development/scql_config_manual.rst:70
-msgid "log_level"
-msgstr "log_level"
-
-#: ../../development/scql_config_manual.rst:70
-msgid "info"
-msgstr "info"
-
-#: ../../development/scql_config_manual.rst:70
-msgid "The type and severity of a logged event"
-msgstr "记录事件的类型和严重性"
-
-#: ../../development/scql_config_manual.rst:72
-msgid "security_compromise.reveal_group_mark"
-msgstr "security_compromise.reveal_group_mark"
-
-#: ../../development/scql_config_manual.rst:72
-#: ../../development/scql_config_manual.rst:269
-#: ../../development/scql_config_manual.rst:285
-#: ../../development/scql_config_manual.rst:291
-#: ../../development/scql_config_manual.rst:303
-#: ../../development/scql_config_manual.rst:307
-#: ../../development/scql_config_manual.rst:319
-msgid "false"
-msgstr "false"
-
-#: ../../development/scql_config_manual.rst:72
-msgid "Whether to reveal group_mark directly for group by"
-msgstr "是否在计算 group by 的时候泄露分组标记信息"
-
-#: ../../development/scql_config_manual.rst:74
-msgid "tls.cert_file"
-msgstr "tls.cert_file"
-
-#: ../../development/scql_config_manual.rst:74
-msgid "Certificate file path to enable TSL, supports crt/pem type"
-msgstr "启用支持crt/pem类型的TSL证书文件路径"
-
-#: ../../development/scql_config_manual.rst:76
-msgid "tls.key_file"
-msgstr "tls.key_file"
-
-#: ../../development/scql_config_manual.rst:76
-msgid "Private key file path to enable TSL, supports key/pem type"
-msgstr "启用支持key/pem类型的TLS私钥文件路径"
-
-#: ../../development/scql_config_manual.rst:78
-msgid "storage.type"
-msgstr "storage.type"
-
-#: ../../development/scql_config_manual.rst:78
-msgid "Database kind in SCDB, supports MYSQL/SQLite3"
-msgstr "SCDB的数据库类型支持 MYSQL/SQLite3 "
-
-#: ../../development/scql_config_manual.rst:80
-msgid "storage.conn_str"
-msgstr "storage.conn_str"
-
-#: ../../development/scql_config_manual.rst:80
-msgid "Used to connect to a database"
-msgstr "用于连接到数据库"
-
-#: ../../development/scql_config_manual.rst:82
-msgid "storage.max_idle_conns"
-msgstr "storage.max_idle_conns"
-
-#: ../../development/scql_config_manual.rst:82
-#: ../../development/scql_config_manual.rst:84
-msgid "1"
-msgstr "1"
-
-#: ../../development/scql_config_manual.rst:82
-msgid "Maximum number of connections in idle connection pool"
-msgstr ""
-
-#: ../../development/scql_config_manual.rst:84
-msgid "storage.max_open_conns"
-msgstr "storage.max_open_conns"
-
-#: ../../development/scql_config_manual.rst:84
-msgid "Maximum number of open connections to the database"
-msgstr "数据库最大连接数"
-
-#: ../../development/scql_config_manual.rst:86
-msgid "storage.conn_max_idle_time"
-msgstr "storage.conn_max_idle_time"
-
-#: ../../development/scql_config_manual.rst:86
-#: ../../development/scql_config_manual.rst:88
-msgid "-1s"
-msgstr "-1s"
-
-#: ../../development/scql_config_manual.rst:86
-msgid "Maximum amount of time a connection may be idle"
-msgstr "连接处于空闲状态的最长时间"
-
-#: ../../development/scql_config_manual.rst:88
-msgid "storage.conn_max_lifetime"
-msgstr "storage.conn_max_lifetime"
-
-#: ../../development/scql_config_manual.rst:88
-msgid "Maximum amount of time a connection may be reused"
-msgstr "可重复连接使用的最长时间"
-
-#: ../../development/scql_config_manual.rst:90
-msgid "grm.grm_mode"
-msgstr "grm.grm_mode"
-
-#: ../../development/scql_config_manual.rst:90
-msgid "The grm service type, support toygrm/stdgrm"
-msgstr "支持 toygrm/stdgrm的grm 服务类型"
-
-#: ../../development/scql_config_manual.rst:92
-msgid "grm.host"
-msgstr "grm.host"
-
-#: ../../development/scql_config_manual.rst:92
-msgid "The host of stdgrm"
-msgstr "stdgrm主机"
-
-#: ../../development/scql_config_manual.rst:94
-msgid "grm.timeout"
-msgstr "grm.timeout"
-
-#: ../../development/scql_config_manual.rst:94
-msgid "Timeout for SCDB to get info from stdgrm"
-msgstr "SCDB 从 stdgrm 获取信息超时"
-
-#: ../../development/scql_config_manual.rst:96
-msgid "grm.toy_grm_conf"
-msgstr "grm.toy_grm_conf"
-
-#: ../../development/scql_config_manual.rst:96
-msgid "The config file path of toygrm"
-msgstr "toygrm路径配置"
-
-#: ../../development/scql_config_manual.rst:98
-msgid "engine.timeout"
-msgstr "engine.timeout"
-
-#: ../../development/scql_config_manual.rst:98
-msgid "Timeout for SCDB to send message to engine"
-msgstr "SCDB 向引擎发送消息超时"
-
-#: ../../development/scql_config_manual.rst:100
-msgid "engine.protocol"
-msgstr "engine.protocol"
-
-#: ../../development/scql_config_manual.rst:100
+#: ../../development/scql_config_manual.rst:118
 msgid "https"
 msgstr "https"
 
+#: ../../development/scql_config_manual.rst:64
+msgid "The transfer protocol of SCDB server, supports HTTP/HTTPS"
+msgstr "SCDB服务器传输协议支持HTTP/HTTPS"
+
+#: ../../development/scql_config_manual.rst:66
+msgid "query_result_callback_timeout"
+msgstr "query_result_callback_timeout"
+
+#: ../../development/scql_config_manual.rst:66
+msgid "200ms"
+msgstr "200ms"
+
+#: ../../development/scql_config_manual.rst:66
+msgid "Timeout for SCDB to notify the query result"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:68
+msgid "session_expire_time"
+msgstr "session_expire_time"
+
+#: ../../development/scql_config_manual.rst:68
+msgid "48h"
+msgstr "48h"
+
+#: ../../development/scql_config_manual.rst:68
+msgid "The expiration duration of a session"
+msgstr "会话超时时间"
+
+#: ../../development/scql_config_manual.rst:70
+msgid "session_expire_check_time"
+msgstr "session_expire_check_time"
+
+#: ../../development/scql_config_manual.rst:70
+msgid "1h"
+msgstr "1h"
+
+#: ../../development/scql_config_manual.rst:70
+msgid "The cleanup interval of expired session"
+msgstr "超时会话的清理间隔"
+
+#: ../../development/scql_config_manual.rst:72
+msgid "password_check"
+msgstr "password_check"
+
+#: ../../development/scql_config_manual.rst:72
+#: ../../development/scql_config_manual.rst:76
+#: ../../development/scql_config_manual.rst:280
+#: ../../development/scql_config_manual.rst:284
+#: ../../development/scql_config_manual.rst:300
+#: ../../development/scql_config_manual.rst:316
+#: ../../development/scql_config_manual.rst:330
+msgid "true"
+msgstr "true"
+
+#: ../../development/scql_config_manual.rst:72
+msgid "Whether to validate password strength when create a user"
+msgstr "创建用户时是否验证密码强度"
+
+#: ../../development/scql_config_manual.rst:74
+msgid "log_level"
+msgstr "log_level"
+
+#: ../../development/scql_config_manual.rst:74
+msgid "info"
+msgstr "info"
+
+#: ../../development/scql_config_manual.rst:74
+msgid "The type and severity of a logged event"
+msgstr "日志等级"
+
+#: ../../development/scql_config_manual.rst:76
+#: ../../development/scql_config_manual.rst:284
+msgid "enable_audit_logger"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:76
+msgid "Whether to enable audit logger"
+msgstr "是否记录审计日志"
+
+#: ../../development/scql_config_manual.rst:78
+msgid "security_compromise.reveal_group_mark"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:78
+#: ../../development/scql_config_manual.rst:90
+#: ../../development/scql_config_manual.rst:302
+#: ../../development/scql_config_manual.rst:318
+#: ../../development/scql_config_manual.rst:324
+#: ../../development/scql_config_manual.rst:336
+#: ../../development/scql_config_manual.rst:340
+#: ../../development/scql_config_manual.rst:352
+msgid "false"
+msgstr "false"
+
+#: ../../development/scql_config_manual.rst:78
+msgid "Whether to reveal group_mark directly for group by"
+msgstr "是否在计算 group by 的时候泄露分组标记信息"
+
+#: ../../development/scql_config_manual.rst:80
+msgid "audit.audit_log_file"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:80
+#: ../../development/scql_config_manual.rst:286
+msgid "audit/audit.log"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:80
+#: ../../development/scql_config_manual.rst:286
+msgid "The file to save basic information about a query"
+msgstr "存储基础审计信息的日志文件"
+
+#: ../../development/scql_config_manual.rst:82
+msgid "audit.audit_detail_file"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:82
+#: ../../development/scql_config_manual.rst:288
+msgid "audit/detail.log"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:82
+#: ../../development/scql_config_manual.rst:288
+msgid "The file to save more detailed information about a query"
+msgstr "存储补充审计信息的日志文件"
+
+#: ../../development/scql_config_manual.rst:84
+msgid "audit.audit_max_size"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:84
+msgid "500"
+msgstr "5000"
+
+#: ../../development/scql_config_manual.rst:84
+msgid "The maximum size of the audit log file before it gets rotated, unit: MB"
+msgstr "单个审计日志文件的最大容量，单位为MB"
+
+#: ../../development/scql_config_manual.rst:86
+msgid "audit.audit_max_backups"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:86
+msgid "0"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:86
+msgid ""
+"The maximum number of old audit log files to retain, default 0 to retain "
+"all old log files"
+msgstr "系统中保留的审计日志文件的最大数量，0 表示保留所有的日志文件"
+
+#: ../../development/scql_config_manual.rst:88
+msgid "audit.audit_max_age_days"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:88
+#: ../../development/scql_config_manual.rst:290
+msgid "180"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:88
+msgid "The maximum number of days to retain old log files"
+msgstr "单个审计日志文件所能保存的最长时间，单位：天"
+
+#: ../../development/scql_config_manual.rst:90
+msgid "audit.audit_max_compress"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:90
+msgid "Whether the rotated log files should be compressed"
+msgstr "是否对审计日志进行压缩"
+
+#: ../../development/scql_config_manual.rst:92
+msgid "tls.cert_file"
+msgstr "tls.cert_file"
+
+#: ../../development/scql_config_manual.rst:92
+msgid "Certificate file path to enable TSL, supports crt/pem type"
+msgstr "启用支持 crt/pem 类型的TSL证书文件路径"
+
+#: ../../development/scql_config_manual.rst:94
+msgid "tls.key_file"
+msgstr "tls.key_file"
+
+#: ../../development/scql_config_manual.rst:94
+msgid "Private key file path to enable TSL, supports key/pem type"
+msgstr "启用支持 key/pem 类型的 TLS 私钥文件路径"
+
+#: ../../development/scql_config_manual.rst:96
+msgid "storage.type"
+msgstr "storage.type"
+
+#: ../../development/scql_config_manual.rst:96
+msgid "Database kind in SCDB, supports MYSQL/SQLite3"
+msgstr "SCDB的数据库类型支持 MYSQL/SQLite3 "
+
+#: ../../development/scql_config_manual.rst:98
+msgid "storage.conn_str"
+msgstr "storage.conn_str"
+
+#: ../../development/scql_config_manual.rst:98
+msgid "Used to connect to a database"
+msgstr "数据库连接串"
+
 #: ../../development/scql_config_manual.rst:100
-msgid "The transfer protocol of Engine, support http/https"
-msgstr "引擎传输协议支持http/https"
+msgid "storage.max_idle_conns"
+msgstr "storage.max_idle_conns"
+
+#: ../../development/scql_config_manual.rst:100
+#: ../../development/scql_config_manual.rst:102
+msgid "1"
+msgstr "1"
+
+#: ../../development/scql_config_manual.rst:100
+msgid "Maximum number of connections in idle connection pool"
+msgstr ""
 
 #: ../../development/scql_config_manual.rst:102
+msgid "storage.max_open_conns"
+msgstr "storage.max_open_conns"
+
+#: ../../development/scql_config_manual.rst:102
+msgid "Maximum number of open connections to the database"
+msgstr "数据库最大连接数"
+
+#: ../../development/scql_config_manual.rst:104
+msgid "storage.conn_max_idle_time"
+msgstr "storage.conn_max_idle_time"
+
+#: ../../development/scql_config_manual.rst:104
+#: ../../development/scql_config_manual.rst:106
+msgid "-1s"
+msgstr "-1s"
+
+#: ../../development/scql_config_manual.rst:104
+msgid "Maximum amount of time a connection may be idle"
+msgstr "连接处于空闲状态的最长时间"
+
+#: ../../development/scql_config_manual.rst:106
+msgid "storage.conn_max_lifetime"
+msgstr "storage.conn_max_lifetime"
+
+#: ../../development/scql_config_manual.rst:106
+msgid "Maximum amount of time a connection may be reused"
+msgstr "可重复连接使用的最长时间"
+
+#: ../../development/scql_config_manual.rst:108
+msgid "grm.grm_mode"
+msgstr "grm.grm_mode"
+
+#: ../../development/scql_config_manual.rst:108
+msgid "The grm service type, support toygrm/stdgrm"
+msgstr "支持 toygrm/stdgrm 的 grm 服务类型"
+
+#: ../../development/scql_config_manual.rst:110
+msgid "grm.host"
+msgstr "grm.host"
+
+#: ../../development/scql_config_manual.rst:110
+msgid "The host of stdgrm"
+msgstr "stdgrm 服务地址"
+
+#: ../../development/scql_config_manual.rst:112
+msgid "grm.timeout"
+msgstr "grm.timeout"
+
+#: ../../development/scql_config_manual.rst:112
+msgid "Timeout for SCDB to get info from stdgrm"
+msgstr "SCDB 从 stdgrm 发送 post 请求的响应超时时间"
+
+#: ../../development/scql_config_manual.rst:114
+msgid "grm.toy_grm_conf"
+msgstr "grm.toy_grm_conf"
+
+#: ../../development/scql_config_manual.rst:114
+msgid "The config file path of toygrm"
+msgstr "toygrm 的配置文件路径"
+
+#: ../../development/scql_config_manual.rst:116
+msgid "engine.timeout"
+msgstr "engine.timeout"
+
+#: ../../development/scql_config_manual.rst:116
+msgid "Timeout for SCDB to send message to engine"
+msgstr "SCDB 向 SCQLEngine 发送消息的响应超时时间"
+
+#: ../../development/scql_config_manual.rst:118
+msgid "engine.protocol"
+msgstr "engine.protocol"
+
+#: ../../development/scql_config_manual.rst:118
+msgid "The transfer protocol of Engine, support http/https"
+msgstr "SCQLEngine 传输协议，支持 http/https"
+
+#: ../../development/scql_config_manual.rst:120
 msgid "engine.content_type"
 msgstr "engine.content_type"
 
-#: ../../development/scql_config_manual.rst:102
+#: ../../development/scql_config_manual.rst:120
 msgid "The original media type in post body from SCDB to engine"
-msgstr "从 SCDB 到引擎所发送的正文中原始媒体类型"
+msgstr "从 SCDB 向 SCQLEngine 实际发送的数据类型"
 
-#: ../../development/scql_config_manual.rst:104
+#: ../../development/scql_config_manual.rst:122
 msgid "engine.spu.protocol"
 msgstr "engine.spu.protocol"
 
-#: ../../development/scql_config_manual.rst:104
+#: ../../development/scql_config_manual.rst:122
 msgid "The mpc protocol for engine to work with"
-msgstr "引擎使用的 mpc 协议"
+msgstr "SCQLEngine 使用的 mpc 协议"
 
-#: ../../development/scql_config_manual.rst:106
+#: ../../development/scql_config_manual.rst:124
 msgid "engine.spu.field"
 msgstr "engine.spu.field"
 
-#: ../../development/scql_config_manual.rst:106
+#: ../../development/scql_config_manual.rst:124
 msgid "A security parameter type for engine to work with"
-msgstr "引擎所使用的安全参数类型"
+msgstr "SCQLEngine 所使用的安全参数类型"
 
-#: ../../development/scql_config_manual.rst:108
+#: ../../development/scql_config_manual.rst:126
 msgid "engine.spu.sigmoid_mode"
 msgstr "engine.spu.sigmoid_mode"
 
-#: ../../development/scql_config_manual.rst:108
+#: ../../development/scql_config_manual.rst:126
 msgid "The sigmoid approximation method for engine to work with"
-msgstr "引擎使用的类似Sigmoid方法"
+msgstr "SCQLEngine 中 MPC 协议中的 Sigmoid 方法"
 
-#: ../../development/scql_config_manual.rst:112
+#: ../../development/scql_config_manual.rst:130
 msgid "Config for SecurityCompromise"
 msgstr "安全退让配置"
 
-#: ../../development/scql_config_manual.rst:114
+#: ../../development/scql_config_manual.rst:132
 msgid ""
 "SCDB provides some security compromise options, which can be selectively "
 "enabled when the security risk is acceptable to speed up the overall "
 "operation."
 msgstr "SCDB 提供了一些安全妥协选项，当安全风险可以接受时可以选择性地启用这些选项，以加快整体运行速度"
 
-#: ../../development/scql_config_manual.rst:116
+#: ../../development/scql_config_manual.rst:134
 msgid "reveal_group_mark:"
 msgstr "reveal_group_mark:"
 
-#: ../../development/scql_config_manual.rst:117
+#: ../../development/scql_config_manual.rst:135
 msgid ""
 "default disable, if enabled, SCDB will expose grouping information(size "
 "of each group) when calculating group-by-aggregation, thereby avoiding "
-"the overhead caused by pre-shuffle.  ``risk``: group size may be leaked, "
-"which is equivalent to the result of count(*)"
+"the overhead caused by pre-shuffle.  ``risk``: group size will be leaked,"
+" which is equivalent to the result of count(*)"
 msgstr ""
 "默认禁用，如果启用，SCDB 在计算分组聚合时会公开分组信息（每个组的大小），从而避免前置 shuffle "
 "带来的开销。``风险``：分组大小会泄露，等价于泄露 count(*) 的结果"
 
-#: ../../development/scql_config_manual.rst:119
+#: ../../development/scql_config_manual.rst:137
 msgid "A typical config of security_compromise can be like:"
 msgstr "典型的配置如下："
 
-#: ../../development/scql_config_manual.rst:128
-msgid "Config for Storage"
+#: ../../development/scql_config_manual.rst:144
+msgid "Config for storage"
 msgstr "存储配置"
 
-#: ../../development/scql_config_manual.rst:130
+#: ../../development/scql_config_manual.rst:145
 msgid ""
-"Database in SCDB is used to storage the SCQL system data, such as CCL and"
-" user information, currently SCDB support MySQL/SQLite3. You can connect "
-"to a database by setting `conn_str` and `type` in the storage config."
+"Database in SCDB is used to store the SCQL system data, such as CCL and "
+"user information, currently SCDB support MySQL/SQLite3. You can connect "
+"to a database by setting ``conn_str`` and ``type`` in the storage config."
 msgstr ""
-"SCDB中的数据库用于存储SCQL系统数据，如CCL和用户信息，目前SCDB支持MySQL/SQLite3。 "
-"您可以通过在存储配置中设置“conn_str”和“type”来连接到数据库。"
+"SCDB 中的数据库用于存储 SCQL 系统数据，如 CCL 和用户信息，目前 SCDB 支持 MySQL/SQLite3 。您可以通过配置项 "
+"``conn_str`` 和 ``type`` 来连接不同的数据库。"
 
-#: ../../development/scql_config_manual.rst:133
+#: ../../development/scql_config_manual.rst:148
 msgid "type"
-msgstr "类型"
+msgstr "type"
 
-#: ../../development/scql_config_manual.rst:133
+#: ../../development/scql_config_manual.rst:148
 msgid ""
 "The database type, which can be set as mysql/sqlite. And MySQL is "
 "recommended, which has been fully tested."
-msgstr "数据库类型可以设置为mysql/sqlite，推荐经过充分测试的MySQL。"
+msgstr "数据库类型可以设置为 mysql/sqlite，我们更加推荐使用 MySQL 来作为 SCDB 的数据库，其相关测试更加充分。"
 
-#: ../../development/scql_config_manual.rst:151
+#: ../../development/scql_config_manual.rst:166
 msgid "conn_str"
 msgstr "conn_str"
 
-#: ../../development/scql_config_manual.rst:136
-msgid "MySQL string format:"
-msgstr "MySQL语句格式："
+#: ../../development/scql_config_manual.rst:151
+msgid ""
+"MySQL string format, see `dsn-data-source-name <https://github.com/mattn"
+"/go-sqlite3#connection-string>`_ for more information."
+msgstr ""
+"MySQL语句格式, 更多信息请参考: `dsn-data-source-name <https://github.com/mattn/go-"
+"sqlite3#connection-string>`_ "
 
-#: ../../development/scql_config_manual.rst
+#: ../../development/scql_config_manual.rst:153
 msgid "[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]"
 msgstr "[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]"
 
-#: ../../development/scql_config_manual.rst
-msgid "*see* `dsn-data-source-name`_ *for more infos*."
-msgstr "*see* `dsn-data-source-name`_ *for more infos*."
-
-#: ../../development/scql_config_manual.rst:141
+#: ../../development/scql_config_manual.rst:156
 msgid "MySQL string example:"
-msgstr "MySQL语句示例："
+msgstr "MySQL 连接串示例："
 
-#: ../../development/scql_config_manual.rst:143
-msgid "user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
-msgstr "user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
+#: ../../development/scql_config_manual.rst:158
+msgid "``user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true``"
+msgstr "``user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true``"
 
-#: ../../development/scql_config_manual.rst:145
+#: ../../development/scql_config_manual.rst:160
 msgid "SQLite3 string format:"
-msgstr "SQLite3语句格式："
+msgstr "SQLite3 连接串示例："
 
-#: ../../development/scql_config_manual.rst:147
+#: ../../development/scql_config_manual.rst:162
 msgid "more infos: https://github.com/mattn/go-sqlite3#connection-string."
-msgstr "更多信息: https://github.com/mattn/go-sqlite3#connection-string."
+msgstr "参考: https://github.com/mattn/go-sqlite3#connection-string. "
 
-#: ../../development/scql_config_manual.rst:149
+#: ../../development/scql_config_manual.rst:164
 msgid "SQLite3 string example:"
-msgstr "SQLite3语句示例："
+msgstr "SQLite3 连接串示例："
 
-#: ../../development/scql_config_manual.rst:151
-msgid "scdb.db"
-msgstr "scdb.db"
+#: ../../development/scql_config_manual.rst:166
+msgid "``scdb.db``"
+msgstr "``scdb.db``"
 
-#: ../../development/scql_config_manual.rst:155
+#: ../../development/scql_config_manual.rst:168
 msgid "A typical config of storage can be like:"
 msgstr "典型的存储配置如下："
 
-#: ../../development/scql_config_manual.rst:168
+#: ../../development/scql_config_manual.rst:181
 msgid ""
 "To handle time.Time correctly, you need to include parseTime as a "
 "parameter. To fully support UTF-8 encoding, you need to change "
-"charset=utf8 to charset=utf8mb4"
+"``charset=utf8`` to ``charset=utf8mb4``."
 msgstr ""
-"正确处理 time.Time需要包含 parseTime 参数。为了完全支持UTF-8编码，需要更改 “charset=utf8 to "
-"charset=utf8mb4” "
+"正确处理 time.Time 需要包含 parseTime 参数。为了完全支持 UTF-8 编码，需要将 ``charset=utf8`` 更改为"
+" ``charset=utf8mb4`` "
 
-#: ../../development/scql_config_manual.rst:173
-msgid "PassWord Check"
-msgstr "PassWord Check"
+#: ../../development/scql_config_manual.rst:185
+#: ../../development/scql_config_manual.rst:459
+msgid "Config for audit"
+msgstr "审计日志配置"
 
-#: ../../development/scql_config_manual.rst:174
+#: ../../development/scql_config_manual.rst:187
+msgid ""
+"Audit log are used to record the SCDB activities during query execution. "
+"It has two types: basic audit log and detail audit log."
+msgstr "SCDB 的审计日志是用来记录 SCDB 在执行 query 过程中所产生的一系列事件，它有两种类型：基础审计日志和补充审计日志。"
+
+#: ../../development/scql_config_manual.rst:189
+msgid ""
+"The basic audit log are used to record the basic information of a query, "
+"such as the result and user information, while the detail audit log "
+"records more detailed information such as execution plan and CCL details."
+" you can see `scdb_audit "
+"<https://github.com/secretflow/scql/blob/main/pkg/audit/audit.proto>`_ "
+"for more information."
+msgstr ""
+"基础审计日志是用来记录 SCDB "
+"在执行过程中的所产生一些事件的的基本信息，比如说：一次查询的结果、提交查询的用户信息等。补充审计日志信息，则是用来记录一些额外的信息，比如单词查询的执行计划、CCL信息等。更多信息请参考"
+" `scdb_audit "
+"<https://github.com/secretflow/scql/blob/main/pkg/audit/audit.proto>`_ 。"
+
+#: ../../development/scql_config_manual.rst:191
+msgid ""
+"When the audit log has reaches the maximum size ( set by "
+"``audit_max_size``), SCDB will save the audit log as ``name-"
+"timestamp.ext``, where the `name` is the filename set in "
+"``audit_log_file`` without the extension, `timestamp` is the time at "
+"which the log was rotated formatted with local time format of "
+"`2006-01-02T15-04-05.000`, `ext` is the extension set in "
+"``audit_log_file``."
+msgstr ""
+"审计日志的文件是系统自动生成的，当审计日志的大小达到 ``audit_max_size`` "
+"的设定值时，系统会自动将日志进行归档，归档的日志文件命名格式为 ``name-timestamp.ext`` ，其中 `name` 是 "
+"``audit_log_file`` 中设置的不带后缀的文件名，`timestamp` 是当前时间（格式为 "
+"`2006-01-02T15-04-05.000`），`ext` 是在 ``audit_log_file`` 中设置的后缀名。"
+
+#: ../../development/scql_config_manual.rst:194
+msgid ""
+"For example, if ``audit_log_file`` set as `audit/audit.log`, a backup "
+"created at 6:30pm on Nov 11 2016 would be saved to "
+"`./audit/audit-2016-11-04T18-30-00.000.log`"
+msgstr ""
+"例如，通过设置 ``audit.audit_log_file`` 为 `audit/audit.log` ， "
+"在2016年11月4日18:30归档的审计日志会被保存至 `./audit/audit-2016-11-04T18-30-00.000.log` "
+"。"
+
+#: ../../development/scql_config_manual.rst:198
+msgid "Password check"
+msgstr "密码校验"
+
+#: ../../development/scql_config_manual.rst:199
 msgid ""
 "``password_check`` serves to validate password strength. For ALTER USER, "
 "CREATE USER statements, if it's true, the password should be at least 16 "
 "characters which including a number, a lowercase letter, a uppercase "
 "letter and a special character."
 msgstr ""
-"“password_check”用于验证密码强度。 对于 ALTER USER、CREATE USER 语句，如果为 true，则密码应至少为 "
-"16 个字符，其中包括数字、小写字母、大写字母和特殊字符。"
+"`password_check` 用于验证密码强度校验。如果该参数设置为true， 对于 ALTER USER、CREATE USER "
+"语句，其所涉及的密码长度至少为 16 个字符，其中包括数字、小写字母、大写字母和特殊字符。"
 
-#: ../../development/scql_config_manual.rst:177
+#: ../../development/scql_config_manual.rst:203
 msgid "Config for GRM"
-msgstr "GRM配置"
+msgstr "GRM 配置"
 
-#: ../../development/scql_config_manual.rst:178
+#: ../../development/scql_config_manual.rst:204
 msgid ""
 "In addition to being provided by developers, GRM services can also be "
 "simulated by reading local JSON files, which is used for testing and "
 "development, you can choose them as follows."
-msgstr "GRM服务除了由开发人员提供外，还可以通过读取本地JSON文件来模拟，用于测试和开发，您可以如下选择。"
+msgstr ""
+"GRM 服务需要由开发人员根据响应的 API 自己实现，于此同时为了方便测试和开发，SCDB 也支持通过读取本地JSON文件来模拟一个 GRM "
+"服务。用户可以通过以下配置来进行选择"
 
-#: ../../development/scql_config_manual.rst:181
+#: ../../development/scql_config_manual.rst:207
 msgid "stdgrm"
 msgstr "stdgrm"
 
-#: ../../development/scql_config_manual.rst:181
+#: ../../development/scql_config_manual.rst:207
 msgid ""
 "If you want to use your own developed GRM service, grm_mode need to be "
 "set as stdgrm."
-msgstr "如果您想使用自己开发的GRM服务，则grm_mode需要设置为stdgrm。"
+msgstr "如果您想使用自己开发的GRM服务，则 grm_mode 需要设置为 stdgrm 。"
 
-#: ../../development/scql_config_manual.rst:191
+#: ../../development/scql_config_manual.rst:217
 msgid "toygrm"
 msgstr "toygrm"
 
-#: ../../development/scql_config_manual.rst:191
+#: ../../development/scql_config_manual.rst:217
 msgid ""
 "If you want to directly mock a GRM service from a json file, except set "
 "grm_mode as toygrm, toy_grm_conf also need to be set."
-msgstr "如果想直接从json文件模拟GRM服务，除了将grm_mode设置为toygrm外，还需要设置toy_grm_conf。"
+msgstr "如果想直接从 json 文件模拟 GRM 服务，除了将 grm_mode 设置为 toygrm 外，还需要设置 toy_grm_conf。"
 
-#: ../../development/scql_config_manual.rst:203
+#: ../../development/scql_config_manual.rst:229
 msgid "Config for TLS"
-msgstr "TLS配置"
+msgstr "TLS 配置"
 
-#: ../../development/scql_config_manual.rst:205
+#: ../../development/scql_config_manual.rst:230
 msgid ""
 "If you need to enable TLS in SCDB, please refer to the following "
 "configuration."
-msgstr "如果需要在SCDB中启用TLS，请参考以下配置。"
+msgstr "如果需要在 SCDB 中启用 TLS ，请参考以下配置。"
 
-#: ../../development/scql_config_manual.rst:217
+#: ../../development/scql_config_manual.rst:242
 msgid ""
-"Additionally, it is necessary to configure the engine to work with SSL, "
-"please refer `Config for SSL`_."
-msgstr "此外，还需要配置引擎以使用 SSL，请参阅“SSL 配置” "
+"Additionally, it is necessary to configure the SCQLEngine to work with "
+"SSL, please refer :ref:`Config for SSL in SCQLEngine <scqlengine-tls>`."
+msgstr ""
+"除此之外，用户还需要设置 :ref:`SCQLEngine 的 SSL 配置 <scqlengine-tls>`，以保证 SCDB 和 "
+"SCQLEngine 能正常工作。"
 
-#: ../../development/scql_config_manual.rst:221
+#: ../../development/scql_config_manual.rst:246
 msgid "Config for SPU"
-msgstr "SPU配置"
+msgstr "SPU 配置"
 
-#: ../../development/scql_config_manual.rst:222
+#: ../../development/scql_config_manual.rst:247
 msgid ""
 "SCQL supports different mpc protocol powered by SPU, you can choose "
 "different mpc protocol by setting SPU runtime config. Protocol **SEMI2K**"
@@ -535,414 +672,430 @@ msgid ""
 "<https://www.secretflow.org.cn/docs/spu/en/reference/runtime_config.html>`_"
 " to get more information."
 msgstr ""
-"SCQL 支持 SPU 支持的不同 mpc 协议，您可以通过设置 SPU 运行时配置来选择不同的 mpc 协议，建议使用经过充分测试并支持多方的 "
-"SEMI2K 协议。 请参阅“ SPU "
-"配置”<https://www.secretflow.org.cn/docs/spu/en/reference/runtime_config.html>获得更多信息"
+"SCQL 的底层 MPC 协议由 SPU 控制，你可以通过更改 SPU 相关配置来选择不同的 MPC 协议， 更多信息请参考 `SPU 配置 "
+"<https://www.secretflow.org.cn/docs/spu/en/reference/runtime_config.html>`_"
+" 。"
 
-#: ../../development/scql_config_manual.rst:234
-msgid "Engine configuration options"
-msgstr "引擎配置选项"
+#: ../../development/scql_config_manual.rst:259
+msgid "SCQLEngine configuration options"
+msgstr "SCQLEngine 配置说明"
 
-#: ../../development/scql_config_manual.rst:235
+#: ../../development/scql_config_manual.rst:260
 msgid "SCQLEngine uses Gflags to manage configurations when SCQLEngine set up."
-msgstr "SCQLEngine 设置时使用 Gflags 来管理配置。"
+msgstr "SCQLEngine 使用 Gflags 来管理配置项。"
 
-#: ../../development/scql_config_manual.rst:238
-msgid "Example for Engine"
-msgstr "引擎示例"
+#: ../../development/scql_config_manual.rst:263
+msgid "Example for SCQLEngine"
+msgstr "SCQLEngine 配置示例"
 
-#: ../../development/scql_config_manual.rst:250
-msgid "Config in Engine"
-msgstr "Engine配置"
+#: ../../development/scql_config_manual.rst:275
+msgid "Config in SCQLEngine"
+msgstr "SCQLEngine 配置项"
 
-#: ../../development/scql_config_manual.rst:255
-msgid "log_dir"
-msgstr "log_dir"
-
-#: ../../development/scql_config_manual.rst:255
-msgid "logs"
-msgstr "日志"
-
-#: ../../development/scql_config_manual.rst:255
-msgid "The directory to save log file"
-msgstr "保存log文件的目录"
-
-#: ../../development/scql_config_manual.rst:257
+#: ../../development/scql_config_manual.rst:280
 msgid "log_enable_console_logger"
 msgstr "log_enable_console_logger"
 
-#: ../../development/scql_config_manual.rst:257
+#: ../../development/scql_config_manual.rst:280
 msgid "Whether logging to stdout while logging to file"
-msgstr "是否记录日志文件到 stdout"
+msgstr "是否记录日志文件到控制台"
 
-#: ../../development/scql_config_manual.rst:259
+#: ../../development/scql_config_manual.rst:282
+msgid "log_dir"
+msgstr "log_dir"
+
+#: ../../development/scql_config_manual.rst:282
+msgid "logs"
+msgstr "logs"
+
+#: ../../development/scql_config_manual.rst:282
+msgid "The directory to save log file"
+msgstr "保存log文件的目录"
+
+#: ../../development/scql_config_manual.rst:284
+msgid "Whether to enable audit log"
+msgstr "是否记录审计日志"
+
+#: ../../development/scql_config_manual.rst:286
+msgid "audit_log_file"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:288
+msgid "audit_detail_file"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:290
+msgid "audit_max_files"
+msgstr ""
+
+#: ../../development/scql_config_manual.rst:290
+msgid "The maximum number of old audit log files to retain"
+msgstr "系统中保留的审计日志文件的最大数量，0 表示保留所有的日志文件"
+
+#: ../../development/scql_config_manual.rst:292
 msgid "peer_engine_protocol"
 msgstr "peer_engine_protocol"
 
-#: ../../development/scql_config_manual.rst:259
-#: ../../development/scql_config_manual.rst:275
+#: ../../development/scql_config_manual.rst:292
+#: ../../development/scql_config_manual.rst:308
 msgid "`http:proto`"
 msgstr "`http:proto`"
 
-#: ../../development/scql_config_manual.rst:259
+#: ../../development/scql_config_manual.rst:292
 msgid "The rpc protocol between engine and engine"
-msgstr "引擎与引擎之间的rpc协议"
+msgstr "SCQLEngine 与 SCQLEngine 之间的rpc协议"
 
-#: ../../development/scql_config_manual.rst:261
+#: ../../development/scql_config_manual.rst:294
 msgid "peer_engine_connection_type"
 msgstr "peer_engine_connection_type"
 
-#: ../../development/scql_config_manual.rst:261
-#: ../../development/scql_config_manual.rst:277
+#: ../../development/scql_config_manual.rst:294
+#: ../../development/scql_config_manual.rst:310
 msgid "pooled"
 msgstr "pooled"
 
-#: ../../development/scql_config_manual.rst:261
+#: ../../development/scql_config_manual.rst:294
 msgid "The rpc connection type between engine and engine"
-msgstr ""
+msgstr "SCQLEngine 与SCQLEngine 之间的 rpc 连接类型"
 
-#: ../../development/scql_config_manual.rst:263
+#: ../../development/scql_config_manual.rst:296
 msgid "peer_engine_timeout_ms"
 msgstr "peer_engine_timeout_ms"
 
-#: ../../development/scql_config_manual.rst:263
+#: ../../development/scql_config_manual.rst:296
 msgid "300000"
 msgstr "300000"
 
-#: ../../development/scql_config_manual.rst:263
+#: ../../development/scql_config_manual.rst:296
 msgid "The rpc timeout between engine and engine, unit: ms"
-msgstr "引擎与引擎之间的rpc超时时间，单位：ms"
+msgstr "SCQLEngine 与 SCQLEngine之间的 rpc 超时时间，单位：ms"
 
-#: ../../development/scql_config_manual.rst:265
+#: ../../development/scql_config_manual.rst:298
 msgid "peer_engine_max_retry"
 msgstr "peer_engine_max_retry"
 
-#: ../../development/scql_config_manual.rst:265
-#: ../../development/scql_config_manual.rst:281
+#: ../../development/scql_config_manual.rst:298
+#: ../../development/scql_config_manual.rst:314
 msgid "3"
 msgstr "3"
 
-#: ../../development/scql_config_manual.rst:265
+#: ../../development/scql_config_manual.rst:298
 msgid "Rpc max retries(not including the first rpc) between engine and engine"
-msgstr "引擎与引擎之间的rpc最大重试次数（不包括第一个rpc）"
+msgstr "SCQLEngine 与 SCQLEngine 之间的rpc最大重试次数（不包括第一个rpc）"
 
-#: ../../development/scql_config_manual.rst:267
+#: ../../development/scql_config_manual.rst:300
 msgid "peer_engine_enable_ssl_as_client"
 msgstr "peer_engine_enable_ssl_as_client"
 
-#: ../../development/scql_config_manual.rst:267
+#: ../../development/scql_config_manual.rst:300
 msgid "Whether enable ssl encryption when send message to another engine"
-msgstr "向其他引擎发送消息时是否启用ssl加密"
+msgstr "SCQLEngine 与 SCQLEngine 之间发送消息是否启用ssl加密"
 
-#: ../../development/scql_config_manual.rst:269
+#: ../../development/scql_config_manual.rst:302
 msgid "peer_engine_enable_ssl_client_verification"
 msgstr "peer_engine_enable_ssl_client_verification"
 
-#: ../../development/scql_config_manual.rst:269
+#: ../../development/scql_config_manual.rst:302
 msgid ""
 "Whether enable certificate verification when send message to another "
 "engine"
-msgstr "向其他引擎发送消息时是否启用证书验证"
+msgstr "作为客户端时，是否验证来自其他 SCQLEngine 的证书"
 
-#: ../../development/scql_config_manual.rst:271
+#: ../../development/scql_config_manual.rst:304
 msgid "peer_engine_ssl_client_ca_certificate"
 msgstr "peer_engine_ssl_client_ca_certificate"
 
-#: ../../development/scql_config_manual.rst:271
+#: ../../development/scql_config_manual.rst:304
 msgid ""
 "The trusted CA file to verify certificate when send message to another "
 "engine"
-msgstr "向另一个引擎发送消息时用于验证证书 CA 文件"
+msgstr "可信 CA 文件，作为客户端时，用于验证来自其他 SCQLEngine 的证书"
 
-#: ../../development/scql_config_manual.rst:273
+#: ../../development/scql_config_manual.rst:306
 msgid "link_recv_timeout_ms"
 msgstr "link_recv_timeout_ms"
 
-#: ../../development/scql_config_manual.rst:273
+#: ../../development/scql_config_manual.rst:306
 msgid "30000"
 msgstr "30000"
 
-#: ../../development/scql_config_manual.rst:273
+#: ../../development/scql_config_manual.rst:306
 msgid "The max time that engine will wait for message come from another engine"
-msgstr "引擎等待其他引擎消息的最大时间"
+msgstr "等待其他 SCQLEngine 消息的最大响应时间"
 
-#: ../../development/scql_config_manual.rst:275
+#: ../../development/scql_config_manual.rst:308
 msgid "scdb_protocol"
 msgstr "scdb_protocol"
 
-#: ../../development/scql_config_manual.rst:275
+#: ../../development/scql_config_manual.rst:308
 msgid "The rpc protocol between engine and SCDB"
-msgstr "引擎与SCDB之间的rpc协议"
+msgstr "SCQLEngine 与 SCDB 之间的 rpc 协议"
 
-#: ../../development/scql_config_manual.rst:277
+#: ../../development/scql_config_manual.rst:310
 msgid "scdb_connection_type"
 msgstr "scdb_connection_type"
 
-#: ../../development/scql_config_manual.rst:277
+#: ../../development/scql_config_manual.rst:310
 msgid "The rpc connection type between engine and SCDB"
-msgstr "引擎与SCDB之间的rpc连接类型"
+msgstr "SCQLEngine 与 SCDB 之间的 rpc 连接类型"
 
-#: ../../development/scql_config_manual.rst:279
+#: ../../development/scql_config_manual.rst:312
 msgid "scdb_timeout_ms"
 msgstr "scdb_timeout_ms"
 
-#: ../../development/scql_config_manual.rst:279
+#: ../../development/scql_config_manual.rst:312
 msgid "5000"
 msgstr "5000"
 
-#: ../../development/scql_config_manual.rst:279
+#: ../../development/scql_config_manual.rst:312
 msgid "The rpc timeout between engine and SCDB, unit: ms"
-msgstr "引擎与SCDB之间的rpc超时时间，单位：ms"
+msgstr "SCQLEngine 与 SCDB 之间的 rpc 超时时间，单位：ms"
 
-#: ../../development/scql_config_manual.rst:281
+#: ../../development/scql_config_manual.rst:314
 msgid "scdb_max_retry"
 msgstr "scdb_max_retry"
 
-#: ../../development/scql_config_manual.rst:281
+#: ../../development/scql_config_manual.rst:314
 msgid "Rpc max retries(not including the first rpc) between engine and SCDB"
-msgstr "引擎和SCDB之间的rpc最大重试次数（不包括第一个rpc）"
+msgstr "SCQLEngine 和 SCDB 之间的 rpc 最大重试次数（不包括第一个 rpc）"
 
-#: ../../development/scql_config_manual.rst:283
+#: ../../development/scql_config_manual.rst:316
 msgid "scdb_enable_ssl_as_client"
 msgstr "scdb_enable_ssl_as_client"
 
-#: ../../development/scql_config_manual.rst:283
+#: ../../development/scql_config_manual.rst:316
 msgid "Whether enable ssl encryption when send message to SCDB"
-msgstr "向 SCDB 发送消息时是否启用 ssl 加密"
+msgstr "作为客户端，向 SCDB 发送消息时是否启用 ssl 加密"
 
-#: ../../development/scql_config_manual.rst:285
+#: ../../development/scql_config_manual.rst:318
 msgid "scdb_enable_ssl_client_verification"
 msgstr "scdb_enable_ssl_client_verification"
 
-#: ../../development/scql_config_manual.rst:285
+#: ../../development/scql_config_manual.rst:318
 msgid "Whether enable certificate verification when send message to SCDB"
-msgstr "向SCDB发送消息时是否启用证书验证"
+msgstr "作为客户端，是否验证 SCDB 的证书"
 
-#: ../../development/scql_config_manual.rst:287
+#: ../../development/scql_config_manual.rst:320
 msgid "scdb_ssl_client_ca_certificate"
 msgstr "scdb_ssl_client_ca_certificate"
 
-#: ../../development/scql_config_manual.rst:287
+#: ../../development/scql_config_manual.rst:320
 msgid "The trusted CA file to verify certificate when send message to SCDB"
-msgstr "向 SCDB 发送消息时用于验证证书的 CA 文件"
+msgstr "可信 CA 文件，作为客户端时，用于验证 SCDB 的证书"
 
-#: ../../development/scql_config_manual.rst:289
+#: ../../development/scql_config_manual.rst:322
 msgid "listen_port"
 msgstr "listen_port"
 
-#: ../../development/scql_config_manual.rst:289
+#: ../../development/scql_config_manual.rst:322
 msgid "8003"
 msgstr "8003"
 
-#: ../../development/scql_config_manual.rst:289
+#: ../../development/scql_config_manual.rst:322
 msgid "The listening port of engine service"
-msgstr "引擎服务监听端口"
+msgstr "SCQLEngine 作为服务器的监听端口"
 
-#: ../../development/scql_config_manual.rst:291
+#: ../../development/scql_config_manual.rst:324
 msgid "enable_builtin_service"
 msgstr "enable_builtin_service"
 
-#: ../../development/scql_config_manual.rst:291
+#: ../../development/scql_config_manual.rst:324
 msgid "Whether enable brpc builtin service"
-msgstr "是否启用brpc内置服务"
+msgstr "是否启用 brpc 内置服务"
 
-#: ../../development/scql_config_manual.rst:293
+#: ../../development/scql_config_manual.rst:326
 msgid "internal_port"
 msgstr "internal_port"
 
-#: ../../development/scql_config_manual.rst:293
+#: ../../development/scql_config_manual.rst:326
 msgid "9527"
 msgstr "9527"
 
-#: ../../development/scql_config_manual.rst:293
+#: ../../development/scql_config_manual.rst:326
 msgid "The listening port of brpc builtin services"
-msgstr "brpc内置服务的监听端口"
+msgstr " brpc 内置服务的监听端口"
 
-#: ../../development/scql_config_manual.rst:295
+#: ../../development/scql_config_manual.rst:328
 msgid "idle_timeout_s"
 msgstr "idle_timeout_s"
 
-#: ../../development/scql_config_manual.rst:295
+#: ../../development/scql_config_manual.rst:328
 msgid "30"
 msgstr "30"
 
-#: ../../development/scql_config_manual.rst:295
+#: ../../development/scql_config_manual.rst:328
 msgid ""
 "Idle connection close delay in seconds between the engine and SCDB, unit:"
 " s"
-msgstr "引擎与 SCDB 之间的空闲连接关闭延迟（以秒为单位）"
+msgstr "SCQLEngine 与 SCDB 之间的空闲连接关闭延迟（单位：秒）"
 
-#: ../../development/scql_config_manual.rst:297
+#: ../../development/scql_config_manual.rst:330
 msgid "server_enable_ssl"
 msgstr "server_enable_ssl"
 
-#: ../../development/scql_config_manual.rst:297
+#: ../../development/scql_config_manual.rst:330
 msgid "Whether enable SSL when engine work as a server"
-msgstr "引擎作为服务器时是否启用SSL"
+msgstr "SCQLEngine 作为服务器时是否启用SSL"
 
-#: ../../development/scql_config_manual.rst:299
+#: ../../development/scql_config_manual.rst:332
 msgid "server_ssl_certificate"
 msgstr "server_ssl_certificate"
 
-#: ../../development/scql_config_manual.rst:299
+#: ../../development/scql_config_manual.rst:332
 msgid "Certificate file path to enable SSL when engine work as a server"
-msgstr "引擎作为服务器时启用 SSL 的证书文件路径"
+msgstr "SCQLEngine 作为服务器时启用 SSL 的证书文件路径"
 
-#: ../../development/scql_config_manual.rst:301
+#: ../../development/scql_config_manual.rst:334
 msgid "server_ssl_private_key"
 msgstr "server_ssl_private_key"
 
-#: ../../development/scql_config_manual.rst:301
+#: ../../development/scql_config_manual.rst:334
 msgid "Private key file path to enable SSL when engine work as a server"
-msgstr "引擎作为服务器时启用 SSL 的私钥文件路径"
+msgstr "SCQLEngine 作为服务器时启用 SSL 的私钥文件路径"
 
-#: ../../development/scql_config_manual.rst:303
+#: ../../development/scql_config_manual.rst:336
 msgid "enable_client_authorization"
 msgstr "enable_client_authorization"
 
-#: ../../development/scql_config_manual.rst:303
+#: ../../development/scql_config_manual.rst:336
 msgid "Whether check requests' http header when engine work as a server"
-msgstr "当引擎作为服务器时是否检查请求的http 头部"
+msgstr "SCQLEngine 作为服务器时是否检查请求的 http 头"
 
-#: ../../development/scql_config_manual.rst:305
+#: ../../development/scql_config_manual.rst:338
 msgid "auth_credential"
 msgstr "auth_credential"
 
-#: ../../development/scql_config_manual.rst:305
+#: ../../development/scql_config_manual.rst:338
 msgid "Authorization credential used to check requests' http header"
-msgstr "检查请求http头部用于授权"
+msgstr "SCQLEngine 作为服务器时用于检查请求的 http 头的 凭证"
 
-#: ../../development/scql_config_manual.rst:307
+#: ../../development/scql_config_manual.rst:340
 msgid "enable_scdb_authorization"
 msgstr "enable_scdb_authorization"
 
-#: ../../development/scql_config_manual.rst:307
+#: ../../development/scql_config_manual.rst:340
 msgid "Whether to authenticate the identity of SCDB"
-msgstr "是否启动SCDB身份认证"
+msgstr "是否启动 SCDB 身份认证"
 
-#: ../../development/scql_config_manual.rst:309
+#: ../../development/scql_config_manual.rst:342
 msgid "engine_credential"
 msgstr "engine_credential"
 
-#: ../../development/scql_config_manual.rst:309
+#: ../../development/scql_config_manual.rst:342
 msgid "Credential used to authenticate SCDB"
 msgstr "用于验证 SCDB 的凭证"
 
-#: ../../development/scql_config_manual.rst:311
+#: ../../development/scql_config_manual.rst:344
 msgid "session_timeout_s"
 msgstr "session_timeout_s"
 
-#: ../../development/scql_config_manual.rst:311
+#: ../../development/scql_config_manual.rst:344
 msgid "1800"
 msgstr "1800"
 
-#: ../../development/scql_config_manual.rst:311
+#: ../../development/scql_config_manual.rst:344
 msgid "Expiration duration of a session between engine and SCDB, unit: s"
-msgstr "引擎与SCDB之间的会话过期时间，单位：秒"
+msgstr "SCQLEngine 与 SCDB 之间的会话过期时间，单位：秒"
 
-#: ../../development/scql_config_manual.rst:313
+#: ../../development/scql_config_manual.rst:346
 msgid "datasource_router"
 msgstr "datasource_router"
 
-#: ../../development/scql_config_manual.rst:313
+#: ../../development/scql_config_manual.rst:346
 msgid "embed"
-msgstr "嵌入的"
+msgstr "embed"
 
-#: ../../development/scql_config_manual.rst:313
+#: ../../development/scql_config_manual.rst:346
 msgid "The datasource router type"
 msgstr "数据源路由类型"
 
-#: ../../development/scql_config_manual.rst:315
+#: ../../development/scql_config_manual.rst:348
 msgid "embed_router_conf"
 msgstr "embed_router_conf"
 
-#: ../../development/scql_config_manual.rst:315
+#: ../../development/scql_config_manual.rst:348
 msgid "Configuration for embed router in json format"
-msgstr "json 格式的嵌入路由配置"
+msgstr "数据源的路由配置，其类型为 json 字符串格式"
 
-#: ../../development/scql_config_manual.rst:317
+#: ../../development/scql_config_manual.rst:350
 msgid "db_connection_info"
 msgstr "db_connection_info"
 
-#: ../../development/scql_config_manual.rst:317
+#: ../../development/scql_config_manual.rst:350
 msgid "Connection string used to connect to mysql"
-msgstr "用于连接mysql的连接字符串"
+msgstr "用于连接 MySQL 数据库的连接串"
 
-#: ../../development/scql_config_manual.rst:319
+#: ../../development/scql_config_manual.rst:352
 msgid "enable_he_schema_type_ou"
 msgstr "enable_he_schema_type_ou"
 
-#: ../../development/scql_config_manual.rst:319
+#: ../../development/scql_config_manual.rst:352
 msgid ""
 "Whether to use OU to speed up HeSum, use ZPaillier by default for "
 "security, see: `heu/ou`_"
 msgstr "是否使用OU算法来加速 HeSum, 考虑到更优的安全性，默认使用 ZPaillier, 参见: `heu/ou`_"
 
-#: ../../development/scql_config_manual.rst:325
+#: ../../development/scql_config_manual.rst:358
 msgid "Config for datasource"
 msgstr "数据源配置"
 
-#: ../../development/scql_config_manual.rst:326
+#: ../../development/scql_config_manual.rst:359
 msgid ""
 "datasources(MySQL/SQLite3/PostgreSQL/CSVDB) are where the SCQLEngine gets"
 " its data from."
 msgstr "SCQLEngine 支持多种数据源，包括 MySQL/SQLite3/PostgreSQL/CSVDB 。"
 
-#: ../../development/scql_config_manual.rst:328
+#: ../../development/scql_config_manual.rst:361
 msgid ""
-"*datasource_router* is design to support multi datasources, currently "
-"only supported: embed."
-msgstr " datasource_router 是为了支持多数据源而设计的，目前仅支持汇聚方式"
-
-#: ../../development/scql_config_manual.rst:330
-msgid ""
-"embed_router is initialized with *embed_router_conf* first, a json string"
-" like::"
+"``datasource_router`` is design to support multi datasources, currently "
+"only supported: embed, which is initialized with ``embed_router_conf`` "
+"first, a json string like::"
 msgstr ""
-"embed_router is initialized with *embed_router_conf* first, a json string"
-" like::"
+"``datasource_router`` 是为了支持多数据源而设计的，目前仅支持 `embed` 方式配值数据源，其首先通过 "
+"``embed_router_conf`` 来初始化，``embed_router_conf`` 是一个 json "
+"类型的字符串，一个典型的配置项如下所示："
 
-#: ../../development/scql_config_manual.rst:348
+#: ../../development/scql_config_manual.rst:379
 msgid ""
-"if *embed_router_conf* is empty, embed_router will try to initialized "
-"with *db_connection_info*."
+"if ``embed_router_conf`` is empty, embed_router will try to initialized "
+"with ``db_connection_info``."
 msgstr ""
-"if *embed_router_conf* is empty, embed_router will try to initialized "
-"with *db_connection_info*."
+"如果 ``embed_router_conf`` 为空， `embed_router` 则会尝试通过 ``db_connection_info``"
+" 来初始化。"
 
-#: ../../development/scql_config_manual.rst:351
+#: ../../development/scql_config_manual.rst:382
 msgid "Embed router"
-msgstr "嵌入式路由"
+msgstr "Embed router"
 
-#: ../../development/scql_config_manual.rst:353
+#: ../../development/scql_config_manual.rst:383
 msgid ""
-"datasources in embed_router_conf contain informations for connecting "
+"datasources in embed_router_conf contain information for connecting "
 "MySQL/SQLite3/PostgreSQL/CSVDB:"
 msgstr ""
 "embed_router_conf 中的 datasources 包含用于连接 MySQL/SQLite3/PostgreSQL/CSVDB "
 "数据源的信息:"
 
-#: ../../development/scql_config_manual.rst:355
+#: ../../development/scql_config_manual.rst:385
 msgid "id: unique id of datasource."
 msgstr "id：数据源的唯一ID。"
 
-#: ../../development/scql_config_manual.rst:357
+#: ../../development/scql_config_manual.rst:387
 msgid "name: custom description help to distinguish datasources."
 msgstr "name：自定义描述，有助于区分数据源。"
 
-#: ../../development/scql_config_manual.rst:359
+#: ../../development/scql_config_manual.rst:389
 msgid "kind: datasource type, currently support MySQL/SQLite3/PostgreSQL/CSVDB."
-msgstr "kind：数据源类型，目前支持MySQL/SQLite3/PostgreSQL/CSVDB。"
+msgstr "kind：数据源类型，目前支持 MySQL/SQLite3/PostgreSQL/CSVDB。"
 
-#: ../../development/scql_config_manual.rst:361
+#: ../../development/scql_config_manual.rst:391
 msgid "connection_str: string used to connect MySQL/SQLite3/PostgreSQL/CSVDB."
-msgstr "connection_str：用于连接MySQL/SQLite3/PostgreSQL/CSVDB的字符串。"
+msgstr "connection_str：用于连接 MySQL/SQLite3/PostgreSQL/CSVDB 数据库的连接串。"
 
-#: ../../development/scql_config_manual.rst:367
+#: ../../development/scql_config_manual.rst:397
 msgid "MySQL Connection string format:"
-msgstr "MySQL连接字符串格式："
+msgstr "MySQL 连接串格式："
 
-#: ../../development/scql_config_manual.rst:364
+#: ../../development/scql_config_manual.rst:394
 msgid ""
 "<str> == <assignment> | <assignment> ';' <str> <assignment> == <name> '='"
 " <value> <name> == 'host' | 'port' | 'user' | 'password' | 'db' | "
@@ -954,36 +1107,36 @@ msgstr ""
 "'compress' | 'auto-reconnect' | 'reset' | 'fail-readonly' <value> == "
 "[~;]*"
 
-#: ../../development/scql_config_manual.rst:370
+#: ../../development/scql_config_manual.rst:400
 msgid "MySQL Connection string e.g:"
-msgstr "MySQL连接字符串示例："
+msgstr "MySQL 连接串示例："
 
-#: ../../development/scql_config_manual.rst:370
-#: ../../development/scql_config_manual.rst:385
-msgid "\"db=${db};user=${user};password=${password};host=${host}\""
-msgstr "\"db=${db};user=${user};password=${password};host=${host}\""
+#: ../../development/scql_config_manual.rst:400
+#: ../../development/scql_config_manual.rst:415
+msgid "``db=${db};user=${user};password=${password};host=${host}``"
+msgstr "``db=${db};user=${user};password=${password};host=${host}``"
 
-#: ../../development/scql_config_manual.rst:373
+#: ../../development/scql_config_manual.rst:403
 msgid "SQLite3 Connection string format:"
-msgstr "SQLite3连接字符串格式："
+msgstr "SQLite3 连接串格式："
 
-#: ../../development/scql_config_manual.rst:373
+#: ../../development/scql_config_manual.rst:403
 msgid "more infos: https://www.sqlite.org/c3ref/open.html"
-msgstr "更多信息：https://www.sqlite.org/c3ref/open.html"
+msgstr "参考：https://www.sqlite.org/c3ref/open.html"
 
-#: ../../development/scql_config_manual.rst:376
+#: ../../development/scql_config_manual.rst:406
 msgid "SQLite3 Connection string e.g:"
-msgstr "SQLite3连接字符串示例"
+msgstr "SQLite3 连接串示例"
 
-#: ../../development/scql_config_manual.rst:376
-msgid "\"file:data_test.db?mode=memory&cache=shared\""
-msgstr "\"file:data_test.db?mode=memory&cache=shared\""
+#: ../../development/scql_config_manual.rst:406
+msgid "``file:data_test.db?mode=memory&cache=shared``"
+msgstr "``file:data_test.db?mode=memory&cache=shared``"
 
-#: ../../development/scql_config_manual.rst:382
+#: ../../development/scql_config_manual.rst:412
 msgid "PostgreSQL Connection string format:"
-msgstr "PostgreSQL 连接字符串格式："
+msgstr "PostgreSQL 连接串格式："
 
-#: ../../development/scql_config_manual.rst:379
+#: ../../development/scql_config_manual.rst:409
 msgid ""
 "<str> == <assignment> | <assignment> ' ' <str> <assignment> == <name> '='"
 " <value> <name> == 'host' | 'port' | 'user' | 'password' | 'dbname' | "
@@ -993,83 +1146,136 @@ msgstr ""
 " <value> <name> == 'host' | 'port' | 'user' | 'password' | 'dbname' | "
 "'connect_timeout' <value> == [~;]*"
 
-#: ../../development/scql_config_manual.rst:385
+#: ../../development/scql_config_manual.rst:415
 msgid "PostgreSQL Connection string e.g:"
-msgstr "PostgreSQL 连接字符串示例："
+msgstr "PostgreSQL 连接串示例："
 
-#: ../../development/scql_config_manual.rst:388
+#: ../../development/scql_config_manual.rst:418
 msgid "CSVDB Connection string format:"
-msgstr "CSVDB 连接字符串格式："
+msgstr "CSVDB 连接串格式："
 
-#: ../../development/scql_config_manual.rst:388
+#: ../../development/scql_config_manual.rst:418
 msgid ""
 "Since connection_str is an object in another json object, the format is a"
 " converted json string corresponding to `CsvdbConf "
 "<https://github.com/secretflow/scql/tree/main/engine/datasource/csvdb_conf.proto>`_"
 msgstr ""
-"由于connection_str是另一个json对象中的对象，因此格式为CsvdbConf对应的转换后的json字符串 "
-"<https://github.com/secretflow/scql/tree/main/engine/datasource/csvdb_conf.proto>"
+"由于 connection_str 是另一个 json 对象中的对象，因此其格式是根据 `CsvdbConf "
+"<https://github.com/secretflow/scql/tree/main/engine/datasource/csvdb_conf.proto>`_"
+" 结构体转换后的的json字符串 "
 
-#: ../../development/scql_config_manual.rst:391
+#: ../../development/scql_config_manual.rst:421
 msgid "CSVDB Connection string e.g:"
 msgstr "CSVDB连接语句示例:"
 
-#: ../../development/scql_config_manual.rst:391
+#: ../../development/scql_config_manual.rst:421
 msgid "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
 msgstr "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
 
-#: ../../development/scql_config_manual.rst:394
+#: ../../development/scql_config_manual.rst:424
 msgid "Routing rules"
 msgstr "路由规则"
 
-#: ../../development/scql_config_manual.rst:395
+#: ../../development/scql_config_manual.rst:425
 msgid ""
-"embed_router's rules support wildcard '*', when given a table in format: "
-"*database_name:table_name*, embed_router will route to the corresponding "
-"datasource by::"
+"embed_router's rules support wildcard ``*`` , when given a table in "
+"format: *database_name:table_name*, embed_router will route to the "
+"corresponding datasource by"
 msgstr ""
-"embed_router 的规则支持通配符 '*'，当给定格式为 database_name:table_name "
-"的表时，embed_router 将通过以下方式路由到相应的数据源："
+"embed_router 的规则支持通配符 ``*`` ，当给定一个 *database_name:table_name* "
+"的数据表时，embed_router 将通过以下方式路由到对应的数据源："
 
-#: ../../development/scql_config_manual.rst:402
+#: ../../development/scql_config_manual.rst:428
+msgid ""
+"find the exact rules first, whose ``${db}:${table}`` equals to "
+"*database_name:table_name*;"
+msgstr ""
+"在 `embed_router_conf` 的 `rules` 中查找 `${db}:${table}` 与 "
+"`database_name:table_name` 完全相等的 rule"
+
+#: ../../development/scql_config_manual.rst:429
+msgid "try the database_name:\\* rules;"
+msgstr "在 `embed_router_conf` 的 `rules` 中查找 `${db}` 与 `database_name` 完全相等的 rule"
+
+#: ../../development/scql_config_manual.rst:430
+msgid "try \\*:table_name in the end."
+msgstr "在 `embed_router_conf` 的 `rules` 中查找 `${table}` 与 `table_name` 完全相等的 rule"
+
+#: ../../development/scql_config_manual.rst:432
 msgid ""
 "Once found, SCQLEngine will try to connect database with datasource's "
 "information correspond to the *datasource_id*."
-msgstr "一旦找到，SCQLEngine将尝试使用与 datasource_id 对应的数据源信息连接数据库。"
+msgstr ""
+"一旦找到对应的 rule ，SCQLEngine 将根据 rule 中 datasource_id 在 datasources 中找到 "
+"对应的数据源信息，并根据这些信息连接对应的数据库。"
 
-#: ../../development/scql_config_manual.rst:405
+#: ../../development/scql_config_manual.rst:435
 msgid "Config for Brpc server"
 msgstr "Brpc 服务器配置"
 
-#: ../../development/scql_config_manual.rst:406
+#: ../../development/scql_config_manual.rst:436
 msgid ""
 "SCQLEngine uses **Brpc** to communicate with SCDB and other peer "
 "SCQLEngines, each SCQLEngine will start a Brpc service on *local-"
 "host:listen_port* to receive data from outside. If you want to enable "
 "Brpc builtin services, add FLAGS:"
 msgstr ""
-"SCQLEngine 使用 Brpc 与 SCDB 和其他对等 SCQLEngine 进行通信，每个 SCQLEngine 都会在 local-"
+"SCQLEngine 使用 Brpc 与 SCDB 以及其他的 SCQLEngine 进行通信，每个 SCQLEngine 都会在 local-"
 "host:listen_port 上启动 Brpc 服务以接收来自外部的数据。如果要启用 Brpc 内置服务，请添加 FLAGS："
 
-#: ../../development/scql_config_manual.rst:417
+#: ../../development/scql_config_manual.rst:447
 msgid "Config for SSL"
 msgstr "SSL配置"
 
-#: ../../development/scql_config_manual.rst:418
+#: ../../development/scql_config_manual.rst:448
 msgid ""
-"If you want to enable SSL in Engine, add FLAGS as follows. Additionally, "
-"it may be necessary to configure SCDB work with TLS please refer `Config "
-"for TLS`_."
-msgstr "如果要在 Engine 中启用 SSL，请添加 FLAGS，如下所示。 此外，可能需要配置 SCDB 与 TLS 一起运行，请参阅“TLS 配置”。"
+"If you want to enable SSL in SCQLEngine, add FLAGS as follows. "
+"Additionally, it may be necessary to configure SCDB work with TLS please "
+"refer :ref:`Config for TLS in SCDB <scdb-tls>`."
+msgstr ""
+"如果要在 Engine 中启用 SSL，请添加 FLAGS，如下所示。 此外，可能需要配置 SCDB 与 TLS 一起运行，请参考 "
+":ref:`SCDB 的 TLS 配置 <scdb-tls>`。"
 
-#~ msgid "Database Kind in SCDB, supports mysql/sqlite"
-#~ msgstr "SCDB数据库类型支持mysql/sqlite"
+#: ../../development/scql_config_manual.rst:460
+msgid ""
+"The audit log in SCQLEngine is used to record the SCQLEngine activities "
+"during the execution of tasks from SCDB. Just like the audit in SCDB, it "
+"also can be divided into two types: common audit log and detail audit "
+"log."
+msgstr ""
+"SCQLEngine 的审计日志是用来记录 SCQLEngine 在执行 SCDB 下发任务过程中所产生的一系列事件，和 SCDB "
+"一样，它也有两种类型：基础审计日志和详补充审计日志"
 
-#~ msgid "datasources(MYSQL/SQLite3) are where the SCQLEngine gets its data from."
-#~ msgstr "数据源(MYSQL/SQLite3) 是 SCQLEngine 获取数据的位置。"
+#: ../../development/scql_config_manual.rst:462
+msgid ""
+"The common audit is used to record some basic information about a task, "
+"while the detail audit is used to record more detailed information of the"
+" task. See `engine_audit "
+"<https://github.com/secretflow/scql/blob/main/engine/audit/audit.proto>`_"
+" for more information"
+msgstr ""
+"基础审计日志是用来记录 SCQLEngine "
+"在执行任务过程中所产生的一系列事件的基本信息。补充审计日志信息，则是用来记录这些事件一些额外的信息。更多信息请参考 `engine_audit "
+"<https://github.com/secretflow/scql/blob/main/engine/audit/audit.proto>`_"
+" 。"
 
-#~ msgid ""
-#~ "datasources in embed_router_conf contain "
-#~ "information for connecting MYSQL/SQLite3::"
-#~ msgstr "embed_router_conf 中的数据源包含连接 MYSQL/SQLite3 的信息："
+#: ../../development/scql_config_manual.rst:464
+msgid ""
+"The log file is rotated in every 24:00:00 in local time, and the filename"
+" is generated in the format ``name-date.ext``, where `name` is the "
+"filename set in ``audit_log_file`` without the extension, `date` is the "
+"time at which the log was rotated formatted with local time format of "
+"`YYYY-MM-DD`, `ext` is the extension set in ``audit_log_file``."
+msgstr ""
+"SCQLEngine 会在每天 24:00:00 对当天的审计日志进行归档，归档的审计日志文件命名格式为 ``name-date.ext`` "
+"，其中 `name` 是在 ``audit_log_file`` 中设置的不带后缀的文件名， `date` 是当前的日期（格式为 `YYYY-"
+"MM-DD`）， `ext` 是在 ``audit_log_file`` 中设置的后缀名。"
+
+#: ../../development/scql_config_manual.rst:467
+msgid ""
+"For example, if you set ``audit_log_file`` as `audit/audit.log`, a backup"
+" created on Nov 11 2016 would be saved to `/audit/audit_2016-11-04.log`"
+msgstr ""
+"例如，通过设置 ``audit_log_file`` 为 `audit/audit.log`，在2016年11月4日 24:00:00 "
+"归档的审计日志会保存至 `./audit/audit_2016-11-04.log` 。"
 

@@ -17,6 +17,7 @@
 #include <chrono>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "absl/container/flat_hash_map.h"
 #include "libspu/core/context.h"
@@ -107,6 +108,13 @@ class Session {
 
   int64_t GetAffectedRows() const { return affected_rows_; }
 
+  using RefNums = std::vector<std::tuple<std::string, int>>;
+  // set origin ref num
+  void UpdateRefName(const std::vector<std::string>& input_ref_names,
+                     const RefNums& output_ref_nums);
+
+  void DelTensors(const std::vector<std::string>& tensor_names);
+
  private:
   void InitLink();
 
@@ -133,6 +141,9 @@ class Session {
 
   std::vector<std::shared_ptr<pb::Tensor>> publish_results_;
   int64_t affected_rows_ = 0;
+
+  std::mutex mutex_;
+  absl::flat_hash_map<std::string, int> tensor_ref_nums_;
 };
 
 }  // namespace scql::engine

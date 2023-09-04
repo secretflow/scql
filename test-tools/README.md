@@ -8,7 +8,7 @@ If you want to enable tls in SCQL but don't have existing CA files, ca_generator
 
 Run the command below to generate CA files:
 ```sh
-bash ca_generator.sh
+sh ca_generator.sh
 ```
 
 If the script completes successfully, you can obtain these CA files as follows:
@@ -46,7 +46,6 @@ Deploy CA files in your environments for SCQL to use:
 
 The default generated CA files may not work well in your environment, if you encounter problems, please check the following:
 
-- Script default add hosts ``localhost/scdb/engine_alice/engine_bob/engine_carol`` to ``subjectAltName``, so the generated CA can only be used for these hosts. please modifying if nodes' hosts do not matched.
-  > e.g: If your scdb listens on IP xxx, you need to add ``IP.2 = xxx`` to ``[sans]`` in ca_generator.sh
+- Script default add ``scdb/engine_alice/engine_bob/engine_carol`` to ``subjectAltName`` and generate CA for these nodes, please modifying if nodes' hosts do not matched.
 
-- Auto generated root-ca.crt may not be trusted by default, try to use trusted CA as root-ca.crt and run the script again, please refer to the comments at the beginning of the ca_generator.sh for usage. If and only if in linux ``test environments``, you can optionally cp root-ca.crt to /etc/ssl/certs in the environments running scdbclient and scdb
+- Auto generated root-ca.crt may not be trusted by default, try to use trusted CA as root-ca.crt and run the script again, please refer to the comments at the beginning of the ca_generator.sh for usage. If and only if in linux ``test environments``, you can optionally cp root-ca.crt to /etc/ssl/certs.

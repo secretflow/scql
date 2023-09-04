@@ -146,7 +146,8 @@ std::shared_ptr<Tensor> Constant::BuildTensorFromScalar(
       break;
     }
     default:
-      YACL_THROW("not supported elem_type:{}", pb_tensor.elem_type());
+      YACL_THROW("not supported elem_type:{}",
+                 pb::PrimitiveDataType_Name(pb_tensor.elem_type()));
       break;
   }
   return result;

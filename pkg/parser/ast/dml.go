@@ -98,11 +98,15 @@ func (n *Join) Restore(ctx *RestoreCtx) error {
 		ctx.WritePlain("(")
 		defer ctx.WritePlain(")")
 	}
-	ctx.JoinLevel++
+	if n.Right != nil {
+		ctx.JoinLevel++
+	}
 	if err := n.Left.Restore(ctx); err != nil {
 		return errors.Annotate(err, "An error occurred while restore Join.Left")
 	}
-	ctx.JoinLevel--
+	if n.Right != nil {
+		ctx.JoinLevel--
+	}
 	if n.Right == nil {
 		return nil
 	}
@@ -1387,9 +1391,6 @@ func (n *InsertStmt) Restore(ctx *RestoreCtx) error {
 	} else {
 		ctx.WriteKeyWord("INSERT ")
 	}
-	if err := n.Priority.Restore(ctx); err != nil {
-		return errors.Trace(err)
-	}
 	if n.Priority != mysql.NoPriority {
 		ctx.WritePlain(" ")
 	}
@@ -1557,9 +1558,6 @@ func (n *DeleteStmt) Restore(ctx *RestoreCtx) error {
 		ctx.WritePlain("*/ ")
 	}
 
-	if err := n.Priority.Restore(ctx); err != nil {
-		return errors.Trace(err)
-	}
 	if n.Priority != mysql.NoPriority {
 		ctx.WritePlain(" ")
 	}
@@ -1699,9 +1697,6 @@ func (n *UpdateStmt) Restore(ctx *RestoreCtx) error {
 		ctx.WritePlain("*/ ")
 	}
 
-	if err := n.Priority.Restore(ctx); err != nil {
-		return errors.Trace(err)
-	}
 	if n.Priority != mysql.NoPriority {
 		ctx.WritePlain(" ")
 	}
@@ -1808,14 +1803,14 @@ type Limit struct {
 // Restore implements Node interface.
 func (n *Limit) Restore(ctx *RestoreCtx) error {
 	ctx.WriteKeyWord("LIMIT ")
+	if err := n.Count.Restore(ctx); err != nil {
+		return errors.Annotate(err, "An error occurred while restore Limit.Count")
+	}
 	if n.Offset != nil {
+		ctx.WriteKeyWord(" OFFSET ")
 		if err := n.Offset.Restore(ctx); err != nil {
 			return errors.Annotate(err, "An error occurred while restore Limit.Offset")
 		}
-		ctx.WritePlain(",")
-	}
-	if err := n.Count.Restore(ctx); err != nil {
-		return errors.Annotate(err, "An error occurred while restore Limit.Count")
 	}
 	return nil
 }

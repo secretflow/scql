@@ -34,8 +34,9 @@ class AuditLogTest : public ::testing::Test {
   void SetUp() override {
     scql::engine::audit::AuditOptions opt;
     {
-      opt.enable_audit_logger = true;
-      opt.audit_log_dir = "audit";
+      opt.audit_log_file = "audit/audit.log";
+      opt.audit_detail_file = "audit/detail.log";
+      opt.audit_max_files = 180;
     }
     SetupAudit(opt);
 

@@ -41,10 +41,10 @@ TEST_P(GroupHeSumTest, works) {
   auto parm = GetParam();
   auto tc = std::get<1>(parm);
   pb::ExecNode node = MakeExecNode(tc);
-  std::vector<Session> sessions = test::MakeMultiPCSession(std::get<0>(parm));
+  auto sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
-  ExecContext alice_ctx(node, &sessions[0]);
-  ExecContext bob_ctx(node, &sessions[1]);
+  ExecContext alice_ctx(node, sessions[0].get());
+  ExecContext bob_ctx(node, sessions[1].get());
 
   test::FeedInputsAsPrivate(&alice_ctx, {tc.group_id, tc.group_num});
   test::FeedInputsAsPrivate(&bob_ctx, {tc.input});

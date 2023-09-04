@@ -72,6 +72,16 @@ func (cc *CCL) GetVisibleParties() []string {
 	return visibleParties
 }
 
+func (cc *CCL) IsVisibleForParties(parties []string) bool {
+	for _, party := range parties {
+		vis, ok := cc.partyLevels[party]
+		if !ok || vis != Plain {
+			return false
+		}
+	}
+	return true
+}
+
 func (cc *CCL) String() string {
 	levelString := ""
 	for _, p := range sliceutil.SortMapKeyForDeterminism(cc.partyLevels) {

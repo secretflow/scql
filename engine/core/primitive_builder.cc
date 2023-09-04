@@ -16,6 +16,10 @@
 
 namespace scql::engine {
 
+void BooleanTensorBuilder::Reserve(int64_t additional_elements) {
+  THROW_IF_ARROW_NOT_OK(builder_.Reserve(additional_elements));
+}
+
 void BooleanTensorBuilder::AppendNull() {
   THROW_IF_ARROW_NOT_OK(builder_.AppendNull());
 }
@@ -23,5 +27,11 @@ void BooleanTensorBuilder::AppendNull() {
 void BooleanTensorBuilder::Append(bool val) {
   THROW_IF_ARROW_NOT_OK(builder_.Append(val));
 }
+
+void BooleanTensorBuilder::UnsafeAppend(bool val) {
+  builder_.UnsafeAppend(val);
+}
+
+void BooleanTensorBuilder::UnsafeAppendNull() { builder_.UnsafeAppendNull(); }
 
 }  // namespace scql::engine

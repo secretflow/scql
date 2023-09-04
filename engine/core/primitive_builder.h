@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include "arrow/builder.h"
 #include "arrow_helper.h"
 
@@ -26,10 +28,22 @@ class BooleanTensorBuilder : public TensorBuilder {
  public:
   BooleanTensorBuilder() : TensorBuilder(arrow::boolean()) {}
 
-  ~BooleanTensorBuilder() = default;
+  ~BooleanTensorBuilder() override = default;
 
+  // Ensure that there is enough space allocated to append the indicated number
+  // of elements without any further reallocation. Note that additional_capacity
+  // is relative to the current number of elements, so calls to Reserve() which
+  // are not interspersed with addition of new elements may not increase the
+  // capacity.
+  void Reserve(int64_t additional_elements);
   void AppendNull() override;
   void Append(bool val);
+  // Note: make sure Reserve is called to attain enough capacity before calling
+  // UnsafeAppend
+  void UnsafeAppend(bool val);
+  // Note: make sure Reserve is called to attain enough capacity before calling
+  // UnsafeAppendNull
+  void UnsafeAppendNull();
 
  private:
   arrow::ArrayBuilder* GetBaseBuilder() override { return &builder_; }
@@ -45,7 +59,14 @@ class NumericTensorBuilder : public TensorBuilder {
   NumericTensorBuilder()
       : TensorBuilder(arrow::TypeTraits<T>::type_singleton()) {}
 
-  ~NumericTensorBuilder() = default;
+  ~NumericTensorBuilder() override = default;
+
+  // Ensure that there is enough space allocated to append the indicated number
+  // of elements without any further reallocation. Note that additional_capacity
+  // is relative to the current number of elements, so calls to Reserve() which
+  // are not interspersed with addition of new elements may not increase the
+  // capacity.
+  void Reserve(int64_t additional_elements);
 
   void AppendNull() override;
 
@@ -53,11 +74,24 @@ class NumericTensorBuilder : public TensorBuilder {
     THROW_IF_ARROW_NOT_OK(builder_.Append(val));
   }
 
+  // Note: make sure Reserve is called to attain enough capacity before calling
+  // UnsafeAppend
+  void UnsafeAppend(const value_type val) { builder_.UnsafeAppend(val); }
+
+  // Note: make sure Reserve is called to attain enough capacity before calling
+  // UnsafeAppendNull
+  void UnsafeAppendNull() { builder_.UnsafeAppendNull(); }
+
  private:
   arrow::ArrayBuilder* GetBaseBuilder() override { return &builder_; }
 
   arrow::NumericBuilder<T> builder_;
 };
+
+template <typename T>
+void NumericTensorBuilder<T>::Reserve(int64_t additional_elements) {
+  THROW_IF_ARROW_NOT_OK(builder_.Reserve(additional_elements));
+}
 
 template <typename T>
 void NumericTensorBuilder<T>::AppendNull() {

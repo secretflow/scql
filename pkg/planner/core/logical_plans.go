@@ -20,7 +20,6 @@ import (
 	"github.com/secretflow/scql/pkg/parser/auth"
 	"github.com/secretflow/scql/pkg/parser/model"
 	"github.com/secretflow/scql/pkg/planner/property"
-	"github.com/secretflow/scql/pkg/planner/util"
 	"github.com/secretflow/scql/pkg/table"
 	"github.com/secretflow/scql/pkg/types"
 	"github.com/secretflow/scql/pkg/util/ranger"
@@ -240,8 +239,7 @@ type DataSource struct {
 	// tableStats     *property.StatsInfo
 
 	// possibleAccessPaths stores all the possible access path for physical plan, including table scan.
-	// TODO(tengt): Implement this.
-	possibleAccessPaths []*util.AccessPath
+	// possibleAccessPaths []*util.AccessPath
 
 	// handleCol represents the handle column for the datasource, either the
 	// int primary key column or extra handle column.
@@ -280,7 +278,8 @@ type LogicalSelection struct {
 	// Originally the WHERE or ON condition is parsed into a single expression,
 	// but after we converted to CNF(Conjunctive normal form), it can be
 	// split into a list of AND conditions.
-	Conditions []expression.Expression
+	Conditions               []expression.Expression
+	AffectedByGroupThreshold bool
 }
 
 // extractCorColumnsBySchema only extracts the correlated columns that match the specified schema.

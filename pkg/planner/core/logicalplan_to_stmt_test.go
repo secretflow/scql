@@ -24,7 +24,6 @@ import (
 	"github.com/secretflow/scql/pkg/infoschema"
 	"github.com/secretflow/scql/pkg/parser"
 	"github.com/secretflow/scql/pkg/parser/format"
-	"github.com/secretflow/scql/pkg/proto-gen/grm"
 	"github.com/secretflow/scql/pkg/sessionctx"
 	"github.com/secretflow/scql/pkg/util/mock"
 	"github.com/secretflow/scql/pkg/util/testleak"
@@ -38,11 +37,12 @@ import (
 )
 
 var _ = Suite(&testRunSQLSuite{})
-var testBackEnds = []string{MySQL, Postgres}
+var testBackEnds = []string{MySQL, Postgres, ODPS}
 
 const (
 	MySQL    = "MYSQL"
 	Postgres = "POSTGRESQL"
+	ODPS     = "ODPS"
 )
 
 type testRunSQLSuite struct {
@@ -57,8 +57,10 @@ type testRunSQLSuite struct {
 type TestCaseSqlString struct {
 	Sql               string `json:"sql"`
 	SkipProjection    bool   `json:"skip_projection"`
+	RewrittenSqlODPS  string `json:"rewritten_sql_odps"`
 	RewrittenSqlMysql string `json:"rewritten_sql_mysql"`
 	RewrittenSqlPg    string `json:"rewritten_sql_pg"`
+	SkipOdpsTest      bool   `json:"skip_odps_test"`
 	SkipPgTest        bool   `json:"skip_pg_test"`
 	// default; if RewrittenSql set, all back ends use this sql as default
 	RewrittenSql string `json:"rewritten_sql"`
@@ -102,24 +104,36 @@ func GetExpectSQL(backEnd string, testCase TestCaseSqlString) string {
 			return testCase.RewrittenSqlPg
 		}
 	}
+	if backEnd == ODPS {
+		if testCase.RewrittenSqlODPS != "" {
+			return testCase.RewrittenSqlODPS
+		}
+	}
 	return testCase.RewrittenSql
 }
 
 func SkipTestFor(backEnd string, testCase TestCaseSqlString) bool {
 	switch backEnd {
 	case MySQL:
-		return true
+		return false
 	case Postgres:
 		return testCase.SkipPgTest
+	case ODPS:
+		return testCase.SkipOdpsTest
 	}
 	return false
 }
 
 func (s *testRunSQLSuite) testRunSQL(c *C, testCase TestCaseSqlString, useV2 bool) {
 	for _, backEnd := range testBackEnds {
+		if SkipTestFor(backEnd, testCase) {
+			continue
+		}
 		expect := GetExpectSQL(backEnd, testCase)
+		dbType, err := ParseDBType(backEnd)
+		c.Assert(err, IsNil)
 		// test mysql
-		sql, err := regenerateSql(testCase, s, DBDialectMap[grm.DataSourceKind(grm.DataSourceKind_value[backEnd])])
+		sql, err := regenerateSql(testCase, s, DBDialectMap[dbType])
 		comment := Commentf("%s tests: for %+v", backEnd, testCase)
 		log.Info(sql)
 		c.Assert(err, IsNil, comment)

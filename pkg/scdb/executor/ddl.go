@@ -19,7 +19,6 @@ package executor
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -123,8 +122,8 @@ func (e *DDLExec) executeCreateTable(s *ast.CreateTableStmt) (err error) {
 	if s.Partition != nil {
 		return fmt.Errorf("ddl.executeCreateTable: unsupported PARTITION options")
 	}
-	if len(s.Cols) != 0 {
-		return fmt.Errorf("ddl.executeCreateTable: unsupport CREATE TABLE with columns")
+	if len(s.Cols) == 0 {
+		return fmt.Errorf("ddl.executeCreateTable: unsupported creating TABLE without columns")
 	}
 	tx := e.ctx.GetSessionVars().Storage.Begin()
 	defer func() {
@@ -163,71 +162,42 @@ func (e *DDLExec) executeCreateTable(s *ast.CreateTableStmt) (err error) {
 		return fmt.Errorf("ddl.executeCreateTable: table %v.%v already exists", dbName, tblName)
 	}
 
-	// fetch table schema from grm
-	tid, err := extractTID(s.Options)
-	if err != nil {
-		return fmt.Errorf("ddl.executeCreateTable: extract tid failed %v", err)
-	}
-	grmToken := e.ctx.GetSessionVars().GrmToken
-	if pass, err := e.ctx.GetSessionVars().GrmClient.VerifyTableOwnership(tid, grmToken); err != nil || !pass {
-		if err != nil {
-			return fmt.Errorf("ddl.executeCreateTable: verify table owner ship failed %v", err)
-		}
-		return fmt.Errorf("ddl.executeCreateTable: user %v is not the owner of tid %v", e.ctx.GetSessionVars().User.Username, tid)
-	}
-	userName := e.ctx.GetSessionVars().User.Username
-	hostName := e.ctx.GetSessionVars().User.Hostname
-	issuerPartyCode, err := storage.QueryUserPartyCode(tx, userName, hostName)
-	if err != nil {
-		return fmt.Errorf("ddl.executeCreateTable: failed to query issuer party code: %v", err)
-	}
-	tableSchema, err := e.ctx.GetSessionVars().GrmClient.GetTableMeta(tid, issuerPartyCode, grmToken)
-	if err != nil {
-		return fmt.Errorf("ddl.executeCreateTable: get table info failed: %v", err)
-	}
-
-	if tableSchema.DbName == "" || tableSchema.TableName == "" {
-		return fmt.Errorf("ddl.executeCreateTable: the reference db name or table name is empty")
-	}
-
-	if len(tableSchema.Columns) == 0 {
-		return fmt.Errorf("ddl.executeCreateTable: the reference table %v.%v is empty", tableSchema.DbName, tableSchema.TableName)
-	}
-
-	for _, col := range tableSchema.Columns {
+	for _, col := range s.Cols {
 		colType := strings.ToLower(col.Type)
 		if !constant.SupportTypes[colType] {
 			return fmt.Errorf("ddl.executeCreateTable: unknown type in schema: %s", colType)
 		}
 	}
 
-	tableSchemaString, err := json.Marshal(tableSchema)
+	ref := extractRefTableOption(s.Options)
+	// TODO: verify ref
+	dbType, err := core.ParseDBType(ref.dbType)
 	if err != nil {
-		return fmt.Errorf("ddl.executeCreateTable: unexpected marshal failure: %v", err)
+		return fmt.Errorf("ddl.executeCreateTable: %+v", err)
 	}
 
 	// create table
 	result := tx.Create(&storage.Table{
-		Db:       dbName,
-		Table:    tblName,
-		Schema:   string(tableSchemaString),
+		Db:    dbName,
+		Table: tblName,
+		// Schema:   string(tableSchemaString),
 		Owner:    e.ctx.GetSessionVars().User.Username,
 		Host:     e.ctx.GetSessionVars().User.Hostname,
-		RefDb:    tableSchema.DbName,
-		RefTable: tableSchema.TableName,
-		DBType:   int(tableSchema.DBType),
+		RefDb:    ref.db,
+		RefTable: ref.table,
+		DBType:   int(dbType),
 	})
 	if result.Error != nil {
 		return fmt.Errorf("ddl.executeCreateTable: %v", result.Error)
 	}
 
-	for _, c := range tableSchema.Columns {
+	for _, c := range s.Cols {
+		// TODO: fill description field
 		result = tx.Create(&storage.Column{
-			Db:          dbName,
-			TableName:   tblName,
-			ColumnName:  strings.ToLower(c.Name),
-			Type:        c.Type,
-			Description: c.Description,
+			Db:         dbName,
+			TableName:  tblName,
+			ColumnName: strings.ToLower(c.Name.String()),
+			Type:       c.Type,
 		})
 		if result.Error != nil {
 			return fmt.Errorf("ddl.executeCreateTable: %v", result.Error)
@@ -237,13 +207,26 @@ func (e *DDLExec) executeCreateTable(s *ast.CreateTableStmt) (err error) {
 	return nil
 }
 
-func extractTID(opts []*ast.TableOption) (string, error) {
+type refTableOption struct {
+	db     string
+	table  string
+	dbType string
+}
+
+func extractRefTableOption(opts []*ast.TableOption) *refTableOption {
+	ref := &refTableOption{}
 	for _, opt := range opts {
-		if opt.Tp == ast.TableOptionTID {
-			return opt.StrValue, nil
+		switch opt.Tp {
+		case ast.TableOptionRefTable:
+			ref.table = opt.StrValue
+			tn := opt.TableNames[0]
+			ref.db = tn.Schema.String()
+			ref.table = tn.Name.String()
+		case ast.TableOptionDBType:
+			ref.dbType = opt.StrValue
 		}
 	}
-	return "", fmt.Errorf("unable to find TID")
+	return ref
 }
 
 func (e *DDLExec) executeCreateView(s *ast.CreateViewStmt) (err error) {

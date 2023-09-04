@@ -40,21 +40,26 @@ class StringifyVisitor {
   template <typename TYPE>
   arrow::Status Visit(const arrow::NumericArray<TYPE>& array) {
     for (int64_t i = 0; i < array.length(); i++) {
-      strs_.push_back(std::to_string(array.GetView(i)));
+      strs_.push_back(array.IsNull(i) ? "null"
+                                      : std::to_string(array.GetView(i)));
     }
     return arrow::Status::OK();
   }
 
   arrow::Status Visit(const arrow::BooleanArray& array) {
     for (int64_t i = 0; i < array.length(); i++) {
-      strs_.push_back(array.GetView(i) ? "true" : "false");
+      if (array.IsNull(i)) {
+        strs_.push_back("null");
+      } else {
+        strs_.push_back(array.GetView(i) ? "true" : "false");
+      }
     }
     return arrow::Status::OK();
   }
 
   arrow::Status Visit(const arrow::LargeStringArray& array) {
     for (int64_t i = 0; i < array.length(); i++) {
-      strs_.push_back(array.GetString(i));
+      strs_.push_back(array.IsNull(i) ? "null" : array.GetString(i));
     }
     return arrow::Status::OK();
   }

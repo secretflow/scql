@@ -22,9 +22,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/secretflow/scql/pkg/executor"
-	"github.com/secretflow/scql/pkg/grm"
+	"github.com/secretflow/scql/pkg/infoschema"
 	"github.com/secretflow/scql/pkg/interpreter/translator"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/scdb/config"
 	"github.com/secretflow/scql/pkg/scdb/storage"
 	"github.com/secretflow/scql/pkg/util/mock"
 )
@@ -48,30 +49,17 @@ func TestAskEngineInfoByTables(t *testing.T) {
 					},
 				},
 			},
-			GrmToken: "alice_token",
 		},
 	}
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockGrmClient := grm.NewMockGrm(ctrl)
-
-	app, err := NewApp(&Config{}, mockGrmClient, store, &executor.MockEngineClient{})
+	app, err := NewApp(&config.Config{}, store, &executor.MockEngineClient{})
 	r.NoError(err)
 
-	session, err := newSession(context.Background(), req, store, mockGrmClient)
+	session, err := newSession(context.Background(), req, store)
 	r.NoError(err)
-
-	mockGrmClient.EXPECT().GetEngines([]string{"alice", "bob"}, "alice_token").Return([]*grm.EngineInfo{
-		{
-			Endpoints:  []string{"http//engine.alice.com"},
-			Credential: []string{"alice_credential"},
-		},
-		{
-			Endpoints:  []string{"http//engine.bob.com"},
-			Credential: []string{"bob_credential"},
-		}}, nil).Times(1)
 
 	// when
 	enginesInfo, err := app.askEngineInfoByTables(session, "test", []string{"table_1", "table_2", "table_3"})
@@ -81,14 +69,14 @@ func TestAskEngineInfoByTables(t *testing.T) {
 
 	host, err := enginesInfo.GetUrlByParty("alice")
 	r.NoError(err)
-	r.Equal("http//engine.alice.com", host)
+	r.Equal("engine.alice.com", host)
 	credential, err := enginesInfo.GetCredentialByParty("alice")
 	r.NoError(err)
 	r.Equal("alice_credential", credential)
 
 	host, err = enginesInfo.GetUrlByParty("bob")
 	r.NoError(err)
-	r.Equal("http//engine.bob.com", host)
+	r.Equal("engine.bob.com", host)
 	credential, err = enginesInfo.GetCredentialByParty("bob")
 	r.NoError(err)
 	r.Equal("bob_credential", credential)
@@ -113,11 +101,11 @@ func TestCollectCCLForUser(t *testing.T) {
 	r.NoError(err)
 	r.NoError(mock.MockStorage(store)) // user already create here
 
-	tableSchemas := []*grm.TableSchema{
+	tableSchemas := []*infoschema.TableSchema{
 		{
 			DbName:    "test",
 			TableName: "table_1",
-			Columns: []*grm.ColumnDesc{
+			Columns: []infoschema.ColumnDesc{
 				{
 					Name: "column1_1",
 					Type: "long",

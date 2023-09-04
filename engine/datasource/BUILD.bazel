@@ -27,12 +27,36 @@ cc_library(
 )
 
 cc_library(
+    name = "arrow_sql_adaptor",
+    srcs = ["arrow_sql_adaptor.cc"],
+    hdrs = ["arrow_sql_adaptor.h"],
+    deps = [
+        ":datasource_adaptor",
+        ":datasource_cc_proto",
+        "//engine/core:arrow_helper",
+        "//engine/util:spu_io",
+        "@org_apache_arrow//:arrow",
+    ],
+)
+
+cc_binary(
+    name = "arrow_sql_adaptor_test",
+    srcs = ["arrow_sql_adaptor_test.cc"],
+    deps = [
+        ":arrow_sql_adaptor",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/flags:parse",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+cc_library(
     name = "odbc_adaptor",
     srcs = ["odbc_adaptor.cc"],
     hdrs = ["odbc_adaptor.h"],
     deps = [
         ":datasource_adaptor",
-        "//api:datasource_cc_proto",
+        ":datasource_cc_proto",
         "//engine/core:arrow_helper",
         "//engine/core:primitive_builder",
         "//engine/core:string_tensor_builder",
@@ -67,18 +91,28 @@ cc_binary(
 cc_library(
     name = "router",
     hdrs = ["router.h"],
-    deps = ["//api:datasource_cc_proto"],
+    deps = [":datasource_cc_proto"],
 )
 
 proto_library(
     name = "router_proto",
     srcs = ["router.proto"],
-    deps = ["//api:datasource_proto"],
+    deps = [":datasource_proto"],
 )
 
 cc_proto_library(
     name = "router_cc_proto",
     deps = [":router_proto"],
+)
+
+proto_library(
+    name = "datasource_proto",
+    srcs = ["datasource.proto"],
+)
+
+cc_proto_library(
+    name = "datasource_cc_proto",
+    deps = [":datasource_proto"],
 )
 
 cc_library(
@@ -108,10 +142,11 @@ cc_library(
     srcs = ["datasource_adaptor_mgr.cc"],
     hdrs = ["datasource_adaptor_mgr.h"],
     deps = [
+        ":arrow_sql_adaptor_factory",
         ":csvdb_adaptor_factory",
         ":datasource_adaptor",
         ":odbc_adaptor_factory",
-        "//api:datasource_cc_proto",
+        ":datasource_cc_proto",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/synchronization",
     ],
@@ -122,7 +157,16 @@ cc_library(
     hdrs = ["datasource_adaptor_factory.h"],
     deps = [
         ":datasource_adaptor",
-        "//api:datasource_cc_proto",
+        ":datasource_cc_proto",
+    ],
+)
+
+cc_library(
+    name = "arrow_sql_adaptor_factory",
+    hdrs = ["arrow_sql_adaptor_factory.h"],
+    deps = [
+        ":arrow_sql_adaptor",
+        ":datasource_adaptor_factory",
     ],
 )
 
@@ -177,7 +221,7 @@ cc_library(
     deps = [
         ":datasource_adaptor",
         ":duckdb_wrapper",
-        "//api:datasource_cc_proto",
+        ":datasource_cc_proto",
         "//engine/core:arrow_helper",
         "//engine/util:spu_io",
         "@yacl//yacl/base:exception",

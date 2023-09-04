@@ -164,8 +164,8 @@ TEST_P(JoinCipherStoreTest, works) {
   auto right_store = MakeRightStore(tc);
 
   // When
-  auto left_indices = left_store->FinalizeAndComputeJoinIndices(true);
-  auto right_indices = right_store->FinalizeAndComputeJoinIndices(false);
+  auto left_indices = left_store->FinalizeAndComputeJoinIndices(0, true);
+  auto right_indices = right_store->FinalizeAndComputeJoinIndices(0, false);
 
   // Then
   EXPECT_EQ(left_indices->Length(), right_indices->Length());

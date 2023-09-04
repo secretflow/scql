@@ -16,6 +16,7 @@
 
 #include "yacl/utils/thread_pool.h"
 
+#include "engine/auth/authenticator.h"
 #include "engine/datasource/datasource_adaptor_mgr.h"
 #include "engine/datasource/embed_router.h"
 #include "engine/framework/session_manager.h"
@@ -35,7 +36,8 @@ class EngineServiceImpl : public pb::SCQLEngineService {
  public:
   EngineServiceImpl(const EngineServiceOptions& options,
                     std::unique_ptr<SessionManager> session_mgr,
-                    ChannelManager* channel_manager);
+                    ChannelManager* channel_manager,
+                    std::unique_ptr<auth::Authenticator> authenticator);
 
   ~EngineServiceImpl() = default;
 
@@ -75,6 +77,8 @@ class EngineServiceImpl : public pb::SCQLEngineService {
 
   bool CheckSCDBCredential(const brpc::HttpHeader& http_header);
 
+  void VerifyPublicKeys(const pb::SessionStartParams& start_params);
+
  private:
   const EngineServiceOptions service_options_;
   std::unique_ptr<SessionManager> session_mgr_;
@@ -86,6 +90,8 @@ class EngineServiceImpl : public pb::SCQLEngineService {
   // used for datasource operator.
   std::unique_ptr<Router> ds_router_;
   std::unique_ptr<DatasourceAdaptorMgr> ds_mgr_;
+
+  std::unique_ptr<auth::Authenticator> authenticator_;
 };
 
 }  // namespace scql::engine

@@ -36,6 +36,7 @@ func NewGraphPartitioner(input *translator.Graph) *GraphPartitioner {
 
 // NaivePartition a graph by topological sort order
 func (p *GraphPartitioner) NaivePartition() error {
+	p.Graph.UpdateTensorRefNum()
 	nodes, err := p.Graph.TopologicalSort()
 	if err != nil {
 		return err

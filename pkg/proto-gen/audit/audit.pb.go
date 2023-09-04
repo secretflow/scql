@@ -165,7 +165,6 @@ type AuditBody struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Body:
-	//
 	//	*AuditBody_Uncategorized
 	//	*AuditBody_RunSyncQuery
 	//	*AuditBody_RunAsyncQuery

@@ -62,8 +62,18 @@ func TestGetStatusConversionCost(t *testing.T) {
 
 func TestAddTensorStatusConversion(t *testing.T) {
 	a := require.New(t)
-	pi, err := NewPartyInfo([]string{"party1", "party2"}, []string{"party1.net", "party2.net"}, []string{"party1_credential", "party2_credential"})
-	a.NoError(err)
+	pi := NewPartyInfo([]*Participant{
+		{
+			PartyCode: "party1",
+			Endpoints: []string{"party1.net"},
+			Token:     "party1_credential",
+		},
+		{
+			PartyCode: "party2",
+			Endpoints: []string{"party2.net"},
+			Token:     "party2_credential",
+		},
+	})
 	newSimplePlan := func() *GraphBuilder {
 		e1 := NewGraphBuilder(pi)
 		t1 := e1.AddTensor("alice.t1")
@@ -93,8 +103,18 @@ func TestAddTensorStatusConversion(t *testing.T) {
 
 func TestConvertTo(t *testing.T) {
 	r := require.New(t)
-	partyInfo, err := NewPartyInfo([]string{"Alice", "Bob"}, []string{"party1.net", "party2.net"}, []string{"party1_credential", "party2_credential"})
-	r.Nil(err)
+	partyInfo := NewPartyInfo([]*Participant{
+		{
+			PartyCode: "Alice",
+			Endpoints: []string{"alice.net"},
+			Token:     "alice_credential",
+		},
+		{
+			PartyCode: "Bob",
+			Endpoints: []string{"bob.net"},
+			Token:     "bob_credential",
+		},
+	})
 	e1 := NewGraphBuilder(partyInfo)
 	mockT1 := e1.AddTensor("t1.1")
 	mockT1.Status = scql.TensorStatus_TENSORSTATUS_PRIVATE

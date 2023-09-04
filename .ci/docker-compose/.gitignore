@@ -1,3 +1,5 @@
 docker-compose.yaml
 docker-compose.yml
 scdb/conf/
+engine/*/conf/authorized_profile.json
+engine/*/conf/ed25519key.pem

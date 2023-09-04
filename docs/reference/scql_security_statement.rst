@@ -8,12 +8,12 @@ For a single query, SCQL protects the confidentiality of data that meets the CCL
 
 SCQL does not protect queries as queries are designed to be public to all participants in SCQL. SCQL also does not protect the size (dimension) information of intermediate computation results.
 
-SCQL is built on top of the MPC framework `secretflow/spu`_, using a semi-honest security model. The SCQL semi-honest model assumes that all participants, including the query issuer, the data owner (SCQLEngine is deployed on the data owner), SCDB server and GRM, strictly abide by the protocol, but may try to learn others' private data from its legitimately received messages. 
+SCQL is built on top of the MPC framework `secretflow/spu`_, using a semi-honest security model. The SCQL semi-honest model assumes that all participants, including the query issuer, the data owner (SCQLEngine is deployed on the data owner) and SCDB server, strictly abide by the protocol, but may try to learn others' private data from its legitimately received messages. 
 
 .. warning:: 
     If you select the SEMI2K as SCQL's underlying mpc protocol, please make sure to use the `TrustedThirdParty beaver provider`_ [#f1]_. The other beaver provider mode `TrustedFirstParty beaver provider`_ should only be used for debugging and may incur significant security problem in the production environment.
 
-Like all cryptography-based privacy-preserving computing systems, SCQL at this stage cannot solve the problem of deducing original privacy data based on the results of legal queries. The current academic solution to this problem is generally to add noise into data through differential privacy mechanism. Although the CCL mechanism allows the data owners to restrict the use of their data, which can alleviate risks to a certain extent, it cannot completely eliminate the risks. SCQL also does not solve the problem of participants tampering with their original input to obtain other participants' private information.
+Like all cryptography-based privacy computing systems, SCQL at this stage cannot solve the problem of deducing original privacy data based on the results of legal queries. The current academic solution to this problem is generally to add noise into data through differential privacy mechanism. Although the CCL mechanism allows the data owners to restrict the use of their data, which can alleviate risks to a certain extent, it cannot completely eliminate the risks. SCQL also does not solve the problem of participants tampering with their original input to obtain other participants' private information.
 
 The following chapters will describe possible attack methods for inferring data from results, and give corresponding suggestions.
 
@@ -62,10 +62,9 @@ System Security Configuration Instructions
 Suggestions for upstream integrators
 ------------------------------------
 
-1. When implementing GRM services, it is recommended to use dynamic tokens to avoid security issues caused by static token leakage.
-2. It is recommended to add an approval process before submitting any queries to SCQL for execution.
-3. It is recommended to add an audit mechanism, analyze historical queries, and track down information leakage issues.
-4. It is recommended to divide the use of SCQL into two stages: development stage and production stage, and to adopt different security control measures. 
+1. It is recommended to add an approval process before submitting any queries to SCQL for execution.
+2. It is recommended to add an audit mechanism, analyze historical queries, and track down information leakage issues.
+3. It is recommended to divide the use of SCQL into two stages: development stage and production stage, and to adopt different security control measures. 
    
    * The development stage refers to the stage where the query is under development iteration. The data samples used in the development stage must be small-scale data sets that have been desensitized, de-identified, anonymized, and added with noise, aiming to quickly build the data analysis processing flow. 
    * The production stage refers to the joint analysis of the query by multiple participating parties to ensure that the task is risk-free or within the acceptance range of multiple participating parties, and is released for production operation. If the related query needs to be changed, it needs to go through multi-party audit and evaluation again. The production stage uses real data, and parties participating in the joint analysis need to: (1) conduct task evaluation and approval before the event; (2) ensure task consistency during the event, and suspend the task in a timely manner if there is any risk; (3) conduct audit after the event, and ensure that potential data leakage risks can be discovered and avoided in case of malicious behavior.

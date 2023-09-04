@@ -22,23 +22,26 @@ DATABASES = {
     "alice": {
         "db_name": "alice",
         "party_code": "alice",
-        "engine": ["engine_alice:8003"],
+        "engine": ["engine-alice:8003"],
         "credentials": ["alice_credential"],
         "token": "alice_token",
+        "db_type": "MYSQL",
     },
     "bob": {
         "db_name": "bob",
         "party_code": "bob",
-        "engine": ["engine_bob:8003"],
+        "engine": ["engine-bob:8003"],
         "credentials": ["bob_credential"],
         "token": "bob_token",
+        "db_type": "CSVDB",
     },
     "carol": {
         "db_name": "carol",
         "party_code": "carol",
-        "engine": ["engine_carol:8003"],
+        "engine": ["engine-carol:8003"],
         "credentials": ["carol_credential"],
         "token": "carol_token",
+        "db_type": "POSTGRESQL",
     },
 }
 COLUMN_COPY_NUM = 3
@@ -46,7 +49,6 @@ TABLE_COPY_NUM = 3
 DATA_TYPE = ["long", "float", "string"]
 CCL_LEVEL = ["plain", "join", "groupby", "compare", "aggregate", "encrypt"]
 CUR_PATH = Path(__file__).parent.resolve()
-tid_index = 0
 
 
 def create_db(db_info):
@@ -60,9 +62,6 @@ def create_table(pos):
     table = dict()
     table_name = f"{table_name_prefix}_{pos}"
     table["columns"] = list()
-    global tid_index
-    table["tid"] = f"tid{tid_index}"
-    tid_index = tid_index + 1
     for i in range(COLUMN_COPY_NUM):
         for dtype in DATA_TYPE:
             for level in CCL_LEVEL:

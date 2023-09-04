@@ -24,7 +24,6 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/secretflow/scql/pkg/executor"
-	"github.com/secretflow/scql/pkg/grm"
 	"github.com/secretflow/scql/pkg/interpreter/translator"
 	"github.com/secretflow/scql/pkg/parser/auth"
 	"github.com/secretflow/scql/pkg/privilege"
@@ -58,9 +57,6 @@ type session struct {
 	result           *scql.SCDBQueryResultResponse
 	ctx              context.Context
 
-	// compling flags
-	skipDbName bool
-
 	executor *executor.AsyncExecutor
 
 	// all sessions have independent stub to avoid concurrent problems
@@ -85,7 +81,7 @@ func (s *session) GetSessionVars() *variable.SessionVars {
 	return s.sessionVars
 }
 
-func newSession(ctx context.Context, req *scql.SCDBQueryRequest, s *gorm.DB, grmClient grm.Grm) (*session, error) {
+func newSession(ctx context.Context, req *scql.SCDBQueryRequest, s *gorm.DB) (*session, error) {
 	sessionId, err := generateSessionID()
 	if nil != err {
 		return nil, err
@@ -100,13 +96,10 @@ func newSession(ctx context.Context, req *scql.SCDBQueryRequest, s *gorm.DB, grm
 		sessionVars:      variable.NewSessionVars(),
 		values:           make(map[fmt.Stringer]interface{}),
 		ctx:              ctx,
-		skipDbName:       true,
 	}
 
 	session.GetSessionVars().Storage = s
 	session.GetSessionVars().StmtCtx = &stmtctx.StatementContext{}
-	session.GetSessionVars().GrmClient = grmClient
-	session.GetSessionVars().GrmToken = req.GetUser().GetGrmToken()
 	session.GetSessionVars().CurrentDB = req.DbName
 
 	return session, nil
@@ -141,6 +134,11 @@ func (s *session) setResultWithOutputColumnsAndAffectedRows(columns []*scql.Tens
 		ScdbSessionId: s.id,
 		AffectedRows:  affectedRows,
 	}
+	if s.GetSessionVars().AffectedByGroupThreshold {
+		reason := "for safety, we filter the results for groups which contain less than 4 items."
+		logrus.Infof("%v", reason)
+		s.result.Warnings = append(s.result.Warnings, &scql.SQLWarning{Reason: reason})
+	}
 }
 
 func (sc *session) mergeQueryResults() (result *scql.SCDBQueryResultResponse, err error) {
@@ -151,6 +149,11 @@ func (sc *session) mergeQueryResults() (result *scql.SCDBQueryResultResponse, er
 	if result.Status.Code != int32(scql.Code_OK) {
 		logrus.Infof("Rewrite QueryResult status code from %v(by engine) to %v", result.Status.Code, scql.Code_INTERNAL)
 		result.Status.Code = int32(scql.Code_INTERNAL)
+	}
+	if sc.GetSessionVars().AffectedByGroupThreshold {
+		reason := "for safety, we filter the results for groups which contain less than 4 items."
+		logrus.Infof("%v", reason)
+		result.Warnings = append(result.Warnings, &scql.SQLWarning{Reason: reason})
 	}
 	return result, err
 }
@@ -166,17 +169,14 @@ func (sc *session) next(ctx context.Context, req *scql.ReportRequest) (bool /*is
 
 func (sc *session) fillPartyInfo(enginesInfo *translator.EnginesInfo) {
 	sc.partyInfo = enginesInfo.GetPartyInfo()
-	for i, partyCode := range sc.partyInfo.GetParties() {
-		partyHosts, err := enginesInfo.GetUrlByParty(partyCode)
-		if err != nil {
-			return
-		}
+	for i, participant := range sc.partyInfo.GetParticipants() {
 		sc.parties = append(
 			sc.parties, &scql.SessionStartParams_Party{
-				Code: partyCode,
-				Name: partyCode,
-				Rank: int32(i),
-				Host: partyHosts,
+				Code:      participant.PartyCode,
+				Name:      participant.PartyCode,
+				Rank:      int32(i),
+				Host:      participant.Endpoints[0],
+				PublicKey: participant.PubKey,
 			})
 	}
 }

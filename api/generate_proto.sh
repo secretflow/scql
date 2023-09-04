@@ -15,11 +15,11 @@
 # limitations under the License.
 #
 set -e
-bazel build //api:scql_go_proto //api:spu_go_proto //api:grm_go_proto
-mkdir -p pkg/proto-gen/scql pkg/proto-gen/spu pkg/proto-gen/grm
+bazel build //api:scql_go_proto //api:spu_go_proto
+mkdir -p pkg/proto-gen/scql 
 proto_gen_package=github.com/secretflow/scql/pkg/proto-gen
 # copy files execpt spu.pb.go
 ls bazel-bin/api/scql_go_proto_/${proto_gen_package}/scql/ | grep -v spu.* | xargs -I {} cp -r bazel-bin/api/scql_go_proto_/${proto_gen_package}/scql/{} pkg/proto-gen/scql
 cp -r bazel-bin/api/spu_go_proto_/${proto_gen_package}/spu/. pkg/proto-gen/spu
-cp -r bazel-bin/api/grm_go_proto_/${proto_gen_package}/grm/. pkg/proto-gen/grm
+
 

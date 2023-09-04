@@ -20,6 +20,16 @@ import (
 	"github.com/secretflow/scql/pkg/interpreter/ccl"
 	"github.com/secretflow/scql/pkg/interpreter/operator"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/util/sliceutil"
+)
+
+const (
+	// for aby3 mul comm round = 1
+	// for semi2k, the round of creating beaver tripper + 1/2(disable kernel vectorization)
+	// for cheetah, to be added
+	// TODO(@xiaoyuan) fix communication cost of op mul, currently we set it as 3
+	MulComm   = 3
+	EqualComm = 3 // TODO(@taochen) fix EqualComm
 )
 
 type materializedAlgorithm struct {
@@ -132,6 +142,8 @@ func NewAlgCreator() *algCreator {
 			operator.OpNameLogicalAnd:   createBinaryAlg,
 			operator.OpNameLogicalOr:    createBinaryAlg,
 			operator.OpNameIn:           createInAlg,
+			operator.OpNameIf:           createIfAlg,
+			operator.OpNameCaseWhen:     createCaseWhenAlg,
 		},
 	}
 	return creator
@@ -323,4 +335,126 @@ func createInAlg(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, allParties
 		}
 	}
 	return result, nil
+}
+
+func createCaseWhenAlg(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, allParties []string) ([]*materializedAlgorithm, error) {
+	// TODO: (@taochen) need rewrite alg cost
+	// privateCost: n * ifelse_cost, ifelse_cost = 3, n = condition.size()
+	// secretCost: (n - 1) * (NotEqual * 2 + Add) + n * Sub + (n + 1) * (Mul + Add), n = condition.size()
+	cond_size := len(in[Condition])
+	commCost := (cond_size+1)*MulComm + (cond_size-1)*2*EqualComm
+	calCost := cond_size * 3
+	privateCost := newAlgCost(0, calCost)
+	shareCost := newAlgCost(commCost, calCost)
+	var result []*materializedAlgorithm
+	result = append(result, createAllPrivateAlgs(in, out, allParties, privateCost)...)
+	result = append(result, createAllShareAlgs(in, out, allParties, shareCost))
+	result = append(result, createSharePublicAlgs(in, out, allParties, privateCost, shareCost))
+	return result, nil
+}
+
+func createIfAlg(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, allParties []string) ([]*materializedAlgorithm, error) {
+	// TODO: (@xiaoyuan) need rewrite alg cost
+	// engine calculate res using cond * (value_true - value_false) + value_false
+	// so we set cal cost as 3
+	privateIfCost := newAlgCost(0, 3)
+	shareIfCost := newAlgCost(MulComm, 3)
+	var result []*materializedAlgorithm
+	result = append(result, createAllPrivateAlgs(in, out, allParties, privateIfCost)...)
+	result = append(result, createAllShareAlgs(in, out, allParties, shareIfCost))
+	result = append(result, createSharePublicAlgs(in, out, allParties, privateIfCost, shareIfCost))
+	return result, nil
+}
+
+func extractCCLsFromMap(in map[string][]*ccl.CCL) []*ccl.CCL {
+	var result []*ccl.CCL
+	for _, key := range sliceutil.SortMapKeyForDeterminism(in) {
+		result = append(result, in[key]...)
+	}
+	return result
+}
+
+func createPrivateAlgForParty(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, party string, cost algCost) *materializedAlgorithm {
+	alg := &materializedAlgorithm{
+		cost:            cost,
+		inputPlacement:  make(map[string][]placement),
+		outputPlacement: make(map[string][]placement),
+	}
+	for _, key := range sliceutil.SortMapKeyForDeterminism(in) {
+		for range in[key] {
+			alg.inputPlacement[key] = append(alg.inputPlacement[key], &privatePlacement{partyCode: party})
+		}
+	}
+	for _, key := range sliceutil.SortMapKeyForDeterminism(out) {
+		for range out[key] {
+			alg.outputPlacement[key] = append(alg.outputPlacement[key], &privatePlacement{partyCode: party})
+		}
+	}
+	return alg
+}
+
+func createAllPrivateAlgs(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, allParties []string, cost algCost) []*materializedAlgorithm {
+	var result []*materializedAlgorithm
+	for _, p := range allParties {
+		visToP := true
+		for _, cc := range append(extractCCLsFromMap(in), extractCCLsFromMap(out)...) {
+			if !cc.IsVisibleFor(p) {
+				visToP = false
+				break
+			}
+		}
+		if visToP {
+			result = append(result, createPrivateAlgForParty(in, out, p, cost))
+		}
+	}
+	return result
+}
+
+func createAllShareAlgs(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, allParties []string, cost algCost) *materializedAlgorithm {
+	alg := &materializedAlgorithm{
+		cost:            cost,
+		inputPlacement:  make(map[string][]placement),
+		outputPlacement: make(map[string][]placement),
+	}
+	for _, key := range sliceutil.SortMapKeyForDeterminism(in) {
+		for range in[key] {
+			alg.inputPlacement[key] = append(alg.inputPlacement[key], &sharePlacement{partyCodes: allParties})
+		}
+	}
+	for _, key := range sliceutil.SortMapKeyForDeterminism(out) {
+		for range out[key] {
+			alg.outputPlacement[key] = append(alg.outputPlacement[key], &sharePlacement{partyCodes: allParties})
+		}
+	}
+	return alg
+}
+
+func createSharePublicAlgs(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, allParties []string, privateCost, shareCost algCost) *materializedAlgorithm {
+	alg := &materializedAlgorithm{
+		cost:            privateCost,
+		inputPlacement:  make(map[string][]placement),
+		outputPlacement: make(map[string][]placement),
+	}
+	hasShareInput := false
+	for _, key := range sliceutil.SortMapKeyForDeterminism(in) {
+		for _, cc := range in[key] {
+			if cc.IsVisibleForParties(allParties) {
+				alg.inputPlacement[key] = append(alg.inputPlacement[key], &publicPlacement{partyCodes: allParties})
+			} else {
+				hasShareInput = true
+				alg.cost = shareCost
+				alg.inputPlacement[key] = append(alg.inputPlacement[key], &sharePlacement{partyCodes: allParties})
+			}
+		}
+	}
+	for _, key := range sliceutil.SortMapKeyForDeterminism(out) {
+		for _, cc := range out[key] {
+			if cc.IsVisibleForParties(allParties) && !hasShareInput {
+				alg.outputPlacement[key] = append(alg.outputPlacement[key], &publicPlacement{partyCodes: allParties})
+			} else {
+				alg.outputPlacement[key] = append(alg.outputPlacement[key], &sharePlacement{partyCodes: allParties})
+			}
+		}
+	}
+	return alg
 }

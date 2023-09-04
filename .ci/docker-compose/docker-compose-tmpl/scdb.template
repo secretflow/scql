@@ -1,4 +1,4 @@
-  scdb_${PROTOCOL}:
+  scdb-${PROTOCOL}:
     image: scql:${SCQL_IMAGE_TAG}
     command:
       - /home/admin/bin/scdbserver

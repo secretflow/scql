@@ -1,0 +1,18 @@
+diff --git a/format/Flight.proto b/cpp/src/arrow/flight/Flight.proto
+similarity index 100%
+rename from format/Flight.proto
+rename to cpp/src/arrow/flight/Flight.proto
+diff --git a/format/FlightSql.proto b/cpp/src/arrow/flight/sql/FlightSql.proto
+similarity index 100%
+rename from format/FlightSql.proto
+rename to cpp/src/arrow/flight/sql/FlightSql.proto
+diff --git a/cpp/src/arrow/flight/sql/protocol_internal.cc b/cpp/src/arrow/flight/sql/protocol_internal.cc
+index 0d5e3c4c6..3fa92e385 100644
+--- a/cpp/src/arrow/flight/sql/protocol_internal.cc
++++ b/cpp/src/arrow/flight/sql/protocol_internal.cc
+@@ -20,4 +20,4 @@
+ // the dllexport/dllimport macro in the right places, we need to
+ // ensure our header gets included (and Protobuf will not insert the
+ // include for you)
+-#include "arrow/flight/sql/FlightSql.pb.cc"  // NOLINT
++// #include "arrow/flight/sql/FlightSql.pb.cc"  // NOLINT

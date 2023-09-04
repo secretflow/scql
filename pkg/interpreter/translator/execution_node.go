@@ -31,8 +31,9 @@ type ExecutionNode struct {
 	Outputs    map[string][]*Tensor
 	Attributes map[string]*Attribute
 
-	PartyCodeInfos *PartyInfo
-	Edges          map[*Edge]bool // Out Edges
+	Edges map[*Edge]bool // Out Edges
+	// party codes of participants
+	Parties []string
 }
 
 // ToString dumps a debug string of the execution node
@@ -81,9 +82,9 @@ func (node *ExecutionNode) ToString() string {
 	}
 	fmt.Fprint(&builder, "],")
 
-	fmt.Fprint(&builder, "url:[")
-	for _, url := range node.PartyCodeInfos.GetUrls() {
-		fmt.Fprintf(&builder, "%s,", url)
+	fmt.Fprint(&builder, "party:[")
+	for _, p := range node.Parties {
+		fmt.Fprintf(&builder, "%s,", p)
 	}
 	fmt.Fprint(&builder, "]")
 	fmt.Fprint(&builder, "}")
@@ -95,7 +96,7 @@ func (node *ExecutionNode) ToBriefString() string {
 	var builder strings.Builder
 	fmt.Fprintf(&builder, "%s", node.Name)
 	fmt.Fprint(&builder, "\\l[")
-	for _, p := range node.PartyCodeInfos.GetParties() {
+	for _, p := range node.Parties {
 		fmt.Fprintf(&builder, "%s,", p)
 	}
 	fmt.Fprint(&builder, "]")

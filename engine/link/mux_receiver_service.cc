@@ -53,9 +53,9 @@ void MuxReceiverServiceImpl::Push(::google::protobuf::RpcController* cntl,
                                  chunk.chunk_offset(), chunk.message_length());
     } else {
       response->set_error_code(link::pb::ErrorCode::INVALID_REQUEST);
-      response->set_error_msg(
-          fmt::format("unrecongnized trans type={}, from link_id={} rank={}",
-                      trans_type, link_id, sender_rank));
+      response->set_error_msg(fmt::format(
+          "unrecongnized trans type={}, from link_id={} rank={}",
+          link::pb::TransType_Name(trans_type), link_id, sender_rank));
       return;
     }
     response->set_error_code(link::pb::ErrorCode::SUCCESS);

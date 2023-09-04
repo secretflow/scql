@@ -21,6 +21,8 @@ cc_library(
     deps = [
         ":arithmetic",
         ":broadcast_to",
+        ":case_when",
+        ":cast",
         ":compare",
         ":concat",
         ":constant",
@@ -31,8 +33,10 @@ cc_library(
         ":group",
         ":group_agg",
         ":group_he_sum",
+        ":if",
         ":in",
         ":join",
+        ":limit",
         ":logical",
         ":make_private",
         ":make_public",
@@ -93,6 +97,8 @@ cc_library(
         "//engine/audit:audit_log",
         "//engine/framework:operator",
         "//engine/util:psi_helper",
+        "@com_github_msgpack_msgpack//:msgpack",
+        "@spulib//libspu/psi/core:ecdh_oprf_psi",
         "@spulib//libspu/psi/core:ecdh_psi",
         "@spulib//libspu/psi/cryptor:cryptor_selector",
     ],
@@ -377,6 +383,7 @@ cc_library(
         "//engine/audit:audit_log",
         "//engine/framework:operator",
         "//engine/util:psi_helper",
+        "@spulib//libspu/psi/core:ecdh_oprf_psi",
         "@spulib//libspu/psi/core:ecdh_psi",
         "@spulib//libspu/psi/cryptor:cryptor_selector",
     ],
@@ -717,6 +724,99 @@ cc_test(
     srcs = ["group_he_sum_test.cc"],
     deps = [
         ":group_he_sum",
+        ":test_util",
+        "//engine/core:tensor_from_json",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "cast",
+    srcs = ["cast.cc"],
+    hdrs = ["cast.h"],
+    deps = [
+        "//engine/framework:operator",
+        "//engine/util:spu_io",
+        "//engine/util:tensor_util",
+    ],
+)
+
+cc_test(
+    name = "cast_test",
+    srcs = ["cast_test.cc"],
+    deps = [
+        ":cast",
+        ":test_util",
+        "//engine/core:tensor_from_json",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "case_when",
+    srcs = ["case_when.cc"],
+    hdrs = ["case_when.h"],
+    deps = [
+        "//engine/framework:operator",
+        "//engine/util:spu_io",
+        "//engine/util:tensor_util",
+        "@spulib//libspu/kernel/hal:shape_ops",
+        "@spulib//libspu/kernel/hlo",
+    ],
+)
+
+cc_test(
+    name = "case_when_test",
+    srcs = ["case_when_test.cc"],
+    deps = [
+        ":case_when",
+        ":test_util",
+        "//engine/core:tensor_from_json",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "if",
+    srcs = ["if.cc"],
+    hdrs = ["if.h"],
+    deps = [
+        "//engine/framework:operator",
+        "//engine/util:spu_io",
+        "//engine/util:tensor_util",
+        "@spulib//libspu/kernel/hal:shape_ops",
+        "@spulib//libspu/kernel/hlo",
+    ],
+)
+
+cc_test(
+    name = "if_test",
+    srcs = ["if_test.cc"],
+    deps = [
+        ":if",
+        ":test_util",
+        "//engine/core:tensor_from_json",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "limit",
+    srcs = ["limit.cc"],
+    hdrs = ["limit.h"],
+    deps = [
+        "//engine/framework:operator",
+        "//engine/util:spu_io",
+        "//engine/util:tensor_util",
+        "@spulib//libspu/kernel/hlo:geometrical",
+    ],
+)
+
+cc_test(
+    name = "limit_test",
+    srcs = ["limit_test.cc"],
+    deps = [
+        ":limit",
         ":test_util",
         "//engine/core:tensor_from_json",
         "@com_google_googletest//:gtest_main",

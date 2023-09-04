@@ -32,10 +32,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/secretflow/scql/pkg/executor"
-	"github.com/secretflow/scql/pkg/grm"
-	"github.com/secretflow/scql/pkg/grm/toygrm"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/scdb/client"
+	"github.com/secretflow/scql/pkg/scdb/config"
 	"github.com/secretflow/scql/pkg/scdb/server"
 	"github.com/secretflow/scql/pkg/scdb/storage"
 	"github.com/secretflow/scql/pkg/util/message"
@@ -52,16 +51,11 @@ const (
 	userAlicePassword = "Alice_password_123"
 	userBobPassword   = "Bob_password_123"
 )
-const (
-	userRootGrmToken  = "token_root"
-	userAliceGrmToken = "token_alice"
-	userBobGrmToken   = "token_bob"
-)
 
 var (
-	userRoot  = newUserCredential(userNameRoot, userRootPassword, userRootGrmToken)
-	userAlice = newUserCredential(userNameAlice, userAlicePassword, userAliceGrmToken)
-	userBob   = newUserCredential(userNameBob, userBobPassword, userBobGrmToken)
+	userRoot  = newUserCredential(userNameRoot, userRootPassword)
+	userAlice = newUserCredential(userNameAlice, userAlicePassword)
+	userBob   = newUserCredential(userNameBob, userBobPassword)
 )
 
 func TestSCDBServer(t *testing.T) {
@@ -74,12 +68,12 @@ func TestSCDBServer(t *testing.T) {
 	port := listener.Addr().(*net.TCPAddr).Port
 	log.Printf("SCDB is listening on :%v\n", port)
 
-	config := &server.Config{
+	config := &config.Config{
 		Port:          port,
 		SCDBHost:      fmt.Sprintf("http://localhost:%v", port),
 		PasswordCheck: true,
-		Storage: server.StorageConf{
-			Type:            server.StorageTypeSQLite,
+		Storage: config.StorageConf{
+			Type:            config.StorageTypeSQLite,
 			ConnStr:         ":memory:",
 			MaxIdleConns:    1,
 			MaxOpenConns:    1,
@@ -93,15 +87,13 @@ func TestSCDBServer(t *testing.T) {
 	r.NoError(err)
 	r.NoError(mock.MockStorage(db)) // user already create here
 
-	// mock engine client and grm
+	// mock engine client
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	toyGrmClient, err := toygrm.New("testdata/mock_toy_grm.json")
-	r.NoError(err)
 	mockEngineClient := executor.NewMockEngineClient(ctrl)
 
-	s, err := server.NewServer(config, toyGrmClient, db, mockEngineClient)
+	s, err := server.NewServer(config, db, mockEngineClient)
 	r.NoError(err)
 
 	done := make(chan bool)
@@ -137,7 +129,7 @@ func TestSCDBServer(t *testing.T) {
 	caseQueryWithQueryResultCallback(r, stub)
 }
 
-func newUserCredential(user, pwd, grmToken string) *scql.SCDBCredential {
+func newUserCredential(user, pwd string) *scql.SCDBCredential {
 	return &scql.SCDBCredential{
 		User: &scql.User{
 			AccountSystemType: scql.User_NATIVE_USER,
@@ -148,7 +140,6 @@ func newUserCredential(user, pwd, grmToken string) *scql.SCDBCredential {
 				},
 			},
 		},
-		GrmToken: grmToken,
 	}
 }
 
@@ -188,7 +179,7 @@ func caseSubmit(a *require.Assertions, stub *client.Client) {
 	// invalid user
 	for _, pair := range [][2]string{{`root`, `wrong_password`}, {`i_dont_exists`, `password`}} {
 		user, pwd := pair[0], pair[1]
-		response, err := stub.Submit(newUserCredential(user, pwd, "token_root"), "")
+		response, err := stub.Submit(newUserCredential(user, pwd), "")
 		a.Nil(err)
 		a.NotEqual(int32(scql.Code_OK), response.Status.Code)
 		a.Equal(fmt.Sprintf("user %s authentication failed", user), response.Status.Message)
@@ -233,7 +224,7 @@ func caseFetch(a *require.Assertions, stub *client.Client) {
 		a.Nil(err)
 
 		// invalid user&pwd
-		resp, err := stub.Fetch(newUserCredential("i_dont_exists", "password", "token"), response.ScdbSessionId)
+		resp, err := stub.Fetch(newUserCredential("i_dont_exists", "password"), response.ScdbSessionId)
 		a.Nil(err)
 		a.NotEqual(int32(scql.Code_OK), resp.Status.Code)
 
@@ -324,11 +315,11 @@ func setupQueryResultCbServer(cb *cbMockServer) *gin.Engine {
 func TestSCDBServerForPipeline(t *testing.T) {
 	r := require.New(t)
 
-	config := &server.Config{
+	config := &config.Config{
 		Port:          0,
 		PasswordCheck: true,
-		Storage: server.StorageConf{
-			Type:            server.StorageTypeSQLite,
+		Storage: config.StorageConf{
+			Type:            config.StorageTypeSQLite,
 			ConnStr:         ":memory:",
 			MaxIdleConns:    1,
 			MaxOpenConns:    1,
@@ -341,15 +332,13 @@ func TestSCDBServerForPipeline(t *testing.T) {
 	db, err := server.NewDbConnWithBootstrap(&config.Storage)
 	r.NoError(err)
 
-	// mock engine client and grm client
+	// mock engine client
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	toyGrmClient, err := toygrm.New("testdata/mock_toy_grm.json")
-	r.NoError(err)
 	mockEngineClient := executor.NewMockEngineClient(ctrl)
 
-	s, err := server.NewServer(config, toyGrmClient, db, mockEngineClient)
+	s, err := server.NewServer(config, db, mockEngineClient)
 	r.NoError(err)
 
 	listener, err := net.Listen("tcp", s.Addr)
@@ -389,10 +378,10 @@ func TestSCDBServerForPipeline(t *testing.T) {
 		return response.OutColumns
 	}
 
-	casePipeline(r, mustRun, toyGrmClient)
+	casePipeline(r, mustRun)
 }
 
-func casePipeline(r *require.Assertions, mustRun func(user *scql.SCDBCredential, sql string) []*scql.Tensor, grmClient grm.Grm) {
+func casePipeline(r *require.Assertions, mustRun func(user *scql.SCDBCredential, sql string) []*scql.Tensor) {
 	// 1.1 root> create user bob
 	mustRun(userRoot, `CREATE USER alice PARTY_CODE "ALICE" IDENTIFIED BY "Alice_password_123"`)
 	// 1.2 root> create user alice
@@ -409,9 +398,9 @@ func casePipeline(r *require.Assertions, mustRun func(user *scql.SCDBCredential,
 	}
 
 	// 2.1 alice> create table
-	mustRun(userAlice, `CREATE TABLE dbtest.t1 tid = "tid1"`)
-	mustRun(userBob, `CREATE TABLE dbtest.t2 tid = "tid2"`)
-	mustRun(userAlice, `CREATE TABLE dbtest.t3 tid = "tid3"`)
+	mustRun(userAlice, `CREATE TABLE dbtest.t1 (column1_1 long, column1_2 long, column1_3 long) REF_TABLE=test.table_1 DB_TYPE='mysql'`)
+	mustRun(userBob, `CREATE TABLE dbtest.t2 (column2_1 long, column2_2 long) REF_TABLE=test.table_2 DB_TYPE='mysql'`)
+	mustRun(userAlice, `CREATE TABLE dbtest.t3 (column3_1 long, column3_2 long) REF_TABLE=test.table_3 DB_TYPE='mysql'`)
 
 	// 2.2 alice > grant ccl to alice&bob
 	mustRun(userAlice, `GRANT SELECT PLAINTEXT(column1_1), SELECT ENCRYPTED_ONLY(column1_2) ON dbtest.t1 TO bob`)

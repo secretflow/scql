@@ -94,6 +94,8 @@ type EngineStub struct {
 	webClient       EngineClient
 	protocol        string
 	contentType     string
+
+	partyInfo *translator.PartyInfo
 }
 
 // NewEngineStub creates an engine stub instance
@@ -102,7 +104,7 @@ func NewEngineStub(sessionID string,
 	callBackUri string,
 	client EngineClient,
 	engineProtocol string,
-	contentType string) *EngineStub {
+	contentType string, partyInfo *translator.PartyInfo) *EngineStub {
 	scheme := strings.SplitN(engineProtocol, ":", 2)[0]
 	if scheme == "" {
 		scheme = "http"
@@ -114,6 +116,7 @@ func NewEngineStub(sessionID string,
 		webClient:       client,
 		protocol:        scheme,
 		contentType:     contentType,
+		partyInfo:       partyInfo,
 	}
 }
 
@@ -140,9 +143,7 @@ func (stub *EngineStub) runSubDAGCore(ctx context.Context, subDAG map[string]*op
 		return fmt.Errorf("subDAG == nil")
 	}
 	var bodies []string
-	var dagURLs []string
 	var partyCodes []string
-	var partyCredentials []string
 	var dagIDs []int
 	for code, partySubDAG := range subDAG {
 		pb := &enginePb.RunDagRequest{
@@ -164,58 +165,44 @@ func (stub *EngineStub) runSubDAGCore(ctx context.Context, subDAG map[string]*op
 			return err
 		}
 
-		url := url.URL{
-			Scheme: stub.protocol,
-			Host:   partySubDAG.PartyURL,
-			Path:   runDagPath,
-		}
-		dagURL := url.String()
-		dagURLs = append(dagURLs, dagURL)
 		bodies = append(bodies, string(body))
 		partyCodes = append(partyCodes, code)
-		partyCredentials = append(partyCredentials, partySubDAG.Credential)
 		dagIDs = append(dagIDs, id)
-		audit.RecordDagDetail(code, dagURL, pb)
+		audit.RecordDagDetail(code, "", pb)
 	}
-	partyInfo, err := translator.NewPartyInfo(partyCodes, dagURLs, partyCredentials)
+	respBodies, err := stub.postRequests(ctx, constant.ActionNameEnginePostForRunDag, runDagPath, bodies, partyCodes, dagIDs)
 	if err != nil {
 		return err
 	}
-
-	respBodies, err := stub.postRequests(ctx, constant.ActionNameEnginePostForRunDag, bodies, *partyInfo, dagIDs)
-	if err != nil {
-		return err
-	}
-	return checkCommonRespStatus(respBodies)
+	return checkRespStatus(respBodies)
 }
 
-func (stub *EngineStub) StartSession(ctx context.Context, sessionStartReq *enginePb.StartSessionRequest, partyInfo *translator.PartyInfo) error {
+func (stub *EngineStub) StartSession(ctx context.Context, sessionStartReq *enginePb.StartSessionRequest, partyCodes []string) error {
 	timeStart := time.Now()
 	logEntry := &logutil.MonitorLogEntry{
 		SessionID:  stub.executionPlanID,
 		ActionName: fmt.Sprintf("%v@%v", "EngineStub", "StartSession"),
 	}
-	err := stub.startSessionCore(ctx, sessionStartReq, *partyInfo)
+	err := stub.startSessionCore(ctx, sessionStartReq, partyCodes)
 	logEntry.CostTime = time.Since(timeStart)
 	if nil != err {
 		logEntry.ErrorMsg = err.Error()
-		log.Errorf("%v|sessionStartParams:%v|partyCodes:%v|partyHosts:%v",
-			logEntry, sessionStartReq, partyInfo.GetParties(), partyInfo.GetUrls())
+		log.Errorf("%v|sessionStartParams:%v|partyCodes:%v",
+			logEntry, sessionStartReq, partyCodes)
 	} else {
-		log.Infof("%v|sessionStartParams:%v|partyCodes:%v|partyHosts:%v",
-			logEntry, sessionStartReq, partyInfo.GetParties(), partyInfo.GetUrls())
+		log.Infof("%v|sessionStartParams:%v|partyCodes:%v",
+			logEntry, sessionStartReq, partyCodes)
 	}
 	return err
 }
 
-func (stub *EngineStub) startSessionCore(ctx context.Context, sessionStartReq *enginePb.StartSessionRequest, partyInfo translator.PartyInfo) error {
+func (stub *EngineStub) startSessionCore(ctx context.Context, sessionStartReq *enginePb.StartSessionRequest, partyCodes []string) error {
 	if sessionStartReq == nil {
 		return fmt.Errorf("startSession: invalid params")
 	}
-	var sessionStartURLs []string
 	var bodies []string
-	for i, host := range partyInfo.GetUrls() {
-		sessionStartReq.SessionParams.PartyCode = partyInfo.GetParties()[i]
+	for _, code := range partyCodes {
+		sessionStartReq.SessionParams.PartyCode = code
 		encodingType, exists := message.ContentType2EncodingType[stub.contentType]
 		if !exists {
 			return fmt.Errorf("unsupported content type:%s", stub.contentType)
@@ -225,58 +212,55 @@ func (stub *EngineStub) startSessionCore(ctx context.Context, sessionStartReq *e
 			return err
 		}
 		bodies = append(bodies, string(body))
-		url := url.URL{
-			Scheme: stub.protocol,
-			Host:   host,
-			Path:   startSessionPath,
-		}
-		sessionURL := url.String()
-		sessionStartURLs = append(sessionStartURLs, sessionURL)
-		audit.RecordSessionParameters(sessionStartReq.GetSessionParams(), sessionURL, false)
+		audit.RecordSessionParameters(sessionStartReq.GetSessionParams(), "", false)
 	}
-	partyInfo.UpdateUrls(sessionStartURLs)
 
-	respBodies, err := stub.postRequests(ctx, constant.ActionNameEnginePostForStartSession, bodies, partyInfo, nil)
+	respBodies, err := stub.postRequests(ctx, constant.ActionNameEnginePostForStartSession, startSessionPath, bodies, partyCodes, nil)
 	if err != nil {
 		return err
 	}
-	return checkCommonRespStatus(respBodies)
+	return checkRespStatus(respBodies)
 }
 
-func (stub *EngineStub) EndSession(ctx context.Context, sessionEndParams *enginePb.StopSessionRequest, partyInfo *translator.PartyInfo) error {
+func (stub *EngineStub) EndSession(ctx context.Context, sessionEndParams *enginePb.StopSessionRequest, partyCodes []string) error {
 	timeStart := time.Now()
 	logEntry := &logutil.MonitorLogEntry{
 		SessionID:  stub.executionPlanID,
 		ActionName: fmt.Sprintf("%v@%v", "EngineStub", "EndSession"),
 	}
-	err := stub.endSessionCore(ctx, sessionEndParams, *partyInfo)
+	err := stub.endSessionCore(ctx, sessionEndParams, partyCodes)
 	logEntry.CostTime = time.Since(timeStart)
 	if nil != err {
 		logEntry.ErrorMsg = err.Error()
-		log.Errorf("%v|sessionEndParams:%v|partyCodes:%v|partyHosts:%v", logEntry,
-			sessionEndParams, partyInfo.GetParties(), partyInfo.GetUrls())
+		log.Errorf("%v|sessionEndParams:%v|partyCodes:%v", logEntry,
+			sessionEndParams, partyCodes)
 	} else {
-		log.Infof("%v|sessionEndParams:%v|partyCodes:%v|partyHosts:%v", logEntry,
-			sessionEndParams, partyInfo.GetParties(), partyInfo.GetUrls())
+		log.Infof("%v|sessionEndParams:%v|partyCodes:%v", logEntry,
+			sessionEndParams, partyCodes)
 	}
 	return err
 }
 
-func (stub *EngineStub) endSessionCore(ctx context.Context, sessionEndParams *enginePb.StopSessionRequest, partyInfo translator.PartyInfo) error {
+func (stub *EngineStub) genURLFor(partyCode string, apiPath string) (string, error) {
+	host, err := stub.partyInfo.GetUrlByParty(partyCode)
+	if err != nil {
+		return "", err
+	}
+	url := url.URL{
+		Scheme: stub.protocol,
+		Host:   host,
+		Path:   apiPath,
+	}
+	return url.String(), nil
+}
+
+func (stub *EngineStub) endSessionCore(ctx context.Context, sessionEndParams *enginePb.StopSessionRequest, partyCodes []string) error {
 	if sessionEndParams == nil {
 		return fmt.Errorf("end session: invalid params")
 	}
 
-	var sessionEndURLs []string
 	var postBodies []string
-	for _, host := range partyInfo.GetUrls() {
-		url := url.URL{
-			Scheme: stub.protocol,
-			Host:   host,
-			Path:   endSessionPath,
-		}
-		sessionURL := url.String()
-		sessionEndURLs = append(sessionEndURLs, sessionURL)
+	for i := 0; i < len(partyCodes); i++ {
 
 		encodingType, exists := message.ContentType2EncodingType[stub.contentType]
 		if !exists {
@@ -290,41 +274,47 @@ func (stub *EngineStub) endSessionCore(ctx context.Context, sessionEndParams *en
 		postBodies = append(postBodies, string(postBody))
 	}
 
-	partyInfo.UpdateUrls(sessionEndURLs)
-	respBodies, err := stub.postRequests(ctx, constant.ActionNameEnginePostForEndSession, postBodies, partyInfo, nil)
+	respBodies, err := stub.postRequests(ctx, constant.ActionNameEnginePostForEndSession, endSessionPath, postBodies, partyCodes, nil)
 	if err != nil {
 		return err
 	}
-	return checkCommonRespStatus(respBodies)
+	return checkRespStatus(respBodies)
 }
 
-func checkCommonRespStatus(respBodies []string) error {
+func checkRespStatus(respBodies []string) error {
 	for _, respBody := range respBodies {
-		resp := &enginePb.StatusResponse{}
-		_, err := message.DeserializeFrom(io.NopCloser(strings.NewReader(respBody)), resp)
+		respStatus := &enginePb.Status{}
+		_, err := message.DeserializeFrom(io.NopCloser(strings.NewReader(respBody)), respStatus)
 		if err != nil {
 			return fmt.Errorf("failed to parse response: %v", err)
 		}
-		if resp.GetStatus().GetCode() != int32(enginePb.Code_OK) {
-			return status.NewStatusFromProto(resp.GetStatus())
+		if respStatus.GetCode() != int32(enginePb.Code_OK) {
+			return status.NewStatusFromProto(respStatus)
 		}
 	}
 	return nil
 }
 
-func (stub *EngineStub) postRequests(ctx context.Context, actionName string, postBodies []string, partyInfo translator.PartyInfo, dagIDs []int) ([]string, error) {
-	partyURLs := partyInfo.GetUrls()
-	partyCodes := partyInfo.GetParties()
-	partyCredentials := partyInfo.GetCredentials()
-	c := make(chan ResponseInfo, len(partyURLs))
-	for i, url := range partyURLs {
+func (stub *EngineStub) postRequests(ctx context.Context, actionName string, path string, postBodies []string, partyCodes []string, dagIDs []int) ([]string, error) {
+	c := make(chan ResponseInfo, len(partyCodes))
+	for i, partyCode := range partyCodes {
 		var dagID string
 		if len(dagIDs) != 0 {
-			if len(dagIDs) != len(partyURLs) {
-				return nil, fmt.Errorf("invalid request, input params for size mismatch for dagIDs:%v, partyURLs:%v", partyURLs, dagIDs)
+			if len(dagIDs) != len(partyCodes) {
+				return nil, fmt.Errorf("invalid request, input params for size mismatch for dagIDs:%v, partyCodes:%v", dagIDs, partyCodes)
 			}
 			dagID = fmt.Sprint(dagIDs[i])
 		}
+		url, err := stub.genURLFor(partyCode, path)
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate URL for party %v: %+v", partyCode, err)
+		}
+
+		credential, err := stub.partyInfo.GetCredentialByParty(partyCode)
+		if err != nil {
+			return nil, fmt.Errorf("no credential found for party %v: %+v", partyCode, err)
+		}
+
 		go func(stub *EngineStub, partyCode, url, partyCredential, contentType, postBody, dagID string) {
 			timeStart := time.Now()
 			logEntry := &logutil.MonitorLogEntry{
@@ -345,10 +335,10 @@ func (stub *EngineStub) postRequests(ctx context.Context, actionName string, pos
 				Err:          err,
 			}
 
-		}(stub, partyCodes[i], url, partyCredentials[i], stub.contentType, postBodies[i], dagID)
+		}(stub, partyCode, url, credential, stub.contentType, postBodies[i], dagID)
 	}
 	var respBody []string
-	for i := 0; i < len(partyURLs); i++ {
+	for i := 0; i < len(partyCodes); i++ {
 		respInfo := <-c
 		if respInfo.Err != nil {
 			return nil, respInfo.Err

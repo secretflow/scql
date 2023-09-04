@@ -29,6 +29,7 @@ import (
 	"github.com/secretflow/scql/pkg/executor"
 	"github.com/secretflow/scql/pkg/interpreter/optimizer"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/scdb/config"
 	"github.com/secretflow/scql/pkg/status"
 	"github.com/secretflow/scql/pkg/util/logutil"
 	"github.com/secretflow/scql/pkg/util/message"
@@ -73,7 +74,7 @@ func (app *App) SubmitAndGetHandler(c *gin.Context) {
 
 // submitAndGet implements core logic of SubmitAndGetHandler
 func (app *App) submitAndGet(ctx context.Context, req *scql.SCDBQueryRequest) *scql.SCDBQueryResultResponse {
-	session, err := newSession(ctx, req, app.storage, app.grmClient)
+	session, err := newSession(ctx, req, app.storage)
 	if err != nil {
 		return newErrorSCDBQueryResultResponse(scql.Code_INTERNAL, err.Error())
 	}
@@ -98,14 +99,6 @@ func (app *App) submitAndGet(ctx context.Context, req *scql.SCDBQueryRequest) *s
 
 // submitAndGetDQL executes query and gets result back
 func (app *App) submitAndGetDQL(ctx context.Context, s *session) *scql.SCDBQueryResultResponse {
-	s.engineStub = executor.NewEngineStub(s.id,
-		app.config.SCDBHost,
-		engineCallbackPath,
-		app.engineClient,
-		app.config.Engine.Protocol,
-		app.config.Engine.ContentType,
-	)
-
 	lpInfo, err := app.compilePrepare(ctx, s)
 	if err != nil {
 		return newErrorFetchResponse(s.id, scql.Code_INTERNAL, err.Error())
@@ -119,7 +112,7 @@ func (app *App) submitAndGetDQL(ctx context.Context, s *session) *scql.SCDBQuery
 	}
 
 	// Build session start parameters.
-	spuRuntimeCfg, err := NewSpuRuntimeCfg(app.config.Engine.SpuRuntimeCfg)
+	spuRuntimeCfg, err := config.NewSpuRuntimeCfg(app.config.Engine.SpuRuntimeCfg)
 	if err != nil {
 		return newErrorFetchResponse(s.id, scql.Code_INTERNAL, err.Error())
 	}
@@ -132,6 +125,15 @@ func (app *App) submitAndGetDQL(ctx context.Context, s *session) *scql.SCDBQuery
 	mapper := optimizer.NewGraphMapper(epInfo.graph, epInfo.subDAGs)
 	mapper.Map()
 	pbRequests := mapper.CodeGen(sessionStartParams)
+
+	s.engineStub = executor.NewEngineStub(s.id,
+		app.config.SCDBHost,
+		engineCallbackPath,
+		app.engineClient,
+		app.config.Engine.Protocol,
+		app.config.Engine.ContentType,
+		s.partyInfo,
+	)
 
 	syncExecutor, err := executor.NewSyncExecutor(pbRequests, epInfo.graph.OutputNames, s.engineStub, s.id, epInfo.graph.PartyInfo)
 	if err != nil {

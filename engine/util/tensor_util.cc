@@ -100,6 +100,33 @@ bool AreTensorsStatusMatched(
   return true;
 }
 
+bool AreTensorsStatusMatchedOneOf(
+    const google::protobuf::RepeatedPtrField<pb::Tensor>& tensors,
+    const std::vector<pb::TensorStatus>& status_set) {
+  for (int i = 1; i < tensors.size(); ++i) {
+    auto st = GetTensorStatus(tensors[i]);
+    bool matched = false;
+    for (const auto& elem : status_set) {
+      if (st == elem) {
+        matched = true;
+        continue;
+      }
+    }
+    if (!matched) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool OneOfTensorsStatusMatched(
+    const google::protobuf::RepeatedPtrField<pb::Tensor>& tensors,
+    pb::TensorStatus expect_status) {
+  return std::any_of(tensors.begin(), tensors.end(), [&](const pb::Tensor& t) {
+    return IsTensorStatusMatched(t, expect_status);
+  });
+}
+
 bool IsTensorStatusMatched(const pb::Tensor& t,
                            pb::TensorStatus expect_status) {
   return GetTensorStatus(t) == expect_status;

@@ -34,24 +34,36 @@ var GlobalPrivColName = map[mysql.PrivilegeType]string{
 	mysql.GrantPriv:      mysql.Priv2UserCol[mysql.GrantPriv],
 }
 
+type EngineAuthMethod int
+
+const (
+	UnknownAuth EngineAuthMethod = iota
+	TokenAuth
+	PubKeyAuth
+)
+
 // User Table stores the metadata of a user.
 // `CREATE USER` statement will add a row in this table.
 // This table mimics `mysql.user` in MySQL
 type User struct {
-	ID             uint   `gorm:"column:id;primaryKey;comment:'unique id'"`
-	Host           string `gorm:"column:host;type:varchar(128);uniqueIndex:uk_host_user;comment:'host name'"`
-	User           string `gorm:"column:user;type:varchar(64);uniqueIndex:uk_host_user;comment:'user name'"`
-	Password       string `gorm:"column:password;type:varchar(256);comment:'password'"`
-	PartyCode      string `gorm:"column:party_code;type:varchar(64);comment:'The party code the user belongs to'"`
-	CreatePriv     bool   `gorm:"column:create_priv;comment:'create privilege'"`
-	CreateUserPriv bool   `gorm:"column:create_user_priv;comment:'create user privilege'"`
-	DropPriv       bool   `gorm:"column:drop_priv;comment:'drop privilege'"`
-	GrantPriv      bool   `gorm:"column:grant_priv;comment:'grant privilege'"`
-	DescribePriv   bool   `gorm:"column:describe_priv;comment:'describe privilege'"`
-	ShowPriv       bool   `gorm:"column:show_priv;comment:'show privilege'"`
-	CreateViewPriv bool   `gorm:"column:create_view_priv;comment:'create view privilege'"`
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	ID               uint   `gorm:"column:id;primaryKey;comment:'unique id'"`
+	Host             string `gorm:"column:host;type:varchar(128);uniqueIndex:uk_host_user;comment:'host name'"`
+	User             string `gorm:"column:user;type:varchar(64);uniqueIndex:uk_host_user;comment:'user name'"`
+	Password         string `gorm:"column:password;type:varchar(256);comment:'password'"`
+	PartyCode        string `gorm:"column:party_code;type:varchar(64);comment:'The party code the user belongs to'"`
+	CreatePriv       bool   `gorm:"column:create_priv;comment:'create privilege'"`
+	CreateUserPriv   bool   `gorm:"column:create_user_priv;comment:'create user privilege'"`
+	DropPriv         bool   `gorm:"column:drop_priv;comment:'drop privilege'"`
+	GrantPriv        bool   `gorm:"column:grant_priv;comment:'grant privilege'"`
+	DescribePriv     bool   `gorm:"column:describe_priv;comment:'describe privilege'"`
+	ShowPriv         bool   `gorm:"column:show_priv;comment:'show privilege'"`
+	CreateViewPriv   bool   `gorm:"column:create_view_priv;comment:'create view privilege'"`
+	EngineAuthMethod int    `gorm:"column:eng_auth_method;comment:'0:unknown; 1:token; 2:public key'"`
+	EngineToken      string `gorm:"column:eng_token;type:text;comment:'scqlengine token string'"`
+	EnginePubKey     string `gorm:"column:eng_pubkey;type:text;comment:'scqlengine public key'"`
+	EngineEndpoints  string `gorm:"column:eng_endpoints;type:text;comment:'scqlengine endpoint list, multiple endpoints concated with ;'"`
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
 }
 
 // Privs return all the privileges the user have

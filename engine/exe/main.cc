@@ -18,6 +18,7 @@
 #include "gflags/gflags.h"
 
 #include "engine/audit/audit_log.h"
+#include "engine/auth/authenticator.h"
 #include "engine/datasource/datasource_adaptor_mgr.h"
 #include "engine/datasource/embed_router.h"
 #include "engine/exe/version.h"
@@ -33,8 +34,12 @@ DEFINE_string(log_dir, "logs", "log directory");
 DEFINE_bool(log_enable_console_logger, true,
             "whether logging to stdout while logging to file");
 
-DEFINE_string(audit_log_dir, "audit", "audit log directory");
 DEFINE_bool(enable_audit_logger, true, "whether enable audit log");
+DEFINE_string(audit_log_file, "audit/audit.log", "audit basic log filename");
+DEFINE_string(audit_detail_file, "audit/detail.log",
+              "audit detail log filename");
+DEFINE_int32(audit_max_files, 180,
+             "maximum number of old audit log files to retain");
 
 // Brpc channel flags for peer engine.
 DEFINE_string(peer_engine_protocol, "baidu_std", "rpc protocol");
@@ -95,6 +100,14 @@ DEFINE_string(
     R"text(configuration for embed router in json format. For example: --embed_router_conf={"datasources":[{"id":"ds001","name":"mysql db","kind":"MYSQL","connection_str":"host=127.0.0.1 db=test user=root password='qwerty'"}],"rules":[{"db":"*","table":"*","datasource_id":"ds001"}]} )text");
 DEFINE_string(db_connection_info, "",
               "connection string used to connect to mysql...");
+// Party authentication flags
+DEFINE_bool(enable_self_auth, true,
+            "whether enable self identity authentication");
+DEFINE_string(private_key_pem_path, "", "path to private key pem file");
+DEFINE_bool(enable_peer_auth, true,
+            "whether enable peer parties identity authentication");
+DEFINE_string(authorized_profile_path, "",
+              "path to authorized profile, in json format");
 
 void AddChannelOptions(scql::engine::ChannelManager* channel_manager) {
   // PeerEngine Options
@@ -182,6 +195,16 @@ std::unique_ptr<scql::engine::Router> BuildRouter() {
   }
 }
 
+std::unique_ptr<scql::engine::auth::Authenticator> BuildAuthenticator() {
+  scql::engine::auth::AuthOption option;
+  option.enable_self_auth = FLAGS_enable_self_auth;
+  option.enable_peer_auth = FLAGS_enable_peer_auth;
+  option.private_key_pem_path = FLAGS_private_key_pem_path;
+  option.authorized_profile_path = FLAGS_authorized_profile_path;
+
+  return std::make_unique<scql::engine::auth::Authenticator>(option);
+}
+
 std::unique_ptr<scql::engine::EngineServiceImpl> BuildEngineService(
     scql::engine::ListenerManager* listener_manager,
     scql::engine::ChannelManager* channel_manager) {
@@ -203,11 +226,14 @@ std::unique_ptr<scql::engine::EngineServiceImpl> BuildEngineService(
       session_opt, listener_manager, std::move(link_factory),
       std::move(ds_router), std::move(ds_mgr), FLAGS_session_timeout_s);
 
+  auto authenticator = BuildAuthenticator();
+
   scql::engine::EngineServiceOptions engine_service_opt;
   engine_service_opt.enable_authorization = FLAGS_enable_scdb_authorization;
   engine_service_opt.credential = FLAGS_engine_credential;
   return std::make_unique<scql::engine::EngineServiceImpl>(
-      engine_service_opt, std::move(session_manager), channel_manager);
+      engine_service_opt, std::move(session_manager), channel_manager,
+      std::move(authenticator));
 }
 
 brpc::ServerOptions BuildServerOptions() {
@@ -253,12 +279,13 @@ int main(int argc, char* argv[]) {
     }
     scql::engine::util::SetupLogger(opts);
 
-    scql::engine::audit::AuditOptions auditOpts;
-    auditOpts.audit_log_dir = FLAGS_audit_log_dir;
     if (FLAGS_enable_audit_logger) {
-      auditOpts.enable_audit_logger = true;
+      scql::engine::audit::AuditOptions auditOpts;
+      auditOpts.audit_log_file = FLAGS_audit_log_file;
+      auditOpts.audit_detail_file = FLAGS_audit_detail_file;
+      auditOpts.audit_max_files = FLAGS_audit_max_files;
+      scql::engine::audit::SetupAudit(auditOpts);
     }
-    scql::engine::audit::SetupAudit(auditOpts);
 
   } catch (const std::exception& e) {
     SPDLOG_ERROR("Fail to setup logger, msg={}", e.what());

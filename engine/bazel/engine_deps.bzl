@@ -21,6 +21,8 @@ SECRETFLOW_GROUP_GIT = "https://github.com/secretflow"
 
 SPU_GIT = "https://github.com/secretflow/spu.git"
 
+HEU_GIT = "https://github.com/secretflow/heu.git"
+
 
 def engine_deps():
     _com_github_nelhage_rules_boost()
@@ -47,14 +49,14 @@ def engine_deps():
     maybe(
         git_repository,
         name = "spulib",
-        tag = "0.4.1b1",
+        tag = "0.5.0.dev20230825",
         remote = SPU_GIT,
     )
     maybe(
         git_repository,
         name = "com_alipay_sf_heu",
-        tag = "v0.4.4b0",
-        remote = "https://github.com/secretflow/heu.git",
+        commit = "370d600baba016a6635a2678717ff52353c7d75d",
+        remote = HEU_GIT,
     )
 
 def _org_apache_arrow():
@@ -64,6 +66,8 @@ def _org_apache_arrow():
         urls = [
             "https://github.com/apache/arrow/archive/apache-arrow-10.0.0.tar.gz",
         ],
+        patch_args = ["-p1"],
+        patches = ["@scql//engine/bazel:patches/arrow.patch"],
         sha256 = "2852b21f93ee84185a9d838809c9a9c41bf6deca741bed1744e0fdba6cc19e3f",
         strip_prefix = "arrow-apache-arrow-10.0.0",
         build_file = "@scql//engine/bazel:arrow.BUILD",

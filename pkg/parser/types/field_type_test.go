@@ -14,13 +14,10 @@
 package types_test
 
 import (
-	"fmt"
 	"testing"
 
 	. "github.com/pingcap/check"
 
-	"github.com/secretflow/scql/pkg/parser"
-	"github.com/secretflow/scql/pkg/parser/ast"
 	"github.com/secretflow/scql/pkg/parser/charset"
 	"github.com/secretflow/scql/pkg/parser/mysql"
 	. "github.com/secretflow/scql/pkg/parser/types"
@@ -194,50 +191,50 @@ func (s *testFieldTypeSuite) TestFieldType(c *C) {
 	c.Assert(HasCharset(ft), IsFalse)
 }
 
-func (s *testFieldTypeSuite) TestHasCharsetFromStmt(c *C) {
-	template := "CREATE TABLE t(a %s)"
+// func (s *testFieldTypeSuite) TestHasCharsetFromStmt(c *C) {
+// 	template := "CREATE TABLE t(a %s)"
 
-	types := []struct {
-		strType    string
-		hasCharset bool
-	}{
-		{"int", false},
-		{"real", false},
-		{"float", false},
-		{"bit", false},
-		{"bool", false},
-		{"char(1)", true},
-		{"national char(1)", true},
-		{"binary", false},
-		{"varchar(1)", true},
-		{"national varchar(1)", true},
-		{"varbinary(1)", false},
-		{"year", false},
-		{"date", false},
-		{"time", false},
-		{"datetime", false},
-		{"timestamp", false},
-		{"blob", false},
-		{"tinyblob", false},
-		{"mediumblob", false},
-		{"longblob", false},
-		{"bit", false},
-		{"text", true},
-		{"tinytext", true},
-		{"mediumtext", true},
-		{"longtext", true},
-		{"json", false},
-		{"enum('1')", true},
-		{"set('1')", true},
-	}
+// 	types := []struct {
+// 		strType    string
+// 		hasCharset bool
+// 	}{
+// 		{"int", false},
+// 		{"real", false},
+// 		{"float", false},
+// 		{"bit", false},
+// 		{"bool", false},
+// 		{"char(1)", true},
+// 		{"national char(1)", true},
+// 		{"binary", false},
+// 		{"varchar(1)", true},
+// 		{"national varchar(1)", true},
+// 		{"varbinary(1)", false},
+// 		{"year", false},
+// 		{"date", false},
+// 		{"time", false},
+// 		{"datetime", false},
+// 		{"timestamp", false},
+// 		{"blob", false},
+// 		{"tinyblob", false},
+// 		{"mediumblob", false},
+// 		{"longblob", false},
+// 		{"bit", false},
+// 		{"text", true},
+// 		{"tinytext", true},
+// 		{"mediumtext", true},
+// 		{"longtext", true},
+// 		{"json", false},
+// 		{"enum('1')", true},
+// 		{"set('1')", true},
+// 	}
 
-	p := parser.New()
-	for _, t := range types {
-		sql := fmt.Sprintf(template, t.strType)
-		stmt, err := p.ParseOneStmt(sql, "", "")
-		c.Assert(err, IsNil)
+// 	p := parser.New()
+// 	for _, t := range types {
+// 		sql := fmt.Sprintf(template, t.strType)
+// 		stmt, err := p.ParseOneStmt(sql, "", "")
+// 		c.Assert(err, IsNil)
 
-		col := stmt.(*ast.CreateTableStmt).Cols[0]
-		c.Assert(HasCharset(col.Tp), Equals, t.hasCharset)
-	}
-}
+// 		col := stmt.(*ast.CreateTableStmt).Cols[0]
+// 		c.Assert(HasCharset(col.Tp), Equals, t.hasCharset)
+// 	}
+// }

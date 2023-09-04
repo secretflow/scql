@@ -80,7 +80,7 @@ TEST_P(GroupTest, works) {
   auto tc = GetParam();
   auto node = MakeExecNode(tc);
   auto session = test::Make1PCSession();
-  ExecContext ctx(node, &session);
+  ExecContext ctx(node, session.get());
 
   test::FeedInputsAsPrivate(&ctx, tc.inputs);
 

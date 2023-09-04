@@ -36,18 +36,18 @@ enum PrimitiveDataType {
   PrimitiveDataType_UNDEFINED = 0;
 
   // Numeric types
-  INT8 = 1; // the 8-bit signed integer type
-  INT16 = 2; // the 16-bit signed integer type
-  INT32 = 3; // the 32-bit signed integer type
-  INT64 = 4; // the 64-bit signed integer type
-  FLOAT32 = 5; // the 32-bit binary floating point type
-  FLOAT64 = 6; // the 64-bit binary floating point type
+  INT8 = 1;     // the 8-bit signed integer type
+  INT16 = 2;    // the 16-bit signed integer type
+  INT32 = 3;    // the 32-bit signed integer type
+  INT64 = 4;    // the 64-bit signed integer type
+  FLOAT32 = 5;  // the 32-bit binary floating point type
+  FLOAT64 = 6;  // the 64-bit binary floating point type
 
   // Other types
   BOOL = 7;
   STRING = 8;
   // DATETIME and TIMESTAMP
-  DATETIME = 9;   // https://dev.mysql.com/doc/refman/8.0/en/datetime.html
+  DATETIME = 9;    // https://dev.mysql.com/doc/refman/8.0/en/datetime.html
   TIMESTAMP = 10;  // seconds since '1970-01-01 00:00:00' UTC
 }
 
@@ -115,6 +115,8 @@ message Tensor {
   repeated bool bool_data = 10 [packed = true];
   // For string and datetime data types
   repeated string string_data = 11;
+  // Tensor reference nums, used to delete tensor immediately
+  int32 ref_num = 12;
 }
 
 // Attribute value, it may be a tensor.

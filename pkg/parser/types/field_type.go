@@ -63,8 +63,6 @@ func (ft *FieldType) Equal(other *FieldType) bool {
 	partialEqual := ft.Tp == other.Tp &&
 		ft.Flen == other.Flen &&
 		ft.Decimal == other.Decimal &&
-		ft.Charset == other.Charset &&
-		ft.Collate == other.Collate &&
 		mysql.HasUnsignedFlag(ft.Flag) == mysql.HasUnsignedFlag(other.Flag)
 	if !partialEqual || len(ft.Elems) != len(other.Elems) {
 		return false
@@ -255,64 +253,28 @@ func (ft *FieldType) Restore(ctx *format.RestoreCtx) error {
 }
 
 // RestoreAsCastType is used for write AST back to string.
-func (ft *FieldType) RestoreAsCastType(ctx *format.RestoreCtx) {
-	switch ft.Tp {
-	case mysql.TypeVarString:
-		if ft.Charset == charset.CharsetBin && ft.Collate == charset.CollationBin {
-			ctx.WriteKeyWord("BINARY")
-		} else {
-			ctx.WriteKeyWord("CHAR")
-		}
-		if ft.Flen != UnspecifiedLength {
-			ctx.WritePlainf("(%d)", ft.Flen)
-		}
-		if ft.Flag&mysql.BinaryFlag != 0 {
-			ctx.WriteKeyWord(" BINARY")
-		}
-		if ft.Charset != charset.CharsetBin && ft.Charset != mysql.DefaultCharset {
-			ctx.WriteKeyWord(" CHARSET ")
-			ctx.WriteKeyWord(ft.Charset)
-		}
-	case mysql.TypeDate:
-		ctx.WriteKeyWord("DATE")
-	case mysql.TypeDatetime:
-		ctx.WriteKeyWord("DATETIME")
-		if ft.Decimal > 0 {
-			ctx.WritePlainf("(%d)", ft.Decimal)
-		}
-	case mysql.TypeNewDecimal:
-		ctx.WriteKeyWord(ctx.Dialect.GetCastFieldType("DECIMAL"))
-		if ft.Flen > 0 && ft.Decimal > 0 {
-			ctx.WritePlainf("(%d, %d)", ft.Flen, ft.Decimal)
-		} else if ft.Flen > 0 {
-			ctx.WritePlainf("(%d)", ft.Flen)
-		}
-	case mysql.TypeDuration:
-		ctx.WriteKeyWord("TIME")
-		if ft.Decimal > 0 {
-			ctx.WritePlainf("(%d)", ft.Decimal)
-		}
-	case mysql.TypeLonglong:
-		if ft.Flag&mysql.UnsignedFlag != 0 {
-			ctx.WriteKeyWord("UNSIGNED")
-		} else {
-			ctx.WriteKeyWord("SIGNED")
-		}
-	case mysql.TypeJSON:
-		ctx.WriteKeyWord("JSON")
-	case mysql.TypeDouble:
-		ctx.WriteKeyWord(ctx.Dialect.GetCastFieldType("DOUBLE"))
-	case mysql.TypeFloat:
-		ctx.WriteKeyWord(ctx.Dialect.GetCastFieldType("FLOAT"))
+func (ft *FieldType) RestoreAsCastType(ctx *format.RestoreCtx) error {
+	keyword, plainWord, err := ctx.Dialect.ConvertCastTypeToString(ft.Tp, ft.Flen, ft.Decimal, ft.Flag)
+	if err != nil {
+		return err
 	}
+	ctx.WriteKeyWord(keyword)
+	if plainWord != "" {
+		ctx.WritePlain(plainWord)
+	}
+	return nil
 }
 
 // FormatAsCastType is used for write AST back to string.
-func (ft *FieldType) FormatAsCastType(w io.Writer) {
+func (ft *FieldType) FormatAsCastType(w io.Writer) error {
 	var sb strings.Builder
 	restoreCtx := format.NewRestoreCtx(format.DefaultRestoreFlags, &sb)
-	ft.RestoreAsCastType(restoreCtx)
+	err := ft.RestoreAsCastType(restoreCtx)
+	if err != nil {
+		return err
+	}
 	fmt.Fprint(w, sb.String())
+	return nil
 }
 
 // VarStorageLen indicates this column is a variable length column.

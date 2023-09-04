@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-03 10:11+0800\n"
+"POT-Creation-Date: 2023-07-13 12:25+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -30,9 +30,7 @@ msgstr "SCQL 数据类型"
 msgid ""
 "SCQL supports frequently-used data types, as illustrated in the following"
 " table."
-msgstr ""
-"SCQL 支持常用的数据类型，如下表所示。"
-
+msgstr "SCQL 支持常用的数据类型，如下表所示。"
 
 #: ../../reference/scql_manual.rst:13
 msgid "Data Type"
@@ -91,20 +89,18 @@ msgid "SCQL Statements"
 msgstr "SCQL 语句"
 
 #: ../../reference/scql_manual.rst:31
+
 msgid ""
 "SCQL is compatible with most MySQL syntax, which makes it easy to use. "
 "For syntax differences between SCQL and MySQL, please read "
 ":doc:`mysql_compatibility`."
 msgstr ""
-"SCQL 兼容大多数 MySQL 语法，这使得它易于使用。"
-"关于 SCQL 和 MySQL 之间的语法差异，请阅读 "
-":doc:`mysql_compatibility`。"
+"SCQL 兼容大多数 MySQL 语法，这使得它易于使用。关于 SCQL 和 MySQL "
+"之间的语法差异，请阅读 :doc:`mysql_compatibility` 。"
 
-
 #: ../../reference/scql_manual.rst:36
 msgid "CREATE/DROP/ALTER USER Statement"
 msgstr "CREATE/DROP/ALTER USER 语句"
-
 
 #: ../../reference/scql_manual.rst:47 ../../reference/scql_manual.rst:74
 #: ../../reference/scql_manual.rst:100 ../../reference/scql_manual.rst:135
@@ -126,10 +122,8 @@ msgid ""
 " user runs queries on virtual table, which helps simplify privilege "
 "control and usage."
 msgstr ""
-"此处创建表意味着将 'tbl_name' 映射到现有的物理表，"
-"该物理表由 'TID' 指定且位于相关参与方上。在 SCQL 中，"
-"用户在虚拟表上运行查询可以有助于简化权限"
-"控制和使用。"
+"此处创建表意味着将 'tbl_name' 映射到现有的物理表，该物理表由 'TID' 指定且位于相关参与方上。在 SCQL "
+"中，用户在虚拟表上运行查询可以有助于简化权限控制和使用。"
 
 #: ../../reference/scql_manual.rst:114
 msgid "GRANT/REVOKE Statement"
@@ -167,5 +161,3 @@ msgstr "待办"
 msgid "this part is not ready, please check later"
 msgstr "该部分尚未准备好，请之后查看"
 
-#~ msgid "CREATE/DROP USER Statement"
-#~ msgstr ""

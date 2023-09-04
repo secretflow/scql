@@ -44,6 +44,13 @@ bool AreTensorsStatusMatched(
     const google::protobuf::RepeatedPtrField<pb::Tensor>& tensors,
     pb::TensorStatus expect_status);
 
+/// @returns true if one of tensors' status is equal to @param[in] expect_status
+bool OneOfTensorsStatusMatched(
+    const google::protobuf::RepeatedPtrField<pb::Tensor>& tensors,
+    pb::TensorStatus expect_status);
+bool AreTensorsStatusMatchedOneOf(
+    const google::protobuf::RepeatedPtrField<pb::Tensor>& tensors,
+    const std::vector<pb::TensorStatus>& status_set);
 bool IsTensorStatusMatched(const pb::Tensor& t, pb::TensorStatus expect_status);
 
 /// @returns true if all tensor' status are the same and be one of

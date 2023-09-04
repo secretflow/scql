@@ -103,7 +103,7 @@ spu::Value ReduceBase::SecretReduceImpl(spu::SPUContext* sctx,
 
   auto results = spu::kernel::hlo::Reduce(sctx, std::vector<spu::Value>{in},
                                           std::vector<spu::Value>{init_value},
-                                          std::vector<int64_t>{0}, reducer);
+                                          spu::Axes{0}, reducer);
 
   return AggregateFinalize(sctx, results[0]);
 }

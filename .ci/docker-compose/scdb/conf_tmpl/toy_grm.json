@@ -4,17 +4,17 @@
     "engines_info": [
       {
         "party": "alice",
-        "url": ["engine_alice:8003"],
+        "url": ["engine-alice:8003"],
         "credential": ["alice_credential"]
       },
       {
         "party": "bob",
-        "url": ["engine_bob:8003"],
+        "url": ["engine-bob:8003"],
         "credential": ["bob_credential"]
       },
       {
         "party": "carol",
-        "url": ["engine_carol:8003"],
+        "url": ["engine-carol:8003"],
         "credential": ["carol_credential"]
       }
     ]

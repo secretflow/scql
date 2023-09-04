@@ -28,6 +28,7 @@
 #include "engine/operator/publish.h"
 #include "engine/operator/run_sql.h"
 #include "engine/operator/test_util.h"
+#include "engine/util/psi_helper.h"
 
 #include "api/status_code.pb.h"
 #include "engine/services/mock_report_service.pb.h"
@@ -65,7 +66,7 @@ class EngineServiceImplTest : public ::testing::Test {
         std::make_unique<SessionManager>(session_options, &listener_manager,
                                          std::move(factory), nullptr, nullptr,
                                          1),
-        &channel_manager);
+        &channel_manager, nullptr);
     EXPECT_NE(nullptr, impl.get());
     {
       global_session_id = "test_session_id";
@@ -268,7 +269,7 @@ class EngineServiceImpl2PartiesTest
               session_options, listener_managers[rank].get(),
               std::move(factory), EmbedRouter::FromJsonStr(router_json_str),
               std::make_unique<DatasourceAdaptorMgr>(), 10),
-          &channel_manager);
+          &channel_manager, nullptr);
       ASSERT_NE(nullptr, impl.get());
 
       factories.push_back(std::move(factory));
@@ -292,20 +293,21 @@ class EngineServiceImpl2PartiesTest
 
   static void AddRunSQLNode(pb::RunExecutionPlanRequest* request,
                             const std::string& table_name,
-                            const std::string& out_name);
+                            const std::string& out_name, int ref_count);
 
   static void AddJoinNode(pb::RunExecutionPlanRequest* request,
-                          const std::string& in_name,
-                          const std::string& out_name);
+                          const std::pair<std::string, std::string>& in_name,
+                          const std::pair<std::string, std::string>& out_name,
+                          int ref_count);
 
   static void AddFilterByIndexNode(pb::RunExecutionPlanRequest* request,
                                    const std::string& in_name,
                                    const std::string& indice_name,
-                                   const std::string& out_name);
+                                   const std::string& out_name, int ref_count);
 
   static void AddPublishNode(pb::RunExecutionPlanRequest* request,
                              const std::string& in_name,
-                             const std::string& out_name);
+                             const std::string& out_name, int ref_count);
 
  protected:
   const size_t kWorldSize = 2u;
@@ -439,13 +441,13 @@ EngineServiceImpl2PartiesTest::ConstructRequestForAlice(
 
   AddSessionParameters(&request, servers, 0);
 
-  AddRunSQLNode(&request, "ta", "ta.name");
+  AddRunSQLNode(&request, "ta", "ta.name", 2);
 
-  AddJoinNode(&request, "ta.name", "ta.index");
+  AddJoinNode(&request, {"ta.name", "tb.name"}, {"ta.index", "tb.index"}, 1);
 
-  AddFilterByIndexNode(&request, "ta.name", "ta.index", "ta.filtered");
+  AddFilterByIndexNode(&request, "ta.name", "ta.index", "ta.filtered", 1);
 
-  AddPublishNode(&request, "ta.filtered", "name");
+  AddPublishNode(&request, "ta.filtered", "name", 0);
 
   return request;
 }
@@ -457,13 +459,13 @@ EngineServiceImpl2PartiesTest::ConstructRequestForBob(
 
   AddSessionParameters(&request, servers, 1);
 
-  AddRunSQLNode(&request, "tb", "tb.name");
+  AddRunSQLNode(&request, "tb", "tb.name", 2);
 
-  AddJoinNode(&request, "tb.name", "tb.index");
+  AddJoinNode(&request, {"ta.name", "tb.name"}, {"ta.index", "tb.index"}, 1);
 
-  AddFilterByIndexNode(&request, "tb.name", "tb.index", "tb.filtered");
+  AddFilterByIndexNode(&request, "tb.name", "tb.index", "tb.filtered", 1);
 
-  AddPublishNode(&request, "tb.filtered", "name");
+  AddPublishNode(&request, "tb.filtered", "name", 0);
 
   return request;
 }
@@ -491,16 +493,16 @@ void EngineServiceImpl2PartiesTest::AddSessionParameters(
 
 void EngineServiceImpl2PartiesTest::AddRunSQLNode(
     pb::RunExecutionPlanRequest* request, const std::string& table_name,
-    const std::string& out_name) {
+    const std::string& out_name, int ref_count) {
   const std::string query = "SELECT name FROM " + table_name;
   const std::vector<std::string> table_refs = {"test.test"};
   op::test::ExecNodeBuilder node_builder(op::RunSQL::kOpType);
   node_builder.SetNodeName("runsql-test");
   node_builder.AddStringAttr(op::RunSQL::kSQLAttr, query);
   node_builder.AddStringsAttr(op::RunSQL::kTableRefsAttr, table_refs);
-  auto out =
-      op::test::MakeTensorReference(out_name, pb::PrimitiveDataType::STRING,
-                                    pb::TensorStatus::TENSORSTATUS_PRIVATE);
+  auto out = op::test::MakeTensorReference(
+      out_name, pb::PrimitiveDataType::STRING,
+      pb::TensorStatus::TENSORSTATUS_PRIVATE, ref_count);
   node_builder.AddOutput(op::RunSQL::kOut, {out});
   auto node = node_builder.Build();
 
@@ -511,35 +513,45 @@ void EngineServiceImpl2PartiesTest::AddRunSQLNode(
 }
 
 void EngineServiceImpl2PartiesTest::AddJoinNode(
-    pb::RunExecutionPlanRequest* request, const std::string& in_name,
-    const std::string& out_name) {
+    pb::RunExecutionPlanRequest* request,
+    const std::pair<std::string, std::string>& in_name,
+    const std::pair<std::string, std::string>& out_name, int ref_count) {
   op::test::ExecNodeBuilder builder(op::Join::kOpType);
   builder.SetNodeName("join-test");
-  builder.AddInt64Attr(op::Join::kJoinTypeAttr, op::Join::kInnerJoin);
+  builder.AddInt64Attr(op::Join::kJoinTypeAttr, util::kInnerJoin);
   builder.AddStringsAttr(op::Join::kInputPartyCodesAttr,
                          std::vector<std::string>{"party0", "party1"});
-  auto in =
-      op::test::MakeTensorReference(in_name, pb::PrimitiveDataType::STRING,
+  auto [in_name_left, in_name_right] = in_name;
+  auto in_left =
+      op::test::MakeTensorReference(in_name_left, pb::PrimitiveDataType::STRING,
                                     pb::TensorStatus::TENSORSTATUS_PRIVATE);
-  builder.AddInput(op::Join::kInLeft, {in});
-  builder.AddInput(op::Join::kInRight, {in});
-  auto join_output =
-      op::test::MakeTensorReference(out_name, pb::PrimitiveDataType::INT64,
-                                    pb::TensorStatus::TENSORSTATUS_PRIVATE);
-  builder.AddOutput(op::Join::kOutLeftJoinIndex, {join_output});
-  builder.AddOutput(op::Join::kOutRightJoinIndex, {join_output});
+  auto in_right = op::test::MakeTensorReference(
+      in_name_right, pb::PrimitiveDataType::STRING,
+      pb::TensorStatus::TENSORSTATUS_PRIVATE);
+  builder.AddInput(op::Join::kInLeft, {in_left});
+  builder.AddInput(op::Join::kInRight, {in_right});
+  auto [out_name_left, out_name_right] = out_name;
+  auto join_output_left = op::test::MakeTensorReference(
+      out_name_left, pb::PrimitiveDataType::INT64,
+      pb::TensorStatus::TENSORSTATUS_PRIVATE, ref_count);
+  auto join_output_right = op::test::MakeTensorReference(
+      out_name_right, pb::PrimitiveDataType::INT64,
+      pb::TensorStatus::TENSORSTATUS_PRIVATE, ref_count);
+  builder.AddOutput(op::Join::kOutLeftJoinIndex, {join_output_left});
+  builder.AddOutput(op::Join::kOutRightJoinIndex, {join_output_right});
 
   auto node = builder.Build();
 
   (*(request->mutable_nodes()))[op::Join::kOpType] = node;
-  auto subdag = request->mutable_policy()->add_subdags();
-  auto job = subdag->add_jobs();
+  auto* subdag = request->mutable_policy()->add_subdags();
+  auto* job = subdag->add_jobs();
   job->add_node_ids(op::Join::kOpType);
 }
 
 void EngineServiceImpl2PartiesTest::AddFilterByIndexNode(
     pb::RunExecutionPlanRequest* request, const std::string& in_name,
-    const std::string& indice_name, const std::string& out_name) {
+    const std::string& indice_name, const std::string& out_name,
+    int ref_count) {
   op::test::ExecNodeBuilder builder(op::FilterByIndex::kOpType);
   builder.SetNodeName("filter-by-index-test");
   auto indice =
@@ -550,9 +562,9 @@ void EngineServiceImpl2PartiesTest::AddFilterByIndexNode(
       op::test::MakeTensorReference(in_name, pb::PrimitiveDataType::STRING,
                                     pb::TensorStatus::TENSORSTATUS_PRIVATE);
   builder.AddInput(op::FilterByIndex::kInData, {in});
-  auto out =
-      op::test::MakeTensorReference(out_name, pb::PrimitiveDataType::STRING,
-                                    pb::TensorStatus::TENSORSTATUS_PRIVATE);
+  auto out = op::test::MakeTensorReference(
+      out_name, pb::PrimitiveDataType::STRING,
+      pb::TensorStatus::TENSORSTATUS_PRIVATE, ref_count);
   builder.AddOutput(op::FilterByIndex::kOut, {out});
 
   auto node = builder.Build();
@@ -565,16 +577,16 @@ void EngineServiceImpl2PartiesTest::AddFilterByIndexNode(
 
 void EngineServiceImpl2PartiesTest::AddPublishNode(
     pb::RunExecutionPlanRequest* request, const std::string& in_name,
-    const std::string& out_name) {
+    const std::string& out_name, int ref_count) {
   op::test::ExecNodeBuilder builder(op::Publish::kOpType);
   builder.SetNodeName("publish-test");
   auto in =
       op::test::MakeTensorReference(in_name, pb::PrimitiveDataType::STRING,
                                     pb::TensorStatus::TENSORSTATUS_PRIVATE);
   builder.AddInput(op::Publish::kIn, {in});
-  auto out =
-      op::test::MakeTensorReference(out_name, pb::PrimitiveDataType::STRING,
-                                    pb::TensorStatus::TENSORSTATUS_PRIVATE);
+  auto out = op::test::MakeTensorReference(
+      out_name, pb::PrimitiveDataType::STRING,
+      pb::TensorStatus::TENSORSTATUS_PRIVATE, ref_count);
   builder.AddOutput(op::Publish::kOut, {out});
 
   auto node = builder.Build();

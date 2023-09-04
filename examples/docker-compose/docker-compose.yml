@@ -22,6 +22,8 @@ services:
     image: secretflow/scql:latest
     volumes:
       - ./engine/alice/conf/gflags.conf:/home/admin/engine/conf/gflags.conf
+      - ./engine/alice/conf/ed25519key.pem:/home/admin/engine/conf/ed25519key.pem
+      - ./engine/alice/conf/authorized_profile.json:/home/admin/engine/conf/authorized_profile.json
   engine_bob:
     cap_add:
       - NET_ADMIN
@@ -31,6 +33,8 @@ services:
     image: secretflow/scql:latest
     volumes:
       - ./engine/bob/conf/gflags.conf:/home/admin/engine/conf/gflags.conf
+      - ./engine/bob/conf/ed25519key.pem:/home/admin/engine/conf/ed25519key.pem
+      - ./engine/bob/conf/authorized_profile.json:/home/admin/engine/conf/authorized_profile.json
   mysql:
     image: mysql:latest
     environment:
