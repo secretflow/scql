@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-13 12:48+0800\n"
+"POT-Creation-Date: 2023-09-04 19:31+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -47,129 +47,128 @@ msgid ""
 " the background."
 msgstr "将 query（DDL/DML/DQL）提交给 SCQL，SCQL 将立即返回一个可用于获取结果的会话 ID，并在后台处理查询。"
 
-#: ../../development/scql_api.rst:21 ../../development/scql_api.rst:97
-#: ../../development/scql_api.rst:228
+#: ../../development/scql_api.rst:21 ../../development/scql_api.rst:96
+#: ../../development/scql_api.rst:226
 msgid "Request"
 msgstr "请求"
 
 #: ../../development/scql_api.rst:24 ../../development/scql_api.rst:45
-#: ../../development/scql_api.rst:100 ../../development/scql_api.rst:113
-#: ../../development/scql_api.rst:204 ../../development/scql_api.rst:231
-#: ../../development/scql_api.rst:248 ../../development/scql_api.rst:325
-#: ../../development/scql_api.rst:337 ../../development/scql_api.rst:348
-#: ../../development/scql_api.rst:359 ../../development/scql_api.rst:370
-#: ../../development/scql_api.rst:399 ../../development/scql_api.rst:410
-#: ../../development/scql_api.rst:421 ../../development/scql_api.rst:431
+#: ../../development/scql_api.rst:99 ../../development/scql_api.rst:112
+#: ../../development/scql_api.rst:202 ../../development/scql_api.rst:229
+#: ../../development/scql_api.rst:246 ../../development/scql_api.rst:322
+#: ../../development/scql_api.rst:334 ../../development/scql_api.rst:343
+#: ../../development/scql_api.rst:354 ../../development/scql_api.rst:365
+#: ../../development/scql_api.rst:394 ../../development/scql_api.rst:405
+#: ../../development/scql_api.rst:416 ../../development/scql_api.rst:426
 msgid "Field"
 msgstr "字段"
 
 #: ../../development/scql_api.rst:24 ../../development/scql_api.rst:45
-#: ../../development/scql_api.rst:100 ../../development/scql_api.rst:113
-#: ../../development/scql_api.rst:204 ../../development/scql_api.rst:231
-#: ../../development/scql_api.rst:248 ../../development/scql_api.rst:325
-#: ../../development/scql_api.rst:337 ../../development/scql_api.rst:348
-#: ../../development/scql_api.rst:359 ../../development/scql_api.rst:370
-#: ../../development/scql_api.rst:399 ../../development/scql_api.rst:410
-#: ../../development/scql_api.rst:421 ../../development/scql_api.rst:431
+#: ../../development/scql_api.rst:99 ../../development/scql_api.rst:112
+#: ../../development/scql_api.rst:202 ../../development/scql_api.rst:229
+#: ../../development/scql_api.rst:246 ../../development/scql_api.rst:322
+#: ../../development/scql_api.rst:334 ../../development/scql_api.rst:343
+#: ../../development/scql_api.rst:354 ../../development/scql_api.rst:365
+#: ../../development/scql_api.rst:394 ../../development/scql_api.rst:405
+#: ../../development/scql_api.rst:416 ../../development/scql_api.rst:426
 msgid "Type"
 msgstr "类型"
 
-#: ../../development/scql_api.rst:24 ../../development/scql_api.rst:100
-#: ../../development/scql_api.rst:204 ../../development/scql_api.rst:231
-#: ../../development/scql_api.rst:325 ../../development/scql_api.rst:337
-#: ../../development/scql_api.rst:348 ../../development/scql_api.rst:359
-#: ../../development/scql_api.rst:370 ../../development/scql_api.rst:399
-#: ../../development/scql_api.rst:421 ../../development/scql_api.rst:431
+#: ../../development/scql_api.rst:24 ../../development/scql_api.rst:99
+#: ../../development/scql_api.rst:202 ../../development/scql_api.rst:229
+#: ../../development/scql_api.rst:322 ../../development/scql_api.rst:334
+#: ../../development/scql_api.rst:343 ../../development/scql_api.rst:354
+#: ../../development/scql_api.rst:365 ../../development/scql_api.rst:394
+#: ../../development/scql_api.rst:416 ../../development/scql_api.rst:426
 msgid "Required"
 msgstr "是否必需"
 
 #: ../../development/scql_api.rst:24 ../../development/scql_api.rst:45
-#: ../../development/scql_api.rst:100 ../../development/scql_api.rst:113
-#: ../../development/scql_api.rst:204 ../../development/scql_api.rst:231
-#: ../../development/scql_api.rst:248 ../../development/scql_api.rst:325
-#: ../../development/scql_api.rst:337 ../../development/scql_api.rst:348
-#: ../../development/scql_api.rst:359 ../../development/scql_api.rst:370
-#: ../../development/scql_api.rst:399 ../../development/scql_api.rst:421
-#: ../../development/scql_api.rst:431 ../../development/scql_api.rst:448
-#: ../../development/scql_api.rst:460 ../../development/scql_api.rst:489
-#: ../../development/scql_api.rst:502 ../../development/scql_api.rst:519
+#: ../../development/scql_api.rst:99 ../../development/scql_api.rst:112
+#: ../../development/scql_api.rst:202 ../../development/scql_api.rst:229
+#: ../../development/scql_api.rst:246 ../../development/scql_api.rst:322
+#: ../../development/scql_api.rst:334 ../../development/scql_api.rst:343
+#: ../../development/scql_api.rst:354 ../../development/scql_api.rst:365
+#: ../../development/scql_api.rst:394 ../../development/scql_api.rst:416
+#: ../../development/scql_api.rst:426 ../../development/scql_api.rst:443
+#: ../../development/scql_api.rst:455 ../../development/scql_api.rst:484
+#: ../../development/scql_api.rst:497 ../../development/scql_api.rst:514
 msgid "Description"
 msgstr "描述"
 
-#: ../../development/scql_api.rst:26 ../../development/scql_api.rst:102
-#: ../../development/scql_api.rst:233
+#: ../../development/scql_api.rst:26 ../../development/scql_api.rst:101
+#: ../../development/scql_api.rst:231
 msgid "header"
 msgstr "header"
 
-#: ../../development/scql_api.rst:26 ../../development/scql_api.rst:102
-#: ../../development/scql_api.rst:233
+#: ../../development/scql_api.rst:26 ../../development/scql_api.rst:101
+#: ../../development/scql_api.rst:231
 msgid "RequestHeader_"
 msgstr "RequestHeader_"
 
 #: ../../development/scql_api.rst:26 ../../development/scql_api.rst:33
 #: ../../development/scql_api.rst:36 ../../development/scql_api.rst:38
-#: ../../development/scql_api.rst:102 ../../development/scql_api.rst:233
-#: ../../development/scql_api.rst:239 ../../development/scql_api.rst:380
-#: ../../development/scql_api.rst:382 ../../development/scql_api.rst:384
-#: ../../development/scql_api.rst:386 ../../development/scql_api.rst:388
-#: ../../development/scql_api.rst:390 ../../development/scql_api.rst:392
-#: ../../development/scql_api.rst:435 ../../development/scql_api.rst:437
+#: ../../development/scql_api.rst:101 ../../development/scql_api.rst:231
+#: ../../development/scql_api.rst:237 ../../development/scql_api.rst:375
+#: ../../development/scql_api.rst:377 ../../development/scql_api.rst:379
+#: ../../development/scql_api.rst:381 ../../development/scql_api.rst:383
+#: ../../development/scql_api.rst:385 ../../development/scql_api.rst:387
+#: ../../development/scql_api.rst:430 ../../development/scql_api.rst:432
 msgid "N"
 msgstr "否"
 
-#: ../../development/scql_api.rst:26 ../../development/scql_api.rst:102
-#: ../../development/scql_api.rst:233
+#: ../../development/scql_api.rst:26 ../../development/scql_api.rst:101
+#: ../../development/scql_api.rst:231
 msgid "Common request header"
 msgstr "共同的请求头"
 
-#: ../../development/scql_api.rst:28 ../../development/scql_api.rst:104
-#: ../../development/scql_api.rst:235 ../../development/scql_api.rst:339
+#: ../../development/scql_api.rst:28 ../../development/scql_api.rst:103
+#: ../../development/scql_api.rst:233 ../../development/scql_api.rst:336
 msgid "user"
 msgstr "user"
 
-#: ../../development/scql_api.rst:28 ../../development/scql_api.rst:104
-#: ../../development/scql_api.rst:235
+#: ../../development/scql_api.rst:28 ../../development/scql_api.rst:103
+#: ../../development/scql_api.rst:233
 msgid "SCDBCredential_"
 msgstr "SCDBCredential_"
 
 #: ../../development/scql_api.rst:28 ../../development/scql_api.rst:30
-#: ../../development/scql_api.rst:104 ../../development/scql_api.rst:106
-#: ../../development/scql_api.rst:206 ../../development/scql_api.rst:208
-#: ../../development/scql_api.rst:210 ../../development/scql_api.rst:212
-#: ../../development/scql_api.rst:235 ../../development/scql_api.rst:237
-#: ../../development/scql_api.rst:241 ../../development/scql_api.rst:327
-#: ../../development/scql_api.rst:339 ../../development/scql_api.rst:341
-#: ../../development/scql_api.rst:350 ../../development/scql_api.rst:352
-#: ../../development/scql_api.rst:361 ../../development/scql_api.rst:363
-#: ../../development/scql_api.rst:372 ../../development/scql_api.rst:374
-#: ../../development/scql_api.rst:376 ../../development/scql_api.rst:378
-#: ../../development/scql_api.rst:401 ../../development/scql_api.rst:423
-#: ../../development/scql_api.rst:433
+#: ../../development/scql_api.rst:103 ../../development/scql_api.rst:105
+#: ../../development/scql_api.rst:204 ../../development/scql_api.rst:206
+#: ../../development/scql_api.rst:208 ../../development/scql_api.rst:210
+#: ../../development/scql_api.rst:233 ../../development/scql_api.rst:235
+#: ../../development/scql_api.rst:239 ../../development/scql_api.rst:324
+#: ../../development/scql_api.rst:336 ../../development/scql_api.rst:345
+#: ../../development/scql_api.rst:347 ../../development/scql_api.rst:356
+#: ../../development/scql_api.rst:358 ../../development/scql_api.rst:367
+#: ../../development/scql_api.rst:369 ../../development/scql_api.rst:371
+#: ../../development/scql_api.rst:373 ../../development/scql_api.rst:396
+#: ../../development/scql_api.rst:418 ../../development/scql_api.rst:428
 msgid "Y"
 msgstr "是"
 
-#: ../../development/scql_api.rst:28 ../../development/scql_api.rst:104
-#: ../../development/scql_api.rst:235
+#: ../../development/scql_api.rst:28 ../../development/scql_api.rst:103
+#: ../../development/scql_api.rst:233
 msgid "User information"
 msgstr "用户信息"
 
-#: ../../development/scql_api.rst:30 ../../development/scql_api.rst:237
+#: ../../development/scql_api.rst:30 ../../development/scql_api.rst:235
 msgid "query"
 msgstr "query"
 
 #: ../../development/scql_api.rst:30 ../../development/scql_api.rst:33
 #: ../../development/scql_api.rst:36 ../../development/scql_api.rst:38
-#: ../../development/scql_api.rst:50 ../../development/scql_api.rst:106
-#: ../../development/scql_api.rst:119 ../../development/scql_api.rst:210
-#: ../../development/scql_api.rst:237 ../../development/scql_api.rst:239
-#: ../../development/scql_api.rst:241 ../../development/scql_api.rst:254
-#: ../../development/scql_api.rst:341 ../../development/scql_api.rst:361
-#: ../../development/scql_api.rst:363 ../../development/scql_api.rst:372
-#: ../../development/scql_api.rst:414 ../../development/scql_api.rst:435
+#: ../../development/scql_api.rst:50 ../../development/scql_api.rst:105
+#: ../../development/scql_api.rst:118 ../../development/scql_api.rst:208
+#: ../../development/scql_api.rst:235 ../../development/scql_api.rst:237
+#: ../../development/scql_api.rst:239 ../../development/scql_api.rst:252
+#: ../../development/scql_api.rst:356 ../../development/scql_api.rst:358
+#: ../../development/scql_api.rst:367 ../../development/scql_api.rst:409
+#: ../../development/scql_api.rst:430
 msgid "string"
 msgstr "string"
 
-#: ../../development/scql_api.rst:30 ../../development/scql_api.rst:237
+#: ../../development/scql_api.rst:30 ../../development/scql_api.rst:235
 msgid "SCQL query to be run"
 msgstr "待执行的 SQL 语句"
 
@@ -183,46 +182,46 @@ msgid ""
 "result<async_send_result>` for more"
 msgstr "用于返回查询结果的回调URL。更多信息请参考 :ref:`异步发送结果 <async_send_result>`"
 
-#: ../../development/scql_api.rst:36 ../../development/scql_api.rst:239
+#: ../../development/scql_api.rst:36 ../../development/scql_api.rst:237
 msgid "biz_request_id"
 msgstr "biz_request_id"
 
-#: ../../development/scql_api.rst:36 ../../development/scql_api.rst:239
+#: ../../development/scql_api.rst:36 ../../development/scql_api.rst:237
 msgid "Biz request id which often be unique per biz action"
 msgstr "业务请求 ID，在每个业务操作中通常是唯一的"
 
-#: ../../development/scql_api.rst:38 ../../development/scql_api.rst:241
+#: ../../development/scql_api.rst:38 ../../development/scql_api.rst:239
 msgid "db_name"
 msgstr "db_name"
 
-#: ../../development/scql_api.rst:38 ../../development/scql_api.rst:241
+#: ../../development/scql_api.rst:38 ../../development/scql_api.rst:239
 msgid "Current database name"
 msgstr "当前数据库名称"
 
-#: ../../development/scql_api.rst:42 ../../development/scql_api.rst:110
-#: ../../development/scql_api.rst:245
+#: ../../development/scql_api.rst:42 ../../development/scql_api.rst:109
+#: ../../development/scql_api.rst:243
 msgid "Response"
 msgstr "响应"
 
-#: ../../development/scql_api.rst:47 ../../development/scql_api.rst:115
-#: ../../development/scql_api.rst:206 ../../development/scql_api.rst:250
-#: ../../development/scql_api.rst:423
+#: ../../development/scql_api.rst:47 ../../development/scql_api.rst:114
+#: ../../development/scql_api.rst:204 ../../development/scql_api.rst:248
+#: ../../development/scql_api.rst:418
 msgid "status"
 msgstr "status"
 
-#: ../../development/scql_api.rst:47 ../../development/scql_api.rst:115
-#: ../../development/scql_api.rst:206 ../../development/scql_api.rst:250
+#: ../../development/scql_api.rst:47 ../../development/scql_api.rst:114
+#: ../../development/scql_api.rst:204 ../../development/scql_api.rst:248
 msgid "Status_"
 msgstr "Status_"
 
-#: ../../development/scql_api.rst:47 ../../development/scql_api.rst:115
-#: ../../development/scql_api.rst:206 ../../development/scql_api.rst:250
+#: ../../development/scql_api.rst:47 ../../development/scql_api.rst:114
+#: ../../development/scql_api.rst:204 ../../development/scql_api.rst:248
 msgid "See `Status code`_ for more information"
 msgstr "更多信息请参考 `Status code`_"
 
-#: ../../development/scql_api.rst:51 ../../development/scql_api.rst:106
-#: ../../development/scql_api.rst:119 ../../development/scql_api.rst:210
-#: ../../development/scql_api.rst:254
+#: ../../development/scql_api.rst:51 ../../development/scql_api.rst:105
+#: ../../development/scql_api.rst:118 ../../development/scql_api.rst:208
+#: ../../development/scql_api.rst:252
 msgid "scdb_session_id"
 msgstr "scdb_session_id"
 
@@ -230,8 +229,8 @@ msgstr "scdb_session_id"
 msgid "Unique ID of a session"
 msgstr "会话的唯一 ID"
 
-#: ../../development/scql_api.rst:56 ../../development/scql_api.rst:125
-#: ../../development/scql_api.rst:261
+#: ../../development/scql_api.rst:56 ../../development/scql_api.rst:124
+#: ../../development/scql_api.rst:259
 msgid "Example"
 msgstr "示例"
 
@@ -245,77 +244,77 @@ msgstr "如果需要执行 `show databases`，请求和响应的消息结构应�
 msgid "request"
 msgstr "请求"
 
-#: ../../development/scql_api.rst:76
+#: ../../development/scql_api.rst:75
 msgid "response"
 msgstr "响应"
 
-#: ../../development/scql_api.rst:92
+#: ../../development/scql_api.rst:91
 msgid "public/fetch_result"
 msgstr "public/fetch_result"
 
-#: ../../development/scql_api.rst:94
+#: ../../development/scql_api.rst:93
 msgid ""
 "Fetch result of the query submitted via the \"submit_query\" method "
 "before, if the query is still running, It will return `NOT_READY` status "
 "code."
 msgstr "通过 session ID 获取之前提交的 query 的结果，如果之前的提交的 query 还在运行中，返回 `NOT_READY`。"
 
-#: ../../development/scql_api.rst:106 ../../development/scql_api.rst:210
+#: ../../development/scql_api.rst:105 ../../development/scql_api.rst:208
 msgid "Given by scdb when submit the query before, same with session_id_"
 msgstr "在 SCDB 中提交查询时返回的会话 ID，与 submit_query 响应中的 session_id_ 一致"
 
-#: ../../development/scql_api.rst:117 ../../development/scql_api.rst:208
-#: ../../development/scql_api.rst:252
+#: ../../development/scql_api.rst:116 ../../development/scql_api.rst:206
+#: ../../development/scql_api.rst:250
 msgid "out_columns"
 msgstr "out_columns"
 
-#: ../../development/scql_api.rst:117 ../../development/scql_api.rst:208
-#: ../../development/scql_api.rst:252
+#: ../../development/scql_api.rst:116 ../../development/scql_api.rst:206
+#: ../../development/scql_api.rst:250
 msgid "Tensor_ list"
 msgstr "Tensor_ list"
 
-#: ../../development/scql_api.rst:117
+#: ../../development/scql_api.rst:116
 msgid "Query result"
 msgstr "query 的运行结果"
 
-#: ../../development/scql_api.rst:119
+#: ../../development/scql_api.rst:118
 msgid "Same with session_id_"
 msgstr "与 submit_query 中的 response 中的 session_id_ 一致"
 
-#: ../../development/scql_api.rst:121 ../../development/scql_api.rst:212
-#: ../../development/scql_api.rst:256
+#: ../../development/scql_api.rst:120 ../../development/scql_api.rst:210
+#: ../../development/scql_api.rst:254
 msgid "affected_rows"
 msgstr "affected_rows"
 
-#: ../../development/scql_api.rst:121 ../../development/scql_api.rst:212
-#: ../../development/scql_api.rst:256 ../../development/scql_api.rst:412
+#: ../../development/scql_api.rst:120 ../../development/scql_api.rst:210
+#: ../../development/scql_api.rst:254 ../../development/scql_api.rst:407
 msgid "int64"
 msgstr "int64"
 
-#: ../../development/scql_api.rst:121 ../../development/scql_api.rst:212
-#: ../../development/scql_api.rst:256
+#: ../../development/scql_api.rst:120 ../../development/scql_api.rst:210
+#: ../../development/scql_api.rst:254
 msgid "The num of rows affected"
 msgstr "受影响的行数"
 
-#: ../../development/scql_api.rst:127
+#: ../../development/scql_api.rst:126
 msgid ""
 "If you want to get the result of the query `show databases`, you can send"
 " a request like this."
 msgstr "如果需要获取 `show databases` 的结果，可以发送如下的请求。"
 
-#: ../../development/scql_api.rst:143
+#: ../../development/scql_api.rst:141
 msgid "If succeed, a response will be received with status code 0 like this:"
 msgstr "如果成功，将收到带有状态码 0 的响应，如下所示："
 
-#: ../../development/scql_api.rst:181
+#: ../../development/scql_api.rst:179
 msgid "If result is not ready, the response can be show as follows:"
 msgstr "如果结果尚未准备好，响应将会是："
 
-#: ../../development/scql_api.rst:199
+#: ../../development/scql_api.rst:197
 msgid "Asynchronous send result"
 msgstr "异步发送结果"
 
-#: ../../development/scql_api.rst:201
+#: ../../development/scql_api.rst:199
 msgid ""
 "Automatically send the result to the user by post the following message "
 "when the result is available. To accomplish this, "
@@ -324,495 +323,487 @@ msgstr ""
 "如果用户配置了 :ref:`query_result_callback_url <callback_url>`， SCDB "
 "在获取到结果后会主动向用户发送消息，返回之前查询的结果。"
 
-#: ../../development/scql_api.rst:208
+#: ../../development/scql_api.rst:206
 msgid "Query result, See Tensor_ for more information"
 msgstr "Query 运行结果，更多信息请参考 Tensor_"
 
-#: ../../development/scql_api.rst:218
+#: ../../development/scql_api.rst:216
 msgid "Synchronous"
 msgstr "同步接口"
 
-#: ../../development/scql_api.rst:223
+#: ../../development/scql_api.rst:221
 msgid "public/submit_and_get"
 msgstr "public/submit_and_get"
 
-#: ../../development/scql_api.rst:225
+#: ../../development/scql_api.rst:223
 msgid ""
 "Submit a query to SCQL, SCQL will wait for all tasks to complete before "
 "returning the result to the use."
 msgstr "向 SCQL 提交查询，SCQL 将等待所有任务完成后再将结果返回给用户。"
 
-#: ../../development/scql_api.rst:252
+#: ../../development/scql_api.rst:250
 msgid "Query result, See `Tensor`_ for more information"
 msgstr "Query 运行结果，更多信息请参考 `Tensor`_ "
 
-#: ../../development/scql_api.rst:254
+#: ../../development/scql_api.rst:252
 msgid "SCDB session id"
 msgstr "SCDB 会话 id"
 
-#: ../../development/scql_api.rst:263
+#: ../../development/scql_api.rst:261
 msgid ""
 "If you want submit a query `show databases`, you can send a request as "
 "follows:"
 msgstr "如果需要提交 `show databases` 查询，可以发送如下的请求："
 
-#: ../../development/scql_api.rst:280
+#: ../../development/scql_api.rst:277
 msgid "If successful, a response will be received like this:"
 msgstr "如果成功，将收到以下响应："
 
-#: ../../development/scql_api.rst:319
+#: ../../development/scql_api.rst:316
 msgid "Message Structure"
 msgstr "Message Structure"
 
-#: ../../development/scql_api.rst:322
+#: ../../development/scql_api.rst:319
 msgid "RequestHeader"
 msgstr "RequestHeader"
 
-#: ../../development/scql_api.rst:327
+#: ../../development/scql_api.rst:324
 msgid "custom_headers"
 msgstr "custom_headers"
 
-#: ../../development/scql_api.rst:327
+#: ../../development/scql_api.rst:324
 msgid "map<string, string>"
 msgstr "map<string, string>"
 
-#: ../../development/scql_api.rst:327
+#: ../../development/scql_api.rst:324
 msgid "Custom headers used to record custom information"
 msgstr "自定义消息头"
 
-#: ../../development/scql_api.rst:334
+#: ../../development/scql_api.rst:331
 msgid "SCDBCredential"
 msgstr "SCDBCredential"
 
-#: ../../development/scql_api.rst:339
+#: ../../development/scql_api.rst:336
 msgid "User_"
 msgstr "User_"
 
-#: ../../development/scql_api.rst:339
+#: ../../development/scql_api.rst:336
 msgid "User information, contains password and name"
 msgstr "用户信息，包含密码和用户名"
 
-#: ../../development/scql_api.rst:341
-msgid "grm_token"
-msgstr "grm_token"
-
-#: ../../development/scql_api.rst:341
-msgid "The unique identifier of the user in GRM"
-msgstr "GRM 中用户的唯一标识符"
-
-#: ../../development/scql_api.rst:345
+#: ../../development/scql_api.rst:340
 msgid "User"
 msgstr "User"
 
-#: ../../development/scql_api.rst:350
+#: ../../development/scql_api.rst:345
 msgid "account_system_type"
 msgstr "account_system_type"
 
-#: ../../development/scql_api.rst:350
+#: ../../development/scql_api.rst:345
 msgid "AccountSystemType_"
 msgstr "AccountSystemType_"
 
-#: ../../development/scql_api.rst:350
+#: ../../development/scql_api.rst:345
 msgid "Account Type"
 msgstr "账号类型"
 
-#: ../../development/scql_api.rst:352
+#: ../../development/scql_api.rst:347
 msgid "native_user"
 msgstr "native_user"
 
-#: ../../development/scql_api.rst:352
+#: ../../development/scql_api.rst:347
 msgid "NativeUser_"
 msgstr "NativeUser_"
 
-#: ../../development/scql_api.rst:352
+#: ../../development/scql_api.rst:347
 msgid "Native user information"
 msgstr "本地用户信息"
 
-#: ../../development/scql_api.rst:356
+#: ../../development/scql_api.rst:351
 msgid "NativeUser"
-msgstr ""
+msgstr "NativeUser"
 
-#: ../../development/scql_api.rst:361 ../../development/scql_api.rst:372
+#: ../../development/scql_api.rst:356 ../../development/scql_api.rst:367
 msgid "name"
 msgstr "name"
 
-#: ../../development/scql_api.rst:361
+#: ../../development/scql_api.rst:356
 msgid "name of user"
 msgstr "用户名"
 
-#: ../../development/scql_api.rst:363
+#: ../../development/scql_api.rst:358
 msgid "password"
-msgstr ""
+msgstr "password"
 
-#: ../../development/scql_api.rst:363
+#: ../../development/scql_api.rst:358
 msgid "password of user"
 msgstr "密码"
 
-#: ../../development/scql_api.rst:367
+#: ../../development/scql_api.rst:362
 msgid "Tensor"
 msgstr "Tensor"
 
-#: ../../development/scql_api.rst:372
+#: ../../development/scql_api.rst:367
 msgid "Tensor name"
 msgstr "Tensor 名称"
 
-#: ../../development/scql_api.rst:374
+#: ../../development/scql_api.rst:369
 msgid "shape"
 msgstr "shape"
 
-#: ../../development/scql_api.rst:374
+#: ../../development/scql_api.rst:369
 msgid "TensorShape_"
 msgstr "TensorShape_"
 
-#: ../../development/scql_api.rst:374
+#: ../../development/scql_api.rst:369
 msgid "It's normally [M] (a vector with M elements)"
 msgstr "通常为 [M] （一个包含 M 个元素的向量）"
 
-#: ../../development/scql_api.rst:376
+#: ../../development/scql_api.rst:371
 msgid "elem_type"
 msgstr "elem_type"
 
-#: ../../development/scql_api.rst:376
+#: ../../development/scql_api.rst:371
 msgid "PrimitiveDataType_"
 msgstr "PrimitiveDataType_"
 
-#: ../../development/scql_api.rst:376
+#: ../../development/scql_api.rst:371
 msgid "The data type of the value data in tensor"
 msgstr "tensor 中存储的数据的类型"
 
-#: ../../development/scql_api.rst:378
+#: ../../development/scql_api.rst:373
 msgid "option"
 msgstr "option"
 
-#: ../../development/scql_api.rst:378
+#: ../../development/scql_api.rst:373
 msgid "TensorOptions_"
 msgstr "TensorOptions_"
 
-#: ../../development/scql_api.rst:378
+#: ../../development/scql_api.rst:373
 msgid "Tensor options"
 msgstr "tensor 配置项"
 
-#: ../../development/scql_api.rst:380
+#: ../../development/scql_api.rst:375
 msgid "annotation"
 msgstr "annotation"
 
-#: ../../development/scql_api.rst:380
+#: ../../development/scql_api.rst:375
 msgid "TensorAnnotation_"
 msgstr "TensorAnnotation_"
 
-#: ../../development/scql_api.rst:380
+#: ../../development/scql_api.rst:375
 msgid ""
 "Carries physical status information, It MUST be there if the <option> is "
 "\"Reference\""
 msgstr "携带物理状态信息，如果 option 为 Reference，则必须存在"
 
-#: ../../development/scql_api.rst:382
+#: ../../development/scql_api.rst:377
 msgid "int32_data"
 msgstr "int32_data"
 
-#: ../../development/scql_api.rst:382
+#: ../../development/scql_api.rst:377
 msgid "int32 list"
 msgstr "int32 list"
 
-#: ../../development/scql_api.rst:382
+#: ../../development/scql_api.rst:377
 msgid "The value data in tensor, for int8, int16, int32 data types"
 msgstr "用于存储 int8, int16, int32 类型的数据"
 
-#: ../../development/scql_api.rst:384
+#: ../../development/scql_api.rst:379
 msgid "int64_data"
 msgstr "int64_data"
 
-#: ../../development/scql_api.rst:384
+#: ../../development/scql_api.rst:379
 msgid "int64 list"
 msgstr "int64 list"
 
-#: ../../development/scql_api.rst:384
+#: ../../development/scql_api.rst:379
 msgid "The value data in tensor, for int64 and timestamp data types"
 msgstr "用于存储 int64 类型的数据"
 
-#: ../../development/scql_api.rst:386
+#: ../../development/scql_api.rst:381
 msgid "float_data"
 msgstr "float_data"
 
-#: ../../development/scql_api.rst:386
+#: ../../development/scql_api.rst:381
 msgid "float list"
 msgstr "float list"
 
-#: ../../development/scql_api.rst:386
+#: ../../development/scql_api.rst:381
 msgid "The value data in tensor, for float32 data type"
 msgstr "用于存储 float32 类型的数据"
 
-#: ../../development/scql_api.rst:388
+#: ../../development/scql_api.rst:383
 msgid "double_data"
 msgstr "double_data"
 
-#: ../../development/scql_api.rst:388
+#: ../../development/scql_api.rst:383
 msgid "double list"
 msgstr "double list"
 
-#: ../../development/scql_api.rst:388
+#: ../../development/scql_api.rst:383
 msgid "The value data in tensor, for float64 data type"
 msgstr "用于存储 float64 类型的数据"
 
-#: ../../development/scql_api.rst:390
+#: ../../development/scql_api.rst:385
 msgid "bool_data"
 msgstr "bool_data"
 
-#: ../../development/scql_api.rst:390
+#: ../../development/scql_api.rst:385
 msgid "bool list"
 msgstr "bool list"
 
-#: ../../development/scql_api.rst:390
+#: ../../development/scql_api.rst:385
 msgid "The value data in tensor, for bool data type"
 msgstr "用于存储 bool 类型的数据"
 
-#: ../../development/scql_api.rst:392
+#: ../../development/scql_api.rst:387
 msgid "string_data"
 msgstr "string_data"
 
-#: ../../development/scql_api.rst:392
+#: ../../development/scql_api.rst:387
 msgid "string list"
 msgstr "string list"
 
-#: ../../development/scql_api.rst:392
+#: ../../development/scql_api.rst:387
 msgid "The value data in tensor, for string and datetime data types"
 msgstr "用于存储 string 和 datetime 类型的数据"
 
-#: ../../development/scql_api.rst:396
+#: ../../development/scql_api.rst:391
 msgid "TensorShape"
 msgstr "TensorShape"
 
-#: ../../development/scql_api.rst:401
+#: ../../development/scql_api.rst:396
 msgid "dim"
 msgstr "dim"
 
-#: ../../development/scql_api.rst:401
+#: ../../development/scql_api.rst:396
 msgid "TensorShape_Dimension_ list"
 msgstr "TensorShape_Dimension_ list"
 
-#: ../../development/scql_api.rst:405
+#: ../../development/scql_api.rst:400
 msgid "TensorShape_Dimension"
 msgstr "TensorShape_Dimension"
 
-#: ../../development/scql_api.rst:407
+#: ../../development/scql_api.rst:402
 msgid "TensorShape_Dimension could be dim_value or dim_param."
 msgstr "TensorShape_Dimension 可以是 dim_value 或 dim_param。"
 
-#: ../../development/scql_api.rst:412
+#: ../../development/scql_api.rst:407
 msgid "dim_value"
 msgstr "dim_value"
 
-#: ../../development/scql_api.rst:414
+#: ../../development/scql_api.rst:409
 msgid "dim_param"
 msgstr "dim_param"
 
-#: ../../development/scql_api.rst:418
+#: ../../development/scql_api.rst:413
 msgid "TensorAnnotation"
 msgstr "TensorAnnotation"
 
-#: ../../development/scql_api.rst:423
+#: ../../development/scql_api.rst:418
 msgid "TensorStatus_"
 msgstr "TensorStatus_"
 
-#: ../../development/scql_api.rst:423
+#: ../../development/scql_api.rst:418
 msgid "Status of tensor"
 msgstr "tensor 状态"
 
-#: ../../development/scql_api.rst:428
+#: ../../development/scql_api.rst:423
 msgid "Status"
 msgstr "Status"
 
-#: ../../development/scql_api.rst:433
+#: ../../development/scql_api.rst:428
 msgid "code"
 msgstr "code"
 
-#: ../../development/scql_api.rst:433
+#: ../../development/scql_api.rst:428
 msgid "int32"
 msgstr "int32"
 
-#: ../../development/scql_api.rst:433
+#: ../../development/scql_api.rst:428
 msgid "The status code, see `Status code`_ for more information"
 msgstr "状态码，更多信息请参考 `Status code`_"
 
-#: ../../development/scql_api.rst:435
+#: ../../development/scql_api.rst:430
 msgid "Messages"
 msgstr "Messages"
 
-#: ../../development/scql_api.rst:435
+#: ../../development/scql_api.rst:430
 msgid "Message for recording the error information"
 msgstr "用于记录错误信息的消息"
 
-#: ../../development/scql_api.rst:437
+#: ../../development/scql_api.rst:432
 msgid "details"
 msgstr "details"
 
-#: ../../development/scql_api.rst:437
+#: ../../development/scql_api.rst:432
 msgid "protobuf.Any list"
 msgstr "protobuf.Any list"
 
-#: ../../development/scql_api.rst:437
+#: ../../development/scql_api.rst:432
 msgid "A list of messages that carry the additional supplementary error details"
 msgstr "携带额外补充错误细节的消息列表"
 
-#: ../../development/scql_api.rst:442
+#: ../../development/scql_api.rst:437
 msgid "Enum Values"
 msgstr "Enum Values"
 
-#: ../../development/scql_api.rst:445
+#: ../../development/scql_api.rst:440
 msgid "AccountSystemType"
 msgstr "AccountSystemType"
 
-#: ../../development/scql_api.rst:448 ../../development/scql_api.rst:460
-#: ../../development/scql_api.rst:489 ../../development/scql_api.rst:502
+#: ../../development/scql_api.rst:443 ../../development/scql_api.rst:455
+#: ../../development/scql_api.rst:484 ../../development/scql_api.rst:497
 msgid "Name"
 msgstr "名称"
 
-#: ../../development/scql_api.rst:448 ../../development/scql_api.rst:460
-#: ../../development/scql_api.rst:489 ../../development/scql_api.rst:502
+#: ../../development/scql_api.rst:443 ../../development/scql_api.rst:455
+#: ../../development/scql_api.rst:484 ../../development/scql_api.rst:497
 msgid "Number"
 msgstr "数值"
 
-#: ../../development/scql_api.rst:450
+#: ../../development/scql_api.rst:445
 msgid "UNKNOWN"
 msgstr "UNKNOWN"
 
-#: ../../development/scql_api.rst:450 ../../development/scql_api.rst:462
-#: ../../development/scql_api.rst:491 ../../development/scql_api.rst:504
-#: ../../development/scql_api.rst:521
+#: ../../development/scql_api.rst:445 ../../development/scql_api.rst:457
+#: ../../development/scql_api.rst:486 ../../development/scql_api.rst:499
+#: ../../development/scql_api.rst:516
 msgid "0"
 msgstr "0"
 
-#: ../../development/scql_api.rst:450
+#: ../../development/scql_api.rst:445
 msgid "Unknown account type"
 msgstr "未知账号类型"
 
-#: ../../development/scql_api.rst:452
+#: ../../development/scql_api.rst:447
 msgid "NATIVE_USER"
 msgstr "NATIVE_USER"
 
-#: ../../development/scql_api.rst:452 ../../development/scql_api.rst:464
-#: ../../development/scql_api.rst:493 ../../development/scql_api.rst:506
+#: ../../development/scql_api.rst:447 ../../development/scql_api.rst:459
+#: ../../development/scql_api.rst:488 ../../development/scql_api.rst:501
 msgid "1"
 msgstr "1"
 
-#: ../../development/scql_api.rst:452
+#: ../../development/scql_api.rst:447
 msgid "Native user type"
 msgstr "本地用户类型"
 
-#: ../../development/scql_api.rst:457
+#: ../../development/scql_api.rst:452
 msgid "PrimitiveDataType"
 msgstr "PrimitiveDataType"
 
-#: ../../development/scql_api.rst:462
+#: ../../development/scql_api.rst:457
 msgid "PrimitiveDataType_UNDEFINED"
 msgstr "PrimitiveDataType_UNDEFINED"
 
-#: ../../development/scql_api.rst:462
+#: ../../development/scql_api.rst:457
 msgid "undefined data type"
 msgstr "未定义的数据类型"
 
-#: ../../development/scql_api.rst:464
+#: ../../development/scql_api.rst:459
 msgid "INT8"
 msgstr "INT8"
 
-#: ../../development/scql_api.rst:464
+#: ../../development/scql_api.rst:459
 msgid "the 8-bit signed integer type"
 msgstr "8-bit 有符号整型类型"
 
-#: ../../development/scql_api.rst:466
+#: ../../development/scql_api.rst:461
 msgid "INT16"
 msgstr "INT16"
 
-#: ../../development/scql_api.rst:466 ../../development/scql_api.rst:495
-#: ../../development/scql_api.rst:508
+#: ../../development/scql_api.rst:461 ../../development/scql_api.rst:490
+#: ../../development/scql_api.rst:503
 msgid "2"
 msgstr "2"
 
-#: ../../development/scql_api.rst:466
+#: ../../development/scql_api.rst:461
 msgid "the 16-bit signed integer type"
 msgstr "16-bit 有符号整型类型"
 
-#: ../../development/scql_api.rst:468
+#: ../../development/scql_api.rst:463
 msgid "INT32"
 msgstr "INT32"
 
-#: ../../development/scql_api.rst:468 ../../development/scql_api.rst:510
+#: ../../development/scql_api.rst:463 ../../development/scql_api.rst:505
 msgid "3"
 msgstr "3"
 
-#: ../../development/scql_api.rst:468
+#: ../../development/scql_api.rst:463
 msgid "the 32-bit signed integer type"
 msgstr "32-bit 有符号整型类型"
 
-#: ../../development/scql_api.rst:470
+#: ../../development/scql_api.rst:465
 msgid "INT64"
 msgstr "INT64"
 
-#: ../../development/scql_api.rst:470 ../../development/scql_api.rst:512
+#: ../../development/scql_api.rst:465 ../../development/scql_api.rst:507
 msgid "4"
 msgstr "4"
 
-#: ../../development/scql_api.rst:470
+#: ../../development/scql_api.rst:465
 msgid "the 64-bit signed integer type"
 msgstr "64-bit 有符号整型类型"
 
-#: ../../development/scql_api.rst:472
+#: ../../development/scql_api.rst:467
 msgid "FLOAT32"
 msgstr "FLOAT32"
 
-#: ../../development/scql_api.rst:472
+#: ../../development/scql_api.rst:467
 msgid "5"
 msgstr "5"
 
-#: ../../development/scql_api.rst:472
+#: ../../development/scql_api.rst:467
 msgid "the 32-bit binary floating point type"
 msgstr "32-bit 浮点数类型"
 
-#: ../../development/scql_api.rst:474
+#: ../../development/scql_api.rst:469
 msgid "FLOAT64"
 msgstr "FLOAT64"
 
-#: ../../development/scql_api.rst:474
+#: ../../development/scql_api.rst:469
 msgid "6"
 msgstr "6"
 
-#: ../../development/scql_api.rst:474
+#: ../../development/scql_api.rst:469
 msgid "the 64-bit binary floating point type"
 msgstr "64-bit 浮点数类型"
 
-#: ../../development/scql_api.rst:476
+#: ../../development/scql_api.rst:471
 msgid "BOOL"
 msgstr "BOOL"
 
-#: ../../development/scql_api.rst:476
+#: ../../development/scql_api.rst:471
 msgid "7"
 msgstr "7"
 
-#: ../../development/scql_api.rst:476
+#: ../../development/scql_api.rst:471
 msgid "the bool data type"
 msgstr "bool 类型"
 
-#: ../../development/scql_api.rst:478
+#: ../../development/scql_api.rst:473
 msgid "STRING"
 msgstr "STRING"
 
-#: ../../development/scql_api.rst:478
+#: ../../development/scql_api.rst:473
 msgid "8"
 msgstr "8"
 
-#: ../../development/scql_api.rst:478
+#: ../../development/scql_api.rst:473
 msgid "the string data type"
 msgstr "string 类型"
 
-#: ../../development/scql_api.rst:480
+#: ../../development/scql_api.rst:475
 msgid "DATETIME"
 msgstr "DATETIME"
 
-#: ../../development/scql_api.rst:480
+#: ../../development/scql_api.rst:475
 msgid "9"
 msgstr "9"
 
-#: ../../development/scql_api.rst:480
+#: ../../development/scql_api.rst:475
 msgid ""
 "see `datetime in mysql "
 "<https://dev.mysql.com/doc/refman/8.0/en/datetime.html>`_ to get more"
@@ -820,287 +811,276 @@ msgstr ""
 "datetime 类型，参考 MySQL中的 `datetime "
 "<https://dev.mysql.com/doc/refman/8.0/en/datetime.html>`_"
 
-#: ../../development/scql_api.rst:482
+#: ../../development/scql_api.rst:477
 msgid "TIMESTAMP"
 msgstr "TIMESTAMP"
 
-#: ../../development/scql_api.rst:482
+#: ../../development/scql_api.rst:477
 msgid "10"
 msgstr "10"
 
-#: ../../development/scql_api.rst:482
+#: ../../development/scql_api.rst:477
 msgid "seconds since '1970-01-01 00:00:00' UTC"
 msgstr "timestamp 类型，单位为秒，从 '1970-01-01 00:00:00' UTC 开始计时"
 
-#: ../../development/scql_api.rst:486
+#: ../../development/scql_api.rst:481
 msgid "TensorOptions"
 msgstr "TensorOptions"
 
-#: ../../development/scql_api.rst:491
+#: ../../development/scql_api.rst:486
 msgid "VALUE"
 msgstr "VALUE"
 
-#: ../../development/scql_api.rst:491
+#: ../../development/scql_api.rst:486
 msgid "A tensor with data"
 msgstr "含数据的 tensor"
 
-#: ../../development/scql_api.rst:493
+#: ../../development/scql_api.rst:488
 msgid "REFERENCE"
 msgstr "REFERENCE"
 
-#: ../../development/scql_api.rst:493
+#: ../../development/scql_api.rst:488
 msgid "A tensor with reference (URI)"
 msgstr "含引用（URI）的 tensor"
 
-#: ../../development/scql_api.rst:495
+#: ../../development/scql_api.rst:490
 msgid "VARIABLE"
 msgstr "VARIABLE"
 
-#: ../../development/scql_api.rst:495
+#: ../../development/scql_api.rst:490
 msgid "A tensor variable (declaration)"
 msgstr "tensor 变量（声明）"
 
-#: ../../development/scql_api.rst:499
+#: ../../development/scql_api.rst:494
 msgid "TensorStatus"
 msgstr ""
 
-#: ../../development/scql_api.rst:504
+#: ../../development/scql_api.rst:499
 msgid "TENSORSTATUS_UNKNOWN"
 msgstr "TENSORSTATUS_UNKNOWN"
 
-#: ../../development/scql_api.rst:504
+#: ../../development/scql_api.rst:499
 msgid "Unknown"
 msgstr "未知"
 
-#: ../../development/scql_api.rst:506
+#: ../../development/scql_api.rst:501
 msgid "TENSORSTATUS_PRIVATE"
 msgstr "TENSORSTATUS_PRIVATE"
 
-#: ../../development/scql_api.rst:506
+#: ../../development/scql_api.rst:501
 msgid "Private"
 msgstr "私密"
 
-#: ../../development/scql_api.rst:508
+#: ../../development/scql_api.rst:503
 msgid "TENSORSTATUS_SECRET"
 msgstr "TENSORSTATUS_SECRET"
 
-#: ../../development/scql_api.rst:508
+#: ../../development/scql_api.rst:503
 msgid "Secret, usually in the form of secret sharing"
 msgstr "秘密，通常为秘密共享的形式"
 
-#: ../../development/scql_api.rst:510
+#: ../../development/scql_api.rst:505
 msgid "TENSORSTATUS_CIPHER"
 msgstr "TENSORSTATUS_CIPHER"
 
-#: ../../development/scql_api.rst:510
+#: ../../development/scql_api.rst:505
 msgid "Ciphertext, usually in the form of homomorphic encryption ciphertext"
 msgstr "密文，通常为同态加密密文"
 
-#: ../../development/scql_api.rst:512
+#: ../../development/scql_api.rst:507
 msgid "TENSORSTATUS_PUBLIC"
 msgstr "TENSORSTATUS_PUBLIC"
 
-#: ../../development/scql_api.rst:512
+#: ../../development/scql_api.rst:507
 msgid "Public"
 msgstr "公开"
 
-#: ../../development/scql_api.rst:516
+#: ../../development/scql_api.rst:511
 msgid "Status code"
 msgstr "Status Code"
 
-#: ../../development/scql_api.rst:519
+#: ../../development/scql_api.rst:514
 msgid "Error code"
 msgstr "错误码"
 
-#: ../../development/scql_api.rst:519
+#: ../../development/scql_api.rst:514
 msgid "Status Code"
 msgstr "状态码"
 
-#: ../../development/scql_api.rst:521
+#: ../../development/scql_api.rst:516
 msgid "Code_OK"
 msgstr "Code_OK"
 
-#: ../../development/scql_api.rst:521
+#: ../../development/scql_api.rst:516
 msgid "Success"
 msgstr "成功"
 
-#: ../../development/scql_api.rst:523
+#: ../../development/scql_api.rst:518
 msgid "100"
 msgstr "100"
 
-#: ../../development/scql_api.rst:523
+#: ../../development/scql_api.rst:518
 msgid "Code_BAD_REQUEST"
 msgstr "Code_BAD_REQUEST"
 
-#: ../../development/scql_api.rst:523
+#: ../../development/scql_api.rst:518
 msgid "Invalid request body"
 msgstr "无效的请求体"
 
-#: ../../development/scql_api.rst:525
+#: ../../development/scql_api.rst:520
 msgid "101"
 msgstr "101"
 
-#: ../../development/scql_api.rst:525
+#: ../../development/scql_api.rst:520
 msgid "Code_UNAUTHENTICATED"
 msgstr "Code_UNAUTHENTICATED"
 
-#: ../../development/scql_api.rst:525
+#: ../../development/scql_api.rst:520
 msgid "User authentication failed"
 msgstr "用户身份验证失败"
 
-#: ../../development/scql_api.rst:527
+#: ../../development/scql_api.rst:522
 msgid "102"
 msgstr "102"
 
-#: ../../development/scql_api.rst:527
+#: ../../development/scql_api.rst:522
 msgid "Code_SQL_PARSE_ERROR"
 msgstr "Code_SQL_PARSE_ERROR"
 
-#: ../../development/scql_api.rst:527
+#: ../../development/scql_api.rst:522
 msgid "Invalid SCQL statement"
 msgstr "无效的 SCQL 语句"
 
-#: ../../development/scql_api.rst:529
+#: ../../development/scql_api.rst:524
 msgid "103"
 msgstr "103"
 
-#: ../../development/scql_api.rst:529
+#: ../../development/scql_api.rst:524
 msgid "Code_INVALID_ARGUMENT"
 msgstr "Code_INVALID_ARGUMENT"
 
-#: ../../development/scql_api.rst:529
+#: ../../development/scql_api.rst:524
 msgid "Invalid parameter in Request"
 msgstr "请求包含无效参数"
 
-#: ../../development/scql_api.rst:531
+#: ../../development/scql_api.rst:526
 msgid "104"
 msgstr "104"
 
-#: ../../development/scql_api.rst:531
+#: ../../development/scql_api.rst:526
 msgid "Code_NOT_READY"
 msgstr "Code_NOT_READY"
 
-#: ../../development/scql_api.rst:531
+#: ../../development/scql_api.rst:526
 msgid "Result not ready"
 msgstr "结果未准备好"
 
-#: ../../development/scql_api.rst:533
+#: ../../development/scql_api.rst:528
 msgid "131"
 msgstr "131"
 
-#: ../../development/scql_api.rst:533
+#: ../../development/scql_api.rst:528
 msgid "Code_DDL_PERMISSION_DENIED"
 msgstr "Code_DDL_PERMISSION_DENIED"
 
-#: ../../development/scql_api.rst:533
+#: ../../development/scql_api.rst:528
 msgid "User does not have permission to execute the DDL"
 msgstr "用户没有执行 DDL 的权限"
 
-#: ../../development/scql_api.rst:535
-msgid "132"
-msgstr "132"
-
-#: ../../development/scql_api.rst:535
-msgid "Code_GRM_RESOURCE_PERMISSION_DENIED"
-msgstr "Code_GRM_RESOURCE_PERMISSION_DENIED"
-
-#: ../../development/scql_api.rst:535
-msgid "User has no required permissions on grm resources"
-msgstr "用户在 grm 上权限不足"
-
-#: ../../development/scql_api.rst:537
+#: ../../development/scql_api.rst:530
 msgid "140"
 msgstr "140"
 
-#: ../../development/scql_api.rst:537
+#: ../../development/scql_api.rst:530
 msgid "Code_NOT_FOUND"
 msgstr "Code_NOT_FOUND"
 
-#: ../../development/scql_api.rst:537
+#: ../../development/scql_api.rst:530
 msgid "General not found error"
 msgstr "一般未找到错误"
 
-#: ../../development/scql_api.rst:539
+#: ../../development/scql_api.rst:532
 msgid "141"
 msgstr "141"
 
-#: ../../development/scql_api.rst:539
+#: ../../development/scql_api.rst:532
 msgid "Code_SESSION_NOT_FOUND"
 msgstr "Code_SESSION_NOT_FOUND"
 
-#: ../../development/scql_api.rst:539
+#: ../../development/scql_api.rst:532
 msgid "SCDB session not found"
 msgstr "SCDB 会话未找到"
 
-#: ../../development/scql_api.rst:541
+#: ../../development/scql_api.rst:534
 msgid "160"
 msgstr "160"
 
-#: ../../development/scql_api.rst:541
+#: ../../development/scql_api.rst:534
 msgid "Code_CCL_CHECK_FAILED"
 msgstr "Code_CCL_CHECK_FAILED"
 
-#: ../../development/scql_api.rst:541
+#: ../../development/scql_api.rst:534
 msgid "Query CCL check failed"
 msgstr "CCL 校验失败"
 
-#: ../../development/scql_api.rst:543
+#: ../../development/scql_api.rst:536
 msgid "201"
 msgstr "201"
 
-#: ../../development/scql_api.rst:543
+#: ../../development/scql_api.rst:536
 msgid "Code_STORAGE_ERROR"
 msgstr "Code_STORAGE_ERROR"
 
-#: ../../development/scql_api.rst:543
+#: ../../development/scql_api.rst:536
 msgid "SCDB DB error"
 msgstr "SCDB DB 错误"
 
-#: ../../development/scql_api.rst:545
+#: ../../development/scql_api.rst:538
 msgid "300"
 msgstr "300"
 
-#: ../../development/scql_api.rst:545
+#: ../../development/scql_api.rst:538
 msgid "Code_INTERNAL"
 msgstr "Code_INTERNAL"
 
-#: ../../development/scql_api.rst:545
+#: ../../development/scql_api.rst:538
 msgid "Server Internal Error"
 msgstr "服务器内部错误"
 
-#: ../../development/scql_api.rst:547
+#: ../../development/scql_api.rst:540
 msgid "320"
 msgstr "320"
 
-#: ../../development/scql_api.rst:547
+#: ../../development/scql_api.rst:540
 msgid "Code_UNKNOWN_ENGINE_ERROR"
 msgstr "Code_UNKNOWN_ENGINE_ERROR"
 
-#: ../../development/scql_api.rst:547
+#: ../../development/scql_api.rst:540
 msgid "Unknown error occurs in Engine"
 msgstr "引擎发生未知错误"
 
-#: ../../development/scql_api.rst:549
+#: ../../development/scql_api.rst:542
 msgid "332"
 msgstr "332"
 
-#: ../../development/scql_api.rst:549
+#: ../../development/scql_api.rst:542
 msgid "Code_ENGINE_RUNSQL_ERROR"
 msgstr "Code_ENGINE_RUNSQL_ERROR"
 
-#: ../../development/scql_api.rst:549
+#: ../../development/scql_api.rst:542
 msgid "Unknown error occurs in Engine during RunSQL"
 msgstr "运行 RunSQL 时引擎发生未知错误"
 
-#: ../../development/scql_api.rst:551
+#: ../../development/scql_api.rst:544
 msgid "340"
 msgstr "340"
 
-#: ../../development/scql_api.rst:551
+#: ../../development/scql_api.rst:544
 msgid "Code_NOT_SUPPORTED"
 msgstr "Code_NOT_SUPPORTED"
 
-#: ../../development/scql_api.rst:551
+#: ../../development/scql_api.rst:544
 msgid "Feature not supported"
 msgstr "不支持该功能"
+
 

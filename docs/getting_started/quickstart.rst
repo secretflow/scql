@@ -234,6 +234,7 @@ Do query
     bob> switch alice
     alice> use demo
     [demo]alice> SELECT ta.credit_rank, COUNT(*) as cnt, AVG(ta.income) as avg_income, AVG(tb.order_amount) as avg_amount FROM ta INNER JOIN tb ON ta.ID = tb.ID WHERE ta.age >= 20 AND ta.age <= 30 AND tb.is_active=1 GROUP BY ta.credit_rank;
+    Warning : for safety, we filter the results for groups which contain less than 4 items.
     [fetch]
     2 rows in set: (1.151690583s)
     +-------------+-----+------------+------------+
