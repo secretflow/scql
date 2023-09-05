@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-13 12:25+0800\n"
+"POT-Creation-Date: 2023-09-04 19:31+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -57,107 +57,109 @@ msgid "``float``"
 msgstr "``float``"
 
 #: ../../reference/scql_manual.rst:17
+msgid "``float32``"
+msgstr "``float32``"
+
+#: ../../reference/scql_manual.rst:19
 msgid "``double``"
 msgstr "``double``"
 
-#: ../../reference/scql_manual.rst:17
-msgid "both storage and computation are done in type float32"
-msgstr "存储和计算都在 float32 类型中完成"
-
 #: ../../reference/scql_manual.rst:19
+msgid "``float64``"
+msgstr "``float64``"
+
+#: ../../reference/scql_manual.rst:21
 msgid "``string``"
 msgstr "``string``"
 
-#: ../../reference/scql_manual.rst:19
+#: ../../reference/scql_manual.rst:21
 msgid "``str``"
 msgstr "``str``"
 
-#: ../../reference/scql_manual.rst:21
+#: ../../reference/scql_manual.rst:23
 msgid "``datetime``"
 msgstr "``datetime``"
 
-#: ../../reference/scql_manual.rst:21 ../../reference/scql_manual.rst:23
+#: ../../reference/scql_manual.rst:23 ../../reference/scql_manual.rst:25
 msgid "not supported yet, coming soon"
 msgstr "暂不支持，即将推出"
 
-#: ../../reference/scql_manual.rst:23
+#: ../../reference/scql_manual.rst:25
 msgid "``timestamp``"
 msgstr "``timestamp``"
 
-#: ../../reference/scql_manual.rst:29
+#: ../../reference/scql_manual.rst:31
 msgid "SCQL Statements"
 msgstr "SCQL 语句"
 
-#: ../../reference/scql_manual.rst:31
-
+#: ../../reference/scql_manual.rst:33
 msgid ""
 "SCQL is compatible with most MySQL syntax, which makes it easy to use. "
 "For syntax differences between SCQL and MySQL, please read "
 ":doc:`mysql_compatibility`."
 msgstr ""
-"SCQL 兼容大多数 MySQL 语法，这使得它易于使用。关于 SCQL 和 MySQL "
-"之间的语法差异，请阅读 :doc:`mysql_compatibility` 。"
+"SCQL 兼容大多数 MySQL 语法，这使得它易于使用。关于 SCQL 和 MySQL 之间的语法差异，请阅读 "
+":doc:`mysql_compatibility` 。"
 
-#: ../../reference/scql_manual.rst:36
+#: ../../reference/scql_manual.rst:38
 msgid "CREATE/DROP/ALTER USER Statement"
 msgstr "CREATE/DROP/ALTER USER 语句"
 
-#: ../../reference/scql_manual.rst:47 ../../reference/scql_manual.rst:74
-#: ../../reference/scql_manual.rst:100 ../../reference/scql_manual.rst:135
+#: ../../reference/scql_manual.rst:61 ../../reference/scql_manual.rst:91
+#: ../../reference/scql_manual.rst:121 ../../reference/scql_manual.rst:161
 msgid "Examples:"
 msgstr "样例："
 
-#: ../../reference/scql_manual.rst:65
+#: ../../reference/scql_manual.rst:82
 msgid "CREATE/DROP DATABASE Statement"
 msgstr "CREATE/DROP DATABASE 语句"
 
-#: ../../reference/scql_manual.rst:88
+#: ../../reference/scql_manual.rst:105
 msgid "CREATE/DROP TABLE Statement"
 msgstr "CREATE/DROP TABLE 语句"
 
-#: ../../reference/scql_manual.rst:97
+#: ../../reference/scql_manual.rst:118
 msgid ""
 "Create table here means mapping 'tbl_name' to the existing physic table, "
-"which is specified by 'TID' and located on the relevant parties. In SCQL,"
-" user runs queries on virtual table, which helps simplify privilege "
-"control and usage."
+"which is specified by ``REF_TABLE`` option and located on the query "
+"issuer party. In SCQL, user runs queries on virtual table, which helps "
+"simplify privilege control and usage."
 msgstr ""
-"此处创建表意味着将 'tbl_name' 映射到现有的物理表，该物理表由 'TID' 指定且位于相关参与方上。在 SCQL "
-"中，用户在虚拟表上运行查询可以有助于简化权限控制和使用。"
+"此处创建表意味着将 'tbl_name' 映射到现有的物理表，该物理表由 ``REF_TABLE`` 选项指定并位于查询发出方。在 SCQL 中，用户在虚拟表上运行查询，这有助于简化权限控制和使用"
 
-#: ../../reference/scql_manual.rst:114
+#: ../../reference/scql_manual.rst:140
 msgid "GRANT/REVOKE Statement"
 msgstr "GRANT/REVOKE 语句"
 
-#: ../../reference/scql_manual.rst:150
+#: ../../reference/scql_manual.rst:176
 msgid "SHOW/DESCRIBE Statement"
 msgstr "SHOW/DESCRIBE 语句"
 
-#: ../../reference/scql_manual.rst:164
+#: ../../reference/scql_manual.rst:190
 msgid "SELECT Statement"
 msgstr "SELECT 语句"
 
-#: ../../reference/scql_manual.rst:226
-msgid "**Limitation:**"
-msgstr "**限制：**"
-
-#: ../../reference/scql_manual.rst:228
-msgid "``JOIN`` only supports"
-msgstr "JOIN 仅仅支持"
-
-#: ../../reference/scql_manual.rst:230
-msgid "``INNER JOIN``"
-msgstr "``INNER JOIN``"
-
-#: ../../reference/scql_manual.rst:233
+#: ../../reference/scql_manual.rst:253
 msgid "Functions and Operators"
 msgstr "函数与操作符"
 
-#: ../../reference/scql_manual.rst:235
+#: ../../reference/scql_manual.rst:255
 msgid "Todo"
 msgstr "待办"
 
-#: ../../reference/scql_manual.rst:235
+#: ../../reference/scql_manual.rst:255
 msgid "this part is not ready, please check later"
 msgstr "该部分尚未准备好，请之后查看"
+
+#~ msgid "both storage and computation are done in type float32"
+#~ msgstr "存储和计算都在 float32 类型中完成"
+
+#~ msgid "**Limitation:**"
+#~ msgstr "**限制：**"
+
+#~ msgid "``JOIN`` only supports"
+#~ msgstr "JOIN 仅仅支持"
+
+#~ msgid "``INNER JOIN``"
+#~ msgstr "``INNER JOIN``"
 

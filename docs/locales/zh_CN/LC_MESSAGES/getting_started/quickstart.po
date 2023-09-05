@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-03 10:11+0800\n"
+"POT-Creation-Date: 2023-09-04 19:31+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -37,8 +37,8 @@ msgid "Prerequisites"
 msgstr "先决条件"
 
 #: ../../getting_started/quickstart.rst:15
-msgid "Build scdbclient"
-msgstr "构建 scdbclient"
+msgid "Build scdbclient & scqltool"
+msgstr "构建 scdbclient & scqltool"
 
 #: ../../getting_started/quickstart.rst:17
 msgid ""
@@ -47,43 +47,29 @@ msgid ""
 msgstr "``scdbclient`` 是 SCDBServer 的一个命令行客户端，我们将用它来向 SCDBServer 提交查询，并取回查询结果。"
 
 #: ../../getting_started/quickstart.rst:30
-msgid "Register user information"
-msgstr "注册用户信息"
-
-#: ../../getting_started/quickstart.rst:32
 msgid ""
-"Before starting the SCQL service, you need to initialize tokens and "
-"credentials in ToyGRM and put this information into user.json and "
-"engine's config file."
-msgstr "在启动 SCQL 服务之前，您需要在 ToyGRM 中初始化令牌和凭证，并将这些信息写入 user.json 和引擎的配置文件中。"
+"``scqltool`` is a command-line tool to help you generate create-user-"
+"statement query. Since create-user-statement query should contain message"
+" and its signature signed by party's private key, it is difficult to "
+"write by hand."
+msgstr "``scqltool`` 是一个命令行工具，可以帮助您生成创建用户的 query 语句。由于创建用户的 query 语句应包含消息及其由当事人私钥加签的签名，因此很难手动编写。"
 
-#: ../../getting_started/quickstart.rst:39
+#: ../../getting_started/quickstart.rst:43
+msgid "Generate PrivateKey and Exchange PublicKey"
+msgstr "生成私钥并交换公钥"
+
+#: ../../getting_started/quickstart.rst:50
 msgid ""
-"The register.sh script will generate random tokens and replace the "
-"``__ALICE_TOKEN__`` and ``__BOB_TOKEN__`` placeholders in `examples"
-"/docker-compose/client/users.json "
-"<https://github.com/secretflow/scql/tree/main/examples/docker-"
-"compose/client/users.json>`_ and `examples/docker-"
-"compose/scdb/conf/toy_grm.json "
-"<https://github.com/secretflow/scql/tree/main/examples/docker-"
-"compose/scdb/conf/toy_grm.json>`_ respectively. If your scdbclient and "
-"docker compose containers are running on different machines, please make "
-"sure to manually replace these tokens to ensure scdbclient get right "
-"tokens."
-msgstr ""
-"register.sh 脚本会用随机的字符串替代 "
-"`examples/docker-compose/client/users.json "
-"<https://github.com/secretflow/scql/tree/main/examples/docker-"
-"compose/client/users.json>`_ 中的 ``__ALICE_TOKEN__`` 以及 "
-"`examples/docker-compose/scdb/conf/toy_grm.json "
-"<https://github.com/secretflow/scql/tree/main/examples/docker-"
-"compose/scdb/conf/toy_grm.json>`_ 中的 ``__BOB_TOKEN__``"
+"The setup.sh script will generate private key for each party, and "
+"exchange public key with peers, add peers public key to "
+"authorized_profile.json configuration."
+msgstr "setup.sh 脚本将为各方生成私钥，并交换各参与方的公钥，将公钥添加到 authorized_profile.json 配置中。"
 
-#: ../../getting_started/quickstart.rst:42
+#: ../../getting_started/quickstart.rst:53
 msgid "Start SCQL Service"
 msgstr "启动 SCQL 服务"
 
-#: ../../getting_started/quickstart.rst:44
+#: ../../getting_started/quickstart.rst:55
 msgid ""
 "You could start SCQL service via `docker-compose "
 "<https://github.com/secretflow/scql/tree/main/examples/docker-compose>`_,"
@@ -99,17 +85,17 @@ msgstr ""
 msgid "docker-compose deployment for quickstart example"
 msgstr "快速入门示例的 docker-compose 部署"
 
-#: ../../getting_started/quickstart.rst:51
+#: ../../getting_started/quickstart.rst:62
 msgid "To demonstrate SCQL, we conducted the following simplified operations:"
 msgstr "为了演示 SCQL，我们进行了以下简化操作："
 
-#: ../../getting_started/quickstart.rst:53
+#: ../../getting_started/quickstart.rst:64
 msgid ""
 "The SCDBServer and two other SCQLEngines use the same database server but"
 " are separated by distinct database names."
 msgstr "SCDBServer 和另外两个 SCQLEngines 使用同一个数据库服务器，但是使用不同的数据库名称进行区分。"
 
-#: ../../getting_started/quickstart.rst:54
+#: ../../getting_started/quickstart.rst:65
 msgid ""
 "The SCDBServer is served through the HTTP protocol. However, for "
 "production environments, it is recommended to use HTTPS instead. Please "
@@ -118,19 +104,13 @@ msgstr ""
 "SCDBServer 是通过 HTTP 协议提供服务的。然而，对于生产环境，建议使用 HTTPS 协议来代替。请查看 :ref:`TLS 配置 "
 "<scdb-tls>` 以了解详情。"
 
-#: ../../getting_started/quickstart.rst:55
-msgid ""
-"Please note that while we used ToyGRM for the demo, it should not be used"
-" in production environments."
-msgstr "请注意，虽然我们在演示中使用了 ToyGRM，但它不应该在生产环境中使用。"
-
-#: ../../getting_started/quickstart.rst:64
+#: ../../getting_started/quickstart.rst:74
 msgid ""
 "SCDBServer is listening on ``http://localhost:8080``, you could send "
 "queries to it via scdbclient."
 msgstr "SCDBServer 监听 ``http://localhost:8080`` ，你可以通过 scdbclient 向它发送查询。"
 
-#: ../../getting_started/quickstart.rst:67
+#: ../../getting_started/quickstart.rst:77
 msgid ""
 "Please checkout `examples/docker-compose/README.md "
 "<https://github.com/secretflow/scql/tree/main/examples/docker-"
@@ -141,15 +121,19 @@ msgstr ""
 "<https://github.com/secretflow/scql/tree/main/examples/docker-"
 "compose/README.md>`_ 故障排除部分以获得帮助。"
 
-#: ../../getting_started/quickstart.rst:72
+#: ../../getting_started/quickstart.rst:82
 msgid "Create database, user and tables"
 msgstr "创建数据库、用户和数据表"
 
-#: ../../getting_started/quickstart.rst:155
+#: ../../getting_started/quickstart.rst:168
+msgid "Register SCQLEngine Endpoints"
+msgstr "注册 SCQLEngine Endpoints"
+
+#: ../../getting_started/quickstart.rst:178
 msgid "Grant CCL"
 msgstr "授权 CCL"
 
-#: ../../getting_started/quickstart.rst:206
+#: ../../getting_started/quickstart.rst:229
 msgid "Do query"
 msgstr "查询"
 

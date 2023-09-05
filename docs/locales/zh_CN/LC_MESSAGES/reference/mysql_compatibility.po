@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-03 10:11+0800\n"
+"POT-Creation-Date: 2023-09-04 19:31+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -66,88 +66,80 @@ msgstr "创建表"
 
 #: ../../reference/mysql_compatibility.rst:23
 msgid ""
-"SCQL get table schemas from GRM, so CREATE TABLE statement must include "
-"keyword TID which uniquely identifies a table in GRM. For more "
-"information, please read :doc:`scql_manual`."
-msgstr ""
-"SCQL 从 GRM 中获取表规格，所以 CREATE TABLE 的语句必须包含关键字 TID，该关键字在 GRM "
-"中标识一个唯一的表格。有关更多信息，请阅读 :doc:`scql_manual`。"
+"The Table created in SCQL is a virtual Table and needs to be mapped to "
+"the actual Table, so we extend the statement to transfer the mapping "
+"information. For more information, please read :doc:`scql_manual`."
+msgstr "SCQL 中创建的 Table 是一个虚拟 Table，需要映射到实际 Table，所以我们扩展该语句来传递映射信息。更多信息，请阅读 :doc:`scql_manual`。"
 
-#: ../../reference/mysql_compatibility.rst:26
+#: ../../reference/mysql_compatibility.rst:27
 msgid "DQL(Data Query Language)"
 msgstr "DQL（数据查询语言）"
 
-#: ../../reference/mysql_compatibility.rst:28
+#: ../../reference/mysql_compatibility.rst:29
 msgid "About implementation status, please read :doc:`scql_status`"
 msgstr "关于实现的具体情况，请阅读 :doc:`scql_status`。"
 
-#: ../../reference/mysql_compatibility.rst:31
-msgid ""
-"Since SCQL only supports floating-point numbers of type float32, please "
-"pay attention to the problem of precision loss."
-msgstr "由于 SCQL 只支持 float32 类型的浮点数，请注意精度损失的问题。"
-
-#: ../../reference/mysql_compatibility.rst:33
+#: ../../reference/mysql_compatibility.rst:32
 msgid "Type Null is unsupported in SCQL."
 msgstr "SCQL 不支持 Null 类型。"
 
-#: ../../reference/mysql_compatibility.rst:36
+#: ../../reference/mysql_compatibility.rst:35
 msgid "Functions different from MySQL"
 msgstr "与 MySQL 的功能差异"
 
-#: ../../reference/mysql_compatibility.rst:39
+#: ../../reference/mysql_compatibility.rst:38
 msgid "Function Name"
 msgstr "功能名称"
 
-#: ../../reference/mysql_compatibility.rst:39
+#: ../../reference/mysql_compatibility.rst:38
 msgid "In SCQL"
 msgstr "SCQL 的方式"
 
-#: ../../reference/mysql_compatibility.rst:39
+#: ../../reference/mysql_compatibility.rst:38
 msgid "In MySQL"
 msgstr "MySQL 的方式"
 
-#: ../../reference/mysql_compatibility.rst:39
+#: ../../reference/mysql_compatibility.rst:38
 msgid "Note"
 msgstr "备注"
 
-#: ../../reference/mysql_compatibility.rst:41
+#: ../../reference/mysql_compatibility.rst:40
 msgid "SUM(INT)"
 msgstr "SUM(INT) 整数求和"
 
-#: ../../reference/mysql_compatibility.rst:41
+#: ../../reference/mysql_compatibility.rst:40
 msgid "returns int"
 msgstr "返回整型 int"
 
-#: ../../reference/mysql_compatibility.rst:41
+#: ../../reference/mysql_compatibility.rst:40
 msgid "returns Decimal/Double"
 msgstr "返回小数 Decimal /双精度 Double"
 
-#: ../../reference/mysql_compatibility.rst:43
+#: ../../reference/mysql_compatibility.rst:42
 msgid "Aggregation Functions With Group BY"
 msgstr "使用 Group BY 的聚合函数"
 
-#: ../../reference/mysql_compatibility.rst:43
+#: ../../reference/mysql_compatibility.rst:42
 msgid "return groups which have more than three elements"
 msgstr "返回包含三个以上元素的组"
 
-#: ../../reference/mysql_compatibility.rst:43
+#: ../../reference/mysql_compatibility.rst:42
 msgid "return all groups"
 msgstr "返回所有组"
 
-#: ../../reference/mysql_compatibility.rst:43
+#: ../../reference/mysql_compatibility.rst:42
 msgid "for safety"
 msgstr "出于安全性考虑"
 
-#: ../../reference/mysql_compatibility.rst:48
+#: ../../reference/mysql_compatibility.rst:47
 msgid "DCL(Data Control Language)"
 msgstr "DCL（数据控制语言）"
 
-#: ../../reference/mysql_compatibility.rst:51
+#: ../../reference/mysql_compatibility.rst:50
 msgid "GRANT/REVOKE"
 msgstr "GRANT/REVOKE"
 
-#: ../../reference/mysql_compatibility.rst:53
+#: ../../reference/mysql_compatibility.rst:52
 msgid ""
 "Except permissions same with mysql such as read/write/create/drop..., ccl"
 " settings are also required before executing a query. You can change CCL "
@@ -157,11 +149,11 @@ msgstr ""
 "除了读、写、创建表格、删除数据等与 mysql 相同的权限之外，在执行查询之前还需要设置 ccl。 可以通过 GRANT/REVOKE 更改 "
 "CCL 的设置。 关于 SCQL 中的 GRANT/REVOKE 的操作，请阅读 :doc:`scql_manual`"
 
-#: ../../reference/mysql_compatibility.rst:56
+#: ../../reference/mysql_compatibility.rst:55
 msgid "Type Conversion Rule"
 msgstr "类型转换规则"
 
-#: ../../reference/mysql_compatibility.rst:58
+#: ../../reference/mysql_compatibility.rst:57
 msgid ""
 "Type conversion takes place when using an operator with operands of "
 "different types, to make them compatible. Some conversions occur "
@@ -169,15 +161,15 @@ msgid ""
 "necessary"
 msgstr "考虑兼容性，当使用运算符操作不同类型的数据时，会发生类型转换。有些转换是隐式发生的。例如，SCQL 会根据需要自动将 int 转换为 float。"
 
-#: ../../reference/mysql_compatibility.rst:72
+#: ../../reference/mysql_compatibility.rst:71
 msgid "The following rules describe how conversion occurs in SCQL."
 msgstr "以下规则描述了如何在 SCQL 中进行类型转换。"
 
-#: ../../reference/mysql_compatibility.rst:77
+#: ../../reference/mysql_compatibility.rst:76
 msgid "single-party query"
 msgstr "单方查询"
 
-#: ../../reference/mysql_compatibility.rst:78
+#: ../../reference/mysql_compatibility.rst:77
 msgid ""
 "If a query only involves one participant, SCQL will convert the query "
 "into a syntax that conforms to the participant's database (such as "
@@ -188,62 +180,61 @@ msgstr ""
 "如果只有一方查询，SCQL 会将查询语句转换成符合参与者数据库（如 MySQL）的语法，然后直接分派到相应的数据库中执行。 "
 "因此对于单方查询，其类型转换规则一般与参与方使用的数据库类型一致。"
 
-#: ../../reference/mysql_compatibility.rst:83
+#: ../../reference/mysql_compatibility.rst:82
 msgid "multi-party query"
 msgstr "多方查询"
 
-#: ../../reference/mysql_compatibility.rst:84
+#: ../../reference/mysql_compatibility.rst:83
 msgid ""
 "If a query involves multiple participants, SCQL will execute type "
 "conversion by applying the following rules."
 msgstr "如果涉及多方查询，SCQL 将通过以下规则进行类型转换。"
 
-#: ../../reference/mysql_compatibility.rst:87
+#: ../../reference/mysql_compatibility.rst:86
 msgid "Compare(>, <, <=, >=, <>, =, !=)"
 msgstr "比较运算 (>, <, <=, >=, <>, =, !=)"
 
-#: ../../reference/mysql_compatibility.rst:88
+#: ../../reference/mysql_compatibility.rst:87
 msgid "Both arguments in a comparison operation shouldn't be string."
 msgstr "比较操作中的两个参数都不能是 string 类型。"
 
-#: ../../reference/mysql_compatibility.rst:89
+#: ../../reference/mysql_compatibility.rst:88
 msgid "If both arguments are long, they are compared as long."
 msgstr "如果两个参数都是 long 类型，则它们将按照 long 类型进行比较。"
 
-#: ../../reference/mysql_compatibility.rst:90
+#: ../../reference/mysql_compatibility.rst:89
 msgid ""
-"If one of the arguments is float32, the other argument will be compared "
-"as float32."
-msgstr "如果其中一个参数是 float32 类型，则会将另一个参数转换为 float32 类型进行比较。"
+"If one of the arguments is float or double, the other argument will be "
+"compared as double."
+msgstr "如果其中一个参数是 float 或者 double 类型，则会将另一个参数转换为 double 类型进行比较。"
 
-#: ../../reference/mysql_compatibility.rst:93
+#: ../../reference/mysql_compatibility.rst:92
 msgid "Arithmetic(+, -, \\*, /, %)"
 msgstr "算术运算 (+, -, \\*, /, %)"
 
-#: ../../reference/mysql_compatibility.rst:94
+#: ../../reference/mysql_compatibility.rst:93
 msgid "Both arguments in a arithmetic operation shouldn't be string."
 msgstr "算术运算中的两个参数都不能是 string 类型。"
 
-#: ../../reference/mysql_compatibility.rst:95
+#: ../../reference/mysql_compatibility.rst:94
 msgid "If both arguments are long, they are calculated as long."
 msgstr "如果两个参数都是 long 类型，则它们将按照 long 类型进行计算。"
 
-#: ../../reference/mysql_compatibility.rst:96
-#: ../../reference/mysql_compatibility.rst:102
+#: ../../reference/mysql_compatibility.rst:95
+#: ../../reference/mysql_compatibility.rst:101
 msgid ""
-"If one of the arguments is float32, the other argument will be calculated"
-" as float32."
-msgstr "如果其中一个参数是 float32 类型，则会将另一个参数转换为 float32 进行计算。"
+"If one of the arguments is float or double, the other argument will be "
+"calculated as double."
+msgstr "如果其中一个参数是 float 或者 double 类型，则会将另一个参数转换为 double 进行计算。"
 
-#: ../../reference/mysql_compatibility.rst:99
+#: ../../reference/mysql_compatibility.rst:98
 msgid "Aggregation(sum, count, avg, min, max)"
 msgstr "聚合操作 (sum, count, avg, min, max)"
 
-#: ../../reference/mysql_compatibility.rst:100
+#: ../../reference/mysql_compatibility.rst:99
 msgid "All arguments in a aggregation function shouldn't be string."
 msgstr "聚合操作中的所有参数都不能是 string 类型。"
 
-#: ../../reference/mysql_compatibility.rst:101
+#: ../../reference/mysql_compatibility.rst:100
 msgid "If all arguments are long, they are calculated as long."
 msgstr "如果所有参数都是 long 类型，则它们将按照 long 类型进行计算。"
-

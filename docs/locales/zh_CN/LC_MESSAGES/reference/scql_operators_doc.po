@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-24 10:10+0800\n"
+"POT-Creation-Date: 2023-09-04 19:31+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -41,200 +41,226 @@ msgid "Definition: Out = Left `Add` Right"
 msgstr "定义：对两个 tensor 进行求和运算， Out = (Left + Right) 。"
 
 #: ../../reference/scql_operators.md:6 ../../reference/scql_operators.md:44
-#: ../../reference/scql_operators.md:81 ../../reference/scql_operators.md:126
-#: ../../reference/scql_operators.md:165 ../../reference/scql_operators.md:197
-#: ../../reference/scql_operators.md:227 ../../reference/scql_operators.md:259
-#: ../../reference/scql_operators.md:298 ../../reference/scql_operators.md:334
-#: ../../reference/scql_operators.md:360 ../../reference/scql_operators.md:390
-#: ../../reference/scql_operators.md:428 ../../reference/scql_operators.md:463
-#: ../../reference/scql_operators.md:500 ../../reference/scql_operators.md:537
-#: ../../reference/scql_operators.md:574 ../../reference/scql_operators.md:611
-#: ../../reference/scql_operators.md:654 ../../reference/scql_operators.md:691
-#: ../../reference/scql_operators.md:728 ../../reference/scql_operators.md:765
-#: ../../reference/scql_operators.md:810 ../../reference/scql_operators.md:850
-#: ../../reference/scql_operators.md:895 ../../reference/scql_operators.md:925
-#: ../../reference/scql_operators.md:955 ../../reference/scql_operators.md:985
-#: ../../reference/scql_operators.md:1015
-#: ../../reference/scql_operators.md:1047
-#: ../../reference/scql_operators.md:1073
-#: ../../reference/scql_operators.md:1099
-#: ../../reference/scql_operators.md:1129
-#: ../../reference/scql_operators.md:1159
-#: ../../reference/scql_operators.md:1189
-#: ../../reference/scql_operators.md:1213
-#: ../../reference/scql_operators.md:1251
-#: ../../reference/scql_operators.md:1285
-#: ../../reference/scql_operators.md:1321
-#: ../../reference/scql_operators.md:1353
-#: ../../reference/scql_operators.md:1387
-#: ../../reference/scql_operators.md:1421
-#: ../../reference/scql_operators.md:1447
-#: ../../reference/scql_operators.md:1481
-#: ../../reference/scql_operators.md:1512
-#: ../../reference/scql_operators.md:1543
-#: ../../reference/scql_operators.md:1574
-#: ../../reference/scql_operators.md:1598
-#: ../../reference/scql_operators.md:1637
-#: ../../reference/scql_operators.md:1683
-#: ../../reference/scql_operators.md:1715
-#: ../../reference/scql_operators.md:1761
+#: ../../reference/scql_operators.md:84 ../../reference/scql_operators.md:118
+#: ../../reference/scql_operators.md:149 ../../reference/scql_operators.md:194
+#: ../../reference/scql_operators.md:233 ../../reference/scql_operators.md:265
+#: ../../reference/scql_operators.md:295 ../../reference/scql_operators.md:327
+#: ../../reference/scql_operators.md:366 ../../reference/scql_operators.md:402
+#: ../../reference/scql_operators.md:428 ../../reference/scql_operators.md:458
+#: ../../reference/scql_operators.md:496 ../../reference/scql_operators.md:531
+#: ../../reference/scql_operators.md:568 ../../reference/scql_operators.md:605
+#: ../../reference/scql_operators.md:642 ../../reference/scql_operators.md:679
+#: ../../reference/scql_operators.md:722 ../../reference/scql_operators.md:759
+#: ../../reference/scql_operators.md:796 ../../reference/scql_operators.md:877
+#: ../../reference/scql_operators.md:922 ../../reference/scql_operators.md:978
+#: ../../reference/scql_operators.md:1023
+#: ../../reference/scql_operators.md:1053
+#: ../../reference/scql_operators.md:1091
+#: ../../reference/scql_operators.md:1123
+#: ../../reference/scql_operators.md:1153
+#: ../../reference/scql_operators.md:1183
+#: ../../reference/scql_operators.md:1215
+#: ../../reference/scql_operators.md:1241
+#: ../../reference/scql_operators.md:1267
+#: ../../reference/scql_operators.md:1297
+#: ../../reference/scql_operators.md:1327
+#: ../../reference/scql_operators.md:1357
+#: ../../reference/scql_operators.md:1381
+#: ../../reference/scql_operators.md:1419
+#: ../../reference/scql_operators.md:1453
+#: ../../reference/scql_operators.md:1489
+#: ../../reference/scql_operators.md:1521
+#: ../../reference/scql_operators.md:1555
+#: ../../reference/scql_operators.md:1589
+#: ../../reference/scql_operators.md:1615
+#: ../../reference/scql_operators.md:1649
+#: ../../reference/scql_operators.md:1680
+#: ../../reference/scql_operators.md:1711
+#: ../../reference/scql_operators.md:1742
+#: ../../reference/scql_operators.md:1766
+#: ../../reference/scql_operators.md:1805
+#: ../../reference/scql_operators.md:1851
+#: ../../reference/scql_operators.md:1883
+#: ../../reference/scql_operators.md:1929
 msgid "**Inputs:**"
 msgstr "**输入：**"
 
-#: ../../reference/scql_operators.md:8 ../../reference/scql_operators.md:199
-#: ../../reference/scql_operators.md:261 ../../reference/scql_operators.md:362
-#: ../../reference/scql_operators.md:392 ../../reference/scql_operators.md:812
-#: ../../reference/scql_operators.md:897 ../../reference/scql_operators.md:927
-#: ../../reference/scql_operators.md:957 ../../reference/scql_operators.md:987
-#: ../../reference/scql_operators.md:1101
-#: ../../reference/scql_operators.md:1131
-#: ../../reference/scql_operators.md:1161
-#: ../../reference/scql_operators.md:1215
+#: ../../reference/scql_operators.md:8 ../../reference/scql_operators.md:267
+#: ../../reference/scql_operators.md:329 ../../reference/scql_operators.md:430
+#: ../../reference/scql_operators.md:460 ../../reference/scql_operators.md:924
+#: ../../reference/scql_operators.md:1025
+#: ../../reference/scql_operators.md:1055
+#: ../../reference/scql_operators.md:1125
+#: ../../reference/scql_operators.md:1155
+#: ../../reference/scql_operators.md:1269
+#: ../../reference/scql_operators.md:1299
+#: ../../reference/scql_operators.md:1329
+#: ../../reference/scql_operators.md:1383
 msgid "`Left`(variadic, T): First operand."
 msgstr "``Left`` （多列数组，类型为 T ）： 第一个操作数。"
 
-#: ../../reference/scql_operators.md:10 ../../reference/scql_operators.md:201
-#: ../../reference/scql_operators.md:263 ../../reference/scql_operators.md:364
-#: ../../reference/scql_operators.md:394 ../../reference/scql_operators.md:814
-#: ../../reference/scql_operators.md:899 ../../reference/scql_operators.md:929
-#: ../../reference/scql_operators.md:959 ../../reference/scql_operators.md:989
-#: ../../reference/scql_operators.md:1103
-#: ../../reference/scql_operators.md:1133
-#: ../../reference/scql_operators.md:1163
-#: ../../reference/scql_operators.md:1217
+#: ../../reference/scql_operators.md:10 ../../reference/scql_operators.md:269
+#: ../../reference/scql_operators.md:331 ../../reference/scql_operators.md:432
+#: ../../reference/scql_operators.md:462 ../../reference/scql_operators.md:926
+#: ../../reference/scql_operators.md:1027
+#: ../../reference/scql_operators.md:1057
+#: ../../reference/scql_operators.md:1127
+#: ../../reference/scql_operators.md:1157
+#: ../../reference/scql_operators.md:1271
+#: ../../reference/scql_operators.md:1301
+#: ../../reference/scql_operators.md:1331
+#: ../../reference/scql_operators.md:1385
 msgid "`Right`(variadic, T1): Second operand."
 msgstr "``Right`` （多列数组，类型为 T1 ）： 第二个操作数。"
 
 #: ../../reference/scql_operators.md:13 ../../reference/scql_operators.md:51
-#: ../../reference/scql_operators.md:86 ../../reference/scql_operators.md:131
-#: ../../reference/scql_operators.md:170 ../../reference/scql_operators.md:204
-#: ../../reference/scql_operators.md:232 ../../reference/scql_operators.md:266
-#: ../../reference/scql_operators.md:305 ../../reference/scql_operators.md:341
-#: ../../reference/scql_operators.md:367 ../../reference/scql_operators.md:397
-#: ../../reference/scql_operators.md:433 ../../reference/scql_operators.md:472
-#: ../../reference/scql_operators.md:509 ../../reference/scql_operators.md:546
-#: ../../reference/scql_operators.md:583 ../../reference/scql_operators.md:620
-#: ../../reference/scql_operators.md:663 ../../reference/scql_operators.md:700
-#: ../../reference/scql_operators.md:737 ../../reference/scql_operators.md:772
-#: ../../reference/scql_operators.md:817 ../../reference/scql_operators.md:857
-#: ../../reference/scql_operators.md:902 ../../reference/scql_operators.md:932
-#: ../../reference/scql_operators.md:962 ../../reference/scql_operators.md:992
-#: ../../reference/scql_operators.md:1020
-#: ../../reference/scql_operators.md:1052
-#: ../../reference/scql_operators.md:1078
-#: ../../reference/scql_operators.md:1106
-#: ../../reference/scql_operators.md:1136
-#: ../../reference/scql_operators.md:1166
-#: ../../reference/scql_operators.md:1194
+#: ../../reference/scql_operators.md:93 ../../reference/scql_operators.md:123
+#: ../../reference/scql_operators.md:154 ../../reference/scql_operators.md:199
+#: ../../reference/scql_operators.md:238 ../../reference/scql_operators.md:272
+#: ../../reference/scql_operators.md:300 ../../reference/scql_operators.md:334
+#: ../../reference/scql_operators.md:373 ../../reference/scql_operators.md:409
+#: ../../reference/scql_operators.md:435 ../../reference/scql_operators.md:465
+#: ../../reference/scql_operators.md:501 ../../reference/scql_operators.md:540
+#: ../../reference/scql_operators.md:577 ../../reference/scql_operators.md:614
+#: ../../reference/scql_operators.md:651 ../../reference/scql_operators.md:688
+#: ../../reference/scql_operators.md:731 ../../reference/scql_operators.md:768
+#: ../../reference/scql_operators.md:805 ../../reference/scql_operators.md:884
+#: ../../reference/scql_operators.md:929 ../../reference/scql_operators.md:985
+#: ../../reference/scql_operators.md:1030
+#: ../../reference/scql_operators.md:1060
+#: ../../reference/scql_operators.md:1096
+#: ../../reference/scql_operators.md:1130
+#: ../../reference/scql_operators.md:1160
+#: ../../reference/scql_operators.md:1188
 #: ../../reference/scql_operators.md:1220
-#: ../../reference/scql_operators.md:1258
-#: ../../reference/scql_operators.md:1292
-#: ../../reference/scql_operators.md:1326
-#: ../../reference/scql_operators.md:1360
-#: ../../reference/scql_operators.md:1394
-#: ../../reference/scql_operators.md:1428
-#: ../../reference/scql_operators.md:1452
-#: ../../reference/scql_operators.md:1486
-#: ../../reference/scql_operators.md:1517
-#: ../../reference/scql_operators.md:1548
-#: ../../reference/scql_operators.md:1579
-#: ../../reference/scql_operators.md:1603
-#: ../../reference/scql_operators.md:1642
-#: ../../reference/scql_operators.md:1688
-#: ../../reference/scql_operators.md:1722
-#: ../../reference/scql_operators.md:1766
+#: ../../reference/scql_operators.md:1246
+#: ../../reference/scql_operators.md:1274
+#: ../../reference/scql_operators.md:1304
+#: ../../reference/scql_operators.md:1334
+#: ../../reference/scql_operators.md:1362
+#: ../../reference/scql_operators.md:1388
+#: ../../reference/scql_operators.md:1426
+#: ../../reference/scql_operators.md:1460
+#: ../../reference/scql_operators.md:1494
+#: ../../reference/scql_operators.md:1528
+#: ../../reference/scql_operators.md:1562
+#: ../../reference/scql_operators.md:1596
+#: ../../reference/scql_operators.md:1620
+#: ../../reference/scql_operators.md:1654
+#: ../../reference/scql_operators.md:1685
+#: ../../reference/scql_operators.md:1716
+#: ../../reference/scql_operators.md:1747
+#: ../../reference/scql_operators.md:1771
+#: ../../reference/scql_operators.md:1810
+#: ../../reference/scql_operators.md:1856
+#: ../../reference/scql_operators.md:1890
+#: ../../reference/scql_operators.md:1934
 msgid "**Outputs:**"
 msgstr "**输出：**"
 
-#: ../../reference/scql_operators.md:15 ../../reference/scql_operators.md:206
-#: ../../reference/scql_operators.md:268 ../../reference/scql_operators.md:369
-#: ../../reference/scql_operators.md:399 ../../reference/scql_operators.md:819
-#: ../../reference/scql_operators.md:904 ../../reference/scql_operators.md:934
-#: ../../reference/scql_operators.md:964 ../../reference/scql_operators.md:994
-#: ../../reference/scql_operators.md:1108
-#: ../../reference/scql_operators.md:1138
-#: ../../reference/scql_operators.md:1168
-#: ../../reference/scql_operators.md:1222
+#: ../../reference/scql_operators.md:15 ../../reference/scql_operators.md:274
+#: ../../reference/scql_operators.md:336 ../../reference/scql_operators.md:437
+#: ../../reference/scql_operators.md:467 ../../reference/scql_operators.md:931
+#: ../../reference/scql_operators.md:1032
+#: ../../reference/scql_operators.md:1062
+#: ../../reference/scql_operators.md:1132
+#: ../../reference/scql_operators.md:1162
+#: ../../reference/scql_operators.md:1276
+#: ../../reference/scql_operators.md:1306
+#: ../../reference/scql_operators.md:1336
+#: ../../reference/scql_operators.md:1390
 msgid "`Out`(variadic, T2): Output Tensor."
 msgstr "``Out`` （多列数组，类型为 T2 ）：输出。 "
 
 #: ../../reference/scql_operators.md:22 ../../reference/scql_operators.md:60
-#: ../../reference/scql_operators.md:108 ../../reference/scql_operators.md:155
-#: ../../reference/scql_operators.md:187 ../../reference/scql_operators.md:213
-#: ../../reference/scql_operators.md:249 ../../reference/scql_operators.md:275
-#: ../../reference/scql_operators.md:314 ../../reference/scql_operators.md:350
-#: ../../reference/scql_operators.md:376 ../../reference/scql_operators.md:406
-#: ../../reference/scql_operators.md:444 ../../reference/scql_operators.md:481
-#: ../../reference/scql_operators.md:518 ../../reference/scql_operators.md:555
-#: ../../reference/scql_operators.md:592 ../../reference/scql_operators.md:635
-#: ../../reference/scql_operators.md:672 ../../reference/scql_operators.md:709
-#: ../../reference/scql_operators.md:746 ../../reference/scql_operators.md:798
-#: ../../reference/scql_operators.md:826 ../../reference/scql_operators.md:883
-#: ../../reference/scql_operators.md:911 ../../reference/scql_operators.md:941
-#: ../../reference/scql_operators.md:971 ../../reference/scql_operators.md:1001
-#: ../../reference/scql_operators.md:1035
-#: ../../reference/scql_operators.md:1061
-#: ../../reference/scql_operators.md:1087
-#: ../../reference/scql_operators.md:1115
-#: ../../reference/scql_operators.md:1145
-#: ../../reference/scql_operators.md:1175
+#: ../../reference/scql_operators.md:102 ../../reference/scql_operators.md:132
+#: ../../reference/scql_operators.md:176 ../../reference/scql_operators.md:223
+#: ../../reference/scql_operators.md:255 ../../reference/scql_operators.md:281
+#: ../../reference/scql_operators.md:317 ../../reference/scql_operators.md:343
+#: ../../reference/scql_operators.md:382 ../../reference/scql_operators.md:418
+#: ../../reference/scql_operators.md:444 ../../reference/scql_operators.md:474
+#: ../../reference/scql_operators.md:512 ../../reference/scql_operators.md:549
+#: ../../reference/scql_operators.md:586 ../../reference/scql_operators.md:623
+#: ../../reference/scql_operators.md:660 ../../reference/scql_operators.md:703
+#: ../../reference/scql_operators.md:740 ../../reference/scql_operators.md:777
+#: ../../reference/scql_operators.md:814 ../../reference/scql_operators.md:910
+#: ../../reference/scql_operators.md:938 ../../reference/scql_operators.md:1011
+#: ../../reference/scql_operators.md:1039
+#: ../../reference/scql_operators.md:1069
+#: ../../reference/scql_operators.md:1113
+#: ../../reference/scql_operators.md:1139
+#: ../../reference/scql_operators.md:1169
 #: ../../reference/scql_operators.md:1203
 #: ../../reference/scql_operators.md:1229
-#: ../../reference/scql_operators.md:1267
-#: ../../reference/scql_operators.md:1301
-#: ../../reference/scql_operators.md:1335
-#: ../../reference/scql_operators.md:1369
-#: ../../reference/scql_operators.md:1403
-#: ../../reference/scql_operators.md:1437
-#: ../../reference/scql_operators.md:1461
-#: ../../reference/scql_operators.md:1495
-#: ../../reference/scql_operators.md:1526
-#: ../../reference/scql_operators.md:1557
-#: ../../reference/scql_operators.md:1588
-#: ../../reference/scql_operators.md:1620
-#: ../../reference/scql_operators.md:1664
-#: ../../reference/scql_operators.md:1697
-#: ../../reference/scql_operators.md:1744
-#: ../../reference/scql_operators.md:1775
+#: ../../reference/scql_operators.md:1255
+#: ../../reference/scql_operators.md:1283
+#: ../../reference/scql_operators.md:1313
+#: ../../reference/scql_operators.md:1343
+#: ../../reference/scql_operators.md:1371
+#: ../../reference/scql_operators.md:1397
+#: ../../reference/scql_operators.md:1435
+#: ../../reference/scql_operators.md:1469
+#: ../../reference/scql_operators.md:1503
+#: ../../reference/scql_operators.md:1537
+#: ../../reference/scql_operators.md:1571
+#: ../../reference/scql_operators.md:1605
+#: ../../reference/scql_operators.md:1629
+#: ../../reference/scql_operators.md:1663
+#: ../../reference/scql_operators.md:1694
+#: ../../reference/scql_operators.md:1725
+#: ../../reference/scql_operators.md:1756
+#: ../../reference/scql_operators.md:1788
+#: ../../reference/scql_operators.md:1832
+#: ../../reference/scql_operators.md:1865
+#: ../../reference/scql_operators.md:1912
+#: ../../reference/scql_operators.md:1943
 msgid "**TensorStatus(ShareType) Constraints:**"
 msgstr "**Tensor 类型约束：**"
 
-#: ../../reference/scql_operators.md:24 ../../reference/scql_operators.md:215
-#: ../../reference/scql_operators.md:277 ../../reference/scql_operators.md:378
-#: ../../reference/scql_operators.md:408 ../../reference/scql_operators.md:828
-#: ../../reference/scql_operators.md:913 ../../reference/scql_operators.md:943
-#: ../../reference/scql_operators.md:973 ../../reference/scql_operators.md:1003
-#: ../../reference/scql_operators.md:1117
-#: ../../reference/scql_operators.md:1147
-#: ../../reference/scql_operators.md:1177
-#: ../../reference/scql_operators.md:1205
-#: ../../reference/scql_operators.md:1231
-#: ../../reference/scql_operators.md:1666
+#: ../../reference/scql_operators.md:24 ../../reference/scql_operators.md:104
+#: ../../reference/scql_operators.md:134 ../../reference/scql_operators.md:283
+#: ../../reference/scql_operators.md:345 ../../reference/scql_operators.md:446
+#: ../../reference/scql_operators.md:476 ../../reference/scql_operators.md:940
+#: ../../reference/scql_operators.md:1041
+#: ../../reference/scql_operators.md:1071
+#: ../../reference/scql_operators.md:1115
+#: ../../reference/scql_operators.md:1141
+#: ../../reference/scql_operators.md:1171
+#: ../../reference/scql_operators.md:1285
+#: ../../reference/scql_operators.md:1315
+#: ../../reference/scql_operators.md:1345
+#: ../../reference/scql_operators.md:1373
+#: ../../reference/scql_operators.md:1399
+#: ../../reference/scql_operators.md:1834
 msgid "`T`: public,private,secret"
 msgstr "``T`` ：公开，私有，密态"
 
 #: ../../reference/scql_operators.md:26 ../../reference/scql_operators.md:64
-#: ../../reference/scql_operators.md:217 ../../reference/scql_operators.md:279
-#: ../../reference/scql_operators.md:380 ../../reference/scql_operators.md:410
-#: ../../reference/scql_operators.md:830 ../../reference/scql_operators.md:915
-#: ../../reference/scql_operators.md:945 ../../reference/scql_operators.md:975
-#: ../../reference/scql_operators.md:1005
-#: ../../reference/scql_operators.md:1119
-#: ../../reference/scql_operators.md:1149
-#: ../../reference/scql_operators.md:1179
-#: ../../reference/scql_operators.md:1233
+#: ../../reference/scql_operators.md:106 ../../reference/scql_operators.md:285
+#: ../../reference/scql_operators.md:347 ../../reference/scql_operators.md:448
+#: ../../reference/scql_operators.md:478 ../../reference/scql_operators.md:942
+#: ../../reference/scql_operators.md:1043
+#: ../../reference/scql_operators.md:1073
+#: ../../reference/scql_operators.md:1143
+#: ../../reference/scql_operators.md:1173
+#: ../../reference/scql_operators.md:1287
+#: ../../reference/scql_operators.md:1317
+#: ../../reference/scql_operators.md:1347
+#: ../../reference/scql_operators.md:1401
 msgid "`T1`: public,private,secret"
 msgstr "``T1`` ：公开，私有，密态"
 
-#: ../../reference/scql_operators.md:28 ../../reference/scql_operators.md:219
-#: ../../reference/scql_operators.md:281 ../../reference/scql_operators.md:382
-#: ../../reference/scql_operators.md:412 ../../reference/scql_operators.md:832
-#: ../../reference/scql_operators.md:917 ../../reference/scql_operators.md:947
-#: ../../reference/scql_operators.md:977 ../../reference/scql_operators.md:1007
-#: ../../reference/scql_operators.md:1121
-#: ../../reference/scql_operators.md:1151
-#: ../../reference/scql_operators.md:1181
-#: ../../reference/scql_operators.md:1235
+#: ../../reference/scql_operators.md:28 ../../reference/scql_operators.md:287
+#: ../../reference/scql_operators.md:349 ../../reference/scql_operators.md:450
+#: ../../reference/scql_operators.md:480 ../../reference/scql_operators.md:944
+#: ../../reference/scql_operators.md:1045
+#: ../../reference/scql_operators.md:1075
+#: ../../reference/scql_operators.md:1145
+#: ../../reference/scql_operators.md:1175
+#: ../../reference/scql_operators.md:1289
+#: ../../reference/scql_operators.md:1319
+#: ../../reference/scql_operators.md:1349
+#: ../../reference/scql_operators.md:1403
 msgid "`T2`: private,secret"
 msgstr "``T2`` ：公开，私有"
 
@@ -269,10 +295,66 @@ msgid "`T2`: public,private"
 msgstr "``T2`` ：公开，私有"
 
 #: ../../reference/scql_operators.md:70
+msgid "`CaseWhen`"
+msgstr "``CaseWhen``"
+
+#: ../../reference/scql_operators.md:72
+msgid ""
+"The CaseWhen operator goes through conditions and returns a value when "
+"the first condition is met (like an if-then-else statement)"
+msgstr "CaseWhen 算子遍历 ``Condition`` 中的条件，并在遇到满足的第一个条件时返回对应值（类似于 if-then-else 语句）"
+
+#: ../../reference/scql_operators.md:74
+msgid "Example:"
+msgstr "例子："
+
+#: ../../reference/scql_operators.md:86
+msgid "`Condition`(variadic, T): Condition tensor."
+msgstr "``Condition`` （多列数组，类型为 T ）：条件 tensor 。"
+
+#: ../../reference/scql_operators.md:88
+msgid ""
+"`Value`(variadic, T1): Value if condition tensor is true and all previous"
+" conditions are false."
+msgstr "``Value`` （多列数组，类型为 T1）：如果 condition tensor 为真并且之前的所有 condition 都为假，则取该 Value 。"
+
+#: ../../reference/scql_operators.md:90
+msgid "`ValueElse`(single, T2): Value if all condition tensors are false."
+msgstr "``ValueElse`` （单列数组，类型为 T2）：当所有 condition tensors 都为假，则取 ValueElse 。"
+
+#: ../../reference/scql_operators.md:95
+msgid "`Out`(single, T3): Result tensor."
+msgstr "``Out`` （单列数组，类型为 T3 ）：结果 tensor 。"
+
+#: ../../reference/scql_operators.md:108
+msgid "`T2`: public,private,secret"
+msgstr "``T2`` ：公开，私有，密态"
+
+#: ../../reference/scql_operators.md:110
+msgid "`T3`: public,private,secret"
+msgstr "``T3`` ：公开，私有，密态"
+
+#: ../../reference/scql_operators.md:114
+msgid "`Cast`"
+msgstr "``Cast``"
+
+#: ../../reference/scql_operators.md:116
+msgid "Definition: Cast Input tensor's data type to Output tensor's."
+msgstr "定义：将输入 tensor 的数据类型转换为输出 tensor 的数据类型。"
+
+#: ../../reference/scql_operators.md:120 ../../reference/scql_operators.md:1359
+msgid "`In`(single, T): Input tensor."
+msgstr "``In`` （单列数组，类型为 T ）：输入 tensor 。"
+
+#: ../../reference/scql_operators.md:125 ../../reference/scql_operators.md:1364
+msgid "`Out`(single, T): Output tensor."
+msgstr "``Out`` （单列数组，类型为 T ）：输出 tensor 。"
+
+#: ../../reference/scql_operators.md:138
 msgid "`Concat`"
 msgstr "``Concat``"
 
-#: ../../reference/scql_operators.md:72
+#: ../../reference/scql_operators.md:140
 msgid ""
 "Definition: Given a number of tensors In (variadic, each tensor's shape "
 "must be the same in every dimension except for the axis), concat the In "
@@ -281,171 +363,173 @@ msgstr ""
 "定义：给定一组 tensor ``In`` （多列数组，所有的 tensor 的大小在除了 axis 之外的所有维度上必须相同)，将它们在 "
 "axis 所指定的维度上进行拼接。例如："
 
-#: ../../reference/scql_operators.md:83
+#: ../../reference/scql_operators.md:151
 msgid "`In`(variadic, T): Tensors to be concat."
 msgstr "``In`` （多列数组，类型为 T ）：待拼接的 tensor 。"
 
-#: ../../reference/scql_operators.md:88
+#: ../../reference/scql_operators.md:156
 msgid "`Out`(single, T): Concated Tensor."
 msgstr "``Out`` （单列数组，类型为 T ）：拼接后的 tensor 。"
 
-#: ../../reference/scql_operators.md:92 ../../reference/scql_operators.md:137
-#: ../../reference/scql_operators.md:176 ../../reference/scql_operators.md:238
-#: ../../reference/scql_operators.md:626 ../../reference/scql_operators.md:778
-#: ../../reference/scql_operators.md:865 ../../reference/scql_operators.md:1026
-#: ../../reference/scql_operators.md:1609
-#: ../../reference/scql_operators.md:1648
-#: ../../reference/scql_operators.md:1728
+#: ../../reference/scql_operators.md:160 ../../reference/scql_operators.md:205
+#: ../../reference/scql_operators.md:244 ../../reference/scql_operators.md:306
+#: ../../reference/scql_operators.md:694 ../../reference/scql_operators.md:890
+#: ../../reference/scql_operators.md:993 ../../reference/scql_operators.md:1102
+#: ../../reference/scql_operators.md:1194
+#: ../../reference/scql_operators.md:1777
+#: ../../reference/scql_operators.md:1816
+#: ../../reference/scql_operators.md:1896
 msgid "**Attributes:**"
 msgstr "**属性：**"
 
-#: ../../reference/scql_operators.md:94
+#: ../../reference/scql_operators.md:162
 msgid "`axis`: Int64. Dimension along which to concatenate."
 msgstr "``axis`` ： Int64 类型，待拼接的维度。"
 
-#: ../../reference/scql_operators.md:101 ../../reference/scql_operators.md:148
-#: ../../reference/scql_operators.md:791 ../../reference/scql_operators.md:876
-#: ../../reference/scql_operators.md:1657
-#: ../../reference/scql_operators.md:1737
+#: ../../reference/scql_operators.md:169 ../../reference/scql_operators.md:216
+#: ../../reference/scql_operators.md:903 ../../reference/scql_operators.md:1004
+#: ../../reference/scql_operators.md:1825
+#: ../../reference/scql_operators.md:1905
 msgid "**Default Attribute Values:**"
 msgstr "**默认值:**"
 
-#: ../../reference/scql_operators.md:103
+#: ../../reference/scql_operators.md:171
 msgid "`axis`: 0"
 msgstr "``axis`` : 0"
 
-#: ../../reference/scql_operators.md:110 ../../reference/scql_operators.md:1269
-#: ../../reference/scql_operators.md:1303
-#: ../../reference/scql_operators.md:1371
-#: ../../reference/scql_operators.md:1405
-#: ../../reference/scql_operators.md:1439
-#: ../../reference/scql_operators.md:1699
+#: ../../reference/scql_operators.md:178 ../../reference/scql_operators.md:1437
+#: ../../reference/scql_operators.md:1471
+#: ../../reference/scql_operators.md:1539
+#: ../../reference/scql_operators.md:1573
+#: ../../reference/scql_operators.md:1607
+#: ../../reference/scql_operators.md:1867
 msgid "`T`: secret"
 msgstr "``T`` ：私有"
 
-#: ../../reference/scql_operators.md:114
+#: ../../reference/scql_operators.md:182
 msgid "`Constant`"
 msgstr "``Constant``"
 
-#: ../../reference/scql_operators.md:116
+#: ../../reference/scql_operators.md:184
 msgid "Definition: Make constant from attribute. Example:"
 msgstr "定义：根据属性中的 ``scalar`` 和 ``to_status`` 参数生成对应的常量。例如："
 
-#: ../../reference/scql_operators.md:128 ../../reference/scql_operators.md:1600
+#: ../../reference/scql_operators.md:196 ../../reference/scql_operators.md:1768
 msgid "No input parameter."
 msgstr "无输入参数。"
 
-#: ../../reference/scql_operators.md:133
+#: ../../reference/scql_operators.md:201
 msgid "`Out`(single, T): output tensor(shape [M]) from constant."
 msgstr "``Out`` （单列数组，类型为 T ）：生成的常量，大小为 [M] 。"
 
-#: ../../reference/scql_operators.md:139
+#: ../../reference/scql_operators.md:207
 msgid "`scalar`: scalar attribute(with shape [M])"
 msgstr "``scalar`` ：大小为 [M] 的标量。"
 
-#: ../../reference/scql_operators.md:141
+#: ../../reference/scql_operators.md:209
 msgid "`to_status`: int64. to status, 0: to private, 1: to public."
 msgstr "``to_status`` ： int64 类型，生成的常量的状态,  0：私有状态, 1：公开状态。"
 
-#: ../../reference/scql_operators.md:150
+#: ../../reference/scql_operators.md:218
 msgid "`to_status`: 0"
 msgstr "``to_status`` : 0"
 
-#: ../../reference/scql_operators.md:157
+#: ../../reference/scql_operators.md:225
 msgid "`T`: public,private"
 msgstr "``T`` ：公共，私有"
 
-#: ../../reference/scql_operators.md:161
+#: ../../reference/scql_operators.md:229
 msgid "`Copy`"
 msgstr "``Copy``"
 
-#: ../../reference/scql_operators.md:163
+#: ../../reference/scql_operators.md:231
 msgid ""
 "Definition: Copy source tensor \"In\" to new tensor \"Out\" on target "
 "party"
 msgstr "定义：复制源 tensor 至目标 tensor 。"
 
-#: ../../reference/scql_operators.md:167
+#: ../../reference/scql_operators.md:235
 msgid "`In`(single, T1): source tensor"
 msgstr "``In`` （单列数组，类型为 T1 ）：源 tensor 。"
 
-#: ../../reference/scql_operators.md:172
+#: ../../reference/scql_operators.md:240
 msgid "`Out`(single, T1): target tensor"
 msgstr "``Out`` （单列数组，类型为 T1 ）：目标 tensor 。"
 
-#: ../../reference/scql_operators.md:178
+#: ../../reference/scql_operators.md:246
 msgid "`input_party_codes`: Input tensor `In` belongs to"
 msgstr "``input_party_codes``：输入 tensor ``In`` 的所属方。"
 
-#: ../../reference/scql_operators.md:180
+#: ../../reference/scql_operators.md:248
 msgid "`output_party_codes`: Output tensor `Out` belongs to"
 msgstr "``output_party_codes``：输出 tensor ``Out`` 的所属方。"
 
-#: ../../reference/scql_operators.md:189 ../../reference/scql_operators.md:802
-#: ../../reference/scql_operators.md:885 ../../reference/scql_operators.md:1089
-#: ../../reference/scql_operators.md:1668
+#: ../../reference/scql_operators.md:257 ../../reference/scql_operators.md:914
+#: ../../reference/scql_operators.md:1013
+#: ../../reference/scql_operators.md:1257
+#: ../../reference/scql_operators.md:1836
 msgid "`T1`: private"
 msgstr "``T1`` ：私有"
 
-#: ../../reference/scql_operators.md:193
+#: ../../reference/scql_operators.md:261
 msgid "`Div`"
 msgstr "``Div``"
 
-#: ../../reference/scql_operators.md:195
+#: ../../reference/scql_operators.md:263
 msgid "Definition: Out = Left `Div` Right"
 msgstr "定义：对两个 tensor 进行除法运算， Out = (Left / Right) 。"
 
-#: ../../reference/scql_operators.md:223
+#: ../../reference/scql_operators.md:291
 msgid "`DumpFile`"
 msgstr "`DumpFile`"
 
-#: ../../reference/scql_operators.md:225
+#: ../../reference/scql_operators.md:293
 msgid ""
 "Definition: Dump the input tensor. Note: This op will change the affected"
 " rows in the session"
 msgstr "定义：将输入的 tensor 存储到文件中。此操作将更改会话中受影响的行。"
 
-#: ../../reference/scql_operators.md:229
+#: ../../reference/scql_operators.md:297
 msgid "`In`(variadic, T): Tensors to be dumped."
 msgstr "``In`` （多列数组，类型为 T ）：待存储的 tensor。"
 
-#: ../../reference/scql_operators.md:234
+#: ../../reference/scql_operators.md:302
 msgid "`Out`(variadic, T): Tensors have been dumped."
 msgstr "``Out`` （多列数组，类型为 T ）： 已存储的 tensor。"
 
-#: ../../reference/scql_operators.md:240
+#: ../../reference/scql_operators.md:308
 msgid "`file_path`: String. Absolute file path to dump the tensors."
 msgstr "``file_path`` ：字符串类型。用于存储 tensor 的绝对文件路径。"
 
-#: ../../reference/scql_operators.md:242
+#: ../../reference/scql_operators.md:310
 msgid "`deliminator`: String. Column deliminator, e.g. comma `,`"
 msgstr "``deliminator`` ：字符串类型。列分隔符，例如逗号。"
 
-#: ../../reference/scql_operators.md:251 ../../reference/scql_operators.md:352
-#: ../../reference/scql_operators.md:446 ../../reference/scql_operators.md:483
-#: ../../reference/scql_operators.md:520 ../../reference/scql_operators.md:557
-#: ../../reference/scql_operators.md:594 ../../reference/scql_operators.md:637
-#: ../../reference/scql_operators.md:674 ../../reference/scql_operators.md:711
-#: ../../reference/scql_operators.md:748 ../../reference/scql_operators.md:800
-#: ../../reference/scql_operators.md:1463
-#: ../../reference/scql_operators.md:1622
-#: ../../reference/scql_operators.md:1777
+#: ../../reference/scql_operators.md:319 ../../reference/scql_operators.md:420
+#: ../../reference/scql_operators.md:514 ../../reference/scql_operators.md:551
+#: ../../reference/scql_operators.md:588 ../../reference/scql_operators.md:625
+#: ../../reference/scql_operators.md:662 ../../reference/scql_operators.md:705
+#: ../../reference/scql_operators.md:742 ../../reference/scql_operators.md:779
+#: ../../reference/scql_operators.md:816 ../../reference/scql_operators.md:912
+#: ../../reference/scql_operators.md:1631
+#: ../../reference/scql_operators.md:1790
+#: ../../reference/scql_operators.md:1945
 msgid "`T`: private"
 msgstr "``T`` ：私有"
 
-#: ../../reference/scql_operators.md:255
+#: ../../reference/scql_operators.md:323
 msgid "`Equal`"
 msgstr "``Equal``"
 
-#: ../../reference/scql_operators.md:257
+#: ../../reference/scql_operators.md:325
 msgid "Definition: Out = Left `Equal` Right"
 msgstr "定义：对两个 tensor 进行比较运算， Out = (Left == Right) 。"
 
-#: ../../reference/scql_operators.md:285
+#: ../../reference/scql_operators.md:353
 msgid "`Filter`"
 msgstr "``Filter``"
 
-#: ../../reference/scql_operators.md:287
+#: ../../reference/scql_operators.md:355
 msgid ""
 "Definition: Given a boolean tensor Filter (its shape is [M]), and a "
 "number of tensors In (variadic, each tensor's shape must be [M]), for i "
@@ -455,125 +539,125 @@ msgstr ""
 "定义：给定一个布尔类型的 tensors ``Filter`` (其大小为 [M] )，以及一个输入 tensor ``In`` （多列数组，每个"
 " tensor 的大小均为 [M] ）。仅当 Filter 中第 i 个元素为真时，保留 In 中第 i 个元素。例:"
 
-#: ../../reference/scql_operators.md:300
+#: ../../reference/scql_operators.md:368
 msgid "`Filter`(single, T1): Filter tensor."
 msgstr "``Filter`` （单列数组，类型为 T1 ）：用来做筛选的 tensor 。"
 
-#: ../../reference/scql_operators.md:302
+#: ../../reference/scql_operators.md:370
 msgid "`In`(variadic, T): Tensors to be filtered."
 msgstr "``In`` （多列数组，类型为 T ）：待筛选的 tensor 。"
 
-#: ../../reference/scql_operators.md:307
+#: ../../reference/scql_operators.md:375 ../../reference/scql_operators.md:1098
 msgid "`Out`(variadic, T): Output tensor."
 msgstr "``Out`` （多列数组，类型为 T ）：输出 tensor 。"
 
-#: ../../reference/scql_operators.md:316 ../../reference/scql_operators.md:1337
-#: ../../reference/scql_operators.md:1497
-#: ../../reference/scql_operators.md:1528
-#: ../../reference/scql_operators.md:1559
-#: ../../reference/scql_operators.md:1590
-#: ../../reference/scql_operators.md:1746
+#: ../../reference/scql_operators.md:384 ../../reference/scql_operators.md:1505
+#: ../../reference/scql_operators.md:1665
+#: ../../reference/scql_operators.md:1696
+#: ../../reference/scql_operators.md:1727
+#: ../../reference/scql_operators.md:1758
+#: ../../reference/scql_operators.md:1914
 msgid "`T`: private,secret"
 msgstr "``T`` ：私有，密态"
 
-#: ../../reference/scql_operators.md:318
+#: ../../reference/scql_operators.md:386
 msgid "`T1`: public,private"
 msgstr "``T1`` ：公开，私有"
 
-#: ../../reference/scql_operators.md:322
+#: ../../reference/scql_operators.md:390
 msgid "`FilterByIndex`"
 msgstr "``FilterByIndex``"
 
-#: ../../reference/scql_operators.md:324
+#: ../../reference/scql_operators.md:392
 msgid "Definition: Filter by rows index. Example:"
 msgstr "定义：按行索引筛选。例如："
 
-#: ../../reference/scql_operators.md:336
+#: ../../reference/scql_operators.md:404
 msgid "`RowsIndexFilter`(single, T): Rows index filter vector(shape [K][1])."
 msgstr "``RowsIndexFilter`` （单列数组，类型为 T ）：用于筛选的索引 tensor （大小为 [K][1] ）。"
 
-#: ../../reference/scql_operators.md:338
+#: ../../reference/scql_operators.md:406
 msgid "`Data`(variadic, T): Input data tensor(shape [M][N])."
 msgstr "``Data`` （多列数组，类型为 T ）：待筛选的 tensor （大小为 [M][N] ）。"
 
-#: ../../reference/scql_operators.md:343
+#: ../../reference/scql_operators.md:411
 msgid "`Out`(variadic, T): Output data tensor(shape [X][N])."
 msgstr "``Out`` （多列数组，类型为 T ）：输出结果 tensor （大小为 [X][N] ）。"
 
-#: ../../reference/scql_operators.md:356
+#: ../../reference/scql_operators.md:424
 msgid "`Greater`"
 msgstr "`Greater`"
 
-#: ../../reference/scql_operators.md:358
+#: ../../reference/scql_operators.md:426
 msgid "Definition: Out = Left `Greater` Right"
 msgstr "定义：对两个 tensor 进行比较运算， Out = (Left > Right) 。"
 
-#: ../../reference/scql_operators.md:386
+#: ../../reference/scql_operators.md:454
 msgid "`GreaterEqual`"
 msgstr "`GreaterEqual`"
 
-#: ../../reference/scql_operators.md:388
+#: ../../reference/scql_operators.md:456
 msgid "Definition: Out = Left `GreaterEqual` Right"
 msgstr "定义：对两个 tensor 进行比较运算， Out = (Left >= Right) 。"
 
-#: ../../reference/scql_operators.md:416
+#: ../../reference/scql_operators.md:484
 msgid "`Group`"
 msgstr "`Group`"
 
-#: ../../reference/scql_operators.md:418
+#: ../../reference/scql_operators.md:486
 msgid ""
 "Definition: Assign a group id(start from 0) for each input element. "
 "Example:"
 msgstr "定义：为每个输入元素分配一个group id (从0开始)。例如："
 
-#: ../../reference/scql_operators.md:430
+#: ../../reference/scql_operators.md:498
 msgid "`Key`(variadic, T): input key tensors(shape [M][1])."
 msgstr "``Key`` （多列数组，类型为 T ）： group key （大小为 [M][1] ）。"
 
-#: ../../reference/scql_operators.md:435
+#: ../../reference/scql_operators.md:503
 msgid "`GroupId`(single, T): group id vector(shape [M][1])."
 msgstr "``GroupId`` （单列数组，类型为 T ）： group id （大小为 [M][1] ）。"
 
-#: ../../reference/scql_operators.md:437
+#: ../../reference/scql_operators.md:505
 msgid "`GroupNum`(single, T): number of groups vector(shape [1][1])"
 msgstr "``GroupNum`` （单列数组，类型为 T ）： group 的数量（大小为 [1][1] ）。"
 
-#: ../../reference/scql_operators.md:450
+#: ../../reference/scql_operators.md:518
 msgid "`GroupAvg`"
 msgstr "``GroupAvg``"
 
-#: ../../reference/scql_operators.md:452 ../../reference/scql_operators.md:489
-#: ../../reference/scql_operators.md:526 ../../reference/scql_operators.md:563
-#: ../../reference/scql_operators.md:643 ../../reference/scql_operators.md:680
-#: ../../reference/scql_operators.md:717
-msgid "Definition: Aggregate `Data` for each group. Example:"
-msgstr "定义：求每个 group 进行聚合。例如:"
+#: ../../reference/scql_operators.md:520 ../../reference/scql_operators.md:557
+#: ../../reference/scql_operators.md:594 ../../reference/scql_operators.md:631
+#: ../../reference/scql_operators.md:711 ../../reference/scql_operators.md:748
+#: ../../reference/scql_operators.md:785
+msgid "Definition: Aggregate `In` for each group. Example:"
+msgstr "定义：聚合每个 group 的 ``In`` 。例如:"
 
-#: ../../reference/scql_operators.md:465 ../../reference/scql_operators.md:502
-#: ../../reference/scql_operators.md:539 ../../reference/scql_operators.md:576
-#: ../../reference/scql_operators.md:613 ../../reference/scql_operators.md:656
-#: ../../reference/scql_operators.md:693 ../../reference/scql_operators.md:730
+#: ../../reference/scql_operators.md:533 ../../reference/scql_operators.md:570
+#: ../../reference/scql_operators.md:607 ../../reference/scql_operators.md:644
+#: ../../reference/scql_operators.md:681 ../../reference/scql_operators.md:724
+#: ../../reference/scql_operators.md:761 ../../reference/scql_operators.md:798
 msgid "`GroupId`(single, T): Input group id vector(shape [M][1])."
 msgstr "``GroupId`` （单列数组，类型为 T ）： group id （大小为 [M][1] ）。"
 
-#: ../../reference/scql_operators.md:467 ../../reference/scql_operators.md:504
-#: ../../reference/scql_operators.md:541 ../../reference/scql_operators.md:578
-#: ../../reference/scql_operators.md:615 ../../reference/scql_operators.md:658
-#: ../../reference/scql_operators.md:695 ../../reference/scql_operators.md:732
+#: ../../reference/scql_operators.md:535 ../../reference/scql_operators.md:572
+#: ../../reference/scql_operators.md:609 ../../reference/scql_operators.md:646
+#: ../../reference/scql_operators.md:683 ../../reference/scql_operators.md:726
+#: ../../reference/scql_operators.md:763 ../../reference/scql_operators.md:800
 msgid "`GroupNum`(single, T): Input number of groups vector(shape [1][1])."
 msgstr "``GroupNum`` （单列数组，类型为 T ）： group 的数量（大小为 [1][1] ）。"
 
-#: ../../reference/scql_operators.md:469 ../../reference/scql_operators.md:506
-#: ../../reference/scql_operators.md:543 ../../reference/scql_operators.md:580
-#: ../../reference/scql_operators.md:660 ../../reference/scql_operators.md:697
-#: ../../reference/scql_operators.md:734
+#: ../../reference/scql_operators.md:537 ../../reference/scql_operators.md:574
+#: ../../reference/scql_operators.md:611 ../../reference/scql_operators.md:648
+#: ../../reference/scql_operators.md:728 ../../reference/scql_operators.md:765
+#: ../../reference/scql_operators.md:802
 msgid "`In`(variadic, T): Input data tensor(shape [M][1])."
 msgstr "``In`` （单列数组，类型为 T ）：输入数据 （大小为 [M][1] ）。"
 
-#: ../../reference/scql_operators.md:474 ../../reference/scql_operators.md:511
-#: ../../reference/scql_operators.md:548 ../../reference/scql_operators.md:585
-#: ../../reference/scql_operators.md:665 ../../reference/scql_operators.md:702
-#: ../../reference/scql_operators.md:739
+#: ../../reference/scql_operators.md:542 ../../reference/scql_operators.md:579
+#: ../../reference/scql_operators.md:616 ../../reference/scql_operators.md:653
+#: ../../reference/scql_operators.md:733 ../../reference/scql_operators.md:770
+#: ../../reference/scql_operators.md:807
 msgid ""
 "`Out`(variadic, T): Output data tensors(shape [K][1], K equals to number "
 "of groups), Out[i] is the agg result for i-th group."
@@ -581,31 +665,31 @@ msgstr ""
 "``Out`` （多列数组，类型为 T ）：计算结果（大小为 [K][1] ， K 等于 group 的个数）， Out[i] 是第 i 个 "
 "group 的聚合结果。"
 
-#: ../../reference/scql_operators.md:487
+#: ../../reference/scql_operators.md:555
 msgid "`GroupCount`"
 msgstr "``GroupCount``"
 
-#: ../../reference/scql_operators.md:524
+#: ../../reference/scql_operators.md:592
 msgid "`GroupCountDistinct`"
 msgstr "``GroupCountDistinct``"
 
-#: ../../reference/scql_operators.md:561
+#: ../../reference/scql_operators.md:629
 msgid "`GroupFirstOf`"
 msgstr "``GroupFirstOf``"
 
-#: ../../reference/scql_operators.md:598
+#: ../../reference/scql_operators.md:666
 msgid "`GroupHeSum`"
 msgstr "``GroupHeSum``"
 
-#: ../../reference/scql_operators.md:600
+#: ../../reference/scql_operators.md:668
 msgid "Definition: Using HE to sum 'In' for each group. Example:"
 msgstr "定义：使用同态加密对每个 group 进行求合。例如:"
 
-#: ../../reference/scql_operators.md:617
+#: ../../reference/scql_operators.md:685
 msgid "`In`(single, T): Input data tensor(shape [M][1])."
 msgstr "``In`` （单列数组，类型为 T ）：输入数据 （大小为 [M][1] ）。"
 
-#: ../../reference/scql_operators.md:622
+#: ../../reference/scql_operators.md:690
 msgid ""
 "`Out`(single, T): Output data tensors(shape [K][1], K equals to number of"
 " groups), Out[i] is the agg result for i-th group."
@@ -613,179 +697,198 @@ msgstr ""
 "``Out`` （多列数组，类型为 T ）：计算结果（大小为 [K][1] ， K 等于 group 的个数）， Out[i] 是第 i 个 "
 "group 的聚合结果。"
 
-#: ../../reference/scql_operators.md:628
+#: ../../reference/scql_operators.md:696
 msgid ""
 "`input_party_codes`: List of parties the inputs belong "
 "to([PartyCodeForGroupId/Num, PartyCodeForIn])."
 msgstr "``input_party_codes`` ：join 操作的参与方列表。"
 
-#: ../../reference/scql_operators.md:641
+#: ../../reference/scql_operators.md:709
 msgid "`GroupMax`"
 msgstr "`GroupMax`"
 
-#: ../../reference/scql_operators.md:678
+#: ../../reference/scql_operators.md:746
 msgid "`GroupMin`"
 msgstr "`GroupMin`"
 
-#: ../../reference/scql_operators.md:715
+#: ../../reference/scql_operators.md:783
 msgid "`GroupSum`"
 msgstr "`GroupSum`"
 
-#: ../../reference/scql_operators.md:752
-msgid "`In`"
-msgstr "`In`"
+#: ../../reference/scql_operators.md:820
+msgid "`If`"
+msgstr "`If`"
 
-#: ../../reference/scql_operators.md:754
+#: ../../reference/scql_operators.md:822
 msgid ""
-"Definition: Given an input tensor Left (its shape is [M]), and another "
-"input tensor Right (its shape is [N]), check whether Left's element "
-"exists in Right's elements and output a boolean tensor Out (its shape is "
-"[M]). Left and Right must be the same type. Example:"
-msgstr ""
-"定义：给定一个输入 ``Left`` （大小为 [M] ）和另一个输入 ``Right`` （大小为 [N] ），判断 ``Left`` "
-"的元素是否存在于 ``Right`` 中, 其中 ``Left`` 和 ``Right`` 中元素类型必须一致。例如："
+"The IF operator returns a value if a condition is TRUE, or another value "
+"if a condition is FALSE."
+msgstr "如果条件为 TRUE ，则 IF 算子返回一个值；如果条件为 FALSE ，则返回另一个值。"
 
-#: ../../reference/scql_operators.md:767
+#: ../../reference/scql_operators.md:879
 msgid "`Left`(single, T): First operand."
 msgstr "``Left`` （单列数组 , 类型为 T ）： 第一个操作数。"
 
-#: ../../reference/scql_operators.md:769
+#: ../../reference/scql_operators.md:881
 msgid "`Right`(single, T1): Second operand."
 msgstr "``Right`` （单列数组 , 类型为 T1 ）： 第二个操作数。"
 
-#: ../../reference/scql_operators.md:774
+#: ../../reference/scql_operators.md:886
 msgid "`Out`(single, T): Output Tensor."
 msgstr "``Out`` （单列数组 , 类型为 T ）：输出结果，类型为布尔值。"
 
-#: ../../reference/scql_operators.md:780
+#: ../../reference/scql_operators.md:892
 msgid "`algorithm`: Int64. Algorithm to use for the op. 1: PSI"
 msgstr "``algorithm`` ： Int64 类型， 该操作所执行的算法，1表示使用PSI算法。"
 
-#: ../../reference/scql_operators.md:782
+#: ../../reference/scql_operators.md:894
 msgid ""
 "`input_party_codes`: List of parties the inputs belong to. This attribute"
 " is required if algorithm = PSI."
 msgstr "``input_party_codes`` ： 参与该操作的参与方的列表。如果采用 PSI 算法，则需要此属性。"
 
-#: ../../reference/scql_operators.md:784
+#: ../../reference/scql_operators.md:896
 msgid ""
 "`reveal_to`: A party can see the result. This attribute is required if "
 "algorithm = PSI."
 msgstr "``reveal_to`` ：可以看到结果的参与方。如果采用 PSI 算法，则需要此属性。"
 
-#: ../../reference/scql_operators.md:793
+#: ../../reference/scql_operators.md:905
 msgid "`algorithm`: 0"
 msgstr "``algorithm`` : 0"
 
-#: ../../reference/scql_operators.md:806
+#: ../../reference/scql_operators.md:918
 msgid "`IntDiv`"
 msgstr "`IntDiv`"
 
-#: ../../reference/scql_operators.md:808
+#: ../../reference/scql_operators.md:920
 msgid "Definition: Out = Left `IntDiv` Right"
 msgstr "定义：对两个整数类型的 tensor 进行整形除法运算， Out = (Left / Right) 。"
 
-#: ../../reference/scql_operators.md:836
+#: ../../reference/scql_operators.md:948
 msgid "`Join`"
 msgstr "`Join`"
 
-#: ../../reference/scql_operators.md:838
+#: ../../reference/scql_operators.md:950
 msgid ""
 "Definition: Create Join Index based on EQ-Join, return result's "
 "corresponding rows index in the original input. Example:"
 msgstr "定义：基于 EQ-Join 对输入进行求交，返回回原始输入中与交集对应的索引值。例如："
 
-#: ../../reference/scql_operators.md:852
+#: ../../reference/scql_operators.md:980
 msgid "`Left`(single, T1): Left vector(shape [M][1])"
 msgstr "``Left`` （单列数组 , 类型为 T1 ）：参与 join 操作的左侧输入（大小为 [M][1] ）。"
 
-#: ../../reference/scql_operators.md:854
+#: ../../reference/scql_operators.md:982
 msgid "`Right`(single, T1): Right vector(shape [N][1])"
 msgstr "``Right`` （单列数组 , 类型为 T1 ）：参与 join 操作的右侧输入（大小为 [M][1] ）。"
 
-#: ../../reference/scql_operators.md:859
+#: ../../reference/scql_operators.md:987
 msgid ""
 "`LeftJoinIndex`(single, T2): Joined rows index for left vector(shape "
 "[K][1])"
 msgstr "``LeftJoinIndex`` （单列数组 , 类型为 T2 ）：参与 join 操作的左侧输入的行索引。"
 
-#: ../../reference/scql_operators.md:861
+#: ../../reference/scql_operators.md:989
 msgid ""
 "`RightJoinIndex`(single, T2): Joined rows index for right vector(shape "
 "[K][1])"
 msgstr "``RightJoinIndex`` （单列数组 , 类型为 T2 ）：参与 join 操作的右侧输入的行索引。"
 
-#: ../../reference/scql_operators.md:867
+#: ../../reference/scql_operators.md:995
 msgid ""
 "`input_party_codes`: List of parties the inputs belong to([PartyCodeLeft,"
 " PartyCodeRight])."
 msgstr "``input_party_codes`` ：join 操作的参与方。"
 
-#: ../../reference/scql_operators.md:869
-msgid "`join_type`: Int64. 0: inner join;"
-msgstr "``join_type`` ： Int64 类型，join 算子的类型。 0: inner join;"
+#: ../../reference/scql_operators.md:997
+msgid "`join_type`: Int64. 0: inner join; 1: left join; 2: right join;"
+msgstr "``join_type`` ： Int64 类型，join 算子的类型。 0: inner join; 1: left join; 2: right join;"
 
-#: ../../reference/scql_operators.md:878
+#: ../../reference/scql_operators.md:1006
 msgid "`join_type`: 0"
 msgstr "``join_type`` : 0"
 
-#: ../../reference/scql_operators.md:887 ../../reference/scql_operators.md:1039
+#: ../../reference/scql_operators.md:1015
+#: ../../reference/scql_operators.md:1207
 msgid "`T2`: private"
 msgstr "``T2`` ：私有"
 
-#: ../../reference/scql_operators.md:891
+#: ../../reference/scql_operators.md:1019
 msgid "`Less`"
 msgstr "`Less`"
 
-#: ../../reference/scql_operators.md:893
+#: ../../reference/scql_operators.md:1021
 msgid "Definition: Out = Left `Less` Right"
 msgstr "定义：对两个 tensor 进行比较运算， Out = (Left < Right) 。"
 
-#: ../../reference/scql_operators.md:921
+#: ../../reference/scql_operators.md:1049
 msgid "`LessEqual`"
 msgstr "`LessEqual`"
 
-#: ../../reference/scql_operators.md:923
+#: ../../reference/scql_operators.md:1051
 msgid "Definition: Out = Left `LessEqual` Right"
 msgstr "定义：对两个 tensor 进行比较运算， Out = (Left <= Right) 。"
 
-#: ../../reference/scql_operators.md:951
+#: ../../reference/scql_operators.md:1079
+msgid "`Limit`"
+msgstr "``Limit``"
+
+#: ../../reference/scql_operators.md:1081
+msgid ""
+"Limit return part of data, the amount of data depends on limit attr, the "
+"offset of data depends on offset attr. Example:"
+msgstr "Limit 算子返回部分数据，数据量取决于 limit attr ，数据的起始位置取决于 offset attr 。 例子："
+
+#: ../../reference/scql_operators.md:1093
+msgid "`In`(variadic, T): Tensors to be limited."
+msgstr "``In`` （多列数组，类型为 T ）：待 limit 的 tensor 。"
+
+#: ../../reference/scql_operators.md:1104
+msgid "`offset`: offset in limit"
+msgstr "`offset`: limit 结果的起始位置"
+
+#: ../../reference/scql_operators.md:1106
+msgid "`count`: count in limit"
+msgstr "`count`: limit 结果的数据量"
+
+#: ../../reference/scql_operators.md:1119
 msgid "`LogicalAnd`"
 msgstr "`LogicalAnd`"
 
-#: ../../reference/scql_operators.md:953
+#: ../../reference/scql_operators.md:1121
 msgid "Definition: Out = Left `LogicalAnd` Right"
 msgstr "定义：对两个 tensor 进行逻辑与运算， Out = (Left & Right) 。"
 
-#: ../../reference/scql_operators.md:981
+#: ../../reference/scql_operators.md:1149
 msgid "`LogicalOr`"
 msgstr "`LogicalOr`"
 
-#: ../../reference/scql_operators.md:983
+#: ../../reference/scql_operators.md:1151
 msgid "Definition: Out = Left `LogicalOr` Right"
 msgstr "定义：对两个 tensor 进行逻辑或运算， Out = (Left ｜ Right) 。"
 
-#: ../../reference/scql_operators.md:1011
+#: ../../reference/scql_operators.md:1179
 msgid "`MakePrivate`"
 msgstr "`MakePrivate`"
 
-#: ../../reference/scql_operators.md:1013
+#: ../../reference/scql_operators.md:1181
 msgid "Definition: Convert In tensor from share status to private status."
 msgstr "定义：将 tensor 从秘态转换为私有状态。"
 
-#: ../../reference/scql_operators.md:1017
-#: ../../reference/scql_operators.md:1049
-#: ../../reference/scql_operators.md:1075
+#: ../../reference/scql_operators.md:1185
+#: ../../reference/scql_operators.md:1217
+#: ../../reference/scql_operators.md:1243
 msgid "`In`(variadic, T1): Input tensors."
 msgstr "``In`` （多列数组，类型为 T1 ）：输入 tensor 。"
 
-#: ../../reference/scql_operators.md:1022
-#: ../../reference/scql_operators.md:1054
-#: ../../reference/scql_operators.md:1080
+#: ../../reference/scql_operators.md:1190
+#: ../../reference/scql_operators.md:1222
+#: ../../reference/scql_operators.md:1248
 msgid "`Out`(variadic, T2): Output tensors."
 msgstr "``Out`` （多列数组，类型为 T2 ）：输出 tensor 。"
 
-#: ../../reference/scql_operators.md:1028
+#: ../../reference/scql_operators.md:1196
 msgid ""
 "`reveal_to`: List of parties to see the private data. If it is revealed "
 "to one party only, the other party also needs to run the op, but does not"
@@ -794,106 +897,98 @@ msgstr ""
 "``reveal_to`` ：可以获取结果的参与方列表。如果只有一方能获取结果，那么另一方也需要运行 ``MakePrivate`` "
 "操作，但它无法获取结果。只有被指定为 reveal_to 的参与方才能获取结果。"
 
-#: ../../reference/scql_operators.md:1037
+#: ../../reference/scql_operators.md:1205
 msgid "`T1`: secret,public"
 msgstr "``T1`` ：秘态，公开"
 
-#: ../../reference/scql_operators.md:1043
+#: ../../reference/scql_operators.md:1211
 msgid "`MakePublic`"
 msgstr "`MakePublic`"
 
-#: ../../reference/scql_operators.md:1045
+#: ../../reference/scql_operators.md:1213
 msgid "Definition: Convert In tensor from share/private status to public status."
 msgstr "定义：将 tensor 从私有或者秘态转变为公开状态。"
 
-#: ../../reference/scql_operators.md:1063
+#: ../../reference/scql_operators.md:1231
 msgid "`T1`: private,secret"
 msgstr "``T1`` ：私有，密态"
 
-#: ../../reference/scql_operators.md:1065
+#: ../../reference/scql_operators.md:1233
 msgid "`T2`: public"
 msgstr "`T2` ：公开"
 
-#: ../../reference/scql_operators.md:1069
+#: ../../reference/scql_operators.md:1237
 msgid "`MakeShare`"
 msgstr "`MakeShare`"
 
-#: ../../reference/scql_operators.md:1071
+#: ../../reference/scql_operators.md:1239
 msgid "Definition: Convert In tensor from private status to share status."
 msgstr "定义：将 tensor 从私有态转变为秘态。"
 
-#: ../../reference/scql_operators.md:1091
+#: ../../reference/scql_operators.md:1259
 msgid "`T2`: secret"
 msgstr "``T2`` : 密态"
 
-#: ../../reference/scql_operators.md:1095
+#: ../../reference/scql_operators.md:1263
 msgid "`Minus`"
 msgstr "`Minus`"
 
-#: ../../reference/scql_operators.md:1097
+#: ../../reference/scql_operators.md:1265
 msgid "Definition: Out = Left `Minus` Right"
 msgstr "定义：对两个 tensor 进行求最小值运算， Out = (Left ``Minus`` Right) 。"
 
-#: ../../reference/scql_operators.md:1125
+#: ../../reference/scql_operators.md:1293
 msgid "`Mod`"
 msgstr "`Mod`"
 
-#: ../../reference/scql_operators.md:1127
+#: ../../reference/scql_operators.md:1295
 msgid "Definition: Out = Left `Mod` Right"
 msgstr "定义：对两个 tensor 进行求余运算， Out = (Left % Right) 。"
 
-#: ../../reference/scql_operators.md:1155
+#: ../../reference/scql_operators.md:1323
 msgid "`Mul`"
 msgstr "`Mul`"
 
-#: ../../reference/scql_operators.md:1157
+#: ../../reference/scql_operators.md:1325
 msgid "Definition: Out = Left `Mul` Right"
 msgstr "定义：对两个 tensor 进行减法运算， Out = (Left - Right) 。"
 
-#: ../../reference/scql_operators.md:1185
+#: ../../reference/scql_operators.md:1353
 msgid "`Not`"
 msgstr "`Not`"
 
-#: ../../reference/scql_operators.md:1187
+#: ../../reference/scql_operators.md:1355
 msgid "Definition:  Out = Not In"
 msgstr "定义：对 tensor 进行逻辑非运算， Out = !In 。"
 
-#: ../../reference/scql_operators.md:1191
-msgid "`In`(single, T): Input tensor."
-msgstr "``In`` （单列数组，类型为 T ）：输入 tensor 。"
-
-#: ../../reference/scql_operators.md:1196
-msgid "`Out`(single, T): Output tensor."
-msgstr "``Out`` （单列数组，类型为 T ）：输出 tensor 。"
-
-#: ../../reference/scql_operators.md:1209
+#: ../../reference/scql_operators.md:1377
 msgid "`NotEqual`"
 msgstr "`NotEqual`"
 
-#: ../../reference/scql_operators.md:1211
+#: ../../reference/scql_operators.md:1379
 msgid "Definition: Out = Left `NotEqual` Right"
 msgstr "定义：对两个 tensor 进行比较运算， Out = (Left != Right) 。"
 
-#: ../../reference/scql_operators.md:1239
+#: ../../reference/scql_operators.md:1407
 msgid "`ObliviousGroupAvg`"
 msgstr "`ObliviousGroupAvg`"
 
-#: ../../reference/scql_operators.md:1241
-#: ../../reference/scql_operators.md:1275
-#: ../../reference/scql_operators.md:1343
-#: ../../reference/scql_operators.md:1377
-#: ../../reference/scql_operators.md:1411
+#: ../../reference/scql_operators.md:1409
+#: ../../reference/scql_operators.md:1443
+#: ../../reference/scql_operators.md:1511
+#: ../../reference/scql_operators.md:1545
+#: ../../reference/scql_operators.md:1579
 msgid ""
 "Definition: partially aggregate `In` according to end of group indicator."
 " Example:"
 msgstr "定义：根据 group mask 来对输入进行分组聚合。"
 
-#: ../../reference/scql_operators.md:1253
-#: ../../reference/scql_operators.md:1287
-#: ../../reference/scql_operators.md:1328
-#: ../../reference/scql_operators.md:1355
-#: ../../reference/scql_operators.md:1389
-#: ../../reference/scql_operators.md:1423
+#: ../../reference/scql_operators.md:1421
+#: ../../reference/scql_operators.md:1455
+#: ../../reference/scql_operators.md:1496
+#: ../../reference/scql_operators.md:1523
+#: ../../reference/scql_operators.md:1557
+#: ../../reference/scql_operators.md:1591
 msgid ""
 "`Group`(single, T): End of group indicator(shape [M][1]). Element 1 means"
 " the row is the last element of the group, 0 is not."
@@ -901,169 +996,169 @@ msgstr ""
 "``Group`` （单列数组，类型为 T ）： groupMark （大小为 [M][1] ），其中 1 "
 "表示该位置的输入对应的元素是该分组中的最后一元素，0 则表示不是最后一个元素。"
 
-#: ../../reference/scql_operators.md:1255
-#: ../../reference/scql_operators.md:1289
-#: ../../reference/scql_operators.md:1357
-#: ../../reference/scql_operators.md:1391
-#: ../../reference/scql_operators.md:1425
+#: ../../reference/scql_operators.md:1423
+#: ../../reference/scql_operators.md:1457
+#: ../../reference/scql_operators.md:1525
+#: ../../reference/scql_operators.md:1559
+#: ../../reference/scql_operators.md:1593
 msgid "`In`(variadic, T): Values to be aggregated (shape [M][1])."
 msgstr "``In`` （多列数组，类型为 T ）：待进行分组聚合的输入（大小为 [M][1] ）。"
 
-#: ../../reference/scql_operators.md:1260
-#: ../../reference/scql_operators.md:1294
-#: ../../reference/scql_operators.md:1362
-#: ../../reference/scql_operators.md:1396
-#: ../../reference/scql_operators.md:1430
+#: ../../reference/scql_operators.md:1428
+#: ../../reference/scql_operators.md:1462
+#: ../../reference/scql_operators.md:1530
+#: ../../reference/scql_operators.md:1564
+#: ../../reference/scql_operators.md:1598
 msgid "`Out`(variadic, T): Partially aggregated values (shape [M][1])."
 msgstr "``Out`` （多列数组，类型为 T ）：分组聚合的结果（大小为 [M][1] ）。"
 
-#: ../../reference/scql_operators.md:1273
+#: ../../reference/scql_operators.md:1441
 msgid "`ObliviousGroupCount`"
 msgstr "`ObliviousGroupCount`"
 
-#: ../../reference/scql_operators.md:1307
+#: ../../reference/scql_operators.md:1475
 msgid "`ObliviousGroupMark`"
 msgstr "`ObliviousGroupMark`"
 
-#: ../../reference/scql_operators.md:1309
+#: ../../reference/scql_operators.md:1477
 msgid ""
 "Definition: generate end of group indicator `Group` based on `Key`. The "
 "operator calculates Group[i] = not_eq(Key[i+1], Key[i]). Example:"
 msgstr "定义：根据输入的 key 生成一个 group ，group 的计算规则为 Group[i] = (Key[i+1] != Key[i] )。例如："
 
-#: ../../reference/scql_operators.md:1323
+#: ../../reference/scql_operators.md:1491
 msgid "`Key`(variadic, T): Pre-sorted group keys (shape [M][1])."
 msgstr "``Key`` （多列数组，类型为 T ）：排序过的 group key 。"
 
-#: ../../reference/scql_operators.md:1341
+#: ../../reference/scql_operators.md:1509
 msgid "`ObliviousGroupMax`"
 msgstr "`ObliviousGroupMax`"
 
-#: ../../reference/scql_operators.md:1375
+#: ../../reference/scql_operators.md:1543
 msgid "`ObliviousGroupMin`"
 msgstr "`ObliviousGroupMin`"
 
-#: ../../reference/scql_operators.md:1409
+#: ../../reference/scql_operators.md:1577
 msgid "`ObliviousGroupSum`"
 msgstr "`ObliviousGroupSum`"
 
-#: ../../reference/scql_operators.md:1443
+#: ../../reference/scql_operators.md:1611
 msgid "`Publish`"
 msgstr "`Publish`"
 
-#: ../../reference/scql_operators.md:1445
+#: ../../reference/scql_operators.md:1613
 msgid "Definition: This operator publishes the DAG results."
 msgstr "定义：将输入的 tensor 进行披露。"
 
-#: ../../reference/scql_operators.md:1449
+#: ../../reference/scql_operators.md:1617
 msgid "`In`(variadic, T): Tensors to be published."
 msgstr "``In`` （多列数组，类型为 T ）：要披露的 Tensors 。"
 
-#: ../../reference/scql_operators.md:1454
+#: ../../reference/scql_operators.md:1622
 msgid ""
 "`Out`(variadic, T): Result tensors of the publish op. Tensors are in "
 "TensorOption VALUE."
 msgstr "``Out`` （多列数组，类型为 T ）：运算结果。"
 
-#: ../../reference/scql_operators.md:1467
+#: ../../reference/scql_operators.md:1635
 msgid "`ReduceAvg`"
 msgstr "`ReduceAvg`"
 
-#: ../../reference/scql_operators.md:1469
+#: ../../reference/scql_operators.md:1637
 msgid ""
 "Definition: Given a input tensor In, return the average of input tensor's"
 " elements. Example:"
 msgstr "定义：给定一个输入 tensor ，返回输入 tensor 元素的平均值。例如："
 
-#: ../../reference/scql_operators.md:1483
+#: ../../reference/scql_operators.md:1651
 msgid "`In`(single, T): Tensor to be reduced (shape [M])."
 msgstr "``In`` （单列数组 , 类型为 T ）：需要求平均的输入（大小为 [M] ）。"
 
-#: ../../reference/scql_operators.md:1488
+#: ../../reference/scql_operators.md:1656
 msgid "`Out`(single, T): The average Tensor (shape [1])."
 msgstr "``Out``  （单列数组 , 类型为 T ）：计算结果（大小为 [1] ）。"
 
-#: ../../reference/scql_operators.md:1501
+#: ../../reference/scql_operators.md:1669
 msgid "`ReduceMax`"
 msgstr "`ReduceMax`"
 
-#: ../../reference/scql_operators.md:1503
+#: ../../reference/scql_operators.md:1671
 msgid ""
 "Definition: Given a input tensor In, return the max of input tensor's "
 "elements. Example:"
 msgstr "定义：给定一个输入 tensor ，返回输入 tensor 元素的最大值。例如："
 
-#: ../../reference/scql_operators.md:1514
+#: ../../reference/scql_operators.md:1682
 msgid "`In`(single, T): Tensor to be maxed (shape [M])."
 msgstr "``In`` （单列数组 , 类型为 T ）：需要计算最大值的输入（大小为 [M] ）。"
 
-#: ../../reference/scql_operators.md:1519
+#: ../../reference/scql_operators.md:1687
 msgid "`Out`(single, T): The maxed Tensor (shape [1])."
 msgstr "``Out`` （单列数组 , 类型为 T ）：计算结果（大小为 [1] ）。"
 
-#: ../../reference/scql_operators.md:1532
+#: ../../reference/scql_operators.md:1700
 msgid "`ReduceMin`"
 msgstr "`ReduceMin`"
 
-#: ../../reference/scql_operators.md:1534
+#: ../../reference/scql_operators.md:1702
 msgid ""
 "Definition: Given a input tensor In, return the min of input tensor's "
 "elements. Example:"
 msgstr "定义：给定一个输入 tensor ，返回输入 tensor 元素的最小值。例如："
 
-#: ../../reference/scql_operators.md:1545
+#: ../../reference/scql_operators.md:1713
 msgid "`In`(single, T): Tensor to be mined (shape [M])."
 msgstr "``In`` （单列数组 , 类型为 T ）：需要计算最小值的输入（大小为 [M] ）。"
 
-#: ../../reference/scql_operators.md:1550
+#: ../../reference/scql_operators.md:1718
 msgid "`Out`(single, T): The mined Tensor (shape [1])."
 msgstr "``Out`` （单列数组 , 类型为 T ）：计算结果（大小为 [1] ）。"
 
-#: ../../reference/scql_operators.md:1563
+#: ../../reference/scql_operators.md:1731
 msgid "`ReduceSum`"
 msgstr "`ReduceSum`"
 
-#: ../../reference/scql_operators.md:1565
+#: ../../reference/scql_operators.md:1733
 msgid ""
 "Definition: Given an input tensor In, return the sum of input tensor's "
 "elements. Example:"
 msgstr "定义：给定一个输入 tensor ，返回输入 tensor 元素的总和。例如："
 
-#: ../../reference/scql_operators.md:1576
+#: ../../reference/scql_operators.md:1744
 msgid "`In`(single, T): Tensor to be summed (shape [M])."
 msgstr "``In`` （单列数组 , 类型为 T ）：要求和的输入（大小为 [M] ）。"
 
-#: ../../reference/scql_operators.md:1581
+#: ../../reference/scql_operators.md:1749
 msgid "`Out`(single, T): The summed Tensor (shape [1])."
 msgstr "``Out`` （单列数组 , 类型为 T ）：计算结果（大小为 [1] ）。"
 
-#: ../../reference/scql_operators.md:1594
+#: ../../reference/scql_operators.md:1762
 msgid "`RunSQL`"
 msgstr "`RunSQL`"
 
-#: ../../reference/scql_operators.md:1596
+#: ../../reference/scql_operators.md:1764
 msgid ""
 "Definition: Run a SQL statement and return a list of tensors in private "
 "status"
 msgstr "定义：运行 SQL 语句并返回私有态的结果"
 
-#: ../../reference/scql_operators.md:1605
+#: ../../reference/scql_operators.md:1773
 msgid "`Out`(variadic, T): Result tensors of the SQL statement."
 msgstr "``Out`` （多列数组，类型为 T ）： SQL 语句的执行结果。"
 
-#: ../../reference/scql_operators.md:1611
+#: ../../reference/scql_operators.md:1779
 msgid "`sql`: SQL statement"
 msgstr "``sql`` ：SQL 语句"
 
-#: ../../reference/scql_operators.md:1613
+#: ../../reference/scql_operators.md:1781
 msgid "`table_refs`: tables referenced by query"
 msgstr "``table_refs`` ：SQL 语句中所引用的表格。"
 
-#: ../../reference/scql_operators.md:1626
+#: ../../reference/scql_operators.md:1794
 msgid "`Shape`"
 msgstr "`Shape`"
 
-#: ../../reference/scql_operators.md:1628
+#: ../../reference/scql_operators.md:1796
 msgid ""
 "Definition: Given tensors In, return shapes of each tensor. Axis starts "
 "from 0. If axis is set, dimensions of each shape are returned. If axis is"
@@ -1072,79 +1167,79 @@ msgstr ""
 "定义：从维度 0 开始计算 tensor 在各个维度的大小，如果设置了 Axis，则返回 Axis 所指定的维度上的大小，否则 ( Axis "
 "默认为 -1)，则返回 tensor 在所有维度上的大小。例如："
 
-#: ../../reference/scql_operators.md:1639
+#: ../../reference/scql_operators.md:1807
 msgid "`In`(variadic, T): Input Tensors"
 msgstr "``In`` （多列数组，类型为 T ）：输入 Tensor 。"
 
-#: ../../reference/scql_operators.md:1644
+#: ../../reference/scql_operators.md:1812
 msgid "`Out`(variadic, T1): Shape Tensors"
 msgstr "``Out`` （多列数组，类型为 T1 ）： Tensor 在各个维度上的大小。"
 
-#: ../../reference/scql_operators.md:1650
+#: ../../reference/scql_operators.md:1818
 msgid "`axis`: Int64. Specific dimension of the shape."
 msgstr "``axis`` ： Int64 类型，特定的维度。"
 
-#: ../../reference/scql_operators.md:1659
+#: ../../reference/scql_operators.md:1827
 msgid "`axis`: -1"
 msgstr "``axis`` : -1"
 
-#: ../../reference/scql_operators.md:1672
+#: ../../reference/scql_operators.md:1840
 msgid "`Shuffle`"
 msgstr "`Shuffle`"
 
-#: ../../reference/scql_operators.md:1674
+#: ../../reference/scql_operators.md:1842
 msgid "Definition: Shuffle `In`. Example:"
 msgstr "定义：将输入 tensor 的顺序进行随机打乱。例如："
 
-#: ../../reference/scql_operators.md:1685
+#: ../../reference/scql_operators.md:1853
 msgid "`In`(variadic, T): Input Value(shape [M][1])."
 msgstr "``In`` （多列数组，类型为 T ）：输入 Tensor （大小为 [M][1] ）。"
 
-#: ../../reference/scql_operators.md:1690
+#: ../../reference/scql_operators.md:1858
 msgid "`Out`(variadic, T): Output Value(shape [M][1])"
 msgstr "``Out`` （多列数组，类型为 T ）：输出 Tensor （大小为 [M][1] ）。"
 
-#: ../../reference/scql_operators.md:1703
+#: ../../reference/scql_operators.md:1871
 msgid "`Sort`"
 msgstr "`Sort`"
 
-#: ../../reference/scql_operators.md:1705
+#: ../../reference/scql_operators.md:1873
 msgid "Definition: sort `In` using `Key`. Example:"
 msgstr "定义：根据排序键 ``Key`` 对输入 ``In`` 中的元素进行排序。例如："
 
-#: ../../reference/scql_operators.md:1717
+#: ../../reference/scql_operators.md:1885
 msgid "`Key`(variadic, T): Sort Key(shape [M][1])."
 msgstr "``Key`` （多列数组，类型为 T ）：排序键（大小为 [M][1] ）。"
 
-#: ../../reference/scql_operators.md:1719
+#: ../../reference/scql_operators.md:1887
 msgid "`In`(variadic, T): Sort Value(shape [M][1])."
 msgstr "``In`` （多列数组，类型为 T ）：所需排序的输入（大小为 [M][1] ）。"
 
-#: ../../reference/scql_operators.md:1724
+#: ../../reference/scql_operators.md:1892
 msgid "`Out`(variadic, T): Sorted Value(shape [M][1])"
 msgstr "``Out`` （多列数组，类型为 T ）：排序后的结果（大小为 [M][1] ）。"
 
-#: ../../reference/scql_operators.md:1730
+#: ../../reference/scql_operators.md:1898
 msgid "`reverse`: Bool. If True, the sorted tensor in descending order."
 msgstr "``reverse`` : 布尔类型, 如果为 True ，则表示按照从大到小的顺序进行排序。"
 
-#: ../../reference/scql_operators.md:1739
+#: ../../reference/scql_operators.md:1907
 msgid "`reverse`: false"
 msgstr "``reverse`` : false"
 
-#: ../../reference/scql_operators.md:1750
+#: ../../reference/scql_operators.md:1918
 msgid "`Unique`"
 msgstr "``Unique``"
 
-#: ../../reference/scql_operators.md:1752
+#: ../../reference/scql_operators.md:1920
 msgid "Definition: Unique of Key tensor. Example:"
 msgstr "定义：获取输入 tensor 中唯一元素。例如："
 
-#: ../../reference/scql_operators.md:1763
+#: ../../reference/scql_operators.md:1931
 msgid "`Key`(single, T): Input key tensors(shape [M][1])."
 msgstr "``Key`` （单列数组，类型为 T ）：输入 tensor （大小为 [M][1] ）。"
 
-#: ../../reference/scql_operators.md:1768
+#: ../../reference/scql_operators.md:1936
 msgid "`UniqueKey`(single, T): Output unique key tensor(shape [K][1])."
 msgstr "``UniqueKey`` （单列数组，类型为 T ）：输出结果（大小为 [K][1] ）。"
 

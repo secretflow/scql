@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-31 11:16+0800\n"
+"POT-Creation-Date: 2023-09-04 19:31+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -17,7 +17,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.11.0\n"
+"Generated-By: Babel 2.12.1\n"
 
 #: ../../getting_started/scql_intro.rst:2
 msgid "SCQL Introduction"
@@ -32,7 +32,9 @@ msgid ""
 "Secure Collaborative Query Language (SCQL) is a system that allows "
 "multiple distrusting parties to run joint analysis without revealing "
 "their private data."
-msgstr "安全协作查询语言（Secure Collaborative Query Language, SCQL）是一个允许多个互不信任参与方在不泄露各自隐私数据的条件下进行联合数据分析的系统。"
+msgstr ""
+"安全协作查询语言（Secure Collaborative Query Language, "
+"SCQL）是一个允许多个互不信任参与方在不泄露各自隐私数据的条件下进行联合数据分析的系统。"
 
 #: ../../getting_started/scql_intro.rst:10
 msgid "Key Features"
@@ -89,136 +91,138 @@ msgid ""
 " with peers to run the execution graph and reports the query result to "
 "SCDB server. SCQLEngine is implemented on top of state-of-the-art MPC "
 "framework `secretflow/spu`_."
-msgstr "SCQLEngine 是一个明密文混合执行引擎，它与参与方协作运行执行图并将查询结果报告给 SCDB 服务器。SCQLEngine 是在最先进的 MPC 框架 `secretflow/spu`_ 的基础上实现的。"
-
-#: ../../getting_started/scql_intro.rst:26
-msgid ""
-"GRM is the abbreviation of :ref:`Global Resource Manager <grm>`, which "
-"manages the information of the participants and the shared table schemas."
-msgstr "GRM 是 Global Resource Manager 的缩写，它管理着参与方和共享的表结构信息。"
+msgstr ""
+"SCQLEngine 是一个明密文混合执行引擎，它与参与方协作运行执行图并将查询结果报告给 SCDB 服务器。SCQLEngine 是在最先进的 "
+"MPC 框架 `secretflow/spu`_ 的基础上实现的。"
 
 #: ../../getting_started/scql_intro.rst:-1
 msgid "SCQL Architecture"
 msgstr "SCQL 架构"
 
-#: ../../getting_started/scql_intro.rst:34
+#: ../../getting_started/scql_intro.rst:33
 msgid "How SCQL Works"
 msgstr "SCQL 如何工作"
 
-#: ../../getting_started/scql_intro.rst:36
+#: ../../getting_started/scql_intro.rst:35
 msgid ""
 "We will show how SCQL works through the life of the following sample SCQL"
 " query Q."
 msgstr "我们将通过以下的 SCQL 查询样本 Q 的整个生命周期来展示 SCQL 是如何工作的。"
 
-#: ../../getting_started/scql_intro.rst:38
+#: ../../getting_started/scql_intro.rst:37
 msgid "SCQL query Q"
 msgstr "SCQL 查询 Q"
 
 #: ../../getting_started/scql_intro.rst:-1
-#: ../../getting_started/scql_intro.rst:48
+#: ../../getting_started/scql_intro.rst:47
 msgid "Table schema"
 msgstr "表的结构"
 
-#: ../../getting_started/scql_intro.rst:50
+#: ../../getting_started/scql_intro.rst:49
 msgid "Let's have a look at the schema of tables involved in the above query Q."
 msgstr "让我们来看看上面查询 Q 中涉及的表的结构。"
 
-#: ../../getting_started/scql_intro.rst:55
+#: ../../getting_started/scql_intro.rst:54
 msgid "``bank_1``"
 msgstr "``bank_1``"
 
-#: ../../getting_started/scql_intro.rst:56
+#: ../../getting_started/scql_intro.rst:55
 msgid ""
 "Party Bank1 owns the table ``bank_1`` in its local database ``DB1``, "
 "which has two columns ``customer_id`` and ``deposit``."
-msgstr "参与方 Bank1 在其本地数据库 ``DB1`` 中有张表 ``bank_1``，该数据表有两列分别是 ``customer_id`` 和 ``deposit``。"
+msgstr ""
+"参与方 Bank1 在其本地数据库 ``DB1`` 中有张表 ``bank_1``，该数据表有两列分别是 ``customer_id`` 和 "
+"``deposit``。"
 
-#: ../../getting_started/scql_intro.rst:59
+#: ../../getting_started/scql_intro.rst:58
 msgid "``bank_2``"
 msgstr "``bank_2``"
 
-#: ../../getting_started/scql_intro.rst:58
+#: ../../getting_started/scql_intro.rst:57
 msgid ""
 "Party Bank2 owns the table ``bank_2`` in its local database ``DB2``, "
 "which has two columns ``customer_id`` and ``loan``."
-msgstr "参与方 Bank2 在其本地数据库 ``DB2`` 中有张表 ``bank_2``，该数据表有两列分别是 ``customer_id`` 和 ``loan``。"
+msgstr ""
+"参与方 Bank2 在其本地数据库 ``DB2`` 中有张表 ``bank_2``，该数据表有两列分别是 ``customer_id`` 和 "
+"``loan``。"
 
-#: ../../getting_started/scql_intro.rst:62
+#: ../../getting_started/scql_intro.rst:61
 msgid ""
 "The table metadata, such as the table owner and table schema, needs to be"
 " registered in GRM, so that SCDB could retrieve the table schema and "
 "resolve the table reference. For example, SCDB would resolve ``table_1`` "
 "into ``DB1.bank_1`` in party Bank1."
-msgstr "表的元数据，例如表的所有者和表的结构，需要在 GRM 中注册，以便 SCDB 可以获取表结构并解析表引用。例如，SCDB 会将 ``table_1`` 解析为参与方 Bank1 中的 ``DB1.bank_1``。"
+msgstr ""
+"表的元数据，例如表的所有者和表的结构，需要在 GRM 中注册，以便 SCDB 可以获取表结构并解析表引用。例如，SCDB 会将 "
+"``table_1`` 解析为参与方 Bank1 中的 ``DB1.bank_1``。"
 
-#: ../../getting_started/scql_intro.rst:66
+#: ../../getting_started/scql_intro.rst:65
 msgid "Column Control List (CCL)"
 msgstr "列控制列表（CCL）"
 
-#: ../../getting_started/scql_intro.rst:68
+#: ../../getting_started/scql_intro.rst:67
 msgid "CCL Form: ``<src_column, dest_party, constraint>``"
 msgstr "CCL 格式: ``<src_column, dest_party, constraint>``"
 
-#: ../../getting_started/scql_intro.rst:70
+#: ../../getting_started/scql_intro.rst:69
 msgid ""
 "It means ``src_column`` is accessible to ``dest_party`` with the "
 "``constraint``."
 msgstr "它表示 ``src_column`` 可以被 ``dest_party`` 在满足 ``constraint`` 的条件下访问。"
 
-#: ../../getting_started/scql_intro.rst:72
+#: ../../getting_started/scql_intro.rst:71
 msgid ""
 "To make the query Q pass the CCL validation, data owner should grant the "
 "following CCL."
 msgstr "为了使查询 Q 通过 CCL 验证，数据所有者应该授予以下 CCL。"
 
-#: ../../getting_started/scql_intro.rst:78
+#: ../../getting_started/scql_intro.rst:77
 msgid "Bank1"
 msgstr "Bank1"
 
-#: ../../getting_started/scql_intro.rst:75
+#: ../../getting_started/scql_intro.rst:74
 msgid "``<bank_1.customer_id, Bank1, PLAINTEXT>``"
 msgstr "``<bank_1.customer_id, Bank1, PLAINTEXT>``"
 
-#: ../../getting_started/scql_intro.rst:76
+#: ../../getting_started/scql_intro.rst:75
 msgid "``<bank_1.deposit, Bank1, PLAINTEXT>``"
 msgstr "``<bank_1.deposit, Bank1, PLAINTEXT>``"
 
-#: ../../getting_started/scql_intro.rst:77
+#: ../../getting_started/scql_intro.rst:76
 msgid "``<bank_1.customer_id, Bank2, PLAINTEXT_AFTER_JOIN>``"
 msgstr "``<bank_1.customer_id, Bank2, PLAINTEXT_AFTER_JOIN>``"
 
-#: ../../getting_started/scql_intro.rst:78
+#: ../../getting_started/scql_intro.rst:77
 msgid "``<bank_1.deposit, Bank2, PLAINTEXT_AFTER_AGGREGATE>``"
 msgstr "``<bank_1.deposit, Bank2, PLAINTEXT_AFTER_AGGREGATE>``"
 
-#: ../../getting_started/scql_intro.rst:84
+#: ../../getting_started/scql_intro.rst:83
 msgid "Bank2"
 msgstr "Bank2"
 
-#: ../../getting_started/scql_intro.rst:81
+#: ../../getting_started/scql_intro.rst:80
 msgid "``<bank_2.customer_id, Bank2, PLAINTEXT>``"
 msgstr "``<bank_2.customer_id, Bank2, PLAINTEXT>``"
 
-#: ../../getting_started/scql_intro.rst:82
+#: ../../getting_started/scql_intro.rst:81
 msgid "``<bank_2.loan, Bank2, PLAINTEXT>``"
 msgstr "``<bank_2.loan, Bank2, PLAINTEXT>``"
 
-#: ../../getting_started/scql_intro.rst:83
+#: ../../getting_started/scql_intro.rst:82
 msgid "``<bank_2.customer_id, Bank1, PLAINTEXT_AFTER_JOIN>``"
 msgstr "``<bank_2.customer_id, Bank1, PLAINTEXT_AFTER_JOIN>``"
 
-#: ../../getting_started/scql_intro.rst:84
+#: ../../getting_started/scql_intro.rst:83
 msgid "``<bank_2.loan, Bank1, PLAINTEXT_AFTER_AGGREGATE>``"
 msgstr "``<bank_2.loan, Bank1, PLAINTEXT_AFTER_AGGREGATE>``"
 
-#: ../../getting_started/scql_intro.rst:87
+#: ../../getting_started/scql_intro.rst:86
 msgid ""
 "To learn more about CCL, please read the doc "
 ":ref:`/reference/scql_ccl_intro.rst`."
 msgstr "要了解更多关于 CCL 的信息，请阅读文档 :ref:`/reference/scql_ccl_intro.rst`。"
 
-#: ../../getting_started/scql_intro.rst:92
+#: ../../getting_started/scql_intro.rst:91
 msgid "Lifetime of SCQL query"
 msgstr "SCQL 查询的生命周期"
 
@@ -226,22 +230,22 @@ msgstr "SCQL 查询的生命周期"
 msgid "SCQL Workflow"
 msgstr "SCQL 工作流"
 
-#: ../../getting_started/scql_intro.rst:98
+#: ../../getting_started/scql_intro.rst:97
 msgid "Step1. Initialize a Session"
 msgstr "步骤1. 初始化会话"
 
-#: ../../getting_started/scql_intro.rst:100
+#: ../../getting_started/scql_intro.rst:99
 msgid ""
 "SCDB creates a new session for the incoming query, and then authenticates"
 " the identity of the query issuer. It will reject the request if "
 "authentication fails."
 msgstr "SCDB 为传入的查询创建一个新的会话，然后验证查询发出者的身份。如果认证失败，它将拒绝该请求。"
 
-#: ../../getting_started/scql_intro.rst:104
+#: ../../getting_started/scql_intro.rst:103
 msgid "Step2. Parse and Plan Q"
 msgstr "步骤2. 解析和规划 Q"
 
-#: ../../getting_started/scql_intro.rst:106
+#: ../../getting_started/scql_intro.rst:105
 msgid ""
 "Parser will parse Q into an AST(Abstract Syntax Tree), and then Planner "
 "converts it into a Logical Plan."
@@ -251,26 +255,28 @@ msgstr "Parser 将 Q 解析为 AST（抽象语法树），然后 Planner 将其�
 msgid "Logical Plan for Q"
 msgstr "Q 的逻辑计划"
 
-#: ../../getting_started/scql_intro.rst:113
+#: ../../getting_started/scql_intro.rst:112
 msgid "Step3. Translate"
 msgstr "步骤3. 翻译"
 
-#: ../../getting_started/scql_intro.rst:116
+#: ../../getting_started/scql_intro.rst:115
 msgid "Step3.1 Build and Check CCL"
 msgstr "步骤3.1 建立和检查 CCL"
 
-#: ../../getting_started/scql_intro.rst:118
+#: ../../getting_started/scql_intro.rst:117
 msgid ""
 "Translator needs to retrieve CCL from CCL manager, it will build CCL "
 "along the logical plan and verify the CCL of root node to ensure Q is "
 "legal on data owners' constraints."
-msgstr "Translator 需要从 CCL 管理器检索 CCL，它将根据逻辑计划构建 CCL，并验证根节点的 CCL，以确保 Q 在数据所有者的约束下是合法的。"
+msgstr ""
+"Translator 需要从 CCL 管理器检索 CCL，它将根据逻辑计划构建 CCL，并验证根节点的 CCL，以确保 Q "
+"在数据所有者的约束下是合法的。"
 
-#: ../../getting_started/scql_intro.rst:122
+#: ../../getting_started/scql_intro.rst:121
 msgid "Step3.2 Translate"
 msgstr "步骤3.2 翻译"
 
-#: ../../getting_started/scql_intro.rst:124
+#: ../../getting_started/scql_intro.rst:123
 msgid ""
 "The translator takes the logical plan and CCL as inputs and generates an "
 "execution graph for the query Q as follows."
@@ -278,13 +284,13 @@ msgstr "翻译器将逻辑计划和 CCL 作为输入，并生成查询 Q 的执�
 
 #: ../../getting_started/scql_intro.rst:-1
 msgid "Execution Graph for Q"
-msgstr ""
+msgstr "Q 的执行图"
 
-#: ../../getting_started/scql_intro.rst:131
+#: ../../getting_started/scql_intro.rst:130
 msgid "Step4. Optimize and Split Graph"
 msgstr "步骤4. 图优化和拆分"
 
-#: ../../getting_started/scql_intro.rst:133
+#: ../../getting_started/scql_intro.rst:132
 msgid ""
 "The graph optimizer will optimize the execution graph, such as node "
 "fusion and replicated node elimination. The optimized execution graph is "
@@ -296,13 +302,21 @@ msgstr "图优化器将对执行图进行优化，如节点融合和重复节点
 msgid "subgraphs"
 msgstr "子图"
 
-#: ../../getting_started/scql_intro.rst:141
+#: ../../getting_started/scql_intro.rst:140
 msgid "Step5. Execute"
 msgstr "步骤5. 执行"
 
-#: ../../getting_started/scql_intro.rst:143
+#: ../../getting_started/scql_intro.rst:142
 msgid ""
 "SCDB sends the subgraphs to corresponding SCQLEngine nodes, SCQLEngine "
 "cooperates with peers to run the execution graph and reports the final "
 "result of Q to SCDB."
 msgstr "SCDB 将子图发送到相应的 SCQLEngine 节点，SCQLEngine 与参与方协助运行执行图，并将 Q 的最终结果报告给 SCDB。"
+
+#~ msgid ""
+#~ "GRM is the abbreviation of :ref:`Global"
+#~ " Resource Manager <grm>`, which manages "
+#~ "the information of the participants and"
+#~ " the shared table schemas."
+#~ msgstr "GRM 是 Global Resource Manager 的缩写，它管理着参与方和共享的表结构信息。"
+
