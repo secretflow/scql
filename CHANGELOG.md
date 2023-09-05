@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
  - Speed up GROUP BY with HEU in some scenarios.
  - Optimized to support billion-level PSI scenarios.
- - Drop GRM from SCQL awareness. We extend the syntax of  create user statement and modify the syntax of create table statement.
+ - Drop GRM from SCQL awareness. We extend the syntax of create user statement and modify the syntax of create table statement.
  - Used json string format to configure spu runtime in scdb yaml conf.
  - Speed up JOIN, IN with Unbalanced PSI in scenarios with unbalanced data.
 
