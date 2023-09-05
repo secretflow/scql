@@ -67,7 +67,14 @@ subjectKeyIdentifier = hash
 authorityKeyIdentifier = keyid:always
 basicConstraints = critical, CA:true
 keyUsage = critical, digitalSignature, keyEncipherment, keyCertSign
-subjectAltName = DNS:localhost,DNS:scdb,DNS:engine_alice,DNS:engine_bob,DNS:engine_carol
+subjectAltName = @sans
+[sans]
+DNS.1 = localhost
+DNS.2 = scdb
+DNS.3 = engine_alice
+DNS.4 = engine_bob
+DNS.5 = engine_carol
+IP.1 = 127.0.0.1
 EOF
 
 # Use existing root CA if present
@@ -130,7 +137,7 @@ for TYPE in scdb engine_alice engine_bob engine_carol; do
                  -cert intermediate-ca.pem \
                  -config .ca/config \
                  -extensions v3_ca
-        
+
   cat ${TYPE}-ca.pem \
       intermediate-ca.pem \
       root-ca.pem > ${TYPE}-ca.crt
