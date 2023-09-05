@@ -66,13 +66,6 @@ def parse_json(source_file: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="parameters")
     parser.add_argument(
-        "--type",
-        "-t",
-        type=str,
-        help="data: mock data; grm: mock grm.json",
-        default="data",
-    )
-    parser.add_argument(
         "--dest_data",
         "-dd",
         type=str,
@@ -88,12 +81,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--rows", "-r", type=int, help="rows of table", default=600)
     args = vars(parser.parse_args())
-    run_type = args["type"]
     source = args["source"]
     rows = args["rows"]
     data_dest = args["dest_data"]
-    grm_dest = args["dest_grm_file"]
-    if run_type == "data":
-        create_mock_data(source, rows, data_dest)
-    else:
-        os._exit("invalid type, please use -h to see which type you need")
+    create_mock_data(source, rows, data_dest)
