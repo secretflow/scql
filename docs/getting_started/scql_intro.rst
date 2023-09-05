@@ -57,10 +57,6 @@ Let's have a look at the schema of tables involved in the above query Q.
     Party Bank2 owns the table ``bank_2`` in its local database ``DB2``, which has two columns ``customer_id`` and ``loan``.
 
 
-.. note:: 
-    The table metadata, such as the table owner and table schema, needs to be registered in GRM, so that SCDB could retrieve the table schema and resolve the table reference. For example, SCDB would resolve ``table_1`` into ``DB1.bank_1`` in party Bank1.
-
-
 Column Control List (CCL)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
