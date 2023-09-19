@@ -148,7 +148,8 @@ jobs:
             - run:
                 name: "Install homebrew dependencies"
                 command: |
-                  brew install bazel cmake ninja libomp wget go md5sha1sum
+                  brew install bazel cmake ninja libomp wget go@1.19 md5sha1sum
+                  brew link go@1.19
                   (cd /opt/homebrew/Cellar/bazel/*.*.*/libexec/bin && curl -fLO https://github.com/bazelbuild/bazel/releases/download/5.4.1/bazel-5.4.1-darwin-arm64 && chmod +x bazel-5.4.1-darwin-arm64)
             - run:
                 name: "Engine Test"
