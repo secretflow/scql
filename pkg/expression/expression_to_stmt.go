@@ -139,7 +139,7 @@ func (c ExprConverter) convertScalarFunction(dialect format.Dialect, expr *Scala
 		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
 	case ast.If:
 		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
-	case ast.Cos, ast.Abs, ast.Round, ast.Log10, ast.Ceil, ast.Floor, ast.Instr:
+	case ast.Cos, ast.Abs, ast.Round, ast.Log10, ast.Ceil, ast.Floor, ast.Instr, ast.Length:
 		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
 	}
 	switch expr.Function.(type) {
