@@ -151,7 +151,7 @@ void MuxLinkChannel::SendChunked(const std::string& key,
   const size_t num_bytes = value.size();
   const size_t num_chunks = (num_bytes + bytes_per_chunk - 1) / bytes_per_chunk;
 
-  constexpr uint32_t kParallelSize = 10;
+  constexpr uint32_t kParallelSize = 5;
   const size_t batch_size = kParallelSize;
   const size_t num_batches = (num_chunks + batch_size - 1) / batch_size;
 

@@ -22,6 +22,7 @@
 namespace scql::engine {
 
 bool LogicalRetryPolicy::DoRetry(const brpc::Controller* cntl) const {
+  bool need_retry = false;
   if (cntl->ErrorCode() == 0) {
     auto response = dynamic_cast<link::pb::MuxPushResponse*>(cntl->response());
     if (!response) {
@@ -35,16 +36,22 @@ bool LogicalRetryPolicy::DoRetry(const brpc::Controller* cntl) const {
       SPDLOG_DEBUG(
           "response not success for unknown reasons, retry after sleep");
       cntl->response()->Clear();
-      bthread_usleep(retry_delay_ns_);
-      return true;
+      need_retry = true;
     } else {
       // default no retry for  other response error.
       return false;
     }
   }
 
-  // leave others to brpc::DefaultRetryPolicy()
-  return brpc::DefaultRetryPolicy()->DoRetry(cntl);
+  if (!need_retry) {
+    // leave others to brpc::DefaultRetryPolicy()
+    need_retry = brpc::DefaultRetryPolicy()->DoRetry(cntl);
+  }
+  if (need_retry) {
+    SPDLOG_DEBUG("response not success for unknown reasons, retry after sleep");
+    bthread_usleep(retry_delay_ns_);
+  }
+  return need_retry;
 }
 
 static std::unique_ptr<brpc::Authenticator> default_authenticator;
