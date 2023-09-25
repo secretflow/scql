@@ -20,7 +20,7 @@ msgstr ""
 
 #: ../../getting_started/index.rst:4
 msgid "Getting started"
-msgstr "Getting started"
+msgstr "入门指南"
 
 #: ../../getting_started/index.rst:6
 msgid "New to SCQL? This is the Beginner's Guide."
