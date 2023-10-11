@@ -20,7 +20,7 @@ msgstr ""
 
 #: ../../topics/system/usage.rst:2
 msgid "How To Use SCQL"
-msgstr ""
+msgstr "SCQL 使用流程"
 
 #: ../../topics/system/usage.rst:4
 msgid ""

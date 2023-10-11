@@ -20,7 +20,7 @@ msgstr ""
 
 #: ../../topics/system/intro.rst:2
 msgid "SCQL System Overview"
-msgstr ""
+msgstr "SCQL 系统概述"
 
 #: ../../topics/system/intro.rst:4
 msgid ""

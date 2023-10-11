@@ -20,7 +20,7 @@ msgstr ""
 
 #: ../../topics/security/overview.rst:2
 msgid "Security overview"
-msgstr ""
+msgstr "安全性说明"
 
 #: ../../topics/security/overview.rst:5
 msgid "Security Guarantees and Threat Model"
