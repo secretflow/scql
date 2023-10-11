@@ -118,8 +118,8 @@ msgstr ""
 "cluster>`"
 
 #: ../../index.rst:65
-msgid "**Reference**: :doc:`SCQLEngine configuration </reference/engine-config>`"
-msgstr "**参考**：:doc:`SCQLEngine 配置 </reference/engine-config>`"
+msgid "**Reference**: :doc:`SCQL system config </reference/engine-config>`"
+msgstr "**参考**：:doc:`SCQL 系统配置 </reference/engine-config>`"
 
 #: ../../index.rst:70
 msgid "For contributors"

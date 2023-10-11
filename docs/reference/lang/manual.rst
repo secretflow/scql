@@ -1,5 +1,5 @@
-SCQL Manual
-===========
+SCQL Language Manual
+====================
 
 
 .. _scql_data_types:

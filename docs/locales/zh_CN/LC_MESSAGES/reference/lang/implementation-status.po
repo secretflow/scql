@@ -19,8 +19,8 @@ msgstr ""
 "Generated-By: Babel 2.12.1\n"
 
 #: ../../reference/scql_status.rst:2
-msgid "SCQL Implementation Status"
-msgstr "SCQL 实现进度"
+msgid "SCQL Language Implementation Status"
+msgstr "SCQL 方言实现进度"
 
 #: ../../reference/scql_status.rst:5
 msgid "SELECT Statement"

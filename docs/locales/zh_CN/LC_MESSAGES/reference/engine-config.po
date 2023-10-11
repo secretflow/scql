@@ -19,8 +19,8 @@ msgstr ""
 "Generated-By: Babel 2.12.1\n"
 
 #: ../../development/scql_config_manual.rst:3
-msgid "SCQL Config Manual"
-msgstr "SCQL 配置手册"
+msgid "SCQL System Config"
+msgstr "SCQL 系统配置"
 
 #: ../../development/scql_config_manual.rst:5
 msgid ""

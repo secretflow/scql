@@ -63,7 +63,7 @@ Deployment
   :doc:`How to deploy an SCQL cluster </topics/deployment/how-to-deploy-a-cluster>`
 
 - **Reference**:
-  :doc:`SCQLEngine configuration </reference/engine-config>`
+  :doc:`SCQL system config </reference/engine-config>`
 
 
 For contributors

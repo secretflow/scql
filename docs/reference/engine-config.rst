@@ -1,5 +1,5 @@
 ==================
-SCQL Config Manual
+SCQL System Config
 ==================
 
 This configuration manual is designed to help users understand the various configuration options available for the SCQL system. It can be divided into two parts: SCDB configuration options and SCQLEngine configuration options.
@@ -185,11 +185,11 @@ A typical config of storage can be like:
 Config for audit
 ^^^^^^^^^^^^^^^^
 
-Audit log are used to record the SCDB activities during query execution. It has two types: basic audit log and detail audit log. 
+Audit log are used to record the SCDB activities during query execution. It has two types: basic audit log and detail audit log.
 
   The basic audit log are used to record the basic information of a query, such as the result and user information, while the detail audit log records more detailed information such as execution plan and CCL details. you can see `scdb_audit <https://github.com/secretflow/scql/blob/main/pkg/audit/audit.proto>`_ for more information.
 
-When the audit log has reaches the maximum size ( set by ``audit_max_size``), SCDB will save the audit log as ``name-timestamp.ext``, where the `name` is the filename set in ``audit_log_file`` without the extension, `timestamp` is the time at which the log was rotated formatted with local time format of `2006-01-02T15-04-05.000`, 
+When the audit log has reaches the maximum size ( set by ``audit_max_size``), SCDB will save the audit log as ``name-timestamp.ext``, where the `name` is the filename set in ``audit_log_file`` without the extension, `timestamp` is the time at which the log was rotated formatted with local time format of `2006-01-02T15-04-05.000`,
 `ext` is the extension set in ``audit_log_file``.
 
   For example, if ``audit_log_file`` set as `audit/audit.log`, a backup created at 6:30pm on Nov 11 2016 would be saved to `./audit/audit-2016-11-04T18-30-00.000.log`
@@ -442,7 +442,7 @@ If you want to enable SSL in SCQLEngine, add FLAGS as follows. Additionally, it 
 
 Config for audit
 ^^^^^^^^^^^^^^^^
-The audit log in SCQLEngine is used to record the SCQLEngine activities during the execution of tasks from SCDB. Just like the audit in SCDB, it also can be divided into two types: common audit log and detail audit log. 
+The audit log in SCQLEngine is used to record the SCQLEngine activities during the execution of tasks from SCDB. Just like the audit in SCDB, it also can be divided into two types: common audit log and detail audit log.
 
   The common audit is used to record some basic information about a task, while the detail audit is used to record more detailed information of the task. See `engine_audit <https://github.com/secretflow/scql/blob/main/engine/audit/audit.proto>`_ for more information
 

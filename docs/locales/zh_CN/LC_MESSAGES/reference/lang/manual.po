@@ -19,8 +19,8 @@ msgstr ""
 "Generated-By: Babel 2.13.0\n"
 
 #: ../../reference/lang/manual.rst:2
-msgid "SCQL Manual"
-msgstr "SCQL 指南"
+msgid "SCQL Language Manual"
+msgstr "SCQL 方言指南"
 
 #: ../../reference/lang/manual.rst:8
 msgid "SCQL Data Types"
