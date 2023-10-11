@@ -1,0 +1,308 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SCQL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: SCQL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-10-11 20:36+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.13.0\n"
+
+#: ../../topics/ccl/usage.rst:2
+msgid "CCL Setting Suggestions"
+msgstr "CCL 配置建议"
+
+#: ../../topics/ccl/usage.rst:4
+msgid ""
+"This document will give some examples on CCL settings in typical "
+"scenarios. You can set CCL according to your needs in practical "
+"scenarios."
+msgstr "本文档将给出一些典型场景下 CCL 配置示例。在实际场景中您可以根据您的需求进行 CCL 配置。"
+
+#: ../../topics/ccl/usage.rst:7
+msgid "Pre-knowledge"
+msgstr "预备知识"
+
+#: ../../topics/ccl/usage.rst:9
+msgid "What is SCQL CCL? Please read :doc:`/topics/ccl/intro`."
+msgstr "什么是 SCQL CCL？请参阅 :doc:`/topics/ccl/intro`。"
+
+#: ../../topics/ccl/usage.rst:11
+msgid "Grant CCL syntax, please read :ref:`Grant/Revoke CCL<scql_grant_revoke>`."
+msgstr "Grant CCL 语法，请参阅 :ref:`Grant/Revoke CCL<scql_grant_revoke>`。"
+
+#: ../../topics/ccl/usage.rst:14
+msgid "Examples"
+msgstr "示例"
+
+#: ../../topics/ccl/usage.rst:16
+msgid ""
+"This part will give suggestions for CCL settings based on different query"
+" scenario examples."
+msgstr "本小节将根据不同的查询场景示例给出 CCL 配置建议。"
+
+#: ../../topics/ccl/usage.rst:18
+msgid ""
+"Let's take the joint analysis between party Alice and Bob as examples to "
+"illustrate. Party Alice owns table ``t1`` which has fields ``id``, "
+"``credit_rank``, ``income``, ``join_date`` and ``age``.  Party Bob owns "
+"table ``t2`` which has fields ``id``, ``age``, ``order_amount``, "
+"``is_active``, ``admin_date``, ``out_date``."
+msgstr ""
+"下面以 Alice 和 Bob 的联合分析为例进行说明，参与方 Alice 拥有表 ``t1``，该表包含字段 "
+"``id``，``credit_rank``，``income``，``join_date`` 和 ``age``。参与方 Bob 拥有表 "
+"``t2``，该表包含字段 "
+"``id``，``age``，``order_amount``，``is_active``，``admin_date``，``out_date``。"
+
+#: ../../topics/ccl/usage.rst:20
+msgid "We represent the CCL settings with a 3-tuple form as follows."
+msgstr "如下所示，我们以三元组的形式展示 CCL 配置。"
+
+#: ../../topics/ccl/usage.rst:22
+msgid "``<src_column, dest_party, constraint>``"
+msgstr "``<src_column, dest_party, constraint>``"
+
+#: ../../topics/ccl/usage.rst:24
+msgid ""
+"It means ``src_column`` is accessible to ``dest_party`` with the "
+"``constraint``. If multiple columns have the same CCL for a party, it "
+"will be abbreviated as follows."
+msgstr ""
+"这意味着 ``dest_party`` 对 ``src_column`` 的访问约束为 ``constraint``。若参与方存在多列相同的 "
+"CCL，它将缩写为如下形式。"
+
+#: ../../topics/ccl/usage.rst:27
+msgid "``<[src_column1,src_column2,...], dest_party, constraint>``."
+msgstr "``<[src_column1,src_column2,...], dest_party, constraint>``。"
+
+#: ../../topics/ccl/usage.rst:30
+msgid "Get Intersection Case"
+msgstr "求交场景"
+
+#: ../../topics/ccl/usage.rst:33
+msgid "Get the intersection of ids using join"
+msgstr "使用 join 获取 ids 的交集"
+
+#: ../../topics/ccl/usage.rst:37 ../../topics/ccl/usage.rst:53
+#: ../../topics/ccl/usage.rst:71 ../../topics/ccl/usage.rst:92
+#: ../../topics/ccl/usage.rst:114 ../../topics/ccl/usage.rst:129
+#: ../../topics/ccl/usage.rst:156 ../../topics/ccl/usage.rst:177
+#: ../../topics/ccl/usage.rst:198 ../../topics/ccl/usage.rst:222
+msgid "CCL settings of table t1 at Alice"
+msgstr "Alice 表 t1 的 CCL 配置"
+
+#: ../../topics/ccl/usage.rst:36 ../../topics/ccl/usage.rst:89
+#: ../../topics/ccl/usage.rst:111 ../../topics/ccl/usage.rst:127
+#: ../../topics/ccl/usage.rst:152 ../../topics/ccl/usage.rst:175
+msgid "``<id, Bob, PLAINTEXT_AFTER_JOIN>``"
+msgstr "``<id, Bob, PLAINTEXT_AFTER_JOIN>``"
+
+#: ../../topics/ccl/usage.rst:37 ../../topics/ccl/usage.rst:53
+#: ../../topics/ccl/usage.rst:71
+msgid "``<id, Alice, PLAINTEXT>``"
+msgstr "``<id, Alice, PLAINTEXT>``"
+
+#: ../../topics/ccl/usage.rst:41 ../../topics/ccl/usage.rst:57
+#: ../../topics/ccl/usage.rst:75 ../../topics/ccl/usage.rst:98
+#: ../../topics/ccl/usage.rst:134 ../../topics/ccl/usage.rst:163
+#: ../../topics/ccl/usage.rst:183 ../../topics/ccl/usage.rst:202
+#: ../../topics/ccl/usage.rst:226
+msgid "CCL settings of table t2 at Bob"
+msgstr "Bob 表 t2 的 CCL 配置"
+
+#: ../../topics/ccl/usage.rst:40 ../../topics/ccl/usage.rst:95
+#: ../../topics/ccl/usage.rst:132 ../../topics/ccl/usage.rst:159
+#: ../../topics/ccl/usage.rst:180
+msgid "``<id, Alice, PLAINTEXT_AFTER_JOIN>``"
+msgstr "``<id, Alice, PLAINTEXT_AFTER_JOIN>``"
+
+#: ../../topics/ccl/usage.rst:41 ../../topics/ccl/usage.rst:57
+#: ../../topics/ccl/usage.rst:75
+msgid "``<id, Bob, PLAINTEXT>``"
+msgstr "``<id, Bob, PLAINTEXT>``"
+
+#: ../../topics/ccl/usage.rst:49
+msgid "Get ids both in t1.id and in t2.id using in"
+msgstr "使用 in 获取 t1.id 和 t2.id 中均存在的 id"
+
+#: ../../topics/ccl/usage.rst:52
+msgid "``<id, Bob, PLAINTEXT_AFTER_COMPARE>``"
+msgstr "``<id, Bob, PLAINTEXT_AFTER_COMPARE>``"
+
+#: ../../topics/ccl/usage.rst:56 ../../topics/ccl/usage.rst:74
+msgid "``<id, Alice, PLAINTEXT_AFTER_COMPARE>``"
+msgstr "``<id, Alice, PLAINTEXT_AFTER_COMPARE>``"
+
+#: ../../topics/ccl/usage.rst:67 ../../topics/ccl/usage.rst:106
+msgid "**More restricted CCL**"
+msgstr "**更严格的 CCL**"
+
+#: ../../topics/ccl/usage.rst:70
+msgid "``<id, Bob, ENCRYPTED_ONLY>``"
+msgstr "``<id, Bob, ENCRYPTED_ONLY>``"
+
+#: ../../topics/ccl/usage.rst:83
+msgid "Aggregation Case"
+msgstr "聚合场景"
+
+#: ../../topics/ccl/usage.rst:86
+msgid "Analyze data using aggregation functions with group by"
+msgstr "使用带有 group by 的聚合函数进行数据分析"
+
+#: ../../topics/ccl/usage.rst:90 ../../topics/ccl/usage.rst:112
+#: ../../topics/ccl/usage.rst:153 ../../topics/ccl/usage.rst:197
+#: ../../topics/ccl/usage.rst:221
+msgid "``<[id, age, income, credit_rank], Alice, PLAINTEXT>``"
+msgstr "``<[id, age, income, credit_rank], Alice, PLAINTEXT>``"
+
+#: ../../topics/ccl/usage.rst:91 ../../topics/ccl/usage.rst:129
+msgid "``<[age, income], Bob, PLAINTEXT_AFTER_AGGREGATE>``"
+msgstr "``<[age, income], Bob, PLAINTEXT_AFTER_AGGREGATE>``"
+
+#: ../../topics/ccl/usage.rst:92 ../../topics/ccl/usage.rst:114
+#: ../../topics/ccl/usage.rst:156
+msgid "``<credit_rank, Bob, PLAINTEXT_AFTER_GROUP_BY>``"
+msgstr "``<credit_rank, Bob, PLAINTEXT_AFTER_GROUP_BY>``"
+
+#: ../../topics/ccl/usage.rst:96 ../../topics/ccl/usage.rst:160
+#: ../../topics/ccl/usage.rst:202 ../../topics/ccl/usage.rst:226
+msgid "``<[id, age, order_amount, is_active], Bob, PLAINTEXT>``"
+msgstr "``<[id, age, order_amount, is_active], Bob, PLAINTEXT>``"
+
+#: ../../topics/ccl/usage.rst:97 ../../topics/ccl/usage.rst:134
+msgid "``<[age, order_amount], Alice, PLAINTEXT_AFTER_AGGREGATE>``"
+msgstr "``<[age, order_amount], Alice, PLAINTEXT_AFTER_AGGREGATE>``"
+
+#: ../../topics/ccl/usage.rst:98 ../../topics/ccl/usage.rst:163
+msgid "``<is_active, Alice, PLAINTEXT_AFTER_GROUP_BY>``"
+msgstr "``<is_active, Alice, PLAINTEXT_AFTER_GROUP_BY>``"
+
+#: ../../topics/ccl/usage.rst:108
+msgid ""
+"If Alice don't want to reveal age/income info to Bob, just set group "
+"keys' CCL constraint to ``ENCRYPTED_ONLY``. Bob's CCL settings remain the"
+" same as before, modify the CCL settings of Alice to the following "
+"configuration"
+msgstr ""
+"如果 Alice 不希望将 age/income 信息泄露给 Bob，那么 Alice 仅需将 group by key 的 CCL 约束设置为 "
+"``ENCRYPTED_ONLY``。Bob 的 CCL 配置与先前配置保持一致，并按照如下设定修改 Alice 的 CCL 配置即可。"
+
+#: ../../topics/ccl/usage.rst:113
+msgid "``<[age, income], Bob, ENCRYPTED_ONLY>``"
+msgstr "``<[age, income], Bob, ENCRYPTED_ONLY>``"
+
+#: ../../topics/ccl/usage.rst:124
+msgid "Analyze data using aggregation functions without group by"
+msgstr "使用不带有 group by 的聚合函数进行数据分析"
+
+#: ../../topics/ccl/usage.rst:128
+msgid "``<[id, age, income], Alice, PLAINTEXT>``"
+msgstr "``<[id, age, income], Alice, PLAINTEXT>``"
+
+#: ../../topics/ccl/usage.rst:133
+msgid "``<[id, age, order_amount], Bob, PLAINTEXT>``"
+msgstr "``<[id, age, order_amount], Bob, PLAINTEXT>``"
+
+#: ../../topics/ccl/usage.rst:136
+msgid "**Queries without group by**"
+msgstr "**不使用 group by 的查询**"
+
+#: ../../topics/ccl/usage.rst:146
+msgid "Filter data before analyzing it"
+msgstr "在分析之前进行数据过滤"
+
+#: ../../topics/ccl/usage.rst:149
+msgid "Case 1: Filter data"
+msgstr "场景 1：数据过滤"
+
+#: ../../topics/ccl/usage.rst:154
+msgid "``<age, Bob, PLAINTEXT_AFTER_COMPARE>``"
+msgstr "``<age, Bob, PLAINTEXT_AFTER_COMPARE>``"
+
+#: ../../topics/ccl/usage.rst:155
+msgid "``<income, Bob, PLAINTEXT_AFTER_AGGREGATE>``"
+msgstr "``<income, Bob, PLAINTEXT_AFTER_AGGREGATE>``"
+
+#: ../../topics/ccl/usage.rst:161
+msgid "``<age, Alice, PLAINTEXT_AFTER_COMPARE>``"
+msgstr "``<age, Alice, PLAINTEXT_AFTER_COMPARE>``"
+
+#: ../../topics/ccl/usage.rst:162
+msgid "``<order_amount, Alice, PLAINTEXT_AFTER_AGGREGATE>``"
+msgstr "``<order_amount, Alice, PLAINTEXT_AFTER_AGGREGATE>``"
+
+#: ../../topics/ccl/usage.rst:172
+msgid "Case 2: Get the results of compare operators"
+msgstr "场景 2：获取比较运算操作的结果"
+
+#: ../../topics/ccl/usage.rst:176
+msgid "``<[id, income, join_date], Alice, PLAINTEXT>``"
+msgstr "``<[id, income, join_date], Alice, PLAINTEXT>``"
+
+#: ../../topics/ccl/usage.rst:177
+msgid "``<[join_date, income], Bob, PLAINTEXT_AFTER_COMPARE>``"
+msgstr "``<[join_date, income], Bob, PLAINTEXT_AFTER_COMPARE>``"
+
+#: ../../topics/ccl/usage.rst:181
+msgid "``<[id, age, order_amount, admin_date, out_date], Bob, PLAINTEXT>``"
+msgstr "``<[id, age, order_amount, admin_date, out_date], Bob, PLAINTEXT>``"
+
+#: ../../topics/ccl/usage.rst:182
+msgid "``<[age, admin_date, out_date], Alice, ENCRYPTED_ONLY>``"
+msgstr "``<[age, admin_date, out_date], Alice, ENCRYPTED_ONLY>``"
+
+#: ../../topics/ccl/usage.rst:183
+msgid "``<order_amount, Alice, PLAINTEXT_AFTER_COMPARE>``"
+msgstr "``<order_amount, Alice, PLAINTEXT_AFTER_COMPARE>``"
+
+#: ../../topics/ccl/usage.rst:192
+msgid "Data Insensitive Case/Test Case"
+msgstr "非敏感数据场景/测试场景"
+
+#: ../../topics/ccl/usage.rst:194
+msgid ""
+"If the data is not sensitive or test case, you can set all data to "
+"PLAINTEXT, then almost all queries will not be rejected by checking CCL. "
+"But you have to be careful, otherwise other users can easily select all "
+"your data."
+msgstr ""
+"如果数据并非敏感或者仅是测试用例，您可以将所有数据设置为 PLAINTEXT，那么几乎所有的查询都不会被 CCL checking "
+"所拒绝。但是进行这样的配置时应该格外小心，否则其他用户可以很容易选择到您的所有数据。"
+
+#: ../../topics/ccl/usage.rst:198
+msgid "``<[id, age, income, credit_rank], Bob, PLAINTEXT>``"
+msgstr "``<[id, age, income, credit_rank], Bob, PLAINTEXT>``"
+
+#: ../../topics/ccl/usage.rst:201
+msgid "``<[id, age, order_amount, is_active], Alice, PLAINTEXT>``"
+msgstr "``<[id, age, order_amount, is_active], Alice, PLAINTEXT>``"
+
+#: ../../topics/ccl/usage.rst:216
+msgid "Encrypt Case"
+msgstr "Encrypt CCL 场景"
+
+#: ../../topics/ccl/usage.rst:218
+msgid ""
+"If you think the data is very sensitive, then you can set them as "
+"``ENCRYPTED_ONLY``, then only aggregation function count can be "
+"performed."
+msgstr "如果您认为数据极度敏感，那么您应当将这些数据设置为 ``ENCRYPTED_ONLY``， 这样的设定下仅能执行聚合函数的 count 操作。"
+
+#: ../../topics/ccl/usage.rst:222
+msgid "``<[id, age, income, credit_rank], Bob, ENCRYPTED_ONLY>``"
+msgstr "``<[id, age, income, credit_rank], Bob, ENCRYPTED_ONLY>``"
+
+#: ../../topics/ccl/usage.rst:225
+msgid "``<[id, age, order_amount, is_active], Alice, ENCRYPTED_ONLY>``"
+msgstr "``<[id, age, order_amount, is_active], Alice, ENCRYPTED_ONLY>``"
+

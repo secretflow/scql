@@ -1,0 +1,94 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SCQL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: SCQL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-10-11 20:36+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.13.0\n"
+
+#: ../../topics/clients/overview.rst:2
+msgid "How To Integrate SCQL System"
+msgstr "如何集成 SCQL 系统"
+
+#: ../../topics/clients/overview.rst:5
+msgid "Overview"
+msgstr "概述"
+
+#: ../../topics/clients/overview.rst:7
+msgid "As shown in FIG, SCQL System needs to work with **Client**:"
+msgstr "如图所示，SCQL 系统需要与 **客户端（Client）** 配合工作："
+
+#: ../../topics/clients/overview.rst:9
+msgid "Client: user interface designed for query submission and result retrieval."
+msgstr "客户端（Client）：为提交查询、获取结果而设计的用户接口。"
+
+#: ../../topics/clients/overview.rst:13
+msgid "Therefore the platform should support Client to integrate SCQL System."
+msgstr "因此，平台应该提供客户端（Client）来集成 SCQL 系统。"
+
+#: ../../topics/clients/overview.rst:15
+msgid "Specifically, the Client interact with SCDB through Query API."
+msgstr "具体来说，客户端（Client）通过查询 API 与 SCDB 互动。"
+
+#: ../../topics/clients/overview.rst:18
+msgid "Query API"
+msgstr "查询 API"
+
+#: ../../topics/clients/overview.rst:19
+msgid "For SQL query, SCDB support services:"
+msgstr "对于 SQL 查询，SCDB 支持服务如下："
+
+#: ../../topics/clients/overview.rst:21
+msgid ""
+"Submit: async API, just submit SQL query and return, server listen on "
+"``${SCDBHost}/public/submit_query``"
+msgstr "Submit：异步 API，用于提交 SQL 查询并返回，服务器监听 ``${SCDBHost}/public/submit_query``"
+
+#: ../../topics/clients/overview.rst:22
+msgid ""
+"Fetch: async API, try to get the result of a SQL query, server listen on "
+"``${SCDBHost}/public/fetch_result``"
+msgstr "Fetch：异步 API，尝试获取 SQL 查询的结果，服务器监听 ``${SCDBHost}/public/fetch_result``"
+
+#: ../../topics/clients/overview.rst:23
+msgid ""
+"SubmitAndGet: sync API, submit query and wait to get the query result, "
+"server listen on ``${SCDBHost}/public/submit_and_get``"
+msgstr ""
+"SubmitAndGet：同步 API，提交查询并等待获取查询结果，服务器监听 "
+"``${SCDBHost}/public/submit_and_get``"
+
+#: ../../topics/clients/overview.rst:25
+msgid "Please refer to :doc:`/reference/http-api` for details."
+msgstr "请参考 :doc:`/reference/http-api` 了解详情。"
+
+#: ../../topics/clients/overview.rst:28
+msgid ""
+"Client can choose to support either async or sync API according to "
+"business scenarios:"
+msgstr "客户端（Client）可以根据业务场景选择支持异步或同步 API："
+
+#: ../../topics/clients/overview.rst:30
+msgid ""
+"If the SQL query task might take too much time, it is recommended to use "
+"the async API, otherwise use the sync API for simplicity."
+msgstr "如果 SQL 查询任务可能需要太多时间，建议使用异步 API，否则为了简单起见使用同步 API。"
+
+#: ../../topics/clients/overview.rst:33
+msgid ""
+"In a word, the custom Client should construct HTTP request for user's "
+"SQL, post to SCDB and parse the response from SCDB."
+msgstr "简单来说，自定义客户端（Custom Client）应该为用户的 SQL 构建 HTTP 请求，提交到 SCDB 并解析 SCDB 的响应。"
+

@@ -5,18 +5,19 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: SCQL \n"
+"Project-Id-Version: SCQL\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-03 10:11+0800\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language: zh_CN\n"
+"POT-Creation-Date: 2023-10-11 20:36+0800\n"
+"PO-Revision-Date: 2023-10-11 20:47+0800\n"
+"Last-Translator: \n"
 "Language-Team: zh_CN <LL@li.org>\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
+"Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.12.1\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"Generated-By: Babel 2.13.0\n"
+"X-Generator: Poedit 3.4\n"
 
 #: ../../index.rst:7
 msgid "SCQL Documentation"
@@ -24,13 +25,109 @@ msgstr "SCQL 文档"
 
 #: ../../index.rst:9
 msgid ""
-"Secure Collaborative Query Language (SCQL) is a system that translates "
-"SQL statements into a hybrid MPC-plaintext execution graph and executes "
-"them on a federation of database systems. The MPC framework is powered by"
-" `SPU <https://github.com/secretflow/spu>`_."
+"Secure Collaborative Query Language (SCQL) is a system that translates SQL "
+"statements into a hybrid MPC-plaintext execution graph and executes them on a "
+"federation of database systems. The MPC framework is powered by `SPU <https://"
+"github.com/secretflow/spu>`_."
 msgstr ""
-"Secure Collaborative Query Language (SCQL) 是一种能够将 SQL 语句转换为明密文混合执行图，并在联合数据库系统上执行的系统。"
-"该系统的 MPC 框架由 `SPU <https://github.com/secretflow/spu>`_ 提供支持。"
+"Secure Collaborative Query Language (SCQL) 是一种能够将 SQL 语句转换为明密文混"
+"合执行图，并在联合数据库系统上执行的系统。该系统的 MPC 框架由 `SPU <https://"
+"github.com/secretflow/spu>`_ 提供支持。"
+
+#: ../../index.rst:13
+msgid "Getting started"
+msgstr "开始"
+
+#: ../../index.rst:15
+msgid ""
+"Follow the :doc:`tutorial </intro/tutorial>` and try out SCQL on your machine!"
+msgstr "按照 :doc:`快速教程 </intro/tutorial>` 在本地尝试 SCQL！"
+
+#: ../../index.rst:19
+msgid "SCQL Systems"
+msgstr "SCQL 系统"
+
+#: ../../index.rst:21
+msgid ""
+"**Overview**: :doc:`System overview and architecture </topics/system/intro>` "
+"| :doc:`Common usage </topics/system/usage>`"
+msgstr ""
+"**概述**：:doc:`系统简介及架构设计 </topics/system/intro>` | :doc:`使用流程  </"
+"topics/system/usage>`"
+
+#: ../../index.rst:25
+msgid "**Security**: :doc:`Security overview </topics/security/overview>`"
+msgstr "**安全性**：:doc:`安全性说明 </topics/security/overview>`"
+
+#: ../../index.rst:30
+msgid "The SCQL Language"
+msgstr "SCQL 方言"
+
+#: ../../index.rst:32
+msgid ""
+"**Reference**: :doc:`SCQL language manual </reference/lang/manual>` | :doc:"
+"`Compatibility with MySQL </reference/lang/mysql-compatibility>` | :doc:"
+"`Implementation status </reference/lang/implementation-status>`"
+msgstr ""
+"**参考**：:doc:`SCQL 方言手册 </reference/lang/manual>` | :doc:`与 MySQL 兼容"
+"性 </reference/lang/mysql-compatibility>` | :doc:`实现进度 </reference/lang/"
+"implementation-status>`"
+
+#: ../../index.rst:39
+msgid "Column Control List (CCL)"
+msgstr ""
+
+#: ../../index.rst:41
+msgid "**Overview**: :doc:`Introduction to CCL </topics/ccl/intro>`"
+msgstr "**概述**：:doc:`CCL 机制简介 </topics/ccl/intro>`"
+
+#: ../../index.rst:44
+msgid "**Guides**: :doc:`Common usage and advice </topics/ccl/usage>`"
+msgstr "**指南**：:doc:`CCL 常见用法与建议 </topics/ccl/usage>`"
+
+#: ../../index.rst:47
+msgid ""
+"**Reference**: :ref:`GRANT and REVOKE <scql_grant_revoke>` | :ref:`How CCL "
+"works <how_ccl_works>`"
+msgstr ""
+"**参考**：:ref:`GRANT/REVOKE 语句 <scql_grant_revoke>` | :ref:`如何工作 "
+"<how_ccl_works>`"
+
+#: ../../index.rst:53
+msgid "Clients"
+msgstr "客户端"
+
+#: ../../index.rst:55
+msgid ":doc:`Overview of SCQL clients </topics/clients/overview>`"
+msgstr ":doc:`关于 SCQL 客户端 </topics/clients/overview>`"
+
+#: ../../index.rst:56
+msgid ":doc:`HTTP API reference </reference/http-api>`"
+msgstr ":doc:`HTTP API 参考 </reference/http-api>`"
+
+#: ../../index.rst:60
+msgid "Deployment"
+msgstr "部署"
+
+#: ../../index.rst:62
+msgid ""
+"**Guides**: :doc:`How to deploy an SCQL cluster </topics/deployment/how-to-"
+"deploy-a-cluster>`"
+msgstr ""
+"**指南**：:doc:`如何部署 SCQL 集群 </topics/deployment/how-to-deploy-a-"
+"cluster>`"
+
+#: ../../index.rst:65
+msgid "**Reference**: :doc:`SCQLEngine configuration </reference/engine-config>`"
+msgstr "**参考**：:doc:`SCQLEngine 配置 </reference/engine-config>`"
+
+#: ../../index.rst:70
+msgid "For contributors"
+msgstr "贡献者文档"
+
+#: ../../index.rst:72
+msgid "**Reference**: :doc:`SCQL operators </reference/operators>`"
+msgstr "**参考**：:doc:`SCQL 算子规范 </reference/operators>`"
+
 #~ msgid "Content"
 #~ msgstr "目录"
-

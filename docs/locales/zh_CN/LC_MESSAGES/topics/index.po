@@ -18,23 +18,27 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.13.0\n"
 
-#: ../../reference/index.rst:4
-msgid "SCQL Language"
-msgstr "SCQL 方言"
-
-#: ../../reference/index.rst:12
+#: ../../topics/index.rst:4
 msgid "SCQL System"
 msgstr "SCQL 系统"
 
-#: ../../reference/index.rst:18
-msgid "SCQL Clients"
-msgstr "SCQL 客户端"
+#: ../../topics/index.rst:11
+msgid "Security"
+msgstr "安全性"
 
-#: ../../reference/index.rst:24
-msgid "Internal Reference"
-msgstr "内部开发者参考"
+#: ../../topics/index.rst:17
+msgid "CCL"
+msgstr "CCL"
 
-#: ../../reference/index.rst:2
-msgid "Reference"
-msgstr "参考文档"
+#: ../../topics/index.rst:24
+msgid "Clients"
+msgstr "客户端"
+
+#: ../../topics/index.rst:30
+msgid "Deployment"
+msgstr "部署"
+
+#: ../../topics/index.rst:2
+msgid "Topics"
+msgstr "主题"
 

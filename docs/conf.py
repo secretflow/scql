@@ -29,7 +29,6 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
-
 # -- Project information -----------------------------------------------------
 
 project = "SCQL"
@@ -43,21 +42,20 @@ author = "SCQL authors"
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "sphinx.ext.napoleon",
-    "sphinx.ext.autodoc",
-    "sphinx.ext.todo",
-    "sphinx.ext.viewcode",
-    "sphinx.ext.extlinks",
-    "sphinx.ext.autosectionlabel",
     "myst_parser",
     "nbsphinx",
-    "sphinxcontrib.actdiag",
-    "sphinxcontrib.blockdiag",
-    "sphinxcontrib.nwdiag",
-    "sphinxcontrib.packetdiag",
-    "sphinxcontrib.rackdiag",
-    "sphinxcontrib.seqdiag",
+    "secretflow_doctools",
     "sphinx_design",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosectionlabel",
+    "sphinx.ext.extlinks",
+    "sphinx.ext.graphviz",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.todo",
+    "sphinx.ext.viewcode",
+    "sphinxcontrib.mermaid",
 ]
 
 # Make sure the target is unique
@@ -77,6 +75,7 @@ language = "en"
 locale_dirs = ["./locales/"]  # path is example but recommended.
 gettext_compact = False  # optional.
 gettext_uuid = False  # optional.
+gettext_allow_fuzzy_translations = True
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -86,6 +85,10 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # Enable TODO
 todo_include_todos = True
+
+# The output format for Graphviz when building HTML files. This must be either
+# 'png' or 'svg'; the default is 'png'.
+graphviz_output_format = "svg"
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -139,19 +142,9 @@ myst_enable_extensions = [
     "tasklist",
 ]
 
-suppress_warnings = ["myst.header"]
+suppress_warnings = ["autosectionlabel", "myst.header"]
 
-myst_gfm_only = True
-myst_heading_anchors = 1
-myst_title_to_header = True
-
-
-# app setup hook
-def setup(app):
-    app.add_config_value(
-        "recommonmark_config",
-        {
-            "auto_toc_tree_section": "Contents",
-        },
-        True,
-    )
+# Enable all MyST features
+myst_gfm_only = False
+# Enable anchors for heading level h1 through h6
+myst_heading_anchors = 6

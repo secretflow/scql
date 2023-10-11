@@ -1,0 +1,264 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SCQL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: SCQL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-10-11 20:36+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.13.0\n"
+
+#: ../../topics/security/overview.rst:2
+msgid "Security overview"
+msgstr ""
+
+#: ../../topics/security/overview.rst:5
+msgid "Security Guarantees and Threat Model"
+msgstr "安全保障和威胁模型"
+
+#: ../../topics/security/overview.rst:7
+msgid ""
+"For a single query, SCQL protects the confidentiality of data that meets "
+"the CCL permission requirements during the computation process."
+msgstr "对于单次查询，SCQL 在计算过程中提供满足 CCL 权限要求的数据机密性保护。"
+
+#: ../../topics/security/overview.rst:9
+msgid ""
+"SCQL does not protect queries as queries are designed to be public to all"
+" participants in SCQL. SCQL also does not protect the size (dimension) "
+"information of intermediate computation results."
+msgstr "SCQL 不保护查询语句，因为查询语句对 SCQL 所有的参与方公开。SCQL 也不保护中间计算结果的大小（维度）信息。"
+
+#: ../../topics/security/overview.rst:11
+msgid ""
+"SCQL is built on top of the MPC framework `secretflow/spu`_, using a "
+"semi-honest security model. The SCQL semi-honest model assumes that all "
+"participants, including the query issuer, the data owner (SCQLEngine is "
+"deployed on the data owner) and SCDB server, strictly abide by the "
+"protocol, but may try to learn others' private data from its legitimately"
+" received messages."
+msgstr ""
+"SCQL 构建在 MPC 框架 `secretflow/spu`_ 之上，使用的是 semi-honest 安全模型。SCQL semi-"
+"honest 模型假设所有的参与方，包括查询者，数据拥有方(SCQLEngine 部署在数据拥有方) ，和 SCDB "
+"等都严格遵守协议，但有可能会尝试分析自己得到的中间信息以获得额外的其他参与方的隐私信息。"
+
+#: ../../topics/security/overview.rst:14
+msgid ""
+"If you select the SEMI2K as SCQL's underlying mpc protocol, please make "
+"sure to use the `TrustedThirdParty beaver provider`_ [#f1]_. The other "
+"beaver provider mode `TrustedFirstParty beaver provider`_ should only be "
+"used for debugging and may incur significant security problem in the "
+"production environment."
+msgstr ""
+"如果选择使用 SPU SEMI2K 作为 SCQL 的底层 MPC 协议，请务必使用 `TrustedThirdParty beaver "
+"provider`_ [#f1]_。请勿在生产环境使用 `TrustedFirstParty beaver "
+"provider`_，它可能会造成重大安全问题，建议只用于测试。"
+
+#: ../../topics/security/overview.rst:16
+msgid ""
+"Like all cryptography-based privacy-preserving computing systems, SCQL at"
+" this stage cannot solve the problem of deducing original privacy data "
+"based on the results of legal queries. The current academic solution to "
+"this problem is generally to add noise into data through differential "
+"privacy mechanism. Although the CCL mechanism allows the data owners to "
+"restrict the use of their data, which can alleviate risks to a certain "
+"extent, it cannot completely eliminate the risks. SCQL also does not "
+"solve the problem of participants tampering with their original input to "
+"obtain other participants' private information."
+msgstr ""
+"和所有基于密码学的隐私计算系统一样，现阶段 SCQL 无法解决建立在合法查询结果上的反推原始数据隐私的问题。目前学术界解决该问题的方案一般都是通过"
+" DP 加噪音。虽然 CCL 机制可以让数据 owner 对自己的数据进行使用限制授权，能一定程度地缓解风险，但是不能完全杜绝风险。SCQL "
+"也不解决参与方篡改自己原始输入从而得到其他参与方隐私信息的问题。"
+
+#: ../../topics/security/overview.rst:18
+msgid ""
+"The following chapters will describe possible attack methods for "
+"inferring data from results, and give corresponding suggestions."
+msgstr "下面的章节会介绍可能存在的结果反推攻击方法，并给出相应的建议。"
+
+#: ../../topics/security/overview.rst:22
+msgid "Suggestions on Deployment"
+msgstr "部署建议"
+
+#: ../../topics/security/overview.rst:24
+msgid ""
+"The SCDB Server serves as a central coordination component in the SCQL "
+"system, responsible for translating the query into a hybrid MPC-plaintext"
+" execution graph, and then dispatching it to the SCQLEngines deployed on "
+"each individual participant for execution. The SCDB server is responsible"
+" for generating execution graphs, and it should not be evil. To dispel "
+"participants' concerns about the SCDB server potentially engaging in "
+"malicious behavior, it is recommended to deploy the SCDB server in a "
+"trusted third party."
+msgstr ""
+"SCDB 是 SCQL 系统中的一个中心协调组件，负责将 query 转换成明密文混合的执行图，然后下发给部署在参与方的 SCQLEngines "
+"执行。SCDB 负责生成执行图，是不能作恶的。建议把 SCDB 部署在可信第三方，打消数据参与方对 SCDB 节点作恶的担忧。"
+
+#: ../../topics/security/overview.rst:28
+msgid "Risk Statement and Suggestion for SCQL Result Inversion Attack"
+msgstr "针对 SCQL 的结果反推攻击风险说明及建议"
+
+#: ../../topics/security/overview.rst:30
+msgid ""
+"The query of SCQL could be flexible, adversaries may construct adaptive "
+"attacks using multiple legit queries or one complex query to achieve the "
+"purpose of deriving the original data."
+msgstr "SCQL 的查询灵活多变，攻击者可以使用多次合法查询或一个复杂查询来构建自适应攻击，以达到反推原始数据的目的。"
+
+#: ../../topics/security/overview.rst:34
+msgid "Attack Method 1: Multi-query Attack"
+msgstr "攻击方法一：多次查询攻击"
+
+#: ../../topics/security/overview.rst:36
+msgid ""
+"The multi-query attack method includes two attack ways: (1) One way to "
+"obtain the other party's information is to tamper with the input content "
+"for each query, while keeping the query itself unchanged. For example, "
+"the attacker can obtain all the information of the other party's join key"
+" through multiple join queries and tampering with the content of his join"
+" key each time. (2) Another way is to infer the other party's private "
+"data by rewriting the query each time and comparing the results of "
+"multiple queries. For example, the attacker can use the where condition "
+"to limit the input of the aggregation function. The first time the query "
+"obtains the aggregation result of N pieces of data, the second time by "
+"changing the where condition, the aggregation result of N-1 pieces of "
+"data can be obtained, and then the attacker can obtain the original "
+"information of 1 piece of data by comparing results."
+msgstr ""
+"多次查询攻击方法包含两种攻击方式： (1) 一种方式是查询语句不变，每次查询时篡改输入内容的方式来获取对方信息。比如攻击者可以通过改变自己 "
+"join key 的内容，多次枚举查询来获得对方 join key 的全部信息。 (2) "
+"另一种方式是通过改写每次查询语句，对比多次查询结果来推测对方的隐私数据。比如攻击者可以利用 where 条件限制聚合函数的输入，第一次查询获得 N"
+" 条数据的聚合结果，第二次通过改变 where 条件，获得其中 N-1 条数据的聚合结果，对比结果可以获得其中 1 条记录的明文数据信息。"
+
+#: ../../topics/security/overview.rst:42
+msgid "Attack Method 2: Constructing Complex Query Attack"
+msgstr "攻击方法二：构造复杂查询攻击"
+
+#: ../../topics/security/overview.rst:44
+msgid ""
+"This attack method is similar to the multi-query attack method, and its "
+"core idea is to write multiple queries into one complex query. For "
+"example, the attacker can perform multiple comparisons on a certain "
+"column in one query, and narrow down the range of data to infer the "
+"original data."
+msgstr ""
+"该攻击方法和多次查询攻击方法类似，其核心思想是将多个查询语句写成一个复杂查询语句。 "
+"举个例子，攻击者可以在一个查询语句里对某一列进行多次比较，缩小数据范围来反推原始数据。"
+
+#: ../../topics/security/overview.rst:49
+msgid "Suggestions"
+msgstr "建议"
+
+#: ../../topics/security/overview.rst:51
+msgid ""
+"Each data owner is advised to give careful consideration when setting CCL"
+" for their own data."
+msgstr "数据拥有方在给自己数据设置 CCL 时要慎重考虑；"
+
+#: ../../topics/security/overview.rst:52
+msgid ""
+"When the upstream platform integrates the SCQL system, it's recommended "
+"to add an approval process before running the query. The query is "
+"submitted to SCQL for execution only after it has been reviewed and "
+"confirmed by all data owners."
+msgstr "上游平台在集成 SCQL 时，建议在执行查询前加一个人工审批流程。查询语句只有经过所有数据拥有方的审核确认后，才能提交到 SCQL 执行；"
+
+#: ../../topics/security/overview.rst:53 ../../topics/security/overview.rst:66
+msgid ""
+"It is recommended to add an audit mechanism, analyze historical queries, "
+"and track down information leakage issues."
+msgstr "建议集成事后审计机制，对历史查询的执行情况进行分析，使得可以追踪和发现敏感信息泄露问题。"
+
+#: ../../topics/security/overview.rst:57
+msgid "System Security Configuration Instructions"
+msgstr "系统安全配置说明"
+
+#: ../../topics/security/overview.rst:59
+msgid ""
+"SCQL supports HTTPS protocol, it is recommended to enable HTTPS by "
+"default. Please see :ref:`SCDB TLS Configuration <scdb-tls>` and "
+":ref:`SCQLEngine TLS Configuration <scqlengine-tls>` for details on how "
+"to enable HTTPS for SCDBServer and SCQLEngine."
+msgstr ""
+"SCQL 支持 HTTPS 协议，建议默认开启。有关如何为 SCDB 和 SCQLEngine 启用 HTTPS 的方法详见 :ref:`SCDB"
+" TLS 配置 <scdb-tls>` and :ref:`SCQLEngine TLS 配置 <scqlengine-tls>`。"
+
+#: ../../topics/security/overview.rst:63
+msgid "Suggestions for upstream integrators"
+msgstr "对上游集成方的建议"
+
+#: ../../topics/security/overview.rst:65
+msgid ""
+"It is recommended to add an approval process before submitting any "
+"queries to SCQL for execution."
+msgstr "在向 SCQL 提交查询前，增加数据参与方审批查询语句的流程。"
+
+#: ../../topics/security/overview.rst:67
+msgid ""
+"It is recommended to divide the use of SCQL into two stages: development "
+"stage and production stage, and to adopt different security control "
+"measures."
+msgstr "建议将 SCQL 的使用过程分为研发态和生产态，并采用不同的安全管控措施。"
+
+#: ../../topics/security/overview.rst:69
+msgid ""
+"The development stage refers to the stage where the query is under "
+"development iteration. The data samples used in the development stage "
+"must be small-scale data sets that have been desensitized, de-identified,"
+" anonymized, and added with noise, aiming to quickly build the data "
+"analysis processing flow."
+msgstr ""
+"研发态指 query "
+"处于迭代中的研发模式。研发态中使用的数据样本必须是经过脱敏、去标识化、匿名化、加噪等手段处理后的小规模数据集，旨在快速地构建数据分析处理流程。"
+
+#: ../../topics/security/overview.rst:70
+msgid ""
+"The production stage refers to the joint analysis of the query by "
+"multiple participating parties to ensure that the task is risk-free or "
+"within the acceptance range of multiple participating parties, and is "
+"released for production operation. If the related query needs to be "
+"changed, it needs to go through multi-party audit and evaluation again. "
+"The production stage uses real data, and parties participating in the "
+"joint analysis need to: (1) conduct task evaluation and approval before "
+"the event; (2) ensure task consistency during the event, and suspend the "
+"task in a timely manner if there is any risk; (3) conduct audit after the"
+" event, and ensure that potential data leakage risks can be discovered "
+"and avoided in case of malicious behavior."
+msgstr ""
+"生产态指 query 经过联合分析的多个参与方一起安全审计，确保任务无风险或者风险在多个参与方的接受范围内，并发布在生产上运行。若相关 query"
+" 要变更，需要重新走多方审计评审。生产态使用的数据为真实数据，联合分析的多方需要进行：(1) 事前对任务评审与审批；(2) "
+"事中确保任务一致性，若有风险及时中止任务；(3) 事后进行审计，若发生恶意行为，确保可以发现和规避潜在的数据泄漏风险。"
+
+#: ../../topics/security/overview.rst:75
+msgid "Footnotes"
+msgstr "脚注"
+
+#: ../../topics/security/overview.rst:76
+msgid ""
+"SPU SEMI2K protocol adopts a trusted third party for generating Beaver "
+"triples for efficiency. In the future, we will consider adding a Beaver "
+"provider implementation that does not rely on third parties."
+msgstr ""
+"SPU SEMI2K 协议实现时为了效率采用了可信第三方来生成 Beaver triples，将来会考虑增加不依赖第三方的 Beaver "
+"provider 实现。"
+
+#~ msgid ""
+#~ "When implementing GRM services, it is"
+#~ " recommended to use dynamic tokens to"
+#~ " avoid security issues caused by "
+#~ "static token leakage."
+#~ msgstr "实现 GRM 服务的时候，建议采用动态 token，避免静态 token 泄露导致的安全问题。"
+
+#~ msgid "SCQL Security Statement"
+#~ msgstr "SCQL 安全声明"
+

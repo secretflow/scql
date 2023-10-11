@@ -132,7 +132,7 @@ func main() {
 		}).ParseFiles(fileName)
 	check(err)
 
-	f, err := os.Create("docs/reference/scql_operators.md")
+	f, err := os.Create("docs/reference/operators.md")
 	check(err)
 	err = tmpl.Execute(f, filler)
 	check(err)
