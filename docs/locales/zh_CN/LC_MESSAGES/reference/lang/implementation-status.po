@@ -1,0 +1,223 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SCQL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: SCQL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-09-04 19:31+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.12.1\n"
+
+#: ../../reference/scql_status.rst:2
+msgid "SCQL Language Implementation Status"
+msgstr "SCQL 方言实现进度"
+
+#: ../../reference/scql_status.rst:5
+msgid "SELECT Statement"
+msgstr "SELECT 语句"
+
+#: ../../reference/scql_status.rst:8
+msgid "syntax"
+msgstr "语法"
+
+#: ../../reference/scql_status.rst:8 ../../reference/scql_status.rst:32
+#: ../../reference/scql_status.rst:59
+msgid "supported(fully/partial/no)"
+msgstr "支持程度(完全/部分/未支持)"
+
+#: ../../reference/scql_status.rst:8 ../../reference/scql_status.rst:32
+#: ../../reference/scql_status.rst:59
+msgid "notes"
+msgstr "说明"
+
+#: ../../reference/scql_status.rst:10
+msgid "join"
+msgstr "join"
+
+#: ../../reference/scql_status.rst:10 ../../reference/scql_status.rst:48
+#: ../../reference/scql_status.rst:52 ../../reference/scql_status.rst:63
+#: ../../reference/scql_status.rst:65
+msgid "partial"
+msgstr "部分"
+
+#: ../../reference/scql_status.rst:10
+msgid "keyword ``using`` is not supported yet"
+msgstr "暂不支持关键字 ``using``"
+
+#: ../../reference/scql_status.rst:12
+msgid "where clause"
+msgstr "where 子句"
+
+#: ../../reference/scql_status.rst:12 ../../reference/scql_status.rst:14
+#: ../../reference/scql_status.rst:16 ../../reference/scql_status.rst:18
+#: ../../reference/scql_status.rst:20 ../../reference/scql_status.rst:34
+#: ../../reference/scql_status.rst:36 ../../reference/scql_status.rst:38
+#: ../../reference/scql_status.rst:40 ../../reference/scql_status.rst:42
+#: ../../reference/scql_status.rst:44 ../../reference/scql_status.rst:46
+#: ../../reference/scql_status.rst:50 ../../reference/scql_status.rst:61
+msgid "fully"
+msgstr "完全"
+
+#: ../../reference/scql_status.rst:14
+msgid "group by clause"
+msgstr "group by 子句"
+
+#: ../../reference/scql_status.rst:16
+msgid "having clause"
+msgstr "having 子句"
+
+#: ../../reference/scql_status.rst:18
+msgid "union/union all clause"
+msgstr "union/union all 子句"
+
+#: ../../reference/scql_status.rst:20
+msgid "distinct clause"
+msgstr "distinct 子句"
+
+#: ../../reference/scql_status.rst:22
+msgid "limit clause"
+msgstr "limit 子句"
+
+#: ../../reference/scql_status.rst:22 ../../reference/scql_status.rst:24
+msgid "no"
+msgstr "未支持"
+
+#: ../../reference/scql_status.rst:24
+msgid "order by clause"
+msgstr "order by 子句"
+
+#: ../../reference/scql_status.rst:29 ../../reference/scql_status.rst:32
+msgid "Functions and Operators"
+msgstr "函数和运算符"
+
+#: ../../reference/scql_status.rst:32
+msgid "Category"
+msgstr "类别"
+
+#: ../../reference/scql_status.rst:34 ../../reference/scql_status.rst:36
+#: ../../reference/scql_status.rst:38 ../../reference/scql_status.rst:40
+#: ../../reference/scql_status.rst:42
+msgid "aggregation"
+msgstr "聚合运算"
+
+#: ../../reference/scql_status.rst:34
+msgid "sum"
+msgstr "sum"
+
+#: ../../reference/scql_status.rst:36
+msgid "count"
+msgstr "count"
+
+#: ../../reference/scql_status.rst:38
+msgid "avg"
+msgstr "avg"
+
+#: ../../reference/scql_status.rst:40
+msgid "min"
+msgstr "min"
+
+#: ../../reference/scql_status.rst:42
+msgid "max"
+msgstr "max"
+
+#: ../../reference/scql_status.rst:44
+msgid "arithmetic"
+msgstr "算术运算"
+
+#: ../../reference/scql_status.rst:44
+msgid "+,-,*,/,div"
+msgstr ""
+
+#: ../../reference/scql_status.rst:44
+msgid "div means ``integer division``"
+msgstr "div: 整数除法"
+
+#: ../../reference/scql_status.rst:46
+msgid "logical"
+msgstr "逻辑运算"
+
+#: ../../reference/scql_status.rst:46
+msgid "logical_and,logical_or,not"
+msgstr "logical_and,logical_or,not"
+
+#: ../../reference/scql_status.rst:48 ../../reference/scql_status.rst:50
+msgid "compare"
+msgstr "比较运算"
+
+#: ../../reference/scql_status.rst:48
+msgid "<,<=,>,>="
+msgstr "<,<=,>,>="
+
+#: ../../reference/scql_status.rst:48
+msgid "string data comparison is not supported"
+msgstr "不支持字符串类型数据比较"
+
+#: ../../reference/scql_status.rst:50
+msgid "=, !="
+msgstr "=, !="
+
+#: ../../reference/scql_status.rst:52
+msgid "in"
+msgstr "in"
+
+#: ../../reference/scql_status.rst:52
+msgid "in, not in"
+msgstr "in, not in"
+
+#: ../../reference/scql_status.rst:52
+msgid "all arguments should be of the same type"
+msgstr "所有参数应为同一类型"
+
+#: ../../reference/scql_status.rst:56
+msgid "Data Source"
+msgstr "数据源"
+
+#: ../../reference/scql_status.rst:59
+msgid "Database Type"
+msgstr "数据库类型"
+
+#: ../../reference/scql_status.rst:61
+msgid "MySQL"
+msgstr ""
+
+#: ../../reference/scql_status.rst:63
+msgid "PostgreSQL"
+msgstr ""
+
+#: ../../reference/scql_status.rst:65
+msgid "CSV"
+msgstr ""
+
+#: ../../reference/scql_status.rst:65
+msgid "Data stored in csv files"
+msgstr "数据源为 CSV 文件"
+
+#: ../../reference/scql_status.rst:69
+msgid ""
+"SCQL supports different databases as data source, but there may be minor "
+"differences in the results due to data type differences built in "
+"databases. Please choose backend database with caution."
+msgstr "SCQL 支持不同的数据库作为数据源，但由于数据库内置的数据类型差异，结果可能会存在细微差异。请谨慎选择后端数据库。"
+
+#~ msgid "union"
+#~ msgstr "union"
+
+#~ msgid "coming soon"
+#~ msgstr "即将支持"
+
+#~ msgid "add,minus,mul,div,intdiv"
+#~ msgstr "add,minus,mul,div,intdiv"
+
+#~ msgid "- currently only inner join is supported"
+#~ msgstr "当前仅支持 inner join"
+

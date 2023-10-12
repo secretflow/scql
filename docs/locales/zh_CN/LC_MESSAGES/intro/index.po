@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-12 08:10+0800\n"
+"POT-Creation-Date: 2023-10-11 20:36+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -18,23 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.13.0\n"
 
-#: ../../reference/index.rst:4
-msgid "Language"
-msgstr "语言"
-
-#: ../../reference/index.rst:11
-msgid "System"
-msgstr "系统"
-
-#: ../../reference/index.rst:17
-msgid "Clients"
-msgstr "客户端"
-
-#: ../../reference/index.rst:23
-msgid "Internal Reference"
-msgstr "内部开发者参考"
-
-#: ../../reference/index.rst:2
-msgid "Reference"
-msgstr "参考文档"
+#: ../../intro/index.rst:2
+msgid "Introduction"
+msgstr "介绍"
 

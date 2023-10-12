@@ -1,0 +1,246 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SCQL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: SCQL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-10-12 08:10+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.13.0\n"
+
+#: ../../reference/lang/mysql-compatibility.rst:2
+msgid "MySQL Compatibility"
+msgstr "与 MySQL 的兼容性"
+
+#: ../../reference/lang/mysql-compatibility.rst:4
+msgid ""
+"SCQL is highly compatible with MySQL, but there are still some syntax "
+"differences."
+msgstr "SCQL 与 MySQL 高度兼容，但仍有一些语法差异。"
+
+#: ../../reference/lang/mysql-compatibility.rst:7
+msgid "Unsupported Features"
+msgstr "不支持的功能"
+
+#: ../../reference/lang/mysql-compatibility.rst:9
+msgid "Partition table"
+msgstr "分区表"
+
+#: ../../reference/lang/mysql-compatibility.rst:10
+msgid "Character sets"
+msgstr "字符集"
+
+#: ../../reference/lang/mysql-compatibility.rst:11
+msgid "User-defined functions"
+msgstr "用户自定义的函数"
+
+#: ../../reference/lang/mysql-compatibility.rst:12
+msgid "TCL(Transaction Control Language)"
+msgstr "TCL（事务控制语言）"
+
+#: ../../reference/lang/mysql-compatibility.rst:13
+msgid "DML(Data Manipulation Language)"
+msgstr "DML（数据操作语言）"
+
+#: ../../reference/lang/mysql-compatibility.rst:16
+msgid "Features that are different from MySQL"
+msgstr "与 MySQL 存在语法差异的功能"
+
+#: ../../reference/lang/mysql-compatibility.rst:19
+msgid "DDL(Data Definition Language)"
+msgstr "DDL（数据定义语言）"
+
+#: ../../reference/lang/mysql-compatibility.rst:22
+msgid "CREATE Table"
+msgstr "创建表"
+
+#: ../../reference/lang/mysql-compatibility.rst:23
+msgid ""
+"The Table created in SCQL is a virtual Table and needs to be mapped to "
+"the actual Table, so we extend the statement to transfer the mapping "
+"information. For more information, please read "
+":doc:`/reference/lang/manual`."
+msgstr ""
+"SCQL 中创建的 Table 是一个虚拟 Table，需要映射到实际 Table，所以我们扩展该语句来传递映射信息。更多信息，请阅读 "
+":doc:`/reference/lang/manual`。"
+
+#: ../../reference/lang/mysql-compatibility.rst:27
+msgid "DQL(Data Query Language)"
+msgstr "DQL（数据查询语言）"
+
+#: ../../reference/lang/mysql-compatibility.rst:29
+msgid ""
+"About implementation status, please read :doc:`/reference/implementation-"
+"status`."
+msgstr "关于实现的具体情况，请阅读 :doc:`/reference/implementation-status`。"
+
+#: ../../reference/lang/mysql-compatibility.rst:32
+msgid "Type Null is unsupported in SCQL."
+msgstr "SCQL 不支持 Null 类型。"
+
+#: ../../reference/lang/mysql-compatibility.rst:35
+msgid "Functions different from MySQL"
+msgstr "与 MySQL 的功能差异"
+
+#: ../../reference/lang/mysql-compatibility.rst:38
+msgid "Function Name"
+msgstr "功能名称"
+
+#: ../../reference/lang/mysql-compatibility.rst:38
+msgid "In SCQL"
+msgstr "SCQL 的方式"
+
+#: ../../reference/lang/mysql-compatibility.rst:38
+msgid "In MySQL"
+msgstr "MySQL 的方式"
+
+#: ../../reference/lang/mysql-compatibility.rst:38
+msgid "Note"
+msgstr "备注"
+
+#: ../../reference/lang/mysql-compatibility.rst:40
+msgid "SUM(INT)"
+msgstr "SUM(INT) 整数求和"
+
+#: ../../reference/lang/mysql-compatibility.rst:40
+msgid "returns int"
+msgstr "返回整型 int"
+
+#: ../../reference/lang/mysql-compatibility.rst:40
+msgid "returns Decimal/Double"
+msgstr "返回小数 Decimal /双精度 Double"
+
+#: ../../reference/lang/mysql-compatibility.rst:42
+msgid "Aggregation Functions With Group BY"
+msgstr "使用 Group BY 的聚合函数"
+
+#: ../../reference/lang/mysql-compatibility.rst:42
+msgid "return groups which have more than three elements"
+msgstr "返回包含三个以上元素的组"
+
+#: ../../reference/lang/mysql-compatibility.rst:42
+msgid "return all groups"
+msgstr "返回所有组"
+
+#: ../../reference/lang/mysql-compatibility.rst:42
+msgid "for safety"
+msgstr "出于安全性考虑"
+
+#: ../../reference/lang/mysql-compatibility.rst:47
+msgid "DCL(Data Control Language)"
+msgstr "DCL（数据控制语言）"
+
+#: ../../reference/lang/mysql-compatibility.rst:50
+msgid "GRANT/REVOKE"
+msgstr "GRANT/REVOKE"
+
+#: ../../reference/lang/mysql-compatibility.rst:52
+msgid ""
+"Except permissions same with mysql such as read/write/create/drop..., ccl"
+" settings are also required before executing a query. You can change CCL "
+"settings via GRANT/REVOKE. About GRANT/REVOKE in SCQL, please read "
+":doc:`/reference/lang/manual`."
+msgstr ""
+"除了读、写、创建表格、删除数据等与 mysql 相同的权限之外，在执行查询之前还需要设置 ccl。 可以通过 GRANT/REVOKE 更改 "
+"CCL 的设置。 关于 SCQL 中的 GRANT/REVOKE 的操作，请阅读 :doc:`/reference/lang/manual`"
+
+#: ../../reference/lang/mysql-compatibility.rst:55
+msgid "Type Conversion Rule"
+msgstr "类型转换规则"
+
+#: ../../reference/lang/mysql-compatibility.rst:57
+msgid ""
+"Type conversion takes place when using an operator with operands of "
+"different types, to make them compatible. Some conversions occur "
+"implicitly. For example, SCQL automatically converts int to float as "
+"necessary"
+msgstr "考虑兼容性，当使用运算符操作不同类型的数据时，会发生类型转换。有些转换是隐式发生的。例如，SCQL 会根据需要自动将 int 转换为 float。"
+
+#: ../../reference/lang/mysql-compatibility.rst:71
+msgid "The following rules describe how conversion occurs in SCQL."
+msgstr "以下规则描述了如何在 SCQL 中进行类型转换。"
+
+#: ../../reference/lang/mysql-compatibility.rst:76
+msgid "single-party query"
+msgstr "单方查询"
+
+#: ../../reference/lang/mysql-compatibility.rst:77
+msgid ""
+"If a query only involves one participant, SCQL will convert the query "
+"into a syntax that conforms to the participant's database (such as "
+"MySQL), and then dispatch it directly to the corresponding database for "
+"execution. Thus, for a single-party query, its type conversion rules are "
+"generally consistent with the database used by the participant."
+msgstr ""
+"如果只有一方查询，SCQL 会将查询语句转换成符合参与者数据库（如 MySQL）的语法，然后直接分派到相应的数据库中执行。 "
+"因此对于单方查询，其类型转换规则一般与参与方使用的数据库类型一致。"
+
+#: ../../reference/lang/mysql-compatibility.rst:82
+msgid "multi-party query"
+msgstr "多方查询"
+
+#: ../../reference/lang/mysql-compatibility.rst:83
+msgid ""
+"If a query involves multiple participants, SCQL will execute type "
+"conversion by applying the following rules."
+msgstr "如果涉及多方查询，SCQL 将通过以下规则进行类型转换。"
+
+#: ../../reference/lang/mysql-compatibility.rst:86
+msgid "Compare(>, <, <=, >=, <>, =, !=)"
+msgstr "比较运算 (>, <, <=, >=, <>, =, !=)"
+
+#: ../../reference/lang/mysql-compatibility.rst:87
+msgid "Both arguments in a comparison operation shouldn't be string."
+msgstr "比较操作中的两个参数都不能是 string 类型。"
+
+#: ../../reference/lang/mysql-compatibility.rst:88
+msgid "If both arguments are long, they are compared as long."
+msgstr "如果两个参数都是 long 类型，则它们将按照 long 类型进行比较。"
+
+#: ../../reference/lang/mysql-compatibility.rst:89
+msgid ""
+"If one of the arguments is float or double, the other argument will be "
+"compared as double."
+msgstr "如果其中一个参数是 float 或者 double 类型，则会将另一个参数转换为 double 类型进行比较。"
+
+#: ../../reference/lang/mysql-compatibility.rst:92
+msgid "Arithmetic(+, -, \\*, /, %)"
+msgstr "算术运算 (+, -, \\*, /, %)"
+
+#: ../../reference/lang/mysql-compatibility.rst:93
+msgid "Both arguments in a arithmetic operation shouldn't be string."
+msgstr "算术运算中的两个参数都不能是 string 类型。"
+
+#: ../../reference/lang/mysql-compatibility.rst:94
+msgid "If both arguments are long, they are calculated as long."
+msgstr "如果两个参数都是 long 类型，则它们将按照 long 类型进行计算。"
+
+#: ../../reference/lang/mysql-compatibility.rst:95
+#: ../../reference/lang/mysql-compatibility.rst:101
+msgid ""
+"If one of the arguments is float or double, the other argument will be "
+"calculated as double."
+msgstr "如果其中一个参数是 float 或者 double 类型，则会将另一个参数转换为 double 进行计算。"
+
+#: ../../reference/lang/mysql-compatibility.rst:98
+msgid "Aggregation(sum, count, avg, min, max)"
+msgstr "聚合操作 (sum, count, avg, min, max)"
+
+#: ../../reference/lang/mysql-compatibility.rst:99
+msgid "All arguments in a aggregation function shouldn't be string."
+msgstr "聚合操作中的所有参数都不能是 string 类型。"
+
+#: ../../reference/lang/mysql-compatibility.rst:100
+msgid "If all arguments are long, they are calculated as long."
+msgstr "如果所有参数都是 long 类型，则它们将按照 long 类型进行计算。"
+

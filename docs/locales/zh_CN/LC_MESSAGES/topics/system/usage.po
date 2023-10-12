@@ -1,0 +1,331 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SCQL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: SCQL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-10-11 20:36+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.13.0\n"
+
+#: ../../topics/system/usage.rst:2
+msgid "How To Use SCQL"
+msgstr "SCQL 使用流程"
+
+#: ../../topics/system/usage.rst:4
+msgid ""
+"The flowchart shows how to use SCQL system, which contains two stages: "
+"prepare and query. In the prepare stage, the system is set up, and the "
+"necessary tables are created and initialized. In the query stage, queries"
+" are submitted, processed, and results are returned."
+msgstr ""
+
+#: ../../topics/system/usage.rst:7
+msgid ""
+"All requests from user to SCDB can be submitted through :ref:`synchronous"
+" api<sync_api>` or :ref:`asynchronous api<async_api>`."
+msgstr ""
+
+#: ../../topics/system/usage.rst:10
+msgid "Workflow"
+msgstr ""
+
+#: ../../topics/system/usage.rst:-1
+msgid "how_to_use_scql"
+msgstr ""
+
+#: ../../topics/system/usage.rst:15
+msgid "Participants"
+msgstr ""
+
+#: ../../topics/system/usage.rst:17
+msgid "Alice: the user in party alice"
+msgstr ""
+
+#: ../../topics/system/usage.rst:18
+msgid "Bob: the user in party bob"
+msgstr ""
+
+#: ../../topics/system/usage.rst:19
+msgid "SCDB: the SCDB server"
+msgstr ""
+
+#: ../../topics/system/usage.rst:22
+msgid ""
+"Before the start of the project, Alice and Bob need to obtain the root "
+"user's username and password from the admin."
+msgstr ""
+
+#: ../../topics/system/usage.rst:25
+msgid "Prepare stage"
+msgstr ""
+
+#: ../../topics/system/usage.rst:28
+msgid "1.0 create database"
+msgstr ""
+
+#: ../../topics/system/usage.rst:28
+msgid ""
+"Alice or Bob creates a new database using the root user account through "
+":ref:`CREATE DATABASE Statement <create_database_stm>`, which can be "
+"considered a new project, SCQL supports running multiple projects "
+"simultaneously."
+msgstr ""
+
+#: ../../topics/system/usage.rst:31
+msgid "2.0 create and grant user"
+msgstr ""
+
+#: ../../topics/system/usage.rst:31
+msgid ""
+"Alice creates user account \"Alice\" in SCDB using the root user account "
+"by :ref:`CREATE USER Statement <create_user_stm>`, and grants access to "
+"the relevant database by :ref:`GRANT Statement <scql_grant_revoke>`"
+msgstr ""
+
+#: ../../topics/system/usage.rst:34
+msgid "3.0 create and grant user"
+msgstr ""
+
+#: ../../topics/system/usage.rst:34
+msgid ""
+"Bob creates user account \"Bob\" in SCDB using the root user account by "
+":ref:`CREATE USER Statement <create_user_stm>`, and grants access to the "
+"relevant database by :ref:`GRANT Statement <scql_grant_revoke>`"
+msgstr ""
+
+#: ../../topics/system/usage.rst:37
+msgid "4.0 create table"
+msgstr ""
+
+#: ../../topics/system/usage.rst:37
+msgid ""
+"Alice creates table in SCDB using the account \"Alice\" by :ref:`CREATE "
+"TABLE Statement <create_table>`."
+msgstr ""
+
+#: ../../topics/system/usage.rst:40
+msgid "5.0 create table"
+msgstr ""
+
+#: ../../topics/system/usage.rst:40
+msgid ""
+"Bob creates table in SCDB using the account \"Bob\" by :ref:`CREATE TABLE"
+" Statement <create_table>`."
+msgstr ""
+
+#: ../../topics/system/usage.rst:43
+msgid "6.0 grant CCL"
+msgstr ""
+
+#: ../../topics/system/usage.rst:43
+msgid ""
+"Alice grants CCL about the table created by Alice for Alice and Bob in "
+"SCDB using the account \"Alice\", see :doc:`/topics/ccl/intro` for more "
+"information."
+msgstr ""
+
+#: ../../topics/system/usage.rst:46
+msgid "7.0 grant CCL"
+msgstr ""
+
+#: ../../topics/system/usage.rst:46
+msgid ""
+"Bob grants CCL about the table created by Bob for Alice and Bob in SCDB "
+"using the account \"Bob\", see :doc:`/topics/ccl/intro` for more "
+"information."
+msgstr ""
+
+#: ../../topics/system/usage.rst:49
+msgid "Execute stage"
+msgstr ""
+
+#: ../../topics/system/usage.rst:52
+msgid "8.0 submit a DQL"
+msgstr ""
+
+#: ../../topics/system/usage.rst:52
+msgid ""
+"Alice submits a DQL to SCDB through :ref:`public/submit_query "
+"<submit_query>` or :ref:`public/submit_and_get <submit_and_get>` using "
+"the account \"Alice\"."
+msgstr ""
+
+#: ../../topics/system/usage.rst:55
+msgid "9.0 process query"
+msgstr ""
+
+#: ../../topics/system/usage.rst:55
+msgid "SCDB will check ccl and execute query with engines."
+msgstr ""
+
+#: ../../topics/system/usage.rst:57
+msgid "10.0 return result"
+msgstr ""
+
+#: ../../topics/system/usage.rst:58
+msgid "SCDB return the query result to Alice."
+msgstr ""
+
+#~ msgid ""
+#~ "SCDB retrieves table schema information "
+#~ "of the table created by Bob from"
+#~ " GGRM through :ref:`GetTableMeta "
+#~ "<get_table_meta>`."
+#~ msgstr ""
+
+#~ msgid "Admin: the root user in SCDB"
+#~ msgstr ""
+
+#~ msgid "GRM: Global Resource Manager"
+#~ msgstr ""
+
+#~ msgid "1.0 register information"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Information which contains table schema "
+#~ "and engine information registered in "
+#~ ":ref:`GRM <grm>`."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "The specific process of this step "
+#~ "depends on the implementation of GRM."
+#~ " For example, in ToyGRM, it just "
+#~ "loads information from a JSON file."
+#~ msgstr ""
+
+#~ msgid "2.0 create database"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "The Admin actor creates a new "
+#~ "database through :ref:`CREATE DATABASE "
+#~ "Statement <create_database_stm>`, which can be"
+#~ " considered a new project, , SCQL "
+#~ "supports running multiple projects "
+#~ "simultaneously."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "The Admin actor creates users Alice "
+#~ "and Bob in SCDB by :ref:`CREATE "
+#~ "USER Statement <create_user_stm>`, and grants"
+#~ " access to the relevant database by"
+#~ " :ref:`GRANT Statement <scql_grant_revoke>`"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Alice creates table in SCDB by "
+#~ ":ref:`CREATE TABLE Statement <create_table>`."
+#~ msgstr ""
+
+#~ msgid "4.1 check table owner"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "SCDB check if Alice is the owner"
+#~ " of the table by send message "
+#~ "to GRM through :ref:`VerifyTableOwnership "
+#~ "<verify_table_ownership>`."
+#~ msgstr ""
+
+#~ msgid "4.2 get table schema"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "SCDB retrieves table schema information "
+#~ "of the table created by Alice from"
+#~ " GRM through :ref:`GetTableMeta "
+#~ "<get_table_meta>`."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Bob creates table in SCDB by "
+#~ ":ref:`CREATE TABLE Statement <create_table>`."
+#~ msgstr ""
+
+#~ msgid "5.1 check table owner"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "SCDB check if Bob is the owner "
+#~ "of the table by send message to"
+#~ " GRM through :ref:`VerifyTableOwnership "
+#~ "<verify_table_ownership>`."
+#~ msgstr ""
+
+#~ msgid "5.2 get table schema"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "SCDB retrieves table schema information "
+#~ "of the table created by Bob from"
+#~ " GRM through :ref:`GetTableMeta "
+#~ "<get_table_meta>`."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Alice grants CCL about the table "
+#~ "created by Alice for Alice and Bob"
+#~ " in SCDB, see :ref:`CCL "
+#~ "</reference/scql_ccl_intro.rst>` for more "
+#~ "information."
+#~ msgstr ""
+
+#~ msgid "6.1 grant CCL"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Bob grants CCL about the table "
+#~ "created by Bob for Alice and Bob"
+#~ " in SCDB, see :ref:`CCL "
+#~ "</reference/scql_ccl_intro.rst>` for more "
+#~ "information."
+#~ msgstr ""
+
+#~ msgid "7.0 submit a DQL"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Alice submits a DQL to SCDB "
+#~ "through :ref:`public/submit_query <submit_query>` or"
+#~ " :ref:`public/submit_and_get <submit_and_get>`."
+#~ msgstr ""
+
+#~ msgid "8.0 get engine information"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "SCDB retrieves the engine information of"
+#~ " the relevant parties from GRM "
+#~ "through :ref:`GetEngines <get_engines>`."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Alice grants CCL about the table "
+#~ "created by Alice for Alice and Bob"
+#~ " in SCDB using the account \"Alice\","
+#~ " see :ref:`CCL </reference/scql_ccl_intro.rst>` "
+#~ "for more information."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Bob grants CCL about the table "
+#~ "created by Bob for Alice and Bob"
+#~ " in SCDB using the account \"Bob\","
+#~ " see :ref:`CCL </reference/scql_ccl_intro.rst>` "
+#~ "for more information."
+#~ msgstr ""
+
