@@ -2,21 +2,20 @@ Reference
 =========
 
 .. toctree::
-    :caption: SCQL Language
+    :caption: Language
     :maxdepth: 1
 
     lang/manual
     lang/mysql-compatibility
-    lang/implementation-status
 
 .. toctree::
-    :caption: SCQL System
+    :caption: System
     :maxdepth: 1
 
     engine-config
 
 .. toctree::
-    :caption: SCQL Clients
+    :caption: Clients
     :maxdepth: 1
 
     http-api
@@ -26,3 +25,8 @@ Reference
     :maxdepth: 1
 
     operators
+
+.. toctree::
+    :maxdepth: 1
+
+    implementation-status

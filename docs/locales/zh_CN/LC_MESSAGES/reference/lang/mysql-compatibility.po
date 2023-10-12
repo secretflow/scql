@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-11 20:36+0800\n"
+"POT-Creation-Date: 2023-10-12 08:10+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -80,10 +80,9 @@ msgstr "DQL（数据查询语言）"
 
 #: ../../reference/lang/mysql-compatibility.rst:29
 msgid ""
-"About implementation status, please read :doc:`/reference/lang"
-"/implementation-status`."
-msgstr "关于实现的具体情况，请阅读 :doc:`/reference/lang"
-"/implementation-status`。"
+"About implementation status, please read :doc:`/reference/implementation-"
+"status`."
+msgstr "关于实现的具体情况，请阅读 :doc:`/reference/implementation-status`。"
 
 #: ../../reference/lang/mysql-compatibility.rst:32
 msgid "Type Null is unsupported in SCQL."

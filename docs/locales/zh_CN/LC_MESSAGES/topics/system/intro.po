@@ -46,9 +46,9 @@ msgstr "支持多方（N>=2）。"
 #: ../../topics/system/intro.rst:11
 msgid ""
 "Support common SQL select syntax and functions to meet the needs of most "
-"scenarios. Please check :doc:`/reference/lang/implementation-status` for "
+"scenarios. Please check :doc:`/reference/implementation-status` for "
 "details."
-msgstr "支持常见的 SQL select 语法和函数，满足大多数场景的需求。详情请查看 :doc:`/reference/lang/implementation-status`。"
+msgstr "支持常见的 SQL select 语法和函数，满足大多数场景的需求。详情请查看 :doc:`/reference/implementation-status`。"
 
 #: ../../topics/system/intro.rst:12
 msgid ""

@@ -31,8 +31,7 @@ The SCQL Language
 
 - **Reference**:
   :doc:`SCQL language manual </reference/lang/manual>` |
-  :doc:`Compatibility with MySQL </reference/lang/mysql-compatibility>` |
-  :doc:`Implementation status </reference/lang/implementation-status>`
+  :doc:`Compatibility with MySQL </reference/lang/mysql-compatibility>`
 
 
 Column Control List (CCL)

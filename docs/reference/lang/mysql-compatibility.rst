@@ -26,7 +26,7 @@ The Table created in SCQL is a virtual Table and needs to be mapped to the actua
 DQL(Data Query Language)
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-About implementation status, please read :doc:`/reference/lang/implementation-status`.
+About implementation status, please read :doc:`/reference/implementation-status`.
 
 .. note::
     Type Null is unsupported in SCQL.

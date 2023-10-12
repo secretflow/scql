@@ -1,5 +1,5 @@
-SCQL Language Implementation Status
-===================================
+SCQL Implementation Status
+==========================
 
 SELECT Statement
 ----------------

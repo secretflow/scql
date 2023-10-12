@@ -8,7 +8,7 @@ Key Features
 
 * Semi-honest security. SCQL assumes that all parties are semi-honest.
 * Support multiple parties (N >= 2).
-* Support common SQL select syntax and functions to meet the needs of most scenarios. Please check :doc:`/reference/lang/implementation-status` for details.
+* Support common SQL select syntax and functions to meet the needs of most scenarios. Please check :doc:`/reference/implementation-status` for details.
 * Practical performance.  SCQL has multiple levels of performance optimization.
 * Easy to use. SCQL provides relation SQL-like interface.
 * Data usage authorization. SCQL provides a mechanism named CCL (Column Control List) for data owner to define their data usage restrictions.
