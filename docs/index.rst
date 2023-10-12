@@ -25,6 +25,9 @@ SCQL Systems
 - **Security**:
   :doc:`Security overview </topics/security/overview>`
 
+- **Reference**:
+  :doc:`SCQL implementation status </reference/implementation-status>`
+
 
 The SCQL Language
 -----------------
