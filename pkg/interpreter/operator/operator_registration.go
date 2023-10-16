@@ -626,14 +626,13 @@ GroupNum = {3}
 		opDef.AddOutput("Out", "Result tensor.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T3)
 		opDef.SetDefinition(`The IF operator returns a value if a condition is TRUE, or another value if a condition is FALSE.
-
-			Example:
-			` + "\n```python" + `
-			Condition = [true, false, true, true]
-			ValueIfTrue = [0, 0, 0, 0]
-			ValueIfFalse = [1, 1, 1, 1]
-			Out = [0, 1, 0, 0]
-			` + "```\n")
+Example:
+` + "\n```python" + `
+Condition = [true, false, true, true]
+ValueIfTrue = [0, 0, 0, 0]
+ValueIfFalse = [1, 1, 1, 1]
+Out = [0, 1, 0, 0]
+` + "```\n")
 		opDef.SetParamTypeConstraint(T, statusPrivateOrSecretOrPublic)
 		opDef.SetParamTypeConstraint(T1, statusPrivateOrSecretOrPublic)
 		opDef.SetParamTypeConstraint(T2, statusPrivateOrSecretOrPublic)
