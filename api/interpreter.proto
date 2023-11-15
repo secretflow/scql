@@ -1,0 +1,128 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+package scql.pb;
+
+option go_package = "proto-gen/scql";
+
+import "api/status.proto";
+import "api/ccl.proto";
+import "api/core.proto";
+import "api/subgraph.proto";
+import "libspu/spu.proto";
+
+service InterpreterService {
+  rpc CompileQuery(CompileQueryRequest) returns (CompileQueryResponse);
+}
+
+message CompileQueryRequest {
+  string query = 1;
+  string db_name = 2;
+  // query issuer
+  PartyId issuer = 3;
+  // If issuer_as_participant is true, the query issuer must
+  // participate in MPC process.
+  bool issuer_as_participant = 4;
+  SecurityConfig security_conf = 5;
+  Catalog catalog = 6;
+  CompileOptions compile_opts = 7;
+}
+
+message CompileQueryResponse {
+  Status status = 1;
+  CompiledPlan plan = 2;
+}
+
+message CompiledPlan {
+  // schema of query result
+  TableSchema schema = 1;
+  Warning warning = 2;
+  spu.RuntimeConfig spu_runtime_conf = 3;
+  // participants in execution graph.
+  // The position order matters, the parties[0]'s rank is 0.
+  repeated PartyId parties = 4;
+  map<string, SubGraph> sub_graphs = 5;
+  // TODO: Add field to specify the party who report final query result.
+
+  ExplainInfo explain = 1000;
+}
+
+message Warning {
+  // If the value is true, it means that the results may be affected by the
+  // group threshold.
+  bool may_affected_by_group_threshold = 1;
+}
+
+message ExplainInfo {
+  // execution graph in dot format.
+  // It has value only when `dump_exe_graph` is true in request compile options.
+  string exe_graph_dot = 1;
+}
+
+// Metadata used to describe the schema (column names, types, comments)
+// of result sets.
+message TableSchema {
+  repeated ColumnDesc columns = 1;
+}
+
+message ColumnDesc {
+  string name = 1;
+  string type = 2;
+}
+
+message CompileOptions {
+  spu.RuntimeConfig spu_conf = 1;
+  SecurityCompromiseConfig security_compromise = 2;
+  // dump execution graph in graphviz dot format
+  bool dump_exe_graph = 3;
+}
+
+message SecurityCompromiseConfig {
+  bool reveal_group_mark = 1;
+}
+
+message Catalog {
+  repeated TableEntry tables = 1;
+}
+
+message TableEntry {
+  // table_name could be qualified name, like "db_name.table_name"
+  string table_name = 1;
+
+  message Column {
+    string name = 1;
+    string type = 2;
+    int32 ordinal_position = 3;
+  }
+  repeated Column columns = 2;
+
+  // NOTE: So far, the value of `is_view` is always False.
+  // TODO: Add support to view.
+  bool is_view = 3;
+  // The value of `select_string` is the definition body of create view.
+  // It valids only when is_view is True.
+  string select_string = 4;
+
+  // The following fields means when `is_view` is false.
+  // `ref_table` refers the physical/real table name inside individual parties,
+  // it could be empty if it's the same as table_name.
+  // `ref_table` name could be qualified name.
+  string ref_table = 5;
+  // the db type of ref_table, maybe 'MySQL/PostgreSQL/csvdb/...'
+  string db_type = 6;
+  PartyId owner = 7;
+}

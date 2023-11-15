@@ -16,7 +16,11 @@ Key Features
 Architecture
 ------------
 
-An SCQL system consists of an SCDB server and multiple SCQLEngines.
+The SCQL system supports both centralized and P2P modes. The centralized model relies on a trusted party, but the deployment and configuration process is simpler; P2P does not need to rely on a trusted party.
+
+The following introduction will be carried out in centralized mode, For P2P mode, please refer to :doc:`/topics/system/intro-p2p`
+
+An SCQL system running in centralized mode consists of an SCDB server and multiple SCQLEngines.
 
 - SCDB server is responsible for translating SQL query into a hybrid MPC-plaintext execution graph and dispatching the execution graph to SCQLEngine of participants.
 - SCQLEngine is a hybrid MPC-plaintext execution engine, which collaborates with peers to run the execution graph and reports the query result to SCDB server. SCQLEngine is implemented on top of state-of-the-art MPC framework `secretflow/spu`_.

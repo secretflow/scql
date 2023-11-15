@@ -14,30 +14,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 `Fixed` for any bug fixes.
 `Security` in case of vulnerabilities.
 
-## Staging
+## [0.4.0] - 2023-11-15
 
 ### Added
 
+ - Added support for P2P mode, no longer need to rely on a trusted third party.
+ - Added support for {datetime, timestamp} data types, as well as related operations.
+ - Support using ArrowSQL as a data source for Engine
+ - Added support for {Limit Cast Mod} operators.
+
 ### Changed
+
+ - Polished document outline.
 
 ## [0.3.0] - 2023-09-10
 
 ### Added
 
-- Optimize SCQLEngine memory usage, release unused tensors immediately.
-- Added warning information to the query result.
-- Added support for {LEFT JOIN, RIGHT JOIN, CASE WHEN, IF} operators
+ - Optimize SCQLEngine memory usage, release unused tensors immediately.
+ - Added warning information to the query result.
+ - Added support for {LEFT JOIN, RIGHT JOIN, CASE WHEN, IF} operators
 
 ### Changed
 
  - Speed up GROUP BY with HEU in some scenarios.
  - Optimized to support billion-level PSI scenarios.
- - Drop GRM from SCQL awareness. We extend the syntax of create user statement and modify the syntax of create table statement.
+ - Drop GRM from SCQL awareness. We extend the syntax of  create user statement and modify the syntax of create table statement.
  - Used json string format to configure spu runtime in scdb yaml conf.
  - Speed up JOIN, IN with Unbalanced PSI in scenarios with unbalanced data.
 
-
-### Fixed
 
 ## [0.2.0] - 2023-06-30
 
@@ -64,12 +69,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fixed create database failed [#19](https://github.com/secretflow/scql/issues/19).
-- Fixed not support group by string[#48](https://github.com/secretflow/scql/pull/48).
+ - Fixed create database failed [#19](https://github.com/secretflow/scql/issues/19).
+ - Fixed not support group by string[#48](https://github.com/secretflow/scql/pull/48).
 
 
 ## [0.1.0] - 2023-03-28
 
 ### Added
 
-- SCQL init release
+ - SCQL init release

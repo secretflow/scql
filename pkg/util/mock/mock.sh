@@ -1,8 +1,8 @@
 #!/bin/bash
 
-python mock_from_testdata.py -t=data -s="testdata/db_alice.json"
-python mock_from_testdata.py -t=data -s="testdata/db_bob.json"
-python mock_from_testdata.py -t=data -s="testdata/db_carol.json"
+python mock_from_testdata.py -dd=testdata -s="testdata/db_alice.json"
+python mock_from_testdata.py -dd=testdata -s="testdata/db_bob.json"
+python mock_from_testdata.py -dd=testdata -s="testdata/db_carol.json"
 
 
 mv testdata/mysql_*_init.sql ../../../.ci/docker-compose/mysql/initdb/

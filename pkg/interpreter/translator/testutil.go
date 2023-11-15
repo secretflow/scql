@@ -15,6 +15,7 @@
 package translator
 
 import (
+	"github.com/secretflow/scql/pkg/planner/core"
 	"github.com/secretflow/scql/pkg/util/mock"
 	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
@@ -28,12 +29,12 @@ func ConvertMockEnginesToEnginesInfo(info *mock.MockEnginesInfo) (*EnginesInfo, 
 			Token:     info.PartyToCredentials[code],
 		})
 	}
-	partyToTables := make(map[string][]DbTable)
-	tableToRefs := make(map[DbTable]DbTable)
+	partyToTables := make(map[string][]core.DbTable)
+	tableToRefs := make(map[core.DbTable]core.DbTable)
 	for p, tables := range info.PartyToTables {
-		var dbTables []DbTable
+		var dbTables []core.DbTable
 		for _, t := range tables {
-			dt, err := newDbTable(t)
+			dt, err := core.NewDbTableFromString(t)
 			if err != nil {
 				return nil, err
 			}
@@ -44,11 +45,11 @@ func ConvertMockEnginesToEnginesInfo(info *mock.MockEnginesInfo) (*EnginesInfo, 
 
 	engineInfo := NewEnginesInfo(NewPartyInfo(participants), partyToTables)
 	for table, refTable := range info.TableToRefs {
-		ref, err := newDbTable(refTable)
+		ref, err := core.NewDbTableFromString(refTable)
 		if err != nil {
 			return nil, err
 		}
-		tbl, err := newDbTable(table)
+		tbl, err := core.NewDbTableFromString(table)
 		if err != nil {
 			return nil, err
 		}

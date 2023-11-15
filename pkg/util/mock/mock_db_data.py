@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import random
+import datetime
 
 DEFAULT_MAX_STR_LEN = 10
 POOL_SIZE = 50
@@ -39,11 +40,13 @@ TYPE_TO_COLUMN = {
     "long": "{} integer NOT NULL DEFAULT 0",
     "float": "{} FLOAT_TYPE NOT NULL DEFAULT 0.0",
     "string": "{} varchar(64) NOT NULL DEFAULT ''",
+    "datetime": "{} DATETIME_TYPE NOT NULL DEFAULT '2020-10-10 10:10:10'",
+    "timestamp": "{} timestamp NOT NULL DEFAULT '2020-10-10 10:10:10'",
 }
 
 REPLACE_MAP = {
-    "postgres": {"FLOAT_TYPE": "numeric"},
-    "mysql": {"FLOAT_TYPE": "double"},
+    "postgres": {"FLOAT_TYPE": "numeric", "DATETIME_TYPE": "date"},
+    "mysql": {"FLOAT_TYPE": "double", "DATETIME_TYPE": "datetime"},
 }
 
 INSERT_STR = """
@@ -76,6 +79,18 @@ def create_str_pool(pool_size, min_num=97, max_num=115):
     return pool
 
 
+def create_random_datatime():
+    year = random.randint(1971, 2030)
+    month = random.randint(1, 12)
+    day = random.randint(1, 28)
+    hour = random.randint(0, 23)
+    minute = random.randint(0, 59)
+    second = random.randint(0, 59)
+    ds = datetime.datetime(year, month, day, hour, minute, second)
+    str_ds = "'" + ds.strftime("%Y-%m-%d %H:%M:%S") + "'"
+    return str_ds
+
+
 def create_data(data_type, str_pool):
     if data_type == "long":
         return random.randint(-100, 100)
@@ -83,6 +98,8 @@ def create_data(data_type, str_pool):
         return random.randint(-10000, 10000) / 100
     elif data_type == "string":
         return str_pool[random.randint(0, POOL_SIZE - 1)]
+    elif data_type == "datetime" or data_type == "timestamp":
+        return create_random_datatime()
     else:
         return 0
 

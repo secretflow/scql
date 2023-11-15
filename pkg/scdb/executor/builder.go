@@ -52,6 +52,8 @@ func (b *executorBuilder) build(p core.Plan) Executor {
 		return b.buildDDL(v)
 	case *core.LogicalShow:
 		return b.buildShow(v)
+	case *core.Set:
+		return b.buildSet(v)
 	default:
 		b.err = ErrUnknownPlan.GenWithStack("unsupported Plan %T", p)
 		return nil
@@ -137,6 +139,16 @@ func (b *executorBuilder) buildDDL(v *core.DDL) Executor {
 		baseExecutor: newBaseExecutor(b.ctx, v.Schema(), v.ExplainID()),
 		stmt:         v.Statement,
 		is:           b.is,
+	}
+	return e
+}
+
+func (b *executorBuilder) buildSet(v *core.Set) Executor {
+	base := newBaseExecutor(b.ctx, v.Schema(), v.ExplainID())
+	base.initCap = chunk.ZeroCapacity
+	e := &SetExecutor{
+		baseExecutor: base,
+		vars:         v.VarAssigns,
 	}
 	return e
 }

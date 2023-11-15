@@ -44,15 +44,29 @@ void Publish::Execute(ExecContext* ctx) {
   int64_t num_rows = 0;
   for (int i = 0; i < input_pbs.size(); ++i) {
     const auto& input_pb = input_pbs[i];
-    const auto& output_name = output_pbs[i].name();
+    const auto& elem_type = input_pbs[i].elem_type();
+
+    const auto& output_name = util::GetStringValue(output_pbs[i]);
 
     auto from_tensor = ctx->GetTensorTable()->GetTensor(input_pb.name());
     YACL_ENFORCE(from_tensor, "get private tensor={} failed", input_pb.name());
 
     auto proto_result = std::make_shared<pb::Tensor>();
-    SetProtoMeta(from_tensor, output_name, proto_result);
+    SetProtoMeta(from_tensor, output_name, proto_result, elem_type);
 
-    util::CopyValuesToProto(from_tensor, proto_result.get());
+    if (elem_type == pb::PrimitiveDataType::DATETIME) {
+      // DATETIME need format to publish
+      util::ConvertDateTimeAndCopyValuesToProto(from_tensor,
+                                                proto_result.get());
+    } else if (elem_type == pb::PrimitiveDataType::TIMESTAMP &&
+               !ctx->GetSession()->TimeZone().empty()) {
+      // when user not set time_zone, time_zone is empty, then no need to
+      // compensate timestamp, just publish the UTC with no time_zone
+      util::CompensateTimeZoneAndCopyToProto(from_tensor, proto_result.get(),
+                                             ctx->GetSession()->TimeZone());
+    } else {
+      util::CopyValuesToProto(from_tensor, proto_result.get());
+    }
     auto dim_value = proto_result->shape().dim(0).dim_value();
     if (num_rows == 0 && dim_value != 0) {
       num_rows = dim_value;
@@ -67,7 +81,8 @@ void Publish::Execute(ExecContext* ctx) {
 
 void Publish::SetProtoMeta(const std::shared_ptr<Tensor> from_tensor,
                            const std::string& name,
-                           std::shared_ptr<pb::Tensor> to_proto) {
+                           std::shared_ptr<pb::Tensor> to_proto,
+                           pb::PrimitiveDataType elem_type) {
   to_proto->set_name(name);
   // set shape (rows, cols)
   auto shape = to_proto->mutable_shape();
@@ -76,7 +91,12 @@ void Publish::SetProtoMeta(const std::shared_ptr<Tensor> from_tensor,
   dim = shape->add_dim();
   dim->set_dim_value(kColumnNumInProto);
 
-  to_proto->set_elem_type(from_tensor->Type());
+  if (elem_type == pb::PrimitiveDataType::DATETIME ||
+      elem_type == pb::PrimitiveDataType::TIMESTAMP) {
+    to_proto->set_elem_type(elem_type);
+  } else {
+    to_proto->set_elem_type(from_tensor->Type());
+  }
   to_proto->set_option(pb::TensorOptions::VALUE);
   to_proto->mutable_annotation()->set_status(
       pb::TensorStatus::TENSORSTATUS_UNKNOWN);

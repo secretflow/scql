@@ -1624,7 +1624,7 @@ Definition: This operator publishes the DAG results.
 
 **Outputs:**  
 
-1. `Out`(variadic, T): Result tensors of the publish op. Tensors are in TensorOption VALUE.
+1. `Out`(variadic, T): Published name of input tensors. Tensors are in TensorOption VALUE.
 
 
 

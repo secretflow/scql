@@ -271,38 +271,6 @@ func RecordAsyncCompleteEvent(result *scql.SCDBQueryResultResponse) {
 	}
 }
 
-func RecordDagDetail(code, url string, req *scql.RunDagRequest) {
-	if !enableAudit {
-		return
-	}
-	details := &audit.QueryDagDetail{
-		DagId:     req.GetDagId(),
-		TargetUrl: url,
-		PartyCode: code,
-	}
-	for _, node := range req.GetNodes() {
-		nodeInfo := getSimpleInfoFromExecNode(node)
-		details.NodeList = append(details.NodeList, nodeInfo)
-	}
-
-	auditLog := &audit.AuditLog{
-		Header: &audit.AuditHeader{
-			Time:      timestamppb.New(time.Now()),
-			SessionId: req.GetSessionId(),
-			EventName: audit.EventName_DAG_DETAIL,
-		},
-		Body: &audit.AuditBody{
-			Body: &audit.AuditBody_DagDetail{
-				DagDetail: details,
-			},
-		},
-	}
-	err := recordAuditLog(auditLog)
-	if err != nil {
-		logrus.Warn(fmt.Printf("failed to record dag details with error: %v", err))
-	}
-}
-
 func RecordPlanDetail(partyCode, targetUrl string, req *scql.RunExecutionPlanRequest) {
 	if !enableAudit {
 		return
@@ -311,7 +279,7 @@ func RecordPlanDetail(partyCode, targetUrl string, req *scql.RunExecutionPlanReq
 		TargetUrl: targetUrl,
 		PartyCode: partyCode,
 	}
-	for _, node := range req.GetNodes() {
+	for _, node := range req.GetGraph().GetNodes() {
 		nodeInfo := getSimpleInfoFromExecNode(node)
 		details.NodeList = append(details.NodeList, nodeInfo)
 	}

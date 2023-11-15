@@ -14,13 +14,17 @@
 
 package translator
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/secretflow/scql/pkg/planner/core"
+)
 
 type EnginesInfo struct {
 	partyInfo     *PartyInfo
-	partyToTables map[string][]DbTable
-	tableToParty  map[DbTable]string
-	tableToRefs   map[DbTable]DbTable
+	partyToTables map[string][]core.DbTable
+	tableToParty  map[core.DbTable]string
+	tableToRefs   map[core.DbTable]core.DbTable
 }
 
 func (h *EnginesInfo) GetPartyInfo() *PartyInfo {
@@ -39,24 +43,24 @@ func (h *EnginesInfo) GetCredentialByParty(party string) (string, error) {
 	return h.partyInfo.GetCredentialByParty(party)
 }
 
-func (h *EnginesInfo) GetTablesByParty(party string) []DbTable {
+func (h *EnginesInfo) GetTablesByParty(party string) []core.DbTable {
 	// if party don't exist in partyInfo just return nil slice
 	return h.partyToTables[party]
 }
 
-func (h *EnginesInfo) GetPartyByTable(t DbTable) string {
+func (h *EnginesInfo) GetPartyByTable(t core.DbTable) string {
 	return h.tableToParty[t]
 }
 
-func (h *EnginesInfo) GetRefTableName(tableName string) (DbTable, error) {
-	dt, err := newDbTable(tableName)
+func (h *EnginesInfo) GetRefTableName(tableName string) (core.DbTable, error) {
+	dt, err := core.NewDbTableFromString(tableName)
 	if err != nil {
-		return DbTable{}, err
+		return core.DbTable{}, err
 	}
 	return h.tableToRefs[dt], nil
 }
 
-func (h *EnginesInfo) GetDBTableMap() map[DbTable]DbTable {
+func (h *EnginesInfo) GetDbTableMap() map[core.DbTable]core.DbTable {
 	return h.tableToRefs
 }
 
@@ -64,14 +68,14 @@ func (h *EnginesInfo) String() string {
 	return fmt.Sprintf("engine infos party info: %+v, tables: %+v", h.partyInfo, h.partyToTables)
 }
 
-func (h *EnginesInfo) UpdateTableToRefs(tableToRefs map[DbTable]DbTable) {
+func (h *EnginesInfo) UpdateTableToRefs(tableToRefs map[core.DbTable]core.DbTable) {
 	for table, ref := range tableToRefs {
 		h.tableToRefs[table] = ref
 	}
 }
 
-func NewEnginesInfo(p *PartyInfo, party2Tables map[string][]DbTable) *EnginesInfo {
-	table2Party := make(map[DbTable]string)
+func NewEnginesInfo(p *PartyInfo, party2Tables map[string][]core.DbTable) *EnginesInfo {
+	table2Party := make(map[core.DbTable]string)
 	for p, tables := range party2Tables {
 		for _, dt := range tables {
 			table2Party[dt] = p
@@ -81,7 +85,7 @@ func NewEnginesInfo(p *PartyInfo, party2Tables map[string][]DbTable) *EnginesInf
 		partyInfo:     p,
 		partyToTables: party2Tables,
 		tableToParty:  table2Party,
-		tableToRefs:   make(map[DbTable]DbTable),
+		tableToRefs:   make(map[core.DbTable]core.DbTable),
 	}
 }
 

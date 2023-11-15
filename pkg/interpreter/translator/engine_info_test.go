@@ -19,6 +19,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/secretflow/scql/pkg/planner/core"
 )
 
 func TestPartyInfos(t *testing.T) {
@@ -70,14 +72,14 @@ func TestEnginesInfo(t *testing.T) {
 	r.Equal("bob.com", url)
 	tb, err := mockEnginesInfo.GetRefTableName("dba.ta")
 	r.NoError(err)
-	r.Equal(DbTable{dbName: "dbar", tableName: "tar"}, tb)
+	r.Equal(core.NewDbTable("dbar", "tar"), tb)
 	tb, err = mockEnginesInfo.GetRefTableName("dbb.tb")
 	r.NoError(err)
-	r.Equal(DbTable{dbName: "dbbr", tableName: "tbr"}, tb)
+	r.Equal(core.NewDbTable("dbbr", "tbr"), tb)
 	r.Equal(2, len(mockEnginesInfo.GetTablesByParty("alice")))
 	r.Equal(2, len(mockEnginesInfo.GetTablesByParty("bob")))
-	r.Equal("alice", mockEnginesInfo.GetPartyByTable(DbTable{dbName: "dbar", tableName: "tar"}))
-	r.Equal("bob", mockEnginesInfo.GetPartyByTable(DbTable{dbName: "dbbr", tableName: "tbr"}))
+	r.Equal("alice", mockEnginesInfo.GetPartyByTable(core.NewDbTable("dbar", "tar")))
+	r.Equal("bob", mockEnginesInfo.GetPartyByTable(core.NewDbTable("dbbr", "tbr")))
 }
 
 type MockPartyAndTableInfos struct {
@@ -100,19 +102,19 @@ func MockEnginesInfo(mockInfos []*MockPartyAndTableInfos) (*EnginesInfo, error) 
 	}
 	partyInfo := NewPartyInfo(participants)
 	tableNum := len(mockInfos[0].tables)
-	party2Tables := make(map[string][]DbTable)
-	mockRefTables := make([]DbTable, 0)
-	mockTables := make([]DbTable, 0)
+	party2Tables := make(map[string][]core.DbTable)
+	mockRefTables := make([]core.DbTable, 0)
+	mockTables := make([]core.DbTable, 0)
 	for _, info := range mockInfos {
 		for _, qualifiedTable := range info.refTables {
-			dt, err := newDbTable(qualifiedTable)
+			dt, err := core.NewDbTableFromString(qualifiedTable)
 			if err != nil {
 				return nil, err
 			}
 			mockRefTables = append(mockRefTables, dt)
 		}
 		for _, refQualifiedTable := range info.tables {
-			dt, err := newDbTable(refQualifiedTable)
+			dt, err := core.NewDbTableFromString(refQualifiedTable)
 			if err != nil {
 				return nil, err
 			}
@@ -122,7 +124,7 @@ func MockEnginesInfo(mockInfos []*MockPartyAndTableInfos) (*EnginesInfo, error) 
 	party2Tables[mockInfos[0].party] = mockRefTables[:tableNum]
 	party2Tables[mockInfos[1].party] = mockRefTables[tableNum:]
 	mockEnginesInfo := NewEnginesInfo(partyInfo, party2Tables)
-	tableToRefs := make(map[DbTable]DbTable)
+	tableToRefs := make(map[core.DbTable]core.DbTable)
 	for i, tbl := range mockRefTables {
 		tableToRefs[mockTables[i]] = tbl
 	}

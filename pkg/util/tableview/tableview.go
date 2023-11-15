@@ -44,7 +44,7 @@ func ConvertToTable(tensors []*scql.Tensor, table *tablewriter.Table) error {
 		var curRow []string
 		for _, t := range tensors {
 			switch t.ElemType {
-			case scql.PrimitiveDataType_STRING:
+			case scql.PrimitiveDataType_STRING, scql.PrimitiveDataType_DATETIME:
 				curRow = append(curRow, t.GetStringData()[i])
 				break
 			case scql.PrimitiveDataType_FLOAT32:
@@ -59,7 +59,7 @@ func ConvertToTable(tensors []*scql.Tensor, table *tablewriter.Table) error {
 			case scql.PrimitiveDataType_INT8, scql.PrimitiveDataType_INT16, scql.PrimitiveDataType_INT32:
 				curRow = append(curRow, fmt.Sprint(t.GetInt32Data()[i]))
 				break
-			case scql.PrimitiveDataType_INT64:
+			case scql.PrimitiveDataType_INT64, scql.PrimitiveDataType_TIMESTAMP:
 				curRow = append(curRow, fmt.Sprint(t.GetInt64Data()[i]))
 				break
 			default:

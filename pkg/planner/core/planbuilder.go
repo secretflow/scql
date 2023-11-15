@@ -153,6 +153,8 @@ func (b *PlanBuilder) Build(ctx context.Context, node ast.Node) (Plan, error) {
 		return b.buildShow(ctx, x)
 	case *ast.ExplainStmt:
 		return b.buildExplain(ctx, x)
+	case *ast.SetStmt:
+		return b.buildSet(ctx, x)
 	}
 	return nil, ErrUnsupportedType.GenWithStack("Unsupported type %T", node)
 }
@@ -207,6 +209,47 @@ func (b *PlanBuilder) buildSimple(node ast.StmtNode) (Plan, error) {
 		b.visitInfo = collectVisitInfoFromRevokeStmt(b.ctx, b.visitInfo, raw)
 	}
 
+	return p, nil
+}
+
+func (b *PlanBuilder) buildSet(ctx context.Context, v *ast.SetStmt) (Plan, error) {
+	p := &Set{}
+	for _, vars := range v.Variables {
+		if vars.IsGlobal {
+			err := ErrSpecificAccessDenied.GenWithStackByArgs("SUPER")
+			b.visitInfo = appendVisitInfo(b.visitInfo, mysql.SuperPriv, "", "", "", err)
+		}
+		assign := &expression.VarAssignment{
+			Name:     vars.Name,
+			IsGlobal: vars.IsGlobal,
+			IsSystem: vars.IsSystem,
+		}
+		if _, ok := vars.Value.(*ast.DefaultExpr); !ok {
+			if cn, ok2 := vars.Value.(*ast.ColumnNameExpr); ok2 && cn.Name.Table.L == "" {
+				// Set use to set timezone, not support other value
+				// Convert column name expression to string value expression.
+				// char, col := b.ctx.GetSessionVars().GetCharsetInfo()
+				// vars.Value = ast.NewValueExpr(cn.Name.Name.O, char, col)
+				return nil, ErrUnsupportedType.GenWithStack("Unsupported set type")
+			}
+			mockTablePlan := LogicalTableDual{}.Init(b.ctx, b.getSelectOffset())
+			var err error
+			assign.Expr, _, err = b.rewrite(ctx, vars.Value, mockTablePlan, nil, true)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			assign.IsDefault = true
+		}
+		if vars.ExtendValue != nil {
+			return nil, ErrUnsupportedType.GenWithStack("Unsupported set type")
+			//assign.ExtendValue = &expression.Constant{
+			//	Value:   vars.ExtendValue.(*driver.ValueExpr).Datum,
+			//	RetType: &vars.ExtendValue.(*driver.ValueExpr).Type,
+			// }
+		}
+		p.VarAssigns = append(p.VarAssigns, assign)
+	}
 	return p, nil
 }
 

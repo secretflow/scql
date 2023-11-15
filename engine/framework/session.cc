@@ -36,6 +36,7 @@ Session::Session(const SessionOptions& session_opt,
                  DatasourceAdaptorMgr* ds_mgr)
     : id_(params.session_id()),
       session_opt_(session_opt),
+      time_zone_(params.time_zone()),
       parties_(params),
       state_(SessionState::IDLE),
       link_factory_(link_factory),
@@ -75,6 +76,7 @@ void Session::InitLink() {
   }
   lctx_ = link_factory_->CreateContext(ctx_desc, parties_.SelfRank());
   lctx_->SetThrottleWindowSize(session_opt_.link_throttle_window_size);
+  lctx_->SetChunkParallelSendSize(session_opt_.link_chunked_send_parallel_size);
   lctx_->ConnectToMesh();
 }
 

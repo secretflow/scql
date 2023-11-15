@@ -57,7 +57,6 @@ engine:
     {
         "protocol": "SEMI2K",
         "field": "FM64",
-        "sigmoid_mode": "SIGMOID_REAL",
         "ttp_beaver_config": {"server_host": "127.0.0.1"}
     }
 party_auth:
@@ -115,7 +114,6 @@ party_auth:
 			SpuRuntimeCfg: `{
 				"protocol": "SEMI2K",
 				"field": "FM64",
-				"sigmoid_mode": "SIGMOID_REAL",
 				"ttp_beaver_config": {"server_host": "127.0.0.1"}
 }
 `,
@@ -132,8 +130,6 @@ party_auth:
 	r.NoError(err)
 	r.Equal(spu.ProtocolKind_SEMI2K, spuConf.Protocol)
 	r.Equal(spu.FieldType_FM64, spuConf.Field)
-	r.Equal(spu.RuntimeConfig_SIGMOID_REAL, spuConf.SigmoidMode)
-
 }
 
 func TestNewConfigWithEnv(t *testing.T) {
@@ -162,8 +158,7 @@ engine:
   spu: |
     {
         "protocol": "SEMI2K",
-        "field": "FM64",
-        "sigmoid_mode": "SIGMOID_REAL"
+        "field": "FM64"
     }
 party_auth:
   method: token
@@ -219,8 +214,7 @@ party_auth:
 			ContentType:   "application/json",
 			SpuRuntimeCfg: `{
 				"protocol": "SEMI2K",
-				"field": "FM64",
-				"sigmoid_mode": "SIGMOID_REAL"
+				"field": "FM64"
 }
 `,
 		},

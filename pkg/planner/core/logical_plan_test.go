@@ -304,3 +304,12 @@ func (s *testPlanSuite) TestPlanBuilderSubQueryWithOptimization(c *C) {
 		s.testPlanBuilderWithOptimization(c, ca, output[i])
 	}
 }
+
+func (s *testPlanSuite) TestPlanBuilderDateTimeWithOptimization(c *C) {
+	defer testleak.AfterTest(c)()
+	var input, output []string
+	s.testData.GetTestCases(c, &input, &output)
+	for i, ca := range input {
+		s.testPlanBuilderWithOptimization(c, ca, output[i])
+	}
+}

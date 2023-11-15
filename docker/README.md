@@ -11,4 +11,7 @@ bash build.sh -n image_name -t image_tag
 # Advanced
 # build image with host bazel cache 
 bash build.sh -c
+# build image for debug purpose
+# It would install golang debug program dlv in image
+bash build.sh -s image-dev
 ```

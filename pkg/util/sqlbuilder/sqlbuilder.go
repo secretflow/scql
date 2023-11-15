@@ -89,7 +89,7 @@ func (b *CreateUserStmtBuilder) AuthByToken(token string) *CreateUserStmtBuilder
 
 func (b *CreateUserStmtBuilder) AuthByPubkeyWithPemFile(pemPath string) *CreateUserStmtBuilder {
 	b.authMethod = authMethodPubkey
-	b.privKey, b.err = loadPrivateKeyFromPemFile(pemPath)
+	b.privKey, b.err = LoadPrivateKeyFromPemFile(pemPath)
 	return b
 }
 
@@ -171,7 +171,8 @@ func (b *CreateUserStmtBuilder) ToSQL() (string, error) {
 	return sb.String(), nil
 }
 
-func loadPrivateKeyFromPemFile(pemPath string) (any, error) {
+// TODO(jingshi): move to appropriate place
+func LoadPrivateKeyFromPemFile(pemPath string) (any, error) {
 	file, err := os.Open(pemPath)
 	if err != nil {
 		return nil, err

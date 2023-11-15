@@ -1,0 +1,49 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+package scql.pb;
+
+import "api/core.proto";
+
+option go_package = "proto-gen/scql";
+
+// SubGraph is the part of the whole execution graph seen
+// from the perspective of the party.
+// Each party could only see the ExecNode which it participates in.
+message SubGraph {
+  map<string, ExecNode> nodes = 1;
+  SchedulingPolicy policy = 2;
+  // checksum of the whole execution graph
+  // It could be used to verify and ensure that engines execute the same graph.
+  bytes graph_checksum = 3;
+}
+
+message SubDAG {
+  message Job {
+    int32 worker_id = 1;
+    repeated string node_ids = 2;
+  }
+
+  repeated Job jobs = 1;
+  // a barrier to sync among parties
+  bool need_call_barrier_after_jobs = 2;
+}
+
+message SchedulingPolicy {
+  int32 worker_num = 1;
+  repeated SubDAG subdags = 2;
+}

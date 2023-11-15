@@ -38,7 +38,8 @@ class Publish : public Operator {
  private:
   void SetProtoMeta(const std::shared_ptr<Tensor> from_tensor,
                     const std::string& name,
-                    std::shared_ptr<pb::Tensor> to_proto);
+                    std::shared_ptr<pb::Tensor> to_proto,
+                    pb::PrimitiveDataType elem_type);
 
  private:
   static constexpr int32_t kColumnNumInProto = 1;  // only cantain one column.

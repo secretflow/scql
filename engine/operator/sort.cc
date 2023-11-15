@@ -90,7 +90,7 @@ void Sort::SortInSecret(ExecContext* ctx) {
     return spu::kernel::hlo::Less(sctx, lhs, rhs);
   };
 
-  spu::kernel::hlo::CompFn comp_fn =
+  spu::kernel::hal::CompFn comp_fn =
       [sctx, sort_key_num,
        &scalar_cmp](absl::Span<const spu::Value> values) -> spu::Value {
     spu::Value pre_equal =

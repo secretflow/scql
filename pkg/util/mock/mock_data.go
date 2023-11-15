@@ -30,19 +30,21 @@ import (
 	"github.com/secretflow/scql/pkg/parser/auth"
 	"github.com/secretflow/scql/pkg/parser/model"
 	"github.com/secretflow/scql/pkg/parser/mysql"
+	"github.com/secretflow/scql/pkg/parser/types"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/scdb/storage"
 	"github.com/secretflow/scql/pkg/sessionctx"
-	"github.com/secretflow/scql/pkg/types"
 )
 
 var mockDataPath = []string{"testdata/db_alice.json", "testdata/db_bob.json", "testdata/db_carol.json"}
 var allPartyCodes = []string{"alice", "bob", "carol"}
 
 var dTypeString2FieldType = map[string]types.FieldType{
-	"long":   *(types.NewFieldType(mysql.TypeLong)),
-	"string": *(types.NewFieldType(mysql.TypeString)),
-	"float":  *(types.NewFieldType(mysql.TypeFloat)),
+	"long":      *(types.NewFieldType(mysql.TypeLong)),
+	"string":    *(types.NewFieldType(mysql.TypeString)),
+	"float":     *(types.NewFieldType(mysql.TypeFloat)),
+	"datetime":  *(types.NewFieldType(mysql.TypeDatetime)),
+	"timestamp": *(types.NewFieldType(mysql.TypeTimestamp)),
 }
 
 var cclString2CCLLevel = map[string]ccl.CCLLevel{
@@ -85,6 +87,18 @@ func (pt *PhysicalTableMeta) ToCreateTableStmt(newTblName string, ifNotExists bo
 	b.WriteString(") ")
 	b.WriteString(fmt.Sprintf("REF_TABLE=%s.%s DB_TYPE='%s'", pt.DbName, pt.TableName, pt.DBType))
 	return b.String()
+}
+
+func (pt *PhysicalTableMeta) RefTable() string {
+	return fmt.Sprintf("%s.%s", pt.DbName, pt.TableName)
+}
+
+func (pt *PhysicalTableMeta) GetColumnDesc() []*scql.CreateTableRequest_ColumnDesc {
+	var result []*scql.CreateTableRequest_ColumnDesc
+	for _, col := range pt.Columns {
+		result = append(result, &scql.CreateTableRequest_ColumnDesc{Name: col.Name, Dtype: col.DType})
+	}
+	return result
 }
 
 type dbConifg struct {

@@ -149,8 +149,11 @@ pb::ExecNode PublishTest::MakePublishExecNode(const PublishTestCase& tc) {
   std::vector<pb::Tensor> outputs;
   for (const auto& name : tc.out_names) {
     pb::Tensor out;
-    // only name is necessary to specify output column's name.
+
     out.set_name(name);
+    out.set_option(pb::TensorOptions::VALUE);
+    out.add_string_data(name);
+    out.set_elem_type(pb::PrimitiveDataType::STRING);
     outputs.push_back(std::move(out));
   }
   builder.AddOutput(Publish::kOut, outputs);

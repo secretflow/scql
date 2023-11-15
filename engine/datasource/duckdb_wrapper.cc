@@ -47,6 +47,12 @@ static duckdb::LogicalType ToLogicalType(csv::ColumnType type) {
       return duckdb::LogicalType::DOUBLE;
     case csv::ColumnType::STRING:
       return duckdb::LogicalType::VARCHAR;
+    // in duckdb, date type represent year, month and day:
+    // http://duckdb.org/docs/sql/data_types/date
+    case csv::ColumnType::DATETIME:
+      return duckdb::LogicalType::DATE;
+    case csv::ColumnType::TIMESTAMP:
+      return duckdb::LogicalType::TIMESTAMP_S;
     default:
       return duckdb::LogicalType::INVALID;
   }

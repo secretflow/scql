@@ -202,6 +202,16 @@ func (c ExprConverter) convertScalarFunction(dialect format.Dialect, expr *Scala
 		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
 	case *builtinTruncateDecimalSig, *builtinTruncateIntSig, *builtinTruncateRealSig, *builtinTruncateUintSig:
 		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
+	case *builtinNowWithoutArgSig, *builtinCurrentDateSig, *builtinCurrentTime0ArgSig, *builtinLastDaySig:
+		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
+	case *builtinAddDateDatetimeIntSig, *builtinSubDateDatetimeIntSig, *builtinAddDatetimeAndStringSig, *builtinSubDatetimeAndStringSig:
+		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
+	case *builtinDateDiffSig, *builtinTimeTimeTimeDiffSig:
+		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
+	case *builtinStrToDateDateSig, *builtinStrToDateDatetimeSig, *builtinStrToDateDurationSig:
+		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
+	case *builtinDateFormatSig:
+		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
 	}
 	return nil, errors.Errorf("Unknown expr: %+v", expr.Function)
 }

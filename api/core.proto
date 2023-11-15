@@ -229,3 +229,8 @@ message OperatorDef {
   // e.g.: {"T": TensorStatusList{status: [TENSORSTATUS_PRIVATE]}}
   map<string, TensorStatusList> param_status_constraints = 7;
 }
+
+// TODO: move PartyId to a proper place.
+message PartyId {
+  string code = 1;  // party code
+}

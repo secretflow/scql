@@ -1,0 +1,19 @@
+{
+  "participants": [
+    {
+      "party_code": "alice",
+      "endpoint": "http://localhost:8082",
+      "pubkey": "MCowBQYDK2VwAyEAqhfJVWZX32aVh00fUqfrbrGkwboi8ZpTpybLQ4rbxoA="
+    },
+    {
+      "party_code": "bob",
+      "endpoint": "http://localhost:8084",
+      "pubkey": "MCowBQYDK2VwAyEAN3w+v2uks/QEaVZiprZ8oRChMkBOZJSAl6V/5LvOnt4="
+    },
+    {
+      "party_code": "carol",
+      "endpoint": "http://localhost:8086",
+      "pubkey": "MCowBQYDK2VwAyEANhiAXTvL4x2jYUiAbQRo9XuOTrFFnAX4Q+YlEAgULs8="
+    }
+  ]
+}

@@ -276,21 +276,12 @@ func (plan *GraphBuilder) AddPublishNode(name string, input []*Tensor, output []
 }
 
 func (plan *GraphBuilder) AddDumpFileNode(name string, in []*Tensor, out []*Tensor, filepath, deliminator, partyCode string) error {
-	newIn := []*Tensor{}
-	for _, it := range in {
-		ot, err := plan.converter.convertTo(
-			it, &privatePlacement{partyCode: partyCode})
-		if err != nil {
-			return fmt.Errorf("addDumpFileNode: %v", err)
-		}
-		newIn = append(newIn, ot)
-	}
 	fp := &Attribute{}
 	fp.SetString(filepath)
 	del := &Attribute{}
 	del.SetString(deliminator)
 	_, err := plan.AddExecutionNode(name, operator.OpNameDumpFile,
-		map[string][]*Tensor{"In": newIn},
+		map[string][]*Tensor{"In": in},
 		map[string][]*Tensor{"Out": out},
 		map[string]*Attribute{
 			operator.FilePathAttr:    fp,

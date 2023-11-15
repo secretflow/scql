@@ -24,42 +24,18 @@ import "libspu/spu.proto";
 import "api/common.proto";
 import "api/core.proto";
 import "api/status.proto";
+import "api/subgraph.proto";
 
 option cc_generic_services = true;
 
 service SCQLEngineService {
-  // Start session
-  rpc StartSession(StartSessionRequest) returns (Status);
-  // Submit run-dag task and return, task result will be reported via callback
-  // later.
-  rpc RunDag(RunDagRequest) returns (Status);
-  // Stop session
-  rpc StopSession(StopSessionRequest) returns (Status);
   // Run the whole execution plan
   rpc RunExecutionPlan(RunExecutionPlanRequest)
       returns (RunExecutionPlanResponse);
+
+  // Stop session
+  rpc StopSession(StopSessionRequest) returns (Status);
 };
-
-// EngineResultCallback
-service EngineResultCallback {
-  // Engine report the RunDag result to SCDB.
-  rpc Report(ReportRequest) returns (google.protobuf.Empty);
-}
-
-message StartSessionRequest {
-  SessionStartParams session_params = 1;
-}
-
-message RunDagRequest {
-  repeated ExecNode nodes = 1;
-  string session_id = 2;
-  // ID of this sub DAG.
-  int32 dag_id = 3;
-  // Callback host, e.g.: "alice.com:8080", used to report run-dag result later.
-  string callback_host = 4;
-  // Callback uri, e.g.: "/a/b".
-  string callback_uri = 5;
-}
 
 message StopSessionRequest {
   string session_id = 1;
@@ -116,36 +92,23 @@ message SessionStartParams {
 
   // The spu runtime configuration.
   spu.RuntimeConfig spu_runtime_cfg = 4;
-}
 
-message SubDAG {
-  message Job {
-    int32 worker_id = 1;
-    repeated string node_ids = 2;
-  }
-
-  repeated Job jobs = 1;
-  // a barrier to sync among parties
-  bool need_call_barrier_after_jobs = 2;
-  bool need_sync_symbol_before_jobs = 3;
-}
-
-message SchedulingPolicy {
-  int32 worker_num = 1;
-  repeated SubDAG subdags = 2;
+  // The session time zone, only support time offset, like: '+08:00'
+  string time_zone = 5;
 }
 
 message RunExecutionPlanRequest {
   SessionStartParams session_params = 1;
 
-  map<string, ExecNode> nodes = 2;  // json only takes string as key
-
-  SchedulingPolicy policy = 3;
+  SubGraph graph = 2;
 
   // Whether the whole execution plan on the engine should be executed
   // synchronously or asynchronously. By default, the execution plan is executed
   // synchronously.
-  bool async = 4;
+  bool async = 3;
+
+  // Callback url, e.g.: "http://alice.com:8080/path/to/callback".
+  string callback_url = 4;
 }
 
 message RunExecutionPlanResponse {
@@ -154,6 +117,28 @@ message RunExecutionPlanResponse {
   repeated Tensor out_columns = 2;
   string session_id = 3;
   // Code of party which finished the execution plan.
+  string party_code = 4;
+  // The number of rows affected by a select into, update, insert, or delete.
+  int64 num_rows_affected = 5;
+}
+
+// EngineResultCallback
+service EngineResultCallback {
+  // Engine report the RunDag result to scdb/broker/...
+  rpc Report(ReportRequest) returns (google.protobuf.Empty);
+}
+
+// After finishing running an execution plan, the Engine sends a ReportRequest
+// to result callback server (such as scdb/broker/...) to return the results.
+message ReportRequest {
+  // Status including whether the plan run was handled successfully,
+  // if not, error message and some more information included.
+  Status status = 1;
+  // Output columns.
+  repeated Tensor out_columns = 2;
+  // The session_id that this execution plan belongs to.
+  string session_id = 3;
+  // Code of party which finished the plan run.
   string party_code = 4;
   // The number of rows affected by a select into, update, insert, or delete.
   int64 num_rows_affected = 5;

@@ -14,29 +14,32 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
+#include <unordered_map>
 
 #include "arrow/flight/sql/client.h"
 
+#include "engine/core/tensor.h"
 #include "engine/datasource/datasource_adaptor.h"
 
 namespace scql::engine {
 
+using SqlClientPtr = std::shared_ptr<arrow::flight::sql::FlightSqlClient>;
 class ArrowSqlAdaptor : public DatasourceAdaptor {
  public:
+  // example: grpc+tcp://127.0.0.1:12929
   explicit ArrowSqlAdaptor(const std::string& uri);
 
   ~ArrowSqlAdaptor() override;
 
-  std::vector<TensorPtr> ExecQuery(
-      const std::string& query,
-      const std::vector<ColumnDesc>& expected_outputs) override;
-
  private:
-  // example: grpc+tcp://127.0.0.1:12929
-  arrow::Status Connect(const std::string& uri);
+  std::vector<TensorPtr> GetQueryResult(const std::string& query) override;
+  SqlClientPtr GetClientFromEndpoint(
+      const arrow::flight::FlightEndpoint& endpoint);
 
-  std::unique_ptr<arrow::flight::sql::FlightSqlClient> sql_client_;
+  SqlClientPtr sql_client_;
+  std::unordered_map<std::string, SqlClientPtr> client_map_;
   arrow::flight::FlightCallOptions call_options_;
 };
 

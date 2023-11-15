@@ -1,0 +1,56 @@
+version: '3.8'
+services:
+  scdb:
+    image: secretflow/scql:latest
+    command:
+      - /home/admin/bin/scdbserver
+      - -config=/home/admin/configs/config.yml
+    restart: always
+    ports:
+      - mode: host
+        protocol: tcp
+        published: ${SCDB_PORT:-8080}
+        target: 8080
+    volumes:
+      - ./scdb/conf/:/home/admin/configs/
+  engine_alice:
+    cap_add:
+      - NET_ADMIN
+    command:
+      - /home/admin/bin/scqlengine
+      - --flagfile=/home/admin/engine/conf/gflags.conf
+    image: secretflow/scql:latest
+    volumes:
+      - ./engine/alice/conf/gflags.conf:/home/admin/engine/conf/gflags.conf
+      - ./engine/alice/conf/ed25519key.pem:/home/admin/engine/conf/ed25519key.pem
+      - ./engine/alice/conf/authorized_profile.json:/home/admin/engine/conf/authorized_profile.json
+  engine_bob:
+    cap_add:
+      - NET_ADMIN
+    command:
+      - /home/admin/bin/scqlengine
+      - --flagfile=/home/admin/engine/conf/gflags.conf
+    image: secretflow/scql:latest
+    volumes:
+      - ./engine/bob/conf/gflags.conf:/home/admin/engine/conf/gflags.conf
+      - ./engine/bob/conf/ed25519key.pem:/home/admin/engine/conf/ed25519key.pem
+      - ./engine/bob/conf/authorized_profile.json:/home/admin/engine/conf/authorized_profile.json
+  mysql:
+    image: mysql:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=__MYSQL_ROOT_PASSWD__
+      - TZ=Asia/Shanghai
+    healthcheck:
+      retries: 10
+      test:
+        - CMD
+        - mysqladmin
+        - ping
+        - -h
+        - mysql
+      timeout: 20s
+    expose:
+      - "3306"
+    restart: always
+    volumes:
+      - ./mysql/initdb:/docker-entrypoint-initdb.d

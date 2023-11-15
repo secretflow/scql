@@ -15,10 +15,10 @@
 # limitations under the License.
 #
 
-set -e
+set -ex
 set -o pipefail
 
-pip install pwntools
+pip install --root-user-action=ignore pwntools "pyelftools==0.29"
 
 BINARY=$1
 

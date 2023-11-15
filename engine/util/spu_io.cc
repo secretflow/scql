@@ -20,6 +20,7 @@
 #include "libspu/kernel/hal/constants.h"
 #include "libspu/kernel/hal/public_helper.h"
 #include "libspu/kernel/hlo/casting.h"
+#include "yacl/link/algorithm/gather.h"
 
 #include "engine/core/arrow_helper.h"
 #include "engine/core/type.h"
@@ -214,7 +215,12 @@ spu::NdArrayRef RevealSpuValue(const spu::SPUContext* sctx,
   for (size_t i = 0; i < lctx->WorldSize(); i++) {
     value_shares.push_back(spu::Value::fromProto(value_protos[i]));
   }
-  return io.combineShares(value_shares);
+
+  auto pt_type = io.getPtType(value_shares);
+  spu::NdArrayRef ret(makePtType(pt_type), value_shares.front().shape());
+  spu::PtBufferView pv(ret.data(), pt_type, ret.shape(), ret.strides());
+  io.combineShares(value_shares, &pv);
+  return ret;
 }
 
 TensorPtr SpuOutfeedHelper::RevealTo(const std::string& name, size_t rank) {

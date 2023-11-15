@@ -73,24 +73,26 @@ func (b *ExecutionPlan) DumpString() string {
 }
 
 type GraphMapper struct {
-	Graph           *translator.Graph
-	SubDAGs         []*SubDAG
-	Codes           map[string]*ExecutionPlan // key is party code, value is execution plan
-	SyncedTensorMap map[string]bool
+	graph   *translator.Graph
+	subDAGs []*SubDAG
+
+	syncedTensorMap map[string]bool
+
+	Codes map[string]*ExecutionPlan // key is party code, value is execution plan
 }
 
 func NewGraphMapper(input *translator.Graph, subDAGs []*SubDAG) *GraphMapper {
 	return &GraphMapper{
-		Graph:           input,
-		SubDAGs:         subDAGs,
+		graph:           input,
+		subDAGs:         subDAGs,
 		Codes:           make(map[string]*ExecutionPlan),
-		SyncedTensorMap: make(map[string]bool),
+		syncedTensorMap: make(map[string]bool),
 	}
 }
 
 func (m *GraphMapper) InferenceWorkerNumber() int {
-	workerNum := len(m.SubDAGs[0].Nodes)
-	for _, subDAG := range m.SubDAGs {
+	workerNum := len(m.subDAGs[0].Nodes)
+	for _, subDAG := range m.subDAGs {
 		if len(subDAG.Nodes) > workerNum {
 			workerNum = len(subDAG.Nodes)
 		}
@@ -131,7 +133,7 @@ func needSyncSymbol(node *translator.ExecutionNode) bool {
 func (m *GraphMapper) IsInputsSynced(node *translator.ExecutionNode) bool {
 	for _, tensors := range node.Inputs {
 		for _, tensor := range tensors {
-			if !m.SyncedTensorMap[tensor.UniqueName()] {
+			if !m.syncedTensorMap[tensor.UniqueName()] {
 				return false
 			}
 		}
@@ -144,8 +146,8 @@ func (m *GraphMapper) IsInputsSynced(node *translator.ExecutionNode) bool {
 func (m *GraphMapper) UpdateSyncedTensorMap(inputs map[string][]*translator.Tensor) {
 	for _, tensors := range inputs {
 		for _, tensor := range tensors {
-			if ok := m.SyncedTensorMap[tensor.UniqueName()]; !ok {
-				m.SyncedTensorMap[tensor.UniqueName()] = false
+			if ok := m.syncedTensorMap[tensor.UniqueName()]; !ok {
+				m.syncedTensorMap[tensor.UniqueName()] = false
 			}
 		}
 	}
@@ -167,8 +169,8 @@ func (m *GraphMapper) inferenceNeedSyncSymbol(i int) {
 	for _, v := range m.Codes {
 		if v.Policy.Jobs[i].NeedSyncSymbolBeforeJobs {
 			// set current to true
-			for key := range m.SyncedTensorMap {
-				m.SyncedTensorMap[key] = true
+			for key := range m.syncedTensorMap {
+				m.syncedTensorMap[key] = true
 			}
 		}
 		break
@@ -186,9 +188,9 @@ func (m *GraphMapper) inferenceNeedSyncSymbol(i int) {
 }
 
 func (m *GraphMapper) Map() {
-	for j, subDAG := range m.SubDAGs {
+	for j, subDAG := range m.subDAGs {
 		partyCodeToParallelJobs := make(map[string]*ParallelJobs)
-		for _, partyCode := range m.Graph.PartyInfo.GetParties() {
+		for _, partyCode := range m.graph.PartyInfo.GetParties() {
 			partyCodeToParallelJobs[partyCode] = &ParallelJobs{
 				Jobs: make(map[int][]int),
 			}
@@ -256,21 +258,22 @@ func (m *GraphMapper) CodeGen(params *scql.SessionStartParams) map[string]*scql.
 		}
 		pb := &scql.RunExecutionPlanRequest{
 			SessionParams: sessionStartParams,
-			Nodes:         make(map[string]*scql.ExecNode),
-			Policy: &scql.SchedulingPolicy{
-				WorkerNum: int32(plan.Policy.WorkerNumber),
-				Subdags:   make([]*scql.SubDAG, 0),
+			Graph: &scql.SubGraph{
+				Nodes: make(map[string]*scql.ExecNode),
+				Policy: &scql.SchedulingPolicy{
+					WorkerNum: int32(plan.Policy.WorkerNumber),
+					Subdags:   make([]*scql.SubDAG, 0),
+				},
 			},
 		}
 		pb.SessionParams.PartyCode = partyCode
 		for k, v := range plan.Nodes {
-			pb.Nodes[strconv.Itoa(k)] = v.ToProto()
+			pb.Graph.Nodes[strconv.Itoa(k)] = v.ToProto()
 		}
 		for _, job := range plan.Policy.Jobs {
 			subdag := &scql.SubDAG{
 				Jobs:                     make([]*scql.SubDAG_Job, 0),
 				NeedCallBarrierAfterJobs: job.NeedCallBarrierAfterJobs,
-				NeedSyncSymbolBeforeJobs: job.NeedSyncSymbolBeforeJobs,
 			}
 			for k, v := range job.Jobs {
 				var ids []string
@@ -283,7 +286,7 @@ func (m *GraphMapper) CodeGen(params *scql.SessionStartParams) map[string]*scql.
 				}
 				subdag.Jobs = append(subdag.Jobs, j)
 			}
-			pb.Policy.Subdags = append(pb.Policy.Subdags, subdag)
+			pb.Graph.Policy.Subdags = append(pb.Graph.Policy.Subdags, subdag)
 		}
 		result[partyCode] = pb
 	}

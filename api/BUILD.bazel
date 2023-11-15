@@ -52,6 +52,7 @@ proto_library(
         ":common_proto",
         ":core_proto",
         ":status_proto",
+        ":subgraph_proto",
         "@com_google_protobuf//:empty_proto",
         "@spulib//libspu:spu_proto",
     ],
@@ -89,6 +90,37 @@ cc_proto_library(
     deps = [":status_code_proto"],
 )
 
+proto_library(
+    name = "broker_proto",
+    srcs = ["broker.proto"],
+    deps = [
+        ":common_proto",
+        ":core_proto",
+        ":status_proto",
+        "@spulib//libspu:spu_proto",
+    ],
+)
+
+proto_library(
+    name = "subgraph_proto",
+    srcs = [
+        "subgraph.proto",
+    ],
+    deps = [":core_proto"],
+)
+
+proto_library(
+    name = "interpreter_proto",
+    srcs = ["interpreter.proto"],
+    deps = [
+        ":ccl_proto",
+        ":core_proto",
+        ":status_proto",
+        ":subgraph_proto",
+        "@spulib//libspu:spu_proto",
+    ],
+)
+
 go_proto_library(
     name = "spu_go_proto",
     importpath = "github.com/secretflow/scql/pkg/proto-gen/spu",
@@ -97,15 +129,19 @@ go_proto_library(
 
 go_proto_library(
     name = "scql_go_proto",
+    compilers = ["@io_bazel_rules_go//proto:go_grpc"],
     importpath = "github.com/secretflow/scql/pkg/proto-gen/scql",
     protos = [
+        ":broker_proto",
         ":ccl_proto",
         ":common_proto",
         ":core_proto",
         ":engine_proto",
+        ":interpreter_proto",
         ":scdb_api_proto",
         ":status_code_proto",
         ":status_proto",
+        ":subgraph_proto",
     ],
     deps = [":spu_go_proto"],
 )

@@ -19,6 +19,7 @@
 
 #include "engine/core/arrow_helper.h"
 #include "engine/util/copy_to_proto_vistor.h"
+#include "engine/util/time_util.h"
 
 namespace scql::engine::util {
 
@@ -156,6 +157,38 @@ void CopyValuesToProto(const std::shared_ptr<Tensor>& from_tensor,
   for (int i = 0; i < chunked_arr->num_chunks(); ++i) {
     THROW_IF_ARROW_NOT_OK(
         arrow::VisitArrayInline(*(chunked_arr->chunk(i)), &copy_vistor));
+  }
+}
+
+std::shared_ptr<Tensor> ConvertDateTimeToInt64(
+    const std::shared_ptr<arrow::ChunkedArray> from_chunked_arr) {
+  ConvertDateTimeToInt64Visitor convert_visitor;
+  for (int i = 0; i < from_chunked_arr->num_chunks(); ++i) {
+    THROW_IF_ARROW_NOT_OK(arrow::VisitArrayInline(*(from_chunked_arr->chunk(i)),
+                                                  &convert_visitor));
+  }
+  return convert_visitor.GetResultTensor();
+}
+
+void ConvertDateTimeAndCopyValuesToProto(
+    const std::shared_ptr<Tensor>& from_tensor, pb::Tensor* to_proto) {
+  ConvertDatetimeoProtoVistor convert_copy_vistor(to_proto);
+  const auto& chunked_arr = from_tensor->ToArrowChunkedArray();
+  for (int i = 0; i < chunked_arr->num_chunks(); ++i) {
+    THROW_IF_ARROW_NOT_OK(arrow::VisitArrayInline(*(chunked_arr->chunk(i)),
+                                                  &convert_copy_vistor));
+  }
+}
+
+void CompensateTimeZoneAndCopyToProto(
+    const std::shared_ptr<Tensor>& from_tensor, pb::Tensor* to_proto,
+    const std::string& time_zone) {
+  CompensateTimeZoneAndCopyToProtoVistor compensate_copy_vistor(to_proto,
+                                                                time_zone);
+  const auto& chunked_arr = from_tensor->ToArrowChunkedArray();
+  for (int i = 0; i < chunked_arr->num_chunks(); ++i) {
+    THROW_IF_ARROW_NOT_OK(arrow::VisitArrayInline(*(chunked_arr->chunk(i)),
+                                                  &compensate_copy_vistor));
   }
 }
 

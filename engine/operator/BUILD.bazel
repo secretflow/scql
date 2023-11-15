@@ -457,7 +457,9 @@ cc_library(
         "//engine/util:spu_io",
         "//engine/util:tensor_util",
         "@spulib//libspu/kernel/hal:shape_ops",
-        "@spulib//libspu/kernel/hlo",
+        "@spulib//libspu/kernel/hlo:basic_binary",
+        "@spulib//libspu/kernel/hlo:const",
+        "@spulib//libspu/kernel/hlo:reduce",
     ],
 )
 
@@ -504,7 +506,9 @@ cc_library(
         "//engine/framework:operator",
         "//engine/util:spu_io",
         "//engine/util:tensor_util",
-        "@spulib//libspu/kernel/hlo",
+        "@spulib//libspu/kernel/hlo:basic_binary",
+        "@spulib//libspu/kernel/hlo:const",
+        "@spulib//libspu/kernel/hlo:sort",
     ],
 )
 
@@ -528,7 +532,10 @@ cc_library(
         "//engine/util:spu_io",
         "//engine/util:tensor_util",
         "@spulib//libspu/kernel/hal:shape_ops",
-        "@spulib//libspu/kernel/hlo",
+        "@spulib//libspu/kernel/hlo:basic_binary",
+        "@spulib//libspu/kernel/hlo:casting",
+        "@spulib//libspu/kernel/hlo:const",
+        "@spulib//libspu/kernel/hlo:geometrical",
     ],
 )
 
@@ -553,7 +560,12 @@ cc_library(
         "//engine/util:tensor_util",
         "@spulib//libspu/kernel/hal:constants",
         "@spulib//libspu/kernel/hal:shape_ops",
-        "@spulib//libspu/kernel/hlo",
+        "@spulib//libspu/kernel/hlo:basic_binary",
+        "@spulib//libspu/kernel/hlo:basic_ternary",
+        "@spulib//libspu/kernel/hlo:casting",
+        "@spulib//libspu/kernel/hlo:const",
+        "@spulib//libspu/kernel/hlo:geometrical",
+        "@spulib//libspu/kernel/hlo:indexing",
     ],
 )
 
@@ -710,6 +722,13 @@ cc_library(
     name = "group_he_sum",
     srcs = ["group_he_sum.cc"],
     hdrs = ["group_he_sum.h"],
+    copts = select({
+        "@platforms//cpu:x86_64": [
+            # HEU uses eigen...force avx on x64
+            "-mavx",
+        ],
+        "//conditions:default": [],
+    }),
     deps = [
         "//engine/framework:operator",
         "//engine/util:spu_io",
@@ -761,7 +780,8 @@ cc_library(
         "//engine/util:spu_io",
         "//engine/util:tensor_util",
         "@spulib//libspu/kernel/hal:shape_ops",
-        "@spulib//libspu/kernel/hlo",
+        "@spulib//libspu/kernel/hlo:basic_binary",
+        "@spulib//libspu/kernel/hlo:const",
     ],
 )
 
@@ -785,7 +805,9 @@ cc_library(
         "//engine/util:spu_io",
         "//engine/util:tensor_util",
         "@spulib//libspu/kernel/hal:shape_ops",
-        "@spulib//libspu/kernel/hlo",
+        "@spulib//libspu/kernel/hlo:basic_binary",
+        "@spulib//libspu/kernel/hlo:casting",
+        "@spulib//libspu/kernel/hlo:const",
     ],
 )
 

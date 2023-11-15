@@ -87,6 +87,16 @@ type Expression interface {
 	HashCode(sc *stmtctx.StatementContext) []byte
 }
 
+// VarAssignment represents a variable assignment in Set, such as set global a = 1.
+type VarAssignment struct {
+	Name        string
+	Expr        Expression
+	IsDefault   bool
+	IsGlobal    bool
+	IsSystem    bool
+	ExtendValue *Constant
+}
+
 func isColumnInOperand(c *Column) bool {
 	return c.InOperand
 }

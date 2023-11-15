@@ -69,12 +69,14 @@ class In : public Operator {
       ExecContext* ctx, bool reveal_to_server, const std::string& tmp_dir,
       const spu::psi::EcdhOprfPsiOptions& psi_options,
       const std::shared_ptr<util::BatchProvider>& batch_provider,
-      util::PsiExecutionInfoTable* psi_info_table);
+      util::PsiExecutionInfoTable* psi_info_table,
+      std::shared_ptr<yacl::link::Context> psi_link);
   static void OprfPsiClient(
       ExecContext* ctx, bool reveal_to_server, const std::string& tmp_dir,
       const spu::psi::EcdhOprfPsiOptions& psi_options,
       const std::shared_ptr<util::BatchProvider>& batch_provider,
-      util::PsiExecutionInfoTable* psi_info_table);
+      util::PsiExecutionInfoTable* psi_info_table,
+      std::shared_ptr<yacl::link::Context> psi_link);
 
   static int64_t OprfServerHandleResult(
       ExecContext* ctx, const std::vector<uint64_t>& matched_indices,

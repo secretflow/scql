@@ -25,12 +25,10 @@ import (
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
-	"github.com/secretflow/scql/pkg/audit"
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/executor"
 	"github.com/secretflow/scql/pkg/interpreter/optimizer"
 	"github.com/secretflow/scql/pkg/interpreter/translator"
-	"github.com/secretflow/scql/pkg/parser"
 	"github.com/secretflow/scql/pkg/planner/core"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/scdb/auth"
@@ -167,8 +165,8 @@ func (app *App) compile(lpInfo *LogicalPlanInfo, s *session) (*ExecutionPlanInfo
 	s.GetSessionVars().AffectedByGroupThreshold = t.AffectedByGroupThreshold
 	logrus.Infof("[Translator] execution plan: \n%s\n", ep.DumpGraphviz())
 
-	graphChecker := translator.NewGraphChecker(ep)
-	if err := graphChecker.Check(); err != nil {
+	graphChecker := translator.NewGraphChecker()
+	if err := graphChecker.Check(ep); err != nil {
 		return nil, err
 	}
 
@@ -183,110 +181,24 @@ func (app *App) compile(lpInfo *LogicalPlanInfo, s *session) (*ExecutionPlanInfo
 	}, nil
 }
 
-func (app *App) compilePrepare(ctx context.Context, s *session) (*LogicalPlanInfo, error) {
-	// step1. find out issuer's party code
-	issuer := s.GetSessionVars().User
-
-	if issuer.Username == storage.DefaultRootName && issuer.Hostname == storage.DefaultHostName {
-		return nil, fmt.Errorf("user root has no privilege to execute dql")
-	}
-	issuerPartyCode, err := storage.QueryUserPartyCode(s.GetSessionVars().Storage, issuer.Username, issuer.Hostname)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query issuer party code: %v", err)
-	}
-
-	is, err := storage.QueryDBInfoSchema(s.GetSessionVars().Storage, s.request.DbName)
+func (app *App) extractDataSourcesInDQL(ctx context.Context, s *session) ([]*core.DataSource, error) {
+	is, err := storage.QueryDBInfoSchema(s.GetSessionVars().Storage, s.request.GetDbName())
 	if err != nil {
 		return nil, err
 	}
 
-	p := parser.New()
-	stmts, _, err := p.Parse(s.request.Query, "", "")
-	if err != nil {
-		return nil, err
-	}
+	// collect datasources which are referenced by the query via analyzing the logical plan
+	return datasourcesInDQL(s.request.GetQuery(), s.request.GetDbName(), is)
+}
 
-	// Ast -> logical plan
-	lp, _, err := core.BuildLogicalPlanWithOptimization(
-		ctx, s, stmts[0], is)
-	if err != nil {
-		return nil, fmt.Errorf("error when building logical plan: %v", err)
-	}
-
-	logrus.Debugf("[Translator] plan in one string: %s", core.ToString(lp))
-	logrus.Debugf("[Translator] logical plan: \n%s\n", core.DrawLogicalPlan(lp))
-
-	// step2. collect datasources which are referenced by the query via analyzing the logical plan
-	dsList, err := datasourcesInDQL(s.request.Query, s.request.DbName, is)
-	if err != nil {
-		return nil, err
-	}
-
-	// check datasource
-	if len(dsList) == 0 {
-		return nil, fmt.Errorf("no datasource specified in the query")
-	}
-	dbName := dsList[0].DBName.String()
-	s.GetSessionVars().CurrentDB = dbName
-	// check if referenced tables are in the same db
-	if len(dsList) > 1 {
-		for _, ds := range dsList[1:] {
-			if ds.DBName.String() != dbName {
-				return nil, fmt.Errorf("query is not allowed to execute cross database")
-			}
-		}
-	}
-
-	// step3. collect referenced table schemas
-	tableNames := make([]string, 0, len(dsList))
-	for _, ds := range dsList {
-		tableNames = append(tableNames, ds.TableInfo().Name.String())
-	}
-	tableSchemas, err := storage.QueryTableSchemas(s.GetSessionVars().Storage, dbName, tableNames)
+func (app *App) buildCatalog(store *gorm.DB, dbName string, tableNames []string) (*scql.Catalog, error) {
+	tableSchemas, err := QueryTableSchemas(store, dbName, tableNames)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query referenced table schemas: %v", err)
 	}
 
-	// step4. collect participating engines which can be derived from tables referenced by the query
-	engines, err := app.askEngineInfoByTables(s, dbName, tableNames)
-	if err != nil {
-		return nil, fmt.Errorf("failed to askEngineInfoByTables: %v", err)
-	}
-
-	// step5. collect needed ccl information
-	partyOwners, err := storage.QueryTablesOwner(s.GetSessionVars().Storage, dbName, tableNames)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query referenced table's owner: %v", err)
-	}
-
-	var ccl []*scql.SecurityConfig_ColumnControl
-	foundQueryIssuer := false
-	for _, partyOwner := range partyOwners {
-		if partyOwner == issuer.Username {
-			foundQueryIssuer = true
-		}
-		cc, err := collectCCLForUser(s.GetSessionVars().Storage, partyOwner, storage.DefaultHostName, tableSchemas)
-		if err != nil {
-			return nil, err
-		}
-		ccl = append(ccl, cc...)
-	}
-	// SecurityConfig should contains the query issuer
-	if !foundQueryIssuer {
-		cc, err := collectCCLForUser(s.GetSessionVars().Storage, issuer.Username, issuer.Hostname, tableSchemas)
-		if err != nil {
-			return nil, err
-		}
-		ccl = append(ccl, cc...)
-	}
-
-	logrus.Debugf("CCL: %v", ccl)
-	audit.RecordSecurityConfig(&scql.SecurityConfig{ColumnControlList: ccl}, s.id)
-	return &LogicalPlanInfo{
-		lp:          lp,
-		issuer:      issuerPartyCode,
-		engineInfos: engines,
-		ccls:        ccl,
+	return &scql.Catalog{
+		Tables: tableSchemas,
 	}, nil
 }
 

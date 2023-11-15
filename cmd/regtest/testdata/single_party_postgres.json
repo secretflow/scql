@@ -2,8 +2,8 @@
   "queries": [
     {
       "name": "plain select",
-      "query": "select plain_long_0 from scdb.carol_tbl_1;",
-      "mysql_query": "select plain_long_0 from carol.tbl_1"
+      "query": "select plain_long_0, plain_timestamp_0 from scdb.carol_tbl_1;",
+      "mysql_query": "select plain_long_0, plain_timestamp_0 from carol.tbl_1"
     },
     {
       "name": "left join",
@@ -234,6 +234,11 @@
       "name": "where in subquery",
       "query": "select plain_long_0 from scdb.carol_tbl_0 as carol where (plain_long_0 in (select plain_long_0 from scdb.carol_tbl_1 as carol)) and plain_long_0 > 0",
       "mysql_query": "select plain_long_0 from carol.tbl_0 where (plain_long_0 in (select plain_long_0 from carol.tbl_1)) and plain_long_0 > 0"
+    },
+    {
+      "name": "date func (now, curdate)",
+      "query": "select plain_datetime_0 < now() as res1, plain_timestamp_0 < now() as res2, plain_datetime_0 < curdate() as res3, plain_timestamp_0 < curdate() as res4 from scdb.carol_tbl_1;",
+      "mysql_query": "select plain_datetime_0 < now() as res1, plain_timestamp_0 < now() as res2, plain_datetime_0 < curdate() as res3, plain_timestamp_0 < curdate() as res4 from carol.tbl_1;"
     }
   ]
 }

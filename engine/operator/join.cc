@@ -172,8 +172,8 @@ void Join::EcdhPsiJoin(ExecContext* ctx) {
     spu::psi::EcdhPsiOptions options;
     options.link_ctx = ctx->GetSession()->GetLink();
     if (options.link_ctx->WorldSize() > 2) {
-      options.link_ctx =
-          options.link_ctx->SubWorld(ctx->GetNodeName(), input_party_codes);
+      options.link_ctx = options.link_ctx->SubWorld(
+          ctx->GetNodeName() + "-EcdhPsiJoin", input_party_codes);
     }
     options.ecc_cryptor = spu::psi::CreateEccCryptor(
         static_cast<spu::psi::CurveType>(FLAGS_psi_curve_type));
@@ -239,7 +239,8 @@ void Join::OprfPsiJoin(ExecContext* ctx, bool is_server,
   spu::psi::EcdhOprfPsiOptions psi_options;
   auto psi_link = ctx->GetSession()->GetLink();
   if (psi_link->WorldSize() > 2) {
-    psi_link = psi_link->SubWorld(ctx->GetNodeName(), input_party_codes);
+    psi_link = psi_link->SubWorld(ctx->GetNodeName() + "-OprfPsiJoin",
+                                  input_party_codes);
   }
   psi_options.link0 = psi_link;
   YACL_ENFORCE(psi_options.link0, "fail to getlink0 for OprfPsiJoin");
@@ -257,10 +258,12 @@ void Join::OprfPsiJoin(ExecContext* ctx, bool is_server,
 
   if (is_server) {
     OprfPsiServer(ctx, join_role, tmp_dir.path().value(), psi_options,
-                  batch_provider, is_left, peer_rank, &psi_info_table);
+                  batch_provider, is_left, peer_rank, &psi_info_table,
+                  psi_link);
   } else {
     OprfPsiClient(ctx, join_role, tmp_dir.path().value(), psi_options,
-                  batch_provider, is_left, peer_rank, &psi_info_table);
+                  batch_provider, is_left, peer_rank, &psi_info_table,
+                  psi_link);
   }
 
   // audit
@@ -324,7 +327,8 @@ void Join::OprfPsiServer(
     ExecContext* ctx, JoinRole join_role, const std::string& tmp_dir,
     const spu::psi::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<util::BatchProvider>& batch_provider, bool is_left,
-    int64_t peer_rank, util::PsiExecutionInfoTable* psi_info_table) {
+    int64_t peer_rank, util::PsiExecutionInfoTable* psi_info_table,
+    std::shared_ptr<yacl::link::Context> psi_link) {
   std::vector<uint8_t> private_key =
       yacl::crypto::SecureRandBytes(spu::psi::kEccKeySize);
   auto dh_oprf_psi_server =
@@ -335,7 +339,7 @@ void Join::OprfPsiServer(
 
   auto transfer_server_items_future =
       std::async(std::launch::async, util::OprfPsiServerTransferServerItems,
-                 ctx, batch_provider, dh_oprf_psi_server, ub_cache);
+                 ctx, psi_link, batch_provider, dh_oprf_psi_server, ub_cache);
   util::OprfPsiServerTransferClientItems(ctx, dh_oprf_psi_server);
   transfer_server_items_future.wait();
 
@@ -356,7 +360,8 @@ void Join::OprfPsiClient(
     ExecContext* ctx, JoinRole join_role, const std::string& tmp_dir,
     const spu::psi::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<util::BatchProvider>& batch_provider, bool is_left,
-    int64_t peer_rank, util::PsiExecutionInfoTable* psi_info_table) {
+    int64_t peer_rank, util::PsiExecutionInfoTable* psi_info_table,
+    std::shared_ptr<yacl::link::Context> psi_link) {
   std::string server_cipher_store_path =
       fmt::format("{}/tmp-server-cipher-store.csv", tmp_dir);
   auto cipher_store =
@@ -364,7 +369,7 @@ void Join::OprfPsiClient(
 
   auto transfer_server_items_future =
       std::async(std::launch::async, util::OprfPsiClientTransferServerItems,
-                 ctx, psi_options, cipher_store);
+                 ctx, psi_link, psi_options, cipher_store);
   util::OprfPsiClientTransferClientItems(ctx, batch_provider, psi_options,
                                          cipher_store);
   transfer_server_items_future.wait();

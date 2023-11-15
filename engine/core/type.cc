@@ -81,6 +81,10 @@ std::shared_ptr<arrow::DataType> ToArrowDataType(pb::PrimitiveDataType dtype) {
     case pb::PrimitiveDataType::STRING:
       dt = arrow::large_utf8();
       break;
+    case pb::PrimitiveDataType::DATETIME:
+    case pb::PrimitiveDataType::TIMESTAMP:
+      dt = arrow::int64();
+      break;
     default:
       dt = nullptr;
   }
@@ -185,6 +189,8 @@ spu::PtType DataTypeToSpuPtType(pb::PrimitiveDataType dtype) {
       pt = spu::PT_I32;
       break;
     case pb::PrimitiveDataType::INT64:
+    case pb::PrimitiveDataType::DATETIME:
+    case pb::PrimitiveDataType::TIMESTAMP:
       pt = spu::PT_I64;
       break;
     case pb::PrimitiveDataType::BOOL:

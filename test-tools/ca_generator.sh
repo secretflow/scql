@@ -137,7 +137,7 @@ for TYPE in scdb engine_alice engine_bob engine_carol; do
                  -cert intermediate-ca.pem \
                  -config .ca/config \
                  -extensions v3_ca
-
+      
   cat ${TYPE}-ca.pem \
       intermediate-ca.pem \
       root-ca.pem > ${TYPE}-ca.crt

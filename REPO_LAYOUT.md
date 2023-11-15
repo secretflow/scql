@@ -3,11 +3,14 @@
 - [api/](api/): SCQL protocol files.
 - [docker/](docker/): Dev container dockerfile.
 - [examples/](examples/): SCQL examples.
-  - [docker-compose](examples/docker-compose/): Standalone deploy example.
+  - [scdb-tutorial](examples/scdb-tutorial/): Standalone SCDB deploy example.
+  - [p2p-tutorial](examples/p2p-tutorial/): Standalone p2p deploy example.
 - [docs/](docs/): Documents of SCQL.
 - [cmd/](cmd/): Main applications for SCQL.
   - [scdbserver/](cmd/scdbserver/): SCDB server application.
   - [scdbclient/](cmd/scdbclient/): SCDB client.
+  - [broker/](cmd/broker/): Broker server application.
+  - [brokerctl/](cmd/brokerctl/): Broker terminal client.
   - [docgen/](cmd/docgen/): SCQL operators document generator.
 - [pkg/](pkg/): SCQL library code.
   - [constant/](pkg/constant/): Common constant values.
@@ -18,6 +21,7 @@
   - [util/](pkg/util/): SCQL utils.
   - [planner/](pkg/planner/): SCQL planner.
   - [scdb/](pkg/scdb/): SCDB pkg.
+  - [broker/](pkg/broker/): Broker pkg.
   - [interpreter/](pkg/interpreter/): SCQL interpreter.
     - [translator/](pkg/interpreter/translator/): Translator translates logical plan to MPC-Plaintext execution dag.
     - [ccl/](pkg/interpreter/ccl/): CCL manager.

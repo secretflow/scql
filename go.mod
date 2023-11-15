@@ -1,6 +1,6 @@
 module github.com/secretflow/scql
 
-go 1.19
+go 1.21
 
 require (
 	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548
@@ -10,7 +10,7 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/golang/mock v1.6.0
 	github.com/golang/snappy v0.0.4
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.3.1
 	github.com/influxdata/go-prompt v0.2.8
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/opentracing-contrib/go-stdlib v1.0.0
@@ -27,10 +27,12 @@ require (
 	github.com/tjfoc/gmsm v1.4.1
 	go.uber.org/zap v1.18.1
 	golang.org/x/exp v0.0.0-20221006183845-316c7553db56
-	golang.org/x/text v0.9.0
-	google.golang.org/protobuf v1.30.0
+	golang.org/x/text v0.13.0
+	google.golang.org/grpc v1.59.0
+	google.golang.org/protobuf v1.31.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/mysql v1.4.4
 	gorm.io/driver/sqlite v1.3.6
 	gorm.io/gorm v1.23.8
@@ -49,6 +51,7 @@ require (
 	github.com/go-playground/validator/v10 v10.14.0 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
+	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
@@ -73,11 +76,11 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/crypto v0.9.0 // indirect
+	golang.org/x/crypto v0.14.0 // indirect
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
-	golang.org/x/net v0.10.0 // indirect
-	golang.org/x/sys v0.8.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+	golang.org/x/net v0.17.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230822172742-b8732ec3820d // indirect
 	modernc.org/golex v1.0.1 // indirect
 	modernc.org/mathutil v1.5.0 // indirect
 	modernc.org/sortutil v1.1.1 // indirect

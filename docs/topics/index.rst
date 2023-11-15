@@ -7,6 +7,7 @@ Topics
 
     system/intro
     system/usage
+    system/intro-p2p
 
 .. toctree::
     :maxdepth: 1
@@ -31,4 +32,5 @@ Topics
     :maxdepth: 1
     :caption: Deployment
 
-    deployment/how-to-deploy-a-cluster
+    deployment/how-to-deploy-centralized-cluster
+    deployment/how-to-deploy-p2p-cluster

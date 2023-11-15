@@ -59,6 +59,11 @@ DEFINE_int32(
     link_throttle_window_size, 16,
     "throttle window size for channel, set to limit the number of messages "
     "sent asynchronously to avoid network congestion, set 0 to disable");
+// TODO(zhihe): for rpc stabilization in 100M bandwidth, the default
+// link_chunked_send_parallel_size is 1, should find a tradeoff value between
+// bandwidth and send speed
+DEFINE_int32(link_chunked_send_parallel_size, 1,
+             "parallel size when send chunked value");
 // Brpc channel flags for Scdb
 DEFINE_string(scdb_protocol, "http:proto", "rpc protocol");
 DEFINE_string(scdb_connection_type, "pooled", "connection type");
@@ -221,6 +226,10 @@ std::unique_ptr<scql::engine::EngineServiceImpl> BuildEngineService(
   session_opt.link_recv_timeout_ms = FLAGS_link_recv_timeout_ms;
   if (FLAGS_link_throttle_window_size > 0) {
     session_opt.link_throttle_window_size = FLAGS_link_throttle_window_size;
+  }
+  if (FLAGS_link_chunked_send_parallel_size > 0) {
+    session_opt.link_chunked_send_parallel_size =
+        FLAGS_link_chunked_send_parallel_size;
   }
   auto session_manager = std::make_unique<scql::engine::SessionManager>(
       session_opt, listener_manager, std::move(link_factory),

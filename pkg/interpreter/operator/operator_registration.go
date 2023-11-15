@@ -86,7 +86,7 @@ func registerAllOpDef() {
 		opDef.SetName(OpNamePublish)
 		opDef.AddInput("In", "Tensors to be published.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
-		opDef.AddOutput("Out", "Result tensors of the publish op. Tensors are in TensorOption VALUE.",
+		opDef.AddOutput("Out", "Published name of input tensors. Tensors are in TensorOption VALUE.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.SetDefinition("Definition: This operator publishes the DAG results.")
 		opDef.SetParamTypeConstraint(T, statusPrivate)

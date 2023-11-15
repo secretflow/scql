@@ -84,6 +84,10 @@ type SessionVars struct {
 	// DurationExecuting is the duration of executing execution plan of the last query.
 	DurationExecuting time.Duration
 
+	// Per-connection time zones. Each client that connects has its own time zone setting, given by the session time_zone variable.
+	// See https://dev.mysql.com/doc/refman/5.7/en/time-zone-support.html
+	TimeZone string
+
 	// Storage
 	Storage *gorm.DB
 
@@ -131,4 +135,12 @@ func (s *SessionVars) GetSystemVar(name string) (string, bool) {
 	}
 	val, ok := s.systems[name]
 	return val, ok
+}
+
+func (s *SessionVars) SetTimeZone(TimeZone string) {
+	s.TimeZone = TimeZone
+}
+
+func (s *SessionVars) GetTimeZone() string {
+	return s.TimeZone
 }

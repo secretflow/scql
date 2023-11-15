@@ -2,8 +2,8 @@
   "queries": [
     {
       "name": "plain select",
-      "query": "select plain_long_0 from scdb.alice_tbl_1;",
-      "mysql_query": "select plain_long_0 from alice.tbl_1"
+      "query": "select plain_long_0, plain_datetime_0, plain_timestamp_0 from scdb.alice_tbl_1;",
+      "mysql_query": "select plain_long_0, plain_datetime_0, plain_timestamp_0 from alice.tbl_1"
     },
     {
       "name": "left join",
@@ -12,28 +12,28 @@
     },
     {
       "name": "compare (less)",
-      "query": "select plain_long_0 < 1 as res0, plain_long_0 < 1.5 as res1, plain_float_0 < 1.5 as res2, plain_long_0 < plain_long_1 as res3, plain_long_0 < plain_float_1 as res4, plain_float_0 < plain_float_1 as res5 from scdb.alice_tbl_1;",
-      "mysql_query": "select plain_long_0 < 1 as res0, plain_long_0 < 1.5 as res1, plain_float_0 < 1.5 as res2, plain_long_0 < plain_long_1 as res3, plain_long_0 < plain_float_1 as res4, plain_float_0 < plain_float_1 as res5 from alice.tbl_1;"
+      "query": "select plain_long_0 < 1 as res0, plain_long_0 < 1.5 as res1, plain_float_0 < 1.5 as res2, plain_long_0 < plain_long_1 as res3, plain_long_0 < plain_float_1 as res4, plain_float_0 < plain_float_1 as res5, plain_datetime_0 < '2000-01-01 00:00:00' as res6, plain_datetime_0 < plain_datetime_1 as res7, plain_datetime_0 < plain_timestamp_0 as res8 from scdb.alice_tbl_1;",
+      "mysql_query": "select plain_long_0 < 1 as res0, plain_long_0 < 1.5 as res1, plain_float_0 < 1.5 as res2, plain_long_0 < plain_long_1 as res3, plain_long_0 < plain_float_1 as res4, plain_float_0 < plain_float_1 as res5, plain_datetime_0 < '2000-01-01 00:00:00' as res6, plain_datetime_0 < plain_datetime_1 as res7, plain_datetime_0 < plain_timestamp_0 as res8 from alice.tbl_1;"
     },
     {
       "name": "compare (greater)",
-      "query": "select plain_long_0 > 1 as res0, plain_long_0 > 1.5 as res1, plain_float_0 > 1.5 as res2, plain_long_0 > plain_long_1 as res3, plain_long_0 > plain_float_1 as res4, plain_float_0 > plain_float_1 as res5 from scdb.alice_tbl_1;",
-      "mysql_query": "select plain_long_0 > 1 as res0, plain_long_0 > 1.5 as res1, plain_float_0 > 1.5 as res2, plain_long_0 > plain_long_1 as res3, plain_long_0 > plain_float_1 as res4, plain_float_0 > plain_float_1 as res5 from alice.tbl_1;"
+      "query": "select plain_long_0 > 1 as res0, plain_long_0 > 1.5 as res1, plain_float_0 > 1.5 as res2, plain_long_0 > plain_long_1 as res3, plain_long_0 > plain_float_1 as res4, plain_float_0 > plain_float_1 as res5, plain_datetime_0 > '2000-01-01 00:00:00' as res6, plain_datetime_0 > plain_datetime_1 as res7, plain_datetime_0 > plain_timestamp_0 as res8  from scdb.alice_tbl_1;",
+      "mysql_query": "select plain_long_0 > 1 as res0, plain_long_0 > 1.5 as res1, plain_float_0 > 1.5 as res2, plain_long_0 > plain_long_1 as res3, plain_long_0 > plain_float_1 as res4, plain_float_0 > plain_float_1 as res5, plain_datetime_0 > '2000-01-01 00:00:00' as res6, plain_datetime_0 > plain_datetime_1 as res7, plain_datetime_0 > plain_timestamp_0 as res8 from alice.tbl_1;"
     },
     {
       "name": "compare (less or equal)",
-      "query": "select plain_long_0 <= 1 as res0, plain_long_0 <= 1.5 as res1, plain_float_0 <= 1.5 as res2, plain_long_0 <= plain_long_1 as res3, plain_long_0 <= plain_float_1 as res4, plain_float_0 <= plain_float_1 as res5 from scdb.alice_tbl_1;",
-      "mysql_query": "select plain_long_0 <= 1 as res0, plain_long_0 <= 1.5 as res1, plain_float_0 <= 1.5 as res2, plain_long_0 <= plain_long_1 as res3, plain_long_0 <= plain_float_1 as res4, plain_float_0 <= plain_float_1 as res5 from alice.tbl_1;"
+      "query": "select plain_long_0 <= 1 as res0, plain_long_0 <= 1.5 as res1, plain_float_0 <= 1.5 as res2, plain_long_0 <= plain_long_1 as res3, plain_long_0 <= plain_float_1 as res4, plain_float_0 <= plain_float_1 as res5, plain_datetime_0 <= '2000-01-01 00:00:00' as res6, plain_datetime_0 <= plain_datetime_1 as res7, plain_datetime_0 <= plain_timestamp_0 as res8 from scdb.alice_tbl_1;",
+      "mysql_query": "select plain_long_0 <= 1 as res0, plain_long_0 <= 1.5 as res1, plain_float_0 <= 1.5 as res2, plain_long_0 <= plain_long_1 as res3, plain_long_0 <= plain_float_1 as res4, plain_float_0 <= plain_float_1 as res5, plain_datetime_0 <= '2000-01-01 00:00:00' as res6, plain_datetime_0 <= plain_datetime_1 as res7, plain_datetime_0 <= plain_timestamp_0 as res8 from alice.tbl_1;"
     },
     {
       "name": "compare (greater or equal)",
-      "query": "select plain_long_0 >= 1 as res0, plain_long_0 >= 1.5 as res1, plain_float_0 >= 1.5 as res2, plain_long_0 >= plain_long_1 as res3, plain_long_0 >= plain_float_1 as res4, plain_float_0 >= plain_float_1 as res5 from scdb.alice_tbl_1;",
-      "mysql_query": "select plain_long_0 >= 1 as res0, plain_long_0 >= 1.5 as res1, plain_float_0 >= 1.5 as res2, plain_long_0 >= plain_long_1 as res3, plain_long_0 >= plain_float_1 as res4, plain_float_0 >= plain_float_1 as res5 from alice.tbl_1;"
+      "query": "select plain_long_0 >= 1 as res0, plain_long_0 >= 1.5 as res1, plain_float_0 >= 1.5 as res2, plain_long_0 >= plain_long_1 as res3, plain_long_0 >= plain_float_1 as res4, plain_float_0 >= plain_float_1 as res5, plain_datetime_0 >= '2000-01-01 00:00:00' as res6, plain_datetime_0 >= plain_datetime_1 as res7, plain_datetime_0 >= plain_timestamp_0 as res8 from scdb.alice_tbl_1;",
+      "mysql_query": "select plain_long_0 >= 1 as res0, plain_long_0 >= 1.5 as res1, plain_float_0 >= 1.5 as res2, plain_long_0 >= plain_long_1 as res3, plain_long_0 >= plain_float_1 as res4, plain_float_0 >= plain_float_1 as res5, plain_datetime_0 >= '2000-01-01 00:00:00' as res6, plain_datetime_0 >= plain_datetime_1 as res7, plain_datetime_0 >= plain_timestamp_0 as res8 from alice.tbl_1;"
     },
     {
       "name": "compare (not equal)",
-      "query": "select plain_long_0 <> 1 as res0, plain_long_0 <> 1.5 as res1, plain_float_0 <> 1.5 as res2, plain_long_0 <> plain_long_1 as res3, plain_long_0 <> plain_float_1 as res4, plain_float_0 <> plain_float_1 as res5 from scdb.alice_tbl_1;",
-      "mysql_query": "select plain_long_0 <> 1 as res0, plain_long_0 <> 1.5 as res1, plain_float_0 <> 1.5 as res2, plain_long_0 <> plain_long_1 as res3, plain_long_0 <> plain_float_1 as res4, plain_float_0 <> plain_float_1 as res5 from alice.tbl_1;"
+      "query": "select plain_long_0 <> 1 as res0, plain_long_0 <> 1.5 as res1, plain_float_0 <> 1.5 as res2, plain_long_0 <> plain_long_1 as res3, plain_long_0 <> plain_float_1 as res4, plain_float_0 <> plain_float_1 as res5, plain_datetime_0 <> '2000-01-01 00:00:00' as res6, plain_datetime_0 <> plain_datetime_1 as res7, plain_datetime_0 <> plain_timestamp_0 as res8 from scdb.alice_tbl_1;",
+      "mysql_query": "select plain_long_0 <> 1 as res0, plain_long_0 <> 1.5 as res1, plain_float_0 <> 1.5 as res2, plain_long_0 <> plain_long_1 as res3, plain_long_0 <> plain_float_1 as res4, plain_float_0 <> plain_float_1 as res5, plain_datetime_0 <> '2000-01-01 00:00:00' as res6, plain_datetime_0 <> plain_datetime_1 as res7, plain_datetime_0 <> plain_timestamp_0 as res8 from alice.tbl_1;"
     },
     {
       "name": "arithmetic (plus)",
@@ -42,8 +42,8 @@
     },
     {
       "name": "arithmetic (subtract)",
-      "query": "select plain_long_0 - 1 as res0, plain_long_0 - 1.5 as res1, plain_float_0 - 1.5 as res2, plain_long_0 - plain_long_1 as res3, plain_long_0 - plain_float_0 as res4, plain_float_0 - plain_float_1 as res5 from scdb.alice_tbl_1;",
-      "mysql_query": "select plain_long_0 - 1 as res0, plain_long_0 - 1.5 as res1, plain_float_0 - 1.5 as res2, plain_long_0 - plain_long_1 as res3, plain_long_0 - plain_float_0 as res4, plain_float_0 - plain_float_1 as res5 from alice.tbl_1;"
+      "query": "select plain_long_0 - 1 as res0, plain_long_0 - 1.5 as res1, plain_float_0 - 1.5 as res2, plain_long_0 - plain_long_1 as res3, plain_long_0 - plain_float_0 as res4, plain_float_0 - plain_float_1 as res5, plain_datetime_0 - plain_datetime_1 as res6, plain_datetime_0 - plain_timestamp_0 as res7, plain_timestamp_0 - plain_timestamp_1 as res8 from scdb.alice_tbl_1;",
+      "mysql_query": "select plain_long_0 - 1 as res0, plain_long_0 - 1.5 as res1, plain_float_0 - 1.5 as res2, plain_long_0 - plain_long_1 as res3, plain_long_0 - plain_float_0 as res4, plain_float_0 - plain_float_1 as res5, plain_datetime_0 - plain_datetime_1 as res6, plain_datetime_0 - plain_timestamp_0 as res7, plain_timestamp_0 - plain_timestamp_1 as res8  from alice.tbl_1;"
     },
     {
       "name": "arithmetic (multiply)",
@@ -259,6 +259,31 @@
       "name": "where in subquery",
       "query": "select plain_long_0 from scdb.alice_tbl_0 as alice where (plain_long_0 in (select plain_long_0 from scdb.alice_tbl_1 as alice)) and plain_long_0 > 0",
       "mysql_query": "select plain_long_0 from alice.tbl_0 where (plain_long_0 in (select plain_long_0 from alice.tbl_1)) and plain_long_0 > 0"
+    },
+    {
+      "name": "date func (now, curdate, last_day, str_to_date, date_format)",
+      "query": "select plain_datetime_0 < now() as res1, plain_timestamp_0 < now() as res2, plain_datetime_0 < curdate() as res3, plain_timestamp_0 < curdate() as res4, last_day(plain_datetime_0) as res5, last_day(plain_timestamp_0) as res6, str_to_date('August 10 2017', '%M %d %Y') as res7, date_format(plain_datetime_0, '%Y-%m-%d %H:%i:%S') as res8 from scdb.alice_tbl_1;",
+      "mysql_query": "select plain_datetime_0 < now() as res1, plain_timestamp_0 < now() as res2, plain_datetime_0 < curdate() as res3, plain_timestamp_0 < curdate() as res4, last_day(plain_datetime_0) as res5, last_day(plain_timestamp_0) as res6, str_to_date('August 10 2017', '%M %d %Y') as res7, date_format(plain_datetime_0, '%Y-%m-%d %H:%i:%S') as res8 from alice.tbl_1;"
+    },
+    {
+      "name": "date func (adddate, subdate)",
+      "query": "select adddate(plain_datetime_0, interval 10 day) as res1, adddate(plain_timestamp_0, interval 10 day) as res2, subdate(plain_datetime_0, interval 10 day) as res3, subdate(plain_timestamp_0, interval 10 day) as res4 from scdb.alice_tbl_1;",
+      "mysql_query": "select adddate(plain_datetime_0, interval 10 day) as res1, adddate(plain_timestamp_0, interval 10 day) as res2, subdate(plain_datetime_0, interval 10 day) as res3, subdate(plain_timestamp_0, interval 10 day) as res4 from alice.tbl_1;"
+    },
+    {
+      "name": "date func (datediff)",
+      "query": "select datediff(plain_datetime_0, plain_datetime_1) as res1, datediff(plain_timestamp_0, plain_timestamp_1) as res2 from scdb.alice_tbl_1;",
+      "mysql_query": "select datediff(plain_datetime_0, plain_datetime_1) as res1, datediff(plain_timestamp_0, plain_timestamp_1) as res2 from alice.tbl_1;"
+    },
+    {
+      "name": "plain select (csv)",
+      "query": "select plain_long_0, plain_datetime_0, plain_timestamp_0 from scdb.bob_tbl_1;",
+      "mysql_query": "select plain_long_0, plain_datetime_0, plain_timestamp_0 from bob.tbl_1"
+    },
+    {
+      "name": "date func (now, curdate, last_day, str_to_date, date_format) (csv)",
+      "query": "select '2020-01-01 00:00:00' < curdate() as res1, last_day(plain_datetime_0) as res2, last_day(plain_timestamp_0) as res3, str_to_date('2017/08/10', '%Y/%m/%d') as res4, date_format(plain_datetime_0, '%Y-%m-%d %H:%M:%S') as res5 from scdb.bob_tbl_1;",
+      "mysql_query": "select '2020-01-01 00:00:00' < curdate() as res1, last_day(plain_datetime_0) as res2, last_day(plain_timestamp_0) as res3, str_to_date('2017/08/10', '%Y/%m/%d') as res4, date_format(plain_datetime_0, '%Y-%m-%d %H:%i:%S') as res5 from bob.tbl_1;"
     }
   ]
 }

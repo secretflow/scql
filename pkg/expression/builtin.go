@@ -293,6 +293,13 @@ func newBaseBuiltinFuncWithTp(ctx sessionctx.Context, args []Expression, retType
 			Decimal: int(types.MaxFsp),
 			Flag:    mysql.BinaryFlag,
 		}
+	case types.ETDuration:
+		fieldType = &types.FieldType{
+			Tp:      mysql.TypeDuration,
+			Flen:    mysql.MaxDurationWidthWithFsp,
+			Decimal: int(types.MaxFsp),
+			Flag:    mysql.BinaryFlag,
+		}
 	// TODO(yang.y): add more cases
 	default:
 		panic(fmt.Sprintf("generateCmpSigs: unsupported op type %v. Please contact yang.y for details", retType))
@@ -388,10 +395,15 @@ var funcs = map[string]functionClass{
 	ast.DateAdd:     &addDateFunctionClass{baseFunctionClass{ast.DateAdd, 3, 3}},
 	ast.SubDate:     &subDateFunctionClass{baseFunctionClass{ast.SubDate, 3, 3}},
 	ast.DateSub:     &subDateFunctionClass{baseFunctionClass{ast.DateSub, 3, 3}},
+	ast.AddTime:     &addTimeFunctionClass{baseFunctionClass{ast.AddTime, 2, 2}},
+	ast.SubTime:     &subTimeFunctionClass{baseFunctionClass{ast.SubTime, 2, 2}},
+	ast.TimeDiff:    &timeDiffFunctionClass{baseFunctionClass{ast.TimeDiff, 2, 2}},
 	ast.DateFormat:  &dateFormatFunctionClass{baseFunctionClass{ast.DateFormat, 2, 2}},
 	ast.StrToDate:   &strToDateFunctionClass{baseFunctionClass{ast.StrToDate, 2, 2}},
 	ast.Curdate:     &currentDateFunctionClass{baseFunctionClass{ast.Curdate, 0, 0}},
 	ast.CurrentDate: &currentDateFunctionClass{baseFunctionClass{ast.CurrentDate, 0, 0}},
+	ast.Curtime:     &currentTimeFunctionClass{baseFunctionClass{ast.Curtime, 0, 1}},
+	ast.Now:         &nowFunctionClass{baseFunctionClass{ast.Now, 0, 1}},
 	ast.LastDay:     &lastDayFunctionClass{baseFunctionClass{ast.LastDay, 1, 1}},
 }
 

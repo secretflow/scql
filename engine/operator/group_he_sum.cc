@@ -206,6 +206,8 @@ void GroupHeSum::Execute(ExecContext* ctx) {
     auto group_id_ptr =
         dynamic_cast<const arrow::NumericArray<arrow::UInt32Type>*>(
             group_id_arr.get());
+    YACL_ENFORCE(group_id_ptr != nullptr,
+                 "failed to cast group_id_arr to NumericArray<Uint32>");
     auto group_indices = BuildGroupIndices(*group_id_ptr, GetGroupNum(ctx));
     // recv HE public key and encrypted data from party_en_de
     auto peer_rank = ctx->GetSession()->GetPartyRank(party_en_de);

@@ -300,14 +300,14 @@ func setResultTable(ln logicalNode, resultIdToTensor map[int64]*Tensor) error {
 
 func (t *translator) buildSelection(ln *SelectionNode) (err error) {
 	selection, ok := ln.lp.(*core.LogicalSelection)
-	t.AffectedByGroupThreshold = selection.AffectedByGroupThreshold
 	if !ok {
 		return fmt.Errorf("assert failed while translator buildSelection, expected: core.LogicalSelection, actual: %T", ln.lp)
 	}
+	t.AffectedByGroupThreshold = selection.AffectedByGroupThreshold
+
 	if len(ln.Children()) != 1 {
 		return fmt.Errorf("buildSelection: unexpected number of children %v != 1", len(ln.children))
 	}
-
 	child := ln.children[0]
 	// record tensor id and tensor pointer
 	colIdToTensor := map[int64]*Tensor{}

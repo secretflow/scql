@@ -16,6 +16,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -27,6 +28,7 @@ import (
 	"github.com/secretflow/scql/pkg/audit"
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/status"
 	"github.com/secretflow/scql/pkg/util/logutil"
 	"github.com/secretflow/scql/pkg/util/message"
 )
@@ -41,10 +43,10 @@ func (app *App) EngineHandler(c *gin.Context) {
 	logEntry.SessionID = report.GetSessionId()
 	if err != nil {
 		logEntry.ErrorMsg = err.Error()
-		logrus.Errorf("%v|PartyCode:%v|DagId:%v|ClientIP:%v", logEntry, report.GetPartyCode(), report.GetDagId(), c.ClientIP())
+		logrus.Errorf("%v|PartyCode:%v|SessionId:%v|ClientIP:%v", logEntry, report.GetPartyCode(), report.GetSessionId(), c.ClientIP())
 		return
 	}
-	logrus.Infof("%v|PartyCode:%v|DagId:%v|ClientIP:%v", logEntry, report.GetPartyCode(), report.GetDagId(), c.ClientIP())
+	logrus.Infof("%v|PartyCode:%v|SessionId:%v|ClientIP:%v", logEntry, report.GetPartyCode(), report.GetSessionId(), c.ClientIP())
 }
 
 func engineHandlerCore(app *App, c *gin.Context) (report *scql.ReportRequest, err error) {
@@ -70,47 +72,26 @@ func engineHandlerCore(app *App, c *gin.Context) (report *scql.ReportRequest, er
 	// response OK
 	c.JSON(http.StatusOK, gin.H{})
 
-	var errMsg string
-	if request.GetStatus().GetCode() != int32(scql.Code_OK) {
-		// note: keep the prefix "job failed: dag is success = false. " to pass the unittest `server_test.go`
-		errMsg = fmt.Sprintf("%v|%v", "job failed: dag is success = false.", request.GetStatus().GetMessage())
-		err = fmt.Errorf(errMsg)
-		errCode := scql.Code_UNKNOWN_ENGINE_ERROR
-		if request.GetStatus().GetCode() == int32(scql.Code_ENGINE_RUNSQL_ERROR) {
-			errCode = scql.Code_ENGINE_RUNSQL_ERROR
-		}
+	finished := session.executor.HandleResultCallback(request)
 
-		frontendCallbackResult := newErrorCallbackResult(session.id, errCode, err)
-		app.finishSession(session, frontendCallbackResult, constant.ReasonSessionAbnormalQuit)
+	if !finished {
+		return request, nil
+	}
+
+	result, err := session.executor.MergeQueryResults()
+	if err != nil {
+		var st *status.Status
+		if errors.As(err, &st) {
+			result = newErrorCallbackResult(session.id, st.Code(), st)
+		} else {
+			result = newErrorCallbackResult(session.id, scql.Code_INTERNAL, err)
+		}
+		app.finishSession(session, result, constant.ReasonSessionAbnormalQuit)
 		return request, err
 	}
 
-	go func() {
-		ctx := c.Request.Context()
-		isEnd, err := session.next(ctx, request) // invoke executor next step.
-		if err != nil {
-			// node callback order is wrong in sequential executor
-			// just notify frontEnd and ignore it's reason
-			errMsg = fmt.Sprintf("job failed: session.next error. job[%s] DAG[%v] party[%s] err info[%s]",
-				request.GetSessionId(), request.GetDagId(), request.GetPartyCode(), err.Error())
-			err = fmt.Errorf(errMsg)
-			frontendCallbackResult := newErrorCallbackResult(session.id, scql.Code_INTERNAL, err)
-			app.finishSession(session, frontendCallbackResult, constant.ReasonSessionAbnormalQuit)
-			return
-		}
-
-		if isEnd {
-			frontendCallbackResult, err := session.mergeQueryResults()
-			destroyReason := constant.ReasonSessionNormalQuit
-			if err != nil {
-				frontendCallbackResult = newErrorCallbackResult(session.id, scql.Code_INTERNAL, err)
-				destroyReason = constant.ReasonSessionAbnormalQuit
-			}
-			app.finishSession(session, frontendCallbackResult, destroyReason)
-			return
-		}
-	}()
-	return request, err
+	app.finishSession(session, result, constant.ReasonSessionNormalQuit)
+	return request, nil
 }
 
 func newErrorCallbackResult(sessionId string, code scql.Code, err error) *scql.SCDBQueryResultResponse {
@@ -136,7 +117,8 @@ func (app *App) finishSession(session *session, result *scql.SCDBQueryResultResp
 		logrus.Infof("|ExecutionPlanId:%v|TableShape:%v|AffectedRows:%v", session.id, resultTableShape, result.AffectedRows)
 	}
 	session.result = result
-	app.DestroySession(session.id, sessionDestroyReason)
+	// Question: should we keep drop session codes?
+	// app.DestroySession(session.id, sessionDestroyReason)
 }
 
 func callbackFrontend(ctx context.Context, engineReq *scql.SCDBQueryResultResponse, cbURL string) (reason string, err error) {

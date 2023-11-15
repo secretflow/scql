@@ -43,8 +43,10 @@ def create_mock_data(source_file: str, rows: int, dest_dir: str):
     for i, db_type in enumerate(DB_TYPES):
         # replace float type in content
         # postgres use numeric, mysql use float
-        contents[i] = contents[i].replace(
-            "FLOAT_TYPE", REPLACE_MAP[db_type]["FLOAT_TYPE"]
+        contents[i] = (
+            contents[i]
+            .replace("FLOAT_TYPE", REPLACE_MAP[db_type]["FLOAT_TYPE"])
+            .replace("DATETIME_TYPE", REPLACE_MAP[db_type]["DATETIME_TYPE"])
         )
         if IS_DB_USE_FILE[db_type][db_name]:
             with open(

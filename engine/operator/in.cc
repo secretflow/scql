@@ -212,7 +212,8 @@ void In::OprfPsiIn(ExecContext* ctx, bool is_server,
   spu::psi::EcdhOprfPsiOptions psi_options;
   auto psi_link = ctx->GetSession()->GetLink();
   if (psi_link->WorldSize() > 2) {
-    psi_link = psi_link->SubWorld(ctx->GetNodeName(), input_party_codes);
+    psi_link = psi_link->SubWorld(ctx->GetNodeName() + "-OprfPsiIn",
+                                  input_party_codes);
   }
   psi_options.link0 = psi_link;
   YACL_ENFORCE(psi_options.link0, "fail to getlink0 for OprfPsiIn");
@@ -227,10 +228,10 @@ void In::OprfPsiIn(ExecContext* ctx, bool is_server,
 
   if (is_server) {
     OprfPsiServer(ctx, reveal_to_server, tmp_dir.path().value(), psi_options,
-                  batch_provider, &psi_info_table);
+                  batch_provider, &psi_info_table, psi_link);
   } else {
     OprfPsiClient(ctx, reveal_to_server, tmp_dir.path().value(), psi_options,
-                  batch_provider, &psi_info_table);
+                  batch_provider, &psi_info_table, psi_link);
   }
 
   // audit
@@ -278,7 +279,8 @@ void In::OprfPsiServer(
     ExecContext* ctx, bool reveal_to_server, const std::string& tmp_dir,
     const spu::psi::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<util::BatchProvider>& batch_provider,
-    util::PsiExecutionInfoTable* psi_info_table) {
+    util::PsiExecutionInfoTable* psi_info_table,
+    std::shared_ptr<yacl::link::Context> psi_link) {
   std::vector<uint8_t> private_key =
       yacl::crypto::SecureRandBytes(spu::psi::kEccKeySize);
   auto dh_oprf_psi_server =
@@ -293,7 +295,7 @@ void In::OprfPsiServer(
         server_cache_path, dh_oprf_psi_server->GetCompareLength(),
         dummy_fields);
 
-    util::OprfPsiServerTransferServerItems(ctx, batch_provider,
+    util::OprfPsiServerTransferServerItems(ctx, psi_link, batch_provider,
                                            dh_oprf_psi_server, ub_cache);
 
     std::vector<uint64_t> matched_indices;
@@ -306,7 +308,7 @@ void In::OprfPsiServer(
   } else {
     auto transfer_server_items_future =
         std::async(std::launch::async, util::OprfPsiServerTransferServerItems,
-                   ctx, batch_provider, dh_oprf_psi_server, nullptr);
+                   ctx, psi_link, batch_provider, dh_oprf_psi_server, nullptr);
     util::OprfPsiServerTransferClientItems(ctx, dh_oprf_psi_server);
     transfer_server_items_future.wait();
     psi_info_table->result_size = 0;
@@ -317,21 +319,23 @@ void In::OprfPsiClient(
     ExecContext* ctx, bool reveal_to_server, const std::string& tmp_dir,
     const spu::psi::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<util::BatchProvider>& batch_provider,
-    util::PsiExecutionInfoTable* psi_info_table) {
+    util::PsiExecutionInfoTable* psi_info_table,
+    std::shared_ptr<yacl::link::Context> psi_link) {
   std::string server_cipher_store_path =
       fmt::format("{}/tmp-server-cipher-store.csv", tmp_dir);
   auto cipher_store =
       std::make_shared<util::UbInCipherStore>(server_cipher_store_path);
 
   if (reveal_to_server) {
-    util::OprfPsiClientTransferServerItems(ctx, psi_options, cipher_store);
+    util::OprfPsiClientTransferServerItems(ctx, psi_link, psi_options,
+                                           cipher_store);
     util::OprfCLientTransferShuffledClientItems(ctx, batch_provider,
                                                 psi_options, cipher_store);
     psi_info_table->result_size = 0;
   } else {
     auto transfer_server_items_future =
         std::async(std::launch::async, util::OprfPsiClientTransferServerItems,
-                   ctx, psi_options, cipher_store);
+                   ctx, psi_link, psi_options, cipher_store);
     OprfPsiClientTransferClientItems(ctx, batch_provider, psi_options,
                                      cipher_store);
     transfer_server_items_future.wait();
@@ -378,8 +382,8 @@ void In::EcdhPsiIn(ExecContext* ctx) {
     spu::psi::EcdhPsiOptions options;
     options.link_ctx = ctx->GetSession()->GetLink();
     if (options.link_ctx->WorldSize() > 2) {
-      options.link_ctx =
-          options.link_ctx->SubWorld(ctx->GetNodeName(), input_party_codes);
+      options.link_ctx = options.link_ctx->SubWorld(
+          ctx->GetNodeName() + "-EcdhPsiIn", input_party_codes);
       // update target rank since link_ctx changed.
       if (reveal_to == input_party_codes[0]) {
         target_rank = 0;

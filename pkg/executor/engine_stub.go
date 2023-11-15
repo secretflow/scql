@@ -27,9 +27,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/secretflow/scql/pkg/audit"
 	"github.com/secretflow/scql/pkg/constant"
-	"github.com/secretflow/scql/pkg/interpreter/optimizer"
 	"github.com/secretflow/scql/pkg/interpreter/translator"
 	enginePb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
@@ -89,19 +87,20 @@ func (c httpClient) Post(ctx context.Context, url string, credential string, con
 // EngineStub struct
 type EngineStub struct {
 	executionPlanID string
-	callBackHost    string
-	callBackUri     string
-	webClient       EngineClient
-	protocol        string
-	contentType     string
+	// callback URL
+	cbURL       string
+	webClient   EngineClient
+	protocol    string
+	contentType string
 
 	partyInfo *translator.PartyInfo
 }
 
 // NewEngineStub creates an engine stub instance
 func NewEngineStub(sessionID string,
+	callBackProtocol string,
 	callBackHost string,
-	callBackUri string,
+	callBackPath string,
 	client EngineClient,
 	engineProtocol string,
 	contentType string, partyInfo *translator.PartyInfo) *EngineStub {
@@ -109,117 +108,20 @@ func NewEngineStub(sessionID string,
 	if scheme == "" {
 		scheme = "http"
 	}
+
+	cbURL := url.URL{
+		Scheme: callBackProtocol,
+		Host:   callBackHost,
+		Path:   callBackPath,
+	}
 	return &EngineStub{
 		executionPlanID: sessionID,
-		callBackHost:    callBackHost,
-		callBackUri:     callBackUri,
+		cbURL:           cbURL.String(),
 		webClient:       client,
 		protocol:        scheme,
 		contentType:     contentType,
 		partyInfo:       partyInfo,
 	}
-}
-
-func (stub *EngineStub) RunSubDAG(ctx context.Context, subDAG map[string]*optimizer.PartySubDAG, id int) error {
-	timeStart := time.Now()
-	logEntry := &logutil.MonitorLogEntry{
-		SessionID:  stub.executionPlanID,
-		ActionName: fmt.Sprintf("%v@%v", "EngineStub", "RunSubDAG"),
-	}
-	err := stub.runSubDAGCore(ctx, subDAG, id)
-	logEntry.CostTime = time.Since(timeStart)
-	if nil != err {
-		logEntry.ErrorMsg = err.Error()
-		log.Errorf("%v|SubDAGID:%v", logEntry, id)
-	} else {
-		log.Infof("%v|SubDAGID:%v", logEntry, id)
-	}
-	return err
-}
-
-// runSubDAGCore invokes a http request and sends the node to engine
-func (stub *EngineStub) runSubDAGCore(ctx context.Context, subDAG map[string]*optimizer.PartySubDAG, id int) error {
-	if len(subDAG) == 0 {
-		return fmt.Errorf("subDAG == nil")
-	}
-	var bodies []string
-	var partyCodes []string
-	var dagIDs []int
-	for code, partySubDAG := range subDAG {
-		pb := &enginePb.RunDagRequest{
-			Nodes:        make([]*enginePb.ExecNode, 0),
-			DagId:        int32(id),
-			SessionId:    stub.executionPlanID,
-			CallbackHost: stub.callBackHost,
-			CallbackUri:  stub.callBackUri,
-		}
-		for _, node := range partySubDAG.Nodes {
-			pb.Nodes = append(pb.Nodes, node.ToProto())
-		}
-		encodingType, exists := message.ContentType2EncodingType[stub.contentType]
-		if !exists {
-			return fmt.Errorf("unsupported content type:%s", stub.contentType)
-		}
-		body, err := message.SerializeTo(pb, encodingType)
-		if err != nil {
-			return err
-		}
-
-		bodies = append(bodies, string(body))
-		partyCodes = append(partyCodes, code)
-		dagIDs = append(dagIDs, id)
-		audit.RecordDagDetail(code, "", pb)
-	}
-	respBodies, err := stub.postRequests(ctx, constant.ActionNameEnginePostForRunDag, runDagPath, bodies, partyCodes, dagIDs)
-	if err != nil {
-		return err
-	}
-	return checkRespStatus(respBodies)
-}
-
-func (stub *EngineStub) StartSession(ctx context.Context, sessionStartReq *enginePb.StartSessionRequest, partyCodes []string) error {
-	timeStart := time.Now()
-	logEntry := &logutil.MonitorLogEntry{
-		SessionID:  stub.executionPlanID,
-		ActionName: fmt.Sprintf("%v@%v", "EngineStub", "StartSession"),
-	}
-	err := stub.startSessionCore(ctx, sessionStartReq, partyCodes)
-	logEntry.CostTime = time.Since(timeStart)
-	if nil != err {
-		logEntry.ErrorMsg = err.Error()
-		log.Errorf("%v|sessionStartParams:%v|partyCodes:%v",
-			logEntry, sessionStartReq, partyCodes)
-	} else {
-		log.Infof("%v|sessionStartParams:%v|partyCodes:%v",
-			logEntry, sessionStartReq, partyCodes)
-	}
-	return err
-}
-
-func (stub *EngineStub) startSessionCore(ctx context.Context, sessionStartReq *enginePb.StartSessionRequest, partyCodes []string) error {
-	if sessionStartReq == nil {
-		return fmt.Errorf("startSession: invalid params")
-	}
-	var bodies []string
-	for _, code := range partyCodes {
-		sessionStartReq.SessionParams.PartyCode = code
-		encodingType, exists := message.ContentType2EncodingType[stub.contentType]
-		if !exists {
-			return fmt.Errorf("unsupported content type:%s", stub.contentType)
-		}
-		body, err := message.SerializeTo(sessionStartReq, encodingType)
-		if err != nil {
-			return err
-		}
-		bodies = append(bodies, string(body))
-		audit.RecordSessionParameters(sessionStartReq.GetSessionParams(), "", false)
-	}
-
-	respBodies, err := stub.postRequests(ctx, constant.ActionNameEnginePostForStartSession, startSessionPath, bodies, partyCodes, nil)
-	if err != nil {
-		return err
-	}
-	return checkRespStatus(respBodies)
 }
 
 func (stub *EngineStub) EndSession(ctx context.Context, sessionEndParams *enginePb.StopSessionRequest, partyCodes []string) error {

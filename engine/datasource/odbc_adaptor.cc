@@ -21,13 +21,13 @@
 #include "Poco/Data/PostgreSQL/Connector.h"
 #include "Poco/Data/RecordSet.h"
 #include "Poco/Data/SQLite/Connector.h"
-#include "arrow/compute/cast.h"
+#include "Poco/DateTime.h"
+#include "Poco/Timestamp.h"
 #include "yacl/base/exception.h"
 
 #include "engine/core/arrow_helper.h"
 #include "engine/core/primitive_builder.h"
 #include "engine/core/string_tensor_builder.h"
-#include "engine/core/type.h"
 #include "engine/util/spu_io.h"
 
 namespace scql::engine {
@@ -49,20 +49,17 @@ OdbcAdaptor::OdbcAdaptor(OdbcAdaptorOptions options)
   }
 }
 
-std::vector<TensorPtr> OdbcAdaptor::ExecQuery(
-    const std::string& query, const std::vector<ColumnDesc>& expected_outputs) {
-  std::vector<TensorPtr> result;
+std::vector<TensorPtr> OdbcAdaptor::GetQueryResult(const std::string& query) {
   try {
-    result = ExecQueryImpl(query, expected_outputs);
+    return GetQueryResultImpl(query);
   } catch (const Poco::Data::DataException& e) {
     YACL_THROW("catch unexpected Poco::Data::DataException: {}",
                e.displayText());
   }
-  return result;
 }
 
-std::vector<TensorPtr> OdbcAdaptor::ExecQueryImpl(
-    const std::string& query, const std::vector<ColumnDesc>& expected_outputs) {
+std::vector<TensorPtr> OdbcAdaptor::GetQueryResultImpl(
+    const std::string& query) {
   auto session = CreateSession();
 
   Poco::Data::Statement select(session);
@@ -73,10 +70,6 @@ std::vector<TensorPtr> OdbcAdaptor::ExecQueryImpl(
 
   // check amount of columns
   std::size_t column_cnt = rs.columnCount();
-  if (column_cnt != expected_outputs.size()) {
-    YACL_THROW("expect output contains {} #columns, but got {} #columns",
-               expected_outputs.size(), column_cnt);
-  }
 
   // TODO(shunde.csd): check output data type
   using Poco::Data::MetaColumn;
@@ -97,6 +90,9 @@ std::vector<TensorPtr> OdbcAdaptor::ExecQueryImpl(
       case MetaColumn::ColumnDataType::FDT_INT64:
       // FIXME: convert uint64 to int64 may overflow
       case MetaColumn::ColumnDataType::FDT_UINT64:
+      case MetaColumn::ColumnDataType::FDT_DATE:
+      case MetaColumn::ColumnDataType::FDT_TIME:
+      case MetaColumn::ColumnDataType::FDT_TIMESTAMP:
         builder = std::make_unique<Int64TensorBuilder>();
         break;
       case MetaColumn::ColumnDataType::FDT_FLOAT:
@@ -118,10 +114,10 @@ std::vector<TensorPtr> OdbcAdaptor::ExecQueryImpl(
     builders.push_back(std::move(builder));
   }
 
-  for (auto it = rs.begin(); it != rs.end(); ++it) {
-    auto& row = *it;
+  bool more = rs.moveFirst();
+  while (more) {
     for (std::size_t col_index = 0; col_index < column_cnt; col_index++) {
-      auto& var = row[col_index];
+      auto var = rs[col_index];
       if (var.isEmpty()) {
         builders[col_index]->AppendNull();
         continue;
@@ -145,6 +141,15 @@ std::vector<TensorPtr> OdbcAdaptor::ExecQueryImpl(
           auto* builder =
               static_cast<Int64TensorBuilder*>(builders[col_index].get());
           builder->Append(var.convert<int64_t>());
+          break;
+        }
+        case MetaColumn::ColumnDataType::FDT_DATE:
+        case MetaColumn::ColumnDataType::FDT_TIME:
+        case MetaColumn::ColumnDataType::FDT_TIMESTAMP: {
+          auto* builder =
+              static_cast<Int64TensorBuilder*>(builders[col_index].get());
+          auto epoch = var.convert<Poco::DateTime>().timestamp().epochTime();
+          builder->Append(static_cast<int64_t>(epoch));
           break;
         }
         case MetaColumn::ColumnDataType::FDT_STRING:
@@ -173,28 +178,12 @@ std::vector<TensorPtr> OdbcAdaptor::ExecQueryImpl(
                      fmt::underlying(rs.columnType(col_index)));
       }
     }
+    more = rs.moveNext();
   }
-
   std::vector<TensorPtr> results(column_cnt);
   for (std::size_t i = 0; i < column_cnt; ++i) {
     builders[i]->Finish(&results[i]);
-    if (results[i]->Type() != expected_outputs[i].dtype) {
-      SPDLOG_WARN("column#{} '{}' type mismatch, convert from {} to {}", i,
-                  expected_outputs[i].name,
-                  pb::PrimitiveDataType_Name(results[i]->Type()),
-                  pb::PrimitiveDataType_Name(expected_outputs[i].dtype));
-
-      auto to_type = ToArrowDataType(expected_outputs[i].dtype);
-      auto result =
-          arrow::compute::Cast(results[i]->ToArrowChunkedArray(), to_type);
-      YACL_ENFORCE(result.ok(), "caught error while invoking arrow cast: {}",
-                   result.status().ToString());
-
-      auto chunked_arr = result.ValueOrDie().chunked_array();
-      results[i] = std::make_shared<Tensor>(std::move(chunked_arr));
-    }
   }
-
   return results;
 }
 

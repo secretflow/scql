@@ -162,8 +162,8 @@ class NdArrayConverter {
   arrow::ArrayVector out_arrays_;
 
   std::shared_ptr<arrow::ResizableBuffer> null_bitmap_;
-  uint8_t* null_bitmap_data_;
-  int64_t null_count_;
+  uint8_t* null_bitmap_data_ = nullptr;
+  int64_t null_count_ = 0;
 };
 
 arrow::Status NdArrayConverter::Convert() {
