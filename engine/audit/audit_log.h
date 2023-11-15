@@ -42,9 +42,6 @@ void RecordUncategorizedEvent(const ::scql::pb::Status& status,
                               std::string session_id, std::string source_ip,
                               std::string url_path);
 
-void RecordRunSubDagEvent(const pb::RunDagRequest& request,
-                          const ::scql::pb::Status& status,
-                          const TimePoint& start_time, std::string source_ip);
 void RecordRunExecPlanEvent(const pb::RunExecutionPlanRequest& request,
                             const pb::RunExecutionPlanResponse& response,
                             const TimePoint& start_time, std::string source_ip);

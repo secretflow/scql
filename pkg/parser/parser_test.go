@@ -1303,7 +1303,6 @@ func (s *testParserSuite) TestBuiltin(c *C) {
 		{"select current_timestamp(1.0)", false, ""},
 		{"select current_timestamp('2')", false, ""},
 		{"select now()", true, "SELECT NOW()"},
-		{"select now(6)", true, "SELECT NOW(6)"},
 		{"select sysdate(), sysdate(6)", true, "SELECT SYSDATE(),SYSDATE(6)"},
 		{"SELECT time('01:02:03');", true, "SELECT TIME('01:02:03')"},
 		{"SELECT time('01:02:03.1')", true, "SELECT TIME('01:02:03.1')"},

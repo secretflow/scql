@@ -176,12 +176,37 @@ const std::string& Mod::Type() const { return kOpType; }
 
 spu::Value Mod::ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
                              const spu::Value& rhs) {
-  YACL_THROW("unimplemented");
+  YACL_ENFORCE(lhs.isInt(), "op {} left data type is not integer", Type());
+  YACL_ENFORCE(rhs.isInt(), "op {} right data type is not integer", Type());
+  return spu::kernel::hlo::Remainder(sctx, lhs, rhs);
 }
 
 TensorPtr Mod::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
-  YACL_THROW("unimplemented");
-  return nullptr;
+  auto left = lhs.ToArrowChunkedArray();
+  auto right = rhs.ToArrowChunkedArray();
+  YACL_ENFORCE(arrow::is_integer(left->type()->id()),
+               "op {} left data type is not integer", Type());
+  YACL_ENFORCE(arrow::is_integer(right->type()->id()),
+               "op {} right data type is not integer", Type());
+
+  auto div_result = arrow::compute::CallFunction("divide", {left, right});
+  YACL_ENFORCE(div_result.ok(),
+               "caught error while invoking arrow divide function: {}",
+               div_result.status().ToString());
+
+  auto div_chunk_arr = div_result.ValueOrDie().chunked_array();
+  auto mul_result =
+      arrow::compute::CallFunction("multiply", {div_chunk_arr, right});
+  YACL_ENFORCE(mul_result.ok(),
+               "caught error while invoking arrow multiply function: {}",
+               mul_result.status().ToString());
+
+  auto mul_chunk_arr = mul_result.ValueOrDie().chunked_array();
+  auto result = arrow::compute::CallFunction("subtract", {left, mul_chunk_arr});
+  YACL_ENFORCE(result.ok(),
+               "caught error while invoking arrow subtract function: {}",
+               result.status().ToString());
+  return std::make_shared<Tensor>(result.ValueOrDie().chunked_array());
 }
 
 }  // namespace scql::engine::op

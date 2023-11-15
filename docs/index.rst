@@ -20,7 +20,8 @@ SCQL Systems
 
 - **Overview**:
   :doc:`System overview and architecture </topics/system/intro>` |
-  :doc:`Common usage </topics/system/usage>`
+  :doc:`Common usage </topics/system/usage>` |
+  :doc:`P2P </topics/system/intro-p2p>`
 
 - **Security**:
   :doc:`Security overview </topics/security/overview>`
@@ -62,7 +63,8 @@ Deployment
 ----------
 
 - **Guides**:
-  :doc:`How to deploy an SCQL cluster </topics/deployment/how-to-deploy-a-cluster>`
+  :doc:`How to deploy an SCQL cluster in centralized mode</topics/deployment/how-to-deploy-centralized-cluster>` |
+  :doc:`How to deploy an SCQL cluster in P2P mode</topics/deployment/how-to-deploy-p2p-cluster>`
 
 - **Reference**:
   :doc:`SCQL system config </reference/engine-config>`

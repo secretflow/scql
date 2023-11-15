@@ -90,113 +90,6 @@ bool EngineServiceImpl::CheckSCDBCredential(
   return true;
 }
 
-void EngineServiceImpl::StartSession(::google::protobuf::RpcController* cntl,
-                                     const pb::StartSessionRequest* request,
-                                     pb::Status* status,
-                                     ::google::protobuf::Closure* done) {
-  brpc::ClosureGuard done_guard(done);
-  // TODO(jingshi): Add opentelemetry.
-  // check illegal request.
-  auto controller = static_cast<brpc::Controller*>(cntl);
-  std::string source_ip =
-      butil::endpoint2str(controller->remote_side()).c_str();
-  auto session_id = request->session_params().session_id();
-  if (!CheckSCDBCredential(controller->http_request())) {
-    std::string err_msg = "scdb authentication failed";
-    LOG_ERROR_AND_SET_STATUS(status, pb::Code::UNAUTHENTICATED, err_msg);
-    audit::RecordUncategorizedEvent(*status, session_id, source_ip,
-                                    "StartSession");
-    return;
-  }
-  if (session_id.empty()) {
-    std::string err_msg = "session_id in request is empty";
-    LOG_ERROR_AND_SET_STATUS(status, pb::Code::INVALID_ARGUMENT, err_msg);
-    audit::RecordUncategorizedEvent(*status, session_id, source_ip,
-                                    "StartSession");
-    return;
-  }
-
-  SPDLOG_INFO("EngineServiceImpl::StartSession with session id: {}",
-              session_id);
-  try {
-    VerifyPublicKeys(request->session_params());
-
-    session_mgr_->CreateSession(request->session_params());
-    status->set_code(pb::Code::OK);
-    audit::RecordCreateSessionEvent(*status, request->session_params(), false,
-                                    source_ip);
-    return;
-  } catch (const std::exception& e) {
-    std::string err_msg = fmt::format(
-        "StartSession for session_id={} failed, catch std::exception={} ",
-        session_id, e.what());
-    LOG_ERROR_AND_SET_STATUS(status, pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
-    audit::RecordCreateSessionEvent(*status, request->session_params(), false,
-                                    source_ip);
-    return;
-  }
-}
-
-void EngineServiceImpl::RunDag(::google::protobuf::RpcController* cntl,
-                               const pb::RunDagRequest* request,
-                               pb::Status* status,
-                               ::google::protobuf::Closure* done) {
-  brpc::ClosureGuard done_guard(done);
-  auto start_time = std::chrono::system_clock::now();
-  // check illegal request.
-  auto controller = static_cast<brpc::Controller*>(cntl);
-  std::string source_ip =
-      butil::endpoint2str(controller->remote_side()).c_str();
-  if (!CheckSCDBCredential(controller->http_request())) {
-    std::string err_msg = "scdb authentication failed";
-    LOG_ERROR_AND_SET_STATUS(status, pb::Code::UNAUTHENTICATED, err_msg);
-    audit::RecordUncategorizedEvent(*status, request->session_id(), source_ip,
-                                    "RunDag");
-    return;
-  }
-  if (request->session_id().empty()) {
-    std::string err_msg = "session_id in request is empty";
-    LOG_ERROR_AND_SET_STATUS(status, pb::Code::INVALID_ARGUMENT, err_msg);
-    audit::RecordUncategorizedEvent(*status, request->session_id(), source_ip,
-                                    "RunDag");
-    return;
-  }
-  if (request->callback_uri().empty() || request->callback_host().empty()) {
-    std::string err_msg = "callback uri/host cannot be null";
-    LOG_ERROR_AND_SET_STATUS(status, pb::Code::INVALID_ARGUMENT, err_msg);
-    audit::RecordUncategorizedEvent(*status, request->session_id(), source_ip,
-                                    "RunDag");
-    return;
-  }
-  auto session = session_mgr_->GetSession(request->session_id());
-  if (session == nullptr) {
-    std::string err_msg = fmt::format("no exist session for session_id({})",
-                                      request->session_id());
-    LOG_ERROR_AND_SET_STATUS(status, pb::Code::INVALID_ARGUMENT, err_msg);
-    audit::RecordRunSubDagEvent(*request, *status, start_time, source_ip);
-    return;
-  }
-
-  auto ret = session_mgr_->SetSessionState(
-      request->session_id(), SessionState::IDLE, SessionState::RUNNING);
-  if (!ret) {
-    std::string err_msg =
-        fmt::format("session({}) running before RunDag", request->session_id());
-    LOG_ERROR_AND_SET_STATUS(status, pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
-    audit::RecordRunSubDagEvent(*request, *status, start_time, source_ip);
-    return;
-  }
-
-  // Copy 'request' to avoid deconstruction before async call finished.
-  worker_pool_.Submit(&EngineServiceImpl::RunDagWithSession, this, *request,
-                      session, source_ip);
-  SPDLOG_INFO("submit rundag for session({}), dag queue length={}",
-              request->session_id(), worker_pool_.GetQueueLength());
-
-  status->set_code(pb::Code::OK);
-  return;
-}
-
 void EngineServiceImpl::StopSession(::google::protobuf::RpcController* cntl,
                                     const pb::StopSessionRequest* request,
                                     pb::Status* status,
@@ -262,6 +155,17 @@ void EngineServiceImpl::RunExecutionPlan(
   response->set_session_id(session_id);
   response->set_party_code(request->session_params().party_code());
 
+  if (request->async() && request->callback_url().empty()) {
+    std::string err_msg = fmt::format(
+        "RunExecutionPlan run jobs({}) failed, in async mode but "
+        "callback_url is empty",
+        session_id);
+    LOG_ERROR_AND_SET_STATUS(response->mutable_status(), pb::Code::BAD_REQUEST,
+                             err_msg);
+    audit::RecordRunExecPlanEvent(*request, *response, start_time, source_ip);
+    return;
+  }
+
   Session* session = nullptr;
   // 1. create session first.
   try {
@@ -286,174 +190,82 @@ void EngineServiceImpl::RunExecutionPlan(
     return;
   }
 
-  // 2. run jobs in plan and add result to response.
-  try {
-    YACL_ENFORCE(session_mgr_->SetSessionState(session_id, SessionState::IDLE,
-                                               SessionState::RUNNING));
-    RunPlan(*request, session, response);
-    YACL_ENFORCE(session_mgr_->SetSessionState(
-        session_id, SessionState::RUNNING, SessionState::IDLE));
-  } catch (const std::exception& e) {
-    std::string err_msg = fmt::format(
-        "RunExecutionPlan run jobs({}) failed, catch std::exception={} ",
-        session_id, e.what());
-    LOG_ERROR_AND_SET_STATUS(response->mutable_status(),
-                             pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
-    response->mutable_out_columns()->Clear();
+  // 2. run plan in async or sync mode
+  if (request->async()) {
+    // Copy 'request' to avoid deconstruction before async call finished.
+    worker_pool_.Submit(&EngineServiceImpl::RunPlanAsync, this, *request,
+                        session, source_ip);
+    SPDLOG_INFO("submit runplan for session({}), dag queue length={}",
+                session_id, worker_pool_.GetQueueLength());
+    response->mutable_status()->set_code(pb::Code::OK);
+    return;
+  } else {
+    // run in sync mode
+    RunPlanSync(request, session, response);
     audit::RecordRunExecPlanEvent(*request, *response, start_time, source_ip);
     return;
   }
-
-  // 3. remove session.
-  try {
-    session_mgr_->RemoveSession(session_id);
-  } catch (const std::exception& e) {
-    std::string err_msg = fmt::format(
-        "RunExecutionPlan remove session({}) failed, catch "
-        "std::exception={} ",
-        session_id, e.what());
-    LOG_ERROR_AND_SET_STATUS(response->mutable_status(),
-                             pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
-    response->mutable_out_columns()->Clear();
-    audit::RecordRunExecPlanEvent(*request, *response, start_time, source_ip);
-    return;
-  }
-
-  SPDLOG_INFO("RunExecutionPlan success, request info:\n{} ",
-              MessageToJsonString(*request));
-  audit::RecordRunExecPlanEvent(*request, *response, start_time, source_ip);
-  return;
 }
 
-void EngineServiceImpl::RunDagWithSession(const pb::RunDagRequest request,
-                                          Session* session,
-                                          const std::string& source_ip) {
-  pb::Status status;
-  auto start_time = std::chrono::system_clock::now();
-  try {
-    // TODO(jingshi): support async run SubDag's nodes.
-    for (int idx = 0; idx < request.nodes_size(); ++idx) {
-      const auto& node = request.nodes(idx);
-
-      SPDLOG_INFO("session({}) start to execute node({}), op({})",
-                  session->Id(), node.node_name(), node.op_type());
-      auto start = std::chrono::system_clock::now();
-
-      ExecContext context(node, session);
-      Executor executor;
-      executor.RunExecNode(&context);
-
-      auto end = std::chrono::system_clock::now();
-      SPDLOG_INFO(
-          "session({}) finished executing node({}), op({}), cost({})ms",
-          session->Id(), node.node_name(), node.op_type(),
-          std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
-              .count());
-    }
-
-    status.set_code(pb::Code::OK);
-  } catch (const std::exception& e) {
-    std::string err_msg =
-        fmt::format("RunDag for session_id={} failed, catch std::exception={} ",
-                    request.session_id(), e.what());
-    SPDLOG_WARN(err_msg);
-
-    status.set_code(pb::Code::UNKNOWN_ENGINE_ERROR);
-    status.set_message(err_msg);
-  }
-
-  if (!session_mgr_->SetSessionState(
-          request.session_id(), SessionState::RUNNING, SessionState::IDLE)) {
-    SPDLOG_WARN("set session({}) state failed after running");
-  }
-
-  std::string report_info_str = ConstructReportInfo(status, request, session);
-  ReportToScdb(request, report_info_str);
-  audit::RecordRunSubDagEvent(request, status, start_time, source_ip);
-  return;
-}
-
-std::string EngineServiceImpl::ConstructReportInfo(
-    const pb::Status& status, const pb::RunDagRequest& request,
-    Session* session) {
-  pb::ReportRequest report;
-  report.mutable_status()->CopyFrom(status);
-  report.set_dag_id(request.dag_id());
-  report.set_session_id(request.session_id());
-  report.set_party_code(session->SelfPartyCode());
-
-  for (int i = 0; i < request.nodes_size(); i++) {
-    const auto& node = request.nodes(i);
-    if (node.op_type() == "Publish") {
-      auto results = session->GetPublishResults();
-      for (const auto& result : results) {
-        pb::Tensor* out_column = report.add_out_columns();
-        out_column->CopyFrom(*result);
-      }
-    } else if (node.op_type() == "DumpFile") {
-      auto affected_rows = session->GetAffectedRows();
-      report.set_num_rows_affected(affected_rows);
-    }
-  }
-
-  return MessageToJsonString(report);
-}
-
-void EngineServiceImpl::ReportToScdb(const pb::RunDagRequest& request,
+void EngineServiceImpl::ReportResult(const std::string& session_id,
+                                     const std::string& cb_url,
                                      const std::string& report_info_str) {
   try {
-    auto rpc_channel =
-        channel_manager_->Create(request.callback_host(), RemoteRole::Scdb);
+    auto rpc_channel = channel_manager_->Create(cb_url, RemoteRole::Scdb);
     if (!rpc_channel) {
       SPDLOG_WARN(
           "create rpc channel failed for scdb: session_id={}, "
-          "callback_host={}",
-          request.session_id(), request.callback_host());
+          "callback_url={}",
+          session_id, cb_url);
       return;
     }
 
     // do http report
     brpc::Controller cntl;
-    cntl.http_request().uri().set_path(request.callback_uri());
+    if (cntl.http_request().uri().SetHttpURL(cb_url) != 0) {
+      const auto& st = cntl.http_request().uri().status();
+      SPDLOG_WARN("failed to set request URL: {}", st.error_str());
+      return;
+    }
     cntl.http_request().set_method(brpc::HTTP_METHOD_POST);
     cntl.http_request().set_content_type("application/json");
     cntl.request_attachment().append(report_info_str);
 
-    SPDLOG_INFO("session({}) send rpc request to scdb, callback_host={}",
-                request.session_id(), request.callback_host());
+    SPDLOG_INFO("session({}) send rpc request to scdb, callback_url={}",
+                session_id, cb_url);
     // Because `done'(last parameter) is NULL, this function waits until
     // the response comes back or error occurs(including timeout).
     rpc_channel->CallMethod(nullptr, &cntl, nullptr, nullptr, nullptr);
     if (cntl.Failed()) {
-      SPDLOG_WARN("session({}) report host({}) failed with error({})",
-                  request.session_id(), request.callback_host(),
-                  cntl.ErrorText());
+      SPDLOG_WARN("session({}) report callback URL({}) failed with error({})",
+                  session_id, cb_url, cntl.ErrorText());
       return;
     }
 
     SPDLOG_INFO("session({}) report success, get response ({}), used({}ms)",
-                request.session_id(), cntl.response_attachment().to_string(),
+                session_id, cntl.response_attachment().to_string(),
                 cntl.latency_us() / 1000);
 
   } catch (const std::exception& e) {
-    SPDLOG_WARN("ReportToScdb({}) failed, catch std::exception={} ",
-                request.session_id(), e.what());
+    SPDLOG_WARN("ReportResult({}) failed, catch std::exception={} ", session_id,
+                e.what());
     return;
   }
 
   return;
 }
 
-void EngineServiceImpl::RunPlan(const pb::RunExecutionPlanRequest& request,
-                                Session* session,
-                                pb::RunExecutionPlanResponse* response) {
-  const auto& policy = request.policy();
+void EngineServiceImpl::RunPlanCore(const pb::RunExecutionPlanRequest& request,
+                                    Session* session,
+                                    pb::RunExecutionPlanResponse* response) {
+  const auto& graph = request.graph();
+  const auto& policy = graph.policy();
   for (const auto& subdag : policy.subdags()) {
     for (const auto& job : subdag.jobs()) {
       const auto& node_ids = job.node_ids();
       for (const auto& node_id : node_ids) {
-        const auto& iter = request.nodes().find(node_id);
-        YACL_ENFORCE(iter != request.nodes().cend(),
+        const auto& iter = graph.nodes().find(node_id);
+        YACL_ENFORCE(iter != graph.nodes().cend(),
                      "no node for node_id={} in node_ids", node_id);
         const auto& node = iter->second;
         SPDLOG_INFO("session({}) start to execute node({}), op({})",
@@ -503,6 +315,69 @@ void EngineServiceImpl::VerifyPublicKeys(
     parties.emplace_back(auth::PartyIdentity{party.code(), party.public_key()});
   }
   authenticator_->Verify(start_params.party_code(), parties);
+}
+
+void EngineServiceImpl::RunPlanSync(const pb::RunExecutionPlanRequest* request,
+                                    Session* session,
+                                    pb::RunExecutionPlanResponse* response) {
+  // 1. run jobs in plan and add result to response.
+  const std::string session_id = request->session_params().session_id();
+  try {
+    YACL_ENFORCE(session_mgr_->SetSessionState(session_id, SessionState::IDLE,
+                                               SessionState::RUNNING));
+    RunPlanCore(*request, session, response);
+    YACL_ENFORCE(session_mgr_->SetSessionState(
+        session_id, SessionState::RUNNING, SessionState::IDLE));
+  } catch (const std::exception& e) {
+    std::string err_msg = fmt::format(
+        "RunExecutionPlan run jobs({}) failed, catch std::exception={} ",
+        session_id, e.what());
+    LOG_ERROR_AND_SET_STATUS(response->mutable_status(),
+                             pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
+    response->mutable_out_columns()->Clear();
+    return;
+  }
+
+  // 2. remove session.
+  try {
+    session_mgr_->RemoveSession(session_id);
+  } catch (const std::exception& e) {
+    std::string err_msg = fmt::format(
+        "RunExecutionPlan remove session({}) failed, catch "
+        "std::exception={} ",
+        session_id, e.what());
+    LOG_ERROR_AND_SET_STATUS(response->mutable_status(),
+                             pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
+    response->mutable_out_columns()->Clear();
+    return;
+  }
+
+  SPDLOG_INFO("RunExecutionPlan success, request info:\n{} ",
+              MessageToJsonString(*request));
+  return;
+}
+
+void EngineServiceImpl::RunPlanAsync(const pb::RunExecutionPlanRequest request,
+                                     Session* session,
+                                     const std::string& source_ip) {
+  auto start_time = std::chrono::system_clock::now();
+  pb::RunExecutionPlanResponse response;
+  response.set_session_id(request.session_params().session_id());
+  response.set_party_code(request.session_params().party_code());
+
+  RunPlanSync(&request, session, &response);
+  audit::RecordRunExecPlanEvent(request, response, start_time, source_ip);
+
+  // prepare report info
+  pb::ReportRequest report;
+  report.mutable_status()->CopyFrom(response.status());
+  report.mutable_out_columns()->CopyFrom(response.out_columns());
+  report.set_session_id(response.session_id());
+  report.set_party_code(response.party_code());
+  report.set_num_rows_affected(response.num_rows_affected());
+
+  ReportResult(request.session_params().session_id(), request.callback_url(),
+               MessageToJsonString(report));
 }
 
 }  // namespace scql::engine

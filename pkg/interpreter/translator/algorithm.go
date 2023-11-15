@@ -133,6 +133,7 @@ func NewAlgCreator() *algCreator {
 			operator.OpNameMul:          createBinaryAlg,
 			operator.OpNameDiv:          createBinaryAlg,
 			operator.OpNameIntDiv:       createBinaryAlg,
+			operator.OpNameMod:          createBinaryAlg,
 			operator.OpNameGreater:      createBinaryAlg,
 			operator.OpNameLess:         createBinaryAlg,
 			operator.OpNameGreaterEqual: createBinaryAlg,

@@ -59,6 +59,7 @@ cc_library(
     srcs = ["listener.cc"],
     hdrs = ["listener.h"],
     deps = [
+        ":mux_receiver_cc_proto",
         "@yacl//yacl/link/transport:channel",
     ],
 )

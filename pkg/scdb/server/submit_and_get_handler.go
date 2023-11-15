@@ -16,20 +16,28 @@ package server
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/proto"
+	"gorm.io/gorm"
 
 	"github.com/secretflow/scql/pkg/audit"
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/executor"
-	"github.com/secretflow/scql/pkg/interpreter/optimizer"
+	"github.com/secretflow/scql/pkg/interpreter"
+	"github.com/secretflow/scql/pkg/interpreter/translator"
+	"github.com/secretflow/scql/pkg/planner/core"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/scdb/config"
+	"github.com/secretflow/scql/pkg/scdb/storage"
 	"github.com/secretflow/scql/pkg/status"
 	"github.com/secretflow/scql/pkg/util/logutil"
 	"github.com/secretflow/scql/pkg/util/message"
@@ -97,49 +105,293 @@ func (app *App) submitAndGet(ctx context.Context, req *scql.SCDBQueryRequest) *s
 	return session.result
 }
 
-// submitAndGetDQL executes query and gets result back
-func (app *App) submitAndGetDQL(ctx context.Context, s *session) *scql.SCDBQueryResultResponse {
-	lpInfo, err := app.compilePrepare(ctx, s)
+func (app *App) buildCompileRequest(ctx context.Context, s *session) (*scql.CompileQueryRequest, error) {
+	issuer := s.GetSessionVars().User
+	if issuer.Username == storage.DefaultRootName && issuer.Hostname == storage.DefaultHostName {
+		return nil, fmt.Errorf("user root has no privilege to execute dql")
+	}
+	issuerPartyCode, err := storage.QueryUserPartyCode(s.GetSessionVars().Storage, issuer.Username, issuer.Hostname)
 	if err != nil {
-		return newErrorFetchResponse(s.id, scql.Code_INTERNAL, err.Error())
+		return nil, fmt.Errorf("failed to query issuer party code: %v", err)
 	}
 
-	s.fillPartyInfo(lpInfo.engineInfos)
-
-	epInfo, err := app.compile(lpInfo, s)
+	dsList, err := app.extractDataSourcesInDQL(ctx, s)
 	if err != nil {
-		return newErrorFetchResponse(s.id, scql.Code_INTERNAL, err.Error())
+		return nil, err
 	}
 
-	// Build session start parameters.
+	// check datasource
+	if len(dsList) == 0 {
+		return nil, fmt.Errorf("no data source specified in the query")
+	}
+	dbName := dsList[0].DBName.String()
+	s.GetSessionVars().CurrentDB = dbName
+	// check if referenced tables are in the same db
+	if len(dsList) > 1 {
+		for _, ds := range dsList[1:] {
+			if ds.DBName.String() != dbName {
+				return nil, fmt.Errorf("query is not allowed to execute across multiply databases")
+			}
+		}
+	}
+
+	// collect referenced table schemas
+	tableNames := make([]string, 0, len(dsList))
+	for _, ds := range dsList {
+		tableNames = append(tableNames, ds.TableInfo().Name.String())
+	}
+
+	catalog, err := app.buildCatalog(s.sessionVars.Storage, dbName, tableNames)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build catalog: %v", err)
+	}
+
+	securityConfig, err := buildSecurityConfig(s.sessionVars.Storage, issuerPartyCode, catalog.Tables)
+	if err != nil {
+		return nil, err
+	}
+
 	spuRuntimeCfg, err := config.NewSpuRuntimeCfg(app.config.Engine.SpuRuntimeCfg)
 	if err != nil {
-		return newErrorFetchResponse(s.id, scql.Code_INTERNAL, err.Error())
+		return nil, err
 	}
+
+	req := &scql.CompileQueryRequest{
+		Query:  s.request.GetQuery(),
+		DbName: dbName,
+		Issuer: &scql.PartyId{
+			Code: issuerPartyCode,
+		},
+		IssuerAsParticipant: false,
+		Catalog:             catalog,
+		SecurityConf:        securityConfig,
+		CompileOpts: &scql.CompileOptions{
+			SpuConf: spuRuntimeCfg,
+			SecurityCompromise: &scql.SecurityCompromiseConfig{
+				RevealGroupMark: app.config.SecurityCompromise.RevealGroupMark,
+			},
+			DumpExeGraph: true,
+		},
+	}
+
+	return req, nil
+}
+
+func buildSecurityConfig(store *gorm.DB, issuerPartyCode string, tables []*scql.TableEntry) (*scql.SecurityConfig, error) {
+	parties := make([]string, 0)
+	for _, tbl := range tables {
+		if !tbl.IsView {
+			parties = append(parties, tbl.GetOwner().GetCode())
+		}
+	}
+
+	var ccl []*scql.SecurityConfig_ColumnControl
+	foundQueryIssuer := false
+	for _, party := range parties {
+		if party == issuerPartyCode {
+			foundQueryIssuer = true
+		}
+		cc, err := collectCCLForParty(store, party, tables)
+		if err != nil {
+			return nil, err
+		}
+		ccl = append(ccl, cc...)
+	}
+
+	// SecurityConfig should contains the query issuer
+	if !foundQueryIssuer {
+		cc, err := collectCCLForParty(store, issuerPartyCode, tables)
+		if err != nil {
+			return nil, err
+		}
+		ccl = append(ccl, cc...)
+	}
+	return &scql.SecurityConfig{
+		ColumnControlList: ccl,
+	}, nil
+}
+
+func QueryTableSchemas(store *gorm.DB, dbName string, tableNames []string) (tables []*scql.TableEntry, err error) {
+	callFc := func(tx *gorm.DB) error {
+		tables, err = queryTableSchemas(tx, dbName, tableNames)
+		return err
+	}
+	if err := store.Transaction(callFc, &sql.TxOptions{ReadOnly: true}); err != nil {
+		return nil, fmt.Errorf("queryTableSchemas: %v", err)
+	}
+	return tables, nil
+}
+
+func queryTableSchemas(store *gorm.DB, dbName string, tableNames []string) ([]*scql.TableEntry, error) {
+	var tables []storage.Table
+	result := store.Model(&storage.Table{}).Where("db = ? AND table_name in ?", dbName, tableNames).Find(&tables)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	userPartyMap := make(map[string]string)
+	getPartyCodeByUser := func(store *gorm.DB, username, host string) (string, error) {
+		if p, ok := userPartyMap[username]; ok {
+			return p, nil
+		}
+		p, err := storage.QueryUserPartyCode(store, username, host)
+		if err == nil {
+			userPartyMap[username] = p
+		}
+		return p, err
+	}
+
+	var tblEntries []*scql.TableEntry
+	for _, tbl := range tables {
+		ownerPartyCode, err := getPartyCodeByUser(store, tbl.Owner, tbl.Host)
+		if err != nil {
+			return nil, err
+		}
+		tblEntry := scql.TableEntry{
+			TableName:    fmt.Sprintf("%s.%s", tbl.Db, tbl.Table),
+			IsView:       tbl.IsView,
+			SelectString: tbl.SelectString,
+			RefTable:     fmt.Sprintf("%s.%s", tbl.RefDb, tbl.RefTable),
+			Owner: &scql.PartyId{
+				Code: ownerPartyCode,
+			},
+			DbType: core.DBType(tbl.DBType).String(),
+		}
+
+		var cols []storage.Column
+		result := store.Model(&storage.Column{}).Where("db = ? AND table_name = ?", dbName, tbl.Table).Find(&cols)
+		if result.Error != nil {
+			return nil, result.Error
+		}
+		for _, col := range cols {
+			tblEntry.Columns = append(tblEntry.Columns, &scql.TableEntry_Column{
+				Name:            col.ColumnName,
+				Type:            col.Type,
+				OrdinalPosition: int32(col.OrdinalPosition),
+			})
+		}
+		tblEntries = append(tblEntries, &tblEntry)
+	}
+	return tblEntries, nil
+}
+
+// If parameter async is true, the query result will be notified by engine, this function will always return nil
+func (app *App) runDQL(ctx context.Context, s *session, async bool) (*scql.SCDBQueryResultResponse, error) {
+	compileReq, err := app.buildCompileRequest(ctx, s)
+	if err != nil {
+		return nil, err
+	}
+	intrpr := interpreter.NewInterpreter()
+	compiledPlan, err := intrpr.Compile(ctx, compileReq)
+
+	if err != nil {
+		return nil, err
+	}
+
+	s.GetSessionVars().AffectedByGroupThreshold = compiledPlan.Warning.GetMayAffectedByGroupThreshold()
+	logrus.Infof("Execution Plan:\n%s\n", compiledPlan.GetExplain().GetExeGraphDot())
+
 	sessionStartParams := &scql.SessionStartParams{
 		SessionId:     s.id,
-		Parties:       epInfo.parties,
-		SpuRuntimeCfg: spuRuntimeCfg,
+		SpuRuntimeCfg: compiledPlan.GetSpuRuntimeConf(),
+		TimeZone:      s.GetSessionVars().GetTimeZone(),
+	}
+	var partyCodes []string
+	for _, p := range compiledPlan.Parties {
+		partyCodes = append(partyCodes, p.GetCode())
 	}
 
-	mapper := optimizer.NewGraphMapper(epInfo.graph, epInfo.subDAGs)
-	mapper.Map()
-	pbRequests := mapper.CodeGen(sessionStartParams)
+	var partyInfo *translator.PartyInfo
+	{
+		db := s.GetSessionVars().Storage
+		var users []storage.User
+		result := db.Model(&storage.User{}).Where("party_code in ?", partyCodes).Find(&users)
+		if result.Error != nil {
+			return nil, result.Error
+		}
+		partyMap := make(map[string]*translator.Participant)
+		for _, u := range users {
+			participant := &translator.Participant{
+				PartyCode: u.PartyCode,
+				Endpoints: strings.Split(u.EngineEndpoints, ";"),
+				Token:     u.EngineToken,
+				PubKey:    u.EnginePubKey,
+			}
+			partyMap[u.PartyCode] = participant
+		}
+		participants := make([]*translator.Participant, 0, len(partyCodes))
+		for i, code := range partyCodes {
+			party, exists := partyMap[code]
+			if !exists {
+				return nil, fmt.Errorf("could not find info for party %s", code)
+			}
+			participants = append(participants, party)
+			sessionStartParams.Parties = append(sessionStartParams.Parties, &scql.SessionStartParams_Party{
+				Code:      code,
+				Name:      code,
+				Host:      party.Endpoints[0],
+				Rank:      int32(i),
+				PublicKey: party.PubKey,
+			})
+		}
+		partyInfo = translator.NewPartyInfo(participants)
+	}
+
+	pbRequests := make(map[string]*scql.RunExecutionPlanRequest)
+	for party, graph := range compiledPlan.SubGraphs {
+		startParams, ok := proto.Clone(sessionStartParams).(*scql.SessionStartParams)
+		if !ok {
+			return nil, fmt.Errorf("failed to clone session start params")
+		}
+		startParams.PartyCode = party
+		cbURL := url.URL{
+			Scheme: app.config.Protocol,
+			Host:   app.config.SCDBHost,
+			Path:   engineCallbackPath,
+		}
+		pbRequests[party] = &scql.RunExecutionPlanRequest{
+			SessionParams: startParams,
+			Graph:         graph,
+			Async:         async,
+			CallbackUrl:   cbURL.String(),
+		}
+	}
 
 	s.engineStub = executor.NewEngineStub(s.id,
+		app.config.Protocol,
 		app.config.SCDBHost,
 		engineCallbackPath,
 		app.engineClient,
 		app.config.Engine.Protocol,
 		app.config.Engine.ContentType,
-		s.partyInfo,
+		partyInfo,
 	)
 
-	syncExecutor, err := executor.NewSyncExecutor(pbRequests, epInfo.graph.OutputNames, s.engineStub, s.id, epInfo.graph.PartyInfo)
-	if err != nil {
-		return newErrorFetchResponse(s.id, scql.Code_INTERNAL, err.Error())
+	var outputNames []string
+	for _, col := range compiledPlan.GetSchema().GetColumns() {
+		outputNames = append(outputNames, col.GetName())
 	}
-	resp, err := syncExecutor.RunExecutionPlan(ctx)
+
+	exec, err := executor.NewExecutor(pbRequests, outputNames, s.engineStub, s.id, partyInfo)
+	if err != nil {
+		return nil, err
+	}
+	s.executor = exec
+	resp, err := exec.RunExecutionPlan(ctx, async)
+	if err != nil {
+		return nil, err
+	}
+
+	if async {
+		// In async mode, result will be set in callback
+		return nil, nil
+	}
+	return resp, nil
+}
+
+// submitAndGetDQL executes query and gets result back
+func (app *App) submitAndGetDQL(ctx context.Context, s *session) *scql.SCDBQueryResultResponse {
+	resp, err := app.runDQL(ctx, s, false)
 	if err != nil {
 		var st *status.Status
 		if errors.As(err, &st) {

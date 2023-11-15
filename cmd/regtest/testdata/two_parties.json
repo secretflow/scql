@@ -22,18 +22,18 @@
     },
     {
       "name": "join on multi keys",
-      "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0 and alice.join_string_0 = bob.join_string_0;",
-      "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0 and alice.join_string_0 = bob.join_string_0;"
+      "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0 and alice.join_string_0 = bob.join_string_0 and alice.plain_datetime_0 = bob.plain_datetime_0 and alice.plain_timestamp_0 = bob.plain_timestamp_0;",
+      "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0 and alice.join_string_0 = bob.join_string_0 and alice.plain_datetime_0 = bob.plain_datetime_0 and alice.plain_timestamp_0 = bob.plain_timestamp_0;"
     },
     {
       "name": "left join on multi keys",
-      "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice left join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0 and alice.join_string_0 = bob.join_string_0;",
-      "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice left join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0 and alice.join_string_0 = bob.join_string_0;"
+      "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice left join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0 and alice.join_string_0 = bob.join_string_0 and alice.plain_datetime_0 = bob.plain_datetime_0 and alice.plain_timestamp_0 = bob.plain_timestamp_0;",
+      "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice left join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0 and alice.join_string_0 = bob.join_string_0 and alice.plain_datetime_0 = bob.plain_datetime_0 and alice.plain_timestamp_0 = bob.plain_timestamp_0;"
     },
     {
       "name": "right join on multi keys",
-      "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice right join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0 and alice.join_string_0 = bob.join_string_0;",
-      "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice right join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0 and alice.join_string_0 = bob.join_string_0;"
+      "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice right join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0 and alice.join_string_0 = bob.join_string_0 and alice.plain_datetime_0 = bob.plain_datetime_0 and alice.plain_timestamp_0 = bob.plain_timestamp_0;",
+      "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice right join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0 and alice.join_string_0 = bob.join_string_0 and alice.plain_datetime_0 = bob.plain_datetime_0 and alice.plain_timestamp_0 = bob.plain_timestamp_0;"
     },
     {
       "name": "join three table(alice, alice, bob)",
@@ -57,28 +57,28 @@
     },
     {
       "name": "compare (less) after join",
-      "query": "select alice.compare_long_0 < bob.compare_long_0 as res0, alice.compare_long_0 < bob.compare_float_0 as res1, alice.compare_float_0 < bob.compare_float_0 as res2 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0;",
-      "mysql_query": "select alice.compare_long_0 < bob.compare_long_0 as res0, alice.compare_long_0 < bob.compare_float_0 as res1, alice.compare_float_0 < bob.compare_float_0 as res2 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
+      "query": "select alice.compare_long_0 < bob.compare_long_0 as res0, alice.compare_long_0 < bob.compare_float_0 as res1, alice.compare_float_0 < bob.compare_float_0 as res2, alice.compare_datetime_0 < bob.compare_datetime_0 as res3, alice.compare_timestamp_0 < bob.compare_timestamp_0 as res4 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0;",
+      "mysql_query": "select alice.compare_long_0 < bob.compare_long_0 as res0, alice.compare_long_0 < bob.compare_float_0 as res1, alice.compare_float_0 < bob.compare_float_0 as res2, alice.compare_datetime_0 < bob.compare_datetime_0 as res3, alice.compare_timestamp_0 < bob.compare_timestamp_0 as res4 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
     },
     {
       "name": "compare (greater) after join",
-      "query": "select alice.compare_long_0 > bob.compare_long_0 as res0, alice.compare_long_0 > bob.compare_float_0 as res1, alice.compare_float_0 > bob.compare_float_0 as res2 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0;",
-      "mysql_query": "select alice.compare_long_0 > bob.compare_long_0 as res0, alice.compare_long_0 > bob.compare_float_0 as res1, alice.compare_float_0 > bob.compare_float_0 as res2 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
+      "query": "select alice.compare_long_0 > bob.compare_long_0 as res0, alice.compare_long_0 > bob.compare_float_0 as res1, alice.compare_float_0 > bob.compare_float_0 as res2, alice.compare_datetime_0 > bob.compare_datetime_0 as res3, alice.compare_timestamp_0 > bob.compare_timestamp_0 as res4 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0;",
+      "mysql_query": "select alice.compare_long_0 > bob.compare_long_0 as res0, alice.compare_long_0 > bob.compare_float_0 as res1, alice.compare_float_0 > bob.compare_float_0 as res2, alice.compare_datetime_0 > bob.compare_datetime_0 as res3, alice.compare_timestamp_0 > bob.compare_timestamp_0 as res4 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
     },
     {
       "name": "compare (less or equal) after join",
-      "query": "select alice.compare_long_0 <= bob.compare_long_0 as res0, alice.compare_long_0 <= bob.compare_float_0 as res1, alice.compare_float_0 <= bob.compare_float_0 as res2 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0;",
-      "mysql_query": "select alice.compare_long_0 <= bob.compare_long_0 as res0, alice.compare_long_0 <= bob.compare_float_0 as res1, alice.compare_float_0 <= bob.compare_float_0 as res2 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
+      "query": "select alice.compare_long_0 <= bob.compare_long_0 as res0, alice.compare_long_0 <= bob.compare_float_0 as res1, alice.compare_float_0 <= bob.compare_float_0 as res2, alice.compare_datetime_0 <= bob.compare_datetime_0 as res3, alice.compare_timestamp_0 <= bob.compare_timestamp_0 as res4 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0;",
+      "mysql_query": "select alice.compare_long_0 <= bob.compare_long_0 as res0, alice.compare_long_0 <= bob.compare_float_0 as res1, alice.compare_float_0 <= bob.compare_float_0 as res2, alice.compare_datetime_0 <= bob.compare_datetime_0 as res3, alice.compare_timestamp_0 <= bob.compare_timestamp_0 as res4 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
     },
     {
       "name": "compare (greater or equal) after join",
-      "query": "select alice.compare_long_0 >= bob.compare_long_0 as res0, alice.compare_long_0 >= bob.compare_float_0 as res1, alice.compare_float_0 >= bob.compare_float_0 as res2 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0;",
-      "mysql_query": "select alice.compare_long_0 >= bob.compare_long_0 as res0, alice.compare_long_0 >= bob.compare_float_0 as res1, alice.compare_float_0 >= bob.compare_float_0 as res2 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
+      "query": "select alice.compare_long_0 >= bob.compare_long_0 as res0, alice.compare_long_0 >= bob.compare_float_0 as res1, alice.compare_float_0 >= bob.compare_float_0 as res2, alice.compare_datetime_0 >= bob.compare_datetime_0 as res3, alice.compare_timestamp_0 >= bob.compare_timestamp_0 as res4 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0;",
+      "mysql_query": "select alice.compare_long_0 >= bob.compare_long_0 as res0, alice.compare_long_0 >= bob.compare_float_0 as res1, alice.compare_float_0 >= bob.compare_float_0 as res2, alice.compare_datetime_0 >= bob.compare_datetime_0 as res3, alice.compare_timestamp_0 >= bob.compare_timestamp_0 as res4 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
     },
     {
       "name": "compare (not equal) after join",
-      "query": "select alice.compare_long_0 <> bob.compare_long_0 as res0, alice.compare_long_0 <> bob.compare_float_0 as res1, alice.compare_float_0 <> bob.compare_float_0 as res2 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0;",
-      "mysql_query": "select alice.compare_long_0 <> bob.compare_long_0 as res0, alice.compare_long_0 <> bob.compare_float_0 as res1, alice.compare_float_0 <> bob.compare_float_0 as res2 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
+      "query": "select alice.compare_long_0 <> bob.compare_long_0 as res0, alice.compare_long_0 <> bob.compare_float_0 as res1, alice.compare_float_0 <> bob.compare_float_0 as res2, alice.compare_datetime_0 <> bob.compare_datetime_0 as res3, alice.compare_timestamp_0 <> bob.compare_timestamp_0 as res4 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0;",
+      "mysql_query": "select alice.compare_long_0 <> bob.compare_long_0 as res0, alice.compare_long_0 <> bob.compare_float_0 as res1, alice.compare_float_0 <> bob.compare_float_0 as res2, alice.compare_datetime_0 <> bob.compare_datetime_0 as res3, alice.compare_timestamp_0 <> bob.compare_timestamp_0 as res4 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
     },
     {
       "name": "arithmetic (plus) after join",
@@ -99,6 +99,11 @@
       "name": "arithmetic (divide) after join",
       "query": "select bob.plain_long_0 / (alice.plain_long_0 * alice.plain_long_0 + 1) as res0, alice.plain_long_0 / (bob.plain_float_0 *  bob.plain_float_0 + 1) as res1, alice.plain_float_0 / (bob.plain_float_0 * bob.plain_float_0 + 1) as res2 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0;",
       "mysql_query": "select bob.plain_long_0 / (alice.plain_long_0 * alice.plain_long_0 + 1) as res0, alice.plain_long_0 / (bob.plain_float_0 *  bob.plain_float_0 + 1) res1, alice.plain_float_0 / (bob.plain_float_0 * bob.plain_float_0 + 1) as res2 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
+    },
+    {
+      "name": "arithmetic (mod) after join",
+      "query": "select bob.plain_long_0 % (alice.plain_long_0 * alice.plain_long_0 + 1) as res0 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0;",
+      "mysql_query": "select bob.plain_long_0 % (alice.plain_long_0 * alice.plain_long_0 + 1) as res0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
     },
     {
       "name": "max after join",
@@ -167,13 +172,13 @@
     },
     {
       "name": "count after join",
-      "query": "select count(alice.aggregate_long_0) as res0, count(bob.aggregate_long_0) as res1, count(alice.aggregate_float_0) as res2, count(bob.aggregate_float_0) as res3, count(alice.aggregate_string_0) as res4, count(bob.aggregate_string_0) as res5 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0;",
-      "mysql_query": "select count(alice.aggregate_long_0) as res0, count(bob.aggregate_long_0) as res1, count(alice.aggregate_float_0) as res2, count(bob.aggregate_float_0) as res3, count(alice.aggregate_string_0) as res4, count(bob.aggregate_string_0) as res5 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
+      "query": "select count(alice.aggregate_long_0) as res0, count(bob.aggregate_long_0) as res1, count(alice.aggregate_float_0) as res2, count(bob.aggregate_float_0) as res3, count(alice.aggregate_string_0) as res4, count(bob.aggregate_string_0) as res5, count(alice.aggregate_datetime_0) as res6, count(bob.aggregate_datetime_0) as res7, count(alice.aggregate_timestamp_0) as res8, count(bob.aggregate_timestamp_0) as res9 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0;",
+      "mysql_query": "select count(alice.aggregate_long_0) as res0, count(bob.aggregate_long_0) as res1, count(alice.aggregate_float_0) as res2, count(bob.aggregate_float_0) as res3, count(alice.aggregate_string_0) as res4, count(bob.aggregate_string_0) as res5, count(alice.aggregate_datetime_0) as res6, count(bob.aggregate_datetime_0) as res7, count(alice.aggregate_timestamp_0) as res8, count(bob.aggregate_timestamp_0) as res9 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
     },
     {
       "name": "count & distinct after join",
-      "query": "select count(distinct alice.aggregate_long_0) as res0, count(distinct bob.aggregate_long_0) as res1, count(distinct alice.aggregate_float_0) as res2, count(distinct bob.aggregate_float_0) as res3, count(distinct alice.aggregate_string_0) as res4, count(distinct bob.aggregate_string_0) as res5 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0;",
-      "mysql_query": "select count(distinct alice.aggregate_long_0) as res0, count(distinct bob.aggregate_long_0) as res1, count(distinct alice.aggregate_float_0) as res2, count(distinct bob.aggregate_float_0) as res3, count(distinct alice.aggregate_string_0) as res4, count(distinct bob.aggregate_string_0) as res5 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
+      "query": "select count(distinct alice.aggregate_long_0) as res0, count(distinct bob.aggregate_long_0) as res1, count(distinct alice.aggregate_float_0) as res2, count(distinct bob.aggregate_float_0) as res3, count(distinct alice.aggregate_string_0) as res4, count(distinct bob.aggregate_string_0) as res5, count(distinct alice.aggregate_datetime_0) as res6, count(distinct bob.aggregate_datetime_0) as res7, count(distinct alice.aggregate_timestamp_0) as res8, count(distinct bob.aggregate_timestamp_0) as res9 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0;",
+      "mysql_query": "select count(distinct alice.aggregate_long_0) as res0, count(distinct bob.aggregate_long_0) as res1, count(distinct alice.aggregate_float_0) as res2, count(distinct bob.aggregate_float_0) as res3, count(distinct alice.aggregate_string_0) as res4, count(distinct bob.aggregate_string_0) as res5, count(distinct alice.aggregate_datetime_0) as res6, count(distinct bob.aggregate_datetime_0) as res7, count(distinct alice.aggregate_timestamp_0) as res8, count(distinct bob.aggregate_timestamp_0) as res9 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
     },
     {
       "name": "logic after join",
@@ -202,28 +207,28 @@
     },
     {
       "name": "compare(less) before join",
-      "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_0 < bob.compare_long_1 and alice.compare_float_0 < bob.compare_long_1 and alice.compare_float_0 < bob.compare_float_1;",
-      "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_0 < bob.compare_long_1 and alice.compare_float_0 < bob.compare_long_1 and alice.compare_float_0 < bob.compare_float_1;"
+      "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_0 < bob.compare_long_1 and alice.compare_float_0 < bob.compare_long_1 and alice.compare_float_0 < bob.compare_float_1 and alice.compare_datetime_0 < bob.compare_datetime_0 and alice.compare_timestamp_0 < bob.compare_timestamp_0;",
+      "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_0 < bob.compare_long_1 and alice.compare_float_0 < bob.compare_long_1 and alice.compare_float_0 < bob.compare_float_1 and alice.compare_datetime_0 < bob.compare_datetime_0 and alice.compare_timestamp_0 < bob.compare_timestamp_0;"
     },
     {
       "name": "compare(greater) before join",
-      "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_1 > bob.compare_long_0 and alice.compare_float_1 > bob.compare_long_0 and alice.compare_float_1 > bob.compare_float_0;",
-      "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_1 > bob.compare_long_0 and alice.compare_float_1 > bob.compare_long_0 and alice.compare_float_1 > bob.compare_float_0;"
+      "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_1 > bob.compare_long_0 and alice.compare_float_1 > bob.compare_long_0 and alice.compare_float_1 > bob.compare_float_0 and alice.compare_datetime_0 > bob.compare_datetime_0 and alice.compare_timestamp_0 > bob.compare_timestamp_0;",
+      "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_1 > bob.compare_long_0 and alice.compare_float_1 > bob.compare_long_0 and alice.compare_float_1 > bob.compare_float_0 and alice.compare_datetime_0 > bob.compare_datetime_0 and alice.compare_timestamp_0 > bob.compare_timestamp_0;"
     },
     {
       "name": "compare(less or equal) before join",
-      "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_0 <= bob.compare_long_1 and alice.compare_float_0 <= bob.compare_long_1 and alice.compare_float_0 <= bob.compare_float_1;",
-      "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_0 <= bob.compare_long_1 and alice.compare_float_0 <= bob.compare_long_1 and alice.compare_float_0 <= bob.compare_float_1;"
+      "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_0 <= bob.compare_long_1 and alice.compare_float_0 <= bob.compare_long_1 and alice.compare_float_0 <= bob.compare_float_1 and alice.compare_datetime_0 <= bob.compare_datetime_0 and alice.compare_timestamp_0 <= bob.compare_timestamp_0;",
+      "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_0 <= bob.compare_long_1 and alice.compare_float_0 <= bob.compare_long_1 and alice.compare_float_0 <= bob.compare_float_1 and alice.compare_datetime_0 <= bob.compare_datetime_0 and alice.compare_timestamp_0 <= bob.compare_timestamp_0;"
     },
     {
       "name": "compare(greater or equal) before join",
-      "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_1 >= bob.compare_long_0 and alice.compare_float_1 >= bob.compare_long_0 and alice.compare_float_1 >= bob.compare_float_0;",
-      "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_1 >= bob.compare_long_0 and alice.compare_float_1 >= bob.compare_long_0 and alice.compare_float_1 >= bob.compare_float_0;"
+      "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_1 >= bob.compare_long_0 and alice.compare_float_1 >= bob.compare_long_0 and alice.compare_float_1 >= bob.compare_float_0 and alice.compare_datetime_0 >= bob.compare_datetime_0 and alice.compare_timestamp_0 >= bob.compare_timestamp_0;",
+      "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_1 >= bob.compare_long_0 and alice.compare_float_1 >= bob.compare_long_0 and alice.compare_float_1 >= bob.compare_float_0 and alice.compare_datetime_0 >= bob.compare_datetime_0 and alice.compare_timestamp_0 >= bob.compare_timestamp_0;"
     },
     {
       "name": "compare(not equal) before join",
-      "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_1 <> bob.compare_long_0 and alice.compare_float_1 <> bob.compare_long_0 and alice.compare_float_1 <> bob.compare_float_0;",
-      "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_1 <> bob.compare_long_0 and alice.compare_float_1 <> bob.compare_long_0 and alice.compare_float_1 <> bob.compare_float_0;"
+      "query": "select alice.plain_long_0 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_1 <> bob.compare_long_0 and alice.compare_float_1 <> bob.compare_long_0 and alice.compare_float_1 <> bob.compare_float_0 and alice.compare_datetime_0 <> bob.compare_datetime_0 and alice.compare_timestamp_0 <> bob.compare_timestamp_0;",
+      "mysql_query": "select alice.plain_long_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0 where alice.compare_long_1 <> bob.compare_long_0 and alice.compare_float_1 <> bob.compare_long_0 and alice.compare_float_1 <> bob.compare_float_0 and alice.compare_datetime_0 <> bob.compare_datetime_0 and alice.compare_timestamp_0 <> bob.compare_timestamp_0;"
     },
     {
       "name": "arithmetic(plus) before join ",
@@ -356,6 +361,11 @@
       "mysql_query": "select ta.groupby_string_0, count(*) as c, count(distinct ta.aggregate_long_0) as cd, sum(ta.aggregate_long_0) as sum, min(ta.aggregate_long_0) as min, max(ta.aggregate_long_0) as max, avg(ta.aggregate_long_0) as avg from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_string_0 having count(*) >= 4"
     },
     {
+      "name": "agg with group by(datetime), private group by",
+      "query": "select ta.groupby_datetime_0, count(*) as c, count(distinct ta.aggregate_long_0) as cd, sum(ta.aggregate_long_0) as sum, min(ta.aggregate_long_0) as min, max(ta.aggregate_long_0) as max, avg(ta.aggregate_long_0) as avg from scdb.alice_tbl_0 as ta join scdb.bob_tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_datetime_0",
+      "mysql_query": "select ta.groupby_datetime_0, count(*) as c, count(distinct ta.aggregate_long_0) as cd, sum(ta.aggregate_long_0) as sum, min(ta.aggregate_long_0) as min, max(ta.aggregate_long_0) as max, avg(ta.aggregate_long_0) as avg from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_datetime_0 having count(*) >= 4"
+    },
+    {
       "name": "agg with group by(string2), oblivious group by",
       "query": "select ta.groupby_string_0,tb.groupby_string_0, count(*) as c, count(distinct ta.aggregate_long_0) as cd, sum(ta.aggregate_long_0) as sum, min(ta.aggregate_long_0) as min, max(ta.aggregate_long_0) as max, avg(ta.aggregate_long_0) as avg from scdb.alice_tbl_0 as ta join scdb.bob_tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_string_0,tb.groupby_string_0",
       "mysql_query": "select ta.groupby_string_0,tb.groupby_string_0, count(*) as c, count(distinct ta.aggregate_long_0) as cd, sum(ta.aggregate_long_0) as sum, min(ta.aggregate_long_0) as min, max(ta.aggregate_long_0) as max, avg(ta.aggregate_long_0) as avg from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 group by ta.groupby_string_0,tb.groupby_string_0 having count(*) >= 4"
@@ -372,8 +382,8 @@
     },
     {
       "name": "select plain data from another party",
-      "query": "select plain_long_0, plain_string_0, plain_float_0 from scdb.bob_tbl_0",
-      "mysql_query": "select plain_long_0, plain_string_0, plain_float_0 from bob.tbl_0"
+      "query": "select plain_long_0, plain_string_0, plain_float_0, plain_datetime_0, plain_timestamp_0 from scdb.bob_tbl_0",
+      "mysql_query": "select plain_long_0, plain_string_0, plain_float_0, plain_datetime_0, plain_timestamp_0 from bob.tbl_0"
     },
     {
       "name": "issuer party not in party infos",
@@ -429,6 +439,21 @@
       "name": "case when(multi condition) after join",
       "query": "select case when alice.compare_long_0 > bob.compare_long_0 then alice.plain_long_0 when alice.plain_long_0 > 50 then bob.plain_long_0 when alice.plain_long_0 then 1 else 0 end as res1 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0",
       "mysql_query": "select case when alice.compare_long_0 > bob.compare_long_0 then alice.plain_long_0 when alice.plain_long_0 > 50 then bob.plain_long_0 when alice.plain_long_0 then 1 else 0 end as res1 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
+    },
+    {
+      "name": "date func (now, curdate)",
+      "query": "select alice.plain_datetime_0 < now() as res1, alice.plain_datetime_0 < curdate() as res2 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_datetime_0 = bob.join_datetime_0;",
+      "mysql_query": "select alice.plain_datetime_0 < now() as res1, alice.plain_datetime_0 < curdate() as res2 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_datetime_0 = bob.join_datetime_0;"
+    },
+    {
+      "name": "date func (adddate, subdate)",
+      "query": "select adddate(alice.plain_datetime_0, interval 10 day) as res1, adddate(bob.plain_datetime_0, interval 10 day) as res2, subdate(alice.plain_datetime_0, interval 10 day) as res3, subdate(bob.plain_datetime_0, interval 10 day) as res4 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_datetime_0 = bob.join_datetime_0;",
+      "mysql_query": "select adddate(alice.plain_datetime_0, interval 10 day) as res1, adddate(bob.plain_datetime_0, interval 10 day) as res2, subdate(alice.plain_datetime_0, interval 10 day) as res3, subdate(bob.plain_datetime_0, interval 10 day) as res4 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_datetime_0 = bob.join_datetime_0;"
+    },
+    {
+      "name": "date func (datediff)",
+      "query": "select datediff(alice.plain_datetime_0, bob.plain_datetime_1) as res1 from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_datetime_0 = bob.join_datetime_0;",
+      "mysql_query": "select datediff(alice.plain_datetime_0, bob.plain_datetime_1) as res1 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_datetime_0 = bob.join_datetime_0;"
     }
   ]
 }

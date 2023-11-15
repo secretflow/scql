@@ -28,35 +28,24 @@ namespace scql::engine {
 //   static LogicalRetryPolicy g_my_retry_policy;
 //   options.retry_policy = &g_my_retry_policy;
 
-// NOTE:
-// brpc::ChannelOptions::timeout_ms controls the timeout of the method call,
-// after the timeout, for synchronized method call, control will return to
-// client even the retry is inprocess, for example:
-//   ChannelOptions options;
-//   options.timeout_ms = 1000; // timeout in 1 second.
-//   stub.SomeRpcCall(&cntl, &request, &response, nullptr);
-//   // first attempt failed.
-//   // brpc call retry.DoRetry()
-//   bthread_usleep(1 * 1000 * 1000); // 1 second.
-//   return true;
-//   // brpc do retry.
-// In this case, the client will get control after timeout_ms(1s), while the
-// retry is still on the road.
 // Suggestion: let
 // options.timeout_ms > total_delay = options.max_retry * policy.delay_interval
 class LogicalRetryPolicy : public brpc::RetryPolicy {
  public:
   LogicalRetryPolicy() = default;
 
-  LogicalRetryPolicy(size_t retry_delay_ms)
-      : retry_delay_ns_(retry_delay_ms * 1000){};
+  LogicalRetryPolicy(int32_t retry_delay_ms)
+      : retry_delay_ms_(retry_delay_ms){};
 
   // From brpc::RetryPolicy
   bool DoRetry(const brpc::Controller* cntl) const override;
 
+  // Returns the backoff time in milliseconds before every retry.
+  int32_t GetBackoffTimeMs(const brpc::Controller* controller) const override;
+
  protected:
-  // logical retry delay, in nano-seconds.
-  const size_t retry_delay_ns_ = 1000 * 1000;
+  // logical retry delay, in milliseconds.
+  const int32_t retry_delay_ms_ = 1000;
 };
 
 class SimpleAuthenticator : public brpc::Authenticator {

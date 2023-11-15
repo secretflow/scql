@@ -183,32 +183,6 @@ void RecordUncategorizedEvent(const ::scql::pb::Status& status,
   RecordAudit(audit);
 }
 
-void RecordRunSubDagEvent(const pb::RunDagRequest& request,
-                          const ::scql::pb::Status& status,
-                          const TimePoint& start_time, std::string source_ip) {
-  if (!audit_init_finished) {
-    return;
-  }
-  AuditLog audit;
-  auto* header = audit.mutable_header();
-  header->mutable_time()->set_seconds(GetTimeSec(start_time));
-
-  header->mutable_status()->CopyFrom(status);
-  header->set_event_name(::audit::pb::RUN_SUB_DAG);
-  header->set_session_id(request.session_id());
-
-  auto* body = audit.mutable_body()->mutable_run_dag();
-  body->set_source_ip(source_ip);
-  body->set_dag_id(request.dag_id());
-  body->set_cost_time(GetCostTime(start_time));
-  for (int idx = 0; idx < request.nodes_size(); ++idx) {
-    const auto& exec_node = request.nodes(idx);
-    auto node_info = GetSimpleInfoFromExecNode(exec_node);
-    body->add_node_list()->CopyFrom(node_info);
-  }
-  RecordAudit(audit);
-}
-
 void RecordRunExecPlanEvent(const pb::RunExecutionPlanRequest& request,
                             const pb::RunExecutionPlanResponse& response,
                             const TimePoint& start_time,
@@ -228,7 +202,7 @@ void RecordRunExecPlanEvent(const pb::RunExecutionPlanRequest& request,
   body->set_cost_time(GetCostTime(start_time));
   body->set_affected_rows(response.num_rows_affected());
 
-  for (const auto& iter : request.nodes()) {
+  for (const auto& iter : request.graph().nodes()) {
     const auto& exec_node = iter.second;
     auto node_info = GetSimpleInfoFromExecNode(exec_node);
     auto* node_to_add = body->add_node_list();

@@ -19,7 +19,7 @@
 namespace scql::engine {
 void Listener::AddChannel(
     const size_t rank,
-    std::shared_ptr<yacl::link::transport::ChannelBase> channel) {
+    std::shared_ptr<yacl::link::transport::Channel> channel) {
   YACL_ENFORCE(channel, "add channel failed, channel can't be nullptr.");
   YACL_ENFORCE(channels_.count(rank) == 0,
                "add channel failed, rank={} exists before add.", rank);
@@ -27,23 +27,13 @@ void Listener::AddChannel(
   return;
 }
 
-void Listener::OnMessage(const size_t rank, const std::string& key,
-                         const std::string& value) {
+void Listener::OnRequest(const size_t rank,
+                         const link::pb::MuxPushRequest* request,
+                         link::pb::MuxPushResponse* response) {
   auto iter = channels_.find(rank);
   YACL_ENFORCE(iter != channels_.end(), "channel for rank:{} not exist", rank);
   YACL_ENFORCE(iter->second, "channel for rank:{} is nullptr", rank);
-  iter->second->OnMessage(key, value);
-  return;
-}
-
-void Listener::OnChunkedMessage(const size_t rank, const std::string& key,
-                                const std::string& value, const size_t offset,
-                                const size_t total_length) {
-  auto iter = channels_.find(rank);
-  YACL_ENFORCE(iter != channels_.end(), "channel for rank:{} not exist", rank);
-  YACL_ENFORCE(iter->second, "channel for rank:{} is nullptr", rank);
-  iter->second->OnChunkedMessage(key, value, offset, total_length);
-  return;
+  iter->second->OnRequest(*request, response);
 }
 
 void ListenerManager::AddListener(const std::string& link_id,

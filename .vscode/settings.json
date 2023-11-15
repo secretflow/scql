@@ -3,5 +3,9 @@
   "gopls": {
     "formatting.local": "github.com/secretflow/scql"
   },
-  "esbonio.sphinx.confDir": "${workspaceFolder}/docs/"
+  "esbonio.sphinx.confDir": "${workspaceFolder}/docs",
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "python.formatting.provider": "none"
 }

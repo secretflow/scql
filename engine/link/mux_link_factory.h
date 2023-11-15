@@ -44,31 +44,38 @@ class MuxLinkFactory : public yacl::link::ILinkFactory {
   ListenerManager* listener_manager_;
 };
 
-class MuxLinkChannel : public yacl::link::transport::ChannelBase {
+class MuxLink : public yacl::link::transport::TransportLink {
  public:
-  MuxLinkChannel(size_t self_rank, size_t peer_rank,
-                 size_t http_max_payload_size, std::string link_id,
-                 std::shared_ptr<::google::protobuf::RpcChannel> channel)
-      : ChannelBase(self_rank, peer_rank, false),
+  MuxLink(size_t self_rank, size_t peer_rank, size_t http_max_payload_size,
+          std::string link_id,
+          std::shared_ptr<::google::protobuf::RpcChannel> rpc_channel)
+      : TransportLink(self_rank, peer_rank),
         http_max_payload_size_(http_max_payload_size),
-        link_id_(std::move(link_id)),
-        rpc_channel_(std::move(channel)) {}
+        link_id_(link_id),
+        rpc_channel_(rpc_channel) {}
 
-  MuxLinkChannel(size_t self_rank, size_t peer_rank, size_t recv_timeout_ms,
-                 size_t http_max_payload_size, std::string link_id,
-                 std::shared_ptr<::google::protobuf::RpcChannel> channel)
-      : ChannelBase(self_rank, peer_rank, recv_timeout_ms, false),
-        http_max_payload_size_(http_max_payload_size),
-        link_id_(std::move(link_id)),
-        rpc_channel_(std::move(channel)) {}
+  size_t GetMaxBytesPerChunk() override;
+  void SetMaxBytesPerChunk(size_t bytes) override;
+  std::unique_ptr<::google::protobuf::Message> PackMonoRequest(
+      const std::string& key, yacl::ByteContainerView value) override;
+  std::unique_ptr<::google::protobuf::Message> PackChunkedRequest(
+      const std::string& key, yacl::ByteContainerView value, size_t offset,
+      size_t total_length) override;
+  void UnpackMonoRequest(const ::google::protobuf::Message& request,
+                         std::string* key,
+                         yacl::ByteContainerView* value) override;
+  void UnpackChunckRequest(const ::google::protobuf::Message& request,
+                           std::string* key, yacl::ByteContainerView* value,
+                           size_t* offset, size_t* total_length) override;
+  void FillResponseOk(const ::google::protobuf::Message& request,
+                      ::google::protobuf::Message* response) override;
+  void FillResponseError(const ::google::protobuf::Message& request,
+                         ::google::protobuf::Message* response) override;
+  bool IsChunkedRequest(const ::google::protobuf::Message& request) override;
+  bool IsMonoRequest(const ::google::protobuf::Message& request) override;
 
- private:
-  void SendChunked(const std::string& key, yacl::ByteContainerView value);
-
-  void SendImpl(const std::string& key, yacl::ByteContainerView value) override;
-
-  void SendImpl(const std::string& key, yacl::ByteContainerView value,
-                uint32_t timeout_ms) override;
+  void SendRequest(const ::google::protobuf::Message& request,
+                   uint32_t timeout_override_ms) override;
 
  private:
   size_t http_max_payload_size_;

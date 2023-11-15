@@ -40,6 +40,22 @@ var dbTypeMap = map[string]DBType{
 	"odps":       DBTypeODPS,
 }
 
+var dbTypeNameMap = map[DBType]string{
+	DBTypeUnknown:  "unknown",
+	DBTypeMySQL:    "mysql",
+	DBTypeSQLite:   "sqlite",
+	DBTypePostgres: "postgresql",
+	DBTypeCSVDB:    "csvdb",
+	DBTypeODPS:     "odps",
+}
+
+func (t DBType) String() string {
+	if name, exists := dbTypeNameMap[t]; exists {
+		return name
+	}
+	return "unknown"
+}
+
 func ParseDBType(tp string) (DBType, error) {
 	if v, ok := dbTypeMap[strings.ToLower(tp)]; ok {
 		return v, nil
@@ -50,13 +66,14 @@ func ParseDBType(tp string) (DBType, error) {
 var (
 	_ Dialect = &MySQLDialect{}
 	_ Dialect = &PostgresDialect{}
+	_ Dialect = &CVSDBDialect{}
 	_ Dialect = &OdpsDialect{}
 )
 
 var (
 	DBDialectMap = map[DBType]Dialect{
 		DBTypeUnknown:  NewMySQLDialect(),
-		DBTypeCSVDB:    NewPostgresDialect(),
+		DBTypeCSVDB:    NewCVSDBDialect(),
 		DBTypeMySQL:    NewMySQLDialect(),
 		DBTypePostgres: NewPostgresDialect(),
 		DBTypeSQLite:   NewMySQLDialect(),
@@ -113,6 +130,28 @@ func (d *PostgresDialect) GetFormatDialect() format.Dialect {
 }
 
 func (d *PostgresDialect) SupportAnyValue() bool {
+	return false
+}
+
+type CVSDBDialect struct {
+	MySQLDialect
+}
+
+func NewCVSDBDialect() *CVSDBDialect {
+	return &CVSDBDialect{
+		MySQLDialect{flags: format.RestoreStringSingleQuotes | format.RestoreKeyWordLowercase, formatDialect: format.NewCVSDBDialect()},
+	}
+}
+
+func (d *CVSDBDialect) GetRestoreFlags() format.RestoreFlags {
+	return d.flags
+}
+
+func (d *CVSDBDialect) GetFormatDialect() format.Dialect {
+	return d.formatDialect
+}
+
+func (d *CVSDBDialect) SupportAnyValue() bool {
 	return false
 }
 

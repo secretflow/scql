@@ -15,97 +15,26 @@
 package server
 
 import (
-	"context"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/secretflow/scql/pkg/executor"
-	"github.com/secretflow/scql/pkg/infoschema"
-	"github.com/secretflow/scql/pkg/interpreter/translator"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
-	"github.com/secretflow/scql/pkg/scdb/config"
 	"github.com/secretflow/scql/pkg/scdb/storage"
 	"github.com/secretflow/scql/pkg/util/mock"
 )
 
-func TestAskEngineInfoByTables(t *testing.T) {
-	// setup
-	r := require.New(t)
-
-	// given
-	store, err := storage.NewMemoryStorage()
-	r.NoError(err)
-	r.NoError(mock.MockStorage(store)) // user already create here
-
-	req := &scql.SCDBQueryRequest{
-		User: &scql.SCDBCredential{
-			User: &scql.User{
-				User: &scql.User_NativeUser_{
-					NativeUser: &scql.User_NativeUser{
-						Name:     "alice",
-						Password: "alice123",
-					},
-				},
-			},
-		},
-	}
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	app, err := NewApp(&config.Config{}, store, &executor.MockEngineClient{})
-	r.NoError(err)
-
-	session, err := newSession(context.Background(), req, store)
-	r.NoError(err)
-
-	// when
-	enginesInfo, err := app.askEngineInfoByTables(session, "test", []string{"table_1", "table_2", "table_3"})
-	// then
-	r.NoError(err)
-	r.Equal(2, len(enginesInfo.GetParties()))
-
-	host, err := enginesInfo.GetUrlByParty("alice")
-	r.NoError(err)
-	r.Equal("engine.alice.com", host)
-	credential, err := enginesInfo.GetCredentialByParty("alice")
-	r.NoError(err)
-	r.Equal("alice_credential", credential)
-
-	host, err = enginesInfo.GetUrlByParty("bob")
-	r.NoError(err)
-	r.Equal("engine.bob.com", host)
-	credential, err = enginesInfo.GetCredentialByParty("bob")
-	r.NoError(err)
-	r.Equal("bob_credential", credential)
-
-	tables := enginesInfo.GetTablesByParty("alice")
-	r.Equal(2, len(tables))
-	r.Equal("test.table_1", tables[0].String())
-	r.Equal("test.table_3", tables[1].String())
-
-	partyCode := enginesInfo.GetPartyByTable(translator.NewDbTable("test", "table_1"))
-	r.Equal("alice", partyCode)
-	partyCode = enginesInfo.GetPartyByTable(translator.NewDbTable("test", "table_2"))
-	r.Equal("bob", partyCode)
-	partyCode = enginesInfo.GetPartyByTable(translator.NewDbTable("test", "table_3"))
-	r.Equal("alice", partyCode)
-}
-
-func TestCollectCCLForUser(t *testing.T) {
+func TestCollectCCLForParty(t *testing.T) {
 	r := require.New(t)
 
 	store, err := storage.NewMemoryStorage()
 	r.NoError(err)
 	r.NoError(mock.MockStorage(store)) // user already create here
 
-	tableSchemas := []*infoschema.TableSchema{
+	tableSchemas := []*scql.TableEntry{
 		{
-			DbName:    "test",
-			TableName: "table_1",
-			Columns: []infoschema.ColumnDesc{
+			TableName: "test.table_1",
+			Columns: []*scql.TableEntry_Column{
 				{
 					Name: "column1_1",
 					Type: "long",
@@ -117,7 +46,7 @@ func TestCollectCCLForUser(t *testing.T) {
 			},
 		},
 	}
-	ccl, err := collectCCLForUser(store, "alice", "%", tableSchemas)
+	ccl, err := collectCCLForParty(store, "alice", tableSchemas)
 	r.NoError(err)
 	r.Equal(len(ccl), 2)
 	r.Equal(ccl[0].PartyCode, "alice")

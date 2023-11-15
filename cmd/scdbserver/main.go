@@ -39,6 +39,8 @@ const (
 	defaultConfigPath = "cmd/scdbserver/config.yml"
 )
 
+var version = "scql version"
+
 // custom monitor formatter, e.g.: "2020-07-14 16:59:47.7144 INFO main.go:107 |msg"
 type CustomMonitorFormatter struct {
 	log.TextFormatter
@@ -64,6 +66,15 @@ const (
 )
 
 func main() {
+	confFile := flag.String("config", defaultConfigPath, "Path to scdb server configuration file")
+	showVersion := flag.Bool("version", false, "Print version information")
+	flag.Parse()
+
+	if *showVersion {
+		fmt.Println(version)
+		return
+	}
+
 	log.SetReportCaller(true)
 	log.SetFormatter(&CustomMonitorFormatter{log.TextFormatter{TimestampFormat: "2006-01-02 15:04:05.123"}})
 	rollingLogger := &lumberjack.Logger{
@@ -76,8 +87,6 @@ func main() {
 	mout := io.MultiWriter(os.Stdout, rollingLogger)
 	log.SetOutput(mout)
 
-	confFile := flag.String("config", defaultConfigPath, "Path to scdb server configuration file")
-	flag.Parse()
 	gin.SetMode(gin.ReleaseMode)
 
 	log.Infof("Starting to read config file: %s", *confFile)

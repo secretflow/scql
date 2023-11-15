@@ -20,13 +20,11 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/secretflow/scql/pkg/infoschema"
 	"github.com/secretflow/scql/pkg/interpreter/translator"
 	"github.com/secretflow/scql/pkg/parser/mysql"
 	"github.com/secretflow/scql/pkg/planner/core"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/scdb/storage"
-	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
 
 func findColPriv(colPrivs []storage.ColumnPriv, colName string) (storage.ColumnPriv, bool) {
@@ -39,23 +37,27 @@ func findColPriv(colPrivs []storage.ColumnPriv, colName string) (storage.ColumnP
 	return storage.ColumnPriv{}, false
 }
 
-func collectCCLForUser(store *gorm.DB, user, host string, tables []*infoschema.TableSchema) ([]*scql.SecurityConfig_ColumnControl, error) {
+func collectCCLForParty(store *gorm.DB, party string, tables []*scql.TableEntry) ([]*scql.SecurityConfig_ColumnControl, error) {
 	var ccl []*scql.SecurityConfig_ColumnControl
 
-	partyCode, err := storage.QueryUserPartyCode(store, user, host)
+	partyOwner, err := storage.FindUserByParty(store, party)
 	if err != nil {
-		return nil, fmt.Errorf("failed to query party code for user %s: %v", user, err)
+		return nil, err
 	}
 
 	for _, tbl := range tables {
+		dbTable, err := core.NewDbTableFromString(tbl.TableName)
+		if err != nil {
+			return nil, err
+		}
 		// table level visibility
-		tblPriv, err := tableVisibilityForUser(store, user, host, tbl.DbName, tbl.TableName)
+		tblPriv, err := tableVisibilityForUser(store, partyOwner.User, partyOwner.Host, dbTable.GetDbName(), dbTable.GetTableName())
 		if err != nil {
 			return nil, err
 		}
 
 		// column level visibility
-		colPrivs, err := columnVisibilityForUser(store, user, host, tbl.DbName, tbl.TableName)
+		colPrivs, err := columnVisibilityForUser(store, partyOwner.User, partyOwner.Host, dbTable.GetDbName(), dbTable.GetTableName())
 		if err != nil {
 			return nil, err
 		}
@@ -67,9 +69,9 @@ func collectCCLForUser(store *gorm.DB, user, host string, tables []*infoschema.T
 				colPriv.VisibilityPriv = tblPriv.VisibilityPriv
 			}
 			cc := &scql.SecurityConfig_ColumnControl{
-				PartyCode:    partyCode,
-				DatabaseName: tbl.DbName,
-				TableName:    tbl.TableName,
+				PartyCode:    party,
+				DatabaseName: dbTable.GetDbName(),
+				TableName:    dbTable.GetTableName(),
 				ColumnName:   col.Name,
 				Visibility:   mysqlPrivilegeType2CCLVisibility(colPriv.VisibilityPriv),
 			}
@@ -111,56 +113,6 @@ func columnVisibilityForUser(store *gorm.DB, user, host, dbName, tableName strin
 		return nil, result.Error
 	}
 	return colPrivs, nil
-}
-
-func (app *App) askEngineInfoByTables(s *session, dbName string, tableNames []string) (*translator.EnginesInfo, error) {
-	store := s.GetSessionVars().Storage
-	var tables []storage.Table
-	result := store.Where("db = ? AND `table_name` in ?", dbName, tableNames).Find(&tables)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
-	var partyCodes []string
-	party2Tables := map[string][]translator.DbTable{}
-	tableToRefs := map[translator.DbTable]translator.DbTable{}
-	for _, t := range tables {
-		partyCode, err := storage.QueryUserPartyCode(store, t.Owner, t.Host)
-		if err != nil {
-			return nil, fmt.Errorf("askEngineInfo failed to query party code: %v", err)
-		}
-		partyCodes = append(partyCodes, partyCode)
-
-		dbTable := translator.NewDbTable(t.Db, t.Table)
-		if _, exist := party2Tables[partyCode]; !exist {
-			party2Tables[partyCode] = []translator.DbTable{dbTable}
-		} else {
-			party2Tables[partyCode] = append(party2Tables[partyCode], dbTable)
-		}
-
-		refDbTable := translator.NewDbTable(t.RefDb, t.RefTable)
-		refDbTable.SetDBType(core.DBType(t.DBType))
-		tableToRefs[dbTable] = refDbTable
-	}
-
-	// NOTE: sort engines by party code to enforce determinism
-	partyCodes = sliceutil.SliceDeDup(partyCodes)
-
-	participants, err := GetParticipantInfos(store, partyCodes)
-	if err != nil {
-		return nil, fmt.Errorf("askEngineInfo failed to get participantInfos: %+v", err)
-	}
-
-	if err = ValidateParticipantInfos(participants); err != nil {
-		return nil, fmt.Errorf("invalid participantsInfo: %+v", err)
-	}
-
-	partyInfo := translator.NewPartyInfo(participants)
-	enginesInfo := translator.NewEnginesInfo(partyInfo, party2Tables)
-
-	enginesInfo.UpdateTableToRefs(tableToRefs)
-
-	return enginesInfo, nil
 }
 
 // one-to-one correspondence between in parameter `partyCodes` and return value `[]*translator.Participant` on success

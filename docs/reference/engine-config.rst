@@ -2,7 +2,7 @@
 SCQL System Config
 ==================
 
-This configuration manual is designed to help users understand the various configuration options available for the SCQL system. It can be divided into two parts: SCDB configuration options and SCQLEngine configuration options.
+This configuration manual is designed to help users understand the various configuration options available for the SCQL system. It can be divided into three parts: SCDB configuration options (for Centralized mode), BrokerServer configuration options (for P2P mode) and SCQLEngine configuration options (for both modes).
 
 .. _scdb_config_options:
 
@@ -59,7 +59,7 @@ Config in SCDB
 +---------------------------------------+------------------+-------------------------------------------------------------------------------------------------------------------+
 |                 Name                  |     Default      |                                                    Description                                                    |
 +=======================================+==================+===================================================================================================================+
-| scdb_host                             | none             | The callback URL for the engine to notify SCDB                                                                    |
+| scdb_host                             | none             | The callback URL for the SCQLEngine to notify SCDB                                                                |
 +---------------------------------------+------------------+-------------------------------------------------------------------------------------------------------------------+
 | port                                  | none             | The listening port of the SCDB server                                                                             |
 +---------------------------------------+------------------+-------------------------------------------------------------------------------------------------------------------+
@@ -95,7 +95,7 @@ Config in SCDB
 +---------------------------------------+------------------+-------------------------------------------------------------------------------------------------------------------+
 | tls.key_file                          | none             | Private key file path to enable TSL, supports key/pem type                                                        |
 +---------------------------------------+------------------+-------------------------------------------------------------------------------------------------------------------+
-| storage.type                          | none             | Database kind in SCDB, supports MYSQL/SQLite3                                                                     |
+| storage.type                          | none             | Database kind in SCDB, supports MYSQL/SQLite3, MYSQL is recommended, SQLite3 may have problems with concurrency   |
 +---------------------------------------+------------------+-------------------------------------------------------------------------------------------------------------------+
 | storage.conn_str                      | none             | Used to connect to a database                                                                                     |
 +---------------------------------------+------------------+-------------------------------------------------------------------------------------------------------------------+
@@ -126,6 +126,9 @@ Config in SCDB
 | party_auth.validity_period            | 30s              | When enable timestamp check,  SCDB will check whether signed timestamp is within (now() - validity_period, now()) |
 +---------------------------------------+------------------+-------------------------------------------------------------------------------------------------------------------+
 
+
+.. _config_security_compromise_options:
+
 Config for SecurityCompromise
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -140,6 +143,9 @@ A typical config of security_compromise can be like:
 
   security_compromise:
     reveal_group_mark: false
+
+
+.. _config_storage_options:
 
 Config for storage
 ^^^^^^^^^^^^^^^^^^
@@ -225,10 +231,127 @@ SCQL supports different mpc protocol powered by SPU, you can choose different mp
 
 .. code-block:: yaml
 
-  spu:
-    protocol: SEMI2K
-    field: FM64
-    sigmoid_mode: SIGMOID_REAL
+  spu: |
+  {
+    "protocol": "SEMI2K",
+    "field": "FM64"
+  }
+
+
+.. _config_broker_server_options:
+
+BrokerServer configuration options
+==================================
+
+BrokerServer, like SCDB, uses yaml files to configure parameters, The majority of their configuration items are the same.
+
+Example for BrokerServer
+------------------------
+
+.. code-block:: yaml
+
+  intra_server:
+    port: 8080
+  inter_server:
+    host: 0.0.0.0
+    port: 8081
+    protocol: https
+    cert_file: ${your cert file path}
+    key_file: ${your key file path}
+  log_level: debug
+  party_code: alice
+  party_info_file: "/home/admin/configs/party_info.json"
+  private_pem_path: "/home/admin/configs/private_key.pem"
+  intra_host: http://broker_alice:8080
+  engines: ["engine_alice:8003"]
+  engine:
+    timeout: 120s
+    protocol: http
+    content_type: application/json
+  storage:
+    type: mysql
+    conn_str: "user_name:pass_word@tcp(127.0.0.1:3306)/db_name?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
+    max_idle_conns: 10
+    max_open_conns: 100
+    conn_max_idle_time: 2m
+    conn_max_lifetime: 5m
+
+
+Config in BrokerServer
+----------------------
+
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+|                 Name                  |  Default  |                                                       Description                                                       |
++=======================================+===========+=========================================================================================================================+
+| intra_server.host                     | 127.0.0.1 | The host where BrokerServer listens for IntraServer requests, default localhost for safety                              |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| intra_server.port                     | none      | The port on which BrokerServer listens for IntraServer requests                                                         |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| intra_server.protocol                 | http      | The transfer protocol of IntraServer, supports HTTP/HTTPS                                                               |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| intra_server.cert_file                | none      | Certificate file path for IntraServer to enable HTTPS, supports crt/pem type                                            |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| intra_server.key_file                 | none      | Private key file path for IntraServer to enable HTTPS, supports key/pem type                                            |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| inter_server.host                     | none      | The host where BrokerServer listens for InterServer requests                                                            |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| inter_server.port                     | none      | The port on which BrokerServer listens for InterServer requests                                                         |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| inter_server.protocol                 | http      | The transfer protocol of InterServer, supports HTTP/HTTPS                                                               |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| inter_server.cert_file                | none      | Certificate file path for InterServer to enable HTTPS, supports crt/pem type                                            |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| inter_server.key_file                 | none      | Private key file path for InterServer to enable HTTPS, supports key/pem type                                            |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| inter_timeout                         | 5s        | Timeout for requesting InterServe                                                                             |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| log_level                             | info      | The type and severity of a logged event                                                                                 |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| party_code                            | none      | Unique identifier used to identify the party                                                                            |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| party_info_file                       | none      | File path that stores information of each party, including party code, public key and InterServer's URL                 |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| private_pem_path                      | none      | Private key file path for party_code, which will be used to sign requests to other BrokerServers                        |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| intra_host                            | none      | The callback URL for the local SCQLEngine to notify BrokerServer                                                        |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| engines                               | none      | The URLs for local available SCQLEngines                                                                                |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| engine.timeout                        | none      | Timeout for BrokerServer to send message to SCQLEngine                                                                  |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| engine.protocol                       | http      | The transfer protocol of SCQLEngine, support http/https                                                                 |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| engine.content_type                   | none      | The original media type in post body from BrokerServer to SCQLEngine                                                    |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| security_compromise.reveal_group_mark | false     | Whether to reveal group_mark directly for group by                                                                      |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| storage.type                          | none      | Database kind in BrokerServer, supports MYSQL/SQLite3, MYSQL is recommended, SQLite3 may have problems with concurrency |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| storage.conn_str                      | none      | Used to connect to a database                                                                                           |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| storage.max_idle_conns                | 1         | Maximum number of connections in idle connection pool                                                                   |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| storage.max_open_conns                | 1         | Maximum number of open connections to the database                                                                      |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| storage.conn_max_idle_time            | -1s       | Maximum amount of time a connection may be idle                                                                         |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+| storage.conn_max_lifetime             | -1s       | Maximum amount of time a connection may be reused                                                                       |
++---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
+
+Config for ServerConfig
+^^^^^^^^^^^^^^^^^^^^^^^
+BrokerServer accept intra-domain requests through IntraServer, while accept requests between different BrokerServers through InterServer.
+
+IntraServer is recommended to use localhost host or LAN address to avoid external attacks, while InterServer is recommended to enable HTTPS to improve security.
+
+
+Reused Config
+^^^^^^^^^^^^^
+
+For more about SecurityCompromise, see :ref:`Config for SecurityCompromise <config_security_compromise_options>`
+
+For more about Storage, see :ref:`Config for storage <config_storage_options>`
+
 
 .. _engine_config_options:
 
@@ -341,7 +464,7 @@ Config in SCQLEngine
 
 Config for datasource
 ^^^^^^^^^^^^^^^^^^^^^
-datasources(MySQL/SQLite3/PostgreSQL/CSVDB) are where the SCQLEngine gets its data from.
+datasources(MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL) are where the SCQLEngine gets its data from.
 
 ``datasource_router`` is design to support multi datasources, currently only supported: embed, which is initialized with ``embed_router_conf`` first, a json string like::
 
@@ -365,20 +488,23 @@ if ``embed_router_conf`` is empty, embed_router will try to initialized with ``d
 
 Embed router
 """"""""""""
-datasources in embed_router_conf contain information for connecting MySQL/SQLite3/PostgreSQL/CSVDB:
+datasources in embed_router_conf contain information for connecting MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL:
 
   id: unique id of datasource.
 
   name: custom description help to distinguish datasources.
 
-  kind: datasource type, currently support MySQL/SQLite3/PostgreSQL/CSVDB.
+  kind: datasource type, currently support MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL.
 
-  connection_str: string used to connect MySQL/SQLite3/PostgreSQL/CSVDB.
+  connection_str: string used to connect MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL.
 
     MySQL Connection string format:
       <str> == <assignment> | <assignment> ';' <str>
+
       <assignment> == <name> '=' <value>
+
       <name> == 'host' | 'port' | 'user' | 'password' | 'db' | 'compress' | 'auto-reconnect' | 'reset' | 'fail-readonly'
+
       <value> == [~;]*
 
     MySQL Connection string e.g:
@@ -392,8 +518,11 @@ datasources in embed_router_conf contain information for connecting MySQL/SQLite
 
     PostgreSQL Connection string format:
       <str> == <assignment> | <assignment> ' ' <str>
+
       <assignment> == <name> '=' <value>
+
       <name> == 'host' | 'port' | 'user' | 'password' | 'dbname' | 'connect_timeout'
+
       <value> == [~;]*
 
     PostgreSQL Connection string e.g:
@@ -404,6 +533,17 @@ datasources in embed_router_conf contain information for connecting MySQL/SQLite
 
     CSVDB Connection string e.g:
       "{\\\"db_name\\\":\\\"csvdb\\\",\\\"tables\\\":[{\\\"table_name\\\":\\\"staff\\\",\\\"data_path\\\":\\\"test.csv\\\",\\\"columns\\\":[{\\\"column_name\\\":\\\"id\\\",\\\"column_type\\\":\\\"1\\\"}]}]}"
+
+    ArrowSQL Connection string format:
+      grpc+<scheme>://host:port
+
+      <scheme> == 'tcp' | 'tls'
+
+    ArrowSQL Connection string e.g:
+      ``grpc+tcp://127.0.0.1:6666``
+
+      .. note::
+        As a datasource embedded in SCQLEngine, ArrowSQL requires an additional gRPC server which provides the corresponding interface for executing an ad-hoc query in `Arrow Flight SQL <https://arrow.apache.org/docs/format/FlightSql.html>`_
 
 Routing rules
 """""""""""""

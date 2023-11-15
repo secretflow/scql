@@ -183,8 +183,8 @@ func newFunctionImpl(ctx sessionctx.Context, fold bool, funcName string, retType
 }
 
 func TransferDateFuncIntervalToSeconds(funcArgs []Expression) ([]Expression, error) {
-	res := make([]Expression, len(funcArgs))
-	copy(res, funcArgs)
+	res := make([]Expression, len(funcArgs)-1)
+	copy(res, funcArgs[:len(funcArgs)-1])
 	baseDateArithmitical := newDateArighmeticalUtil()
 	intervalEvalTp := funcArgs[1].GetType().EvalType()
 	if intervalEvalTp != types.ETString && intervalEvalTp != types.ETDecimal && intervalEvalTp != types.ETReal {
@@ -215,10 +215,6 @@ func TransferDateFuncIntervalToSeconds(funcArgs []Expression) ([]Expression, err
 	res[1] = &Constant{
 		Value:   types.NewIntDatum(sec),
 		RetType: types.NewFieldType(mysql.TypeLong),
-	}
-	res[2] = &Constant{
-		Value:   types.NewStringDatum("SECOND"),
-		RetType: types.NewFieldType(mysql.TypeString),
 	}
 	return res, nil
 }

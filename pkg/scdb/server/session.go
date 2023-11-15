@@ -57,7 +57,7 @@ type session struct {
 	result           *scql.SCDBQueryResultResponse
 	ctx              context.Context
 
-	executor *executor.AsyncExecutor
+	executor *executor.Executor
 
 	// all sessions have independent stub to avoid concurrent problems
 	engineStub *executor.EngineStub
@@ -156,15 +156,6 @@ func (sc *session) mergeQueryResults() (result *scql.SCDBQueryResultResponse, er
 		result.Warnings = append(result.Warnings, &scql.SQLWarning{Reason: reason})
 	}
 	return result, err
-}
-
-func (sc *session) next(ctx context.Context, req *scql.ReportRequest) (bool /*isEnd*/, error) {
-	nextSubDagID, isEnd, err := sc.executor.CanRunNext(ctx, req)
-	if err != nil || isEnd || nextSubDagID < 0 {
-		return isEnd, err
-	}
-
-	return false /*isEnd*/, sc.executor.RunNext(ctx, req)
 }
 
 func (sc *session) fillPartyInfo(enginesInfo *translator.EnginesInfo) {

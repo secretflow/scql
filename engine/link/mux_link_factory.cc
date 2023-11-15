@@ -62,9 +62,10 @@ std::shared_ptr<yacl::link::Context> MuxLinkFactory::CreateContext(
     auto rpc_channel =
         channel_manager_->Create(peer_host, RemoteRole::PeerEngine);
     YACL_ENFORCE(rpc_channel, "create rpc channel failed for rank={}", rank);
-    auto link_channel = std::make_shared<MuxLinkChannel>(
-        self_rank, rank, desc.recv_timeout_ms, desc.http_max_payload_size,
-        desc.id, rpc_channel);
+    auto link = std::make_shared<MuxLink>(
+        self_rank, rank, desc.http_max_payload_size, desc.id, rpc_channel);
+    auto link_channel =
+        std::make_shared<yacl::link::transport::Channel>(link, false);
     channels[rank] = link_channel;
     if (rank == self_rank) {
       continue;
@@ -78,126 +79,106 @@ std::shared_ptr<yacl::link::Context> MuxLinkFactory::CreateContext(
   return ctx;
 }
 
-void MuxLinkChannel::SendImpl(const std::string& key,
-                              yacl::ByteContainerView value) {
-  SendImpl(key, value, 0);
+size_t MuxLink::GetMaxBytesPerChunk() { return http_max_payload_size_; }
+
+void MuxLink::SetMaxBytesPerChunk(size_t bytes) {
+  http_max_payload_size_ = bytes;
 }
 
-void MuxLinkChannel::SendImpl(const std::string& key,
-                              yacl::ByteContainerView value,
-                              uint32_t timeout_ms) {
-  if (value.size() > http_max_payload_size_) {
-    SendChunked(key, value);
-    return;
-  }
-
-  link::pb::MuxPushRequest request;
+std::unique_ptr<::google::protobuf::Message> MuxLink::PackMonoRequest(
+    const std::string& key, yacl::ByteContainerView value) {
+  auto request = std::make_unique<link::pb::MuxPushRequest>();
   {
-    request.set_link_id(link_id_);
-    auto* msg = request.mutable_msg();
+    request->set_link_id(link_id_);
+    auto* msg = request->mutable_msg();
     msg->set_sender_rank(self_rank_);
     msg->set_key(key);
     msg->set_value(value.data(), value.size());
     msg->set_trans_type(link::pb::TransType::MONO);
   }
-
-  link::pb::MuxPushResponse response;
-  brpc::Controller cntl;
-  if (timeout_ms != 0) {
-    cntl.set_timeout_ms(timeout_ms);
-  }
-  link::pb::MuxReceiverService::Stub stub(rpc_channel_.get());
-  stub.Push(&cntl, &request, &response, nullptr);
-
-  std::string request_info = fmt::format(
-      "link_id={} sender_rank={} send key={}", link_id_, self_rank_, key);
-  THROW_IF_RPC_NOT_OK(cntl, response, request_info);
+  return request;
 }
 
-namespace {
-
-class BatchDesc {
- protected:
-  size_t batch_idx_;
-  size_t batch_size_;
-  size_t total_size_;
-
- public:
-  BatchDesc(size_t batch_idx, size_t batch_size, size_t total_size)
-      : batch_idx_(batch_idx),
-        batch_size_(batch_size),
-        total_size_(total_size) {}
-
-  // return the index of this batch.
-  size_t Index() const { return batch_idx_; }
-
-  // return the offset of the first element in this batch.
-  size_t Begin() const { return batch_idx_ * batch_size_; }
-
-  // return the offset after last element in this batch.
-  size_t End() const { return std::min(Begin() + batch_size_, total_size_); }
-
-  // return the size of this batch.
-  size_t Size() const { return End() - Begin(); }
-
-  std::string ToString() const { return "B:" + std::to_string(batch_idx_); };
-};
-
-}  // namespace
-
-void MuxLinkChannel::SendChunked(const std::string& key,
-                                 yacl::ByteContainerView value) {
-  const size_t bytes_per_chunk = http_max_payload_size_;
-  const size_t num_bytes = value.size();
-  const size_t num_chunks = (num_bytes + bytes_per_chunk - 1) / bytes_per_chunk;
-
-  constexpr uint32_t kParallelSize = 10;
-  const size_t batch_size = kParallelSize;
-  const size_t num_batches = (num_chunks + batch_size - 1) / batch_size;
-
-  for (size_t batch_idx = 0; batch_idx < num_batches; batch_idx++) {
-    const BatchDesc batch(batch_idx, batch_size, num_chunks);
-
-    // See: "半同步“ from
-    // https://github.com/apache/incubator-brpc/blob/master/docs/cn/client.md
-    std::vector<brpc::Controller> cntls(batch.Size());
-    std::vector<link::pb::MuxPushResponse> responses(batch.Size());
-
-    // fire batched chunk requests.
-    for (size_t idx = 0; idx < batch.Size(); idx++) {
-      const size_t chunk_idx = batch.Begin() + idx;
-      const size_t chunk_offset = chunk_idx * bytes_per_chunk;
-
-      link::pb::MuxPushRequest request;
-      {
-        request.set_link_id(link_id_);
-        auto* msg = request.mutable_msg();
-        msg->set_sender_rank(self_rank_);
-        msg->set_key(key);
-        msg->set_value(value.data() + chunk_offset,
-                       std::min(bytes_per_chunk, value.size() - chunk_offset));
-        msg->set_trans_type(link::pb::TransType::CHUNKED);
-        msg->mutable_chunk_info()->set_chunk_offset(chunk_offset);
-        msg->mutable_chunk_info()->set_message_length(num_bytes);
-      }
-      auto& cntl = cntls[idx];
-      auto& response = responses[idx];
-      link::pb::MuxReceiverService::Stub stub(rpc_channel_.get());
-      stub.Push(&cntl, &request, &response, brpc::DoNothing());
-    }
-
-    for (size_t idx = 0; idx < batch.Size(); idx++) {
-      brpc::Join(cntls[idx].call_id());
-    }
-
-    for (size_t idx = 0; idx < batch.Size(); idx++) {
-      const size_t chunk_idx = batch.Begin() + idx;
-      std::string request_info = fmt::format(
-          "link_id={}, sender_rank={}, key={} (chunked {} out of {})", link_id_,
-          self_rank_, key, chunk_idx + 1, num_chunks);
-      THROW_IF_RPC_NOT_OK(cntls[idx], responses[idx], request_info);
-    }
+std::unique_ptr<::google::protobuf::Message> MuxLink::PackChunkedRequest(
+    const std::string& key, yacl::ByteContainerView value, size_t offset,
+    size_t total_length) {
+  auto request = std::make_unique<link::pb::MuxPushRequest>();
+  {
+    request->set_link_id(link_id_);
+    auto* msg = request->mutable_msg();
+    msg->set_sender_rank(self_rank_);
+    msg->set_key(key);
+    msg->set_value(value.data(), value.size());
+    msg->set_trans_type(link::pb::TransType::CHUNKED);
+    msg->mutable_chunk_info()->set_chunk_offset(offset);
+    msg->mutable_chunk_info()->set_message_length(total_length);
   }
+  return request;
+}
+
+void MuxLink::UnpackMonoRequest(const ::google::protobuf::Message& request,
+                                std::string* key,
+                                yacl::ByteContainerView* value) {
+  auto real_request = static_cast<const link::pb::MuxPushRequest*>(&request);
+  *key = real_request->msg().key();
+  *value = real_request->msg().value();
+}
+
+void MuxLink::UnpackChunckRequest(const ::google::protobuf::Message& request,
+                                  std::string* key,
+                                  yacl::ByteContainerView* value,
+                                  size_t* offset, size_t* total_length) {
+  auto real_request = static_cast<const link::pb::MuxPushRequest*>(&request);
+  *key = real_request->msg().key();
+  *value = real_request->msg().value();
+  *offset = real_request->msg().chunk_info().chunk_offset();
+  *total_length = real_request->msg().chunk_info().message_length();
+}
+
+void MuxLink::FillResponseOk(const ::google::protobuf::Message& request,
+                             ::google::protobuf::Message* response) {
+  auto real_response = static_cast<link::pb::MuxPushResponse*>(response);
+  real_response->set_error_code(link::pb::ErrorCode::SUCCESS);
+  real_response->set_error_msg("");
+}
+
+void MuxLink::FillResponseError(const ::google::protobuf::Message& request,
+                                ::google::protobuf::Message* response) {
+  auto real_response = static_cast<link::pb::MuxPushResponse*>(response);
+  auto real_request = static_cast<const link::pb::MuxPushRequest*>(&request);
+
+  real_response->set_error_code(link::pb::ErrorCode::INVALID_REQUEST);
+  real_response->set_error_msg(
+      fmt::format("Error: trans type={}, from link_id={} rank={}",
+                  TransType_Name(real_request->msg().trans_type()), link_id_,
+                  real_request->msg().sender_rank()));
+}
+
+bool MuxLink::IsChunkedRequest(const ::google::protobuf::Message& request) {
+  auto real_request = static_cast<const link::pb::MuxPushRequest*>(&request);
+  return real_request->msg().trans_type() == link::pb::TransType::CHUNKED;
+}
+
+bool MuxLink::IsMonoRequest(const ::google::protobuf::Message& request) {
+  auto real_request = static_cast<const link::pb::MuxPushRequest*>(&request);
+  return real_request->msg().trans_type() == link::pb::TransType::MONO;
+}
+
+void MuxLink::SendRequest(const ::google::protobuf::Message& request,
+                          uint32_t timeout) {
+  link::pb::MuxPushResponse response;
+  brpc::Controller cntl;
+  if (timeout != 0) {
+    cntl.set_timeout_ms(timeout);
+  }
+  link::pb::MuxReceiverService::Stub stub(rpc_channel_.get());
+  auto push_request = static_cast<const link::pb::MuxPushRequest*>(&request);
+  stub.Push(&cntl, push_request, &response, nullptr);
+
+  std::string request_info =
+      fmt::format("link_id={} sender_rank={} send key={}", link_id_,
+                  LocalRank(), push_request->msg().key());
+  THROW_IF_RPC_NOT_OK(cntl, response, request_info);
 }
 
 }  // namespace scql::engine

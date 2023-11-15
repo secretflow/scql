@@ -1,0 +1,259 @@
+// Copyright 2023 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package storage
+
+import (
+	"testing"
+	"time"
+
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/require"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	gormlog "gorm.io/gorm/logger"
+)
+
+func TestBootstrap(t *testing.T) {
+	r := require.New(t)
+	db, err := gorm.Open(sqlite.Open(":memory:"),
+		&gorm.Config{
+			SkipDefaultTransaction: true,
+			Logger: gormlog.New(
+				logrus.StandardLogger(),
+				gormlog.Config{
+					SlowThreshold: 200 * time.Millisecond,
+					Colorful:      false,
+					LogLevel:      gormlog.Warn,
+				}),
+		})
+
+	r.NoError(err)
+	manager := NewMetaManager(db)
+	err = manager.Bootstrap()
+	r.NoError(err)
+	transaction := manager.CreateMetaTransaction()
+	projectID1 := "p1"
+	projectName1 := "n1"
+	projectConf := ProjectConfig{SpuConf: "I'm a conf"}
+	alice := "alice"
+	// create project
+	err = transaction.CreateProject(Project{ID: projectID1, Name: projectName1, ProjectConf: projectConf, Creator: alice, Member: alice})
+	r.NoError(err)
+	// create duplicated project
+	err = transaction.CreateProject(Project{ID: projectID1, Name: projectName1, ProjectConf: projectConf, Creator: alice, Member: alice})
+	r.Error(err)
+	// disturbance terms
+	unusedProjectName := "seems_wrong"
+	err = transaction.CreateProject(Project{ID: unusedProjectName, Name: "wrong_n1", ProjectConf: projectConf, Creator: alice, Member: alice})
+	r.NoError(err)
+
+	projs, err := transaction.ListProjects([]string{})
+	r.NoError(err)
+	r.Equal(len(projs), 2)
+	r.Equal(projs[0].ID, projectID1)
+	r.Equal(projs[1].ID, unusedProjectName)
+
+	tableName := "t1"
+	t1Identifier := TableIdentifier{ProjectID: projectID1, TableName: tableName}
+	tableMeta := TableMeta{
+		Table: Table{TableIdentifier: t1Identifier, RefTable: "real.t1", Owner: alice},
+		Columns: []ColumnMeta{
+			{ColumnName: "c1", DType: "float"},
+			{ColumnName: "c2", DType: "int"},
+		},
+	}
+	// create table
+	err = transaction.AddTable(tableMeta)
+	r.NoError(err)
+	c1Identifier := ColumnIdentifier{ProjectID: t1Identifier.ProjectID, TableName: t1Identifier.TableName, ColumnName: "c1"}
+	c2Identifier := ColumnIdentifier{ProjectID: t1Identifier.ProjectID, TableName: t1Identifier.TableName, ColumnName: "c2"}
+	// disturbance terms
+	unusedTableName := "wrong_table"
+	unusedTables := TableMeta{
+		Table: Table{TableIdentifier: TableIdentifier{ProjectID: unusedProjectName, TableName: unusedTableName}, RefTable: "real.t1", Owner: alice},
+		Columns: []ColumnMeta{
+			{ColumnName: "c1", DType: "float"},
+			{ColumnName: "c2", DType: "int"},
+		},
+	}
+	err = transaction.AddTable(unusedTables)
+	r.NoError(err)
+	// create duplicated table is allowed in storage, but not allowed through IntraServer
+	err = transaction.AddTable(tableMeta)
+	r.NoError(err)
+	// create duplicated table with different owner is not allowed
+	tableMeta.Table.Owner = "different owner"
+	err = transaction.AddTable(tableMeta)
+	r.Error(err)
+	// project id not exist
+	stupidTable := TableMeta{
+		Table: Table{TableIdentifier: TableIdentifier{ProjectID: "not_exist", TableName: tableName}, RefTable: "real.t1", Owner: alice},
+	}
+	err = transaction.AddTable(stupidTable)
+	r.Error(err)
+
+	res, err := transaction.ListTables(projectID1)
+	r.NoError(err)
+	r.Equal(1, len(res))
+	r.Equal(2, len(res[0].Columns))
+	res, err = transaction.GetTablesByTableNames(projectID1, []string{"t1"})
+	r.NoError(err)
+	r.Equal(1, len(res))
+
+	owners, err := transaction.ListDedupTableOwners([]string{tableName})
+	r.NoError(err)
+	r.Equal([]string{alice}, owners)
+
+	// update project
+	newProjectConf := ProjectConfig{SpuConf: "I'm a new conf"}
+	err = transaction.UpdateProject(projectID1, newProjectConf)
+	r.NoError(err)
+	proj, err := transaction.GetProject(projectID1)
+	r.NoError(err)
+	r.Equal(newProjectConf, proj.ProjectConf)
+	// alter table
+	bob := "bob"
+	res, err = transaction.ListTables(projectID1)
+	r.NoError(err)
+	r.Equal(1, len(res))
+	r.Equal(2, len(res[0].Columns))
+	for _, c := range res[0].Columns {
+		if c.ColumnName == "c1" {
+			r.Equal("float", c.DType)
+		}
+	}
+	// invitation
+	inviteBob := Invitation{
+		ProjectID:   projectID1,
+		ProjectConf: projectConf,
+		Member:      proj.Member,
+		InviteTime:  time.Now(),
+		Inviter:     alice,
+		Invitee:     bob,
+	}
+	err = transaction.AddInvitations([]Invitation{inviteBob})
+	r.NoError(err)
+	// invite carol
+	carol := "carol"
+	inviteCarol := Invitation{
+		ProjectID:   projectID1,
+		ProjectConf: projectConf,
+		Member:      proj.Member,
+		InviteTime:  time.Now(),
+		Inviter:     alice,
+		Invitee:     carol,
+	}
+	err = transaction.AddInvitations([]Invitation{inviteCarol})
+	r.NoError(err)
+	// disturbance terms
+	inviteAnotherCarol := Invitation{
+		ProjectID:   unusedProjectName,
+		ProjectConf: projectConf,
+		Member:      proj.Member,
+		InviteTime:  time.Now(),
+		Inviter:     alice,
+		Invitee:     carol,
+	}
+	inviteAnotherBob := Invitation{
+		ProjectID:   unusedProjectName,
+		ProjectConf: projectConf,
+		Member:      proj.Member,
+		InviteTime:  time.Now(),
+		Inviter:     alice,
+		Invitee:     bob,
+	}
+	err = transaction.AddInvitations([]Invitation{inviteAnotherBob, inviteAnotherCarol})
+	r.NoError(err)
+	updateCarol := Invitation{
+		ProjectID:   projectID1,
+		ProjectConf: projectConf,
+		Member:      proj.Member,
+		Inviter:     alice,
+		Invitee:     carol,
+		Accepted:    1,
+	}
+	err = transaction.UpdateInvitation(updateCarol)
+	r.NoError(err)
+	invites, err := transaction.ListInvitations()
+	r.Equal(4, len(invites))
+
+	for _, v := range invites {
+		if v.Invitee == carol && v.ProjectID == projectID1 {
+			r.Equal(int8(1), v.Accepted)
+		}
+	}
+	// grant
+	privs := []ColumnPriv{
+		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: c1Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: c1Identifier.ColumnName, DestParty: alice}, Priv: "plain"},
+		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: c1Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: c1Identifier.ColumnName, DestParty: bob}, Priv: "encrypt"},
+		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: alice}, Priv: "plain"},
+		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: bob}, Priv: "encrypt"},
+	}
+	err = transaction.GrantColumnConstraints(privs)
+	r.NoError(err)
+	// duplicated grant
+	err = transaction.GrantColumnConstraints(privs)
+	r.NoError(err)
+	// show grant alice
+	privs, err = transaction.ListColumnConstraints(projectID1, []string{tableName}, []string{alice})
+	r.NoError(err)
+	r.Equal(2, len(privs))
+	// show grant bob
+	privs, err = transaction.ListColumnConstraints(projectID1, []string{tableName}, []string{bob})
+	r.NoError(err)
+	r.Equal(2, len(privs))
+	// remove grant
+	err = transaction.RevokeColumnConstraints([]ColumnPrivIdentifier{{ProjectID: c1Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: c1Identifier.ColumnName}})
+	r.NoError(err)
+	// show grant bob
+	privs, err = transaction.ListColumnConstraints(projectID1, []string{tableName}, []string{bob})
+	r.NoError(err)
+	r.Equal(2, len(privs))
+	// grant or update
+	privs = []ColumnPriv{
+		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: c1Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: c1Identifier.ColumnName, DestParty: alice}, Priv: "encrypt"},
+		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: c1Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: c1Identifier.ColumnName, DestParty: bob}, Priv: "encrypt"},
+		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: alice}, Priv: "plain"},
+		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: bob}, Priv: "plain"},
+		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: c1Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: c1Identifier.ColumnName, DestParty: carol}, Priv: "plain"},
+		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: carol}, Priv: "encrypt"},
+	}
+	err = transaction.GrantColumnConstraints(privs)
+	r.NoError(err)
+	// show grant all
+	privs, err = transaction.ListColumnConstraints(projectID1, []string{tableName}, []string{})
+	r.NoError(err)
+	r.Equal(6, len(privs))
+	for _, priv := range privs {
+		if priv.ColumnPrivIdentifier.ProjectID == c1Identifier.ProjectID &&
+			priv.ColumnPrivIdentifier.TableName == c1Identifier.TableName &&
+			priv.ColumnPrivIdentifier.ColumnName == c1Identifier.ColumnName &&
+			priv.DestParty == alice {
+			r.Equal("encrypt", priv.Priv)
+		}
+		if priv.ColumnPrivIdentifier.ProjectID == c1Identifier.ProjectID &&
+			priv.ColumnPrivIdentifier.TableName == c1Identifier.TableName &&
+			priv.ColumnPrivIdentifier.ColumnName == c1Identifier.ColumnName &&
+			priv.DestParty == carol {
+			r.Equal("plain", priv.Priv)
+		}
+		if priv.ColumnPrivIdentifier.ProjectID == c2Identifier.ProjectID &&
+			priv.ColumnPrivIdentifier.TableName == c2Identifier.TableName &&
+			priv.ColumnPrivIdentifier.ColumnName == c2Identifier.ColumnName && priv.DestParty == bob {
+			r.Equal("plain", priv.Priv)
+		}
+	}
+	transaction.Finish(nil)
+}

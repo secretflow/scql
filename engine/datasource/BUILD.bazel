@@ -19,9 +19,11 @@ package(default_visibility = ["//visibility:public"])
 
 cc_library(
     name = "datasource_adaptor",
+    srcs = ["datasource_adaptor.cc"],
     hdrs = ["datasource_adaptor.h"],
     deps = [
         "//api:core_cc_proto",
+        "//engine/core:arrow_helper",
         "//engine/core:tensor",
     ],
 )
@@ -33,7 +35,6 @@ cc_library(
     deps = [
         ":datasource_adaptor",
         ":datasource_cc_proto",
-        "//engine/core:arrow_helper",
         "//engine/util:spu_io",
         "@org_apache_arrow//:arrow",
     ],
@@ -57,7 +58,6 @@ cc_library(
     deps = [
         ":datasource_adaptor",
         ":datasource_cc_proto",
-        "//engine/core:arrow_helper",
         "//engine/core:primitive_builder",
         "//engine/core:string_tensor_builder",
         "//engine/util:spu_io",
@@ -145,8 +145,8 @@ cc_library(
         ":arrow_sql_adaptor_factory",
         ":csvdb_adaptor_factory",
         ":datasource_adaptor",
-        ":odbc_adaptor_factory",
         ":datasource_cc_proto",
+        ":odbc_adaptor_factory",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/synchronization",
     ],
@@ -220,10 +220,10 @@ cc_library(
     hdrs = ["csvdb_adaptor.h"],
     deps = [
         ":datasource_adaptor",
-        ":duckdb_wrapper",
         ":datasource_cc_proto",
-        "//engine/core:arrow_helper",
+        ":duckdb_wrapper",
         "//engine/util:spu_io",
+        "//engine/util:tensor_util",
         "@yacl//yacl/base:exception",
     ],
 )

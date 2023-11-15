@@ -161,6 +161,18 @@ func QueryUserPartyCode(store *gorm.DB, userName, host string) (string, error) {
 	return user.PartyCode, nil
 }
 
+func FindUserByParty(store *gorm.DB, partyCode string) (*User, error) {
+	var user User
+	result := store.Where(User{PartyCode: partyCode}).Find(&user)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	if result.RowsAffected != 1 {
+		return nil, fmt.Errorf("expect only one user for party: %s, but got %d", partyCode, result.RowsAffected)
+	}
+	return &user, nil
+}
+
 func QueryInfoSchema(store *gorm.DB) (result infoschema.InfoSchema, err error) {
 	callFc := func(tx *gorm.DB) error {
 		result, err = queryInfoSchema(tx)

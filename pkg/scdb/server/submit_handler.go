@@ -26,12 +26,10 @@ import (
 
 	"github.com/secretflow/scql/pkg/audit"
 	"github.com/secretflow/scql/pkg/constant"
-	"github.com/secretflow/scql/pkg/executor"
 	"github.com/secretflow/scql/pkg/infoschema"
 	"github.com/secretflow/scql/pkg/parser"
 	"github.com/secretflow/scql/pkg/parser/ast"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
-	"github.com/secretflow/scql/pkg/scdb/config"
 	scdbexecutor "github.com/secretflow/scql/pkg/scdb/executor"
 	"github.com/secretflow/scql/pkg/scdb/storage"
 	"github.com/secretflow/scql/pkg/status"
@@ -114,7 +112,7 @@ func (app *App) submit(ctx context.Context, req *scql.SCDBQueryRequest) *scql.SC
 
 	app.sessions.SetDefault(session.id, session)
 	if isDQL {
-		return app.runDQL(ctx, session)
+		return app.submitDQL(ctx, session)
 	}
 	go func() {
 		app.runSQL(session)
@@ -139,30 +137,13 @@ func isDQL(sql string) (bool, error) {
 }
 
 // compile and run dql
-func (app *App) runDQL(ctx context.Context, session *session) *scql.SCDBSubmitResponse {
-	elp, err := app.compilePrepare(ctx, session)
-	if err != nil {
-		return newErrorSCDBSubmitResponse(scql.Code_INTERNAL, err.Error())
-	}
-
-	session.fillPartyInfo(elp.engineInfos)
-
-	session.engineStub = executor.NewEngineStub(session.id,
-		app.config.SCDBHost,
-		engineCallbackPath,
-		app.engineClient,
-		app.config.Engine.Protocol,
-		app.config.Engine.ContentType,
-		session.partyInfo,
-	)
-
-	err = app.compileAndKickOff(ctx, session, elp)
+func (app *App) submitDQL(ctx context.Context, session *session) *scql.SCDBSubmitResponse {
+	_, err := app.runDQL(ctx, session, true)
 	if err != nil {
 		var status *status.Status
 		if errors.As(err, &status) {
 			return newErrorSCDBSubmitResponse(status.Code(), status.Message())
 		}
-
 		return newErrorSCDBSubmitResponse(scql.Code_INTERNAL, err.Error())
 	}
 	return newSuccessSCDBSubmitResponse(session.id)
@@ -235,42 +216,4 @@ func (s *session) setResult(result []*scql.Tensor) {
 		OutColumns:    result,
 		ScdbSessionId: s.id,
 	}
-}
-
-func (app *App) compileAndKickOff(ctx context.Context, s *session, lpInfo *LogicalPlanInfo) error {
-	// translate logical plan to execution plan
-	// optimize the execution plan
-	// static scheduling of the execution plan
-	epInfo, err := app.compile(lpInfo, s)
-	if err != nil {
-		return err
-	}
-
-	// Build session start request.
-	spuRuntimeCfg, err := config.NewSpuRuntimeCfg(app.config.Engine.SpuRuntimeCfg)
-	if err != nil {
-		return err
-	}
-
-	sessionStartReq := &scql.StartSessionRequest{
-		SessionParams: &scql.SessionStartParams{
-			SessionId:     s.id,
-			Parties:       epInfo.parties,
-			SpuRuntimeCfg: spuRuntimeCfg,
-		},
-	}
-
-	logrus.Infof("party codes: %+v", s.partyInfo.GetParties())
-	err = s.engineStub.StartSession(ctx, sessionStartReq, s.partyInfo.GetParties())
-	if err != nil {
-		return err
-	}
-
-	// 2. submit execution plan to engines
-	s.executor, err = executor.NewAsyncExecutor(epInfo.subDAGs, epInfo.graph.OutputNames, s.engineStub)
-	if err != nil {
-		return err
-	}
-
-	return s.executor.RunFirst(ctx)
 }

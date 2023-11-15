@@ -26,20 +26,8 @@ message RequestHeader {
   map<string, string> custom_headers = 1;
 }
 
-// After finishing running a DAG, the Engine sends a ReportRequest
-// to SCDB to return the results.
-message ReportRequest {
-  // Status including whether the dag run was handled successfully,
-  // if not, error message and some more information included.
-  Status status = 1;
-  // Output columns.
-  repeated Tensor out_columns = 2;
-  // The id of finished sub DAG.
-  int32 dag_id = 3;
-  // The session_id that this sub dag belongs to.
-  string session_id = 4;
-  // Code of party which finished the dag run.
-  string party_code = 5;
-  // The number of rows affected by a select into, update, insert, or delete.
-  int64 num_rows_affected = 6;
+// TODO: move SQLWarning to a proper place
+message SQLWarning {
+  // Description of the warning
+  string reason = 1;
 }

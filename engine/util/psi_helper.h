@@ -39,13 +39,13 @@ static constexpr int64_t kLeftJoin = 1;
 static constexpr int64_t kRightJoin = 2;
 
 struct PsiSizeInfo {
-  size_t self_size;
-  size_t peer_size;
+  size_t self_size = 0;
+  size_t peer_size = 0;
 };
 
 struct PsiPlan {
   bool unbalanced = false;
-  bool is_server;
+  bool is_server = false;
   PsiSizeInfo psi_size_info;
 };
 
@@ -220,7 +220,8 @@ class UbPsiJoinCache : public spu::psi::IUbPsiCache {
 };
 
 void OprfPsiServerTransferServerItems(
-    ExecContext* ctx, const std::shared_ptr<BatchProvider>& batch_provider,
+    ExecContext* ctx, std::shared_ptr<yacl::link::Context> psi_link,
+    const std::shared_ptr<BatchProvider>& batch_provider,
     const std::shared_ptr<spu::psi::EcdhOprfPsiServer>& dh_oprf_psi_server,
     std::shared_ptr<spu::psi::IUbPsiCache> ub_cache = nullptr);
 
@@ -229,7 +230,8 @@ void OprfPsiServerTransferClientItems(
     const std::shared_ptr<spu::psi::EcdhOprfPsiServer>& dh_oprf_psi_server);
 
 void OprfPsiClientTransferServerItems(
-    ExecContext* ctx, const spu::psi::EcdhOprfPsiOptions& psi_options,
+    ExecContext* ctx, std::shared_ptr<yacl::link::Context> psi_link,
+    const spu::psi::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<util::UbOprfPsiClientCipherStore>& cipher_store);
 
 void OprfPsiClientTransferClientItems(

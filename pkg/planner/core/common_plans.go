@@ -13,7 +13,10 @@
 
 package core
 
-import "github.com/secretflow/scql/pkg/parser/ast"
+import (
+	"github.com/secretflow/scql/pkg/expression"
+	"github.com/secretflow/scql/pkg/parser/ast"
+)
 
 // Simple represents a simple statement plan which doesn't need any optimization.
 type Simple struct {
@@ -40,4 +43,10 @@ type Explain struct {
 
 	Rows           [][]string
 	explainedPlans map[int]bool
+}
+
+type Set struct {
+	baseSchemaProducer
+
+	VarAssigns []*expression.VarAssignment
 }

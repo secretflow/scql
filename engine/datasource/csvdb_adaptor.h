@@ -23,15 +23,13 @@ namespace scql::engine {
 
 class CsvdbAdaptor : public DatasourceAdaptor {
  public:
-  CsvdbAdaptor(const std::string& json_str);
+  explicit CsvdbAdaptor(const std::string& json_str);
 
-  ~CsvdbAdaptor() = default;
-
-  std::vector<TensorPtr> ExecQuery(
-      const std::string& query,
-      const std::vector<ColumnDesc>& expected_outputs) override;
+  ~CsvdbAdaptor() override = default;
 
  private:
+  std::vector<TensorPtr> GetQueryResult(const std::string& query) override;
+
   csv::CsvdbConf csvdb_conf_;
 };
 

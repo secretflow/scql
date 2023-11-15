@@ -71,15 +71,21 @@
   },
   {
     "name": "TestPlanBuilderCoalesceOp",
-    "cases": ["select coalesce(plain_long_0, plain_long_1) from alice.tbl_0"]
+    "cases": [
+      "select coalesce(plain_long_0, plain_long_1) from alice.tbl_0"
+    ]
   },
   {
     "name": "TestPlanBuilderLengthOp",
-    "cases": ["select length(plain_long_0) from alice.tbl_0"]
+    "cases": [
+      "select length(plain_long_0) from alice.tbl_0"
+    ]
   },
   {
     "name": "TestPlanBuilderReplaceOp",
-    "cases": ["select replace(plain_string_0, 'old', 'new') from alice.tbl_0"]
+    "cases": [
+      "select replace(plain_string_0, 'old', 'new') from alice.tbl_0"
+    ]
   },
   {
     "name": "TestPlanBuildeLikeRlikeOp",
@@ -97,11 +103,15 @@
   },
   {
     "name": "TestPlanBuildeLimitOp",
-    "cases": ["select plain_long_0 from alice.tbl_0 limit 5;"]
+    "cases": [
+      "select plain_long_0 from alice.tbl_0 limit 5;"
+    ]
   },
   {
     "name": "TestPlanBuilderInstrOp",
-    "cases": ["select instr(plain_string_0, plain_string_1) from alice.tbl_0"]
+    "cases": [
+      "select instr(plain_string_0, plain_string_1) from alice.tbl_0"
+    ]
   },
   {
     "name": "TestPlanBuilderGreatestLeastOp",
@@ -153,7 +163,9 @@
   },
   {
     "name": "TestPlanBuilderCast",
-    "cases": ["select cast(plain_long_0 as float) from alice.tbl_0;"]
+    "cases": [
+      "select cast(plain_long_0 as float) from alice.tbl_0;"
+    ]
   },
   {
     "name": "TestPlanBuilderSimpleWithOptimization",
@@ -218,6 +230,46 @@
     "cases": [
       "select plain_long_0 in (select plain_long_1 from alice.tbl_0) from alice.tbl_0;",
       "select t0.plain_long_0 in (select plain_long_1 from alice.tbl_0) as f1 from alice.tbl_0 t0 join alice.tbl_1 t1 where t0.plain_long_0=1234 and t1.plain_long_1=3456"
+    ]
+  },
+  {
+    "name": "TestPlanBuilderDateTimeWithOptimization",
+    "cases": [
+      // date function
+      "select plain_datetime_0 < now() from alice.tbl_0;",
+      "select plain_timestamp_0 < curdate() from alice.tbl_0;",
+      "select plain_datetime_0 < curtime() from alice.tbl_0;",
+      "select adddate(plain_datetime_0, interval 10 day) from alice.tbl_0;",
+      "select subdate(plain_timestamp_0, interval 10 day) from alice.tbl_0;",
+      "select addtime(plain_datetime_0, '1 1:1:1') from alice.tbl_0;",
+      "select subtime(plain_timestamp_0, '1 1:1:1') from alice.tbl_0;",
+      "select datediff(plain_datetime_0, plain_datetime_1) from alice.tbl_0;",
+      "select datediff(plain_datetime_0, plain_timestamp_0) from alice.tbl_0;",
+      "select datediff(plain_timestamp_0, plain_timestamp_1) from alice.tbl_0;",
+      "select timediff(plain_datetime_0, plain_datetime_1) from alice.tbl_0;",
+      "select timediff(plain_datetime_0, plain_timestamp_0) from alice.tbl_0;",
+      "select timediff(plain_timestamp_0, plain_timestamp_1) from alice.tbl_0;",
+      "select last_day(plain_timestamp_0) from alice.tbl_0;",
+      "select str_to_date('August 10 2017', '%M %d %Y') from alice.tbl_0;",
+      "select date_format(plain_datetime_0, '%Y-%m-%d %H:%i:%S') from alice.tbl_0;",
+      // selection
+      "select plain_datetime_0, plain_timestamp_0 from alice.tbl_0;",
+      "select plain_datetime_0 < plain_datetime_1 from alice.tbl_0",
+      "select plain_timestamp_0 < plain_timestamp_1 from alice.tbl_0",
+      "select plain_datetime_0 < plain_timestamp_0 from alice.tbl_0",
+      "select plain_datetime_0 from alice.tbl_0 where plain_datetime_0 not in (select plain_timestamp_0 from alice.tbl_0)",
+      "select case when plain_datetime_0 < '2020-10-10' then 0 else 1 end from alice.tbl_0",
+      "select case when plain_datetime_0 in (select plain_timestamp_1 from alice.tbl_1) then 0 else 1 end from alice.tbl_0",
+      "select plain_datetime_0 in (select plain_datetime_1 from alice.tbl_0 where plain_datetime_1 = '2020-10-10 10:10:10') from alice.tbl_0",
+      // group by
+      "select distinct plain_datetime_0, plain_timestamp_0 from alice.tbl_0",
+      "select count(plain_long_1) from alice.tbl_0 group by plain_datetime_0",
+      "select max(plain_timestamp_0), min(plain_timestamp_0), median(plain_timestamp_0) from alice.tbl_0 group by plain_datetime_0",
+      // order by
+      "select plain_datetime_0 from alice.tbl_0 order by plain_datetime_0",
+      "select plain_datetime_0 from alice.tbl_0 order by plain_datetime_0 desc",
+      "select plain_datetime_0 from alice.tbl_0 order by plain_datetime_0 desc, plain_timestamp_0 asc",
+      "select plain_datetime_0 from alice.tbl_0 limit 1"
     ]
   }
 ]

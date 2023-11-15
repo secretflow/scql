@@ -126,8 +126,3 @@ message User {
 message SCDBCredential {
   User user = 1;
 }
-
-message SQLWarning {
-  // Description of the warning
-  string reason = 1;
-}

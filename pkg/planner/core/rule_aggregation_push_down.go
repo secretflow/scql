@@ -268,7 +268,10 @@ func (a *aggregationPushDownSolver) makeNewAgg(ctx sessionctx.Context, aggFuncs 
 		if err != nil {
 			return nil, err
 		}
-		newCol, _ := gbyCol.Clone().(*expression.Column)
+		newCol, ok := gbyCol.Clone().(*expression.Column)
+		if !ok {
+			return nil, fmt.Errorf("makeNewAgg: clone column err")
+		}
 		newCol.RetType = firstRow.RetTp
 
 		duplicateFirstRow := false

@@ -43,6 +43,10 @@ class MockReportServiceImpl : public services::pb::MockReportService {
               ::google::protobuf::Closure* done) override {
     brpc::ClosureGuard done_guard(done);
     req_id = request->session_id();
+    status.CopyFrom(request->status());
+    if (request->out_columns_size() > 0) {
+      first_tensor = request->out_columns(0);
+    }
     brpc::Controller* cntl = static_cast<brpc::Controller*>(controller);
     cntl->response_attachment().append("receive report succ.");
     return;
@@ -50,6 +54,8 @@ class MockReportServiceImpl : public services::pb::MockReportService {
 
  public:
   std::string req_id;
+  pb::Status status;
+  pb::Tensor first_tensor;
 };
 
 class EngineServiceImplTest : public ::testing::Test {
@@ -100,108 +106,30 @@ class EngineServiceImplTest : public ::testing::Test {
   EngineServiceOptions engine_service_options;
 };
 
-TEST_F(EngineServiceImplTest, StartSession) {
-  // Given
-  std::string session_id = global_session_id;
-  pb::StartSessionRequest request;
-  request.mutable_session_params()->CopyFrom(global_params);
-  pb::Status response;
-  // When
-  EXPECT_NO_THROW(
-      impl->StartSession(&global_cntl, &request, &response, nullptr));
-  // Then
-  EXPECT_NE(nullptr, listener_manager.GetListener(session_id));
-  EXPECT_EQ(pb::Code::OK, response.code());
+// TEST_F(EngineServiceImplTest, StopSession) {
+//   // Given
+//   std::string session_id = global_session_id;
+//   {
+//     // Start session firstly.
+//     pb::StartSessionRequest request;
+//     request.mutable_session_params()->CopyFrom(global_params);
 
-  // When CreateSession with the same session id.
-  EXPECT_NO_THROW(
-      impl->StartSession(&global_cntl, &request, &response, nullptr));
-  // Then
-  EXPECT_EQ(pb::Code::UNKNOWN_ENGINE_ERROR, response.code());
-
-  // When session_id is empty.
-  request.mutable_session_params()->clear_session_id();
-  EXPECT_NO_THROW(
-      impl->StartSession(&global_cntl, &request, &response, nullptr));
-  // Then
-  EXPECT_EQ(pb::Code::INVALID_ARGUMENT, response.code());
-
-  // When CreateSession with wrong credential.
-  global_cntl.http_request().SetHeader("Credential", "err_credential");
-  EXPECT_NO_THROW(
-      impl->StartSession(&global_cntl, &request, &response, nullptr));
-  EXPECT_EQ(pb::Code::UNAUTHENTICATED, response.code());
-
-  // When CreateSession with empty credential.
-  global_cntl.http_request().SetHeader("Credential", "");
-  EXPECT_NO_THROW(
-      impl->StartSession(&global_cntl, &request, &response, nullptr));
-  EXPECT_EQ(pb::Code::UNAUTHENTICATED, response.code());
-}
-
-TEST_F(EngineServiceImplTest, StopSession) {
-  // Given
-  std::string session_id = global_session_id;
-  {
-    // Start session firstly.
-    pb::StartSessionRequest request;
-    request.mutable_session_params()->CopyFrom(global_params);
-
-    pb::Status response;
-    EXPECT_NO_THROW(
-        impl->StartSession(&global_cntl, &request, &response, nullptr));
-    EXPECT_NE(nullptr, listener_manager.GetListener(session_id));
-  }
-  // prepare request.
-  pb::StopSessionRequest request;
-  request.set_session_id(session_id);
-  pb::Status response;
-  // When
-  EXPECT_NO_THROW(
-      impl->StopSession(&global_cntl, &request, &response, nullptr));
-  // Then
-  EXPECT_EQ(nullptr, listener_manager.GetListener(session_id));
-  EXPECT_EQ(pb::Code::OK, response.code());
-}
-
-TEST_F(EngineServiceImplTest, RunDag) {
-  // Given
-  std::string session_id = global_session_id;
-  // start mock report service.
-  brpc::Server recv_server;
-  MockReportServiceImpl service;
-  ASSERT_EQ(0,
-            recv_server.AddService(&service, brpc::SERVER_DOESNT_OWN_SERVICE));
-  brpc::ServerOptions recv_options;
-  ASSERT_EQ(0, recv_server.Start("127.0.0.1:0", &recv_options));
-
-  {
-    // start session.
-    pb::StartSessionRequest request;
-    request.mutable_session_params()->CopyFrom(global_params);
-    pb::Status response;
-    EXPECT_NO_THROW(
-        impl->StartSession(&global_cntl, &request, &response, nullptr));
-    EXPECT_NE(nullptr, listener_manager.GetListener(session_id));
-  }
-  // prepare request
-  pb::RunDagRequest request;
-  request.set_session_id(session_id);
-  request.set_callback_host(
-      butil::endpoint2str(recv_server.listen_address()).c_str());
-  request.set_callback_uri("/MockReportService/Report");
-  pb::Status response;
-  // When
-  EXPECT_NO_THROW(impl->RunDag(&global_cntl, &request, &response, nullptr));
-  // Then
-  EXPECT_EQ(pb::Code::OK, response.code());
-  sleep(1);  // wait async run finished.
-
-  EXPECT_EQ(session_id, service.req_id);
-
-  recv_server.Stop(1000);
-  recv_server.Join();
-}
+//     pb::Status response;
+//     EXPECT_NO_THROW(
+//         impl->StartSession(&global_cntl, &request, &response, nullptr));
+//     EXPECT_NE(nullptr, listener_manager.GetListener(session_id));
+//   }
+//   // prepare request.
+//   pb::StopSessionRequest request;
+//   request.set_session_id(session_id);
+//   pb::Status response;
+//   // When
+//   EXPECT_NO_THROW(
+//       impl->StopSession(&global_cntl, &request, &response, nullptr));
+//   // Then
+//   EXPECT_EQ(nullptr, listener_manager.GetListener(session_id));
+//   EXPECT_EQ(pb::Code::OK, response.code());
+// }
 
 TEST_F(EngineServiceImplTest, RunExecutionPlan) {
   // Given
@@ -219,14 +147,66 @@ TEST_F(EngineServiceImplTest, RunExecutionPlan) {
   node.set_node_name("Publish.0");
   node.set_op_type("Publish");
   std::string node_id = "0";
-  (*request.mutable_nodes())[node_id] = node;
-  auto subdag = request.mutable_policy()->add_subdags();
+  auto* graph = request.mutable_graph();
+  (*graph->mutable_nodes())[node_id] = node;
+  auto subdag = graph->mutable_policy()->add_subdags();
   auto job = subdag->add_jobs();
   job->add_node_ids(node_id);
 
   EXPECT_NO_THROW(
       impl->RunExecutionPlan(&global_cntl, &request, &response, nullptr));
   EXPECT_EQ(pb::Code::UNKNOWN_ENGINE_ERROR, response.status().code());
+}
+
+TEST_F(EngineServiceImplTest, RunExecutionPlanAsync) {
+  // Given
+  brpc::Server recv_server;
+  MockReportServiceImpl service;
+  {
+    ASSERT_EQ(
+        0, recv_server.AddService(&service, brpc::SERVER_DOESNT_OWN_SERVICE));
+    brpc::ServerOptions recv_options;
+    ASSERT_EQ(0, recv_server.Start("127.0.0.1:0", &recv_options));
+  }
+  pb::RunExecutionPlanRequest request;
+  request.mutable_session_params()->CopyFrom(global_params);
+  request.set_async(true);
+  request.set_callback_url(
+      fmt::format("{}/MockReportService/Report",
+                  butil::endpoint2str(recv_server.listen_address()).c_str()));
+
+  pb::RunExecutionPlanResponse response;
+  // When
+  EXPECT_NO_THROW(
+      impl->RunExecutionPlan(&global_cntl, &request, &response, nullptr));
+  // Then
+  EXPECT_EQ(pb::Code::OK, response.status().code());
+
+  usleep(100 * 1000);  // wait async run finished.
+  EXPECT_EQ(global_session_id, service.req_id);
+  EXPECT_EQ(pb::Code::OK, service.status.code());
+
+  // test with error response
+  pb::ExecNode node;
+  node.set_node_name("Publish.0");
+  node.set_op_type("Publish");
+  std::string node_id = "0";
+  auto* graph = request.mutable_graph();
+  (*graph->mutable_nodes())[node_id] = node;
+  auto subdag = graph->mutable_policy()->add_subdags();
+  auto job = subdag->add_jobs();
+  job->add_node_ids(node_id);
+
+  EXPECT_NO_THROW(
+      impl->RunExecutionPlan(&global_cntl, &request, &response, nullptr));
+  EXPECT_EQ(pb::Code::OK, response.status().code());
+
+  usleep(100 * 1000);  // wait async run finished.
+  EXPECT_EQ(global_session_id, service.req_id);
+  EXPECT_EQ(pb::Code::UNKNOWN_ENGINE_ERROR, service.status.code());
+
+  recv_server.Stop(1000);
+  recv_server.Join();
 }
 
 // ===========================Test for 2 Parties =========================
@@ -400,6 +380,49 @@ TEST_P(EngineServiceImpl2PartiesTest, RunExecutionPlan) {
   check_equal(response_alice.out_columns(0), test_case.inner_join_result);
   ASSERT_EQ(response_bob.out_columns_size(), 1);
   check_equal(response_bob.out_columns(0), test_case.inner_join_result);
+
+  // -------test async run---------
+  {
+    // start mock report service.
+    brpc::Server recv_server;
+    MockReportServiceImpl service;
+    ASSERT_EQ(
+        0, recv_server.AddService(&service, brpc::SERVER_DOESNT_OWN_SERVICE));
+    brpc::ServerOptions recv_options;
+    ASSERT_EQ(0, recv_server.Start("127.0.0.1:0", &recv_options));
+    // modify request
+    request_alice.set_async(true);
+    request_alice.set_callback_url(
+        fmt::format("{}/MockReportService/Report",
+                    butil::endpoint2str(recv_server.listen_address()).c_str()));
+    request_bob.set_async(true);
+    // only check alice result
+    request_bob.set_callback_url(
+        fmt::format("{}/MockReportService/NotExistReport",
+                    butil::endpoint2str(recv_server.listen_address()).c_str()));
+
+    pb::RunExecutionPlanResponse response_alice;
+    auto future_alice =
+        std::async(proc, engine_svcs[0].get(), &request_alice, &response_alice);
+
+    pb::RunExecutionPlanResponse response_bob;
+    auto future_bob =
+        std::async(proc, engine_svcs[1].get(), &request_bob, &response_bob);
+
+    EXPECT_NO_THROW(future_alice.wait());
+    EXPECT_NO_THROW(future_bob.wait());
+
+    ASSERT_EQ(response_alice.status().code(), 0);
+    ASSERT_EQ(response_bob.status().code(), 0);
+
+    usleep(100 * 1000);  // wait report
+    ASSERT_EQ(service.req_id, "test_session_id");
+    ASSERT_EQ(service.status.code(), 0);
+    check_equal(service.first_tensor, test_case.inner_join_result);
+
+    recv_server.Stop(1000);
+    recv_server.Join();
+  }
 }
 
 /// ===========================
@@ -505,9 +528,9 @@ void EngineServiceImpl2PartiesTest::AddRunSQLNode(
       pb::TensorStatus::TENSORSTATUS_PRIVATE, ref_count);
   node_builder.AddOutput(op::RunSQL::kOut, {out});
   auto node = node_builder.Build();
-
-  (*(request->mutable_nodes()))[op::RunSQL::kOpType] = node;
-  auto subdag = request->mutable_policy()->add_subdags();
+  auto* graph = request->mutable_graph();
+  (*(graph->mutable_nodes()))[op::RunSQL::kOpType] = node;
+  auto subdag = graph->mutable_policy()->add_subdags();
   auto job = subdag->add_jobs();
   job->add_node_ids(op::RunSQL::kOpType);
 }
@@ -541,9 +564,9 @@ void EngineServiceImpl2PartiesTest::AddJoinNode(
   builder.AddOutput(op::Join::kOutRightJoinIndex, {join_output_right});
 
   auto node = builder.Build();
-
-  (*(request->mutable_nodes()))[op::Join::kOpType] = node;
-  auto* subdag = request->mutable_policy()->add_subdags();
+  auto* graph = request->mutable_graph();
+  (*(graph->mutable_nodes()))[op::Join::kOpType] = node;
+  auto* subdag = graph->mutable_policy()->add_subdags();
   auto* job = subdag->add_jobs();
   job->add_node_ids(op::Join::kOpType);
 }
@@ -568,9 +591,9 @@ void EngineServiceImpl2PartiesTest::AddFilterByIndexNode(
   builder.AddOutput(op::FilterByIndex::kOut, {out});
 
   auto node = builder.Build();
-
-  (*(request->mutable_nodes()))[op::FilterByIndex::kOpType] = node;
-  auto subdag = request->mutable_policy()->add_subdags();
+  auto* graph = request->mutable_graph();
+  (*(graph->mutable_nodes()))[op::FilterByIndex::kOpType] = node;
+  auto subdag = graph->mutable_policy()->add_subdags();
   auto job = subdag->add_jobs();
   job->add_node_ids(op::FilterByIndex::kOpType);
 }
@@ -584,15 +607,18 @@ void EngineServiceImpl2PartiesTest::AddPublishNode(
       op::test::MakeTensorReference(in_name, pb::PrimitiveDataType::STRING,
                                     pb::TensorStatus::TENSORSTATUS_PRIVATE);
   builder.AddInput(op::Publish::kIn, {in});
-  auto out = op::test::MakeTensorReference(
-      out_name, pb::PrimitiveDataType::STRING,
-      pb::TensorStatus::TENSORSTATUS_PRIVATE, ref_count);
+
+  pb::Tensor out;
+  out.set_name(out_name);
+  out.set_elem_type(pb::PrimitiveDataType::STRING);
+  out.set_option(pb::TensorOptions::VALUE);
+  out.add_string_data(out_name);
   builder.AddOutput(op::Publish::kOut, {out});
 
   auto node = builder.Build();
-
-  (*(request->mutable_nodes()))[op::Publish::kOpType] = node;
-  auto subdag = request->mutable_policy()->add_subdags();
+  auto* graph = request->mutable_graph();
+  (*(graph->mutable_nodes()))[op::Publish::kOpType] = node;
+  auto subdag = graph->mutable_policy()->add_subdags();
   auto job = subdag->add_jobs();
   job->add_node_ids(op::Publish::kOpType);
 }

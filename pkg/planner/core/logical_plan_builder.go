@@ -1420,7 +1420,10 @@ func (b *PlanBuilder) buildAggregation(
 			return nil, nil, err
 		}
 		plan4Agg.AggFuncs = append(plan4Agg.AggFuncs, newFunc)
-		newCol, _ := col.Clone().(*expression.Column)
+		newCol, ok := col.Clone().(*expression.Column)
+		if !ok {
+			return nil, nil, fmt.Errorf("clone column failed")
+		}
 		newCol.RetType = newFunc.RetTp
 		schema4Agg.Append(newCol)
 		names = append(names, p.OutputNames()[i])

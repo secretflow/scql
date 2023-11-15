@@ -41,17 +41,6 @@ class EngineServiceImpl : public pb::SCQLEngineService {
 
   ~EngineServiceImpl() = default;
 
-  void StartSession(::google::protobuf::RpcController* cntl,
-                    const pb::StartSessionRequest* request,
-                    pb::Status* response,
-                    ::google::protobuf::Closure* done) override;
-
-  // Async api, just enqueue RunDag request and return, callback after
-  // finished.
-  void RunDag(::google::protobuf::RpcController* cntl,
-              const pb::RunDagRequest* request, pb::Status* response,
-              ::google::protobuf::Closure* done) override;
-
   void StopSession(::google::protobuf::RpcController* cntl,
                    const pb::StopSessionRequest* request, pb::Status* response,
                    ::google::protobuf::Closure* done) override;
@@ -62,18 +51,17 @@ class EngineServiceImpl : public pb::SCQLEngineService {
                         ::google::protobuf::Closure* done) override;
 
  private:
-  void RunDagWithSession(const pb::RunDagRequest request, Session* session,
-                         const std::string& source_ip);
-
-  std::string ConstructReportInfo(const pb::Status& status,
-                                  const pb::RunDagRequest& request,
-                                  Session* session);
-
-  void ReportToScdb(const pb::RunDagRequest& request,
+  void ReportResult(const std::string& session_id, const std::string& cb_url,
                     const std::string& report_info_str);
 
-  void RunPlan(const pb::RunExecutionPlanRequest& request, Session* session,
-               pb::RunExecutionPlanResponse* response);
+  void RunPlanCore(const pb::RunExecutionPlanRequest& request, Session* session,
+                   pb::RunExecutionPlanResponse* response);
+
+  void RunPlanSync(const pb::RunExecutionPlanRequest* request, Session* session,
+                   pb::RunExecutionPlanResponse* response);
+
+  void RunPlanAsync(const pb::RunExecutionPlanRequest request, Session* session,
+                    const std::string& source_ip);
 
   bool CheckSCDBCredential(const brpc::HttpHeader& http_header);
 

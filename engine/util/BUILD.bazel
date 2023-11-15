@@ -60,6 +60,7 @@ cc_library(
         ":copy_to_proto_vistor",
         "//engine/core:arrow_helper",
         "//engine/core:tensor",
+        "//engine/util:time_util",
         "@yacl//yacl/base:exception",
     ],
 )
@@ -122,6 +123,18 @@ cc_library(
     hdrs = ["filepath_helper.h"],
     deps = [
         "@com_google_absl//absl/strings",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+cc_library(
+    name = "time_util",
+    srcs = ["time_util.cc"],
+    hdrs = ["time_util.h"],
+    deps = [
+        "//engine/core:primitive_builder",
+        "//engine/core:tensor",
+        "@org_apache_arrow//:arrow",
         "@yacl//yacl/base:exception",
     ],
 )

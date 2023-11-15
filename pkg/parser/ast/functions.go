@@ -20,6 +20,7 @@ import (
 
 	"github.com/pingcap/errors"
 
+	"github.com/secretflow/scql/pkg/parser/format"
 	. "github.com/secretflow/scql/pkg/parser/format"
 	"github.com/secretflow/scql/pkg/parser/model"
 	"github.com/secretflow/scql/pkg/parser/types"
@@ -328,6 +329,17 @@ const (
 	TiDBDecodeKey = "tidb_decode_key"
 )
 
+var DateFunc = map[string]bool{
+	AddDate:    true,
+	Curdate:    true,
+	DateDiff:   true,
+	Now:        true,
+	SubDate:    true,
+	LastDay:    true,
+	StrToDate:  true,
+	DateFormat: true,
+}
+
 // FuncCallExpr is for function expression.
 type FuncCallExpr struct {
 	funcNode
@@ -337,8 +349,191 @@ type FuncCallExpr struct {
 	Args []ExprNode
 }
 
+func (n *FuncCallExpr) RestoreDateFuncWithMysqlDialect(ctx *RestoreCtx) (err error) {
+	ctx.WriteKeyWord(n.FnName.O)
+	ctx.WritePlain("(")
+	switch n.FnName.L {
+	case Now, Curdate:
+		if len(n.Args) != 0 {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr: %s", n.FnName.L)
+		}
+	case AddDate, SubDate:
+		if len(n.Args) != 3 {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr: %s", n.FnName.L)
+		}
+		if err = n.Args[0].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[0]")
+		}
+		ctx.WritePlain(", ")
+		ctx.WriteKeyWord("INTERVAL ")
+		if err := n.Args[1].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[1]")
+		}
+		ctx.WritePlain(" ")
+		old_ctx_flags := ctx.Flags
+		ctx.Flags &= ^format.RestoreStringSingleQuotes
+		if err := n.Args[2].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[2]")
+		}
+		ctx.Flags = old_ctx_flags
+	default:
+		for i, argv := range n.Args {
+			if i != 0 {
+				ctx.WritePlain(", ")
+			}
+			if err := argv.Restore(ctx); err != nil {
+				return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args %d", i)
+			}
+		}
+	}
+	ctx.WritePlain(")")
+	return nil
+}
+
+func (n *FuncCallExpr) RestoreDateFuncWithPostgresDialect(ctx *RestoreCtx) (err error) {
+	switch n.FnName.L {
+	case Now:
+		if len(n.Args) != 0 {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr: %s", n.FnName.L)
+		}
+		ctx.WriteKeyWord(n.FnName.O)
+		ctx.WritePlain("()")
+	case Curdate:
+		if len(n.Args) != 0 {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr: %s", n.FnName.L)
+		}
+		ctx.WriteKeyWord(ctx.Dialect.GetSpecialFuncName(n.FnName.L))
+	case AddDate, SubDate:
+		if len(n.Args) != 3 {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr: %s", n.FnName.L)
+		}
+		if err = n.Args[0].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[0]")
+		}
+		ctx.WriteKeyWord(ctx.Dialect.GetSpecialFuncName(n.FnName.L))
+		ctx.WriteKeyWord(" INTERVAL '")
+		if err := n.Args[1].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[1]")
+		}
+		ctx.WritePlain(" ")
+		// timeunit donot need to add single quotes
+		old_ctx_flags := ctx.Flags
+		ctx.Flags &= ^format.RestoreStringSingleQuotes
+		if err := n.Args[2].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[2]")
+		}
+		ctx.Flags = old_ctx_flags
+		ctx.WritePlain("'")
+	case DateDiff, LastDay, StrToDate, DateFormat:
+		// postgres donot support datediff op because Poco can not interpret the interval type result;
+		// postgres donot support last_day、str_to_date、date_format becase postgres has not these func: https://m.runoob.com/postgresql/postgresql-datetime.html
+		return errors.Annotatef(err, "An error occurred while restore FuncCallExpr: %s", n.FnName.L)
+	default:
+		ctx.WriteKeyWord(n.FnName.O)
+		ctx.WritePlain("(")
+		for i, argv := range n.Args {
+			if i != 0 {
+				ctx.WritePlain(", ")
+			}
+			if err := argv.Restore(ctx); err != nil {
+				return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args %d", i)
+			}
+		}
+		ctx.WritePlain(")")
+	}
+	return nil
+}
+
+func (n *FuncCallExpr) RestoreDateFuncWithCSVDBDialect(ctx *RestoreCtx) (err error) {
+	switch n.FnName.L {
+	case Now, Curdate:
+		if len(n.Args) != 0 {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr: %s", n.FnName.L)
+		}
+		ctx.WriteKeyWord(ctx.Dialect.GetSpecialFuncName(n.FnName.L))
+		ctx.WritePlain("()")
+	case AddDate, SubDate:
+		if len(n.Args) != 3 {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr: %s", n.FnName.L)
+		}
+		if err = n.Args[0].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[0]")
+		}
+		ctx.WriteKeyWord(ctx.Dialect.GetSpecialFuncName(n.FnName.L))
+		ctx.WriteKeyWord("INTERVAL ")
+		if err := n.Args[1].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[1]")
+		}
+		ctx.WritePlain(" ")
+		old_ctx_flags := ctx.Flags
+		ctx.Flags &= ^format.RestoreStringSingleQuotes
+		if err := n.Args[2].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[2]")
+		}
+		ctx.Flags = old_ctx_flags
+	case DateDiff:
+		// csv donot support datediff op
+		return errors.Annotatef(err, "An error occurred while restore FuncCallExpr: %s", n.FnName.L)
+	case StrToDate:
+		if len(n.Args) != 2 {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr: %s", n.FnName.L)
+		}
+		ctx.WriteKeyWord("strptime")
+		ctx.WritePlain("(")
+		if err = n.Args[0].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[0]")
+		}
+		ctx.WritePlain(",")
+		if err = n.Args[1].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[1]")
+		}
+		ctx.WritePlain(")")
+	case DateFormat:
+		// csv'format specifiers are diffrent from mysql
+		// csv: https://duckdb.org/docs/archive/0.9.0/sql/functions/dateformat
+		// mysql: https://dev.mysql.com/doc/refman/5.7/en/date-and-time-functions.html#function_date-format
+		if len(n.Args) != 2 {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr: %s", n.FnName.L)
+		}
+		ctx.WriteKeyWord("strftime")
+		ctx.WritePlain("(")
+		if err = n.Args[0].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[0]")
+		}
+		ctx.WritePlain(",")
+		if err = n.Args[1].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[1]")
+		}
+		ctx.WritePlain(")")
+	default:
+		ctx.WriteKeyWord(n.FnName.O)
+		ctx.WritePlain("(")
+		for i, argv := range n.Args {
+			if i != 0 {
+				ctx.WritePlain(", ")
+			}
+			if err := argv.Restore(ctx); err != nil {
+				return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args %d", i)
+			}
+		}
+		ctx.WritePlain(")")
+	}
+	return nil
+}
+
 // Restore implements Node interface.
 func (n *FuncCallExpr) Restore(ctx *RestoreCtx) error {
+	if _, ok := DateFunc[n.FnName.L]; ok {
+		switch ctx.Dialect.(type) {
+		case *PostgresDialect:
+			return n.RestoreDateFuncWithPostgresDialect(ctx)
+		case *CVSDBDialect:
+			return n.RestoreDateFuncWithCSVDBDialect(ctx)
+		default:
+			return n.RestoreDateFuncWithMysqlDialect(ctx)
+		}
+	}
+
 	n.FnName = model.NewCIStr(ctx.Dialect.GetSpecialFuncName(n.FnName.L))
 	var specialLiteral string
 	switch n.FnName.L {
@@ -366,7 +561,7 @@ func (n *FuncCallExpr) Restore(ctx *RestoreCtx) error {
 		}
 		ctx.WriteKeyWord(" USING ")
 		ctx.WriteKeyWord(n.Args[1].GetType().Charset)
-	case "adddate", "subdate", "date_add", "date_sub":
+	case "date_add", "date_sub":
 		if err := n.Args[0].Restore(ctx); err != nil {
 			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[0]")
 		}

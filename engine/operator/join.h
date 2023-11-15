@@ -85,12 +85,14 @@ class Join : public Operator {
       ExecContext* ctx, JoinRole join_role, const std::string& tmp_dir,
       const spu::psi::EcdhOprfPsiOptions& psi_options,
       const std::shared_ptr<util::BatchProvider>& batch_provider, bool is_left,
-      int64_t peer_rank, util::PsiExecutionInfoTable* psi_info_table);
+      int64_t peer_rank, util::PsiExecutionInfoTable* psi_info_table,
+      std::shared_ptr<yacl::link::Context> psi_link);
   static void OprfPsiClient(
       ExecContext* ctx, JoinRole join_role, const std::string& tmp_dir,
       const spu::psi::EcdhOprfPsiOptions& psi_options,
       const std::shared_ptr<util::BatchProvider>& batch_provider, bool is_left,
-      int64_t peer_rank, util::PsiExecutionInfoTable* psi_info_table);
+      int64_t peer_rank, util::PsiExecutionInfoTable* psi_info_table,
+      std::shared_ptr<yacl::link::Context> psi_link);
 
   static uint64_t RecvNullCount(ExecContext* ctx, int64_t peer_rank);
   static void SendNullCount(ExecContext* ctx, int64_t peer_rank,

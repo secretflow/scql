@@ -8,6 +8,9 @@ build --enable_platform_specific_config
 build --cxxopt=-std=c++17
 build --host_cxxopt=-std=c++17
 build --linkopt -fvisibility=hidden
+# default off CUDA build
+build --@rules_cuda//cuda:enable=false
+test --@rules_cuda//cuda:enable=false
 
 # Binary safety flags
 build --copt=-fPIC

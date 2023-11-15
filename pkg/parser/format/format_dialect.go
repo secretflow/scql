@@ -24,6 +24,7 @@ var (
 	_ Dialect = &MySQLDialect{}
 	_ Dialect = &TiDBDialect{}
 	_ Dialect = &PostgresDialect{}
+	_ Dialect = &CVSDBDialect{}
 	_ Dialect = &OdpsDialect{}
 )
 
@@ -174,6 +175,10 @@ func NewPostgresDialect() Dialect {
 			// don't use package ast here, may cause circle dependency
 			"ifnull":   "coalesce",
 			"truncate": "trunc",
+			"curdate":  "current_date",
+			"adddate":  "+",
+			"subdate":  "-",
+			"datediff": "-",
 		},
 	}
 }
@@ -203,6 +208,41 @@ func (d *PostgresDialect) SkipSchemaInColName() bool {
 }
 
 func (d *PostgresDialect) GetSpecialFuncName(originName string) string {
+	if res, ok := d.FuncNameMap[originName]; ok {
+		return res
+	}
+	return originName
+}
+
+type CVSDBDialect struct {
+	PostgresDialect
+	FuncNameMap map[string]string
+}
+
+func NewCVSDBDialect() Dialect {
+	return &CVSDBDialect{
+		FuncNameMap: map[string]string{
+			// don't use package ast here, may cause circle dependency
+			"ifnull":   "coalesce",
+			"truncate": "trunc",
+			"now":      "now",
+			"curdate":  "current_date",
+			"adddate":  "+",
+			"subdate":  "-",
+			"datediff": "-",
+		},
+	}
+}
+
+func (d *CVSDBDialect) ConvertCastTypeToString(asType byte, flen int, decimal int, flag uint) (keyword string, plainWord string, err error) {
+	return d.PostgresDialect.ConvertCastTypeToString(asType, flen, decimal, flag)
+}
+
+func (d *CVSDBDialect) SkipSchemaInColName() bool {
+	return true
+}
+
+func (d *CVSDBDialect) GetSpecialFuncName(originName string) string {
 	if res, ok := d.FuncNameMap[originName]; ok {
 		return res
 	}

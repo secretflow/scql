@@ -42,6 +42,7 @@ enum class SessionState {
 struct SessionOptions {
   uint32_t link_recv_timeout_ms = 30 * 1000;  // 30s
   size_t link_throttle_window_size = 0;
+  size_t link_chunked_send_parallel_size = 8;
 };
 
 /// @brief Session holds everything needed to run the execution plan.
@@ -55,6 +56,8 @@ class Session {
 
   /// @return session id
   std::string Id() const { return id_; }
+
+  std::string TimeZone() const { return time_zone_; }
 
   // each session has its own logger, it may contain session id in each log
   // message.
@@ -121,6 +124,7 @@ class Session {
  private:
   const std::string id_;
   const SessionOptions session_opt_;
+  const std::string time_zone_;
   PartyInfo parties_;
   SessionState state_;
   std::chrono::time_point<std::chrono::system_clock> start_time_;

@@ -15,9 +15,6 @@
 package executor
 
 import (
-	"fmt"
-
-	"github.com/secretflow/scql/pkg/constant"
 	proto "github.com/secretflow/scql/pkg/proto-gen/scql"
 )
 
@@ -29,36 +26,4 @@ func findTensorListByName(tensors []*proto.Tensor, name string) []*proto.Tensor 
 		}
 	}
 	return result
-}
-
-func mergeStringTensorsToFirstTensor(tensors []*proto.Tensor) error {
-	if len(tensors) == 0 {
-		return fmt.Errorf("mergeStringTensors: invaild tensors number %v", len(tensors))
-	}
-
-	var stringsList [][]string
-	for _, t := range tensors {
-		if t.ElemType != proto.PrimitiveDataType_STRING {
-			return fmt.Errorf("mergeStringTensors: invaild tensor element type %v", t.ElemType)
-		}
-		stringsList = append(stringsList, t.GetStringData())
-	}
-
-	// check shapes
-	for i := 0; i < len(stringsList)-1; i++ {
-		if len(stringsList[i]) != len(stringsList[i+1]) {
-			return fmt.Errorf("mergeStringTensors: tensor shape doesn't match %v != %v", len(stringsList[i]), len(stringsList[i+1]))
-		}
-	}
-
-	// set valid result to the first tensor
-	for _, ss := range stringsList {
-		for i, s := range ss {
-			if s != constant.StringElementPlaceHolder {
-				tensors[0].GetStringData()[i] = s
-			}
-		}
-	}
-
-	return nil
 }

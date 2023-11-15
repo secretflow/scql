@@ -18,6 +18,8 @@
 
 #include "yacl/link/transport/channel.h"
 
+#include "engine/link/mux_receiver.pb.h"
+
 namespace scql::engine {
 
 // Listener contains the Channels belong to the same Context.
@@ -28,18 +30,13 @@ class Listener {
   ~Listener() = default;
 
   void AddChannel(const size_t rank,
-                  std::shared_ptr<yacl::link::transport::ChannelBase> channel);
+                  std::shared_ptr<yacl::link::transport::Channel> channel);
 
-  void OnMessage(const size_t rank, const std::string& key,
-                 const std::string& value);
-
-  void OnChunkedMessage(const size_t rank, const std::string& key,
-                        const std::string& value, const size_t offset,
-                        const size_t total_length);
+  void OnRequest(const size_t rank, const link::pb::MuxPushRequest* request,
+                 link::pb::MuxPushResponse* response);
 
  private:
-  std::map<size_t, std::shared_ptr<yacl::link::transport::ChannelBase>>
-      channels_;
+  std::map<size_t, std::shared_ptr<yacl::link::transport::Channel>> channels_;
 };
 
 // thread safe, and will be used cocurrently.

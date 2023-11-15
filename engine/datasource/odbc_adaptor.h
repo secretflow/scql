@@ -41,18 +41,14 @@ struct OdbcAdaptorOptions {
 class OdbcAdaptor : public DatasourceAdaptor {
  public:
   explicit OdbcAdaptor(OdbcAdaptorOptions options);
-  ~OdbcAdaptor() = default;
 
-  std::vector<TensorPtr> ExecQuery(
-      const std::string& query,
-      const std::vector<ColumnDesc>& expected_outputs) override;
+  ~OdbcAdaptor() override = default;
 
  private:
   void Init();
 
-  std::vector<TensorPtr> ExecQueryImpl(
-      const std::string& query,
-      const std::vector<ColumnDesc>& expected_outputs);
+  std::vector<TensorPtr> GetQueryResult(const std::string& query) override;
+  std::vector<TensorPtr> GetQueryResultImpl(const std::string& query);
 
   // Returns a session from session pool if using pooled session,
   // Otherwise, creates a new session.

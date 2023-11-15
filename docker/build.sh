@@ -20,6 +20,7 @@ set -eu
 SCQL_IMAGE=scql
 IMAGE_TAG=latest
 ENABLE_CACHE=false
+TARGET_STAGE=image-prod
 
 usage() {
   echo "Usage: $0 [-n Name] [-t Tag] [-c]"
@@ -27,16 +28,20 @@ usage() {
   echo "Options:"
   echo "  -n name, image name, default is \"scql\""
   echo "  -t tag, image tag, default is \"latest\""
+  echo "  -s target build stage, default is \"image-prod\", set it to \"image-dev\" for debug purpose."
   echo "  -c, enable host disk bazel cache to speedup build process"
 }
 
-while getopts "n:t:c" options; do
+while getopts "n:t:s:c" options; do
   case "${options}" in
   n)
     SCQL_IMAGE=${OPTARG}
     ;;
   t)
     IMAGE_TAG=${OPTARG}
+    ;;
+  s)
+    TARGET_STAGE=${OPTARG}
     ;;
   c)
     ENABLE_CACHE=true
@@ -80,10 +85,15 @@ for dir in ${dirs[@]}; do
   docker cp ${WORK_DIR}/${dir} ${container_id}:/home/admin/dev
 done
 
+# prepare version information before build
+version=$(grep "version" $SCRIPT_DIR/version.txt | awk -F'"' '{print $2}')
+version+=$(date '+%Y%m%d-%H:%M:%S')
+version+=".$(git rev-parse --short HEAD)"
+echo "binary version: ${version}"
 # build engine binary
-docker exec -it ${container_id} bash -c "cd /home/admin/dev && bazel build //engine/exe:scqlengine -c opt"
+docker exec -it ${container_id} bash -c "cd /home/admin/dev && sed -i "s/SCQL_VERSION/$version/g" engine/exe/version.h && bazel build //engine/exe:scqlengine -c opt"
 # build scdbserver + scdbclient binary
-docker exec -it ${container_id} bash -c "cd /home/admin/dev && make"
+docker exec -it ${container_id} bash -c "cd /home/admin/dev && export SCQL_VERSION=$version && make"
 
 # prepare temporary path $TMP_PATH for file copies
 TMP_PATH=$WORK_DIR/.buildtmp/$IMAGE_TAG
@@ -94,6 +104,8 @@ echo "copy files to dir: $TMP_PATH"
 docker cp ${container_id}:/home/admin/dev/bazel-bin/engine/exe/scqlengine $TMP_PATH
 docker cp ${container_id}:/home/admin/dev/bin/scdbserver $TMP_PATH
 docker cp ${container_id}:/home/admin/dev/bin/scdbclient $TMP_PATH
+docker cp ${container_id}:/home/admin/dev/bin/broker $TMP_PATH
+docker cp ${container_id}:/home/admin/dev/bin/brokerctl $TMP_PATH
 
 # copy dockerfile
 cp $SCRIPT_DIR/scql.Dockerfile $TMP_PATH
@@ -102,7 +114,7 @@ cp $SCRIPT_DIR/scql.Dockerfile $TMP_PATH
 cd $TMP_PATH
 echo "start to build scql image in $(pwd)"
 
-docker build -f scql.Dockerfile -t $SCQL_IMAGE:$IMAGE_TAG .
+docker build --target $TARGET_STAGE -f scql.Dockerfile -t $SCQL_IMAGE:$IMAGE_TAG .
 
 # cleanup
 rm -rf ${TMP_PATH}

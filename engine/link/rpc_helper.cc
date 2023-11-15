@@ -35,16 +35,19 @@ bool LogicalRetryPolicy::DoRetry(const brpc::Controller* cntl) const {
       SPDLOG_DEBUG(
           "response not success for unknown reasons, retry after sleep");
       cntl->response()->Clear();
-      bthread_usleep(retry_delay_ns_);
       return true;
     } else {
       // default no retry for  other response error.
       return false;
     }
   }
-
   // leave others to brpc::DefaultRetryPolicy()
   return brpc::DefaultRetryPolicy()->DoRetry(cntl);
+}
+
+int32_t LogicalRetryPolicy::GetBackoffTimeMs(
+    const brpc::Controller* controller) const {
+  return retry_delay_ms_;
 }
 
 static std::unique_ptr<brpc::Authenticator> default_authenticator;

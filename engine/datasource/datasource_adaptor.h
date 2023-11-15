@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 
 #include "engine/core/tensor.h"
@@ -42,10 +43,20 @@ class DatasourceAdaptor {
   virtual ~DatasourceAdaptor() = default;
 
   // ExecQuery execute query,
-  // It will complain if the actual outputs not matched with expected_outputs.
-  virtual std::vector<TensorPtr> ExecQuery(
+  std::vector<TensorPtr> ExecQuery(
       const std::string& query,
-      const std::vector<ColumnDesc>& expected_outputs) = 0;
+      const std::vector<ColumnDesc>& expected_outputs) {
+    auto tensors = GetQueryResult(query);
+    return ConvertDataTypeToExpected(tensors, expected_outputs);
+  }
+
+ private:
+  // Get result from data source
+  virtual std::vector<TensorPtr> GetQueryResult(const std::string& query) = 0;
+  // It will complain if the actual outputs not matched with expected_outputs.
+  std::vector<TensorPtr> ConvertDataTypeToExpected(
+      std::vector<TensorPtr>& tensors,
+      const std::vector<ColumnDesc>& expected_outputs);
 };
 
 }  // namespace scql::engine

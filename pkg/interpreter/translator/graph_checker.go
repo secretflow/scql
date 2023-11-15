@@ -30,18 +30,17 @@ type checkGraphRule interface {
 }
 
 type GraphChecker struct {
-	graph *Graph
 	rules []checkGraphRule
 }
 
-func NewGraphChecker(graph *Graph) *GraphChecker {
+func NewGraphChecker() *GraphChecker {
 	rules := []checkGraphRule{&checkTensorCCL{}}
-	return &GraphChecker{graph: graph, rules: rules}
+	return &GraphChecker{rules: rules}
 }
 
-func (c *GraphChecker) Check() error {
+func (c *GraphChecker) Check(graph *Graph) error {
 	for _, rule := range c.rules {
-		if err := rule.checkGraph(c.graph); err != nil {
+		if err := rule.checkGraph(graph); err != nil {
 			return err
 		}
 	}

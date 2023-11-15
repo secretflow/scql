@@ -27,7 +27,7 @@ parser:
 	cd pkg/parser && make
 
 build: fmt vet
-	go build ./cmd/...
+	go build -ldflags "-X main.version=${SCQL_VERSION}" ./cmd/...
 
 pb: clean
 	$(RM) -rf pkg/proto-gen/*

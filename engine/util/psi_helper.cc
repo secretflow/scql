@@ -115,10 +115,10 @@ PsiPlan CoordinatePsiPlan(ExecContext* ctx) {
   msgpack::sbuffer sbuf;
   msgpack::pack(sbuf, tensor_length);
   auto psi_link = ctx->GetSession()->GetLink();
-  if (psi_link->WorldSize() > 2) {
-    psi_link = psi_link->SubWorld(ctx->GetNodeName(), input_party_codes);
-  }
   auto tag = ctx->GetNodeName() + "-TensorLength";
+  if (psi_link->WorldSize() > 2) {
+    psi_link = psi_link->SubWorld(tag, input_party_codes);
+  }
   auto length_bufs = yacl::link::AllGather(
       psi_link, yacl::ByteContainerView(sbuf.data(), sbuf.size()), tag);
   auto& peer_length_buf = length_bufs[psi_link->NextRank()];
@@ -617,7 +617,7 @@ void UbPsiJoinCache::SaveData(yacl::ByteContainerView item, size_t index,
 
 // OPRF ECDH PSI phases
 void OprfPsiServerTransferServerItems(
-    ExecContext* ctx,
+    ExecContext* ctx, std::shared_ptr<yacl::link::Context> psi_link,
     const std::shared_ptr<util::BatchProvider>& batch_provider,
     const std::shared_ptr<spu::psi::EcdhOprfPsiServer>& dh_oprf_psi_server,
     std::shared_ptr<spu::psi::IUbPsiCache> ub_cache) {
@@ -626,8 +626,7 @@ void OprfPsiServerTransferServerItems(
       "party_code: {}",
       ctx->GetSession()->SelfRank(), ctx->GetSession()->SelfPartyCode());
 
-  yacl::link::Barrier(ctx->GetSession()->GetLink(),
-                      "Sync for UbPsi client and server");
+  yacl::link::Barrier(psi_link, "Sync for UbPsi client and server");
 
   size_t self_item_count =
       ub_cache
@@ -650,7 +649,8 @@ void OprfPsiServerTransferClientItems(
 }
 
 void OprfPsiClientTransferServerItems(
-    ExecContext* ctx, const spu::psi::EcdhOprfPsiOptions& psi_options,
+    ExecContext* ctx, std::shared_ptr<yacl::link::Context> psi_link,
+    const spu::psi::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<util::UbOprfPsiClientCipherStore>& cipher_store) {
   SPDLOG_DEBUG(
       "Oprf client start to receive evaluated server items, my rank: {}, my "
@@ -659,8 +659,7 @@ void OprfPsiClientTransferServerItems(
   auto dh_oprf_psi_client_offline =
       std::make_shared<spu::psi::EcdhOprfPsiClient>(psi_options);
 
-  yacl::link::Barrier(ctx->GetSession()->GetLink(),
-                      "Sync for UbPsi client and server");
+  yacl::link::Barrier(psi_link, "Sync for UbPsi client and server");
 
   dh_oprf_psi_client_offline->RecvFinalEvaluatedItems(cipher_store);
   SPDLOG_DEBUG(

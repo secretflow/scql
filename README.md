@@ -25,7 +25,7 @@ docker run -d -it --name scql-dev-$(whoami) \
          --cap-add=SYS_PTRACE --security-opt seccomp=unconfined \
          --cap-add=NET_ADMIN \
          --privileged=true \
-         secretflow/scql-ci:latest
+         secretflow/scql-ci:latest /bin/bash
 
 # attach to dev container
 docker exec -it scql-dev-$(whoami) bash
@@ -44,6 +44,9 @@ bazel build //engine/exe:scqlengine -c opt
 
 # run unittests for SCQL engine
 bazel test //engine/...
+
+# update scdb proto
+make pb
 
 # build scdb code
 make

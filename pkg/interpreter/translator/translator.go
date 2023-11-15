@@ -17,7 +17,7 @@ package translator
 import (
 	"fmt"
 	"sort"
-	"strings"
+	"time"
 
 	"golang.org/x/exp/slices"
 
@@ -51,6 +51,9 @@ var astName2NodeName = map[string]string{
 	ast.IntDiv:   operator.OpNameIntDiv,
 	ast.Mod:      operator.OpNameMod,
 	ast.Case:     operator.OpNameCaseWhen,
+	ast.DateDiff: operator.OpNameMinus,
+	ast.AddDate:  operator.OpNameAdd,
+	ast.SubDate:  operator.OpNameMinus,
 }
 
 type translator struct {
@@ -98,8 +101,17 @@ func NewTranslator(
 
 func convertOriginalCCL(sc *proto.SecurityConfig) map[string]*ccl.CCL {
 	result := make(map[string]*ccl.CCL)
+	toFullQualifiedColumnName := func(dbName, tblName, colName string) string {
+		if len(dbName) == 0 && len(tblName) == 0 {
+			return colName
+		}
+		if len(dbName) == 0 {
+			return fmt.Sprintf("%s.%s", tblName, colName)
+		}
+		return fmt.Sprintf("%s.%s.%s", dbName, tblName, colName)
+	}
 	for _, cc := range sc.ColumnControlList {
-		fullQualifiedName := strings.Join([]string{cc.DatabaseName, cc.TableName, cc.ColumnName}, ".")
+		fullQualifiedName := toFullQualifiedColumnName(cc.DatabaseName, cc.TableName, cc.ColumnName)
 		if result[fullQualifiedName] == nil {
 			result[fullQualifiedName] = ccl.NewCCL()
 		}
@@ -222,7 +234,7 @@ func (t *translator) addResultNode(ln logicalNode) error {
 func (t *translator) addPublishNode(ln logicalNode) error {
 	input := []*Tensor{}
 	output := []*Tensor{}
-	for _, it := range ln.ResultTable() {
+	for i, it := range ln.ResultTable() {
 		var err error
 		// Reveal tensor to issuerPartyCode
 		it, err = t.ep.converter.convertTo(it, &privatePlacement{partyCode: t.issuerPartyCode})
@@ -232,22 +244,21 @@ func (t *translator) addPublishNode(ln logicalNode) error {
 		input = append(input, it)
 
 		ot := t.ep.AddTensorAs(it)
+
+		colName := ln.OutputNames()[i].ColName.String()
+		if len(colName) == 0 {
+			colName = ln.Schema().Columns[i].String()
+		}
+		ot.Name = colName
 		ot.Option = proto.TensorOptions_VALUE
+		ot.DType = proto.PrimitiveDataType_STRING
+		ot.StringS = []string{colName}
 		output = append(output, ot)
 	}
 
-	// Rename output tensors to result table column names
-	for i, n := range ln.OutputNames() {
-		if n.ColName.String() == "" {
-			output[i].Name = ln.Schema().Columns[i].String()
-		} else {
-			output[i].Name = n.ColName.String()
-		}
-	}
-
-	// Set execution plan's output tensor
+	// Set execution plan's output tensor name
 	for _, ot := range output {
-		t.ep.outputName = append(t.ep.outputName, ot.UniqueName())
+		t.ep.outputName = append(t.ep.outputName, ot.Name)
 	}
 
 	err := t.ep.AddPublishNode("publish", input, output, []string{t.issuerPartyCode})
@@ -268,9 +279,17 @@ func (t *translator) addDumpFileNode(ln logicalNode) error {
 	if intoOpt.PartyCode != t.issuerPartyCode {
 		return fmt.Errorf("failed to check select into party code (%s) which is not equal to (%s)", intoOpt.PartyCode, t.issuerPartyCode)
 	}
-	input := ln.ResultTable()
+	var input []*Tensor
 	var output []*Tensor
-	for i, it := range input {
+	for i, it := range ln.ResultTable() {
+		var err error
+		// Reveal tensor to into party code
+		it, err = t.ep.converter.convertTo(it, &privatePlacement{partyCode: intoOpt.PartyCode})
+		if err != nil {
+			return err
+		}
+		input = append(input, it)
+
 		ot := t.ep.AddTensorAs(it)
 		ot.Option = proto.TensorOptions_VALUE
 		var colName string
@@ -285,6 +304,22 @@ func (t *translator) addDumpFileNode(ln logicalNode) error {
 		output = append(output, ot)
 	}
 	return t.ep.AddDumpFileNode("dump_file", input, output, intoOpt.FileName, intoOpt.FieldsInfo.Terminated, intoOpt.PartyCode)
+}
+
+// runSQLString create sql string from lp with dialect
+func runSQLString(lp core.LogicalPlan, enginesInfo *EnginesInfo) (sql string, newTableRefs []string, err error) {
+	needRewrite := false
+	for _, party := range enginesInfo.GetParties() {
+		if len(enginesInfo.GetTablesByParty(party)) > 0 {
+			needRewrite = true
+		}
+	}
+	var m map[core.DbTable]core.DbTable
+	if needRewrite {
+		m = enginesInfo.GetDbTableMap()
+	}
+
+	return core.RewriteSQLFromLP(lp, m, needRewrite)
 }
 
 func (t *translator) buildRunSQL(ln logicalNode, partyCode string) error {
@@ -389,7 +424,7 @@ func convertDataType(typ *types.FieldType) (proto.PrimitiveDataType, error) {
 			return proto.PrimitiveDataType_BOOL, nil
 		}
 		return proto.PrimitiveDataType_INT64, nil
-	case mysql.TypeLong:
+	case mysql.TypeLong, mysql.TypeDuration:
 		return proto.PrimitiveDataType_INT64, nil
 	case mysql.TypeString, mysql.TypeVarchar, mysql.TypeVarString:
 		return proto.PrimitiveDataType_STRING, nil
@@ -399,6 +434,10 @@ func convertDataType(typ *types.FieldType) (proto.PrimitiveDataType, error) {
 		return proto.PrimitiveDataType_FLOAT32, nil
 	case mysql.TypeDouble, mysql.TypeNewDecimal:
 		return proto.PrimitiveDataType_FLOAT64, nil
+	case mysql.TypeDatetime, mysql.TypeDate, mysql.TypeYear:
+		return proto.PrimitiveDataType_DATETIME, nil
+	case mysql.TypeTimestamp:
+		return proto.PrimitiveDataType_TIMESTAMP, nil
 	}
 	return proto.PrimitiveDataType_PrimitiveDataType_UNDEFINED, fmt.Errorf("convertDataType doesn't support type %v", typ.Tp)
 }
@@ -461,8 +500,31 @@ func (t *translator) addBroadcastToNodeOndemand(inputs []*Tensor) ([]*Tensor, er
 }
 
 func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors map[int64]*Tensor, isApply bool, ln logicalNode) (*Tensor, error) {
+	if f.FuncName.L == ast.Now || f.FuncName.L == ast.Curdate {
+		unix_time := time.Unix(1e9, 0)
+		seconds := unix_time.Unix()
+		date_seconds := time.Date(unix_time.Year(), unix_time.Month(), unix_time.Day(), 0, 0, 0, 0, time.UTC).Unix()
+		time_seconds := seconds - date_seconds
+		var secondsDatum types.Datum
+		if f.FuncName.L == ast.Now {
+			secondsDatum = types.NewIntDatum(seconds)
+		} else if f.FuncName.L == ast.Curdate {
+			secondsDatum = types.NewIntDatum(date_seconds)
+		} else {
+			secondsDatum = types.NewIntDatum(time_seconds)
+		}
+		return t.addConstantNode(&secondsDatum)
+	}
+
 	args := f.GetArgs()
 	inputs := []*Tensor{}
+	if f.FuncName.L == ast.AddDate || f.FuncName.L == ast.SubDate {
+		var err error
+		args, err = expression.TransferDateFuncIntervalToSeconds(args)
+		if err != nil {
+			return nil, err
+		}
+	}
 	for _, arg := range args {
 		t, err := t.getTensorFromExpression(arg, tensors)
 		if err != nil {
@@ -490,7 +552,7 @@ func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors m
 		}
 		return t.ep.AddNotNode("not", inputs[0], inTensorPartyCodes)
 	// binary function
-	case ast.LT, ast.GT, ast.GE, ast.EQ, ast.LE, ast.NE, ast.LogicOr, ast.LogicAnd, ast.Plus, ast.Minus, ast.Mul, ast.Div, ast.IntDiv, ast.Mod:
+	case ast.LT, ast.GT, ast.GE, ast.EQ, ast.LE, ast.NE, ast.LogicOr, ast.LogicAnd, ast.Plus, ast.Minus, ast.Mul, ast.Div, ast.IntDiv, ast.Mod, ast.AddDate, ast.SubDate, ast.DateDiff:
 		if len(inputs) != 2 {
 			return nil, fmt.Errorf("buildScalarFunction:err input for %s expected for %d got %d", f.FuncName.L, 2, len(inputs))
 		}

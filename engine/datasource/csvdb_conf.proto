@@ -24,6 +24,8 @@ enum ColumnType {
   FLOAT = 2;
   DOUBLE = 3;
   STRING = 4;
+  DATETIME = 5;
+  TIMESTAMP = 6;
 };
 
 message CsvTableConf {

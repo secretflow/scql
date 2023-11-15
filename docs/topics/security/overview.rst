@@ -23,6 +23,8 @@ Suggestions on Deployment
 
 The SCDB Server serves as a central coordination component in the SCQL system, responsible for translating the query into a hybrid MPC-plaintext execution graph, and then dispatching it to the SCQLEngines deployed on each individual participant for execution. The SCDB server is responsible for generating execution graphs, and it should not be evil. To dispel participants' concerns about the SCDB server potentially engaging in malicious behavior, it is recommended to deploy the SCDB server in a trusted third party.
 
+If the trusted third party is not exist, you are recommended to deploy SCQL system in P2P mode. refer to :doc:`/topics/system/intro-p2p` for details.
+
 
 Risk Statement and Suggestion for SCQL Result Inversion Attack
 --------------------------------------------------------------

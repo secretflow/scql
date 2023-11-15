@@ -35,6 +35,11 @@ var ContentType2EncodingType = map[string]ContentEncodingType{
 	"application/x-protobuf": EncodingTypeProtobuf,
 }
 
+var EncodingType2ContentType = map[ContentEncodingType]string{
+	EncodingTypeJson:     "application/json",
+	EncodingTypeProtobuf: "application/x-protobuf",
+}
+
 var maxPrintContentLength = 1000
 
 func DeserializeFrom(in io.ReadCloser, request proto.Message) (ContentEncodingType, error) {
