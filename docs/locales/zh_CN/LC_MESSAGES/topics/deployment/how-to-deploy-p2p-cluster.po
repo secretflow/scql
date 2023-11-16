@@ -85,22 +85,22 @@ msgstr "为了简化，我们使用同一个 mysql 容器来存储 SCQLBroker �
 msgid ""
 "The source data can be stored in a file called ``alice_init.sql`` with "
 "content like `alice_init.sql "
-"<https://github.com/secretflow/scql/tree/main/example/p2p-"
+"<https://github.com/secretflow/scql/tree/main/examples/p2p-"
 "tutorial/mysql/initdb/alice_init.sql>`_. For Bob, please use "
 "`bob_init.sql <https://github.com/secretflow/scql/tree/main/examples"
 "/docker-compose/mysql/initdb/bob_init.sql>`_ instead."
-msgstr "源数据存储在名为 ``alice_init.sql`` 的文件中，其内容可参考 `alice_init.sql <https://github.com/secretflow/scql/tree/main/example/p2p-tutorial/mysql/initdb/alice_init.sql>`_。对于 Bob ，请使用 `bob_init.sql <https://github.com/secretflow/scql/tree/main/examples/docker-compose/mysql/initdb/bob_init.sql>` _ 代替。"
+msgstr "源数据存储在名为 ``alice_init.sql`` 的文件中，其内容可参考 `alice_init.sql <https://github.com/secretflow/scql/tree/main/examples/p2p-tutorial/mysql/initdb/alice_init.sql>`_。对于 Bob ，请使用 `bob_init.sql <https://github.com/secretflow/scql/tree/main/examples/p2p-tutorial/mysql/initdb/bob_init.sql>`_ 代替。"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:40
 msgid ""
 "The meta data can be stored in ``broker_init_alice.sql`` with content "
 "like `broker_init_alice.sql "
-"<https://github.com/secretflow/scql/tree/main/example/p2p-"
+"<https://github.com/secretflow/scql/tree/main/examples/p2p-"
 "tutorial/mysql/initdb/broker_init_alice.sql>`_. For Bob, please use "
 "`broker_init_bob.sql "
 "<https://github.com/secretflow/scql/tree/main/examples/docker-"
 "compose/mysql/initdb/broker_init_bob.sql>`_ instead."
-msgstr "元数据则存储在 ``broker_init_alice.sql`` 中，内容可参考 `broker_init_alice.sql <https://github.com/secretflow/scql/tree/main/example/p2p-tutorial/mysql/initdb/broker_init_alice.sql>`_。对于 Bob ，请使用 `broker_init_bob.sql <https://github.com/secretflow/scql/tree/main/examples/docker-compose/mysql/initdb/broker_init_bob.sql>`_ 代替。"
+msgstr "元数据则存储在 ``broker_init_alice.sql`` 中，内容可参考 `broker_init_alice.sql <https://github.com/secretflow/scql/tree/main/examples/p2p-tutorial/mysql/initdb/broker_init_alice.sql>`_。对于 Bob ，请使用 `broker_init_bob.sql <https://github.com/secretflow/scql/tree/main/examples/p2p-tutorial/initdb/broker_init_bob.sql>`_ 代替。"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:42
 msgid ""
@@ -169,7 +169,7 @@ msgid ""
 "published ports on the host machine, you need to replace it with an "
 "accessible port number. In this case, we have designated them as "
 "``8080``, ``8081`` and ``8003``."
-msgstr " ``__INTRA_PORT__``, ``__INTER_PORT__`` 和 ``__ENGINE_PORT__`` 作为监听端口，您需要替换为可访问的端口，这里我们指定为 ``8080``, ``8081`` 和 ``8003``"
+msgstr "``__INTRA_PORT__``, ``__INTER_PORT__`` 和 ``__ENGINE_PORT__`` 作为监听端口，您需要替换为可访问的端口，这里我们指定为 ``8080``, ``8081`` 和 ``8003``"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:177
 msgid ""

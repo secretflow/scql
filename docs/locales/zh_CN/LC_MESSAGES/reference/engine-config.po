@@ -713,7 +713,7 @@ msgstr ""
 
 #: ../../reference/engine-config.rst:296
 msgid "The host where SCQLBroker listens for InterServer requests"
-msgstr ""
+msgstr "SCQLBroker 监听 InterServer 请求的 host"
 
 #: ../../reference/engine-config.rst:298
 msgid "inter_server.port"
@@ -721,7 +721,7 @@ msgstr ""
 
 #: ../../reference/engine-config.rst:298
 msgid "The port on which SCQLBroker listens for InterServer requests"
-msgstr ""
+msgstr "SCQLBroker 监听 InterServer 请求的端口"
 
 #: ../../reference/engine-config.rst:300
 msgid "inter_server.protocol"
@@ -761,7 +761,7 @@ msgstr ""
 
 #: ../../reference/engine-config.rst:306
 msgid "Timeout for requesting InterServe"
-msgstr ""
+msgstr "InterServer 的请求超时时间"
 
 #: ../../reference/engine-config.rst:310
 msgid "party_code"
@@ -769,7 +769,7 @@ msgstr ""
 
 #: ../../reference/engine-config.rst:310
 msgid "Unique identifier used to identify the party"
-msgstr ""
+msgstr "用于识别参与方的唯一标识"
 
 #: ../../reference/engine-config.rst:312
 msgid "party_info_file"
@@ -779,7 +779,7 @@ msgstr ""
 msgid ""
 "File path that stores information of each party, including party code, "
 "public key and InterServer's URL"
-msgstr ""
+msgstr "存储参与方信息的文件路径，包括各参与方的 party code 、公钥和 InterServer 的 URL"
 
 #: ../../reference/engine-config.rst:314
 msgid "private_pem_path"

@@ -35,18 +35,18 @@ Here we present how to deploy components for party Alice.
 
 To simplify, We use a mysql container to store the SCQLBroker's meta data and SCQLEngine's source data. However, if you prefer, you can use your preferred database service or store both types of data separately.
 
-The source data can be stored in a file called ``alice_init.sql`` with content like `alice_init.sql <https://github.com/secretflow/scql/tree/main/example/p2p-tutorial/mysql/initdb/alice_init.sql>`_. For Bob, please use `bob_init.sql <https://github.com/secretflow/scql/tree/main/examples/docker-compose/mysql/initdb/bob_init.sql>`_ instead.
+The source data can be stored in a file called ``alice_init.sql`` with content like `alice_init.sql <https://github.com/secretflow/scql/tree/main/examples/p2p-tutorial/mysql/initdb/alice_init.sql>`_. For Bob, please use `bob_init.sql <https://github.com/secretflow/scql/tree/main/examples/docker-compose/mysql/initdb/bob_init.sql>`_ instead.
 
-The meta data can be stored in ``broker_init_alice.sql`` with content like `broker_init_alice.sql <https://github.com/secretflow/scql/tree/main/example/p2p-tutorial/mysql/initdb/broker_init_alice.sql>`_. For Bob, please use `broker_init_bob.sql <https://github.com/secretflow/scql/tree/main/examples/docker-compose/mysql/initdb/broker_init_bob.sql>`_ instead.
+The meta data can be stored in ``broker_init_alice.sql`` with content like `broker_init_alice.sql <https://github.com/secretflow/scql/tree/main/examples/p2p-tutorial/mysql/initdb/broker_init_alice.sql>`_. For Bob, please use `broker_init_bob.sql <https://github.com/secretflow/scql/tree/main/examples/docker-compose/mysql/initdb/broker_init_bob.sql>`_ instead.
 
 These files can also be obtained via the command-line with either curl, wget or another similar tool.
 
 .. code-block:: bash
 
-  # For Bob, please use command: wget raw.githubusercontent.com/secretflow/scql/main/example/p2p-tutorial/mysql/initdb/bob_init.sql
-  wget raw.githubusercontent.com/secretflow/scql/main/example/p2p-tutorial/mysql/initdb/alice_init.sql
-  # For Bob, please use command: wget raw.githubusercontent.com/secretflow/scql/main/example/p2p-tutorial/mysql/initdb/broker_init_bob.sql
-  wget raw.githubusercontent.com/secretflow/scql/main/example/p2p-tutorial/mysql/initdb/broker_init_alice.sql
+  # For Bob, please use command: wget raw.githubusercontent.com/secretflow/scql/main/examples/p2p-tutorial/mysql/initdb/bob_init.sql
+  wget raw.githubusercontent.com/secretflow/scql/main/examples/p2p-tutorial/mysql/initdb/alice_init.sql
+  # For Bob, please use command: wget raw.githubusercontent.com/secretflow/scql/main/examples/p2p-tutorial/mysql/initdb/broker_init_bob.sql
+  wget raw.githubusercontent.com/secretflow/scql/main/examples/p2p-tutorial/mysql/initdb/broker_init_alice.sql
 
 
 1.3 Set SCQLBroker Config
@@ -217,8 +217,8 @@ Create other files:
   # for engine Bob,  the output can be used to replace the __BOB_PUBLIC_KEY__ in engine Alice's authorized_profile.json
   openssl pkey -in ed25519key.pem  -pubout -outform DER | base64
   # download authorized profile
-  # for engine Bob, use command: wget https://raw.githubusercontent.com/secretflow/scql/main/example/p2p-tutorial/engine/bob/conf/authorized_profile.json
-  wget https://raw.githubusercontent.com/secretflow/scql/main/example/p2p-tutorial/engine/alice/conf/authorized_profile.json
+  # for engine Bob, use command: wget https://raw.githubusercontent.com/secretflow/scql/main/examples/p2p-tutorial/engine/bob/conf/authorized_profile.json
+  wget https://raw.githubusercontent.com/secretflow/scql/main/examples/p2p-tutorial/engine/alice/conf/authorized_profile.json
 
 
 Then you need to replace ``__XXX_PUBLIC_KEY__`` in party_info.json and authorized_profile.json with corresponding public keys.

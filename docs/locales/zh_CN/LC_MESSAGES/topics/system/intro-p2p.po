@@ -61,7 +61,7 @@ msgid ""
 "**SQL analysis and job scheduling**: translate SQL query into a hybrid "
 "MPC-plaintext execution graph and delegate the execution of the graph to "
 "its local SCQLEngine."
-msgstr "**SQL 分析及作业调度**：将 SQL 查询转换为明密文混合的执行图，并将执行度调度到本地 SCQLEngine 执行。"
+msgstr "**SQL 分析及作业调度**：将 SQL 查询转换为明密文混合的执行图，并调度到本地 SCQLEngine 执行。"
 
 #: ../../topics/system/intro-p2p.rst:20
 msgid ""
@@ -136,7 +136,7 @@ msgstr "**配置 CCL**：成员创建自己的表后，可以将特定的 CCL �
 msgid ""
 "**Executing query jobs**: After completing the CCL configuration, parties"
 " can perform the corresponding SQL analysis job."
-msgstr "“**执行查询**：完成 CCL 配置后，各方可以执行相应的 SQL 分析作业。”"
+msgstr "**执行查询**：完成 CCL 配置后，各方可以执行相应的 SQL 分析作业。”"
 
 #: ../../topics/system/intro-p2p.rst:42
 msgid ""
