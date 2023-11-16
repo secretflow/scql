@@ -14,7 +14,7 @@ The deployment diagram of the SCQL system that we plan to deploy is shown as the
 .. image:: /imgs/p2p_deploy.png
 
 .. note::
-    1. The BrokerServers are served through the HTTP protocol. It is recommended to use HTTPS instead in production environments.
+    1. The SCQLBrokers are served through the HTTP protocol. It is recommended to use HTTPS instead in production environments.
 
 
 Step 1: Deployment for Alice
@@ -33,7 +33,7 @@ Here we present how to deploy components for party Alice.
 1.2 Prepare Meta Data and Source Data
 -------------------------------------
 
-To simplify, We use a mysql container to store the BrokerServer's meta data and SCQLEngine's source data. However, if you prefer, you can use your preferred database service or store both types of data separately.
+To simplify, We use a mysql container to store the SCQLBroker's meta data and SCQLEngine's source data. However, if you prefer, you can use your preferred database service or store both types of data separately.
 
 The source data can be stored in a file called ``alice_init.sql`` with content like `alice_init.sql <https://github.com/secretflow/scql/tree/main/example/p2p-tutorial/mysql/initdb/alice_init.sql>`_. For Bob, please use `bob_init.sql <https://github.com/secretflow/scql/tree/main/examples/docker-compose/mysql/initdb/bob_init.sql>`_ instead.
 
@@ -49,7 +49,7 @@ These files can also be obtained via the command-line with either curl, wget or 
   wget raw.githubusercontent.com/secretflow/scql/main/example/p2p-tutorial/mysql/initdb/broker_init_alice.sql
 
 
-1.3 Set BrokerServer Config
+1.3 Set SCQLBroker Config
 ---------------------------
 
 Create a file called ``config.yml`` in your workspace and paste the following code in:
@@ -83,7 +83,7 @@ Create a file called ``config.yml`` in your workspace and paste the following co
 
   For Bob, the **party_code** should be ``bob``, and the ``brokeralice`` in **conn_str** should be replaced by ``brokerbob``.
 
-See :ref:`BrokerServer configuration options <config_broker_server_options>` for more.
+See :ref:`SCQLBroker configuration options <config_broker_server_options>` for more.
 
 
 1.4 Set SCQLEngine Config
@@ -276,7 +276,7 @@ It is basically the same as `Step 1: Deployment for Alice`_, but some characters
 Step 3: SCQL Test
 =================
 
-Here we use brokerctl to submit a query to BrokerServer for testing, you can also submit queries directly to BrokerServer by sending a POST request.
+Here we use brokerctl to submit a query to SCQLBroker for testing, you can also submit queries directly to SCQLBroker by sending a POST request.
 
 
 3.1 Build brokerctl
@@ -299,7 +299,7 @@ Here we use brokerctl to submit a query to BrokerServer for testing, you can als
 3.2 Submit Query
 ----------------
 
-You can start to use brokerctl to submit requests to BrokerServer and fetch the results back. it's similar to what you can do in :doc:`/intro/p2p-tutorial`.
+You can start to use brokerctl to submit requests to SCQLBroker and fetch the results back. it's similar to what you can do in :doc:`/intro/p2p-tutorial`.
 
 
 .. code-block:: bash
@@ -322,4 +322,4 @@ You can start to use brokerctl to submit requests to BrokerServer and fetch the 
 
 .. note::
 
-  Yeed need to replace ``__ALICE_INTRA_URL__`` or ``__BOB_INTRA_URL__`` with the actual IntraServer address, like:  http://30.30.30.30:8080.
+  You need to replace ``__ALICE_INTRA_URL__`` or ``__BOB_INTRA_URL__`` with the actual IntraServer address, like:  http://30.30.30.30:8080.

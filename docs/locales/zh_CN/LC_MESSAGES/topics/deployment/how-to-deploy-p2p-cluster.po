@@ -54,9 +54,9 @@ msgstr ""
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:17
 msgid ""
-"The BrokerServers are served through the HTTP protocol. It is recommended"
+"The SCQLBrokers are served through the HTTP protocol. It is recommended"
 " to use HTTPS instead in production environments."
-msgstr "BrokerServers 使用 HTTP 协议提供服务。在生产环境建议使用 HTTPS。详情请查看 :ref:`配置 TLS <scdb-tls>`。"
+msgstr "SCQLBrokers 使用 HTTP 协议提供服务。在生产环境建议使用 HTTPS。详情请查看 :ref:`配置 TLS <scdb-tls>`。"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:21
 msgid "Step 1: Deployment for Alice"
@@ -76,10 +76,10 @@ msgstr "1.2 准备状态数据、源数据"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:36
 msgid ""
-"To simplify, We use a mysql container to store the BrokerServer's meta "
+"To simplify, We use a mysql container to store the SCQLBroker's meta "
 "data and SCQLEngine's source data. However, if you prefer, you can use "
 "your preferred database service or store both types of data separately."
-msgstr "为了简化，我们使用同一个 mysql 容器来存储 BrokerServer 的元数据和 SCQLEngine 的源数据。当然，您也可以使用您喜欢的其他数据库服务或分开存储两种类型的数据。"
+msgstr "为了简化，我们使用同一个 mysql 容器来存储 SCQLBroker 的元数据和 SCQLEngine 的源数据。当然，您也可以使用您喜欢的其他数据库服务或分开存储两种类型的数据。"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:38
 msgid ""
@@ -109,8 +109,8 @@ msgid ""
 msgstr "这些文件也可以通过命令行工具curl、wget或其他类似工具获取。"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:53
-msgid "1.3 Set BrokerServer Config"
-msgstr "1.3 配置 BrokerServer"
+msgid "1.3 Set SCQLBroker Config"
+msgstr "1.3 配置 SCQLBroker"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:55
 msgid ""
@@ -126,9 +126,9 @@ msgstr "对于 Bob，**party_code** 应该是 ``bob``，而 **conn_str** 中的 
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:86
 msgid ""
-"See :ref:`BrokerServer configuration options "
+"See :ref:`SCQLBroker configuration options "
 "<config_broker_server_options>` for more."
-msgstr "请参阅：ref:`BrokerServer 配置选项 <config_broker_server_options>` 了解更多信息。"
+msgstr "请参阅：ref:`SCQLBroker 配置选项 <config_broker_server_options>` 了解更多信息。"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:90
 msgid "1.4 Set SCQLEngine Config"
@@ -181,7 +181,7 @@ msgstr "*mysql* 容器通过 ``alice_init.sql`` 和` `broker_init_alice.sql`` �
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:179
 msgid "If you use your own database service, container *mysql* can be deleted"
-msgstr "如果您使用自己的数据库服务，则 *mysql* 容器可以删除，修改 BrokerServer 和 SCQLEngine 配置中的 conn_str ，指定可用的数据库连接信息即可"
+msgstr "如果您使用自己的数据库服务，则 *mysql* 容器可以删除，修改 SCQLBroker 和 SCQLEngine 配置中的 conn_str ，指定可用的数据库连接信息即可"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:183
 msgid "1.6 Prepare Party Auth Files"
@@ -249,10 +249,10 @@ msgstr "步骤三：测试 SCQL"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:279
 msgid ""
-"Here we use brokerctl to submit a query to BrokerServer for testing, you "
-"can also submit queries directly to BrokerServer by sending a POST "
+"Here we use brokerctl to submit a query to SCQLBroker for testing, you "
+"can also submit queries directly to SCQLBroker by sending a POST "
 "request."
-msgstr "这里我们使用 brokerctl 向 BrokerServer 提交查询进行测试，您也可以通过发送 POST 请求直接向 BrokerServer 提交查询。"
+msgstr "这里我们使用 brokerctl 向 SCQLBroker 提交查询进行测试，您也可以通过发送 POST 请求直接向 SCQLBroker 提交查询。"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:283
 msgid "3.1 Build brokerctl"
@@ -264,14 +264,14 @@ msgstr "3.2 提交查询"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:302
 msgid ""
-"You can start to use brokerctl to submit requests to BrokerServer and "
+"You can start to use brokerctl to submit requests to SCQLBroker and "
 "fetch the results back. it's similar to what you can do in :doc:`/intro"
 "/p2p-tutorial`."
-msgstr "您可以开始使用 brokerctl 向 BrokerServer 提交请求并获取结果。这与您在 :doc:`/intro/p2p-tutorial` 中可以执行的操作类似。"
+msgstr "您可以开始使用 brokerctl 向 SCQLBroker 提交请求并获取结果。这与您在 :doc:`/intro/p2p-tutorial` 中可以执行的操作类似。"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:325
 msgid ""
-"Yeed need to replace ``__ALICE_INTRA_URL__`` or ``__BOB_INTRA_URL__`` "
+"You need to replace ``__ALICE_INTRA_URL__`` or ``__BOB_INTRA_URL__`` "
 "with the actual IntraServer address, like:  http://30.30.30.30:8080."
 msgstr "您需要将 ``__ALICE_INTRA_URL__`` 或 ``__BOB_INTRA_URL__`` 替换为实际的 IntraServer 地址，例如：http://30.30.30.30:8080。"
 

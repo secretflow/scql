@@ -67,9 +67,9 @@ msgstr "**SQL 分析及作业调度**：将 SQL 查询转换为明密文混合�
 msgid ""
 "``SCQLEngine``: SCQLEngine is a hybrid MPC-plaintext execution engine, "
 "which collaborates with peers to run the execution graph and reports the "
-"query result to BrokerServer. SCQLEngine is implemented on top of state-"
+"query result to SCQLBroker. SCQLEngine is implemented on top of state-"
 "of-the-art MPC framework `secretflow/spu`_."
-msgstr "``SCQLEngine``：SCQLEngine 是一个明密文混合执行引擎，不同参与方的 SCQLEngine 可以协作完成执行图计算，本地的 SCQLEngine 会将结果报告给 BrokerServer 。SCQLEngine 是在最先进的 "
+msgstr "``SCQLEngine``：SCQLEngine 是一个明密文混合执行引擎，不同参与方的 SCQLEngine 可以协作完成执行图计算，本地的 SCQLEngine 会将结果报告给 SCQLBroker 。SCQLEngine 是在最先进的 "
 "MPC 框架 `secretflow/spu`_ 的基础上实现的。"
 
 #: ../../topics/system/intro-p2p.rst:-1

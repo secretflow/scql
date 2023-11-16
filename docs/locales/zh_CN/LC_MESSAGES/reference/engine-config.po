@@ -27,9 +27,9 @@ msgid ""
 "This configuration manual is designed to help users understand the "
 "various configuration options available for the SCQL system. It can be "
 "divided into three parts: SCDB configuration options (for Centralized "
-"mode), BrokerServer configuration options (for P2P mode) and SCQLEngine "
+"mode), SCQLBroker configuration options (for P2P mode) and SCQLEngine "
 "configuration options (for both modes)."
-msgstr "本配置手册旨在帮助用户了解 SCQL 系统的各种配置项。 它可以分为三部分：SCDB 配置项、 BrokerServer 配置项和 Engine 配置项。"
+msgstr "本配置手册旨在帮助用户了解 SCQL 系统的各种配置项。 它可以分为三部分：SCDB 配置项、 SCQLBroker 配置项和 Engine 配置项。"
 
 #: ../../reference/engine-config.rst:10
 msgid "SCDB configuration options"
@@ -619,22 +619,22 @@ msgstr ""
 " 。"
 
 #: ../../reference/engine-config.rst:244
-msgid "BrokerServer configuration options"
-msgstr "BrokerServer 配置说明"
+msgid "SCQLBroker configuration options"
+msgstr "SCQLBroker 配置说明"
 
 #: ../../reference/engine-config.rst:246
 msgid ""
-"BrokerServer, like SCDB, uses yaml files to configure parameters, The "
+"SCQLBroker, like SCDB, uses yaml files to configure parameters, The "
 "majority of their configuration items are the same."
-msgstr "BrokerServer 和 SCDB一样，使用 yaml 文件配置参数，两者的配置项也大体相同"
+msgstr "SCQLBroker 和 SCDB一样，使用 yaml 文件配置参数，两者的配置项也大体相同"
 
 #: ../../reference/engine-config.rst:249
-msgid "Example for BrokerServer"
-msgstr "BrokerServer 配置示例"
+msgid "Example for SCQLBroker"
+msgstr "SCQLBroker 配置示例"
 
 #: ../../reference/engine-config.rst:281
-msgid "Config in BrokerServer"
-msgstr "BrokerServer 配置"
+msgid "Config in SCQLBroker"
+msgstr "SCQLBroker 配置"
 
 #: ../../reference/engine-config.rst:342
 msgid "Config for ServerConfig"
@@ -642,9 +642,9 @@ msgstr "ServerConfig 配置"
 
 #: ../../reference/engine-config.rst:343
 msgid ""
-"BrokerServer accept intra-domain requests through IntraServer, while "
-"accept requests between different BrokerServers through InterServer."
-msgstr "BrokerServer 通过IntraServer 接收域内请求，而通过 InterServer 接收不同 BrokerServer 之间的请求。"
+"SCQLBroker accept intra-domain requests through IntraServer, while "
+"accept requests between different SCQLBrokers through InterServer."
+msgstr "SCQLBroker 通过IntraServer 接收域内请求，而通过 InterServer 接收不同 SCQLBroker 之间的请求。"
 
 #: ../../reference/engine-config.rst:345
 msgid ""

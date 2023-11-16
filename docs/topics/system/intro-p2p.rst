@@ -17,7 +17,7 @@ The SCQL system running in P2P mode consists of ``SCQLBrokers`` and ``SCQLEngine
 
   + **SQL analysis and job scheduling**: translate SQL query into a hybrid MPC-plaintext execution graph and delegate the execution of the graph to its local SCQLEngine.
 
-- ``SCQLEngine``: SCQLEngine is a hybrid MPC-plaintext execution engine, which collaborates with peers to run the execution graph and reports the query result to BrokerServer. SCQLEngine is implemented on top of state-of-the-art MPC framework `secretflow/spu`_.
+- ``SCQLEngine``: SCQLEngine is a hybrid MPC-plaintext execution engine, which collaborates with peers to run the execution graph and reports the query result to SCQLBroker. SCQLEngine is implemented on top of state-of-the-art MPC framework `secretflow/spu`_.
 
 .. image:: /imgs/scql_p2p_architecture.png
     :alt: SCQL P2P Architecture

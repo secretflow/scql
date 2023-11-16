@@ -2,7 +2,7 @@
 SCQL System Config
 ==================
 
-This configuration manual is designed to help users understand the various configuration options available for the SCQL system. It can be divided into three parts: SCDB configuration options (for Centralized mode), BrokerServer configuration options (for P2P mode) and SCQLEngine configuration options (for both modes).
+This configuration manual is designed to help users understand the various configuration options available for the SCQL system. It can be divided into three parts: SCDB configuration options (for Centralized mode), SCQLBroker configuration options (for P2P mode) and SCQLEngine configuration options (for both modes).
 
 .. _scdb_config_options:
 
@@ -240,12 +240,12 @@ SCQL supports different mpc protocol powered by SPU, you can choose different mp
 
 .. _config_broker_server_options:
 
-BrokerServer configuration options
+SCQLBroker configuration options
 ==================================
 
-BrokerServer, like SCDB, uses yaml files to configure parameters, The majority of their configuration items are the same.
+SCQLBroker, like SCDB, uses yaml files to configure parameters, The majority of their configuration items are the same.
 
-Example for BrokerServer
+Example for SCQLBroker
 ------------------------
 
 .. code-block:: yaml
@@ -277,15 +277,15 @@ Example for BrokerServer
     conn_max_lifetime: 5m
 
 
-Config in BrokerServer
+Config in SCQLBroker
 ----------------------
 
 +---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
 |                 Name                  |  Default  |                                                       Description                                                       |
 +=======================================+===========+=========================================================================================================================+
-| intra_server.host                     | 127.0.0.1 | The host where BrokerServer listens for IntraServer requests, default localhost for safety                              |
+| intra_server.host                     | 127.0.0.1 | The host where SCQLBroker listens for IntraServer requests, default localhost for safety                              |
 +---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
-| intra_server.port                     | none      | The port on which BrokerServer listens for IntraServer requests                                                         |
+| intra_server.port                     | none      | The port on which SCQLBroker listens for IntraServer requests                                                         |
 +---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
 | intra_server.protocol                 | http      | The transfer protocol of IntraServer, supports HTTP/HTTPS                                                               |
 +---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
@@ -293,9 +293,9 @@ Config in BrokerServer
 +---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
 | intra_server.key_file                 | none      | Private key file path for IntraServer to enable HTTPS, supports key/pem type                                            |
 +---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
-| inter_server.host                     | none      | The host where BrokerServer listens for InterServer requests                                                            |
+| inter_server.host                     | none      | The host where SCQLBroker listens for InterServer requests                                                            |
 +---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
-| inter_server.port                     | none      | The port on which BrokerServer listens for InterServer requests                                                         |
+| inter_server.port                     | none      | The port on which SCQLBroker listens for InterServer requests                                                         |
 +---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
 | inter_server.protocol                 | http      | The transfer protocol of InterServer, supports HTTP/HTTPS                                                               |
 +---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
@@ -311,21 +311,21 @@ Config in BrokerServer
 +---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
 | party_info_file                       | none      | File path that stores information of each party, including party code, public key and InterServer's URL                 |
 +---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
-| private_pem_path                      | none      | Private key file path for party_code, which will be used to sign requests to other BrokerServers                        |
+| private_pem_path                      | none      | Private key file path for party_code, which will be used to sign requests to other SCQLBrokers                        |
 +---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
-| intra_host                            | none      | The callback URL for the local SCQLEngine to notify BrokerServer                                                        |
+| intra_host                            | none      | The callback URL for the local SCQLEngine to notify SCQLBroker                                                        |
 +---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
 | engines                               | none      | The URLs for local available SCQLEngines                                                                                |
 +---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
-| engine.timeout                        | none      | Timeout for BrokerServer to send message to SCQLEngine                                                                  |
+| engine.timeout                        | none      | Timeout for SCQLBroker to send message to SCQLEngine                                                                  |
 +---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
 | engine.protocol                       | http      | The transfer protocol of SCQLEngine, support http/https                                                                 |
 +---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
-| engine.content_type                   | none      | The original media type in post body from BrokerServer to SCQLEngine                                                    |
+| engine.content_type                   | none      | The original media type in post body from SCQLBroker to SCQLEngine                                                    |
 +---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
 | security_compromise.reveal_group_mark | false     | Whether to reveal group_mark directly for group by                                                                      |
 +---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
-| storage.type                          | none      | Database kind in BrokerServer, supports MYSQL/SQLite3, MYSQL is recommended, SQLite3 may have problems with concurrency |
+| storage.type                          | none      | Database kind in SCQLBroker, supports MYSQL/SQLite3, MYSQL is recommended, SQLite3 may have problems with concurrency |
 +---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
 | storage.conn_str                      | none      | Used to connect to a database                                                                                           |
 +---------------------------------------+-----------+-------------------------------------------------------------------------------------------------------------------------+
@@ -340,7 +340,7 @@ Config in BrokerServer
 
 Config for ServerConfig
 ^^^^^^^^^^^^^^^^^^^^^^^
-BrokerServer accept intra-domain requests through IntraServer, while accept requests between different BrokerServers through InterServer.
+SCQLBroker accept intra-domain requests through IntraServer, while accept requests between different SCQLBrokers through InterServer.
 
 IntraServer is recommended to use localhost host or LAN address to avoid external attacks, while InterServer is recommended to enable HTTPS to improve security.
 
