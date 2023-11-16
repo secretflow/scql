@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-16 09:25+0800\n"
+"POT-Creation-Date: 2023-11-16 10:08+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.13.0\n"
+"Generated-By: Babel 2.12.1\n"
 
 #: ../../reference/operators.md:1
 msgid "SCQL Operators Specification"
@@ -647,31 +647,26 @@ msgid "`If`"
 msgstr "`If`"
 
 #: ../../reference/operators.md:828
-#, fuzzy
 msgid ""
 "The IF operator returns a value if a condition is TRUE, or another value "
 "if a condition is FALSE. Example:"
 msgstr "如果条件为 TRUE ，则 IF 算子返回一个值；如果条件为 FALSE ，则返回另一个值。"
 
 #: ../../reference/operators.md:841
-#, fuzzy
 msgid "`Condition`(single, T): Condition tensor."
 msgstr "``Condition`` （多列数组，类型为 T ）：条件 tensor 。"
 
 #: ../../reference/operators.md:843
-#, fuzzy
 msgid "`ValueIfTrue`(single, T1): Value if true tensor."
 msgstr "``Filter`` （单列数组，类型为 T1 ）：用来做筛选的 tensor 。"
 
 #: ../../reference/operators.md:845
-#, fuzzy
 msgid "`ValueIfFalse`(single, T2): Value if false tensor."
-msgstr "``ValueElse`` （单列数组，类型为 T2）：当所有 condition tensors 都为假，则取 ValueElse 。"
+msgstr "``ValueIfFalse`` （单列数组，类型为 T2）：当条件为假，则取 ValueIfFalse 。"
 
 #: ../../reference/operators.md:869
-#, fuzzy
 msgid "`In`"
-msgstr "`Join`"
+msgstr "`In`"
 
 #: ../../reference/operators.md:871
 msgid ""
@@ -1002,9 +997,9 @@ msgstr "``In`` （多列数组，类型为 T ）：要披露的 Tensors 。"
 
 #: ../../reference/operators.md:1627
 msgid ""
-"`Out`(variadic, T): Result tensors of the publish op. Tensors are in "
+"`Out`(variadic, T): Published name of input tensors. Tensors are in "
 "TensorOption VALUE."
-msgstr "``Out`` （多列数组，类型为 T ）：运算结果。"
+msgstr "``Out`` （多列数组，类型为 T ）：输入 tensors 的披露结果。 Tensors 位于 TensorOption VALUE 。"
 
 #: ../../reference/operators.md:1640
 msgid "`ReduceAvg`"

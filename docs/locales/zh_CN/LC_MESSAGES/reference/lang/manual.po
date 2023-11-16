@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-11 20:36+0800\n"
+"POT-Creation-Date: 2023-11-16 10:08+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.13.0\n"
+"Generated-By: Babel 2.12.1\n"
 
 #: ../../reference/lang/manual.rst:2
 msgid "SCQL Language Manual"
@@ -80,13 +80,22 @@ msgstr "``str``"
 msgid "``datetime``"
 msgstr "``datetime``"
 
-#: ../../reference/lang/manual.rst:23 ../../reference/lang/manual.rst:25
-msgid "not supported yet, coming soon"
-msgstr "暂不支持，即将推出"
+#: ../../reference/lang/manual.rst:23
+msgid ""
+"Used for values that contain both date and time parts. SCQL retrieves and"
+" displays in 'YYYY-MM-DD hh:mm:ss' format"
+msgstr "包含日期和时间两部分， SCQL 使用 'YYYY-MM-DD hh:mm:ss' 格式识别及表示"
 
 #: ../../reference/lang/manual.rst:25
 msgid "``timestamp``"
 msgstr "``timestamp``"
+
+#: ../../reference/lang/manual.rst:25
+msgid ""
+"Used for values that contain both date and time parts. SCQL retrieves in "
+"'YYYY-MM-DD hh:mm:ss' format and displays in int64 value affected by time"
+" zone"
+msgstr "包含日期和时间两部分， SCQL 使用 'YYYY-MM-DD hh:mm:ss' 格式识别，但表示为受时区影响的 int64 值"
 
 #: ../../reference/lang/manual.rst:32
 msgid "SCQL Statements"
@@ -140,15 +149,15 @@ msgstr "SHOW/DESCRIBE 语句"
 msgid "SELECT Statement"
 msgstr "SELECT 语句"
 
-#: ../../reference/lang/manual.rst:254
+#: ../../reference/lang/manual.rst:262
 msgid "Functions and Operators"
 msgstr "函数与操作符"
 
-#: ../../reference/lang/manual.rst:256
+#: ../../reference/lang/manual.rst:264
 msgid "Todo"
 msgstr "待办"
 
-#: ../../reference/lang/manual.rst:256
+#: ../../reference/lang/manual.rst:264
 msgid "this part is not ready, please check later"
 msgstr "该部分尚未准备好，请之后查看"
 
@@ -163,4 +172,7 @@ msgstr "该部分尚未准备好，请之后查看"
 
 #~ msgid "``INNER JOIN``"
 #~ msgstr "``INNER JOIN``"
+
+#~ msgid "not supported yet, coming soon"
+#~ msgstr "暂不支持，即将推出"
 

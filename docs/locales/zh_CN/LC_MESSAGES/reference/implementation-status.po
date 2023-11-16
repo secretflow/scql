@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-12 08:14+0800\n"
+"POT-Creation-Date: 2023-11-16 10:08+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.13.0\n"
+"Generated-By: Babel 2.12.1\n"
 
 #: ../../reference/implementation-status.rst:2
 msgid "SCQL Implementation Status"
@@ -32,13 +32,13 @@ msgstr "语法"
 
 #: ../../reference/implementation-status.rst:8
 #: ../../reference/implementation-status.rst:32
-#: ../../reference/implementation-status.rst:59
+#: ../../reference/implementation-status.rst:71
 msgid "supported(fully/partial/no)"
 msgstr "支持程度(完全/部分/未支持)"
 
 #: ../../reference/implementation-status.rst:8
 #: ../../reference/implementation-status.rst:32
-#: ../../reference/implementation-status.rst:59
+#: ../../reference/implementation-status.rst:71
 msgid "notes"
 msgstr "说明"
 
@@ -49,8 +49,14 @@ msgstr "join"
 #: ../../reference/implementation-status.rst:10
 #: ../../reference/implementation-status.rst:48
 #: ../../reference/implementation-status.rst:52
-#: ../../reference/implementation-status.rst:63
-#: ../../reference/implementation-status.rst:65
+#: ../../reference/implementation-status.rst:54
+#: ../../reference/implementation-status.rst:56
+#: ../../reference/implementation-status.rst:58
+#: ../../reference/implementation-status.rst:60
+#: ../../reference/implementation-status.rst:62
+#: ../../reference/implementation-status.rst:64
+#: ../../reference/implementation-status.rst:75
+#: ../../reference/implementation-status.rst:77
 msgid "partial"
 msgstr "部分"
 
@@ -75,7 +81,7 @@ msgstr "where 子句"
 #: ../../reference/implementation-status.rst:44
 #: ../../reference/implementation-status.rst:46
 #: ../../reference/implementation-status.rst:50
-#: ../../reference/implementation-status.rst:61
+#: ../../reference/implementation-status.rst:73
 msgid "fully"
 msgstr "完全"
 
@@ -194,31 +200,91 @@ msgstr "in, not in"
 msgid "all arguments should be of the same type"
 msgstr "所有参数应为同一类型"
 
+#: ../../reference/implementation-status.rst:54
 #: ../../reference/implementation-status.rst:56
+#: ../../reference/implementation-status.rst:58
+#: ../../reference/implementation-status.rst:60
+#: ../../reference/implementation-status.rst:62
+#: ../../reference/implementation-status.rst:64
+msgid "datetime"
+msgstr ""
+
+#: ../../reference/implementation-status.rst:54
+msgid "now"
+msgstr ""
+
+#: ../../reference/implementation-status.rst:54
+msgid "no arguments, affected by timezone"
+msgstr "无参数，受时区影响"
+
+#: ../../reference/implementation-status.rst:56
+msgid "curdate"
+msgstr ""
+
+#: ../../reference/implementation-status.rst:56
+msgid ""
+"no arguments, different datasource may have different result because of "
+"timezone"
+msgstr "无参数，受时区影响，不同的数据源可能有不同的结果"
+
+#: ../../reference/implementation-status.rst:58
+msgid "last_day"
+msgstr ""
+
+#: ../../reference/implementation-status.rst:58
+#: ../../reference/implementation-status.rst:60
+msgid "arguments must be datetime or timestamp, not supported by PostgreSQL"
+msgstr "参数必须是 datetime 或者 timestamp ，不支持 PostgreSQL "
+
+#: ../../reference/implementation-status.rst:60
+msgid "str_to_date, date_format"
+msgstr ""
+
+#: ../../reference/implementation-status.rst:62
+msgid "adddate, subdate"
+msgstr ""
+
+#: ../../reference/implementation-status.rst:62
+msgid ""
+"the first argument must be datetime or timestamp, second argument is "
+"interval"
+msgstr "第一个参数必须是 datetime 或者 timestamp，第二个参数是间隔"
+
+#: ../../reference/implementation-status.rst:64
+msgid "datediff"
+msgstr ""
+
+#: ../../reference/implementation-status.rst:64
+msgid ""
+"arguments must be datetime or timestamp, not supported by PostgreSQL and "
+"csv"
+msgstr "参数必须是 datetime 或者 timestamp ，不支持 PostgreSQL 和 csv "
+
+#: ../../reference/implementation-status.rst:68
 msgid "Data Source"
 msgstr "数据源"
 
-#: ../../reference/implementation-status.rst:59
+#: ../../reference/implementation-status.rst:71
 msgid "Database Type"
 msgstr "数据库类型"
 
-#: ../../reference/implementation-status.rst:61
+#: ../../reference/implementation-status.rst:73
 msgid "MySQL"
 msgstr ""
 
-#: ../../reference/implementation-status.rst:63
+#: ../../reference/implementation-status.rst:75
 msgid "PostgreSQL"
 msgstr ""
 
-#: ../../reference/implementation-status.rst:65
+#: ../../reference/implementation-status.rst:77
 msgid "CSV"
 msgstr ""
 
-#: ../../reference/implementation-status.rst:65
+#: ../../reference/implementation-status.rst:77
 msgid "Data stored in csv files"
 msgstr "数据源为 CSV 文件"
 
-#: ../../reference/implementation-status.rst:69
+#: ../../reference/implementation-status.rst:81
 msgid ""
 "SCQL supports different databases as data source, but there may be minor "
 "differences in the results due to data type differences built in "
