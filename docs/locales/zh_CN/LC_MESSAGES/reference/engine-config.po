@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-11-16 10:08+0800\n"
+"POT-Creation-Date: 2023-11-16 18:46+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -29,7 +29,9 @@ msgid ""
 "divided into three parts: SCDB configuration options (for Centralized "
 "mode), SCQLBroker configuration options (for P2P mode) and SCQLEngine "
 "configuration options (for both modes)."
-msgstr "本配置手册旨在帮助用户了解 SCQL 系统的各种配置项。 它可以分为三部分：SCDB 配置项、 SCQLBroker 配置项和 Engine 配置项。"
+msgstr ""
+"本配置手册旨在帮助用户了解 SCQL 系统的各种配置项。 它可以分为三部分：SCDB 配置项、 SCQLBroker 配置项和 Engine "
+"配置项。"
 
 #: ../../reference/engine-config.rst:10
 msgid "SCDB configuration options"
@@ -47,15 +49,18 @@ msgstr "SCDB 配置示例"
 msgid "Config in SCDB"
 msgstr "SCDB 配置项"
 
-#: ../../reference/engine-config.rst:60 ../../reference/engine-config.rst:378
+#: ../../reference/engine-config.rst:60 ../../reference/engine-config.rst:284
+#: ../../reference/engine-config.rst:378
 msgid "Name"
 msgstr "名称"
 
-#: ../../reference/engine-config.rst:60 ../../reference/engine-config.rst:378
+#: ../../reference/engine-config.rst:60 ../../reference/engine-config.rst:284
+#: ../../reference/engine-config.rst:378
 msgid "Default"
 msgstr "默认值"
 
-#: ../../reference/engine-config.rst:60 ../../reference/engine-config.rst:378
+#: ../../reference/engine-config.rst:60 ../../reference/engine-config.rst:284
+#: ../../reference/engine-config.rst:378
 msgid "Description"
 msgstr "描述"
 
@@ -68,7 +73,15 @@ msgstr "scdb_host"
 #: ../../reference/engine-config.rst:98 ../../reference/engine-config.rst:100
 #: ../../reference/engine-config.rst:110 ../../reference/engine-config.rst:114
 #: ../../reference/engine-config.rst:116 ../../reference/engine-config.rst:118
-#: ../../reference/engine-config.rst:120 ../../reference/engine-config.rst:404
+#: ../../reference/engine-config.rst:120 ../../reference/engine-config.rst:288
+#: ../../reference/engine-config.rst:292 ../../reference/engine-config.rst:294
+#: ../../reference/engine-config.rst:296 ../../reference/engine-config.rst:298
+#: ../../reference/engine-config.rst:302 ../../reference/engine-config.rst:304
+#: ../../reference/engine-config.rst:310 ../../reference/engine-config.rst:312
+#: ../../reference/engine-config.rst:314 ../../reference/engine-config.rst:316
+#: ../../reference/engine-config.rst:318 ../../reference/engine-config.rst:320
+#: ../../reference/engine-config.rst:324 ../../reference/engine-config.rst:328
+#: ../../reference/engine-config.rst:330 ../../reference/engine-config.rst:404
 #: ../../reference/engine-config.rst:420 ../../reference/engine-config.rst:432
 #: ../../reference/engine-config.rst:434 ../../reference/engine-config.rst:438
 #: ../../reference/engine-config.rst:442 ../../reference/engine-config.rst:448
@@ -153,15 +166,15 @@ msgstr "true"
 msgid "Whether to validate password strength when create a user"
 msgstr "创建用户时是否验证密码强度"
 
-#: ../../reference/engine-config.rst:76
+#: ../../reference/engine-config.rst:76 ../../reference/engine-config.rst:308
 msgid "log_level"
 msgstr "log_level"
 
-#: ../../reference/engine-config.rst:76
+#: ../../reference/engine-config.rst:76 ../../reference/engine-config.rst:308
 msgid "info"
 msgstr "info"
 
-#: ../../reference/engine-config.rst:76
+#: ../../reference/engine-config.rst:76 ../../reference/engine-config.rst:308
 msgid "The type and severity of a logged event"
 msgstr "日志等级"
 
@@ -240,9 +253,10 @@ msgid "audit.audit_max_compress"
 msgstr "audit.audit_max_compress"
 
 #: ../../reference/engine-config.rst:90 ../../reference/engine-config.rst:92
-#: ../../reference/engine-config.rst:402 ../../reference/engine-config.rst:418
-#: ../../reference/engine-config.rst:424 ../../reference/engine-config.rst:436
-#: ../../reference/engine-config.rst:440 ../../reference/engine-config.rst:452
+#: ../../reference/engine-config.rst:326 ../../reference/engine-config.rst:402
+#: ../../reference/engine-config.rst:418 ../../reference/engine-config.rst:424
+#: ../../reference/engine-config.rst:436 ../../reference/engine-config.rst:440
+#: ../../reference/engine-config.rst:452
 msgid "false"
 msgstr "false"
 
@@ -250,11 +264,11 @@ msgstr "false"
 msgid "Whether the rotated log files should be compressed"
 msgstr "是否对审计日志进行压缩"
 
-#: ../../reference/engine-config.rst:92
+#: ../../reference/engine-config.rst:92 ../../reference/engine-config.rst:326
 msgid "security_compromise.reveal_group_mark"
 msgstr "security_compromise.reveal_group_mark"
 
-#: ../../reference/engine-config.rst:92
+#: ../../reference/engine-config.rst:92 ../../reference/engine-config.rst:326
 msgid "Whether to reveal group_mark directly for group by"
 msgstr "是否在计算 group by 的时候泄露分组标记信息"
 
@@ -274,7 +288,7 @@ msgstr "tls.key_file"
 msgid "Private key file path to enable TSL, supports key/pem type"
 msgstr "启用支持 key/pem 类型的 TLS 私钥文件路径"
 
-#: ../../reference/engine-config.rst:98
+#: ../../reference/engine-config.rst:98 ../../reference/engine-config.rst:328
 msgid "storage.type"
 msgstr "storage.type"
 
@@ -284,55 +298,57 @@ msgid ""
 "SQLite3 may have problems with concurrency"
 msgstr "SCDB 使用的数据库类型， 支持 MYSQL/SQLite3，推荐使用 MYSQL，SQLite3在并发下可能出问题"
 
-#: ../../reference/engine-config.rst:100
+#: ../../reference/engine-config.rst:100 ../../reference/engine-config.rst:330
 msgid "storage.conn_str"
 msgstr "storage.conn_str"
 
-#: ../../reference/engine-config.rst:100
+#: ../../reference/engine-config.rst:100 ../../reference/engine-config.rst:330
 msgid "Used to connect to a database"
 msgstr "数据库连接串"
 
-#: ../../reference/engine-config.rst:102
+#: ../../reference/engine-config.rst:102 ../../reference/engine-config.rst:332
 msgid "storage.max_idle_conns"
 msgstr "storage.max_idle_conns"
 
 #: ../../reference/engine-config.rst:102 ../../reference/engine-config.rst:104
+#: ../../reference/engine-config.rst:332 ../../reference/engine-config.rst:334
 msgid "1"
 msgstr "1"
 
-#: ../../reference/engine-config.rst:102
+#: ../../reference/engine-config.rst:102 ../../reference/engine-config.rst:332
 msgid "Maximum number of connections in idle connection pool"
 msgstr "空闲连接池最大连接数"
 
-#: ../../reference/engine-config.rst:104
+#: ../../reference/engine-config.rst:104 ../../reference/engine-config.rst:334
 msgid "storage.max_open_conns"
 msgstr "storage.max_open_conns"
 
-#: ../../reference/engine-config.rst:104
+#: ../../reference/engine-config.rst:104 ../../reference/engine-config.rst:334
 msgid "Maximum number of open connections to the database"
 msgstr "数据库最大连接数"
 
-#: ../../reference/engine-config.rst:106
+#: ../../reference/engine-config.rst:106 ../../reference/engine-config.rst:336
 msgid "storage.conn_max_idle_time"
 msgstr "storage.conn_max_idle_time"
 
 #: ../../reference/engine-config.rst:106 ../../reference/engine-config.rst:108
+#: ../../reference/engine-config.rst:336 ../../reference/engine-config.rst:338
 msgid "-1s"
 msgstr "-1s"
 
-#: ../../reference/engine-config.rst:106
+#: ../../reference/engine-config.rst:106 ../../reference/engine-config.rst:336
 msgid "Maximum amount of time a connection may be idle"
 msgstr "连接处于空闲状态的最长时间"
 
-#: ../../reference/engine-config.rst:108
+#: ../../reference/engine-config.rst:108 ../../reference/engine-config.rst:338
 msgid "storage.conn_max_lifetime"
 msgstr "storage.conn_max_lifetime"
 
-#: ../../reference/engine-config.rst:108
+#: ../../reference/engine-config.rst:108 ../../reference/engine-config.rst:338
 msgid "Maximum amount of time a connection may be reused"
 msgstr "可重复连接使用的最长时间"
 
-#: ../../reference/engine-config.rst:110
+#: ../../reference/engine-config.rst:110 ../../reference/engine-config.rst:320
 msgid "engine.timeout"
 msgstr "engine.timeout"
 
@@ -340,7 +356,7 @@ msgstr "engine.timeout"
 msgid "Timeout for SCDB to send message to engine"
 msgstr "SCDB 向 SCQLEngine 发送消息的响应超时时间"
 
-#: ../../reference/engine-config.rst:112
+#: ../../reference/engine-config.rst:112 ../../reference/engine-config.rst:322
 msgid "engine.protocol"
 msgstr "engine.protocol"
 
@@ -348,7 +364,7 @@ msgstr "engine.protocol"
 msgid "The transfer protocol of Engine, support http/https"
 msgstr "SCQLEngine 传输协议，支持 http/https"
 
-#: ../../reference/engine-config.rst:114
+#: ../../reference/engine-config.rst:114 ../../reference/engine-config.rst:324
 msgid "engine.content_type"
 msgstr "engine.content_type"
 
@@ -636,14 +652,187 @@ msgstr "SCQLBroker 配置示例"
 msgid "Config in SCQLBroker"
 msgstr "SCQLBroker 配置"
 
+#: ../../reference/engine-config.rst:286
+msgid "intra_server.host"
+msgstr "intra_server.host"
+
+#: ../../reference/engine-config.rst:286
+msgid "127.0.0.1"
+msgstr "127.0.0.1"
+
+#: ../../reference/engine-config.rst:286
+msgid ""
+"The host where SCQLBroker listens for IntraServer requests, default "
+"localhost for safety"
+msgstr "SCQLBroker 监听 IntraServer 请求的 host，为了安全起见，默认 localhost"
+
+#: ../../reference/engine-config.rst:288
+msgid "intra_server.port"
+msgstr "intra_server.port"
+
+#: ../../reference/engine-config.rst:288
+msgid "The port on which SCQLBroker listens for IntraServer requests"
+msgstr "SCQLBroker 监听 IntraServer 请求的端口"
+
+#: ../../reference/engine-config.rst:290
+msgid "intra_server.protocol"
+msgstr "intra_server.protocol"
+
+#: ../../reference/engine-config.rst:290 ../../reference/engine-config.rst:300
+#: ../../reference/engine-config.rst:322
+msgid "http"
+msgstr "http"
+
+#: ../../reference/engine-config.rst:290
+msgid "The transfer protocol of IntraServer, supports HTTP/HTTPS"
+msgstr "IntraServer 传输协议，支持 HTTP/HTTPS"
+
+#: ../../reference/engine-config.rst:292
+msgid "intra_server.cert_file"
+msgstr "intra_server.cert_file"
+
+#: ../../reference/engine-config.rst:292
+msgid ""
+"Certificate file path for IntraServer to enable HTTPS, supports crt/pem "
+"type"
+msgstr "启用 IntraServer HTTPS 的证书文件路径，支持 crt/pem 类型"
+
+#: ../../reference/engine-config.rst:294
+msgid "intra_server.key_file"
+msgstr "intra_server.key_file"
+
+#: ../../reference/engine-config.rst:294
+msgid ""
+"Private key file path for IntraServer to enable HTTPS, supports key/pem "
+"type"
+msgstr "启用 IntraServer HTTPS 的私钥文件路径，支持 key/pem 类型"
+
+#: ../../reference/engine-config.rst:296
+msgid "inter_server.host"
+msgstr ""
+
+#: ../../reference/engine-config.rst:296
+msgid "The host where SCQLBroker listens for InterServer requests"
+msgstr ""
+
+#: ../../reference/engine-config.rst:298
+msgid "inter_server.port"
+msgstr ""
+
+#: ../../reference/engine-config.rst:298
+msgid "The port on which SCQLBroker listens for InterServer requests"
+msgstr ""
+
+#: ../../reference/engine-config.rst:300
+msgid "inter_server.protocol"
+msgstr ""
+
+#: ../../reference/engine-config.rst:300
+msgid "The transfer protocol of InterServer, supports HTTP/HTTPS"
+msgstr "InterServer 的传输协议，支持 HTTP/HTTPS"
+
+#: ../../reference/engine-config.rst:302
+msgid "inter_server.cert_file"
+msgstr ""
+
+#: ../../reference/engine-config.rst:302
+msgid ""
+"Certificate file path for InterServer to enable HTTPS, supports crt/pem "
+"type"
+msgstr "启用 InterServer HTTPS 的证书文件路径，支持 crt/pem 类型"
+
+#: ../../reference/engine-config.rst:304
+msgid "inter_server.key_file"
+msgstr ""
+
+#: ../../reference/engine-config.rst:304
+msgid ""
+"Private key file path for InterServer to enable HTTPS, supports key/pem "
+"type"
+msgstr "启用 InterServer HTTPS 的私钥文件路径，支持 key/pem 类型"
+
+#: ../../reference/engine-config.rst:306
+msgid "inter_timeout"
+msgstr ""
+
+#: ../../reference/engine-config.rst:306
+msgid "5s"
+msgstr ""
+
+#: ../../reference/engine-config.rst:306
+msgid "Timeout for requesting InterServe"
+msgstr ""
+
+#: ../../reference/engine-config.rst:310
+msgid "party_code"
+msgstr ""
+
+#: ../../reference/engine-config.rst:310
+msgid "Unique identifier used to identify the party"
+msgstr ""
+
+#: ../../reference/engine-config.rst:312
+msgid "party_info_file"
+msgstr ""
+
+#: ../../reference/engine-config.rst:312
+msgid ""
+"File path that stores information of each party, including party code, "
+"public key and InterServer's URL"
+msgstr ""
+
+#: ../../reference/engine-config.rst:314
+msgid "private_pem_path"
+msgstr ""
+
+#: ../../reference/engine-config.rst:314
+msgid ""
+"Private key file path for party_code, which will be used to sign requests"
+" to other SCQLBrokers"
+msgstr "party_code 的私钥文件路径，将用于签署对其他 SCQLBrokers 的请求"
+
+#: ../../reference/engine-config.rst:316
+msgid "intra_host"
+msgstr "intra_host"
+
+#: ../../reference/engine-config.rst:316
+msgid "The callback URL for the local SCQLEngine to notify SCQLBroker"
+msgstr "SCQLEngine 通知 SCQLBroker 的回调 URL"
+
+#: ../../reference/engine-config.rst:318
+msgid "engines"
+msgstr "engines"
+
+#: ../../reference/engine-config.rst:318
+msgid "The URLs for local available SCQLEngines"
+msgstr "本地可用 SCQLEngine 的 URL"
+
+#: ../../reference/engine-config.rst:320
+msgid "Timeout for SCQLBroker to send message to SCQLEngine"
+msgstr "SCQLBroker 向 SCQLEngine 发送消息的响应超时时间"
+
+#: ../../reference/engine-config.rst:322
+msgid "The transfer protocol of SCQLEngine, support http/https"
+msgstr "SCQLEngine 传输协议，支持 http/https"
+
+#: ../../reference/engine-config.rst:324
+msgid "The original media type in post body from SCQLBroker to SCQLEngine"
+msgstr "从 SCQLBroker 向 SCQLEngine 实际发送的数据类型"
+
+#: ../../reference/engine-config.rst:328
+msgid ""
+"Database kind in SCQLBroker, supports MYSQL/SQLite3, MYSQL is "
+"recommended, SQLite3 may have problems with concurrency"
+msgstr "SCQLBroker 使用的数据库类型， 支持 MYSQL/SQLite3，推荐使用 MYSQL，SQLite3在并发下可能出问题"
+
 #: ../../reference/engine-config.rst:342
 msgid "Config for ServerConfig"
 msgstr "ServerConfig 配置"
 
 #: ../../reference/engine-config.rst:343
 msgid ""
-"SCQLBroker accept intra-domain requests through IntraServer, while "
-"accept requests between different SCQLBrokers through InterServer."
+"SCQLBroker accept intra-domain requests through IntraServer, while accept"
+" requests between different SCQLBrokers through InterServer."
 msgstr "SCQLBroker 通过IntraServer 接收域内请求，而通过 InterServer 接收不同 SCQLBroker 之间的请求。"
 
 #: ../../reference/engine-config.rst:345
@@ -651,7 +840,9 @@ msgid ""
 "IntraServer is recommended to use localhost host or LAN address to avoid "
 "external attacks, while InterServer is recommended to enable HTTPS to "
 "improve security."
-msgstr "IntraServer 建议使用 localhost 或 LAN 地址以避免外部攻击，而 InterServer 建议启用 HTTPS 以提高安全性。"
+msgstr ""
+"IntraServer 建议使用 localhost 或 LAN 地址以避免外部攻击，而 InterServer 建议启用 HTTPS "
+"以提高安全性。"
 
 #: ../../reference/engine-config.rst:349
 msgid "Reused Config"
@@ -661,13 +852,15 @@ msgstr "复用的配置"
 msgid ""
 "For more about SecurityCompromise, see :ref:`Config for "
 "SecurityCompromise <config_security_compromise_options>`"
-msgstr "有关 SecurityCompromise 的更多信息，请参阅 :ref:`安全退让配置 <config_security_compromise_options>`"
+msgstr ""
+"有关 SecurityCompromise 的更多信息，请参阅 :ref:`安全退让配置 "
+"<config_security_compromise_options>`"
 
 #: ../../reference/engine-config.rst:353
 msgid ""
 "For more about Storage, see :ref:`Config for storage "
 "<config_storage_options>`"
-msgstr "有关存储的更多信息，请参阅:ref:`存储配置 <config_storage_options>`"
+msgstr "有关存储的更多信息，请参阅 :ref:`存储配置 <config_storage_options>`"
 
 #: ../../reference/engine-config.rst:359
 msgid "SCQLEngine configuration options"
@@ -1094,8 +1287,8 @@ msgid ""
 "datasources in embed_router_conf contain information for connecting "
 "MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL:"
 msgstr ""
-"embed_router_conf 中的 datasources 包含用于连接 MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL "
-"数据源的信息:"
+"embed_router_conf 中的 datasources 包含用于连接 "
+"MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL 数据源的信息:"
 
 #: ../../reference/engine-config.rst:493
 msgid "id: unique id of datasource."
@@ -1229,8 +1422,9 @@ msgid ""
 "gRPC server which provides the corresponding interface for executing an "
 "ad-hoc query in `Arrow Flight SQL "
 "<https://arrow.apache.org/docs/format/FlightSql.html>`_"
-msgstr "作为 SCQLEngine 内嵌的数据源，ArrowSQL 依赖额外的 gRPC 服务，该服务需要提供相应的接口，用于执行 `Arrow Flight SQL "
-"<https://arrow.apache.org/docs/format/FlightSql.html>` 即时查询"
+msgstr ""
+"作为 SCQLEngine 内嵌的数据源，ArrowSQL 依赖额外的 gRPC 服务，该服务需要提供相应的接口，用于执行 `Arrow "
+"Flight SQL <https://arrow.apache.org/docs/format/FlightSql.html>` 即时查询"
 
 #: ../../reference/engine-config.rst:549
 msgid "Routing rules"

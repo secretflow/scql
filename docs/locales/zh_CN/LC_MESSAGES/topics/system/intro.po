@@ -83,7 +83,7 @@ msgstr "SCQL 系统支持中心化和 P2P 两种部署模式。中心化模式�
 msgid ""
 "The following introduction will be carried out in centralized mode, For "
 "P2P mode, please refer to :doc:`/topics/system/intro-p2p`"
-msgstr "后续介绍将以中心化部署模式进行，更多 P2P 模式的相关信息，请参考:doc:`/topics/system/intro-p2p`"
+msgstr "后续介绍将以中心化部署模式进行，更多 P2P 模式的相关信息，请参考 :doc:`/topics/system/intro-p2p`"
 
 #: ../../topics/system/intro.rst:23
 msgid ""

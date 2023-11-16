@@ -53,7 +53,7 @@ msgid ""
 "</topics/system/intro>` | :doc:`Common usage </topics/system/usage>` | "
 ":doc:`P2P </topics/system/intro-p2p>`"
 msgstr ""
-"**概述**：:doc:`系统简介及架构设计 </topics/system/intro>` | :doc:`使用流程 | "
+"**概述**：:doc:`系统简介及架构设计 </topics/system/intro>` | :doc:`使用流程 </topics/system/usage>` | "
 ":doc:`P2P </topics/system/intro-p2p>`"
 
 #: ../../index.rst:26
@@ -120,8 +120,7 @@ msgid ""
 "mode</topics/deployment/how-to-deploy-centralized-cluster>` | :doc:`How "
 "to deploy an SCQL cluster in P2P mode</topics/deployment/how-to-deploy-"
 "p2p-cluster>`"
-msgstr "**指南**：:doc:`如何部署 SCQL 集群 </topics/deployment/how-to-deploy-a-cluster>` | "
-"如何在 P2P 模式下部署 SCQL 集群"
+msgstr "**指南**：:doc:`如何部署 SCQL 集群 </topics/deployment/how-to-deploy-centralized-cluster>` | :doc:`如何在 P2P 模式下部署 SCQL 集群 </topics/deployment/how-to-deploy-p2p-cluster>` "
 
 #: ../../index.rst:69
 msgid "**Reference**: :doc:`SCQL system config </reference/engine-config>`"

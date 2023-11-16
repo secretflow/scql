@@ -56,7 +56,7 @@ msgstr ""
 msgid ""
 "The SCQLBrokers are served through the HTTP protocol. It is recommended"
 " to use HTTPS instead in production environments."
-msgstr "SCQLBrokers 使用 HTTP 协议提供服务。在生产环境建议使用 HTTPS。详情请查看 :ref:`配置 TLS <scdb-tls>`。"
+msgstr "SCQLBrokers 使用 HTTP 协议提供服务。在生产环境建议使用 HTTPS。"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:21
 msgid "Step 1: Deployment for Alice"
@@ -128,7 +128,7 @@ msgstr "对于 Bob，**party_code** 应该是 ``bob``，而 **conn_str** 中的 
 msgid ""
 "See :ref:`SCQLBroker configuration options "
 "<config_broker_server_options>` for more."
-msgstr "请参阅：ref:`SCQLBroker 配置选项 <config_broker_server_options>` 了解更多信息。"
+msgstr "请参阅：:ref:`SCQLBroker 配置选项 <config_broker_server_options>` 了解更多信息。"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:90
 msgid "1.4 Set SCQLEngine Config"
