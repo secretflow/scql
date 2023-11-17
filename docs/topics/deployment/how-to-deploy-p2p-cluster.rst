@@ -314,8 +314,7 @@ You can start to use brokerctl to submit requests to SCQLBroker and fetch the re
     +-----------+---------+---------+----------------------------------+
     | demo      | alice   | [alice] | {                                |
     |           |         |         |   "protocol":  "SEMI2K",         |
-    |           |         |         |   "field":  "FM64",              |
-    |           |         |         |   "sigmoidMode":  "SIGMOID_REAL" |
+    |           |         |         |   "field":  "FM64"               |
     |           |         |         | }                                |
     +-----------+---------+---------+----------------------------------+
     ...

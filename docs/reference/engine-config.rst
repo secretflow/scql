@@ -44,8 +44,7 @@ Example for SCDB
       spu: |
         {
           "protocol": "SEMI2K",
-          "field": "FM64",
-          "sigmoid_mode": "SIGMOID_REAL"
+          "field": "FM64"
         }
   party_auth:
     method: pubkey
