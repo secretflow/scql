@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-11-17 15:13+0800\n"
+"POT-Creation-Date: 2023-11-17 16:22+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -126,7 +126,7 @@ msgid ""
 "config information"
 msgstr "更多配置信息请查看 :ref:`引擎配置项 <engine_config_options>`"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:70
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:71
 msgid ""
 "The ``connection_str`` specified in ``embed_router_conf`` is utilized to "
 "connect database named alice as set in `1.2 Set Dataset`_, For Bob it "
@@ -135,32 +135,32 @@ msgstr ""
 "``embed_router_conf`` 中指定的 ``connection_str`` 用于连接 `1.2 设置数据集`_ 中设置的 "
 "alice 的数据库，对于 Bob，应该连接 bob 的数据库。"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:72
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:73
 msgid ""
 "The ``__MYSQL_ROOT_PASSWORD__`` should be replaced with the password set "
 "by the corresponding party, and please replace this placeholder in the "
 "same way for subsequent files."
 msgstr "``__MYSQL_ROOT_PASSWORD__`` 应替换为对应参与方选择的密码，后续文件请以同样的方式替换此占位符。"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:76
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:77
 msgid "1.4 Create docker-compose file"
 msgstr "1.4 创建 docker-compose 文件"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:78
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:238
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:79
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:244
 msgid ""
 "Create a file called ``docker-compose.yaml`` in your workspace and paste "
 "the following code in:"
 msgstr "在您的工作区中创建一个名为 ``docker-compose.yaml`` 的文件，并粘贴以下代码："
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:120
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:121
 msgid ""
 "``__ALICE_PORT__``  is the published port on the host machine which is "
 "used for engine service to listen on, you need to replace it with an "
 "accessible port number. In this case, we have designated it as ``8080``"
 msgstr "``__ALICE_PORT__`` 是 Engine 在宿主机上的监听端口，您需要替换为一个可访问的端口。这里我们将其指定为 8080"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:122
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:123
 msgid ""
 "Container *mysql* is init by ``alice_init.sql`` as set in `1.2 Set "
 "Dataset`_ , it should be ``bob_init.sql`` for Bob. If you use your own "
@@ -169,17 +169,23 @@ msgstr ""
 "*mysql* 容器通过 `1.2 设置数据集`_ 设置的 ``alice_init.sql`` 进行初始化，对于 Bob 应该使用 "
 "``bob_init.sql``。如果您有自己的数据库服务，可以删除 *mysql* 容器"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:126
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:125
+msgid ""
+"Please remember to replace ``__MYSQL_ROOT_PASSWORD__`` with the same "
+"password :ref:`as before <replace_root_password>`"
+msgstr "请勿忘记将 ``__MYSQL_ROOT_PASSWORD__`` 替换为与 :ref:`前面 <replace_root_password>` 相同的密码"
+
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:129
 msgid "1.5 Prepare Party Auth Files"
 msgstr "1.5 准备身份验证文件"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:128
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:131
 msgid ""
 "The party authentication flags are enabled in ``gflags.conf``, so we need"
 " to generate private key and authorized_profile."
 msgstr " ``gflags.conf`` 中启用了身份验证开关，因此我们需要生成私钥和 authorized_profile 。"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:142
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:145
 msgid ""
 "Then you need to replace ``__BOB_PUBLIC_KEY__`` in "
 "authorized_profile.json with Bob's public key. For engine Bob, please "
@@ -188,58 +194,58 @@ msgstr ""
 "然后您需要将 authorized_profile.json 中的 ``__BOB_PUBLIC_KEY__`` 替换为Bob的公钥。对于 Bob"
 " 的 Engine ，请替换 ``__ALICE_PUBLIC_KEY__`` "
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:146
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:149
 msgid "1.6 Start Engine Service"
 msgstr "1.6 启动引擎"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:148
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:282
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:151
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:290
 msgid "The file your workspace should be as follows:"
 msgstr "您工作区的文件应如下所示："
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:159
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:291
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:162
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:299
 msgid "Then you can start engine service by running docker compose up"
 msgstr "然后您可以运行 docker compose up 来启动引擎服务"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:170
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:301
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:173
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:309
 msgid "You can use docker logs to check whether engine works well"
 msgstr "您可以使用 docker logs 检查引擎是否正常工作"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:178
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:181
 msgid "SCQLEngine is listening on ``8080``."
 msgstr "SCQLEngine 正在监听 ``8080``。"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:182
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:185
 msgid "Step 2: Deploy SCDB"
 msgstr "步骤二：部署 SCDB"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:184
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:187
 msgid "This chapter will demonstrate how to deploy SCDB in a Third-Party"
 msgstr "本章将演示如何在第三方部署 SCDB"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:187
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:190
 msgid "2.1 Create a Workspace"
 msgstr "2.1 创建工作区"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:195
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:198
 msgid "2.2 Set SCDB Config"
 msgstr "2.2 配置 SCDB"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:197
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:200
 msgid ""
 "Create a file called ``config.yml`` in your workspace and paste the "
 "following code in:"
 msgstr "在您的工作区创建一个名为 ``config.yml`` 的文件，并将以下代码粘贴进去："
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:229
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:232
 msgid ""
 "See :ref:`SCDB configuration options <scdb_config_options>` for more "
 "config information"
 msgstr "更多配置信息请查看 :ref:`SCDB 配置项 <scdb_config_options>` "
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:233
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:236
 msgid ""
 "``conn_str`` is utilized to connect database named scdb which will be "
 "deployed in next step, if you prefer, you can also use your own database "
@@ -248,30 +254,37 @@ msgstr ""
 "``conn_str`` 用于连接一个名为 SCDB 的数据库，该数据库将在 2.4 节中通过 docker-compose "
 "完成部署。您也可以根据自己的需求来设置对应的数据库连接串"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:236
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:238
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:285
+msgid ""
+"Please remember to replace ``__MYSQL_ROOT_PASSWORD__`` with the same "
+"password  :ref:`as before <replace_root_password>`"
+msgstr "请勿忘记将 ``__MYSQL_ROOT_PASSWORD__`` 替换为与 :ref:`前面 <replace_root_password>` 相同的密码"
+
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:242
 msgid "2.4 Create docker-compose file"
 msgstr "2.4 创建 docker-compose 文件"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:277
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:283
 msgid ""
 "``__SCDB_PORT__`` is the published port on the host machine which is used"
 " for scdb service to listen on, you need to replace it with an accessible"
 " port number. Here, it's set as 8080"
 msgstr "``__SCDB_PORT__`` 是 SCDB 服务在宿主机上的监听端口。您需要用一个可访问的端口号替换它。这里设置为 8080。"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:280
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:288
 msgid "2.5 Start SCDB Service"
 msgstr "2.5 启动 SCDB"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:309
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:317
 msgid "SCDB is listening on ``8080``, waiting for connection"
 msgstr "SCDB 正在监听 ``8080``，等待连接。"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:313
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:321
 msgid "Step 3: SCQL Test"
 msgstr "步骤三：测试 SCQL"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:315
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:323
 msgid ""
 "Here we use scdbclient to submit a query to SCDB for testing, you can "
 "also submit queries directly to SCDB by sending a POST request. This step"
@@ -280,7 +293,7 @@ msgstr ""
 "这里我们使用 scdbclient 向 SCDB 提交测试查询，您也可以通过发送 POST 请求直接向 SCDB 提交查询。此步骤可以在任何能访问"
 " SCDB 地址的机器上完成。"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:317
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:325
 msgid ""
 "You can read `How to use SCDBClient "
 "<https://github.com/secretflow/scql/tree/main/cmd/scdbclient/README.md>`_"
@@ -289,19 +302,19 @@ msgstr ""
 "关于 scdbclient 更多信息请阅读 `如何使用 SCDBClient "
 "<https://github.com/secretflow/scql/tree/main/cmd/scdbclient/README.md>`_"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:320
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:328
 msgid "3.1 Build scdbclient"
 msgstr "3.1 构建 scdbclient"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:337
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:345
 msgid "3.2 Set Client Config"
 msgstr "3.2 配置客户端"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:339
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:347
 msgid "Create a json file named as ``users.json`` as follows:"
 msgstr "创建一个名为 ``users.json`` 的 JSON 文件，内容如下："
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:361
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:369
 msgid ""
 "The ``root`` user is the admin user of SCDB which is init when scdb "
 "container set up, ``alice`` and ``bob`` are the user belong to party "
@@ -310,17 +323,17 @@ msgstr ""
 "``root`` 用户是在 scdb 容器初始化时设置的 SCDB 管理员用户，``alice`` 和 ``bob`` 分别属于 Alice 和 "
 "Bob。"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:363
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:371
 msgid ""
 "The user information for ``alice`` and ``bob`` should be same with the "
 "user information you will create."
 msgstr "``alice`` 和 ``bob`` 的用户信息应该与您将要创建的用户信息保持一致。"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:367
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:375
 msgid "3.3 Submit Query"
 msgstr "3.3 提交查询"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:369
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:377
 msgid ""
 "You can start to use scdbclient to submit queries to SCDBServer and fetch"
 " the query results back. it's same as what you can do in "
@@ -329,7 +342,7 @@ msgstr ""
 "您可以开始使用 scdbclient 向 SCDBServer 提交查询并获取查询结果。您可以与在 :doc:`/intro/tutorial` "
 "中执行的操作相同"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:390
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:398
 msgid ""
 "``__SCDB_URL__`` is the url (eg:http://127.0.0.1:8080) where scdb service"
 " is listen on, you need to replace it with scdb service url."
@@ -337,7 +350,7 @@ msgstr ""
 "``__SCDB_URL__`` 是 scdb 服务监听的 url（例如：http://127.0.0.1:8080），您需要用 scdb 服务的"
 " url 替换它。"
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:392
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:400
 msgid ""
 "Because the SCQLEngine listening URL of quickstart is different from that"
 " of distributed deployment, if you encounter an error similar to the "
@@ -347,7 +360,7 @@ msgstr ""
 "由于 quickstart 的 SCQLEngine 监听 URL 与分布式部署不同，如果遇到类似以下错误，请使用 ``alter user`` "
 "query 指定正确的监听 URL ，如：30.30.30.30:8080 "
 
-#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:394
+#: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:402
 msgid ""
 "[fetch]err: Code: 300, message:Post "
 "\"http://engine_alice:8080/SCQLEngineService/RunExecutionPlan\": dial tcp"

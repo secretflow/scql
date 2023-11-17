@@ -79,6 +79,7 @@ Create a file called ``config.yml`` in your workspace and paste the following co
     conn_max_idle_time: 2m
     conn_max_lifetime: 5m
 
+.. _replace_p2p_password:
 .. note::
 
   For Bob, the **party_code** should be ``bob``, and the ``brokeralice`` in **conn_str** should be replaced by ``brokerbob``.
@@ -110,7 +111,9 @@ Create a file called ``gflags.conf`` in your workspace and paste the following c
 
 .. note::
 
-  The ``connection_str`` specified in ``embed_router_conf`` is utilized to connect database named alice as set in `1.2 Prepare Meta Data and Source Data`_, For Bob it should be set to connect database named bob.
+  The ``connection_str`` specified in ``embed_router_conf`` is utilized to connect database named **alice** as set in `1.2 Prepare Meta Data and Source Data`_, For Bob it should be set to connect database named **bob**.
+
+  Please remember to replace ``__MYSQL_ROOT_PASSWORD__`` with the same password :ref:`as before <replace_p2p_password>`
 
 See :ref:`Engine configuration options <engine_config_options>` for more config information
 
@@ -174,9 +177,11 @@ Create a file called ``docker-compose.yaml`` in your workspace and paste the fol
 
 .. note::
 
-  ``__INTRA_PORT__``, ``__INTER_PORT__`` and ``__ENGINE_PORT__``  are published ports on the host machine, you need to replace it with an accessible port number. In this case, we have designated them as ``8080``, ``8081`` and ``8003``.
+  ``__INTRA_PORT__``, ``__INTER_PORT__`` and ``__ENGINE_PORT__``  are published ports on the host machine, you need to replace it with an accessible port number. In this case, we have designated them as ``8080``, ``8081`` and ``8003``
 
-  Container *mysql* are initialized by ``alice_init.sql`` and ``broker_init_alice.sql`` as set in `1.2 Prepare Meta Data and Source Data`_ , please change to ``bob_init.sql`` and ``broker_init_bob.sql`` for Bob.
+  Please remember to replace ``__MYSQL_ROOT_PASSWORD__`` with the same password :ref:`as before <replace_p2p_password>`
+
+  Container *mysql* are initialized by ``alice_init.sql`` and ``broker_init_alice.sql`` as set in `1.2 Prepare Meta Data and Source Data`_ , please change to ``bob_init.sql`` and ``broker_init_bob.sql`` for Bob
   
   If you use your own database service, container *mysql* can be deleted
 

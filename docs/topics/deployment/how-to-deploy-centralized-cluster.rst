@@ -65,6 +65,7 @@ Create a file called ``gflags.conf`` in your workspace and paste the following c
 
 See :ref:`Engine configuration options <engine_config_options>` for more config information
 
+.. _replace_root_password:
 .. note::
 
   The ``connection_str`` specified in ``embed_router_conf`` is utilized to connect database named alice as set in `1.2 Set Dataset`_, For Bob it should be set to connect database named bob.
@@ -120,6 +121,8 @@ Create a file called ``docker-compose.yaml`` in your workspace and paste the fol
   ``__ALICE_PORT__``  is the published port on the host machine which is used for engine service to listen on, you need to replace it with an accessible port number. In this case, we have designated it as ``8080``
 
   Container *mysql* is init by ``alice_init.sql`` as set in `1.2 Set Dataset`_ , it should be ``bob_init.sql`` for Bob. If you use your own database service, container *mysql* can be deleted
+
+  Please remember to replace ``__MYSQL_ROOT_PASSWORD__`` with the same password :ref:`as before <replace_root_password>`
 
 
 1.5 Prepare Party Auth Files
@@ -232,6 +235,9 @@ See :ref:`SCDB configuration options <scdb_config_options>` for more config info
 
   ``conn_str`` is utilized to connect database named scdb which will be deployed in next step, if you prefer, you can also use your own database service.
 
+  Please remember to replace ``__MYSQL_ROOT_PASSWORD__`` with the same password  :ref:`as before <replace_root_password>`
+
+
 2.4 Create docker-compose file
 ------------------------------
 
@@ -275,6 +281,8 @@ Create a file called ``docker-compose.yaml`` in your workspace and paste the fol
 .. note::
 
   ``__SCDB_PORT__`` is the published port on the host machine which is used for scdb service to listen on, you need to replace it with an accessible port number. Here, it's set as 8080
+
+  Please remember to replace ``__MYSQL_ROOT_PASSWORD__`` with the same password  :ref:`as before <replace_root_password>`
 
 2.5 Start SCDB Service
 ----------------------
