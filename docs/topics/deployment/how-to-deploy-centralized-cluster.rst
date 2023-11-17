@@ -56,7 +56,7 @@ Create a file called ``gflags.conf`` in your workspace and paste the following c
     --server_enable_ssl=false
     --scdb_enable_ssl_as_client=false
     --peer_engine_enable_ssl_as_client=false
-    --embed_router_conf={"datasources":[{"id":"ds001","name":"mysql db","kind":"MYSQL","connection_str":"db=alice;user=root;password=testpass;host=mysql;auto-reconnect=true"}],"rules":[{"db":"*","table":"*","datasource_id":"ds001"}]}
+    --embed_router_conf={"datasources":[{"id":"ds001","name":"mysql db","kind":"MYSQL","connection_str":"db=alice;user=root;password=__MYSQL_ROOT_PASSWORD__;host=mysql;auto-reconnect=true"}],"rules":[{"db":"*","table":"*","datasource_id":"ds001"}]}
     # party authentication flags
     --enable_self_auth=true
     --enable_peer_auth=true
@@ -65,9 +65,12 @@ Create a file called ``gflags.conf`` in your workspace and paste the following c
 
 See :ref:`Engine configuration options <engine_config_options>` for more config information
 
+.. _replace_root_password:
 .. note::
 
   The ``connection_str`` specified in ``embed_router_conf`` is utilized to connect database named alice as set in `1.2 Set Dataset`_, For Bob it should be set to connect database named bob.
+
+  The ``__MYSQL_ROOT_PASSWORD__`` should be replaced with the password set by the corresponding party, and please replace this placeholder in the same way for subsequent files.
 
 
 1.4 Create docker-compose file
@@ -96,7 +99,7 @@ Create a file called ``docker-compose.yaml`` in your workspace and paste the fol
     mysql:
       image: mysql:latest
       environment:
-        - MYSQL_ROOT_PASSWORD=testpass
+        - MYSQL_ROOT_PASSWORD=__MYSQL_ROOT_PASSWORD__
         - TZ=Asia/Shanghai
       healthcheck:
         retries: 10
@@ -118,6 +121,8 @@ Create a file called ``docker-compose.yaml`` in your workspace and paste the fol
   ``__ALICE_PORT__``  is the published port on the host machine which is used for engine service to listen on, you need to replace it with an accessible port number. In this case, we have designated it as ``8080``
 
   Container *mysql* is init by ``alice_init.sql`` as set in `1.2 Set Dataset`_ , it should be ``bob_init.sql`` for Bob. If you use your own database service, container *mysql* can be deleted
+
+  Please remember to replace ``__MYSQL_ROOT_PASSWORD__`` with the same password :ref:`as before <replace_root_password>`
 
 
 1.5 Prepare Party Auth Files
@@ -205,7 +210,7 @@ Create a file called ``config.yml`` in your workspace and paste the following co
   log_level: debug
   storage:
     type: mysql
-    conn_str: "root:testpass@tcp(mysql:3306)/scdb?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
+    conn_str: "root:__MYSQL_ROOT_PASSWORD__@tcp(mysql:3306)/scdb?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
     max_idle_conns: 10
     max_open_conns: 100
     conn_max_idle_time: 2m
@@ -229,6 +234,9 @@ See :ref:`SCDB configuration options <scdb_config_options>` for more config info
 .. note::
 
   ``conn_str`` is utilized to connect database named scdb which will be deployed in next step, if you prefer, you can also use your own database service.
+
+  Please remember to replace ``__MYSQL_ROOT_PASSWORD__`` with the same password  :ref:`as before <replace_root_password>`
+
 
 2.4 Create docker-compose file
 ------------------------------
@@ -254,7 +262,7 @@ Create a file called ``docker-compose.yaml`` in your workspace and paste the fol
     mysql:
       image: mysql:latest
       environment:
-        - MYSQL_ROOT_PASSWORD=testpass
+        - MYSQL_ROOT_PASSWORD=__MYSQL_ROOT_PASSWORD__
         - MYSQL_DATABASE=scdb
         - TZ=Asia/Shanghai
       healthcheck:
@@ -273,6 +281,8 @@ Create a file called ``docker-compose.yaml`` in your workspace and paste the fol
 .. note::
 
   ``__SCDB_PORT__`` is the published port on the host machine which is used for scdb service to listen on, you need to replace it with an accessible port number. Here, it's set as 8080
+
+  Please remember to replace ``__MYSQL_ROOT_PASSWORD__`` with the same password  :ref:`as before <replace_root_password>`
 
 2.5 Start SCDB Service
 ----------------------

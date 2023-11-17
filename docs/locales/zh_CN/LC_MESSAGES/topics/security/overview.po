@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-11 20:36+0800\n"
+"POT-Creation-Date: 2023-11-16 10:08+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.13.0\n"
+"Generated-By: Babel 2.12.1\n"
 
 #: ../../topics/security/overview.rst:2
 msgid "Security overview"
@@ -104,22 +104,29 @@ msgstr ""
 "SCDB 是 SCQL 系统中的一个中心协调组件，负责将 query 转换成明密文混合的执行图，然后下发给部署在参与方的 SCQLEngines "
 "执行。SCDB 负责生成执行图，是不能作恶的。建议把 SCDB 部署在可信第三方，打消数据参与方对 SCDB 节点作恶的担忧。"
 
-#: ../../topics/security/overview.rst:28
+#: ../../topics/security/overview.rst:26
+msgid ""
+"If the trusted third party is not exist, you are recommended to deploy "
+"SCQL system in P2P mode. refer to :doc:`/topics/system/intro-p2p` for "
+"details."
+msgstr "如果可信第三方不存在，建议您在P2P模式下部署SCQL系统。 详细信息请参阅 :doc:`/topics/system/intro-p2p`"
+
+#: ../../topics/security/overview.rst:30
 msgid "Risk Statement and Suggestion for SCQL Result Inversion Attack"
 msgstr "针对 SCQL 的结果反推攻击风险说明及建议"
 
-#: ../../topics/security/overview.rst:30
+#: ../../topics/security/overview.rst:32
 msgid ""
 "The query of SCQL could be flexible, adversaries may construct adaptive "
 "attacks using multiple legit queries or one complex query to achieve the "
 "purpose of deriving the original data."
 msgstr "SCQL 的查询灵活多变，攻击者可以使用多次合法查询或一个复杂查询来构建自适应攻击，以达到反推原始数据的目的。"
 
-#: ../../topics/security/overview.rst:34
+#: ../../topics/security/overview.rst:36
 msgid "Attack Method 1: Multi-query Attack"
 msgstr "攻击方法一：多次查询攻击"
 
-#: ../../topics/security/overview.rst:36
+#: ../../topics/security/overview.rst:38
 msgid ""
 "The multi-query attack method includes two attack ways: (1) One way to "
 "obtain the other party's information is to tamper with the input content "
@@ -140,11 +147,11 @@ msgstr ""
 "另一种方式是通过改写每次查询语句，对比多次查询结果来推测对方的隐私数据。比如攻击者可以利用 where 条件限制聚合函数的输入，第一次查询获得 N"
 " 条数据的聚合结果，第二次通过改变 where 条件，获得其中 N-1 条数据的聚合结果，对比结果可以获得其中 1 条记录的明文数据信息。"
 
-#: ../../topics/security/overview.rst:42
+#: ../../topics/security/overview.rst:44
 msgid "Attack Method 2: Constructing Complex Query Attack"
 msgstr "攻击方法二：构造复杂查询攻击"
 
-#: ../../topics/security/overview.rst:44
+#: ../../topics/security/overview.rst:46
 msgid ""
 "This attack method is similar to the multi-query attack method, and its "
 "core idea is to write multiple queries into one complex query. For "
@@ -155,17 +162,17 @@ msgstr ""
 "该攻击方法和多次查询攻击方法类似，其核心思想是将多个查询语句写成一个复杂查询语句。 "
 "举个例子，攻击者可以在一个查询语句里对某一列进行多次比较，缩小数据范围来反推原始数据。"
 
-#: ../../topics/security/overview.rst:49
+#: ../../topics/security/overview.rst:51
 msgid "Suggestions"
 msgstr "建议"
 
-#: ../../topics/security/overview.rst:51
+#: ../../topics/security/overview.rst:53
 msgid ""
 "Each data owner is advised to give careful consideration when setting CCL"
 " for their own data."
 msgstr "数据拥有方在给自己数据设置 CCL 时要慎重考虑；"
 
-#: ../../topics/security/overview.rst:52
+#: ../../topics/security/overview.rst:54
 msgid ""
 "When the upstream platform integrates the SCQL system, it's recommended "
 "to add an approval process before running the query. The query is "
@@ -173,17 +180,17 @@ msgid ""
 "confirmed by all data owners."
 msgstr "上游平台在集成 SCQL 时，建议在执行查询前加一个人工审批流程。查询语句只有经过所有数据拥有方的审核确认后，才能提交到 SCQL 执行；"
 
-#: ../../topics/security/overview.rst:53 ../../topics/security/overview.rst:66
+#: ../../topics/security/overview.rst:55 ../../topics/security/overview.rst:68
 msgid ""
 "It is recommended to add an audit mechanism, analyze historical queries, "
 "and track down information leakage issues."
 msgstr "建议集成事后审计机制，对历史查询的执行情况进行分析，使得可以追踪和发现敏感信息泄露问题。"
 
-#: ../../topics/security/overview.rst:57
+#: ../../topics/security/overview.rst:59
 msgid "System Security Configuration Instructions"
 msgstr "系统安全配置说明"
 
-#: ../../topics/security/overview.rst:59
+#: ../../topics/security/overview.rst:61
 msgid ""
 "SCQL supports HTTPS protocol, it is recommended to enable HTTPS by "
 "default. Please see :ref:`SCDB TLS Configuration <scdb-tls>` and "
@@ -193,24 +200,24 @@ msgstr ""
 "SCQL 支持 HTTPS 协议，建议默认开启。有关如何为 SCDB 和 SCQLEngine 启用 HTTPS 的方法详见 :ref:`SCDB"
 " TLS 配置 <scdb-tls>` and :ref:`SCQLEngine TLS 配置 <scqlengine-tls>`。"
 
-#: ../../topics/security/overview.rst:63
+#: ../../topics/security/overview.rst:65
 msgid "Suggestions for upstream integrators"
 msgstr "对上游集成方的建议"
 
-#: ../../topics/security/overview.rst:65
+#: ../../topics/security/overview.rst:67
 msgid ""
 "It is recommended to add an approval process before submitting any "
 "queries to SCQL for execution."
 msgstr "在向 SCQL 提交查询前，增加数据参与方审批查询语句的流程。"
 
-#: ../../topics/security/overview.rst:67
+#: ../../topics/security/overview.rst:69
 msgid ""
 "It is recommended to divide the use of SCQL into two stages: development "
 "stage and production stage, and to adopt different security control "
 "measures."
 msgstr "建议将 SCQL 的使用过程分为研发态和生产态，并采用不同的安全管控措施。"
 
-#: ../../topics/security/overview.rst:69
+#: ../../topics/security/overview.rst:71
 msgid ""
 "The development stage refers to the stage where the query is under "
 "development iteration. The data samples used in the development stage "
@@ -221,7 +228,7 @@ msgstr ""
 "研发态指 query "
 "处于迭代中的研发模式。研发态中使用的数据样本必须是经过脱敏、去标识化、匿名化、加噪等手段处理后的小规模数据集，旨在快速地构建数据分析处理流程。"
 
-#: ../../topics/security/overview.rst:70
+#: ../../topics/security/overview.rst:72
 msgid ""
 "The production stage refers to the joint analysis of the query by "
 "multiple participating parties to ensure that the task is risk-free or "
@@ -239,11 +246,11 @@ msgstr ""
 " 要变更，需要重新走多方审计评审。生产态使用的数据为真实数据，联合分析的多方需要进行：(1) 事前对任务评审与审批；(2) "
 "事中确保任务一致性，若有风险及时中止任务；(3) 事后进行审计，若发生恶意行为，确保可以发现和规避潜在的数据泄漏风险。"
 
-#: ../../topics/security/overview.rst:75
+#: ../../topics/security/overview.rst:77
 msgid "Footnotes"
 msgstr "脚注"
 
-#: ../../topics/security/overview.rst:76
+#: ../../topics/security/overview.rst:78
 msgid ""
 "SPU SEMI2K protocol adopts a trusted third party for generating Beaver "
 "triples for efficiency. In the future, we will consider adding a Beaver "

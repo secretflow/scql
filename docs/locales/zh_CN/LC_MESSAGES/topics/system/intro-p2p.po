@@ -1,0 +1,165 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SCQL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: SCQL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-11-16 10:08+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.12.1\n"
+
+#: ../../topics/system/intro-p2p.rst:2
+msgid "SCQL P2P Overview"
+msgstr "SCQL P2P 模式概述"
+
+#: ../../topics/system/intro-p2p.rst:4
+msgid ""
+"SCQL supports deployment in P2P mode. In this mode, all parties have the "
+"same privileges and do not need to rely on a trusted third party."
+msgstr "SCQL 支持 P2P 模式部署。在这种模式下，各方均拥有对等权限，不需要依赖可信的第三方。"
+
+#: ../../topics/system/intro-p2p.rst:8
+msgid "Architecture"
+msgstr "架构"
+
+#: ../../topics/system/intro-p2p.rst:10
+msgid ""
+"The SCQL system running in P2P mode consists of ``SCQLBrokers`` and "
+"``SCQLEngines``, each party has its own independent SCQLBroker and "
+"SCQLEngines."
+msgstr "P2P 模式下的 SCQL 系统由 ``SCQLBrokers`` 和 ``SCQLEngines`` 组成，各方都有自己独立的 SCQLBroker 和 SCQLEngines "
+
+#: ../../topics/system/intro-p2p.rst:12
+msgid ""
+"``SCQLBroker``: As the core module of p2p, it mainly consists of three "
+"functions:"
+msgstr "``SCQLBroker``：作为 P2P 的核心模块，主要包含三个功能："
+
+#: ../../topics/system/intro-p2p.rst:14
+msgid ""
+"**Interaction with users**: accept requests and return results through "
+"the http interface"
+msgstr "**用户交互**：通过 http 接口接受请求并返回结果。"
+
+#: ../../topics/system/intro-p2p.rst:16
+msgid ""
+"**P2P status synchronization**: complete status synchronization between "
+"different SCQLBrokers."
+msgstr "**P2P 状态同步**：完成不同 SCQLBroker 之间的状态同步。"
+
+#: ../../topics/system/intro-p2p.rst:18
+msgid ""
+"**SQL analysis and job scheduling**: translate SQL query into a hybrid "
+"MPC-plaintext execution graph and delegate the execution of the graph to "
+"its local SCQLEngine."
+msgstr "**SQL 分析及作业调度**：将 SQL 查询转换为明密文混合的执行图，并调度到本地 SCQLEngine 执行。"
+
+#: ../../topics/system/intro-p2p.rst:20
+msgid ""
+"``SCQLEngine``: SCQLEngine is a hybrid MPC-plaintext execution engine, "
+"which collaborates with peers to run the execution graph and reports the "
+"query result to SCQLBroker. SCQLEngine is implemented on top of state-"
+"of-the-art MPC framework `secretflow/spu`_."
+msgstr "``SCQLEngine``：SCQLEngine 是一个明密文混合执行引擎，不同参与方的 SCQLEngine 可以协作完成执行图计算，本地的 SCQLEngine 会将结果报告给 SCQLBroker 。SCQLEngine 是在最先进的 "
+"MPC 框架 `secretflow/spu`_ 的基础上实现的。"
+
+#: ../../topics/system/intro-p2p.rst:-1
+msgid "SCQL P2P Architecture"
+msgstr "SCQL P2P 架构"
+
+#: ../../topics/system/intro-p2p.rst:27
+msgid "Workflow of P2P Model"
+msgstr "P2P 模式的工作流"
+
+#: ../../topics/system/intro-p2p.rst:29
+msgid ""
+"In the P2P mode, different parties are identified by ``Unique "
+"Identifiers``, and various businesses are isolated by ``Projects``."
+msgstr "在 P2P 模式中，不同的参与方通过 ``Unique Identifiers`` 来标识，不同业务则通过 ``Projects`` 进行隔离。"
+
+#: ../../topics/system/intro-p2p.rst:31
+msgid ""
+"``Unique Identifier``: including unique partyCode and public-private key "
+"pair, the private key should be kept by the party itself secretly, and "
+"the public key could be public."
+msgstr "``Unique Identifier``: 包括唯一的 partyCode 和公私钥对，私钥应由参与方自行保密，公钥则对所有参与方公开。"
+
+#: ../../topics/system/intro-p2p.rst:32
+msgid ""
+"``Project``: similar to the virtual database concept in Centralized mode,"
+" it is used to isolate different businesses."
+msgstr "``Project``: 项目，类似于中心化模式中的虚拟数据库概念，用于隔离不同的业务。"
+
+#: ../../topics/system/intro-p2p.rst:34
+msgid ""
+"The overall workflow can be divided into: **creating project**, "
+"**inviting parties**, **creating tables**, **configuring CCLs**, and "
+"**executing query jobs**."
+msgstr "整个流程可以分为五步：**创建项目**、**邀请参与方**、**创建数据表**、**配置 CCL** 和 **执行查询**。"
+
+#: ../../topics/system/intro-p2p.rst:36
+msgid ""
+"**Creating Project**: A party can create a project and become the project"
+" owner. The owner only has the permission to invite other members to join"
+" and has no other additional permissions."
+msgstr "**创建项目**：一方可以创建项目并成为项目所有者。所有者只额外拥有邀请其他成员加入的权限。"
+
+#: ../../topics/system/intro-p2p.rst:37
+msgid ""
+"**Inviting parties**: After the project owner invites other parties, the "
+"other parties can choose whether to accept the invitation. If accepted, "
+"they will become project members."
+msgstr "**邀请参与方**：项目所有方邀请其他方后，其他方可以选择是否接受邀请。 如果接受，则可以加入项目，成为项目成员。"
+
+#: ../../topics/system/intro-p2p.rst:38
+msgid ""
+"**Creating tables**: Project members can create their own tables metadata"
+" for joint analysis in the project."
+msgstr "**创建数据表**：项目成员可以创建自己的数据表元数据，以便在项目中进行联合分析。"
+
+#: ../../topics/system/intro-p2p.rst:39
+msgid ""
+"**Configuring CCLs**: After members created their own table, they can "
+"grant the specific CCL to themselves and other participants."
+msgstr "**配置 CCL**：成员创建自己的表后，可以将特定的 CCL 权限授予自己及其他参与方。"
+
+#: ../../topics/system/intro-p2p.rst:40
+msgid ""
+"**Executing query jobs**: After completing the CCL configuration, parties"
+" can perform the corresponding SQL analysis job."
+msgstr "**执行查询**：完成 CCL 配置后，各方可以执行相应的 SQL 分析作业。"
+
+#: ../../topics/system/intro-p2p.rst:42
+msgid ""
+"It is recommended to experience the overall process through the "
+":doc:`/intro/p2p-tutorial`"
+msgstr "建议您通过 :doc:`/intro/p2p-tutorial` 来进一步体验整个流程"
+
+#: ../../topics/system/intro-p2p.rst:46
+msgid "P2P vs Centralized"
+msgstr "P2P 与中心化"
+
+#: ../../topics/system/intro-p2p.rst:48
+msgid ""
+"The two modes support the same SQL syntax and MPC protocol, and the end-"
+"to-end performance is basically the same."
+msgstr "两种模式支持相同的 SQL 语法和 MPC 协议，端到端性能也基本相同。"
+
+#: ../../topics/system/intro-p2p.rst:50
+msgid ""
+"If there is a trusted party deploying SCDB in the business scenario, it "
+"is recommended to use the centralized mode, which is simpler in "
+"configuration and integration. The P2P mode does not rely on trusted "
+"parties, but it requires more complex interactions to complete status "
+"interactions."
+msgstr "如果业务场景中有可信方部署 SCDB ，则建议使用中心化模式，配置和集成都更简单。P2P 模式不依赖可信方，但需要更复杂的交互来完成状态同步。"
+

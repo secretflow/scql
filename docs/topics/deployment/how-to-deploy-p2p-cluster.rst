@@ -14,7 +14,7 @@ The deployment diagram of the SCQL system that we plan to deploy is shown as the
 .. image:: /imgs/p2p_deploy.png
 
 .. note::
-    1. The BrokerServers are served through the HTTP protocol. It is recommended to use HTTPS instead in production environments.
+    1. The SCQLBrokers are served through the HTTP protocol. It is recommended to use HTTPS instead in production environments.
 
 
 Step 1: Deployment for Alice
@@ -33,23 +33,23 @@ Here we present how to deploy components for party Alice.
 1.2 Prepare Meta Data and Source Data
 -------------------------------------
 
-To simplify, We use a mysql container to store the BrokerServer's meta data and SCQLEngine's source data. However, if you prefer, you can use your preferred database service or store both types of data separately.
+To simplify, We use a mysql container to store the SCQLBroker's meta data and SCQLEngine's source data. However, if you prefer, you can use your preferred database service or store both types of data separately.
 
-The source data can be stored in a file called ``alice_init.sql`` with content like `alice_init.sql <https://github.com/secretflow/scql/tree/main/example/p2p-tutorial/mysql/initdb/alice_init.sql>`_. For Bob, please use `bob_init.sql <https://github.com/secretflow/scql/tree/main/examples/docker-compose/mysql/initdb/bob_init.sql>`_ instead.
+The source data can be stored in a file called ``alice_init.sql`` with content like `alice_init.sql <https://github.com/secretflow/scql/tree/main/examples/p2p-tutorial/mysql/initdb/alice_init.sql>`_. For Bob, please use `bob_init.sql <https://github.com/secretflow/scql/tree/main/examples/docker-compose/mysql/initdb/bob_init.sql>`_ instead.
 
-The meta data can be stored in ``broker_init_alice.sql`` with content like `broker_init_alice.sql <https://github.com/secretflow/scql/tree/main/example/p2p-tutorial/mysql/initdb/broker_init_alice.sql>`_. For Bob, please use `broker_init_bob.sql <https://github.com/secretflow/scql/tree/main/examples/docker-compose/mysql/initdb/broker_init_bob.sql>`_ instead.
+The meta data can be stored in ``broker_init_alice.sql`` with content like `broker_init_alice.sql <https://github.com/secretflow/scql/tree/main/examples/p2p-tutorial/mysql/initdb/broker_init_alice.sql>`_. For Bob, please use `broker_init_bob.sql <https://github.com/secretflow/scql/tree/main/examples/docker-compose/mysql/initdb/broker_init_bob.sql>`_ instead.
 
 These files can also be obtained via the command-line with either curl, wget or another similar tool.
 
 .. code-block:: bash
 
-  # For Bob, please use command: wget raw.githubusercontent.com/secretflow/scql/main/example/p2p-tutorial/mysql/initdb/bob_init.sql
-  wget raw.githubusercontent.com/secretflow/scql/main/example/p2p-tutorial/mysql/initdb/alice_init.sql
-  # For Bob, please use command: wget raw.githubusercontent.com/secretflow/scql/main/example/p2p-tutorial/mysql/initdb/broker_init_bob.sql
-  wget raw.githubusercontent.com/secretflow/scql/main/example/p2p-tutorial/mysql/initdb/broker_init_alice.sql
+  # For Bob, please use command: wget raw.githubusercontent.com/secretflow/scql/main/examples/p2p-tutorial/mysql/initdb/bob_init.sql
+  wget raw.githubusercontent.com/secretflow/scql/main/examples/p2p-tutorial/mysql/initdb/alice_init.sql
+  # For Bob, please use command: wget raw.githubusercontent.com/secretflow/scql/main/examples/p2p-tutorial/mysql/initdb/broker_init_bob.sql
+  wget raw.githubusercontent.com/secretflow/scql/main/examples/p2p-tutorial/mysql/initdb/broker_init_alice.sql
 
 
-1.3 Set BrokerServer Config
+1.3 Set SCQLBroker Config
 ---------------------------
 
 Create a file called ``config.yml`` in your workspace and paste the following code in:
@@ -73,17 +73,20 @@ Create a file called ``config.yml`` in your workspace and paste the following co
     content_type: application/json
   storage:
     type: mysql
-    conn_str: "root:testpass@tcp(mysql:3306)/brokeralice?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
+    conn_str: "root:__MYSQL_ROOT_PASSWORD__@tcp(mysql:3306)/brokeralice?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
     max_idle_conns: 10
     max_open_conns: 100
     conn_max_idle_time: 2m
     conn_max_lifetime: 5m
 
+.. _replace_p2p_password:
 .. note::
 
   For Bob, the **party_code** should be ``bob``, and the ``brokeralice`` in **conn_str** should be replaced by ``brokerbob``.
 
-See :ref:`BrokerServer configuration options <config_broker_server_options>` for more.
+  The ``__MYSQL_ROOT_PASSWORD__`` should be replaced with the password set by the corresponding party, and please replace this placeholder in the same way for subsequent files.
+
+See :ref:`SCQLBroker configuration options <config_broker_server_options>` for more.
 
 
 1.4 Set SCQLEngine Config
@@ -99,7 +102,7 @@ Create a file called ``gflags.conf`` in your workspace and paste the following c
   --server_enable_ssl=false
   --scdb_enable_ssl_as_client=false
   --peer_engine_enable_ssl_as_client=false
-  --embed_router_conf={"datasources":[{"id":"ds001","name":"mysql db","kind":"MYSQL","connection_str":"db=alice;user=root;password=testpass;host=mysql;auto-reconnect=true"}],"rules":[{"db":"*","table":"*","datasource_id":"ds001"}]}
+  --embed_router_conf={"datasources":[{"id":"ds001","name":"mysql db","kind":"MYSQL","connection_str":"db=alice;user=root;password=__MYSQL_ROOT_PASSWORD__;host=mysql;auto-reconnect=true"}],"rules":[{"db":"*","table":"*","datasource_id":"ds001"}]}
   # party authentication flags
   --enable_self_auth=true
   --enable_peer_auth=true
@@ -108,7 +111,9 @@ Create a file called ``gflags.conf`` in your workspace and paste the following c
 
 .. note::
 
-  The ``connection_str`` specified in ``embed_router_conf`` is utilized to connect database named alice as set in `1.2 Prepare Meta Data and Source Data`_, For Bob it should be set to connect database named bob.
+  The ``connection_str`` specified in ``embed_router_conf`` is utilized to connect database named **alice** as set in `1.2 Prepare Meta Data and Source Data`_, For Bob it should be set to connect database named **bob**.
+
+  Please remember to replace ``__MYSQL_ROOT_PASSWORD__`` with the same password :ref:`as before <replace_p2p_password>`
 
 See :ref:`Engine configuration options <engine_config_options>` for more config information
 
@@ -151,7 +156,7 @@ Create a file called ``docker-compose.yaml`` in your workspace and paste the fol
     mysql:
       image: mysql:latest
       environment:
-        - MYSQL_ROOT_PASSWORD=testpass
+        - MYSQL_ROOT_PASSWORD=__MYSQL_ROOT_PASSWORD__
         - TZ=Asia/Shanghai
       healthcheck:
         retries: 10
@@ -172,9 +177,11 @@ Create a file called ``docker-compose.yaml`` in your workspace and paste the fol
 
 .. note::
 
-  ``__INTRA_PORT__``, ``__INTER_PORT__`` and ``__ENGINE_PORT__``  are published ports on the host machine, you need to replace it with an accessible port number. In this case, we have designated them as ``8080``, ``8081`` and ``8003``.
+  ``__INTRA_PORT__``, ``__INTER_PORT__`` and ``__ENGINE_PORT__``  are published ports on the host machine, you need to replace it with an accessible port number. In this case, we have designated them as ``8080``, ``8081`` and ``8003``
 
-  Container *mysql* are initialized by ``alice_init.sql`` and ``broker_init_alice.sql`` as set in `1.2 Prepare Meta Data and Source Data`_ , please change to ``bob_init.sql`` and ``broker_init_bob.sql`` for Bob.
+  Please remember to replace ``__MYSQL_ROOT_PASSWORD__`` with the same password :ref:`as before <replace_p2p_password>`
+
+  Container *mysql* are initialized by ``alice_init.sql`` and ``broker_init_alice.sql`` as set in `1.2 Prepare Meta Data and Source Data`_ , please change to ``bob_init.sql`` and ``broker_init_bob.sql`` for Bob
   
   If you use your own database service, container *mysql* can be deleted
 
@@ -217,8 +224,8 @@ Create other files:
   # for engine Bob,  the output can be used to replace the __BOB_PUBLIC_KEY__ in engine Alice's authorized_profile.json
   openssl pkey -in ed25519key.pem  -pubout -outform DER | base64
   # download authorized profile
-  # for engine Bob, use command: wget https://raw.githubusercontent.com/secretflow/scql/main/example/p2p-tutorial/engine/bob/conf/authorized_profile.json
-  wget https://raw.githubusercontent.com/secretflow/scql/main/example/p2p-tutorial/engine/alice/conf/authorized_profile.json
+  # for engine Bob, use command: wget https://raw.githubusercontent.com/secretflow/scql/main/examples/p2p-tutorial/engine/bob/conf/authorized_profile.json
+  wget https://raw.githubusercontent.com/secretflow/scql/main/examples/p2p-tutorial/engine/alice/conf/authorized_profile.json
 
 
 Then you need to replace ``__XXX_PUBLIC_KEY__`` in party_info.json and authorized_profile.json with corresponding public keys.
@@ -276,7 +283,7 @@ It is basically the same as `Step 1: Deployment for Alice`_, but some characters
 Step 3: SCQL Test
 =================
 
-Here we use brokerctl to submit a query to BrokerServer for testing, you can also submit queries directly to BrokerServer by sending a POST request.
+Here we use brokerctl to submit a query to SCQLBroker for testing, you can also submit queries directly to SCQLBroker by sending a POST request.
 
 
 3.1 Build brokerctl
@@ -299,7 +306,7 @@ Here we use brokerctl to submit a query to BrokerServer for testing, you can als
 3.2 Submit Query
 ----------------
 
-You can start to use brokerctl to submit requests to BrokerServer and fetch the results back. it's similar to what you can do in :doc:`/intro/p2p-tutorial`.
+You can start to use brokerctl to submit requests to SCQLBroker and fetch the results back. it's similar to what you can do in :doc:`/intro/p2p-tutorial`.
 
 
 .. code-block:: bash
@@ -314,12 +321,11 @@ You can start to use brokerctl to submit requests to BrokerServer and fetch the 
     +-----------+---------+---------+----------------------------------+
     | demo      | alice   | [alice] | {                                |
     |           |         |         |   "protocol":  "SEMI2K",         |
-    |           |         |         |   "field":  "FM64",              |
-    |           |         |         |   "sigmoidMode":  "SIGMOID_REAL" |
+    |           |         |         |   "field":  "FM64"               |
     |           |         |         | }                                |
     +-----------+---------+---------+----------------------------------+
     ...
 
 .. note::
 
-  Yeed need to replace ``__ALICE_INTRA_URL__`` or ``__BOB_INTRA_URL__`` with the actual IntraServer address, like:  http://30.30.30.30:8080.
+  You need to replace ``__ALICE_INTRA_URL__`` or ``__BOB_INTRA_URL__`` with the actual IntraServer address, like:  http://30.30.30.30:8080.

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-11 20:36+0800\n"
+"POT-Creation-Date: 2023-11-16 10:08+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.13.0\n"
+"Generated-By: Babel 2.12.1\n"
 
 #: ../../topics/system/intro.rst:2
 msgid "SCQL System Overview"
@@ -48,7 +48,9 @@ msgid ""
 "Support common SQL select syntax and functions to meet the needs of most "
 "scenarios. Please check :doc:`/reference/implementation-status` for "
 "details."
-msgstr "支持常见的 SQL select 语法和函数，满足大多数场景的需求。详情请查看 :doc:`/reference/implementation-status`。"
+msgstr ""
+"支持常见的 SQL select 语法和函数，满足大多数场景的需求。详情请查看 :doc:`/reference/implementation-"
+"status`。"
 
 #: ../../topics/system/intro.rst:12
 msgid ""
@@ -71,17 +73,32 @@ msgid "Architecture"
 msgstr "架构"
 
 #: ../../topics/system/intro.rst:19
-msgid "An SCQL system consists of an SCDB server and multiple SCQLEngines."
-msgstr "一个 SCQL 系统由一个 SCDB 服务器和多个 SCQLEngines 组成。"
+msgid ""
+"The SCQL system supports both centralized and P2P modes. The centralized "
+"model relies on a trusted party, but the deployment and configuration "
+"process is simpler; P2P does not need to rely on a trusted party."
+msgstr "SCQL 系统支持中心化和 P2P 两种部署模式。中心化模式依赖于可信第三方，但部署和配置过程更简单；P2P 则不需要依赖额外的可信第三方。"
 
 #: ../../topics/system/intro.rst:21
+msgid ""
+"The following introduction will be carried out in centralized mode, For "
+"P2P mode, please refer to :doc:`/topics/system/intro-p2p`"
+msgstr "后续介绍将以中心化部署模式进行，更多 P2P 模式的相关信息，请参考 :doc:`/topics/system/intro-p2p`"
+
+#: ../../topics/system/intro.rst:23
+msgid ""
+"An SCQL system running in centralized mode consists of an SCDB server and"
+" multiple SCQLEngines."
+msgstr "中心化模式下的 SCQL 系统由一个 SCDB 服务器和多个 SCQLEngines 组成。"
+
+#: ../../topics/system/intro.rst:25
 msgid ""
 "SCDB server is responsible for translating SQL query into a hybrid MPC-"
 "plaintext execution graph and dispatching the execution graph to "
 "SCQLEngine of participants."
 msgstr "SCDB 服务器负责将 SQL 查询翻译成明密文混合执行图，并将执行图下发给参与方的 SCQLEngine。"
 
-#: ../../topics/system/intro.rst:22
+#: ../../topics/system/intro.rst:26
 msgid ""
 "SCQLEngine is a hybrid MPC-plaintext execution engine, which collaborates"
 " with peers to run the execution graph and reports the query result to "
@@ -95,33 +112,33 @@ msgstr ""
 msgid "SCQL Architecture"
 msgstr "SCQL 架构"
 
-#: ../../topics/system/intro.rst:30
+#: ../../topics/system/intro.rst:34
 msgid "How SCQL Works"
 msgstr "SCQL 如何工作"
 
-#: ../../topics/system/intro.rst:32
+#: ../../topics/system/intro.rst:36
 msgid ""
 "We will show how SCQL works through the life of the following sample SCQL"
 " query Q."
 msgstr "我们将通过以下的 SCQL 查询样本 Q 的整个生命周期来展示 SCQL 是如何工作的。"
 
-#: ../../topics/system/intro.rst:34
+#: ../../topics/system/intro.rst:38
 msgid "SCQL query Q"
 msgstr "SCQL 查询 Q"
 
-#: ../../topics/system/intro.rst:-1 ../../topics/system/intro.rst:44
+#: ../../topics/system/intro.rst:-1 ../../topics/system/intro.rst:48
 msgid "Table schema"
 msgstr "表的结构"
 
-#: ../../topics/system/intro.rst:46
+#: ../../topics/system/intro.rst:50
 msgid "Let's have a look at the schema of tables involved in the above query Q."
 msgstr "让我们来看看上面查询 Q 中涉及的表的结构。"
 
-#: ../../topics/system/intro.rst:51
+#: ../../topics/system/intro.rst:55
 msgid "``bank_1``"
 msgstr "``bank_1``"
 
-#: ../../topics/system/intro.rst:52
+#: ../../topics/system/intro.rst:56
 msgid ""
 "Party Bank1 owns the table ``bank_1`` in its local database ``DB1``, "
 "which has two columns ``customer_id`` and ``deposit``."
@@ -129,11 +146,11 @@ msgstr ""
 "参与方 Bank1 在其本地数据库 ``DB1`` 中有张表 ``bank_1``，该数据表有两列分别是 ``customer_id`` 和 "
 "``deposit``。"
 
-#: ../../topics/system/intro.rst:55
+#: ../../topics/system/intro.rst:59
 msgid "``bank_2``"
 msgstr "``bank_2``"
 
-#: ../../topics/system/intro.rst:54
+#: ../../topics/system/intro.rst:58
 msgid ""
 "Party Bank2 owns the table ``bank_2`` in its local database ``DB2``, "
 "which has two columns ``customer_id`` and ``loan``."
@@ -141,71 +158,71 @@ msgstr ""
 "参与方 Bank2 在其本地数据库 ``DB2`` 中有张表 ``bank_2``，该数据表有两列分别是 ``customer_id`` 和 "
 "``loan``。"
 
-#: ../../topics/system/intro.rst:58
+#: ../../topics/system/intro.rst:62
 msgid "Column Control List (CCL)"
 msgstr "列控制列表（CCL）"
 
-#: ../../topics/system/intro.rst:60
+#: ../../topics/system/intro.rst:64
 msgid "CCL Form: ``<src_column, dest_party, constraint>``"
 msgstr "CCL 格式: ``<src_column, dest_party, constraint>``"
 
-#: ../../topics/system/intro.rst:62
+#: ../../topics/system/intro.rst:66
 msgid ""
 "It means ``src_column`` is accessible to ``dest_party`` with the "
 "``constraint``."
 msgstr "它表示 ``src_column`` 可以被 ``dest_party`` 在满足 ``constraint`` 的条件下访问。"
 
-#: ../../topics/system/intro.rst:64
+#: ../../topics/system/intro.rst:68
 msgid ""
 "To make the query Q pass the CCL validation, data owner should grant the "
 "following CCL."
 msgstr "为了使查询 Q 通过 CCL 验证，数据所有者应该授予以下 CCL。"
 
-#: ../../topics/system/intro.rst:70
+#: ../../topics/system/intro.rst:74
 msgid "Bank1"
 msgstr "Bank1"
 
-#: ../../topics/system/intro.rst:67
+#: ../../topics/system/intro.rst:71
 msgid "``<bank_1.customer_id, Bank1, PLAINTEXT>``"
 msgstr "``<bank_1.customer_id, Bank1, PLAINTEXT>``"
 
-#: ../../topics/system/intro.rst:68
+#: ../../topics/system/intro.rst:72
 msgid "``<bank_1.deposit, Bank1, PLAINTEXT>``"
 msgstr "``<bank_1.deposit, Bank1, PLAINTEXT>``"
 
-#: ../../topics/system/intro.rst:69
+#: ../../topics/system/intro.rst:73
 msgid "``<bank_1.customer_id, Bank2, PLAINTEXT_AFTER_JOIN>``"
 msgstr "``<bank_1.customer_id, Bank2, PLAINTEXT_AFTER_JOIN>``"
 
-#: ../../topics/system/intro.rst:70
+#: ../../topics/system/intro.rst:74
 msgid "``<bank_1.deposit, Bank2, PLAINTEXT_AFTER_AGGREGATE>``"
 msgstr "``<bank_1.deposit, Bank2, PLAINTEXT_AFTER_AGGREGATE>``"
 
-#: ../../topics/system/intro.rst:76
+#: ../../topics/system/intro.rst:80
 msgid "Bank2"
 msgstr "Bank2"
 
-#: ../../topics/system/intro.rst:73
+#: ../../topics/system/intro.rst:77
 msgid "``<bank_2.customer_id, Bank2, PLAINTEXT>``"
 msgstr "``<bank_2.customer_id, Bank2, PLAINTEXT>``"
 
-#: ../../topics/system/intro.rst:74
+#: ../../topics/system/intro.rst:78
 msgid "``<bank_2.loan, Bank2, PLAINTEXT>``"
 msgstr "``<bank_2.loan, Bank2, PLAINTEXT>``"
 
-#: ../../topics/system/intro.rst:75
+#: ../../topics/system/intro.rst:79
 msgid "``<bank_2.customer_id, Bank1, PLAINTEXT_AFTER_JOIN>``"
 msgstr "``<bank_2.customer_id, Bank1, PLAINTEXT_AFTER_JOIN>``"
 
-#: ../../topics/system/intro.rst:76
+#: ../../topics/system/intro.rst:80
 msgid "``<bank_2.loan, Bank1, PLAINTEXT_AFTER_AGGREGATE>``"
 msgstr "``<bank_2.loan, Bank1, PLAINTEXT_AFTER_AGGREGATE>``"
 
-#: ../../topics/system/intro.rst:79
+#: ../../topics/system/intro.rst:83
 msgid "To learn more about CCL, please read the doc :doc:`/topics/ccl/intro`."
 msgstr "要了解更多关于 CCL 的信息，请阅读文档 :doc:`/topics/ccl/intro`。"
 
-#: ../../topics/system/intro.rst:83
+#: ../../topics/system/intro.rst:87
 msgid "Lifetime of SCQL query"
 msgstr "SCQL 查询的生命周期"
 
@@ -213,22 +230,22 @@ msgstr "SCQL 查询的生命周期"
 msgid "SCQL Workflow"
 msgstr "SCQL 工作流"
 
-#: ../../topics/system/intro.rst:89
+#: ../../topics/system/intro.rst:93
 msgid "Step1. Initialize a Session"
 msgstr "步骤1. 初始化会话"
 
-#: ../../topics/system/intro.rst:91
+#: ../../topics/system/intro.rst:95
 msgid ""
 "SCDB creates a new session for the incoming query, and then authenticates"
 " the identity of the query issuer. It will reject the request if "
 "authentication fails."
 msgstr "SCDB 为传入的查询创建一个新的会话，然后验证查询发出者的身份。如果认证失败，它将拒绝该请求。"
 
-#: ../../topics/system/intro.rst:95
+#: ../../topics/system/intro.rst:99
 msgid "Step2. Parse and Plan Q"
 msgstr "步骤2. 解析和规划 Q"
 
-#: ../../topics/system/intro.rst:97
+#: ../../topics/system/intro.rst:101
 msgid ""
 "Parser will parse Q into an AST(Abstract Syntax Tree), and then Planner "
 "converts it into a Logical Plan."
@@ -238,15 +255,15 @@ msgstr "Parser 将 Q 解析为 AST（抽象语法树），然后 Planner 将其�
 msgid "Logical Plan for Q"
 msgstr "Q 的逻辑计划"
 
-#: ../../topics/system/intro.rst:104
+#: ../../topics/system/intro.rst:108
 msgid "Step3. Translate"
 msgstr "步骤3. 翻译"
 
-#: ../../topics/system/intro.rst:106
+#: ../../topics/system/intro.rst:110
 msgid "Step3.1 Build and Check CCL"
 msgstr "步骤3.1 建立和检查 CCL"
 
-#: ../../topics/system/intro.rst:108
+#: ../../topics/system/intro.rst:112
 msgid ""
 "Translator needs to retrieve CCL from CCL manager, it will build CCL "
 "along the logical plan and verify the CCL of root node to ensure Q is "
@@ -255,11 +272,11 @@ msgstr ""
 "Translator 需要从 CCL 管理器检索 CCL，它将根据逻辑计划构建 CCL，并验证根节点的 CCL，以确保 Q "
 "在数据所有者的约束下是合法的。"
 
-#: ../../topics/system/intro.rst:111
+#: ../../topics/system/intro.rst:115
 msgid "Step3.2 Translate"
 msgstr "步骤3.2 翻译"
 
-#: ../../topics/system/intro.rst:113
+#: ../../topics/system/intro.rst:117
 msgid ""
 "The translator takes the logical plan and CCL as inputs and generates an "
 "execution graph for the query Q as follows."
@@ -269,11 +286,11 @@ msgstr "翻译器将逻辑计划和 CCL 作为输入，并生成查询 Q 的执�
 msgid "Execution Graph for Q"
 msgstr "Q 的执行图"
 
-#: ../../topics/system/intro.rst:120
+#: ../../topics/system/intro.rst:124
 msgid "Step4. Optimize and Split Graph"
 msgstr "步骤4. 图优化和拆分"
 
-#: ../../topics/system/intro.rst:122
+#: ../../topics/system/intro.rst:126
 msgid ""
 "The graph optimizer will optimize the execution graph, such as node "
 "fusion and replicated node elimination. The optimized execution graph is "
@@ -285,11 +302,11 @@ msgstr "图优化器将对执行图进行优化，如节点融合和重复节点
 msgid "subgraphs"
 msgstr "子图"
 
-#: ../../topics/system/intro.rst:130
+#: ../../topics/system/intro.rst:134
 msgid "Step5. Execute"
 msgstr "步骤5. 执行"
 
-#: ../../topics/system/intro.rst:132
+#: ../../topics/system/intro.rst:136
 msgid ""
 "SCDB sends the subgraphs to corresponding SCQLEngine nodes, SCQLEngine "
 "cooperates with peers to run the execution graph and reports the final "
