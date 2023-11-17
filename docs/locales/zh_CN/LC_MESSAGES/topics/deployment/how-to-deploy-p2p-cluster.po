@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-11-16 10:08+0800\n"
+"POT-Creation-Date: 2023-11-17 15:12+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,7 +26,9 @@ msgid ""
 "This document describes how to deploy a SCQL system with docker in P2P "
 "mode and use brokerctl to query. It is basically the same as the "
 ":doc:`/intro/p2p-tutorial`, but deployed on multi machines."
-msgstr "本文档介绍了如何使用 docker 以 P2P 模式部署 SCQL 系统，并使用 brokerctl 进行查询。它与 :doc:`/intro/p2p-tutorial` 基本相同，但部署在多机上。"
+msgstr ""
+"本文档介绍了如何使用 docker 以 P2P 模式部署 SCQL 系统，并使用 brokerctl 进行查询。它与 :doc:`/intro"
+"/p2p-tutorial` 基本相同，但部署在多机上。"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:7
 msgid ""
@@ -49,13 +51,12 @@ msgid ""
 "The deployment diagram of the SCQL system that we plan to deploy is shown"
 " as the following figure, it involves parties named ``Alice`` and "
 "``Bob``. We use two machines to simulate different parties."
-msgstr ""
-"SCQL 系统的部署图如下图所示，它涉及到两个参与方：``Alice`` 和 ``Bob`` ，我们使用两台机器来模拟不同的参与方。"
+msgstr "SCQL 系统的部署图如下图所示，它涉及到两个参与方：``Alice`` 和 ``Bob`` ，我们使用两台机器来模拟不同的参与方。"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:17
 msgid ""
-"The SCQLBrokers are served through the HTTP protocol. It is recommended"
-" to use HTTPS instead in production environments."
+"The SCQLBrokers are served through the HTTP protocol. It is recommended "
+"to use HTTPS instead in production environments."
 msgstr "SCQLBrokers 使用 HTTP 协议提供服务。在生产环境建议使用 HTTPS。"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:21
@@ -76,10 +77,12 @@ msgstr "1.2 准备状态数据、源数据"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:36
 msgid ""
-"To simplify, We use a mysql container to store the SCQLBroker's meta "
-"data and SCQLEngine's source data. However, if you prefer, you can use "
-"your preferred database service or store both types of data separately."
-msgstr "为了简化，我们使用同一个 mysql 容器来存储 SCQLBroker 的元数据和 SCQLEngine 的源数据。当然，您也可以使用您喜欢的其他数据库服务或分开存储两种类型的数据。"
+"To simplify, We use a mysql container to store the SCQLBroker's meta data"
+" and SCQLEngine's source data. However, if you prefer, you can use your "
+"preferred database service or store both types of data separately."
+msgstr ""
+"为了简化，我们使用同一个 mysql 容器来存储 SCQLBroker 的元数据和 SCQLEngine "
+"的源数据。当然，您也可以使用您喜欢的其他数据库服务或分开存储两种类型的数据。"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:38
 msgid ""
@@ -89,7 +92,12 @@ msgid ""
 "tutorial/mysql/initdb/alice_init.sql>`_. For Bob, please use "
 "`bob_init.sql <https://github.com/secretflow/scql/tree/main/examples"
 "/docker-compose/mysql/initdb/bob_init.sql>`_ instead."
-msgstr "源数据存储在名为 ``alice_init.sql`` 的文件中，其内容可参考 `alice_init.sql <https://github.com/secretflow/scql/tree/main/examples/p2p-tutorial/mysql/initdb/alice_init.sql>`_。对于 Bob ，请使用 `bob_init.sql <https://github.com/secretflow/scql/tree/main/examples/p2p-tutorial/mysql/initdb/bob_init.sql>`_ 代替。"
+msgstr ""
+"源数据存储在名为 ``alice_init.sql`` 的文件中，其内容可参考 `alice_init.sql "
+"<https://github.com/secretflow/scql/tree/main/examples/p2p-"
+"tutorial/mysql/initdb/alice_init.sql>`_。对于 Bob ，请使用 `bob_init.sql "
+"<https://github.com/secretflow/scql/tree/main/examples/p2p-"
+"tutorial/mysql/initdb/bob_init.sql>`_ 代替。"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:40
 msgid ""
@@ -100,7 +108,13 @@ msgid ""
 "`broker_init_bob.sql "
 "<https://github.com/secretflow/scql/tree/main/examples/docker-"
 "compose/mysql/initdb/broker_init_bob.sql>`_ instead."
-msgstr "元数据则存储在 ``broker_init_alice.sql`` 中，内容可参考 `broker_init_alice.sql <https://github.com/secretflow/scql/tree/main/examples/p2p-tutorial/mysql/initdb/broker_init_alice.sql>`_。对于 Bob ，请使用 `broker_init_bob.sql <https://github.com/secretflow/scql/tree/main/examples/p2p-tutorial/initdb/broker_init_bob.sql>`_ 代替。"
+msgstr ""
+"元数据则存储在 ``broker_init_alice.sql`` 中，内容可参考 `broker_init_alice.sql "
+"<https://github.com/secretflow/scql/tree/main/examples/p2p-"
+"tutorial/mysql/initdb/broker_init_alice.sql>`_。对于 Bob ，请使用 "
+"`broker_init_bob.sql "
+"<https://github.com/secretflow/scql/tree/main/examples/p2p-"
+"tutorial/initdb/broker_init_bob.sql>`_ 代替。"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:42
 msgid ""
@@ -122,156 +136,185 @@ msgstr "在工作区中创建一个名为 ``config.yml`` 的文件，并粘贴�
 msgid ""
 "For Bob, the **party_code** should be ``bob``, and the ``brokeralice`` in"
 " **conn_str** should be replaced by ``brokerbob``."
-msgstr "对于 Bob，**party_code** 应该是 ``bob``，而 **conn_str** 中的 ``brokeralice`` 应该替换为 ``brokerbob``。"
+msgstr ""
+"对于 Bob，**party_code** 应该是 ``bob``，而 **conn_str** 中的 ``brokeralice`` 应该替换为"
+" ``brokerbob``。"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:86
+msgid ""
+"The ``__MYSQL_ROOT_PASSWORD__`` should be replaced with the password set "
+"by the corresponding party, and please replace this placeholder in the "
+"same way for subsequent files."
+msgstr "``__MYSQL_ROOT_PASSWORD__`` 应替换为对应参与方选择的密码，后续文件请以同样的方式替换此占位符。"
+
+
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:88
 msgid ""
 "See :ref:`SCQLBroker configuration options "
 "<config_broker_server_options>` for more."
 msgstr "请参阅：:ref:`SCQLBroker 配置选项 <config_broker_server_options>` 了解更多信息。"
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:90
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:92
 msgid "1.4 Set SCQLEngine Config"
 msgstr "1.4 配置 SCQLEngine"
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:92
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:94
 msgid ""
 "Create a file called ``gflags.conf`` in your workspace and paste the "
 "following code in:"
 msgstr "在工作区中创建一个名为 ``gflags.conf`` 的文件，并粘贴如下代码："
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:111
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:113
 msgid ""
 "The ``connection_str`` specified in ``embed_router_conf`` is utilized to "
 "connect database named alice as set in `1.2 Prepare Meta Data and Source "
 "Data`_, For Bob it should be set to connect database named bob."
-msgstr "``embed_router_conf`` 中指定的 ``connection_str`` 用于连接名为 alice 的数据库，如 `1.2 准备元数据和源数据`_ 中设置的那样，对于 Bob，应设置为连接名为 bob 的数据库。"
+msgstr ""
+"``embed_router_conf`` 中指定的 ``connection_str`` 用于连接名为 alice 的数据库，如 `1.2 "
+"准备元数据和源数据`_ 中设置的那样，对于 Bob，应设置为连接名为 bob 的数据库。"
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:113
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:115
 msgid ""
 "See :ref:`Engine configuration options <engine_config_options>` for more "
 "config information"
 msgstr "请参阅 :ref:`引擎配置选项 <engine_config_options>` 了解更多配置信息"
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:117
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:119
 msgid "1.5 Create docker-compose file"
 msgstr "1.5 创建 docker-compose 文件"
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:119
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:121
 msgid ""
 "Create a file called ``docker-compose.yaml`` in your workspace and paste "
 "the following code in:"
 msgstr "在您的工作区中创建一个名为 ``docker-compose.yaml`` 的文件，并粘贴以下代码："
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:175
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:177
 msgid ""
 "``__INTRA_PORT__``, ``__INTER_PORT__`` and ``__ENGINE_PORT__``  are "
 "published ports on the host machine, you need to replace it with an "
 "accessible port number. In this case, we have designated them as "
 "``8080``, ``8081`` and ``8003``."
-msgstr "``__INTRA_PORT__``, ``__INTER_PORT__`` 和 ``__ENGINE_PORT__`` 作为监听端口，您需要替换为可访问的端口，这里我们指定为 ``8080``, ``8081`` 和 ``8003``"
+msgstr ""
+"``__INTRA_PORT__``, ``__INTER_PORT__`` 和 ``__ENGINE_PORT__`` "
+"作为监听端口，您需要替换为可访问的端口，这里我们指定为 ``8080``, ``8081`` 和 ``8003``"
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:177
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:179
 msgid ""
 "Container *mysql* are initialized by ``alice_init.sql`` and "
 "``broker_init_alice.sql`` as set in `1.2 Prepare Meta Data and Source "
 "Data`_ , please change to ``bob_init.sql`` and ``broker_init_bob.sql`` "
 "for Bob."
-msgstr "*mysql* 容器通过 ``alice_init.sql`` 和` `broker_init_alice.sql`` 完成数据初始化，如 `1.2 准备元数据和源数据`_ 中设置。 对于 Bob，请使用 ``bob_init.sql`` 和 ``broker_init_bob.sql``。"
+msgstr ""
+"*mysql* 容器通过 ``alice_init.sql`` 和` `broker_init_alice.sql`` 完成数据初始化，如 "
+"`1.2 准备元数据和源数据`_ 中设置。 对于 Bob，请使用 ``bob_init.sql`` 和 "
+"``broker_init_bob.sql``。"
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:179
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:181
 msgid "If you use your own database service, container *mysql* can be deleted"
-msgstr "如果您使用自己的数据库服务，则 *mysql* 容器可以删除，修改 SCQLBroker 和 SCQLEngine 配置中的 conn_str ，指定可用的数据库连接信息即可"
+msgstr ""
+"如果您使用自己的数据库服务，则 *mysql* 容器可以删除，修改 SCQLBroker 和 SCQLEngine 配置中的 conn_str "
+"，指定可用的数据库连接信息即可"
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:183
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:185
 msgid "1.6 Prepare Party Auth Files"
 msgstr "1.6 准备身份验证文件"
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:185
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:187
 msgid ""
 "Parties are identified by private-public key pairs, so we need to "
 "generate these files."
 msgstr "参与方身份通过私钥-公钥对进行识别，因此我们需要生成这些文件。"
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:187
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:189
 msgid ""
 "Create a file called ``party_info.json`` in your workspace and paste the "
 "following code in:"
 msgstr "在您的工作区中创建一个名为 ``party_info.json`` 的文件，并粘贴以下代码："
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:207
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:209
 msgid ""
 "``__ALICE_BROKER_URL__`` should be replaced by ``Alice machine host/ip + "
 "Alice __INTER_PORT__``, like: http://30.30.30.30:8081, do the same for "
 "``__BOB_BROKER_URL__``."
-msgstr "将 ``__ALICE_BROKER_URL__`` 替换为``Alice 机器的对外 host/ip + __INTER_PORT__``，如：http://30.30.30.30:8081，对 ``__BOB_BROKER_URL__`` 执行相同操作。"
+msgstr ""
+"将 ``__ALICE_BROKER_URL__`` 替换为``Alice 机器的对外 host/ip + "
+"__INTER_PORT__``，如：http://30.30.30.30:8081，对 ``__BOB_BROKER_URL__`` "
+"执行相同操作。"
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:210
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:212
 msgid "Create other files:"
 msgstr "创建其他文件"
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:224
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:226
 msgid ""
 "Then you need to replace ``__XXX_PUBLIC_KEY__`` in party_info.json and "
 "authorized_profile.json with corresponding public keys."
-msgstr "然后您需要将 party_info.json 和 authorized_profile.json 中的 ``__XXX_PUBLIC_KEY__`` 占位符替换为相应的真实公钥。"
+msgstr ""
+"然后您需要将 party_info.json 和 authorized_profile.json 中的 "
+"``__XXX_PUBLIC_KEY__`` 占位符替换为相应的真实公钥。"
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:228
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:230
 msgid "1.6 Start Services"
 msgstr "1.6 启动服务"
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:230
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:232
 msgid "The file your workspace should be as follows:"
 msgstr "您的工作区文件应如下所示："
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:244
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:246
 msgid "Then you can start services by running docker compose up"
 msgstr "然后您可以运行 docker compose up 来启动引擎服务"
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:256
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:258
 msgid "You can use docker logs to check whether services works well"
 msgstr "您可以使用 docker logs 检查引擎是否正常工作"
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:271
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:273
 msgid "Step 2: Deployment for Bob"
 msgstr "步骤二：部署 Bob 环境"
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:273
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:275
 msgid ""
 "It is basically the same as `Step 1: Deployment for Alice`_, but some "
 "characters and files related to ``alice`` need to be replaced with "
 "``bob``."
 msgstr "与 `步骤一：部署 Alice 环境`_ 基本相同，但与 ``alice`` 相关的一些字符和文件需要替换为 ``bob`` 。"
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:277
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:279
 msgid "Step 3: SCQL Test"
 msgstr "步骤三：测试 SCQL"
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:279
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:281
 msgid ""
 "Here we use brokerctl to submit a query to SCQLBroker for testing, you "
-"can also submit queries directly to SCQLBroker by sending a POST "
-"request."
-msgstr "这里我们使用 brokerctl 向 SCQLBroker 提交查询进行测试，您也可以通过发送 POST 请求直接向 SCQLBroker 提交查询。"
+"can also submit queries directly to SCQLBroker by sending a POST request."
+msgstr ""
+"这里我们使用 brokerctl 向 SCQLBroker 提交查询进行测试，您也可以通过发送 POST 请求直接向 SCQLBroker "
+"提交查询。"
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:283
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:285
 msgid "3.1 Build brokerctl"
 msgstr "3.1 构建 brokerctl"
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:300
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:302
 msgid "3.2 Submit Query"
 msgstr "3.2 提交查询"
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:302
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:304
 msgid ""
-"You can start to use brokerctl to submit requests to SCQLBroker and "
-"fetch the results back. it's similar to what you can do in :doc:`/intro"
-"/p2p-tutorial`."
-msgstr "您可以开始使用 brokerctl 向 SCQLBroker 提交请求并获取结果。这与您在 :doc:`/intro/p2p-tutorial` 中可以执行的操作类似。"
+"You can start to use brokerctl to submit requests to SCQLBroker and fetch"
+" the results back. it's similar to what you can do in :doc:`/intro/p2p-"
+"tutorial`."
+msgstr ""
+"您可以开始使用 brokerctl 向 SCQLBroker 提交请求并获取结果。这与您在 :doc:`/intro/p2p-tutorial` "
+"中可以执行的操作类似。"
 
-#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:325
+#: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:326
 msgid ""
-"You need to replace ``__ALICE_INTRA_URL__`` or ``__BOB_INTRA_URL__`` "
-"with the actual IntraServer address, like:  http://30.30.30.30:8080."
-msgstr "您需要将 ``__ALICE_INTRA_URL__`` 或 ``__BOB_INTRA_URL__`` 替换为实际的 IntraServer 地址，例如：http://30.30.30.30:8080。"
+"You need to replace ``__ALICE_INTRA_URL__`` or ``__BOB_INTRA_URL__`` with"
+" the actual IntraServer address, like:  http://30.30.30.30:8080."
+msgstr ""
+"您需要将 ``__ALICE_INTRA_URL__`` 或 ``__BOB_INTRA_URL__`` 替换为实际的 IntraServer "
+"地址，例如：http://30.30.30.30:8080。"
 
