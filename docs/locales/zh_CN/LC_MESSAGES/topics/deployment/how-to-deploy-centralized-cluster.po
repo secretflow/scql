@@ -186,7 +186,7 @@ msgid ""
 "replace the ``__ALICE_PUBLIC_KEY__``"
 msgstr ""
 "然后您需要将 authorized_profile.json 中的 ``__BOB_PUBLIC_KEY__`` 替换为Bob的公钥。对于 Bob"
-" 的 Engine ，请替换``__ALICE_PUBLIC_KEY__`` "
+" 的 Engine ，请替换 ``__ALICE_PUBLIC_KEY__`` "
 
 #: ../../topics/deployment/how-to-deploy-centralized-cluster.rst:146
 msgid "1.6 Start Engine Service"
