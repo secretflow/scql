@@ -7,8 +7,13 @@ SCRIPT_DIR=$(
 )
 
 # generate password for mysql root user
-MYSQL_PASSWD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13)
-grep -rl '__MYSQL_ROOT_PASSWD__' --exclude='*.sh' ${SCRIPT_DIR}/ | xargs sed -i "s/__MYSQL_ROOT_PASSWD__/${MYSQL_PASSWD}/g"
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  MYSQL_PASSWD=$(LC_CTYPE=C tr -dc A-Za-z0-9 </dev/urandom | head -c 13)                                                         # The locale needs to be specified on macos
+  grep -rl '__MYSQL_ROOT_PASSWD__' --exclude='*.sh' ${SCRIPT_DIR}/ | xargs sed -i "" "s/__MYSQL_ROOT_PASSWD__/${MYSQL_PASSWD}/g" # Should use sed -i "" on macos
+else
+  MYSQL_PASSWD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13)
+  grep -rl '__MYSQL_ROOT_PASSWD__' --exclude='*.sh' ${SCRIPT_DIR}/ | xargs sed -i "s/__MYSQL_ROOT_PASSWD__/${MYSQL_PASSWD}/g"
+fi
 
 # generate private pem for each party
 PARTIES=("alice" "bob")
