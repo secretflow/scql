@@ -1,0 +1,75 @@
+version: '3.8'
+services:
+  broker_alice:
+    image: ${SCQL_IMAGE:-secretflow/scql:latest}
+    command:
+      - /home/admin/bin/broker
+      - -config=/home/admin/configs/config.yml
+    restart: always
+    ports:
+      - mode: host
+        protocol: tcp
+        published: ${ALICE_PORT:-8081}
+        target: 8080
+    volumes:
+      - ./broker/alice/conf/:/home/admin/configs/
+      - ./tls/root-ca.crt:/etc/ssl/certs/root-ca.crt
+      - ./tls/broker_alice-ca.crt:/home/admin/configs/cert.pem
+      - ./tls/broker_alice-ca.key:/home/admin/configs/key.pem
+  broker_bob:
+    image: ${SCQL_IMAGE:-secretflow/scql:latest}
+    command:
+      - /home/admin/bin/broker
+      - -config=/home/admin/configs/config.yml
+    restart: always
+    ports:
+      - mode: host
+        protocol: tcp
+        published: ${BOB_PORT:-8082}
+        target: 8080
+    volumes:
+      - ./broker/bob/conf/:/home/admin/configs/
+      - ./tls/root-ca.crt:/etc/ssl/certs/root-ca.crt
+      - ./tls/broker_bob-ca.crt:/home/admin/configs/cert.pem
+      - ./tls/broker_bob-ca.key:/home/admin/configs/key.pem
+  engine_alice:
+    cap_add:
+      - NET_ADMIN
+    command:
+      - /home/admin/bin/scqlengine
+      - --flagfile=/home/admin/engine/conf/gflags.conf
+    image: ${SCQL_IMAGE:-secretflow/scql:latest}
+    volumes:
+      - ./engine/alice/conf/gflags.conf:/home/admin/engine/conf/gflags.conf
+      - ./tls/engine_alice-ca.crt:/home/admin/engine/conf/cert.pem
+      - ./tls/engine_alice-ca.key:/home/admin/engine/conf/key.pem
+  engine_bob:
+    cap_add:
+      - NET_ADMIN
+    command:
+      - /home/admin/bin/scqlengine
+      - --flagfile=/home/admin/engine/conf/gflags.conf
+    image: ${SCQL_IMAGE:-secretflow/scql:latest}
+    volumes:
+      - ./engine/bob/conf/gflags.conf:/home/admin/engine/conf/gflags.conf
+      - ./tls/engine_alice-ca.crt:/home/admin/engine/conf/cert.pem
+      - ./tls/engine_alice-ca.key:/home/admin/engine/conf/key.pem
+  mysql:
+    image: mysql:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=__MYSQL_ROOT_PASSWD__
+      - TZ=Asia/Shanghai
+    healthcheck:
+      retries: 10
+      test:
+        - CMD
+        - mysqladmin
+        - ping
+        - -h
+        - mysql
+      timeout: 20s
+    expose:
+      - "3306"
+    restart: always
+    volumes:
+      - ./mysql/initdb:/docker-entrypoint-initdb.d

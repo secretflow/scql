@@ -12,7 +12,7 @@ Secure Collaborative Query Language (SCQL) is a system that translates SQL state
 Getting started
 ---------------
 
-Follow the :doc:`tutorial </intro/tutorial>` and try out SCQL on your machine!
+Follow the :doc:`tutorial </intro/p2p-tutorial>` and try out SCQL on your machine!
 
 
 SCQL Systems

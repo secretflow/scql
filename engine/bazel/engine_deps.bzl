@@ -46,7 +46,7 @@ def engine_deps():
     maybe(
         git_repository,
         name = "spulib",
-        commit = "f3804a33e2a2e988cb03887e912e18e2b177fdeb",
+        commit = "0883c15512c9e4d3e4ec7bbe27e038fd084a2eee",
         remote = SPU_GIT,
     )
     maybe(
@@ -193,13 +193,15 @@ def _com_github_lz4_lz4():
     )
 
 def _com_github_nelhage_rules_boost():
-    # use boost 1.77
+    # MySQL require boost 1.77
     RULES_BOOST_COMMIT = "d104cb7beba996d67ae5826be07aab2d9ca0ee38"
     maybe(
         http_archive,
         name = "com_github_nelhage_rules_boost",
         sha256 = "5b7dbeadf66ae330d660359115f518d012082feec26402af26a7c540f6d0af9f",
         strip_prefix = "rules_boost-%s" % RULES_BOOST_COMMIT,
+        patch_args = ["-p1"],
+        patches = ["@scql//engine/bazel:patches/rules_boost.patch"],
         urls = [
             "https://github.com/nelhage/rules_boost/archive/%s.tar.gz" % RULES_BOOST_COMMIT,
         ],

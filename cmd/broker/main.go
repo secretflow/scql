@@ -45,6 +45,8 @@ const (
 	defaultConfigPath = "cmd/broker/config.yml"
 )
 
+var version = "scql version"
+
 // custom monitor formatter, e.g.: "2020-07-14 16:59:47.7144 INFO main.go:107 |msg"
 type CustomMonitorFormatter struct {
 	log.TextFormatter
@@ -70,6 +72,15 @@ const (
 )
 
 func main() {
+	confFile := flag.String("config", defaultConfigPath, "Path to broker configuration file")
+	showVersion := flag.Bool("version", false, "Print version information")
+	flag.Parse()
+
+	if *showVersion {
+		fmt.Println(version)
+		return
+	}
+
 	log.SetReportCaller(true)
 	log.SetFormatter(&CustomMonitorFormatter{log.TextFormatter{TimestampFormat: "2006-01-02 15:04:05.123"}})
 	rollingLogger := &lumberjack.Logger{
@@ -81,9 +92,6 @@ func main() {
 	}
 	mOut := io.MultiWriter(os.Stdout, rollingLogger)
 	log.SetOutput(mOut)
-
-	confFile := flag.String("config", defaultConfigPath, "Path to broker configuration file")
-	flag.Parse()
 
 	log.Infof("Starting to read config file: %s", *confFile)
 	cfg, err := config.NewConfig(*confFile)
@@ -98,7 +106,7 @@ func main() {
 		}
 	}
 
-	partyMgr, err := partymgr.NewFilePartyMgr(cfg.PartyInfoFile, cfg.PartyCode, cfg.Engines)
+	partyMgr, err := partymgr.NewFilePartyMgr(cfg.PartyInfoFile, cfg.PartyCode)
 	if err != nil {
 		log.Fatalf("Failed to create file partyMgr: %v", err)
 	}

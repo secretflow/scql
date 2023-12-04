@@ -39,15 +39,12 @@ More to say: you may need run `pip install -r requirements.txt` when first time 
 ### Run regtest
 
 ```bash
-# export `SCDB_PORTS` and `MYSQL_PORT` and `PROTOCOLS` defined in `.ci/docker-compose/.env`
-export $(grep -v '^#' .ci/docker-compose/.env | xargs)
-# export SKIP_CONCURRENT_TEST=true if you want to skip current tests
-# export SKIP_PLAINTEXT_CCL_TEST=true if you want to skip all ccl plaintext tests
-# go test will use package path as working directory
-go test ./cmd/regtest/scdb_test/... -v -count=1 -timeout=30m -args -alicePem ../../../.ci/docker-compose/engine/alice/conf/ed25519key.pem -bobPem ../../../.ci/docker-compose/engine/bob/conf/ed25519key.pem -carolPem ../../../.ci/docker-compose/engine/carol/conf/ed25519key.pem
 
-# debugging set SKIP_CREATE_USER_CCL true to skip create user ccl ...
-export SKIP_CREATE_USER_CCL=true
+# go test will use package path as working directory
+go test ./cmd/regtest/scdb_test/... -v -count=1 -timeout=30m -args --conf=../../../.ci/docker-compose/regtest.yml
+
+# All test flags are stored in regtest.yml. If necessary, please modify the corresponding parameters in regtest.yml before running the tests.
+
 # you could run sql interactively if needed
 go run cmd/scdbclient/main.go prompt --host="http://localhost:$SCDB_PORTS"
 >switch alice;
@@ -70,7 +67,7 @@ You could customize scdbserver published port and container images and protocols
 ### Prepare docker files
 
 ```bash
-# export `SCDB_PORTS` and `MYSQL_PORT` and `SCQL_IMAGE_TAG` defined in `.ci/broker-docker-compose/.env`
+# export `BROKER_PORTS` and `MYSQL_PORT` and `SCQL_IMAGE_TAG` defined in `.ci/broker-docker-compose/.env`
 export $(grep -v '^#' .ci/broker-docker-compose/.env | xargs)
 
 (cd .ci/broker-docker-compose && python setup.py)
@@ -87,15 +84,11 @@ More to say: you may need run `pip install -r requirements.txt` when first time 
 ### Run regtest
 
 ```bash
-# export `SCDB_PORTS` and `MYSQL_PORT` and `PROJECT_CONF` defined in `.ci/docker-compose/.env`
+# export `BROKER_PORTS` and `MYSQL_PORT` and `PROJECT_CONF` defined in `.ci/broker-docker-compose/.env`
 export $(grep -v '^#' .ci/broker-docker-compose/.env | xargs)
-# export SKIP_CONCURRENT_TEST=true if you want to skip all concurrency tests, including concurrent execution of queries and concurrent modification of project information.
-# export SKIP_PLAINTEXT_CCL_TEST=true if you want to skip all ccl plaintext tests
+# All test flags are stored in regtest.yml. If necessary, please modify the corresponding parameters in regtest.yml before running the tests.
 # go test will use package path as working directory
-go test ./cmd/regtest/p2p_test/... -v
-
-# set SKIP_CREATE_TABLE_CCL true to skip create user ccl fro debugging mode when run tests repeatedly
-export SKIP_CREATE_TABLE_CCL=true
+go test ./cmd/regtest/p2p_test/... -v -count=1 -timeout=30m -args --conf=../../../.ci/broker-docker-compose/regtest.yml
 ```
 
 ### Turn down all containers

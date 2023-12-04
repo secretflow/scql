@@ -1,6 +1,6 @@
-======================
-Deployment in P2P Mode
-======================
+==============
+P2P Deployment
+==============
 
 This document describes how to deploy a SCQL system with docker in P2P mode and use brokerctl to query. It is basically the same as the :doc:`/intro/p2p-tutorial`, but deployed on multi machines.
 
@@ -63,7 +63,8 @@ Create a file called ``config.yml`` in your workspace and paste the following co
     port: 8081
   log_level: debug
   party_code: alice
-  engines: ["engine:8003"]
+  session_expire_time: 24h
+  session_expire_check_time: 1m
   party_info_file: "/home/admin/configs/party_info.json"
   private_pem_path: "/home/admin/configs/ed25519key.pem"
   intra_host: broker:8080
@@ -71,6 +72,8 @@ Create a file called ``config.yml`` in your workspace and paste the following co
     timeout: 120s
     protocol: http
     content_type: application/json
+    uris:
+      - for_peer: engine:8003
   storage:
     type: mysql
     conn_str: "root:__MYSQL_ROOT_PASSWORD__@tcp(mysql:3306)/brokeralice?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
@@ -98,14 +101,14 @@ Create a file called ``gflags.conf`` in your workspace and paste the following c
 
   --listen_port=8003
   --datasource_router=embed
-  --enable_scdb_authorization=false
+  --enable_driver_authorization=false
   --server_enable_ssl=false
-  --scdb_enable_ssl_as_client=false
+  --driver_enable_ssl_as_client=false
   --peer_engine_enable_ssl_as_client=false
   --embed_router_conf={"datasources":[{"id":"ds001","name":"mysql db","kind":"MYSQL","connection_str":"db=alice;user=root;password=__MYSQL_ROOT_PASSWORD__;host=mysql;auto-reconnect=true"}],"rules":[{"db":"*","table":"*","datasource_id":"ds001"}]}
   # party authentication flags
-  --enable_self_auth=true
-  --enable_peer_auth=true
+  --enable_self_auth=false
+  --enable_peer_auth=false
   --private_key_pem_path=/home/admin/engine/conf/ed25519key.pem
   --authorized_profile_path=/home/admin/engine/conf/authorized_profile.json
 

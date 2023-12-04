@@ -30,17 +30,6 @@ type PartyMgr interface {
 	GetBrokerUrlByParty(party string) (string, error)
 	GetPubKeyByParty(party string) (string, error)
 	GetPartyInfoByParties(parties []string) (*translator.PartyInfo, error)
-	GetSelfInfo() *SelfInfo
-}
-
-type SelfInfo struct {
-	Endpoints []string
-	Code      string
-}
-
-func (info *SelfInfo) GetEndpoint() string {
-	// TODO: support load balance
-	return info.Endpoints[0]
 }
 
 // TODO: renamed to avoid confusion with engine partyInfo structure
@@ -58,10 +47,9 @@ type BrokerInfo struct {
 type FilePartyMgr struct {
 	urlMap    map[string]string
 	pubKeyMap map[string]string
-	self      *SelfInfo
 }
 
-func NewFilePartyMgr(partyPath string, selfCode string, selfEngineUrls []string) (PartyMgr, error) {
+func NewFilePartyMgr(partyPath string, selfCode string) (PartyMgr, error) {
 	content, err := os.ReadFile(partyPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file %s: %+v", partyPath, err)
@@ -72,17 +60,9 @@ func NewFilePartyMgr(partyPath string, selfCode string, selfEngineUrls []string)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal from json: %v", err)
 	}
-	if len(selfEngineUrls) == 0 {
-		return nil, fmt.Errorf("failed to find any engine urls")
-	}
-	selfPartInfo := &SelfInfo{
-		Endpoints: selfEngineUrls,
-		Code:      selfCode,
-	}
 	filePartyMgr := FilePartyMgr{
 		urlMap:    map[string]string{},
 		pubKeyMap: map[string]string{},
-		self:      selfPartInfo,
 	}
 	for _, party := range partyInfo.Participants {
 		filePartyMgr.urlMap[party.PartyCode] = party.Endpoint
@@ -122,8 +102,4 @@ func (m *FilePartyMgr) GetPartyInfoByParties(parties []string) (*translator.Part
 		participants = append(participants, participant)
 	}
 	return translator.NewPartyInfo(participants), nil
-}
-
-func (m *FilePartyMgr) GetSelfInfo() *SelfInfo {
-	return m.self
 }

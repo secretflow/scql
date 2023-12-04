@@ -48,9 +48,6 @@ class RecvTestImpl : public link::pb::MuxReceiverService {
 };
 
 static SimpleAuthenticator g_my_auth("test");
-
-static LogicalRetryPolicy g_my_retry_policy;
-
 }  // namespace
 
 class RpcHelperTest : public testing::Test {
@@ -100,7 +97,6 @@ TEST_F(RpcHelperTest, RpcWithRetryAndAuth) {
 
   options.protocol = "baidu_std";
   options.auth = &g_my_auth;
-  options.retry_policy = &g_my_retry_policy;
   ASSERT_EQ(channel.Init(host_.c_str(), &options), 0);
   link::pb::MuxReceiverService::Stub stub(&channel);
 

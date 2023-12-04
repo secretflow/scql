@@ -87,9 +87,9 @@ void In::Execute(ExecContext* ctx) {
       return LocalIn(ctx);
     case static_cast<int64_t>(InAlgo::kOprfPsiIn):
       SPDLOG_INFO("Execute In, algo = {}", "OprfPsiIn");
-      // Besides letting the engines decide, SCDB can directly choose prefered
+      // Besides letting the engines decide, Driver can directly choose prefered
       // PSI algorithm(EcdhPsi or OprfPsi) UbPsiServerHint is indispensable when
-      // SCDB explicitly choose OprfPsiIn
+      // Driver explicitly choose OprfPsiIn
       return OprfPsiIn(ctx, IsOprfServerAccordToHint(ctx));
     case static_cast<int64_t>(InAlgo::kEcdhPsiIn):
       SPDLOG_INFO("Execute In, algo = {}", "EcdhPsiIn");

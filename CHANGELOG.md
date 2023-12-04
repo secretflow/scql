@@ -14,6 +14,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 `Fixed` for any bug fixes.
 `Security` in case of vulnerabilities.
 
+## Staging
+
+### Changed
+
+ - Speed up GROUP BY with Radix Sort.
+ - Adjusted configuration items for SCQLEngine and SCQLBroker.
+
+### Fixed
+
+ - Fixed check for grant ccl in P2P mode.
+
 ## [0.4.0] - 2023-11-15
 
 ### Added

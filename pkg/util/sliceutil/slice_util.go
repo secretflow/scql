@@ -41,3 +41,12 @@ func SortMapKeyForDeterminism[k constraints.Ordered, v any](m map[k]v) []k {
 	sortSlice(keys)
 	return keys
 }
+
+func SubSet[S ~[]E, E comparable](s S, sub S) bool {
+	for _, element := range sub {
+		if !slices.Contains(s, element) {
+			return false
+		}
+	}
+	return true
+}

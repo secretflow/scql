@@ -1,0 +1,13 @@
+--listen_port=8003
+--datasource_router=embed
+--enable_driver_authorization=false
+--server_enable_ssl=false
+--driver_enable_ssl_as_client=false
+--peer_engine_enable_ssl_as_client=false
+--embed_router_conf={"datasources":[{"id":"ds001","name":"mysql db","kind":"MYSQL","connection_str":"db=bob;user=root;password=__MYSQL_ROOT_PASSWD__;host=mysql;auto-reconnect=true"}],"rules":[{"db":"*","table":"*","datasource_id":"ds001"}]}
+
+# party authentication flags
+--enable_self_auth=true
+--enable_peer_auth=true
+--private_key_pem_path=/home/admin/engine/conf/ed25519key.pem
+--authorized_profile_path=/home/admin/engine/conf/authorized_profile.json

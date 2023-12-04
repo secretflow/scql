@@ -63,7 +63,7 @@ class EngineServiceImpl : public pb::SCQLEngineService {
   void RunPlanAsync(const pb::RunExecutionPlanRequest request, Session* session,
                     const std::string& source_ip);
 
-  bool CheckSCDBCredential(const brpc::HttpHeader& http_header);
+  bool CheckDriverCredential(const brpc::HttpHeader& http_header);
 
   void VerifyPublicKeys(const pb::SessionStartParams& start_params);
 

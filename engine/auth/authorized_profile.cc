@@ -32,7 +32,7 @@ AuthorizedProfile::AuthorizedProfile(const std::string& json_str) {
       "failed to parse json to message AuthorizedProfile: json={}, error={}",
       json_str, status.ToString());
 
-  scdb_pub_key_ = profile_pb.scdb().public_key();
+  driver_pub_key_ = profile_pb.driver().public_key();
 
   for (const auto& pi : profile_pb.parties()) {
     YACL_ENFORCE(trusted_parties_.count(pi.party_code()) == 0,
@@ -51,8 +51,8 @@ void AuthorizedProfile::VerifyParty(const std::string& party_code,
                "public key mismatched for party code `{}`", party_code);
 }
 
-void AuthorizedProfile::VerifySCDB(const std::string& pub_key) const {
-  YACL_ENFORCE(scdb_pub_key_ == pub_key, "scdb public key mismatched");
+void AuthorizedProfile::VerifyDriver(const std::string& pub_key) const {
+  YACL_ENFORCE(driver_pub_key_ == pub_key, "driver public key mismatched");
 }
 
 }  // namespace auth

@@ -1,7 +1,7 @@
 # Startup
 
 ```bash
-# generate private/public keys for parties
+# generate private/public keys, ca files for parties
 bash setup.sh
 # start containers
 docker compose up -d

@@ -59,7 +59,7 @@ The following explains the derivation of specific operations, taking operations 
 
 **Join**
 
-When the CCL constraints of the JOIN keys are both ``PLAINTEXT_AFTER_JOIN`` or ``PLAINTEXT``, the CCL constraint type of the intersection result is ``PLAINTEXT``.
+When the CCL constraints of the JOIN keys are both ``PLAINTEXT_AFTER_JOIN`` or ``PLAINTEXT``, the CCL constraint type of the intersection result is ``PLAINTEXT`` for **InnerJoin**; for **LeftOuterJoin**, only the intersection of the right JOIN key becomes ``PLAINTEXT``; for **RightOutJoin**, the intersection of the left JOIN key becomes ``PLAINTEXT``.
 
 **Group By**
 

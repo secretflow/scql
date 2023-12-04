@@ -39,6 +39,7 @@ import (
 	"github.com/secretflow/scql/pkg/broker/partymgr"
 	"github.com/secretflow/scql/pkg/broker/services/auth"
 	"github.com/secretflow/scql/pkg/broker/storage"
+	"github.com/secretflow/scql/pkg/broker/testdata"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/util/message"
 	urlutil "github.com/secretflow/scql/pkg/util/url"
@@ -76,6 +77,8 @@ type ServerTestSuit struct {
 
 func (suite *ServerTestSuit) SetupTest() {
 	freePorts, err := GetFreePorts(4)
+	suite.NoError(err)
+	err = testdata.CreateTestPemFiles("../testdata")
 	suite.NoError(err)
 	f, err := os.CreateTemp("", "broker_server_test")
 	suite.NoError(err)
@@ -489,17 +492,17 @@ func buildTestApp(party string, ports []int, infoFile string) (app *application.
 			Port: ports[0],
 		},
 		PartyCode:      party,
-		Engines:        []string{"fake url"},
 		PartyInfoFile:  infoFile,
 		PrivatePemPath: fmt.Sprintf("../testdata/private_key_%s.pem", party),
 		Engine: config.EngineConfig{
 			ClientTimeout: 1 * time.Second,
 			Protocol:      "SEMI2K",
 			ContentType:   "application/json",
+			Uris:          []config.EngineUri{{ForPeer: "fake url"}},
 		},
 	}
 
-	partyMgr, err := partymgr.NewFilePartyMgr(cfg.PartyInfoFile, cfg.PartyCode, cfg.Engines)
+	partyMgr, err := partymgr.NewFilePartyMgr(cfg.PartyInfoFile, cfg.PartyCode)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create partyMgr from: %v", err)
 	}

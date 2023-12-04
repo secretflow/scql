@@ -131,10 +131,10 @@ Config in SCDB
 Config for SecurityCompromise
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-SCDB provides some security compromise options, which can be selectively enabled when the security risk is acceptable to speed up the overall operation.
+SCQL provides some security compromise options, which can be selectively enabled when the security risk is acceptable to speed up the overall operation.
 
 1. reveal_group_mark:
-default disable, if enabled, SCDB will expose grouping information(size of each group) when calculating group-by-aggregation, thereby avoiding the overhead caused by pre-shuffle.  ``risk``: group size will be leaked, which is equivalent to the result of count(*)
+default disable, if enabled, SCQL will expose grouping information(size of each group) when calculating group-by-aggregation, thereby avoiding the overhead caused by pre-shuffle.  ``risk``: group size will be leaked, which is equivalent to the result of count(*)
 
 A typical config of security_compromise can be like:
 
@@ -148,7 +148,7 @@ A typical config of security_compromise can be like:
 
 Config for storage
 ^^^^^^^^^^^^^^^^^^
-Database in SCDB is used to store the SCQL system data, such as CCL and user information, currently SCDB support MySQL/SQLite3. You can connect to a database by setting ``conn_str`` and ``type`` in the storage config.
+Database is used to store the SCQL system data, such as CCL and user information, currently support MySQL/SQLite3. You can connect to a database by setting ``conn_str`` and ``type`` in the storage config.
 
 type
   The database type, which can be set as mysql/sqlite. And MySQL is recommended, which has been fully tested.
@@ -221,6 +221,10 @@ If you need to enable TLS in SCDB, please refer to the following configuration.
   engine:
     protocol: https
 
+.. note::
+
+  Self-signed CA files may not be trusted by default, please refer to `Trouble shooting <https://github.com/secretflow/scql/tree/main/test-tools#trouble-shooting>`_ for help.
+
 Additionally, it is necessary to configure the SCQLEngine to work with SSL, please refer :ref:`Config for SSL in SCQLEngine <scqlengine-tls>`.
 
 
@@ -259,14 +263,18 @@ Example for SCQLBroker
     key_file: ${your key file path}
   log_level: debug
   party_code: alice
+  session_expire_time: 24h
+  session_expire_check_time: 1m
   party_info_file: "/home/admin/configs/party_info.json"
   private_pem_path: "/home/admin/configs/private_key.pem"
   intra_host: http://broker_alice:8080
-  engines: ["engine_alice:8003"]
   engine:
     timeout: 120s
     protocol: http
     content_type: application/json
+    uris:
+      - for_peer: alice_for_peer:8003
+        for_self: alice_for_self:8003
   storage:
     type: mysql
     conn_str: "user_name:pass_word@tcp(127.0.0.1:3306)/db_name?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
@@ -279,69 +287,98 @@ Example for SCQLBroker
 Config in SCQLBroker
 ----------------------
 
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-|                 Name                  |  Default  |                                                      Description                                                      |
-+=======================================+===========+=======================================================================================================================+
-| intra_server.host                     | 127.0.0.1 | The host where SCQLBroker listens for IntraServer requests, default localhost for safety                              |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| intra_server.port                     | none      | The port on which SCQLBroker listens for IntraServer requests                                                         |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| intra_server.protocol                 | http      | The transfer protocol of IntraServer, supports HTTP/HTTPS                                                             |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| intra_server.cert_file                | none      | Certificate file path for IntraServer to enable HTTPS, supports crt/pem type                                          |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| intra_server.key_file                 | none      | Private key file path for IntraServer to enable HTTPS, supports key/pem type                                          |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| inter_server.host                     | none      | The host where SCQLBroker listens for InterServer requests                                                            |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| inter_server.port                     | none      | The port on which SCQLBroker listens for InterServer requests                                                         |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| inter_server.protocol                 | http      | The transfer protocol of InterServer, supports HTTP/HTTPS                                                             |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| inter_server.cert_file                | none      | Certificate file path for InterServer to enable HTTPS, supports crt/pem type                                          |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| inter_server.key_file                 | none      | Private key file path for InterServer to enable HTTPS, supports key/pem type                                          |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| inter_timeout                         | 5s        | Timeout for requesting InterServe                                                                                     |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| log_level                             | info      | The type and severity of a logged event                                                                               |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| party_code                            | none      | Unique identifier used to identify the party                                                                          |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| party_info_file                       | none      | File path that stores information of each party, including party code, public key and InterServer's URL               |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| private_pem_path                      | none      | Private key file path for party_code, which will be used to sign requests to other SCQLBrokers                        |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| intra_host                            | none      | The callback URL for the local SCQLEngine to notify SCQLBroker                                                        |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| engines                               | none      | The URLs for local available SCQLEngines                                                                              |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| engine.timeout                        | none      | Timeout for SCQLBroker to send message to SCQLEngine                                                                  |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| engine.protocol                       | http      | The transfer protocol of SCQLEngine, support http/https                                                               |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| engine.content_type                   | none      | The original media type in post body from SCQLBroker to SCQLEngine                                                    |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| security_compromise.reveal_group_mark | false     | Whether to reveal group_mark directly for group by                                                                    |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| storage.type                          | none      | Database kind in SCQLBroker, supports MYSQL/SQLite3, MYSQL is recommended, SQLite3 may have problems with concurrency |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| storage.conn_str                      | none      | Used to connect to a database                                                                                         |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| storage.max_idle_conns                | 1         | Maximum number of connections in idle connection pool                                                                 |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| storage.max_open_conns                | 1         | Maximum number of open connections to the database                                                                    |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| storage.conn_max_idle_time            | -1s       | Maximum amount of time a connection may be idle                                                                       |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
-| storage.conn_max_lifetime             | -1s       | Maximum amount of time a connection may be reused                                                                     |
-+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------+
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+|                 Name                  |  Default  |                                                       Description                                                        |
++=======================================+===========+==========================================================================================================================+
+| intra_server.host                     | 127.0.0.1 | The host where SCQLBroker listens for IntraServer requests, default localhost for safety                                 |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| intra_server.port                     | none      | The port on which SCQLBroker listens for IntraServer requests                                                            |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| intra_server.protocol                 | http      | The transfer protocol of IntraServer, supports HTTP/HTTPS                                                                |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| intra_server.cert_file                | none      | Certificate file path for IntraServer to enable HTTPS, supports crt/pem type                                             |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| intra_server.key_file                 | none      | Private key file path for IntraServer to enable HTTPS, supports key/pem type                                             |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| inter_server.host                     | none      | The host where SCQLBroker listens for InterServer requests                                                               |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| inter_server.port                     | none      | The port on which SCQLBroker listens for InterServer requests                                                            |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| inter_server.protocol                 | http      | The transfer protocol of InterServer, supports HTTP/HTTPS                                                                |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| inter_server.cert_file                | none      | Certificate file path for InterServer to enable HTTPS, supports crt/pem type                                             |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| inter_server.key_file                 | none      | Private key file path for InterServer to enable HTTPS, supports key/pem type                                             |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| inter_timeout                         | 5s        | Timeout for requesting InterServe                                                                                        |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| log_level                             | info      | The type and severity of a logged event                                                                                  |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| party_code                            | none      | Unique identifier used to identify the party                                                                             |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| party_info_file                       | none      | File path that stores information of each party, including party code, public key and InterServer's URL                  |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| private_pem_path                      | none      | Private key file path for party_code, which will be used to sign requests to other SCQLBrokers                           |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| intra_host                            | none      | The callback URL for the local SCQLEngine to notify SCQLBroker                                                           |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| engine.timeout                        | none      | Timeout for SCQLBroker to send message to SCQLEngine                                                                     |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| engine.protocol                       | http      | The transfer protocol of SCQLEngine, support http/https                                                                  |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| engine.content_type                   | none      | The original media type in post body from SCQLBroker to SCQLEngine                                                       |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| engine.uris                           | none      | The URIs for local SCQLEngines, which using **for_peer** to serve peer engines and **for_self** to serve the SCQLBroker, |
+|                                       |           | if **for_self** is empty, **for_peer** is used instead                                                                   |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| security_compromise.reveal_group_mark | false     | Whether to reveal group_mark directly for group by                                                                       |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| storage.type                          | none      | Database kind in SCQLBroker, supports MYSQL/SQLite3, MYSQL is recommended, SQLite3 may have problems with concurrency    |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| storage.conn_str                      | none      | Used to connect to a database                                                                                            |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| storage.max_idle_conns                | 1         | Maximum number of connections in idle connection pool                                                                    |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| storage.max_open_conns                | 1         | Maximum number of open connections to the database                                                                       |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| storage.conn_max_idle_time            | -1s       | Maximum amount of time a connection may be idle                                                                          |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| storage.conn_max_lifetime             | -1s       | Maximum amount of time a connection may be reused                                                                        |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| session_expire_time                   | 24h       | Maximum lifespan of a job                                                                                                |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| session_expire_check_time             | 1m        | The interval checking whether session is timeout                                                                         |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+
 
 Config for ServerConfig
 ^^^^^^^^^^^^^^^^^^^^^^^
 SCQLBroker accept intra-domain requests through IntraServer, while accept requests between different SCQLBrokers through InterServer.
 
 IntraServer is recommended to use localhost host or LAN address to avoid external attacks, while InterServer is recommended to enable HTTPS to improve security.
+
+.. _broker-tls:
+
+Please refer to the following configuration to enable HTTPS for InterServer: (similar to IntraServer)
+
+.. code-block:: yaml
+
+  inter_server:
+    host: 0.0.0.0
+    port: 8081
+    protocol: https
+    cert_file: ${your cert file path}
+    key_file: ${your key file path}
+
+.. note::
+
+  Self-signed CA files may not be trusted by default, please refer to `Trouble shooting <https://github.com/secretflow/scql/tree/main/test-tools#trouble-shooting>`_ for help.
+
+  Please change the endpoints in **party_info.json** from http to https.
+
+  We have enabled HTTPS in the `p2p examples <https://github.com/secretflow/scql/blob/main/examples/p2p-tutorial/README.md>`_, and the initialization process of related configurations may provide some help.
+
+For SCQLEngine to work with SSL, please refer :ref:`Config for SSL in SCQLEngine <scqlengine-tls>`.
 
 
 Reused Config
@@ -372,6 +409,8 @@ Example for SCQLEngine
 
 Config in SCQLEngine
 --------------------
+
+SCQLEngine can cooperate with upper-layer modules such as SCDB and SCQLBroker according to the deployment mode. ``Driver`` is used in the configuration items to represent these upper-layer modules.
 
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+
 |                    Name                    |     Default      |                                        Description                                         |
@@ -404,19 +443,19 @@ Config in SCQLEngine
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+
 | link_recv_timeout_ms                       | 30000            | The max time that engine will wait for message come from another engine                    |
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+
-| scdb_protocol                              | `http:proto`     | The rpc protocol between engine and SCDB                                                   |
+| driver_protocol                            | `http:proto`     | The rpc protocol between engine and Driver                                                 |
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+
-| scdb_connection_type                       | pooled           | The rpc connection type between engine and SCDB                                            |
+| driver_connection_type                     | pooled           | The rpc connection type between engine and Driver                                          |
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+
-| scdb_timeout_ms                            | 5000             | The rpc timeout between engine and SCDB, unit: ms                                          |
+| driver_timeout_ms                          | 5000             | The rpc timeout between engine and Driver, unit: ms                                        |
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+
-| scdb_max_retry                             | 3                | Rpc max retries(not including the first rpc) between engine and SCDB                       |
+| driver_max_retry                           | 3                | Rpc max retries(not including the first rpc) between engine and Driver                     |
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+
-| scdb_enable_ssl_as_client                  | true             | Whether enable ssl encryption when send message to SCDB                                    |
+| driver_enable_ssl_as_client                | true             | Whether enable ssl encryption when send message to Driver                                  |
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+
-| scdb_enable_ssl_client_verification        | false            | Whether enable certificate verification when send message to SCDB                          |
+| driver_enable_ssl_client_verification      | false            | Whether enable certificate verification when send message to Driver                        |
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+
-| scdb_ssl_client_ca_certificate             | none             | The trusted CA file to verify certificate when send message to SCDB                        |
+| driver_ssl_client_ca_certificate           | none             | The trusted CA file to verify certificate when send message to Driver                      |
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+
 | listen_port                                | 8003             | The listening port of engine service                                                       |
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+
@@ -424,7 +463,7 @@ Config in SCQLEngine
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+
 | internal_port                              | 9527             | The listening port of brpc builtin services                                                |
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+
-| idle_timeout_s                             | 30               | Idle connection close delay in seconds between the engine and SCDB, unit: s                |
+| idle_timeout_s                             | 30               | Idle connection close delay in seconds between the engine and Driver, unit: s              |
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+
 | server_enable_ssl                          | true             | Whether enable SSL when engine work as a server                                            |
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+
@@ -436,11 +475,11 @@ Config in SCQLEngine
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+
 | auth_credential                            | none             | Authorization credential used to check requests' http header                               |
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+
-| enable_scdb_authorization                  | false            | Whether to authenticate the identity of SCDB                                               |
+| enable_driver_authorization                | false            | Whether to authenticate the identity of Driver                                             |
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+
-| engine_credential                          | none             | Credential used to authenticate SCDB                                                       |
+| engine_credential                          | none             | Credential used to authenticate Driver                                                     |
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+
-| session_timeout_s                          | 1800             | Expiration duration of a session between engine and SCDB, unit: s                          |
+| session_timeout_s                          | 1800             | Expiration duration of a session between engine and Driver, unit: s                        |
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+
 | datasource_router                          | embed            | The datasource router type                                                                 |
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+
@@ -557,7 +596,7 @@ Once found, SCQLEngine will try to connect database with datasource's informatio
 
 Config for Brpc server
 ^^^^^^^^^^^^^^^^^^^^^^
-SCQLEngine uses **Brpc** to communicate with SCDB and other peer SCQLEngines, each SCQLEngine will start a Brpc service on *local-host:listen_port* to receive data from outside. If you want to enable Brpc builtin services, add FLAGS:
+SCQLEngine uses **Brpc** to communicate with Driver and other peer SCQLEngines, each SCQLEngine will start a Brpc service on *local-host:listen_port* to receive data from outside. If you want to enable Brpc builtin services, add FLAGS:
 
 .. code-block::
 
@@ -569,19 +608,21 @@ SCQLEngine uses **Brpc** to communicate with SCDB and other peer SCQLEngines, ea
 
 Config for SSL
 ^^^^^^^^^^^^^^
-If you want to enable SSL in SCQLEngine, add FLAGS as follows. Additionally, it may be necessary to configure SCDB work with TLS please refer :ref:`Config for TLS in SCDB <scdb-tls>`.
+If you want to enable SSL in SCQLEngine, add FLAGS as follows. Additionally, it may be necessary to configure the Driver to work with TLS, please refer :ref:`TLS in SCDB <scdb-tls>` or :ref:`TLS in SCQLBroker <broker-tls>`.
 
 .. code-block::
 
   --server_enable_ssl=true
   --server_ssl_certificate=${file path of cert}
   --server_ssl_private_key=${file path of key}
+  # set peer_engine_enable_ssl_as_client to true when peer SCQLEngine has https enabled
   --peer_engine_enable_ssl_as_client=true
-  --scdb_enable_ssl_as_client=true
+  # set driver_enable_ssl_as_client to true when the Driver has https enabled (SCDB or SCQLBroker's IntraServer)
+  --driver_enable_ssl_as_client=true
 
 Config for audit
 ^^^^^^^^^^^^^^^^
-The audit log in SCQLEngine is used to record the SCQLEngine activities during the execution of tasks from SCDB. Just like the audit in SCDB, it also can be divided into two types: common audit log and detail audit log.
+The audit log in SCQLEngine is used to record the SCQLEngine activities during the execution of tasks from Driver. Just like the audit in Driver, it also can be divided into two types: common audit log and detail audit log.
 
   The common audit is used to record some basic information about a task, while the detail audit is used to record more detailed information of the task. See `engine_audit <https://github.com/secretflow/scql/blob/main/engine/audit/audit.proto>`_ for more information
 
@@ -592,7 +633,7 @@ The log file is rotated in every 24:00:00 in local time, and the filename is gen
 
 Config for party authentication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-For security, SCQLEngine enables party authentication by default. SCQLEngine will check it's public key in the SCDB request matches the local public key in ``private_key_pem_path``, and that the other participant's public key also matches the one in ``authorized_profile_path``.
+For security, SCQLEngine enables party authentication by default. SCQLEngine will check it's public key in the Driver request matches the local public key in ``private_key_pem_path``, and that the other participant's public key also matches the one in ``authorized_profile_path``.
 
 .. _heu/ou: https://www.secretflow.org.cn/docs/heu/latest/zh-Hans/getting_started/algo_choice#ou-paillier
 

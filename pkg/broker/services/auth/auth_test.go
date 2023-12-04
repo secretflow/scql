@@ -19,11 +19,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/secretflow/scql/pkg/broker/testdata"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 )
 
 func TestAuth(t *testing.T) {
 	r := require.New(t)
+	err := testdata.CreateTestPemFiles("../../testdata")
+	r.NoError(err)
 	auth, err := NewAuth("../../testdata/private_key_alice.pem")
 	r.NoError(err)
 

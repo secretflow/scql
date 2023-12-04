@@ -74,6 +74,9 @@ DNS.2 = scdb
 DNS.3 = engine_alice
 DNS.4 = engine_bob
 DNS.5 = engine_carol
+DNS.6 = broker_alice
+DNS.7 = broker_bob
+DNS.8 = broker_carol
 IP.1 = 127.0.0.1
 EOF
 
@@ -122,7 +125,7 @@ if [[ ! -e intermediate-ca.key ]]; then
 fi
 
 # Generate new leaf CAs for SCDB and all SCQLEngines
-for TYPE in scdb engine_alice engine_bob engine_carol; do
+for TYPE in scdb engine_alice engine_bob engine_carol broker_alice broker_bob broker_carol; do
   CERT_NAME="${PRODUCT}-$(echo ${TYPE} | tr / -)-ca"
   echo "Generating ${CERT_NAME} leaf certificate authority EC key and certificate"
   ${OPENSSL} ecparam -name prime256v1 -genkey -noout -out ${TYPE}-ca.key

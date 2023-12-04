@@ -33,32 +33,7 @@ import (
 	"github.com/secretflow/scql/pkg/planner/core"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/util/message"
-	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
-
-func PrivsManagedByParty(txn *storage.MetaTransaction, privs []storage.ColumnPriv, partyCode string) error {
-	var privIDs []storage.ColumnPrivIdentifier
-	for _, priv := range privs {
-		privIDs = append(privIDs, priv.ColumnPrivIdentifier)
-	}
-	return PrivIDsManagedByParty(txn, privIDs, partyCode)
-}
-
-func PrivIDsManagedByParty(txn *storage.MetaTransaction, privIDs []storage.ColumnPrivIdentifier, partyCode string) error {
-	var tables []string
-	for _, privID := range privIDs {
-		tables = append(tables, privID.TableName)
-	}
-	owners, err := txn.ListDedupTableOwners(sliceutil.SliceDeDup(tables))
-	if err != nil {
-		return fmt.Errorf("PrivIDsManagedByParty: ListDedupTableOwners err: %v", err)
-	}
-	if len(owners) != 1 || owners[0] != partyCode {
-		return fmt.Errorf("PrivIDsManagedByParty: privs contain tables whose owner is not the client")
-	}
-
-	return nil
-}
 
 func PostSyncInfo(app *application.App, projectID string, action pb.ChangeEntry_Action, data any, targetParties []string) (err error) {
 	if len(targetParties) == 0 {
@@ -121,7 +96,7 @@ func PostSyncInfo(app *application.App, projectID string, action pb.ChangeEntry_
 
 // Only update the table that is included in the resources here to avoid side effects and no need to check privileges again
 func askInfoAndUpdateStorage(session *application.Session, resources []*pb.ResourceSpec, targetParty string) (err error) {
-	req := pb.AskInfoRequest{ClientId: &pb.PartyId{Code: session.PartyMgr.GetSelfInfo().Code}, ResourceSpecs: resources}
+	req := pb.AskInfoRequest{ClientId: &pb.PartyId{Code: session.GetSelfPartyCode()}, ResourceSpecs: resources}
 	destUrl, err := session.PartyMgr.GetBrokerUrlByParty(targetParty)
 	if err != nil {
 		return err
@@ -136,9 +111,11 @@ func askInfoAndUpdateStorage(session *application.Session, resources []*pb.Resou
 		return fmt.Errorf("ask info failed: %+v", resp.Status)
 	}
 	txn := session.MetaMgr.CreateMetaTransaction()
-	defer txn.Finish(err)
+	defer func() {
+		txn.Finish(err)
+	}()
 	for i, resource := range resources {
-		err = updateStorageBy(txn, resource, resp.Datas[i])
+		err = updateStorageFor(txn, resource, resp.Datas[i], targetParty)
 		if err != nil {
 			return
 		}
@@ -146,10 +123,10 @@ func askInfoAndUpdateStorage(session *application.Session, resources []*pb.Resou
 	return nil
 }
 
-// Only update the table that is included in the resource
-func updateStorageBy(txn *storage.MetaTransaction, resource *pb.ResourceSpec, data []byte) (err error) {
+func updateStorageFor(txn *storage.MetaTransaction, resource *pb.ResourceSpec, data []byte, targetParty string) (err error) {
 	switch resource.Kind {
 	case pb.ResourceSpec_Table:
+		// Only update the table that is included in the resource
 		var metas []storage.TableMeta
 		err = json.Unmarshal(data, &metas)
 		if err != nil {
@@ -168,14 +145,14 @@ func updateStorageBy(txn *storage.MetaTransaction, resource *pb.ResourceSpec, da
 			if !slices.Contains(resource.TableNames, meta.Table.TableName) {
 				continue
 			}
-			err = txn.AddTable(meta)
+			err = AddTableWithCheck(txn, resource.ProjectId, targetParty, meta)
 			if err != nil {
 				return
 			}
 		}
-
 		return
 	case pb.ResourceSpec_CCL:
+		// only update columns owned by target party
 		var columnPrivs []storage.ColumnPriv
 		err = json.Unmarshal(data, &columnPrivs)
 		if err != nil {
@@ -189,7 +166,7 @@ func updateStorageBy(txn *storage.MetaTransaction, resource *pb.ResourceSpec, da
 			}
 			privs = append(privs, priv)
 		}
-		err = txn.GrantColumnConstraints(privs)
+		err = GrantColumnConstraintsWithCheck(txn, resource.GetProjectId(), targetParty, privs)
 		return
 	default:
 		return fmt.Errorf("unsupported resource type in ask info response: %+v", resource)

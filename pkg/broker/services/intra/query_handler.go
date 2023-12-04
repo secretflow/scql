@@ -140,7 +140,7 @@ func DistributeQueryToOtherParty(session *application.Session, enginesInfo *tran
 		return
 	}
 	executionInfo := session.ExecuteInfo
-	selfCode := session.PartyMgr.GetSelfInfo().Code
+	selfCode := session.GetSelfPartyCode()
 	selfEndpoint, err := session.GetEndpoint(selfCode)
 	if err != nil {
 		ret.err = err

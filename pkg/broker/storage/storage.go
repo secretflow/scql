@@ -84,6 +84,18 @@ func CheckStorage(store *gorm.DB) error {
 	return nil
 }
 
+func AddExclusiveLock(txn *MetaTransaction) *MetaTransaction {
+	return &MetaTransaction{
+		db: txn.db.Clauses(clause.Locking{Strength: "UPDATE"}),
+	}
+}
+
+func AddShareLock(txn *MetaTransaction) *MetaTransaction {
+	return &MetaTransaction{
+		db: txn.db.Clauses(clause.Locking{Strength: "SHARE"}),
+	}
+}
+
 // create a new MetaTransaction for every request
 // and call Finish when you finish all your actions
 func (manager *MetaManager) CreateMetaTransaction() *MetaTransaction {
@@ -140,10 +152,10 @@ func (t *MetaTransaction) RemoveProject(projectID string) error {
 }
 
 // update project fail if project not exists or other reasons
-func (t *MetaTransaction) UpdateProject(projectID string, conf ProjectConfig) error {
-	result := t.db.Model(&Project{}).Where("id = ?", projectID).Updates(&Project{ProjectConf: conf})
+func (t *MetaTransaction) UpdateProject(proj Project) error {
+	result := t.db.Model(&Project{}).Where("id = ?", proj.ID).Updates(&proj)
 	if result.RowsAffected != 1 {
-		return fmt.Errorf("failed to update project %s, with affected rows num %d", projectID, result.RowsAffected)
+		return fmt.Errorf("failed to update project %s, with affected rows num %d", proj.ID, result.RowsAffected)
 	}
 	return result.Error
 }
@@ -354,33 +366,13 @@ func (t *MetaTransaction) GetTablesByTableNames(projectID string, tableNames []s
 }
 
 func (t *MetaTransaction) GrantColumnConstraints(privs []ColumnPriv) error {
-	unknownCCL := pb.SecurityConfig_ColumnControl_Visibility_name[int32(pb.SecurityConfig_ColumnControl_UNKNOWN)]
 	// insert into storage
+	// refer to: https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
 	result := t.db.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "dest_party"}, {Name: "table_name"}, {Name: "column_name"}, {Name: "project_id"}},
-		DoUpdates: clause.Assignments(map[string]interface{}{"priv": unknownCCL}),
+		UpdateAll: true,
 	}).CreateInBatches(&privs, InsertBatchSize)
 	if result.Error != nil {
 		return result.Error
-	}
-	// map key project_id-table_name-dest_party-priv
-	type keyWord struct {
-		projectID string
-		tableName string
-		destParty string
-		priv      string
-	}
-	columnMap := make(map[keyWord][]string)
-	for _, priv := range privs {
-		key := keyWord{projectID: priv.ProjectID, tableName: priv.TableName, destParty: priv.DestParty, priv: priv.Priv}
-		columnMap[key] = append(columnMap[key], priv.ColumnName)
-	}
-	// update column privs
-	for key, columns := range columnMap {
-		result := t.db.Model(&ColumnPriv{}).Where("table_name = ? and project_id = ?", key.tableName, key.projectID).Where("dest_party = ?", key.destParty).Where("column_name in ?", columns).Update("priv", key.priv)
-		if result.Error != nil {
-			return result.Error
-		}
 	}
 	return nil
 }

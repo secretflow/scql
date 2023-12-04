@@ -92,6 +92,23 @@ func (s *Session) SetResultSafely(result *pb.QueryResponse) {
 	s.Result = result
 }
 
+func (s *Session) GetSelfPartyCode() string {
+	return s.Conf.PartyCode
+}
+
+func (s *Session) GetOneSelfEngineUriForPeer() string {
+	return s.Conf.Engine.Uris[0].ForPeer
+}
+
+func (s *Session) GetOneSelfEngineUriForSelf() string {
+	engineUri := s.Conf.Engine.Uris[0]
+	if engineUri.ForSelf == "" {
+		logrus.Info("GetOneSelfEngineUriForSelf: not set for_self uri, using for_peer by default")
+		return engineUri.ForPeer
+	}
+	return engineUri.ForSelf
+}
+
 type ExecutionInfo struct {
 	Issuer        *pb.PartyId
 	ProjectID     string
@@ -143,14 +160,16 @@ func NewSession(ctx context.Context, info *ExecutionInfo, app *App, asyncMode bo
 		AsyncMode:    asyncMode,
 	}
 	// set self engine endpoint work in current session
-	session.SaveEndpoint(session.PartyMgr.GetSelfInfo().Code, session.PartyMgr.GetSelfInfo().GetEndpoint())
+	session.SaveEndpoint(session.GetSelfPartyCode(), session.GetOneSelfEngineUriForPeer())
 	session.ExecuteInfo.InterStub = app.InterStub
 	session.GetSessionVars().StmtCtx = &stmtctx.StatementContext{}
 	// use project id as default db name
 	session.GetSessionVars().CurrentDB = info.ProjectID
 
 	txn := session.MetaMgr.CreateMetaTransaction()
-	defer txn.Finish(err)
+	defer func() {
+		txn.Finish(err)
+	}()
 	project, err := txn.GetProject(info.ProjectID)
 	if err != nil {
 		return nil, fmt.Errorf("NewSession: project %v not exists", project.ID)
@@ -180,7 +199,7 @@ func (s *Session) Value(key fmt.Stringer) interface{} {
 }
 
 func (s *Session) GetSelfChecksum() (Checksum, error) {
-	selfCode := s.PartyMgr.GetSelfInfo().Code
+	selfCode := s.GetSelfPartyCode()
 	return s.ExecuteInfo.Checksums.GetLocal(selfCode)
 }
 
@@ -218,7 +237,7 @@ func (s *Session) SaveEndpoint(partyCode, endpoint string) {
 }
 
 func (s *Session) IsIssuer() bool {
-	if s.ExecuteInfo.Issuer.Code == s.PartyMgr.GetSelfInfo().Code {
+	if s.ExecuteInfo.Issuer.Code == s.GetSelfPartyCode() {
 		return true
 	}
 	return false

@@ -23,7 +23,7 @@ configure_make(
     name = "ncurses",
     configure_command = "configure",
     configure_options = [
-        "--prefix ${INSTALLDIR}",
+        "--prefix $$INSTALLDIR",
         "--without-debug",
         "--without-ada",
         "--enable-overwrite",

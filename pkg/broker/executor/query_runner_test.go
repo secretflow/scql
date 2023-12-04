@@ -30,7 +30,9 @@ import (
 	"github.com/secretflow/scql/pkg/broker/application"
 	"github.com/secretflow/scql/pkg/broker/config"
 	"github.com/secretflow/scql/pkg/broker/partymgr"
+	"github.com/secretflow/scql/pkg/broker/services/common"
 	"github.com/secretflow/scql/pkg/broker/storage"
+	"github.com/secretflow/scql/pkg/broker/testdata"
 	"github.com/secretflow/scql/pkg/planner/core"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 )
@@ -54,6 +56,8 @@ func TestQueryRunner(t *testing.T) {
 	r.NoError(err)
 	meta := storage.NewMetaManager(db)
 	err = meta.Bootstrap()
+	r.NoError(err)
+	err = testdata.CreateTestPemFiles("../testdata")
 	r.NoError(err)
 	transaction := meta.CreateMetaTransaction()
 	projectID1 := "p1"
@@ -93,19 +97,25 @@ func TestQueryRunner(t *testing.T) {
 	// grant
 	c1Identifier := storage.ColumnIdentifier{ProjectID: t1Identifier.ProjectID, TableName: t1Identifier.TableName, ColumnName: "id"}
 	c2Identifier := storage.ColumnIdentifier{ProjectID: t2Identifier.ProjectID, TableName: t2Identifier.TableName, ColumnName: "id"}
-	privs := []storage.ColumnPriv{
+	privsAlice := []storage.ColumnPriv{
 		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c1Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: c1Identifier.ColumnName, DestParty: alice}, Priv: "plaintext"},
-		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c1Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: c1Identifier.ColumnName, DestParty: bob}, Priv: "plaintext"},
+		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c1Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: c1Identifier.ColumnName, DestParty: bob}, Priv: "plaintext"}}
+	privsBob := []storage.ColumnPriv{
 		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: alice}, Priv: "plaintext"},
 		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: bob}, Priv: "plaintext"},
 	}
-	err = transaction.GrantColumnConstraints(privs)
+	// add bob to project before granting ccl
+	err = transaction.AddProjectMember(t1Identifier.ProjectID, bob)
+	r.NoError(err)
+	err = common.GrantColumnConstraintsWithCheck(transaction, t1Identifier.ProjectID, alice, privsAlice)
+	r.NoError(err)
+	err = common.GrantColumnConstraintsWithCheck(transaction, t2Identifier.ProjectID, bob, privsBob)
 	r.NoError(err)
 	// mock config
 	cfg, err := config.NewConfig("../testdata/config_test.yml")
 	r.NoError(err)
 	// mock party meta
-	partyMgr, err := partymgr.NewFilePartyMgr("../testdata/party_info_test.json", cfg.PartyCode, cfg.Engines)
+	partyMgr, err := partymgr.NewFilePartyMgr("../testdata/party_info_test.json", cfg.PartyCode)
 	r.NoError(err)
 	app, err := application.NewApp(partyMgr, meta, cfg)
 	r.NoError(err)

@@ -52,9 +52,9 @@ Create a file called ``gflags.conf`` in your workspace and paste the following c
 
     --listen_port=8080
     --datasource_router=embed
-    --enable_scdb_authorization=false
+    --enable_driver_authorization=false
     --server_enable_ssl=false
-    --scdb_enable_ssl_as_client=false
+    --driver_enable_ssl_as_client=false
     --peer_engine_enable_ssl_as_client=false
     --embed_router_conf={"datasources":[{"id":"ds001","name":"mysql db","kind":"MYSQL","connection_str":"db=alice;user=root;password=__MYSQL_ROOT_PASSWORD__;host=mysql;auto-reconnect=true"}],"rules":[{"db":"*","table":"*","datasource_id":"ds001"}]}
     # party authentication flags
@@ -205,8 +205,8 @@ Create a file called ``config.yml`` in your workspace and paste the following co
   port: 8080
   protocol: http
   query_result_callback_timeout: 3m
-  session_expire_time: 3m
-  session_expire_check_time: 100ms
+  session_expire_time: 24h
+  session_expire_check_time: 1m
   log_level: debug
   storage:
     type: mysql

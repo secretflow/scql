@@ -1,10 +1,18 @@
-P2P Quickstart Tutorial
-=======================
+Quickstart Tutorial
+===================
 
-TL;DR
------
+In this tutorial, you will deploy the SCQL system on a single machine, then simulate the project settings for joint data analysis between two parties, and finally initiate a joint analysis query.
 
-Use ``docker-compose`` to deploy a standalone SCQL in P2P model, then use brokerctl to query
+
+Deployment Architecture Description
+-----------------------------------
+
+SCQL supports two deployment architectures: centralized and P2P.
+
+* Centralized: The centralized deployment architecture relies on a trusted third party to deploy the coordination service SCDB. Each data participant only needs to deploy a computing engine named SCQLEngine.
+* P2P: The P2P deployment architecture does not require a trusted third party. Each data participant needs to deploy an SCQLEngine and an SCQLBroker service.
+
+This tutorial uses the P2P deployment architecture. If you would like to experience the centralized deployment architecture, you can go :doc:`here </intro/tutorial>`.
 
 
 Prerequisites
@@ -50,7 +58,7 @@ You could start SCQL service via `docker-compose <https://github.com/secretflow/
     To demonstrate SCQL, we conducted the following simplified operations:
 
     1. The SCQLBrokers and SCQLEngines use the same database server but are separated by distinct database names.
-    2. The SCQLBrokers are served through the HTTP protocol. However, for production environments, it is recommended to use HTTPS instead. Please check :ref:`TLS Configuration <scdb-tls>` for details.
+    2. The SCQLBrokers are served through the HTTP protocol. However, for production environments, it is recommended to use HTTPS instead. Please check :ref:`TLS Configuration <broker-tls>` for details.
     3. The brokerctl can send requests to both SCQLBrokers, but in production environments, the SCQLBroker should use the local port and only listen to local requests for security.
 
 

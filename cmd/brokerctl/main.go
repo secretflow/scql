@@ -16,6 +16,9 @@ package main
 
 import "github.com/secretflow/scql/cmd/brokerctl/cmd"
 
+var version = "scql version"
+
 func main() {
+	cmd.SetVersion(version)
 	cmd.Execute()
 }

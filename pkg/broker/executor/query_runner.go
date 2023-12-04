@@ -116,7 +116,7 @@ func (r *QueryRunner) CreateChecksum() (map[string]application.Checksum, error) 
 
 func (r *QueryRunner) ExchangeJobInfo(targetParty string) (*pb.ExchangeJobInfoResponse, error) {
 	executionInfo := r.session.ExecuteInfo
-	selfCode := r.session.PartyMgr.GetSelfInfo().Code
+	selfCode := r.session.GetSelfPartyCode()
 
 	req := &pb.ExchangeJobInfoRequest{
 		ProjectId: executionInfo.ProjectID,
@@ -388,7 +388,7 @@ func (r *QueryRunner) CreateExecutor(plan *pb.CompiledPlan) (*executor.Executor,
 
 	myself := &translator.Participant{
 		PartyCode: session.Conf.PartyCode,
-		Endpoints: session.PartyMgr.GetSelfInfo().Endpoints,
+		Endpoints: []string{session.GetOneSelfEngineUriForSelf()},
 		PubKey:    myPubKey,
 	}
 
@@ -419,7 +419,7 @@ func (r *QueryRunner) CreateExecutor(plan *pb.CompiledPlan) (*executor.Executor,
 func (r *QueryRunner) Execute(usedTables []core.DbTable) error {
 	s := r.session
 	executionInfo := s.ExecuteInfo
-	selfCode := s.PartyMgr.GetSelfInfo().Code
+	selfCode := s.GetSelfPartyCode()
 	if r.prepareAgain {
 		logrus.Infof("ask info has been triggered, get data from storage again")
 		_, _, err := r.Prepare(usedTables)

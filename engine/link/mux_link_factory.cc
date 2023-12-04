@@ -29,9 +29,18 @@ namespace scql::engine {
 #define THROW_IF_RPC_NOT_OK(cntl, response, request_info)                     \
   do {                                                                        \
     if ((cntl).Failed()) {                                                    \
-      YACL_THROW_NETWORK_ERROR("send failed: {}, rpc failed={}, message={}.", \
-                               request_info, (cntl).ErrorCode(),              \
-                               (cntl).ErrorText());                           \
+      if ((cntl).ErrorCode() == brpc::EHTTP) {                                \
+        std::string error_info = fmt::format(                                 \
+            "send failed: {}, http code={}, message={}.", request_info,       \
+            static_cast<int>((cntl).http_response().status_code()),           \
+            (cntl).ErrorText());                                              \
+        YACL_THROW_LINK_ERROR(0, (cntl).http_response().status_code(),        \
+                              error_info);                                    \
+      }                                                                       \
+      YACL_THROW_LINK_ERROR((cntl).ErrorCode(), 0,                            \
+                            "send failed: {}, rpc failed={}, message={}.",    \
+                            request_info, (cntl).ErrorCode(),                 \
+                            (cntl).ErrorText());                              \
     } else if ((response).error_code() != link::pb::ErrorCode::SUCCESS) {     \
       std::string error_info = fmt::format(                                   \
           "send failed: {}, peer failed code={}, message={}.", request_info,  \
@@ -64,8 +73,9 @@ std::shared_ptr<yacl::link::Context> MuxLinkFactory::CreateContext(
     YACL_ENFORCE(rpc_channel, "create rpc channel failed for rank={}", rank);
     auto link = std::make_shared<MuxLink>(
         self_rank, rank, desc.http_max_payload_size, desc.id, rpc_channel);
-    auto link_channel =
-        std::make_shared<yacl::link::transport::Channel>(link, false);
+
+    auto link_channel = std::make_shared<yacl::link::transport::Channel>(
+        link, desc.recv_timeout_ms, false, desc.retry_opts);
     channels[rank] = link_channel;
     if (rank == self_rank) {
       continue;
@@ -79,14 +89,14 @@ std::shared_ptr<yacl::link::Context> MuxLinkFactory::CreateContext(
   return ctx;
 }
 
-size_t MuxLink::GetMaxBytesPerChunk() { return http_max_payload_size_; }
+size_t MuxLink::GetMaxBytesPerChunk() const { return http_max_payload_size_; }
 
 void MuxLink::SetMaxBytesPerChunk(size_t bytes) {
   http_max_payload_size_ = bytes;
 }
 
 std::unique_ptr<::google::protobuf::Message> MuxLink::PackMonoRequest(
-    const std::string& key, yacl::ByteContainerView value) {
+    const std::string& key, yacl::ByteContainerView value) const {
   auto request = std::make_unique<link::pb::MuxPushRequest>();
   {
     request->set_link_id(link_id_);
@@ -101,7 +111,7 @@ std::unique_ptr<::google::protobuf::Message> MuxLink::PackMonoRequest(
 
 std::unique_ptr<::google::protobuf::Message> MuxLink::PackChunkedRequest(
     const std::string& key, yacl::ByteContainerView value, size_t offset,
-    size_t total_length) {
+    size_t total_length) const {
   auto request = std::make_unique<link::pb::MuxPushRequest>();
   {
     request->set_link_id(link_id_);
@@ -118,7 +128,7 @@ std::unique_ptr<::google::protobuf::Message> MuxLink::PackChunkedRequest(
 
 void MuxLink::UnpackMonoRequest(const ::google::protobuf::Message& request,
                                 std::string* key,
-                                yacl::ByteContainerView* value) {
+                                yacl::ByteContainerView* value) const {
   auto real_request = static_cast<const link::pb::MuxPushRequest*>(&request);
   *key = real_request->msg().key();
   *value = real_request->msg().value();
@@ -127,7 +137,7 @@ void MuxLink::UnpackMonoRequest(const ::google::protobuf::Message& request,
 void MuxLink::UnpackChunckRequest(const ::google::protobuf::Message& request,
                                   std::string* key,
                                   yacl::ByteContainerView* value,
-                                  size_t* offset, size_t* total_length) {
+                                  size_t* offset, size_t* total_length) const {
   auto real_request = static_cast<const link::pb::MuxPushRequest*>(&request);
   *key = real_request->msg().key();
   *value = real_request->msg().value();
@@ -136,14 +146,14 @@ void MuxLink::UnpackChunckRequest(const ::google::protobuf::Message& request,
 }
 
 void MuxLink::FillResponseOk(const ::google::protobuf::Message& request,
-                             ::google::protobuf::Message* response) {
+                             ::google::protobuf::Message* response) const {
   auto real_response = static_cast<link::pb::MuxPushResponse*>(response);
   real_response->set_error_code(link::pb::ErrorCode::SUCCESS);
   real_response->set_error_msg("");
 }
 
 void MuxLink::FillResponseError(const ::google::protobuf::Message& request,
-                                ::google::protobuf::Message* response) {
+                                ::google::protobuf::Message* response) const {
   auto real_response = static_cast<link::pb::MuxPushResponse*>(response);
   auto real_request = static_cast<const link::pb::MuxPushRequest*>(&request);
 
@@ -154,18 +164,19 @@ void MuxLink::FillResponseError(const ::google::protobuf::Message& request,
                   real_request->msg().sender_rank()));
 }
 
-bool MuxLink::IsChunkedRequest(const ::google::protobuf::Message& request) {
+bool MuxLink::IsChunkedRequest(
+    const ::google::protobuf::Message& request) const {
   auto real_request = static_cast<const link::pb::MuxPushRequest*>(&request);
   return real_request->msg().trans_type() == link::pb::TransType::CHUNKED;
 }
 
-bool MuxLink::IsMonoRequest(const ::google::protobuf::Message& request) {
+bool MuxLink::IsMonoRequest(const ::google::protobuf::Message& request) const {
   auto real_request = static_cast<const link::pb::MuxPushRequest*>(&request);
   return real_request->msg().trans_type() == link::pb::TransType::MONO;
 }
 
 void MuxLink::SendRequest(const ::google::protobuf::Message& request,
-                          uint32_t timeout) {
+                          uint32_t timeout) const {
   link::pb::MuxPushResponse response;
   brpc::Controller cntl;
   if (timeout != 0) {

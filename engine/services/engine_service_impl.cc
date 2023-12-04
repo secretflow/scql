@@ -66,13 +66,13 @@ EngineServiceImpl::EngineServiceImpl(
       authenticator_(std::move(authenticator)) {
   if (options.enable_authorization && options.credential.empty()) {
     YACL_THROW(
-        "credential is empty, you should provide credential for scdb "
+        "credential is empty, you should provide credential for driver "
         "authorization");
   }
   op::RegisterAllOps();
 }
 
-bool EngineServiceImpl::CheckSCDBCredential(
+bool EngineServiceImpl::CheckDriverCredential(
     const brpc::HttpHeader& http_header) {
   if (!service_options_.enable_authorization) {
     return true;
@@ -84,7 +84,7 @@ bool EngineServiceImpl::CheckSCDBCredential(
   }
 
   if (*credential != service_options_.credential) {
-    SPDLOG_ERROR("scdb authorization failed, unknown scdb credential");
+    SPDLOG_ERROR("driver authorization failed, unknown driver credential");
     return false;
   }
   return true;
@@ -100,8 +100,8 @@ void EngineServiceImpl::StopSession(::google::protobuf::RpcController* cntl,
   std::string source_ip =
       butil::endpoint2str(controller->remote_side()).c_str();
   auto session_id = request->session_id();
-  if (!CheckSCDBCredential(controller->http_request())) {
-    std::string err_msg = "scdb authentication failed";
+  if (!CheckDriverCredential(controller->http_request())) {
+    std::string err_msg = "driver authentication failed";
     LOG_ERROR_AND_SET_STATUS(status, pb::Code::UNAUTHENTICATED, err_msg);
     audit::RecordUncategorizedEvent(*status, session_id, source_ip,
                                     "StopSession");
@@ -141,8 +141,8 @@ void EngineServiceImpl::RunExecutionPlan(
   auto controller = static_cast<brpc::Controller*>(cntl);
   std::string source_ip =
       butil::endpoint2str(controller->remote_side()).c_str();
-  if (!CheckSCDBCredential(controller->http_request())) {
-    std::string err_msg = "scdb authentication failed";
+  if (!CheckDriverCredential(controller->http_request())) {
+    std::string err_msg = "driver authentication failed";
     LOG_ERROR_AND_SET_STATUS(response->mutable_status(),
                              pb::Code::UNAUTHENTICATED, err_msg);
     audit::RecordUncategorizedEvent(response->status(),
@@ -211,10 +211,10 @@ void EngineServiceImpl::ReportResult(const std::string& session_id,
                                      const std::string& cb_url,
                                      const std::string& report_info_str) {
   try {
-    auto rpc_channel = channel_manager_->Create(cb_url, RemoteRole::Scdb);
+    auto rpc_channel = channel_manager_->Create(cb_url, RemoteRole::Driver);
     if (!rpc_channel) {
       SPDLOG_WARN(
-          "create rpc channel failed for scdb: session_id={}, "
+          "create rpc channel failed for driver: session_id={}, "
           "callback_url={}",
           session_id, cb_url);
       return;
@@ -231,7 +231,7 @@ void EngineServiceImpl::ReportResult(const std::string& session_id,
     cntl.http_request().set_content_type("application/json");
     cntl.request_attachment().append(report_info_str);
 
-    SPDLOG_INFO("session({}) send rpc request to scdb, callback_url={}",
+    SPDLOG_INFO("session({}) send rpc request to driver, callback_url={}",
                 session_id, cb_url);
     // Because `done'(last parameter) is NULL, this function waits until
     // the response comes back or error occurs(including timeout).
@@ -326,9 +326,15 @@ void EngineServiceImpl::RunPlanSync(const pb::RunExecutionPlanRequest* request,
     YACL_ENFORCE(session_mgr_->SetSessionState(session_id, SessionState::IDLE,
                                                SessionState::RUNNING));
     RunPlanCore(*request, session, response);
-    YACL_ENFORCE(session_mgr_->SetSessionState(
-        session_id, SessionState::RUNNING, SessionState::IDLE));
   } catch (const std::exception& e) {
+    if (!session_mgr_->SetSessionState(session_id, SessionState::RUNNING,
+                                       SessionState::IDLE)) {
+      SPDLOG_WARN(
+          "RunExecutionPlan set session to idle failed when exception throw");
+    }  // else wait WatchSessionTimeoutThread or StopSession to remove
+       // session, because it requires the cooperation of all participating
+       // engines
+
     std::string err_msg = fmt::format(
         "RunExecutionPlan run jobs({}) failed, catch std::exception={} ",
         session_id, e.what());
@@ -340,6 +346,8 @@ void EngineServiceImpl::RunPlanSync(const pb::RunExecutionPlanRequest* request,
 
   // 2. remove session.
   try {
+    YACL_ENFORCE(session_mgr_->SetSessionState(
+        session_id, SessionState::RUNNING, SessionState::IDLE));
     session_mgr_->RemoveSession(session_id);
   } catch (const std::exception& e) {
     std::string err_msg = fmt::format(

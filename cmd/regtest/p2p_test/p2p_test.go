@@ -16,6 +16,7 @@ package p2p_test
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
 	"strings"
@@ -23,6 +24,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
 
 	"github.com/secretflow/scql/cmd/regtest"
 	"github.com/secretflow/scql/pkg/broker/application"
@@ -33,15 +35,7 @@ import (
 )
 
 const (
-	SkipCreate           = "SKIP_CREATE_TABLE_CCL"
-	MySQLPort            = "MYSQL_PORT"
-	BrokerPorts          = "BROKER_PORTS"
-	HttpProtocol         = "HTTP_PROTOCOL"
-	MySQLConnStr         = "MYSQL_CONN_STR"
-	SkipConcurrent       = "SKIP_CONCURRENT_TEST"
-	SkipPlaintextCCLTest = "SKIP_PLAINTEXT_CCL_TEST"
-	Deliminator          = ","
-	ProjectConf          = "PROJECT_CONF"
+	Deliminator = ","
 )
 
 const (
@@ -58,7 +52,6 @@ const (
 
 var (
 	testDataSource regtest.TestDataSource
-	skipCreateFlag bool
 
 	// addresses
 	aliceStub *brokerutil.Command
@@ -71,16 +64,47 @@ var (
 	dbs    = []string{"brokera", "brokerb", "brokerc"}
 )
 
+type testConfig struct {
+	SkipCreateTableCCL   bool   `yaml:"skip_create_table_ccl"`
+	SkipConcurrentTest   bool   `yaml:"skip_concurrent_test"`
+	SkipPlaintextCCLTest bool   `yaml:"skip_plaintext_ccl_test"`
+	ProjectConf          string `yaml:"project_conf"`
+	HttpProtocol         string `yaml:"http_protocol"`
+	BrokerPorts          string `yaml:"broker_ports"`
+	MySQLConnStr         string `yaml:"mysql_conn_str"`
+}
+
+var (
+	testConf *testConfig
+)
+
 type testFlag struct {
 	sync           bool
 	testConcurrent bool
 	testSerial     bool
 }
 
-func getUrlList() error {
-	portStr := os.Getenv(BrokerPorts)
+func readConf(path string) (*testConfig, error) {
+	if len(path) == 0 {
+		return nil, fmt.Errorf("failed due to no conf file for p2p regtest")
+	}
+
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read test conf file %s: %v", path, err)
+	}
+
+	conf := &testConfig{}
+	if err := yaml.Unmarshal(content, conf); err != nil {
+		return nil, fmt.Errorf("failed to parse test conf: %v", err)
+	}
+	return conf, nil
+}
+
+func getUrlList(conf *testConfig) error {
+	portStr := conf.BrokerPorts
 	ports := strings.Split(portStr, Deliminator)
-	httpProtocol := os.Getenv(HttpProtocol)
+	httpProtocol := conf.HttpProtocol
 	var hostProtocol string
 	if httpProtocol == "https" {
 		hostProtocol = "https"
@@ -103,39 +127,30 @@ func getUrlList() error {
 	return nil
 }
 
-func getProjectConf() (string, error) {
-	pc := os.Getenv(ProjectConf)
-	if pc == "" {
-		return "", fmt.Errorf("failed to get protocol config")
-	}
-	return pc, nil
-}
-
 func TestMain(m *testing.M) {
-	if os.Getenv(BrokerPorts) == "" {
+	confFile := flag.String("conf", "", "/path/to/conf")
+	flag.Parse()
+	var err error
+	testConf, err = readConf(*confFile)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
+	}
+
+	if len(testConf.BrokerPorts) == 0 {
 		fmt.Println("Skipping testing due to empty BrokerPorts")
 		return
 	}
 
-	skipCreateFlag = false
-	if os.Getenv(SkipCreate) == "true" {
-		skipCreateFlag = true
-	}
-
-	mysqlConnStr := os.Getenv(MySQLConnStr)
-	if mysqlConnStr == "" {
-		mysqlConnStr = fmt.Sprintf("root:testpass@tcp(localhost:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true", os.Getenv(MySQLPort), alice)
-	}
-
 	mysqlConf := &config.StorageConf{
-		ConnStr:         mysqlConnStr,
+		ConnStr:         testConf.MySQLConnStr,
 		MaxOpenConns:    100,
 		MaxIdleConns:    10,
 		ConnMaxIdleTime: 120,
 		ConnMaxLifetime: 3000,
 	}
 	if err := testDataSource.ConnDB(mysqlConf); err != nil {
-		fmt.Printf("connect mysql(%s) failed\n", mysqlConnStr)
+		fmt.Printf("connect mysql(%s) failed\n", testConf.MySQLConnStr)
 		panic(err)
 	}
 	os.Exit(m.Run())
@@ -145,36 +160,28 @@ func TestRunQueryWithNormalCCL(t *testing.T) {
 	r := require.New(t)
 	err := clearData()
 	r.NoError(err)
-	err = getUrlList()
-	r.NoError(err)
-	projectConf, err := getProjectConf()
+	err = getUrlList(testConf)
 	r.NoError(err)
 	mockTables, err := mock.MockAllTables()
 	r.NoError(err)
 	regtest.FillTableToPartyCodeMap(mockTables)
-	skipConcurrent := false
-	if os.Getenv(SkipConcurrent) == "true" {
-		skipConcurrent = true
-	}
 	cclList, err := mock.MockAllCCL()
 	r.NoError(err)
-	r.NoError(createProjectTableAndCcl(projectConf, cclList, skipCreateFlag))
-	r.NoError(runQueryTest(alice, testFlag{sync: false, testConcurrent: !skipConcurrent, testSerial: true}))
-	r.NoError(runQueryTest(alice, testFlag{sync: true, testConcurrent: !skipConcurrent, testSerial: true}))
+	r.NoError(createProjectTableAndCcl(testConf.ProjectConf, cclList, testConf.SkipCreateTableCCL))
+	r.NoError(runQueryTest(alice, testFlag{sync: false, testConcurrent: !testConf.SkipConcurrentTest, testSerial: true}))
+	r.NoError(runQueryTest(alice, testFlag{sync: true, testConcurrent: !testConf.SkipConcurrentTest, testSerial: true}))
 }
 
 func TestConcurrentModifyProject(t *testing.T) {
 	r := require.New(t)
 	err := clearData()
 	r.NoError(err)
-	err = getUrlList()
-	r.NoError(err)
-	projectConf, err := getProjectConf()
+	err = getUrlList(testConf)
 	r.NoError(err)
 	mockTables, err := mock.MockAllTables()
 	r.NoError(err)
 	regtest.FillTableToPartyCodeMap(mockTables)
-	if os.Getenv(SkipConcurrent) == "true" {
+	if testConf.SkipConcurrentTest {
 		return
 	}
 	cclList, err := mock.MockAllCCL()
@@ -193,7 +200,7 @@ func TestConcurrentModifyProject(t *testing.T) {
 		for _, id := range projectIDs {
 			inChan <- 0
 			go func(id string) {
-				err := concurrentModifyProjectTableAndCcl(id, projectConf, cclList)
+				err := concurrentModifyProjectTableAndCcl(id, testConf.ProjectConf, cclList)
 				outCh <- err
 				<-inChan
 			}(id)
@@ -421,6 +428,12 @@ func concurrentModifyProjectTableAndCcl(projectID, projectConf string, cclList [
 			return err
 		}
 	}
+	if err = checkProjectMemberNum(bobStub, projectID, 3); err != nil {
+		return err
+	}
+	if err = checkProjectMemberNum(carolStub, projectID, 3); err != nil {
+		return err
+	}
 	physicalTableMetas, err := mock.MockPhysicalTableMetas()
 	if err != nil {
 		return err
@@ -488,6 +501,25 @@ func concurrentModifyProjectTableAndCcl(projectID, projectConf string, cclList [
 	}
 	fmt.Println()
 	return nil
+}
+
+func checkProjectMemberNum(stub *brokerutil.Command, projectID string, expectNum int) error {
+	for i := 0; i < 3; i++ {
+		projectResponse, err := stub.GetProject(projectID)
+		if err != nil {
+			return err
+		}
+		if len(projectResponse.Projects) != 1 {
+			return fmt.Errorf("expect only one project, but got %+v", projectResponse.Projects)
+		}
+		projDesc := projectResponse.Projects[0]
+		if len(projDesc.Members) == expectNum {
+			return nil
+		}
+		fmt.Printf("expect project member num %d, but got %d\n", expectNum, len(projDesc.Members))
+		time.Sleep(time.Second)
+	}
+	return fmt.Errorf("fail to check project member")
 }
 
 func processInvitation(stub *brokerutil.Command, projectID string) error {
