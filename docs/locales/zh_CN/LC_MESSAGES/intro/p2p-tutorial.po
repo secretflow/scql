@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-11-16 10:08+0800\n"
+"POT-Creation-Date: 2023-12-04 16:14+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,117 +18,149 @@ msgstr ""
 "Generated-By: Babel 2.12.1\n"
 
 #: ../../intro/p2p-tutorial.rst:2
-msgid "P2P Quickstart Tutorial"
-msgstr "P2P 快速开始"
+msgid "Quickstart Tutorial"
+msgstr "快速开始"
 
-#: ../../intro/p2p-tutorial.rst:5
-msgid "TL;DR"
-msgstr "摘要"
-
-#: ../../intro/p2p-tutorial.rst:7
+#: ../../intro/p2p-tutorial.rst:4
 msgid ""
-"Use ``docker-compose`` to deploy a standalone SCQL in P2P model, then use"
-" brokerctl to query"
-msgstr "使用 ``docker-compose`` 来部署一个独立的 P2P 模式 SCQL，然后使用 brokerctl 来配置及查询"
+"In this tutorial, you will deploy the SCQL system on a single machine, "
+"then simulate the project settings for joint data analysis between two "
+"parties, and finally initiate a joint analysis query."
+msgstr "在本教程中，您将在单机上部署 SCQL 系统，然后模拟两方联合数据分析场景，对项目设置并发起联合分析查询。"
 
-#: ../../intro/p2p-tutorial.rst:11
+#: ../../intro/p2p-tutorial.rst:8
+msgid "Deployment Architecture Description"
+msgstr "部署架构说明"
+
+#: ../../intro/p2p-tutorial.rst:10
+msgid "SCQL supports two deployment architectures: centralized and P2P."
+msgstr "SCQL 支持两种部署架构：中心化和 P2P 。"
+
+#: ../../intro/p2p-tutorial.rst:12
+msgid ""
+"Centralized: The centralized deployment architecture relies on a trusted "
+"third party to deploy the coordination service SCDB. Each data "
+"participant only needs to deploy a computing engine named SCQLEngine."
+msgstr "中心化：中心化部署架构依靠可信第三方部署协调服务 SCDB，每个数据参与方只需要部署一个 SCQLEngine 计算引擎。"
+
+#: ../../intro/p2p-tutorial.rst:13
+msgid ""
+"P2P: The P2P deployment architecture does not require a trusted third "
+"party. Each data participant needs to deploy an SCQLEngine and an "
+"SCQLBroker service."
+msgstr "P2P ： P2P 部署架构不需要可信第三方。每个数据参与方都需要部署一个 SCQLEngine 和 SCQLBroker 。"
+
+#: ../../intro/p2p-tutorial.rst:15
+msgid ""
+"This tutorial uses the P2P deployment architecture. If you would like to "
+"experience the centralized deployment architecture, you can go :doc:`here"
+" </intro/tutorial>`."
+msgstr "本教程采用 P2P 部署架构。 如果您想体验中心化部署架构，可以参考 :doc: `这里 </intro/tutorial>`"
+
+#: ../../intro/p2p-tutorial.rst:19
 msgid "Prerequisites"
 msgstr "先决条件"
 
-#: ../../intro/p2p-tutorial.rst:15
+#: ../../intro/p2p-tutorial.rst:23
 msgid "Build brokerctl"
 msgstr "构建 brokerctl"
 
-#: ../../intro/p2p-tutorial.rst:17
+#: ../../intro/p2p-tutorial.rst:25
 msgid ""
 "``brokerctl`` is a command-line tool for SCQLBroker, we would use it to "
 "configure project and submit queries to the SCQLBrokers."
 msgstr "``brokerctl`` 是面向 SCQLBroker 的命令行工具，我们将使用它来配置项目并向 SCQLBroker 提交查询。"
 
-#: ../../intro/p2p-tutorial.rst:31
+#: ../../intro/p2p-tutorial.rst:39
 msgid "Generate PrivateKey and Exchange PublicKey"
 msgstr "生成私钥并交换公钥"
 
-#: ../../intro/p2p-tutorial.rst:38
+#: ../../intro/p2p-tutorial.rst:46
 msgid ""
 "The setup.sh script will generate private key for each party, and "
 "exchange public key with peers."
 msgstr "setup.sh 脚本将为各参与方生成私钥，并与其它参与方互相交换公钥。"
 
-#: ../../intro/p2p-tutorial.rst:41
+#: ../../intro/p2p-tutorial.rst:49
 msgid "Start SCQL Service"
 msgstr "启动"
 
-#: ../../intro/p2p-tutorial.rst:43
+#: ../../intro/p2p-tutorial.rst:51
 msgid ""
 "You could start SCQL service via `docker-compose "
 "<https://github.com/secretflow/scql/tree/main/examples/p2p-tutorial>`_, "
 "it would deploy and start services as shown in the following figure, it "
 "contains two SCQLBrokers and SCQLEngines for party ``alice``, ``bob``."
-msgstr "你可以通过 `docker-compose "
+msgstr ""
+"你可以通过 `docker-compose "
 "<https://github.com/secretflow/scql/tree/main/examples/docker-compose>`_ "
-"来启动 SCQL 服务 ，它将部署和启动服务，如下图所示，它包含两个参与方 ``alice`` 和 "
-"``bob`` 的 SCQLBroker 和 SCQLEngine 。"
+"来启动 SCQL 服务 ，它将部署和启动服务，如下图所示，它包含两个参与方 ``alice`` 和 ``bob`` 的 SCQLBroker 和 "
+"SCQLEngine 。"
 
 #: ../../intro/p2p-tutorial.rst:-1
 msgid "docker-compose deployment for quickstart example"
 msgstr "快速开始对应的 docker-compose 部署示例"
 
-#: ../../intro/p2p-tutorial.rst:50
+#: ../../intro/p2p-tutorial.rst:58
 msgid "To demonstrate SCQL, we conducted the following simplified operations:"
 msgstr "为了演示 SCQL，我们进行了以下简化操作："
 
-#: ../../intro/p2p-tutorial.rst:52
+#: ../../intro/p2p-tutorial.rst:60
 msgid ""
 "The SCQLBrokers and SCQLEngines use the same database server but are "
 "separated by distinct database names."
 msgstr "SCQLBrokers 和 SCQLEngines 使用同一个数据库服务器，但是使用不同的数据库名称进行区分。"
 
-#: ../../intro/p2p-tutorial.rst:53
+#: ../../intro/p2p-tutorial.rst:61
 msgid ""
 "The SCQLBrokers are served through the HTTP protocol. However, for "
 "production environments, it is recommended to use HTTPS instead. Please "
-"check :ref:`TLS Configuration <scdb-tls>` for details."
+"check :ref:`TLS Configuration <broker-tls>` for details."
 msgstr ""
 "SCQLBrokers 是通过 HTTP 协议提供服务的。然而，对于生产环境，建议使用 HTTPS 协议来代替。请查看 :ref:`TLS 配置 "
-"<scdb-tls>` 以了解详情。"
+"<broker-tls>` 以了解详情。"
 
-#: ../../intro/p2p-tutorial.rst:54
+#: ../../intro/p2p-tutorial.rst:62
 msgid ""
 "The brokerctl can send requests to both SCQLBrokers, but in production "
 "environments, the SCQLBroker should use the local port and only listen to"
 " local requests for security."
-msgstr "演示环境中 brokerctl 可以向两个 SCQLBrokers 发送请求，但在生产环境中，SCQLBroker 应使用本地端口，并且仅监听本地请求以确保安全。"
+msgstr ""
+"演示环境中 brokerctl 可以向两个 SCQLBrokers 发送请求，但在生产环境中，SCQLBroker "
+"应使用本地端口，并且仅监听本地请求以确保安全。"
 
-#: ../../intro/p2p-tutorial.rst:63
+#: ../../intro/p2p-tutorial.rst:71
 msgid ""
 "SCQLBroker for alice is listening on ``http://localhost:8081`` while bob "
 "is on ``http://localhost:8082`` you could send requests to them via "
 "brokerctl."
-msgstr "alice 的 SCQLBroker 监听 ``http://localhost:8081``，而 bob 则监听 ``http://localhost:8082``，您可以通过 brokerctl 向他们发送请求。"
+msgstr ""
+"alice 的 SCQLBroker 监听 ``http://localhost:8081``，而 bob 则监听 "
+"``http://localhost:8082``，您可以通过 brokerctl 向他们发送请求。"
 
-#: ../../intro/p2p-tutorial.rst:66
+#: ../../intro/p2p-tutorial.rst:74
 msgid ""
 "Please checkout `examples/p2p-tutorial/README.md "
 "<https://github.com/secretflow/scql/tree/main/examples/p2p-"
 "tutorial/README.md>`_ troubleshooting section for help if you encounter "
 "any problems."
-msgstr "如果你遇到任何问题，请查看 `examples/p2p-tutorial/README.md "
-"<https://github.com/secretflow/scql/tree/main/examples/p2p-tutorial/README.md>`_ 故障排除部分以获得帮助。"
+msgstr ""
+"如果你遇到任何问题，请查看 `examples/p2p-tutorial/README.md "
+"<https://github.com/secretflow/scql/tree/main/examples/p2p-"
+"tutorial/README.md>`_ 故障排除部分以获得帮助。"
 
-#: ../../intro/p2p-tutorial.rst:71
+#: ../../intro/p2p-tutorial.rst:79
 msgid "Create project, invite party to join"
 msgstr "创建项目，并邀请参与方加入"
 
-#: ../../intro/p2p-tutorial.rst:120
+#: ../../intro/p2p-tutorial.rst:128
 msgid "Create tables"
 msgstr "创建数据表"
 
-#: ../../intro/p2p-tutorial.rst:157
+#: ../../intro/p2p-tutorial.rst:165
 msgid "Grant CCL"
 msgstr "授权 CCL"
 
-#: ../../intro/p2p-tutorial.rst:212
+#: ../../intro/p2p-tutorial.rst:220
 msgid "Do query"
 msgstr "查询"
-
