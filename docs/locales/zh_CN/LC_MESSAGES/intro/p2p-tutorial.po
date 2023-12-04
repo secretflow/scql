@@ -55,7 +55,7 @@ msgid ""
 "This tutorial uses the P2P deployment architecture. If you would like to "
 "experience the centralized deployment architecture, you can go :doc:`here"
 " </intro/tutorial>`."
-msgstr "本教程采用 P2P 部署架构。 如果您想体验中心化部署架构，可以参考 :doc: `这里 </intro/tutorial>`"
+msgstr "本教程采用 P2P 部署架构。 如果您想体验中心化部署架构，可以参考 :doc:`这里 </intro/tutorial>`"
 
 #: ../../intro/p2p-tutorial.rst:19
 msgid "Prerequisites"

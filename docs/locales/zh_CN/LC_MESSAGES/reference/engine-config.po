@@ -96,7 +96,7 @@ msgstr "SCQLEngine 通知 SCDB 的回调 URL"
 
 #: ../../reference/engine-config.rst:63
 msgid "port"
-msgstr "端口"
+msgstr "port"
 
 #: ../../reference/engine-config.rst:63
 msgid "The listening port of the SCDB server"
@@ -104,7 +104,7 @@ msgstr "SCDB服务器监听端口"
 
 #: ../../reference/engine-config.rst:65
 msgid "protocol"
-msgstr "协议"
+msgstr "protocol"
 
 #: ../../reference/engine-config.rst:65 ../../reference/engine-config.rst:111
 msgid "https"
@@ -1547,7 +1547,7 @@ msgid ""
 "SCQLBroker <broker-tls>`."
 msgstr ""
 "如果要在 SCQLEngine 中启用 SSL，请添加 FLAGS，如下所示。 此外，也可能需要配置 Driver 在 TLS 下运行，请参考 "
-":ref:`SCDB 的 TLS 配置 <scdb-tls>`。"
+":ref:`SCDB 的 TLS 配置 <scdb-tls>` 或 :ref:`SCQLBroker 的 TLS 配置 <broker-tls>` 。"
 
 #: ../../reference/engine-config.rst:625
 msgid ""
