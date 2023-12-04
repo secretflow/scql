@@ -64,15 +64,17 @@ DEFINE_int32(
 // bandwidth and send speed
 DEFINE_int32(link_chunked_send_parallel_size, 1,
              "parallel size when send chunked value");
-// Brpc channel flags for Scdb
-DEFINE_string(scdb_protocol, "http:proto", "rpc protocol");
-DEFINE_string(scdb_connection_type, "pooled", "connection type");
-DEFINE_int32(scdb_timeout_ms, 5000, "rpc timeout in milliseconds.");
-DEFINE_int32(scdb_max_retry, 3, "rpc max retries(not including the first rpc)");
-DEFINE_bool(scdb_enable_ssl_as_client, true, "enable ssl encryption as client");
-DEFINE_bool(scdb_enable_ssl_client_verification, false,
+// Brpc channel flags for driver(SCDB, SCQLBroker...)
+DEFINE_string(driver_protocol, "http:proto", "rpc protocol");
+DEFINE_string(driver_connection_type, "pooled", "connection type");
+DEFINE_int32(driver_timeout_ms, 5000, "rpc timeout in milliseconds.");
+DEFINE_int32(driver_max_retry, 3,
+             "rpc max retries(not including the first rpc)");
+DEFINE_bool(driver_enable_ssl_as_client, true,
+            "enable ssl encryption as client");
+DEFINE_bool(driver_enable_ssl_client_verification, false,
             "enable ssl client verification");
-DEFINE_string(scdb_ssl_client_ca_certificate, "",
+DEFINE_string(driver_ssl_client_ca_certificate, "",
               "certificate Authority file path to verify SSL as client");
 // Brpc server flags.
 DEFINE_int32(listen_port, 8003, "");
@@ -90,10 +92,10 @@ DEFINE_string(server_ssl_private_key, "",
 DEFINE_bool(enable_client_authorization, false,
             "if set true, server will check all requests' http header.");
 DEFINE_string(auth_credential, "", "authorization credential");
-DEFINE_bool(enable_scdb_authorization, false,
+DEFINE_bool(enable_driver_authorization, false,
             "if set to true, the engine will verify the HTTP header "
-            "'credential' field of requests from SCDB");
-DEFINE_string(engine_credential, "", "scdb authorization credential");
+            "'credential' field of requests from driver");
+DEFINE_string(engine_credential, "", "driver authorization credential");
 // Session flags
 DEFINE_int32(session_timeout_s, 1800,
              "TTL for session, should be greater than the typical runtime of "
@@ -121,7 +123,6 @@ void AddChannelOptions(scql::engine::ChannelManager* channel_manager) {
     options.protocol = FLAGS_peer_engine_protocol;
     options.connection_type = FLAGS_peer_engine_connection_type;
     options.timeout_ms = FLAGS_peer_engine_timeout_ms;
-    options.max_retry = FLAGS_peer_engine_max_retry;
 
     if (FLAGS_peer_engine_enable_ssl_as_client) {
       options.mutable_ssl_options()->ciphers = "";
@@ -136,9 +137,6 @@ void AddChannelOptions(scql::engine::ChannelManager* channel_manager) {
       }
     }
 
-    static scql::engine::LogicalRetryPolicy g_my_retry_policy;
-    options.retry_policy = &g_my_retry_policy;
-
     if (FLAGS_enable_client_authorization) {
       options.auth = scql::engine::DefaultAuthenticator();
     }
@@ -147,24 +145,25 @@ void AddChannelOptions(scql::engine::ChannelManager* channel_manager) {
                                        options);
   }
 
-  // Scdb Options
+  // Driver Options
   {
     brpc::ChannelOptions options;
-    options.protocol = FLAGS_scdb_protocol;
-    options.connection_type = FLAGS_scdb_connection_type;
-    options.timeout_ms = FLAGS_scdb_timeout_ms;
-    options.max_retry = FLAGS_scdb_max_retry;
+    options.protocol = FLAGS_driver_protocol;
+    options.connection_type = FLAGS_driver_connection_type;
+    options.timeout_ms = FLAGS_driver_timeout_ms;
+    options.max_retry = FLAGS_driver_max_retry;
 
-    if (FLAGS_scdb_enable_ssl_as_client) {
+    if (FLAGS_driver_enable_ssl_as_client) {
       options.mutable_ssl_options()->ciphers = "";
-      if (FLAGS_scdb_enable_ssl_client_verification) {
+      if (FLAGS_driver_enable_ssl_client_verification) {
         options.mutable_ssl_options()->verify.verify_depth = 1;
         options.mutable_ssl_options()->verify.ca_file_path =
-            FLAGS_scdb_ssl_client_ca_certificate;
+            FLAGS_driver_ssl_client_ca_certificate;
       }
     }
 
-    channel_manager->AddChannelOptions(scql::engine::RemoteRole::Scdb, options);
+    channel_manager->AddChannelOptions(scql::engine::RemoteRole::Driver,
+                                       options);
   }
 }
 
@@ -231,6 +230,28 @@ std::unique_ptr<scql::engine::EngineServiceImpl> BuildEngineService(
     session_opt.link_chunked_send_parallel_size =
         FLAGS_link_chunked_send_parallel_size;
   }
+  // NOTE: use yacl retry options to replace brpc retry policy
+  yacl::link::RetryOptions retry_opt;
+  retry_opt.max_retry = FLAGS_peer_engine_max_retry;
+  retry_opt.http_codes = {
+      brpc::HTTP_STATUS_INTERNAL_SERVER_ERROR,
+      brpc::HTTP_STATUS_GATEWAY_TIMEOUT, brpc::HTTP_STATUS_BAD_GATEWAY,
+      brpc::HTTP_STATUS_REQUEST_TIMEOUT, brpc::HTTP_STATUS_SERVICE_UNAVAILABLE,
+      // too many connections
+      429};
+  retry_opt.error_codes = {brpc::Errno::EFAILEDSOCKET,
+                           brpc::Errno::EEOF,
+                           brpc::Errno::ELOGOFF,
+                           brpc::Errno::ELIMIT,
+                           ETIMEDOUT,
+                           ENOENT,
+                           EPIPE,
+                           ECONNREFUSED,
+                           ECONNRESET,
+                           ENODATA,
+                           brpc::Errno::EOVERCROWDED,
+                           brpc::Errno::EH2RUNOUTSTREAMS};
+  session_opt.link_retry_options = retry_opt;
   auto session_manager = std::make_unique<scql::engine::SessionManager>(
       session_opt, listener_manager, std::move(link_factory),
       std::move(ds_router), std::move(ds_mgr), FLAGS_session_timeout_s);
@@ -238,7 +259,7 @@ std::unique_ptr<scql::engine::EngineServiceImpl> BuildEngineService(
   auto authenticator = BuildAuthenticator();
 
   scql::engine::EngineServiceOptions engine_service_opt;
-  engine_service_opt.enable_authorization = FLAGS_enable_scdb_authorization;
+  engine_service_opt.enable_authorization = FLAGS_enable_driver_authorization;
   engine_service_opt.credential = FLAGS_engine_credential;
   return std::make_unique<scql::engine::EngineServiceImpl>(
       engine_service_opt, std::move(session_manager), channel_manager,

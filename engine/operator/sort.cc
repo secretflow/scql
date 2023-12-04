@@ -82,33 +82,13 @@ void Sort::SortInSecret(ExecContext* ctx) {
   }
 
   auto sctx = ctx->GetSession()->GetSpuContext();
-  auto scalar_cmp = [reverse](spu::SPUContext* sctx, const spu::Value& lhs,
-                              const spu::Value& rhs) {
-    if (reverse) {
-      return spu::kernel::hlo::Greater(sctx, lhs, rhs);
-    }
-    return spu::kernel::hlo::Less(sctx, lhs, rhs);
-  };
-
-  spu::kernel::hal::CompFn comp_fn =
-      [sctx, sort_key_num,
-       &scalar_cmp](absl::Span<const spu::Value> values) -> spu::Value {
-    spu::Value pre_equal =
-        spu::kernel::hlo::Constant(sctx, true, values[0].shape());
-    spu::Value result = scalar_cmp(sctx, values[0], values[1]);
-    for (size_t idx = 2; idx < sort_key_num * 2; idx += 2) {
-      pre_equal = spu::kernel::hlo::And(
-          sctx, pre_equal,
-          spu::kernel::hlo::Equal(sctx, values[idx - 2], values[idx - 1]));
-      auto current = scalar_cmp(sctx, values[idx], values[idx + 1]);
-      current = spu::kernel::hlo::And(sctx, pre_equal, current);
-      result = spu::kernel::hlo::Or(sctx, result, current);
-    }
-    return result;
-  };
-  // NOTE: spu doesn't support stable sort when sorting secret value
-  auto results =
-      spu::kernel::hlo::Sort(sctx, inputs, 0, false, comp_fn, spu::VIS_SECRET);
+  auto sort_direction = spu::kernel::hal::SortDirection::Ascending;
+  if (reverse) {
+    sort_direction = spu::kernel::hal::SortDirection::Descending;
+  }
+  // NOTE: use default performance hint for SimpleSort
+  auto results = spu::kernel::hlo::SimpleSort(sctx, inputs, 0, sort_direction,
+                                              sort_key_num);
 
   for (int i = 0; i < out_pbs.size(); ++i) {
     auto idx = sort_key_num + i;

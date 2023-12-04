@@ -118,7 +118,7 @@ func TestBootstrap(t *testing.T) {
 
 	// update project
 	newProjectConf := ProjectConfig{SpuConf: "I'm a new conf"}
-	err = transaction.UpdateProject(projectID1, newProjectConf)
+	err = transaction.UpdateProject(Project{ID: projectID1, ProjectConf: newProjectConf})
 	r.NoError(err)
 	proj, err := transaction.GetProject(projectID1)
 	r.NoError(err)
@@ -201,6 +201,9 @@ func TestBootstrap(t *testing.T) {
 		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: alice}, Priv: "plain"},
 		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: bob}, Priv: "encrypt"},
 	}
+	err = transaction.AddProjectMember(c1Identifier.ProjectID, bob)
+	r.NoError(err)
+	// project member [alice], but grant to [alice, bob]
 	err = transaction.GrantColumnConstraints(privs)
 	r.NoError(err)
 	// duplicated grant
@@ -230,6 +233,8 @@ func TestBootstrap(t *testing.T) {
 		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: c1Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: c1Identifier.ColumnName, DestParty: carol}, Priv: "plain"},
 		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: carol}, Priv: "encrypt"},
 	}
+	err = transaction.AddProjectMember(c1Identifier.ProjectID, carol)
+	r.NoError(err)
 	err = transaction.GrantColumnConstraints(privs)
 	r.NoError(err)
 	// show grant all

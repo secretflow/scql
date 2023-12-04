@@ -19,11 +19,13 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/secretflow/scql/pkg/infoschema"
 	"github.com/secretflow/scql/pkg/interpreter/optimizer"
 	"github.com/secretflow/scql/pkg/interpreter/translator"
 	"github.com/secretflow/scql/pkg/parser"
+	"github.com/secretflow/scql/pkg/parser/model"
 	"github.com/secretflow/scql/pkg/planner/core"
 	proto "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/proto-gen/spu"
@@ -177,25 +179,60 @@ func buildCompiledPlan(spuConf *spu.RuntimeConfig, eGraph *translator.Graph, exe
 }
 
 func buildInfoSchemaFromCatalogProto(catalog *proto.Catalog) (infoschema.InfoSchema, error) {
-	tables := make([]*infoschema.TableSchema, 0, len(catalog.GetTables()))
-	for _, tblEntry := range catalog.GetTables() {
+	tblInfoMap := make(map[string][]*model.TableInfo)
+	for i, tblEntry := range catalog.GetTables() {
 		dbTable, err := core.NewDbTableFromString(tblEntry.GetTableName())
 		if err != nil {
 			return nil, err
 		}
-		newTable := infoschema.TableSchema{
-			DbName:    dbTable.GetDbName(),
-			TableName: dbTable.GetTableName(),
+		tblInfo := &model.TableInfo{
+			ID:          int64(i),
+			TableId:     fmt.Sprint(i),
+			Name:        model.NewCIStr(dbTable.GetTableName()),
+			Columns:     []*model.ColumnInfo{},
+			Indices:     []*model.IndexInfo{},
+			ForeignKeys: []*model.FKInfo{},
+			State:       model.StatePublic,
+			PKIsHandle:  false,
 		}
-		for _, col := range tblEntry.GetColumns() {
-			newTable.Columns = append(newTable.Columns, infoschema.ColumnDesc{
-				Name: col.GetName(),
-				Type: col.GetType(),
-			})
+
+		if tblEntry.GetIsView() {
+			tblInfo.View = &model.ViewInfo{
+				Algorithm:  model.AlgorithmMerge,
+				SelectStmt: tblEntry.SelectString,
+			}
 		}
-		tables = append(tables, &newTable)
+		// sort columns by ordinal position
+		sort.Slice(tblEntry.Columns, func(i, j int) bool {
+			return tblEntry.Columns[i].OrdinalPosition < tblEntry.Columns[j].OrdinalPosition
+		})
+
+		for idx, col := range tblEntry.GetColumns() {
+			colTp := strings.ToLower(col.GetType())
+			defaultVal, err := infoschema.TypeDefaultValue(colTp)
+			if err != nil {
+				return nil, err
+			}
+			fieldTp, err := infoschema.TypeConversion(colTp)
+			if err != nil {
+				return nil, err
+			}
+			colInfo := &model.ColumnInfo{
+				ID:                 int64(idx),
+				Name:               model.NewCIStr(col.GetName()),
+				Offset:             idx,
+				OriginDefaultValue: defaultVal,
+				DefaultValue:       defaultVal,
+				DefaultValueBit:    []byte{},
+				Dependences:        map[string]struct{}{},
+				FieldType:          fieldTp,
+				State:              model.StatePublic,
+			}
+			tblInfo.Columns = append(tblInfo.Columns, colInfo)
+		}
+		tblInfoMap[dbTable.GetDbName()] = append(tblInfoMap[dbTable.GetDbName()], tblInfo)
 	}
-	return infoschema.FromTableSchema(tables)
+	return infoschema.MockInfoSchema(tblInfoMap), nil
 }
 
 func collectDataSourceNode(lp core.LogicalPlan) []*core.DataSource {
@@ -234,6 +271,7 @@ func buildEngineInfo(lp core.LogicalPlan, catalog *proto.Catalog, currentDb stri
 		return nil, fmt.Errorf("no data source in query")
 	}
 
+	// NOTE: no view include in dsList
 	for _, ds := range dsList {
 		dbName := ds.DBName.String()
 		tblName := ds.TableInfo().Name.String()
@@ -252,8 +290,8 @@ func buildEngineInfo(lp core.LogicalPlan, catalog *proto.Catalog, currentDb stri
 		tblOwner := tblEntry.GetOwner().GetCode()
 		party2Tables[tblOwner] = append(party2Tables[tblOwner], dbTable)
 
-		// Note: ref table name empty means it is the same with itself
 		refTblName := tblEntry.GetRefTable()
+		// Note: ref table name empty means it is the same with itself
 		if len(refTblName) == 0 {
 			refTblName = tblEntry.GetTableName()
 		}
@@ -265,7 +303,6 @@ func buildEngineInfo(lp core.LogicalPlan, catalog *proto.Catalog, currentDb stri
 		if err != nil {
 			return nil, fmt.Errorf("unknown DBType of table %s： %v", tn, err)
 		}
-
 		refDbTable.SetDBType(dbType)
 
 		tableToRefs[dbTable] = refDbTable

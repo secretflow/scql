@@ -83,7 +83,13 @@ def create_random_datatime():
     year = random.randint(1971, 2030)
     month = random.randint(1, 12)
     day = random.randint(1, 28)
-    hour = random.randint(0, 23)
+    # mysql8.0 not support 1986-05-04 02:00 to 03:00 datetime, ref: https://github.com/chronotope/chrono-tz/issues/28
+    hour = 2
+    if year == 1986 and month == 5 and day == 4:
+        while hour == 2:
+            hour = random.randint(0, 23)
+    else:
+        hour = random.randint(0, 23)
     minute = random.randint(0, 59)
     second = random.randint(0, 59)
     ds = datetime.datetime(year, month, day, hour, minute, second)

@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
 
 	"github.com/secretflow/scql/cmd/regtest"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
@@ -35,43 +36,35 @@ import (
 )
 
 const (
-	SkipCreate           = "SKIP_CREATE_USER_CCL"
-	MySQLPort            = "MYSQL_PORT"
-	SCDBPorts            = "SCDB_PORTS"
-	SCDBHosts            = "SCDB_HOSTS"
-	HttpProtocol         = "HTTP_PROTOCOL"
-	MySQLConnStr         = "MYSQL_CONN_STR"
-	SkipConcurrent       = "SKIP_CONCURRENT_TEST"
-	SkipPlaintextCCLTest = "SKIP_PLAINTEXT_CCL_TEST"
-	Deliminator          = ","
-	Protocols            = "PROTOCOLS"
-	ABY3                 = "ABY3"
-	SEMI2K               = "SEMI2K"
-	CHEETAH              = "CHEETAH"
-)
+	Deliminator = ","
+	ABY3        = "ABY3"
+	SEMI2K      = "SEMI2K"
+	CHEETAH     = "CHEETAH"
 
-const (
 	concurrentNum      = 5
 	stubTimeoutMinutes = 5
 )
 
 var (
 	testDataSource regtest.TestDataSource
-	skipCreateFlag bool
 )
 
-// TODO: refactor regtest configuration with YAML?
-var (
-	alicePrivateKeyPemPath = flag.String("alicePem", "", "path to alice private key pem")
-	bobPrivateKeyPemPath   = flag.String("bobPem", "", "path to bob private key pem")
-	carolPrivateKeyPemPath = flag.String("carolPem", "", "path to carol private key pem")
-)
+type testConfig struct {
+	SkipCreateUserCCL    bool                 `yaml:"skip_create_user_ccl"`
+	SkipConcurrentTest   bool                 `yaml:"skip_concurrent_test"`
+	SkipPlaintextCCLTest bool                 `yaml:"skip_plaintext_ccl_test"`
+	MPCProtocols         string               `yaml:"mpc_protocols"`
+	HttpProtocol         string               `yaml:"http_protocol"`
+	SCDBPorts            string               `yaml:"scdb_ports"`
+	SCDBHosts            string               `yaml:"scdb_hosts"`
+	MySQLConnStr         string               `yaml:"mysql_conn_str"`
+	Parties              map[string]partyInfo `yaml:"parties"`
+}
 
-var (
-	aliceEngAddr = flag.String("aliceEngAddr", "engine-alice:8003", "endpoint of alice engine")
-	bobEngAddr   = flag.String("bobEngAddr", "engine-bob:8003", "endpoint of bob engine")
-	carolEngAddr = flag.String("carolEngAddr", "engine-carol:8003", "endpoint of carol engine")
-)
+type partyInfo struct {
+	EngAddr    string `yaml:"eng_addr"`
+	PrivateKey string `yaml:"private_key"`
+}
 
 type testFlag struct {
 	sync           bool
@@ -79,13 +72,15 @@ type testFlag struct {
 	testSerial     bool
 }
 
-func getUrlList() ([]string, error) {
-	portStr := os.Getenv(SCDBPorts)
-	ports := strings.Split(portStr, Deliminator)
-	hostStr := os.Getenv(SCDBHosts)
-	httpProtocol := os.Getenv(HttpProtocol)
+var (
+	testConf *testConfig
+)
+
+func getUrlList(conf *testConfig) ([]string, error) {
+	ports := strings.Split(conf.SCDBPorts, Deliminator)
+	hostStr := conf.SCDBHosts
 	var hostProtocol string
-	if httpProtocol == "https" {
+	if conf.HttpProtocol == "https" {
 		hostProtocol = "https"
 	} else {
 		hostProtocol = "http"
@@ -106,7 +101,7 @@ func getUrlList() ([]string, error) {
 			}
 		}
 		if len(ports) != len(hosts) {
-			return nil, fmt.Errorf("failed to get scdb address with host %s port %s", hostStr, portStr)
+			return nil, fmt.Errorf("failed to get scdb address with host %s port %s", hostStr, conf.SCDBPorts)
 		}
 		for i := range hosts {
 			addr = append(addr, fmt.Sprintf("%s://%s:%s", hostProtocol, strings.Trim(hosts[i], " "), strings.Trim(ports[i], " ")))
@@ -116,8 +111,8 @@ func getUrlList() ([]string, error) {
 	return addr, nil
 }
 
-func getProtocols() ([]string, error) {
-	ps := os.Getenv(Protocols)
+func getProtocols(conf *testConfig) ([]string, error) {
+	ps := conf.MPCProtocols
 	if ps == "" {
 		return []string{SEMI2K}, nil
 	}
@@ -130,73 +125,88 @@ func getProtocols() ([]string, error) {
 	return trimProtocols, nil
 }
 
+func readConf(path string) (*testConfig, error) {
+	if len(path) == 0 {
+		return nil, fmt.Errorf("failed due to no conf file for scdb regtest")
+	}
+
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read test conf file %s: %v", path, err)
+	}
+
+	conf := &testConfig{}
+	if err := yaml.Unmarshal(content, conf); err != nil {
+		return nil, fmt.Errorf("failed to parse test conf: %v", err)
+	}
+	return conf, nil
+}
+
 func TestMain(m *testing.M) {
-	if os.Getenv(SCDBPorts) == "" {
-		fmt.Println("Skipping testing due to empty SCDBPorts")
+	confFile := flag.String("conf", "", "/path/to/conf")
+	flag.Parse()
+	var err error
+	testConf, err = readConf(*confFile)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
+	}
+
+	// check config
+	if testConf.SCDBPorts == "" {
+		fmt.Println("Warning: Skipping testing due to empty SCDBPorts in config")
 		return
 	}
 
-	skipCreateFlag = false
-	if os.Getenv(SkipCreate) == "true" {
-		skipCreateFlag = true
-	}
-
-	mysqlConnStr := os.Getenv(MySQLConnStr)
-	if mysqlConnStr == "" {
-		mysqlConnStr = fmt.Sprintf("root:testpass@tcp(localhost:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true", os.Getenv(MySQLPort), dbName)
-	}
-
 	mysqlConf := &config.StorageConf{
-		ConnStr:         mysqlConnStr,
+		ConnStr:         testConf.MySQLConnStr,
 		MaxOpenConns:    100,
 		MaxIdleConns:    10,
 		ConnMaxIdleTime: 120,
 		ConnMaxLifetime: 3000,
 	}
 	if err := testDataSource.ConnDB(mysqlConf); err != nil {
-		fmt.Printf("connect mysql(%s) failed\n", mysqlConnStr)
-		panic(err)
+		fmt.Fprintf(os.Stderr, "connect mysql(%s) failed: %v\n", testConf.MySQLConnStr, err)
+		os.Exit(1)
 	}
+
 	os.Exit(m.Run())
 }
 
 func TestSCDBWithNormalCCL(t *testing.T) {
 	r := require.New(t)
-	addresses, err := getUrlList()
+	addresses, err := getUrlList(testConf)
 	r.NoError(err)
-	protocols, err := getProtocols()
+	protocols, err := getProtocols(testConf)
 	r.NoError(err)
 	mockTables, err := mock.MockAllTables()
 	r.NoError(err)
 	regtest.FillTableToPartyCodeMap(mockTables)
-	skipConcurrent := false
-	if os.Getenv(SkipConcurrent) == "true" {
-		skipConcurrent = true
-	}
+
 	cclList, err := mock.MockAllCCL()
 	r.NoError(err)
 	for i, addr := range addresses {
 		fmt.Printf("test protocol %s\n", protocols[i])
-		r.NoError(createUserAndCcl(cclList, addresses[i], skipCreateFlag))
+		r.NoError(createUserAndCcl(testConf, cclList, addresses[i], testConf.SkipCreateUserCCL))
 		if protocols[i] == SEMI2K {
 			// We are temporarily using a separate file to save postgres test cases. After the complete support
 			// of postgres functions, is it possible to remove this file?
 			r.NoError(testCaseForSerial("../testdata/single_party_postgres.json", true, addr, userNameCarol))
 		}
-		r.NoError(runQueryTest(userNameAlice, addr, protocols[i], testFlag{sync: true, testConcurrent: !skipConcurrent, testSerial: true}))
-		r.NoError(runQueryTest(userNameAlice, addr, protocols[i], testFlag{sync: false, testConcurrent: !skipConcurrent, testSerial: false}))
+		r.NoError(runQueryTest(userNameAlice, addr, protocols[i], testFlag{sync: true, testConcurrent: !testConf.SkipConcurrentTest, testSerial: true}))
+		r.NoError(runQueryTest(userNameAlice, addr, protocols[i], testFlag{sync: false, testConcurrent: !testConf.SkipConcurrentTest, testSerial: false}))
 	}
 }
 
 func TestSCDBWithAllCCLPlaintext(t *testing.T) {
-	if os.Getenv(SkipPlaintextCCLTest) == "true" {
-		fmt.Println("Skipping testing due to set SKIP_PLAINTEXT_CCL_TEST true")
+	if testConf.SkipPlaintextCCLTest {
+		fmt.Println("Skipping testing due to set skip_plaintext_ccl_test true in config")
 		return
 	}
 	r := require.New(t)
-	addresses, err := getUrlList()
+	addresses, err := getUrlList(testConf)
 	r.NoError(err)
-	protocols, err := getProtocols()
+	protocols, err := getProtocols(testConf)
 	r.NoError(err)
 	mockTables, err := mock.MockAllTables()
 	r.NoError(err)
@@ -207,7 +217,7 @@ func TestSCDBWithAllCCLPlaintext(t *testing.T) {
 	// only test concurrent case for all plaintext ccl
 	for i, addr := range addresses {
 		fmt.Printf("test protocol %s\n", protocols[i])
-		r.NoError(createUserAndCcl(cclList, addresses[i], skipCreateFlag))
+		r.NoError(createUserAndCcl(testConf, cclList, addresses[i], testConf.SkipCreateUserCCL))
 		r.NoError(runQueryTest(userNameAlice, addr, protocols[i], testFlag{sync: true, testConcurrent: true, testSerial: false}))
 		r.NoError(runQueryTest(userNameAlice, addr, protocols[i], testFlag{sync: false, testConcurrent: true, testSerial: false}))
 	}
@@ -320,30 +330,22 @@ func createSuit(dataPath string, suit *regtest.QueryTestSuit) error {
 	return nil
 }
 
-func createUserAndCcl(cclList []*scql.SecurityConfig_ColumnControl, addr string, skipCreate bool) error {
+func createUserAndCcl(testConf *testConfig, cclList []*scql.SecurityConfig_ColumnControl, addr string, skipCreate bool) error {
 	if skipCreate {
 		fmt.Println("skip func createUserAndCcl")
 		return nil
 	}
 
-	// TODO: refactor these userMapXxx
-
-	userMapPrivateKeyPath := map[string]string{
-		"alice": *alicePrivateKeyPemPath,
-		"bob":   *bobPrivateKeyPemPath,
-		"carol": *carolPrivateKeyPemPath,
-	}
-
-	userMapEngEndpoint := map[string]string{
-		"alice": *aliceEngAddr,
-		"bob":   *bobEngAddr,
-		"carol": *carolEngAddr,
-	}
-
 	// create user
 	for _, user := range userNames {
+		partyCode := userMapPartyCode[user]
+		party, exists := testConf.Parties[partyCode]
+		if !exists {
+			return fmt.Errorf("party %s not found in config", partyCode)
+		}
+		fmt.Printf("party info for %s is %v\n", partyCode, party)
 		builder := sqlbuilder.NewCreateUserStmtBuilder()
-		sql, err := builder.IfNotExists().SetUser(user).SetPassword(userMapPassword[user]).SetParty(userMapPartyCode[user]).AuthByPubkeyWithPemFile(userMapPrivateKeyPath[user]).WithEndpoinits([]string{userMapEngEndpoint[user]}).ToSQL()
+		sql, err := builder.IfNotExists().SetUser(user).SetPassword(userMapPassword[user]).SetParty(userMapPartyCode[user]).AuthByPubkeyWithPemFile(party.PrivateKey).WithEndpoinits([]string{party.EngAddr}).ToSQL()
 		if err != nil {
 			return err
 		}

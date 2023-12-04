@@ -46,6 +46,8 @@ var (
 
 	// for source
 	sourceFile string
+
+	version = "scql version"
 )
 
 type UserCredential struct {
@@ -68,6 +70,7 @@ var rootCmd = &cobra.Command{
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		return setupUserConfig()
 	},
+	Version: version,
 }
 
 var sourceCmd = &cobra.Command{

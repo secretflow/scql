@@ -141,12 +141,20 @@ func (app *App) buildCompileRequest(ctx context.Context, s *session) (*scql.Comp
 		tableNames = append(tableNames, ds.TableInfo().Name.String())
 	}
 
-	catalog, err := app.buildCatalog(s.sessionVars.Storage, dbName, tableNames)
+	// collect all view in db
+	// TODO: possible optimization: Analysis AST to find all reference tables (including real data source & view)
+	views, err := storage.QueryAllViewsInDb(s.GetSessionVars().Storage, dbName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query all views in db `%s`: %v", dbName, err)
+	}
+	tableNames = append(tableNames, views...)
+
+	catalog, err := app.buildCatalog(s.GetSessionVars().Storage, dbName, tableNames)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build catalog: %v", err)
 	}
 
-	securityConfig, err := buildSecurityConfig(s.sessionVars.Storage, issuerPartyCode, catalog.Tables)
+	securityConfig, err := buildSecurityConfig(s.GetSessionVars().Storage, issuerPartyCode, catalog.Tables)
 	if err != nil {
 		return nil, err
 	}

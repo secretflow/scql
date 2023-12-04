@@ -7,31 +7,39 @@ SCRIPT_DIR=$(
 )
 
 # generate password for mysql root user
-MYSQL_PASSWD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13)
-grep -rl '__MYSQL_ROOT_PASSWD__' --exclude='*.sh' ${SCRIPT_DIR}/ | xargs sed -i "s/__MYSQL_ROOT_PASSWD__/${MYSQL_PASSWD}/g"
-
+MYSQL_PASSWD=$(LC_CTYPE=C tr -dc A-Za-z0-9 </dev/urandom | head -c 13)
+for file in $(grep -rl '__MYSQL_ROOT_PASSWD__' --exclude='*.sh' ${SCRIPT_DIR}/); do
+  # remove suffix .template
+  newfile=$(echo $file | sed 's/\.[^.]*$//')
+  sed "s/__MYSQL_ROOT_PASSWD__/${MYSQL_PASSWD}/g" $file >$newfile
+done
 # generate private pem for each party
 PARTIES=("alice" "bob")
 for party in ${PARTIES[*]}; do
-  openssl genpkey -algorithm ed25519 -out "$SCRIPT_DIR/engine/$party/conf/ed25519key.pem"
-  cp "$SCRIPT_DIR/engine/$party/conf/ed25519key.pem" "$SCRIPT_DIR/broker/$party/conf/private_key.pem"
+  openssl genpkey -algorithm ed25519 -out "$SCRIPT_DIR/broker/$party/conf/private_key.pem"
 done
 
-DATA_FILES=("$SCRIPT_DIR/broker/alice/conf/party_info.json" "$SCRIPT_DIR/broker/bob/conf/party_info.json" "$SCRIPT_DIR/engine/alice/conf/authorized_profile.json" "$SCRIPT_DIR/engine/bob/conf/authorized_profile.json")
+DATA_FILES=("$SCRIPT_DIR/broker/alice/conf/party_info.json.template" "$SCRIPT_DIR/broker/bob/conf/party_info.json.template")
 
-ALICE_PUBKEY=$(openssl pkey -in "$SCRIPT_DIR/engine/alice/conf/ed25519key.pem" -pubout -outform DER | base64)
-BOB_PUBKEY=$(openssl pkey -in "$SCRIPT_DIR/engine/bob/conf/ed25519key.pem" -pubout -outform DER | base64)
+ALICE_PUBKEY=$(openssl pkey -in "$SCRIPT_DIR/broker/alice/conf/private_key.pem" -pubout -outform DER | base64)
+BOB_PUBKEY=$(openssl pkey -in "$SCRIPT_DIR/broker/bob/conf/private_key.pem" -pubout -outform DER | base64)
 
 for file in ${DATA_FILES[*]}; do
+  # remove suffix .template
+  newfile=$(echo $file | sed 's/\.[^.]*$//')
   if [[ "$(uname)" == "Darwin" ]]; then
     # macOS
     # NOTE: base64 alphabet contains '/', so use '|' as sed delimiters
-    sed -i '' -e "s|__ALICE_PUBLIC_KEY__|${ALICE_PUBKEY}|" $file
-    sed -i '' -e "s|__BOB_PUBLIC_KEY__|${BOB_PUBKEY}|" $file
+    sed "s|__ALICE_PUBLIC_KEY__|${ALICE_PUBKEY}|g" $file >$newfile
+    sed -i '' "s|__BOB_PUBLIC_KEY__|${BOB_PUBKEY}|g" $newfile
   else
     # linux
-    sed -i "s|__ALICE_PUBLIC_KEY__|${ALICE_PUBKEY}|" $file
-    sed -i "s|__BOB_PUBLIC_KEY__|${BOB_PUBKEY}|" $file
+    sed "s|__ALICE_PUBLIC_KEY__|${ALICE_PUBKEY}|g" $file >$newfile
+    sed -i "s|__BOB_PUBLIC_KEY__|${BOB_PUBKEY}|g" $newfile
   fi
 done
-echo "successfully completed private key generation and public key configuration"
+
+# generate self-signed ca files for each broker and engine
+(cd $SCRIPT_DIR && bash ../../test-tools/ca_generator.sh)
+
+echo "successfully completed private key generation, public key configuration and ca file generation"

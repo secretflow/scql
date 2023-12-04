@@ -481,6 +481,62 @@ var testCases = []compileTestCase{
 		ok:           true,
 		workPartyNum: 2,
 	},
+	// VIEW test
+	{
+		req: &proto.CompileQueryRequest{
+			Query:  "SELECT credit_rank from view1",
+			DbName: "demo",
+			Issuer: &proto.PartyId{
+				Code: "alice",
+			},
+			IssuerAsParticipant: true,
+			SecurityConf: &proto.SecurityConfig{
+				ColumnControlList: []*proto.SecurityConfig_ColumnControl{
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "demo",
+						TableName:    "ta",
+						ColumnName:   "credit_rank",
+					},
+				},
+			},
+			Catalog: &proto.Catalog{
+				Tables: []*proto.TableEntry{
+					{
+						TableName: "demo.ta",
+						Columns: []*proto.TableEntry_Column{
+							{
+								Name: "credit_rank",
+								Type: "int",
+							},
+						},
+						IsView:   false,
+						RefTable: "alice.user_credit",
+						DbType:   "mysql",
+						Owner: &proto.PartyId{
+							Code: "alice",
+						},
+					},
+					{
+						TableName: "demo.view1",
+						Columns: []*proto.TableEntry_Column{
+							{
+								Name:            "credit_rank",
+								Type:            "int",
+								OrdinalPosition: 0,
+							},
+						},
+						IsView:       true,
+						SelectString: "SELECT credit_rank from demo.ta",
+					},
+				},
+			},
+			// TODO: add RuntimeConfig
+		},
+		ok:           true,
+		workPartyNum: 1,
+	},
 }
 
 type compileTestCase struct {

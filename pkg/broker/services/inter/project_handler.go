@@ -24,6 +24,8 @@ import (
 	"golang.org/x/exp/slices"
 	"google.golang.org/protobuf/encoding/protojson"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/secretflow/scql/pkg/broker/services/common"
 	"github.com/secretflow/scql/pkg/broker/storage"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
@@ -81,8 +83,8 @@ func (svc *grpcInterSvc) ReplyInvitation(c context.Context, req *pb.ReplyInvitat
 	defer func() {
 		txn.Finish(err)
 	}()
-
-	proj, err := txn.GetProject(req.GetProjectId())
+	// add X lock to avoid add member concurrently
+	proj, err := storage.AddExclusiveLock(txn).GetProject(req.GetProjectId())
 	if err != nil {
 		return nil, fmt.Errorf("ReplyInvitation: %v", err)
 	}
@@ -139,7 +141,12 @@ func (svc *grpcInterSvc) ReplyInvitation(c context.Context, req *pb.ReplyInvitat
 				targetParties = append(targetParties, p)
 			}
 		}
-		go common.PostSyncInfo(svc.app, req.GetProjectId(), pb.ChangeEntry_AddProjectMember, req.GetClientId().GetCode(), targetParties)
+		go func() {
+			err := common.PostSyncInfo(svc.app, req.GetProjectId(), pb.ChangeEntry_AddProjectMember, req.GetClientId().GetCode(), targetParties)
+			if err != nil {
+				logrus.Warnf("ReplyInvitation: sync info to %v err %s", targetParties, err)
+			}
+		}()
 	}
 
 	proj, err = txn.GetProject(req.GetProjectId())

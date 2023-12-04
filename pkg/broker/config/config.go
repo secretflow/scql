@@ -25,11 +25,11 @@ import (
 )
 
 const (
-	DefaultSessionExpireTime            = 2 * 24 * time.Hour // 2 days
-	DefaultSessionCheckInterval         = 1 * time.Hour      // 1 hours
-	DefaultEngineClientTimeout          = 120 * time.Second  // 120s
-	DefaultInterTimeout                 = 5 * time.Second    // 5s
-	DefaultBrokerIntraServerHost        = "127.0.0.1"        // default use localhost for safety
+	DefaultSessionExpireTime            = 24 * time.Hour    // 24 hours
+	DefaultSessionCheckInterval         = 1 * time.Minute   // 1 minute
+	DefaultEngineClientTimeout          = 120 * time.Second // 120s
+	DefaultInterTimeout                 = 5 * time.Second   // 5s
+	DefaultBrokerIntraServerHost        = "127.0.0.1"       // default use localhost for safety
 	DefaultLogLevel                     = "info"
 	DefaultEngineProtocol               = "http"
 	DefaultExchangeJobInfoRetryTimes    = 3
@@ -45,7 +45,6 @@ type Config struct {
 	LogLevel  string `yaml:"log_level"`
 	// self party code
 	PartyCode          string                            `yaml:"party_code"`
-	Engines            []string                          `yaml:"engines"`
 	PrivatePemPath     string                            `yaml:"private_pem_path"`
 	PartyInfoFile      string                            `yaml:"party_info_file"`
 	Engine             EngineConfig                      `yaml:"engine"`
@@ -80,6 +79,12 @@ type EngineConfig struct {
 	ClientTimeout time.Duration `yaml:"timeout"`
 	Protocol      string        `yaml:"protocol"`
 	ContentType   string        `yaml:"content_type"`
+	Uris          []EngineUri   `yaml:"uris"`
+}
+
+type EngineUri struct {
+	ForPeer string `yaml:"for_peer"`
+	ForSelf string `yaml:"for_self"`
 }
 
 const (
@@ -101,6 +106,11 @@ func NewConfig(configPath string) (*Config, error) {
 	// if need more env parameters, please use viper
 	if conStr := os.Getenv("SCDB_CONN_STR"); conStr != "" {
 		config.Storage.ConnStr = conStr
+	}
+
+	// checks for config
+	if len(config.Engine.Uris) == 0 {
+		return nil, fmt.Errorf("NewConfig: no engine uris")
 	}
 	return config, nil
 }

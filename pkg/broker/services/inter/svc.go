@@ -47,14 +47,14 @@ func (svc *grpcInterSvc) SyncInfo(c context.Context, req *pb.SyncInfoRequest) (r
 		txn.Finish(err)
 	}()
 
-	proj, err := txn.GetProject(req.GetProjectId())
-	if err != nil {
-		return nil, fmt.Errorf("SyncInfo: get project %v err: %v", req.GetProjectId(), err)
-	}
-
 	action := req.GetChangeEntry().GetAction()
 	switch action {
 	case pb.ChangeEntry_AddProjectMember:
+		// add row lock to avoid adding member concurrently
+		proj, err := storage.AddExclusiveLock(txn).GetProject(req.GetProjectId())
+		if err != nil {
+			return nil, fmt.Errorf("SyncInfo: get project %v err: %v", req.GetProjectId(), err)
+		}
 		if req.GetClientId().GetCode() != proj.Creator {
 			return nil, fmt.Errorf("SyncInfo AddProjectMember: project %v not owned by client %v", proj.ID, req.GetClientId().GetCode())
 		}
@@ -68,14 +68,19 @@ func (svc *grpcInterSvc) SyncInfo(c context.Context, req *pb.SyncInfoRequest) (r
 			return nil, fmt.Errorf("SyncInfo AddProjectMember: %v", err)
 		}
 	case pb.ChangeEntry_CreateTable:
+		_, err = txn.GetProject(req.GetProjectId())
+		if err != nil {
+			return nil, fmt.Errorf("SyncInfo: get project %v err: %v", req.GetProjectId(), err)
+		}
 		var tableMeta storage.TableMeta
 		err = json.Unmarshal(req.GetChangeEntry().GetData(), &tableMeta)
 		if err != nil {
 			return nil, fmt.Errorf("SyncInfo CreateTable: %v", err)
 		}
-		err = txn.AddTable(tableMeta)
+		// check table owner
+		err = common.AddTableWithCheck(txn, req.GetProjectId(), req.GetClientId().GetCode(), tableMeta)
 		if err != nil {
-			return nil, fmt.Errorf("SyncInfo CreateTable AddTable err: %v", err)
+			return nil, fmt.Errorf("SyncInfo CreateTable err: %v", err)
 		}
 	case pb.ChangeEntry_DropTable:
 		var tableId storage.TableIdentifier
@@ -84,17 +89,9 @@ func (svc *grpcInterSvc) SyncInfo(c context.Context, req *pb.SyncInfoRequest) (r
 			return nil, fmt.Errorf("SyncInfo DropTable: %v", err)
 		}
 
-		tableMetas, err := txn.GetTablesByTableNames(tableId.ProjectID, []string{tableId.TableName})
-		if err != nil || len(tableMetas) != 1 {
-			return nil, fmt.Errorf("DropTable: get table err: %v", err)
-		}
-		if tableMetas[0].Table.Owner != req.GetClientId().GetCode() {
-			return nil, fmt.Errorf("DropTable: cannot drop table without ownership")
-		}
-
-		err = txn.DropTable(tableId)
+		_, err = common.DropTableWithCheck(txn, req.GetProjectId(), req.GetClientId().GetCode(), tableId)
 		if err != nil {
-			return nil, fmt.Errorf("SyncInfo DropTable: %v", err)
+			return nil, fmt.Errorf("SyncInfo DropTableWithCheck: %v", err)
 		}
 	case pb.ChangeEntry_GrantCCL:
 		var privs []storage.ColumnPriv
@@ -102,13 +99,7 @@ func (svc *grpcInterSvc) SyncInfo(c context.Context, req *pb.SyncInfoRequest) (r
 		if err != nil {
 			return nil, fmt.Errorf("SyncInfo GrantCCL: %v", err)
 		}
-
-		err = common.PrivsManagedByParty(txn, privs, req.GetClientId().GetCode())
-		if err != nil {
-			return nil, fmt.Errorf("SyncInfo GrantCCL: failed to check privs: %v", err)
-		}
-
-		err = txn.GrantColumnConstraints(privs)
+		err = common.GrantColumnConstraintsWithCheck(txn, req.GetProjectId(), req.GetClientId().GetCode(), privs)
 		if err != nil {
 			return nil, fmt.Errorf("SyncInfo GrantCCL GrantColumnConstraints err: %v", err)
 		}
@@ -119,15 +110,11 @@ func (svc *grpcInterSvc) SyncInfo(c context.Context, req *pb.SyncInfoRequest) (r
 			return nil, fmt.Errorf("SyncInfo RevokeCCL: %v", err)
 		}
 
-		err = common.PrivIDsManagedByParty(txn, privIDs, req.GetClientId().GetCode())
+		err = common.RevokeColumnConstraintsWithCheck(txn, req.GetProjectId(), req.GetClientId().GetCode(), privIDs)
 		if err != nil {
-			return nil, fmt.Errorf("SyncInfo RevokeCCL: failed to check privIDs: %v", err)
+			return nil, fmt.Errorf("SyncInfo RevokeCCL: %v", err)
 		}
 
-		err = txn.RevokeColumnConstraints(privIDs)
-		if err != nil {
-			return nil, fmt.Errorf("SyncInfo RevokeCCL GrantColumnConstraints err: %v", err)
-		}
 	default:
 		return nil, fmt.Errorf("SyncInfo not supported Action: %v", pb.ChangeEntry_Action_name[int32(action)])
 	}
@@ -230,7 +217,7 @@ func (svc *grpcInterSvc) ExchangeJobInfo(ctx context.Context, req *pb.ExchangeJo
 		return &pb.ExchangeJobInfoResponse{Status: &pb.Status{Code: int32(pb.Code_SESSION_NOT_FOUND), Message: "session not found"}}, nil
 	}
 	executionInfo := s.ExecuteInfo
-	selfCode := s.PartyMgr.GetSelfInfo().Code
+	selfCode := s.GetSelfPartyCode()
 	selfEndpoint, err := s.GetEndpoint(selfCode)
 	if err != nil {
 		return nil, err

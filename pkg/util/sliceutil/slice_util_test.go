@@ -26,3 +26,19 @@ func TestSliceDeDup(t *testing.T) {
 	r.Equal([]int{1, 2, 3}, SliceDeDup([]int{1, 2, 1, 2, 2, 1, 3}))
 	r.Equal([]float64{0.1, 0.2}, SliceDeDup([]float64{0.1, 0.2, 0.1}))
 }
+
+func TestSubSet(t *testing.T) {
+	r := require.New(t)
+	r.True(SubSet([]string{"a", "b", "c"}, []string{"a", "b", "c"}))
+	r.True(SubSet([]string{"a", "b", "c"}, []string{"a", "c"}))
+	r.True(SubSet([]string{"a", "b", "c"}, []string{"a", "a", "c"}))
+	r.False(SubSet([]string{"a", "b", "c"}, []string{"a", "a", "c", "d"}))
+	r.False(SubSet([]string{}, []string{"a", "a", "c", "d"}))
+	r.True(SubSet([]string{"a", "b", "c"}, []string{}))
+	r.True(SubSet([]int{1, 2, 3}, []int{1, 2, 3}))
+	r.True(SubSet([]int{1, 2, 3}, []int{1, 2, 3, 3}))
+	r.False(SubSet([]int{1, 2}, []int{1, 2, 3, 3}))
+	r.False(SubSet([]int{}, []int{1, 2, 3, 3}))
+	r.True(SubSet([]int{1, 2, 3}, []int{}))
+	r.True(SubSet([]int{}, []int{}))
+}

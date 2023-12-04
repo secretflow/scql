@@ -22,32 +22,8 @@
 
 namespace scql::engine {
 
-// NOTE: Using Singleton for LogicalRetryPolicy/SimpleAuthenticator to
-// remain accessible at all times, such as:
-//   brpc::ChannelOptions options;
-//   static LogicalRetryPolicy g_my_retry_policy;
-//   options.retry_policy = &g_my_retry_policy;
-
-// Suggestion: let
-// options.timeout_ms > total_delay = options.max_retry * policy.delay_interval
-class LogicalRetryPolicy : public brpc::RetryPolicy {
- public:
-  LogicalRetryPolicy() = default;
-
-  LogicalRetryPolicy(int32_t retry_delay_ms)
-      : retry_delay_ms_(retry_delay_ms){};
-
-  // From brpc::RetryPolicy
-  bool DoRetry(const brpc::Controller* cntl) const override;
-
-  // Returns the backoff time in milliseconds before every retry.
-  int32_t GetBackoffTimeMs(const brpc::Controller* controller) const override;
-
- protected:
-  // logical retry delay, in milliseconds.
-  const int32_t retry_delay_ms_ = 1000;
-};
-
+// NOTE: Using Singleton for SimpleAuthenticator to
+// remain accessible at all times
 class SimpleAuthenticator : public brpc::Authenticator {
  public:
   SimpleAuthenticator(std::string credential)

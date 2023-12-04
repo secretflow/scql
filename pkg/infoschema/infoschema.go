@@ -25,14 +25,8 @@ import (
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/parser/model"
 	"github.com/secretflow/scql/pkg/parser/mysql"
-	"github.com/secretflow/scql/pkg/parser/terror"
 	"github.com/secretflow/scql/pkg/table"
 	"github.com/secretflow/scql/pkg/types"
-)
-
-var (
-	// ErrTableNotExists returns for table not exists.
-	ErrTableNotExists = terror.ClassSchema.New(mysql.ErrNoSuchTable, mysql.MySQLErrName[mysql.ErrNoSuchTable])
 )
 
 // InfoSchema is the interface used to retrieve the schema information.
@@ -77,7 +71,7 @@ func (is *infoSchema) TableByName(schema, table model.CIStr) (t table.Table, err
 			return
 		}
 	}
-	return nil, ErrTableNotExists.GenWithStackByArgs(schema, table)
+	return nil, fmt.Errorf("TableByName: Table '%s.%s' doesn't exist", schema, table)
 }
 
 // MockInfoSchema only serves for test.

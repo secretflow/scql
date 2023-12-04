@@ -65,6 +65,7 @@ void Session::InitLink() {
   yacl::link::ContextDesc ctx_desc;
   {
     ctx_desc.id = id_;
+    ctx_desc.retry_opts = session_opt_.link_retry_options;
     ctx_desc.recv_timeout_ms = session_opt_.link_recv_timeout_ms;
     ctx_desc.parties.reserve(parties_.WorldSize());
     for (const auto& party : parties_.AllParties()) {

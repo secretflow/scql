@@ -20,9 +20,9 @@ import (
 
 type Project struct {
 	// ->;<-:create means read and create
-	// name and id can't be modified
+	// id can't be modified
 	ID          string        `gorm:"column:id;type:varchar(64);primaryKey;uniqueIndex:;comment:'unique id';->;<-:create"`
-	Name        string        `gorm:"column:name;type:varchar(64);not null;comment:'project name';<-:create"`
+	Name        string        `gorm:"column:name;type:varchar(64);not null;comment:'project name'"`
 	Description string        `gorm:"column:desc;type:varchar(64);comment:'description'"`
 	Creator     string        `gorm:"column:creator;type:varchar(64);comment:'creator of the project'"`
 	Member      string        `gorm:"column:member;type:varchar(64);comment:'members, flattened string, like: alice;bob'"`
@@ -38,8 +38,8 @@ type ProjectConfig struct {
 }
 
 type TableIdentifier struct {
-	ProjectID string `gorm:"column:project_id;type:varchar(64);uniqueIndex:,composite:identifier;not null"`
-	TableName string `gorm:"column:table_name;type:varchar(64);uniqueIndex:,composite:identifier;not null"`
+	ProjectID string `gorm:"column:project_id;type:varchar(64);primaryKey;not null"`
+	TableName string `gorm:"column:table_name;type:varchar(64);primaryKey;not null"`
 }
 
 type Table struct {
@@ -52,9 +52,9 @@ type Table struct {
 }
 
 type ColumnIdentifier struct {
-	ProjectID  string `gorm:"column:project_id;type:varchar(64);uniqueIndex:,composite:identifier;not null"`
-	TableName  string `gorm:"column:table_name;type:varchar(64);uniqueIndex:,composite:identifier;not null"`
-	ColumnName string `gorm:"column:column_name;type:varchar(64);uniqueIndex:,composite:identifier;not null;"`
+	ProjectID  string `gorm:"column:project_id;type:varchar(64);primaryKey;not null"`
+	TableName  string `gorm:"column:table_name;type:varchar(64);primaryKey;not null"`
+	ColumnName string `gorm:"column:column_name;type:varchar(64);primaryKey;not null;"`
 }
 
 type Column struct {
@@ -65,10 +65,10 @@ type Column struct {
 }
 
 type ColumnPrivIdentifier struct {
-	ProjectID  string `gorm:"column:project_id;type:varchar(64);uniqueIndex:,composite:identifier;not null"`
-	TableName  string `gorm:"column:table_name;type:varchar(64);uniqueIndex:,composite:identifier;not null"`
-	ColumnName string `gorm:"column:column_name;type:varchar(64);uniqueIndex:,composite:identifier;not null;"`
-	DestParty  string `gorm:"column:dest_party;type:varchar(64);uniqueIndex:,composite:identifier;not null;"`
+	ProjectID  string `gorm:"column:project_id;type:varchar(64);primaryKey;not null"`
+	TableName  string `gorm:"column:table_name;type:varchar(64);primaryKey;not null"`
+	ColumnName string `gorm:"column:column_name;type:varchar(64);primaryKey;not null;"`
+	DestParty  string `gorm:"column:dest_party;type:varchar(64);primaryKey;not null;"`
 }
 
 type ColumnPriv struct {
@@ -79,7 +79,7 @@ type ColumnPriv struct {
 }
 
 type Invitation struct {
-	ID          uint64        `gorm:"column:id;primarykey;comment:'auto generated increment id'"`
+	ID          uint64        `gorm:"column:id;primaryKey;comment:'auto generated increment id'"`
 	ProjectID   string        `gorm:"column:project_id;type:varchar(64);not null;comment:'project id'"`
 	Name        string        `gorm:"column:name;type:varchar(64);comment:'name'"`
 	Description string        `gorm:"column:desc;type:varchar(64);comment:'description'"`

@@ -18,11 +18,15 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/secretflow/scql/pkg/broker/testdata"
 )
 
 func TestPartyInfos(t *testing.T) {
 	r := require.New(t)
-	partyMgr, err := NewFilePartyMgr("../testdata/party_info_test.json", "alice", []string{"http://alice.com"})
+	err := testdata.CreateTestPemFiles("../testdata")
+	r.NoError(err)
+	partyMgr, err := NewFilePartyMgr("../testdata/party_info_test.json", "alice")
 	r.NoError(err)
 	r.NotNil(partyMgr)
 

@@ -54,28 +54,29 @@ class MuxLink : public yacl::link::transport::TransportLink {
         link_id_(link_id),
         rpc_channel_(rpc_channel) {}
 
-  size_t GetMaxBytesPerChunk() override;
+  size_t GetMaxBytesPerChunk() const override;
   void SetMaxBytesPerChunk(size_t bytes) override;
   std::unique_ptr<::google::protobuf::Message> PackMonoRequest(
-      const std::string& key, yacl::ByteContainerView value) override;
+      const std::string& key, yacl::ByteContainerView value) const override;
   std::unique_ptr<::google::protobuf::Message> PackChunkedRequest(
       const std::string& key, yacl::ByteContainerView value, size_t offset,
-      size_t total_length) override;
+      size_t total_length) const override;
   void UnpackMonoRequest(const ::google::protobuf::Message& request,
                          std::string* key,
-                         yacl::ByteContainerView* value) override;
+                         yacl::ByteContainerView* value) const override;
   void UnpackChunckRequest(const ::google::protobuf::Message& request,
                            std::string* key, yacl::ByteContainerView* value,
-                           size_t* offset, size_t* total_length) override;
+                           size_t* offset, size_t* total_length) const override;
   void FillResponseOk(const ::google::protobuf::Message& request,
-                      ::google::protobuf::Message* response) override;
+                      ::google::protobuf::Message* response) const override;
   void FillResponseError(const ::google::protobuf::Message& request,
-                         ::google::protobuf::Message* response) override;
-  bool IsChunkedRequest(const ::google::protobuf::Message& request) override;
-  bool IsMonoRequest(const ::google::protobuf::Message& request) override;
+                         ::google::protobuf::Message* response) const override;
+  bool IsChunkedRequest(
+      const ::google::protobuf::Message& request) const override;
+  bool IsMonoRequest(const ::google::protobuf::Message& request) const override;
 
   void SendRequest(const ::google::protobuf::Message& request,
-                   uint32_t timeout_override_ms) override;
+                   uint32_t timeout_override_ms) const override;
 
  private:
   size_t http_max_payload_size_;

@@ -7,7 +7,7 @@ session_expire_check_time: 1s
 log_level: debug
 storage:
   type: mysql
-  conn_str: "root:testpass@tcp(mysql:3306)/scdb?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
+  conn_str: "root:${MYSQL_ROOT_PASSWORD}@tcp(mysql:3306)/scdb?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
   max_idle_conns: 10
   max_open_conns: 100
   conn_max_idle_time: 2m

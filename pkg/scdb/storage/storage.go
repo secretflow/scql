@@ -405,6 +405,16 @@ func QueryTablesOwner(store *gorm.DB, dbName string, tns []string) ([]string, er
 	return owners, nil
 }
 
+// Get All view names in database `dbName`
+func QueryAllViewsInDb(store *gorm.DB, dbName string) ([]string, error) {
+	var tableNames []string
+	result := store.Model(&Table{}).Where("db = ? AND is_view = true", dbName).Pluck("table_name", &tableNames)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return tableNames, nil
+}
+
 func CheckDatabaseExist(db *gorm.DB, dbName string) (bool, error) {
 	database := Database{}
 	result := db.Where(&Database{Db: dbName}).Find(&database)

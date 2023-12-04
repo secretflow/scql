@@ -60,7 +60,6 @@ func (b *TestAppBuilder) buildHandlerTestApp(partyCode, engineEndpoint string) (
 			Port: 8082,
 		},
 		PartyCode:                    partyCode,
-		Engines:                      []string{engineEndpoint},
 		PartyInfoFile:                b.PartyInfoTmpPath,
 		PrivatePemPath:               b.PemFilePaths[partyCode],
 		ExchangeJobInfoRetryTimes:    3,
@@ -69,9 +68,10 @@ func (b *TestAppBuilder) buildHandlerTestApp(partyCode, engineEndpoint string) (
 			ClientTimeout: 1 * time.Second,
 			Protocol:      "http",
 			ContentType:   "application/json",
+			Uris:          []config.EngineUri{{ForPeer: engineEndpoint}},
 		},
 	}
-	partyMgr, err := partymgr.NewFilePartyMgr(cfg.PartyInfoFile, cfg.PartyCode, cfg.Engines)
+	partyMgr, err := partymgr.NewFilePartyMgr(cfg.PartyInfoFile, cfg.PartyCode)
 	if err != nil {
 		return nil, err
 	}

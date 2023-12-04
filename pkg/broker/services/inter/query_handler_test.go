@@ -25,6 +25,7 @@ import (
 
 	"github.com/secretflow/scql/pkg/broker/application"
 	"github.com/secretflow/scql/pkg/broker/constant"
+	"github.com/secretflow/scql/pkg/broker/services/common"
 	"github.com/secretflow/scql/pkg/broker/services/inter"
 	"github.com/secretflow/scql/pkg/broker/storage"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
@@ -61,7 +62,7 @@ func (s *interTestSuite) SetupSuite() {
 func (s *interTestSuite) bootstrap(manager *storage.MetaManager) {
 	txn := manager.CreateMetaTransaction()
 	defer txn.Finish(nil)
-	s.NoError(txn.CreateProject(storage.Project{ID: "1", Name: "test project", Creator: "bob", Member: "bob;carol", ProjectConf: storage.ProjectConfig{SpuConf: `{"protocol": "SEMI2K","field": "FM64"}`}}))
+	s.NoError(txn.CreateProject(storage.Project{ID: "1", Name: "test project", Creator: "bob", Member: "alice;bob;carol", ProjectConf: storage.ProjectConfig{SpuConf: `{"protocol": "SEMI2K","field": "FM64"}`}}))
 	// mock table/ccl
 	metaA := storage.TableMeta{
 		Table: storage.Table{
@@ -99,14 +100,19 @@ func (s *interTestSuite) bootstrap(manager *storage.MetaManager) {
 	c4Identifier := storage.ColumnPrivIdentifier{ProjectID: "1", TableName: "tb", ColumnName: "data"}
 	c5Identifier := storage.ColumnPrivIdentifier{ProjectID: "1", TableName: "tc", ColumnName: "id"}
 	c6Identifier := storage.ColumnPrivIdentifier{ProjectID: "1", TableName: "tc", ColumnName: "data"}
-	privs := []storage.ColumnPriv{}
-	for _, p := range []string{"bob", "alice", "carol"} {
-		for _, identifier := range []storage.ColumnPrivIdentifier{c1Identifier, c2Identifier, c3Identifier, c4Identifier, c5Identifier, c6Identifier} {
+	tableNameToOwners := map[string]string{
+		"ta": "alice",
+		"tb": "bob",
+		"tc": "carol",
+	}
+	for _, identifier := range []storage.ColumnPrivIdentifier{c1Identifier, c2Identifier, c3Identifier, c4Identifier, c5Identifier, c6Identifier} {
+		privs := []storage.ColumnPriv{}
+		for _, p := range []string{"bob", "alice", "carol"} {
 			identifier.DestParty = p
 			privs = append(privs, storage.ColumnPriv{ColumnPrivIdentifier: identifier, Priv: "plaintext"})
 		}
+		s.NoError(common.GrantColumnConstraintsWithCheck(txn, "1", tableNameToOwners[identifier.TableName], privs))
 	}
-	s.NoError(txn.GrantColumnConstraints(privs))
 }
 
 func (s *interTestSuite) SetupTest() {

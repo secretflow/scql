@@ -287,7 +287,13 @@ func (svc *grpcIntraSvc) ProcessInvitation(c context.Context, req *pb.ProcessInv
 	if err == nil {
 		return nil, fmt.Errorf("ProcessInvitation: existing project{%+v} conflicts with invitation{%+v}", proj, invitation)
 	}
-
+	if req.GetRespond() == pb.InvitationRespond_ACCEPT {
+		// insert a blank project to avoid duplicate project and lock it
+		err = txn.CreateProject(storage.Project{ID: invitation.ProjectID, Creator: invitation.Creator})
+		if err != nil {
+			return nil, fmt.Errorf("ProcessInvitation: CreateProject: %v", err)
+		}
+	}
 	// 1. Send Rpc request to project owner
 	url, err := svc.app.PartyMgr.GetBrokerUrlByParty(invitation.Inviter)
 	if err != nil {
@@ -321,7 +327,7 @@ func (svc *grpcIntraSvc) ProcessInvitation(c context.Context, req *pb.ProcessInv
 		if err != nil {
 			return nil, fmt.Errorf("ProcessInvitation: unmarshal project failed: %v", err)
 		}
-		err = txn.CreateProject(proj)
+		err = txn.UpdateProject(proj)
 		if err != nil {
 			return nil, fmt.Errorf("ProcessInvitation: CreateProject: %v", err)
 		}

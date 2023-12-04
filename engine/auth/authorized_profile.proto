@@ -23,12 +23,12 @@ message PartyIdentity {
   string public_key = 2;
 }
 
-message SCDBIdentity {
+message DriverIdentity {
   // base64 encoded version of the DER encoded public key
   string public_key = 1;
 }
 
 message AuthorizedProfile {
-  SCDBIdentity scdb = 1;
+  DriverIdentity driver = 1;
   repeated PartyIdentity parties = 2;
 }

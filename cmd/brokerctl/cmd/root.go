@@ -40,6 +40,10 @@ func Execute() error {
 	return rootCmd.Execute()
 }
 
+func SetVersion(version string) {
+	rootCmd.Version = version
+}
+
 func init() {
 	rootCmd.PersistentFlags().StringVar(&host, "host", "", "host to access broker, e.g: http://localhost:8080")
 	rootCmd.PersistentFlags().StringVar(&projectID, "project-id", "", "unique identifier for project")

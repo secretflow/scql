@@ -1,10 +1,7 @@
-Quickstart tutorial
-===================
+Centralized Deployment Quickstart Tutorial
+==========================================
 
-TL;DR
------
-
-Use ``docker-compose`` to deploy a standalone SCQL, then use scdbclient to query
+In this tutorial, you will deploy the SCQL system on a single machine, then simulate the project settings for joint data analysis between two parties, and finally initiate a joint analysis query.
 
 
 Prerequisites

@@ -49,7 +49,7 @@ jobs:
           command: |
             set +e
             go mod tidy
-            go test -timeout=30m -v  ./...
+            go test -timeout=30m -v  ./pkg/...
   linux_engine_ut:
     docker:
       - image: registry.hub.docker.com/secretflow/scql-ci:0.9
@@ -123,7 +123,7 @@ jobs:
                 command: |
                   set +e
                   go mod tidy
-                  go test -timeout=30m -v ./...
+                  go test -timeout=30m -v ./pkg/...
   macOS_engine_ut:
     macos:
       xcode: 14.2

@@ -28,11 +28,6 @@ import (
 	"github.com/secretflow/scql/pkg/util/message"
 )
 
-const (
-	SessionExpireTimeSec    = 1000
-	SessionCheckIntervalSec = 10
-)
-
 type App struct {
 	Sessions     *cache.Cache
 	PartyMgr     partymgr.PartyMgr

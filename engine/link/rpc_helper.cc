@@ -20,36 +20,6 @@
 #include "engine/link/mux_receiver.pb.h"
 
 namespace scql::engine {
-
-bool LogicalRetryPolicy::DoRetry(const brpc::Controller* cntl) const {
-  if (cntl->ErrorCode() == 0) {
-    auto response = dynamic_cast<link::pb::MuxPushResponse*>(cntl->response());
-    if (!response) {
-      SPDLOG_WARN("fail to get from cntl->response()");
-      return false;
-    }
-
-    if (response->error_code() == link::pb::ErrorCode::UNEXPECTED_ERROR) {
-      // NOTE: not retry for exact errors(INVILAD_INPUT/...), as retrying may
-      // result in the same response.
-      SPDLOG_DEBUG(
-          "response not success for unknown reasons, retry after sleep");
-      cntl->response()->Clear();
-      return true;
-    } else {
-      // default no retry for  other response error.
-      return false;
-    }
-  }
-  // leave others to brpc::DefaultRetryPolicy()
-  return brpc::DefaultRetryPolicy()->DoRetry(cntl);
-}
-
-int32_t LogicalRetryPolicy::GetBackoffTimeMs(
-    const brpc::Controller* controller) const {
-  return retry_delay_ms_;
-}
-
 static std::unique_ptr<brpc::Authenticator> default_authenticator;
 
 void SetDefaultAuthenticator(std::unique_ptr<brpc::Authenticator> auth) {

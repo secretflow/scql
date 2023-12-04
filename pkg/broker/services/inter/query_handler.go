@@ -99,7 +99,7 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 	// ask info from issuer
 	chLen := 1
 	// ask info from other parties
-	selfCode := session.PartyMgr.GetSelfInfo().Code
+	selfCode := session.GetSelfPartyCode()
 	for _, p := range executionInfo.DataParties {
 		if p != req.GetClientId().GetCode() && p != selfCode {
 			chLen += 1
@@ -112,19 +112,25 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 	retCh := make(chan retInfo, chLen)
 	// update local storage from issuer
 	go func() {
-		if slices.Contains(dataParties, req.GetClientId().GetCode()) {
-			reqChecksumCompareRes, err := executionInfo.Checksums.CompareChecksumFor(req.GetClientId().GetCode())
-			if err != nil {
-				return
-			}
-			prepareAgain, err := common.AskInfoByChecksumResult(session, reqChecksumCompareRes, r.GetEnginesInfo().GetTablesByParty(req.GetClientId().GetCode()), req.GetClientId().GetCode())
-			if err != nil {
-				return
-			}
+		var err error
+		prepareAgain := false
+		defer func() {
 			retCh <- retInfo{err, prepareAgain}
+		}()
+		if slices.Contains(dataParties, req.GetClientId().GetCode()) {
+			var reqChecksumCompareRes pb.ChecksumCompareResult
+			reqChecksumCompareRes, err = executionInfo.Checksums.CompareChecksumFor(req.GetClientId().GetCode())
+			if err != nil {
+				logrus.Warningf("CompareChecksumFor: %s", err)
+				return
+			}
+			prepareAgain, err = common.AskInfoByChecksumResult(session, reqChecksumCompareRes, r.GetEnginesInfo().GetTablesByParty(req.GetClientId().GetCode()), req.GetClientId().GetCode())
+			if err != nil {
+				logrus.Warningf("AskInfoByChecksumResult: %s", err)
+				return
+			}
 			return
 		}
-		retCh <- retInfo{nil, false}
 	}()
 	// update local storage from other parties
 	for _, p := range executionInfo.DataParties {

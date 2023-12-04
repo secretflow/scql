@@ -69,9 +69,9 @@ func (svc *grpcIntraSvc) CreateTable(c context.Context, req *pb.CreateTableReque
 	if err != nil {
 		return nil, fmt.Errorf("CreateTable: Table schema err: %v", err)
 	}
-	err = txn.AddTable(tableMeta)
+	err = common.AddTableWithCheck(txn, req.GetProjectId(), app.Conf.PartyCode, tableMeta)
 	if err != nil {
-		return nil, fmt.Errorf("CreateTable: AddTable err: %v", err)
+		return nil, fmt.Errorf("CreateTable: AddTableWithCheck err: %v", err)
 	}
 
 	// Sync Info to other parties
@@ -171,9 +171,9 @@ func (svc *grpcIntraSvc) DropTable(c context.Context, req *pb.DropTableRequest) 
 		ProjectID: req.GetProjectId(),
 		TableName: req.GetTableName(),
 	}
-	err = txn.DropTable(tableId)
+	_, err = common.DropTableWithCheck(txn, req.GetProjectId(), app.Conf.PartyCode, tableId)
 	if err != nil {
-		return nil, fmt.Errorf("DropTable: %v", err)
+		return nil, fmt.Errorf("DropTable: DropTableWithCheck err %v", err)
 	}
 
 	// Sync to other parties

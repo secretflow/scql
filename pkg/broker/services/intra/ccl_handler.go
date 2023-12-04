@@ -57,12 +57,7 @@ func (svc *grpcIntraSvc) GrantCCL(ctx context.Context, req *pb.GrantCCLRequest) 
 		}
 	}
 
-	err = common.PrivsManagedByParty(txn, privs, app.Conf.PartyCode)
-	if err != nil {
-		return nil, fmt.Errorf("GrantCCL: failed to check privs: %v", err)
-	}
-
-	err = txn.GrantColumnConstraints(privs)
+	err = common.GrantColumnConstraintsWithCheck(txn, req.GetProjectId(), app.Conf.PartyCode, privs)
 	if err != nil {
 		return nil, fmt.Errorf("GrantCCL: GrantColumnConstraints err: %v", err)
 	}
@@ -100,16 +95,10 @@ func (svc *grpcIntraSvc) RevokeCCL(c context.Context, req *pb.RevokeCCLRequest) 
 		return nil, fmt.Errorf("RevokeCCL: %v", err)
 	}
 
-	err = common.PrivIDsManagedByParty(txn, privIDs, app.Conf.PartyCode)
+	err = common.RevokeColumnConstraintsWithCheck(txn, req.GetProjectId(), app.Conf.PartyCode, privIDs)
 	if err != nil {
 		return nil, fmt.Errorf("RevokeCCL: %v", err)
 	}
-
-	err = txn.RevokeColumnConstraints(privIDs)
-	if err != nil {
-		return nil, fmt.Errorf("RevokeCCL: %v", err)
-	}
-
 	// Sync to other parties
 	proj, err := txn.GetProject(req.GetProjectId())
 	if err != nil {

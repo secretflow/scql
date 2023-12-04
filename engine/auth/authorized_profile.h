@@ -25,10 +25,10 @@ class AuthorizedProfile {
   void VerifyParty(const std::string& party_code,
                    const std::string& pub_key) const;
 
-  void VerifySCDB(const std::string& pub_key) const;
+  void VerifyDriver(const std::string& pub_key) const;
 
  private:
-  std::string scdb_pub_key_;
+  std::string driver_pub_key_;
   std::unordered_map<std::string, std::string> trusted_parties_;
 };
 

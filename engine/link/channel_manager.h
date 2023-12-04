@@ -23,7 +23,7 @@ namespace scql::engine {
 enum class RemoteRole {
   Invalid = 0,
   PeerEngine = 1,
-  Scdb = 2,
+  Driver = 2,  // Driver could be SCDB, SCQLBroker...
 };
 
 class ChannelManager {

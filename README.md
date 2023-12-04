@@ -52,7 +52,7 @@ make pb
 make
 
 # run scdb unit tests
-go test ./...
+go test ./pkg/...
 ```
 
 ### Build docs
@@ -68,6 +68,14 @@ make doc
 # Build documentation in Chinese
 make doc-cn
 ```
+
+## Hardware Requirements
+
+The following requirements only apply to SCQLEngine.
+
+- CPU
+  * x86_64: minimum required AVX instruction set. For FourQ based PSI, the AVX2 instruction set is required.
+
 
 ## Disclaimer
 
