@@ -73,7 +73,8 @@ Create a file called ``config.yml`` in your workspace and paste the following co
     protocol: http
     content_type: application/json
     uris:
-      - for_peer: engine:8003
+      - for_peer: __ENGINE_URL__
+        for_self: engine:8003
   storage:
     type: mysql
     conn_str: "root:__MYSQL_ROOT_PASSWORD__@tcp(mysql:3306)/brokeralice?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
@@ -86,6 +87,8 @@ Create a file called ``config.yml`` in your workspace and paste the following co
 .. note::
 
   For Bob, the **party_code** should be ``bob``, and the ``brokeralice`` in **conn_str** should be replaced by ``brokerbob``.
+
+  The ``__ENGINE_URL__`` should be replaced by **machine host/ip + engine published port**, like: http://30.30.30.30:8003.
 
   The ``__MYSQL_ROOT_PASSWORD__`` should be replaced with the password set by the corresponding party, and please replace this placeholder in the same way for subsequent files.
 
@@ -109,8 +112,6 @@ Create a file called ``gflags.conf`` in your workspace and paste the following c
   # party authentication flags
   --enable_self_auth=false
   --enable_peer_auth=false
-  --private_key_pem_path=/home/admin/engine/conf/ed25519key.pem
-  --authorized_profile_path=/home/admin/engine/conf/authorized_profile.json
 
 .. note::
 
@@ -131,7 +132,7 @@ Create a file called ``docker-compose.yaml`` in your workspace and paste the fol
   version: '3.8'
   services:
     broker:
-      image: scql:latest
+      image: secretflow/scql:latest
       command:
         - /home/admin/bin/broker
         - -config=/home/admin/configs/config.yml
@@ -149,13 +150,11 @@ Create a file called ``docker-compose.yaml`` in your workspace and paste the fol
       command:
         - /home/admin/bin/scqlengine
         - --flagfile=/home/admin/engine/conf/gflags.conf
-      image: scql:latest
+      image: secretflow/scql:latest
       ports:
         - __ENGINE_PORT__:8003
       volumes:
         - ./gflags.conf:/home/admin/engine/conf/gflags.conf
-        - ./ed25519key.pem:/home/admin/engine/conf/ed25519key.pem
-        - ./authorized_profile.json:/home/admin/engine/conf/authorized_profile.json
     mysql:
       image: mysql:latest
       environment:
@@ -180,7 +179,7 @@ Create a file called ``docker-compose.yaml`` in your workspace and paste the fol
 
 .. note::
 
-  ``__INTRA_PORT__``, ``__INTER_PORT__`` and ``__ENGINE_PORT__``  are published ports on the host machine, you need to replace it with an accessible port number. In this case, we have designated them as ``8080``, ``8081`` and ``8003``
+  ``__INTRA_PORT__``, ``__INTER_PORT__`` and ``__ENGINE_PORT__``  are published ports on the host machine, you should replace them with accessible port numbers, in particular, the ``__ENGINE_PORT__`` should be the same port in :ref:`__ENGINE_URL__ <replace_p2p_password>`. In this case, we have designated them as ``8080``, ``8081`` and ``8003``
 
   Please remember to replace ``__MYSQL_ROOT_PASSWORD__`` with the same password :ref:`as before <replace_p2p_password>`
 
@@ -223,15 +222,12 @@ Create other files:
 
   # generate private key
   openssl genpkey -algorithm ed25519 -out ed25519key.pem
-  # get public key corresponding to the private key, the output can be used to replace the __ALICE_PUBLIC_KEY__ in engine Bob's authorized_profile.json
-  # for engine Bob,  the output can be used to replace the __BOB_PUBLIC_KEY__ in engine Alice's authorized_profile.json
+  # get public key corresponding to the private key, the output can be used to replace the __ALICE_PUBLIC_KEY__ in party_info.json
+  # for engine Bob,  the output can be used to replace the __BOB_PUBLIC_KEY__ in party_info.json
   openssl pkey -in ed25519key.pem  -pubout -outform DER | base64
-  # download authorized profile
-  # for engine Bob, use command: wget https://raw.githubusercontent.com/secretflow/scql/main/examples/p2p-tutorial/engine/bob/conf/authorized_profile.json
-  wget https://raw.githubusercontent.com/secretflow/scql/main/examples/p2p-tutorial/engine/alice/conf/authorized_profile.json
 
 
-Then you need to replace ``__XXX_PUBLIC_KEY__`` in party_info.json and authorized_profile.json with corresponding public keys.
+Then you need to replace ``__XXX_PUBLIC_KEY__`` in party_info.json with corresponding public keys.
 
 
 1.6 Start Services
@@ -243,7 +239,6 @@ The file your workspace should be as follows:
 
   └── scql-p2p
     ├── alice_init.sql
-    ├── authorized_profile.json
     ├── broker_init_alice.sql
     ├── config.yml
     ├── docker-compose.yaml
