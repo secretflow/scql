@@ -20,14 +20,14 @@ msgstr ""
 
 #: ../../intro/tutorial.rst:2
 msgid "Centralized Deployment Quickstart Tutorial"
-msgstr "以中心化模式快速开始"
+msgstr "基于中心化部署架构的快速开始"
 
 #: ../../intro/tutorial.rst:4
 msgid ""
 "In this tutorial, you will deploy the SCQL system on a single machine, "
 "then simulate the project settings for joint data analysis between two "
 "parties, and finally initiate a joint analysis query."
-msgstr "在本教程中，您将在单机上部署 SCQL 系统，然后模拟两方联合数据分析场景，对项目设置并发起联合分析查询。"
+msgstr "在本教程中，您将在单机上部署 SCQL 系统，然后模拟两方进行联合数据分析的项目设置，最后发起联合分析查询。"
 
 #: ../../intro/tutorial.rst:8
 msgid "Prerequisites"

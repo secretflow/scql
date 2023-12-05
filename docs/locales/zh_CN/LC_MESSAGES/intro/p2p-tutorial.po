@@ -26,7 +26,7 @@ msgid ""
 "In this tutorial, you will deploy the SCQL system on a single machine, "
 "then simulate the project settings for joint data analysis between two "
 "parties, and finally initiate a joint analysis query."
-msgstr "在本教程中，您将在单机上部署 SCQL 系统，然后模拟两方联合数据分析场景，对项目设置并发起联合分析查询。"
+msgstr "在本教程中，您将在单机上部署 SCQL 系统，然后模拟两方进行联合数据分析的项目设置，最后发起联合分析查询。"
 
 #: ../../intro/p2p-tutorial.rst:8
 msgid "Deployment Architecture Description"
@@ -41,14 +41,14 @@ msgid ""
 "Centralized: The centralized deployment architecture relies on a trusted "
 "third party to deploy the coordination service SCDB. Each data "
 "participant only needs to deploy a computing engine named SCQLEngine."
-msgstr "中心化：中心化部署架构依靠可信第三方部署协调服务 SCDB，每个数据参与方只需要部署一个 SCQLEngine 计算引擎。"
+msgstr "中心化：中心化部署架构依靠可信第三方部署协调服务 SCDB ，每个数据参与方只需要部署一个 SCQLEngine 计算引擎。"
 
 #: ../../intro/p2p-tutorial.rst:13
 msgid ""
 "P2P: The P2P deployment architecture does not require a trusted third "
 "party. Each data participant needs to deploy an SCQLEngine and an "
 "SCQLBroker service."
-msgstr "P2P ： P2P 部署架构不需要可信第三方。每个数据参与方都需要部署一个 SCQLEngine 和 SCQLBroker 。"
+msgstr "P2P ： P2P 部署架构不需要可信第三方。每个数据参与方都需要部署一个 SCQLEngine 和一个 SCQLBroker 。"
 
 #: ../../intro/p2p-tutorial.rst:15
 msgid ""

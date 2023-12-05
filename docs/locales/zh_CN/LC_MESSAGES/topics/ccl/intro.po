@@ -254,7 +254,7 @@ msgid ""
 "key becomes ``PLAINTEXT``."
 msgstr ""
 "当 JOIN keys 的 CCL constraint 均为 ``PLAINTEXT_AFTER_JOIN`` 或 ``PLAINTEXT`` "
-"时，则对于 **InnerJoin** ， JOIN keys 交集结果的 CCL 变为 ``PLAINTEXT`` ，对于 **LeftOuterJoin** ，只有右 JOIN keys 的交集结果的 CCL 变为 ``PLAINTEXT`` ， 对于 **RightOuterJoin** ，则是左 JOIN keys 的交集结果变为 ``PLAINTEXT`` 。"
+"时，则对于 **InnerJoin** ， JOIN keys 交集结果的 CCL 变为 ``PLAINTEXT`` ，对于 **LeftOuterJoin** ，只有右 JOIN key 的交集结果的 CCL 变为 ``PLAINTEXT`` ， 对于 **RightOuterJoin** ，则是左 JOIN key 的交集结果变为 ``PLAINTEXT`` 。"
 
 #: ../../topics/ccl/intro.rst:64
 msgid "**Group By**"
