@@ -23,7 +23,7 @@ Example for SCDB
   session_expire_time: 1h
   session_expire_check_time: 100ms
   password_check: true
-  log_level: debug
+  log_level: info
   enable_audit_logger: true
   audit:
     audit_log_file: audit/audit.log
@@ -261,7 +261,7 @@ Example for SCQLBroker
     protocol: https
     cert_file: ${your cert file path}
     key_file: ${your key file path}
-  log_level: debug
+  log_level: info
   party_code: alice
   session_expire_time: 24h
   session_expire_check_time: 1m
