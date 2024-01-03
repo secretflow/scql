@@ -31,7 +31,7 @@ jobs:
     # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
     # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
     docker:
-      - image: registry.hub.docker.com/secretflow/scql-ci:0.9
+      - image: secretflow/scql-ci:latest
     resource_class: 2xlarge
     # Add steps to the job
     # See: https://circleci.com/docs/2.0/configuration-reference/#steps
@@ -52,50 +52,26 @@ jobs:
             go test -timeout=30m -v  ./pkg/...
   linux_engine_ut:
     docker:
-      - image: registry.hub.docker.com/secretflow/scql-ci:0.9
+      - image: secretflow/scql-ci:latest
     resource_class: 2xlarge
     # Add steps to the job
     # See: https://circleci.com/docs/2.0/configuration-reference/#steps
     steps:
-      # Kill the whole ci after 1hr
-      - run:
-          name: Cancel build after set time
-          background: true
-          command: |
-            sleep 3600
-            echo "Canceling workflow as too much time has elapsed"
-            curl -X POST --header "Content-Type: application/json" "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/cancel?circle-token=${BUILD_TIMER_TOKEN}"
       - checkout
-      - restore_cache:
-          name: "Restore build engine cache"
-          key: engine-ut-build-{{ arch }}-
       - run:
           name: "Checkout devtools"
-          command: git clone https://github.com/secretflow/devtools.git
-      - run:
-          name: Decompress cache
-          command: sh devtools/decompress-build-cache.sh engine_ut_cache
+          command: git clone https://github.com/secretflow/devtools.git ../devtools
       - run:
           name: "Engine Test"
           command: |
             set +e
             declare -i test_status
-            bazel test //engine/... -c opt --ui_event_filters=-info,-debug,-warning --test_output=errors --disk_cache=~/.cache/engine_ut_cache | tee test_result.log; test_status=${PIPESTATUS[0]}
-            sh .ci/script/rename_junit_xml.sh
+            bazel test //engine/... -c opt --ui_event_filters=-info,-debug,-warning --test_output=errors --remote_cache=https://storage.googleapis.com/secretflow --google_credentials=../gcs.json --remote_download_minimal | tee test_result.log; test_status=${PIPESTATUS[0]}
+            
+            sh ../devtools/rename_junit_xml.sh
             find bazel-bin/ -executable -type f -name "*_test"  -print0 | xargs -0 tar -cvzf test_binary.tar.gz
             find bazel-testlogs/ -type f -name "test.log"  -print0 | xargs -0 tar -cvzf test_logs.tar.gz
             exit ${test_status}
-      - run:
-          name: Cleanup and compress cache
-          command: |
-            sh devtools/clean_disk_cache.sh ~/.cache/engine_ut_cache
-            sh devtools/compress-build-cache.sh engine_ut_cache
-          when: always
-      - save_cache:
-          key: engine-ut-build-{{ arch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
-          paths:
-            - ~/.cache/engine_ut_cache.tar.gz
-          when: always
       - store_test_results:
           path: test-results
       - store_artifacts:
@@ -104,9 +80,7 @@ jobs:
           path: test_logs.tar.gz
   macOS_scdb_ut:
     macos:
-      xcode: 14.2
-    environment:
-      HOMEBREW_NO_AUTO_UPDATE: 1
+      xcode: 15.1
     resource_class: macos.m1.large.gen1
     steps:
       - checkout
@@ -126,58 +100,35 @@ jobs:
                   go test -timeout=30m -v ./pkg/...
   macOS_engine_ut:
     macos:
-      xcode: 14.2
-    environment:
-      HOMEBREW_NO_AUTO_UPDATE: 1
+      xcode: 15.1
     resource_class: macos.m1.large.gen1
     steps:
       - checkout
-      - when:
-          condition:
-            equal: [main, << pipeline.git.branch >>]
-          steps:
-            - restore_cache:
-                name: "Restore engine cache"
-                key: engine-ut-build-{{ arch }}-
-            - run:
-                name: "Checkout devtools"
-                command: git clone https://github.com/secretflow/devtools.git
-            - run:
-                name: Decompress cache
-                command: sh devtools/decompress-build-cache.sh engine_ut_cache
-            - run:
-                name: "Install homebrew dependencies"
-                command: |
-                  brew install bazel cmake ninja libomp wget go@1.19 md5sha1sum
-                  brew link go@1.19
-                  (cd /opt/homebrew/Cellar/bazel/*.*.*/libexec/bin && curl -fLO https://github.com/bazelbuild/bazel/releases/download/5.4.1/bazel-5.4.1-darwin-arm64 && chmod +x bazel-5.4.1-darwin-arm64)
-            - run:
-                name: "Engine Test"
-                command: |
-                  set +e
-                  declare -i test_status
-                  bazel test //engine/... -c opt --ui_event_filters=-info,-debug,-warning --test_output=errors --disk_cache=~/.cache/engine_ut_cache | tee test_result.log; test_status=${PIPESTATUS[0]}
-                  sh .ci/script/rename_junit_xml.sh
-                  find bazel-bin/ -perm +111 -type f -name "*_test"  -print0 | xargs -0 tar -cvzf test_binary.tar.gz
-                  find bazel-testlogs/ -type f -name "test.log"  -print0 | xargs -0 tar -cvzf test_logs.tar.gz
-                  exit ${test_status}
-            - run:
-                name: Cleanup and compress cache
-                command: |
-                  sh devtools/clean_disk_cache.sh ~/.cache/engine_ut_cache
-                  sh devtools/compress-build-cache.sh engine_ut_cache
-                when: always
-            - save_cache:
-                key: engine-ut-build-{{ arch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
-                paths:
-                  - ~/.cache/engine_ut_cache.tar.gz
-                when: always
-            - store_test_results:
-                path: test-results
-            - store_artifacts:
-                path: test_binary.tar.gz
-            - store_artifacts:
-                path: test_logs.tar.gz
+      - run:
+          name: "Checkout devtools"
+          command: git clone https://github.com/secretflow/devtools.git ../devtools
+      - run:
+          name: "Install homebrew dependencies"
+          command: |
+            brew install bazelisk cmake ninja libomp wget go@1.19 md5sha1sum
+            brew link go@1.19
+      - run:
+          name: "Engine Test"
+          command: |
+            set +e
+            declare -i test_status
+            bazel test //engine/... -c opt --ui_event_filters=-info,-debug,-warning --test_output=errors --remote_cache=https://storage.googleapis.com/secretflow --google_credentials=../gcs.json --remote_download_minimal | tee test_result.log; test_status=${PIPESTATUS[0]}
+            
+            sh ../devtools/rename_junit_xml.sh
+            find bazel-bin/ -perm +111 -type f -name "*_test"  -print0 | xargs -0 tar -cvzf test_binary.tar.gz
+            find bazel-testlogs/ -type f -name "test.log"  -print0 | xargs -0 tar -cvzf test_logs.tar.gz
+            exit ${test_status}
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test_binary.tar.gz
+      - store_artifacts:
+          path: test_logs.tar.gz
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
@@ -186,6 +137,10 @@ workflows:
     when: << pipeline.parameters.run_unittest >>
     jobs:
       - linux_scdb_ut
-      - linux_engine_ut
+      - linux_engine_ut:
+          context:
+            - gcs
       - macOS_scdb_ut
-      - macOS_engine_ut
+      - macOS_engine_ut:
+          context:
+            - gcs
