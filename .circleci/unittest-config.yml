@@ -84,20 +84,16 @@ jobs:
     resource_class: macos.m1.large.gen1
     steps:
       - checkout
-      - when:
-          condition:
-            equal: [main, << pipeline.git.branch >>]
-          steps:
-            - run:
-                name: "Install homebrew dependencies"
-                command: |
-                  brew install wget go
-            - run:
-                name: "SCDB Test"
-                command: |
-                  set +e
-                  go mod tidy
-                  go test -timeout=30m -v ./pkg/...
+      - run:
+          name: "Install homebrew dependencies"
+          command: |
+            brew install wget go
+      - run:
+          name: "SCDB Test"
+          command: |
+            set +e
+            go mod tidy
+            go test -timeout=30m -v ./pkg/...
   macOS_engine_ut:
     macos:
       xcode: 15.1
