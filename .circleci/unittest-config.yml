@@ -139,10 +139,6 @@ workflows:
     when: << pipeline.parameters.run_unittest >>
     jobs:
       - linux_scdb_ut
-      - linux_engine_ut:
-          context:
-            - gcs
+      - linux_engine_ut
       - macOS_scdb_ut
-      - macOS_engine_ut:
-          context:
-            - gcs
+      - macOS_engine_ut
