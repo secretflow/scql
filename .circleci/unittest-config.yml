@@ -56,14 +56,16 @@ jobs:
           command: git clone https://github.com/secretflow/devtools.git ../devtools
       - run:
           name: Setup GCS
-          command: ../devtools/base64_converter.py --str ${gcs_content} --out_file ../gcs.json
+          command: |
+            echo ${gcs_content} > ../gcs.data
+            # FIXME: disable BwoB due to https://github.com/bazelbuild/bazel/pull/20409
+            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json
       - run:
           name: "Engine Test"
           command: |
             set +e
             declare -i test_status
-            # FIXME: disable BwoB due to https://github.com/bazelbuild/bazel/pull/20409
-            bazel test //engine/... -c opt --ui_event_filters=-info,-debug,-warning --test_output=errors --remote_cache=https://storage.googleapis.com/secretflow --google_credentials=../gcs.json | tee test_result.log; test_status=${PIPESTATUS[0]}
+            bazel test //engine/... -c opt --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
             
             sh ../devtools/rename_junit_xml.sh
             find bazel-bin/ -executable -type f -name "*_test"  -print0 | xargs -0 tar -cvzf test_binary.tar.gz
@@ -114,15 +116,17 @@ jobs:
             brew link go@1.19
       - run:
           name: Setup GCS
-          command: ../devtools/base64_converter.py --str ${gcs_content} --out_file ../gcs.json
+          command: |
+            echo ${gcs_content} > ../gcs.data
+            # FIXME: disable BwoB due to https://github.com/bazelbuild/bazel/pull/20409
+            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json
       - run:
           name: "Engine Test"
           command: |
             set +e
             declare -i test_status
 
-            # FIXME: disable BwoB due to https://github.com/bazelbuild/bazel/pull/20409
-            bazel test //engine/... -c opt --ui_event_filters=-info,-debug,-warning --test_output=errors --remote_cache=https://storage.googleapis.com/secretflow --google_credentials=../gcs.json | tee test_result.log; test_status=${PIPESTATUS[0]}
+            bazel test //engine/... -c opt --ui_event_filters=-info,-debug,-warning --test_output=errors| tee test_result.log; test_status=${PIPESTATUS[0]}
             
             sh ../devtools/rename_junit_xml.sh
             find bazel-bin/ -perm +111 -type f -name "*_test"  -print0 | xargs -0 tar -cvzf test_binary.tar.gz
