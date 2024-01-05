@@ -68,8 +68,8 @@ jobs:
           command: |
             set +e
             cd .ci/docker-compose
-            pip install -r requirements.txt
-            python setup.py
+            python3 -m pip install -r requirements.txt
+            python3 setup.py
             docker compose -p regtest up -d 
             docker ps | grep regtest
       - run:
