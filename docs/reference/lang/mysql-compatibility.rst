@@ -90,12 +90,12 @@ Compare(>, <, <=, >=, <>, =, !=)
 
 Arithmetic(+, -, \*, /, %)
 """"""""""""""""""""""""""
-* Both arguments in a arithmetic operation shouldn't be string.
+* Arguments of '%' operation only support type long, while other arithmetic operations support types other than type string.
 * If both arguments are long, they are calculated as long.
 * If one of the arguments is float or double, the other argument will be calculated as double.
 
 Aggregation(sum, count, avg, min, max)
 """"""""""""""""""""""""""""""""""""""
-* All arguments in a aggregation function shouldn't be string.
+* In all aggregation functions except count, parameters should not be type string.
 * If all arguments are long, they are calculated as long.
 * If one of the arguments is float or double, the other argument will be calculated as double.

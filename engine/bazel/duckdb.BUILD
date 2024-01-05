@@ -29,13 +29,11 @@ common_cache_entries = {
     "BUILD_UNITTESTS": "OFF",
     "ENABLE_SANITIZER": "OFF",
     "ENABLE_UBSAN": "OFF",
-    "BUILD_JEMALLOC_EXTENSION": "OFF",
 }
 
 spu_cmake_external(
     name = "duckdb",
     cache_entries = common_cache_entries,
-    generate_crosstool_file = False,
     lib_source = ":all_srcs",
     linkopts = [
         "-lm",
@@ -51,5 +49,6 @@ spu_cmake_external(
         "libduckdb_fastpforlib.a",
         "libduckdb_mbedtls.a",
         "libduckdb_fsst.a",
+        "libparquet_extension.a",
     ],
 )

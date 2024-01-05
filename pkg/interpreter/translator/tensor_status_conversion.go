@@ -143,11 +143,14 @@ func (b *statusConverter) revealString(input *Tensor, revealParty string) (*Tens
 		}
 	}
 
-	publicT, err := b.plan.AddMakePublicNode("make_public", input, b.plan.partyInfo.GetParties())
-	if err != nil {
-		return nil, fmt.Errorf("revealString: %v", err)
+	if input.Status != proto.TensorStatus_TENSORSTATUS_PUBLIC {
+		var err error
+		input, err = b.plan.AddMakePublicNode("make_public", input, b.plan.partyInfo.GetParties())
+		if err != nil {
+			return nil, fmt.Errorf("revealString: %v", err)
+		}
 	}
-	return b.plan.AddMakePrivateNode("make_private", publicT, revealParty, b.plan.partyInfo.GetParties())
+	return b.plan.AddMakePrivateNode("make_private", input, revealParty, b.plan.partyInfo.GetParties())
 }
 
 // if status conversion is possible return cost else return error

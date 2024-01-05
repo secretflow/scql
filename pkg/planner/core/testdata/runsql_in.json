@@ -18,6 +18,26 @@
         "rewritten_sql": "select tbl_1.plain_float_0 from alice.tbl_1"
       },
       {
+        "sql": "select plain_float_0 from alice.tbl_1 as tbl_1",
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_1.plain_float_0 from alice.tbl_1 as tbl_1"
+      },
+      {
+        "sql": "select plain_float_0, Plain_float_1 from alice.tbl_1 as tbl_1",
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_1.plain_float_0,tbl_1.plain_float_1 as Plain_float_1 from alice.tbl_1 as tbl_1"
+      },
+      {
+        "sql": "select plain_float_0, Plain_float_1 + plain_float_0 from alice.tbl_1 as tbl_1",
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_1.plain_float_0,tbl_1.plain_float_1+tbl_1.plain_float_0 as expr_91 from alice.tbl_1 as tbl_1"
+      },
+      {
+        "sql": "select count(*) from (select plain_float_0, Plain_float_1 from alice.tbl_1) as tbl_1 join alice.tbl_2 on tbl_1.Plain_float_1 = tbl_2.plain_float_1",
+        "skip_projection": false,
+        "rewritten_sql": "select count(1) as expr_181 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_float_1=tbl_2.plain_float_1"
+      },
+      {
         "sql": "select plain_float_0, plain_float_0 from alice.tbl_1",
         "skip_projection": false,
         "rewritten_sql": "select tbl_1.plain_float_0,tbl_1.plain_float_0 from alice.tbl_1"
@@ -56,9 +76,9 @@
         "rewritten_sql": "select tbl_1.plain_float_0+tbl_1.plain_float_1 as fl from alice.tbl_1"
       },
       {
-        "sql": "select plain_float_0 % plain_long_0 as fl from alice.tbl_1 where tbl_1.plain_long_0 != 0",
+        "sql": "select plain_long_0 % plain_long_0 as fl from alice.tbl_1 where tbl_1.plain_long_0 != 0",
         "skip_projection": false,
-        "rewritten_sql": "select tbl_1.plain_float_0%tbl_1.plain_long_0 as fl from alice.tbl_1 where tbl_1.plain_long_0!=0"
+        "rewritten_sql": "select tbl_1.plain_long_0%tbl_1.plain_long_0 as fl from alice.tbl_1 where tbl_1.plain_long_0!=0"
       },
       {
         "sql": "select plain_float_0 + plain_float_1 as fl from alice.tbl_1 where plain_float_0 + plain_float_1 > 0",
@@ -140,6 +160,11 @@
         "sql": "select plain_long_0 from alice.tbl_1 union all select plain_long_0 from alice.tbl_2",
         "skip_projection": false,
         "rewritten_sql": "select t_0.plain_long_0 from ((select tbl_1.plain_long_0 from alice.tbl_1) union all (select tbl_2.plain_long_0 from alice.tbl_2)) as t_0"
+      },
+      {
+        "sql": "select mm from (select plain_long_0 + plain_long_1 as mm from alice.tbl_1 union all select plain_long_0 + plain_long_1 as mm from alice.tbl_2) as tt",
+        "skip_projection": false,
+        "rewritten_sql": "select tt.expr_183 as mm from ((select tbl_1.plain_long_0+tbl_1.plain_long_1 as expr_183 from alice.tbl_1) union all (select tbl_2.plain_long_0+tbl_2.plain_long_1 as expr_183 from alice.tbl_2)) as tt"
       },
       {
         "sql": "select plain_long_0 as p from alice.tbl_1 union all select plain_long_0 from alice.tbl_2",
@@ -396,6 +421,46 @@
         "skip_projection": false,
         "rewritten_sql": "select date_format(tbl_1.plain_datetime_0, '%Y-%m-%d %H:%i:%S') as a from alice.tbl_1",
         "skip_pg_test": true
+      },
+      {
+        "sql": "SELECT t_0.b4 FROM  (SELECT tbl_1.plain_string_0 as b4 FROM alice.tbl_1 WHERE tbl_1.plain_string_0 = '123') AS t_0 GROUP BY t_0.b4 HAVING count(1)>=4;",
+        "skip_projection": false,
+        "rewritten_sql": "select any_value(tbl_1.plain_string_0) as b4 from alice.tbl_1 where tbl_1.plain_string_0='123' group by tbl_1.plain_string_0 having count(1)>=4",
+        "rewritten_sql_pg": "select tbl_1.plain_string_0 as b4 from alice.tbl_1 where tbl_1.plain_string_0='123' group by tbl_1.plain_string_0 having count(1)>=4",
+        "rewritten_sql_odps": "select tbl_1.plain_string_0 as b4 from alice.tbl_1 where tbl_1.plain_string_0='123' group by tbl_1.plain_string_0 having count(1)>=4"
+      },
+      {
+        "sql": "SELECT CASE WHEN (t_0.b4='1' OR t_0.b4='1' OR t_0.b4='2') THEN '3' ELSE '4' END AS bank_type, count(1) AS expr_24 FROM (SELECT str_to_date(plain_string_0, '%Y-%m-%d') AS p0, plain_string_1 as b4, plain_string_2 as b5 FROM alice.tbl_1 WHERE (str_to_date(plain_string_0, '%Y-%m-%d')=str_to_date('2023-01-10', '%Y-%m-%d'))) AS t_0 GROUP BY t_0.b4 HAVING count(1)>=4;",
+        "skip_projection": false,
+        "skip_odps_test": true,
+        "skip_pg_test": true,
+        "rewritten_sql": "select case when (any_value(tbl_1.plain_string_1)='1' or any_value(tbl_1.plain_string_1)='1' or any_value(tbl_1.plain_string_1)='2') then '3' else '4' end as bank_type,count(1) as expr_24 from alice.tbl_1 where str_to_date(tbl_1.plain_string_0, '%Y-%m-%d')=str_to_date('2023-01-10', '%Y-%m-%d') group by tbl_1.plain_string_1 having count(1)>=4"
+      },
+      {
+        "sql": "select count(*) from (select plain_float_0 + plain_float_1 as f1 from alice.tbl_1) as ta join alice.tbl_2 on ta.f1 = tbl_2.plain_float_1",
+        "skip_projection": false,
+        "rewritten_sql": "select count(1) as expr_182 from (select tbl_1.plain_float_0+tbl_1.plain_float_1 as f1 from alice.tbl_1) as ta join alice.tbl_2 on ta.f1=tbl_2.plain_float_1"
+      },
+      {
+        "sql": "select bank_type, count(1) from (select case when t1.b4 in ('1', '2', '3') then '1' else '2' end as bank_type from (select str_to_date(plain_string_0, '%Y-%m-%d') as partition_date, plain_string_1 as b4, plain_string_2 as b5 from alice.tbl_1) t1 where t1.partition_date = '2022-02-02') tt group by bank_type;",
+        "skip_projection": false,
+        "skip_odps_test": true,
+        "skip_pg_test": true,
+        "rewritten_sql": "select any_value(case when (t_0.b4='1' or t_0.b4='2' or t_0.b4='3') then '1' else '2' end) as bank_type,count(1) as expr_93 from (select str_to_date(tbl_1.plain_string_0, '%Y-%m-%d') as partition_date,tbl_1.plain_string_1 as b4 from alice.tbl_1 where str_to_date(tbl_1.plain_string_0, '%Y-%m-%d')='2022-02-02') as t_0 group by case when (t_0.b4='1' or t_0.b4='2' or t_0.b4='3') then '1' else '2' end"
+      },
+      {
+        "sql": "select a.plain_long_0, b.plain_long_0 from alice.tbl_0 a left join (select distinct plain_long_0, plain_long_1 from alice.tbl_1) b on a.plain_long_0 = b.plain_long_0",
+        "skip_projection": false,
+        "rewritten_sql": "select a.plain_long_0,b.expr_172 from alice.tbl_0 as a left join (select any_value(tbl_1.plain_long_0) as expr_172 from alice.tbl_1 group by tbl_1.plain_long_0,tbl_1.plain_long_1) as b on a.plain_long_0=b.expr_172",
+        "rewritten_sql_pg": "select a.plain_long_0,b.plain_long_0 from alice.tbl_0 as a left join (select tbl_1.plain_long_0 from alice.tbl_1 group by tbl_1.plain_long_0,tbl_1.plain_long_1) as b on a.plain_long_0=b.plain_long_0",
+        "rewritten_sql_odps": "select a.plain_long_0,b.plain_long_0 from alice.tbl_0 as a left join (select tbl_1.plain_long_0 from alice.tbl_1 group by tbl_1.plain_long_0,tbl_1.plain_long_1) as b on a.plain_long_0=b.plain_long_0"
+      },
+      {
+        "sql": "select a.plain_long_0 from alice.tbl_0 a left join (select distinct plain_long_0, plain_long_1 from alice.tbl_1) b on a.plain_long_0 = b.plain_long_0",
+        "skip_projection": false,
+        "rewritten_sql": "select a.plain_long_0 from alice.tbl_0 as a left join (select any_value(tbl_1.plain_long_0) as expr_172 from alice.tbl_1 group by tbl_1.plain_long_0,tbl_1.plain_long_1) as b on a.plain_long_0=b.expr_172",
+        "rewritten_sql_pg": "select a.plain_long_0 from alice.tbl_0 as a left join (select tbl_1.plain_long_0 from alice.tbl_1 group by tbl_1.plain_long_0,tbl_1.plain_long_1) as b on a.plain_long_0=b.plain_long_0",
+        "rewritten_sql_odps": "select a.plain_long_0 from alice.tbl_0 as a left join (select tbl_1.plain_long_0 from alice.tbl_1 group by tbl_1.plain_long_0,tbl_1.plain_long_1) as b on a.plain_long_0=b.plain_long_0"
       }
     ]
   }

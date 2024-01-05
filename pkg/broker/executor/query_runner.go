@@ -117,7 +117,6 @@ func (r *QueryRunner) CreateChecksum() (map[string]application.Checksum, error) 
 func (r *QueryRunner) ExchangeJobInfo(targetParty string) (*pb.ExchangeJobInfoResponse, error) {
 	executionInfo := r.session.ExecuteInfo
 	selfCode := r.session.GetSelfPartyCode()
-
 	req := &pb.ExchangeJobInfoRequest{
 		ProjectId: executionInfo.ProjectID,
 		JobId:     executionInfo.JobID,
@@ -132,6 +131,7 @@ func (r *QueryRunner) ExchangeJobInfo(targetParty string) (*pb.ExchangeJobInfoRe
 			TableSchema: serverChecksum.TableSchema,
 			Ccl:         serverChecksum.CCL,
 		}
+		logrus.Infof("exchange job info with party %s with request %s", targetParty, req.String())
 	}
 
 	url, err := r.session.PartyMgr.GetBrokerUrlByParty(targetParty)
@@ -159,7 +159,7 @@ func (r *QueryRunner) ExchangeJobInfo(targetParty string) (*pb.ExchangeJobInfoRe
 	if response.Status == nil {
 		return nil, fmt.Errorf("err response from party %s; response %+v", targetParty, response)
 	}
-	if response.Status.Code == int32(pb.Code_CHECKSUM_CHECK_FAILED) {
+	if response.Status.Code == int32(pb.Code_DATA_INCONSISTENCY) {
 		return response, nil
 	}
 	return nil, fmt.Errorf("failed to exchange job info with %s return error %+v", targetParty, response.Status)
@@ -169,9 +169,9 @@ func (r *QueryRunner) prepareData(usedTableNames []string) (dataParties []string
 	s := r.session
 	txn := s.MetaMgr.CreateMetaTransaction()
 	defer func() {
-		txn.Finish(err)
+		err = txn.Finish(err)
 	}()
-	r.tables, err = txn.GetTablesByTableNames(s.ExecuteInfo.ProjectID, usedTableNames)
+	r.tables, err = txn.GetTableMetasByTableNames(s.ExecuteInfo.ProjectID, usedTableNames)
 	if err != nil {
 		return
 	}

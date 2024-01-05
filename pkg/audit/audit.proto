@@ -17,7 +17,6 @@ syntax = "proto3";
 
 package audit.pb;
 
-import "libspu/spu.proto";
 import "api/engine.proto";
 import "api/ccl.proto";
 import "pkg/audit/common.proto";

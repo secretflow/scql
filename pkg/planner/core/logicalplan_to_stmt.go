@@ -28,9 +28,6 @@ func (p *DataSource) SqlStmt(d Dialect) (*runSqlCtx, error) {
 	tableName := ast.TableName{Schema: p.DBName, Name: p.tableInfo.Name}
 	from := &ast.TableRefsClause{TableRefs: &ast.Join{Left: &ast.TableSource{Source: &tableName, AsName: *p.TableAsName}}}
 	tableAsName := *p.TableAsName
-	if p.TableAsName.String() == "" {
-		tableAsName = p.tableInfo.Name
-	}
 	err := c.updateExprNodeFromColumns(d, p.logicalSchemaProducer.Schema().Columns)
 	if err != nil {
 		return nil, err

@@ -851,10 +851,10 @@ func (c *greatestFunctionClass) getFunction(ctx sessionctx.Context, args []Expre
 	case types.ETString:
 		sig = &builtinGreatestStringSig{bf}
 		//sig.setPbCode(tipb.ScalarFuncSig_GreatestString)
-	case types.ETDatetime, types.ETTimestamp:
+	default:
 		//sig = &builtinGreatestTimeSig{bf}
 		//sig.setPbCode(tipb.ScalarFuncSig_GreatestTime)
-		return nil, fmt.Errorf("datetime is not supported")
+		return nil, fmt.Errorf("unsupported data type %d", tp)
 	}
 	sig.getRetTp().Flen, sig.getRetTp().Decimal = fixFlenAndDecimalForGreatestAndLeast(args)
 	return sig, nil
@@ -1080,10 +1080,10 @@ func (c *leastFunctionClass) getFunction(ctx sessionctx.Context, args []Expressi
 	case types.ETString:
 		sig = &builtinLeastStringSig{bf}
 		//sig.setPbCode(tipb.ScalarFuncSig_LeastString)
-	case types.ETDatetime, types.ETTimestamp:
+	default:
 		//sig = &builtinLeastTimeSig{bf}
 		//sig.setPbCode(tipb.ScalarFuncSig_LeastTime)
-		return nil, fmt.Errorf("datetime is not supported")
+		return nil, fmt.Errorf("unsupported data type %d", tp)
 	}
 	sig.getRetTp().Flen, sig.getRetTp().Decimal = fixFlenAndDecimalForGreatestAndLeast(args)
 	return sig, nil

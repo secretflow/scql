@@ -168,7 +168,7 @@ func NewSession(ctx context.Context, info *ExecutionInfo, app *App, asyncMode bo
 
 	txn := session.MetaMgr.CreateMetaTransaction()
 	defer func() {
-		txn.Finish(err)
+		err = txn.Finish(err)
 	}()
 	project, err := txn.GetProject(info.ProjectID)
 	if err != nil {

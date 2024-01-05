@@ -25,29 +25,36 @@ import (
 	"golang.org/x/exp/slices"
 	"google.golang.org/protobuf/encoding/protojson"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/secretflow/scql/pkg/broker/application"
 	"github.com/secretflow/scql/pkg/broker/services/common"
 	"github.com/secretflow/scql/pkg/broker/storage"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	spu "github.com/secretflow/scql/pkg/proto-gen/spu"
+	"github.com/secretflow/scql/pkg/status"
 )
 
 func (svc *grpcIntraSvc) CreateProject(c context.Context, req *pb.CreateProjectRequest) (resp *pb.CreateProjectResponse, err error) {
 	if req == nil {
-		return nil, fmt.Errorf("CreateProject: illegal empty request")
+		return nil, status.New(pb.Code_BAD_REQUEST, "CreateProject: illegal empty request")
 	}
 
 	spuConf, err := protojson.Marshal(req.GetConf().GetSpuRuntimeCfg())
 	if err != nil {
-		return nil, fmt.Errorf("CreateProject: %v", err)
+		return nil, status.New(pb.Code_BAD_REQUEST, fmt.Sprintf("CreateProject: %v", err))
 	}
+	defer func() {
+		if err != nil {
+			err = status.New(pb.Code_INTERNAL, err.Error())
+		}
+	}()
 	app := svc.app
 	project := storage.Project{
 		ID:          req.GetProjectId(),
 		Name:        req.GetName(),
 		Description: req.GetDescription(),
 		Creator:     app.Conf.PartyCode,
-		Member:      app.Conf.PartyCode,
 		Archived:    false,
 		ProjectConf: storage.ProjectConfig{
 			SpuConf: string(spuConf),
@@ -60,7 +67,7 @@ func (svc *grpcIntraSvc) CreateProject(c context.Context, req *pb.CreateProjectR
 		}
 		project.ID = fmt.Sprint(id)
 	}
-
+	// check project ID validity when working as db name
 	err = common.VerifyProjectID(project.ID)
 	if err != nil {
 		return nil, fmt.Errorf("CreateProject: %v", err)
@@ -68,13 +75,12 @@ func (svc *grpcIntraSvc) CreateProject(c context.Context, req *pb.CreateProjectR
 
 	txn := app.MetaMgr.CreateMetaTransaction()
 	defer func() {
-		txn.Finish(err)
+		err = txn.Finish(err)
 	}()
 	err = txn.CreateProject(project)
 	if err != nil {
 		return nil, fmt.Errorf("CreateProject: %v", err)
 	}
-
 	return &pb.CreateProjectResponse{
 		Status: &pb.Status{
 			Code:    int32(0),
@@ -91,15 +97,19 @@ func (svc *grpcIntraSvc) ListProjects(c context.Context, req *pb.ListProjectsReq
 	app := svc.app
 	txn := app.MetaMgr.CreateMetaTransaction()
 	defer func() {
-		txn.Finish(err)
+		err = txn.Finish(err)
+		if err != nil {
+			err = status.New(pb.Code_INTERNAL, err.Error())
+		}
 	}()
 
-	projects, err := txn.ListProjects(req.GetIds())
+	projectWithMembers, err := txn.ListProjects(req.GetIds())
 	if err != nil {
 		return nil, fmt.Errorf("ListProjects: %v", err)
 	}
 	var projectsList []*pb.ProjectDesc
-	for _, proj := range projects {
+	for _, projWithMember := range projectWithMembers {
+		proj := projWithMember.Proj
 		var spuConf spu.RuntimeConfig
 		err := protojson.Unmarshal([]byte(proj.ProjectConf.SpuConf), &spuConf)
 		if err != nil {
@@ -113,7 +123,7 @@ func (svc *grpcIntraSvc) ListProjects(c context.Context, req *pb.ListProjectsReq
 				SpuRuntimeCfg: &spuConf,
 			},
 			Creator: proj.Creator,
-			Members: strings.Split(proj.Member, ";"),
+			Members: projWithMember.Members,
 		})
 	}
 
@@ -131,28 +141,31 @@ func (svc *grpcIntraSvc) ArchiveProject(c context.Context, req *pb.ArchiveProjec
 }
 
 func (svc *grpcIntraSvc) InviteMember(c context.Context, req *pb.InviteMemberRequest) (resp *pb.InviteMemberResponse, err error) {
-	if req.GetMethod() == pb.InviteMemberRequest_PULL {
-		return nil, errors.New("InviteMember: not support PULL method")
+	if req.GetMethod() != pb.InviteMemberRequest_PUSH {
+		return nil, status.New(pb.Code_BAD_REQUEST, fmt.Sprintf("InviteMember: not support invite method %v", req.GetMethod()))
 	}
 	if req.GetProjectId() == "" || req.GetInvitee() == "" {
-		return nil, fmt.Errorf("InviteMember: request illegal, empty project id or invitee in request:%v", protojson.Format(req))
+		return nil, status.New(pb.Code_BAD_REQUEST, fmt.Sprintf("InviteMember: request illegal, empty project id or invitee in request:%v", protojson.Format(req)))
 	}
 
 	app := svc.app
 	txn := app.MetaMgr.CreateMetaTransaction()
 	defer func() {
-		txn.Finish(err)
+		err = txn.Finish(err)
+		if err != nil {
+			err = status.New(pb.Code_INTERNAL, err.Error())
+		}
 	}()
 
-	var proj storage.Project
-	proj, err = txn.GetProject(req.GetProjectId())
+	projWithMember, err := txn.GetProjectAndMembers(req.GetProjectId())
 	if err != nil {
 		return nil, fmt.Errorf("InviteMember: %v", err)
 	}
+	proj := projWithMember.Proj
 	if proj.Creator != app.Conf.PartyCode {
 		return nil, fmt.Errorf("InviteMember: project creator{%v} not equal to selfParty{%v}", proj.Creator, app.Conf.PartyCode)
 	}
-	members := strings.Split(proj.Member, ";")
+	members := projWithMember.Members
 	if slices.Contains(members, req.GetInvitee()) {
 		return nil, fmt.Errorf("InviteMember: project already contains invitee{%v}", req.GetInvitee())
 	}
@@ -169,6 +182,29 @@ func (svc *grpcIntraSvc) InviteMember(c context.Context, req *pb.InviteMemberReq
 		return nil, fmt.Errorf("InviteMember unmarshal: %v", err)
 	}
 
+	// add invitation to metaMgr
+	invite := storage.Invitation{
+		ProjectID:   proj.ID,
+		Name:        proj.Name,
+		Description: proj.Description,
+		Creator:     proj.Creator,
+		Member:      strings.Join(projWithMember.Members, ";"),
+		ProjectConf: proj.ProjectConf,
+		Inviter:     proj.Creator,
+		Invitee:     req.GetInvitee(),
+		Status:      int8(pb.InvitationStatus_UNDECIDED),
+		InviteTime:  time.Now(),
+	}
+	// set existed project invalid
+	err = txn.SetUnhandledInvitationsInvalid(proj.ID, proj.Creator, req.GetInvitee())
+	if err != nil {
+		return nil, fmt.Errorf("InviteMember: failed to set existed invitations invalid with err %v", err)
+	}
+	err = txn.AddInvitations([]storage.Invitation{invite})
+	if err != nil {
+		return nil, fmt.Errorf("InviteMember: %v", err)
+	}
+
 	interReq := &pb.InviteToProjectRequest{
 		ClientId: &pb.PartyId{
 			Code: app.Conf.PartyCode,
@@ -181,7 +217,7 @@ func (svc *grpcIntraSvc) InviteMember(c context.Context, req *pb.InviteMemberReq
 				SpuRuntimeCfg: &spuConf,
 			},
 			Creator: proj.Creator,
-			Members: strings.Split(proj.Member, ";"),
+			Members: projWithMember.Members,
 		},
 		Inviter: app.Conf.PartyCode,
 	}
@@ -189,32 +225,12 @@ func (svc *grpcIntraSvc) InviteMember(c context.Context, req *pb.InviteMemberReq
 	response := &pb.InviteToProjectResponse{}
 	err = app.InterStub.InviteToProject(url, interReq, response)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("InviteMember not success: error occur when inviting %s err %v", req.GetInvitee(), err)
 	}
 
 	if response.GetStatus().GetCode() != 0 {
 		return nil, fmt.Errorf("InviteMember not success: %v", response.GetStatus().String())
 	}
-
-	// add invitation to metaMgr
-	invite := storage.Invitation{
-		ProjectID:   proj.ID,
-		Name:        proj.Name,
-		Description: proj.Description,
-		Creator:     proj.Creator,
-		Member:      proj.Member,
-		ProjectConf: proj.ProjectConf,
-		Inviter:     proj.Creator,
-		Invitee:     req.GetInvitee(),
-		Accepted:    0,
-		InviteTime:  time.Now(),
-	}
-	err = txn.AddInvitations([]storage.Invitation{invite})
-	if err != nil {
-		return nil, fmt.Errorf("InviteMember: %v", err)
-
-	}
-
 	return &pb.InviteMemberResponse{
 		Status: &pb.Status{
 			Code:    int32(0),
@@ -226,7 +242,10 @@ func (svc *grpcIntraSvc) InviteMember(c context.Context, req *pb.InviteMemberReq
 func (svc *grpcIntraSvc) ListInvitations(c context.Context, req *pb.ListInvitationsRequest) (resp *pb.ListInvitationsResponse, err error) {
 	txn := svc.app.MetaMgr.CreateMetaTransaction()
 	defer func() {
-		txn.Finish(err)
+		err = txn.Finish(err)
+		if err != nil {
+			err = status.New(pb.Code_INTERNAL, err.Error())
+		}
 	}()
 
 	invitations, err := txn.ListInvitations()
@@ -253,8 +272,9 @@ func (svc *grpcIntraSvc) ListInvitations(c context.Context, req *pb.ListInvitati
 				Members: strings.Split(inv.Member, ";"),
 			},
 			Inviter: inv.Inviter,
+			Invitee: inv.Invitee,
 			// postscript...
-			Accepted: int32(inv.Accepted),
+			Status: pb.InvitationStatus(inv.Status),
 		})
 
 	}
@@ -269,31 +289,114 @@ func (svc *grpcIntraSvc) ListInvitations(c context.Context, req *pb.ListInvitati
 }
 
 func (svc *grpcIntraSvc) ProcessInvitation(c context.Context, req *pb.ProcessInvitationRequest) (resp *pb.ProcessInvitationResponse, err error) {
-	txn := svc.app.MetaMgr.CreateMetaTransaction()
-	defer func() {
-		txn.Finish(err)
-	}()
+	// check parameter
+	if _, ok := pb.InvitationRespond_name[int32(req.GetRespond())]; !ok {
+		return nil, status.New(pb.Code_BAD_REQUEST, fmt.Sprintf("ProcessInvitation: not support respond type: %d", req.GetRespond()))
+	}
 
+	txn := svc.app.MetaMgr.CreateMetaTransaction()
 	var invitation storage.Invitation
+	invalidInvitation := false
+	var projectInfoBytes []byte
+	var invitationMembers []storage.Member
+	defer func() {
+		finishErr := txn.Finish(err)
+		// use new transaction to set invitation invalid
+		if invalidInvitation {
+			svc.app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
+				return txn.SetInvitationInvalidByID(invitation.ID)
+			})
+		}
+		if err != nil {
+			err = status.New(pb.Code_INTERNAL, err.Error())
+			return
+		}
+		if finishErr != nil {
+			err = status.New(pb.Code_INTERNAL, finishErr.Error())
+			return
+		}
+		// add members not in invitations
+		if len(projectInfoBytes) > 0 {
+			projectAndMembers := storage.ProjectWithMember{}
+			unmarshalErr := json.Unmarshal(projectInfoBytes, &projectAndMembers)
+			// ignore error and return
+			if unmarshalErr != nil {
+				logrus.Warningf("ProcessInvitation: unable to unmarshal %s", unmarshalErr.Error())
+				return
+			}
+			var newMembers []storage.Member
+			for _, member := range projectAndMembers.Members {
+				found := false
+				if member == invitation.Creator || member == invitation.Invitee {
+					continue
+				}
+				for _, projectMember := range invitationMembers {
+					if member == projectMember.Member {
+						found = true
+					}
+				}
+				if !found {
+					newMembers = append(newMembers, storage.Member{ProjectID: invitation.ProjectID, Member: member})
+				}
+			}
+			if len(newMembers) > 0 {
+				svc.app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
+					// lock project
+					_, lockErr := storage.AddExclusiveLock(txn).GetProject(invitation.ProjectID)
+					if lockErr != nil {
+						logrus.Warningf("ProcessInvitation: unable to lock project %s", err.Error())
+						return lockErr
+					}
+					return txn.AddProjectMembers(newMembers)
+				})
+			}
+		}
+	}()
 	invitation, err = txn.GetUnhandledInvitationWithID(req.GetInvitationId())
 	if err != nil {
-		return nil, fmt.Errorf("ProcessInvitation: GetUnhandledInvitationWithID : %v", err)
+		return nil, fmt.Errorf("ProcessInvitation: GetUnhandledInvitationWithID: %v", err)
 	}
 	if invitation.Invitee != svc.app.Conf.PartyCode {
+		invalidInvitation = true
 		return nil, fmt.Errorf("ProcessInvitation: invitee{%v} != selfParty{%v}", invitation.Invitee, svc.app.Conf.PartyCode)
 	}
-
-	proj, err := txn.GetProject(invitation.ProjectID)
+	// lock projection id
+	proj, err := storage.AddExclusiveLock(txn).GetProject(invitation.ProjectID)
 	if err == nil {
 		return nil, fmt.Errorf("ProcessInvitation: existing project{%+v} conflicts with invitation{%+v}", proj, invitation)
 	}
+
+	status := pb.InvitationStatus_DECLINED
 	if req.GetRespond() == pb.InvitationRespond_ACCEPT {
-		// insert a blank project to avoid duplicate project and lock it
-		err = txn.CreateProject(storage.Project{ID: invitation.ProjectID, Creator: invitation.Creator})
+		logrus.Infof("ProcessInvitation: accept invitation invited by %s to project %s with conf %+v", invitation.Inviter, invitation.ProjectID, invitation.ProjectConf)
+		err = txn.CreateProject(storage.Project{
+			ID:          invitation.ProjectID,
+			Name:        invitation.Name,
+			Description: invitation.Description,
+			Archived:    false,
+			ProjectConf: invitation.ProjectConf,
+			Creator:     invitation.Creator,
+		})
 		if err != nil {
 			return nil, fmt.Errorf("ProcessInvitation: CreateProject: %v", err)
 		}
+		for _, member := range append(strings.Split(invitation.Member, ";"), invitation.Invitee) {
+			if member != "" && member != invitation.Creator {
+				invitationMembers = append(invitationMembers, storage.Member{ProjectID: invitation.ProjectID, Member: member})
+			}
+		}
+		err = txn.AddProjectMembers(invitationMembers)
+		if err != nil {
+			return nil, fmt.Errorf("ProcessInvitation: AddProjectMember: %v", err)
+		}
+		status = pb.InvitationStatus_ACCEPTED
 	}
+
+	err = txn.ModifyInvitationStatus(invitation.ID, status)
+	if err != nil {
+		return nil, fmt.Errorf("ProcessInvitation: %v", err)
+	}
+
 	// 1. Send Rpc request to project owner
 	url, err := svc.app.PartyMgr.GetBrokerUrlByParty(invitation.Inviter)
 	if err != nil {
@@ -309,38 +412,20 @@ func (svc *grpcIntraSvc) ProcessInvitation(c context.Context, req *pb.ProcessInv
 		RespondComment: req.GetRespondComment(),
 	}
 	response := &pb.ReplyInvitationResponse{}
+	// ignore project info in response for now
 	err = svc.app.InterStub.ReplyInvitation(url, interReq, response)
 	if err != nil {
 		return nil, err
 	}
-
+	if response.GetStatus().GetCode() == int32(pb.Code_DATA_INCONSISTENCY) {
+		invalidInvitation = true
+		return nil, fmt.Errorf("ProcessInvitation: failed to reply invitation due to invitation %d is not same with project", invitation.ID)
+	}
 	if response.GetStatus().GetCode() != 0 {
 		return nil, fmt.Errorf("ProcessInvitation not success: %v", response.GetStatus().String())
 	}
-
-	// 2. Update local invitations
-	if req.GetRespond() == pb.InvitationRespond_ACCEPT {
-		invitation.Accepted = 1
-		// Add project
-		var proj storage.Project
-		err = json.Unmarshal(response.GetProjectInfo(), &proj)
-		if err != nil {
-			return nil, fmt.Errorf("ProcessInvitation: unmarshal project failed: %v", err)
-		}
-		err = txn.UpdateProject(proj)
-		if err != nil {
-			return nil, fmt.Errorf("ProcessInvitation: CreateProject: %v", err)
-		}
-	} else {
-		invitation.Accepted = -1
-	}
-	err = txn.UpdateInvitation(invitation)
-	if err != nil {
-		return nil, fmt.Errorf("ProcessInvitation: %v", err)
-	}
-
+	projectInfoBytes = response.GetProjectInfo()
 	// 3. TODO(jingshi): Ask and store more project information: table/ccl
-
 	return &pb.ProcessInvitationResponse{
 		Status: &pb.Status{
 			Code:    int32(0),

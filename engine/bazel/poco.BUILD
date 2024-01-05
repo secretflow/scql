@@ -71,5 +71,4 @@ spu_cmake_external(
         "@org_postgres//:postgres",
         "@org_sqlite//:sqlite3",
     ],
-    alwayslink = True,
 )

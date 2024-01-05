@@ -66,8 +66,8 @@ type infoSchema struct {
 }
 
 func (is *infoSchema) TableByName(schema, table model.CIStr) (t table.Table, err error) {
-	if tbNames, ok := is.schemaMap[schema.L]; ok {
-		if t, ok = tbNames.tables[table.L]; ok {
+	if tbNames, ok := is.schemaMap[schema.O]; ok {
+		if t, ok = tbNames.tables[table.O]; ok {
 			return
 		}
 	}
@@ -92,7 +92,7 @@ func MockInfoSchema(dbTableList map[string][]*model.TableInfo) InfoSchema {
 		result.schemaMap[dbName] = tableNames
 		for _, tb := range tbList {
 			tbl := table.MockTableFromMeta(tb)
-			tableNames.tables[tb.Name.L] = tbl
+			tableNames.tables[tb.Name.O] = tbl
 			bucketIdx := tableBucketIdx(tb.ID)
 			result.sortedTablesBuckets[bucketIdx] = append(result.sortedTablesBuckets[bucketIdx], tbl)
 		}
@@ -107,7 +107,7 @@ func MockInfoSchema(dbTableList map[string][]*model.TableInfo) InfoSchema {
 var _ InfoSchema = (*infoSchema)(nil)
 
 func (is *infoSchema) SchemaByName(schema model.CIStr) (val *model.DBInfo, ok bool) {
-	tableNames, ok := is.schemaMap[schema.L]
+	tableNames, ok := is.schemaMap[schema.O]
 	if !ok {
 		return
 	}
@@ -174,54 +174,7 @@ func FromTableSchema(tableSchema []*TableSchema) (InfoSchema, error) {
 	for dbName := range result.schemaMap {
 		for _, tblInfo := range result.schemaMap[dbName].dbInfo.Tables {
 			tb := table.MockTableFromMeta(tblInfo)
-			result.schemaMap[dbName].tables[tblInfo.Name.L] = tb
-		}
-	}
-	return result, nil
-}
-
-func ConvertToTableSchemas(m map[string][]*model.TableInfo) ([]*TableSchema, error) {
-	result := make([]*TableSchema, 0)
-
-	// sort to enforce determinism
-	var allDbNames []string
-	for dbName := range m {
-		allDbNames = append(allDbNames, dbName)
-	}
-	sort.Strings(allDbNames)
-
-	for _, dbName := range allDbNames {
-		v := m[dbName]
-		for _, tbl := range v {
-			columns := make([]ColumnDesc, 0, len(tbl.Columns))
-			for _, c := range tbl.Columns {
-				typeStr, err := FieldTypeString(c.FieldType)
-				if err != nil {
-					return nil, err
-				}
-				col := ColumnDesc{
-					Name:        c.Name.L,
-					Type:        typeStr,
-					Description: c.Comment,
-				}
-				columns = append(columns, col)
-			}
-			s := strings.Split(tbl.Name.L, ".")
-			var shortTableName string
-			switch len(s) {
-			case 0:
-				shortTableName = ""
-			case 1:
-				shortTableName = s[0]
-			default:
-				shortTableName = s[1]
-			}
-			tblSchema := &TableSchema{
-				DbName:    dbName,
-				TableName: shortTableName,
-				Columns:   columns,
-			}
-			result = append(result, tblSchema)
+			result.schemaMap[dbName].tables[tblInfo.Name.O] = tb
 		}
 	}
 	return result, nil

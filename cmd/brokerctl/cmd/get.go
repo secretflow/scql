@@ -180,13 +180,15 @@ func printInvitations(invitations []*pb.ProjectInvitation) {
 	for _, invite := range invitations {
 		var curRow []string
 		curRow = append(curRow, fmt.Sprint(invite.GetInvitationId()))
-		switch invite.GetAccepted() {
-		case 0:
+		switch invite.GetStatus() {
+		case pb.InvitationStatus_UNDECIDED:
 			curRow = append(curRow, "Pending")
-		case 1:
+		case pb.InvitationStatus_ACCEPTED:
 			curRow = append(curRow, "Accepted")
-		case -1:
+		case pb.InvitationStatus_DECLINED:
 			curRow = append(curRow, "Declined")
+		case pb.InvitationStatus_INVALID:
+			curRow = append(curRow, "Invalid")
 		default:
 			curRow = append(curRow, "Error")
 		}

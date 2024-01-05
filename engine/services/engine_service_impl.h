@@ -23,6 +23,8 @@
 #include "engine/link/channel_manager.h"
 
 #include "api/engine.pb.h"
+#include "api/status.pb.h"
+#include "api/status_code.pb.h"
 #include "engine/audit/audit.pb.h"
 
 namespace scql::engine {
@@ -50,6 +52,8 @@ class EngineServiceImpl : public pb::SCQLEngineService {
                         pb::RunExecutionPlanResponse* response,
                         ::google::protobuf::Closure* done) override;
 
+  SessionManager* GetSessionManager() { return session_mgr_.get(); }
+
  private:
   void ReportResult(const std::string& session_id, const std::string& cb_url,
                     const std::string& report_info_str);
@@ -66,6 +70,9 @@ class EngineServiceImpl : public pb::SCQLEngineService {
   bool CheckDriverCredential(const brpc::HttpHeader& http_header);
 
   void VerifyPublicKeys(const pb::SessionStartParams& start_params);
+
+  void ReportErrorToPeers(const pb::SessionStartParams& params,
+                          const pb::Code err_code, const std::string& err_msg);
 
  private:
   const EngineServiceOptions service_options_;

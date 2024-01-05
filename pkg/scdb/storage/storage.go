@@ -427,6 +427,17 @@ func CheckDatabaseExist(db *gorm.DB, dbName string) (bool, error) {
 	return false, nil
 }
 
+func GetColumnOriginNameByLowerName(tx *gorm.DB, dbName, tblName string, colNames []string) ([]string, error) {
+	var orginNames []string
+	if err := tx.Model(&Column{}).Select("column_name").Where(&Column{
+		Db:        dbName,
+		TableName: tblName,
+	}).Find(&orginNames, "lower(column_name) IN ?", colNames).Error; err != nil {
+		return nil, err
+	}
+	return orginNames, nil
+}
+
 func CheckColumnsExist(tx *gorm.DB, dbName, tblName string, colNames []string) error {
 	var columnPrivExist []string
 	if err := tx.Model(&Column{}).Select("lower(column_name)").Where(&Column{

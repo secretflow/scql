@@ -21,12 +21,14 @@
 #include "engine/auth/authenticator.h"
 #include "engine/datasource/datasource_adaptor_mgr.h"
 #include "engine/datasource/embed_router.h"
+#include "engine/datasource/http_router.h"
 #include "engine/exe/version.h"
 #include "engine/framework/session.h"
 #include "engine/link/mux_link_factory.h"
 #include "engine/link/mux_receiver_service.h"
 #include "engine/link/rpc_helper.h"
 #include "engine/services/engine_service_impl.h"
+#include "engine/services/error_collector_service_impl.h"
 #include "engine/util/logging.h"
 
 // Log flags
@@ -101,10 +103,12 @@ DEFINE_int32(session_timeout_s, 1800,
              "TTL for session, should be greater than the typical runtime of "
              "the specific tasks.");
 // DataBase connection flags.
-DEFINE_string(datasource_router, "embed", "datasource router type");
+DEFINE_string(datasource_router, "embed",
+              "datasource router type: embed | http");
 DEFINE_string(
     embed_router_conf, "",
     R"text(configuration for embed router in json format. For example: --embed_router_conf={"datasources":[{"id":"ds001","name":"mysql db","kind":"MYSQL","connection_str":"host=127.0.0.1 db=test user=root password='qwerty'"}],"rules":[{"db":"*","table":"*","datasource_id":"ds001"}]} )text");
+DEFINE_string(http_router_endpoint, "", "http datasource router endpoint url");
 DEFINE_string(db_connection_info, "",
               "connection string used to connect to mysql...");
 // Party authentication flags
@@ -192,6 +196,10 @@ std::unique_ptr<scql::engine::Router> BuildRouter() {
         "embed_router_conf/db_connection_info(gflags) or "
         "DB_CONNECTION_INFO(ENV)");
     return nullptr;
+  } else if (FLAGS_datasource_router == "http") {
+    scql::engine::HttpRouterOptions options;
+    options.endpoint = FLAGS_http_router_endpoint;
+    return std::make_unique<scql::engine::HttpRouter>(options);
   } else {
     SPDLOG_ERROR("Fail to build router, unsupported datasource router type={}",
                  FLAGS_datasource_router);
@@ -360,6 +368,14 @@ int main(int argc, char* argv[]) {
   if (server.AddService(engine_svc.get(), brpc::SERVER_DOESNT_OWN_SERVICE) !=
       0) {
     SPDLOG_ERROR("Fail to add EngineService to server");
+    return -1;
+  }
+
+  scql::engine::ErrorCollectorServiceImpl err_svc(
+      engine_svc->GetSessionManager());
+  SPDLOG_INFO("Adding ErrorCollectorService into brpc server");
+  if (server.AddService(&err_svc, brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
+    SPDLOG_ERROR("Fail to add ErrorCollectorService to server");
     return -1;
   }
 

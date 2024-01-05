@@ -25,11 +25,15 @@ type Project struct {
 	Name        string        `gorm:"column:name;type:varchar(64);not null;comment:'project name'"`
 	Description string        `gorm:"column:desc;type:varchar(64);comment:'description'"`
 	Creator     string        `gorm:"column:creator;type:varchar(64);comment:'creator of the project'"`
-	Member      string        `gorm:"column:member;type:varchar(64);comment:'members, flattened string, like: alice;bob'"`
 	Archived    bool          `gorm:"column:archived;comment:'if archived is true, whole project can't be modified'"`
 	ProjectConf ProjectConfig `gorm:"embedded"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+}
+
+type Member struct {
+	ProjectID string `gorm:"column:project_id;type:varchar(64);primaryKey;not null"`
+	Member    string `gorm:"column:member;type:varchar(64);primaryKey;not null;comment:'member in the project'"`
 }
 
 type ProjectConfig struct {
@@ -44,9 +48,13 @@ type TableIdentifier struct {
 
 type Table struct {
 	TableIdentifier
-	RefTable  string `gorm:"column:ref_table;type:varchar(128);comment:'ref table'"`
-	DBType    string `gorm:"column:db_type;type:varchar(64);comment:'database type like MYSQL'"`
-	Owner     string `gorm:"column:owner;comment:'ref table'"`
+	RefTable string `gorm:"column:ref_table;type:varchar(128);comment:'ref table'"`
+	DBType   string `gorm:"column:db_type;type:varchar(64);comment:'database type like MYSQL'"`
+	Owner    string `gorm:"column:owner;comment:'ref table'"`
+	// view
+	IsView       bool   `gorm:"column:is_view;comment:'this table is a view'"`
+	SelectString string `gorm:"column:select_string;comment:'the internal select query in string format, the field is valid only when IsView is true'"`
+
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -80,17 +88,16 @@ type ColumnPriv struct {
 
 type Invitation struct {
 	ID          uint64        `gorm:"column:id;primaryKey;comment:'auto generated increment id'"`
-	ProjectID   string        `gorm:"column:project_id;type:varchar(64);not null;comment:'project id'"`
+	ProjectID   string        `gorm:"column:project_id;type:varchar(64);not null;index:,composite:identifier;comment:'project id'"`
 	Name        string        `gorm:"column:name;type:varchar(64);comment:'name'"`
 	Description string        `gorm:"column:desc;type:varchar(64);comment:'description'"`
 	Creator     string        `gorm:"column:creator;type:varchar(64);comment:'creator of the project'"`
 	Member      string        `gorm:"column:member;type:varchar(64);not null;comment:'members, flattened string, like: alice;bob'"`
 	ProjectConf ProjectConfig `gorm:"embedded"`
-	// flattened string, like: "alice;bob"
-	Inviter string `gorm:"column:inviter;type:varchar(256);comment:'inviter'"`
-	Invitee string `gorm:"column:invitee;type:varchar(256);comment:'invitee'"`
-	// 0: default, not decided to accept invitation or not; 1: accepted; -1: rejected
-	Accepted   int8 `gorm:"column:accepted;default:0;comment:'accepted'"`
+	Inviter     string        `gorm:"column:inviter;type:varchar(256);index:,composite:identifier;comment:'inviter'"`
+	Invitee     string        `gorm:"column:invitee;type:varchar(256);index:,composite:identifier;comment:'invitee'"`
+	// 0: default, not decided to accept invitation or not; 1: accepted; 2: rejected; 3: invalid
+	Status     int8 `gorm:"column:status;default:0;comment:'accepted'"`
 	InviteTime time.Time
 	CreatedAt  time.Time
 	UpdatedAt  time.Time

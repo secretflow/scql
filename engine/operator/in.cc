@@ -28,10 +28,10 @@
 
 #include "butil/files/scoped_temp_dir.h"
 #include "gflags/gflags.h"
-#include "libspu/psi/core/ecdh_oprf_psi.h"
-#include "libspu/psi/core/ecdh_psi.h"
-#include "libspu/psi/cryptor/cryptor_selector.h"
-#include "libspu/psi/utils/cipher_store.h"
+#include "psi/psi/core/ecdh_oprf_psi.h"
+#include "psi/psi/core/ecdh_psi.h"
+#include "psi/psi/cryptor/cryptor_selector.h"
+#include "psi/psi/utils/ec_point_store.h"
 #include "yacl/crypto/utils/rand.h"
 
 #include "engine/audit/audit_log.h"
@@ -209,7 +209,7 @@ void In::OprfPsiIn(ExecContext* ctx, bool is_server,
       (is_server && reveal_to_me) || (!is_server && !reveal_to_me);
 
   // set EcdhOprfPsiOptions
-  spu::psi::EcdhOprfPsiOptions psi_options;
+  psi::psi::EcdhOprfPsiOptions psi_options;
   auto psi_link = ctx->GetSession()->GetLink();
   if (psi_link->WorldSize() > 2) {
     psi_link = psi_link->SubWorld(ctx->GetNodeName() + "-OprfPsiIn",
@@ -220,7 +220,7 @@ void In::OprfPsiIn(ExecContext* ctx, bool is_server,
   psi_options.link1 = psi_options.link0->Spawn();
   YACL_ENFORCE(psi_options.link1, "fail to getlink1 for OprfPsiIn");
   psi_options.curve_type =
-      static_cast<spu::psi::CurveType>(FLAGS_psi_curve_type);
+      static_cast<psi::psi::CurveType>(FLAGS_psi_curve_type);
 
   // create temp dir
   butil::ScopedTempDir tmp_dir;
@@ -277,39 +277,39 @@ int64_t In::OprfServerHandleResult(ExecContext* ctx,
 
 void In::OprfPsiServer(
     ExecContext* ctx, bool reveal_to_server, const std::string& tmp_dir,
-    const spu::psi::EcdhOprfPsiOptions& psi_options,
+    const psi::psi::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<util::BatchProvider>& batch_provider,
     util::PsiExecutionInfoTable* psi_info_table,
     std::shared_ptr<yacl::link::Context> psi_link) {
   std::vector<uint8_t> private_key =
-      yacl::crypto::SecureRandBytes(spu::psi::kEccKeySize);
-  auto dh_oprf_psi_server =
-      std::make_shared<spu::psi::EcdhOprfPsiServer>(psi_options, private_key);
-  YACL_ENFORCE(dh_oprf_psi_server, "Fail to create EcdhOprfPsiServer");
+      yacl::crypto::SecureRandBytes(psi::psi::kEccKeySize);
+  auto ec_oprf_psi_server =
+      std::make_shared<psi::psi::EcdhOprfPsiServer>(psi_options, private_key);
+  YACL_ENFORCE(ec_oprf_psi_server, "Fail to create EcdhOprfPsiServer");
   if (reveal_to_server) {
     // Create UbPsiCache
     std::string server_cache_path = fmt::format("{}/tmp-server-cache", tmp_dir);
-    std::shared_ptr<spu::psi::IUbPsiCache> ub_cache;
+    std::shared_ptr<psi::psi::IUbPsiCache> ub_cache;
     std::vector<std::string> dummy_fields{};
-    ub_cache = std::make_shared<spu::psi::UbPsiCache>(
-        server_cache_path, dh_oprf_psi_server->GetCompareLength(),
+    ub_cache = std::make_shared<psi::psi::UbPsiCache>(
+        server_cache_path, ec_oprf_psi_server->GetCompareLength(),
         dummy_fields);
 
     util::OprfPsiServerTransferServerItems(ctx, psi_link, batch_provider,
-                                           dh_oprf_psi_server, ub_cache);
+                                           ec_oprf_psi_server, ub_cache);
 
     std::vector<uint64_t> matched_indices;
     size_t self_item_count{};
     util::OprfServerTransferShuffledClientItems(
-        ctx, dh_oprf_psi_server, server_cache_path,
+        ctx, ec_oprf_psi_server, server_cache_path,
         FLAGS_shuffle_provider_batch_size, &matched_indices, &self_item_count);
     psi_info_table->result_size =
         OprfServerHandleResult(ctx, matched_indices, self_item_count);
   } else {
     auto transfer_server_items_future =
         std::async(std::launch::async, util::OprfPsiServerTransferServerItems,
-                   ctx, psi_link, batch_provider, dh_oprf_psi_server, nullptr);
-    util::OprfPsiServerTransferClientItems(ctx, dh_oprf_psi_server);
+                   ctx, psi_link, batch_provider, ec_oprf_psi_server, nullptr);
+    util::OprfPsiServerTransferClientItems(ctx, ec_oprf_psi_server);
     transfer_server_items_future.wait();
     psi_info_table->result_size = 0;
   }
@@ -317,36 +317,44 @@ void In::OprfPsiServer(
 
 void In::OprfPsiClient(
     ExecContext* ctx, bool reveal_to_server, const std::string& tmp_dir,
-    const spu::psi::EcdhOprfPsiOptions& psi_options,
+    const psi::psi::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<util::BatchProvider>& batch_provider,
     util::PsiExecutionInfoTable* psi_info_table,
     std::shared_ptr<yacl::link::Context> psi_link) {
   std::string server_cipher_store_path =
       fmt::format("{}/tmp-server-cipher-store.csv", tmp_dir);
-  auto cipher_store =
-      std::make_shared<util::UbInCipherStore>(server_cipher_store_path);
+  auto server_store =
+      std::make_shared<util::UbPsiCipherStore>(server_cipher_store_path, false);
+
+  std::string client_cipher_store_path =
+      fmt::format("{}/tmp-client-cipher-store.csv", tmp_dir);
+  auto client_store =
+      std::make_shared<util::UbPsiCipherStore>(client_cipher_store_path, true);
 
   if (reveal_to_server) {
     util::OprfPsiClientTransferServerItems(ctx, psi_link, psi_options,
-                                           cipher_store);
-    util::OprfCLientTransferShuffledClientItems(ctx, batch_provider,
-                                                psi_options, cipher_store);
+                                           server_store);
+    util::OprfCLientTransferShuffledClientItems(
+        ctx, batch_provider, psi_options, client_store, server_store);
     psi_info_table->result_size = 0;
   } else {
     auto transfer_server_items_future =
         std::async(std::launch::async, util::OprfPsiClientTransferServerItems,
-                   ctx, psi_link, psi_options, cipher_store);
+                   ctx, psi_link, psi_options, server_store);
     OprfPsiClientTransferClientItems(ctx, batch_provider, psi_options,
-                                     cipher_store);
+                                     client_store);
     transfer_server_items_future.wait();
-    psi_info_table->result_size = OprfClientHandleResult(ctx, cipher_store);
+    psi_info_table->result_size =
+        OprfClientHandleResult(ctx, client_store, server_store);
   }
 }
 
 int64_t In::OprfClientHandleResult(
     ExecContext* ctx,
-    const std::shared_ptr<util::UbInCipherStore>& cipher_store) {
-  auto result_tensor = cipher_store->FinalizeAndComputeInResult();
+    const std::shared_ptr<util::UbPsiCipherStore>& client_store,
+    const std::shared_ptr<util::UbPsiCipherStore>& server_store) {
+  auto result_tensor =
+      util::FinalizeAndComputeOprfInResult(client_store, server_store);
   int64_t result_size = result_tensor->Length();
 
   const auto& output_pb = ctx->GetOutput(In::kOut)[0];
@@ -377,9 +385,12 @@ void In::EcdhPsiIn(ExecContext* ctx) {
 
   auto batch_provider =
       std::make_shared<util::BatchProvider>(std::vector<TensorPtr>{in_tensor});
-  auto in_cipher_store = std::make_shared<util::InCipherStore>("/tmp", 64);
+  auto self_store = std::make_shared<psi::psi::HashBucketEcPointStore>(
+      "/tmp", util::kNumBins);
+  auto peer_store = std::make_shared<psi::psi::HashBucketEcPointStore>(
+      "/tmp", util::kNumBins);
   {
-    spu::psi::EcdhPsiOptions options;
+    psi::psi::EcdhPsiOptions options;
     options.link_ctx = ctx->GetSession()->GetLink();
     if (options.link_ctx->WorldSize() > 2) {
       options.link_ctx = options.link_ctx->SubWorld(
@@ -391,14 +402,14 @@ void In::EcdhPsiIn(ExecContext* ctx) {
         target_rank = 1;
       }
     }
-    options.ecc_cryptor = spu::psi::CreateEccCryptor(
-        static_cast<spu::psi::CurveType>(FLAGS_psi_curve_type));
+    options.ecc_cryptor = psi::psi::CreateEccCryptor(
+        static_cast<psi::psi::CurveType>(FLAGS_psi_curve_type));
     options.target_rank = target_rank;
     options.on_batch_finished = util::BatchFinishedCb(
         ctx->GetSession()->Id(),
         (in_tensor->Length() + options.batch_size - 1) / options.batch_size);
 
-    spu::psi::RunEcdhPsi(options, batch_provider, in_cipher_store);
+    psi::psi::RunEcdhPsi(options, batch_provider, self_store, peer_store);
   }
   // reveal to me
 
@@ -406,9 +417,10 @@ void In::EcdhPsiIn(ExecContext* ctx) {
   size_t peer_size = 0;
   int64_t result_size = 0;
   if (reveal_to == my_party_code) {
-    auto result = in_cipher_store->FinalizeAndComputeInResult(is_left);
-    self_size = in_cipher_store->GetSelfItemCount();
-    peer_size = in_cipher_store->GetPeerItemCount();
+    auto result =
+        util::FinalizeAndComputeInResult(is_left, self_store, peer_store);
+    self_size = self_store->ItemCount();
+    peer_size = peer_store->ItemCount();
     result_size = result->Length();
     SPDLOG_INFO(
         "ECDH PSI In finish, my_party_code:{}, my_rank:{}, total "

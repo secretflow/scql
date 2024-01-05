@@ -95,7 +95,7 @@ TEST_P(ShuffleTest, Works) {
   });
 
   util::BatchProvider provider(outs);
-  auto shuffle_result = provider.ReadNextBatch(tc.output_values.size());
+  auto shuffle_result = provider.ReadNextBatch();
   EXPECT_THAT(shuffle_result,
               ::testing::UnorderedElementsAreArray(tc.output_values));
 }

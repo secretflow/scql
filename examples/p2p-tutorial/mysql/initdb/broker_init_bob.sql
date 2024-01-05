@@ -15,23 +15,27 @@ CREATE TABLE `projects` (
   `name` varchar(64) NOT NULL COMMENT '''project name''',
   `desc` varchar(64) DEFAULT NULL COMMENT '''description''',
   `creator` varchar(64) DEFAULT NULL COMMENT '''creator of the project''',
-  `member` varchar(64) DEFAULT NULL COMMENT '''members, flattened string, like: alice',
   `archived` tinyint(1) DEFAULT NULL COMMENT '''if archived is true, whole project can''t be modified''',
   `spu_conf` longtext COMMENT '''description''',
   `created_at` datetime(3) DEFAULT NULL,
   `updated_at` datetime(3) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `projects`
+-- Table structure for table `members`
 --
 
-LOCK TABLES `projects` WRITE;
-/*!40000 ALTER TABLE `projects` DISABLE KEYS */;
-/*!40000 ALTER TABLE `projects` ENABLE KEYS */;
-UNLOCK TABLES;
+DROP TABLE IF EXISTS `members`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `members` (
+  `project_id` varchar(64) NOT NULL,
+  `member` varchar(64) NOT NULL COMMENT '''member in the project''',
+  PRIMARY KEY (`project_id`, `member`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `tables`
@@ -45,12 +49,13 @@ CREATE TABLE `tables` (
   `table_name` varchar(64) NOT NULL,
   `ref_table` varchar(128) DEFAULT NULL COMMENT '''ref table''',
   `db_type` varchar(64) DEFAULT NULL COMMENT '''database type like MYSQL''',
-  `owner` longtext COMMENT '''ref table''',
+  `owner` varchar(64) DEFAULT NULL COMMENT '''ref table''',
+  `is_view` tinyint(1) DEFAULT NULL COMMENT '''this table is a view''',
+  `select_string` longtext DEFAULT NULL COMMENT '''the internal select query in string format, the field is valid only when IsView is true''',
   `created_at` datetime(3) DEFAULT NULL,
   `updated_at` datetime(3) DEFAULT NULL,
-  UNIQUE KEY `idx_tables_identifier` (`project_id`,`table_name`),
-  CONSTRAINT `fk_projects_table` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  PRIMARY KEY (`project_id`,`table_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -67,19 +72,9 @@ CREATE TABLE `columns` (
   `data_type` varchar(64) DEFAULT NULL COMMENT '''data type like float''',
   `created_at` datetime(3) DEFAULT NULL,
   `updated_at` datetime(3) DEFAULT NULL,
-  UNIQUE KEY `idx_columns_identifier` (`project_id`,`table_name`,`column_name`),
-  CONSTRAINT `fk_tables_column` FOREIGN KEY (`project_id`, `table_name`) REFERENCES `tables` (`project_id`, `table_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  PRIMARY KEY (`project_id`,`table_name`,`column_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `columns`
---
-
-LOCK TABLES `columns` WRITE;
-/*!40000 ALTER TABLE `columns` DISABLE KEYS */;
-/*!40000 ALTER TABLE `columns` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 --
@@ -97,19 +92,9 @@ CREATE TABLE `column_privs` (
   `priv` varchar(256) DEFAULT NULL COMMENT '''priv of column''',
   `created_at` datetime(3) DEFAULT NULL,
   `updated_at` datetime(3) DEFAULT NULL,
-  UNIQUE KEY `idx_column_privs_identifier` (`project_id`,`table_name`,`column_name`,`dest_party`),
-  CONSTRAINT `fk_columns_column_priv` FOREIGN KEY (`project_id`, `table_name`, `column_name`) REFERENCES `columns` (`project_id`, `table_name`, `column_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  PRIMARY KEY (`project_id`,`table_name`,`column_name`,`dest_party`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `column_privs`
---
-
-LOCK TABLES `column_privs` WRITE;
-/*!40000 ALTER TABLE `column_privs` DISABLE KEYS */;
-/*!40000 ALTER TABLE `column_privs` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `invitations`
@@ -128,19 +113,11 @@ CREATE TABLE `invitations` (
   `spu_conf` longtext COMMENT '''description''',
   `inviter` varchar(256) DEFAULT NULL COMMENT '''inviter''',
   `invitee` varchar(256) DEFAULT NULL COMMENT '''invitee''',
-  `accepted` tinyint(4) DEFAULT '0' COMMENT '''accepted''',
+  `status` tinyint(4) DEFAULT '0' COMMENT '''0: default, not decided to accept invitation or not; 1: accepted; 2: rejected; 3: invalid''',
   `invite_time` datetime(3) DEFAULT NULL,
   `created_at` datetime(3) DEFAULT NULL,
   `updated_at` datetime(3) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  PRIMARY KEY (`id`),
+  INDEX `idx_project_id_inviter_invitee_identifier` (`project_id`,`inviter`, `invitee`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `invitations`
---
-
-LOCK TABLES `invitations` WRITE;
-/*!40000 ALTER TABLE `invitations` DISABLE KEYS */;
-/*!40000 ALTER TABLE `invitations` ENABLE KEYS */;
-UNLOCK TABLES;

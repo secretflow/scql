@@ -16,41 +16,44 @@ package intra
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"strings"
 
 	"golang.org/x/exp/slices"
 
 	"github.com/secretflow/scql/pkg/broker/services/common"
 	"github.com/secretflow/scql/pkg/broker/storage"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/status"
+	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
 
 func (svc *grpcIntraSvc) GrantCCL(ctx context.Context, req *pb.GrantCCLRequest) (resp *pb.GrantCCLResponse, err error) {
 	if req == nil || req.GetProjectId() == "" || req.GetColumnControlList() == nil {
-		return nil, fmt.Errorf("GrantCCL: illegal request")
+		return nil, status.New(pb.Code_BAD_REQUEST, "GrantCCL: illegal request")
 	}
 
 	app := svc.app
 	txn := app.MetaMgr.CreateMetaTransaction()
 	defer func() {
-		txn.Finish(err)
+		err = txn.Finish(err)
+		if err != nil {
+			err = status.New(pb.Code_INTERNAL, err.Error())
+		}
 	}()
 
-	var proj storage.Project
-	proj, err = txn.GetProject(req.GetProjectId())
+	members, err := txn.GetProjectMembers(req.GetProjectId())
 	if err != nil {
-		return nil, fmt.Errorf("GrantCCL: get project %v err: %v", req.GetProjectId(), err)
+		return nil, fmt.Errorf("GrantCCL: get project %s err: %v", req.GetProjectId(), err)
 	}
-
+	if len(members) == 0 {
+		return nil, fmt.Errorf("GrantCCL: project %s has no members or project doesn't exist", req.GetProjectId())
+	}
 	privs, err := ColumnControlList2ColumnPriv(req.GetProjectId(), req.GetColumnControlList())
 	if err != nil {
 		return nil, fmt.Errorf("GrantCCL: %v", err)
 	}
 
 	// only allow to grant ccl to project members
-	members := strings.Split(proj.Member, ";")
 	for _, priv := range privs {
 		if !slices.Contains(members, priv.DestParty) {
 			return nil, fmt.Errorf("GrantCCL: member %v not in project members %v", priv.DestParty, members)
@@ -59,7 +62,7 @@ func (svc *grpcIntraSvc) GrantCCL(ctx context.Context, req *pb.GrantCCLRequest) 
 
 	err = common.GrantColumnConstraintsWithCheck(txn, req.GetProjectId(), app.Conf.PartyCode, privs)
 	if err != nil {
-		return nil, fmt.Errorf("GrantCCL: GrantColumnConstraints err: %v", err)
+		return nil, fmt.Errorf("GrantCCL: %v", err)
 	}
 
 	// Sync Info to other parties
@@ -81,13 +84,16 @@ func (svc *grpcIntraSvc) GrantCCL(ctx context.Context, req *pb.GrantCCLRequest) 
 
 func (svc *grpcIntraSvc) RevokeCCL(c context.Context, req *pb.RevokeCCLRequest) (resp *pb.RevokeCCLResponse, err error) {
 	if req == nil || req.GetProjectId() == "" || len(req.GetColumnControlList()) == 0 {
-		return nil, errors.New("RevokeCCL: illegal request")
+		return nil, status.New(pb.Code_BAD_REQUEST, "RevokeCCL: illegal request")
 	}
 
 	app := svc.app
 	txn := app.MetaMgr.CreateMetaTransaction()
 	defer func() {
-		txn.Finish(err)
+		err = txn.Finish(err)
+		if err != nil {
+			err = status.New(pb.Code_INTERNAL, err.Error())
+		}
 	}()
 
 	privIDs, err := ColumnControlList2ColumnPrivIdentifier(req.GetProjectId(), req.GetColumnControlList())
@@ -100,13 +106,13 @@ func (svc *grpcIntraSvc) RevokeCCL(c context.Context, req *pb.RevokeCCLRequest) 
 		return nil, fmt.Errorf("RevokeCCL: %v", err)
 	}
 	// Sync to other parties
-	proj, err := txn.GetProject(req.GetProjectId())
+	members, err := txn.GetProjectMembers(req.GetProjectId())
 	if err != nil {
 		return nil, fmt.Errorf("RevokeCCL: GetProject: %v", err)
 	}
 	go func() {
 		var targetParties []string
-		for _, p := range strings.Split(proj.Member, ";") {
+		for _, p := range members {
 			if p != app.Conf.PartyCode {
 				targetParties = append(targetParties, p)
 			}
@@ -125,13 +131,33 @@ func (svc *grpcIntraSvc) RevokeCCL(c context.Context, req *pb.RevokeCCLRequest) 
 
 func (svc *grpcIntraSvc) ShowCCL(ctx context.Context, req *pb.ShowCCLRequest) (resp *pb.ShowCCLResponse, err error) {
 	if req == nil || req.GetProjectId() == "" {
-		return nil, fmt.Errorf("ShowCCL: no project id in request")
+		return nil, status.New(pb.Code_BAD_REQUEST, "ShowCCL: no project id in request")
 	}
 	app := svc.app
 	txn := app.MetaMgr.CreateMetaTransaction()
 	defer func() {
-		txn.Finish(err)
+		err = txn.Finish(err)
+		if err != nil {
+			err = status.New(pb.Code_INTERNAL, err.Error())
+		}
 	}()
+	// check project exist
+	projectAndMembers, err := txn.GetProjectAndMembers(req.GetProjectId())
+	if err != nil {
+		return nil, fmt.Errorf("ShowCCL: GetProjectAndMembers err: %v", err)
+	}
+	// check member exist
+	if !sliceutil.ContainsAll(projectAndMembers.Members, req.GetDestParties()) {
+		return nil, fmt.Errorf("ShowCCL: dest parties %v not found in project members", sliceutil.Subtraction(req.GetDestParties(), projectAndMembers.Members))
+	}
+	// check table exist
+	exist, err := txn.CheckTablesExist(req.GetProjectId(), req.GetTables())
+	if err != nil {
+		return nil, fmt.Errorf("ShowCCL: CheckTablesExist err: %v", err)
+	}
+	if !exist {
+		return nil, fmt.Errorf("ShowCCL: tables %v not all exist", req.GetTables())
+	}
 
 	var privs []storage.ColumnPriv
 	privs, err = txn.ListColumnConstraints(req.GetProjectId(), req.GetTables(), req.GetDestParties())
@@ -187,6 +213,9 @@ func ColumnControlList2ColumnPriv(projectID string, ccls []*pb.ColumnControl) ([
 		if ccl.GetCol().GetTableName() == "" || ccl.GetCol().GetColumnName() == "" || ccl.GetPartyCode() == "" {
 			return nil, fmt.Errorf("ColumnControlList2ColumnPriv: contain empty table/column/party: %+v", ccl)
 		}
+		if _, ok := pb.Constraint_name[int32(ccl.Constraint)]; !ok {
+			return nil, fmt.Errorf("ColumnControlList2ColumnPriv: illegal constraint: %d", ccl.GetConstraint())
+		}
 		privs = append(privs, storage.ColumnPriv{
 			ColumnPrivIdentifier: storage.ColumnPrivIdentifier{
 				ProjectID:  projectID,
@@ -194,7 +223,7 @@ func ColumnControlList2ColumnPriv(projectID string, ccls []*pb.ColumnControl) ([
 				ColumnName: ccl.GetCol().GetColumnName(),
 				DestParty:  ccl.GetPartyCode(),
 			},
-			Priv: pb.Constraint_name[int32(ccl.GetConstraint())],
+			Priv: ccl.GetConstraint().String(),
 		})
 	}
 	return privs, nil

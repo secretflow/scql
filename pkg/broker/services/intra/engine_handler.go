@@ -46,6 +46,11 @@ func (svc *grpcIntraSvc) Report(ctx context.Context, request *pb.ReportRequest) 
 	result := &pb.QueryResponse{}
 	defer session.SetResultSafely(result)
 
+	if request.GetStatus().GetCode() != int32(pb.Code_OK) {
+		result.Status = request.GetStatus()
+		return nil, nil
+	}
+
 	err := checkColumnsShape(request.GetOutColumns())
 	if err != nil {
 		result.Status = &pb.Status{
@@ -70,7 +75,7 @@ func (svc *grpcIntraSvc) Report(ctx context.Context, request *pb.ReportRequest) 
 	result.CostTimeS = time.Since(session.CreatedAt).Seconds()
 	if session.GetSessionVars().AffectedByGroupThreshold {
 		reason := "for safety, we filter the results for groups which contain less than 4 items."
-		logrus.Infof("%v", reason)
+		logrus.Infof("Report: %v", reason)
 		result.Warnings = append(result.Warnings, &pb.SQLWarning{Reason: reason})
 	}
 

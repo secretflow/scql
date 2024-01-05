@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/secretflow/scql/pkg/parser/ast"
 	"github.com/secretflow/scql/pkg/scdb/config"
 	"github.com/secretflow/scql/pkg/sessionctx"
@@ -85,6 +87,9 @@ func (pa *PartyAuthenticator) verifyPubKey(authOpt *ast.PubKeyAuthOption) (err e
 		// recover if public key is invalid
 		if r := recover(); r != nil {
 			err = fmt.Errorf("failed to verify engine auth: %v", r)
+		}
+		if err != nil {
+			logrus.Error(err)
 		}
 	}()
 	// check timestamp

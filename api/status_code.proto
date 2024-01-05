@@ -51,7 +51,7 @@ enum Code {
 
   // The P2P internal exchange error
   // Local storage info is not equal to storage info in other parties
-  CHECKSUM_CHECK_FAILED = 170;
+  DATA_INCONSISTENCY = 170;
 
   // =========================
   // 200-299 Dependence Error

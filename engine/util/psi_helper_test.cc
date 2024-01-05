@@ -49,61 +49,39 @@ class BatchProviderTest : public ::testing::Test {
 };
 
 TEST_F(BatchProviderTest, singleKey) {
-  const int64_t seq_len = 21;
-  const int64_t batch_size = 10;
+  const int64_t seq_len = 10;
   auto tensor = MakeInt64SequenceTensor(seq_len);
 
   BatchProvider provider(std::vector<TensorPtr>{tensor});
 
-  auto batch1 = provider.ReadNextBatch(batch_size);
+  auto batch1 = provider.ReadNextBatch();
   EXPECT_EQ(batch1.size(), 10);
   EXPECT_THAT(batch1, ::testing::ElementsAre("0", "1", "2", "3", "4", "5", "6",
                                              "7", "8", "9"));
 
-  auto batch2 = provider.ReadNextBatch(batch_size);
-  EXPECT_EQ(batch2.size(), 10);
-  EXPECT_THAT(batch2, ::testing::ElementsAre("10", "11", "12", "13", "14", "15",
-                                             "16", "17", "18", "19"));
-
-  auto batch3 = provider.ReadNextBatch(batch_size);
-  EXPECT_EQ(batch3.size(), 1);
-  EXPECT_THAT(batch3, ::testing::ElementsAre("20"));
-
-  auto empty_batch = provider.ReadNextBatch(batch_size);
+  auto empty_batch = provider.ReadNextBatch();
   EXPECT_EQ(empty_batch.size(), 0);
 }
 
 TEST_F(BatchProviderTest, twoKeys) {
-  const int64_t seq_len = 28;
-  const int64_t batch_size = 10;
+  const int64_t seq_len = 10;
   auto tensor1 = MakeInt64SequenceTensor(seq_len);
   auto tensor2 = MakeAlphabetStringTensor(seq_len);
 
   BatchProvider provider(std::vector<TensorPtr>{tensor1, tensor2});
 
-  auto batch1 = provider.ReadNextBatch(batch_size);
-  EXPECT_EQ(batch1.size(), 10);
+  auto batch1 = provider.ReadNextBatch();
+  EXPECT_EQ(batch1.size(), seq_len);
   EXPECT_THAT(batch1,
               ::testing::ElementsAre("0,a", "1,b", "2,c", "3,d", "4,e", "5,f",
                                      "6,g", "7,h", "8,i", "9,j"));
 
-  auto batch2 = provider.ReadNextBatch(batch_size);
-  EXPECT_EQ(batch2.size(), 10);
-  EXPECT_THAT(batch2,
-              ::testing::ElementsAre("10,k", "11,l", "12,m", "13,n", "14,o",
-                                     "15,p", "16,q", "17,r", "18,s", "19,t"));
-
-  auto batch3 = provider.ReadNextBatch(batch_size);
-  EXPECT_EQ(batch3.size(), 8);
-  EXPECT_THAT(batch3, ::testing::ElementsAre("20,u", "21,v", "22,w", "23,x",
-                                             "24,y", "25,z", "26,a", "27,b"));
-
-  auto empty_batch = provider.ReadNextBatch(batch_size);
+  auto empty_batch = provider.ReadNextBatch();
   EXPECT_EQ(empty_batch.size(), 0);
 }
 
 /// ======================================
-/// Test for JoinCipherStore
+/// Test for JoinIndices
 /// ======================================
 
 struct JoinTestCase {
@@ -114,29 +92,26 @@ struct JoinTestCase {
   std::vector<std::string> join_indices;
 };
 
-class JoinCipherStoreTest : public ::testing::TestWithParam<JoinTestCase> {
+class JoinIndicesTest : public ::testing::TestWithParam<JoinTestCase> {
  protected:
-  std::unique_ptr<JoinCipherStore> MakeLeftStore(const JoinTestCase& tc) {
-    auto store = std::make_unique<JoinCipherStore>("/tmp", 2);
+  std::shared_ptr<psi::psi::HashBucketEcPointStore> MakeLeftStore(
+      const JoinTestCase& tc) {
+    auto store =
+        std::make_shared<psi::psi::HashBucketEcPointStore>("/tmp", kNumBins);
 
     for (const auto& str : tc.left) {
-      store->SaveSelf(str);
-    }
-    for (const auto& str : tc.right) {
-      store->SavePeer(str);
+      store->Save(str);
     }
 
     return store;
   }
 
-  std::unique_ptr<JoinCipherStore> MakeRightStore(const JoinTestCase& tc) {
-    auto store = std::make_unique<JoinCipherStore>("/tmp", 2);
-
-    for (const auto& str : tc.left) {
-      store->SavePeer(str);
-    }
+  std::shared_ptr<psi::psi::HashBucketEcPointStore> MakeRightStore(
+      const JoinTestCase& tc) {
+    auto store =
+        std::make_shared<psi::psi::HashBucketEcPointStore>("/tmp", kNumBins);
     for (const auto& str : tc.right) {
-      store->SaveSelf(str);
+      store->Save(str);
     }
 
     return store;
@@ -144,7 +119,7 @@ class JoinCipherStoreTest : public ::testing::TestWithParam<JoinTestCase> {
 };
 
 INSTANTIATE_TEST_SUITE_P(
-    JoinCipherStoreBatchTest, JoinCipherStoreTest,
+    JoinIndicesBatchTest, JoinIndicesTest,
     testing::Values(JoinTestCase{.left = {"A", "B", "C", "D", "E", "F"},
                                  .right = {"B", "C", "A", "E", "G", "H"},
                                  .join_indices = {"0,2", "1,0", "2,1", "4,3"}},
@@ -156,7 +131,7 @@ INSTANTIATE_TEST_SUITE_P(
                                  .join_indices = {"0,1", "0,2", "1,5", "2,0",
                                                   "5,1", "5,2"}}));
 
-TEST_P(JoinCipherStoreTest, works) {
+TEST_P(JoinIndicesTest, works) {
   // Given
   auto tc = GetParam();
 
@@ -164,8 +139,10 @@ TEST_P(JoinCipherStoreTest, works) {
   auto right_store = MakeRightStore(tc);
 
   // When
-  auto left_indices = left_store->FinalizeAndComputeJoinIndices(0, true);
-  auto right_indices = right_store->FinalizeAndComputeJoinIndices(0, false);
+  auto left_indices = FinalizeAndComputeJoinIndices(
+      true, left_store, right_store, 0);
+  auto right_indices = FinalizeAndComputeJoinIndices(
+      false, right_store, left_store, 0);
 
   // Then
   EXPECT_EQ(left_indices->Length(), right_indices->Length());
@@ -173,7 +150,7 @@ TEST_P(JoinCipherStoreTest, works) {
 
   BatchProvider provider(std::vector<TensorPtr>{left_indices, right_indices});
 
-  auto indices_got = provider.ReadNextBatch(left_indices->Length());
+  auto indices_got = provider.ReadNextBatch();
   EXPECT_THAT(indices_got,
               ::testing::UnorderedElementsAreArray(tc.join_indices));
 }

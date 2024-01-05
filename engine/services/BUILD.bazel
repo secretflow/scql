@@ -16,8 +16,16 @@ proto_library(
     name = "mock_report_service_proto",
     srcs = ["mock_report_service.proto"],
     deps = [
-        "//api:common_proto",
         "//api:engine_proto",
+    ],
+)
+
+proto_library(
+    name = "error_collector_service_proto",
+    srcs = ["error_collector_service.proto"],
+    deps = [
+        "//api:engine_proto",
+        "//api:status_proto",
     ],
 )
 
@@ -26,12 +34,32 @@ cc_proto_library(
     deps = [":mock_report_service_proto"],
 )
 
+cc_proto_library(
+    name = "error_collector_service_cc_proto",
+    deps = [":error_collector_service_proto"],
+)
+
+cc_library(
+    name = "error_collector_service_impl",
+    srcs = ["error_collector_service_impl.cc"],
+    hdrs = ["error_collector_service_impl.h"],
+    visibility = ["//engine/exe:__pkg__"],
+    deps = [
+        ":error_collector_service_cc_proto",
+        "//api:engine_cc_proto",
+        "//api:status_cc_proto",
+        "//engine/framework:session_manager",
+        "@com_github_brpc_brpc//:brpc",
+    ],
+)
+
 cc_library(
     name = "engine_service_impl",
     srcs = ["engine_service_impl.cc"],
     hdrs = ["engine_service_impl.h"],
     visibility = ["//engine/exe:__pkg__"],
     deps = [
+        ":error_collector_service_impl",
         "//api:engine_cc_proto",
         "//api:status_cc_proto",
         "//engine/audit:audit_log",

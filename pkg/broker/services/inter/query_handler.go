@@ -27,25 +27,35 @@ import (
 	"github.com/secretflow/scql/pkg/broker/services/common"
 	"github.com/secretflow/scql/pkg/planner/core"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/status"
 )
 
 // only issuer can distribute query to other party
 func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.DistributeQueryRequest) (res *pb.DistributeQueryResponse, err error) {
 	// 1. check request
 	if req == nil || req.GetProjectId() == "" || req.GetQuery() == "" || req.GetEngineEndpoint() == "" {
-		return nil, fmt.Errorf("DistributeQuery: illegal request: missing information")
+		return nil, status.New(pb.Code_BAD_REQUEST, "DistributeQuery: illegal request: missing information")
 	}
 	if req.ClientProtocol != application.Version {
-		return nil, fmt.Errorf("expected client version %d equals to version %d", req.ClientProtocol, application.Version)
+		return nil, status.New(pb.Code_BAD_REQUEST, fmt.Sprintf("DistributeQuery: expected client version %d equals to version %d", req.ClientProtocol, application.Version))
 	}
 
+	defer func() {
+		if err != nil {
+			err = status.New(pb.Code_INTERNAL, err.Error())
+		}
+	}()
 	app := svc.app
 	// 2. create session
 	session, exist := app.GetSession(req.JobId)
 	if exist {
-		errStr := fmt.Sprintf("DistributeQuery: duplicated job id: %s", req.JobId)
+		errStr := fmt.Sprintf("DistributeQuery: duplicated job id %s", req.JobId)
 		logrus.Warning(errStr)
 		return nil, fmt.Errorf(errStr)
+	}
+	err = common.CheckMemberExistInProject(app.MetaMgr, req.GetProjectId(), req.GetClientId().GetCode())
+	if err != nil {
+		return nil, err
 	}
 	info := &application.ExecutionInfo{
 		ProjectID:    req.GetProjectId(),
@@ -54,6 +64,7 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 		Issuer:       req.GetClientId(),
 		EngineClient: app.EngineClient,
 	}
+
 	session, err = application.NewSession(ctx, info, app, req.GetIsAsync())
 	if err != nil {
 		return
@@ -68,6 +79,7 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 	if err != nil {
 		return
 	}
+	logrus.Infof("get source tables %+v in project %s from storage", usedTables, req.GetProjectId())
 	dataParties, workParties, err := r.Prepare(usedTables)
 	if err != nil {
 		return
@@ -87,8 +99,8 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 		}
 	}
 	session.SaveEndpoint(req.GetClientId().GetCode(), req.EngineEndpoint)
-	// 3.2 sync info and get endpoints from other party
 
+	// 3.2 sync info and get endpoints from other party
 	localChecksums, err := r.CreateChecksum()
 	if err != nil {
 		return
@@ -145,17 +157,23 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 	// run sql
 	go func() {
 		// check error
+		var err error
 		for i := 0; i < chLen; i++ {
 			ret := <-retCh
 			if ret.err != nil {
-				logrus.Errorf("runsql err: %s", ret.err)
-				return
+				err = errors.Join(err, ret.err)
+				continue
 			}
+			err = errors.Join(err, ret.err)
 			if ret.prepareAgain {
 				r.SetPrepareAgain()
 			}
 		}
-		err := r.Execute(usedTables)
+		if err != nil {
+			logrus.Errorf("runsql err: %s", err)
+			return
+		}
+		err = r.Execute(usedTables)
 		if err != nil {
 			logrus.Errorf("runsql err: %s", err)
 			return
@@ -166,30 +184,25 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 	if err != nil {
 		return nil, err
 	}
+	response := &pb.DistributeQueryResponse{
+		Status:               &pb.Status{Code: int32(pb.Code_OK)},
+		ServerProtocol:       application.Version,
+		ServerChecksumResult: pb.ChecksumCompareResult_EQUAL,
+		EngineEndpoint:       selfEndpoint}
 	if slices.Contains(executionInfo.DataParties, selfCode) {
-		statusCode := pb.Code_OK
 		checksum, err := session.GetSelfChecksum()
 		if err != nil {
 			return nil, err
 		}
 		equalResult := checksum.CompareWith(application.NewChecksumFromProto(req.ServerChecksum))
 		if equalResult != pb.ChecksumCompareResult_EQUAL {
-			statusCode = pb.Code_CHECKSUM_CHECK_FAILED
+			response.Status.Code = int32(pb.Code_DATA_INCONSISTENCY)
 		}
-		return &pb.DistributeQueryResponse{
-			Status:                 &pb.Status{Code: int32(statusCode)},
-			ServerProtocol:         application.Version,
-			ServerChecksumResult:   equalResult,
-			EngineEndpoint:         selfEndpoint,
-			ExpectedServerChecksum: &pb.Checksum{TableSchema: checksum.TableSchema, Ccl: checksum.CCL},
-		}, nil
+		response.ServerChecksumResult = equalResult
+		response.ExpectedServerChecksum = &pb.Checksum{TableSchema: checksum.TableSchema, Ccl: checksum.CCL}
 	}
 
-	return &pb.DistributeQueryResponse{
-		Status:               &pb.Status{Code: 0},
-		ServerProtocol:       application.Version,
-		ServerChecksumResult: pb.ChecksumCompareResult_EQUAL,
-		EngineEndpoint:       selfEndpoint}, nil
+	return response, nil
 }
 
 func checkInfoFromOtherParty(session *application.Session, r *executor.QueryRunner, targetCode string) (prepareAgain bool, err error) {
@@ -197,7 +210,7 @@ func checkInfoFromOtherParty(session *application.Session, r *executor.QueryRunn
 	if err != nil {
 		return
 	}
-	if response.Status.Code == int32(pb.Code_CHECKSUM_CHECK_FAILED) {
+	if response.Status.Code == int32(pb.Code_DATA_INCONSISTENCY) {
 		err = session.SaveRemoteChecksum(targetCode, response.ExpectedServerChecksum)
 		if err != nil {
 			return

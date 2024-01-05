@@ -23,6 +23,10 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	"github.com/sirupsen/logrus"
+
+	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/status"
 	"github.com/secretflow/scql/pkg/util/sqlbuilder"
 )
 
@@ -33,12 +37,15 @@ type Auth struct {
 func NewAuth(pemPath string) (*Auth, error) {
 	priv, err := sqlbuilder.LoadPrivateKeyFromPemFile(pemPath)
 	if err != nil {
+		logrus.Errorf("NewAuth: %v", err)
 		return nil, fmt.Errorf("NewAuth: %v", err)
 	}
 
 	e, ok := priv.(ed25519.PrivateKey)
 	if !ok {
-		return nil, fmt.Errorf("NewAuth: no ed25519 private key")
+		err = fmt.Errorf("NewAuth: no ed25519 private key")
+		logrus.Error(err)
+		return nil, err
 	}
 	return &Auth{priv: e}, nil
 }
@@ -47,7 +54,13 @@ func (auth *Auth) SignMessage(msg proto.Message) (err error) {
 	defer func() {
 		// recover if protoReflect panic
 		if r := recover(); r != nil {
-			err = fmt.Errorf("SignMessage: failed to sign message: %v", r)
+			err = status.New(pb.Code_INTERNAL, fmt.Sprintf("SignMessage: failed to sign message: %v", r))
+			logrus.Error(err)
+			return
+		}
+		if err != nil {
+			err = status.New(pb.Code_INTERNAL, err.Error())
+			logrus.Error(err)
 		}
 	}()
 	signDesc := msg.ProtoReflect().Descriptor().Fields().ByJSONName("signature")
@@ -71,7 +84,13 @@ func (auth *Auth) CheckSign(msg proto.Message, pubKey string) (err error) {
 		// https://pkg.go.dev/crypto/ed25519@go1.19.11#Verify
 		// recover if public key is invalid
 		if r := recover(); r != nil {
-			err = fmt.Errorf("failed to check signature: %v", r)
+			err = status.New(pb.Code_UNAUTHENTICATED, fmt.Sprintf("CheckSign: failed to check signature: %v", r))
+			logrus.Error(err)
+			return
+		}
+		if err != nil {
+			err = status.New(pb.Code_UNAUTHENTICATED, fmt.Sprintf("CheckSign: unable to check signature: %s", err.Error()))
+			logrus.Error(err)
 		}
 	}()
 

@@ -42,9 +42,9 @@ std::vector<TensorPtr> ConvertDuckResultToTensors(
     std::unique_ptr<duckdb::QueryResult> result) {
   ArrowSchema abi_arrow_schema;
   std::vector<std::shared_ptr<arrow::RecordBatch>> batches_result;
-  auto timezone_config = duckdb::QueryResult::GetConfigTimezone(*result);
   duckdb::ArrowConverter::ToArrowSchema(&abi_arrow_schema, result->types,
-                                        result->names, timezone_config);
+                                        result->names,
+                                        result->client_properties);
   std::shared_ptr<arrow::Schema> schema;
   ASSIGN_OR_THROW_ARROW_STATUS(schema, arrow::ImportSchema(&abi_arrow_schema));
 
@@ -55,7 +55,8 @@ std::vector<TensorPtr> ConvertDuckResultToTensors(
     }
     data_chunk->Verify();
     ArrowArray arrow_array;
-    duckdb::ArrowConverter::ToArrowArray(*data_chunk, &arrow_array);
+    duckdb::ArrowConverter::ToArrowArray(*data_chunk, &arrow_array,
+                                         result->client_properties);
     std::shared_ptr<arrow::RecordBatch> batch;
     ASSIGN_OR_THROW_ARROW_STATUS(
         batch, arrow::ImportRecordBatch(&arrow_array, schema));

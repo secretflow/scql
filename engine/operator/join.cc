@@ -27,10 +27,10 @@
 
 #include "butil/files/scoped_temp_dir.h"
 #include "gflags/gflags.h"
-#include "libspu/psi/core/ecdh_oprf_psi.h"
-#include "libspu/psi/core/ecdh_psi.h"
-#include "libspu/psi/cryptor/cryptor_selector.h"
 #include "msgpack.hpp"
+#include "psi/psi/core/ecdh_oprf_psi.h"
+#include "psi/psi/core/ecdh_psi.h"
+#include "psi/psi/cryptor/cryptor_selector.h"
 #include "yacl/crypto/utils/rand.h"
 
 #include "engine/audit/audit_log.h"
@@ -167,16 +167,19 @@ void Join::EcdhPsiJoin(ExecContext* ctx) {
   //   1. Try to adjust bins number based on the both input sizes and memory
   // amounts.
   //   2. Try to use pure memory store when the input size is small.
-  auto join_cipher_store = std::make_shared<util::JoinCipherStore>("/tmp", 64);
+  auto self_store = std::make_shared<psi::psi::HashBucketEcPointStore>(
+      "/tmp", util::kNumBins);
+  auto peer_store = std::make_shared<psi::psi::HashBucketEcPointStore>(
+      "/tmp", util::kNumBins);
   {
-    spu::psi::EcdhPsiOptions options;
+    psi::psi::EcdhPsiOptions options;
     options.link_ctx = ctx->GetSession()->GetLink();
     if (options.link_ctx->WorldSize() > 2) {
       options.link_ctx = options.link_ctx->SubWorld(
           ctx->GetNodeName() + "-EcdhPsiJoin", input_party_codes);
     }
-    options.ecc_cryptor = spu::psi::CreateEccCryptor(
-        static_cast<spu::psi::CurveType>(FLAGS_psi_curve_type));
+    options.ecc_cryptor = psi::psi::CreateEccCryptor(
+        static_cast<psi::psi::CurveType>(FLAGS_psi_curve_type));
     options.target_rank = yacl::link::kAllRank;
     if (join_keys.size() > 0) {
       options.on_batch_finished = util::BatchFinishedCb(
@@ -185,14 +188,14 @@ void Join::EcdhPsiJoin(ExecContext* ctx) {
               options.batch_size);
     }
 
-    spu::psi::RunEcdhPsi(options, batch_provider, join_cipher_store);
+    psi::psi::RunEcdhPsi(options, batch_provider, self_store, peer_store);
   }
 
   int64_t join_type = ctx->GetInt64ValueFromAttribute(kJoinTypeAttr);
-  auto join_indices =
-      join_cipher_store->FinalizeAndComputeJoinIndices(join_type, is_left);
-  auto self_size = join_cipher_store->GetSelfItemCount();
-  auto peer_size = join_cipher_store->GetPeerItemCount();
+  auto join_indices = util::FinalizeAndComputeJoinIndices(
+      is_left, self_store, peer_store, join_type);
+  auto self_size = self_store->ItemCount();
+  auto peer_size = peer_store->ItemCount();
   auto result_size = join_indices->Length();
   SPDLOG_INFO(
       "ECDH PSI Join finish, my_party_code:{}, my_rank:{}, total "
@@ -236,7 +239,7 @@ void Join::OprfPsiJoin(ExecContext* ctx, bool is_server,
   auto batch_provider = std::make_shared<util::BatchProvider>(join_keys);
 
   // set EcdhOprfPsiOptions
-  spu::psi::EcdhOprfPsiOptions psi_options;
+  psi::psi::EcdhOprfPsiOptions psi_options;
   auto psi_link = ctx->GetSession()->GetLink();
   if (psi_link->WorldSize() > 2) {
     psi_link = psi_link->SubWorld(ctx->GetNodeName() + "-OprfPsiJoin",
@@ -247,7 +250,7 @@ void Join::OprfPsiJoin(ExecContext* ctx, bool is_server,
   psi_options.link1 = psi_options.link0->Spawn();
   YACL_ENFORCE(psi_options.link1, "fail to getlink1 for OprfPsiJoin");
   psi_options.curve_type =
-      static_cast<spu::psi::CurveType>(FLAGS_psi_curve_type);
+      static_cast<psi::psi::CurveType>(FLAGS_psi_curve_type);
 
   // create temp dir
   butil::ScopedTempDir tmp_dir;
@@ -325,22 +328,22 @@ auto Join::GetJoinRole(int64_t join_type, bool is_left) -> JoinRole {
 
 void Join::OprfPsiServer(
     ExecContext* ctx, JoinRole join_role, const std::string& tmp_dir,
-    const spu::psi::EcdhOprfPsiOptions& psi_options,
+    const psi::psi::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<util::BatchProvider>& batch_provider, bool is_left,
     int64_t peer_rank, util::PsiExecutionInfoTable* psi_info_table,
     std::shared_ptr<yacl::link::Context> psi_link) {
   std::vector<uint8_t> private_key =
-      yacl::crypto::SecureRandBytes(spu::psi::kEccKeySize);
-  auto dh_oprf_psi_server =
-      std::make_shared<spu::psi::EcdhOprfPsiServer>(psi_options, private_key);
-  YACL_ENFORCE(dh_oprf_psi_server, "Fail to create EcdhOprfPsiServer");
+      yacl::crypto::SecureRandBytes(psi::psi::kEccKeySize);
+  auto ec_oprf_psi_server =
+      std::make_shared<psi::psi::EcdhOprfPsiServer>(psi_options, private_key);
+  YACL_ENFORCE(ec_oprf_psi_server, "Fail to create EcdhOprfPsiServer");
   auto ub_cache =
       std::make_shared<util::UbPsiJoinCache>(batch_provider->TotalLength());
 
   auto transfer_server_items_future =
       std::async(std::launch::async, util::OprfPsiServerTransferServerItems,
-                 ctx, psi_link, batch_provider, dh_oprf_psi_server, ub_cache);
-  util::OprfPsiServerTransferClientItems(ctx, dh_oprf_psi_server);
+                 ctx, psi_link, batch_provider, ec_oprf_psi_server, ub_cache);
+  util::OprfPsiServerTransferClientItems(ctx, ec_oprf_psi_server);
   transfer_server_items_future.wait();
 
   uint64_t client_unmatched_count = 0;
@@ -358,20 +361,24 @@ void Join::OprfPsiServer(
 
 void Join::OprfPsiClient(
     ExecContext* ctx, JoinRole join_role, const std::string& tmp_dir,
-    const spu::psi::EcdhOprfPsiOptions& psi_options,
+    const psi::psi::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<util::BatchProvider>& batch_provider, bool is_left,
     int64_t peer_rank, util::PsiExecutionInfoTable* psi_info_table,
     std::shared_ptr<yacl::link::Context> psi_link) {
   std::string server_cipher_store_path =
       fmt::format("{}/tmp-server-cipher-store.csv", tmp_dir);
-  auto cipher_store =
-      std::make_shared<util::UbJoinCipherStore>(server_cipher_store_path);
-
+  auto server_cipher_store =
+      std::make_shared<util::UbPsiCipherStore>(server_cipher_store_path, false);
   auto transfer_server_items_future =
       std::async(std::launch::async, util::OprfPsiClientTransferServerItems,
-                 ctx, psi_link, psi_options, cipher_store);
+                 ctx, psi_link, psi_options, server_cipher_store);
+
+  std::string client_cipher_store_path =
+      fmt::format("{}/tmp-client-cipher-store.csv", tmp_dir);
+  auto client_cipher_store =
+      std::make_shared<util::UbPsiCipherStore>(client_cipher_store_path, true);
   util::OprfPsiClientTransferClientItems(ctx, batch_provider, psi_options,
-                                         cipher_store);
+                                         client_cipher_store);
   transfer_server_items_future.wait();
 
   std::vector<uint64_t> match_server_seqs;
@@ -383,17 +390,20 @@ void Join::OprfPsiClient(
   if (join_role == JoinRole::kLeftOrRightJoinFullParty) {
     uint64_t client_unmatched_count = 0;
     std::tie(result_tensor, matched_seqs) =
-        cipher_store->FinalizeAndComputeJoinResult(nullptr,
-                                                   &client_unmatched_count);
+        util::FinalizeAndComputeOprfJoinResult(server_cipher_store,
+                                               client_cipher_store, nullptr,
+                                               &client_unmatched_count);
     SendNullCount(ctx, peer_rank, client_unmatched_count);
   } else if (join_role == JoinRole::kLeftOrRightJoinNullParty) {
     uint64_t server_unmatched_count = 0;
     std::tie(result_tensor, matched_seqs) =
-        cipher_store->FinalizeAndComputeJoinResult(&server_unmatched_count,
-                                                   nullptr);
+        util::FinalizeAndComputeOprfJoinResult(
+            server_cipher_store, client_cipher_store, &server_unmatched_count,
+            nullptr);
   } else if (join_role == JoinRole::kInnerJoinParty) {
     std::tie(result_tensor, matched_seqs) =
-        cipher_store->FinalizeAndComputeJoinResult(nullptr, nullptr);
+        util::FinalizeAndComputeOprfJoinResult(
+            server_cipher_store, client_cipher_store, nullptr, nullptr);
   } else {
     YACL_THROW("unexpected condition: join_role={}",
                static_cast<int64_t>(join_role));

@@ -28,7 +28,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
@@ -49,10 +48,10 @@ var version = "scql version"
 
 // custom monitor formatter, e.g.: "2020-07-14 16:59:47.7144 INFO main.go:107 |msg"
 type CustomMonitorFormatter struct {
-	log.TextFormatter
+	logrus.TextFormatter
 }
 
-func (f *CustomMonitorFormatter) Format(entry *log.Entry) ([]byte, error) {
+func (f *CustomMonitorFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	var fileWithLine string
 	if entry.HasCaller() {
 		fileWithLine = fmt.Sprintf("%s:%d", filepath.Base(entry.Caller.File), entry.Caller.Line)
@@ -81,8 +80,8 @@ func main() {
 		return
 	}
 
-	log.SetReportCaller(true)
-	log.SetFormatter(&CustomMonitorFormatter{log.TextFormatter{TimestampFormat: "2006-01-02 15:04:05.123"}})
+	logrus.SetReportCaller(true)
+	logrus.SetFormatter(&CustomMonitorFormatter{logrus.TextFormatter{TimestampFormat: "2006-01-02 15:04:05.123"}})
 	rollingLogger := &lumberjack.Logger{
 		Filename:   LogFileName,
 		MaxSize:    LogOptionMaxSizeInMegaBytes, // megabytes
@@ -91,58 +90,58 @@ func main() {
 		Compress:   LogOptionCompress,
 	}
 	mOut := io.MultiWriter(os.Stdout, rollingLogger)
-	log.SetOutput(mOut)
+	logrus.SetOutput(mOut)
 
-	log.Infof("Starting to read config file: %s", *confFile)
+	logrus.Infof("Starting to read config file: %s", *confFile)
 	cfg, err := config.NewConfig(*confFile)
 	if err != nil {
-		log.Fatalf("Failed to create config from %s: %v", *confFile, err)
+		logrus.Fatalf("Failed to create config from %s: %v", *confFile, err)
 	}
 
 	// set log level if defined
 	if cfg.LogLevel != "" {
-		if lvl, err := log.ParseLevel(cfg.LogLevel); err == nil {
-			log.SetLevel(lvl)
+		if lvl, err := logrus.ParseLevel(cfg.LogLevel); err == nil {
+			logrus.SetLevel(lvl)
 		}
 	}
 
 	partyMgr, err := partymgr.NewFilePartyMgr(cfg.PartyInfoFile, cfg.PartyCode)
 	if err != nil {
-		log.Fatalf("Failed to create file partyMgr: %v", err)
+		logrus.Fatalf("Failed to create file partyMgr: %v", err)
 	}
 
 	gin.SetMode(gin.ReleaseMode)
 
 	db, err := newDb(&cfg.Storage)
 	if err != nil {
-		log.Fatalf("Failed to create broker db: %v", err)
+		logrus.Fatalf("Failed to create broker db: %v", err)
 	}
 
 	metaMgr := storage.NewMetaManager(db)
 	if metaMgr.NeedBootstrap() {
 		err = metaMgr.Bootstrap()
 		if err != nil {
-			log.Fatalf("Failed to boot strap meta manager: %v", err)
+			logrus.Fatalf("Failed to boot strap meta manager: %v", err)
 		}
 	}
 
 	if err := storage.CheckStorage(db); err != nil {
-		log.Fatalf("Failed to check storage: %v", err)
+		logrus.Fatalf("Failed to check storage: %v", err)
 	}
 
 	app, err := application.NewApp(partyMgr, metaMgr, cfg)
 	if err != nil {
-		log.Fatalf("Failed to create app: %v", err)
+		logrus.Fatalf("Failed to create app: %v", err)
 	}
 
 	intraSvr, err := server.NewIntraServer(app)
 	if err != nil {
-		log.Fatalf("Failed to create broker intra server: %v", err)
+		logrus.Fatalf("Failed to create broker intra server: %v", err)
 	}
 
 	interSvr, err := server.NewInterServer(app)
 	if err != nil {
-		log.Fatalf("Failed to create broker inter server: %v", err)
+		logrus.Fatalf("Failed to create broker inter server: %v", err)
 	}
 
 	go startService(intraSvr, cfg.IntraServer)
@@ -153,18 +152,18 @@ func main() {
 func startService(svr *http.Server, cfg config.ServerConfig) {
 	if cfg.Protocol == "https" {
 		if cfg.CertFile == "" || cfg.KeyFile == "" {
-			log.Fatalf("Could't start https service without cert_file or key_file")
+			logrus.Fatalf("Could't start https service without cert_file or key_file")
 		}
-		log.Infof("Starting to serve request on %v with https...", svr.Addr)
+		logrus.Infof("Starting to serve request on %v with https...", svr.Addr)
 		if err := svr.ListenAndServeTLS(cfg.CertFile, cfg.KeyFile); err != nil {
-			log.Fatalf("Server with tls err: %v", err)
+			logrus.Fatalf("Server with tls err: %v", err)
 		}
 		return
 	} else {
 		// default http
-		log.Infof("Starting to serve request on %v with http...", svr.Addr)
+		logrus.Infof("Starting to serve request on %v with http...", svr.Addr)
 		if err := svr.ListenAndServe(); err != nil {
-			log.Fatalf("Server err: %v", err)
+			logrus.Fatalf("Server err: %v", err)
 		}
 	}
 

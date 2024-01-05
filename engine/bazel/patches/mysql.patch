@@ -1,0 +1,25 @@
+diff --git a/cmake/boost.cmake b/cmake/boost.cmake
+index 64e5cd6..894640a 100644
+--- a/cmake/boost.cmake
++++ b/cmake/boost.cmake
+@@ -38,7 +38,7 @@
+ # we assume that the correct version (see below)
+ # is installed on the compile host in the standard location.
+
+-SET(BOOST_PACKAGE_NAME "boost_1_77_0")
++SET(BOOST_PACKAGE_NAME "boost_1_83_0")
+ SET(BOOST_TARBALL "${BOOST_PACKAGE_NAME}.tar.bz2")
+ SET(BOOST_DOWNLOAD_URL
+   "https://boostorg.jfrog.io/artifactory/main/release/1.77.0/source/${BOOST_TARBALL}"
+@@ -301,9 +301,9 @@ IF(NOT BOOST_MAJOR_VERSION EQUAL 10)
+   COULD_NOT_FIND_BOOST()
+ ENDIF()
+
+-IF(NOT BOOST_MINOR_VERSION EQUAL 77)
++IF(NOT BOOST_MINOR_VERSION EQUAL 83)
+   MESSAGE(WARNING "Boost minor version found is ${BOOST_MINOR_VERSION} "
+-    "we need 77"
++    "we need 83"
+     )
+   COULD_NOT_FIND_BOOST()
+ ENDIF()

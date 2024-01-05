@@ -22,4 +22,23 @@ proto_gen_package=github.com/secretflow/scql/pkg/proto-gen
 ls bazel-bin/api/scql_go_proto_/${proto_gen_package}/scql/ | grep -v spu.* | xargs -I {} cp -r bazel-bin/api/scql_go_proto_/${proto_gen_package}/scql/{} pkg/proto-gen/scql
 cp -r bazel-bin/api/spu_go_proto_/${proto_gen_package}/spu/. pkg/proto-gen/spu
 
+# generate openapi file for broker.proto/scdb_api.proto
+trap "rm  libspu/spu.proto google/api/*.proto" EXIT
+# note: temporary copy spu.proto to avoid external dependency
+mkdir -p libspu
+cp -f bazel-scql/external/spulib/libspu/spu.proto libspu/spu.proto
+# note: protoc need google api
+mkdir -p google/api
+cp -f bazel-scql/external/googleapis/google/api/*.proto google/api
 
+
+GOBIN=${PWD}/tool-bin go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest
+PATH=${GOBIN}:${PATH} protoc --proto_path . \
+                              --openapiv2_out ./docs \
+                              --openapiv2_opt output_format=yaml  \
+                              --openapiv2_opt preserve_rpc_order=true \
+                              --openapiv2_opt json_names_for_fields=false \
+                              --openapiv2_opt remove_internal_comments=true \
+                              --openapiv2_opt Mlibspu/spu.proto=spu.pb \
+                              --openapiv2_opt openapi_configuration=api/broker.config_openapi.yaml \
+                              api/broker.proto

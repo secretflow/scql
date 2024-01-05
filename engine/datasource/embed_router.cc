@@ -70,11 +70,11 @@ std::vector<DataSource> EmbedRouter::Route(
 
 std::unique_ptr<EmbedRouter> EmbedRouter::FromJsonStr(
     std::string_view json_str) {
-  RouterConf router_conf;
+  EmbedRouterConf router_conf;
   auto status = google::protobuf::util::JsonStringToMessage(
       google::protobuf::StringPiece(json_str), &router_conf);
   if (!status.ok()) {
-    YACL_THROW("Fail to parse json_str to `RouterConf`, reason={}",
+    YACL_THROW("Fail to parse json_str to `EmbedRouterConf`, reason={}",
                status.ToString());
   }
 
@@ -83,7 +83,7 @@ std::unique_ptr<EmbedRouter> EmbedRouter::FromJsonStr(
 
 std::unique_ptr<EmbedRouter> EmbedRouter::FromConnectionStr(
     const std::string& connection_str) {
-  RouterConf router_conf;
+  EmbedRouterConf router_conf;
   const std::string kDefaultDatasourceId = "ds001";
   {
     auto ds = router_conf.add_datasources();
@@ -103,7 +103,7 @@ std::unique_ptr<EmbedRouter> EmbedRouter::FromConnectionStr(
 }
 
 std::unique_ptr<EmbedRouter> EmbedRouter::FromProto(
-    const RouterConf& router_conf) {
+    const EmbedRouterConf& router_conf) {
   auto router = std::make_unique<EmbedRouter>();
   // initialize router with router_conf
   {

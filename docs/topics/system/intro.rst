@@ -16,7 +16,7 @@ Key Features
 Architecture
 ------------
 
-The SCQL system supports both centralized and P2P modes. The centralized model relies on a trusted party, but the deployment and configuration process is simpler; P2P does not need to rely on a trusted party.
+The SCQL system supports both centralized and P2P modes. The centralized model relies on a trusted party, but the deployment and configuration process is simpler; P2P does not need to rely on a trusted party. See :doc:`/topics/system/deploy-arch` for details.
 
 The following introduction will be carried out in centralized mode, For P2P mode, please refer to :doc:`/topics/system/intro-p2p`
 

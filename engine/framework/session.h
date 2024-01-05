@@ -119,6 +119,16 @@ class Session {
 
   void DelTensors(const std::vector<std::string>& tensor_names);
 
+  void StorePeerError(const std::string& party_code, const pb::Status& status) {
+    std::lock_guard<std::mutex> guard(peer_error_mutex_);
+    peer_errors_.emplace_back(party_code, status);
+  }
+
+  std::vector<std::pair<std::string, pb::Status>> GetPeerErrors() {
+    std::lock_guard<std::mutex> guard(peer_error_mutex_);
+    return peer_errors_;
+  }
+
  private:
   void InitLink();
 
@@ -149,6 +159,9 @@ class Session {
 
   std::mutex mutex_;
   absl::flat_hash_map<std::string, int> tensor_ref_nums_;
+
+  std::mutex peer_error_mutex_;
+  std::vector<std::pair<std::string, pb::Status>> peer_errors_;
 };
 
 }  // namespace scql::engine

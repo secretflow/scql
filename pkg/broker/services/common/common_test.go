@@ -15,12 +15,22 @@
 package common
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+
+	gormlog "gorm.io/gorm/logger"
 
 	"github.com/secretflow/scql/pkg/broker/application"
 	"github.com/secretflow/scql/pkg/broker/storage"
+	"github.com/secretflow/scql/pkg/broker/testdata"
+	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/status"
 )
 
 func TestVerifyTableMeta(t *testing.T) {
@@ -53,6 +63,12 @@ func TestVerifyTableMeta(t *testing.T) {
 	// set illegal table name
 	mockMeta.Table.TableName = "@test_t"
 	r.Error(VerifyTableMeta(mockMeta))
+	mockMeta.Table.TableName = " test_t"
+	r.Error(VerifyTableMeta(mockMeta))
+	mockMeta.Table.TableName = "test_t "
+	r.Error(VerifyTableMeta(mockMeta))
+	mockMeta.Table.TableName = "test t "
+	r.Error(VerifyTableMeta(mockMeta))
 	// reset
 	mockMeta.Table.TableName = "test_t"
 
@@ -72,6 +88,12 @@ func TestVerifyTableMeta(t *testing.T) {
 
 	// set illegal column name
 	mockMeta.Columns[0].ColumnName = "@c1"
+	r.Error(VerifyTableMeta(mockMeta))
+	mockMeta.Columns[0].ColumnName = " c1"
+	r.Error(VerifyTableMeta(mockMeta))
+	mockMeta.Columns[0].ColumnName = "c1 "
+	r.Error(VerifyTableMeta(mockMeta))
+	mockMeta.Columns[0].ColumnName = "c1 c2"
 	r.Error(VerifyTableMeta(mockMeta))
 	// reset
 	mockMeta.Columns[0].ColumnName = "c1"
@@ -101,4 +123,158 @@ func TestVerifyProjectID(t *testing.T) {
 	// lex error, parse 4e2 as float
 	r.Error(VerifyProjectID("4e2b8e84794811ee9fac047bcba5a41e"))
 	r.Error(VerifyProjectID("@test_db"))
+	r.Error(VerifyProjectID(" test_db"))
+	r.Error(VerifyProjectID("test_db "))
+	r.Error(VerifyProjectID(" test_db "))
+	r.Error(VerifyProjectID(" test db "))
+	r.Error(VerifyProjectID(""))
+}
+
+func TestStorageWithCheck(t *testing.T) {
+	r := require.New(t)
+
+	// mock data
+	db, err := gorm.Open(sqlite.Open(":memory:"),
+		&gorm.Config{
+			SkipDefaultTransaction: true,
+			Logger: gormlog.New(
+				logrus.StandardLogger(),
+				gormlog.Config{
+					SlowThreshold: 200 * time.Millisecond,
+					Colorful:      false,
+					LogLevel:      gormlog.Warn,
+				}),
+		})
+
+	r.NoError(err)
+	meta := storage.NewMetaManager(db)
+	err = meta.Bootstrap()
+	r.NoError(err)
+	err = testdata.CreateTestPemFiles("../../testdata")
+	r.NoError(err)
+	transaction := meta.CreateMetaTransaction()
+	projectID1 := "p1"
+	projectName1 := "n1"
+	projectConf := storage.ProjectConfig{SpuConf: `{
+        "protocol": "SEMI2K",
+        "field": "FM64",
+        "ttp_beaver_config": {"server_host": "127.0.0.1"}
+    }`}
+	alice := "alice"
+	bob := "bob"
+	// create project
+	err = transaction.CreateProject(storage.Project{ID: projectID1, Name: projectName1, ProjectConf: projectConf, Creator: alice})
+	r.NoError(err)
+	err = transaction.AddProjectMembers([]storage.Member{storage.Member{ProjectID: projectID1, Member: bob}})
+	r.NoError(err)
+	tableName1 := "t1"
+	t1Identifier := storage.TableIdentifier{ProjectID: projectID1, TableName: tableName1}
+	tableMeta := storage.TableMeta{
+		Table: storage.Table{TableIdentifier: t1Identifier, RefTable: "real.t1", Owner: alice, DBType: "MYSQL"},
+		Columns: []storage.ColumnMeta{
+			{ColumnName: "id", DType: "int"},
+		},
+	}
+	// create table
+	err = AddTableWithCheck(transaction, tableMeta.Table.ProjectID, tableMeta.Table.Owner, tableMeta)
+	r.NoError(err)
+	tableName2 := "t2"
+	t2Identifier := storage.TableIdentifier{ProjectID: projectID1, TableName: tableName2}
+	tableMeta = storage.TableMeta{
+		Table: storage.Table{TableIdentifier: t2Identifier, RefTable: "real.t2", Owner: bob, DBType: "MYSQL"},
+		Columns: []storage.ColumnMeta{
+			{ColumnName: "id", DType: "int"},
+		},
+	}
+	// create table
+	err = AddTableWithCheck(transaction, tableMeta.Table.ProjectID, tableMeta.Table.Owner, tableMeta)
+	r.NoError(err)
+	// allow create table repeatedly
+	err = AddTableWithCheck(transaction, tableMeta.Table.ProjectID, tableMeta.Table.Owner, tableMeta)
+	r.NoError(err)
+	// grant
+	c1Identifier := storage.ColumnIdentifier{ProjectID: t1Identifier.ProjectID, TableName: t1Identifier.TableName, ColumnName: "id"}
+	c2Identifier := storage.ColumnIdentifier{ProjectID: t2Identifier.ProjectID, TableName: t2Identifier.TableName, ColumnName: "id"}
+	privsAlice := []storage.ColumnPriv{
+		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c1Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: c1Identifier.ColumnName, DestParty: alice}, Priv: "plaintext"},
+		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c1Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: c1Identifier.ColumnName, DestParty: bob}, Priv: "plaintext"}}
+	privsBob := []storage.ColumnPriv{
+		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: alice}, Priv: "plaintext"},
+		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: bob}, Priv: "plaintext"},
+	}
+	// normal grant
+	err = GrantColumnConstraintsWithCheck(transaction, t1Identifier.ProjectID, alice, privsAlice)
+	r.NoError(err)
+	err = GrantColumnConstraintsWithCheck(transaction, t2Identifier.ProjectID, bob, privsBob)
+	r.NoError(err)
+
+	tableNotExistPriv := []storage.ColumnPriv{
+		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: "not_exist", ColumnName: c2Identifier.ColumnName, DestParty: alice}, Priv: "plaintext"},
+		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: "not_exist", ColumnName: c2Identifier.ColumnName, DestParty: bob}, Priv: "plaintext"},
+	}
+	err = GrantColumnConstraintsWithCheck(transaction, t2Identifier.ProjectID, bob, tableNotExistPriv)
+	r.Error(err)
+	r.Equal("GrantColumnConstraintsWithCheck: table not_exist not found", err.Error())
+	columnNotExistPriv := []storage.ColumnPriv{
+		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: "column_not_exist", DestParty: alice}, Priv: "plaintext"},
+		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: "error_column", DestParty: bob}, Priv: "plaintext"},
+	}
+	err = GrantColumnConstraintsWithCheck(transaction, t2Identifier.ProjectID, alice, columnNotExistPriv)
+	r.Error(err)
+	r.Equal("GrantColumnConstraintsWithCheck: unknown column name column_not_exist in table t1", err.Error())
+
+	tableNotExistPrivID := []storage.ColumnPrivIdentifier{
+		{ProjectID: c2Identifier.ProjectID, TableName: "not_exist", ColumnName: c2Identifier.ColumnName, DestParty: alice},
+		{ProjectID: c2Identifier.ProjectID, TableName: "not_exist", ColumnName: c2Identifier.ColumnName, DestParty: bob},
+	}
+	err = RevokeColumnConstraintsWithCheck(transaction, t2Identifier.ProjectID, bob, tableNotExistPrivID)
+	r.Error(err)
+	r.Equal("RevokeColumnConstraintsWithCheck: table not_exist not found", err.Error())
+	columnNotExistPrivID := []storage.ColumnPrivIdentifier{
+		{ProjectID: c2Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: "column_not_exist", DestParty: alice},
+		{ProjectID: c2Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: "error_column", DestParty: bob},
+	}
+	err = RevokeColumnConstraintsWithCheck(transaction, t2Identifier.ProjectID, alice, columnNotExistPrivID)
+	r.Error(err)
+	r.Equal("RevokeColumnConstraintsWithCheck: unknown column name column_not_exist in table t1", err.Error())
+
+	errTableMeta := tableMeta
+	errTableMeta.Table.ProjectID = "not_exist_project"
+	err = AddTableWithCheck(transaction, "not_exist_project", errTableMeta.Table.Owner, errTableMeta)
+	r.Error(err)
+	r.Equal("AddTableWithCheck: party bob is not in project not_exist_project", err.Error())
+
+	exist, err := DropTableWithCheck(transaction, tableMeta.Table.ProjectID, tableMeta.Table.Owner, tableMeta.Table.TableIdentifier)
+	r.NoError(err)
+	r.True(exist)
+	// drop table duplicated
+	exist, err = DropTableWithCheck(transaction, tableMeta.Table.ProjectID, tableMeta.Table.Owner, tableMeta.Table.TableIdentifier)
+	r.NoError(err)
+	r.False(exist)
+}
+
+func TestFeedResponseStatus(t *testing.T) {
+	r := require.New(t)
+	// test error is nil/response.Status is nil
+	response := &pb.InviteToProjectResponse{}
+	feedResponseStatus(response, nil)
+	r.Nil(response.Status)
+	// test error is not nil/response.Status is nil
+	response = &pb.InviteToProjectResponse{}
+	feedResponseStatus(response, fmt.Errorf("mock error"))
+	r.NotNil(response.Status)
+	r.Equal(int32(pb.Code_INTERNAL), response.Status.Code)
+	r.Equal("Error: code=300, msg=\"mock error\"", response.Status.Message)
+	// test error is nil/response.Status is not nil
+	response = &pb.InviteToProjectResponse{Status: &pb.Status{Code: int32(pb.Code_BAD_REQUEST), Message: "mock error"}}
+	feedResponseStatus(response, nil)
+	r.NotNil(response.Status)
+	r.Equal(int32(pb.Code_BAD_REQUEST), response.Status.Code)
+	r.Equal("mock error", response.Status.Message)
+	// test error is not nil/response.Status is not nil
+	response = &pb.InviteToProjectResponse{Status: &pb.Status{Code: int32(pb.Code_INTERNAL), Message: "from status"}}
+	feedResponseStatus(response, status.New(pb.Code_BAD_REQUEST, "from error"))
+	r.NotNil(response.Status)
+	r.Equal(int32(pb.Code_BAD_REQUEST), response.Status.Code)
+	r.Equal("Error: code=100, msg=\"from error\"", response.Status.Message)
 }

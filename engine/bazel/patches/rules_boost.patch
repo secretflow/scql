@@ -1,218 +1,25 @@
-diff --git a/BUILD.boost b/BUILD.boost
-index 57d7082..1c0a7d2 100644
---- a/BUILD.boost
-+++ b/BUILD.boost
-@@ -12,7 +12,7 @@ _w_no_deprecated = selects.with_or({
- config_setting(
-     name = "linux",
-     constraint_values = [
--        "@bazel_tools//platforms:linux",
-+        "@platforms//os:linux",
-     ],
-     visibility = ["//visibility:public"],
- )
-@@ -20,7 +20,7 @@ config_setting(
- config_setting(
-     name = "android",
-     constraint_values = [
--        "@bazel_tools//platforms:android",
-+        "@platforms//os:android",
-     ],
-     visibility = ["//visibility:public"],
- )
-@@ -28,7 +28,7 @@ config_setting(
- config_setting(
-     name = "osx",
-     constraint_values = [
--        "@bazel_tools//platforms:osx",
-+        "@platforms//os:osx",
-     ],
-     visibility = ["//visibility:public"],
- )
-@@ -36,7 +36,7 @@ config_setting(
- config_setting(
-     name = "windows",
-     constraint_values = [
--        "@bazel_tools//platforms:windows",
-+        "@platforms//os:windows",
-     ],
-     visibility = ["//visibility:public"],
- )
-@@ -44,8 +44,8 @@ config_setting(
- config_setting(
-     name = "linux_arm",
-     constraint_values = [
--        "@bazel_tools//platforms:linux",
--        "@bazel_tools//platforms:arm",
-+        "@platforms//os:linux",
-+        "@platforms//cpu:arm",
-     ],
-     visibility = ["//visibility:public"],
- )
-@@ -53,8 +53,8 @@ config_setting(
- config_setting(
-     name = "linux_ppc",
-     constraint_values = [
--        "@bazel_tools//platforms:linux",
--        "@bazel_tools//platforms:ppc",
-+        "@platforms//os:linux",
-+        "@platforms//cpu:ppc",
-     ],
-     visibility = ["//visibility:public"],
- )
-@@ -62,8 +62,8 @@ config_setting(
- config_setting(
-     name = "linux_aarch64",
-     constraint_values = [
--        "@bazel_tools//platforms:linux",
--        "@bazel_tools//platforms:aarch64",
-+        "@platforms//os:linux",
-+        "@platforms//cpu:aarch64",
-     ],
-     visibility = ["//visibility:public"],
- )
-@@ -71,8 +71,8 @@ config_setting(
- config_setting(
-     name = "linux_x86_64",
-     constraint_values = [
--        "@bazel_tools//platforms:linux",
--        "@bazel_tools//platforms:x86_64",
-+        "@platforms//os:linux",
-+        "@platforms//cpu:x86_64",
-     ],
-     visibility = ["//visibility:public"],
- )
-@@ -80,8 +80,8 @@ config_setting(
- config_setting(
-     name = "osx_arm64",
-     constraint_values = [
--        "@bazel_tools//platforms:osx",
--        "@bazel_tools//platforms:aarch64",
-+        "@platforms//os:osx",
-+        "@platforms//cpu:aarch64",
-     ],
-     visibility = ["//visibility:public"],
- )
-@@ -89,8 +89,8 @@ config_setting(
- config_setting(
-     name = "osx_x86_64",
-     constraint_values = [
--        "@bazel_tools//platforms:osx",
--        "@bazel_tools//platforms:x86_64",
-+        "@platforms//os:osx",
-+        "@platforms//cpu:x86_64",
-     ],
-     visibility = ["//visibility:public"],
- )
-@@ -98,8 +98,8 @@ config_setting(
- config_setting(
-     name = "windows_x86_64",
-     constraint_values = [
--        "@bazel_tools//platforms:windows",
--        "@bazel_tools//platforms:x86_64",
-+        "@platforms//os:windows",
-+        "@platforms//cpu:x86_64",
-     ],
-     visibility = ["//visibility:public"],
- )
-@@ -107,7 +107,7 @@ config_setting(
- config_setting(
-     name = "x86_64",
-     constraint_values = [
--        "@bazel_tools//platforms:x86_64",
-+        "@platforms//cpu:x86_64",
-     ],
-     visibility = ["//visibility:public"],
- )
-@@ -115,8 +115,8 @@ config_setting(
- config_setting(
-     name = "android_arm",
-     constraint_values = [
--        "@bazel_tools//platforms:android",
--        "@bazel_tools//platforms:arm",
-+        "@platforms//os:android",
-+        "@platforms//cpu:arm",
-     ],
-     visibility = ["//visibility:public"],
- )
-@@ -124,8 +124,8 @@ config_setting(
- config_setting(
-     name = "android_aarch64",
-     constraint_values = [
--        "@bazel_tools//platforms:android",
--        "@bazel_tools//platforms:aarch64",
-+        "@platforms//os:android",
-+        "@platforms//cpu:aarch64",
-     ],
-     visibility = ["//visibility:public"],
- )
-diff --git a/BUILD.lzma b/BUILD.lzma
-index c744623..6b2fb72 100644
---- a/BUILD.lzma
-+++ b/BUILD.lzma
-@@ -6,33 +6,33 @@ load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+diff --git a/config.lzma-linux.h b/config.lzma-linux.h
+index e8b00d8..092696f 100644
+--- a/config.lzma-linux.h
++++ b/config.lzma-linux.h
+@@ -56,7 +56,9 @@
+ /* #undef HAVE_COMMONCRYPTO_COMMONDIGEST_H */
 
- config_setting(
-     name = "linux",
--    constraint_values = ["@bazel_tools//platforms:linux"],
-+    constraint_values = ["@platforms//os:linux"],
- )
+ /* Define to 1 if you have the <cpuid.h> header file. */
+-#define HAVE_CPUID_H 1
++#ifdef __x86_64__
++   #define HAVE_CPUID_H 1
++#endif
 
- config_setting(
-     name = "osx_arm64",
-     constraint_values = [
--        "@bazel_tools//platforms:osx",
--        "@bazel_tools//platforms:aarch64",
-+        "@platforms//os:osx",
-+        "@platforms//cpu:aarch64",
-     ],
- )
+ /* Define if the GNU dcgettext() function is already present or preinstalled.
+    */
+@@ -309,7 +311,9 @@
 
- config_setting(
-     name = "osx_x86_64",
-     constraint_values = [
--        "@bazel_tools//platforms:osx",
--        "@bazel_tools//platforms:x86_64",
-+        "@platforms//os:osx",
-+        "@platforms//cpu:x86_64",
-     ],
- )
+ /* Define to 1 if _mm_clmulepi64_si128 is usable. See configure.ac for
+    details. */
++#ifdef __x86_64__
+ #define HAVE_USABLE_CLMUL 1
++#endif
 
- config_setting(
-     name = "windows",
--    constraint_values = ["@bazel_tools//platforms:windows"],
-+    constraint_values = ["@platforms//os:windows"],
- )
-
- config_setting(
-     name = "android",
--    constraint_values = ["@bazel_tools//platforms:android"],
-+    constraint_values = ["@platforms//os:android"],
- )
-
- copy_file(
-diff --git a/BUILD.zstd b/BUILD.zstd
-index 3112574..d47aec6 100644
---- a/BUILD.zstd
-+++ b/BUILD.zstd
-@@ -233,6 +233,6 @@ cc_library(
- config_setting(
-     name = "windows",
-     constraint_values = [
--        "@bazel_tools//platforms:windows",
-+        "@platforms//os:windows",
-     ],
- )
-diff --git a/test/BUILD b/test/BUILD
-index cd185f7..101faf8 100644
---- a/test/BUILD
-+++ b/test/BUILD
-@@ -584,7 +584,7 @@ cc_test(
- config_setting(
-     name = "windows",
-     constraint_values = [
--        "@bazel_tools//platforms:windows",
-+        "@platforms//os:windows",
-     ],
-     visibility = ["//visibility:public"],
- )
+ /* Define to 1 if you have the `utime' function. */
+ /* #undef HAVE_UTIME */

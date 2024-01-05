@@ -85,6 +85,10 @@ void BroadcastTo::BroadcastToPrivate(ExecContext* ctx,
   for (int i = 0; i < input_pbs.size(); ++i) {
     auto ret = spu_io.DumpPublic(input_pbs[i].name());
     YACL_ENFORCE(ret, "dump public for {} failed", input_pbs[i].name());
+    // convert hash to string for string tensor in spu
+    if (input_pbs[i].elem_type() == pb::PrimitiveDataType::STRING) {
+      ret = ctx->GetSession()->HashToString(*ret);
+    }
 
     std::shared_ptr<arrow::Scalar> scalar;
     ASSIGN_OR_THROW_ARROW_STATUS(scalar,

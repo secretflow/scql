@@ -36,7 +36,7 @@ void Constant::Validate(ExecContext* ctx) {
   const auto& output_status = util::GetTensorStatus(outputs[0]);
   YACL_ENFORCE(output_status == pb::TensorStatus::TENSORSTATUS_PRIVATE ||
                    output_status == pb::TensorStatus::TENSORSTATUS_PUBLIC,
-               "Constant output tensor' status should  be private/public");
+               "Constant output tensor' status should be private/public");
 }
 
 void Constant::Execute(ExecContext* ctx) {
@@ -57,6 +57,11 @@ void Constant::Execute(ExecContext* ctx) {
     auto tensor = BuildTensorFromScalar(scalar_attr);
     YACL_ENFORCE(tensor != nullptr,
                  "build tensor from scalar attribute failed");
+    // NOTE: if tensor' type is string, we should convert it to
+    // integer first, currently use hash value of string.
+    if (tensor->Type() == pb::PrimitiveDataType::STRING) {
+      tensor = ctx->GetSession()->StringToHash(*tensor);
+    }
     infeed_helper.InfeedTensorAsPublic(output.name(), *tensor);
 
     // all parties calculate public value locally to avoid network interaction

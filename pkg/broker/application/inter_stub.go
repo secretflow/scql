@@ -23,8 +23,6 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/secretflow/scql/pkg/broker/constant"
 	"github.com/secretflow/scql/pkg/broker/services/auth"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
@@ -39,12 +37,6 @@ type InterStub struct {
 }
 
 func (stub *InterStub) baseCall(url, path string, req proto.Message, response proto.Message) (err error) {
-	startTime := time.Now()
-	var latency time.Duration
-	defer func() {
-		latency = time.Now().Sub(startTime)
-		logrus.Infof("|inter stub|path=%v|ip=%v|latency=%v|%s", path, url, latency, err)
-	}()
 	err = stub.Auth.SignMessage(req)
 	if err != nil {
 		return

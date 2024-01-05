@@ -8,6 +8,7 @@ Topics
     system/intro
     system/usage
     system/intro-p2p
+    system/deploy-arch
 
 .. toctree::
     :maxdepth: 1
@@ -26,7 +27,7 @@ Topics
     :maxdepth: 1
     :caption: Clients
 
-    clients/overview
+    clients/integrate-scdb
 
 .. toctree::
     :maxdepth: 1

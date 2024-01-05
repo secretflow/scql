@@ -1915,3 +1915,75 @@ func TestPlatformSecurityConfig(t *testing.T) {
 		}
 	}
 }
+
+func TestCaseSensitive(t *testing.T) {
+	r := require.New(t)
+	ctx := setupTestEnv(t)
+
+	// root> create user alice
+	_, err := runSQL(ctx, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`)
+	r.NoError(err)
+
+	_, err = runSQL(ctx, `CREATE USER bob PARTY_CODE "party_B" IDENTIFIED BY "some_pwd"`)
+	r.NoError(err)
+
+	// switch to user root
+	r.NoError(switchUser(ctx, userRoot))
+
+	// root> GRANT ALL on *.* to alice
+	_, err = runSQL(ctx, `GRANT ALL ON *.* to alice`)
+	r.NoError(err)
+
+	// alice> create database da -- success
+	_, err = runSQL(ctx, `CREATE DATABASE da`)
+	r.NoError(err)
+
+	// alice> create table da.t1 -- success
+	_, err = runSQL(ctx, `CREATE TABLE da.t1 (id string, data int) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
+	r.NoError(err)
+
+	// alice> create table da.t1 -- error
+	// due to duplicate column name
+	_, err = runSQL(ctx, `CREATE TABLE da.t2 (id string, data int, Data int) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
+	r.Error(err)
+
+	// alice> create table da.t2 -- success
+	_, err = runSQL(ctx, `CREATE TABLE da.t2 (id string, Data int) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
+	r.NoError(err)
+
+	// alice> create table da.T2 -- success
+	_, err = runSQL(ctx, `CREATE TABLE da.T2 (id string, Data int) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
+	r.NoError(err)
+
+	// grant data -- success
+	_, err = runSQL(ctx, `GRANT SELECT PLAINTEXT(id, data) ON da.t1 TO alice`)
+	r.NoError(err)
+	// grant Data -- success
+	_, err = runSQL(ctx, `GRANT SELECT PLAINTEXT(id, Data) ON da.t1 TO alice`)
+	r.NoError(err)
+
+	// alice> revoke data
+	_, err = runSQL(ctx, `REVOKE SELECT PLAINTEXT(data) ON da.t1 FROM alice`)
+	r.NoError(err)
+
+	// alice> revoke ID
+	_, err = runSQL(ctx, `REVOKE SELECT PLAINTEXT(ID) ON da.t1 FROM alice`)
+	r.NoError(err)
+
+	// alice> delete table da.t1 -- success
+	_, err = runSQL(ctx, `DROP TABLE da.t1`)
+	r.NoError(err)
+
+	// alice> delete table da.T2 -- success
+	_, err = runSQL(ctx, `DROP TABLE da.T2`)
+	r.NoError(err)
+
+	// alice> delete table da.t2 -- success
+	_, err = runSQL(ctx, `DROP TABLE da.t2`)
+	r.NoError(err)
+
+	// alice> delete table da.T2 -- error
+	// da.T2 not exist
+	_, err = runSQL(ctx, `DROP TABLE da.T2`)
+	r.Error(err)
+}

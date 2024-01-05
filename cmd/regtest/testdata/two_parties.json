@@ -181,6 +181,11 @@
       "mysql_query": "select count(distinct alice.aggregate_long_0) as res0, count(distinct bob.aggregate_long_0) as res1, count(distinct alice.aggregate_float_0) as res2, count(distinct bob.aggregate_float_0) as res3, count(distinct alice.aggregate_string_0) as res4, count(distinct bob.aggregate_string_0) as res5, count(distinct alice.aggregate_datetime_0) as res6, count(distinct bob.aggregate_datetime_0) as res7, count(distinct alice.aggregate_timestamp_0) as res8, count(distinct bob.aggregate_timestamp_0) as res9 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"
     },
     {
+      "name": "count & distinct & if after join",
+      "query": "select count(distinct (if(alice.encrypt_long_0>1, bob.join_string_0, 'aaaaa'))) as cd from scdb.alice_tbl_0 as alice inner join scdb.bob_tbl_0 as bob on alice.join_string_0=bob.join_string_0 group by bob.groupby_long_0;",
+      "mysql_query": "select count(distinct (if(alice.encrypt_long_0>1, bob.join_string_0, 'aaaaa'))) as cd from alice.tbl_0 as alice inner join bob.tbl_0 as bob on alice.join_string_0=bob.join_string_0 group by bob.groupby_long_0;"
+    },
+    {
       "name": "logic after join",
       "query": "select alice.plain_long_0 as res0, alice.plain_long_0 > bob.plain_long_0 and alice.plain_long_0 >= bob.plain_long_0 as and_log, (alice.plain_long_0 <= bob.plain_long_0) or (alice.plain_long_0 <> bob.plain_long_0) as or_log from scdb.alice_tbl_0 as alice join scdb.bob_tbl_0 as bob on alice.join_long_0 = bob.join_long_0;",
       "mysql_query": "select alice.plain_long_0 as res0, alice.plain_long_0 > bob.plain_long_0 and alice.plain_long_0 >= bob.plain_long_0 as and_log, (alice.plain_long_0 <= bob.plain_long_0) or (alice.plain_long_0 <> bob.plain_long_0) as or_log from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_long_0 = bob.join_long_0;"

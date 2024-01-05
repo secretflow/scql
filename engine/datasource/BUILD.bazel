@@ -95,14 +95,14 @@ cc_library(
 )
 
 proto_library(
-    name = "router_proto",
-    srcs = ["router.proto"],
+    name = "embed_router_proto",
+    srcs = ["embed_router.proto"],
     deps = [":datasource_proto"],
 )
 
 cc_proto_library(
-    name = "router_cc_proto",
-    deps = [":router_proto"],
+    name = "embed_router_cc_proto",
+    deps = [":embed_router_proto"],
 )
 
 proto_library(
@@ -120,8 +120,8 @@ cc_library(
     srcs = ["embed_router.cc"],
     hdrs = ["embed_router.h"],
     deps = [
+        ":embed_router_cc_proto",
         ":router",
-        ":router_cc_proto",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/strings",
         "@yacl//yacl/base:exception",
@@ -246,5 +246,35 @@ cc_library(
     deps = [
         ":csvdb_adaptor",
         ":datasource_adaptor_factory",
+    ],
+)
+
+proto_library(
+    name = "http_router_proto",
+    srcs = ["http_router.proto"],
+    deps = [
+        ":datasource_proto",
+        "//api:common_proto",
+        "//api:status_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "http_router_cc_proto",
+    deps = [
+        ":http_router_proto",
+    ],
+)
+
+cc_library(
+    name = "http_router",
+    srcs = ["http_router.cc"],
+    hdrs = ["http_router.h"],
+    deps = [
+        ":http_router_cc_proto",
+        ":router",
+        "@com_github_brpc_brpc//:brpc",
+        "@com_google_absl//absl/strings",
+        "@yacl//yacl/base:exception",
     ],
 )

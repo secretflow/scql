@@ -1,1406 +1,1440 @@
 {
-    "db_name": "carol",
-    "party_code": "carol",
-    "engine": ["engine-carol:8003"],
-    "credentials": ["carol_credential"],
-    "token": "carol_token",
-    "db_type": "POSTGRESQL",
-    "tables": {
-        "tbl_0": {
-            "columns": [
-                {
-                    "column_name": "plain_long_0",
-                    "dtype": "long",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_long_0",
-                    "dtype": "long",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_long_0",
-                    "dtype": "long",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_long_0",
-                    "dtype": "long",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_long_0",
-                    "dtype": "long",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_long_0",
-                    "dtype": "long",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_float_0",
-                    "dtype": "float",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_float_0",
-                    "dtype": "float",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_float_0",
-                    "dtype": "float",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_float_0",
-                    "dtype": "float",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_float_0",
-                    "dtype": "float",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_float_0",
-                    "dtype": "float",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_string_0",
-                    "dtype": "string",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_string_0",
-                    "dtype": "string",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_string_0",
-                    "dtype": "string",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_string_0",
-                    "dtype": "string",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_string_0",
-                    "dtype": "string",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_string_0",
-                    "dtype": "string",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_datetime_0",
-                    "dtype": "datetime",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_datetime_0",
-                    "dtype": "datetime",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_datetime_0",
-                    "dtype": "datetime",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_datetime_0",
-                    "dtype": "datetime",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_datetime_0",
-                    "dtype": "datetime",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_datetime_0",
-                    "dtype": "datetime",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_timestamp_0",
-                    "dtype": "timestamp",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_timestamp_0",
-                    "dtype": "timestamp",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_timestamp_0",
-                    "dtype": "timestamp",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_timestamp_0",
-                    "dtype": "timestamp",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_timestamp_0",
-                    "dtype": "timestamp",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_timestamp_0",
-                    "dtype": "timestamp",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_long_1",
-                    "dtype": "long",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_long_1",
-                    "dtype": "long",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_long_1",
-                    "dtype": "long",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_long_1",
-                    "dtype": "long",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_long_1",
-                    "dtype": "long",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_long_1",
-                    "dtype": "long",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_float_1",
-                    "dtype": "float",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_float_1",
-                    "dtype": "float",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_float_1",
-                    "dtype": "float",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_float_1",
-                    "dtype": "float",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_float_1",
-                    "dtype": "float",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_float_1",
-                    "dtype": "float",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_string_1",
-                    "dtype": "string",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_string_1",
-                    "dtype": "string",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_string_1",
-                    "dtype": "string",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_string_1",
-                    "dtype": "string",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_string_1",
-                    "dtype": "string",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_string_1",
-                    "dtype": "string",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_datetime_1",
-                    "dtype": "datetime",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_datetime_1",
-                    "dtype": "datetime",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_datetime_1",
-                    "dtype": "datetime",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_datetime_1",
-                    "dtype": "datetime",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_datetime_1",
-                    "dtype": "datetime",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_datetime_1",
-                    "dtype": "datetime",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_timestamp_1",
-                    "dtype": "timestamp",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_timestamp_1",
-                    "dtype": "timestamp",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_timestamp_1",
-                    "dtype": "timestamp",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_timestamp_1",
-                    "dtype": "timestamp",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_timestamp_1",
-                    "dtype": "timestamp",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_timestamp_1",
-                    "dtype": "timestamp",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_long_2",
-                    "dtype": "long",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_long_2",
-                    "dtype": "long",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_long_2",
-                    "dtype": "long",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_long_2",
-                    "dtype": "long",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_long_2",
-                    "dtype": "long",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_long_2",
-                    "dtype": "long",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_float_2",
-                    "dtype": "float",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_float_2",
-                    "dtype": "float",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_float_2",
-                    "dtype": "float",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_float_2",
-                    "dtype": "float",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_float_2",
-                    "dtype": "float",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_float_2",
-                    "dtype": "float",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_string_2",
-                    "dtype": "string",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_string_2",
-                    "dtype": "string",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_string_2",
-                    "dtype": "string",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_string_2",
-                    "dtype": "string",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_string_2",
-                    "dtype": "string",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_string_2",
-                    "dtype": "string",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_datetime_2",
-                    "dtype": "datetime",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_datetime_2",
-                    "dtype": "datetime",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_datetime_2",
-                    "dtype": "datetime",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_datetime_2",
-                    "dtype": "datetime",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_datetime_2",
-                    "dtype": "datetime",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_datetime_2",
-                    "dtype": "datetime",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_timestamp_2",
-                    "dtype": "timestamp",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_timestamp_2",
-                    "dtype": "timestamp",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_timestamp_2",
-                    "dtype": "timestamp",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_timestamp_2",
-                    "dtype": "timestamp",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_timestamp_2",
-                    "dtype": "timestamp",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_timestamp_2",
-                    "dtype": "timestamp",
-                    "ccl": ["encrypt"]
-                }
-            ]
+  "db_name": "carol",
+  "party_code": "carol",
+  "engine": ["engine-carol:8003"],
+  "credentials": ["carol_credential"],
+  "token": "carol_token",
+  "db_type": "POSTGRESQL",
+  "tables": {
+    "tbl_0": {
+      "columns": [
+        {
+          "column_name": "plain_long_0",
+          "dtype": "long",
+          "ccl": ["plain"]
         },
-        "tbl_1": {
-            "columns": [
-                {
-                    "column_name": "plain_long_0",
-                    "dtype": "long",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_long_0",
-                    "dtype": "long",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_long_0",
-                    "dtype": "long",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_long_0",
-                    "dtype": "long",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_long_0",
-                    "dtype": "long",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_long_0",
-                    "dtype": "long",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_float_0",
-                    "dtype": "float",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_float_0",
-                    "dtype": "float",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_float_0",
-                    "dtype": "float",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_float_0",
-                    "dtype": "float",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_float_0",
-                    "dtype": "float",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_float_0",
-                    "dtype": "float",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_string_0",
-                    "dtype": "string",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_string_0",
-                    "dtype": "string",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_string_0",
-                    "dtype": "string",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_string_0",
-                    "dtype": "string",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_string_0",
-                    "dtype": "string",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_string_0",
-                    "dtype": "string",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_datetime_0",
-                    "dtype": "datetime",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_datetime_0",
-                    "dtype": "datetime",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_datetime_0",
-                    "dtype": "datetime",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_datetime_0",
-                    "dtype": "datetime",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_datetime_0",
-                    "dtype": "datetime",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_datetime_0",
-                    "dtype": "datetime",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_timestamp_0",
-                    "dtype": "timestamp",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_timestamp_0",
-                    "dtype": "timestamp",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_timestamp_0",
-                    "dtype": "timestamp",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_timestamp_0",
-                    "dtype": "timestamp",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_timestamp_0",
-                    "dtype": "timestamp",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_timestamp_0",
-                    "dtype": "timestamp",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_long_1",
-                    "dtype": "long",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_long_1",
-                    "dtype": "long",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_long_1",
-                    "dtype": "long",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_long_1",
-                    "dtype": "long",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_long_1",
-                    "dtype": "long",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_long_1",
-                    "dtype": "long",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_float_1",
-                    "dtype": "float",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_float_1",
-                    "dtype": "float",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_float_1",
-                    "dtype": "float",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_float_1",
-                    "dtype": "float",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_float_1",
-                    "dtype": "float",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_float_1",
-                    "dtype": "float",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_string_1",
-                    "dtype": "string",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_string_1",
-                    "dtype": "string",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_string_1",
-                    "dtype": "string",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_string_1",
-                    "dtype": "string",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_string_1",
-                    "dtype": "string",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_string_1",
-                    "dtype": "string",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_datetime_1",
-                    "dtype": "datetime",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_datetime_1",
-                    "dtype": "datetime",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_datetime_1",
-                    "dtype": "datetime",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_datetime_1",
-                    "dtype": "datetime",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_datetime_1",
-                    "dtype": "datetime",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_datetime_1",
-                    "dtype": "datetime",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_timestamp_1",
-                    "dtype": "timestamp",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_timestamp_1",
-                    "dtype": "timestamp",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_timestamp_1",
-                    "dtype": "timestamp",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_timestamp_1",
-                    "dtype": "timestamp",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_timestamp_1",
-                    "dtype": "timestamp",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_timestamp_1",
-                    "dtype": "timestamp",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_long_2",
-                    "dtype": "long",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_long_2",
-                    "dtype": "long",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_long_2",
-                    "dtype": "long",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_long_2",
-                    "dtype": "long",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_long_2",
-                    "dtype": "long",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_long_2",
-                    "dtype": "long",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_float_2",
-                    "dtype": "float",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_float_2",
-                    "dtype": "float",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_float_2",
-                    "dtype": "float",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_float_2",
-                    "dtype": "float",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_float_2",
-                    "dtype": "float",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_float_2",
-                    "dtype": "float",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_string_2",
-                    "dtype": "string",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_string_2",
-                    "dtype": "string",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_string_2",
-                    "dtype": "string",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_string_2",
-                    "dtype": "string",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_string_2",
-                    "dtype": "string",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_string_2",
-                    "dtype": "string",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_datetime_2",
-                    "dtype": "datetime",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_datetime_2",
-                    "dtype": "datetime",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_datetime_2",
-                    "dtype": "datetime",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_datetime_2",
-                    "dtype": "datetime",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_datetime_2",
-                    "dtype": "datetime",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_datetime_2",
-                    "dtype": "datetime",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_timestamp_2",
-                    "dtype": "timestamp",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_timestamp_2",
-                    "dtype": "timestamp",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_timestamp_2",
-                    "dtype": "timestamp",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_timestamp_2",
-                    "dtype": "timestamp",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_timestamp_2",
-                    "dtype": "timestamp",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_timestamp_2",
-                    "dtype": "timestamp",
-                    "ccl": ["encrypt"]
-                }
-            ]
+        {
+          "column_name": "join_long_0",
+          "dtype": "long",
+          "ccl": ["join"]
         },
-        "tbl_2": {
-            "columns": [
-                {
-                    "column_name": "plain_long_0",
-                    "dtype": "long",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_long_0",
-                    "dtype": "long",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_long_0",
-                    "dtype": "long",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_long_0",
-                    "dtype": "long",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_long_0",
-                    "dtype": "long",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_long_0",
-                    "dtype": "long",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_float_0",
-                    "dtype": "float",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_float_0",
-                    "dtype": "float",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_float_0",
-                    "dtype": "float",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_float_0",
-                    "dtype": "float",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_float_0",
-                    "dtype": "float",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_float_0",
-                    "dtype": "float",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_string_0",
-                    "dtype": "string",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_string_0",
-                    "dtype": "string",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_string_0",
-                    "dtype": "string",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_string_0",
-                    "dtype": "string",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_string_0",
-                    "dtype": "string",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_string_0",
-                    "dtype": "string",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_datetime_0",
-                    "dtype": "datetime",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_datetime_0",
-                    "dtype": "datetime",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_datetime_0",
-                    "dtype": "datetime",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_datetime_0",
-                    "dtype": "datetime",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_datetime_0",
-                    "dtype": "datetime",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_datetime_0",
-                    "dtype": "datetime",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_timestamp_0",
-                    "dtype": "timestamp",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_timestamp_0",
-                    "dtype": "timestamp",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_timestamp_0",
-                    "dtype": "timestamp",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_timestamp_0",
-                    "dtype": "timestamp",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_timestamp_0",
-                    "dtype": "timestamp",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_timestamp_0",
-                    "dtype": "timestamp",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_long_1",
-                    "dtype": "long",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_long_1",
-                    "dtype": "long",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_long_1",
-                    "dtype": "long",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_long_1",
-                    "dtype": "long",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_long_1",
-                    "dtype": "long",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_long_1",
-                    "dtype": "long",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_float_1",
-                    "dtype": "float",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_float_1",
-                    "dtype": "float",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_float_1",
-                    "dtype": "float",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_float_1",
-                    "dtype": "float",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_float_1",
-                    "dtype": "float",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_float_1",
-                    "dtype": "float",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_string_1",
-                    "dtype": "string",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_string_1",
-                    "dtype": "string",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_string_1",
-                    "dtype": "string",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_string_1",
-                    "dtype": "string",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_string_1",
-                    "dtype": "string",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_string_1",
-                    "dtype": "string",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_datetime_1",
-                    "dtype": "datetime",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_datetime_1",
-                    "dtype": "datetime",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_datetime_1",
-                    "dtype": "datetime",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_datetime_1",
-                    "dtype": "datetime",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_datetime_1",
-                    "dtype": "datetime",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_datetime_1",
-                    "dtype": "datetime",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_timestamp_1",
-                    "dtype": "timestamp",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_timestamp_1",
-                    "dtype": "timestamp",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_timestamp_1",
-                    "dtype": "timestamp",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_timestamp_1",
-                    "dtype": "timestamp",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_timestamp_1",
-                    "dtype": "timestamp",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_timestamp_1",
-                    "dtype": "timestamp",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_long_2",
-                    "dtype": "long",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_long_2",
-                    "dtype": "long",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_long_2",
-                    "dtype": "long",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_long_2",
-                    "dtype": "long",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_long_2",
-                    "dtype": "long",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_long_2",
-                    "dtype": "long",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_float_2",
-                    "dtype": "float",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_float_2",
-                    "dtype": "float",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_float_2",
-                    "dtype": "float",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_float_2",
-                    "dtype": "float",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_float_2",
-                    "dtype": "float",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_float_2",
-                    "dtype": "float",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_string_2",
-                    "dtype": "string",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_string_2",
-                    "dtype": "string",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_string_2",
-                    "dtype": "string",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_string_2",
-                    "dtype": "string",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_string_2",
-                    "dtype": "string",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_string_2",
-                    "dtype": "string",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_datetime_2",
-                    "dtype": "datetime",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_datetime_2",
-                    "dtype": "datetime",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_datetime_2",
-                    "dtype": "datetime",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_datetime_2",
-                    "dtype": "datetime",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_datetime_2",
-                    "dtype": "datetime",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_datetime_2",
-                    "dtype": "datetime",
-                    "ccl": ["encrypt"]
-                },
-                {
-                    "column_name": "plain_timestamp_2",
-                    "dtype": "timestamp",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "join_timestamp_2",
-                    "dtype": "timestamp",
-                    "ccl": ["join"]
-                },
-                {
-                    "column_name": "groupby_timestamp_2",
-                    "dtype": "timestamp",
-                    "ccl": ["groupby"]
-                },
-                {
-                    "column_name": "compare_timestamp_2",
-                    "dtype": "timestamp",
-                    "ccl": ["compare"]
-                },
-                {
-                    "column_name": "aggregate_timestamp_2",
-                    "dtype": "timestamp",
-                    "ccl": ["aggregate"]
-                },
-                {
-                    "column_name": "encrypt_timestamp_2",
-                    "dtype": "timestamp",
-                    "ccl": ["encrypt"]
-                }
-            ]
+        {
+          "column_name": "groupby_long_0",
+          "dtype": "long",
+          "ccl": ["groupby"]
         },
-        "tbl_3": {
-            "columns": [
-                {
-                    "column_name": "cp_jn_pl_long_0",
-                    "dtype": "long",
-                    "ccl": ["compare", "join", "plain"]
-                },
-                {
-                    "column_name": "cp_jn_pl_long_1",
-                    "dtype": "long",
-                    "ccl": ["compare", "join", "plain"]
-                },
-                {
-                    "column_name": "gb_en_pl_long_0",
-                    "dtype": "long",
-                    "ccl": ["groupby", "encrypt", "plain"]
-                },
-                {
-                    "column_name": "agg_en_pl_long_0",
-                    "dtype": "long",
-                    "ccl": ["aggregate", "encrypt", "plain"]
-                },
-                {
-                    "column_name": "plain_datetime_0",
-                    "dtype": "datetime",
-                    "ccl": ["plain"]
-                },
-                {
-                    "column_name": "plain_timestamp_0",
-                    "dtype": "timestamp",
-                    "ccl": ["plain"]
-                }
-            ]
+        {
+          "column_name": "compare_long_0",
+          "dtype": "long",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_long_0",
+          "dtype": "long",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_long_0",
+          "dtype": "long",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_float_0",
+          "dtype": "float",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_float_0",
+          "dtype": "float",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_float_0",
+          "dtype": "float",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_float_0",
+          "dtype": "float",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_float_0",
+          "dtype": "float",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_float_0",
+          "dtype": "float",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_string_0",
+          "dtype": "string",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_string_0",
+          "dtype": "string",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_string_0",
+          "dtype": "string",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_string_0",
+          "dtype": "string",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_string_0",
+          "dtype": "string",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_string_0",
+          "dtype": "string",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_datetime_0",
+          "dtype": "datetime",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_datetime_0",
+          "dtype": "datetime",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_datetime_0",
+          "dtype": "datetime",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_datetime_0",
+          "dtype": "datetime",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_datetime_0",
+          "dtype": "datetime",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_datetime_0",
+          "dtype": "datetime",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_timestamp_0",
+          "dtype": "timestamp",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_timestamp_0",
+          "dtype": "timestamp",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_timestamp_0",
+          "dtype": "timestamp",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_timestamp_0",
+          "dtype": "timestamp",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_timestamp_0",
+          "dtype": "timestamp",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_timestamp_0",
+          "dtype": "timestamp",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_long_1",
+          "dtype": "long",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_long_1",
+          "dtype": "long",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_long_1",
+          "dtype": "long",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_long_1",
+          "dtype": "long",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_long_1",
+          "dtype": "long",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_long_1",
+          "dtype": "long",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_float_1",
+          "dtype": "float",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_float_1",
+          "dtype": "float",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_float_1",
+          "dtype": "float",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_float_1",
+          "dtype": "float",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_float_1",
+          "dtype": "float",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_float_1",
+          "dtype": "float",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_string_1",
+          "dtype": "string",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_string_1",
+          "dtype": "string",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_string_1",
+          "dtype": "string",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_string_1",
+          "dtype": "string",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_string_1",
+          "dtype": "string",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_string_1",
+          "dtype": "string",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_datetime_1",
+          "dtype": "datetime",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_datetime_1",
+          "dtype": "datetime",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_datetime_1",
+          "dtype": "datetime",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_datetime_1",
+          "dtype": "datetime",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_datetime_1",
+          "dtype": "datetime",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_datetime_1",
+          "dtype": "datetime",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_timestamp_1",
+          "dtype": "timestamp",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_timestamp_1",
+          "dtype": "timestamp",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_timestamp_1",
+          "dtype": "timestamp",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_timestamp_1",
+          "dtype": "timestamp",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_timestamp_1",
+          "dtype": "timestamp",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_timestamp_1",
+          "dtype": "timestamp",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_long_2",
+          "dtype": "long",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_long_2",
+          "dtype": "long",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_long_2",
+          "dtype": "long",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_long_2",
+          "dtype": "long",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_long_2",
+          "dtype": "long",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_long_2",
+          "dtype": "long",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_float_2",
+          "dtype": "float",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_float_2",
+          "dtype": "float",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_float_2",
+          "dtype": "float",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_float_2",
+          "dtype": "float",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_float_2",
+          "dtype": "float",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_float_2",
+          "dtype": "float",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_string_2",
+          "dtype": "string",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_string_2",
+          "dtype": "string",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_string_2",
+          "dtype": "string",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_string_2",
+          "dtype": "string",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_string_2",
+          "dtype": "string",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_string_2",
+          "dtype": "string",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_datetime_2",
+          "dtype": "datetime",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_datetime_2",
+          "dtype": "datetime",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_datetime_2",
+          "dtype": "datetime",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_datetime_2",
+          "dtype": "datetime",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_datetime_2",
+          "dtype": "datetime",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_datetime_2",
+          "dtype": "datetime",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_timestamp_2",
+          "dtype": "timestamp",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_timestamp_2",
+          "dtype": "timestamp",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_timestamp_2",
+          "dtype": "timestamp",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_timestamp_2",
+          "dtype": "timestamp",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_timestamp_2",
+          "dtype": "timestamp",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_timestamp_2",
+          "dtype": "timestamp",
+          "ccl": ["encrypt"]
         }
+      ]
+    },
+    "tbl_1": {
+      "columns": [
+        {
+          "column_name": "plain_long_0",
+          "dtype": "long",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_long_0",
+          "dtype": "long",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_long_0",
+          "dtype": "long",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_long_0",
+          "dtype": "long",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_long_0",
+          "dtype": "long",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_long_0",
+          "dtype": "long",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_float_0",
+          "dtype": "float",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_float_0",
+          "dtype": "float",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_float_0",
+          "dtype": "float",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_float_0",
+          "dtype": "float",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_float_0",
+          "dtype": "float",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_float_0",
+          "dtype": "float",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_string_0",
+          "dtype": "string",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_string_0",
+          "dtype": "string",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_string_0",
+          "dtype": "string",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_string_0",
+          "dtype": "string",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_string_0",
+          "dtype": "string",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_string_0",
+          "dtype": "string",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_datetime_0",
+          "dtype": "datetime",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_datetime_0",
+          "dtype": "datetime",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_datetime_0",
+          "dtype": "datetime",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_datetime_0",
+          "dtype": "datetime",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_datetime_0",
+          "dtype": "datetime",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_datetime_0",
+          "dtype": "datetime",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_timestamp_0",
+          "dtype": "timestamp",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_timestamp_0",
+          "dtype": "timestamp",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_timestamp_0",
+          "dtype": "timestamp",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_timestamp_0",
+          "dtype": "timestamp",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_timestamp_0",
+          "dtype": "timestamp",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_timestamp_0",
+          "dtype": "timestamp",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_long_1",
+          "dtype": "long",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_long_1",
+          "dtype": "long",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_long_1",
+          "dtype": "long",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_long_1",
+          "dtype": "long",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_long_1",
+          "dtype": "long",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_long_1",
+          "dtype": "long",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_float_1",
+          "dtype": "float",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_float_1",
+          "dtype": "float",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_float_1",
+          "dtype": "float",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_float_1",
+          "dtype": "float",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_float_1",
+          "dtype": "float",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_float_1",
+          "dtype": "float",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_string_1",
+          "dtype": "string",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_string_1",
+          "dtype": "string",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_string_1",
+          "dtype": "string",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_string_1",
+          "dtype": "string",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_string_1",
+          "dtype": "string",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_string_1",
+          "dtype": "string",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_datetime_1",
+          "dtype": "datetime",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_datetime_1",
+          "dtype": "datetime",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_datetime_1",
+          "dtype": "datetime",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_datetime_1",
+          "dtype": "datetime",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_datetime_1",
+          "dtype": "datetime",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_datetime_1",
+          "dtype": "datetime",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_timestamp_1",
+          "dtype": "timestamp",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_timestamp_1",
+          "dtype": "timestamp",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_timestamp_1",
+          "dtype": "timestamp",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_timestamp_1",
+          "dtype": "timestamp",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_timestamp_1",
+          "dtype": "timestamp",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_timestamp_1",
+          "dtype": "timestamp",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_long_2",
+          "dtype": "long",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_long_2",
+          "dtype": "long",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_long_2",
+          "dtype": "long",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_long_2",
+          "dtype": "long",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_long_2",
+          "dtype": "long",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_long_2",
+          "dtype": "long",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_float_2",
+          "dtype": "float",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_float_2",
+          "dtype": "float",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_float_2",
+          "dtype": "float",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_float_2",
+          "dtype": "float",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_float_2",
+          "dtype": "float",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_float_2",
+          "dtype": "float",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_string_2",
+          "dtype": "string",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_string_2",
+          "dtype": "string",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_string_2",
+          "dtype": "string",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_string_2",
+          "dtype": "string",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_string_2",
+          "dtype": "string",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_string_2",
+          "dtype": "string",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_datetime_2",
+          "dtype": "datetime",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_datetime_2",
+          "dtype": "datetime",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_datetime_2",
+          "dtype": "datetime",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_datetime_2",
+          "dtype": "datetime",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_datetime_2",
+          "dtype": "datetime",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_datetime_2",
+          "dtype": "datetime",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_timestamp_2",
+          "dtype": "timestamp",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_timestamp_2",
+          "dtype": "timestamp",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_timestamp_2",
+          "dtype": "timestamp",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_timestamp_2",
+          "dtype": "timestamp",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_timestamp_2",
+          "dtype": "timestamp",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_timestamp_2",
+          "dtype": "timestamp",
+          "ccl": ["encrypt"]
+        }
+      ]
+    },
+    "tbl_2": {
+      "columns": [
+        {
+          "column_name": "plain_long_0",
+          "dtype": "long",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_long_0",
+          "dtype": "long",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_long_0",
+          "dtype": "long",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_long_0",
+          "dtype": "long",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_long_0",
+          "dtype": "long",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_long_0",
+          "dtype": "long",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_float_0",
+          "dtype": "float",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_float_0",
+          "dtype": "float",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_float_0",
+          "dtype": "float",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_float_0",
+          "dtype": "float",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_float_0",
+          "dtype": "float",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_float_0",
+          "dtype": "float",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_string_0",
+          "dtype": "string",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_string_0",
+          "dtype": "string",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_string_0",
+          "dtype": "string",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_string_0",
+          "dtype": "string",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_string_0",
+          "dtype": "string",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_string_0",
+          "dtype": "string",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_datetime_0",
+          "dtype": "datetime",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_datetime_0",
+          "dtype": "datetime",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_datetime_0",
+          "dtype": "datetime",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_datetime_0",
+          "dtype": "datetime",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_datetime_0",
+          "dtype": "datetime",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_datetime_0",
+          "dtype": "datetime",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_timestamp_0",
+          "dtype": "timestamp",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_timestamp_0",
+          "dtype": "timestamp",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_timestamp_0",
+          "dtype": "timestamp",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_timestamp_0",
+          "dtype": "timestamp",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_timestamp_0",
+          "dtype": "timestamp",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_timestamp_0",
+          "dtype": "timestamp",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_long_1",
+          "dtype": "long",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_long_1",
+          "dtype": "long",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_long_1",
+          "dtype": "long",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_long_1",
+          "dtype": "long",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_long_1",
+          "dtype": "long",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_long_1",
+          "dtype": "long",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_float_1",
+          "dtype": "float",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_float_1",
+          "dtype": "float",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_float_1",
+          "dtype": "float",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_float_1",
+          "dtype": "float",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_float_1",
+          "dtype": "float",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_float_1",
+          "dtype": "float",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_string_1",
+          "dtype": "string",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_string_1",
+          "dtype": "string",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_string_1",
+          "dtype": "string",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_string_1",
+          "dtype": "string",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_string_1",
+          "dtype": "string",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_string_1",
+          "dtype": "string",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_datetime_1",
+          "dtype": "datetime",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_datetime_1",
+          "dtype": "datetime",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_datetime_1",
+          "dtype": "datetime",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_datetime_1",
+          "dtype": "datetime",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_datetime_1",
+          "dtype": "datetime",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_datetime_1",
+          "dtype": "datetime",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_timestamp_1",
+          "dtype": "timestamp",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_timestamp_1",
+          "dtype": "timestamp",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_timestamp_1",
+          "dtype": "timestamp",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_timestamp_1",
+          "dtype": "timestamp",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_timestamp_1",
+          "dtype": "timestamp",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_timestamp_1",
+          "dtype": "timestamp",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_long_2",
+          "dtype": "long",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_long_2",
+          "dtype": "long",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_long_2",
+          "dtype": "long",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_long_2",
+          "dtype": "long",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_long_2",
+          "dtype": "long",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_long_2",
+          "dtype": "long",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_float_2",
+          "dtype": "float",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_float_2",
+          "dtype": "float",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_float_2",
+          "dtype": "float",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_float_2",
+          "dtype": "float",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_float_2",
+          "dtype": "float",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_float_2",
+          "dtype": "float",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_string_2",
+          "dtype": "string",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_string_2",
+          "dtype": "string",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_string_2",
+          "dtype": "string",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_string_2",
+          "dtype": "string",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_string_2",
+          "dtype": "string",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_string_2",
+          "dtype": "string",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_datetime_2",
+          "dtype": "datetime",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_datetime_2",
+          "dtype": "datetime",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_datetime_2",
+          "dtype": "datetime",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_datetime_2",
+          "dtype": "datetime",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_datetime_2",
+          "dtype": "datetime",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_datetime_2",
+          "dtype": "datetime",
+          "ccl": ["encrypt"]
+        },
+        {
+          "column_name": "plain_timestamp_2",
+          "dtype": "timestamp",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "join_timestamp_2",
+          "dtype": "timestamp",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "groupby_timestamp_2",
+          "dtype": "timestamp",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "compare_timestamp_2",
+          "dtype": "timestamp",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "aggregate_timestamp_2",
+          "dtype": "timestamp",
+          "ccl": ["aggregate"]
+        },
+        {
+          "column_name": "encrypt_timestamp_2",
+          "dtype": "timestamp",
+          "ccl": ["encrypt"]
+        }
+      ]
+    },
+    "tbl_3": {
+      "columns": [
+        {
+          "column_name": "cp_jn_pl_long_0",
+          "dtype": "long",
+          "ccl": ["compare", "join", "plain"]
+        },
+        {
+          "column_name": "cp_jn_pl_long_1",
+          "dtype": "long",
+          "ccl": ["compare", "join", "plain"]
+        },
+        {
+          "column_name": "gb_en_pl_long_0",
+          "dtype": "long",
+          "ccl": ["groupby", "encrypt", "plain"]
+        },
+        {
+          "column_name": "agg_en_pl_long_0",
+          "dtype": "long",
+          "ccl": ["aggregate", "encrypt", "plain"]
+        },
+        {
+          "column_name": "plain_datetime_0",
+          "dtype": "datetime",
+          "ccl": ["plain"]
+        },
+        {
+          "column_name": "plain_timestamp_0",
+          "dtype": "timestamp",
+          "ccl": ["plain"]
+        }
+      ]
+    },
+    "UPPER_table": {
+      "columns": [
+        {
+          "column_name": "GROUPBY_int_0",
+          "dtype": "long",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "groupby_int_1",
+          "dtype": "long",
+          "ccl": ["groupby"]
+        },
+        {
+          "column_name": "JOIN_string_0",
+          "dtype": "string",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "join_string_1",
+          "dtype": "string",
+          "ccl": ["join"]
+        },
+        {
+          "column_name": "COMPARE_float_0",
+          "dtype": "float",
+          "ccl": ["compare"]
+        },
+        {
+          "column_name": "compare_float_1",
+          "dtype": "float",
+          "ccl": ["compare"]
+        }
+      ]
     }
+  }
 }

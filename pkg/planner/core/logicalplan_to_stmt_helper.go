@@ -39,15 +39,14 @@ const (
 )
 
 type runSqlCtx struct {
-	exprConverter         *expression.ExprConverter
-	colIdToExprNode       map[int64]ast.ExprNode
-	selectStmt            *ast.SelectStmt
-	schemaProducer        *logicalSchemaProducer
-	storedClause          map[ClauseType]LogicalPlan
-	clauses               []ClauseType
-	tableAsName           model.CIStr
-	tableRefs             []string
-	needUpdateTableAsName bool
+	exprConverter   *expression.ExprConverter
+	colIdToExprNode map[int64]ast.ExprNode
+	selectStmt      *ast.SelectStmt
+	schemaProducer  *logicalSchemaProducer
+	storedClause    map[ClauseType]LogicalPlan
+	clauses         []ClauseType
+	tableAsName     model.CIStr
+	tableRefs       []string
 }
 
 func NewRunSqlCtx() *runSqlCtx {
@@ -81,7 +80,6 @@ func BuildChildCtx(d Dialect, in LogicalPlan) (*runSqlCtx, error) {
 	if producer := getSchemaProducer(in); producer != nil {
 		ctx.schemaProducer = producer
 	}
-	ctx.updateTableAsNameIfNeed(ctx.schemaProducer)
 	return ctx, nil
 }
 
@@ -104,10 +102,9 @@ func getSchemaProducer(in LogicalPlan) *logicalSchemaProducer {
 }
 
 func (ctx *runSqlCtx) updateTableAsNameIfNeed(p *logicalSchemaProducer) {
-	if ctx.needUpdateTableAsName && ctx.tableAsName.String() == "" {
+	if ctx.tableAsName.String() == "" {
 		ctx.tableAsName = createAsTable(p, 0)
 		ctx.updateTableAsName(ctx.tableAsName)
-		ctx.needUpdateTableAsName = false
 	}
 }
 
@@ -224,7 +221,7 @@ func (ctx *runSqlCtx) addClause(c ClauseType) (newCtx *runSqlCtx, err error) {
 			return
 		}
 		newCtx.clauses = append(newCtx.clauses, ClauseTableSource)
-		newCtx.needUpdateTableAsName = true
+		newCtx.updateTableRefs(ctx.tableRefs)
 	}
 	newCtx.clauses = append(newCtx.clauses, c)
 	newCtx.clauses = sliceutil.SliceDeDup(newCtx.clauses)
@@ -250,13 +247,12 @@ func (c *runSqlCtx) UpdateFieldsName(oldCtx *runSqlCtx) {
 }
 
 func (c *runSqlCtx) WorkAsSub() (*runSqlCtx, error) {
-	// create table as name before creating sub query
-	c.needUpdateTableAsName = true
-	c.updateTableAsNameIfNeed(nil)
 	ss, err := c.GetSQLStmt()
 	if err != nil {
 		return nil, err
 	}
+	// create table as name after creating sub query
+	c.updateTableAsNameIfNeed(nil)
 	newCtx := NewRunSqlCtx()
 	newCtx.selectStmt.From = &ast.TableRefsClause{TableRefs: &ast.Join{Left: &ast.TableSource{Source: ss, AsName: c.tableAsName}}}
 	newCtx.addClause(ClauseTableSource)
@@ -300,9 +296,12 @@ func (c *runSqlCtx) convertAggregateFunc(d Dialect, agg *LogicalAggregation) err
 }
 
 func (c *runSqlCtx) updateTableAsName(tableAsName model.CIStr) {
+	if tableAsName.String() == "" {
+		return
+	}
 	for id, expr := range c.colIdToExprNode {
 		if col, ok := expr.(*ast.ColumnNameExpr); ok {
-			c.colIdToExprNode[id] = &ast.ColumnNameExpr{Name: &ast.ColumnName{Schema: col.Name.Schema, Table: tableAsName, Name: col.Name.Name}}
+			c.colIdToExprNode[id] = &ast.ColumnNameExpr{Name: &ast.ColumnName{Table: tableAsName, Name: col.Name.Name}}
 		}
 	}
 }
@@ -345,24 +344,34 @@ func composeCNFCondition(conds []ast.ExprNode) ast.ExprNode {
 }
 
 // get table as name
-func getOriginAsName(p *logicalSchemaProducer) model.CIStr {
+func getOriginAsName(p *logicalSchemaProducer, colIndex int) (model.CIStr, bool) {
 	if p == nil {
-		return model.CIStr{}
+		return model.CIStr{}, false
 	}
-	for i := range p.names {
-		if p.names[i].TblName.O != "" &&
-			p.names[i].TblName.O != p.names[i].OrigTblName.O {
-			return p.names[i].TblName
-		}
+	if p.names[colIndex].TblName.O != "" &&
+		p.names[colIndex].TblName.O != p.names[colIndex].OrigTblName.O {
+		return p.names[colIndex].TblName, true
 	}
-	return model.CIStr{}
+
+	return model.CIStr{}, false
 }
 
+// common case for subquery
 // sometimes table need as name, if the table don't rename in logical plan, use this function creating table as name
+// special case for join
+// join plan has two children, columns from left children locate in left half of p.names, columns from right children locate in right half of p.names
+// Note: length of p.names may not equal to length of p.schema.columns due to column pruning
 func createAsTable(p *logicalSchemaProducer, childIndex int) model.CIStr {
+	// if childIndex != 0, means right child of logical join
+	left := childIndex == 0
+
 	if p != nil {
-		tableAsName := getOriginAsName(p)
-		if tableAsName.String() != "" {
+		colIndex := 0
+		if !left {
+			colIndex = len(p.names) - 1
+		}
+		tableAsName, found := getOriginAsName(p, colIndex)
+		if found {
 			return tableAsName
 		}
 	}

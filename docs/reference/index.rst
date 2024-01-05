@@ -12,13 +12,15 @@ Reference
     :caption: System
     :maxdepth: 1
 
-    engine-config
+    p2p-deploy-config
+    centralized-deploy-config
 
 .. toctree::
     :caption: Clients
     :maxdepth: 1
 
-    http-api
+    broker-api
+    scdb-api
 
 .. toctree::
     :caption: Internal Reference

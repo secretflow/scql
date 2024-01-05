@@ -22,9 +22,6 @@ You could customize scdbserver published port and container images and protocols
 If you want to test more than one protocols you can modify `.ci/docker-compose/.env` and set `PROTOCOLS` as the protocols which you want to test and separate them with commas. At the same time you must set scdb port for every protocol. Such as if you want to test protocols ABY3 and SEMI2K, you must set `PROTOCOLS=ABY3,SEMI2K` and `SCDB_PORTS=8080,8081`.
 
 ```bash
-# export `SCDB_PORTS` and `MYSQL_PORT` and `PROTOCOLS` defined in `.ci/docker-compose/.env`
-export $(grep -v '^#' .ci/docker-compose/.env | xargs)
-
 (cd .ci/docker-compose && python setup.py)
 ```
 
@@ -39,13 +36,15 @@ More to say: you may need run `pip install -r requirements.txt` when first time 
 ### Run regtest
 
 ```bash
+# All test flags are stored in regtest.yml. If necessary, please modify the corresponding parameters in regtest.yml before running the tests.
 
 # go test will use package path as working directory
 go test ./cmd/regtest/scdb_test/... -v -count=1 -timeout=30m -args --conf=../../../.ci/docker-compose/regtest.yml
 
-# All test flags are stored in regtest.yml. If necessary, please modify the corresponding parameters in regtest.yml before running the tests.
 
 # you could run sql interactively if needed
+# export `SCDB_PORTS` defined in `.ci/docker-compose/.env`
+export $(grep -v '^#' .ci/docker-compose/.env | xargs)
 go run cmd/scdbclient/main.go prompt --host="http://localhost:$SCDB_PORTS"
 >switch alice;
 alice> use scdb
@@ -67,9 +66,6 @@ You could customize scdbserver published port and container images and protocols
 ### Prepare docker files
 
 ```bash
-# export `BROKER_PORTS` and `MYSQL_PORT` and `SCQL_IMAGE_TAG` defined in `.ci/broker-docker-compose/.env`
-export $(grep -v '^#' .ci/broker-docker-compose/.env | xargs)
-
 (cd .ci/broker-docker-compose && python setup.py)
 ```
 
@@ -84,8 +80,6 @@ More to say: you may need run `pip install -r requirements.txt` when first time 
 ### Run regtest
 
 ```bash
-# export `BROKER_PORTS` and `MYSQL_PORT` and `PROJECT_CONF` defined in `.ci/broker-docker-compose/.env`
-export $(grep -v '^#' .ci/broker-docker-compose/.env | xargs)
 # All test flags are stored in regtest.yml. If necessary, please modify the corresponding parameters in regtest.yml before running the tests.
 # go test will use package path as working directory
 go test ./cmd/regtest/p2p_test/... -v -count=1 -timeout=30m -args --conf=../../../.ci/broker-docker-compose/regtest.yml
