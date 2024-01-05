@@ -62,7 +62,12 @@ jobs:
           name: "Build image"
           command: |
             cd image
-            docker build -f scql-ubuntu.Dockerfile -t scql:latest .
+            MACHINE_TYPE=`arch`
+            if [ ${MACHINE_TYPE} == 'x86_64' ]; then
+              docker buildx build --platform linux/amd64 -f scql-ubuntu.Dockerfile -t scql:latest .
+            else
+              docker buildx build --platform linux/arm64 -f scql-ubuntu.Dockerfile -t scql:latest .
+            fi   
       - run:
           name: "Deploy image"
           command: |
