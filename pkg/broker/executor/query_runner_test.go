@@ -33,6 +33,7 @@ import (
 	"github.com/secretflow/scql/pkg/broker/services/common"
 	"github.com/secretflow/scql/pkg/broker/storage"
 	"github.com/secretflow/scql/pkg/broker/testdata"
+	"github.com/secretflow/scql/pkg/interpreter"
 	"github.com/secretflow/scql/pkg/planner/core"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 )
@@ -41,23 +42,7 @@ func TestQueryRunner(t *testing.T) {
 	r := require.New(t)
 
 	// mock data
-	db, err := gorm.Open(sqlite.Open(":memory:"),
-		&gorm.Config{
-			SkipDefaultTransaction: true,
-			Logger: gormlog.New(
-				logrus.StandardLogger(),
-				gormlog.Config{
-					SlowThreshold: 200 * time.Millisecond,
-					Colorful:      false,
-					LogLevel:      gormlog.Warn,
-				}),
-		})
-
-	r.NoError(err)
-	meta := storage.NewMetaManager(db)
-	err = meta.Bootstrap()
-	r.NoError(err)
-	err = testdata.CreateTestPemFiles("../testdata")
+	meta, err := buildTestStorage()
 	r.NoError(err)
 	transaction := meta.CreateMetaTransaction()
 	projectID1 := "p1"
@@ -69,7 +54,7 @@ func TestQueryRunner(t *testing.T) {
     }`}
 	alice := "alice"
 	// create project
-	err = transaction.CreateProject(storage.Project{ID: projectID1, Name: projectName1, ProjectConf: projectConf, Creator: alice, Member: alice})
+	err = transaction.CreateProject(storage.Project{ID: projectID1, Name: projectName1, ProjectConf: projectConf, Creator: alice})
 	r.NoError(err)
 	tableName1 := "t1"
 	t1Identifier := storage.TableIdentifier{ProjectID: projectID1, TableName: tableName1}
@@ -105,7 +90,7 @@ func TestQueryRunner(t *testing.T) {
 		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: bob}, Priv: "plaintext"},
 	}
 	// add bob to project before granting ccl
-	err = transaction.AddProjectMember(t1Identifier.ProjectID, bob)
+	err = transaction.AddProjectMembers([]storage.Member{storage.Member{ProjectID: t1Identifier.ProjectID, Member: bob}})
 	r.NoError(err)
 	err = common.GrantColumnConstraintsWithCheck(transaction, t1Identifier.ProjectID, alice, privsAlice)
 	r.NoError(err)
@@ -175,4 +160,278 @@ func TestQueryRunner(t *testing.T) {
 	// 	syncer, err := runner.CreateSyncExecutor(graph)
 	// 	r.NoError(err)
 	// 	r.NotNil(syncer)
+}
+
+func TestCaseSensitive(t *testing.T) {
+	r := require.New(t)
+	meta, err := buildTestStorage()
+	r.NoError(err)
+	transaction := meta.CreateMetaTransaction()
+	projectID1 := "Project1"
+	projectConf := storage.ProjectConfig{SpuConf: `{"protocol": "SEMI2K"}`}
+	alice := "alice"
+	// create project
+	err = transaction.CreateProject(storage.Project{ID: projectID1, Name: "n1", ProjectConf: projectConf, Creator: alice})
+	r.NoError(err)
+	tableName1 := "t1"
+	t1Identifier := storage.TableIdentifier{ProjectID: projectID1, TableName: tableName1}
+	tableMeta := storage.TableMeta{
+		Table: storage.Table{TableIdentifier: t1Identifier, RefTable: "real.T1", Owner: alice, DBType: "MYSQL"},
+		Columns: []storage.ColumnMeta{
+			{ColumnName: "id", DType: "int"},
+			{ColumnName: "Data", DType: "int"},
+		},
+	}
+	bob := "bob"
+	// add bob to project before granting ccl
+	err = transaction.AddProjectMembers([]storage.Member{storage.Member{ProjectID: t1Identifier.ProjectID, Member: bob}})
+	// create table
+	err = common.AddTableWithCheck(transaction, projectID1, alice, tableMeta)
+	r.NoError(err)
+	tableName2 := "T2"
+	t2Identifier := storage.TableIdentifier{ProjectID: projectID1, TableName: tableName2}
+	tableMeta = storage.TableMeta{
+		Table: storage.Table{TableIdentifier: t2Identifier, RefTable: "real.t2", Owner: bob, DBType: "MYSQL"},
+		Columns: []storage.ColumnMeta{
+			{ColumnName: "id", DType: "int"},
+			{ColumnName: "Data", DType: "int"},
+		},
+	}
+	// create table
+	err = common.AddTableWithCheck(transaction, projectID1, bob, tableMeta)
+	r.NoError(err)
+	// grant id
+	c1Identifier := storage.ColumnIdentifier{ProjectID: t1Identifier.ProjectID, TableName: t1Identifier.TableName, ColumnName: "id"}
+	c2Identifier := storage.ColumnIdentifier{ProjectID: t2Identifier.ProjectID, TableName: t2Identifier.TableName, ColumnName: "id"}
+	privsAlice := []storage.ColumnPriv{
+		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c1Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: c1Identifier.ColumnName, DestParty: alice}, Priv: "plaintext"},
+		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c1Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: c1Identifier.ColumnName, DestParty: bob}, Priv: "plaintext"}}
+	privsBob := []storage.ColumnPriv{
+		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: alice}, Priv: "plaintext"},
+		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: bob}, Priv: "plaintext"},
+	}
+	r.NoError(err)
+	err = common.GrantColumnConstraintsWithCheck(transaction, t1Identifier.ProjectID, alice, privsAlice)
+	r.NoError(err)
+	err = common.GrantColumnConstraintsWithCheck(transaction, t2Identifier.ProjectID, bob, privsBob)
+	r.NoError(err)
+	// grant data
+	c1Identifier = storage.ColumnIdentifier{ProjectID: t1Identifier.ProjectID, TableName: t1Identifier.TableName, ColumnName: "Data"}
+	c2Identifier = storage.ColumnIdentifier{ProjectID: t2Identifier.ProjectID, TableName: t2Identifier.TableName, ColumnName: "Data"}
+	privsAlice = []storage.ColumnPriv{
+		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c1Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: c1Identifier.ColumnName, DestParty: alice}, Priv: "plaintext"},
+		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c1Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: c1Identifier.ColumnName, DestParty: bob}, Priv: "plaintext"}}
+	privsBob = []storage.ColumnPriv{
+		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: alice}, Priv: "plaintext"},
+		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: bob}, Priv: "plaintext"},
+	}
+	err = common.GrantColumnConstraintsWithCheck(transaction, t1Identifier.ProjectID, alice, privsAlice)
+	r.NoError(err)
+	err = common.GrantColumnConstraintsWithCheck(transaction, t2Identifier.ProjectID, bob, privsBob)
+	r.NoError(err)
+	transaction.Finish(nil)
+	// mock config
+	cfg, err := config.NewConfig("../testdata/config_test.yml")
+	r.NoError(err)
+	// mock party meta
+	partyMgr, err := partymgr.NewFilePartyMgr("../testdata/party_info_test.json", cfg.PartyCode)
+	r.NoError(err)
+	app, err := application.NewApp(partyMgr, meta, cfg)
+	r.NoError(err)
+	info := &application.ExecutionInfo{
+		ProjectID:    projectID1,
+		JobID:        "mock job id",
+		Query:        "select t1.id, t1.Data + t2.Data from Project1.t1 join Project1.T2 as t2 on t1.id = t2.id",
+		Issuer:       &scql.PartyId{Code: "alice"},
+		EngineClient: app.EngineClient,
+	}
+	session, err := application.NewSession(context.Background(), info, app, false)
+	r.NoError(err)
+	session.SaveEndpoint(bob, "bob.com")
+	runner := NewQueryRunner(session)
+	usedTables, err := core.GetSourceTables(session.ExecuteInfo.Query)
+	r.NoError(err)
+	dataParties, workParties, err := runner.Prepare(usedTables)
+	r.NoError(err)
+	session.ExecuteInfo.WorkParties = workParties
+	session.ExecuteInfo.DataParties = dataParties
+	compileReq := runner.buildCompileQueryRequest()
+	intrpr := interpreter.NewInterpreter()
+	compiledPlan, err := intrpr.Compile(context.Background(), compileReq)
+	r.NoError(err)
+	r.NotNil(compiledPlan)
+	// check alice
+	attrSQL, ok := compiledPlan.SubGraphs["alice"].Nodes["0"].Attributes["sql"].Value.(*scql.AttributeValue_T)
+	r.True(ok)
+	r.Equal("select T1.Data,T1.id from real.T1", attrSQL.T.GetStringData()[0])
+	attrTable, ok := compiledPlan.SubGraphs["alice"].Nodes["0"].Attributes["table_refs"].Value.(*scql.AttributeValue_T)
+	r.True(ok)
+	r.Equal("real.T1", attrTable.T.GetStringData()[0])
+	// check bob
+	attrSQL, ok = compiledPlan.SubGraphs["bob"].Nodes["1"].Attributes["sql"].Value.(*scql.AttributeValue_T)
+	r.True(ok)
+	r.Equal("select t2.Data,t2.id from real.t2 as t2", attrSQL.T.GetStringData()[0])
+	attrTable, ok = compiledPlan.SubGraphs["bob"].Nodes["1"].Attributes["table_refs"].Value.(*scql.AttributeValue_T)
+	r.True(ok)
+	r.Equal("real.t2", attrTable.T.GetStringData()[0])
+	// Project1.T2 -> Project1.t2
+	// check table case sensitive
+	session.ExecuteInfo.Query = "select t1.id, t1.Data + t2.Data from Project1.t1 as t1 join Project1.t2 as t2 on t1.id = t2.id"
+	usedTables, err = core.GetSourceTables(session.ExecuteInfo.Query)
+	r.NoError(err)
+	runner.Clear()
+	dataParties, workParties, err = runner.Prepare(usedTables)
+	r.Error(err)
+	r.Equal("table t2 not found", err.Error())
+	// Project1.T2 -> project1.T2
+	// check project id case sensitive
+	session.ExecuteInfo.Query = "select t1.id, t1.Data + t2.Data from Project1.t1 as t1 join project1.T2 as t2 on t1.id = t2.id"
+	usedTables, err = core.GetSourceTables(session.ExecuteInfo.Query)
+	r.NoError(err)
+	runner.Clear()
+	dataParties, workParties, err = runner.Prepare(usedTables)
+	r.NoError(err)
+	session.ExecuteInfo.WorkParties = workParties
+	session.ExecuteInfo.DataParties = dataParties
+	compileReq = runner.buildCompileQueryRequest()
+	compiledPlan, err = intrpr.Compile(context.Background(), compileReq)
+	r.Error(err)
+	r.Equal("TableByName: Table 'project1.T2' doesn't exist", err.Error())
+	// Data -> data, id -> ID
+	// check column case sensitive
+	session.ExecuteInfo.Query = "select t1.ID, t1.data + t2.data from Project1.t1 as t1 join Project1.T2 as t2 on t1.ID = t2.ID"
+	usedTables, err = core.GetSourceTables(session.ExecuteInfo.Query)
+	r.NoError(err)
+	runner.Clear()
+	dataParties, workParties, err = runner.Prepare(usedTables)
+	r.NoError(err)
+	session.ExecuteInfo.WorkParties = workParties
+	session.ExecuteInfo.DataParties = dataParties
+	compileReq = runner.buildCompileQueryRequest()
+	compiledPlan, err = intrpr.Compile(context.Background(), compileReq)
+	r.NoError(err)
+	r.NotNil(compiledPlan)
+	// check alice
+	attrSQL, ok = compiledPlan.SubGraphs["alice"].Nodes["0"].Attributes["sql"].Value.(*scql.AttributeValue_T)
+	r.True(ok)
+	r.Equal("select t1.Data,t1.id from real.T1 as t1", attrSQL.T.GetStringData()[0])
+	attrTable, ok = compiledPlan.SubGraphs["alice"].Nodes["0"].Attributes["table_refs"].Value.(*scql.AttributeValue_T)
+	r.True(ok)
+	r.Equal("real.T1", attrTable.T.GetStringData()[0])
+	// check bob
+	attrSQL, ok = compiledPlan.SubGraphs["bob"].Nodes["1"].Attributes["sql"].Value.(*scql.AttributeValue_T)
+	r.True(ok)
+	r.Equal("select t2.Data,t2.id from real.t2 as t2", attrSQL.T.GetStringData()[0])
+	attrTable, ok = compiledPlan.SubGraphs["bob"].Nodes["1"].Attributes["table_refs"].Value.(*scql.AttributeValue_T)
+	r.True(ok)
+
+	// create table T1
+	tableT1Identifier := storage.TableIdentifier{ProjectID: projectID1, TableName: "T1"}
+	tableMeta = storage.TableMeta{
+		Table: storage.Table{TableIdentifier: tableT1Identifier, RefTable: "real.UpperT1", Owner: alice, DBType: "MYSQL"},
+		Columns: []storage.ColumnMeta{
+			{ColumnName: "id", DType: "int"},
+			{ColumnName: "Data", DType: "int"},
+		},
+	}
+	transaction = meta.CreateMetaTransaction()
+	// create table
+	err = common.AddTableWithCheck(transaction, projectID1, alice, tableMeta)
+	r.NoError(err)
+	// grant CCL
+	idIdentifier := storage.ColumnIdentifier{ProjectID: t1Identifier.ProjectID, TableName: "T1", ColumnName: "id"}
+	dataIdentifier := storage.ColumnIdentifier{ProjectID: t1Identifier.ProjectID, TableName: "T1", ColumnName: "data"}
+	privs := []storage.ColumnPriv{
+		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: idIdentifier.ProjectID, TableName: idIdentifier.TableName, ColumnName: idIdentifier.ColumnName, DestParty: alice}, Priv: "plaintext"},
+		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: idIdentifier.ProjectID, TableName: idIdentifier.TableName, ColumnName: idIdentifier.ColumnName, DestParty: bob}, Priv: "plaintext"},
+		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: dataIdentifier.ProjectID, TableName: dataIdentifier.TableName, ColumnName: dataIdentifier.ColumnName, DestParty: alice}, Priv: "plaintext"},
+		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: dataIdentifier.ProjectID, TableName: dataIdentifier.TableName, ColumnName: dataIdentifier.ColumnName, DestParty: bob}, Priv: "plaintext"},
+	}
+	err = common.GrantColumnConstraintsWithCheck(transaction, t1Identifier.ProjectID, alice, privs)
+	r.NoError(err)
+	transaction.Finish(nil)
+	session.ExecuteInfo.Query = "select t1.ID, t1.data + t2.data from Project1.T1 as t1 join Project1.T2 as t2 on t1.ID = t2.ID"
+	usedTables, err = core.GetSourceTables(session.ExecuteInfo.Query)
+	r.NoError(err)
+	runner.Clear()
+	dataParties, workParties, err = runner.Prepare(usedTables)
+	r.NoError(err)
+	session.ExecuteInfo.WorkParties = workParties
+	session.ExecuteInfo.DataParties = dataParties
+	compileReq = runner.buildCompileQueryRequest()
+	compiledPlan, err = intrpr.Compile(context.Background(), compileReq)
+	r.NoError(err)
+	r.NotNil(compiledPlan)
+	// check alice
+	attrSQL, ok = compiledPlan.SubGraphs["alice"].Nodes["0"].Attributes["sql"].Value.(*scql.AttributeValue_T)
+	r.True(ok)
+	r.Equal("select t1.Data,t1.id from real.UpperT1 as t1", attrSQL.T.GetStringData()[0])
+	attrTable, ok = compiledPlan.SubGraphs["alice"].Nodes["0"].Attributes["table_refs"].Value.(*scql.AttributeValue_T)
+	r.True(ok)
+	r.Equal("real.UpperT1", attrTable.T.GetStringData()[0])
+	// check bob
+	attrSQL, ok = compiledPlan.SubGraphs["bob"].Nodes["1"].Attributes["sql"].Value.(*scql.AttributeValue_T)
+	r.True(ok)
+	r.Equal("select t2.Data,t2.id from real.t2 as t2", attrSQL.T.GetStringData()[0])
+	attrTable, ok = compiledPlan.SubGraphs["bob"].Nodes["1"].Attributes["table_refs"].Value.(*scql.AttributeValue_T)
+	r.True(ok)
+
+	// test column case sensitive
+	transaction = meta.CreateMetaTransaction()
+	// create table test
+	// error due to duplicate columns
+	tableIdentifier := storage.TableIdentifier{ProjectID: projectID1, TableName: "T1"}
+	tableMeta = storage.TableMeta{
+		Table: storage.Table{TableIdentifier: tableIdentifier, RefTable: "real.UpperT1", Owner: alice, DBType: "MYSQL"},
+		Columns: []storage.ColumnMeta{
+			{ColumnName: "id", DType: "int"},
+			{ColumnName: "Data", DType: "int"},
+			{ColumnName: "data", DType: "int"},
+		},
+	}
+	err = common.AddTableWithCheck(transaction, projectID1, alice, tableMeta)
+	r.Error(err)
+
+	// revoke CCL test
+	idPrivID := storage.ColumnPrivIdentifier{ProjectID: t1Identifier.ProjectID, TableName: "t1", ColumnName: "id", DestParty: alice}
+	// column name case insensitive `Data` -> `data`
+	dataPrivID := storage.ColumnPrivIdentifier{ProjectID: t1Identifier.ProjectID, TableName: "t1", ColumnName: "data", DestParty: alice}
+	err = common.RevokeColumnConstraintsWithCheck(transaction, t1Identifier.ProjectID, alice, []storage.ColumnPrivIdentifier{idPrivID, dataPrivID})
+	r.NoError(err)
+	privs, err = transaction.ListColumnConstraints(projectID1, []string{"t1"}, []string{alice})
+	r.NoError(err)
+	for _, priv := range privs {
+		if priv.ColumnName == "Data" {
+			r.Equal("UNKNOWN", priv.Priv)
+		}
+	}
+	transaction.Finish(nil)
+}
+
+func buildTestStorage() (*storage.MetaManager, error) {
+	// mock data
+	db, err := gorm.Open(sqlite.Open(":memory:"),
+		&gorm.Config{
+			SkipDefaultTransaction: true,
+			Logger: gormlog.New(
+				logrus.StandardLogger(),
+				gormlog.Config{
+					SlowThreshold: 200 * time.Millisecond,
+					Colorful:      false,
+					LogLevel:      gormlog.Warn,
+				}),
+		})
+	if err != nil {
+		return nil, err
+	}
+	meta := storage.NewMetaManager(db)
+	err = meta.Bootstrap()
+	if err != nil {
+		return nil, err
+	}
+	err = testdata.CreateTestPemFiles("../testdata")
+	if err != nil {
+		return nil, err
+	}
+	return meta, nil
 }

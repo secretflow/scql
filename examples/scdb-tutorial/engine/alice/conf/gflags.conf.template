@@ -10,5 +10,3 @@
 --enable_peer_auth=true
 --private_key_pem_path=/home/admin/engine/conf/ed25519key.pem
 --authorized_profile_path=/home/admin/engine/conf/authorized_profile.json
-# deprecated configs, temporarily reserved for compatibility with older versions
---scdb_enable_ssl_as_client=false

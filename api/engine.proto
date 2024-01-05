@@ -21,7 +21,6 @@ option go_package = "proto-gen/scql";
 
 import "google/protobuf/empty.proto";
 import "libspu/spu.proto";
-import "api/common.proto";
 import "api/core.proto";
 import "api/status.proto";
 import "api/subgraph.proto";

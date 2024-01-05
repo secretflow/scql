@@ -34,6 +34,8 @@ DEFINE_bool(enable_restricted_read_path, true,
 DEFINE_string(
     restricted_read_path, "./data",
     "in where the file is allowed to read if enable restricted read path");
+DEFINE_string(csv_null_str, "NULL",
+              "specifies the string that represents a NULL value.");
 
 namespace {
 
@@ -62,7 +64,7 @@ struct CSVTableReplacementScanData : public duckdb::ReplacementScanData {
   const csv::CsvdbConf *csvdb_conf;
 };
 
-static std::unique_ptr<duckdb::TableFunctionRef> CSVTableReplacementScan(
+static duckdb::unique_ptr<duckdb::TableRef> CSVTableReplacementScan(
     duckdb::ClientContext &context, const std::string &table_name,
     duckdb::ReplacementScanData *data) {
   auto scan_data = dynamic_cast<CSVTableReplacementScanData *>(data);
@@ -85,51 +87,53 @@ static std::unique_ptr<duckdb::TableFunctionRef> CSVTableReplacementScan(
   }
 
   auto table_function = std::make_unique<duckdb::TableFunctionRef>();
-  std::vector<std::unique_ptr<duckdb::ParsedExpression>> children;
-  children.push_back(std::make_unique<duckdb::ConstantExpression>(
+  std::vector<duckdb::unique_ptr<duckdb::ParsedExpression>> children;
+  children.emplace_back(duckdb::make_uniq<duckdb::ConstantExpression>(
       duckdb::Value(util::GetAbsolutePath(csv_tbl->data_path(),
                                           FLAGS_enable_restricted_read_path,
                                           FLAGS_restricted_read_path))));
   {
-    std::vector<duckdb::Value> types;
     std::vector<duckdb::Value> names;
+    std::vector<duckdb::Value> types;
     for (const auto &col : csv_tbl->columns()) {
-      types.emplace_back(ToLogicalType(col.column_type()).ToString());
       names.emplace_back(col.column_name());
+      types.emplace_back(ToLogicalType(col.column_type()).ToString());
     }
-    children.push_back(std::make_unique<duckdb::ConstantExpression>(
-        duckdb::Value::LIST(duckdb::LogicalType::VARCHAR, std::move(types))));
-    children.push_back(std::make_unique<duckdb::ConstantExpression>(
+    children.emplace_back(duckdb::make_uniq<duckdb::ConstantExpression>(
         duckdb::Value::LIST(duckdb::LogicalType::VARCHAR, std::move(names))));
+    children.emplace_back(duckdb::make_uniq<duckdb::ConstantExpression>(
+        duckdb::Value::LIST(duckdb::LogicalType::VARCHAR, std::move(types))));
   }
-  table_function->function = std::make_unique<duckdb::FunctionExpression>(
+
+  table_function->function = duckdb::make_uniq<duckdb::FunctionExpression>(
       "csv_scan", std::move(children));
   return table_function;
 }
 
-static std::unique_ptr<duckdb::FunctionData> CSVScanBind(
+static duckdb::unique_ptr<duckdb::FunctionData> CSVScanBind(
     duckdb::ClientContext &context, duckdb::TableFunctionBindInput &input,
-    std::vector<duckdb::LogicalType> &return_types,
-    std::vector<std::string> &names) {
-  auto return_type_list = duckdb::ListValue::GetChildren(input.inputs[1]);
-  for (const auto &type_value : return_type_list) {
-    if (type_value.type().id() != duckdb::LogicalTypeId::VARCHAR) {
+    duckdb::vector<duckdb::LogicalType> &return_types,
+    duckdb::vector<std::string> &names) {
+  auto name_list = duckdb::ListValue::GetChildren(input.inputs[1]);
+  auto type_list = duckdb::ListValue::GetChildren(input.inputs[2]);
+  if (name_list.size() != type_list.size()) {
+    throw duckdb::BinderException(
+        "csv_scan: name_list & type_list size mismatched");
+  }
+  duckdb::child_list_t<duckdb::Value> columns;
+  for (size_t i = 0; i < name_list.size(); i++) {
+    if (name_list[i].type().id() != duckdb::LogicalTypeId::VARCHAR ||
+        type_list[i].type().id() != duckdb::LogicalTypeId::VARCHAR) {
       throw duckdb::BinderException(
-          "csv_scan requires a type specification as string");
+          "csv_scan requires a column name & type specification as string");
     }
-    return_types.emplace_back(duckdb::TransformStringToLogicalTypeId(
-        duckdb::StringValue::Get(type_value)));
+    columns.emplace_back(
+        std::make_pair(duckdb::StringValue::Get(name_list[i]),
+                       duckdb::StringValue::Get(type_list[i])));
   }
-
-  auto name_list = duckdb::ListValue::GetChildren(input.inputs[2]);
-  for (const auto &name_value : name_list) {
-    if (name_value.type().id() != duckdb::LogicalTypeId::VARCHAR) {
-      throw duckdb::BinderException("csv_scan requires column name as string");
-    }
-    names.emplace_back(duckdb::StringValue::Get(name_value));
-  }
-
+  input.named_parameters["nullstr"] = duckdb::Value(FLAGS_csv_null_str);
   input.named_parameters["header"] = duckdb::Value::BOOLEAN(true);
+  input.named_parameters["columns"] = duckdb::Value::STRUCT(std::move(columns));
 
   // delegate to ReadCSVBind
   return duckdb::ReadCSVTableFunction::GetFunction().bind(context, input,
@@ -149,7 +153,7 @@ void CheckTablePaths(const csv::CsvdbConf &csvdb_conf) {
 
 duckdb::DuckDB DuckDBWrapper::CreateDB(const csv::CsvdbConf *csvdb_conf) {
   CheckTablePaths(*csvdb_conf);
-  auto scan_data = std::make_unique<CSVTableReplacementScanData>();
+  auto scan_data = duckdb::make_uniq<CSVTableReplacementScanData>();
   scan_data->csvdb_conf = csvdb_conf;
 
   duckdb::DBConfig config;
@@ -161,7 +165,7 @@ duckdb::DuckDB DuckDBWrapper::CreateDB(const csv::CsvdbConf *csvdb_conf) {
 
 void DuckDBWrapper::CreateCSVScanFunction(duckdb::Connection &conn) {
   auto &context = *conn.context;
-  auto &catalog = duckdb::Catalog::GetCatalog(context);
+  auto &catalog = duckdb::Catalog::GetSystemCatalog(context);
 
   duckdb::TableFunction read_csv = duckdb::ReadCSVTableFunction::GetFunction();
 
@@ -173,6 +177,13 @@ void DuckDBWrapper::CreateCSVScanFunction(duckdb::Connection &conn) {
       read_csv.function, CSVScanBind, read_csv.init_global,
       read_csv.init_local);
   csv_scan.table_scan_progress = read_csv.table_scan_progress;
+  csv_scan.pushdown_complex_filter = read_csv.pushdown_complex_filter;
+  csv_scan.serialize = read_csv.serialize;
+  csv_scan.deserialize = read_csv.deserialize;
+  csv_scan.get_batch_index = read_csv.get_batch_index;
+  csv_scan.cardinality = read_csv.cardinality;
+  csv_scan.projection_pushdown = read_csv.projection_pushdown;
+
   csv_scan.named_parameters = read_csv.named_parameters;
 
   duckdb::CreateTableFunctionInfo info(std::move(csv_scan));

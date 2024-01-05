@@ -1,4 +1,4 @@
-How To Use SCQL
+How to Use SCQL
 ===============
 
 The flowchart shows how to use SCQL system, which contains two stages: prepare and query. In the prepare stage, the system is set up, and the necessary tables are created and initialized. In the query stage, queries are submitted, processed, and results are returned.

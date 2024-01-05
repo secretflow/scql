@@ -47,6 +47,36 @@ func (c *Checksum) CompareWith(checksum Checksum) pb.ChecksumCompareResult {
 	return pb.ChecksumCompareResult_EQUAL
 }
 
+func (c *Checksum) String() string {
+	result := ""
+	if len(c.TableSchema) > 0 {
+		result += fmt.Sprintf("table schema: %+v;", c.TableSchema)
+	}
+	if len(c.CCL) > 0 {
+		result += fmt.Sprintf("ccl: %+v", c.CCL)
+	}
+	return result
+}
+
+func min(x, y int) int {
+	if x < y {
+		return x
+	}
+	return y
+}
+
+func (c *Checksum) TruncateString() string {
+	result := ""
+	checksumTruncateNum := 10
+	if len(c.TableSchema) > 0 {
+		result += fmt.Sprintf("table schema: %+v;", c.TableSchema[:min(len(c.TableSchema), checksumTruncateNum)])
+	}
+	if len(c.CCL) > 0 {
+		result += fmt.Sprintf("ccl: %+v", c.CCL[:min(len(c.TableSchema), checksumTruncateNum)])
+	}
+	return result
+}
+
 type ChecksumStorage struct {
 	// key -> party code; value -> Checksum
 	// localChecksums keeps checksum calculated by local storage
@@ -64,6 +94,7 @@ func (s *ChecksumStorage) GetLocal(partyCode string) (Checksum, error) {
 	if !ok {
 		return Checksum{}, fmt.Errorf("failed to parse local checksum from %+v", value)
 	}
+	logrus.Infof("get local checksum %s for party %s", checksum.TruncateString(), partyCode)
 	return checksum, nil
 }
 
@@ -76,6 +107,7 @@ func (s *ChecksumStorage) GetRemote(partyCode string) (Checksum, error) {
 	if !ok {
 		return Checksum{}, fmt.Errorf("failed to parse remote checksum from %+v", value)
 	}
+	logrus.Infof("get remote checksum %s for party %s", checksum.TruncateString(), partyCode)
 	return checksum, nil
 }
 
@@ -83,10 +115,11 @@ func (s *ChecksumStorage) SaveLocal(partyCode string, sum Checksum) error {
 	if len(sum.TableSchema) == 0 {
 		return fmt.Errorf("table schema in checksum is empty")
 	}
-	if sum.CCL == nil || len(sum.CCL) == 0 {
+	if len(sum.CCL) == 0 {
 		return fmt.Errorf("ccl in checksum is empty")
 	}
 	s.localChecksums.Store(partyCode, sum)
+	logrus.Infof("save local checksum %s for party %s", sum.TruncateString(), partyCode)
 	return nil
 }
 
@@ -98,10 +131,11 @@ func (s *ChecksumStorage) SaveRemote(partyCode string, pbChecksum *pb.Checksum) 
 	if len(sum.TableSchema) == 0 {
 		return fmt.Errorf("table schema in checksum is empty")
 	}
-	if sum.CCL == nil || len(sum.CCL) == 0 {
+	if len(sum.CCL) == 0 {
 		return fmt.Errorf("ccl in checksum is empty")
 	}
 	s.remoteChecksums.Store(partyCode, sum)
+	logrus.Infof("save remote checksum %s for party %s", sum.TruncateString(), partyCode)
 	return nil
 }
 
@@ -116,7 +150,7 @@ func (s *ChecksumStorage) CompareChecksumFor(partyCode string) (pb.ChecksumCompa
 	}
 	reqChecksumCompareRes := localChecksum.CompareWith(remoteChecksum)
 	if reqChecksumCompareRes != pb.ChecksumCompareResult_EQUAL {
-		logrus.Infof("compare result of checksum is %d, self checksum: %+v, remote checksum: %+v", reqChecksumCompareRes, localChecksum, remoteChecksum)
+		logrus.Warningf("compare result of checksum is %s, self checksum: %+v, remote checksum: %+v", reqChecksumCompareRes.String(), localChecksum, remoteChecksum)
 	}
 	return reqChecksumCompareRes, nil
 }

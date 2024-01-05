@@ -51,7 +51,10 @@ INSTANTIATE_TEST_SUITE_P(
                      test::NamedTensor("b", TensorFromJSON(arrow::float32(),
                                                            "[-3.14]")),
                      test::NamedTensor("c", TensorFromJSON(arrow::boolean(),
-                                                           "[true]"))},
+                                                           "[true]")),
+                     test::NamedTensor("d",
+                                       TensorFromJSON(arrow::large_utf8(),
+                                                      R"json(["bob"])json"))},
                 .ref_tensor = test::NamedTensor(
                     "ref", TensorFromJSON(arrow::int64(), "[1, 2, 3]")),
                 .ref_tensor_status = pb::TENSORSTATUS_PRIVATE,
@@ -63,7 +66,11 @@ INSTANTIATE_TEST_SUITE_P(
                                                       "[-3.14, -3.14, -3.14]")),
                      test::NamedTensor("c_out",
                                        TensorFromJSON(arrow::boolean(),
-                                                      "[true, true, true]"))}},
+                                                      "[true, true, true]")),
+                     test::NamedTensor(
+                         "d_out",
+                         TensorFromJSON(arrow::large_utf8(),
+                                        R"json(["bob","bob","bob"])json"))}},
             BroadcastToTestCase{
                 .inputs =
                     {test::NamedTensor("a",

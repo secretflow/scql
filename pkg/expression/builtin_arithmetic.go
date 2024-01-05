@@ -17,6 +17,8 @@ import (
 	"fmt"
 	"math"
 
+	"golang.org/x/exp/slices"
+
 	"github.com/secretflow/scql/pkg/parser/mysql"
 	"github.com/secretflow/scql/pkg/parser/terror"
 	"github.com/secretflow/scql/pkg/sessionctx"
@@ -297,34 +299,13 @@ type arithmeticModFunctionClass struct {
 	baseFunctionClass
 }
 
-func (c *arithmeticModFunctionClass) setType4ModRealOrDecimal(retTp, a, b *types.FieldType, isDecimal bool) {
-	if a.Decimal == types.UnspecifiedLength || b.Decimal == types.UnspecifiedLength {
-		retTp.Decimal = types.UnspecifiedLength
-	} else {
-		retTp.Decimal = mathutil.Max(a.Decimal, b.Decimal)
-		if isDecimal && retTp.Decimal > mysql.MaxDecimalScale {
-			retTp.Decimal = mysql.MaxDecimalScale
-		}
-	}
-
-	if a.Flen == types.UnspecifiedLength || b.Flen == types.UnspecifiedLength {
-		retTp.Flen = types.UnspecifiedLength
-	} else {
-		retTp.Flen = mathutil.Max(a.Flen, b.Flen)
-		if isDecimal {
-			retTp.Flen = mathutil.Min(retTp.Flen, mysql.MaxDecimalWidth)
-			return
-		}
-		retTp.Flen = mathutil.Min(retTp.Flen, mysql.MaxRealWidth)
-	}
-}
-
 func (c *arithmeticModFunctionClass) getFunction(ctx sessionctx.Context, args []Expression) (builtinFunc, error) {
 	if err := c.verifyArgs(args); err != nil {
 		return nil, err
 	}
 	lhsTp, rhsTp := args[0].GetType(), args[1].GetType()
-	if rhsTp.Tp == mysql.TypeFloat || rhsTp.Tp == mysql.TypeDouble || rhsTp.Tp == mysql.TypeNewDecimal {
+	blockTypes := []byte{mysql.TypeFloat, mysql.TypeDouble, mysql.TypeNewDecimal}
+	if slices.Contains(blockTypes, rhsTp.Tp) || slices.Contains(blockTypes, lhsTp.Tp) {
 		return nil, fmt.Errorf("getFunction: not support mod float")
 	}
 	bf := newBaseBuiltinFuncWithTp(ctx, args, types.ETInt, types.ETInt, types.ETInt)

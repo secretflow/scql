@@ -251,7 +251,7 @@ func (e *RevokeExec) revokeColumnPriv(tx *gorm.DB, priv *ast.PrivElem, user, hos
 		VisibilityPriv: priv.Priv,
 	}
 	var columnPrivExist []storage.ColumnPriv
-	if err := transaction.AddExclusiveLock(tx).Model(&storage.ColumnPriv{}).Where(&condition).Find(&columnPrivExist, "column_name IN ?", colNames).Error; err != nil {
+	if err := transaction.AddExclusiveLock(tx).Model(&storage.ColumnPriv{}).Where(&condition).Find(&columnPrivExist, "lower(column_name) IN ?", colNames).Error; err != nil {
 		return err
 	}
 

@@ -100,14 +100,14 @@ Create project, invite party to join
     # bob check invitation list
     ./brokerctl get invitation --host http://localhost:8082
     [fetch]
-    +--------------+---------+---------+-----------+---------+---------+----------------------------------+
-    | InvitationId | Status  | Inviter | ProjectId | Creator | Members |               Conf               |
-    +--------------+---------+---------+-----------+---------+---------+----------------------------------+
-    |            1 | Pending | alice   | demo      | alice   | [alice] | {                                |
-    |              |         |         |           |         |         |   "protocol":  "SEMI2K",         |
-    |              |         |         |           |         |         |   "field":  "FM64"               |
-    |              |         |         |           |         |         | }                                |
-    +--------------+---------+---------+-----------+---------+---------+----------------------------------+
+    +--------------+---------+---------+---------+-----------+---------+---------+----------------------------------+
+    | InvitationId | Status  | Inviter | Invitee | ProjectId | Creator | Members |               Conf               |
+    +--------------+---------+---------+---------+-----------+---------+---------+----------------------------------+
+    |            1 | Pending | alice   | bob     | demo      | alice   | [alice] | {                                |
+    |              |         |         |         |           |         |         |   "protocol":  "SEMI2K",         |
+    |              |         |         |         |           |         |         |   "field":  "FM64"               |
+    |              |         |         |         |           |         |         | }                                |
+    +--------------+---------+---------+---------+-----------+---------+---------+----------------------------------+
 
     # bob decide to join the project with invitation-id 1
     ./brokerctl process invitation 1 --response "accept" --project-id "demo" --host http://localhost:8082

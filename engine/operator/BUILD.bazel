@@ -98,9 +98,9 @@ cc_library(
         "//engine/framework:operator",
         "//engine/util:psi_helper",
         "@com_github_msgpack_msgpack//:msgpack",
-        "@spulib//libspu/psi/core:ecdh_oprf_psi",
-        "@spulib//libspu/psi/core:ecdh_psi",
-        "@spulib//libspu/psi/cryptor:cryptor_selector",
+        "@psi//psi/psi/core:ecdh_oprf_psi",
+        "@psi//psi/psi/core:ecdh_psi",
+        "@psi//psi/psi/cryptor:cryptor_selector",
     ],
 )
 
@@ -383,9 +383,9 @@ cc_library(
         "//engine/audit:audit_log",
         "//engine/framework:operator",
         "//engine/util:psi_helper",
-        "@spulib//libspu/psi/core:ecdh_oprf_psi",
-        "@spulib//libspu/psi/core:ecdh_psi",
-        "@spulib//libspu/psi/cryptor:cryptor_selector",
+        "@psi//psi/psi/core:ecdh_oprf_psi",
+        "@psi//psi/psi/core:ecdh_psi",
+        "@psi//psi/psi/cryptor:cryptor_selector",
     ],
 )
 

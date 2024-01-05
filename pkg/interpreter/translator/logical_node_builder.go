@@ -69,7 +69,7 @@ func (b *logicalNodeBuilder) build(lp core.LogicalPlan) (logicalNode, error) {
 	switch x := lp.(type) {
 	case *core.DataSource:
 		expectChildNum = 0
-		dt, err := core.NewDbTableFromString(strings.Join([]string{x.DBName.L, x.TableInfo().Name.L}, "."))
+		dt, err := core.NewDbTableFromString(strings.Join([]string{x.DBName.O, x.TableInfo().Name.O}, "."))
 		if err != nil {
 			return nil, err
 		}

@@ -340,6 +340,15 @@ var DateFunc = map[string]bool{
 	DateFormat: true,
 }
 
+var DateFuncArgsNum = map[string]int{
+	Now:        0,
+	Curdate:    0,
+	StrToDate:  2,
+	DateFormat: 2,
+	AddDate:    3,
+	SubDate:    3,
+}
+
 // FuncCallExpr is for function expression.
 type FuncCallExpr struct {
 	funcNode
@@ -349,18 +358,21 @@ type FuncCallExpr struct {
 	Args []ExprNode
 }
 
+func (n *FuncCallExpr) checkDateFuncArgsNum() error {
+	if expectedNum, ok := DateFuncArgsNum[n.FnName.L]; ok {
+		if expectedNum != len(n.Args) {
+			return fmt.Errorf("%s func need %d args, but got %d args", n.FnName.L, expectedNum, len(n.Args))
+		}
+	}
+
+	return nil
+}
+
 func (n *FuncCallExpr) RestoreDateFuncWithMysqlDialect(ctx *RestoreCtx) (err error) {
 	ctx.WriteKeyWord(n.FnName.O)
 	ctx.WritePlain("(")
 	switch n.FnName.L {
-	case Now, Curdate:
-		if len(n.Args) != 0 {
-			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr: %s", n.FnName.L)
-		}
 	case AddDate, SubDate:
-		if len(n.Args) != 3 {
-			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr: %s", n.FnName.L)
-		}
 		if err = n.Args[0].Restore(ctx); err != nil {
 			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[0]")
 		}
@@ -393,20 +405,11 @@ func (n *FuncCallExpr) RestoreDateFuncWithMysqlDialect(ctx *RestoreCtx) (err err
 func (n *FuncCallExpr) RestoreDateFuncWithPostgresDialect(ctx *RestoreCtx) (err error) {
 	switch n.FnName.L {
 	case Now:
-		if len(n.Args) != 0 {
-			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr: %s", n.FnName.L)
-		}
 		ctx.WriteKeyWord(n.FnName.O)
 		ctx.WritePlain("()")
 	case Curdate:
-		if len(n.Args) != 0 {
-			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr: %s", n.FnName.L)
-		}
 		ctx.WriteKeyWord(ctx.Dialect.GetSpecialFuncName(n.FnName.L))
 	case AddDate, SubDate:
-		if len(n.Args) != 3 {
-			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr: %s", n.FnName.L)
-		}
 		if err = n.Args[0].Restore(ctx); err != nil {
 			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[0]")
 		}
@@ -427,7 +430,7 @@ func (n *FuncCallExpr) RestoreDateFuncWithPostgresDialect(ctx *RestoreCtx) (err 
 	case DateDiff, LastDay, StrToDate, DateFormat:
 		// postgres donot support datediff op because Poco can not interpret the interval type result;
 		// postgres donot support last_day、str_to_date、date_format becase postgres has not these func: https://m.runoob.com/postgresql/postgresql-datetime.html
-		return errors.Annotatef(err, "An error occurred while restore FuncCallExpr: %s", n.FnName.L)
+		return fmt.Errorf("an error occurred while restore FuncCallExpr: %s", n.FnName.L)
 	default:
 		ctx.WriteKeyWord(n.FnName.O)
 		ctx.WritePlain("(")
@@ -447,15 +450,9 @@ func (n *FuncCallExpr) RestoreDateFuncWithPostgresDialect(ctx *RestoreCtx) (err 
 func (n *FuncCallExpr) RestoreDateFuncWithCSVDBDialect(ctx *RestoreCtx) (err error) {
 	switch n.FnName.L {
 	case Now, Curdate:
-		if len(n.Args) != 0 {
-			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr: %s", n.FnName.L)
-		}
 		ctx.WriteKeyWord(ctx.Dialect.GetSpecialFuncName(n.FnName.L))
 		ctx.WritePlain("()")
 	case AddDate, SubDate:
-		if len(n.Args) != 3 {
-			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr: %s", n.FnName.L)
-		}
 		if err = n.Args[0].Restore(ctx); err != nil {
 			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[0]")
 		}
@@ -473,11 +470,8 @@ func (n *FuncCallExpr) RestoreDateFuncWithCSVDBDialect(ctx *RestoreCtx) (err err
 		ctx.Flags = old_ctx_flags
 	case DateDiff:
 		// csv donot support datediff op
-		return errors.Annotatef(err, "An error occurred while restore FuncCallExpr: %s", n.FnName.L)
+		return fmt.Errorf("an error occurred while restore FuncCallExpr: %s", n.FnName.L)
 	case StrToDate:
-		if len(n.Args) != 2 {
-			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr: %s", n.FnName.L)
-		}
 		ctx.WriteKeyWord("strptime")
 		ctx.WritePlain("(")
 		if err = n.Args[0].Restore(ctx); err != nil {
@@ -492,9 +486,6 @@ func (n *FuncCallExpr) RestoreDateFuncWithCSVDBDialect(ctx *RestoreCtx) (err err
 		// csv'format specifiers are diffrent from mysql
 		// csv: https://duckdb.org/docs/archive/0.9.0/sql/functions/dateformat
 		// mysql: https://dev.mysql.com/doc/refman/5.7/en/date-and-time-functions.html#function_date-format
-		if len(n.Args) != 2 {
-			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr: %s", n.FnName.L)
-		}
 		ctx.WriteKeyWord("strftime")
 		ctx.WritePlain("(")
 		if err = n.Args[0].Restore(ctx); err != nil {
@@ -524,6 +515,9 @@ func (n *FuncCallExpr) RestoreDateFuncWithCSVDBDialect(ctx *RestoreCtx) (err err
 // Restore implements Node interface.
 func (n *FuncCallExpr) Restore(ctx *RestoreCtx) error {
 	if _, ok := DateFunc[n.FnName.L]; ok {
+		if err := n.checkDateFuncArgsNum(); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr: %s", n.FnName.L)
+		}
 		switch ctx.Dialect.(type) {
 		case *PostgresDialect:
 			return n.RestoreDateFuncWithPostgresDialect(ctx)

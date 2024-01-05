@@ -27,7 +27,10 @@
 #include "engine/operator/all_ops_register.h"
 #include "engine/util/tensor_util.h"
 
+#include "api/engine.pb.h"
+#include "api/status.pb.h"
 #include "api/status_code.pb.h"
+#include "engine/services/error_collector_service.pb.h"
 
 #ifndef LOG_ERROR_AND_SET_STATUS
 #define LOG_ERROR_AND_SET_STATUS(status, err_code, err_msg) \
@@ -49,6 +52,19 @@ std::string MessageToJsonString(const google::protobuf::Message& message) {
   std::string result;
   ::google::protobuf::util::MessageToJsonString(message, &result, opts);
   return result;
+}
+
+void MergePeerErrors(
+    const std::vector<std::pair<std::string, scql::pb::Status>>& peer_errors,
+    scql::pb::Status* status) {
+  for (const auto& error : peer_errors) {
+    // NOTE: status->add_details() is not used here because the format used by
+    // brpc to convert messages containing Any into json is not compatible with
+    // the standard.
+    status->set_message(
+        fmt::format("{}; (peer: {}, code: {}, msg: {})", status->message(),
+                    error.first, error.second.code(), error.second.message()));
+  }
 }
 
 }  // namespace
@@ -148,6 +164,8 @@ void EngineServiceImpl::RunExecutionPlan(
     audit::RecordUncategorizedEvent(response->status(),
                                     request->session_params().session_id(),
                                     source_ip, "RunExecutionPlan");
+    ReportErrorToPeers(request->session_params(), pb::Code::UNAUTHENTICATED,
+                       err_msg);
     return;
   }
 
@@ -163,6 +181,9 @@ void EngineServiceImpl::RunExecutionPlan(
     LOG_ERROR_AND_SET_STATUS(response->mutable_status(), pb::Code::BAD_REQUEST,
                              err_msg);
     audit::RecordRunExecPlanEvent(*request, *response, start_time, source_ip);
+
+    ReportErrorToPeers(request->session_params(), pb::Code::BAD_REQUEST,
+                       err_msg);
     return;
   }
 
@@ -187,6 +208,8 @@ void EngineServiceImpl::RunExecutionPlan(
                              pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
     audit::RecordCreateSessionEvent(response->status(),
                                     request->session_params(), true, source_ip);
+    ReportErrorToPeers(request->session_params(),
+                       pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
     return;
   }
 
@@ -341,9 +364,13 @@ void EngineServiceImpl::RunPlanSync(const pb::RunExecutionPlanRequest* request,
     LOG_ERROR_AND_SET_STATUS(response->mutable_status(),
                              pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
     response->mutable_out_columns()->Clear();
+    ReportErrorToPeers(request->session_params(),
+                       pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
+    MergePeerErrors(session->GetPeerErrors(), response->mutable_status());
     return;
   }
 
+  auto peer_errors = session->GetPeerErrors();
   // 2. remove session.
   try {
     YACL_ENFORCE(session_mgr_->SetSessionState(
@@ -357,11 +384,15 @@ void EngineServiceImpl::RunPlanSync(const pb::RunExecutionPlanRequest* request,
     LOG_ERROR_AND_SET_STATUS(response->mutable_status(),
                              pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
     response->mutable_out_columns()->Clear();
+    ReportErrorToPeers(request->session_params(),
+                       pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
+    MergePeerErrors(peer_errors, response->mutable_status());
     return;
   }
 
   SPDLOG_INFO("RunExecutionPlan success, request info:\n{} ",
               MessageToJsonString(*request));
+  MergePeerErrors(peer_errors, response->mutable_status());
   return;
 }
 
@@ -386,6 +417,49 @@ void EngineServiceImpl::RunPlanAsync(const pb::RunExecutionPlanRequest request,
 
   ReportResult(request.session_params().session_id(), request.callback_url(),
                MessageToJsonString(report));
+}
+
+void EngineServiceImpl::ReportErrorToPeers(const pb::SessionStartParams& params,
+                                           const pb::Code err_code,
+                                           const std::string& err_msg) {
+  try {
+    PartyInfo parties(params);
+    for (const auto& party : parties.AllParties()) {
+      if (party.id == parties.SelfPartyCode()) {
+        continue;
+      }
+
+      auto rpc_channel =
+          channel_manager_->Create(party.host, RemoteRole::PeerEngine);
+      YACL_ENFORCE(rpc_channel, "create rpc channel failed for party=({},{})",
+                   party.id, party.host);
+
+      services::pb::ReportErrorRequest request;
+      services::pb::ReportErrorResponse response;
+      brpc::Controller cntl;
+      services::pb::ErrorCollectorService_Stub stub(rpc_channel.get());
+
+      request.set_session_id(params.session_id());
+      request.set_party_code(parties.SelfPartyCode());
+      request.mutable_status()->set_code(err_code);
+      request.mutable_status()->set_message(err_msg);
+
+      stub.ReportError(&cntl, &request, &response, NULL);
+      if (cntl.Failed()) {
+        SPDLOG_WARN(
+            "sync error to peer=({},{}) rpc failed: error_code: {}, "
+            "error_info: {}",
+            party.id, party.host, cntl.ErrorCode(), cntl.ErrorText());
+      } else {
+        if (response.status().code() != pb::Code::OK) {
+          SPDLOG_WARN("sync error to peer=({},{}) failed: status: {}", party.id,
+                      party.host, response.status().DebugString());
+        }
+      }
+    }
+  } catch (const std::exception& e) {
+    SPDLOG_WARN("sync error to peers failed: throw: {}", e.what());
+  }
 }
 
 }  // namespace scql::engine

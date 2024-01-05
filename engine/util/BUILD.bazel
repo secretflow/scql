@@ -45,10 +45,10 @@ cc_library(
         "@com_github_msgpack_msgpack//:msgpack",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
-        "@spulib//libspu/psi/core:ecdh_oprf_psi",
-        "@spulib//libspu/psi/utils:batch_provider",
-        "@spulib//libspu/psi/utils:cipher_store",
-        "@spulib//libspu/psi/utils:ub_psi_cache",
+        "@psi//psi/psi/core:ecdh_oprf_psi",
+        "@psi//psi/psi/utils:batch_provider",
+        "@psi//psi/psi/utils:ec_point_store",
+        "@psi//psi/psi/utils:ub_psi_cache",
     ],
 )
 

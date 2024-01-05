@@ -215,7 +215,11 @@ func (e *GrantExec) grantColumnLevelPriv(tx *gorm.DB, user *ast.UserSpec) error 
 		if err := storage.CheckColumnsExist(tx, e.Level.DBName, e.Level.TableName, colNames); err != nil {
 			return err
 		}
-		if err := e.grantColumnPriv(tx, priv.Priv, user, colNames); err != nil {
+		originNames, err := storage.GetColumnOriginNameByLowerName(tx, e.Level.DBName, e.Level.TableName, colNames)
+		if err != nil {
+			return err
+		}
+		if err := e.grantColumnPriv(tx, priv.Priv, user, originNames); err != nil {
 			return err
 		}
 	}

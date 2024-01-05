@@ -21,7 +21,6 @@ package scql.engine.services.pb;
 option cc_generic_services = true;
 
 import "api/engine.proto";
-import "api/common.proto";
 
 // Multiplexing Receiver Service
 service MockReportService {

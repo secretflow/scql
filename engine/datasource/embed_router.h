@@ -22,7 +22,7 @@
 
 #include "engine/datasource/router.h"
 
-#include "engine/datasource/router.pb.h"
+#include "engine/datasource/embed_router.pb.h"
 
 namespace scql::engine {
 
@@ -43,7 +43,8 @@ class EmbedRouter final : public Router {
       const std::string& connection_str);
 
  private:
-  static std::unique_ptr<EmbedRouter> FromProto(const RouterConf& router_conf);
+  static std::unique_ptr<EmbedRouter> FromProto(
+      const EmbedRouterConf& router_conf);
 
  private:
   // $datasource_id --> datasource spec

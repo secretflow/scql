@@ -163,7 +163,37 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.Equal(len(response.GetInvitations()), 1)
 		suite.Equal(response.GetInvitations()[0].GetProject().GetName(), "test")
 		suite.Equal(response.GetInvitations()[0].GetInviter(), "alice")
-		suite.Equal(response.GetInvitations()[0].GetAccepted(), int32(0))
+		suite.Equal(response.GetInvitations()[0].GetStatus(), pb.InvitationStatus_UNDECIDED)
+		resp.Body.Close()
+	}
+
+	// Invite member: alice invites bob again
+	{
+		reqStr := `{"project_id":"test_id", "invitee":"bob"}`
+		resp, err := httpClient.Post(urlutil.JoinHostPath(urlAlice, constant.InviteMemberPath),
+			"application/json", strings.NewReader(reqStr))
+		suite.NoError(err)
+
+		response := &pb.InviteMemberResponse{}
+		_, err = message.DeserializeFrom(resp.Body, response)
+		suite.NoError(err)
+		suite.Equal(response.GetStatus().GetCode(), int32(0))
+		resp.Body.Close()
+	}
+
+	// CHECK Invite member: alice / bob list invitations
+	for _, party := range []string{urlAlice, urlBob} {
+		reqStr := `{}`
+		resp, err := httpClient.Post(urlutil.JoinHostPath(party, constant.ListInvitationsPath),
+			"application/json", strings.NewReader(reqStr))
+		suite.NoError(err)
+
+		response := &pb.ListInvitationsResponse{}
+		_, err = message.DeserializeFrom(resp.Body, response)
+		suite.NoError(err)
+		suite.Equal(response.GetStatus().GetCode(), int32(0))
+		suite.Equal(len(response.GetInvitations()), 2)
+		suite.Equal(response.GetInvitations()[0].GetStatus(), pb.InvitationStatus_INVALID)
 		resp.Body.Close()
 	}
 
@@ -196,7 +226,7 @@ func (suite *ServerTestSuit) TestServer() {
 
 	// Process Invitation: bob agrees to join project
 	{
-		reqStr := `{"invitation_id":1, "respond": 0, "respond_comment":"I agree to join you"}`
+		reqStr := `{"invitation_id":2, "respond": 0, "respond_comment":"I agree to join you"}`
 		resp, err := httpClient.Post(urlutil.JoinHostPath(urlBob, constant.ProcessInvitationPath),
 			"application/json", strings.NewReader(reqStr))
 		suite.NoError(err)
@@ -234,10 +264,10 @@ func (suite *ServerTestSuit) TestServer() {
 		_, err = message.DeserializeFrom(resp.Body, response)
 		suite.NoError(err)
 		suite.Equal(response.GetStatus().GetCode(), int32(0))
-		suite.Equal(len(response.GetInvitations()), 1)
-		suite.Equal(response.GetInvitations()[0].GetProject().GetName(), "test")
-		suite.Equal(response.GetInvitations()[0].GetInviter(), "alice")
-		suite.Equal(response.GetInvitations()[0].GetAccepted(), int32(1))
+		suite.Equal(len(response.GetInvitations()), 2)
+		suite.Equal(response.GetInvitations()[1].GetProject().GetName(), "test")
+		suite.Equal(response.GetInvitations()[1].GetInviter(), "alice")
+		suite.Equal(response.GetInvitations()[1].GetStatus(), pb.InvitationStatus_ACCEPTED)
 		resp.Body.Close()
 	}
 
@@ -347,11 +377,10 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.Equal(response.GetStatus().GetCode(), int32(0))
 		suite.Equal(len(response.GetDatas()), 3)
 		// check project
-		var proj storage.Project
+		var proj storage.ProjectWithMember
 		err = json.Unmarshal(response.GetDatas()[0], &proj)
 		suite.NoError(err)
-		suite.Equal(proj.Name, "test")
-		suite.Equal(proj.Member, "alice;bob")
+		suite.Equal(proj.Proj.Name, "test")
 		// check table
 		var tables []storage.TableMeta
 		err = json.Unmarshal(response.GetDatas()[1], &tables)
@@ -476,7 +505,6 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.Equal(response.GetAffectedRows(), int64(10), protojson.Format(response))
 		resp.Body.Close()
 	}
-
 }
 
 func TestServerSuit(t *testing.T) {

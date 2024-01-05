@@ -24,13 +24,15 @@ spu_cmake_external(
     cache_entries = {
         "WITHOUT_SERVER": "ON",
         "INSTALL_PRIV_LIBDIR": "$EXT_BUILD_DEPS",
-        "WITH_SSL": "$EXT_BUILD_DEPS/openssl",
+        "WITH_SSL": "$EXT_BUILD_DEPS/openssl",  # MySQL 8.0.30 and later could use OpenSSL3
         "WITH_UNIT_TESTS": "OFF",
         "WITH_PROTOBUF": "system",
         "WITH_BOOST": "$EXT_BUILD_DEPS/include",
         "CURSES_LIBRARY": "$EXT_BUILD_DEPS/ncurses/lib/libcurses.a",
         "CURSES_INCLUDE_PATH": "$EXT_BUILD_DEPS/ncurses/include/",
         "INSTALL_INCLUDEDIR": "include/mysql",  # poco data needs <mysql/mysql.h>
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
     },
     install = False,
     lib_source = ":all_srcs",

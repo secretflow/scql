@@ -67,13 +67,13 @@ class In : public Operator {
   static bool IsOprfServerAccordToHint(ExecContext* ctx);
   static void OprfPsiServer(
       ExecContext* ctx, bool reveal_to_server, const std::string& tmp_dir,
-      const spu::psi::EcdhOprfPsiOptions& psi_options,
+      const psi::psi::EcdhOprfPsiOptions& psi_options,
       const std::shared_ptr<util::BatchProvider>& batch_provider,
       util::PsiExecutionInfoTable* psi_info_table,
       std::shared_ptr<yacl::link::Context> psi_link);
   static void OprfPsiClient(
       ExecContext* ctx, bool reveal_to_server, const std::string& tmp_dir,
-      const spu::psi::EcdhOprfPsiOptions& psi_options,
+      const psi::psi::EcdhOprfPsiOptions& psi_options,
       const std::shared_ptr<util::BatchProvider>& batch_provider,
       util::PsiExecutionInfoTable* psi_info_table,
       std::shared_ptr<yacl::link::Context> psi_link);
@@ -83,7 +83,8 @@ class In : public Operator {
       size_t self_item_count);
   static int64_t OprfClientHandleResult(
       ExecContext* ctx,
-      const std::shared_ptr<util::UbInCipherStore>& cipher_store);
+      const std::shared_ptr<util::UbPsiCipherStore>& client_store,
+      const std::shared_ptr<util::UbPsiCipherStore>& server_store);
 };
 
 }  // namespace scql::engine::op

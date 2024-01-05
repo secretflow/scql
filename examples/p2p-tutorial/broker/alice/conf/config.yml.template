@@ -26,5 +26,3 @@ storage:
   max_open_conns: 100
   conn_max_idle_time: 2m
   conn_max_lifetime: 5m
-# deprecated configs, temporarily reserved for compatibility with older versions
-engines: ["engine_alice:8003"]

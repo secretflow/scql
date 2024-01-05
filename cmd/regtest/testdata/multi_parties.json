@@ -99,6 +99,11 @@
       "name": "case when(multi condition) after join",
       "query": "select case when alice.compare_long_0 > bob.compare_long_0 then alice.plain_long_0 when carol.compare_long_0 > 100 then carol.plain_long_0 when carol.plain_long_0 then 1 else 0 end as res1 from scdb.alice_tbl_0 as alice, scdb.bob_tbl_0 as bob, scdb.carol_tbl_0 as carol where alice.join_long_0 = bob.join_long_0 and bob.join_long_0 = carol.join_long_0;",
       "mysql_query": "select case when alice.compare_long_0 > bob.compare_long_0 then alice.plain_long_0 when carol.compare_long_0 > 100 then carol.plain_long_0 when carol.plain_long_0 then 1 else 0 end as res1 from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_long_0 = bob.join_long_0 and bob.join_long_0 = carol.join_long_0;"
+    },
+    {
+      "name": "test case sensitive",
+      "query": "select alice.groupby_int_0 as r1, alice.GROUPBY_int_1 as r2, bob.join_string_0 as r3, bob.JOIN_STRING_0 as r4, carol.COMPARE_float_0 > 0 as r5, carol.compare_float_1 > 0 as r6 from scdb.alice_UPPER_table as alice, scdb.bob_UPPER_table as bob, scdb.carol_UPPER_table as carol where alice.join_string_0 = bob.JOIN_string_0 and bob.join_string_1 = carol.JOIN_string_1;",
+      "mysql_query": "select alice.groupby_int_0 as r1, alice.GROUPBY_int_1 as r2, bob.join_string_0 as r3, bob.JOIN_STRING_0 as r4, carol.COMPARE_float_0 > 0 as r5, carol.compare_float_1 > 0 as r6 from alice.UPPER_table as alice, bob.UPPER_table as bob, carol.UPPER_table as carol where alice.join_string_0 = bob.JOIN_string_0 and bob.join_string_1 = carol.JOIN_string_1;"
     }
   ]
 }

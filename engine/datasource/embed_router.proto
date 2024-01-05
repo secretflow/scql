@@ -41,8 +41,8 @@ message RouteRule {
   string datasource_id = 3;
 }
 
-// RouterConf is used to bootstrap Router from scratch
-message RouterConf {
+// EmbedRouterConf is used to bootstrap EmbedRouter from scratch
+message EmbedRouterConf {
   repeated DataSource datasources = 1;
   repeated RouteRule rules = 2;
 }

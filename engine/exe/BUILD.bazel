@@ -23,10 +23,12 @@ cc_binary(
     linkopts = ["-pie"],
     deps = [
         "//engine/auth:authenticator",
+        "//engine/datasource:http_router",
         "//engine/link:mux_link_factory",
         "//engine/link:mux_receiver_service",
         "//engine/link:rpc_helper",
         "//engine/services:engine_service_impl",
+        "//engine/services:error_collector_service_impl",
         "//engine/util:logging",
         "@com_github_brpc_brpc//:brpc",
         "@com_google_absl//absl/debugging:failure_signal_handler",

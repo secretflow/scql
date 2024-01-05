@@ -24,9 +24,7 @@ namespace scql::engine {
 class MuxReceiverServiceImpl : public link::pb::MuxReceiverService {
  public:
   explicit MuxReceiverServiceImpl(ListenerManager* listener_manager)
-      : listener_manager_(listener_manager) {
-    YACL_ENFORCE(listener_manager_, "null listener_manager.");
-  }
+      : listener_manager_(listener_manager) {}
 
   void Push(::google::protobuf::RpcController* cntl,
             const link::pb::MuxPushRequest* request,

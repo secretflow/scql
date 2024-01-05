@@ -99,6 +99,7 @@ func (exec *Executor) RunExecutionPlan(ctx context.Context, engineAsync bool) (*
 	} else {
 		logrus.Info(logEntry)
 	}
+
 	return result, err
 }
 

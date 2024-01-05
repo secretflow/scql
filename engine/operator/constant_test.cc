@@ -68,11 +68,16 @@ INSTANTIATE_TEST_SUITE_P(
                              .output_status = pb::TENSORSTATUS_PUBLIC},
             ConstantTestCase{
                 .scalar = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::boolean(), "[true]"))},
+                    "y", TensorFromJSON(arrow::large_utf8(),
+                                        R"json(["2022-11-22"])json"))},
                 .output_status = pb::TENSORSTATUS_PUBLIC},
             ConstantTestCase{
                 .scalar = {test::NamedTensor(
-                    "z", TensorFromJSON(arrow::float32(), "[3.1415]"))},
+                    "z", TensorFromJSON(arrow::boolean(), "[true]"))},
+                .output_status = pb::TENSORSTATUS_PUBLIC},
+            ConstantTestCase{
+                .scalar = {test::NamedTensor(
+                    "zz", TensorFromJSON(arrow::float32(), "[3.1415]"))},
                 .output_status = pb::TENSORSTATUS_PUBLIC})),
     TestParamNameGenerator(ConstantTest));
 
@@ -107,6 +112,10 @@ TEST_P(ConstantTest, Works) {
     auto device_symbols = exec_ctxs[0].GetSession()->GetDeviceSymbols();
     util::SpuOutfeedHelper outfeed_helper(sctx, device_symbols);
     out = outfeed_helper.DumpPublic(tc.scalar.name);
+    // convert hash to string for string tensor in spu
+    if (tc.scalar.tensor->Type() == pb::PrimitiveDataType::STRING) {
+      out = exec_ctxs[0].GetSession()->HashToString(*out);
+    }
   }
   ASSERT_TRUE(out);
   EXPECT_TRUE(out->ToArrowChunkedArray()->ApproxEquals(*expect_arr))

@@ -29,16 +29,39 @@ func TestSliceDeDup(t *testing.T) {
 
 func TestSubSet(t *testing.T) {
 	r := require.New(t)
-	r.True(SubSet([]string{"a", "b", "c"}, []string{"a", "b", "c"}))
-	r.True(SubSet([]string{"a", "b", "c"}, []string{"a", "c"}))
-	r.True(SubSet([]string{"a", "b", "c"}, []string{"a", "a", "c"}))
-	r.False(SubSet([]string{"a", "b", "c"}, []string{"a", "a", "c", "d"}))
-	r.False(SubSet([]string{}, []string{"a", "a", "c", "d"}))
-	r.True(SubSet([]string{"a", "b", "c"}, []string{}))
-	r.True(SubSet([]int{1, 2, 3}, []int{1, 2, 3}))
-	r.True(SubSet([]int{1, 2, 3}, []int{1, 2, 3, 3}))
-	r.False(SubSet([]int{1, 2}, []int{1, 2, 3, 3}))
-	r.False(SubSet([]int{}, []int{1, 2, 3, 3}))
-	r.True(SubSet([]int{1, 2, 3}, []int{}))
-	r.True(SubSet([]int{}, []int{}))
+	r.True(ContainsAll([]string{"a", "b", "c"}, []string{"a", "b", "c"}))
+	r.True(ContainsAll([]string{"a", "b", "c"}, []string{"a", "c"}))
+	r.True(ContainsAll([]string{"a", "b", "c"}, []string{"a", "a", "c"}))
+	r.False(ContainsAll([]string{"a", "b", "c"}, []string{"a", "a", "c", "d"}))
+	r.False(ContainsAll([]string{}, []string{"a", "a", "c", "d"}))
+	r.True(ContainsAll([]string{"a", "b", "c"}, []string{}))
+	r.True(ContainsAll([]int{1, 2, 3}, []int{1, 2, 3}))
+	r.True(ContainsAll([]int{1, 2, 3}, []int{1, 2, 3, 3}))
+	r.False(ContainsAll([]int{1, 2}, []int{1, 2, 3, 3}))
+	r.False(ContainsAll([]int{}, []int{1, 2, 3, 3}))
+	r.True(ContainsAll([]int{1, 2, 3}, []int{}))
+	r.True(ContainsAll([]int{}, []int{}))
+}
+
+func TestEqual(t *testing.T) {
+	r := require.New(t)
+	r.True(Equal([]string{"a", "b"}, []string{"a", "b"}))
+	r.True(Equal([]string{"a", "b"}, []string{"b", "a"}))
+	r.False(Equal([]string{"a", "b"}, []string{"b", "a", "c"}))
+	r.False(Equal([]string{"a", "b"}, []string{"b"}))
+	r.False(Equal([]string{"a", "b"}, []string{}))
+	r.True(Equal([]int{1, 2}, []int{2, 1}))
+	r.False(Equal([]int{1, 2}, []int{1}))
+	r.True(Equal([]string{}, []string{}))
+}
+
+func TestSubtraction(t *testing.T) {
+	r := require.New(t)
+	a := []int{1, 2, 3, 4, 5}
+	b := []int{2, 4}
+	r.Equal([]int{1, 3, 5}, Subtraction(a, b))
+
+	c := []string{"a", "b", "c"}
+	d := []string{"a", "d"}
+	r.Equal([]string{"b", "c"}, Subtraction(c, d))
 }

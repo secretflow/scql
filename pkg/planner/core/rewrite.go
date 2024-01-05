@@ -48,9 +48,9 @@ func NewDbTableFromString(dbTableName string) (DbTable, error) {
 		return DbTable{}, fmt.Errorf("NewDbTableFromString: invalid dbTableName %v", dbTableName)
 	}
 	if len(ss) == 1 {
-		return DbTable{tableName: strings.ToLower(ss[0])}, nil
+		return DbTable{tableName: ss[0]}, nil
 	}
-	return DbTable{dbName: strings.ToLower(ss[0]), tableName: strings.ToLower(ss[1])}, nil
+	return DbTable{dbName: ss[0], tableName: ss[1]}, nil
 }
 
 func (dt *DbTable) SetDBType(dbType DBType) {

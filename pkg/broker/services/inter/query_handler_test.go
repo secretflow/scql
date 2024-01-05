@@ -62,7 +62,9 @@ func (s *interTestSuite) SetupSuite() {
 func (s *interTestSuite) bootstrap(manager *storage.MetaManager) {
 	txn := manager.CreateMetaTransaction()
 	defer txn.Finish(nil)
-	s.NoError(txn.CreateProject(storage.Project{ID: "1", Name: "test project", Creator: "bob", Member: "alice;bob;carol", ProjectConf: storage.ProjectConfig{SpuConf: `{"protocol": "SEMI2K","field": "FM64"}`}}))
+	s.NoError(txn.CreateProject(storage.Project{ID: "1", Name: "test project", Creator: "bob", ProjectConf: storage.ProjectConfig{SpuConf: `{"protocol": "SEMI2K","field": "FM64"}`}}))
+	s.NoError(txn.AddProjectMembers([]storage.Member{storage.Member{ProjectID: "1", Member: "alice"}}))
+	s.NoError(txn.AddProjectMembers([]storage.Member{storage.Member{ProjectID: "1", Member: "carol"}}))
 	// mock table/ccl
 	metaA := storage.TableMeta{
 		Table: storage.Table{
@@ -151,18 +153,19 @@ func (s *interTestSuite) TestDistributeQueryErrorQuery() {
 	mockReq.Query = "select error query"
 	res, err := s.svcBob.DistributeQuery(s.ctx, mockReq)
 	s.Error(err)
-	s.Equal(err.Error(), "line 1 column 12 near \"error query\" ")
+	s.Equal(err.Error(), "Error: code=300, msg=\"line 1 column 12 near \"error query\" \"")
 	s.Nil(res)
 	// duplicated job id
 	res, err = s.svcBob.DistributeQuery(s.ctx, mockReq)
 	s.Error(err)
-	s.Equal(err.Error(), "DistributeQuery: duplicated job id: 1")
+	s.Equal(err.Error(), "Error: code=300, msg=\"DistributeQuery: duplicated job id 1\"")
 	s.Nil(res)
 	// table not found
 	mockReq.Query = "select xxx from table_not_found"
 	mockReq.JobId = "2"
 	res, err = s.svcBob.DistributeQuery(s.ctx, mockReq)
-	s.NoError(err)
+	s.Error(err)
+	s.Equal(err.Error(), "Error: code=300, msg=\"table table_not_found not found\"")
 }
 
 func (s *interTestSuite) TestDistributeQueryChecksumNotEqual2P() {
@@ -205,7 +208,7 @@ func (s *interTestSuite) TestDistributeQueryChecksumNotEqual2P() {
 	// server checksum not equal
 	res, err := s.svcBob.DistributeQuery(s.ctx, mockReq)
 	s.NoError(err)
-	s.Equal(res.Status.Code, int32(scql.Code_CHECKSUM_CHECK_FAILED))
+	s.Equal(res.Status.Code, int32(scql.Code_DATA_INCONSISTENCY))
 	s.Equal(res.ServerChecksumResult, scql.ChecksumCompareResult_TABLE_CCL_NOT_EQUAL)
 	// make sure AskInfo has been triggered
 	select {
@@ -251,7 +254,7 @@ func (s *interTestSuite) TestDistributeQueryServerChecksumEqual2P() {
 	}
 	res, err := s.svcBob.DistributeQuery(s.ctx, mockReq)
 	s.NoError(err)
-	s.Equal(res.Status.Code, int32(scql.Code_CHECKSUM_CHECK_FAILED))
+	s.Equal(res.Status.Code, int32(scql.Code_DATA_INCONSISTENCY))
 	select {
 	case <-chEngine:
 	case <-time.After(100 * time.Millisecond):
@@ -413,7 +416,7 @@ func (s *interTestSuite) TestDistributeQueryOtherPartyChecksumNotEqual3P() {
 			s.NoError(err)
 			// mock error to trigger ask info
 			resp.ServerChecksumResult = scql.ChecksumCompareResult_CCL_NOT_EQUAL
-			resp.Status.Code = int32(scql.Code_CHECKSUM_CHECK_FAILED)
+			resp.Status.Code = int32(scql.Code_DATA_INCONSISTENCY)
 			body, _ := message.SerializeTo(resp, inputEncodingType)
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(body))

@@ -16,12 +16,15 @@ package common
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
+	"unicode"
 
 	"golang.org/x/exp/slices"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -32,6 +35,8 @@ import (
 	"github.com/secretflow/scql/pkg/parser"
 	"github.com/secretflow/scql/pkg/planner/core"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/status"
+	"github.com/secretflow/scql/pkg/util/logutil"
 	"github.com/secretflow/scql/pkg/util/message"
 )
 
@@ -47,6 +52,7 @@ func PostSyncInfo(app *application.App, projectID string, action pb.ChangeEntry_
 
 	retCh := make(chan error, len(targetParties))
 	for _, p := range targetParties {
+		logrus.Infof("PostSyncInfo: sync info to party %s, sync type %s", p, action.String())
 		go func(p string) {
 			syncReq := &pb.SyncInfoRequest{
 				ClientId: &pb.PartyId{
@@ -85,10 +91,7 @@ func PostSyncInfo(app *application.App, projectID string, action pb.ChangeEntry_
 	}
 
 	for i := 0; i < len(targetParties); i++ {
-		ret := <-retCh
-		if ret != nil {
-			err = fmt.Errorf("%v,{%v}", err, ret)
-		}
+		err = errors.Join(err, <-retCh)
 	}
 
 	return
@@ -112,7 +115,7 @@ func askInfoAndUpdateStorage(session *application.Session, resources []*pb.Resou
 	}
 	txn := session.MetaMgr.CreateMetaTransaction()
 	defer func() {
-		txn.Finish(err)
+		err = txn.Finish(err)
 	}()
 	for i, resource := range resources {
 		err = updateStorageFor(txn, resource, resp.Datas[i], targetParty)
@@ -197,6 +200,7 @@ func createResourcesFrom(checksumResult pb.ChecksumCompareResult, tables []core.
 func AskInfoByChecksumResult(session *application.Session, compRes pb.ChecksumCompareResult, tables []core.DbTable, targetParty string) (askInfoTriggerd bool, err error) {
 	resources := createResourcesFrom(compRes, tables, session.ExecuteInfo.ProjectID, session.ExecuteInfo.WorkParties)
 	if len(resources) != 0 {
+		logrus.Infof("ask info from party %s for resources %+v in project %s", targetParty, resources, session.ExecuteInfo.ProjectID)
 		askInfoTriggerd = true
 		err = askInfoAndUpdateStorage(session, resources, targetParty)
 		if err != nil {
@@ -219,6 +223,13 @@ func VerifyTableMeta(meta storage.TableMeta) error {
 		}
 	}
 	// 3. check table/column name
+	if hasSpaceInString(meta.Table.ProjectID) {
+		return fmt.Errorf("VerifyTableMeta: illegal project id %s which contains space", meta.Table.ProjectID)
+	}
+	if hasSpaceInString(meta.Table.TableName) {
+		return fmt.Errorf("VerifyTableMeta: illegal table name %s which contains space", meta.Table.TableName)
+	}
+
 	createFormat := `
 	create table %s.%s (
 		%s
@@ -226,6 +237,9 @@ func VerifyTableMeta(meta storage.TableMeta) error {
 	`
 	columnStr := ""
 	for i := 0; i < len(meta.Columns); i++ {
+		if hasSpaceInString(meta.Columns[i].ColumnName) {
+			return fmt.Errorf("VerifyTableMeta: illegal column name %s which contains space", meta.Columns[i].ColumnName)
+		}
 		columnStr += fmt.Sprintf("%s int", meta.Columns[i].ColumnName)
 		if i < len(meta.Columns)-1 {
 			columnStr += ",\n"
@@ -245,6 +259,9 @@ func VerifyTableMeta(meta storage.TableMeta) error {
 }
 
 func VerifyProjectID(projectID string) error {
+	if hasSpaceInString(projectID) {
+		return fmt.Errorf("VerifyProjectID: illegal project id %s which contains space", projectID)
+	}
 	p := parser.New()
 	// project id may work as db name
 	_, err := p.ParseOneStmt(fmt.Sprintf("create database %s;", projectID), "", "")
@@ -254,11 +271,72 @@ func VerifyProjectID(projectID string) error {
 	return nil
 }
 
-func FeedResponse(c *gin.Context, response proto.Message, encodingType message.ContentEncodingType) {
+func hasSpaceInString(s string) bool {
+	for _, c := range s {
+		if unicode.IsSpace(c) {
+			return true
+		}
+	}
+	return false
+}
+
+func feedResponseStatus(response proto.Message, err error) {
+	if err != nil {
+		var statusPointer *status.Status
+		if !errors.As(err, &statusPointer) {
+			statusPointer = status.New(pb.Code_INTERNAL, err.Error())
+		}
+		statusDesc := response.ProtoReflect().Descriptor().Fields().ByJSONName("status")
+		response.ProtoReflect().Set(statusDesc, protoreflect.ValueOf(statusPointer.ToProto().ProtoReflect()))
+	}
+}
+
+func FeedResponse(c *gin.Context, response proto.Message, err error, encodingType message.ContentEncodingType) {
+	feedResponseStatus(response, err)
 	body, err := message.SerializeTo(response, encodingType)
 	if err != nil {
 		c.String(http.StatusInternalServerError, fmt.Sprintf("FeedResponse: unable to serialize response: %+v", response))
 		return
 	}
 	c.String(http.StatusOK, body)
+}
+
+func LogWithError(logEntry *logutil.BrokerMonitorLogEntry, err error) {
+	if err != nil {
+		logEntry.ErrorMsg = err.Error()
+		logrus.Errorf("%v", logEntry)
+	} else {
+		logrus.Infof("%v", logEntry)
+	}
+}
+
+// Check Archived/ProjectConf/Creator
+func CheckInvitationCompatibleWithProj(invitation storage.Invitation, proj storage.Project) error {
+	if proj.Archived {
+		return fmt.Errorf("failed to reply invitation due to project %s archived", proj.ID)
+	}
+	if proj.ProjectConf != invitation.ProjectConf {
+		return fmt.Errorf("failed to check project config got %+v from project but expected %+v", proj.ProjectConf, invitation.ProjectConf)
+	}
+	if proj.Creator != invitation.Creator {
+		return fmt.Errorf("failed to check creator got %q from project but expected %q", proj.Creator, invitation.Creator)
+	}
+	return nil
+}
+
+// check project exist and current party is member
+func CheckMemberExistInProject(manager *storage.MetaManager, projectID string, member string) error {
+	return manager.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
+		members, err := txn.GetProjectMembers(projectID)
+		if err != nil {
+			return err
+		}
+		if len(members) == 0 {
+			return fmt.Errorf("CheckMemberExistInProject: project %s has no members or project doesn't exist", projectID)
+		}
+		if !slices.Contains(members, member) {
+			return fmt.Errorf("CheckMemberExistInProject: issuer code %s is not member of project %s", member, projectID)
+		}
+		return nil
+	})
 }

@@ -42,11 +42,28 @@ func SortMapKeyForDeterminism[k constraints.Ordered, v any](m map[k]v) []k {
 	return keys
 }
 
-func SubSet[S ~[]E, E comparable](s S, sub S) bool {
+// Contains reports whether all elements in sub are present in super.
+func ContainsAll[S ~[]E, E comparable](super S, sub S) bool {
 	for _, element := range sub {
-		if !slices.Contains(s, element) {
+		if !slices.Contains(super, element) {
 			return false
 		}
 	}
 	return true
+}
+
+func Subtraction[S ~[]E, E comparable](a S, b S) S {
+	var result []E
+	for _, element := range a {
+		if !slices.Contains(b, element) {
+			result = append(result, element)
+		}
+	}
+	return result
+}
+
+func Equal[S ~[]E, E constraints.Ordered](left S, right S) bool {
+	sortSlice(left)
+	sortSlice(right)
+	return slices.Equal(left, right)
 }

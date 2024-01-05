@@ -15,6 +15,7 @@
 package storage
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -49,21 +50,26 @@ func TestBootstrap(t *testing.T) {
 	projectConf := ProjectConfig{SpuConf: "I'm a conf"}
 	alice := "alice"
 	// create project
-	err = transaction.CreateProject(Project{ID: projectID1, Name: projectName1, ProjectConf: projectConf, Creator: alice, Member: alice})
+	err = transaction.CreateProject(Project{ID: projectID1, Name: projectName1, ProjectConf: projectConf, Creator: alice})
 	r.NoError(err)
 	// create duplicated project
-	err = transaction.CreateProject(Project{ID: projectID1, Name: projectName1, ProjectConf: projectConf, Creator: alice, Member: alice})
+	err = transaction.CreateProject(Project{ID: projectID1, Name: projectName1, ProjectConf: projectConf, Creator: alice})
 	r.Error(err)
+	// test case sensitive
+	proj, err := transaction.GetProject("P1")
+	r.Error(err)
+	proj, err = transaction.GetProject("p1")
+	r.NoError(err)
 	// disturbance terms
 	unusedProjectName := "seems_wrong"
-	err = transaction.CreateProject(Project{ID: unusedProjectName, Name: "wrong_n1", ProjectConf: projectConf, Creator: alice, Member: alice})
+	err = transaction.CreateProject(Project{ID: unusedProjectName, Name: "wrong_n1", ProjectConf: projectConf, Creator: alice})
 	r.NoError(err)
 
 	projs, err := transaction.ListProjects([]string{})
 	r.NoError(err)
 	r.Equal(len(projs), 2)
-	r.Equal(projs[0].ID, projectID1)
-	r.Equal(projs[1].ID, unusedProjectName)
+	r.Equal(projs[0].Proj.ID, projectID1)
+	r.Equal(projs[1].Proj.ID, unusedProjectName)
 
 	tableName := "t1"
 	t1Identifier := TableIdentifier{ProjectID: projectID1, TableName: tableName}
@@ -90,9 +96,6 @@ func TestBootstrap(t *testing.T) {
 	}
 	err = transaction.AddTable(unusedTables)
 	r.NoError(err)
-	// create duplicated table is allowed in storage, but not allowed through IntraServer
-	err = transaction.AddTable(tableMeta)
-	r.NoError(err)
 	// create duplicated table with different owner is not allowed
 	tableMeta.Table.Owner = "different owner"
 	err = transaction.AddTable(tableMeta)
@@ -108,20 +111,17 @@ func TestBootstrap(t *testing.T) {
 	r.NoError(err)
 	r.Equal(1, len(res))
 	r.Equal(2, len(res[0].Columns))
-	res, err = transaction.GetTablesByTableNames(projectID1, []string{"t1"})
+	res, err = transaction.GetTableMetasByTableNames(projectID1, []string{"t1"})
 	r.NoError(err)
 	r.Equal(1, len(res))
-
-	owners, err := transaction.ListDedupTableOwners([]string{tableName})
-	r.NoError(err)
-	r.Equal([]string{alice}, owners)
 
 	// update project
 	newProjectConf := ProjectConfig{SpuConf: "I'm a new conf"}
 	err = transaction.UpdateProject(Project{ID: projectID1, ProjectConf: newProjectConf})
 	r.NoError(err)
-	proj, err := transaction.GetProject(projectID1)
+	projWithMembers, err := transaction.GetProjectAndMembers(projectID1)
 	r.NoError(err)
+	proj = projWithMembers.Proj
 	r.Equal(newProjectConf, proj.ProjectConf)
 	// alter table
 	bob := "bob"
@@ -138,7 +138,7 @@ func TestBootstrap(t *testing.T) {
 	inviteBob := Invitation{
 		ProjectID:   projectID1,
 		ProjectConf: projectConf,
-		Member:      proj.Member,
+		Member:      strings.Join(projWithMembers.Members, ";"),
 		InviteTime:  time.Now(),
 		Inviter:     alice,
 		Invitee:     bob,
@@ -150,7 +150,7 @@ func TestBootstrap(t *testing.T) {
 	inviteCarol := Invitation{
 		ProjectID:   projectID1,
 		ProjectConf: projectConf,
-		Member:      proj.Member,
+		Member:      strings.Join(projWithMembers.Members, ";"),
 		InviteTime:  time.Now(),
 		Inviter:     alice,
 		Invitee:     carol,
@@ -161,7 +161,7 @@ func TestBootstrap(t *testing.T) {
 	inviteAnotherCarol := Invitation{
 		ProjectID:   unusedProjectName,
 		ProjectConf: projectConf,
-		Member:      proj.Member,
+		Member:      strings.Join(projWithMembers.Members, ";"),
 		InviteTime:  time.Now(),
 		Inviter:     alice,
 		Invitee:     carol,
@@ -169,31 +169,15 @@ func TestBootstrap(t *testing.T) {
 	inviteAnotherBob := Invitation{
 		ProjectID:   unusedProjectName,
 		ProjectConf: projectConf,
-		Member:      proj.Member,
+		Member:      strings.Join(projWithMembers.Members, ";"),
 		InviteTime:  time.Now(),
 		Inviter:     alice,
 		Invitee:     bob,
 	}
 	err = transaction.AddInvitations([]Invitation{inviteAnotherBob, inviteAnotherCarol})
 	r.NoError(err)
-	updateCarol := Invitation{
-		ProjectID:   projectID1,
-		ProjectConf: projectConf,
-		Member:      proj.Member,
-		Inviter:     alice,
-		Invitee:     carol,
-		Accepted:    1,
-	}
-	err = transaction.UpdateInvitation(updateCarol)
-	r.NoError(err)
 	invites, err := transaction.ListInvitations()
 	r.Equal(4, len(invites))
-
-	for _, v := range invites {
-		if v.Invitee == carol && v.ProjectID == projectID1 {
-			r.Equal(int8(1), v.Accepted)
-		}
-	}
 	// grant
 	privs := []ColumnPriv{
 		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: c1Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: c1Identifier.ColumnName, DestParty: alice}, Priv: "plain"},
@@ -201,7 +185,7 @@ func TestBootstrap(t *testing.T) {
 		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: alice}, Priv: "plain"},
 		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: bob}, Priv: "encrypt"},
 	}
-	err = transaction.AddProjectMember(c1Identifier.ProjectID, bob)
+	err = transaction.AddProjectMembers([]Member{Member{ProjectID: c1Identifier.ProjectID, Member: bob}})
 	r.NoError(err)
 	// project member [alice], but grant to [alice, bob]
 	err = transaction.GrantColumnConstraints(privs)
@@ -233,7 +217,7 @@ func TestBootstrap(t *testing.T) {
 		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: c1Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: c1Identifier.ColumnName, DestParty: carol}, Priv: "plain"},
 		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: carol}, Priv: "encrypt"},
 	}
-	err = transaction.AddProjectMember(c1Identifier.ProjectID, carol)
+	err = transaction.AddProjectMembers([]Member{Member{ProjectID: c1Identifier.ProjectID, Member: carol}})
 	r.NoError(err)
 	err = transaction.GrantColumnConstraints(privs)
 	r.NoError(err)

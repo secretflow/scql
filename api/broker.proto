@@ -22,6 +22,8 @@ option go_package = "proto-gen/scql";
 import "api/common.proto";
 import "api/status.proto";
 import "api/core.proto";
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
 import "libspu/spu.proto";
 
 // IntraBrokerService only accepts requests from within the domain.
@@ -31,79 +33,169 @@ service IntraBrokerService {
 
   // Run Query synchronously and return query result if the query completes
   // within a specified timeout
-  rpc DoQuery(QueryRequest) returns (QueryResponse);
+  rpc DoQuery(QueryRequest) returns (QueryResponse) {
+    option (google.api.http) = {
+      post: "/intra/query"
+      body: "*"
+    };
+  }
 
   // Run Query asynchronously
-  rpc SubmitQuery(QueryRequest) returns (SubmitResponse);
+  rpc SubmitQuery(QueryRequest) returns (SubmitResponse) {
+    option (google.api.http) = {
+      post: "/intra/query/submit"
+      body: "*"
+    };
+  }
   // Fetch query result of asynchronous query
-  rpc FetchResult(FetchResultRequest) returns (QueryResponse);
+  rpc FetchResult(FetchResultRequest) returns (QueryResponse) {
+    option (google.api.http) = {
+      post: "/intra/query/fetch"
+      body: "*"
+    };
+  }
 
   // ===== Admin APIs =====
 
   // Project Related API
 
-  rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse);
+  // Create a new Project and automatically become the Project member and
+  // creator
+  rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse) {
+    option (google.api.http) = {
+      post: "/intra/project/create"
+      body: "*"
+    };
+  }
   rpc UpdateProject(UpdateProjectRequest) returns (UpdateProjectResponse);
   // List All Projects that have created and joined
-  rpc ListProjects(ListProjectsRequest) returns (ListProjectsResponse);
+  rpc ListProjects(ListProjectsRequest) returns (ListProjectsResponse) {
+    option (google.api.http) = {
+      post: "/intra/project/list"
+      body: "*"
+    };
+  }
   rpc ArchiveProject(ArchiveProjectRequest) returns (ArchiveProjectResponse);
 
-  rpc InviteMember(InviteMemberRequest) returns (InviteMemberResponse);
-  // List all unprocessed invitation
-  rpc ListInvitations(ListInvitationsRequest) returns (ListInvitationsResponse);
+  // Invite another member to join the Project you created
+  rpc InviteMember(InviteMemberRequest) returns (InviteMemberResponse) {
+    option (google.api.http) = {
+      post: "/intra/member/invite"
+      body: "*"
+    };
+  }
+  // List all invitations sent and received
+  rpc ListInvitations(ListInvitationsRequest)
+      returns (ListInvitationsResponse) {
+    option (google.api.http) = {
+      post: "/intra/invitation/list"
+      body: "*"
+    };
+  }
+  // Process the received invitation, specify it by invitation_id, choose to
+  // join the corresponding project or reject it
   rpc ProcessInvitation(ProcessInvitationRequest)
-      returns (ProcessInvitationResponse);
+      returns (ProcessInvitationResponse) {
+    option (google.api.http) = {
+      post: "/intra/invitation/process"
+      body: "*"
+    };
+  }
 
   // Table related API
-  rpc CreateTable(CreateTableRequest) returns (CreateTableResponse);
-  // List all tables in specified project
-  rpc ListTables(ListTablesRequest) returns (ListTablesResponse);
-  rpc DropTable(DropTableRequest) returns (DropTableResponse);
+
+  // Create a Table you owned in specified Project
+  rpc CreateTable(CreateTableRequest) returns (CreateTableResponse) {
+    option (google.api.http) = {
+      post: "/intra/table/create"
+      body: "*"
+    };
+  }
+  // List all Tables in specified Project
+  rpc ListTables(ListTablesRequest) returns (ListTablesResponse) {
+    option (google.api.http) = {
+      post: "/intra/table/list"
+      body: "*"
+    };
+  }
+  // Drop a Table you owned in specified Project, the relevant CCLs will be
+  // automatically cleared
+  rpc DropTable(DropTableRequest) returns (DropTableResponse) {
+    option (google.api.http) = {
+      post: "/intra/table/drop"
+      body: "*"
+    };
+  }
 
   // CCL related
-  rpc GrantCCL(GrantCCLRequest) returns (GrantCCLResponse);
-  rpc RevokeCCL(RevokeCCLRequest) returns (RevokeCCLResponse);
-  rpc ShowCCL(ShowCCLRequest) returns (ShowCCLResponse);
+
+  // Grant CCLs of your Table to a specific member
+  rpc GrantCCL(GrantCCLRequest) returns (GrantCCLResponse) {
+    option (google.api.http) = {
+      post: "/intra/ccl/grant"
+      body: "*"
+    };
+  }
+  // Revoke the CCLs you have granted to the specified member
+  rpc RevokeCCL(RevokeCCLRequest) returns (RevokeCCLResponse) {
+    option (google.api.http) = {
+      post: "/intra/ccl/revoke"
+      body: "*"
+    };
+  }
+  // Show CCLs in specified Project, supports specifying Tables, members
+  rpc ShowCCL(ShowCCLRequest) returns (ShowCCLResponse) {
+    option (google.api.http) = {
+      post: "/intra/ccl/show"
+      body: "*"
+    };
+  }
 }
 
 message QueryRequest {
   RequestHeader header = 1;
-  // project id
-  string project_id = 2;
-  string query = 3;
+  // The ID of the Project in which to run the query
+  string project_id = 2 [(google.api.field_behavior) = REQUIRED];
+  // SCQL query to be run
+  string query = 3 [(google.api.field_behavior) = REQUIRED];
 }
 
 message QueryResponse {
   Status status = 1;
-  // valid while DQL is a select-into statement
+  // Valid while DQL is a select-into statement
   int64 affected_rows = 2;
   repeated SQLWarning warnings = 3;
   double cost_time_s = 4;
-  // Output columns
+  // Output columns are used to store the result datas
   repeated Tensor out_columns = 1000;
 }
 
 message SubmitResponse {
   Status status = 1;
+  // The unique identifier of the query job, used to obtain the job result
+  // later.
   string job_id = 2;
 }
 
 message FetchResultRequest {
-  string job_id = 1;
+  // The unique identifier of the query job, obtained when SubmitQuery is called
+  string job_id = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
 message CreateProjectRequest {
-  // project id, if empty, broker will generate unique project id
+  // The unique identifier of the Project, if empty, broker will generate unique
+  // project id
   string project_id = 1;
-  // project name, human readable
+  // Project name, human readable
   string name = 2;
   string description = 3;
-  ProjectConfig conf = 4;
+  // Runtime conf for Project
+  ProjectConfig conf = 4 [(google.api.field_behavior) = REQUIRED];
 };
 
 message CreateProjectResponse {
   Status status = 1;
-  // if project id is empty in request, broker will generate one and return it
+  // If Project id is empty in request, broker will generate one and return it
   // in response.
   string project_id = 2;
 };
@@ -120,6 +212,7 @@ message UpdateProjectResponse {
 }
 
 message ListProjectsRequest {
+  // The ids of Projects to be listed, if empty, all Projects will be listed
   repeated string ids = 1;
 }
 
@@ -133,7 +226,7 @@ message ProjectDesc {
   string name = 2;
   string description = 3;
   ProjectConfig conf = 4;
-  // creator of the project
+  // Creator of the Project
   string creator = 5;
   repeated string members = 6;
 }
@@ -152,9 +245,24 @@ message ListInvitationsResponse {
   repeated ProjectInvitation invitations = 2;
 }
 
+enum InvitationRespond {
+  ACCEPT = 0;
+  DECLINE = 1;
+}
+
+enum InvitationStatus {
+  UNDECIDED = 0;
+  ACCEPTED = 1;
+  DECLINED = 2;
+  INVALID = 3;
+}
+
 message ProcessInvitationRequest {
-  uint64 invitation_id = 1;
-  InvitationRespond respond = 2;
+  // The id used to specify the Invitation, corresponding to the result of
+  // ListInvitation
+  uint64 invitation_id = 1 [(google.api.field_behavior) = REQUIRED];
+  // Choose to accept or decline the Invitation
+  InvitationRespond respond = 2 [(google.api.field_behavior) = REQUIRED];
   string respond_comment = 3;
 }
 message ProcessInvitationResponse {
@@ -165,24 +273,30 @@ message ProjectInvitation {
   uint64 invitation_id = 1;
   ProjectDesc project = 2;
   string inviter = 3;
-  string postscript = 4;
-  int32 accepted = 5;
+  string invitee = 4;
+  string postscript = 5;
+  InvitationStatus status = 6;
 }
 
-// import physical table `ref_table` in project `project_id` as `table_name`
-// Question:
-// define db_typ and column dtype in enum?
+// Import physical table `ref_table` in Project `project_id` as `table_name`
+// (-- Question: define db_typ and column dtype in enum? --)
 message CreateTableRequest {
-  string project_id = 1;
-  string table_name = 2;
-  string ref_table = 3;
-  // db_type of ref_table, maybe 'MySQL/Postgres/csvdb/...'
+  // Project id
+  string project_id = 1 [(google.api.field_behavior) = REQUIRED];
+  // Table name
+  string table_name = 2 [(google.api.field_behavior) = REQUIRED];
+  // The refered physical table
+  string ref_table = 3 [(google.api.field_behavior) = REQUIRED];
+  // The db_type of ref_table, maybe 'MySQL/Postgres/csvdb/...'
   string db_type = 4;
   message ColumnDesc {
+    // Column name
     string name = 1;
+    // Column data type, maybe 'long/float/string/timestamp/datetime/...'
     string dtype = 2;
   }
-  repeated ColumnDesc columns = 5;
+  // Columns choosed to refer from physical table
+  repeated ColumnDesc columns = 5 [(google.api.field_behavior) = REQUIRED];
 }
 
 message CreateTableResponse {
@@ -190,7 +304,9 @@ message CreateTableResponse {
 }
 
 message ListTablesRequest {
-  string project_id = 1;
+  // Project id
+  string project_id = 1 [(google.api.field_behavior) = REQUIRED];
+  // The names of Tables to be listed, if empty, all Tables will be listed
   repeated string names = 2;
 }
 
@@ -200,24 +316,32 @@ message ListTablesResponse {
 }
 
 message DropTableRequest {
-  string project_id = 1;
-  string table_name = 2;
+  // Project id
+  string project_id = 1 [(google.api.field_behavior) = REQUIRED];
+  // The name of Table to be droped
+  string table_name = 2 [(google.api.field_behavior) = REQUIRED];
 }
 message DropTableResponse {
   Status status = 1;
 }
 
 message GrantCCLRequest {
-  string project_id = 1;
-  repeated ColumnControl column_control_list = 2;
+  // Project id
+  string project_id = 1 [(google.api.field_behavior) = REQUIRED];
+  // CCLs
+  repeated ColumnControl column_control_list = 2
+      [(google.api.field_behavior) = REQUIRED];
 }
 message GrantCCLResponse {
   Status status = 1;
 }
 
 message RevokeCCLRequest {
-  string project_id = 1;
-  repeated ColumnControl column_control_list = 2;
+  // Project id
+  string project_id = 1 [(google.api.field_behavior) = REQUIRED];
+  // CCLs
+  repeated ColumnControl column_control_list = 2
+      [(google.api.field_behavior) = REQUIRED];
 }
 
 message RevokeCCLResponse {
@@ -225,16 +349,18 @@ message RevokeCCLResponse {
 }
 
 message ShowCCLRequest {
-  string project_id = 1;
-  // if tables is empty, it will show all tables in the project
+  // Project id
+  string project_id = 1 [(google.api.field_behavior) = REQUIRED];
+  // If tables is empty, it will show all Tables in the Project
   repeated string tables = 2;
-  // if dest_parties is empty, it will show all members in the project.
+  // If dest_parties is empty, it will show all members in the Project.
   // dest_party value could be `self`, or `others`, or some specific name.
   repeated string dest_parties = 3;
 }
 
 message ShowCCLResponse {
   Status status = 1;
+  // CCLs
   repeated ColumnControl column_control_list = 2;
 }
 
@@ -244,10 +370,10 @@ message ProjectConfig {
 }
 
 message InviteMemberRequest {
-  // project id
-  string project_id = 1;
-  // party code of invitee
-  string invitee = 2;
+  // Project id
+  string project_id = 1 [(google.api.field_behavior) = REQUIRED];
+  // Party code of invitee
+  string invitee = 2 [(google.api.field_behavior) = REQUIRED];
   string postscript = 3;
   enum InvitationMethod {
     // push invitation request to invitee's broker
@@ -262,7 +388,7 @@ message InviteMemberRequest {
 
 message InviteMemberResponse {
   Status status = 1;
-  // valid only when using PULL invitation method.
+  // Valid only when using PULL invitation method.
   // Format looks like URL parameters
   string invitation_code = 2;
 }
@@ -338,11 +464,6 @@ message InviteToProjectRequest {
 
 message InviteToProjectResponse {
   Status status = 1;
-}
-
-enum InvitationRespond {
-  ACCEPT = 0;
-  DECLINE = 1;
 }
 
 message ReplyInvitationRequest {

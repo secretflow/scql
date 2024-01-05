@@ -431,7 +431,7 @@ var strTypeUnsupportedOpM = map[string]bool{
 
 func checkBinaryOpInputType(opType string, left, right *Tensor) error {
 	// for datetime: left type maybe datetime or timestamp, right type maybe int64
-	if (opType == "IntDiv" || opType == "Mod") &&
+	if (opType == operator.OpNameIntDiv || opType == operator.OpNameMod) &&
 		((left.DType != proto.PrimitiveDataType_INT64 && left.DType != proto.PrimitiveDataType_DATETIME && left.DType != proto.PrimitiveDataType_TIMESTAMP) ||
 			(right.DType != proto.PrimitiveDataType_INT64)) {
 		return status.Wrap(proto.Code_NOT_SUPPORTED, fmt.Errorf("op %v requires both left and right operands be int64", opType))
@@ -1064,6 +1064,8 @@ func (plan *GraphBuilder) AddGroupAggNode(name string, opType string, groupId, g
 			} else {
 				output.DType = proto.PrimitiveDataType_INT64
 			}
+		} else if opType == operator.OpNameGroupCount || opType == operator.OpNameGroupCountDistinct {
+			output.DType = proto.PrimitiveDataType_INT64
 		}
 		outputs = append(outputs, output)
 	}

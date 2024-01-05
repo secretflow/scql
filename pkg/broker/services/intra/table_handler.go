@@ -16,35 +16,39 @@ package intra
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/secretflow/scql/pkg/broker/services/common"
 	"github.com/secretflow/scql/pkg/broker/storage"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/status"
 )
 
 func (svc *grpcIntraSvc) CreateTable(c context.Context, req *pb.CreateTableRequest) (resp *pb.CreateTableResponse, err error) {
 	if req == nil || req.GetProjectId() == "" || req.GetTableName() == "" || req.GetRefTable() == "" {
-		return nil, errors.New("CreateTable: illegal request")
+		return nil, status.New(pb.Code_BAD_REQUEST, "CreateTable: illegal request")
 	}
 
 	app := svc.app
 	txn := app.MetaMgr.CreateMetaTransaction()
 	defer func() {
-		txn.Finish(err)
+		err = txn.Finish(err)
+		if err != nil {
+			err = status.New(pb.Code_INTERNAL, err.Error())
+		}
 	}()
 
-	var proj storage.Project
-	proj, err = txn.GetProject(req.GetProjectId())
+	members, err := txn.GetProjectMembers(req.GetProjectId())
 	if err != nil {
 		return nil, fmt.Errorf("CreateTable: get project %v err: %v", req.GetProjectId(), err)
 	}
+	exist, tmpErr := txn.CheckTablesExist(req.GetProjectId(), []string{req.GetTableName()})
+	if tmpErr != nil {
+		return nil, fmt.Errorf("CreateTable: %s", tmpErr.Error())
+	}
 
-	tables, tmpErr := txn.GetTablesByTableNames(req.GetProjectId(), []string{req.GetTableName()})
-	if tmpErr == nil && len(tables) > 0 {
-		return nil, fmt.Errorf("CreateTable: already exist table with same name: %+v", tables)
+	if exist {
+		return nil, fmt.Errorf("CreateTable: table %v already exists", req.GetTableName())
 	}
 
 	var columns []storage.ColumnMeta
@@ -76,12 +80,11 @@ func (svc *grpcIntraSvc) CreateTable(c context.Context, req *pb.CreateTableReque
 
 	// Sync Info to other parties
 	var targetParties []string
-	for _, p := range strings.Split(proj.Member, ";") {
+	for _, p := range members {
 		if p != app.Conf.PartyCode {
 			targetParties = append(targetParties, p)
 		}
 	}
-
 	err = common.PostSyncInfo(svc.app, req.GetProjectId(), pb.ChangeEntry_CreateTable, tableMeta, targetParties)
 	if err != nil {
 		// NOTICE: if sync failed, rollback operations are performed to prevent parties from creating tables with the same name at the same time:
@@ -107,16 +110,22 @@ func (svc *grpcIntraSvc) CreateTable(c context.Context, req *pb.CreateTableReque
 
 func (svc *grpcIntraSvc) ListTables(ctx context.Context, req *pb.ListTablesRequest) (resp *pb.ListTablesResponse, err error) {
 	if req == nil || req.GetProjectId() == "" {
-		return nil, errors.New("ListTables: illegal request")
+		return nil, status.New(pb.Code_BAD_REQUEST, "ListTables: illegal request")
 	}
 
 	app := svc.app
 	txn := app.MetaMgr.CreateMetaTransaction()
 	defer func() {
-		txn.Finish(err)
+		err = txn.Finish(err)
+		if err != nil {
+			err = status.New(pb.Code_INTERNAL, err.Error())
+		}
 	}()
-
-	tables, err := txn.GetTablesByTableNames(req.GetProjectId(), req.GetNames())
+	_, err = txn.GetProject(req.GetProjectId())
+	if err != nil {
+		return nil, fmt.Errorf("ListTables: GetProject err: %v", err)
+	}
+	tables, err := txn.GetTableMetasByTableNames(req.GetProjectId(), req.GetNames())
 	if err != nil {
 		return nil, fmt.Errorf("ListTables: %v", err)
 	}
@@ -150,45 +159,42 @@ func (svc *grpcIntraSvc) ListTables(ctx context.Context, req *pb.ListTablesReque
 
 func (svc *grpcIntraSvc) DropTable(c context.Context, req *pb.DropTableRequest) (resp *pb.DropTableResponse, err error) {
 	if req == nil || req.GetProjectId() == "" || req.GetTableName() == "" {
-		return nil, errors.New("DropTable: illegal request")
+		return nil, status.New(pb.Code_BAD_REQUEST, "DropTable: illegal request")
 	}
 
 	app := svc.app
 	txn := app.MetaMgr.CreateMetaTransaction()
 	defer func() {
-		txn.Finish(err)
+		err = txn.Finish(err)
+		if err != nil {
+			err = status.New(pb.Code_INTERNAL, err.Error())
+		}
 	}()
-
-	tableMetas, err := txn.GetTablesByTableNames(req.GetProjectId(), []string{req.GetTableName()})
-	if err != nil || len(tableMetas) != 1 {
-		return nil, fmt.Errorf("DropTable: get table err: %v", err)
-	}
-	if tableMetas[0].Table.Owner != app.Conf.PartyCode {
-		return nil, fmt.Errorf("DropTable: cannot drop table without ownership")
-	}
 
 	tableId := storage.TableIdentifier{
 		ProjectID: req.GetProjectId(),
 		TableName: req.GetTableName(),
 	}
-	_, err = common.DropTableWithCheck(txn, req.GetProjectId(), app.Conf.PartyCode, tableId)
+	exist, err := common.DropTableWithCheck(txn, req.GetProjectId(), app.Conf.PartyCode, tableId)
 	if err != nil {
 		return nil, fmt.Errorf("DropTable: DropTableWithCheck err %v", err)
 	}
-
+	if !exist {
+		return nil, fmt.Errorf("DropTable: table %s not found", tableId.TableName)
+	}
 	// Sync to other parties
-	proj, err := txn.GetProject(req.GetProjectId())
+	members, err := txn.GetProjectMembers(req.GetProjectId())
 	if err != nil {
 		return nil, fmt.Errorf("DropTable: GetProject: %v", err)
 	}
 	go func() {
 		var targetParties []string
-		for _, p := range strings.Split(proj.Member, ";") {
+		for _, p := range members {
 			if p != app.Conf.PartyCode {
 				targetParties = append(targetParties, p)
 			}
 		}
-		common.PostSyncInfo(svc.app, req.GetProjectId(), pb.ChangeEntry_DropTable, tableId, targetParties)
+		common.PostSyncInfo(svc.app, req.GetProjectId(), pb.ChangeEntry_DropTable, tableId, members)
 	}()
 
 	return &pb.DropTableResponse{

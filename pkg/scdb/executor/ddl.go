@@ -30,6 +30,7 @@ import (
 	"github.com/secretflow/scql/pkg/planner/core"
 	"github.com/secretflow/scql/pkg/scdb/storage"
 	"github.com/secretflow/scql/pkg/util/chunk"
+	"github.com/secretflow/scql/pkg/util/sliceutil"
 	"github.com/secretflow/scql/pkg/util/transaction"
 )
 
@@ -134,7 +135,7 @@ func (e *DDLExec) executeCreateTable(s *ast.CreateTableStmt) (err error) {
 		}
 	}()
 
-	dbName := s.Table.Schema.L
+	dbName := s.Table.Schema.O
 	if dbName == "" {
 		if e.ctx.GetSessionVars().CurrentDB == "" {
 			return fmt.Errorf("no database selected")
@@ -190,13 +191,20 @@ func (e *DDLExec) executeCreateTable(s *ast.CreateTableStmt) (err error) {
 	if result.Error != nil {
 		return fmt.Errorf("ddl.executeCreateTable: %v", result.Error)
 	}
-
+	// check column case
+	var lowerColumnNames []string
+	for _, col := range s.Cols {
+		lowerColumnNames = append(lowerColumnNames, col.Name.Name.L)
+	}
+	if len(lowerColumnNames) != len(sliceutil.SliceDeDup(lowerColumnNames)) {
+		return fmt.Errorf("ddl.executeCreateTable: duplicate column names in table %s", tblName)
+	}
 	for _, c := range s.Cols {
 		// TODO: fill description field
 		result = tx.Create(&storage.Column{
 			Db:         dbName,
 			TableName:  tblName,
-			ColumnName: strings.ToLower(c.Name.String()),
+			ColumnName: c.Name.String(),
 			Type:       c.Type,
 		})
 		if result.Error != nil {

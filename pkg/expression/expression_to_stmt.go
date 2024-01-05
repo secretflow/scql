@@ -71,12 +71,12 @@ func (c ExprConverter) convertColumn(column *Column) (*ast.ColumnNameExpr, error
 		return nil, fmt.Errorf("failed to check column name for len(split(%s)) is not in (1,2,3)", column.OrigName)
 	}
 
-	name.Name = model.CIStr{O: subStrs[len(subStrs)-1]}
+	name.Name = model.NewCIStr(subStrs[len(subStrs)-1])
 	if len(subStrs) >= 2 {
-		name.Table = model.CIStr{O: subStrs[len(subStrs)-2]}
+		name.Table = model.NewCIStr(subStrs[len(subStrs)-2])
 	}
 	if len(subStrs) == 3 {
-		name.Schema = model.CIStr{O: subStrs[len(subStrs)-3]}
+		name.Schema = model.NewCIStr(subStrs[len(subStrs)-3])
 	}
 	return &ast.ColumnNameExpr{Name: &name}, nil
 }

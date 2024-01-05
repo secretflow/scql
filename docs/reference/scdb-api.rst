@@ -1,8 +1,8 @@
 ========
-SCQL API
+SCDB API
 ========
 
-SCQL supports two types of APIs: synchronous and asynchronous. The synchronous interface is suitable for executing fast queries, such as DDL, DCL, and simple DQL. 
+SCDB supports two types of APIs: synchronous and asynchronous. The synchronous interface is suitable for executing fast queries, such as DDL, DCL, and simple DQL.
 Meanwhile, the asynchronous interface is recommended when the query may take a long time to run.
 
 .. _async_api:
@@ -15,7 +15,7 @@ Asynchronous
 public/submit_query
 -------------------
 
-Submit the query (DDL/DCL/DQL) to SCQL, SCQL will return a session ID immediately which can be used to fetch result, and processes the query in the background.
+Submit the query (DDL/DCL/DQL) to SCDB, SCDB will return a session ID immediately which can be used to fetch result, and processes the query in the background.
 
 Request
 ^^^^^^^
@@ -220,7 +220,7 @@ Synchronous
 public/submit_and_get
 ---------------------
 
-Submit a query to SCQL, SCQL will wait for all tasks to complete before returning the result to the use. 
+Submit a query to SCDB, SCDB will wait for all tasks to complete before returning the result to the use.
 
 Request
 ^^^^^^^

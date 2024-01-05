@@ -18,9 +18,7 @@ import (
 	"database/sql"
 	"fmt"
 	"reflect"
-	"strings"
 
-	"golang.org/x/exp/slices"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
@@ -34,7 +32,7 @@ const (
 	InsertBatchSize = 1000
 )
 
-var allTables = []interface{}{&Project{}, &Table{}, &Column{}, &ColumnPriv{}, &Invitation{}}
+var allTables = []interface{}{&Member{}, &Project{}, &Table{}, &Column{}, &ColumnPriv{}, &Invitation{}}
 
 type MetaManager struct {
 	// for now, no cache, all info store in db
@@ -100,55 +98,44 @@ func AddShareLock(txn *MetaTransaction) *MetaTransaction {
 // and call Finish when you finish all your actions
 func (manager *MetaManager) CreateMetaTransaction() *MetaTransaction {
 	return &MetaTransaction{
-		db: manager.db.Begin(&sql.TxOptions{Isolation: sql.LevelRepeatableRead}),
+		db: manager.db.Begin(&sql.TxOptions{Isolation: sql.LevelReadCommitted}),
 	}
+}
+
+func (manager *MetaManager) ExecInMetaTransaction(fn func(*MetaTransaction) error) error {
+	txn := manager.CreateMetaTransaction()
+	err := fn(txn)
+	return txn.Finish(err)
 }
 
 type MetaTransaction struct {
 	db *gorm.DB
 }
 
-func (t *MetaTransaction) Finish(err error) {
+// Automatic rollback will occur if a deadlock or timeout occurs.
+func (t *MetaTransaction) Finish(err error) error {
 	if err == nil {
-		t.db.Commit()
+		result := t.db.Commit()
+		return result.Error
 	} else {
-		t.db.Rollback()
+		result := t.db.Rollback()
+		if result.Error != nil {
+			logrus.Errorf("%v, rollback failed: %s", err, result.Error)
+		}
+		return err
 	}
 }
 
 // return err, if project exists
 func (t *MetaTransaction) CreateProject(project Project) error {
+	// add project
 	result := t.db.Create(&project)
-	return result.Error
-}
-
-func (t *MetaTransaction) RemoveProject(projectID string) error {
-	// drop invitations
-	result := t.db.Delete(&Invitation{ProjectID: projectID})
 	if result.Error != nil {
 		return result.Error
 	}
-	tableIdentifier := TableIdentifier{ProjectID: projectID}
-	columnIdentifier := ColumnIdentifier{ProjectID: projectID}
-	columnPrivIndentifier := ColumnPrivIdentifier{ProjectID: projectID}
-	// drop column privs
-	result = t.db.Delete(&ColumnPriv{ColumnPrivIdentifier: columnPrivIndentifier})
-	if result.Error != nil {
-		return result.Error
-	}
-	// drop columns
-	result = t.db.Delete(&Column{ColumnIdentifier: columnIdentifier})
-	if result.Error != nil {
-		return result.Error
-	}
-	// drop tables;
-	result = t.db.Delete(&Table{TableIdentifier: tableIdentifier})
-	if result.Error != nil {
-		return result.Error
-	}
-	// drop project
-	result = t.db.Delete(&Project{ID: projectID})
-	return result.Error
+	// add first member
+	err := t.AddProjectMembers([]Member{Member{ProjectID: project.ID, Member: project.Creator}})
+	return err
 }
 
 // update project fail if project not exists or other reasons
@@ -160,20 +147,8 @@ func (t *MetaTransaction) UpdateProject(proj Project) error {
 	return result.Error
 }
 
-func (t *MetaTransaction) AddProjectMember(projectID, newMember string) error {
-	project, err := t.GetProject(projectID)
-	if err != nil {
-		return err
-	}
-
-	members := strings.Split(project.Member, ";")
-	if slices.Contains(members, newMember) {
-		logrus.Warnf("member %v already exists in project %v", newMember, projectID)
-		return nil
-	}
-	members = append(members, newMember)
-
-	result := t.db.Model(&Project{}).Where(&Project{ID: projectID}).Update("member", strings.Join(members, ";"))
+func (t *MetaTransaction) AddProjectMembers(members []Member) error {
+	result := t.db.CreateInBatches(&members, InsertBatchSize)
 	return result.Error
 }
 
@@ -183,14 +158,65 @@ func (t *MetaTransaction) GetProject(projectID string) (Project, error) {
 	return project, result.Error
 }
 
-func (t *MetaTransaction) ListProjects(projectIDs []string) ([]Project, error) {
+func (t *MetaTransaction) GetProjectMembers(projectID string) ([]string, error) {
+	var members []string
+	result := t.db.Model(&Member{}).Where(&Member{ProjectID: projectID}).Select("member").Scan(&members)
+	return members, result.Error
+}
+
+type ProjectWithMember struct {
+	Proj    Project
+	Members []string
+}
+
+func (t *MetaTransaction) GetProjectAndMembers(projectID string) (projectAndMembers ProjectWithMember, err error) {
+	project := Project{}
+	result := t.db.Model(&Project{}).Where(&Project{ID: projectID}).First(&project)
+	if result.Error != nil {
+		return ProjectWithMember{}, result.Error
+	}
+	projectAndMembers.Proj = project
+	projectAndMembers.Members, err = t.GetProjectMembers(projectID)
+	return projectAndMembers, err
+}
+
+func (t *MetaTransaction) ListProjects(projectIDs []string) ([]ProjectWithMember, error) {
 	var projects []Project
 	result := t.db.Model(&Project{})
 	if len(projectIDs) != 0 {
 		result = result.Where("id in ?", projectIDs)
 	}
 	result.Scan(&projects)
-	return projects, result.Error
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	if len(projectIDs) != 0 {
+		var existProjectIDs []string
+		for _, proj := range projects {
+			existProjectIDs = append(existProjectIDs, proj.ID)
+		}
+		if !sliceutil.ContainsAll(existProjectIDs, projectIDs) {
+			return nil, fmt.Errorf("projects %+v not found", sliceutil.Subtraction(projectIDs, existProjectIDs))
+		}
+	}
+	var members []Member
+	result = t.db.Model(&Member{})
+	if len(projectIDs) != 0 {
+		result = result.Where("project_id in ?", projectIDs)
+	}
+	result.Scan(&members)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	memberMap := make(map[string][]string, len(projects))
+	for _, member := range members {
+		memberMap[member.ProjectID] = append(memberMap[member.ProjectID], member.Member)
+	}
+	var projectsWithMembers []ProjectWithMember
+	for _, proj := range projects {
+		projectsWithMembers = append(projectsWithMembers, ProjectWithMember{Proj: proj, Members: memberMap[proj.ID]})
+	}
+	return projectsWithMembers, result.Error
 }
 
 // archive project fail if project not exists or other reasons
@@ -217,24 +243,39 @@ func (t *MetaTransaction) ListInvitations() ([]Invitation, error) {
 	return invitations, result.Error
 }
 
+func (t *MetaTransaction) GetInvitationsBy(projectID, inviter, invitee string) ([]Invitation, error) {
+	var invitations []Invitation
+	result := t.db.Model(&Invitation{}).Where(&Invitation{ProjectID: projectID, Inviter: inviter, Invitee: invitee}).Scan(invitations)
+	return invitations, result.Error
+}
+
 func (t *MetaTransaction) GetUnhandledInvitationWithID(invitationID uint64) (Invitation, error) {
 	var invitation Invitation
 	// NOTE: When querying with struct, GORM will only query with non-zero fields, so use map for 'accepted' instead of struct here.
 	// ref: https://gorm.io/docs/query.html
-	result := t.db.Model(&Invitation{}).Where(&Invitation{ID: invitationID}).Where(map[string]string{"accepted": "0"}).First(&invitation)
+	result := t.db.Model(&Invitation{}).Where(&Invitation{ID: invitationID}).Where(map[string]interface{}{"status": pb.InvitationStatus_UNDECIDED}).First(&invitation)
 	return invitation, result.Error
 }
 
 func (t *MetaTransaction) GetUnhandledInvitation(projectID, inviter, invitee string) (Invitation, error) {
 	var invitation Invitation
-	result := t.db.Model(&Invitation{}).Where(&Invitation{ProjectID: projectID, Inviter: inviter, Invitee: invitee}).Where(map[string]string{"accepted": "0"}).First(&invitation)
+	result := t.db.Model(&Invitation{}).Where(&Invitation{ProjectID: projectID, Inviter: inviter, Invitee: invitee}).Where(map[string]interface{}{"status": pb.InvitationStatus_UNDECIDED}).First(&invitation)
 	return invitation, result.Error
 }
 
-// update invitation status to accept or reject inviting
-// NOTE: all invitations with same projectID + inviter + invitee will be updated
-func (t *MetaTransaction) UpdateInvitation(invitation Invitation) error {
-	result := t.db.Model(&Invitation{}).Where(&Invitation{ProjectID: invitation.ProjectID, Inviter: invitation.Inviter, Invitee: invitation.Invitee}).Update("accepted", invitation.Accepted)
+// NOTE: invitation id may be zero don't use Where(&Invitation{ID: id})
+func (t *MetaTransaction) ModifyInvitationStatus(invitationID uint64, status pb.InvitationStatus) error {
+	result := t.db.Model(&Invitation{}).Where(map[string]interface{}{"id": invitationID}).Update("status", int8(status))
+	return result.Error
+}
+
+func (t *MetaTransaction) SetInvitationInvalidByID(invitationID uint64) error {
+	result := t.db.Model(&Invitation{}).Where(map[string]interface{}{"id": invitationID}).Update("status", pb.InvitationStatus_INVALID)
+	return result.Error
+}
+
+func (t *MetaTransaction) SetUnhandledInvitationsInvalid(projectID, inviter, invitee string) error {
+	result := t.db.Model(&Invitation{}).Where(&Invitation{ProjectID: projectID, Inviter: inviter, Invitee: invitee}).Where(map[string]interface{}{"status": pb.InvitationStatus_UNDECIDED}).Update("status", pb.InvitationStatus_INVALID)
 	return result.Error
 }
 
@@ -248,24 +289,6 @@ type TableMeta struct {
 }
 
 func (t *MetaTransaction) AddTable(table TableMeta) error {
-	// if table already exists, check whether the owner is the same.
-	{
-		var tables []Table
-		result := t.db.Model(&Table{}).Where(&Table{TableIdentifier: TableIdentifier{ProjectID: table.Table.ProjectID, TableName: table.Table.TableName}}).Find(&tables)
-		if result.Error == nil && result.RowsAffected > 0 {
-			if len(tables) != 1 {
-				return fmt.Errorf("AddTable: existing multi tables with same name: %+v", tables)
-			} else if tables[0].Owner != table.Table.Owner {
-				return fmt.Errorf("AddTable: existing table owner{%s} not equal to {%s}", tables[0].Owner, table.Table.Owner)
-			} else {
-				logrus.Warnf("AddTable: already exist, droping table first: %+v", tables)
-				err := t.DropTable(TableIdentifier{ProjectID: table.Table.ProjectID, TableName: table.Table.TableName})
-				if err != nil {
-					return fmt.Errorf("AddTable: drop existing table err: %v", err)
-				}
-			}
-		}
-	}
 	result := t.db.Create(&table.Table)
 	if result.Error != nil {
 		return result.Error
@@ -322,13 +345,12 @@ type tableColumn struct {
 }
 
 func (t *MetaTransaction) ListTables(projectID string) ([]TableMeta, error) {
-	return t.GetTablesByTableNames(projectID, []string{})
+	return t.GetTableMetasByTableNames(projectID, []string{})
 }
 
-func (t *MetaTransaction) ListDedupTableOwners(tableNames []string) ([]string, error) {
-	result := t.db.Model(&Table{}).Select("tables.owner").Where("tables.table_name IN ?", tableNames)
+func (t *MetaTransaction) ListDedupTableOwners(projectID string, tableNames []string) ([]string, error) {
 	var owners []string
-	result = result.Scan(&owners)
+	result := t.db.Model(&Table{}).Select("owner").Where("project_id = ?", projectID).Where("table_name IN ?", tableNames).Scan(&owners)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -336,7 +358,8 @@ func (t *MetaTransaction) ListDedupTableOwners(tableNames []string) ([]string, e
 }
 
 // if len(tableNames) == 0 return all tables
-func (t *MetaTransaction) GetTablesByTableNames(projectID string, tableNames []string) ([]TableMeta, error) {
+// return err if ANY table DOESN'T exist
+func (t *MetaTransaction) GetTableMetasByTableNames(projectID string, tableNames []string) ([]TableMeta, error) {
 	var tableColumns []tableColumn
 	// SELECT tables.table_name, tables.ref_table, tables.db_type, tables.owner, columns.column_name, columns.data_type FROM `tables` join columns on tables.project_id = columns.project_id
 	result := t.db.Model(&Table{}).Select("tables.table_name, tables.ref_table, tables.db_type, tables.owner, columns.column_name, columns.data_type").Joins("join columns on tables.project_id = columns.project_id").Where("columns.project_id = ?", projectID).Where("columns.table_name = tables.table_name")
@@ -358,11 +381,28 @@ func (t *MetaTransaction) GetTablesByTableNames(projectID string, tableNames []s
 		columnMeta := ColumnMeta{ColumnName: tableCol.ColumnName, DType: tableCol.DType}
 		tableMeta.Columns = append(tableMeta.Columns, columnMeta)
 	}
+	// check table exist
+	for _, tableName := range tableNames {
+		_, exist := tableMap[tableName]
+		if !exist {
+			return nil, fmt.Errorf("table %s not found", tableName)
+		}
+	}
 	var tableMetas []TableMeta
 	for _, tableName := range sliceutil.SortMapKeyForDeterminism(tableMap) {
 		tableMetas = append(tableMetas, *tableMap[tableName])
 	}
 	return tableMetas, nil
+}
+
+// return false if one of table names does NOT exist
+func (t *MetaTransaction) CheckTablesExist(projectID string, tableNames []string) (bool, error) {
+	var existTblNames []string
+	result := t.db.Model(&Table{}).Select("tables.table_name").Where("tables.project_id = ?", projectID).Where("tables.table_name in ?", tableNames).Scan(&existTblNames)
+	if result.Error != nil {
+		return false, result.Error
+	}
+	return sliceutil.ContainsAll(existTblNames, tableNames), nil
 }
 
 func (t *MetaTransaction) GrantColumnConstraints(privs []ColumnPriv) error {

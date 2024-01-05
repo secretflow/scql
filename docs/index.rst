@@ -20,8 +20,8 @@ SCQL Systems
 
 - **Overview**:
   :doc:`System overview and architecture </topics/system/intro>` |
-  :doc:`Common usage </topics/system/usage>` |
-  :doc:`P2P </topics/system/intro-p2p>`
+  :doc:`Common usage </topics/system/usage>` ｜
+  :doc:`P2P vs. Centralized </topics/system/deploy-arch>`
 
 - **Security**:
   :doc:`Security overview </topics/security/overview>`
@@ -55,19 +55,29 @@ Column Control List (CCL)
 Clients
 -------
 
-- :doc:`Overview of SCQL clients </topics/clients/overview>`
-- :doc:`HTTP API reference </reference/http-api>`
+* **P2P**
+
+  - :doc:`Broker HTTP API reference </reference/broker-api>`
+
+
+* **Centralized**
+
+  - :doc:`Overview of SCQL clients </topics/clients/integrate-scdb>`
+  - :doc:`SCDB HTTP API reference </reference/scdb-api>`
 
 
 Deployment
 ----------
 
-- **Guides**:
-  :doc:`How to deploy an SCQL cluster in centralized mode</topics/deployment/how-to-deploy-centralized-cluster>` |
-  :doc:`How to deploy an SCQL cluster in P2P mode</topics/deployment/how-to-deploy-p2p-cluster>`
+* **P2P**
 
-- **Reference**:
-  :doc:`SCQL system config </reference/engine-config>`
+  - **Guides**: :doc:`P2P Deployment </topics/deployment/how-to-deploy-p2p-cluster>`
+  - **Reference**: :doc:`P2P Configuration </reference/p2p-deploy-config>`
+
+* **Centralized**
+
+  - **Guides:** :doc:`Centralized Deployment </topics/deployment/how-to-deploy-centralized-cluster>`
+  - **Reference**: :doc:`Centralized Configuration </reference/centralized-deploy-config>`
 
 
 For contributors

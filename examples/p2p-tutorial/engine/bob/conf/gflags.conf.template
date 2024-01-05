@@ -13,5 +13,3 @@
 --peer_engine_enable_ssl_as_client=true
 # set false when SCQLBroker IntraServer not enable https
 --driver_enable_ssl_as_client=false
-# deprecated configs, temporarily reserved for compatibility with older versions
---scdb_enable_ssl_as_client=false

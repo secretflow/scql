@@ -34,3 +34,19 @@ func (b MonitorLogEntry) String() string {
 	return fmt.Sprintf("|RequestID:%v|SessionID:%v|ActionName:%v|CostTime:%v|Reason:%v|ErrorMsg:%v|Request:%v",
 		b.RequestID, b.SessionID, b.ActionName, b.CostTime, b.Reason, b.ErrorMsg, b.RawRequest)
 }
+
+type BrokerMonitorLogEntry struct {
+	RequestID    string
+	RequestParty string
+	JobID        string
+	ActionName   string
+	CostTime     time.Duration
+	Reason       string
+	ErrorMsg     string
+	RawRequest   string
+}
+
+func (b BrokerMonitorLogEntry) String() string {
+	return fmt.Sprintf("|RequestID:%v|RequestParty:%v|SessionID:%v|ActionName:%v|CostTime:%v|Reason:%v|ErrorMsg:%v|Request:%v",
+		b.RequestID, b.RequestParty, b.JobID, b.ActionName, b.CostTime, b.Reason, b.ErrorMsg, b.RawRequest)
+}

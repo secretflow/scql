@@ -13,14 +13,7 @@
 # limitations under the License.
 
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
-SECRETFLOW_GROUP_GIT = "https://github.com/secretflow"
-
-SPU_GIT = "https://github.com/secretflow/spu.git"
-
-HEU_GIT = "https://github.com/secretflow/heu.git"
 
 def engine_deps():
     _com_github_nelhage_rules_boost()
@@ -35,25 +28,48 @@ def engine_deps():
     _io_opentelemetry_cpp()
     _com_github_google_snappy()
     _com_github_lz4_lz4()
-
+    _secretflow_deps()
     _com_mysql()
     _org_pocoproject_poco()
     _ncurses()
     _org_sqlite()
     _com_github_duckdb()
+    _com_google_googleapis()
 
     _org_postgres()
+
+def _secretflow_deps():
+    SPU_COMMIT = "4d9ed28a61f6fff20361cacb2073108adad57176"
+    PSI_COMMIT = "d5caedc399503275820a881f10d48e1e11a10357"
+    HEU_COMMIT = "afa15a0ad009cb5d5e40bd1dce885b9e4d472083"
+
     maybe(
-        git_repository,
+        http_archive,
         name = "spulib",
-        commit = "0883c15512c9e4d3e4ec7bbe27e038fd084a2eee",
-        remote = SPU_GIT,
+        urls = [
+            "https://github.com/secretflow/spu/archive/%s.tar.gz" % SPU_COMMIT,
+        ],
+        strip_prefix = "spu-%s" % SPU_COMMIT,
+        sha256 = "4ad844dc7e62889f4c90d58095215a77cd50a2d26dc680713d731176750cdf09",
     )
     maybe(
-        git_repository,
+        http_archive,
+        name = "psi",
+        urls = [
+            "https://github.com/secretflow/psi/archive/%s.tar.gz" % PSI_COMMIT,
+        ],
+        strip_prefix = "psi-%s" % PSI_COMMIT,
+        sha256 = "f7968386cc74d74d0848fd293c4ab9dc978da164ee22ba1c5b081f78aa8b0b1b",
+    )
+
+    maybe(
+        http_archive,
         name = "com_alipay_sf_heu",
-        commit = "5cc6810382c6d6f8b8de93d3cd4b7f9e7889b36c",
-        remote = HEU_GIT,
+        urls = [
+            "https://github.com/secretflow/heu/archive/%s.tar.gz" % HEU_COMMIT,
+        ],
+        strip_prefix = "heu-%s" % HEU_COMMIT,
+        sha256 = "6c151a1d2941c745df7b12d3278b7c1dcea59fba0dc2cb2d539f3da7375407ac",
     )
 
 def _org_apache_arrow():
@@ -193,12 +209,12 @@ def _com_github_lz4_lz4():
     )
 
 def _com_github_nelhage_rules_boost():
-    # MySQL require boost 1.77
-    RULES_BOOST_COMMIT = "d104cb7beba996d67ae5826be07aab2d9ca0ee38"
+    # use boost 1.83
+    RULES_BOOST_COMMIT = "cfa585b1b5843993b70aa52707266dc23b3282d0"
     maybe(
         http_archive,
         name = "com_github_nelhage_rules_boost",
-        sha256 = "5b7dbeadf66ae330d660359115f518d012082feec26402af26a7c540f6d0af9f",
+        sha256 = "a7c42df432fae9db0587ff778d84f9dc46519d67a984eff8c79ae35e45f277c1",
         strip_prefix = "rules_boost-%s" % RULES_BOOST_COMMIT,
         patch_args = ["-p1"],
         patches = ["@scql//engine/bazel:patches/rules_boost.patch"],
@@ -212,10 +228,12 @@ def _com_mysql():
         http_archive,
         name = "com_mysql",
         urls = [
-            "https://github.com/mysql/mysql-server/archive/refs/tags/mysql-8.0.29.tar.gz",
+            "https://github.com/mysql/mysql-server/archive/refs/tags/mysql-8.0.30.tar.gz",
         ],
-        sha256 = "fc02246f39764b7b2b7815bb260d52983296919ba13246f3de8873b3e86dc579",
-        strip_prefix = "mysql-server-mysql-8.0.29",
+        patch_args = ["-p1"],
+        patches = ["@scql//engine/bazel:patches/mysql.patch"],
+        sha256 = "e76636197f9cb764940ad8d800644841771def046ce6ae75c346181d5cdd879a",
+        strip_prefix = "mysql-server-mysql-8.0.30",
         build_file = "@scql//engine/bazel:mysql.BUILD",
     )
 
@@ -272,9 +290,22 @@ def _com_github_duckdb():
         http_archive,
         name = "com_github_duckdb",
         urls = [
-            "https://github.com/duckdb/duckdb/archive/refs/tags/v0.6.1.tar.gz",
+            "https://github.com/duckdb/duckdb/archive/refs/tags/v0.9.2.tar.gz",
         ],
-        sha256 = "ea9bba89ae3e461f3fc9f83911b2f3b6c386c23463bcf7b1ed6bb4cc13e822a4",
-        strip_prefix = "duckdb-0.6.1",
+        patch_args = ["-p1"],
+        patches = ["@scql//engine/bazel:patches/duckdb.patch"],
+        sha256 = "afff7bd925a98dc2af4039b8ab2159b0705cbf5e0ee05d97f7bb8dce5f880dc2",
+        strip_prefix = "duckdb-0.9.2",
         build_file = "@scql//engine/bazel:duckdb.BUILD",
+    )
+
+def _com_google_googleapis():
+    maybe(
+        http_archive,
+        name = "googleapis",
+        urls = [
+            "https://github.com/googleapis/googleapis/archive/fea22b1d9f27f86ef355c1d0dba00e0791a08a19.tar.gz",
+        ],
+        strip_prefix = "googleapis-fea22b1d9f27f86ef355c1d0dba00e0791a08a19",
+        sha256 = "957ef432cdedbace1621bb023e6d8637ecbaa78856b3fc6e299f9b277ae990ff",
     )

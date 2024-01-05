@@ -81,7 +81,8 @@ class DuckdbWrapperTest : public ::testing::Test {
   std::string csv_content_ = R"csv(ID,age,name,income
 1,25,bob,25000.1
 2,30,alice,48000
-3,42,tom,98000)csv";
+3,42,"",98000
+4,18,NULL,118000)csv";
 };
 
 TEST_F(DuckdbWrapperTest, NormalQuery) {
@@ -94,21 +95,21 @@ TEST_F(DuckdbWrapperTest, NormalQuery) {
   conn.Commit();
 
   auto result = conn.Query("select * from csvdb.staff");
-  EXPECT_FALSE(result->HasError());
-  ASSERT_EQ(result->RowCount(), 3);
+  EXPECT_FALSE(result->HasError()) << result->GetError();
+  ASSERT_EQ(result->RowCount(), 4);
   ASSERT_EQ(result->ColumnCount(), 4);
   auto data_chunk = result->Fetch();
 
   // column "id"
-  EXPECT_TRUE(ColumnEquals(*conn.context, *data_chunk, 0, {1, 2, 3}));
+  EXPECT_TRUE(ColumnEquals(*conn.context, *data_chunk, 0, {1, 2, 3, 4}));
   // column "age"
-  EXPECT_TRUE(ColumnEquals(*conn.context, *data_chunk, 1, {25, 30, 42}));
+  EXPECT_TRUE(ColumnEquals(*conn.context, *data_chunk, 1, {25, 30, 42, 18}));
   // column "name"
-  EXPECT_TRUE(
-      ColumnEquals(*conn.context, *data_chunk, 2, {"bob", "alice", "tom"}));
+  EXPECT_TRUE(ColumnEquals(*conn.context, *data_chunk, 2,
+                           {"bob", "alice", "", duckdb::Value()}));
   // column "income"
-  EXPECT_TRUE(
-      ColumnEquals(*conn.context, *data_chunk, 3, {25000.1, 48000, 98000}));
+  EXPECT_TRUE(ColumnEquals(*conn.context, *data_chunk, 3,
+                           {25000.1, 48000, 98000, 118000}));
 }
 
 TEST_F(DuckdbWrapperTest, QueryWithPredicate) {
@@ -120,13 +121,13 @@ TEST_F(DuckdbWrapperTest, QueryWithPredicate) {
   conn.Commit();
 
   auto result = conn.Query("select name from csvdb.staff where age > 30");
-  EXPECT_FALSE(result->HasError());
+  EXPECT_FALSE(result->HasError()) << result->GetError();
   ASSERT_EQ(result->RowCount(), 1);
   ASSERT_EQ(result->ColumnCount(), 1);
   auto data_chunk = result->Fetch();
 
   // column "name"
-  EXPECT_TRUE(ColumnEquals(*conn.context, *data_chunk, 0, {"tom"}));
+  EXPECT_TRUE(ColumnEquals(*conn.context, *data_chunk, 0, {""}));
 }
 
 TEST_F(DuckdbWrapperTest, IngoringColumnCase) {
@@ -139,12 +140,68 @@ TEST_F(DuckdbWrapperTest, IngoringColumnCase) {
 
   // id -> ID
   auto result = conn.Query("select id from csvdb.staff");
-  EXPECT_FALSE(result->HasError());
-  ASSERT_EQ(result->RowCount(), 3);
+  EXPECT_FALSE(result->HasError()) << result->GetError();
+  ASSERT_EQ(result->RowCount(), 4);
   ASSERT_EQ(result->ColumnCount(), 1);
   auto data_chunk = result->Fetch();
 
-  EXPECT_TRUE(ColumnEquals(*conn.context, *data_chunk, 0, {1, 2, 3}));
+  EXPECT_TRUE(ColumnEquals(*conn.context, *data_chunk, 0, {1, 2, 3, 4}));
+}
+
+TEST_F(DuckdbWrapperTest, DISABLED_ComplexQueryWithBigDataset) {
+  // test with dataset download from kaggle:
+  // https://www.kaggle.com/datasets/luiscorter/netflix-original-films-imdb-scores
+  // download the dataset and rename header "IMDB Score" to "IMDB_Score".
+  csv::CsvdbConf csvdb_conf;
+  {
+    csvdb_conf.set_db_name("csvdb");
+    auto table = csvdb_conf.add_tables();
+    table->set_table_name("netflix_original_films_imdb_scores");
+    table->set_data_path("./netflix_original_films_imdb_scores.csv");
+
+    auto column = table->add_columns();
+    column->set_column_name("Title");
+    column->set_column_type(csv::ColumnType::STRING);
+
+    column = table->add_columns();
+    column->set_column_name("Genre");
+    column->set_column_type(csv::ColumnType::STRING);
+
+    column = table->add_columns();
+    column->set_column_name("Premiere");
+    column->set_column_type(csv::ColumnType::STRING);
+
+    column = table->add_columns();
+    column->set_column_name("Runtime");
+    column->set_column_type(csv::ColumnType::LONG);
+
+    column = table->add_columns();
+    column->set_column_name("IMDB_Score");
+    column->set_column_type(csv::ColumnType::DOUBLE);
+
+    column = table->add_columns();
+    column->set_column_name("Language");
+    column->set_column_type(csv::ColumnType::STRING);
+  }
+
+  duckdb::DuckDB db = DuckDBWrapper::CreateDB(&csvdb_conf);
+  duckdb::Connection conn(db);
+
+  conn.BeginTransaction();
+  DuckDBWrapper::CreateCSVScanFunction(conn);
+  conn.Commit();
+
+  auto result = conn.Query(
+      "select Genre, count(*) as cnt, avg(IMDB_Score) as avg_score from "
+      "csvdb.netflix_original_films_imdb_scores where Runtime > 60 and "
+      "IMDB_Score > 3 group by Genre order by cnt desc");
+  EXPECT_FALSE(result->HasError()) << result->GetError();
+  ASSERT_EQ(result->RowCount(), 104);
+  ASSERT_EQ(result->ColumnCount(), 3);
+
+  // The first row is "Documentary, 118, 7.079661016949156"
+  auto data_chunk = result->Fetch();
+  EXPECT_EQ(data_chunk->data[1].GetValue(0), 118);
 }
 
 }  // namespace scql::engine

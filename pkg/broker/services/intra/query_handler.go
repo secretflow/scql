@@ -28,14 +28,23 @@ import (
 	"github.com/secretflow/scql/pkg/interpreter/translator"
 	"github.com/secretflow/scql/pkg/planner/core"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/status"
 )
 
-func (svc *grpcIntraSvc) DoQuery(ctx context.Context, req *pb.QueryRequest) (*pb.QueryResponse, error) {
+func (svc *grpcIntraSvc) DoQuery(ctx context.Context, req *pb.QueryRequest) (resp *pb.QueryResponse, err error) {
 	if req == nil || req.GetProjectId() == "" || req.GetQuery() == "" {
-		return nil, errors.New("request for DoQuery is illegal")
+		return nil, status.New(pb.Code_BAD_REQUEST, "request for DoQuery is illegal")
 	}
-
+	defer func() {
+		if err != nil {
+			err = status.New(pb.Code_INTERNAL, err.Error())
+		}
+	}()
 	app := svc.app
+	err = common.CheckMemberExistInProject(app.MetaMgr, req.GetProjectId(), app.Conf.PartyCode)
+	if err != nil {
+		return nil, err
+	}
 	jobID, err := application.GenerateJobID()
 	if err != nil {
 		return nil, fmt.Errorf("DoQuery: %v", err)
@@ -62,14 +71,22 @@ func (svc *grpcIntraSvc) DoQuery(ctx context.Context, req *pb.QueryRequest) (*pb
 
 func (svc *grpcIntraSvc) SubmitQuery(ctx context.Context, req *pb.QueryRequest) (resp *pb.SubmitResponse, err error) {
 	if req == nil || req.GetProjectId() == "" || req.GetQuery() == "" {
-		return nil, errors.New("request for SubmitQuery is illegal: empty project or query")
+		return nil, status.New(pb.Code_BAD_REQUEST, "request for SubmitQuery is illegal: empty project or query")
 	}
-
+	defer func() {
+		if err != nil {
+			err = status.New(pb.Code_INTERNAL, err.Error())
+		}
+	}()
+	app := svc.app
+	err = common.CheckMemberExistInProject(app.MetaMgr, req.GetProjectId(), app.Conf.PartyCode)
+	if err != nil {
+		return nil, err
+	}
 	jobID, err := application.GenerateJobID()
 	if err != nil {
 		return nil, fmt.Errorf("SubmitQuery: %v", err)
 	}
-	app := svc.app
 	info := &application.ExecutionInfo{
 		ProjectID: req.GetProjectId(),
 		JobID:     jobID,
@@ -102,27 +119,18 @@ func (svc *grpcIntraSvc) SubmitQuery(ctx context.Context, req *pb.QueryRequest) 
 
 func (svc *grpcIntraSvc) FetchResult(c context.Context, req *pb.FetchResultRequest) (resp *pb.QueryResponse, err error) {
 	if req == nil || req.GetJobId() == "" {
-		return nil, errors.New("request for FetchResult is illegal: empty job id")
+		return nil, status.New(pb.Code_BAD_REQUEST, "request for FetchResult is illegal: empty job id")
 	}
 	session, ok := svc.app.GetSession(req.GetJobId())
 	if !ok {
-		return &pb.QueryResponse{
-			Status: &pb.Status{
-				Code:    int32(pb.Code_NOT_FOUND),
-				Message: fmt.Sprintf("no existing session for job: %v", req.GetJobId()),
-			},
-		}, nil
+		err = status.New(pb.Code_NOT_FOUND, fmt.Sprintf("no existing session for job: %v", req.GetJobId()))
+		return
 	}
-	result := session.GetResultSafely()
-	if result == nil {
-		return &pb.QueryResponse{
-			Status: &pb.Status{
-				Code:    int32(pb.Code_NOT_READY),
-				Message: "result not ready, please retry later",
-			},
-		}, nil
+	resp = session.GetResultSafely()
+	if resp == nil {
+		err = status.New(pb.Code_NOT_READY, "result not ready, please retry later")
 	}
-	return result, nil
+	return
 }
 
 type DistributeRet struct {
@@ -190,14 +198,11 @@ func DistributeQueryToOtherParty(session *application.Session, enginesInfo *tran
 		return
 	}
 	// check error code to avoid panic
-	if response.Status.Code != 0 && response.Status.Code != int32(pb.Code_CHECKSUM_CHECK_FAILED) {
+	if response.GetStatus().GetCode() != 0 && response.GetStatus().GetCode() != int32(pb.Code_DATA_INCONSISTENCY) {
 		ret.err = fmt.Errorf("distribute query err: %+v", response.Status)
 		return
 	}
 	ret.endpoint = response.GetEngineEndpoint()
-	if response.Status.Code == 0 {
-		return
-	}
 	if slices.Contains(executionInfo.DataParties, p) {
 		err = session.SaveRemoteChecksum(p, response.ExpectedServerChecksum)
 		if err != nil {
@@ -205,11 +210,13 @@ func DistributeQueryToOtherParty(session *application.Session, enginesInfo *tran
 			return
 		}
 	}
-	if response.Status.Code == int32(pb.Code_CHECKSUM_CHECK_FAILED) {
+	if response.Status.Code == int32(pb.Code_DATA_INCONSISTENCY) {
+		logrus.Infof("checksum not equal with party %s for job %s", p, executionInfo.JobID)
 		ret.prepareAgain = true
 		_, err = common.AskInfoByChecksumResult(session, response.ServerChecksumResult, enginesInfo.GetTablesByParty(p), p)
 		if err != nil {
-			logrus.Warningf("runsql err: %s", err)
+			ret.err = err
+			logrus.Warningf("err when running AskInfoByChecksumResult: %s", err)
 			return
 		}
 	}
@@ -220,11 +227,12 @@ func (svc *grpcIntraSvc) runQuery(session *application.Session) error {
 	app := svc.app
 	executionInfo := session.ExecuteInfo
 	r := executor.NewQueryRunner(session)
+	logrus.Infof("create query runner for job %s", session.ExecuteInfo.JobID)
 	usedTables, err := core.GetSourceTables(session.ExecuteInfo.Query)
 	if err != nil {
 		return fmt.Errorf("runQuery: %v", err)
 	}
-
+	logrus.Infof("get source tables %+v in project %s from storage", usedTables, executionInfo.ProjectID)
 	// prepare info, tableSchema, CCL...
 	dataParties, workParties, err := r.Prepare(usedTables)
 	if err != nil {
@@ -232,7 +240,7 @@ func (svc *grpcIntraSvc) runQuery(session *application.Session) error {
 	}
 	executionInfo.WorkParties = workParties
 	executionInfo.DataParties = dataParties
-	logrus.Infof("work parties: %+v; data parties: %+v", workParties, dataParties)
+	logrus.Infof("work parties: %+v; data parties: %+v for job %s", workParties, dataParties, session.ExecuteInfo.JobID)
 	err = executionInfo.CheckProjectConf()
 	if err != nil {
 		return fmt.Errorf("runQuery CheckProjectConf: %v", err)
@@ -255,7 +263,7 @@ func (svc *grpcIntraSvc) runQuery(session *application.Session) error {
 		}
 		distributePartyNum++
 		go func(p string) {
-			logrus.Infof("distribute query to party %s", p)
+			logrus.Infof("distribute query to party %s for job %s", p, session.ExecuteInfo.JobID)
 			ret := DistributeQueryToOtherParty(session, r.GetEnginesInfo(), p)
 			retCh <- ret
 		}(p)
@@ -264,20 +272,17 @@ func (svc *grpcIntraSvc) runQuery(session *application.Session) error {
 	// wait for response from other parties
 	for i := 0; i < distributePartyNum; i++ {
 		ret := <-retCh
+		logrus.Infof("distribute query return: %+v, for job %s", ret, session.ExecuteInfo.JobID)
+		if ret.err != nil {
+			totalErr = errors.Join(totalErr, ret.err)
+			continue
+		}
 		if ret.prepareAgain {
 			r.SetPrepareAgain()
 		}
-		if ret.err != nil {
-			errStr := fmt.Sprintf("party %s: %s;", ret.party, ret.err)
-			if totalErr == nil {
-				totalErr = fmt.Errorf(errStr)
-			} else {
-				totalErr = fmt.Errorf(totalErr.Error() + errStr)
-			}
-			continue
-		}
 		session.SaveEndpoint(ret.party, ret.endpoint)
 	}
+	logrus.Infof("distribute query completed for job %s", session.ExecuteInfo.JobID)
 	// err occurred when distributing query
 	if totalErr != nil {
 		return fmt.Errorf("runQuery distribute: %v", err)

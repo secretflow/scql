@@ -60,7 +60,7 @@ var (
 	stubMap   map[string]*brokerutil.Command
 
 	// test tables
-	tables = []string{"column_privs", "columns", "tables", "invitations", "projects"}
+	tables = []string{"members", "column_privs", "columns", "tables", "invitations", "projects"}
 	dbs    = []string{"brokera", "brokerb", "brokerc"}
 )
 
@@ -304,7 +304,7 @@ func createSuit(dataPath string, suit *regtest.QueryTestSuit) error {
 
 func getUnAcceptedInvitation(response *scql.ListInvitationsResponse, projectID string) (uint64, error) {
 	for _, invitation := range response.Invitations {
-		if invitation.Accepted == 0 && invitation.Project.ProjectId == projectID {
+		if invitation.Status == scql.InvitationStatus_UNDECIDED && invitation.Project.ProjectId == projectID {
 			return invitation.InvitationId, nil
 		}
 	}
@@ -330,13 +330,13 @@ func createProjectTableAndCcl(projectConf string, cclList []*scql.SecurityConfig
 	if err != nil {
 		return err
 	}
-	// invite carol
-	err = aliceStub.InviteMember(defaultProjectName, carol)
+	// bob accept
+	err = processInvitation(bobStub, defaultProjectName)
 	if err != nil {
 		return err
 	}
-	// bob accept
-	err = processInvitation(bobStub, defaultProjectName)
+	// invite carol
+	err = aliceStub.InviteMember(defaultProjectName, carol)
 	if err != nil {
 		return err
 	}
@@ -394,6 +394,7 @@ func concurrentModifyProjectTableAndCcl(projectID, projectConf string, cclList [
 	}
 	// make error channel big enough
 	errCh := make(chan error, 100)
+	// invite bob
 	go func() {
 		// invite bob
 		err = aliceStub.InviteMember(projectID, bob)
@@ -428,6 +429,7 @@ func concurrentModifyProjectTableAndCcl(projectID, projectConf string, cclList [
 			return err
 		}
 	}
+
 	if err = checkProjectMemberNum(bobStub, projectID, 3); err != nil {
 		return err
 	}

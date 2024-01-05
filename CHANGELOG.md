@@ -16,8 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Staging
 
+### Added
+
+ - Added support for HTTP data source router.
+
 ### Changed
 
+ - **breaking**: Add table **members** in broker storage for P2P mode.
  - Speed up GROUP BY with Radix Sort.
  - Adjusted configuration items for SCQLEngine and SCQLBroker.
 

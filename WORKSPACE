@@ -32,6 +32,14 @@ load("@yacl//bazel:repositories.bzl", "yacl_deps")
 
 yacl_deps()
 
+#
+# psi
+#
+load("@psi//bazel:repositories.bzl", "psi_deps")
+
+psi_deps()
+
+# grpc
 load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps")
 
 grpc_deps()
