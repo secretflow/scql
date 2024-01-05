@@ -55,6 +55,8 @@ jobs:
             docker cp scql-dev:/home/admin/dev/bazel-bin/engine/exe/scqlengine image
             docker cp scql-dev:/home/admin/dev/bin/scdbserver image
             docker cp scql-dev:/home/admin/dev/bin/scdbclient image
+            docker cp scql-dev:/home/admin/dev/bin/broker image
+            docker cp scql-dev:/home/admin/dev/bin/brokerctl image
             docker stop scql-dev &&  docker rm scql-dev
       - run:
           name: "Build image"
