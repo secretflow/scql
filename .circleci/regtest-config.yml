@@ -30,31 +30,51 @@ jobs:
   linux_regtest:
     machine:
       image: ubuntu-2004:2022.07.1
-    resource_class: 2xlarge
+    parameters:
+      resource_class:
+        type: string
+    resource_class: << parameters.resource_class >>
     steps:
       - checkout
+      - run:
+          name: "Checkout devtools"
+          command: git clone https://github.com/secretflow/devtools.git ../devtools
+      - run:
+          name: Setup GCS
+          command: |
+            echo ${gcs_content} > ../gcs.data
+            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=gcs.json
       - run:
           name: "Build binary"
           command: |
             set +e 
             mkdir -p image
-            cp docker/scql.Dockerfile image
-            docker run -d -it --name scql-dev -v $(pwd):/home/admin/dev/ -w /home/admin/dev --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --cap-add=NET_ADMIN --privileged=true secretflow/release-ci:latest
-            docker exec -it scql-dev bash -c "make && bazel build //engine/... -c opt --ui_event_filters=-info,-debug,-warning" 
+            cp docker/scql-ubuntu.Dockerfile image
+            docker run -d -it --name scql-dev -v $(pwd):/home/admin/dev/ -w /home/admin/dev --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --cap-add=NET_ADMIN --privileged=true --entrypoint=bash secretflow/scql-ci:latest
+            docker exec -it scql-dev bash -c "make && bazel build //engine/exe:scqlengine -c opt --ui_event_filters=-info,-debug,-warning" 
             docker cp scql-dev:/home/admin/dev/bazel-bin/engine/exe/scqlengine image
             docker cp scql-dev:/home/admin/dev/bin/scdbserver image
             docker cp scql-dev:/home/admin/dev/bin/scdbclient image
+            docker cp scql-dev:/home/admin/dev/bin/broker image
+            docker cp scql-dev:/home/admin/dev/bin/brokerctl image
             docker stop scql-dev &&  docker rm scql-dev
       - run:
           name: "Build image"
           command: |
             cd image
-            docker build -f scql.Dockerfile -t scql:latest .
+            MACHINE_TYPE=`arch`
+            if [ ${MACHINE_TYPE} == 'x86_64' ]; then
+              docker buildx build --platform linux/amd64 -f scql-ubuntu.Dockerfile -t scql:latest .
+            else
+              docker buildx build --platform linux/arm64 -f scql-ubuntu.Dockerfile -t scql:latest .
+            fi   
       - run:
           name: "Deploy image"
           command: |
             set +e
             cd .ci/docker-compose
+            python3 -m pip install -r requirements.txt
+            python3 setup.py
             docker compose -p regtest up -d 
             docker ps | grep regtest
       - run:
@@ -72,4 +92,7 @@ workflows:
   regtest:
     when: << pipeline.parameters.run_regtest >>
     jobs:
-      - linux_regtest
+      - linux_regtest:
+          matrix:
+            parameters:
+              resource_class: ["2xlarge", "arm-xlarge"]
