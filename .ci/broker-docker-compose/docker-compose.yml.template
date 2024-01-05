@@ -4,14 +4,14 @@ services:
     command:
       - /home/admin/bin/scqlengine
       - --flagfile=/home/admin/engine/conf/gflags.conf
-    image: scql:${SCQL_IMAGE_TAG}
+    image: ${SCQL_IMAGE_TAG}
     volumes:
       - ./engine/alice/conf/gflags.conf:/home/admin/engine/conf/gflags.conf
   engine-bob:
     command:
       - /home/admin/bin/scqlengine
       - --flagfile=/home/admin/engine/conf/gflags.conf
-    image: scql:${SCQL_IMAGE_TAG}
+    image: ${SCQL_IMAGE_TAG}
     volumes:
       - ./engine/bob/conf/gflags.conf:/home/admin/engine/conf/gflags.conf
       - ./csv/:/data/
@@ -19,11 +19,11 @@ services:
     command:
       - /home/admin/bin/scqlengine
       - --flagfile=/home/admin/engine/conf/gflags.conf
-    image: scql:${SCQL_IMAGE_TAG}
+    image: ${SCQL_IMAGE_TAG}
     volumes:
       - ./engine/carol/conf/gflags.conf:/home/admin/engine/conf/gflags.conf
   broker-alice:
-    image: scql:${SCQL_IMAGE_TAG}
+    image: ${SCQL_IMAGE_TAG}
     command:
       - /home/admin/bin/broker
       - -config=/home/admin/configs/config.yml
@@ -36,7 +36,7 @@ services:
     volumes:
       - ./broker/conf/alice/:/home/admin/configs/
   broker-bob:
-    image: scql:${SCQL_IMAGE_TAG}
+    image: ${SCQL_IMAGE_TAG}
     command:
       - /home/admin/bin/broker
       - -config=/home/admin/configs/config.yml
@@ -49,7 +49,7 @@ services:
     volumes:
       - ./broker/conf/bob/:/home/admin/configs/
   broker-carol:
-    image: scql:${SCQL_IMAGE_TAG}
+    image: ${SCQL_IMAGE_TAG}
     command:
       - /home/admin/bin/broker
       - -config=/home/admin/configs/config.yml
