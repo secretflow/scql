@@ -21,18 +21,20 @@ SCQL_IMAGE=scql
 IMAGE_TAG=latest
 ENABLE_CACHE=false
 TARGET_STAGE=image-prod
+TARGET_PLATFORM="linux/amd64"
 
 usage() {
-  echo "Usage: $0 [-n Name] [-t Tag] [-c]"
+  echo "Usage: $0 [-n Name] [-t Tag] [-p Platform] [-s Stage] [-c]"
   echo ""
   echo "Options:"
   echo "  -n name, image name, default is \"scql\""
   echo "  -t tag, image tag, default is \"latest\""
   echo "  -s target build stage, default is \"image-prod\", set it to \"image-dev\" for debug purpose."
+  echo "  -p target platform, default is \"linux/amd64\", support \"linux/arm64\" and \"linux/amd64\"."
   echo "  -c, enable host disk bazel cache to speedup build process"
 }
 
-while getopts "n:t:s:c" options; do
+while getopts "n:t:s:p:c" options; do
   case "${options}" in
   n)
     SCQL_IMAGE=${OPTARG}
@@ -45,6 +47,9 @@ while getopts "n:t:s:c" options; do
     ;;
   c)
     ENABLE_CACHE=true
+    ;;
+  p)
+    TARGET_PLATFORM=${OPTARG}
     ;;
   *)
     usage
@@ -73,9 +78,14 @@ if $ENABLE_CACHE; then
   MOUNT_OPTIONS="--mount type=volume,source=scql-rel-build-cache,target=/root/.cache"
 fi
 
+BUILDER=secretflow/release-ci:latest
+if [ "$TARGET_PLATFORM" == "linux/arm64" ]; then
+  BUILDER=secretflow/release-ci-aarch64:latest
+fi
+
 container_id=$(docker run -it --rm --detach \
   -w /home/admin/dev ${MOUNT_OPTIONS} \
-  secretflow/release-ci:latest)
+  $BUILDER)
 
 trap "docker stop ${container_id}" EXIT
 
@@ -114,7 +124,7 @@ cp $SCRIPT_DIR/scql.Dockerfile $TMP_PATH
 cd $TMP_PATH
 echo "start to build scql image in $(pwd)"
 
-docker build --target $TARGET_STAGE -f scql.Dockerfile -t $SCQL_IMAGE:$IMAGE_TAG .
+docker buildx build --platform $TARGET_PLATFORM --target $TARGET_STAGE -f scql.Dockerfile -t $SCQL_IMAGE:$IMAGE_TAG .
 
 # cleanup
 rm -rf ${TMP_PATH}
