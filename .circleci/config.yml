@@ -19,9 +19,22 @@ version: 2.1
 setup: true
 
 orbs:
-  path-filtering: circleci/path-filtering@0.1.4
+  path-filtering: circleci/path-filtering@1.0.0
+  continuation: circleci/continuation@1.0.0
 
 parameters:
+  GHA_Actor:
+    type: string
+    default: ""
+  GHA_Action:
+    type: string
+    default: ""
+  GHA_Event:
+    type: string
+    default: ""
+  GHA_Meta:
+    type: string
+    default: ""
   enable_regtest:
     type: boolean
     default: false
@@ -31,7 +44,10 @@ parameters:
 workflows:
   run_ut:
     when:
-      not: << pipeline.parameters.enable_regtest >>
+      and:
+        - not: << pipeline.parameters.enable_regtest >>
+        - not: << pipeline.parameters.GHA_Action >>
+        - not: << pipeline.parameters.GHA_Meta >>
     jobs:
       - path-filtering/filter:
           base-revision: main
@@ -58,3 +74,9 @@ workflows:
             pkg/.* run_regtest true
             .bazelrc run_regtest true
             .circleci/regtest-config.yml run_regtest true
+  publish-workflow:
+    when:
+      equal: [ "release", << pipeline.parameters.GHA_Event >> ]
+    jobs:
+      - continuation/continue:
+          configuration_path: .circleci/release-config.yml

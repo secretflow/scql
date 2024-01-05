@@ -8,11 +8,11 @@ RUN apt update \
     && apt upgrade -y \
     && apt clean
 
-COPY ./scqlengine /home/admin/bin/scqlengine
-COPY ./scdbserver /home/admin/bin/scdbserver
-COPY ./scdbclient /home/admin/bin/scdbclient
-COPY ./broker /home/admin/bin/broker
-COPY ./brokerctl /home/admin/bin/brokerctl
+COPY ./$TARGETPLATFORM/scqlengine /home/admin/bin/scqlengine
+COPY ./$TARGETPLATFORM/scdbserver /home/admin/bin/scdbserver
+COPY ./$TARGETPLATFORM/scdbclient /home/admin/bin/scdbclient
+COPY ./$TARGETPLATFORM/broker /home/admin/bin/broker
+COPY ./$TARGETPLATFORM/brokerctl /home/admin/bin/brokerctl
 
 FROM base as image-dev
 
