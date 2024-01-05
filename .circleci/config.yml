@@ -83,4 +83,5 @@ workflows:
           configuration_path: .circleci/release-config.yml
           # This is mandatory to trigger a pipeline when pushing a tag
           filters:
-            - tags
+            tags:
+              only: /.*/
