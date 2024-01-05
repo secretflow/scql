@@ -106,7 +106,7 @@ docker exec -it ${container_id} bash -c "cd /home/admin/dev && sed -i "s/SCQL_VE
 docker exec -it ${container_id} bash -c "cd /home/admin/dev && export SCQL_VERSION=$version && make"
 
 # prepare temporary path $TMP_PATH for file copies
-TMP_PATH=$WORK_DIR/.buildtmp/$IMAGE_TAG
+TMP_PATH=$WORK_DIR/.buildtmp/$IMAGE_TAG/$TARGET_PLATFORM
 rm -rf $TMP_PATH
 mkdir -p $TMP_PATH
 echo "copy files to dir: $TMP_PATH"
