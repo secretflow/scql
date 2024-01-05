@@ -52,11 +52,23 @@ jobs:
             cp docker/scql-ubuntu.Dockerfile image
             docker run -d -it --name scql-dev -v $(pwd):/home/admin/dev/ -w /home/admin/dev --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --cap-add=NET_ADMIN --privileged=true --entrypoint=bash secretflow/scql-ci:latest
             docker exec -it scql-dev bash -c "make && bazel build //engine/exe:scqlengine -c opt --ui_event_filters=-info,-debug,-warning" 
-            docker cp scql-dev:/home/admin/dev/bazel-bin/engine/exe/scqlengine image
-            docker cp scql-dev:/home/admin/dev/bin/scdbserver image
-            docker cp scql-dev:/home/admin/dev/bin/scdbclient image
-            docker cp scql-dev:/home/admin/dev/bin/broker image
-            docker cp scql-dev:/home/admin/dev/bin/brokerctl image
+            
+            MACHINE_TYPE=`arch`
+            if [ ${MACHINE_TYPE} == 'x86_64' ]; then
+              mkdir -p image/linux/amd64
+              docker cp scql-dev:/home/admin/dev/bazel-bin/engine/exe/scqlengine image/linux/amd64
+              docker cp scql-dev:/home/admin/dev/bin/scdbserver image/linux/amd64
+              docker cp scql-dev:/home/admin/dev/bin/scdbclient image/linux/amd64
+              docker cp scql-dev:/home/admin/dev/bin/broker image/linux/amd64
+              docker cp scql-dev:/home/admin/dev/bin/brokerctl image/linux/amd64
+            else
+              mkdir -p image/linux/arm64
+              docker cp scql-dev:/home/admin/dev/bazel-bin/engine/exe/scqlengine image/linux/arm64
+              docker cp scql-dev:/home/admin/dev/bin/scdbserver image/linux/arm64
+              docker cp scql-dev:/home/admin/dev/bin/scdbclient image/linux/arm64
+              docker cp scql-dev:/home/admin/dev/bin/broker image/linux/arm64
+              docker cp scql-dev:/home/admin/dev/bin/brokerctl image/linux/arm64
+            fi
             docker stop scql-dev &&  docker rm scql-dev
       - run:
           name: "Build image"
