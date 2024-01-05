@@ -36,7 +36,7 @@ jobs:
     resource_class: << parameters.resource_class >>
     steps:
       - checkout
-       - run:
+      - run:
           name: "Checkout devtools"
           command: git clone https://github.com/secretflow/devtools.git ../devtools
       - run:
