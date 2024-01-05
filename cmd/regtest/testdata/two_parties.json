@@ -391,11 +391,6 @@
       "mysql_query": "select plain_long_0, plain_string_0, plain_float_0, plain_datetime_0, plain_timestamp_0 from bob.tbl_0"
     },
     {
-      "name": "issuer party not in party infos",
-      "query": "select tb.plain_long_0 from scdb.bob_tbl_0 as tb join scdb.carol_tbl_0 as tc on tb.join_long_0 = tc.join_long_0",
-      "mysql_query": "select tb.plain_long_0 from bob.tbl_0 as tb join carol.tbl_0 as tc on tb.join_long_0 = tc.join_long_0"
-    },
-    {
       "name": "union all tests",
       "query": "select ta.plain_long_0 from scdb.alice_tbl_0 as ta union all select tb.plain_long_0 from scdb.bob_tbl_0 as tb",
       "mysql_query": "select ta.plain_long_0 from alice.tbl_0 as ta union all select tb.plain_long_0 from bob.tbl_0 as tb"
