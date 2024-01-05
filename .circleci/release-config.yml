@@ -95,6 +95,7 @@ jobs:
             # Build image
             cd docker
             cp -r /tmp/binary .
+            docker buildx create --name scql-image-builder --platform linux/arm64,linux/amd64 --use
             docker buildx build --platform linux/arm64,linux/amd64 -f scql-ubuntu.Dockerfile .
 
 # Invoke jobs via workflows
