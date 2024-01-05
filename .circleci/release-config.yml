@@ -93,6 +93,9 @@ jobs:
             # login docker
             # docker login -u secretflow -p ${DOCKER_DEPLOY_TOKEN}
 
+            ls /tmp/binary/linux/amd64/
+            ls /tmp/binary/linux/arm64/
+
             # Build image
             cd docker
             mkdir -p linux/amd64
