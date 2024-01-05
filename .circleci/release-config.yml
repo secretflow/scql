@@ -76,8 +76,8 @@ jobs:
       - persist_to_workspace:
           root: "/tmp/binary/linux"
           paths:
-            - "amd64"
-            - "arm64"
+            - "amd64/*"
+            - "arm64/*"
   docker_image_publish:
     docker:
       - image: cimg/deploy:2023.06.1
@@ -94,7 +94,10 @@ jobs:
 
             # Build image
             cd docker
-            cp -r /tmp/binary .
+            mkdir -p linux/amd64
+            mkdir -p linux/arm64
+            cp -r /tmp/binary/linux/amd64/ ./linux/amd64
+            cp -r /tmp/binary/linux/arm64/ ./linux/arm64
             ls ./linux/amd64
             ls ./linux/arm64
             docker buildx create --name scql-image-builder --platform linux/arm64,linux/amd64 --use
