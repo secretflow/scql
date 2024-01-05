@@ -61,6 +61,7 @@ jobs:
       - run:
           name: "Copy binary"
           command: |
+            MACHINE_TYPE=`arch`
             if [ ${MACHINE_TYPE} == 'x86_64' ]; then
               DIR=/tmp/binary/linux/amd64
             else
