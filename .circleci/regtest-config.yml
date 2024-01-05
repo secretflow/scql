@@ -50,7 +50,7 @@ jobs:
             set +e 
             mkdir -p image
             cp docker/scql-ubuntu.Dockerfile image
-            docker run -d -it --name scql-dev -v $(pwd):/home/admin/dev/ -w /home/admin/dev --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --cap-add=NET_ADMIN --privileged=true secretflow/scql-ci:latest
+            docker run -d -it --name scql-dev -v $(pwd):/home/admin/dev/ -w /home/admin/dev --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --cap-add=NET_ADMIN --privileged=true --entrypoint=bash secretflow/scql-ci:latest
             docker exec -it scql-dev bash -c "make && bazel build //engine/... -c opt --ui_event_filters=-info,-debug,-warning" 
             docker cp scql-dev:/home/admin/dev/bazel-bin/engine/exe/scqlengine image
             docker cp scql-dev:/home/admin/dev/bin/scdbserver image
