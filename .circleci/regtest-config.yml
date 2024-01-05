@@ -30,16 +30,24 @@ jobs:
   linux_regtest:
     machine:
       image: ubuntu-2004:2022.07.1
-    resource_class: 2xlarge
+    parameters:
+      resource_class:
+        type: string
+    resource_class: << parameters.resource_class >>
     steps:
       - checkout
+      - run:
+          name: Setup GCS
+          command: |
+            echo ${gcs_content} > ../gcs.data
+            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=gcs.json
       - run:
           name: "Build binary"
           command: |
             set +e 
             mkdir -p image
-            cp docker/scql.Dockerfile image
-            docker run -d -it --name scql-dev -v $(pwd):/home/admin/dev/ -w /home/admin/dev --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --cap-add=NET_ADMIN --privileged=true secretflow/release-ci:latest
+            cp docker/scql-ubuntu.Dockerfile image
+            docker run -d -it --name scql-dev -v $(pwd):/home/admin/dev/ -w /home/admin/dev --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --cap-add=NET_ADMIN --privileged=true secretflow/scql-ci:latest
             docker exec -it scql-dev bash -c "make && bazel build //engine/... -c opt --ui_event_filters=-info,-debug,-warning" 
             docker cp scql-dev:/home/admin/dev/bazel-bin/engine/exe/scqlengine image
             docker cp scql-dev:/home/admin/dev/bin/scdbserver image
@@ -72,4 +80,7 @@ workflows:
   regtest:
     when: << pipeline.parameters.run_regtest >>
     jobs:
-      - linux_regtest
+      - linux_regtest:
+          matrix:
+            parameters:
+              resource_class: ["2xlarge", "arm-xlarge"]
