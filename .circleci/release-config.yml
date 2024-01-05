@@ -63,9 +63,9 @@ jobs:
           command: |
             MACHINE_TYPE=`arch`
             if [ ${MACHINE_TYPE} == 'x86_64' ]; then
-              DIR=/tmp/binary/linux/amd64
+              DIR=/tmp/binary/linux/amd64/
             else
-              DIR=/tmp/binary/linux/arm64
+              DIR=/tmp/binary/linux/arm64/
             fi
             mkdir -p ${DIR}
             cp bazel-bin/engine/exe/scqlengine ${DIR}
@@ -73,6 +73,7 @@ jobs:
             cp bin/scdbclient ${DIR}
             cp bin/broker ${DIR}
             cp bin/brokerctl ${DIR}
+            ls ${DIR}
       - persist_to_workspace:
           root: "/tmp/binary/linux"
           paths:
