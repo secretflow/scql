@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-12 08:10+0800\n"
+"POT-Creation-Date: 2024-01-05 15:22+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.13.0\n"
+"Generated-By: Babel 2.12.1\n"
 
 #: ../../reference/lang/mysql-compatibility.rst:2
 msgid "MySQL Compatibility"
@@ -218,8 +218,10 @@ msgid "Arithmetic(+, -, \\*, /, %)"
 msgstr "算术运算 (+, -, \\*, /, %)"
 
 #: ../../reference/lang/mysql-compatibility.rst:93
-msgid "Both arguments in a arithmetic operation shouldn't be string."
-msgstr "算术运算中的两个参数都不能是 string 类型。"
+msgid ""
+"Arguments of '%' operation only support type long, while other arithmetic"
+" operations support types other than type string."
+msgstr "'%' 运算的参数仅支持 long 类型，而其他算术运算支持除 string 以外的数据类型。"
 
 #: ../../reference/lang/mysql-compatibility.rst:94
 msgid "If both arguments are long, they are calculated as long."
@@ -237,10 +239,11 @@ msgid "Aggregation(sum, count, avg, min, max)"
 msgstr "聚合操作 (sum, count, avg, min, max)"
 
 #: ../../reference/lang/mysql-compatibility.rst:99
-msgid "All arguments in a aggregation function shouldn't be string."
-msgstr "聚合操作中的所有参数都不能是 string 类型。"
+msgid ""
+"In all aggregation functions except count, parameters should not be type "
+"string."
+msgstr "除了 count ，聚合操作中的所有参数都不能是 string 类型。"
 
 #: ../../reference/lang/mysql-compatibility.rst:100
 msgid "If all arguments are long, they are calculated as long."
 msgstr "如果所有参数都是 long 类型，则它们将按照 long 类型进行计算。"
-

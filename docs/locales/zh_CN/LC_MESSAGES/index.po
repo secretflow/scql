@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  SCQL\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-12-04 16:14+0800\n"
+"POT-Creation-Date: 2024-01-05 15:22+0800\n"
 "PO-Revision-Date: 2023-10-11 20:47+0800\n"
 "Last-Translator: \n"
 "Language: zh_CN\n"
@@ -50,11 +50,11 @@ msgstr "SCQL 系统"
 #: ../../index.rst:21
 msgid ""
 "**Overview**: :doc:`System overview and architecture "
-"</topics/system/intro>` | :doc:`Common usage </topics/system/usage>` | "
-":doc:`P2P </topics/system/intro-p2p>`"
+"</topics/system/intro>` | :doc:`Common usage </topics/system/usage>` ｜ "
+":doc:`P2P vs. Centralized </topics/system/deploy-arch>`"
 msgstr ""
 "**概述**：:doc:`系统简介及架构设计 </topics/system/intro>` | :doc:`使用流程 "
-"</topics/system/usage>` | :doc:`P2P </topics/system/intro-p2p>`"
+"</topics/system/usage>` | :doc:`P2P vs 中心化 </topics/system/deploy-arch>`"
 
 #: ../../index.rst:26
 msgid "**Security**: :doc:`Security overview </topics/security/overview>`"
@@ -102,38 +102,61 @@ msgstr ""
 msgid "Clients"
 msgstr "客户端"
 
-#: ../../index.rst:58
-msgid ":doc:`Overview of SCQL clients </topics/clients/overview>`"
-msgstr ":doc:`关于 SCQL 客户端 </topics/clients/overview>`"
+#: ../../index.rst:58 ../../index.rst:72
+msgid "**P2P**"
+msgstr ""
 
-#: ../../index.rst:59
-msgid ":doc:`HTTP API reference </reference/http-api>`"
-msgstr ":doc:`HTTP API 参考 </reference/http-api>`"
+#: ../../index.rst:60
+msgid ":doc:`Broker HTTP API reference </reference/broker-api>`"
+msgstr ":doc:`Broker HTTP API 参考 </reference/broker-api>`"
 
-#: ../../index.rst:63
+#: ../../index.rst:63 ../../index.rst:77
+msgid "**Centralized**"
+msgstr "**中心化**"
+
+#: ../../index.rst:65
+msgid ":doc:`Overview of SCQL clients </topics/clients/integrate-scdb>`"
+msgstr ":doc:`SCQL 客户端 </topics/clients/integrate-scdb>`"
+
+#: ../../index.rst:66
+msgid ":doc:`SCDB HTTP API reference </reference/scdb-api>`"
+msgstr ":doc:`SCDB HTTP API 参考 </reference/scdb-api>`"
+
+#: ../../index.rst:70
 msgid "Deployment"
 msgstr "部署"
 
-#: ../../index.rst:65
-msgid ""
-"**Guides**: :doc:`How to deploy an SCQL cluster in centralized "
-"mode</topics/deployment/how-to-deploy-centralized-cluster>` | :doc:`How "
-"to deploy an SCQL cluster in P2P mode</topics/deployment/how-to-deploy-"
-"p2p-cluster>`"
-msgstr ""
-"**指南**：:doc:`如何部署 SCQL 集群 </topics/deployment/how-to-deploy-centralized-"
-"cluster>` | :doc:`如何在 P2P 模式下部署 SCQL 集群 </topics/deployment/how-to-"
-"deploy-p2p-cluster>` "
-
-#: ../../index.rst:69
-msgid "**Reference**: :doc:`SCQL system config </reference/engine-config>`"
-msgstr "**参考**：:doc:`SCQL 系统配置 </reference/engine-config>`"
-
 #: ../../index.rst:74
+msgid ""
+"**Guides**: :doc:`P2P Deployment </topics/deployment/how-to-deploy-p2p-"
+"cluster>`"
+msgstr ""
+"**指南**: :doc:`P2P 部署 </topics/deployment/how-to-deploy-p2p-"
+"cluster>`"
+
+#: ../../index.rst:75
+msgid "**Reference**: :doc:`P2P Configuration </reference/p2p-deploy-config>`"
+msgstr "**参考**：:doc:`P2P 配置 </reference/p2p-deploy-config>`"
+
+#: ../../index.rst:79
+msgid ""
+"**Guides:** :doc:`Centralized Deployment </topics/deployment/how-to-"
+"deploy-centralized-cluster>`"
+msgstr ""
+"**指南:** :doc:`中心化部署 </topics/deployment/how-to-"
+"deploy-centralized-cluster>`"
+
+#: ../../index.rst:80
+msgid ""
+"**Reference**: :doc:`Centralized Configuration </reference/centralized-"
+"deploy-config>`"
+msgstr "**参考**：:doc:`中心化部署配置 </reference/centralized-"
+"deploy-config>`"
+
+#: ../../index.rst:84
 msgid "For contributors"
 msgstr "贡献者文档"
 
-#: ../../index.rst:76
+#: ../../index.rst:86
 msgid "**Reference**: :doc:`SCQL operators </reference/operators>`"
 msgstr "**参考**：:doc:`SCQL 算子规范 </reference/operators>`"
-

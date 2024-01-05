@@ -1,0 +1,67 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SCQL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: SCQL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-05 15:22+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.12.1\n"
+
+#: ../../topics/system/deploy-arch.rst:2
+msgid "Deployment Architecture: P2P vs Centralized"
+msgstr "部署架构：P2P vs 中心化"
+
+#: ../../topics/system/deploy-arch.rst:5
+msgid ""
+"The SCQL system supports both P2P and Centralized deployment "
+"architecture. They look different, but share the same SCQL unified "
+"architecture."
+msgstr "SCQL 系统同时支持 P2P 和中心化部署架构。它们看起来不同，但共享相同的 SCQL 统一架构。"
+
+#: ../../topics/system/deploy-arch.rst:-1
+msgid "SCQL Unified Architecture"
+msgstr "SCQL 统一架构"
+
+#: ../../topics/system/deploy-arch.rst:12
+msgid ""
+"The ``Driver`` component in the above diagram could be ``Broker`` in P2P "
+"deployment architecture, or ``SCDB`` in centralized deployment "
+"architecture."
+msgstr "图中的 ``Driver`` 组件可以是 P2P 部署架构中的 ``Broker`` ，也可以是中心化部署架构中的 ``SCDB`` 。"
+
+#: ../../topics/system/deploy-arch.rst:14
+msgid ""
+"The ``Interpreter`` component is responsible for translating the DQL "
+"query into hybrid MPC-plaintext execution graph, it is the core component"
+" of SCQL. Normally, it will be embedded in the ``Driver`` as lib."
+msgstr "``Interpreter`` 组件负责将 DQL 查询翻译成明密文混合执行图，它是 SCQL 的核心组件。通常作为 lib 嵌入到 ``Driver`` 中"
+
+#: ../../topics/system/deploy-arch.rst:18
+msgid "Which one to choose, P2P or Centralized?"
+msgstr "如何选择部署模式，P2P 还是中心化？"
+
+#: ../../topics/system/deploy-arch.rst:20
+msgid ""
+"It depends on the actual business scenario. If there is no trusted third "
+"party to rely on, use P2P deployment architecture. If there exists a "
+"trusted third party, user could choose the centralized deployment "
+"architecture."
+msgstr "这取决于实际的业务场景。如果没有可信第三方可以依赖，则使用 P2P 部署架构。如果有可信第三方，则可以选择中心化部署架构。"
+
+#: ../../topics/system/deploy-arch.rst:22
+msgid ""
+"Both P2P and Centralized deployment architecture support the same SCQL "
+"DQL syntax and MPC protocol, and the end-to-end performance is basically "
+"the same."
+msgstr "P2P 和中心化部署架构支持相同的 DQL 语法和 MPC 协议，端到端性能也基本相同。"
+

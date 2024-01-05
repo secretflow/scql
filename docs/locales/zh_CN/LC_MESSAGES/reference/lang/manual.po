@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-11-16 10:08+0800\n"
+"POT-Creation-Date: 2024-01-05 15:22+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -98,81 +98,26 @@ msgid ""
 msgstr "包含日期和时间两部分， SCQL 使用 'YYYY-MM-DD hh:mm:ss' 格式识别，但表示为受时区影响的 int64 值"
 
 #: ../../reference/lang/manual.rst:32
-msgid "SCQL Statements"
-msgstr "SCQL 语句"
+msgid "SCQL Query Syntax"
+msgstr "SCQL 查询语法"
 
 #: ../../reference/lang/manual.rst:34
 msgid ""
-"SCQL is compatible with most MySQL syntax, which makes it easy to use. "
-"For syntax differences between SCQL and MySQL, please read "
-":doc:`/reference/lang/mysql-compatibility`."
+"It is compatible with most MySQL DQL syntax. For syntax differences "
+"between SCQL and MySQL, please read :doc:`/reference/lang/mysql-"
+"compatibility`."
 msgstr ""
-"SCQL 兼容大多数 MySQL 语法，这使得它易于使用。关于 SCQL 和 MySQL 之间的语法差异，请阅读 "
+"SCQL 兼容大多数 MySQL 语法。关于 SCQL 和 MySQL 之间的语法差异，请阅读 "
 ":doc:`/reference/lang/mysql-compatibility` 。"
 
-#: ../../reference/lang/manual.rst:39
-msgid "CREATE/DROP/ALTER USER Statement"
-msgstr "CREATE/DROP/ALTER USER 语句"
-
-#: ../../reference/lang/manual.rst:62 ../../reference/lang/manual.rst:92
-#: ../../reference/lang/manual.rst:122 ../../reference/lang/manual.rst:162
-msgid "Examples:"
-msgstr "样例："
-
-#: ../../reference/lang/manual.rst:83
-msgid "CREATE/DROP DATABASE Statement"
-msgstr "CREATE/DROP DATABASE 语句"
-
-#: ../../reference/lang/manual.rst:106
-msgid "CREATE/DROP TABLE Statement"
-msgstr "CREATE/DROP TABLE 语句"
-
-#: ../../reference/lang/manual.rst:119
-msgid ""
-"Create table here means mapping 'tbl_name' to the existing physic table, "
-"which is specified by ``REF_TABLE`` option and located on the query "
-"issuer party. In SCQL, user runs queries on virtual table, which helps "
-"simplify privilege control and usage."
-msgstr ""
-"此处创建表意味着将 'tbl_name' 映射到现有的物理表，该物理表由 ``REF_TABLE`` 选项指定并位于查询发出方。在 SCQL "
-"中，用户在虚拟表上运行查询，这有助于简化权限控制和使用"
-
-#: ../../reference/lang/manual.rst:141
-msgid "GRANT/REVOKE Statement"
-msgstr "GRANT/REVOKE 语句"
-
-#: ../../reference/lang/manual.rst:177
-msgid "SHOW/DESCRIBE Statement"
-msgstr "SHOW/DESCRIBE 语句"
-
-#: ../../reference/lang/manual.rst:191
-msgid "SELECT Statement"
-msgstr "SELECT 语句"
-
-#: ../../reference/lang/manual.rst:262
+#: ../../reference/lang/manual.rst:105
 msgid "Functions and Operators"
 msgstr "函数与操作符"
 
-#: ../../reference/lang/manual.rst:264
+#: ../../reference/lang/manual.rst:107
 msgid "Todo"
 msgstr "待办"
 
-#: ../../reference/lang/manual.rst:264
+#: ../../reference/lang/manual.rst:107
 msgid "this part is not ready, please check later"
 msgstr "该部分尚未准备好，请之后查看"
-
-#~ msgid "both storage and computation are done in type float32"
-#~ msgstr "存储和计算都在 float32 类型中完成"
-
-#~ msgid "**Limitation:**"
-#~ msgstr "**限制：**"
-
-#~ msgid "``JOIN`` only supports"
-#~ msgstr "JOIN 仅仅支持"
-
-#~ msgid "``INNER JOIN``"
-#~ msgstr "``INNER JOIN``"
-
-#~ msgid "not supported yet, coming soon"
-#~ msgstr "暂不支持，即将推出"
-
