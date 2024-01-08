@@ -81,7 +81,7 @@ fi
 MACHINE_TYPE=`arch`
 HOST_PLATFORM=""
 
-if [ "$MACHINE_TYPE" == "x86_64"]; then
+if [ "$MACHINE_TYPE" == "x86_64" ]; then
   HOST_PLATFORM=linux/amd64
 else
   HOST_PLATFORM=linux/arm64
