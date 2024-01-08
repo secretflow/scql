@@ -91,7 +91,7 @@ jobs:
           name: Build Docker image
           command: |
             # login docker
-            #docker login -u secretflow -p ${DOCKER_DEPLOY_TOKEN}
+            docker login -u secretflow -p ${DOCKER_DEPLOY_TOKEN}
 
             ls /tmp/binary/linux/amd64/
             ls /tmp/binary/linux/arm64/
