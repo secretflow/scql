@@ -20,17 +20,17 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/pbQueryResponse'
+            $ref: '#/definitions/scql.pb.QueryResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: body
           in: body
           required: true
           schema:
-            $ref: '#/definitions/pbQueryRequest'
+            $ref: '#/definitions/scql.pb.QueryRequest'
       tags:
         - IntraBrokerService
   /intra/query/submit:
@@ -41,17 +41,17 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/pbSubmitResponse'
+            $ref: '#/definitions/scql.pb.SubmitResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: body
           in: body
           required: true
           schema:
-            $ref: '#/definitions/pbQueryRequest'
+            $ref: '#/definitions/scql.pb.QueryRequest'
       tags:
         - IntraBrokerService
   /intra/query/fetch:
@@ -62,17 +62,17 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/pbQueryResponse'
+            $ref: '#/definitions/scql.pb.QueryResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: body
           in: body
           required: true
           schema:
-            $ref: '#/definitions/pbFetchResultRequest'
+            $ref: '#/definitions/scql.pb.FetchResultRequest'
       tags:
         - IntraBrokerService
   /intra/project/create:
@@ -85,17 +85,17 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/pbCreateProjectResponse'
+            $ref: '#/definitions/scql.pb.CreateProjectResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: body
           in: body
           required: true
           schema:
-            $ref: '#/definitions/pbCreateProjectRequest'
+            $ref: '#/definitions/scql.pb.CreateProjectRequest'
       tags:
         - IntraBrokerService
   /intra/project/list:
@@ -106,17 +106,17 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/pbListProjectsResponse'
+            $ref: '#/definitions/scql.pb.ListProjectsResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: body
           in: body
           required: true
           schema:
-            $ref: '#/definitions/pbListProjectsRequest'
+            $ref: '#/definitions/scql.pb.ListProjectsRequest'
       tags:
         - IntraBrokerService
   /intra/member/invite:
@@ -127,17 +127,17 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/pbInviteMemberResponse'
+            $ref: '#/definitions/scql.pb.InviteMemberResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: body
           in: body
           required: true
           schema:
-            $ref: '#/definitions/pbInviteMemberRequest'
+            $ref: '#/definitions/scql.pb.InviteMemberRequest'
       tags:
         - IntraBrokerService
   /intra/invitation/list:
@@ -148,17 +148,17 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/pbListInvitationsResponse'
+            $ref: '#/definitions/scql.pb.ListInvitationsResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: body
           in: body
           required: true
           schema:
-            $ref: '#/definitions/pbListInvitationsRequest'
+            $ref: '#/definitions/scql.pb.ListInvitationsRequest'
       tags:
         - IntraBrokerService
   /intra/invitation/process:
@@ -171,17 +171,17 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/pbProcessInvitationResponse'
+            $ref: '#/definitions/scql.pb.ProcessInvitationResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: body
           in: body
           required: true
           schema:
-            $ref: '#/definitions/pbProcessInvitationRequest'
+            $ref: '#/definitions/scql.pb.ProcessInvitationRequest'
       tags:
         - IntraBrokerService
   /intra/table/create:
@@ -192,17 +192,17 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/pbCreateTableResponse'
+            $ref: '#/definitions/scql.pb.CreateTableResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: body
           in: body
           required: true
           schema:
-            $ref: '#/definitions/pbCreateTableRequest'
+            $ref: '#/definitions/scql.pb.CreateTableRequest'
       tags:
         - IntraBrokerService
   /intra/table/list:
@@ -213,17 +213,17 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/pbListTablesResponse'
+            $ref: '#/definitions/scql.pb.ListTablesResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: body
           in: body
           required: true
           schema:
-            $ref: '#/definitions/pbListTablesRequest'
+            $ref: '#/definitions/scql.pb.ListTablesRequest'
       tags:
         - IntraBrokerService
   /intra/table/drop:
@@ -236,17 +236,17 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/pbDropTableResponse'
+            $ref: '#/definitions/scql.pb.DropTableResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: body
           in: body
           required: true
           schema:
-            $ref: '#/definitions/pbDropTableRequest'
+            $ref: '#/definitions/scql.pb.DropTableRequest'
       tags:
         - IntraBrokerService
   /intra/ccl/grant:
@@ -257,17 +257,17 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/pbGrantCCLResponse'
+            $ref: '#/definitions/scql.pb.GrantCCLResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: body
           in: body
           required: true
           schema:
-            $ref: '#/definitions/pbGrantCCLRequest'
+            $ref: '#/definitions/scql.pb.GrantCCLRequest'
       tags:
         - IntraBrokerService
   /intra/ccl/revoke:
@@ -278,17 +278,17 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/pbRevokeCCLResponse'
+            $ref: '#/definitions/scql.pb.RevokeCCLResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: body
           in: body
           required: true
           schema:
-            $ref: '#/definitions/pbRevokeCCLRequest'
+            $ref: '#/definitions/scql.pb.RevokeCCLRequest'
       tags:
         - IntraBrokerService
   /intra/ccl/show:
@@ -299,993 +299,21 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/pbShowCCLResponse'
+            $ref: '#/definitions/scql.pb.ShowCCLResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: body
           in: body
           required: true
           schema:
-            $ref: '#/definitions/pbShowCCLRequest'
+            $ref: '#/definitions/scql.pb.ShowCCLRequest'
       tags:
         - IntraBrokerService
 definitions:
-  ChangeEntryAction:
-    type: string
-    enum:
-      - CreateTable
-      - DropTable
-      - GrantCCL
-      - RevokeCCL
-      - AddProjectMember
-      - UpdateProjectConf
-      - ArchiveProject
-    default: CreateTable
-  CreateTableRequestColumnDesc:
-    type: object
-    properties:
-      name:
-        type: string
-        title: Column name
-      dtype:
-        type: string
-        title: Column data type, maybe 'long/float/string/timestamp/datetime/...'
-  InviteMemberRequestInvitationMethod:
-    type: string
-    enum:
-      - PUSH
-      - PULL
-    default: PUSH
-    description: |2-
-       - PUSH: push invitation request to invitee's broker
-       - PULL: Get invitation code, then share to invitee via email or IM
-      tools.
-      status: tobe implemented.
-  ResourceSpecResourceKind:
-    type: string
-    enum:
-      - Project
-      - Table
-      - CCL
-    default: Project
-    title: |-
-      - Project: project information
-       - Table: table schema
-       - CCL: all ccls for specific table
-  RuntimeConfigBeaverType:
-    type: string
-    enum:
-      - TrustedFirstParty
-      - TrustedThirdParty
-      - MultiParty
-    default: TrustedFirstParty
-    description: |2-
-       - TrustedFirstParty: Assume first party (rank0) as trusted party to generate beaver triple.
-      WARNING: It is NOT SAFE and SHOULD NOT BE used in production.
-       - TrustedThirdParty: Generate beaver triple through an additional trusted third party.
-       - MultiParty: Generate beaver triple through multi-party.
-  RuntimeConfigExpMode:
-    type: string
-    enum:
-      - EXP_DEFAULT
-      - EXP_PADE
-      - EXP_TAYLOR
-    default: EXP_DEFAULT
-    description: |-
-      The exponential approximation method.
-
-       - EXP_DEFAULT: Implementation defined.
-       - EXP_PADE: The pade approximation.
-       - EXP_TAYLOR: Taylor series approximation.
-  RuntimeConfigLogMode:
-    type: string
-    enum:
-      - LOG_DEFAULT
-      - LOG_PADE
-      - LOG_NEWTON
-    default: LOG_DEFAULT
-    description: |-
-      The logarithm approximation method.
-
-       - LOG_DEFAULT: Implementation defined.
-       - LOG_PADE: The pade approximation.
-       - LOG_NEWTON: The newton approximation.
-  RuntimeConfigSigmoidMode:
-    type: string
-    enum:
-      - SIGMOID_DEFAULT
-      - SIGMOID_MM1
-      - SIGMOID_SEG3
-      - SIGMOID_REAL
-    default: SIGMOID_DEFAULT
-    description: |-
-      The sigmoid approximation method.
-
-       - SIGMOID_DEFAULT: Implementation defined.
-       - SIGMOID_MM1: Minmax approximation one order.
-      f(x) = 0.5 + 0.125 * x
-       - SIGMOID_SEG3: Piece-wise simulation.
-      f(x) = 0.5 + 0.125x if -4 <= x <= 4
-             1            if       x > 4
-             0            if  -4 > x
-       - SIGMOID_REAL: The real definition, which depends on exp's accuracy.
-      f(x) = 1 / (1 + exp(-x))
-  TableMetaColumn:
-    type: object
-    properties:
-      name:
-        type: string
-      dtype:
-        type: string
-  TensorShapeDimension:
-    type: object
-    properties:
-      dim_value:
-        type: string
-        format: int64
-      dim_param:
-        type: string
-        description: shape is unknown.
-  googlerpcStatus:
-    type: object
-    properties:
-      code:
-        type: integer
-        format: int32
-      message:
-        type: string
-      details:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/protobufAny'
-  pbArchiveProjectResponse:
-    type: object
-    properties:
-      status:
-        $ref: '#/definitions/scqlpbStatus'
-  pbAskInfoResponse:
-    type: object
-    properties:
-      status:
-        $ref: '#/definitions/scqlpbStatus'
-      datas:
-        type: array
-        items:
-          type: string
-          format: byte
-  pbBrokerProtocolVersion:
-    type: string
-    enum:
-      - BROKER_SERVICE_PROTOCOL_V1
-    default: BROKER_SERVICE_PROTOCOL_V1
-  pbCancelQueryResponse:
-    type: object
-    properties:
-      status:
-        $ref: '#/definitions/scqlpbStatus'
-  pbChangeEntry:
-    type: object
-    properties:
-      action:
-        $ref: '#/definitions/ChangeEntryAction'
-      data:
-        type: string
-        format: byte
-  pbChecksum:
-    type: object
-    properties:
-      table_schema:
-        type: string
-        format: byte
-        title: checksum of schemas
-      ccl:
-        type: string
-        format: byte
-        title: checksum of ccl
-  pbChecksumCompareResult:
-    type: string
-    enum:
-      - EQUAL
-      - TABLE_SCHEMA_NOT_EQUAL
-      - CCL_NOT_EQUAL
-      - TABLE_CCL_NOT_EQUAL
-    default: EQUAL
-  pbColumnControl:
-    type: object
-    properties:
-      col:
-        $ref: '#/definitions/pbColumnDef'
-      party_code:
-        type: string
-        description: the code of party that the constraint applies to.
-      constraint:
-        $ref: '#/definitions/pbConstraint'
-  pbColumnDef:
-    type: object
-    properties:
-      column_name:
-        type: string
-      table_name:
-        type: string
-  pbConstraint:
-    type: string
-    enum:
-      - UNKNOWN
-      - PLAINTEXT
-      - ENCRYPTED_ONLY
-      - PLAINTEXT_AFTER_JOIN
-      - PLAINTEXT_AFTER_GROUP_BY
-      - PLAINTEXT_AFTER_COMPARE
-      - PLAINTEXT_AFTER_AGGREGATE
-    default: UNKNOWN
-    title: |-
-      - PLAINTEXT: The column can be revealed at party_code.
-       - ENCRYPTED_ONLY: The column or any column produced by it can NOT be revealed at
-      party_code. It can be used as condition in JOIN, WHERE, and GROUP BY.
-       - PLAINTEXT_AFTER_JOIN: The column can be revealed at party_code if it is used as join key
-       - PLAINTEXT_AFTER_GROUP_BY: The column can be revealed at party_code if it is used as group by key
-       - PLAINTEXT_AFTER_COMPARE: The column can be revealed at party_code, if and only if
-      it is the result of the comparison function e.g. select compare1 >
-      compare2 from t group by zip_code
-       - PLAINTEXT_AFTER_AGGREGATE: The column can be revealed at party_code, if and only if
-      it has been through a N to 1 mapping such as
-          - Aggregation operation such as sum/min/max/avg/count, e.g.
-               select avg(score) from t group by zip_code
-               select avg(score) from t
-  pbCreateProjectRequest:
-    type: object
-    example:
-      conf:
-        field: FM64
-        protocol: SEMI2K
-      name: proj_name
-      project_id: proj_id
-    properties:
-      project_id:
-        type: string
-        title: |-
-          The unique identifier of the Project, if empty, broker will generate unique
-          project id
-      name:
-        type: string
-        title: Project name, human readable
-      description:
-        type: string
-      conf:
-        $ref: '#/definitions/pbProjectConfig'
-        title: Runtime conf for Project
-    required:
-      - conf
-  pbCreateProjectResponse:
-    type: object
-    example:
-      project_id: proj_id
-      status:
-        code: 0
-        message: 'create project succeed, id: proj_id'
-    properties:
-      status:
-        $ref: '#/definitions/scqlpbStatus'
-      project_id:
-        type: string
-        description: |-
-          If Project id is empty in request, broker will generate one and return it
-          in response.
-  pbCreateTableRequest:
-    type: object
-    example:
-      columns:
-        - dtype: string
-          name: ID
-        - dtype: int
-          name: age
-      db_type: mysql
-      project_id: proj_id
-      ref_table: physic.table_alice
-      table_name: ta
-    properties:
-      project_id:
-        type: string
-        title: Project id
-      table_name:
-        type: string
-        title: Table name
-      ref_table:
-        type: string
-        title: The refered physical table
-      db_type:
-        type: string
-        title: The db_type of ref_table, maybe 'MySQL/Postgres/csvdb/...'
-      columns:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/CreateTableRequestColumnDesc'
-        title: Columns choosed to refer from physical table
-    title: Import physical table `ref_table` in Project `project_id` as `table_name`
-    required:
-      - project_id
-      - table_name
-      - ref_table
-      - columns
-  pbCreateTableResponse:
-    type: object
-    example:
-      status:
-        code: 0
-        message: create table for proj_id succeed
-    properties:
-      status:
-        $ref: '#/definitions/scqlpbStatus'
-  pbDistributeQueryResponse:
-    type: object
-    properties:
-      status:
-        $ref: '#/definitions/scqlpbStatus'
-      server_protocol:
-        $ref: '#/definitions/pbBrokerProtocolVersion'
-      engine_endpoint:
-        type: string
-        title: SCQLEngine endpoint of server
-      client_checksum_result:
-        $ref: '#/definitions/pbChecksumCompareResult'
-      server_checksum_result:
-        $ref: '#/definitions/pbChecksumCompareResult'
-      expected_server_checksum:
-        $ref: '#/definitions/pbChecksum'
-  pbDropTableRequest:
-    type: object
-    example:
-      status:
-        code: 0
-        message: drop table succeed
-    properties:
-      project_id:
-        type: string
-        title: Project id
-      table_name:
-        type: string
-        title: The name of Table to be droped
-    required:
-      - project_id
-      - table_name
-  pbDropTableResponse:
-    type: object
-    properties:
-      status:
-        $ref: '#/definitions/scqlpbStatus'
-  pbExchangeJobInfoResponse:
-    type: object
-    properties:
-      status:
-        $ref: '#/definitions/scqlpbStatus'
-      endpoint:
-        type: string
-        title: engine endpoint
-      server_checksum_result:
-        $ref: '#/definitions/pbChecksumCompareResult'
-      expected_server_checksum:
-        $ref: '#/definitions/pbChecksum'
-        title: used when checksum result was not equal
-  pbFetchResultRequest:
-    type: object
-    example:
-      job_id: your-job-id-from-submit
-    properties:
-      job_id:
-        type: string
-        title: The unique identifier of the query job, obtained when SubmitQuery is called
-    required:
-      - job_id
-  pbGrantCCLRequest:
-    type: object
-    example:
-      column_control_list:
-        - col:
-            column_name: ID
-            table_name: ta
-          constraint: PLAINTEXT
-          party_code: alice
-      project_id: proj_id
-    properties:
-      project_id:
-        type: string
-        title: Project id
-      column_control_list:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/pbColumnControl'
-        title: CCLs
-    required:
-      - project_id
-      - column_control_list
-  pbGrantCCLResponse:
-    type: object
-    example:
-      status:
-        code: 0
-        message: grant ccl for proj_id succeed
-    properties:
-      status:
-        $ref: '#/definitions/scqlpbStatus'
-  pbInvitationRespond:
-    type: string
-    enum:
-      - ACCEPT
-      - DECLINE
-    default: ACCEPT
-  pbInvitationStatus:
-    type: string
-    enum:
-      - UNDECIDED
-      - ACCEPTED
-      - DECLINED
-      - INVALID
-    default: UNDECIDED
-  pbInviteMemberRequest:
-    type: object
-    example:
-      invitee: bob
-      project_id: proj_id
-    properties:
-      project_id:
-        type: string
-        title: Project id
-      invitee:
-        type: string
-        title: Party code of invitee
-      postscript:
-        type: string
-      method:
-        $ref: '#/definitions/InviteMemberRequestInvitationMethod'
-    required:
-      - project_id
-      - invitee
-  pbInviteMemberResponse:
-    type: object
-    example:
-      status:
-        code: 0
-        message: invite member bob succeed
-    properties:
-      status:
-        $ref: '#/definitions/scqlpbStatus'
-      invitation_code:
-        type: string
-        title: |-
-          Valid only when using PULL invitation method.
-          Format looks like URL parameters
-  pbInviteToProjectResponse:
-    type: object
-    properties:
-      status:
-        $ref: '#/definitions/scqlpbStatus'
-  pbListInvitationsRequest:
-    type: object
-    example: {}
-  pbListInvitationsResponse:
-    type: object
-    example:
-      invitations:
-        - invitation_id: 1
-          invitee: bob
-          inviter: alice
-          project:
-            conf:
-              spu_runtime_cfg:
-                field: FM64
-                protocol: SEMI2K
-            project_id: proj_id
-          status: 0
-      status:
-        code: 0
-        message: list invitations succeed
-    properties:
-      status:
-        $ref: '#/definitions/scqlpbStatus'
-      invitations:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/pbProjectInvitation'
-  pbListProjectsRequest:
-    type: object
-    example:
-      ids:
-        - proj_id
-    properties:
-      ids:
-        type: array
-        items:
-          type: string
-        title: The ids of Projects to be listed, if empty, all Projects will be listed
-  pbListProjectsResponse:
-    type: object
-    example:
-      projects:
-        - conf:
-            spu_runtime_cfg:
-              field: FM64
-              protocol: SEMI2K
-          creator: alice
-          members:
-            - alice
-          project_id: proj_id
-      status:
-        code: 0
-        message: list projects succeed
-    properties:
-      status:
-        $ref: '#/definitions/scqlpbStatus'
-      projects:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/pbProjectDesc'
-  pbListTablesRequest:
-    type: object
-    example:
-      project_id: proj_id
-    properties:
-      project_id:
-        type: string
-        title: Project id
-      names:
-        type: array
-        items:
-          type: string
-        title: The names of Tables to be listed, if empty, all Tables will be listed
-    required:
-      - project_id
-  pbListTablesResponse:
-    type: object
-    example:
-      status:
-        code: 0
-        message: list tables succeed
-      tables:
-        - columns:
-            - dtype: string
-              name: ID
-            - dtype: int
-              name: age
-          db_type: mysql
-          ref_table: bob.user_stats
-          table_name: tb
-          table_owner: bob
-    properties:
-      status:
-        $ref: '#/definitions/scqlpbStatus'
-      tables:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/pbTableMeta'
-  pbPartyId:
-    type: object
-    properties:
-      code:
-        type: string
-        title: party code
-    description: 'TODO: move PartyId to a proper place.'
-  pbPrimitiveDataType:
-    type: string
-    enum:
-      - PrimitiveDataType_UNDEFINED
-      - INT8
-      - INT16
-      - INT32
-      - INT64
-      - FLOAT32
-      - FLOAT64
-      - BOOL
-      - STRING
-      - DATETIME
-      - TIMESTAMP
-    default: PrimitiveDataType_UNDEFINED
-    description: |-
-      the 8-bit signed integer type
-       - INT16: the 16-bit signed integer type
-       - INT32: the 32-bit signed integer type
-       - INT64: the 64-bit signed integer type
-       - FLOAT32: the 32-bit binary floating point type
-       - FLOAT64: the 64-bit binary floating point type
-       - BOOL: Other types
-       - DATETIME: DATETIME and TIMESTAMP
-
-      https://dev.mysql.com/doc/refman/8.0/en/datetime.html
-       - TIMESTAMP: seconds since '1970-01-01 00:00:00' UTC
-    title: '- INT8: Numeric types'
-  pbProcessInvitationRequest:
-    type: object
-    example:
-      invitation_id: 1
-    properties:
-      invitation_id:
-        type: string
-        format: uint64
-        title: |-
-          The id used to specify the Invitation, corresponding to the result of
-          ListInvitation
-      respond:
-        $ref: '#/definitions/pbInvitationRespond'
-        title: Choose to accept or decline the Invitation
-      respond_comment:
-        type: string
-    required:
-      - invitation_id
-      - respond
-  pbProcessInvitationResponse:
-    type: object
-    example:
-      status:
-        code: 0
-        message: process invitation 1 succeed
-    properties:
-      status:
-        $ref: '#/definitions/scqlpbStatus'
-  pbProjectConfig:
-    type: object
-    properties:
-      spu_runtime_cfg:
-        $ref: '#/definitions/spuRuntimeConfig'
-        description: The spu runtime configuration.
-  pbProjectDesc:
-    type: object
-    properties:
-      project_id:
-        type: string
-      name:
-        type: string
-      description:
-        type: string
-      conf:
-        $ref: '#/definitions/pbProjectConfig'
-      creator:
-        type: string
-        title: Creator of the Project
-      members:
-        type: array
-        items:
-          type: string
-  pbProjectInvitation:
-    type: object
-    properties:
-      invitation_id:
-        type: string
-        format: uint64
-      project:
-        $ref: '#/definitions/pbProjectDesc'
-      inviter:
-        type: string
-      invitee:
-        type: string
-      postscript:
-        type: string
-      status:
-        $ref: '#/definitions/pbInvitationStatus'
-  pbQueryRequest:
-    type: object
-    example:
-      project_id: proj_id
-      query: SELECT * FROM TA;
-    properties:
-      header:
-        $ref: '#/definitions/pbRequestHeader'
-      project_id:
-        type: string
-        title: The ID of the Project in which to run the query
-      query:
-        type: string
-        title: SCQL query to be run
-    required:
-      - project_id
-      - query
-  pbQueryResponse:
-    type: object
-    example:
-      cost_time_s: 0.010912044
-      out_columns:
-        - elem_type: STRING
-          name: ID
-          option: VALUE
-          shape:
-            dim:
-              - dim_value: "2"
-              - dim_value: "1"
-          string_data:
-            - alice
-            - bob
-      status:
-        code: 0
-    properties:
-      status:
-        $ref: '#/definitions/scqlpbStatus'
-      affected_rows:
-        type: string
-        format: int64
-        title: Valid while DQL is a select-into statement
-      warnings:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/pbSQLWarning'
-      cost_time_s:
-        type: number
-        format: double
-      out_columns:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/pbTensor'
-        title: Output columns are used to store the result datas
-  pbReplyInvitationResponse:
-    type: object
-    properties:
-      status:
-        $ref: '#/definitions/scqlpbStatus'
-      project_info:
-        type: string
-        format: byte
-  pbRequestHeader:
-    type: object
-    properties:
-      custom_headers:
-        type: object
-        additionalProperties:
-          type: string
-        description: Custom headers used to record custom information.
-    description: RequestHeader carries the user custom headers.
-  pbResourceSpec:
-    type: object
-    properties:
-      kind:
-        $ref: '#/definitions/ResourceSpecResourceKind'
-      project_id:
-        type: string
-      table_names:
-        type: array
-        items:
-          type: string
-      dest_parties:
-        type: array
-        items:
-          type: string
-  pbRevokeCCLRequest:
-    type: object
-    example:
-      column_control_list:
-        - col:
-            column_name: ID
-            table_name: ta
-          party_code: alice
-      project_id: proj_id
-    properties:
-      project_id:
-        type: string
-        title: Project id
-      column_control_list:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/pbColumnControl'
-        title: CCLs
-    required:
-      - project_id
-      - column_control_list
-  pbRevokeCCLResponse:
-    type: object
-    example:
-      status:
-        code: 0
-        message: revoke ccls succeed
-    properties:
-      status:
-        $ref: '#/definitions/scqlpbStatus'
-  pbSQLWarning:
-    type: object
-    properties:
-      reason:
-        type: string
-        title: Description of the warning
-    title: 'TODO: move SQLWarning to a proper place'
-  pbShowCCLRequest:
-    type: object
-    example:
-      project_id: proj_id
-    properties:
-      project_id:
-        type: string
-        title: Project id
-      tables:
-        type: array
-        items:
-          type: string
-        title: If tables is empty, it will show all Tables in the Project
-      dest_parties:
-        type: array
-        items:
-          type: string
-        description: |-
-          If dest_parties is empty, it will show all members in the Project.
-          dest_party value could be `self`, or `others`, or some specific name.
-    required:
-      - project_id
-  pbShowCCLResponse:
-    type: object
-    example:
-      column_control_list:
-        - col:
-            column_name: ID
-            table_name: ta
-          constraint: PLAINTEXT
-          party_code: alice
-      status:
-        code: 0
-        message: show ccl for proj_id succeed
-    properties:
-      status:
-        $ref: '#/definitions/scqlpbStatus'
-      column_control_list:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/pbColumnControl'
-        title: CCLs
-  pbSubmitResponse:
-    type: object
-    example:
-      job_id: d946a6fc-a079-11ee-8b9a-0242ac130003
-      status:
-        code: 0
-        message: submit query job d946a6fc-a079-11ee-8b9a-0242ac130003 succeed
-    properties:
-      status:
-        $ref: '#/definitions/scqlpbStatus'
-      job_id:
-        type: string
-        description: |-
-          The unique identifier of the query job, used to obtain the job result
-          later.
-  pbSyncInfoResponse:
-    type: object
-    properties:
-      status:
-        $ref: '#/definitions/scqlpbStatus'
-  pbTableMeta:
-    type: object
-    properties:
-      table_name:
-        type: string
-      ref_table:
-        type: string
-      db_type:
-        type: string
-      table_owner:
-        type: string
-        title: party code of table owner
-      columns:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/TableMetaColumn'
-  pbTensor:
-    type: object
-    properties:
-      name:
-        type: string
-        description: Tensor name.
-      shape:
-        $ref: '#/definitions/pbTensorShape'
-        description: |-
-          Tensor shape.
-          In SCQL cases, it's normally [M] (a vector with M elements).
-      elem_type:
-        $ref: '#/definitions/pbPrimitiveDataType'
-        description: Tensor element type.
-      option:
-        $ref: '#/definitions/pbTensorOptions'
-        description: Tensor options.
-      annotation:
-        $ref: '#/definitions/pbTensorAnnotation'
-        title: |-
-          Tensor annotation carries physical status information.
-          It MUST be there if the <option> is "Reference"
-      int32_data:
-        type: array
-        items:
-          type: integer
-          format: int32
-        title: For int8, int16, int32 data types
-      int64_data:
-        type: array
-        items:
-          type: string
-          format: int64
-        title: For int64 and timestamp data types
-      float_data:
-        type: array
-        items:
-          type: number
-          format: float
-        title: For float32 data type
-      double_data:
-        type: array
-        items:
-          type: number
-          format: double
-        title: For float64 data type
-      bool_data:
-        type: array
-        items:
-          type: boolean
-        title: For bool data type
-      string_data:
-        type: array
-        items:
-          type: string
-        title: For string and datetime data types
-      ref_num:
-        type: integer
-        format: int32
-        title: Tensor reference nums, used to delete tensor immediately
-    description: A tensor data representation.
-  pbTensorAnnotation:
-    type: object
-    properties:
-      status:
-        $ref: '#/definitions/pbTensorStatus'
-  pbTensorOptions:
-    type: string
-    enum:
-      - VALUE
-      - REFERENCE
-      - VARIABLE
-    default: VALUE
-    description: |-
-      Tensor options.
-
-       - VALUE: A tensor with data.
-       - REFERENCE: A tensor with reference (URI).
-       - VARIABLE: A tensor variable (declaration).
-  pbTensorShape:
-    type: object
-    properties:
-      dim:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/TensorShapeDimension'
-    description: |-
-      Defines a tensor shape. A dimension can be either an integer value
-      or a symbolic variable. A symbolic variable represents an unknown
-      dimension.
-  pbTensorStatus:
-    type: string
-    enum:
-      - TENSORSTATUS_UNKNOWN
-      - TENSORSTATUS_PRIVATE
-      - TENSORSTATUS_SECRET
-      - TENSORSTATUS_CIPHER
-      - TENSORSTATUS_PUBLIC
-    default: TENSORSTATUS_UNKNOWN
-    description: |2-
-       - TENSORSTATUS_UNKNOWN: Unknown.
-       - TENSORSTATUS_PRIVATE: Private.
-       - TENSORSTATUS_SECRET: Secret, usually in the form of secret sharing.
-       - TENSORSTATUS_CIPHER: Ciphertext, usually in the form of homomorphic encryption ciphertext.
-       - TENSORSTATUS_PUBLIC: Public.
-  pbUpdateProjectResponse:
-    type: object
-    properties:
-      status:
-        $ref: '#/definitions/scqlpbStatus'
-  protobufAny:
+  google.protobuf.Any:
     type: object
     properties:
       '@type':
@@ -1399,7 +427,762 @@ definitions:
             "@type": "type.googleapis.com/google.protobuf.Duration",
             "value": "1.212s"
           }
-  scqlpbStatus:
+  google.rpc.Status:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      details:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/google.protobuf.Any'
+  scql.pb.ArchiveProjectResponse:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+  scql.pb.AskInfoResponse:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+      datas:
+        type: array
+        items:
+          type: string
+          format: byte
+  scql.pb.BrokerProtocolVersion:
+    type: string
+    enum:
+      - BROKER_SERVICE_PROTOCOL_V1
+    default: BROKER_SERVICE_PROTOCOL_V1
+  scql.pb.CancelQueryResponse:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+  scql.pb.ChangeEntry:
+    type: object
+    properties:
+      action:
+        $ref: '#/definitions/scql.pb.ChangeEntry.Action'
+      data:
+        type: string
+        format: byte
+  scql.pb.ChangeEntry.Action:
+    type: string
+    enum:
+      - CreateTable
+      - DropTable
+      - GrantCCL
+      - RevokeCCL
+      - AddProjectMember
+      - UpdateProjectConf
+      - ArchiveProject
+    default: CreateTable
+  scql.pb.Checksum:
+    type: object
+    properties:
+      table_schema:
+        type: string
+        format: byte
+        title: checksum of schemas
+      ccl:
+        type: string
+        format: byte
+        title: checksum of ccl
+  scql.pb.ChecksumCompareResult:
+    type: string
+    enum:
+      - EQUAL
+      - TABLE_SCHEMA_NOT_EQUAL
+      - CCL_NOT_EQUAL
+      - TABLE_CCL_NOT_EQUAL
+    default: EQUAL
+  scql.pb.ColumnControl:
+    type: object
+    properties:
+      col:
+        $ref: '#/definitions/scql.pb.ColumnDef'
+      party_code:
+        type: string
+        description: the code of party that the constraint applies to.
+      constraint:
+        $ref: '#/definitions/scql.pb.Constraint'
+  scql.pb.ColumnDef:
+    type: object
+    properties:
+      column_name:
+        type: string
+      table_name:
+        type: string
+  scql.pb.Constraint:
+    type: string
+    enum:
+      - UNKNOWN
+      - PLAINTEXT
+      - ENCRYPTED_ONLY
+      - PLAINTEXT_AFTER_JOIN
+      - PLAINTEXT_AFTER_GROUP_BY
+      - PLAINTEXT_AFTER_COMPARE
+      - PLAINTEXT_AFTER_AGGREGATE
+    default: UNKNOWN
+    title: |-
+      - PLAINTEXT: The column can be revealed at party_code.
+       - ENCRYPTED_ONLY: The column or any column produced by it can NOT be revealed at
+      party_code. It can be used as condition in JOIN, WHERE, and GROUP BY.
+       - PLAINTEXT_AFTER_JOIN: The column can be revealed at party_code if it is used as join key
+       - PLAINTEXT_AFTER_GROUP_BY: The column can be revealed at party_code if it is used as group by key
+       - PLAINTEXT_AFTER_COMPARE: The column can be revealed at party_code, if and only if
+      it is the result of the comparison function e.g. select compare1 >
+      compare2 from t group by zip_code
+       - PLAINTEXT_AFTER_AGGREGATE: The column can be revealed at party_code, if and only if
+      it has been through a N to 1 mapping such as
+          - Aggregation operation such as sum/min/max/avg/count, e.g.
+               select avg(score) from t group by zip_code
+               select avg(score) from t
+  scql.pb.CreateProjectRequest:
+    type: object
+    example:
+      conf:
+        spu_runtime_cfg:
+          field: FM64
+          protocol: SEMI2K
+      name: proj_name
+      project_id: proj_id
+    properties:
+      project_id:
+        type: string
+        title: |-
+          The unique identifier of the Project, if empty, broker will generate unique
+          project id
+      name:
+        type: string
+        title: Project name, human readable
+      description:
+        type: string
+      conf:
+        $ref: '#/definitions/scql.pb.ProjectConfig'
+        title: Runtime conf for Project
+    required:
+      - conf
+  scql.pb.CreateProjectResponse:
+    type: object
+    example:
+      project_id: proj_id
+      status:
+        code: 0
+        message: 'create project succeed, id: proj_id'
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+      project_id:
+        type: string
+        description: |-
+          If Project id is empty in request, broker will generate one and return it
+          in response.
+  scql.pb.CreateTableRequest:
+    type: object
+    example:
+      columns:
+        - dtype: string
+          name: ID
+        - dtype: int
+          name: age
+      db_type: mysql
+      project_id: proj_id
+      ref_table: physic.table_alice
+      table_name: ta
+    properties:
+      project_id:
+        type: string
+        title: Project id
+      table_name:
+        type: string
+        title: Table name
+      ref_table:
+        type: string
+        title: The refered physical table
+      db_type:
+        type: string
+        title: The db_type of ref_table, maybe 'MySQL/Postgres/csvdb/...'
+      columns:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scql.pb.CreateTableRequest.ColumnDesc'
+        title: Columns choosed to refer from physical table
+    title: Import physical table `ref_table` in Project `project_id` as `table_name`
+    required:
+      - project_id
+      - table_name
+      - ref_table
+      - columns
+  scql.pb.CreateTableRequest.ColumnDesc:
+    type: object
+    properties:
+      name:
+        type: string
+        title: Column name
+      dtype:
+        type: string
+        title: Column data type, maybe 'long/float/string/timestamp/datetime/...'
+  scql.pb.CreateTableResponse:
+    type: object
+    example:
+      status:
+        code: 0
+        message: create table for proj_id succeed
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+  scql.pb.DistributeQueryResponse:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+      server_protocol:
+        $ref: '#/definitions/scql.pb.BrokerProtocolVersion'
+      engine_endpoint:
+        type: string
+        title: SCQLEngine endpoint of server
+      client_checksum_result:
+        $ref: '#/definitions/scql.pb.ChecksumCompareResult'
+      server_checksum_result:
+        $ref: '#/definitions/scql.pb.ChecksumCompareResult'
+      expected_server_checksum:
+        $ref: '#/definitions/scql.pb.Checksum'
+  scql.pb.DropTableRequest:
+    type: object
+    example:
+      project_id: proj_id
+      table_name: ta
+    properties:
+      project_id:
+        type: string
+        title: Project id
+      table_name:
+        type: string
+        title: The name of Table to be droped
+    required:
+      - project_id
+      - table_name
+  scql.pb.DropTableResponse:
+    type: object
+    example:
+      status:
+        code: 0
+        message: drop table succeed
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+  scql.pb.ExchangeJobInfoResponse:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+      endpoint:
+        type: string
+        title: engine endpoint
+      server_checksum_result:
+        $ref: '#/definitions/scql.pb.ChecksumCompareResult'
+      expected_server_checksum:
+        $ref: '#/definitions/scql.pb.Checksum'
+        title: used when checksum result was not equal
+  scql.pb.FetchResultRequest:
+    type: object
+    example:
+      job_id: your-job-id-from-submit
+    properties:
+      job_id:
+        type: string
+        title: The unique identifier of the query job, obtained when SubmitQuery is called
+    required:
+      - job_id
+  scql.pb.GrantCCLRequest:
+    type: object
+    example:
+      column_control_list:
+        - col:
+            column_name: ID
+            table_name: ta
+          constraint: PLAINTEXT
+          party_code: alice
+      project_id: proj_id
+    properties:
+      project_id:
+        type: string
+        title: Project id
+      column_control_list:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scql.pb.ColumnControl'
+        title: CCLs
+    required:
+      - project_id
+      - column_control_list
+  scql.pb.GrantCCLResponse:
+    type: object
+    example:
+      status:
+        code: 0
+        message: grant ccl for proj_id succeed
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+  scql.pb.InvitationRespond:
+    type: string
+    enum:
+      - ACCEPT
+      - DECLINE
+    default: ACCEPT
+  scql.pb.InvitationStatus:
+    type: string
+    enum:
+      - UNDECIDED
+      - ACCEPTED
+      - DECLINED
+      - INVALID
+    default: UNDECIDED
+  scql.pb.InviteMemberRequest:
+    type: object
+    example:
+      invitee: bob
+      project_id: proj_id
+    properties:
+      project_id:
+        type: string
+        title: Project id
+      invitee:
+        type: string
+        title: Party code of invitee
+      postscript:
+        type: string
+      method:
+        $ref: '#/definitions/scql.pb.InviteMemberRequest.InvitationMethod'
+    required:
+      - project_id
+      - invitee
+  scql.pb.InviteMemberRequest.InvitationMethod:
+    type: string
+    enum:
+      - PUSH
+      - PULL
+    default: PUSH
+    description: |2-
+       - PUSH: push invitation request to invitee's broker
+       - PULL: Get invitation code, then share to invitee via email or IM
+      tools.
+      status: tobe implemented.
+  scql.pb.InviteMemberResponse:
+    type: object
+    example:
+      status:
+        code: 0
+        message: invite member bob succeed
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+      invitation_code:
+        type: string
+        title: |-
+          Valid only when using PULL invitation method.
+          Format looks like URL parameters
+  scql.pb.InviteToProjectResponse:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+  scql.pb.ListInvitationsRequest:
+    type: object
+    example: {}
+  scql.pb.ListInvitationsResponse:
+    type: object
+    example:
+      invitations:
+        - invitation_id: 1
+          invitee: bob
+          inviter: alice
+          project:
+            conf:
+              spu_runtime_cfg:
+                field: FM64
+                protocol: SEMI2K
+            project_id: proj_id
+          status: 0
+      status:
+        code: 0
+        message: list invitations succeed
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+      invitations:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scql.pb.ProjectInvitation'
+  scql.pb.ListProjectsRequest:
+    type: object
+    example:
+      ids:
+        - proj_id
+    properties:
+      ids:
+        type: array
+        items:
+          type: string
+        title: The ids of Projects to be listed, if empty, all Projects will be listed
+  scql.pb.ListProjectsResponse:
+    type: object
+    example:
+      projects:
+        - conf:
+            spu_runtime_cfg:
+              field: FM64
+              protocol: SEMI2K
+          creator: alice
+          members:
+            - alice
+          project_id: proj_id
+      status:
+        code: 0
+        message: list projects succeed
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+      projects:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scql.pb.ProjectDesc'
+  scql.pb.ListTablesRequest:
+    type: object
+    example:
+      project_id: proj_id
+    properties:
+      project_id:
+        type: string
+        title: Project id
+      names:
+        type: array
+        items:
+          type: string
+        title: The names of Tables to be listed, if empty, all Tables will be listed
+    required:
+      - project_id
+  scql.pb.ListTablesResponse:
+    type: object
+    example:
+      status:
+        code: 0
+        message: list tables succeed
+      tables:
+        - columns:
+            - dtype: string
+              name: ID
+            - dtype: int
+              name: age
+          db_type: mysql
+          ref_table: bob.user_stats
+          table_name: tb
+          table_owner: bob
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+      tables:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scql.pb.TableMeta'
+  scql.pb.PartyId:
+    type: object
+    properties:
+      code:
+        type: string
+        title: party code
+    description: 'TODO: move PartyId to a proper place.'
+  scql.pb.PrimitiveDataType:
+    type: string
+    enum:
+      - PrimitiveDataType_UNDEFINED
+      - INT8
+      - INT16
+      - INT32
+      - INT64
+      - FLOAT32
+      - FLOAT64
+      - BOOL
+      - STRING
+      - DATETIME
+      - TIMESTAMP
+    default: PrimitiveDataType_UNDEFINED
+    description: |-
+      the 8-bit signed integer type
+       - INT16: the 16-bit signed integer type
+       - INT32: the 32-bit signed integer type
+       - INT64: the 64-bit signed integer type
+       - FLOAT32: the 32-bit binary floating point type
+       - FLOAT64: the 64-bit binary floating point type
+       - BOOL: Other types
+       - DATETIME: DATETIME and TIMESTAMP
+
+      https://dev.mysql.com/doc/refman/8.0/en/datetime.html
+       - TIMESTAMP: seconds since '1970-01-01 00:00:00' UTC
+    title: '- INT8: Numeric types'
+  scql.pb.ProcessInvitationRequest:
+    type: object
+    example:
+      invitation_id: 1
+    properties:
+      invitation_id:
+        type: string
+        format: uint64
+        title: |-
+          The id used to specify the Invitation, corresponding to the result of
+          ListInvitation
+      respond:
+        $ref: '#/definitions/scql.pb.InvitationRespond'
+        title: Choose to accept or decline the Invitation
+      respond_comment:
+        type: string
+    required:
+      - invitation_id
+      - respond
+  scql.pb.ProcessInvitationResponse:
+    type: object
+    example:
+      status:
+        code: 0
+        message: process invitation 1 succeed
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+  scql.pb.ProjectConfig:
+    type: object
+    properties:
+      spu_runtime_cfg:
+        $ref: '#/definitions/spu.RuntimeConfig'
+        description: The spu runtime configuration.
+  scql.pb.ProjectDesc:
+    type: object
+    properties:
+      project_id:
+        type: string
+      name:
+        type: string
+      description:
+        type: string
+      conf:
+        $ref: '#/definitions/scql.pb.ProjectConfig'
+      creator:
+        type: string
+        title: Creator of the Project
+      members:
+        type: array
+        items:
+          type: string
+  scql.pb.ProjectInvitation:
+    type: object
+    properties:
+      invitation_id:
+        type: string
+        format: uint64
+      project:
+        $ref: '#/definitions/scql.pb.ProjectDesc'
+      inviter:
+        type: string
+      invitee:
+        type: string
+      postscript:
+        type: string
+      status:
+        $ref: '#/definitions/scql.pb.InvitationStatus'
+  scql.pb.QueryRequest:
+    type: object
+    example:
+      project_id: proj_id
+      query: SELECT * FROM TA;
+    properties:
+      header:
+        $ref: '#/definitions/scql.pb.RequestHeader'
+      project_id:
+        type: string
+        title: The ID of the Project in which to run the query
+      query:
+        type: string
+        title: SCQL query to be run
+    required:
+      - project_id
+      - query
+  scql.pb.QueryResponse:
+    type: object
+    example:
+      cost_time_s: 0.010912044
+      out_columns:
+        - elem_type: STRING
+          name: ID
+          option: VALUE
+          shape:
+            dim:
+              - dim_value: "2"
+              - dim_value: "1"
+          string_data:
+            - alice
+            - bob
+      status:
+        code: 0
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+      affected_rows:
+        type: string
+        format: int64
+        title: Valid while DQL is a select-into statement
+      warnings:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scql.pb.SQLWarning'
+      cost_time_s:
+        type: number
+        format: double
+      out_columns:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scql.pb.Tensor'
+        title: Output columns are used to store the result datas
+  scql.pb.ReplyInvitationResponse:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+      project_info:
+        type: string
+        format: byte
+  scql.pb.RequestHeader:
+    type: object
+    properties:
+      custom_headers:
+        type: object
+        additionalProperties:
+          type: string
+        description: Custom headers used to record custom information.
+    description: RequestHeader carries the user custom headers.
+  scql.pb.ResourceSpec:
+    type: object
+    properties:
+      kind:
+        $ref: '#/definitions/scql.pb.ResourceSpec.ResourceKind'
+      project_id:
+        type: string
+      table_names:
+        type: array
+        items:
+          type: string
+      dest_parties:
+        type: array
+        items:
+          type: string
+  scql.pb.ResourceSpec.ResourceKind:
+    type: string
+    enum:
+      - Project
+      - Table
+      - CCL
+    default: Project
+    title: |-
+      - Project: project information
+       - Table: table schema
+       - CCL: all ccls for specific table
+  scql.pb.RevokeCCLRequest:
+    type: object
+    example:
+      column_control_list:
+        - col:
+            column_name: ID
+            table_name: ta
+          constraint: PLAINTEXT
+          party_code: alice
+      project_id: proj_id
+    properties:
+      project_id:
+        type: string
+        title: Project id
+      column_control_list:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scql.pb.ColumnControl'
+        title: CCLs
+    required:
+      - project_id
+      - column_control_list
+  scql.pb.RevokeCCLResponse:
+    type: object
+    example:
+      status:
+        code: 0
+        message: revoke ccls succeed
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+  scql.pb.SQLWarning:
+    type: object
+    properties:
+      reason:
+        type: string
+        title: Description of the warning
+    title: 'TODO: move SQLWarning to a proper place'
+  scql.pb.ShowCCLRequest:
+    type: object
+    example:
+      project_id: proj_id
+    properties:
+      project_id:
+        type: string
+        title: Project id
+      tables:
+        type: array
+        items:
+          type: string
+        title: If tables is empty, it will show all Tables in the Project
+      dest_parties:
+        type: array
+        items:
+          type: string
+        description: |-
+          If dest_parties is empty, it will show all members in the Project.
+          dest_party value could be `self`, or `others`, or some specific name.
+    required:
+      - project_id
+  scql.pb.ShowCCLResponse:
+    type: object
+    example:
+      column_control_list:
+        - col:
+            column_name: ID
+            table_name: ta
+          constraint: PLAINTEXT
+          party_code: alice
+      status:
+        code: 0
+        message: show ccl for proj_id succeed
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+      column_control_list:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scql.pb.ColumnControl'
+        title: CCLs
+  scql.pb.Status:
     type: object
     properties:
       code:
@@ -1413,7 +1196,7 @@ definitions:
         type: array
         items:
           type: object
-          $ref: '#/definitions/protobufAny'
+          $ref: '#/definitions/google.protobuf.Any'
         description: A list of messages that carry the additional supplementary error details.
     description: |-
       The `Status` type defines a logical error model that is suitable for
@@ -1423,7 +1206,171 @@ definitions:
 
       You can find out more about this error model and how to work with it in the
       [API Design Guide](https://cloud.google.com/apis/design/errors).
-  spuFieldType:
+  scql.pb.SubmitResponse:
+    type: object
+    example:
+      job_id: d946a6fc-a079-11ee-8b9a-0242ac130003
+      status:
+        code: 0
+        message: submit query job d946a6fc-a079-11ee-8b9a-0242ac130003 succeed
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+      job_id:
+        type: string
+        description: |-
+          The unique identifier of the query job, used to obtain the job result
+          later.
+  scql.pb.SyncInfoResponse:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+  scql.pb.TableMeta:
+    type: object
+    properties:
+      table_name:
+        type: string
+      ref_table:
+        type: string
+      db_type:
+        type: string
+      table_owner:
+        type: string
+        title: party code of table owner
+      columns:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scql.pb.TableMeta.Column'
+  scql.pb.TableMeta.Column:
+    type: object
+    properties:
+      name:
+        type: string
+      dtype:
+        type: string
+  scql.pb.Tensor:
+    type: object
+    properties:
+      name:
+        type: string
+        description: Tensor name.
+      shape:
+        $ref: '#/definitions/scql.pb.TensorShape'
+        description: |-
+          Tensor shape.
+          In SCQL cases, it's normally [M] (a vector with M elements).
+      elem_type:
+        $ref: '#/definitions/scql.pb.PrimitiveDataType'
+        description: Tensor element type.
+      option:
+        $ref: '#/definitions/scql.pb.TensorOptions'
+        description: Tensor options.
+      annotation:
+        $ref: '#/definitions/scql.pb.TensorAnnotation'
+        title: |-
+          Tensor annotation carries physical status information.
+          It MUST be there if the <option> is "Reference"
+      int32_data:
+        type: array
+        items:
+          type: integer
+          format: int32
+        title: For int8, int16, int32 data types
+      int64_data:
+        type: array
+        items:
+          type: string
+          format: int64
+        title: For int64 and timestamp data types
+      float_data:
+        type: array
+        items:
+          type: number
+          format: float
+        title: For float32 data type
+      double_data:
+        type: array
+        items:
+          type: number
+          format: double
+        title: For float64 data type
+      bool_data:
+        type: array
+        items:
+          type: boolean
+        title: For bool data type
+      string_data:
+        type: array
+        items:
+          type: string
+        title: For string and datetime data types
+      ref_num:
+        type: integer
+        format: int32
+        title: Tensor reference nums, used to delete tensor immediately
+    description: A tensor data representation.
+  scql.pb.TensorAnnotation:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.TensorStatus'
+  scql.pb.TensorOptions:
+    type: string
+    enum:
+      - VALUE
+      - REFERENCE
+      - VARIABLE
+    default: VALUE
+    description: |-
+      Tensor options.
+
+       - VALUE: A tensor with data.
+       - REFERENCE: A tensor with reference (URI).
+       - VARIABLE: A tensor variable (declaration).
+  scql.pb.TensorShape:
+    type: object
+    properties:
+      dim:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scql.pb.TensorShape.Dimension'
+    description: |-
+      Defines a tensor shape. A dimension can be either an integer value
+      or a symbolic variable. A symbolic variable represents an unknown
+      dimension.
+  scql.pb.TensorShape.Dimension:
+    type: object
+    properties:
+      dim_value:
+        type: string
+        format: int64
+      dim_param:
+        type: string
+        description: shape is unknown.
+  scql.pb.TensorStatus:
+    type: string
+    enum:
+      - TENSORSTATUS_UNKNOWN
+      - TENSORSTATUS_PRIVATE
+      - TENSORSTATUS_SECRET
+      - TENSORSTATUS_CIPHER
+      - TENSORSTATUS_PUBLIC
+    default: TENSORSTATUS_UNKNOWN
+    description: |2-
+       - TENSORSTATUS_UNKNOWN: Unknown.
+       - TENSORSTATUS_PRIVATE: Private.
+       - TENSORSTATUS_SECRET: Secret, usually in the form of secret sharing.
+       - TENSORSTATUS_CIPHER: Ciphertext, usually in the form of homomorphic encryption ciphertext.
+       - TENSORSTATUS_PUBLIC: Public.
+  scql.pb.UpdateProjectResponse:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+  spu.FieldType:
     type: string
     enum:
       - FT_INVALID
@@ -1439,7 +1386,7 @@ definitions:
        - FM32: Ring 2^32
        - FM64: Ring 2^64
        - FM128: Ring 2^128
-  spuProtocolKind:
+  spu.ProtocolKind:
     type: string
     enum:
       - PROT_INVALID
@@ -1466,14 +1413,14 @@ definitions:
       fast 2PC protocol.
        - SECURENN: A semi-honest 3PC-protocol for Neural Network, P2 as the helper,
       (https://eprint.iacr.org/2018/442)
-  spuRuntimeConfig:
+  spu.RuntimeConfig:
     type: object
     properties:
       protocol:
-        $ref: '#/definitions/spuProtocolKind'
+        $ref: '#/definitions/spu.ProtocolKind'
         description: The protocol kind.
       field:
-        $ref: '#/definitions/spuFieldType'
+        $ref: '#/definitions/spu.FieldType'
         description: The field type.
       fxp_fraction_bits:
         type: string
@@ -1538,7 +1485,7 @@ definitions:
           The iterations use in f_div with Goldschmidt method.
           0(default) indicates implementation defined.
       fxp_exp_mode:
-        $ref: '#/definitions/RuntimeConfigExpMode'
+        $ref: '#/definitions/spu.RuntimeConfig.ExpMode'
         description: The exponent approximation method.
       fxp_exp_iters:
         type: string
@@ -1547,7 +1494,7 @@ definitions:
           Number of iterations of `exp` approximation, 0(default) indicates impl
           defined.
       fxp_log_mode:
-        $ref: '#/definitions/RuntimeConfigLogMode'
+        $ref: '#/definitions/spu.RuntimeConfig.LogMode'
         description: The logarithm approximation method.
       fxp_log_iters:
         type: string
@@ -1560,7 +1507,7 @@ definitions:
         format: int64
         description: Number of orders of `log` approximation, 0(default) indicates impl defined.
       sigmoid_mode:
-        $ref: '#/definitions/RuntimeConfigSigmoidMode'
+        $ref: '#/definitions/spu.RuntimeConfig.SigmoidMode'
         description: The sigmoid function approximation model.
       enable_lower_accuracy_rsqrt:
         type: boolean
@@ -1570,10 +1517,10 @@ definitions:
         format: int64
         title: Sine/Cosine approximation iterations
       beaver_type:
-        $ref: '#/definitions/RuntimeConfigBeaverType'
+        $ref: '#/definitions/spu.RuntimeConfig.BeaverType'
         description: beaver config, works for semi2k and spdz2k for now.
       ttp_beaver_config:
-        $ref: '#/definitions/spuTTPBeaverConfig'
+        $ref: '#/definitions/spu.TTPBeaverConfig'
         description: TrustedThirdParty configs.
       trunc_allow_msb_error:
         type: boolean
@@ -1602,7 +1549,65 @@ definitions:
     description: |+
       The SPU runtime configuration.
 
-  spuTTPBeaverConfig:
+  spu.RuntimeConfig.BeaverType:
+    type: string
+    enum:
+      - TrustedFirstParty
+      - TrustedThirdParty
+      - MultiParty
+    default: TrustedFirstParty
+    description: |2-
+       - TrustedFirstParty: Assume first party (rank0) as trusted party to generate beaver triple.
+      WARNING: It is NOT SAFE and SHOULD NOT BE used in production.
+       - TrustedThirdParty: Generate beaver triple through an additional trusted third party.
+       - MultiParty: Generate beaver triple through multi-party.
+  spu.RuntimeConfig.ExpMode:
+    type: string
+    enum:
+      - EXP_DEFAULT
+      - EXP_PADE
+      - EXP_TAYLOR
+    default: EXP_DEFAULT
+    description: |-
+      The exponential approximation method.
+
+       - EXP_DEFAULT: Implementation defined.
+       - EXP_PADE: The pade approximation.
+       - EXP_TAYLOR: Taylor series approximation.
+  spu.RuntimeConfig.LogMode:
+    type: string
+    enum:
+      - LOG_DEFAULT
+      - LOG_PADE
+      - LOG_NEWTON
+    default: LOG_DEFAULT
+    description: |-
+      The logarithm approximation method.
+
+       - LOG_DEFAULT: Implementation defined.
+       - LOG_PADE: The pade approximation.
+       - LOG_NEWTON: The newton approximation.
+  spu.RuntimeConfig.SigmoidMode:
+    type: string
+    enum:
+      - SIGMOID_DEFAULT
+      - SIGMOID_MM1
+      - SIGMOID_SEG3
+      - SIGMOID_REAL
+    default: SIGMOID_DEFAULT
+    description: |-
+      The sigmoid approximation method.
+
+       - SIGMOID_DEFAULT: Implementation defined.
+       - SIGMOID_MM1: Minmax approximation one order.
+      f(x) = 0.5 + 0.125 * x
+       - SIGMOID_SEG3: Piece-wise simulation.
+      f(x) = 0.5 + 0.125x if -4 <= x <= 4
+             1            if       x > 4
+             0            if  -4 > x
+       - SIGMOID_REAL: The real definition, which depends on exp's accuracy.
+      f(x) = 1 / (1 + exp(-x))
+  spu.TTPBeaverConfig:
     type: object
     properties:
       server_host:

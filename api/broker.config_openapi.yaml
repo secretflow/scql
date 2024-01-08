@@ -60,8 +60,10 @@ openapiOptions:
             "project_id": "proj_id",
             "name": "proj_name",
             "conf": {
-              "protocol": "SEMI2K",
-              "field": "FM64"
+              "spu_runtime_cfg": {
+                "protocol": "SEMI2K",
+                "field": "FM64"
+              }
             }
           }
     - message: scql.pb.CreateProjectResponse
@@ -232,7 +234,7 @@ openapiOptions:
             "project_id": "proj_id",
             "table_name": "ta"
           }
-    - message: scql.pb.DropTableRequest
+    - message: scql.pb.DropTableResponse
       option:
         example: |
           {
@@ -277,7 +279,8 @@ openapiOptions:
                   "column_name": "ID",
                   "table_name": "ta"
                 },
-                "party_code": "alice"
+                "party_code": "alice",
+                "constraint": "PLAINTEXT"
               }
             ]
           }
