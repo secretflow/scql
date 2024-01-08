@@ -84,4 +84,4 @@ workflows:
           # This is mandatory to trigger a pipeline when pushing a tag
           filters:
             tags:
-              only: /.*/
+              only: /.*(?<!dev\d{8})$/
