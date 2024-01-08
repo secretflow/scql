@@ -119,7 +119,7 @@ service IntraBrokerService {
 
   // Table related API
 
-  /// CreateTable
+  // CreateTable
   //
   // Create a Table you owned in specified Project
   rpc CreateTable(CreateTableRequest) returns (CreateTableResponse) {

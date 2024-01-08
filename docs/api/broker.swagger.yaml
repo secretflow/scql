@@ -194,7 +194,7 @@ paths:
         - IntraBrokerService
   /intra/table/create:
     post:
-      summary: / CreateTable
+      summary: CreateTable
       description: Create a Table you owned in specified Project
       operationId: IntraBrokerService_CreateTable
       responses:
