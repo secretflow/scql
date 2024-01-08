@@ -48,7 +48,7 @@ msgid ""
 "P2P: The P2P deployment architecture does not require a trusted third "
 "party. Each data participant needs to deploy an SCQLEngine and an "
 "SCQLBroker service."
-msgstr "P2P ： P2P 部署架构不需要可信第三方。每个数据参与方都需要部署一个 SCQLEngine 和一个 SCQLBroker 。"
+msgstr "P2P ： P2P 部署架构不需要可信第三方，每个数据参与方都需要部署一个 SCQLEngine 和一个 SCQLBroker 。"
 
 #: ../../intro/p2p-tutorial.rst:15
 msgid ""
