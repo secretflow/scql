@@ -21,7 +21,7 @@ SCQL_IMAGE=scql
 IMAGE_TAG=latest
 ENABLE_CACHE=false
 TARGET_STAGE=image-prod
-TARGET_PLATFORM="linux/amd64"
+TARGET_PLATFORM=""
 
 usage() {
   echo "Usage: $0 [-n Name] [-t Tag] [-p Platform] [-s Stage] [-c]"
@@ -78,6 +78,20 @@ if $ENABLE_CACHE; then
   MOUNT_OPTIONS="--mount type=volume,source=scql-rel-build-cache,target=/root/.cache"
 fi
 
+MACHINE_TYPE=`arch`
+HOST_PLATFORM=""
+
+if [ "$MACHINE_TYPE" == "x86_64"]; then
+  HOST_PLATFORM=linux/amd64
+else
+  HOST_PLATFORM=linux/arm64
+fi
+
+# If TargetPlatform is not set, set to host platform
+if [ -z "$TARGET_PLATFORM" ]; then
+  TARGET_PLATFORM=$HOST_PLATFORM
+fi
+
 BUILDER=secretflow/release-ci:latest
 if [ "$TARGET_PLATFORM" == "linux/arm64" ]; then
   BUILDER=secretflow/release-ci-aarch64:latest
@@ -124,7 +138,12 @@ cp $SCRIPT_DIR/scql.Dockerfile $TMP_PATH
 cd $TMP_PATH
 echo "start to build scql image in $(pwd)"
 
-docker buildx build --platform $TARGET_PLATFORM --target $TARGET_STAGE -f scql.Dockerfile -t $SCQL_IMAGE:$IMAGE_TAG .
+# If target == host, no need to use buildx
+if [ "$HOST_PLATFORM" == "$TARGET_PLATFORM" ]; then
+  docker build --build-arg="TARGET_PLATFORM=$TARGET_PLATFORM" --target $TARGET_STAGE -f scql.Dockerfile -t $SCQL_IMAGE:$IMAGE_TAG .
+else
+  docker buildx build --platform $TARGET_PLATFORM --target $TARGET_STAGE -f scql.Dockerfile -t $SCQL_IMAGE:$IMAGE_TAG .
+fi
 
 # cleanup
 rm -rf ${TMP_PATH}
