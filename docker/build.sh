@@ -140,7 +140,7 @@ echo "start to build scql image in $(pwd)"
 
 # If target == host, no need to use buildx
 if [ "$HOST_PLATFORM" == "$TARGET_PLATFORM" ]; then
-  docker build --build-arg="TARGET_PLATFORM=$TARGET_PLATFORM" --target $TARGET_STAGE -f scql.Dockerfile -t $SCQL_IMAGE:$IMAGE_TAG .
+  docker build --build-arg="TARGET_PLATFORM=${TARGET_PLATFORM}" --target $TARGET_STAGE -f scql.Dockerfile -t $SCQL_IMAGE:$IMAGE_TAG .
 else
   docker buildx build --platform $TARGET_PLATFORM --target $TARGET_STAGE -f scql.Dockerfile -t $SCQL_IMAGE:$IMAGE_TAG .
 fi
