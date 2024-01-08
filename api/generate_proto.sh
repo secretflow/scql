@@ -40,5 +40,6 @@ PATH=${GOBIN}:${PATH} protoc --proto_path . \
                               --openapiv2_opt json_names_for_fields=false \
                               --openapiv2_opt remove_internal_comments=true \
                               --openapiv2_opt Mlibspu/spu.proto=spu.pb \
+                              --openapiv2_opt openapi_naming_strategy=fqn \
                               --openapiv2_opt openapi_configuration=api/broker.config_openapi.yaml \
                               api/broker.proto
