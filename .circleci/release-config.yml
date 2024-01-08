@@ -118,10 +118,8 @@ jobs:
             echo $TAG
             docker buildx create --name scql-image-builder --platform linux/arm64,linux/amd64 --use
             docker buildx build --platform linux/arm64,linux/amd64 -f scql-ubuntu.Dockerfile -t secretflow/scql:$TAG --push .
-            docker tag secretflow/scql:$TAG secretflow/scql:latest
-            docker tag secretflow/scql:$TAG secretflow/scql:stable
-            docker push secretflow/scql:latest
-            docker push secretflow/scql:stable
+            docker buildx build --platform linux/arm64,linux/amd64 -f scql-ubuntu.Dockerfile -t secretflow/scql:latest --push .
+            docker buildx build --platform linux/arm64,linux/amd64 -f scql-ubuntu.Dockerfile -t secretflow/scql:stable --push .
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
