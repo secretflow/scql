@@ -31,6 +31,8 @@ service IntraBrokerService {
   // ===== DQL APIs =====
   // Only for select statement
 
+  // DoQuery
+  //
   // Run Query synchronously and return query result if the query completes
   // within a specified timeout
   rpc DoQuery(QueryRequest) returns (QueryResponse) {
@@ -39,7 +41,8 @@ service IntraBrokerService {
       body: "*"
     };
   }
-
+  // SubmitQuery
+  //
   // Run Query asynchronously
   rpc SubmitQuery(QueryRequest) returns (SubmitResponse) {
     option (google.api.http) = {
@@ -47,6 +50,8 @@ service IntraBrokerService {
       body: "*"
     };
   }
+  // FetchResult
+  //
   // Fetch query result of asynchronous query
   rpc FetchResult(FetchResultRequest) returns (QueryResponse) {
     option (google.api.http) = {
@@ -59,6 +64,8 @@ service IntraBrokerService {
 
   // Project Related API
 
+  // CreateProject
+  //
   // Create a new Project and automatically become the Project member and
   // creator
   rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse) {
@@ -68,6 +75,8 @@ service IntraBrokerService {
     };
   }
   rpc UpdateProject(UpdateProjectRequest) returns (UpdateProjectResponse);
+  // ListProjects
+  //
   // List All Projects that have created and joined
   rpc ListProjects(ListProjectsRequest) returns (ListProjectsResponse) {
     option (google.api.http) = {
@@ -77,6 +86,8 @@ service IntraBrokerService {
   }
   rpc ArchiveProject(ArchiveProjectRequest) returns (ArchiveProjectResponse);
 
+  // InviteMember
+  //
   // Invite another member to join the Project you created
   rpc InviteMember(InviteMemberRequest) returns (InviteMemberResponse) {
     option (google.api.http) = {
@@ -84,6 +95,8 @@ service IntraBrokerService {
       body: "*"
     };
   }
+  // ListInvitations
+  //
   // List all invitations sent and received
   rpc ListInvitations(ListInvitationsRequest)
       returns (ListInvitationsResponse) {
@@ -92,6 +105,8 @@ service IntraBrokerService {
       body: "*"
     };
   }
+  // ProcessInvitation
+  //
   // Process the received invitation, specify it by invitation_id, choose to
   // join the corresponding project or reject it
   rpc ProcessInvitation(ProcessInvitationRequest)
@@ -104,6 +119,8 @@ service IntraBrokerService {
 
   // Table related API
 
+  /// CreateTable
+  //
   // Create a Table you owned in specified Project
   rpc CreateTable(CreateTableRequest) returns (CreateTableResponse) {
     option (google.api.http) = {
@@ -111,6 +128,8 @@ service IntraBrokerService {
       body: "*"
     };
   }
+  // ListTables
+  //
   // List all Tables in specified Project
   rpc ListTables(ListTablesRequest) returns (ListTablesResponse) {
     option (google.api.http) = {
@@ -118,6 +137,8 @@ service IntraBrokerService {
       body: "*"
     };
   }
+  // DropTable
+  //
   // Drop a Table you owned in specified Project, the relevant CCLs will be
   // automatically cleared
   rpc DropTable(DropTableRequest) returns (DropTableResponse) {
@@ -129,6 +150,8 @@ service IntraBrokerService {
 
   // CCL related
 
+  // GrantCCL
+  //
   // Grant CCLs of your Table to a specific member
   rpc GrantCCL(GrantCCLRequest) returns (GrantCCLResponse) {
     option (google.api.http) = {
@@ -136,6 +159,8 @@ service IntraBrokerService {
       body: "*"
     };
   }
+  // RevokeCCL
+  //
   // Revoke the CCLs you have granted to the specified member
   rpc RevokeCCL(RevokeCCLRequest) returns (RevokeCCLResponse) {
     option (google.api.http) = {
@@ -143,6 +168,8 @@ service IntraBrokerService {
       body: "*"
     };
   }
+  // ShowCCL
+  //
   // Show CCLs in specified Project, supports specifying Tables, members
   rpc ShowCCL(ShowCCLRequest) returns (ShowCCLResponse) {
     option (google.api.http) = {

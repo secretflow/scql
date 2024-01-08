@@ -12,7 +12,8 @@ produces:
 paths:
   /intra/query:
     post:
-      summary: |-
+      summary: DoQuery
+      description: |-
         Run Query synchronously and return query result if the query completes
         within a specified timeout
       operationId: IntraBrokerService_DoQuery
@@ -35,7 +36,8 @@ paths:
         - IntraBrokerService
   /intra/query/submit:
     post:
-      summary: Run Query asynchronously
+      summary: SubmitQuery
+      description: Run Query asynchronously
       operationId: IntraBrokerService_SubmitQuery
       responses:
         "200":
@@ -56,7 +58,8 @@ paths:
         - IntraBrokerService
   /intra/query/fetch:
     post:
-      summary: Fetch query result of asynchronous query
+      summary: FetchResult
+      description: Fetch query result of asynchronous query
       operationId: IntraBrokerService_FetchResult
       responses:
         "200":
@@ -77,7 +80,8 @@ paths:
         - IntraBrokerService
   /intra/project/create:
     post:
-      summary: |-
+      summary: CreateProject
+      description: |-
         Create a new Project and automatically become the Project member and
         creator
       operationId: IntraBrokerService_CreateProject
@@ -100,7 +104,8 @@ paths:
         - IntraBrokerService
   /intra/project/list:
     post:
-      summary: List All Projects that have created and joined
+      summary: ListProjects
+      description: List All Projects that have created and joined
       operationId: IntraBrokerService_ListProjects
       responses:
         "200":
@@ -121,7 +126,8 @@ paths:
         - IntraBrokerService
   /intra/member/invite:
     post:
-      summary: Invite another member to join the Project you created
+      summary: InviteMember
+      description: Invite another member to join the Project you created
       operationId: IntraBrokerService_InviteMember
       responses:
         "200":
@@ -142,7 +148,8 @@ paths:
         - IntraBrokerService
   /intra/invitation/list:
     post:
-      summary: List all invitations sent and received
+      summary: ListInvitations
+      description: List all invitations sent and received
       operationId: IntraBrokerService_ListInvitations
       responses:
         "200":
@@ -163,7 +170,8 @@ paths:
         - IntraBrokerService
   /intra/invitation/process:
     post:
-      summary: |-
+      summary: ProcessInvitation
+      description: |-
         Process the received invitation, specify it by invitation_id, choose to
         join the corresponding project or reject it
       operationId: IntraBrokerService_ProcessInvitation
@@ -186,7 +194,8 @@ paths:
         - IntraBrokerService
   /intra/table/create:
     post:
-      summary: Create a Table you owned in specified Project
+      summary: / CreateTable
+      description: Create a Table you owned in specified Project
       operationId: IntraBrokerService_CreateTable
       responses:
         "200":
@@ -207,7 +216,8 @@ paths:
         - IntraBrokerService
   /intra/table/list:
     post:
-      summary: List all Tables in specified Project
+      summary: ListTables
+      description: List all Tables in specified Project
       operationId: IntraBrokerService_ListTables
       responses:
         "200":
@@ -228,7 +238,8 @@ paths:
         - IntraBrokerService
   /intra/table/drop:
     post:
-      summary: |-
+      summary: DropTable
+      description: |-
         Drop a Table you owned in specified Project, the relevant CCLs will be
         automatically cleared
       operationId: IntraBrokerService_DropTable
@@ -251,7 +262,8 @@ paths:
         - IntraBrokerService
   /intra/ccl/grant:
     post:
-      summary: Grant CCLs of your Table to a specific member
+      summary: GrantCCL
+      description: Grant CCLs of your Table to a specific member
       operationId: IntraBrokerService_GrantCCL
       responses:
         "200":
@@ -272,7 +284,8 @@ paths:
         - IntraBrokerService
   /intra/ccl/revoke:
     post:
-      summary: Revoke the CCLs you have granted to the specified member
+      summary: RevokeCCL
+      description: Revoke the CCLs you have granted to the specified member
       operationId: IntraBrokerService_RevokeCCL
       responses:
         "200":
@@ -293,7 +306,8 @@ paths:
         - IntraBrokerService
   /intra/ccl/show:
     post:
-      summary: Show CCLs in specified Project, supports specifying Tables, members
+      summary: ShowCCL
+      description: Show CCLs in specified Project, supports specifying Tables, members
       operationId: IntraBrokerService_ShowCCL
       responses:
         "200":
