@@ -93,10 +93,12 @@ jobs:
           name: "Run regtest"
           command: |
             set +e
+            sudo snap install go --channel=1.21/stable --classic
             sleep 1m
             export SKIP_CONCURRENT_TEST=true
             export $(grep -v '^#' .ci/docker-compose/.env | xargs)
-            go test ./cmd/regtest/... -v -count=1 -timeout=30m
+            # env $snap_bin_path is empty, use hardcoded go path
+            /snap/bin/go test ./cmd/regtest/... -v -count=1 -timeout=30m -args --conf=../../../.ci/docker-compose/regtest.yml
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
