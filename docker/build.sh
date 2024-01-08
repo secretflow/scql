@@ -120,16 +120,17 @@ docker exec -it ${container_id} bash -c "cd /home/admin/dev && sed -i "s/SCQL_VE
 docker exec -it ${container_id} bash -c "cd /home/admin/dev && export SCQL_VERSION=$version && make"
 
 # prepare temporary path $TMP_PATH for file copies
-TMP_PATH=$WORK_DIR/.buildtmp/$IMAGE_TAG/$TARGET_PLATFORM
+TMP_PATH=$WORK_DIR/.buildtmp/$IMAGE_TAG
 rm -rf $TMP_PATH
 mkdir -p $TMP_PATH
+mkdir -p $TMP_PATH/$TARGET_PLATFORM
 echo "copy files to dir: $TMP_PATH"
 
-docker cp ${container_id}:/home/admin/dev/bazel-bin/engine/exe/scqlengine $TMP_PATH
-docker cp ${container_id}:/home/admin/dev/bin/scdbserver $TMP_PATH
-docker cp ${container_id}:/home/admin/dev/bin/scdbclient $TMP_PATH
-docker cp ${container_id}:/home/admin/dev/bin/broker $TMP_PATH
-docker cp ${container_id}:/home/admin/dev/bin/brokerctl $TMP_PATH
+docker cp ${container_id}:/home/admin/dev/bazel-bin/engine/exe/scqlengine $TMP_PATH/$TARGET_PLATFORM
+docker cp ${container_id}:/home/admin/dev/bin/scdbserver $TMP_PATH/$TARGET_PLATFORM
+docker cp ${container_id}:/home/admin/dev/bin/scdbclient $TMP_PATH/$TARGET_PLATFORM
+docker cp ${container_id}:/home/admin/dev/bin/broker $TMP_PATH/$TARGET_PLATFORM
+docker cp ${container_id}:/home/admin/dev/bin/brokerctl $TMP_PATH/$TARGET_PLATFORM
 
 # copy dockerfile
 cp $SCRIPT_DIR/scql.Dockerfile $TMP_PATH
