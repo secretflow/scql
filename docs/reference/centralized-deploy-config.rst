@@ -132,15 +132,14 @@ Config for SecurityCompromise
 
 SCQL provides some security compromise options, which can be selectively enabled when the security risk is acceptable to speed up the overall operation.
 
-1. reveal_group_mark:
-default disable, if enabled, SCQL will expose grouping information(size of each group) when calculating group-by-aggregation, thereby avoiding the overhead caused by pre-shuffle.  ``risk``: group size will be leaked, which is equivalent to the result of count(*)
-
+1. **reveal_group_mark**: default disable, if enabled, SCQL will expose grouping information(size of each group) when calculating group-by-aggregation, thereby avoiding the overhead caused by pre-shuffle.  ``risk``: group size will be leaked, which is equivalent to the result of count(*)
+   
 A typical config of security_compromise can be like:
 
 .. code-block:: yaml
 
-  security_compromise:
-    reveal_group_mark: false
+    security_compromise:
+      reveal_group_mark: false
 
 
 .. _config_storage_options:

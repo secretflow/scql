@@ -1,22 +1,458 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) 2023 Ant Group Co., Ltd.
 # This file is distributed under the same license as the SCQL package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
 #
+#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-05 15:22+0800\n"
+"POT-Creation-Date: 2024-01-05 16:47+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language: zh_CN\n"
-"Language-Team: zh_CN <LL@li.org>\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.12.1\n"
+
+#: ../../reference/p2p-deploy-config.rst:2
+msgid "SCQL P2P Deployment Configuration"
+msgstr "SCQL P2P 部署配置"
+
+#: ../../reference/p2p-deploy-config.rst:4
+msgid ""
+"SCQL P2P deployment architecture consists of SCQLBroker and SCQLEngine, "
+"and the configuration instructions include these two parts."
+msgstr "SCQL P2P 部署架构由 SCQLBroker 和 SCQLEngine 组成，配置说明包括这两部分。"
+
+#: ../../reference/p2p-deploy-config.rst:10
+msgid "SCQLBroker Configuration"
+msgstr "SCQLBroker 配置说明"
+
+#: ../../reference/p2p-deploy-config.rst:12
+msgid "SCQLBroker uses YAML as configuration file format."
+msgstr "SCQLBroker 使用 YAML 作为配置文件格式"
+
+#: ../../reference/p2p-deploy-config.rst:15
+msgid "Example configuration for SCQLBroker"
+msgstr "SCQLBroker 配置示例"
+
+#: ../../reference/p2p-deploy-config.rst:51
+msgid "Configuration Options of SCQLBroker"
+msgstr "SCQLBroker 配置项"
+
+#: ../../reference/engine-config.rst:27
+#: ../../reference/p2p-deploy-config.rst:54
+msgid "Name"
+msgstr "名称"
+
+#: ../../reference/engine-config.rst:27
+#: ../../reference/p2p-deploy-config.rst:54
+msgid "Default"
+msgstr "默认值"
+
+#: ../../reference/engine-config.rst:27
+#: ../../reference/p2p-deploy-config.rst:54
+msgid "Description"
+msgstr "描述"
+
+#: ../../reference/p2p-deploy-config.rst:56
+msgid "intra_server.host"
+msgstr "intra_server.host"
+
+#: ../../reference/p2p-deploy-config.rst:56
+msgid "127.0.0.1"
+msgstr "127.0.0.1"
+
+#: ../../reference/p2p-deploy-config.rst:56
+msgid ""
+"The host where SCQLBroker listens for IntraServer requests, default "
+"localhost for safety"
+msgstr "SCQLBroker 监听 IntraServer 请求的 host，为了安全起见，默认 localhost"
+
+#: ../../reference/p2p-deploy-config.rst:58
+msgid "intra_server.port"
+msgstr "intra_server.port"
+
+#: ../../reference/engine-config.rst:53 ../../reference/engine-config.rst:69
+#: ../../reference/engine-config.rst:81 ../../reference/engine-config.rst:83
+#: ../../reference/engine-config.rst:87 ../../reference/engine-config.rst:91
+#: ../../reference/engine-config.rst:97 ../../reference/engine-config.rst:99
+#: ../../reference/engine-config.rst:101 ../../reference/engine-config.rst:107
+#: ../../reference/engine-config.rst:111
+#: ../../reference/p2p-deploy-config.rst:58
+#: ../../reference/p2p-deploy-config.rst:62
+#: ../../reference/p2p-deploy-config.rst:64
+#: ../../reference/p2p-deploy-config.rst:66
+#: ../../reference/p2p-deploy-config.rst:68
+#: ../../reference/p2p-deploy-config.rst:72
+#: ../../reference/p2p-deploy-config.rst:74
+#: ../../reference/p2p-deploy-config.rst:80
+#: ../../reference/p2p-deploy-config.rst:82
+#: ../../reference/p2p-deploy-config.rst:84
+#: ../../reference/p2p-deploy-config.rst:86
+#: ../../reference/p2p-deploy-config.rst:88
+#: ../../reference/p2p-deploy-config.rst:92
+#: ../../reference/p2p-deploy-config.rst:94
+#: ../../reference/p2p-deploy-config.rst:99
+#: ../../reference/p2p-deploy-config.rst:101
+msgid "none"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:58
+msgid "The port on which SCQLBroker listens for IntraServer requests"
+msgstr "SCQLBroker 监听 IntraServer 请求的端口"
+
+#: ../../reference/p2p-deploy-config.rst:60
+msgid "intra_server.protocol"
+msgstr "intra_server.protocol"
+
+#: ../../reference/p2p-deploy-config.rst:60
+#: ../../reference/p2p-deploy-config.rst:70
+#: ../../reference/p2p-deploy-config.rst:90
+msgid "http"
+msgstr "http"
+
+#: ../../reference/p2p-deploy-config.rst:60
+msgid "The transfer protocol of IntraServer, supports HTTP/HTTPS"
+msgstr "IntraServer 传输协议，支持 HTTP/HTTPS"
+
+#: ../../reference/p2p-deploy-config.rst:62
+msgid "intra_server.cert_file"
+msgstr "intra_server.cert_file"
+
+#: ../../reference/p2p-deploy-config.rst:62
+msgid ""
+"Certificate file path for IntraServer to enable HTTPS, supports crt/pem "
+"type"
+msgstr "启用 IntraServer HTTPS 的证书文件路径，支持 crt/pem 类型"
+
+#: ../../reference/p2p-deploy-config.rst:64
+msgid "intra_server.key_file"
+msgstr "intra_server.key_file"
+
+#: ../../reference/p2p-deploy-config.rst:64
+msgid ""
+"Private key file path for IntraServer to enable HTTPS, supports key/pem "
+"type"
+msgstr "启用 IntraServer HTTPS 的私钥文件路径，支持 key/pem 类型"
+
+#: ../../reference/p2p-deploy-config.rst:66
+msgid "inter_server.host"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:66
+msgid "The host where SCQLBroker listens for InterServer requests"
+msgstr "SCQLBroker 监听 InterServer 请求的 host"
+
+#: ../../reference/p2p-deploy-config.rst:68
+msgid "inter_server.port"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:68
+msgid "The port on which SCQLBroker listens for InterServer requests"
+msgstr "SCQLBroker 监听 InterServer 请求的端口"
+
+#: ../../reference/p2p-deploy-config.rst:70
+msgid "inter_server.protocol"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:70
+msgid "The transfer protocol of InterServer, supports HTTP/HTTPS"
+msgstr "InterServer 的传输协议，支持 HTTP/HTTPS"
+
+#: ../../reference/p2p-deploy-config.rst:72
+msgid "inter_server.cert_file"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:72
+msgid ""
+"Certificate file path for InterServer to enable HTTPS, supports crt/pem "
+"type"
+msgstr "启用 InterServer HTTPS 的证书文件路径，支持 crt/pem 类型"
+
+#: ../../reference/p2p-deploy-config.rst:74
+msgid "inter_server.key_file"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:74
+msgid ""
+"Private key file path for InterServer to enable HTTPS, supports key/pem "
+"type"
+msgstr "启用 InterServer HTTPS 的私钥文件路径，支持 key/pem 类型"
+
+#: ../../reference/p2p-deploy-config.rst:76
+msgid "inter_timeout"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:76
+msgid "5s"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:76
+msgid "Timeout for requesting InterServe"
+msgstr "InterServer 的请求超时时间"
+
+#: ../../reference/p2p-deploy-config.rst:78
+msgid "log_level"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:78
+msgid "info"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:78
+msgid "The type and severity of a logged event"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:80
+msgid "party_code"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:80
+msgid "Unique identifier used to identify the party"
+msgstr "用于识别参与方的唯一标识"
+
+#: ../../reference/p2p-deploy-config.rst:82
+msgid "party_info_file"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:82
+msgid ""
+"File path that stores information of each party, including party code, "
+"public key and InterServer's URL"
+msgstr "存储参与方信息的文件路径，包括各参与方的 party code 、公钥和 InterServer 的 URL"
+
+#: ../../reference/p2p-deploy-config.rst:84
+msgid "private_pem_path"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:84
+msgid ""
+"Private key file path for party_code, which will be used to sign requests"
+" to other SCQLBrokers"
+msgstr "party_code 的私钥文件路径，将用于签署对其他 SCQLBrokers 的请求"
+
+#: ../../reference/p2p-deploy-config.rst:86
+msgid "intra_host"
+msgstr "intra_host"
+
+#: ../../reference/p2p-deploy-config.rst:86
+msgid "The callback URL for the local SCQLEngine to notify SCQLBroker"
+msgstr "SCQLEngine 通知 SCQLBroker 的回调 URL"
+
+#: ../../reference/p2p-deploy-config.rst:88
+msgid "engine.timeout"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:88
+msgid "Timeout for SCQLBroker to send message to SCQLEngine"
+msgstr "SCQLBroker 向 SCQLEngine 发送消息的响应超时时间"
+
+#: ../../reference/p2p-deploy-config.rst:90
+msgid "engine.protocol"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:90
+msgid "The transfer protocol of SCQLEngine, support http/https"
+msgstr "SCQLEngine 传输协议，支持 http/https"
+
+#: ../../reference/p2p-deploy-config.rst:92
+msgid "engine.content_type"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:92
+msgid "The original media type in post body from SCQLBroker to SCQLEngine"
+msgstr "从 SCQLBroker 向 SCQLEngine 实际发送的数据类型"
+
+#: ../../reference/p2p-deploy-config.rst:94
+msgid "engine.uris"
+msgstr "engine.uris"
+
+#: ../../reference/p2p-deploy-config.rst:94
+msgid ""
+"The URIs for local SCQLEngines, which using **for_peer** to serve peer "
+"engines and **for_self** to serve the SCQLBroker, if **for_self** is "
+"empty, **for_peer** is used instead"
+msgstr ""
+"本地 SCQLEngines 的 URI，其中 **for_peer** 为其它参与方的 SCQLEngines 提供服务， "
+"**for_self** 则为 SCQLBroker 提供服务，如果 **for_self** 为空，则默认使用 **for_peer** 来代替"
+
+#: ../../reference/p2p-deploy-config.rst:97
+msgid "security_compromise.reveal_group_mark"
+msgstr ""
+
+#: ../../reference/engine-config.rst:51 ../../reference/engine-config.rst:67
+#: ../../reference/engine-config.rst:73 ../../reference/engine-config.rst:85
+#: ../../reference/engine-config.rst:89 ../../reference/engine-config.rst:103
+#: ../../reference/p2p-deploy-config.rst:97
+msgid "false"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:97
+msgid "Whether to reveal group_mark directly for group by"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:99
+msgid "storage.type"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:99
+msgid ""
+"Database kind in SCQLBroker, supports MYSQL/SQLite3, MYSQL is "
+"recommended, SQLite3 may have problems with concurrency"
+msgstr "SCQLBroker 使用的数据库类型， 支持 MYSQL/SQLite3，推荐使用 MYSQL，SQLite3在并发下可能出问题"
+
+#: ../../reference/p2p-deploy-config.rst:101
+msgid "storage.conn_str"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:101
+msgid "Used to connect to a database"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:103
+msgid "storage.max_idle_conns"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:103
+#: ../../reference/p2p-deploy-config.rst:105
+msgid "1"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:103
+msgid "Maximum number of connections in idle connection pool"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:105
+msgid "storage.max_open_conns"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:105
+msgid "Maximum number of open connections to the database"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:107
+msgid "storage.conn_max_idle_time"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:107
+#: ../../reference/p2p-deploy-config.rst:109
+msgid "-1s"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:107
+msgid "Maximum amount of time a connection may be idle"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:109
+msgid "storage.conn_max_lifetime"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:109
+msgid "Maximum amount of time a connection may be reused"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:111
+msgid "session_expire_time"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:111
+msgid "24h"
+msgstr "24h"
+
+#: ../../reference/p2p-deploy-config.rst:111
+msgid "Maximum lifespan of a job"
+msgstr "任务的超时时间"
+
+#: ../../reference/p2p-deploy-config.rst:113
+msgid "session_expire_check_time"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:113
+msgid "1m"
+msgstr "1m"
+
+#: ../../reference/p2p-deploy-config.rst:113
+msgid "The interval checking whether session is timeout"
+msgstr "检查会话是否超时的间隔"
+
+#: ../../reference/p2p-deploy-config.rst:118
+msgid "Config for ServerConfig"
+msgstr "ServerConfig 配置"
+
+#: ../../reference/p2p-deploy-config.rst:119
+msgid ""
+"SCQLBroker accept intra-domain requests through IntraServer, while accept"
+" requests between different SCQLBrokers through InterServer."
+msgstr "SCQLBroker 通过IntraServer 接收域内请求，而通过 InterServer 接收不同 SCQLBroker 之间的请求。"
+
+#: ../../reference/p2p-deploy-config.rst:121
+msgid ""
+"IntraServer is recommended to use localhost host or LAN address to avoid "
+"external attacks, while InterServer is recommended to enable HTTPS to "
+"improve security."
+msgstr ""
+"IntraServer 建议使用 localhost 或 LAN 地址以避免外部攻击，而 InterServer 建议启用 HTTPS "
+"以提高安全性。"
+
+#: ../../reference/p2p-deploy-config.rst:125
+msgid ""
+"Please refer to the following configuration to enable HTTPS for "
+"InterServer: (similar to IntraServer)"
+msgstr "请参考以下配置为 InterServer 启用 HTTPS ：（IntraServer 类似）"
+
+#: ../../reference/p2p-deploy-config.rst:138
+msgid ""
+"Self-signed CA files may not be trusted by default, please refer to "
+"`Trouble shooting <https://github.com/secretflow/scql/tree/main/test-"
+"tools#trouble-shooting>`_ for help."
+msgstr ""
+"默认情况下，自签的 CA 文件可能不受信任，请参阅 `故障排除  "
+"<https://github.com/secretflow/scql/tree/main/test-tools#trouble-"
+"shooting>`_ 获取帮助。"
+
+#: ../../reference/p2p-deploy-config.rst:140
+msgid "Please change the endpoints in **party_info.json** from http to https."
+msgstr "请将 **party_info.json** 中的 endpoints 从 http 更改为 https"
+
+#: ../../reference/p2p-deploy-config.rst:142
+msgid ""
+"We have enabled HTTPS in the `p2p examples "
+"<https://github.com/secretflow/scql/blob/main/examples/p2p-"
+"tutorial/README.md>`_, and the initialization process of related "
+"configurations may provide some help."
+msgstr ""
+"我们在 `p2p examples <https://github.com/secretflow/scql/blob/main/examples"
+"/p2p-tutorial/README.md>`_ 中启用了 HTTPS，相关配置的初始化过程也许能提供一些帮助"
+
+#: ../../reference/p2p-deploy-config.rst:144
+msgid ""
+"For SCQLEngine to work with SSL, please refer :ref:`Config for SSL in "
+"SCQLEngine <scqlengine-tls>`."
+msgstr ""
+"除此之外，用户还需要设置 :ref:`SCQLEngine 的 SSL 配置 <scqlengine-tls>`，以保证 SCQLEngine "
+"能正常工作。"
+
+#: ../../reference/p2p-deploy-config.rst:147
+msgid "Reused Config"
+msgstr "复用的配置"
+
+#: ../../reference/p2p-deploy-config.rst:149
+msgid ""
+"For more about SecurityCompromise, see :ref:`Config for "
+"SecurityCompromise <config_security_compromise_options>`"
+msgstr ""
+"有关 SecurityCompromise 的更多信息，请参阅 :ref:`安全退让配置 "
+"<config_security_compromise_options>`"
+
+#: ../../reference/p2p-deploy-config.rst:151
+msgid ""
+"For more about Storage, see :ref:`Config for storage "
+"<config_storage_options>`"
+msgstr "有关存储的更多信息，请参阅 :ref:`存储配置 <config_storage_options>`"
 
 #: ../../reference/engine-config.rst:5
 msgid "SCQLEngine Configuration"

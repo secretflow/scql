@@ -1,0 +1,143 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SCQL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: SCQL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-05 15:22+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.12.1\n"
+
+#: ../../topics/clients/integrate-scdb.rst:2
+msgid "How to Integrate SCDB"
+msgstr "如何集成 SCDB"
+
+#: ../../topics/clients/integrate-scdb.rst:5
+msgid "Overview"
+msgstr "概述"
+
+#: ../../topics/clients/integrate-scdb.rst:7
+msgid "As shown in FIG, SCQL System needs to work with **Client**:"
+msgstr "如图所示，SCQL 系统需要与 **客户端** 配合工作"
+
+#: ../../topics/clients/integrate-scdb.rst:9
+msgid "Client: user interface designed for query submission and result retrieval."
+msgstr "客户端：为提交查询、获取结果而设计的用户接口"
+
+#: ../../topics/clients/integrate-scdb.rst:13
+msgid "Therefore the platform should support Client to integrate SCQL System."
+msgstr "因此，平台应该提供客户端来集成 SCQL 系统。"
+
+#: ../../topics/clients/integrate-scdb.rst:15
+msgid "Specifically, the Client interact with SCDB through Query API."
+msgstr "具体来说，客户端通过查询 API 与 SCDB 互动。"
+
+#: ../../topics/clients/integrate-scdb.rst:18
+msgid "Query API"
+msgstr "查询 API"
+
+#: ../../topics/clients/integrate-scdb.rst:19
+msgid "For SQL query, SCDB support services:"
+msgstr "针对 SQL 查询， SCDB 支持如下服务："
+
+#: ../../topics/clients/integrate-scdb.rst:21
+msgid ""
+"Submit: async API, just submit SQL query and return, server listen on "
+"``${SCDBHost}/public/submit_query``"
+msgstr "Submit：异步 API，用于提交 SQL 查询并返回，服务器监听 "
+"``${SCDBHost}/public/submit_query``"
+
+#: ../../topics/clients/integrate-scdb.rst:22
+msgid ""
+"Fetch: async API, try to get the result of a SQL query, server listen on "
+"``${SCDBHost}/public/fetch_result``"
+msgstr "Fetch：异步 API，尝试获取 SQL 查询的结果，服务器监听 "
+"``${SCDBHost}/public/fetch_result``"
+
+#: ../../topics/clients/integrate-scdb.rst:23
+msgid ""
+"SubmitAndGet: sync API, submit query and wait to get the query result, "
+"server listen on ``${SCDBHost}/public/submit_and_get``"
+msgstr "SubmitAndGet：同步 API，提交查询并等待获取查询结果，服务器监听"
+"server listen on ``${SCDBHost}/public/submit_and_get``"
+
+#: ../../topics/clients/integrate-scdb.rst:25
+msgid "Please refer to :doc:`/reference/scdb-api` for details."
+msgstr "更多细节请参考 :doc:`/reference/scdb-api`"
+
+#: ../../topics/clients/integrate-scdb.rst:28
+msgid ""
+"Client can choose to support either async or sync API according to "
+"business scenarios:"
+msgstr "客户端可以根据业务场景选择支持异步或同步 API："
+
+#: ../../topics/clients/integrate-scdb.rst:30
+msgid ""
+"If the SQL query task might take too much time, it is recommended to use "
+"the async API, otherwise use the sync API for simplicity."
+msgstr "如果 SQL 查询任务需要较长的时间，建议使用异步 API，否则使用同步 API 更简单。"
+
+#: ../../topics/clients/integrate-scdb.rst:33
+msgid ""
+"In a word, the custom Client should construct HTTP request for user's "
+"SQL, post to SCDB and parse the response from SCDB."
+msgstr "简单来说，自定义客户端应该为用户的 SQL 构建 HTTP 请求，提交到 SCDB 并解析 SCDB 的响应。"
+
+#: ../../topics/clients/integrate-scdb.rst:37
+msgid "SQL Syntax"
+msgstr "SQL 语法"
+
+#: ../../topics/clients/integrate-scdb.rst:39
+msgid ""
+"SCDB provides a SQL-like user interface, which is compatible with most "
+"MySQL syntax."
+msgstr "SCDB 提供了类似 SQL 的用户界面，与大多数 MySQL 语法兼容。"
+
+#: ../../topics/clients/integrate-scdb.rst:42
+msgid "For DQL syntax, please check :doc:`/reference/lang/manual`"
+msgstr "DQL 语法请参考 :doc:`/reference/lang/manual`"
+
+#: ../../topics/clients/integrate-scdb.rst:48
+msgid "CREATE/DROP/ALTER USER Statement"
+msgstr ""
+
+#: ../../topics/clients/integrate-scdb.rst:71
+#: ../../topics/clients/integrate-scdb.rst:101
+#: ../../topics/clients/integrate-scdb.rst:131
+#: ../../topics/clients/integrate-scdb.rst:171
+msgid "Examples:"
+msgstr "示例："
+
+#: ../../topics/clients/integrate-scdb.rst:92
+msgid "CREATE/DROP DATABASE Statement"
+msgstr ""
+
+#: ../../topics/clients/integrate-scdb.rst:115
+msgid "CREATE/DROP TABLE Statement"
+msgstr ""
+
+#: ../../topics/clients/integrate-scdb.rst:128
+msgid ""
+"Create table here means mapping 'tbl_name' to the existing physic table, "
+"which is specified by ``REF_TABLE`` option and located on the query "
+"issuer party. In SCQL, user runs queries on virtual table, which helps "
+"simplify privilege control and usage."
+msgstr "这里创建表意味着将 ``tbl_name`` 映射到现有的物理表，该物理表由 ``REF_TABLE`` 选项指定并位于查询发出方。在 SCQL 中，用户在虚拟表上运行查询，这有助于简化权限控制和使用"
+
+#: ../../topics/clients/integrate-scdb.rst:150
+msgid "GRANT/REVOKE Statement"
+msgstr ""
+
+#: ../../topics/clients/integrate-scdb.rst:186
+msgid "SHOW/DESCRIBE Statement"
+msgstr ""
+

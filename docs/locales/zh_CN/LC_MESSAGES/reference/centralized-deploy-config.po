@@ -1,22 +1,651 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) 2023 Ant Group Co., Ltd.
 # This file is distributed under the same license as the SCQL package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
 #
+#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-05 15:22+0800\n"
+"POT-Creation-Date: 2024-01-05 17:46+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language: zh_CN\n"
-"Language-Team: zh_CN <LL@li.org>\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.12.1\n"
+
+#: ../../reference/centralized-deploy-config.rst:2
+msgid "SCQL Centralized Deployment Configuration"
+msgstr "SCQL 中心化部署配置"
+
+#: ../../reference/centralized-deploy-config.rst:4
+msgid ""
+"SCQL centralized deployment architecture consists of SCDB and SCQLEngine,"
+" and the configuration instructions include these two parts."
+msgstr "SCQL 中心化部署由 SCDB 和 SCQLEngine 组成，配置说明包含这两部分。"
+
+#: ../../reference/centralized-deploy-config.rst:9
+msgid "SCDB Configuration"
+msgstr "SCDB 配置说明"
+
+#: ../../reference/centralized-deploy-config.rst:11
+msgid "SCDB uses YAML as configuration file format."
+msgstr "SCDB 使用 YAML 作为配置文件格式"
+
+#: ../../reference/centralized-deploy-config.rst:14
+msgid "Example configuration for SCDB"
+msgstr "SCDB 配置示例"
+
+#: ../../reference/centralized-deploy-config.rst:55
+msgid "Configuration Options of SCDB"
+msgstr "SCDB 配置项"
+
+#: ../../reference/centralized-deploy-config.rst:58
+#: ../../reference/engine-config.rst:27
+msgid "Name"
+msgstr "名称"
+
+#: ../../reference/centralized-deploy-config.rst:58
+#: ../../reference/engine-config.rst:27
+msgid "Default"
+msgstr "默认值"
+
+#: ../../reference/centralized-deploy-config.rst:58
+#: ../../reference/engine-config.rst:27
+msgid "Description"
+msgstr "描述"
+
+#: ../../reference/centralized-deploy-config.rst:60
+msgid "scdb_host"
+msgstr ""
+
+#: ../../reference/centralized-deploy-config.rst:60
+#: ../../reference/centralized-deploy-config.rst:62
+#: ../../reference/centralized-deploy-config.rst:92
+#: ../../reference/centralized-deploy-config.rst:94
+#: ../../reference/centralized-deploy-config.rst:96
+#: ../../reference/centralized-deploy-config.rst:98
+#: ../../reference/centralized-deploy-config.rst:108
+#: ../../reference/centralized-deploy-config.rst:112
+#: ../../reference/centralized-deploy-config.rst:114
+#: ../../reference/centralized-deploy-config.rst:116
+#: ../../reference/centralized-deploy-config.rst:118
+#: ../../reference/engine-config.rst:53 ../../reference/engine-config.rst:69
+#: ../../reference/engine-config.rst:81 ../../reference/engine-config.rst:83
+#: ../../reference/engine-config.rst:87 ../../reference/engine-config.rst:91
+#: ../../reference/engine-config.rst:97 ../../reference/engine-config.rst:99
+#: ../../reference/engine-config.rst:101 ../../reference/engine-config.rst:107
+#: ../../reference/engine-config.rst:111
+msgid "none"
+msgstr "无"
+
+#: ../../reference/centralized-deploy-config.rst:60
+msgid "The callback URL for the SCQLEngine to notify SCDB"
+msgstr "SCQLEngine 通知 SCDB 的回调 URL"
+
+#: ../../reference/centralized-deploy-config.rst:62
+msgid "port"
+msgstr "port"
+
+#: ../../reference/centralized-deploy-config.rst:62
+msgid "The listening port of the SCDB server"
+msgstr "SCDB服务器监听端口"
+
+#: ../../reference/centralized-deploy-config.rst:64
+msgid "protocol"
+msgstr "protocol"
+
+#: ../../reference/centralized-deploy-config.rst:64
+#: ../../reference/centralized-deploy-config.rst:110
+msgid "https"
+msgstr "https"
+
+#: ../../reference/centralized-deploy-config.rst:64
+msgid "The transfer protocol of SCDB server, supports HTTP/HTTPS"
+msgstr "SCDB服务器传输协议支持HTTP/HTTPS"
+
+#: ../../reference/centralized-deploy-config.rst:66
+msgid "query_result_callback_timeout"
+msgstr "query_result_callback_timeout"
+
+#: ../../reference/centralized-deploy-config.rst:66
+msgid "200ms"
+msgstr "200ms"
+
+#: ../../reference/centralized-deploy-config.rst:66
+msgid "Timeout for SCDB to notify the query result"
+msgstr "SCDB 返回查询结果的超时时间"
+
+#: ../../reference/centralized-deploy-config.rst:68
+msgid "session_expire_time"
+msgstr "session_expire_time"
+
+#: ../../reference/centralized-deploy-config.rst:68
+msgid "48h"
+msgstr "48h"
+
+#: ../../reference/centralized-deploy-config.rst:68
+msgid "The expiration duration of a session"
+msgstr "会话超时时间"
+
+#: ../../reference/centralized-deploy-config.rst:70
+msgid "session_expire_check_time"
+msgstr "session_expire_check_time"
+
+#: ../../reference/centralized-deploy-config.rst:70
+msgid "1h"
+msgstr "1h"
+
+#: ../../reference/centralized-deploy-config.rst:70
+msgid "The cleanup interval of expired session"
+msgstr "超时会话的清理间隔"
+
+#: ../../reference/centralized-deploy-config.rst:72
+msgid "password_check"
+msgstr "password_check"
+
+#: ../../reference/centralized-deploy-config.rst:72
+#: ../../reference/centralized-deploy-config.rst:76
+#: ../../reference/centralized-deploy-config.rst:122
+#: ../../reference/engine-config.rst:29 ../../reference/engine-config.rst:33
+#: ../../reference/engine-config.rst:49 ../../reference/engine-config.rst:65
+#: ../../reference/engine-config.rst:79 ../../reference/engine-config.rst:105
+#: ../../reference/engine-config.rst:109
+msgid "true"
+msgstr "true"
+
+#: ../../reference/centralized-deploy-config.rst:72
+msgid "Whether to validate password strength when create a user"
+msgstr "创建用户时是否验证密码强度"
+
+#: ../../reference/centralized-deploy-config.rst:74
+msgid "log_level"
+msgstr "log_level"
+
+#: ../../reference/centralized-deploy-config.rst:74
+msgid "info"
+msgstr "info"
+
+#: ../../reference/centralized-deploy-config.rst:74
+msgid "The type and severity of a logged event"
+msgstr "日志等级"
+
+#: ../../reference/centralized-deploy-config.rst:76
+#: ../../reference/engine-config.rst:33
+msgid "enable_audit_logger"
+msgstr "enable_audit_logger"
+
+#: ../../reference/centralized-deploy-config.rst:76
+msgid "Whether to enable audit logger"
+msgstr "是否记录审计日志"
+
+#: ../../reference/centralized-deploy-config.rst:78
+msgid "audit.audit_log_file"
+msgstr "audit.audit_log_file"
+
+#: ../../reference/centralized-deploy-config.rst:78
+#: ../../reference/engine-config.rst:35
+msgid "audit/audit.log"
+msgstr "audit/audit.log"
+
+#: ../../reference/centralized-deploy-config.rst:78
+#: ../../reference/engine-config.rst:35
+msgid "The file to save basic information about a query"
+msgstr "存储基础审计信息的日志文件"
+
+#: ../../reference/centralized-deploy-config.rst:80
+msgid "audit.audit_detail_file"
+msgstr "audit.audit_detail_file"
+
+#: ../../reference/centralized-deploy-config.rst:80
+#: ../../reference/engine-config.rst:37
+msgid "audit/detail.log"
+msgstr "audit/detail.log"
+
+#: ../../reference/centralized-deploy-config.rst:80
+#: ../../reference/engine-config.rst:37
+msgid "The file to save more detailed information about a query"
+msgstr "存储补充审计信息的日志文件"
+
+#: ../../reference/centralized-deploy-config.rst:82
+msgid "audit.audit_max_size"
+msgstr "audit.audit_max_size"
+
+#: ../../reference/centralized-deploy-config.rst:82
+msgid "500"
+msgstr "5000"
+
+#: ../../reference/centralized-deploy-config.rst:82
+msgid "The maximum size of the audit log file before it gets rotated, unit: MB"
+msgstr "单个审计日志文件的最大容量，单位为MB"
+
+#: ../../reference/centralized-deploy-config.rst:84
+msgid "audit.audit_max_backups"
+msgstr "audit.audit_max_backups"
+
+#: ../../reference/centralized-deploy-config.rst:84
+msgid "0"
+msgstr "0"
+
+#: ../../reference/centralized-deploy-config.rst:84
+msgid ""
+"The maximum number of old audit log files to retain, default 0 to retain "
+"all old log files"
+msgstr "系统中保留的审计日志文件的最大数量，0 表示保留所有的日志文件"
+
+#: ../../reference/centralized-deploy-config.rst:86
+msgid "audit.audit_max_age_days"
+msgstr "audit.audit_max_age_days"
+
+#: ../../reference/centralized-deploy-config.rst:86
+#: ../../reference/engine-config.rst:39
+msgid "180"
+msgstr "180"
+
+#: ../../reference/centralized-deploy-config.rst:86
+msgid "The maximum number of days to retain old log files"
+msgstr "单个审计日志文件所能保存的最长时间，单位：天"
+
+#: ../../reference/centralized-deploy-config.rst:88
+msgid "audit.audit_max_compress"
+msgstr "audit.audit_max_compress"
+
+#: ../../reference/centralized-deploy-config.rst:88
+#: ../../reference/centralized-deploy-config.rst:90
+#: ../../reference/engine-config.rst:51 ../../reference/engine-config.rst:67
+#: ../../reference/engine-config.rst:73 ../../reference/engine-config.rst:85
+#: ../../reference/engine-config.rst:89 ../../reference/engine-config.rst:103
+msgid "false"
+msgstr "false"
+
+#: ../../reference/centralized-deploy-config.rst:88
+msgid "Whether the rotated log files should be compressed"
+msgstr "是否对审计日志进行压缩"
+
+#: ../../reference/centralized-deploy-config.rst:90
+msgid "security_compromise.reveal_group_mark"
+msgstr "security_compromise.reveal_group_mark"
+
+#: ../../reference/centralized-deploy-config.rst:90
+msgid "Whether to reveal group_mark directly for group by"
+msgstr "是否在计算 group by 的时候泄露分组标记信息"
+
+#: ../../reference/centralized-deploy-config.rst:92
+msgid "tls.cert_file"
+msgstr "tls.cert_file"
+
+#: ../../reference/centralized-deploy-config.rst:92
+msgid "Certificate file path to enable TSL, supports crt/pem type"
+msgstr "启用支持 crt/pem 类型的TSL证书文件路径"
+
+#: ../../reference/centralized-deploy-config.rst:94
+msgid "tls.key_file"
+msgstr "tls.key_file"
+
+#: ../../reference/centralized-deploy-config.rst:94
+msgid "Private key file path to enable TSL, supports key/pem type"
+msgstr "启用支持 key/pem 类型的 TLS 私钥文件路径"
+
+#: ../../reference/centralized-deploy-config.rst:96
+msgid "storage.type"
+msgstr "storage.type"
+
+#: ../../reference/centralized-deploy-config.rst:96
+msgid ""
+"Database kind in SCDB, supports MYSQL/SQLite3, MYSQL is recommended, "
+"SQLite3 may have problems with concurrency"
+msgstr "SCDB 使用的数据库类型， 支持 MYSQL/SQLite3，推荐使用 MYSQL，SQLite3在并发下可能出问题"
+
+#: ../../reference/centralized-deploy-config.rst:98
+msgid "storage.conn_str"
+msgstr "storage.conn_str"
+
+#: ../../reference/centralized-deploy-config.rst:98
+msgid "Used to connect to a database"
+msgstr "数据库连接串"
+
+#: ../../reference/centralized-deploy-config.rst:100
+msgid "storage.max_idle_conns"
+msgstr "storage.max_idle_conns"
+
+#: ../../reference/centralized-deploy-config.rst:100
+#: ../../reference/centralized-deploy-config.rst:102
+msgid "1"
+msgstr "1"
+
+#: ../../reference/centralized-deploy-config.rst:100
+msgid "Maximum number of connections in idle connection pool"
+msgstr "空闲连接池最大连接数"
+
+#: ../../reference/centralized-deploy-config.rst:102
+msgid "storage.max_open_conns"
+msgstr "storage.max_open_conns"
+
+#: ../../reference/centralized-deploy-config.rst:102
+msgid "Maximum number of open connections to the database"
+msgstr "数据库最大连接数"
+
+#: ../../reference/centralized-deploy-config.rst:104
+msgid "storage.conn_max_idle_time"
+msgstr "storage.conn_max_idle_time"
+
+#: ../../reference/centralized-deploy-config.rst:104
+#: ../../reference/centralized-deploy-config.rst:106
+msgid "-1s"
+msgstr "-1s"
+
+#: ../../reference/centralized-deploy-config.rst:104
+msgid "Maximum amount of time a connection may be idle"
+msgstr "连接处于空闲状态的最长时间"
+
+#: ../../reference/centralized-deploy-config.rst:106
+msgid "storage.conn_max_lifetime"
+msgstr "storage.conn_max_lifetime"
+
+#: ../../reference/centralized-deploy-config.rst:106
+msgid "Maximum amount of time a connection may be reused"
+msgstr "可重复连接使用的最长时间"
+
+#: ../../reference/centralized-deploy-config.rst:108
+msgid "engine.timeout"
+msgstr "engine.timeout"
+
+#: ../../reference/centralized-deploy-config.rst:108
+msgid "Timeout for SCDB to send message to engine"
+msgstr "SCDB 向 SCQLEngine 发送消息的响应超时时间"
+
+#: ../../reference/centralized-deploy-config.rst:110
+msgid "engine.protocol"
+msgstr "engine.protocol"
+
+#: ../../reference/centralized-deploy-config.rst:110
+msgid "The transfer protocol of Engine, support http/https"
+msgstr "SCQLEngine 传输协议，支持 http/https"
+
+#: ../../reference/centralized-deploy-config.rst:112
+msgid "engine.content_type"
+msgstr "engine.content_type"
+
+#: ../../reference/centralized-deploy-config.rst:112
+msgid "The original media type in post body from SCDB to engine"
+msgstr "从 SCDB 向 SCQLEngine 实际发送的数据类型"
+
+#: ../../reference/centralized-deploy-config.rst:114
+msgid "engine.spu.protocol"
+msgstr "engine.spu.protocol"
+
+#: ../../reference/centralized-deploy-config.rst:114
+msgid "The mpc protocol for engine to work with"
+msgstr "SCQLEngine 使用的 mpc 协议"
+
+#: ../../reference/centralized-deploy-config.rst:116
+msgid "engine.spu.field"
+msgstr "engine.spu.field"
+
+#: ../../reference/centralized-deploy-config.rst:116
+msgid "A security parameter type for engine to work with"
+msgstr "SCQLEngine 所使用的安全参数类型"
+
+#: ../../reference/centralized-deploy-config.rst:118
+msgid "engine.spu.sigmoid_mode"
+msgstr "engine.spu.sigmoid_mode"
+
+#: ../../reference/centralized-deploy-config.rst:118
+msgid "The sigmoid approximation method for engine to work with"
+msgstr "SCQLEngine 中 MPC 协议中的 Sigmoid 方法"
+
+#: ../../reference/centralized-deploy-config.rst:120
+msgid "party_auth.method"
+msgstr "party_auth.method"
+
+#: ../../reference/centralized-deploy-config.rst:120
+msgid "pubkey"
+msgstr "pubkey"
+
+#: ../../reference/centralized-deploy-config.rst:120
+msgid ""
+"Method to authenticate the participant when registering a user, supports "
+"pubkey/token"
+msgstr "注册用户时验证参与者的方法，支持 pubkey/token 认证"
+
+#: ../../reference/centralized-deploy-config.rst:122
+msgid "party_auth.enable_timestamp_check"
+msgstr "party_auth.enable_timestamp_check"
+
+#: ../../reference/centralized-deploy-config.rst:122
+msgid ""
+"When using pubkey authentication, whether to check the signed timestamp "
+"to avoid `replay attacks`_"
+msgstr "使用 pubkey 认证时，是否检查签名时间戳以避免 `replay attacks`_"
+
+#: ../../reference/centralized-deploy-config.rst:124
+msgid "party_auth.validity_period"
+msgstr "party_auth.validity_period"
+
+#: ../../reference/centralized-deploy-config.rst:124
+msgid "30s"
+msgstr "30s"
+
+#: ../../reference/centralized-deploy-config.rst:124
+msgid ""
+"When enable timestamp check,  SCDB will check whether signed timestamp is"
+" within (now() - validity_period, now())"
+msgstr "当启用时间戳检查时，SCDB 将检查签名时间戳是否在 (now() - valid_period, now()) 内"
+
+#: ../../reference/centralized-deploy-config.rst:131
+msgid "Config for SecurityCompromise"
+msgstr "安全退让配置"
+
+#: ../../reference/centralized-deploy-config.rst:133
+msgid ""
+"SCQL provides some security compromise options, which can be selectively "
+"enabled when the security risk is acceptable to speed up the overall "
+"operation."
+msgstr "SCQL 提供了一些安全妥协选项，当安全风险可以接受时可以选择性地启用这些选项，以加快整体运行速度"
+
+#: ../../reference/centralized-deploy-config.rst:135
+#, fuzzy
+msgid ""
+"**reveal_group_mark**: default disable, if enabled, SCQL will expose "
+"grouping information(size of each group) when calculating group-by-"
+"aggregation, thereby avoiding the overhead caused by pre-shuffle.  "
+"``risk``: group size will be leaked, which is equivalent to the result of"
+" count(*)"
+msgstr ""
+"**reveal_group_mark** ：默认禁用，如果启用，SCQL 在计算分组聚合时会公开分组信息（每个组的大小），从而避免前置 shuffle "
+"带来的开销。``风险``：分组大小会泄露，等价于泄露 count(*) 的结果"
+
+#: ../../reference/centralized-deploy-config.rst:137
+msgid "A typical config of security_compromise can be like:"
+msgstr "典型的配置如下："
+
+#: ../../reference/centralized-deploy-config.rst:148
+msgid "Config for storage"
+msgstr "存储配置"
+
+#: ../../reference/centralized-deploy-config.rst:149
+msgid ""
+"Database is used to store the SCQL system data, such as CCL and user "
+"information, currently support MySQL/SQLite3. You can connect to a "
+"database by setting ``conn_str`` and ``type`` in the storage config."
+msgstr ""
+"数据库用于存储 SCQL 系统数据，如 CCL 和用户信息，目前 SCDB 支持 MySQL/SQLite3 。您可以通过配置项 "
+"``conn_str`` 和 ``type`` 来连接不同的数据库。"
+
+#: ../../reference/centralized-deploy-config.rst:152
+msgid "type"
+msgstr "type"
+
+#: ../../reference/centralized-deploy-config.rst:152
+msgid ""
+"The database type, which can be set as mysql/sqlite. And MySQL is "
+"recommended, which has been fully tested."
+msgstr "数据库类型可以设置为 mysql/sqlite，我们更加推荐使用 MySQL 来作为 SCDB 的数据库，其相关测试更加充分。"
+
+#: ../../reference/centralized-deploy-config.rst:170
+msgid "conn_str"
+msgstr "conn_str"
+
+#: ../../reference/centralized-deploy-config.rst:155
+msgid ""
+"MySQL string format, see `dsn-data-source-name <https://github.com/mattn"
+"/go-sqlite3#connection-string>`_ for more information."
+msgstr ""
+"MySQL语句格式, 更多信息请参考: `dsn-data-source-name <https://github.com/mattn/go-"
+"sqlite3#connection-string>`_ "
+
+#: ../../reference/centralized-deploy-config.rst:157
+msgid "[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]"
+msgstr "[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]"
+
+#: ../../reference/centralized-deploy-config.rst:160
+msgid "MySQL string example:"
+msgstr "MySQL 连接串示例："
+
+#: ../../reference/centralized-deploy-config.rst:162
+msgid "``user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true``"
+msgstr "``user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true``"
+
+#: ../../reference/centralized-deploy-config.rst:164
+msgid "SQLite3 string format:"
+msgstr "SQLite3 连接串示例："
+
+#: ../../reference/centralized-deploy-config.rst:166
+msgid "more infos: https://github.com/mattn/go-sqlite3#connection-string."
+msgstr "参考: https://github.com/mattn/go-sqlite3#connection-string. "
+
+#: ../../reference/centralized-deploy-config.rst:168
+msgid "SQLite3 string example:"
+msgstr "SQLite3 连接串示例："
+
+#: ../../reference/centralized-deploy-config.rst:170
+msgid "``scdb.db``"
+msgstr "``scdb.db``"
+
+#: ../../reference/centralized-deploy-config.rst:172
+msgid "A typical config of storage can be like:"
+msgstr "典型的存储配置如下："
+
+#: ../../reference/centralized-deploy-config.rst:185
+msgid ""
+"To handle time.Time correctly, you need to include parseTime as a "
+"parameter. To fully support UTF-8 encoding, you need to change "
+"``charset=utf8`` to ``charset=utf8mb4``."
+msgstr ""
+"正确处理 time.Time 需要包含 parseTime 参数。为了完全支持 UTF-8 编码，需要将 ``charset=utf8`` 更改为"
+" ``charset=utf8mb4`` "
+
+#: ../../reference/centralized-deploy-config.rst:189
+#: ../../reference/engine-config.rst:237
+msgid "Config for audit"
+msgstr "审计日志配置"
+
+#: ../../reference/centralized-deploy-config.rst:191
+msgid ""
+"Audit log are used to record the SCDB activities during query execution. "
+"It has two types: basic audit log and detail audit log."
+msgstr "SCDB 的审计日志是用来记录 SCDB 在执行 query 过程中所产生的一系列事件，它有两种类型：基础审计日志和补充审计日志。"
+
+#: ../../reference/centralized-deploy-config.rst:193
+msgid ""
+"The basic audit log are used to record the basic information of a query, "
+"such as the result and user information, while the detail audit log "
+"records more detailed information such as execution plan and CCL details."
+" you can see `scdb_audit "
+"<https://github.com/secretflow/scql/blob/main/pkg/audit/audit.proto>`_ "
+"for more information."
+msgstr ""
+"基础审计日志是用来记录 SCDB "
+"在执行过程中的所产生一些事件的的基本信息，比如说：一次查询的结果、提交查询的用户信息等。补充审计日志信息，则是用来记录一些额外的信息，比如单词查询的执行计划、CCL信息等。更多信息请参考"
+" `scdb_audit "
+"<https://github.com/secretflow/scql/blob/main/pkg/audit/audit.proto>`_ 。"
+
+#: ../../reference/centralized-deploy-config.rst:195
+msgid ""
+"When the audit log has reaches the maximum size ( set by "
+"``audit_max_size``), SCDB will save the audit log as ``name-"
+"timestamp.ext``, where the `name` is the filename set in "
+"``audit_log_file`` without the extension, `timestamp` is the time at "
+"which the log was rotated formatted with local time format of "
+"`2006-01-02T15-04-05.000`, `ext` is the extension set in "
+"``audit_log_file``."
+msgstr ""
+"审计日志的文件是系统自动生成的，当审计日志的大小达到 ``audit_max_size`` "
+"的设定值时，系统会自动将日志进行归档，归档的日志文件命名格式为 ``name-timestamp.ext`` ，其中 `name` 是 "
+"``audit_log_file`` 中设置的不带后缀的文件名，`timestamp` 是当前时间（格式为 "
+"`2006-01-02T15-04-05.000`），`ext` 是在 ``audit_log_file`` 中设置的后缀名。"
+
+#: ../../reference/centralized-deploy-config.rst:198
+msgid ""
+"For example, if ``audit_log_file`` set as `audit/audit.log`, a backup "
+"created at 6:30pm on Nov 11 2016 would be saved to "
+"`./audit/audit-2016-11-04T18-30-00.000.log`"
+msgstr ""
+"例如，通过设置 ``audit.audit_log_file`` 为 `audit/audit.log` ， "
+"在2016年11月4日18:30归档的审计日志会被保存至 `./audit/audit-2016-11-04T18-30-00.000.log` "
+"。"
+
+#: ../../reference/centralized-deploy-config.rst:202
+msgid "Password check"
+msgstr "密码校验"
+
+#: ../../reference/centralized-deploy-config.rst:203
+msgid ""
+"``password_check`` serves to validate password strength. For ALTER USER, "
+"CREATE USER statements, if it's true, the password should be at least 16 "
+"characters which including a number, a lowercase letter, a uppercase "
+"letter and a special character."
+msgstr ""
+"`password_check` 用于验证密码强度校验。如果该参数设置为true， 对于 ALTER USER、CREATE USER "
+"语句，其所涉及的密码长度至少为 16 个字符，其中包括数字、小写字母、大写字母和特殊字符。"
+
+#: ../../reference/centralized-deploy-config.rst:209
+msgid "Config for TLS"
+msgstr "TLS 配置"
+
+#: ../../reference/centralized-deploy-config.rst:210
+msgid ""
+"If you need to enable TLS in SCDB, please refer to the following "
+"configuration."
+msgstr "如果需要在 SCDB 中启用 TLS ，请参考以下配置。"
+
+#: ../../reference/centralized-deploy-config.rst:224
+msgid ""
+"Self-signed CA files may not be trusted by default, please refer to "
+"`Trouble shooting <https://github.com/secretflow/scql/tree/main/test-"
+"tools#trouble-shooting>`_ for help."
+msgstr ""
+"默认情况下，自签的 CA 文件可能不受信任，请参阅 `故障排除  "
+"<https://github.com/secretflow/scql/tree/main/test-tools#trouble-"
+"shooting>`_ 获取帮助。"
+
+#: ../../reference/centralized-deploy-config.rst:226
+msgid ""
+"Additionally, it is necessary to configure the SCQLEngine to work with "
+"SSL, please refer :ref:`Config for SSL in SCQLEngine <scqlengine-tls>`."
+msgstr ""
+"除此之外，用户还需要设置 :ref:`SCQLEngine 的 SSL 配置 <scqlengine-tls>`，以保证 SCDB 和 "
+"SCQLEngine 能正常工作。"
+
+#: ../../reference/centralized-deploy-config.rst:230
+msgid "Config for SPU"
+msgstr "SPU 配置"
+
+#: ../../reference/centralized-deploy-config.rst:231
+msgid ""
+"SCQL supports different mpc protocol powered by SPU, you can choose "
+"different mpc protocol by setting SPU runtime config. Protocol **SEMI2K**"
+" is suggested, which is fully tested and support multi parties. See `SPU "
+"runtime config "
+"<https://www.secretflow.org.cn/docs/spu/en/reference/runtime_config.html>`_"
+" to get more information."
+msgstr ""
+"SCQL 的底层 MPC 协议由 SPU 控制，你可以通过更改 SPU 相关配置来选择不同的 MPC 协议， 更多信息请参考 `SPU 配置 "
+"<https://www.secretflow.org.cn/docs/spu/en/reference/runtime_config.html>`_"
+" 。"
 
 #: ../../reference/engine-config.rst:5
 msgid "SCQLEngine Configuration"
@@ -43,28 +672,9 @@ msgstr ""
 "SCQLEngine 根据部署方式可以与 SCDB 、 SCQLBroker 等上层模块协作。配置项中使用 ``Driver`` "
 "来表示这些上层模块。"
 
-#: ../../reference/engine-config.rst:27
-msgid "Name"
-msgstr "名称"
-
-#: ../../reference/engine-config.rst:27
-msgid "Default"
-msgstr "默认值"
-
-#: ../../reference/engine-config.rst:27
-msgid "Description"
-msgstr "描述"
-
 #: ../../reference/engine-config.rst:29
 msgid "log_enable_console_logger"
 msgstr "log_enable_console_logger"
-
-#: ../../reference/engine-config.rst:29 ../../reference/engine-config.rst:33
-#: ../../reference/engine-config.rst:49 ../../reference/engine-config.rst:65
-#: ../../reference/engine-config.rst:79 ../../reference/engine-config.rst:105
-#: ../../reference/engine-config.rst:109
-msgid "true"
-msgstr "true"
 
 #: ../../reference/engine-config.rst:29
 msgid "Whether logging to stdout while logging to file"
@@ -83,10 +693,6 @@ msgid "The directory to save log file"
 msgstr "保存log文件的目录"
 
 #: ../../reference/engine-config.rst:33
-msgid "enable_audit_logger"
-msgstr "enable_audit_logger"
-
-#: ../../reference/engine-config.rst:33
 msgid "Whether to enable audit log"
 msgstr "是否记录审计日志"
 
@@ -94,33 +700,13 @@ msgstr "是否记录审计日志"
 msgid "audit_log_file"
 msgstr "audit_log_file"
 
-#: ../../reference/engine-config.rst:35
-msgid "audit/audit.log"
-msgstr "audit/audit.log"
-
-#: ../../reference/engine-config.rst:35
-msgid "The file to save basic information about a query"
-msgstr "存储基础审计信息的日志文件"
-
 #: ../../reference/engine-config.rst:37
 msgid "audit_detail_file"
 msgstr "audit_detail_file"
 
-#: ../../reference/engine-config.rst:37
-msgid "audit/detail.log"
-msgstr "audit/detail.log"
-
-#: ../../reference/engine-config.rst:37
-msgid "The file to save more detailed information about a query"
-msgstr "存储补充审计信息的日志文件"
-
 #: ../../reference/engine-config.rst:39
 msgid "audit_max_files"
 msgstr "audit_max_files"
-
-#: ../../reference/engine-config.rst:39
-msgid "180"
-msgstr "180"
 
 #: ../../reference/engine-config.rst:39
 msgid "The maximum number of old audit log files to retain"
@@ -186,12 +772,6 @@ msgstr "SCQLEngine 与 SCQLEngine 之间发送消息是否启用ssl加密"
 msgid "peer_engine_enable_ssl_client_verification"
 msgstr "peer_engine_enable_ssl_client_verification"
 
-#: ../../reference/engine-config.rst:51 ../../reference/engine-config.rst:67
-#: ../../reference/engine-config.rst:73 ../../reference/engine-config.rst:85
-#: ../../reference/engine-config.rst:89 ../../reference/engine-config.rst:103
-msgid "false"
-msgstr "false"
-
 #: ../../reference/engine-config.rst:51
 msgid ""
 "Whether enable certificate verification when send message to another "
@@ -201,15 +781,6 @@ msgstr "作为客户端时，是否验证来自其他 SCQLEngine 的证书"
 #: ../../reference/engine-config.rst:53
 msgid "peer_engine_ssl_client_ca_certificate"
 msgstr "peer_engine_ssl_client_ca_certificate"
-
-#: ../../reference/engine-config.rst:53 ../../reference/engine-config.rst:69
-#: ../../reference/engine-config.rst:81 ../../reference/engine-config.rst:83
-#: ../../reference/engine-config.rst:87 ../../reference/engine-config.rst:91
-#: ../../reference/engine-config.rst:97 ../../reference/engine-config.rst:99
-#: ../../reference/engine-config.rst:101 ../../reference/engine-config.rst:107
-#: ../../reference/engine-config.rst:111
-msgid "none"
-msgstr "无"
 
 #: ../../reference/engine-config.rst:53
 msgid ""
@@ -413,7 +984,7 @@ msgstr "embed"
 
 #: ../../reference/engine-config.rst:95
 msgid "The datasource router type, \"embed\" or \"http\""
-msgstr "数据源路由类型， \"embed\" or \"http\""
+msgstr "数据源路由类型, 支持 \"embed\" 或 \"http\""
 
 #: ../../reference/engine-config.rst:97
 msgid "embed_router_conf"
@@ -431,7 +1002,7 @@ msgstr ""
 msgid ""
 "http datasource router endpoint, it is valid only when "
 "--datasource_router=http"
-msgstr "http 数据源的路由断点，只在 --datasource_router=http 时生效"
+msgstr ""
 
 #: ../../reference/engine-config.rst:101
 msgid "db_connection_info"
@@ -725,10 +1296,6 @@ msgstr ""
 ":ref:`SCDB 的 TLS 配置 <scdb-tls>` 或 :ref:`SCQLBroker 的 TLS 配置 <broker-tls>`"
 " 。"
 
-#: ../../reference/engine-config.rst:237
-msgid "Config for audit"
-msgstr "审计日志配置"
-
 #: ../../reference/engine-config.rst:238
 msgid ""
 "The audit log in SCQLEngine is used to record the SCQLEngine activities "
@@ -787,3 +1354,4 @@ msgstr ""
 "安全起见，SCQLEngine 默认启用参与方身份验证。 SCQLEngine 将检查 Driver 请求中自身的公钥是否与 "
 "``private_key_pem_path`` 中的本地公钥匹配，并且其他参与者的公钥也与 "
 "``authorized_profile_path`` 中的公钥匹配。"
+
