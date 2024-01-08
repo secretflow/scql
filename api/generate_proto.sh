@@ -43,3 +43,14 @@ PATH=${GOBIN}:${PATH} protoc --proto_path . \
                               --openapiv2_opt openapi_naming_strategy=fqn \
                               --openapiv2_opt openapi_configuration=api/broker.config_openapi.yaml \
                               api/broker.proto
+
+PATH=${GOBIN}:${PATH} protoc --proto_path . \
+                              --openapiv2_out ./docs \
+                              --openapiv2_opt output_format=yaml  \
+                              --openapiv2_opt preserve_rpc_order=true \
+                              --openapiv2_opt json_names_for_fields=false \
+                              --openapiv2_opt remove_internal_comments=true \
+                              --openapiv2_opt Mlibspu/spu.proto=spu.pb \
+                              --openapiv2_opt openapi_naming_strategy=fqn \
+                              --openapiv2_opt openapi_configuration=api/scdb_api.config_openapi.yaml \
+                              api/scdb_api.proto

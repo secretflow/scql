@@ -43,6 +43,7 @@ proto_library(
         ":status_proto",
         "@com_google_protobuf//:empty_proto",
         "@googleapis//google/api:annotations_proto",
+        "@googleapis//google/api:field_behavior_proto",
     ],
 )
 
