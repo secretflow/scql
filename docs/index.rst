@@ -20,7 +20,6 @@ SCQL Systems
 
 - **Overview**:
   :doc:`System overview and architecture </topics/system/intro>` |
-  :doc:`Common usage </topics/system/usage>` ｜
   :doc:`P2P vs. Centralized </topics/system/deploy-arch>`
 
 - **Security**:
