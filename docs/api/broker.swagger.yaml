@@ -1152,7 +1152,6 @@ definitions:
       reason:
         type: string
         title: Description of the warning
-    title: 'TODO: move SQLWarning to a proper place'
   scql.pb.ShowCCLRequest:
     type: object
     example:
@@ -1202,7 +1201,7 @@ definitions:
       code:
         type: integer
         format: int32
-        description: The status code, which should be one of google rpc code or custom code.
+        title: The status code, see [definition](https://github.com/secretflow/scql/blob/main/api/status_code.proto#L22)
       message:
         type: string
         description: Message for recording the error information.

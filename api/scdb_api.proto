@@ -20,6 +20,8 @@ package scql.pb;
 import "api/core.proto";
 import "api/common.proto";
 import "api/status.proto";
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
 import "google/protobuf/empty.proto";
 
 option go_package = "proto-gen/scql";
@@ -28,15 +30,31 @@ option go_package = "proto-gen/scql";
 // that client-user can connect to the SCQL system, execute queries and fetch
 // results.
 service SCDBService {
+  // Submit
+  //
   // Asynchronous query interface.
   // Submit the query (DDL/DCL/DQL) to SCQL, and return immediately.
   // It will allocate a new `scdb_session_id` for the query, and set it in
   // response.
-  rpc Submit(SCDBQueryRequest) returns (SCDBSubmitResponse);
+  rpc Submit(SCDBQueryRequest) returns (SCDBSubmitResponse) {
+    option (google.api.http) = {
+      post: "/public/submit_query"
+      body: "*"
+    };
+  }
+  // Fetch
+  //
   // Fetch the result of the query submitted asynchronously.
   // It will return `NOT_READY` status code if the query is still running.
-  rpc Fetch(SCDBFetchRequest) returns (SCDBQueryResultResponse);
+  rpc Fetch(SCDBFetchRequest) returns (SCDBQueryResultResponse) {
+    option (google.api.http) = {
+      post: "/public/fetch_result"
+      body: "*"
+    };
+  }
 
+  // SubmitAndGet
+  //
   // The synchronous query interface allows users to submit a query,
   // wait for it to finish, and get the query result in one RPC.
   // This interface is suitable for executing fast queries,
@@ -44,7 +62,12 @@ service SCDBService {
   // if the query takes a long time to run, it may result in a timeout.
   // Therefore, it is recommended to use the synchronous query API to run
   // complex queries.
-  rpc SubmitAndGet(SCDBQueryRequest) returns (SCDBQueryResultResponse);
+  rpc SubmitAndGet(SCDBQueryRequest) returns (SCDBQueryResultResponse) {
+    option (google.api.http) = {
+      post: "/public/submit_and_get"
+      body: "*"
+    };
+  }
 }
 
 // SCDBQueryResultCallback defines an API that SCQL could use it to notify the
@@ -60,9 +83,10 @@ service SCDBQueryResultCallback {
 // and traceid
 message SCDBQueryRequest {
   RequestHeader header = 1;
-  SCDBCredential user = 2;
+  // User information
+  SCDBCredential user = 2 [(google.api.field_behavior) = REQUIRED];
   // SCQL query to be run.
-  string query = 3;
+  string query = 3 [(google.api.field_behavior) = REQUIRED];
   // Optional call back URL to report query result.
   // If provided, it should implements the
   // `SCDBQueryResultCallback.ReportQueryResult` method.
@@ -84,9 +108,9 @@ message SCDBSubmitResponse {
 
 message SCDBFetchRequest {
   RequestHeader header = 1;
-  SCDBCredential user = 2;
+  SCDBCredential user = 2 [(google.api.field_behavior) = REQUIRED];
   // Scdb session id
-  string scdb_session_id = 3;
+  string scdb_session_id = 3 [(google.api.field_behavior) = REQUIRED];
 }
 
 // SCDB query result representation (table view by columns).
@@ -111,9 +135,9 @@ message User {
   }
 
   message NativeUser {
-    // e.g. "zhang_san"
+    // User name, e.g. "zhang_san"
     string name = 1;
-    // e.g. "123456"
+    // Password, e.g. "123456"
     string password = 2;
   }
 

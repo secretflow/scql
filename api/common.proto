@@ -24,7 +24,7 @@ message RequestHeader {
   map<string, string> custom_headers = 1;
 }
 
-// TODO: move SQLWarning to a proper place
+// (-- TODO: move SQLWarning to a proper place --)
 message SQLWarning {
   // Description of the warning
   string reason = 1;

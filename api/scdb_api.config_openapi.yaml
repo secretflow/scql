@@ -1,0 +1,124 @@
+# For definitions of options, see: https://github.com/grpc-ecosystem/grpc-gateway/blob/main/protoc-gen-openapiv2/options/annotations.proto
+openapiOptions:
+  message:
+    - message: scql.pb.SCDBQueryRequest
+      option:
+        example: |
+          {
+              "user": {
+                  "user": {
+                      "account_system_type": "NATIVE_USER",
+                      "native_user": { "name": "someuser", "password": "somepassword" }
+                  }
+              },
+              "query": "show databases;",
+              "biz_request_id": "1234"
+          }
+    - message: scql.pb.SCDBSubmitResponse
+      option:
+        example: |
+          {
+              "status": {
+                  "code": 0,
+                  "message": "",
+                  "details": []
+              },
+              "scdb_session_id": "some_session_id"
+          }
+    - message: scql.pb.SCDBFetchRequest
+      option:
+        example: |
+          {
+              "user": {
+                  "user": {
+                      "account_system_type": "NATIVE_USER",
+                      "native_user": { "name": "some_user", "password": "some_password" }
+                  }
+              },
+              "scdb_session_id": "some_session_id"
+          }
+    - message: scql.pb.SCDBQueryResultResponse
+      option:
+        example: |
+          {
+              "status": {
+                  "code": 0,
+                  "message": "",
+                  "details": []
+              },
+              "out_columns": [
+                  {
+                      "name": "Database",
+                      "shape": {
+                          "dim": [
+                              {
+                                  "dim_value": "1"
+                              },
+                              {
+                                  "dim_value": "1"
+                              }
+                          ]
+                      },
+                      "elem_type": "STRING",
+                      "option": "VALUE",
+                      "annotation": null,
+                      "int32_data":[],
+                      "int64_data":[],
+                      "float_data":[],
+                      "double_data":[],
+                      "bool_data":[],
+                      "string_data": ["scdb"]
+                  }
+              ],
+              "scdb_session_id": "some_session_id",
+              "affected_rows": "0"
+          }
+    - message: scql.pb.SCDBQueryRequest
+      option:
+        example: |
+          {
+              "user": {
+                  "user": {
+                      "account_system_type": "NATIVE_USER",
+                      "native_user": { "name": "someuser", "password": "somepassword" }
+                  }
+              },
+              "query": "show databases;",
+              "biz_request_id": "1234"
+          }
+    - message: scql.pb.SCDBQueryResultResponse
+      option:
+        example: |
+          {
+              "status": {
+                  "code": 0,
+                  "message": "",
+                  "details": []
+              },
+              "out_columns": [
+                  {
+                      "name": "Database",
+                      "shape": {
+                          "dim": [
+                              {
+                                  "dim_value": "1"
+                              },
+                              {
+                                  "dim_value": "1"
+                              }
+                          ]
+                      },
+                      "elem_type": "STRING",
+                      "option": "VALUE",
+                      "annotation": null,
+                      "int32_data":[],
+                      "int64_data":[],
+                      "float_data":[],
+                      "double_data":[],
+                      "bool_data":[],
+                      "string_data": ["scdb"]
+                  }
+              ],
+              "scdb_session_id": "some_session_id",
+              "affected_rows": "0"
+          }

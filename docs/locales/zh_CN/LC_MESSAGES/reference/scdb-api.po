@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-05 17:06+0800\n"
+"POT-Creation-Date: 2024-01-08 19:43+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,1064 +21,766 @@ msgstr ""
 msgid "SCDB API"
 msgstr ""
 
-#: ../../reference/scdb-api.rst:5
-msgid ""
-"SCDB supports two types of APIs: synchronous and asynchronous. The "
-"synchronous interface is suitable for executing fast queries, such as "
-"DDL, DCL, and simple DQL. Meanwhile, the asynchronous interface is "
-"recommended when the query may take a long time to run."
-msgstr ""
-"SCDB 支持两种类型的 API：同步和异步。同步接口适用于执行快速查询，例如 DDL、DML 和简单的 DQL。而异步接口则推荐用于耗时较多的 "
-"DQL。"
-
-#: ../../reference/scdb-api.rst:11
-msgid "Asynchronous"
-msgstr "异步接口"
-
-#: ../../reference/scdb-api.rst:16
-msgid "public/submit_query"
-msgstr "public/submit_query"
-
-#: ../../reference/scdb-api.rst:18
-msgid ""
-"Submit the query (DDL/DCL/DQL) to SCDB, SCDB will return a session ID "
-"immediately which can be used to fetch result, and processes the query in"
-" the background."
-msgstr "将 query（DDL/DML/DQL）提交给 SCDB ， SCDB 将立即返回一个可用于获取结果的会话 ID，并在后台处理查询。"
-
-#: ../../reference/scdb-api.rst:21 ../../reference/scdb-api.rst:96
-#: ../../reference/scdb-api.rst:226
-msgid "Request"
-msgstr "请求"
-
-#: ../../reference/scdb-api.rst:24 ../../reference/scdb-api.rst:45
-#: ../../reference/scdb-api.rst:99 ../../reference/scdb-api.rst:112
-#: ../../reference/scdb-api.rst:202 ../../reference/scdb-api.rst:229
-#: ../../reference/scdb-api.rst:246 ../../reference/scdb-api.rst:322
-#: ../../reference/scdb-api.rst:334 ../../reference/scdb-api.rst:343
-#: ../../reference/scdb-api.rst:354 ../../reference/scdb-api.rst:365
-#: ../../reference/scdb-api.rst:394 ../../reference/scdb-api.rst:405
-#: ../../reference/scdb-api.rst:416 ../../reference/scdb-api.rst:426
-msgid "Field"
-msgstr "字段"
-
-#: ../../reference/scdb-api.rst:24 ../../reference/scdb-api.rst:45
-#: ../../reference/scdb-api.rst:99 ../../reference/scdb-api.rst:112
-#: ../../reference/scdb-api.rst:202 ../../reference/scdb-api.rst:229
-#: ../../reference/scdb-api.rst:246 ../../reference/scdb-api.rst:322
-#: ../../reference/scdb-api.rst:334 ../../reference/scdb-api.rst:343
-#: ../../reference/scdb-api.rst:354 ../../reference/scdb-api.rst:365
-#: ../../reference/scdb-api.rst:394 ../../reference/scdb-api.rst:405
-#: ../../reference/scdb-api.rst:416 ../../reference/scdb-api.rst:426
-msgid "Type"
-msgstr "类型"
-
-#: ../../reference/scdb-api.rst:24 ../../reference/scdb-api.rst:99
-#: ../../reference/scdb-api.rst:202 ../../reference/scdb-api.rst:229
-#: ../../reference/scdb-api.rst:322 ../../reference/scdb-api.rst:334
-#: ../../reference/scdb-api.rst:343 ../../reference/scdb-api.rst:354
-#: ../../reference/scdb-api.rst:365 ../../reference/scdb-api.rst:394
-#: ../../reference/scdb-api.rst:416 ../../reference/scdb-api.rst:426
-msgid "Required"
-msgstr "是否必需"
-
-#: ../../reference/scdb-api.rst:24 ../../reference/scdb-api.rst:45
-#: ../../reference/scdb-api.rst:99 ../../reference/scdb-api.rst:112
-#: ../../reference/scdb-api.rst:202 ../../reference/scdb-api.rst:229
-#: ../../reference/scdb-api.rst:246 ../../reference/scdb-api.rst:322
-#: ../../reference/scdb-api.rst:334 ../../reference/scdb-api.rst:343
-#: ../../reference/scdb-api.rst:354 ../../reference/scdb-api.rst:365
-#: ../../reference/scdb-api.rst:394 ../../reference/scdb-api.rst:416
-#: ../../reference/scdb-api.rst:426 ../../reference/scdb-api.rst:443
-#: ../../reference/scdb-api.rst:455 ../../reference/scdb-api.rst:484
-#: ../../reference/scdb-api.rst:497 ../../reference/scdb-api.rst:514
-msgid "Description"
-msgstr "描述"
-
-#: ../../reference/scdb-api.rst:26 ../../reference/scdb-api.rst:101
-#: ../../reference/scdb-api.rst:231
-msgid "header"
-msgstr "header"
-
-#: ../../reference/scdb-api.rst:26 ../../reference/scdb-api.rst:101
-#: ../../reference/scdb-api.rst:231
-msgid "RequestHeader_"
-msgstr "RequestHeader_"
-
-#: ../../reference/scdb-api.rst:26 ../../reference/scdb-api.rst:33
-#: ../../reference/scdb-api.rst:36 ../../reference/scdb-api.rst:38
-#: ../../reference/scdb-api.rst:101 ../../reference/scdb-api.rst:231
-#: ../../reference/scdb-api.rst:237 ../../reference/scdb-api.rst:375
-#: ../../reference/scdb-api.rst:377 ../../reference/scdb-api.rst:379
-#: ../../reference/scdb-api.rst:381 ../../reference/scdb-api.rst:383
-#: ../../reference/scdb-api.rst:385 ../../reference/scdb-api.rst:387
-#: ../../reference/scdb-api.rst:430 ../../reference/scdb-api.rst:432
-msgid "N"
-msgstr "否"
-
-#: ../../reference/scdb-api.rst:26 ../../reference/scdb-api.rst:101
-#: ../../reference/scdb-api.rst:231
-msgid "Common request header"
-msgstr "共同的请求头"
-
-#: ../../reference/scdb-api.rst:28 ../../reference/scdb-api.rst:103
-#: ../../reference/scdb-api.rst:233 ../../reference/scdb-api.rst:336
-msgid "user"
-msgstr "user"
-
-#: ../../reference/scdb-api.rst:28 ../../reference/scdb-api.rst:103
-#: ../../reference/scdb-api.rst:233
-msgid "SCDBCredential_"
-msgstr "SCDBCredential_"
-
-#: ../../reference/scdb-api.rst:28 ../../reference/scdb-api.rst:30
-#: ../../reference/scdb-api.rst:103 ../../reference/scdb-api.rst:105
-#: ../../reference/scdb-api.rst:204 ../../reference/scdb-api.rst:206
-#: ../../reference/scdb-api.rst:208 ../../reference/scdb-api.rst:210
-#: ../../reference/scdb-api.rst:233 ../../reference/scdb-api.rst:235
-#: ../../reference/scdb-api.rst:239 ../../reference/scdb-api.rst:324
-#: ../../reference/scdb-api.rst:336 ../../reference/scdb-api.rst:345
-#: ../../reference/scdb-api.rst:347 ../../reference/scdb-api.rst:356
-#: ../../reference/scdb-api.rst:358 ../../reference/scdb-api.rst:367
-#: ../../reference/scdb-api.rst:369 ../../reference/scdb-api.rst:371
-#: ../../reference/scdb-api.rst:373 ../../reference/scdb-api.rst:396
-#: ../../reference/scdb-api.rst:418 ../../reference/scdb-api.rst:428
-msgid "Y"
-msgstr "是"
-
-#: ../../reference/scdb-api.rst:28 ../../reference/scdb-api.rst:103
-#: ../../reference/scdb-api.rst:233
-msgid "User information"
-msgstr "用户信息"
-
-#: ../../reference/scdb-api.rst:30 ../../reference/scdb-api.rst:235
-msgid "query"
-msgstr "query"
-
-#: ../../reference/scdb-api.rst:30 ../../reference/scdb-api.rst:33
-#: ../../reference/scdb-api.rst:36 ../../reference/scdb-api.rst:38
-#: ../../reference/scdb-api.rst:50 ../../reference/scdb-api.rst:105
-#: ../../reference/scdb-api.rst:118 ../../reference/scdb-api.rst:208
-#: ../../reference/scdb-api.rst:235 ../../reference/scdb-api.rst:237
-#: ../../reference/scdb-api.rst:239 ../../reference/scdb-api.rst:252
-#: ../../reference/scdb-api.rst:356 ../../reference/scdb-api.rst:358
-#: ../../reference/scdb-api.rst:367 ../../reference/scdb-api.rst:409
-#: ../../reference/scdb-api.rst:430
-msgid "string"
-msgstr "string"
-
-#: ../../reference/scdb-api.rst:30 ../../reference/scdb-api.rst:235
-msgid "SCQL query to be run"
-msgstr "待执行的 SQL 语句"
-
-#: ../../reference/scdb-api.rst:34
-msgid "query_result_callback_url"
-msgstr "query_result_callback_url"
-
-#: ../../reference/scdb-api.rst:33
-msgid ""
-"callback URL to report query result. See :ref:`Asynchronous send "
-"result<async_send_result>` for more"
-msgstr "用于返回查询结果的回调URL。更多信息请参考 :ref:`异步发送结果 <async_send_result>`"
-
-#: ../../reference/scdb-api.rst:36 ../../reference/scdb-api.rst:237
-msgid "biz_request_id"
-msgstr "biz_request_id"
-
-#: ../../reference/scdb-api.rst:36 ../../reference/scdb-api.rst:237
-msgid "Biz request id which often be unique per biz action"
-msgstr "业务请求 ID，在每个业务操作中通常是唯一的"
-
-#: ../../reference/scdb-api.rst:38 ../../reference/scdb-api.rst:239
-msgid "db_name"
-msgstr "db_name"
-
-#: ../../reference/scdb-api.rst:38 ../../reference/scdb-api.rst:239
-msgid "Current database name"
-msgstr "当前数据库名称"
-
-#: ../../reference/scdb-api.rst:42 ../../reference/scdb-api.rst:109
-#: ../../reference/scdb-api.rst:243
-msgid "Response"
-msgstr "响应"
-
-#: ../../reference/scdb-api.rst:47 ../../reference/scdb-api.rst:114
-#: ../../reference/scdb-api.rst:204 ../../reference/scdb-api.rst:248
-#: ../../reference/scdb-api.rst:418
-msgid "status"
-msgstr "status"
-
-#: ../../reference/scdb-api.rst:47 ../../reference/scdb-api.rst:114
-#: ../../reference/scdb-api.rst:204 ../../reference/scdb-api.rst:248
-msgid "Status_"
-msgstr "Status_"
-
-#: ../../reference/scdb-api.rst:47 ../../reference/scdb-api.rst:114
-#: ../../reference/scdb-api.rst:204 ../../reference/scdb-api.rst:248
-msgid "See `Status code`_ for more information"
-msgstr "更多信息请参考 `Status code`_"
-
-#: ../../reference/scdb-api.rst:51 ../../reference/scdb-api.rst:105
-#: ../../reference/scdb-api.rst:118 ../../reference/scdb-api.rst:208
-#: ../../reference/scdb-api.rst:252
-msgid "scdb_session_id"
-msgstr "scdb_session_id"
-
-#: ../../reference/scdb-api.rst:50
-msgid "Unique ID of a session"
-msgstr "会话的唯一 ID"
-
-#: ../../reference/scdb-api.rst:56 ../../reference/scdb-api.rst:124
-#: ../../reference/scdb-api.rst:259
-msgid "Example"
-msgstr "示例"
-
-#: ../../reference/scdb-api.rst:58
-msgid ""
-"If you want execute `show databases`, the request and response message "
-"should be structured as follows:"
-msgstr "如果需要执行 `show databases`，请求和响应的消息结构应该如下所示："
-
-#: ../../reference/scdb-api.rst:60
-msgid "request"
-msgstr "请求"
-
-#: ../../reference/scdb-api.rst:75
-msgid "response"
-msgstr "响应"
-
-#: ../../reference/scdb-api.rst:91
-msgid "public/fetch_result"
-msgstr "public/fetch_result"
-
-#: ../../reference/scdb-api.rst:93
-msgid ""
-"Fetch result of the query submitted via the \"submit_query\" method "
-"before, if the query is still running, It will return `NOT_READY` status "
-"code."
-msgstr "通过 session ID 获取之前提交的 query 的结果，如果之前的提交的 query 还在运行中，返回 `NOT_READY`。"
-
-#: ../../reference/scdb-api.rst:105 ../../reference/scdb-api.rst:208
-msgid "Given by scdb when submit the query before, same with session_id_"
-msgstr "在 SCDB 中提交查询时返回的会话 ID，与 submit_query 响应中的 session_id_ 一致"
-
-#: ../../reference/scdb-api.rst:116 ../../reference/scdb-api.rst:206
-#: ../../reference/scdb-api.rst:250
-msgid "out_columns"
-msgstr "out_columns"
-
-#: ../../reference/scdb-api.rst:116 ../../reference/scdb-api.rst:206
-#: ../../reference/scdb-api.rst:250
-msgid "Tensor_ list"
-msgstr "Tensor_ list"
-
-#: ../../reference/scdb-api.rst:116
-msgid "Query result"
-msgstr "query 的运行结果"
-
-#: ../../reference/scdb-api.rst:118
-msgid "Same with session_id_"
-msgstr "与 submit_query 中的 response 中的 session_id_ 一致"
-
-#: ../../reference/scdb-api.rst:120 ../../reference/scdb-api.rst:210
-#: ../../reference/scdb-api.rst:254
-msgid "affected_rows"
-msgstr "affected_rows"
-
-#: ../../reference/scdb-api.rst:120 ../../reference/scdb-api.rst:210
-#: ../../reference/scdb-api.rst:254 ../../reference/scdb-api.rst:407
-msgid "int64"
-msgstr "int64"
-
-#: ../../reference/scdb-api.rst:120 ../../reference/scdb-api.rst:210
-#: ../../reference/scdb-api.rst:254
-msgid "The num of rows affected"
-msgstr "受影响的行数"
-
-#: ../../reference/scdb-api.rst:126
-msgid ""
-"If you want to get the result of the query `show databases`, you can send"
-" a request like this."
-msgstr "如果需要获取 `show databases` 的结果，可以发送如下的请求。"
-
-#: ../../reference/scdb-api.rst:141
-msgid "If succeed, a response will be received with status code 0 like this:"
-msgstr "如果成功，将收到带有状态码 0 的响应，如下所示："
-
-#: ../../reference/scdb-api.rst:179
-msgid "If result is not ready, the response can be show as follows:"
-msgstr "如果结果尚未准备好，响应将会是："
-
-#: ../../reference/scdb-api.rst:197
-msgid "Asynchronous send result"
-msgstr "异步发送结果"
-
-#: ../../reference/scdb-api.rst:199
-msgid ""
-"Automatically send the result to the user by post the following message "
-"when the result is available. To accomplish this, "
-":ref:`query_result_callback_url <callback_url>` should be set."
-msgstr ""
-"如果用户配置了 :ref:`query_result_callback_url <callback_url>`， SCDB "
-"在获取到结果后会主动向用户发送消息，返回之前查询的结果。"
-
-#: ../../reference/scdb-api.rst:206
-msgid "Query result, See Tensor_ for more information"
-msgstr "Query 运行结果，更多信息请参考 Tensor_"
-
-#: ../../reference/scdb-api.rst:216
-msgid "Synchronous"
-msgstr "同步接口"
-
-#: ../../reference/scdb-api.rst:221
-msgid "public/submit_and_get"
-msgstr "public/submit_and_get"
-
-#: ../../reference/scdb-api.rst:223
-msgid ""
-"Submit a query to SCDB, SCDB will wait for all tasks to complete before "
-"returning the result to the use."
-msgstr "向 SCDB 提交查询， SCDB 将等待所有任务完成后再将结果返回给用户。"
-
-#: ../../reference/scdb-api.rst:250
-msgid "Query result, See `Tensor`_ for more information"
-msgstr "Query 运行结果，更多信息请参考 `Tensor`_ "
-
-#: ../../reference/scdb-api.rst:252
-msgid "SCDB session id"
-msgstr "SCDB 会话 id"
-
-#: ../../reference/scdb-api.rst:261
-msgid ""
-"If you want submit a query `show databases`, you can send a request as "
-"follows:"
-msgstr "如果需要提交 `show databases` 查询，可以发送如下的请求："
-
-#: ../../reference/scdb-api.rst:277
-msgid "If successful, a response will be received like this:"
-msgstr "如果成功，将收到以下响应："
-
-#: ../../reference/scdb-api.rst:316
-msgid "Message Structure"
-msgstr "Message Structure"
-
-#: ../../reference/scdb-api.rst:319
-msgid "RequestHeader"
-msgstr "RequestHeader"
-
-#: ../../reference/scdb-api.rst:324
-msgid "custom_headers"
-msgstr "custom_headers"
-
-#: ../../reference/scdb-api.rst:324
-msgid "map<string, string>"
-msgstr "map<string, string>"
-
-#: ../../reference/scdb-api.rst:324
-msgid "Custom headers used to record custom information"
-msgstr "自定义消息头"
-
-#: ../../reference/scdb-api.rst:331
-msgid "SCDBCredential"
-msgstr "SCDBCredential"
-
-#: ../../reference/scdb-api.rst:336
-msgid "User_"
-msgstr "User_"
-
-#: ../../reference/scdb-api.rst:336
-msgid "User information, contains password and name"
-msgstr "用户信息，包含密码和用户名"
-
-#: ../../reference/scdb-api.rst:340
-msgid "User"
-msgstr "User"
-
-#: ../../reference/scdb-api.rst:345
-msgid "account_system_type"
-msgstr "account_system_type"
-
-#: ../../reference/scdb-api.rst:345
-msgid "AccountSystemType_"
-msgstr "AccountSystemType_"
-
-#: ../../reference/scdb-api.rst:345
-msgid "Account Type"
-msgstr "账号类型"
-
-#: ../../reference/scdb-api.rst:347
-msgid "native_user"
-msgstr "native_user"
-
-#: ../../reference/scdb-api.rst:347
-msgid "NativeUser_"
-msgstr "NativeUser_"
-
-#: ../../reference/scdb-api.rst:347
-msgid "Native user information"
-msgstr "本地用户信息"
-
-#: ../../reference/scdb-api.rst:351
-msgid "NativeUser"
-msgstr "NativeUser"
-
-#: ../../reference/scdb-api.rst:356 ../../reference/scdb-api.rst:367
-msgid "name"
-msgstr "name"
-
-#: ../../reference/scdb-api.rst:356
-msgid "name of user"
-msgstr "用户名"
-
-#: ../../reference/scdb-api.rst:358
-msgid "password"
-msgstr "password"
-
-#: ../../reference/scdb-api.rst:358
-msgid "password of user"
-msgstr "密码"
-
-#: ../../reference/scdb-api.rst:362
-msgid "Tensor"
-msgstr "Tensor"
-
-#: ../../reference/scdb-api.rst:367
-msgid "Tensor name"
-msgstr "Tensor 名称"
-
-#: ../../reference/scdb-api.rst:369
-msgid "shape"
-msgstr "shape"
-
-#: ../../reference/scdb-api.rst:369
-msgid "TensorShape_"
-msgstr "TensorShape_"
-
-#: ../../reference/scdb-api.rst:369
-msgid "It's normally [M] (a vector with M elements)"
-msgstr "通常为 [M] （一个包含 M 个元素的向量）"
-
-#: ../../reference/scdb-api.rst:371
-msgid "elem_type"
-msgstr "elem_type"
-
-#: ../../reference/scdb-api.rst:371
-msgid "PrimitiveDataType_"
-msgstr "PrimitiveDataType_"
-
-#: ../../reference/scdb-api.rst:371
-msgid "The data type of the value data in tensor"
-msgstr "tensor 中存储的数据的类型"
-
-#: ../../reference/scdb-api.rst:373
-msgid "option"
-msgstr "option"
-
-#: ../../reference/scdb-api.rst:373
-msgid "TensorOptions_"
-msgstr "TensorOptions_"
-
-#: ../../reference/scdb-api.rst:373
-msgid "Tensor options"
-msgstr "tensor 配置项"
-
-#: ../../reference/scdb-api.rst:375
-msgid "annotation"
-msgstr "annotation"
-
-#: ../../reference/scdb-api.rst:375
-msgid "TensorAnnotation_"
-msgstr "TensorAnnotation_"
-
-#: ../../reference/scdb-api.rst:375
-msgid ""
-"Carries physical status information, It MUST be there if the <option> is "
-"\"Reference\""
-msgstr "携带物理状态信息，如果 option 为 Reference，则必须存在"
-
-#: ../../reference/scdb-api.rst:377
-msgid "int32_data"
-msgstr "int32_data"
-
-#: ../../reference/scdb-api.rst:377
-msgid "int32 list"
-msgstr "int32 list"
-
-#: ../../reference/scdb-api.rst:377
-msgid "The value data in tensor, for int8, int16, int32 data types"
-msgstr "用于存储 int8, int16, int32 类型的数据"
-
-#: ../../reference/scdb-api.rst:379
-msgid "int64_data"
-msgstr "int64_data"
-
-#: ../../reference/scdb-api.rst:379
-msgid "int64 list"
-msgstr "int64 list"
-
-#: ../../reference/scdb-api.rst:379
-msgid "The value data in tensor, for int64 and timestamp data types"
-msgstr "用于存储 int64 类型的数据"
-
-#: ../../reference/scdb-api.rst:381
-msgid "float_data"
-msgstr "float_data"
-
-#: ../../reference/scdb-api.rst:381
-msgid "float list"
-msgstr "float list"
-
-#: ../../reference/scdb-api.rst:381
-msgid "The value data in tensor, for float32 data type"
-msgstr "用于存储 float32 类型的数据"
-
-#: ../../reference/scdb-api.rst:383
-msgid "double_data"
-msgstr "double_data"
-
-#: ../../reference/scdb-api.rst:383
-msgid "double list"
-msgstr "double list"
-
-#: ../../reference/scdb-api.rst:383
-msgid "The value data in tensor, for float64 data type"
-msgstr "用于存储 float64 类型的数据"
-
-#: ../../reference/scdb-api.rst:385
-msgid "bool_data"
-msgstr "bool_data"
-
-#: ../../reference/scdb-api.rst:385
-msgid "bool list"
-msgstr "bool list"
-
-#: ../../reference/scdb-api.rst:385
-msgid "The value data in tensor, for bool data type"
-msgstr "用于存储 bool 类型的数据"
-
-#: ../../reference/scdb-api.rst:387
-msgid "string_data"
-msgstr "string_data"
-
-#: ../../reference/scdb-api.rst:387
-msgid "string list"
-msgstr "string list"
-
-#: ../../reference/scdb-api.rst:387
-msgid "The value data in tensor, for string and datetime data types"
-msgstr "用于存储 string 和 datetime 类型的数据"
-
-#: ../../reference/scdb-api.rst:391
-msgid "TensorShape"
-msgstr "TensorShape"
-
-#: ../../reference/scdb-api.rst:396
-msgid "dim"
-msgstr "dim"
-
-#: ../../reference/scdb-api.rst:396
-msgid "TensorShape_Dimension_ list"
-msgstr "TensorShape_Dimension_ list"
-
-#: ../../reference/scdb-api.rst:400
-msgid "TensorShape_Dimension"
-msgstr "TensorShape_Dimension"
-
-#: ../../reference/scdb-api.rst:402
-msgid "TensorShape_Dimension could be dim_value or dim_param."
-msgstr "TensorShape_Dimension 可以是 dim_value 或 dim_param。"
-
-#: ../../reference/scdb-api.rst:407
-msgid "dim_value"
-msgstr "dim_value"
-
-#: ../../reference/scdb-api.rst:409
-msgid "dim_param"
-msgstr "dim_param"
-
-#: ../../reference/scdb-api.rst:413
-msgid "TensorAnnotation"
-msgstr "TensorAnnotation"
-
-#: ../../reference/scdb-api.rst:418
-msgid "TensorStatus_"
-msgstr "TensorStatus_"
-
-#: ../../reference/scdb-api.rst:418
-msgid "Status of tensor"
-msgstr "tensor 状态"
-
-#: ../../reference/scdb-api.rst:423
-msgid "Status"
-msgstr "Status"
-
-#: ../../reference/scdb-api.rst:428
-msgid "code"
-msgstr "code"
-
-#: ../../reference/scdb-api.rst:428
-msgid "int32"
-msgstr "int32"
-
-#: ../../reference/scdb-api.rst:428
-msgid "The status code, see `Status code`_ for more information"
-msgstr "状态码，更多信息请参考 `Status code`_"
-
-#: ../../reference/scdb-api.rst:430
-msgid "Messages"
-msgstr "Messages"
-
-#: ../../reference/scdb-api.rst:430
-msgid "Message for recording the error information"
-msgstr "用于记录错误信息的消息"
-
-#: ../../reference/scdb-api.rst:432
-msgid "details"
-msgstr "details"
-
-#: ../../reference/scdb-api.rst:432
-msgid "protobuf.Any list"
-msgstr "protobuf.Any list"
-
-#: ../../reference/scdb-api.rst:432
-msgid "A list of messages that carry the additional supplementary error details"
-msgstr "携带额外补充错误细节的消息列表"
-
-#: ../../reference/scdb-api.rst:437
-msgid "Enum Values"
-msgstr "Enum Values"
-
-#: ../../reference/scdb-api.rst:440
-msgid "AccountSystemType"
-msgstr "AccountSystemType"
-
-#: ../../reference/scdb-api.rst:443 ../../reference/scdb-api.rst:455
-#: ../../reference/scdb-api.rst:484 ../../reference/scdb-api.rst:497
-msgid "Name"
-msgstr "名称"
-
-#: ../../reference/scdb-api.rst:443 ../../reference/scdb-api.rst:455
-#: ../../reference/scdb-api.rst:484 ../../reference/scdb-api.rst:497
-msgid "Number"
-msgstr "数值"
-
-#: ../../reference/scdb-api.rst:445
-msgid "UNKNOWN"
-msgstr "UNKNOWN"
-
-#: ../../reference/scdb-api.rst:445 ../../reference/scdb-api.rst:457
-#: ../../reference/scdb-api.rst:486 ../../reference/scdb-api.rst:499
-#: ../../reference/scdb-api.rst:516
-msgid "0"
-msgstr "0"
-
-#: ../../reference/scdb-api.rst:445
-msgid "Unknown account type"
-msgstr "未知账号类型"
-
-#: ../../reference/scdb-api.rst:447
-msgid "NATIVE_USER"
-msgstr "NATIVE_USER"
-
-#: ../../reference/scdb-api.rst:447 ../../reference/scdb-api.rst:459
-#: ../../reference/scdb-api.rst:488 ../../reference/scdb-api.rst:501
-msgid "1"
-msgstr "1"
-
-#: ../../reference/scdb-api.rst:447
-msgid "Native user type"
-msgstr "本地用户类型"
-
-#: ../../reference/scdb-api.rst:452
-msgid "PrimitiveDataType"
-msgstr "PrimitiveDataType"
-
-#: ../../reference/scdb-api.rst:457
-msgid "PrimitiveDataType_UNDEFINED"
-msgstr "PrimitiveDataType_UNDEFINED"
-
-#: ../../reference/scdb-api.rst:457
-msgid "undefined data type"
-msgstr "未定义的数据类型"
-
-#: ../../reference/scdb-api.rst:459
-msgid "INT8"
-msgstr "INT8"
-
-#: ../../reference/scdb-api.rst:459
-msgid "the 8-bit signed integer type"
-msgstr "8-bit 有符号整型类型"
-
-#: ../../reference/scdb-api.rst:461
-msgid "INT16"
-msgstr "INT16"
-
-#: ../../reference/scdb-api.rst:461 ../../reference/scdb-api.rst:490
-#: ../../reference/scdb-api.rst:503
-msgid "2"
-msgstr "2"
-
-#: ../../reference/scdb-api.rst:461
-msgid "the 16-bit signed integer type"
-msgstr "16-bit 有符号整型类型"
-
-#: ../../reference/scdb-api.rst:463
-msgid "INT32"
-msgstr "INT32"
-
-#: ../../reference/scdb-api.rst:463 ../../reference/scdb-api.rst:505
-msgid "3"
-msgstr "3"
-
-#: ../../reference/scdb-api.rst:463
-msgid "the 32-bit signed integer type"
-msgstr "32-bit 有符号整型类型"
-
-#: ../../reference/scdb-api.rst:465
-msgid "INT64"
-msgstr "INT64"
-
-#: ../../reference/scdb-api.rst:465 ../../reference/scdb-api.rst:507
-msgid "4"
-msgstr "4"
-
-#: ../../reference/scdb-api.rst:465
-msgid "the 64-bit signed integer type"
-msgstr "64-bit 有符号整型类型"
-
-#: ../../reference/scdb-api.rst:467
-msgid "FLOAT32"
-msgstr "FLOAT32"
-
-#: ../../reference/scdb-api.rst:467
-msgid "5"
-msgstr "5"
-
-#: ../../reference/scdb-api.rst:467
-msgid "the 32-bit binary floating point type"
-msgstr "32-bit 浮点数类型"
-
-#: ../../reference/scdb-api.rst:469
-msgid "FLOAT64"
-msgstr "FLOAT64"
-
-#: ../../reference/scdb-api.rst:469
-msgid "6"
-msgstr "6"
-
-#: ../../reference/scdb-api.rst:469
-msgid "the 64-bit binary floating point type"
-msgstr "64-bit 浮点数类型"
-
-#: ../../reference/scdb-api.rst:471
-msgid "BOOL"
-msgstr "BOOL"
-
-#: ../../reference/scdb-api.rst:471
-msgid "7"
-msgstr "7"
-
-#: ../../reference/scdb-api.rst:471
-msgid "the bool data type"
-msgstr "bool 类型"
-
-#: ../../reference/scdb-api.rst:473
-msgid "STRING"
-msgstr "STRING"
-
-#: ../../reference/scdb-api.rst:473
-msgid "8"
-msgstr "8"
-
-#: ../../reference/scdb-api.rst:473
-msgid "the string data type"
-msgstr "string 类型"
-
-#: ../../reference/scdb-api.rst:475
-msgid "DATETIME"
-msgstr "DATETIME"
-
-#: ../../reference/scdb-api.rst:475
-msgid "9"
-msgstr "9"
-
-#: ../../reference/scdb-api.rst:475
-msgid ""
-"see `datetime in mysql "
-"<https://dev.mysql.com/doc/refman/8.0/en/datetime.html>`_ to get more"
-msgstr ""
-"datetime 类型，参考 MySQL中的 `datetime "
-"<https://dev.mysql.com/doc/refman/8.0/en/datetime.html>`_"
-
-#: ../../reference/scdb-api.rst:477
-msgid "TIMESTAMP"
-msgstr "TIMESTAMP"
-
-#: ../../reference/scdb-api.rst:477
-msgid "10"
-msgstr "10"
-
-#: ../../reference/scdb-api.rst:477
-msgid "seconds since '1970-01-01 00:00:00' UTC"
-msgstr "timestamp 类型，单位为秒，从 '1970-01-01 00:00:00' UTC 开始计时"
-
-#: ../../reference/scdb-api.rst:481
-msgid "TensorOptions"
-msgstr "TensorOptions"
-
-#: ../../reference/scdb-api.rst:486
-msgid "VALUE"
-msgstr "VALUE"
-
-#: ../../reference/scdb-api.rst:486
-msgid "A tensor with data"
-msgstr "含数据的 tensor"
-
-#: ../../reference/scdb-api.rst:488
-msgid "REFERENCE"
-msgstr "REFERENCE"
-
-#: ../../reference/scdb-api.rst:488
-msgid "A tensor with reference (URI)"
-msgstr "含引用（URI）的 tensor"
-
-#: ../../reference/scdb-api.rst:490
-msgid "VARIABLE"
-msgstr "VARIABLE"
-
-#: ../../reference/scdb-api.rst:490
-msgid "A tensor variable (declaration)"
-msgstr "tensor 变量（声明）"
-
-#: ../../reference/scdb-api.rst:494
-msgid "TensorStatus"
-msgstr ""
-
-#: ../../reference/scdb-api.rst:499
-msgid "TENSORSTATUS_UNKNOWN"
-msgstr "TENSORSTATUS_UNKNOWN"
-
-#: ../../reference/scdb-api.rst:499
-msgid "Unknown"
-msgstr "未知"
-
-#: ../../reference/scdb-api.rst:501
-msgid "TENSORSTATUS_PRIVATE"
-msgstr "TENSORSTATUS_PRIVATE"
-
-#: ../../reference/scdb-api.rst:501
-msgid "Private"
-msgstr "私密"
-
-#: ../../reference/scdb-api.rst:503
-msgid "TENSORSTATUS_SECRET"
-msgstr "TENSORSTATUS_SECRET"
-
-#: ../../reference/scdb-api.rst:503
-msgid "Secret, usually in the form of secret sharing"
-msgstr "秘密，通常为秘密共享的形式"
-
-#: ../../reference/scdb-api.rst:505
-msgid "TENSORSTATUS_CIPHER"
-msgstr "TENSORSTATUS_CIPHER"
-
-#: ../../reference/scdb-api.rst:505
-msgid "Ciphertext, usually in the form of homomorphic encryption ciphertext"
-msgstr "密文，通常为同态加密密文"
-
-#: ../../reference/scdb-api.rst:507
-msgid "TENSORSTATUS_PUBLIC"
-msgstr "TENSORSTATUS_PUBLIC"
-
-#: ../../reference/scdb-api.rst:507
-msgid "Public"
-msgstr "公开"
-
-#: ../../reference/scdb-api.rst:511
-msgid "Status code"
-msgstr "Status Code"
-
-#: ../../reference/scdb-api.rst:514
-msgid "Error code"
-msgstr "错误码"
-
-#: ../../reference/scdb-api.rst:514
-msgid "Status Code"
-msgstr "状态码"
-
-#: ../../reference/scdb-api.rst:516
-msgid "Code_OK"
-msgstr "Code_OK"
-
-#: ../../reference/scdb-api.rst:516
-msgid "Success"
-msgstr "成功"
-
-#: ../../reference/scdb-api.rst:518
-msgid "100"
-msgstr "100"
-
-#: ../../reference/scdb-api.rst:518
-msgid "Code_BAD_REQUEST"
-msgstr "Code_BAD_REQUEST"
-
-#: ../../reference/scdb-api.rst:518
-msgid "Invalid request body"
-msgstr "无效的请求体"
-
-#: ../../reference/scdb-api.rst:520
-msgid "101"
-msgstr "101"
-
-#: ../../reference/scdb-api.rst:520
-msgid "Code_UNAUTHENTICATED"
-msgstr "Code_UNAUTHENTICATED"
-
-#: ../../reference/scdb-api.rst:520
-msgid "User authentication failed"
-msgstr "用户身份验证失败"
-
-#: ../../reference/scdb-api.rst:522
-msgid "102"
-msgstr "102"
-
-#: ../../reference/scdb-api.rst:522
-msgid "Code_SQL_PARSE_ERROR"
-msgstr "Code_SQL_PARSE_ERROR"
-
-#: ../../reference/scdb-api.rst:522
-msgid "Invalid SCQL statement"
-msgstr "无效的 SCQL 语句"
-
-#: ../../reference/scdb-api.rst:524
-msgid "103"
-msgstr "103"
-
-#: ../../reference/scdb-api.rst:524
-msgid "Code_INVALID_ARGUMENT"
-msgstr "Code_INVALID_ARGUMENT"
-
-#: ../../reference/scdb-api.rst:524
-msgid "Invalid parameter in Request"
-msgstr "请求包含无效参数"
-
-#: ../../reference/scdb-api.rst:526
-msgid "104"
-msgstr "104"
-
-#: ../../reference/scdb-api.rst:526
-msgid "Code_NOT_READY"
-msgstr "Code_NOT_READY"
-
-#: ../../reference/scdb-api.rst:526
-msgid "Result not ready"
-msgstr "结果未准备好"
-
-#: ../../reference/scdb-api.rst:528
-msgid "131"
-msgstr "131"
-
-#: ../../reference/scdb-api.rst:528
-msgid "Code_DDL_PERMISSION_DENIED"
-msgstr "Code_DDL_PERMISSION_DENIED"
-
-#: ../../reference/scdb-api.rst:528
-msgid "User does not have permission to execute the DDL"
-msgstr "用户没有执行 DDL 的权限"
-
-#: ../../reference/scdb-api.rst:530
-msgid "140"
-msgstr "140"
-
-#: ../../reference/scdb-api.rst:530
-msgid "Code_NOT_FOUND"
-msgstr "Code_NOT_FOUND"
-
-#: ../../reference/scdb-api.rst:530
-msgid "General not found error"
-msgstr "一般未找到错误"
-
-#: ../../reference/scdb-api.rst:532
-msgid "141"
-msgstr "141"
-
-#: ../../reference/scdb-api.rst:532
-msgid "Code_SESSION_NOT_FOUND"
-msgstr "Code_SESSION_NOT_FOUND"
-
-#: ../../reference/scdb-api.rst:532
-msgid "SCDB session not found"
-msgstr "SCDB 会话未找到"
-
-#: ../../reference/scdb-api.rst:534
-msgid "160"
-msgstr "160"
-
-#: ../../reference/scdb-api.rst:534
-msgid "Code_CCL_CHECK_FAILED"
-msgstr "Code_CCL_CHECK_FAILED"
-
-#: ../../reference/scdb-api.rst:534
-msgid "Query CCL check failed"
-msgstr "CCL 校验失败"
-
-#: ../../reference/scdb-api.rst:536
-msgid "201"
-msgstr "201"
-
-#: ../../reference/scdb-api.rst:536
-msgid "Code_STORAGE_ERROR"
-msgstr "Code_STORAGE_ERROR"
-
-#: ../../reference/scdb-api.rst:536
-msgid "SCDB DB error"
-msgstr "SCDB DB 错误"
-
-#: ../../reference/scdb-api.rst:538
-msgid "300"
-msgstr "300"
-
-#: ../../reference/scdb-api.rst:538
-msgid "Code_INTERNAL"
-msgstr "Code_INTERNAL"
-
-#: ../../reference/scdb-api.rst:538
-msgid "Server Internal Error"
-msgstr "服务器内部错误"
-
-#: ../../reference/scdb-api.rst:540
-msgid "320"
-msgstr "320"
-
-#: ../../reference/scdb-api.rst:540
-msgid "Code_UNKNOWN_ENGINE_ERROR"
-msgstr "Code_UNKNOWN_ENGINE_ERROR"
-
-#: ../../reference/scdb-api.rst:540
-msgid "Unknown error occurs in Engine"
-msgstr "引擎发生未知错误"
-
-#: ../../reference/scdb-api.rst:542
-msgid "332"
-msgstr "332"
-
-#: ../../reference/scdb-api.rst:542
-msgid "Code_ENGINE_RUNSQL_ERROR"
-msgstr "Code_ENGINE_RUNSQL_ERROR"
-
-#: ../../reference/scdb-api.rst:542
-msgid "Unknown error occurs in Engine during RunSQL"
-msgstr "运行 RunSQL 时引擎发生未知错误"
-
-#: ../../reference/scdb-api.rst:544
-msgid "340"
-msgstr "340"
-
-#: ../../reference/scdb-api.rst:544
-msgid "Code_NOT_SUPPORTED"
-msgstr "Code_NOT_SUPPORTED"
-
-#: ../../reference/scdb-api.rst:544
-msgid "Feature not supported"
-msgstr "不支持该功能"
+#~ msgid ""
+#~ "SCDB supports two types of APIs: "
+#~ "synchronous and asynchronous. The synchronous"
+#~ " interface is suitable for executing "
+#~ "fast queries, such as DDL, DCL, "
+#~ "and simple DQL. Meanwhile, the "
+#~ "asynchronous interface is recommended when "
+#~ "the query may take a long time "
+#~ "to run."
+#~ msgstr ""
+#~ "SCDB 支持两种类型的 API：同步和异步。同步接口适用于执行快速查询，例如 DDL、DML "
+#~ "和简单的 DQL。而异步接口则推荐用于耗时较多的 DQL。"
+
+#~ msgid "Asynchronous"
+#~ msgstr "异步接口"
+
+#~ msgid "public/submit_query"
+#~ msgstr "public/submit_query"
+
+#~ msgid ""
+#~ "Submit the query (DDL/DCL/DQL) to SCDB,"
+#~ " SCDB will return a session ID "
+#~ "immediately which can be used to "
+#~ "fetch result, and processes the query"
+#~ " in the background."
+#~ msgstr "将 query（DDL/DML/DQL）提交给 SCDB ， SCDB 将立即返回一个可用于获取结果的会话 ID，并在后台处理查询。"
+
+#~ msgid "Request"
+#~ msgstr "请求"
+
+#~ msgid "Field"
+#~ msgstr "字段"
+
+#~ msgid "Type"
+#~ msgstr "类型"
+
+#~ msgid "Required"
+#~ msgstr "是否必需"
+
+#~ msgid "Description"
+#~ msgstr "描述"
+
+#~ msgid "header"
+#~ msgstr "header"
+
+#~ msgid "RequestHeader_"
+#~ msgstr "RequestHeader_"
+
+#~ msgid "N"
+#~ msgstr "否"
+
+#~ msgid "Common request header"
+#~ msgstr "共同的请求头"
+
+#~ msgid "user"
+#~ msgstr "user"
+
+#~ msgid "SCDBCredential_"
+#~ msgstr "SCDBCredential_"
+
+#~ msgid "Y"
+#~ msgstr "是"
+
+#~ msgid "User information"
+#~ msgstr "用户信息"
+
+#~ msgid "query"
+#~ msgstr "query"
+
+#~ msgid "string"
+#~ msgstr "string"
+
+#~ msgid "SCQL query to be run"
+#~ msgstr "待执行的 SQL 语句"
+
+#~ msgid "query_result_callback_url"
+#~ msgstr "query_result_callback_url"
+
+#~ msgid ""
+#~ "callback URL to report query result. "
+#~ "See :ref:`Asynchronous send "
+#~ "result<async_send_result>` for more"
+#~ msgstr "用于返回查询结果的回调URL。更多信息请参考 :ref:`异步发送结果 <async_send_result>`"
+
+#~ msgid "biz_request_id"
+#~ msgstr "biz_request_id"
+
+#~ msgid "Biz request id which often be unique per biz action"
+#~ msgstr "业务请求 ID，在每个业务操作中通常是唯一的"
+
+#~ msgid "db_name"
+#~ msgstr "db_name"
+
+#~ msgid "Current database name"
+#~ msgstr "当前数据库名称"
+
+#~ msgid "Response"
+#~ msgstr "响应"
+
+#~ msgid "status"
+#~ msgstr "status"
+
+#~ msgid "Status_"
+#~ msgstr "Status_"
+
+#~ msgid "See `Status code`_ for more information"
+#~ msgstr "更多信息请参考 `Status code`_"
+
+#~ msgid "scdb_session_id"
+#~ msgstr "scdb_session_id"
+
+#~ msgid "Unique ID of a session"
+#~ msgstr "会话的唯一 ID"
+
+#~ msgid "Example"
+#~ msgstr "示例"
+
+#~ msgid ""
+#~ "If you want execute `show databases`,"
+#~ " the request and response message "
+#~ "should be structured as follows:"
+#~ msgstr "如果需要执行 `show databases`，请求和响应的消息结构应该如下所示："
+
+#~ msgid "request"
+#~ msgstr "请求"
+
+#~ msgid "response"
+#~ msgstr "响应"
+
+#~ msgid "public/fetch_result"
+#~ msgstr "public/fetch_result"
+
+#~ msgid ""
+#~ "Fetch result of the query submitted "
+#~ "via the \"submit_query\" method before, "
+#~ "if the query is still running, It"
+#~ " will return `NOT_READY` status code."
+#~ msgstr "通过 session ID 获取之前提交的 query 的结果，如果之前的提交的 query 还在运行中，返回 `NOT_READY`。"
+
+#~ msgid "Given by scdb when submit the query before, same with session_id_"
+#~ msgstr "在 SCDB 中提交查询时返回的会话 ID，与 submit_query 响应中的 session_id_ 一致"
+
+#~ msgid "out_columns"
+#~ msgstr "out_columns"
+
+#~ msgid "Tensor_ list"
+#~ msgstr "Tensor_ list"
+
+#~ msgid "Query result"
+#~ msgstr "query 的运行结果"
+
+#~ msgid "Same with session_id_"
+#~ msgstr "与 submit_query 中的 response 中的 session_id_ 一致"
+
+#~ msgid "affected_rows"
+#~ msgstr "affected_rows"
+
+#~ msgid "int64"
+#~ msgstr "int64"
+
+#~ msgid "The num of rows affected"
+#~ msgstr "受影响的行数"
+
+#~ msgid ""
+#~ "If you want to get the result "
+#~ "of the query `show databases`, you "
+#~ "can send a request like this."
+#~ msgstr "如果需要获取 `show databases` 的结果，可以发送如下的请求。"
+
+#~ msgid "If succeed, a response will be received with status code 0 like this:"
+#~ msgstr "如果成功，将收到带有状态码 0 的响应，如下所示："
+
+#~ msgid "If result is not ready, the response can be show as follows:"
+#~ msgstr "如果结果尚未准备好，响应将会是："
+
+#~ msgid "Asynchronous send result"
+#~ msgstr "异步发送结果"
+
+#~ msgid ""
+#~ "Automatically send the result to the "
+#~ "user by post the following message "
+#~ "when the result is available. To "
+#~ "accomplish this, :ref:`query_result_callback_url "
+#~ "<callback_url>` should be set."
+#~ msgstr ""
+#~ "如果用户配置了 :ref:`query_result_callback_url <callback_url>`，"
+#~ " SCDB 在获取到结果后会主动向用户发送消息，返回之前查询的结果。"
+
+#~ msgid "Query result, See Tensor_ for more information"
+#~ msgstr "Query 运行结果，更多信息请参考 Tensor_"
+
+#~ msgid "Synchronous"
+#~ msgstr "同步接口"
+
+#~ msgid "public/submit_and_get"
+#~ msgstr "public/submit_and_get"
+
+#~ msgid ""
+#~ "Submit a query to SCDB, SCDB will"
+#~ " wait for all tasks to complete "
+#~ "before returning the result to the "
+#~ "use."
+#~ msgstr "向 SCDB 提交查询， SCDB 将等待所有任务完成后再将结果返回给用户。"
+
+#~ msgid "Query result, See `Tensor`_ for more information"
+#~ msgstr "Query 运行结果，更多信息请参考 `Tensor`_ "
+
+#~ msgid "SCDB session id"
+#~ msgstr "SCDB 会话 id"
+
+#~ msgid ""
+#~ "If you want submit a query `show"
+#~ " databases`, you can send a request"
+#~ " as follows:"
+#~ msgstr "如果需要提交 `show databases` 查询，可以发送如下的请求："
+
+#~ msgid "If successful, a response will be received like this:"
+#~ msgstr "如果成功，将收到以下响应："
+
+#~ msgid "Message Structure"
+#~ msgstr "Message Structure"
+
+#~ msgid "RequestHeader"
+#~ msgstr "RequestHeader"
+
+#~ msgid "custom_headers"
+#~ msgstr "custom_headers"
+
+#~ msgid "map<string, string>"
+#~ msgstr "map<string, string>"
+
+#~ msgid "Custom headers used to record custom information"
+#~ msgstr "自定义消息头"
+
+#~ msgid "SCDBCredential"
+#~ msgstr "SCDBCredential"
+
+#~ msgid "User_"
+#~ msgstr "User_"
+
+#~ msgid "User information, contains password and name"
+#~ msgstr "用户信息，包含密码和用户名"
+
+#~ msgid "User"
+#~ msgstr "User"
+
+#~ msgid "account_system_type"
+#~ msgstr "account_system_type"
+
+#~ msgid "AccountSystemType_"
+#~ msgstr "AccountSystemType_"
+
+#~ msgid "Account Type"
+#~ msgstr "账号类型"
+
+#~ msgid "native_user"
+#~ msgstr "native_user"
+
+#~ msgid "NativeUser_"
+#~ msgstr "NativeUser_"
+
+#~ msgid "Native user information"
+#~ msgstr "本地用户信息"
+
+#~ msgid "NativeUser"
+#~ msgstr "NativeUser"
+
+#~ msgid "name"
+#~ msgstr "name"
+
+#~ msgid "name of user"
+#~ msgstr "用户名"
+
+#~ msgid "password"
+#~ msgstr "password"
+
+#~ msgid "password of user"
+#~ msgstr "密码"
+
+#~ msgid "Tensor"
+#~ msgstr "Tensor"
+
+#~ msgid "Tensor name"
+#~ msgstr "Tensor 名称"
+
+#~ msgid "shape"
+#~ msgstr "shape"
+
+#~ msgid "TensorShape_"
+#~ msgstr "TensorShape_"
+
+#~ msgid "It's normally [M] (a vector with M elements)"
+#~ msgstr "通常为 [M] （一个包含 M 个元素的向量）"
+
+#~ msgid "elem_type"
+#~ msgstr "elem_type"
+
+#~ msgid "PrimitiveDataType_"
+#~ msgstr "PrimitiveDataType_"
+
+#~ msgid "The data type of the value data in tensor"
+#~ msgstr "tensor 中存储的数据的类型"
+
+#~ msgid "option"
+#~ msgstr "option"
+
+#~ msgid "TensorOptions_"
+#~ msgstr "TensorOptions_"
+
+#~ msgid "Tensor options"
+#~ msgstr "tensor 配置项"
+
+#~ msgid "annotation"
+#~ msgstr "annotation"
+
+#~ msgid "TensorAnnotation_"
+#~ msgstr "TensorAnnotation_"
+
+#~ msgid ""
+#~ "Carries physical status information, It "
+#~ "MUST be there if the <option> is"
+#~ " \"Reference\""
+#~ msgstr "携带物理状态信息，如果 option 为 Reference，则必须存在"
+
+#~ msgid "int32_data"
+#~ msgstr "int32_data"
+
+#~ msgid "int32 list"
+#~ msgstr "int32 list"
+
+#~ msgid "The value data in tensor, for int8, int16, int32 data types"
+#~ msgstr "用于存储 int8, int16, int32 类型的数据"
+
+#~ msgid "int64_data"
+#~ msgstr "int64_data"
+
+#~ msgid "int64 list"
+#~ msgstr "int64 list"
+
+#~ msgid "The value data in tensor, for int64 and timestamp data types"
+#~ msgstr "用于存储 int64 类型的数据"
+
+#~ msgid "float_data"
+#~ msgstr "float_data"
+
+#~ msgid "float list"
+#~ msgstr "float list"
+
+#~ msgid "The value data in tensor, for float32 data type"
+#~ msgstr "用于存储 float32 类型的数据"
+
+#~ msgid "double_data"
+#~ msgstr "double_data"
+
+#~ msgid "double list"
+#~ msgstr "double list"
+
+#~ msgid "The value data in tensor, for float64 data type"
+#~ msgstr "用于存储 float64 类型的数据"
+
+#~ msgid "bool_data"
+#~ msgstr "bool_data"
+
+#~ msgid "bool list"
+#~ msgstr "bool list"
+
+#~ msgid "The value data in tensor, for bool data type"
+#~ msgstr "用于存储 bool 类型的数据"
+
+#~ msgid "string_data"
+#~ msgstr "string_data"
+
+#~ msgid "string list"
+#~ msgstr "string list"
+
+#~ msgid "The value data in tensor, for string and datetime data types"
+#~ msgstr "用于存储 string 和 datetime 类型的数据"
+
+#~ msgid "TensorShape"
+#~ msgstr "TensorShape"
+
+#~ msgid "dim"
+#~ msgstr "dim"
+
+#~ msgid "TensorShape_Dimension_ list"
+#~ msgstr "TensorShape_Dimension_ list"
+
+#~ msgid "TensorShape_Dimension"
+#~ msgstr "TensorShape_Dimension"
+
+#~ msgid "TensorShape_Dimension could be dim_value or dim_param."
+#~ msgstr "TensorShape_Dimension 可以是 dim_value 或 dim_param。"
+
+#~ msgid "dim_value"
+#~ msgstr "dim_value"
+
+#~ msgid "dim_param"
+#~ msgstr "dim_param"
+
+#~ msgid "TensorAnnotation"
+#~ msgstr "TensorAnnotation"
+
+#~ msgid "TensorStatus_"
+#~ msgstr "TensorStatus_"
+
+#~ msgid "Status of tensor"
+#~ msgstr "tensor 状态"
+
+#~ msgid "Status"
+#~ msgstr "Status"
+
+#~ msgid "code"
+#~ msgstr "code"
+
+#~ msgid "int32"
+#~ msgstr "int32"
+
+#~ msgid "The status code, see `Status code`_ for more information"
+#~ msgstr "状态码，更多信息请参考 `Status code`_"
+
+#~ msgid "Messages"
+#~ msgstr "Messages"
+
+#~ msgid "Message for recording the error information"
+#~ msgstr "用于记录错误信息的消息"
+
+#~ msgid "details"
+#~ msgstr "details"
+
+#~ msgid "protobuf.Any list"
+#~ msgstr "protobuf.Any list"
+
+#~ msgid ""
+#~ "A list of messages that carry the"
+#~ " additional supplementary error details"
+#~ msgstr "携带额外补充错误细节的消息列表"
+
+#~ msgid "Enum Values"
+#~ msgstr "Enum Values"
+
+#~ msgid "AccountSystemType"
+#~ msgstr "AccountSystemType"
+
+#~ msgid "Name"
+#~ msgstr "名称"
+
+#~ msgid "Number"
+#~ msgstr "数值"
+
+#~ msgid "UNKNOWN"
+#~ msgstr "UNKNOWN"
+
+#~ msgid "0"
+#~ msgstr "0"
+
+#~ msgid "Unknown account type"
+#~ msgstr "未知账号类型"
+
+#~ msgid "NATIVE_USER"
+#~ msgstr "NATIVE_USER"
+
+#~ msgid "1"
+#~ msgstr "1"
+
+#~ msgid "Native user type"
+#~ msgstr "本地用户类型"
+
+#~ msgid "PrimitiveDataType"
+#~ msgstr "PrimitiveDataType"
+
+#~ msgid "PrimitiveDataType_UNDEFINED"
+#~ msgstr "PrimitiveDataType_UNDEFINED"
+
+#~ msgid "undefined data type"
+#~ msgstr "未定义的数据类型"
+
+#~ msgid "INT8"
+#~ msgstr "INT8"
+
+#~ msgid "the 8-bit signed integer type"
+#~ msgstr "8-bit 有符号整型类型"
+
+#~ msgid "INT16"
+#~ msgstr "INT16"
+
+#~ msgid "2"
+#~ msgstr "2"
+
+#~ msgid "the 16-bit signed integer type"
+#~ msgstr "16-bit 有符号整型类型"
+
+#~ msgid "INT32"
+#~ msgstr "INT32"
+
+#~ msgid "3"
+#~ msgstr "3"
+
+#~ msgid "the 32-bit signed integer type"
+#~ msgstr "32-bit 有符号整型类型"
+
+#~ msgid "INT64"
+#~ msgstr "INT64"
+
+#~ msgid "4"
+#~ msgstr "4"
+
+#~ msgid "the 64-bit signed integer type"
+#~ msgstr "64-bit 有符号整型类型"
+
+#~ msgid "FLOAT32"
+#~ msgstr "FLOAT32"
+
+#~ msgid "5"
+#~ msgstr "5"
+
+#~ msgid "the 32-bit binary floating point type"
+#~ msgstr "32-bit 浮点数类型"
+
+#~ msgid "FLOAT64"
+#~ msgstr "FLOAT64"
+
+#~ msgid "6"
+#~ msgstr "6"
+
+#~ msgid "the 64-bit binary floating point type"
+#~ msgstr "64-bit 浮点数类型"
+
+#~ msgid "BOOL"
+#~ msgstr "BOOL"
+
+#~ msgid "7"
+#~ msgstr "7"
+
+#~ msgid "the bool data type"
+#~ msgstr "bool 类型"
+
+#~ msgid "STRING"
+#~ msgstr "STRING"
+
+#~ msgid "8"
+#~ msgstr "8"
+
+#~ msgid "the string data type"
+#~ msgstr "string 类型"
+
+#~ msgid "DATETIME"
+#~ msgstr "DATETIME"
+
+#~ msgid "9"
+#~ msgstr "9"
+
+#~ msgid ""
+#~ "see `datetime in mysql "
+#~ "<https://dev.mysql.com/doc/refman/8.0/en/datetime.html>`_ to "
+#~ "get more"
+#~ msgstr ""
+#~ "datetime 类型，参考 MySQL中的 `datetime "
+#~ "<https://dev.mysql.com/doc/refman/8.0/en/datetime.html>`_"
+
+#~ msgid "TIMESTAMP"
+#~ msgstr "TIMESTAMP"
+
+#~ msgid "10"
+#~ msgstr "10"
+
+#~ msgid "seconds since '1970-01-01 00:00:00' UTC"
+#~ msgstr "timestamp 类型，单位为秒，从 '1970-01-01 00:00:00' UTC 开始计时"
+
+#~ msgid "TensorOptions"
+#~ msgstr "TensorOptions"
+
+#~ msgid "VALUE"
+#~ msgstr "VALUE"
+
+#~ msgid "A tensor with data"
+#~ msgstr "含数据的 tensor"
+
+#~ msgid "REFERENCE"
+#~ msgstr "REFERENCE"
+
+#~ msgid "A tensor with reference (URI)"
+#~ msgstr "含引用（URI）的 tensor"
+
+#~ msgid "VARIABLE"
+#~ msgstr "VARIABLE"
+
+#~ msgid "A tensor variable (declaration)"
+#~ msgstr "tensor 变量（声明）"
+
+#~ msgid "TensorStatus"
+#~ msgstr ""
+
+#~ msgid "TENSORSTATUS_UNKNOWN"
+#~ msgstr "TENSORSTATUS_UNKNOWN"
+
+#~ msgid "Unknown"
+#~ msgstr "未知"
+
+#~ msgid "TENSORSTATUS_PRIVATE"
+#~ msgstr "TENSORSTATUS_PRIVATE"
+
+#~ msgid "Private"
+#~ msgstr "私密"
+
+#~ msgid "TENSORSTATUS_SECRET"
+#~ msgstr "TENSORSTATUS_SECRET"
+
+#~ msgid "Secret, usually in the form of secret sharing"
+#~ msgstr "秘密，通常为秘密共享的形式"
+
+#~ msgid "TENSORSTATUS_CIPHER"
+#~ msgstr "TENSORSTATUS_CIPHER"
+
+#~ msgid "Ciphertext, usually in the form of homomorphic encryption ciphertext"
+#~ msgstr "密文，通常为同态加密密文"
+
+#~ msgid "TENSORSTATUS_PUBLIC"
+#~ msgstr "TENSORSTATUS_PUBLIC"
+
+#~ msgid "Public"
+#~ msgstr "公开"
+
+#~ msgid "Status code"
+#~ msgstr "Status Code"
+
+#~ msgid "Error code"
+#~ msgstr "错误码"
+
+#~ msgid "Status Code"
+#~ msgstr "状态码"
+
+#~ msgid "Code_OK"
+#~ msgstr "Code_OK"
+
+#~ msgid "Success"
+#~ msgstr "成功"
+
+#~ msgid "100"
+#~ msgstr "100"
+
+#~ msgid "Code_BAD_REQUEST"
+#~ msgstr "Code_BAD_REQUEST"
+
+#~ msgid "Invalid request body"
+#~ msgstr "无效的请求体"
+
+#~ msgid "101"
+#~ msgstr "101"
+
+#~ msgid "Code_UNAUTHENTICATED"
+#~ msgstr "Code_UNAUTHENTICATED"
+
+#~ msgid "User authentication failed"
+#~ msgstr "用户身份验证失败"
+
+#~ msgid "102"
+#~ msgstr "102"
+
+#~ msgid "Code_SQL_PARSE_ERROR"
+#~ msgstr "Code_SQL_PARSE_ERROR"
+
+#~ msgid "Invalid SCQL statement"
+#~ msgstr "无效的 SCQL 语句"
+
+#~ msgid "103"
+#~ msgstr "103"
+
+#~ msgid "Code_INVALID_ARGUMENT"
+#~ msgstr "Code_INVALID_ARGUMENT"
+
+#~ msgid "Invalid parameter in Request"
+#~ msgstr "请求包含无效参数"
+
+#~ msgid "104"
+#~ msgstr "104"
+
+#~ msgid "Code_NOT_READY"
+#~ msgstr "Code_NOT_READY"
+
+#~ msgid "Result not ready"
+#~ msgstr "结果未准备好"
+
+#~ msgid "131"
+#~ msgstr "131"
+
+#~ msgid "Code_DDL_PERMISSION_DENIED"
+#~ msgstr "Code_DDL_PERMISSION_DENIED"
+
+#~ msgid "User does not have permission to execute the DDL"
+#~ msgstr "用户没有执行 DDL 的权限"
+
+#~ msgid "140"
+#~ msgstr "140"
+
+#~ msgid "Code_NOT_FOUND"
+#~ msgstr "Code_NOT_FOUND"
+
+#~ msgid "General not found error"
+#~ msgstr "一般未找到错误"
+
+#~ msgid "141"
+#~ msgstr "141"
+
+#~ msgid "Code_SESSION_NOT_FOUND"
+#~ msgstr "Code_SESSION_NOT_FOUND"
+
+#~ msgid "SCDB session not found"
+#~ msgstr "SCDB 会话未找到"
+
+#~ msgid "160"
+#~ msgstr "160"
+
+#~ msgid "Code_CCL_CHECK_FAILED"
+#~ msgstr "Code_CCL_CHECK_FAILED"
+
+#~ msgid "Query CCL check failed"
+#~ msgstr "CCL 校验失败"
+
+#~ msgid "201"
+#~ msgstr "201"
+
+#~ msgid "Code_STORAGE_ERROR"
+#~ msgstr "Code_STORAGE_ERROR"
+
+#~ msgid "SCDB DB error"
+#~ msgstr "SCDB DB 错误"
+
+#~ msgid "300"
+#~ msgstr "300"
+
+#~ msgid "Code_INTERNAL"
+#~ msgstr "Code_INTERNAL"
+
+#~ msgid "Server Internal Error"
+#~ msgstr "服务器内部错误"
+
+#~ msgid "320"
+#~ msgstr "320"
+
+#~ msgid "Code_UNKNOWN_ENGINE_ERROR"
+#~ msgstr "Code_UNKNOWN_ENGINE_ERROR"
+
+#~ msgid "Unknown error occurs in Engine"
+#~ msgstr "引擎发生未知错误"
+
+#~ msgid "332"
+#~ msgstr "332"
+
+#~ msgid "Code_ENGINE_RUNSQL_ERROR"
+#~ msgstr "Code_ENGINE_RUNSQL_ERROR"
+
+#~ msgid "Unknown error occurs in Engine during RunSQL"
+#~ msgstr "运行 RunSQL 时引擎发生未知错误"
+
+#~ msgid "340"
+#~ msgstr "340"
+
+#~ msgid "Code_NOT_SUPPORTED"
+#~ msgstr "Code_NOT_SUPPORTED"
+
+#~ msgid "Feature not supported"
+#~ msgstr "不支持该功能"
 
