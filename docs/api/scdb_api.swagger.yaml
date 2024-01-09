@@ -320,7 +320,6 @@ definitions:
     required:
       - user
       - query
-      - db_name
   scql.pb.SCDBQueryResultResponse:
     type: object
     example:

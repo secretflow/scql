@@ -96,7 +96,7 @@ message SCDBQueryRequest {
   string biz_request_id = 5;
 
   // Current database name
-  string db_name = 6 [(google.api.field_behavior) = REQUIRED];
+  string db_name = 6;
 }
 
 message SCDBSubmitResponse {
