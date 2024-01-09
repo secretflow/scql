@@ -390,7 +390,6 @@ definitions:
       reason:
         type: string
         title: Description of the warning
-    title: 'TODO: move SQLWarning to a proper place'
   scql.pb.Status:
     type: object
     properties:
