@@ -1,3 +1,4 @@
+# For definitions of options, see: https://github.com/grpc-ecosystem/grpc-gateway/blob/main/protoc-gen-openapiv2/options/annotations.proto
 openapiOptions:
   message:
     - message: scql.pb.SCDBQueryRequest

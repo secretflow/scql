@@ -30,7 +30,7 @@ option go_package = "proto-gen/scql";
 // You can find out more about this error model and how to work with it in the
 // [API Design Guide](https://cloud.google.com/apis/design/errors).
 message Status {
-    // The status code, which should be one of google rpc code or custom code.
+    // The status code, see [definition](https://github.com/secretflow/scql/blob/main/api/status_code.proto#L22)
     int32 code = 1;
     // Message for recording the error information.
     string message = 2;
