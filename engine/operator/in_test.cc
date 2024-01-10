@@ -22,6 +22,8 @@
 #include "engine/core/tensor_from_json.h"
 #include "engine/operator/test_util.h"
 
+DECLARE_int32(psi_curve_type);
+
 namespace scql::engine::op {
 
 struct InTestCase {
@@ -329,6 +331,7 @@ TEST_P(InTest, Works) {
   FeedInputs({&alice_ctx, &bob_ctx}, tc);
 
   // When
+  FLAGS_psi_curve_type = psi::psi::CURVE_FOURQ;
   EXPECT_NO_THROW(test::RunAsync<In>({&alice_ctx, &bob_ctx}));
 
   // Then

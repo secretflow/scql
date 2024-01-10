@@ -23,6 +23,8 @@
 #include "engine/operator/test_util.h"
 #include "engine/util/psi_helper.h"
 
+DECLARE_int32(psi_curve_type);
+
 namespace scql::engine::op {
 
 struct JoinTestCase {
@@ -622,6 +624,7 @@ TEST_P(JoinTest, works) {
   FeedInputs(&bob_ctx, test_case.right_inputs);
 
   // When
+  FLAGS_psi_curve_type = psi::psi::CURVE_FOURQ;
   EXPECT_NO_THROW(test::RunAsync<Join>({&alice_ctx, &bob_ctx}));
 
   // Then
