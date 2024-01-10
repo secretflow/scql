@@ -1,6 +1,7 @@
 FROM openanolis/anolisos:8.6 as base
 
 ARG TARGETPLATFORM
+ENV TARGETPLATFORM=$TARGETPLATFORM
 
 ENV TZ=Asia/Shanghai
 
