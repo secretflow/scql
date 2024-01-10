@@ -39,18 +39,20 @@ def engine_deps():
     _org_postgres()
 
 def _secretflow_deps():
-    SPU_COMMIT = "4d9ed28a61f6fff20361cacb2073108adad57176"
-    PSI_COMMIT = "d5caedc399503275820a881f10d48e1e11a10357"
-    HEU_COMMIT = "afa15a0ad009cb5d5e40bd1dce885b9e4d472083"
+    #SPU_COMMIT = "4d9ed28a61f6fff20361cacb2073108adad57176"
+    PSI_COMMIT = "65263edfa3255ffe17af6b30904b395366b5b661"
+    #HEU_COMMIT = "afa15a0ad009cb5d5e40bd1dce885b9e4d472083"
 
     maybe(
         http_archive,
         name = "spulib",
         urls = [
-            "https://github.com/secretflow/spu/archive/%s.tar.gz" % SPU_COMMIT,
+            #"https://github.com/secretflow/spu/archive/%s.tar.gz" % SPU_COMMIT,
+            "https://github.com/secretflow/spu/archive/refs/tags/0.7.0b0.tar.gz",
         ],
-        strip_prefix = "spu-%s" % SPU_COMMIT,
-        sha256 = "4ad844dc7e62889f4c90d58095215a77cd50a2d26dc680713d731176750cdf09",
+        #strip_prefix = "spu-%s" % SPU_COMMIT,
+        strip_prefix = "spu-0.7.0b0",
+        sha256 = "7387a4ea55f3b763d699d2c99268333763d38c6556279c525e78b62a9956f293",
     )
     maybe(
         http_archive,
@@ -59,17 +61,19 @@ def _secretflow_deps():
             "https://github.com/secretflow/psi/archive/%s.tar.gz" % PSI_COMMIT,
         ],
         strip_prefix = "psi-%s" % PSI_COMMIT,
-        sha256 = "f7968386cc74d74d0848fd293c4ab9dc978da164ee22ba1c5b081f78aa8b0b1b",
+        sha256 = "8d1e42eaa435e6715c1b9dda38b1dec2245d499afe4f79c0da24602bf72cb72b",
     )
 
     maybe(
         http_archive,
         name = "com_alipay_sf_heu",
         urls = [
-            "https://github.com/secretflow/heu/archive/%s.tar.gz" % HEU_COMMIT,
+            #"https://github.com/secretflow/heu/archive/%s.tar.gz" % HEU_COMMIT,
+            "https://github.com/secretflow/heu/archive/tags/v0.5.0b0.tar.gz",
         ],
-        strip_prefix = "heu-%s" % HEU_COMMIT,
-        sha256 = "6c151a1d2941c745df7b12d3278b7c1dcea59fba0dc2cb2d539f3da7375407ac",
+        #strip_prefix = "heu-%s" % HEU_COMMIT,
+        strip_prefix = "heu-tags-v0.5.0b0",
+        sha256 = "fb62afb7506fb86ee43b9aea91a0fe260b547138794abd3647c1edae8eb5965a",
     )
 
 def _org_apache_arrow():
