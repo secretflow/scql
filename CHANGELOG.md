@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Changed
+
+## [0.5.0] - 2024-01-10
+
+### Added
+
  - Added support for HTTP data source router.
 
 ### Changed
