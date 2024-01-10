@@ -370,6 +370,8 @@ func (plan *GraphBuilder) AddJoinNode(name string, left []*Tensor, right []*Tens
 	partyAttr.SetStrings(partyCodes)
 	joinTypeAttr := &Attribute{}
 	joinTypeAttr.SetInt(joinType)
+	joinAlgAttr := &Attribute{}
+	joinAlgAttr.SetInt(EcdhPSIJoin)
 
 	inputs := make(map[string][]*Tensor)
 	inputs["Left"] = left
@@ -388,7 +390,7 @@ func (plan *GraphBuilder) AddJoinNode(name string, left []*Tensor, right []*Tens
 	outputs["LeftJoinIndex"] = []*Tensor{leftOutput}
 	outputs["RightJoinIndex"] = []*Tensor{rightOutput}
 	if _, err := plan.AddExecutionNode(name, operator.OpNameJoin, inputs, outputs,
-		map[string]*Attribute{operator.InputPartyCodesAttr: partyAttr, operator.JoinTypeAttr: joinTypeAttr}, partyCodes); err != nil {
+		map[string]*Attribute{operator.InputPartyCodesAttr: partyAttr, operator.JoinTypeAttr: joinTypeAttr, operator.AlgorithmAttr: joinAlgAttr}, partyCodes); err != nil {
 		return nil, nil, err
 	}
 	return leftOutput, rightOutput, nil
@@ -738,7 +740,7 @@ func (plan *GraphBuilder) addPSIInNode(left *Tensor, right *Tensor, outCCL *ccl.
 	output.OwnerPartyCode = revealParty
 	output.cc = outCCL
 	attr0 := &Attribute{}
-	attr0.SetInt(PSIIn)
+	attr0.SetInt(EcdhPsiIn)
 	attr1 := &Attribute{}
 	attr1.SetStrings([]string{left.OwnerPartyCode, right.OwnerPartyCode})
 	attr2 := &Attribute{}

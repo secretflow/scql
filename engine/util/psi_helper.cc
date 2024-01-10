@@ -41,7 +41,7 @@ DEFINE_int64(unbalance_psi_ratio_threshold, 5,
              "PSI, LargePartySize means the rows count of the larger party");
 DEFINE_int64(unbalance_psi_larger_party_rows_count_threshold, 81920,
              "minimum rows count of the larger party to choose unbalanced PSI");
-DEFINE_int32(psi_curve_type, psi::psi::CURVE_FOURQ, "curve type used in PSI");
+DEFINE_int32(psi_curve_type, psi::psi::CURVE_25519, "curve type used in PSI");
 
 namespace scql::engine::util {
 PsiPlan GetPsiPlan(int64_t self_length, int64_t peer_length) {

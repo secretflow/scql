@@ -47,7 +47,12 @@ const (
 )
 
 const (
-	PSIIn = 1
+	PSIIn     = 1
+	EcdhPsiIn = 3
+)
+
+const (
+	EcdhPSIJoin = 0
 )
 
 var algorithmCreator = NewAlgCreator()
