@@ -157,10 +157,10 @@ def _brotli():
         http_archive,
         name = "brotli",
         build_file = "@scql//engine/bazel:brotli.BUILD",
-        sha256 = "f9e8d81d0405ba66d181529af42a3354f838c939095ff99930da6aa9cdf6fe46",
-        strip_prefix = "brotli-1.0.9",
+        sha256 = "e720a6ca29428b803f4ad165371771f5398faba397edf6778837a18599ea13ff",
+        strip_prefix = "brotli-1.1.0",
         urls = [
-            "https://github.com/google/brotli/archive/refs/tags/v1.0.9.tar.gz",
+            "https://github.com/google/brotli/archive/refs/tags/v1.1.0.tar.gz",
         ],
     )
 
