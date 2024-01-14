@@ -95,12 +95,12 @@ def _com_github_google_flatbuffers():
         http_archive,
         name = "com_github_google_flatbuffers",
         urls = [
-            "https://github.com/google/flatbuffers/archive/refs/tags/v22.10.26.tar.gz",
+            "https://github.com/google/flatbuffers/archive/refs/tags/v22.12.6.tar.gz",
         ],
         patch_args = ["-p1"],
         patches = ["@scql//engine/bazel:patches/flatbuffers.patch"],
-        sha256 = "34f1820cfd78a3d92abc880fbb1a644c7fb31a71238995f4ed6b5915a1ad4e79",
-        strip_prefix = "flatbuffers-22.10.26",
+        sha256 = "8539be5a93fcd2f827d4733cf8e8688a4cea6a53de08897a2506c0fda46b0aa1",
+        strip_prefix = "flatbuffers-22.12.6",
     )
 
 def _com_google_double_conversion():
