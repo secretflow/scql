@@ -107,11 +107,11 @@ def _com_google_double_conversion():
     maybe(
         http_archive,
         name = "com_google_double_conversion",
-        sha256 = "a63ecb93182134ba4293fd5f22d6e08ca417caafa244afaa751cbfddf6415b13",
-        strip_prefix = "double-conversion-3.1.5",
+        sha256 = "04ec44461850abbf33824da84978043b22554896b552c5fd11a9c5ae4b4d296e",
+        strip_prefix = "double-conversion-3.3.0",
         build_file = "@scql//engine/bazel:double-conversion.BUILD",
         urls = [
-            "https://github.com/google/double-conversion/archive/refs/tags/v3.1.5.tar.gz",
+            "https://github.com/google/double-conversion/archive/refs/tags/v3.3.0.tar.gz",
         ],
     )
 
