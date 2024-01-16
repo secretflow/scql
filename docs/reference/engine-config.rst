@@ -165,7 +165,7 @@ datasources in embed_router_conf contain information for connecting MySQL/SQLite
       more infos: https://www.sqlite.org/c3ref/open.html
 
     SQLite3 Connection string e.g:
-      ``file:data_test.db?mode=memory&cache=shared``
+      ``file:/path/to/data.db``
 
     PostgreSQL Connection string format:
       <str> == <assignment> | <assignment> ' ' <str>
