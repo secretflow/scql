@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-05 15:22+0800\n"
+"POT-Creation-Date: 2024-01-16 17:26+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.12.1\n"
+"Generated-By: Babel 2.13.0\n"
 
 #: ../../reference/engine-config.rst:5
 msgid "SCQLEngine Configuration"
@@ -586,8 +586,8 @@ msgid "SQLite3 Connection string e.g:"
 msgstr "SQLite3 连接串示例"
 
 #: ../../reference/engine-config.rst:168
-msgid "``file:data_test.db?mode=memory&cache=shared``"
-msgstr "``file:data_test.db?mode=memory&cache=shared``"
+msgid "``file:/path/to/data.db``"
+msgstr ""
 
 #: ../../reference/engine-config.rst:177
 msgid "PostgreSQL Connection string format:"
@@ -787,3 +787,7 @@ msgstr ""
 "安全起见，SCQLEngine 默认启用参与方身份验证。 SCQLEngine 将检查 Driver 请求中自身的公钥是否与 "
 "``private_key_pem_path`` 中的本地公钥匹配，并且其他参与者的公钥也与 "
 "``authorized_profile_path`` 中的公钥匹配。"
+
+#~ msgid "``file:data_test.db?mode=memory&cache=shared``"
+#~ msgstr "``file:data_test.db?mode=memory&cache=shared``"
+
