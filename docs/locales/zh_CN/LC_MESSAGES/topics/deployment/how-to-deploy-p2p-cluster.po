@@ -116,7 +116,7 @@ msgstr ""
 "tutorial/mysql/initdb/broker_init_alice.sql>`_。对于 Bob ，请使用 "
 "`broker_init_bob.sql "
 "<https://github.com/secretflow/scql/tree/main/examples/p2p-"
-"tutorial/initdb/broker_init_bob.sql>`_ 代替。"
+"tutorial/mysql/initdb/broker_init_bob.sql>`_ 代替。"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:42
 msgid ""
