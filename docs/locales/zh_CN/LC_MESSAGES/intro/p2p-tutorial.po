@@ -93,7 +93,7 @@ msgid ""
 "contains two SCQLBrokers and SCQLEngines for party ``alice``, ``bob``."
 msgstr ""
 "你可以通过 `docker-compose "
-"<https://github.com/secretflow/scql/tree/main/examples/docker-compose>`_ "
+"<https://github.com/secretflow/scql/tree/main/examples/p2p-tutorial>`_ "
 "来启动 SCQL 服务 ，它将部署和启动服务，如下图所示，它包含两个参与方 ``alice`` 和 ``bob`` 的 SCQLBroker 和 "
 "SCQLEngine 。"
 
