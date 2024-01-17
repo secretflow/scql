@@ -35,9 +35,9 @@ Here we present how to deploy components for party Alice.
 
 To simplify, We use a mysql container to store the SCQLBroker's meta data and SCQLEngine's source data. However, if you prefer, you can use your preferred database service or store both types of data separately.
 
-The source data can be stored in a file called ``alice_init.sql`` with content like `alice_init.sql <https://github.com/secretflow/scql/tree/main/examples/p2p-tutorial/mysql/initdb/alice_init.sql>`_. For Bob, please use `bob_init.sql <https://github.com/secretflow/scql/tree/main/examples/docker-compose/mysql/initdb/bob_init.sql>`_ instead.
+The source data can be stored in a file called ``alice_init.sql`` with content like `alice_init.sql <https://github.com/secretflow/scql/tree/main/examples/p2p-tutorial/mysql/initdb/alice_init.sql>`_. For Bob, please use `bob_init.sql <https://github.com/secretflow/scql/tree/main/examples/p2p-tutorial/mysql/initdb/bob_init.sql>`_ instead.
 
-The meta data can be stored in ``broker_init_alice.sql`` with content like `broker_init_alice.sql <https://github.com/secretflow/scql/tree/main/examples/p2p-tutorial/mysql/initdb/broker_init_alice.sql>`_. For Bob, please use `broker_init_bob.sql <https://github.com/secretflow/scql/tree/main/examples/docker-compose/mysql/initdb/broker_init_bob.sql>`_ instead.
+The meta data can be stored in ``broker_init_alice.sql`` with content like `broker_init_alice.sql <https://github.com/secretflow/scql/tree/main/examples/p2p-tutorial/mysql/initdb/broker_init_alice.sql>`_. For Bob, please use `broker_init_bob.sql <https://github.com/secretflow/scql/tree/main/examples/p2p-tutorial/mysql/initdb/broker_init_bob.sql>`_ instead.
 
 These files can also be obtained via the command-line with either curl, wget or another similar tool.
 

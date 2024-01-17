@@ -76,7 +76,7 @@ msgid ""
 "contains a SCDBServer and two SCQLEngines from party ``alice``, ``bob``."
 msgstr ""
 "你可以通过 `docker-compose "
-"<https://github.com/secretflow/scql/tree/main/examples/docker-compose>`_ "
+"<https://github.com/secretflow/scql/tree/main/examples/scdb-tutorial>`_ "
 "来启动 SCQL 服务 ，它将部署和启动服务，如下图所示，它包含一个 SCDBServer 和两个分别来自参与方 ``alice`` 、 "
 "``bob`` 的 SCQLEngines 。"
 
