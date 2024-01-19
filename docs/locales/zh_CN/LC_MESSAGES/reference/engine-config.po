@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-16 17:26+0800\n"
+"POT-Creation-Date: 2024-01-19 06:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.13.0\n"
+"Generated-By: Babel 2.14.0\n"
 
 #: ../../reference/engine-config.rst:5
 msgid "SCQLEngine Configuration"
@@ -319,7 +319,7 @@ msgstr "9527"
 
 #: ../../reference/engine-config.rst:75
 msgid "The listening port of brpc builtin services"
-msgstr " brpc 内置服务的监听端口"
+msgstr "brpc 内置服务的监听端口"
 
 #: ../../reference/engine-config.rst:77
 msgid "idle_timeout_s"
@@ -429,9 +429,9 @@ msgstr ""
 
 #: ../../reference/engine-config.rst:99
 msgid ""
-"http datasource router endpoint, it is valid only when "
-"--datasource_router=http"
-msgstr "http 数据源的路由断点，只在 --datasource_router=http 时生效"
+"http datasource router endpoint, it is valid only datasource_router is "
+"set to \"http\""
+msgstr "http 数据源的路由端点，只在 datasource_router 设置为 http 时生效"
 
 #: ../../reference/engine-config.rst:101
 msgid "db_connection_info"
