@@ -96,7 +96,7 @@ SCQLEngine can cooperate with upper-layer modules such as SCDB and SCQLBroker ac
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+
 | embed_router_conf                          | none             | Configuration for embed router in json format                                              |
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+
-| http_router_endpoint                       | none             | http datasource router endpoint, it is valid only when --datasource_router=http            |
+| http_router_endpoint                       | none             | http datasource router endpoint, it is valid only datasource_router is set to "http"       |
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+
 | db_connection_info                         | none             | Connection string used to connect to mysql                                                 |
 +--------------------------------------------+------------------+--------------------------------------------------------------------------------------------+

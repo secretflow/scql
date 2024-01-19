@@ -8,14 +8,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-16 17:26+0800\n"
+"POT-Creation-Date: 2024-01-19 06:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.13.0\n"
+"Generated-By: Babel 2.14.0\n"
 
 #: ../../reference/p2p-deploy-config.rst:2
 msgid "SCQL P2P Deployment Configuration"
@@ -205,7 +205,7 @@ msgstr ""
 
 #: ../../reference/p2p-deploy-config.rst:78
 msgid "The type and severity of a logged event"
-msgstr ""
+msgstr "日志等级"
 
 #: ../../reference/p2p-deploy-config.rst:80
 msgid "party_code"
@@ -293,7 +293,7 @@ msgstr ""
 
 #: ../../reference/p2p-deploy-config.rst:97
 msgid "Whether to reveal group_mark directly for group by"
-msgstr ""
+msgstr "是否在计算 group by 的时候泄露分组标记信息"
 
 #: ../../reference/p2p-deploy-config.rst:99
 msgid "storage.type"
@@ -311,7 +311,7 @@ msgstr ""
 
 #: ../../reference/p2p-deploy-config.rst:101
 msgid "Used to connect to a database"
-msgstr ""
+msgstr "数据库连接串"
 
 #: ../../reference/p2p-deploy-config.rst:103
 msgid "storage.max_idle_conns"
@@ -324,7 +324,7 @@ msgstr ""
 
 #: ../../reference/p2p-deploy-config.rst:103
 msgid "Maximum number of connections in idle connection pool"
-msgstr ""
+msgstr "空闲连接池最大连接数"
 
 #: ../../reference/p2p-deploy-config.rst:105
 msgid "storage.max_open_conns"
@@ -332,7 +332,7 @@ msgstr ""
 
 #: ../../reference/p2p-deploy-config.rst:105
 msgid "Maximum number of open connections to the database"
-msgstr ""
+msgstr "数据库最大连接数"
 
 #: ../../reference/p2p-deploy-config.rst:107
 msgid "storage.conn_max_idle_time"
@@ -345,7 +345,7 @@ msgstr ""
 
 #: ../../reference/p2p-deploy-config.rst:107
 msgid "Maximum amount of time a connection may be idle"
-msgstr ""
+msgstr "连接处于空闲状态的最长时间"
 
 #: ../../reference/p2p-deploy-config.rst:109
 msgid "storage.conn_max_lifetime"
@@ -353,7 +353,7 @@ msgstr ""
 
 #: ../../reference/p2p-deploy-config.rst:109
 msgid "Maximum amount of time a connection may be reused"
-msgstr ""
+msgstr "可重复连接使用的最长时间"
 
 #: ../../reference/p2p-deploy-config.rst:111
 msgid "session_expire_time"
@@ -728,7 +728,7 @@ msgstr "9527"
 
 #: ../../reference/engine-config.rst:75
 msgid "The listening port of brpc builtin services"
-msgstr " brpc 内置服务的监听端口"
+msgstr "brpc 内置服务的监听端口"
 
 #: ../../reference/engine-config.rst:77
 msgid "idle_timeout_s"
@@ -838,9 +838,9 @@ msgstr ""
 
 #: ../../reference/engine-config.rst:99
 msgid ""
-"http datasource router endpoint, it is valid only when "
-"--datasource_router=http"
-msgstr "http 数据源的路由断点，只在 --datasource_router=http 时生效"
+"http datasource router endpoint, it is valid only datasource_router is "
+"set to \"http\""
+msgstr "http 数据源的路由端点，只在 datasource_router 设置为 http 时生效"
 
 #: ../../reference/engine-config.rst:101
 msgid "db_connection_info"
