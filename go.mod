@@ -26,7 +26,7 @@ require (
 	github.com/stretchr/testify v1.8.3
 	github.com/tjfoc/gmsm v1.4.1
 	go.uber.org/zap v1.18.1
-	golang.org/x/exp v0.0.0-20221006183845-316c7553db56
+	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a
 	golang.org/x/text v0.14.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20231012201019-e917dd12ba7a
 	google.golang.org/grpc v1.59.0
@@ -90,4 +90,3 @@ require (
 	modernc.org/sortutil v1.1.1 // indirect
 	modernc.org/strutil v1.1.3 // indirect
 )
-
