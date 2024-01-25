@@ -64,8 +64,7 @@ jobs:
           name: Setup GCS
           command: |
             echo ${gcs_content} > ../gcs.data
-            # FIXME: disable BwoB due to https://github.com/bazelbuild/bazel/pull/20409
-            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json
+            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
       - run:
           name: "Engine Test"
           command: |
@@ -124,8 +123,7 @@ jobs:
           name: Setup GCS
           command: |
             echo ${gcs_content} > ../gcs.data
-            # FIXME: disable BwoB due to https://github.com/bazelbuild/bazel/pull/20409
-            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json
+=            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
       - run:
           name: "Engine Test"
           command: |
