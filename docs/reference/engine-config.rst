@@ -177,7 +177,7 @@ datasources in embed_router_conf contain information for connecting MySQL/SQLite
       <value> == [~;]*
 
     PostgreSQL Connection string e.g:
-      ``db=${db};user=${user};password=${password};host=${host}``
+      ``db=${db} user=${user} password=${password} host=${host}``
 
     CSVDB Connection string format:
       Since connection_str is an object in another json object, the format is a converted json string corresponding to `CsvdbConf <https://github.com/secretflow/scql/tree/main/engine/datasource/csvdb_conf.proto>`_
