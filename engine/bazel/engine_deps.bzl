@@ -308,8 +308,8 @@ def _com_google_googleapis():
         http_archive,
         name = "googleapis",
         urls = [
-            "https://github.com/googleapis/googleapis/archive/fea22b1d9f27f86ef355c1d0dba00e0791a08a19.tar.gz",
+            "https://github.com/googleapis/googleapis/archive/40b951b9d77aca86f017c74750f30df0e090ed68.tar.gz",
         ],
-        strip_prefix = "googleapis-fea22b1d9f27f86ef355c1d0dba00e0791a08a19",
-        sha256 = "957ef432cdedbace1621bb023e6d8637ecbaa78856b3fc6e299f9b277ae990ff",
+        strip_prefix = "googleapis-40b951b9d77aca86f017c74750f30df0e090ed68",
+        sha256 = "da9aa10ba661e95ee031044e2d17a399d0cbd47488163fb13ac6a6f14b36ba36",
     )
