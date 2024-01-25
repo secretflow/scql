@@ -2,7 +2,7 @@ common --experimental_repo_remote_exec
 common --experimental_cc_shared_library
 common --experimental_ui_max_stdouterr_bytes=-1
 
-common --experimental_remote_download_regex='.*scqlengine$'
+common --experimental_remote_download_regex='.*\/scqlengine$'
 
 
 build --incompatible_new_actions_api=false 

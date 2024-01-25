@@ -123,7 +123,7 @@ jobs:
           name: Setup GCS
           command: |
             echo ${gcs_content} > ../gcs.data
-=            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
+            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
       - run:
           name: "Engine Test"
           command: |
