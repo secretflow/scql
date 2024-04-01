@@ -73,7 +73,7 @@ def _secretflow_deps():
         ],
         #strip_prefix = "heu-%s" % HEU_COMMIT,
         strip_prefix = "heu-tags-v0.5.0b0",
-        sha256 = "fb62afb7506fb86ee43b9aea91a0fe260b547138794abd3647c1edae8eb5965a",
+        sha256 = "ca9391e16cc84e4a763f953f997d42530e75fc89ae26e345b2d3ec3e9fc63364",
     )
 
 def _org_apache_arrow():
