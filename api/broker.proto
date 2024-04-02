@@ -196,14 +196,15 @@ service IntraBrokerService {
   // Other APIs
 
   // CheckAndUpdateStatus
+  // (-- NOTE: api not implemented yet --)
   //
-  // Check and update status for Projects (not used)
+  // Check and update status for Projects
   rpc CheckAndUpdateStatus(CheckAndUpdateStatusRequest)
       returns (CheckAndUpdateStatusResponse) {
-    option (google.api.http) = {
-      post: "/intra/status/check_and_update"
-      body: "*"
-    };
+    // option (google.api.http) = {
+    //   post: "/intra/status/check_and_update"
+    //   body: "*"
+    // };
   }
 }
 
