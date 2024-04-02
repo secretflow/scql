@@ -290,6 +290,7 @@ cc_library(
     deps = [
         ":csvdb_conf_cc_proto",
         ":router",
+        "@com_github_brpc_brpc//:bthread",
         "@com_github_brpc_brpc//:butil",
         "@com_github_grpc_grpc//:grpc++",
         "@com_google_absl//absl/strings",
