@@ -63,6 +63,8 @@ party_auth:
   method: pubkey
   enable_timestamp_check: true
   validity_period: 3m
+security_compromise:
+  group_by_threshold: 3
 `
 	tmpFile, err := os.CreateTemp("", "*.yaml")
 	r.NoError(err)
@@ -123,6 +125,7 @@ party_auth:
 			EnableTimestampCheck: true,
 			ValidityPeriod:       time.Minute * 3,
 		},
+		SecurityCompromise: SecurityCompromiseConf{GroupByThreshold: 3},
 	}
 	expectedCfg.Engine.SpuRuntimeCfg = strings.ReplaceAll(expectedCfg.Engine.SpuRuntimeCfg, "\t", " ")
 	r.Equal(expectedCfg, cfg)

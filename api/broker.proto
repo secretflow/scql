@@ -18,12 +18,14 @@ syntax = "proto3";
 package scql.pb;
 
 option go_package = "proto-gen/scql";
+option java_package = "org.secretflow.scql";
 
 import "api/common.proto";
 import "api/status.proto";
 import "api/core.proto";
 import "google/api/annotations.proto";
 import "google/api/field_behavior.proto";
+import "google/protobuf/timestamp.proto";
 import "libspu/spu.proto";
 
 // IntraBrokerService only accepts requests from within the domain.
@@ -56,6 +58,19 @@ service IntraBrokerService {
   rpc FetchResult(FetchResultRequest) returns (QueryResponse) {
     option (google.api.http) = {
       post: "/intra/query/fetch"
+      body: "*"
+    };
+  }
+
+  // CancelQuery
+  //
+  // Cancel asynchronous query, currently only valid in the
+  // [KUSCIA](https://github.com/secretflow/kuscia). It will release the
+  // occupied local computing resources in time, but only try to notify
+  // other members to release their corresponding resources.
+  rpc CancelQuery(CancelQueryRequest) returns (CancelQueryResponse) {
+    option (google.api.http) = {
+      post: "/intra/query/cancel"
       body: "*"
     };
   }
@@ -177,6 +192,19 @@ service IntraBrokerService {
       body: "*"
     };
   }
+
+  // Other APIs
+
+  // CheckAndUpdateStatus
+  //
+  // Check and update status for Projects (not used)
+  rpc CheckAndUpdateStatus(CheckAndUpdateStatusRequest)
+      returns (CheckAndUpdateStatusResponse) {
+    option (google.api.http) = {
+      post: "/intra/status/check_and_update"
+      body: "*"
+    };
+  }
 }
 
 message QueryRequest {
@@ -185,6 +213,11 @@ message QueryRequest {
   string project_id = 2 [(google.api.field_behavior) = REQUIRED];
   // SCQL query to be run
   string query = 3 [(google.api.field_behavior) = REQUIRED];
+  DebugOptions debug_opts = 4;
+  // Dry run query, only takes effect in sync query API, naming DoQuery.
+  // SubmitQuery API will report an error if dry_run is set to True.
+  // Dry run only checks query syntax & CCL.
+  bool dry_run = 5;
 }
 
 message QueryResponse {
@@ -207,6 +240,14 @@ message SubmitResponse {
 message FetchResultRequest {
   // The unique identifier of the query job, obtained when SubmitQuery is called
   string job_id = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+message CancelQueryRequest {
+  string job_id = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+message CancelQueryResponse {
+  Status status = 1;
 }
 
 message CreateProjectRequest {
@@ -256,6 +297,8 @@ message ProjectDesc {
   // Creator of the Project
   string creator = 5;
   repeated string members = 6;
+  // created_at is the time the project was first created
+  google.protobuf.Timestamp created_at = 7;
 }
 
 message ArchiveProjectRequest {
@@ -266,7 +309,13 @@ message ArchiveProjectResponse {
   Status status = 1;
 }
 
-message ListInvitationsRequest {}
+message ListInvitationsRequest {
+  oneof filter {
+    InvitationStatus status = 1;
+    string inviter = 2;
+  }
+}
+
 message ListInvitationsResponse {
   Status status = 1;
   repeated ProjectInvitation invitations = 2;
@@ -319,7 +368,7 @@ message CreateTableRequest {
   message ColumnDesc {
     // Column name
     string name = 1;
-    // Column data type, maybe 'long/float/string/timestamp/datetime/...'
+    // Column data type, see Enum DataType definition in "api/v1/column.proto"
     string dtype = 2;
   }
   // Columns choosed to refer from physical table
@@ -420,13 +469,33 @@ message InviteMemberResponse {
   string invitation_code = 2;
 }
 
+message CheckAndUpdateStatusRequest {
+  // The ids of Projects to be checked and updated, if empty, all Projects
+  // will be processed
+  repeated string project_ids = 1;
+}
+message CheckAndUpdateStatusResponse {
+  Status status = 1;
+  // Valid only when status.code() == Code::PROJECT_CONFLICT
+  // maps from project_id to conflicts in the Project
+  map<string, ProjectConflict> conficts = 2;
+}
+message ProjectConflict {
+  message ConflictItem {
+    // Human-readable conflict details, e.g: "project creator is: alice in
+    // alice; bob in bob"
+    string message = 1;
+  }
+  repeated ConflictItem items = 1;
+}
+
 // InterBrokerService defines a collection of APIs which are used to communicate
 // with other p2p brokers.
 service InterBrokerService {
   // Distribute query task to other participants
   rpc DistributeQuery(DistributeQueryRequest) returns (DistributeQueryResponse);
 
-  rpc CancelQuery(CancelQueryRequest) returns (CancelQueryResponse);
+  rpc CancelQueryJob(CancelQueryJobRequest) returns (CancelQueryJobResponse);
 
   // Project related
   rpc InviteToProject(InviteToProjectRequest) returns (InviteToProjectResponse);
@@ -456,6 +525,8 @@ message DistributeQueryRequest {
   Checksum client_checksum = 9;
   Checksum server_checksum = 10;
   bool is_async = 11;
+  DebugOptions debug_opts = 12;
+  bool dry_run = 13;
 }
 
 message DistributeQueryResponse {
@@ -468,14 +539,14 @@ message DistributeQueryResponse {
   Checksum expected_server_checksum = 6;
 }
 
-message CancelQueryRequest {
+message CancelQueryJobRequest {
   PartyId client_id = 1;
   bytes signature = 2;
   string job_id = 3;
   // cancel reason
   string reason = 4;
 }
-message CancelQueryResponse {
+message CancelQueryJobResponse {
   Status status = 1;
 }
 
@@ -546,6 +617,8 @@ message ResourceSpec {
     Table = 1;
     // all ccls for specific table
     CCL = 2;
+    // all status managed by server party for specific project
+    All = 3;
   }
   ResourceKind kind = 1;
   string project_id = 2;

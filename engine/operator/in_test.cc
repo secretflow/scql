@@ -21,8 +21,7 @@
 
 #include "engine/core/tensor_from_json.h"
 #include "engine/operator/test_util.h"
-
-DECLARE_int32(psi_curve_type);
+#include "engine/util/psi_helper.h"
 
 namespace scql::engine::op {
 
@@ -30,6 +29,7 @@ struct InTestCase {
   test::NamedTensor left_input;
   test::NamedTensor right_input;
   int64_t in_algo;
+  int64_t in_type;
   std::string left_party;
   std::string right_party;
   std::string reveal_to;
@@ -59,7 +59,7 @@ INSTANTIATE_TEST_SUITE_P(
                 .right_input = test::NamedTensor(
                     "y", TensorFromJSON(arrow::int64(),
                                         "[1, 2, 3, -1, 34, 43, 99]")),
-                .in_algo = static_cast<int64_t>(In::InAlgo::kEcdhPsiIn),
+                .in_algo = static_cast<int64_t>(util::PsiAlgo::kEcdhPsi),
                 .left_party = test::kPartyAlice,
                 .right_party = test::kPartyBob,
                 .reveal_to = test::kPartyAlice,
@@ -76,7 +76,7 @@ INSTANTIATE_TEST_SUITE_P(
                     "y",
                     TensorFromJSON(arrow::large_utf8(),
                                    R"json(["C", "D", "B", "A", "G"])json")),
-                .in_algo = static_cast<int64_t>(In::InAlgo::kEcdhPsiIn),
+                .in_algo = static_cast<int64_t>(util::PsiAlgo::kEcdhPsi),
                 .left_party = test::kPartyAlice,
                 .right_party = test::kPartyBob,
                 .reveal_to = test::kPartyAlice,
@@ -91,7 +91,7 @@ INSTANTIATE_TEST_SUITE_P(
                                    R"json(["A", "E", "D", "F", "A"])json")),
                 .right_input = test::NamedTensor(
                     "y", TensorFromJSON(arrow::large_utf8(), R"json([])json")),
-                .in_algo = static_cast<int64_t>(In::InAlgo::kEcdhPsiIn),
+                .in_algo = static_cast<int64_t>(util::PsiAlgo::kEcdhPsi),
                 .left_party = test::kPartyAlice,
                 .right_party = test::kPartyBob,
                 .reveal_to = test::kPartyAlice,
@@ -107,7 +107,7 @@ INSTANTIATE_TEST_SUITE_P(
                     "y",
                     TensorFromJSON(arrow::large_utf8(),
                                    R"json(["A", "E", "D", "F", "A"])json")),
-                .in_algo = static_cast<int64_t>(In::InAlgo::kEcdhPsiIn),
+                .in_algo = static_cast<int64_t>(util::PsiAlgo::kEcdhPsi),
                 .left_party = test::kPartyAlice,
                 .right_party = test::kPartyBob,
                 .reveal_to = test::kPartyAlice,
@@ -123,7 +123,7 @@ INSTANTIATE_TEST_SUITE_P(
                 .right_input = test::NamedTensor(
                     "y", TensorFromJSON(arrow::int64(),
                                         "[1, 2, 3, -1, 34, 43, 99]")),
-                .in_algo = static_cast<int64_t>(In::InAlgo::kOprfPsiIn),
+                .in_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .left_party = test::kPartyAlice,
                 .right_party = test::kPartyBob,
                 .reveal_to = test::kPartyAlice,
@@ -141,7 +141,7 @@ INSTANTIATE_TEST_SUITE_P(
                     "y",
                     TensorFromJSON(arrow::large_utf8(),
                                    R"json(["C", "D", "B", "A", "G"])json")),
-                .in_algo = static_cast<int64_t>(In::InAlgo::kOprfPsiIn),
+                .in_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .left_party = test::kPartyAlice,
                 .right_party = test::kPartyBob,
                 .reveal_to = test::kPartyAlice,
@@ -157,7 +157,7 @@ INSTANTIATE_TEST_SUITE_P(
                                    R"json(["A", "E", "D", "F", "A"])json")),
                 .right_input = test::NamedTensor(
                     "y", TensorFromJSON(arrow::large_utf8(), R"json([])json")),
-                .in_algo = static_cast<int64_t>(In::InAlgo::kOprfPsiIn),
+                .in_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .left_party = test::kPartyAlice,
                 .right_party = test::kPartyBob,
                 .reveal_to = test::kPartyAlice,
@@ -172,7 +172,7 @@ INSTANTIATE_TEST_SUITE_P(
                     "y",
                     TensorFromJSON(arrow::large_utf8(),
                                    R"json(["A", "E", "D", "F", "A"])json")),
-                .in_algo = static_cast<int64_t>(In::InAlgo::kOprfPsiIn),
+                .in_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .left_party = test::kPartyAlice,
                 .right_party = test::kPartyBob,
                 .reveal_to = test::kPartyAlice,
@@ -188,7 +188,7 @@ INSTANTIATE_TEST_SUITE_P(
                 .right_input = test::NamedTensor(
                     "y", TensorFromJSON(arrow::int64(),
                                         "[1, 2, 3, -1, 34, 43, 99]")),
-                .in_algo = static_cast<int64_t>(In::InAlgo::kOprfPsiIn),
+                .in_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .left_party = test::kPartyAlice,
                 .right_party = test::kPartyBob,
                 .reveal_to = test::kPartyAlice,
@@ -206,7 +206,7 @@ INSTANTIATE_TEST_SUITE_P(
                     "y",
                     TensorFromJSON(arrow::large_utf8(),
                                    R"json(["C", "D", "B", "A", "G"])json")),
-                .in_algo = static_cast<int64_t>(In::InAlgo::kOprfPsiIn),
+                .in_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .left_party = test::kPartyAlice,
                 .right_party = test::kPartyBob,
                 .reveal_to = test::kPartyAlice,
@@ -222,7 +222,7 @@ INSTANTIATE_TEST_SUITE_P(
                                    R"json(["A", "E", "D", "F", "A"])json")),
                 .right_input = test::NamedTensor(
                     "y", TensorFromJSON(arrow::large_utf8(), R"json([])json")),
-                .in_algo = static_cast<int64_t>(In::InAlgo::kOprfPsiIn),
+                .in_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .left_party = test::kPartyAlice,
                 .right_party = test::kPartyBob,
                 .reveal_to = test::kPartyAlice,
@@ -237,7 +237,7 @@ INSTANTIATE_TEST_SUITE_P(
                     "y",
                     TensorFromJSON(arrow::large_utf8(),
                                    R"json(["A", "E", "D", "F", "A"])json")),
-                .in_algo = static_cast<int64_t>(In::InAlgo::kOprfPsiIn),
+                .in_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .left_party = test::kPartyAlice,
                 .right_party = test::kPartyBob,
                 .reveal_to = test::kPartyAlice,
@@ -253,7 +253,7 @@ INSTANTIATE_TEST_SUITE_P(
                 .right_input = test::NamedTensor(
                     "y", TensorFromJSON(arrow::int64(),
                                         "[1, 2, 3, -1, 34, 43, 99]")),
-                .in_algo = static_cast<int64_t>(In::InAlgo::kPsiIn),
+                .in_algo = static_cast<int64_t>(util::PsiAlgo::kAutoPsi),
                 .left_party = test::kPartyAlice,
                 .right_party = test::kPartyBob,
                 .reveal_to = test::kPartyAlice,
@@ -271,7 +271,7 @@ INSTANTIATE_TEST_SUITE_P(
                     "y",
                     TensorFromJSON(arrow::large_utf8(),
                                    R"json(["C", "D", "B", "A", "G"])json")),
-                .in_algo = static_cast<int64_t>(In::InAlgo::kPsiIn),
+                .in_algo = static_cast<int64_t>(util::PsiAlgo::kAutoPsi),
                 .left_party = test::kPartyAlice,
                 .right_party = test::kPartyBob,
                 .reveal_to = test::kPartyAlice,
@@ -287,7 +287,7 @@ INSTANTIATE_TEST_SUITE_P(
                                    R"json(["A", "E", "D", "F", "A"])json")),
                 .right_input = test::NamedTensor(
                     "y", TensorFromJSON(arrow::large_utf8(), R"json([])json")),
-                .in_algo = static_cast<int64_t>(In::InAlgo::kPsiIn),
+                .in_algo = static_cast<int64_t>(util::PsiAlgo::kAutoPsi),
                 .left_party = test::kPartyAlice,
                 .right_party = test::kPartyBob,
                 .reveal_to = test::kPartyAlice,
@@ -302,7 +302,7 @@ INSTANTIATE_TEST_SUITE_P(
                     "y",
                     TensorFromJSON(arrow::large_utf8(),
                                    R"json(["A", "E", "D", "F", "A"])json")),
-                .in_algo = static_cast<int64_t>(In::InAlgo::kPsiIn),
+                .in_algo = static_cast<int64_t>(util::PsiAlgo::kAutoPsi),
                 .left_party = test::kPartyAlice,
                 .right_party = test::kPartyBob,
                 .reveal_to = test::kPartyAlice,
@@ -316,9 +316,9 @@ TEST_P(InTest, Works) {
   auto parm = GetParam();
   auto tc = std::get<1>(parm);
   std::unordered_set<int64_t> supported_algos{
-      static_cast<int64_t>(In::InAlgo::kPsiIn),
-      static_cast<int64_t>(In::InAlgo::kOprfPsiIn),
-      static_cast<int64_t>(In::InAlgo::kEcdhPsiIn)};
+      static_cast<int64_t>(util::PsiAlgo::kAutoPsi),
+      static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
+      static_cast<int64_t>(util::PsiAlgo::kEcdhPsi)};
   if (supported_algos.count(tc.in_algo) == 0) {
     FAIL() << "In algorithm " << tc.in_algo << " not supported yet";
   }
@@ -331,7 +331,6 @@ TEST_P(InTest, Works) {
   FeedInputs({&alice_ctx, &bob_ctx}, tc);
 
   // When
-  FLAGS_psi_curve_type = psi::psi::CURVE_FOURQ;
   EXPECT_NO_THROW(test::RunAsync<In>({&alice_ctx, &bob_ctx}));
 
   // Then
@@ -364,6 +363,7 @@ pb::ExecNode InTest::MakeExecNode(const InTestCase& tc) {
 
   // set in_algo
   builder.AddInt64Attr(In::kAlgorithmAttr, tc.in_algo);
+  builder.AddInt64Attr(In::kInType, tc.in_type);
 
   // Add input left
   auto left = test::MakePrivateTensorReference(tc.left_input.name,

@@ -16,9 +16,11 @@ package constant
 
 // HTTP service paths
 const (
+	HealthPath            = "/health"
 	DoQueryPath           = "/intra/query"
 	SubmitQueryPath       = "/intra/query/submit"
 	FetchResultPath       = "/intra/query/fetch"
+	CancelQueryPath       = "/intra/query/cancel"
 	CreateProjectPath     = "/intra/project/create"
 	ListProjectsPath      = "/intra/project/list"
 	InviteMemberPath      = "/intra/member/invite"
@@ -37,5 +39,6 @@ const (
 	SyncInfoPath        = "/inter/info/sync"
 	AskInfoPath         = "/inter/info/ask"
 	DistributeQueryPath = "/inter/query/distribute"
+	CancelQueryJobPath  = "/inter/query/cancel"
 	ExchangeJobInfoPath = "/inter/job/exchange"
 )

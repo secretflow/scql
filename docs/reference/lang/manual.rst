@@ -97,7 +97,15 @@ It is compatible with most MySQL DQL syntax. For syntax differences between SCQL
         INTO OUTFILE PARTY_CODE 'party_code' 'file_path' [export_options]
 
     export_options:
-        FIELDS TERMINATED BY 'terminal_character'
+        [FIELDS | COLUMNS
+            [TERMINATED BY 'terminal_character']
+            [[OPTIONALLY] ENCLOSED BY 'enclosing_character']
+        ]
+        [LINES TERMINATED BY 'terminal_string']
+
+.. note::
+   SCQL support ``export_options`` with limitations: only support '"' or '' for **enclosing_character**; **ESCAPED BY** is not supported.
+   **OPTIONALLY** in ``export_options`` controls quoting of fields, if omitted all fields are enclosed by the **enclosing_character**, otherwise only string fields are enclosed. see `mysql load data`_
 
 
 
@@ -105,3 +113,5 @@ Functions and Operators
 -----------------------
 
 .. todo:: this part is not ready, please check later
+
+.. _mysql load data: https://dev.mysql.com/doc/refman/8.0/en/load-data.html

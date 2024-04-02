@@ -62,6 +62,19 @@ class ReduceSum : public ReduceBase {
   ReduceFn GetReduceFn(spu::SPUContext* sctx) override;
 };
 
+class ReduceCount : public ReduceBase {
+ public:
+  static const std::string kOpType;
+
+  const std::string& Type() const override;
+
+ protected:
+  std::string GetArrowFunName() override { return "count"; }
+
+  spu::Value GetInitValue(spu::SPUContext* sctx) override;
+  ReduceFn GetReduceFn(spu::SPUContext* sctx) override;
+};
+
 class ReduceAvg : public ReduceBase {
  public:
   static const std::string kOpType;

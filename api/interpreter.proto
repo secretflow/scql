@@ -84,15 +84,29 @@ message ColumnDesc {
   string type = 2;
 }
 
+enum PsiAlgorithmType {
+  // auto means choosing psi type by engine
+  AUTO = 0;
+  ECDH = 1;
+  OPRF = 2;
+}
+
+message OptimizerHints {
+  // auto means choosing psi type by engine
+  PsiAlgorithmType psi_algorithm_type = 1;
+}
+
 message CompileOptions {
   spu.RuntimeConfig spu_conf = 1;
   SecurityCompromiseConfig security_compromise = 2;
   // dump execution graph in graphviz dot format
   bool dump_exe_graph = 3;
+  OptimizerHints optimizer_hints = 4;
 }
 
 message SecurityCompromiseConfig {
   bool reveal_group_mark = 1;
+  uint64 group_by_threshold = 2;
 }
 
 message Catalog {

@@ -64,7 +64,7 @@ TEST_F(AuditLogTest, RecordSqlNodeDetail) {
   header->set_session_id("a0b72d96-f305-11ed-833c-0242c0a82005");
   header->mutable_time()->set_seconds(1664589600);
   auto *detail = audit.mutable_body()->mutable_sql_detail();
-  detail->mutable_query()->append("select plain_long_0 from scdb.alice_tbl_1s");
+  detail->mutable_query()->append("select plain_int_0 from scdb.alice_tbl_1s");
   detail->set_node_name("runsql.0");
   detail->set_num_rows(10);
   detail->set_num_columns(100);
@@ -82,54 +82,11 @@ TEST_F(AuditLogTest, RecordSqlNodeDetail) {
       "{\"header\":{\"status\":{\"code\":0,\"message\":\"\",\"details\":[]},"
       "\"event_name\":\"SQL_DETAIL\",\"session_id\":\"a0b72d96-f305-11ed-"
       "833c-0242c0a82005\",\"time\":\"2022-10-01T02:00:00Z\"},\"body\":{\"sql_"
-      "detail\":{\"node_name\":\"runsql.0\",\"query\":\"select plain_long_0 "
+      "detail\":{\"node_name\":\"runsql.0\",\"query\":\"select plain_int_0 "
       "from "
       "scdb.alice_tbl_1s\",\"num_rows\":\"10\",\"num_columns\":\"100\",\"cost_"
       "time\":\"20000\"}}}";
   ASSERT_EQ(actual, expected);
-}
-
-TEST_F(AuditLogTest, RunSubDagEvent) {
-  AuditLog exceptedAudit;
-  auto *header = exceptedAudit.mutable_header();
-  header->mutable_status()->set_code(0);
-  header->set_event_name(::audit::pb::RUN_SUB_DAG);
-  header->set_session_id("a0b72d96-f305-11ed-833c-0242c0a82005");
-  header->mutable_time()->set_seconds(1664589600);
-
-  auto *body = exceptedAudit.mutable_body()->mutable_run_dag();
-  body->set_dag_id(2);
-  ::audit::pb::NodeInfo node_info;
-
-  node_info.set_name("join.2");
-
-  ::google::protobuf::Map<std::string, ::audit::pb::strings> input_info;
-  input_info["Left"].add_ss("demo.tb.id.4");
-  input_info["Right"].add_ss("demo.tb.id.0");
-  ::google::protobuf::Map<std::string, ::audit::pb::strings> output_info;
-  output_info["LeftJoinIndex"].add_ss("demo.tb.id.7");
-  output_info["RightJoinIndex"].add_ss("demo.tb.id.8");
-
-  node_info.mutable_inputs()->swap(input_info);
-  node_info.mutable_outputs()->swap(output_info);
-
-  body->add_node_list()->CopyFrom(node_info);
-
-  RecordAudit(exceptedAudit);
-  std::ifstream log_file;
-  log_file.open(default_file_name_, std::ios::in);
-  ASSERT_TRUE(log_file.is_open());
-  std::string log_str;
-  getline(log_file, log_str);
-  log_file.close();
-
-  AuditLog actualAudit;
-  auto status =
-      ::google::protobuf::util::JsonStringToMessage(log_str, &actualAudit);
-  ASSERT_TRUE(status.ok());
-
-  ASSERT_TRUE(::google::protobuf::util::MessageDifferencer::Equals(
-      actualAudit, exceptedAudit));
 }
 
 }  // namespace scql::engine::audit

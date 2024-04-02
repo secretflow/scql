@@ -33,40 +33,54 @@ const (
 )
 
 var allTables = []interface{}{&Member{}, &Project{}, &Table{}, &Column{}, &ColumnPriv{}, &Invitation{}}
+var sessionTables = []interface{}{&SessionInfo{}, &SessionResult{}, &Lock{}}
 
 type MetaManager struct {
 	// for now, no cache, all info store in db
-	db *gorm.DB
+	db             *gorm.DB
+	persistSession bool
 }
 
-func NewMetaManager(db *gorm.DB) *MetaManager {
+func NewMetaManager(db *gorm.DB, ps bool) *MetaManager {
 	return &MetaManager{
-		db: db,
+		db:             db,
+		persistSession: ps,
 	}
+}
+
+func (manager *MetaManager) tables() []interface{} {
+	tables := allTables
+	if manager.persistSession {
+		tables = append(tables, sessionTables...)
+	}
+	return tables
 }
 
 // NeedBootstrap checks if the store is empty
 func (manager *MetaManager) NeedBootstrap() bool {
-	for _, tn := range allTables {
+	for _, tn := range manager.tables() {
 		if manager.db.Migrator().HasTable(tn) {
 			return false
 		}
 	}
+
 	return true
 }
 
 // Bootstrap init db
 func (manager *MetaManager) Bootstrap() error {
+	logrus.Infof("migrate tables: %+v", allTables...)
 	// Migrate the schemas
-	if err := manager.db.AutoMigrate(allTables...); err != nil {
+	if err := manager.db.AutoMigrate(manager.tables()...); err != nil {
 		return err
 	}
+
 	return nil
 }
 
 // drop db for tests
 func (manager *MetaManager) DropTables() error {
-	if err := manager.db.Migrator().DropTable(allTables...); err != nil {
+	if err := manager.db.Migrator().DropTable(manager.tables()...); err != nil {
 		return err
 	}
 	return nil
@@ -116,6 +130,9 @@ type MetaTransaction struct {
 func (t *MetaTransaction) Finish(err error) error {
 	if err == nil {
 		result := t.db.Commit()
+		if result.Error != nil {
+			logrus.Errorf("commit failed: %s", result.Error)
+		}
 		return result.Error
 	} else {
 		result := t.db.Rollback()
@@ -243,10 +260,17 @@ func (t *MetaTransaction) ListInvitations() ([]Invitation, error) {
 	return invitations, result.Error
 }
 
-func (t *MetaTransaction) GetInvitationsBy(projectID, inviter, invitee string) ([]Invitation, error) {
-	var invitations []Invitation
-	result := t.db.Model(&Invitation{}).Where(&Invitation{ProjectID: projectID, Inviter: inviter, Invitee: invitee}).Scan(invitations)
-	return invitations, result.Error
+// Note: because undecided status is zero, gorm will ignore it, so if select undecided invitations, set selectUnDecidedStatus true
+func (t *MetaTransaction) GetInvitationsBy(invitation Invitation, selectUnDecidedStatus bool) (invitations []Invitation, err error) {
+	if selectUnDecidedStatus {
+		invitation.Status = int8(pb.InvitationStatus_UNDECIDED)
+		result := t.db.Model(&Invitation{}).Where(&invitation).Where(map[string]interface{}{"status": pb.InvitationStatus_UNDECIDED}).Scan(&invitations)
+		err = result.Error
+	} else {
+		result := t.db.Model(&Invitation{}).Where(&invitation).Scan(&invitations)
+		err = result.Error
+	}
+	return
 }
 
 func (t *MetaTransaction) GetUnhandledInvitationWithID(invitationID uint64) (Invitation, error) {
@@ -344,10 +368,6 @@ type tableColumn struct {
 	DType      string `gorm:"column:data_type"`
 }
 
-func (t *MetaTransaction) ListTables(projectID string) ([]TableMeta, error) {
-	return t.GetTableMetasByTableNames(projectID, []string{})
-}
-
 func (t *MetaTransaction) ListDedupTableOwners(projectID string, tableNames []string) ([]string, error) {
 	var owners []string
 	result := t.db.Model(&Table{}).Select("owner").Where("project_id = ?", projectID).Where("table_name IN ?", tableNames).Scan(&owners)
@@ -359,16 +379,16 @@ func (t *MetaTransaction) ListDedupTableOwners(projectID string, tableNames []st
 
 // if len(tableNames) == 0 return all tables
 // return err if ANY table DOESN'T exist
-func (t *MetaTransaction) GetTableMetasByTableNames(projectID string, tableNames []string) ([]TableMeta, error) {
+func (t *MetaTransaction) GetTableMetasByTableNames(projectID string, tableNames []string) (tableMetas []TableMeta, notFoundTables []string, err error) {
 	var tableColumns []tableColumn
-	// SELECT tables.table_name, tables.ref_table, tables.db_type, tables.owner, columns.column_name, columns.data_type FROM `tables` join columns on tables.project_id = columns.project_id
-	result := t.db.Model(&Table{}).Select("tables.table_name, tables.ref_table, tables.db_type, tables.owner, columns.column_name, columns.data_type").Joins("join columns on tables.project_id = columns.project_id").Where("columns.project_id = ?", projectID).Where("columns.table_name = tables.table_name")
+	// SELECT tables.table_name, tables.ref_table, tables.db_type, tables.owner, columns.column_name, columns.data_type FROM `tables` join columns on tables.project_id = columns.project_id and tables.table_name = columns.table_name where columns.project_id = ?
+	result := t.db.Model(&Table{}).Select("tables.table_name, tables.ref_table, tables.db_type, tables.owner, columns.column_name, columns.data_type").Joins("join columns on tables.project_id = columns.project_id and tables.table_name = columns.table_name").Where("columns.project_id = ?", projectID)
 	if len(tableNames) != 0 {
 		result = result.Where("tables.table_name in ?", tableNames)
 	}
 	result = result.Scan(&tableColumns)
 	if result.Error != nil {
-		return nil, result.Error
+		return nil, nil, result.Error
 	}
 	// fill columns into TableMeta
 	tableMap := map[string]*TableMeta{}
@@ -381,28 +401,30 @@ func (t *MetaTransaction) GetTableMetasByTableNames(projectID string, tableNames
 		columnMeta := ColumnMeta{ColumnName: tableCol.ColumnName, DType: tableCol.DType}
 		tableMeta.Columns = append(tableMeta.Columns, columnMeta)
 	}
+	for _, tableName := range sliceutil.SortMapKeyForDeterminism(tableMap) {
+		tableMetas = append(tableMetas, *tableMap[tableName])
+	}
 	// check table exist
 	for _, tableName := range tableNames {
 		_, exist := tableMap[tableName]
 		if !exist {
-			return nil, fmt.Errorf("table %s not found", tableName)
+			logrus.Warningf("table %s not found", tableName)
+			notFoundTables = append(notFoundTables, tableName)
 		}
 	}
-	var tableMetas []TableMeta
-	for _, tableName := range sliceutil.SortMapKeyForDeterminism(tableMap) {
-		tableMetas = append(tableMetas, *tableMap[tableName])
-	}
-	return tableMetas, nil
+	return
 }
 
-// return false if one of table names does NOT exist
-func (t *MetaTransaction) CheckTablesExist(projectID string, tableNames []string) (bool, error) {
-	var existTblNames []string
-	result := t.db.Model(&Table{}).Select("tables.table_name").Where("tables.project_id = ?", projectID).Where("tables.table_name in ?", tableNames).Scan(&existTblNames)
+func (t *MetaTransaction) GetTables(projectID string, tableNames []string) (tables []Table, allTableExist bool, err error) {
+	result := t.db.Model(&Table{}).Select("tables.table_name").Where("tables.project_id = ?", projectID).Where("tables.table_name in ?", tableNames).Scan(&tables)
 	if result.Error != nil {
-		return false, result.Error
+		return nil, false, result.Error
 	}
-	return sliceutil.ContainsAll(existTblNames, tableNames), nil
+	allTableExist = true
+	if len(tables) != len(tableNames) {
+		allTableExist = false
+	}
+	return tables, allTableExist, nil
 }
 
 func (t *MetaTransaction) GrantColumnConstraints(privs []ColumnPriv) error {
@@ -452,4 +474,37 @@ func (t *MetaTransaction) ListColumnConstraints(projectID string, tableNames []s
 	}
 	result.Scan(&privs)
 	return privs, result.Error
+}
+
+type ProjectMeta struct {
+	// TODO: add project info later
+	// proj   Project
+	Tables []TableMeta
+	CCLs   []ColumnPriv
+}
+
+// return all tables and ccls for the given project if tableNames and cclDestParties are nil
+func (t *MetaTransaction) GetProjectMeta(projectID string, tableNames []string, cclDestParties []string, owner string) (*ProjectMeta, error) {
+	var meta ProjectMeta
+	tables, _, err := t.GetTableMetasByTableNames(projectID, tableNames)
+	if err != nil {
+		return nil, err
+	}
+	var ownedTableNames []string
+	for _, table := range tables {
+		if table.Table.Owner == owner {
+			ownedTableNames = append(ownedTableNames, table.Table.TableName)
+			meta.Tables = append(meta.Tables, table)
+		}
+	}
+	// if no table in tableNames is owned by current party, just return empty meta
+	if len(tableNames) > 0 && len(ownedTableNames) == 0 {
+		return &meta, nil
+	}
+	ccls, err := t.ListColumnConstraints(projectID, ownedTableNames, cclDestParties)
+	if err != nil {
+		return nil, err
+	}
+	meta.CCLs = ccls
+	return &meta, nil
 }

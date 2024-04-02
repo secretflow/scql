@@ -58,4 +58,5 @@ func init() {
 	rootCmd.AddCommand(grantCmd)
 	rootCmd.AddCommand(revokeCmd)
 	rootCmd.AddCommand(runCmd)
+	rootCmd.AddCommand(cancelCmd)
 }

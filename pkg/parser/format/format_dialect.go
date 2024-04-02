@@ -20,6 +20,8 @@ import (
 	"github.com/secretflow/scql/pkg/parser/mysql"
 )
 
+const maxCSVDecimalWidth = 38
+
 var (
 	_ Dialect = &MySQLDialect{}
 	_ Dialect = &TiDBDialect{}
@@ -37,6 +39,7 @@ type Dialect interface {
 	// please use the original name directly; otherwise, please call this function.
 	// Of course, you can also override the differences in function names of different backend databases within this function.
 	GetSpecialFuncName(string) string
+	GetOperator(string) string
 }
 
 func NewMySQLDialect() Dialect {
@@ -53,7 +56,7 @@ func (d *MySQLDialect) SkipSchemaInColName() bool {
 func (d *MySQLDialect) ConvertCastTypeToString(asType byte, flen int, decimal int, flag uint) (keyword string, plainWord string, err error) {
 	unspecifiedLength := -1
 	switch asType {
-	case mysql.TypeVarString:
+	case mysql.TypeVarString, mysql.TypeVarchar:
 		keyword = "CHAR"
 		if flen != unspecifiedLength {
 			plainWord = fmt.Sprintf("(%d)", flen)
@@ -102,6 +105,10 @@ func (d *MySQLDialect) GetSpecialFuncName(originName string) string {
 	return originName
 }
 
+func (d *MySQLDialect) GetOperator(op string) string {
+	return op
+}
+
 type TiDBDialect struct {
 	MySQLDialect
 }
@@ -121,7 +128,7 @@ func (d *TiDBDialect) SkipSchemaInColName() bool {
 func (d *TiDBDialect) ConvertCastTypeToString(asType byte, flen int, decimal int, flag uint) (keyword string, plainWord string, err error) {
 	unspecifiedLength := -1
 	switch asType {
-	case mysql.TypeVarString:
+	case mysql.TypeVarString, mysql.TypeVarchar:
 		keyword = "CHAR"
 		if flen != unspecifiedLength {
 			plainWord = fmt.Sprintf("(%d)", flen)
@@ -166,12 +173,12 @@ func (d *TiDBDialect) ConvertCastTypeToString(asType byte, flen int, decimal int
 
 type PostgresDialect struct {
 	MySQLDialect
-	FuncNameMap map[string]string
+	funcNameMap map[string]string
 }
 
 func NewPostgresDialect() Dialect {
 	return &PostgresDialect{
-		FuncNameMap: map[string]string{
+		funcNameMap: map[string]string{
 			// don't use package ast here, may cause circle dependency
 			"ifnull":   "coalesce",
 			"truncate": "trunc",
@@ -179,6 +186,7 @@ func NewPostgresDialect() Dialect {
 			"adddate":  "+",
 			"subdate":  "-",
 			"datediff": "-",
+			"intdiv":   "div",
 		},
 	}
 }
@@ -208,7 +216,7 @@ func (d *PostgresDialect) SkipSchemaInColName() bool {
 }
 
 func (d *PostgresDialect) GetSpecialFuncName(originName string) string {
-	if res, ok := d.FuncNameMap[originName]; ok {
+	if res, ok := d.funcNameMap[originName]; ok {
 		return res
 	}
 	return originName
@@ -216,12 +224,13 @@ func (d *PostgresDialect) GetSpecialFuncName(originName string) string {
 
 type CVSDBDialect struct {
 	PostgresDialect
-	FuncNameMap map[string]string
+	funcNameMap map[string]string
+	operatorMap map[string]string
 }
 
 func NewCVSDBDialect() Dialect {
 	return &CVSDBDialect{
-		FuncNameMap: map[string]string{
+		funcNameMap: map[string]string{
 			// don't use package ast here, may cause circle dependency
 			"ifnull":   "coalesce",
 			"truncate": "trunc",
@@ -231,11 +240,29 @@ func NewCVSDBDialect() Dialect {
 			"subdate":  "-",
 			"datediff": "-",
 		},
+		operatorMap: map[string]string{
+			// ref to https://duckdb.org/docs/archive/0.9/sql/functions/numeric
+			" DIV ": " // ",
+		},
 	}
 }
 
 func (d *CVSDBDialect) ConvertCastTypeToString(asType byte, flen int, decimal int, flag uint) (keyword string, plainWord string, err error) {
-	return d.PostgresDialect.ConvertCastTypeToString(asType, flen, decimal, flag)
+	switch asType {
+	case mysql.TypeNewDecimal:
+		keyword = "NUMERIC"
+		// ref: https://github.com/duckdb/duckdb/blob/v0.9.2/src/parser/transform/helpers/transform_typename.cpp#L167
+		if flen <= maxCSVDecimalWidth {
+			if flen > 0 && decimal > 0 {
+				plainWord = fmt.Sprintf("(%d, %d)", flen, decimal)
+			} else if flen > 0 {
+				plainWord = fmt.Sprintf("(%d)", flen)
+			}
+		}
+	default:
+		return d.PostgresDialect.ConvertCastTypeToString(asType, flen, decimal, flag)
+	}
+	return
 }
 
 func (d *CVSDBDialect) SkipSchemaInColName() bool {
@@ -243,7 +270,14 @@ func (d *CVSDBDialect) SkipSchemaInColName() bool {
 }
 
 func (d *CVSDBDialect) GetSpecialFuncName(originName string) string {
-	if res, ok := d.FuncNameMap[originName]; ok {
+	if res, ok := d.funcNameMap[originName]; ok {
+		return res
+	}
+	return originName
+}
+
+func (d *CVSDBDialect) GetOperator(originName string) string {
+	if res, ok := d.operatorMap[originName]; ok {
 		return res
 	}
 	return originName
@@ -251,12 +285,12 @@ func (d *CVSDBDialect) GetSpecialFuncName(originName string) string {
 
 type OdpsDialect struct {
 	MySQLDialect
-	FuncNameMap map[string]string
+	funcNameMap map[string]string
 }
 
 func NewOdpsDialect() Dialect {
 	return &OdpsDialect{
-		FuncNameMap: map[string]string{
+		funcNameMap: map[string]string{
 			"truncate": "trunc",
 			"ifnull":   "nvl",
 		},
@@ -268,7 +302,7 @@ func (d *OdpsDialect) SkipSchemaInColName() bool {
 }
 
 func (d *OdpsDialect) GetSpecialFuncName(originName string) string {
-	if res, ok := d.FuncNameMap[originName]; ok {
+	if res, ok := d.funcNameMap[originName]; ok {
 		return res
 	}
 	return originName
@@ -276,7 +310,7 @@ func (d *OdpsDialect) GetSpecialFuncName(originName string) string {
 
 func (d *OdpsDialect) ConvertCastTypeToString(asType byte, flen int, decimal int, flag uint) (keyword string, plainWord string, err error) {
 	switch asType {
-	case mysql.TypeVarString:
+	case mysql.TypeVarString, mysql.TypeVarchar:
 		keyword = "STRING"
 	case mysql.TypeNewDecimal:
 		// odps don't support decimal, so we use double replace decimal(xx,xx)

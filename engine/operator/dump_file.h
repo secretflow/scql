@@ -26,7 +26,13 @@ class DumpFile : public Operator {
   static constexpr char kIn[] = "In";
   static constexpr char kOut[] = "Out";
   static constexpr char kFilePathAttr[] = "file_path";
-  static constexpr char kDeliminatorAttr[] = "deliminator";
+  static constexpr char kLineTerminatorAttr[] = "line_terminator";
+  static constexpr char kFieldDeliminatorAttr[] = "field_deliminator";
+  static constexpr char kQuotingStyleAttr[] = "quoting_style";
+
+  static constexpr int64_t kQuotingNone = 0;
+  static constexpr int64_t kQuotingNeeded = 1;
+  static constexpr int64_t kQuotingAllValid = 2;
 
   const std::string& Type() const override;
 

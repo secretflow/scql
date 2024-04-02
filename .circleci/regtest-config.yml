@@ -52,7 +52,7 @@ jobs:
             cp docker/scql-ubuntu.Dockerfile image
             docker run -d -it --name scql-dev -v $(pwd):/home/admin/dev/ -w /home/admin/dev --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --cap-add=NET_ADMIN --privileged=true --entrypoint=bash secretflow/scql-ci:latest
             docker exec -it scql-dev bash -c "make && bazel build //engine/exe:scqlengine -c opt --ui_event_filters=-info,-debug,-warning" 
-            
+
             MACHINE_TYPE=`arch`
             if [ ${MACHINE_TYPE} == 'x86_64' ]; then
               mkdir -p image/linux/amd64
@@ -79,7 +79,7 @@ jobs:
               docker buildx build --platform linux/amd64 -f scql-ubuntu.Dockerfile -t scql:latest .
             else
               docker buildx build --platform linux/arm64 -f scql-ubuntu.Dockerfile -t scql:latest .
-            fi   
+            fi
       - run:
           name: "Deploy image"
           command: |

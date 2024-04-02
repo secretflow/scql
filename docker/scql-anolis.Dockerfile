@@ -47,4 +47,6 @@ RUN go install github.com/go-delve/delve/cmd/dlv@latest
 # Add GOPATH to PATH
 ENV PATH="${PATH}:/root/go/bin"
 
+RUN yum install -y jq mysql
+
 FROM base as image-prod

@@ -77,7 +77,7 @@ class EngineServiceImpl : public pb::SCQLEngineService {
  private:
   const EngineServiceOptions service_options_;
   std::unique_ptr<SessionManager> session_mgr_;
-  // thread pool to run RunDag tasks.
+  // thread pool to run async tasks.
   yacl::ThreadPool worker_pool_;
 
   ChannelManager* channel_manager_;

@@ -45,7 +45,7 @@ func TestNewConfig(t *testing.T) {
 		LogLevel:                     "debug",
 		PartyCode:                    "alice",
 		PartyInfoFile:                "../testdata/party_info.json",
-		PrivatePemPath:               "../testdata/private_key_alice.pem",
+		PrivateKeyPath:               "../testdata/private_key_alice.pem",
 		SessionExpireTime:            24 * time.Hour,
 		SessionCheckInterval:         1 * time.Minute,
 		ExchangeJobInfoRetryTimes:    2,
@@ -55,6 +55,11 @@ func TestNewConfig(t *testing.T) {
 			Protocol:      "http",
 			ContentType:   "application/json",
 			Uris:          []EngineUri{{ForPeer: "alice.com", ForSelf: "alice.com"}},
+			KusciaSchedulerOption: &KusciaSchedulerConf{
+				MaxPollTimes: 20,
+				MaxWaitTime:  time.Minute,
+				PollInterval: time.Second,
+			},
 		},
 		Storage: StorageConf{
 			Type:            "mysql",

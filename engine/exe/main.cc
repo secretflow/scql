@@ -12,9 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <memory>
+
 #include "absl/debugging/failure_signal_handler.h"
 #include "absl/debugging/symbolize.h"
 #include "brpc/server.h"
+#include "butil/file_util.h"
 #include "gflags/gflags.h"
 
 #include "engine/audit/audit_log.h"
@@ -22,6 +25,7 @@
 #include "engine/datasource/datasource_adaptor_mgr.h"
 #include "engine/datasource/embed_router.h"
 #include "engine/datasource/http_router.h"
+#include "engine/datasource/kuscia_datamesh_router.h"
 #include "engine/exe/version.h"
 #include "engine/framework/session.h"
 #include "engine/link/mux_link_factory.h"
@@ -29,9 +33,14 @@
 #include "engine/link/rpc_helper.h"
 #include "engine/services/engine_service_impl.h"
 #include "engine/services/error_collector_service_impl.h"
+#include "engine/services/prometheus_service_impl.h"
 #include "engine/util/logging.h"
+#include "engine/util/prometheus_monitor.h"
 
 // Log flags
+DEFINE_string(
+    log_level, "info",
+    "log level, can be trace, debug, info, warning, error, critical, off");
 DEFINE_string(log_dir, "logs", "log directory");
 DEFINE_bool(log_enable_console_logger, true,
             "whether logging to stdout while logging to file");
@@ -46,6 +55,7 @@ DEFINE_int32(audit_max_files, 180,
 // Brpc channel flags for peer engine.
 DEFINE_string(peer_engine_protocol, "baidu_std", "rpc protocol");
 DEFINE_string(peer_engine_connection_type, "single", "connection type");
+DEFINE_string(peer_engine_load_balancer, "", "load balancer: \"rr\" or empty");
 DEFINE_int32(peer_engine_timeout_ms, 300000, "rpc timeout in milliseconds.");
 DEFINE_int32(peer_engine_max_retry, 3,
              "rpc max retries(not including the first rpc)");
@@ -66,9 +76,12 @@ DEFINE_int32(
 // bandwidth and send speed
 DEFINE_int32(link_chunked_send_parallel_size, 1,
              "parallel size when send chunked value");
+DEFINE_int32(http_max_payload_size, 1024 * 1024,
+             "max payload to decide whether to send value chunked, default 1M");
 // Brpc channel flags for driver(SCDB, SCQLBroker...)
 DEFINE_string(driver_protocol, "http:proto", "rpc protocol");
 DEFINE_string(driver_connection_type, "pooled", "connection type");
+DEFINE_string(driver_load_balancer, "", "load balancer: \"rr\" or empty");
 DEFINE_int32(driver_timeout_ms, 5000, "rpc timeout in milliseconds.");
 DEFINE_int32(driver_max_retry, 3,
              "rpc max retries(not including the first rpc)");
@@ -104,11 +117,19 @@ DEFINE_int32(session_timeout_s, 1800,
              "the specific tasks.");
 // DataBase connection flags.
 DEFINE_string(datasource_router, "embed",
-              "datasource router type: embed | http");
+              "datasource router type: embed | http | kusciadatamesh");
 DEFINE_string(
     embed_router_conf, "",
     R"text(configuration for embed router in json format. For example: --embed_router_conf={"datasources":[{"id":"ds001","name":"mysql db","kind":"MYSQL","connection_str":"host=127.0.0.1 db=test user=root password='qwerty'"}],"rules":[{"db":"*","table":"*","datasource_id":"ds001"}]} )text");
 DEFINE_string(http_router_endpoint, "", "http datasource router endpoint url");
+DEFINE_string(kuscia_datamesh_endpoint, "datamesh:8071",
+              "kuscia datamesh grpc endpoint");
+DEFINE_string(kuscia_datamesh_client_key_path, "",
+              "kuscia datamesh client key file");
+DEFINE_string(kuscia_datamesh_client_cert_path, "",
+              "kuscia datamesh client cert file");
+DEFINE_string(kuscia_datamesh_cacert_path, "",
+              "kuscia datamesh server cacert file");
 DEFINE_string(db_connection_info, "",
               "connection string used to connect to mysql...");
 // Party authentication flags
@@ -119,31 +140,41 @@ DEFINE_bool(enable_peer_auth, true,
             "whether enable peer parties identity authentication");
 DEFINE_string(authorized_profile_path, "",
               "path to authorized profile, in json format");
+DEFINE_bool(enable_psi_detail_logger, false, "whether enable detail log");
+DEFINE_string(psi_detail_logger_dir, "logs/detail", "log dir");
+
+grpc::SslCredentialsOptions LoadSslCredentialsOptions(
+    const std::string& key_file, const std::string& cert_file,
+    const std::string& cacert_file);
 
 void AddChannelOptions(scql::engine::ChannelManager* channel_manager) {
   // PeerEngine Options
   {
-    brpc::ChannelOptions options;
-    options.protocol = FLAGS_peer_engine_protocol;
-    options.connection_type = FLAGS_peer_engine_connection_type;
-    options.timeout_ms = FLAGS_peer_engine_timeout_ms;
+    brpc::ChannelOptions brpc_options;
+    brpc_options.protocol = FLAGS_peer_engine_protocol;
+    brpc_options.connection_type = FLAGS_peer_engine_connection_type;
+    brpc_options.timeout_ms = FLAGS_peer_engine_timeout_ms;
 
     if (FLAGS_peer_engine_enable_ssl_as_client) {
-      options.mutable_ssl_options()->ciphers = "";
+      brpc_options.mutable_ssl_options()->ciphers = "";
       if (FLAGS_peer_engine_enable_ssl_client_verification) {
         if (FLAGS_peer_engine_ssl_client_ca_certificate.empty()) {
           SPDLOG_WARN("peer_engine_ssl_client_ca_certificate is empty");
         }
         // All certificate are directly signed by our CA, depth = 1 is enough.
-        options.mutable_ssl_options()->verify.verify_depth = 1;
-        options.mutable_ssl_options()->verify.ca_file_path =
+        brpc_options.mutable_ssl_options()->verify.verify_depth = 1;
+        brpc_options.mutable_ssl_options()->verify.ca_file_path =
             FLAGS_peer_engine_ssl_client_ca_certificate;
       }
     }
 
     if (FLAGS_enable_client_authorization) {
-      options.auth = scql::engine::DefaultAuthenticator();
+      brpc_options.auth = scql::engine::DefaultAuthenticator();
     }
+
+    scql::engine::ChannelOptions options;
+    options.brpc_options = brpc_options;
+    options.load_balancer = FLAGS_peer_engine_load_balancer;
 
     channel_manager->AddChannelOptions(scql::engine::RemoteRole::PeerEngine,
                                        options);
@@ -151,20 +182,24 @@ void AddChannelOptions(scql::engine::ChannelManager* channel_manager) {
 
   // Driver Options
   {
-    brpc::ChannelOptions options;
-    options.protocol = FLAGS_driver_protocol;
-    options.connection_type = FLAGS_driver_connection_type;
-    options.timeout_ms = FLAGS_driver_timeout_ms;
-    options.max_retry = FLAGS_driver_max_retry;
+    brpc::ChannelOptions brpc_options;
+    brpc_options.protocol = FLAGS_driver_protocol;
+    brpc_options.connection_type = FLAGS_driver_connection_type;
+    brpc_options.timeout_ms = FLAGS_driver_timeout_ms;
+    brpc_options.max_retry = FLAGS_driver_max_retry;
 
     if (FLAGS_driver_enable_ssl_as_client) {
-      options.mutable_ssl_options()->ciphers = "";
+      brpc_options.mutable_ssl_options()->ciphers = "";
       if (FLAGS_driver_enable_ssl_client_verification) {
-        options.mutable_ssl_options()->verify.verify_depth = 1;
-        options.mutable_ssl_options()->verify.ca_file_path =
+        brpc_options.mutable_ssl_options()->verify.verify_depth = 1;
+        brpc_options.mutable_ssl_options()->verify.ca_file_path =
             FLAGS_driver_ssl_client_ca_certificate;
       }
     }
+
+    scql::engine::ChannelOptions options;
+    options.brpc_options = brpc_options;
+    options.load_balancer = FLAGS_driver_load_balancer;
 
     channel_manager->AddChannelOptions(scql::engine::RemoteRole::Driver,
                                        options);
@@ -200,6 +235,15 @@ std::unique_ptr<scql::engine::Router> BuildRouter() {
     scql::engine::HttpRouterOptions options;
     options.endpoint = FLAGS_http_router_endpoint;
     return std::make_unique<scql::engine::HttpRouter>(options);
+  } else if (FLAGS_datasource_router == "kusciadatamesh") {
+    auto ssl_opts =
+        LoadSslCredentialsOptions(FLAGS_kuscia_datamesh_client_key_path,
+                                  FLAGS_kuscia_datamesh_client_cert_path,
+                                  FLAGS_kuscia_datamesh_cacert_path);
+    auto channel_creds = grpc::SslCredentials(ssl_opts);
+    return std::make_unique<scql::engine::KusciaDataMeshRouter>(
+        FLAGS_kuscia_datamesh_endpoint, channel_creds);
+
   } else {
     SPDLOG_ERROR("Fail to build router, unsupported datasource router type={}",
                  FLAGS_datasource_router);
@@ -238,6 +282,9 @@ std::unique_ptr<scql::engine::EngineServiceImpl> BuildEngineService(
     session_opt.link_chunked_send_parallel_size =
         FLAGS_link_chunked_send_parallel_size;
   }
+  if (FLAGS_http_max_payload_size > 0) {
+    session_opt.http_max_payload_size = FLAGS_http_max_payload_size;
+  }
   // NOTE: use yacl retry options to replace brpc retry policy
   yacl::link::RetryOptions retry_opt;
   retry_opt.max_retry = FLAGS_peer_engine_max_retry;
@@ -260,6 +307,12 @@ std::unique_ptr<scql::engine::EngineServiceImpl> BuildEngineService(
                            brpc::Errno::EOVERCROWDED,
                            brpc::Errno::EH2RUNOUTSTREAMS};
   session_opt.link_retry_options = retry_opt;
+  scql::engine::util::LogOptions opts;
+  if (FLAGS_enable_psi_detail_logger) {
+    opts.enable_psi_detail_logger = true;
+    opts.log_dir = FLAGS_psi_detail_logger_dir;
+  }
+  session_opt.log_options = opts;
   auto session_manager = std::make_unique<scql::engine::SessionManager>(
       session_opt, listener_manager, std::move(link_factory),
       std::move(ds_router), std::move(ds_mgr), FLAGS_session_timeout_s);
@@ -312,6 +365,7 @@ int main(int argc, char* argv[]) {
   try {
     scql::engine::util::LogOptions opts;
     opts.log_dir = FLAGS_log_dir;
+    opts.log_level = FLAGS_log_level;
     if (FLAGS_log_enable_console_logger) {
       opts.enable_console_logger = true;
     }
@@ -379,6 +433,16 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
+  scql::engine::MetricsService metrics_exposer;
+  metrics_exposer.RegisterCollectable(
+      scql::engine::util::PrometheusMonitor::GetInstance()->GetRegistry());
+  SPDLOG_INFO("Adding MetricsService into brpc server");
+  if (server.AddService(&metrics_exposer, brpc::SERVER_DOESNT_OWN_SERVICE) !=
+      0) {
+    SPDLOG_ERROR("Fail to add MetricsService to server");
+    return -1;
+  }
+
   // Start brpc server.
   brpc::ServerOptions options = BuildServerOptions();
   if (server.Start(FLAGS_listen_port, &options) != 0) {
@@ -393,4 +457,21 @@ int main(int argc, char* argv[]) {
   server.RunUntilAskedToQuit();
 
   return 0;
+}
+
+grpc::SslCredentialsOptions LoadSslCredentialsOptions(
+    const std::string& key_file, const std::string& cert_file,
+    const std::string& cacert_file) {
+  grpc::SslCredentialsOptions opts;
+
+  std::string content;
+  YACL_ENFORCE(butil::ReadFileToString(butil::FilePath(cacert_file), &content));
+  opts.pem_root_certs = content;
+
+  YACL_ENFORCE(butil::ReadFileToString(butil::FilePath(key_file), &content));
+  opts.pem_private_key = content;
+
+  YACL_ENFORCE(butil::ReadFileToString(butil::FilePath(cert_file), &content));
+  opts.pem_cert_chain = content;
+  return opts;
 }

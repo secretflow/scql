@@ -139,7 +139,7 @@ type CVSDBDialect struct {
 
 func NewCVSDBDialect() *CVSDBDialect {
 	return &CVSDBDialect{
-		MySQLDialect{flags: format.RestoreStringSingleQuotes | format.RestoreKeyWordLowercase, formatDialect: format.NewCVSDBDialect()},
+		MySQLDialect{flags: format.RestoreStringSingleQuotes | format.RestoreKeyWordLowercase | format.RestoreNameDoubleQuotes, formatDialect: format.NewCVSDBDialect()},
 	}
 }
 

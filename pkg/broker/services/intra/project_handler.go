@@ -24,6 +24,7 @@ import (
 
 	"golang.org/x/exp/slices"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/sirupsen/logrus"
 
@@ -44,11 +45,7 @@ func (svc *grpcIntraSvc) CreateProject(c context.Context, req *pb.CreateProjectR
 	if err != nil {
 		return nil, status.New(pb.Code_BAD_REQUEST, fmt.Sprintf("CreateProject: %v", err))
 	}
-	defer func() {
-		if err != nil {
-			err = status.New(pb.Code_INTERNAL, err.Error())
-		}
-	}()
+
 	app := svc.app
 	project := storage.Project{
 		ID:          req.GetProjectId(),
@@ -98,9 +95,6 @@ func (svc *grpcIntraSvc) ListProjects(c context.Context, req *pb.ListProjectsReq
 	txn := app.MetaMgr.CreateMetaTransaction()
 	defer func() {
 		err = txn.Finish(err)
-		if err != nil {
-			err = status.New(pb.Code_INTERNAL, err.Error())
-		}
 	}()
 
 	projectWithMembers, err := txn.ListProjects(req.GetIds())
@@ -122,8 +116,9 @@ func (svc *grpcIntraSvc) ListProjects(c context.Context, req *pb.ListProjectsReq
 			Conf: &pb.ProjectConfig{
 				SpuRuntimeCfg: &spuConf,
 			},
-			Creator: proj.Creator,
-			Members: projWithMember.Members,
+			Creator:   proj.Creator,
+			Members:   projWithMember.Members,
+			CreatedAt: timestamppb.New(proj.CreatedAt),
 		})
 	}
 
@@ -152,9 +147,6 @@ func (svc *grpcIntraSvc) InviteMember(c context.Context, req *pb.InviteMemberReq
 	txn := app.MetaMgr.CreateMetaTransaction()
 	defer func() {
 		err = txn.Finish(err)
-		if err != nil {
-			err = status.New(pb.Code_INTERNAL, err.Error())
-		}
 	}()
 
 	projWithMember, err := txn.GetProjectAndMembers(req.GetProjectId())
@@ -184,16 +176,17 @@ func (svc *grpcIntraSvc) InviteMember(c context.Context, req *pb.InviteMemberReq
 
 	// add invitation to metaMgr
 	invite := storage.Invitation{
-		ProjectID:   proj.ID,
-		Name:        proj.Name,
-		Description: proj.Description,
-		Creator:     proj.Creator,
-		Member:      strings.Join(projWithMember.Members, ";"),
-		ProjectConf: proj.ProjectConf,
-		Inviter:     proj.Creator,
-		Invitee:     req.GetInvitee(),
-		Status:      int8(pb.InvitationStatus_UNDECIDED),
-		InviteTime:  time.Now(),
+		ProjectID:        proj.ID,
+		Name:             proj.Name,
+		Description:      proj.Description,
+		Creator:          proj.Creator,
+		ProjectCreatedAt: proj.CreatedAt,
+		Member:           strings.Join(projWithMember.Members, ";"),
+		ProjectConf:      proj.ProjectConf,
+		Inviter:          proj.Creator,
+		Invitee:          req.GetInvitee(),
+		Status:           int8(pb.InvitationStatus_UNDECIDED),
+		InviteTime:       time.Now(),
 	}
 	// set existed project invalid
 	err = txn.SetUnhandledInvitationsInvalid(proj.ID, proj.Creator, req.GetInvitee())
@@ -216,8 +209,9 @@ func (svc *grpcIntraSvc) InviteMember(c context.Context, req *pb.InviteMemberReq
 			Conf: &pb.ProjectConfig{
 				SpuRuntimeCfg: &spuConf,
 			},
-			Creator: proj.Creator,
-			Members: projWithMember.Members,
+			Creator:   proj.Creator,
+			Members:   projWithMember.Members,
+			CreatedAt: timestamppb.New(proj.CreatedAt),
 		},
 		Inviter: app.Conf.PartyCode,
 	}
@@ -243,12 +237,21 @@ func (svc *grpcIntraSvc) ListInvitations(c context.Context, req *pb.ListInvitati
 	txn := svc.app.MetaMgr.CreateMetaTransaction()
 	defer func() {
 		err = txn.Finish(err)
-		if err != nil {
-			err = status.New(pb.Code_INTERNAL, err.Error())
-		}
 	}()
 
-	invitations, err := txn.ListInvitations()
+	var invitations []storage.Invitation
+	targetInvitation := storage.Invitation{}
+	selectUndecidedInvitation := false
+	if req.Filter != nil {
+		switch filter := req.Filter.(type) {
+		case *pb.ListInvitationsRequest_Status:
+			targetInvitation.Status = int8(filter.Status)
+			selectUndecidedInvitation = filter.Status == pb.InvitationStatus_UNDECIDED
+		case *pb.ListInvitationsRequest_Inviter:
+			targetInvitation.Inviter = filter.Inviter
+		}
+	}
+	invitations, err = txn.GetInvitationsBy(targetInvitation, selectUndecidedInvitation)
 	if err != nil {
 		return nil, fmt.Errorf("ListInvitations: %v", err)
 	}
@@ -302,17 +305,19 @@ func (svc *grpcIntraSvc) ProcessInvitation(c context.Context, req *pb.ProcessInv
 	defer func() {
 		finishErr := txn.Finish(err)
 		// use new transaction to set invitation invalid
+		// whether commit or rollback, we need to set invitation invalid if invalidInvitation is true
 		if invalidInvitation {
 			svc.app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
 				return txn.SetInvitationInvalidByID(invitation.ID)
 			})
 		}
-		if err != nil {
-			err = status.New(pb.Code_INTERNAL, err.Error())
-			return
-		}
 		if finishErr != nil {
-			err = status.New(pb.Code_INTERNAL, finishErr.Error())
+			// commit error, user should try to process again
+			if err == nil {
+				err = fmt.Errorf("ProcessInvitation: commit error, please try it again")
+				return
+			}
+			// rollback, just return
 			return
 		}
 		// add members not in invitations
@@ -376,6 +381,7 @@ func (svc *grpcIntraSvc) ProcessInvitation(c context.Context, req *pb.ProcessInv
 			Archived:    false,
 			ProjectConf: invitation.ProjectConf,
 			Creator:     invitation.Creator,
+			CreatedAt:   invitation.ProjectCreatedAt,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("ProcessInvitation: CreateProject: %v", err)

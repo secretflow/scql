@@ -97,16 +97,18 @@ func (s *testCCLSuite) testCheckCCL(c *C, testCase TestCaseCCLString) {
 
 	lp, _, err := core.BuildLogicalPlanWithOptimization(context.Background(), s.ctx, stmt, s.is)
 	c.Assert(err, IsNil, comment)
-
+	compileOpts := scql.CompileOptions{
+		SecurityCompromise: &scql.SecurityCompromiseConfig{RevealGroupMark: false, GroupByThreshold: 4},
+	}
 	t, err := NewTranslator(
 		s.engineInfo, &scql.SecurityConfig{ColumnControlList: ccl},
-		s.issuerParty, &SecurityCompromiseConf{RevealGroupMark: false})
+		s.issuerParty, &compileOpts)
 	c.Assert(err, IsNil, comment)
 	// preprocessing lp
 	processor := LpPrePocessor{}
 	err = processor.process(lp)
 	c.Assert(err, IsNil)
-	builder, err := newLogicalNodeBuilder(t.issuerPartyCode, t.enginesInfo, convertOriginalCCL(t.sc))
+	builder, err := newLogicalNodeBuilder(t.issuerPartyCode, t.enginesInfo, convertOriginalCCL(t.sc), 4)
 	c.Assert(err, IsNil)
 	ln, err := builder.buildLogicalNode(lp)
 	c.Assert(err, IsNil, comment)

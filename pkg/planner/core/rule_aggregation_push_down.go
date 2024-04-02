@@ -299,9 +299,10 @@ func (a *aggregationPushDownSolver) makeNewAgg(ctx sessionctx.Context, aggFuncs 
 func (a *aggregationPushDownSolver) pushAggCrossUnion(agg *LogicalAggregation, unionSchema *expression.Schema, unionChild LogicalPlan) LogicalPlan {
 	ctx := agg.ctx
 	newAgg := LogicalAggregation{
-		AggFuncs:     make([]*aggregation.AggFuncDesc, 0, len(agg.AggFuncs)),
-		GroupByItems: make([]expression.Expression, 0, len(agg.GroupByItems)),
-		aggHints:     agg.aggHints,
+		AggFuncs:           make([]*aggregation.AggFuncDesc, 0, len(agg.AggFuncs)),
+		GroupByItems:       make([]expression.Expression, 0, len(agg.GroupByItems)),
+		aggHints:           agg.aggHints,
+		ProducedByDistinct: agg.ProducedByDistinct,
 	}.Init(ctx, agg.blockOffset)
 	newAgg.SetSchema(agg.schema.Clone())
 	for _, aggFunc := range agg.AggFuncs {
@@ -358,6 +359,7 @@ func (a *aggregationPushDownSolver) tryAggPushDownForUnion(union *LogicalUnionAl
 	if err != nil {
 		return err
 	}
+	pushedAgg.ProducedByDistinct = agg.ProducedByDistinct
 	newChildren := make([]LogicalPlan, 0, len(union.children))
 	for _, child := range union.children {
 		newChild := a.pushAggCrossUnion(pushedAgg, union.Schema(), child)

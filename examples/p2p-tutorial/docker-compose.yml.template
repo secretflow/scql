@@ -14,8 +14,8 @@ services:
     volumes:
       - ./broker/alice/conf/:/home/admin/configs/
       - ./tls/root-ca.crt:/etc/ssl/certs/root-ca.crt
-      - ./tls/broker_alice-ca.crt:/home/admin/configs/cert.pem
-      - ./tls/broker_alice-ca.key:/home/admin/configs/key.pem
+      - ./tls/broker_alice-ca.crt:/home/admin/tls/cert.crt
+      - ./tls/broker_alice-ca.key:/home/admin/tls/key.key
   broker_bob:
     image: ${SCQL_IMAGE:-secretflow/scql:latest}
     command:
@@ -30,8 +30,8 @@ services:
     volumes:
       - ./broker/bob/conf/:/home/admin/configs/
       - ./tls/root-ca.crt:/etc/ssl/certs/root-ca.crt
-      - ./tls/broker_bob-ca.crt:/home/admin/configs/cert.pem
-      - ./tls/broker_bob-ca.key:/home/admin/configs/key.pem
+      - ./tls/broker_bob-ca.crt:/home/admin/tls/cert.crt
+      - ./tls/broker_bob-ca.key:/home/admin/tls/key.key
   engine_alice:
     cap_add:
       - NET_ADMIN
@@ -41,8 +41,8 @@ services:
     image: ${SCQL_IMAGE:-secretflow/scql:latest}
     volumes:
       - ./engine/alice/conf/gflags.conf:/home/admin/engine/conf/gflags.conf
-      - ./tls/engine_alice-ca.crt:/home/admin/engine/conf/cert.pem
-      - ./tls/engine_alice-ca.key:/home/admin/engine/conf/key.pem
+      - ./tls/engine_alice-ca.crt:/home/admin/engine/conf/cert.crt
+      - ./tls/engine_alice-ca.key:/home/admin/engine/conf/key.key
   engine_bob:
     cap_add:
       - NET_ADMIN
@@ -52,8 +52,8 @@ services:
     image: ${SCQL_IMAGE:-secretflow/scql:latest}
     volumes:
       - ./engine/bob/conf/gflags.conf:/home/admin/engine/conf/gflags.conf
-      - ./tls/engine_alice-ca.crt:/home/admin/engine/conf/cert.pem
-      - ./tls/engine_alice-ca.key:/home/admin/engine/conf/key.pem
+      - ./tls/engine_alice-ca.crt:/home/admin/engine/conf/cert.crt
+      - ./tls/engine_alice-ca.key:/home/admin/engine/conf/key.key
   mysql:
     image: mysql:latest
     environment:

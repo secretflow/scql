@@ -21,12 +21,14 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 
 	"github.com/secretflow/scql/pkg/broker/application"
 	"github.com/secretflow/scql/pkg/broker/constant"
 	"github.com/secretflow/scql/pkg/broker/services/inter"
 	"github.com/secretflow/scql/pkg/broker/services/intra"
+	prom "github.com/secretflow/scql/pkg/util/prometheus"
 )
 
 type Server struct {
@@ -45,11 +47,17 @@ func NewIntraServer(app *application.App) (*http.Server, error) {
 		AllowCredentials: true,
 		MaxAge:           50 * time.Second,
 	}))
+	router.Use(prom.GetMonitor().Middleware)
+	router.GET(prom.MetricsPath, func(ctx *gin.Context) {
+		promhttp.Handler().ServeHTTP(ctx.Writer, ctx.Request)
+	})
 
 	intraSvc := intra.NewIntraSvc(app)
+	router.GET(constant.HealthPath, intraSvc.HealthHandler)
 	router.POST(constant.DoQueryPath, intraSvc.DoQueryHandler)
 	router.POST(constant.SubmitQueryPath, intraSvc.SubmitQueryHandler)
 	router.POST(constant.FetchResultPath, intraSvc.FetchResultHandler)
+	router.POST(constant.CancelQueryPath, intraSvc.CancelQueryHandler)
 	router.POST(constant.CreateProjectPath, intraSvc.CreateProjectHandler)
 	router.POST(constant.ListProjectsPath, intraSvc.ListProjectsHandler)
 	router.POST(constant.InviteMemberPath, intraSvc.InviteMemberHandler)
@@ -92,6 +100,7 @@ func NewInterServer(
 	router.POST(constant.SyncInfoPath, interSvc.SyncInfoHandler)
 	router.POST(constant.AskInfoPath, interSvc.AskInfoHandler)
 	router.POST(constant.DistributeQueryPath, interSvc.DistributedQueryHandler)
+	router.POST(constant.CancelQueryJobPath, interSvc.CancelQueryJobHandler)
 	router.POST(constant.ExchangeJobInfoPath, interSvc.ExchangeJobInfoHandler)
 
 	return &http.Server{
@@ -108,6 +117,7 @@ func ginLogger() gin.HandlerFunc {
 		start := time.Now()
 		path := c.Request.URL.Path
 
+		logrus.Infof("GIN | Start handling request method=%s path=%s client=%s", c.Request.Method, path, c.ClientIP())
 		// Process request
 		c.Next()
 

@@ -141,9 +141,7 @@ func newFunctionImpl(ctx sessionctx.Context, fold bool, funcName string, retType
 		return nil, errors.Errorf("RetType cannot be nil for ScalarFunction")
 	}
 	if funcName == ast.Cast {
-		return nil, errors.Trace(fmt.Errorf("currently not support cast function"))
-		// TODO(yang.y): port cast function later
-		// return BuildCastFunction(ctx, args[0], retType), nil
+		return BuildCastFunction(ctx, args[0], retType), nil
 	}
 	fc, ok := funcs[funcName]
 	if !ok {

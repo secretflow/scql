@@ -15,11 +15,9 @@
 package common
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"unicode"
 
 	"golang.org/x/exp/slices"
@@ -29,7 +27,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
-	"github.com/secretflow/scql/pkg/broker/application"
 	"github.com/secretflow/scql/pkg/broker/storage"
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/parser"
@@ -38,177 +35,8 @@ import (
 	"github.com/secretflow/scql/pkg/status"
 	"github.com/secretflow/scql/pkg/util/logutil"
 	"github.com/secretflow/scql/pkg/util/message"
+	prom "github.com/secretflow/scql/pkg/util/prometheus"
 )
-
-func PostSyncInfo(app *application.App, projectID string, action pb.ChangeEntry_Action, data any, targetParties []string) (err error) {
-	if len(targetParties) == 0 {
-		return
-	}
-
-	dataBytes, err := json.Marshal(data)
-	if err != nil {
-		return fmt.Errorf("PostSyncInfo: marshal: %v", err)
-	}
-
-	retCh := make(chan error, len(targetParties))
-	for _, p := range targetParties {
-		logrus.Infof("PostSyncInfo: sync info to party %s, sync type %s", p, action.String())
-		go func(p string) {
-			syncReq := &pb.SyncInfoRequest{
-				ClientId: &pb.PartyId{
-					Code: app.Conf.PartyCode,
-				},
-				ProjectId: projectID,
-				ChangeEntry: &pb.ChangeEntry{
-					Action: action,
-					Data:   dataBytes,
-				},
-			}
-			targetUrl, err := app.PartyMgr.GetBrokerUrlByParty(p)
-			if err != nil {
-				retCh <- fmt.Errorf("PostSyncInfo: %v", err)
-				return
-			}
-			response := &pb.SyncInfoResponse{}
-			err = app.InterStub.SyncInfo(targetUrl, syncReq, response)
-			if err != nil {
-				if urlErr, ok := err.(*url.Error); ok && urlErr.Timeout() {
-					// we ignore timeout for syncInfo
-					logrus.Warnf("PostSyncInfo ignore http timeout err: %v", urlErr)
-					retCh <- nil
-					return
-				}
-				retCh <- fmt.Errorf("PostSyncInfo to %v: %v", p, err)
-				return
-			}
-
-			if response.GetStatus().GetCode() != 0 {
-				retCh <- fmt.Errorf("PostSyncInfo to %v: status: %+v", p, response.Status)
-				return
-			}
-			retCh <- nil
-		}(p)
-	}
-
-	for i := 0; i < len(targetParties); i++ {
-		err = errors.Join(err, <-retCh)
-	}
-
-	return
-}
-
-// Only update the table that is included in the resources here to avoid side effects and no need to check privileges again
-func askInfoAndUpdateStorage(session *application.Session, resources []*pb.ResourceSpec, targetParty string) (err error) {
-	req := pb.AskInfoRequest{ClientId: &pb.PartyId{Code: session.GetSelfPartyCode()}, ResourceSpecs: resources}
-	destUrl, err := session.PartyMgr.GetBrokerUrlByParty(targetParty)
-	if err != nil {
-		return err
-	}
-	resp := pb.AskInfoResponse{}
-	err = session.ExecuteInfo.InterStub.AskInfo(destUrl, &req, &resp)
-	if err != nil {
-		return
-	}
-	// check resp ok
-	if resp.Status == nil || resp.Status.Code != 0 {
-		return fmt.Errorf("ask info failed: %+v", resp.Status)
-	}
-	txn := session.MetaMgr.CreateMetaTransaction()
-	defer func() {
-		err = txn.Finish(err)
-	}()
-	for i, resource := range resources {
-		err = updateStorageFor(txn, resource, resp.Datas[i], targetParty)
-		if err != nil {
-			return
-		}
-	}
-	return nil
-}
-
-func updateStorageFor(txn *storage.MetaTransaction, resource *pb.ResourceSpec, data []byte, targetParty string) (err error) {
-	switch resource.Kind {
-	case pb.ResourceSpec_Table:
-		// Only update the table that is included in the resource
-		var metas []storage.TableMeta
-		err = json.Unmarshal(data, &metas)
-		if err != nil {
-			return
-		}
-		// remove all tables in the resource
-		for _, tableName := range resource.TableNames {
-			err = txn.DropTable(storage.TableIdentifier{ProjectID: resource.ProjectId, TableName: tableName})
-			if err != nil {
-				return
-			}
-		}
-		// create tables
-		for _, meta := range metas {
-			// ignore table which is not in the resource
-			if !slices.Contains(resource.TableNames, meta.Table.TableName) {
-				continue
-			}
-			err = AddTableWithCheck(txn, resource.ProjectId, targetParty, meta)
-			if err != nil {
-				return
-			}
-		}
-		return
-	case pb.ResourceSpec_CCL:
-		// only update columns owned by target party
-		var columnPrivs []storage.ColumnPriv
-		err = json.Unmarshal(data, &columnPrivs)
-		if err != nil {
-			return
-		}
-		// ignore column which is not in the resource
-		var privs []storage.ColumnPriv
-		for _, priv := range columnPrivs {
-			if !slices.Contains(resource.TableNames, priv.TableName) {
-				continue
-			}
-			privs = append(privs, priv)
-		}
-		err = GrantColumnConstraintsWithCheck(txn, resource.GetProjectId(), targetParty, privs)
-		return
-	default:
-		return fmt.Errorf("unsupported resource type in ask info response: %+v", resource)
-	}
-}
-
-func createResourcesFrom(checksumResult pb.ChecksumCompareResult, tables []core.DbTable, projectID string, workParties []string) (resources []*pb.ResourceSpec) {
-	if checksumResult == pb.ChecksumCompareResult_EQUAL {
-		return
-	}
-	if checksumResult == pb.ChecksumCompareResult_TABLE_SCHEMA_NOT_EQUAL || checksumResult == pb.ChecksumCompareResult_TABLE_CCL_NOT_EQUAL {
-		resource := pb.ResourceSpec{Kind: pb.ResourceSpec_Table, ProjectId: projectID}
-		for _, dt := range tables {
-			resource.TableNames = append(resource.TableNames, dt.GetTableName())
-		}
-		resources = append(resources, &resource)
-	}
-
-	resource := pb.ResourceSpec{Kind: pb.ResourceSpec_CCL, ProjectId: projectID}
-	for _, dt := range tables {
-		resource.TableNames = append(resource.TableNames, dt.GetTableName())
-	}
-	resource.DestParties = workParties
-	resources = append(resources, &resource)
-	return
-}
-
-func AskInfoByChecksumResult(session *application.Session, compRes pb.ChecksumCompareResult, tables []core.DbTable, targetParty string) (askInfoTriggerd bool, err error) {
-	resources := createResourcesFrom(compRes, tables, session.ExecuteInfo.ProjectID, session.ExecuteInfo.WorkParties)
-	if len(resources) != 0 {
-		logrus.Infof("ask info from party %s for resources %+v in project %s", targetParty, resources, session.ExecuteInfo.ProjectID)
-		askInfoTriggerd = true
-		err = askInfoAndUpdateStorage(session, resources, targetParty)
-		if err != nil {
-			return
-		}
-	}
-	return askInfoTriggerd, nil
-}
 
 func VerifyTableMeta(meta storage.TableMeta) error {
 	// 1. check DB type
@@ -280,7 +108,7 @@ func hasSpaceInString(s string) bool {
 	return false
 }
 
-func feedResponseStatus(response proto.Message, err error) {
+func feedResponseStatus(c *gin.Context, response proto.Message, err error) {
 	if err != nil {
 		var statusPointer *status.Status
 		if !errors.As(err, &statusPointer) {
@@ -288,11 +116,14 @@ func feedResponseStatus(response proto.Message, err error) {
 		}
 		statusDesc := response.ProtoReflect().Descriptor().Fields().ByJSONName("status")
 		response.ProtoReflect().Set(statusDesc, protoreflect.ValueOf(statusPointer.ToProto().ProtoReflect()))
+		c.Set(prom.ResponseStatusKey, statusPointer.Code().String())
+	} else {
+		c.Set(prom.ResponseStatusKey, pb.Code_OK.String())
 	}
 }
 
 func FeedResponse(c *gin.Context, response proto.Message, err error, encodingType message.ContentEncodingType) {
-	feedResponseStatus(response, err)
+	feedResponseStatus(c, response, err)
 	body, err := message.SerializeTo(response, encodingType)
 	if err != nil {
 		c.String(http.StatusInternalServerError, fmt.Sprintf("FeedResponse: unable to serialize response: %+v", response))

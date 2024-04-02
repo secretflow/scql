@@ -140,7 +140,7 @@ void EngineServiceImpl::StopSession(::google::protobuf::RpcController* cntl,
     return;
   } catch (const std::exception& e) {
     std::string err_msg =
-        fmt::format("StopSession({}) failed, catch std::exception={} ",
+        fmt::format("StopSession({}) failed, catch std::exception={}",
                     session_id, e.what());
     LOG_ERROR_AND_SET_STATUS(status, pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
     audit::RecordStopSessionEvent(*request, *status, source_ip);
@@ -157,6 +157,10 @@ void EngineServiceImpl::RunExecutionPlan(
   auto controller = static_cast<brpc::Controller*>(cntl);
   std::string source_ip =
       butil::endpoint2str(controller->remote_side()).c_str();
+  SPDLOG_INFO(
+      "Start handling RunExecutionPlan request client={}, "
+      "request={}",
+      source_ip, MessageToJsonString(*request));
   if (!CheckDriverCredential(controller->http_request())) {
     std::string err_msg = "driver authentication failed";
     LOG_ERROR_AND_SET_STATUS(response->mutable_status(),
@@ -192,7 +196,8 @@ void EngineServiceImpl::RunExecutionPlan(
   try {
     VerifyPublicKeys(request->session_params());
 
-    session_mgr_->CreateSession(request->session_params());
+    session_mgr_->CreateSession(request->session_params(),
+                                request->debug_opts());
     session = session_mgr_->GetSession(session_id);
     YACL_ENFORCE(session, "get session failed");
     ::scql::pb::Status status;
@@ -270,7 +275,7 @@ void EngineServiceImpl::ReportResult(const std::string& session_id,
                 cntl.latency_us() / 1000);
 
   } catch (const std::exception& e) {
-    SPDLOG_WARN("ReportResult({}) failed, catch std::exception={} ", session_id,
+    SPDLOG_WARN("ReportResult({}) failed, catch std::exception={}", session_id,
                 e.what());
     return;
   }
@@ -359,7 +364,7 @@ void EngineServiceImpl::RunPlanSync(const pb::RunExecutionPlanRequest* request,
        // engines
 
     std::string err_msg = fmt::format(
-        "RunExecutionPlan run jobs({}) failed, catch std::exception={} ",
+        "RunExecutionPlan run jobs({}) failed, catch std::exception={}",
         session_id, e.what());
     LOG_ERROR_AND_SET_STATUS(response->mutable_status(),
                              pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
@@ -379,7 +384,7 @@ void EngineServiceImpl::RunPlanSync(const pb::RunExecutionPlanRequest* request,
   } catch (const std::exception& e) {
     std::string err_msg = fmt::format(
         "RunExecutionPlan remove session({}) failed, catch "
-        "std::exception={} ",
+        "std::exception={}",
         session_id, e.what());
     LOG_ERROR_AND_SET_STATUS(response->mutable_status(),
                              pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
@@ -390,8 +395,7 @@ void EngineServiceImpl::RunPlanSync(const pb::RunExecutionPlanRequest* request,
     return;
   }
 
-  SPDLOG_INFO("RunExecutionPlan success, request info:\n{} ",
-              MessageToJsonString(*request));
+  SPDLOG_INFO("RunExecutionPlan success, sessionID={}", session_id);
   MergePeerErrors(peer_errors, response->mutable_status());
   return;
 }
@@ -448,7 +452,7 @@ void EngineServiceImpl::ReportErrorToPeers(const pb::SessionStartParams& params,
       if (cntl.Failed()) {
         SPDLOG_WARN(
             "sync error to peer=({},{}) rpc failed: error_code: {}, "
-            "error_info: {}",
+            "error_text: {}",
             party.id, party.host, cntl.ErrorCode(), cntl.ErrorText());
       } else {
         if (response.status().code() != pb::Code::OK) {

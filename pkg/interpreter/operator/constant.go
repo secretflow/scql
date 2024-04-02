@@ -57,7 +57,8 @@ const (
 	OpNameReduceMax string = "ReduceMax"
 	OpNameReduceMin string = "ReduceMin"
 	// OpNameReduceMedian string = "ReduceMedian"
-	OpNameReduceAvg string = "ReduceAvg"
+	OpNameReduceAvg   string = "ReduceAvg"
+	OpNameReduceCount string = "ReduceCount"
 
 	// private group by
 	OpNameGroup              string = "Group"
@@ -98,16 +99,19 @@ const (
 	LimitCountAttr  = "count"
 	LimitOffsetAttr = "offset"
 	// AlgorithmAttr
-	AlgorithmAttr   = `algorithm`
-	JoinTypeAttr    = `join_type`
-	SqlAttr         = `sql`
-	TableRefsAttr   = `table_refs`
-	ScalarAttr      = `scalar`
-	ToStatusAttr    = `to_status`
-	FilePathAttr    = `file_path`
-	DeliminatorAttr = `deliminator`
-	AxisAttr        = `axis`
-	ReverseAttr     = `reverse`
+	PsiAlgorithmAttr     = `psi_algorithm`
+	InTypeAttr           = `in_type`
+	JoinTypeAttr         = `join_type`
+	SqlAttr              = `sql`
+	TableRefsAttr        = `table_refs`
+	ScalarAttr           = `scalar`
+	ToStatusAttr         = `to_status`
+	FilePathAttr         = `file_path`
+	FieldDeliminatorAttr = `field_deliminator`
+	QuotingStyleAttr     = `quoting_style`
+	LineTerminatorAttr   = `line_terminator`
+	AxisAttr             = `axis`
+	ReverseAttr          = `reverse`
 )
 
 var ReduceAggOp = map[string]string{
@@ -115,7 +119,8 @@ var ReduceAggOp = map[string]string{
 	ast.AggFuncMax: OpNameReduceMax,
 	ast.AggFuncMin: OpNameReduceMin,
 	// ast.AggFuncMedian: OpNameReduceMedian,
-	ast.AggFuncAvg: OpNameReduceAvg,
+	ast.AggFuncAvg:   OpNameReduceAvg,
+	ast.AggFuncCount: OpNameReduceCount,
 }
 
 var ObliviousGroupAggOp = map[string]string{

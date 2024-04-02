@@ -542,6 +542,8 @@ void EngineServiceImpl2PartiesTest::AddJoinNode(
   op::test::ExecNodeBuilder builder(op::Join::kOpType);
   builder.SetNodeName("join-test");
   builder.AddInt64Attr(op::Join::kJoinTypeAttr, util::kInnerJoin);
+  builder.AddInt64Attr(op::Join::kAlgorithmAttr,
+                       static_cast<int64_t>(util::PsiAlgo::kEcdhPsi));
   builder.AddStringsAttr(op::Join::kInputPartyCodesAttr,
                          std::vector<std::string>{"party0", "party1"});
   auto [in_name_left, in_name_right] = in_name;

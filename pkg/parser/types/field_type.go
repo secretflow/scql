@@ -97,6 +97,18 @@ func (ft *FieldType) EvalType() EvalType {
 	return ETString
 }
 
+func (ft *FieldType) IsInt() bool {
+	switch ft.Tp {
+	case mysql.TypeTiny, mysql.TypeInt24, mysql.TypeLong, mysql.TypeLonglong, mysql.TypeShort:
+		return true
+	case mysql.TypeDecimal, mysql.TypeNewDecimal:
+		if ft.Decimal == 0 {
+			return true
+		}
+	}
+	return false
+}
+
 // Hybrid checks whether a type is a hybrid type, which can represent different types of value in specific context.
 func (ft *FieldType) Hybrid() bool {
 	return ft.Tp == mysql.TypeEnum || ft.Tp == mysql.TypeBit || ft.Tp == mysql.TypeSet

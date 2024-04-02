@@ -208,7 +208,7 @@ func TestRemoveSensitiveInfo(t *testing.T) {
 		expectSql string
 	}
 	testCase := []sPair{
-		{`select plain_long_0 from scdb.alice_tbl_1;`, `select plain_long_0 from scdb.alice_tbl_1;`},
+		{`select plain_int_0 from scdb.alice_tbl_1;`, `select plain_int_0 from scdb.alice_tbl_1;`},
 		{`CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY "some_pwd"`, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED ***`},
 		{`CREATE USER alice PARTY_CODE "party_A" IDENTIFIED BY     "some_pwd"`, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED ***`},
 		{`CREATE USER alice PARTY_CODE "party_A" IDENTIFIED    BY "some_pwd"`, `CREATE USER alice PARTY_CODE "party_A" IDENTIFIED    ***`},

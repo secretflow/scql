@@ -92,15 +92,15 @@ func TestQueryRunner(t *testing.T) {
 	// add bob to project before granting ccl
 	err = transaction.AddProjectMembers([]storage.Member{storage.Member{ProjectID: t1Identifier.ProjectID, Member: bob}})
 	r.NoError(err)
-	err = common.GrantColumnConstraintsWithCheck(transaction, t1Identifier.ProjectID, alice, privsAlice)
+	err = common.GrantColumnConstraintsWithCheck(transaction, t1Identifier.ProjectID, privsAlice, common.OwnerChecker{Owner: alice})
 	r.NoError(err)
-	err = common.GrantColumnConstraintsWithCheck(transaction, t2Identifier.ProjectID, bob, privsBob)
+	err = common.GrantColumnConstraintsWithCheck(transaction, t2Identifier.ProjectID, privsBob, common.OwnerChecker{Owner: bob})
 	r.NoError(err)
 	// mock config
 	cfg, err := config.NewConfig("../testdata/config_test.yml")
 	r.NoError(err)
 	// mock party meta
-	partyMgr, err := partymgr.NewFilePartyMgr("../testdata/party_info_test.json", cfg.PartyCode)
+	partyMgr, err := partymgr.NewFilePartyMgr("../testdata/party_info_test.json")
 	r.NoError(err)
 	app, err := application.NewApp(partyMgr, meta, cfg)
 	r.NoError(err)
@@ -110,9 +110,10 @@ func TestQueryRunner(t *testing.T) {
 		Query:        "select t1.id from t1 join t2 on t1.id = t2.id",
 		Issuer:       &scql.PartyId{Code: "alice"},
 		EngineClient: app.EngineClient,
+		DebugOpts:    &scql.DebugOptions{EnablePsiDetailLog: true},
 	}
 	transaction.Finish(nil)
-	session, err := application.NewSession(context.Background(), info, app, false)
+	session, err := application.NewSession(context.Background(), info, app, false, false)
 	r.NoError(err)
 	executionInfo := session.ExecuteInfo
 	session.SaveEndpoint(bob, "bob.com")
@@ -140,26 +141,25 @@ func TestQueryRunner(t *testing.T) {
 	expectT := core.NewDbTable("real", "t1")
 	expectT.SetDBType(core.DBTypeMySQL)
 	r.Equal(expectT, refT)
-	// 	graph, err := runner.Compile()
-	// 	r.NoError(err)
-	// 	r.Equal(`digraph G {
-	// 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select t1.id from real.t1,table_refs:[real.t1],],party:[alice,]}"]
-	// 1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select t2.id from real.t2,table_refs:[real.t2],],party:[bob,]}"]
-	// 2 [label="join:{in:[Left:{t_0,},Right:{t_1,},],out:[LeftJoinIndex:{t_2,},RightJoinIndex:{t_3,},],attr:[input_party_codes:[alice bob],join_type:0,],party:[alice,bob,]}"]
-	// 3 [label="filter_by_index:{in:[Data:{t_0,},RowsIndexFilter:{t_2,},],out:[Out:{t_4,},],attr:[],party:[alice,]}"]
-	// 4 [label="filter_by_index:{in:[Data:{t_1,},RowsIndexFilter:{t_3,},],out:[Out:{t_5,},],attr:[],party:[bob,]}"]
-	// 5 [label="publish:{in:[In:{t_4,},],out:[Out:{t_6,},],attr:[],party:[alice,]}"]
-	// 0 -> 2 [label = "t_0:{id:PRIVATE:INT64}"]
-	// 0 -> 3 [label = "t_0:{id:PRIVATE:INT64}"]
-	// 1 -> 2 [label = "t_1:{id:PRIVATE:INT64}"]
-	// 1 -> 4 [label = "t_1:{id:PRIVATE:INT64}"]
-	// 2 -> 3 [label = "t_2:{id:PRIVATE:INT64}"]
-	// 2 -> 4 [label = "t_3:{id:PRIVATE:INT64}"]
-	// 3 -> 5 [label = "t_4:{id:PRIVATE:INT64}"]
-	// }`, graph.DumpGraphviz())
-	// 	syncer, err := runner.CreateSyncExecutor(graph)
-	// 	r.NoError(err)
-	// 	r.NotNil(syncer)
+	compileReq := runner.buildCompileQueryRequest()
+	intrpr := interpreter.NewInterpreter()
+	compiledPlan, err := intrpr.Compile(context.Background(), compileReq)
+	r.NoError(err)
+	r.Equal(`digraph G {
+0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select t1.id from real.t1,table_refs:[real.t1],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select t2.id from real.t2,table_refs:[real.t2],],party:[bob,]}"]
+2 [label="join:{in:[Left:{t_0,},Right:{t_1,},],out:[LeftJoinIndex:{t_2,},RightJoinIndex:{t_3,},],attr:[input_party_codes:[alice bob],join_type:0,psi_algorithm:1,],party:[alice,bob,]}"]
+3 [label="filter_by_index:{in:[Data:{t_0,},RowsIndexFilter:{t_2,},],out:[Out:{t_4,},],attr:[],party:[alice,]}"]
+4 [label="filter_by_index:{in:[Data:{t_1,},RowsIndexFilter:{t_3,},],out:[Out:{t_5,},],attr:[],party:[bob,]}"]
+5 [label="publish:{in:[In:{t_4,},],out:[Out:{t_6,},],attr:[],party:[alice,]}"]
+0 -> 2 [label = "t_0:{id:PRIVATE:INT64}"]
+0 -> 3 [label = "t_0:{id:PRIVATE:INT64}"]
+1 -> 2 [label = "t_1:{id:PRIVATE:INT64}"]
+1 -> 4 [label = "t_1:{id:PRIVATE:INT64}"]
+2 -> 3 [label = "t_2:{id:PRIVATE:INT64}"]
+2 -> 4 [label = "t_3:{id:PRIVATE:INT64}"]
+3 -> 5 [label = "t_4:{id:PRIVATE:INT64}"]
+}`, compiledPlan.Explain.GetExeGraphDot())
 }
 
 func TestCaseSensitive(t *testing.T) {
@@ -211,9 +211,9 @@ func TestCaseSensitive(t *testing.T) {
 		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: bob}, Priv: "plaintext"},
 	}
 	r.NoError(err)
-	err = common.GrantColumnConstraintsWithCheck(transaction, t1Identifier.ProjectID, alice, privsAlice)
+	err = common.GrantColumnConstraintsWithCheck(transaction, t1Identifier.ProjectID, privsAlice, common.OwnerChecker{Owner: alice})
 	r.NoError(err)
-	err = common.GrantColumnConstraintsWithCheck(transaction, t2Identifier.ProjectID, bob, privsBob)
+	err = common.GrantColumnConstraintsWithCheck(transaction, t2Identifier.ProjectID, privsBob, common.OwnerChecker{Owner: bob})
 	r.NoError(err)
 	// grant data
 	c1Identifier = storage.ColumnIdentifier{ProjectID: t1Identifier.ProjectID, TableName: t1Identifier.TableName, ColumnName: "Data"}
@@ -225,16 +225,16 @@ func TestCaseSensitive(t *testing.T) {
 		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: alice}, Priv: "plaintext"},
 		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: bob}, Priv: "plaintext"},
 	}
-	err = common.GrantColumnConstraintsWithCheck(transaction, t1Identifier.ProjectID, alice, privsAlice)
+	err = common.GrantColumnConstraintsWithCheck(transaction, t1Identifier.ProjectID, privsAlice, common.OwnerChecker{Owner: alice})
 	r.NoError(err)
-	err = common.GrantColumnConstraintsWithCheck(transaction, t2Identifier.ProjectID, bob, privsBob)
+	err = common.GrantColumnConstraintsWithCheck(transaction, t2Identifier.ProjectID, privsBob, common.OwnerChecker{Owner: bob})
 	r.NoError(err)
 	transaction.Finish(nil)
 	// mock config
 	cfg, err := config.NewConfig("../testdata/config_test.yml")
 	r.NoError(err)
 	// mock party meta
-	partyMgr, err := partymgr.NewFilePartyMgr("../testdata/party_info_test.json", cfg.PartyCode)
+	partyMgr, err := partymgr.NewFilePartyMgr("../testdata/party_info_test.json")
 	r.NoError(err)
 	app, err := application.NewApp(partyMgr, meta, cfg)
 	r.NoError(err)
@@ -245,7 +245,7 @@ func TestCaseSensitive(t *testing.T) {
 		Issuer:       &scql.PartyId{Code: "alice"},
 		EngineClient: app.EngineClient,
 	}
-	session, err := application.NewSession(context.Background(), info, app, false)
+	session, err := application.NewSession(context.Background(), info, app, false, false)
 	r.NoError(err)
 	session.SaveEndpoint(bob, "bob.com")
 	runner := NewQueryRunner(session)
@@ -282,7 +282,7 @@ func TestCaseSensitive(t *testing.T) {
 	runner.Clear()
 	dataParties, workParties, err = runner.Prepare(usedTables)
 	r.Error(err)
-	r.Equal("table t2 not found", err.Error())
+	r.Equal("prepareData: table [t2] not found", err.Error())
 	// Project1.T2 -> project1.T2
 	// check project id case sensitive
 	session.ExecuteInfo.Query = "select t1.id, t1.Data + t2.Data from Project1.t1 as t1 join project1.T2 as t2 on t1.id = t2.id"
@@ -347,7 +347,7 @@ func TestCaseSensitive(t *testing.T) {
 		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: dataIdentifier.ProjectID, TableName: dataIdentifier.TableName, ColumnName: dataIdentifier.ColumnName, DestParty: alice}, Priv: "plaintext"},
 		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: dataIdentifier.ProjectID, TableName: dataIdentifier.TableName, ColumnName: dataIdentifier.ColumnName, DestParty: bob}, Priv: "plaintext"},
 	}
-	err = common.GrantColumnConstraintsWithCheck(transaction, t1Identifier.ProjectID, alice, privs)
+	err = common.GrantColumnConstraintsWithCheck(transaction, t1Identifier.ProjectID, privs, common.OwnerChecker{Owner: alice})
 	r.NoError(err)
 	transaction.Finish(nil)
 	session.ExecuteInfo.Query = "select t1.ID, t1.data + t2.data from Project1.T1 as t1 join Project1.T2 as t2 on t1.ID = t2.ID"
@@ -424,7 +424,7 @@ func buildTestStorage() (*storage.MetaManager, error) {
 	if err != nil {
 		return nil, err
 	}
-	meta := storage.NewMetaManager(db)
+	meta := storage.NewMetaManager(db, false)
 	err = meta.Bootstrap()
 	if err != nil {
 		return nil, err

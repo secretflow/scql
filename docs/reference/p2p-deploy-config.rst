@@ -29,7 +29,7 @@ Example configuration for SCQLBroker
   session_expire_time: 24h
   session_expire_check_time: 1m
   party_info_file: "/home/admin/configs/party_info.json"
-  private_pem_path: "/home/admin/configs/private_key.pem"
+  private_key_path: "/home/admin/configs/private_key.pem"
   intra_host: http://broker_alice:8080
   engine:
     timeout: 120s
@@ -81,7 +81,7 @@ Configuration Options of SCQLBroker
 +---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
 | party_info_file                       | none      | File path that stores information of each party, including party code, public key and InterServer's URL                  |
 +---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
-| private_pem_path                      | none      | Private key file path for party_code, which will be used to sign requests to other SCQLBrokers                           |
+| private_key_path                      | none      | Private key file path for party_code, which will be used to sign requests to other SCQLBrokers                           |
 +---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
 | intra_host                            | none      | The callback URL for the local SCQLEngine to notify SCQLBroker                                                           |
 +---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
@@ -111,6 +111,8 @@ Configuration Options of SCQLBroker
 | session_expire_time                   | 24h       | Maximum lifespan of a job                                                                                                |
 +---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
 | session_expire_check_time             | 1m        | The interval checking whether session is timeout                                                                         |
++---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
+| persist_session                       | true     | Whether persist session to storage to support cluster mode                                                               |
 +---------------------------------------+-----------+--------------------------------------------------------------------------------------------------------------------------+
 
 

@@ -33,22 +33,18 @@ func (svc *grpcIntraSvc) CreateTable(c context.Context, req *pb.CreateTableReque
 	txn := app.MetaMgr.CreateMetaTransaction()
 	defer func() {
 		err = txn.Finish(err)
-		if err != nil {
-			err = status.New(pb.Code_INTERNAL, err.Error())
-		}
 	}()
 
 	members, err := txn.GetProjectMembers(req.GetProjectId())
 	if err != nil {
 		return nil, fmt.Errorf("CreateTable: get project %v err: %v", req.GetProjectId(), err)
 	}
-	exist, tmpErr := txn.CheckTablesExist(req.GetProjectId(), []string{req.GetTableName()})
-	if tmpErr != nil {
-		return nil, fmt.Errorf("CreateTable: %s", tmpErr.Error())
+	tables, exist, err := txn.GetTables(req.GetProjectId(), []string{req.GetTableName()})
+	if err != nil {
+		return nil, fmt.Errorf("CreateTable: %s", err.Error())
 	}
-
 	if exist {
-		return nil, fmt.Errorf("CreateTable: table %v already exists", req.GetTableName())
+		return nil, fmt.Errorf("CreateTable: table %v already exists owned by %s", req.GetTableName(), tables[0].Owner)
 	}
 
 	var columns []storage.ColumnMeta
@@ -117,17 +113,17 @@ func (svc *grpcIntraSvc) ListTables(ctx context.Context, req *pb.ListTablesReque
 	txn := app.MetaMgr.CreateMetaTransaction()
 	defer func() {
 		err = txn.Finish(err)
-		if err != nil {
-			err = status.New(pb.Code_INTERNAL, err.Error())
-		}
 	}()
 	_, err = txn.GetProject(req.GetProjectId())
 	if err != nil {
 		return nil, fmt.Errorf("ListTables: GetProject err: %v", err)
 	}
-	tables, err := txn.GetTableMetasByTableNames(req.GetProjectId(), req.GetNames())
+	tables, notFoundTables, err := txn.GetTableMetasByTableNames(req.GetProjectId(), req.GetNames())
 	if err != nil {
 		return nil, fmt.Errorf("ListTables: %v", err)
+	}
+	if len(notFoundTables) > 0 {
+		return nil, fmt.Errorf("ListTables: table %v not found", notFoundTables)
 	}
 	var tableList []*pb.TableMeta
 	for _, table := range tables {
@@ -166,9 +162,6 @@ func (svc *grpcIntraSvc) DropTable(c context.Context, req *pb.DropTableRequest) 
 	txn := app.MetaMgr.CreateMetaTransaction()
 	defer func() {
 		err = txn.Finish(err)
-		if err != nil {
-			err = status.New(pb.Code_INTERNAL, err.Error())
-		}
 	}()
 
 	tableId := storage.TableIdentifier{

@@ -1,0 +1,138 @@
+apiVersion: kuscia.secretflow/v1alpha1
+kind: AppImage
+metadata:
+  name: scql
+spec:
+  configTemplates:
+    broker.config.yaml: |-
+      intra_server:
+       protocol: http
+       host: 0.0.0.0
+       port: {{.KUSCIA_PORT_INTRA_NUMBER}}
+      inter_server:
+       port: {{.KUSCIA_PORT_INTER_NUMBER}}
+       protocol: http
+       cert_file: "{{.SERVER_CERT_FILE}}"
+       key_file: "{{.SERVER_PRIVATE_KEY_FILE}}"
+      inter_timeout: 30s
+      log_level: debug
+      party_code: {{.KUSCIA_DOMAIN_ID}}
+      private_key_data: {{.KUSCIA_DOMAIN_KEY_DATA}}
+      intra_host: "scql-broker-intra.{{.KUSCIA_DOMAIN_ID}}.svc:{{.KUSCIA_PORT_INTRA_NUMBER}}"
+      discovery:
+        type: kuscia
+        kuscia:
+          endpoint: kusciaapi:8083
+          tls_mode: {{.KUSCIA_API_PROTOCOL}}
+          cert: {{.CLIENT_CERT_FILE}}
+          key: {{.CLIENT_PRIVATE_KEY_FILE}}
+          cacert: {{.TRUSTED_CA_FILE}}
+          token: {{.KUSCIA_API_TOKEN}}
+      engine:
+        timeout: 120s
+        protocol: http
+        content_type: application/json
+        # scheduler: naive
+        uris:
+          - for_peer: engine_alice:8003
+            for_self: engine_alice:8003
+        scheduler: kuscia
+        kuscia_scheduler:
+          endpoint: kusciaapi:8083
+          tls_mode: {{.KUSCIA_API_PROTOCOL}}
+          cert: {{.CLIENT_CERT_FILE}}
+          key: {{.CLIENT_PRIVATE_KEY_FILE}}
+          cacert: {{.TRUSTED_CA_FILE}}
+          token: {{.KUSCIA_API_TOKEN}}
+          keep_job_alive_for_debug: false
+      storage:
+        type: sqlite
+        conn_str: "/home/kuscia/var/storage/data/broker.db"
+        max_idle_conns: 10
+        max_open_conns: 100
+        conn_max_idle_time: 2m
+        conn_max_lifetime: 5m
+    engine.conf: |-
+      --listen_port={{.KUSCIA_PORT_ENGINEPORT_NUMBER}}
+      --enable_driver_authorization=false
+      --datasource_router=embed
+      #--embed_router_conf="{{.EMBED_ROUTER_CONF}}"
+      # NOTE: set --datasource_router to kusciadatamesh if use kuscia datamesh
+      #--datasource_router=kusciadatamesh
+      --kuscia_datamesh_endpoint=datamesh:8071
+      --kuscia_datamesh_client_cert_path={{.CLIENT_CERT_FILE}}
+      --kuscia_datamesh_client_key_path={{.CLIENT_PRIVATE_KEY_FILE}}
+      --kuscia_datamesh_cacert_path={{.TRUSTED_CA_FILE}}
+      # party authentication flags
+      --enable_self_auth=false
+      --enable_peer_auth=false
+      # https flags
+      --server_enable_ssl=false
+      --server_ssl_certificate=/home/admin/engine/conf/cert.pem
+      --server_ssl_private_key=/home/admin/engine/conf/key.pem
+      # set peer_engine_enable_ssl_as_client to true when peer SCQLEngine has https enabled
+      --peer_engine_enable_ssl_as_client=false
+      # set false when SCQLBroker IntraServer not enable https
+      --driver_enable_ssl_as_client=false
+      --peer_engine_protocol=http:proto
+      --peer_engine_connection_type=pooled
+      --peer_engine_load_balancer=rr
+      # log level
+      --log_level=debug
+  deployTemplates:
+    - name: broker
+      role: broker
+      replicas: 2
+      spec:
+        containers:
+          - command:
+              - /home/admin/bin/broker
+              - -config=/home/admin/configs/config.yml
+              # - -config=/home/kuscia/var/storage/data/broker.yaml
+            configVolumeMounts:
+              - mountPath: /home/admin/configs/config.yml
+                subPath: broker.config.yaml
+            name: broker
+            ports:
+              - name: intra
+                port: 8080
+                protocol: HTTP
+                scope: Domain
+              - name: inter
+                port: 8081
+                protocol: HTTP
+                scope: Cluster
+            readinessProbe:
+              httpGet:
+                path: /health
+                port: 8080
+            workingDir: /work
+        restartPolicy: Always
+    - name: engine
+      role: engine
+      replicas: 1
+      spec:
+        containers:
+          - command:
+              - /home/admin/bin/scqlengine
+              - --flagfile=/home/admin/engine/conf/gflags.conf
+            configVolumeMounts:
+              - mountPath: /home/admin/engine/conf/gflags.conf
+                subPath: engine.conf
+            name: engine
+            resources:
+              requests:
+                cpu: 4
+                memory: 8Gi
+            ports:
+              - name: engineport
+                port: 8003
+                protocol: HTTP
+                scope: Cluster
+            workingDir: /work
+        restartPolicy: Never
+  image:
+    id: abc # any value is ok now
+    name: "{{IMAGE_NAME}}"
+    sign: abc # any value is ok now
+    tag: "{{IMAGE_TAG}}"

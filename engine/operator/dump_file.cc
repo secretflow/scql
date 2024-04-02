@@ -93,7 +93,18 @@ void DumpFile::Execute(ExecContext* ctx) {
 
   arrow::csv::WriteOptions options;
   options.delimiter =
-      ctx->GetStringValueFromAttribute(kDeliminatorAttr).front();
+      ctx->GetStringValueFromAttribute(kFieldDeliminatorAttr).front();
+  options.eol = ctx->GetStringValueFromAttribute(kLineTerminatorAttr);
+  const auto quoting = ctx->GetInt64ValueFromAttribute(kQuotingStyleAttr);
+  if (quoting == kQuotingNone) {
+    options.quoting_style = arrow::csv::QuotingStyle::None;
+  } else if (quoting == kQuotingNeeded) {
+    options.quoting_style = arrow::csv::QuotingStyle::Needed;
+  } else if (quoting == kQuotingAllValid) {
+    options.quoting_style = arrow::csv::QuotingStyle::AllValid;
+  } else {
+    YACL_THROW("unsupported quoting style {}", quoting);
+  }
 
   THROW_IF_ARROW_NOT_OK(
       arrow::csv::WriteCSV(*table, options, out_stream.get()));

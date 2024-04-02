@@ -53,6 +53,7 @@ spu::RuntimeConfig MakeSpuRuntimeConfigForTest(
   config.set_protocol(protocol_kind);
   config.set_field(spu::FieldType::FM64);
   config.set_sigmoid_mode(spu::RuntimeConfig::SIGMOID_REAL);
+  config.set_experimental_enable_colocated_optimization(true);
 
   spu::populateRuntimeConfig(config);
   return config;
@@ -70,9 +71,10 @@ std::shared_ptr<Session> Make1PCSession(Router* ds_router,
   SessionOptions options;
   auto* alice = params.add_parties();
   alice->CopyFrom(BuildParty(kPartyAlice, 0));
-
-  return std::make_shared<Session>(options, params, &g_mem_link_factory,
-                                   nullptr, ds_router, ds_mgr);
+  pb::DebugOptions debug_opts;
+  return std::make_shared<Session>(options, params, debug_opts,
+                                   &g_mem_link_factory, nullptr, ds_router,
+                                   ds_mgr);
 }
 
 std::vector<std::shared_ptr<Session>> MakeMultiPCSession(
@@ -90,8 +92,10 @@ std::vector<std::shared_ptr<Session>> MakeMultiPCSession(
   std::vector<std::future<std::shared_ptr<Session>>> futures;
   SessionOptions options;
   auto create_session = [&](const pb::SessionStartParams& params) {
-    return std::make_shared<Session>(options, params, &g_mem_link_factory,
-                                     nullptr, nullptr, nullptr);
+    pb::DebugOptions debug_opts;
+    return std::make_shared<Session>(options, params, debug_opts,
+                                     &g_mem_link_factory, nullptr, nullptr,
+                                     nullptr);
   };
   for (size_t i = 0; i < test_case.party_size; ++i) {
     pb::SessionStartParams params;

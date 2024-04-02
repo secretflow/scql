@@ -17,11 +17,16 @@ syntax = "proto3";
 
 package scql.pb;
 option go_package = "proto-gen/scql";
+option java_package = "org.secretflow.scql";
 
 // RequestHeader carries the user custom headers.
 message RequestHeader {
   // Custom headers used to record custom information.
   map<string, string> custom_headers = 1;
+}
+
+message DebugOptions {
+  bool enable_psi_detail_log = 1;
 }
 
 // (-- TODO: move SQLWarning to a proper place --)

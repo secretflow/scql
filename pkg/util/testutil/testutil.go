@@ -105,8 +105,8 @@ func loadTestSuiteCases(filePath string) (res []testCases, err error) {
 	if err != nil {
 		return res, err
 	}
-	// Remove comments, since they are not allowed in json.
-	re := regexp.MustCompile("(?s)//.*?\n")
+	// Remove comments(keep a // b), since they are not allowed in json
+	re := regexp.MustCompile("(?s)  //.*?\n")
 	err = json.Unmarshal(re.ReplaceAll(byteValue, nil), &res)
 	return res, err
 }

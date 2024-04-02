@@ -25,11 +25,12 @@ import (
 )
 
 var (
-	projectConf string
-	columns     string
-	refTable    string
-	dbType      string
-	query       string
+	projectConf        string
+	columns            string
+	refTable           string
+	dbType             string
+	query              string
+	enablePsiDetailLog bool
 
 	createCmd = &cobra.Command{
 		Use:   "create {project|table <name>|job}",
@@ -59,6 +60,7 @@ func init() {
 	createCmd.Flags().StringVar(&refTable, "ref-table", "", "the physical table name corresponding to the new table, e.g: 'test_table'")
 	createCmd.Flags().StringVar(&dbType, "db-type", "mysql", "the database type to which the table belongs, e.g: 'mysql'")
 	createCmd.Flags().StringVar(&query, "query", "", "the sql query for create job, e.g: 'select count(*) from ta'")
+	createCmd.Flags().BoolVar(&enablePsiDetailLog, "enable-psi-detail-log", false, "whether enable psi detail log")
 }
 
 func createProject() error {
@@ -119,7 +121,7 @@ func createJob() error {
 	if query == "" {
 		return fmt.Errorf("flags query must not be empty")
 	}
-	jobID, err := brokerCommand.CreateJob(projectID, query)
+	jobID, err := brokerCommand.CreateJob(projectID, query, &pb.DebugOptions{EnablePsiDetailLog: enablePsiDetailLog})
 	if err != nil {
 		return err
 	}

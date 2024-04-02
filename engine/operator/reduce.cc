@@ -14,6 +14,7 @@
 
 #include "engine/operator/reduce.h"
 
+#include <cstddef>
 #include <functional>
 #include <iterator>
 
@@ -124,6 +125,22 @@ ReduceBase::ReduceFn ReduceSum::GetReduceFn(spu::SPUContext* sctx) {
   return [sctx](const spu::Value& lhs, const spu::Value& rhs) -> spu::Value {
     return spu::kernel::hlo::Add(sctx, lhs, rhs);
   };
+}
+
+// ================
+//  ReduceCount impl
+// ================
+
+const std::string ReduceCount::kOpType("ReduceCount");
+
+const std::string& ReduceCount::Type() const { return kOpType; }
+
+spu::Value ReduceCount::GetInitValue(spu::SPUContext* sctx) {
+  YACL_THROW("unsupported reduce func: count");
+}
+
+ReduceBase::ReduceFn ReduceCount::GetReduceFn(spu::SPUContext* sctx) {
+  YACL_THROW("unsupported reduce func: count");
 }
 
 // ===============

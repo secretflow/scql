@@ -147,40 +147,6 @@ func (app *App) onQueryJobDone(sid string) {
 	logrus.Info(logEntry)
 }
 
-func (app *App) compile(lpInfo *LogicalPlanInfo, s *session) (*ExecutionPlanInfo, error) {
-	// translate logical plan to execution plan
-	t, err := translator.NewTranslator(
-		lpInfo.engineInfos,
-		&scql.SecurityConfig{
-			ColumnControlList: lpInfo.ccls,
-		},
-		lpInfo.issuer, &app.config.SecurityCompromise)
-	if err != nil {
-		return nil, fmt.Errorf("error when translating from logical plan to execution plan: %v", err)
-	}
-	ep, err := t.Translate(lpInfo.lp)
-	if err != nil {
-		return nil, err
-	}
-	s.GetSessionVars().AffectedByGroupThreshold = t.AffectedByGroupThreshold
-	logrus.Infof("[Translator] execution plan: \n%s\n", ep.DumpGraphviz())
-
-	graphChecker := translator.NewGraphChecker()
-	if err := graphChecker.Check(ep); err != nil {
-		return nil, err
-	}
-
-	p := optimizer.NewGraphPartitioner(ep)
-	p.NaivePartition()
-
-	return &ExecutionPlanInfo{
-		parties: s.parties,
-		subDAGs: p.SubDAGs,
-		graph:   p.Graph,
-		attr:    &translator.Attribute{},
-	}, nil
-}
-
 func (app *App) extractDataSourcesInDQL(ctx context.Context, s *session) ([]*core.DataSource, error) {
 	is, err := storage.QueryDBInfoSchema(s.GetSessionVars().Storage, s.request.GetDbName())
 	if err != nil {
@@ -200,33 +166,4 @@ func (app *App) buildCatalog(store *gorm.DB, dbName string, tableNames []string)
 	return &scql.Catalog{
 		Tables: tableSchemas,
 	}, nil
-}
-
-func (app *App) DestroySession(id string, destroyReason string) {
-	session, ok := app.getSession(id)
-	logEntry := &logutil.MonitorLogEntry{
-		SessionID:  id,
-		ActionName: fmt.Sprintf("%v@%v", "SessionManager", "DestroySession"),
-		Reason:     destroyReason,
-	}
-	if !ok || session == nil {
-		logEntry.ErrorMsg = fmt.Sprintf("Session id:%v not found", id)
-		logrus.Infof("%v|SessionExists:%v", logEntry, false)
-		return
-	}
-
-	// Send end session task to all parties.
-	engineErr := session.engineStub.EndSession(session.ctx,
-		&scql.StopSessionRequest{
-			SessionId: session.id,
-		},
-		session.partyInfo.GetParties())
-	var errMsg string
-	if engineErr != nil {
-		errMsg = engineErr.Error()
-	}
-	// fall through here even when nil != err
-	logEntry.ErrorMsg += errMsg
-	logEntry.RequestID = session.request.BizRequestId
-	logrus.Infof("%v|SessionExists:%v|EngineEndSessionOk:%v", logEntry, true, engineErr == nil)
 }

@@ -66,7 +66,7 @@ Create a file called ``config.yml`` in your workspace and paste the following co
   session_expire_time: 24h
   session_expire_check_time: 1m
   party_info_file: "/home/admin/configs/party_info.json"
-  private_pem_path: "/home/admin/configs/ed25519key.pem"
+  private_key_path: "/home/admin/configs/ed25519key.pem"
   intra_host: broker:8080
   engine:
     timeout: 120s
@@ -250,7 +250,7 @@ Then you can start services by running docker compose up
 
 .. code-block:: bash
 
-  # If you install docker with Compose V1, pleas use `docker-compose` instead of `docker compose`
+  # If you install docker with Compose V1, please use `docker-compose` instead of `docker compose`
   $ docker compose -f docker-compose.yaml up -d
 
   Network scql-p2p_default     Created

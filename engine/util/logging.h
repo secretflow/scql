@@ -14,18 +14,26 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
+
+#include "spdlog/spdlog.h"
 
 namespace scql::engine::util {
 
 struct LogOptions {
   bool enable_console_logger = false;
+  bool enable_psi_detail_logger = false;
   std::string log_dir = "logs";
   size_t max_log_file_size = 500 * 1024 * 1024;
   size_t max_log_file_count = 10;
+  std::string log_level = "info";
 };
 
 // Setup default logger "scqlengine", and use it to sink brpc log.
 void SetupLogger(LogOptions opts = LogOptions());
 
+std::shared_ptr<spdlog::logger> CreateDetailLogger(
+    const std::string& logger_name, const std::string& logger_file_name,
+    LogOptions opts = LogOptions());
 }  // namespace scql::engine::util

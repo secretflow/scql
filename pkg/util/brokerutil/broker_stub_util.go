@@ -59,7 +59,9 @@ func (c *Command) CreateProject(projectID, projectConf string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("CreateProject: %v", err)
 	}
-
+	if response.Status == nil {
+		return "", fmt.Errorf("CreateProject: invalid response: status is nil")
+	}
 	if response.GetStatus().GetCode() == 0 {
 		return response.GetProjectId(), nil
 	} else {
@@ -89,7 +91,9 @@ func (c *Command) CreateTable(projectID, tableName, dbType, refTable string, col
 	if err != nil {
 		return fmt.Errorf("CreateTable: %v", err)
 	}
-
+	if response.Status == nil {
+		return fmt.Errorf("CreateTable: invalid response: status is nil")
+	}
 	if response.GetStatus().GetCode() == 0 {
 		return nil
 	} else {
@@ -110,6 +114,9 @@ func (c *Command) DeleteTable(projectID, name string) error {
 	if err != nil {
 		return fmt.Errorf("DeleteTable: %v", err)
 	}
+	if response.Status == nil {
+		return fmt.Errorf("DeleteTable: invalid response: status is nil")
+	}
 	if response.GetStatus().GetCode() == 0 {
 		return nil
 	} else {
@@ -127,6 +134,9 @@ func (c *Command) GetProject(projectID string) (*pb.ListProjectsResponse, error)
 	err := c.intraStub.ListProjects(c.host, req, response)
 	if err != nil {
 		return nil, fmt.Errorf("GetProject: %v", err)
+	}
+	if response.Status == nil {
+		return nil, fmt.Errorf("GetProject: invalid response: status is nil")
 	}
 	if response.GetStatus().GetCode() != 0 {
 		return nil, fmt.Errorf("GetProject response: %v", protojson.Format(response))
@@ -146,6 +156,9 @@ func (c *Command) GetTable(projectID string, tableNames []string) (*pb.ListTable
 	err := c.intraStub.ListTables(c.host, req, response)
 	if err != nil {
 		return nil, fmt.Errorf("GetTable: %v", err)
+	}
+	if response.Status == nil {
+		return nil, fmt.Errorf("GetTable: invalid response: status is nil")
 	}
 	if response.GetStatus().GetCode() != 0 {
 		return nil, fmt.Errorf("GetTable response: %v", protojson.Format(response))
@@ -168,6 +181,9 @@ func (c *Command) GetCCL(projectID string, tables, destParties []string) (*pb.Sh
 	if err != nil {
 		return nil, fmt.Errorf("GetCCL: %v", err)
 	}
+	if response.Status == nil {
+		return nil, fmt.Errorf("GetCCL: invalid response: status is nil")
+	}
 	if response.GetStatus().GetCode() != 0 {
 		return nil, fmt.Errorf("GetCCL response: %v", protojson.Format(response))
 	}
@@ -180,6 +196,9 @@ func (c *Command) GetInvitation() (*pb.ListInvitationsResponse, error) {
 	err := c.intraStub.ListInvitations(c.host, req, response)
 	if err != nil {
 		return nil, fmt.Errorf("GetInvitation: %v", err)
+	}
+	if response.Status == nil {
+		return nil, fmt.Errorf("GetInvitation: invalid response: status is nil")
 	}
 	if response.GetStatus().GetCode() != 0 {
 		return nil, fmt.Errorf("GetInvitation response: %v", protojson.Format(response))
@@ -200,6 +219,9 @@ func (c *Command) GrantCCL(projectID string, ccls []*pb.ColumnControl) error {
 	if err != nil {
 		return fmt.Errorf("GrantCCL: %v", err)
 	}
+	if response.Status == nil {
+		return fmt.Errorf("GrantCCL: invalid response: status is nil")
+	}
 	if response.GetStatus().GetCode() == 0 {
 		return nil
 	} else {
@@ -216,6 +238,9 @@ func (c *Command) InviteMember(projectID, member string) error {
 	err := c.intraStub.InviteMember(c.host, req, response)
 	if err != nil {
 		return fmt.Errorf("InviteMember: %v", err)
+	}
+	if response.Status == nil {
+		return fmt.Errorf("InviteMember: invalid response: status is nil")
 	}
 	if response.GetStatus().GetCode() == 0 {
 		return nil
@@ -243,6 +268,9 @@ func (c *Command) ProcessInvitation(ids string, accept bool) error {
 	if err != nil {
 		return fmt.Errorf("ProcessInvitation: %v", err)
 	}
+	if response.Status == nil {
+		return fmt.Errorf("ProcessInvitation: invalid response: status is nil")
+	}
 	if response.GetStatus().GetCode() == 0 {
 		return nil
 	} else {
@@ -264,6 +292,9 @@ func (c *Command) RevokeCCL(projectID, party string, ccls []*pb.ColumnControl) e
 	if err != nil {
 		return fmt.Errorf("RevokeCCL: %v", err)
 	}
+	if response.Status == nil {
+		return fmt.Errorf("RevokeCCL: invalid response: status is nil")
+	}
 	if response.GetStatus().GetCode() == 0 {
 		return nil
 	} else {
@@ -271,15 +302,19 @@ func (c *Command) RevokeCCL(projectID, party string, ccls []*pb.ColumnControl) e
 	}
 }
 
-func (c *Command) DoQuery(projectID, query string) (*pb.QueryResponse, error) {
+func (c *Command) DoQuery(projectID, query string, debugOpts *pb.DebugOptions) (*pb.QueryResponse, error) {
 	req := &pb.QueryRequest{
 		ProjectId: projectID,
 		Query:     query,
+		DebugOpts: debugOpts,
 	}
 	response := &pb.QueryResponse{}
 	err := c.intraStub.RunQuery(c.host, req, response)
 	if err != nil {
 		return nil, fmt.Errorf("DoQuery: %v", err)
+	}
+	if response.Status == nil {
+		return nil, fmt.Errorf("DoQuery: invalid response: status is nil")
 	}
 	if response.GetStatus().GetCode() != 0 {
 		return nil, fmt.Errorf("DoQuery response: %v", protojson.Format(response))
@@ -287,17 +322,20 @@ func (c *Command) DoQuery(projectID, query string) (*pb.QueryResponse, error) {
 	return response, nil
 }
 
-func (c *Command) CreateJob(projectID, query string) (string, error) {
+func (c *Command) CreateJob(projectID, query string, debugOpts *pb.DebugOptions) (string, error) {
 	req := &pb.QueryRequest{
 		ProjectId: projectID,
 		Query:     query,
+		DebugOpts: debugOpts,
 	}
 	response := &pb.SubmitResponse{}
 	err := c.intraStub.CreateJob(c.host, req, response)
 	if err != nil {
-		return "", fmt.Errorf("CreateJob: %v", err)
+		return "", fmt.Errorf("CreateJob: %w", err)
 	}
-
+	if response.Status == nil {
+		return "", fmt.Errorf("CreateJob: invalid response: status is nil")
+	}
 	if response.GetStatus().GetCode() == 0 {
 		return response.JobId, nil
 	} else {
@@ -317,11 +355,33 @@ func (c *Command) GetResult(jobID string) (result *pb.QueryResponse, not_ready b
 	if err != nil {
 		return
 	}
+	if response.Status == nil {
+		return nil, false, fmt.Errorf("GetResult: invalid response: status is nil")
+	}
 	if response.GetStatus().GetCode() == 0 {
 		return response, false, nil
 	} else if response.GetStatus().GetCode() == int32(pb.Code_NOT_READY) {
 		return nil, true, nil
 	} else {
 		return nil, false, fmt.Errorf("GetResult response: %v", protojson.Format(response))
+	}
+}
+
+func (c *Command) CancelJob(jobID string) error {
+	req := &pb.CancelQueryRequest{
+		JobId: jobID,
+	}
+	response := &pb.CancelQueryResponse{}
+	err := c.intraStub.CancelJob(c.host, req, response)
+	if err != nil {
+		return fmt.Errorf("CancelJob: %w", err)
+	}
+	if response.Status == nil {
+		return fmt.Errorf("CancelJob: invalid response: status is nil")
+	}
+	if response.GetStatus().GetCode() == 0 {
+		return nil
+	} else {
+		return fmt.Errorf("CancelJob status: %v", response.GetStatus())
 	}
 }

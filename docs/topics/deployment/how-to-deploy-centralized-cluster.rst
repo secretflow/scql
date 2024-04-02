@@ -163,7 +163,7 @@ Then you can start engine service by running docker compose up
 
 .. code-block:: bash
 
-  # If you install docker with Compose V1, pleas use `docker-compose` instead of `docker compose`
+  # If you install docker with Compose V1, please use `docker-compose` instead of `docker compose`
   $ docker compose -f docker-compose.yaml up -d
 
   Creating network "engine_default" with the default driver
@@ -300,7 +300,7 @@ Then you can start engine service by running docker compose up
 
 .. code-block:: bash
 
-  # If you install docker with Compose V1, pleas use `docker-compose` instead of `docker compose`
+  # If you install docker with Compose V1, please use `docker-compose` instead of `docker compose`
   $ docker compose -f docker-compose.yaml up -d
 
   Creating scdb_mysql_1 ... done

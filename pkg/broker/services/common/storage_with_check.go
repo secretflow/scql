@@ -40,7 +40,12 @@ func createMapLowerToOriginColName(tableMetas []storage.TableMeta) map[string]ma
 	return colMap
 }
 
-func GrantColumnConstraintsWithCheck(t *storage.MetaTransaction, projectID, party string, privs []storage.ColumnPriv) error {
+type OwnerChecker struct {
+	Owner          string
+	SkipOwnerCheck bool
+}
+
+func GrantColumnConstraintsWithCheck(t *storage.MetaTransaction, projectID string, privs []storage.ColumnPriv, columnOwnerChecker OwnerChecker) error {
 	// split info in privs
 	privMap := make(map[string][]string)
 	var toParties []string
@@ -63,14 +68,18 @@ func GrantColumnConstraintsWithCheck(t *storage.MetaTransaction, projectID, part
 	if !sliceutil.ContainsAll(members, toParties) {
 		return fmt.Errorf("GrantColumnConstraintsWithCheck: project members %+v not found", sliceutil.Subtraction(toParties, members))
 	}
-	tableMetas, err := t.GetTableMetasByTableNames(projectID, sliceutil.SliceDeDup(tableNames))
+	tableMetas, notFoundTables, err := t.GetTableMetasByTableNames(projectID, sliceutil.SliceDeDup(tableNames))
 	if err != nil {
 		return fmt.Errorf("GrantColumnConstraintsWithCheck: %s", err)
 	}
+	if len(notFoundTables) > 0 {
+		return fmt.Errorf("GrantColumnConstraintsWithCheck: table %+v not found", notFoundTables)
+	}
 	// check table meta
 	for _, tableMeta := range tableMetas {
-		if tableMeta.Table.Owner != party {
-			return fmt.Errorf("GrantColumnConstraintsWithCheck: grant ccl to columns in table %s by %s, but owner is %s", tableMeta.Table.TableName, party, tableMeta.Table.Owner)
+		// check table owner if party is not empty string
+		if !columnOwnerChecker.SkipOwnerCheck && tableMeta.Table.Owner != columnOwnerChecker.Owner {
+			return fmt.Errorf("GrantColumnConstraintsWithCheck: grant ccl to columns in table %s by %s, but owner is %s", tableMeta.Table.TableName, columnOwnerChecker.Owner, tableMeta.Table.Owner)
 		}
 	}
 	// transfer column case
@@ -100,9 +109,12 @@ func RevokeColumnConstraintsWithCheck(t *storage.MetaTransaction, projectID, par
 		tableNames = append(tableNames, priv.TableName)
 	}
 	// check owner
-	tableMetas, err := t.GetTableMetasByTableNames(projectID, sliceutil.SliceDeDup(tableNames))
+	tableMetas, notFoundTables, err := t.GetTableMetasByTableNames(projectID, sliceutil.SliceDeDup(tableNames))
 	if err != nil {
 		return fmt.Errorf("RevokeColumnConstraintsWithCheck: %s", err)
+	}
+	if len(notFoundTables) > 0 {
+		return fmt.Errorf("RevokeColumnConstraintsWithCheck: table %+v not found", notFoundTables)
 	}
 	// check table meta
 	for _, tableMeta := range tableMetas {
@@ -190,7 +202,7 @@ func DropTableWithCheck(t *storage.MetaTransaction, projectID, party string, tab
 	if tableId.ProjectID != projectID {
 		return false, fmt.Errorf("DropTableWithCheck: table %s is not in project %s", tableId.TableName, projectID)
 	}
-	exist, err = t.CheckTablesExist(tableId.ProjectID, []string{tableId.TableName})
+	_, exist, err = t.GetTables(tableId.ProjectID, []string{tableId.TableName})
 	if err != nil {
 		return false, fmt.Errorf("DropTableWithCheck: get table err: %v", err)
 	}

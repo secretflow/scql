@@ -17,11 +17,10 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
-
-	"github.com/secretflow/scql/pkg/interpreter/translator"
 )
 
 const (
@@ -36,6 +35,11 @@ const (
 	DefaultExchangeJobInfoRetryInterval = 200 * time.Millisecond
 )
 
+type SecurityCompromiseConf struct {
+	GroupByThreshold uint64 `yaml:"group_by_threshold"`
+	RevealGroupMark  bool   `yaml:"reveal_group_mark"`
+}
+
 type Config struct {
 	IntraServer  ServerConfig  `yaml:"intra_server"`
 	InterServer  ServerConfig  `yaml:"inter_server"`
@@ -44,18 +48,44 @@ type Config struct {
 	IntraHost string `yaml:"intra_host"`
 	LogLevel  string `yaml:"log_level"`
 	// self party code
-	PartyCode          string                            `yaml:"party_code"`
-	PrivatePemPath     string                            `yaml:"private_pem_path"`
-	PartyInfoFile      string                            `yaml:"party_info_file"`
-	Engine             EngineConfig                      `yaml:"engine"`
-	Storage            StorageConf                       `yaml:"storage"`
-	SecurityCompromise translator.SecurityCompromiseConf `yaml:"security_compromise"`
+	PartyCode      string `yaml:"party_code"`
+	PrivateKeyPath string `yaml:"private_key_path"`
+	// base64 encoded PEM-encoded private key
+	PrivateKeyData     string                 `yaml:"private_key_data"`
+	PartyInfoFile      string                 `yaml:"party_info_file"`
+	Engine             EngineConfig           `yaml:"engine"`
+	Storage            StorageConf            `yaml:"storage"`
+	SecurityCompromise SecurityCompromiseConf `yaml:"security_compromise"`
+	Discovery          DiscoveryConf
 	// cache
 	SessionExpireTime    time.Duration `yaml:"session_expire_time"`
 	SessionCheckInterval time.Duration `yaml:"session_expire_check_time"`
+	PersistSession       bool          `yaml:"persist_session"`
 	// exchange job info
 	ExchangeJobInfoRetryTimes    int           `yaml:"exchange_job_info_retry_times"`
 	ExchangeJobInfoRetryInterval time.Duration `yaml:"exchange_job_info_retry_interval"`
+}
+
+type DiscoveryConf struct {
+	// supported discovery types: "file", "kuscia"
+	Type   string          `yaml:"type"`
+	File   string          `yaml:"file"`
+	Kuscia *KusciaDiscConf `yaml:"kuscia"`
+}
+
+type KusciaDiscConf struct {
+	KusciaApiConf `yaml:",inline"`
+}
+
+type KusciaApiConf struct {
+	Endpoint string `yaml:"endpoint"`
+	// supported tls mode: "NOTLS", "TLS", "MTLS"
+	// - Token is needed if tls_mode == TLS or tls_mode == MTLS
+	TLSMode string `yaml:"tls_mode"`
+	Cert    string `yaml:"cert"`
+	Key     string `yaml:"key"`
+	CaCert  string `yaml:"cacert"`
+	Token   string `yaml:"token"`
 }
 
 type ServerConfig struct {
@@ -79,7 +109,23 @@ type EngineConfig struct {
 	ClientTimeout time.Duration `yaml:"timeout"`
 	Protocol      string        `yaml:"protocol"`
 	ContentType   string        `yaml:"content_type"`
-	Uris          []EngineUri   `yaml:"uris"`
+	// supported schedulers: "kuscia" or "naive"
+	Scheduler string `yaml:"scheduler"`
+	// Uris valid when scheduler is empty or "naive"
+	Uris []EngineUri `yaml:"uris"`
+	// KusciaSchedulerOption valid only when scheduler is "kuscia"
+	KusciaSchedulerOption *KusciaSchedulerConf `yaml:"kuscia_scheduler"`
+}
+
+type KusciaSchedulerConf struct {
+	KusciaApiConf `yaml:",inline"`
+
+	MaxPollTimes int           `yaml:"max_poll_times"`
+	PollInterval time.Duration `yaml:"poll_interval"`
+	MaxWaitTime  time.Duration `yaml:"max_wait_time"`
+
+	// default value is false, set true for debugging purpose
+	KeepJobAliveForDebug bool `yaml:"keep_job_alive_for_debug"`
 }
 
 type EngineUri struct {
@@ -109,7 +155,7 @@ func NewConfig(configPath string) (*Config, error) {
 	}
 
 	// checks for config
-	if len(config.Engine.Uris) == 0 {
+	if strings.ToLower(config.Engine.Scheduler) != "kuscia" && len(config.Engine.Uris) == 0 {
 		return nil, fmt.Errorf("NewConfig: no engine uris")
 	}
 	return config, nil
@@ -123,6 +169,7 @@ func newDefaultConfig() *Config {
 
 	config.SessionExpireTime = DefaultSessionExpireTime
 	config.SessionCheckInterval = DefaultSessionCheckInterval
+	config.PersistSession = true
 	config.ExchangeJobInfoRetryTimes = DefaultExchangeJobInfoRetryTimes
 	config.ExchangeJobInfoRetryInterval = DefaultExchangeJobInfoRetryInterval
 	config.Storage = StorageConf{
@@ -134,7 +181,11 @@ func newDefaultConfig() *Config {
 	config.Engine = EngineConfig{
 		ClientTimeout: DefaultEngineClientTimeout,
 		Protocol:      DefaultEngineProtocol,
+		KusciaSchedulerOption: &KusciaSchedulerConf{
+			MaxPollTimes: 20,
+			PollInterval: time.Second,
+			MaxWaitTime:  time.Minute,
+		},
 	}
-	config.SecurityCompromise = translator.SecurityCompromiseConf{RevealGroupMark: false}
 	return &config
 }

@@ -21,11 +21,13 @@ filegroup(
 
 configure_make(
     name = "ncurses",
+    args = ["-j 8"],
     configure_command = "configure",
     configure_options = [
         "--prefix $$INSTALLDIR",
         "--without-debug",
         "--without-ada",
+        "--without-tests",
         "--enable-overwrite",
     ] + select({
         "@platforms//os:osx": [],

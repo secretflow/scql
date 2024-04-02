@@ -1,0 +1,14 @@
+apiVersion: kuscia.secretflow/v1alpha1
+kind: KusciaDeployment
+metadata:
+  labels:
+    kuscia.secretflow/app-type: scql
+  name: scql
+  namespace: cross-domain
+spec:
+  initiator: alice
+  inputConfig: ""
+  parties:
+    - appImageRef: scql
+      domainID: alice
+      role: broker

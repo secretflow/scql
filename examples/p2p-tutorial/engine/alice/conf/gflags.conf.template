@@ -7,8 +7,8 @@
 --enable_peer_auth=false
 # https flags
 --server_enable_ssl=true
---server_ssl_certificate=/home/admin/engine/conf/cert.pem
---server_ssl_private_key=/home/admin/engine/conf/key.pem
+--server_ssl_certificate=/home/admin/engine/conf/cert.crt
+--server_ssl_private_key=/home/admin/engine/conf/key.key
 # set peer_engine_enable_ssl_as_client to true when peer SCQLEngine has https enabled
 --peer_engine_enable_ssl_as_client=true
 # set false when SCQLBroker IntraServer not enable https

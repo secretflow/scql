@@ -38,6 +38,7 @@ import (
 	"github.com/secretflow/scql/pkg/broker/partymgr"
 	"github.com/secretflow/scql/pkg/broker/server"
 	"github.com/secretflow/scql/pkg/broker/storage"
+	"github.com/secretflow/scql/pkg/util/kusciaclient"
 )
 
 const (
@@ -105,9 +106,33 @@ func main() {
 		}
 	}
 
-	partyMgr, err := partymgr.NewFilePartyMgr(cfg.PartyInfoFile, cfg.PartyCode)
-	if err != nil {
-		logrus.Fatalf("Failed to create file partyMgr: %v", err)
+	var partyMgr partymgr.PartyMgr
+
+	switch strings.ToLower(cfg.Discovery.Type) {
+	case "", "file":
+		path := cfg.Discovery.File
+		if len(path) == 0 {
+			path = cfg.PartyInfoFile
+		}
+		partyMgr, err = partymgr.NewFilePartyMgr(path)
+		if err != nil {
+			logrus.Fatalf("Failed to create file partyMgr: %v", err)
+		}
+	case "kuscia":
+		if cfg.Discovery.Kuscia == nil {
+			logrus.Fatal("Missing kuscia discovery config while discovery type is kuscia")
+		}
+		kuscia := cfg.Discovery.Kuscia
+		conn, err := kusciaclient.NewKusciaClientConn(kuscia.Endpoint, kuscia.TLSMode, kuscia.Cert, kuscia.Key, kuscia.CaCert, kuscia.Token)
+		if err != nil {
+			logrus.Fatalf("Failed to create kuscia client connection: %v", err)
+		}
+		partyMgr, err = partymgr.NewKusciaPartyMgr(conn)
+		if err != nil {
+			logrus.Fatalf("Failed to create kuscia partyMgr: %v", err)
+		}
+	default:
+		logrus.Fatalf("unsupported discovery type: %s", cfg.Discovery.Type)
 	}
 
 	gin.SetMode(gin.ReleaseMode)
@@ -117,8 +142,9 @@ func main() {
 		logrus.Fatalf("Failed to create broker db: %v", err)
 	}
 
-	metaMgr := storage.NewMetaManager(db)
+	metaMgr := storage.NewMetaManager(db, cfg.PersistSession)
 	if metaMgr.NeedBootstrap() {
+		logrus.Info("Start to bootstrap meta manager...")
 		err = metaMgr.Bootstrap()
 		if err != nil {
 			logrus.Fatalf("Failed to boot strap meta manager: %v", err)
@@ -152,7 +178,7 @@ func main() {
 func startService(svr *http.Server, cfg config.ServerConfig) {
 	if cfg.Protocol == "https" {
 		if cfg.CertFile == "" || cfg.KeyFile == "" {
-			logrus.Fatalf("Could't start https service without cert_file or key_file")
+			logrus.Fatal("Could't start https service without cert_file or key_file")
 		}
 		logrus.Infof("Starting to serve request on %v with https...", svr.Addr)
 		if err := svr.ListenAndServeTLS(cfg.CertFile, cfg.KeyFile); err != nil {

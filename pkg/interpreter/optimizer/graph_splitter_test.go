@@ -67,13 +67,13 @@ func TestSplitSimple(t *testing.T) {
 	e1.AddRunSQLNode("RunSQLOp3", []*translator.Tensor{t2},
 		"select test.h3.in_hospital_day from test.h3", []string{"test.h3"}, "hospital3")
 
-	leftIndex, rightIndex, err := e1.AddJoinNode("join", []*translator.Tensor{t0}, []*translator.Tensor{t1}, []string{"hospital1", "hospital2"}, translator.InnerJoin)
+	leftIndex, rightIndex, err := e1.AddJoinNode("join", []*translator.Tensor{t0}, []*translator.Tensor{t1}, []string{"hospital1", "hospital2"}, translator.InnerJoin, 0)
 	r.NoError(err)
 	t0AfterFilters, err := e1.AddFilterByIndexNode("filter", leftIndex, []*translator.Tensor{t0}, "hospital1")
 	r.NoError(err)
 	t1AfterFilters, err := e1.AddFilterByIndexNode("filter", rightIndex, []*translator.Tensor{t1}, "hospital2")
 	r.NoError(err)
-	leftIndex, rightIndex, err = e1.AddJoinNode("join", []*translator.Tensor{t0AfterFilters[0]}, []*translator.Tensor{t2}, []string{"hospital1", "hospital3"}, translator.InnerJoin)
+	leftIndex, rightIndex, err = e1.AddJoinNode("join", []*translator.Tensor{t0AfterFilters[0]}, []*translator.Tensor{t2}, []string{"hospital1", "hospital3"}, translator.InnerJoin, 0)
 	r.NoError(err)
 	_, err = e1.AddFilterByIndexNode("filter", leftIndex, []*translator.Tensor{t0AfterFilters[0]}, "hospital1")
 	r.NoError(err)
@@ -125,7 +125,7 @@ func TestSplitSimple(t *testing.T) {
 
 func TestSplitComplex(t *testing.T) {
 	r := require.New(t)
-	sql := `select ta.plain_long_0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_long_0 = tb.plain_long_0 where ta.plain_long_1 > tb.plain_long_1 and ta.compare_long_0 < tb.compare_long_0 and ta.compare_long_1 <> tb.compare_long_1 and ta.compare_long_2 >= tb.compare_long_2 and ta.compare_float_0 <= tb.compare_float_0`
+	sql := `select ta.plain_int_0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_int_0 = tb.plain_int_0 where ta.plain_int_1 > tb.plain_int_1 and ta.compare_int_0 < tb.compare_int_0 and ta.compare_int_1 <> tb.compare_int_1 and ta.compare_int_2 >= tb.compare_int_2 and ta.compare_float_0 <= tb.compare_float_0`
 	mockTables, err := mock.MockAllTables()
 	r.NoError(err)
 	is := infoschema.MockInfoSchema(mockTables)
@@ -146,8 +146,10 @@ func TestSplitComplex(t *testing.T) {
 
 	lp, _, err := core.BuildLogicalPlanWithOptimization(context.Background(), ctx, stmt, is)
 	r.NoError(err)
-
-	trans, err := translator.NewTranslator(info, &proto.SecurityConfig{ColumnControlList: ccl}, "alice", &translator.SecurityCompromiseConf{RevealGroupMark: false})
+	compileOpts := proto.CompileOptions{
+		SecurityCompromise: &proto.SecurityCompromiseConfig{RevealGroupMark: false, GroupByThreshold: 4},
+	}
+	trans, err := translator.NewTranslator(info, &proto.SecurityConfig{ColumnControlList: ccl}, "alice", &compileOpts)
 	r.NoError(err)
 	ep, err := trans.Translate(lp)
 	r.Nil(err)

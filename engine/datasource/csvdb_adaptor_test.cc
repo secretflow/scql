@@ -35,27 +35,26 @@ class CsvdbAdaptorTest : public ::testing::Test {
     temp_file_ = std::make_unique<butil::TempFile>("csv");
     temp_file_->save(csv_content_.c_str());
 
-    csv::CsvdbConf csvdb_conf;
     {
-      csvdb_conf.set_db_name("csvdb");
-      auto table = csvdb_conf.add_tables();
+      csvdb_conf_.set_db_name("csvdb");
+      auto table = csvdb_conf_.add_tables();
       table->set_table_name("staff");
       table->set_data_path(temp_file_->fname());
 
       auto column = table->add_columns();
       column->set_column_name("id");
-      column->set_column_type(csv::ColumnType::LONG);
+      column->set_column_type("int64");
       column = table->add_columns();
       column->set_column_name("age");
-      column->set_column_type(csv::ColumnType::LONG);
+      column->set_column_type("int64");
       column = table->add_columns();
       column->set_column_name("name");
-      column->set_column_type(csv::ColumnType::STRING);
+      column->set_column_type("string");
       column = table->add_columns();
       column->set_column_name("salary");
-      column->set_column_type(csv::ColumnType::DOUBLE);
+      column->set_column_type("double");
     }
-    auto status = google::protobuf::util::MessageToJsonString(csvdb_conf,
+    auto status = google::protobuf::util::MessageToJsonString(csvdb_conf_,
                                                               &csvdb_conf_str_);
     EXPECT_TRUE(status.ok());
   }
@@ -74,6 +73,7 @@ class CsvdbAdaptorTest : public ::testing::Test {
   }
 
  public:
+  csv::CsvdbConf csvdb_conf_;
   std::string csvdb_conf_str_;
   std::unique_ptr<butil::TempFile> temp_file_;
   std::string csv_content_ = R"csv(id, age, name, salary
@@ -107,6 +107,24 @@ TEST_F(CsvdbAdaptorTest, NormalQuery) {
                                               "[2100.2,4500.8,1900.5,8900]"));
 }
 
+TEST_F(CsvdbAdaptorTest, QueryWithAggregation) {
+  // Given
+  CsvdbAdaptor csvdb_adaptor(csvdb_conf_str_);
+
+  const std::string query = "select SUM(age), SUM(salary) from csvdb.staff";
+  std::vector<ColumnDesc> outputs{
+      {"age_sum", pb::PrimitiveDataType::INT64},
+      {"salary_sum", pb::PrimitiveDataType::FLOAT64}};
+
+  // When
+  auto results = csvdb_adaptor.ExecQuery(query, outputs);
+
+  // Then
+  EXPECT_EQ(results.size(), 2);
+  CheckTensorEqual(results[0], TensorFromJSON(arrow::int64(), "[114]"));
+  CheckTensorEqual(results[1], TensorFromJSON(arrow::float64(), "[17401.5]"));
+}
+
 TEST_F(CsvdbAdaptorTest, QueryWithPredicate) {
   // Given
   CsvdbAdaptor csvdb_adaptor(csvdb_conf_str_);
@@ -128,6 +146,43 @@ TEST_F(CsvdbAdaptorTest, QueryWithPredicate) {
                                               R"json(["bob", "dave"])json"));
   CheckTensorEqual(results[2],
                    TensorFromJSON(arrow::float64(), "[4500.8,8900]"));
+}
+
+TEST_F(CsvdbAdaptorTest, QueryWithDomainDataID) {
+  // Given
+  csvdb_conf_.clear_db_name();
+  ASSERT_EQ(csvdb_conf_.tables_size(), 1);
+  csvdb_conf_.mutable_tables()->at(0).set_table_name(
+      "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9");
+  std::string conf_str;
+  auto status =
+      google::protobuf::util::MessageToJsonString(csvdb_conf_, &conf_str);
+  EXPECT_TRUE(status.ok());
+  CsvdbAdaptor csvdb_adaptor(conf_str);
+
+  const std::string query =
+      R"str(select "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9"."ID",
+                   "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9"."Age",
+                   "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9"."name",
+                   "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9"."salarY"
+            from "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9")str";
+  std::vector<ColumnDesc> outputs{{"id", pb::PrimitiveDataType::INT64},
+                                  {"age", pb::PrimitiveDataType::INT64},
+                                  {"name", pb::PrimitiveDataType::STRING},
+                                  {"salary", pb::PrimitiveDataType::FLOAT64}};
+
+  // When
+  auto results = csvdb_adaptor.ExecQuery(query, outputs);
+
+  // Then
+  EXPECT_EQ(results.size(), 4);
+  CheckTensorEqual(results[0], TensorFromJSON(arrow::int64(), "[1,2,3,4]"));
+  CheckTensorEqual(results[1], TensorFromJSON(arrow::int64(), "[21,42,19,32]"));
+  CheckTensorEqual(results[2],
+                   TensorFromJSON(arrow::large_utf8(),
+                                  R"json(["alice","bob","carol","dave"])json"));
+  CheckTensorEqual(results[3], TensorFromJSON(arrow::float64(),
+                                              "[2100.2,4500.8,1900.5,8900]"));
 }
 
 }  // namespace scql::engine

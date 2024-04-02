@@ -37,12 +37,13 @@ import (
 )
 
 var _ = Suite(&testRunSQLSuite{})
-var testBackEnds = []string{MySQL, Postgres, ODPS}
+var testBackEnds = []string{MySQL, Postgres, ODPS, CSV}
 
 const (
 	MySQL    = "MYSQL"
 	Postgres = "POSTGRESQL"
 	ODPS     = "ODPS"
+	CSV      = "CSVDB"
 )
 
 type testRunSQLSuite struct {
@@ -60,8 +61,10 @@ type TestCaseSqlString struct {
 	RewrittenSqlODPS  string `json:"rewritten_sql_odps"`
 	RewrittenSqlMysql string `json:"rewritten_sql_mysql"`
 	RewrittenSqlPg    string `json:"rewritten_sql_pg"`
+	RewrittenSqlCSV   string `json:"rewritten_sql_csv"`
 	SkipOdpsTest      bool   `json:"skip_odps_test"`
 	SkipPgTest        bool   `json:"skip_pg_test"`
+	SkipCSVTest       bool   `json:"skip_csv_test"`
 	// default; if RewrittenSql set, all back ends use this sql as default
 	RewrittenSql string `json:"rewritten_sql"`
 }
@@ -93,6 +96,50 @@ func (s *testRunSQLSuite) TestRunSQL(c *C) {
 	}
 }
 
+type rewriteCase struct {
+	originSql  string
+	rewriteSql string
+}
+
+func (s *testRunSQLSuite) TestRewriteSQLWithDomainDataId(c *C) {
+	defer testleak.AfterTest(c)()
+
+	cases := []rewriteCase{
+		{
+			originSql:  "select plain_int_0 from bob.tbl_0",
+			rewriteSql: `select "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9"."plain_int_0" from "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9"`,
+		},
+		{
+			originSql:  "select distinct t0.plain_int_0, t0.groupby_float_0 from bob.tbl_0 as t0 join bob.tbl_1 as t1 where t0.join_string_0=t1.join_string_0",
+			rewriteSql: `select "t0"."plain_int_0","t0"."groupby_float_0" from "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9" as "t0" join "domain-data-id-as-table-name" as "t1" on "t0"."join_string_0"="t1"."join_string_0" group by "t0"."plain_int_0","t0"."groupby_float_0"`,
+		},
+	}
+
+	for _, ca := range cases {
+		stmt, err := s.ParseOneStmt(ca.originSql, "", "")
+		comment := Commentf("for test: %s\n", ca.originSql)
+		c.Assert(err, IsNil, comment)
+
+		err = Preprocess(s.ctx, stmt, s.is)
+		c.Assert(err, IsNil, comment)
+
+		lp, _, err := BuildLogicalPlanWithOptimization(context.Background(), s.ctx, stmt, s.is)
+		c.Assert(err, IsNil, comment)
+
+		m := make(map[DbTable]DbTable)
+		ref0 := NewDbTable("", "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9")
+		ref0.SetDBType(DBTypeCSVDB)
+		m[NewDbTable("bob", "tbl_0")] = ref0
+		ref1 := NewDbTable("", "domain-data-id-as-table-name")
+		ref1.SetDBType(DBTypeCSVDB)
+		m[NewDbTable("bob", "tbl_1")] = ref1
+		actual, _, err := RewriteSQLFromLP(lp, m, true)
+		c.Assert(err, IsNil, comment)
+		comment = Commentf("for test: %s\n expect: %s\n actual: %s", ca.originSql, ca.rewriteSql, actual)
+		c.Assert(actual == ca.rewriteSql, IsTrue, comment)
+	}
+}
+
 func GetExpectSQL(backEnd string, testCase TestCaseSqlString) string {
 	if backEnd == MySQL {
 		if testCase.RewrittenSqlMysql != "" {
@@ -109,6 +156,11 @@ func GetExpectSQL(backEnd string, testCase TestCaseSqlString) string {
 			return testCase.RewrittenSqlODPS
 		}
 	}
+	if backEnd == CSV {
+		if testCase.RewrittenSqlCSV != "" {
+			return testCase.RewrittenSqlCSV
+		}
+	}
 	return testCase.RewrittenSql
 }
 
@@ -120,6 +172,8 @@ func SkipTestFor(backEnd string, testCase TestCaseSqlString) bool {
 		return testCase.SkipPgTest
 	case ODPS:
 		return testCase.SkipOdpsTest
+	case CSV:
+		return testCase.SkipCSVTest
 	}
 	return false
 }
@@ -178,7 +232,7 @@ func regenerateSql(testCase TestCaseSqlString, s *testRunSQLSuite, dialect Diale
 	}
 	// StripFieldAsName(newStmt)
 	b := new(bytes.Buffer)
-	if err := newStmt.Restore(format.NewRestoreCtxWithDialect(dialect.GetRestoreFlags(), b, dialect.GetFormatDialect())); err != nil {
+	if err := newStmt.Restore(format.NewRestoreCtxWithDialect(format.RestoreStringSingleQuotes|format.RestoreKeyWordLowercase, b, dialect.GetFormatDialect())); err != nil {
 		return "", err
 	}
 	return b.String(), err

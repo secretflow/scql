@@ -7,6 +7,7 @@ ENV TZ=Asia/Shanghai
 RUN apt update \
     && apt upgrade -y \
     && apt install -y libgomp1 \
+    && apt install -y curl iputils-ping \
     && apt clean
 
 COPY ./$TARGETPLATFORM/scqlengine /home/admin/bin/scqlengine
@@ -19,16 +20,16 @@ FROM base as image-dev
 
 ARG GO_VERSION=1.21.5
 
-RUN apt install -y wget
+RUN apt install -y wget iproute2
 
 # install go
 RUN if [ "$TARGETPLATFORM" = "linux/arm64" ] ; \
     then \
-        GO_ARCH=arm64 && \
-        GO_SHA256SUM=841cced7ecda9b2014f139f5bab5ae31785f35399f236b8b3e75dff2a2978d96 ; \
+    GO_ARCH=arm64 && \
+    GO_SHA256SUM=841cced7ecda9b2014f139f5bab5ae31785f35399f236b8b3e75dff2a2978d96 ; \
     else \
-        GO_ARCH=amd64 && \
-        GO_SHA256SUM=e2bc0b3e4b64111ec117295c088bde5f00eeed1567999ff77bc859d7df70078e ; \
+    GO_ARCH=amd64 && \
+    GO_SHA256SUM=e2bc0b3e4b64111ec117295c088bde5f00eeed1567999ff77bc859d7df70078e ; \
     fi \
     && url="https://go.dev/dl/go${GO_VERSION}.linux-${GO_ARCH}.tar.gz"; \
     wget --no-check-certificate -O go.tgz "$url"; \

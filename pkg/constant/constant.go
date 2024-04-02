@@ -23,6 +23,10 @@ const (
 )
 
 const (
+	DefaultGroupByThreshold uint64 = 4
+)
+
+const (
 	ReasonCallbackFrontendFail = "CallbackFrontendFail"
 	ReasonSessionNotFound      = "SessionNotFound"
 	ReasonSessionAbnormalQuit  = "SessionAbnormalQuit"
@@ -32,17 +36,16 @@ const (
 	ReasonInvalidResponse      = "InvalidResponse"
 	ReasonCallEngineFail       = "CallEngineFail"
 
-	ActionNameEnginePostForStartSession = "EngineStubPost@StartSession"
-	ActionNameEnginePostForRunDag       = "EngineStubPost@RunDag"
-	ActionNameEnginePostForEndSession   = "EngineStubPost@EndSession"
-	ActionNameSCDBQueryJobDone          = "SCDBQueryJobDone"
-	ActionNameSCDBCallbackFrontend      = "SCDBCallbackFrontend"
+	ActionNameSCDBQueryJobDone     = "SCDBQueryJobDone"
+	ActionNameSCDBCallbackFrontend = "SCDBCallbackFrontend"
 )
 
+// NOTE: the type values are defined by DataType Enum in "api/v1/column.proto"
 var StringTypeAlias = map[string]bool{"string": true, "str": true}
-var IntegerTypeAlias = map[string]bool{"int": true, "long": true, "int64": true, "integer": true}
-var FloatTypeAlias = map[string]bool{"float": true}
-var DoubleTypeAlias = map[string]bool{"double": true}
+
+var IntegerTypeAlias = map[string]bool{"int32": true, "int64": true, "integer": true, "int": true}
+var FloatTypeAlias = map[string]bool{"float": true, "float32": true}
+var DoubleTypeAlias = map[string]bool{"double": true, "float64": true}
 var DateTimeTypeAlias = map[string]bool{"datetime": true}
 var TimeStampTypeAlias = map[string]bool{"timestamp": true}
 

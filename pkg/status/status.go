@@ -47,7 +47,7 @@ func (s *Status) Message() string {
 func (s *Status) ToProto() *scql.Status {
 	return &scql.Status{
 		Code:    int32(s.code),
-		Message: s.Error(),
+		Message: s.Message(),
 	}
 }
 

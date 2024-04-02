@@ -27,7 +27,6 @@ import (
 
 	"github.com/secretflow/scql/pkg/audit"
 	"github.com/secretflow/scql/pkg/constant"
-	"github.com/secretflow/scql/pkg/interpreter/translator"
 	"github.com/secretflow/scql/pkg/parser/auth"
 	"github.com/secretflow/scql/pkg/proto-gen/spu"
 )
@@ -63,25 +62,30 @@ type TlsConf struct {
 	KeyFile  string `yaml:"key_file"`
 }
 
+type SecurityCompromiseConf struct {
+	GroupByThreshold uint64 `yaml:"group_by_threshold"`
+	RevealGroupMark  bool   `yaml:"reveal_group_mark"`
+}
+
 // Config contains bootstrap configuration for SCDB
 type Config struct {
 	// SCDBHost is used as callback url for engine worked in async mode
-	SCDBHost             string                            `yaml:"scdb_host"`
-	Port                 int                               `yaml:"port"`
-	Protocol             string                            `yaml:"protocol"`
-	QueryResultCbTimeout time.Duration                     `yaml:"query_result_callback_timeout"`
-	SessionExpireTime    time.Duration                     `yaml:"session_expire_time"`
-	SessionCheckInterval time.Duration                     `yaml:"session_expire_check_time"`
-	AuthEncType          string                            `yaml:"auth_enc_type"`
-	PasswordCheck        bool                              `yaml:"password_check"`
-	LogLevel             string                            `yaml:"log_level"`
-	EnableAuditLogger    bool                              `yaml:"enable_audit_logger"`
-	AuditConfig          audit.AuditConf                   `yaml:"audit"`
-	TlsConfig            TlsConf                           `yaml:"tls"`
-	Storage              StorageConf                       `yaml:"storage"`
-	Engine               EngineConfig                      `yaml:"engine"`
-	SecurityCompromise   translator.SecurityCompromiseConf `yaml:"security_compromise"`
-	PartyAuth            PartyAuthConf                     `yaml:"party_auth"`
+	SCDBHost             string                 `yaml:"scdb_host"`
+	Port                 int                    `yaml:"port"`
+	Protocol             string                 `yaml:"protocol"`
+	QueryResultCbTimeout time.Duration          `yaml:"query_result_callback_timeout"`
+	SessionExpireTime    time.Duration          `yaml:"session_expire_time"`
+	SessionCheckInterval time.Duration          `yaml:"session_expire_check_time"`
+	AuthEncType          string                 `yaml:"auth_enc_type"`
+	PasswordCheck        bool                   `yaml:"password_check"`
+	LogLevel             string                 `yaml:"log_level"`
+	EnableAuditLogger    bool                   `yaml:"enable_audit_logger"`
+	AuditConfig          audit.AuditConf        `yaml:"audit"`
+	TlsConfig            TlsConf                `yaml:"tls"`
+	Storage              StorageConf            `yaml:"storage"`
+	Engine               EngineConfig           `yaml:"engine"`
+	SecurityCompromise   SecurityCompromiseConf `yaml:"security_compromise"`
+	PartyAuth            PartyAuthConf          `yaml:"party_auth"`
 }
 
 const (
@@ -170,7 +174,6 @@ func NewDefaultConfig() *Config {
 		ClientTimeout: DefaultClientTimeout,
 		Protocol:      DefaultProtocol,
 	}
-	config.SecurityCompromise = translator.SecurityCompromiseConf{RevealGroupMark: false}
 	config.PartyAuth = PartyAuthConf{
 		Method:               PartyAuthMethodPubKey,
 		EnableTimestampCheck: true,

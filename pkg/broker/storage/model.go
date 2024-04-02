@@ -18,6 +18,8 @@ import (
 	"time"
 )
 
+const GcLockID = 100
+
 type Project struct {
 	// ->;<-:create means read and create
 	// id can't be modified
@@ -87,18 +89,48 @@ type ColumnPriv struct {
 }
 
 type Invitation struct {
-	ID          uint64        `gorm:"column:id;primaryKey;comment:'auto generated increment id'"`
-	ProjectID   string        `gorm:"column:project_id;type:varchar(64);not null;index:,composite:identifier;comment:'project id'"`
-	Name        string        `gorm:"column:name;type:varchar(64);comment:'name'"`
-	Description string        `gorm:"column:desc;type:varchar(64);comment:'description'"`
-	Creator     string        `gorm:"column:creator;type:varchar(64);comment:'creator of the project'"`
-	Member      string        `gorm:"column:member;type:varchar(64);not null;comment:'members, flattened string, like: alice;bob'"`
-	ProjectConf ProjectConfig `gorm:"embedded"`
-	Inviter     string        `gorm:"column:inviter;type:varchar(256);index:,composite:identifier;comment:'inviter'"`
-	Invitee     string        `gorm:"column:invitee;type:varchar(256);index:,composite:identifier;comment:'invitee'"`
+	ID               uint64        `gorm:"column:id;primaryKey;comment:'auto generated increment id'"`
+	ProjectID        string        `gorm:"column:project_id;type:varchar(64);not null;index:,composite:identifier;comment:'project id'"`
+	Name             string        `gorm:"column:name;type:varchar(64);comment:'name'"`
+	Description      string        `gorm:"column:desc;type:varchar(64);comment:'description'"`
+	Creator          string        `gorm:"column:creator;type:varchar(64);comment:'creator of the project'"`
+	ProjectCreatedAt time.Time     `gorm:"column:proj_created_at;comment:'the create time of the project'"`
+	Member           string        `gorm:"column:member;type:string;not null;comment:'members, flattened string, like: alice;bob'"`
+	ProjectConf      ProjectConfig `gorm:"embedded"`
+	Inviter          string        `gorm:"column:inviter;type:varchar(256);index:,composite:identifier;comment:'inviter'"`
+	Invitee          string        `gorm:"column:invitee;type:varchar(256);index:,composite:identifier;comment:'invitee'"`
 	// 0: default, not decided to accept invitation or not; 1: accepted; 2: rejected; 3: invalid
 	Status     int8 `gorm:"column:status;default:0;comment:'accepted'"`
 	InviteTime time.Time
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
+}
+
+// SessionInfo and SessionResult ares used to support broker cluster mode
+type SessionInfo struct {
+	SessionID string `gorm:"column:session_id;type:varchar(64);primaryKey;uniqueIndex:;comment:'unique session id';->;<-:create"`
+	// 0: default, running; 1: finished; 2: canceled
+	Status        int8   `gorm:"column:status;default:0;comment:'session status'"`
+	TableChecksum []byte `gorm:"column:table_checksum;type:varbinary(256);comment:'table checksum for self party'"`
+	CCLChecksum   []byte `gorm:"column:ccl_checksum;type:varbinary(256);comment:'ccl checksum for self party'"`
+	EngineUrl     string `gorm:"column:engine_url;type:varchar(256);comment:'url for engine to communicate with peer engine'"`
+	JobInfo       []byte `gorm:"column:job_info;type:bytes;comment:'serialized job info to specify task in engine'"`
+	WorkParties   string `gorm:"column:work_parties;type:string;not null;comment:'parties involved, flattened string, like: alice;bob'"`
+	OutputNames   string `gorm:"column:output_names;type:string;comment:'output column names, flattened string, like: col1,col2'"`
+	Warning       []byte `gorm:"column:warning;type:bytes;comment:'warning infos, serialized from pb.Warning'"`
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+}
+
+type SessionResult struct {
+	SessionID string `gorm:"column:session_id;type:varchar(64);primaryKey;uniqueIndex:;comment:'unique session id';->;<-:create"`
+	Result    []byte `gorm:"column:result;type:bytes;comment:'query result, serialized from protobuf message'"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+type Lock struct {
+	ID        int8   `gorm:"column:id;primaryKey;uniqueIndex;comment:'lock id';->;<-:create"`
+	Owner     string `gorm:"column:owner;type:varchar(64);comment:'lock owner'"`
+	UpdatedAt time.Time
 }

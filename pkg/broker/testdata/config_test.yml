@@ -9,9 +9,10 @@ log_level: debug
 party_code: alice
 # NOTICE: relative paths are used here, which may cause inaccessibility due to mismatched levels of test files
 party_info_file: "../testdata/party_info.json"
-private_pem_path: "../testdata/private_key_alice.pem"
+private_key_path: "../testdata/private_key_alice.pem"
 session_expire_time: 24h
 session_expire_check_time: 1m
+persist_session: false
 exchange_job_info_retry_times: 2
 exchange_job_info_retry_interval: 10s
 intra_host: localhost:8081

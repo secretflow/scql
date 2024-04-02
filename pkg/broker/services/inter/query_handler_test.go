@@ -113,7 +113,7 @@ func (s *interTestSuite) bootstrap(manager *storage.MetaManager) {
 			identifier.DestParty = p
 			privs = append(privs, storage.ColumnPriv{ColumnPrivIdentifier: identifier, Priv: "plaintext"})
 		}
-		s.NoError(common.GrantColumnConstraintsWithCheck(txn, "1", tableNameToOwners[identifier.TableName], privs))
+		s.NoError(common.GrantColumnConstraintsWithCheck(txn, "1", privs, common.OwnerChecker{Owner: tableNameToOwners[identifier.TableName]}))
 	}
 }
 
@@ -140,6 +140,8 @@ func (s *interTestSuite) TearDownTest() {
 }
 
 func (s *interTestSuite) TestDistributeQueryErrorQuery() {
+	serverAlice := s.testAppBuilder.ServerAlice
+	serverCarol := s.testAppBuilder.ServerCarol
 	mockReq := &scql.DistributeQueryRequest{
 		ClientProtocol: application.Version,
 		ClientId:       &scql.PartyId{Code: "alice"},
@@ -153,19 +155,42 @@ func (s *interTestSuite) TestDistributeQueryErrorQuery() {
 	mockReq.Query = "select error query"
 	res, err := s.svcBob.DistributeQuery(s.ctx, mockReq)
 	s.Error(err)
-	s.Equal(err.Error(), "Error: code=300, msg=\"line 1 column 12 near \"error query\" \"")
+	s.Equal(err.Error(), "line 1 column 12 near \"error query\" ")
 	s.Nil(res)
-	// duplicated job id
-	res, err = s.svcBob.DistributeQuery(s.ctx, mockReq)
-	s.Error(err)
-	s.Equal(err.Error(), "Error: code=300, msg=\"DistributeQuery: duplicated job id 1\"")
-	s.Nil(res)
+
+	serverAlice.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == constant.AskInfoPath {
+			var req scql.AskInfoRequest
+			inputEncodingType, err := message.DeserializeFrom(r.Body, &req)
+			s.NoError(err)
+			resp, err := s.svcAlice.AskInfo(context.Background(), &req)
+			s.NoError(err)
+			body, _ := message.SerializeTo(resp, inputEncodingType)
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(body))
+		}
+	})
+	serverCarol.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == constant.AskInfoPath {
+			var req scql.AskInfoRequest
+			inputEncodingType, err := message.DeserializeFrom(r.Body, &req)
+			s.NoError(err)
+			resp, err := s.svcCarol.AskInfo(context.Background(), &req)
+			s.NoError(err)
+			body, _ := message.SerializeTo(resp, inputEncodingType)
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(body))
+		}
+	})
+
+	// use new job id to avoid conflicting with other tests
+	mockReq.JobId = "2"
 	// table not found
 	mockReq.Query = "select xxx from table_not_found"
-	mockReq.JobId = "2"
 	res, err = s.svcBob.DistributeQuery(s.ctx, mockReq)
 	s.Error(err)
-	s.Equal(err.Error(), "Error: code=300, msg=\"table table_not_found not found\"")
+	s.Equal(err.Error(), "prepareData: table [table_not_found] not found")
+	s.Nil(res)
 }
 
 func (s *interTestSuite) TestDistributeQueryChecksumNotEqual2P() {
@@ -303,13 +328,16 @@ func (s *interTestSuite) TestDistributeQueryChecksumEqual3P() {
 				JobID:     req.JobId,
 				Issuer:    &scql.PartyId{Code: "alice"},
 			}
-			session, err := application.NewSession(context.Background(), info, s.testAppBuilder.AppCarol, false)
+			session, err := application.NewSession(context.Background(), info, s.testAppBuilder.AppCarol, false, false)
 			if err != nil {
 				return
 			}
 			s.testAppBuilder.AppCarol.AddSession(req.JobId, session)
 			session.ExecuteInfo.Checksums.SaveLocal("bob", application.NewChecksumFromProto(&checksumBob))
 			session.ExecuteInfo.Checksums.SaveLocal("carol", application.NewChecksumFromProto(&checksumCarol))
+			session.ExecuteInfo.DataParties = []string{"alice", "bob", "carol"}
+			session.ExecuteInfo.WorkParties = []string{"alice", "bob", "carol"}
+			s.testAppBuilder.AppCarol.PersistSessionInfo(session)
 			resp, err := s.svcCarol.ExchangeJobInfo(context.Background(), &req)
 			s.NoError(err)
 			s.Equal(scql.ChecksumCompareResult_EQUAL, resp.ServerChecksumResult)
@@ -404,7 +432,7 @@ func (s *interTestSuite) TestDistributeQueryOtherPartyChecksumNotEqual3P() {
 				JobID:     req.JobId,
 				Issuer:    &scql.PartyId{Code: "alice"},
 			}
-			session, err := application.NewSession(context.Background(), info, s.testAppBuilder.AppCarol, false)
+			session, err := application.NewSession(context.Background(), info, s.testAppBuilder.AppCarol, false, false)
 			if err != nil {
 				return
 			}
@@ -412,6 +440,7 @@ func (s *interTestSuite) TestDistributeQueryOtherPartyChecksumNotEqual3P() {
 			session.ExecuteInfo.Checksums.SaveLocal("bob", application.NewChecksumFromProto(&checksumBob))
 			session.ExecuteInfo.Checksums.SaveLocal("carol", application.NewChecksumFromProto(&checksumCarol))
 			session.ExecuteInfo.DataParties = []string{"bob", "carol", "alice"}
+			s.testAppBuilder.AppCarol.PersistSessionInfo(session)
 			resp, err := s.svcCarol.ExchangeJobInfo(context.Background(), &req)
 			s.NoError(err)
 			// mock error to trigger ask info

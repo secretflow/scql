@@ -54,9 +54,7 @@ func NewRunSqlCtx() *runSqlCtx {
 		exprConverter:   &expression.ExprConverter{},
 		colIdToExprNode: make(map[int64]ast.ExprNode),
 		selectStmt:      &ast.SelectStmt{},
-		tableRefs:       make([]string, 0),
 		storedClause:    make(map[ClauseType]LogicalPlan),
-		clauses:         make([]ClauseType, 0),
 	}
 }
 

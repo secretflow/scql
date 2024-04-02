@@ -181,15 +181,19 @@ func LoadPrivateKeyFromPemFile(pemPath string) (any, error) {
 	if err != nil {
 		return nil, err
 	}
+	return LoadPrivateKeyFromPem(data)
+}
 
-	for block, rest := pem.Decode(data); block != nil; block, rest = pem.Decode(rest) {
-		if block.Type != "PRIVATE KEY" {
-			continue
+func LoadPrivateKeyFromPem(pemData []byte) (any, error) {
+	for block, rest := pem.Decode(pemData); block != nil; block, rest = pem.Decode(rest) {
+		if block.Type == "PRIVATE KEY" {
+			// find private key and parse it
+			return x509.ParsePKCS8PrivateKey(block.Bytes)
 		}
-		// find private key and parse it
-		return x509.ParsePKCS8PrivateKey(block.Bytes)
+		if block.Type == "RSA PRIVATE KEY" {
+			return x509.ParsePKCS1PrivateKey(block.Bytes)
+		}
 	}
-
 	return nil, errors.New("failed to decode PEM block containing private key")
 }
 

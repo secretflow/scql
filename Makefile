@@ -60,6 +60,9 @@ clean:
 test:
 	go test -v -cover ./pkg/...
 
+testsum:
+	go run gotest.tools/gotestsum@latest ./pkg/...
+
 coverage: install
 	go list -f '{{if gt (len .TestGoFiles) 0}}"go test -covermode count -coverprofile {{.Name}}.coverprofile -coverpkg ./... {{.ImportPath}}"{{end}}' ./... | xargs -I {} bash -c {}
 	find . -name "*.coverprofile"

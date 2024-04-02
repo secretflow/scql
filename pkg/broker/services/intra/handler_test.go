@@ -152,6 +152,57 @@ func (s *intraTestSuite) TestProcessInvitationNormal() {
 	s.Equal(scql.InvitationStatus_ACCEPTED, invitationsRes.Invitations[0].Status)
 }
 
+func (s *intraTestSuite) TestListInvitations() {
+	spuCfg := `{"protocol": "SEMI2K","field": "FM64"}`
+	txn := s.testAppBuilder.AppBob.MetaMgr.CreateMetaTransaction()
+	s.NoError(txn.AddInvitations([]storage.Invitation{
+		{
+			ProjectID:   "mock_id1",
+			Name:        "mock_name1",
+			ProjectConf: storage.ProjectConfig{SpuConf: spuCfg},
+			Creator:     "alice",
+			Member:      "alice;carol",
+			Inviter:     "alice",
+			Invitee:     "bob",
+			InviteTime:  time.Now(),
+		},
+		{
+			ProjectID:   "mock_id2",
+			Name:        "mock_name2",
+			ProjectConf: storage.ProjectConfig{SpuConf: spuCfg},
+			Creator:     "carol",
+			Member:      "alice;carol",
+			Inviter:     "carol",
+			Invitee:     "bob",
+			InviteTime:  time.Now(),
+		},
+		{
+			ProjectID:   "mock_id3",
+			Name:        "mock_name3",
+			ProjectConf: storage.ProjectConfig{SpuConf: spuCfg},
+			Creator:     "alice",
+			Member:      "alice;carol",
+			Inviter:     "alice",
+			Invitee:     "bob",
+			Status:      int8(pb.InvitationStatus_INVALID),
+			InviteTime:  time.Now(),
+		},
+	}))
+	txn.Finish(nil)
+	// inviter: alice
+	invitationsRes, err := s.svcBob.ListInvitations(s.ctx, &scql.ListInvitationsRequest{Filter: &scql.ListInvitationsRequest_Inviter{Inviter: "alice"}})
+	s.NoError(err)
+	s.Equal(2, len(invitationsRes.Invitations))
+	// status: undecided
+	invitationsRes, err = s.svcBob.ListInvitations(s.ctx, &scql.ListInvitationsRequest{Filter: &scql.ListInvitationsRequest_Status{Status: pb.InvitationStatus_UNDECIDED}})
+	s.NoError(err)
+	s.Equal(2, len(invitationsRes.Invitations))
+	// status: invalid
+	invitationsRes, err = s.svcBob.ListInvitations(s.ctx, &scql.ListInvitationsRequest{Filter: &scql.ListInvitationsRequest_Status{Status: pb.InvitationStatus_INVALID}})
+	s.NoError(err)
+	s.Equal(1, len(invitationsRes.Invitations))
+}
+
 func (s *intraTestSuite) TestProcessInvitationError() {
 	serverAlice := s.testAppBuilder.ServerAlice
 	serverBob := s.testAppBuilder.ServerBob
@@ -212,7 +263,7 @@ func (s *intraTestSuite) TestProcessInvitationError() {
 	}
 	_, err = s.svcBob.ProcessInvitation(s.ctx, processReq)
 	s.Error(err)
-	s.Equal("Error: code=300, msg=\"ProcessInvitation: failed to reply invitation due to invitation 1 is not same with project\"", err.Error())
+	s.Equal("ProcessInvitation: failed to reply invitation due to invitation 1 is not same with project", err.Error())
 	invitationsRes, err := s.svcBob.ListInvitations(s.ctx, &scql.ListInvitationsRequest{})
 	s.NoError(err)
 	s.Equal(1, len(invitationsRes.Invitations))
@@ -248,31 +299,31 @@ func (s *intraTestSuite) TestParameterCheck() {
 	listCCLsReq := &scql.ShowCCLRequest{ProjectId: "not_exist"}
 	_, err = s.svcAlice.ShowCCL(s.ctx, listCCLsReq)
 	s.Error(err)
-	s.Equal("Error: code=300, msg=\"ShowCCL: GetProjectAndMembers err: record not found\"", err.Error())
+	s.Equal("ShowCCL: GetProjectAndMembers err: record not found", err.Error())
 	listCCLsReq = &scql.ShowCCLRequest{ProjectId: "1", Tables: []string{"not_exist_table"}}
 	_, err = s.svcAlice.ShowCCL(s.ctx, listCCLsReq)
 	s.Error(err)
-	s.Equal("Error: code=300, msg=\"ShowCCL: tables [not_exist_table] not all exist\"", err.Error())
+	s.Equal("ShowCCL: tables [not_exist_table] not all exist", err.Error())
 	listCCLsReq = &scql.ShowCCLRequest{ProjectId: "1", Tables: []string{}, DestParties: []string{"not_exist_party"}}
 	_, err = s.svcAlice.ShowCCL(s.ctx, listCCLsReq)
 	s.Error(err)
-	s.Equal("Error: code=300, msg=\"ShowCCL: dest parties [not_exist_party] not found in project members\"", err.Error())
+	s.Equal("ShowCCL: dest parties [not_exist_party] not found in project members", err.Error())
 	grantCCLReq := &scql.GrantCCLRequest{ProjectId: "1", ColumnControlList: []*scql.ColumnControl{&scql.ColumnControl{Col: &scql.ColumnDef{ColumnName: "not_exist_col", TableName: "not_exist_table"}, PartyCode: "alice", Constraint: 1}}}
 	_, err = s.svcAlice.GrantCCL(s.ctx, grantCCLReq)
 	s.Error(err)
-	s.Equal("Error: code=300, msg=\"GrantCCL: GrantColumnConstraintsWithCheck: table not_exist_table not found\"", err.Error())
+	s.Equal("GrantCCL: GrantColumnConstraintsWithCheck: table [not_exist_table] not found", err.Error())
 	grantCCLReq = &scql.GrantCCLRequest{ProjectId: "1", ColumnControlList: []*scql.ColumnControl{&scql.ColumnControl{Col: &scql.ColumnDef{ColumnName: "not_exist_col", TableName: "not_exist_table"}, PartyCode: "alice", Constraint: 10}}}
 	_, err = s.svcAlice.GrantCCL(s.ctx, grantCCLReq)
 	s.Error(err)
-	s.Equal("Error: code=300, msg=\"GrantCCL: ColumnControlList2ColumnPriv: illegal constraint: 10\"", err.Error())
+	s.Equal("GrantCCL: ColumnControlList2ColumnPriv: illegal constraint: 10", err.Error())
 	grantCCLReq = &scql.GrantCCLRequest{ProjectId: "not_exist", ColumnControlList: []*scql.ColumnControl{&scql.ColumnControl{Col: &scql.ColumnDef{ColumnName: "not_exist_col", TableName: "not_exist_table"}, PartyCode: "alice", Constraint: 10}}}
 	_, err = s.svcAlice.GrantCCL(s.ctx, grantCCLReq)
 	s.Error(err)
-	s.Equal("Error: code=300, msg=\"GrantCCL: project not_exist has no members or project doesn't exist\"", err.Error())
+	s.Equal("GrantCCL: project not_exist has no members or project doesn't exist", err.Error())
 	revokeCCLReq := &scql.RevokeCCLRequest{ProjectId: "1", ColumnControlList: []*scql.ColumnControl{&scql.ColumnControl{Col: &scql.ColumnDef{ColumnName: "not_exist_col", TableName: "not_exist_table"}, PartyCode: "alice"}}}
 	_, err = s.svcAlice.RevokeCCL(s.ctx, revokeCCLReq)
 	s.Error(err)
-	s.Equal("Error: code=300, msg=\"RevokeCCL: RevokeColumnConstraintsWithCheck: table not_exist_table not found\"", err.Error())
+	s.Equal("RevokeCCL: RevokeColumnConstraintsWithCheck: table [not_exist_table] not found", err.Error())
 }
 
 func (s *intraTestSuite) TearDownSuite() {

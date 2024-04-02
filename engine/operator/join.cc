@@ -28,15 +28,16 @@
 #include "butil/files/scoped_temp_dir.h"
 #include "gflags/gflags.h"
 #include "msgpack.hpp"
-#include "psi/psi/core/ecdh_oprf_psi.h"
-#include "psi/psi/core/ecdh_psi.h"
-#include "psi/psi/cryptor/cryptor_selector.h"
+#include "psi/cryptor/cryptor_selector.h"
+#include "psi/ecdh/ecdh_oprf_psi.h"
+#include "psi/ecdh/ecdh_psi.h"
 #include "yacl/crypto/utils/rand.h"
 
 #include "engine/audit/audit_log.h"
 #include "engine/core/primitive_builder.h"
 #include "engine/core/tensor.h"
 #include "engine/framework/exec.h"
+#include "engine/util/psi_detail_logger.h"
 #include "engine/util/psi_helper.h"
 #include "engine/util/tensor_util.h"
 
@@ -49,38 +50,23 @@ const std::string Join::kOpType("Join");
 const std::string& Join::Type() const { return kOpType; }
 
 void Join::Validate(ExecContext* ctx) {
-  ValidateJoinType(ctx);
+  ValidateJoinTypeAndAlgo(ctx);
 
   std::vector<std::string> input_party_codes =
       ctx->GetStringValuesFromAttribute(kInputPartyCodesAttr);
   YACL_ENFORCE(input_party_codes.size() == 2,
                "Join operator attribute {} must have exactly 2 elements",
                kInputPartyCodesAttr);
-
-  int64_t algorithm =
-      ctx->TryGetInt64ValueFromAttribute(kAlgorithmAttr)
-          .value_or(static_cast<int64_t>(JoinAlgo::kEcdhPsiJoin));
-  if (algorithm == static_cast<int64_t>(JoinAlgo::kEcdhPsiJoin) ||
-      algorithm == static_cast<int64_t>(JoinAlgo::kOprfPsiJoin)) {
-    ValidatePsiVisibility(ctx);
-  } else {
-    YACL_THROW("to be implemented");
-  }
 }
 
 void Join::Execute(ExecContext* ctx) {
-  auto algorithm = ctx->TryGetInt64ValueFromAttribute(kAlgorithmAttr);
-
-  // use server hint
-  if (algorithm.has_value()) {
-    SPDLOG_INFO("use server hint");
-    if (algorithm == static_cast<int64_t>(JoinAlgo::kEcdhPsiJoin)) {
-      return Join::EcdhPsiJoin(ctx);
-    } else if (algorithm == static_cast<int64_t>(JoinAlgo::kOprfPsiJoin)) {
-      return OprfPsiJoin(ctx, IsOprfServerAccordToHint(ctx));
-    } else {
-      YACL_THROW("unsupported join algorithm id: {}", algorithm.value());
-    }
+  int64_t algorithm = ctx->GetInt64ValueFromAttribute(kAlgorithmAttr);
+  if (algorithm == static_cast<int64_t>(util::PsiAlgo::kEcdhPsi)) {
+    SPDLOG_INFO("use server hint Ecdh");
+    return Join::EcdhPsiJoin(ctx);
+  } else if (algorithm == static_cast<int64_t>(util::PsiAlgo::kOprfPsi)) {
+    SPDLOG_INFO("use server hint Oprf");
+    return OprfPsiJoin(ctx, IsOprfServerAccordToHint(ctx));
   }
 
   // coordinate between engines
@@ -103,7 +89,7 @@ void Join::Execute(ExecContext* ctx) {
   }
 }
 
-void Join::ValidateJoinType(ExecContext* ctx) {
+void Join::ValidateJoinTypeAndAlgo(ExecContext* ctx) {
   int64_t join_type = ctx->GetInt64ValueFromAttribute(kJoinTypeAttr);
   static std::unordered_set<int64_t> supported_types{
       static_cast<int64_t>(JoinType::kInnerJoin),
@@ -111,6 +97,13 @@ void Join::ValidateJoinType(ExecContext* ctx) {
       static_cast<int64_t>(JoinType::kRightJoin)};
   YACL_ENFORCE(supported_types.count(join_type) > 0, "Invalid join type: {}",
                join_type);
+  int64_t algorithm = ctx->GetInt64ValueFromAttribute(kAlgorithmAttr);
+  static std::unordered_set<int64_t> supported_algorithms{
+      static_cast<int64_t>(util::PsiAlgo::kAutoPsi),
+      static_cast<int64_t>(util::PsiAlgo::kEcdhPsi),
+      static_cast<int64_t>(util::PsiAlgo::kOprfPsi)};
+  YACL_ENFORCE(supported_algorithms.count(algorithm) > 0,
+               "Invalid join algorithm: {}", algorithm);
 }
 
 void Join::ValidatePsiVisibility(ExecContext* ctx) {
@@ -160,26 +153,28 @@ void Join::EcdhPsiJoin(ExecContext* ctx) {
   bool is_left = my_party_code == input_party_codes.at(0);
 
   auto join_keys = GetJoinKeys(ctx, is_left);
-
+  if (ctx->GetSession()->GetPsiLogger()) {
+    ctx->GetSession()->GetPsiLogger()->LogInput(join_keys);
+  }
   auto batch_provider = std::make_shared<util::BatchProvider>(join_keys);
   // NOTE(shunde.csd): There are some possible ways to optimize the performance
   // of compute join indices.
   //   1. Try to adjust bins number based on the both input sizes and memory
   // amounts.
   //   2. Try to use pure memory store when the input size is small.
-  auto self_store = std::make_shared<psi::psi::HashBucketEcPointStore>(
-      "/tmp", util::kNumBins);
-  auto peer_store = std::make_shared<psi::psi::HashBucketEcPointStore>(
-      "/tmp", util::kNumBins);
+  auto self_store =
+      std::make_shared<psi::HashBucketEcPointStore>("/tmp", util::kNumBins);
+  auto peer_store =
+      std::make_shared<psi::HashBucketEcPointStore>("/tmp", util::kNumBins);
   {
-    psi::psi::EcdhPsiOptions options;
+    psi::ecdh::EcdhPsiOptions options;
     options.link_ctx = ctx->GetSession()->GetLink();
     if (options.link_ctx->WorldSize() > 2) {
       options.link_ctx = options.link_ctx->SubWorld(
           ctx->GetNodeName() + "-EcdhPsiJoin", input_party_codes);
     }
-    options.ecc_cryptor = psi::psi::CreateEccCryptor(
-        static_cast<psi::psi::CurveType>(FLAGS_psi_curve_type));
+    options.ecc_cryptor = psi::CreateEccCryptor(
+        static_cast<psi::CurveType>(FLAGS_psi_curve_type));
     options.target_rank = yacl::link::kAllRank;
     if (join_keys.size() > 0) {
       options.on_batch_finished = util::BatchFinishedCb(
@@ -187,8 +182,10 @@ void Join::EcdhPsiJoin(ExecContext* ctx) {
           (join_keys[0]->Length() + options.batch_size - 1) /
               options.batch_size);
     }
-
-    psi::psi::RunEcdhPsi(options, batch_provider, self_store, peer_store);
+    if (ctx->GetSession()->GetPsiLogger()) {
+      options.ecdh_logger = ctx->GetSession()->GetPsiLogger()->GetEcdhLogger();
+    }
+    psi::ecdh::RunEcdhPsi(options, batch_provider, self_store, peer_store);
   }
 
   int64_t join_type = ctx->GetInt64ValueFromAttribute(kJoinTypeAttr);
@@ -202,7 +199,9 @@ void Join::EcdhPsiJoin(ExecContext* ctx) {
       "self_item_count:{}, total peer_item_count:{}, result_size:{}",
       ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
       self_size, peer_size, result_size);
-
+  if (ctx->GetSession()->GetPsiLogger()) {
+    ctx->GetSession()->GetPsiLogger()->LogOutput(join_indices, join_keys);
+  }
   SetJoinResult(ctx, is_left, std::move(join_indices));
   audit::RecordJoinNodeDetail(*ctx, static_cast<int64_t>(self_size),
                               static_cast<int64_t>(peer_size), result_size,
@@ -239,7 +238,7 @@ void Join::OprfPsiJoin(ExecContext* ctx, bool is_server,
   auto batch_provider = std::make_shared<util::BatchProvider>(join_keys);
 
   // set EcdhOprfPsiOptions
-  psi::psi::EcdhOprfPsiOptions psi_options;
+  psi::ecdh::EcdhOprfPsiOptions psi_options;
   auto psi_link = ctx->GetSession()->GetLink();
   if (psi_link->WorldSize() > 2) {
     psi_link = psi_link->SubWorld(ctx->GetNodeName() + "-OprfPsiJoin",
@@ -249,8 +248,7 @@ void Join::OprfPsiJoin(ExecContext* ctx, bool is_server,
   YACL_ENFORCE(psi_options.link0, "fail to getlink0 for OprfPsiJoin");
   psi_options.link1 = psi_options.link0->Spawn();
   YACL_ENFORCE(psi_options.link1, "fail to getlink1 for OprfPsiJoin");
-  psi_options.curve_type =
-      static_cast<psi::psi::CurveType>(FLAGS_psi_curve_type);
+  psi_options.curve_type = static_cast<psi::CurveType>(FLAGS_psi_curve_type);
 
   // create temp dir
   butil::ScopedTempDir tmp_dir;
@@ -328,14 +326,14 @@ auto Join::GetJoinRole(int64_t join_type, bool is_left) -> JoinRole {
 
 void Join::OprfPsiServer(
     ExecContext* ctx, JoinRole join_role, const std::string& tmp_dir,
-    const psi::psi::EcdhOprfPsiOptions& psi_options,
+    const psi::ecdh::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<util::BatchProvider>& batch_provider, bool is_left,
     int64_t peer_rank, util::PsiExecutionInfoTable* psi_info_table,
     std::shared_ptr<yacl::link::Context> psi_link) {
   std::vector<uint8_t> private_key =
-      yacl::crypto::SecureRandBytes(psi::psi::kEccKeySize);
+      yacl::crypto::SecureRandBytes(psi::kEccKeySize);
   auto ec_oprf_psi_server =
-      std::make_shared<psi::psi::EcdhOprfPsiServer>(psi_options, private_key);
+      std::make_shared<psi::ecdh::EcdhOprfPsiServer>(psi_options, private_key);
   YACL_ENFORCE(ec_oprf_psi_server, "Fail to create EcdhOprfPsiServer");
   auto ub_cache =
       std::make_shared<util::UbPsiJoinCache>(batch_provider->TotalLength());
@@ -361,7 +359,7 @@ void Join::OprfPsiServer(
 
 void Join::OprfPsiClient(
     ExecContext* ctx, JoinRole join_role, const std::string& tmp_dir,
-    const psi::psi::EcdhOprfPsiOptions& psi_options,
+    const psi::ecdh::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<util::BatchProvider>& batch_provider, bool is_left,
     int64_t peer_rank, util::PsiExecutionInfoTable* psi_info_table,
     std::shared_ptr<yacl::link::Context> psi_link) {

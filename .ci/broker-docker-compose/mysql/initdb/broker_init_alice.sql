@@ -109,6 +109,7 @@ CREATE TABLE `invitations` (
   `name` varchar(64) DEFAULT NULL COMMENT '''name''',
   `desc` varchar(64) DEFAULT NULL COMMENT '''description''',
   `creator` varchar(64) DEFAULT NULL COMMENT '''creator of the project''',
+  `proj_created_at` datetime(3) DEFAULT NULL COMMENT '''the create time of the project''',
   `member` varchar(64) NOT NULL COMMENT '''members, flattened string, like: alice',
   `spu_conf` longtext COMMENT '''description''',
   `inviter` varchar(256) DEFAULT NULL COMMENT '''inviter''',
@@ -120,4 +121,59 @@ CREATE TABLE `invitations` (
   PRIMARY KEY (`id`),
   INDEX `idx_project_id_inviter_invitee_identifier` (`project_id`,`inviter`, `invitee`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `session_infos`
+--
+
+DROP TABLE IF EXISTS `session_infos`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `session_infos` (
+  `session_id` varchar(64) NOT NULL COMMENT '''unique session id''',
+  `status` tinyint DEFAULT '0' COMMENT '''session status''',
+  `table_checksum` varbinary(256) DEFAULT NULL COMMENT '''table checksum for self party''',
+  `ccl_checksum` varbinary(256) DEFAULT NULL COMMENT '''ccl checksum for self party''',
+  `engine_url` varchar(256) DEFAULT NULL COMMENT '''url for engine to communicate with peer engine''',
+  `job_info` longblob COMMENT '''serialized job info to specify task in engine''',
+  `work_parties` longtext NOT NULL COMMENT '''parties involved, flattened string, like: alice',
+  `output_names` longtext COMMENT '''output column names, flattened string, like: col1,col2''',
+  `warning` longblob COMMENT '''warning infos, serialized from pb.Warning''',
+  `created_at` datetime(3) DEFAULT NULL,
+  `updated_at` datetime(3) DEFAULT NULL,
+  PRIMARY KEY (`session_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `session_results`
+--
+
+DROP TABLE IF EXISTS `session_results`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `session_results` (
+  `session_id` varchar(64) NOT NULL COMMENT '''unique session id''',
+  `result` longblob COMMENT '''query result, serialized from protobuf message''',
+  `created_at` datetime(3) DEFAULT NULL,
+  `updated_at` datetime(3) DEFAULT NULL,
+  PRIMARY KEY (`session_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `locks`
+--
+
+DROP TABLE IF EXISTS `locks`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `locks` (
+  `id` tinyint NOT NULL AUTO_INCREMENT COMMENT '''lock id''',
+  `owner` varchar(64) DEFAULT NULL COMMENT '''lock owner''',
+  `updated_at` datetime(3) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_locks_id` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=101 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;

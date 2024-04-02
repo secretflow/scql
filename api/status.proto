@@ -21,6 +21,7 @@ import "google/protobuf/any.proto";
 
 package scql.pb;
 option go_package = "proto-gen/scql";
+option java_package = "org.secretflow.scql";
 
 // The `Status` type defines a logical error model that is suitable for
 // different programming environments, including REST APIs and RPC APIs. It is
@@ -30,10 +31,11 @@ option go_package = "proto-gen/scql";
 // You can find out more about this error model and how to work with it in the
 // [API Design Guide](https://cloud.google.com/apis/design/errors).
 message Status {
-    // The status code, see [definition](https://github.com/secretflow/scql/blob/main/api/status_code.proto#L22)
-    int32 code = 1;
-    // Message for recording the error information.
-    string message = 2;
-    // A list of messages that carry the additional supplementary error details.
-    repeated google.protobuf.Any details = 3;
+  // The status code, see
+  // [definition](https://github.com/secretflow/scql/blob/main/api/status_code.proto#L22)
+  int32 code = 1;
+  // Message for recording the error information.
+  string message = 2;
+  // A list of messages that carry the additional supplementary error details.
+  repeated google.protobuf.Any details = 3;
 }

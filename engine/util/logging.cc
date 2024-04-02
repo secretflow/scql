@@ -32,6 +32,8 @@ namespace scql::engine::util {
 static const char* kFormatPattern =
     "%Y-%m-%d %H:%M:%S.%e [%l] [%s:%!:%#] [%n] %v";
 
+static const char* kDetailLogFormatPattern = "%v";
+
 namespace {
 
 static const char* kBrpcUnknownFuncname = "BRPC";
@@ -73,7 +75,9 @@ void SinkBrpcLogWithDefaultLogger() {
 
 }  // namespace
 
-void SetupLogger(LogOptions opts) {
+std::shared_ptr<spdlog::logger> CreateLogger(
+    const std::string& logger_name, const std::string& logger_file_name,
+    const LogOptions& opts, const std::string& formatter) {
   // 1. mkdir logs/ if not exists
   const butil::FilePath logs_dir{opts.log_dir};
   {
@@ -85,7 +89,7 @@ void SetupLogger(LogOptions opts) {
 
   // 2. setup scqlengine logger, make it default
   auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
-      logs_dir.Append("scqlengine.log").value(), opts.max_log_file_size,
+      logs_dir.Append(logger_file_name).value(), opts.max_log_file_size,
       opts.max_log_file_count);
 
   std::vector<spdlog::sink_ptr> sinks{file_sink};
@@ -94,15 +98,28 @@ void SetupLogger(LogOptions opts) {
     sinks.push_back(std::move(console_sink));
   }
 
-  auto root_logger = std::make_shared<spdlog::logger>(
-      "scqlengine", sinks.begin(), sinks.end());
-  root_logger->set_level(spdlog::level::info);
-  root_logger->set_pattern(kFormatPattern);
-  root_logger->flush_on(spdlog::level::info);
-  spdlog::set_default_logger(root_logger);
+  auto logger =
+      std::make_shared<spdlog::logger>(logger_name, sinks.begin(), sinks.end());
+  auto level = spdlog::level::from_str(opts.log_level);
+  logger->set_level(level);
+  logger->set_pattern(formatter);
+  logger->flush_on(spdlog::level::info);
+  return logger;
+}
 
-  // 3. sink brpc log.
+void SetupLogger(LogOptions opts) {
+  spdlog::set_default_logger(
+      CreateLogger("sciengine", "sciengine.log", opts, kFormatPattern));
+
+  // sink brpc log.
   SinkBrpcLogWithDefaultLogger();
+}
+
+std::shared_ptr<spdlog::logger> CreateDetailLogger(
+    const std::string& logger_name, const std::string& logger_file_name,
+    LogOptions opts) {
+  return CreateLogger(logger_name, logger_file_name, opts,
+                      kDetailLogFormatPattern);
 }
 
 }  // namespace scql::engine::util

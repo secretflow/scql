@@ -82,7 +82,7 @@ func TestRunSyncQueryEventToJsonString(t *testing.T) {
 					UserName: "alice",
 					HostName: "%",
 					SourceIp: "127.0.0.1",
-					Query:    "select plain_long_0 from scdb.alice_tbl_1",
+					Query:    "select plain_int_0 from scdb.alice_tbl_1",
 					Type:     audit.QueryType_DQL,
 					NumRows:  30,
 					CostTime: 3000,
@@ -98,7 +98,7 @@ func TestRunSyncQueryEventToJsonString(t *testing.T) {
 
 	actual := string(buf)
 	fmt.Println(actual)
-	expected := `{"header":{"time":"2022-10-01T02:00:00Z","status":{"code":0,"message":"","details":[]},"event_name":"RUN_SYNC_QUERY","session_id":"a0b72d96-f305-11ed-833c-0242c0a82005"},"body":{"run_sync_query":{"user_name":"alice","host_name":"%","source_ip":"127.0.0.1","query":"select plain_long_0 from scdb.alice_tbl_1","type":"DQL","num_rows":"30","affected_rows":"0","cost_time":"3000"}}}`
+	expected := `{"header":{"time":"2022-10-01T02:00:00Z","status":{"code":0,"message":"","details":[]},"event_name":"RUN_SYNC_QUERY","session_id":"a0b72d96-f305-11ed-833c-0242c0a82005"},"body":{"run_sync_query":{"user_name":"alice","host_name":"%","source_ip":"127.0.0.1","query":"select plain_int_0 from scdb.alice_tbl_1","type":"DQL","num_rows":"30","affected_rows":"0","cost_time":"3000"}}}`
 	r.True(JsonStringEqual(expected, actual))
 }
 
@@ -223,11 +223,11 @@ func TestDeserializeFromAuditJson(t *testing.T) {
 
 	t.Run("DeserializeFromRunSyncQuery", func(t *testing.T) {
 		var auditLog audit.AuditLog
-		runQueryEvent := `{"header":{"time":"2022-10-01T02:00:00Z","status":{"code":0,"message":"","details":[]},"event_name":"RUN_SYNC_QUERY","session_id":"a0b72d96-f305-11ed-833c-0242c0a82005"},"body":{"run_sync_query":{"user_name":"alice","host_name":"%","source_ip":"127.0.0.1","query":"select plain_long_0 from scdb.alice_tbl_1","type":"DQL","num_rows":"30","affected_rows":"0","cost_time":"3000"}}}`
+		runQueryEvent := `{"header":{"time":"2022-10-01T02:00:00Z","status":{"code":0,"message":"","details":[]},"event_name":"RUN_SYNC_QUERY","session_id":"a0b72d96-f305-11ed-833c-0242c0a82005"},"body":{"run_sync_query":{"user_name":"alice","host_name":"%","source_ip":"127.0.0.1","query":"select plain_int_0 from scdb.alice_tbl_1","type":"DQL","num_rows":"30","affected_rows":"0","cost_time":"3000"}}}`
 		err := protojson.Unmarshal([]byte(runQueryEvent), &auditLog)
 		r.NoError(err)
 		r.Equal(audit.EventName_RUN_SYNC_QUERY, auditLog.Header.EventName)
-		r.Equal("select plain_long_0 from scdb.alice_tbl_1", auditLog.Body.GetRunSyncQuery().Query)
+		r.Equal("select plain_int_0 from scdb.alice_tbl_1", auditLog.Body.GetRunSyncQuery().Query)
 	})
 
 }
@@ -260,7 +260,7 @@ func TestRecordAuditLog(t *testing.T) {
 						UserName: "alice",
 						HostName: "%",
 						SourceIp: "127.0.0.1",
-						Query:    "select plain_long_0 from scdb.alice_tbl_1",
+						Query:    "select plain_int_0 from scdb.alice_tbl_1",
 						NumRows:  30,
 						CostTime: 3000,
 					},
@@ -268,7 +268,7 @@ func TestRecordAuditLog(t *testing.T) {
 			},
 		}
 		r.NoError(recordAuditLog(auditLog))
-		expected := `{"header":{"time":"2022-10-01T02:00:00Z","status":{"code":0,"message":"","details":[]},"event_name":"RUN_SYNC_QUERY","session_id":"a0b72d96-f305-11ed-833c-0242c0a82005"},"body":{"run_sync_query":{"user_name":"alice","host_name":"%","source_ip":"127.0.0.1","query":"select plain_long_0 from scdb.alice_tbl_1","type":"UNKNOWN","num_rows":"30","affected_rows":"0","cost_time":"3000"}}}` + "\n"
+		expected := `{"header":{"time":"2022-10-01T02:00:00Z","status":{"code":0,"message":"","details":[]},"event_name":"RUN_SYNC_QUERY","session_id":"a0b72d96-f305-11ed-833c-0242c0a82005"},"body":{"run_sync_query":{"user_name":"alice","host_name":"%","source_ip":"127.0.0.1","query":"select plain_int_0 from scdb.alice_tbl_1","type":"UNKNOWN","num_rows":"30","affected_rows":"0","cost_time":"3000"}}}` + "\n"
 		bytes, err := os.ReadFile(config.AuditLogFile)
 		r.NoError(err)
 		actual := string(bytes)

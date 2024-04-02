@@ -28,6 +28,8 @@
 #include "engine/datasource/router.h"
 #include "engine/framework/party_info.h"
 #include "engine/framework/tensor_table.h"
+#include "engine/util/logging.h"
+#include "engine/util/psi_detail_logger.h"
 
 #include "api/engine.pb.h"
 
@@ -43,7 +45,9 @@ struct SessionOptions {
   uint32_t link_recv_timeout_ms = 30 * 1000;  // 30s
   size_t link_throttle_window_size = 0;
   size_t link_chunked_send_parallel_size = 8;
+  size_t http_max_payload_size = 1024 * 1024;  // 1M
   yacl::link::RetryOptions link_retry_options;
+  util::LogOptions log_options;
 };
 
 /// @brief Session holds everything needed to run the execution plan.
@@ -51,10 +55,11 @@ class Session {
  public:
   explicit Session(const SessionOptions& session_opt,
                    const pb::SessionStartParams& params,
+                   pb::DebugOptions debug_opts,
                    yacl::link::ILinkFactory* link_factory,
                    std::shared_ptr<spdlog::logger> logger, Router* router,
                    DatasourceAdaptorMgr* ds_mgr);
-
+  ~Session();
   /// @return session id
   std::string Id() const { return id_; }
 
@@ -129,6 +134,8 @@ class Session {
     return peer_errors_;
   }
 
+  std::shared_ptr<util::PsiDetailLogger> GetPsiLogger() { return psi_logger_; }
+
  private:
   void InitLink();
 
@@ -162,6 +169,8 @@ class Session {
 
   std::mutex peer_error_mutex_;
   std::vector<std::pair<std::string, pb::Status>> peer_errors_;
+  std::shared_ptr<util::PsiDetailLogger> psi_logger_ = nullptr;
+  pb::DebugOptions debug_opts_;
 };
 
 }  // namespace scql::engine

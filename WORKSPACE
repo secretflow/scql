@@ -49,12 +49,22 @@ load("@com_github_grpc_grpc//bazel:grpc_extra_deps.bzl", "grpc_extra_deps")
 
 grpc_extra_deps()
 
+load("@rules_proto_grpc//:repositories.bzl", "rules_proto_grpc_repos", "rules_proto_grpc_toolchains")
+
+rules_proto_grpc_toolchains()
+
+rules_proto_grpc_repos()
+
 #
 # heu
 #
 load("@com_alipay_sf_heu//third_party/bazel_cpp:repositories.bzl", "heu_cpp_deps")
 
 heu_cpp_deps()
+
+load("@rules_python//python:repositories.bzl", "py_repositories")
+
+py_repositories()
 
 load(
     "@rules_foreign_cc//foreign_cc:repositories.bzl",

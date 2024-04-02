@@ -33,6 +33,9 @@ struct DumpFileTestCase {
   std::vector<test::NamedTensor> inputs;
   std::vector<std::string> output_names;
   std::string output_file_path;
+  std::string line_terminator = "\n";
+  std::string field_deliminator = ",";
+  int64_t quoting = 1;
   std::string output_file_content;
 };
 
@@ -47,31 +50,58 @@ INSTANTIATE_TEST_SUITE_P(
     DumpPrivateTest, DumpFileTest,
     testing::Values(
         DumpFileTestCase{
-            .inputs = {test::NamedTensor(
-                           "x1",
-                           TensorFromJSON(arrow::float64(),
+            .inputs =
+                {test::NamedTensor(
+                     "x1", TensorFromJSON(arrow::float64(),
                                           "[-3.1415, 0.1, 99.999, 1000]")),
-                       test::NamedTensor(
-                           "x2", TensorFromJSON(arrow::boolean(),
-                                                "[true,false,false,true]"))},
-            .output_names = {"x1_dump", "x2_dump"},
+                 test::NamedTensor("x2",
+                                   TensorFromJSON(arrow::boolean(),
+                                                  "[true,false,false,true]")),
+                 test::NamedTensor(
+                     "x3",
+                     TensorFromJSON(arrow::large_utf8(),
+                                    R"json(["test str","","A","B"])json"))},
+            .output_names = {"x1_dump", "x2_dump", "x3_dump"},
             .output_file_path = "./dumpfile_out.1",
-            .output_file_content = R"csv("x1_dump","x2_dump"
--3.1415,true
-0.1,false
-99.999,false
-1000,true
+            .output_file_content = R"csv("x1_dump","x2_dump","x3_dump"
+-3.1415,true,"test str"
+0.1,false,""
+99.999,false,"A"
+1000,true,"B"
+)csv"},
+        DumpFileTestCase{
+            .inputs =
+                {test::NamedTensor(
+                     "x1", TensorFromJSON(arrow::float64(),
+                                          "[-3.1415, 0.1, 99.999, 1000]")),
+                 test::NamedTensor("x2",
+                                   TensorFromJSON(arrow::boolean(),
+                                                  "[true,false,false,true]")),
+                 test::NamedTensor(
+                     "x3",
+                     TensorFromJSON(arrow::large_utf8(),
+                                    R"json(["test str","","A","B"])json"))},
+            .output_names = {"x1_dump", "x2_dump", "x3_dump"},
+            .output_file_path = "./dumpfile_out.2",
+            .line_terminator = ";\n",
+            .field_deliminator = "|",
+            .quoting = 0,
+            .output_file_content = R"csv("x1_dump"|"x2_dump"|"x3_dump";
+-3.1415|true|test str;
+0.1|false|;
+99.999|false|A;
+1000|true|B;
 )csv"},
         DumpFileTestCase{
             .inputs = {test::NamedTensor(
                 "x1", TensorFromJSON(arrow::large_utf8(),
-                                     R"json(["D","C","B","B","A"])json"))},
+                                     R"json(["D","C","","B","A"])json"))},
             .output_names = {"x1_dump"},
-            .output_file_path = "./dumpfile_out.2",
+            .output_file_path = "./dumpfile_out.3",
             .output_file_content = R"csv("x1_dump"
 "D"
 "C"
-"B"
+""
 "B"
 "A"
 )csv"},
@@ -79,7 +109,7 @@ INSTANTIATE_TEST_SUITE_P(
             .inputs = {test::NamedTensor(
                 "x1", TensorFromJSON(arrow::int64(), "[-1,0,1,2,3,10,11,12]"))},
             .output_names = {"x1_dump"},
-            .output_file_path = "./dump_test/dumpfile_out.3",
+            .output_file_path = "./dump_test/dumpfile_out.4",
             .output_file_content = R"csv("x1_dump"
 -1
 0
@@ -125,8 +155,11 @@ pb::ExecNode DumpFileTest::MakeDumpFileExecNode(const DumpFileTestCase& tc) {
   builder.SetNodeName("dump-file-test");
   builder.AddStringsAttr(DumpFile::kFilePathAttr,
                          std::vector<std::string>{tc.output_file_path});
-  builder.AddStringsAttr(DumpFile::kDeliminatorAttr,
-                         std::vector<std::string>{","});
+  builder.AddStringsAttr(DumpFile::kLineTerminatorAttr,
+                         std::vector<std::string>{tc.line_terminator});
+  builder.AddStringsAttr(DumpFile::kFieldDeliminatorAttr,
+                         std::vector<std::string>{tc.field_deliminator});
+  builder.AddInt64Attr(DumpFile::kQuotingStyleAttr, tc.quoting);
   // Add inputs
   std::vector<pb::Tensor> input_datas;
   for (const auto& named_tensor : tc.inputs) {

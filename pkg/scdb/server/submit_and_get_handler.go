@@ -164,6 +164,11 @@ func (app *App) buildCompileRequest(ctx context.Context, s *session) (*scql.Comp
 		return nil, err
 	}
 
+	groupByThreshold := constant.DefaultGroupByThreshold
+	if app.config.SecurityCompromise.GroupByThreshold > 0 {
+		groupByThreshold = app.config.SecurityCompromise.GroupByThreshold
+	}
+
 	req := &scql.CompileQueryRequest{
 		Query:  s.request.GetQuery(),
 		DbName: dbName,
@@ -176,7 +181,8 @@ func (app *App) buildCompileRequest(ctx context.Context, s *session) (*scql.Comp
 		CompileOpts: &scql.CompileOptions{
 			SpuConf: spuRuntimeCfg,
 			SecurityCompromise: &scql.SecurityCompromiseConfig{
-				RevealGroupMark: app.config.SecurityCompromise.RevealGroupMark,
+				RevealGroupMark:  app.config.SecurityCompromise.RevealGroupMark,
+				GroupByThreshold: groupByThreshold,
 			},
 			DumpExeGraph: true,
 		},
@@ -186,7 +192,7 @@ func (app *App) buildCompileRequest(ctx context.Context, s *session) (*scql.Comp
 }
 
 func buildSecurityConfig(store *gorm.DB, issuerPartyCode string, tables []*scql.TableEntry) (*scql.SecurityConfig, error) {
-	parties := make([]string, 0)
+	parties := make([]string, 0, len(tables))
 	for _, tbl := range tables {
 		if !tbl.IsView {
 			parties = append(parties, tbl.GetOwner().GetCode())

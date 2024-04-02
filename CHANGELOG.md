@@ -18,7 +18,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Support for RSA key pairs in SCQLBroker.
+- Support running on [kuscia](https://github.com/secretflow/kuscia) and scheduling SCQLEngine dynamic via kuscia job.
+- Added `dry_run` parameter in DoQuery request, it could be used to check query syntax and CCL without actually executing the query.
+- Improve Broker high availability, support depolying in multi-node cluster deployment.
+- Support reading csv from OSS/MINIO.
+
 ### Changed
+
+- **breaking**: Reshape column data type, data type `LONG` is deprecated.
+- **breaking**: Modify table schema in broker storage for P2P mode.
 
 ## [0.5.0] - 2024-01-10
 

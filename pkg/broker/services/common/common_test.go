@@ -19,6 +19,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/sqlite"
@@ -31,6 +32,7 @@ import (
 	"github.com/secretflow/scql/pkg/broker/testdata"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
+	prom "github.com/secretflow/scql/pkg/util/prometheus"
 )
 
 func TestVerifyTableMeta(t *testing.T) {
@@ -147,7 +149,7 @@ func TestStorageWithCheck(t *testing.T) {
 		})
 
 	r.NoError(err)
-	meta := storage.NewMetaManager(db)
+	meta := storage.NewMetaManager(db, false)
 	err = meta.Bootstrap()
 	r.NoError(err)
 	err = testdata.CreateTestPemFiles("../../testdata")
@@ -203,23 +205,23 @@ func TestStorageWithCheck(t *testing.T) {
 		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: bob}, Priv: "plaintext"},
 	}
 	// normal grant
-	err = GrantColumnConstraintsWithCheck(transaction, t1Identifier.ProjectID, alice, privsAlice)
+	err = GrantColumnConstraintsWithCheck(transaction, t1Identifier.ProjectID, privsAlice, OwnerChecker{Owner: alice})
 	r.NoError(err)
-	err = GrantColumnConstraintsWithCheck(transaction, t2Identifier.ProjectID, bob, privsBob)
+	err = GrantColumnConstraintsWithCheck(transaction, t2Identifier.ProjectID, privsBob, OwnerChecker{Owner: bob})
 	r.NoError(err)
 
 	tableNotExistPriv := []storage.ColumnPriv{
 		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: "not_exist", ColumnName: c2Identifier.ColumnName, DestParty: alice}, Priv: "plaintext"},
 		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: "not_exist", ColumnName: c2Identifier.ColumnName, DestParty: bob}, Priv: "plaintext"},
 	}
-	err = GrantColumnConstraintsWithCheck(transaction, t2Identifier.ProjectID, bob, tableNotExistPriv)
+	err = GrantColumnConstraintsWithCheck(transaction, t2Identifier.ProjectID, tableNotExistPriv, OwnerChecker{Owner: bob})
 	r.Error(err)
-	r.Equal("GrantColumnConstraintsWithCheck: table not_exist not found", err.Error())
+	r.Equal("GrantColumnConstraintsWithCheck: table [not_exist] not found", err.Error())
 	columnNotExistPriv := []storage.ColumnPriv{
 		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: "column_not_exist", DestParty: alice}, Priv: "plaintext"},
 		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: "error_column", DestParty: bob}, Priv: "plaintext"},
 	}
-	err = GrantColumnConstraintsWithCheck(transaction, t2Identifier.ProjectID, alice, columnNotExistPriv)
+	err = GrantColumnConstraintsWithCheck(transaction, t2Identifier.ProjectID, columnNotExistPriv, OwnerChecker{Owner: alice})
 	r.Error(err)
 	r.Equal("GrantColumnConstraintsWithCheck: unknown column name column_not_exist in table t1", err.Error())
 
@@ -229,7 +231,7 @@ func TestStorageWithCheck(t *testing.T) {
 	}
 	err = RevokeColumnConstraintsWithCheck(transaction, t2Identifier.ProjectID, bob, tableNotExistPrivID)
 	r.Error(err)
-	r.Equal("RevokeColumnConstraintsWithCheck: table not_exist not found", err.Error())
+	r.Equal("RevokeColumnConstraintsWithCheck: table [not_exist] not found", err.Error())
 	columnNotExistPrivID := []storage.ColumnPrivIdentifier{
 		{ProjectID: c2Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: "column_not_exist", DestParty: alice},
 		{ProjectID: c2Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: "error_column", DestParty: bob},
@@ -257,24 +259,32 @@ func TestFeedResponseStatus(t *testing.T) {
 	r := require.New(t)
 	// test error is nil/response.Status is nil
 	response := &pb.InviteToProjectResponse{}
-	feedResponseStatus(response, nil)
+	testCtx, _ := gin.CreateTestContext(nil)
+	feedResponseStatus(testCtx, response, nil)
+	r.Equal(pb.Code_OK.String(), testCtx.GetString(prom.ResponseStatusKey))
 	r.Nil(response.Status)
 	// test error is not nil/response.Status is nil
 	response = &pb.InviteToProjectResponse{}
-	feedResponseStatus(response, fmt.Errorf("mock error"))
+	feedResponseStatus(testCtx, response, fmt.Errorf("mock error"))
 	r.NotNil(response.Status)
 	r.Equal(int32(pb.Code_INTERNAL), response.Status.Code)
-	r.Equal("Error: code=300, msg=\"mock error\"", response.Status.Message)
+	r.Equal(pb.Code_INTERNAL.String(), testCtx.GetString(prom.ResponseStatusKey))
+	r.Equal("mock error", response.Status.Message)
 	// test error is nil/response.Status is not nil
 	response = &pb.InviteToProjectResponse{Status: &pb.Status{Code: int32(pb.Code_BAD_REQUEST), Message: "mock error"}}
-	feedResponseStatus(response, nil)
+	feedResponseStatus(testCtx, response, nil)
 	r.NotNil(response.Status)
 	r.Equal(int32(pb.Code_BAD_REQUEST), response.Status.Code)
 	r.Equal("mock error", response.Status.Message)
 	// test error is not nil/response.Status is not nil
 	response = &pb.InviteToProjectResponse{Status: &pb.Status{Code: int32(pb.Code_INTERNAL), Message: "from status"}}
-	feedResponseStatus(response, status.New(pb.Code_BAD_REQUEST, "from error"))
+	feedResponseStatus(testCtx, response, status.New(pb.Code_BAD_REQUEST, "from error"))
 	r.NotNil(response.Status)
 	r.Equal(int32(pb.Code_BAD_REQUEST), response.Status.Code)
-	r.Equal("Error: code=100, msg=\"from error\"", response.Status.Message)
+	r.Equal("from error", response.Status.Message)
+	// test status wrapped with other errors
+	wrapErr := fmt.Errorf("wrap error: %w", status.New(pb.Code_OK, "origin error"))
+	feedResponseStatus(testCtx, response, wrapErr)
+	r.Equal(int32(pb.Code_OK), response.Status.Code)
+	r.Equal("origin error", response.Status.Message)
 }

@@ -25,13 +25,11 @@ namespace scql::engine::op {
 
 class In : public Operator {
  public:
-  enum class InAlgo : int64_t {
-    kSecretShareIn = 0,
-    kPsiIn = 1,
+  enum class InType : int64_t {
+    kPsiIn = 0,
+    kSecretShareIn = 1,
     kLocalIn = 2,
-    kEcdhPsiIn = 3,
-    kOprfPsiIn = 4,
-    kAlgoNums,  // Sentinel Value, must be placed last
+    kInTypeNums,  // Sentinel Value, must be placed last
   };
 
   static const std::string kOpType;
@@ -39,8 +37,8 @@ class In : public Operator {
   static constexpr char kInLeft[] = "Left";
   static constexpr char kInRight[] = "Right";
   static constexpr char kOut[] = "Out";
-
-  static constexpr char kAlgorithmAttr[] = "algorithm";
+  static constexpr char kInType[] = "in_type";
+  static constexpr char kAlgorithmAttr[] = "psi_algorithm";
   static constexpr char kInputPartyCodesAttr[] = "input_party_codes";
   static constexpr char kRevealToAttr[] = "reveal_to";
 
@@ -67,13 +65,13 @@ class In : public Operator {
   static bool IsOprfServerAccordToHint(ExecContext* ctx);
   static void OprfPsiServer(
       ExecContext* ctx, bool reveal_to_server, const std::string& tmp_dir,
-      const psi::psi::EcdhOprfPsiOptions& psi_options,
+      const psi::ecdh::EcdhOprfPsiOptions& psi_options,
       const std::shared_ptr<util::BatchProvider>& batch_provider,
       util::PsiExecutionInfoTable* psi_info_table,
       std::shared_ptr<yacl::link::Context> psi_link);
   static void OprfPsiClient(
       ExecContext* ctx, bool reveal_to_server, const std::string& tmp_dir,
-      const psi::psi::EcdhOprfPsiOptions& psi_options,
+      const psi::ecdh::EcdhOprfPsiOptions& psi_options,
       const std::shared_ptr<util::BatchProvider>& batch_provider,
       util::PsiExecutionInfoTable* psi_info_table,
       std::shared_ptr<yacl::link::Context> psi_link);

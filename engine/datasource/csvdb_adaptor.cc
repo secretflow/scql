@@ -14,6 +14,7 @@
 
 #include "engine/datasource/csvdb_adaptor.h"
 
+#include "absl/strings/ascii.h"
 #include "arrow/c/abi.h"
 #include "arrow/c/bridge.h"
 #include "arrow/result.h"
@@ -30,6 +31,7 @@
 #include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
 
+#include "api/v1/column.pb.h"
 #include "engine/datasource/csvdb_conf.pb.h"
 
 namespace scql::engine {
@@ -87,13 +89,22 @@ std::vector<TensorPtr> ConvertDuckResultToTensors(
 }  // namespace
 
 CsvdbAdaptor::CsvdbAdaptor(const std::string& json_str) {
-  google::protobuf::util::JsonParseOptions options;
-  options.case_insensitive_enum_parsing = true;
-  auto status = google::protobuf::util::JsonStringToMessage(
-      json_str, &csvdb_conf_, options);
+  auto status =
+      google::protobuf::util::JsonStringToMessage(json_str, &csvdb_conf_);
   YACL_ENFORCE(status.ok(),
                "failed to parse json to csvdb conf: json={}, error={}",
                json_str, status.ToString());
+  // check column data type
+  for (const auto& tbl : csvdb_conf_.tables()) {
+    for (const auto& col : tbl.columns()) {
+      scql::api::v1::DataType dtype;
+      if (!scql::api::v1::DataType_Parse(
+              absl::AsciiStrToUpper(col.column_type()), &dtype)) {
+        YACL_THROW("unknown column type={} of column={} in table={}",
+                   col.column_type(), col.column_name(), tbl.table_name());
+      }
+    }
+  }
 }
 
 std::vector<TensorPtr> CsvdbAdaptor::GetQueryResult(const std::string& query) {

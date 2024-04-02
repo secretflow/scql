@@ -52,6 +52,9 @@ enum Code {
   // The P2P internal exchange error
   // Local storage info is not equal to storage info in other parties
   DATA_INCONSISTENCY = 170;
+  // In P2P mode, the project status in different members conflicts and cannot
+  // reach an agreement
+  PROJECT_CONFLICT = 171;
 
   // =========================
   // 200-299 Dependence Error

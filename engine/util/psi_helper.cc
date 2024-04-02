@@ -41,7 +41,7 @@ DEFINE_int64(unbalance_psi_ratio_threshold, 5,
              "PSI, LargePartySize means the rows count of the larger party");
 DEFINE_int64(unbalance_psi_larger_party_rows_count_threshold, 81920,
              "minimum rows count of the larger party to choose unbalanced PSI");
-DEFINE_int32(psi_curve_type, psi::psi::CURVE_25519, "curve type used in PSI");
+DEFINE_int32(psi_curve_type, psi::CURVE_FOURQ, "curve type used in PSI");
 
 namespace scql::engine::util {
 PsiPlan GetPsiPlan(int64_t self_length, int64_t peer_length) {
@@ -129,12 +129,8 @@ PsiPlan CoordinatePsiPlan(ExecContext* ctx) {
   return util::GetPsiPlan(tensor_length, peer_length);
 }
 
-BatchProvider::BatchProvider(std::vector<TensorPtr> tensors, bool shuffle,
-                             size_t batch_size)
-    : tensors_(std::move(tensors)),
-      idx_(0),
-      shuffle_(shuffle),
-      batch_size_(batch_size) {
+BatchProvider::BatchProvider(std::vector<TensorPtr> tensors, size_t batch_size)
+    : tensors_(std::move(tensors)), idx_(0), batch_size_(batch_size) {
   for (size_t i = 0; i < tensors_.size(); ++i) {
     YACL_ENFORCE(tensors_[i]->GetNullCount() == 0,
                  "NULL value is unsupported in PSI");
@@ -159,7 +155,6 @@ std::vector<std::string> BatchProvider::ReadNextBatch() {
 
   for (size_t i = 1; i < tensors_.size(); ++i) {
     auto another_keys = stringify_visitors_[i]->StringifyBatch(batch_size_);
-
     YACL_ENFORCE(keys.size() == another_keys.size(),
                  "tensor #{} batch size not equals with previous", i);
 
@@ -181,22 +176,20 @@ BatchProvider::ReadNextShuffledBatch() {
   auto keys = ReadNextBatch();
   batch_indices.resize(keys.size());
   std::iota(batch_indices.begin(), batch_indices.end(), idx_);
-  if (shuffle_) {
-    shuffle_indices.resize(keys.size());
-    std::iota(shuffle_indices.begin(), shuffle_indices.end(), 0);
-    std::mt19937 rng(yacl::crypto::SecureRandU64());
-    std::shuffle(shuffle_indices.begin(), shuffle_indices.end(), rng);
-    std::vector<std::string> shuffled_keys(keys.size());
-    for (size_t i = 0; i < keys.size(); ++i) {
-      shuffled_keys[i].swap(keys[shuffle_indices[i]]);
-    }
-    keys.swap(shuffled_keys);
-    for (size_t i = 0; i < keys.size(); ++i) {
-      shuffle_indices[i] += idx_;
-    }
-  } else {
-    shuffle_indices = batch_indices;
+
+  shuffle_indices.resize(keys.size());
+  std::iota(shuffle_indices.begin(), shuffle_indices.end(), 0);
+  std::mt19937 rng(yacl::crypto::SecureRandU64());
+  std::shuffle(shuffle_indices.begin(), shuffle_indices.end(), rng);
+  std::vector<std::string> shuffled_keys(keys.size());
+  for (size_t i = 0; i < keys.size(); ++i) {
+    shuffled_keys[i].swap(keys[shuffle_indices[i]]);
   }
+  keys.swap(shuffled_keys);
+  for (size_t i = 0; i < keys.size(); ++i) {
+    shuffle_indices[i] += idx_;
+  }
+
   idx_ += keys.size();
 
   return std::make_tuple(keys, batch_indices, shuffle_indices);
@@ -213,8 +206,8 @@ std::vector<std::string> Combine(const std::vector<std::string>& col1,
 
 TensorPtr FinalizeAndComputeJoinIndices(
     bool is_left,
-    const std::shared_ptr<psi::psi::HashBucketEcPointStore>& self_cache,
-    const std::shared_ptr<psi::psi::HashBucketEcPointStore>& peer_cache,
+    const std::shared_ptr<psi::HashBucketEcPointStore>& self_cache,
+    const std::shared_ptr<psi::HashBucketEcPointStore>& peer_cache,
     int64_t join_type) {
   self_cache->Flush();
   peer_cache->Flush();
@@ -227,8 +220,8 @@ TensorPtr FinalizeAndComputeJoinIndices(
 }
 
 TensorPtr ComputeJoinIndices(
-    const std::shared_ptr<psi::psi::HashBucketEcPointStore>& left,
-    const std::shared_ptr<psi::psi::HashBucketEcPointStore>& right,
+    const std::shared_ptr<psi::HashBucketEcPointStore>& left,
+    const std::shared_ptr<psi::HashBucketEcPointStore>& right,
     int64_t join_type, bool is_left) {
   YACL_ENFORCE(left->num_bins() == right->num_bins(),
                "left store num_bins={} not equal to right store num_bins={}",
@@ -302,8 +295,8 @@ TensorPtr ComputeJoinIndices(
 
 TensorPtr FinalizeAndComputeInResult(
     bool is_left,
-    const std::shared_ptr<psi::psi::HashBucketEcPointStore>& self_cache,
-    const std::shared_ptr<psi::psi::HashBucketEcPointStore>& peer_cache) {
+    const std::shared_ptr<psi::HashBucketEcPointStore>& self_cache,
+    const std::shared_ptr<psi::HashBucketEcPointStore>& peer_cache) {
   self_cache->Flush();
   peer_cache->Flush();
 
@@ -356,8 +349,8 @@ TensorPtr InResultResolver::FinalizeAndRestoreResultOrder() {
 }  // namespace
 
 TensorPtr ComputeInResult(
-    const std::shared_ptr<psi::psi::HashBucketEcPointStore>& left,
-    const std::shared_ptr<psi::psi::HashBucketEcPointStore>& right) {
+    const std::shared_ptr<psi::HashBucketEcPointStore>& left,
+    const std::shared_ptr<psi::HashBucketEcPointStore>& right) {
   YACL_ENFORCE(left->num_bins() == right->num_bins(),
                "left store num_bins={} not equal to right store num_bins={}",
                left->num_bins(), right->num_bins());
@@ -397,8 +390,7 @@ void BatchFinishedCb::operator()(size_t batch_count) {
 
 UbPsiCipherStore::UbPsiCipherStore(std::string csv_path, bool enable_cache)
     : csv_path_(std::move(csv_path)), enable_cache_(enable_cache) {
-  out_ =
-      psi::psi::io::BuildOutputStream(psi::psi::io::FileIoOptions(csv_path_));
+  out_ = psi::io::BuildOutputStream(psi::io::FileIoOptions(csv_path_));
   YACL_ENFORCE(out_, "Fail to build outputstream for UbPsiCipherStore");
   out_->Write(kDummyField);
   out_->Write("\n");
@@ -426,8 +418,8 @@ std::vector<std::string> FinalizeAndComputeIntersection(
   server_store->Finalize();
 
   std::vector<std::string> fields{UbPsiCipherStore::kDummyField};
-  psi::psi::CsvBatchProvider server_provider(server_store->GetPath(), fields,
-                                             util::kBatchSize);
+  psi::CsvBatchProvider server_provider(server_store->GetPath(), fields,
+                                        util::kBatchSize);
   size_t batch_count = 0;
 
   // may have duplicate items
@@ -468,8 +460,8 @@ TensorPtr FinalizeAndComputeOprfInResult(
   BooleanTensorBuilder result_builder;
 
   std::vector<std::string> fields{UbPsiCipherStore::kDummyField};
-  psi::psi::CsvBatchProvider server_provider(server_store->GetPath(), fields,
-                                             util::kBatchSize);
+  psi::CsvBatchProvider server_provider(server_store->GetPath(), fields,
+                                        util::kBatchSize);
   size_t batch_count = 0;
 
   while (true) {
@@ -539,8 +531,8 @@ std::pair<TensorPtr, std::vector<uint64_t>> FinalizeAndComputeOprfJoinResult(
   };
 
   std::vector<std::string> fields{UbPsiCipherStore::kDummyField};
-  psi::psi::CsvBatchProvider server_provider(server_store->GetPath(), fields,
-                                             util::kBatchSize);
+  psi::CsvBatchProvider server_provider(server_store->GetPath(), fields,
+                                        util::kBatchSize);
   size_t batch_count = 0;
   while (true) {
     auto batch_server_data = server_provider.ReadNextBatch();
@@ -590,15 +582,19 @@ std::pair<TensorPtr, std::vector<uint64_t>> FinalizeAndComputeOprfJoinResult(
 
 void UbPsiJoinCache::SaveData(yacl::ByteContainerView item, size_t index,
                               size_t shuffle_index) {
-  seq_to_indice_[index] = shuffle_index;
+  if (idx_ >= seq_to_indice_.size()) {
+    SPDLOG_ERROR("idx:{} >= vector size:{}", idx_, seq_to_indice_.size());
+    YACL_THROW("UbPsiJoin idx out-of-bounds");
+  }
+  seq_to_indice_[idx_++] = shuffle_index;
 }
 
 // OPRF ECDH PSI phases
 void OprfPsiServerTransferServerItems(
     ExecContext* ctx, std::shared_ptr<yacl::link::Context> psi_link,
     const std::shared_ptr<util::BatchProvider>& batch_provider,
-    const std::shared_ptr<psi::psi::EcdhOprfPsiServer>& ec_oprf_psi_server,
-    std::shared_ptr<psi::psi::IUbPsiCache> ub_cache) {
+    const std::shared_ptr<psi::ecdh::EcdhOprfPsiServer>& ec_oprf_psi_server,
+    std::shared_ptr<psi::IUbPsiCache> ub_cache) {
   SPDLOG_DEBUG(
       "Oprf server start to transfer evaluated server items, my rank: {}, my "
       "party_code: {}",
@@ -616,7 +612,7 @@ void OprfPsiServerTransferServerItems(
 
 void OprfPsiServerTransferClientItems(
     ExecContext* ctx,
-    const std::shared_ptr<psi::psi::EcdhOprfPsiServer>& ec_oprf_psi_server) {
+    const std::shared_ptr<psi::ecdh::EcdhOprfPsiServer>& ec_oprf_psi_server) {
   SPDLOG_DEBUG(
       "Oprf server start to transfer client items, my rank: {}, my "
       "party_code: {}",
@@ -628,14 +624,14 @@ void OprfPsiServerTransferClientItems(
 
 void OprfPsiClientTransferServerItems(
     ExecContext* ctx, std::shared_ptr<yacl::link::Context> psi_link,
-    const psi::psi::EcdhOprfPsiOptions& psi_options,
+    const psi::ecdh::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<UbPsiCipherStore>& cipher_store) {
   SPDLOG_DEBUG(
       "Oprf client start to receive evaluated server items, my rank: {}, my "
       "party_code: {}",
       ctx->GetSession()->SelfRank(), ctx->GetSession()->SelfPartyCode());
   auto ec_oprf_psi_client_offline =
-      std::make_shared<psi::psi::EcdhOprfPsiClient>(psi_options);
+      std::make_shared<psi::ecdh::EcdhOprfPsiClient>(psi_options);
 
   yacl::link::Barrier(psi_link, "Sync for UbPsi client and server");
 
@@ -648,7 +644,7 @@ void OprfPsiClientTransferServerItems(
 void OprfPsiClientTransferClientItems(
     ExecContext* ctx,
     const std::shared_ptr<util::BatchProvider>& batch_provider,
-    const psi::psi::EcdhOprfPsiOptions& psi_options,
+    const psi::ecdh::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<UbPsiCipherStore>& cipher_store) {
   SPDLOG_DEBUG(
       "Oprf client start to transfer client items, my rank: {}, my party_code: "
@@ -656,7 +652,7 @@ void OprfPsiClientTransferClientItems(
       ctx->GetSession()->SelfRank(), ctx->GetSession()->SelfPartyCode());
 
   auto ec_oprf_psi_client_online =
-      std::make_shared<psi::psi::EcdhOprfPsiClient>(psi_options);
+      std::make_shared<psi::ecdh::EcdhOprfPsiClient>(psi_options);
 
   std::future<size_t> f_client_send_blind = std::async([&] {
     return ec_oprf_psi_client_online->SendBlindedItems(batch_provider);
@@ -672,7 +668,7 @@ void OprfPsiClientTransferClientItems(
 
 void OprfServerTransferShuffledClientItems(
     ExecContext* ctx,
-    const std::shared_ptr<psi::psi::EcdhOprfPsiServer>& ec_oprf_psi_server,
+    const std::shared_ptr<psi::ecdh::EcdhOprfPsiServer>& ec_oprf_psi_server,
     const std::string& server_cache_path, size_t batch_size,
     std::vector<uint64_t>* matched_indices, size_t* self_item_count) {
   SPDLOG_DEBUG(
@@ -681,8 +677,8 @@ void OprfServerTransferShuffledClientItems(
       ctx->GetSession()->SelfRank(), ctx->GetSession()->SelfPartyCode());
   ec_oprf_psi_server->RecvBlindAndShuffleSendEvaluate();
 
-  std::shared_ptr<psi::psi::IShuffledBatchProvider> cache_provider =
-      std::make_shared<psi::psi::UbPsiCacheProvider>(
+  std::shared_ptr<psi::IShuffledBatchProvider> cache_provider =
+      std::make_shared<psi::UbPsiCacheProvider>(
           server_cache_path, kNumBins, ec_oprf_psi_server->GetCompareLength());
 
   std::tie(*matched_indices, *self_item_count) =
@@ -692,7 +688,7 @@ void OprfServerTransferShuffledClientItems(
 void OprfCLientTransferShuffledClientItems(
     ExecContext* ctx,
     const std::shared_ptr<util::BatchProvider>& batch_provider,
-    const psi::psi::EcdhOprfPsiOptions& psi_options,
+    const psi::ecdh::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<UbPsiCipherStore>& client_store,
     const std::shared_ptr<UbPsiCipherStore>& server_store) {
   SPDLOG_DEBUG(
@@ -700,10 +696,9 @@ void OprfCLientTransferShuffledClientItems(
       "party_code: {}",
       ctx->GetSession()->SelfRank(), ctx->GetSession()->SelfPartyCode());
 
-  std::vector<uint8_t> private_key =
-      yacl::crypto::RandBytes(psi::psi::kEccKeySize);
+  std::vector<uint8_t> private_key = yacl::crypto::RandBytes(psi::kEccKeySize);
   auto ub_psi_client_shuffle_online =
-      std::make_shared<psi::psi::EcdhOprfPsiClient>(psi_options, private_key);
+      std::make_shared<psi::ecdh::EcdhOprfPsiClient>(psi_options, private_key);
 
   size_t self_items_count =
       ub_psi_client_shuffle_online->SendBlindedItems(batch_provider);
@@ -714,9 +709,8 @@ void OprfCLientTransferShuffledClientItems(
 
   auto matched_items =
       util::FinalizeAndComputeIntersection(client_store, server_store);
-  std::shared_ptr<psi::psi::IBasicBatchProvider> intersection_masked_provider =
-      std::make_shared<psi::psi::MemoryBatchProvider>(matched_items,
-                                                      kBatchSize);
+  std::shared_ptr<psi::IBasicBatchProvider> intersection_masked_provider =
+      std::make_shared<psi::MemoryBatchProvider>(matched_items, kBatchSize);
   ub_psi_client_shuffle_online->SendIntersectionMaskedItems(
       intersection_masked_provider);
 }

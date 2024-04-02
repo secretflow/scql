@@ -14,13 +14,14 @@
 
 #include "engine/link/channel_manager.h"
 
+#include "absl/strings/match.h"
 #include "spdlog/spdlog.h"
 #include "yacl/base/exception.h"
 
 namespace scql::engine {
 
 void ChannelManager::AddChannelOptions(const RemoteRole role,
-                                       const brpc::ChannelOptions& options) {
+                                       const ChannelOptions& options) {
   auto iter = options_.find(role);
   if (iter != options_.end()) {
     YACL_THROW_LOGIC_ERROR("options already exist for role={}",
@@ -31,22 +32,31 @@ void ChannelManager::AddChannelOptions(const RemoteRole role,
 
 std::shared_ptr<google::protobuf::RpcChannel> ChannelManager::Create(
     const std::string& remote_addr, RemoteRole role) {
-  brpc::ChannelOptions option;
+  ChannelOptions options;
   auto iter = options_.find(role);
   if (iter != options_.end()) {
-    option = iter->second;
+    options = iter->second;
   } else {
     SPDLOG_WARN("not found options for role={}, default use http protocal",
                 static_cast<int>(role));
-    option.protocol = "http:proto";
+    options.brpc_options.protocol = "http:proto";
   }
   auto result = std::make_shared<brpc::Channel>();
-  int init_result = result->Init(remote_addr.c_str(), &option);
+  auto addr = remote_addr;
+  // add "http://" prefix if load balancer is not empty and no "http[s]://"
+  // prefix
+  if (options.load_balancer != "" && !absl::StartsWith(addr, "http://") &&
+      !absl::StartsWith(addr, "https://")) {
+    addr = absl::StrCat("http://", addr);
+  }
+  int init_result = result->Init(addr.c_str(), options.load_balancer.c_str(),
+                                 &(options.brpc_options));
   if (init_result != 0) {
     YACL_THROW(
-        "BrpcChannel Init failed, ret={}, remote_addr={}, role={}, protocal={}",
-        init_result, remote_addr, static_cast<int>(role),
-        option.protocol.name());
+        "BrpcChannel Init failed, ret={}, remote_addr={}, load_balancer={}, "
+        "role={}, protocol={}",
+        init_result, addr, static_cast<int>(role), options.load_balancer,
+        options.brpc_options.protocol.name());
   }
   return result;
 }

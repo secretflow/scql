@@ -493,6 +493,24 @@ func (er *expressionRewriter) unaryOpToExpression(v *ast.UnaryOperationExpr) {
 		// expression (+ a) is equal to a
 		return
 	case opcode.Minus:
+		if value, ok := v.V.(*driver.ValueExpr); ok {
+			switch value.Datum.Kind() {
+			case types.KindInt64:
+				value.Datum.SetValue(-value.Datum.GetInt64())
+			case types.KindUint64:
+				value.Datum.SetValue(-value.Datum.GetUint64())
+			case types.KindFloat32:
+				value.Datum.SetValue(-value.Datum.GetFloat32())
+			case types.KindFloat64:
+				value.Datum.SetValue(-value.Datum.GetFloat64())
+			default:
+				er.err = errors.Errorf("UnSupported UnaryMinus arg %v", value)
+				return
+			}
+			er.ctxStack[stkLen-1] = &expression.Constant{Value: value.Datum, RetType: er.ctxStack[stkLen-1].GetType()}
+			v.Op = opcode.Plus
+			return
+		}
 		op = ast.UnaryMinus
 	case opcode.BitNeg:
 		op = ast.BitNeg
@@ -523,6 +541,13 @@ func (er *expressionRewriter) binaryOpToExpression(v *ast.BinaryOperationExpr) {
 		if lLen != 1 || rLen != 1 {
 			er.err = expression.ErrOperandColumns.GenWithStackByArgs(1)
 			return
+		}
+		if v.Op == opcode.Div {
+			argL := er.ctxStack[stkLen-2]
+			argR := er.ctxStack[stkLen-1]
+			if argL.GetType().IsInt() && argR.GetType().IsInt() {
+				er.ctxStack[stkLen-2] = expression.BuildCastFunction(er.sctx, argL, types.NewFieldType(mysql.TypeDouble))
+			}
 		}
 		function, er.err = er.newFunction(v.Op.String(), types.NewFieldType(mysql.TypeUnspecified), er.ctxStack[stkLen-2:]...)
 	}

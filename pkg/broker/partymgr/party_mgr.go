@@ -23,8 +23,12 @@ import (
 )
 
 var (
-	_ PartyMgr = &FilePartyMgr{}
+	_ PartyMgr = &filePartyMgr{}
 )
+
+// type Discoverer interface {
+// 	FindPeers()
+// }
 
 type PartyMgr interface {
 	GetBrokerUrlByParty(party string) (string, error)
@@ -44,12 +48,12 @@ type BrokerInfo struct {
 	Participants []*Participant `json:"participants"`
 }
 
-type FilePartyMgr struct {
+type filePartyMgr struct {
 	urlMap    map[string]string
 	pubKeyMap map[string]string
 }
 
-func NewFilePartyMgr(partyPath string, selfCode string) (PartyMgr, error) {
+func NewFilePartyMgr(partyPath string) (PartyMgr, error) {
 	content, err := os.ReadFile(partyPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file %s: %+v", partyPath, err)
@@ -60,7 +64,7 @@ func NewFilePartyMgr(partyPath string, selfCode string) (PartyMgr, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal from json: %v", err)
 	}
-	filePartyMgr := FilePartyMgr{
+	filePartyMgr := filePartyMgr{
 		urlMap:    map[string]string{},
 		pubKeyMap: map[string]string{},
 	}
@@ -73,7 +77,7 @@ func NewFilePartyMgr(partyPath string, selfCode string) (PartyMgr, error) {
 
 }
 
-func (m *FilePartyMgr) GetBrokerUrlByParty(party string) (string, error) {
+func (m *filePartyMgr) GetBrokerUrlByParty(party string) (string, error) {
 	url, ok := m.urlMap[party]
 	if !ok {
 		return "", fmt.Errorf("GetBrokerUrlByParty: no url for party: %v", party)
@@ -81,7 +85,7 @@ func (m *FilePartyMgr) GetBrokerUrlByParty(party string) (string, error) {
 	return url, nil
 }
 
-func (m *FilePartyMgr) GetPubKeyByParty(party string) (string, error) {
+func (m *filePartyMgr) GetPubKeyByParty(party string) (string, error) {
 	pubKey, ok := m.pubKeyMap[party]
 	if !ok {
 		return "", fmt.Errorf("GetPubKeyByParty: no pubKey for party: %v", party)
@@ -89,7 +93,7 @@ func (m *FilePartyMgr) GetPubKeyByParty(party string) (string, error) {
 	return pubKey, nil
 }
 
-func (m *FilePartyMgr) GetPartyInfoByParties(parties []string) (*translator.PartyInfo, error) {
+func (m *filePartyMgr) GetPartyInfoByParties(parties []string) (*translator.PartyInfo, error) {
 	var participants []*translator.Participant
 	for _, party := range parties {
 		participant := &translator.Participant{PartyCode: party, Endpoints: []string{}}

@@ -14,6 +14,7 @@
 
 load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_cc//cc:defs.bzl", "cc_proto_library")
+load("@rules_java//java:defs.bzl", "java_proto_library")
 load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 
 package(default_visibility = ["//visibility:public"])
@@ -51,6 +52,7 @@ proto_library(
     name = "engine_proto",
     srcs = ["engine.proto"],
     deps = [
+        ":common_proto",
         ":core_proto",
         ":status_proto",
         ":subgraph_proto",
@@ -94,9 +96,17 @@ proto_library(
         ":common_proto",
         ":core_proto",
         ":status_proto",
+        "@com_google_protobuf//:timestamp_proto",
         "@googleapis//google/api:annotations_proto",
         "@googleapis//google/api:field_behavior_proto",
         "@spulib//libspu:spu_proto",
+    ],
+)
+
+java_proto_library(
+    name = "broker_java_proto",
+    deps = [
+        ":broker_proto",
     ],
 )
 

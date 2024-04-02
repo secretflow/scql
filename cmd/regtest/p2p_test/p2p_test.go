@@ -36,11 +36,13 @@ import (
 
 const (
 	Deliminator = ","
+	ABY3        = "ABY3"
+	SEMI2K      = "SEMI2K"
+	CHEETAH     = "CHEETAH"
 )
 
 const (
-	concurrentNum      = 5
-	defaultProjectName = "scdb"
+	concurrentNum = 5
 	// timeout send request to intra broker
 	timeoutS        = 60
 	fetchIntervalMs = 100
@@ -51,6 +53,7 @@ const (
 )
 
 var (
+	projectName    = "scdb"
 	testDataSource regtest.TestDataSource
 
 	// addresses
@@ -70,7 +73,8 @@ type testConfig struct {
 	SkipPlaintextCCLTest bool   `yaml:"skip_plaintext_ccl_test"`
 	ProjectConf          string `yaml:"project_conf"`
 	HttpProtocol         string `yaml:"http_protocol"`
-	BrokerPorts          string `yaml:"broker_ports"`
+	BrokerAddrs          string `yaml:"broker_addrs"`
+	SpuProtocol          string `yaml:"spu_protocol"`
 	MySQLConnStr         string `yaml:"mysql_conn_str"`
 }
 
@@ -102,8 +106,8 @@ func readConf(path string) (*testConfig, error) {
 }
 
 func getUrlList(conf *testConfig) error {
-	portStr := conf.BrokerPorts
-	ports := strings.Split(portStr, Deliminator)
+	addrStr := conf.BrokerAddrs
+	addrs := strings.Split(addrStr, Deliminator)
 	httpProtocol := conf.HttpProtocol
 	var hostProtocol string
 	if httpProtocol == "https" {
@@ -111,14 +115,14 @@ func getUrlList(conf *testConfig) error {
 	} else {
 		hostProtocol = "http"
 	}
-	if len(ports) != 3 {
-		return fmt.Errorf("need three ports for test, got: %s", portStr)
+	if len(addrs) != 3 {
+		return fmt.Errorf("need three ports for test, got: %s", addrs)
 	}
-	aliceAddress := fmt.Sprintf("%s://localhost:%s", hostProtocol, strings.Trim(ports[0], " "))
+	aliceAddress := fmt.Sprintf("%s://%s", hostProtocol, strings.Trim(addrs[0], " "))
 	aliceStub = brokerutil.NewCommand(aliceAddress, timeoutS)
-	bobAddress := fmt.Sprintf("%s://localhost:%s", hostProtocol, strings.Trim(ports[1], " "))
+	bobAddress := fmt.Sprintf("%s://%s", hostProtocol, strings.Trim(addrs[1], " "))
 	bobStub = brokerutil.NewCommand(bobAddress, timeoutS)
-	carolAddress := fmt.Sprintf("%s://localhost:%s", hostProtocol, strings.Trim(ports[2], " "))
+	carolAddress := fmt.Sprintf("%s://%s", hostProtocol, strings.Trim(addrs[2], " "))
 	carolStub = brokerutil.NewCommand(carolAddress, timeoutS)
 	stubMap = make(map[string]*brokerutil.Command)
 	stubMap[alice] = aliceStub
@@ -136,9 +140,9 @@ func TestMain(m *testing.M) {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
-
-	if len(testConf.BrokerPorts) == 0 {
-		fmt.Println("Skipping testing due to empty BrokerPorts")
+	projectName = fmt.Sprintf("scdb_%s", testConf.SpuProtocol)
+	if len(testConf.BrokerAddrs) == 0 {
+		fmt.Println("Skipping testing due to empty BrokerAddrs")
 		return
 	}
 
@@ -158,9 +162,7 @@ func TestMain(m *testing.M) {
 
 func TestRunQueryWithNormalCCL(t *testing.T) {
 	r := require.New(t)
-	err := clearData()
-	r.NoError(err)
-	err = getUrlList(testConf)
+	err := getUrlList(testConf)
 	r.NoError(err)
 	mockTables, err := mock.MockAllTables()
 	r.NoError(err)
@@ -168,8 +170,8 @@ func TestRunQueryWithNormalCCL(t *testing.T) {
 	cclList, err := mock.MockAllCCL()
 	r.NoError(err)
 	r.NoError(createProjectTableAndCcl(testConf.ProjectConf, cclList, testConf.SkipCreateTableCCL))
-	r.NoError(runQueryTest(alice, testFlag{sync: false, testConcurrent: !testConf.SkipConcurrentTest, testSerial: true}))
-	r.NoError(runQueryTest(alice, testFlag{sync: true, testConcurrent: !testConf.SkipConcurrentTest, testSerial: true}))
+	r.NoError(runQueryTest(alice, testConf.SpuProtocol, testFlag{sync: false, testConcurrent: !testConf.SkipConcurrentTest, testSerial: true}))
+	r.NoError(runQueryTest(alice, testConf.SpuProtocol, testFlag{sync: true, testConcurrent: !testConf.SkipConcurrentTest, testSerial: true}))
 }
 
 func TestConcurrentModifyProject(t *testing.T) {
@@ -211,9 +213,10 @@ func TestConcurrentModifyProject(t *testing.T) {
 	}
 }
 
-func runQueryTest(user string, flags testFlag) (err error) {
-	path := []string{"../testdata/single_party.json", "../testdata/two_parties.json", "../testdata/multi_parties.json"}
-	for _, fileName := range path {
+func runQueryTest(user string, spu_protocol string, flags testFlag) (err error) {
+	fmt.Printf("test protocol: %s\n", spu_protocol)
+	path := map[string][]string{SEMI2K: {"../testdata/single_party.json", "../testdata/single_party_postgres.json", "../testdata/two_parties.json", "../testdata/multi_parties.json"}, CHEETAH: {"../testdata/two_parties.json"}, ABY3: {"../testdata/multi_parties.json"}}
+	for _, fileName := range path[spu_protocol] {
 		if flags.testSerial {
 			// use alice as issuer
 			if err := testCaseForSerial(fileName, flags.sync, user); err != nil {
@@ -321,27 +324,27 @@ func createProjectTableAndCcl(projectConf string, cclList []*scql.SecurityConfig
 		return nil
 	}
 	// create project
-	_, err := aliceStub.CreateProject(defaultProjectName, projectConf)
+	_, err := aliceStub.CreateProject(projectName, projectConf)
 	if err != nil {
 		return err
 	}
 	// invite bob
-	err = aliceStub.InviteMember(defaultProjectName, bob)
+	err = aliceStub.InviteMember(projectName, bob)
 	if err != nil {
 		return err
 	}
 	// bob accept
-	err = processInvitation(bobStub, defaultProjectName)
+	err = processInvitation(bobStub, projectName)
 	if err != nil {
 		return err
 	}
 	// invite carol
-	err = aliceStub.InviteMember(defaultProjectName, carol)
+	err = aliceStub.InviteMember(projectName, carol)
 	if err != nil {
 		return err
 	}
 	// carol accept
-	err = processInvitation(carolStub, defaultProjectName)
+	err = processInvitation(carolStub, projectName)
 	if err != nil {
 		return err
 	}
@@ -366,7 +369,7 @@ func createProjectTableAndCcl(projectConf string, cclList []*scql.SecurityConfig
 			if !ok {
 				return fmt.Errorf("%s not found in physicalTableMetas", dbTableName)
 			}
-			err = stubMap[tableOwner].CreateTable(defaultProjectName, dbTableName, pt.DBType, pt.RefTable(), pt.GetColumnDesc())
+			err = stubMap[tableOwner].CreateTable(projectName, dbTableName, pt.DBType, pt.RefTable(), pt.GetColumnDesc())
 			if err != nil {
 				return err
 			}
@@ -376,7 +379,7 @@ func createProjectTableAndCcl(projectConf string, cclList []*scql.SecurityConfig
 	}
 	fmt.Println("Grant CCL...")
 	for party, values := range ccls {
-		err = stubMap[party].GrantCCL(defaultProjectName, values)
+		err = stubMap[party].GrantCCL(projectName, values)
 		if err != nil {
 			return err
 		}
@@ -476,7 +479,7 @@ func concurrentModifyProjectTableAndCcl(projectID, projectConf string, cclList [
 				return
 			}
 			tableOwner := regtest.TableToPartyCode[tableName]
-			_, err = stubMap[tableOwner].DoQuery(projectID, fmt.Sprintf("select * from %s limit 1", tableName))
+			_, err = stubMap[tableOwner].DoQuery(projectID, fmt.Sprintf("select * from %s limit 1", tableName), &scql.DebugOptions{EnablePsiDetailLog: false})
 			errCh <- err
 		}(tableName)
 	}
@@ -538,7 +541,7 @@ func processInvitation(stub *brokerutil.Command, projectID string) error {
 
 func runSql(command *brokerutil.Command, sql string, sync bool) ([]*scql.Tensor, error) {
 	if sync {
-		resp, err := command.DoQuery(defaultProjectName, sql)
+		resp, err := command.DoQuery(projectName, sql, &scql.DebugOptions{EnablePsiDetailLog: false})
 		if err != nil {
 			return nil, err
 		}
@@ -547,7 +550,7 @@ func runSql(command *brokerutil.Command, sql string, sync bool) ([]*scql.Tensor,
 		}
 		return resp.OutColumns, nil
 	} else {
-		jobID, err := command.CreateJob(defaultProjectName, sql)
+		jobID, err := command.CreateJob(projectName, sql, &scql.DebugOptions{EnablePsiDetailLog: false})
 		if err != nil {
 			return nil, err
 		}

@@ -14,6 +14,7 @@
 
 #include "engine/datasource/duckdb_wrapper.h"
 
+#include "absl/strings/ascii.h"
 #include "duckdb/function/replacement_scan.hpp"
 #include "duckdb/function/table/read_csv.hpp"
 #include "duckdb/parser/expression/constant_expression.hpp"
@@ -25,6 +26,7 @@
 
 #include "engine/util/filepath_helper.h"
 
+#include "api/v1/column.pb.h"
 #include "engine/datasource/csvdb_conf.pb.h"
 
 namespace scql::engine {
@@ -39,30 +41,62 @@ DEFINE_string(csv_null_str, "NULL",
 
 namespace {
 
-static duckdb::LogicalType ToLogicalType(csv::ColumnType type) {
+static duckdb::LogicalTypeId ToLogicalTypeId(scql::api::v1::DataType type) {
   switch (type) {
-    case csv::ColumnType::LONG:
-      return duckdb::LogicalType::BIGINT;
-    case csv::ColumnType::FLOAT:
-      return duckdb::LogicalType::FLOAT;
-    case csv::ColumnType::DOUBLE:
-      return duckdb::LogicalType::DOUBLE;
-    case csv::ColumnType::STRING:
-      return duckdb::LogicalType::VARCHAR;
-    // in duckdb, date type represent year, month and day:
-    // http://duckdb.org/docs/sql/data_types/date
-    case csv::ColumnType::DATETIME:
-      return duckdb::LogicalType::DATE;
-    case csv::ColumnType::TIMESTAMP:
-      return duckdb::LogicalType::TIMESTAMP_S;
+    case scql::api::v1::DataType::BOOL:
+      return duckdb::LogicalTypeId::BOOLEAN;
+    case scql::api::v1::DataType::INT8:
+      return duckdb::LogicalTypeId::TINYINT;
+    case scql::api::v1::DataType::INT16:
+      return duckdb::LogicalTypeId::SMALLINT;
+    case scql::api::v1::DataType::INT32:
+    case scql::api::v1::DataType::INT:
+    case scql::api::v1::DataType::INTEGER:
+      return duckdb::LogicalTypeId::INTEGER;
+    case scql::api::v1::DataType::INT64:
+      return duckdb::LogicalTypeId::BIGINT;
+    case scql::api::v1::DataType::FLOAT32:
+    case scql::api::v1::DataType::FLOAT:
+      return duckdb::LogicalTypeId::FLOAT;
+    case scql::api::v1::DataType::FLOAT64:
+    case scql::api::v1::DataType::DOUBLE:
+      return duckdb::LogicalTypeId::DOUBLE;
+    case scql::api::v1::DataType::STRING:
+    case scql::api::v1::DataType::STR:
+      return duckdb::LogicalTypeId::VARCHAR;
+    case scql::api::v1::DataType::DATETIME:
+      return duckdb::LogicalTypeId::DATE;
+    case scql::api::v1::DataType::TIMESTAMP:
+      return duckdb::LogicalTypeId::TIMESTAMP_SEC;
     default:
-      return duckdb::LogicalType::INVALID;
+      return duckdb::LogicalTypeId::INVALID;
   }
+}
+
+std::string ToDuckDBDataType(const std::string &type) {
+  duckdb::LogicalTypeId ret = duckdb::LogicalTypeId::INVALID;
+
+  scql::api::v1::DataType dtype;
+  if (scql::api::v1::DataType_Parse(absl::AsciiStrToUpper(type), &dtype)) {
+    ret = ToLogicalTypeId(dtype);
+  }
+
+  return duckdb::EnumUtil::ToString(ret);
 }
 
 struct CSVTableReplacementScanData : public duckdb::ReplacementScanData {
   const csv::CsvdbConf *csvdb_conf;
 };
+
+static std::string GetS3Prefix(const std::string &url) {
+  const std::string prefixes[] = {"oss://", "minio://", "s3://"};
+  for (auto &prefix : prefixes) {
+    if (url.rfind(prefix, 0) == 0) {
+      return prefix;
+    }
+  }
+  return std::string();
+}
 
 static duckdb::unique_ptr<duckdb::TableRef> CSVTableReplacementScan(
     duckdb::ClientContext &context, const std::string &table_name,
@@ -74,9 +108,15 @@ static duckdb::unique_ptr<duckdb::TableRef> CSVTableReplacementScan(
 
   const csv::CsvTableConf *csv_tbl = nullptr;
   for (int i = 0; i < scan_data->csvdb_conf->tables_size(); ++i) {
-    const std::string full_table_name =
-        fmt::format("{}.{}", scan_data->csvdb_conf->db_name(),
-                    scan_data->csvdb_conf->tables(i).table_name());
+    std::string full_table_name;
+    if (scan_data->csvdb_conf->db_name().empty()) {
+      full_table_name = scan_data->csvdb_conf->tables(i).table_name();
+    } else {
+      full_table_name =
+          fmt::format("{}.{}", scan_data->csvdb_conf->db_name(),
+                      scan_data->csvdb_conf->tables(i).table_name());
+    }
+
     if (full_table_name == table_name) {
       csv_tbl = &scan_data->csvdb_conf->tables(i);
       break;
@@ -88,16 +128,27 @@ static duckdb::unique_ptr<duckdb::TableRef> CSVTableReplacementScan(
 
   auto table_function = std::make_unique<duckdb::TableFunctionRef>();
   std::vector<duckdb::unique_ptr<duckdb::ParsedExpression>> children;
-  children.emplace_back(duckdb::make_uniq<duckdb::ConstantExpression>(
-      duckdb::Value(util::GetAbsolutePath(csv_tbl->data_path(),
-                                          FLAGS_enable_restricted_read_path,
-                                          FLAGS_restricted_read_path))));
+  auto data_path = csv_tbl->data_path();
+  // NOTE: duckdb just support parse s3 prefix path url, ref:
+  // https://github.com/duckdb/duckdb/blob/v0.9.2/extension/httpfs/s3fs.cpp#L559
+  // if inherit from duckdb::S3FileSystem, we should rewrite the
+  // S3UrlParse. so here just replace prefix here, such as from oss://
+  // to s3://, then duckdb can parse the path url. When duckdb release
+  // next version, we can considier inherit from duckdb::S3FileSystem
+  // and make patch
+  auto prefix = GetS3Prefix(data_path);
+  if (!prefix.empty()) {
+    data_path.replace(0, prefix.length(), "s3://");
+  }
+  children.emplace_back(
+      duckdb::make_uniq<duckdb::ConstantExpression>(duckdb::Value(data_path)));
+
   {
     std::vector<duckdb::Value> names;
     std::vector<duckdb::Value> types;
     for (const auto &col : csv_tbl->columns()) {
       names.emplace_back(col.column_name());
-      types.emplace_back(ToLogicalType(col.column_type()).ToString());
+      types.emplace_back(ToDuckDBDataType(col.column_type()));
     }
     children.emplace_back(duckdb::make_uniq<duckdb::ConstantExpression>(
         duckdb::Value::LIST(duckdb::LogicalType::VARCHAR, std::move(names))));
@@ -125,7 +176,8 @@ static duckdb::unique_ptr<duckdb::FunctionData> CSVScanBind(
     if (name_list[i].type().id() != duckdb::LogicalTypeId::VARCHAR ||
         type_list[i].type().id() != duckdb::LogicalTypeId::VARCHAR) {
       throw duckdb::BinderException(
-          "csv_scan requires a column name & type specification as string");
+          "csv_scan requires a column name & type specification as "
+          "string");
     }
     columns.emplace_back(
         std::make_pair(duckdb::StringValue::Get(name_list[i]),
@@ -133,26 +185,41 @@ static duckdb::unique_ptr<duckdb::FunctionData> CSVScanBind(
   }
   input.named_parameters["nullstr"] = duckdb::Value(FLAGS_csv_null_str);
   input.named_parameters["header"] = duckdb::Value::BOOLEAN(true);
-  input.named_parameters["columns"] = duckdb::Value::STRUCT(std::move(columns));
+  input.named_parameters["auto_detect"] = duckdb::Value::BOOLEAN(true);
+  input.named_parameters["types"] = duckdb::Value::STRUCT(std::move(columns));
 
   // delegate to ReadCSVBind
   return duckdb::ReadCSVTableFunction::GetFunction().bind(context, input,
                                                           return_types, names);
 }
 
-void CheckTablePaths(const csv::CsvdbConf &csvdb_conf) {
+static std::string CheckTablePathsAndGetPrefix(
+    const csv::CsvdbConf &csvdb_conf) {
+  std::string path_prefix;
   for (const auto &table_conf : csvdb_conf.tables()) {
-    // If path not illegal, exception will be thrown.
-    util::GetAbsolutePath(table_conf.data_path(),
-                          FLAGS_enable_restricted_read_path,
-                          FLAGS_restricted_read_path);
+    // If path not s3 and not illegal, exception will be thrown.
+    auto data_path = table_conf.data_path();
+    auto prefix = GetS3Prefix(data_path);
+    if (!prefix.empty()) {
+      if (!path_prefix.empty()) {
+        YACL_ENFORCE(path_prefix == prefix,
+                     "csvdb_conf have different oss prefix");
+      } else {
+        path_prefix = prefix;
+      }
+    } else {
+      util::GetAbsolutePath(data_path, FLAGS_enable_restricted_read_path,
+                            FLAGS_restricted_read_path);
+    }
   }
+
+  return path_prefix;
 }
 
 }  // namespace
 
 duckdb::DuckDB DuckDBWrapper::CreateDB(const csv::CsvdbConf *csvdb_conf) {
-  CheckTablePaths(*csvdb_conf);
+  auto path_prefix = CheckTablePathsAndGetPrefix(*csvdb_conf);
   auto scan_data = duckdb::make_uniq<CSVTableReplacementScanData>();
   scan_data->csvdb_conf = csvdb_conf;
 
@@ -160,7 +227,26 @@ duckdb::DuckDB DuckDBWrapper::CreateDB(const csv::CsvdbConf *csvdb_conf) {
   config.replacement_scans.push_back(
       duckdb::ReplacementScan(CSVTableReplacementScan, std::move(scan_data)));
 
-  return duckdb::DuckDB(nullptr, &config);
+  duckdb::DuckDB db(nullptr, &config);
+  if (!csvdb_conf->s3_conf().endpoint().empty()) {
+    auto &db_config = duckdb::DBConfig::GetConfig(*db.instance);
+    db_config.SetOption("s3_endpoint",
+                        duckdb::Value(csvdb_conf->s3_conf().endpoint()));
+    db_config.SetOption("s3_access_key_id",
+                        duckdb::Value(csvdb_conf->s3_conf().access_key_id()));
+    db_config.SetOption(
+        "s3_secret_access_key",
+        duckdb::Value(csvdb_conf->s3_conf().secret_access_key()));
+    if (path_prefix != "oss://") {
+      // minio not support https
+      db_config.SetOption("s3_use_ssl", false);
+      // See
+      // https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html
+      db_config.SetOption("s3_url_style", duckdb::Value("path"));
+    }
+  }
+
+  return db;
 }
 
 void DuckDBWrapper::CreateCSVScanFunction(duckdb::Connection &conn) {

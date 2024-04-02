@@ -8,7 +8,8 @@
   "words": [
     "brokerctl",
     "gorm",
-    "varchar",
+    "Kuscia",
+    "kusciaapi",
     "quickstart",
     "scdb",
     "scdbclient",
@@ -16,6 +17,7 @@
     "scql",
     "scqlengine",
     "secretflow",
-    "spu"
+    "spu",
+    "varchar"
   ]
 }

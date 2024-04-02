@@ -51,7 +51,7 @@ func processInvitation(ids string) error {
 	case "decline":
 		accept = false
 	default:
-		return fmt.Errorf("flags response %v not belongs to {accept|decline}", response)
+		return fmt.Errorf("flags response %v not belong to {accept|decline}", response)
 	}
 	err := brokerCommand.ProcessInvitation(ids, accept)
 	if err != nil {

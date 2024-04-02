@@ -52,11 +52,12 @@ func (svc *grpcInterSvc) InviteToProject(c context.Context, req *pb.InviteToProj
 		return nil, status.New(pb.Code_BAD_REQUEST, fmt.Sprintf("InviteToProject: %s", err.Error()))
 	}
 	invite := storage.Invitation{
-		ProjectID:   req.GetProject().GetProjectId(),
-		Name:        req.GetProject().GetName(),
-		Description: req.GetProject().GetDescription(),
-		Creator:     req.GetProject().GetCreator(),
-		Member:      strings.Join(req.GetProject().GetMembers(), ";"),
+		ProjectID:        req.GetProject().GetProjectId(),
+		Name:             req.GetProject().GetName(),
+		Description:      req.GetProject().GetDescription(),
+		Creator:          req.GetProject().GetCreator(),
+		ProjectCreatedAt: req.GetProject().GetCreatedAt().AsTime(),
+		Member:           strings.Join(req.GetProject().GetMembers(), ";"),
 		ProjectConf: storage.ProjectConfig{
 			SpuConf: string(spuCfg),
 		},
@@ -90,9 +91,6 @@ func (svc *grpcInterSvc) ReplyInvitation(c context.Context, req *pb.ReplyInvitat
 	txn := svc.app.MetaMgr.CreateMetaTransaction()
 	defer func() {
 		err = txn.Finish(err)
-		if err != nil {
-			err = status.New(pb.Code_INTERNAL, err.Error())
-		}
 	}()
 
 	proj, err := txn.GetProject(req.GetProjectId())

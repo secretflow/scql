@@ -14,4 +14,10 @@ bash build.sh -c
 # build image for debug purpose
 # It would install golang debug program dlv in image
 bash build.sh -s image-dev
+
+# build with anolis based image
+bash build.sh -b anolis
+
+# build with ubuntu based image
+bash build.sh -b ubuntu
 ```

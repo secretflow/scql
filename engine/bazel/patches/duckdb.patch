@@ -1,14 +1,34 @@
 diff --git a/extension/extension_config.cmake b/extension/extension_config.cmake
-index 83a8e2c490..2529aa4f84 100644
+index 83a8e2c490..4861b28332 100644
 --- a/extension/extension_config.cmake
 +++ b/extension/extension_config.cmake
-@@ -12,5 +12,5 @@ duckdb_extension_load(parquet)
+@@ -9,8 +9,9 @@
+
+ # Parquet is loaded by default on every build as its a essential part of DuckDB
+ duckdb_extension_load(parquet)
++duckdb_extension_load(httpfs)
 
  # Jemalloc is enabled by default for linux. MacOS malloc is already good enough and Jemalloc on windows has issues.
  if(NOT WASM_LOADABLE_EXTENSIONS AND NOT CLANG_TIDY AND OS_NAME STREQUAL "linux" AND NOT ANDROID AND NOT ZOS)
 -    duckdb_extension_load(jemalloc)
 +    # duckdb_extension_load(jemalloc)
  endif()
+diff --git a/extension/httpfs/CMakeLists.txt b/extension/httpfs/CMakeLists.txt
+index 2ce831d50e..d839c1fcb9 100644
+--- a/extension/httpfs/CMakeLists.txt
++++ b/extension/httpfs/CMakeLists.txt
+@@ -33,3 +33,10 @@ install(
+   EXPORT "${DUCKDB_EXPORT_SET}"
+   LIBRARY DESTINATION "${INSTALL_LIB_DIR}"
+   ARCHIVE DESTINATION "${INSTALL_LIB_DIR}")
++
++install(FILES "${PROJECT_SOURCE_DIR}/include/httpfs.hpp"
++              "${PROJECT_SOURCE_DIR}/include/s3fs.hpp"
++              "${PROJECT_SOURCE_DIR}/include/http_metadata_cache.hpp"
++              "${PROJECT_SOURCE_DIR}/include/httpfs_extension.hpp"
++              "${PROJECT_SOURCE_DIR}/include/crypto.hpp"
++              DESTINATION "${INSTALL_INCLUDE_DIR}/duckdb/extension/httpfs/")
+\ No newline at end of file
 diff --git a/third_party/re2/CMakeLists.txt b/third_party/re2/CMakeLists.txt
 index df428ac1ea..2c250caaea 100644
 --- a/third_party/re2/CMakeLists.txt

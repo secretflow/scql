@@ -26,11 +26,14 @@
 #include "engine/core/arrow_helper.h"
 #include "engine/core/primitive_builder.h"
 #include "engine/core/string_tensor_builder.h"
+#include "engine/util/prometheus_monitor.h"
+#include "engine/util/psi_detail_logger.h"
 
 namespace scql::engine {
 
 Session::Session(const SessionOptions& session_opt,
                  const pb::SessionStartParams& params,
+                 pb::DebugOptions debug_opts,
                  yacl::link::ILinkFactory* link_factory,
                  std::shared_ptr<spdlog::logger> logger, Router* router,
                  DatasourceAdaptorMgr* ds_mgr)
@@ -42,7 +45,8 @@ Session::Session(const SessionOptions& session_opt,
       link_factory_(link_factory),
       logger_(std::move(logger)),
       router_(router),
-      ds_mgr_(ds_mgr) {
+      ds_mgr_(ds_mgr),
+      debug_opts_(debug_opts) {
   start_time_ = std::chrono::system_clock::now();
 
   if (logger_ == nullptr) {
@@ -55,10 +59,24 @@ Session::Session(const SessionOptions& session_opt,
   if (lctx_->WorldSize() >= 2) {
     // spu SPUContext valid only when world_size >= 2
     auto config = params.spu_runtime_cfg();
+    config.set_experimental_enable_colocated_optimization(true);
     spu::populateRuntimeConfig(config);
     spu_ctx_ = std::make_unique<spu::SPUContext>(config, lctx_);
     spu::mpc::Factory::RegisterProtocol(spu_ctx_.get(), lctx_);
   }
+
+  // create detail logger for session if need
+  if (session_opt.log_options.enable_psi_detail_logger &&
+      debug_opts_.enable_psi_detail_log()) {
+    psi_logger_ = std::make_shared<util::PsiDetailLogger>(
+        util::CreateDetailLogger(id_, id_ + ".log", session_opt.log_options));
+  }
+
+  util::PrometheusMonitor::GetInstance()->IncSessionNumberTotal();
+}
+
+Session::~Session() {
+  util::PrometheusMonitor::GetInstance()->DecSessionNumberTotal();
 }
 
 void Session::InitLink() {
@@ -67,6 +85,7 @@ void Session::InitLink() {
     ctx_desc.id = id_;
     ctx_desc.retry_opts = session_opt_.link_retry_options;
     ctx_desc.recv_timeout_ms = session_opt_.link_recv_timeout_ms;
+    ctx_desc.http_max_payload_size = session_opt_.http_max_payload_size;
     ctx_desc.parties.reserve(parties_.WorldSize());
     for (const auto& party : parties_.AllParties()) {
       yacl::link::ContextDesc::Party p;
@@ -109,15 +128,11 @@ namespace {
 
 static_assert(sizeof(size_t) == 8);
 size_t CryptoHash(const std::string& str) {
-  std::array<unsigned char, SHA256_DIGEST_LENGTH> hash;
-  SHA256_CTX c;
-
-  SHA256_Init(&c);
-  SHA256_Update(&c, str.data(), str.size());
-  SHA256_Final(hash.data(), &c);
+  auto* hash = SHA256(reinterpret_cast<const unsigned char*>(str.data()),
+                      str.size(), nullptr);
 
   size_t ret;
-  std::memcpy(&ret, hash.data(), sizeof(ret));
+  std::memcpy(&ret, hash, sizeof(ret));
   return ret >> 1;  // spu FM64 only used 63 bit to calculate
 }
 

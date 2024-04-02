@@ -141,23 +141,6 @@ func (s *session) setResultWithOutputColumnsAndAffectedRows(columns []*scql.Tens
 	}
 }
 
-func (sc *session) mergeQueryResults() (result *scql.SCDBQueryResultResponse, err error) {
-	result, err = sc.executor.MergeQueryResults()
-	if err != nil {
-		return nil, err
-	}
-	if result.Status.Code != int32(scql.Code_OK) {
-		logrus.Infof("Rewrite QueryResult status code from %v(by engine) to %v", result.Status.Code, scql.Code_INTERNAL)
-		result.Status.Code = int32(scql.Code_INTERNAL)
-	}
-	if sc.GetSessionVars().AffectedByGroupThreshold {
-		reason := "for safety, we filter the results for groups which contain less than 4 items."
-		logrus.Infof("%v", reason)
-		result.Warnings = append(result.Warnings, &scql.SQLWarning{Reason: reason})
-	}
-	return result, err
-}
-
 func (sc *session) fillPartyInfo(enginesInfo *translator.EnginesInfo) {
 	sc.partyInfo = enginesInfo.GetPartyInfo()
 	for i, participant := range sc.partyInfo.GetParticipants() {

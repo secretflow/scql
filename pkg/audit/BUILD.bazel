@@ -21,7 +21,6 @@ proto_library(
     name = "common_proto",
     srcs = ["common.proto"],
     deps = [
-        "//api:core_proto",
         "//api:status_proto",
         "@com_google_protobuf//:timestamp_proto",
     ],
