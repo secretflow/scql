@@ -21,8 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for RSA key pairs in SCQLBroker.
 - Support running on [kuscia](https://github.com/secretflow/kuscia) and scheduling SCQLEngine dynamic via kuscia job.
 - Added `dry_run` parameter in DoQuery request, it could be used to check query syntax and CCL without actually executing the query.
-- Improve Broker high availability, support depoly in multi-node cluster deployment.
-- Support read csv from oss/minio
+- Improve Broker high availability, support depolying in multi-node cluster deployment.
+- Support reading csv from OSS/MINIO.
 
 ### Changed
 

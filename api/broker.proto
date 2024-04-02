@@ -197,7 +197,7 @@ service IntraBrokerService {
 
   // CheckAndUpdateStatus
   //
-  // Check and update status for Projects
+  // Check and update status for Projects (not used)
   rpc CheckAndUpdateStatus(CheckAndUpdateStatusRequest)
       returns (CheckAndUpdateStatusResponse) {
     option (google.api.http) = {
