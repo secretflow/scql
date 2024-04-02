@@ -51,7 +51,8 @@ SessionManager::~SessionManager() {
   }
 }
 
-void SessionManager::CreateSession(const pb::SessionStartParams& params) {
+void SessionManager::CreateSession(const pb::SessionStartParams& params,
+                                   pb::DebugOptions debug_opts) {
   const std::string& session_id = params.session_id();
   YACL_ENFORCE(!session_id.empty(), "session_id is empty.");
 
@@ -65,7 +66,7 @@ void SessionManager::CreateSession(const pb::SessionStartParams& params) {
       std::make_shared<spdlog::logger>(logger_name, sinks.begin(), sinks.end());
 
   auto new_session = std::make_unique<Session>(
-      session_opt_, params, link_factory_.get(), session_logger,
+      session_opt_, params, debug_opts, link_factory_.get(), session_logger,
       ds_router_.get(), ds_mgr_.get());
   {
     std::unique_lock<std::mutex> lock(mutex_);

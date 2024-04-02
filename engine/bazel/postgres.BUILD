@@ -21,6 +21,7 @@ filegroup(
 
 configure_make(
     name = "postgres",
+    args = ["-j 8"],
     configure_options = [
         "--without-readline",
         "--without-zlib",

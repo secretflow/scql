@@ -41,9 +41,9 @@ var (
 )
 
 func runQuery(query string) error {
-	response, err := brokerCommand.DoQuery(projectID, query)
+	response, err := brokerCommand.DoQuery(projectID, query, &pb.DebugOptions{EnablePsiDetailLog: enablePsiDetailLog})
 	if err != nil {
-		return fmt.Errorf("run query: %v", err)
+		return fmt.Errorf("run query: %w", err)
 	}
 	fmt.Println("run query succeeded")
 	printQueryResult(response)

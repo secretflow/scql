@@ -1,26 +1,26 @@
 {
-  "db_name": "test",
-  "party_code": "alice",
-  "tables": {
-    "dt1": {
-      "table_name": "dt1",
-      "columns": [
-        {
-          "column_name": "c1",
-          "dtype": "float",
-          "ccl": ["plain"]
-        },
-        {
-          "column_name": "c2",
-          "dtype": "long",
-          "ccl": ["join"]
-        },
-        {
-          "column_name": "c3",
-          "dtype": "string",
-          "ccl": ["groupby"]
+    "db_name": "test",
+    "party_code": "alice",
+    "tables": {
+        "dt1": {
+            "table_name": "dt1",
+            "columns": [
+                {
+                    "column_name": "c1",
+                    "dtype": "float",
+                    "ccl": ["plain"]
+                },
+                {
+                    "column_name": "c2",
+                    "dtype": "int",
+                    "ccl": ["join"]
+                },
+                {
+                    "column_name": "c3",
+                    "dtype": "string",
+                    "ccl": ["groupby"]
+                }
+            ]
         }
-      ]
     }
-  }
 }

@@ -19,6 +19,10 @@ import (
 	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
 
+type Context struct {
+	GroupByThreshold uint64
+}
+
 // ColumnTracer trace column source info
 type ColumnTracer struct {
 	colToSourceParties map[int64][]string

@@ -96,11 +96,12 @@ cc_library(
     deps = [
         "//engine/audit:audit_log",
         "//engine/framework:operator",
+        "//engine/util:psi_detail_logger",
         "//engine/util:psi_helper",
         "@com_github_msgpack_msgpack//:msgpack",
-        "@psi//psi/psi/core:ecdh_oprf_psi",
-        "@psi//psi/psi/core:ecdh_psi",
-        "@psi//psi/psi/cryptor:cryptor_selector",
+        "@psi//psi/ecdh:ecdh_oprf_psi",
+        "@psi//psi/ecdh:ecdh_psi",
+        "@psi//psi/cryptor:cryptor_selector",
     ],
 )
 
@@ -382,10 +383,11 @@ cc_library(
     deps = [
         "//engine/audit:audit_log",
         "//engine/framework:operator",
+        "//engine/util:psi_detail_logger",
         "//engine/util:psi_helper",
-        "@psi//psi/psi/core:ecdh_oprf_psi",
-        "@psi//psi/psi/core:ecdh_psi",
-        "@psi//psi/psi/cryptor:cryptor_selector",
+        "@psi//psi/ecdh:ecdh_oprf_psi",
+        "@psi//psi/ecdh:ecdh_psi",
+        "@psi//psi/cryptor:cryptor_selector",
     ],
 )
 

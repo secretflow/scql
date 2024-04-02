@@ -221,7 +221,7 @@ func (t *translator) buildEQJoin(ln *JoinNode) (err error) {
 		}
 	}
 
-	leftIndexT, rightIndexT, err = t.ep.AddJoinNode("join", leftTs, rightTs, parties, JoinTypeLpToEp[join.JoinType])
+	leftIndexT, rightIndexT, err = t.ep.AddJoinNode("join", leftTs, rightTs, parties, JoinTypeLpToEp[join.JoinType], t.CompileOpts.GetOptimizerHints().GetPsiAlgorithmType())
 	if err != nil {
 		return fmt.Errorf("buildEQJoin: %v", err)
 	}
@@ -316,6 +316,10 @@ func (t *translator) buildSelection(ln *SelectionNode) (err error) {
 	resultIdToTensor := map[int64]*Tensor{}
 	for i, c := range child.Schema().Columns {
 		childIdToTensor[c.UniqueID] = child.ResultTable()[i]
+	}
+	if len(selection.Conditions) == 0 {
+		err = setResultTable(ln, childIdToTensor)
+		return
 	}
 	for _, c := range selection.Schema().Columns {
 		colIdToTensor[c.UniqueID] = childIdToTensor[c.UniqueID]
@@ -547,7 +551,7 @@ func (t *translator) buildAggregation(ln *AggregationNode) (err error) {
 							return fmt.Errorf("buildAggregation: %v", err)
 						}
 					}
-				} else {
+				} else if _, ok := aggFunc.Args[0].(*expression.Constant); ok {
 					var partyCode string
 					tensor := child.ResultTable()[0]
 					switch tensor.Status {
@@ -561,6 +565,15 @@ func (t *translator) buildAggregation(ln *AggregationNode) (err error) {
 					out, err = t.ep.AddShapeNode("shape", tensor, 0, partyCode)
 					if err != nil {
 						return fmt.Errorf("buildAggregation: count: %v", err)
+					}
+				} else {
+					colT, err := t.buildExpression(aggFunc.Args[0], childColIdToTensor, false, ln)
+					if err != nil {
+						return fmt.Errorf("buildAggregation: %v", err)
+					}
+					out, err = t.ep.AddReduceAggNode(ast.AggFuncCount, colT)
+					if err != nil {
+						return fmt.Errorf("buildAggregation: %v", err)
 					}
 				}
 				colIdToTensor[ln.Schema().Columns[i].UniqueID] = out
@@ -779,41 +792,6 @@ func (t *translator) buildGroupId(ln *AggregationNode, partyCode string) (*Tenso
 	return t.ep.AddGroupNode("group", groupCol, partyCode)
 }
 
-func (t *translator) MergeKeys(ln *AggregationNode, keyTs []*Tensor) (mergedKeys []*Tensor, err error) {
-	// separate private keyTs to different parties while appending the shared keyTs directly to the result
-	partyToKeys := make(map[string][]*Tensor)
-	var partiesInOrder []string // added to avoid DAG uncertainty caused by map hash
-	for _, key := range keyTs {
-		if key.Status != proto.TensorStatus_TENSORSTATUS_PRIVATE ||
-			key.OwnerPartyCode == "" {
-			mergedKeys = append(mergedKeys, key)
-			continue
-		}
-		_, ok := partyToKeys[key.OwnerPartyCode]
-		if !ok {
-			partyToKeys[key.OwnerPartyCode] = []*Tensor{key}
-			partiesInOrder = append(partiesInOrder, key.OwnerPartyCode)
-		} else {
-			partyToKeys[key.OwnerPartyCode] = append(partyToKeys[key.OwnerPartyCode], key)
-		}
-	}
-
-	// NOTE: we do not build groupId by sort, so the resulting groups maybe not in order
-	for _, party := range partiesInOrder {
-		if len(partyToKeys[party]) > 1 {
-			groupId, _, err := t.ep.AddGroupNode("group", partyToKeys[party], party)
-			if err != nil {
-				return nil, fmt.Errorf("MergeKeys: %v", err)
-			}
-			mergedKeys = append(mergedKeys, groupId)
-		} else {
-			mergedKeys = append(mergedKeys, partyToKeys[party][0])
-		}
-	}
-
-	return mergedKeys, nil
-}
-
 func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err error) {
 	agg, ok := ln.lp.(*core.LogicalAggregation)
 	if !ok {
@@ -822,35 +800,32 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 	child := ln.Children()[0]
 
 	// sort group by keys
-	keyTs := []*Tensor{}
-	childColIdToTensor := t.getNodeResultTensor(ln.Children()[0])
+	sortKeys := []*Tensor{}
+	childColIdToTensor := t.getNodeResultTensor(child)
 	for _, key := range agg.GroupByItems {
-		keyT, err := t.getTensorFromExpression(key, childColIdToTensor)
+		sortKey, err := t.getTensorFromExpression(key, childColIdToTensor)
 		if err != nil {
 			return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 		}
-		keyTs = append(keyTs, keyT)
-	}
-
-	sortKey, err := t.MergeKeys(ln, keyTs)
-	if err != nil {
-		return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+		sortKeys = append(sortKeys, sortKey)
 	}
 
 	var sortPayload []*Tensor
-	sortPayload = append(sortPayload, sortKey...)
+	sortPayload = append(sortPayload, sortKeys...)
 	// TODO(jingshi): remove duplicated payload
 	sortPayload = append(sortPayload, child.ResultTable()...)
-	out, err := t.ep.AddSortNode("sort", sortKey, sortPayload)
+
+	out, err := t.ep.AddSortNode("sort", sortKeys, sortPayload)
 	if err != nil {
 		return fmt.Errorf("buildObliviousGroupAggregation: sort with groupIds err: %v", err)
 	}
-	sortedKeys := out[0:len(sortKey)]
-	sortedTensors := out[len(sortKey):]
+	sortedKeys := out[0:len(sortKeys)]
+	sortedTensors := out[len(sortKeys):]
 	sortedChildColIdToTensor := map[int64]*Tensor{}
 	for i, tensor := range sortedTensors {
 		sortedChildColIdToTensor[child.Schema().Columns[i].UniqueID] = tensor
 	}
+
 	// create group mark
 	groupMark, err := t.ep.AddObliviousGroupMarkNode("group_mark", sortedKeys)
 	if err != nil {
@@ -961,7 +936,7 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 	}
 
 	// TODO(jingshi): temporary remove shuffle here for simplicity, make group_mark public and support aggregation with public group_mark later for efficiency
-	if !t.securityCompromise.RevealGroupMark {
+	if !t.CompileOpts.GetSecurityCompromise().GetRevealGroupMark() {
 		// shuffle and replace 'rt' and 'groupMark'
 		shuffled, err := t.ep.AddShuffleNode("shuffle", append(rt, groupMark))
 		if err != nil {

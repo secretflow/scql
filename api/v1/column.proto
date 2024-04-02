@@ -1,0 +1,42 @@
+// Copyright 2024 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+package scql.api.v1;
+
+option go_package = "github.com/secretflow/scql/proto-gen/api/v1;scql";
+
+// Column Data Type
+// Column DataType values are subset of [data types in secretflow
+// spec](https://github.com/secretflow/spec/blob/main/secretflow/spec/v1/data.proto#L116)
+enum DataType {
+  DataType_UNSPECIFIED = 0;
+  BOOL = 1;   // reserved datatype, not supported yet, use INT32 instead
+  INT8 = 2;   // reserved datatype, not supported yet, use INT32 instead
+  INT16 = 3;  // reserved datatype, not supported yet, use INT32 instead
+  INT32 = 4;
+  INT64 = 5;
+  FLOAT32 = 6;
+  FLOAT64 = 7;
+  INT = 8;      // alias for INT32
+  INTEGER = 9;  // alias for INT32
+  FLOAT = 10;   // alias for FLOAT32
+  DOUBLE = 11;  // alias for FLOAT64
+  STRING = 12;
+  STR = 13;  // alias for STRING
+  DATETIME = 14;
+  TIMESTAMP = 15;
+}

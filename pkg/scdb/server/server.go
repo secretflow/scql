@@ -23,6 +23,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
@@ -32,6 +33,7 @@ import (
 	"github.com/secretflow/scql/pkg/executor"
 	"github.com/secretflow/scql/pkg/scdb/config"
 	"github.com/secretflow/scql/pkg/scdb/storage"
+	prom "github.com/secretflow/scql/pkg/util/prometheus"
 )
 
 const (
@@ -74,6 +76,10 @@ func NewServer(conf *config.Config, storage *gorm.DB, engineClient executor.Engi
 		AllowCredentials: true,
 		MaxAge:           50 * time.Second,
 	}))
+	router.Use(prom.GetMonitor().Middleware)
+	router.GET(prom.MetricsPath, func(ctx *gin.Context) {
+		promhttp.Handler().ServeHTTP(ctx.Writer, ctx.Request)
+	})
 
 	public := router.Group("/public")
 	public.GET(healthCheckPath, app.HealthHandler)

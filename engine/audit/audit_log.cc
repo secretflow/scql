@@ -98,7 +98,6 @@ void RecordAudit(const AuditLog& audit_log) {
 
   auto audit_type = audit_log.body().body_case();
   switch (audit_type) {
-    case AuditBody::kRunDag:
     case AuditBody::kRunPlan:
     case AuditBody::kCreateSession:
     case AuditBody::kStopSession:

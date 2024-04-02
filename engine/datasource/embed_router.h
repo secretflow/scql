@@ -38,7 +38,7 @@ class EmbedRouter final : public Router {
   static std::unique_ptr<EmbedRouter> FromJsonStr(std::string_view json_str);
 
   // Only support MYSQL's connection string temporarily.
-  // TODO(jignshi) : Add DataSourceKind: HTTP/CVSDB... if needed.
+  // TODO(jingshi) : Add DataSourceKind: HTTP/CVSDB... if needed.
   static std::unique_ptr<EmbedRouter> FromConnectionStr(
       const std::string& connection_str);
 

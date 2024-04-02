@@ -81,7 +81,12 @@ func (s *testTranslatorSuite) TearDownSuite(c *C) {
 	}
 }
 
+type testConf struct {
+	groupThreshold int
+}
+
 type sPair struct {
 	sql      string
 	dotGraph string
+	conf     testConf
 }

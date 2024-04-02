@@ -117,3 +117,7 @@ func (stub *IntraStub) CreateJob(url string, req *pb.QueryRequest, response *pb.
 func (stub *IntraStub) GetResult(url string, req *pb.FetchResultRequest, response *pb.QueryResponse) (err error) {
 	return stub.baseCall(url, constant.FetchResultPath, req, response)
 }
+
+func (stub *IntraStub) CancelJob(url string, req *pb.CancelQueryRequest, response *pb.CancelQueryResponse) (err error) {
+	return stub.baseCall(url, constant.CancelQueryPath, req, response)
+}

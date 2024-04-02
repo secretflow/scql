@@ -117,8 +117,6 @@ func (app *App) finishSession(session *session, result *scql.SCDBQueryResultResp
 		logrus.Infof("|ExecutionPlanId:%v|TableShape:%v|AffectedRows:%v", session.id, resultTableShape, result.AffectedRows)
 	}
 	session.result = result
-	// Question: should we keep drop session codes?
-	// app.DestroySession(session.id, sessionDestroyReason)
 }
 
 func callbackFrontend(ctx context.Context, engineReq *scql.SCDBQueryResultResponse, cbURL string) (reason string, err error) {

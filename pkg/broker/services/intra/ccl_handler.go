@@ -36,9 +36,6 @@ func (svc *grpcIntraSvc) GrantCCL(ctx context.Context, req *pb.GrantCCLRequest) 
 	txn := app.MetaMgr.CreateMetaTransaction()
 	defer func() {
 		err = txn.Finish(err)
-		if err != nil {
-			err = status.New(pb.Code_INTERNAL, err.Error())
-		}
 	}()
 
 	members, err := txn.GetProjectMembers(req.GetProjectId())
@@ -60,7 +57,7 @@ func (svc *grpcIntraSvc) GrantCCL(ctx context.Context, req *pb.GrantCCLRequest) 
 		}
 	}
 
-	err = common.GrantColumnConstraintsWithCheck(txn, req.GetProjectId(), app.Conf.PartyCode, privs)
+	err = common.GrantColumnConstraintsWithCheck(txn, req.GetProjectId(), privs, common.OwnerChecker{Owner: app.Conf.PartyCode})
 	if err != nil {
 		return nil, fmt.Errorf("GrantCCL: %v", err)
 	}
@@ -91,9 +88,6 @@ func (svc *grpcIntraSvc) RevokeCCL(c context.Context, req *pb.RevokeCCLRequest) 
 	txn := app.MetaMgr.CreateMetaTransaction()
 	defer func() {
 		err = txn.Finish(err)
-		if err != nil {
-			err = status.New(pb.Code_INTERNAL, err.Error())
-		}
 	}()
 
 	privIDs, err := ColumnControlList2ColumnPrivIdentifier(req.GetProjectId(), req.GetColumnControlList())
@@ -137,9 +131,6 @@ func (svc *grpcIntraSvc) ShowCCL(ctx context.Context, req *pb.ShowCCLRequest) (r
 	txn := app.MetaMgr.CreateMetaTransaction()
 	defer func() {
 		err = txn.Finish(err)
-		if err != nil {
-			err = status.New(pb.Code_INTERNAL, err.Error())
-		}
 	}()
 	// check project exist
 	projectAndMembers, err := txn.GetProjectAndMembers(req.GetProjectId())
@@ -151,7 +142,7 @@ func (svc *grpcIntraSvc) ShowCCL(ctx context.Context, req *pb.ShowCCLRequest) (r
 		return nil, fmt.Errorf("ShowCCL: dest parties %v not found in project members", sliceutil.Subtraction(req.GetDestParties(), projectAndMembers.Members))
 	}
 	// check table exist
-	exist, err := txn.CheckTablesExist(req.GetProjectId(), req.GetTables())
+	_, exist, err := txn.GetTables(req.GetProjectId(), req.GetTables())
 	if err != nil {
 		return nil, fmt.Errorf("ShowCCL: CheckTablesExist err: %v", err)
 	}

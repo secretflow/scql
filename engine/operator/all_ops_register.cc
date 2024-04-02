@@ -100,6 +100,7 @@ void RegisterAllOpsImpl() {
 
   // aggregation
   ADD_OPERATOR_TO_REGISTRY(ReduceSum);
+  ADD_OPERATOR_TO_REGISTRY(ReduceCount);
   ADD_OPERATOR_TO_REGISTRY(ReduceAvg);
   ADD_OPERATOR_TO_REGISTRY(ReduceMin);
   ADD_OPERATOR_TO_REGISTRY(ReduceMax);

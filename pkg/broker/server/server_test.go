@@ -75,6 +75,22 @@ type ServerTestSuit struct {
 	freePorts []int
 }
 
+type MockEngineInstance struct {
+}
+
+func (me *MockEngineInstance) GetEndpointForSelf() string {
+	return "self endpoint"
+}
+func (me *MockEngineInstance) GetEndpointForPeer() string {
+	return "peer endpoint"
+}
+func (me *MockEngineInstance) MarshalToText() ([]byte, error) {
+	return []byte("{}"), nil
+}
+func (me *MockEngineInstance) Stop() error {
+	return nil
+}
+
 func (suite *ServerTestSuit) SetupTest() {
 	freePorts, err := GetFreePorts(4)
 	suite.NoError(err)
@@ -104,6 +120,16 @@ func (suite *ServerTestSuit) TestServer() {
 	httpClient := &http.Client{Timeout: 1 * time.Second}
 	urlAlice := fmt.Sprintf("http://localhost:%v", suite.freePorts[0])
 	urlBob := fmt.Sprintf("http://localhost:%v", suite.freePorts[2])
+
+	// Check Health
+	{
+		for _, party := range []string{urlAlice, urlBob} {
+			url := urlutil.JoinHostPath(party, constant.HealthPath)
+			resp, err := httpClient.Get(url)
+			suite.NoError(err)
+			suite.Equal(resp.StatusCode, http.StatusOK)
+		}
+	}
 
 	// Create project: alice creates a project
 	{
@@ -206,7 +232,9 @@ func (suite *ServerTestSuit) TestServer() {
 			ProjectId: "test_id",
 			Respond:   pb.InvitationRespond_ACCEPT,
 		}
-		auth, err := auth.NewAuth("../testdata/private_key_carol.pem")
+		pemData, err := os.ReadFile("../testdata/private_key_carol.pem")
+		suite.NoError(err)
+		auth, err := auth.NewAuth(pemData)
 		suite.NoError(err)
 		err = auth.SignMessage(req)
 		suite.NoError(err)
@@ -473,16 +501,10 @@ func (suite *ServerTestSuit) TestServer() {
 		{
 			// prepare session for reporting
 			app := suite.appAlice
-			info := &application.ExecutionInfo{
-				ProjectID:    "test_id",
-				JobID:        "job_id",
-				Query:        "select * from ta",
-				Issuer:       &pb.PartyId{Code: "alice"},
-				EngineClient: app.EngineClient,
-			}
-			session, err := application.NewSession(context.Background(), info, app, false)
-			suite.NoError(err)
+			session := NewTestSession(app)
 			app.AddSession("job_id", session)
+			err := app.PersistSessionInfo(session)
+			suite.NoError(err)
 		}
 		reqStr := `{"status":{"code": 0, "message": "ok"}, "session_id": "job_id", "num_rows_affected": 10}`
 		resp, err := httpClient.Post(urlutil.JoinHostPath(urlAlice, constant.EngineCallbackPath),
@@ -505,6 +527,34 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.Equal(response.GetAffectedRows(), int64(10), protojson.Format(response))
 		resp.Body.Close()
 	}
+
+	// Cancel Query: alice cancel query
+	{
+		sessionAlice := NewTestSession(suite.appAlice)
+		suite.appAlice.AddSession("job_id", NewTestSession(suite.appAlice))
+		suite.appAlice.PersistSessionInfo(sessionAlice)
+
+		sessionBob := NewTestSession(suite.appBob)
+		suite.appBob.AddSession("job_id", NewTestSession(suite.appBob))
+		suite.appBob.PersistSessionInfo(sessionBob)
+
+		reqStr := `{"job_id":"job_id"}`
+		resp, err := httpClient.Post(urlutil.JoinHostPath(urlAlice, constant.CancelQueryPath),
+			"application/json", strings.NewReader(reqStr))
+		suite.NoError(err)
+
+		response := &pb.CancelQueryResponse{}
+		_, err = message.DeserializeFrom(resp.Body, response)
+		suite.NoError(err)
+		suite.Equal(response.GetStatus().GetCode(), int32(0), protojson.Format(response))
+		resp.Body.Close()
+		// Check session release
+		time.Sleep(20 * time.Millisecond)
+		_, ok := suite.appAlice.GetSession("job_id")
+		suite.False(ok)
+		_, ok = suite.appBob.GetSession("job_id")
+		suite.False(ok)
+	}
 }
 
 func TestServerSuit(t *testing.T) {
@@ -519,18 +569,20 @@ func buildTestApp(party string, ports []int, infoFile string) (app *application.
 		IntraServer: config.ServerConfig{
 			Port: ports[0],
 		},
-		PartyCode:      party,
-		PartyInfoFile:  infoFile,
-		PrivatePemPath: fmt.Sprintf("../testdata/private_key_%s.pem", party),
+		PartyCode:            party,
+		PartyInfoFile:        infoFile,
+		SessionExpireTime:    time.Minute,
+		SessionCheckInterval: time.Second,
+		PrivateKeyPath:       fmt.Sprintf("../testdata/private_key_%s.pem", party),
 		Engine: config.EngineConfig{
 			ClientTimeout: 1 * time.Second,
-			Protocol:      "SEMI2K",
+			Protocol:      "http",
 			ContentType:   "application/json",
-			Uris:          []config.EngineUri{{ForPeer: "fake url"}},
+			Uris:          []config.EngineUri{{ForPeer: "127.0.0.1:8000"}},
 		},
 	}
 
-	partyMgr, err := partymgr.NewFilePartyMgr(cfg.PartyInfoFile, cfg.PartyCode)
+	partyMgr, err := partymgr.NewFilePartyMgr(cfg.PartyInfoFile)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create partyMgr from: %v", err)
 	}
@@ -548,7 +600,7 @@ func buildTestApp(party string, ports []int, infoFile string) (app *application.
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create broker db: %v", err)
 	}
-	metaMgr := storage.NewMetaManager(db)
+	metaMgr := storage.NewMetaManager(db, false)
 	err = metaMgr.Bootstrap()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to boot strap meta manager: %v", err)
@@ -600,4 +652,22 @@ func GetFreePorts(count int) ([]int, error) {
 		ports = append(ports, l.Addr().(*net.TCPAddr).Port)
 	}
 	return ports, nil
+}
+
+func NewTestSession(app *application.App) *application.Session {
+	info := &application.ExecutionInfo{
+		ProjectID:    "test_id",
+		JobID:        "job_id",
+		Query:        "select * from ta",
+		Issuer:       &pb.PartyId{Code: "alice"},
+		EngineClient: app.EngineClient,
+		WorkParties:  []string{"alice", "bob"},
+	}
+	session, _ := application.NewSession(context.Background(), info, app, false, false)
+	session.Engine = &MockEngineInstance{}
+	checksum := application.Checksum{TableSchema: []byte("table checksum"), CCL: []byte("ccl checksum")}
+	session.SaveLocalChecksum("alice", checksum)
+	session.SaveLocalChecksum("bob", checksum)
+
+	return session
 }

@@ -136,6 +136,16 @@ func CreateBoolAttribute(data bool) *proto.AttributeValue {
 	}
 }
 
+func CreateStringAttribute(str string) *proto.AttributeValue {
+	return &proto.AttributeValue{
+		Value: &proto.AttributeValue_T{
+			T: &proto.Tensor{
+				ElemType:   proto.PrimitiveDataType_STRING,
+				StringData: []string{str},
+			}},
+	}
+}
+
 // Set param type constraint
 func (op *OperatorDef) SetParamTypeConstraint(constraintName string, status []proto.TensorStatus) {
 	if op.err != nil {

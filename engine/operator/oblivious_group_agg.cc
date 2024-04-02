@@ -123,10 +123,7 @@ spu::Value Scan(spu::SPUContext* ctx, const spu::Value& origin_value,
     const auto [new_v, new_gm] = scan_fn(lhs_v, lhs_gm, rhs_v, rhs_gm);
 
     YACL_ENFORCE_EQ(value.dtype(), new_v.dtype());
-    YACL_ENFORCE_EQ(value.vtype(), new_v.vtype());
-
     YACL_ENFORCE_EQ(group_mask.dtype(), new_gm.dtype());
-    YACL_ENFORCE_EQ(group_mask.vtype(), new_gm.vtype());
 
     spu::kernel::hlo::LinearScatterInPlace(ctx, value, new_v,
                                            index_tuple.first);

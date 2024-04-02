@@ -90,3 +90,7 @@ func (stub *InterStub) ReplyInvitation(url string, req *pb.ReplyInvitationReques
 func (stub *InterStub) DistributeQuery(url string, req *pb.DistributeQueryRequest, response *pb.DistributeQueryResponse) (err error) {
 	return stub.baseCall(url, constant.DistributeQueryPath, req, response)
 }
+
+func (stub *InterStub) CancelQueryJob(url string, req *pb.CancelQueryJobRequest, response *pb.CancelQueryJobResponse) (err error) {
+	return stub.baseCall(url, constant.CancelQueryJobPath, req, response)
+}

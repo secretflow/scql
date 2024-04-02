@@ -27,6 +27,7 @@ import (
 
 	"github.com/secretflow/scql/pkg/broker/application"
 	"github.com/secretflow/scql/pkg/broker/constant"
+	"github.com/secretflow/scql/pkg/broker/services/common"
 	"github.com/secretflow/scql/pkg/broker/storage"
 	"github.com/secretflow/scql/pkg/executor"
 	"github.com/secretflow/scql/pkg/infoschema"
@@ -115,15 +116,16 @@ func (r *QueryRunner) CreateChecksum() (map[string]application.Checksum, error) 
 }
 
 func (r *QueryRunner) ExchangeJobInfo(targetParty string) (*pb.ExchangeJobInfoResponse, error) {
-	executionInfo := r.session.ExecuteInfo
-	selfCode := r.session.GetSelfPartyCode()
+	session := r.session
+	executionInfo := session.ExecuteInfo
+	selfCode := session.GetSelfPartyCode()
 	req := &pb.ExchangeJobInfoRequest{
 		ProjectId: executionInfo.ProjectID,
 		JobId:     executionInfo.JobID,
 		ClientId:  &pb.PartyId{Code: selfCode},
 	}
 	if slices.Contains(executionInfo.DataParties, targetParty) {
-		serverChecksum, err := r.session.GetLocalChecksum(targetParty)
+		serverChecksum, err := session.GetLocalChecksum(targetParty)
 		if err != nil {
 			return nil, fmt.Errorf("ExchangeJobInfo: %s", err)
 		}
@@ -134,20 +136,20 @@ func (r *QueryRunner) ExchangeJobInfo(targetParty string) (*pb.ExchangeJobInfoRe
 		logrus.Infof("exchange job info with party %s with request %s", targetParty, req.String())
 	}
 
-	url, err := r.session.PartyMgr.GetBrokerUrlByParty(targetParty)
+	url, err := session.App.PartyMgr.GetBrokerUrlByParty(targetParty)
 	if err != nil {
 		return nil, fmt.Errorf("ExchangeJobInfoStub: %v", err)
 	}
 	response := &pb.ExchangeJobInfoResponse{}
 	// retry to make sure that peer broker has created session
-	for i := 0; i < r.session.Conf.ExchangeJobInfoRetryTimes; i++ {
+	for i := 0; i < session.App.Conf.ExchangeJobInfoRetryTimes; i++ {
 		err = executionInfo.InterStub.ExchangeJobInfo(url, req, response)
 		if err != nil {
 			return nil, fmt.Errorf("ExchangeJobInfoStub: %v", err)
 		}
 		if response.GetStatus().GetCode() == int32(pb.Code_SESSION_NOT_FOUND) {
-			if i < r.session.Conf.ExchangeJobInfoRetryTimes-1 {
-				time.Sleep(r.session.Conf.ExchangeJobInfoRetryInterval)
+			if i < session.App.Conf.ExchangeJobInfoRetryTimes-1 {
+				time.Sleep(r.session.App.Conf.ExchangeJobInfoRetryInterval)
 			}
 			continue
 		}
@@ -166,14 +168,38 @@ func (r *QueryRunner) ExchangeJobInfo(targetParty string) (*pb.ExchangeJobInfoRe
 }
 
 func (r *QueryRunner) prepareData(usedTableNames []string) (dataParties []string, workParties []string, err error) {
-	s := r.session
-	txn := s.MetaMgr.CreateMetaTransaction()
+	session := r.session
+	txn := session.App.MetaMgr.CreateMetaTransaction()
 	defer func() {
 		err = txn.Finish(err)
 	}()
-	r.tables, err = txn.GetTableMetasByTableNames(s.ExecuteInfo.ProjectID, usedTableNames)
+	var notFoundTables []string
+	r.tables, notFoundTables, err = txn.GetTableMetasByTableNames(session.ExecuteInfo.ProjectID, usedTableNames)
 	if err != nil {
 		return
+	}
+	if len(notFoundTables) > 0 && !r.prepareAgain {
+		var members []string
+		members, err = txn.GetProjectMembers(session.ExecuteInfo.ProjectID)
+		if err != nil {
+			return
+		}
+		// finish old transaction
+		txn.Finish(nil)
+		err = common.AskProjectInfoFromParties(session.App, session.ExecuteInfo.ProjectID, notFoundTables, []string{}, sliceutil.Subtraction(members, []string{session.App.Conf.PartyCode}))
+		if err != nil {
+			logrus.Warningf("prepareData: get not found tables %+v err: %s", notFoundTables, err)
+		}
+		// use new transaction
+		txn = session.App.MetaMgr.CreateMetaTransaction()
+		// get tables schema again
+		r.tables, notFoundTables, err = txn.GetTableMetasByTableNames(session.ExecuteInfo.ProjectID, usedTableNames)
+		if err != nil {
+			return
+		}
+		if len(notFoundTables) > 0 {
+			return nil, nil, fmt.Errorf("prepareData: table %+v not found", notFoundTables)
+		}
 	}
 	var parties []string
 	party2Tables := make(map[string][]core.DbTable)
@@ -201,15 +227,15 @@ func (r *QueryRunner) prepareData(usedTableNames []string) (dataParties []string
 	}
 	// SliceDeDup sort parties and compact
 	dataParties = sliceutil.SliceDeDup(parties)
-	workParties = sliceutil.SliceDeDup(append(dataParties, s.ExecuteInfo.Issuer.Code))
-	partyInfo, err := s.PartyMgr.GetPartyInfoByParties(workParties)
+	workParties = sliceutil.SliceDeDup(append(dataParties, session.ExecuteInfo.Issuer.Code))
+	partyInfo, err := session.App.PartyMgr.GetPartyInfoByParties(workParties)
 	if err != nil {
 		return
 	}
 	r.info = translator.NewEnginesInfo(partyInfo, party2Tables)
 	r.info.UpdateTableToRefs(tableToRefs)
 	// get ccls
-	columnPrivs, err := txn.ListColumnConstraints(s.ExecuteInfo.ProjectID, usedTableNames, workParties)
+	columnPrivs, err := txn.ListColumnConstraints(session.ExecuteInfo.ProjectID, usedTableNames, workParties)
 	for _, columnPriv := range columnPrivs {
 		r.ccls = append(r.ccls, &pb.SecurityConfig_ColumnControl{
 			PartyCode:    columnPriv.DestParty,
@@ -300,14 +326,8 @@ func (r *QueryRunner) buildCompileQueryRequest() *pb.CompileQueryRequest {
 		SecurityConf: &pb.SecurityConfig{
 			ColumnControlList: r.ccls,
 		},
-		Catalog: catalog,
-		CompileOpts: &pb.CompileOptions{
-			SpuConf: s.ExecuteInfo.SpuRuntimeCfg,
-			SecurityCompromise: &pb.SecurityCompromiseConfig{
-				RevealGroupMark: s.Conf.SecurityCompromise.RevealGroupMark,
-			},
-			DumpExeGraph: true,
-		},
+		Catalog:     catalog,
+		CompileOpts: s.ExecuteInfo.CompileOpts,
 	}
 	return req
 }
@@ -342,8 +362,9 @@ func buildCatalog(tables []storage.TableMeta) *pb.Catalog {
 func (r *QueryRunner) CreateExecutor(plan *pb.CompiledPlan) (*executor.Executor, error) {
 	// create SessionStartParams
 	session := r.session
+	conf := session.App.Conf
 	startParams := &pb.SessionStartParams{
-		PartyCode:     session.Conf.PartyCode,
+		PartyCode:     conf.PartyCode,
 		SessionId:     session.ExecuteInfo.JobID,
 		SpuRuntimeCfg: plan.GetSpuRuntimeConf(),
 	}
@@ -352,7 +373,7 @@ func (r *QueryRunner) CreateExecutor(plan *pb.CompiledPlan) (*executor.Executor,
 		if err != nil {
 			return nil, err
 		}
-		pubKey, err := session.PartyMgr.GetPubKeyByParty(p.GetCode())
+		pubKey, err := session.App.PartyMgr.GetPubKeyByParty(p.GetCode())
 		if err != nil {
 			return nil, err
 		}
@@ -365,7 +386,7 @@ func (r *QueryRunner) CreateExecutor(plan *pb.CompiledPlan) (*executor.Executor,
 		})
 	}
 
-	myGraph, exists := plan.GetSubGraphs()[session.Conf.PartyCode]
+	myGraph, exists := plan.GetSubGraphs()[conf.PartyCode]
 	if !exists {
 		return nil, fmt.Errorf("could not find my graph")
 	}
@@ -374,21 +395,22 @@ func (r *QueryRunner) CreateExecutor(plan *pb.CompiledPlan) (*executor.Executor,
 		SessionParams: startParams,
 		Graph:         myGraph,
 		Async:         false,
+		DebugOpts:     session.ExecuteInfo.DebugOpts,
 	}
 
 	planReqs := map[string]*pb.RunExecutionPlanRequest{
-		session.Conf.PartyCode: req,
+		conf.PartyCode: req,
 	}
 
 	// create sync executor
-	myPubKey, err := session.PartyMgr.GetPubKeyByParty(session.Conf.PartyCode)
+	myPubKey, err := session.App.PartyMgr.GetPubKeyByParty(conf.PartyCode)
 	if err != nil {
 		return nil, err
 	}
 
 	myself := &translator.Participant{
-		PartyCode: session.Conf.PartyCode,
-		Endpoints: []string{session.GetOneSelfEngineUriForSelf()},
+		PartyCode: conf.PartyCode,
+		Endpoints: []string{session.Engine.GetEndpointForSelf()},
 		PubKey:    myPubKey,
 	}
 
@@ -396,12 +418,12 @@ func (r *QueryRunner) CreateExecutor(plan *pb.CompiledPlan) (*executor.Executor,
 
 	engineStub := executor.NewEngineStub(
 		session.ExecuteInfo.JobID,
-		session.Conf.IntraServer.Protocol,
+		conf.IntraServer.Protocol,
 		session.CallBackHost,
 		constant.EngineCallbackPath,
 		session.ExecuteInfo.EngineClient,
-		session.Conf.Engine.Protocol,
-		session.Conf.Engine.ContentType,
+		conf.Engine.Protocol,
+		conf.Engine.ContentType,
 		partyInfo,
 	)
 
@@ -416,10 +438,26 @@ func (r *QueryRunner) CreateExecutor(plan *pb.CompiledPlan) (*executor.Executor,
 	return executor.NewExecutor(planReqs, outputNames, engineStub, r.session.ExecuteInfo.JobID, translator.NewPartyInfo([]*translator.Participant{myself}))
 }
 
+// checkChecksum checks data consistency with other parties via comparing checksum
+func (r *QueryRunner) checkChecksum() error {
+	executionInfo := r.session.ExecuteInfo
+	for _, p := range executionInfo.DataParties {
+		if p == r.session.GetSelfPartyCode() {
+			continue
+		}
+		compareResult, err := executionInfo.Checksums.CompareChecksumFor(p)
+		if err != nil {
+			return err
+		}
+		if compareResult != pb.ChecksumCompareResult_EQUAL {
+			return fmt.Errorf("checksum not equal with party %s", p)
+		}
+	}
+	return nil
+}
+
 func (r *QueryRunner) Execute(usedTables []core.DbTable) error {
 	s := r.session
-	executionInfo := s.ExecuteInfo
-	selfCode := s.GetSelfPartyCode()
 	if r.prepareAgain {
 		logrus.Infof("ask info has been triggered, get data from storage again")
 		_, _, err := r.Prepare(usedTables)
@@ -434,17 +472,8 @@ func (r *QueryRunner) Execute(usedTables []core.DbTable) error {
 			s.SaveLocalChecksum(code, checksum)
 		}
 		// check checksum again
-		for _, p := range executionInfo.DataParties {
-			if p == selfCode {
-				continue
-			}
-			compareResult, err := s.ExecuteInfo.Checksums.CompareChecksumFor(p)
-			if err != nil {
-				return err
-			}
-			if compareResult != pb.ChecksumCompareResult_EQUAL {
-				return fmt.Errorf("checksums are not equal after asking info for party %s", p)
-			}
+		if err := r.checkChecksum(); err != nil {
+			return err
 		}
 	}
 
@@ -452,7 +481,7 @@ func (r *QueryRunner) Execute(usedTables []core.DbTable) error {
 	intrpr := interpreter.NewInterpreter()
 	compiledPlan, err := intrpr.Compile(context.Background(), compileReq)
 	if err != nil {
-		return fmt.Errorf("failed to compile query to plan: %+v", err)
+		return fmt.Errorf("failed to compile query to plan: %w", err)
 	}
 
 	logrus.Infof("Execution Plan:\n%s\n", compiledPlan.GetExplain().GetExeGraphDot())
@@ -462,7 +491,15 @@ func (r *QueryRunner) Execute(usedTables []core.DbTable) error {
 		return err
 	}
 	s.OutputNames = executor.OutputNames
-
+	s.Warning = compiledPlan.Warning
+	if s.IsIssuer() {
+		// we must persist session info before executing to avoid engine reporting failure
+		// persist session info need to contain more infos: Warning/OutputNames...
+		err = s.App.PersistSessionInfo(s)
+		if err != nil {
+			return fmt.Errorf("runQuery persist session info err: %v", err)
+		}
+	}
 	// TODO: sync err to issuer
 	ret, err := executor.RunExecutionPlan(s.Ctx, s.AsyncMode)
 	if err != nil {
@@ -489,5 +526,39 @@ func (r *QueryRunner) Execute(usedTables []core.DbTable) error {
 		s.SetResultSafely(result)
 	} // when engines run in async mode, result will be set in callback handler.
 
+	return nil
+}
+
+// get checksum from parties except self and issuer
+func (r *QueryRunner) GetChecksumFromOtherParties(issuerParty string) error {
+	session := r.session
+	for _, p := range session.ExecuteInfo.DataParties {
+		if p == issuerParty || p == r.session.GetSelfPartyCode() {
+			continue
+		}
+		response, err := r.ExchangeJobInfo(p)
+		if err != nil {
+			return err
+		}
+		err = session.SaveRemoteChecksum(p, response.ExpectedServerChecksum)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *QueryRunner) DryRun(usedTables []core.DbTable) error {
+	// 1. check data consistency
+	if err := r.checkChecksum(); err != nil {
+		return err
+	}
+	// 2. try compile query
+	compileReq := r.buildCompileQueryRequest()
+	intrpr := interpreter.NewInterpreter()
+	_, err := intrpr.Compile(context.TODO(), compileReq)
+	if err != nil {
+		return fmt.Errorf("failed to compile query: %w", err)
+	}
 	return nil
 }

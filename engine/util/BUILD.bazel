@@ -34,6 +34,16 @@ cc_library(
 )
 
 cc_library(
+    name = "prometheus_monitor",
+    srcs = ["prometheus_monitor.cc"],
+    hdrs = ["prometheus_monitor.h"],
+    deps = [
+        "@com_github_jupp0r_prometheus_cpp//core",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+cc_library(
     name = "psi_helper",
     srcs = ["psi_helper.cc"],
     hdrs = ["psi_helper.h"],
@@ -45,10 +55,23 @@ cc_library(
         "@com_github_msgpack_msgpack//:msgpack",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
-        "@psi//psi/psi/core:ecdh_oprf_psi",
-        "@psi//psi/psi/utils:batch_provider",
-        "@psi//psi/psi/utils:ec_point_store",
-        "@psi//psi/psi/utils:ub_psi_cache",
+        "@psi//psi/ecdh:ecdh_oprf_psi",
+        "@psi//psi/utils:batch_provider",
+        "@psi//psi/utils:ec_point_store",
+        "@psi//psi/utils:ub_psi_cache",
+    ],
+)
+
+cc_library(
+    name = "psi_detail_logger",
+    srcs = ["psi_detail_logger.cc"],
+    hdrs = ["psi_detail_logger.h"],
+    deps = [
+        ":logging",
+        ":spu_io",
+        "//engine/core:tensor",
+        "@psi//psi/ecdh:ecdh_logger",
+        "@psi//psi/cryptor:ecc_cryptor",
     ],
 )
 

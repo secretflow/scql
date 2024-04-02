@@ -156,6 +156,10 @@ func (c ExprConverter) convertScalarFunction(dialect format.Dialect, expr *Scala
 	case *builtinArithmeticModIntSig:
 		return &ast.BinaryOperationExpr{Op: opcode.Mod, L: children[0], R: children[1]}, nil
 	case *builtinArithmeticIntDivideIntSig:
+		// for postgres, intdiv is not a operator but a function call
+		if _, ok := dialect.(*format.PostgresDialect); ok {
+			return &ast.FuncCallExpr{FnName: model.NewCIStr(expr.FuncName.L), Args: children}, nil
+		}
 		return &ast.BinaryOperationExpr{Op: opcode.IntDiv, L: children[0], R: children[1]}, nil
 	case *builtinLTIntSig, *builtinLTStringSig, *builtinLTRealSig, *builtinLTDecimalSig:
 		return &ast.BinaryOperationExpr{Op: opcode.LT, L: children[0], R: children[1]}, nil

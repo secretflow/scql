@@ -5,12 +5,12 @@ intra_server:
 inter_server:
   port: 8081
   protocol: https
-  cert_file: "/home/admin/configs/cert.pem"
-  key_file: "/home/admin/configs/key.pem"
+  cert_file: "/home/admin/tls/cert.crt"
+  key_file: "/home/admin/tls/key.key"
 log_level: debug
 party_code: alice
 party_info_file: "/home/admin/configs/party_info.json"
-private_pem_path: "/home/admin/configs/private_key.pem"
+private_key_path: "/home/admin/configs/private_key.pem"
 intra_host: broker_alice:8080
 engine:
   timeout: 120s

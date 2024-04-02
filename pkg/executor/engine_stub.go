@@ -16,7 +16,6 @@ package executor
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -27,18 +26,10 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/interpreter/translator"
-	enginePb "github.com/secretflow/scql/pkg/proto-gen/scql"
-	"github.com/secretflow/scql/pkg/status"
-	"github.com/secretflow/scql/pkg/util/logutil"
-	"github.com/secretflow/scql/pkg/util/message"
 )
 
 const (
-	startSessionPath     = "/SCQLEngineService/StartSession"
-	endSessionPath       = "/SCQLEngineService/StopSession"
-	runDagPath           = "/SCQLEngineService/RunDag"
 	runExecutionPlanPath = "/SCQLEngineService/RunExecutionPlan"
 )
 
@@ -122,130 +113,4 @@ func NewEngineStub(sessionID string,
 		contentType:     contentType,
 		partyInfo:       partyInfo,
 	}
-}
-
-func (stub *EngineStub) EndSession(ctx context.Context, sessionEndParams *enginePb.StopSessionRequest, partyCodes []string) error {
-	timeStart := time.Now()
-	logEntry := &logutil.MonitorLogEntry{
-		SessionID:  stub.executionPlanID,
-		ActionName: fmt.Sprintf("%v@%v", "EngineStub", "EndSession"),
-	}
-	err := stub.endSessionCore(ctx, sessionEndParams, partyCodes)
-	logEntry.CostTime = time.Since(timeStart)
-	if nil != err {
-		logEntry.ErrorMsg = err.Error()
-		log.Errorf("%v|sessionEndParams:%v|partyCodes:%v", logEntry,
-			sessionEndParams, partyCodes)
-	} else {
-		log.Infof("%v|sessionEndParams:%v|partyCodes:%v", logEntry,
-			sessionEndParams, partyCodes)
-	}
-	return err
-}
-
-func (stub *EngineStub) genURLFor(partyCode string, apiPath string) (string, error) {
-	host, err := stub.partyInfo.GetUrlByParty(partyCode)
-	if err != nil {
-		return "", err
-	}
-	url := url.URL{
-		Scheme: stub.protocol,
-		Host:   host,
-		Path:   apiPath,
-	}
-	return url.String(), nil
-}
-
-func (stub *EngineStub) endSessionCore(ctx context.Context, sessionEndParams *enginePb.StopSessionRequest, partyCodes []string) error {
-	if sessionEndParams == nil {
-		return fmt.Errorf("end session: invalid params")
-	}
-
-	var postBodies []string
-	for i := 0; i < len(partyCodes); i++ {
-
-		encodingType, exists := message.ContentType2EncodingType[stub.contentType]
-		if !exists {
-			return fmt.Errorf("unsupported content type:%s", stub.contentType)
-		}
-
-		postBody, err := message.SerializeTo(sessionEndParams, encodingType)
-		if err != nil {
-			return err
-		}
-		postBodies = append(postBodies, string(postBody))
-	}
-
-	respBodies, err := stub.postRequests(ctx, constant.ActionNameEnginePostForEndSession, endSessionPath, postBodies, partyCodes, nil)
-	if err != nil {
-		return err
-	}
-	return checkRespStatus(respBodies)
-}
-
-func checkRespStatus(respBodies []string) error {
-	for _, respBody := range respBodies {
-		respStatus := &enginePb.Status{}
-		_, err := message.DeserializeFrom(io.NopCloser(strings.NewReader(respBody)), respStatus)
-		if err != nil {
-			return fmt.Errorf("failed to parse response: %v", err)
-		}
-		if respStatus.GetCode() != int32(enginePb.Code_OK) {
-			return status.NewStatusFromProto(respStatus)
-		}
-	}
-	return nil
-}
-
-func (stub *EngineStub) postRequests(ctx context.Context, actionName string, path string, postBodies []string, partyCodes []string, dagIDs []int) ([]string, error) {
-	c := make(chan ResponseInfo, len(partyCodes))
-	for i, partyCode := range partyCodes {
-		var dagID string
-		if len(dagIDs) != 0 {
-			if len(dagIDs) != len(partyCodes) {
-				return nil, fmt.Errorf("invalid request, input params for size mismatch for dagIDs:%v, partyCodes:%v", dagIDs, partyCodes)
-			}
-			dagID = fmt.Sprint(dagIDs[i])
-		}
-		url, err := stub.genURLFor(partyCode, path)
-		if err != nil {
-			return nil, fmt.Errorf("failed to generate URL for party %v: %+v", partyCode, err)
-		}
-
-		credential, err := stub.partyInfo.GetCredentialByParty(partyCode)
-		if err != nil {
-			return nil, fmt.Errorf("no credential found for party %v: %+v", partyCode, err)
-		}
-
-		go func(stub *EngineStub, partyCode, url, partyCredential, contentType, postBody, dagID string) {
-			timeStart := time.Now()
-			logEntry := &logutil.MonitorLogEntry{
-				SessionID:  stub.executionPlanID,
-				ActionName: actionName,
-				RawRequest: postBody,
-			}
-			respBody, err := stub.webClient.Post(ctx, url, partyCredential, contentType, postBody)
-			logEntry.CostTime = time.Since(timeStart)
-			if err != nil {
-				logEntry.ErrorMsg = err.Error()
-				log.Errorf("%v|PartyCode:%v|DagID:%v|Url:%v", logEntry, partyCode, dagID, url)
-			} else {
-				log.Infof("%v|PartyCode:%v|DagID:%v|Url:%v", logEntry, partyCode, dagID, url)
-			}
-			c <- ResponseInfo{
-				ResponseBody: respBody,
-				Err:          err,
-			}
-
-		}(stub, partyCode, url, credential, stub.contentType, postBodies[i], dagID)
-	}
-	var respBody []string
-	for i := 0; i < len(partyCodes); i++ {
-		respInfo := <-c
-		if respInfo.Err != nil {
-			return nil, respInfo.Err
-		}
-		respBody = append(respBody, respInfo.ResponseBody)
-	}
-	return respBody, nil
 }

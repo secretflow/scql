@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- [feature] Add support for RSA key pairs in SCQLBroker.
+- [experiment][feature] support running on [kuscia](https://github.com/secretflow/kuscia) and scheduling SCQLEngine dynamic via kuscia job.
+- [feature] Add `dry_run` parameter in DoQuery request, it could be used to check query syntax and CCL without actually executing the query.
+
 ### Changed
 
 ## [0.5.0] - 2024-01-10

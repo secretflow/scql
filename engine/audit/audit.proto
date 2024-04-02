@@ -28,7 +28,6 @@ message AuditLog {
 message AuditBody {
   oneof body {
     audit.pb.UncategorizedEvent uncategorized = 1;
-    RunSubDagEvent run_dag = 2;
     RunExecPlanEvent run_plan = 3;
     CreateSessionEvent create_session = 4;
     StopSessionEvent stop_session = 5;
@@ -39,13 +38,6 @@ message AuditBody {
     DumpFileNodeDetail dump_detail = 9;
     PublishNodeDetail publish_detail = 10;
   }
-}
-
-message RunSubDagEvent {
-  string source_ip = 1;
-  int32 dag_id = 2;
-  int64 cost_time = 3;  // unit: ms
-  repeated audit.pb.NodeInfo node_list = 4;
 }
 
 message RunExecPlanEvent {

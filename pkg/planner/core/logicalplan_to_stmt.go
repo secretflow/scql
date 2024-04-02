@@ -43,17 +43,22 @@ func (p *LogicalProjection) SqlStmt(d Dialect) (*runSqlCtx, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, err = c.updateExprNodeFromExpressions(d, p.Exprs, p.logicalSchemaProducer.Schema().Columns)
+	newCtx, err := c.addClause(ClauseProjection)
 	if err != nil {
 		return nil, err
 	}
-	return c.addClause(ClauseProjection)
+	_, err = newCtx.updateExprNodeFromExpressions(d, p.Exprs, p.logicalSchemaProducer.Schema().Columns)
+	return newCtx, err
 }
 
 func (p *LogicalSelection) SqlStmt(d Dialect) (*runSqlCtx, error) {
 	c, err := BuildChildCtx(d, p.Children()[0])
 	if err != nil {
 		return nil, err
+	}
+	// empty selection, due to group by threshold is 1
+	if len(p.Conditions) == 0 {
+		return c, nil
 	}
 	if slices.Contains(c.clauses, ClauseAggregate) {
 		c, err = c.addClause(ClauseHaving)

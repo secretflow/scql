@@ -15,7 +15,11 @@
 package auth
 
 import (
+	"crypto"
 	"crypto/ed25519"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
 	"fmt"
@@ -31,23 +35,49 @@ import (
 )
 
 type Auth struct {
-	priv ed25519.PrivateKey
+	privKey any
 }
 
-func NewAuth(pemPath string) (*Auth, error) {
-	priv, err := sqlbuilder.LoadPrivateKeyFromPemFile(pemPath)
+func NewAuth(pemData []byte) (*Auth, error) {
+	priv, err := sqlbuilder.LoadPrivateKeyFromPem(pemData)
 	if err != nil {
 		logrus.Errorf("NewAuth: %v", err)
 		return nil, fmt.Errorf("NewAuth: %v", err)
 	}
 
-	e, ok := priv.(ed25519.PrivateKey)
-	if !ok {
-		err = fmt.Errorf("NewAuth: no ed25519 private key")
-		logrus.Error(err)
-		return nil, err
+	switch v := priv.(type) {
+	case ed25519.PrivateKey, *rsa.PrivateKey:
+		return &Auth{privKey: priv}, nil
+	default:
+		return nil, fmt.Errorf("NewAuth: unsupported private key type: %T", v)
 	}
-	return &Auth{priv: e}, nil
+}
+
+func (auth *Auth) sign(msg []byte) (signature []byte, err error) {
+	switch priv := auth.privKey.(type) {
+	case ed25519.PrivateKey:
+		return ed25519.Sign(priv, msg), nil
+	case *rsa.PrivateKey:
+		msgHashSum := sha256.Sum256(msg)
+		return rsa.SignPSS(rand.Reader, priv, crypto.SHA256, msgHashSum[:], nil)
+	default:
+		return nil, fmt.Errorf("unsupported sign message using private key type: %T", priv)
+	}
+}
+
+func verify(pub any, msg, sig []byte) error {
+	switch pub := pub.(type) {
+	case ed25519.PublicKey:
+		if !ed25519.Verify(pub, msg, sig) {
+			return fmt.Errorf("failed to verify signature with ed25519 public key")
+		}
+		return nil
+	case *rsa.PublicKey:
+		msgHashSum := sha256.Sum256(msg)
+		return rsa.VerifyPSS(pub, crypto.SHA256, msgHashSum[:], sig, nil)
+	default:
+		return fmt.Errorf("unsupported verify message using public key type: %T", pub)
+	}
 }
 
 func (auth *Auth) SignMessage(msg proto.Message) (err error) {
@@ -72,9 +102,12 @@ func (auth *Auth) SignMessage(msg proto.Message) (err error) {
 	if err != nil {
 		return fmt.Errorf("SignMessage: %v", err)
 	}
-	sign := ed25519.Sign(auth.priv, c)
+	signature, err := auth.sign(c)
+	if err != nil {
+		return fmt.Errorf("SignMessage: %v", err)
+	}
 
-	msg.ProtoReflect().Set(signDesc, protoreflect.ValueOfBytes(sign))
+	msg.ProtoReflect().Set(signDesc, protoreflect.ValueOfBytes(signature))
 
 	return
 }
@@ -117,15 +150,5 @@ func (auth *Auth) CheckSign(msg proto.Message, pubKey string) (err error) {
 		return fmt.Errorf("failed to marshal msg: %v", err)
 	}
 
-	switch pub := pub.(type) {
-	case ed25519.PublicKey:
-		if !ed25519.Verify(pub, msgArray, sign) {
-			return fmt.Errorf("failed to verify signature with public key")
-		}
-	// TODO: support sm2, rsa
-	default:
-		return fmt.Errorf("unknown type of public key")
-	}
-
-	return nil
+	return verify(pub, msgArray, sign)
 }

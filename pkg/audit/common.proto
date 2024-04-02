@@ -16,7 +16,6 @@
 syntax = "proto3";
 
 package audit.pb;
-import "api/core.proto";
 import "api/status.proto";
 import "google/protobuf/timestamp.proto";
 

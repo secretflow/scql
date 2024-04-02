@@ -14,9 +14,12 @@
 
 #include "engine/operator/concat.h"
 
+#include "libspu/core/encoding.h"
+#include "libspu/kernel/hlo/casting.h"
 #include "libspu/kernel/hlo/geometrical.h"
 
 #include "engine/core/primitive_builder.h"
+#include "engine/core/type.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
 
@@ -44,20 +47,34 @@ void Concat::Validate(ExecContext* ctx) {
 
 void Concat::Execute(ExecContext* ctx) {
   const auto& input_pbs = ctx->GetInput(kIn);
+  const auto& output_pb = ctx->GetOutput(kOut)[0];
+  auto sctx = ctx->GetSession()->GetSpuContext();
   auto symbols = ctx->GetSession()->GetDeviceSymbols();
+
+  spu::DataType output_type = spu::DataType::DT_INVALID;
+  if (output_pb.elem_type() != pb::PrimitiveDataType::STRING) {
+    output_type =
+        spu::getEncodeType(DataTypeToSpuPtType(output_pb.elem_type()));
+  }
+
   std::vector<spu::Value> values;
   values.reserve(input_pbs.size());
   for (int i = 0; i < input_pbs.size(); ++i) {
     auto value = symbols->getVar(
         util::SpuVarNameEncoder::GetValueName(input_pbs[i].name()));
-    values.push_back(value);
+    if (output_type != spu::DataType::DT_INVALID &&
+        output_type != value.dtype()) {
+      const auto cast_value =
+          spu::kernel::hlo::Cast(sctx, value, value.vtype(), output_type);
+      values.push_back(cast_value);
+    } else {
+      values.push_back(value);
+    }
   }
 
-  auto sctx = ctx->GetSession()->GetSpuContext();
   int64_t axis = ctx->GetInt64ValueFromAttribute(kAxis);
   auto result_value = spu::kernel::hlo::Concatenate(sctx, values, axis);
 
-  const auto& output_pb = ctx->GetOutput(kOut)[0];
   symbols->setVar(util::SpuVarNameEncoder::GetValueName(output_pb.name()),
                   result_value);
 

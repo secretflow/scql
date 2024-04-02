@@ -313,9 +313,24 @@ Definition: Dump the input tensor. Note: This op will change the affected rows i
 
 1. `file_path`: String. Absolute file path to dump the tensors.
 
-1. `deliminator`: String. Column deliminator, e.g. comma `,`
+1. `field_deliminator`: String. Column deliminator, e.g. `\t`
+
+1. `quoting_style`: Int64. Strategies for using quotes, 0: do not use quotes; 1: use quotes for strings; 2: use quotes for all valid data
+
+1. `line_terminator`: String. Line terminator, e.g. `\n`
 
 
+
+
+
+
+**Default Attribute Values:**
+
+1. `field_deliminator`: \t
+
+1. `line_terminator`: \n
+
+1. `quoting_style`: 0
 
 
 
@@ -894,7 +909,9 @@ Out = {False, True, False, True}
 
 **Attributes:**  
 
-1. `algorithm`: Int64. Algorithm to use for the op. 1: PSI
+1. `in_type`: Int64. 0: PSI In, 1: Share In, 2: Local In
+
+1. `psi_algorithm`: Int64. PSI Algorithm for In. 0: Auto, 1: Ecdh, 2: Oprf;
 
 1. `input_party_codes`: List of parties the inputs belong to. This attribute is required if algorithm = PSI.
 
@@ -907,7 +924,9 @@ Out = {False, True, False, True}
 
 **Default Attribute Values:**
 
-1. `algorithm`: 0
+1. `in_type`: 0
+
+1. `psi_algorithm`: 0
 
 
 
@@ -1001,6 +1020,8 @@ RightJoinIndex = {0,1,2,2,3} // shape:[K=5], rows after applied filter eq-join-l
 
 1. `join_type`: Int64. 0: inner join; 1: left join; 2: right join;
 
+1. `psi_algorithm`: Choose PSI join algorithm, Int64. 0: Auto; 1: Ecdh; 2: Oprf;
+
 
 
 
@@ -1009,6 +1030,8 @@ RightJoinIndex = {0,1,2,2,3} // shape:[K=5], rows after applied filter eq-join-l
 **Default Attribute Values:**
 
 1. `join_type`: 0
+
+1. `psi_algorithm`: 0
 
 
 
@@ -1659,6 +1682,37 @@ Out = {2.5}
 **Outputs:**  
 
 1. `Out`(single, T): The average Tensor (shape [1]).
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: private,secret
+
+
+
+### `ReduceCount`
+
+Definition: Given an input tensor In, return the count of input tensor's elements.
+Example:
+
+```python
+In = {1, 2, 3, 4, 5, 6}
+Out = {6}
+```
+
+
+**Inputs:**
+
+1. `In`(single, T): Tensor to be counted (shape [M]).
+
+
+**Outputs:**
+
+1. `Out`(single, T): The counted Tensor (shape [1]).
 
 
 

@@ -67,6 +67,53 @@ func (x *RequestHeader) GetCustomHeaders() map[string]string {
 	return nil
 }
 
+type DebugOptions struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	EnablePsiDetailLog bool `protobuf:"varint,1,opt,name=enable_psi_detail_log,json=enablePsiDetailLog,proto3" json:"enable_psi_detail_log,omitempty"`
+}
+
+func (x *DebugOptions) Reset() {
+	*x = DebugOptions{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_common_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DebugOptions) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DebugOptions) ProtoMessage() {}
+
+func (x *DebugOptions) ProtoReflect() protoreflect.Message {
+	mi := &file_api_common_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DebugOptions.ProtoReflect.Descriptor instead.
+func (*DebugOptions) Descriptor() ([]byte, []int) {
+	return file_api_common_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *DebugOptions) GetEnablePsiDetailLog() bool {
+	if x != nil {
+		return x.EnablePsiDetailLog
+	}
+	return false
+}
+
 type SQLWarning struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -78,7 +125,7 @@ type SQLWarning struct {
 func (x *SQLWarning) Reset() {
 	*x = SQLWarning{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_api_common_proto_msgTypes[1]
+		mi := &file_api_common_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -91,7 +138,7 @@ func (x *SQLWarning) String() string {
 func (*SQLWarning) ProtoMessage() {}
 
 func (x *SQLWarning) ProtoReflect() protoreflect.Message {
-	mi := &file_api_common_proto_msgTypes[1]
+	mi := &file_api_common_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -104,7 +151,7 @@ func (x *SQLWarning) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SQLWarning.ProtoReflect.Descriptor instead.
 func (*SQLWarning) Descriptor() ([]byte, []int) {
-	return file_api_common_proto_rawDescGZIP(), []int{1}
+	return file_api_common_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *SQLWarning) GetReason() string {
@@ -129,11 +176,16 @@ var file_api_common_proto_rawDesc = []byte{
 	0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01,
 	0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65,
 	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38,
-	0x01, 0x22, 0x24, 0x0a, 0x0a, 0x53, 0x51, 0x4c, 0x57, 0x61, 0x72, 0x6e, 0x69, 0x6e, 0x67, 0x12,
-	0x16, 0x0a, 0x06, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x06, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x42, 0x10, 0x5a, 0x0e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x2d, 0x67, 0x65, 0x6e, 0x2f, 0x73, 0x63, 0x71, 0x6c, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x33,
+	0x01, 0x22, 0x41, 0x0a, 0x0c, 0x44, 0x65, 0x62, 0x75, 0x67, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e,
+	0x73, 0x12, 0x31, 0x0a, 0x15, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x5f, 0x70, 0x73, 0x69, 0x5f,
+	0x64, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x5f, 0x6c, 0x6f, 0x67, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08,
+	0x52, 0x12, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x50, 0x73, 0x69, 0x44, 0x65, 0x74, 0x61, 0x69,
+	0x6c, 0x4c, 0x6f, 0x67, 0x22, 0x24, 0x0a, 0x0a, 0x53, 0x51, 0x4c, 0x57, 0x61, 0x72, 0x6e, 0x69,
+	0x6e, 0x67, 0x12, 0x16, 0x0a, 0x06, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x06, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x42, 0x25, 0x0a, 0x13, 0x6f, 0x72,
+	0x67, 0x2e, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x66, 0x6c, 0x6f, 0x77, 0x2e, 0x73, 0x63, 0x71,
+	0x6c, 0x5a, 0x0e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2d, 0x67, 0x65, 0x6e, 0x2f, 0x73, 0x63, 0x71,
+	0x6c, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -148,14 +200,15 @@ func file_api_common_proto_rawDescGZIP() []byte {
 	return file_api_common_proto_rawDescData
 }
 
-var file_api_common_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_api_common_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_api_common_proto_goTypes = []interface{}{
 	(*RequestHeader)(nil), // 0: scql.pb.RequestHeader
-	(*SQLWarning)(nil),    // 1: scql.pb.SQLWarning
-	nil,                   // 2: scql.pb.RequestHeader.CustomHeadersEntry
+	(*DebugOptions)(nil),  // 1: scql.pb.DebugOptions
+	(*SQLWarning)(nil),    // 2: scql.pb.SQLWarning
+	nil,                   // 3: scql.pb.RequestHeader.CustomHeadersEntry
 }
 var file_api_common_proto_depIdxs = []int32{
-	2, // 0: scql.pb.RequestHeader.custom_headers:type_name -> scql.pb.RequestHeader.CustomHeadersEntry
+	3, // 0: scql.pb.RequestHeader.custom_headers:type_name -> scql.pb.RequestHeader.CustomHeadersEntry
 	1, // [1:1] is the sub-list for method output_type
 	1, // [1:1] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
@@ -182,6 +235,18 @@ func file_api_common_proto_init() {
 			}
 		}
 		file_api_common_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DebugOptions); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_api_common_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*SQLWarning); i {
 			case 0:
 				return &v.state
@@ -200,7 +265,7 @@ func file_api_common_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_api_common_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

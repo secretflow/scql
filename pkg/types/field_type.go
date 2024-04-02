@@ -267,6 +267,9 @@ func DefaultCharsetForType(tp byte) (string, string) {
 // The result field type of the case expression is the merged type of the two when clause.
 // See https://github.com/mysql/mysql-server/blob/5.7/sql/field.cc#L1042
 func MergeFieldType(a byte, b byte) byte {
+	if a == b {
+		return a
+	}
 	ia := getFieldTypeIndex(a)
 	ib := getFieldTypeIndex(b)
 	return fieldTypeMergeRules[ia][ib]

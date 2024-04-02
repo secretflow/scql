@@ -37,11 +37,11 @@ func TestCollectCCLForParty(t *testing.T) {
 			Columns: []*scql.TableEntry_Column{
 				{
 					Name: "column1_1",
-					Type: "long",
+					Type: "int",
 				},
 				{
 					Name: "column1_2",
-					Type: "long",
+					Type: "int",
 				},
 			},
 		},

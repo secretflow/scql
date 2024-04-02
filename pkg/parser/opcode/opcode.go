@@ -144,7 +144,7 @@ func (o Op) Format(w io.Writer) {
 // Restore the Op into a Writer
 func (o Op) Restore(ctx *RestoreCtx) error {
 	if v, ok := opsLiteral[o]; ok {
-		ctx.WriteKeyWord(v)
+		ctx.WriteKeyWord(ctx.Dialect.GetOperator(v))
 		return nil
 	}
 	return errors.Errorf("Invalid opcode type %d during restoring AST to SQL text", o)

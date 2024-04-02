@@ -37,7 +37,7 @@ type logicalNode interface {
 	String() string
 	IntoOpt() *ast.SelectIntoOption
 	// buildCCL builds the column control list of logical node's table
-	buildCCL(*ccl.ColumnTracer) error
+	buildCCL(*ccl.Context, *ccl.ColumnTracer) error
 	// CCL returns the column control list of the logical node's table
 	CCL() map[int64]*ccl.CCL
 	// VisibleParty returns a list of parties that can see the logical node's table

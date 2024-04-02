@@ -18,13 +18,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"golang.org/x/exp/slices"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/secretflow/scql/pkg/broker/application"
 	"github.com/secretflow/scql/pkg/broker/executor"
 	"github.com/secretflow/scql/pkg/broker/services/common"
+	"github.com/secretflow/scql/pkg/broker/storage"
 	"github.com/secretflow/scql/pkg/interpreter/translator"
 	"github.com/secretflow/scql/pkg/planner/core"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
@@ -35,11 +39,7 @@ func (svc *grpcIntraSvc) DoQuery(ctx context.Context, req *pb.QueryRequest) (res
 	if req == nil || req.GetProjectId() == "" || req.GetQuery() == "" {
 		return nil, status.New(pb.Code_BAD_REQUEST, "request for DoQuery is illegal")
 	}
-	defer func() {
-		if err != nil {
-			err = status.New(pb.Code_INTERNAL, err.Error())
-		}
-	}()
+
 	app := svc.app
 	err = common.CheckMemberExistInProject(app.MetaMgr, req.GetProjectId(), app.Conf.PartyCode)
 	if err != nil {
@@ -57,13 +57,23 @@ func (svc *grpcIntraSvc) DoQuery(ctx context.Context, req *pb.QueryRequest) (res
 			Code: app.Conf.PartyCode,
 		},
 		EngineClient: app.EngineClient,
+		DebugOpts:    req.GetDebugOpts(),
 	}
-	session, err := application.NewSession(ctx, info, app, false)
+	session, err := application.NewSession(ctx, info, app, false, req.GetDryRun())
 	if err != nil {
 		return nil, err
 	}
 	app.AddSession(jobID, session)
 	logrus.Infof("create session %s with query '%s' in project %s", jobID, req.Query, req.ProjectId)
+
+	defer func() {
+		if session.Engine != nil {
+			if err := session.Engine.Stop(); err != nil {
+				logrus.Warnf("failed to stop engine for query job=%s: %v", jobID, err)
+			}
+		}
+		app.DeleteSession(jobID)
+	}()
 
 	err = svc.runQuery(session)
 	return session.GetResultSafely(), err
@@ -73,11 +83,11 @@ func (svc *grpcIntraSvc) SubmitQuery(ctx context.Context, req *pb.QueryRequest) 
 	if req == nil || req.GetProjectId() == "" || req.GetQuery() == "" {
 		return nil, status.New(pb.Code_BAD_REQUEST, "request for SubmitQuery is illegal: empty project or query")
 	}
-	defer func() {
-		if err != nil {
-			err = status.New(pb.Code_INTERNAL, err.Error())
-		}
-	}()
+
+	if req.GetDryRun() {
+		return nil, status.New(pb.Code_BAD_REQUEST, "Bad Request: dry_run is not supported in SubmitQuery, please use DoQuery instead")
+	}
+
 	app := svc.app
 	err = common.CheckMemberExistInProject(app.MetaMgr, req.GetProjectId(), app.Conf.PartyCode)
 	if err != nil {
@@ -95,17 +105,26 @@ func (svc *grpcIntraSvc) SubmitQuery(ctx context.Context, req *pb.QueryRequest) 
 			Code: app.Conf.PartyCode,
 		},
 		EngineClient: app.EngineClient,
+		DebugOpts:    req.GetDebugOpts(),
 	}
-	session, err := application.NewSession(ctx, info, app, true /* async mode */)
+	session, err := application.NewSession(ctx, info, app, true /* async mode */, false)
 	if err != nil {
 		return nil, err
 	}
 	app.AddSession(jobID, session)
 	logrus.Infof("create session %s with query '%s' in project %s", jobID, req.Query, req.ProjectId)
 
+	defer func(session *application.Session) {
+		if err != nil {
+			go session.OnError(err)
+			app.DeleteSession(jobID)
+			// NOTE: no need to clear session info in DB, since the PersistSession is called in the end of runQuery
+		}
+	}(session)
+
 	err = svc.runQuery(session)
 	if err != nil {
-		return nil, fmt.Errorf("SubmitQuery: %v", err)
+		return nil, fmt.Errorf("SubmitQuery: %w", err)
 	}
 
 	return &pb.SubmitResponse{
@@ -121,16 +140,71 @@ func (svc *grpcIntraSvc) FetchResult(c context.Context, req *pb.FetchResultReque
 	if req == nil || req.GetJobId() == "" {
 		return nil, status.New(pb.Code_BAD_REQUEST, "request for FetchResult is illegal: empty job id")
 	}
-	session, ok := svc.app.GetSession(req.GetJobId())
-	if !ok {
-		err = status.New(pb.Code_NOT_FOUND, fmt.Sprintf("no existing session for job: %v", req.GetJobId()))
+
+	info, err := svc.app.GetSessionInfo(req.GetJobId())
+	if err != nil {
+		err = status.New(pb.Code_NOT_FOUND, fmt.Sprintf("no existing session for job: %v, err: %s", req.GetJobId(), err))
 		return
 	}
-	resp = session.GetResultSafely()
+	// Currently when persist_session is enabled, canceled or expired session_infos still exists in the database, while session_results are deleted
+	if info.Status == int8(storage.SessionCanceled) {
+		return nil, fmt.Errorf("session %s was canceled, no result existing now", req.GetJobId())
+	}
+	if time.Now().After(info.CreatedAt.Add(svc.app.Conf.SessionExpireTime)) {
+		return nil, fmt.Errorf("session %s was expired, no result existing now", req.GetJobId())
+	}
+
+	resp, err = svc.app.GetSessionResult(info.SessionID)
+	if err != nil {
+		return nil, fmt.Errorf("FetchResult: GetSessionResult failed: %v", err)
+	}
+
 	if resp == nil {
 		err = status.New(pb.Code_NOT_READY, "result not ready, please retry later")
 	}
 	return
+}
+
+func (svc *grpcIntraSvc) CancelQuery(c context.Context, req *pb.CancelQueryRequest) (resp *pb.CancelQueryResponse, err error) {
+	if req == nil || req.GetJobId() == "" {
+		return nil, status.New(pb.Code_BAD_REQUEST, "request for CancelQeury is illegal: empty job id")
+	}
+
+	info, err := svc.app.GetSessionInfo(req.GetJobId())
+	if err != nil {
+		err = status.New(pb.Code_NOT_FOUND, fmt.Sprintf("no existing session for job: %v, err: %s", req.GetJobId(), err))
+		return
+	}
+
+	if info.Status == int8(storage.SessionCanceled) {
+		return &pb.CancelQueryResponse{
+			Status: &pb.Status{
+				Code:    int32(0),
+				Message: fmt.Sprintf("job %v already canceled", req.GetJobId()),
+			},
+		}, nil
+	}
+
+	err = svc.app.CancelSession(info)
+	if err != nil {
+		return nil, fmt.Errorf("CancelQuery: cancel session %s failed: %v", info.SessionID, err)
+	}
+
+	// async notify other members to release resources
+	for _, party := range strings.Split(info.WorkParties, ";") {
+		if party == svc.app.Conf.PartyCode {
+			continue
+		}
+		go cancelDistributedQuery(svc.app, party, req.GetJobId())
+	}
+
+	logrus.Infof("cancel query job{%s} manually.", req.GetJobId())
+	return &pb.CancelQueryResponse{
+		Status: &pb.Status{
+			Code:    int32(0),
+			Message: fmt.Sprintf("cancel query job %v succeed", req.GetJobId()),
+		},
+	}, nil
 }
 
 type DistributeRet struct {
@@ -140,20 +214,29 @@ type DistributeRet struct {
 	prepareAgain bool
 }
 
-func DistributeQueryToOtherParty(session *application.Session, enginesInfo *translator.EnginesInfo, p string) (ret DistributeRet) {
+func (dr *DistributeRet) String() string {
+	return fmt.Sprintf("{party:%s, endpoint:%s, err:%v, prepareAgain:%v}", dr.party, dr.endpoint, dr.err, dr.prepareAgain)
+}
+
+func distributeQueryToOtherParty(session *application.Session, enginesInfo *translator.EnginesInfo, p string) (ret DistributeRet) {
 	ret.party = p
-	url, err := session.PartyMgr.GetBrokerUrlByParty(p)
+	url, err := session.App.PartyMgr.GetBrokerUrlByParty(p)
 	if err != nil {
 		ret.err = err
 		return
 	}
 	executionInfo := session.ExecuteInfo
 	selfCode := session.GetSelfPartyCode()
-	selfEndpoint, err := session.GetEndpoint(selfCode)
-	if err != nil {
-		ret.err = err
-		return
+	var selfEndpoint string
+	if !session.DryRun {
+		endpoint, err := session.GetEndpoint(selfCode)
+		if err != nil {
+			ret.err = err
+			return
+		}
+		selfEndpoint = endpoint
 	}
+
 	// distribute queries to other participants
 	distributeReq := &pb.DistributeQueryRequest{
 		ClientProtocol: application.Version,
@@ -163,6 +246,8 @@ func DistributeQueryToOtherParty(session *application.Session, enginesInfo *tran
 		ClientId:       &pb.PartyId{Code: selfCode},
 		EngineEndpoint: selfEndpoint,
 		IsAsync:        session.AsyncMode,
+		DebugOpts:      session.ExecuteInfo.DebugOpts,
+		DryRun:         session.DryRun,
 	}
 	if slices.Contains(executionInfo.DataParties, selfCode) {
 		selfInfoChecksum, err := session.GetSelfChecksum()
@@ -193,13 +278,14 @@ func DistributeQueryToOtherParty(session *application.Session, enginesInfo *tran
 		ret.err = fmt.Errorf("failed to parse response: %+v", response)
 		return
 	}
-	if response.ServerProtocol != application.Version {
-		ret.err = fmt.Errorf("failed to check protocol: self is %s, party %s is %s", application.Version, p, response.ServerProtocol)
-		return
-	}
 	// check error code to avoid panic
 	if response.GetStatus().GetCode() != 0 && response.GetStatus().GetCode() != int32(pb.Code_DATA_INCONSISTENCY) {
 		ret.err = fmt.Errorf("distribute query err: %+v", response.Status)
+		return
+	}
+	// check version when there is no err
+	if response.ServerProtocol != application.Version {
+		ret.err = fmt.Errorf("failed to check protocol: self is %s, party %s is %s", application.Version, p, response.ServerProtocol)
 		return
 	}
 	ret.endpoint = response.GetEngineEndpoint()
@@ -264,7 +350,7 @@ func (svc *grpcIntraSvc) runQuery(session *application.Session) error {
 		distributePartyNum++
 		go func(p string) {
 			logrus.Infof("distribute query to party %s for job %s", p, session.ExecuteInfo.JobID)
-			ret := DistributeQueryToOtherParty(session, r.GetEnginesInfo(), p)
+			ret := distributeQueryToOtherParty(session, r.GetEnginesInfo(), p)
 			retCh <- ret
 		}(p)
 	}
@@ -272,7 +358,7 @@ func (svc *grpcIntraSvc) runQuery(session *application.Session) error {
 	// wait for response from other parties
 	for i := 0; i < distributePartyNum; i++ {
 		ret := <-retCh
-		logrus.Infof("distribute query return: %+v, for job %s", ret, session.ExecuteInfo.JobID)
+		logrus.Infof("distribute query return: %s, for job %s", ret.String(), session.ExecuteInfo.JobID)
 		if ret.err != nil {
 			totalErr = errors.Join(totalErr, ret.err)
 			continue
@@ -285,11 +371,52 @@ func (svc *grpcIntraSvc) runQuery(session *application.Session) error {
 	logrus.Infof("distribute query completed for job %s", session.ExecuteInfo.JobID)
 	// err occurred when distributing query
 	if totalErr != nil {
-		return fmt.Errorf("runQuery distribute: %v", err)
+		return fmt.Errorf("runQuery distribute: %v", totalErr)
 	}
+
+	if session.DryRun {
+		// NOTE: dry run doesn't need to persistent session info
+		if err := r.DryRun(usedTables); err != nil {
+			return err
+		}
+
+		result := &pb.QueryResponse{
+			Status: &pb.Status{
+				Code:    int32(pb.Code_OK),
+				Message: "dry run success",
+			},
+		}
+
+		session.SetResultSafely(result)
+		return nil
+	}
+
 	err = r.Execute(usedTables)
 	if err != nil {
-		return fmt.Errorf("runQuery Execute err: %s", err)
+		return fmt.Errorf("runQuery Execute err: %w", err)
 	}
+
 	return nil
+}
+
+// Try to notify party to cancel jobId
+func cancelDistributedQuery(app *application.App, party, jobId string) {
+	destUrl, err := app.PartyMgr.GetBrokerUrlByParty(party)
+	if err != nil {
+		logrus.Warnf("cancelDistributedQuery: get url for party %s failed: %v", party, err)
+		return
+	}
+	req := pb.CancelQueryJobRequest{
+		ClientId: &pb.PartyId{Code: app.Conf.PartyCode},
+		JobId:    jobId,
+	}
+	resp := pb.CancelQueryJobResponse{}
+	err = app.InterStub.CancelQueryJob(destUrl, &req, &resp)
+	if err != nil {
+		logrus.Warnf("cancelDistributedQuery: inter request failed: %v", err)
+		return
+	}
+	if resp.GetStatus().GetCode() != int32(pb.Code_OK) {
+		logrus.Warnf("cancelDistributedQuery: response error: %v", protojson.Format(&resp))
+	}
 }

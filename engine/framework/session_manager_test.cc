@@ -59,6 +59,7 @@ class SessionManagerTest : public ::testing::Test {
 TEST_F(SessionManagerTest, Works) {
   // Given
   std::string session_id = "session_id";
+  pb::DebugOptions debug_opts;
   pb::SessionStartParams params;
   {
     params.set_session_id(session_id);
@@ -76,11 +77,11 @@ TEST_F(SessionManagerTest, Works) {
     config->set_sigmoid_mode(spu::RuntimeConfig::SIGMOID_REAL);
   }
   // When
-  EXPECT_NO_THROW(mgr->CreateSession(params));
+  EXPECT_NO_THROW(mgr->CreateSession(params, debug_opts));
   // Then
   EXPECT_NE(nullptr, listener_manager.GetListener(session_id));
   // duplicate creation error.
-  EXPECT_THROW(mgr->CreateSession(params), ::yacl::LogicError);
+  EXPECT_THROW(mgr->CreateSession(params, debug_opts), ::yacl::LogicError);
   // GetSession.
   EXPECT_EQ(nullptr, mgr->GetSession("not exist session_id"));
   EXPECT_NE(nullptr, mgr->GetSession(session_id));
@@ -98,7 +99,7 @@ TEST_F(SessionManagerTest, Works) {
   // test timeout.
   session_id = session_id + "_timeout";
   params.set_session_id(session_id);
-  EXPECT_NO_THROW(mgr->CreateSession(params));
+  EXPECT_NO_THROW(mgr->CreateSession(params, debug_opts));
   EXPECT_NE(nullptr, listener_manager.GetListener(session_id));
   sleep(2);
   EXPECT_EQ(nullptr, listener_manager.GetListener(session_id));

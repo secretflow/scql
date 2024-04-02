@@ -196,9 +196,11 @@ cc_library(
     hdrs = ["duckdb_wrapper.h"],
     deps = [
         ":csvdb_conf_cc_proto",
+        "//api/v1:column_cpp_proto",
         "//engine/util:filepath_helper",
         "@com_github_duckdb//:duckdb",
         "@com_github_gflags_gflags//:gflags",
+        "@com_google_absl//absl/strings",
         "@yacl//yacl/base:exception",
     ],
 )
@@ -222,8 +224,10 @@ cc_library(
         ":datasource_adaptor",
         ":datasource_cc_proto",
         ":duckdb_wrapper",
+        "//api/v1:column_cpp_proto",
         "//engine/util:spu_io",
         "//engine/util:tensor_util",
+        "@com_google_absl//absl/strings",
         "@yacl//yacl/base:exception",
     ],
 )
@@ -276,5 +280,33 @@ cc_library(
         "@com_github_brpc_brpc//:brpc",
         "@com_google_absl//absl/strings",
         "@yacl//yacl/base:exception",
+    ],
+)
+
+cc_library(
+    name = "kuscia_datamesh_router",
+    srcs = ["kuscia_datamesh_router.cc"],
+    hdrs = ["kuscia_datamesh_router.h"],
+    deps = [
+        ":csvdb_conf_cc_proto",
+        ":router",
+        "@com_github_brpc_brpc//:butil",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_google_absl//absl/strings",
+        "@kuscia//proto/api/v1alpha1/datamesh:domaindata_cpp_grpc",
+        "@kuscia//proto/api/v1alpha1/datamesh:domaindatasource_cpp_grpc",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+cc_binary(
+    name = "kuscia_datamesh_router_test",
+    srcs = [
+        "kuscia_datamesh_router_test.cc",
+    ],
+    deps = [
+        ":kuscia_datamesh_router",
+        "@com_google_absl//absl/debugging:failure_signal_handler",
+        "@com_google_absl//absl/debugging:symbolize",
     ],
 )

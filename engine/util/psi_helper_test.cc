@@ -94,10 +94,10 @@ struct JoinTestCase {
 
 class JoinIndicesTest : public ::testing::TestWithParam<JoinTestCase> {
  protected:
-  std::shared_ptr<psi::psi::HashBucketEcPointStore> MakeLeftStore(
+  std::shared_ptr<psi::HashBucketEcPointStore> MakeLeftStore(
       const JoinTestCase& tc) {
     auto store =
-        std::make_shared<psi::psi::HashBucketEcPointStore>("/tmp", kNumBins);
+        std::make_shared<psi::HashBucketEcPointStore>("/tmp", kNumBins);
 
     for (const auto& str : tc.left) {
       store->Save(str);
@@ -106,10 +106,10 @@ class JoinIndicesTest : public ::testing::TestWithParam<JoinTestCase> {
     return store;
   }
 
-  std::shared_ptr<psi::psi::HashBucketEcPointStore> MakeRightStore(
+  std::shared_ptr<psi::HashBucketEcPointStore> MakeRightStore(
       const JoinTestCase& tc) {
     auto store =
-        std::make_shared<psi::psi::HashBucketEcPointStore>("/tmp", kNumBins);
+        std::make_shared<psi::HashBucketEcPointStore>("/tmp", kNumBins);
     for (const auto& str : tc.right) {
       store->Save(str);
     }
@@ -139,10 +139,10 @@ TEST_P(JoinIndicesTest, works) {
   auto right_store = MakeRightStore(tc);
 
   // When
-  auto left_indices = FinalizeAndComputeJoinIndices(
-      true, left_store, right_store, 0);
-  auto right_indices = FinalizeAndComputeJoinIndices(
-      false, right_store, left_store, 0);
+  auto left_indices =
+      FinalizeAndComputeJoinIndices(true, left_store, right_store, 0);
+  auto right_indices =
+      FinalizeAndComputeJoinIndices(false, right_store, left_store, 0);
 
   // Then
   EXPECT_EQ(left_indices->Length(), right_indices->Length());

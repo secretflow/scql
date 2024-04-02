@@ -65,7 +65,7 @@ You could start SCQL service via `docker-compose <https://github.com/secretflow/
 .. code-block:: bash
 
     # startup docker-compose
-    # If you install docker with Compose V1, pleas use `docker-compose` instead of `docker compose`
+    # If you install docker with Compose V1, please use `docker-compose` instead of `docker compose`
     (cd examples/p2p-tutorial && docker compose up -d)
 
 SCQLBroker for alice is listening on ``http://localhost:8081`` while bob is on ``http://localhost:8082`` you could send requests to them via brokerctl.

@@ -22,6 +22,7 @@ IMAGE_TAG=latest
 ENABLE_CACHE=false
 TARGET_STAGE=image-prod
 TARGET_PLATFORM=""
+BASE_IMAGE=ubuntu
 
 usage() {
   echo "Usage: $0 [-n Name] [-t Tag] [-p Platform] [-s Stage] [-c]"
@@ -31,10 +32,11 @@ usage() {
   echo "  -t tag, image tag, default is \"latest\""
   echo "  -s target build stage, default is \"image-prod\", set it to \"image-dev\" for debug purpose."
   echo "  -p target platform, default is \"linux/amd64\", support \"linux/arm64\" and \"linux/amd64\"."
+  echo "  -b base image, default is \"ubuntu\", support \"ubuntu\" and \"anolis\"."
   echo "  -c, enable host disk bazel cache to speedup build process"
 }
 
-while getopts "n:t:s:p:c" options; do
+while getopts "n:t:s:p:b:c" options; do
   case "${options}" in
   n)
     SCQL_IMAGE=${OPTARG}
@@ -50,6 +52,9 @@ while getopts "n:t:s:p:c" options; do
     ;;
   p)
     TARGET_PLATFORM=${OPTARG}
+    ;;
+  b)
+    BASE_IMAGE=${OPTARG}
     ;;
   *)
     usage
@@ -75,10 +80,14 @@ echo "build image $SCQL_IMAGE:$IMAGE_TAG"
 
 MOUNT_OPTIONS=""
 if $ENABLE_CACHE; then
-  MOUNT_OPTIONS="--mount type=volume,source=scql-rel-build-cache,target=/root/.cache"
+  if [ "$BASE_IMAGE" == "ubuntu" ]; then
+    MOUNT_OPTIONS="--mount type=volume,source=scql-ubuntu-buildcache,target=/root/.cache"
+  else
+    MOUNT_OPTIONS="--mount type=volume,source=scql-anolis-buildcache,target=/root/.cache"
+  fi
 fi
 
-MACHINE_TYPE=`arch`
+MACHINE_TYPE=$(arch)
 HOST_PLATFORM=""
 
 if [ "$MACHINE_TYPE" == "x86_64" ]; then
@@ -92,19 +101,22 @@ if [ -z "$TARGET_PLATFORM" ]; then
   TARGET_PLATFORM=$HOST_PLATFORM
 fi
 
-BUILDER=secretflow/release-ci:latest
-if [ "$TARGET_PLATFORM" == "linux/arm64" ]; then
-  BUILDER=secretflow/release-ci-aarch64:latest
+BUILDER=secretflow/scql-ci:latest
+if [ "$BASE_IMAGE" == "anolis" ]; then
+  BUILDER=secretflow/release-ci:latest
+  if [ "$TARGET_PLATFORM" == "linux/arm64" ]; then
+    BUILDER=secretflow/release-ci-aarch64:latest
+  fi
 fi
 
 container_id=$(docker run -it --rm --detach \
   -w /home/admin/dev ${MOUNT_OPTIONS} \
-  $BUILDER)
+  $BUILDER tail -f /dev/null)
 
 trap "docker stop ${container_id}" EXIT
 
 # copy code to docker container
-dirs=("pkg" "engine" "api" "bazel" "cmd" ".bazelrc" ".bazelversion" "BUILD.bazel" "go.mod" "go.sum" "Makefile" "WORKSPACE")
+dirs=("pkg" "engine" "api" "bazel" "cmd" "proto-gen" ".bazelrc" ".bazelversion" "BUILD.bazel" "go.mod" "go.sum" "Makefile" "WORKSPACE")
 for dir in ${dirs[@]}; do
   docker cp ${WORK_DIR}/${dir} ${container_id}:/home/admin/dev
 done
@@ -133,7 +145,7 @@ docker cp ${container_id}:/home/admin/dev/bin/broker $TMP_PATH/$TARGET_PLATFORM
 docker cp ${container_id}:/home/admin/dev/bin/brokerctl $TMP_PATH/$TARGET_PLATFORM
 
 # copy dockerfile
-cp $SCRIPT_DIR/scql.Dockerfile $TMP_PATH
+cp ${SCRIPT_DIR}/scql-${BASE_IMAGE}.Dockerfile $TMP_PATH/Dockerfile
 
 # build docker image
 cd $TMP_PATH
@@ -141,9 +153,9 @@ echo "start to build scql image in $(pwd)"
 
 # If target == host, no need to use buildx
 if [ "$HOST_PLATFORM" == "$TARGET_PLATFORM" ]; then
-  docker build --build-arg="TARGETPLATFORM=${TARGET_PLATFORM}" --target $TARGET_STAGE -f scql.Dockerfile -t $SCQL_IMAGE:$IMAGE_TAG .
+  docker build --build-arg="TARGETPLATFORM=${TARGET_PLATFORM}" --target $TARGET_STAGE -f Dockerfile -t $SCQL_IMAGE:$IMAGE_TAG .
 else
-  docker buildx build --platform $TARGET_PLATFORM --target $TARGET_STAGE -f scql.Dockerfile -t $SCQL_IMAGE:$IMAGE_TAG .
+  docker buildx build --platform $TARGET_PLATFORM --target $TARGET_STAGE -f Dockerfile -t $SCQL_IMAGE:$IMAGE_TAG .
 fi
 
 # cleanup

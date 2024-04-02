@@ -66,6 +66,7 @@ You could customize scdbserver published port and container images and protocols
 ### Prepare docker files
 
 ```bash
+# please set SPU_PROTOCOL in .env file if you want to test ABY3 or CHEETAH
 (cd .ci/broker-docker-compose && python setup.py)
 ```
 

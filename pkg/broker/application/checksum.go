@@ -78,7 +78,7 @@ func (c *Checksum) TruncateString() string {
 }
 
 type ChecksumStorage struct {
-	// key -> party code; value -> Checksum
+	// maps from party code to checksum
 	// localChecksums keeps checksum calculated by local storage
 	// remoteChecksums keeps checksums from their owner party(not include self code)
 	localChecksums  sync.Map

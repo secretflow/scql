@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package scql.engine.services.pb;
+
+option cc_generic_services = true;
+
+message MetricsRequest {}
+message MetricsResponse {}
+
+service metrics {
+  rpc default_method(MetricsRequest) returns (MetricsResponse);
+}

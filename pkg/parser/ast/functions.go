@@ -449,7 +449,9 @@ func (n *FuncCallExpr) RestoreDateFuncWithPostgresDialect(ctx *RestoreCtx) (err 
 
 func (n *FuncCallExpr) RestoreDateFuncWithCSVDBDialect(ctx *RestoreCtx) (err error) {
 	switch n.FnName.L {
-	case Now, Curdate:
+	case Curdate:
+		ctx.WriteKeyWord(ctx.Dialect.GetSpecialFuncName(n.FnName.L))
+	case Now:
 		ctx.WriteKeyWord(ctx.Dialect.GetSpecialFuncName(n.FnName.L))
 		ctx.WritePlain("()")
 	case AddDate, SubDate:

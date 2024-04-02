@@ -25,9 +25,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/encoding/protojson"
 
-	"github.com/secretflow/scql/pkg/broker/config"
-	"github.com/secretflow/scql/pkg/broker/partymgr"
+	"github.com/secretflow/scql/pkg/broker/scheduler"
 	"github.com/secretflow/scql/pkg/broker/storage"
+	"github.com/secretflow/scql/pkg/constant"
 	exe "github.com/secretflow/scql/pkg/executor"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/proto-gen/spu"
@@ -61,20 +61,20 @@ type Session struct {
 	CreatedAt   time.Time
 	SessionVars *variable.SessionVars
 	Ctx         context.Context
-
+	App         *App
 	// all sessions have independent stub to avoid concurrent problems
-	MetaMgr     *storage.MetaManager
-	PartyMgr    partymgr.PartyMgr
 	ExecuteInfo *ExecutionInfo
-	Conf        *config.Config
-
+	Engine      scheduler.EngineInstance
 	// current broker host for local engine to call back
 	CallBackHost string
 
 	Values map[fmt.Stringer]interface{}
 
+	DryRun bool
+
 	AsyncMode   bool
 	OutputNames []string
+	Warning     *pb.Warning
 	// mu protects the Result when running in async mode
 	mu     sync.Mutex
 	Result *pb.QueryResponse
@@ -93,28 +93,35 @@ func (s *Session) SetResultSafely(result *pb.QueryResponse) {
 }
 
 func (s *Session) GetSelfPartyCode() string {
-	return s.Conf.PartyCode
+	return s.App.Conf.PartyCode
 }
 
-func (s *Session) GetOneSelfEngineUriForPeer() string {
-	return s.Conf.Engine.Uris[0].ForPeer
-}
+// OnError is called when query job failed
+func (s *Session) OnError(err error) {
+	logrus.Warnf("error occurred during executing query job %s: %v", s.ExecuteInfo.JobID, err)
 
-func (s *Session) GetOneSelfEngineUriForSelf() string {
-	engineUri := s.Conf.Engine.Uris[0]
-	if engineUri.ForSelf == "" {
-		logrus.Info("GetOneSelfEngineUriForSelf: not set for_self uri, using for_peer by default")
-		return engineUri.ForPeer
+	if s.Engine != nil {
+		if err := s.Engine.Stop(); err != nil {
+			logrus.Warnf("failed to stop engine on query job %s: %v", s.ExecuteInfo.JobID, err)
+		}
 	}
-	return engineUri.ForSelf
+	// TODO: add more actions on error
+}
+
+// OnSuccess is called when query job success
+func (s *Session) OnSuccess() {
+	if s.Engine != nil {
+		if err := s.Engine.Stop(); err != nil {
+			logrus.Warnf("failed to stop engine on query job %s: %v", s.ExecuteInfo.JobID, err)
+		}
+	}
 }
 
 type ExecutionInfo struct {
-	Issuer        *pb.PartyId
-	ProjectID     string
-	JobID         string
-	Query         string
-	SpuRuntimeCfg *spu.RuntimeConfig
+	Issuer    *pb.PartyId
+	ProjectID string
+	JobID     string
+	Query     string
 	// map from party to engine endpoint
 	EngineEndpoints sync.Map
 	EngineClient    exe.EngineClient
@@ -125,10 +132,15 @@ type ExecutionInfo struct {
 	WorkParties []string
 
 	Checksums ChecksumStorage
+
+	CompileOpts *pb.CompileOptions
+	// for debug
+	DebugOpts *pb.DebugOptions
 }
 
 func (e *ExecutionInfo) CheckProjectConf() error {
-	if e.SpuRuntimeCfg == nil {
+	spuConf := e.CompileOpts.SpuConf
+	if spuConf == nil {
 		return fmt.Errorf("spu runtime config is nil")
 	}
 	partyNum := len(e.WorkParties)
@@ -138,47 +150,72 @@ func (e *ExecutionInfo) CheckProjectConf() error {
 	if partyNum == 1 {
 		return nil
 	}
-	if e.SpuRuntimeCfg.Protocol == spu.ProtocolKind_CHEETAH && partyNum != 2 {
+	if spuConf.Protocol == spu.ProtocolKind_CHEETAH && partyNum != 2 {
 		return fmt.Errorf("protocol cheetah only support 2 parties, but got %d", partyNum)
 	}
-	if e.SpuRuntimeCfg.Protocol == spu.ProtocolKind_ABY3 && partyNum != 3 {
+	if spuConf.Protocol == spu.ProtocolKind_ABY3 && partyNum != 3 {
 		return fmt.Errorf("protocol cheetah only support 3 parties, but got %d", partyNum)
 	}
 	return nil
 }
 
-func NewSession(ctx context.Context, info *ExecutionInfo, app *App, asyncMode bool) (session *Session, err error) {
+func NewSession(ctx context.Context, info *ExecutionInfo, app *App, asyncMode bool, dryRun bool) (session *Session, err error) {
+	spuConf := &spu.RuntimeConfig{}
+	err = app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
+		project, err := txn.GetProject(info.ProjectID)
+		if err != nil {
+			return fmt.Errorf("NewSession: project %v not exists", project.ID)
+		}
+		return protojson.Unmarshal([]byte(project.ProjectConf.SpuConf), spuConf)
+	})
+	if err != nil {
+		return nil, err
+	}
+	groupByThreshold := constant.DefaultGroupByThreshold
+	if app.Conf.SecurityCompromise.GroupByThreshold > 0 {
+		groupByThreshold = app.Conf.SecurityCompromise.GroupByThreshold
+	}
+	info.CompileOpts = &pb.CompileOptions{
+		SpuConf: spuConf,
+		SecurityCompromise: &pb.SecurityCompromiseConfig{
+			RevealGroupMark:  app.Conf.SecurityCompromise.RevealGroupMark,
+			GroupByThreshold: groupByThreshold,
+		},
+		DumpExeGraph: true,
+		OptimizerHints: &pb.OptimizerHints{
+			PsiAlgorithmType: pb.PsiAlgorithmType_AUTO,
+		},
+	}
+	// NOTE(xiaoyuan): use ecdh psi when EnablePsiDetailLog is true
+	if info.DebugOpts != nil && info.DebugOpts.EnablePsiDetailLog {
+		info.CompileOpts.OptimizerHints.PsiAlgorithmType = pb.PsiAlgorithmType_ECDH
+	}
 	session = &Session{
 		CreatedAt:    time.Now(),
 		ExecuteInfo:  info,
 		SessionVars:  variable.NewSessionVars(),
 		Ctx:          ctx,
-		MetaMgr:      app.MetaMgr,
-		PartyMgr:     app.PartyMgr,
-		Conf:         app.Conf,
+		App:          app,
 		CallBackHost: app.Conf.IntraHost,
 		AsyncMode:    asyncMode,
+		DryRun:       dryRun,
 	}
-	// set self engine endpoint work in current session
-	session.SaveEndpoint(session.GetSelfPartyCode(), session.GetOneSelfEngineUriForPeer())
+
 	session.ExecuteInfo.InterStub = app.InterStub
 	session.GetSessionVars().StmtCtx = &stmtctx.StatementContext{}
 	// use project id as default db name
 	session.GetSessionVars().CurrentDB = info.ProjectID
 
-	txn := session.MetaMgr.CreateMetaTransaction()
-	defer func() {
-		err = txn.Finish(err)
-	}()
-	project, err := txn.GetProject(info.ProjectID)
-	if err != nil {
-		return nil, fmt.Errorf("NewSession: project %v not exists", project.ID)
+	if !dryRun {
+		eng, err := app.Scheduler.Schedule(info.JobID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to schedule scqlengine for job %v: %v", info.JobID, err)
+		}
+		session.Engine = eng
+		// set self engine endpoint work in current session
+		session.SaveEndpoint(session.GetSelfPartyCode(), eng.GetEndpointForSelf())
 	}
-	session.ExecuteInfo.SpuRuntimeCfg = &spu.RuntimeConfig{}
-	err = protojson.Unmarshal([]byte(project.ProjectConf.SpuConf), info.SpuRuntimeCfg)
-	if err != nil {
-		return
-	}
+
 	return
 }
 
@@ -226,7 +263,7 @@ func (s *Session) GetEndpoint(partyCode string) (string, error) {
 	}
 	endpoint, ok := value.(string)
 	if !ok {
-		return "", fmt.Errorf("failed to parse checksum from %+v", value)
+		return "", fmt.Errorf("failed to parse endpoint from %+v of party %s", value, partyCode)
 	}
 	return endpoint, nil
 }
@@ -237,8 +274,5 @@ func (s *Session) SaveEndpoint(partyCode, endpoint string) {
 }
 
 func (s *Session) IsIssuer() bool {
-	if s.ExecuteInfo.Issuer.Code == s.GetSelfPartyCode() {
-		return true
-	}
-	return false
+	return s.ExecuteInfo.Issuer.Code == s.GetSelfPartyCode()
 }

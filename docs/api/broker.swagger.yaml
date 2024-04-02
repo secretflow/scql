@@ -78,6 +78,32 @@ paths:
             $ref: '#/definitions/scql.pb.FetchResultRequest'
       tags:
         - IntraBrokerService
+  /intra/query/cancel:
+    post:
+      summary: CancelQuery
+      description: |-
+        Cancel asynchronous query, currently only valid in the
+        [KUSCIA](https://github.com/secretflow/kuscia). It will release the
+        occupied local computing resources in time, but only try to notify
+        other members to release their corresponding resources.
+      operationId: IntraBrokerService_CancelQuery
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/scql.pb.CancelQueryResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/google.rpc.Status'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/scql.pb.CancelQueryRequest'
+      tags:
+        - IntraBrokerService
   /intra/project/create:
     post:
       summary: CreateProject
@@ -326,6 +352,28 @@ paths:
             $ref: '#/definitions/scql.pb.ShowCCLRequest'
       tags:
         - IntraBrokerService
+  /intra/status/check_and_update:
+    post:
+      summary: CheckAndUpdateStatus
+      description: Check and update status for Projects
+      operationId: IntraBrokerService_CheckAndUpdateStatus
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/scql.pb.CheckAndUpdateStatusResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/google.rpc.Status'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/scql.pb.CheckAndUpdateStatusRequest'
+      tags:
+        - IntraBrokerService
 definitions:
   google.protobuf.Any:
     type: object
@@ -474,8 +522,26 @@ definitions:
     enum:
       - BROKER_SERVICE_PROTOCOL_V1
     default: BROKER_SERVICE_PROTOCOL_V1
+  scql.pb.CancelQueryJobResponse:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+  scql.pb.CancelQueryRequest:
+    type: object
+    example:
+      job_id: your-job-id-from-submit
+    properties:
+      job_id:
+        type: string
+    required:
+      - job_id
   scql.pb.CancelQueryResponse:
     type: object
+    example:
+      status:
+        code: 0
+        message: cancel query job your-job-id-from-submit succeed
     properties:
       status:
         $ref: '#/definitions/scql.pb.Status'
@@ -498,6 +564,28 @@ definitions:
       - UpdateProjectConf
       - ArchiveProject
     default: CreateTable
+  scql.pb.CheckAndUpdateStatusRequest:
+    type: object
+    properties:
+      project_ids:
+        type: array
+        items:
+          type: string
+        title: |-
+          The ids of Projects to be checked and updated, if empty, all Projects
+          will be processed
+  scql.pb.CheckAndUpdateStatusResponse:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+      conficts:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/scql.pb.ProjectConflict'
+        title: |-
+          Valid only when status.code() == Code::PROJECT_CONFLICT
+          maps from project_id to conflicts in the Project
   scql.pb.Checksum:
     type: object
     properties:
@@ -644,7 +732,7 @@ definitions:
         title: Column name
       dtype:
         type: string
-        title: Column data type, maybe 'long/float/string/timestamp/datetime/...'
+        title: Column data type, see Enum DataType definition in "api/v1/column.proto"
   scql.pb.CreateTableResponse:
     type: object
     example:
@@ -654,6 +742,11 @@ definitions:
     properties:
       status:
         $ref: '#/definitions/scql.pb.Status'
+  scql.pb.DebugOptions:
+    type: object
+    properties:
+      enable_psi_detail_log:
+        type: boolean
   scql.pb.DistributeQueryResponse:
     type: object
     properties:
@@ -815,6 +908,11 @@ definitions:
   scql.pb.ListInvitationsRequest:
     type: object
     example: {}
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.InvitationStatus'
+      inviter:
+        type: string
   scql.pb.ListInvitationsResponse:
     type: object
     example:
@@ -982,6 +1080,22 @@ definitions:
       spu_runtime_cfg:
         $ref: '#/definitions/spu.RuntimeConfig'
         description: The spu runtime configuration.
+  scql.pb.ProjectConflict:
+    type: object
+    properties:
+      items:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scql.pb.ProjectConflict.ConflictItem'
+  scql.pb.ProjectConflict.ConflictItem:
+    type: object
+    properties:
+      message:
+        type: string
+        title: |-
+          Human-readable conflict details, e.g: "project creator is: alice in
+          alice; bob in bob"
   scql.pb.ProjectDesc:
     type: object
     properties:
@@ -1000,6 +1114,10 @@ definitions:
         type: array
         items:
           type: string
+      created_at:
+        type: string
+        format: date-time
+        title: created_at is the time the project was first created
   scql.pb.ProjectInvitation:
     type: object
     properties:
@@ -1030,6 +1148,14 @@ definitions:
       query:
         type: string
         title: SCQL query to be run
+      debug_opts:
+        $ref: '#/definitions/scql.pb.DebugOptions'
+      dry_run:
+        type: boolean
+        description: |-
+          Dry run query, only takes effect in sync query API, naming DoQuery.
+          SubmitQuery API will report an error if dry_run is set to True.
+          Dry run only checks query syntax & CCL.
     required:
       - project_id
       - query
@@ -1109,11 +1235,13 @@ definitions:
       - Project
       - Table
       - CCL
+      - All
     default: Project
     title: |-
       - Project: project information
        - Table: table schema
        - CCL: all ccls for specific table
+       - All: all status managed by server party for specific project
   scql.pb.RevokeCCLRequest:
     type: object
     example:
@@ -1201,7 +1329,9 @@ definitions:
       code:
         type: integer
         format: int32
-        title: The status code, see [definition](https://github.com/secretflow/scql/blob/main/api/status_code.proto#L22)
+        title: |-
+          The status code, see
+          [definition](https://github.com/secretflow/scql/blob/main/api/status_code.proto#L22)
       message:
         type: string
         description: Message for recording the error information.
@@ -1441,6 +1571,10 @@ definitions:
         description: |-
           Number of fraction bits of fixed-point number.
           0(default) indicates implementation defined.
+      max_concurrency:
+        type: integer
+        format: int32
+        title: Max number of cores
       enable_action_trace:
         type: boolean
         description: |-

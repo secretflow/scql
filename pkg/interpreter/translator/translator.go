@@ -28,52 +28,50 @@ import (
 	"github.com/secretflow/scql/pkg/parser/mysql"
 	"github.com/secretflow/scql/pkg/planner/core"
 	proto "github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/status"
 	"github.com/secretflow/scql/pkg/types"
 	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
 
 var astName2NodeName = map[string]string{
-	ast.If:       operator.OpNameIf,
-	ast.Greatest: operator.OpNameGreatest,
-	ast.Least:    operator.OpNameLeast,
-	ast.LT:       operator.OpNameLess,
-	ast.LE:       operator.OpNameLessEqual,
-	ast.GT:       operator.OpNameGreater,
-	ast.GE:       operator.OpNameGreaterEqual,
-	ast.EQ:       operator.OpNameEqual,
-	ast.NE:       operator.OpNameNotEqual,
-	ast.LogicOr:  operator.OpNameLogicalOr,
-	ast.LogicAnd: operator.OpNameLogicalAnd,
-	ast.Plus:     operator.OpNameAdd,
-	ast.Minus:    operator.OpNameMinus,
-	ast.Mul:      operator.OpNameMul,
-	ast.Div:      operator.OpNameDiv,
-	ast.IntDiv:   operator.OpNameIntDiv,
-	ast.Mod:      operator.OpNameMod,
-	ast.Case:     operator.OpNameCaseWhen,
-	ast.DateDiff: operator.OpNameMinus,
-	ast.AddDate:  operator.OpNameAdd,
-	ast.SubDate:  operator.OpNameMinus,
+	ast.If:         operator.OpNameIf,
+	ast.Greatest:   operator.OpNameGreatest,
+	ast.Least:      operator.OpNameLeast,
+	ast.LT:         operator.OpNameLess,
+	ast.LE:         operator.OpNameLessEqual,
+	ast.GT:         operator.OpNameGreater,
+	ast.GE:         operator.OpNameGreaterEqual,
+	ast.EQ:         operator.OpNameEqual,
+	ast.NE:         operator.OpNameNotEqual,
+	ast.LogicOr:    operator.OpNameLogicalOr,
+	ast.LogicAnd:   operator.OpNameLogicalAnd,
+	ast.Plus:       operator.OpNameAdd,
+	ast.UnaryMinus: operator.OpNameMinus,
+	ast.Minus:      operator.OpNameMinus,
+	ast.Mul:        operator.OpNameMul,
+	ast.Div:        operator.OpNameDiv,
+	ast.IntDiv:     operator.OpNameIntDiv,
+	ast.Mod:        operator.OpNameMod,
+	ast.Case:       operator.OpNameCaseWhen,
+	ast.DateDiff:   operator.OpNameMinus,
+	ast.AddDate:    operator.OpNameAdd,
+	ast.SubDate:    operator.OpNameMinus,
 }
 
 type translator struct {
-	ep                 *GraphBuilder
-	issuerPartyCode    string
-	enginesInfo        *EnginesInfo
-	sc                 *proto.SecurityConfig
-	securityCompromise *SecurityCompromiseConf
+	ep              *GraphBuilder
+	issuerPartyCode string
+	enginesInfo     *EnginesInfo
+	sc              *proto.SecurityConfig
+	CompileOpts     *proto.CompileOptions
 
 	AffectedByGroupThreshold bool
-}
-
-type SecurityCompromiseConf struct {
-	RevealGroupMark bool `yaml:"reveal_group_mark"`
 }
 
 func NewTranslator(
 	enginesInfo *EnginesInfo,
 	sc *proto.SecurityConfig,
-	issuerPartyCode string, securityCompromise *SecurityCompromiseConf) (
+	issuerPartyCode string, compileOpts *proto.CompileOptions) (
 	*translator, error) {
 	if sc == nil {
 		return nil, fmt.Errorf("translate: empty CCL")
@@ -91,11 +89,11 @@ func NewTranslator(
 		}
 	}
 	return &translator{
-		ep:                 NewGraphBuilder(enginesInfo.partyInfo),
-		issuerPartyCode:    issuerPartyCode,
-		sc:                 newSc,
-		enginesInfo:        enginesInfo,
-		securityCompromise: securityCompromise,
+		ep:              NewGraphBuilder(enginesInfo.partyInfo),
+		issuerPartyCode: issuerPartyCode,
+		sc:              newSc,
+		enginesInfo:     enginesInfo,
+		CompileOpts:     compileOpts,
 	}, nil
 }
 
@@ -136,7 +134,7 @@ func (t *translator) Translate(lp core.LogicalPlan) (*Graph, error) {
 	if err := processor.process(lp); err != nil {
 		return nil, err
 	}
-	builder, err := newLogicalNodeBuilder(t.issuerPartyCode, t.enginesInfo, convertOriginalCCL(t.sc))
+	builder, err := newLogicalNodeBuilder(t.issuerPartyCode, t.enginesInfo, convertOriginalCCL(t.sc), t.CompileOpts.GetSecurityCompromise().GetGroupByThreshold())
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +146,9 @@ func (t *translator) Translate(lp core.LogicalPlan) (*Graph, error) {
 	for i, col := range ln.Schema().Columns {
 		cc := ln.CCL()[col.UniqueID]
 		if !cc.IsVisibleFor(t.issuerPartyCode) {
-			return nil, fmt.Errorf("ccl check failed: the %dth column %s in the result is not visibile (%s) to party %s", i+1, col.OrigName, cc.LevelFor(t.issuerPartyCode).String(), t.issuerPartyCode)
+			return nil, status.New(
+				proto.Code_CCL_CHECK_FAILED,
+				fmt.Sprintf("ccl check failed: the %dth column %s in the result is not visibile (%s) to party %s", i+1, col.OrigName, cc.LevelFor(t.issuerPartyCode).String(), t.issuerPartyCode))
 		}
 	}
 	// find one of the qualified computation parties to act as the query issuer
@@ -303,7 +303,7 @@ func (t *translator) addDumpFileNode(ln logicalNode) error {
 		ot.StringS = []string{colName}
 		output = append(output, ot)
 	}
-	return t.ep.AddDumpFileNode("dump_file", input, output, intoOpt.FileName, intoOpt.FieldsInfo.Terminated, intoOpt.PartyCode)
+	return t.ep.AddDumpFileNode("dump_file", input, output, intoOpt)
 }
 
 // runSQLString create sql string from lp with dialect
@@ -586,6 +586,20 @@ func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors m
 		return t.ep.AddCaseWhenNode(astName2NodeName[f.FuncName.L], conditions, values, inputs[len(inputs)-1])
 	case ast.If:
 		return t.ep.AddIfNode(astName2NodeName[f.FuncName.L], inputs[0], inputs[1], inputs[2])
+	case ast.UnaryMinus:
+		var zero types.Datum
+		zero.SetInt64(0)
+		zeroTensor, err := t.addConstantNode(&zero)
+		if err != nil {
+			return nil, fmt.Errorf("buildScalarFunction: unaryminus err: %s", err)
+		}
+		outputs, err := t.addBroadcastToNodeOndemand([]*Tensor{zeroTensor, inputs[0]})
+		if err != nil {
+			return nil, fmt.Errorf("buildScalarFunction: unaryminus err: %s", err)
+		}
+		return t.addBinaryNode(astName2NodeName[f.FuncName.L], astName2NodeName[f.FuncName.L], outputs[0], outputs[1])
+	case ast.UnaryPlus:
+		return inputs[0], nil
 	}
 	return nil, fmt.Errorf("buildScalarFunction doesn't support %s", f.FuncName.L)
 }
@@ -673,7 +687,7 @@ func (t *translator) addInNode(f *expression.ScalarFunction, left, right *Tensor
 	if err != nil {
 		return nil, fmt.Errorf("addInNode: %v", err)
 	}
-	return t.ep.AddInNode(left, right, outCc)
+	return t.ep.AddInNode(left, right, outCc, t.CompileOpts.GetOptimizerHints().GetPsiAlgorithmType())
 }
 
 func (t *translator) addConcatNode(inputs []*Tensor) (*Tensor, error) {

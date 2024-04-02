@@ -61,7 +61,7 @@ func (b *TestAppBuilder) buildHandlerTestApp(partyCode, engineEndpoint string) (
 		},
 		PartyCode:                    partyCode,
 		PartyInfoFile:                b.PartyInfoTmpPath,
-		PrivatePemPath:               b.PemFilePaths[partyCode],
+		PrivateKeyPath:               b.PemFilePaths[partyCode],
 		ExchangeJobInfoRetryTimes:    3,
 		ExchangeJobInfoRetryInterval: time.Second,
 		Engine: config.EngineConfig{
@@ -71,7 +71,7 @@ func (b *TestAppBuilder) buildHandlerTestApp(partyCode, engineEndpoint string) (
 			Uris:          []config.EngineUri{{ForPeer: engineEndpoint}},
 		},
 	}
-	partyMgr, err := partymgr.NewFilePartyMgr(cfg.PartyInfoFile, cfg.PartyCode)
+	partyMgr, err := partymgr.NewFilePartyMgr(cfg.PartyInfoFile)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (b *TestAppBuilder) buildHandlerTestApp(partyCode, engineEndpoint string) (
 	if err != nil {
 		return nil, err
 	}
-	metaMgr := storage.NewMetaManager(db)
+	metaMgr := storage.NewMetaManager(db, false)
 	return application.NewApp(partyMgr, metaMgr, &cfg)
 }
 

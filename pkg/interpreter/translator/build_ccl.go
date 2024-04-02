@@ -28,14 +28,10 @@ import (
 	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
 
-const (
-	GroupByThreshold = 4
-)
-
-func (n *baseNode) buildChildCCL(columnTracer *ccl.ColumnTracer) error {
+func (n *baseNode) buildChildCCL(ctx *ccl.Context, columnTracer *ccl.ColumnTracer) error {
 	n.dataSourceParties = []string{}
 	for _, c := range n.Children() {
-		if err := c.buildCCL(columnTracer); err != nil {
+		if err := c.buildCCL(ctx, columnTracer); err != nil {
 			return err
 		}
 		n.dataSourceParties = append(n.dataSourceParties, c.DataSourceParty()...)
@@ -44,7 +40,7 @@ func (n *baseNode) buildChildCCL(columnTracer *ccl.ColumnTracer) error {
 	return nil
 }
 
-func (n *DataSourceNode) buildCCL(colTracer *ccl.ColumnTracer) error {
+func (n *DataSourceNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
 	ds, ok := n.lp.(*core.DataSource)
 	if !ok {
 		return fmt.Errorf("assert failed while dataSourceNode buildCCL, expected: core.DataSource, actual: %T", n.lp)
@@ -67,8 +63,8 @@ func (n *DataSourceNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 	return nil
 }
 
-func (n *ProjectionNode) buildCCL(colTracer *ccl.ColumnTracer) error {
-	if err := n.buildChildCCL(colTracer); err != nil {
+func (n *ProjectionNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
+	if err := n.buildChildCCL(ctx, colTracer); err != nil {
 		return err
 	}
 	childCCL, err := extractChildCCL(n)
@@ -96,8 +92,8 @@ func (n *ProjectionNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 	return nil
 }
 
-func (n *JoinNode) buildCCL(colTracer *ccl.ColumnTracer) error {
-	if err := n.buildChildCCL(colTracer); err != nil {
+func (n *JoinNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
+	if err := n.buildChildCCL(ctx, colTracer); err != nil {
 		return err
 	}
 	childCCL, err := extractChildCCL(n)
@@ -164,23 +160,18 @@ func (n *JoinNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 				}
 			}
 		}
-		if join.JoinType == core.InnerJoin {
-			// left/right column must have same ccl level
-			for _, p := range leftCc.Parties() {
-				level := ccl.LookUpVis(leftCc.LevelFor(p), rightCc.LevelFor(p))
-				leftCc.SetLevelForParty(p, level)
-				rightCc.SetLevelForParty(p, level)
-			}
-		}
+
 		// check ccl
 		for _, p := range colTracer.FindSourceParties(rightId) {
 			if !leftCc.IsVisibleFor(p) && leftCc.LevelFor(p) != ccl.Join {
-				return fmt.Errorf("joinNode.buildCCL: failed to check condition (%s) left party(%s) ccl(%v)", equalCondition.String(), p, conditionCCLs[0].LevelFor(p).String())
+				return fmt.Errorf("joinNode.buildCCL: join on condition (%s) failed: column(%s) ccl(%v) for party(%s) does not belong to (PLAINTEXT_AFTER_JOIN, PLAINTEXT)",
+					equalCondition.String(), equalCondition.GetArgs()[0].String(), leftCc.LevelFor(p).String(), p)
 			}
 		}
 		for _, p := range colTracer.FindSourceParties(leftId) {
 			if !rightCc.IsVisibleFor(p) && rightCc.LevelFor(p) != ccl.Join {
-				return fmt.Errorf("joinNode.buildCCL: failed to check condition (%s) right party(%s) ccl(%v)", equalCondition.String(), p, conditionCCLs[1].LevelFor(p).String())
+				return fmt.Errorf("joinNode.buildCCL: join on condition (%s) failed: column(%s) ccl(%v) for party(%s) does not belong to (PLAINTEXT_AFTER_JOIN, PLAINTEXT)",
+					equalCondition.String(), equalCondition.GetArgs()[1].String(), rightCc.LevelFor(p).String(), p)
 			}
 		}
 		joinKeyCCLs[leftId] = leftCc
@@ -216,8 +207,8 @@ func (n *JoinNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 	return nil
 }
 
-func (n *SelectionNode) buildCCL(colTracer *ccl.ColumnTracer) error {
-	if err := n.buildChildCCL(colTracer); err != nil {
+func (n *SelectionNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
+	if err := n.buildChildCCL(ctx, colTracer); err != nil {
 		return err
 	}
 	childCCL, err := extractChildCCL(n)
@@ -230,9 +221,16 @@ func (n *SelectionNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 		return fmt.Errorf("assert failed while selectionNode buildCCL, expected: core.LogicalSelection, actual: %T", n.lp)
 	}
 	for i, expr := range sel.Conditions {
-		if col, ok := expr.(*expression.Column); ok && col.UseAsThreshold {
+		col, ok := expr.(*expression.Column)
+		if (!ok) || (!col.UseAsThreshold) {
+			continue
+		}
+		if ctx.GroupByThreshold <= 0 {
+			return fmt.Errorf("SelectionNode buildCCL: group by threshold %d must be greater than zero", ctx.GroupByThreshold)
+		}
+		if ctx.GroupByThreshold > 1 {
 			args := []expression.Expression{col, &expression.Constant{
-				Value:   types.NewDatum(GroupByThreshold),
+				Value:   types.NewDatum(int(ctx.GroupByThreshold)),
 				RetType: types.NewFieldType(mysql.TypeTiny),
 			}}
 			newExpr, err := expression.NewFunction(sessionctx.NewContext(), ast.GE, types.NewFieldType(mysql.TypeTiny), args...)
@@ -241,7 +239,14 @@ func (n *SelectionNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 			}
 			sel.Conditions[i] = newExpr
 			sel.AffectedByGroupThreshold = true
+		} else {
+			// remove the threshold condition, may cause empty selection node
+			sel.Conditions = append(sel.Conditions[:i], sel.Conditions[i+1:]...)
 		}
+	}
+	if len(sel.Conditions) == 0 {
+		n.ccl = childCCL
+		return nil
 	}
 	var conditionCCL *ccl.CCL
 	for i, expr := range sel.Conditions {
@@ -288,8 +293,8 @@ func extractChildCCL(n logicalNode) (map[int64]*ccl.CCL, error) {
 	return childCCL, nil
 }
 
-func (n *ApplyNode) buildCCL(colTracer *ccl.ColumnTracer) error {
-	if err := n.buildChildCCL(colTracer); err != nil {
+func (n *ApplyNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
+	if err := n.buildChildCCL(ctx, colTracer); err != nil {
 		return err
 	}
 	childCCL, err := extractChildCCL(n)
@@ -344,8 +349,16 @@ func (n *ApplyNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 	return nil
 }
 
-func (n *AggregationNode) buildCCL(colTracer *ccl.ColumnTracer) error {
-	if err := n.buildChildCCL(colTracer); err != nil {
+func SetAllPlainWhenLevelGroupBy(cc *ccl.CCL) {
+	for _, p := range cc.Parties() {
+		if cc.LevelFor(p) == ccl.GroupBy {
+			cc.SetLevelForParty(p, ccl.Plain)
+		}
+	}
+}
+
+func (n *AggregationNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
+	if err := n.buildChildCCL(ctx, colTracer); err != nil {
 		return err
 	}
 	childCCL, err := extractChildCCL(n)
@@ -369,11 +382,7 @@ func (n *AggregationNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 			if !exist {
 				return fmt.Errorf("failed to get ccl for column %+v", col)
 			}
-			for _, p := range cc.Parties() {
-				if cc.LevelFor(p) == ccl.GroupBy {
-					cc.SetLevelForParty(p, ccl.Plain)
-				}
-			}
+			SetAllPlainWhenLevelGroupBy(cc)
 			groupKeyCC = append(groupKeyCC, cc)
 		}
 	}
@@ -385,6 +394,12 @@ func (n *AggregationNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 			return fmt.Errorf("aggregationNode.buildCCL: %v", err)
 		}
 		outputCCL := argCCL.Clone()
+		// for distinct, if ccl is group by, set to plaintext, otherwise return
+		if agg.ProducedByDistinct {
+			SetAllPlainWhenLevelGroupBy(outputCCL)
+			result[agg.Schema().Columns[i].UniqueID] = outputCCL
+			continue
+		}
 		switch aggFunc.Name {
 		case ast.AggFuncCount:
 			// for agg count, if len(group by keys) = 0, then set plaintext for all parties
@@ -431,8 +446,8 @@ func (n *AggregationNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 	return nil
 }
 
-func (n *UnionAllNode) buildCCL(colTracer *ccl.ColumnTracer) error {
-	if err := n.buildChildCCL(colTracer); err != nil {
+func (n *UnionAllNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
+	if err := n.buildChildCCL(ctx, colTracer); err != nil {
 		return err
 	}
 	union, ok := n.lp.(*core.LogicalUnionAll)
@@ -471,8 +486,8 @@ func (n *UnionAllNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 	return nil
 }
 
-func (n *LimitNode) buildCCL(colTracer *ccl.ColumnTracer) error {
-	if err := n.buildChildCCL(colTracer); err != nil {
+func (n *LimitNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
+	if err := n.buildChildCCL(ctx, colTracer); err != nil {
 		return err
 	}
 
@@ -485,10 +500,10 @@ func (n *LimitNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 	return nil
 }
 
-func (n *SortNode) buildCCL(colTracer *ccl.ColumnTracer) error {
+func (n *SortNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
 	return fmt.Errorf("sort function not supported yet")
 }
 
-func (n *WindowNode) buildCCL(colTracer *ccl.ColumnTracer) error {
+func (n *WindowNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
 	return fmt.Errorf("window function not supported yet")
 }

@@ -169,6 +169,8 @@ func registerAllOpDef() {
 		// TODO(xiaoyuan) support outer join later
 		opDef.AddAttribute(JoinTypeAttr, "Int64. 0: inner join; 1: left join; 2: right join;")
 		opDef.AddDefaultAttributeValue(JoinTypeAttr, CreateIntAttribute(0))
+		opDef.AddAttribute(PsiAlgorithmAttr, "Choose PSI join algorithm, Int64. 0: Auto; 1: Ecdh; 2: Oprf;")
+		opDef.AddDefaultAttributeValue(PsiAlgorithmAttr, CreateIntAttribute(0))
 		opDef.SetDefinition(`Definition: Create Join Index based on EQ-Join, return result's corresponding rows index in the original input.
 Example:
 ` + "\n```python" + `
@@ -286,7 +288,12 @@ Out = [{"a", "b", "c"}]
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.SetDefinition(`Definition: Dump the input tensor. Note: This op will change the affected rows in the session`)
 		opDef.AddAttribute(FilePathAttr, "String. Absolute file path to dump the tensors.")
-		opDef.AddAttribute(DeliminatorAttr, "String. Column deliminator, e.g. comma `,`")
+		opDef.AddAttribute(FieldDeliminatorAttr, "String. Column deliminator, e.g. `\\t`")
+		opDef.AddDefaultAttributeValue(FieldDeliminatorAttr, CreateStringAttribute("\\t"))
+		opDef.AddAttribute(QuotingStyleAttr, "Int64. Strategies for using quotes, 0: do not use quotes; 1: use quotes for strings; 2: use quotes for all valid data")
+		opDef.AddDefaultAttributeValue(QuotingStyleAttr, CreateIntAttribute(0))
+		opDef.AddAttribute(LineTerminatorAttr, "String. Line terminator, e.g. `\\n`")
+		opDef.AddDefaultAttributeValue(LineTerminatorAttr, CreateStringAttribute("\\n"))
 		opDef.SetParamTypeConstraint(T, statusPrivate)
 		check(opDef.err)
 		AllOpDef = append(AllOpDef, opDef)
@@ -301,8 +308,10 @@ Out = [{"a", "b", "c"}]
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T1)
 		opDef.AddOutput("Out", "Output Tensor.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
-		opDef.AddAttribute(AlgorithmAttr, "Int64. Algorithm to use for the op. 1: PSI")
-		opDef.AddDefaultAttributeValue(AlgorithmAttr, CreateIntAttribute(0))
+		opDef.AddAttribute(InTypeAttr, "Int64. 0: PSI In, 1: Share In, 2: Local In")
+		opDef.AddDefaultAttributeValue(InTypeAttr, CreateIntAttribute(0))
+		opDef.AddAttribute(PsiAlgorithmAttr, "Int64. PSI Algorithm for In. 0: Auto, 1: Ecdh, 2: Oprf;")
+		opDef.AddDefaultAttributeValue(PsiAlgorithmAttr, CreateIntAttribute(0))
 		opDef.AddAttribute(InputPartyCodesAttr, "List of parties the inputs belong to. This attribute is required if algorithm = PSI.")
 		opDef.AddAttribute(RevealToAttr, "A party can see the result. This attribute is required if algorithm = PSI.")
 		opDef.SetDefinition(`Definition: Given an input tensor Left (its shape is [M]), and another input tensor Right (its shape is [N]),
@@ -336,6 +345,24 @@ Example:
 ` + "\n```python" + `
 In = {1, 2, 3, 4, 5, 6}
 Out = {21}
+` + "```\n")
+		opDef.SetParamTypeConstraint(T, statusPrivateOrSecret)
+		check(opDef.err)
+		AllOpDef = append(AllOpDef, opDef)
+	}
+
+	{
+		opDef := &OperatorDef{}
+		opDef.SetName(OpNameReduceCount)
+		opDef.AddInput("In", "Tensor to be counted (shape [M]).",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.AddOutput("Out", "The counted Tensor (shape [1]).",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.SetDefinition(`Definition: Given an input tensor In, return the count of input tensor's elements.
+Example:
+` + "\n```python" + `
+In = {1, 2, 3, 4, 5, 6}
+Out = {6}
 ` + "```\n")
 		opDef.SetParamTypeConstraint(T, statusPrivateOrSecret)
 		check(opDef.err)

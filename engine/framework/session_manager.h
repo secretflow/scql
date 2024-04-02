@@ -41,7 +41,8 @@ class SessionManager {
   SessionManager(const SessionManager&) = delete;
   SessionManager& operator=(const SessionManager&) = delete;
 
-  void CreateSession(const pb::SessionStartParams& params);
+  void CreateSession(const pb::SessionStartParams& params,
+                     pb::DebugOptions debug_opts);
 
   Session* GetSession(const std::string& session_id);
 

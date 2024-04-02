@@ -26,7 +26,7 @@ func TestPartyInfos(t *testing.T) {
 	r := require.New(t)
 	err := testdata.CreateTestPemFiles("../testdata")
 	r.NoError(err)
-	partyMgr, err := NewFilePartyMgr("../testdata/party_info_test.json", "alice")
+	partyMgr, err := NewFilePartyMgr("../testdata/party_info_test.json")
 	r.NoError(err)
 	r.NotNil(partyMgr)
 

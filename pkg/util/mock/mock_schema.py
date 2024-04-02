@@ -46,7 +46,7 @@ DATABASES = {
 }
 COLUMN_COPY_NUM = 3
 TABLE_COPY_NUM = 3
-DATA_TYPE = ["long", "float", "string", "datetime", "timestamp"]
+DATA_TYPE = ["int", "float", "string", "datetime", "timestamp"]
 CCL_LEVEL = ["plain", "join", "groupby", "compare", "aggregate", "encrypt"]
 CUR_PATH = Path(__file__).parent.resolve()
 

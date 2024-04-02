@@ -20,25 +20,30 @@ import (
 
 	"github.com/secretflow/scql/pkg/interpreter/ccl"
 	"github.com/secretflow/scql/pkg/planner/core"
+	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/status"
 )
 
 type logicalNodeBuilder struct {
-	issuerPartyCode string
-	numOfParties    int
-	enginesInfo     *EnginesInfo
-	columnToParty   map[int64][]string
-	originCCL       map[string]*ccl.CCL
-	columnTracer    *ccl.ColumnTracer
+	issuerPartyCode  string
+	numOfParties     int
+	enginesInfo      *EnginesInfo
+	columnToParty    map[int64][]string
+	originCCL        map[string]*ccl.CCL
+	columnTracer     *ccl.ColumnTracer
+	groupByThreshold uint64
 }
 
-func newLogicalNodeBuilder(issuer string, info *EnginesInfo, ccls map[string]*ccl.CCL) (*logicalNodeBuilder, error) {
+func newLogicalNodeBuilder(issuer string, info *EnginesInfo, ccls map[string]*ccl.CCL, groupByThreshold uint64) (*logicalNodeBuilder, error) {
 	return &logicalNodeBuilder{
-		issuerPartyCode: issuer,
-		numOfParties:    len(info.GetParties()),
-		enginesInfo:     info,
-		columnToParty:   map[int64][]string{},
-		originCCL:       ccls,
-		columnTracer:    ccl.NewColumnTracer()}, nil
+		issuerPartyCode:  issuer,
+		numOfParties:     len(info.GetParties()),
+		enginesInfo:      info,
+		columnToParty:    map[int64][]string{},
+		originCCL:        ccls,
+		columnTracer:     ccl.NewColumnTracer(),
+		groupByThreshold: groupByThreshold,
+	}, nil
 }
 
 func (b *logicalNodeBuilder) buildLogicalNode(lp core.LogicalPlan) (logicalNode, error) {
@@ -47,8 +52,8 @@ func (b *logicalNodeBuilder) buildLogicalNode(lp core.LogicalPlan) (logicalNode,
 		return nil, err
 	}
 	if b.originCCL != nil {
-		if err := ln.buildCCL(b.columnTracer); err != nil {
-			return nil, err
+		if err := ln.buildCCL(&ccl.Context{GroupByThreshold: b.groupByThreshold}, b.columnTracer); err != nil {
+			return nil, status.New(pb.Code_CCL_CHECK_FAILED, err.Error())
 		}
 	}
 	return ln, nil

@@ -21,6 +21,7 @@ filegroup(
 
 spu_cmake_external(
     name = "mysqlclient",
+    build_args = ["-j 8"],
     cache_entries = {
         "WITHOUT_SERVER": "ON",
         "INSTALL_PRIV_LIBDIR": "$EXT_BUILD_DEPS",

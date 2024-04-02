@@ -20,6 +20,8 @@ import (
 
 	"golang.org/x/exp/slices"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/secretflow/scql/pkg/interpreter/ccl"
 	"github.com/secretflow/scql/pkg/interpreter/operator"
 	"github.com/secretflow/scql/pkg/parser/ast"
@@ -275,20 +277,48 @@ func (plan *GraphBuilder) AddPublishNode(name string, input []*Tensor, output []
 	return err
 }
 
-func (plan *GraphBuilder) AddDumpFileNode(name string, in []*Tensor, out []*Tensor, filepath, deliminator, partyCode string) error {
+// refer to Arrow QuotingStyle: https://github.com/apache/arrow/blob/apache-arrow-14.0.0/cpp/src/arrow/csv/options.h#L174
+const (
+	_quotingNone     int = 0
+	_quotingNeeded   int = 1
+	_quotingAllValid int = 2
+)
+
+func (plan *GraphBuilder) AddDumpFileNode(name string, in []*Tensor, out []*Tensor, intoOpt *ast.SelectIntoOption) error {
 	fp := &Attribute{}
-	fp.SetString(filepath)
+	fp.SetString(intoOpt.FileName)
+	terminator := &Attribute{}
+	terminator.SetString(intoOpt.LinesInfo.Terminated)
 	del := &Attribute{}
-	del.SetString(deliminator)
+	del.SetString(intoOpt.FieldsInfo.Terminated)
+	qs := &Attribute{}
+	if intoOpt.FieldsInfo.Enclosed == 0 {
+		qs.SetInt(_quotingNone) // default no quotes
+	} else {
+		// Limitations from Arrow CSV Writer C++ API: only support (ENCLOSED BY '"') and not support (ESCAPED BY) option
+		// refer to: https://github.com/apache/arrow/blob/apache-arrow-14.0.0/cpp/src/arrow/csv/options.h#L187
+		if intoOpt.FieldsInfo.Enclosed != '"' {
+			return fmt.Errorf("AddDumpFileNode: only support \", not support: %v", intoOpt.FieldsInfo.Enclosed)
+		}
+		logrus.Warn("not support 'ESCAPED BY' Option, default ignored")
+
+		if intoOpt.FieldsInfo.OptEnclosed {
+			qs.SetInt(_quotingNeeded) // optionally enclosed valid string data
+		} else {
+			qs.SetInt(_quotingAllValid) // enclosed all valid data
+		}
+	}
 	_, err := plan.AddExecutionNode(name, operator.OpNameDumpFile,
 		map[string][]*Tensor{"In": in},
 		map[string][]*Tensor{"Out": out},
 		map[string]*Attribute{
-			operator.FilePathAttr:    fp,
-			operator.DeliminatorAttr: del,
-		}, []string{partyCode})
+			operator.FilePathAttr:         fp,
+			operator.FieldDeliminatorAttr: del,
+			operator.QuotingStyleAttr:     qs,
+			operator.LineTerminatorAttr:   terminator,
+		}, []string{intoOpt.PartyCode})
 	if err != nil {
-		return fmt.Errorf("addDumpFileNode: %v", err)
+		return fmt.Errorf("AddDumpFileNode: %v", err)
 	}
 	return nil
 }
@@ -365,13 +395,13 @@ func (plan *GraphBuilder) AddMakePublicNode(name string, input *Tensor, partyCod
 }
 
 // AddJoinNode adds a Join node, used in EQ join
-func (plan *GraphBuilder) AddJoinNode(name string, left []*Tensor, right []*Tensor, partyCodes []string, joinType int) (*Tensor, *Tensor, error) {
+func (plan *GraphBuilder) AddJoinNode(name string, left []*Tensor, right []*Tensor, partyCodes []string, joinType int, psiAlg proto.PsiAlgorithmType) (*Tensor, *Tensor, error) {
 	partyAttr := &Attribute{}
 	partyAttr.SetStrings(partyCodes)
 	joinTypeAttr := &Attribute{}
 	joinTypeAttr.SetInt(joinType)
-	joinAlgAttr := &Attribute{}
-	joinAlgAttr.SetInt(EcdhPSIJoin)
+	psiAlgAttr := &Attribute{}
+	psiAlgAttr.SetInt(int(psiAlg))
 
 	inputs := make(map[string][]*Tensor)
 	inputs["Left"] = left
@@ -390,7 +420,7 @@ func (plan *GraphBuilder) AddJoinNode(name string, left []*Tensor, right []*Tens
 	outputs["LeftJoinIndex"] = []*Tensor{leftOutput}
 	outputs["RightJoinIndex"] = []*Tensor{rightOutput}
 	if _, err := plan.AddExecutionNode(name, operator.OpNameJoin, inputs, outputs,
-		map[string]*Attribute{operator.InputPartyCodesAttr: partyAttr, operator.JoinTypeAttr: joinTypeAttr, operator.AlgorithmAttr: joinAlgAttr}, partyCodes); err != nil {
+		map[string]*Attribute{operator.InputPartyCodesAttr: partyAttr, operator.JoinTypeAttr: joinTypeAttr, operator.PsiAlgorithmAttr: psiAlgAttr}, partyCodes); err != nil {
 		return nil, nil, err
 	}
 	return leftOutput, rightOutput, nil
@@ -697,7 +727,7 @@ func (plan *GraphBuilder) AddCastNode(name string, outputDType proto.PrimitiveDa
 }
 
 // For now, only support psi in
-func (plan *GraphBuilder) AddInNode(left *Tensor, right *Tensor, outCCL *ccl.CCL) (*Tensor, error) {
+func (plan *GraphBuilder) AddInNode(left *Tensor, right *Tensor, outCCL *ccl.CCL, psiAlg proto.PsiAlgorithmType) (*Tensor, error) {
 	creator := algorithmCreator.getCreator(operator.OpNameIn)
 	if creator == nil {
 		return nil, fmt.Errorf("fail to get algorithm creator for op type %s", operator.OpNameIn)
@@ -727,11 +757,11 @@ func (plan *GraphBuilder) AddInNode(left *Tensor, right *Tensor, outCCL *ccl.CCL
 		return nil, fmt.Errorf("addBinaryNode: %v", err)
 	}
 	// TODO(xiaoyuan) add share in/local in later
-	return plan.addPSIInNode(left, right, outCCL, bestAlg.outputPlacement[Out][0].partyList()[0])
+	return plan.addPSIInNode(left, right, outCCL, bestAlg.outputPlacement[Out][0].partyList()[0], psiAlg)
 }
 
 // AddPSIInNode adds psi-in node
-func (plan *GraphBuilder) addPSIInNode(left *Tensor, right *Tensor, outCCL *ccl.CCL, revealParty string) (*Tensor, error) {
+func (plan *GraphBuilder) addPSIInNode(left *Tensor, right *Tensor, outCCL *ccl.CCL, revealParty string, psiAlg proto.PsiAlgorithmType) (*Tensor, error) {
 	nodeName := "psi_in"
 	output := plan.AddTensor(nodeName + "_out")
 	output.Option = proto.TensorOptions_REFERENCE
@@ -740,12 +770,12 @@ func (plan *GraphBuilder) addPSIInNode(left *Tensor, right *Tensor, outCCL *ccl.
 	output.OwnerPartyCode = revealParty
 	output.cc = outCCL
 	attr0 := &Attribute{}
-	attr0.SetInt(EcdhPsiIn)
+	attr0.SetInt(int(psiAlg))
 	attr1 := &Attribute{}
 	attr1.SetStrings([]string{left.OwnerPartyCode, right.OwnerPartyCode})
 	attr2 := &Attribute{}
 	attr2.SetStrings([]string{revealParty})
-	attrs := map[string]*Attribute{operator.AlgorithmAttr: attr0, operator.InputPartyCodesAttr: attr1, operator.RevealToAttr: attr2}
+	attrs := map[string]*Attribute{operator.PsiAlgorithmAttr: attr0, operator.InputPartyCodesAttr: attr1, operator.RevealToAttr: attr2}
 	if _, err := plan.AddExecutionNode(nodeName, operator.OpNameIn, map[string][]*Tensor{Left: []*Tensor{left}, Right: []*Tensor{right}},
 		map[string][]*Tensor{Out: []*Tensor{output}}, attrs, []string{left.OwnerPartyCode, right.OwnerPartyCode}); err != nil {
 		return nil, err
@@ -772,7 +802,10 @@ func (plan *GraphBuilder) AddReduceAggNode(aggName string, in *Tensor) (*Tensor,
 		} else if isFloatOrDoubleType(in.DType) {
 			out.DType = proto.PrimitiveDataType_FLOAT64
 		}
+	} else if aggName == ast.AggFuncCount {
+		out.DType = proto.PrimitiveDataType_INT64
 	}
+
 	if _, err := plan.AddExecutionNode("reduce_"+aggName, opType,
 		map[string][]*Tensor{"In": {in}}, map[string][]*Tensor{"Out": {out}},
 		map[string]*Attribute{}, partyCodes); err != nil {

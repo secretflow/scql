@@ -54,6 +54,21 @@ openapiOptions:
           {
             "job_id": "your-job-id-from-submit"
           }
+    - message: scql.pb.CancelQueryRequest
+      option:
+        example: |
+          {
+            "job_id": "your-job-id-from-submit"
+          }
+    - message: scql.pb.CancelQueryResponse
+      option:
+        example: |
+          {
+            "status": {
+              "code": 0,
+              "message": "cancel query job your-job-id-from-submit succeed"
+            }
+          }
     - message: scql.pb.CreateProjectRequest
       option:
         example: |

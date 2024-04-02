@@ -19,10 +19,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"runtime/debug"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"golang.org/x/exp/slices"
+	"github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/secretflow/scql/pkg/broker/application"
 	"github.com/secretflow/scql/pkg/broker/services/common"
@@ -47,9 +49,6 @@ func (svc *grpcInterSvc) SyncInfo(c context.Context, req *pb.SyncInfoRequest) (r
 	txn := svc.app.MetaMgr.CreateMetaTransaction()
 	defer func() {
 		err = txn.Finish(err)
-		if err != nil {
-			err = status.New(pb.Code_INTERNAL, err.Error())
-		}
 	}()
 
 	action := req.GetChangeEntry().GetAction()
@@ -103,7 +102,7 @@ func (svc *grpcInterSvc) SyncInfo(c context.Context, req *pb.SyncInfoRequest) (r
 		if err != nil {
 			return nil, fmt.Errorf("SyncInfo GrantCCL: %v", err)
 		}
-		err = common.GrantColumnConstraintsWithCheck(txn, req.GetProjectId(), req.GetClientId().GetCode(), privs)
+		err = common.GrantColumnConstraintsWithCheck(txn, req.GetProjectId(), privs, common.OwnerChecker{Owner: req.GetClientId().GetCode()})
 		if err != nil {
 			return nil, fmt.Errorf("SyncInfo GrantCCL GrantColumnConstraints err: %v", err)
 		}
@@ -139,9 +138,6 @@ func (svc *grpcInterSvc) AskInfo(c context.Context, req *pb.AskInfoRequest) (res
 	txn := svc.app.MetaMgr.CreateMetaTransaction()
 	defer func() {
 		err = txn.Finish(err)
-		if err != nil {
-			err = status.New(pb.Code_INTERNAL, err.Error())
-		}
 	}()
 
 	resp = &pb.AskInfoResponse{
@@ -164,16 +160,16 @@ func (svc *grpcInterSvc) AskInfo(c context.Context, req *pb.AskInfoRequest) (res
 			if projectAndMembers.Proj.Creator != svc.app.Conf.PartyCode {
 				return nil, fmt.Errorf("AskInfo Project: project %v not created by server", resource.GetProjectId())
 			}
-			projBytes, err := json.Marshal(projectAndMembers)
+			data, err := json.Marshal(projectAndMembers)
 			if err != nil {
 				return nil, fmt.Errorf("AskInfo Project: marshal err: %v", err)
 			}
-			resp.Datas = append(resp.Datas, projBytes)
+			resp.Datas = append(resp.Datas, data)
 		case pb.ResourceSpec_Table:
 			if resource.GetProjectId() == "" || len(resource.GetTableNames()) == 0 {
 				return nil, fmt.Errorf("AskInfo Table: empty project_id or table_name in %+v", resource)
 			}
-			tableMetas, err := txn.GetTableMetasByTableNames(resource.GetProjectId(), resource.GetTableNames())
+			tableMetas, _, err := txn.GetTableMetasByTableNames(resource.GetProjectId(), resource.GetTableNames())
 			if err != nil {
 				return nil, fmt.Errorf("AskInfo Table: get table failed: %v", err)
 			}
@@ -183,12 +179,11 @@ func (svc *grpcInterSvc) AskInfo(c context.Context, req *pb.AskInfoRequest) (res
 				}
 			}
 
-			tableBytes, err := json.Marshal(tableMetas)
+			data, err := json.Marshal(tableMetas)
 			if err != nil {
 				return nil, fmt.Errorf("AskInfo Table: marshal err: %v", err)
 			}
-			resp.Datas = append(resp.Datas, tableBytes)
-
+			resp.Datas = append(resp.Datas, data)
 		case pb.ResourceSpec_CCL:
 			if resource.GetProjectId() == "" || len(resource.GetTableNames()) == 0 {
 				return nil, fmt.Errorf("AskInfo CCL: empty project_id or table_name in %+v", resource)
@@ -200,12 +195,25 @@ func (svc *grpcInterSvc) AskInfo(c context.Context, req *pb.AskInfoRequest) (res
 			}
 			// TODO: Check privs owned by server
 
-			privBytes, err := json.Marshal(columnPrivs)
+			data, err := json.Marshal(columnPrivs)
 			if err != nil {
 				return nil, fmt.Errorf("AskInfo CCL: marshal err: %v", err)
 			}
-			resp.Datas = append(resp.Datas, privBytes)
-
+			resp.Datas = append(resp.Datas, data)
+		case pb.ResourceSpec_All:
+			if resource.GetProjectId() == "" {
+				return nil, fmt.Errorf("AskInfo All: empty project_id in %+v", resource)
+			}
+			// TODO(xiaoyuan): add project info later
+			projectMeta, err := txn.GetProjectMeta(resource.GetProjectId(), resource.GetTableNames(), resource.GetDestParties(), svc.app.Conf.PartyCode)
+			if err != nil {
+				return nil, fmt.Errorf("AskInfo All: get project meta failed: %v", err)
+			}
+			data, err := json.Marshal(projectMeta)
+			if err != nil {
+				return nil, fmt.Errorf("AskInfo All: marshal err: %v", err)
+			}
+			resp.Datas = append(resp.Datas, data)
 		default:
 			return nil, fmt.Errorf("AskInfo illegal resource kind %v", resource.Kind)
 		}
@@ -218,31 +226,21 @@ func (svc *grpcInterSvc) ExchangeJobInfo(ctx context.Context, req *pb.ExchangeJo
 	if req == nil || req.GetProjectId() == "" || req.GetJobId() == "" {
 		return nil, status.New(pb.Code_BAD_REQUEST, fmt.Sprintf("ExchangeJobInfo illegal request: %+v", req))
 	}
-	s, exist := svc.app.GetSession(req.JobId)
-	if !exist {
-		return nil, status.New(pb.Code_SESSION_NOT_FOUND, "session not found")
-	}
-	defer func() {
-		if err != nil {
-			err = status.New(pb.Code_INTERNAL, err.Error())
-		}
-	}()
-	executionInfo := s.ExecuteInfo
-	selfCode := s.GetSelfPartyCode()
-	selfEndpoint, err := s.GetEndpoint(selfCode)
+
+	info, err := svc.app.GetSessionInfo(req.GetJobId())
 	if err != nil {
-		return nil, err
+		return &pb.ExchangeJobInfoResponse{Status: &pb.Status{Code: int32(pb.Code_SESSION_NOT_FOUND), Message: fmt.Sprintf("get session info failed: %s", err.Error())}}, nil
 	}
+	selfEndpoint := info.EngineUrl
+	checksum := application.Checksum{
+		TableSchema: []byte(info.TableChecksum),
+		CCL:         []byte(info.CCLChecksum),
+	}
+
 	statusCode := pb.Code_OK
-	equalResult := pb.ChecksumCompareResult_EQUAL
-	// get self checksum
-	checksum, err := s.GetSelfChecksum()
-	if err != nil {
-		return &pb.ExchangeJobInfoResponse{Status: &pb.Status{Code: int32(pb.Code_SESSION_NOT_FOUND), Message: "checksum not ready"}}, nil
-	}
-	if slices.Contains(executionInfo.DataParties, selfCode) {
+	equalResult := checksum.CompareWith(application.NewChecksumFromProto(req.ServerChecksum))
+	if equalResult != pb.ChecksumCompareResult_EQUAL {
 		statusCode = pb.Code_DATA_INCONSISTENCY
-		equalResult = checksum.CompareWith(application.NewChecksumFromProto(req.ServerChecksum))
 	}
 	return &pb.ExchangeJobInfoResponse{
 		Status:                 &pb.Status{Code: int32(statusCode)},
@@ -265,247 +263,148 @@ func NewInterSvc(app *application.App) *InterSvc {
 }
 
 func (svc *InterSvc) InviteToProjectHandler(c *gin.Context) {
-	var err error
-	timeStart := time.Now()
-	logEntry := &logutil.BrokerMonitorLogEntry{
-		ActionName: fmt.Sprintf("%v@%v", "Inter", "InviteToProject"),
-	}
-	defer func() {
-		logEntry.CostTime = time.Since(timeStart)
-		common.LogWithError(logEntry, err)
-	}()
-	var req pb.InviteToProjectRequest
-	inputEncodingType, err := message.DeserializeFrom(c.Request.Body, &req)
-	if err != nil {
-		c.String(http.StatusBadRequest, "InviteToProjectHandler: unable to parse request body: %v", err)
-		return
-	}
-	logEntry.RequestParty = req.GetInvitationCode()
-	logEntry.RawRequest = req.String()
-	response := &pb.InviteToProjectResponse{}
-	defer func() {
-		common.FeedResponse(c, response, err, inputEncodingType)
-	}()
-	// check signature with pubKey
-	pubKey, err := svc.app.PartyMgr.GetPubKeyByParty(req.GetClientId().GetCode())
-	if err != nil {
-		err = status.New(pb.Code_UNAUTHENTICATED, fmt.Sprintf("InviteToProjectHandler: %s", err.Error()))
-		return
-	}
-	err = svc.app.Auth.CheckSign(&req, pubKey)
-	if err != nil {
-		return
-	}
-
-	resp, err := svc.InviteToProject(c.Request.Context(), &req)
-	if err != nil {
-		return
-	}
-
-	response = resp
+	handlerWrapper(c, svc.app,
+		&pb.InviteToProjectRequest{},
+		&pb.InviteToProjectResponse{},
+		func(ctx context.Context, req *pb.InviteToProjectRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.InviteToProjectResponse, error) {
+			logEntry.RequestParty = req.GetInvitationCode()
+			logEntry.RawRequest = req.String()
+			logEntry.ActionName = fmt.Sprintf("%v@%v", "Inter", "InviteToProject")
+			return svc.InviteToProject(ctx, req)
+		})
 }
 
 func (svc *InterSvc) DistributedQueryHandler(c *gin.Context) {
-	var err error
-	timeStart := time.Now()
-	logEntry := &logutil.BrokerMonitorLogEntry{
-		ActionName: fmt.Sprintf("%v@%v", "Inter", "DistributedQuery"),
-	}
-	defer func() {
-		logEntry.CostTime = time.Since(timeStart)
-		common.LogWithError(logEntry, err)
-	}()
-	var req pb.DistributeQueryRequest
-	inputEncodingType, err := message.DeserializeFrom(c.Request.Body, &req)
-	if err != nil {
-		c.String(http.StatusBadRequest, "DistributedQueryHandler: unable to parse request body: %v", err)
-		return
-	}
-	logEntry.RequestParty = req.ClientId.GetCode()
-	logEntry.RawRequest = req.String()
-	logEntry.JobID = req.GetJobId()
-	response := &pb.DistributeQueryResponse{}
-	defer func() {
-		common.FeedResponse(c, response, err, inputEncodingType)
-	}()
-	// check signature with pubKey
-	pubKey, err := svc.app.PartyMgr.GetPubKeyByParty(req.GetClientId().GetCode())
-	if err != nil {
-		err = status.New(pb.Code_UNAUTHENTICATED, fmt.Sprintf("DistributedQueryHandler: %s", err.Error()))
-		return
-	}
-	err = svc.app.Auth.CheckSign(&req, pubKey)
-	if err != nil {
-		return
-	}
+	handlerWrapper(c, svc.app,
+		&pb.DistributeQueryRequest{},
+		&pb.DistributeQueryResponse{},
+		func(ctx context.Context, req *pb.DistributeQueryRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.DistributeQueryResponse, error) {
+			logEntry.RequestParty = req.ClientId.GetCode()
+			logEntry.RawRequest = req.String()
+			logEntry.JobID = req.GetJobId()
+			logEntry.ActionName = fmt.Sprintf("%v@%v", "Inter", "DistributeQuery")
+			return svc.DistributeQuery(ctx, req)
+		})
+}
 
-	resp, err := svc.DistributeQuery(c.Request.Context(), &req)
-	if err != nil {
-		return
-	}
-
-	response = resp
+func (svc *InterSvc) CancelQueryJobHandler(c *gin.Context) {
+	handlerWrapper(c, svc.app,
+		&pb.CancelQueryJobRequest{},
+		&pb.CancelQueryJobResponse{},
+		func(ctx context.Context, req *pb.CancelQueryJobRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.CancelQueryJobResponse, error) {
+			logEntry.RequestParty = req.ClientId.GetCode()
+			logEntry.RawRequest = req.String()
+			logEntry.JobID = req.GetJobId()
+			logEntry.ActionName = fmt.Sprintf("%v@%v", "Inter", "CancelQueryJob")
+			return svc.CancelQueryJob(ctx, req)
+		})
 }
 
 func (svc *InterSvc) ReplyInvitationHandler(c *gin.Context) {
-	var err error
-	timeStart := time.Now()
-	logEntry := &logutil.BrokerMonitorLogEntry{
-		ActionName: fmt.Sprintf("%v@%v", "Inter", "ReplyInvitation"),
-	}
-	defer func() {
-		logEntry.CostTime = time.Since(timeStart)
-		common.LogWithError(logEntry, err)
-	}()
-	var req pb.ReplyInvitationRequest
-	inputEncodingType, err := message.DeserializeFrom(c.Request.Body, &req)
-	if err != nil {
-		c.String(http.StatusBadRequest, "ReplyInvitationPathHandler: unable to parse request body: %v", err)
-		return
-	}
-	logEntry.RequestParty = req.ClientId.GetCode()
-	logEntry.RawRequest = req.String()
-	response := &pb.ReplyInvitationResponse{}
-	defer func() {
-		common.FeedResponse(c, response, err, inputEncodingType)
-	}()
-	// check signature with pubKey
-	pubKey, err := svc.app.PartyMgr.GetPubKeyByParty(req.GetClientId().GetCode())
-	if err != nil {
-		err = status.New(pb.Code_UNAUTHENTICATED, fmt.Sprintf("ReplyInvitationHandler: %s", err.Error()))
-		return
-	}
-	err = svc.app.Auth.CheckSign(&req, pubKey)
-	if err != nil {
-		return
-	}
-
-	resp, err := svc.ReplyInvitation(c.Request.Context(), &req)
-	if err != nil {
-		return
-	}
-
-	response = resp
+	handlerWrapper(c, svc.app,
+		&pb.ReplyInvitationRequest{},
+		&pb.ReplyInvitationResponse{},
+		func(ctx context.Context, req *pb.ReplyInvitationRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.ReplyInvitationResponse, error) {
+			logEntry.RequestParty = req.ClientId.GetCode()
+			logEntry.RawRequest = req.String()
+			logEntry.ActionName = fmt.Sprintf("%v@%v", "Inter", "ReplyInvitation")
+			return svc.ReplyInvitation(ctx, req)
+		})
 }
 
 func (svc *InterSvc) SyncInfoHandler(c *gin.Context) {
-	var err error
-	timeStart := time.Now()
-	logEntry := &logutil.BrokerMonitorLogEntry{
-		ActionName: fmt.Sprintf("%v@%v", "Inter", "SyncInfo"),
-	}
-	defer func() {
-		logEntry.CostTime = time.Since(timeStart)
-		common.LogWithError(logEntry, err)
-	}()
-	var req pb.SyncInfoRequest
-	inputEncodingType, err := message.DeserializeFrom(c.Request.Body, &req)
-	if err != nil {
-		c.String(http.StatusBadRequest, "SyncInfoHandler: unable to parse request body: %v", err)
-		return
-	}
-	logEntry.RequestParty = req.ClientId.GetCode()
-	logEntry.RawRequest = req.String()
-	response := &pb.SyncInfoResponse{}
-	defer func() {
-		common.FeedResponse(c, response, err, inputEncodingType)
-	}()
-	// check signature with pubKey
-	pubKey, err := svc.app.PartyMgr.GetPubKeyByParty(req.GetClientId().GetCode())
-	if err != nil {
-		err = status.New(pb.Code_UNAUTHENTICATED, fmt.Sprintf("SyncInfoHandler: %s", err.Error()))
-		return
-	}
-	err = svc.app.Auth.CheckSign(&req, pubKey)
-	if err != nil {
-		return
-	}
-
-	resp, err := svc.SyncInfo(c.Request.Context(), &req)
-	if err != nil {
-		return
-	}
-
-	response = resp
+	handlerWrapper(c, svc.app,
+		&pb.SyncInfoRequest{},
+		&pb.SyncInfoResponse{},
+		func(ctx context.Context, req *pb.SyncInfoRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.SyncInfoResponse, error) {
+			logEntry.RequestParty = req.ClientId.GetCode()
+			logEntry.RawRequest = req.String()
+			logEntry.ActionName = fmt.Sprintf("%v@%v", "Inter", "SyncInfo")
+			return svc.SyncInfo(ctx, req)
+		})
 }
 
 func (svc *InterSvc) AskInfoHandler(c *gin.Context) {
-	var err error
-	timeStart := time.Now()
-	logEntry := &logutil.BrokerMonitorLogEntry{
-		ActionName: fmt.Sprintf("%v@%v", "Inter", "AskInfo"),
-	}
-	defer func() {
-		logEntry.CostTime = time.Since(timeStart)
-		common.LogWithError(logEntry, err)
-	}()
-	var req pb.AskInfoRequest
-	inputEncodingType, err := message.DeserializeFrom(c.Request.Body, &req)
-	if err != nil {
-		c.String(http.StatusBadRequest, "AskInfoHandler: unable to parse request body: %v", err)
-		return
-	}
-	logEntry.RequestParty = req.ClientId.GetCode()
-	logEntry.RawRequest = req.String()
-	response := &pb.AskInfoResponse{}
-	defer func() {
-		common.FeedResponse(c, response, err, inputEncodingType)
-	}()
-	// check signature with pubKey
-	pubKey, err := svc.app.PartyMgr.GetPubKeyByParty(req.GetClientId().GetCode())
-	if err != nil {
-		err = status.New(pb.Code_UNAUTHENTICATED, fmt.Sprintf("AskInfoHandler: %s", err.Error()))
-		return
-	}
-	err = svc.app.Auth.CheckSign(&req, pubKey)
-	if err != nil {
-		return
-	}
-
-	resp, err := svc.AskInfo(c.Request.Context(), &req)
-	if err != nil {
-		return
-	}
-
-	response = resp
+	handlerWrapper(c, svc.app,
+		&pb.AskInfoRequest{},
+		&pb.AskInfoResponse{},
+		func(ctx context.Context, req *pb.AskInfoRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.AskInfoResponse, error) {
+			logEntry.RequestParty = req.ClientId.GetCode()
+			logEntry.RawRequest = req.String()
+			logEntry.ActionName = fmt.Sprintf("%v@%v", "Inter", "AskInfo")
+			return svc.AskInfo(ctx, req)
+		})
 }
 
 func (svc *InterSvc) ExchangeJobInfoHandler(c *gin.Context) {
+	handlerWrapper(c, svc.app,
+		&pb.ExchangeJobInfoRequest{},
+		&pb.ExchangeJobInfoResponse{},
+		func(ctx context.Context, req *pb.ExchangeJobInfoRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.ExchangeJobInfoResponse, error) {
+			logEntry.RequestParty = req.ClientId.GetCode()
+			logEntry.RawRequest = req.String()
+			logEntry.ActionName = fmt.Sprintf("%v@%v", "Inter", "ExchangeJobInfo")
+			return svc.ExchangeJobInfo(ctx, req)
+		})
+}
+
+func handlerWrapper[In, Out protoreflect.ProtoMessage](
+	c *gin.Context,
+	app *application.App,
+	req In, resp Out,
+	fn func(context.Context, In, *logutil.BrokerMonitorLogEntry) (Out, error)) {
 	var err error
 	timeStart := time.Now()
-	logEntry := &logutil.BrokerMonitorLogEntry{
-		ActionName: fmt.Sprintf("%v@%v", "Inter", "ExchangeJobInfo"),
-	}
+	logEntry := &logutil.BrokerMonitorLogEntry{}
 	defer func() {
 		logEntry.CostTime = time.Since(timeStart)
 		common.LogWithError(logEntry, err)
 	}()
-	var req pb.ExchangeJobInfoRequest
-	inputEncodingType, err := message.DeserializeFrom(c.Request.Body, &req)
+	inputEncodingType, err := message.DeserializeFrom(c.Request.Body, req)
 	if err != nil {
-		c.String(http.StatusBadRequest, "ExchangeJobInfoHandler: unable to parse request body: %v", err)
+		c.String(http.StatusBadRequest, "unable to parse request body: %v", err)
 		return
 	}
-	logEntry.RequestParty = req.ClientId.GetCode()
-	logEntry.RawRequest = req.String()
-	response := &pb.ExchangeJobInfoResponse{}
 	defer func() {
-		common.FeedResponse(c, response, err, inputEncodingType)
+		if r := recover(); r != nil {
+			stackInfo := string(debug.Stack())
+			err = fmt.Errorf("unexpected error: %+v", r)
+			logrus.Infof("err=%v, stack=%s\n", err, stackInfo)
+		}
+		common.FeedResponse(c, resp, err, inputEncodingType)
 	}()
+	code, err := getClientCodeFrom(req)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "failed to get client code: %+v", err)
+		return
+	}
 	// check signature with pubKey
-	pubKey, err := svc.app.PartyMgr.GetPubKeyByParty(req.GetClientId().GetCode())
+	pubKey, err := app.PartyMgr.GetPubKeyByParty(code)
 	if err != nil {
-		err = status.New(pb.Code_UNAUTHENTICATED, fmt.Sprintf("AskInfoHandler: %s", err.Error()))
+		err = status.New(pb.Code_UNAUTHENTICATED, err.Error())
 		return
 	}
-	err = svc.app.Auth.CheckSign(&req, pubKey)
+	err = app.Auth.CheckSign(req, pubKey)
+	if err != nil {
+		err = status.New(pb.Code_UNAUTHENTICATED, err.Error())
+		return
+	}
+	response, err := fn(c.Request.Context(), req, logEntry)
 	if err != nil {
 		return
 	}
-	resp, err := svc.ExchangeJobInfo(c.Request.Context(), &req)
-	if err != nil {
-		return
-	}
+	resp = response
+}
 
-	response = resp
+func getClientCodeFrom(req protoreflect.ProtoMessage) (string, error) {
+	clientDesc := req.ProtoReflect().Descriptor().Fields().ByJSONName("clientId")
+	if clientDesc == nil {
+		return "", fmt.Errorf("failed to get client id")
+	}
+	clientId := req.ProtoReflect().Get(clientDesc).Message()
+	codeDes := clientId.Descriptor().Fields().ByJSONName("code")
+	if codeDes == nil {
+		return "", fmt.Errorf("failed to get client code")
+	}
+	return clientId.Get(codeDes).String(), nil
 }

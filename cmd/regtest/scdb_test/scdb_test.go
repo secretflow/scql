@@ -434,6 +434,7 @@ func createUserAndCcl(testConf *testConfig, cclList []*scql.SecurityConfig_Colum
 func runSql(user *scql.SCDBCredential, sql, addr string, sync bool) ([]*scql.Tensor, error) {
 	httpClient := &http.Client{Timeout: stubTimeoutMinutes * time.Minute}
 	stub := client.NewDefaultClient(addr, httpClient)
+	stub.SetDBName(dbName)
 	if sync {
 		resp, err := stub.SubmitAndGet(user, sql)
 		if err != nil {

@@ -44,6 +44,16 @@ pb::PrimitiveDataType FromArrowDataType(
     case arrow::Type::DOUBLE:
       ty = pb::PrimitiveDataType::FLOAT64;
       break;
+    case arrow::Type::DECIMAL128: {
+      auto decimal_type =
+          std::dynamic_pointer_cast<arrow::Decimal128Type>(dtype);
+      if (decimal_type->scale() == 0) {
+        ty = pb::PrimitiveDataType::INT64;
+      } else {
+        ty = pb::PrimitiveDataType::PrimitiveDataType_UNDEFINED;
+      }
+      break;
+    }
     case arrow::Type::STRING:
     case arrow::Type::LARGE_STRING:
       ty = pb::PrimitiveDataType::STRING;

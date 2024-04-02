@@ -18,12 +18,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/sirupsen/logrus"
 
+	"github.com/secretflow/scql/pkg/broker/storage"
 	"github.com/secretflow/scql/pkg/executor"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 )
@@ -38,20 +41,44 @@ func (svc *grpcIntraSvc) Report(ctx context.Context, request *pb.ReportRequest) 
 	logrus.Debugf("Receive report request: %s", request.String())
 
 	app := svc.app
-	session, ok := app.GetSession(request.GetSessionId())
-	if !ok {
-		return nil, fmt.Errorf("session %v not found", request.GetSessionId())
+	info, err := app.GetSessionInfo(request.GetSessionId())
+	if err != nil {
+		return nil, fmt.Errorf("session %v not found: %v", request.GetSessionId(), err)
+	}
+
+	switch info.Status {
+	case int8(storage.SessionFinished):
+		return nil, nil
+	case int8(storage.SessionRunning):
+		break // check passed
+	default:
+		return nil, fmt.Errorf("session status %d is not allowed to set result", info.Status)
 	}
 
 	result := &pb.QueryResponse{}
-	defer session.SetResultSafely(result)
+	defer func() {
+		if err := app.PersistSessionResult(request.GetSessionId(), result); err != nil {
+			logrus.Warnf("failed to persist session result: %v", err)
+			return
+		}
+		session, ok := app.GetSession(request.GetSessionId())
+		if ok {
+			session.SetResultSafely(result)
+		}
+
+		if engine, err := app.Scheduler.ParseEngineInstance(info.JobInfo); err != nil {
+			logrus.Warnf("failed to get engine from info: %v", err)
+		} else if err := engine.Stop(); err != nil {
+			logrus.Warnf("failed to stop query job: %v", err)
+		}
+	}()
 
 	if request.GetStatus().GetCode() != int32(pb.Code_OK) {
 		result.Status = request.GetStatus()
 		return nil, nil
 	}
 
-	err := checkColumnsShape(request.GetOutColumns())
+	err = checkColumnsShape(request.GetOutColumns())
 	if err != nil {
 		result.Status = &pb.Status{
 			Code:    int32(pb.Code_ENGINE_RUNSQL_ERROR),
@@ -60,8 +87,21 @@ func (svc *grpcIntraSvc) Report(ctx context.Context, request *pb.ReportRequest) 
 		return nil, err
 	}
 
-	if err := executor.CheckResultSchemas(request.GetOutColumns(), session.OutputNames); err != nil {
-		err = fmt.Errorf("received error query result report: %+v", err)
+	var outputNames []string
+	if info.OutputNames != "" {
+		outputNames = strings.Split(info.OutputNames, ";")
+	}
+	if err := executor.CheckResultSchemas(request.GetOutColumns(), outputNames); err != nil {
+		err = fmt.Errorf("received error query result report: %v", err)
+		result.Status = &pb.Status{
+			Code:    int32(pb.Code_INTERNAL),
+			Message: err.Error(),
+		}
+		return nil, err
+	}
+	var warn pb.Warning
+	if err := protojson.Unmarshal([]byte(info.Warning), &warn); err != nil {
+		err = fmt.Errorf("unmarshal warning err: %v", err)
 		result.Status = &pb.Status{
 			Code:    int32(pb.Code_INTERNAL),
 			Message: err.Error(),
@@ -72,8 +112,8 @@ func (svc *grpcIntraSvc) Report(ctx context.Context, request *pb.ReportRequest) 
 	result.Status = request.GetStatus()
 	result.OutColumns = request.GetOutColumns()
 	result.AffectedRows = request.GetNumRowsAffected()
-	result.CostTimeS = time.Since(session.CreatedAt).Seconds()
-	if session.GetSessionVars().AffectedByGroupThreshold {
+	result.CostTimeS = time.Since(info.CreatedAt).Seconds()
+	if warn.MayAffectedByGroupThreshold {
 		reason := "for safety, we filter the results for groups which contain less than 4 items."
 		logrus.Infof("Report: %v", reason)
 		result.Warnings = append(result.Warnings, &pb.SQLWarning{Reason: reason})

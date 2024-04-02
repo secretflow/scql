@@ -26,16 +26,21 @@ enum class RemoteRole {
   Driver = 2,  // Driver could be SCDB, SCQLBroker...
 };
 
+// A wrapper for brpc channel options
+struct ChannelOptions {
+  brpc::ChannelOptions brpc_options;
+  std::string load_balancer = "";
+};
+
 class ChannelManager {
  public:
-  void AddChannelOptions(const RemoteRole role,
-                         const brpc::ChannelOptions& options);
+  void AddChannelOptions(const RemoteRole role, const ChannelOptions& options);
 
   std::shared_ptr<google::protobuf::RpcChannel> Create(
       const std::string& remote_addr, RemoteRole role);
 
  private:
-  std::map<RemoteRole, brpc::ChannelOptions> options_;
+  std::map<RemoteRole, ChannelOptions> options_;
 };
 
 }  // namespace scql::engine

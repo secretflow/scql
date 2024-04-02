@@ -26,13 +26,17 @@ filegroup(
 
 common_cache_entries = {
     "BUILD_SHARED_LIBS": "OFF",
+    "BUILD_SHELL": "OFF",
     "BUILD_UNITTESTS": "OFF",
+    "EXPORT_DLL_SYMBOLS": "OFF",
     "ENABLE_SANITIZER": "OFF",
     "ENABLE_UBSAN": "OFF",
+    "OPENSSL_ROOT_DIR": "$EXT_BUILD_DEPS/openssl",
 }
 
 spu_cmake_external(
     name = "duckdb",
+    build_args = ["-j 8"],
     cache_entries = common_cache_entries,
     lib_source = ":all_srcs",
     linkopts = [
@@ -50,5 +54,9 @@ spu_cmake_external(
         "libduckdb_mbedtls.a",
         "libduckdb_fsst.a",
         "libparquet_extension.a",
+        "libhttpfs_extension.a",
+    ],
+    deps = [
+        "@com_github_openssl_openssl//:openssl",
     ],
 )

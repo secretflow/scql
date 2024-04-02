@@ -40,7 +40,7 @@ var mockDataPath = []string{"testdata/db_alice.json", "testdata/db_bob.json", "t
 var allPartyCodes = []string{"alice", "bob", "carol"}
 
 var dTypeString2FieldType = map[string]types.FieldType{
-	"long":      *(types.NewFieldType(mysql.TypeLong)),
+	"int":       *(types.NewFieldType(mysql.TypeLong)),
 	"string":    *(types.NewFieldType(mysql.TypeString)),
 	"float":     *(types.NewFieldType(mysql.TypeFloat)),
 	"datetime":  *(types.NewFieldType(mysql.TypeDatetime)),
@@ -360,9 +360,6 @@ func MockEngines() (*MockEnginesInfo, error) {
 	}
 	for _, db := range data {
 		for tableName := range db.Tables {
-			if len(result.PartyToTables[db.PartyCode]) == 0 {
-				result.PartyToTables[db.PartyCode] = make([]string, 0)
-			}
 			qualifiedName := strings.Join([]string{db.DbName, tableName}, ".")
 			result.PartyToTables[db.PartyCode] = append(result.PartyToTables[db.PartyCode], qualifiedName)
 			result.TableToRefs[qualifiedName] = qualifiedName
@@ -445,12 +442,12 @@ func MockStorage(db *gorm.DB) error {
 
 	// initialize columns
 	columns := []storage.Column{
-		{Db: "test", TableName: "table_1", ColumnName: "column1_1", Type: "long"},
-		{Db: "test", TableName: "table_1", ColumnName: "column1_2", Type: "long"},
-		{Db: "test", TableName: "table_1", ColumnName: "column1_3", Type: "long"},
-		{Db: "test", TableName: "table_2", ColumnName: "column2_1", Type: "long"},
-		{Db: "test", TableName: "table_2", ColumnName: "column2_2", Type: "long"},
-		{Db: "test", TableName: "table_3", ColumnName: "column3_1", Type: "long"},
+		{Db: "test", TableName: "table_1", ColumnName: "column1_1", Type: "int"},
+		{Db: "test", TableName: "table_1", ColumnName: "column1_2", Type: "int"},
+		{Db: "test", TableName: "table_1", ColumnName: "column1_3", Type: "int"},
+		{Db: "test", TableName: "table_2", ColumnName: "column2_1", Type: "int"},
+		{Db: "test", TableName: "table_2", ColumnName: "column2_2", Type: "int"},
+		{Db: "test", TableName: "table_3", ColumnName: "column3_1", Type: "int"},
 	}
 
 	result = db.Create(&columns)

@@ -27,7 +27,7 @@ import (
 	"github.com/secretflow/scql/pkg/parser"
 	"github.com/secretflow/scql/pkg/parser/model"
 	"github.com/secretflow/scql/pkg/planner/core"
-	proto "github.com/secretflow/scql/pkg/proto-gen/scql"
+	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/proto-gen/spu"
 	"github.com/secretflow/scql/pkg/sessionctx"
 	"github.com/secretflow/scql/pkg/sessionctx/stmtctx"
@@ -39,7 +39,7 @@ func NewInterpreter() *Interpreter {
 	return &Interpreter{}
 }
 
-func (intr *Interpreter) Compile(ctx context.Context, req *proto.CompileQueryRequest) (*proto.CompiledPlan, error) {
+func (intr *Interpreter) Compile(ctx context.Context, req *pb.CompileQueryRequest) (*pb.CompiledPlan, error) {
 	p := parser.New()
 	stmts, _, err := p.Parse(req.GetQuery(), "", "")
 	if err != nil {
@@ -75,10 +75,7 @@ func (intr *Interpreter) Compile(ctx context.Context, req *proto.CompileQueryReq
 	if err != nil {
 		return nil, err
 	}
-
-	t, err := translator.NewTranslator(enginesInfo, req.GetSecurityConf(), req.GetIssuer().GetCode(), &translator.SecurityCompromiseConf{
-		RevealGroupMark: req.GetCompileOpts().GetSecurityCompromise().GetRevealGroupMark(),
-	})
+	t, err := translator.NewTranslator(enginesInfo, req.GetSecurityConf(), req.GetIssuer().GetCode(), req.GetCompileOpts())
 	if err != nil {
 		return nil, err
 	}
@@ -103,28 +100,28 @@ func (intr *Interpreter) Compile(ctx context.Context, req *proto.CompileQueryReq
 
 	plan := buildCompiledPlan(req.GetCompileOpts().GetSpuConf(), ep, mapper.Codes)
 	if req.GetCompileOpts().GetDumpExeGraph() {
-		plan.Explain = &proto.ExplainInfo{
+		plan.Explain = &pb.ExplainInfo{
 			ExeGraphDot: ep.DumpGraphviz(),
 		}
 	}
-	plan.Warning = &proto.Warning{
+	plan.Warning = &pb.Warning{
 		MayAffectedByGroupThreshold: t.AffectedByGroupThreshold,
 	}
 
 	return plan, nil
 }
 
-func buildCompiledPlan(spuConf *spu.RuntimeConfig, eGraph *translator.Graph, execPlans map[string]*optimizer.ExecutionPlan) *proto.CompiledPlan {
-	plan := &proto.CompiledPlan{
-		Schema:         &proto.TableSchema{},
+func buildCompiledPlan(spuConf *spu.RuntimeConfig, eGraph *translator.Graph, execPlans map[string]*optimizer.ExecutionPlan) *pb.CompiledPlan {
+	plan := &pb.CompiledPlan{
+		Schema:         &pb.TableSchema{},
 		SpuRuntimeConf: spuConf,
-		SubGraphs:      make(map[string]*proto.SubGraph),
+		SubGraphs:      make(map[string]*pb.SubGraph),
 	}
 
 	{
 		// Fill Schema
 		for _, out := range eGraph.OutputNames {
-			plan.Schema.Columns = append(plan.Schema.Columns, &proto.ColumnDesc{
+			plan.Schema.Columns = append(plan.Schema.Columns, &pb.ColumnDesc{
 				Name: out,
 				// TODO: populate Field Type
 				// Type: <column data type>
@@ -132,18 +129,18 @@ func buildCompiledPlan(spuConf *spu.RuntimeConfig, eGraph *translator.Graph, exe
 		}
 		// Fill Parties
 		for _, party := range eGraph.GetParties() {
-			plan.Parties = append(plan.Parties, &proto.PartyId{
+			plan.Parties = append(plan.Parties, &pb.PartyId{
 				Code: party,
 			})
 		}
 
 		// Fill Subgraphs
 		for party, subGraph := range execPlans {
-			graphProto := &proto.SubGraph{
-				Nodes: make(map[string]*proto.ExecNode),
-				Policy: &proto.SchedulingPolicy{
+			graphProto := &pb.SubGraph{
+				Nodes: make(map[string]*pb.ExecNode),
+				Policy: &pb.SchedulingPolicy{
 					WorkerNum: int32(subGraph.Policy.WorkerNumber),
-					Subdags:   make([]*proto.SubDAG, 0),
+					Subdags:   make([]*pb.SubDAG, 0),
 				},
 				// TODO: populate GraphChecksum
 				// GraphChecksum: <checksum>,
@@ -154,8 +151,8 @@ func buildCompiledPlan(spuConf *spu.RuntimeConfig, eGraph *translator.Graph, exe
 			}
 			// Fill Policy subdags
 			for _, job := range subGraph.Policy.Jobs {
-				subdag := &proto.SubDAG{
-					Jobs:                     make([]*proto.SubDAG_Job, 0),
+				subdag := &pb.SubDAG{
+					Jobs:                     make([]*pb.SubDAG_Job, 0),
 					NeedCallBarrierAfterJobs: job.NeedCallBarrierAfterJobs,
 				}
 				for k, v := range job.Jobs {
@@ -164,7 +161,7 @@ func buildCompiledPlan(spuConf *spu.RuntimeConfig, eGraph *translator.Graph, exe
 						ids = append(ids, strconv.Itoa(id))
 					}
 
-					j := &proto.SubDAG_Job{
+					j := &pb.SubDAG_Job{
 						WorkerId: int32(k),
 						NodeIds:  ids,
 					}
@@ -178,7 +175,7 @@ func buildCompiledPlan(spuConf *spu.RuntimeConfig, eGraph *translator.Graph, exe
 	return plan
 }
 
-func buildInfoSchemaFromCatalogProto(catalog *proto.Catalog) (infoschema.InfoSchema, error) {
+func buildInfoSchemaFromCatalogProto(catalog *pb.Catalog) (infoschema.InfoSchema, error) {
 	tblInfoMap := make(map[string][]*model.TableInfo)
 	for i, tblEntry := range catalog.GetTables() {
 		dbTable, err := core.NewDbTableFromString(tblEntry.GetTableName())
@@ -252,9 +249,9 @@ func collectDataSourceNode(lp core.LogicalPlan) []*core.DataSource {
 	return nil
 }
 
-func buildEngineInfo(lp core.LogicalPlan, catalog *proto.Catalog, currentDb string, queryIssuer string, issuerAsParticipant bool) (*translator.EnginesInfo, error) {
+func buildEngineInfo(lp core.LogicalPlan, catalog *pb.Catalog, currentDb string, queryIssuer string, issuerAsParticipant bool) (*translator.EnginesInfo, error) {
 	// construct catalog map
-	catalogMap := make(map[string]*proto.TableEntry)
+	catalogMap := make(map[string]*pb.TableEntry)
 	for _, table := range catalog.GetTables() {
 		tn := table.GetTableName()
 		if _, exists := catalogMap[tn]; exists {

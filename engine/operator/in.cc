@@ -28,10 +28,10 @@
 
 #include "butil/files/scoped_temp_dir.h"
 #include "gflags/gflags.h"
-#include "psi/psi/core/ecdh_oprf_psi.h"
-#include "psi/psi/core/ecdh_psi.h"
-#include "psi/psi/cryptor/cryptor_selector.h"
-#include "psi/psi/utils/ec_point_store.h"
+#include "psi/cryptor/cryptor_selector.h"
+#include "psi/ecdh/ecdh_oprf_psi.h"
+#include "psi/ecdh/ecdh_psi.h"
+#include "psi/utils/ec_point_store.h"
 #include "yacl/crypto/utils/rand.h"
 
 #include "engine/audit/audit_log.h"
@@ -39,6 +39,7 @@
 #include "engine/core/primitive_builder.h"
 #include "engine/core/tensor.h"
 #include "engine/framework/exec.h"
+#include "engine/util/psi_detail_logger.h"
 #include "engine/util/psi_helper.h"
 #include "engine/util/tensor_util.h"
 
@@ -53,16 +54,17 @@ const std::string In::kOpType("In");
 const std::string& In::Type() const { return kOpType; }
 
 void In::Validate(ExecContext* ctx) {
-  int64_t algorithm = ctx->GetInt64ValueFromAttribute(kAlgorithmAttr);
-  if (algorithm < 0 || algorithm >= static_cast<int64_t>(InAlgo::kAlgoNums)) {
-    YACL_THROW("Unknown in algorithm value: {}", algorithm);
+  int64_t in_type = ctx->GetInt64ValueFromAttribute(kInType);
+  if (in_type < 0 || in_type >= static_cast<int64_t>(InType::kInTypeNums)) {
+    YACL_THROW("Unknown in type: {}", in_type);
   }
 
-  static std::unordered_set<int64_t> supported_algos{
-      static_cast<int64_t>(InAlgo::kPsiIn),
-      static_cast<int64_t>(InAlgo::kOprfPsiIn),
-      static_cast<int64_t>(InAlgo::kEcdhPsiIn)};
-  if (supported_algos.count(algorithm) > 0) {
+  if (in_type == static_cast<int64_t>(InType::kPsiIn)) {
+    int64_t algorithm = ctx->GetInt64ValueFromAttribute(kAlgorithmAttr);
+    if (algorithm < 0 ||
+        algorithm >= static_cast<int64_t>(util::PsiAlgo::kAlgoNums)) {
+      YACL_THROW("Unknown psi algorithm value: {}", algorithm);
+    }
     ValidateInputAndOutputForPsi(ctx);
     ValidatePartyCodesForPsi(ctx);
   } else {
@@ -72,30 +74,39 @@ void In::Validate(ExecContext* ctx) {
 }
 
 void In::Execute(ExecContext* ctx) {
-  int64_t algorithm = ctx->GetInt64ValueFromAttribute(kAlgorithmAttr);
-  switch (algorithm) {
-    case static_cast<int64_t>(InAlgo::kSecretShareIn):
-      SPDLOG_INFO("Execute In, algo = {}", "SecretShareIn");
+  int64_t in_type = ctx->GetInt64ValueFromAttribute(kInType);
+  switch (in_type) {
+    case static_cast<int64_t>(InType::kSecretShareIn):
+      SPDLOG_INFO("Execute In, In type = {}", "SecretShareIn");
       return SecretShareIn(ctx);
-    case static_cast<int64_t>(InAlgo::kPsiIn):
+    case static_cast<int64_t>(InType::kPsiIn):
       // engines will coordinate proper PSI algorithm(EcdhPsi or OprfPsi)
       // according to the tensor size
-      SPDLOG_INFO("Execute In, algo = {}", "PsiIn");
-      return PsiIn(ctx);
-    case static_cast<int64_t>(InAlgo::kLocalIn):
-      SPDLOG_INFO("Execute In, algo = {}", "LocalIn");
+      SPDLOG_INFO("Execute In, In type = {}", "PsiIn");
+      {
+        auto algorithm = ctx->GetInt64ValueFromAttribute(kAlgorithmAttr);
+        switch (algorithm) {
+          case static_cast<int64_t>(util::PsiAlgo::kOprfPsi):
+            SPDLOG_INFO("Execute In, algo = {}", "OprfPsi");
+            // Besides letting the engines decide, Driver can directly choose
+            // prefered PSI algorithm(EcdhPsi or OprfPsi) UbPsiServerHint is
+            // indispensable when Driver explicitly choose OprfPsiIn
+            return OprfPsiIn(ctx, IsOprfServerAccordToHint(ctx));
+          case static_cast<int64_t>(util::PsiAlgo::kEcdhPsi):
+            SPDLOG_INFO("Execute In, algo = {}", "EcdhPsi");
+            return EcdhPsiIn(ctx);
+          case static_cast<int64_t>(util::PsiAlgo::kAutoPsi):
+            SPDLOG_INFO("Execute In, algo = {}", "AutoPsi");
+            return PsiIn(ctx);
+          default:
+            YACL_THROW("unsupported in algorithm id: {}", algorithm);
+        }
+      }
+    case static_cast<int64_t>(InType::kLocalIn):
+      SPDLOG_INFO("Execute In, In type = {}", "LocalIn");
       return LocalIn(ctx);
-    case static_cast<int64_t>(InAlgo::kOprfPsiIn):
-      SPDLOG_INFO("Execute In, algo = {}", "OprfPsiIn");
-      // Besides letting the engines decide, Driver can directly choose prefered
-      // PSI algorithm(EcdhPsi or OprfPsi) UbPsiServerHint is indispensable when
-      // Driver explicitly choose OprfPsiIn
-      return OprfPsiIn(ctx, IsOprfServerAccordToHint(ctx));
-    case static_cast<int64_t>(InAlgo::kEcdhPsiIn):
-      SPDLOG_INFO("Execute In, algo = {}", "EcdhPsiIn");
-      return EcdhPsiIn(ctx);
     default:
-      YACL_THROW("unsupported in algorithm id: {}", algorithm);
+      YACL_THROW("unsupported In type id: {}", in_type);
   }
 }
 
@@ -192,9 +203,8 @@ void In::OprfPsiIn(ExecContext* ctx, bool is_server,
   auto in_tensor = ctx->GetTensorTable()->GetTensor(param_name);
   YACL_ENFORCE(in_tensor != nullptr, "{} not found in tensor table",
                param_name);
-  bool items_need_shuffle = is_server;
-  auto batch_provider = std::make_shared<util::BatchProvider>(
-      std::vector<TensorPtr>{in_tensor}, items_need_shuffle);
+  auto batch_provider =
+      std::make_shared<util::BatchProvider>(std::vector<TensorPtr>{in_tensor});
 
   // check reveal condition
   std::string reveal_to_party_code =
@@ -209,7 +219,7 @@ void In::OprfPsiIn(ExecContext* ctx, bool is_server,
       (is_server && reveal_to_me) || (!is_server && !reveal_to_me);
 
   // set EcdhOprfPsiOptions
-  psi::psi::EcdhOprfPsiOptions psi_options;
+  psi::ecdh::EcdhOprfPsiOptions psi_options;
   auto psi_link = ctx->GetSession()->GetLink();
   if (psi_link->WorldSize() > 2) {
     psi_link = psi_link->SubWorld(ctx->GetNodeName() + "-OprfPsiIn",
@@ -219,8 +229,7 @@ void In::OprfPsiIn(ExecContext* ctx, bool is_server,
   YACL_ENFORCE(psi_options.link0, "fail to getlink0 for OprfPsiIn");
   psi_options.link1 = psi_options.link0->Spawn();
   YACL_ENFORCE(psi_options.link1, "fail to getlink1 for OprfPsiIn");
-  psi_options.curve_type =
-      static_cast<psi::psi::CurveType>(FLAGS_psi_curve_type);
+  psi_options.curve_type = static_cast<psi::CurveType>(FLAGS_psi_curve_type);
 
   // create temp dir
   butil::ScopedTempDir tmp_dir;
@@ -277,21 +286,21 @@ int64_t In::OprfServerHandleResult(ExecContext* ctx,
 
 void In::OprfPsiServer(
     ExecContext* ctx, bool reveal_to_server, const std::string& tmp_dir,
-    const psi::psi::EcdhOprfPsiOptions& psi_options,
+    const psi::ecdh::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<util::BatchProvider>& batch_provider,
     util::PsiExecutionInfoTable* psi_info_table,
     std::shared_ptr<yacl::link::Context> psi_link) {
   std::vector<uint8_t> private_key =
-      yacl::crypto::SecureRandBytes(psi::psi::kEccKeySize);
+      yacl::crypto::SecureRandBytes(psi::kEccKeySize);
   auto ec_oprf_psi_server =
-      std::make_shared<psi::psi::EcdhOprfPsiServer>(psi_options, private_key);
+      std::make_shared<psi::ecdh::EcdhOprfPsiServer>(psi_options, private_key);
   YACL_ENFORCE(ec_oprf_psi_server, "Fail to create EcdhOprfPsiServer");
   if (reveal_to_server) {
     // Create UbPsiCache
     std::string server_cache_path = fmt::format("{}/tmp-server-cache", tmp_dir);
-    std::shared_ptr<psi::psi::IUbPsiCache> ub_cache;
+    std::shared_ptr<psi::IUbPsiCache> ub_cache;
     std::vector<std::string> dummy_fields{};
-    ub_cache = std::make_shared<psi::psi::UbPsiCache>(
+    ub_cache = std::make_shared<psi::UbPsiCache>(
         server_cache_path, ec_oprf_psi_server->GetCompareLength(),
         dummy_fields);
 
@@ -317,7 +326,7 @@ void In::OprfPsiServer(
 
 void In::OprfPsiClient(
     ExecContext* ctx, bool reveal_to_server, const std::string& tmp_dir,
-    const psi::psi::EcdhOprfPsiOptions& psi_options,
+    const psi::ecdh::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<util::BatchProvider>& batch_provider,
     util::PsiExecutionInfoTable* psi_info_table,
     std::shared_ptr<yacl::link::Context> psi_link) {
@@ -382,15 +391,17 @@ void In::EcdhPsiIn(ExecContext* ctx) {
   auto in_tensor = ctx->GetTensorTable()->GetTensor(param_name);
   YACL_ENFORCE(in_tensor != nullptr, "{} not found in tensor table",
                param_name);
-
+  if (ctx->GetSession()->GetPsiLogger()) {
+    ctx->GetSession()->GetPsiLogger()->LogInput({in_tensor});
+  }
   auto batch_provider =
       std::make_shared<util::BatchProvider>(std::vector<TensorPtr>{in_tensor});
-  auto self_store = std::make_shared<psi::psi::HashBucketEcPointStore>(
-      "/tmp", util::kNumBins);
-  auto peer_store = std::make_shared<psi::psi::HashBucketEcPointStore>(
-      "/tmp", util::kNumBins);
+  auto self_store =
+      std::make_shared<psi::HashBucketEcPointStore>("/tmp", util::kNumBins);
+  auto peer_store =
+      std::make_shared<psi::HashBucketEcPointStore>("/tmp", util::kNumBins);
   {
-    psi::psi::EcdhPsiOptions options;
+    psi::ecdh::EcdhPsiOptions options;
     options.link_ctx = ctx->GetSession()->GetLink();
     if (options.link_ctx->WorldSize() > 2) {
       options.link_ctx = options.link_ctx->SubWorld(
@@ -402,14 +413,17 @@ void In::EcdhPsiIn(ExecContext* ctx) {
         target_rank = 1;
       }
     }
-    options.ecc_cryptor = psi::psi::CreateEccCryptor(
-        static_cast<psi::psi::CurveType>(FLAGS_psi_curve_type));
+    options.ecc_cryptor = psi::CreateEccCryptor(
+        static_cast<psi::CurveType>(FLAGS_psi_curve_type));
     options.target_rank = target_rank;
     options.on_batch_finished = util::BatchFinishedCb(
         ctx->GetSession()->Id(),
         (in_tensor->Length() + options.batch_size - 1) / options.batch_size);
+    if (ctx->GetSession()->GetPsiLogger()) {
+      options.ecdh_logger = ctx->GetSession()->GetPsiLogger()->GetEcdhLogger();
+    }
 
-    psi::psi::RunEcdhPsi(options, batch_provider, self_store, peer_store);
+    psi::ecdh::RunEcdhPsi(options, batch_provider, self_store, peer_store);
   }
   // reveal to me
 
@@ -428,6 +442,9 @@ void In::EcdhPsiIn(ExecContext* ctx) {
         ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
         self_size, peer_size, result_size);
     const auto& output_pb = ctx->GetOutput(kOut)[0];
+    if (ctx->GetSession()->GetPsiLogger()) {
+      ctx->GetSession()->GetPsiLogger()->LogOutput(result);
+    }
     ctx->GetSession()->GetTensorTable()->AddTensor(output_pb.name(),
                                                    std::move(result));
   }

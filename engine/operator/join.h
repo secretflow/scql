@@ -26,12 +26,6 @@ namespace scql::engine::op {
 
 class Join : public Operator {
  public:
-  enum class JoinAlgo : int64_t {
-    kEcdhPsiJoin = 0,
-    kOprfPsiJoin = 1,
-    kAlgoNums,  // Sentinel Value
-  };
-
   enum class JoinType : int64_t {
     kInnerJoin = 0,
     kLeftJoin = 1,
@@ -56,7 +50,7 @@ class Join : public Operator {
   static constexpr char kJoinTypeAttr[] = "join_type";
   static constexpr char kInputPartyCodesAttr[] = "input_party_codes";
 
-  static constexpr char kAlgorithmAttr[] = "algorithm";
+  static constexpr char kAlgorithmAttr[] = "psi_algorithm";
 
   static constexpr char kUbPsiServerHint[] = "ub_psi_server_hint";
 
@@ -68,7 +62,7 @@ class Join : public Operator {
 
  private:
   static void ValidatePsiVisibility(ExecContext* ctx);
-  static void ValidateJoinType(ExecContext* ctx);
+  static void ValidateJoinTypeAndAlgo(ExecContext* ctx);
 
   static void EcdhPsiJoin(ExecContext* ctx);
   static void OprfPsiJoin(ExecContext* ctx, bool is_server,
@@ -83,13 +77,13 @@ class Join : public Operator {
   static bool IsOprfServerAccordToHint(ExecContext* ctx);
   static void OprfPsiServer(
       ExecContext* ctx, JoinRole join_role, const std::string& tmp_dir,
-      const psi::psi::EcdhOprfPsiOptions& psi_options,
+      const psi::ecdh::EcdhOprfPsiOptions& psi_options,
       const std::shared_ptr<util::BatchProvider>& batch_provider, bool is_left,
       int64_t peer_rank, util::PsiExecutionInfoTable* psi_info_table,
       std::shared_ptr<yacl::link::Context> psi_link);
   static void OprfPsiClient(
       ExecContext* ctx, JoinRole join_role, const std::string& tmp_dir,
-      const psi::psi::EcdhOprfPsiOptions& psi_options,
+      const psi::ecdh::EcdhOprfPsiOptions& psi_options,
       const std::shared_ptr<util::BatchProvider>& batch_provider, bool is_left,
       int64_t peer_rank, util::PsiExecutionInfoTable* psi_info_table,
       std::shared_ptr<yacl::link::Context> psi_link);

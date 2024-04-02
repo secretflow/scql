@@ -22,11 +22,10 @@
 #include <tuple>
 #include <vector>
 
-#include "psi/psi/core/ecdh_oprf_psi.h"
-#include "psi/psi/io/io.h"
-#include "psi/psi/utils/batch_provider.h"
-#include "psi/psi/utils/ec_point_store.h"
-#include "psi/psi/utils/ub_psi_cache.h"
+#include "psi/ecdh/ecdh_oprf_psi.h"
+#include "psi/utils/batch_provider.h"
+#include "psi/utils/ec_point_store.h"
+#include "psi/utils/ub_psi_cache.h"
 
 #include "engine/core/tensor.h"
 #include "engine/framework/exec.h"
@@ -38,8 +37,14 @@ static constexpr int64_t kInnerJoin = 0;
 static constexpr int64_t kLeftJoin = 1;
 static constexpr int64_t kRightJoin = 2;
 static constexpr size_t kNumBins = 64;
-static constexpr size_t kBatchSize =
-    8192;  // same with psi::psi::EcdhOprfPsiOptions
+static constexpr size_t kBatchSize = 8192;  // same with psi::EcdhOprfPsiOptions
+
+enum class PsiAlgo : int64_t {
+  kAutoPsi = 0,
+  kEcdhPsi = 1,
+  kOprfPsi = 2,
+  kAlgoNums,  // Sentinel Value
+};
 
 struct PsiSizeInfo {
   size_t self_size = 0;
@@ -71,10 +76,10 @@ std::vector<std::string> Combine(const std::vector<std::string>& col1,
                                  const std::vector<std::string>& col2);
 
 /// @brief BatchProvider combines multiple join keys into one
-class BatchProvider : public psi::psi::IBasicBatchProvider,
-                      public psi::psi::IShuffledBatchProvider {
+class BatchProvider : public psi::IBasicBatchProvider,
+                      public psi::IShuffledBatchProvider {
  public:
-  explicit BatchProvider(std::vector<TensorPtr> tensors, bool shuffle = false,
+  explicit BatchProvider(std::vector<TensorPtr> tensors,
                          size_t batch_size = 8192);
 
   std::vector<std::string> ReadNextBatch() override;
@@ -90,39 +95,34 @@ class BatchProvider : public psi::psi::IBasicBatchProvider,
 
  private:
   std::vector<TensorPtr> tensors_;
-
   std::vector<std::unique_ptr<StringifyVisitor>> stringify_visitors_;
-
   size_t idx_;
-
-  bool shuffle_;
-
   size_t batch_size_;
 };
 
 // param is_left represents whether myself on the left side of join
 TensorPtr FinalizeAndComputeJoinIndices(
     bool is_left,
-    const std::shared_ptr<psi::psi::HashBucketEcPointStore>& self_cache,
-    const std::shared_ptr<psi::psi::HashBucketEcPointStore>& peer_cache,
+    const std::shared_ptr<psi::HashBucketEcPointStore>& self_cache,
+    const std::shared_ptr<psi::HashBucketEcPointStore>& peer_cache,
     int64_t join_type);
 
 /// @param[in] is_left denotes whether to compute the left join indices.
 /// it returns right join indices if is_left == false
 TensorPtr ComputeJoinIndices(
-    const std::shared_ptr<psi::psi::HashBucketEcPointStore>& left,
-    const std::shared_ptr<psi::psi::HashBucketEcPointStore>& right,
+    const std::shared_ptr<psi::HashBucketEcPointStore>& left,
+    const std::shared_ptr<psi::HashBucketEcPointStore>& right,
     int64_t join_type, bool is_left);
 
 /// @param[in] is_left represents whether myself on the left side of in
 TensorPtr FinalizeAndComputeInResult(
     bool is_left,
-    const std::shared_ptr<psi::psi::HashBucketEcPointStore>& self_cache,
-    const std::shared_ptr<psi::psi::HashBucketEcPointStore>& peer_cache);
+    const std::shared_ptr<psi::HashBucketEcPointStore>& self_cache,
+    const std::shared_ptr<psi::HashBucketEcPointStore>& peer_cache);
 
 TensorPtr ComputeInResult(
-    const std::shared_ptr<psi::psi::HashBucketEcPointStore>& left,
-    const std::shared_ptr<psi::psi::HashBucketEcPointStore>& right);
+    const std::shared_ptr<psi::HashBucketEcPointStore>& left,
+    const std::shared_ptr<psi::HashBucketEcPointStore>& right);
 
 class BatchFinishedCb {
  public:
@@ -135,7 +135,7 @@ class BatchFinishedCb {
   size_t batch_total_;
 };
 
-class UbPsiCipherStore : public psi::psi::IEcPointStore {
+class UbPsiCipherStore : public psi::IEcPointStore {
  public:
   explicit UbPsiCipherStore(std::string csv_path, bool enable_cache);
 
@@ -172,18 +172,19 @@ class UbPsiCipherStore : public psi::psi::IEcPointStore {
  private:
   static constexpr size_t kLogInterval = 10000;
   bool enable_cache_;
-  std::unique_ptr<psi::psi::io::OutputStream> out_;
+  std::unique_ptr<psi::io::OutputStream> out_;
 };
 
-class UbPsiJoinCache : public psi::psi::IUbPsiCache {
+class UbPsiJoinCache : public psi::IUbPsiCache {
  public:
-  explicit UbPsiJoinCache(size_t size) : seq_to_indice_(size){};
+  explicit UbPsiJoinCache(size_t size) : idx_(0), seq_to_indice_(size){};
   void SaveData(yacl::ByteContainerView item, size_t index,
                 size_t shuffle_index) override;
 
   size_t GetIndice(size_t seq) { return seq_to_indice_.at(seq); }
 
  private:
+  size_t idx_;
   std::vector<size_t> seq_to_indice_;
 };
 
@@ -199,34 +200,34 @@ std::pair<TensorPtr, std::vector<uint64_t>> FinalizeAndComputeOprfJoinResult(
 void OprfPsiServerTransferServerItems(
     ExecContext* ctx, std::shared_ptr<yacl::link::Context> psi_link,
     const std::shared_ptr<BatchProvider>& batch_provider,
-    const std::shared_ptr<psi::psi::EcdhOprfPsiServer>& dh_oprf_psi_server,
-    std::shared_ptr<psi::psi::IUbPsiCache> ub_cache = nullptr);
+    const std::shared_ptr<psi::ecdh::EcdhOprfPsiServer>& dh_oprf_psi_server,
+    std::shared_ptr<psi::IUbPsiCache> ub_cache = nullptr);
 
 void OprfPsiServerTransferClientItems(
     ExecContext* ctx,
-    const std::shared_ptr<psi::psi::EcdhOprfPsiServer>& dh_oprf_psi_server);
+    const std::shared_ptr<psi::ecdh::EcdhOprfPsiServer>& dh_oprf_psi_server);
 
 void OprfPsiClientTransferServerItems(
     ExecContext* ctx, std::shared_ptr<yacl::link::Context> psi_link,
-    const psi::psi::EcdhOprfPsiOptions& psi_options,
+    const psi::ecdh::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<UbPsiCipherStore>& cipher_store);
 
 void OprfPsiClientTransferClientItems(
     ExecContext* ctx,
     const std::shared_ptr<util::BatchProvider>& batch_provider,
-    const psi::psi::EcdhOprfPsiOptions& psi_options,
+    const psi::ecdh::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<UbPsiCipherStore>& cipher_store);
 
 void OprfServerTransferShuffledClientItems(
     ExecContext* ctx,
-    const std::shared_ptr<psi::psi::EcdhOprfPsiServer>& dh_oprf_psi_server,
+    const std::shared_ptr<psi::ecdh::EcdhOprfPsiServer>& dh_oprf_psi_server,
     const std::string& server_cache_path, size_t batch_size,
     std::vector<uint64_t>* matched_indices, size_t* self_item_count);
 
 void OprfCLientTransferShuffledClientItems(
     ExecContext* ctx,
     const std::shared_ptr<util::BatchProvider>& batch_provider,
-    const psi::psi::EcdhOprfPsiOptions& psi_options,
+    const psi::ecdh::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<UbPsiCipherStore>& client_store,
     const std::shared_ptr<UbPsiCipherStore>& server_store);
 

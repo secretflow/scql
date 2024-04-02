@@ -40,7 +40,10 @@ MC4CAQAwBQYDK2VwBCIEIFvceWQFFw2LNbqVrJs1nSZji0HQZABKzTfrOABTBn5F
 			return err
 		}
 		defer file.Close()
-		file.WriteString(fileContents[i])
+		_, err = file.WriteString(fileContents[i])
+		if err != nil {
+			return err
+		}
 	}
 	filePath := path + "/" + "party_info_test.json"
 	file, err := os.Create(filePath)
@@ -48,7 +51,7 @@ MC4CAQAwBQYDK2VwBCIEIFvceWQFFw2LNbqVrJs1nSZji0HQZABKzTfrOABTBn5F
 		return err
 	}
 	defer file.Close()
-	file.WriteString(`
+	_, err = file.WriteString(`
 	{
 		"participants": [
 		  {
@@ -68,5 +71,8 @@ MC4CAQAwBQYDK2VwBCIEIFvceWQFFw2LNbqVrJs1nSZji0HQZABKzTfrOABTBn5F
 		  }
 		]
 	  }`)
+	if err != nil {
+		return err
+	}
 	return nil
 }

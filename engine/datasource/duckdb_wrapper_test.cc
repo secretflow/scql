@@ -61,24 +61,23 @@ class DuckdbWrapperTest : public ::testing::Test {
       table->set_data_path(temp_file_->fname());
 
       auto column = table->add_columns();
-      column->set_column_name("ID");  // for test of ignoring column case
-      column->set_column_type(csv::ColumnType::LONG);
-      column = table->add_columns();
-      column->set_column_name("age");
-      column->set_column_type(csv::ColumnType::LONG);
-      column = table->add_columns();
-      column->set_column_name("name");
-      column->set_column_type(csv::ColumnType::STRING);
+      column->set_column_name("ID");
+      column->set_column_type("string");
+      // ignore setting 'age' column and swap the 'income' and 'name' columns to
+      // test auto_detection feature in NormalQuery
       column = table->add_columns();
       column->set_column_name("income");
-      column->set_column_type(csv::ColumnType::DOUBLE);
+      column->set_column_type("double");
+      column = table->add_columns();
+      column->set_column_name("name");
+      column->set_column_type("string");
     }
   }
 
  public:
   csv::CsvdbConf csvdb_conf_;
   std::unique_ptr<butil::TempFile> temp_file_;
-  std::string csv_content_ = R"csv(ID,age,name,income
+  std::string csv_content_ = R"csv(id,age,name,income
 1,25,bob,25000.1
 2,30,alice,48000
 3,42,"",98000
@@ -100,16 +99,22 @@ TEST_F(DuckdbWrapperTest, NormalQuery) {
   ASSERT_EQ(result->ColumnCount(), 4);
   auto data_chunk = result->Fetch();
 
-  // column "id"
-  EXPECT_TRUE(ColumnEquals(*conn.context, *data_chunk, 0, {1, 2, 3, 4}));
+  // column "id", the type is manually specified as VARCHAR instead of the
+  // default BIGINT
+  EXPECT_TRUE(
+      ColumnEquals(*conn.context, *data_chunk, 0, {"1", "2", "3", "4"}));
+  EXPECT_TRUE(data_chunk->data[0].GetType() == duckdb::LogicalType::VARCHAR);
   // column "age"
   EXPECT_TRUE(ColumnEquals(*conn.context, *data_chunk, 1, {25, 30, 42, 18}));
+  EXPECT_TRUE(data_chunk->data[1].GetType() == duckdb::LogicalType::BIGINT);
   // column "name"
   EXPECT_TRUE(ColumnEquals(*conn.context, *data_chunk, 2,
                            {"bob", "alice", "", duckdb::Value()}));
+  EXPECT_TRUE(data_chunk->data[2].GetType() == duckdb::LogicalType::VARCHAR);
   // column "income"
   EXPECT_TRUE(ColumnEquals(*conn.context, *data_chunk, 3,
                            {25000.1, 48000, 98000, 118000}));
+  EXPECT_TRUE(data_chunk->data[3].GetType() == duckdb::LogicalType::DOUBLE);
 }
 
 TEST_F(DuckdbWrapperTest, QueryWithPredicate) {
@@ -138,14 +143,14 @@ TEST_F(DuckdbWrapperTest, IngoringColumnCase) {
   DuckDBWrapper::CreateCSVScanFunction(conn);
   conn.Commit();
 
-  // id -> ID
-  auto result = conn.Query("select id from csvdb.staff");
+  // AgE -> age
+  auto result = conn.Query("select AgE from csvdb.staff");
   EXPECT_FALSE(result->HasError()) << result->GetError();
   ASSERT_EQ(result->RowCount(), 4);
   ASSERT_EQ(result->ColumnCount(), 1);
   auto data_chunk = result->Fetch();
 
-  EXPECT_TRUE(ColumnEquals(*conn.context, *data_chunk, 0, {1, 2, 3, 4}));
+  EXPECT_TRUE(ColumnEquals(*conn.context, *data_chunk, 0, {25, 30, 42, 18}));
 }
 
 TEST_F(DuckdbWrapperTest, DISABLED_ComplexQueryWithBigDataset) {
@@ -161,27 +166,27 @@ TEST_F(DuckdbWrapperTest, DISABLED_ComplexQueryWithBigDataset) {
 
     auto column = table->add_columns();
     column->set_column_name("Title");
-    column->set_column_type(csv::ColumnType::STRING);
+    column->set_column_type("string");
 
     column = table->add_columns();
     column->set_column_name("Genre");
-    column->set_column_type(csv::ColumnType::STRING);
+    column->set_column_type("string");
 
     column = table->add_columns();
     column->set_column_name("Premiere");
-    column->set_column_type(csv::ColumnType::STRING);
+    column->set_column_type("string");
 
     column = table->add_columns();
     column->set_column_name("Runtime");
-    column->set_column_type(csv::ColumnType::LONG);
+    column->set_column_type("int64");
 
     column = table->add_columns();
     column->set_column_name("IMDB_Score");
-    column->set_column_type(csv::ColumnType::DOUBLE);
+    column->set_column_type("double");
 
     column = table->add_columns();
     column->set_column_name("Language");
-    column->set_column_type(csv::ColumnType::STRING);
+    column->set_column_type("string");
   }
 
   duckdb::DuckDB db = DuckDBWrapper::CreateDB(&csvdb_conf);

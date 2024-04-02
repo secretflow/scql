@@ -20,6 +20,7 @@ import (
 	"math"
 	"reflect"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -202,6 +203,12 @@ func (c *ResultColumn) toStringSlice() []string {
 }
 
 func (c *ResultColumn) EqualTo(o *ResultColumn) bool {
+	cLen := slices.Max([]int{len(c.Ss), len(c.Int64s), len(c.Bools), len(c.Doubles)})
+	oLen := slices.Max([]int{len(o.Ss), len(o.Int64s), len(o.Bools), len(o.Doubles)})
+	if cLen != oLen {
+		logrus.Infof("the number of rows is not equal: %s != %s", cLen, oLen)
+		return false
+	}
 	if c.Ss != nil {
 		return reflect.DeepEqual(c.Ss, o.Ss)
 	} else if c.Bools != nil || o.Bools != nil {

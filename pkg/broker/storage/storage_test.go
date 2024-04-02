@@ -24,6 +24,8 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	gormlog "gorm.io/gorm/logger"
+
+	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 )
 
 func TestBootstrap(t *testing.T) {
@@ -41,7 +43,7 @@ func TestBootstrap(t *testing.T) {
 		})
 
 	r.NoError(err)
-	manager := NewMetaManager(db)
+	manager := NewMetaManager(db, false)
 	err = manager.Bootstrap()
 	r.NoError(err)
 	transaction := manager.CreateMetaTransaction()
@@ -107,11 +109,7 @@ func TestBootstrap(t *testing.T) {
 	err = transaction.AddTable(stupidTable)
 	r.Error(err)
 
-	res, err := transaction.ListTables(projectID1)
-	r.NoError(err)
-	r.Equal(1, len(res))
-	r.Equal(2, len(res[0].Columns))
-	res, err = transaction.GetTableMetasByTableNames(projectID1, []string{"t1"})
+	res, _, err := transaction.GetTableMetasByTableNames(projectID1, []string{"t1"})
 	r.NoError(err)
 	r.Equal(1, len(res))
 
@@ -125,7 +123,7 @@ func TestBootstrap(t *testing.T) {
 	r.Equal(newProjectConf, proj.ProjectConf)
 	// alter table
 	bob := "bob"
-	res, err = transaction.ListTables(projectID1)
+	res, _, err = transaction.GetTableMetasByTableNames(projectID1, []string{})
 	r.NoError(err)
 	r.Equal(1, len(res))
 	r.Equal(2, len(res[0].Columns))
@@ -173,11 +171,16 @@ func TestBootstrap(t *testing.T) {
 		InviteTime:  time.Now(),
 		Inviter:     alice,
 		Invitee:     bob,
+		Status:      int8(pb.InvitationStatus_INVALID),
 	}
 	err = transaction.AddInvitations([]Invitation{inviteAnotherBob, inviteAnotherCarol})
 	r.NoError(err)
 	invites, err := transaction.ListInvitations()
 	r.Equal(4, len(invites))
+	invites, err = transaction.GetInvitationsBy(Invitation{Inviter: alice}, false)
+	r.Equal(4, len(invites))
+	invites, err = transaction.GetInvitationsBy(Invitation{ProjectID: unusedProjectName, Inviter: alice}, true)
+	r.Equal(1, len(invites))
 	// grant
 	privs := []ColumnPriv{
 		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: c1Identifier.ProjectID, TableName: c1Identifier.TableName, ColumnName: c1Identifier.ColumnName, DestParty: alice}, Priv: "plain"},

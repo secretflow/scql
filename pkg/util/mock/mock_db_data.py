@@ -37,7 +37,7 @@ USE `{0}`;
 
 COLUMN_NAME_FORMAT = "{}_{}_{}"
 TYPE_TO_COLUMN = {
-    "long": "{} integer NOT NULL DEFAULT 0",
+    "int": "{} integer NOT NULL DEFAULT 0",
     "float": "{} FLOAT_TYPE NOT NULL DEFAULT 0.0",
     "string": "{} varchar(64) NOT NULL DEFAULT ''",
     "datetime": "{} DATETIME_TYPE NOT NULL DEFAULT '2020-10-10 10:10:10'",
@@ -98,7 +98,7 @@ def create_random_datatime():
 
 
 def create_data(data_type, str_pool):
-    if data_type == "long":
+    if data_type == "int":
         return random.randint(-100, 100)
     elif data_type == "float":
         return random.randint(-10000, 10000) / 100

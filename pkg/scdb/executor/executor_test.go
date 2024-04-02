@@ -561,7 +561,7 @@ func TestCreateView(t *testing.T) {
 		r.NoError(err)
 
 		// success
-		_, err = runSQL(ctx, `CREATE TABLE test.new_table (c1 long, c2 long) REF_TABLE=d1.c2 DB_TYPE='mysql'`)
+		_, err = runSQL(ctx, `CREATE TABLE test.new_table (c1 int, c2 int) REF_TABLE=d1.c2 DB_TYPE='mysql'`)
 		r.NoError(err)
 
 		is1, err := storage.QueryDBInfoSchema(db, "test")
@@ -654,36 +654,36 @@ func TestCreateTable(t *testing.T) {
 
 		// success
 		_, err = runSQL(ctx, `CREATE TABLE test.new_table (
-			c1 long,
-			c2 long
+			c1 int,
+			c2 int
 		) REF_TABLE=d1.t1 DB_TYPE='MYSQL'`)
 		r.NoError(err)
 
 		// failed due to database doesn't exists
 		_, err = runSQL(ctx, `CREATE TABLE i_dont_exists.new_table (
-			c1 long,
-			c2 long
+			c1 int,
+			c2 int
 		) REF_TABLE=d1.t1 DB_TYPE='MYSQL'`)
 		r.Error(err)
 
 		// failed due to table already exists
 		_, err = runSQL(ctx, `CREATE TABLE test.new_table (
-			c1 long,
-			c2 long
+			c1 int,
+			c2 int
 		) REF_TABLE=d1.t1 DB_TYPE='MYSQL'`)
 		r.Error(err)
 
 		// success on if not exists
 		_, err = runSQL(ctx, `CREATE TABLE IF NOT EXISTS test.new_table (
-			c1 long,
-			c2 long
+			c1 int,
+			c2 int
 		) REF_TABLE=d1.t1 DB_TYPE='MYSQL'`)
 		r.NoError(err)
 
 		// failed due to missing db_name
 		_, err = runSQL(ctx, `CREATE TABLE new_table_2 (
 			c1 string,
-			c2 long,
+			c2 int,
 		) REF_TABLE=d1.t2 DB_TYPE='POSTGRESQL'`)
 		r.Error(err)
 
@@ -691,7 +691,7 @@ func TestCreateTable(t *testing.T) {
 		ctx.GetSessionVars().CurrentDB = "test"
 		_, err = runSQL(ctx, `CREATE TABLE new_table_2 (
 			c1 string,
-			c2 long
+			c2 int
 		) REF_TABLE=d1.t2 DB_TYPE='POSTGRESQL'`)
 		r.NoError(err)
 	}
@@ -1011,7 +1011,7 @@ func TestGrantTableScope(t *testing.T) {
 		r.NoError(switchUser(ctx, userAlice))
 
 		// alice> create table da.t1
-		_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 long) REF_TABLE=dba.tbl1 DB_TYPE='mysql'`)
+		_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 int) REF_TABLE=dba.tbl1 DB_TYPE='mysql'`)
 		r.NoError(err)
 
 		// alice> GRANT SELECT PLAINTEXT on da.t1 to bob
@@ -1077,7 +1077,7 @@ func TestRevokeColumnScope(t *testing.T) {
 		r.NoError(switchUser(ctx, userAlice))
 
 		// alice> create table da.t1
-		_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 long) REF_TABLE=dba.tbl1 DB_TYPE='mysql'`)
+		_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 int) REF_TABLE=dba.tbl1 DB_TYPE='mysql'`)
 		r.NoError(err)
 
 		_, err = runSQL(ctx, `GRANT SELECT PLAINTEXT(c1) ON da.t1 TO bob`)
@@ -1125,7 +1125,7 @@ func TestRevokeColumnScope(t *testing.T) {
 		r.NoError(switchUser(ctx, userAlice))
 
 		// alice> create table da.t1
-		_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 long) REF_TABLE=dba.tbl1 DB_TYPE='mysql'`)
+		_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 int) REF_TABLE=dba.tbl1 DB_TYPE='mysql'`)
 		r.NoError(err)
 		_, err = runSQL(ctx, `GRANT SELECT PLAINTEXT(c1) ON da.t1 TO bob`)
 		r.NoError(err)
@@ -1169,7 +1169,7 @@ func TestRevokeTableScope(t *testing.T) {
 	r.NoError(switchUser(ctx, userAlice))
 
 	// alice> create table da.t1
-	_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 long, c2 long) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
+	_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 int, c2 int) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
 	r.NoError(err)
 
 	// alice> grant SELECT PLAINTEXT priv to alice
@@ -1499,7 +1499,7 @@ func TestDescribe(t *testing.T) {
 	// switch to user alice
 	r.NoError(switchUser(ctx, userAlice))
 
-	_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 long, c2 long) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
+	_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 int, c2 int) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
 	r.NoError(err)
 
 	// alice>
@@ -1546,7 +1546,7 @@ func TestShowTables(t *testing.T) {
 	r.NoError(err)
 	r.Equal(int64(0), rt[0].GetShape().GetDim()[0].GetDimValue())
 
-	_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 long, c2 long) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
+	_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 int, c2 int) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
 	r.NoError(err)
 
 	rt, err = runSQL(ctx, `SHOW TABLES FROM da`)
@@ -1763,7 +1763,7 @@ func TestGrantColumnScope(t *testing.T) {
 		r.NoError(switchUser(ctx, userAlice))
 
 		// alice> create table da.t1
-		_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 long, c2 long) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
+		_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 int, c2 int) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
 		r.NoError(err)
 
 		// alice> GRANT SELECT PLAINTEXT(c1), ENCRYPTED_ONLY(c2) on da.t1 to bob
@@ -1823,7 +1823,7 @@ func TestGrantColumnScope(t *testing.T) {
 		r.NoError(switchUser(ctx, userAlice))
 
 		// root> create table da.t1
-		_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 long, c2 long) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
+		_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 int, c2 int) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
 		r.NoError(err)
 
 		// check privileges before grant
@@ -1871,7 +1871,7 @@ func TestPlatformSecurityConfig(t *testing.T) {
 	r.NoError(switchUser(ctx, userAlice))
 
 	// alice> create table da.t1
-	_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 long, c2 long) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
+	_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 int, c2 int) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
 	r.NoError(err)
 
 	states := []mysql.PrivilegeType{

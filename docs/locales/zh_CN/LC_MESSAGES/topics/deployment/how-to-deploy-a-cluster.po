@@ -1,0 +1,324 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SCQL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: SCQL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-10-11 20:36+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.13.0\n"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:3
+msgid "Deployment"
+msgstr "部署"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:5
+msgid ""
+"This document describes how to deploy a SCQL system with docker, and use "
+"scdbclient to query, it's basically same with :doc:`/intro/tutorial`, but"
+" deployed in multi-machine."
+msgstr ""
+"本文描述了如何使用 Docker 部署一个 SCQL 系统，并且使用 scdbclient 进行查询，它与 :doc:`/intro/tutorial` "
+"基本相同，只不过是部署在多台机器上。"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:7
+msgid ""
+"Before start this doc, we assume that the reader has some experience "
+"using the docker-compose utility. If you are new to Docker Compose, "
+"please consider reviewing the `official Docker Compose overview "
+"<https://docs.docker.com/compose/>`_, or checking out the `Getting "
+"Started guide <https://docs.docker.com/compose/gettingstarted/>`_."
+msgstr ""
+"在开始阅读这篇文档前，我们假设读者已经具备一定的 docker-compose 使用经验。如果您对 Docker Compose 不熟悉，请参阅 "
+"`Docker Compose 官方概述 <https://docs.docker.com/compose/>`_，或者查看 `入门指南 "
+"<https://docs.docker.com/compose/gettingstarted/>`_。"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:10
+msgid "Deployment Diagram"
+msgstr "部署图"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:12
+msgid ""
+"The deployment diagram of the SCQL system that we plan to deploy is shown"
+" as the following figure, it involves a total of three party, including a"
+" trusted third-party and two data owner parties named ``Alice`` and "
+"``Bob``. We use three machines to simulate different parties."
+msgstr ""
+"SCQL 系统的部署图如下图所示，它涉及到三个参与方，包括一个可信的第三方和两个名为 ``Alice`` 和 ``Bob`` "
+"的数据提供方。我们使用三台机器来模拟不同的参与方。"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:17
+msgid ""
+"The SCDB is served through the HTTP protocol. It is recommended to use "
+"HTTPS instead in production environments. Please check :ref:`TLS "
+"Configuration <scdb-tls>` for details."
+msgstr "SCDB 使用 HTTP 协议提供服务。在生产环境建议使用 HTTPS。详情请查看 :ref:`配置 TLS <scdb-tls>`。"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:20
+msgid "Step 1: Deploy SCQLEngine"
+msgstr "步骤一：部署 SCQLEngine"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:22
+msgid ""
+"Here we displayed how to deploy engine in party Alice, it's same with "
+"party Bob."
+msgstr "在这里，我们将展示如何在参与方 Alice 中部署引擎，Bob 同理。"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:25
+msgid "1.1 Create a Workspace"
+msgstr "1.1 创建工作区"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:33
+msgid "1.2 Set Dataset"
+msgstr "1.2 设置数据集"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:35
+msgid ""
+"The database in Engine is use to storage the origin data. In this "
+"document we will use MySQL as the database service, and simulate a "
+"dataset. However, if you prefer, you can use your preferred database "
+"service."
+msgstr "引擎中的数据库用于存储原始数据。在本文档中我们将使用 MySQL 作为数据库服务并模拟一个数据集，当然，如果您愿意，也可以使用您喜欢的数据库服务。"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:37
+msgid ""
+"To simulate a dataset, you need create a sql init file named "
+"alice_init.sql in your workspace, which corresponds to `alice_init.sql "
+"<https://github.com/secretflow/scql/tree/main/examples/docker-"
+"compose/mysql/initdb/alice_init.sql>`_. For Bob, please use `bob_init.sql"
+" <https://github.com/secretflow/scql/tree/main/examples/docker-"
+"compose/mysql/initdb/bob_init.sql>`_ instead."
+msgstr ""
+"要模拟一个数据集，你需要在你的工作区中创建一个名为 alice_init.sql 的 SQL 初始化文件，该文件对应于 "
+"`alice_init.sql <https://github.com/secretflow/scql/tree/main/examples"
+"/docker-compose/mysql/initdb/alice_init.sql>`_。对于 Bob 请使用 `bob_init.sql "
+"<https://github.com/secretflow/scql/tree/main/examples/docker-"
+"compose/mysql/initdb/bob_init.sql>`_。"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:39
+msgid ""
+"This file can also be obtained via the command-line with either curl, "
+"wget or another similar tool."
+msgstr "此文件也可以在命令行使用 curl、wget 或其它类似工具获取。"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:47
+msgid "1.3 Set Engine Config"
+msgstr "1.3 配置引擎"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:49
+msgid ""
+"Create a file called ``gflags.conf`` in your workspace and paste the "
+"following code in:"
+msgstr "在您的工作区中创建一个名为 ``gflags.conf`` 的文件，并粘贴以下代码："
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:62
+msgid ""
+"See :ref:`Engine configuration options <engine_config_options>` for more "
+"config information"
+msgstr "更多配置信息请查看 :ref:`引擎配置项 <engine_config_options>`"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:66
+msgid ""
+"The ``connection_str`` specified in ``embed_router_conf`` is utilized to "
+"connect database named alice as set in `1.2 Set Dataset`_, For Bob it "
+"should be set to connect database named bob."
+msgstr ""
+"``embed_router_conf`` 中指定的 ``connection_str`` 用于连接 `1.2 设置数据集`_ 中设置的 "
+"alice 的数据库，对于 Bob，应该连接 bob 的数据库。"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:68
+msgid ""
+"``__ALICE_CREDENTIAL__`` is used to authenticate SCDB, you need replace "
+"it with your own credential, same with Bob. In our example, we have "
+"simply set it as ``credential_alice`` for Alice, and ``credential_bob`` "
+"for Bob."
+msgstr ""
+"``__ALICE_CREDENTIAL__`` 用于验证 SCDB，您需要用自己的凭据替换它，对于 Bob "
+"同样如此。在我们的示例中，我们简单的将 Alice 的凭据设置为 ``credential_alice``，将 Bob 的凭据设置为 "
+"``credential_bob``。"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:72
+msgid "1.4 Create docker-compose file"
+msgstr "1.4 创建 docker-compose 文件"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:74
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:207
+msgid ""
+"Create a file called ``docker-compose.yaml`` in your workspace and paste "
+"the following code in:"
+msgstr "在您的工作区中创建一个名为 ``docker-compose.yaml`` 的文件，并粘贴以下代码："
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:114
+msgid ""
+"``__ALICE_PORT__``  is the published port on the host machine which is "
+"used for engine service to listen on, you need to replace it with an "
+"accessible port number. In this case, we have designated it as ``8080``"
+msgstr "``__ALICE_PORT__`` 是 Engine 在宿主机上的监听端口，您需要替换为一个可访问的端口。这里我们将其指定为 8080"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:116
+msgid ""
+"Container *mysql* is init by ``alice_init.sql`` as set in `1.2 Set "
+"Dataset`_ , it should be ``bob_init.sql`` for Bob. If you use your own "
+"database service, container *mysql* can be deleted"
+msgstr ""
+"*mysql* 容器通过 `1.2 设置数据集`_ 设置的 ``alice_init.sql`` 进行初始化，对于 Bob 应该使用 "
+"``bob_init.sql``。如果您有自己的数据库服务，可以删除 *mysql* 容器"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:120
+msgid "1.5 Start Engine Service"
+msgstr "1.5 启动引擎"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:122
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:251
+msgid "The file your workspace should be as follows:"
+msgstr "您工作区的文件应如下所示："
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:131
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:260
+msgid "Then you can start engine service by running docker compose up"
+msgstr "然后您可以运行 docker compose up 来启动引擎服务"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:142
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:270
+msgid "You can use docker logs to check whether engine works well"
+msgstr "您可以使用 docker logs 检查引擎是否正常工作"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:150
+msgid "SCQLEngine is listening on ``8080``."
+msgstr "SCQLEngine 正在监听 ``8080``。"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:154
+msgid "Step 2: Deploy SCDB"
+msgstr "步骤二：部署 SCDB"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:156
+msgid "This chapter will demonstrate how to deploy SCDB in a Third-Party"
+msgstr "本章将演示如何在第三方部署 SCDB"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:159
+msgid "2.1 Create a Workspace"
+msgstr "2.1 创建工作区"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:167
+msgid "2.2 Set SCDB Config"
+msgstr "2.2 配置 SCDB"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:169
+msgid ""
+"Create a file called ``config.yml`` in your workspace and paste the "
+"following code in:"
+msgstr "在您的工作区创建一个名为 ``config.yml`` 的文件，并将以下代码粘贴进去："
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:198
+msgid ""
+"See :ref:`SCDB configuration options <scdb_config_options>` for more "
+"config information"
+msgstr "更多配置信息请查看 :ref:`SCDB 配置项 <scdb_config_options>` "
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:202
+msgid ""
+"``conn_str`` is utilized to connect database named scdb which will be "
+"deployed in next step, if you prefer, you can also use your own database "
+"service."
+msgstr ""
+"``conn_str`` 用于连接一个名为 SCDB 的数据库，该数据库将在 2.4 节中通过 docker-compose "
+"完成部署。您也可以根据自己的需求来设置对应的数据库连接串"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:205
+msgid "2.4 Create docker-compose file"
+msgstr "2.4 创建 docker-compose 文件"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:246
+msgid ""
+"``__SCDB_PORT__`` is the published port on the host machine which is used"
+" for scdb service to listen on, you need to replace it with an accessible"
+" port number. Here, it's set as 8080"
+msgstr "``__SCDB_PORT__`` 是 SCDB 服务在宿主机上的监听端口。您需要用一个可访问的端口号替换它。这里设置为 8080。"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:249
+msgid "2.5 Start SCDB Service"
+msgstr "2.5 启动 SCDB"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:278
+msgid "SCDB is listening on ``8080``, waiting for connection"
+msgstr "SCDB 正在监听 ``8080``，等待连接。"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:282
+msgid "Step 3: SCQL Test"
+msgstr "步骤三：测试 SCQL"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:284
+msgid ""
+"Here we use scdbclient to submit a query to SCDB for testing, you can "
+"also submit queries directly to SCDB by sending a POST request. This step"
+" can be completed on any machine that has access to the SCDB ip address."
+msgstr ""
+"这里我们使用 scdbclient 向 SCDB 提交测试查询，您也可以通过发送 POST 请求直接向 SCDB 提交查询。此步骤可以在任何能访问"
+" SCDB 地址的机器上完成。"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:286
+msgid ""
+"You can read `How to use SCDBClient "
+"<https://github.com/secretflow/scql/tree/main/cmd/scdbclient/README.md>`_"
+" for more information about scdbclient."
+msgstr ""
+"关于 scdbclient 更多信息请阅读 `如何使用 SCDBClient "
+"<https://github.com/secretflow/scql/tree/main/cmd/scdbclient/README.md>`_"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:289
+msgid "3.1 Build scdbclient"
+msgstr "3.1 构建 scdbclient"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:306
+msgid "3.2 Set Client Config"
+msgstr "配置客户端"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:308
+msgid "Create a json file named as ``users.json`` as follows:"
+msgstr "创建一个名为 ``users.json`` 的 JSON 文件，内容如下："
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:330
+msgid ""
+"The ``root`` user is the admin user of SCDB which is init when scdb "
+"container set up, ``alice`` and ``bob`` are the user belong to party "
+"Alice and Bob,"
+msgstr ""
+"``root`` 用户是在 scdb 容器初始化时设置的 SCDB 管理员用户，``alice`` 和 ``bob`` 分别属于 Alice 和 "
+"Bob。"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:332
+msgid ""
+"The user information for ``alice`` and ``bob`` should be same with the "
+"user information you will create."
+msgstr "``alice`` 和 ``bob`` 的用户信息应该与您将要创建的用户信息保持一致。"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:336
+msgid "3.3 Submit Query"
+msgstr "3.3 提交查询"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:338
+msgid ""
+"You can start to use scdbclient to submit queries to SCDBServer and fetch"
+" the query results back. it's same as what you can do in "
+":doc:`/intro/tutorial`"
+msgstr ""
+"您可以开始使用 scdbclient 向 SCDBServer 提交查询并获取查询结果。您可以与在 :doc:`/intro/tutorial` "
+"中执行的操作相同"
+
+#: ../../topics/deployment/how-to-deploy-a-cluster.rst:359
+msgid ""
+"``__SCDB_URL__`` is the url (eg:http://127.0.0.1:8080) where scdb service"
+" is listen on, you need to replace it with scdb service url."
+msgstr ""
+"``__SCDB_URL__`` 是 scdb 服务监听的 url（例如：http://127.0.0.1:8080），您需要用 scdb 服务的"
+" url 替换它。"

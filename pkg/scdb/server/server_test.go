@@ -398,9 +398,9 @@ func casePipeline(r *require.Assertions, mustRun func(user *scql.SCDBCredential,
 	}
 
 	// 2.1 alice> create table
-	mustRun(userAlice, `CREATE TABLE dbtest.t1 (column1_1 long, column1_2 long, column1_3 long) REF_TABLE=test.table_1 DB_TYPE='mysql'`)
-	mustRun(userBob, `CREATE TABLE dbtest.t2 (column2_1 long, column2_2 long) REF_TABLE=test.table_2 DB_TYPE='mysql'`)
-	mustRun(userAlice, `CREATE TABLE dbtest.t3 (column3_1 long, column3_2 long) REF_TABLE=test.table_3 DB_TYPE='mysql'`)
+	mustRun(userAlice, `CREATE TABLE dbtest.t1 (column1_1 int, column1_2 int, column1_3 int) REF_TABLE=test.table_1 DB_TYPE='mysql'`)
+	mustRun(userBob, `CREATE TABLE dbtest.t2 (column2_1 int, column2_2 int) REF_TABLE=test.table_2 DB_TYPE='mysql'`)
+	mustRun(userAlice, `CREATE TABLE dbtest.t3 (column3_1 int, column3_2 int) REF_TABLE=test.table_3 DB_TYPE='mysql'`)
 
 	// 2.2 alice > grant ccl to alice&bob
 	mustRun(userAlice, `GRANT SELECT PLAINTEXT(column1_1), SELECT ENCRYPTED_ONLY(column1_2) ON dbtest.t1 TO bob`)

@@ -113,7 +113,21 @@ INSTANTIATE_TEST_SUITE_P(
                     "x", TensorFromJSON(arrow::float32(),
                                         "[1.75, 2.34, 4.12, 1.99]")),
                 .output = test::NamedTensor(
-                    "y", TensorFromJSON(arrow::float32(), "[1.75]"))})),
+                    "y", TensorFromJSON(arrow::float32(), "[1.75]"))},
+            ReduceTestCase{.op_type = ReduceCount::kOpType,
+                           .status = pb::TENSORSTATUS_PRIVATE,
+                           .input = test::NamedTensor(
+                               "x", TensorFromJSON(arrow::float32(),
+                                                   "[1.75, 2.34, 4.12, 1.99]")),
+                           .output = test::NamedTensor(
+                               "y", TensorFromJSON(arrow::int64(), "[4]"))},
+            ReduceTestCase{.op_type = ReduceCount::kOpType,
+                           .status = pb::TENSORSTATUS_PRIVATE,
+                           .input = test::NamedTensor(
+                               "x", TensorFromJSON(arrow::float32(),
+                                                   "[null, 2.34, null, 1.99]")),
+                           .output = test::NamedTensor(
+                               "y", TensorFromJSON(arrow::int64(), "[2]"))})),
     TestParamNameGenerator(ReduceTest));
 
 INSTANTIATE_TEST_SUITE_P(
