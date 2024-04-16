@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **breaking**: Reshape column data type, data type `LONG` is deprecated.
+- **breaking**: Modify table schema in broker storage for P2P mode.
+
 ## [0.5.0] - 2024-01-10
 
 ### Added

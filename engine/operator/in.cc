@@ -32,7 +32,7 @@
 #include "psi/ecdh/ecdh_oprf_psi.h"
 #include "psi/ecdh/ecdh_psi.h"
 #include "psi/utils/ec_point_store.h"
-#include "yacl/crypto/utils/rand.h"
+#include "yacl/crypto/rand/rand.h"
 
 #include "engine/audit/audit_log.h"
 #include "engine/core/arrow_helper.h"

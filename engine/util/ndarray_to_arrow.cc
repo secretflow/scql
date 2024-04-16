@@ -100,7 +100,7 @@ class NdArrayConverter {
           "NdArrayConverter doesn't support strided arrays");
     }
 
-    if (pt_type_ == spu::PT_BOOL) {
+    if (pt_type_ == spu::PT_I1) {
       int64_t nbytes = arrow::bit_util::BytesForBits(length_);
       ARROW_ASSIGN_OR_RAISE(auto buffer, arrow::AllocateBuffer(nbytes, pool_));
 

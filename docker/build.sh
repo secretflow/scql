@@ -126,6 +126,8 @@ version=$(grep "version" $SCRIPT_DIR/version.txt | awk -F'"' '{print $2}')
 version+=$(date '+%Y%m%d-%H:%M:%S')
 version+=".$(git rev-parse --short HEAD)"
 echo "binary version: ${version}"
+# install deps
+docker exec -it ${container_id} bash -c "pip install numpy"
 # build engine binary
 docker exec -it ${container_id} bash -c "cd /home/admin/dev && sed -i "s/SCQL_VERSION/$version/g" engine/exe/version.h && bazel build //engine/exe:scqlengine -c opt"
 # build scdbserver + scdbclient binary

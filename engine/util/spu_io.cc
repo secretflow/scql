@@ -35,15 +35,11 @@ namespace {
 
 struct SpuPtBufferViewConverter {
   void const* data_ptr = nullptr;
+  bool is_bitset = false;
 
   void Convert(const arrow::Array& array) {
     THROW_IF_ARROW_NOT_OK(arrow::VisitArrayInline(array, this));
   }
-
-  bool HasDataOwnership() { return has_owned_data_; }
-
-  // Release owned data
-  yacl::Buffer Release() { return std::move(owned_data_); }
 
   template <typename T>
   arrow::Status Visit(const T& array) {
@@ -59,22 +55,10 @@ struct SpuPtBufferViewConverter {
   }
 
   arrow::Status Visit(const arrow::BooleanArray& array) {
-    // NOTE(shunde.csd): Arrow boolean array use bitmap to storage values,
-    // but spu use one byte to represent bool values.
-    // We need expand it.
-    owned_data_ = yacl::Buffer(array.length());
-    has_owned_data_ = true;
-
-    for (int64_t i = 0; i < array.length(); ++i) {
-      owned_data_.data<bool>()[i] = array.GetView(i);
-    }
-    data_ptr = owned_data_.data();
+    data_ptr = static_cast<void const*>(array.values()->data());
+    is_bitset = true;
     return arrow::Status::OK();
   }
-
- private:
-  bool has_owned_data_ = false;
-  yacl::Buffer owned_data_;
 };
 
 }  // namespace
@@ -113,24 +97,17 @@ SpuInfeedHelper::PtView SpuInfeedHelper::ConvertArrowArrayToPtView(
   SpuPtBufferViewConverter converter;
   converter.Convert(*array);
 
-  if (converter.HasDataOwnership()) {
-    buffers_.push_back(std::move(converter.Release()));
-  } else {
-    array_refs_.push_back(array);
-  }
+  array_refs_.push_back(array);
 
-  auto value =
-      spu::PtBufferView(converter.data_ptr, pt, {array->length()}, {1});
+  auto value = spu::PtBufferView(converter.data_ptr, pt, {array->length()}, {1},
+                                 converter.is_bitset);
 
 #ifdef SCQL_WITH_NULL
   // NOTE: null_bitmap may be nullptr if all values are valid in array
-  // FIXME(shunde.csd): spu does not support single bit bool value, we should
-  // expand bit map to byte(uint8) repr.
   const uint8_t* null_bitmap = array->null_bitmap_data();
-  int64_t len = (array->length() + 7) / 8;
 
   auto validity = spu::PtBufferView(static_cast<void const*>(null_bitmap),
-                                    spu::PT_U8, {len}, {1});
+                                    spu::PT_I1, {array->length()}, {1}, true);
   return PtView(value, validity);
 #endif  // SCQL_WITH_NULL
 
@@ -141,8 +118,6 @@ void SpuInfeedHelper::Sync() {
   cio_->sync();
   // release array refs
   array_refs_.clear();
-  // release buffers
-  buffers_.clear();
 }
 
 void SpuInfeedHelper::InfeedTensor(const std::string& name,

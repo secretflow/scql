@@ -106,7 +106,7 @@ spu::PtType ArrowDataTypeToSpuPtType(
   spu::PtType pt;
   switch (dtype->id()) {
     case arrow::Type::BOOL:
-      pt = spu::PT_BOOL;
+      pt = spu::PT_I1;
       break;
     case arrow::Type::UINT8:
       pt = spu::PT_U8;
@@ -177,7 +177,7 @@ std::shared_ptr<arrow::DataType> SpuPtTypeToArrowDataType(spu::PtType pt_type) {
     case spu::PT_F64:
       dt = arrow::float64();
       break;
-    case spu::PT_BOOL:
+    case spu::PT_I1:
       dt = arrow::boolean();
       break;
     default:
@@ -204,7 +204,7 @@ spu::PtType DataTypeToSpuPtType(pb::PrimitiveDataType dtype) {
       pt = spu::PT_I64;
       break;
     case pb::PrimitiveDataType::BOOL:
-      pt = spu::PT_BOOL;
+      pt = spu::PT_I1;
       break;
     case pb::PrimitiveDataType::FLOAT32:
       pt = spu::PT_F32;

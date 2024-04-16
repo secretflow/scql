@@ -75,9 +75,6 @@ class SpuInfeedHelper {
   // hold a copy of array's shared_ptr to make sure spu::PtBufferView valid
   // until sync() is called.
   std::vector<std::shared_ptr<arrow::Array>> array_refs_;
-  // hold allocated buffers to make sure spu::PtBufferView valid until sync() is
-  // called.
-  std::vector<yacl::Buffer> buffers_;
 };
 
 /// @brief helper class for outfeeding tensors from SPU device

@@ -39,21 +39,9 @@ load("@psi//bazel:repositories.bzl", "psi_deps")
 
 psi_deps()
 
-# grpc
-load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps")
+load("@rules_python//python:repositories.bzl", "py_repositories")
 
-grpc_deps()
-
-# Not mentioned in official docs... mentioned here https://github.com/grpc/grpc/issues/20511
-load("@com_github_grpc_grpc//bazel:grpc_extra_deps.bzl", "grpc_extra_deps")
-
-grpc_extra_deps()
-
-load("@rules_proto_grpc//:repositories.bzl", "rules_proto_grpc_repos", "rules_proto_grpc_toolchains")
-
-rules_proto_grpc_toolchains()
-
-rules_proto_grpc_repos()
+py_repositories()
 
 #
 # heu
@@ -61,10 +49,6 @@ rules_proto_grpc_repos()
 load("@com_alipay_sf_heu//third_party/bazel_cpp:repositories.bzl", "heu_cpp_deps")
 
 heu_cpp_deps()
-
-load("@rules_python//python:repositories.bzl", "py_repositories")
-
-py_repositories()
 
 load(
     "@rules_foreign_cc//foreign_cc:repositories.bzl",
@@ -77,13 +61,36 @@ rules_foreign_cc_dependencies(
     register_preinstalled_tools = True,
 )
 
-load("@xla//third_party/llvm:workspace.bzl", llvm = "repo")
+load("@xla//:workspace4.bzl", "xla_workspace4")
 
-llvm("llvm-raw")
+xla_workspace4()
 
-load("@xla//third_party/llvm:setup.bzl", "llvm_setup")
+load("@xla//:workspace3.bzl", "xla_workspace3")
 
-llvm_setup("llvm-project")
+xla_workspace3()
+
+load("@xla//:workspace2.bzl", "xla_workspace2")
+
+xla_workspace2()
+
+load("@xla//:workspace1.bzl", "xla_workspace1")
+
+xla_workspace1()
+
+load("@xla//:workspace0.bzl", "xla_workspace0")
+
+xla_workspace0()
+
+# grpc
+load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps")
+
+grpc_deps()
+
+load("@rules_proto_grpc//:repositories.bzl", "rules_proto_grpc_repos", "rules_proto_grpc_toolchains")
+
+rules_proto_grpc_toolchains()
+
+rules_proto_grpc_repos()
 
 #
 # boost
@@ -91,7 +98,3 @@ llvm_setup("llvm-project")
 load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
 
 boost_deps()
-
-
-
-
