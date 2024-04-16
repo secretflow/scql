@@ -34,14 +34,16 @@ About implementation status, please read :doc:`/reference/implementation-status`
 Functions different from MySQL
 ``````````````````````````````
 
-+-------------------------------------+---------------------------------------------------+------------------------+------------+
-| Function Name                       | In SCQL                                           | In MySQL               | Note       |
-+=====================================+===================================================+========================+============+
-| SUM(INT)                            | returns int                                       | returns Decimal/Double |            |
-+-------------------------------------+---------------------------------------------------+------------------------+------------+
-| Aggregation Functions With Group BY | return groups which have more than three elements | return all groups      | for safety |
-+-------------------------------------+---------------------------------------------------+------------------------+------------+
++-------------------------------------+---------------------------------------------------------------------------+------------------------+------------+
+| Function Name                       | In SCQL                                                                   | In MySQL               | Note       |
++=====================================+===========================================================================+========================+============+
+| SUM(INT)                            | returns int                                                               | returns Decimal/Double |            |
++-------------------------------------+---------------------------------------------------------------------------+------------------------+------------+
+| Aggregation Functions With Group BY | return groups which have greater or equal ``group_by_threshold`` elements | return all groups      | for safety |
++-------------------------------------+---------------------------------------------------------------------------+------------------------+------------+
 
+.. note::
+    ``group_by_threshold`` can be configured in :ref:`p2p mode <config_broker_server_options>` or :ref:`central mode <scdb_config_options>`.
 
 DCL(Data Control Language)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
