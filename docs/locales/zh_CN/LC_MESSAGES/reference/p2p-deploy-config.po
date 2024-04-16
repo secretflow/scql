@@ -409,7 +409,7 @@ msgstr "true"
 
 #: ../../reference/p2p-deploy-config.rst:117
 msgid "Whether persist session to storage to support cluster mode"
-msgstr "集群模式下是否将 session 持久化到存储中去"
+msgstr "是否将 session 持久化到存储中去，以支持集群模式"
 
 #: ../../reference/p2p-deploy-config.rst:122
 msgid "Config for ServerConfig"

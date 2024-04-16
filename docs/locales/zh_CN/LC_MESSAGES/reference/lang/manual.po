@@ -118,7 +118,7 @@ msgid ""
 "omitted all fields are enclosed by the **enclosing_character**, otherwise"
 " only string fields are enclosed. see `mysql load data`_"
 msgstr "SCQL 在一定限制下支持 ``export_options``: 目前只支持 '\"' 或者 '' 作为 **enclosing_character**；暂时不支持 **ESCAPED BY** 语法。 "
-"``export_options``中的**OPTIONALLY**用于控制字段的引用行为，如果省略则所有类型的字段都会使用**enclosing_character**括起来，否则只有string类型的字段被括起来。"
+"``export_options``中的 **OPTIONALLY** 用于控制字段的引用行为，如果省略则所有类型的字段都会使用 **enclosing_character** 括起来，否则只有 string 类型的字段被括起来。"
 
 #: ../../reference/lang/manual.rst:113
 msgid "Functions and Operators"
