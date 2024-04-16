@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-04-16 16:03+0800\n"
+"POT-Creation-Date: 2024-04-16 16:43+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -266,16 +266,21 @@ msgstr ""
 msgid "The original media type in post body from SCQLBroker to SCQLEngine"
 msgstr "从 SCQLBroker 向 SCQLEngine 实际发送的数据类型"
 
-#: ../../reference/p2p-deploy-config.rst:94
+#: ../../reference/p2p-deploy-config.rst
 msgid "engine.uris"
 msgstr "engine.uris"
 
-#: ../../reference/p2p-deploy-config.rst:94
+#: ../../reference/p2p-deploy-config.rst
 msgid ""
 "The URIs for local SCQLEngines, which using **for_peer** to serve peer "
-"engines and **for_self** to serve the SCQLBroker, if **for_self** is "
-"empty, **for_peer** is used instead"
-msgstr "本地 SCQLEngines 的 URI，其中 **for_peer** 为其它参与方的 SCQLEngines 提供服务，**for_self** 则为 SCQLBroker 提供服务，如果 **for_self** 为空，则默认使用 **for_peer** 来代替"
+"engines and **for_self** to serve the SCQLBroker,"
+msgstr ""
+"本地 SCQLEngines 的 URI，其中 **for_peer** 为其它参与方的 SCQLEngines "
+"提供服务，**for_self** 则为 SCQLBroker 提供服务，"
+
+#: ../../reference/p2p-deploy-config.rst
+msgid "if **for_self** is empty, **for_peer** is used instead"
+msgstr "如果 **for_self** 为空，则默认使用 **for_peer** 来代替"
 
 #: ../../reference/p2p-deploy-config.rst:97
 msgid "security_compromise.reveal_group_mark"

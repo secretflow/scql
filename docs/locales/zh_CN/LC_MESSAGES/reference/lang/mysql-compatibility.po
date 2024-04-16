@@ -126,7 +126,7 @@ msgstr "使用 Group BY 的聚合函数"
 
 #: ../../reference/lang/mysql-compatibility.rst:42
 msgid "return groups which have greater or equal ``group_by_threshold`` elements"
-msgstr "返回组内元素大于等于 ``group_by_threshold`` 的组"
+msgstr "返回组内数据数量大于等于 ``group_by_threshold`` 的组"
 
 #: ../../reference/lang/mysql-compatibility.rst:42
 msgid "return all groups"
