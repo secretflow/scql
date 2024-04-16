@@ -8,14 +8,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-19 06:05+0000\n"
+"POT-Creation-Date: 2024-04-16 16:03+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.14.0\n"
+"Generated-By: Babel 2.11.0\n"
 
 #: ../../reference/p2p-deploy-config.rst:2
 msgid "SCQL P2P Deployment Configuration"
@@ -81,7 +81,7 @@ msgstr "intra_server.port"
 #: ../../reference/engine-config.rst:87 ../../reference/engine-config.rst:91
 #: ../../reference/engine-config.rst:97 ../../reference/engine-config.rst:99
 #: ../../reference/engine-config.rst:101 ../../reference/engine-config.rst:107
-#: ../../reference/engine-config.rst:111
+#: ../../reference/engine-config.rst:111 ../../reference/p2p-deploy-config.rst
 #: ../../reference/p2p-deploy-config.rst:58
 #: ../../reference/p2p-deploy-config.rst:62
 #: ../../reference/p2p-deploy-config.rst:64
@@ -95,9 +95,8 @@ msgstr "intra_server.port"
 #: ../../reference/p2p-deploy-config.rst:86
 #: ../../reference/p2p-deploy-config.rst:88
 #: ../../reference/p2p-deploy-config.rst:92
-#: ../../reference/p2p-deploy-config.rst:94
-#: ../../reference/p2p-deploy-config.rst:99
 #: ../../reference/p2p-deploy-config.rst:101
+#: ../../reference/p2p-deploy-config.rst:103
 msgid "none"
 msgstr ""
 
@@ -276,9 +275,7 @@ msgid ""
 "The URIs for local SCQLEngines, which using **for_peer** to serve peer "
 "engines and **for_self** to serve the SCQLBroker, if **for_self** is "
 "empty, **for_peer** is used instead"
-msgstr ""
-"本地 SCQLEngines 的 URI，其中 **for_peer** 为其它参与方的 SCQLEngines 提供服务， "
-"**for_self** 则为 SCQLBroker 提供服务，如果 **for_self** 为空，则默认使用 **for_peer** 来代替"
+msgstr "本地 SCQLEngines 的 URI，其中 **for_peer** 为其它参与方的 SCQLEngines 提供服务，**for_self** 则为 SCQLBroker 提供服务，如果 **for_self** 为空，则默认使用 **for_peer** 来代替"
 
 #: ../../reference/p2p-deploy-config.rst:97
 msgid "security_compromise.reveal_group_mark"
@@ -296,100 +293,130 @@ msgid "Whether to reveal group_mark directly for group by"
 msgstr "是否在计算 group by 的时候泄露分组标记信息"
 
 #: ../../reference/p2p-deploy-config.rst:99
-msgid "storage.type"
+msgid "security_compromise.group_by_threshold"
 msgstr ""
 
 #: ../../reference/p2p-deploy-config.rst:99
+msgid "4"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:99
+msgid ""
+"Minimum amount of data within a group that will be retained(effective "
+"only for the group by syntax, and not for distinct, etc.)"
+msgstr "一个 group 分组中的数据少于这个值就会被隐藏（只会在 group by 语法中生效，distinct 等语法中不会应用这个规则）"
+
+#: ../../reference/p2p-deploy-config.rst:101
+msgid "storage.type"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:101
 msgid ""
 "Database kind in SCQLBroker, supports MYSQL/SQLite3, MYSQL is "
 "recommended, SQLite3 may have problems with concurrency"
 msgstr "SCQLBroker 使用的数据库类型， 支持 MYSQL/SQLite3，推荐使用 MYSQL，SQLite3在并发下可能出问题"
 
-#: ../../reference/p2p-deploy-config.rst:101
+#: ../../reference/p2p-deploy-config.rst:103
 msgid "storage.conn_str"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:101
+#: ../../reference/p2p-deploy-config.rst:103
 msgid "Used to connect to a database"
 msgstr "数据库连接串"
 
-#: ../../reference/p2p-deploy-config.rst:103
+#: ../../reference/p2p-deploy-config.rst:105
 msgid "storage.max_idle_conns"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:103
 #: ../../reference/p2p-deploy-config.rst:105
+#: ../../reference/p2p-deploy-config.rst:107
 msgid "1"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:103
+#: ../../reference/p2p-deploy-config.rst:105
 msgid "Maximum number of connections in idle connection pool"
 msgstr "空闲连接池最大连接数"
 
-#: ../../reference/p2p-deploy-config.rst:105
+#: ../../reference/p2p-deploy-config.rst:107
 msgid "storage.max_open_conns"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:105
+#: ../../reference/p2p-deploy-config.rst:107
 msgid "Maximum number of open connections to the database"
 msgstr "数据库最大连接数"
 
-#: ../../reference/p2p-deploy-config.rst:107
+#: ../../reference/p2p-deploy-config.rst:109
 msgid "storage.conn_max_idle_time"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:107
 #: ../../reference/p2p-deploy-config.rst:109
+#: ../../reference/p2p-deploy-config.rst:111
 msgid "-1s"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:107
+#: ../../reference/p2p-deploy-config.rst:109
 msgid "Maximum amount of time a connection may be idle"
 msgstr "连接处于空闲状态的最长时间"
 
-#: ../../reference/p2p-deploy-config.rst:109
+#: ../../reference/p2p-deploy-config.rst:111
 msgid "storage.conn_max_lifetime"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:109
+#: ../../reference/p2p-deploy-config.rst:111
 msgid "Maximum amount of time a connection may be reused"
 msgstr "可重复连接使用的最长时间"
 
-#: ../../reference/p2p-deploy-config.rst:111
+#: ../../reference/p2p-deploy-config.rst:113
 msgid "session_expire_time"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:111
+#: ../../reference/p2p-deploy-config.rst:113
 msgid "24h"
 msgstr "24h"
 
-#: ../../reference/p2p-deploy-config.rst:111
+#: ../../reference/p2p-deploy-config.rst:113
 msgid "Maximum lifespan of a job"
 msgstr "任务的超时时间"
 
-#: ../../reference/p2p-deploy-config.rst:113
+#: ../../reference/p2p-deploy-config.rst:115
 msgid "session_expire_check_time"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:113
+#: ../../reference/p2p-deploy-config.rst:115
 msgid "1m"
 msgstr "1m"
 
-#: ../../reference/p2p-deploy-config.rst:113
+#: ../../reference/p2p-deploy-config.rst:115
 msgid "The interval checking whether session is timeout"
 msgstr "检查会话是否超时的间隔"
 
-#: ../../reference/p2p-deploy-config.rst:118
+#: ../../reference/p2p-deploy-config.rst:117
+msgid "persist_session"
+msgstr ""
+
+#: ../../reference/engine-config.rst:29 ../../reference/engine-config.rst:33
+#: ../../reference/engine-config.rst:49 ../../reference/engine-config.rst:65
+#: ../../reference/engine-config.rst:79 ../../reference/engine-config.rst:105
+#: ../../reference/engine-config.rst:109
+#: ../../reference/p2p-deploy-config.rst:117
+msgid "true"
+msgstr "true"
+
+#: ../../reference/p2p-deploy-config.rst:117
+msgid "Whether persist session to storage to support cluster mode"
+msgstr "集群模式下是否将 session 持久化到存储中去"
+
+#: ../../reference/p2p-deploy-config.rst:122
 msgid "Config for ServerConfig"
 msgstr "ServerConfig 配置"
 
-#: ../../reference/p2p-deploy-config.rst:119
+#: ../../reference/p2p-deploy-config.rst:123
 msgid ""
 "SCQLBroker accept intra-domain requests through IntraServer, while accept"
 " requests between different SCQLBrokers through InterServer."
 msgstr "SCQLBroker 通过IntraServer 接收域内请求，而通过 InterServer 接收不同 SCQLBroker 之间的请求。"
 
-#: ../../reference/p2p-deploy-config.rst:121
+#: ../../reference/p2p-deploy-config.rst:125
 msgid ""
 "IntraServer is recommended to use localhost host or LAN address to avoid "
 "external attacks, while InterServer is recommended to enable HTTPS to "
@@ -398,13 +425,13 @@ msgstr ""
 "IntraServer 建议使用 localhost 或 LAN 地址以避免外部攻击，而 InterServer 建议启用 HTTPS "
 "以提高安全性。"
 
-#: ../../reference/p2p-deploy-config.rst:125
+#: ../../reference/p2p-deploy-config.rst:129
 msgid ""
 "Please refer to the following configuration to enable HTTPS for "
 "InterServer: (similar to IntraServer)"
 msgstr "请参考以下配置为 InterServer 启用 HTTPS ：（IntraServer 类似）"
 
-#: ../../reference/p2p-deploy-config.rst:138
+#: ../../reference/p2p-deploy-config.rst:142
 msgid ""
 "Self-signed CA files may not be trusted by default, please refer to "
 "`Trouble shooting <https://github.com/secretflow/scql/tree/main/test-"
@@ -414,11 +441,11 @@ msgstr ""
 "<https://github.com/secretflow/scql/tree/main/test-tools#trouble-"
 "shooting>`_ 获取帮助。"
 
-#: ../../reference/p2p-deploy-config.rst:140
+#: ../../reference/p2p-deploy-config.rst:144
 msgid "Please change the endpoints in **party_info.json** from http to https."
 msgstr "请将 **party_info.json** 中的 endpoints 从 http 更改为 https"
 
-#: ../../reference/p2p-deploy-config.rst:142
+#: ../../reference/p2p-deploy-config.rst:146
 msgid ""
 "We have enabled HTTPS in the `p2p examples "
 "<https://github.com/secretflow/scql/blob/main/examples/p2p-"
@@ -428,7 +455,7 @@ msgstr ""
 "我们在 `p2p examples <https://github.com/secretflow/scql/blob/main/examples"
 "/p2p-tutorial/README.md>`_ 中启用了 HTTPS，相关配置的初始化过程也许能提供一些帮助"
 
-#: ../../reference/p2p-deploy-config.rst:144
+#: ../../reference/p2p-deploy-config.rst:148
 msgid ""
 "For SCQLEngine to work with SSL, please refer :ref:`Config for SSL in "
 "SCQLEngine <scqlengine-tls>`."
@@ -436,11 +463,11 @@ msgstr ""
 "除此之外，用户还需要设置 :ref:`SCQLEngine 的 SSL 配置 <scqlengine-tls>`，以保证 SCQLEngine "
 "能正常工作。"
 
-#: ../../reference/p2p-deploy-config.rst:147
+#: ../../reference/p2p-deploy-config.rst:151
 msgid "Reused Config"
 msgstr "复用的配置"
 
-#: ../../reference/p2p-deploy-config.rst:149
+#: ../../reference/p2p-deploy-config.rst:153
 msgid ""
 "For more about SecurityCompromise, see :ref:`Config for "
 "SecurityCompromise <config_security_compromise_options>`"
@@ -448,7 +475,7 @@ msgstr ""
 "有关 SecurityCompromise 的更多信息，请参阅 :ref:`安全退让配置 "
 "<config_security_compromise_options>`"
 
-#: ../../reference/p2p-deploy-config.rst:151
+#: ../../reference/p2p-deploy-config.rst:155
 msgid ""
 "For more about Storage, see :ref:`Config for storage "
 "<config_storage_options>`"
@@ -482,13 +509,6 @@ msgstr ""
 #: ../../reference/engine-config.rst:29
 msgid "log_enable_console_logger"
 msgstr "log_enable_console_logger"
-
-#: ../../reference/engine-config.rst:29 ../../reference/engine-config.rst:33
-#: ../../reference/engine-config.rst:49 ../../reference/engine-config.rst:65
-#: ../../reference/engine-config.rst:79 ../../reference/engine-config.rst:105
-#: ../../reference/engine-config.rst:109
-msgid "true"
-msgstr "true"
 
 #: ../../reference/engine-config.rst:29
 msgid "Whether logging to stdout while logging to file"

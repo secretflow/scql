@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-05 15:22+0800\n"
+"POT-Creation-Date: 2024-04-16 16:03+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.12.1\n"
+"Generated-By: Babel 2.11.0\n"
 
 #: ../../reference/lang/mysql-compatibility.rst:2
 msgid "MySQL Compatibility"
@@ -125,8 +125,8 @@ msgid "Aggregation Functions With Group BY"
 msgstr "使用 Group BY 的聚合函数"
 
 #: ../../reference/lang/mysql-compatibility.rst:42
-msgid "return groups which have more than three elements"
-msgstr "返回包含三个以上元素的组"
+msgid "return groups which have greater or equal ``group_by_threshold`` elements"
+msgstr "返回组内元素大于等于 ``group_by_threshold`` 的组"
 
 #: ../../reference/lang/mysql-compatibility.rst:42
 msgid "return all groups"
@@ -136,15 +136,22 @@ msgstr "返回所有组"
 msgid "for safety"
 msgstr "出于安全性考虑"
 
-#: ../../reference/lang/mysql-compatibility.rst:47
+#: ../../reference/lang/mysql-compatibility.rst:46
+msgid ""
+"``group_by_threshold`` can be configured in :ref:`p2p mode "
+"<config_broker_server_options>` or :ref:`central mode "
+"<scdb_config_options>`."
+msgstr "``group_by_threshold`` 可以根据 :ref:`p2p mode <config_broker_server_options>` 或者 :ref:`central mode <scdb_config_options>` 配置"
+
+#: ../../reference/lang/mysql-compatibility.rst:49
 msgid "DCL(Data Control Language)"
 msgstr "DCL（数据控制语言）"
 
-#: ../../reference/lang/mysql-compatibility.rst:50
+#: ../../reference/lang/mysql-compatibility.rst:52
 msgid "GRANT/REVOKE"
 msgstr "GRANT/REVOKE"
 
-#: ../../reference/lang/mysql-compatibility.rst:52
+#: ../../reference/lang/mysql-compatibility.rst:54
 msgid ""
 "Except permissions same with mysql such as read/write/create/drop..., ccl"
 " settings are also required before executing a query. You can change CCL "
@@ -154,11 +161,11 @@ msgstr ""
 "除了读、写、创建表格、删除数据等与 mysql 相同的权限之外，在执行查询之前还需要设置 ccl。 可以通过 GRANT/REVOKE 更改 "
 "CCL 的设置。 关于 SCQL 中的 GRANT/REVOKE 的操作，请阅读 :doc:`/reference/lang/manual`"
 
-#: ../../reference/lang/mysql-compatibility.rst:55
+#: ../../reference/lang/mysql-compatibility.rst:57
 msgid "Type Conversion Rule"
 msgstr "类型转换规则"
 
-#: ../../reference/lang/mysql-compatibility.rst:57
+#: ../../reference/lang/mysql-compatibility.rst:59
 msgid ""
 "Type conversion takes place when using an operator with operands of "
 "different types, to make them compatible. Some conversions occur "
@@ -166,15 +173,15 @@ msgid ""
 "necessary"
 msgstr "考虑兼容性，当使用运算符操作不同类型的数据时，会发生类型转换。有些转换是隐式发生的。例如，SCQL 会根据需要自动将 int 转换为 float。"
 
-#: ../../reference/lang/mysql-compatibility.rst:71
+#: ../../reference/lang/mysql-compatibility.rst:73
 msgid "The following rules describe how conversion occurs in SCQL."
 msgstr "以下规则描述了如何在 SCQL 中进行类型转换。"
 
-#: ../../reference/lang/mysql-compatibility.rst:76
+#: ../../reference/lang/mysql-compatibility.rst:78
 msgid "single-party query"
 msgstr "单方查询"
 
-#: ../../reference/lang/mysql-compatibility.rst:77
+#: ../../reference/lang/mysql-compatibility.rst:79
 msgid ""
 "If a query only involves one participant, SCQL will convert the query "
 "into a syntax that conforms to the participant's database (such as "
@@ -185,65 +192,66 @@ msgstr ""
 "如果只有一方查询，SCQL 会将查询语句转换成符合参与者数据库（如 MySQL）的语法，然后直接分派到相应的数据库中执行。 "
 "因此对于单方查询，其类型转换规则一般与参与方使用的数据库类型一致。"
 
-#: ../../reference/lang/mysql-compatibility.rst:82
+#: ../../reference/lang/mysql-compatibility.rst:84
 msgid "multi-party query"
 msgstr "多方查询"
 
-#: ../../reference/lang/mysql-compatibility.rst:83
+#: ../../reference/lang/mysql-compatibility.rst:85
 msgid ""
 "If a query involves multiple participants, SCQL will execute type "
 "conversion by applying the following rules."
 msgstr "如果涉及多方查询，SCQL 将通过以下规则进行类型转换。"
 
-#: ../../reference/lang/mysql-compatibility.rst:86
+#: ../../reference/lang/mysql-compatibility.rst:88
 msgid "Compare(>, <, <=, >=, <>, =, !=)"
 msgstr "比较运算 (>, <, <=, >=, <>, =, !=)"
 
-#: ../../reference/lang/mysql-compatibility.rst:87
+#: ../../reference/lang/mysql-compatibility.rst:89
 msgid "Both arguments in a comparison operation shouldn't be string."
 msgstr "比较操作中的两个参数都不能是 string 类型。"
 
-#: ../../reference/lang/mysql-compatibility.rst:88
+#: ../../reference/lang/mysql-compatibility.rst:90
 msgid "If both arguments are long, they are compared as long."
 msgstr "如果两个参数都是 long 类型，则它们将按照 long 类型进行比较。"
 
-#: ../../reference/lang/mysql-compatibility.rst:89
+#: ../../reference/lang/mysql-compatibility.rst:91
 msgid ""
 "If one of the arguments is float or double, the other argument will be "
 "compared as double."
 msgstr "如果其中一个参数是 float 或者 double 类型，则会将另一个参数转换为 double 类型进行比较。"
 
-#: ../../reference/lang/mysql-compatibility.rst:92
+#: ../../reference/lang/mysql-compatibility.rst:94
 msgid "Arithmetic(+, -, \\*, /, %)"
 msgstr "算术运算 (+, -, \\*, /, %)"
 
-#: ../../reference/lang/mysql-compatibility.rst:93
+#: ../../reference/lang/mysql-compatibility.rst:95
 msgid ""
 "Arguments of '%' operation only support type long, while other arithmetic"
 " operations support types other than type string."
 msgstr "'%' 运算的参数仅支持 long 类型，而其他算术运算支持除 string 以外的数据类型。"
 
-#: ../../reference/lang/mysql-compatibility.rst:94
+#: ../../reference/lang/mysql-compatibility.rst:96
 msgid "If both arguments are long, they are calculated as long."
 msgstr "如果两个参数都是 long 类型，则它们将按照 long 类型进行计算。"
 
-#: ../../reference/lang/mysql-compatibility.rst:95
-#: ../../reference/lang/mysql-compatibility.rst:101
+#: ../../reference/lang/mysql-compatibility.rst:97
+#: ../../reference/lang/mysql-compatibility.rst:103
 msgid ""
 "If one of the arguments is float or double, the other argument will be "
 "calculated as double."
 msgstr "如果其中一个参数是 float 或者 double 类型，则会将另一个参数转换为 double 进行计算。"
 
-#: ../../reference/lang/mysql-compatibility.rst:98
+#: ../../reference/lang/mysql-compatibility.rst:100
 msgid "Aggregation(sum, count, avg, min, max)"
 msgstr "聚合操作 (sum, count, avg, min, max)"
 
-#: ../../reference/lang/mysql-compatibility.rst:99
+#: ../../reference/lang/mysql-compatibility.rst:101
 msgid ""
 "In all aggregation functions except count, parameters should not be type "
 "string."
 msgstr "除了 count ，聚合操作中的所有参数都不能是 string 类型。"
 
-#: ../../reference/lang/mysql-compatibility.rst:100
+#: ../../reference/lang/mysql-compatibility.rst:102
 msgid "If all arguments are long, they are calculated as long."
 msgstr "如果所有参数都是 long 类型，则它们将按照 long 类型进行计算。"
+

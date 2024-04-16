@@ -8,14 +8,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-19 06:05+0000\n"
+"POT-Creation-Date: 2024-04-16 16:03+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.14.0\n"
+"Generated-By: Babel 2.11.0\n"
 
 #: ../../reference/centralized-deploy-config.rst:2
 msgid "SCQL Centralized Deployment Configuration"
@@ -458,15 +458,22 @@ msgstr ""
 "**reveal_group_mark** ：默认禁用，如果启用，SCQL 在计算分组聚合时会公开分组信息（每个组的大小），从而避免前置 "
 "shuffle 带来的开销。``风险``：分组大小会泄露，等价于泄露 count(*) 的结果"
 
-#: ../../reference/centralized-deploy-config.rst:137
+#: ../../reference/centralized-deploy-config.rst:136
+msgid ""
+"**group_by_threshold**: minimum amount of data within a group that will "
+"be retained(effective only for the group by syntax, and not for distinct,"
+" etc.)"
+msgstr "**group_by_threshold**: 一个 group 分组中的数据少于这个值就会被隐藏（只会在 group by 语法中生效，distinct 等语法中不会应用这个规则）"
+
+#: ../../reference/centralized-deploy-config.rst:138
 msgid "A typical config of security_compromise can be like:"
 msgstr "典型的配置如下："
 
-#: ../../reference/centralized-deploy-config.rst:148
+#: ../../reference/centralized-deploy-config.rst:149
 msgid "Config for storage"
 msgstr "存储配置"
 
-#: ../../reference/centralized-deploy-config.rst:149
+#: ../../reference/centralized-deploy-config.rst:150
 msgid ""
 "Database is used to store the SCQL system data, such as CCL and user "
 "information, currently support MySQL/SQLite3. You can connect to a "
@@ -475,21 +482,21 @@ msgstr ""
 "数据库用于存储 SCQL 系统数据，如 CCL 和用户信息，目前 SCDB 支持 MySQL/SQLite3 。您可以通过配置项 "
 "``conn_str`` 和 ``type`` 来连接不同的数据库。"
 
-#: ../../reference/centralized-deploy-config.rst:152
+#: ../../reference/centralized-deploy-config.rst:153
 msgid "type"
 msgstr "type"
 
-#: ../../reference/centralized-deploy-config.rst:152
+#: ../../reference/centralized-deploy-config.rst:153
 msgid ""
 "The database type, which can be set as mysql/sqlite. And MySQL is "
 "recommended, which has been fully tested."
 msgstr "数据库类型可以设置为 mysql/sqlite，我们更加推荐使用 MySQL 来作为 SCDB 的数据库，其相关测试更加充分。"
 
-#: ../../reference/centralized-deploy-config.rst:170
+#: ../../reference/centralized-deploy-config.rst:171
 msgid "conn_str"
 msgstr "conn_str"
 
-#: ../../reference/centralized-deploy-config.rst:155
+#: ../../reference/centralized-deploy-config.rst:156
 msgid ""
 "MySQL string format, see `dsn-data-source-name <https://github.com/mattn"
 "/go-sqlite3#connection-string>`_ for more information."
@@ -497,39 +504,39 @@ msgstr ""
 "MySQL语句格式, 更多信息请参考: `dsn-data-source-name <https://github.com/mattn/go-"
 "sqlite3#connection-string>`_ "
 
-#: ../../reference/centralized-deploy-config.rst:157
+#: ../../reference/centralized-deploy-config.rst:158
 msgid "[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]"
 msgstr "[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]"
 
-#: ../../reference/centralized-deploy-config.rst:160
+#: ../../reference/centralized-deploy-config.rst:161
 msgid "MySQL string example:"
 msgstr "MySQL 连接串示例："
 
-#: ../../reference/centralized-deploy-config.rst:162
+#: ../../reference/centralized-deploy-config.rst:163
 msgid "``user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true``"
 msgstr "``user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true``"
 
-#: ../../reference/centralized-deploy-config.rst:164
+#: ../../reference/centralized-deploy-config.rst:165
 msgid "SQLite3 string format:"
 msgstr "SQLite3 连接串示例："
 
-#: ../../reference/centralized-deploy-config.rst:166
+#: ../../reference/centralized-deploy-config.rst:167
 msgid "more infos: https://github.com/mattn/go-sqlite3#connection-string."
 msgstr "参考: https://github.com/mattn/go-sqlite3#connection-string. "
 
-#: ../../reference/centralized-deploy-config.rst:168
+#: ../../reference/centralized-deploy-config.rst:169
 msgid "SQLite3 string example:"
 msgstr "SQLite3 连接串示例："
 
-#: ../../reference/centralized-deploy-config.rst:170
+#: ../../reference/centralized-deploy-config.rst:171
 msgid "``scdb.db``"
 msgstr "``scdb.db``"
 
-#: ../../reference/centralized-deploy-config.rst:172
+#: ../../reference/centralized-deploy-config.rst:173
 msgid "A typical config of storage can be like:"
 msgstr "典型的存储配置如下："
 
-#: ../../reference/centralized-deploy-config.rst:185
+#: ../../reference/centralized-deploy-config.rst:186
 msgid ""
 "To handle time.Time correctly, you need to include parseTime as a "
 "parameter. To fully support UTF-8 encoding, you need to change "
@@ -538,18 +545,18 @@ msgstr ""
 "正确处理 time.Time 需要包含 parseTime 参数。为了完全支持 UTF-8 编码，需要将 ``charset=utf8`` 更改为"
 " ``charset=utf8mb4`` "
 
-#: ../../reference/centralized-deploy-config.rst:189
+#: ../../reference/centralized-deploy-config.rst:190
 #: ../../reference/engine-config.rst:237
 msgid "Config for audit"
 msgstr "审计日志配置"
 
-#: ../../reference/centralized-deploy-config.rst:191
+#: ../../reference/centralized-deploy-config.rst:192
 msgid ""
 "Audit log are used to record the SCDB activities during query execution. "
 "It has two types: basic audit log and detail audit log."
 msgstr "SCDB 的审计日志是用来记录 SCDB 在执行 query 过程中所产生的一系列事件，它有两种类型：基础审计日志和补充审计日志。"
 
-#: ../../reference/centralized-deploy-config.rst:193
+#: ../../reference/centralized-deploy-config.rst:194
 msgid ""
 "The basic audit log are used to record the basic information of a query, "
 "such as the result and user information, while the detail audit log "
@@ -563,7 +570,7 @@ msgstr ""
 " `scdb_audit "
 "<https://github.com/secretflow/scql/blob/main/pkg/audit/audit.proto>`_ 。"
 
-#: ../../reference/centralized-deploy-config.rst:195
+#: ../../reference/centralized-deploy-config.rst:196
 msgid ""
 "When the audit log has reaches the maximum size ( set by "
 "``audit_max_size``), SCDB will save the audit log as ``name-"
@@ -578,7 +585,7 @@ msgstr ""
 "``audit_log_file`` 中设置的不带后缀的文件名，`timestamp` 是当前时间（格式为 "
 "`2006-01-02T15-04-05.000`），`ext` 是在 ``audit_log_file`` 中设置的后缀名。"
 
-#: ../../reference/centralized-deploy-config.rst:198
+#: ../../reference/centralized-deploy-config.rst:199
 msgid ""
 "For example, if ``audit_log_file`` set as `audit/audit.log`, a backup "
 "created at 6:30pm on Nov 11 2016 would be saved to "
@@ -588,11 +595,11 @@ msgstr ""
 "在2016年11月4日18:30归档的审计日志会被保存至 `./audit/audit-2016-11-04T18-30-00.000.log` "
 "。"
 
-#: ../../reference/centralized-deploy-config.rst:202
+#: ../../reference/centralized-deploy-config.rst:203
 msgid "Password check"
 msgstr "密码校验"
 
-#: ../../reference/centralized-deploy-config.rst:203
+#: ../../reference/centralized-deploy-config.rst:204
 msgid ""
 "``password_check`` serves to validate password strength. For ALTER USER, "
 "CREATE USER statements, if it's true, the password should be at least 16 "
@@ -602,17 +609,17 @@ msgstr ""
 "`password_check` 用于验证密码强度校验。如果该参数设置为true， 对于 ALTER USER、CREATE USER "
 "语句，其所涉及的密码长度至少为 16 个字符，其中包括数字、小写字母、大写字母和特殊字符。"
 
-#: ../../reference/centralized-deploy-config.rst:209
+#: ../../reference/centralized-deploy-config.rst:210
 msgid "Config for TLS"
 msgstr "TLS 配置"
 
-#: ../../reference/centralized-deploy-config.rst:210
+#: ../../reference/centralized-deploy-config.rst:211
 msgid ""
 "If you need to enable TLS in SCDB, please refer to the following "
 "configuration."
 msgstr "如果需要在 SCDB 中启用 TLS ，请参考以下配置。"
 
-#: ../../reference/centralized-deploy-config.rst:224
+#: ../../reference/centralized-deploy-config.rst:225
 msgid ""
 "Self-signed CA files may not be trusted by default, please refer to "
 "`Trouble shooting <https://github.com/secretflow/scql/tree/main/test-"
@@ -622,7 +629,7 @@ msgstr ""
 "<https://github.com/secretflow/scql/tree/main/test-tools#trouble-"
 "shooting>`_ 获取帮助。"
 
-#: ../../reference/centralized-deploy-config.rst:226
+#: ../../reference/centralized-deploy-config.rst:227
 msgid ""
 "Additionally, it is necessary to configure the SCQLEngine to work with "
 "SSL, please refer :ref:`Config for SSL in SCQLEngine <scqlengine-tls>`."
@@ -630,11 +637,11 @@ msgstr ""
 "除此之外，用户还需要设置 :ref:`SCQLEngine 的 SSL 配置 <scqlengine-tls>`，以保证 SCDB 和 "
 "SCQLEngine 能正常工作。"
 
-#: ../../reference/centralized-deploy-config.rst:230
+#: ../../reference/centralized-deploy-config.rst:231
 msgid "Config for SPU"
 msgstr "SPU 配置"
 
-#: ../../reference/centralized-deploy-config.rst:231
+#: ../../reference/centralized-deploy-config.rst:232
 msgid ""
 "SCQL supports different mpc protocol powered by SPU, you can choose "
 "different mpc protocol by setting SPU runtime config. Protocol **SEMI2K**"
