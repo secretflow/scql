@@ -1481,6 +1481,25 @@ definitions:
     properties:
       status:
         $ref: '#/definitions/scql.pb.Status'
+  spu.CheetahConfig:
+    type: object
+    properties:
+      disable_matmul_pack:
+        type: boolean
+        title: disable the ciphertext packing for matmul
+      enable_mul_lsb_error:
+        type: boolean
+        title: allow least significant bits error for point-wise mul
+      ot_kind:
+        $ref: '#/definitions/spu.CheetahOtKind'
+        title: Setup for cheetah ot
+  spu.CheetahOtKind:
+    type: string
+    enum:
+      - YACL_Ferret
+      - YACL_Softspoken
+      - EMP_Ferret
+    default: YACL_Ferret
   spu.FieldType:
     type: string
     enum:
@@ -1637,6 +1656,9 @@ definitions:
       ttp_beaver_config:
         $ref: '#/definitions/spu.TTPBeaverConfig'
         description: TrustedThirdParty configs.
+      cheetah_2pc_config:
+        $ref: '#/definitions/spu.CheetahConfig'
+        description: Cheetah 2PC configs.
       trunc_allow_msb_error:
         type: boolean
         description: |-
@@ -1695,6 +1717,7 @@ definitions:
       - LOG_DEFAULT
       - LOG_PADE
       - LOG_NEWTON
+      - LOG_MINMAX
     default: LOG_DEFAULT
     description: |-
       The logarithm approximation method.
@@ -1702,6 +1725,7 @@ definitions:
        - LOG_DEFAULT: Implementation defined.
        - LOG_PADE: The pade approximation.
        - LOG_NEWTON: The newton approximation.
+       - LOG_MINMAX: The minmax approximation.
   spu.RuntimeConfig.SigmoidMode:
     type: string
     enum:
