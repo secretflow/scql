@@ -30,7 +30,7 @@
 #include "arrow/compute/api.h"
 #include "gflags/gflags.h"
 #include "msgpack.hpp"
-#include "yacl/crypto/utils/rand.h"
+#include "yacl/crypto/rand/rand.h"
 
 #include "engine/core/arrow_helper.h"
 #include "engine/core/primitive_builder.h"

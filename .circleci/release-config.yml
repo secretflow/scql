@@ -57,6 +57,7 @@ jobs:
       - run:
           name: "Build"
           command: |
+            pip install numpy
             make && bazel build //engine/exe:scqlengine -c opt --ui_event_filters=-info,-debug,-warning
       - run:
           name: "Copy binary"

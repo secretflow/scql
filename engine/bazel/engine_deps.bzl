@@ -40,56 +40,56 @@ def engine_deps():
     _org_postgres()
 
 def _secretflow_deps():
-    SPU_COMMIT = "3ccae529b70b37f7312e1171eab7e5acc16ff136"
-
-    #PSI_COMMIT = "47aaeb9c9ccd92deb8c150b2d55302ac0070f723"
-    #HEU_COMMIT = "afa15a0ad009cb5d5e40bd1dce885b9e4d472083"
-    KUSCIA_COMMIT = "1979d1f4f17db5c2bd6c57be7a690e88fa9ce7ed"
+    # SPU_COMMIT = "3ccae529b70b37f7312e1171eab7e5acc16ff136"
+    # PSI_COMMIT = "47aaeb9c9ccd92deb8c150b2d55302ac0070f723"
+    # HEU_COMMIT = "afa15a0ad009cb5d5e40bd1dce885b9e4d472083"
+    # KUSCIA_COMMIT = "1979d1f4f17db5c2bd6c57be7a690e88fa9ce7ed"
 
     maybe(
         http_archive,
         name = "spulib",
         urls = [
-            "https://github.com/secretflow/spu/archive/%s.tar.gz" % SPU_COMMIT,
-            # "https://github.com/secretflow/spu/archive/refs/tags/0.8.0dev20240112.tar.gz",
+            # "https://github.com/secretflow/spu/archive/%s.tar.gz" % SPU_COMMIT,
+            "https://github.com/secretflow/spu/archive/refs/tags/0.9.0b1.tar.gz",
         ],
-        strip_prefix = "spu-%s" % SPU_COMMIT,
-        # strip_prefix = "spu-0.8.0dev20240112",
-        sha256 = "33131793625b68775af03df6ac11eb3af45c34a71b9f1bb258e86487d0d20841",
+        # strip_prefix = "spu-%s" % SPU_COMMIT,
+        strip_prefix = "spu-0.9.0b1",
+        sha256 = "1f6220a43dda542b15b7673d8a03b10ef9f62d63053e33ef2182b6c61f498a1f",
     )
+
     maybe(
         http_archive,
         name = "psi",
         urls = [
             #"https://github.com/secretflow/psi/archive/%s.tar.gz" % PSI_COMMIT,
-            "https://github.com/secretflow/psi/archive/refs/tags/v0.3.0.dev240222.tar.gz",
+            "https://github.com/secretflow/psi/archive/refs/tags/v0.4.0.dev240401.tar.gz",
         ],
-        #strip_prefix = "psi-%s" % PSI_COMMIT,
-        strip_prefix = "psi-0.3.0.dev240222",
-        sha256 = "a7319040510a1581741f05ac4b31e3d887ba8ba4766154736f96d76970d00de5",
+        # strip_prefix = "psi-%s" % PSI_COMMIT,
+        strip_prefix = "psi-0.4.0.dev240401",
+        sha256 = "bc91e5c635fc94f865004e61e3896eb334d76549c1125fbc98caf8c6b3a82463",
     )
 
     maybe(
         http_archive,
         name = "com_alipay_sf_heu",
         urls = [
-            #"https://github.com/secretflow/heu/archive/%s.tar.gz" % HEU_COMMIT,
-            "https://github.com/secretflow/heu/archive/tags/v0.5.0b0.tar.gz",
+            # "https://github.com/secretflow/heu/archive/%s.tar.gz" % HEU_COMMIT,
+            "https://github.com/secretflow/heu/archive/tags/0.5.1.dev20240402.tar.gz",
         ],
-        #strip_prefix = "heu-%s" % HEU_COMMIT,
-        strip_prefix = "heu-tags-v0.5.0b0",
-        sha256 = "ca9391e16cc84e4a763f953f997d42530e75fc89ae26e345b2d3ec3e9fc63364",
+        # strip_prefix = "heu-%s" % HEU_COMMIT,
+        strip_prefix = "heu-tags-0.5.1.dev20240402",
+        sha256 = "3a672039b559edbe3133025880074207829720a06b57183a7a3d25a5ec84a84b",
     )
 
     maybe(
         http_archive,
         name = "kuscia",
         urls = [
-            "https://github.com/secretflow/kuscia/archive/%s.tar.gz" % KUSCIA_COMMIT,
-            # "https://github.com/secretflow/kuscia/archive/refs/tags/0.6.0.dev240115.tar.gz",
+            # "https://github.com/secretflow/kuscia/archive/%s.tar.gz" % KUSCIA_COMMIT,
+            "https://github.com/secretflow/kuscia/archive/refs/tags/v0.7.0b0.tar.gz",
         ],
-        strip_prefix = "kuscia-%s" % KUSCIA_COMMIT,
-        sha256 = "96aae6c878b7567455fe97ac96e8fd42d180e30cbd10de18dd86e12ac083b346",
+        strip_prefix = "kuscia-0.7.0b0",
+        sha256 = "76e396f9b148ec741e3c938d0a54ce9e91709466254d2f6effc8a4d50a77ff97",
     )
 
 def _org_apache_arrow():

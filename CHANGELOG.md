@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Staging
 
+## [0.6.0] - 2024-04-15
+
 ### Added
 
 - Support for RSA key pairs in SCQLBroker.
@@ -33,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
- - Added support for HTTP data source router.
+ - Added support for HTTP data source router. 
 
 ### Changed
 
