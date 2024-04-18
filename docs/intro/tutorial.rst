@@ -17,7 +17,7 @@ Build scdbclient & scqltool
 
     # build scdbclient from source
     # requirements:
-    #   go version >= 1.19
+    #   go version >= 1.22
     go build -o scdbclient cmd/scdbclient/main.go
 
     # try scdbclient

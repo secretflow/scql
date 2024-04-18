@@ -71,7 +71,7 @@ coverage: install
 prepare: GO-exists GO-package
 
 GO-exists:
-	$(if $(shell command -v go 2> /dev/null),$(info Found `go`),$(error Please install go (prefer v1.19.6): refer to `https://golang.org/dl/`))
+	$(if $(shell command -v go 2> /dev/null),$(info Found `go`),$(error Please install go (prefer v1.22): refer to `https://golang.org/dl/`))
 
 GOLINT-exists:
 	$(if $(shell command -v golangci-lint 2> /dev/null),$(info Found `golangci-lint`),$(shell curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ${TOOLBIN} v1.42.0))

@@ -28,7 +28,7 @@ Build brokerctl
 
     # build brokerctl from source
     # requirements:
-    #   go version >= 1.19
+    #   go version >= 1.22
     go build -o brokerctl cmd/brokerctl/main.go
 
     # try brokerctl
