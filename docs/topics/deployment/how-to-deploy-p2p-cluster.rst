@@ -295,7 +295,7 @@ Here we use brokerctl to submit a query to SCQLBroker for testing, you can also 
 
     # build scdbclient from source
     # requirements:
-    #   go version >= 1.19
+    #   go version >= 1.22
     go build -o brokerctl cmd/brokerctl/main.go
 
     # try brokerctl
