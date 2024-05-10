@@ -128,8 +128,11 @@ namespace {
 
 static_assert(sizeof(size_t) == 8);
 size_t CryptoHash(const std::string& str) {
+  // If md is NULL, the digest is placed in a static array. Note: setting md to
+  // NULL is not thread safe.
+  unsigned char md[SHA256_DIGEST_LENGTH];
   auto* hash = SHA256(reinterpret_cast<const unsigned char*>(str.data()),
-                      str.size(), nullptr);
+                      str.size(), md);
 
   size_t ret;
   std::memcpy(&ret, hash, sizeof(ret));

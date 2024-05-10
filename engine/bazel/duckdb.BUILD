@@ -42,6 +42,9 @@ spu_cmake_external(
     linkopts = [
         "-lm",
     ],
+    env = {
+        "CCACHE_DISABLE": "1",
+    },
     out_static_libs = [
         "libduckdb_static.a",
         "libduckdb_pg_query.a",

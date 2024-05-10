@@ -218,11 +218,7 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 
 	var selfEndpoint string
 	if !session.DryRun {
-		endpoint, err := session.GetEndpoint(session.GetSelfPartyCode())
-		if err != nil {
-			return nil, err
-		}
-		selfEndpoint = endpoint
+		selfEndpoint = session.Engine.GetEndpointForPeer()
 	}
 
 	response := &pb.DistributeQueryResponse{
