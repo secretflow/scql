@@ -229,12 +229,7 @@ func distributeQueryToOtherParty(session *application.Session, enginesInfo *tran
 	selfCode := session.GetSelfPartyCode()
 	var selfEndpoint string
 	if !session.DryRun {
-		endpoint, err := session.GetEndpoint(selfCode)
-		if err != nil {
-			ret.err = err
-			return
-		}
-		selfEndpoint = endpoint
+		selfEndpoint = session.Engine.GetEndpointForPeer()
 	}
 
 	// distribute queries to other participants
