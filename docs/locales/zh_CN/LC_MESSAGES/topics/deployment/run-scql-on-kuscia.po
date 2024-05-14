@@ -139,7 +139,7 @@ msgstr ""
 msgid ""
 "``.spec.configTemplates.engineConf``: Its value is the configuration file"
 " content for SCQLEngine."
-msgstr ".spec.configTemplates.engineConf``：值是 SCQLEngine 的配置文件内容"
+msgstr "``.spec.configTemplates.engineConf``：值是 SCQLEngine 的配置文件内容"
 
 #: ../../topics/deployment/run-scql-on-kuscia.rst:42
 msgid ""
