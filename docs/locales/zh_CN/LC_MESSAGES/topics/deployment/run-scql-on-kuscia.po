@@ -1,0 +1,202 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SCQL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: SCQL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-05-14 16:45+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.14.0\n"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:3
+msgid "Run SCQL on Kusica"
+msgstr "在 Kusica 中运行 SCQL"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:5
+msgid ""
+"SCQL can run on `Kuscia <https://github.com/secretflow/kuscia>`_. "
+"Deploying and running on Kuscia has the following advantages:"
+msgstr ""
+"SCQL 支持在 `Kuscia <https://github.com/secretflow/kuscia>`_ 中运行。 在 Kuscia "
+"中部署和运行有以下优势："
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:7
+msgid ""
+"Kuscia is a k8s-based privacy-preserving computing task orchestration "
+"framework, it can simplify the deployment process, no need to manually "
+"exchange public keys between participating parties during deployment, and"
+" making scaling up or down much easier."
+msgstr ""
+"Kuscia 是一个基于 k8s "
+"的隐私计算任务编排框架，它可以简化部署过程，部署过程中无需在参与方之间手动交换公钥，并且使资源扩展或缩减变得更加容易。"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:8
+msgid ""
+"SCQL utilizes kuscia jobs for scheduling engines to handle query tasks. "
+"Kuscia jobs ensure isolation in the processing of different query tasks, "
+"and resources (cpu/mem/...) would be freed upon the completion of kuscia "
+"job, thereby boosting both stability and resource efficiency."
+msgstr ""
+"SCQL 使用 kuscia jobs 作为调度引擎来处理查询任务。 Kuscia jobs "
+"确保不同查询任务处理的隔离性，资源（cpu/mem/...）在 kuscia job 完成后将被释放，从而提高稳定性和资源效率。"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:9
+msgid ""
+"SCQL supports integration with Kuscia Datamesh API, enabling access to "
+"the data source information in Kuscia Datamesh."
+msgstr "SCQL 支持与 Kuscia Datamesh API 集成，从而可以访问 Kuscia Datamesh 中的数据源信息。"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:12
+msgid "The following section will describe how to deploy SCQL on Kuscia."
+msgstr "以下部分将介绍如何在 Kuscia 上部署 SCQL。"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:14
+msgid ""
+"Only the SCQL P2P mode is compatible with Kuscia. SCQLBroker is deployed "
+"as resident service via `KusciaDeployment <https://www.secretflow.org.cn"
+"/zh-CN/docs/kuscia/v0.7.0b0/reference/concepts/kusciadeployment_cn>`_."
+msgstr ""
+"Kuscia 仅兼容 SCQL P2P 模式， SCQLBroker 通过 `KusciaDeployment "
+"<https://www.secretflow.org.cn/zh-"
+"CN/docs/kuscia/v0.7.0b0/reference/concepts/kusciadeployment_cn>`_ "
+"部署为常驻服务。"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:17
+msgid "Prerequisites"
+msgstr "先决条件"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:19
+msgid ""
+"If you have not installed Kuscia yet, please refer to the following docs "
+"to complete the installation."
+msgstr "如果您尚未安装 Kuscia ，请参考以下文档完成安装。"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:21
+msgid ""
+"`Kuscia quickstart on single-node <https://www.secretflow.org.cn/zh-"
+"CN/docs/kuscia/v0.7.0b0/getting_started/quickstart_cn>`_"
+msgstr ""
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:22
+msgid ""
+"`Kuscia Multi-Node Deployment <https://www.secretflow.org.cn/zh-"
+"CN/docs/kuscia/v0.7.0b0/deployment/Docker_deployment_kuscia/deploy_p2p_cn>`_"
+msgstr ""
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:26
+msgid "Prepare SCQL AppImage"
+msgstr "准备 SCQL AppImage"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:28
+msgid ""
+"`AppImage <https://www.secretflow.org.cn/zh-"
+"CN/docs/kuscia/v0.7.0b0/reference/concepts/appimage_cn>`_ is a "
+"fundamental concept in Kuscia, it contains the app deployment "
+"configuration and image information. The following YAML file is an "
+"example SCQL AppImage template."
+msgstr ""
+"`AppImage <https://www.secretflow.org.cn/zh-"
+"CN/docs/kuscia/v0.7.0b0/reference/concepts/appimage_cn>`_ 是 Kuscia "
+"的一个基本概念，它包含应用程序部署配置和镜像信息。 以下 YAML 文件是 SCQL AppImage 模板示例。"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:33
+msgid "In the above AppImage template:"
+msgstr "在上述的 AppImage模版中："
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:35
+msgid ""
+"``.spec.configTemplates.brokerConf``: Its value is the configuration file"
+" content for SCQLBroker."
+msgstr "``.spec.configTemplates.brokerConf``：值是 SCQLBroker 的配置文件内容。"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:37
+msgid ""
+"NOTE: Placeholders in the form of ``{{.VARIABLE_NAME}}`` is kuscia built-"
+"in variables, which will be assigned values by kuscia when starting pods."
+msgstr "注意： ``{{.VARIABLE_NAME}}`` 形式的占位符是 kuscia 内置变量，在启动 pod 时将由 kuscia 为其赋值。"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:38
+msgid ""
+"Please modify the database connection configuration items "
+"``storage.type`` and ``storage.conn_str`` to the actual db you wish to "
+"use. The example use sqlite."
+msgstr ""
+"请将数据库连接配置项 ``storage.type`` 和 ``storage.conn_str`` 修改为您要使用的实际数据库。 该示例使用 "
+"sqlite。"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:40
+msgid ""
+"``.spec.configTemplates.engineConf``: Its value is the configuration file"
+" content for SCQLEngine."
+msgstr "``.spec.configTemplates.engineConf``：值是 SCQLEngine 的配置文件内容"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:42
+msgid ""
+"If you want to use Kuscia Datamesh as SCQL datasource router, please "
+"modify ``--datasource_router`` to ``kusciadatamesh``. Otherwise, fill the"
+" configuration item ``--embed_router_conf``."
+msgstr ""
+"如果您想使用 Kuscia Datamesh 作为 SCQL 数据源的路由，请将 ``--datasource_router`` 修改为 "
+"``kusciadatamesh``。 否则，填写配置项 ``--embed_router_conf`` 。"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:44
+msgid "``spec.image``: SCQL image information."
+msgstr "``spec.image``：SCQL 镜像信息"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:46
+msgid "``spec.image.name``: SCQL image name"
+msgstr "``spec.image.name``：SCQL 镜像名称"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:47
+msgid "``spec.image.tag``: The tag you want to use."
+msgstr "``spec.image.tag``：您要使用的标签。"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:51
+msgid "Prepare SCQLBroker Deployment YAML"
+msgstr "准备 SCQLBroker 部署 YAML"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:53
+msgid "SCQLBroker KusciaDeployment yaml file looks as follows."
+msgstr "SCQLBroker 的 KusciaDeployment yaml 文件如下所示。"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:73
+msgid ""
+"Please modify ``.spec.initiator`` and ``.spec.parties[0].domainID`` to "
+"the actual DomainID(DomainID is a Kuscia concept) you wish to deploy."
+msgstr "请将 ``.spec.initiator`` 和 ``.spec.parties[0].domainID`` 修改为您希望部署的实际 DomainID（DomainID 是 Kuscia 概念）。"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:77
+msgid "Let's go and deploy it"
+msgstr "让我们开始部署吧"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:79
+msgid "Create AppImage"
+msgstr "创建 AppImage"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:90
+msgid "Create SCQLBroker KusciaDeployment"
+msgstr "创建 SCQLBroker KusciaDeployment"
+
+#: ../../topics/deployment/run-scql-on-kuscia.rst:104
+msgid ""
+"This article primarily discusses the YAML configuration for SCQL AppImage"
+" and SCQLBroker Deployment. Please read the tutorial `Run SCQL on Kuscia "
+"<https://www.secretflow.org.cn/zh-"
+"CN/docs/kuscia/main/tutorial/run_scql_on_kuscia_cn>`_ from kuscia's "
+"perspective for more detailed step-by-step instructions."
+msgstr ""
+"本文主要讨论 SCQL AppImage 和 SCQLBroker Deployment 的 YAML 配置。 请从 kuscia 的角度阅读教程"
+" `在 Kuscia 中运行 SCQL <https://www.secretflow.org.cn/zh-"
+"CN/docs/kuscia/main/tutorial/run_scql_on_kuscia_cn>`_，了解更详细的分步说明。"
+

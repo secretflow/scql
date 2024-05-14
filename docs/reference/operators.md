@@ -1703,14 +1703,14 @@ Example:
 In = {1, 2, 3, 4, 5, 6}
 Out = {6}
 ```
+  
 
-
-**Inputs:**
+**Inputs:**  
 
 1. `In`(single, T): Tensor to be counted (shape [M]).
 
 
-**Outputs:**
+**Outputs:**  
 
 1. `Out`(single, T): The counted Tensor (shape [1]).
 

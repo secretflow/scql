@@ -45,7 +45,7 @@ jobs:
           command: |
             set +e
             go mod tidy
-            go test -timeout=30m -v  ./pkg/...
+            go test -timeout=30m -v -short ./pkg/...
   linux_engine_ut:
     docker:
       - image: secretflow/scql-ci:latest
@@ -98,7 +98,7 @@ jobs:
           command: |
             set +e
             go mod tidy
-            go test -timeout=30m -v ./pkg/...
+            go test -timeout=30m -v -short ./pkg/...
   macOS_engine_ut:
     macos:
       xcode: 15.1

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-19 06:05+0000\n"
+"POT-Creation-Date: 2024-05-14 15:02+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -613,43 +613,53 @@ msgstr "CSVDB 连接串格式："
 
 #: ../../reference/engine-config.rst:183
 msgid ""
-"Since connection_str is an object in another json object, the format is a"
-" converted json string corresponding to `CsvdbConf "
+"CSVDB support read csv from local and OSS/MinIO, since connection_str is "
+"an object in another json object, the format is a converted json string "
+"corresponding to `CsvdbConf "
 "<https://github.com/secretflow/scql/tree/main/engine/datasource/csvdb_conf.proto>`_"
 msgstr ""
-"由于 connection_str 是另一个 json 对象中的对象，因此其格式是根据 `CsvdbConf "
+"CSVDB 支持从 local 和 OSS/MinIO 读取 csv 文件，由于 connection_str 是另一个 json "
+"对象中的对象，因此其格式是根据 `CsvdbConf "
 "<https://github.com/secretflow/scql/tree/main/engine/datasource/csvdb_conf.proto>`_"
 " 结构体转换后的的json字符串 "
 
-#: ../../reference/engine-config.rst:186
+#: ../../reference/engine-config.rst:188
 msgid "CSVDB Connection string e.g:"
 msgstr "CSVDB连接语句示例:"
 
 #: ../../reference/engine-config.rst:186
-msgid "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
-msgstr "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
+msgid ""
+"local csv: "
+"\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
+msgstr ""
 
-#: ../../reference/engine-config.rst:191
+#: ../../reference/engine-config.rst:188
+msgid ""
+"OSS/MinIO csv: "
+"\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"S3Conf\\\\\\\":{\\\\\\\"endpoint\\\\\\\":\\\\\\\"test_endpoint\\\\\\\",\\\\\\\"access_key_id\\\\\\\":\\\\\\\"test_id\\\\\\\",\\\\\\\"secret_access_key\\\\\\\":\\\\\\\"test_key\\\\\\\"},\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"oss://test_bucket/test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
+msgstr ""
+
+#: ../../reference/engine-config.rst:193
 msgid "ArrowSQL Connection string format:"
 msgstr "ArrowSQL 连接串格式："
 
-#: ../../reference/engine-config.rst:189
+#: ../../reference/engine-config.rst:191
 msgid "grpc+<scheme>://host:port"
 msgstr ""
 
-#: ../../reference/engine-config.rst:191
+#: ../../reference/engine-config.rst:193
 msgid "<scheme> == 'tcp' | 'tls'"
 msgstr ""
 
-#: ../../reference/engine-config.rst:197
+#: ../../reference/engine-config.rst:199
 msgid "ArrowSQL Connection string e.g:"
 msgstr "ArrowSQL 连接串示例："
 
-#: ../../reference/engine-config.rst:194
+#: ../../reference/engine-config.rst:196
 msgid "``grpc+tcp://127.0.0.1:6666``"
 msgstr ""
 
-#: ../../reference/engine-config.rst:197
+#: ../../reference/engine-config.rst:199
 msgid ""
 "As a datasource embedded in SCQLEngine, ArrowSQL requires an additional "
 "gRPC server which provides the corresponding interface for executing an "
@@ -659,11 +669,11 @@ msgstr ""
 "作为 SCQLEngine 内嵌的数据源，ArrowSQL 依赖额外的 gRPC 服务，该服务需要提供相应的接口，用于执行 `Arrow "
 "Flight SQL <https://arrow.apache.org/docs/format/FlightSql.html>`_ 即时查询"
 
-#: ../../reference/engine-config.rst:200
+#: ../../reference/engine-config.rst:202
 msgid "Routing rules"
 msgstr "路由规则"
 
-#: ../../reference/engine-config.rst:201
+#: ../../reference/engine-config.rst:203
 msgid ""
 "embed_router's rules support wildcard ``*`` , when given a table in "
 "format: *database_name:table_name*, embed_router will route to the "
@@ -672,7 +682,7 @@ msgstr ""
 "embed_router 的规则支持通配符 ``*`` ，当给定一个 *database_name:table_name* "
 "的数据表时，embed_router 将通过以下方式路由到对应的数据源："
 
-#: ../../reference/engine-config.rst:204
+#: ../../reference/engine-config.rst:206
 msgid ""
 "find the exact rules first, whose ``${db}:${table}`` equals to "
 "*database_name:table_name*;"
@@ -680,15 +690,15 @@ msgstr ""
 "在 `embed_router_conf` 的 `rules` 中查找 `${db}:${table}` 与 "
 "`database_name:table_name` 完全相等的 rule"
 
-#: ../../reference/engine-config.rst:205
+#: ../../reference/engine-config.rst:207
 msgid "try the database_name:\\* rules;"
 msgstr "在 `embed_router_conf` 的 `rules` 中查找 `${db}` 与 `database_name` 完全相等的 rule"
 
-#: ../../reference/engine-config.rst:206
+#: ../../reference/engine-config.rst:208
 msgid "try \\*:table_name in the end."
 msgstr "在 `embed_router_conf` 的 `rules` 中查找 `${table}` 与 `table_name` 完全相等的 rule"
 
-#: ../../reference/engine-config.rst:208
+#: ../../reference/engine-config.rst:210
 msgid ""
 "Once found, SCQLEngine will try to connect database with datasource's "
 "information correspond to the *datasource_id*."
@@ -696,11 +706,11 @@ msgstr ""
 "一旦找到对应的 rule ，SCQLEngine 将根据 rule 中 datasource_id 在 datasources 中找到 "
 "对应的数据源信息，并根据这些信息连接对应的数据库。"
 
-#: ../../reference/engine-config.rst:211
+#: ../../reference/engine-config.rst:213
 msgid "Config for Brpc server"
 msgstr "Brpc 服务器配置"
 
-#: ../../reference/engine-config.rst:212
+#: ../../reference/engine-config.rst:214
 msgid ""
 "SCQLEngine uses **Brpc** to communicate with Driver and other peer "
 "SCQLEngines, each SCQLEngine will start a Brpc service on *local-"
@@ -710,11 +720,11 @@ msgstr ""
 "SCQLEngine 使用 Brpc 与 Driver 以及其他的 SCQLEngine 进行通信，每个 SCQLEngine 都会在 "
 "local-host:listen_port 上启动 Brpc 服务以接收来自外部的数据。如果要启用 Brpc 内置服务，请添加 FLAGS："
 
-#: ../../reference/engine-config.rst:223
+#: ../../reference/engine-config.rst:225
 msgid "Config for SSL"
 msgstr "SSL配置"
 
-#: ../../reference/engine-config.rst:224
+#: ../../reference/engine-config.rst:226
 msgid ""
 "If you want to enable SSL in SCQLEngine, add FLAGS as follows. "
 "Additionally, it may be necessary to configure the Driver to work with "
@@ -725,11 +735,11 @@ msgstr ""
 ":ref:`SCDB 的 TLS 配置 <scdb-tls>` 或 :ref:`SCQLBroker 的 TLS 配置 <broker-tls>`"
 " 。"
 
-#: ../../reference/engine-config.rst:237
+#: ../../reference/engine-config.rst:239
 msgid "Config for audit"
 msgstr "审计日志配置"
 
-#: ../../reference/engine-config.rst:238
+#: ../../reference/engine-config.rst:240
 msgid ""
 "The audit log in SCQLEngine is used to record the SCQLEngine activities "
 "during the execution of tasks from Driver. Just like the audit in Driver,"
@@ -739,7 +749,7 @@ msgstr ""
 "SCQLEngine 的审计日志是用来记录 SCQLEngine 在执行 Driver 下发任务过程中所产生的一系列事件，和 Driver "
 "一样，它也有两种类型：基础审计日志和详补充审计日志"
 
-#: ../../reference/engine-config.rst:240
+#: ../../reference/engine-config.rst:242
 msgid ""
 "The common audit is used to record some basic information about a task, "
 "while the detail audit is used to record more detailed information of the"
@@ -752,7 +762,7 @@ msgstr ""
 "<https://github.com/secretflow/scql/blob/main/engine/audit/audit.proto>`_"
 " 。"
 
-#: ../../reference/engine-config.rst:242
+#: ../../reference/engine-config.rst:244
 msgid ""
 "The log file is rotated in every 24:00:00 in local time, and the filename"
 " is generated in the format ``name-date.ext``, where `name` is the "
@@ -764,7 +774,7 @@ msgstr ""
 "，其中 `name` 是在 ``audit_log_file`` 中设置的不带后缀的文件名， `date` 是当前的日期（格式为 `YYYY-"
 "MM-DD`）， `ext` 是在 ``audit_log_file`` 中设置的后缀名。"
 
-#: ../../reference/engine-config.rst:245
+#: ../../reference/engine-config.rst:247
 msgid ""
 "For example, if you set ``audit_log_file`` as `audit/audit.log`, a backup"
 " created on Nov 11 2016 would be saved to `/audit/audit_2016-11-04.log`"
@@ -772,11 +782,11 @@ msgstr ""
 "例如，通过设置 ``audit_log_file`` 为 `audit/audit.log`，在2016年11月4日 24:00:00 "
 "归档的审计日志会保存至 `./audit/audit_2016-11-04.log` 。"
 
-#: ../../reference/engine-config.rst:248
+#: ../../reference/engine-config.rst:250
 msgid "Config for party authentication"
 msgstr "参与方身份验证配置"
 
-#: ../../reference/engine-config.rst:249
+#: ../../reference/engine-config.rst:251
 msgid ""
 "For security, SCQLEngine enables party authentication by default. "
 "SCQLEngine will check it's public key in the Driver request matches the "
@@ -788,6 +798,8 @@ msgstr ""
 "``private_key_pem_path`` 中的本地公钥匹配，并且其他参与者的公钥也与 "
 "``authorized_profile_path`` 中的公钥匹配。"
 
-#~ msgid "``file:data_test.db?mode=memory&cache=shared``"
-#~ msgstr "``file:data_test.db?mode=memory&cache=shared``"
+#~ msgid ""
+#~ "本地 csv: "
+#~ "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
+#~ msgstr ""
 
