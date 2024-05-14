@@ -70,8 +70,8 @@ cc_library(
         ":logging",
         ":spu_io",
         "//engine/core:tensor",
-        "@psi//psi/ecdh:ecdh_logger",
         "@psi//psi/cryptor:ecc_cryptor",
+        "@psi//psi/ecdh:ecdh_logger",
     ],
 )
 
@@ -171,5 +171,24 @@ cc_test(
     deps = [
         ":filepath_helper",
         "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "table_util",
+    srcs = ["table_util.cc"],
+    hdrs = ["table_util.h"],
+    deps = [
+        "//engine/framework:exec",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+cc_library(
+    name = "communicate_helper",
+    hdrs = ["communicate_helper.h"],
+    deps = [
+        "//engine/util:spu_io",
+        "@com_github_msgpack_msgpack//:msgpack",
     ],
 )

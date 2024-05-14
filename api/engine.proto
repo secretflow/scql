@@ -33,24 +33,27 @@ service SCQLEngineService {
   rpc RunExecutionPlan(RunExecutionPlanRequest)
       returns (RunExecutionPlanResponse);
 
-  // Stop session
-  rpc StopSession(StopSessionRequest) returns (Status);
+  // Query Job Status
+  rpc QueryJobStatus(QueryJobStatusRequest) returns (QueryJobStatusResponse);
+
+  // Stop Job
+  rpc StopJob(StopJobRequest) returns (Status);
 };
 
-message StopSessionRequest {
-  string session_id = 1;
-  // session stop reason, it maybe
-  // - "Finish". Session ended normally.
-  // - "Timeout". Session timeout.
-  // - "Canceled". Session canceled by client, maybe triggered by CTRL+C
+message StopJobRequest {
+  string job_id = 1;
+  // job stop reason, it maybe
+  // - "Finish". Job ended normally.
+  // - "Timeout". Job timeout.
+  // - "Canceled". Job canceled by client, maybe triggered by CTRL+C
   // - "Error". Exception caught when running.
   // - "Killed". Killed by client.
   // - or something else.
   string reason = 2;
 }
 
-// A message carries all session-level (execution plan level) information.
-message SessionStartParams {
+// A message carries all job session-level (execution plan level) information.
+message JobStartParams {
   message Party {
     // party code
     string code = 1;
@@ -87,40 +90,68 @@ message SessionStartParams {
   // All parties that would jointly complete an execution plan.
   repeated Party parties = 2;
 
-  // The session id
-  string session_id = 3;
+  // The job id
+  string job_id = 3;
 
   // The spu runtime configuration.
   spu.RuntimeConfig spu_runtime_cfg = 4;
 
-  // The session time zone, only support time offset, like: '+08:00'
+  // The query job time zone, only support time offset, like: '+08:00'
   string time_zone = 5;
 }
 
+message GraphChecksum {
+  bool check_graph_checksum = 1;
+  // map from rank to checksum
+  // It could be used to verify and ensure that engines execute the same
+  // graph.
+  map<string, string> sub_graph_checksums = 2;
+  string whole_graph_checksum = 3;
+}
+
 message RunExecutionPlanRequest {
-  SessionStartParams session_params = 1;
+  JobStartParams job_params = 1;
 
   SubGraph graph = 2;
+  GraphChecksum graph_checksum = 3;
 
   // Whether the whole execution plan on the engine should be executed
   // synchronously or asynchronously. By default, the execution plan is executed
   // synchronously.
-  bool async = 3;
+  bool async = 4;
 
   // Callback url, e.g.: "http://alice.com:8080/path/to/callback".
-  string callback_url = 4;
-  DebugOptions debug_opts = 5;
+  string callback_url = 5;
+  DebugOptions debug_opts = 6;
 }
 
 message RunExecutionPlanResponse {
   Status status = 1;
   // Output columns used to store result datas.
   repeated Tensor out_columns = 2;
-  string session_id = 3;
+  string job_id = 3;
   // Code of party which finished the execution plan.
   string party_code = 4;
   // The number of rows affected by a select into, update, insert, or delete.
   int64 num_rows_affected = 5;
+}
+
+message QueryJobStatusRequest {
+  string job_id = 1;
+}
+
+message QueryJobStatusResponse {
+  Status status = 1;
+  enum JobState {
+    JOB_STATE_UNSPECIFIED = 0;
+    INITIALIZED = 1;
+    RUNNING = 2;
+    SUCCEEDED = 3;
+    FAILED = 4;
+    CANCELED = 5;
+  }
+  JobState job_state = 2;
+  // TODO: Add progress information
 }
 
 // EngineResultCallback
@@ -137,8 +168,8 @@ message ReportRequest {
   Status status = 1;
   // Output columns.
   repeated Tensor out_columns = 2;
-  // The session_id that this execution plan belongs to.
-  string session_id = 3;
+  // The job_id that this execution plan belongs to.
+  string job_id = 3;
   // Code of party which finished the plan run.
   string party_code = 4;
   // The number of rows affected by a select into, update, insert, or delete.

@@ -98,6 +98,9 @@ type SessionVars struct {
 
 	// AffectedByGroupThreshold is used to mark whether GroupByThreshold is applied to protect query results
 	AffectedByGroupThreshold bool
+
+	// GroupByThreshold applied to protect query results
+	GroupByThreshold uint64
 }
 
 // PreparedParams contains the parameters of the current prepared statement when executing it.

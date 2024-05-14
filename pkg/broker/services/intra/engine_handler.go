@@ -27,6 +27,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/secretflow/scql/pkg/broker/storage"
+	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/executor"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 )
@@ -34,16 +35,16 @@ import (
 var _ pb.EngineResultCallbackServer = &grpcIntraSvc{}
 
 func (svc *grpcIntraSvc) Report(ctx context.Context, request *pb.ReportRequest) (*emptypb.Empty, error) {
-	if request == nil || request.GetSessionId() == "" {
+	if request == nil || request.GetJobId() == "" {
 		return nil, errors.New("Report: illegal request: no session id")
 	}
 
 	logrus.Debugf("Receive report request: %s", request.String())
 
 	app := svc.app
-	info, err := app.GetSessionInfo(request.GetSessionId())
+	info, err := app.GetSessionInfo(request.GetJobId())
 	if err != nil {
-		return nil, fmt.Errorf("session %v not found: %v", request.GetSessionId(), err)
+		return nil, fmt.Errorf("session %v not found: %v", request.GetJobId(), err)
 	}
 
 	switch info.Status {
@@ -57,13 +58,14 @@ func (svc *grpcIntraSvc) Report(ctx context.Context, request *pb.ReportRequest) 
 
 	result := &pb.QueryResponse{}
 	defer func() {
-		if err := app.PersistSessionResult(request.GetSessionId(), result); err != nil {
+		// stop engine whether persist failed or successfully
+		if err := app.PersistSessionResult(request.GetJobId(), result); err != nil {
 			logrus.Warnf("failed to persist session result: %v", err)
-			return
 		}
-		session, ok := app.GetSession(request.GetSessionId())
+		session, ok := app.GetSession(request.GetJobId())
 		if ok {
 			session.SetResultSafely(result)
+			session.App.JobWatcher.Unwatch(request.GetJobId())
 		}
 
 		if engine, err := app.Scheduler.ParseEngineInstance(info.JobInfo); err != nil {
@@ -114,7 +116,12 @@ func (svc *grpcIntraSvc) Report(ctx context.Context, request *pb.ReportRequest) 
 	result.AffectedRows = request.GetNumRowsAffected()
 	result.CostTimeS = time.Since(info.CreatedAt).Seconds()
 	if warn.MayAffectedByGroupThreshold {
-		reason := "for safety, we filter the results for groups which contain less than 4 items."
+		groupByThreshold := constant.DefaultGroupByThreshold
+		if app.Conf.SecurityCompromise.GroupByThreshold > 0 {
+			groupByThreshold = app.Conf.SecurityCompromise.GroupByThreshold
+		}
+
+		reason := fmt.Sprintf("for safety, we filter the results for groups which contain less than %d items.", groupByThreshold)
 		logrus.Infof("Report: %v", reason)
 		result.Warnings = append(result.Warnings, &pb.SQLWarning{Reason: reason})
 	}

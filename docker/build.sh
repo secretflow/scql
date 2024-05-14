@@ -81,9 +81,9 @@ echo "build image $SCQL_IMAGE:$IMAGE_TAG"
 MOUNT_OPTIONS=""
 if $ENABLE_CACHE; then
   if [ "$BASE_IMAGE" == "ubuntu" ]; then
-    MOUNT_OPTIONS="--mount type=volume,source=scql-ubuntu-buildcache,target=/root/.cache"
+    MOUNT_OPTIONS="--mount type=volume,source=scql-ubuntu-buildcache,target=/root/.cache --mount type=volume,source=scql-ubuntu-go-buildcache,target=/usr/local/pkg/mod"
   else
-    MOUNT_OPTIONS="--mount type=volume,source=scql-anolis-buildcache,target=/root/.cache"
+    MOUNT_OPTIONS="--mount type=volume,source=scql-anolis-buildcache,target=/root/.cache --mount type=volume,source=scql-ubuntu-go-buildcache,target=/usr/local/pkg/mod"
   fi
 fi
 
@@ -148,6 +148,9 @@ docker cp ${container_id}:/home/admin/dev/bin/brokerctl $TMP_PATH/$TARGET_PLATFO
 
 # copy dockerfile
 cp ${SCRIPT_DIR}/scql-${BASE_IMAGE}.Dockerfile $TMP_PATH/Dockerfile
+
+# copy scripts
+cp -r ${WORK_DIR}/scripts $TMP_PATH/scripts
 
 # build docker image
 cd $TMP_PATH

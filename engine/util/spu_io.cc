@@ -111,6 +111,7 @@ SpuInfeedHelper::PtView SpuInfeedHelper::ConvertArrowArrayToPtView(
   return PtView(value, validity);
 #endif  // SCQL_WITH_NULL
 
+  YACL_ENFORCE(array->null_count() == 0, "not support null in spu yet");
   return PtView(value);
 }
 

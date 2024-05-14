@@ -56,8 +56,8 @@ message CompiledPlan {
   // The position order matters, the parties[0]'s rank is 0.
   repeated PartyId parties = 4;
   map<string, SubGraph> sub_graphs = 5;
+  string whole_graph_checksum = 6;
   // TODO: Add field to specify the party who report final query result.
-
   ExplainInfo explain = 1000;
 }
 

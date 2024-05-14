@@ -45,7 +45,7 @@ TYPE_TO_COLUMN = {
 }
 
 REPLACE_MAP = {
-    "postgres": {"FLOAT_TYPE": "numeric", "DATETIME_TYPE": "date"},
+    "postgres": {"FLOAT_TYPE": "numeric", "DATETIME_TYPE": "timestamp with time zone"},
     "mysql": {"FLOAT_TYPE": "double", "DATETIME_TYPE": "datetime"},
 }
 

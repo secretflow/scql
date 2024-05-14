@@ -477,8 +477,7 @@ func (t *MetaTransaction) ListColumnConstraints(projectID string, tableNames []s
 }
 
 type ProjectMeta struct {
-	// TODO: add project info later
-	// proj   Project
+	Proj   ProjectWithMember
 	Tables []TableMeta
 	CCLs   []ColumnPriv
 }
@@ -486,6 +485,12 @@ type ProjectMeta struct {
 // return all tables and ccls for the given project if tableNames and cclDestParties are nil
 func (t *MetaTransaction) GetProjectMeta(projectID string, tableNames []string, cclDestParties []string, owner string) (*ProjectMeta, error) {
 	var meta ProjectMeta
+	proj, err := t.GetProjectAndMembers(projectID)
+	if err != nil {
+		return nil, err
+	}
+	meta.Proj = proj
+
 	tables, _, err := t.GetTableMetasByTableNames(projectID, tableNames)
 	if err != nil {
 		return nil, err
@@ -497,6 +502,7 @@ func (t *MetaTransaction) GetProjectMeta(projectID string, tableNames []string, 
 			meta.Tables = append(meta.Tables, table)
 		}
 	}
+
 	// if no table in tableNames is owned by current party, just return empty meta
 	if len(tableNames) > 0 && len(ownedTableNames) == 0 {
 		return &meta, nil

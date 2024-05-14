@@ -143,6 +143,7 @@ A typical config of security_compromise can be like:
       reveal_group_mark: false
       group_by_threshold: 4
 
+
 .. _config_storage_options:
 
 Config for storage

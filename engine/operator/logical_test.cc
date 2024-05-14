@@ -16,7 +16,7 @@
 
 #include "gtest/gtest.h"
 
-#include "engine/core/tensor_from_json.h"
+#include "engine/core/tensor_constructor.h"
 #include "engine/operator/binary_test.h"
 #include "engine/operator/test_util.h"
 

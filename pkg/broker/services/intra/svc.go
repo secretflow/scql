@@ -55,7 +55,7 @@ func (svc *IntraSvc) HealthHandler(c *gin.Context) {
 }
 
 func (svc *IntraSvc) CreateProjectHandler(c *gin.Context) {
-	handlerWrapper(c, svc.app,
+	handlerWrapper(c,
 		&pb.CreateProjectRequest{},
 		&pb.CreateProjectResponse{},
 		func(ctx context.Context, req *pb.CreateProjectRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.CreateProjectResponse, error) {
@@ -66,7 +66,7 @@ func (svc *IntraSvc) CreateProjectHandler(c *gin.Context) {
 }
 
 func (svc *IntraSvc) ListProjectsHandler(c *gin.Context) {
-	handlerWrapper(c, svc.app,
+	handlerWrapper(c,
 		&pb.ListProjectsRequest{},
 		&pb.ListProjectsResponse{},
 		func(ctx context.Context, req *pb.ListProjectsRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.ListProjectsResponse, error) {
@@ -77,7 +77,7 @@ func (svc *IntraSvc) ListProjectsHandler(c *gin.Context) {
 }
 
 func (svc *IntraSvc) InviteMemberHandler(c *gin.Context) {
-	handlerWrapper(c, svc.app,
+	handlerWrapper(c,
 		&pb.InviteMemberRequest{},
 		&pb.InviteMemberResponse{},
 		func(ctx context.Context, req *pb.InviteMemberRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.InviteMemberResponse, error) {
@@ -88,7 +88,7 @@ func (svc *IntraSvc) InviteMemberHandler(c *gin.Context) {
 }
 
 func (svc *IntraSvc) ListInvitationsHandler(c *gin.Context) {
-	handlerWrapper(c, svc.app,
+	handlerWrapper(c,
 		&pb.ListInvitationsRequest{},
 		&pb.ListInvitationsResponse{},
 		func(ctx context.Context, req *pb.ListInvitationsRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.ListInvitationsResponse, error) {
@@ -99,7 +99,7 @@ func (svc *IntraSvc) ListInvitationsHandler(c *gin.Context) {
 }
 
 func (svc *IntraSvc) ProcessInvitationHandler(c *gin.Context) {
-	handlerWrapper(c, svc.app,
+	handlerWrapper(c,
 		&pb.ProcessInvitationRequest{},
 		&pb.ProcessInvitationResponse{},
 		func(ctx context.Context, req *pb.ProcessInvitationRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.ProcessInvitationResponse, error) {
@@ -110,7 +110,7 @@ func (svc *IntraSvc) ProcessInvitationHandler(c *gin.Context) {
 }
 
 func (svc *IntraSvc) DoQueryHandler(c *gin.Context) {
-	handlerWrapper(c, svc.app,
+	handlerWrapper(c,
 		&pb.QueryRequest{},
 		&pb.QueryResponse{},
 		func(ctx context.Context, req *pb.QueryRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.QueryResponse, error) {
@@ -121,7 +121,7 @@ func (svc *IntraSvc) DoQueryHandler(c *gin.Context) {
 }
 
 func (svc *IntraSvc) SubmitQueryHandler(c *gin.Context) {
-	handlerWrapper(c, svc.app,
+	handlerWrapper(c,
 		&pb.QueryRequest{},
 		&pb.SubmitResponse{},
 		func(ctx context.Context, req *pb.QueryRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.SubmitResponse, error) {
@@ -136,7 +136,7 @@ func (svc *IntraSvc) SubmitQueryHandler(c *gin.Context) {
 }
 
 func (svc *IntraSvc) FetchResultHandler(c *gin.Context) {
-	handlerWrapper(c, svc.app,
+	handlerWrapper(c,
 		&pb.FetchResultRequest{},
 		&pb.QueryResponse{},
 		func(ctx context.Context, req *pb.FetchResultRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.QueryResponse, error) {
@@ -148,7 +148,7 @@ func (svc *IntraSvc) FetchResultHandler(c *gin.Context) {
 }
 
 func (svc *IntraSvc) CancelQueryHandler(c *gin.Context) {
-	handlerWrapper(c, svc.app,
+	handlerWrapper(c,
 		&pb.CancelQueryRequest{},
 		&pb.CancelQueryResponse{},
 		func(ctx context.Context, req *pb.CancelQueryRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.CancelQueryResponse, error) {
@@ -160,7 +160,7 @@ func (svc *IntraSvc) CancelQueryHandler(c *gin.Context) {
 }
 
 func (svc *IntraSvc) CreateTableHandler(c *gin.Context) {
-	handlerWrapper(c, svc.app,
+	handlerWrapper(c,
 		&pb.CreateTableRequest{},
 		&pb.CreateTableResponse{},
 		func(ctx context.Context, req *pb.CreateTableRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.CreateTableResponse, error) {
@@ -171,7 +171,7 @@ func (svc *IntraSvc) CreateTableHandler(c *gin.Context) {
 }
 
 func (svc *IntraSvc) ListTablesHandler(c *gin.Context) {
-	handlerWrapper(c, svc.app,
+	handlerWrapper(c,
 		&pb.ListTablesRequest{},
 		&pb.ListTablesResponse{},
 		func(ctx context.Context, req *pb.ListTablesRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.ListTablesResponse, error) {
@@ -182,7 +182,7 @@ func (svc *IntraSvc) ListTablesHandler(c *gin.Context) {
 }
 
 func (svc *IntraSvc) DropTableHandler(c *gin.Context) {
-	handlerWrapper(c, svc.app,
+	handlerWrapper(c,
 		&pb.DropTableRequest{},
 		&pb.DropTableResponse{},
 		func(ctx context.Context, req *pb.DropTableRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.DropTableResponse, error) {
@@ -193,7 +193,7 @@ func (svc *IntraSvc) DropTableHandler(c *gin.Context) {
 }
 
 func (svc *IntraSvc) GrantCCLHandler(c *gin.Context) {
-	handlerWrapper(c, svc.app,
+	handlerWrapper(c,
 		&pb.GrantCCLRequest{},
 		&pb.GrantCCLResponse{},
 		func(ctx context.Context, req *pb.GrantCCLRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.GrantCCLResponse, error) {
@@ -204,7 +204,7 @@ func (svc *IntraSvc) GrantCCLHandler(c *gin.Context) {
 }
 
 func (svc *IntraSvc) RevokeCCLHandler(c *gin.Context) {
-	handlerWrapper(c, svc.app,
+	handlerWrapper(c,
 		&pb.RevokeCCLRequest{},
 		&pb.RevokeCCLResponse{},
 		func(ctx context.Context, req *pb.RevokeCCLRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.RevokeCCLResponse, error) {
@@ -215,13 +215,24 @@ func (svc *IntraSvc) RevokeCCLHandler(c *gin.Context) {
 }
 
 func (svc *IntraSvc) ShowCCLHandler(c *gin.Context) {
-	handlerWrapper(c, svc.app,
+	handlerWrapper(c,
 		&pb.ShowCCLRequest{},
 		&pb.ShowCCLResponse{},
 		func(ctx context.Context, req *pb.ShowCCLRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.ShowCCLResponse, error) {
 			logEntry.RawRequest = req.String()
 			logEntry.ActionName = fmt.Sprintf("%v@%v", "Intra", "ShowCCL")
 			return svc.ShowCCL(ctx, req)
+		})
+}
+
+func (svc *IntraSvc) CheckAndUpdateStatusHandler(c *gin.Context) {
+	handlerWrapper(c,
+		&pb.CheckAndUpdateStatusRequest{},
+		&pb.CheckAndUpdateStatusResponse{},
+		func(ctx context.Context, req *pb.CheckAndUpdateStatusRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.CheckAndUpdateStatusResponse, error) {
+			logEntry.RawRequest = req.String()
+			logEntry.ActionName = fmt.Sprintf("%v@%v", "Intra", "CheckAndUpdateStatus")
+			return svc.CheckAndUpdateStatus(ctx, req)
 		})
 }
 
@@ -253,7 +264,6 @@ func (svc *IntraSvc) EngineCallbackHandler(c *gin.Context) {
 
 func handlerWrapper[In, Out protoreflect.ProtoMessage](
 	c *gin.Context,
-	app *application.App,
 	req In, resp Out,
 	fn func(context.Context, In, *logutil.BrokerMonitorLogEntry) (Out, error)) {
 	var err error

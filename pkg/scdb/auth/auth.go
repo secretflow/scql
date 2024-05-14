@@ -15,13 +15,17 @@
 package auth
 
 import (
+	"crypto"
 	"crypto/ed25519"
+	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
 	"fmt"
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"github.com/tjfoc/gmsm/sm2"
 
 	"github.com/secretflow/scql/pkg/parser/ast"
 	"github.com/secretflow/scql/pkg/scdb/config"
@@ -115,16 +119,24 @@ func (pa *PartyAuthenticator) verifyPubKey(authOpt *ast.PubKeyAuthOption) (err e
 			return fmt.Errorf("failed to parse DER encoded public key: %+v", err)
 		}
 
+		sig, err := base64.StdEncoding.DecodeString(authOpt.Signature)
+		if err != nil {
+			return fmt.Errorf("failed to decode signature in base64 encoding: %+v", err)
+		}
 		switch pub := pub.(type) {
 		case ed25519.PublicKey:
-			sig, err := base64.StdEncoding.DecodeString(authOpt.Signature)
-			if err != nil {
-				return fmt.Errorf("failed to decode signature in base64 encoding: %+v", err)
-			}
 			if !ed25519.Verify(pub, []byte(authOpt.Message), sig) {
-				return fmt.Errorf("failed to verify signature with public key")
+				return fmt.Errorf("failed to verify signature with ed25519 public key")
 			}
-		// TODO: support sm2, rsa
+		case *rsa.PublicKey:
+			msgHashSum := sha256.Sum256([]byte(authOpt.Message))
+			if err := rsa.VerifyPSS(pub, crypto.SHA256, msgHashSum[:], sig, nil); err != nil {
+				return fmt.Errorf("failed to verify signature with rsa public key: %+v", err)
+			}
+		case *sm2.PublicKey:
+			if ok := pub.Verify([]byte(authOpt.Message), sig); !ok {
+				return fmt.Errorf("failed to verify signature with sm2 public key")
+			}
 		default:
 			return fmt.Errorf("unknown type of public key")
 		}

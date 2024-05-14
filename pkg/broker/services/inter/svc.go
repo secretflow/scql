@@ -66,7 +66,7 @@ func (svc *grpcInterSvc) SyncInfo(c context.Context, req *pb.SyncInfoRequest) (r
 		if err != nil {
 			return nil, fmt.Errorf("SyncInfo AddProjectMember: unmarshal: %v", err)
 		}
-		err = txn.AddProjectMembers([]storage.Member{storage.Member{ProjectID: req.GetProjectId(), Member: member}})
+		err = txn.AddProjectMembers([]storage.Member{{ProjectID: req.GetProjectId(), Member: member}})
 		if err != nil {
 			return nil, fmt.Errorf("SyncInfo AddProjectMember: %v", err)
 		}

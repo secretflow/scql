@@ -8,8 +8,8 @@ inter_server:
 log_level: debug
 party_code: alice
 # NOTICE: relative paths are used here, which may cause inaccessibility due to mismatched levels of test files
-party_info_file: "../testdata/party_info.json"
-private_key_path: "../testdata/private_key_alice.pem"
+party_info_file: "party_info.json"
+private_key_path: "private_key.pem"
 session_expire_time: 24h
 session_expire_check_time: 1m
 persist_session: false

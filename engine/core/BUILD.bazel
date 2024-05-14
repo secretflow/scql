@@ -94,11 +94,12 @@ cc_library(
 )
 
 cc_library(
-    name = "tensor_from_json",
-    srcs = ["tensor_from_json.cc"],
-    hdrs = ["tensor_from_json.h"],
+    name = "tensor_constructor",
+    srcs = ["tensor_constructor.cc"],
+    hdrs = ["tensor_constructor.h"],
     deps = [
         ":arrow_helper",
+        ":primitive_builder",
         ":tensor",
     ],
 )

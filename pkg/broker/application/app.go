@@ -47,6 +47,8 @@ type App struct {
 	InterStub    *InterStub
 
 	Scheduler scheduler.EngineScheduler
+
+	JobWatcher *executor.JobWatcher
 }
 
 func NewApp(partyMgr partymgr.PartyMgr, metaMgr *storage.MetaManager, cfg *config.Config) (*App, error) {
@@ -105,7 +107,7 @@ func NewApp(partyMgr partymgr.PartyMgr, metaMgr *storage.MetaManager, cfg *confi
 		}
 		app.Scheduler = scheduler
 	case "", "naive":
-		scheduler, err := scheduler.NewNaiveScheduler(cfg.Engine.Uris)
+		scheduler, err := scheduler.NewNaiveScheduler(cfg.Engine)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create naive scheduler: %v", err)
 		}
@@ -113,6 +115,12 @@ func NewApp(partyMgr partymgr.PartyMgr, metaMgr *storage.MetaManager, cfg *confi
 	default:
 		return nil, fmt.Errorf("unsupported engine scheduler %s", cfg.Engine.Scheduler)
 	}
+
+	jobWatcher := executor.NewJobWatcher(func(jobId, reason string) {
+		app.onJobDead(jobId, reason)
+	})
+
+	app.JobWatcher = jobWatcher
 
 	if cfg.PersistSession {
 		go app.StorageGc()
@@ -131,6 +139,21 @@ func (app *App) GetSession(sid string) (*Session, bool) {
 		return result, exists
 	}
 	return nil, false
+}
+
+func (app *App) onJobDead(jobId string, reason string) {
+	session, ok := app.GetSession(jobId)
+	if !ok {
+		logrus.Warnf("App.onJobDead error: session not found for job id %s", jobId)
+	}
+	result := &pb.QueryResponse{
+		Status: &pb.Status{
+			Code:    int32(pb.Code_INTERNAL),
+			Message: reason,
+		},
+	}
+	session.SetResultSafely(result)
+	session.OnError(fmt.Errorf(reason))
 }
 
 func (app *App) DeleteSession(sid string) {

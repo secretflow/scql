@@ -16,6 +16,8 @@
 
 #include "absl/debugging/failure_signal_handler.h"
 #include "absl/debugging/symbolize.h"
+#include "absl/strings/str_split.h"
+#include "absl/strings/strip.h"
 #include "brpc/server.h"
 #include "butil/file_util.h"
 #include "gflags/gflags.h"
@@ -115,6 +117,8 @@ DEFINE_string(engine_credential, "", "driver authorization credential");
 DEFINE_int32(session_timeout_s, 1800,
              "TTL for session, should be greater than the typical runtime of "
              "the specific tasks.");
+DEFINE_string(spu_allowed_protocols, "SEMI2K,ABY3,CHEETAH,SECURENN",
+              "spu allowed protocols");
 // DataBase connection flags.
 DEFINE_string(datasource_router, "embed",
               "datasource router type: embed | http | kusciadatamesh");
@@ -313,9 +317,24 @@ std::unique_ptr<scql::engine::EngineServiceImpl> BuildEngineService(
     opts.log_dir = FLAGS_psi_detail_logger_dir;
   }
   session_opt.log_options = opts;
+
+  std::vector<spu::ProtocolKind> allowed_protocols;
+
+  std::vector<absl::string_view> protocols_str =
+      absl::StrSplit(FLAGS_spu_allowed_protocols, ',');
+  for (auto& protocol_str : protocols_str) {
+    std::string stripped_str(absl::StripAsciiWhitespace(protocol_str));
+    spu::ProtocolKind protocol_kind;
+
+    YACL_ENFORCE(spu::ProtocolKind_Parse(stripped_str, &protocol_kind),
+                 fmt::format("invalid protocol provided: {}", stripped_str));
+    allowed_protocols.push_back(protocol_kind);
+  }
+
   auto session_manager = std::make_unique<scql::engine::SessionManager>(
       session_opt, listener_manager, std::move(link_factory),
-      std::move(ds_router), std::move(ds_mgr), FLAGS_session_timeout_s);
+      std::move(ds_router), std::move(ds_mgr), FLAGS_session_timeout_s,
+      allowed_protocols);
 
   auto authenticator = BuildAuthenticator();
 

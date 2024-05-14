@@ -28,9 +28,8 @@ static yacl::link::FactoryMem g_mem_link_factory;
 
 namespace {
 
-pb::SessionStartParams::Party BuildParty(const std::string& code,
-                                         int32_t rank) {
-  pb::SessionStartParams::Party party;
+pb::JobStartParams::Party BuildParty(const std::string& code, int32_t rank) {
+  pb::JobStartParams::Party party;
   party.set_code(code);
   party.set_name("party " + code);
   party.set_host(code + ".com");
@@ -63,24 +62,26 @@ spu::RuntimeConfig MakeSpuRuntimeConfigForTest(
 
 std::shared_ptr<Session> Make1PCSession(Router* ds_router,
                                         DatasourceAdaptorMgr* ds_mgr) {
-  pb::SessionStartParams params;
+  pb::JobStartParams params;
   params.set_party_code(kPartyAlice);
-  params.set_session_id("1PC-session");
+  params.set_job_id("1PC-session");
   params.mutable_spu_runtime_cfg()->CopyFrom(
       MakeSpuRuntimeConfigForTest(spu::ProtocolKind::REF2K));
   SessionOptions options;
   auto* alice = params.add_parties();
   alice->CopyFrom(BuildParty(kPartyAlice, 0));
   pb::DebugOptions debug_opts;
+  std::vector<spu::ProtocolKind> allowed_protocols{spu::ProtocolKind::CHEETAH,
+                                                   spu::ProtocolKind::SEMI2K};
   return std::make_shared<Session>(options, params, debug_opts,
                                    &g_mem_link_factory, nullptr, ds_router,
-                                   ds_mgr);
+                                   ds_mgr, allowed_protocols);
 }
 
 std::vector<std::shared_ptr<Session>> MakeMultiPCSession(
     const SpuRuntimeTestCase test_case) {
-  pb::SessionStartParams common_params;
-  common_params.set_session_id("session_multi_pc");
+  pb::JobStartParams common_params;
+  common_params.set_job_id("session_multi_pc");
   for (size_t i = 0; i < test_case.party_size; ++i) {
     auto party = BuildParty(kPartyCodes[i], i);
     auto* p = common_params.add_parties();
@@ -91,14 +92,17 @@ std::vector<std::shared_ptr<Session>> MakeMultiPCSession(
 
   std::vector<std::future<std::shared_ptr<Session>>> futures;
   SessionOptions options;
-  auto create_session = [&](const pb::SessionStartParams& params) {
+  auto create_session = [&](const pb::JobStartParams& params) {
     pb::DebugOptions debug_opts;
+    std::vector<spu::ProtocolKind> allowed_protocols{spu::ProtocolKind::CHEETAH,
+                                                     spu::ProtocolKind::SEMI2K,
+                                                     spu::ProtocolKind::ABY3};
     return std::make_shared<Session>(options, params, debug_opts,
                                      &g_mem_link_factory, nullptr, nullptr,
-                                     nullptr);
+                                     nullptr, allowed_protocols);
   };
   for (size_t i = 0; i < test_case.party_size; ++i) {
-    pb::SessionStartParams params;
+    pb::JobStartParams params;
     params.CopyFrom(common_params);
     params.set_party_code(kPartyCodes[i]);
     futures.push_back(std::async(create_session, params));
@@ -248,7 +252,7 @@ void FeedInputAsShares(const std::vector<ExecContext*>& ctxs,
   }
 
   for (auto& future : futures) {
-    future.wait();
+    future.get();
   }
 }
 }  // namespace

@@ -17,7 +17,7 @@
 #include "arrow/type.h"
 #include "gtest/gtest.h"
 
-#include "engine/core/tensor_from_json.h"
+#include "engine/core/tensor_constructor.h"
 #include "engine/operator/test_util.h"
 
 namespace scql::engine::op {
@@ -25,6 +25,48 @@ namespace scql::engine::op {
 struct CopyTestCase {
   std::vector<test::NamedTensor> datas;
   std::vector<std::string> output_names;
+};
+
+CopyTestCase MockInt32TensorCase(const size_t tensor_length) {
+  CopyTestCase test_case;
+  test_case.output_names = {"x1_copy"};
+  std::vector<test::NamedTensor> tensors;
+  std::string tensor_str = "[";
+  for (size_t i = 0; i < tensor_length; i++) {
+    if (i % 7 == 0) {
+      tensor_str += "null";
+    } else {
+      tensor_str += std::to_string(i);
+    }
+    if (i < tensor_length - 1) {
+      tensor_str += ",";
+    }
+  }
+  tensor_str += "]";
+  test_case.datas = {
+      test::NamedTensor("x1", TensorFromJSON(arrow::int32(), tensor_str))};
+  return test_case;
+};
+
+CopyTestCase MockStringTensorCase(const size_t tensor_length) {
+  CopyTestCase test_case;
+  test_case.output_names = {"x1_copy"};
+  std::vector<test::NamedTensor> tensors;
+  std::string tensor_str = "[";
+  for (size_t i = 0; i < tensor_length; i++) {
+    if (i % 7 == 0) {
+      tensor_str += "null";
+    } else {
+      tensor_str += "\"" + std::to_string(i) + "\"";
+    }
+    if (i < tensor_length - 1) {
+      tensor_str += ",";
+    }
+  }
+  tensor_str += "]";
+  test_case.datas = {
+      test::NamedTensor("x1", TensorFromJSON(arrow::large_utf8(), tensor_str))};
+  return test_case;
 };
 
 class CopyTest : public ::testing::TestWithParam<
@@ -57,7 +99,14 @@ INSTANTIATE_TEST_SUITE_P(
                 .datas = {test::NamedTensor(
                     "x1", TensorFromJSON(arrow::int64(),
                                          "[null,0,1,2,3,10,11,12,13]"))},
-                .output_names = {"x1_copy"}})),
+                .output_names = {"x1_copy"}},
+            CopyTestCase{.datas = {test::NamedTensor(
+                             "x1", TensorFromJSON(arrow::int64(), "[]"))},
+                         .output_names = {"x1_copy"}},
+            MockInt32TensorCase(100), MockStringTensorCase(500),
+            MockInt32TensorCase(2000), MockStringTensorCase(12000),
+            MockInt32TensorCase(1000 * 1000 + 2),
+            MockStringTensorCase(1000 * 1000 + 3))),
     TestParamNameGenerator(CopyTest));
 
 TEST_P(CopyTest, works) {

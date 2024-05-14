@@ -27,9 +27,9 @@ option go_package = "proto-gen/scql";
 message SubGraph {
   map<string, ExecNode> nodes = 1;
   SchedulingPolicy policy = 2;
-  // checksum of the whole execution graph
+  // checksum of the current sub graph
   // It could be used to verify and ensure that engines execute the same graph.
-  bytes graph_checksum = 3;
+  string sub_graph_checksum = 3;
 }
 
 message SubDAG {

@@ -70,6 +70,7 @@ func NewIntraServer(app *application.App) (*http.Server, error) {
 	router.POST(constant.RevokeCCLPath, intraSvc.RevokeCCLHandler)
 	router.POST(constant.ShowCCLPath, intraSvc.ShowCCLHandler)
 	router.POST(constant.EngineCallbackPath, intraSvc.EngineCallbackHandler)
+	router.POST(constant.CheckAndUpdateStatusPath, intraSvc.CheckAndUpdateStatusHandler)
 
 	return &http.Server{
 		Addr:           fmt.Sprintf("%s:%v", app.Conf.IntraServer.Host, app.Conf.IntraServer.Port),

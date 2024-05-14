@@ -35,3 +35,4 @@ Topics
 
     deployment/how-to-deploy-centralized-cluster
     deployment/how-to-deploy-p2p-cluster
+    deployment/run-scql-on-kuscia

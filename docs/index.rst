@@ -79,6 +79,9 @@ Deployment
   - **Reference**: :doc:`Centralized Configuration </reference/centralized-deploy-config>`
 
 
+* **With Kuscia**: :doc:`Run SCQL on Kuscia </topics/deployment/run-scql-on-kuscia>`
+
+
 For contributors
 ----------------
 

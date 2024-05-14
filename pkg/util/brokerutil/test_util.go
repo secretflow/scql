@@ -13,66 +13,87 @@
 // limitations under the License.
 
 // Due to circular references, please avoid moving this file to testutil.
-package testdata
+package brokerutil
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 
-func CreateTestPemFiles(path string) error {
-	fileNames := []string{"private_key_alice.pem", "private_key_bob.pem", "private_key_carol.pem"}
-	fileContents := []string{
-		`-----BEGIN PRIVATE KEY-----
+const (
+	AlicePemFilKey   = "alice_pem_file"
+	BobPemFileKey    = "bob_pem_file"
+	CarolPemFileKey  = "carol_pem_file"
+	PartyInfoFileKey = "party_info_file"
+)
+
+func CreateTestPemFiles(portsMap map[string]int, tempDir string) (filesMap map[string]string, err error) {
+	filesMap = make(map[string]string)
+	fileContents := map[string]string{
+		AlicePemFilKey: `-----BEGIN PRIVATE KEY-----
 MC4CAQAwBQYDK2VwBCIEICh+ZViILyFPq658OPYq6iKlSj802q1LfrmrV2i1GWcn
 -----END PRIVATE KEY-----
 `,
-		`-----BEGIN PRIVATE KEY-----
+		BobPemFileKey: `-----BEGIN PRIVATE KEY-----
 MC4CAQAwBQYDK2VwBCIEIOlHfgiMd9iEQtlJVdWGSBLyGnqIVc+sU3MAcfpJcP4S
 -----END PRIVATE KEY-----
 `,
-		`-----BEGIN PRIVATE KEY-----
+		CarolPemFileKey: `-----BEGIN PRIVATE KEY-----
 MC4CAQAwBQYDK2VwBCIEIFvceWQFFw2LNbqVrJs1nSZji0HQZABKzTfrOABTBn5F
 -----END PRIVATE KEY-----
 `,
 	}
-	for i, fileName := range fileNames {
-		filePath := path + "/" + fileName
-		file, err := os.Create(filePath)
+	var toRemoveFilePath []string
+	defaultPorts := map[string]int{
+		"alice": 8082,
+		"bob":   8084,
+		"carol": 8086,
+	}
+	// use default portsMap if no portsMap are specified
+	for portName, port := range portsMap {
+		defaultPorts[portName] = port
+	}
+	for key, value := range fileContents {
+		var file *os.File
+		file, err = os.CreateTemp(tempDir, "*.pem")
 		if err != nil {
-			return err
+			return
 		}
+		toRemoveFilePath = append(toRemoveFilePath, file.Name())
 		defer file.Close()
-		_, err = file.WriteString(fileContents[i])
+		_, err = file.WriteString(value)
 		if err != nil {
-			return err
+			return
 		}
+		filesMap[key] = file.Name()
 	}
-	filePath := path + "/" + "party_info_test.json"
-	file, err := os.Create(filePath)
+	var file *os.File
+	file, err = os.CreateTemp(tempDir, "*.json")
 	if err != nil {
-		return err
+		return
 	}
+	toRemoveFilePath = append(toRemoveFilePath, file.Name())
 	defer file.Close()
-	_, err = file.WriteString(`
+	filesMap[PartyInfoFileKey] = file.Name()
+	_, err = file.WriteString(fmt.Sprintf(`
 	{
 		"participants": [
 		  {
 			"party_code": "alice",
-			"endpoint": "http://localhost:8082",
+			"endpoint": "http://localhost:%d",
 			"pubkey": "MCowBQYDK2VwAyEAqhfJVWZX32aVh00fUqfrbrGkwboi8ZpTpybLQ4rbxoA="
 		  },
 		  {
 			"party_code": "bob",
-			"endpoint": "http://localhost:8084",
+			"endpoint": "http://localhost:%d",
 			"pubkey": "MCowBQYDK2VwAyEAN3w+v2uks/QEaVZiprZ8oRChMkBOZJSAl6V/5LvOnt4="
 		  },
 		  {
 			"party_code": "carol",
-			"endpoint": "http://localhost:8086",
+			"endpoint": "http://localhost:%d",
 			"pubkey": "MCowBQYDK2VwAyEANhiAXTvL4x2jYUiAbQRo9XuOTrFFnAX4Q+YlEAgULs8="
 		  }
 		]
-	  }`)
-	if err != nil {
-		return err
-	}
-	return nil
+	  }`, defaultPorts["alice"], defaultPorts["bob"], defaultPorts["carol"]))
+	return
 }

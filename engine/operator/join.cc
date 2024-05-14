@@ -37,6 +37,7 @@
 #include "engine/core/primitive_builder.h"
 #include "engine/core/tensor.h"
 #include "engine/framework/exec.h"
+#include "engine/util/communicate_helper.h"
 #include "engine/util/psi_detail_logger.h"
 #include "engine/util/psi_helper.h"
 #include "engine/util/tensor_util.h"
@@ -278,6 +279,7 @@ void Join::OprfPsiJoin(ExecContext* ctx, bool is_server,
       *ctx, static_cast<int64_t>(psi_info_table.self_size),
       static_cast<int64_t>(psi_info_table.peer_size),
       psi_info_table.result_size, psi_info_table.start_time);
+  SPDLOG_INFO("OPRF PSI Join end");
 }
 
 std::vector<TensorPtr> Join::GetJoinKeys(ExecContext* ctx, bool is_left) {
@@ -432,21 +434,22 @@ void Join::SendNullCount(ExecContext* ctx, int64_t peer_rank,
 
 void Join::SendMatchedSeqs(ExecContext* ctx, int64_t peer_rank,
                            const std::vector<uint64_t>& matched_seqs) {
+  SPDLOG_INFO("OPRF Join: start sending matched seqs, total count: {}",
+              matched_seqs.size());
+
   auto lctx = ctx->GetSession()->GetLink();
-  msgpack::sbuffer sbuf;
-  msgpack::pack(sbuf, matched_seqs);
   auto tag = ctx->GetNodeName() + "-UbJoinMatchedSeqs";
-  lctx->Send(peer_rank, yacl::ByteContainerView(sbuf.data(), sbuf.size()), tag);
+
+  util::SendMassiveMsgpack<uint64_t>(lctx, tag, peer_rank, matched_seqs);
+
+  SPDLOG_INFO("OPRF Join: finish sending matched seqs");
 }
 
 std::vector<uint64_t> Join::RecvMatchedSeqs(ExecContext* ctx,
                                             int64_t peer_rank) {
   auto lctx = ctx->GetSession()->GetLink();
   auto tag = ctx->GetNodeName() + "-UbJoinMatchedSeqs";
-  yacl::Buffer matched_seqs_buf = lctx->Recv(peer_rank, tag);
-  msgpack::object_handle oh = msgpack::unpack(
-      static_cast<char*>(matched_seqs_buf.data()), matched_seqs_buf.size());
-  return oh.get().as<std::vector<uint64_t>>();
+  return util::RecvMassiveMsgpack<uint64_t>(lctx, tag, peer_rank);
 }
 
 TensorPtr Join::BuildServerResult(
@@ -455,7 +458,8 @@ TensorPtr Join::BuildServerResult(
     uint64_t client_unmatched_count, JoinRole join_role,
     const std::shared_ptr<util::BatchProvider>& batch_provider) {
   UInt64TensorBuilder result_builder;
-  result_builder.Reserve(static_cast<int64_t>(matched_seqs.size()));
+  result_builder.Reserve(
+      static_cast<int64_t>(matched_seqs.size() + client_unmatched_count));
   std::unordered_set<uint64_t> matched_indices;
   for (uint64_t matched_seq : matched_seqs) {
     uint64_t matched_indice = ub_cache->GetIndice(matched_seq);
@@ -464,7 +468,6 @@ TensorPtr Join::BuildServerResult(
   }
 
   if (join_role == JoinRole::kLeftOrRightJoinNullParty) {
-    result_builder.Reserve(static_cast<int64_t>(client_unmatched_count));
     for (uint64_t i = 0; i < client_unmatched_count; ++i) {
       result_builder.UnsafeAppendNull();
     }

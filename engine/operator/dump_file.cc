@@ -92,6 +92,7 @@ void DumpFile::Execute(ExecContext* ctx) {
       out_stream, arrow::io::FileOutputStream::Open(absolute_path_file, false));
 
   arrow::csv::WriteOptions options;
+  options.batch_size = 1024 * 100;  // default 1024 is too small for large data
   options.delimiter =
       ctx->GetStringValueFromAttribute(kFieldDeliminatorAttr).front();
   options.eol = ctx->GetStringValueFromAttribute(kLineTerminatorAttr);

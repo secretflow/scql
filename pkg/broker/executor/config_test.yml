@@ -1,0 +1,32 @@
+intra_server:
+  port: 8081
+  protocol: https
+  cert_file: cert_file
+  key_file: key_file
+inter_server:
+  port: 8082
+log_level: debug
+party_code: alice
+# NOTICE: relative paths are used here, which may cause inaccessibility due to mismatched levels of test files
+party_info_file: "party_info.json"
+private_key_path: "private_key.pem"
+session_expire_time: 24h
+session_expire_check_time: 1m
+persist_session: false
+exchange_job_info_retry_times: 2
+exchange_job_info_retry_interval: 10s
+intra_host: localhost:8081
+engine:
+  timeout: 120s
+  protocol: http
+  content_type: application/json
+  uris:
+    - for_peer: alice.com
+      for_self: alice.com
+storage:
+  type: mysql
+  conn_str: "root:xxxx@tcp(mysql:3306)/scdb?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
+  max_idle_conns: 10
+  max_open_conns: 100
+  conn_max_idle_time: 2m
+  conn_max_lifetime: 5m

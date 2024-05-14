@@ -17,9 +17,10 @@ package brokerutil
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
-	"os"
+	"strconv"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -75,7 +76,8 @@ func (b *TestAppBuilder) buildHandlerTestApp(partyCode, engineEndpoint string) (
 	if err != nil {
 		return nil, err
 	}
-	db, err := gorm.Open(sqlite.Open(":memory:"),
+	connStr := fmt.Sprintf("file:%s?mode=memory&cache=shared", partyCode)
+	db, err := gorm.Open(sqlite.Open(connStr),
 		&gorm.Config{
 			SkipDefaultTransaction: true,
 			Logger: gormlog.New(
@@ -93,74 +95,40 @@ func (b *TestAppBuilder) buildHandlerTestApp(partyCode, engineEndpoint string) (
 	return application.NewApp(partyMgr, metaMgr, &cfg)
 }
 
-func (b *TestAppBuilder) BuildAppTests() error {
-	partyJson, err := os.CreateTemp("", "party_info_*.json")
-	defer partyJson.Close()
-	formatter := `{
-   "participants": [
-     {
-       "party_code": "alice",
-       "endpoint": "%s",
-       "pubkey": "MCowBQYDK2VwAyEAqhfJVWZX32aVh00fUqfrbrGkwboi8ZpTpybLQ4rbxoA="
-     },
-     {
-       "party_code": "bob",
-       "endpoint": "%s",
-       "pubkey": "MCowBQYDK2VwAyEAN3w+v2uks/QEaVZiprZ8oRChMkBOZJSAl6V/5LvOnt4="
-     },
-     {
-       "party_code": "carol",
-       "endpoint": "%s",
-       "pubkey": "MCowBQYDK2VwAyEANhiAXTvL4x2jYUiAbQRo9XuOTrFFnAX4Q+YlEAgULs8="
-     }
-   ]
- }
- `
-
+func (b *TestAppBuilder) BuildAppTests(tempDir string) error {
 	b.ServerAlice = httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 	b.ServerBob = httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 	b.ServerCarol = httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 	b.ServerEngine = httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	urlMap := make(map[string]string)
 	b.ServerAliceUrl = "http://" + b.ServerAlice.Listener.Addr().String()
+	urlMap["alice"] = b.ServerAlice.Listener.Addr().String()
 	b.ServerBobUrl = "http://" + b.ServerBob.Listener.Addr().String()
+	urlMap["bob"] = b.ServerBob.Listener.Addr().String()
 	b.ServerCarolUrl = "http://" + b.ServerCarol.Listener.Addr().String()
+	urlMap["carol"] = b.ServerCarol.Listener.Addr().String()
+	portsMap := make(map[string]int)
+	for party, url := range urlMap {
+		_, port, err := net.SplitHostPort(url)
+		if err != nil {
+			return err
+		}
+		portNum, err := strconv.Atoi(port)
+		if err != nil {
+			return err
+		}
+		portsMap[party] = portNum
+	}
 	b.ServerEngineUrl = b.ServerEngine.Listener.Addr().String()
-
-	partyJson.WriteString(fmt.Sprintf(formatter, b.ServerAliceUrl, b.ServerBobUrl, b.ServerCarolUrl))
+	filesMap, err := CreateTestPemFiles(portsMap, tempDir)
 	if err != nil {
 		return err
 	}
-	b.PartyInfoTmpPath = partyJson.Name()
-	pemAlice, err := os.CreateTemp("", "private_key_*.pem")
-	if err != nil {
-		return err
-	}
-	defer pemAlice.Close()
-	pemAlice.WriteString(`-----BEGIN PRIVATE KEY-----
-MC4CAQAwBQYDK2VwBCIEICh+ZViILyFPq658OPYq6iKlSj802q1LfrmrV2i1GWcn
------END PRIVATE KEY-----`)
-
-	pemBob, err := os.CreateTemp("", "private_key_*.pem")
-	if err != nil {
-		return err
-	}
-	defer pemBob.Close()
-	pemBob.WriteString(`-----BEGIN PRIVATE KEY-----
-MC4CAQAwBQYDK2VwBCIEIOlHfgiMd9iEQtlJVdWGSBLyGnqIVc+sU3MAcfpJcP4S
------END PRIVATE KEY-----`)
-
-	pemCarol, err := os.CreateTemp("", "private_key_*.pem")
-	if err != nil {
-		return err
-	}
-	defer pemCarol.Close()
-	pemCarol.WriteString(`-----BEGIN PRIVATE KEY-----
-MC4CAQAwBQYDK2VwBCIEIFvceWQFFw2LNbqVrJs1nSZji0HQZABKzTfrOABTBn5F
------END PRIVATE KEY-----`)
 	b.PemFilePaths = make(map[string]string)
-	b.PemFilePaths["alice"] = pemAlice.Name()
-	b.PemFilePaths["bob"] = pemBob.Name()
-	b.PemFilePaths["carol"] = pemCarol.Name()
+	b.PartyInfoTmpPath = filesMap[PartyInfoFileKey]
+	b.PemFilePaths["alice"] = filesMap[AlicePemFilKey]
+	b.PemFilePaths["bob"] = filesMap[BobPemFileKey]
+	b.PemFilePaths["carol"] = filesMap[CarolPemFileKey]
 	b.AppAlice, err = b.buildHandlerTestApp("alice", b.ServerEngineUrl)
 	if err != nil {
 		return err

@@ -96,12 +96,13 @@ cc_library(
     deps = [
         "//engine/audit:audit_log",
         "//engine/framework:operator",
+        "//engine/util:communicate_helper",
         "//engine/util:psi_detail_logger",
         "//engine/util:psi_helper",
         "@com_github_msgpack_msgpack//:msgpack",
+        "@psi//psi/cryptor:cryptor_selector",
         "@psi//psi/ecdh:ecdh_oprf_psi",
         "@psi//psi/ecdh:ecdh_psi",
-        "@psi//psi/cryptor:cryptor_selector",
     ],
 )
 
@@ -111,7 +112,7 @@ cc_test(
     deps = [
         ":join",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -149,7 +150,7 @@ cc_test(
     deps = [
         ":filter_by_index",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -171,7 +172,7 @@ cc_test(
     deps = [
         ":make_share",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -193,7 +194,7 @@ cc_test(
     deps = [
         ":publish",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -216,7 +217,7 @@ cc_library(
     deps = [
         ":all_ops_register",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest",
     ],
 )
@@ -259,7 +260,7 @@ cc_test(
     deps = [
         ":make_private",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -283,7 +284,7 @@ cc_test(
     deps = [
         ":filter",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -306,7 +307,7 @@ cc_test(
     deps = [
         ":make_public",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -349,7 +350,7 @@ cc_test(
         ":binary_test",
         ":logical",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -361,6 +362,7 @@ cc_library(
     deps = [
         "//engine/framework:operator",
         "//engine/util:spu_io",
+        "//engine/util:table_util",
         "//engine/util:tensor_util",
     ],
 )
@@ -371,7 +373,7 @@ cc_test(
     deps = [
         ":copy",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -385,9 +387,9 @@ cc_library(
         "//engine/framework:operator",
         "//engine/util:psi_detail_logger",
         "//engine/util:psi_helper",
+        "@psi//psi/cryptor:cryptor_selector",
         "@psi//psi/ecdh:ecdh_oprf_psi",
         "@psi//psi/ecdh:ecdh_psi",
-        "@psi//psi/cryptor:cryptor_selector",
     ],
 )
 
@@ -397,7 +399,7 @@ cc_test(
     deps = [
         ":in",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -421,7 +423,7 @@ cc_test(
     deps = [
         ":constant",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -444,7 +446,7 @@ cc_test(
     deps = [
         ":dump_file",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_github_brpc_brpc//:butil",
         "@com_google_googletest//:gtest_main",
     ],
@@ -472,7 +474,7 @@ cc_test(
         ":all_ops_register",
         ":reduce",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -495,7 +497,7 @@ cc_test(
     deps = [
         ":shape",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -520,7 +522,7 @@ cc_test(
     deps = [
         ":sort",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -547,7 +549,7 @@ cc_test(
     deps = [
         ":oblivious_group_mark",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -578,7 +580,7 @@ cc_test(
         ":all_ops_register",
         ":oblivious_group_agg",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -601,7 +603,7 @@ cc_test(
     deps = [
         ":shuffle",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "//engine/util:psi_helper",
         "@com_google_googletest//:gtest_main",
     ],
@@ -625,7 +627,7 @@ cc_test(
     deps = [
         ":broadcast_to",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -646,7 +648,7 @@ cc_test(
     deps = [
         ":test_util",
         ":unique",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -669,7 +671,7 @@ cc_test(
     deps = [
         ":concat",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -682,6 +684,7 @@ cc_library(
         "//engine/core:primitive_builder",
         "//engine/framework:operator",
         "//engine/util:spu_io",
+        "//engine/util:table_util",
         "//engine/util:tensor_util",
     ],
 )
@@ -692,7 +695,7 @@ cc_test(
     deps = [
         ":group",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -715,7 +718,7 @@ cc_test(
         ":all_ops_register",
         ":group_agg",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -746,7 +749,7 @@ cc_test(
     deps = [
         ":group_he_sum",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -768,7 +771,7 @@ cc_test(
     deps = [
         ":cast",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -793,7 +796,7 @@ cc_test(
     deps = [
         ":case_when",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -819,7 +822,7 @@ cc_test(
     deps = [
         ":if",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -842,7 +845,7 @@ cc_test(
     deps = [
         ":limit",
         ":test_util",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
 )

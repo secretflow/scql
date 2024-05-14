@@ -22,13 +22,15 @@ SessionManager::SessionManager(
     const SessionOptions& session_opt, ListenerManager* listener_manager,
     std::unique_ptr<yacl::link::ILinkFactory> link_factory,
     std::unique_ptr<Router> ds_router,
-    std::unique_ptr<DatasourceAdaptorMgr> ds_mgr, int32_t session_timeout_s)
+    std::unique_ptr<DatasourceAdaptorMgr> ds_mgr, int32_t session_timeout_s,
+    const std::vector<spu::ProtocolKind>& allowed_spu_protocols)
     : session_opt_(session_opt),
       listener_manager_(listener_manager),
       link_factory_(std::move(link_factory)),
       ds_router_(std::move(ds_router)),
       ds_mgr_(std::move(ds_mgr)),
-      session_default_timeout_s_(session_timeout_s) {
+      session_default_timeout_s_(session_timeout_s),
+      allowed_spu_protocols_(allowed_spu_protocols) {
   watch_thread_.reset(
       new std::thread([this]() { this->WatchSessionTimeoutThread(); }));
 }
@@ -51,27 +53,27 @@ SessionManager::~SessionManager() {
   }
 }
 
-void SessionManager::CreateSession(const pb::SessionStartParams& params,
+void SessionManager::CreateSession(const pb::JobStartParams& params,
                                    pb::DebugOptions debug_opts) {
-  const std::string& session_id = params.session_id();
-  YACL_ENFORCE(!session_id.empty(), "session_id is empty.");
+  const std::string& job_id = params.job_id();
+  YACL_ENFORCE(!job_id.empty(), "job_id is empty.");
 
   // setup logger for new session
   // sinks should be the same as the default logger
   // If different loggers aim to write to the same output file all of them
   // must share the same sink. Otherwise there will be strange results.
   const auto& sinks = spdlog::default_logger()->sinks();
-  std::string logger_name = "session(" + session_id + ")";
+  std::string logger_name = "job(" + job_id + ")";
   auto session_logger =
       std::make_shared<spdlog::logger>(logger_name, sinks.begin(), sinks.end());
 
   auto new_session = std::make_unique<Session>(
       session_opt_, params, debug_opts, link_factory_.get(), session_logger,
-      ds_router_.get(), ds_mgr_.get());
+      ds_router_.get(), ds_mgr_.get(), allowed_spu_protocols_);
   {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (id_to_session_.find(session_id) != id_to_session_.end()) {
-      YACL_THROW_LOGIC_ERROR("Session for session_id={} exists.", session_id);
+    if (id_to_session_.find(job_id) != id_to_session_.end()) {
+      YACL_THROW_LOGIC_ERROR("Session for job_id={} exists.", job_id);
     }
 
     auto end = std::chrono::system_clock::now();
@@ -79,13 +81,13 @@ void SessionManager::CreateSession(const pb::SessionStartParams& params,
                          end - new_session->GetStartTime())
                          .count();
 
-    id_to_session_.emplace(session_id, std::move(new_session));
+    id_to_session_.emplace(job_id, std::move(new_session));
 
-    session_timeout_queue_.push(session_id);
+    session_timeout_queue_.push(job_id);
 
     SPDLOG_INFO(
         "create session({}) succ, cost({}ms), current running session={}",
-        session_id, time_cost, id_to_session_.size());
+        job_id, time_cost, id_to_session_.size());
   }
 }
 
@@ -104,6 +106,32 @@ Session* SessionManager::GetSession(const std::string& session_id) {
   return iter->second.get();
 }
 
+void SessionManager::StopSession(const std::string& session_id) {
+  if (session_id.empty()) {
+    SPDLOG_WARN("session_id is empty.");
+    return;
+  }
+
+  std::unique_lock<std::mutex> lock(mutex_);
+  auto iter = id_to_session_.find(session_id);
+  lock.unlock();
+
+  if (iter == id_to_session_.end()) {
+    SPDLOG_WARN("session({}) not exists.", session_id);
+    return;
+  }
+
+  if (iter->second->GetState() == SessionState::RUNNING) {
+    // CAS to avoid RunPlanSync setting state concurrently
+    if (iter->second->CASState(SessionState::RUNNING, SessionState::ABORTING)) {
+      iter->second->GetLink()->AbortLink();
+    }
+  }
+
+  SPDLOG_INFO("session({}) is stopping, waiting for task finish...",
+              session_id);
+}
+
 void SessionManager::RemoveSession(const std::string& session_id) {
   if (session_id.empty()) {
     SPDLOG_WARN("session_id is empty.");
@@ -119,10 +147,14 @@ void SessionManager::RemoveSession(const std::string& session_id) {
       return;
     }
 
-    if (iter->second->GetState() != SessionState::IDLE) {
-      YACL_THROW_LOGIC_ERROR("session({}), status({}) != idle, so can't stop.",
-                             session_id,
-                             static_cast<size_t>(iter->second->GetState()));
+    auto session_state = iter->second->GetState();
+
+    if (session_state != SessionState::FAILED &&
+        session_state != SessionState::SUCCEEDED) {
+      YACL_THROW_LOGIC_ERROR(
+          "session({}), status({}) not belong to FAILED/SUCCEEDED, so can't "
+          "stop.",
+          session_id, static_cast<size_t>(session_state));
     }
 
     auto node_handle = id_to_session_.extract(iter);
@@ -131,7 +163,7 @@ void SessionManager::RemoveSession(const std::string& session_id) {
     lock.unlock();
 
     auto lctx = node_handle.mapped()->GetLink();
-    if (lctx) {
+    if (lctx && session_state == SessionState::SUCCEEDED) {
       lctx->WaitLinkTaskFinish();
     }
     auto end = std::chrono::system_clock::now();
@@ -146,7 +178,6 @@ void SessionManager::RemoveSession(const std::string& session_id) {
 }
 
 bool SessionManager::SetSessionState(const std::string& session_id,
-                                     SessionState expect_current_state,
                                      SessionState state) {
   std::unique_lock<std::mutex> lock(mutex_);
   auto iter = id_to_session_.find(session_id);
@@ -155,17 +186,8 @@ bool SessionManager::SetSessionState(const std::string& session_id,
     return false;
   }
 
-  if (iter->second->GetState() != expect_current_state) {
-    SPDLOG_WARN(
-        "session({}), set session status failed. current status({}) != {}",
-        session_id, static_cast<size_t>(iter->second->GetState()),
-        static_cast<size_t>(expect_current_state));
-    return false;
-  }
-
   iter->second->SetState(state);
-  SPDLOG_INFO("session({}), set old state={} to new state={}", session_id,
-              static_cast<size_t>(expect_current_state),
+  SPDLOG_INFO("session({}), set state={}", session_id,
               static_cast<size_t>(state));
   return true;
 }

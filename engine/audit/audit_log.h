@@ -47,12 +47,12 @@ void RecordRunExecPlanEvent(const pb::RunExecutionPlanRequest& request,
                             const TimePoint& start_time, std::string source_ip);
 
 void RecordCreateSessionEvent(const ::scql::pb::Status& status,
-                              const pb::SessionStartParams& params, bool sync,
+                              const pb::JobStartParams& params, bool sync,
                               std::string source_ip);
 
-void RecordStopSessionEvent(const pb::StopSessionRequest& request,
-                            const ::scql::pb::Status& status,
-                            std::string source_ip);
+void RecordStopJobEvent(const pb::StopJobRequest& request,
+                        const ::scql::pb::Status& status,
+                        std::string source_ip);
 
 void RecordDumpFileNodeDetail(const ExecContext& ctx,
                               const std::string& file_path,

@@ -385,3 +385,18 @@ func (c *Command) CancelJob(jobID string) error {
 		return fmt.Errorf("CancelJob status: %v", response.GetStatus())
 	}
 }
+
+func (c *Command) CheckAndUpdateStatus(ids []string) (*pb.CheckAndUpdateStatusResponse, error) {
+	req := &pb.CheckAndUpdateStatusRequest{
+		ProjectIds: ids,
+	}
+	response := &pb.CheckAndUpdateStatusResponse{}
+	err := c.intraStub.CheckAndUpdateStatus(c.host, req, response)
+	if err != nil {
+		return nil, fmt.Errorf("CheckAndUpdateStatus: %w", err)
+	}
+	if response.Status == nil {
+		return nil, fmt.Errorf("CheckAndUpdateStatus: invalid response: status is nil")
+	}
+	return response, err
+}

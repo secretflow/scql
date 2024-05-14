@@ -34,25 +34,26 @@ class SessionManager {
                  std::unique_ptr<yacl::link::ILinkFactory> link_factory,
                  std::unique_ptr<Router> ds_router,
                  std::unique_ptr<DatasourceAdaptorMgr> ds_mgr,
-                 int32_t session_timeout_s);
+                 int32_t session_timeout_s,
+                 const std::vector<spu::ProtocolKind>& allowed_spu_protocols);
 
   ~SessionManager();
 
   SessionManager(const SessionManager&) = delete;
   SessionManager& operator=(const SessionManager&) = delete;
 
-  void CreateSession(const pb::SessionStartParams& params,
+  void CreateSession(const pb::JobStartParams& params,
                      pb::DebugOptions debug_opts);
 
   Session* GetSession(const std::string& session_id);
 
+  void StopSession(const std::string& session_id);
+
   void RemoveSession(const std::string& session_id);
 
   // Set Session state
-  // if current state not match, don't set to the new state
-  bool SetSessionState(const std::string& session_id,
-                       SessionState expect_current_state,
-                       SessionState dest_state);
+  // return false if session not found
+  bool SetSessionState(const std::string& session_id, SessionState dest_state);
 
  private:
   void WatchSessionTimeoutThread();
@@ -77,6 +78,7 @@ class SessionManager {
   std::atomic<bool> to_stop_{false};
   std::unique_ptr<std::thread> watch_thread_;
   std::queue<std::string> session_timeout_queue_;
+  const std::vector<spu::ProtocolKind> allowed_spu_protocols_;
 };
 
 }  // namespace scql::engine

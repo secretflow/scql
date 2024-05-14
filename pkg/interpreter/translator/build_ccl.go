@@ -142,38 +142,37 @@ func (n *JoinNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error
 		leftCc := conditionCCLs[0]
 		rightCc := conditionCCLs[1]
 		leftId, rightId := cols[0].UniqueID, cols[1].UniqueID
+
+		joinKeyPairs = append(joinKeyPairs, joinKeyPair{
+			leftId:  leftId,
+			rightId: rightId,
+		})
+
+		// set and check ccl
 		for _, p := range colTracer.FindSourceParties(leftId) {
 			if rightCc.LevelFor(p) == ccl.Join {
 				if join.JoinType == core.InnerJoin || join.JoinType == core.LeftOuterJoin {
 					rightCc.SetLevelForParty(p, ccl.Plain)
 				}
 			}
+			if !rightCc.IsVisibleFor(p) && rightCc.LevelFor(p) != ccl.Join {
+				return fmt.Errorf("joinNode.buildCCL: join on condition (%s) failed: column(%s) ccl(%v) for party(%s) does not belong to (PLAINTEXT_AFTER_JOIN, PLAINTEXT)",
+					equalCondition.String(), equalCondition.GetArgs()[1].String(), rightCc.LevelFor(p).String(), p)
+			}
 		}
-		joinKeyPairs = append(joinKeyPairs, joinKeyPair{
-			leftId:  leftId,
-			rightId: rightId,
-		})
+
 		for _, p := range colTracer.FindSourceParties(rightId) {
 			if leftCc.LevelFor(p) == ccl.Join {
 				if join.JoinType == core.InnerJoin || join.JoinType == core.RightOuterJoin {
 					leftCc.SetLevelForParty(p, ccl.Plain)
 				}
 			}
-		}
-
-		// check ccl
-		for _, p := range colTracer.FindSourceParties(rightId) {
 			if !leftCc.IsVisibleFor(p) && leftCc.LevelFor(p) != ccl.Join {
 				return fmt.Errorf("joinNode.buildCCL: join on condition (%s) failed: column(%s) ccl(%v) for party(%s) does not belong to (PLAINTEXT_AFTER_JOIN, PLAINTEXT)",
 					equalCondition.String(), equalCondition.GetArgs()[0].String(), leftCc.LevelFor(p).String(), p)
 			}
 		}
-		for _, p := range colTracer.FindSourceParties(leftId) {
-			if !rightCc.IsVisibleFor(p) && rightCc.LevelFor(p) != ccl.Join {
-				return fmt.Errorf("joinNode.buildCCL: join on condition (%s) failed: column(%s) ccl(%v) for party(%s) does not belong to (PLAINTEXT_AFTER_JOIN, PLAINTEXT)",
-					equalCondition.String(), equalCondition.GetArgs()[1].String(), rightCc.LevelFor(p).String(), p)
-			}
-		}
+
 		joinKeyCCLs[leftId] = leftCc
 		joinKeyCCLs[rightId] = rightCc
 	}
@@ -402,8 +401,22 @@ func (n *AggregationNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer
 		}
 		switch aggFunc.Name {
 		case ast.AggFuncCount:
-			// for agg count, if len(group by keys) = 0, then set plaintext for all parties
-			// if len(group by keys) != 0, if ccl for party p is not encrypt, set it to plaintext
+			if len(groupKeyCC) == 0 {
+				// check ccls of all cols in this schema
+				// if one of the ccls is not unknown, then the result is plain
+				// TODO(xiaoyuan): check here if null is supported
+				for _, p := range outputCCL.Parties() {
+					outputCCL.SetLevelForParty(p, ccl.Unknown)
+					for _, cc := range childCCL {
+						if cc.LevelFor(p) != ccl.Unknown {
+							outputCCL.SetLevelForParty(p, ccl.Plain)
+							break
+						}
+					}
+				}
+				break
+			}
+			// for agg count if len(group by keys) != 0, ccl of the result is determined by group by keys
 			for _, p := range outputCCL.Parties() {
 				outputCCL.SetLevelForParty(p, ccl.Plain)
 			}

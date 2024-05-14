@@ -17,7 +17,7 @@
 #include "gtest/gtest.h"
 #include "libspu/kernel/hal/public_helper.h"
 
-#include "engine/core/tensor_from_json.h"
+#include "engine/core/tensor_constructor.h"
 #include "engine/operator/test_util.h"
 #include "engine/util/ndarray_to_arrow.h"
 

@@ -33,13 +33,11 @@ class MakePublic : public Operator {
   void Execute(ExecContext* ctx) override;
 
  private:
-  using RepeatedTensor = google::protobuf::RepeatedPtrField<pb::Tensor>;
+  void PrivateToPublic(ExecContext* ctx, const RepeatedPbTensor& inputs,
+                       const RepeatedPbTensor& outputs);
 
-  void PrivateToPublic(ExecContext* ctx, const RepeatedTensor& inputs,
-                       const RepeatedTensor& outputs);
-
-  void SecretToPublic(ExecContext* ctx, const RepeatedTensor& inputs,
-                      const RepeatedTensor& outputs);
+  void SecretToPublic(ExecContext* ctx, const RepeatedPbTensor& inputs,
+                      const RepeatedPbTensor& outputs);
 };
 
 }  // namespace scql::engine::op

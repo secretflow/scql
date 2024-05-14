@@ -17,7 +17,7 @@
 #include "arrow/type.h"
 #include "gtest/gtest.h"
 
-#include "engine/core/tensor_from_json.h"
+#include "engine/core/tensor_constructor.h"
 #include "engine/operator/test_util.h"
 #include "engine/util/spu_io.h"
 

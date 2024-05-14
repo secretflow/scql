@@ -82,7 +82,6 @@ func (plan *GraphBuilder) AddColumn(name string, status proto.TensorStatus,
 	t.Status = status
 	t.Option = option
 	t.DType = dType
-	t.cc = ccl.NewCCL()
 	return t
 }
 

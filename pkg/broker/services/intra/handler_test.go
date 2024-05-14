@@ -16,8 +16,9 @@ package intra_test
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -28,7 +29,6 @@ import (
 	"github.com/secretflow/scql/pkg/broker/constant"
 	"github.com/secretflow/scql/pkg/broker/services/intra"
 	"github.com/secretflow/scql/pkg/broker/storage"
-	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/util/brokerutil"
 	"github.com/secretflow/scql/pkg/util/message"
@@ -49,7 +49,7 @@ func TestServerSuit(t *testing.T) {
 
 func (s *intraTestSuite) SetupSuite() {
 	s.testAppBuilder = &brokerutil.TestAppBuilder{}
-	s.NoError(s.testAppBuilder.BuildAppTests())
+	s.NoError(s.testAppBuilder.BuildAppTests(s.Suite.T().TempDir()))
 	s.svcAlice = intra.NewIntraSvc(s.testAppBuilder.AppAlice)
 	s.svcBob = intra.NewIntraSvc(s.testAppBuilder.AppBob)
 	s.svcCarol = intra.NewIntraSvc(s.testAppBuilder.AppCarol)
@@ -88,17 +88,17 @@ func (s *intraTestSuite) TearDownTest() {
 func (s *intraTestSuite) TestProcessInvitationNormal() {
 	serverAlice := s.testAppBuilder.ServerAlice
 	serverBob := s.testAppBuilder.ServerBob
-	inviteReq := &scql.InviteMemberRequest{
+	inviteReq := &pb.InviteMemberRequest{
 		ProjectId: "1",
 		Invitee:   "bob",
 	}
 	serverAlice.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == constant.ReplyInvitationPath {
-			var req scql.ReplyInvitationRequest
+			var req pb.ReplyInvitationRequest
 			inputEncodingType, err := message.DeserializeFrom(r.Body, &req)
 			s.NoError(err)
-			resp := &scql.ReplyInvitationResponse{
-				Status:      &scql.Status{Code: 0},
+			resp := &pb.ReplyInvitationResponse{
+				Status:      &pb.Status{Code: 0},
 				ProjectInfo: []byte{},
 			}
 			body, _ := message.SerializeTo(resp, inputEncodingType)
@@ -108,7 +108,7 @@ func (s *intraTestSuite) TestProcessInvitationNormal() {
 	})
 	serverBob.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == constant.InviteToProjectPath {
-			var req scql.InviteToProjectRequest
+			var req pb.InviteToProjectRequest
 			inputEncodingType, err := message.DeserializeFrom(r.Body, &req)
 			s.NoError(err)
 			txn := s.testAppBuilder.AppBob.MetaMgr.CreateMetaTransaction()
@@ -128,8 +128,8 @@ func (s *intraTestSuite) TestProcessInvitationNormal() {
 				Invitee:    "bob",
 				InviteTime: time.Now(),
 			}}))
-			resp := &scql.InviteToProjectResponse{
-				Status: &scql.Status{Code: 0},
+			resp := &pb.InviteToProjectResponse{
+				Status: &pb.Status{Code: 0},
 			}
 			body, _ := message.SerializeTo(resp, inputEncodingType)
 			w.WriteHeader(http.StatusOK)
@@ -138,18 +138,18 @@ func (s *intraTestSuite) TestProcessInvitationNormal() {
 	})
 	res, err := s.svcAlice.InviteMember(s.ctx, inviteReq)
 	s.NoError(err)
-	s.Equal(int32(scql.Code_OK), res.Status.Code)
-	processReq := &scql.ProcessInvitationRequest{
+	s.Equal(int32(pb.Code_OK), res.Status.Code)
+	processReq := &pb.ProcessInvitationRequest{
 		InvitationId: 1,
-		Respond:      scql.InvitationRespond_ACCEPT,
+		Respond:      pb.InvitationRespond_ACCEPT,
 	}
 	result, err := s.svcBob.ProcessInvitation(s.ctx, processReq)
 	s.NoError(err)
-	s.Equal(int32(scql.Code_OK), result.Status.Code)
-	invitationsRes, err := s.svcBob.ListInvitations(s.ctx, &scql.ListInvitationsRequest{})
+	s.Equal(int32(pb.Code_OK), result.Status.Code)
+	invitationsRes, err := s.svcBob.ListInvitations(s.ctx, &pb.ListInvitationsRequest{})
 	s.NoError(err)
 	s.Equal(1, len(invitationsRes.Invitations))
-	s.Equal(scql.InvitationStatus_ACCEPTED, invitationsRes.Invitations[0].Status)
+	s.Equal(pb.InvitationStatus_ACCEPTED, invitationsRes.Invitations[0].Status)
 }
 
 func (s *intraTestSuite) TestListInvitations() {
@@ -190,15 +190,15 @@ func (s *intraTestSuite) TestListInvitations() {
 	}))
 	txn.Finish(nil)
 	// inviter: alice
-	invitationsRes, err := s.svcBob.ListInvitations(s.ctx, &scql.ListInvitationsRequest{Filter: &scql.ListInvitationsRequest_Inviter{Inviter: "alice"}})
+	invitationsRes, err := s.svcBob.ListInvitations(s.ctx, &pb.ListInvitationsRequest{Filter: &pb.ListInvitationsRequest_Inviter{Inviter: "alice"}})
 	s.NoError(err)
 	s.Equal(2, len(invitationsRes.Invitations))
 	// status: undecided
-	invitationsRes, err = s.svcBob.ListInvitations(s.ctx, &scql.ListInvitationsRequest{Filter: &scql.ListInvitationsRequest_Status{Status: pb.InvitationStatus_UNDECIDED}})
+	invitationsRes, err = s.svcBob.ListInvitations(s.ctx, &pb.ListInvitationsRequest{Filter: &pb.ListInvitationsRequest_Status{Status: pb.InvitationStatus_UNDECIDED}})
 	s.NoError(err)
 	s.Equal(2, len(invitationsRes.Invitations))
 	// status: invalid
-	invitationsRes, err = s.svcBob.ListInvitations(s.ctx, &scql.ListInvitationsRequest{Filter: &scql.ListInvitationsRequest_Status{Status: pb.InvitationStatus_INVALID}})
+	invitationsRes, err = s.svcBob.ListInvitations(s.ctx, &pb.ListInvitationsRequest{Filter: &pb.ListInvitationsRequest_Status{Status: pb.InvitationStatus_INVALID}})
 	s.NoError(err)
 	s.Equal(1, len(invitationsRes.Invitations))
 }
@@ -206,17 +206,17 @@ func (s *intraTestSuite) TestListInvitations() {
 func (s *intraTestSuite) TestProcessInvitationError() {
 	serverAlice := s.testAppBuilder.ServerAlice
 	serverBob := s.testAppBuilder.ServerBob
-	inviteReq := &scql.InviteMemberRequest{
+	inviteReq := &pb.InviteMemberRequest{
 		ProjectId: "1",
 		Invitee:   "bob",
 	}
 	serverAlice.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == constant.ReplyInvitationPath {
-			var req scql.ReplyInvitationRequest
+			var req pb.ReplyInvitationRequest
 			inputEncodingType, err := message.DeserializeFrom(r.Body, &req)
 			s.NoError(err)
-			resp := &scql.ReplyInvitationResponse{
-				Status:      &scql.Status{Code: int32(pb.Code_DATA_INCONSISTENCY)},
+			resp := &pb.ReplyInvitationResponse{
+				Status:      &pb.Status{Code: int32(pb.Code_DATA_INCONSISTENCY)},
 				ProjectInfo: []byte{},
 			}
 			body, _ := message.SerializeTo(resp, inputEncodingType)
@@ -226,7 +226,7 @@ func (s *intraTestSuite) TestProcessInvitationError() {
 	})
 	serverBob.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == constant.InviteToProjectPath {
-			var req scql.InviteToProjectRequest
+			var req pb.InviteToProjectRequest
 			inputEncodingType, err := message.DeserializeFrom(r.Body, &req)
 			s.NoError(err)
 			txn := s.testAppBuilder.AppBob.MetaMgr.CreateMetaTransaction()
@@ -246,8 +246,8 @@ func (s *intraTestSuite) TestProcessInvitationError() {
 				Invitee:    "bob",
 				InviteTime: time.Now(),
 			}}))
-			resp := &scql.InviteToProjectResponse{
-				Status: &scql.Status{Code: 0},
+			resp := &pb.InviteToProjectResponse{
+				Status: &pb.Status{Code: 0},
 			}
 			body, _ := message.SerializeTo(resp, inputEncodingType)
 			w.WriteHeader(http.StatusOK)
@@ -256,71 +256,71 @@ func (s *intraTestSuite) TestProcessInvitationError() {
 	})
 	res, err := s.svcAlice.InviteMember(s.ctx, inviteReq)
 	s.NoError(err)
-	s.Equal(int32(scql.Code_OK), res.Status.Code)
-	processReq := &scql.ProcessInvitationRequest{
+	s.Equal(int32(pb.Code_OK), res.Status.Code)
+	processReq := &pb.ProcessInvitationRequest{
 		InvitationId: 1,
-		Respond:      scql.InvitationRespond_ACCEPT,
+		Respond:      pb.InvitationRespond_ACCEPT,
 	}
 	_, err = s.svcBob.ProcessInvitation(s.ctx, processReq)
 	s.Error(err)
 	s.Equal("ProcessInvitation: failed to reply invitation due to invitation 1 is not same with project", err.Error())
-	invitationsRes, err := s.svcBob.ListInvitations(s.ctx, &scql.ListInvitationsRequest{})
+	invitationsRes, err := s.svcBob.ListInvitations(s.ctx, &pb.ListInvitationsRequest{})
 	s.NoError(err)
 	s.Equal(1, len(invitationsRes.Invitations))
 	s.Equal(pb.InvitationStatus_INVALID, invitationsRes.Invitations[0].Status)
-	projects, err := s.svcBob.ListProjects(s.ctx, &scql.ListProjectsRequest{})
+	projects, err := s.svcBob.ListProjects(s.ctx, &pb.ListProjectsRequest{})
 	s.NoError(err)
 	s.Equal(0, len(projects.Projects))
 }
 
 func (s *intraTestSuite) TestParameterCheck() {
-	inviteReq := &scql.InviteMemberRequest{ProjectId: "not_exist", Invitee: "carol"}
+	inviteReq := &pb.InviteMemberRequest{ProjectId: "not_exist", Invitee: "carol"}
 	_, err := s.svcAlice.InviteMember(s.ctx, inviteReq)
 	s.Error(err)
-	inviteReq = &scql.InviteMemberRequest{ProjectId: "1", Invitee: "carol"}
+	inviteReq = &pb.InviteMemberRequest{ProjectId: "1", Invitee: "carol"}
 	_, err = s.svcAlice.InviteMember(s.ctx, inviteReq)
 	s.NoError(err)
-	listResponse, err := s.svcAlice.ListInvitations(s.ctx, &scql.ListInvitationsRequest{})
+	listResponse, err := s.svcAlice.ListInvitations(s.ctx, &pb.ListInvitationsRequest{})
 	s.NoError(err)
 	s.Equal(1, len(listResponse.GetInvitations()))
-	processInvitationReq := &scql.ProcessInvitationRequest{InvitationId: listResponse.GetInvitations()[0].GetInvitationId(), Respond: 2}
+	processInvitationReq := &pb.ProcessInvitationRequest{InvitationId: listResponse.GetInvitations()[0].GetInvitationId(), Respond: 2}
 	_, err = s.svcAlice.ProcessInvitation(s.ctx, processInvitationReq)
 	s.Error(err)
 	s.Equal("Error: code=100, msg=\"ProcessInvitation: not support respond type: 2\"", err.Error())
-	listProjectReq := &scql.ListProjectsRequest{Ids: []string{"1", "not_exist"}}
+	listProjectReq := &pb.ListProjectsRequest{Ids: []string{"1", "not_exist"}}
 	_, err = s.svcAlice.ListProjects(s.ctx, listProjectReq)
 	s.Error(err)
-	listTablesReq := &scql.ListTablesRequest{ProjectId: "not_exist", Names: []string{}}
+	listTablesReq := &pb.ListTablesRequest{ProjectId: "not_exist", Names: []string{}}
 	_, err = s.svcAlice.ListTables(s.ctx, listTablesReq)
 	s.Error(err)
-	listTablesReq = &scql.ListTablesRequest{ProjectId: "1", Names: []string{"not_exist_table"}}
+	listTablesReq = &pb.ListTablesRequest{ProjectId: "1", Names: []string{"not_exist_table"}}
 	_, err = s.svcAlice.ListTables(s.ctx, listTablesReq)
 	s.Error(err)
-	listCCLsReq := &scql.ShowCCLRequest{ProjectId: "not_exist"}
+	listCCLsReq := &pb.ShowCCLRequest{ProjectId: "not_exist"}
 	_, err = s.svcAlice.ShowCCL(s.ctx, listCCLsReq)
 	s.Error(err)
 	s.Equal("ShowCCL: GetProjectAndMembers err: record not found", err.Error())
-	listCCLsReq = &scql.ShowCCLRequest{ProjectId: "1", Tables: []string{"not_exist_table"}}
+	listCCLsReq = &pb.ShowCCLRequest{ProjectId: "1", Tables: []string{"not_exist_table"}}
 	_, err = s.svcAlice.ShowCCL(s.ctx, listCCLsReq)
 	s.Error(err)
 	s.Equal("ShowCCL: tables [not_exist_table] not all exist", err.Error())
-	listCCLsReq = &scql.ShowCCLRequest{ProjectId: "1", Tables: []string{}, DestParties: []string{"not_exist_party"}}
+	listCCLsReq = &pb.ShowCCLRequest{ProjectId: "1", Tables: []string{}, DestParties: []string{"not_exist_party"}}
 	_, err = s.svcAlice.ShowCCL(s.ctx, listCCLsReq)
 	s.Error(err)
 	s.Equal("ShowCCL: dest parties [not_exist_party] not found in project members", err.Error())
-	grantCCLReq := &scql.GrantCCLRequest{ProjectId: "1", ColumnControlList: []*scql.ColumnControl{&scql.ColumnControl{Col: &scql.ColumnDef{ColumnName: "not_exist_col", TableName: "not_exist_table"}, PartyCode: "alice", Constraint: 1}}}
+	grantCCLReq := &pb.GrantCCLRequest{ProjectId: "1", ColumnControlList: []*pb.ColumnControl{&pb.ColumnControl{Col: &pb.ColumnDef{ColumnName: "not_exist_col", TableName: "not_exist_table"}, PartyCode: "alice", Constraint: 1}}}
 	_, err = s.svcAlice.GrantCCL(s.ctx, grantCCLReq)
 	s.Error(err)
 	s.Equal("GrantCCL: GrantColumnConstraintsWithCheck: table [not_exist_table] not found", err.Error())
-	grantCCLReq = &scql.GrantCCLRequest{ProjectId: "1", ColumnControlList: []*scql.ColumnControl{&scql.ColumnControl{Col: &scql.ColumnDef{ColumnName: "not_exist_col", TableName: "not_exist_table"}, PartyCode: "alice", Constraint: 10}}}
+	grantCCLReq = &pb.GrantCCLRequest{ProjectId: "1", ColumnControlList: []*pb.ColumnControl{&pb.ColumnControl{Col: &pb.ColumnDef{ColumnName: "not_exist_col", TableName: "not_exist_table"}, PartyCode: "alice", Constraint: 10}}}
 	_, err = s.svcAlice.GrantCCL(s.ctx, grantCCLReq)
 	s.Error(err)
 	s.Equal("GrantCCL: ColumnControlList2ColumnPriv: illegal constraint: 10", err.Error())
-	grantCCLReq = &scql.GrantCCLRequest{ProjectId: "not_exist", ColumnControlList: []*scql.ColumnControl{&scql.ColumnControl{Col: &scql.ColumnDef{ColumnName: "not_exist_col", TableName: "not_exist_table"}, PartyCode: "alice", Constraint: 10}}}
+	grantCCLReq = &pb.GrantCCLRequest{ProjectId: "not_exist", ColumnControlList: []*pb.ColumnControl{&pb.ColumnControl{Col: &pb.ColumnDef{ColumnName: "not_exist_col", TableName: "not_exist_table"}, PartyCode: "alice", Constraint: 10}}}
 	_, err = s.svcAlice.GrantCCL(s.ctx, grantCCLReq)
 	s.Error(err)
 	s.Equal("GrantCCL: project not_exist has no members or project doesn't exist", err.Error())
-	revokeCCLReq := &scql.RevokeCCLRequest{ProjectId: "1", ColumnControlList: []*scql.ColumnControl{&scql.ColumnControl{Col: &scql.ColumnDef{ColumnName: "not_exist_col", TableName: "not_exist_table"}, PartyCode: "alice"}}}
+	revokeCCLReq := &pb.RevokeCCLRequest{ProjectId: "1", ColumnControlList: []*pb.ColumnControl{&pb.ColumnControl{Col: &pb.ColumnDef{ColumnName: "not_exist_col", TableName: "not_exist_table"}, PartyCode: "alice"}}}
 	_, err = s.svcAlice.RevokeCCL(s.ctx, revokeCCLReq)
 	s.Error(err)
 	s.Equal("RevokeCCL: RevokeColumnConstraintsWithCheck: table [not_exist_table] not found", err.Error())
@@ -331,8 +331,119 @@ func (s *intraTestSuite) TearDownSuite() {
 	s.testAppBuilder.ServerBob.Close()
 	s.testAppBuilder.ServerCarol.Close()
 	s.testAppBuilder.ServerEngine.Close()
-	os.Remove(s.testAppBuilder.PartyInfoTmpPath)
-	for _, path := range s.testAppBuilder.PemFilePaths {
-		os.Remove(path)
+}
+
+func (s *intraTestSuite) TestCheckAndUpdateStatusNormal() {
+	tb := storage.TableMeta{
+		Table: storage.Table{
+			TableIdentifier: storage.TableIdentifier{TableName: "tb", ProjectID: "3"},
+			RefTable:        "physic.tb",
+			DBType:          "MYSQL",
+			Owner:           "bob",
+		},
+		Columns: []storage.ColumnMeta{{ColumnName: "id", DType: "int"}},
 	}
+	{
+		txn := s.testAppBuilder.AppAlice.MetaMgr.CreateMetaTransaction()
+		s.NoError(txn.CreateProject(storage.Project{ID: "2", Name: "test project creator conflict", Creator: "bob"}))
+		s.NoError(txn.CreateProject(storage.Project{ID: "3", Name: "test status update normally", Creator: "bob"}))
+		s.NoError(txn.AddTable(tb))
+		txn.Finish(nil)
+	}
+	priv := storage.ColumnPriv{
+		ColumnPrivIdentifier: storage.ColumnPrivIdentifier{
+			ProjectID:  "3",
+			TableName:  "tb2",
+			ColumnName: "col1",
+			DestParty:  "alice",
+		},
+		Priv: "PLAINTEXT_AFTER_JOIN",
+	}
+	serverBob := s.testAppBuilder.ServerBob
+	serverBob.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == constant.AskInfoPath {
+			var req pb.AskInfoRequest
+			inputEncodingType, err := message.DeserializeFrom(r.Body, &req)
+			s.NoError(err)
+			s.Equal(1, len(req.GetResourceSpecs()))
+			s.Equal(pb.ResourceSpec_All, req.GetResourceSpecs()[0].GetKind())
+			var status storage.ProjectMeta
+			if req.GetResourceSpecs()[0].GetProjectId() == "2" {
+				status = storage.ProjectMeta{
+					Proj: storage.ProjectWithMember{
+						Proj: storage.Project{
+							ID:      "2",
+							Creator: "alice",
+						},
+					},
+				}
+			} else if req.GetResourceSpecs()[0].GetProjectId() == "3" {
+				tb.Table.CreatedAt = time.Now()
+				tb.Columns = append(tb.Columns, storage.ColumnMeta{ColumnName: "name", DType: "string"})
+				status = storage.ProjectMeta{
+					Proj: storage.ProjectWithMember{
+						Proj: storage.Project{
+							ID:      "3",
+							Name:    "test status update normally",
+							Creator: "bob",
+						},
+						Members: []string{"alice", "bob"},
+					},
+					Tables: []storage.TableMeta{
+						tb,
+						{
+							Table: storage.Table{
+								TableIdentifier: storage.TableIdentifier{ProjectID: "3", TableName: "tb2"},
+								Owner:           "bob",
+								RefTable:        "physic.tb2",
+							},
+							Columns: []storage.ColumnMeta{
+								{
+									ColumnName: "col1",
+									DType:      "long",
+								},
+							},
+						}},
+					CCLs: []storage.ColumnPriv{priv},
+				}
+			}
+			statusBytes, err := json.Marshal(status)
+			s.NoError(err)
+			resp := &pb.AskInfoResponse{
+				Status: &pb.Status{Code: 0},
+				Datas:  [][]byte{statusBytes},
+			}
+			body, _ := message.SerializeTo(resp, inputEncodingType)
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(body))
+		}
+	})
+	req := pb.CheckAndUpdateStatusRequest{
+		ProjectIds: []string{"2"},
+	}
+	res, err := s.svcAlice.CheckAndUpdateStatus(s.ctx, &req)
+	s.NoError(err)
+	s.Equal(int32(pb.Code_PROJECT_CONFLICT), res.Status.Code, protojson.Format(res))
+	// check update normally
+	req = pb.CheckAndUpdateStatusRequest{
+		ProjectIds: []string{"3"},
+	}
+	res, err = s.svcAlice.CheckAndUpdateStatus(s.ctx, &req)
+	s.NoError(err)
+	s.Equal(int32(pb.Code_OK), res.Status.Code, protojson.Format(res))
+	txn := s.testAppBuilder.AppAlice.MetaMgr.CreateMetaTransaction()
+	defer txn.Finish(nil)
+	tables, _, err := txn.GetTableMetasByTableNames("3", nil)
+	s.NoError(err)
+	s.Equal(2, len(tables), fmt.Sprintf("tables: %v", tables))
+	s.Equal(2, len(tables[0].Columns))
+	s.Equal("tb2", tables[1].Table.TableName)
+	s.Equal(1, len(tables[1].Columns))
+	s.Equal("col1", tables[1].Columns[0].ColumnName)
+	s.Equal("long", tables[1].Columns[0].DType)
+	ccls, err := txn.ListColumnConstraints("3", []string{}, []string{})
+	s.NoError(err)
+	s.Equal(1, len(ccls), fmt.Sprintf("tables: %v", ccls))
+	s.Equal(priv.ColumnPrivIdentifier, ccls[0].ColumnPrivIdentifier)
+	s.Equal(priv.DestParty, ccls[0].DestParty)
 }

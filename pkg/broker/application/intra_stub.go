@@ -121,3 +121,7 @@ func (stub *IntraStub) GetResult(url string, req *pb.FetchResultRequest, respons
 func (stub *IntraStub) CancelJob(url string, req *pb.CancelQueryRequest, response *pb.CancelQueryResponse) (err error) {
 	return stub.baseCall(url, constant.CancelQueryPath, req, response)
 }
+
+func (stub *IntraStub) CheckAndUpdateStatus(url string, req *pb.CheckAndUpdateStatusRequest, response *pb.CheckAndUpdateStatusResponse) (err error) {
+	return stub.baseCall(url, constant.CheckAndUpdateStatusPath, req, response)
+}

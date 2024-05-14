@@ -12,16 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
+package storage
 
-#include "engine/core/tensor.h"
+import (
+	"strings"
 
-namespace scql::engine {
+	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
+)
 
-/// @brief construct tensor from json
-/// It would be helpful in unittests.
-/// TODO(shunde.csd): use wrapped data type instead of arrow::DataType directly
-TensorPtr TensorFromJSON(const std::shared_ptr<arrow::DataType>& dtype,
-                         const std::string& json);
-
-}  // namespace scql::engine
+func ColumnPrivs2ColumnControls(cps []ColumnPriv) []*pb.SecurityConfig_ColumnControl {
+	ccs := make([]*pb.SecurityConfig_ColumnControl, len(cps))
+	for i, cp := range cps {
+		ccs[i] = &pb.SecurityConfig_ColumnControl{
+			PartyCode:    cp.DestParty,
+			Visibility:   pb.SecurityConfig_ColumnControl_Visibility(pb.SecurityConfig_ColumnControl_Visibility_value[strings.ToUpper(cp.Priv)]),
+			DatabaseName: cp.ProjectID,
+			TableName:    cp.TableName,
+			ColumnName:   cp.ColumnName,
+		}
+	}
+	return ccs
+}

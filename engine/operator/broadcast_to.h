@@ -33,13 +33,12 @@ class BroadcastTo : public Operator {
   void Execute(ExecContext* ctx) override;
 
  private:
-  using RepeatedTensor = google::protobuf::RepeatedPtrField<pb::Tensor>;
-  void BroadcastToPrivate(ExecContext* ctx, const RepeatedTensor& input_pbs,
-                          const RepeatedTensor& output_pbs,
+  void BroadcastToPrivate(ExecContext* ctx, const RepeatedPbTensor& input_pbs,
+                          const RepeatedPbTensor& output_pbs,
                           const int64_t to_length);
 
-  void BroadcastToPublic(ExecContext* ctx, const RepeatedTensor& input_pbs,
-                         const RepeatedTensor& output_pbs,
+  void BroadcastToPublic(ExecContext* ctx, const RepeatedPbTensor& input_pbs,
+                         const RepeatedPbTensor& output_pbs,
                          const int64_t to_length);
 };
 

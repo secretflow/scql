@@ -43,14 +43,19 @@ class EngineServiceImpl : public pb::SCQLEngineService {
 
   ~EngineServiceImpl() = default;
 
-  void StopSession(::google::protobuf::RpcController* cntl,
-                   const pb::StopSessionRequest* request, pb::Status* response,
-                   ::google::protobuf::Closure* done) override;
-
   void RunExecutionPlan(::google::protobuf::RpcController* cntl,
                         const pb::RunExecutionPlanRequest* request,
                         pb::RunExecutionPlanResponse* response,
                         ::google::protobuf::Closure* done) override;
+
+  void QueryJobStatus(::google::protobuf::RpcController* cntl,
+                      const pb::QueryJobStatusRequest* request,
+                      pb::QueryJobStatusResponse* response,
+                      ::google::protobuf::Closure* done) override;
+
+  void StopJob(::google::protobuf::RpcController* cntl,
+               const pb::StopJobRequest* request, pb::Status* response,
+               ::google::protobuf::Closure* done) override;
 
   SessionManager* GetSessionManager() { return session_mgr_.get(); }
 
@@ -69,9 +74,9 @@ class EngineServiceImpl : public pb::SCQLEngineService {
 
   bool CheckDriverCredential(const brpc::HttpHeader& http_header);
 
-  void VerifyPublicKeys(const pb::SessionStartParams& start_params);
+  void VerifyPublicKeys(const pb::JobStartParams& start_params);
 
-  void ReportErrorToPeers(const pb::SessionStartParams& params,
+  void ReportErrorToPeers(const pb::JobStartParams& params,
                           const pb::Code err_code, const std::string& err_msg);
 
  private:

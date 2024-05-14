@@ -49,7 +49,7 @@ enum EventName {
   RUN_EXEC_PLAN = 10;
 
   CREATE_SESSION = 11;
-  STOP_SESSION = 12;
+  STOP_JOB = 12;
 
   JOIN_DETAIL = 13;
   IN_DETAIL = 14;

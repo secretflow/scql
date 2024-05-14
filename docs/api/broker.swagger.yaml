@@ -352,6 +352,28 @@ paths:
             $ref: '#/definitions/scql.pb.ShowCCLRequest'
       tags:
         - IntraBrokerService
+  /intra/status/check_and_update:
+    post:
+      summary: CheckAndUpdateStatus
+      description: Check and update status for Projects
+      operationId: IntraBrokerService_CheckAndUpdateStatus
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/scql.pb.CheckAndUpdateStatusResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/google.rpc.Status'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/scql.pb.CheckAndUpdateStatusRequest'
+      tags:
+        - IntraBrokerService
 definitions:
   google.protobuf.Any:
     type: object
@@ -542,12 +564,22 @@ definitions:
       - UpdateProjectConf
       - ArchiveProject
     default: CreateTable
+  scql.pb.CheckAndUpdateStatusRequest:
+    type: object
+    properties:
+      project_ids:
+        type: array
+        items:
+          type: string
+        title: |-
+          The ids of Projects to be checked and updated, if empty, all Projects
+          will be processed
   scql.pb.CheckAndUpdateStatusResponse:
     type: object
     properties:
       status:
         $ref: '#/definitions/scql.pb.Status'
-      conficts:
+      conflicts:
         type: object
         additionalProperties:
           $ref: '#/definitions/scql.pb.ProjectConflict'

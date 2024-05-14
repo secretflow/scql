@@ -101,4 +101,16 @@ d/O2F2JveCIswFRe0G5lwC/A1Fl6p8A62RXgzXmGQQlaEWJl56VWFbgjU+RiCX1o
 BlonvlhGyLHRlw446EVgT6B3Ge1LZuBxwI+toCZZHoEt56XnBvSW2HyR5Mn74E7S
 1wIDAQAB`,
 	},
+	{
+		// sm2 key pair
+		privateKey: `-----BEGIN PRIVATE KEY-----
+MIGTAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBHkwdwIBAQQgV/jOWgcM+0jjlmgY
+uLyBIvZPx+GZ8mjH7Po+GYYvykygCgYIKoEcz1UBgi2hRANCAATXVtQufwQwXxmU
+r8fdeBfIgrBXhf+oeYswmN+iiJcSWXMl/n5nSS34j+z+5VMEh+adxx6Q8x5xfy9o
+FaHj/Juf
+-----END PRIVATE KEY-----
+`,
+		publicKey: `MFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAE11bULn8EMF8ZlK/H3XgXyIKwV4X/
+qHmLMJjfooiXEllzJf5+Z0kt+I/s/uVTBIfmnccekPMecX8vaBWh4/ybnw==`,
+	},
 }

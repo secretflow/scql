@@ -31,7 +31,7 @@ class PartyInfo {
   };
 
  public:
-  explicit PartyInfo(const pb::SessionStartParams& params);
+  explicit PartyInfo(const pb::JobStartParams& params);
   PartyInfo() = delete;
 
   size_t SelfRank() const;

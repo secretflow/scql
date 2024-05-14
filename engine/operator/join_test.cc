@@ -14,12 +14,14 @@
 
 #include "engine/operator/join.h"
 
+#include <cstddef>
 #include <cstdint>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-#include "engine/core/tensor_from_json.h"
+#include "engine/core/tensor_constructor.h"
 #include "engine/operator/test_util.h"
 #include "engine/util/psi_helper.h"
 
@@ -47,6 +49,19 @@ class JoinTest : public ::testing::TestWithParam<
   static constexpr char kOutLeft[] = "left_output";
   static constexpr char kOutRight[] = "right_output";
 };
+
+namespace {
+std::vector<std::string> AllMatchedJoinIndices(size_t left_count,
+                                               size_t right_count) {
+  std::vector<std::string> ret;
+  for (size_t left_idx = 0; left_idx < left_count; ++left_idx) {
+    for (size_t right_idx = 0; right_idx < right_count; ++right_idx) {
+      ret.emplace_back(absl::StrCat(left_idx, ",", right_idx));
+    }
+  }
+  return ret;
+}
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(
     JoinBatchTest, JoinTest,
@@ -543,9 +558,20 @@ INSTANTIATE_TEST_SUITE_P(
                 .join_indices = {"null,0", "null,1", "null,2", "null,3"},
                 .ub_server = 1},
 
+            // case 5
+            // testcase: duplicated keys
+            JoinTestCase{
+                .left_inputs = {test::NamedTensor(
+                    "id_a", FullNumericTensor<arrow::Int64Type>(5, 1))},
+                .right_inputs = {test::NamedTensor(
+                    "id_b", FullNumericTensor<arrow::Int64Type>(1000, 1))},
+                .join_type = static_cast<int64_t>(Join::JoinType::kInnerJoin),
+                .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
+                .join_indices = AllMatchedJoinIndices(5, 1000),
+                .ub_server = 1},
+
             // without hint
 
-            // case 1
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
                     "id_a", TensorFromJSON(arrow::int64(), "[4,8,1,3,3,5]"))},

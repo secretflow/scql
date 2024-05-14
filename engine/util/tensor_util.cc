@@ -90,9 +90,8 @@ pb::TensorStatus GetTensorStatus(const pb::Tensor& t) {
   return t.annotation().status();
 }
 
-bool AreTensorsStatusMatched(
-    const google::protobuf::RepeatedPtrField<pb::Tensor>& tensors,
-    pb::TensorStatus expect_status) {
+bool AreTensorsStatusMatched(const RepeatedPbTensor& tensors,
+                             pb::TensorStatus expect_status) {
   for (const auto& t : tensors) {
     if (!IsTensorStatusMatched(t, expect_status)) {
       return false;
@@ -102,7 +101,7 @@ bool AreTensorsStatusMatched(
 }
 
 bool AreTensorsStatusMatchedOneOf(
-    const google::protobuf::RepeatedPtrField<pb::Tensor>& tensors,
+    const RepeatedPbTensor& tensors,
     const std::vector<pb::TensorStatus>& status_set) {
   for (int i = 1; i < tensors.size(); ++i) {
     auto st = GetTensorStatus(tensors[i]);
@@ -120,9 +119,8 @@ bool AreTensorsStatusMatchedOneOf(
   return true;
 }
 
-bool OneOfTensorsStatusMatched(
-    const google::protobuf::RepeatedPtrField<pb::Tensor>& tensors,
-    pb::TensorStatus expect_status) {
+bool OneOfTensorsStatusMatched(const RepeatedPbTensor& tensors,
+                               pb::TensorStatus expect_status) {
   return std::any_of(tensors.begin(), tensors.end(), [&](const pb::Tensor& t) {
     return IsTensorStatusMatched(t, expect_status);
   });
@@ -133,9 +131,8 @@ bool IsTensorStatusMatched(const pb::Tensor& t,
   return GetTensorStatus(t) == expect_status;
 }
 
-bool AreTensorsStatusEqualAndOneOf(
-    const google::protobuf::RepeatedPtrField<pb::Tensor>& tensors,
-    std::vector<pb::TensorStatus> status_set) {
+bool AreTensorsStatusEqualAndOneOf(const RepeatedPbTensor& tensors,
+                                   std::vector<pb::TensorStatus> status_set) {
   auto st = GetTensorStatus(tensors[0]);
   for (int i = 1; i < tensors.size(); ++i) {
     if (!IsTensorStatusMatched(tensors[i], st)) {

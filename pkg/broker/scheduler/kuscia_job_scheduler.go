@@ -36,12 +36,14 @@ const (
 )
 
 type kusciaEnginePod struct {
-	client kusciaapi.JobServiceClient
+	kusciaClient kusciaapi.JobServiceClient
 	// exports fields for marshaling
+	// query job id
+	JobId string `json:"job_id"`
 	// kuscia job id
-	JobID string `json:"job_id"`
+	KusciaJobID string `json:"kuscia_job_id"`
 	// kuscia task id
-	TaskID string `json:"task_id"`
+	KusciaTaskID string `json:"kuscia_task_id"`
 	// engine endpoint
 	Endpoint string `json:"endpoint"`
 
@@ -125,17 +127,17 @@ func NewKusciaJobScheduler(conn grpc.ClientConnInterface, selfPartyID string, op
 func (s *kusciaJobScheduler) ParseEngineInstance(jobInfo []byte) (EngineInstance, error) {
 	var pod kusciaEnginePod
 	err := json.Unmarshal(jobInfo, &pod)
-	pod.client = s.client // client is not in job info
+	pod.kusciaClient = s.client // client is not in job info
 	return &pod, err
 }
 
 func (s *kusciaJobScheduler) Schedule(jobID string) (EngineInstance, error) {
-	var newJobID string
+	var kusciaJobID string
 	// create kuscia job
 	{
 
-		jobID = fmt.Sprintf("%s-%s", jobID, s.jobIdSuffix)
-		req := s.buildCreateJobRequest(jobID)
+		kusciaJobID = fmt.Sprintf("%s-%s", jobID, s.jobIdSuffix)
+		req := s.buildCreateJobRequest(kusciaJobID)
 		resp, err := s.client.CreateJob(context.Background(), req)
 		if err != nil {
 			return nil, err
@@ -143,23 +145,28 @@ func (s *kusciaJobScheduler) Schedule(jobID string) (EngineInstance, error) {
 		if resp.GetStatus().GetCode() != 0 {
 			return nil, fmt.Errorf("failed to create kuscia job, code=%d, message=%s", resp.GetStatus().GetCode(), resp.GetStatus().GetMessage())
 		}
-
-		newJobID = resp.GetData().GetJobId()
+		// kuscia may overwrite job id
+		kusciaJobID = resp.GetData().GetJobId()
 	}
 	// polling kuscia job status
-	pod, err := s.waitJobRunningAndGetEnginePod(newJobID)
-	if err != nil && !s.keepJobAliveForDebug {
-		logrus.Infof("failed to wait for kuscia job %s tobe running, it will be deleted...", newJobID)
-		if err := deleteKusciaJob(context.TODO(), s.client, newJobID); err != nil {
-			logrus.Warnf("failed to delete kuscia job %s: %v", newJobID, err)
+	pod, err := s.waitJobRunningAndGetEnginePod(kusciaJobID)
+	if err != nil {
+		if !s.keepJobAliveForDebug {
+			logrus.Infof("failed to wait for kuscia job %s tobe running, it will be deleted...", kusciaJobID)
+			if err := deleteKusciaJob(context.TODO(), s.client, kusciaJobID); err != nil {
+				logrus.Warnf("failed to delete kuscia job %s: %v", kusciaJobID, err)
+			}
 		}
+		return nil, fmt.Errorf("failed to wait for kuscia job %s tobe running", kusciaJobID)
 	}
-	return pod, err
+	pod.JobId = jobID
+	return pod, nil
 }
 
-func (s *kusciaJobScheduler) waitJobRunningAndGetEnginePod(jobID string) (*kusciaEnginePod, error) {
-	req := s.buildQueryJobRequest(jobID)
+func (s *kusciaJobScheduler) waitJobRunningAndGetEnginePod(kusciaJobID string) (*kusciaEnginePod, error) {
+	req := s.buildQueryJobRequest(kusciaJobID)
 
+	var jobStatus string
 	timer := time.NewTimer(s.maxWaitTime)
 	// NOTE: First set ticker to very small duration, let the first query job request be sent immediately
 	ticker := time.NewTicker(time.Nanosecond)
@@ -167,25 +174,26 @@ func (s *kusciaJobScheduler) waitJobRunningAndGetEnginePod(jobID string) (*kusci
 	for i := 0; i < s.maxPollTimes; i++ {
 		select {
 		case <-timer.C:
-			return nil, fmt.Errorf("timeout to wait kuscia job %s running", jobID)
+			return nil, fmt.Errorf("timeout to wait kuscia job %s running, job status %s", kusciaJobID, jobStatus)
 		case <-ticker.C:
 			resp, err := s.client.QueryJob(context.Background(), req)
 			if err != nil {
 				return nil, fmt.Errorf("invoke QueryJob rpc error: %w", err)
 			}
 			logrus.Debugf("QueryJob Response: %v", resp)
-			ready, err := readyToGetEndpoint(resp)
+			var ready bool
+			ready, jobStatus, err = readyToGetEndpoint(resp)
 			if err != nil {
-				return nil, fmt.Errorf("kuscia job %s error: %w", jobID, err)
+				return nil, fmt.Errorf("kuscia job %s error: %w", kusciaJobID, err)
 			}
 			if !ready {
 				ticker.Reset(s.pollInterval)
 				continue
 			}
 			pod := &kusciaEnginePod{
-				client:            s.client,
-				JobID:             jobID,
-				TaskID:            resp.GetData().GetStatus().GetTasks()[0].GetTaskId(),
+				kusciaClient:      s.client,
+				KusciaJobID:       kusciaJobID,
+				KusciaTaskID:      resp.GetData().GetStatus().GetTasks()[0].GetTaskId(),
 				KeepAliveForDebug: s.keepJobAliveForDebug,
 			}
 
@@ -198,49 +206,58 @@ func (s *kusciaJobScheduler) waitJobRunningAndGetEnginePod(jobID string) (*kusci
 				}
 			}
 			if !found {
-				return nil, fmt.Errorf("endpoint not found for port %s in kuscia task %s", enginePort, jobID)
+				return nil, fmt.Errorf("endpoint not found for port %s in kuscia task %s", enginePort, kusciaJobID)
 			}
 			return pod, nil
 		}
 	}
 
-	return nil, fmt.Errorf("timeout to wait kuscia job %s running, exceed max poll times", jobID)
+	return nil, fmt.Errorf("timeout to wait kuscia job %s running, exceed max poll times, job status %s", kusciaJobID, jobStatus)
 }
 
 // If kuscia job/task is ready, it returns (true, nil), otherwise returns (false, nil)
 // It will return (false, error) if job failed
-func readyToGetEndpoint(resp *kusciaapi.QueryJobResponse) (bool, error) {
+func readyToGetEndpoint(resp *kusciaapi.QueryJobResponse) (bool, string, error) {
 	if resp.GetStatus().GetCode() != 0 {
-		return false, fmt.Errorf("failed to query job: code=%d, message=%s", resp.GetStatus().GetCode(), resp.GetStatus().GetMessage())
+		return false, "", fmt.Errorf("failed to query job: code=%d, message=%s", resp.GetStatus().GetCode(), resp.GetStatus().GetMessage())
 	}
 	switch strings.ToLower(resp.GetData().GetStatus().GetState()) {
 	case strings.ToLower(string(kuscia.KusciaJobPending)):
-		return false, nil
+		return false, "", nil
 	case strings.ToLower(string(kuscia.KusciaJobFailed)):
-		return false, fmt.Errorf("kuscia job failed, err_msg=%s", resp.GetData().GetStatus().GetErrMsg())
+		// NOTE: Maybe in next kuscia version, we can get errMsg directly.
+		errMsg := resp.GetData().GetStatus().GetErrMsg()
+		if len(errMsg) == 0 && len(resp.GetData().GetStatus().GetTasks()) == 1 && len(resp.GetData().GetStatus().GetTasks()[0].GetParties()) == 1 {
+			errMsg = resp.GetData().GetStatus().GetTasks()[0].GetParties()[0].GetErrMsg()
+		}
+		return false, "", fmt.Errorf("kuscia job failed, err_msg=%s", errMsg)
 	case strings.ToLower(string(kuscia.KusciaJobSucceeded)):
-		return false, fmt.Errorf("unexpected job status, it already finished")
+		return false, "", fmt.Errorf("unexpected job status, it already finished")
 	case strings.ToLower(string(kuscia.KusciaJobRunning)):
 		{
 			// get task status
 			// NOTE: we expect that there is only one task in a job since we only request one task in CreateJob request
 			// wait until there is one task in status.tasks
 			if len(resp.GetData().GetStatus().GetTasks()) < 1 {
-				return false, nil
+				return false, "", nil
 			}
 
 			taskState := resp.GetData().GetStatus().GetTasks()[0].GetState()
 			switch strings.ToLower(taskState) {
 			case strings.ToLower(string(kuscia.TaskPending)):
-				return false, nil
+				if len(resp.GetData().GetStatus().GetTasks()[0].GetParties()) < 1 {
+					return false, taskState, nil
+				}
+				jobStatus := taskState + ", err_msg=" + resp.GetData().GetStatus().GetTasks()[0].GetParties()[0].GetErrMsg()
+				return false, jobStatus, nil
 			case strings.ToLower(string(kuscia.TaskRunning)):
-				return true, nil
+				return true, taskState, nil
 			default:
-				return false, fmt.Errorf("unexpected task state: %s", taskState)
+				return false, taskState, fmt.Errorf("unexpected task state: %s", taskState)
 			}
 		}
 	default:
-		return false, fmt.Errorf("unknown job state: %s", resp.GetData().GetStatus().GetState())
+		return false, "", fmt.Errorf("unknown job state: %s", resp.GetData().GetStatus().GetState())
 	}
 }
 
@@ -289,13 +306,13 @@ func (p *kusciaEnginePod) MarshalToText() ([]byte, error) {
 
 func (p *kusciaEnginePod) Stop() error {
 	if p.KeepAliveForDebug {
-		logrus.Warnf("kuscia job %s will not be stopped for debugging purpose, please stop it manually", p.JobID)
+		logrus.Warnf("kuscia job %s will not be stopped for debugging purpose, please stop it manually", p.KusciaJobID)
 		return nil
 	}
-	logrus.Infof("kuscia job %s will be deleted...", p.JobID)
+	logrus.Infof("kuscia job %s will be deleted...", p.KusciaJobID)
 	// NOTE: kuscia stop job request will not release/clean job resources(pods, services...)
 	// So we use delete job here
-	return deleteKusciaJob(context.TODO(), p.client, p.JobID)
+	return deleteKusciaJob(context.TODO(), p.kusciaClient, p.KusciaJobID)
 }
 
 func deleteKusciaJob(ctx context.Context, client kusciaapi.JobServiceClient, jobID string) error {

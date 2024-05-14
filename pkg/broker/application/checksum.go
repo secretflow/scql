@@ -15,13 +15,19 @@
 package application
 
 import (
+	"crypto/sha256"
 	"fmt"
+	"hash"
+	"sort"
+	"strings"
 	"sync"
 
 	"golang.org/x/exp/slices"
 
 	"github.com/sirupsen/logrus"
 
+	"github.com/secretflow/scql/pkg/broker/storage"
+	"github.com/secretflow/scql/pkg/parser/model"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 )
 
@@ -50,10 +56,10 @@ func (c *Checksum) CompareWith(checksum Checksum) pb.ChecksumCompareResult {
 func (c *Checksum) String() string {
 	result := ""
 	if len(c.TableSchema) > 0 {
-		result += fmt.Sprintf("table schema: %+v;", c.TableSchema)
+		result += fmt.Sprintf("table schema: %x;", c.TableSchema)
 	}
 	if len(c.CCL) > 0 {
-		result += fmt.Sprintf("ccl: %+v", c.CCL)
+		result += fmt.Sprintf("ccl: %x", c.CCL)
 	}
 	return result
 }
@@ -153,4 +159,71 @@ func (s *ChecksumStorage) CompareChecksumFor(partyCode string) (pb.ChecksumCompa
 		logrus.Warningf("compare result of checksum is %s, self checksum: %+v, remote checksum: %+v", reqChecksumCompareRes.String(), localChecksum, remoteChecksum)
 	}
 	return reqChecksumCompareRes, nil
+}
+
+type ChecksumHasher struct {
+	tableSchemaCrypt hash.Hash
+	cclCrypt         hash.Hash
+}
+
+func NewChecksumHasher() *ChecksumHasher {
+	return &ChecksumHasher{
+		tableSchemaCrypt: sha256.New(),
+		cclCrypt:         sha256.New(),
+	}
+}
+
+func (c *ChecksumHasher) InfeedTable(tableName string, columnInfos []*model.ColumnInfo) {
+	c.tableSchemaCrypt.Write([]byte(tableName))
+
+	sort.Slice(columnInfos, func(i, j int) bool {
+		return columnInfos[i].Name.String() < columnInfos[j].Name.String()
+	})
+	for _, col := range columnInfos {
+		c.tableSchemaCrypt.Write([]byte(col.Name.String()))
+		c.tableSchemaCrypt.Write([]byte(col.GetTypeDesc()))
+	}
+}
+
+func (c *ChecksumHasher) InfeedCCLs(ccls []*pb.SecurityConfig_ColumnControl) {
+	sort.Slice(ccls, func(i, j int) bool {
+		return strings.Join([]string{ccls[i].TableName, ccls[i].ColumnName, ccls[i].PartyCode}, " ") <
+			strings.Join([]string{ccls[j].TableName, ccls[j].ColumnName, ccls[j].PartyCode}, " ")
+	})
+	for _, ccl := range ccls {
+		c.cclCrypt.Write([]byte(ccl.TableName))
+		c.cclCrypt.Write([]byte(ccl.ColumnName))
+		c.cclCrypt.Write([]byte(ccl.Visibility.String()))
+	}
+}
+
+func (c *ChecksumHasher) Finalize() Checksum {
+	return Checksum{
+		TableSchema: c.tableSchemaCrypt.Sum(nil),
+		CCL:         c.cclCrypt.Sum(nil),
+	}
+}
+
+// TODO(jingshi): DRY, use ChecksumHasher.InfeedTable instead
+func GetTableChecksum(meta storage.TableMeta) string {
+	crypt := sha256.New()
+	// only care about table name
+	crypt.Write([]byte(meta.Table.TableName))
+
+	sort.Slice(meta.Columns, func(i, j int) bool {
+		return meta.Columns[i].ColumnName < meta.Columns[j].ColumnName
+	})
+	for _, col := range meta.Columns {
+		crypt.Write([]byte(col.ColumnName))
+		crypt.Write([]byte(col.DType))
+	}
+
+	return fmt.Sprintf("%x", crypt.Sum(nil))
+}
+
+func GetCCLsChecksum(ccls []storage.ColumnPriv) string {
+	hasher := NewChecksumHasher()
+	hasher.InfeedCCLs(storage.ColumnPrivs2ColumnControls(ccls))
+	checksum := hasher.Finalize()
+	return fmt.Sprintf("%x", checksum.CCL)
 }

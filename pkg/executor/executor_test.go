@@ -37,7 +37,7 @@ type mockWebClient struct {
 func (client mockWebClient) Post(ctx context.Context, url string, credential string, content_type string, body string) (string, error) {
 	resp := &proto.RunExecutionPlanResponse{
 		Status:     &scql.Status{Code: int32(scql.Code_OK)},
-		SessionId:  client.sessionId,
+		JobId:      client.sessionId,
 		OutColumns: client.responses[url],
 	}
 	return message.SerializeTo(resp, message.EncodingTypeJson)
@@ -82,8 +82,8 @@ func TestSyncExecutor(t *testing.T) {
 	a.NoError(err)
 
 	sessionId := "mock"
-	startParams := &scql.SessionStartParams{
-		SessionId: sessionId,
+	startParams := &scql.JobStartParams{
+		JobId: sessionId,
 	}
 
 	pbRequests := m.CodeGen(startParams)

@@ -70,11 +70,9 @@ func (svc *grpcIntraSvc) CreateProject(c context.Context, req *pb.CreateProjectR
 		return nil, fmt.Errorf("CreateProject: %v", err)
 	}
 
-	txn := app.MetaMgr.CreateMetaTransaction()
-	defer func() {
-		err = txn.Finish(err)
-	}()
-	err = txn.CreateProject(project)
+	err = app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
+		return txn.CreateProject(project)
+	})
 	if err != nil {
 		return nil, fmt.Errorf("CreateProject: %v", err)
 	}
@@ -90,14 +88,14 @@ func (svc *grpcIntraSvc) UpdateProject(context.Context, *pb.UpdateProjectRequest
 	return nil, errors.New("method UpdateProject not implemented")
 }
 
-func (svc *grpcIntraSvc) ListProjects(c context.Context, req *pb.ListProjectsRequest) (resp *pb.ListProjectsResponse, err error) {
+func (svc *grpcIntraSvc) ListProjects(c context.Context, req *pb.ListProjectsRequest) (*pb.ListProjectsResponse, error) {
 	app := svc.app
-	txn := app.MetaMgr.CreateMetaTransaction()
-	defer func() {
-		err = txn.Finish(err)
-	}()
-
-	projectWithMembers, err := txn.ListProjects(req.GetIds())
+	var projectWithMembers []storage.ProjectWithMember
+	err := app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
+		var err error
+		projectWithMembers, err = txn.ListProjects(req.GetIds())
+		return err
+	})
 	if err != nil {
 		return nil, fmt.Errorf("ListProjects: %v", err)
 	}
@@ -234,12 +232,6 @@ func (svc *grpcIntraSvc) InviteMember(c context.Context, req *pb.InviteMemberReq
 }
 
 func (svc *grpcIntraSvc) ListInvitations(c context.Context, req *pb.ListInvitationsRequest) (resp *pb.ListInvitationsResponse, err error) {
-	txn := svc.app.MetaMgr.CreateMetaTransaction()
-	defer func() {
-		err = txn.Finish(err)
-	}()
-
-	var invitations []storage.Invitation
 	targetInvitation := storage.Invitation{}
 	selectUndecidedInvitation := false
 	if req.Filter != nil {
@@ -251,7 +243,12 @@ func (svc *grpcIntraSvc) ListInvitations(c context.Context, req *pb.ListInvitati
 			targetInvitation.Inviter = filter.Inviter
 		}
 	}
-	invitations, err = txn.GetInvitationsBy(targetInvitation, selectUndecidedInvitation)
+	var invitations []storage.Invitation
+	err = svc.app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
+		var err error
+		invitations, err = txn.GetInvitationsBy(targetInvitation, selectUndecidedInvitation)
+		return err
+	})
 	if err != nil {
 		return nil, fmt.Errorf("ListInvitations: %v", err)
 	}

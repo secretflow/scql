@@ -162,8 +162,8 @@ func TestMain(m *testing.M) {
 
 func TestRunQueryWithNormalCCL(t *testing.T) {
 	r := require.New(t)
-	err := getUrlList(testConf)
-	r.NoError(err)
+	r.NoError(clearData())
+	r.NoError(getUrlList(testConf))
 	mockTables, err := mock.MockAllTables()
 	r.NoError(err)
 	regtest.FillTableToPartyCodeMap(mockTables)
@@ -176,9 +176,8 @@ func TestRunQueryWithNormalCCL(t *testing.T) {
 
 func TestConcurrentModifyProject(t *testing.T) {
 	r := require.New(t)
-	err := clearData()
-	r.NoError(err)
-	err = getUrlList(testConf)
+	r.NoError(clearData())
+	err := getUrlList(testConf)
 	r.NoError(err)
 	mockTables, err := mock.MockAllTables()
 	r.NoError(err)

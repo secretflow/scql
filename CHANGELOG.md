@@ -16,6 +16,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Staging
 
+## [0.7.0] - 2024-05-14
+
+### Added
+
+- Added CheckAndUpdate API for self-recovery when status is inconsistent in P2P mode.
+
+### Fixed
+
+- Fixed the problem that Broker was unable to detect SCQLEngine crashes or being killed by OOM.
+
 ## [0.6.0] - 2024-04-15
 
 ### Added

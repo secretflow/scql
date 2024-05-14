@@ -303,10 +303,11 @@ func (app *App) runDQL(ctx context.Context, s *session, async bool) (*scql.SCDBQ
 	}
 
 	s.GetSessionVars().AffectedByGroupThreshold = compiledPlan.Warning.GetMayAffectedByGroupThreshold()
+	s.GetSessionVars().GroupByThreshold = compileReq.CompileOpts.SecurityCompromise.GroupByThreshold
 	logrus.Infof("Execution Plan:\n%s\n", compiledPlan.GetExplain().GetExeGraphDot())
 
-	sessionStartParams := &scql.SessionStartParams{
-		SessionId:     s.id,
+	sessionStartParams := &scql.JobStartParams{
+		JobId:         s.id,
 		SpuRuntimeCfg: compiledPlan.GetSpuRuntimeConf(),
 		TimeZone:      s.GetSessionVars().GetTimeZone(),
 	}
@@ -340,7 +341,7 @@ func (app *App) runDQL(ctx context.Context, s *session, async bool) (*scql.SCDBQ
 				return nil, fmt.Errorf("could not find info for party %s", code)
 			}
 			participants = append(participants, party)
-			sessionStartParams.Parties = append(sessionStartParams.Parties, &scql.SessionStartParams_Party{
+			sessionStartParams.Parties = append(sessionStartParams.Parties, &scql.JobStartParams_Party{
 				Code:      code,
 				Name:      code,
 				Host:      party.Endpoints[0],
@@ -353,7 +354,7 @@ func (app *App) runDQL(ctx context.Context, s *session, async bool) (*scql.SCDBQ
 
 	pbRequests := make(map[string]*scql.RunExecutionPlanRequest)
 	for party, graph := range compiledPlan.SubGraphs {
-		startParams, ok := proto.Clone(sessionStartParams).(*scql.SessionStartParams)
+		startParams, ok := proto.Clone(sessionStartParams).(*scql.JobStartParams)
 		if !ok {
 			return nil, fmt.Errorf("failed to clone session start params")
 		}
@@ -364,10 +365,11 @@ func (app *App) runDQL(ctx context.Context, s *session, async bool) (*scql.SCDBQ
 			Path:   engineCallbackPath,
 		}
 		pbRequests[party] = &scql.RunExecutionPlanRequest{
-			SessionParams: startParams,
+			JobParams:     startParams,
 			Graph:         graph,
 			Async:         async,
 			CallbackUrl:   cbURL.String(),
+			GraphChecksum: &scql.GraphChecksum{CheckGraphChecksum: false},
 		}
 	}
 

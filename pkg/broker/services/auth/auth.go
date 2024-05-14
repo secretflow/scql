@@ -24,10 +24,13 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	smx509 "github.com/tjfoc/gmsm/x509"
+
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/sirupsen/logrus"
+	"github.com/tjfoc/gmsm/sm2"
 
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
@@ -46,7 +49,7 @@ func NewAuth(pemData []byte) (*Auth, error) {
 	}
 
 	switch v := priv.(type) {
-	case ed25519.PrivateKey, *rsa.PrivateKey:
+	case ed25519.PrivateKey, *rsa.PrivateKey, *sm2.PrivateKey:
 		return &Auth{privKey: priv}, nil
 	default:
 		return nil, fmt.Errorf("NewAuth: unsupported private key type: %T", v)
@@ -60,6 +63,8 @@ func (auth *Auth) sign(msg []byte) (signature []byte, err error) {
 	case *rsa.PrivateKey:
 		msgHashSum := sha256.Sum256(msg)
 		return rsa.SignPSS(rand.Reader, priv, crypto.SHA256, msgHashSum[:], nil)
+	case *sm2.PrivateKey:
+		return priv.Sign(rand.Reader, msg, nil)
 	default:
 		return nil, fmt.Errorf("unsupported sign message using private key type: %T", priv)
 	}
@@ -75,6 +80,11 @@ func verify(pub any, msg, sig []byte) error {
 	case *rsa.PublicKey:
 		msgHashSum := sha256.Sum256(msg)
 		return rsa.VerifyPSS(pub, crypto.SHA256, msgHashSum[:], sig, nil)
+	case *sm2.PublicKey:
+		if ok := pub.Verify(msg, sig); !ok {
+			return fmt.Errorf("sm2 pub verify failed")
+		}
+		return nil
 	default:
 		return fmt.Errorf("unsupported verify message using public key type: %T", pub)
 	}
@@ -127,16 +137,6 @@ func (auth *Auth) CheckSign(msg proto.Message, pubKey string) (err error) {
 		}
 	}()
 
-	pubDER, err := base64.StdEncoding.DecodeString(pubKey)
-	if err != nil {
-		return fmt.Errorf("failed to parse public key in base64 encoding: %v", err)
-	}
-
-	pub, err := x509.ParsePKIXPublicKey(pubDER)
-	if err != nil {
-		return fmt.Errorf("failed to parse DER encoded public key: %v", err)
-	}
-
 	msg = proto.Clone(msg)
 	signDesc := msg.ProtoReflect().Descriptor().Fields().ByJSONName("signature")
 	if !msg.ProtoReflect().Has(signDesc) {
@@ -150,5 +150,28 @@ func (auth *Auth) CheckSign(msg proto.Message, pubKey string) (err error) {
 		return fmt.Errorf("failed to marshal msg: %v", err)
 	}
 
+	pub, err := parsePubKey(pubKey)
+	if err != nil {
+		return err
+	}
+
 	return verify(pub, msgArray, sign)
+}
+
+func parsePubKey(pubKey string) (any, error) {
+	pubDER, err := base64.StdEncoding.DecodeString(pubKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse public key in base64 encoding: %v", err)
+	}
+
+	pub, err := x509.ParsePKIXPublicKey(pubDER)
+	if err != nil {
+		logrus.Warnf("%v, try sm2", err)
+		pub, err = smx509.ParseSm2PublicKey(pubDER)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse DER encoded public key: %v", err)
+		}
+	}
+
+	return pub, nil
 }

@@ -40,13 +40,13 @@ func (app *App) EngineHandler(c *gin.Context) {
 	}
 	report, err := engineHandlerCore(app, c)
 	logEntry.CostTime = time.Since(timeStart)
-	logEntry.SessionID = report.GetSessionId()
+	logEntry.SessionID = report.GetJobId()
 	if err != nil {
 		logEntry.ErrorMsg = err.Error()
-		logrus.Errorf("%v|PartyCode:%v|SessionId:%v|ClientIP:%v", logEntry, report.GetPartyCode(), report.GetSessionId(), c.ClientIP())
+		logrus.Errorf("%v|PartyCode:%v|SessionId:%v|ClientIP:%v", logEntry, report.GetPartyCode(), report.GetJobId(), c.ClientIP())
 		return
 	}
-	logrus.Infof("%v|PartyCode:%v|SessionId:%v|ClientIP:%v", logEntry, report.GetPartyCode(), report.GetSessionId(), c.ClientIP())
+	logrus.Infof("%v|PartyCode:%v|SessionId:%v|ClientIP:%v", logEntry, report.GetPartyCode(), report.GetJobId(), c.ClientIP())
 }
 
 func engineHandlerCore(app *App, c *gin.Context) (report *scql.ReportRequest, err error) {
@@ -61,9 +61,9 @@ func engineHandlerCore(app *App, c *gin.Context) (report *scql.ReportRequest, er
 		return &scql.ReportRequest{}, err
 	}
 
-	session, ok := app.getSession(request.GetSessionId())
+	session, ok := app.getSession(request.GetJobId())
 	if !ok {
-		err = fmt.Errorf("session %v not found", request.GetSessionId())
+		err = fmt.Errorf("session %v not found", request.GetJobId())
 		// ignore session deleted, still marked as OK
 		c.JSON(http.StatusOK, gin.H{"error": err.Error()})
 		return request, err

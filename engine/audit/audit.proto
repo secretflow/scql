@@ -30,7 +30,7 @@ message AuditBody {
     audit.pb.UncategorizedEvent uncategorized = 1;
     RunExecPlanEvent run_plan = 3;
     CreateSessionEvent create_session = 4;
-    StopSessionEvent stop_session = 5;
+    StopJobEvent stop_job = 5;
 
     JoinNodeDetail join_detail = 6;
     InNodeDetail in_detail = 7;
@@ -50,10 +50,10 @@ message RunExecPlanEvent {
 message CreateSessionEvent {
   string source_ip = 1;
   bool sync = 2;
-  scql.pb.SessionStartParams parameters = 3;
+  scql.pb.JobStartParams parameters = 3;
 }
 
-message StopSessionEvent {
+message StopJobEvent {
   string reason = 1;
   string source_ip = 2;
 }

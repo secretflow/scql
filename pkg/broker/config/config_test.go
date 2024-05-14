@@ -25,7 +25,7 @@ func TestNewConfig(t *testing.T) {
 	r := require.New(t)
 
 	// when
-	cfg, err := NewConfig("../testdata/config_test.yml")
+	cfg, err := NewConfig("config_test.yml")
 	r.NoError(err)
 
 	// then
@@ -44,8 +44,8 @@ func TestNewConfig(t *testing.T) {
 		IntraHost:                    "localhost:8081",
 		LogLevel:                     "debug",
 		PartyCode:                    "alice",
-		PartyInfoFile:                "../testdata/party_info.json",
-		PrivateKeyPath:               "../testdata/private_key_alice.pem",
+		PartyInfoFile:                "party_info.json",
+		PrivateKeyPath:               "private_key.pem",
 		SessionExpireTime:            24 * time.Hour,
 		SessionCheckInterval:         1 * time.Minute,
 		ExchangeJobInfoRetryTimes:    2,

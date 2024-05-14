@@ -17,7 +17,7 @@
 #include "arrow/compute/cast.h"
 #include "gtest/gtest.h"
 
-#include "engine/core/tensor_from_json.h"
+#include "engine/core/tensor_constructor.h"
 #include "engine/core/type.h"
 #include "engine/operator/test_util.h"
 #include "engine/util/ndarray_to_arrow.h"

@@ -98,7 +98,7 @@ message QueryDagDetail {
 
 message SessionParameters {
   bool sync = 1;
-  scql.pb.SessionStartParams parameters = 2;
+  scql.pb.JobStartParams parameters = 2;
 }
 
 message AsyncCompleteEvent {

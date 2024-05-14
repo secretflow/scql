@@ -16,7 +16,6 @@ package intra
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -33,6 +32,8 @@ import (
 	"github.com/secretflow/scql/pkg/planner/core"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
+	"github.com/secretflow/scql/pkg/util/parallel"
+	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
 
 func (svc *grpcIntraSvc) DoQuery(ctx context.Context, req *pb.QueryRequest) (resp *pb.QueryResponse, err error) {
@@ -207,23 +208,17 @@ func (svc *grpcIntraSvc) CancelQuery(c context.Context, req *pb.CancelQueryReque
 	}, nil
 }
 
-type DistributeRet struct {
+type distributeRet struct {
 	party        string
 	endpoint     string
-	err          error
 	prepareAgain bool
 }
 
-func (dr *DistributeRet) String() string {
-	return fmt.Sprintf("{party:%s, endpoint:%s, err:%v, prepareAgain:%v}", dr.party, dr.endpoint, dr.err, dr.prepareAgain)
-}
-
-func distributeQueryToOtherParty(session *application.Session, enginesInfo *translator.EnginesInfo, p string) (ret DistributeRet) {
-	ret.party = p
+func distributeQueryToOtherParty(session *application.Session, enginesInfo *translator.EnginesInfo, p string) (*distributeRet, error) {
+	result := distributeRet{party: p}
 	url, err := session.App.PartyMgr.GetBrokerUrlByParty(p)
 	if err != nil {
-		ret.err = err
-		return
+		return nil, err
 	}
 	executionInfo := session.ExecuteInfo
 	selfCode := session.GetSelfPartyCode()
@@ -247,8 +242,7 @@ func distributeQueryToOtherParty(session *application.Session, enginesInfo *tran
 	if slices.Contains(executionInfo.DataParties, selfCode) {
 		selfInfoChecksum, err := session.GetSelfChecksum()
 		if err != nil {
-			ret.err = err
-			return
+			return nil, err
 		}
 		distributeReq.ClientChecksum = &pb.Checksum{TableSchema: selfInfoChecksum.TableSchema, Ccl: selfInfoChecksum.CCL}
 	}
@@ -256,8 +250,7 @@ func distributeQueryToOtherParty(session *application.Session, enginesInfo *tran
 		// get checksum of table/ccl of party p
 		checksum, err := session.GetLocalChecksum(p)
 		if err != nil {
-			ret.err = err
-			return
+			return nil, err
 		}
 		distributeReq.ServerChecksum = &pb.Checksum{TableSchema: checksum.TableSchema, Ccl: checksum.CCL}
 	}
@@ -266,46 +259,39 @@ func distributeQueryToOtherParty(session *application.Session, enginesInfo *tran
 	// distribute query
 	err = executionInfo.InterStub.DistributeQuery(url, distributeReq, response)
 	if err != nil {
-		ret.err = err
-		return
+		return nil, err
 	}
-	if response == nil || response.Status == nil {
-		ret.err = fmt.Errorf("failed to parse response: %+v", response)
-		return
+	if response.Status == nil {
+		return nil, fmt.Errorf("failed to parse response: %+v", response)
 	}
 	// check error code to avoid panic
 	if response.GetStatus().GetCode() != 0 && response.GetStatus().GetCode() != int32(pb.Code_DATA_INCONSISTENCY) {
-		ret.err = fmt.Errorf("distribute query err: %+v", response.Status)
-		return
+		return nil, fmt.Errorf("distribute query err: %+v", response.Status)
 	}
 	// check version when there is no err
 	if response.ServerProtocol != application.Version {
-		ret.err = fmt.Errorf("failed to check protocol: self is %s, party %s is %s", application.Version, p, response.ServerProtocol)
-		return
+		return nil, fmt.Errorf("failed to check protocol: self is %s, party %s is %s", application.Version, p, response.ServerProtocol)
 	}
-	ret.endpoint = response.GetEngineEndpoint()
+	result.endpoint = response.GetEngineEndpoint()
 	if slices.Contains(executionInfo.DataParties, p) {
 		err = session.SaveRemoteChecksum(p, response.ExpectedServerChecksum)
 		if err != nil {
-			ret.err = err
-			return
+			return nil, err
 		}
 	}
 	if response.Status.Code == int32(pb.Code_DATA_INCONSISTENCY) {
 		logrus.Infof("checksum not equal with party %s for job %s", p, executionInfo.JobID)
-		ret.prepareAgain = true
+		result.prepareAgain = true
 		_, err = common.AskInfoByChecksumResult(session, response.ServerChecksumResult, enginesInfo.GetTablesByParty(p), p)
 		if err != nil {
-			ret.err = err
 			logrus.Warningf("err when running AskInfoByChecksumResult: %s", err)
-			return
+			return nil, err
 		}
 	}
-	return
+	return &result, nil
 }
 
 func (svc *grpcIntraSvc) runQuery(session *application.Session) error {
-	app := svc.app
 	executionInfo := session.ExecuteInfo
 	r := executor.NewQueryRunner(session)
 	logrus.Infof("create query runner for job %s", session.ExecuteInfo.JobID)
@@ -335,39 +321,22 @@ func (svc *grpcIntraSvc) runQuery(session *application.Session) error {
 	for code, checksum := range localChecksums {
 		session.SaveLocalChecksum(code, checksum)
 	}
+	selfCode := session.GetSelfPartyCode()
 	// if alice submit a two-party query which data comes from bob and carol, it must run by a three-party protocol
-	retCh := make(chan DistributeRet, len(session.ExecuteInfo.WorkParties))
-	distributePartyNum := 0
-	for _, p := range session.ExecuteInfo.WorkParties {
-		if p == app.Conf.PartyCode {
-			continue
-		}
-		distributePartyNum++
-		go func(p string) {
-			logrus.Infof("distribute query to party %s for job %s", p, session.ExecuteInfo.JobID)
-			ret := distributeQueryToOtherParty(session, r.GetEnginesInfo(), p)
-			retCh <- ret
-		}(p)
+	results, err := parallel.ParallelRun(sliceutil.Subtraction(session.ExecuteInfo.WorkParties, []string{selfCode}), func(p string) (*distributeRet, error) {
+		logrus.Infof("distribute query to party %s for job %s", p, session.ExecuteInfo.JobID)
+		return distributeQueryToOtherParty(session, r.GetEnginesInfo(), p)
+	})
+	if err != nil {
+		return fmt.Errorf("runQuery distribute: %v", err)
 	}
-	var totalErr error
-	// wait for response from other parties
-	for i := 0; i < distributePartyNum; i++ {
-		ret := <-retCh
-		logrus.Infof("distribute query return: %s, for job %s", ret.String(), session.ExecuteInfo.JobID)
-		if ret.err != nil {
-			totalErr = errors.Join(totalErr, ret.err)
-			continue
-		}
-		if ret.prepareAgain {
+	for _, result := range results {
+		if result.prepareAgain {
 			r.SetPrepareAgain()
 		}
-		session.SaveEndpoint(ret.party, ret.endpoint)
+		session.SaveEndpoint(result.party, result.endpoint)
 	}
 	logrus.Infof("distribute query completed for job %s", session.ExecuteInfo.JobID)
-	// err occurred when distributing query
-	if totalErr != nil {
-		return fmt.Errorf("runQuery distribute: %v", totalErr)
-	}
 
 	if session.DryRun {
 		// NOTE: dry run doesn't need to persistent session info
