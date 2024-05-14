@@ -70,7 +70,7 @@ SCQLBroker KusciaDeployment yaml file looks as follows.
           domainID: alice # make it same with `spec.initiator`
           role: broker
 
-Please modify ``.spec.initiator`` and ``.spec.parties[0].domainID``` to the actual DomainID(DomainID is a Kuscia concept) you wish to deploy.
+Please modify ``.spec.initiator`` and ``.spec.parties[0].domainID`` to the actual DomainID(DomainID is a Kuscia concept) you wish to deploy.
 
 
 Let's go and deploy it

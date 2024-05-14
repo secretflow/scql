@@ -8,14 +8,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-04-16 16:03+0800\n"
+"POT-Creation-Date: 2024-05-14 15:02+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.11.0\n"
+"Generated-By: Babel 2.14.0\n"
 
 #: ../../reference/centralized-deploy-config.rst:2
 msgid "SCQL Centralized Deployment Configuration"
@@ -463,17 +463,19 @@ msgid ""
 "**group_by_threshold**: minimum amount of data within a group that will "
 "be retained(effective only for the group by syntax, and not for distinct,"
 " etc.)"
-msgstr "**group_by_threshold**: 一个 group 分组中的数据少于这个值就会被隐藏（只会在 group by 语法中生效，distinct 等语法中不会应用这个规则）"
+msgstr ""
+"**group_by_threshold**: 一个 group 分组中的数据少于这个值就会被隐藏（只会在 group by "
+"语法中生效，distinct 等语法中不会应用这个规则）"
 
 #: ../../reference/centralized-deploy-config.rst:138
 msgid "A typical config of security_compromise can be like:"
 msgstr "典型的配置如下："
 
-#: ../../reference/centralized-deploy-config.rst:149
+#: ../../reference/centralized-deploy-config.rst:150
 msgid "Config for storage"
 msgstr "存储配置"
 
-#: ../../reference/centralized-deploy-config.rst:150
+#: ../../reference/centralized-deploy-config.rst:151
 msgid ""
 "Database is used to store the SCQL system data, such as CCL and user "
 "information, currently support MySQL/SQLite3. You can connect to a "
@@ -482,21 +484,21 @@ msgstr ""
 "数据库用于存储 SCQL 系统数据，如 CCL 和用户信息，目前 SCDB 支持 MySQL/SQLite3 。您可以通过配置项 "
 "``conn_str`` 和 ``type`` 来连接不同的数据库。"
 
-#: ../../reference/centralized-deploy-config.rst:153
+#: ../../reference/centralized-deploy-config.rst:154
 msgid "type"
 msgstr "type"
 
-#: ../../reference/centralized-deploy-config.rst:153
+#: ../../reference/centralized-deploy-config.rst:154
 msgid ""
 "The database type, which can be set as mysql/sqlite. And MySQL is "
 "recommended, which has been fully tested."
 msgstr "数据库类型可以设置为 mysql/sqlite，我们更加推荐使用 MySQL 来作为 SCDB 的数据库，其相关测试更加充分。"
 
-#: ../../reference/centralized-deploy-config.rst:171
+#: ../../reference/centralized-deploy-config.rst:172
 msgid "conn_str"
 msgstr "conn_str"
 
-#: ../../reference/centralized-deploy-config.rst:156
+#: ../../reference/centralized-deploy-config.rst:157
 msgid ""
 "MySQL string format, see `dsn-data-source-name <https://github.com/mattn"
 "/go-sqlite3#connection-string>`_ for more information."
@@ -504,39 +506,39 @@ msgstr ""
 "MySQL语句格式, 更多信息请参考: `dsn-data-source-name <https://github.com/mattn/go-"
 "sqlite3#connection-string>`_ "
 
-#: ../../reference/centralized-deploy-config.rst:158
+#: ../../reference/centralized-deploy-config.rst:159
 msgid "[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]"
 msgstr "[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]"
 
-#: ../../reference/centralized-deploy-config.rst:161
+#: ../../reference/centralized-deploy-config.rst:162
 msgid "MySQL string example:"
 msgstr "MySQL 连接串示例："
 
-#: ../../reference/centralized-deploy-config.rst:163
+#: ../../reference/centralized-deploy-config.rst:164
 msgid "``user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true``"
 msgstr "``user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true``"
 
-#: ../../reference/centralized-deploy-config.rst:165
+#: ../../reference/centralized-deploy-config.rst:166
 msgid "SQLite3 string format:"
 msgstr "SQLite3 连接串示例："
 
-#: ../../reference/centralized-deploy-config.rst:167
+#: ../../reference/centralized-deploy-config.rst:168
 msgid "more infos: https://github.com/mattn/go-sqlite3#connection-string."
 msgstr "参考: https://github.com/mattn/go-sqlite3#connection-string. "
 
-#: ../../reference/centralized-deploy-config.rst:169
+#: ../../reference/centralized-deploy-config.rst:170
 msgid "SQLite3 string example:"
 msgstr "SQLite3 连接串示例："
 
-#: ../../reference/centralized-deploy-config.rst:171
+#: ../../reference/centralized-deploy-config.rst:172
 msgid "``scdb.db``"
 msgstr "``scdb.db``"
 
-#: ../../reference/centralized-deploy-config.rst:173
+#: ../../reference/centralized-deploy-config.rst:174
 msgid "A typical config of storage can be like:"
 msgstr "典型的存储配置如下："
 
-#: ../../reference/centralized-deploy-config.rst:186
+#: ../../reference/centralized-deploy-config.rst:187
 msgid ""
 "To handle time.Time correctly, you need to include parseTime as a "
 "parameter. To fully support UTF-8 encoding, you need to change "
@@ -545,18 +547,18 @@ msgstr ""
 "正确处理 time.Time 需要包含 parseTime 参数。为了完全支持 UTF-8 编码，需要将 ``charset=utf8`` 更改为"
 " ``charset=utf8mb4`` "
 
-#: ../../reference/centralized-deploy-config.rst:190
-#: ../../reference/engine-config.rst:237
+#: ../../reference/centralized-deploy-config.rst:191
+#: ../../reference/engine-config.rst:239
 msgid "Config for audit"
 msgstr "审计日志配置"
 
-#: ../../reference/centralized-deploy-config.rst:192
+#: ../../reference/centralized-deploy-config.rst:193
 msgid ""
 "Audit log are used to record the SCDB activities during query execution. "
 "It has two types: basic audit log and detail audit log."
 msgstr "SCDB 的审计日志是用来记录 SCDB 在执行 query 过程中所产生的一系列事件，它有两种类型：基础审计日志和补充审计日志。"
 
-#: ../../reference/centralized-deploy-config.rst:194
+#: ../../reference/centralized-deploy-config.rst:195
 msgid ""
 "The basic audit log are used to record the basic information of a query, "
 "such as the result and user information, while the detail audit log "
@@ -570,7 +572,7 @@ msgstr ""
 " `scdb_audit "
 "<https://github.com/secretflow/scql/blob/main/pkg/audit/audit.proto>`_ 。"
 
-#: ../../reference/centralized-deploy-config.rst:196
+#: ../../reference/centralized-deploy-config.rst:197
 msgid ""
 "When the audit log has reaches the maximum size ( set by "
 "``audit_max_size``), SCDB will save the audit log as ``name-"
@@ -585,7 +587,7 @@ msgstr ""
 "``audit_log_file`` 中设置的不带后缀的文件名，`timestamp` 是当前时间（格式为 "
 "`2006-01-02T15-04-05.000`），`ext` 是在 ``audit_log_file`` 中设置的后缀名。"
 
-#: ../../reference/centralized-deploy-config.rst:199
+#: ../../reference/centralized-deploy-config.rst:200
 msgid ""
 "For example, if ``audit_log_file`` set as `audit/audit.log`, a backup "
 "created at 6:30pm on Nov 11 2016 would be saved to "
@@ -595,11 +597,11 @@ msgstr ""
 "在2016年11月4日18:30归档的审计日志会被保存至 `./audit/audit-2016-11-04T18-30-00.000.log` "
 "。"
 
-#: ../../reference/centralized-deploy-config.rst:203
+#: ../../reference/centralized-deploy-config.rst:204
 msgid "Password check"
 msgstr "密码校验"
 
-#: ../../reference/centralized-deploy-config.rst:204
+#: ../../reference/centralized-deploy-config.rst:205
 msgid ""
 "``password_check`` serves to validate password strength. For ALTER USER, "
 "CREATE USER statements, if it's true, the password should be at least 16 "
@@ -609,17 +611,17 @@ msgstr ""
 "`password_check` 用于验证密码强度校验。如果该参数设置为true， 对于 ALTER USER、CREATE USER "
 "语句，其所涉及的密码长度至少为 16 个字符，其中包括数字、小写字母、大写字母和特殊字符。"
 
-#: ../../reference/centralized-deploy-config.rst:210
+#: ../../reference/centralized-deploy-config.rst:211
 msgid "Config for TLS"
 msgstr "TLS 配置"
 
-#: ../../reference/centralized-deploy-config.rst:211
+#: ../../reference/centralized-deploy-config.rst:212
 msgid ""
 "If you need to enable TLS in SCDB, please refer to the following "
 "configuration."
 msgstr "如果需要在 SCDB 中启用 TLS ，请参考以下配置。"
 
-#: ../../reference/centralized-deploy-config.rst:225
+#: ../../reference/centralized-deploy-config.rst:226
 msgid ""
 "Self-signed CA files may not be trusted by default, please refer to "
 "`Trouble shooting <https://github.com/secretflow/scql/tree/main/test-"
@@ -629,7 +631,7 @@ msgstr ""
 "<https://github.com/secretflow/scql/tree/main/test-tools#trouble-"
 "shooting>`_ 获取帮助。"
 
-#: ../../reference/centralized-deploy-config.rst:227
+#: ../../reference/centralized-deploy-config.rst:228
 msgid ""
 "Additionally, it is necessary to configure the SCQLEngine to work with "
 "SSL, please refer :ref:`Config for SSL in SCQLEngine <scqlengine-tls>`."
@@ -637,11 +639,11 @@ msgstr ""
 "除此之外，用户还需要设置 :ref:`SCQLEngine 的 SSL 配置 <scqlengine-tls>`，以保证 SCDB 和 "
 "SCQLEngine 能正常工作。"
 
-#: ../../reference/centralized-deploy-config.rst:231
+#: ../../reference/centralized-deploy-config.rst:232
 msgid "Config for SPU"
 msgstr "SPU 配置"
 
-#: ../../reference/centralized-deploy-config.rst:232
+#: ../../reference/centralized-deploy-config.rst:233
 msgid ""
 "SCQL supports different mpc protocol powered by SPU, you can choose "
 "different mpc protocol by setting SPU runtime config. Protocol **SEMI2K**"
@@ -1191,43 +1193,53 @@ msgstr "CSVDB 连接串格式："
 
 #: ../../reference/engine-config.rst:183
 msgid ""
-"Since connection_str is an object in another json object, the format is a"
-" converted json string corresponding to `CsvdbConf "
+"CSVDB support read csv from local and OSS/MinIO, since connection_str is "
+"an object in another json object, the format is a converted json string "
+"corresponding to `CsvdbConf "
 "<https://github.com/secretflow/scql/tree/main/engine/datasource/csvdb_conf.proto>`_"
 msgstr ""
-"由于 connection_str 是另一个 json 对象中的对象，因此其格式是根据 `CsvdbConf "
+"CSVDB 支持从 local 和 OSS/MinIO 读取 csv 文件，由于 connection_str 是另一个 json "
+"对象中的对象，因此其格式是根据 `CsvdbConf "
 "<https://github.com/secretflow/scql/tree/main/engine/datasource/csvdb_conf.proto>`_"
 " 结构体转换后的的json字符串 "
 
-#: ../../reference/engine-config.rst:186
+#: ../../reference/engine-config.rst:188
 msgid "CSVDB Connection string e.g:"
 msgstr "CSVDB连接语句示例:"
 
 #: ../../reference/engine-config.rst:186
-msgid "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
-msgstr "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
+msgid ""
+"local csv: "
+"\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
+msgstr ""
 
-#: ../../reference/engine-config.rst:191
+#: ../../reference/engine-config.rst:188
+msgid ""
+"OSS/MinIO csv: "
+"\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"S3Conf\\\\\\\":{\\\\\\\"endpoint\\\\\\\":\\\\\\\"test_endpoint\\\\\\\",\\\\\\\"access_key_id\\\\\\\":\\\\\\\"test_id\\\\\\\",\\\\\\\"secret_access_key\\\\\\\":\\\\\\\"test_key\\\\\\\"},\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"oss://test_bucket/test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
+msgstr ""
+
+#: ../../reference/engine-config.rst:193
 msgid "ArrowSQL Connection string format:"
 msgstr "ArrowSQL 连接串格式："
 
-#: ../../reference/engine-config.rst:189
+#: ../../reference/engine-config.rst:191
 msgid "grpc+<scheme>://host:port"
 msgstr ""
 
-#: ../../reference/engine-config.rst:191
+#: ../../reference/engine-config.rst:193
 msgid "<scheme> == 'tcp' | 'tls'"
 msgstr ""
 
-#: ../../reference/engine-config.rst:197
+#: ../../reference/engine-config.rst:199
 msgid "ArrowSQL Connection string e.g:"
 msgstr "ArrowSQL 连接串示例："
 
-#: ../../reference/engine-config.rst:194
+#: ../../reference/engine-config.rst:196
 msgid "``grpc+tcp://127.0.0.1:6666``"
 msgstr ""
 
-#: ../../reference/engine-config.rst:197
+#: ../../reference/engine-config.rst:199
 msgid ""
 "As a datasource embedded in SCQLEngine, ArrowSQL requires an additional "
 "gRPC server which provides the corresponding interface for executing an "
@@ -1237,11 +1249,11 @@ msgstr ""
 "作为 SCQLEngine 内嵌的数据源，ArrowSQL 依赖额外的 gRPC 服务，该服务需要提供相应的接口，用于执行 `Arrow "
 "Flight SQL <https://arrow.apache.org/docs/format/FlightSql.html>`_ 即时查询"
 
-#: ../../reference/engine-config.rst:200
+#: ../../reference/engine-config.rst:202
 msgid "Routing rules"
 msgstr "路由规则"
 
-#: ../../reference/engine-config.rst:201
+#: ../../reference/engine-config.rst:203
 msgid ""
 "embed_router's rules support wildcard ``*`` , when given a table in "
 "format: *database_name:table_name*, embed_router will route to the "
@@ -1250,7 +1262,7 @@ msgstr ""
 "embed_router 的规则支持通配符 ``*`` ，当给定一个 *database_name:table_name* "
 "的数据表时，embed_router 将通过以下方式路由到对应的数据源："
 
-#: ../../reference/engine-config.rst:204
+#: ../../reference/engine-config.rst:206
 msgid ""
 "find the exact rules first, whose ``${db}:${table}`` equals to "
 "*database_name:table_name*;"
@@ -1258,15 +1270,15 @@ msgstr ""
 "在 `embed_router_conf` 的 `rules` 中查找 `${db}:${table}` 与 "
 "`database_name:table_name` 完全相等的 rule"
 
-#: ../../reference/engine-config.rst:205
+#: ../../reference/engine-config.rst:207
 msgid "try the database_name:\\* rules;"
 msgstr "在 `embed_router_conf` 的 `rules` 中查找 `${db}` 与 `database_name` 完全相等的 rule"
 
-#: ../../reference/engine-config.rst:206
+#: ../../reference/engine-config.rst:208
 msgid "try \\*:table_name in the end."
 msgstr "在 `embed_router_conf` 的 `rules` 中查找 `${table}` 与 `table_name` 完全相等的 rule"
 
-#: ../../reference/engine-config.rst:208
+#: ../../reference/engine-config.rst:210
 msgid ""
 "Once found, SCQLEngine will try to connect database with datasource's "
 "information correspond to the *datasource_id*."
@@ -1274,11 +1286,11 @@ msgstr ""
 "一旦找到对应的 rule ，SCQLEngine 将根据 rule 中 datasource_id 在 datasources 中找到 "
 "对应的数据源信息，并根据这些信息连接对应的数据库。"
 
-#: ../../reference/engine-config.rst:211
+#: ../../reference/engine-config.rst:213
 msgid "Config for Brpc server"
 msgstr "Brpc 服务器配置"
 
-#: ../../reference/engine-config.rst:212
+#: ../../reference/engine-config.rst:214
 msgid ""
 "SCQLEngine uses **Brpc** to communicate with Driver and other peer "
 "SCQLEngines, each SCQLEngine will start a Brpc service on *local-"
@@ -1288,11 +1300,11 @@ msgstr ""
 "SCQLEngine 使用 Brpc 与 Driver 以及其他的 SCQLEngine 进行通信，每个 SCQLEngine 都会在 "
 "local-host:listen_port 上启动 Brpc 服务以接收来自外部的数据。如果要启用 Brpc 内置服务，请添加 FLAGS："
 
-#: ../../reference/engine-config.rst:223
+#: ../../reference/engine-config.rst:225
 msgid "Config for SSL"
 msgstr "SSL配置"
 
-#: ../../reference/engine-config.rst:224
+#: ../../reference/engine-config.rst:226
 msgid ""
 "If you want to enable SSL in SCQLEngine, add FLAGS as follows. "
 "Additionally, it may be necessary to configure the Driver to work with "
@@ -1303,7 +1315,7 @@ msgstr ""
 ":ref:`SCDB 的 TLS 配置 <scdb-tls>` 或 :ref:`SCQLBroker 的 TLS 配置 <broker-tls>`"
 " 。"
 
-#: ../../reference/engine-config.rst:238
+#: ../../reference/engine-config.rst:240
 msgid ""
 "The audit log in SCQLEngine is used to record the SCQLEngine activities "
 "during the execution of tasks from Driver. Just like the audit in Driver,"
@@ -1313,7 +1325,7 @@ msgstr ""
 "SCQLEngine 的审计日志是用来记录 SCQLEngine 在执行 Driver 下发任务过程中所产生的一系列事件，和 Driver "
 "一样，它也有两种类型：基础审计日志和详补充审计日志"
 
-#: ../../reference/engine-config.rst:240
+#: ../../reference/engine-config.rst:242
 msgid ""
 "The common audit is used to record some basic information about a task, "
 "while the detail audit is used to record more detailed information of the"
@@ -1326,7 +1338,7 @@ msgstr ""
 "<https://github.com/secretflow/scql/blob/main/engine/audit/audit.proto>`_"
 " 。"
 
-#: ../../reference/engine-config.rst:242
+#: ../../reference/engine-config.rst:244
 msgid ""
 "The log file is rotated in every 24:00:00 in local time, and the filename"
 " is generated in the format ``name-date.ext``, where `name` is the "
@@ -1338,7 +1350,7 @@ msgstr ""
 "，其中 `name` 是在 ``audit_log_file`` 中设置的不带后缀的文件名， `date` 是当前的日期（格式为 `YYYY-"
 "MM-DD`）， `ext` 是在 ``audit_log_file`` 中设置的后缀名。"
 
-#: ../../reference/engine-config.rst:245
+#: ../../reference/engine-config.rst:247
 msgid ""
 "For example, if you set ``audit_log_file`` as `audit/audit.log`, a backup"
 " created on Nov 11 2016 would be saved to `/audit/audit_2016-11-04.log`"
@@ -1346,11 +1358,11 @@ msgstr ""
 "例如，通过设置 ``audit_log_file`` 为 `audit/audit.log`，在2016年11月4日 24:00:00 "
 "归档的审计日志会保存至 `./audit/audit_2016-11-04.log` 。"
 
-#: ../../reference/engine-config.rst:248
+#: ../../reference/engine-config.rst:250
 msgid "Config for party authentication"
 msgstr "参与方身份验证配置"
 
-#: ../../reference/engine-config.rst:249
+#: ../../reference/engine-config.rst:251
 msgid ""
 "For security, SCQLEngine enables party authentication by default. "
 "SCQLEngine will check it's public key in the Driver request matches the "
@@ -1368,5 +1380,20 @@ msgstr ""
 #~ msgid ""
 #~ "http datasource router endpoint, it is"
 #~ " valid only when --datasource_router=http"
+#~ msgstr ""
+
+#~ msgid "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
+#~ msgstr "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
+
+#~ msgid ""
+#~ "local csv: "
+#~ "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
+#~ " Oss/Minio csv: "
+#~ "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"S3Conf\\\\\\\":{\\\\\\\"endpoint\\\\\\\":\\\\\\\"test_endpoint\\\\\\\",\\\\\\\"access_key_id\\\\\\\":\\\\\\\"test_id\\\\\\\",\\\\\\\"secret_access_key\\\\\\\":\\\\\\\"test_key\\\\\\\"},\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"oss://test_bucket/test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
+#~ msgstr ""
+
+#~ msgid ""
+#~ "本地 csv: "
+#~ "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
 #~ msgstr ""
 

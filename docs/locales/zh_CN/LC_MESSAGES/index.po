@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  SCQL\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-08 10:28+0800\n"
+"POT-Creation-Date: 2024-05-14 14:40+0800\n"
 "PO-Revision-Date: 2023-10-11 20:47+0800\n"
 "Last-Translator: \n"
 "Language: zh_CN\n"
@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.12.1\n"
+"Generated-By: Babel 2.14.0\n"
 
 #: ../../index.rst:7
 msgid "SCQL Documentation"
@@ -54,7 +54,8 @@ msgid ""
 "</topics/system/intro>` | :doc:`P2P vs. Centralized </topics/system"
 "/deploy-arch>`"
 msgstr ""
-"**概述**：:doc:`系统简介及架构设计 </topics/system/intro>` | :doc:`P2P vs 中心化 </topics/system/deploy-arch>`"
+"**概述**：:doc:`系统简介及架构设计 </topics/system/intro>` | :doc:`P2P vs 中心化 "
+"</topics/system/deploy-arch>`"
 
 #: ../../index.rst:25
 msgid "**Security**: :doc:`Security overview </topics/security/overview>`"
@@ -150,11 +151,17 @@ msgid ""
 "deploy-config>`"
 msgstr "**参考**：:doc:`中心化部署配置 </reference/centralized-deploy-config>`"
 
-#: ../../index.rst:83
+#: ../../index.rst:82
+msgid ""
+"**With Kuscia**: :doc:`Run SCQL on Kuscia </topics/deployment/run-scql-"
+"on-kuscia>`"
+msgstr "**配合 Kuscia** ： :doc:`在 Kuscia 中运行 SCQL </topics/deployment/run-scql-on-kuscia>`"
+
+#: ../../index.rst:86
 msgid "For contributors"
 msgstr "贡献者文档"
 
-#: ../../index.rst:85
+#: ../../index.rst:88
 msgid "**Reference**: :doc:`SCQL operators </reference/operators>`"
 msgstr "**参考**：:doc:`SCQL 算子规范 </reference/operators>`"
 
