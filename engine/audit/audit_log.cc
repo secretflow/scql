@@ -100,7 +100,7 @@ void RecordAudit(const AuditLog& audit_log) {
   switch (audit_type) {
     case AuditBody::kRunPlan:
     case AuditBody::kCreateSession:
-    case AuditBody::kStopSession:
+    case AuditBody::kStopJob:
     case AuditBody::kUncategorized: {
       auto audit_logger = spdlog::get(default_logger_name);
       if (audit_logger == nullptr) {
@@ -194,7 +194,7 @@ void RecordRunExecPlanEvent(const pb::RunExecutionPlanRequest& request,
   header->mutable_time()->set_seconds(GetTimeSec(start_time));
   header->mutable_status()->CopyFrom(response.status());
   header->set_event_name(::audit::pb::RUN_EXEC_PLAN);
-  header->set_session_id(request.session_params().session_id());
+  header->set_session_id(request.job_params().job_id());
 
   auto* body = audit.mutable_body()->mutable_run_plan();
   body->set_source_ip(source_ip);
@@ -211,7 +211,7 @@ void RecordRunExecPlanEvent(const pb::RunExecutionPlanRequest& request,
 }
 
 void RecordCreateSessionEvent(const ::scql::pb::Status& status,
-                              const pb::SessionStartParams& params, bool sync,
+                              const pb::JobStartParams& params, bool sync,
                               std::string source_ip) {
   if (!audit_init_finished) {
     return;
@@ -221,7 +221,7 @@ void RecordCreateSessionEvent(const ::scql::pb::Status& status,
   header->mutable_time()->set_seconds(
       GetTimeSec(std::chrono::system_clock::now()));
   header->mutable_status()->CopyFrom(status);
-  header->set_session_id(params.session_id());
+  header->set_session_id(params.job_id());
   header->set_event_name(::audit::pb::CREATE_SESSION);
 
   auto* body = audit.mutable_body()->mutable_create_session();
@@ -231,9 +231,9 @@ void RecordCreateSessionEvent(const ::scql::pb::Status& status,
   RecordAudit(audit);
 }
 
-void RecordStopSessionEvent(const pb::StopSessionRequest& request,
-                            const ::scql::pb::Status& status,
-                            std::string source_ip) {
+void RecordStopJobEvent(const pb::StopJobRequest& request,
+                        const ::scql::pb::Status& status,
+                        std::string source_ip) {
   if (!audit_init_finished) {
     return;
   }
@@ -242,10 +242,10 @@ void RecordStopSessionEvent(const pb::StopSessionRequest& request,
   header->mutable_time()->set_seconds(
       GetTimeSec(std::chrono::system_clock::now()));
   header->mutable_status()->CopyFrom(status);
-  header->set_session_id(request.session_id());
-  header->set_event_name(::audit::pb::STOP_SESSION);
+  header->set_session_id(request.job_id());
+  header->set_event_name(::audit::pb::STOP_JOB);
 
-  auto* body = audit.mutable_body()->mutable_stop_session();
+  auto* body = audit.mutable_body()->mutable_stop_job();
   body->set_reason(request.reason());
   body->set_source_ip(source_ip);
   RecordAudit(audit);

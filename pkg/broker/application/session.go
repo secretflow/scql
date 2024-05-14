@@ -33,6 +33,7 @@ import (
 	"github.com/secretflow/scql/pkg/proto-gen/spu"
 	"github.com/secretflow/scql/pkg/sessionctx/stmtctx"
 	"github.com/secretflow/scql/pkg/sessionctx/variable"
+	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
 
 const (
@@ -89,7 +90,11 @@ func (s *Session) GetResultSafely() *pb.QueryResponse {
 func (s *Session) SetResultSafely(result *pb.QueryResponse) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.Result = result
+	if s.Result == nil {
+		s.Result = result
+	} else {
+		logrus.Warnf("session %s already has result, ignore new one", s.ExecuteInfo.JobID)
+	}
 }
 
 func (s *Session) GetSelfPartyCode() string {
@@ -254,6 +259,20 @@ func (s *Session) SaveLocalChecksum(partyCode string, sum Checksum) error {
 
 func (s *Session) SaveRemoteChecksum(partyCode string, pbChecksum *pb.Checksum) error {
 	return s.ExecuteInfo.Checksums.SaveRemote(partyCode, pbChecksum)
+}
+
+// CheckChecksum checks data consistency with other parties via comparing checksum
+func (s *Session) CheckChecksum() error {
+	for _, p := range sliceutil.Subtraction(s.ExecuteInfo.DataParties, []string{s.GetSelfPartyCode()}) {
+		compareResult, err := s.ExecuteInfo.Checksums.CompareChecksumFor(p)
+		if err != nil {
+			return err
+		}
+		if compareResult != pb.ChecksumCompareResult_EQUAL {
+			return fmt.Errorf("checksum not equal with party %s", p)
+		}
+	}
+	return nil
 }
 
 func (s *Session) GetEndpoint(partyCode string) (string, error) {

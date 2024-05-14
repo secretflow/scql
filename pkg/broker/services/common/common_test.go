@@ -29,7 +29,6 @@ import (
 
 	"github.com/secretflow/scql/pkg/broker/application"
 	"github.com/secretflow/scql/pkg/broker/storage"
-	"github.com/secretflow/scql/pkg/broker/testdata"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
 	prom "github.com/secretflow/scql/pkg/util/prometheus"
@@ -151,8 +150,6 @@ func TestStorageWithCheck(t *testing.T) {
 	r.NoError(err)
 	meta := storage.NewMetaManager(db, false)
 	err = meta.Bootstrap()
-	r.NoError(err)
-	err = testdata.CreateTestPemFiles("../../testdata")
 	r.NoError(err)
 	transaction := meta.CreateMetaTransaction()
 	projectID1 := "p1"

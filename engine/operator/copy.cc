@@ -23,6 +23,7 @@
 #include "engine/core/type.h"
 #include "engine/util/ndarray_to_arrow.h"
 #include "engine/util/spu_io.h"
+#include "engine/util/table_util.h"
 #include "engine/util/tensor_util.h"
 
 namespace scql::engine::op {
@@ -58,69 +59,100 @@ void Copy::Execute(ExecContext* ctx) {
   auto lctx = ctx->GetSession()->GetLink();
 
   if (self_party == from_party) {
-    auto table = ConstructTableFromTensors(ctx, input_pbs);
+    auto table = util::ConstructTableFromTensors(ctx, input_pbs);
     YACL_ENFORCE(table, "construct table failed");
-
-    auto buffer = SerializeTable(std::move(table));
-    YACL_ENFORCE(buffer, "serialize table failed");
 
     auto send_to_rank = ctx->GetSession()->GetPartyRank(to_party);
     YACL_ENFORCE(send_to_rank != -1, "unknown rank for party={}", to_party);
-    lctx->Send(send_to_rank,
-               yacl::ByteContainerView(buffer->mutable_data(), buffer->size()),
-               ctx->GetNodeName());
+
+    auto reader = arrow::TableBatchReader(table);
+    reader.set_chunksize(batch_size_);
+
+    std::shared_ptr<arrow::RecordBatch> batch;
+    int count = 0;
+    int64_t total = 0;
+    while (reader.ReadNext(&batch).ok() && batch != nullptr) {
+      count++;
+      size_t current_rows = batch->num_rows();
+      total += current_rows;
+
+      auto buffer = SerializeRecordBatch(std::move(batch));
+      YACL_ENFORCE(buffer, "serialize record batch failed");
+
+      lctx->Send(
+          send_to_rank,
+          yacl::ByteContainerView(buffer->mutable_data(), buffer->size()),
+          ctx->GetNodeName());
+
+      SPDLOG_INFO("sent {} rows in batch {}, {} rows in total.", current_rows,
+                  count, total);
+    }
+
+    // append a dummy batch to the tail of the batch to indicate
+    // the batching is done
+    {
+      std::shared_ptr<arrow::RecordBatch> dummy_batch;
+      ASSIGN_OR_THROW_ARROW_STATUS(
+          dummy_batch, arrow::RecordBatch::MakeEmpty(table->schema()));
+      auto buffer = SerializeRecordBatch(std::move(dummy_batch));
+      YACL_ENFORCE(buffer, "serialize record batch failed");
+
+      lctx->Send(
+          send_to_rank,
+          yacl::ByteContainerView(buffer->mutable_data(), buffer->size()),
+          ctx->GetNodeName());
+    }
   } else {
     auto recv_from_rank = ctx->GetSession()->GetPartyRank(from_party);
     YACL_ENFORCE(recv_from_rank != -1, "unknown rank for party={}", from_party);
-    yacl::Buffer value = lctx->Recv(recv_from_rank, ctx->GetNodeName());
+    std::shared_ptr<arrow::Table> merged_table;
+    int count = 0;
+    int64_t total = 0;
+    while (true) {
+      yacl::Buffer value = lctx->Recv(recv_from_rank, ctx->GetNodeName());
+      std::shared_ptr<arrow::Table> table = DeserializeTable(std::move(value));
+      YACL_ENFORCE(table, "deserialize table failed");
 
-    auto table = DeserializeTable(std::move(value));
-    YACL_ENFORCE(table, "deserialize table failed");
+      auto current_rows = table->num_rows();
+      total += current_rows;
 
-    InsertTensorsFromTable(ctx, output_pbs, std::move(table));
-  }
-}
+      if (!merged_table) {
+        merged_table = table;
+      } else {
+        auto result = arrow::ConcatenateTables({merged_table, table});
+        YACL_ENFORCE(result.ok(), "concatenate table failed");
+        merged_table = result.ValueOrDie();
+      }
 
-std::shared_ptr<arrow::Table> Copy::ConstructTableFromTensors(
-    ExecContext* ctx, const RepeatedTensor& input_pbs) {
-  std::vector<std::shared_ptr<arrow::Field>> fields;
-  std::vector<std::shared_ptr<arrow::ChunkedArray>> chunked_arrs;
-  int64_t pre_length = 0;
-  for (int i = 0; i < input_pbs.size(); ++i) {
-    const auto& input_pb = input_pbs[i];
-    auto tensor = ctx->GetTensorTable()->GetTensor(input_pb.name());
-    YACL_ENFORCE(tensor != nullptr, "get tensor={} from tensor table failed",
-                 input_pb.name());
-    auto chunked_arr = tensor->ToArrowChunkedArray();
-    if (i > 0) {
-      YACL_ENFORCE(chunked_arr->length() == pre_length,
-                   "input tensors must have the same length");
+      if (table->num_rows() == 0) {
+        break;
+      }
+
+      count++;
+      SPDLOG_INFO("received {} rows in batch {}, {} rows in total.",
+                  current_rows, count, total);
     }
-    pre_length = chunked_arr->length();
 
-    fields.emplace_back(arrow::field(input_pb.name(), chunked_arr->type()));
-    chunked_arrs.emplace_back(chunked_arr);
+    InsertTensorsFromTable(ctx, output_pbs, std::move(merged_table));
   }
-
-  auto table = arrow::Table::Make(arrow::schema(fields), chunked_arrs);
-  return table;
 }
 
-std::shared_ptr<arrow::Buffer> Copy::SerializeTable(
-    std::shared_ptr<arrow::Table> table) {
-  std::shared_ptr<arrow::io::BufferOutputStream> out_stream;
-  ASSIGN_OR_THROW_ARROW_STATUS(out_stream,
+std::shared_ptr<arrow::Buffer> Copy::SerializeRecordBatch(
+    std::shared_ptr<arrow::RecordBatch> batch) {
+  std::shared_ptr<arrow::io::BufferOutputStream> output_stream;
+  ASSIGN_OR_THROW_ARROW_STATUS(output_stream,
                                arrow::io::BufferOutputStream::Create());
 
   std::shared_ptr<arrow::ipc::RecordBatchWriter> writer;
   ASSIGN_OR_THROW_ARROW_STATUS(
-      writer, arrow::ipc::MakeStreamWriter(out_stream, table->schema()));
+      writer, arrow::ipc::MakeStreamWriter(output_stream, batch->schema()));
 
-  THROW_IF_ARROW_NOT_OK(writer->WriteTable(*table));
+  THROW_IF_ARROW_NOT_OK(writer->WriteRecordBatch(*batch));
   THROW_IF_ARROW_NOT_OK(writer->Close());
 
   std::shared_ptr<arrow::Buffer> buffer;
-  ASSIGN_OR_THROW_ARROW_STATUS(buffer, out_stream->Finish());
+  ASSIGN_OR_THROW_ARROW_STATUS(buffer, output_stream->Finish());
+
   return buffer;
 }
 
@@ -143,7 +175,7 @@ std::shared_ptr<arrow::Table> Copy::DeserializeTable(yacl::Buffer value) {
 }
 
 void Copy::InsertTensorsFromTable(ExecContext* ctx,
-                                  const RepeatedTensor& output_pbs,
+                                  const RepeatedPbTensor& output_pbs,
                                   std::shared_ptr<arrow::Table> table) {
   YACL_ENFORCE(table->num_columns() == output_pbs.size(),
                "receive table column size={} not equal to output size={}",

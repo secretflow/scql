@@ -16,7 +16,6 @@ package inter
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/sirupsen/logrus"
@@ -122,10 +121,10 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 			app.DeleteSession(req.JobId)
 		}
 	}()
-	selfCode := session.GetSelfPartyCode()
+	js := newJobSync(session, r.GetEnginesInfo())
 	if session.DryRun {
 		// if parties is more than two, get checksum from other parties
-		err = r.GetChecksumFromOtherParties(req.GetClientId().GetCode())
+		err = js.getChecksumFromOtherParties(req.GetClientId().GetCode())
 		if err != nil {
 			return
 		}
@@ -133,55 +132,15 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 			return
 		}
 	} else {
-		// ask info from issuer
-		chLen := 1
-		// ask info from other parties
-		for _, p := range executionInfo.DataParties {
-			if p != req.GetClientId().GetCode() && p != selfCode {
-				chLen += 1
-			}
-		}
-		type retInfo struct {
-			err          error
-			prepareAgain bool
-		}
-		retCh := make(chan retInfo, chLen)
-		// update local storage from issuer
-		go func() {
-			var err error
-			prepareAgain := false
-			defer func() {
-				retCh <- retInfo{err, prepareAgain}
-			}()
-			if slices.Contains(dataParties, req.GetClientId().GetCode()) {
-				var reqChecksumCompareRes pb.ChecksumCompareResult
-				reqChecksumCompareRes, err = executionInfo.Checksums.CompareChecksumFor(req.GetClientId().GetCode())
-				if err != nil {
-					logrus.Warningf("CompareChecksumFor: %s", err)
-					return
-				}
-				prepareAgain, err = common.AskInfoByChecksumResult(session, reqChecksumCompareRes, r.GetEnginesInfo().GetTablesByParty(req.GetClientId().GetCode()), req.GetClientId().GetCode())
-				if err != nil {
-					logrus.Warningf("AskInfoByChecksumResult: %s", err)
-					return
-				}
-				return
-			}
-		}()
-		// update local storage from other parties
-		for _, p := range executionInfo.DataParties {
-			if p == req.GetClientId().GetCode() || p == selfCode {
-				continue
-			}
-			go func(p string) {
-				prepareAgain, err := checkInfoFromOtherParty(session, r, p)
-				retCh <- retInfo{err: err, prepareAgain: prepareAgain}
-			}(p)
-		}
 		// run sql
 		go func() {
-			// check error
-			var err error
+			syncTriggered, err := js.syncWithAll()
+			if err != nil {
+				logrus.Errorf("runsql err: %s", err)
+			}
+			if syncTriggered {
+				r.SetPrepareAgain()
+			}
 			defer func() {
 				// clear session and DB meta if in sync mode or errors occurs
 				if !req.GetIsAsync() || err != nil {
@@ -192,21 +151,6 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 					// TODO: clear SessionInfo in DB, ignore it temporarily to reduce DB write times
 				}
 			}()
-
-			for i := 0; i < chLen; i++ {
-				ret := <-retCh
-				if ret.err != nil {
-					err = errors.Join(err, ret.err)
-					continue
-				}
-				if ret.prepareAgain {
-					r.SetPrepareAgain()
-				}
-			}
-			if err != nil {
-				logrus.Errorf("runsql err: %s", err)
-				return
-			}
 			err = r.Execute(usedTables)
 			if err != nil {
 				logrus.Errorf("runsql err: %s", err)
@@ -240,22 +184,6 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 	}
 
 	return response, nil
-}
-
-func checkInfoFromOtherParty(session *application.Session, r *executor.QueryRunner, targetCode string) (prepareAgain bool, err error) {
-	response, err := r.ExchangeJobInfo(targetCode)
-	if err != nil {
-		return
-	}
-	err = session.SaveRemoteChecksum(targetCode, response.ExpectedServerChecksum)
-	if err != nil {
-		return
-	}
-	if response.Status.Code == int32(pb.Code_DATA_INCONSISTENCY) {
-		prepareAgain, err = common.AskInfoByChecksumResult(session, response.ServerChecksumResult, r.GetEnginesInfo().GetTablesByParty(targetCode), targetCode)
-	}
-	session.SaveEndpoint(targetCode, response.Endpoint)
-	return
 }
 
 func (svc *grpcInterSvc) CancelQueryJob(c context.Context, req *pb.CancelQueryJobRequest) (resp *pb.CancelQueryJobResponse, err error) {

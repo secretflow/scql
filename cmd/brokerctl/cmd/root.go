@@ -59,4 +59,5 @@ func init() {
 	rootCmd.AddCommand(revokeCmd)
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(cancelCmd)
+	rootCmd.AddCommand(checkAndUpdateCmd)
 }

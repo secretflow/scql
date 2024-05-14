@@ -15,11 +15,14 @@
 #include "engine/services/engine_service_impl.h"
 
 #include <cstddef>
+#include <cstdint>
+#include <cstring>
 #include <utility>
 
 #include "brpc/channel.h"
 #include "brpc/closure_guard.h"
 #include "google/protobuf/util/json_util.h"
+#include "psi/utils/sync.h"
 
 #include "engine/audit/audit_log.h"
 #include "engine/framework/exec.h"
@@ -57,14 +60,16 @@ std::string MessageToJsonString(const google::protobuf::Message& message) {
 void MergePeerErrors(
     const std::vector<std::pair<std::string, scql::pb::Status>>& peer_errors,
     scql::pb::Status* status) {
+  std::string merged_error_msg{};
   for (const auto& error : peer_errors) {
     // NOTE: status->add_details() is not used here because the format used by
     // brpc to convert messages containing Any into json is not compatible with
     // the standard.
-    status->set_message(
-        fmt::format("{}; (peer: {}, code: {}, msg: {})", status->message(),
-                    error.first, error.second.code(), error.second.message()));
+    merged_error_msg.append(fmt::format("; (peer: {}, code: {}, msg: {})",
+                                        error.first, error.second.code(),
+                                        error.second.message()));
   }
+  status->set_message(merged_error_msg);
 }
 
 }  // namespace
@@ -106,45 +111,90 @@ bool EngineServiceImpl::CheckDriverCredential(
   return true;
 }
 
-void EngineServiceImpl::StopSession(::google::protobuf::RpcController* cntl,
-                                    const pb::StopSessionRequest* request,
-                                    pb::Status* status,
-                                    ::google::protobuf::Closure* done) {
+void EngineServiceImpl::StopJob(::google::protobuf::RpcController* cntl,
+                                const pb::StopJobRequest* request,
+                                pb::Status* status,
+                                ::google::protobuf::Closure* done) {
   brpc::ClosureGuard done_guard(done);
   // check illegal request.
   auto controller = static_cast<brpc::Controller*>(cntl);
   std::string source_ip =
       butil::endpoint2str(controller->remote_side()).c_str();
-  auto session_id = request->session_id();
+  auto session_id = request->job_id();
   if (!CheckDriverCredential(controller->http_request())) {
     std::string err_msg = "driver authentication failed";
     LOG_ERROR_AND_SET_STATUS(status, pb::Code::UNAUTHENTICATED, err_msg);
-    audit::RecordUncategorizedEvent(*status, session_id, source_ip,
-                                    "StopSession");
+    audit::RecordUncategorizedEvent(*status, session_id, source_ip, "StopJob");
     return;
   }
   if (session_id.empty()) {
     std::string err_msg = "session_id in request is empty";
     LOG_ERROR_AND_SET_STATUS(status, pb::Code::INVALID_ARGUMENT, err_msg);
-    audit::RecordUncategorizedEvent(*status, session_id, source_ip,
-                                    "StopSession");
+    audit::RecordUncategorizedEvent(*status, session_id, source_ip, "StopJob");
     return;
   }
-  SPDLOG_INFO("EngineServiceImpl::StopSession({}), reason({})", session_id,
+  SPDLOG_INFO("EngineServiceImpl::StopJob({}), reason({})", session_id,
               request->reason());
   try {
-    session_mgr_->RemoveSession(session_id);
+    session_mgr_->StopSession(session_id);
 
     status->set_code(pb::Code::OK);
-    audit::RecordStopSessionEvent(*request, *status, source_ip);
+    audit::RecordStopJobEvent(*request, *status, source_ip);
     return;
   } catch (const std::exception& e) {
     std::string err_msg =
         fmt::format("StopSession({}) failed, catch std::exception={}",
                     session_id, e.what());
     LOG_ERROR_AND_SET_STATUS(status, pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
-    audit::RecordStopSessionEvent(*request, *status, source_ip);
+    audit::RecordStopJobEvent(*request, *status, source_ip);
     return;
+  }
+}
+
+void CheckGraphChecksum(const pb::RunExecutionPlanRequest*& request,
+                        Session*& session) {
+  if (session->GetLink()->WorldSize() < 2 ||
+      !request->graph_checksum().check_graph_checksum()) {
+    SPDLOG_INFO("skip checking graph checksum");
+    return;
+  }
+
+  SPDLOG_INFO("check graph checksum");
+  const auto& graph_checksum = request->graph_checksum();
+  auto iter = graph_checksum.sub_graph_checksums().find(
+      std::to_string(session->SelfRank()));
+  YACL_ENFORCE(iter != graph_checksum.sub_graph_checksums().end(),
+               "get graph checksum failed for rank {}", session->SelfRank());
+  const auto& whole_graph_checksum = graph_checksum.whole_graph_checksum();
+  // concat whole graph checksum and self sub graph checksum
+  auto checksum = whole_graph_checksum + iter->second;
+
+  // get checksum from other parties
+  auto checksum_bufs = yacl::link::AllGather(
+      session->GetLink(),
+      yacl::ByteContainerView(checksum.data(), checksum.length()),
+      "graph checksum");
+
+  for (size_t rank = 0; rank < session->GetLink()->WorldSize(); rank++) {
+    if (rank == session->SelfRank()) {
+      continue;
+    }
+    // split checksum
+    auto peer_checksum = std::string_view(checksum_bufs[rank]);
+    auto peer_whole_graph_checksum =
+        peer_checksum.substr(0, whole_graph_checksum.size());
+    YACL_ENFORCE(peer_whole_graph_checksum == whole_graph_checksum,
+                 "peer_whole_graph_checksum: {} != whole_graph_checksum: {}",
+                 peer_checksum, whole_graph_checksum);
+    auto iter = graph_checksum.sub_graph_checksums().find(std::to_string(rank));
+    YACL_ENFORCE(iter != graph_checksum.sub_graph_checksums().end(),
+                 "get graph checksum failed for rank {}", session->SelfRank());
+    auto local_sub_graph_checksum = std::string(iter->second);
+    auto peer_sub_graph_checksum = peer_checksum.substr(
+        whole_graph_checksum.size(), local_sub_graph_checksum.size());
+    YACL_ENFORCE(peer_sub_graph_checksum == local_sub_graph_checksum,
+                 "peer_checksum: {} != local_sub_graph_checksum: {}",
+                 peer_sub_graph_checksum, local_sub_graph_checksum);
   }
 }
 
@@ -166,16 +216,14 @@ void EngineServiceImpl::RunExecutionPlan(
     LOG_ERROR_AND_SET_STATUS(response->mutable_status(),
                              pb::Code::UNAUTHENTICATED, err_msg);
     audit::RecordUncategorizedEvent(response->status(),
-                                    request->session_params().session_id(),
-                                    source_ip, "RunExecutionPlan");
-    ReportErrorToPeers(request->session_params(), pb::Code::UNAUTHENTICATED,
-                       err_msg);
+                                    request->job_params().job_id(), source_ip,
+                                    "RunExecutionPlan");
     return;
   }
 
-  const std::string session_id = request->session_params().session_id();
-  response->set_session_id(session_id);
-  response->set_party_code(request->session_params().party_code());
+  const std::string session_id = request->job_params().job_id();
+  response->set_job_id(session_id);
+  response->set_party_code(request->job_params().party_code());
 
   if (request->async() && request->callback_url().empty()) {
     std::string err_msg = fmt::format(
@@ -186,23 +234,23 @@ void EngineServiceImpl::RunExecutionPlan(
                              err_msg);
     audit::RecordRunExecPlanEvent(*request, *response, start_time, source_ip);
 
-    ReportErrorToPeers(request->session_params(), pb::Code::BAD_REQUEST,
-                       err_msg);
+    ReportErrorToPeers(request->job_params(), pb::Code::BAD_REQUEST, err_msg);
     return;
   }
 
   Session* session = nullptr;
   // 1. create session first.
   try {
-    VerifyPublicKeys(request->session_params());
+    VerifyPublicKeys(request->job_params());
 
-    session_mgr_->CreateSession(request->session_params(),
-                                request->debug_opts());
+    session_mgr_->CreateSession(request->job_params(), request->debug_opts());
     session = session_mgr_->GetSession(session_id);
     YACL_ENFORCE(session, "get session failed");
+    // check graph checksum
+    CheckGraphChecksum(request, session);
     ::scql::pb::Status status;
     status.set_code(0);
-    audit::RecordCreateSessionEvent(status, request->session_params(), true,
+    audit::RecordCreateSessionEvent(status, request->job_params(), true,
                                     source_ip);
   } catch (const std::exception& e) {
     std::string err_msg = fmt::format(
@@ -211,10 +259,10 @@ void EngineServiceImpl::RunExecutionPlan(
         session_id, e.what());
     LOG_ERROR_AND_SET_STATUS(response->mutable_status(),
                              pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
-    audit::RecordCreateSessionEvent(response->status(),
-                                    request->session_params(), true, source_ip);
-    ReportErrorToPeers(request->session_params(),
-                       pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
+    audit::RecordCreateSessionEvent(response->status(), request->job_params(),
+                                    true, source_ip);
+    ReportErrorToPeers(request->job_params(), pb::Code::UNKNOWN_ENGINE_ERROR,
+                       err_msg);
     return;
   }
 
@@ -231,8 +279,61 @@ void EngineServiceImpl::RunExecutionPlan(
     // run in sync mode
     RunPlanSync(request, session, response);
     audit::RecordRunExecPlanEvent(*request, *response, start_time, source_ip);
+
+    try {
+      session_mgr_->RemoveSession(session_id);
+    } catch (const std::exception& e) {
+      SPDLOG_ERROR(
+          "RunExecutionPlan remove session({}) failed, catch "
+          "std::exception={}",
+          session_id, e.what());
+    }
     return;
   }
+}
+
+void EngineServiceImpl::QueryJobStatus(::google::protobuf::RpcController* cntl,
+                                       const pb::QueryJobStatusRequest* request,
+                                       pb::QueryJobStatusResponse* response,
+                                       ::google::protobuf::Closure* done) {
+  brpc::ClosureGuard done_guard(done);
+
+  SPDLOG_INFO("Start to handle QueryJobStatus request, request={}",
+              MessageToJsonString(*request));
+
+  auto controller = static_cast<brpc::Controller*>(cntl);
+  if (!CheckDriverCredential(controller->http_request())) {
+    std::string err_msg = "driver authentication failed";
+    LOG_ERROR_AND_SET_STATUS(response->mutable_status(),
+                             pb::Code::UNAUTHENTICATED, err_msg);
+    return;
+  }
+
+  const auto& job_id = request->job_id();
+  if (job_id.empty()) {
+    std::string err_msg = "bad request: job_id is empty";
+    LOG_ERROR_AND_SET_STATUS(response->mutable_status(),
+                             pb::Code::INVALID_ARGUMENT, err_msg);
+    return;
+  }
+  auto session = session_mgr_->GetSession(job_id);
+  if (session == nullptr) {
+    std::string err_msg =
+        fmt::format("QueryJobStatus failed, job({}) not found", job_id);
+    LOG_ERROR_AND_SET_STATUS(response->mutable_status(), pb::Code::NOT_FOUND,
+                             err_msg);
+    return;
+  }
+
+  auto job_state = ConvertSessionStateToJobState(session->GetState());
+  if (job_state == pb::QueryJobStatusResponse_JobState_JOB_STATE_UNSPECIFIED) {
+    SPDLOG_WARN("unknown job state, job_id={}", job_id);
+  }
+
+  response->mutable_status()->set_code(pb::Code::OK);
+  response->set_job_state(job_state);
+  SPDLOG_INFO("Finish to handle QueryJobStatus request, job_id={}", job_id);
+  return;
 }
 
 void EngineServiceImpl::ReportResult(const std::string& session_id,
@@ -300,6 +401,8 @@ void EngineServiceImpl::RunPlanCore(const pb::RunExecutionPlanRequest& request,
                     session->Id(), node.node_name(), node.op_type());
         auto start = std::chrono::system_clock::now();
 
+        YACL_ENFORCE(session->GetState() == SessionState::RUNNING,
+                     "session status not equal to running");
         ExecContext context(node, session);
         Executor executor;
         executor.RunExecNode(&context);
@@ -334,7 +437,7 @@ void EngineServiceImpl::RunPlanCore(const pb::RunExecutionPlanRequest& request,
 }
 
 void EngineServiceImpl::VerifyPublicKeys(
-    const pb::SessionStartParams& start_params) {
+    const pb::JobStartParams& start_params) {
   if (!authenticator_) {
     return;
   }
@@ -349,19 +452,22 @@ void EngineServiceImpl::RunPlanSync(const pb::RunExecutionPlanRequest* request,
                                     Session* session,
                                     pb::RunExecutionPlanResponse* response) {
   // 1. run jobs in plan and add result to response.
-  const std::string session_id = request->session_params().session_id();
+  const std::string session_id = request->job_params().job_id();
   try {
-    YACL_ENFORCE(session_mgr_->SetSessionState(session_id, SessionState::IDLE,
-                                               SessionState::RUNNING));
-    RunPlanCore(*request, session, response);
+    auto run_f = std::async([&] {
+      session->SetState(SessionState::RUNNING);
+
+      RunPlanCore(*request, session, response);
+
+      session->SetState(SessionState::SUCCEEDED);
+    });
+    // wait until all peers finished, if any one of them broken, the
+    // ::yacl::IoError will be throw in other peers after Channel::Recv timeout
+    ::psi::SyncWait(session->GetLink(), &run_f);
+
+    SPDLOG_INFO("RunExecutionPlan success, sessionID={}", session_id);
   } catch (const std::exception& e) {
-    if (!session_mgr_->SetSessionState(session_id, SessionState::RUNNING,
-                                       SessionState::IDLE)) {
-      SPDLOG_WARN(
-          "RunExecutionPlan set session to idle failed when exception throw");
-    }  // else wait WatchSessionTimeoutThread or StopSession to remove
-       // session, because it requires the cooperation of all participating
-       // engines
+    session->SetState(SessionState::FAILED);
 
     std::string err_msg = fmt::format(
         "RunExecutionPlan run jobs({}) failed, catch std::exception={}",
@@ -369,34 +475,12 @@ void EngineServiceImpl::RunPlanSync(const pb::RunExecutionPlanRequest* request,
     LOG_ERROR_AND_SET_STATUS(response->mutable_status(),
                              pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
     response->mutable_out_columns()->Clear();
-    ReportErrorToPeers(request->session_params(),
-                       pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
-    MergePeerErrors(session->GetPeerErrors(), response->mutable_status());
-    return;
+    ReportErrorToPeers(request->job_params(), pb::Code::UNKNOWN_ENGINE_ERROR,
+                       err_msg);
   }
 
-  auto peer_errors = session->GetPeerErrors();
-  // 2. remove session.
-  try {
-    YACL_ENFORCE(session_mgr_->SetSessionState(
-        session_id, SessionState::RUNNING, SessionState::IDLE));
-    session_mgr_->RemoveSession(session_id);
-  } catch (const std::exception& e) {
-    std::string err_msg = fmt::format(
-        "RunExecutionPlan remove session({}) failed, catch "
-        "std::exception={}",
-        session_id, e.what());
-    LOG_ERROR_AND_SET_STATUS(response->mutable_status(),
-                             pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
-    response->mutable_out_columns()->Clear();
-    ReportErrorToPeers(request->session_params(),
-                       pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
-    MergePeerErrors(peer_errors, response->mutable_status());
-    return;
-  }
+  MergePeerErrors(session->GetPeerErrors(), response->mutable_status());
 
-  SPDLOG_INFO("RunExecutionPlan success, sessionID={}", session_id);
-  MergePeerErrors(peer_errors, response->mutable_status());
   return;
 }
 
@@ -405,8 +489,8 @@ void EngineServiceImpl::RunPlanAsync(const pb::RunExecutionPlanRequest request,
                                      const std::string& source_ip) {
   auto start_time = std::chrono::system_clock::now();
   pb::RunExecutionPlanResponse response;
-  response.set_session_id(request.session_params().session_id());
-  response.set_party_code(request.session_params().party_code());
+  response.set_job_id(request.job_params().job_id());
+  response.set_party_code(request.job_params().party_code());
 
   RunPlanSync(&request, session, &response);
   audit::RecordRunExecPlanEvent(request, response, start_time, source_ip);
@@ -415,15 +499,28 @@ void EngineServiceImpl::RunPlanAsync(const pb::RunExecutionPlanRequest request,
   pb::ReportRequest report;
   report.mutable_status()->CopyFrom(response.status());
   report.mutable_out_columns()->CopyFrom(response.out_columns());
-  report.set_session_id(response.session_id());
+  report.set_job_id(response.job_id());
   report.set_party_code(response.party_code());
   report.set_num_rows_affected(response.num_rows_affected());
 
-  ReportResult(request.session_params().session_id(), request.callback_url(),
+  ReportResult(request.job_params().job_id(), request.callback_url(),
                MessageToJsonString(report));
+
+  // remove session.
+  // NOTE: removing the session should be performed after ReportResult to
+  // prevent the job watcher from receiving a "session not found" error when
+  // executing QueryJobStatus.
+  try {
+    session_mgr_->RemoveSession(request.job_params().job_id());
+  } catch (const std::exception& e) {
+    SPDLOG_ERROR(
+        "RunExecutionPlan remove session({}) failed, catch "
+        "std::exception={}",
+        request.job_params().job_id(), e.what());
+  }
 }
 
-void EngineServiceImpl::ReportErrorToPeers(const pb::SessionStartParams& params,
+void EngineServiceImpl::ReportErrorToPeers(const pb::JobStartParams& params,
                                            const pb::Code err_code,
                                            const std::string& err_msg) {
   try {
@@ -443,7 +540,7 @@ void EngineServiceImpl::ReportErrorToPeers(const pb::SessionStartParams& params,
       brpc::Controller cntl;
       services::pb::ErrorCollectorService_Stub stub(rpc_channel.get());
 
-      request.set_session_id(params.session_id());
+      request.set_job_id(params.job_id());
       request.set_party_code(parties.SelfPartyCode());
       request.mutable_status()->set_code(err_code);
       request.mutable_status()->set_message(err_msg);

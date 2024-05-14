@@ -16,10 +16,12 @@ package executor
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/sqlite"
@@ -32,10 +34,10 @@ import (
 	"github.com/secretflow/scql/pkg/broker/partymgr"
 	"github.com/secretflow/scql/pkg/broker/services/common"
 	"github.com/secretflow/scql/pkg/broker/storage"
-	"github.com/secretflow/scql/pkg/broker/testdata"
 	"github.com/secretflow/scql/pkg/interpreter"
 	"github.com/secretflow/scql/pkg/planner/core"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/util/brokerutil"
 )
 
 func TestQueryRunner(t *testing.T) {
@@ -96,11 +98,14 @@ func TestQueryRunner(t *testing.T) {
 	r.NoError(err)
 	err = common.GrantColumnConstraintsWithCheck(transaction, t2Identifier.ProjectID, privsBob, common.OwnerChecker{Owner: bob})
 	r.NoError(err)
-	// mock config
-	cfg, err := config.NewConfig("../testdata/config_test.yml")
+	filesMap, err := brokerutil.CreateTestPemFiles(nil, t.TempDir())
 	r.NoError(err)
+	// mock config
+	cfg, err := config.NewConfig("config_test.yml")
+	r.NoError(err)
+	cfg.PrivateKeyPath = filesMap[brokerutil.AlicePemFilKey]
 	// mock party meta
-	partyMgr, err := partymgr.NewFilePartyMgr("../testdata/party_info_test.json")
+	partyMgr, err := partymgr.NewFilePartyMgr(filesMap[brokerutil.PartyInfoFileKey])
 	r.NoError(err)
 	app, err := application.NewApp(partyMgr, meta, cfg)
 	r.NoError(err)
@@ -160,6 +165,7 @@ func TestQueryRunner(t *testing.T) {
 2 -> 4 [label = "t_3:{id:PRIVATE:INT64}"]
 3 -> 5 [label = "t_4:{id:PRIVATE:INT64}"]
 }`, compiledPlan.Explain.GetExeGraphDot())
+	r.Equal("8b6a91c03d6a9d977d6d55919b890caff6874e2b6a49ade0e669fcad17d24469", compiledPlan.WholeGraphChecksum)
 }
 
 func TestCaseSensitive(t *testing.T) {
@@ -231,11 +237,14 @@ func TestCaseSensitive(t *testing.T) {
 	r.NoError(err)
 	transaction.Finish(nil)
 	// mock config
-	cfg, err := config.NewConfig("../testdata/config_test.yml")
+	cfg, err := config.NewConfig("config_test.yml")
+	r.NoError(err)
+	filesMap, err := brokerutil.CreateTestPemFiles(nil, t.TempDir())
 	r.NoError(err)
 	// mock party meta
-	partyMgr, err := partymgr.NewFilePartyMgr("../testdata/party_info_test.json")
+	partyMgr, err := partymgr.NewFilePartyMgr(filesMap[brokerutil.PartyInfoFileKey])
 	r.NoError(err)
+	cfg.PrivateKeyPath = filesMap[brokerutil.AlicePemFilKey]
 	app, err := application.NewApp(partyMgr, meta, cfg)
 	r.NoError(err)
 	info := &application.ExecutionInfo{
@@ -408,9 +417,16 @@ func TestCaseSensitive(t *testing.T) {
 	transaction.Finish(nil)
 }
 
+// create different in memory db
 func buildTestStorage() (*storage.MetaManager, error) {
+	id, err := uuid.NewUUID()
+	if err != nil {
+		return nil, err
+	}
+	// use uuid as dbname
+	connStr := fmt.Sprintf("file:%s?mode=memory&cache=shared", id)
 	// mock data
-	db, err := gorm.Open(sqlite.Open(":memory:"),
+	db, err := gorm.Open(sqlite.Open(connStr),
 		&gorm.Config{
 			SkipDefaultTransaction: true,
 			Logger: gormlog.New(
@@ -426,10 +442,6 @@ func buildTestStorage() (*storage.MetaManager, error) {
 	}
 	meta := storage.NewMetaManager(db, false)
 	err = meta.Bootstrap()
-	if err != nil {
-		return nil, err
-	}
-	err = testdata.CreateTestPemFiles("../testdata")
 	if err != nil {
 		return nil, err
 	}

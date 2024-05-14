@@ -51,5 +51,6 @@ class Tensor {
 };
 
 using TensorPtr = std::shared_ptr<Tensor>;
+using RepeatedPbTensor = google::protobuf::RepeatedPtrField<pb::Tensor>;
 
 }  // namespace scql::engine

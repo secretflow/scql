@@ -15,7 +15,11 @@
 package sqlbuilder
 
 import (
+	"crypto"
 	"crypto/ed25519"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
@@ -25,6 +29,10 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/sirupsen/logrus"
+	"github.com/tjfoc/gmsm/sm2"
+	smx509 "github.com/tjfoc/gmsm/x509"
 )
 
 type AuthMethod int
@@ -188,7 +196,12 @@ func LoadPrivateKeyFromPem(pemData []byte) (any, error) {
 	for block, rest := pem.Decode(pemData); block != nil; block, rest = pem.Decode(rest) {
 		if block.Type == "PRIVATE KEY" {
 			// find private key and parse it
-			return x509.ParsePKCS8PrivateKey(block.Bytes)
+			pk, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+			if err != nil {
+				logrus.Warnf("%v\ntry sm2", err)
+				return smx509.ParsePKCS8PrivateKey(block.Bytes, nil)
+			}
+			return pk, err
 		}
 		if block.Type == "RSA PRIVATE KEY" {
 			return x509.ParsePKCS1PrivateKey(block.Bytes)
@@ -198,13 +211,27 @@ func LoadPrivateKeyFromPem(pemData []byte) (any, error) {
 }
 
 func signMessage(key any, msg []byte) (string, error) {
+	var sig []byte
+	var err error
 	switch priv := key.(type) {
 	case ed25519.PrivateKey:
-		sig := ed25519.Sign(priv, msg)
-		return base64.StdEncoding.EncodeToString(sig), nil
+		sig = ed25519.Sign(priv, msg)
+	case *rsa.PrivateKey:
+		msgHashSum := sha256.Sum256(msg)
+		sig, err = rsa.SignPSS(rand.Reader, priv, crypto.SHA256, msgHashSum[:], nil)
+		if err != nil {
+			return "", err
+		}
+	case *sm2.PrivateKey:
+		sig, err = priv.Sign(rand.Reader, msg, nil)
+		if err != nil {
+			return "", err
+		}
 	default:
 		return "", errors.New("unsupported type of private key")
 	}
+
+	return base64.StdEncoding.EncodeToString(sig), nil
 }
 
 func getPublicKeyInDER(privKey any) ([]byte, error) {
@@ -212,6 +239,10 @@ func getPublicKeyInDER(privKey any) ([]byte, error) {
 	case ed25519.PrivateKey:
 		pub := priv.Public()
 		return x509.MarshalPKIXPublicKey(pub)
+	case *rsa.PrivateKey:
+		return x509.MarshalPKIXPublicKey(&priv.PublicKey)
+	case *sm2.PrivateKey:
+		return smx509.MarshalSm2PublicKey(&priv.PublicKey)
 	default:
 		return nil, errors.New("unsupported type of private key")
 	}

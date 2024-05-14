@@ -20,7 +20,7 @@
 #include "google/protobuf/util/json_util.h"
 #include "gtest/gtest.h"
 
-#include "engine/core/tensor_from_json.h"
+#include "engine/core/tensor_constructor.h"
 
 #include "engine/datasource/csvdb_conf.pb.h"
 

@@ -58,7 +58,7 @@ type LogicalPlanInfo struct {
 }
 
 type ExecutionPlanInfo struct {
-	parties []*scql.SessionStartParams_Party
+	parties []*scql.JobStartParams_Party
 	subDAGs []*optimizer.SubDAG
 	graph   *translator.Graph
 	attr    *translator.Attribute

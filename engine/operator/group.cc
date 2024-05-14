@@ -20,6 +20,7 @@
 #include "engine/core/arrow_helper.h"
 #include "engine/core/primitive_builder.h"
 #include "engine/util/spu_io.h"
+#include "engine/util/table_util.h"
 #include "engine/util/tensor_util.h"
 
 namespace scql::engine::op {
@@ -47,30 +48,37 @@ void Group::Validate(ExecContext* ctx) {
 }
 
 void Group::Execute(ExecContext* ctx) {
-  std::vector<arrow::Datum> keys;
   const auto& input_pbs = ctx->GetInput(kIn);
-  for (int i = 0; i < input_pbs.size(); ++i) {
-    const auto& input_pb = input_pbs[i];
-    auto in_t = ctx->GetTensorTable()->GetTensor(input_pb.name());
-    YACL_ENFORCE(in_t, "no private tensor={}", input_pb.name());
-    keys.emplace_back(
-        util::ConcatenateChunkedArray(in_t->ToArrowChunkedArray()));
+  auto table = util::ConstructTableFromTensors(ctx, input_pbs);
+  YACL_ENFORCE(table, "construct table failed");
+
+  std::vector<arrow::TypeHolder> key_types;
+  for (auto field : table->schema()->fields()) {
+    key_types.push_back(field->type());
   }
-
-  arrow::compute::ExecBatch key_batch;
-  ASSIGN_OR_THROW_ARROW_STATUS(
-      key_batch, arrow::compute::ExecBatch::Make(std::move(keys)));
-
   std::unique_ptr<arrow::compute::Grouper> grouper;
-  ASSIGN_OR_THROW_ARROW_STATUS(
-      grouper, arrow::compute::Grouper::Make(key_batch.GetTypes()));
+  ASSIGN_OR_THROW_ARROW_STATUS(grouper,
+                               arrow::compute::Grouper::Make(key_types));
 
-  arrow::Datum id_batch;
-  ASSIGN_OR_THROW_ARROW_STATUS(
-      id_batch, grouper->Consume(arrow::compute::ExecSpan(key_batch)));
-
+  auto reader = arrow::TableBatchReader(table);
+  // NOTE: limit chunk size to 1000W to avoid overflow in Grouper::Consume
+  // TODO: make chunk size configurable
+  reader.set_chunksize(1000 * 10000);
+  arrow::ArrayVector id_chunks;
+  while (true) {
+    std::shared_ptr<arrow::RecordBatch> batch;
+    ASSIGN_OR_THROW_ARROW_STATUS(batch, reader.Next());
+    if (batch == nullptr) {
+      break;
+    }
+    arrow::Datum id_batch;
+    ASSIGN_OR_THROW_ARROW_STATUS(id_batch,
+                                 grouper->Consume(arrow::compute::ExecSpan(
+                                     arrow::compute::ExecBatch(*batch))));
+    id_chunks.push_back(id_batch.make_array());
+  }
   auto chunked_arr =
-      std::make_shared<arrow::ChunkedArray>(id_batch.make_array());
+      std::make_shared<arrow::ChunkedArray>(id_chunks, arrow::uint32());
   ctx->GetTensorTable()->AddTensor(ctx->GetOutput(kOutId)[0].name(),
                                    std::make_shared<Tensor>(chunked_arr));
 

@@ -17,7 +17,6 @@ package inter_test
 import (
 	"context"
 	"net/http"
-	"os"
 	"testing"
 	"time"
 
@@ -48,7 +47,7 @@ func TestServerSuit(t *testing.T) {
 
 func (s *interTestSuite) SetupSuite() {
 	s.testAppBuilder = &brokerutil.TestAppBuilder{}
-	s.NoError(s.testAppBuilder.BuildAppTests())
+	s.NoError(s.testAppBuilder.BuildAppTests(s.Suite.T().TempDir()))
 	s.svcAlice = inter.NewInterSvc(s.testAppBuilder.AppAlice)
 	s.svcBob = inter.NewInterSvc(s.testAppBuilder.AppBob)
 	s.svcCarol = inter.NewInterSvc(s.testAppBuilder.AppCarol)
@@ -493,8 +492,4 @@ func (s *interTestSuite) TearDownSuite() {
 	s.testAppBuilder.ServerBob.Close()
 	s.testAppBuilder.ServerCarol.Close()
 	s.testAppBuilder.ServerEngine.Close()
-	os.Remove(s.testAppBuilder.PartyInfoTmpPath)
-	for _, path := range s.testAppBuilder.PemFilePaths {
-		os.Remove(path)
-	}
 }

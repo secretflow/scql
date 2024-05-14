@@ -42,7 +42,7 @@ class MockReportServiceImpl : public services::pb::MockReportService {
               services::pb::MockResponse* response,
               ::google::protobuf::Closure* done) override {
     brpc::ClosureGuard done_guard(done);
-    req_id = request->session_id();
+    req_id = request->job_id();
     status.CopyFrom(request->status());
     if (request->out_columns_size() > 0) {
       first_tensor = request->out_columns(0);
@@ -67,17 +67,19 @@ class EngineServiceImplTest : public ::testing::Test {
     EXPECT_NE(nullptr, factory.get());
     engine_service_options.enable_authorization = true;
     engine_service_options.credential = "alice_credential";
+    std::vector<spu::ProtocolKind> allowed_protocols = {
+        spu::ProtocolKind::SEMI2K};
     impl = std::make_unique<EngineServiceImpl>(
         engine_service_options,
         std::make_unique<SessionManager>(session_options, &listener_manager,
                                          std::move(factory), nullptr, nullptr,
-                                         1),
+                                         1, allowed_protocols),
         &channel_manager, nullptr);
     EXPECT_NE(nullptr, impl.get());
     {
       global_session_id = "test_session_id";
-      // prepare pb::SessionStartParams global_params.
-      global_params.set_session_id(global_session_id);
+      // prepare pb::JobStartParams global_params.
+      global_params.set_job_id(global_session_id);
 
       global_params.set_party_code("alice");
       auto* alice = global_params.add_parties();
@@ -101,7 +103,7 @@ class EngineServiceImplTest : public ::testing::Test {
   std::unique_ptr<EngineServiceImpl> impl;
   std::string global_session_id;
   brpc::Controller global_cntl;
-  pb::SessionStartParams global_params;
+  pb::JobStartParams global_params;
   SessionOptions session_options;
   EngineServiceOptions engine_service_options;
 };
@@ -112,7 +114,7 @@ class EngineServiceImplTest : public ::testing::Test {
 //   {
 //     // Start session firstly.
 //     pb::StartSessionRequest request;
-//     request.mutable_session_params()->CopyFrom(global_params);
+//     request.mutable_job_params()->CopyFrom(global_params);
 
 //     pb::Status response;
 //     EXPECT_NO_THROW(
@@ -121,7 +123,7 @@ class EngineServiceImplTest : public ::testing::Test {
 //   }
 //   // prepare request.
 //   pb::StopSessionRequest request;
-//   request.set_session_id(session_id);
+//   request.set_job_id(session_id);
 //   pb::Status response;
 //   // When
 //   EXPECT_NO_THROW(
@@ -134,7 +136,7 @@ class EngineServiceImplTest : public ::testing::Test {
 TEST_F(EngineServiceImplTest, RunExecutionPlan) {
   // Given
   pb::RunExecutionPlanRequest request;
-  request.mutable_session_params()->CopyFrom(global_params);
+  request.mutable_job_params()->CopyFrom(global_params);
   pb::RunExecutionPlanResponse response;
   // When
   EXPECT_NO_THROW(
@@ -169,7 +171,7 @@ TEST_F(EngineServiceImplTest, RunExecutionPlanAsync) {
     ASSERT_EQ(0, recv_server.Start("127.0.0.1:0", &recv_options));
   }
   pb::RunExecutionPlanRequest request;
-  request.mutable_session_params()->CopyFrom(global_params);
+  request.mutable_job_params()->CopyFrom(global_params);
   request.set_async(true);
   request.set_callback_url(
       fmt::format("{}/MockReportService/Report",
@@ -243,12 +245,14 @@ class EngineServiceImpl2PartiesTest
       service_options.enable_authorization = true;
       service_options.credential = "alice_credential";
       SessionOptions session_options;
+      std::vector<spu::ProtocolKind> allowed_protocols = {
+          spu::ProtocolKind::SEMI2K};
       auto impl = std::make_unique<EngineServiceImpl>(
           service_options,
           std::make_unique<SessionManager>(
               session_options, listener_managers[rank].get(),
               std::move(factory), EmbedRouter::FromJsonStr(router_json_str),
-              std::make_unique<DatasourceAdaptorMgr>(), 10),
+              std::make_unique<DatasourceAdaptorMgr>(), 10, allowed_protocols),
           &channel_manager, nullptr);
       ASSERT_NE(nullptr, impl.get());
 
@@ -462,6 +466,12 @@ EngineServiceImpl2PartiesTest::ConstructRequestForAlice(
     const std::vector<brpc::Server>& servers) {
   pb::RunExecutionPlanRequest request;
 
+  // set graph checksum
+  auto* checker = request.mutable_graph_checksum();
+  checker->set_check_graph_checksum(true);
+  checker->mutable_sub_graph_checksums()->insert({"0", "test"});
+  checker->mutable_sub_graph_checksums()->insert({"1", "test"});
+  checker->mutable_whole_graph_checksum()->append("whole");
   AddSessionParameters(&request, servers, 0);
 
   AddRunSQLNode(&request, "ta", "ta.name", 2);
@@ -480,6 +490,13 @@ EngineServiceImpl2PartiesTest::ConstructRequestForBob(
     const std::vector<brpc::Server>& servers) {
   pb::RunExecutionPlanRequest request;
 
+  // set graph checksum
+  auto* checker = request.mutable_graph_checksum();
+  checker->set_check_graph_checksum(true);
+  checker->mutable_sub_graph_checksums()->insert({"0", "test"});
+  checker->mutable_sub_graph_checksums()->insert({"1", "test"});
+  checker->mutable_whole_graph_checksum()->append("whole");
+
   AddSessionParameters(&request, servers, 1);
 
   AddRunSQLNode(&request, "tb", "tb.name", 2);
@@ -496,8 +513,8 @@ EngineServiceImpl2PartiesTest::ConstructRequestForBob(
 void EngineServiceImpl2PartiesTest::AddSessionParameters(
     pb::RunExecutionPlanRequest* request,
     const std::vector<brpc::Server>& servers, const size_t& self_rank) {
-  auto params = request->mutable_session_params();
-  params->set_session_id("test_session_id");
+  auto params = request->mutable_job_params();
+  params->set_job_id("test_session_id");
   params->set_party_code("party" + std::to_string(self_rank));
   for (size_t rank = 0; rank < servers.size(); rank++) {
     auto party = params->add_parties();

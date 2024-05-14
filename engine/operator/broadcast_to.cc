@@ -77,8 +77,8 @@ void BroadcastTo::Execute(ExecContext* ctx) {
 }
 
 void BroadcastTo::BroadcastToPrivate(ExecContext* ctx,
-                                     const RepeatedTensor& input_pbs,
-                                     const RepeatedTensor& output_pbs,
+                                     const RepeatedPbTensor& input_pbs,
+                                     const RepeatedPbTensor& output_pbs,
                                      const int64_t to_length) {
   auto spu_io = util::SpuOutfeedHelper(ctx->GetSession()->GetSpuContext(),
                                        ctx->GetSession()->GetDeviceSymbols());
@@ -105,8 +105,8 @@ void BroadcastTo::BroadcastToPrivate(ExecContext* ctx,
 }
 
 void BroadcastTo::BroadcastToPublic(ExecContext* ctx,
-                                    const RepeatedTensor& input_pbs,
-                                    const RepeatedTensor& output_pbs,
+                                    const RepeatedPbTensor& input_pbs,
+                                    const RepeatedPbTensor& output_pbs,
                                     const int64_t to_length) {
   auto symbols = ctx->GetSession()->GetDeviceSymbols();
   auto sctx = ctx->GetSession()->GetSpuContext();

@@ -24,8 +24,8 @@ func TestKusciaScheduler(t *testing.T) {
 	r := require.New(t)
 	// test pod marshal unmarshal
 	pod := kusciaEnginePod{
-		JobID:             "job_id",
-		TaskID:            "task_id",
+		KusciaJobID:       "kuscia_job_id",
+		KusciaTaskID:      "kuscia_task_id",
 		Endpoint:          "endpoint",
 		KeepAliveForDebug: true,
 	}

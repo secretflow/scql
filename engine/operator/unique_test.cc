@@ -17,7 +17,7 @@
 #include "arrow/type.h"
 #include "gtest/gtest.h"
 
-#include "engine/core/tensor_from_json.h"
+#include "engine/core/tensor_constructor.h"
 #include "engine/operator/test_util.h"
 
 namespace scql::engine::op {
@@ -51,11 +51,12 @@ INSTANTIATE_TEST_SUITE_P(
                        .expect_out = test::NamedTensor(
                            "a_out", TensorFromJSON(arrow::float32(),
                                                    "[-10.2, 3.14, 0.34]"))},
-        UniqueTestCase{
-            .input = test::NamedTensor(
-                "a", TensorFromJSON(arrow::large_utf8(), R"json(["AB","AB"])json")),
-            .expect_out = test::NamedTensor(
-                "a_out", TensorFromJSON(arrow::large_utf8(), R"json(["AB"])json"))},
+        UniqueTestCase{.input = test::NamedTensor(
+                           "a", TensorFromJSON(arrow::large_utf8(),
+                                               R"json(["AB","AB"])json")),
+                       .expect_out = test::NamedTensor(
+                           "a_out", TensorFromJSON(arrow::large_utf8(),
+                                                   R"json(["AB"])json"))},
         UniqueTestCase{
             .input = test::NamedTensor("a",
                                        TensorFromJSON(arrow::int64(), "[]")),

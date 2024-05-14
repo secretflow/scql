@@ -68,9 +68,9 @@ func (s *testTranslatorSuite) TestTranslateWithCCL(c *C) {
 func (s *testTranslatorSuite) TestBuildCCL(c *C) {
 	ccl, err := mock.MockAllCCL()
 	c.Assert(err, IsNil)
-	for _, sql := range buildCCLTestCases {
-		comment := Commentf("for %s", sql)
-		stmt, err := s.ParseOneStmt(sql, "", "")
+	for _, ca := range buildCCLTestCases {
+		comment := Commentf("for %s", ca.sql)
+		stmt, err := s.ParseOneStmt(ca.sql, "", "")
 		c.Assert(err, IsNil, comment)
 
 		err = core.Preprocess(s.ctx, stmt, s.is)
@@ -94,18 +94,26 @@ func (s *testTranslatorSuite) TestBuildCCL(c *C) {
 		if err != nil {
 			c.Assert(err, IsNil)
 		}
+		visibleToIssuer := true
 		// Check if the result is visible to the issuerPartyCode
 		for _, col := range ln.Schema().Columns {
 			cc := ln.CCL()[col.UniqueID]
-			c.Assert(cc.IsVisibleFor(t.issuerPartyCode), IsTrue, Commentf("for %s", sql))
+			visibleToIssuer = visibleToIssuer && cc.IsVisibleFor(t.issuerPartyCode)
 		}
+		c.Assert(visibleToIssuer == ca.ok, IsTrue, Commentf("for %s", ca.sql))
 	}
 }
 
-var buildCCLTestCases = []string{
-	"select plain_string_0 + plain_string_0 from alice.tbl_0 group by plain_string_0",
-	"select concat(plain_string_0, plain_string_1) as tt from alice.tbl_0",
-	"select count(*), max(aggregate_int_0) from (select aggregate_int_0, groupby_int_0 from alice.tbl_0 union all select aggregate_int_0, groupby_int_0 from bob.tbl_1 union all select aggregate_int_0, groupby_int_0 from carol.tbl_2) as u",
-	"select count(*), max(aggregate_int_0) from (select aggregate_int_0, groupby_int_0 from alice.tbl_0 union all select aggregate_int_0, groupby_int_0 from bob.tbl_1 union all select aggregate_int_0, groupby_int_0 from carol.tbl_2) as u group by groupby_int_0",
-	"select gb_gb_gb_int_0 from alice.tbl_3 group by gb_gb_gb_int_0",
+var buildCCLTestCases = []CCLTestPair{
+	{"select plain_string_0 + plain_string_0 from alice.tbl_0 group by plain_string_0", true},
+	{"select concat(plain_string_0, plain_string_1) as tt from alice.tbl_0", true},
+	{"select count(*), max(aggregate_int_0) from (select aggregate_int_0, groupby_int_0 from alice.tbl_0 union all select aggregate_int_0, groupby_int_0 from bob.tbl_1 union all select aggregate_int_0, groupby_int_0 from carol.tbl_2) as u", true},
+	{"select count(*), max(aggregate_int_0) from (select aggregate_int_0, groupby_int_0 from alice.tbl_0 union all select aggregate_int_0, groupby_int_0 from bob.tbl_1 union all select aggregate_int_0, groupby_int_0 from carol.tbl_2) as u group by groupby_int_0", true},
+	{"select gb_gb_gb_int_0 from alice.tbl_3 group by gb_gb_gb_int_0", true},
+	{`SELECT count(*) as test1 FROM bob.tbl_0 as tb where tb.groupby_int_0 > tb.join_int_0`, false},
+}
+
+type CCLTestPair struct {
+	sql string
+	ok  bool
 }

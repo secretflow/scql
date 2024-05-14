@@ -18,37 +18,33 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/secretflow/scql/pkg/broker/testdata"
 )
 
 func TestPartyInfos(t *testing.T) {
 	r := require.New(t)
-	err := testdata.CreateTestPemFiles("../testdata")
-	r.NoError(err)
-	partyMgr, err := NewFilePartyMgr("../testdata/party_info_test.json")
+	partyMgr, err := NewFilePartyMgr("party_info_test.json")
 	r.NoError(err)
 	r.NotNil(partyMgr)
 
 	// test GetUrlByParty
 	aliceUrl, err := partyMgr.GetBrokerUrlByParty("alice")
 	r.NoError(err)
-	r.Equal("http://localhost:8082", aliceUrl)
+	r.Equal("http://localhost:8081", aliceUrl)
 	bobUrl, err := partyMgr.GetBrokerUrlByParty("bob")
 	r.NoError(err)
-	r.Equal("http://localhost:8084", bobUrl)
+	r.Equal("http://localhost:8082", bobUrl)
 	carolUrl, err := partyMgr.GetBrokerUrlByParty("carol")
 	r.NoError(err)
-	r.Equal("http://localhost:8086", carolUrl)
+	r.Equal("http://localhost:8083", carolUrl)
 
 	// test GetUrlByParty
 	alicePubKey, err := partyMgr.GetPubKeyByParty("alice")
 	r.NoError(err)
-	r.Equal("MCowBQYDK2VwAyEAqhfJVWZX32aVh00fUqfrbrGkwboi8ZpTpybLQ4rbxoA=", alicePubKey)
+	r.Equal("fake_pub_key_alice", alicePubKey)
 	bobPubKey, err := partyMgr.GetPubKeyByParty("bob")
 	r.NoError(err)
-	r.Equal("MCowBQYDK2VwAyEAN3w+v2uks/QEaVZiprZ8oRChMkBOZJSAl6V/5LvOnt4=", bobPubKey)
+	r.Equal("fake_pub_key_bob", bobPubKey)
 	carolPubKey, err := partyMgr.GetPubKeyByParty("carol")
 	r.NoError(err)
-	r.Equal("MCowBQYDK2VwAyEANhiAXTvL4x2jYUiAbQRo9XuOTrFFnAX4Q+YlEAgULs8=", carolPubKey)
+	r.Equal("fake_pub_key_carol", carolPubKey)
 }

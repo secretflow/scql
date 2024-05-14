@@ -54,8 +54,9 @@ void MakePublic::Execute(ExecContext* ctx) {
   }
 }
 
-void MakePublic::PrivateToPublic(ExecContext* ctx, const RepeatedTensor& inputs,
-                                 const RepeatedTensor& outputs) {
+void MakePublic::PrivateToPublic(ExecContext* ctx,
+                                 const RepeatedPbTensor& inputs,
+                                 const RepeatedPbTensor& outputs) {
   spu::device::ColocatedIo cio(ctx->GetSession()->GetSpuContext());
   util::SpuInfeedHelper infeed_helper(&cio);
 
@@ -80,8 +81,9 @@ void MakePublic::PrivateToPublic(ExecContext* ctx, const RepeatedTensor& inputs,
   ctx->GetSession()->MergeDeviceSymbolsFrom(symbols);
 }
 
-void MakePublic::SecretToPublic(ExecContext* ctx, const RepeatedTensor& inputs,
-                                const RepeatedTensor& outputs) {
+void MakePublic::SecretToPublic(ExecContext* ctx,
+                                const RepeatedPbTensor& inputs,
+                                const RepeatedPbTensor& outputs) {
   auto symbols = ctx->GetSession()->GetDeviceSymbols();
   for (int i = 0; i < inputs.size(); ++i) {
     const auto& in_name = inputs[i].name();

@@ -237,7 +237,7 @@ cc_test(
     srcs = ["csvdb_adaptor_test.cc"],
     deps = [
         ":csvdb_adaptor",
-        "//engine/core:tensor_from_json",
+        "//engine/core:tensor_constructor",
         "@com_github_brpc_brpc//:butil",
         "@com_google_googletest//:gtest_main",
     ],

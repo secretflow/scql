@@ -249,15 +249,15 @@ func (m *GraphMapper) Map() {
 	}
 }
 
-func (m *GraphMapper) CodeGen(params *scql.SessionStartParams) map[string]*scql.RunExecutionPlanRequest {
+func (m *GraphMapper) CodeGen(params *scql.JobStartParams) map[string]*scql.RunExecutionPlanRequest {
 	result := make(map[string]*scql.RunExecutionPlanRequest)
 	for partyCode, plan := range m.Codes {
-		sessionStartParams, ok := proto.Clone(params).(*scql.SessionStartParams)
+		jobStartParams, ok := proto.Clone(params).(*scql.JobStartParams)
 		if !ok {
 			return nil
 		}
 		pb := &scql.RunExecutionPlanRequest{
-			SessionParams: sessionStartParams,
+			JobParams: jobStartParams,
 			Graph: &scql.SubGraph{
 				Nodes: make(map[string]*scql.ExecNode),
 				Policy: &scql.SchedulingPolicy{
@@ -266,7 +266,7 @@ func (m *GraphMapper) CodeGen(params *scql.SessionStartParams) map[string]*scql.
 				},
 			},
 		}
-		pb.SessionParams.PartyCode = partyCode
+		pb.JobParams.PartyCode = partyCode
 		for k, v := range plan.Nodes {
 			pb.Graph.Nodes[strconv.Itoa(k)] = v.ToProto()
 		}

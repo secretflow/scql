@@ -17,6 +17,7 @@ package scheduler
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -27,16 +28,21 @@ func TestNaiveScheduler(t *testing.T) {
 	r := require.New(t)
 	// test pod marshal unmarshal
 	engine := residentEngine{
-		Uri: config.EngineUri{
-			ForPeer: "for_peer",
-			ForSelf: "for_self",
-		},
-		JobID: "job_id",
+		PeerUri:       "for_peer",
+		SelfUri:       "engine.com",
+		JobID:         "job_id",
+		postUri:       "http://engine.com/SCQLEngineService/StopJob",
+		clientTimeout: time.Second,
 	}
 	jobInfo, err := engine.MarshalToText()
 	r.NoError(err)
 
-	scheduler := &naiveScheduler{}
+	scheduler := &naiveScheduler{
+		engine: config.EngineConfig{
+			Protocol:      "http",
+			ClientTimeout: time.Second,
+		},
+	}
 	newEngine, err := scheduler.ParseEngineInstance(jobInfo)
 	r.NoError(err)
 	r.Equal(&engine, newEngine, fmt.Sprintf("origin: %+v, result: %+v", engine, newEngine))

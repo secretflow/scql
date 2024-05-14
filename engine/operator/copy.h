@@ -35,19 +35,16 @@ class Copy : public Operator {
   void Execute(ExecContext* ctx) override;
 
  private:
-  using RepeatedTensor = google::protobuf::RepeatedPtrField<pb::Tensor>;
-
-  std::shared_ptr<arrow::Table> ConstructTableFromTensors(
-      ExecContext* ctx, const RepeatedTensor& input_pbs);
-
-  std::shared_ptr<arrow::Buffer> SerializeTable(
-      std::shared_ptr<arrow::Table> table);
+  std::shared_ptr<arrow::Buffer> SerializeRecordBatch(
+      std::shared_ptr<arrow::RecordBatch> batch);
 
   std::shared_ptr<arrow::Table> DeserializeTable(yacl::Buffer value);
 
   void InsertTensorsFromTable(ExecContext* ctx,
-                              const RepeatedTensor& output_pbs,
+                              const RepeatedPbTensor& output_pbs,
                               std::shared_ptr<arrow::Table> table);
+
+  size_t batch_size_ = 1000 * 1000;
 };
 
 }  // namespace scql::engine::op

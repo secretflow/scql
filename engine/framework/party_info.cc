@@ -18,7 +18,7 @@
 
 namespace scql::engine {
 
-PartyInfo::PartyInfo(const pb::SessionStartParams& params) {
+PartyInfo::PartyInfo(const pb::JobStartParams& params) {
   my_party_code_ = params.party_code();
 
   parties_.resize(params.parties_size());
@@ -47,7 +47,7 @@ PartyInfo::PartyInfo(const pb::SessionStartParams& params) {
   auto iter = code_rank_map_.find(my_party_code_);
   if (iter == code_rank_map_.end()) {
     YACL_THROW(
-        "invalid SessionStartParams, self party code not found in the parties "
+        "invalid JobStartParams, self party code not found in the parties "
         "list: {}",
         params.ShortDebugString());
   }

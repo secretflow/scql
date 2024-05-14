@@ -17,6 +17,7 @@
 #include <memory>
 #include <mutex>
 
+#include "algorithm"
 #include "arrow/array.h"
 #include "arrow/visit_array_inline.h"
 #include "libspu/core/config.h"
@@ -31,24 +32,54 @@
 
 namespace scql::engine {
 
+pb::QueryJobStatusResponse_JobState ConvertSessionStateToJobState(
+    SessionState state) {
+  switch (state) {
+    case SessionState::INITIALIZED:
+      return pb::QueryJobStatusResponse_JobState_INITIALIZED;
+    case SessionState::RUNNING:
+    // ABORTING job is treated as running
+    case SessionState::ABORTING:
+      return pb::QueryJobStatusResponse_JobState_RUNNING;
+    case SessionState::SUCCEEDED:
+      return pb::QueryJobStatusResponse_JobState_SUCCEEDED;
+    case SessionState::FAILED:
+      return pb::QueryJobStatusResponse_JobState_FAILED;
+    default:
+      return pb::QueryJobStatusResponse_JobState_JOB_STATE_UNSPECIFIED;
+  }
+}
+
+bool Session::ValidateSPUContext() {
+  YACL_ENFORCE(spu_ctx_ != nullptr,
+               "SPU context is not initialized successfully.");
+  if (std::find(allowed_spu_protocols_.begin(), allowed_spu_protocols_.end(),
+                spu_ctx_->config().protocol()) ==
+      allowed_spu_protocols_.end()) {
+    return false;
+  }
+
+  return true;
+}
+
 Session::Session(const SessionOptions& session_opt,
-                 const pb::SessionStartParams& params,
-                 pb::DebugOptions debug_opts,
+                 const pb::JobStartParams& params, pb::DebugOptions debug_opts,
                  yacl::link::ILinkFactory* link_factory,
                  std::shared_ptr<spdlog::logger> logger, Router* router,
-                 DatasourceAdaptorMgr* ds_mgr)
-    : id_(params.session_id()),
+                 DatasourceAdaptorMgr* ds_mgr,
+                 const std::vector<spu::ProtocolKind>& allowed_spu_protocols)
+    : id_(params.job_id()),
       session_opt_(session_opt),
       time_zone_(params.time_zone()),
       parties_(params),
-      state_(SessionState::IDLE),
+      state_(SessionState::INITIALIZED),
       link_factory_(link_factory),
       logger_(std::move(logger)),
       router_(router),
       ds_mgr_(ds_mgr),
-      debug_opts_(debug_opts) {
+      debug_opts_(debug_opts),
+      allowed_spu_protocols_(allowed_spu_protocols) {
   start_time_ = std::chrono::system_clock::now();
-
   if (logger_ == nullptr) {
     logger_ = spdlog::default_logger();
   }
@@ -62,6 +93,21 @@ Session::Session(const SessionOptions& session_opt,
     config.set_experimental_enable_colocated_optimization(true);
     spu::populateRuntimeConfig(config);
     spu_ctx_ = std::make_unique<spu::SPUContext>(config, lctx_);
+
+    YACL_ENFORCE(
+        ValidateSPUContext(),
+        fmt::format(
+            "SPU runtime validation failed. Protocol {} is "
+            "not allowed in current scenario, only [{}] are allowed",
+            spu_ctx_->config().protocol(),
+            std::accumulate(
+                allowed_spu_protocols_.begin(), allowed_spu_protocols_.end(),
+                std::string{},
+                [](const std::string& acc, const spu::ProtocolKind& protocol) {
+                  return acc.empty()
+                             ? spu::ProtocolKind_Name(protocol)
+                             : acc + ", " + spu::ProtocolKind_Name(protocol);
+                })));
     spu::mpc::Factory::RegisterProtocol(spu_ctx_.get(), lctx_);
   }
 

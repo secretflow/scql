@@ -1,0 +1,19 @@
+{
+  "participants": [
+    {
+      "party_code": "alice",
+      "endpoint": "http://localhost:8081",
+      "pubkey": "fake_pub_key_alice"
+    },
+    {
+      "party_code": "bob",
+      "endpoint": "http://localhost:8082",
+      "pubkey": "fake_pub_key_bob"
+    },
+    {
+      "party_code": "carol",
+      "endpoint": "http://localhost:8083",
+      "pubkey": "fake_pub_key_carol"
+    }
+  ]
+}

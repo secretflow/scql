@@ -98,6 +98,7 @@ cc_library(
         "//engine/link:mux_link_factory",
         "//engine/link:mux_receiver_service",
         "//engine/operator:all_ops_register",
+        "@psi//psi/utils:sync",
     ],
 )
 

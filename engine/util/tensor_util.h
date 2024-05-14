@@ -40,16 +40,14 @@ void SetBooleanValues(pb::Tensor* t, const std::vector<bool>& values);
 pb::TensorStatus GetTensorStatus(const pb::Tensor& t);
 
 /// @returns true if all tensors' status are equal to @param[in] expect_status
-bool AreTensorsStatusMatched(
-    const google::protobuf::RepeatedPtrField<pb::Tensor>& tensors,
-    pb::TensorStatus expect_status);
+bool AreTensorsStatusMatched(const RepeatedPbTensor& tensors,
+                             pb::TensorStatus expect_status);
 
 /// @returns true if one of tensors' status is equal to @param[in] expect_status
-bool OneOfTensorsStatusMatched(
-    const google::protobuf::RepeatedPtrField<pb::Tensor>& tensors,
-    pb::TensorStatus expect_status);
+bool OneOfTensorsStatusMatched(const RepeatedPbTensor& tensors,
+                               pb::TensorStatus expect_status);
 bool AreTensorsStatusMatchedOneOf(
-    const google::protobuf::RepeatedPtrField<pb::Tensor>& tensors,
+    const RepeatedPbTensor& tensors,
     const std::vector<pb::TensorStatus>& status_set);
 bool IsTensorStatusMatched(const pb::Tensor& t, pb::TensorStatus expect_status);
 
@@ -58,9 +56,8 @@ bool IsTensorStatusMatched(const pb::Tensor& t, pb::TensorStatus expect_status);
 ///
 /// Requirements:
 /// @param[in] tensors size should >= 1
-bool AreTensorsStatusEqualAndOneOf(
-    const google::protobuf::RepeatedPtrField<pb::Tensor>& tensors,
-    std::vector<pb::TensorStatus> status_set);
+bool AreTensorsStatusEqualAndOneOf(const RepeatedPbTensor& tensors,
+                                   std::vector<pb::TensorStatus> status_set);
 
 void CopyValuesToProto(const std::shared_ptr<Tensor>& from_tensor,
                        pb::Tensor* to_proto);
@@ -74,5 +71,4 @@ void ConvertDateTimeAndCopyValuesToProto(
 void CompensateTimeZoneAndCopyToProto(
     const std::shared_ptr<Tensor>& from_tensor, pb::Tensor* to_proto,
     const std::string& time_zone);
-
 }  // namespace scql::engine::util

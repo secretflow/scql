@@ -43,16 +43,14 @@ class ExecContext {
 
   const std::string& GetOpType() const;
   // Input/Output
-  const google::protobuf::RepeatedPtrField<pb::Tensor>& GetInput(
-      const std::string& name) const;
+  const RepeatedPbTensor& GetInput(const std::string& name) const;
 
-  const google::protobuf::RepeatedPtrField<pb::Tensor>& GetOutput(
-      const std::string& name) const;
+  const RepeatedPbTensor& GetOutput(const std::string& name) const;
 
   // Input/Output
-  google::protobuf::RepeatedPtrField<pb::Tensor> GetInputTensors() const;
+  RepeatedPbTensor GetInputTensors() const;
 
-  google::protobuf::RepeatedPtrField<pb::Tensor> GetOutputTensors() const;
+  RepeatedPbTensor GetOutputTensors() const;
 
   // attributes
   // get attribute value by name

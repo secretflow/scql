@@ -52,7 +52,7 @@ type Table struct {
 	TableIdentifier
 	RefTable string `gorm:"column:ref_table;type:varchar(128);comment:'ref table'"`
 	DBType   string `gorm:"column:db_type;type:varchar(64);comment:'database type like MYSQL'"`
-	Owner    string `gorm:"column:owner;comment:'ref table'"`
+	Owner    string `gorm:"column:owner;comment:'table owner'"`
 	// view
 	IsView       bool   `gorm:"column:is_view;comment:'this table is a view'"`
 	SelectString string `gorm:"column:select_string;comment:'the internal select query in string format, the field is valid only when IsView is true'"`

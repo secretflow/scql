@@ -39,77 +39,54 @@ import (
 	"github.com/secretflow/scql/pkg/broker/partymgr"
 	"github.com/secretflow/scql/pkg/broker/services/auth"
 	"github.com/secretflow/scql/pkg/broker/storage"
-	"github.com/secretflow/scql/pkg/broker/testdata"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/util/brokerutil"
 	"github.com/secretflow/scql/pkg/util/message"
 	urlutil "github.com/secretflow/scql/pkg/util/url"
 )
 
-const (
-	partyInfo = `{
-		"participants": [
-			{
-				"party_code": "alice",
-				"endpoint": "http://localhost:ALICE_INTER_PORT",
-				"pubkey": "MCowBQYDK2VwAyEAqhfJVWZX32aVh00fUqfrbrGkwboi8ZpTpybLQ4rbxoA="
-			},
-			{
-				"party_code": "bob",
-				"endpoint": "http://localhost:BOB_INTER_PORT",
-				"pubkey": "MCowBQYDK2VwAyEAN3w+v2uks/QEaVZiprZ8oRChMkBOZJSAl6V/5LvOnt4="
-			},
-			{
-				"party_code": "carol",
-				"endpoint": "http://localhost:CAROL_INTER_PORT",
-				"pubkey": "MCowBQYDK2VwAyEANhiAXTvL4x2jYUiAbQRo9XuOTrFFnAX4Q+YlEAgULs8="
-			}
-		]
-	}
-	`
-)
-
 type ServerTestSuit struct {
 	suite.Suite
-	appAlice  *application.App
-	appBob    *application.App
-	freePorts []int
+	appAlice    *application.App
+	appBob      *application.App
+	freePorts   []int
+	pemFilesMap map[string]string
 }
 
 type MockEngineInstance struct {
 }
 
-func (me *MockEngineInstance) GetEndpointForSelf() string {
+func (m *MockEngineInstance) GetEndpointForSelf() string {
 	return "self endpoint"
 }
-func (me *MockEngineInstance) GetEndpointForPeer() string {
+func (m *MockEngineInstance) GetEndpointForPeer() string {
 	return "peer endpoint"
 }
-func (me *MockEngineInstance) MarshalToText() ([]byte, error) {
+func (m *MockEngineInstance) MarshalToText() ([]byte, error) {
 	return []byte("{}"), nil
 }
-func (me *MockEngineInstance) Stop() error {
+func (m *MockEngineInstance) Stop() error {
 	return nil
 }
 
 func (suite *ServerTestSuit) SetupTest() {
 	freePorts, err := GetFreePorts(4)
-	suite.NoError(err)
-	err = testdata.CreateTestPemFiles("../testdata")
-	suite.NoError(err)
-	f, err := os.CreateTemp("", "broker_server_test")
-	suite.NoError(err)
-	defer os.Remove(f.Name())
-	content := strings.ReplaceAll(partyInfo, "ALICE_INTER_PORT", fmt.Sprint(freePorts[1]))
-	content = strings.ReplaceAll(content, "BOB_INTER_PORT", fmt.Sprint(freePorts[3]))
-	_, err = f.Write([]byte(content))
-	suite.NoError(err)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
+	}
 	suite.freePorts = freePorts
-
-	aliceApp, err := buildTestApp("alice", freePorts[:2], f.Name())
+	filesMap, err := brokerutil.CreateTestPemFiles(map[string]int{"alice": freePorts[1], "bob": freePorts[3]}, suite.T().TempDir())
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
+	}
+	suite.pemFilesMap = filesMap
+	aliceApp, err := buildTestApp("alice", freePorts[:2], filesMap[brokerutil.PartyInfoFileKey], filesMap[brokerutil.AlicePemFilKey])
 	suite.NoError(err)
 	suite.appAlice = aliceApp
 
-	bobApp, err := buildTestApp("bob", freePorts[2:], f.Name())
+	bobApp, err := buildTestApp("bob", freePorts[2:], filesMap[brokerutil.PartyInfoFileKey], filesMap[brokerutil.BobPemFileKey])
 	suite.NoError(err)
 	suite.appBob = bobApp
 
@@ -232,7 +209,7 @@ func (suite *ServerTestSuit) TestServer() {
 			ProjectId: "test_id",
 			Respond:   pb.InvitationRespond_ACCEPT,
 		}
-		pemData, err := os.ReadFile("../testdata/private_key_carol.pem")
+		pemData, err := os.ReadFile(suite.pemFilesMap[brokerutil.CarolPemFileKey])
 		suite.NoError(err)
 		auth, err := auth.NewAuth(pemData)
 		suite.NoError(err)
@@ -506,7 +483,7 @@ func (suite *ServerTestSuit) TestServer() {
 			err := app.PersistSessionInfo(session)
 			suite.NoError(err)
 		}
-		reqStr := `{"status":{"code": 0, "message": "ok"}, "session_id": "job_id", "num_rows_affected": 10}`
+		reqStr := `{"status":{"code": 0, "message": "ok"}, "job_id": "job_id", "num_rows_affected": 10}`
 		resp, err := httpClient.Post(urlutil.JoinHostPath(urlAlice, constant.EngineCallbackPath),
 			"application/json", strings.NewReader(reqStr))
 		suite.NoError(err)
@@ -555,13 +532,27 @@ func (suite *ServerTestSuit) TestServer() {
 		_, ok = suite.appBob.GetSession("job_id")
 		suite.False(ok)
 	}
+
+	// CheckAndUpdateStatus: alice check and update project status
+	{
+		reqStr := `{"project_ids": ["test_id" ]}`
+		resp, err := httpClient.Post(urlutil.JoinHostPath(urlAlice, constant.CheckAndUpdateStatusPath),
+			"application/json", strings.NewReader(reqStr))
+		suite.NoError(err)
+
+		response := &pb.CheckAndUpdateStatusResponse{}
+		_, err = message.DeserializeFrom(resp.Body, response)
+		suite.NoError(err)
+		suite.Equal(response.GetStatus().GetCode(), int32(pb.Code_OK))
+		resp.Body.Close()
+	}
 }
 
 func TestServerSuit(t *testing.T) {
 	suite.Run(t, new(ServerTestSuit))
 }
 
-func buildTestApp(party string, ports []int, infoFile string) (app *application.App, err error) {
+func buildTestApp(party string, ports []int, partyInfoPath, privatePemPath string) (app *application.App, err error) {
 	cfg := &config.Config{
 		InterServer: config.ServerConfig{
 			Port: ports[1],
@@ -570,10 +561,10 @@ func buildTestApp(party string, ports []int, infoFile string) (app *application.
 			Port: ports[0],
 		},
 		PartyCode:            party,
-		PartyInfoFile:        infoFile,
+		PartyInfoFile:        partyInfoPath,
 		SessionExpireTime:    time.Minute,
 		SessionCheckInterval: time.Second,
-		PrivateKeyPath:       fmt.Sprintf("../testdata/private_key_%s.pem", party),
+		PrivateKeyPath:       privatePemPath,
 		Engine: config.EngineConfig{
 			ClientTimeout: 1 * time.Second,
 			Protocol:      "http",
@@ -586,7 +577,8 @@ func buildTestApp(party string, ports []int, infoFile string) (app *application.
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create partyMgr from: %v", err)
 	}
-	db, err := gorm.Open(sqlite.Open(":memory:"),
+	connStr := fmt.Sprintf("file:%s?mode=memory&cache=shared", party)
+	db, err := gorm.Open(sqlite.Open(connStr),
 		&gorm.Config{
 			SkipDefaultTransaction: true,
 			Logger: gormlog.New(

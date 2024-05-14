@@ -105,8 +105,11 @@ DataSource MakeCSVDataSourceFromOSS(const std::string& datasource_id,
 
     auto csv_tbl = csv_conf.add_tables();
     csv_tbl->set_table_name(domaindata.domaindata_id());
-    std::string s3_url = oss.storage_type() + "://" + oss.bucket() + "/" +
-                         oss.prefix() + "/" + domaindata.relative_uri();
+    std::string s3_url = oss.storage_type() + "://" + oss.bucket();
+    if (!oss.prefix().empty()) {
+      s3_url += "/" + oss.prefix();
+    }
+    s3_url += "/" + domaindata.relative_uri();
     csv_tbl->set_data_path(s3_url);
     for (const auto& column : domaindata.columns()) {
       auto new_col = csv_tbl->add_columns();

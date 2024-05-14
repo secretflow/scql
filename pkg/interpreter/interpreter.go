@@ -16,6 +16,7 @@ package interpreter
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"sort"
 	"strconv"
@@ -104,6 +105,11 @@ func (intr *Interpreter) Compile(ctx context.Context, req *pb.CompileQueryReques
 			ExeGraphDot: ep.DumpGraphviz(),
 		}
 	}
+	// calculate whole graph checksum
+	tableSchemaCrypt := sha256.New()
+	tableSchemaCrypt.Write([]byte(ep.DumpGraphviz()))
+	plan.WholeGraphChecksum = fmt.Sprintf("%x", tableSchemaCrypt.Sum(nil))
+
 	plan.Warning = &pb.Warning{
 		MayAffectedByGroupThreshold: t.AffectedByGroupThreshold,
 	}
@@ -142,8 +148,6 @@ func buildCompiledPlan(spuConf *spu.RuntimeConfig, eGraph *translator.Graph, exe
 					WorkerNum: int32(subGraph.Policy.WorkerNumber),
 					Subdags:   make([]*pb.SubDAG, 0),
 				},
-				// TODO: populate GraphChecksum
-				// GraphChecksum: <checksum>,
 			}
 			// Fill Nodes
 			for k, v := range subGraph.Nodes {
@@ -169,6 +173,11 @@ func buildCompiledPlan(spuConf *spu.RuntimeConfig, eGraph *translator.Graph, exe
 				}
 				graphProto.Policy.Subdags = append(graphProto.Policy.Subdags, subdag)
 			}
+			// calculate checksum for each party
+			tableSchemaCrypt := sha256.New()
+			// write graph
+			tableSchemaCrypt.Write([]byte(graphProto.String()))
+			graphProto.SubGraphChecksum = fmt.Sprintf("%x", tableSchemaCrypt.Sum(nil))
 			plan.SubGraphs[party] = graphProto
 		}
 	}

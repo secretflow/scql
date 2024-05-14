@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <chrono>
 #include <memory>
 #include <string>
@@ -35,11 +36,20 @@
 
 namespace scql::engine {
 
+// The normal state transition process is:
+//   INITIALIZED -> RUNNING -> SUCCEEDED/FAILED
+// When the user manually terminates the query, the transition process will be:
+//   INITIALIZED -> RUNNING -> ABORTING -> FAILED
 enum class SessionState {
-  IDLE = 0,
+  INITIALIZED = 0,
   RUNNING = 1,
-  // TODO(jingshi) : add state to_be_removed in case of RemoveSession failed.
+  ABORTING = 2,
+  SUCCEEDED = 3,
+  FAILED = 4,
 };
+
+pb::QueryJobStatusResponse_JobState ConvertSessionStateToJobState(
+    SessionState state);
 
 struct SessionOptions {
   uint32_t link_recv_timeout_ms = 30 * 1000;  // 30s
@@ -54,11 +64,12 @@ struct SessionOptions {
 class Session {
  public:
   explicit Session(const SessionOptions& session_opt,
-                   const pb::SessionStartParams& params,
+                   const pb::JobStartParams& params,
                    pb::DebugOptions debug_opts,
                    yacl::link::ILinkFactory* link_factory,
                    std::shared_ptr<spdlog::logger> logger, Router* router,
-                   DatasourceAdaptorMgr* ds_mgr);
+                   DatasourceAdaptorMgr* ds_mgr,
+                   const std::vector<spu::ProtocolKind>& allowed_spu_protocols);
   ~Session();
   /// @return session id
   std::string Id() const { return id_; }
@@ -89,9 +100,14 @@ class Session {
 
   spu::device::SymbolTable* GetDeviceSymbols() { return &device_symbols_; }
 
-  SessionState GetState() { return state_; }
+  SessionState GetState() { return state_.load(); }
 
-  void SetState(SessionState new_state) { state_ = new_state; }
+  void SetState(SessionState new_state) { state_.store(new_state); }
+
+  // compare and swap state_ to avoid race condition
+  bool CASState(SessionState old_state, SessionState new_state) {
+    return state_.compare_exchange_strong(old_state, new_state);
+  }
 
   std::chrono::time_point<std::chrono::system_clock> GetStartTime() {
     return start_time_;
@@ -138,13 +154,14 @@ class Session {
 
  private:
   void InitLink();
+  bool ValidateSPUContext();
 
  private:
   const std::string id_;
   const SessionOptions session_opt_;
   const std::string time_zone_;
   PartyInfo parties_;
-  SessionState state_;
+  std::atomic<SessionState> state_;
   std::chrono::time_point<std::chrono::system_clock> start_time_;
 
   yacl::link::ILinkFactory* link_factory_;
@@ -171,6 +188,8 @@ class Session {
   std::vector<std::pair<std::string, pb::Status>> peer_errors_;
   std::shared_ptr<util::PsiDetailLogger> psi_logger_ = nullptr;
   pb::DebugOptions debug_opts_;
+
+  const std::vector<spu::ProtocolKind> allowed_spu_protocols_;
 };
 
 }  // namespace scql::engine

@@ -28,7 +28,7 @@ service ErrorCollectorService {
 }
 
 message ReportErrorRequest {
-  string session_id = 1;
+  string job_id = 1;
   string party_code = 2;
   scql.pb.Status status = 3;
 }

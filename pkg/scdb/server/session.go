@@ -62,7 +62,7 @@ type session struct {
 	// all sessions have independent stub to avoid concurrent problems
 	engineStub *executor.EngineStub
 	partyInfo  *translator.PartyInfo
-	parties    []*scql.SessionStartParams_Party
+	parties    []*scql.JobStartParams_Party
 }
 
 // SetValue implements sessionctx.Context SetValue interface.
@@ -135,7 +135,7 @@ func (s *session) setResultWithOutputColumnsAndAffectedRows(columns []*scql.Tens
 		AffectedRows:  affectedRows,
 	}
 	if s.GetSessionVars().AffectedByGroupThreshold {
-		reason := "for safety, we filter the results for groups which contain less than 4 items."
+		reason := fmt.Sprintf("for safety, we filter the results for groups which contain less than %d items.", s.GetSessionVars().GroupByThreshold)
 		logrus.Infof("%v", reason)
 		s.result.Warnings = append(s.result.Warnings, &scql.SQLWarning{Reason: reason})
 	}
@@ -145,7 +145,7 @@ func (sc *session) fillPartyInfo(enginesInfo *translator.EnginesInfo) {
 	sc.partyInfo = enginesInfo.GetPartyInfo()
 	for i, participant := range sc.partyInfo.GetParticipants() {
 		sc.parties = append(
-			sc.parties, &scql.SessionStartParams_Party{
+			sc.parties, &scql.JobStartParams_Party{
 				Code:      participant.PartyCode,
 				Name:      participant.PartyCode,
 				Rank:      int32(i),

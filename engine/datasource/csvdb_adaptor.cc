@@ -52,6 +52,8 @@ std::vector<TensorPtr> ConvertDuckResultToTensors(
 
   while (true) {
     auto data_chunk = result->Fetch();
+    YACL_ENFORCE(!result->HasError(), "fetch result failed, msg={}",
+                 result->GetError());
     if (!data_chunk || data_chunk->size() == 0) {
       break;
     }

@@ -196,15 +196,14 @@ service IntraBrokerService {
   // Other APIs
 
   // CheckAndUpdateStatus
-  // (-- NOTE: api not implemented yet --)
   //
   // Check and update status for Projects
   rpc CheckAndUpdateStatus(CheckAndUpdateStatusRequest)
       returns (CheckAndUpdateStatusResponse) {
-    // option (google.api.http) = {
-    //   post: "/intra/status/check_and_update"
-    //   body: "*"
-    // };
+    option (google.api.http) = {
+      post: "/intra/status/check_and_update"
+      body: "*"
+    };
   }
 }
 
@@ -479,7 +478,7 @@ message CheckAndUpdateStatusResponse {
   Status status = 1;
   // Valid only when status.code() == Code::PROJECT_CONFLICT
   // maps from project_id to conflicts in the Project
-  map<string, ProjectConflict> conficts = 2;
+  map<string, ProjectConflict> conflicts = 2;
 }
 message ProjectConflict {
   message ConflictItem {

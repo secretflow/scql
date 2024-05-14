@@ -120,7 +120,7 @@ func (exec *Executor) RunExecutionPlanCore(ctx context.Context, engineAsync bool
 	for partyCode, pb := range exec.ExecutionPlans {
 		url := url.URL{
 			Scheme: exec.EngineStub.protocol,
-			Host:   exec.PartyCodeToHost[pb.GetSessionParams().GetPartyCode()],
+			Host:   exec.PartyCodeToHost[pb.GetJobParams().GetPartyCode()],
 			Path:   runExecutionPlanPath,
 		}
 		urls = append(urls, url.String())
@@ -136,9 +136,9 @@ func (exec *Executor) RunExecutionPlanCore(ctx context.Context, engineAsync bool
 
 		partyCodes = append(partyCodes, partyCode)
 
-		partyCredentials = append(partyCredentials, exec.partyCodeToCredential[pb.GetSessionParams().GetPartyCode()])
+		partyCredentials = append(partyCredentials, exec.partyCodeToCredential[pb.GetJobParams().GetPartyCode()])
 		audit.RecordPlanDetail(partyCode, url.String(), pb)
-		audit.RecordSessionParameters(pb.GetSessionParams(), url.String(), true)
+		audit.RecordSessionParameters(pb.GetJobParams(), url.String(), true)
 	}
 
 	c := make(chan ResponseInfo, len(urls))
@@ -216,7 +216,7 @@ func (exec *Executor) RunExecutionPlanCore(ctx context.Context, engineAsync bool
 
 	res := &scql.SCDBQueryResultResponse{
 		Status:        responses[0].GetStatus(),
-		ScdbSessionId: responses[0].GetSessionId(),
+		ScdbSessionId: responses[0].GetJobId(),
 	}
 
 	if !engineAsync {

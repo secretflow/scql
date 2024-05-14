@@ -287,7 +287,7 @@ func RecordPlanDetail(partyCode, targetUrl string, req *scql.RunExecutionPlanReq
 	auditLog := &audit.AuditLog{
 		Header: &audit.AuditHeader{
 			Time:      timestamppb.New(time.Now()),
-			SessionId: req.GetSessionParams().GetSessionId(),
+			SessionId: req.GetJobParams().GetJobId(),
 			EventName: audit.EventName_PLAN_DETAIL,
 		},
 		Body: &audit.AuditBody{
@@ -302,14 +302,14 @@ func RecordPlanDetail(partyCode, targetUrl string, req *scql.RunExecutionPlanReq
 	}
 }
 
-func RecordSessionParameters(params *scql.SessionStartParams, targetUrl string, sync bool) {
+func RecordSessionParameters(params *scql.JobStartParams, targetUrl string, sync bool) {
 	if !enableAudit {
 		return
 	}
 	auditLog := &audit.AuditLog{
 		Header: &audit.AuditHeader{
 			Time:      timestamppb.New(time.Now()),
-			SessionId: params.GetSessionId(),
+			SessionId: params.GetJobId(),
 			EventName: audit.EventName_SESSION_PARAMS,
 		},
 		Body: &audit.AuditBody{

@@ -22,6 +22,7 @@ import (
 	"github.com/secretflow/scql/pkg/broker/storage"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
+	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
 
 func (svc *grpcIntraSvc) CreateTable(c context.Context, req *pb.CreateTableRequest) (resp *pb.CreateTableResponse, err error) {
@@ -181,13 +182,8 @@ func (svc *grpcIntraSvc) DropTable(c context.Context, req *pb.DropTableRequest) 
 		return nil, fmt.Errorf("DropTable: GetProject: %v", err)
 	}
 	go func() {
-		var targetParties []string
-		for _, p := range members {
-			if p != app.Conf.PartyCode {
-				targetParties = append(targetParties, p)
-			}
-		}
-		common.PostSyncInfo(svc.app, req.GetProjectId(), pb.ChangeEntry_DropTable, tableId, members)
+		targetParties := sliceutil.Subtraction(members, []string{app.Conf.PartyCode})
+		common.PostSyncInfo(svc.app, req.GetProjectId(), pb.ChangeEntry_DropTable, tableId, targetParties)
 	}()
 
 	return &pb.DropTableResponse{

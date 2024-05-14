@@ -27,12 +27,12 @@ void ErrorCollectorServiceImpl::ReportError(
     ::google::protobuf::Closure* done) {
   brpc::ClosureGuard done_guard(done);
   try {
-    const std::string& session_id = request->session_id();
-    Session* session = session_manager_->GetSession(session_id);
+    const std::string& job_id = request->job_id();
+    Session* session = session_manager_->GetSession(job_id);
     if (!session) {
       response->mutable_status()->set_code(pb::Code::SESSION_NOT_FOUND);
       response->mutable_status()->set_message(
-          fmt::format("no session for session_id={}", session_id));
+          fmt::format("no session for job_id={}", job_id));
       return;
     }
 
@@ -42,9 +42,8 @@ void ErrorCollectorServiceImpl::ReportError(
     return;
   } catch (const std::exception& e) {
     response->mutable_status()->set_code(pb::Code::UNKNOWN_ENGINE_ERROR);
-    response->mutable_status()->set_message(
-        fmt::format("internal error, session_id={}, error={}",
-                    request->session_id(), e.what()));
+    response->mutable_status()->set_message(fmt::format(
+        "internal error, job_id={}, error={}", request->job_id(), e.what()));
     return;
   }
 }

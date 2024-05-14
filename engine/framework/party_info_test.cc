@@ -20,7 +20,7 @@ namespace scql::engine {
 
 TEST(PartyInfoTest, normal) {
   // Given
-  pb::SessionStartParams params;
+  pb::JobStartParams params;
   {
     params.set_party_code("alice");
     auto alice = params.add_parties();

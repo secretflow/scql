@@ -180,10 +180,11 @@ datasources in embed_router_conf contain information for connecting MySQL/SQLite
       ``db=${db};user=${user};password=${password};host=${host}``
 
     CSVDB Connection string format:
-      Since connection_str is an object in another json object, the format is a converted json string corresponding to `CsvdbConf <https://github.com/secretflow/scql/tree/main/engine/datasource/csvdb_conf.proto>`_
+      CSVDB support read csv from local and Oss/Minio, since connection_str is an object in another json object, the format is a converted json string corresponding to `CsvdbConf <https://github.com/secretflow/scql/tree/main/engine/datasource/csvdb_conf.proto>`_
 
     CSVDB Connection string e.g:
-      "{\\\"db_name\\\":\\\"csvdb\\\",\\\"tables\\\":[{\\\"table_name\\\":\\\"staff\\\",\\\"data_path\\\":\\\"test.csv\\\",\\\"columns\\\":[{\\\"column_name\\\":\\\"id\\\",\\\"column_type\\\":\\\"1\\\"}]}]}"
+      local csv: "{\\\"db_name\\\":\\\"csvdb\\\",\\\"tables\\\":[{\\\"table_name\\\":\\\"staff\\\",\\\"data_path\\\":\\\"test.csv\\\",\\\"columns\\\":[{\\\"column_name\\\":\\\"id\\\",\\\"column_type\\\":\\\"1\\\"}]}]}"
+      Oss/Minio csv: "{\\\"db_name\\\":\\\"csvdb\\\",\\\"S3Conf\\\":{\\\"endpoint\\\":\\\"test_endpoint\\\",\\\"access_key_id\\\":\\\"test_id\\\",\\\"secret_access_key\\\":\\\"test_key\\\"},\\\"tables\\\":[{\\\"table_name\\\":\\\"staff\\\",\\\"data_path\\\":\\\"oss://test_bucket/test.csv\\\",\\\"columns\\\":[{\\\"column_name\\\":\\\"id\\\",\\\"column_type\\\":\\\"1\\\"}]}]}"
 
     ArrowSQL Connection string format:
       grpc+<scheme>://host:port

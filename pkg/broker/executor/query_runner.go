@@ -16,14 +16,13 @@ package executor
 
 import (
 	"context"
-	"crypto/sha256"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/slices"
 
 	"github.com/secretflow/scql/pkg/broker/application"
 	"github.com/secretflow/scql/pkg/broker/constant"
@@ -74,97 +73,30 @@ func (r *QueryRunner) CreateChecksum() (map[string]application.Checksum, error) 
 	s := r.session
 	checksumMap := make(map[string]application.Checksum)
 	for _, p := range s.ExecuteInfo.DataParties {
-		tableSchemaCrypt := sha256.New()
-		cclCrypt := sha256.New()
+		hasher := application.NewChecksumHasher()
 		tables := r.info.GetTablesByParty(p)
 		sort.Slice(tables, func(i, j int) bool {
 			return tables[i].String() < tables[j].String()
 		})
 		for _, t := range tables {
-			tableSchemaCrypt.Write([]byte(t.String()))
 			tableSchema, err := r.is.TableByName(model.NewCIStr(t.GetDbName()), model.NewCIStr(t.GetTableName()))
 			if err != nil {
 				return nil, err
 			}
 			columnInfos := tableSchema.Meta().Columns
-			sort.Slice(columnInfos, func(i, j int) bool {
-				return columnInfos[i].Name.String() < columnInfos[j].Name.String()
-			})
-			for _, col := range columnInfos {
-				tableSchemaCrypt.Write([]byte(col.Name.String()))
-				tableSchemaCrypt.Write([]byte(col.GetTypeDesc()))
-			}
+			hasher.InfeedTable(t.String(), columnInfos)
+
 			var cclsForP []*pb.SecurityConfig_ColumnControl
 			for _, ccl := range r.ccls {
 				if ccl.TableName == t.GetTableName() && ccl.DatabaseName == t.GetDbName() {
 					cclsForP = append(cclsForP, ccl)
 				}
 			}
-			sort.Slice(cclsForP, func(i, j int) bool {
-				return strings.Join([]string{cclsForP[i].TableName, cclsForP[i].ColumnName, cclsForP[i].PartyCode}, " ") <
-					strings.Join([]string{cclsForP[j].TableName, cclsForP[j].ColumnName, cclsForP[j].PartyCode}, " ")
-			})
-			for _, ccl := range cclsForP {
-				cclCrypt.Write([]byte(ccl.TableName))
-				cclCrypt.Write([]byte(ccl.ColumnName))
-				cclCrypt.Write([]byte(ccl.Visibility.String()))
-			}
+			hasher.InfeedCCLs(cclsForP)
 		}
-		checksumMap[p] = application.Checksum{TableSchema: tableSchemaCrypt.Sum(nil), CCL: cclCrypt.Sum(nil)}
+		checksumMap[p] = hasher.Finalize()
 	}
 	return checksumMap, nil
-}
-
-func (r *QueryRunner) ExchangeJobInfo(targetParty string) (*pb.ExchangeJobInfoResponse, error) {
-	session := r.session
-	executionInfo := session.ExecuteInfo
-	selfCode := session.GetSelfPartyCode()
-	req := &pb.ExchangeJobInfoRequest{
-		ProjectId: executionInfo.ProjectID,
-		JobId:     executionInfo.JobID,
-		ClientId:  &pb.PartyId{Code: selfCode},
-	}
-	if slices.Contains(executionInfo.DataParties, targetParty) {
-		serverChecksum, err := session.GetLocalChecksum(targetParty)
-		if err != nil {
-			return nil, fmt.Errorf("ExchangeJobInfo: %s", err)
-		}
-		req.ServerChecksum = &pb.Checksum{
-			TableSchema: serverChecksum.TableSchema,
-			Ccl:         serverChecksum.CCL,
-		}
-		logrus.Infof("exchange job info with party %s with request %s", targetParty, req.String())
-	}
-
-	url, err := session.App.PartyMgr.GetBrokerUrlByParty(targetParty)
-	if err != nil {
-		return nil, fmt.Errorf("ExchangeJobInfoStub: %v", err)
-	}
-	response := &pb.ExchangeJobInfoResponse{}
-	// retry to make sure that peer broker has created session
-	for i := 0; i < session.App.Conf.ExchangeJobInfoRetryTimes; i++ {
-		err = executionInfo.InterStub.ExchangeJobInfo(url, req, response)
-		if err != nil {
-			return nil, fmt.Errorf("ExchangeJobInfoStub: %v", err)
-		}
-		if response.GetStatus().GetCode() == int32(pb.Code_SESSION_NOT_FOUND) {
-			if i < session.App.Conf.ExchangeJobInfoRetryTimes-1 {
-				time.Sleep(r.session.App.Conf.ExchangeJobInfoRetryInterval)
-			}
-			continue
-		}
-		if response.GetStatus().GetCode() == 0 {
-			return response, nil
-		}
-		break
-	}
-	if response.Status == nil {
-		return nil, fmt.Errorf("err response from party %s; response %+v", targetParty, response)
-	}
-	if response.Status.Code == int32(pb.Code_DATA_INCONSISTENCY) {
-		return response, nil
-	}
-	return nil, fmt.Errorf("failed to exchange job info with %s return error %+v", targetParty, response.Status)
 }
 
 func (r *QueryRunner) prepareData(usedTableNames []string) (dataParties []string, workParties []string, err error) {
@@ -236,15 +168,7 @@ func (r *QueryRunner) prepareData(usedTableNames []string) (dataParties []string
 	r.info.UpdateTableToRefs(tableToRefs)
 	// get ccls
 	columnPrivs, err := txn.ListColumnConstraints(session.ExecuteInfo.ProjectID, usedTableNames, workParties)
-	for _, columnPriv := range columnPrivs {
-		r.ccls = append(r.ccls, &pb.SecurityConfig_ColumnControl{
-			PartyCode:    columnPriv.DestParty,
-			Visibility:   pb.SecurityConfig_ColumnControl_Visibility(pb.SecurityConfig_ColumnControl_Visibility_value[strings.ToUpper(columnPriv.Priv)]),
-			DatabaseName: columnPriv.ProjectID,
-			TableName:    columnPriv.TableName,
-			ColumnName:   columnPriv.ColumnName,
-		})
-	}
+	r.ccls = storage.ColumnPrivs2ColumnControls(columnPrivs)
 	return
 }
 
@@ -360,14 +284,15 @@ func buildCatalog(tables []storage.TableMeta) *pb.Catalog {
 }
 
 func (r *QueryRunner) CreateExecutor(plan *pb.CompiledPlan) (*executor.Executor, error) {
-	// create SessionStartParams
+	// create JobStartParams
 	session := r.session
 	conf := session.App.Conf
-	startParams := &pb.SessionStartParams{
+	startParams := &pb.JobStartParams{
 		PartyCode:     conf.PartyCode,
-		SessionId:     session.ExecuteInfo.JobID,
+		JobId:         session.ExecuteInfo.JobID,
 		SpuRuntimeCfg: plan.GetSpuRuntimeConf(),
 	}
+	partyToRank := make(map[string]string)
 	for i, p := range plan.Parties {
 		endpoint, err := session.GetEndpoint(p.GetCode())
 		if err != nil {
@@ -377,13 +302,14 @@ func (r *QueryRunner) CreateExecutor(plan *pb.CompiledPlan) (*executor.Executor,
 		if err != nil {
 			return nil, err
 		}
-		startParams.Parties = append(startParams.Parties, &pb.SessionStartParams_Party{
+		startParams.Parties = append(startParams.Parties, &pb.JobStartParams_Party{
 			Code:      p.GetCode(),
 			Name:      p.GetCode(),
 			Rank:      int32(i),
 			Host:      endpoint,
 			PublicKey: pubKey,
 		})
+		partyToRank[p.GetCode()] = strconv.Itoa(i)
 	}
 
 	myGraph, exists := plan.GetSubGraphs()[conf.PartyCode]
@@ -391,11 +317,17 @@ func (r *QueryRunner) CreateExecutor(plan *pb.CompiledPlan) (*executor.Executor,
 		return nil, fmt.Errorf("could not find my graph")
 	}
 
+	graphChecksums := make(map[string]string)
+	for code, graph := range plan.GetSubGraphs() {
+		graphChecksums[partyToRank[code]] = graph.SubGraphChecksum
+	}
+
 	req := &pb.RunExecutionPlanRequest{
-		SessionParams: startParams,
+		JobParams:     startParams,
 		Graph:         myGraph,
 		Async:         false,
 		DebugOpts:     session.ExecuteInfo.DebugOpts,
+		GraphChecksum: &pb.GraphChecksum{CheckGraphChecksum: true, WholeGraphChecksum: plan.WholeGraphChecksum, SubGraphChecksums: graphChecksums},
 	}
 
 	planReqs := map[string]*pb.RunExecutionPlanRequest{
@@ -438,24 +370,6 @@ func (r *QueryRunner) CreateExecutor(plan *pb.CompiledPlan) (*executor.Executor,
 	return executor.NewExecutor(planReqs, outputNames, engineStub, r.session.ExecuteInfo.JobID, translator.NewPartyInfo([]*translator.Participant{myself}))
 }
 
-// checkChecksum checks data consistency with other parties via comparing checksum
-func (r *QueryRunner) checkChecksum() error {
-	executionInfo := r.session.ExecuteInfo
-	for _, p := range executionInfo.DataParties {
-		if p == r.session.GetSelfPartyCode() {
-			continue
-		}
-		compareResult, err := executionInfo.Checksums.CompareChecksumFor(p)
-		if err != nil {
-			return err
-		}
-		if compareResult != pb.ChecksumCompareResult_EQUAL {
-			return fmt.Errorf("checksum not equal with party %s", p)
-		}
-	}
-	return nil
-}
-
 func (r *QueryRunner) Execute(usedTables []core.DbTable) error {
 	s := r.session
 	if r.prepareAgain {
@@ -472,7 +386,7 @@ func (r *QueryRunner) Execute(usedTables []core.DbTable) error {
 			s.SaveLocalChecksum(code, checksum)
 		}
 		// check checksum again
-		if err := r.checkChecksum(); err != nil {
+		if err := s.CheckChecksum(); err != nil {
 			return err
 		}
 	}
@@ -518,39 +432,22 @@ func (r *QueryRunner) Execute(usedTables []core.DbTable) error {
 			CostTimeS:    time.Since(s.CreatedAt).Seconds(),
 		}
 		if compiledPlan.Warning.MayAffectedByGroupThreshold {
-			reason := "for safety, we filter the results for groups which contain less than 4 items."
+			reason := fmt.Sprintf("for safety, we filter the results for groups which contain less than %d items.", compileReq.CompileOpts.SecurityCompromise.GroupByThreshold)
 			logrus.Infof("%v", reason)
 			result.Warnings = append(result.Warnings, &pb.SQLWarning{Reason: reason})
 		}
 
 		s.SetResultSafely(result)
-	} // when engines run in async mode, result will be set in callback handler.
-
-	return nil
-}
-
-// get checksum from parties except self and issuer
-func (r *QueryRunner) GetChecksumFromOtherParties(issuerParty string) error {
-	session := r.session
-	for _, p := range session.ExecuteInfo.DataParties {
-		if p == issuerParty || p == r.session.GetSelfPartyCode() {
-			continue
-		}
-		response, err := r.ExchangeJobInfo(p)
-		if err != nil {
-			return err
-		}
-		err = session.SaveRemoteChecksum(p, response.ExpectedServerChecksum)
-		if err != nil {
-			return err
-		}
+	} else { // when engines run in async mode, result will be set in callback handler.
+		s.App.JobWatcher.Watch(s.ExecuteInfo.JobID, s.Engine.GetEndpointForSelf())
 	}
+
 	return nil
 }
 
 func (r *QueryRunner) DryRun(usedTables []core.DbTable) error {
 	// 1. check data consistency
-	if err := r.checkChecksum(); err != nil {
+	if err := r.session.CheckChecksum(); err != nil {
 		return err
 	}
 	// 2. try compile query

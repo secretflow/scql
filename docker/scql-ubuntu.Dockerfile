@@ -15,6 +15,7 @@ COPY ./$TARGETPLATFORM/scdbserver /home/admin/bin/scdbserver
 COPY ./$TARGETPLATFORM/scdbclient /home/admin/bin/scdbclient
 COPY ./$TARGETPLATFORM/broker /home/admin/bin/broker
 COPY ./$TARGETPLATFORM/brokerctl /home/admin/bin/brokerctl
+COPY ./scripts/kuscia-templates /home/admin/scripts/kuscia-templates
 
 FROM base as image-dev
 

@@ -29,32 +29,28 @@ const std::string& ExecContext::GetNodeName() const {
 
 const std::string& ExecContext::GetOpType() const { return node_.op_type(); }
 
-const google::protobuf::RepeatedPtrField<pb::Tensor>& ExecContext::GetInput(
-    const std::string& name) const {
+const RepeatedPbTensor& ExecContext::GetInput(const std::string& name) const {
   YACL_ENFORCE(node_.inputs().count(name) > 0,
                "the input {} of op {} does not exist", name, node_.op_type());
   return node_.inputs().at(name).tensors();
 }
 
-const google::protobuf::RepeatedPtrField<pb::Tensor>& ExecContext::GetOutput(
-    const std::string& name) const {
+const RepeatedPbTensor& ExecContext::GetOutput(const std::string& name) const {
   YACL_ENFORCE(node_.outputs().count(name) > 0,
                "the output {} of op {} does not exist", name, node_.op_type());
   return node_.outputs().at(name).tensors();
 }
 
-google::protobuf::RepeatedPtrField<pb::Tensor> ExecContext::GetInputTensors()
-    const {
-  google::protobuf::RepeatedPtrField<pb::Tensor> tensors;
+RepeatedPbTensor ExecContext::GetInputTensors() const {
+  RepeatedPbTensor tensors;
   for (const auto& pair : node_.inputs()) {
     tensors.Add(pair.second.tensors().begin(), pair.second.tensors().end());
   }
   return tensors;
 }
 
-google::protobuf::RepeatedPtrField<pb::Tensor> ExecContext::GetOutputTensors()
-    const {
-  google::protobuf::RepeatedPtrField<pb::Tensor> tensors;
+RepeatedPbTensor ExecContext::GetOutputTensors() const {
+  RepeatedPbTensor tensors;
   for (const auto& pair : node_.outputs()) {
     tensors.Add(pair.second.tensors().begin(), pair.second.tensors().end());
   }

@@ -15,10 +15,12 @@
 package storage
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/sqlite"
@@ -30,7 +32,10 @@ import (
 
 func TestBootstrap(t *testing.T) {
 	r := require.New(t)
-	db, err := gorm.Open(sqlite.Open(":memory:"),
+	id, err := uuid.NewUUID()
+	r.NoError(err)
+	connStr := fmt.Sprintf("file:%s?mode=memory&cache=shared", id)
+	db, err := gorm.Open(sqlite.Open(connStr),
 		&gorm.Config{
 			SkipDefaultTransaction: true,
 			Logger: gormlog.New(

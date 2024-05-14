@@ -83,27 +83,29 @@ func (svc *grpcIntraSvc) RevokeCCL(c context.Context, req *pb.RevokeCCLRequest) 
 	if req == nil || req.GetProjectId() == "" || len(req.GetColumnControlList()) == 0 {
 		return nil, status.New(pb.Code_BAD_REQUEST, "RevokeCCL: illegal request")
 	}
-
-	app := svc.app
-	txn := app.MetaMgr.CreateMetaTransaction()
-	defer func() {
-		err = txn.Finish(err)
-	}()
-
 	privIDs, err := ColumnControlList2ColumnPrivIdentifier(req.GetProjectId(), req.GetColumnControlList())
 	if err != nil {
 		return nil, fmt.Errorf("RevokeCCL: %v", err)
 	}
-
-	err = common.RevokeColumnConstraintsWithCheck(txn, req.GetProjectId(), app.Conf.PartyCode, privIDs)
+	app := svc.app
+	var members []string
+	err = app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
+		var err error
+		err = common.RevokeColumnConstraintsWithCheck(txn, req.GetProjectId(), app.Conf.PartyCode, privIDs)
+		if err != nil {
+			return fmt.Errorf("RevokeCCL: %v", err)
+		}
+		// get sync parties
+		members, err = txn.GetProjectMembers(req.GetProjectId())
+		if err != nil {
+			return fmt.Errorf("RevokeCCL: GetProject: %v", err)
+		}
+		return nil
+	})
 	if err != nil {
-		return nil, fmt.Errorf("RevokeCCL: %v", err)
+		return nil, err
 	}
-	// Sync to other parties
-	members, err := txn.GetProjectMembers(req.GetProjectId())
-	if err != nil {
-		return nil, fmt.Errorf("RevokeCCL: GetProject: %v", err)
-	}
+	// sync to other parties
 	go func() {
 		var targetParties []string
 		for _, p := range members {

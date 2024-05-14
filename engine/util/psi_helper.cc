@@ -76,9 +76,9 @@ PsiPlan GetPsiPlan(int64_t self_length, int64_t peer_length) {
 }
 
 namespace {
-static constexpr char kPsiInLeft[] = "Left";
-static constexpr char kPsiInRight[] = "Right";
-static constexpr char kPsiInputPartyCodesAttr[] = "input_party_codes";
+constexpr char kPsiInLeft[] = "Left";
+constexpr char kPsiInRight[] = "Right";
+constexpr char kPsiInputPartyCodesAttr[] = "input_party_codes";
 }  // namespace
 
 PsiPlan CoordinatePsiPlan(ExecContext* ctx) {
