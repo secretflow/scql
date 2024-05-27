@@ -1,0 +1,85 @@
+name: Error Issue Template
+description: Thank you for reporting the issue!
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please make sure that you report a Install/Deploy Problem, Running Problem,Document Problem on GitHub.
+        Please post on our [discussions](https://github.com/secretflow/scql/discussions) instead if you want to ask questions or share ideas.
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Issue Type
+      description: What type of issue would you like to report?
+      multiple: false
+      options:
+        - Install/Deploy
+        - Running
+        - Build
+        - CCL
+        - Others
+    validations:
+      required: true
+  - type: dropdown
+    id: searched-for-existing-issues
+    attributes:
+      label: Have you searched for existing issues? 
+      description: Existing [documents](https://www.secretflow.org.cn/zh-CN/docs/scql/main/topics) and [issues](https://github.com/secretflow/scql/issues)
+      options:
+        - 'Yes'
+        - 'No'
+    validations:
+      required: true
+  - type: input
+    id: OS
+    attributes:
+      label: OS Platform and Distribution
+      description:
+      placeholder: e.g., Linux Ubuntu 18.04
+    validations:
+      required: true
+  - type: input
+    id: scql-version
+    attributes:
+      label: Scql Version
+      description:
+      placeholder: e.g., scql 0.7.0b0
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happend and What you expected to happen.
+      description: Describe the bug, expected behavior.
+      placeholder: A bug happened!
+      value:
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: scql-config
+    attributes:
+      label: Configuration file used to run SCQL.
+      description: Configuration file used to run SCQL.
+      placeholder: |
+        Install/Deploy issue, please output files with suffixes yaml and config
+        CCL issue, please output the authorization information and SQL statement of CCL
+        If there are multiple parties (such as Alice, Bob), the SCQL configuration file for multiple parties can be output.
+      value:
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: log-output
+    attributes:
+      label: Scql log output.
+      description: Relevant log output (docker logs -f xxx-broker-xxx/xxx-engine-xxx), logdescription. if having multi parties (e.g. alice, bob), you can put multi parties SCQL log output.
+      placeholder: |
+        # alice.log
+        .......
+        # bob.log
+        .......
+      value:
+      render: shell
+    validations:
+      required: true
