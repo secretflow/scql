@@ -88,7 +88,7 @@ Create a file called ``config.yml`` in your workspace and paste the following co
 
   For Bob, the **party_code** should be ``bob``, and the ``brokeralice`` in **conn_str** should be replaced by ``brokerbob``.
 
-  The ``__ENGINE_URL__`` should be replaced by **machine host/ip + engine published port**, like: http://30.30.30.30:8003.
+  The ``__ENGINE_URL__`` should be replaced by **machine host/ip + engine published port**, like: 30.30.30.30:8003.
 
   The ``__MYSQL_ROOT_PASSWORD__`` should be replaced with the password set by the corresponding party, and please replace this placeholder in the same way for subsequent files.
 
