@@ -1,0 +1,49 @@
+name: Consulting issue template
+description: Thank you for reporting the issue!
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please ensure that you are reporting the consultation issue on GitHub.（CCL、Perfomance、Feature、Documentation、Others）
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Issue Type
+      description: What type of issue would you like to report?
+      multiple: false
+      options:
+        - CCL
+        - Perfomance
+        - Feature
+        - Documentation
+        - Others
+    validations:
+      required: true
+  - type: dropdown
+    id: searched-for-existing-issues
+    attributes:
+      label: Have you searched for existing issues? 
+      description: It is recommended to search existing [documentation](https://www.secretflow.org.cn/zh-CN/docs/scql/main/topics) and [issues](https://github.com/secretflow/scql/issues) first
+      options:
+        - 'Yes'
+        - 'No'
+    validations:
+      required: true
+  - type: input
+    id: link
+    attributes:
+      label: Link to Relevant Documentation
+      description: For faster problem-solving, if there are relevant documents, please attach links.
+      placeholder: e.g., https://www.secretflow.org.cn/zh-CN/docs/scql/main/topics/ccl/intro
+    validations:
+      required: false
+  - type: textarea
+    id: Question-Details
+    attributes:
+      label: Question Details
+      description: Please detail your issue with observed versus expected behavior and attempted solutions to expedite resolution.
+      placeholder: Describe the questions you want to consult and what you want to do
+      value:
+      render: shell
+    validations:
+      required: true

@@ -1,0 +1,82 @@
+name: Error Issue Template
+description: Thank you for reporting the issue!
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please ensure that you are reporting the consultation issue on GitHub.（Install/Build、Running、CCL、Others）
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Issue Type
+      description: What type of issue would you like to report?
+      multiple: false
+      options:
+        - Install/Build
+        - Running
+        - CCL
+        - Others
+    validations:
+      required: true
+  - type: dropdown
+    id: searched-for-existing-issues
+    attributes:
+      label: Have you searched for existing issues? 
+      description: It is recommended to search existing [documentation](https://www.secretflow.org.cn/zh-CN/docs/scql/main/topics) and [issues](https://github.com/secretflow/scql/issues) first
+      options:
+        - 'Yes'
+        - 'No'
+    validations:
+      required: true
+  - type: input
+    id: OS
+    attributes:
+      label: OS Platform and Distribution
+      description:
+      placeholder: e.g., Linux Ubuntu 18.04
+    validations:
+      required: true
+  - type: input
+    id: scql-version
+    attributes:
+      label: SCQL Version
+      description:
+      placeholder: e.g., SCQL 0.7.0b0
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happend and What you expected to happen.
+      description: A clear and concise description of what the bug is.
+      placeholder: Describe the bug, expected behavior.
+      value:
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: scql-config
+    attributes:
+      label: Configuration used to run SCQL.
+      description: Supply SCQL runtime config (.yaml, .conf) and, for CCL issues, supply authorization info and SQL statements.
+      placeholder: |
+        # - For install/deploy, provide files ending with `.yaml` and `.conf`.
+        # - For CCL, provide the authorization details and CCL SQL.
+      value:
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: log-output
+    attributes:
+      label: SCQL log output.
+      description: Supply relevant log output (docker logs -f xxx-broker-xxx/xxx-engine-xxx); For multi-party (e.g. Alice, Bob) scenarios, include all corresponding logs.
+      placeholder: |
+        # alice.log
+        .......
+        # bob.log
+        .......
+      value:
+      render: shell
+    validations:
+      required: true
