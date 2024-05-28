@@ -23,7 +23,7 @@ body:
     id: searched-for-existing-issues
     attributes:
       label: Have you searched for existing issues? 
-      description: Suggest searching first existing [documents](https://www.secretflow.org.cn/zh-CN/docs/scql/main/) and [issues](https://github.com/secretflow/scql/issues)
+      description: It is recommended to search existing [documentation](https://www.secretflow.org.cn/zh-CN/docs/scql/main/topics) and [issues](https://github.com/secretflow/scql/issues) first
       options:
         - 'Yes'
         - 'No'
