@@ -108,8 +108,8 @@ void BroadcastTo::BroadcastToPublic(ExecContext* ctx,
                                     const RepeatedPbTensor& input_pbs,
                                     const RepeatedPbTensor& output_pbs,
                                     const int64_t to_length) {
-  auto symbols = ctx->GetSession()->GetDeviceSymbols();
-  auto sctx = ctx->GetSession()->GetSpuContext();
+  auto* symbols = ctx->GetSession()->GetDeviceSymbols();
+  auto* sctx = ctx->GetSession()->GetSpuContext();
   for (int i = 0; i < input_pbs.size(); ++i) {
     const auto value_name =
         util::SpuVarNameEncoder::GetValueName(input_pbs[i].name());

@@ -50,14 +50,14 @@ INSTANTIATE_TEST_SUITE_P(
                 .datas =
                     {test::NamedTensor(
                          "x1", TensorFromJSON(arrow::large_utf8(),
-                                              R"json(["A","B","C","D"])json")),
+                                              R"json(["A","B","C",null])json")),
                      test::NamedTensor("x2", TensorFromJSON(arrow::int64(),
                                                             "[10,11,12,13]"))},
                 .data_status = pb::TENSORSTATUS_PRIVATE,
                 .expect_outs =
-                    {test::NamedTensor("y1", TensorFromJSON(
-                                                 arrow::large_utf8(),
-                                                 R"json(["A","D"])json")),
+                    {test::NamedTensor("y1",
+                                       TensorFromJSON(arrow::large_utf8(),
+                                                      R"json(["A",null])json")),
                      test::NamedTensor("y2", TensorFromJSON(arrow::int64(),
                                                             "[10,13]"))}},
             // TODO: enable when support null in spu

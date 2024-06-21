@@ -76,11 +76,13 @@ func TestSession(t *testing.T) {
 	// -----test SessionResult-----
 	resp := &pb.QueryResponse{
 		Status: &pb.Status{Code: 0},
-		OutColumns: []*pb.Tensor{{
-			Name:       "ta",
-			StringData: []string{"a", "b"},
-		}},
-		CostTimeS: 1.2345,
+		Result: &pb.QueryResult{
+			OutColumns: []*pb.Tensor{{
+				Name:       "ta",
+				StringData: []string{"a", "b"},
+			}},
+			CostTimeS: 1.2345,
+		},
 	}
 	str, err := protojson.Marshal(resp)
 	r.NoError(err)
@@ -101,8 +103,8 @@ func TestSession(t *testing.T) {
 	err = protojson.Unmarshal([]byte(resultFetch.Result), &respFetch)
 	r.NoError(err)
 	r.Equal(resp.Status, respFetch.Status)
-	r.Equal(resp.OutColumns, respFetch.OutColumns)
-	r.Equal(resp.CostTimeS, respFetch.CostTimeS)
+	r.Equal(resp.GetResult().GetOutColumns(), respFetch.GetResult().GetOutColumns())
+	r.Equal(resp.GetResult().GetCostTimeS(), respFetch.GetResult().GetCostTimeS())
 
 	// clear SessionResult
 	err = manager.ClearSessionResult(sessionID)
@@ -131,17 +133,20 @@ func TestSession(t *testing.T) {
 	err = manager.HoldGcLock("alice", time.Second)
 	r.NoError(err)
 	// test ClearExpiredResults
+	expireSeconds := 5
 	err = manager.SetSessionResult(SessionResult{
 		SessionID: sessionID,
 		Result:    str,
-		CreatedAt: time.Now().Add(-2 * time.Minute),
+		CreatedAt: time.Now(),
+		ExpiredAt: time.Now().Add(time.Duration(expireSeconds) * time.Second),
 	})
 	r.NoError(err)
-	err = manager.ClearExpiredResults(3 * time.Minute)
+	err = manager.ClearExpiredSessions()
 	r.NoError(err)
 	_, err = manager.GetSessionResult(sessionID)
 	r.NoError(err)
-	err = manager.ClearExpiredResults(time.Minute)
+	time.Sleep(time.Duration(2*expireSeconds) * time.Second)
+	err = manager.ClearExpiredSessions()
 	r.NoError(err)
 	_, err = manager.GetSessionResult(sessionID)
 	r.Equal(err.Error(), "record not found")

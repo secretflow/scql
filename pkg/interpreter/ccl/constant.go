@@ -23,12 +23,13 @@ import (
 type CCLLevel int32
 
 const (
-	Plain     CCLLevel = CCLLevel(proto.SecurityConfig_ColumnControl_PLAINTEXT)
-	Join      CCLLevel = CCLLevel(proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_JOIN)
-	GroupBy   CCLLevel = CCLLevel(proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_GROUP_BY)
-	Aggregate CCLLevel = CCLLevel(proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_AGGREGATE)
-	Compare   CCLLevel = CCLLevel(proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_COMPARE)
-	Encrypt   CCLLevel = CCLLevel(proto.SecurityConfig_ColumnControl_ENCRYPTED_ONLY)
+	Plain         CCLLevel = CCLLevel(proto.SecurityConfig_ColumnControl_PLAINTEXT)
+	Join          CCLLevel = CCLLevel(proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_JOIN)
+	GroupBy       CCLLevel = CCLLevel(proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_GROUP_BY)
+	Aggregate     CCLLevel = CCLLevel(proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_AGGREGATE)
+	Compare       CCLLevel = CCLLevel(proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_COMPARE)
+	Encrypt       CCLLevel = CCLLevel(proto.SecurityConfig_ColumnControl_ENCRYPTED_ONLY)
+	AsJoinPayload CCLLevel = CCLLevel(proto.SecurityConfig_ColumnControl_PLAINTEXT_AS_JOIN_PAYLOAD)
 	// if CCLLevel of column/Tensor was setting unknown just meaning it can't be used in ccl infer
 	Unknown CCLLevel = CCLLevel(proto.SecurityConfig_ColumnControl_UNKNOWN)
 )

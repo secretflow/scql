@@ -713,6 +713,103 @@ var testCases = []compileTestCase{
 		ok:           true,
 		workPartyNum: 2,
 	},
+	{
+		req: &proto.CompileQueryRequest{
+			Query:  "SELECT tb.id, tb.tag FROM ta inner join tb on ta.id = tb.id",
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "alice",
+			},
+			IssuerAsParticipant: true,
+			SecurityConf: &proto.SecurityConfig{
+				ColumnControlList: []*proto.SecurityConfig_ColumnControl{
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "id",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_JOIN,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "id",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "id",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "tag",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_JOIN,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "id",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AS_JOIN_PAYLOAD,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "tag",
+					},
+				},
+			},
+			Catalog: &proto.Catalog{
+				Tables: []*proto.TableEntry{
+					{
+						TableName: "ta",
+						Columns: []*proto.TableEntry_Column{
+							{
+								Name: "id",
+								Type: "string",
+							},
+						},
+						IsView:   false,
+						RefTable: "alice.user_info",
+						DbType:   "mysql",
+						Owner: &proto.PartyId{
+							Code: "alice",
+						},
+					},
+					{
+						TableName: "tb",
+						Columns: []*proto.TableEntry_Column{
+							{
+								Name: "id",
+								Type: "string",
+							},
+							{
+								Name: "tag",
+								Type: "string",
+							},
+						},
+						IsView:   false,
+						RefTable: "bob.client_info",
+						DbType:   "mysql",
+						Owner: &proto.PartyId{
+							Code: "bob",
+						},
+					},
+				},
+			},
+			CompileOpts: &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+		},
+		ok:           true,
+		workPartyNum: 2,
+	},
 }
 
 type compileTestCase struct {

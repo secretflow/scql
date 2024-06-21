@@ -98,6 +98,9 @@ DEFINE_int32(listen_port, 8003, "");
 DEFINE_bool(enable_builtin_service, false,
             "whether brpc builtin service is enable/disable");
 DEFINE_int32(internal_port, 9527, "which port the builtin services server on");
+DEFINE_bool(enable_separate_link_port, false,
+            "whether use a separate port for link service");
+DEFINE_int32(link_port, 8004, "port for link service");
 DEFINE_int32(idle_timeout_s, 30, "connections idle close delay in seconds");
 DEFINE_bool(server_enable_ssl, true,
             "whether brpc server's ssl enable/disable");
@@ -117,7 +120,7 @@ DEFINE_string(engine_credential, "", "driver authorization credential");
 DEFINE_int32(session_timeout_s, 1800,
              "TTL for session, should be greater than the typical runtime of "
              "the specific tasks.");
-DEFINE_string(spu_allowed_protocols, "SEMI2K,ABY3,CHEETAH,SECURENN",
+DEFINE_string(spu_allowed_protocols, "SEMI2K,ABY3,CHEETAH",
               "spu allowed protocols");
 // DataBase connection flags.
 DEFINE_string(datasource_router, "embed",
@@ -278,16 +281,17 @@ std::unique_ptr<scql::engine::EngineServiceImpl> BuildEngineService(
       std::make_unique<scql::engine::DatasourceAdaptorMgr>();
 
   scql::engine::SessionOptions session_opt;
-  session_opt.link_recv_timeout_ms = FLAGS_link_recv_timeout_ms;
+  session_opt.link_config.link_recv_timeout_ms = FLAGS_link_recv_timeout_ms;
   if (FLAGS_link_throttle_window_size > 0) {
-    session_opt.link_throttle_window_size = FLAGS_link_throttle_window_size;
+    session_opt.link_config.link_throttle_window_size =
+        FLAGS_link_throttle_window_size;
   }
   if (FLAGS_link_chunked_send_parallel_size > 0) {
-    session_opt.link_chunked_send_parallel_size =
+    session_opt.link_config.link_chunked_send_parallel_size =
         FLAGS_link_chunked_send_parallel_size;
   }
   if (FLAGS_http_max_payload_size > 0) {
-    session_opt.http_max_payload_size = FLAGS_http_max_payload_size;
+    session_opt.link_config.http_max_payload_size = FLAGS_http_max_payload_size;
   }
   // NOTE: use yacl retry options to replace brpc retry policy
   yacl::link::RetryOptions retry_opt;
@@ -310,7 +314,7 @@ std::unique_ptr<scql::engine::EngineServiceImpl> BuildEngineService(
                            ENODATA,
                            brpc::Errno::EOVERCROWDED,
                            brpc::Errno::EH2RUNOUTSTREAMS};
-  session_opt.link_retry_options = retry_opt;
+  session_opt.link_config.link_retry_options = retry_opt;
   scql::engine::util::LogOptions opts;
   if (FLAGS_enable_psi_detail_logger) {
     opts.enable_psi_detail_logger = true;
@@ -356,7 +360,7 @@ brpc::ServerOptions BuildServerOptions() {
         FLAGS_server_ssl_private_key.empty()) {
       SPDLOG_WARN("server ssl cert or key file is empty");
     }
-    auto ssl_options = options.mutable_ssl_options();
+    auto* ssl_options = options.mutable_ssl_options();
     ssl_options->default_cert.certificate = FLAGS_server_ssl_certificate;
     ssl_options->default_cert.private_key = FLAGS_server_ssl_private_key;
     ssl_options->ciphers = "";
@@ -415,12 +419,6 @@ int main(int argc, char* argv[]) {
   server.set_version(ENGINE_VERSION_STRING);
 
   scql::engine::ListenerManager listener_manager;
-  scql::engine::MuxReceiverServiceImpl rcv_svc(&listener_manager);
-  SPDLOG_INFO("Adding MuxReceiverService into brpc server");
-  if (server.AddService(&rcv_svc, brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
-    SPDLOG_ERROR("Fail to add MuxReceiverService to server");
-    return -1;
-  }
 
   scql::engine::ChannelManager channel_manager;
   try {
@@ -462,6 +460,22 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
+  brpc::Server link_svr;
+  scql::engine::MuxReceiverServiceImpl rcv_svc(&listener_manager);
+  if (!FLAGS_enable_separate_link_port) {
+    SPDLOG_INFO("Adding MuxReceiverService into main server...");
+    if (server.AddService(&rcv_svc, brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
+      SPDLOG_ERROR("Fail to add MuxReceiverService to main server");
+      return -1;
+    }
+  } else {
+    SPDLOG_INFO("Adding MuxReceiverService into seperate link server...");
+    if (link_svr.AddService(&rcv_svc, brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
+      SPDLOG_ERROR("Fail to add MuxReceiverService to seperate link server");
+      return -1;
+    }
+  }
+
   // Start brpc server.
   brpc::ServerOptions options = BuildServerOptions();
   if (server.Start(FLAGS_listen_port, &options) != 0) {
@@ -472,8 +486,34 @@ int main(int argc, char* argv[]) {
   SPDLOG_INFO("Started engine rpc server success, listen on: {}",
               butil::endpoint2str(server.listen_address()).c_str());
 
+  if (FLAGS_enable_separate_link_port) {
+    if (FLAGS_link_port == FLAGS_listen_port) {
+      SPDLOG_ERROR(
+          "conf invalid, link_port should not be same as "
+          "listen_port if "
+          "--enable_separate_link_port=true");
+      return -1;
+    }
+
+    brpc::ServerOptions link_svr_opts = BuildServerOptions();
+    link_svr_opts.has_builtin_services = false;
+
+    if (link_svr.Start(FLAGS_link_port, &link_svr_opts) != 0) {
+      SPDLOG_ERROR("Fail to start link server on port={}", FLAGS_link_port);
+      return -1;
+    }
+
+    SPDLOG_INFO("Started link server success, listen on: {}",
+                butil::endpoint2str(link_svr.listen_address()).c_str());
+  }
+
   // Wait until Ctrl-C is pressed, then Stop() and Join() the server.
   server.RunUntilAskedToQuit();
+
+  if (FLAGS_enable_separate_link_port) {
+    link_svr.Stop(0);
+    link_svr.Join();
+  }
 
   return 0;
 }

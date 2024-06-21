@@ -38,14 +38,16 @@ class Filter : public Operator {
   void Execute(ExecContext* ctx) override;
 
  private:
-  void FilterPrivate(ExecContext* ctx, const pb::Tensor& filter_pb,
-                     const pb::Tensor& data_pb, const std::string& output_name);
+  static void FilterPrivate(ExecContext* ctx, const pb::Tensor& filter_pb,
+                            const pb::Tensor& data_pb,
+                            const std::string& output_name);
 
-  void FilterSecret(ExecContext* ctx, const pb::Tensor& filter_pb,
-                    const pb::Tensor& data_pb, const std::string& output_name);
+  static void FilterSecret(ExecContext* ctx, const pb::Tensor& filter_pb,
+                           const pb::Tensor& data_pb,
+                           const std::string& output_name);
 
-  TensorPtr GetPrivateOrPublicTensor(ExecContext* ctx,
-                                     const pb::Tensor& input_pb);
+  static TensorPtr GetPrivateOrPublicTensor(ExecContext* ctx,
+                                            const pb::Tensor& input_pb);
 };
 
 }  // namespace scql::engine::op

@@ -16,6 +16,7 @@ package executor
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -37,6 +38,7 @@ import (
 	"github.com/secretflow/scql/pkg/interpreter"
 	"github.com/secretflow/scql/pkg/planner/core"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/proto-gen/spu"
 	"github.com/secretflow/scql/pkg/util/brokerutil"
 )
 
@@ -49,11 +51,14 @@ func TestQueryRunner(t *testing.T) {
 	transaction := meta.CreateMetaTransaction()
 	projectID1 := "p1"
 	projectName1 := "n1"
-	projectConf := storage.ProjectConfig{SpuConf: `{
-        "protocol": "SEMI2K",
-        "field": "FM64",
-        "ttp_beaver_config": {"server_host": "127.0.0.1"}
-    }`}
+	projectConf, _ := json.Marshal(scql.ProjectConfig{
+		SpuRuntimeCfg: &spu.RuntimeConfig{
+			Protocol: spu.ProtocolKind_SEMI2K,
+			Field:    spu.FieldType_FM64,
+			TtpBeaverConfig: &spu.TTPBeaverConfig{
+				ServerHost: "127.0.0.1",
+			},
+		}})
 	alice := "alice"
 	// create project
 	err = transaction.CreateProject(storage.Project{ID: projectID1, Name: projectName1, ProjectConf: projectConf, Creator: alice})
@@ -116,6 +121,9 @@ func TestQueryRunner(t *testing.T) {
 		Issuer:       &scql.PartyId{Code: "alice"},
 		EngineClient: app.EngineClient,
 		DebugOpts:    &scql.DebugOptions{EnablePsiDetailLog: true},
+		SessionOptions: &application.SessionOptions{
+			SessionExpireSeconds: 86400,
+		},
 	}
 	transaction.Finish(nil)
 	session, err := application.NewSession(context.Background(), info, app, false, false)
@@ -174,7 +182,7 @@ func TestCaseSensitive(t *testing.T) {
 	r.NoError(err)
 	transaction := meta.CreateMetaTransaction()
 	projectID1 := "Project1"
-	projectConf := storage.ProjectConfig{SpuConf: `{"protocol": "SEMI2K"}`}
+	projectConf, _ := json.Marshal(scql.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K}})
 	alice := "alice"
 	// create project
 	err = transaction.CreateProject(storage.Project{ID: projectID1, Name: "n1", ProjectConf: projectConf, Creator: alice})
@@ -253,6 +261,9 @@ func TestCaseSensitive(t *testing.T) {
 		Query:        "select t1.id, t1.Data + t2.Data from Project1.t1 join Project1.T2 as t2 on t1.id = t2.id",
 		Issuer:       &scql.PartyId{Code: "alice"},
 		EngineClient: app.EngineClient,
+		SessionOptions: &application.SessionOptions{
+			SessionExpireSeconds: 86400,
+		},
 	}
 	session, err := application.NewSession(context.Background(), info, app, false, false)
 	r.NoError(err)

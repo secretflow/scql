@@ -15,6 +15,7 @@
 package common
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -30,6 +31,7 @@ import (
 	"github.com/secretflow/scql/pkg/broker/application"
 	"github.com/secretflow/scql/pkg/broker/storage"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/proto-gen/spu"
 	"github.com/secretflow/scql/pkg/status"
 	prom "github.com/secretflow/scql/pkg/util/prometheus"
 )
@@ -154,11 +156,15 @@ func TestStorageWithCheck(t *testing.T) {
 	transaction := meta.CreateMetaTransaction()
 	projectID1 := "p1"
 	projectName1 := "n1"
-	projectConf := storage.ProjectConfig{SpuConf: `{
-        "protocol": "SEMI2K",
-        "field": "FM64",
-        "ttp_beaver_config": {"server_host": "127.0.0.1"}
-    }`}
+	projectConf, _ := json.Marshal(pb.ProjectConfig{
+		SpuRuntimeCfg: &spu.RuntimeConfig{
+			Protocol: spu.ProtocolKind_SEMI2K,
+			Field:    spu.FieldType_FM64,
+			TtpBeaverConfig: &spu.TTPBeaverConfig{
+				ServerHost: "127.0.0.1",
+			},
+		},
+	})
 	alice := "alice"
 	bob := "bob"
 	// create project

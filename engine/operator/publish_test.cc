@@ -23,7 +23,7 @@ namespace scql::engine::op {
 
 struct PublishTestCase {
   std::vector<test::NamedTensor> inputs;
-  std::vector<std::string> out_names;
+  std::vector<pb::PrimitiveDataType> input_types;
   std::vector<std::string> out_strs;
 };
 
@@ -38,13 +38,22 @@ INSTANTIATE_TEST_SUITE_P(
     PublishPrivateTest, PublishTest,
     testing::Values(
         PublishTestCase{
-            .inputs = {test::NamedTensor(
-                "private", TensorFromJSON(arrow::int64(), "[0,1,2,3,4]"))},
-            .out_names = {"private_out"},
-            .out_strs = {R"""(name: "private_out"
+            .inputs =
+                {test::NamedTensor("in0", TensorFromJSON(arrow::int64(),
+                                                         "[0,1,null,3]")),
+                 test::NamedTensor("in1", TensorFromJSON(arrow::int64(),
+                                                         "[0,10,null,1000]")),
+                 test::NamedTensor("in2", TensorFromJSON(arrow::int64(),
+                                                         "[0,10,null,1000]"))},
+            .input_types =
+                {pb::PrimitiveDataType::INT64,
+                 // affected by timezone, we use Beijing time in test_util
+                 pb::PrimitiveDataType::TIMESTAMP,
+                 pb::PrimitiveDataType::DATETIME},
+            .out_strs = {R"""(name: "col#0"
 shape {
   dim {
-    dim_value: 5
+    dim_value: 4
   }
   dim {
     dim_value: 1
@@ -55,9 +64,54 @@ annotation {
 }
 int64_data: 0
 int64_data: 1
-int64_data: 2
+int64_data: 0
 int64_data: 3
-int64_data: 4
+data_validity: true
+data_validity: true
+data_validity: false
+data_validity: true
+)""",
+                         R"""(name: "col#1"
+shape {
+  dim {
+    dim_value: 4
+  }
+  dim {
+    dim_value: 1
+  }
+}
+elem_type: TIMESTAMP
+annotation {
+}
+int64_data: 28800
+int64_data: 28810
+int64_data: 28800
+int64_data: 29800
+data_validity: true
+data_validity: true
+data_validity: false
+data_validity: true
+)""",
+                         R"""(name: "col#2"
+shape {
+  dim {
+    dim_value: 4
+  }
+  dim {
+    dim_value: 1
+  }
+}
+elem_type: DATETIME
+annotation {
+}
+string_data: "1970-01-01 00:00:00"
+string_data: "1970-01-01 00:00:10"
+string_data: "1970-01-01 00:00:00"
+string_data: "1970-01-01 00:16:40"
+data_validity: true
+data_validity: true
+data_validity: false
+data_validity: true
 )"""}},
         PublishTestCase{
             .inputs = {test::NamedTensor(
@@ -69,8 +123,9 @@ int64_data: 4
                            TensorFromJSON(
                                arrow::float32(),
                                "[1.1025, 100.245, -10.2, 0.34, 3.1415926]"))},
-            .out_names = {"po0", "po1"},
-            .out_strs = {R"""(name: "po0"
+            .input_types = {pb::PrimitiveDataType::STRING,
+                            pb::PrimitiveDataType::FLOAT32},
+            .out_strs = {R"""(name: "col#0"
 shape {
   dim {
     dim_value: 5
@@ -88,7 +143,7 @@ string_data: "A"
 string_data: "CCC"
 string_data: "B"
 )""",
-                         R"""(name: "po1"
+                         R"""(name: "col#1"
 shape {
   dim {
     dim_value: 5
@@ -139,17 +194,18 @@ pb::ExecNode PublishTest::MakePublishExecNode(const PublishTestCase& tc) {
   std::vector<pb::Tensor> input_datas;
   for (size_t i = 0; i < tc.inputs.size(); ++i) {
     const auto& named_tensor = tc.inputs[i];
-    auto data = test::MakePrivateTensorReference(named_tensor.name,
-                                                 named_tensor.tensor->Type());
+    auto data =
+        test::MakePrivateTensorReference(named_tensor.name, tc.input_types[i]);
     input_datas.push_back(std::move(data));
   }
   builder.AddInput(Publish::kIn, input_datas);
 
   // Add outputs
   std::vector<pb::Tensor> outputs;
-  for (const auto& name : tc.out_names) {
+  for (size_t i = 0; i < tc.inputs.size(); ++i) {
     pb::Tensor out;
 
+    auto name = fmt::format("col#{}", i);
     out.set_name(name);
     out.set_option(pb::TensorOptions::VALUE);
     out.add_string_data(name);

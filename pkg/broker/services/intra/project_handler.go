@@ -32,7 +32,6 @@ import (
 	"github.com/secretflow/scql/pkg/broker/services/common"
 	"github.com/secretflow/scql/pkg/broker/storage"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
-	spu "github.com/secretflow/scql/pkg/proto-gen/spu"
 	"github.com/secretflow/scql/pkg/status"
 )
 
@@ -41,40 +40,63 @@ func (svc *grpcIntraSvc) CreateProject(c context.Context, req *pb.CreateProjectR
 		return nil, status.New(pb.Code_BAD_REQUEST, "CreateProject: illegal empty request")
 	}
 
-	spuConf, err := protojson.Marshal(req.GetConf().GetSpuRuntimeCfg())
-	if err != nil {
-		return nil, status.New(pb.Code_BAD_REQUEST, fmt.Sprintf("CreateProject: %v", err))
+	app := svc.app
+
+	projectConf := req.GetConf()
+	if projectConf == nil {
+		projectConf = &pb.ProjectConfig{}
 	}
 
-	app := svc.app
+	if projectConf.GetSpuRuntimeCfg() == nil {
+		return nil, fmt.Errorf("CreateProject: spu runtime config can not be null in project config")
+	}
+
+	if projectConf.SessionExpireSeconds <= 0 {
+		projectConf.SessionExpireSeconds = int64(app.Conf.SessionExpireTime.Seconds())
+	}
+
+	projConf, err := json.Marshal(pb.ProjectConfig{
+		SpuRuntimeCfg:                             projectConf.GetSpuRuntimeCfg(),
+		SessionExpireSeconds:                      projectConf.GetSessionExpireSeconds(),
+		UnbalancePsiRatioThreshold:                projectConf.GetUnbalancePsiRatioThreshold(),
+		UnbalancePsiLargerPartyRowsCountThreshold: projectConf.GetUnbalancePsiLargerPartyRowsCountThreshold(),
+		PsiCurveType:                              projectConf.GetPsiCurveType(),
+		HttpMaxPayloadSize:                        projectConf.GetHttpMaxPayloadSize(),
+		LinkRecvTimeoutSec:                        projectConf.GetLinkRecvTimeoutSec(),
+		LinkThrottleWindowSize:                    projectConf.GetLinkThrottleWindowSize(),
+		LinkChunkedSendParallelSize:               projectConf.GetLinkChunkedSendParallelSize(),
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("CreateProject: failed to serialize project conf: %v", err)
+	}
+
 	project := storage.Project{
 		ID:          req.GetProjectId(),
 		Name:        req.GetName(),
 		Description: req.GetDescription(),
 		Creator:     app.Conf.PartyCode,
 		Archived:    false,
-		ProjectConf: storage.ProjectConfig{
-			SpuConf: string(spuConf),
-		},
+		ProjectConf: projConf,
 	}
 	if project.ID == "" {
 		id, err := application.GenerateProjectID()
 		if err != nil {
-			return nil, fmt.Errorf("CreateProject: %v", err)
+			return nil, fmt.Errorf("CreateProject: failed to generate project ID: %v", err)
 		}
 		project.ID = fmt.Sprint(id)
 	}
 	// check project ID validity when working as db name
 	err = common.VerifyProjectID(project.ID)
 	if err != nil {
-		return nil, fmt.Errorf("CreateProject: %v", err)
+		return nil, fmt.Errorf("CreateProject: failed to veriry project ID: %v", err)
 	}
 
 	err = app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
 		return txn.CreateProject(project)
 	})
 	if err != nil {
-		return nil, fmt.Errorf("CreateProject: %v", err)
+		return nil, fmt.Errorf("CreateProject: failed to create table in meta database: %v", err)
 	}
 	return &pb.CreateProjectResponse{
 		Status: &pb.Status{
@@ -97,22 +119,33 @@ func (svc *grpcIntraSvc) ListProjects(c context.Context, req *pb.ListProjectsReq
 		return err
 	})
 	if err != nil {
-		return nil, fmt.Errorf("ListProjects: %v", err)
+		return nil, fmt.Errorf("ListProjects: failed to list project in meta database: %v", err)
 	}
 	var projectsList []*pb.ProjectDesc
 	for _, projWithMember := range projectWithMembers {
 		proj := projWithMember.Proj
-		var spuConf spu.RuntimeConfig
-		err := protojson.Unmarshal([]byte(proj.ProjectConf.SpuConf), &spuConf)
+		var projConf pb.ProjectConfig
+		err := protojson.Unmarshal(proj.ProjectConf, &projConf)
 		if err != nil {
 			return nil, fmt.Errorf("ListProjects: unmarshal: %v", err)
 		}
+
+		spuConf := projConf.SpuRuntimeCfg
+
 		projectsList = append(projectsList, &pb.ProjectDesc{
 			ProjectId:   proj.ID,
 			Name:        proj.Name,
 			Description: proj.Description,
 			Conf: &pb.ProjectConfig{
-				SpuRuntimeCfg: &spuConf,
+				SpuRuntimeCfg:                             spuConf,
+				SessionExpireSeconds:                      projConf.SessionExpireSeconds,
+				UnbalancePsiRatioThreshold:                projConf.UnbalancePsiRatioThreshold,
+				UnbalancePsiLargerPartyRowsCountThreshold: projConf.UnbalancePsiLargerPartyRowsCountThreshold,
+				PsiCurveType:                              projConf.PsiCurveType,
+				HttpMaxPayloadSize:                        projConf.HttpMaxPayloadSize,
+				LinkRecvTimeoutSec:                        projConf.LinkRecvTimeoutSec,
+				LinkThrottleWindowSize:                    projConf.LinkThrottleWindowSize,
+				LinkChunkedSendParallelSize:               projConf.LinkChunkedSendParallelSize,
 			},
 			Creator:   proj.Creator,
 			Members:   projWithMember.Members,
@@ -149,7 +182,7 @@ func (svc *grpcIntraSvc) InviteMember(c context.Context, req *pb.InviteMemberReq
 
 	projWithMember, err := txn.GetProjectAndMembers(req.GetProjectId())
 	if err != nil {
-		return nil, fmt.Errorf("InviteMember: %v", err)
+		return nil, fmt.Errorf("InviteMember: failed to list project info in meta database: %v", err)
 	}
 	proj := projWithMember.Proj
 	if proj.Creator != app.Conf.PartyCode {
@@ -163,14 +196,17 @@ func (svc *grpcIntraSvc) InviteMember(c context.Context, req *pb.InviteMemberReq
 	// Send Rpc request first
 	url, err := app.PartyMgr.GetBrokerUrlByParty(req.GetInvitee())
 	if err != nil {
-		return nil, fmt.Errorf("InviteMember: %v", err)
+		return nil, fmt.Errorf("InviteMember: failed to get invitee broker url: %v", err)
 	}
 
-	var spuConf spu.RuntimeConfig
-	err = protojson.Unmarshal([]byte(proj.ProjectConf.SpuConf), &spuConf)
+	var projConf pb.ProjectConfig
+	err = protojson.Unmarshal(proj.ProjectConf, &projConf)
+
 	if err != nil {
-		return nil, fmt.Errorf("InviteMember unmarshal: %v", err)
+		return nil, fmt.Errorf("InviteMember unmarshal: failed to deserialize project conf string: %v", err)
 	}
+
+	spuConf := projConf.SpuRuntimeCfg
 
 	// add invitation to metaMgr
 	invite := storage.Invitation{
@@ -193,7 +229,7 @@ func (svc *grpcIntraSvc) InviteMember(c context.Context, req *pb.InviteMemberReq
 	}
 	err = txn.AddInvitations([]storage.Invitation{invite})
 	if err != nil {
-		return nil, fmt.Errorf("InviteMember: %v", err)
+		return nil, fmt.Errorf("InviteMember: failed to add invitation in meta database: %v", err)
 	}
 
 	interReq := &pb.InviteToProjectRequest{
@@ -205,7 +241,15 @@ func (svc *grpcIntraSvc) InviteMember(c context.Context, req *pb.InviteMemberReq
 			Name:        proj.Name,
 			Description: proj.Description,
 			Conf: &pb.ProjectConfig{
-				SpuRuntimeCfg: &spuConf,
+				SpuRuntimeCfg:                             spuConf,
+				SessionExpireSeconds:                      projConf.SessionExpireSeconds,
+				UnbalancePsiRatioThreshold:                projConf.UnbalancePsiRatioThreshold,
+				UnbalancePsiLargerPartyRowsCountThreshold: projConf.UnbalancePsiLargerPartyRowsCountThreshold,
+				PsiCurveType:                              projConf.PsiCurveType,
+				HttpMaxPayloadSize:                        projConf.HttpMaxPayloadSize,
+				LinkRecvTimeoutSec:                        projConf.LinkRecvTimeoutSec,
+				LinkThrottleWindowSize:                    projConf.LinkThrottleWindowSize,
+				LinkChunkedSendParallelSize:               projConf.LinkChunkedSendParallelSize,
 			},
 			Creator:   proj.Creator,
 			Members:   projWithMember.Members,
@@ -250,15 +294,18 @@ func (svc *grpcIntraSvc) ListInvitations(c context.Context, req *pb.ListInvitati
 		return err
 	})
 	if err != nil {
-		return nil, fmt.Errorf("ListInvitations: %v", err)
+		return nil, fmt.Errorf("ListInvitations: failed to list invitations in meta database %v", err)
 	}
 	var invitationsList []*pb.ProjectInvitation
 	for _, inv := range invitations {
-		var spuConf spu.RuntimeConfig
-		err = protojson.Unmarshal([]byte(inv.ProjectConf.SpuConf), &spuConf)
+		var projConf pb.ProjectConfig
+		err = protojson.Unmarshal(inv.ProjectConf, &projConf)
 		if err != nil {
-			return nil, fmt.Errorf("ListInvitations: %v", err)
+			return nil, fmt.Errorf("ListInvitations: failed to deserialize spu config: %v", err)
 		}
+
+		spuConf := projConf.SpuRuntimeCfg
+
 		invitationsList = append(invitationsList, &pb.ProjectInvitation{
 			InvitationId: inv.ID,
 			Project: &pb.ProjectDesc{
@@ -266,7 +313,15 @@ func (svc *grpcIntraSvc) ListInvitations(c context.Context, req *pb.ListInvitati
 				Name:        inv.Name,
 				Description: inv.Description,
 				Conf: &pb.ProjectConfig{
-					SpuRuntimeCfg: &spuConf,
+					SpuRuntimeCfg:                             spuConf,
+					SessionExpireSeconds:                      projConf.SessionExpireSeconds,
+					UnbalancePsiRatioThreshold:                projConf.UnbalancePsiRatioThreshold,
+					UnbalancePsiLargerPartyRowsCountThreshold: projConf.UnbalancePsiLargerPartyRowsCountThreshold,
+					PsiCurveType:                              projConf.PsiCurveType,
+					HttpMaxPayloadSize:                        projConf.HttpMaxPayloadSize,
+					LinkRecvTimeoutSec:                        projConf.LinkRecvTimeoutSec,
+					LinkThrottleWindowSize:                    projConf.LinkThrottleWindowSize,
+					LinkChunkedSendParallelSize:               projConf.LinkChunkedSendParallelSize,
 				},
 				Creator: inv.Creator,
 				Members: strings.Split(inv.Member, ";"),
@@ -381,7 +436,7 @@ func (svc *grpcIntraSvc) ProcessInvitation(c context.Context, req *pb.ProcessInv
 			CreatedAt:   invitation.ProjectCreatedAt,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("ProcessInvitation: CreateProject: %v", err)
+			return nil, fmt.Errorf("ProcessInvitation: CreateProject: failed to create project in meta database while processing invitation: %v", err)
 		}
 		for _, member := range append(strings.Split(invitation.Member, ";"), invitation.Invitee) {
 			if member != "" && member != invitation.Creator {
@@ -390,20 +445,20 @@ func (svc *grpcIntraSvc) ProcessInvitation(c context.Context, req *pb.ProcessInv
 		}
 		err = txn.AddProjectMembers(invitationMembers)
 		if err != nil {
-			return nil, fmt.Errorf("ProcessInvitation: AddProjectMember: %v", err)
+			return nil, fmt.Errorf("ProcessInvitation: AddProjectMember: failed to add project member in meta database while processing invitation: %v", err)
 		}
 		status = pb.InvitationStatus_ACCEPTED
 	}
 
 	err = txn.ModifyInvitationStatus(invitation.ID, status)
 	if err != nil {
-		return nil, fmt.Errorf("ProcessInvitation: %v", err)
+		return nil, fmt.Errorf("ProcessInvitation: failed to modify invitation status: %v", err)
 	}
 
 	// 1. Send Rpc request to project owner
 	url, err := svc.app.PartyMgr.GetBrokerUrlByParty(invitation.Inviter)
 	if err != nil {
-		return nil, fmt.Errorf("ProcessInvitation: %v", err)
+		return nil, fmt.Errorf("ProcessInvitation: failed to get inviter broker url: %v", err)
 	}
 
 	interReq := &pb.ReplyInvitationRequest{

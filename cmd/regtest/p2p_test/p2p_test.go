@@ -162,6 +162,7 @@ func TestMain(m *testing.M) {
 
 func TestRunQueryWithNormalCCL(t *testing.T) {
 	r := require.New(t)
+
 	r.NoError(clearData())
 	r.NoError(getUrlList(testConf))
 	mockTables, err := mock.MockAllTables()
@@ -172,6 +173,9 @@ func TestRunQueryWithNormalCCL(t *testing.T) {
 	r.NoError(createProjectTableAndCcl(testConf.ProjectConf, cclList, testConf.SkipCreateTableCCL))
 	r.NoError(runQueryTest(alice, testConf.SpuProtocol, testFlag{sync: false, testConcurrent: !testConf.SkipConcurrentTest, testSerial: true}))
 	r.NoError(runQueryTest(alice, testConf.SpuProtocol, testFlag{sync: true, testConcurrent: !testConf.SkipConcurrentTest, testSerial: true}))
+
+	r.NoError(runQueryTestSessionExpired(alice, 1, 100))
+	r.Error(runQueryTestSessionExpired(alice, 10, 1))
 }
 
 func TestConcurrentModifyProject(t *testing.T) {
@@ -212,6 +216,19 @@ func TestConcurrentModifyProject(t *testing.T) {
 	}
 }
 
+func runQueryTestSessionExpired(user string, sleepSeconds int, sessionExpireSeconds int) error {
+	sql := "select plain_int_0, plain_datetime_0, plain_timestamp_0 from alice_tbl_1;"
+	jobID, err := stubMap[user].CreateJob(projectName, sql, &scql.DebugOptions{EnablePsiDetailLog: false}, fmt.Sprintf(`{"session_expire_seconds": %v}`, sessionExpireSeconds))
+
+	if err != nil {
+		return err
+	}
+
+	time.Sleep(time.Second * time.Duration(sleepSeconds))
+	_, err = stubMap[user].GetResult(jobID)
+	return err
+}
+
 func runQueryTest(user string, spu_protocol string, flags testFlag) (err error) {
 	fmt.Printf("test protocol: %s\n", spu_protocol)
 	path := map[string][]string{SEMI2K: {"../testdata/single_party.json", "../testdata/single_party_postgres.json", "../testdata/two_parties.json", "../testdata/multi_parties.json"}, CHEETAH: {"../testdata/two_parties.json"}, ABY3: {"../testdata/multi_parties.json"}}
@@ -239,7 +256,7 @@ func testCaseForSerial(dataPath string, sync bool, issuer string) error {
 	}
 	for i, query := range suit.Queries {
 		comment := fmt.Sprintf("For query='%s', name='%s' in testfile='%s'", query.Query, query.Name, dataPath)
-		answer, err := runSql(stubMap[issuer], query.Query, sync)
+		answer, err := runSql(stubMap[issuer], query.Query, sync, "{}")
 		if err != nil {
 			return fmt.Errorf("%s Error Info (%s)", comment, err)
 		}
@@ -270,7 +287,7 @@ func testCaseForConcurrent(dataPath string, sync bool, issuer string) error {
 				<-inChan
 			}()
 			comment := fmt.Sprintf("For query='%s', name='%s' in testfile='%s'", testCase.Query, testCase.Name, dataPath)
-			answer, err := runSql(stubMap[issuer], testCase.Query, sync)
+			answer, err := runSql(stubMap[issuer], testCase.Query, sync, "{}")
 			if err != nil {
 				return
 			}
@@ -478,7 +495,7 @@ func concurrentModifyProjectTableAndCcl(projectID, projectConf string, cclList [
 				return
 			}
 			tableOwner := regtest.TableToPartyCode[tableName]
-			_, err = stubMap[tableOwner].DoQuery(projectID, fmt.Sprintf("select * from %s limit 1", tableName), &scql.DebugOptions{EnablePsiDetailLog: false})
+			_, err = stubMap[tableOwner].DoQuery(projectID, fmt.Sprintf("select * from %s limit 1", tableName), &scql.DebugOptions{EnablePsiDetailLog: false}, "{}")
 			errCh <- err
 		}(tableName)
 	}
@@ -538,18 +555,18 @@ func processInvitation(stub *brokerutil.Command, projectID string) error {
 	return stub.ProcessInvitation(fmt.Sprintf("%d", inviteId), true)
 }
 
-func runSql(command *brokerutil.Command, sql string, sync bool) ([]*scql.Tensor, error) {
+func runSql(command *brokerutil.Command, sql string, sync bool, jobConf string) ([]*scql.Tensor, error) {
 	if sync {
-		resp, err := command.DoQuery(projectName, sql, &scql.DebugOptions{EnablePsiDetailLog: false})
+		resp, err := command.DoQuery(projectName, sql, &scql.DebugOptions{EnablePsiDetailLog: false}, jobConf)
 		if err != nil {
 			return nil, err
 		}
 		if int32(scql.Code_OK) != resp.GetStatus().GetCode() {
 			return nil, fmt.Errorf("error code %d, %+v", resp.Status.Code, resp)
 		}
-		return resp.OutColumns, nil
+		return resp.GetResult().GetOutColumns(), nil
 	} else {
-		jobID, err := command.CreateJob(projectName, sql, &scql.DebugOptions{EnablePsiDetailLog: false})
+		jobID, err := command.CreateJob(projectName, sql, &scql.DebugOptions{EnablePsiDetailLog: false}, jobConf)
 		if err != nil {
 			return nil, err
 		}
@@ -558,15 +575,18 @@ func runSql(command *brokerutil.Command, sql string, sync bool) ([]*scql.Tensor,
 			if fetchIntervalMs*count > timeoutS*1000 {
 				return nil, fmt.Errorf("fetch result timeout")
 			}
-			resp, notReady, err := command.GetResult(jobID)
+			resp, err := command.GetResult(jobID)
 			if err != nil {
 				return nil, err
 			}
-			if !notReady {
-				return resp.OutColumns, nil
+			if resp.GetStatus().GetCode() == int32(scql.Code_OK) {
+				return resp.GetResult().GetOutColumns(), nil
+			} else if resp.GetStatus().GetCode() == int32(scql.Code_NOT_READY) {
+				count++
+				time.Sleep(fetchIntervalMs * time.Millisecond)
+			} else {
+				return nil, fmt.Errorf("GetResult status: %v", resp.GetStatus())
 			}
-			count++
-			time.Sleep(fetchIntervalMs * time.Millisecond)
 		}
 	}
 }

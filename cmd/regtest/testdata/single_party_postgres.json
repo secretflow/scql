@@ -216,9 +216,9 @@
       "mysql_query": "select substring(plain_string_0, 2, 3) as t from carol.tbl_1 where substring(plain_string_0, 2) != '';"
     },
     {
-      "name": "ifnull",
-      "query": "select plain_int_0, plain_string_0, ifnull(plain_string_0, plain_string_1) as mul from carol_tbl_1;",
-      "mysql_query": "select plain_int_0, plain_string_0, ifnull(plain_string_0, plain_string_1) as mul from carol.tbl_1;"
+      "name": "ifnull & coalesce",
+      "query": "select plain_int_0, plain_string_0, ifnull(plain_string_0, plain_string_1) as mul, coalesce(plain_float_0, plain_float_1, 1.0) as cl from carol_tbl_1;",
+      "mysql_query": "select plain_int_0, plain_string_0, ifnull(plain_string_0, plain_string_1) as mul, coalesce(plain_float_0, plain_float_1, 1.0) as cl from carol.tbl_1;"
     },
     {
       "name": "apply in",

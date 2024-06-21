@@ -84,13 +84,13 @@ INSTANTIATE_TEST_SUITE_P(
             CaseWhenTestCase{
                 .conds =
                     {test::NamedTensor("cond1", TensorFromJSON(arrow::int64(),
-                                                               "[1,0,0,0]")),
+                                                               "[1,null,0,0]")),
                      test::NamedTensor(
                          "cond2", TensorFromJSON(arrow::boolean(),
-                                                 "[true,true,false,false]")),
+                                                 "[true,true,null,false]")),
                      test::NamedTensor("cond3",
                                        TensorFromJSON(arrow::int64(),
-                                                      "[11,11,11,0]"))},
+                                                      "[11,11,11,null]"))},
                 .cond_status = {pb::TENSORSTATUS_PRIVATE,
                                 pb::TENSORSTATUS_PRIVATE,
                                 pb::TENSORSTATUS_PRIVATE},

@@ -86,6 +86,13 @@ func (manager *MetaManager) DropTables() error {
 	return nil
 }
 
+func (manager *MetaManager) GetProject(projectId string) (*Project, error) {
+	txn := manager.CreateMetaTransaction()
+	project, err := txn.GetProject(projectId)
+	txn.Finish(err)
+	return &project, err
+}
+
 // CheckStorage verifies storage is valid
 func CheckStorage(store *gorm.DB) error {
 	for _, tn := range allTables {

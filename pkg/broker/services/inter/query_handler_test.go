@@ -16,6 +16,7 @@ package inter_test
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"testing"
 	"time"
@@ -28,6 +29,7 @@ import (
 	"github.com/secretflow/scql/pkg/broker/services/inter"
 	"github.com/secretflow/scql/pkg/broker/storage"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/proto-gen/spu"
 	"github.com/secretflow/scql/pkg/util/brokerutil"
 	"github.com/secretflow/scql/pkg/util/message"
 )
@@ -61,7 +63,8 @@ func (s *interTestSuite) SetupSuite() {
 func (s *interTestSuite) bootstrap(manager *storage.MetaManager) {
 	txn := manager.CreateMetaTransaction()
 	defer txn.Finish(nil)
-	s.NoError(txn.CreateProject(storage.Project{ID: "1", Name: "test project", Creator: "bob", ProjectConf: storage.ProjectConfig{SpuConf: `{"protocol": "SEMI2K","field": "FM64"}`}}))
+	projConf, _ := json.Marshal(scql.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}, SessionExpireSeconds: 86400})
+	s.NoError(txn.CreateProject(storage.Project{ID: "1", Name: "test project", Creator: "bob", ProjectConf: projConf}))
 	s.NoError(txn.AddProjectMembers([]storage.Member{storage.Member{ProjectID: "1", Member: "alice"}}))
 	s.NoError(txn.AddProjectMembers([]storage.Member{storage.Member{ProjectID: "1", Member: "carol"}}))
 	// mock table/ccl
@@ -149,6 +152,7 @@ func (s *interTestSuite) TestDistributeQueryErrorQuery() {
 		JobId:          "1",
 		ClientChecksum: &scql.Checksum{TableSchema: []byte{0x1}, Ccl: []byte{0x1}},
 		ServerChecksum: &scql.Checksum{TableSchema: []byte{0x1}, Ccl: []byte{0x1}},
+		JobConfig:      &scql.JobConfig{},
 	}
 	// failed to parse query
 	mockReq.Query = "select error query"
@@ -228,6 +232,7 @@ func (s *interTestSuite) TestDistributeQueryChecksumNotEqual2P() {
 		Query:          "select id from ta join tb on ta.id = tb.id",
 		ClientChecksum: &scql.Checksum{TableSchema: []byte{0x1}, Ccl: []byte{0x1}},
 		ServerChecksum: &scql.Checksum{TableSchema: []byte{0x1}, Ccl: []byte{0x1}},
+		JobConfig:      &scql.JobConfig{},
 	}
 	// server checksum not equal
 	res, err := s.svcBob.DistributeQuery(s.ctx, mockReq)
@@ -271,6 +276,7 @@ func (s *interTestSuite) TestDistributeQueryServerChecksumEqual2P() {
 		Query:          "select ta.id from ta join tb on ta.id = tb.id",
 		ClientChecksum: &scql.Checksum{TableSchema: []byte{0x1}, Ccl: []byte{0x1}},
 		ServerChecksum: &scql.Checksum{TableSchema: []byte{0x1}, Ccl: []byte{0x1}},
+		JobConfig:      &scql.JobConfig{},
 	}
 	mockReq.ClientChecksum = &scql.Checksum{
 		TableSchema: []byte{157, 69, 36, 57, 100, 26, 130, 58, 54, 50, 8, 177, 99, 131, 55, 216, 224, 17, 47, 117, 60, 139, 238, 187, 128, 75, 250, 27, 233, 99, 20, 182},
@@ -326,6 +332,9 @@ func (s *interTestSuite) TestDistributeQueryChecksumEqual3P() {
 				ProjectID: req.ProjectId,
 				JobID:     req.JobId,
 				Issuer:    &scql.PartyId{Code: "alice"},
+				SessionOptions: &application.SessionOptions{
+					SessionExpireSeconds: 86400,
+				},
 			}
 			session, err := application.NewSession(context.Background(), info, s.testAppBuilder.AppCarol, false, false)
 			if err != nil {
@@ -360,6 +369,7 @@ func (s *interTestSuite) TestDistributeQueryChecksumEqual3P() {
 		Query:          "select ta.id from ta join tb on ta.id = tb.id join tc on tc.id = ta.id",
 		ClientChecksum: &scql.Checksum{TableSchema: []byte{0x1}, Ccl: []byte{0x1}},
 		ServerChecksum: &scql.Checksum{TableSchema: []byte{0x1}, Ccl: []byte{0x1}},
+		JobConfig:      &scql.JobConfig{},
 	}
 	// server checksum equal
 	mockReq.JobId = "2"
@@ -430,6 +440,9 @@ func (s *interTestSuite) TestDistributeQueryOtherPartyChecksumNotEqual3P() {
 				ProjectID: req.ProjectId,
 				JobID:     req.JobId,
 				Issuer:    &scql.PartyId{Code: "alice"},
+				SessionOptions: &application.SessionOptions{
+					SessionExpireSeconds: 86400,
+				},
 			}
 			session, err := application.NewSession(context.Background(), info, s.testAppBuilder.AppCarol, false, false)
 			if err != nil {

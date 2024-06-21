@@ -49,6 +49,8 @@ spec:
         conn_max_lifetime: 5m
     engineConf: |-
       --listen_port={{.KUSCIA_PORT_ENGINEPORT_NUMBER}}
+      --enable_separate_link_port=true
+      --link_port={{.KUSCIA_PORT_LINKPORT_NUMBER}}
       --enable_driver_authorization=false
       --datasource_router=embed
       #--embed_router_conf=xxx
@@ -123,6 +125,10 @@ spec:
             ports:
               - name: engineport
                 port: 8003
+                protocol: HTTP
+                scope: Domain
+              - name: linkport
+                port: 8004
                 protocol: HTTP
                 scope: Cluster
             workingDir: /work

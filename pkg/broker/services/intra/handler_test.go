@@ -30,6 +30,7 @@ import (
 	"github.com/secretflow/scql/pkg/broker/services/intra"
 	"github.com/secretflow/scql/pkg/broker/storage"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/proto-gen/spu"
 	"github.com/secretflow/scql/pkg/util/brokerutil"
 	"github.com/secretflow/scql/pkg/util/message"
 )
@@ -62,7 +63,8 @@ func (s *intraTestSuite) SetupSuite() {
 func (s *intraTestSuite) bootstrap(manager *storage.MetaManager) {
 	txn := manager.CreateMetaTransaction()
 	defer txn.Finish(nil)
-	s.NoError(txn.CreateProject(storage.Project{ID: "1", Name: "test project", Creator: "alice", ProjectConf: storage.ProjectConfig{SpuConf: `{"protocol": "SEMI2K","field": "FM64"}`}}))
+	projConf, _ := json.Marshal(pb.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}})
+	s.NoError(txn.CreateProject(storage.Project{ID: "1", Name: "test project", Creator: "alice", ProjectConf: projConf}))
 }
 
 func (s *intraTestSuite) SetupTest() {
@@ -113,7 +115,10 @@ func (s *intraTestSuite) TestProcessInvitationNormal() {
 			s.NoError(err)
 			txn := s.testAppBuilder.AppBob.MetaMgr.CreateMetaTransaction()
 			defer txn.Finish(nil)
-			spuCfg, err := protojson.Marshal(req.GetProject().GetConf().GetSpuRuntimeCfg())
+			projecjConf, err := json.Marshal(pb.ProjectConfig{
+				SpuRuntimeCfg:        req.GetProject().GetConf().GetSpuRuntimeCfg(),
+				SessionExpireSeconds: req.GetProject().GetConf().SessionExpireSeconds,
+			})
 			s.NoError(err)
 			s.NoError(txn.AddInvitations([]storage.Invitation{storage.Invitation{
 				ProjectID:   req.GetProject().GetProjectId(),
@@ -121,12 +126,10 @@ func (s *intraTestSuite) TestProcessInvitationNormal() {
 				Description: req.GetProject().GetDescription(),
 				Creator:     req.GetProject().GetCreator(),
 				Member:      strings.Join(req.GetProject().GetMembers(), ";"),
-				ProjectConf: storage.ProjectConfig{
-					SpuConf: string(spuCfg),
-				},
-				Inviter:    req.GetInviter(),
-				Invitee:    "bob",
-				InviteTime: time.Now(),
+				ProjectConf: projecjConf,
+				Inviter:     req.GetInviter(),
+				Invitee:     "bob",
+				InviteTime:  time.Now(),
 			}}))
 			resp := &pb.InviteToProjectResponse{
 				Status: &pb.Status{Code: 0},
@@ -153,13 +156,18 @@ func (s *intraTestSuite) TestProcessInvitationNormal() {
 }
 
 func (s *intraTestSuite) TestListInvitations() {
-	spuCfg := `{"protocol": "SEMI2K","field": "FM64"}`
 	txn := s.testAppBuilder.AppBob.MetaMgr.CreateMetaTransaction()
+	projConf, _ := json.Marshal(pb.ProjectConfig{
+		SpuRuntimeCfg: &spu.RuntimeConfig{
+			Protocol: spu.ProtocolKind_SEMI2K,
+			Field:    spu.FieldType_FM64,
+		},
+	})
 	s.NoError(txn.AddInvitations([]storage.Invitation{
 		{
 			ProjectID:   "mock_id1",
 			Name:        "mock_name1",
-			ProjectConf: storage.ProjectConfig{SpuConf: spuCfg},
+			ProjectConf: projConf,
 			Creator:     "alice",
 			Member:      "alice;carol",
 			Inviter:     "alice",
@@ -169,7 +177,7 @@ func (s *intraTestSuite) TestListInvitations() {
 		{
 			ProjectID:   "mock_id2",
 			Name:        "mock_name2",
-			ProjectConf: storage.ProjectConfig{SpuConf: spuCfg},
+			ProjectConf: projConf,
 			Creator:     "carol",
 			Member:      "alice;carol",
 			Inviter:     "carol",
@@ -179,7 +187,7 @@ func (s *intraTestSuite) TestListInvitations() {
 		{
 			ProjectID:   "mock_id3",
 			Name:        "mock_name3",
-			ProjectConf: storage.ProjectConfig{SpuConf: spuCfg},
+			ProjectConf: projConf,
 			Creator:     "alice",
 			Member:      "alice;carol",
 			Inviter:     "alice",
@@ -231,7 +239,11 @@ func (s *intraTestSuite) TestProcessInvitationError() {
 			s.NoError(err)
 			txn := s.testAppBuilder.AppBob.MetaMgr.CreateMetaTransaction()
 			defer txn.Finish(nil)
-			spuCfg, err := protojson.Marshal(req.GetProject().GetConf().GetSpuRuntimeCfg())
+			s.NoError(err)
+			projConf, _ := json.Marshal(pb.ProjectConfig{
+				SpuRuntimeCfg:        req.Project.Conf.SpuRuntimeCfg,
+				SessionExpireSeconds: req.Project.Conf.SessionExpireSeconds,
+			})
 			s.NoError(err)
 			s.NoError(txn.AddInvitations([]storage.Invitation{storage.Invitation{
 				ProjectID:   req.GetProject().GetProjectId(),
@@ -239,12 +251,10 @@ func (s *intraTestSuite) TestProcessInvitationError() {
 				Description: req.GetProject().GetDescription(),
 				Creator:     req.GetProject().GetCreator(),
 				Member:      strings.Join(req.GetProject().GetMembers(), ";"),
-				ProjectConf: storage.ProjectConfig{
-					SpuConf: string(spuCfg),
-				},
-				Inviter:    req.GetInviter(),
-				Invitee:    "bob",
-				InviteTime: time.Now(),
+				ProjectConf: projConf,
+				Inviter:     req.GetInviter(),
+				Invitee:     "bob",
+				InviteTime:  time.Now(),
 			}}))
 			resp := &pb.InviteToProjectResponse{
 				Status: &pb.Status{Code: 0},

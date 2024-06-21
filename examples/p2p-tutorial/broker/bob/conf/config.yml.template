@@ -17,7 +17,7 @@ engine:
   protocol: https
   content_type: application/json
   uris:
-    - for_peer: engine_bob:8003
+    - for_peer: engine_bob:8004
       for_self: engine_bob:8003
 storage:
   type: mysql

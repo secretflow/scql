@@ -6,72 +6,18 @@ Secure Collaborative Query Language (SCQL) is a system that translates SQL state
 
 ![SCQL Workflow](./docs/imgs/scql_workflow.png)
 
-## Contents
+## Documentation
 
-- [Documentation](https://www.secretflow.org.cn/docs/scql/en/)
-- [Build and Test](#build)
-
-## Build
-
-### Prerequisite
-
-#### Docker
-
-```sh
-## start dev container
-docker run -d -it --name scql-dev-$(whoami) \
-         --mount type=bind,source="$(pwd)",target=/home/admin/dev/ \
-         -w /home/admin/dev \
-         --cap-add=SYS_PTRACE --security-opt seccomp=unconfined \
-         --cap-add=NET_ADMIN \
-         --privileged=true \
-         secretflow/scql-ci:latest /bin/bash
-
-# attach to dev container
-docker exec -it scql-dev-$(whoami) bash
-```
-
-### Build & UnitTest
+- [Documentation in English](https://www.secretflow.org.cn/en/docs/scql)
+- [中文文档](https://www.secretflow.org.cn/zh-CN/docs/scql/)
 
 
 
+## Contribution Guidelines
 
-```sh
-# prerequisite
-# spu needs numpy
-pip install numpy
+If you would like to contribute to SCQL, please see the [Contribution guidelines](CONTRIBUTING.md).
 
-# build SCQL engine as release
-bazel build //engine/exe:scqlengine -c opt
-
-# test
-
-# run unittests for SCQL engine
-bazel test //engine/...
-
-# update scdb proto
-make pb
-
-# build scdb code
-make
-
-# run scdb unit tests
-go test ./pkg/...
-```
-
-### Build docs
-
-```sh
-# prerequisite
-pip3 install -U -r docs/requirements.txt
-
-# Build HTML docs, and the result is placed in directory 'docs/_build/html'
-# Build documentation in English
-make doc
-
-# Build documentation in Chinese
-make doc-cn
-```
+This documentation also contains instructions for [build and testing](CONTRIBUTING.md#build)
 
 ## Hardware Requirements
 

@@ -17,6 +17,8 @@ package translator
 import (
 	"fmt"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/secretflow/scql/pkg/expression"
 	"github.com/secretflow/scql/pkg/interpreter/ccl"
 	"github.com/secretflow/scql/pkg/interpreter/operator"
@@ -126,6 +128,8 @@ func (n *JoinNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error
 		rightId int64
 	}
 	var joinKeyPairs []joinKeyPair
+	// if table_alice joins table_bob, then alice and bob can see each other's join payload: payloadVisible[alice][bob] = payloadVisible[bob][alice] = true
+	payloadVisible := make(map[string]map[string]bool)
 	for _, equalCondition := range join.EqualConditions {
 		cols, err := extractEQColumns(equalCondition)
 		if err != nil {
@@ -149,7 +153,25 @@ func (n *JoinNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error
 		})
 
 		// set and check ccl
-		for _, p := range colTracer.FindSourceParties(leftId) {
+		leftSourceParties := colTracer.FindSourceParties(leftId)
+		rigthSourceParties := colTracer.FindSourceParties(rightId)
+		// temporaryly record payloadVisible for inner join only
+		if join.JoinType == core.InnerJoin {
+			for _, lp := range leftSourceParties {
+				for _, rp := range rigthSourceParties {
+					if _, ok := payloadVisible[lp]; !ok {
+						payloadVisible[lp] = make(map[string]bool)
+					}
+					payloadVisible[lp][rp] = true
+
+					if _, ok := payloadVisible[rp]; !ok {
+						payloadVisible[rp] = make(map[string]bool)
+					}
+					payloadVisible[rp][lp] = true
+				}
+			}
+		}
+		for _, p := range leftSourceParties {
 			if rightCc.LevelFor(p) == ccl.Join {
 				if join.JoinType == core.InnerJoin || join.JoinType == core.LeftOuterJoin {
 					rightCc.SetLevelForParty(p, ccl.Plain)
@@ -161,7 +183,7 @@ func (n *JoinNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error
 			}
 		}
 
-		for _, p := range colTracer.FindSourceParties(rightId) {
+		for _, p := range rigthSourceParties {
 			if leftCc.LevelFor(p) == ccl.Join {
 				if join.JoinType == core.InnerJoin || join.JoinType == core.RightOuterJoin {
 					leftCc.SetLevelForParty(p, ccl.Plain)
@@ -190,6 +212,7 @@ func (n *JoinNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error
 	for id, parties := range IdToSourceParties {
 		colTracer.AddSourceParties(id, parties)
 	}
+
 	result := make(map[int64]*ccl.CCL)
 	for _, c := range n.Schema().Columns {
 		cc, ok := childCCL[c.UniqueID]
@@ -198,7 +221,21 @@ func (n *JoinNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error
 		}
 		if joinCc, ok := joinKeyCCLs[c.UniqueID]; ok {
 			cc = joinCc.Clone()
+		} else {
+			// set for PLAINTEXT_AS_JOIN_PAYLOAD
+			for _, p := range cc.Parties() {
+				if cc.LevelFor(p) == ccl.AsJoinPayload {
+					for _, sp := range colTracer.FindSourceParties(c.UniqueID) {
+						if payloadVisible[p][sp] {
+							cc.SetLevelForParty(p, ccl.Plain)
+							logrus.Infof("set '%+v' from PLAINTEXT_AS_JOIN_PAYLOAD to PLAINTEXT for %s", c, p)
+							break
+						}
+					}
+				}
+			}
 		}
+
 		result[c.UniqueID] = cc
 	}
 

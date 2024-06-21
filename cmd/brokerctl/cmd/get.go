@@ -114,19 +114,25 @@ func getResult() error {
 	if jobId == "" {
 		return fmt.Errorf("flags job-id must not be empty")
 	}
-	response, notReady, err := brokerCommand.GetResult(jobId)
+	response, err := brokerCommand.GetResult(jobId)
 	if err != nil {
 		return err
 	}
-	if notReady {
-		fmt.Println("result is not ready, try again later")
-		return nil
+
+	if response.GetStatus().GetCode() == int32(pb.Code_OK) {
+		fmt.Fprintln(os.Stdout, "GetResult successed:")
+		printQueryResult(response.GetResult())
+	} else if response.GetStatus().GetCode() == int32(pb.Code_NOT_READY) {
+		if response.GetJobStatus() == nil {
+			fmt.Fprintln(os.Stdout, "result is not ready, and job status is unavailable")
+			return nil
+		}
+		fmt.Fprintln(os.Stdout, "result is not ready, obtained the job status:")
+		printJobStatus(response.GetJobStatus())
+	} else {
+		return fmt.Errorf("GetResult failed, response status: %v", response.GetStatus())
 	}
-	if response.GetStatus().GetCode() == 0 {
-		fmt.Println("get result succeeded")
-		printQueryResult(response)
-		return nil
-	}
+
 	return nil
 }
 
@@ -249,4 +255,32 @@ func printCCLs(ccls []*pb.ColumnControl) {
 		table.Append(curRow)
 	}
 	table.Render()
+}
+
+func printJobStatus(jobStatus *pb.JobStatus) {
+	if len(jobStatus.GetSummary()) > 0 {
+		fmt.Fprintf(os.Stdout, "[status summary] %s\n", jobStatus.GetSummary())
+	}
+	fmt.Fprintf(os.Stdout, "[job start time] %s\n", jobStatus.GetProgress().GetStartTime().AsTime().Local())
+	fmt.Fprintf(os.Stdout, "[stage stats] executed stages: %d, total stages: %d\n",
+		jobStatus.GetProgress().GetExecutedStages(),
+		jobStatus.GetProgress().GetStagesCount())
+
+	fmt.Fprintf(os.Stdout, "[IO stats] send bytes: %d, recv bytes: %d, send actions: %d, recv actions: %d\n",
+		jobStatus.GetProgress().GetIoStats().GetSendBytes(), jobStatus.GetProgress().GetIoStats().GetRecvBytes(),
+		jobStatus.GetProgress().GetIoStats().GetSendActions(), jobStatus.GetProgress().GetIoStats().GetRecvActions())
+
+	// TODO enhance StageInfo details
+	runningStages := jobStatus.GetProgress().GetRunningStages()
+	fmt.Fprintf(os.Stdout, "[running stages] %d stage(s) running\n", len(runningStages))
+	for i, stage := range runningStages {
+		printStageInfo(stage, i, 1)
+	}
+}
+
+func printStageInfo(stageInfo *pb.StageInfo, index int, indent int) {
+	indentStr := strings.Repeat("    ", indent+1)
+	fmt.Fprintf(os.Stdout, "%s[running stage] running stage %d\n", strings.Repeat("    ", indent), index)
+	fmt.Fprintf(os.Stdout, "%s[stage name]: %s\n", indentStr, stageInfo.GetName())
+	fmt.Fprintf(os.Stdout, "%s[start time]: %s\n", indentStr, stageInfo.GetStartTime().AsTime().Local())
 }

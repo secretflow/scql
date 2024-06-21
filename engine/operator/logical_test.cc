@@ -233,25 +233,25 @@ INSTANTIATE_TEST_SUITE_P(
                 .left_input_status = pb::TENSORSTATUS_PRIVATE,
                 .right_inputs = {test::NamedTensor(
                     "y1", TensorFromJSON(arrow::boolean(),
-                                         "[true, true, false, false]"))},
+                                         "[true, true, null, false]"))},
                 .right_input_status = pb::TENSORSTATUS_PRIVATE,
                 .outputs = {test::NamedTensor(
                     "z1", TensorFromJSON(arrow::boolean(),
-                                         "[true, false, false, null]"))},
+                                         "[true, false, null, false]"))},
                 .output_status = pb::TENSORSTATUS_PRIVATE},
             BinaryTestCase{
                 .op_type = LogicalOr::kOpType,
                 .left_inputs = {test::NamedTensor(
                     "x1", TensorFromJSON(arrow::boolean(),
-                                         "[true, false, true, false]"))},
+                                         "[true, false, true, null]"))},
                 .left_input_status = pb::TENSORSTATUS_PRIVATE,
                 .right_inputs = {test::NamedTensor(
                     "y1", TensorFromJSON(arrow::boolean(),
-                                         "[true, null, false, false]"))},
+                                         "[true, true, null, false]"))},
                 .right_input_status = pb::TENSORSTATUS_PRIVATE,
                 .outputs = {test::NamedTensor(
                     "z1", TensorFromJSON(arrow::boolean(),
-                                         "[true, null, true, false]"))},
+                                         "[true, true, true, null]"))},
                 .output_status = pb::TENSORSTATUS_PRIVATE})),
     TestParamNameGenerator(BinaryComputeInPlainTest));
 

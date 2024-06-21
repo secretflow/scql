@@ -29,12 +29,12 @@ enum class RemoteRole {
 // A wrapper for brpc channel options
 struct ChannelOptions {
   brpc::ChannelOptions brpc_options;
-  std::string load_balancer = "";
+  std::string load_balancer;
 };
 
 class ChannelManager {
  public:
-  void AddChannelOptions(const RemoteRole role, const ChannelOptions& options);
+  void AddChannelOptions(RemoteRole role, const ChannelOptions& options);
 
   std::shared_ptr<google::protobuf::RpcChannel> Create(
       const std::string& remote_addr, RemoteRole role);

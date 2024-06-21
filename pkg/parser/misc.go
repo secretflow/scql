@@ -705,6 +705,7 @@ var tokenMap = map[string]int{
 	"NOWAIT":                    nowait,
 	"PLAINTEXT":                 plaintext,
 	"PLAINTEXT_AFTER_JOIN":      plaintextAfterJoin,
+	"PLAINTEXT_AS_JOIN_PAYLOAD": plaintextAsJoinPayload,
 	"PLAINTEXT_AFTER_GROUP_BY":  plaintextAfterGroupBy,
 	"PLAINTEXT_AFTER_COMPARE":   plaintextAfterCompare,
 	"PLAINTEXT_AFTER_AGGREGATE": plaintextAfterAggregate,

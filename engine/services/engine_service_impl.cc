@@ -14,6 +14,7 @@
 
 #include "engine/services/engine_service_impl.h"
 
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -30,9 +31,6 @@
 #include "engine/operator/all_ops_register.h"
 #include "engine/util/tensor_util.h"
 
-#include "api/engine.pb.h"
-#include "api/status.pb.h"
-#include "api/status_code.pb.h"
 #include "engine/services/error_collector_service.pb.h"
 
 #ifndef LOG_ERROR_AND_SET_STATUS
@@ -69,12 +67,27 @@ void MergePeerErrors(
                                         error.first, error.second.code(),
                                         error.second.message()));
   }
-  status->set_message(merged_error_msg);
+  status->set_message(fmt::format("{}{}", status->message(), merged_error_msg));
 }
 
 }  // namespace
 
 namespace scql::engine {
+
+namespace {
+
+int32_t CountTotalNodes(const scql::pb::SchedulingPolicy& policy) {
+  int32_t nodes_count = 0;
+  for (const auto& subdag : policy.subdags()) {
+    for (const auto& job : subdag.jobs()) {
+      nodes_count += job.node_ids().size();
+    }
+  }
+
+  return nodes_count;
+}
+
+}  // namespace
 
 EngineServiceImpl::EngineServiceImpl(
     const EngineServiceOptions& options,
@@ -301,7 +314,7 @@ void EngineServiceImpl::QueryJobStatus(::google::protobuf::RpcController* cntl,
   SPDLOG_INFO("Start to handle QueryJobStatus request, request={}",
               MessageToJsonString(*request));
 
-  auto controller = static_cast<brpc::Controller*>(cntl);
+  auto* controller = static_cast<brpc::Controller*>(cntl);
   if (!CheckDriverCredential(controller->http_request())) {
     std::string err_msg = "driver authentication failed";
     LOG_ERROR_AND_SET_STATUS(response->mutable_status(),
@@ -316,7 +329,7 @@ void EngineServiceImpl::QueryJobStatus(::google::protobuf::RpcController* cntl,
                              pb::Code::INVALID_ARGUMENT, err_msg);
     return;
   }
-  auto session = session_mgr_->GetSession(job_id);
+  auto* session = session_mgr_->GetSession(job_id);
   if (session == nullptr) {
     std::string err_msg =
         fmt::format("QueryJobStatus failed, job({}) not found", job_id);
@@ -326,14 +339,49 @@ void EngineServiceImpl::QueryJobStatus(::google::protobuf::RpcController* cntl,
   }
 
   auto job_state = ConvertSessionStateToJobState(session->GetState());
-  if (job_state == pb::QueryJobStatusResponse_JobState_JOB_STATE_UNSPECIFIED) {
+  if (job_state == pb::JOB_STATE_UNSPECIFIED) {
     SPDLOG_WARN("unknown job state, job_id={}", job_id);
   }
 
   response->mutable_status()->set_code(pb::Code::OK);
   response->set_job_state(job_state);
+
+  {
+    // set job progress
+    auto* progress = response->mutable_progress();
+
+    auto chronoTimePointToTimestamp =
+        [](const std::chrono::system_clock::time_point& tp)
+        -> google::protobuf::Timestamp {
+      google::protobuf::Timestamp timestamp;
+      auto seconds = std::chrono::time_point_cast<std::chrono::seconds>(tp);
+      auto nanos =
+          std::chrono::time_point_cast<std::chrono::nanoseconds>(tp) -
+          std::chrono::time_point_cast<std::chrono::nanoseconds>(seconds);
+      timestamp.set_seconds(seconds.time_since_epoch().count());
+      timestamp.set_nanos(static_cast<int>(nanos.count()));
+      return timestamp;
+    };
+    progress->mutable_start_time()->CopyFrom(
+        chronoTimePointToTimestamp(session->GetStartTime()));
+
+    progress->set_stages_count(session->GetNodesCount());
+    progress->set_executed_stages(session->GetExecutedNodes());
+
+    auto link_stats = session->GetLinkStats();
+    progress->mutable_io_stats()->set_send_bytes(link_stats->sent_bytes);
+    progress->mutable_io_stats()->set_recv_bytes(link_stats->recv_bytes);
+    progress->mutable_io_stats()->set_send_actions(link_stats->sent_actions);
+    progress->mutable_io_stats()->set_recv_actions(link_stats->recv_actions);
+
+    auto* current_stage = progress->add_running_stages();
+    auto [node_start_time, current_node_name] = session->GetCurrentNodeInfo();
+    current_stage->mutable_start_time()->CopyFrom(
+        chronoTimePointToTimestamp(node_start_time));
+    current_stage->set_name(current_node_name);
+  }
+
   SPDLOG_INFO("Finish to handle QueryJobStatus request, job_id={}", job_id);
-  return;
 }
 
 void EngineServiceImpl::ReportResult(const std::string& session_id,
@@ -380,8 +428,6 @@ void EngineServiceImpl::ReportResult(const std::string& session_id,
                 e.what());
     return;
   }
-
-  return;
 }
 
 void EngineServiceImpl::RunPlanCore(const pb::RunExecutionPlanRequest& request,
@@ -389,6 +435,8 @@ void EngineServiceImpl::RunPlanCore(const pb::RunExecutionPlanRequest& request,
                                     pb::RunExecutionPlanResponse* response) {
   const auto& graph = request.graph();
   const auto& policy = graph.policy();
+  session->SetNodesCount(CountTotalNodes(policy));
+  session->SetExecutedNodes(0);
   for (const auto& subdag : policy.subdags()) {
     for (const auto& job : subdag.jobs()) {
       const auto& node_ids = job.node_ids();
@@ -400,6 +448,7 @@ void EngineServiceImpl::RunPlanCore(const pb::RunExecutionPlanRequest& request,
         SPDLOG_INFO("session({}) start to execute node({}), op({})",
                     session->Id(), node.node_name(), node.op_type());
         auto start = std::chrono::system_clock::now();
+        session->SetCurrentNodeInfo(start, node.node_name());
 
         YACL_ENFORCE(session->GetState() == SessionState::RUNNING,
                      "session status not equal to running");
@@ -413,6 +462,12 @@ void EngineServiceImpl::RunPlanCore(const pb::RunExecutionPlanRequest& request,
             session->Id(), node.node_name(), node.op_type(),
             std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
                 .count());
+
+        session->IncExecutedNodes();
+        YACL_ENFORCE(session->GetExecutedNodes() <= session->GetNodesCount(),
+                     "executed nodes: {}, total nodes count: {}",
+                     session->GetExecutedNodes(), session->GetNodesCount());
+
         if (node.op_type() == "Publish") {
           auto results = session->GetPublishResults();
           for (const auto& result : results) {
@@ -433,7 +488,6 @@ void EngineServiceImpl::RunPlanCore(const pb::RunExecutionPlanRequest& request,
 
   SPDLOG_INFO("session({}) run plan policy succ", session->Id());
   response->mutable_status()->set_code(pb::Code::OK);
-  return;
 }
 
 void EngineServiceImpl::VerifyPublicKeys(
@@ -480,8 +534,6 @@ void EngineServiceImpl::RunPlanSync(const pb::RunExecutionPlanRequest* request,
   }
 
   MergePeerErrors(session->GetPeerErrors(), response->mutable_status());
-
-  return;
 }
 
 void EngineServiceImpl::RunPlanAsync(const pb::RunExecutionPlanRequest request,

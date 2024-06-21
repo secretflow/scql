@@ -7,8 +7,8 @@
     },
     {
       "name": "join on",
-      "query": "select alice.plain_int_0 from alice_tbl_0 as alice join bob_tbl_0 as bob on alice.join_int_0 = bob.join_int_0;",
-      "mysql_query": "select alice.plain_int_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+      "query": "select alice.plain_int_0, bob.joinpayload_int_0 from alice_tbl_0 as alice join bob_tbl_0 as bob on alice.join_int_0 = bob.join_int_0;",
+      "mysql_query": "select alice.plain_int_0, bob.joinpayload_int_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
     },
     {
       "name": "left join on",
@@ -17,8 +17,8 @@
     },
     {
       "name": "right join on",
-      "query": "select alice.plain_int_0 from alice_tbl_0 as alice right join bob_tbl_0 as bob on alice.join_int_0 = bob.join_int_0;",
-      "mysql_query": "select alice.plain_int_0 from alice.tbl_0 as alice right join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+      "query": "select count(alice.plain_int_0) as t1 from alice_tbl_0 as alice right join bob_tbl_0 as bob on alice.join_int_0 = bob.join_int_0;",
+      "mysql_query": "select count(alice.plain_int_0) as t1 from alice.tbl_0 as alice right join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
     },
     {
       "name": "join where",
@@ -37,8 +37,8 @@
     },
     {
       "name": "right join on multi keys",
-      "query": "select alice.plain_int_0 from alice_tbl_0 as alice right join bob_tbl_0 as bob on alice.join_int_0 = bob.join_int_0 and alice.join_string_0 = bob.join_string_0 and alice.plain_datetime_0 = bob.plain_datetime_0 and alice.plain_timestamp_0 = bob.plain_timestamp_0;",
-      "mysql_query": "select alice.plain_int_0 from alice.tbl_0 as alice right join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 and alice.join_string_0 = bob.join_string_0 and alice.plain_datetime_0 = bob.plain_datetime_0 and alice.plain_timestamp_0 = bob.plain_timestamp_0;"
+      "query": "select count(alice.plain_int_0) as t1 from alice_tbl_0 as alice right join bob_tbl_0 as bob on alice.join_int_0 = bob.join_int_0 and alice.join_string_0 = bob.join_string_0 and alice.plain_datetime_0 = bob.plain_datetime_0 and alice.plain_timestamp_0 = bob.plain_timestamp_0;",
+      "mysql_query": "select count(alice.plain_int_0) as t1 from alice.tbl_0 as alice right join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 and alice.join_string_0 = bob.join_string_0 and alice.plain_datetime_0 = bob.plain_datetime_0 and alice.plain_timestamp_0 = bob.plain_timestamp_0;"
     },
     {
       "name": "join three table(alice, alice, bob)",
@@ -214,6 +214,11 @@
       "name": "in list after join",
       "query": "select alice.plain_int_0 in (100, 12.3, 10) as res from alice_tbl_0 as alice, bob_tbl_0 as bob where alice.join_int_0 = bob.join_int_0;",
       "mysql_query": "select alice.plain_int_0 in (100, 12.3, 10) as res from alice.tbl_0 as alice, bob.tbl_0 as bob where alice.join_int_0 = bob.join_int_0;"
+    },
+    {
+      "name": "null after join",
+      "query": "select bob.plain_int_0 is not null as c1, ifnull(bob.plain_string_0, 'null_str') as c2, coalesce(bob.plain_float_0, bob.plain_float_1, 1.0) as c3 from alice_tbl_0 as alice left join bob_tbl_0 as bob on alice.join_int_0 = bob.join_int_0;",
+      "mysql_query": "select bob.plain_int_0 is not null as c1, ifnull(bob.plain_string_0, 'null_str') as c2, coalesce(bob.plain_float_0, bob.plain_float_1, 1.0) as c3 from alice.tbl_0 as alice left join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
     },
     {
       "name": "compare(less) before join",
@@ -459,6 +464,11 @@
       "name": "date func (datediff)",
       "query": "select datediff(alice.plain_datetime_0, bob.plain_datetime_1) as res1 from alice_tbl_0 as alice join bob_tbl_0 as bob on alice.join_datetime_0 = bob.join_datetime_0;",
       "mysql_query": "select datediff(alice.plain_datetime_0, bob.plain_datetime_1) as res1 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_datetime_0 = bob.join_datetime_0;"
+    },
+    {
+      "name": "negative constant",
+      "query": "select if(ta.plain_float_0, -1.0, -ta.plain_float_0) as res from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0;",
+      "mysql_query": "select if(ta.plain_float_0, -1.0, -ta.plain_float_0) as res from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
     }
   ]
 }

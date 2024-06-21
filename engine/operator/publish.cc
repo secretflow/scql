@@ -17,6 +17,7 @@
 #include "engine/audit/audit_log.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
+#include "engine/util/time_util.h"
 
 namespace scql::engine::op {
 
@@ -50,6 +51,11 @@ void Publish::Execute(ExecContext* ctx) {
 
     auto from_tensor = ctx->GetTensorTable()->GetTensor(input_pb.name());
     YACL_ENFORCE(from_tensor, "get private tensor={} failed", input_pb.name());
+    if (elem_type == pb::PrimitiveDataType::TIMESTAMP &&
+        !ctx->GetSession()->TimeZone().empty()) {
+      from_tensor =
+          util::CompensateTimeZone(from_tensor, ctx->GetSession()->TimeZone());
+    }
 
     auto proto_result = std::make_shared<pb::Tensor>();
     SetProtoMeta(from_tensor, output_name, proto_result, elem_type);
@@ -58,12 +64,6 @@ void Publish::Execute(ExecContext* ctx) {
       // DATETIME need format to publish
       util::ConvertDateTimeAndCopyValuesToProto(from_tensor,
                                                 proto_result.get());
-    } else if (elem_type == pb::PrimitiveDataType::TIMESTAMP &&
-               !ctx->GetSession()->TimeZone().empty()) {
-      // when user not set time_zone, time_zone is empty, then no need to
-      // compensate timestamp, just publish the UTC with no time_zone
-      util::CompensateTimeZoneAndCopyToProto(from_tensor, proto_result.get(),
-                                             ctx->GetSession()->TimeZone());
     } else {
       util::CopyValuesToProto(from_tensor, proto_result.get());
     }

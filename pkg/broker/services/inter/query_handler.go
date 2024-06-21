@@ -20,6 +20,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"golang.org/x/exp/slices"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/secretflow/scql/pkg/broker/application"
 	"github.com/secretflow/scql/pkg/broker/executor"
@@ -28,6 +29,7 @@ import (
 	"github.com/secretflow/scql/pkg/planner/core"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
+	"github.com/secretflow/scql/pkg/util/brokerutil"
 )
 
 // only issuer can distribute query to other party
@@ -51,6 +53,37 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 	if err != nil {
 		return nil, err
 	}
+
+	var existingProject *storage.Project
+	existingProject, err = app.MetaMgr.GetProject(req.GetProjectId())
+
+	if err != nil {
+		return nil, err
+	}
+
+	var projConf pb.ProjectConfig
+	err = protojson.Unmarshal(existingProject.ProjectConf, &projConf)
+	if err != nil {
+		return nil, err
+	}
+
+	jobConf := req.GetJobConfig()
+
+	jobConf = brokerutil.UpdateJobConfig(jobConf, &projConf)
+
+	linkCfg := &pb.LinkConfig{
+		LinkRecvTimeoutSec:          jobConf.LinkRecvTimeoutSec,
+		LinkThrottleWindowSize:      jobConf.LinkThrottleWindowSize,
+		LinkChunkedSendParallelSize: jobConf.LinkChunkedSendParallelSize,
+		HttpMaxPayloadSize:          jobConf.HttpMaxPayloadSize,
+	}
+
+	psiCfg := &pb.PsiConfig{
+		PsiCurveType:                              jobConf.PsiCurveType,
+		UnbalancePsiRatioThreshold:                jobConf.UnbalancePsiRatioThreshold,
+		UnbalancePsiLargerPartyRowsCountThreshold: jobConf.UnbalancePsiLargerPartyRowsCountThreshold,
+	}
+
 	info := &application.ExecutionInfo{
 		ProjectID:    req.GetProjectId(),
 		JobID:        req.GetJobId(),
@@ -58,6 +91,12 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 		Issuer:       req.GetClientId(),
 		EngineClient: app.EngineClient,
 		DebugOpts:    req.GetDebugOpts(),
+		SessionOptions: &application.SessionOptions{
+			SessionExpireSeconds: projConf.SessionExpireSeconds,
+			LinkConfig:           linkCfg,
+			PsiConfig:            psiCfg,
+			TimeZone:             req.GetTimeZone(),
+		},
 	}
 
 	session, err := application.NewSession(ctx, info, app, req.GetIsAsync(), req.GetDryRun())

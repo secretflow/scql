@@ -51,7 +51,7 @@ INSTANTIATE_TEST_SUITE_P(
                                                       "[true, false, true]")),
                      test::NamedTensor("b",
                                        TensorFromJSON(arrow::int64(),
-                                                      "[1,2,3,4,5,6,7,8]")),
+                                                      "[1,2,null,4,5,6,7,8]")),
                      test::NamedTensor(
                          "c", TensorFromJSON(
                                   arrow::float64(),
@@ -65,8 +65,8 @@ INSTANTIATE_TEST_SUITE_P(
                     {test::NamedTensor(
                          "a_out",
                          TensorFromJSON(arrow::boolean(), "[false,true]")),
-                     test::NamedTensor("b_out",
-                                       TensorFromJSON(arrow::int64(), "[2,3]")),
+                     test::NamedTensor("b_out", TensorFromJSON(arrow::int64(),
+                                                               "[2,null]")),
                      test::NamedTensor("c_out",
                                        TensorFromJSON(arrow::float64(),
                                                       "[100.245, -10.2]")),

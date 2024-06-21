@@ -60,6 +60,10 @@ static const auto SpuTestValuesMultiPC =
                     test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 3},
                     test::SpuRuntimeTestCase{spu::ProtocolKind::ABY3, 3});
 
+pb::JobStartParams::Party BuildParty(const std::string& code, int32_t rank);
+
+spu::RuntimeConfig MakeSpuRuntimeConfigForTest(spu::ProtocolKind protocol_kind);
+
 // make single party session
 std::shared_ptr<Session> Make1PCSession(Router* ds_router = nullptr,
                                         DatasourceAdaptorMgr* ds_mgr = nullptr);

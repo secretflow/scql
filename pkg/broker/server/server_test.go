@@ -110,7 +110,7 @@ func (suite *ServerTestSuit) TestServer() {
 
 	// Create project: alice creates a project
 	{
-		reqStr := `{"project_id":"test_id", "name":"test", "conf":{"spu_runtime_cfg":{"protocol": "SEMI2K"}}}`
+		reqStr := `{"project_id":"test_id", "name":"test", "conf":{"spu_runtime_cfg":{"protocol":"SEMI2K","field":"FM64"},"session_expire_seconds":"86400"}}`
 		resp, err := httpClient.Post(urlutil.JoinHostPath(urlAlice, constant.CreateProjectPath),
 			"application/json", strings.NewReader(reqStr))
 		suite.NoError(err)
@@ -489,6 +489,7 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.NoError(err)
 		suite.Equal(resp.StatusCode, http.StatusOK, resp.Status)
 	}
+
 	// CHECK EngineCallback: FetResult from alice
 	{
 		time.Sleep(100 * time.Millisecond)
@@ -497,11 +498,11 @@ func (suite *ServerTestSuit) TestServer() {
 			"application/json", strings.NewReader(reqStr))
 		suite.NoError(err)
 
-		response := &pb.QueryResponse{}
+		response := &pb.FetchResultResponse{}
 		_, err = message.DeserializeFrom(resp.Body, response)
 		suite.NoError(err)
 		suite.Equal(response.GetStatus().GetCode(), int32(0), protojson.Format(response))
-		suite.Equal(response.GetAffectedRows(), int64(10), protojson.Format(response))
+		suite.Equal(response.GetResult().GetAffectedRows(), int64(10), protojson.Format(response))
 		resp.Body.Close()
 	}
 
@@ -654,12 +655,16 @@ func NewTestSession(app *application.App) *application.Session {
 		Issuer:       &pb.PartyId{Code: "alice"},
 		EngineClient: app.EngineClient,
 		WorkParties:  []string{"alice", "bob"},
+		SessionOptions: &application.SessionOptions{
+			SessionExpireSeconds: 86400,
+		},
 	}
 	session, _ := application.NewSession(context.Background(), info, app, false, false)
 	session.Engine = &MockEngineInstance{}
 	checksum := application.Checksum{TableSchema: []byte("table checksum"), CCL: []byte("ccl checksum")}
 	session.SaveLocalChecksum("alice", checksum)
 	session.SaveLocalChecksum("bob", checksum)
+	session.ExpireSeconds = 86400
 
 	return session
 }

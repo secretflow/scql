@@ -77,9 +77,6 @@ std::shared_ptr<yacl::link::Context> MuxLinkFactory::CreateContext(
     auto link_channel = std::make_shared<yacl::link::transport::Channel>(
         link, desc.recv_timeout_ms, false, desc.retry_opts);
     channels[rank] = link_channel;
-    if (rank == self_rank) {
-      continue;
-    }
     listener->AddChannel(rank, link_channel);
   }
   listener_manager_->AddListener(desc.id, listener);

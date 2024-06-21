@@ -67,7 +67,7 @@ class NdArrayConverter {
     try {
       auto xt_validity = spu::xt_adapt<uint8_t>(*validity);
       for (int64_t i = 0; i < length; ++i) {
-        if (xt_validity[i]) {
+        if (xt_validity[i] > 0) {
           arrow::bit_util::SetBit(bitmap, i);
         } else {
           ++null_count;

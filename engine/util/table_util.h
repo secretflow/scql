@@ -14,9 +14,6 @@
 
 #pragma once
 
-#include <string>
-#include <vector>
-
 #include "arrow/table.h"
 
 #include "engine/core/tensor.h"

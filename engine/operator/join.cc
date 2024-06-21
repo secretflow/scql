@@ -42,8 +42,6 @@
 #include "engine/util/psi_helper.h"
 #include "engine/util/tensor_util.h"
 
-DECLARE_int32(psi_curve_type);
-
 namespace scql::engine::op {
 
 const std::string Join::kOpType("Join");
@@ -157,7 +155,8 @@ void Join::EcdhPsiJoin(ExecContext* ctx) {
   if (ctx->GetSession()->GetPsiLogger()) {
     ctx->GetSession()->GetPsiLogger()->LogInput(join_keys);
   }
-  auto batch_provider = std::make_shared<util::BatchProvider>(join_keys);
+  auto batch_provider = std::make_shared<util::BatchProvider>(
+      join_keys, FLAGS_provider_batch_size);
   // NOTE(shunde.csd): There are some possible ways to optimize the performance
   // of compute join indices.
   //   1. Try to adjust bins number based on the both input sizes and memory
@@ -174,8 +173,9 @@ void Join::EcdhPsiJoin(ExecContext* ctx) {
       options.link_ctx = options.link_ctx->SubWorld(
           ctx->GetNodeName() + "-EcdhPsiJoin", input_party_codes);
     }
-    options.ecc_cryptor = psi::CreateEccCryptor(
-        static_cast<psi::CurveType>(FLAGS_psi_curve_type));
+
+    options.ecc_cryptor = psi::CreateEccCryptor(static_cast<psi::CurveType>(
+        ctx->GetSession()->GetSessionOptions().psi_config.psi_curve_type));
     options.target_rank = yacl::link::kAllRank;
     if (join_keys.size() > 0) {
       options.on_batch_finished = util::BatchFinishedCb(
@@ -236,7 +236,8 @@ void Join::OprfPsiJoin(ExecContext* ctx, bool is_server,
 
   // prepare input
   auto join_keys = GetJoinKeys(ctx, is_left);
-  auto batch_provider = std::make_shared<util::BatchProvider>(join_keys);
+  auto batch_provider = std::make_shared<util::BatchProvider>(
+      join_keys, FLAGS_provider_batch_size);
 
   // set EcdhOprfPsiOptions
   psi::ecdh::EcdhOprfPsiOptions psi_options;
@@ -249,7 +250,9 @@ void Join::OprfPsiJoin(ExecContext* ctx, bool is_server,
   YACL_ENFORCE(psi_options.link0, "fail to getlink0 for OprfPsiJoin");
   psi_options.link1 = psi_options.link0->Spawn();
   YACL_ENFORCE(psi_options.link1, "fail to getlink1 for OprfPsiJoin");
-  psi_options.curve_type = static_cast<psi::CurveType>(FLAGS_psi_curve_type);
+
+  psi_options.curve_type = static_cast<psi::CurveType>(
+      ctx->GetSession()->GetSessionOptions().psi_config.psi_curve_type);
 
   // create temp dir
   butil::ScopedTempDir tmp_dir;

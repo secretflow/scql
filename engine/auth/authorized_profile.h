@@ -20,7 +20,7 @@
 namespace scql::engine::auth {
 class AuthorizedProfile {
  public:
-  AuthorizedProfile(const std::string& json_str);
+  explicit AuthorizedProfile(const std::string& json_str);
 
   void VerifyParty(const std::string& party_code,
                    const std::string& pub_key) const;

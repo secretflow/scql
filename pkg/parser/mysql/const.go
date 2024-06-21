@@ -248,6 +248,7 @@ const (
 	// VisibilityPriv for SCQL
 	PlaintextPriv
 	PlaintextAfterJoinPriv
+	PlaintextAsJoinPayloadPriv
 	PlaintextAfterGroupByPriv
 	PlaintextAfterAggregatePriv
 	PlaintextAfterComparePriv
@@ -328,6 +329,7 @@ var Priv2UserCol = map[PrivilegeType]string{
 	ShowPriv:                    "Show_priv",
 	PlaintextPriv:               "Plaintext_priv",
 	PlaintextAfterJoinPriv:      "Plaintext_after_join_priv",
+	PlaintextAsJoinPayloadPriv:  "Plaintext_as_join_payload",
 	PlaintextAfterGroupByPriv:   "Plaintext_after_group_by_priv",
 	PlaintextAfterComparePriv:   "PLAINTEXT_AFTER_COMPARE_priv",
 	PlaintextAfterAggregatePriv: "PLAINTEXT_AFTER_AGGREGATE_priv",
@@ -368,6 +370,7 @@ var Col2PrivType = map[string]PrivilegeType{
 	"Show_priv":                      ShowPriv,
 	"Plaintext_priv":                 PlaintextPriv,
 	"Plaintext_after_join_priv":      PlaintextAfterJoinPriv,
+	"Plaintext_as_join_payload":      PlaintextAsJoinPayloadPriv,
 	"Plaintext_after_group_by_priv":  PlaintextAfterGroupByPriv,
 	"PLAINTEXT_AFTER_COMPARE_priv":   PlaintextAfterComparePriv,
 	"PLAINTEXT_AFTER_AGGREGATE_priv": PlaintextAfterAggregatePriv,
@@ -444,6 +447,7 @@ var Priv2Str = map[PrivilegeType]string{
 	ShowPriv:                    "SHOW",
 	PlaintextPriv:               "SELECT PLAINTEXT",
 	PlaintextAfterJoinPriv:      "SELECT PLAINTEXT_AFTER_JOIN",
+	PlaintextAsJoinPayloadPriv:  "SELECT PLAINTEXT_AS_JOIN_PAYLOAD",
 	PlaintextAfterGroupByPriv:   "SELECT PLAINTEXT_AFTER_GROUP_BY",
 	PlaintextAfterComparePriv:   "SELECT PLAINTEXT_AFTER_COMPARE",
 	PlaintextAfterAggregatePriv: "SELECT PLAINTEXT_AFTER_AGGREGATE",
@@ -486,7 +490,7 @@ var SetStr2Priv = map[string]PrivilegeType{
 }
 
 // AllGlobalPrivs is all the privileges in global scope.
-var AllGlobalPrivs = []PrivilegeType{SelectPriv, InsertPriv, UpdatePriv, DeletePriv, CreatePriv, DropPriv, ProcessPriv, ReferencesPriv, AlterPriv, ShowDBPriv, SuperPriv, ExecutePriv, IndexPriv, CreateUserPriv, TriggerPriv, CreateViewPriv, ShowViewPriv, CreateRolePriv, DropRolePriv, CreateTMPTablePriv, LockTablesPriv, CreateRoutinePriv, AlterRoutinePriv, EventPriv, ShutdownPriv, ReloadPriv, FilePriv, DescribePriv, ShowPriv, PlaintextPriv, PlaintextAfterJoinPriv, PlaintextAfterGroupByPriv, PlaintextAfterAggregatePriv, PlaintextAfterComparePriv, EncryptedOnlyPriv}
+var AllGlobalPrivs = []PrivilegeType{SelectPriv, InsertPriv, UpdatePriv, DeletePriv, CreatePriv, DropPriv, ProcessPriv, ReferencesPriv, AlterPriv, ShowDBPriv, SuperPriv, ExecutePriv, IndexPriv, CreateUserPriv, TriggerPriv, CreateViewPriv, ShowViewPriv, CreateRolePriv, DropRolePriv, CreateTMPTablePriv, LockTablesPriv, CreateRoutinePriv, AlterRoutinePriv, EventPriv, ShutdownPriv, ReloadPriv, FilePriv, DescribePriv, ShowPriv, PlaintextPriv, PlaintextAfterJoinPriv, PlaintextAsJoinPayloadPriv, PlaintextAfterGroupByPriv, PlaintextAfterAggregatePriv, PlaintextAfterComparePriv, EncryptedOnlyPriv}
 
 // AllDBPrivs is all the privileges in database scope.
 var AllDBPrivs = []PrivilegeType{SelectPriv, InsertPriv, UpdatePriv, DeletePriv, CreatePriv, DropPriv, AlterPriv, ExecutePriv, IndexPriv, CreateViewPriv, ShowViewPriv, DescribePriv, ShowPriv}

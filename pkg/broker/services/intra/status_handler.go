@@ -206,7 +206,12 @@ func checkConflict(app *application.App, local, remote *storage.ProjectMeta, loc
 	remoteProj := remote.Proj.Proj
 	remoteProj.CreatedAt = localProj.CreatedAt // ignore comparing created time
 	remoteProj.UpdatedAt = localProj.UpdatedAt // ignore comparing updated time
-	if localProj != remoteProj {
+	eq, err := localProj.Equals(&remoteProj)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compare project between local project and remote project, %v", err)
+	}
+
+	if !eq {
 		conflict.Items = append(conflict.Items, &pb.ProjectConflict_ConflictItem{
 			Message: fmt.Sprintf("project info conflict: '%+v' in party %s; '%+v' in party %s", localProj, localParty, remoteProj, remoteParty),
 		})
@@ -220,7 +225,7 @@ func checkConflict(app *application.App, local, remote *storage.ProjectMeta, loc
 	}
 	// search from local storage, since param 'local' does not contains tables owned by others
 	var localTables []storage.TableMeta
-	err := app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
+	err = app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
 		var tmpErr error
 		localTables, _, tmpErr = txn.GetTableMetasByTableNames(localProj.ID, tableNames)
 		return tmpErr

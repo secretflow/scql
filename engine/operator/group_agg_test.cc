@@ -106,23 +106,23 @@ INSTANTIATE_TEST_SUITE_P(
     testing::Values(
         GroupAggTestCase{
             .op_type = GroupFirstOf::kOpType,
-            .inputs =
-                {test::NamedTensor("in_a", TensorFromJSON(arrow::int64(),
-                                                          "[0, 0, 1, 1, 2]")),
-                 test::NamedTensor("in_b",
-                                   TensorFromJSON(arrow::float32(),
+            .inputs = {test::NamedTensor("in_a",
+                                         TensorFromJSON(arrow::int64(),
+                                                        "[null, 0, 1, 1, 2]")),
+                       test::NamedTensor(
+                           "in_b", TensorFromJSON(arrow::float32(),
                                                   "[0, 0, 1.1, 1.1, 2.2]")),
-                 test::NamedTensor(
-                     "in_c",
-                     TensorFromJSON(arrow::large_utf8(),
-                                    R"json(["A","A","B","B","CCC"])json"))},
+                       test::NamedTensor(
+                           "in_c", TensorFromJSON(
+                                       arrow::large_utf8(),
+                                       R"json(["A","A","B","B","CCC"])json"))},
             .group_id = test::NamedTensor(
                 "group_id", TensorFromJSON(arrow::uint32(), "[0, 0, 1, 1, 2]")),
             .group_num = test::NamedTensor(
                 "group_num", TensorFromJSON(arrow::uint32(), "[3]")),
             .outputs =
-                {test::NamedTensor("out_a",
-                                   TensorFromJSON(arrow::int64(), "[0, 1, 2]")),
+                {test::NamedTensor("out_a", TensorFromJSON(arrow::int64(),
+                                                           "[null, 1, 2]")),
                  test::NamedTensor("out_b", TensorFromJSON(arrow::float32(),
                                                            "[0, 1.1, 2.2]")),
                  test::NamedTensor(
@@ -132,7 +132,7 @@ INSTANTIATE_TEST_SUITE_P(
             .op_type = GroupCountDistinct::kOpType,
             .inputs = {test::NamedTensor("in_a",
                                          TensorFromJSON(arrow::int64(),
-                                                        "[0, 0, 1, 1, 2]")),
+                                                        "[null, 0, 1, 1, 2]")),
                        test::NamedTensor(
                            "in_b", TensorFromJSON(arrow::float32(),
                                                   "[0, 0, 1.1, 1.1, 2.2]"))},
@@ -149,7 +149,7 @@ INSTANTIATE_TEST_SUITE_P(
             .op_type = GroupCount::kOpType,
             .inputs = {test::NamedTensor("in_a",
                                          TensorFromJSON(arrow::int64(),
-                                                        "[0, 0, 1, 1, 2]")),
+                                                        "[null, 0, 1, 1, 2]")),
                        test::NamedTensor(
                            "in_b", TensorFromJSON(arrow::float32(),
                                                   "[0, 0, 1.1, 1.1, 2.2]"))},
@@ -159,14 +159,14 @@ INSTANTIATE_TEST_SUITE_P(
                 "group_num", TensorFromJSON(arrow::uint32(), "[3]")),
             .outputs =
                 {test::NamedTensor("out_a",
-                                   TensorFromJSON(arrow::int64(), "[2, 2, 1]")),
+                                   TensorFromJSON(arrow::int64(), "[1, 2, 1]")),
                  test::NamedTensor("out_b", TensorFromJSON(arrow::int64(),
                                                            "[2, 2, 1]"))}},
         GroupAggTestCase{
             .op_type = GroupSum::kOpType,
             .inputs = {test::NamedTensor("in_a",
                                          TensorFromJSON(arrow::int64(),
-                                                        "[0, 1, 2, 3, 4]")),
+                                                        "[0, 1, 2, 3, null]")),
                        test::NamedTensor(
                            "in_b", TensorFromJSON(arrow::float32(),
                                                   "[0, 1.1, 2.2, 3.3, 4.4]"))},
@@ -176,7 +176,7 @@ INSTANTIATE_TEST_SUITE_P(
                 "group_num", TensorFromJSON(arrow::uint32(), "[3]")),
             .outputs = {test::NamedTensor("out_a",
                                           TensorFromJSON(arrow::int64(),
-                                                         "[1, 5, 4]")),
+                                                         "[1, 5, null]")),
                         test::NamedTensor("out_b",
                                           TensorFromJSON(arrow::float64(),
                                                          "[1.1, 5.5, 4.4]"))}},
@@ -184,7 +184,7 @@ INSTANTIATE_TEST_SUITE_P(
             .op_type = GroupAvg::kOpType,
             .inputs = {test::NamedTensor("in_a",
                                          TensorFromJSON(arrow::int64(),
-                                                        "[0, 1, 2, 3, 4]")),
+                                                        "[0, 1, 2, 3, null]")),
                        test::NamedTensor(
                            "in_b", TensorFromJSON(arrow::float32(),
                                                   "[0, 1.1, 2.2, 3.3, 4.4]"))},
@@ -194,7 +194,7 @@ INSTANTIATE_TEST_SUITE_P(
                 "group_num", TensorFromJSON(arrow::uint32(), "[3]")),
             .outputs = {test::NamedTensor("out_a",
                                           TensorFromJSON(arrow::float64(),
-                                                         "[0.5, 2.5, 4]")),
+                                                         "[0.5, 2.5, null]")),
                         test::NamedTensor(
                             "out_b", TensorFromJSON(arrow::float64(),
                                                     "[0.55, 2.75, 4.4]"))}},
@@ -202,7 +202,7 @@ INSTANTIATE_TEST_SUITE_P(
             .op_type = GroupMin::kOpType,
             .inputs = {test::NamedTensor("in_a",
                                          TensorFromJSON(arrow::int64(),
-                                                        "[0, 1, 2, 3, 4]")),
+                                                        "[0, 1, 2, 3, null]")),
                        test::NamedTensor(
                            "in_b", TensorFromJSON(arrow::float32(),
                                                   "[0, 1.1, 2.2, 3.3, 4.4]"))},
@@ -211,15 +211,15 @@ INSTANTIATE_TEST_SUITE_P(
             .group_num = test::NamedTensor(
                 "group_num", TensorFromJSON(arrow::uint32(), "[3]")),
             .outputs =
-                {test::NamedTensor("out_a",
-                                   TensorFromJSON(arrow::int64(), "[0, 2, 4]")),
+                {test::NamedTensor("out_a", TensorFromJSON(arrow::int64(),
+                                                           "[0, 2, null]")),
                  test::NamedTensor("out_b", TensorFromJSON(arrow::float32(),
                                                            "[0, 2.2, 4.4]"))}},
         GroupAggTestCase{
             .op_type = GroupMax::kOpType,
             .inputs = {test::NamedTensor("in_a",
                                          TensorFromJSON(arrow::int64(),
-                                                        "[0, 1, 2, 3, 4]")),
+                                                        "[0, 1, 2, 3, null]")),
                        test::NamedTensor(
                            "in_b", TensorFromJSON(arrow::float32(),
                                                   "[0, 1.1, 2.2, 3.3, 4.4]"))},
@@ -228,8 +228,8 @@ INSTANTIATE_TEST_SUITE_P(
             .group_num = test::NamedTensor(
                 "group_num", TensorFromJSON(arrow::uint32(), "[3]")),
             .outputs = {
-                test::NamedTensor("out_a",
-                                  TensorFromJSON(arrow::int64(), "[1, 3, 4]")),
+                test::NamedTensor("out_a", TensorFromJSON(arrow::int64(),
+                                                          "[1, 3, null]")),
                 test::NamedTensor("out_b",
                                   TensorFromJSON(arrow::float32(),
                                                  "[1.1, 3.3, 4.4]"))}}));

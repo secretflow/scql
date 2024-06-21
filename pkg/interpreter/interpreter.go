@@ -23,7 +23,8 @@ import (
 	"strings"
 
 	"github.com/secretflow/scql/pkg/infoschema"
-	"github.com/secretflow/scql/pkg/interpreter/optimizer"
+	"github.com/secretflow/scql/pkg/interpreter/graph"
+	"github.com/secretflow/scql/pkg/interpreter/graph/optimizer"
 	"github.com/secretflow/scql/pkg/interpreter/translator"
 	"github.com/secretflow/scql/pkg/parser"
 	"github.com/secretflow/scql/pkg/parser/model"
@@ -86,7 +87,7 @@ func (intr *Interpreter) Compile(ctx context.Context, req *pb.CompileQueryReques
 		return nil, err
 	}
 
-	graphChecker := translator.NewGraphChecker()
+	graphChecker := graph.NewGraphChecker()
 	if err := graphChecker.Check(ep); err != nil {
 		return nil, err
 	}
@@ -117,7 +118,7 @@ func (intr *Interpreter) Compile(ctx context.Context, req *pb.CompileQueryReques
 	return plan, nil
 }
 
-func buildCompiledPlan(spuConf *spu.RuntimeConfig, eGraph *translator.Graph, execPlans map[string]*optimizer.ExecutionPlan) *pb.CompiledPlan {
+func buildCompiledPlan(spuConf *spu.RuntimeConfig, eGraph *graph.Graph, execPlans map[string]*optimizer.ExecutionPlan) *pb.CompiledPlan {
 	plan := &pb.CompiledPlan{
 		Schema:         &pb.TableSchema{},
 		SpuRuntimeConf: spuConf,
@@ -258,7 +259,7 @@ func collectDataSourceNode(lp core.LogicalPlan) []*core.DataSource {
 	return nil
 }
 
-func buildEngineInfo(lp core.LogicalPlan, catalog *pb.Catalog, currentDb string, queryIssuer string, issuerAsParticipant bool) (*translator.EnginesInfo, error) {
+func buildEngineInfo(lp core.LogicalPlan, catalog *pb.Catalog, currentDb string, queryIssuer string, issuerAsParticipant bool) (*graph.EnginesInfo, error) {
 	// construct catalog map
 	catalogMap := make(map[string]*pb.TableEntry)
 	for _, table := range catalog.GetTables() {
@@ -314,9 +315,9 @@ func buildEngineInfo(lp core.LogicalPlan, catalog *pb.Catalog, currentDb string,
 		tableToRefs[dbTable] = refDbTable
 	}
 
-	parties := make([]*translator.Participant, 0)
+	parties := make([]*graph.Participant, 0)
 	for party := range party2Tables {
-		parties = append(parties, &translator.Participant{
+		parties = append(parties, &graph.Participant{
 			PartyCode: party,
 			// NOTE: For translator, other information (endpoint, token, pubkey...) is not important
 			// TODO: remove unneeded fields
@@ -325,7 +326,7 @@ func buildEngineInfo(lp core.LogicalPlan, catalog *pb.Catalog, currentDb string,
 
 	if _, exists := party2Tables[queryIssuer]; !exists {
 		if issuerAsParticipant {
-			parties = append(parties, &translator.Participant{
+			parties = append(parties, &graph.Participant{
 				PartyCode: queryIssuer,
 			})
 		}
@@ -336,9 +337,9 @@ func buildEngineInfo(lp core.LogicalPlan, catalog *pb.Catalog, currentDb string,
 		return parties[i].PartyCode < parties[j].PartyCode
 	})
 
-	partyInfo := translator.NewPartyInfo(parties)
+	partyInfo := graph.NewPartyInfo(parties)
 
-	engineInfo := translator.NewEnginesInfo(partyInfo, party2Tables)
+	engineInfo := graph.NewEnginesInfo(partyInfo, party2Tables)
 	engineInfo.UpdateTableToRefs(tableToRefs)
 
 	return engineInfo, nil

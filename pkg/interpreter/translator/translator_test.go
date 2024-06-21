@@ -23,6 +23,7 @@ import (
 	. "github.com/pingcap/check"
 
 	"github.com/secretflow/scql/pkg/infoschema"
+	"github.com/secretflow/scql/pkg/interpreter/graph"
 	"github.com/secretflow/scql/pkg/parser"
 	"github.com/secretflow/scql/pkg/sessionctx"
 	"github.com/secretflow/scql/pkg/util/mock"
@@ -47,7 +48,7 @@ type testTranslatorSuite struct {
 	is  infoschema.InfoSchema
 	ctx sessionctx.Context
 
-	engineInfo *EnginesInfo
+	engineInfo *graph.EnginesInfo
 
 	issuerParty string
 

@@ -23,6 +23,7 @@ cc_library(
         ":broadcast_to",
         ":case_when",
         ":cast",
+        ":coalesce",
         ":compare",
         ":concat",
         ":constant",
@@ -34,6 +35,8 @@ cc_library(
         ":group_agg",
         ":group_he_sum",
         ":if",
+        ":if_null",
+        ":is_null",
         ":in",
         ":join",
         ":limit",
@@ -844,6 +847,69 @@ cc_test(
     srcs = ["limit_test.cc"],
     deps = [
         ":limit",
+        ":test_util",
+        "//engine/core:tensor_constructor",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "is_null",
+    srcs = ["is_null.cc"],
+    hdrs = ["is_null.h"],
+    deps = [
+        "//engine/framework:operator",
+        "//engine/util:tensor_util",
+    ],
+)
+
+cc_test(
+    name = "is_null_test",
+    srcs = ["is_null_test.cc"],
+    deps = [
+        ":is_null",
+        ":test_util",
+        "//engine/core:tensor_constructor",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "if_null",
+    srcs = ["if_null.cc"],
+    hdrs = ["if_null.h"],
+    deps = [
+        "//engine/framework:operator",
+        "//engine/util:tensor_util",
+    ],
+)
+
+cc_test(
+    name = "if_null_test",
+    srcs = ["if_null_test.cc"],
+    deps = [
+        ":if_null",
+        ":test_util",
+        "//engine/core:tensor_constructor",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "coalesce",
+    srcs = ["coalesce.cc"],
+    hdrs = ["coalesce.h"],
+    deps = [
+        "//engine/framework:operator",
+        "//engine/util:tensor_util",
+    ],
+)
+
+cc_test(
+    name = "coalesce_test",
+    srcs = ["coalesce_test.cc"],
+    deps = [
+        ":coalesce",
         ":test_util",
         "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",

@@ -33,13 +33,15 @@ class BroadcastTo : public Operator {
   void Execute(ExecContext* ctx) override;
 
  private:
-  void BroadcastToPrivate(ExecContext* ctx, const RepeatedPbTensor& input_pbs,
-                          const RepeatedPbTensor& output_pbs,
-                          const int64_t to_length);
+  static void BroadcastToPrivate(ExecContext* ctx,
+                                 const RepeatedPbTensor& input_pbs,
+                                 const RepeatedPbTensor& output_pbs,
+                                 int64_t to_length);
 
-  void BroadcastToPublic(ExecContext* ctx, const RepeatedPbTensor& input_pbs,
-                         const RepeatedPbTensor& output_pbs,
-                         const int64_t to_length);
+  static void BroadcastToPublic(ExecContext* ctx,
+                                const RepeatedPbTensor& input_pbs,
+                                const RepeatedPbTensor& output_pbs,
+                                int64_t to_length);
 };
 
 }  // namespace scql::engine::op

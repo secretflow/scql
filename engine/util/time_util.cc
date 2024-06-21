@@ -16,15 +16,20 @@
 
 #include <ctime>
 
+#include "arrow/compute/api_scalar.h"
 #include "spdlog/spdlog.h"
 #include "yacl/base/exception.h"
 
 namespace scql::engine::util {
 
 std::string ConvertEpochToStr(time_t epoch) {
-  struct tm* date_time = gmtime(&epoch);
+  struct tm date_time;
+  auto* date_ptr = gmtime_r(&epoch, &date_time);
+  YACL_ENFORCE(date_ptr != nullptr,
+               "gmtime_r failed, errno: {}, error message: {}", errno,
+               strerror(errno));
   char buf[20];
-  strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", date_time);
+  strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &date_time);
   std::string date_str(buf);
   return date_str;
 }
@@ -51,21 +56,34 @@ int64_t TimeZoneToSeconds(const std::string& time_zone) {
   return seconds * sign;
 }
 
-ConvertDatetimeoProtoVistor::ConvertDatetimeoProtoVistor(pb::Tensor* to_tensor)
-    : to_proto_(to_tensor) {
+std::shared_ptr<Tensor> CompensateTimeZone(
+    const std::shared_ptr<Tensor>& from_tensor, const std::string& time_zone) {
+  int64_t time_zone_offset_s = TimeZoneToSeconds(time_zone);
+  auto chunked_array = from_tensor->ToArrowChunkedArray();
+  arrow::Result<arrow::Datum> result = arrow::compute::CallFunction(
+      "add", {from_tensor->ToArrowChunkedArray(),
+              arrow::MakeScalar(time_zone_offset_s)});
+
+  YACL_ENFORCE(result.ok(),
+               "caught error while invoking arrow add function: {}",
+               result.status().ToString());
+  return std::make_shared<Tensor>(result.ValueOrDie().chunked_array());
+}
+
+ConvertDatetimeProtoVistor::ConvertDatetimeProtoVistor(pb::Tensor* to_tensor,
+                                                       bool contain_null)
+    : to_proto_(to_tensor), contain_null_(contain_null) {
   YACL_ENFORCE(to_proto_, "to_proto_ can not be null.");
 }
 
-arrow::Status ConvertDatetimeoProtoVistor::Visit(
+arrow::Status ConvertDatetimeProtoVistor::Visit(
     const arrow::NumericArray<arrow::Int64Type>& array) {
   for (int64_t i = 0; i < array.length(); i++) {
-    if (array.GetView(i) > INT64_MAX) {
-      return arrow::Status::Invalid(
-          fmt::format("overflow while casting uint64 to int64, number#{}={}", i,
-                      array.GetView(i)));
-    }
     to_proto_->add_string_data(
         ConvertEpochToStr(static_cast<time_t>(array.GetView(i))));
+    if (contain_null_) {
+      to_proto_->add_data_validity(array.IsValid(i));
+    }
   }
   return arrow::Status::OK();
 }
@@ -101,8 +119,12 @@ int64_t ConvertDateTimeToInt64Visitor::DateUnitCountPerSecond(
 arrow::Status ConvertDateTimeToInt64Visitor::Visit(
     const arrow::NumericArray<arrow::Date32Type>& array) {
   for (int64_t i = 0; i < array.length(); i++) {
-    int64_t value = static_cast<int32_t>(array.GetView(i)) * kSecondPerDay;
-    builder_.Append(value);
+    if (array.IsValid(i)) {
+      int64_t value = static_cast<int32_t>(array.GetView(i)) * kSecondPerDay;
+      builder_.Append(value);
+    } else {
+      builder_.AppendNull();
+    }
   }
   return arrow::Status::OK();
 }
@@ -110,8 +132,12 @@ arrow::Status ConvertDateTimeToInt64Visitor::Visit(
 arrow::Status ConvertDateTimeToInt64Visitor::Visit(
     const arrow::NumericArray<arrow::Date64Type>& array) {
   for (int64_t i = 0; i < array.length(); i++) {
-    int64_t value = static_cast<int64_t>(array.GetView(i)) / kMillisPerSecond;
-    builder_.Append(value);
+    if (array.IsValid(i)) {
+      int64_t value = static_cast<int64_t>(array.GetView(i)) / kMillisPerSecond;
+      builder_.Append(value);
+    } else {
+      builder_.AppendNull();
+    }
   }
   return arrow::Status::OK();
 }
@@ -122,28 +148,12 @@ arrow::Status ConvertDateTimeToInt64Visitor::Visit(
       arrow::internal::checked_pointer_cast<arrow::TimestampType>(array.type())
           ->unit());
   for (int64_t i = 0; i < array.length(); i++) {
-    int64_t value = static_cast<int64_t>(array.GetView(i));
-    builder_.Append(value / unit);
-  }
-  return arrow::Status::OK();
-}
-
-CompensateTimeZoneAndCopyToProtoVistor::CompensateTimeZoneAndCopyToProtoVistor(
-    pb::Tensor* to_proto, const std::string& time_zone)
-    : to_proto_(to_proto) {
-  YACL_ENFORCE(to_proto_, "to_proto_ can not be null.");
-  time_zone_offset_s_ = TimeZoneToSeconds(time_zone);
-}
-
-arrow::Status CompensateTimeZoneAndCopyToProtoVistor::Visit(
-    const arrow::NumericArray<arrow::Int64Type>& array) {
-  for (int64_t i = 0; i < array.length(); i++) {
-    if (array.GetView(i) > INT64_MAX) {
-      return arrow::Status::Invalid(
-          fmt::format("overflow while casting uint64 to int64, number#{}={}", i,
-                      array.GetView(i)));
+    if (array.IsValid(i)) {
+      int64_t value = static_cast<int64_t>(array.GetView(i));
+      builder_.Append(value / unit);
+    } else {
+      builder_.AppendNull();
     }
-    to_proto_->add_int64_data(array.GetView(i) + time_zone_offset_s_);
   }
   return arrow::Status::OK();
 }

@@ -73,6 +73,16 @@
         "rewritten_sql_csv": "select coalesce(alice.plain_float_0, alice.plain_float_1) as fl from alice.tbl_1 as alice"
       },
       {
+        "sql": "select plain_float_0 is null as fl from alice.tbl_1 where plain_float_1 is not null",
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_1.plain_float_0 is null as fl from alice.tbl_1 where not(tbl_1.plain_float_1 is null)"
+      },
+      {
+        "sql": "select coalesce(plain_float_0, plain_float_1, plain_float_2) as fl from alice.tbl_1",
+        "skip_projection": false,
+        "rewritten_sql": "select coalesce(tbl_1.plain_float_0, tbl_1.plain_float_1, tbl_1.plain_float_2) as fl from alice.tbl_1"
+      },
+      {
         "sql": "select if(plain_float_0 > 0, plain_float_0, plain_float_1) as fl from alice.tbl_1 as alice",
         "skip_projection": false,
         "rewritten_sql": "select if(alice.plain_float_0>0, alice.plain_float_0, alice.plain_float_1) as fl from alice.tbl_1 as alice",
@@ -88,6 +98,15 @@
         "sql": "select plain_float_0 + plain_float_1 as fl from alice.tbl_1",
         "skip_projection": false,
         "rewritten_sql": "select tbl_1.plain_float_0+tbl_1.plain_float_1 as fl from alice.tbl_1"
+      },
+      {
+        "sql": "select (plain_float_0 = plain_float_1) = 1 as fl from alice.tbl_1",
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_1.plain_float_0=tbl_1.plain_float_1=1 as fl from alice.tbl_1",
+        // this not really work for pg, it is just for test, since pg can't compare int with boolean
+        "rewritten_sql_pg": "select (tbl_1.plain_float_0=tbl_1.plain_float_1)=1 as fl from alice.tbl_1",
+        "rewritten_sql_csv": "select (tbl_1.plain_float_0=tbl_1.plain_float_1)=1 as fl from alice.tbl_1",
+        "rewritten_sql_odps": "select (tbl_1.plain_float_0=tbl_1.plain_float_1)=1 as fl from alice.tbl_1"
       },
       {
         "sql": "select plain_int_0 % plain_int_0 as fl from alice.tbl_1 where tbl_1.plain_int_0 != 0",
@@ -284,14 +303,16 @@
         "sql": "select cast(alice.compare_string_0 as CHAR(100)) as m from alice.tbl_0 as alice;",
         "skip_projection": false,
         "rewritten_sql": "select cast(alice.compare_string_0 as char(100)) as m from alice.tbl_0 as alice",
-        "rewritten_sql_odps": "select cast(alice.compare_string_0 as string) as m from alice.tbl_0 as alice"
+        "rewritten_sql_odps": "select cast(alice.compare_string_0 as string) as m from alice.tbl_0 as alice",
+        "rewritten_sql_pg": "select cast(alice.compare_string_0 as varchar) as m from alice.tbl_0 as alice",
+        "rewritten_sql_csv": "select cast(alice.compare_string_0 as varchar) as m from alice.tbl_0 as alice"
       },
       {
         "sql": "select cast(alice.compare_float_0 as double) as m from alice.tbl_0 as alice;",
         "skip_projection": false,
         "rewritten_sql": "select cast(alice.compare_float_0 as decimal(64,30)) as m from alice.tbl_0 as alice",
-        "rewritten_sql_pg": "select cast(alice.compare_float_0 as numeric) as m from alice.tbl_0 as alice",
-        "rewritten_sql_csv": "select cast(alice.compare_float_0 as numeric) as m from alice.tbl_0 as alice",
+        "rewritten_sql_pg": "select cast(alice.compare_float_0 as double precision) as m from alice.tbl_0 as alice",
+        "rewritten_sql_csv": "select cast(alice.compare_float_0 as double precision) as m from alice.tbl_0 as alice",
         "rewritten_sql_odps": "select cast(alice.compare_float_0 as double) as m from alice.tbl_0 as alice"
       },
       {
@@ -301,6 +322,36 @@
         "rewritten_sql_pg": "select cast(alice.compare_float_0 as numeric(11)) as m from alice.tbl_0 as alice",
         "rewritten_sql_csv": "select cast(alice.compare_float_0 as numeric(11)) as m from alice.tbl_0 as alice",
         "rewritten_sql_odps": "select cast(alice.compare_float_0 as bigint) as m from alice.tbl_0 as alice"
+      },
+      {
+        "sql": "select cast(alice.compare_float_0 as signed) as m from alice.tbl_0 as alice;",
+        "skip_projection": false,
+        "rewritten_sql": "select cast(alice.compare_float_0 as signed) as m from alice.tbl_0 as alice",
+        "rewritten_sql_pg": "select cast(alice.compare_float_0 as integer) as m from alice.tbl_0 as alice",
+        "rewritten_sql_csv": "select cast(alice.compare_float_0 as integer) as m from alice.tbl_0 as alice",
+        "rewritten_sql_odps": "select cast(alice.compare_float_0 as bigint) as m from alice.tbl_0 as alice"
+      },
+      {
+        "sql": "select cast(alice.compare_float_0 as unsigned) as m from alice.tbl_0 as alice;",
+        "skip_projection": false,
+        "skip_pg_test": true,
+        "skip_csv_test": true,
+        "skip_odps_test": true,
+        "rewritten_sql": "select cast(alice.compare_float_0 as unsigned) as m from alice.tbl_0 as alice"
+      },
+      {
+        "sql": "select cast(alice.compare_datetime_0 as date) as m from alice.tbl_0 as alice;",
+        "skip_projection": false,
+        "skip_odps_test": true,
+        "rewritten_sql": "select cast(alice.compare_datetime_0 as date) as m from alice.tbl_0 as alice"
+      },
+      {
+        "sql": "select cast(alice.compare_datetime_0 as datetime) as m from alice.tbl_0 as alice;",
+        "skip_projection": false,
+        "skip_odps_test": true,
+        "rewritten_sql": "select cast(alice.compare_datetime_0 as datetime) as m from alice.tbl_0 as alice",
+        "rewritten_sql_pg": "select cast(alice.compare_datetime_0 as timestamp) as m from alice.tbl_0 as alice",
+        "rewritten_sql_csv": "select cast(alice.compare_datetime_0 as timestamp) as m from alice.tbl_0 as alice"
       },
       {
         "sql": "SELECT 'David!' LIKE 'David\\_' as tt from alice.tbl_0 as alice;",
@@ -326,12 +377,18 @@
       {
         "sql": "select plain_int_0, 3 + plain_int_1 in (2, 5, 15) as ee from alice.tbl_1 where plain_int_0 in (2, 5, 15) and plain_int_1 not in (2, 5, 15);",
         "skip_projection": false,
-        "rewritten_sql": "select tbl_1.plain_int_0,3+tbl_1.plain_int_1=2 or 3+tbl_1.plain_int_1=5 or 3+tbl_1.plain_int_1=15 as ee from alice.tbl_1 where (tbl_1.plain_int_0=2 or tbl_1.plain_int_0=5 or tbl_1.plain_int_0=15) and (not(tbl_1.plain_int_1=2 or tbl_1.plain_int_1=5 or tbl_1.plain_int_1=15))"
+        "rewritten_sql": "select tbl_1.plain_int_0,3+tbl_1.plain_int_1=2 or 3+tbl_1.plain_int_1=5 or 3+tbl_1.plain_int_1=15 as ee from alice.tbl_1 where (tbl_1.plain_int_0=2 or tbl_1.plain_int_0=5 or tbl_1.plain_int_0=15) and (not(tbl_1.plain_int_1=2 or tbl_1.plain_int_1=5 or tbl_1.plain_int_1=15))",
+        "rewritten_sql_pg": "select tbl_1.plain_int_0,(3+tbl_1.plain_int_1=2) or (3+tbl_1.plain_int_1=5) or (3+tbl_1.plain_int_1=15) as ee from alice.tbl_1 where ((tbl_1.plain_int_0=2) or (tbl_1.plain_int_0=5) or (tbl_1.plain_int_0=15)) and (not((tbl_1.plain_int_1=2) or (tbl_1.plain_int_1=5) or (tbl_1.plain_int_1=15)))",
+        "rewritten_sql_csv": "select tbl_1.plain_int_0,(3+tbl_1.plain_int_1=2) or (3+tbl_1.plain_int_1=5) or (3+tbl_1.plain_int_1=15) as ee from alice.tbl_1 where ((tbl_1.plain_int_0=2) or (tbl_1.plain_int_0=5) or (tbl_1.plain_int_0=15)) and (not((tbl_1.plain_int_1=2) or (tbl_1.plain_int_1=5) or (tbl_1.plain_int_1=15)))",
+        "rewritten_sql_odps": "select tbl_1.plain_int_0,(3+tbl_1.plain_int_1=2) or (3+tbl_1.plain_int_1=5) or (3+tbl_1.plain_int_1=15) as ee from alice.tbl_1 where ((tbl_1.plain_int_0=2) or (tbl_1.plain_int_0=5) or (tbl_1.plain_int_0=15)) and (not((tbl_1.plain_int_1=2) or (tbl_1.plain_int_1=5) or (tbl_1.plain_int_1=15)))"
       },
       {
         "sql": "select plain_int_0 + plain_int_0 + 5, (plain_int_1 + plain_int_2 + plain_int_0) > plain_int_1 and plain_int_1 > plain_int_0 and plain_int_1 < plain_int_0 from alice.tbl_1;",
         "skip_projection": false,
-        "rewritten_sql": "select tbl_1.plain_int_0+tbl_1.plain_int_0+5 as expr_91,tbl_1.plain_int_1+tbl_1.plain_int_2+tbl_1.plain_int_0>tbl_1.plain_int_1 and tbl_1.plain_int_1>tbl_1.plain_int_0 and tbl_1.plain_int_1<tbl_1.plain_int_0 as expr_92 from alice.tbl_1"
+        "rewritten_sql": "select tbl_1.plain_int_0+tbl_1.plain_int_0+5 as expr_91,tbl_1.plain_int_1+tbl_1.plain_int_2+tbl_1.plain_int_0>tbl_1.plain_int_1 and tbl_1.plain_int_1>tbl_1.plain_int_0 and tbl_1.plain_int_1<tbl_1.plain_int_0 as expr_92 from alice.tbl_1",
+        "rewritten_sql_pg": "select tbl_1.plain_int_0+tbl_1.plain_int_0+5 as expr_91,(tbl_1.plain_int_1+tbl_1.plain_int_2+tbl_1.plain_int_0>tbl_1.plain_int_1) and (tbl_1.plain_int_1>tbl_1.plain_int_0) and (tbl_1.plain_int_1<tbl_1.plain_int_0) as expr_92 from alice.tbl_1",
+        "rewritten_sql_csv": "select tbl_1.plain_int_0+tbl_1.plain_int_0+5 as expr_91,(tbl_1.plain_int_1+tbl_1.plain_int_2+tbl_1.plain_int_0>tbl_1.plain_int_1) and (tbl_1.plain_int_1>tbl_1.plain_int_0) and (tbl_1.plain_int_1<tbl_1.plain_int_0) as expr_92 from alice.tbl_1",
+        "rewritten_sql_odps": "select tbl_1.plain_int_0+tbl_1.plain_int_0+5 as expr_91,(tbl_1.plain_int_1+tbl_1.plain_int_2+tbl_1.plain_int_0>tbl_1.plain_int_1) and (tbl_1.plain_int_1>tbl_1.plain_int_0) and (tbl_1.plain_int_1<tbl_1.plain_int_0) as expr_92 from alice.tbl_1"
       },
       {
         "sql": "select plain_int_0 > if(plain_int_0, plain_int_1, plain_int_2) as res from alice.tbl_1;",
@@ -342,7 +399,10 @@
       {
         "sql": "select plain_int_0, plain_int_0 > 1 and plain_int_0 >= 1 as and_log, not (plain_int_0 < 5) as not_log, (plain_int_0 <= 5) or (plain_int_0 <> 8) as or_log from carol.tbl_1",
         "skip_projection": false,
-        "rewritten_sql": "select tbl_1.plain_int_0,tbl_1.plain_int_0>1 and tbl_1.plain_int_0>=1 as and_log,not(tbl_1.plain_int_0<5) as not_log,tbl_1.plain_int_0<=5 or tbl_1.plain_int_0!=8 as or_log from carol.tbl_1"
+        "rewritten_sql": "select tbl_1.plain_int_0,tbl_1.plain_int_0>1 and tbl_1.plain_int_0>=1 as and_log,not(tbl_1.plain_int_0<5) as not_log,tbl_1.plain_int_0<=5 or tbl_1.plain_int_0!=8 as or_log from carol.tbl_1",
+        "rewritten_sql_pg": "select tbl_1.plain_int_0,(tbl_1.plain_int_0>1) and (tbl_1.plain_int_0>=1) as and_log,not(tbl_1.plain_int_0<5) as not_log,(tbl_1.plain_int_0<=5) or (tbl_1.plain_int_0!=8) as or_log from carol.tbl_1",
+        "rewritten_sql_csv": "select tbl_1.plain_int_0,(tbl_1.plain_int_0>1) and (tbl_1.plain_int_0>=1) as and_log,not(tbl_1.plain_int_0<5) as not_log,(tbl_1.plain_int_0<=5) or (tbl_1.plain_int_0!=8) as or_log from carol.tbl_1",
+        "rewritten_sql_odps": "select tbl_1.plain_int_0,(tbl_1.plain_int_0>1) and (tbl_1.plain_int_0>=1) as and_log,not(tbl_1.plain_int_0<5) as not_log,(tbl_1.plain_int_0<=5) or (tbl_1.plain_int_0!=8) as or_log from carol.tbl_1"
       },
       {
         "sql": "select -(plain_int_0 + plain_int_2) * plain_int_1 as res from carol.tbl_1",

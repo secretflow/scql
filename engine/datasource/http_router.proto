@@ -39,6 +39,8 @@ message RouteRequest {
 
 message RouteResponse {
   scql.pb.Status status = 1;
+  // datasource_ids should have the same size as argument `tables` in
+  // RouteRequest.
   repeated string datasource_ids = 2;
   // datasource_ids --> DataSouorce map
   map<string, scql.engine.DataSource> datasources = 3;

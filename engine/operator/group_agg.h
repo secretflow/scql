@@ -63,7 +63,6 @@ class GroupCountDistinct : public GroupAggBase {
 
   const std::string& Type() const override { return kOpType; }
 
- public:
   std::shared_ptr<arrow::Scalar> AggImpl(
       std::shared_ptr<arrow::Array> arr) override;
 };
@@ -74,7 +73,6 @@ class GroupCount : public GroupAggBase {
 
   const std::string& Type() const override { return kOpType; }
 
- public:
   std::shared_ptr<arrow::Scalar> AggImpl(
       std::shared_ptr<arrow::Array> arr) override;
 };
@@ -85,7 +83,6 @@ class GroupSum : public GroupAggBase {
 
   const std::string& Type() const override { return kOpType; }
 
- public:
   std::shared_ptr<arrow::Scalar> AggImpl(
       std::shared_ptr<arrow::Array> arr) override;
 };
@@ -96,7 +93,6 @@ class GroupAvg : public GroupAggBase {
 
   const std::string& Type() const override { return kOpType; }
 
- public:
   std::shared_ptr<arrow::Scalar> AggImpl(
       std::shared_ptr<arrow::Array> arr) override;
 };
@@ -107,7 +103,6 @@ class GroupMin : public GroupAggBase {
 
   const std::string& Type() const override { return kOpType; }
 
- public:
   std::shared_ptr<arrow::Scalar> AggImpl(
       std::shared_ptr<arrow::Array> arr) override;
 };
@@ -118,7 +113,6 @@ class GroupMax : public GroupAggBase {
 
   const std::string& Type() const override { return kOpType; }
 
- public:
   std::shared_ptr<arrow::Scalar> AggImpl(
       std::shared_ptr<arrow::Array> arr) override;
 };

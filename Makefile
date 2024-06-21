@@ -26,8 +26,13 @@ fast: fmt vet
 parser:
 	cd pkg/parser && make
 
-build: fmt vet
-	go build -ldflags "-X main.version=${SCQL_VERSION}" ./cmd/...
+binary: clean prepare fmt vet gogenerate
+	$(eval SCQL_VERSION := $(shell bash ${PWD}/version_build.sh))
+	echo "Binary version: ${SCQL_VERSION}"
+	GOBIN=${PWD}/bin go install -ldflags "-X main.version=${SCQL_VERSION}" ./cmd/...
+	pip install numpy
+	bazel build //engine/exe:scqlengine -c opt
+	bash ${PWD}/version_build.sh -r
 
 pb: clean
 	$(RM) -rf pkg/proto-gen/*

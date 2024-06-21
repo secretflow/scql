@@ -20,27 +20,28 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/secretflow/scql/pkg/interpreter/ccl"
+	"github.com/secretflow/scql/pkg/interpreter/graph"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	proto "github.com/secretflow/scql/pkg/proto-gen/scql"
 )
 
-func createTenosorFromPlace(place placement) *Tensor {
-	t := NewTensor(0, "")
+func createTenosorFromPlace(place placement) *graph.Tensor {
+	t := graph.NewTensor(0, "")
 	switch x := place.(type) {
 	case *privatePlacement:
-		t.Status = proto.TensorStatus_TENSORSTATUS_PRIVATE
+		t.SetStatus(proto.TensorStatus_TENSORSTATUS_PRIVATE)
 		t.OwnerPartyCode = x.partyCode
 	case *sharePlacement:
-		t.Status = proto.TensorStatus_TENSORSTATUS_SECRET
+		t.SetStatus(proto.TensorStatus_TENSORSTATUS_SECRET)
 	case *publicPlacement:
-		t.Status = proto.TensorStatus_TENSORSTATUS_PUBLIC
+		t.SetStatus(proto.TensorStatus_TENSORSTATUS_PUBLIC)
 	}
 	return t
 }
 
 func TestGetStatusConversionCost(t *testing.T) {
 	type testCase struct {
-		old  *Tensor
+		old  *graph.Tensor
 		new  placement
 		pass bool
 	}
@@ -62,7 +63,7 @@ func TestGetStatusConversionCost(t *testing.T) {
 
 func TestAddTensorStatusConversion(t *testing.T) {
 	a := require.New(t)
-	pi := NewPartyInfo([]*Participant{
+	pi := graph.NewPartyInfo([]*graph.Participant{
 		{
 			PartyCode: "party1",
 			Endpoints: []string{"party1.net"},
@@ -74,28 +75,29 @@ func TestAddTensorStatusConversion(t *testing.T) {
 			Token:     "party2_credential",
 		},
 	})
-	newSimplePlan := func() *GraphBuilder {
-		e1 := NewGraphBuilder(pi)
+	newSimplePlan := func() *graph.GraphBuilder {
+		e1 := graph.NewGraphBuilder(pi)
 		t1 := e1.AddTensor("alice.t1")
-		t1.cc.SetLevelForParty("party1", ccl.Plain)
-		t1.cc.SetLevelForParty("party2", ccl.Plain)
+		t1.CC.SetLevelForParty("party1", ccl.Plain)
+		t1.CC.SetLevelForParty("party2", ccl.Plain)
 		t1.OwnerPartyCode = "party1"
-		t1.Status = proto.TensorStatus_TENSORSTATUS_PRIVATE
-		e1.AddRunSQLNode("RunSQLOp1", []*Tensor{t1}, "select f1 from alice.t1", []string{"alice.t1"}, "party1")
+		t1.SetStatus(proto.TensorStatus_TENSORSTATUS_PRIVATE)
+		e1.AddRunSQLNode("RunSQLOp1", []*graph.Tensor{t1}, "select f1 from alice.t1", []string{"alice.t1"}, "party1")
 		return e1
 	}
-
 	{
 		e := newSimplePlan()
 		tensor := e.Tensors[0]
-		_, err := e.converter.convertTo(tensor, &privatePlacement{"party2"})
+		converter := newStatusConverter(e)
+		_, err := converter.convertTo(tensor, &privatePlacement{"party2"})
 		a.NoError(err)
 	}
 
 	{
 		e := newSimplePlan()
 		tensor := e.Tensors[0]
-		t2, err := e.converter.convertTo(tensor, &privatePlacement{"party1"})
+		converter := newStatusConverter(e)
+		t2, err := converter.convertTo(tensor, &privatePlacement{"party1"})
 		a.NoError(err)
 		a.Equal(tensor, t2)
 	}
@@ -103,7 +105,7 @@ func TestAddTensorStatusConversion(t *testing.T) {
 
 func TestConvertTo(t *testing.T) {
 	r := require.New(t)
-	partyInfo := NewPartyInfo([]*Participant{
+	partyInfo := graph.NewPartyInfo([]*graph.Participant{
 		{
 			PartyCode: "Alice",
 			Endpoints: []string{"alice.net"},
@@ -115,19 +117,19 @@ func TestConvertTo(t *testing.T) {
 			Token:     "bob_credential",
 		},
 	})
-	e1 := NewGraphBuilder(partyInfo)
+	e1 := graph.NewGraphBuilder(partyInfo)
 	mockT1 := e1.AddTensor("t1.1")
-	mockT1.Status = scql.TensorStatus_TENSORSTATUS_PRIVATE
+	mockT1.SetStatus(scql.TensorStatus_TENSORSTATUS_PRIVATE)
 	mockT1.OwnerPartyCode = "Alice"
-	mockT1.cc = ccl.CreateAllPlainCCL(partyInfo.GetParties())
-
-	convertToBob1, err := e1.converter.convertTo(mockT1, &privatePlacement{partyCode: "Bob"})
+	mockT1.CC = ccl.CreateAllPlainCCL(partyInfo.GetParties())
+	converter := newStatusConverter(e1)
+	convertToBob1, err := converter.convertTo(mockT1, &privatePlacement{partyCode: "Bob"})
 	r.Nil(err)
 	r.NotEqual(convertToBob1.ID, mockT1.ID)
-	convertToBob2, err := e1.converter.convertTo(mockT1, &privatePlacement{partyCode: "Bob"})
+	convertToBob2, err := converter.convertTo(mockT1, &privatePlacement{partyCode: "Bob"})
 	r.Nil(err)
 	r.Equal(convertToBob1.ID, convertToBob2.ID)
-	convertBobToShare, err := e1.converter.convertTo(convertToBob1, &sharePlacement{partyCodes: []string{"Alice", "Bob"}})
+	convertBobToShare, err := converter.convertTo(convertToBob1, &sharePlacement{partyCodes: []string{"Alice", "Bob"}})
 	r.Nil(err)
 	r.NotEqual(convertBobToShare.ID, convertToBob2.ID)
 }

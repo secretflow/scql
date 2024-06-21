@@ -1,11 +1,15 @@
 {
-  "editor.formatOnSave": true,
-  "gopls": {
-    "formatting.local": "github.com/secretflow/scql"
-  },
-  "esbonio.sphinx.confDir": "${workspaceFolder}/docs",
-  "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter"
-  },
-  "python.formatting.provider": "none"
+    "editor.formatOnSave": true,
+    "gopls": {
+        "formatting.local": "github.com/secretflow/scql"
+    },
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "files.watcherExclude": {
+        "**/.git/**": true,
+        "**/.cache/**": true,
+        "**/bazel-*/**": true,
+        "**/external/**": true
+    }
 }

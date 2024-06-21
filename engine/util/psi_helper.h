@@ -22,6 +22,7 @@
 #include <tuple>
 #include <vector>
 
+#include "gflags/gflags.h"
 #include "psi/ecdh/ecdh_oprf_psi.h"
 #include "psi/utils/batch_provider.h"
 #include "psi/utils/ec_point_store.h"
@@ -31,13 +32,14 @@
 #include "engine/framework/exec.h"
 #include "engine/util/stringify_visitor.h"
 
+DECLARE_int64(provider_batch_size);
+
 namespace scql::engine::util {
 
 static constexpr int64_t kInnerJoin = 0;
 static constexpr int64_t kLeftJoin = 1;
 static constexpr int64_t kRightJoin = 2;
 static constexpr size_t kNumBins = 64;
-static constexpr size_t kBatchSize = 8192;  // same with psi::EcdhOprfPsiOptions
 
 enum class PsiAlgo : int64_t {
   kAutoPsi = 0,
@@ -64,7 +66,9 @@ struct PsiExecutionInfoTable {
   int64_t result_size;
 };
 
-PsiPlan GetPsiPlan(int64_t self_length, int64_t peer_length);
+PsiPlan GetPsiPlan(int64_t self_length, int64_t peer_length,
+                   int64_t unbalance_psi_ratio_threshold,
+                   int64_t unbalance_psi_larger_party_rows_count_threshold);
 
 PsiPlan CoordinatePsiPlan(ExecContext* ctx);
 
@@ -177,14 +181,14 @@ class UbPsiCipherStore : public psi::IEcPointStore {
 
 class UbPsiJoinCache : public psi::IUbPsiCache {
  public:
-  explicit UbPsiJoinCache(size_t size) : idx_(0), seq_to_indice_(size){};
+  explicit UbPsiJoinCache(size_t size) : seq_to_indice_(size) {}
   void SaveData(yacl::ByteContainerView item, size_t index,
                 size_t shuffle_index) override;
 
   size_t GetIndice(size_t seq) { return seq_to_indice_.at(seq); }
 
  private:
-  size_t idx_;
+  size_t idx_ = 0;
   std::vector<size_t> seq_to_indice_;
 };
 
@@ -221,7 +225,7 @@ void OprfPsiClientTransferClientItems(
 void OprfServerTransferShuffledClientItems(
     ExecContext* ctx,
     const std::shared_ptr<psi::ecdh::EcdhOprfPsiServer>& dh_oprf_psi_server,
-    const std::string& server_cache_path, size_t batch_size,
+    const std::string& server_cache_path,
     std::vector<uint64_t>* matched_indices, size_t* self_item_count);
 
 void OprfCLientTransferShuffledClientItems(

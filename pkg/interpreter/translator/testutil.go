@@ -15,15 +15,16 @@
 package translator
 
 import (
+	"github.com/secretflow/scql/pkg/interpreter/graph"
 	"github.com/secretflow/scql/pkg/planner/core"
 	"github.com/secretflow/scql/pkg/util/mock"
 	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
 
-func ConvertMockEnginesToEnginesInfo(info *mock.MockEnginesInfo) (*EnginesInfo, error) {
-	participants := make([]*Participant, 0, len(info.PartyToUrls))
+func ConvertMockEnginesToEnginesInfo(info *mock.MockEnginesInfo) (*graph.EnginesInfo, error) {
+	participants := make([]*graph.Participant, 0, len(info.PartyToUrls))
 	for _, code := range sliceutil.SortMapKeyForDeterminism(info.PartyToUrls) {
-		participants = append(participants, &Participant{
+		participants = append(participants, &graph.Participant{
 			PartyCode: code,
 			Endpoints: []string{info.PartyToUrls[code]},
 			Token:     info.PartyToCredentials[code],
@@ -43,7 +44,7 @@ func ConvertMockEnginesToEnginesInfo(info *mock.MockEnginesInfo) (*EnginesInfo, 
 		partyToTables[p] = dbTables
 	}
 
-	engineInfo := NewEnginesInfo(NewPartyInfo(participants), partyToTables)
+	engineInfo := graph.NewEnginesInfo(graph.NewPartyInfo(participants), partyToTables)
 	for table, refTable := range info.TableToRefs {
 		ref, err := core.NewDbTableFromString(refTable)
 		if err != nil {

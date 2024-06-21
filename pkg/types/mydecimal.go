@@ -246,6 +246,10 @@ func (d *MyDecimal) IsNegative() bool {
 	return d.negative
 }
 
+func (d *MyDecimal) SetNegative(negative bool) {
+	d.negative = negative
+}
+
 // GetDigitsFrac returns the digitsFrac.
 func (d *MyDecimal) GetDigitsFrac() int8 {
 	return d.digitsFrac

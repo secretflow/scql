@@ -110,28 +110,17 @@ if [ "$BASE_IMAGE" == "anolis" ]; then
 fi
 
 container_id=$(docker run -it --rm --detach \
+  --mount type=bind,source="${WORK_DIR}",target=/home/admin/dev/ \
   -w /home/admin/dev ${MOUNT_OPTIONS} \
   $BUILDER tail -f /dev/null)
 
 trap "docker stop ${container_id}" EXIT
 
-# copy code to docker container
-dirs=("pkg" "engine" "api" "bazel" "cmd" "proto-gen" ".bazelrc" ".bazelversion" "BUILD.bazel" "go.mod" "go.sum" "Makefile" "WORKSPACE")
-for dir in ${dirs[@]}; do
-  docker cp ${WORK_DIR}/${dir} ${container_id}:/home/admin/dev
-done
 
-# prepare version information before build
-version=$(grep "version" $SCRIPT_DIR/version.txt | awk -F'"' '{print $2}')
-version+=$(date '+%Y%m%d-%H:%M:%S')
-version+=".$(git rev-parse --short HEAD)"
-echo "binary version: ${version}"
-# install deps
-docker exec -it ${container_id} bash -c "pip install numpy"
-# build engine binary
-docker exec -it ${container_id} bash -c "cd /home/admin/dev && sed -i "s/SCQL_VERSION/$version/g" engine/exe/version.h && bazel build //engine/exe:scqlengine -c opt"
-# build scdbserver + scdbclient binary
-docker exec -it ${container_id} bash -c "cd /home/admin/dev && export SCQL_VERSION=$version && make"
+# prepare for git command
+docker exec -it ${container_id} bash -c "git config --global --add safe.directory /home/admin/dev"
+# build binary
+docker exec -it ${container_id} bash -c "cd /home/admin/dev && make binary"
 
 # prepare temporary path $TMP_PATH for file copies
 TMP_PATH=$WORK_DIR/.buildtmp/$IMAGE_TAG
@@ -141,10 +130,7 @@ mkdir -p $TMP_PATH/$TARGET_PLATFORM
 echo "copy files to dir: $TMP_PATH"
 
 docker cp ${container_id}:/home/admin/dev/bazel-bin/engine/exe/scqlengine $TMP_PATH/$TARGET_PLATFORM
-docker cp ${container_id}:/home/admin/dev/bin/scdbserver $TMP_PATH/$TARGET_PLATFORM
-docker cp ${container_id}:/home/admin/dev/bin/scdbclient $TMP_PATH/$TARGET_PLATFORM
-docker cp ${container_id}:/home/admin/dev/bin/broker $TMP_PATH/$TARGET_PLATFORM
-docker cp ${container_id}:/home/admin/dev/bin/brokerctl $TMP_PATH/$TARGET_PLATFORM
+docker cp ${container_id}:/home/admin/dev/bin/. $TMP_PATH/$TARGET_PLATFORM
 
 # copy dockerfile
 cp ${SCRIPT_DIR}/scql-${BASE_IMAGE}.Dockerfile $TMP_PATH/Dockerfile

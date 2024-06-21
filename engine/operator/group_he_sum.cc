@@ -109,6 +109,7 @@ class Tensor2PMatrixVisitor {
 
 PMatrix Tensor2PMatrix(TensorPtr t, std::shared_ptr<PlainEncoder> encoder) {
   YACL_ENFORCE(t);
+  YACL_ENFORCE(t->GetNullCount() == 0, "GroupHeSum not support null yet");
   PMatrix result(t->Length(), 1);
   Tensor2PMatrixVisitor visitor(&result, std::move(encoder));
 

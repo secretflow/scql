@@ -43,19 +43,21 @@ INSTANTIATE_TEST_SUITE_P(
         test::SpuTestValuesMultiPC,
         testing::Values(
             // test private status
-            CastTestCase{.input = test::NamedTensor(
-                             "in", TensorFromJSON(arrow::int64(), "[1, 2, 3]")),
-                         .input_status = pb::TENSORSTATUS_PRIVATE,
-                         .expect_out = test::NamedTensor(
-                             "out", TensorFromJSON(arrow::float64(),
-                                                   "[1.0, 2.0, 3.0]"))},
+            CastTestCase{
+                .input = test::NamedTensor(
+                    "in", TensorFromJSON(arrow::int64(), "[1, 2, 3, null]")),
+                .input_status = pb::TENSORSTATUS_PRIVATE,
+                .expect_out = test::NamedTensor(
+                    "out",
+                    TensorFromJSON(arrow::float64(), "[1.0, 2.0, 3.0, null]"))},
             CastTestCase{
                 .input = test::NamedTensor(
                     "in", TensorFromJSON(arrow::float64(),
-                                         "[-1.5, -0.1, 1.1, 2.3, 3.5]")),
+                                         "[-1.5, -0.1, 1.1, 2.3, 3.5, null]")),
                 .input_status = pb::TENSORSTATUS_PRIVATE,
                 .expect_out = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::int64(), "[-1, 0, 1, 2, 3]"))},
+                    "out",
+                    TensorFromJSON(arrow::int64(), "[-1, 0, 1, 2, 3, null]"))},
             CastTestCase{.input = test::NamedTensor(
                              "in", TensorFromJSON(arrow::float64(), "[]")),
                          .input_status = pb::TENSORSTATUS_PRIVATE,

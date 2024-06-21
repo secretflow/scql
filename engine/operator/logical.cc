@@ -149,7 +149,7 @@ spu::Value LogicalAnd::ComputeOnSpu(spu::SPUContext* sctx,
 
 TensorPtr LogicalAnd::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
   auto result = arrow::compute::CallFunction(
-      "and", {lhs.ToArrowChunkedArray(), rhs.ToArrowChunkedArray()});
+      "and_kleene", {lhs.ToArrowChunkedArray(), rhs.ToArrowChunkedArray()});
   YACL_ENFORCE(result.ok(),
                "caught error while invoking arrow and function: {}",
                result.status().ToString());
@@ -170,7 +170,7 @@ spu::Value LogicalOr::ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
 
 TensorPtr LogicalOr::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
   auto result = arrow::compute::CallFunction(
-      "or", {lhs.ToArrowChunkedArray(), rhs.ToArrowChunkedArray()});
+      "or_kleene", {lhs.ToArrowChunkedArray(), rhs.ToArrowChunkedArray()});
   YACL_ENFORCE(result.ok(), "caught error while invoking arrow or function: {}",
                result.status().ToString());
   return std::make_shared<Tensor>(result.ValueOrDie().chunked_array());

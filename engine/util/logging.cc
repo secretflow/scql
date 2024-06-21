@@ -36,7 +36,7 @@ static const char* kDetailLogFormatPattern = "%v";
 
 namespace {
 
-static const char* kBrpcUnknownFuncname = "BRPC";
+const char* kBrpcUnknownFuncname = "BRPC";
 
 spdlog::level::level_enum FromBrpcLogSeverity(int severity) {
   spdlog::level::level_enum level = spdlog::level::off;
@@ -107,7 +107,7 @@ std::shared_ptr<spdlog::logger> CreateLogger(
   return logger;
 }
 
-void SetupLogger(LogOptions opts) {
+void SetupLogger(const LogOptions& opts) {
   spdlog::set_default_logger(
       CreateLogger("sciengine", "sciengine.log", opts, kFormatPattern));
 
@@ -117,7 +117,7 @@ void SetupLogger(LogOptions opts) {
 
 std::shared_ptr<spdlog::logger> CreateDetailLogger(
     const std::string& logger_name, const std::string& logger_file_name,
-    LogOptions opts) {
+    const LogOptions& opts) {
   return CreateLogger(logger_name, logger_file_name, opts,
                       kDetailLogFormatPattern);
 }

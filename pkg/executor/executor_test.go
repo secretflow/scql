@@ -21,8 +21,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/secretflow/scql/pkg/interpreter/optimizer"
-	"github.com/secretflow/scql/pkg/interpreter/translator"
+	"github.com/secretflow/scql/pkg/interpreter/graph"
+	"github.com/secretflow/scql/pkg/interpreter/graph/optimizer"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	proto "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/util/message"
@@ -45,7 +45,7 @@ func (client mockWebClient) Post(ctx context.Context, url string, credential str
 
 func TestSyncExecutor(t *testing.T) {
 	a := require.New(t)
-	partyInfo := translator.NewPartyInfo([]*translator.Participant{
+	partyInfo := graph.NewPartyInfo([]*graph.Participant{
 		{
 			PartyCode: "alice",
 			Endpoints: []string{"alice.url"},
@@ -57,17 +57,17 @@ func TestSyncExecutor(t *testing.T) {
 			Token:     "bob_credential",
 		},
 	})
-	plan := translator.NewGraphBuilder(partyInfo)
+	plan := graph.NewGraphBuilder(partyInfo)
 
 	t1 := plan.AddTensor("alice.t1")
-	t1.Status = scql.TensorStatus_TENSORSTATUS_PRIVATE
-	err := plan.AddRunSQLNode("RunSQLOp1", []*translator.Tensor{t1},
+	t1.SetStatus(scql.TensorStatus_TENSORSTATUS_PRIVATE)
+	err := plan.AddRunSQLNode("RunSQLOp1", []*graph.Tensor{t1},
 		"select f1 from alice.t1", []string{"alice.t1"}, "alice")
 	a.NoError(err)
 
 	t2 := plan.AddTensor("bob.t2")
-	t2.Status = scql.TensorStatus_TENSORSTATUS_PRIVATE
-	err = plan.AddRunSQLNode("RunSQLOp2", []*translator.Tensor{t2},
+	t2.SetStatus(scql.TensorStatus_TENSORSTATUS_PRIVATE)
+	err = plan.AddRunSQLNode("RunSQLOp2", []*graph.Tensor{t2},
 		"select * from bob.t2", []string{"bob.t2"}, "bob")
 	a.NoError(err)
 

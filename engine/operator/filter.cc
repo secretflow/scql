@@ -108,8 +108,8 @@ void Filter::FilterPrivate(ExecContext* ctx, const pb::Tensor& filter_pb,
 void Filter::FilterSecret(ExecContext* ctx, const pb::Tensor& filter_pb,
                           const pb::Tensor& data_pb,
                           const std::string& output_name) {
-  auto symbols = ctx->GetSession()->GetDeviceSymbols();
-  auto sctx = ctx->GetSession()->GetSpuContext();
+  auto* symbols = ctx->GetSession()->GetDeviceSymbols();
+  auto* sctx = ctx->GetSession()->GetSpuContext();
 
   const auto filter_value_name =
       util::SpuVarNameEncoder::GetValueName(filter_pb.name());
@@ -149,8 +149,6 @@ void Filter::FilterSecret(ExecContext* ctx, const pb::Tensor& filter_pb,
   symbols->setVar(util::SpuVarNameEncoder::GetValidityName(output_name),
                   result_validity);
 #endif  // SCQL_WITH_NULL
-
-  return;
 }
 
 TensorPtr Filter::GetPrivateOrPublicTensor(ExecContext* ctx,

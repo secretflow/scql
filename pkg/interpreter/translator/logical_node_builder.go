@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/secretflow/scql/pkg/interpreter/ccl"
+	"github.com/secretflow/scql/pkg/interpreter/graph"
 	"github.com/secretflow/scql/pkg/planner/core"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
@@ -27,14 +28,14 @@ import (
 type logicalNodeBuilder struct {
 	issuerPartyCode  string
 	numOfParties     int
-	enginesInfo      *EnginesInfo
+	enginesInfo      *graph.EnginesInfo
 	columnToParty    map[int64][]string
 	originCCL        map[string]*ccl.CCL
 	columnTracer     *ccl.ColumnTracer
 	groupByThreshold uint64
 }
 
-func newLogicalNodeBuilder(issuer string, info *EnginesInfo, ccls map[string]*ccl.CCL, groupByThreshold uint64) (*logicalNodeBuilder, error) {
+func newLogicalNodeBuilder(issuer string, info *graph.EnginesInfo, ccls map[string]*ccl.CCL, groupByThreshold uint64) (*logicalNodeBuilder, error) {
 	return &logicalNodeBuilder{
 		issuerPartyCode:  issuer,
 		numOfParties:     len(info.GetParties()),

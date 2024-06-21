@@ -15,6 +15,7 @@
 package common
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -146,7 +147,21 @@ func CheckInvitationCompatibleWithProj(invitation storage.Invitation, proj stora
 	if proj.Archived {
 		return fmt.Errorf("failed to reply invitation due to project %s archived", proj.ID)
 	}
-	if proj.ProjectConf != invitation.ProjectConf {
+
+	var currentProj pb.ProjectConfig
+	err := json.Unmarshal(proj.ProjectConf, &currentProj)
+	if err != nil {
+		return fmt.Errorf("failed to deserialize project conf of current project")
+	}
+
+	var inviteProj pb.ProjectConfig
+	err = json.Unmarshal(invitation.ProjectConf, &inviteProj)
+
+	if err != nil {
+		return fmt.Errorf("failed to deserialize project conf of invitation project")
+	}
+
+	if !proto.Equal(&currentProj, &inviteProj) {
 		return fmt.Errorf("failed to check project config got %+v from project but expected %+v", proj.ProjectConf, invitation.ProjectConf)
 	}
 	if proj.Creator != invitation.Creator {

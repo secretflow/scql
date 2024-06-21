@@ -56,7 +56,7 @@ type Config struct {
 	Engine             EngineConfig           `yaml:"engine"`
 	Storage            StorageConf            `yaml:"storage"`
 	SecurityCompromise SecurityCompromiseConf `yaml:"security_compromise"`
-	Discovery          DiscoveryConf
+	Discovery          DiscoveryConf          `yaml:"discovery"`
 	// cache
 	SessionExpireTime    time.Duration `yaml:"session_expire_time"`
 	SessionCheckInterval time.Duration `yaml:"session_expire_check_time"`

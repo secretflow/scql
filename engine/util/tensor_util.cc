@@ -149,7 +149,7 @@ bool AreTensorsStatusEqualAndOneOf(const RepeatedPbTensor& tensors,
 
 void CopyValuesToProto(const std::shared_ptr<Tensor>& from_tensor,
                        pb::Tensor* to_proto) {
-  CopyToProtoVistor copy_vistor(to_proto);
+  CopyToProtoVistor copy_vistor(to_proto, from_tensor->GetNullCount() > 0);
   const auto& chunked_arr = from_tensor->ToArrowChunkedArray();
   for (int i = 0; i < chunked_arr->num_chunks(); ++i) {
     THROW_IF_ARROW_NOT_OK(
@@ -169,23 +169,12 @@ std::shared_ptr<Tensor> ConvertDateTimeToInt64(
 
 void ConvertDateTimeAndCopyValuesToProto(
     const std::shared_ptr<Tensor>& from_tensor, pb::Tensor* to_proto) {
-  ConvertDatetimeoProtoVistor convert_copy_vistor(to_proto);
+  ConvertDatetimeProtoVistor convert_copy_vistor(to_proto,
+                                                 from_tensor->GetNullCount());
   const auto& chunked_arr = from_tensor->ToArrowChunkedArray();
   for (int i = 0; i < chunked_arr->num_chunks(); ++i) {
     THROW_IF_ARROW_NOT_OK(arrow::VisitArrayInline(*(chunked_arr->chunk(i)),
                                                   &convert_copy_vistor));
-  }
-}
-
-void CompensateTimeZoneAndCopyToProto(
-    const std::shared_ptr<Tensor>& from_tensor, pb::Tensor* to_proto,
-    const std::string& time_zone) {
-  CompensateTimeZoneAndCopyToProtoVistor compensate_copy_vistor(to_proto,
-                                                                time_zone);
-  const auto& chunked_arr = from_tensor->ToArrowChunkedArray();
-  for (int i = 0; i < chunked_arr->num_chunks(); ++i) {
-    THROW_IF_ARROW_NOT_OK(arrow::VisitArrayInline(*(chunked_arr->chunk(i)),
-                                                  &compensate_copy_vistor));
   }
 }
 

@@ -21,6 +21,7 @@ proto_gen_package=github.com/secretflow/scql/pkg/proto-gen
 # copy files execpt spu.pb.go
 ls bazel-bin/api/scql_go_proto_/${proto_gen_package}/scql/ | grep -v spu.* | xargs -I {} cp -r bazel-bin/api/scql_go_proto_/${proto_gen_package}/scql/{} pkg/proto-gen/scql
 cp -r bazel-bin/api/spu_go_proto_/${proto_gen_package}/spu/. pkg/proto-gen/spu
+chmod -R -x+X pkg/proto-gen
 
 # generate openapi file for broker.proto/scdb_api.proto
 trap "rm -rf libspu google" EXIT

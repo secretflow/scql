@@ -33,7 +33,7 @@ import (
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/executor"
 	"github.com/secretflow/scql/pkg/interpreter"
-	"github.com/secretflow/scql/pkg/interpreter/translator"
+	"github.com/secretflow/scql/pkg/interpreter/graph"
 	"github.com/secretflow/scql/pkg/planner/core"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/scdb/config"
@@ -316,7 +316,7 @@ func (app *App) runDQL(ctx context.Context, s *session, async bool) (*scql.SCDBQ
 		partyCodes = append(partyCodes, p.GetCode())
 	}
 
-	var partyInfo *translator.PartyInfo
+	var partyInfo *graph.PartyInfo
 	{
 		db := s.GetSessionVars().Storage
 		var users []storage.User
@@ -324,9 +324,9 @@ func (app *App) runDQL(ctx context.Context, s *session, async bool) (*scql.SCDBQ
 		if result.Error != nil {
 			return nil, result.Error
 		}
-		partyMap := make(map[string]*translator.Participant)
+		partyMap := make(map[string]*graph.Participant)
 		for _, u := range users {
-			participant := &translator.Participant{
+			participant := &graph.Participant{
 				PartyCode: u.PartyCode,
 				Endpoints: strings.Split(u.EngineEndpoints, ";"),
 				Token:     u.EngineToken,
@@ -334,7 +334,7 @@ func (app *App) runDQL(ctx context.Context, s *session, async bool) (*scql.SCDBQ
 			}
 			partyMap[u.PartyCode] = participant
 		}
-		participants := make([]*translator.Participant, 0, len(partyCodes))
+		participants := make([]*graph.Participant, 0, len(partyCodes))
 		for i, code := range partyCodes {
 			party, exists := partyMap[code]
 			if !exists {
@@ -349,7 +349,7 @@ func (app *App) runDQL(ctx context.Context, s *session, async bool) (*scql.SCDBQ
 				PublicKey: party.PubKey,
 			})
 		}
-		partyInfo = translator.NewPartyInfo(participants)
+		partyInfo = graph.NewPartyInfo(participants)
 	}
 
 	pbRequests := make(map[string]*scql.RunExecutionPlanRequest)

@@ -46,6 +46,12 @@ message SecurityConfig {
       //          select avg(score) from t group by zip_code
       //          select avg(score) from t
       PLAINTEXT_AFTER_AGGREGATE = 6;
+      // The column can be revealed at party_code if it is used as join payload.
+      // For example:
+      //   select t2.id, t2.col1 from t1 inner join t2 on t1.id = t2.id;
+      // In the above query, t2.col1 is used as join payload, t2.id is used as
+      // join key.
+      PLAINTEXT_AS_JOIN_PAYLOAD = 7;
     }
     Visibility visibility = 2;
 

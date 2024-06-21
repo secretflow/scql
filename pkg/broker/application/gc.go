@@ -48,7 +48,7 @@ func (app *App) StorageGc() {
 		}
 
 		// scan table to get all expired ids
-		err = app.MetaMgr.ClearExpiredResults(app.Conf.SessionExpireTime)
+		err = app.MetaMgr.ClearExpiredSessions()
 		if err != nil {
 			logrus.Warnf("GC err: %s", err.Error())
 		}
@@ -67,6 +67,7 @@ func (app *App) SessionGc() {
 		for k := range items {
 			ids = append(ids, k)
 		}
+		deleteSet := make(map[string]bool)
 
 		canceledIds, err := app.MetaMgr.CheckIdCanceled(ids)
 		if err != nil {
@@ -74,6 +75,20 @@ func (app *App) SessionGc() {
 			continue
 		}
 		for _, id := range canceledIds {
+			deleteSet[id] = true
+		}
+
+		expiredSessions, err := app.MetaMgr.CheckIdExpired(ids)
+		if err != nil {
+			logrus.Errorf("check expired session ids failed: %v", err)
+			continue
+		}
+
+		for _, id := range expiredSessions {
+			deleteSet[id] = true
+		}
+
+		for id := range deleteSet {
 			app.DeleteSession(id)
 		}
 	}

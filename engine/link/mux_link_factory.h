@@ -51,8 +51,8 @@ class MuxLink : public yacl::link::transport::TransportLink {
           std::shared_ptr<::google::protobuf::RpcChannel> rpc_channel)
       : TransportLink(self_rank, peer_rank),
         http_max_payload_size_(http_max_payload_size),
-        link_id_(link_id),
-        rpc_channel_(rpc_channel) {}
+        link_id_(std::move(link_id)),
+        rpc_channel_(std::move(rpc_channel)) {}
 
   size_t GetMaxBytesPerChunk() const override;
   void SetMaxBytesPerChunk(size_t bytes) override;

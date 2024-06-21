@@ -36,23 +36,20 @@
 #include "engine/core/primitive_builder.h"
 #include "engine/core/tensor.h"
 
-DEFINE_int64(unbalance_psi_ratio_threshold, 5,
-             "minimum LargePartySize/SmallPartySize ratio to choose unbalanced "
-             "PSI, LargePartySize means the rows count of the larger party");
-DEFINE_int64(unbalance_psi_larger_party_rows_count_threshold, 81920,
-             "minimum rows count of the larger party to choose unbalanced PSI");
-DEFINE_int32(psi_curve_type, psi::CURVE_FOURQ, "curve type used in PSI");
+DEFINE_int64(provider_batch_size, 8192, "batch size used in PSI Provider");
 
 namespace scql::engine::util {
-PsiPlan GetPsiPlan(int64_t self_length, int64_t peer_length) {
+PsiPlan GetPsiPlan(int64_t self_length, int64_t peer_length,
+                   int64_t unbalance_psi_ratio_threshold,
+                   int64_t unbalance_psi_larger_party_rows_count_threshold) {
   util::PsiPlan psi_plan;
   int64_t small_length = std::min(self_length, peer_length);
   int64_t big_length = std::max(self_length, peer_length);
-  YACL_ENFORCE(FLAGS_unbalance_psi_ratio_threshold >= 1,
+  YACL_ENFORCE(unbalance_psi_ratio_threshold > 1,
                "Invalid unbalance PSI ratio threshold");
   if (small_length > 0 &&
-      big_length / small_length >= FLAGS_unbalance_psi_ratio_threshold &&
-      big_length > FLAGS_unbalance_psi_larger_party_rows_count_threshold) {
+      big_length / small_length >= unbalance_psi_ratio_threshold &&
+      big_length > unbalance_psi_larger_party_rows_count_threshold) {
     psi_plan.unbalanced = true;
     // the side with bigger tensor length should be oprf server
     psi_plan.is_server = small_length != self_length;
@@ -66,8 +63,8 @@ PsiPlan GetPsiPlan(int64_t self_length, int64_t peer_length) {
       server_info = ", is client";
     }
   }
-  SPDLOG_DEBUG("CoordinatePsiPlan finished, use UbPsi: {} {}", psi_plan.ublance,
-               server_info);
+  SPDLOG_DEBUG("CoordinatePsiPlan finished, use UbPsi: {} {}",
+               psi_plan.unbalanced, server_info);
 
   psi_plan.psi_size_info.self_size = self_length;
   psi_plan.psi_size_info.peer_size = peer_length;
@@ -126,7 +123,12 @@ PsiPlan CoordinatePsiPlan(ExecContext* ctx) {
       static_cast<char*>(peer_length_buf.data()), peer_length_buf.size());
   auto peer_length = oh.get().as<int64_t>();
 
-  return util::GetPsiPlan(tensor_length, peer_length);
+  auto& session_opts = ctx->GetSession()->GetSessionOptions();
+
+  return util::GetPsiPlan(
+      tensor_length, peer_length,
+      session_opts.psi_config.unbalance_psi_ratio_threshold,
+      session_opts.psi_config.unbalance_psi_larger_party_rows_count_threshold);
 }
 
 BatchProvider::BatchProvider(std::vector<TensorPtr> tensors, size_t batch_size)
@@ -419,7 +421,7 @@ std::vector<std::string> FinalizeAndComputeIntersection(
 
   std::vector<std::string> fields{UbPsiCipherStore::kDummyField};
   psi::CsvBatchProvider server_provider(server_store->GetPath(), fields,
-                                        util::kBatchSize);
+                                        FLAGS_provider_batch_size);
   size_t batch_count = 0;
 
   // may have duplicate items
@@ -461,7 +463,7 @@ TensorPtr FinalizeAndComputeOprfInResult(
 
   std::vector<std::string> fields{UbPsiCipherStore::kDummyField};
   psi::CsvBatchProvider server_provider(server_store->GetPath(), fields,
-                                        util::kBatchSize);
+                                        FLAGS_provider_batch_size);
   size_t batch_count = 0;
 
   while (true) {
@@ -532,7 +534,7 @@ std::pair<TensorPtr, std::vector<uint64_t>> FinalizeAndComputeOprfJoinResult(
 
   std::vector<std::string> fields{UbPsiCipherStore::kDummyField};
   psi::CsvBatchProvider server_provider(server_store->GetPath(), fields,
-                                        util::kBatchSize);
+                                        FLAGS_provider_batch_size);
   size_t batch_count = 0;
   while (true) {
     auto batch_server_data = server_provider.ReadNextBatch();
@@ -669,7 +671,7 @@ void OprfPsiClientTransferClientItems(
 void OprfServerTransferShuffledClientItems(
     ExecContext* ctx,
     const std::shared_ptr<psi::ecdh::EcdhOprfPsiServer>& ec_oprf_psi_server,
-    const std::string& server_cache_path, size_t batch_size,
+    const std::string& server_cache_path,
     std::vector<uint64_t>* matched_indices, size_t* self_item_count) {
   SPDLOG_DEBUG(
       "Oprf server start to transfer shuffled client items, my rank: {}, my "
@@ -679,7 +681,8 @@ void OprfServerTransferShuffledClientItems(
 
   std::shared_ptr<psi::IShuffledBatchProvider> cache_provider =
       std::make_shared<psi::UbPsiCacheProvider>(
-          server_cache_path, kNumBins, ec_oprf_psi_server->GetCompareLength());
+          server_cache_path, FLAGS_provider_batch_size,
+          ec_oprf_psi_server->GetCompareLength());
 
   std::tie(*matched_indices, *self_item_count) =
       ec_oprf_psi_server->RecvIntersectionMaskedItems(cache_provider);
@@ -710,7 +713,8 @@ void OprfCLientTransferShuffledClientItems(
   auto matched_items =
       util::FinalizeAndComputeIntersection(client_store, server_store);
   std::shared_ptr<psi::IBasicBatchProvider> intersection_masked_provider =
-      std::make_shared<psi::MemoryBatchProvider>(matched_items, kBatchSize);
+      std::make_shared<psi::MemoryBatchProvider>(matched_items,
+                                                 FLAGS_provider_batch_size);
   ub_psi_client_shuffle_online->SendIntersectionMaskedItems(
       intersection_masked_provider);
 }

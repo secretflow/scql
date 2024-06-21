@@ -31,9 +31,9 @@ struct LogOptions {
 };
 
 // Setup default logger "scqlengine", and use it to sink brpc log.
-void SetupLogger(LogOptions opts = LogOptions());
+void SetupLogger(const LogOptions& opts = LogOptions());
 
 std::shared_ptr<spdlog::logger> CreateDetailLogger(
     const std::string& logger_name, const std::string& logger_file_name,
-    LogOptions opts = LogOptions());
+    const LogOptions& opts = LogOptions());
 }  // namespace scql::engine::util

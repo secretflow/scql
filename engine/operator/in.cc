@@ -27,7 +27,6 @@
 #include <vector>
 
 #include "butil/files/scoped_temp_dir.h"
-#include "gflags/gflags.h"
 #include "psi/cryptor/cryptor_selector.h"
 #include "psi/ecdh/ecdh_oprf_psi.h"
 #include "psi/ecdh/ecdh_psi.h"
@@ -42,10 +41,6 @@
 #include "engine/util/psi_detail_logger.h"
 #include "engine/util/psi_helper.h"
 #include "engine/util/tensor_util.h"
-
-DEFINE_int64(shuffle_provider_batch_size, 8192,
-             "batch size used in OprfServerShuffleOnline");
-DECLARE_int32(psi_curve_type);
 
 namespace scql::engine::op {
 
@@ -203,8 +198,8 @@ void In::OprfPsiIn(ExecContext* ctx, bool is_server,
   auto in_tensor = ctx->GetTensorTable()->GetTensor(param_name);
   YACL_ENFORCE(in_tensor != nullptr, "{} not found in tensor table",
                param_name);
-  auto batch_provider =
-      std::make_shared<util::BatchProvider>(std::vector<TensorPtr>{in_tensor});
+  auto batch_provider = std::make_shared<util::BatchProvider>(
+      std::vector<TensorPtr>{in_tensor}, FLAGS_provider_batch_size);
 
   // check reveal condition
   std::string reveal_to_party_code =
@@ -229,7 +224,9 @@ void In::OprfPsiIn(ExecContext* ctx, bool is_server,
   YACL_ENFORCE(psi_options.link0, "fail to getlink0 for OprfPsiIn");
   psi_options.link1 = psi_options.link0->Spawn();
   YACL_ENFORCE(psi_options.link1, "fail to getlink1 for OprfPsiIn");
-  psi_options.curve_type = static_cast<psi::CurveType>(FLAGS_psi_curve_type);
+
+  psi_options.curve_type = static_cast<psi::CurveType>(
+      ctx->GetSession()->GetSessionOptions().psi_config.psi_curve_type);
 
   // create temp dir
   butil::ScopedTempDir tmp_dir;
@@ -310,8 +307,8 @@ void In::OprfPsiServer(
     std::vector<uint64_t> matched_indices;
     size_t self_item_count{};
     util::OprfServerTransferShuffledClientItems(
-        ctx, ec_oprf_psi_server, server_cache_path,
-        FLAGS_shuffle_provider_batch_size, &matched_indices, &self_item_count);
+        ctx, ec_oprf_psi_server, server_cache_path, &matched_indices,
+        &self_item_count);
     psi_info_table->result_size =
         OprfServerHandleResult(ctx, matched_indices, self_item_count);
   } else {
@@ -394,8 +391,8 @@ void In::EcdhPsiIn(ExecContext* ctx) {
   if (ctx->GetSession()->GetPsiLogger()) {
     ctx->GetSession()->GetPsiLogger()->LogInput({in_tensor});
   }
-  auto batch_provider =
-      std::make_shared<util::BatchProvider>(std::vector<TensorPtr>{in_tensor});
+  auto batch_provider = std::make_shared<util::BatchProvider>(
+      std::vector<TensorPtr>{in_tensor}, FLAGS_provider_batch_size);
   auto self_store =
       std::make_shared<psi::HashBucketEcPointStore>("/tmp", util::kNumBins);
   auto peer_store =
@@ -413,8 +410,9 @@ void In::EcdhPsiIn(ExecContext* ctx) {
         target_rank = 1;
       }
     }
-    options.ecc_cryptor = psi::CreateEccCryptor(
-        static_cast<psi::CurveType>(FLAGS_psi_curve_type));
+
+    options.ecc_cryptor = psi::CreateEccCryptor(static_cast<psi::CurveType>(
+        ctx->GetSession()->GetSessionOptions().psi_config.psi_curve_type));
     options.target_rank = target_rank;
     options.on_batch_finished = util::BatchFinishedCb(
         ctx->GetSession()->Id(),

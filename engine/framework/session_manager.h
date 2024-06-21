@@ -62,6 +62,9 @@ class SessionManager {
 
   std::optional<std::string> GetTimeoutSession();
 
+  scql::engine::SessionOptions GenerateUpdatedSessionOptions(
+      const pb::JobStartParams& jobParams);
+
  private:
   // used to construct session
   const SessionOptions session_opt_;

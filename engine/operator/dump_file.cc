@@ -35,6 +35,9 @@ DEFINE_string(
     restricted_write_path, "./data",
     "in where the file is allowed to write if enable restricted write path");
 
+DEFINE_string(null_string_to_write, "NULL",
+              "the string to write for null values");
+
 const std::string DumpFile::kOpType("DumpFile");
 const std::string& DumpFile::Type() const { return kOpType; }
 
@@ -92,6 +95,7 @@ void DumpFile::Execute(ExecContext* ctx) {
       out_stream, arrow::io::FileOutputStream::Open(absolute_path_file, false));
 
   arrow::csv::WriteOptions options;
+  options.null_string = FLAGS_null_string_to_write;
   options.batch_size = 1024 * 100;  // default 1024 is too small for large data
   options.delimiter =
       ctx->GetStringValueFromAttribute(kFieldDeliminatorAttr).front();
