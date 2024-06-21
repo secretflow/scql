@@ -40,34 +40,50 @@ var (
 	}
 )
 
+func init() {
+	runCmd.Flags().StringVar(&jobConf, "job-conf", `{}`, `job conf in json format, e.g.: '{"session_expire_seconds": 86400}'
+	{
+		"session_expire_seconds": 86400, // Duration in seconds after which a session expires. If set to 0, falls back to project default setting
+		"time_zone": "+02:00", // If not set, would use the default timezone
+		"link_recv_timeout_sec": 30, // Duration in seconds after which a link receive operation times out
+		"link_throttle_window_size": 100, // Size of the throttle window for link operations
+		"link_chunked_send_parallel_size": 10, // Number of parallel chunks for chunked link sends
+		"unbalance_psi_ratio_threshold": 80, // Threshold ratio for unbalanced PSI
+		"unbalance_psi_larger_party_rows_count_threshold": 1000, // Threshold rows count for unbalanced PSI in larger party
+		"psi_curve_type": 1, // Type of curve used in PSI calculations
+		"http_max_payload_size": 1048576 // Maximum payload size for HTTP requests
+	  }
+	`)
+}
+
 func runQuery(query string) error {
-	response, err := brokerCommand.DoQuery(projectID, query, &pb.DebugOptions{EnablePsiDetailLog: enablePsiDetailLog})
+	response, err := brokerCommand.DoQuery(projectID, query, &pb.DebugOptions{EnablePsiDetailLog: enablePsiDetailLog}, jobConf)
 	if err != nil {
 		return fmt.Errorf("run query: %w", err)
 	}
 	fmt.Println("run query succeeded")
-	printQueryResult(response)
+	printQueryResult(response.GetResult())
 	return nil
 }
 
-func printQueryResult(response *pb.QueryResponse) {
-	for _, warn := range response.Warnings {
+func printQueryResult(result *pb.QueryResult) {
+	for _, warn := range result.GetWarnings() {
 		fmt.Printf("Warning : %v\n", warn.Reason)
 	}
-	if len(response.OutColumns) > 0 {
+	if len(result.GetOutColumns()) > 0 {
 		fmt.Fprintf(os.Stdout, "[fetch]\n")
 		// table view
 		table := tablewriter.NewWriter(os.Stdout)
 		table.SetAutoWrapText(false)
 		table.SetAutoFormatHeaders(false)
-		if err := tableview.ConvertToTable(response.OutColumns, table); err != nil {
+		if err := tableview.ConvertToTable(result.GetOutColumns(), table); err != nil {
 			log.Fatalf("[fetch]convertToTable with err:%v\n", err)
 		}
-		fmt.Printf("%v rows in set: (%vs)\n", table.NumLines(), response.GetCostTimeS())
+		fmt.Printf("%v rows in set: (%vs)\n", table.NumLines(), result.GetCostTimeS())
 		table.Render()
 		return
-	} else if response.AffectedRows > 0 {
-		fmt.Printf("[fetch] %v rows affected\n", response.AffectedRows)
+	} else if result.GetAffectedRows() > 0 {
+		fmt.Printf("[fetch] %v rows affected\n", result.GetAffectedRows())
 		return
 	}
 }

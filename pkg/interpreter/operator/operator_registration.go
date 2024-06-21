@@ -777,7 +777,8 @@ Out = {2, 4, 4}
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.AddOutput("Out", "Output tensor.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
-		opDef.SetDefinition(`Limit return part of data, the amount of data depends on limit attr, the offset of data depends on offset attr. Example:
+		opDef.SetDefinition(`Limit return part of data, the amount of data depends on limit attr, the offset of data depends on offset attr.
+Example:
 ` + "\n```python" + `
 offset = 1
 count = 2
@@ -789,6 +790,57 @@ Out = {b, c}
 		opDef.SetParamTypeConstraint(T, statusPrivateOrSecretOrPublic)
 		check(opDef.err)
 		AllOpDef = append(AllOpDef, opDef)
+	}
+
+	{
+		opDef := &OperatorDef{}
+		opDef.SetName(OpNameIsNull)
+		opDef.AddInput("In", "Input tensor.", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.AddOutput("Out", "Output tensor.", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.SetDefinition(`Definition: Test if Input tensor's data contains NULL.
+Example:
+` + "\n```python" + `
+In = {0, 1, NULL}
+Out = {false, false, true}
+` + "```\n")
+		opDef.SetParamTypeConstraint(T, statusPrivate)
+		check(opDef.err)
+		AllOpDef = append(AllOpDef, opDef)
+	}
+
+	{
+		opDef := &OperatorDef{}
+		opDef.SetName(OpNameIfNull)
+		opDef.AddInput("Expr", "The expression to test whether is NULL", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.AddInput("AltValue", "The value to return if Expr is NULL", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.AddOutput("Out", "Result", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.SetDefinition(`Definition: If Expr is NULL, return AltValue. Otherwise, return Expr.
+Example:
+` + "\n```python" + `
+Expr = {0, 1, NULL}
+AltValue = {10, 10, 10}
+Out = {0, 1, 10}
+` + "```\n")
+		opDef.SetParamTypeConstraint(T, statusPrivate)
+		check(opDef.err)
+		AllOpDef = append(AllOpDef, opDef)
+
+		{
+			opDef := &OperatorDef{}
+			opDef.SetName(OpNameCoalesce)
+			opDef.AddInput("Exprs", "The expressions to coalesce", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+			opDef.AddOutput("Out", "Result", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+			opDef.SetDefinition(`Definition: Coalesce returns the first value of Exprs that is not NULL. NULL is returned only if Exprs are all NULL.
+Example:
+` + "\n```python" + `
+Exprs[0] = {0, NULL, NULL}
+Exprs[1] = {0, 1, NULL}
+Out = {0, 1, NULL}
+` + "```\n")
+			opDef.SetParamTypeConstraint(T, statusPrivate)
+			check(opDef.err)
+			AllOpDef = append(AllOpDef, opDef)
+		}
 	}
 }
 

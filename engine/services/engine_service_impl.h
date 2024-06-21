@@ -22,6 +22,7 @@
 #include "engine/framework/session_manager.h"
 #include "engine/link/channel_manager.h"
 
+#include "api/common.pb.h"
 #include "api/engine.pb.h"
 #include "api/status.pb.h"
 #include "api/status_code.pb.h"

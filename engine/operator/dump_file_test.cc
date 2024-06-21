@@ -52,15 +52,16 @@ INSTANTIATE_TEST_SUITE_P(
         DumpFileTestCase{
             .inputs =
                 {test::NamedTensor(
-                     "x1", TensorFromJSON(arrow::float64(),
-                                          "[-3.1415, 0.1, 99.999, 1000]")),
-                 test::NamedTensor("x2",
-                                   TensorFromJSON(arrow::boolean(),
-                                                  "[true,false,false,true]")),
+                     "x1",
+                     TensorFromJSON(arrow::float64(),
+                                    "[-3.1415, 0.1, 99.999, 1000, null]")),
                  test::NamedTensor(
-                     "x3",
-                     TensorFromJSON(arrow::large_utf8(),
-                                    R"json(["test str","","A","B"])json"))},
+                     "x2", TensorFromJSON(arrow::boolean(),
+                                          "[true,false,false,true, null]")),
+                 test::NamedTensor(
+                     "x3", TensorFromJSON(
+                               arrow::large_utf8(),
+                               R"json(["test str","","A","B", null])json"))},
             .output_names = {"x1_dump", "x2_dump", "x3_dump"},
             .output_file_path = "./dumpfile_out.1",
             .output_file_content = R"csv("x1_dump","x2_dump","x3_dump"
@@ -68,6 +69,7 @@ INSTANTIATE_TEST_SUITE_P(
 0.1,false,""
 99.999,false,"A"
 1000,true,"B"
+NULL,NULL,NULL
 )csv"},
         DumpFileTestCase{
             .inputs =

@@ -77,8 +77,9 @@ type Session struct {
 	OutputNames []string
 	Warning     *pb.Warning
 	// mu protects the Result when running in async mode
-	mu     sync.Mutex
-	Result *pb.QueryResponse
+	mu            sync.Mutex
+	Result        *pb.QueryResponse
+	ExpireSeconds int64
 }
 
 func (s *Session) GetResultSafely() *pb.QueryResponse {
@@ -122,6 +123,13 @@ func (s *Session) OnSuccess() {
 	}
 }
 
+type SessionOptions struct {
+	SessionExpireSeconds int64
+	LinkConfig           *pb.LinkConfig
+	PsiConfig            *pb.PsiConfig
+	TimeZone             string
+}
+
 type ExecutionInfo struct {
 	Issuer    *pb.PartyId
 	ProjectID string
@@ -141,6 +149,8 @@ type ExecutionInfo struct {
 	CompileOpts *pb.CompileOptions
 	// for debug
 	DebugOpts *pb.DebugOptions
+
+	SessionOptions *SessionOptions
 }
 
 func (e *ExecutionInfo) CheckProjectConf() error {
@@ -159,7 +169,7 @@ func (e *ExecutionInfo) CheckProjectConf() error {
 		return fmt.Errorf("protocol cheetah only support 2 parties, but got %d", partyNum)
 	}
 	if spuConf.Protocol == spu.ProtocolKind_ABY3 && partyNum != 3 {
-		return fmt.Errorf("protocol cheetah only support 3 parties, but got %d", partyNum)
+		return fmt.Errorf("protocol aby3 only support 3 parties, but got %d", partyNum)
 	}
 	return nil
 }
@@ -171,7 +181,14 @@ func NewSession(ctx context.Context, info *ExecutionInfo, app *App, asyncMode bo
 		if err != nil {
 			return fmt.Errorf("NewSession: project %v not exists", project.ID)
 		}
-		return protojson.Unmarshal([]byte(project.ProjectConf.SpuConf), spuConf)
+
+		var projConf pb.ProjectConfig
+		err = protojson.Unmarshal(project.ProjectConf, &projConf)
+		if err != nil {
+			return fmt.Errorf("NewSession: failed to deserialize project config stored in db: %v", err)
+		}
+		spuConf = projConf.SpuRuntimeCfg
+		return err
 	})
 	if err != nil {
 		return nil, err
@@ -196,14 +213,15 @@ func NewSession(ctx context.Context, info *ExecutionInfo, app *App, asyncMode bo
 		info.CompileOpts.OptimizerHints.PsiAlgorithmType = pb.PsiAlgorithmType_ECDH
 	}
 	session = &Session{
-		CreatedAt:    time.Now(),
-		ExecuteInfo:  info,
-		SessionVars:  variable.NewSessionVars(),
-		Ctx:          ctx,
-		App:          app,
-		CallBackHost: app.Conf.IntraHost,
-		AsyncMode:    asyncMode,
-		DryRun:       dryRun,
+		CreatedAt:     time.Now(),
+		ExecuteInfo:   info,
+		SessionVars:   variable.NewSessionVars(),
+		Ctx:           ctx,
+		App:           app,
+		CallBackHost:  app.Conf.IntraHost,
+		AsyncMode:     asyncMode,
+		DryRun:        dryRun,
+		ExpireSeconds: info.SessionOptions.SessionExpireSeconds,
 	}
 
 	session.ExecuteInfo.InterStub = app.InterStub

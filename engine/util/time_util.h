@@ -37,20 +37,23 @@ std::string ConvertEpochToStr(time_t epoch);
 
 int64_t TimeZoneToSeconds(const std::string& time_zone);
 
+std::shared_ptr<Tensor> CompensateTimeZone(
+    const std::shared_ptr<Tensor>& from_tensor, const std::string& time_zone);
+
 // arrow has no func to convert timestamp to str:
 // https://arrow.apache.org/docs/cpp/compute.html#
-/// @brief ConvertDatetimeoProtoVistor convert timestamp to str and copy array's
+/// @brief ConvertDatetimeProtoVistor convert timestamp to str and copy array's
 /// value to pb::Tensor.
-class ConvertDatetimeoProtoVistor {
+class ConvertDatetimeProtoVistor {
  public:
-  ConvertDatetimeoProtoVistor() = delete;
+  ConvertDatetimeProtoVistor() = delete;
 
-  explicit ConvertDatetimeoProtoVistor(pb::Tensor* to_tensor);
+  explicit ConvertDatetimeProtoVistor(pb::Tensor* to_tensor, bool contain_null);
 
   template <typename T>
   arrow::Status Visit(const T& array) {
     return arrow::Status::NotImplemented(
-        fmt::format("type {} is not implemented in ConvertDatetimeoProtoVistor",
+        fmt::format("type {} is not implemented in ConvertDatetimeProtoVistor",
                     array.type()->name()));
   }
 
@@ -58,6 +61,7 @@ class ConvertDatetimeoProtoVistor {
 
  private:
   pb::Tensor* to_proto_;
+  bool contain_null_;
 };
 
 class ConvertDateTimeToInt64Visitor {
@@ -88,25 +92,6 @@ class ConvertDateTimeToInt64Visitor {
 
  private:
   Int64TensorBuilder builder_;
-};
-
-class CompensateTimeZoneAndCopyToProtoVistor {
- public:
-  CompensateTimeZoneAndCopyToProtoVistor(pb::Tensor* to_proto,
-                                         const std::string& time_zone);
-
-  template <typename T>
-  arrow::Status Visit(const T& array) {
-    return arrow::Status::NotImplemented(fmt::format(
-        "type {} is not implemented in CompensateTimeZoneAndCopyToProtoVistor",
-        array.type()->name()));
-  }
-
-  arrow::Status Visit(const arrow::NumericArray<arrow::Int64Type>& array);
-
- private:
-  pb::Tensor* to_proto_;
-  int64_t time_zone_offset_s_;
 };
 
 }  // namespace scql::engine::util

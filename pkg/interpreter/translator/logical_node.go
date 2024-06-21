@@ -19,6 +19,7 @@ import (
 
 	"github.com/secretflow/scql/pkg/expression"
 	"github.com/secretflow/scql/pkg/interpreter/ccl"
+	"github.com/secretflow/scql/pkg/interpreter/graph"
 	"github.com/secretflow/scql/pkg/parser/ast"
 	"github.com/secretflow/scql/pkg/planner/core"
 	"github.com/secretflow/scql/pkg/types"
@@ -44,16 +45,16 @@ type logicalNode interface {
 	VisibleParty() []string
 	// DataSourceParty returns a list of parties that logical node's table comes from
 	DataSourceParty() []string
-	SetResultTableWithDTypeCheck([]*Tensor) error
-	ResultTable() []*Tensor
+	SetResultTableWithDTypeCheck([]*graph.Tensor) error
+	ResultTable() []*graph.Tensor
 
-	FindTensorByColumnId(int64) (*Tensor, error)
+	FindTensorByColumnId(int64) (*graph.Tensor, error)
 }
 
 type baseNode struct {
 	lp                core.LogicalPlan
 	children          []logicalNode
-	rt                []*Tensor
+	rt                []*graph.Tensor
 	ccl               map[int64]*ccl.CCL
 	dataSourceParties []string
 }
@@ -112,7 +113,7 @@ func (n *baseNode) DataSourceParty() []string {
 	return n.dataSourceParties
 }
 
-func (n *baseNode) SetResultTableWithDTypeCheck(rt []*Tensor) error {
+func (n *baseNode) SetResultTableWithDTypeCheck(rt []*graph.Tensor) error {
 	// check tensor date type matches the logical node's column data type
 	for i, t := range rt {
 		col := n.Schema().Columns[i]
@@ -120,18 +121,18 @@ func (n *baseNode) SetResultTableWithDTypeCheck(rt []*Tensor) error {
 		if err != nil {
 			return fmt.Errorf("fail to set result table: %v", err)
 		}
-		if !t.skipDTypeCheck && t.DType != expectTp {
+		if !t.SkipDTypeCheck && t.DType != expectTp {
 			return fmt.Errorf("fail to set result table: tensor %v type(=%v) doesn't match scheme type(=%v) in node %v ",
 				t.UniqueName(), t.DType, expectTp, n.Type())
 		}
-		t.cc = n.ccl[col.UniqueID]
+		t.CC = n.ccl[col.UniqueID]
 	}
 
 	n.rt = rt
 	return nil
 }
 
-func (n *baseNode) ResultTable() []*Tensor {
+func (n *baseNode) ResultTable() []*graph.Tensor {
 	return n.rt
 }
 
@@ -143,7 +144,7 @@ func (n *baseNode) buildCCL(colTracer *ccl.ColumnTracer) error {
 	return fmt.Errorf("please implement this function in child")
 }
 
-func (n *baseNode) FindTensorByColumnId(id int64) (*Tensor, error) {
+func (n *baseNode) FindTensorByColumnId(id int64) (*graph.Tensor, error) {
 	if n.rt == nil || len(n.rt) != len(n.Schema().Columns) {
 		return nil, fmt.Errorf("findTensorByColumnId: invalid result table %v", n.rt)
 	}

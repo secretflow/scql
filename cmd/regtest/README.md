@@ -86,6 +86,12 @@ More to say: you may need run `pip install -r requirements.txt` when first time 
 go test ./cmd/regtest/p2p_test/... -v -count=1 -timeout=30m -args --conf=../../../.ci/broker-docker-compose/regtest.yml
 ```
 
+You could run sql manually if needed.
+```bash
+# please modify project-id or host if they are changed manually in .broker-docker-compose/.env
+./brokerctl run "select plain_datetime_0 from alice_tbl_0 limit 1;" --project-id "scdb_SEMI2K" --host http://127.0.0.1:8880 --timeout 30
+```
+
 ### Turn down all containers
 
 ```bash

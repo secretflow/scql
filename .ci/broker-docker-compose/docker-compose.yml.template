@@ -14,7 +14,7 @@ services:
     image: ${SCQL_IMAGE_TAG}
     volumes:
       - ./engine/bob/conf/gflags.conf:/home/admin/engine/conf/gflags.conf
-      - ./csv/:/data/
+      - ../test-data/csv/:/data/
   engine-carol:
     command:
       - /home/admin/bin/scqlengine
@@ -84,7 +84,12 @@ services:
         target: 3306
     restart: always
     volumes:
-      - ./mysql/initdb:/docker-entrypoint-initdb.d
+      - ./mysql/initdb/broker_init_alice.sql:/docker-entrypoint-initdb.d/broker_init_alice.sql
+      - ./mysql/initdb/broker_init_bob.sql:/docker-entrypoint-initdb.d/broker_init_bob.sql
+      - ./mysql/initdb/broker_init_carol.sql:/docker-entrypoint-initdb.d/broker_init_carol.sql
+      - ../test-data/mysql/mysql_alice_init.sql:/docker-entrypoint-initdb.d/mysql_alice_init.sql
+      - ../test-data/mysql/mysql_bob_init.sql:/docker-entrypoint-initdb.d/mysql_bob_init.sql
+      - ../test-data/mysql/mysql_carol_init.sql:/docker-entrypoint-initdb.d/mysql_carol_init.sql
       - ./mysql/conf/my.cnf:/etc/my.cnf
   postgres:
     image: postgres:9.5
@@ -106,4 +111,4 @@ services:
         target: 5432
     restart: always
     volumes:
-      - ./postgres/initdb:/docker-entrypoint-initdb.d/
+      - ../test-data/postgres:/docker-entrypoint-initdb.d/

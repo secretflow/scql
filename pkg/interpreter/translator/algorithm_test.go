@@ -20,16 +20,17 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/secretflow/scql/pkg/interpreter/ccl"
+	"github.com/secretflow/scql/pkg/interpreter/graph"
 )
 
 func createBinaryInputOutput() []map[string][]*ccl.CCL {
 	result := make([]map[string][]*ccl.CCL, 0)
 	in := map[string][]*ccl.CCL{
-		Left:  []*ccl.CCL{ccl.NewCCL()},
-		Right: []*ccl.CCL{ccl.NewCCL()},
+		graph.Left:  []*ccl.CCL{ccl.NewCCL()},
+		graph.Right: []*ccl.CCL{ccl.NewCCL()},
 	}
 	out := map[string][]*ccl.CCL{
-		Out: []*ccl.CCL{ccl.NewCCL()},
+		graph.Out: []*ccl.CCL{ccl.NewCCL()},
 	}
 	result = append(result, in)
 	result = append(result, out)
@@ -41,27 +42,27 @@ func TestCreateBinaryAlg(t *testing.T) {
 	{
 		inputs := createBinaryInputOutput()
 		in := inputs[0]
-		in[Left][0].SetLevelForParty("party1", ccl.Encrypt)
-		in[Left][0].SetLevelForParty("party2", ccl.Encrypt)
-		in[Right][0].SetLevelForParty("party1", ccl.Encrypt)
-		in[Right][0].SetLevelForParty("party2", ccl.Encrypt)
+		in[graph.Left][0].SetLevelForParty("party1", ccl.Encrypt)
+		in[graph.Left][0].SetLevelForParty("party2", ccl.Encrypt)
+		in[graph.Right][0].SetLevelForParty("party1", ccl.Encrypt)
+		in[graph.Right][0].SetLevelForParty("party2", ccl.Encrypt)
 		out := inputs[1]
-		out[Out][0].SetLevelForParty("party1", ccl.Encrypt)
-		out[Out][0].SetLevelForParty("party2", ccl.Encrypt)
+		out[graph.Out][0].SetLevelForParty("party1", ccl.Encrypt)
+		out[graph.Out][0].SetLevelForParty("party2", ccl.Encrypt)
 		algs, err := createBinaryAlg(in, out, []string{"party1", "party2"})
 		r.Nil(err)
 		expectedAlg := &materializedAlgorithm{
 			cost: newAlgCost(1, 3),
 			inputPlacement: map[string][]placement{
-				Left: []placement{
+				graph.Left: []placement{
 					&sharePlacement{partyCodes: []string{"party1", "party2"}},
 				},
-				Right: []placement{
+				graph.Right: []placement{
 					&sharePlacement{partyCodes: []string{"party1", "party2"}},
 				},
 			},
 			outputPlacement: map[string][]placement{
-				Out: []placement{
+				graph.Out: []placement{
 					&sharePlacement{partyCodes: []string{"party1", "party2"}},
 				},
 			},
@@ -72,27 +73,27 @@ func TestCreateBinaryAlg(t *testing.T) {
 	{
 		inputs := createBinaryInputOutput()
 		in := inputs[0]
-		in[Left][0].SetLevelForParty("party1", ccl.Plain)
-		in[Left][0].SetLevelForParty("party2", ccl.Encrypt)
-		in[Right][0].SetLevelForParty("party1", ccl.Plain)
-		in[Right][0].SetLevelForParty("party2", ccl.Encrypt)
+		in[graph.Left][0].SetLevelForParty("party1", ccl.Plain)
+		in[graph.Left][0].SetLevelForParty("party2", ccl.Encrypt)
+		in[graph.Right][0].SetLevelForParty("party1", ccl.Plain)
+		in[graph.Right][0].SetLevelForParty("party2", ccl.Encrypt)
 		out := inputs[1]
-		out[Out][0].SetLevelForParty("party1", ccl.Plain)
-		out[Out][0].SetLevelForParty("party2", ccl.Encrypt)
+		out[graph.Out][0].SetLevelForParty("party1", ccl.Plain)
+		out[graph.Out][0].SetLevelForParty("party2", ccl.Encrypt)
 		algs, err := createBinaryAlg(in, out, []string{"party1", "party2"})
 		r.Nil(err)
 		expectedAlg1 := &materializedAlgorithm{
 			cost: newAlgCost(1, 3),
 			inputPlacement: map[string][]placement{
-				Left: []placement{
+				graph.Left: []placement{
 					&sharePlacement{partyCodes: []string{"party1", "party2"}},
 				},
-				Right: []placement{
+				graph.Right: []placement{
 					&sharePlacement{partyCodes: []string{"party1", "party2"}},
 				},
 			},
 			outputPlacement: map[string][]placement{
-				Out: []placement{
+				graph.Out: []placement{
 					&sharePlacement{partyCodes: []string{"party1", "party2"}},
 				},
 			},
@@ -100,15 +101,15 @@ func TestCreateBinaryAlg(t *testing.T) {
 		expectedAlg2 := &materializedAlgorithm{
 			cost: newAlgCost(0, 1),
 			inputPlacement: map[string][]placement{
-				Left: []placement{
+				graph.Left: []placement{
 					&privatePlacement{partyCode: "party1"},
 				},
-				Right: []placement{
+				graph.Right: []placement{
 					&privatePlacement{partyCode: "party1"},
 				},
 			},
 			outputPlacement: map[string][]placement{
-				Out: []placement{
+				graph.Out: []placement{
 					&privatePlacement{partyCode: "party1"},
 				},
 			},
@@ -120,27 +121,27 @@ func TestCreateBinaryAlg(t *testing.T) {
 	{
 		inputs := createBinaryInputOutput()
 		in := inputs[0]
-		in[Left][0].SetLevelForParty("party1", ccl.Plain)
-		in[Left][0].SetLevelForParty("party2", ccl.Plain)
-		in[Right][0].SetLevelForParty("party1", ccl.Plain)
-		in[Right][0].SetLevelForParty("party2", ccl.Encrypt)
+		in[graph.Left][0].SetLevelForParty("party1", ccl.Plain)
+		in[graph.Left][0].SetLevelForParty("party2", ccl.Plain)
+		in[graph.Right][0].SetLevelForParty("party1", ccl.Plain)
+		in[graph.Right][0].SetLevelForParty("party2", ccl.Encrypt)
 		out := inputs[1]
-		out[Out][0].SetLevelForParty("party1", ccl.Plain)
-		out[Out][0].SetLevelForParty("party2", ccl.Encrypt)
+		out[graph.Out][0].SetLevelForParty("party1", ccl.Plain)
+		out[graph.Out][0].SetLevelForParty("party2", ccl.Encrypt)
 		algs, err := createBinaryAlg(in, out, []string{"party1", "party2"})
 		r.Nil(err)
 		expectedAlg1 := &materializedAlgorithm{
 			cost: newAlgCost(1, 3),
 			inputPlacement: map[string][]placement{
-				Left: []placement{
+				graph.Left: []placement{
 					&sharePlacement{partyCodes: []string{"party1", "party2"}},
 				},
-				Right: []placement{
+				graph.Right: []placement{
 					&sharePlacement{partyCodes: []string{"party1", "party2"}},
 				},
 			},
 			outputPlacement: map[string][]placement{
-				Out: []placement{
+				graph.Out: []placement{
 					&sharePlacement{partyCodes: []string{"party1", "party2"}},
 				},
 			},
@@ -148,15 +149,15 @@ func TestCreateBinaryAlg(t *testing.T) {
 		expectedAlg2 := &materializedAlgorithm{
 			cost: newAlgCost(0, 1),
 			inputPlacement: map[string][]placement{
-				Left: []placement{
+				graph.Left: []placement{
 					&privatePlacement{partyCode: "party1"},
 				},
-				Right: []placement{
+				graph.Right: []placement{
 					&privatePlacement{partyCode: "party1"},
 				},
 			},
 			outputPlacement: map[string][]placement{
-				Out: []placement{
+				graph.Out: []placement{
 					&privatePlacement{partyCode: "party1"},
 				},
 			},
@@ -164,15 +165,15 @@ func TestCreateBinaryAlg(t *testing.T) {
 		expectedAlg3 := &materializedAlgorithm{
 			cost: newAlgCost(1, 3),
 			inputPlacement: map[string][]placement{
-				Left: []placement{
+				graph.Left: []placement{
 					&publicPlacement{partyCodes: []string{"party1", "party2"}},
 				},
-				Right: []placement{
+				graph.Right: []placement{
 					&sharePlacement{partyCodes: []string{"party1", "party2"}},
 				},
 			},
 			outputPlacement: map[string][]placement{
-				Out: []placement{
+				graph.Out: []placement{
 					&sharePlacement{partyCodes: []string{"party1", "party2"}},
 				},
 			},
@@ -180,15 +181,15 @@ func TestCreateBinaryAlg(t *testing.T) {
 		expectedAlg4 := &materializedAlgorithm{
 			cost: newAlgCost(0, 2),
 			inputPlacement: map[string][]placement{
-				Left: []placement{
+				graph.Left: []placement{
 					&publicPlacement{partyCodes: []string{"party1", "party2"}},
 				},
-				Right: []placement{
+				graph.Right: []placement{
 					&privatePlacement{partyCode: "party1"},
 				},
 			},
 			outputPlacement: map[string][]placement{
-				Out: []placement{
+				graph.Out: []placement{
 					&privatePlacement{partyCode: "party1"},
 				},
 			},
@@ -206,27 +207,27 @@ func TestCreateBinaryAlgNoComm(t *testing.T) {
 	{
 		inputs := createBinaryInputOutput()
 		in := inputs[0]
-		in[Left][0].SetLevelForParty("party1", ccl.Encrypt)
-		in[Left][0].SetLevelForParty("party2", ccl.Encrypt)
-		in[Right][0].SetLevelForParty("party1", ccl.Encrypt)
-		in[Right][0].SetLevelForParty("party2", ccl.Encrypt)
+		in[graph.Left][0].SetLevelForParty("party1", ccl.Encrypt)
+		in[graph.Left][0].SetLevelForParty("party2", ccl.Encrypt)
+		in[graph.Right][0].SetLevelForParty("party1", ccl.Encrypt)
+		in[graph.Right][0].SetLevelForParty("party2", ccl.Encrypt)
 		out := inputs[1]
-		out[Out][0].SetLevelForParty("party1", ccl.Encrypt)
-		out[Out][0].SetLevelForParty("party2", ccl.Encrypt)
+		out[graph.Out][0].SetLevelForParty("party1", ccl.Encrypt)
+		out[graph.Out][0].SetLevelForParty("party2", ccl.Encrypt)
 		algs, err := createBinaryAlgNoComm(in, out, []string{"party1", "party2"})
 		r.Nil(err)
 		expectedAlg := &materializedAlgorithm{
 			cost: newAlgCost(0, 3),
 			inputPlacement: map[string][]placement{
-				Left: []placement{
+				graph.Left: []placement{
 					&sharePlacement{partyCodes: []string{"party1", "party2"}},
 				},
-				Right: []placement{
+				graph.Right: []placement{
 					&sharePlacement{partyCodes: []string{"party1", "party2"}},
 				},
 			},
 			outputPlacement: map[string][]placement{
-				Out: []placement{
+				graph.Out: []placement{
 					&sharePlacement{partyCodes: []string{"party1", "party2"}},
 				},
 			},

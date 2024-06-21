@@ -17,6 +17,7 @@ package translator
 import (
 	"fmt"
 
+	"github.com/secretflow/scql/pkg/interpreter/graph"
 	proto "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
@@ -27,22 +28,22 @@ type tensorToStatusPair struct {
 }
 
 type statusConverter struct {
-	convertMap map[tensorToStatusPair]*Tensor
-	plan       *GraphBuilder
+	convertMap map[tensorToStatusPair]*graph.Tensor
+	plan       *graph.GraphBuilder
 }
 
-func newStatusConverter(plan *GraphBuilder) *statusConverter {
-	return &statusConverter{convertMap: make(map[tensorToStatusPair]*Tensor), plan: plan}
+func newStatusConverter(plan *graph.GraphBuilder) *statusConverter {
+	return &statusConverter{convertMap: make(map[tensorToStatusPair]*graph.Tensor), plan: plan}
 }
 
-func (b *statusConverter) getExpectTensorFromMap(inputT *Tensor, expectPlace placement) *Tensor {
+func (b *statusConverter) getExpectTensorFromMap(inputT *graph.Tensor, expectPlace placement) *graph.Tensor {
 	if t, ok := b.convertMap[tensorToStatusPair{tensorID: inputT.ID, destStatus: expectPlace.toString()}]; ok {
 		return t
 	}
 	return nil
 }
 
-func (b *statusConverter) convertTo(inputT *Tensor, expectPlace placement) (*Tensor, error) {
+func (b *statusConverter) convertTo(inputT *graph.Tensor, expectPlace placement) (*graph.Tensor, error) {
 	if t := b.getExpectTensorFromMap(inputT, expectPlace); t != nil {
 		return t, nil
 	}
@@ -54,8 +55,8 @@ func (b *statusConverter) convertTo(inputT *Tensor, expectPlace placement) (*Ten
 	return t, nil
 }
 
-func (b *statusConverter) convertStatusForMap(inputT map[string][]*Tensor, expect map[string][]placement) (map[string][]*Tensor, error) {
-	result := make(map[string][]*Tensor)
+func (b *statusConverter) convertStatusForMap(inputT map[string][]*graph.Tensor, expect map[string][]placement) (map[string][]*graph.Tensor, error) {
+	result := make(map[string][]*graph.Tensor)
 	for _, key := range sliceutil.SortMapKeyForDeterminism(inputT) {
 		ts := inputT[key]
 		for i, t := range ts {
@@ -69,10 +70,10 @@ func (b *statusConverter) convertStatusForMap(inputT map[string][]*Tensor, expec
 	return result, nil
 }
 
-func (b *statusConverter) addTensorStatusConversion(tensor *Tensor, placement placement) (*Tensor, error) {
-	switch tensor.Status {
+func (b *statusConverter) addTensorStatusConversion(tensor *graph.Tensor, placement placement) (*graph.Tensor, error) {
+	switch tensor.Status() {
 	case proto.TensorStatus_TENSORSTATUS_PRIVATE:
-		switch placement.status() {
+		switch placement.Status() {
 		case proto.TensorStatus_TENSORSTATUS_PUBLIC:
 			return b.plan.AddMakePublicNode("make_public", tensor, placement.partyList())
 		case proto.TensorStatus_TENSORSTATUS_PRIVATE:
@@ -90,7 +91,7 @@ func (b *statusConverter) addTensorStatusConversion(tensor *Tensor, placement pl
 			return b.plan.AddMakeShareNode("make_share", tensor, placement.partyList())
 		}
 	case proto.TensorStatus_TENSORSTATUS_SECRET:
-		switch placement.status() {
+		switch placement.Status() {
 		case proto.TensorStatus_TENSORSTATUS_PUBLIC:
 			return b.plan.AddMakePublicNode("make_public", tensor, placement.partyList())
 		case proto.TensorStatus_TENSORSTATUS_SECRET:
@@ -100,26 +101,26 @@ func (b *statusConverter) addTensorStatusConversion(tensor *Tensor, placement pl
 			if tensor.DType == proto.PrimitiveDataType_STRING {
 				return b.revealString(tensor, revealParty)
 			}
-			return b.plan.AddMakePrivateNode("make_private", tensor, revealParty, b.plan.partyInfo.GetParties())
+			return b.plan.AddMakePrivateNode("make_private", tensor, revealParty, b.plan.GetPartyInfo().GetParties())
 		}
 	case proto.TensorStatus_TENSORSTATUS_PUBLIC:
-		switch placement.status() {
+		switch placement.Status() {
 		case proto.TensorStatus_TENSORSTATUS_PRIVATE:
 			revealParty := placement.partyList()[0]
 			if tensor.DType == proto.PrimitiveDataType_STRING {
 				return b.revealString(tensor, revealParty)
 			}
-			return b.plan.AddMakePrivateNode("make_private", tensor, revealParty, b.plan.partyInfo.GetParties())
+			return b.plan.AddMakePrivateNode("make_private", tensor, revealParty, b.plan.GetPartyInfo().GetParties())
 		case proto.TensorStatus_TENSORSTATUS_SECRET:
 			return b.plan.AddMakeShareNode("make_share", tensor, placement.partyList())
 		case proto.TensorStatus_TENSORSTATUS_PUBLIC:
 			return tensor, nil
 		}
 	}
-	return nil, fmt.Errorf("addTensorStatusConversion doesn't support converting from %v to %v", tensor.Status, placement.status())
+	return nil, fmt.Errorf("addTensorStatusConversion doesn't support converting from %v to %v", tensor.Status(), placement.Status())
 }
 
-func (b *statusConverter) getStatusConversionCost(inputT *Tensor, expectPlace placement) (algCost, error) {
+func (b *statusConverter) getStatusConversionCost(inputT *graph.Tensor, expectPlace placement) (algCost, error) {
 	if t := b.getExpectTensorFromMap(inputT, expectPlace); t != nil {
 		return newAlgCost(0, 0), nil
 	}
@@ -130,9 +131,9 @@ func (b *statusConverter) getStatusConversionCost(inputT *Tensor, expectPlace pl
 // typically only one party converts the private string, in union there may exist multi parities
 // 1) for one party: make string private in this party, and copy if needed.
 // 2) for multi parties: make string hash public(additional public ccl for all parties needed), then make private.
-func (b *statusConverter) revealString(input *Tensor, revealParty string) (*Tensor, error) {
+func (b *statusConverter) revealString(input *graph.Tensor, revealParty string) (*graph.Tensor, error) {
 	if len(input.SecretStringOwners) == 1 {
-		privateT, err := b.plan.AddMakePrivateNode("make_private", input, input.SecretStringOwners[0], b.plan.partyInfo.GetParties())
+		privateT, err := b.plan.AddMakePrivateNode("make_private", input, input.SecretStringOwners[0], b.plan.GetPartyInfo().GetParties())
 		if err != nil {
 			return nil, fmt.Errorf("revealString: %v", err)
 		}
@@ -143,22 +144,22 @@ func (b *statusConverter) revealString(input *Tensor, revealParty string) (*Tens
 		}
 	}
 
-	if input.Status != proto.TensorStatus_TENSORSTATUS_PUBLIC {
+	if input.Status() != proto.TensorStatus_TENSORSTATUS_PUBLIC {
 		var err error
-		input, err = b.plan.AddMakePublicNode("make_public", input, b.plan.partyInfo.GetParties())
+		input, err = b.plan.AddMakePublicNode("make_public", input, b.plan.GetPartyInfo().GetParties())
 		if err != nil {
 			return nil, fmt.Errorf("revealString: %v", err)
 		}
 	}
-	return b.plan.AddMakePrivateNode("make_private", input, revealParty, b.plan.partyInfo.GetParties())
+	return b.plan.AddMakePrivateNode("make_private", input, revealParty, b.plan.GetPartyInfo().GetParties())
 }
 
 // if status conversion is possible return cost else return error
-func getStatusConversionCost(inputT *Tensor, newPlacement placement) (algCost, error) {
+func getStatusConversionCost(inputT *graph.Tensor, newPlacement placement) (algCost, error) {
 	// TODO(xiaoyuan) Conversion cost here may be re-assign by secret protocol
-	switch inputT.status() {
+	switch inputT.Status() {
 	case proto.TensorStatus_TENSORSTATUS_PRIVATE:
-		switch newPlacement.status() {
+		switch newPlacement.Status() {
 		case proto.TensorStatus_TENSORSTATUS_PRIVATE:
 			if inputT.OwnerPartyCode == newPlacement.partyList()[0] {
 				return newAlgCost(0, 0), nil
@@ -170,7 +171,7 @@ func getStatusConversionCost(inputT *Tensor, newPlacement placement) (algCost, e
 			return newAlgCost(len(newPlacement.partyList())-1, 0), nil
 		}
 	case proto.TensorStatus_TENSORSTATUS_SECRET:
-		switch newPlacement.status() {
+		switch newPlacement.Status() {
 		case proto.TensorStatus_TENSORSTATUS_PRIVATE:
 			return newAlgCost(len(newPlacement.partyList())-1, 0), nil
 		case proto.TensorStatus_TENSORSTATUS_SECRET:
@@ -179,7 +180,7 @@ func getStatusConversionCost(inputT *Tensor, newPlacement placement) (algCost, e
 			return newAlgCost(len(newPlacement.partyList()), 0), nil
 		}
 	case proto.TensorStatus_TENSORSTATUS_PUBLIC:
-		switch newPlacement.status() {
+		switch newPlacement.Status() {
 		case proto.TensorStatus_TENSORSTATUS_PRIVATE:
 			return newAlgCost(0, 1), nil
 		case proto.TensorStatus_TENSORSTATUS_SECRET:

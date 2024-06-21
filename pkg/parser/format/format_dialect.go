@@ -40,6 +40,11 @@ type Dialect interface {
 	// Of course, you can also override the differences in function names of different backend databases within this function.
 	GetSpecialFuncName(string) string
 	GetOperator(string) string
+	// need parentheses or not for continuous comparison operator
+	// such as: a = b = c
+	// for mysql a = b = c
+	// for pg (a = b) = c
+	NeedParenthesesForCmpOperand() bool
 }
 
 func NewMySQLDialect() Dialect {
@@ -107,6 +112,10 @@ func (d *MySQLDialect) GetSpecialFuncName(originName string) string {
 
 func (d *MySQLDialect) GetOperator(op string) string {
 	return op
+}
+
+func (d *MySQLDialect) NeedParenthesesForCmpOperand() bool {
+	return false
 }
 
 type TiDBDialect struct {
@@ -201,12 +210,28 @@ func (d *PostgresDialect) ConvertCastTypeToString(asType byte, flen int, decimal
 			plainWord = fmt.Sprintf("(%d)", flen)
 
 		}
-	case mysql.TypeDouble:
-		keyword = "NUMERIC"
-	case mysql.TypeFloat:
-		keyword = "NUMERIC"
+	case mysql.TypeDouble, mysql.TypeFloat:
+		keyword = "DOUBLE PRECISION"
+	case mysql.TypeLong, mysql.TypeLonglong, mysql.TypeInt24, mysql.TypeShort:
+		if flag&mysql.UnsignedFlag != 0 {
+			err = fmt.Errorf("unsupported cast as data type %+v", asType)
+			return
+		} else {
+			keyword = "INTEGER"
+		}
+	case mysql.TypeVarString, mysql.TypeVarchar:
+		keyword = "VARCHAR"
+	case mysql.TypeDate:
+		keyword = "DATE"
+	// there is no datetime in pg
+	case mysql.TypeDatetime, mysql.TypeTimestamp:
+		keyword = "TIMESTAMP"
+	case mysql.TypeDuration:
+		keyword = "INTERVAL"
+	case mysql.TypeTiny:
+		keyword = "BOOLEAN"
 	default:
-		return d.MySQLDialect.ConvertCastTypeToString(asType, flen, decimal, flag)
+		err = fmt.Errorf("unsupported cast as data type: %+v", asType)
 	}
 	return
 }
@@ -220,6 +245,10 @@ func (d *PostgresDialect) GetSpecialFuncName(originName string) string {
 		return res
 	}
 	return originName
+}
+
+func (d *PostgresDialect) NeedParenthesesForCmpOperand() bool {
+	return true
 }
 
 type CVSDBDialect struct {
@@ -333,4 +362,8 @@ func (d *OdpsDialect) ConvertCastTypeToString(asType byte, flen int, decimal int
 		return d.MySQLDialect.ConvertCastTypeToString(asType, flen, decimal, flag)
 	}
 	return
+}
+
+func (d *OdpsDialect) NeedParenthesesForCmpOperand() bool {
+	return true
 }

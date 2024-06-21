@@ -65,7 +65,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/scql.pb.QueryResponse'
+            $ref: '#/definitions/scql.pb.FetchResultResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -435,7 +435,7 @@ definitions:
             foo = any.unpack(Foo.class);
           }
 
-       Example 3: Pack and unpack a message in Python.
+      Example 3: Pack and unpack a message in Python.
 
           foo = Foo(...)
           any = Any()
@@ -445,13 +445,16 @@ definitions:
             any.Unpack(foo)
             ...
 
-       Example 4: Pack and unpack a message in Go
+      Example 4: Pack and unpack a message in Go
 
            foo := &pb.Foo{...}
-           any, err := ptypes.MarshalAny(foo)
+           any, err := anypb.New(foo)
+           if err != nil {
+             ...
+           }
            ...
            foo := &pb.Foo{}
-           if err := ptypes.UnmarshalAny(any, foo); err != nil {
+           if err := any.UnmarshalTo(foo); err != nil {
              ...
            }
 
@@ -463,7 +466,7 @@ definitions:
 
 
       JSON
-      ====
+
       The JSON representation of an `Any` value uses the regular
       representation of the deserialized, embedded message, with an
       additional field `@type` which contains the type URL. Example:
@@ -632,9 +635,10 @@ definitions:
       - PLAINTEXT_AFTER_GROUP_BY
       - PLAINTEXT_AFTER_COMPARE
       - PLAINTEXT_AFTER_AGGREGATE
+      - PLAINTEXT_AS_JOIN_PAYLOAD
     default: UNKNOWN
-    title: |-
-      - PLAINTEXT: The column can be revealed at party_code.
+    description: |2-
+       - PLAINTEXT: The column can be revealed at party_code.
        - ENCRYPTED_ONLY: The column or any column produced by it can NOT be revealed at
       party_code. It can be used as condition in JOIN, WHERE, and GROUP BY.
        - PLAINTEXT_AFTER_JOIN: The column can be revealed at party_code if it is used as join key
@@ -647,6 +651,11 @@ definitions:
           - Aggregation operation such as sum/min/max/avg/count, e.g.
                select avg(score) from t group by zip_code
                select avg(score) from t
+       - PLAINTEXT_AS_JOIN_PAYLOAD: The column can be revealed at party_code if it is used as join payload.
+      For example:
+        select t2.id, t2.col1 from t1 inner join t2 on t1.id = t2.id;
+      In the above query, t2.col1 is used as join payload, t2.id is used as
+      join key.
   scql.pb.CreateProjectRequest:
     type: object
     example:
@@ -810,6 +819,33 @@ definitions:
         title: The unique identifier of the query job, obtained when SubmitQuery is called
     required:
       - job_id
+  scql.pb.FetchResultResponse:
+    type: object
+    example:
+      result:
+        costTimeS: 51.09585244
+        outColumns:
+          - annotation: {}
+            elemType: INT64
+            int64Data:
+              - "19"
+            name: cnt
+            shape:
+              dim:
+                - dimValue: "1"
+                - dimValue: "1"
+      status:
+        code: 0
+        message: successfully retrieved session result
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+      result:
+        $ref: '#/definitions/scql.pb.QueryResult'
+        title: Result of corresponding query, provided when status.code == Code.OK
+      job_status:
+        $ref: '#/definitions/scql.pb.JobStatus'
+        title: JobStatus may be provided when result is not ready
   scql.pb.GrantCCLRequest:
     type: object
     example:
@@ -842,6 +878,24 @@ definitions:
     properties:
       status:
         $ref: '#/definitions/scql.pb.Status'
+  scql.pb.IOStats:
+    type: object
+    properties:
+      send_bytes:
+        type: string
+        format: uint64
+      recv_bytes:
+        type: string
+        format: uint64
+      send_actions:
+        type: string
+        format: uint64
+      recv_actions:
+        type: string
+        format: uint64
+    description: |-
+      IOStats contains input/output statistics for a job, including bytes sent and received,
+      as well as the number of send and receive actions performed.
   scql.pb.InvitationRespond:
     type: string
     enum:
@@ -905,6 +959,73 @@ definitions:
     properties:
       status:
         $ref: '#/definitions/scql.pb.Status'
+  scql.pb.JobConfig:
+    type: object
+    properties:
+      session_expire_seconds:
+        type: string
+        format: int64
+        title: |-
+          if the value is 0 which means user does not set it, it would fallback to
+          project default setting
+      time_zone:
+        type: string
+        title: |-
+          job's time_zone for session, default is empty which means use engine's
+          default time_zone
+      unbalance_psi_ratio_threshold:
+        type: string
+        format: int64
+      unbalance_psi_larger_party_rows_count_threshold:
+        type: string
+        format: int64
+      psi_curve_type:
+        type: integer
+        format: int32
+      http_max_payload_size:
+        type: string
+        format: int64
+      link_recv_timeout_sec:
+        type: string
+        format: int64
+      link_throttle_window_size:
+        type: string
+        format: int64
+      link_chunked_send_parallel_size:
+        type: string
+        format: int64
+  scql.pb.JobProgress:
+    type: object
+    properties:
+      start_time:
+        type: string
+        format: date-time
+        title: Job start time
+      stages_count:
+        type: integer
+        format: int32
+        description: The total number of stages planned for the job.
+      executed_stages:
+        type: integer
+        format: int32
+        description: The number of stages that have been executed so far.
+      io_stats:
+        $ref: '#/definitions/scql.pb.IOStats'
+      running_stages:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/scql.pb.StageInfo'
+        description: A list of currently running stages, providing insight into which parts of the job are active.
+    description: JobProgress provides detailed information about the progress of a running job.
+  scql.pb.JobStatus:
+    type: object
+    properties:
+      summary:
+        type: string
+        description: A brief summary that describes the current state of the job.
+      progress:
+        $ref: '#/definitions/scql.pb.JobProgress'
   scql.pb.ListInvitationsRequest:
     type: object
     example: {}
@@ -1080,6 +1201,30 @@ definitions:
       spu_runtime_cfg:
         $ref: '#/definitions/spu.RuntimeConfig'
         description: The spu runtime configuration.
+      session_expire_seconds:
+        type: string
+        format: int64
+      unbalance_psi_ratio_threshold:
+        type: string
+        format: int64
+      unbalance_psi_larger_party_rows_count_threshold:
+        type: string
+        format: int64
+      psi_curve_type:
+        type: integer
+        format: int32
+      http_max_payload_size:
+        type: string
+        format: int64
+      link_recv_timeout_sec:
+        type: string
+        format: int64
+      link_throttle_window_size:
+        type: string
+        format: int64
+      link_chunked_send_parallel_size:
+        type: string
+        format: int64
   scql.pb.ProjectConflict:
     type: object
     properties:
@@ -1094,8 +1239,8 @@ definitions:
       message:
         type: string
         title: |-
-          Human-readable conflict details, e.g: "project creator is: alice in
-          alice; bob in bob"
+          Human-readable conflict details, e.g: "table 'ta' owner conflict: 'alice'
+          in party alice; 'bob' in party bob"
   scql.pb.ProjectDesc:
     type: object
     properties:
@@ -1156,33 +1301,40 @@ definitions:
           Dry run query, only takes effect in sync query API, naming DoQuery.
           SubmitQuery API will report an error if dry_run is set to True.
           Dry run only checks query syntax & CCL.
+      job_config:
+        $ref: '#/definitions/scql.pb.JobConfig'
     required:
       - project_id
       - query
   scql.pb.QueryResponse:
     type: object
     example:
-      cost_time_s: 0.010912044
-      out_columns:
-        - elem_type: STRING
-          name: ID
-          option: VALUE
-          shape:
-            dim:
-              - dim_value: "2"
-              - dim_value: "1"
-          string_data:
-            - alice
-            - bob
+      result:
+        cost_time_s: 0.010912044
+        out_columns:
+          - elem_type: STRING
+            name: ID
+            option: VALUE
+            shape:
+              dim:
+                - dim_value: "2"
+                - dim_value: "1"
+            string_data:
+              - alice
+              - bob
       status:
         code: 0
     properties:
       status:
         $ref: '#/definitions/scql.pb.Status'
+      result:
+        $ref: '#/definitions/scql.pb.QueryResult'
+  scql.pb.QueryResult:
+    type: object
+    properties:
       affected_rows:
         type: string
         format: int64
-        title: Valid while DQL is a select-into statement
       warnings:
         type: array
         items:
@@ -1197,6 +1349,7 @@ definitions:
           type: object
           $ref: '#/definitions/scql.pb.Tensor'
         title: Output columns are used to store the result datas
+    description: QueryResult represents the result of an executed SQL query.
   scql.pb.ReplyInvitationResponse:
     type: object
     properties:
@@ -1323,6 +1476,23 @@ definitions:
           type: object
           $ref: '#/definitions/scql.pb.ColumnControl'
         title: CCLs
+  scql.pb.StageInfo:
+    type: object
+    properties:
+      name:
+        type: string
+        description: The name of the stage.
+      summary:
+        type: string
+        title: A brief summary describing the stage
+      start_time:
+        type: string
+        format: date-time
+        title: Stage start time
+      details:
+        $ref: '#/definitions/google.protobuf.Any'
+        description: Personalized details that may have different structures depending on the stage type.
+    description: StageInfo provides information about an individual stage within a running job.
   scql.pb.Status:
     type: object
     properties:
@@ -1449,10 +1619,18 @@ definitions:
         items:
           type: string
         title: For string and datetime data types
+      data_validity:
+        type: array
+        items:
+          type: boolean
+        title: |-
+          validity mask for data(int32_data/int64_data/...), size can be zero(all
+          data valid) or the same as data, where item false means NULL, true means
+          valid value
       ref_num:
         type: integer
         format: int32
-        title: Tensor reference nums, used to delete tensor immediately
+        title: Tensor reference nums, internally used to delete tensor immediately
     description: A tensor data representation.
   scql.pb.TensorAnnotation:
     type: object
@@ -1784,12 +1962,18 @@ definitions:
       server_host:
         type: string
         description: TrustedThirdParty beaver server's remote ip:port or load-balance uri.
-      session_id:
-        type: string
-        description: if empty, use link id as session id.
       adjust_rank:
         type: integer
         format: int32
         description: |-
           which rank do adjust rpc call, usually choose the rank closer to the
           server.
+      asym_crypto_schema:
+        type: string
+        description: |-
+          asym_crypto_schema: support ["SM2"]
+          Will support 25519 in the future, after yacl supported it.
+      server_public_key:
+        type: string
+        format: byte
+        title: server's public key

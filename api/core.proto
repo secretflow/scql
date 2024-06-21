@@ -116,7 +116,11 @@ message Tensor {
   repeated bool bool_data = 10 [packed = true];
   // For string and datetime data types
   repeated string string_data = 11;
-  // Tensor reference nums, used to delete tensor immediately
+  // validity mask for data(int32_data/int64_data/...), size can be zero(all
+  // data valid) or the same as data, where item false means NULL, true means
+  // valid value
+  repeated bool data_validity = 13 [packed = true];
+  // Tensor reference nums, internally used to delete tensor immediately
   int32 ref_num = 12;
 }
 

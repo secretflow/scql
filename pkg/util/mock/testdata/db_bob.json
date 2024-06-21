@@ -19,6 +19,11 @@
                     "ccl": ["join"]
                 },
                 {
+                    "column_name": "joinpayload_int_0",
+                    "dtype": "int",
+                    "ccl": ["joinpayload"]
+                },
+                {
                     "column_name": "groupby_int_0",
                     "dtype": "int",
                     "ccl": ["groupby"]

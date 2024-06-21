@@ -28,10 +28,13 @@ import (
 	"github.com/secretflow/scql/pkg/broker/executor"
 	"github.com/secretflow/scql/pkg/broker/services/common"
 	"github.com/secretflow/scql/pkg/broker/storage"
-	"github.com/secretflow/scql/pkg/interpreter/translator"
+	exe "github.com/secretflow/scql/pkg/executor"
+	"github.com/secretflow/scql/pkg/interpreter/graph"
 	"github.com/secretflow/scql/pkg/planner/core"
+	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
+	"github.com/secretflow/scql/pkg/util/brokerutil"
 	"github.com/secretflow/scql/pkg/util/parallel"
 	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
@@ -42,6 +45,7 @@ func (svc *grpcIntraSvc) DoQuery(ctx context.Context, req *pb.QueryRequest) (res
 	}
 
 	app := svc.app
+
 	err = common.CheckMemberExistInProject(app.MetaMgr, req.GetProjectId(), app.Conf.PartyCode)
 	if err != nil {
 		return nil, err
@@ -50,6 +54,37 @@ func (svc *grpcIntraSvc) DoQuery(ctx context.Context, req *pb.QueryRequest) (res
 	if err != nil {
 		return nil, fmt.Errorf("DoQuery: %v", err)
 	}
+
+	jobConfig := req.GetJobConfig()
+
+	var existingProject *storage.Project
+	existingProject, err = app.MetaMgr.GetProject(req.GetProjectId())
+
+	if err != nil {
+		return nil, err
+	}
+
+	var projConf pb.ProjectConfig
+	err = protojson.Unmarshal(existingProject.ProjectConf, &projConf)
+	if err != nil {
+		return nil, err
+	}
+
+	jobConfig = brokerutil.UpdateJobConfig(jobConfig, &projConf)
+
+	linkCfg := &pb.LinkConfig{
+		LinkRecvTimeoutSec:          jobConfig.LinkRecvTimeoutSec,
+		LinkThrottleWindowSize:      jobConfig.LinkThrottleWindowSize,
+		LinkChunkedSendParallelSize: jobConfig.LinkChunkedSendParallelSize,
+		HttpMaxPayloadSize:          jobConfig.HttpMaxPayloadSize,
+	}
+
+	psiCfg := &pb.PsiConfig{
+		PsiCurveType:                              jobConfig.PsiCurveType,
+		UnbalancePsiRatioThreshold:                jobConfig.UnbalancePsiRatioThreshold,
+		UnbalancePsiLargerPartyRowsCountThreshold: jobConfig.UnbalancePsiLargerPartyRowsCountThreshold,
+	}
+
 	info := &application.ExecutionInfo{
 		ProjectID: req.GetProjectId(),
 		JobID:     jobID,
@@ -59,6 +94,11 @@ func (svc *grpcIntraSvc) DoQuery(ctx context.Context, req *pb.QueryRequest) (res
 		},
 		EngineClient: app.EngineClient,
 		DebugOpts:    req.GetDebugOpts(),
+		SessionOptions: &application.SessionOptions{
+			SessionExpireSeconds: jobConfig.GetSessionExpireSeconds(),
+			LinkConfig:           linkCfg,
+			PsiConfig:            psiCfg,
+		},
 	}
 	session, err := application.NewSession(ctx, info, app, false, req.GetDryRun())
 	if err != nil {
@@ -90,6 +130,7 @@ func (svc *grpcIntraSvc) SubmitQuery(ctx context.Context, req *pb.QueryRequest) 
 	}
 
 	app := svc.app
+
 	err = common.CheckMemberExistInProject(app.MetaMgr, req.GetProjectId(), app.Conf.PartyCode)
 	if err != nil {
 		return nil, err
@@ -98,6 +139,37 @@ func (svc *grpcIntraSvc) SubmitQuery(ctx context.Context, req *pb.QueryRequest) 
 	if err != nil {
 		return nil, fmt.Errorf("SubmitQuery: %v", err)
 	}
+
+	jobConfig := req.GetJobConfig()
+
+	var existingProject *storage.Project
+	existingProject, err = app.MetaMgr.GetProject(req.GetProjectId())
+
+	if err != nil {
+		return nil, err
+	}
+
+	var projConf pb.ProjectConfig
+	err = protojson.Unmarshal(existingProject.ProjectConf, &projConf)
+	if err != nil {
+		return nil, err
+	}
+
+	jobConfig = brokerutil.UpdateJobConfig(jobConfig, &projConf)
+
+	linkCfg := &pb.LinkConfig{
+		LinkRecvTimeoutSec:          jobConfig.LinkRecvTimeoutSec,
+		LinkThrottleWindowSize:      jobConfig.LinkThrottleWindowSize,
+		LinkChunkedSendParallelSize: jobConfig.LinkChunkedSendParallelSize,
+		HttpMaxPayloadSize:          jobConfig.HttpMaxPayloadSize,
+	}
+
+	psiCfg := &pb.PsiConfig{
+		PsiCurveType:                              jobConfig.PsiCurveType,
+		UnbalancePsiRatioThreshold:                jobConfig.UnbalancePsiRatioThreshold,
+		UnbalancePsiLargerPartyRowsCountThreshold: jobConfig.UnbalancePsiLargerPartyRowsCountThreshold,
+	}
+
 	info := &application.ExecutionInfo{
 		ProjectID: req.GetProjectId(),
 		JobID:     jobID,
@@ -107,6 +179,12 @@ func (svc *grpcIntraSvc) SubmitQuery(ctx context.Context, req *pb.QueryRequest) 
 		},
 		EngineClient: app.EngineClient,
 		DebugOpts:    req.GetDebugOpts(),
+		SessionOptions: &application.SessionOptions{
+			SessionExpireSeconds: jobConfig.GetSessionExpireSeconds(),
+			LinkConfig:           linkCfg,
+			PsiConfig:            psiCfg,
+			TimeZone:             req.GetJobConfig().GetTimeZone(),
+		},
 	}
 	session, err := application.NewSession(ctx, info, app, true /* async mode */, false)
 	if err != nil {
@@ -137,33 +215,142 @@ func (svc *grpcIntraSvc) SubmitQuery(ctx context.Context, req *pb.QueryRequest) 
 
 }
 
-func (svc *grpcIntraSvc) FetchResult(c context.Context, req *pb.FetchResultRequest) (resp *pb.QueryResponse, err error) {
+func fetchSessionStatus(session_info *storage.SessionInfo) (resp *scql.QueryJobStatusResponse, err error) {
+	conn, err := exe.NewEngineClientConn(session_info.EngineUrlForSelf, "")
+	if err != nil {
+		return nil, err
+	}
+	client := pb.NewSCQLEngineServiceClient(conn)
+
+	req := pb.QueryJobStatusRequest{
+		JobId: session_info.SessionID,
+	}
+	resp, err = client.QueryJobStatus(context.TODO(), &req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, err
+}
+
+func (svc *grpcIntraSvc) getAndCheckSessionResult(sid string) (resp *pb.FetchResultResponse, err error) {
+	queryResp, err := svc.app.GetSessionResult(sid)
+	if err != nil {
+		return nil, fmt.Errorf("GetSessionResult failed: %v", err)
+	}
+	if queryResp == nil {
+		return nil, nil
+	}
+
+	if queryResp.GetStatus() == nil {
+		return nil, fmt.Errorf("invalid response: status is nil")
+	}
+	if queryResp.GetStatus().GetCode() != int32(pb.Code_OK) {
+		return nil, fmt.Errorf("QueryResponse error: status = %v", queryResp.GetStatus())
+	}
+	resp = &scql.FetchResultResponse{
+		Status: &pb.Status{
+			Code:    int32(pb.Code_OK),
+			Message: "successfully retrieved session result",
+		},
+		Result: queryResp.GetResult(),
+	}
+	return resp, nil
+}
+
+func makeJobStatus(statusResp *pb.QueryJobStatusResponse) (jobStatus *pb.JobStatus, err error) {
+	if statusResp.GetProgress() == nil {
+		return nil, fmt.Errorf("makeJobStatus: nil JobProgress")
+	}
+
+	jobStatus = &pb.JobStatus{
+		Progress: statusResp.Progress,
+	}
+
+	switch statusResp.JobState {
+	case pb.JobState_JOB_INITIALIZED, pb.JobState_JOB_RUNNING:
+		totalStages := statusResp.Progress.GetStagesCount()
+		executedStages := statusResp.Progress.GetExecutedStages()
+		stageStr := ""
+		if totalStages > 0 {
+			stageStr = fmt.Sprintf(", %.3f%% of stages executed(%d/%d)", 100.0*float64(executedStages)/float64(totalStages), executedStages, totalStages)
+		}
+		jobStatus.Summary = fmt.Sprintf("job is running%s", stageStr)
+	case pb.JobState_JOB_SUCCEEDED:
+		jobStatus.Summary = "the engine has completed the job, but reporting may take some time"
+	case pb.JobState_JOB_CANCELED:
+		jobStatus.Summary = "the job has been canceled"
+	default:
+		jobStatus.Summary = "the job is in an abnormal state"
+	}
+
+	return jobStatus, nil
+}
+
+func (svc *grpcIntraSvc) FetchResult(c context.Context, req *pb.FetchResultRequest) (resp *pb.FetchResultResponse, err error) {
 	if req == nil || req.GetJobId() == "" {
 		return nil, status.New(pb.Code_BAD_REQUEST, "request for FetchResult is illegal: empty job id")
 	}
 
 	info, err := svc.app.GetSessionInfo(req.GetJobId())
 	if err != nil {
-		err = status.New(pb.Code_NOT_FOUND, fmt.Sprintf("no existing session for job: %v, err: %s", req.GetJobId(), err))
-		return
+		return nil, status.New(pb.Code_NOT_FOUND, fmt.Sprintf("no existing session for job: %v, err: %s", req.GetJobId(), err))
 	}
 	// Currently when persist_session is enabled, canceled or expired session_infos still exists in the database, while session_results are deleted
 	if info.Status == int8(storage.SessionCanceled) {
 		return nil, fmt.Errorf("session %s was canceled, no result existing now", req.GetJobId())
 	}
-	if time.Now().After(info.CreatedAt.Add(svc.app.Conf.SessionExpireTime)) {
+	if time.Now().After(info.ExpiredAt) {
 		return nil, fmt.Errorf("session %s was expired, no result existing now", req.GetJobId())
 	}
 
-	resp, err = svc.app.GetSessionResult(info.SessionID)
+	resp, err = svc.getAndCheckSessionResult(info.SessionID)
 	if err != nil {
-		return nil, fmt.Errorf("FetchResult: GetSessionResult failed: %v", err)
+		return nil, fmt.Errorf("FetchResult: failed in session result check: %v", err)
+	}
+	if resp != nil {
+		// result exist
+		return resp, nil
 	}
 
-	if resp == nil {
-		err = status.New(pb.Code_NOT_READY, "result not ready, please retry later")
+	// result does not exist, fetch job progress
+	resp = &pb.FetchResultResponse{}
+	resp.Status = &pb.Status{
+		Code: int32(pb.Code_NOT_READY),
 	}
-	return
+
+	statusResp, err := fetchSessionStatus(info)
+	if err != nil {
+		logrus.Warnf("FetchResult: failed to fetch session status: %v", err)
+	} else {
+		switch statusResp.GetStatus().GetCode() {
+		case int32(pb.Code_OK):
+			resp.JobStatus, err = makeJobStatus(statusResp)
+			if err != nil {
+				logrus.Warnf("FetchResult: err in makeJobStatus: %v", err)
+			}
+		case int32(pb.Code_NOT_FOUND):
+			// get the result again to handle the situation where the task's completion leads to the deletion of the session
+			resultResp, err := svc.getAndCheckSessionResult(info.SessionID)
+			if err != nil {
+				return nil, fmt.Errorf("FetchResult: failed in 2nd session result check: %v", err)
+			}
+			if resultResp != nil {
+				return resultResp, nil
+			}
+			logrus.Warn("FetchResult: still no result in 2nd session result check")
+		default:
+			logrus.Warnf("FetchResult: invalid resp status for QueryJobStatus: %v", statusResp.GetStatus())
+		}
+	}
+
+	if resp.JobStatus == nil {
+		resp.Status.Message = "job result is not ready, and failed to fetch job status info"
+	} else {
+		resp.Status.Message = "job result is not ready, fetch job status info"
+	}
+
+	return resp, nil
 }
 
 func (svc *grpcIntraSvc) CancelQuery(c context.Context, req *pb.CancelQueryRequest) (resp *pb.CancelQueryResponse, err error) {
@@ -214,7 +401,7 @@ type distributeRet struct {
 	prepareAgain bool
 }
 
-func distributeQueryToOtherParty(session *application.Session, enginesInfo *translator.EnginesInfo, p string) (*distributeRet, error) {
+func distributeQueryToOtherParty(session *application.Session, enginesInfo *graph.EnginesInfo, p string) (*distributeRet, error) {
 	result := distributeRet{party: p}
 	url, err := session.App.PartyMgr.GetBrokerUrlByParty(p)
 	if err != nil {
@@ -238,6 +425,18 @@ func distributeQueryToOtherParty(session *application.Session, enginesInfo *tran
 		IsAsync:        session.AsyncMode,
 		DebugOpts:      session.ExecuteInfo.DebugOpts,
 		DryRun:         session.DryRun,
+		TimeZone:       session.ExecuteInfo.SessionOptions.TimeZone,
+		JobConfig: &pb.JobConfig{
+			SessionExpireSeconds:       session.ExecuteInfo.SessionOptions.SessionExpireSeconds,
+			TimeZone:                   session.ExecuteInfo.SessionOptions.TimeZone,
+			UnbalancePsiRatioThreshold: session.ExecuteInfo.SessionOptions.PsiConfig.UnbalancePsiRatioThreshold,
+			UnbalancePsiLargerPartyRowsCountThreshold: session.ExecuteInfo.SessionOptions.PsiConfig.UnbalancePsiLargerPartyRowsCountThreshold,
+			PsiCurveType:                session.ExecuteInfo.SessionOptions.PsiConfig.PsiCurveType,
+			HttpMaxPayloadSize:          session.ExecuteInfo.SessionOptions.LinkConfig.HttpMaxPayloadSize,
+			LinkRecvTimeoutSec:          session.ExecuteInfo.SessionOptions.LinkConfig.LinkRecvTimeoutSec,
+			LinkThrottleWindowSize:      session.ExecuteInfo.SessionOptions.LinkConfig.LinkThrottleWindowSize,
+			LinkChunkedSendParallelSize: session.ExecuteInfo.SessionOptions.LinkConfig.LinkChunkedSendParallelSize,
+		},
 	}
 	if slices.Contains(executionInfo.DataParties, selfCode) {
 		selfInfoChecksum, err := session.GetSelfChecksum()

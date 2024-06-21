@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/secretflow/scql/pkg/interpreter/ccl"
+	"github.com/secretflow/scql/pkg/interpreter/graph"
 	"github.com/secretflow/scql/pkg/interpreter/operator"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/util/sliceutil"
@@ -60,12 +61,8 @@ func (c *algCost) addCost(cost algCost) {
 	c.communicationCost += cost.communicationCost
 }
 
-type statusConstraint interface {
-	status() scql.TensorStatus
-}
-
 type placement interface {
-	status() scql.TensorStatus
+	Status() scql.TensorStatus
 	partyList() []string
 	toString() string
 }
@@ -74,7 +71,7 @@ type privatePlacement struct {
 	partyCode string
 }
 
-func (p *privatePlacement) status() scql.TensorStatus {
+func (p *privatePlacement) Status() scql.TensorStatus {
 	return scql.TensorStatus_TENSORSTATUS_PRIVATE
 }
 
@@ -83,14 +80,14 @@ func (p *privatePlacement) partyList() []string {
 }
 
 func (p *privatePlacement) toString() string {
-	return fmt.Sprintf("%d-%v", p.status(), p.partyList())
+	return fmt.Sprintf("%d-%v", p.Status(), p.partyList())
 }
 
 type publicPlacement struct {
 	partyCodes []string
 }
 
-func (p *publicPlacement) status() scql.TensorStatus {
+func (p *publicPlacement) Status() scql.TensorStatus {
 	return scql.TensorStatus_TENSORSTATUS_PUBLIC
 }
 
@@ -99,14 +96,14 @@ func (p *publicPlacement) partyList() []string {
 }
 
 func (p *publicPlacement) toString() string {
-	return fmt.Sprintf("%d-%v", p.status(), p.partyList())
+	return fmt.Sprintf("%d-%v", p.Status(), p.partyList())
 }
 
 type sharePlacement struct {
 	partyCodes []string
 }
 
-func (p *sharePlacement) status() scql.TensorStatus {
+func (p *sharePlacement) Status() scql.TensorStatus {
 	return scql.TensorStatus_TENSORSTATUS_SECRET
 }
 
@@ -115,7 +112,7 @@ func (p *sharePlacement) partyList() []string {
 }
 
 func (p *sharePlacement) toString() string {
-	return fmt.Sprintf("%d-%v", p.status(), p.partyList())
+	return fmt.Sprintf("%d-%v", p.Status(), p.partyList())
 }
 
 type algCreateFunc func(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, allParties []string) ([]*materializedAlgorithm, error)
@@ -229,33 +226,33 @@ func createBinaryAlg(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, allPar
 	privatePublicCalCost := 2
 	shareCalCost := 3
 	commuCost := 1
-	if len(in[Left]) != 1 || len(in[Right]) != 1 {
-		return nil, fmt.Errorf("verifyBinary: invalid input size Left(%d)/Right(%d)", len(in[Left]), len(in[Right]))
+	if len(in[graph.Left]) != 1 || len(in[graph.Right]) != 1 {
+		return nil, fmt.Errorf("verifyBinary: invalid input size Left(%d)/Right(%d)", len(in[graph.Left]), len(in[graph.Right]))
 	}
-	if len(out[Out]) != 1 {
+	if len(out[graph.Out]) != 1 {
 		return nil, fmt.Errorf("verifyBinary: invalid output size %v", len(out))
 	}
-	for _, lp := range createPlacementByCCL(in[Left][0], allParties) {
-		for _, rp := range createPlacementByCCL(in[Right][0], allParties) {
+	for _, lp := range createPlacementByCCL(in[graph.Left][0], allParties) {
+		for _, rp := range createPlacementByCCL(in[graph.Right][0], allParties) {
 			alg := &materializedAlgorithm{
 				cost: newAlgCost(0, 0),
 				inputPlacement: map[string][]placement{
-					Left:  []placement{lp},
-					Right: []placement{rp},
+					graph.Left:  []placement{lp},
+					graph.Right: []placement{rp},
 				},
 				outputPlacement: map[string][]placement{
-					Out: []placement{},
+					graph.Out: []placement{},
 				}}
-			status, exist := binaryIOStatusMap[tensorStatusPair{left: lp.status(), right: rp.status()}]
+			status, exist := binaryIOStatusMap[tensorStatusPair{left: lp.Status(), right: rp.Status()}]
 			if !exist {
 				continue
 			}
 			outPartyCodes := lp.partyList()
 			// infer placement
-			if areStatusesAllPrivate(lp.status(), rp.status()) && lp.partyList()[0] != rp.partyList()[0] {
+			if areStatusesAllPrivate(lp.Status(), rp.Status()) && lp.partyList()[0] != rp.partyList()[0] {
 				continue
 			}
-			if areStatusesAllPrivate(rp.status()) {
+			if areStatusesAllPrivate(rp.Status()) {
 				outPartyCodes = rp.partyList()
 			}
 			outPlacement, err := createPlacementByStatus(status, outPartyCodes)
@@ -263,13 +260,13 @@ func createBinaryAlg(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, allPar
 				continue
 			}
 			// continue if check ccl failed
-			if !checkPlacementCCL(outPlacement, out[Out][0]) {
+			if !checkPlacementCCL(outPlacement, out[graph.Out][0]) {
 				continue
 			}
-			alg.outputPlacement[Out] = append(alg.outputPlacement[Out], outPlacement)
+			alg.outputPlacement[graph.Out] = append(alg.outputPlacement[graph.Out], outPlacement)
 			// calculate cost. No need to consider public vs public
-			if oneOfStatusesPrivate(lp.status(), rp.status()) {
-				if oneOfStatusesPublic(lp.status(), rp.status()) {
+			if oneOfStatusesPrivate(lp.Status(), rp.Status()) {
+				if oneOfStatusesPublic(lp.Status(), rp.Status()) {
 					alg.cost.calculationCost = privatePublicCalCost
 				} else {
 					alg.cost.calculationCost = localCalCost
@@ -277,7 +274,7 @@ func createBinaryAlg(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, allPar
 			} else {
 				alg.cost.calculationCost = shareCalCost
 			}
-			if oneOfStatusesShare(lp.status(), rp.status()) {
+			if oneOfStatusesShare(lp.Status(), rp.Status()) {
 				alg.cost.communicationCost = commuCost
 			} else {
 				alg.cost.communicationCost = 0
@@ -308,11 +305,11 @@ func createInAlg(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, allParties
 	psiInCommCost := 1
 	// encrypt cost 2, computing intersection cost 1
 	psiCalCost := 3
-	for _, lp := range createPlacementByCCL(in[Left][0], allParties) {
-		for _, rp := range createPlacementByCCL(in[Right][0], allParties) {
-			for _, outp := range createPlacementByCCL(out[Out][0], allParties) {
+	for _, lp := range createPlacementByCCL(in[graph.Left][0], allParties) {
+		for _, rp := range createPlacementByCCL(in[graph.Right][0], allParties) {
+			for _, outp := range createPlacementByCCL(out[graph.Out][0], allParties) {
 				// left and right tensor must be private
-				if !areStatusesAllPrivate(lp.status(), rp.status(), outp.status()) {
+				if !areStatusesAllPrivate(lp.Status(), rp.Status(), outp.Status()) {
 					continue
 				}
 				// left and right tensor must not be in the same side
@@ -325,11 +322,11 @@ func createInAlg(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, allParties
 				alg := &materializedAlgorithm{
 					cost: newAlgCost(psiInCommCost, psiCalCost),
 					inputPlacement: map[string][]placement{
-						Left:  []placement{lp},
-						Right: []placement{rp},
+						graph.Left:  []placement{lp},
+						graph.Right: []placement{rp},
 					},
 					outputPlacement: map[string][]placement{
-						Out: []placement{outp},
+						graph.Out: []placement{outp},
 					}}
 				result = append(result, alg)
 			}
@@ -342,7 +339,7 @@ func createCaseWhenAlg(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, allP
 	// TODO: (@taochen) need rewrite alg cost
 	// privateCost: n * ifelse_cost, ifelse_cost = 3, n = condition.size()
 	// secretCost: (n - 1) * (NotEqual * 2 + Add) + n * Sub + (n + 1) * (Mul + Add), n = condition.size()
-	cond_size := len(in[Condition])
+	cond_size := len(in[graph.Condition])
 	commCost := (cond_size+1)*MulComm + (cond_size-1)*2*EqualComm
 	calCost := cond_size * 3
 	privateCost := newAlgCost(0, calCost)

@@ -556,6 +556,7 @@ import (
 	nowait                  "NOWAIT"
 	plaintext               "PLAINTEXT"
 	plaintextAfterJoin      "PLAINTEXT_AFTER_JOIN"
+	plaintextAsJoinPayload  "PLAINTEXT_AS_JOIN_PAYLOAD"
 	plaintextAfterGroupBy   "PLAINTEXT_AFTER_GROUP_BY"
 	plaintextAfterCompare   "PLAINTEXT_AFTER_COMPARE"
 	plaintextAfterAggregate "PLAINTEXT_AFTER_AGGREGATE"
@@ -4896,6 +4897,7 @@ UnReservedKeyword:
 |	"PER_DB"
 |	"PLAINTEXT"
 |	"PLAINTEXT_AFTER_JOIN"
+|	"PLAINTEXT_AS_JOIN_PAYLOAD"
 |	"PLAINTEXT_AFTER_GROUP_BY"
 |	"PLAINTEXT_AFTER_COMPARE"
 |	"PLAINTEXT_AFTER_AGGREGATE"
@@ -10651,6 +10653,10 @@ PrivType:
 |	"SELECT" "PLAINTEXT_AFTER_JOIN"
 	{
 		$$ = mysql.PlaintextAfterJoinPriv
+	}
+|	"SELECT" "PLAINTEXT_AS_JOIN_PAYLOAD"
+	{
+		$$ = mysql.PlaintextAsJoinPayloadPriv
 	}
 |	"SELECT" "PLAINTEXT_AFTER_GROUP_BY"
 	{

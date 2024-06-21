@@ -85,6 +85,7 @@ cc_library(
     visibility = ["//engine/exe:__pkg__"],
     deps = [
         ":error_collector_service_impl",
+        "//api:common_cc_proto",
         "//api:engine_cc_proto",
         "//api:status_cc_proto",
         "//engine/audit:audit_log",

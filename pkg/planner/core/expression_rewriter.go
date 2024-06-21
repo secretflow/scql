@@ -503,6 +503,8 @@ func (er *expressionRewriter) unaryOpToExpression(v *ast.UnaryOperationExpr) {
 				value.Datum.SetValue(-value.Datum.GetFloat32())
 			case types.KindFloat64:
 				value.Datum.SetValue(-value.Datum.GetFloat64())
+			case types.KindMysqlDecimal:
+				value.GetMysqlDecimal().SetNegative(!value.Datum.GetMysqlDecimal().IsNegative())
 			default:
 				er.err = errors.Errorf("UnSupported UnaryMinus arg %v", value)
 				return

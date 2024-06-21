@@ -15,7 +15,12 @@
 package storage
 
 import (
+	"encoding/json"
 	"time"
+
+	"google.golang.org/protobuf/proto"
+
+	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 )
 
 const GcLockID = 100
@@ -23,24 +28,49 @@ const GcLockID = 100
 type Project struct {
 	// ->;<-:create means read and create
 	// id can't be modified
-	ID          string        `gorm:"column:id;type:varchar(64);primaryKey;uniqueIndex:;comment:'unique id';->;<-:create"`
-	Name        string        `gorm:"column:name;type:varchar(64);not null;comment:'project name'"`
-	Description string        `gorm:"column:desc;type:varchar(64);comment:'description'"`
-	Creator     string        `gorm:"column:creator;type:varchar(64);comment:'creator of the project'"`
-	Archived    bool          `gorm:"column:archived;comment:'if archived is true, whole project can't be modified'"`
-	ProjectConf ProjectConfig `gorm:"embedded"`
+	ID          string `gorm:"column:id;type:varchar(64);primaryKey;uniqueIndex:;comment:'unique id';->;<-:create"`
+	Name        string `gorm:"column:name;type:varchar(64);not null;comment:'project name'"`
+	Description string `gorm:"column:desc;type:varchar(64);comment:'description'"`
+	Creator     string `gorm:"column:creator;type:varchar(64);comment:'creator of the project'"`
+	Archived    bool   `gorm:"column:archived;comment:'if archived is true, whole project can't be modified'"`
+	ProjectConf []byte `gorm:"column:project_conf;type:bytes;comment:'project config stored as byte array'"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+}
+
+func (p *Project) Equals(other *Project) (bool, error) {
+	// compare each field except for time fields
+	if p.ID != other.ID ||
+		p.Name != other.Name ||
+		p.Description != other.Description ||
+		p.Creator != other.Creator ||
+		p.Archived != other.Archived {
+		return false, nil
+	}
+
+	var projConf pb.ProjectConfig
+	if len(p.ProjectConf) == 0 && len(other.ProjectConf) == 0 {
+		return true, nil
+	}
+	err := json.Unmarshal(p.ProjectConf, &projConf)
+
+	if err != nil {
+		return false, err
+	}
+
+	var otherProjConf pb.ProjectConfig
+	err = json.Unmarshal(other.ProjectConf, &otherProjConf)
+
+	if err != nil {
+		return false, err
+	}
+
+	return proto.Equal(&projConf, &otherProjConf), nil
 }
 
 type Member struct {
 	ProjectID string `gorm:"column:project_id;type:varchar(64);primaryKey;not null"`
 	Member    string `gorm:"column:member;type:varchar(64);primaryKey;not null;comment:'member in the project'"`
-}
-
-type ProjectConfig struct {
-	// in json format
-	SpuConf string `gorm:"column:spu_conf;comment:'description'"`
 }
 
 type TableIdentifier struct {
@@ -89,16 +119,16 @@ type ColumnPriv struct {
 }
 
 type Invitation struct {
-	ID               uint64        `gorm:"column:id;primaryKey;comment:'auto generated increment id'"`
-	ProjectID        string        `gorm:"column:project_id;type:varchar(64);not null;index:,composite:identifier;comment:'project id'"`
-	Name             string        `gorm:"column:name;type:varchar(64);comment:'name'"`
-	Description      string        `gorm:"column:desc;type:varchar(64);comment:'description'"`
-	Creator          string        `gorm:"column:creator;type:varchar(64);comment:'creator of the project'"`
-	ProjectCreatedAt time.Time     `gorm:"column:proj_created_at;comment:'the create time of the project'"`
-	Member           string        `gorm:"column:member;type:string;not null;comment:'members, flattened string, like: alice;bob'"`
-	ProjectConf      ProjectConfig `gorm:"embedded"`
-	Inviter          string        `gorm:"column:inviter;type:varchar(256);index:,composite:identifier;comment:'inviter'"`
-	Invitee          string        `gorm:"column:invitee;type:varchar(256);index:,composite:identifier;comment:'invitee'"`
+	ID               uint64    `gorm:"column:id;primaryKey;comment:'auto generated increment id'"`
+	ProjectID        string    `gorm:"column:project_id;type:varchar(64);not null;index:,composite:identifier;comment:'project id'"`
+	Name             string    `gorm:"column:name;type:varchar(64);comment:'name'"`
+	Description      string    `gorm:"column:desc;type:varchar(64);comment:'description'"`
+	Creator          string    `gorm:"column:creator;type:varchar(64);comment:'creator of the project'"`
+	ProjectCreatedAt time.Time `gorm:"column:proj_created_at;comment:'the create time of the project'"`
+	Member           string    `gorm:"column:member;type:string;not null;comment:'members, flattened string, like: alice;bob'"`
+	ProjectConf      []byte    `gorm:"column:project_conf;type:bytes;comment:'project config stored as byte array'"`
+	Inviter          string    `gorm:"column:inviter;type:varchar(256);index:,composite:identifier;comment:'inviter'"`
+	Invitee          string    `gorm:"column:invitee;type:varchar(256);index:,composite:identifier;comment:'invitee'"`
 	// 0: default, not decided to accept invitation or not; 1: accepted; 2: rejected; 3: invalid
 	Status     int8 `gorm:"column:status;default:0;comment:'accepted'"`
 	InviteTime time.Time
@@ -110,16 +140,19 @@ type Invitation struct {
 type SessionInfo struct {
 	SessionID string `gorm:"column:session_id;type:varchar(64);primaryKey;uniqueIndex:;comment:'unique session id';->;<-:create"`
 	// 0: default, running; 1: finished; 2: canceled
-	Status        int8   `gorm:"column:status;default:0;comment:'session status'"`
-	TableChecksum []byte `gorm:"column:table_checksum;type:varbinary(256);comment:'table checksum for self party'"`
-	CCLChecksum   []byte `gorm:"column:ccl_checksum;type:varbinary(256);comment:'ccl checksum for self party'"`
-	EngineUrl     string `gorm:"column:engine_url;type:varchar(256);comment:'url for engine to communicate with peer engine'"`
-	JobInfo       []byte `gorm:"column:job_info;type:bytes;comment:'serialized job info to specify task in engine'"`
-	WorkParties   string `gorm:"column:work_parties;type:string;not null;comment:'parties involved, flattened string, like: alice;bob'"`
-	OutputNames   string `gorm:"column:output_names;type:string;comment:'output column names, flattened string, like: col1,col2'"`
-	Warning       []byte `gorm:"column:warning;type:bytes;comment:'warning infos, serialized from pb.Warning'"`
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+
+	Status           int8   `gorm:"column:status;default:0;comment:'session status'"`
+	TableChecksum    []byte `gorm:"column:table_checksum;type:varbinary(256);comment:'table checksum for self party'"`
+	CCLChecksum      []byte `gorm:"column:ccl_checksum;type:varbinary(256);comment:'ccl checksum for self party'"`
+	EngineUrl        string `gorm:"column:engine_url;type:varchar(256);comment:'url for engine to communicate with peer engine'"`
+	EngineUrlForSelf string `gorm:"column:engine_url_for_self;type:varchar(256);comment:'engine url used for self broker'"`
+	JobInfo          []byte `gorm:"column:job_info;type:bytes;comment:'serialized job info to specify task in engine'"`
+	WorkParties      string `gorm:"column:work_parties;type:string;not null;comment:'parties involved, flattened string, like: alice;bob'"`
+	OutputNames      string `gorm:"column:output_names;type:string;comment:'output column names, flattened string, like: col1,col2'"`
+	Warning          []byte `gorm:"column:warning;type:bytes;comment:'warning infos, serialized from pb.Warning'"`
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	ExpiredAt        time.Time
 }
 
 type SessionResult struct {
@@ -127,6 +160,7 @@ type SessionResult struct {
 	Result    []byte `gorm:"column:result;type:bytes;comment:'query result, serialized from protobuf message'"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	ExpiredAt time.Time
 }
 
 type Lock struct {

@@ -51,19 +51,20 @@ INSTANTIATE_TEST_SUITE_P(
         test::SpuTestValuesMultiPC,
         testing::Values(
             IfTestCase{
-                .cond = test::NamedTensor(
-                    "Condition", TensorFromJSON(arrow::boolean(), "[1,0,1,1]")),
+                .cond = test::NamedTensor("Condition",
+                                          TensorFromJSON(arrow::boolean(),
+                                                         "[1,0,1,null]")),
                 .cond_status = pb::TENSORSTATUS_PRIVATE,
                 .value_true = test::NamedTensor(
                     "ValueIfTrue",
-                    TensorFromJSON(arrow::int64(), "[10,11,12,13]")),
+                    TensorFromJSON(arrow::int64(), "[10,11,null,13]")),
                 .value_true_status = pb::TENSORSTATUS_PRIVATE,
                 .value_false = test::NamedTensor(
                     "ValueIfFalse",
                     TensorFromJSON(arrow::int64(), "[16,17,18,19]")),
                 .value_false_status = pb::TENSORSTATUS_PRIVATE,
                 .out = test::NamedTensor(
-                    "Out", TensorFromJSON(arrow::int64(), "[10,17,12,13]")),
+                    "Out", TensorFromJSON(arrow::int64(), "[10,17,null,null]")),
                 .out_status = pb::TENSORSTATUS_PRIVATE},
             IfTestCase{
                 .cond = test::NamedTensor(

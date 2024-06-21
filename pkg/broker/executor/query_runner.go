@@ -31,7 +31,7 @@ import (
 	"github.com/secretflow/scql/pkg/executor"
 	"github.com/secretflow/scql/pkg/infoschema"
 	"github.com/secretflow/scql/pkg/interpreter"
-	"github.com/secretflow/scql/pkg/interpreter/translator"
+	"github.com/secretflow/scql/pkg/interpreter/graph"
 	"github.com/secretflow/scql/pkg/parser/model"
 	"github.com/secretflow/scql/pkg/planner/core"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
@@ -41,7 +41,7 @@ import (
 type QueryRunner struct {
 	session *application.Session
 	// running info
-	info   *translator.EnginesInfo
+	info   *graph.EnginesInfo
 	is     infoschema.InfoSchema
 	ccls   []*pb.SecurityConfig_ColumnControl
 	tables []storage.TableMeta
@@ -61,7 +61,7 @@ func (r *QueryRunner) Clear() {
 	r.ccls = nil
 }
 
-func (r *QueryRunner) GetEnginesInfo() *translator.EnginesInfo {
+func (r *QueryRunner) GetEnginesInfo() *graph.EnginesInfo {
 	return r.info
 }
 
@@ -164,7 +164,7 @@ func (r *QueryRunner) prepareData(usedTableNames []string) (dataParties []string
 	if err != nil {
 		return
 	}
-	r.info = translator.NewEnginesInfo(partyInfo, party2Tables)
+	r.info = graph.NewEnginesInfo(partyInfo, party2Tables)
 	r.info.UpdateTableToRefs(tableToRefs)
 	// get ccls
 	columnPrivs, err := txn.ListColumnConstraints(session.ExecuteInfo.ProjectID, usedTableNames, workParties)
@@ -287,10 +287,22 @@ func (r *QueryRunner) CreateExecutor(plan *pb.CompiledPlan) (*executor.Executor,
 	// create JobStartParams
 	session := r.session
 	conf := session.App.Conf
+	linkCfg := session.ExecuteInfo.SessionOptions.LinkConfig
+	if linkCfg == nil {
+		linkCfg = &pb.LinkConfig{}
+	}
+
+	psiCfg := session.ExecuteInfo.SessionOptions.PsiConfig
+	if psiCfg == nil {
+		psiCfg = &pb.PsiConfig{}
+	}
 	startParams := &pb.JobStartParams{
 		PartyCode:     conf.PartyCode,
 		JobId:         session.ExecuteInfo.JobID,
 		SpuRuntimeCfg: plan.GetSpuRuntimeConf(),
+		LinkCfg:       linkCfg,
+		PsiCfg:        psiCfg,
+		TimeZone:      session.ExecuteInfo.SessionOptions.TimeZone,
 	}
 	partyToRank := make(map[string]string)
 	for i, p := range plan.Parties {
@@ -340,13 +352,13 @@ func (r *QueryRunner) CreateExecutor(plan *pb.CompiledPlan) (*executor.Executor,
 		return nil, err
 	}
 
-	myself := &translator.Participant{
+	myself := &graph.Participant{
 		PartyCode: conf.PartyCode,
 		Endpoints: []string{session.Engine.GetEndpointForSelf()},
 		PubKey:    myPubKey,
 	}
 
-	partyInfo := translator.NewPartyInfo([]*translator.Participant{myself})
+	partyInfo := graph.NewPartyInfo([]*graph.Participant{myself})
 
 	engineStub := executor.NewEngineStub(
 		session.ExecuteInfo.JobID,
@@ -367,7 +379,7 @@ func (r *QueryRunner) CreateExecutor(plan *pb.CompiledPlan) (*executor.Executor,
 		}
 	}
 
-	return executor.NewExecutor(planReqs, outputNames, engineStub, r.session.ExecuteInfo.JobID, translator.NewPartyInfo([]*translator.Participant{myself}))
+	return executor.NewExecutor(planReqs, outputNames, engineStub, r.session.ExecuteInfo.JobID, graph.NewPartyInfo([]*graph.Participant{myself}))
 }
 
 func (r *QueryRunner) Execute(usedTables []core.DbTable) error {
@@ -426,15 +438,17 @@ func (r *QueryRunner) Execute(usedTables []core.DbTable) error {
 	// store result to session when engines run in sync mode
 	if !s.AsyncMode {
 		result := &pb.QueryResponse{
-			Status:       ret.Status,
-			OutColumns:   ret.GetOutColumns(),
-			AffectedRows: ret.GetAffectedRows(),
-			CostTimeS:    time.Since(s.CreatedAt).Seconds(),
+			Status: ret.Status,
+			Result: &pb.QueryResult{
+				OutColumns:   ret.GetOutColumns(),
+				AffectedRows: ret.GetAffectedRows(),
+				CostTimeS:    time.Since(s.CreatedAt).Seconds(),
+			},
 		}
 		if compiledPlan.Warning.MayAffectedByGroupThreshold {
 			reason := fmt.Sprintf("for safety, we filter the results for groups which contain less than %d items.", compileReq.CompileOpts.SecurityCompromise.GroupByThreshold)
 			logrus.Infof("%v", reason)
-			result.Warnings = append(result.Warnings, &pb.SQLWarning{Reason: reason})
+			result.Result.Warnings = append(result.Result.Warnings, &pb.SQLWarning{Reason: reason})
 		}
 
 		s.SetResultSafely(result)

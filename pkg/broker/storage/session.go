@@ -28,6 +28,7 @@ const (
 	SessionRunning  SessionStatus = 0
 	SessionFinished SessionStatus = 1
 	SessionCanceled SessionStatus = 2
+	SessionTimeout  SessionStatus = 3
 )
 
 func (m *MetaManager) SetSessionInfo(info SessionInfo) error {
@@ -49,6 +50,17 @@ func (m *MetaManager) CheckIdCanceled(ids []string) ([]string, error) {
 	}
 	result := m.db.Model(&SessionInfo{}).Select("session_id").Where("session_id in ?", ids).Where("status", int8(SessionCanceled)).Scan(&canceledIds)
 	return canceledIds, result.Error
+}
+
+func (m *MetaManager) CheckIdExpired(ids []string) ([]string, error) {
+	var expiredIds []string
+	if len(ids) == 0 {
+		return expiredIds, nil
+	}
+
+	result := m.db.Model(&SessionInfo{}).Select("session_id").Where("session_id in ?", ids).Where("expired_at < ?", time.Now()).Scan(&expiredIds)
+
+	return expiredIds, result.Error
 }
 
 // NOTE: check SessionInfo exist before calling
@@ -117,10 +129,23 @@ func (m *MetaManager) HoldGcLock(owner string, ttl time.Duration) error {
 	return fmt.Errorf("hold lock failed: {row affected: %d ; err: %+v}", result.RowsAffected, result.Error)
 }
 
-func (m *MetaManager) ClearExpiredResults(ttl time.Duration) error {
-	result := m.db.Where("created_at < ?", time.Now().Add(-ttl)).Limit(100).Delete(&SessionResult{})
+func (m *MetaManager) ClearExpiredSessions() error {
+	var expiredResults []SessionResult
+
+	result := m.db.Where("expired_at < ?", time.Now()).Limit(100).Delete(&expiredResults)
+
 	if result.Error == nil && result.RowsAffected > 0 {
 		logrus.Infof("GC: clear %d expired results", result.RowsAffected)
 	}
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	result = m.db.Model(&SessionInfo{}).Where("expired_at < ? AND status <> ?", time.Now(), int8(SessionTimeout)).Update("status", int8(SessionTimeout))
+	if result.Error == nil && result.RowsAffected > 0 {
+		logrus.Infof("GC: set %d sessions' status to be 'expired'", result.RowsAffected)
+	}
+
 	return result.Error
 }

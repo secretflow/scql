@@ -36,13 +36,14 @@ class GroupTest : public testing::TestWithParam<GroupTestCase> {
 INSTANTIATE_TEST_SUITE_P(
     GroupBatchTest, GroupTest,
     testing::Values(
-        GroupTestCase{
-            .inputs = {test::NamedTensor(
-                "in", TensorFromJSON(arrow::int64(), "[2, 1, 1, 1, 0]"))},
-            .group_id = test::NamedTensor(
-                "out_id", TensorFromJSON(arrow::uint32(), "[0, 1, 1, 1, 2]")),
-            .group_num = test::NamedTensor(
-                "out_num", TensorFromJSON(arrow::uint32(), "[3]"))},
+        GroupTestCase{.inputs = {test::NamedTensor(
+                          "in", TensorFromJSON(arrow::int64(),
+                                               "[2, 1, 1, 1, null, 0, null]"))},
+                      .group_id = test::NamedTensor(
+                          "out_id", TensorFromJSON(arrow::uint32(),
+                                                   "[0, 1, 1, 1, 2, 3, 2]")),
+                      .group_num = test::NamedTensor(
+                          "out_num", TensorFromJSON(arrow::uint32(), "[4]"))},
         GroupTestCase{
             .inputs = {test::NamedTensor("in_a",
                                          TensorFromJSON(arrow::int64(),

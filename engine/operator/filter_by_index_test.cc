@@ -43,14 +43,15 @@ INSTANTIATE_TEST_SUITE_P(
             .indice = test::NamedTensor("indice", TensorFromJSON(arrow::int64(),
                                                                  "[3,2,1,0]")),
             .datas = {test::NamedTensor(
-                          "x1", TensorFromJSON(arrow::large_utf8(),
-                                               R"json(["A","B","C","D"])json")),
+                          "x1",
+                          TensorFromJSON(arrow::large_utf8(),
+                                         R"json(["A",null,"C","D"])json")),
                       test::NamedTensor("x2", TensorFromJSON(arrow::int64(),
                                                              "[10,11,12,13]"))},
             .expect_outs =
                 {test::NamedTensor(
                      "y1", TensorFromJSON(arrow::large_utf8(),
-                                          R"json(["D","C","B","A"])json")),
+                                          R"json(["D","C",null,"A"])json")),
                  test::NamedTensor("y2", TensorFromJSON(arrow::int64(),
                                                         "[13,12,11,10]"))}},
         FilterByIndexTestCase{

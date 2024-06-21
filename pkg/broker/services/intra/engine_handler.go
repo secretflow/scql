@@ -59,7 +59,7 @@ func (svc *grpcIntraSvc) Report(ctx context.Context, request *pb.ReportRequest) 
 	result := &pb.QueryResponse{}
 	defer func() {
 		// stop engine whether persist failed or successfully
-		if err := app.PersistSessionResult(request.GetJobId(), result); err != nil {
+		if err := app.PersistSessionResult(request.GetJobId(), result, info.ExpiredAt); err != nil {
 			logrus.Warnf("failed to persist session result: %v", err)
 		}
 		session, ok := app.GetSession(request.GetJobId())
@@ -112,9 +112,12 @@ func (svc *grpcIntraSvc) Report(ctx context.Context, request *pb.ReportRequest) 
 	}
 
 	result.Status = request.GetStatus()
-	result.OutColumns = request.GetOutColumns()
-	result.AffectedRows = request.GetNumRowsAffected()
-	result.CostTimeS = time.Since(info.CreatedAt).Seconds()
+	result.Result = &pb.QueryResult{
+		OutColumns:   request.GetOutColumns(),
+		AffectedRows: request.GetNumRowsAffected(),
+		CostTimeS:    time.Since(info.CreatedAt).Seconds(),
+	}
+
 	if warn.MayAffectedByGroupThreshold {
 		groupByThreshold := constant.DefaultGroupByThreshold
 		if app.Conf.SecurityCompromise.GroupByThreshold > 0 {
@@ -123,7 +126,7 @@ func (svc *grpcIntraSvc) Report(ctx context.Context, request *pb.ReportRequest) 
 
 		reason := fmt.Sprintf("for safety, we filter the results for groups which contain less than %d items.", groupByThreshold)
 		logrus.Infof("Report: %v", reason)
-		result.Warnings = append(result.Warnings, &pb.SQLWarning{Reason: reason})
+		result.Result.Warnings = append(result.Result.Warnings, &pb.SQLWarning{Reason: reason})
 	}
 
 	return nil, nil

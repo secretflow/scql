@@ -15,7 +15,12 @@
 #include "engine/framework/session_manager.h"
 
 #include <memory>
-
+DEFINE_int32(psi_curve_type, psi::CURVE_FOURQ, "curve type used in PSI");
+DEFINE_int64(unbalance_psi_ratio_threshold, 5,
+             "minimum LargePartySize/SmallPartySize ratio to choose unbalanced "
+             "PSI, LargePartySize means the rows count of the larger party");
+DEFINE_int64(unbalance_psi_larger_party_rows_count_threshold, 81920,
+             "minimum rows count of the larger party to choose unbalanced PSI");
 namespace scql::engine {
 
 SessionManager::SessionManager(
@@ -53,6 +58,56 @@ SessionManager::~SessionManager() {
   }
 }
 
+scql::engine::SessionOptions SessionManager::GenerateUpdatedSessionOptions(
+    const pb::JobStartParams& params) {
+  struct SessionOptions session_opt = session_opt_;
+  // to make the config unit consistent, here to use second instead of
+  // miliseconds
+  if (params.link_cfg().link_recv_timeout_sec() > 0) {
+    session_opt.link_config.link_recv_timeout_ms =
+        params.link_cfg().link_recv_timeout_sec() * 1000;
+  }
+
+  if (params.link_cfg().link_throttle_window_size() > 0) {
+    session_opt.link_config.link_throttle_window_size =
+        params.link_cfg().link_throttle_window_size();
+  }
+
+  if (params.link_cfg().link_chunked_send_parallel_size() > 0) {
+    session_opt.link_config.link_chunked_send_parallel_size =
+        params.link_cfg().link_chunked_send_parallel_size();
+  }
+
+  if (params.link_cfg().http_max_payload_size() > 0) {
+    session_opt.link_config.http_max_payload_size =
+        params.link_cfg().http_max_payload_size();
+  }
+
+  if (params.psi_cfg().unbalance_psi_larger_party_rows_count_threshold() > 0) {
+    session_opt.psi_config.unbalance_psi_larger_party_rows_count_threshold =
+        params.psi_cfg().unbalance_psi_larger_party_rows_count_threshold();
+  } else {
+    session_opt.psi_config.unbalance_psi_larger_party_rows_count_threshold =
+        FLAGS_unbalance_psi_larger_party_rows_count_threshold;
+  }
+
+  if (params.psi_cfg().unbalance_psi_ratio_threshold() > 0) {
+    session_opt.psi_config.unbalance_psi_ratio_threshold =
+        params.psi_cfg().unbalance_psi_ratio_threshold();
+  } else {
+    session_opt.psi_config.unbalance_psi_ratio_threshold =
+        FLAGS_unbalance_psi_ratio_threshold;
+  }
+
+  if (params.psi_cfg().psi_curve_type() > 0) {
+    session_opt.psi_config.psi_curve_type = params.psi_cfg().psi_curve_type();
+  } else {
+    session_opt.psi_config.psi_curve_type = FLAGS_psi_curve_type;
+  }
+
+  return session_opt;
+}
+
 void SessionManager::CreateSession(const pb::JobStartParams& params,
                                    pb::DebugOptions debug_opts) {
   const std::string& job_id = params.job_id();
@@ -67,8 +122,9 @@ void SessionManager::CreateSession(const pb::JobStartParams& params,
   auto session_logger =
       std::make_shared<spdlog::logger>(logger_name, sinks.begin(), sinks.end());
 
+  auto session_opt = GenerateUpdatedSessionOptions(params);
   auto new_session = std::make_unique<Session>(
-      session_opt_, params, debug_opts, link_factory_.get(), session_logger,
+      session_opt, params, debug_opts, link_factory_.get(), session_logger,
       ds_router_.get(), ds_mgr_.get(), allowed_spu_protocols_);
   {
     std::unique_lock<std::mutex> lock(mutex_);

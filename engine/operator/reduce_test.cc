@@ -45,49 +45,52 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::Combine(
         test::SpuTestValuesMultiPC,
         testing::Values(
+            ReduceTestCase{
+                .op_type = ReduceSum::kOpType,
+                .status = pb::TENSORSTATUS_PRIVATE,
+                .input = test::NamedTensor(
+                    "x", TensorFromJSON(arrow::boolean(),
+                                        "[true, false, true, null]")),
+                .output = test::NamedTensor("y", TensorFromJSON(arrow::uint64(),
+                                                                "[2]"))},
             ReduceTestCase{.op_type = ReduceSum::kOpType,
                            .status = pb::TENSORSTATUS_PRIVATE,
                            .input = test::NamedTensor(
-                               "x", TensorFromJSON(arrow::boolean(),
-                                                   "[true, false, true]")),
+                               "x", TensorFromJSON(arrow::int64(),
+                                                   "[1, 2, 3, 4, 5, 6, null]")),
                            .output = test::NamedTensor(
-                               "y", TensorFromJSON(arrow::uint64(), "[2]"))},
+                               "y", TensorFromJSON(arrow::int64(), "[21]"))},
             ReduceTestCase{
                 .op_type = ReduceSum::kOpType,
                 .status = pb::TENSORSTATUS_PRIVATE,
                 .input = test::NamedTensor(
-                    "x", TensorFromJSON(arrow::int64(), "[1, 2, 3, 4, 5, 6]")),
-                .output = test::NamedTensor("y", TensorFromJSON(arrow::int64(),
-                                                                "[21]"))},
-            ReduceTestCase{
-                .op_type = ReduceSum::kOpType,
-                .status = pb::TENSORSTATUS_PRIVATE,
-                .input = test::NamedTensor(
-                    "x", TensorFromJSON(arrow::float64(),
-                                        "[0.1, 0.22, 0.33, 0.44, 0.55, 0.67]")),
+                    "x", TensorFromJSON(
+                             arrow::float64(),
+                             "[0.1, 0.22, 0.33, 0.44, 0.55, 0.67, null]")),
                 .output = test::NamedTensor(
                     "y", TensorFromJSON(arrow::float64(), "[2.31]"))},
-            ReduceTestCase{
-                .op_type = ReduceAvg::kOpType,
-                .status = pb::TENSORSTATUS_PRIVATE,
-                .input = test::NamedTensor(
-                    "x", TensorFromJSON(arrow::int64(), "[1, 2, 3, 4, 5, 6]")),
-                .output = test::NamedTensor(
-                    "y", TensorFromJSON(arrow::float64(), "[3.5]"))},
+            ReduceTestCase{.op_type = ReduceAvg::kOpType,
+                           .status = pb::TENSORSTATUS_PRIVATE,
+                           .input = test::NamedTensor(
+                               "x", TensorFromJSON(arrow::int64(),
+                                                   "[1, 2, 3, 4, 5, 6, null]")),
+                           .output = test::NamedTensor(
+                               "y", TensorFromJSON(arrow::float64(), "[3.5]"))},
             ReduceTestCase{
                 .op_type = ReduceAvg::kOpType,
                 .status = pb::TENSORSTATUS_PRIVATE,
                 .input = test::NamedTensor(
                     "x", TensorFromJSON(arrow::float32(),
-                                        "[1.75, 2.34, 4.12, 1.99]")),
+                                        "[1.75, 2.34, 4.12, 1.99, null]")),
                 .output = test::NamedTensor(
                     "y", TensorFromJSON(arrow::float64(), "[2.55]"))},
             ReduceTestCase{
                 .op_type = ReduceMax::kOpType,
                 .status = pb::TENSORSTATUS_PRIVATE,
                 .input = test::NamedTensor(
-                    "x", TensorFromJSON(arrow::int64(),
-                                        "[1000, -2, 3345, 42, 5999, 60]")),
+                    "x",
+                    TensorFromJSON(arrow::int64(),
+                                   "[1000, -2, 3345, 42, 5999, 60, null]")),
                 .output = test::NamedTensor("y", TensorFromJSON(arrow::int64(),
                                                                 "[5999]"))},
             ReduceTestCase{
@@ -95,15 +98,16 @@ INSTANTIATE_TEST_SUITE_P(
                 .status = pb::TENSORSTATUS_PRIVATE,
                 .input = test::NamedTensor(
                     "x", TensorFromJSON(arrow::float32(),
-                                        "[1.75, 2.34, 4.12, 1.99]")),
+                                        "[1.75, 2.34, 4.12, 1.99, null]")),
                 .output = test::NamedTensor(
                     "y", TensorFromJSON(arrow::float32(), "[4.12]"))},
             ReduceTestCase{
                 .op_type = ReduceMin::kOpType,
                 .status = pb::TENSORSTATUS_PRIVATE,
                 .input = test::NamedTensor(
-                    "x", TensorFromJSON(arrow::int64(),
-                                        "[1000, -2, 3345, 42, 5999, 60]")),
+                    "x",
+                    TensorFromJSON(arrow::int64(),
+                                   "[1000, -2, 3345, 42, 5999, 60, null]")),
                 .output = test::NamedTensor("y", TensorFromJSON(arrow::int64(),
                                                                 "[-2]"))},
             ReduceTestCase{
@@ -111,23 +115,25 @@ INSTANTIATE_TEST_SUITE_P(
                 .status = pb::TENSORSTATUS_PRIVATE,
                 .input = test::NamedTensor(
                     "x", TensorFromJSON(arrow::float32(),
-                                        "[1.75, 2.34, 4.12, 1.99]")),
+                                        "[1.75, 2.34, 4.12, 1.99, null]")),
                 .output = test::NamedTensor(
                     "y", TensorFromJSON(arrow::float32(), "[1.75]"))},
-            ReduceTestCase{.op_type = ReduceCount::kOpType,
-                           .status = pb::TENSORSTATUS_PRIVATE,
-                           .input = test::NamedTensor(
-                               "x", TensorFromJSON(arrow::float32(),
-                                                   "[1.75, 2.34, 4.12, 1.99]")),
-                           .output = test::NamedTensor(
-                               "y", TensorFromJSON(arrow::int64(), "[4]"))},
-            ReduceTestCase{.op_type = ReduceCount::kOpType,
-                           .status = pb::TENSORSTATUS_PRIVATE,
-                           .input = test::NamedTensor(
-                               "x", TensorFromJSON(arrow::float32(),
-                                                   "[null, 2.34, null, 1.99]")),
-                           .output = test::NamedTensor(
-                               "y", TensorFromJSON(arrow::int64(), "[2]"))})),
+            ReduceTestCase{
+                .op_type = ReduceCount::kOpType,
+                .status = pb::TENSORSTATUS_PRIVATE,
+                .input = test::NamedTensor(
+                    "x", TensorFromJSON(arrow::float32(),
+                                        "[1.75, 2.34, 4.12, 1.99, null]")),
+                .output = test::NamedTensor("y", TensorFromJSON(arrow::int64(),
+                                                                "[4]"))},
+            ReduceTestCase{
+                .op_type = ReduceCount::kOpType,
+                .status = pb::TENSORSTATUS_PRIVATE,
+                .input = test::NamedTensor(
+                    "x", TensorFromJSON(arrow::float32(),
+                                        "[null, 2.34, null, 1.99, null]")),
+                .output = test::NamedTensor("y", TensorFromJSON(arrow::int64(),
+                                                                "[2]"))})),
     TestParamNameGenerator(ReduceTest));
 
 INSTANTIATE_TEST_SUITE_P(

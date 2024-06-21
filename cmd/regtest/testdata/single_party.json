@@ -52,13 +52,13 @@
     },
     {
       "name": "arithmetic (divide)",
-      "query": "select plain_int_0 / 1 as res0, plain_int_0 / 1.5 as res1, plain_float_0 / 1.5 as res2, plain_int_0 / plain_int_1 as res3, plain_int_0 / plain_float_0 as res4, plain_float_0 / plain_float_1 as res5 from alice_tbl_1;",
-      "mysql_query": "select plain_int_0 / 1 as res0, plain_int_0 / 1.5 as res1, plain_float_0 / 1.5 as res2, plain_int_0 / plain_int_1 as res3, plain_int_0 / plain_float_0 as res4, plain_float_0 / plain_float_1 as res5 from alice.tbl_1;"
+      "query": "select plain_int_0 / 1 as res0, plain_int_0 / 1.5 as res1, plain_float_0 / 1.5 as res2, plain_int_0 / (case when plain_int_1 = 0 then 1 else plain_int_1 end) as res3, plain_int_0 / (case when plain_float_0 = 0 then 1.0 else plain_float_0 end) as res4, plain_float_0 / (case when plain_float_1 = 0 then 1.0 else plain_float_1 end) as res5 from alice_tbl_1;",
+      "mysql_query": "select plain_int_0 / 1 as res0, plain_int_0 / 1.5 as res1, plain_float_0 / 1.5 as res2, plain_int_0 / (case when plain_int_1 = 0 then 1 else plain_int_1 end) as res3, plain_int_0 / (case when plain_float_0 = 0 then 1.0 else plain_float_0 end) as res4, plain_float_0 / (case when plain_float_1 = 0 then 1.0 else plain_float_1 end) as res5 from alice.tbl_1;"
     },
     {
       "name": "arithmetic (model)",
-      "query": "select plain_int_0 % 1 as res0, plain_int_0 % plain_int_1 as res1 from alice_tbl_1;",
-      "mysql_query": "select plain_int_0 % 1 as res0, plain_int_0 % plain_int_1 as res1 from alice.tbl_1;"
+      "query": "select plain_int_0 % 1 as res0, plain_int_0 % (case when plain_int_1 = 0 then 1 else plain_int_1 end) as res1 from alice_tbl_1;",
+      "mysql_query": "select plain_int_0 % 1 as res0, plain_int_0 % (case when plain_int_1 = 0 then 1 else plain_int_1 end) as res1 from alice.tbl_1;"
     },
     {
       "name": "max",
@@ -136,9 +136,9 @@
       "mysql_query": "select count(distinct alice.plain_int_0) as res0, count(distinct alice.plain_float_0) as res1, count(distinct alice.plain_string_0) as res2 from alice.tbl_0 as alice;"
     },
     {
-      "name": "ifnull",
-      "query": "select plain_int_0, plain_string_0, ifnull(plain_string_0, plain_int_0) as mul from alice_tbl_1;",
-      "mysql_query": "select plain_int_0, plain_string_0, ifnull(plain_string_0, plain_int_0) as mul from alice.tbl_1;"
+      "name": "ifnull & coalesce",
+      "query": "select plain_int_0, plain_string_0, ifnull(plain_string_0, plain_int_0) as mul, coalesce(plain_float_0, plain_float_1, 1.0) as cl from alice_tbl_1;",
+      "mysql_query": "select plain_int_0, plain_string_0, ifnull(plain_string_0, plain_int_0) as mul, coalesce(plain_float_0, plain_float_1, 1.0) as cl from alice.tbl_1;"
     },
     {
       "name": "if",
@@ -222,18 +222,18 @@
     },
     {
       "name": "arithmetic (divide) where(null)",
-      "query": "select plain_int_0 / 1 as res0, plain_int_0 / 1.5 as res1, plain_float_0 / 1.5 as res2, plain_int_0 / plain_int_1 as res3, plain_int_0 / plain_float_0 as res4, plain_float_0 / plain_float_1 as res5 from alice_tbl_1 as alice where alice.plain_int_0 > alice.plain_int_1;",
-      "mysql_query": "select plain_int_0 / 1 as res0, plain_int_0 / 1.5 as res1, plain_float_0 / 1.5 as res2, plain_int_0 / plain_int_1 as res3, plain_int_0 / plain_float_0 as res4, plain_float_0 / plain_float_1 as res5 from alice.tbl_1 as alice where alice.plain_int_0 > alice.plain_int_1;"
+      "query": "select plain_int_0 / 1 as res0, plain_int_0 / 1.5 as res1, plain_float_0 / 1.5 as res2, plain_int_0 / (case when plain_int_1 = 0 then 1 else plain_int_1 end) as res3, plain_int_0 / (case when plain_float_0 = 0 then 1 else plain_float_0 end) as res4, plain_float_0 / (case when plain_float_1 = 0 then 1 else plain_float_1 end) as res5 from alice_tbl_1 as alice where alice.plain_int_0 > alice.plain_int_1;",
+      "mysql_query": "select plain_int_0 / 1 as res0, plain_int_0 / 1.5 as res1, plain_float_0 / 1.5 as res2, plain_int_0 / (case when plain_int_1 = 0 then 1 else plain_int_1 end) as res3, plain_int_0 / (case when plain_float_0 = 0 then 1 else plain_float_0 end) as res4, plain_float_0 / (case when plain_float_1 = 0 then 1 else plain_float_1 end) as res5 from alice.tbl_1 as alice where alice.plain_int_0 > alice.plain_int_1;"
     },
     {
       "name": "arithmetic (model) where(null)",
-      "query": "select plain_int_0 % 1 as res0, plain_int_0 % plain_int_1 as res1 from alice_tbl_1 as alice where alice.plain_int_0 > alice.plain_int_1;",
-      "mysql_query": "select plain_int_0 % 1 as res0,  plain_int_0 % plain_int_1 as res1 from alice.tbl_1 as alice where alice.plain_int_0 > alice.plain_int_1;"
+      "query": "select plain_int_0 % 1 as res0, plain_int_0 % (case when plain_int_1 = 0 then 1 else plain_int_1 end) as res1 from alice_tbl_1 as alice where alice.plain_int_0 > alice.plain_int_1;",
+      "mysql_query": "select plain_int_0 % 1 as res0,  plain_int_0 % (case when plain_int_1 = 0 then 1 else plain_int_1 end) as res1 from alice.tbl_1 as alice where alice.plain_int_0 > alice.plain_int_1;"
     },
     {
       "name": "case when",
-      "query": "select plain_int_0, plain_int_1, case when plain_int_0 >= 5  then -1 else (plain_int_0 / plain_int_1) end as r from alice_tbl_1;",
-      "mysql_query": "select plain_int_0, plain_int_1, case when plain_int_0 >= 5  then -1 else (plain_int_0 / plain_int_1) end as r from alice.tbl_1;"
+      "query": "select plain_int_0, plain_int_1, case when plain_int_0 >= 5  then -1 else plain_int_0 end as r from alice_tbl_1;",
+      "mysql_query": "select plain_int_0, plain_int_1, case when plain_int_0 >= 5  then -1 else plain_int_0 end as r from alice.tbl_1;"
     },
     {
       "name": "concat",

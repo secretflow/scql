@@ -24,7 +24,7 @@ import (
 	"github.com/secretflow/kuscia/proto/api/v1alpha1/kusciaapi"
 	"google.golang.org/grpc"
 
-	"github.com/secretflow/scql/pkg/interpreter/translator"
+	"github.com/secretflow/scql/pkg/interpreter/graph"
 )
 
 type kusciaPartyMgr struct {
@@ -65,10 +65,10 @@ func (k *kusciaPartyMgr) GetPubKeyByParty(party string) (string, error) {
 }
 
 // TODO: refactor(DRY) it with filePartyMgr.GetPartyInfoByParties
-func (k *kusciaPartyMgr) GetPartyInfoByParties(parties []string) (*translator.PartyInfo, error) {
-	var participants []*translator.Participant
+func (k *kusciaPartyMgr) GetPartyInfoByParties(parties []string) (*graph.PartyInfo, error) {
+	var participants []*graph.Participant
 	for _, party := range parties {
-		participant := &translator.Participant{PartyCode: party, Endpoints: []string{}}
+		participant := &graph.Participant{PartyCode: party, Endpoints: []string{}}
 		pubkey, err := k.GetPubKeyByParty(party)
 		if err != nil {
 			return nil, err
@@ -76,7 +76,7 @@ func (k *kusciaPartyMgr) GetPartyInfoByParties(parties []string) (*translator.Pa
 		participant.PubKey = pubkey
 		participants = append(participants, participant)
 	}
-	return translator.NewPartyInfo(participants), nil
+	return graph.NewPartyInfo(participants), nil
 }
 
 // extractPublicKeyFromCertificate extract public key from base64 encoded certificate & return its base64 encoded value

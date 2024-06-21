@@ -18,10 +18,11 @@ The CCL (Column Control List) constrains the revelation policy and operations al
 Types of CCL Constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-CCL Constraints are currently divided into the following seven types. Among them, the first six constraints describe the circumstances under which data can be revealed
+CCL Constraints are currently divided into the following eight types. Among them, the first seven constraints describe the circumstances under which data can be revealed
 
 * ``PLAINTEXT``: Computation and revelation of data in any form, including clear text, is permitted without any restrictions on use. Typically used for non-sensitive data. ``PLAINTEXT`` needs to be used with caution.
 * ``PLAINTEXT_AFTER_JOIN``: The data is allowed to be used as the key of INNER JOIN, and can be revealed in plaintext after JOIN.
+* ``PLAINTEXT_AS_JOIN_PAYLOAD``: The data could be revealed if it is used as inner join payload(not join key).
 * ``PLAINTEXT_AFTER_GROUP_BY``: When the constrained column is used as GROUP BY key, it can be revealed in plaintext after GROUP BY. CCL also limits the rows of the results obtained by GROUP BY, and filters out the groups whose number of rows does not meet the requirement of more than three.
 * ``PLAINTEXT_AFTER_AGGREGATE``: When the constrained column is used as the input parameter of aggregation functions (such as SUM, AVG, MIN, MAX, COUNT), the calculated results can be revealed in plaintext.
 * ``PLAINTEXT_AFTER_COMPARE``: When the constrained column is used as an input parameter of Compare (such as <, >, >=, =, !=, etc.), the result obtained can be revealed in plaintext.

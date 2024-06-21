@@ -67,8 +67,4 @@ std::shared_ptr<Tensor> ConvertDateTimeToInt64(
 
 void ConvertDateTimeAndCopyValuesToProto(
     const std::shared_ptr<Tensor>& from_tensor, pb::Tensor* to_proto);
-
-void CompensateTimeZoneAndCopyToProto(
-    const std::shared_ptr<Tensor>& from_tensor, pb::Tensor* to_proto,
-    const std::string& time_zone);
 }  // namespace scql::engine::util

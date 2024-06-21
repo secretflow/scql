@@ -15,8 +15,6 @@
 #pragma once
 
 #include <memory>
-#include <string>
-#include <unordered_map>
 
 #include "prometheus/gauge.h"
 #include "prometheus/registry.h"
@@ -30,6 +28,9 @@ class PrometheusMonitor {
     return &t;
   }
 
+  PrometheusMonitor(const PrometheusMonitor&) = delete;
+  PrometheusMonitor& operator=(const PrometheusMonitor&) = delete;
+
   prometheus::Registry* GetRegistry() { return metrics_registry_.get(); }
 
   // Metrics funcs
@@ -38,14 +39,11 @@ class PrometheusMonitor {
 
  private:
   PrometheusMonitor();
-  PrometheusMonitor(const PrometheusMonitor&) = delete;
-  PrometheusMonitor& operator=(const PrometheusMonitor&) = delete;
 
- private:
   struct Stats {
     prometheus::Gauge& session_number_total;
 
-    Stats(prometheus::Registry& registry);
+    explicit Stats(prometheus::Registry& registry);
   };
   std::unique_ptr<Stats> stats_;
 

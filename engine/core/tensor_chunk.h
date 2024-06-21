@@ -28,8 +28,8 @@ class TensorChunk {
   TensorChunk();
   explicit TensorChunk(std::shared_ptr<arrow::Array> array);
 
-  TensorChunk(TensorChunk&&);
-  TensorChunk& operator=(TensorChunk&& other);
+  TensorChunk(TensorChunk&&) noexcept;
+  TensorChunk& operator=(TensorChunk&& other) noexcept;
 
   TensorChunk(const TensorChunk&) = delete;
   TensorChunk& operator=(const TensorChunk&) = delete;

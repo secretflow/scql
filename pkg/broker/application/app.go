@@ -176,7 +176,7 @@ func (app *App) PersistSessionInfo(session *Session) error {
 	return app.MetaMgr.SetSessionInfo(*info)
 }
 
-func (app *App) PersistSessionResult(sid string, resp *pb.QueryResponse) error {
+func (app *App) PersistSessionResult(sid string, resp *pb.QueryResponse, expiredAt time.Time) error {
 	if !app.Conf.PersistSession {
 		return nil
 	}
@@ -188,6 +188,7 @@ func (app *App) PersistSessionResult(sid string, resp *pb.QueryResponse) error {
 	return app.MetaMgr.SetSessionResult(storage.SessionResult{
 		SessionID: sid,
 		Result:    ser,
+		ExpiredAt: expiredAt,
 	})
 }
 
@@ -272,6 +273,7 @@ func sessionInfo(session *Session) (info *storage.SessionInfo, err error) {
 	}
 	var jobInfo []byte
 	engineUrl := ""
+	engineUrlForSelf := ""
 	if !session.DryRun {
 		jobInfo, err = session.Engine.MarshalToText()
 		if err != nil {
@@ -279,6 +281,7 @@ func sessionInfo(session *Session) (info *storage.SessionInfo, err error) {
 			return
 		}
 		engineUrl = session.Engine.GetEndpointForPeer()
+		engineUrlForSelf = session.Engine.GetEndpointForSelf()
 	}
 
 	warn, err := protojson.Marshal(session.Warning)
@@ -287,15 +290,18 @@ func sessionInfo(session *Session) (info *storage.SessionInfo, err error) {
 		return
 	}
 	return &storage.SessionInfo{
-		SessionID:     session.ExecuteInfo.JobID,
-		Status:        0,
-		TableChecksum: checksum.TableSchema,
-		CCLChecksum:   checksum.CCL,
-		EngineUrl:     engineUrl,
-		JobInfo:       jobInfo,
-		WorkParties:   strings.Join(session.ExecuteInfo.WorkParties, ";"),
-		OutputNames:   strings.Join(session.OutputNames, ";"),
-		Warning:       warn,
-		CreatedAt:     session.CreatedAt,
+
+		SessionID:        session.ExecuteInfo.JobID,
+		Status:           0,
+		TableChecksum:    checksum.TableSchema,
+		CCLChecksum:      checksum.CCL,
+		EngineUrl:        engineUrl,
+		EngineUrlForSelf: engineUrlForSelf,
+		JobInfo:          jobInfo,
+		WorkParties:      strings.Join(session.ExecuteInfo.WorkParties, ";"),
+		OutputNames:      strings.Join(session.OutputNames, ";"),
+		Warning:          warn,
+		CreatedAt:        session.CreatedAt,
+		ExpiredAt:        session.CreatedAt.Add(time.Duration(session.ExpireSeconds) * time.Second),
 	}, nil
 }

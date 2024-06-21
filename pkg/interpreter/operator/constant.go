@@ -35,6 +35,7 @@ const (
 	OpNameBroadcastTo   string = "BroadcastTo"
 	OpNameCast          string = "Cast"
 	OpNameLimit         string = "Limit"
+	OpNameIsNull        string = "IsNull"
 	// binary ops
 	OpNameLess         string = "Less"
 	OpNameLessEqual    string = "LessEqual"
@@ -86,6 +87,8 @@ const (
 	// condition ops
 	OpNameCaseWhen string = "CaseWhen"
 	OpNameIf       string = "If"
+	OpNameIfNull   string = "IfNull"
+	OpNameCoalesce string = "Coalesce"
 )
 
 const (

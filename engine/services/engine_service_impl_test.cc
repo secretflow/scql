@@ -14,6 +14,8 @@
 
 #include "engine/services/engine_service_impl.h"
 
+#include <cstdint>
+
 #include "Poco/Data/SQLite/Connector.h"
 #include "Poco/Data/Session.h"
 #include "brpc/server.h"
@@ -49,7 +51,6 @@ class MockReportServiceImpl : public services::pb::MockReportService {
     }
     brpc::Controller* cntl = static_cast<brpc::Controller*>(controller);
     cntl->response_attachment().append("receive report succ.");
-    return;
   }
 
  public:
@@ -81,19 +82,44 @@ class EngineServiceImplTest : public ::testing::Test {
       // prepare pb::JobStartParams global_params.
       global_params.set_job_id(global_session_id);
 
-      global_params.set_party_code("alice");
+      global_params.set_party_code(op::test::kPartyAlice);
       auto* alice = global_params.add_parties();
-      alice->set_code("alice");
-      alice->set_name("party alice");
-      alice->set_host("alice.com");
-      alice->set_rank(0);
-      global_cntl.http_request().SetHeader("Credential", "alice_credential");
+      alice->CopyFrom(op::test::BuildParty(op::test::kPartyAlice, 0));
+      global_cntl.http_request().SetHeader(
+          "Credential", fmt::format("{}_credential", op::test::kPartyAlice));
 
-      auto* config = global_params.mutable_spu_runtime_cfg();
-      config->set_protocol(spu::ProtocolKind::SEMI2K);
-      config->set_field(spu::FieldType::FM64);
-      config->set_sigmoid_mode(spu::RuntimeConfig::SIGMOID_REAL);
+      global_params.mutable_spu_runtime_cfg()->CopyFrom(
+          op::test::MakeSpuRuntimeConfigForTest(spu::ProtocolKind::SEMI2K));
     }
+  }
+
+  void CheckJobStatus(pb::JobState pb_state) {
+    pb::QueryJobStatusRequest request;
+    request.set_job_id(global_session_id);
+    pb::QueryJobStatusResponse response;
+    EXPECT_NO_THROW(
+        impl->QueryJobStatus(&global_cntl, &request, &response, nullptr));
+    EXPECT_EQ(pb::Code::OK, response.status().code());
+    EXPECT_EQ(pb_state, response.job_state());
+  }
+
+  void SetAndCheckJobStatus(SessionState state) {
+    auto* session_manager = impl->GetSessionManager();
+    EXPECT_TRUE(session_manager->SetSessionState(global_session_id, state));
+
+    CheckJobStatus(ConvertSessionStateToJobState(state));
+  }
+
+  void CheckJobNodeCount(int32_t expected_nodes_count,
+                         int32_t expected_executed_nodes) {
+    pb::QueryJobStatusRequest request;
+    request.set_job_id(global_session_id);
+    pb::QueryJobStatusResponse response;
+    EXPECT_NO_THROW(
+        impl->QueryJobStatus(&global_cntl, &request, &response, nullptr));
+    EXPECT_EQ(pb::Code::OK, response.status().code());
+    EXPECT_EQ(expected_nodes_count, response.progress().stages_count());
+    EXPECT_EQ(expected_executed_nodes, response.progress().executed_stages());
   }
 
  public:
@@ -108,30 +134,41 @@ class EngineServiceImplTest : public ::testing::Test {
   EngineServiceOptions engine_service_options;
 };
 
-// TEST_F(EngineServiceImplTest, StopSession) {
-//   // Given
-//   std::string session_id = global_session_id;
-//   {
-//     // Start session firstly.
-//     pb::StartSessionRequest request;
-//     request.mutable_job_params()->CopyFrom(global_params);
+TEST_F(EngineServiceImplTest, QueryJobStatus) {
+  // Given
+  //  bypass RunExecutionPlan, control the session's state manually.
+  pb::DebugOptions debug_opts;
+  pb::JobStartParams params;
+  {
+    params.set_job_id(global_session_id);
 
-//     pb::Status response;
-//     EXPECT_NO_THROW(
-//         impl->StartSession(&global_cntl, &request, &response, nullptr));
-//     EXPECT_NE(nullptr, listener_manager.GetListener(session_id));
-//   }
-//   // prepare request.
-//   pb::StopSessionRequest request;
-//   request.set_job_id(session_id);
-//   pb::Status response;
-//   // When
-//   EXPECT_NO_THROW(
-//       impl->StopSession(&global_cntl, &request, &response, nullptr));
-//   // Then
-//   EXPECT_EQ(nullptr, listener_manager.GetListener(session_id));
-//   EXPECT_EQ(pb::Code::OK, response.code());
-// }
+    params.set_party_code(op::test::kPartyAlice);
+    auto* alice = params.add_parties();
+    alice->CopyFrom(op::test::BuildParty(op::test::kPartyAlice, 0));
+
+    params.mutable_spu_runtime_cfg()->CopyFrom(
+        op::test::MakeSpuRuntimeConfigForTest(spu::ProtocolKind::SEMI2K));
+  }
+
+  // When
+  auto* session_manager = impl->GetSessionManager();
+  EXPECT_NO_THROW(session_manager->CreateSession(params, debug_opts));
+  // Then
+  CheckJobStatus(pb::JOB_INITIALIZED);
+  // When & Then
+  SetAndCheckJobStatus(SessionState::RUNNING);
+  SetAndCheckJobStatus(SessionState::ABORTING);
+  SetAndCheckJobStatus(SessionState::SUCCEEDED);
+  SetAndCheckJobStatus(SessionState::FAILED);
+
+  CheckJobNodeCount(-1, -1);
+  auto* session = session_manager->GetSession(global_session_id);
+  const int32_t nodes_count = 10;
+  const int32_t executed_nodes = 5;
+  session->SetNodesCount(nodes_count);
+  session->SetExecutedNodes(executed_nodes);
+  CheckJobNodeCount(nodes_count, executed_nodes);
+}
 
 TEST_F(EngineServiceImplTest, RunExecutionPlan) {
   // Given
@@ -513,7 +550,7 @@ EngineServiceImpl2PartiesTest::ConstructRequestForBob(
 void EngineServiceImpl2PartiesTest::AddSessionParameters(
     pb::RunExecutionPlanRequest* request,
     const std::vector<brpc::Server>& servers, const size_t& self_rank) {
-  auto params = request->mutable_job_params();
+  auto* params = request->mutable_job_params();
   params->set_job_id("test_session_id");
   params->set_party_code("party" + std::to_string(self_rank));
   for (size_t rank = 0; rank < servers.size(); rank++) {
@@ -525,10 +562,8 @@ void EngineServiceImpl2PartiesTest::AddSessionParameters(
     party->set_rank(rank);
   }
 
-  auto config = params->mutable_spu_runtime_cfg();
-  config->set_protocol(spu::ProtocolKind::SEMI2K);
-  config->set_field(spu::FieldType::FM64);
-  config->set_sigmoid_mode(spu::RuntimeConfig::SIGMOID_REAL);
+  params->mutable_spu_runtime_cfg()->CopyFrom(
+      op::test::MakeSpuRuntimeConfigForTest(spu::ProtocolKind::SEMI2K));
 }
 
 void EngineServiceImpl2PartiesTest::AddRunSQLNode(

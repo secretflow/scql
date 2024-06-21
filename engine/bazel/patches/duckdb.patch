@@ -1,23 +1,26 @@
 diff --git a/extension/extension_config.cmake b/extension/extension_config.cmake
-index 83a8e2c490..4861b28332 100644
+index 8990ddc4bc..23ff3b2b50 100644
 --- a/extension/extension_config.cmake
 +++ b/extension/extension_config.cmake
-@@ -9,8 +9,9 @@
+@@ -9,9 +9,10 @@
 
  # Parquet is loaded by default on every build as its a essential part of DuckDB
  duckdb_extension_load(parquet)
 +duckdb_extension_load(httpfs)
 
- # Jemalloc is enabled by default for linux. MacOS malloc is already good enough and Jemalloc on windows has issues.
- if(NOT WASM_LOADABLE_EXTENSIONS AND NOT CLANG_TIDY AND OS_NAME STREQUAL "linux" AND NOT ANDROID AND NOT ZOS)
+ # The Linux allocator has issues so we use jemalloc, but only on x86 because page sizes are fixed at 4KB.
+ # If page sizes vary for an architecture (e.g., arm64), we cannot create a portable binary due to jemalloc config
+-if(OS_NAME STREQUAL "linux" AND (OS_ARCH STREQUAL "amd64" OR OS_ARCH STREQUAL "i386") AND NOT WASM_LOADABLE_EXTENSIONS AND NOT CLANG_TIDY AND NOT ANDROID AND NOT ZOS)
 -    duckdb_extension_load(jemalloc)
-+    # duckdb_extension_load(jemalloc)
- endif()
+-endif()
++# if(OS_NAME STREQUAL "linux" AND (OS_ARCH STREQUAL "amd64" OR OS_ARCH STREQUAL "i386") AND NOT WASM_LOADABLE_EXTENSIONS AND NOT CLANG_TIDY AND NOT ANDROID AND NOT ZOS)
++#     duckdb_extension_load(jemalloc)
++# endif()
 diff --git a/extension/httpfs/CMakeLists.txt b/extension/httpfs/CMakeLists.txt
-index 2ce831d50e..d839c1fcb9 100644
+index da6e6e32bf..64219c4a61 100644
 --- a/extension/httpfs/CMakeLists.txt
 +++ b/extension/httpfs/CMakeLists.txt
-@@ -33,3 +33,10 @@ install(
+@@ -39,3 +39,10 @@ install(
    EXPORT "${DUCKDB_EXPORT_SET}"
    LIBRARY DESTINATION "${INSTALL_LIB_DIR}"
    ARCHIVE DESTINATION "${INSTALL_LIB_DIR}")
@@ -30,15 +33,15 @@ index 2ce831d50e..d839c1fcb9 100644
 +              DESTINATION "${INSTALL_INCLUDE_DIR}/duckdb/extension/httpfs/")
 \ No newline at end of file
 diff --git a/third_party/re2/CMakeLists.txt b/third_party/re2/CMakeLists.txt
-index df428ac1ea..2c250caaea 100644
+index 4440566c86..b554c39578 100644
 --- a/third_party/re2/CMakeLists.txt
 +++ b/third_party/re2/CMakeLists.txt
-@@ -96,4 +96,8 @@ install(TARGETS duckdb_re2
+@@ -99,4 +99,8 @@ install(TARGETS duckdb_re2
          LIBRARY DESTINATION "${INSTALL_LIB_DIR}"
          ARCHIVE DESTINATION "${INSTALL_LIB_DIR}")
 
 +install(FILES "${PROJECT_SOURCE_DIR}/re2/re2.h"
-+              "${PROJECT_SOURCE_DIR}/re2/stringpiece.h"
-+              DESTINATION "${INSTALL_INCLUDE_DIR}/re2/")
++        "${PROJECT_SOURCE_DIR}/re2/stringpiece.h"
++        DESTINATION "${INSTALL_INCLUDE_DIR}/re2/")
 +
  disable_target_warnings(duckdb_re2)

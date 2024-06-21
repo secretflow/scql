@@ -115,7 +115,7 @@ LOOP:
 						if s, ok := status.FromError(err); ok && s.Code() == codes.Unavailable {
 							job.inaccessibleTimes += 1
 						}
-						logrus.Warnf("failed to probe job status: jobId=%s, err=%v", job.jobId, err)
+						logrus.Warnf("failed to probe job status: jobId=%s, endpoint=%s, err=%v", job.jobId, job.engineEndpoint, err)
 					}
 
 					if job.inaccessibleTimes >= 3 || (err == nil && !alive) {

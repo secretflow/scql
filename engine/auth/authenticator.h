@@ -35,10 +35,10 @@ struct PartyIdentity {
 
 class Authenticator {
  public:
-  Authenticator(const AuthOption& option);
+  explicit Authenticator(AuthOption option);
 
-  void Verify(std::string self_party_code,
-              const std::vector<PartyIdentity>& parties);
+  void Verify(const std::string& self_party_code,
+              const std::vector<PartyIdentity>& parties) const;
 
  private:
   const AuthOption option_;

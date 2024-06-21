@@ -48,12 +48,13 @@ var dTypeString2FieldType = map[string]types.FieldType{
 }
 
 var cclString2CCLLevel = map[string]ccl.CCLLevel{
-	"plain":     ccl.Plain,
-	"join":      ccl.Join,
-	"groupby":   ccl.GroupBy,
-	"aggregate": ccl.Aggregate,
-	"compare":   ccl.Compare,
-	"encrypt":   ccl.Encrypt,
+	"plain":       ccl.Plain,
+	"join":        ccl.Join,
+	"joinpayload": ccl.AsJoinPayload,
+	"groupby":     ccl.GroupBy,
+	"aggregate":   ccl.Aggregate,
+	"compare":     ccl.Compare,
+	"encrypt":     ccl.Encrypt,
 }
 
 // TODO: rename PhysicalTableMeta

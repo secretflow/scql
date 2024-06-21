@@ -28,6 +28,17 @@ static yacl::link::FactoryMem g_mem_link_factory;
 
 namespace {
 
+pb::TensorList ToTensorList(const std::vector<pb::Tensor>& tensors) {
+  pb::TensorList list;
+  for (const auto& tensor : tensors) {
+    auto* new_tensor = list.add_tensors();
+    new_tensor->CopyFrom(tensor);
+  }
+  return list;
+}
+
+}  // namespace
+
 pb::JobStartParams::Party BuildParty(const std::string& code, int32_t rank) {
   pb::JobStartParams::Party party;
   party.set_code(code);
@@ -35,15 +46,6 @@ pb::JobStartParams::Party BuildParty(const std::string& code, int32_t rank) {
   party.set_host(code + ".com");
   party.set_rank(rank);
   return party;
-}
-
-pb::TensorList ToTensorList(const std::vector<pb::Tensor>& tensors) {
-  pb::TensorList list;
-  for (size_t i = 0; i < tensors.size(); ++i) {
-    auto new_tensor = list.add_tensors();
-    new_tensor->CopyFrom(tensors[i]);
-  }
-  return list;
 }
 
 spu::RuntimeConfig MakeSpuRuntimeConfigForTest(
@@ -58,20 +60,22 @@ spu::RuntimeConfig MakeSpuRuntimeConfigForTest(
   return config;
 }
 
-}  // namespace
-
 std::shared_ptr<Session> Make1PCSession(Router* ds_router,
                                         DatasourceAdaptorMgr* ds_mgr) {
   pb::JobStartParams params;
   params.set_party_code(kPartyAlice);
   params.set_job_id("1PC-session");
+  params.set_time_zone("+08:00");
   params.mutable_spu_runtime_cfg()->CopyFrom(
       MakeSpuRuntimeConfigForTest(spu::ProtocolKind::REF2K));
   SessionOptions options;
   auto* alice = params.add_parties();
   alice->CopyFrom(BuildParty(kPartyAlice, 0));
   pb::DebugOptions debug_opts;
-  std::vector<spu::ProtocolKind> allowed_protocols{spu::ProtocolKind::CHEETAH,
+  // When there is only one party involved, the protocol will not be validated,
+  // so the related parameters are dummy.
+  std::vector<spu::ProtocolKind> allowed_protocols{spu::ProtocolKind::REF2K,
+                                                   spu::ProtocolKind::CHEETAH,
                                                    spu::ProtocolKind::SEMI2K};
   return std::make_shared<Session>(options, params, debug_opts,
                                    &g_mem_link_factory, nullptr, ds_router,
@@ -92,6 +96,9 @@ std::vector<std::shared_ptr<Session>> MakeMultiPCSession(
 
   std::vector<std::future<std::shared_ptr<Session>>> futures;
   SessionOptions options;
+  options.psi_config.unbalance_psi_ratio_threshold = 5;
+  options.psi_config.unbalance_psi_larger_party_rows_count_threshold = 81920;
+  options.psi_config.psi_curve_type = psi::CURVE_FOURQ;
   auto create_session = [&](const pb::JobStartParams& params) {
     pb::DebugOptions debug_opts;
     std::vector<spu::ProtocolKind> allowed_protocols{spu::ProtocolKind::CHEETAH,
@@ -213,7 +220,7 @@ pb::Tensor MakeTensorAs(const std::string& name, const pb::Tensor& ref) {
 
 void FeedInputsAsPrivate(ExecContext* ctx,
                          const std::vector<test::NamedTensor>& ts) {
-  auto tensor_table = ctx->GetTensorTable();
+  auto* tensor_table = ctx->GetTensorTable();
   for (const auto& named_tensor : ts) {
     tensor_table->AddTensor(named_tensor.name, named_tensor.tensor);
   }

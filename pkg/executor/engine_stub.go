@@ -26,7 +26,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/secretflow/scql/pkg/interpreter/translator"
+	"github.com/secretflow/scql/pkg/interpreter/graph"
 )
 
 const (
@@ -84,7 +84,7 @@ type EngineStub struct {
 	protocol    string
 	contentType string
 
-	partyInfo *translator.PartyInfo
+	partyInfo *graph.PartyInfo
 }
 
 // NewEngineStub creates an engine stub instance
@@ -94,7 +94,7 @@ func NewEngineStub(sessionID string,
 	callBackPath string,
 	client EngineClient,
 	engineProtocol string,
-	contentType string, partyInfo *translator.PartyInfo) *EngineStub {
+	contentType string, partyInfo *graph.PartyInfo) *EngineStub {
 	scheme := strings.SplitN(engineProtocol, ":", 2)[0]
 	if scheme == "" {
 		scheme = "http"

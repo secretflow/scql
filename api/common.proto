@@ -19,6 +19,9 @@ package scql.pb;
 option go_package = "proto-gen/scql";
 option java_package = "org.secretflow.scql";
 
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+
 // RequestHeader carries the user custom headers.
 message RequestHeader {
   // Custom headers used to record custom information.
@@ -33,4 +36,60 @@ message DebugOptions {
 message SQLWarning {
   // Description of the warning
   string reason = 1;
+}
+
+// IOStats contains input/output statistics for a job, including bytes sent and received,
+// as well as the number of send and receive actions performed.
+message IOStats {
+  uint64 send_bytes = 1;
+  uint64 recv_bytes = 2;
+  uint64 send_actions = 3;
+  uint64 recv_actions = 4;
+}
+
+// StageInfo provides information about an individual stage within a running job.
+message StageInfo {
+  // The name of the stage.
+  string name = 1;
+  // A brief summary describing the stage
+  string summary = 2;
+  // Stage start time
+  google.protobuf.Timestamp start_time = 3;
+  // Personalized details that may have different structures depending on the stage type.
+  google.protobuf.Any details = 4;
+}
+
+// JobProgress provides detailed information about the progress of a running job.
+message JobProgress {
+  // Job start time
+  google.protobuf.Timestamp start_time = 1;
+  // The total number of stages planned for the job.
+  int32 stages_count = 2;
+  // The number of stages that have been executed so far.
+  int32 executed_stages = 3;
+  IOStats io_stats = 4;
+  // A list of currently running stages, providing insight into which parts of the job are active.
+  repeated StageInfo running_stages = 5;
+}
+
+enum JobState {
+  JOB_STATE_UNSPECIFIED = 0;
+  JOB_INITIALIZED = 1;
+  JOB_RUNNING = 2;
+  JOB_SUCCEEDED = 3;
+  JOB_FAILED = 4;
+  JOB_CANCELED = 5;
+}
+
+message LinkConfig {
+  int64 link_recv_timeout_sec = 1;
+  int64 link_throttle_window_size = 2;
+  int64 link_chunked_send_parallel_size = 3;
+  int64 http_max_payload_size = 4;
+}
+
+message PsiConfig {
+  int64 unbalance_psi_ratio_threshold = 1;
+  int64 unbalance_psi_larger_party_rows_count_threshold = 2;
+  int32 psi_curve_type = 3;
 }

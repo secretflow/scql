@@ -36,32 +36,29 @@ func ConvertToTable(tensors []*scql.Tensor, table *tablewriter.Table) error {
 	switch x := tensors[0].Shape.Dim[0].Value.(type) {
 	case *scql.TensorShape_Dimension_DimValue:
 		rows = x.DimValue
-		break
 	case *scql.TensorShape_Dimension_DimParam:
 		return fmt.Errorf("unexpected type:%T", x)
 	}
 	for i := int64(0); i < rows; i++ {
 		var curRow []string
 		for _, t := range tensors {
+			if len(t.DataValidity) > 0 && !t.DataValidity[i] {
+				curRow = append(curRow, "null")
+				continue
+			}
 			switch t.ElemType {
 			case scql.PrimitiveDataType_STRING, scql.PrimitiveDataType_DATETIME:
 				curRow = append(curRow, t.GetStringData()[i])
-				break
 			case scql.PrimitiveDataType_FLOAT32:
 				curRow = append(curRow, fmt.Sprint(t.GetFloatData()[i]))
-				break
 			case scql.PrimitiveDataType_FLOAT64:
 				curRow = append(curRow, fmt.Sprint(t.GetDoubleData()[i]))
-				break
 			case scql.PrimitiveDataType_BOOL:
 				curRow = append(curRow, fmt.Sprint(t.GetBoolData()[i]))
-				break
 			case scql.PrimitiveDataType_INT8, scql.PrimitiveDataType_INT16, scql.PrimitiveDataType_INT32:
 				curRow = append(curRow, fmt.Sprint(t.GetInt32Data()[i]))
-				break
 			case scql.PrimitiveDataType_INT64, scql.PrimitiveDataType_TIMESTAMP:
 				curRow = append(curRow, fmt.Sprint(t.GetInt64Data()[i]))
-				break
 			default:
 				return fmt.Errorf("unsupported type:%T", t.ElemType)
 			}

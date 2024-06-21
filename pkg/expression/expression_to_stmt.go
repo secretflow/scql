@@ -128,14 +128,15 @@ func (c ExprConverter) convertScalarFunction(dialect format.Dialect, expr *Scala
 		children = append(children, argExpr)
 	}
 	defer func() {
-		if fatherPrec > prec && fatherPrec != precNonOperatorExpression {
+		if fatherPrec != precNonOperatorExpression && (fatherPrec > prec ||
+			(fatherPrec != 0 && IsCompareOp(expr) && dialect.NeedParenthesesForCmpOperand())) {
 			result = &ast.ParenthesesExpr{Expr: result}
 		}
 	}()
 	switch expr.FuncName.L {
 	case ast.Cast:
 		return &ast.FuncCastExpr{Expr: children[0], Tp: expr.RetType, FunctionType: ast.CastFunction}, nil
-	case ast.Ifnull:
+	case ast.Ifnull, ast.Coalesce:
 		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
 	case ast.If:
 		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
@@ -218,4 +219,18 @@ func (c ExprConverter) convertScalarFunction(dialect format.Dialect, expr *Scala
 		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
 	}
 	return nil, errors.Errorf("Unknown expr: %+v", expr.Function)
+}
+
+func IsCompareOp(expr *ScalarFunction) bool {
+	switch expr.Function.(type) {
+	case *builtinLEIntSig, *builtinLEStringSig, *builtinLERealSig, *builtinLEDecimalSig,
+		*builtinGTIntSig, *builtinGTStringSig, *builtinGTRealSig, *builtinGTDecimalSig,
+		*builtinGEIntSig, *builtinGEStringSig, *builtinGERealSig, *builtinGEDecimalSig,
+		*builtinLTIntSig, *builtinLTStringSig, *builtinLTRealSig, *builtinLTDecimalSig,
+		*builtinEQIntSig, *builtinEQStringSig, *builtinEQRealSig, *builtinEQDecimalSig,
+		*builtinNEIntSig, *builtinNEStringSig, *builtinNERealSig, *builtinNEDecimalSig:
+		return true
+	}
+	return false
+
 }

@@ -55,7 +55,7 @@ service IntraBrokerService {
   // FetchResult
   //
   // Fetch query result of asynchronous query
-  rpc FetchResult(FetchResultRequest) returns (QueryResponse) {
+  rpc FetchResult(FetchResultRequest) returns (FetchResultResponse) {
     option (google.api.http) = {
       post: "/intra/query/fetch"
       body: "*"
@@ -218,16 +218,13 @@ message QueryRequest {
   // SubmitQuery API will report an error if dry_run is set to True.
   // Dry run only checks query syntax & CCL.
   bool dry_run = 5;
+
+  JobConfig job_config = 6;
 }
 
 message QueryResponse {
   Status status = 1;
-  // Valid while DQL is a select-into statement
-  int64 affected_rows = 2;
-  repeated SQLWarning warnings = 3;
-  double cost_time_s = 4;
-  // Output columns are used to store the result datas
-  repeated Tensor out_columns = 1000;
+  QueryResult result = 2;
 }
 
 message SubmitResponse {
@@ -240,6 +237,31 @@ message SubmitResponse {
 message FetchResultRequest {
   // The unique identifier of the query job, obtained when SubmitQuery is called
   string job_id = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+// QueryResult represents the result of an executed SQL query.
+message QueryResult {
+  int64 affected_rows = 1;
+  repeated SQLWarning warnings = 2;
+  double cost_time_s = 3;
+  // Output columns are used to store the result datas
+  repeated Tensor out_columns = 1000;
+}
+
+message JobStatus {
+  // A brief summary that describes the current state of the job.
+  string summary = 1;
+  JobProgress progress = 2;
+}
+
+
+message FetchResultResponse {
+  Status status = 1;
+
+  // Result of corresponding query, provided when status.code == Code.OK
+  QueryResult result = 2;
+  // JobStatus may be provided when result is not ready
+  JobStatus job_status = 3;
 }
 
 message CancelQueryRequest {
@@ -443,6 +465,30 @@ message ShowCCLResponse {
 message ProjectConfig {
   // The spu runtime configuration.
   spu.RuntimeConfig spu_runtime_cfg = 1;
+  int64 session_expire_seconds = 2;
+  int64 unbalance_psi_ratio_threshold = 3;
+  int64 unbalance_psi_larger_party_rows_count_threshold = 4;
+  int32 psi_curve_type = 5;
+  int64 http_max_payload_size = 6;
+  int64 link_recv_timeout_sec = 7;
+  int64 link_throttle_window_size = 8;
+  int64 link_chunked_send_parallel_size = 9;
+}
+
+message JobConfig {
+  // if the value is 0 which means user does not set it, it would fallback to
+  // project default setting
+  int64 session_expire_seconds = 1;
+  // job's time_zone for session, default is empty which means use engine's
+  // default time_zone
+  string time_zone = 2;
+  int64 unbalance_psi_ratio_threshold = 3;
+  int64 unbalance_psi_larger_party_rows_count_threshold = 4;
+  int32 psi_curve_type = 5;
+  int64 http_max_payload_size = 6;
+  int64 link_recv_timeout_sec = 7;
+  int64 link_throttle_window_size = 8;
+  int64 link_chunked_send_parallel_size = 9;
 }
 
 message InviteMemberRequest {
@@ -482,8 +528,8 @@ message CheckAndUpdateStatusResponse {
 }
 message ProjectConflict {
   message ConflictItem {
-    // Human-readable conflict details, e.g: "project creator is: alice in
-    // alice; bob in bob"
+    // Human-readable conflict details, e.g: "table 'ta' owner conflict: 'alice'
+    // in party alice; 'bob' in party bob"
     string message = 1;
   }
   repeated ConflictItem items = 1;
@@ -527,6 +573,8 @@ message DistributeQueryRequest {
   bool is_async = 11;
   DebugOptions debug_opts = 12;
   bool dry_run = 13;
+  string time_zone = 14;
+  JobConfig job_config = 15;
 }
 
 message DistributeQueryResponse {
@@ -717,4 +765,10 @@ enum Constraint {
   //          select avg(score) from t group by zip_code
   //          select avg(score) from t
   PLAINTEXT_AFTER_AGGREGATE = 6;
+  // The column can be revealed at party_code if it is used as join payload.
+  // For example:
+  //   select t2.id, t2.col1 from t1 inner join t2 on t1.id = t2.id;
+  // In the above query, t2.col1 is used as join payload, t2.id is used as
+  // join key.
+  PLAINTEXT_AS_JOIN_PAYLOAD = 7;
 }

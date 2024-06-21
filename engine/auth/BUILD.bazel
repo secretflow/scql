@@ -14,29 +14,6 @@
 
 package(default_visibility = ["//visibility:public"])
 
-cc_library(
-    name = "pkey",
-    srcs = ["pkey.cc"],
-    hdrs = ["pkey.h"],
-    deps = [
-        "@com_github_openssl_openssl//:openssl",
-        "@yacl//yacl/base:exception",
-        "@yacl//yacl/utils:scope_guard",
-    ],
-)
-
-cc_test(
-    name = "pkey_test",
-    srcs = ["pkey_test.cc"],
-    deps = [
-        ":pkey",
-        "@com_github_brpc_brpc//:butil",
-        "@com_github_fmtlib_fmt//:fmtlib",
-        "@com_google_absl//absl/strings",
-        "@com_google_googletest//:gtest_main",
-    ],
-)
-
 proto_library(
     name = "authorized_profile_proto",
     srcs = ["authorized_profile.proto"],
@@ -63,8 +40,8 @@ cc_library(
     hdrs = ["authenticator.h"],
     deps = [
         ":authorized_profile",
-        ":pkey",
         "@com_github_brpc_brpc//:butil",
         "@com_google_absl//absl/strings",
+        "@yacl//yacl/crypto:key_utils",
     ],
 )

@@ -17,17 +17,22 @@
 #include "absl/strings/escaping.h"
 #include "butil/file_util.h"
 #include "yacl/base/exception.h"
+#include "yacl/crypto/key_utils.h"
 
 #include "engine/auth/authorized_profile.h"
-#include "engine/auth/pkey.h"
 
 namespace scql::engine::auth {
 
-Authenticator::Authenticator(const AuthOption& option) : option_(option) {
+Authenticator::Authenticator(AuthOption option) : option_(std::move(option)) {
   if (option_.enable_self_auth) {
-    // load private key
-    auto priv_key = PrivateKey::LoadFromPemFile(option_.private_key_pem_path);
-    self_public_key_ = absl::Base64Escape(priv_key->GetPublicKeyInDER());
+    auto priv_key = yacl::crypto::LoadKeyFromFile(option_.private_key_pem_path);
+
+    yacl::Buffer buf = yacl::crypto::ExportPublicKeyToDerBuf(priv_key);
+    char* pkey_der = reinterpret_cast<char*>(buf.data());
+    int64_t pkey_der_len = buf.size();
+    YACL_ENFORCE(pkey_der_len > 0, "abnormal length of extracted public key");
+
+    self_public_key_ = absl::Base64Escape({pkey_der, pkey_der_len});
   }
 
   if (option_.enable_peer_auth) {
@@ -42,8 +47,8 @@ Authenticator::Authenticator(const AuthOption& option) : option_(option) {
   }
 }
 
-void Authenticator::Verify(std::string self_party_code,
-                           const std::vector<PartyIdentity>& parties) {
+void Authenticator::Verify(const std::string& self_party_code,
+                           const std::vector<PartyIdentity>& parties) const {
   if (!option_.enable_self_auth && !option_.enable_peer_auth) {
     return;
   }

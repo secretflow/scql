@@ -40,17 +40,44 @@ func TestSessionGc(t *testing.T) {
 
 	app.AddSession("s1", &Session{})
 	app.AddSession("s2", &Session{})
+	app.AddSession("s3", &Session{})
+	app.AddSession("s4", &Session{})
+	expireSeconds := 2
 	app.MetaMgr.SetSessionInfo(storage.SessionInfo{
 		SessionID: "s1",
+		CreatedAt: time.Now(),
 		Status:    int8(storage.SessionCanceled),
+		ExpiredAt: time.Now().Add(time.Duration(expireSeconds*10) * time.Second),
 	})
-	r.Equal(app.Sessions.ItemCount(), 2)
+
+	app.MetaMgr.SetSessionInfo(storage.SessionInfo{
+		SessionID: "s2",
+		CreatedAt: time.Now(),
+		Status:    int8(storage.SessionFinished),
+		ExpiredAt: time.Now().Add(time.Duration(expireSeconds) * time.Second),
+	})
+	app.MetaMgr.SetSessionInfo(storage.SessionInfo{
+		SessionID: "s3",
+		CreatedAt: time.Now(),
+		Status:    int8(storage.SessionRunning),
+		ExpiredAt: time.Now().Add(time.Duration(expireSeconds) * time.Second),
+	})
+	app.MetaMgr.SetSessionInfo(storage.SessionInfo{
+		SessionID: "s2",
+		CreatedAt: time.Now(),
+		Status:    int8(storage.SessionFinished),
+		ExpiredAt: time.Now().Add(time.Duration(expireSeconds) * time.Second),
+	})
+
+	r.Equal(app.Sessions.ItemCount(), 4)
 
 	go app.SessionGc()
 
 	time.Sleep(app.Conf.SessionCheckInterval / 2)
-	r.Equal(app.Sessions.ItemCount(), 2)
-	time.Sleep(app.Conf.SessionCheckInterval * 3)
+	r.Equal(app.Sessions.ItemCount(), 4)
+	time.Sleep(time.Second * time.Duration(expireSeconds) * 2)
+
+	// 2 cleared for expired, 1 cleared for canceled
 	r.Equal(app.Sessions.ItemCount(), 1)
 }
 
@@ -65,9 +92,11 @@ func TestStorageGc(t *testing.T) {
 	app, err := buildTestApp()
 	r.NoError(err)
 
+	expireSeconds := 3
 	err = app.MetaMgr.SetSessionResult(storage.SessionResult{
 		SessionID: "s1",
 		CreatedAt: time.Now(),
+		ExpiredAt: time.Now().Add(time.Duration(expireSeconds) * time.Second),
 	})
 	r.NoError(err)
 
@@ -82,7 +111,7 @@ func TestStorageGc(t *testing.T) {
 	r.NoError(err)
 	r.Equal(sr.SessionID, "s1")
 
-	time.Sleep(app.Conf.SessionExpireTime * 3)
+	time.Sleep(time.Second * time.Duration(expireSeconds) * 3)
 	sr, err = app.MetaMgr.GetSessionResult("s1")
 	r.Equal(err.Error(), "record not found")
 }
@@ -100,7 +129,7 @@ func buildTestApp() (*App, error) {
 
 	cfg := &config.Config{
 		PersistSession:       true,
-		SessionExpireTime:    100 * time.Millisecond,
+		SessionExpireTime:    100 * time.Second,
 		SessionCheckInterval: 10 * time.Millisecond,
 	}
 	app := &App{

@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/secretflow/scql/pkg/interpreter/translator"
+	"github.com/secretflow/scql/pkg/interpreter/graph"
 )
 
 var (
@@ -33,7 +33,7 @@ var (
 type PartyMgr interface {
 	GetBrokerUrlByParty(party string) (string, error)
 	GetPubKeyByParty(party string) (string, error)
-	GetPartyInfoByParties(parties []string) (*translator.PartyInfo, error)
+	GetPartyInfoByParties(parties []string) (*graph.PartyInfo, error)
 }
 
 // TODO: renamed to avoid confusion with engine partyInfo structure
@@ -93,10 +93,10 @@ func (m *filePartyMgr) GetPubKeyByParty(party string) (string, error) {
 	return pubKey, nil
 }
 
-func (m *filePartyMgr) GetPartyInfoByParties(parties []string) (*translator.PartyInfo, error) {
-	var participants []*translator.Participant
+func (m *filePartyMgr) GetPartyInfoByParties(parties []string) (*graph.PartyInfo, error) {
+	var participants []*graph.Participant
 	for _, party := range parties {
-		participant := &translator.Participant{PartyCode: party, Endpoints: []string{}}
+		participant := &graph.Participant{PartyCode: party, Endpoints: []string{}}
 		// find pub key
 		pubKey, exist := m.pubKeyMap[party]
 		if !exist {
@@ -105,5 +105,5 @@ func (m *filePartyMgr) GetPartyInfoByParties(parties []string) (*translator.Part
 		participant.PubKey = pubKey
 		participants = append(participants, participant)
 	}
-	return translator.NewPartyInfo(participants), nil
+	return graph.NewPartyInfo(participants), nil
 }

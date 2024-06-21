@@ -57,7 +57,7 @@ func (s *testTranslatorSuite) TestTranslateWithCCL(c *C) {
 		// if you want to copy the graph created by DumpGraphviz, uncomment this line
 		c.Log(ep.DumpGraphviz())
 		if recordTestOutput {
-			_, err := s.recordFile.WriteString(fmt.Sprintf("{`%s`, `%s`},\n", sql, ep.DumpGraphviz()))
+			_, err := s.recordFile.WriteString(fmt.Sprintf("{`%s`, `%s`, testConf%+v},\n", sql, ep.DumpGraphviz(), conf))
 			c.Assert(err, IsNil)
 		} else {
 			c.Assert(ep.DumpGraphviz(), Equals, dot, Commentf("for %s", sql))

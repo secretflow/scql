@@ -15,6 +15,7 @@
 package storage
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -54,7 +55,8 @@ func TestBootstrap(t *testing.T) {
 	transaction := manager.CreateMetaTransaction()
 	projectID1 := "p1"
 	projectName1 := "n1"
-	projectConf := ProjectConfig{SpuConf: "I'm a conf"}
+	projectConf, err := json.Marshal(pb.ProjectConfig{})
+
 	alice := "alice"
 	// create project
 	err = transaction.CreateProject(Project{ID: projectID1, Name: projectName1, ProjectConf: projectConf, Creator: alice})
@@ -119,7 +121,7 @@ func TestBootstrap(t *testing.T) {
 	r.Equal(1, len(res))
 
 	// update project
-	newProjectConf := ProjectConfig{SpuConf: "I'm a new conf"}
+	newProjectConf, err := json.Marshal(pb.ProjectConfig{})
 	err = transaction.UpdateProject(Project{ID: projectID1, ProjectConf: newProjectConf})
 	r.NoError(err)
 	projWithMembers, err := transaction.GetProjectAndMembers(projectID1)

@@ -20,6 +20,7 @@ import (
 	. "github.com/pingcap/check"
 
 	"github.com/secretflow/scql/pkg/infoschema"
+	"github.com/secretflow/scql/pkg/interpreter/graph"
 	"github.com/secretflow/scql/pkg/parser"
 	"github.com/secretflow/scql/pkg/planner/core"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
@@ -37,7 +38,7 @@ type testCCLSuite struct {
 	is  infoschema.InfoSchema
 	ctx sessionctx.Context
 
-	engineInfo *EnginesInfo
+	engineInfo *graph.EnginesInfo
 
 	issuerParty string
 	testData    testutil.TestData

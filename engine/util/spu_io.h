@@ -57,7 +57,7 @@ class SpuInfeedHelper {
     PtView(spu::PtBufferView val, spu::PtBufferView validity)
         : value(val), validity(validity) {}
 #else
-    PtView(spu::PtBufferView val) : value(val) {}
+    explicit PtView(spu::PtBufferView val) : value(val) {}
 #endif  // SCQL_WITH_NULL
 
     PtView() = delete;

@@ -32,34 +32,29 @@
 
 namespace scql::engine {
 
-pb::QueryJobStatusResponse_JobState ConvertSessionStateToJobState(
-    SessionState state) {
+pb::JobState ConvertSessionStateToJobState(SessionState state) {
   switch (state) {
     case SessionState::INITIALIZED:
-      return pb::QueryJobStatusResponse_JobState_INITIALIZED;
+      return pb::JOB_INITIALIZED;
     case SessionState::RUNNING:
     // ABORTING job is treated as running
     case SessionState::ABORTING:
-      return pb::QueryJobStatusResponse_JobState_RUNNING;
+      return pb::JOB_RUNNING;
     case SessionState::SUCCEEDED:
-      return pb::QueryJobStatusResponse_JobState_SUCCEEDED;
+      return pb::JOB_SUCCEEDED;
     case SessionState::FAILED:
-      return pb::QueryJobStatusResponse_JobState_FAILED;
+      return pb::JOB_FAILED;
     default:
-      return pb::QueryJobStatusResponse_JobState_JOB_STATE_UNSPECIFIED;
+      return pb::JOB_STATE_UNSPECIFIED;
   }
 }
 
 bool Session::ValidateSPUContext() {
   YACL_ENFORCE(spu_ctx_ != nullptr,
                "SPU context is not initialized successfully.");
-  if (std::find(allowed_spu_protocols_.begin(), allowed_spu_protocols_.end(),
-                spu_ctx_->config().protocol()) ==
-      allowed_spu_protocols_.end()) {
-    return false;
-  }
-
-  return true;
+  return std::find(allowed_spu_protocols_.begin(), allowed_spu_protocols_.end(),
+                   spu_ctx_->config().protocol()) !=
+         allowed_spu_protocols_.end();
 }
 
 Session::Session(const SessionOptions& session_opt,
@@ -129,9 +124,10 @@ void Session::InitLink() {
   yacl::link::ContextDesc ctx_desc;
   {
     ctx_desc.id = id_;
-    ctx_desc.retry_opts = session_opt_.link_retry_options;
-    ctx_desc.recv_timeout_ms = session_opt_.link_recv_timeout_ms;
-    ctx_desc.http_max_payload_size = session_opt_.http_max_payload_size;
+    ctx_desc.retry_opts = session_opt_.link_config.link_retry_options;
+    ctx_desc.recv_timeout_ms = session_opt_.link_config.link_recv_timeout_ms;
+    ctx_desc.http_max_payload_size =
+        session_opt_.link_config.http_max_payload_size;
     ctx_desc.parties.reserve(parties_.WorldSize());
     for (const auto& party : parties_.AllParties()) {
       yacl::link::ContextDesc::Party p;
@@ -141,8 +137,10 @@ void Session::InitLink() {
     }
   }
   lctx_ = link_factory_->CreateContext(ctx_desc, parties_.SelfRank());
-  lctx_->SetThrottleWindowSize(session_opt_.link_throttle_window_size);
-  lctx_->SetChunkParallelSendSize(session_opt_.link_chunked_send_parallel_size);
+  lctx_->SetThrottleWindowSize(
+      session_opt_.link_config.link_throttle_window_size);
+  lctx_->SetChunkParallelSendSize(
+      session_opt_.link_config.link_chunked_send_parallel_size);
   lctx_->ConnectToMesh();
 }
 

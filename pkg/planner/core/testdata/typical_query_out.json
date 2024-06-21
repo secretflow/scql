@@ -77,7 +77,9 @@
   },
   {
     "name": "TestPlanBuilderLengthOp",
-    "cases": ["DataScan(tbl_0)->Projection([length(alice.tbl_0.plain_int_0)])"]
+    "cases": [
+      "DataScan(tbl_0)->Projection([length(alice.tbl_0.plain_int_0)])"
+    ]
   },
   {
     "name": "TestPlanBuilderReplaceOp",
@@ -101,7 +103,9 @@
   },
   {
     "name": "TestPlanBuildeLimitOp",
-    "cases": ["DataScan(tbl_0)->Projection([alice.tbl_0.plain_int_0])->Limit"]
+    "cases": [
+      "DataScan(tbl_0)->Projection([alice.tbl_0.plain_int_0])->Limit"
+    ]
   },
   {
     "name": "TestPlanBuilderInstrOp",
@@ -159,7 +163,9 @@
   },
   {
     "name": "TestPlanBuilderCast",
-    "cases": ["DataScan(tbl_0)->Projection([cast(alice.tbl_0.plain_int_0)])"]
+    "cases": [
+      "DataScan(tbl_0)->Projection([cast(alice.tbl_0.plain_int_0)])"
+    ]
   },
   {
     "Name": "TestPlanBuilderSimpleWithOptimization",
@@ -192,7 +198,7 @@
       "UnionAll{UnionAll{DataScan(tbl_0)->Aggr(firstrow(alice.tbl_0.plain_int_0))->DataScan(tbl_1)->Aggr(firstrow(alice.tbl_1.plain_int_1))}->Aggr(firstrow(Column#273))->Projection([Column#271])->DataScan(tbl_2)->Projection([alice.tbl_2.plain_int_2])}",
       "UnionAll{DataScan(tbl_0)->Sel([eq(alice.tbl_0.plain_int_0, 10) eq(alice.tbl_0.plain_int_1, 1)])->Aggr(firstrow(alice.tbl_0.plain_int_0))->DataScan(tbl_1)->Sel([eq(alice.tbl_1.plain_int_0, 11) eq(alice.tbl_1.plain_int_1, 2)])->Aggr(firstrow(alice.tbl_1.plain_int_0))}->Aggr(firstrow(Column#182))->Sort(Column#181)->Limit",
       "UnionAll{DataScan(tbl_0)->Sel([eq(alice.tbl_0.plain_int_1, 2)])->Projection([alice.tbl_0.plain_int_0])->Limit->Aggr(firstrow(alice.tbl_0.plain_int_0))->DataScan(tbl_1)->Sel([eq(alice.tbl_1.plain_int_1, 1)])->Projection([alice.tbl_1.plain_int_0])->Limit->Aggr(firstrow(alice.tbl_1.plain_int_0))}->Aggr(firstrow(Column#182))->Limit",
-      "Join{DataScan(alice)->DataScan(bob)}([eq(alice.tbl_0.plain_int_0, bob.tbl_0.plain_int_0)],)->Aggr(count(1),sum(bob.tbl_0.plain_string_0),firstrow(alice.tbl_0.plain_string_0),firstrow(alice.tbl_0.plain_string_1))->Projection([alice.tbl_0.plain_string_0 alice.tbl_0.plain_string_1 Column#181 Column#182])",
+      "Join{DataScan(alice)->DataScan(bob)}([eq(alice.tbl_0.plain_int_0, bob.tbl_0.plain_int_0)],)->Aggr(count(1),sum(bob.tbl_0.plain_string_0),firstrow(alice.tbl_0.plain_string_0),firstrow(alice.tbl_0.plain_string_1))->Projection([alice.tbl_0.plain_string_0 alice.tbl_0.plain_string_1 Column#182 Column#183])",
       "DataScan(tbl_0)->Aggr(count(1),sum(alice.tbl_0.plain_int_1),min(alice.tbl_0.plain_int_1),max(alice.tbl_0.plain_int_1),avg(alice.tbl_0.plain_int_1))->Projection([Column#91 Column#92 Column#93 Column#94 Column#95])",
       "UnionAll{DataScan(tbl_0)->Aggr(sum(alice.tbl_0.plain_int_0))->DataScan(tbl_1)->Aggr(sum(alice.tbl_1.plain_int_1))}->Aggr(sum(Column#183))->Projection([Column#182])",
       "UnionAll{DataScan(tbl_1)->Aggr(sum(alice.tbl_1.plain_int_0),firstrow(alice.tbl_1.plain_int_1),count(1))->DataScan(tbl_2)->Aggr(sum(alice.tbl_2.plain_int_0),firstrow(alice.tbl_2.plain_int_1),count(1))}->Aggr(sum(Column#185),firstrow(Column#186),count(Column#187))->Projection([Column#182 Column#183])",
@@ -202,7 +208,7 @@
       "UnionAll{DataScan(tbl_1)->Projection([alice.tbl_1.plain_int_0 alice.tbl_1.plain_int_1])->DataScan(tbl_2)->Projection([alice.tbl_2.plain_int_0 alice.tbl_2.plain_int_1])}->Aggr(median(Column#181),firstrow(Column#182),count(1))->Projection([Column#182 Column#183])",
       "UnionAll{DataScan(tbl_0)->Aggr(count(1),firstrow(alice.tbl_0.plain_int_1))->DataScan(tbl_0)->Aggr(count(1),firstrow(alice.tbl_0.plain_int_1))}->Aggr(count(Column#184),firstrow(Column#185))->Projection([Column#182 Column#183])",
       "DataScan(tbl_1)->Aggr(sum(alice.tbl_1.plain_int_1),firstrow(alice.tbl_1.plain_int_0),count(1))->Sort(Column#91)->Projection([alice.tbl_1.plain_int_0])",
-      "UnionAll{DataScan(ta)->Aggr(firstrow(1),firstrow(alice.tbl_0.groupby_string_0))->DataScan(tb)->Aggr(firstrow(1),firstrow(bob.tbl_0.groupby_string_0))->DataScan(tc)->Aggr(firstrow(1),firstrow(carol.tbl_0.groupby_string_0))}->Aggr(firstrow(Column#274))->Aggr(count(1))->Projection([Column#272])"
+      "UnionAll{DataScan(ta)->Aggr(firstrow(1),firstrow(alice.tbl_0.groupby_string_0))->DataScan(tb)->Aggr(firstrow(1),firstrow(bob.tbl_0.groupby_string_0))->DataScan(tc)->Aggr(firstrow(1),firstrow(carol.tbl_0.groupby_string_0))}->Aggr(firstrow(Column#275))->Aggr(count(1))->Projection([Column#273])"
     ]
   },
   {

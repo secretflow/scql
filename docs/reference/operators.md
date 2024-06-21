@@ -141,6 +141,38 @@ Definition: Cast Input tensor's data type to Output tensor's.
 
 
 
+### `Coalesce`
+
+Definition: Coalesce returns the first value of Exprs that is not NULL. NULL is returned only if Exprs are all NULL.
+Example:
+
+```python
+Exprs[0] = {0, NULL, NULL}
+Exprs[1] = {0, 1, NULL}
+Out = {0, 1, NULL}
+```
+
+
+**Inputs:**
+
+1. `Exprs`(variadic, T): The expressions to coalesce
+
+
+**Outputs:**
+
+1. `Out`(single, T): Result
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: private
+
+
+
 ### `Concat`
 
 Definition: Given a number of tensors In (variadic, each tensor's shape must be the same in every dimension except for the axis), concat the In tensors along the axis.
@@ -881,6 +913,40 @@ Out = [0, 1, 0, 0]
 
 
 
+### `IfNull`
+
+Definition: If Expr is NULL, return AltValue. Otherwise, return Expr.
+Example:
+
+```python
+Expr = {0, 1, NULL}
+AltValue = {10, 10, 10}
+Out = {0, 1, 10}
+```
+
+
+**Inputs:**
+
+1. `Expr`(single, T): The expression to test whether is NULL
+
+1. `AltValue`(single, T): The value to return if Expr is NULL
+
+
+**Outputs:**
+
+1. `Out`(single, T): Result
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: private
+
+
+
 ### `In`
 
 Definition: Given an input tensor Left (its shape is [M]), and another input tensor Right (its shape is [N]),
@@ -966,6 +1032,37 @@ Definition: Out = Left `IntDiv` Right
 1. `T1`: public,private,secret
 
 1. `T2`: private,secret
+
+
+
+### `IsNull`
+
+Definition: Test if Input tensor's data contains NULL.
+Example:
+
+```python
+In = {0, 1, NULL}
+Out = {false, false, true}
+```
+
+
+**Inputs:**
+
+1. `In`(single, T): Input tensor.
+
+
+**Outputs:**
+
+1. `Out`(single, T): Output tensor.
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: private
 
 
 
@@ -1106,7 +1203,8 @@ Definition: Out = Left `LessEqual` Right
 
 ### `Limit`
 
-Limit return part of data, the amount of data depends on limit attr, the offset of data depends on offset attr. Example:
+Limit return part of data, the amount of data depends on limit attr, the offset of data depends on offset attr.
+Example:
 
 ```python
 offset = 1

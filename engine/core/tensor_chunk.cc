@@ -19,9 +19,10 @@ namespace scql::engine {
 TensorChunk::TensorChunk(std::shared_ptr<arrow::Array> array)
     : arr_(std::move(array)) {}
 
-TensorChunk::TensorChunk(TensorChunk&& other) : arr_(std::move(other.arr_)) {}
+TensorChunk::TensorChunk(TensorChunk&& other) noexcept
+    : arr_(std::move(other.arr_)) {}
 
-TensorChunk& TensorChunk::operator=(TensorChunk&& other) {
+TensorChunk& TensorChunk::operator=(TensorChunk&& other) noexcept {
   arr_ = std::move(other.arr_);
   return *this;
 }

@@ -16,8 +16,11 @@
 
 #include <atomic>
 #include <chrono>
+#include <cstdint>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
@@ -32,6 +35,7 @@
 #include "engine/util/logging.h"
 #include "engine/util/psi_detail_logger.h"
 
+#include "api/common.pb.h"
 #include "api/engine.pb.h"
 
 namespace scql::engine {
@@ -48,16 +52,27 @@ enum class SessionState {
   FAILED = 4,
 };
 
-pb::QueryJobStatusResponse_JobState ConvertSessionStateToJobState(
-    SessionState state);
+pb::JobState ConvertSessionStateToJobState(SessionState state);
 
-struct SessionOptions {
+struct LinkConfig {
   uint32_t link_recv_timeout_ms = 30 * 1000;  // 30s
   size_t link_throttle_window_size = 0;
   size_t link_chunked_send_parallel_size = 8;
-  size_t http_max_payload_size = 1024 * 1024;  // 1M
   yacl::link::RetryOptions link_retry_options;
+  size_t http_max_payload_size = 1024 * 1024;  // 1M
+};
+
+struct PsiConfig {
+  // if the value here is 0, it would use the gflags config instead
+  int64_t unbalance_psi_ratio_threshold = 0;
+  int64_t unbalance_psi_larger_party_rows_count_threshold = 0;
+  int32_t psi_curve_type = 0;
+};
+
+struct SessionOptions {
   util::LogOptions log_options;
+  LinkConfig link_config;
+  PsiConfig psi_config;
 };
 
 /// @brief Session holds everything needed to run the execution plan.
@@ -76,17 +91,21 @@ class Session {
 
   std::string TimeZone() const { return time_zone_; }
 
+  const std::string& SelfPartyCode() const { return parties_.SelfPartyCode(); }
+
+  size_t SelfRank() const { return parties_.SelfRank(); }
+
   // each session has its own logger, it may contain session id in each log
   // message.
   std::shared_ptr<spdlog::logger> GetLogger() const { return logger_; }
 
+  std::shared_ptr<util::PsiDetailLogger> GetPsiLogger() const {
+    return psi_logger_;
+  }
+
   Router* GetRouter() const { return router_; }
 
   DatasourceAdaptorMgr* GetDatasourceAdaptorMgr() const { return ds_mgr_; }
-
-  const std::string& SelfPartyCode() const { return parties_.SelfPartyCode(); }
-
-  size_t SelfRank() { return parties_.SelfRank(); }
 
   ssize_t GetPartyRank(const std::string& party_code) const {
     return parties_.GetRank(party_code);
@@ -100,7 +119,7 @@ class Session {
 
   spu::device::SymbolTable* GetDeviceSymbols() { return &device_symbols_; }
 
-  SessionState GetState() { return state_.load(); }
+  SessionState GetState() const { return state_.load(); }
 
   void SetState(SessionState new_state) { state_.store(new_state); }
 
@@ -109,22 +128,8 @@ class Session {
     return state_.compare_exchange_strong(old_state, new_state);
   }
 
-  std::chrono::time_point<std::chrono::system_clock> GetStartTime() {
+  std::chrono::time_point<std::chrono::system_clock> GetStartTime() const {
     return start_time_;
-  }
-
-  void MergeDeviceSymbolsFrom(const spu::device::SymbolTable& other);
-
-  TensorPtr StringToHash(const Tensor& string_tensor);
-
-  TensorPtr HashToString(const Tensor& hash_tensor);
-
-  void AddPublishResult(std::shared_ptr<pb::Tensor> pb) {
-    publish_results_.emplace_back(std::move(pb));
-  }
-
-  std::vector<std::shared_ptr<pb::Tensor>> GetPublishResults() {
-    return publish_results_;
   }
 
   void SetAffectedRows(int64_t affected_rows) {
@@ -133,6 +138,59 @@ class Session {
 
   int64_t GetAffectedRows() const { return affected_rows_; }
 
+  void SetNodesCount(int32_t nodes_count) { nodes_count_ = nodes_count; }
+
+  int32_t GetNodesCount() const { return nodes_count_; }
+
+  void IncExecutedNodes() { ++executed_nodes_; }
+
+  void SetExecutedNodes(int32_t executed_nodes) {
+    executed_nodes_ = executed_nodes;
+  }
+
+  int32_t GetExecutedNodes() const { return executed_nodes_; }
+
+  auto GetCurrentNodeInfo() {
+    std::lock_guard<std::mutex> guard(progress_mutex_);
+    return std::make_pair(node_start_time_, current_node_name_);
+  }
+
+  void SetCurrentNodeInfo(
+      std::chrono::time_point<std::chrono::system_clock> start_time,
+      const std::string& name) {
+    std::lock_guard<std::mutex> guard(progress_mutex_);
+    node_start_time_ = start_time;
+    current_node_name_ = name;
+  }
+
+  void StorePeerError(const std::string& party_code, const pb::Status& status) {
+    std::lock_guard<std::mutex> guard(peer_error_mutex_);
+    peer_errors_.emplace_back(party_code, status);
+  }
+
+  std::vector<std::pair<std::string, pb::Status>> GetPeerErrors() const {
+    std::lock_guard<std::mutex> guard(peer_error_mutex_);
+    return peer_errors_;
+  }
+
+  void AddPublishResult(std::shared_ptr<pb::Tensor> pb) {
+    publish_results_.emplace_back(std::move(pb));
+  }
+
+  std::vector<std::shared_ptr<pb::Tensor>> GetPublishResults() const {
+    return publish_results_;
+  }
+
+  std::shared_ptr<const yacl::link::Statistics> GetLinkStats() const {
+    return lctx_->GetStats();
+  }
+
+  void MergeDeviceSymbolsFrom(const spu::device::SymbolTable& other);
+
+  TensorPtr StringToHash(const Tensor& string_tensor);
+
+  TensorPtr HashToString(const Tensor& hash_tensor);
+
   using RefNums = std::vector<std::tuple<std::string, int>>;
   // set origin ref num
   void UpdateRefName(const std::vector<std::string>& input_ref_names,
@@ -140,17 +198,7 @@ class Session {
 
   void DelTensors(const std::vector<std::string>& tensor_names);
 
-  void StorePeerError(const std::string& party_code, const pb::Status& status) {
-    std::lock_guard<std::mutex> guard(peer_error_mutex_);
-    peer_errors_.emplace_back(party_code, status);
-  }
-
-  std::vector<std::pair<std::string, pb::Status>> GetPeerErrors() {
-    std::lock_guard<std::mutex> guard(peer_error_mutex_);
-    return peer_errors_;
-  }
-
-  std::shared_ptr<util::PsiDetailLogger> GetPsiLogger() { return psi_logger_; }
+  const SessionOptions& GetSessionOptions() const { return session_opt_; }
 
  private:
   void InitLink();
@@ -181,15 +229,22 @@ class Session {
   std::vector<std::shared_ptr<pb::Tensor>> publish_results_;
   int64_t affected_rows_ = 0;
 
-  std::mutex mutex_;
+  mutable std::mutex mutex_;
   absl::flat_hash_map<std::string, int> tensor_ref_nums_;
 
-  std::mutex peer_error_mutex_;
+  mutable std::mutex peer_error_mutex_;
   std::vector<std::pair<std::string, pb::Status>> peer_errors_;
   std::shared_ptr<util::PsiDetailLogger> psi_logger_ = nullptr;
   pb::DebugOptions debug_opts_;
 
   const std::vector<spu::ProtocolKind> allowed_spu_protocols_;
+
+  // for progress exposure
+  std::atomic_int32_t nodes_count_ = -1;
+  std::atomic_int32_t executed_nodes_ = -1;
+  mutable std::mutex progress_mutex_;
+  std::string current_node_name_;
+  std::chrono::time_point<std::chrono::system_clock> node_start_time_;
 };
 
 }  // namespace scql::engine

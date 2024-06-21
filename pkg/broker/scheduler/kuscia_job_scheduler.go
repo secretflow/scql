@@ -33,6 +33,7 @@ const (
 	kusciaTokenHeader        = "token"
 	engineDeployTemplateName = "engine"
 	enginePort               = "engineport"
+	linkPort                 = "linkport" // linkport is port of link service, used for peer
 )
 
 type kusciaEnginePod struct {
@@ -45,7 +46,8 @@ type kusciaEnginePod struct {
 	// kuscia task id
 	KusciaTaskID string `json:"kuscia_task_id"`
 	// engine endpoint
-	Endpoint string `json:"endpoint"`
+	Endpoint        string `json:"endpoint"`
+	EndpointForPeer string `json:"endpoint_for_peer"`
 
 	KeepAliveForDebug bool `json:"keep_alive_for_debug"`
 }
@@ -160,6 +162,7 @@ func (s *kusciaJobScheduler) Schedule(jobID string) (EngineInstance, error) {
 		return nil, fmt.Errorf("failed to wait for kuscia job %s tobe running", kusciaJobID)
 	}
 	pod.JobId = jobID
+	logrus.Debugf("pod endpoint_for_self: %v, endpoint_for_peer: %v", pod.Endpoint, pod.EndpointForPeer)
 	return pod, nil
 }
 
@@ -202,12 +205,14 @@ func (s *kusciaJobScheduler) waitJobRunningAndGetEnginePod(kusciaJobID string) (
 				if ep.GetPortName() == enginePort {
 					found = true
 					pod.Endpoint = ep.GetEndpoint()
-					break
+				} else if ep.GetPortName() == linkPort {
+					pod.EndpointForPeer = ep.GetEndpoint()
 				}
 			}
 			if !found {
 				return nil, fmt.Errorf("endpoint not found for port %s in kuscia task %s", enginePort, kusciaJobID)
 			}
+			logrus.Debugf("scheduled pod: %+v, resp=%+v", pod, resp.String())
 			return pod, nil
 		}
 	}
@@ -293,6 +298,9 @@ func (s *kusciaJobScheduler) buildQueryJobRequest(jobID string) *kusciaapi.Query
 }
 
 func (p *kusciaEnginePod) GetEndpointForPeer() string {
+	if len(p.EndpointForPeer) > 0 {
+		return p.EndpointForPeer
+	}
 	return p.Endpoint
 }
 

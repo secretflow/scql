@@ -28,7 +28,7 @@ import (
 
 	"github.com/secretflow/scql/pkg/audit"
 	"github.com/secretflow/scql/pkg/constant"
-	"github.com/secretflow/scql/pkg/interpreter/translator"
+	"github.com/secretflow/scql/pkg/interpreter/graph"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	enginePb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
@@ -56,7 +56,7 @@ type ResponseInfo struct {
 }
 
 func NewExecutor(plans map[string]*scql.RunExecutionPlanRequest, outputNames []string,
-	engineStub *EngineStub, id string, partyInfo *translator.PartyInfo) (*Executor, error) {
+	engineStub *EngineStub, id string, partyInfo *graph.PartyInfo) (*Executor, error) {
 	partyCodeToHost := make(map[string]string)
 	partyCodeToCredential := make(map[string]string)
 	for _, partyCode := range partyInfo.GetParties() {

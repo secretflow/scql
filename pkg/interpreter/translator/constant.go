@@ -14,44 +14,6 @@
 
 package translator
 
-import (
-	"github.com/secretflow/scql/pkg/proto-gen/scql"
-)
-
-type TensorStatus int32
-
-const (
-	UnknownStatus TensorStatus = TensorStatus(scql.TensorStatus_TENSORSTATUS_UNKNOWN)
-	PrivateStatus TensorStatus = TensorStatus(scql.TensorStatus_TENSORSTATUS_PRIVATE)
-	SecretStatus  TensorStatus = TensorStatus(scql.TensorStatus_TENSORSTATUS_SECRET)
-	CipherStatus  TensorStatus = TensorStatus(scql.TensorStatus_TENSORSTATUS_CIPHER)
-	PublicStatus  TensorStatus = TensorStatus(scql.TensorStatus_TENSORSTATUS_PUBLIC)
-)
-
-// input tensors key
-const (
-	Left         string = "Left"
-	Right        string = "Right"
-	Condition    string = "Condition"
-	ValueIfTrue  string = "ValueIfTrue"
-	ValueIfFalse string = "ValueIfFalse"
-	Value        string = "Value"
-	ValueElse    string = "ValueElse"
-	Out          string = "Out"
-)
-
-const (
-	InnerJoin      = 0
-	LeftOuterJoin  = 1
-	RightOuterJoin = 2
-)
-
-const (
-	PsiIn  = 0
-	EcdhIn = 1
-	OprfIn = 2
-)
-
 var algorithmCreator = NewAlgCreator()
 
 const (

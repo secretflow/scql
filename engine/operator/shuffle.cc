@@ -38,7 +38,7 @@ void Shuffle::Validate(ExecContext* ctx) {
 }
 
 void Shuffle::Execute(ExecContext* ctx) {
-  auto symbols = ctx->GetSession()->GetDeviceSymbols();
+  auto* symbols = ctx->GetSession()->GetDeviceSymbols();
   std::vector<spu::Value> inputs;
 
   const auto& input_pbs = ctx->GetInput(kIn);
@@ -48,7 +48,7 @@ void Shuffle::Execute(ExecContext* ctx) {
     inputs.push_back(std::move(val));
   }
 
-  auto sctx = ctx->GetSession()->GetSpuContext();
+  auto* sctx = ctx->GetSession()->GetSpuContext();
   auto outputs = spu::kernel::hlo::Shuffle(sctx, inputs, 0);
 
   const auto& output_pbs = ctx->GetOutput(kOut);

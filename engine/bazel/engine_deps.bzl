@@ -50,11 +50,11 @@ def _secretflow_deps():
         name = "spulib",
         urls = [
             # "https://github.com/secretflow/spu/archive/%s.tar.gz" % SPU_COMMIT,
-            "https://github.com/secretflow/spu/archive/refs/tags/0.9.0b1.tar.gz",
+            "https://github.com/secretflow/spu/archive/refs/tags/0.9.1dev20240614.tar.gz",
         ],
         # strip_prefix = "spu-%s" % SPU_COMMIT,
-        strip_prefix = "spu-0.9.0b1",
-        sha256 = "1f6220a43dda542b15b7673d8a03b10ef9f62d63053e33ef2182b6c61f498a1f",
+        strip_prefix = "spu-0.9.1dev20240614",
+        sha256 = "3cdde62ac2794ba5218cf567c8c9bd3479ff69389586b43bb9adff49c8cc2595",
     )
 
     maybe(
@@ -62,11 +62,11 @@ def _secretflow_deps():
         name = "psi",
         urls = [
             #"https://github.com/secretflow/psi/archive/%s.tar.gz" % PSI_COMMIT,
-            "https://github.com/secretflow/psi/archive/refs/tags/v0.4.0.dev240401.tar.gz",
+            "https://github.com/secretflow/psi/archive/refs/tags/v0.4.0.dev240524.tar.gz",
         ],
         # strip_prefix = "psi-%s" % PSI_COMMIT,
-        strip_prefix = "psi-0.4.0.dev240401",
-        sha256 = "bc91e5c635fc94f865004e61e3896eb334d76549c1125fbc98caf8c6b3a82463",
+        strip_prefix = "psi-0.4.0.dev240524",
+        sha256 = "c2868fa6a9d804e6bbed9922dab6dc819ec6e180e15eafe7eb1b661302508c88",
     )
 
     maybe(
@@ -74,11 +74,11 @@ def _secretflow_deps():
         name = "com_alipay_sf_heu",
         urls = [
             # "https://github.com/secretflow/heu/archive/%s.tar.gz" % HEU_COMMIT,
-            "https://github.com/secretflow/heu/archive/tags/0.5.1.dev20240402.tar.gz",
+            "https://github.com/secretflow/heu/archive/refs/tags/0.6.0.dev20240529.tar.gz",
         ],
         # strip_prefix = "heu-%s" % HEU_COMMIT,
-        strip_prefix = "heu-tags-0.5.1.dev20240402",
-        sha256 = "3a672039b559edbe3133025880074207829720a06b57183a7a3d25a5ec84a84b",
+        strip_prefix = "heu-0.6.0.dev20240529",
+        sha256 = "1430a17385286c11792e78c7b038860f12b6a0716e8fe8a547fb4626be60195f",
     )
 
     maybe(
@@ -310,12 +310,12 @@ def _com_github_duckdb():
         http_archive,
         name = "com_github_duckdb",
         urls = [
-            "https://github.com/duckdb/duckdb/archive/refs/tags/v0.9.2.tar.gz",
+            "https://github.com/duckdb/duckdb/archive/refs/tags/v0.10.2.tar.gz",
         ],
         patch_args = ["-p1"],
         patches = ["@scql//engine/bazel:patches/duckdb.patch"],
-        sha256 = "afff7bd925a98dc2af4039b8ab2159b0705cbf5e0ee05d97f7bb8dce5f880dc2",
-        strip_prefix = "duckdb-0.9.2",
+        sha256 = "662a0ba5c35d678ab6870db8f65ffa1c72e6096ad525a35b41b275139684cea6",
+        strip_prefix = "duckdb-0.10.2",
         build_file = "@scql//engine/bazel:duckdb.BUILD",
     )
 

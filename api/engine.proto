@@ -98,6 +98,9 @@ message JobStartParams {
 
   // The query job time zone, only support time offset, like: '+08:00'
   string time_zone = 5;
+
+  LinkConfig link_cfg = 6;
+  PsiConfig psi_cfg = 7;
 }
 
 message GraphChecksum {
@@ -142,16 +145,9 @@ message QueryJobStatusRequest {
 
 message QueryJobStatusResponse {
   Status status = 1;
-  enum JobState {
-    JOB_STATE_UNSPECIFIED = 0;
-    INITIALIZED = 1;
-    RUNNING = 2;
-    SUCCEEDED = 3;
-    FAILED = 4;
-    CANCELED = 5;
-  }
   JobState job_state = 2;
-  // TODO: Add progress information
+
+  JobProgress progress = 3;
 }
 
 // EngineResultCallback

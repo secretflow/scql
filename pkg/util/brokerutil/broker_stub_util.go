@@ -24,7 +24,6 @@ import (
 
 	"github.com/secretflow/scql/pkg/broker/application"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
-	"github.com/secretflow/scql/pkg/proto-gen/spu"
 )
 
 // Simplify the complexity of calling HTTP interfaces when writing debugging tools or test code.
@@ -43,21 +42,19 @@ func NewCommand(host string, timeoutS int) *Command {
 }
 
 func (c *Command) CreateProject(projectID, projectConf string) (string, error) {
-	var spuConf spu.RuntimeConfig
-	err := protojson.Unmarshal([]byte(projectConf), &spuConf)
+	var projConf pb.ProjectConfig
+	err := protojson.Unmarshal([]byte(projectConf), &projConf)
 	if err != nil {
-		return "", fmt.Errorf("CreateProject: unmarshal: %v", err)
+		return "", fmt.Errorf("CreateProject: failed to deserialize project config: %v", err)
 	}
 	req := &pb.CreateProjectRequest{
 		ProjectId: projectID,
-		Conf: &pb.ProjectConfig{
-			SpuRuntimeCfg: &spuConf,
-		},
+		Conf:      &projConf,
 	}
 	response := &pb.CreateProjectResponse{}
 	err = c.intraStub.CreateProject(c.host, req, response)
 	if err != nil {
-		return "", fmt.Errorf("CreateProject: %v", err)
+		return "", fmt.Errorf("CreateProject: failed to call creating project service: %v", err)
 	}
 	if response.Status == nil {
 		return "", fmt.Errorf("CreateProject: invalid response: status is nil")
@@ -89,7 +86,7 @@ func (c *Command) CreateTable(projectID, tableName, dbType, refTable string, col
 	response := &pb.CreateTableResponse{}
 	err := c.intraStub.CreateTable(c.host, req, response)
 	if err != nil {
-		return fmt.Errorf("CreateTable: %v", err)
+		return fmt.Errorf("CreateTable: failed to call creating table service: %v", err)
 	}
 	if response.Status == nil {
 		return fmt.Errorf("CreateTable: invalid response: status is nil")
@@ -112,7 +109,7 @@ func (c *Command) DeleteTable(projectID, name string) error {
 	response := &pb.DropTableResponse{}
 	err := c.intraStub.DropTable(c.host, req, response)
 	if err != nil {
-		return fmt.Errorf("DeleteTable: %v", err)
+		return fmt.Errorf("DeleteTable: failed to call dropping table service: %v", err)
 	}
 	if response.Status == nil {
 		return fmt.Errorf("DeleteTable: invalid response: status is nil")
@@ -133,7 +130,7 @@ func (c *Command) GetProject(projectID string) (*pb.ListProjectsResponse, error)
 	response := &pb.ListProjectsResponse{}
 	err := c.intraStub.ListProjects(c.host, req, response)
 	if err != nil {
-		return nil, fmt.Errorf("GetProject: %v", err)
+		return nil, fmt.Errorf("GetProject: failed to call listing project service: %v", err)
 	}
 	if response.Status == nil {
 		return nil, fmt.Errorf("GetProject: invalid response: status is nil")
@@ -155,7 +152,7 @@ func (c *Command) GetTable(projectID string, tableNames []string) (*pb.ListTable
 	response := &pb.ListTablesResponse{}
 	err := c.intraStub.ListTables(c.host, req, response)
 	if err != nil {
-		return nil, fmt.Errorf("GetTable: %v", err)
+		return nil, fmt.Errorf("GetTable: failed to call getting talbe info service: %v", err)
 	}
 	if response.Status == nil {
 		return nil, fmt.Errorf("GetTable: invalid response: status is nil")
@@ -179,7 +176,7 @@ func (c *Command) GetCCL(projectID string, tables, destParties []string) (*pb.Sh
 	response := &pb.ShowCCLResponse{}
 	err := c.intraStub.ListCCLs(c.host, req, response)
 	if err != nil {
-		return nil, fmt.Errorf("GetCCL: %v", err)
+		return nil, fmt.Errorf("GetCCL: failed to call listing CCL service: %v", err)
 	}
 	if response.Status == nil {
 		return nil, fmt.Errorf("GetCCL: invalid response: status is nil")
@@ -195,7 +192,7 @@ func (c *Command) GetInvitation() (*pb.ListInvitationsResponse, error) {
 	response := &pb.ListInvitationsResponse{}
 	err := c.intraStub.ListInvitations(c.host, req, response)
 	if err != nil {
-		return nil, fmt.Errorf("GetInvitation: %v", err)
+		return nil, fmt.Errorf("GetInvitation: failed to call listing invitation service: %v", err)
 	}
 	if response.Status == nil {
 		return nil, fmt.Errorf("GetInvitation: invalid response: status is nil")
@@ -217,7 +214,7 @@ func (c *Command) GrantCCL(projectID string, ccls []*pb.ColumnControl) error {
 	response := &pb.GrantCCLResponse{}
 	err := c.intraStub.GrantCCL(c.host, req, response)
 	if err != nil {
-		return fmt.Errorf("GrantCCL: %v", err)
+		return fmt.Errorf("GrantCCL: failed to call granting CLL service: %v", err)
 	}
 	if response.Status == nil {
 		return fmt.Errorf("GrantCCL: invalid response: status is nil")
@@ -237,7 +234,7 @@ func (c *Command) InviteMember(projectID, member string) error {
 	response := &pb.InviteMemberResponse{}
 	err := c.intraStub.InviteMember(c.host, req, response)
 	if err != nil {
-		return fmt.Errorf("InviteMember: %v", err)
+		return fmt.Errorf("InviteMember: failed to call inviting member service: %v", err)
 	}
 	if response.Status == nil {
 		return fmt.Errorf("InviteMember: invalid response: status is nil")
@@ -252,7 +249,7 @@ func (c *Command) InviteMember(projectID, member string) error {
 func (c *Command) ProcessInvitation(ids string, accept bool) error {
 	id, err := strconv.ParseUint(ids, 10, 64)
 	if err != nil {
-		return fmt.Errorf("ProcessInvitation: %v", err)
+		return fmt.Errorf("ProcessInvitation: failed to parse input string as invitation id: %v", err)
 	}
 	resp := pb.InvitationRespond_DECLINE
 	if accept {
@@ -266,7 +263,7 @@ func (c *Command) ProcessInvitation(ids string, accept bool) error {
 
 	err = c.intraStub.ProcessInvitation(c.host, req, response)
 	if err != nil {
-		return fmt.Errorf("ProcessInvitation: %v", err)
+		return fmt.Errorf("ProcessInvitation: failed to call processing invitation service: %v", err)
 	}
 	if response.Status == nil {
 		return fmt.Errorf("ProcessInvitation: invalid response: status is nil")
@@ -290,7 +287,7 @@ func (c *Command) RevokeCCL(projectID, party string, ccls []*pb.ColumnControl) e
 	response := &pb.RevokeCCLResponse{}
 	err := c.intraStub.RevokeCCL(c.host, req, response)
 	if err != nil {
-		return fmt.Errorf("RevokeCCL: %v", err)
+		return fmt.Errorf("RevokeCCL: failed to call revoking CCL service: %v", err)
 	}
 	if response.Status == nil {
 		return fmt.Errorf("RevokeCCL: invalid response: status is nil")
@@ -302,16 +299,25 @@ func (c *Command) RevokeCCL(projectID, party string, ccls []*pb.ColumnControl) e
 	}
 }
 
-func (c *Command) DoQuery(projectID, query string, debugOpts *pb.DebugOptions) (*pb.QueryResponse, error) {
+func (c *Command) DoQuery(projectID, query string, debugOpts *pb.DebugOptions, jobConfStr string) (*pb.QueryResponse, error) {
+	jobConf := pb.JobConfig{}
+
+	err := protojson.Unmarshal([]byte(jobConfStr), &jobConf)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to deserialize job config: %v", err)
+	}
+
 	req := &pb.QueryRequest{
 		ProjectId: projectID,
 		Query:     query,
 		DebugOpts: debugOpts,
+		JobConfig: &jobConf,
 	}
 	response := &pb.QueryResponse{}
-	err := c.intraStub.RunQuery(c.host, req, response)
+	err = c.intraStub.RunQuery(c.host, req, response)
 	if err != nil {
-		return nil, fmt.Errorf("DoQuery: %v", err)
+		return nil, fmt.Errorf("DoQuery: failed to call query service: %v", err)
 	}
 	if response.Status == nil {
 		return nil, fmt.Errorf("DoQuery: invalid response: status is nil")
@@ -322,16 +328,23 @@ func (c *Command) DoQuery(projectID, query string, debugOpts *pb.DebugOptions) (
 	return response, nil
 }
 
-func (c *Command) CreateJob(projectID, query string, debugOpts *pb.DebugOptions) (string, error) {
+func (c *Command) CreateJob(projectID, query string, debugOpts *pb.DebugOptions, jobConfStr string) (string, error) {
+	var jobConfig pb.JobConfig
+	err := protojson.Unmarshal([]byte(jobConfStr), &jobConfig)
+	if err != nil {
+		return "", fmt.Errorf("CreateJob: failed to deserialize job config: %v", err)
+	}
+
 	req := &pb.QueryRequest{
 		ProjectId: projectID,
 		Query:     query,
 		DebugOpts: debugOpts,
+		JobConfig: &jobConfig,
 	}
 	response := &pb.SubmitResponse{}
-	err := c.intraStub.CreateJob(c.host, req, response)
+	err = c.intraStub.CreateJob(c.host, req, response)
 	if err != nil {
-		return "", fmt.Errorf("CreateJob: %w", err)
+		return "", fmt.Errorf("CreateJob: failed to call creating job service %w", err)
 	}
 	if response.Status == nil {
 		return "", fmt.Errorf("CreateJob: invalid response: status is nil")
@@ -343,27 +356,26 @@ func (c *Command) CreateJob(projectID, query string, debugOpts *pb.DebugOptions)
 	}
 }
 
-func (c *Command) GetResult(jobID string) (result *pb.QueryResponse, not_ready bool, err error) {
+func (c *Command) GetResult(jobID string) (result *pb.FetchResultResponse, err error) {
 	req := &pb.FetchResultRequest{}
 	if jobID == "" {
-		return nil, false, fmt.Errorf("GetResult: jobID must not be empty")
+		return nil, fmt.Errorf("GetResult: jobID must not be empty")
 	} else {
 		req.JobId = jobID
 	}
-	response := &pb.QueryResponse{}
+
+	response := &pb.FetchResultResponse{}
 	err = c.intraStub.GetResult(c.host, req, response)
 	if err != nil {
-		return
+		return nil, fmt.Errorf("GetResult: failed to call getting result service: %w", err)
 	}
 	if response.Status == nil {
-		return nil, false, fmt.Errorf("GetResult: invalid response: status is nil")
+		return nil, fmt.Errorf("GetResult: invalid response: status is nil")
 	}
-	if response.GetStatus().GetCode() == 0 {
-		return response, false, nil
-	} else if response.GetStatus().GetCode() == int32(pb.Code_NOT_READY) {
-		return nil, true, nil
+	if response.GetStatus().GetCode() == int32(pb.Code_OK) || response.GetStatus().GetCode() == int32(pb.Code_NOT_READY) {
+		return response, nil
 	} else {
-		return nil, false, fmt.Errorf("GetResult response: %v", protojson.Format(response))
+		return nil, fmt.Errorf("GetResult status: %v", response.GetStatus())
 	}
 }
 
@@ -374,7 +386,7 @@ func (c *Command) CancelJob(jobID string) error {
 	response := &pb.CancelQueryResponse{}
 	err := c.intraStub.CancelJob(c.host, req, response)
 	if err != nil {
-		return fmt.Errorf("CancelJob: %w", err)
+		return fmt.Errorf("CancelJob: failed to call canceling job service: %w", err)
 	}
 	if response.Status == nil {
 		return fmt.Errorf("CancelJob: invalid response: status is nil")
@@ -393,7 +405,7 @@ func (c *Command) CheckAndUpdateStatus(ids []string) (*pb.CheckAndUpdateStatusRe
 	response := &pb.CheckAndUpdateStatusResponse{}
 	err := c.intraStub.CheckAndUpdateStatus(c.host, req, response)
 	if err != nil {
-		return nil, fmt.Errorf("CheckAndUpdateStatus: %w", err)
+		return nil, fmt.Errorf("CheckAndUpdateStatus: failed to call checking and updating status service: %w", err)
 	}
 	if response.Status == nil {
 		return nil, fmt.Errorf("CheckAndUpdateStatus: invalid response: status is nil")

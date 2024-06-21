@@ -23,7 +23,6 @@ import (
 	"time"
 
 	"golang.org/x/exp/slices"
-	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/sirupsen/logrus"
 
@@ -47,10 +46,32 @@ func (svc *grpcInterSvc) InviteToProject(c context.Context, req *pb.InviteToProj
 	if err == nil {
 		return nil, status.New(pb.Code_BAD_REQUEST, fmt.Sprintf("InviteToProject: project %v already exists", project.ID))
 	}
-	spuCfg, err := protojson.Marshal(req.GetProject().GetConf().GetSpuRuntimeCfg())
-	if err != nil {
-		return nil, status.New(pb.Code_BAD_REQUEST, fmt.Sprintf("InviteToProject: %s", err.Error()))
+
+	reqProjectConf := req.GetProject().GetConf()
+	if reqProjectConf == nil {
+		reqProjectConf = &pb.ProjectConfig{}
 	}
+
+	if reqProjectConf.GetSpuRuntimeCfg() == nil {
+		return nil, fmt.Errorf("InviteToProject: spu runtime config can not be null in project config")
+	}
+
+	projConf, err := json.Marshal(pb.ProjectConfig{
+		SpuRuntimeCfg:                             reqProjectConf.GetSpuRuntimeCfg(),
+		SessionExpireSeconds:                      reqProjectConf.GetSessionExpireSeconds(),
+		HttpMaxPayloadSize:                        reqProjectConf.GetHttpMaxPayloadSize(),
+		UnbalancePsiRatioThreshold:                reqProjectConf.GetUnbalancePsiRatioThreshold(),
+		UnbalancePsiLargerPartyRowsCountThreshold: reqProjectConf.GetUnbalancePsiLargerPartyRowsCountThreshold(),
+		PsiCurveType:                              reqProjectConf.GetPsiCurveType(),
+		LinkRecvTimeoutSec:                        reqProjectConf.GetLinkRecvTimeoutSec(),
+		LinkThrottleWindowSize:                    reqProjectConf.GetLinkThrottleWindowSize(),
+		LinkChunkedSendParallelSize:               reqProjectConf.GetLinkChunkedSendParallelSize(),
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("InviteToProject: failed to serialize project conf: %v", err)
+	}
+
 	invite := storage.Invitation{
 		ProjectID:        req.GetProject().GetProjectId(),
 		Name:             req.GetProject().GetName(),
@@ -58,12 +79,10 @@ func (svc *grpcInterSvc) InviteToProject(c context.Context, req *pb.InviteToProj
 		Creator:          req.GetProject().GetCreator(),
 		ProjectCreatedAt: req.GetProject().GetCreatedAt().AsTime(),
 		Member:           strings.Join(req.GetProject().GetMembers(), ";"),
-		ProjectConf: storage.ProjectConfig{
-			SpuConf: string(spuCfg),
-		},
-		Inviter:    req.GetInviter(),
-		Invitee:    app.Conf.PartyCode,
-		InviteTime: time.Now(),
+		ProjectConf:      projConf,
+		Inviter:          req.GetInviter(),
+		Invitee:          app.Conf.PartyCode,
+		InviteTime:       time.Now(),
 	}
 	// set existed project invalid
 	err = txn.SetUnhandledInvitationsInvalid(req.GetProject().GetProjectId(), req.GetInviter(), app.Conf.PartyCode)

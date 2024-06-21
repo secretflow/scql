@@ -29,7 +29,7 @@ void ErrorCollectorServiceImpl::ReportError(
   try {
     const std::string& job_id = request->job_id();
     Session* session = session_manager_->GetSession(job_id);
-    if (!session) {
+    if (session == nullptr) {
       response->mutable_status()->set_code(pb::Code::SESSION_NOT_FOUND);
       response->mutable_status()->set_message(
           fmt::format("no session for job_id={}", job_id));

@@ -20,6 +20,7 @@
 #include "engine/operator/broadcast_to.h"
 #include "engine/operator/case_when.h"
 #include "engine/operator/cast.h"
+#include "engine/operator/coalesce.h"
 #include "engine/operator/compare.h"
 #include "engine/operator/concat.h"
 #include "engine/operator/constant.h"
@@ -31,7 +32,9 @@
 #include "engine/operator/group_agg.h"
 #include "engine/operator/group_he_sum.h"
 #include "engine/operator/if.h"
+#include "engine/operator/if_null.h"
 #include "engine/operator/in.h"
+#include "engine/operator/is_null.h"
 #include "engine/operator/join.h"
 #include "engine/operator/limit.h"
 #include "engine/operator/logical.h"
@@ -135,6 +138,9 @@ void RegisterAllOpsImpl() {
   ADD_OPERATOR_TO_REGISTRY(Concat);
   ADD_OPERATOR_TO_REGISTRY(Cast);
   ADD_OPERATOR_TO_REGISTRY(If);
+  ADD_OPERATOR_TO_REGISTRY(IfNull);
+  ADD_OPERATOR_TO_REGISTRY(IsNull);
+  ADD_OPERATOR_TO_REGISTRY(Coalesce);
 }
 
 }  // namespace

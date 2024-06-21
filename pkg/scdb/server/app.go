@@ -27,8 +27,8 @@ import (
 
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/executor"
-	"github.com/secretflow/scql/pkg/interpreter/optimizer"
-	"github.com/secretflow/scql/pkg/interpreter/translator"
+	"github.com/secretflow/scql/pkg/interpreter/graph"
+	"github.com/secretflow/scql/pkg/interpreter/graph/optimizer"
 	"github.com/secretflow/scql/pkg/planner/core"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/scdb/auth"
@@ -53,15 +53,15 @@ type App struct {
 type LogicalPlanInfo struct {
 	lp          core.LogicalPlan
 	issuer      string
-	engineInfos *translator.EnginesInfo
+	engineInfos *graph.EnginesInfo
 	ccls        []*scql.SecurityConfig_ColumnControl
 }
 
 type ExecutionPlanInfo struct {
 	parties []*scql.JobStartParams_Party
 	subDAGs []*optimizer.SubDAG
-	graph   *translator.Graph
-	attr    *translator.Attribute
+	graph   *graph.Graph
+	attr    *graph.Attribute
 }
 
 func NewApp(conf *config.Config, storage *gorm.DB, engineClient executor.EngineClient) (*App, error) {

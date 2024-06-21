@@ -25,7 +25,7 @@ import (
 
 	"github.com/secretflow/scql/pkg/broker/application"
 	"github.com/secretflow/scql/pkg/broker/services/common"
-	"github.com/secretflow/scql/pkg/interpreter/translator"
+	"github.com/secretflow/scql/pkg/interpreter/graph"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/util/parallel"
 	"github.com/secretflow/scql/pkg/util/sliceutil"
@@ -34,10 +34,10 @@ import (
 type jobSync struct {
 	issuerCode string
 	session    *application.Session
-	tableInfo  *translator.EnginesInfo
+	tableInfo  *graph.EnginesInfo
 }
 
-func newJobSync(session *application.Session, tableInfo *translator.EnginesInfo) *jobSync {
+func newJobSync(session *application.Session, tableInfo *graph.EnginesInfo) *jobSync {
 	issuerCode := session.ExecuteInfo.Issuer.GetCode()
 	return &jobSync{issuerCode, session, tableInfo}
 }

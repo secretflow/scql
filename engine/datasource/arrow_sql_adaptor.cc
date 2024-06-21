@@ -30,39 +30,39 @@
 
 // can't be set to true until update grpc version to 1.27 or higher
 DEFINE_bool(disable_server_verification, false, "disable server verification");
-DEFINE_string(arrow_cert_perm_path, "",
+DEFINE_string(arrow_cert_pem_path, "",
               "work in tls/mtls, used in server verification when "
               "disable_server_verification is false");
-DEFINE_string(arrow_client_key_perm_path, "", "work in mtls");
-DEFINE_string(arrow_client_cert_perm_path, "", "work in mtls");
+DEFINE_string(arrow_client_key_pem_path, "", "work in mtls");
+DEFINE_string(arrow_client_cert_pem_path, "", "work in mtls");
 
 namespace scql::engine {
 arrow::flight::FlightClientOptions GetFlightClientOptions() {
   arrow::flight::FlightClientOptions options;
   options.disable_server_verification = FLAGS_disable_server_verification;
   if ((!options.disable_server_verification) &&
-      (!FLAGS_arrow_cert_perm_path.empty())) {
-    std::string cert_perm_content;
+      (!FLAGS_arrow_cert_pem_path.empty())) {
+    std::string cert_pem_content;
     YACL_ENFORCE(
-        butil::ReadFileToString(butil::FilePath(FLAGS_arrow_cert_perm_path),
-                                &cert_perm_content),
-        "fail to read from {}", FLAGS_arrow_cert_perm_path);
-    options.tls_root_certs = cert_perm_content;
+        butil::ReadFileToString(butil::FilePath(FLAGS_arrow_cert_pem_path),
+                                &cert_pem_content),
+        "fail to read from {}", FLAGS_arrow_cert_pem_path);
+    options.tls_root_certs = cert_pem_content;
   }
-  if (!FLAGS_arrow_client_key_perm_path.empty()) {
+  if (!FLAGS_arrow_client_key_pem_path.empty()) {
     std::string client_private_key;
     YACL_ENFORCE(butil::ReadFileToString(
-                     butil::FilePath(FLAGS_arrow_client_key_perm_path),
+                     butil::FilePath(FLAGS_arrow_client_key_pem_path),
                      &client_private_key),
-                 "fail to read from {}", FLAGS_arrow_client_key_perm_path);
+                 "fail to read from {}", FLAGS_arrow_client_key_pem_path);
     options.private_key = client_private_key;
   }
-  if (!FLAGS_arrow_client_cert_perm_path.empty()) {
+  if (!FLAGS_arrow_client_cert_pem_path.empty()) {
     std::string client_cert_perm;
     YACL_ENFORCE(butil::ReadFileToString(
-                     butil::FilePath(FLAGS_arrow_client_cert_perm_path),
+                     butil::FilePath(FLAGS_arrow_client_cert_pem_path),
                      &client_cert_perm),
-                 "fail to read from {}", FLAGS_arrow_client_cert_perm_path);
+                 "fail to read from {}", FLAGS_arrow_client_cert_pem_path);
     options.cert_chain = client_cert_perm;
   }
   return options;

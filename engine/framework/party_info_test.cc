@@ -16,24 +16,21 @@
 
 #include "gtest/gtest.h"
 
+#include "engine/operator/test_util.h"
+
 namespace scql::engine {
 
 TEST(PartyInfoTest, normal) {
   // Given
   pb::JobStartParams params;
   {
-    params.set_party_code("alice");
-    auto alice = params.add_parties();
-    alice->set_code("alice");
-    alice->set_name("party alice");
-    alice->set_host("alice.com");
-    alice->set_rank(0);
+    params.set_party_code(op::test::kPartyAlice);
 
-    auto bob = params.add_parties();
-    bob->set_code("bob");
-    bob->set_name("party bob");
-    bob->set_host("bob.com");
-    bob->set_rank(1);
+    auto* alice = params.add_parties();
+    alice->CopyFrom(op::test::BuildParty(op::test::kPartyAlice, 0));
+
+    auto* bob = params.add_parties();
+    bob->CopyFrom(op::test::BuildParty(op::test::kPartyBob, 1));
   }
 
   // When
@@ -42,9 +39,9 @@ TEST(PartyInfoTest, normal) {
   // Then
   EXPECT_EQ(parties.SelfRank(), 0);
   EXPECT_EQ(parties.WorldSize(), 2);
-  EXPECT_EQ(parties.SelfPartyCode(), "alice");
-  EXPECT_EQ(parties.GetRank("bob"), 1);
-  EXPECT_EQ(parties.GetRank("carol"), -1);
+  EXPECT_EQ(parties.SelfPartyCode(), op::test::kPartyAlice);
+  EXPECT_EQ(parties.GetRank(op::test::kPartyBob), 1);
+  EXPECT_EQ(parties.GetRank(op::test::kPartyCarol), -1);
 }
 
 }  // namespace scql::engine

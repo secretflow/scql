@@ -21,7 +21,10 @@
         target: 3306
     restart: always
     volumes:
-      - ./mysql/initdb:/docker-entrypoint-initdb.d
+      - ./mysql/initdb/scdb_init.sql:/docker-entrypoint-initdb.d/scdb_init.sql
+      - ../test-data/mysql/mysql_alice_init.sql:/docker-entrypoint-initdb.d/mysql_alice_init.sql
+      - ../test-data/mysql/mysql_bob_init.sql:/docker-entrypoint-initdb.d/mysql_bob_init.sql
+      - ../test-data/mysql/mysql_carol_init.sql:/docker-entrypoint-initdb.d/mysql_carol_init.sql
   postgres:
     image: postgres:9.5
     environment:
@@ -42,4 +45,4 @@
         target: 5432
     restart: always
     volumes:
-      - ./postgres/initdb:/docker-entrypoint-initdb.d/
+      - ../test-data/postgres:/docker-entrypoint-initdb.d/

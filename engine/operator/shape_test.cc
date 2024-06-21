@@ -49,7 +49,7 @@ INSTANTIATE_TEST_SUITE_P(
                                                       "[true, false, true]")),
                      test::NamedTensor("b",
                                        TensorFromJSON(arrow::int64(),
-                                                      "[1,2,3,4,5,6,7,8]")),
+                                                      "[1,2,3,4,5,6,7,null]")),
                      test::NamedTensor(
                          "c", TensorFromJSON(
                                   arrow::float32(),

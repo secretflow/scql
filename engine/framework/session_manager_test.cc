@@ -21,6 +21,7 @@
 #include "libspu/core/config.h"
 
 #include "engine/framework/session.h"
+#include "engine/operator/test_util.h"
 
 namespace scql::engine {
 
@@ -66,23 +67,18 @@ class SessionManagerTest : public ::testing::Test {
 TEST_F(SessionManagerTest, Works) {
   // Given
   std::string session_id = "session_id";
-  pb::DebugOptions debug_opts;
   pb::JobStartParams params;
   {
     params.set_job_id(session_id);
 
-    params.set_party_code("alice");
-    auto alice = params.add_parties();
-    alice->set_code("alice");
-    alice->set_name("party alice");
-    alice->set_host("alice.com");
-    alice->set_rank(0);
+    params.set_party_code(op::test::kPartyAlice);
+    auto* alice = params.add_parties();
+    alice->CopyFrom(op::test::BuildParty(op::test::kPartyAlice, 0));
 
-    auto config = params.mutable_spu_runtime_cfg();
-    config->set_protocol(spu::ProtocolKind::SEMI2K);
-    config->set_field(spu::FieldType::FM64);
-    config->set_sigmoid_mode(spu::RuntimeConfig::SIGMOID_REAL);
+    params.mutable_spu_runtime_cfg()->CopyFrom(
+        op::test::MakeSpuRuntimeConfigForTest(spu::ProtocolKind::SEMI2K));
   }
+  pb::DebugOptions debug_opts;
   // When
   EXPECT_NO_THROW(mgr->CreateSession(params, debug_opts));
   // Then
@@ -117,36 +113,16 @@ TEST_F(SessionManagerTest, Works) {
 TEST_F(SessionManagerTest, TestSessionCreation) {
   pb::JobStartParams common_params;
   common_params.set_job_id("session_multi_pc");
-  auto buildParty = [](const std::string& code, int32_t rank) {
-    pb::JobStartParams::Party party;
-    party.set_code(code);
-    party.set_name("party " + code);
-    party.set_host(code + ".com");
-    party.set_rank(rank);
-    return party;
-  };
-  auto alice_party = buildParty("alice", 0);
-  common_params.add_parties()->CopyFrom(alice_party);
-
-  auto bob_party = buildParty("bob", 1);
-  common_params.add_parties()->CopyFrom(bob_party);
-
-  auto makeSpuRunTimeConfigForTest = [](const spu::ProtocolKind protocol_kind) {
-    spu::RuntimeConfig config;
-    config.set_protocol(protocol_kind);
-    config.set_field(spu::FieldType::FM64);
-    config.set_sigmoid_mode(spu::RuntimeConfig::SIGMOID_REAL);
-    config.set_experimental_enable_colocated_optimization(true);
-    spu::populateRuntimeConfig(config);
-
-    return config;
-  };
+  common_params.add_parties()->CopyFrom(
+      op::test::BuildParty(op::test::kPartyAlice, 0));
+  common_params.add_parties()->CopyFrom(
+      op::test::BuildParty(op::test::kPartyBob, 1));
 
   yacl::link::FactoryMem g_mem_link_factory;
   SessionOptions options;
 
   common_params.mutable_spu_runtime_cfg()->CopyFrom(
-      makeSpuRunTimeConfigForTest(spu::ProtocolKind::REF2K));
+      op::test::MakeSpuRuntimeConfigForTest(spu::ProtocolKind::REF2K));
   auto create_session = [&](const pb::JobStartParams& params) {
     pb::DebugOptions debug_opts;
 
@@ -164,12 +140,12 @@ TEST_F(SessionManagerTest, TestSessionCreation) {
 
   pb::JobStartParams alice_params;
   alice_params.CopyFrom(common_params);
-  alice_params.set_party_code("alice");
+  alice_params.set_party_code(op::test::kPartyAlice);
   futures.push_back(std::async(create_session, alice_params));
 
   pb::JobStartParams bob_params;
   bob_params.CopyFrom(common_params);
-  bob_params.set_party_code("bob");
+  bob_params.set_party_code(op::test::kPartyBob);
   futures.push_back(std::async(create_session, bob_params));
 
   futures[0].get();

@@ -138,8 +138,8 @@ func (svc *IntraSvc) SubmitQueryHandler(c *gin.Context) {
 func (svc *IntraSvc) FetchResultHandler(c *gin.Context) {
 	handlerWrapper(c,
 		&pb.FetchResultRequest{},
-		&pb.QueryResponse{},
-		func(ctx context.Context, req *pb.FetchResultRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.QueryResponse, error) {
+		&pb.FetchResultResponse{},
+		func(ctx context.Context, req *pb.FetchResultRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.FetchResultResponse, error) {
 			logEntry.RawRequest = req.String()
 			logEntry.JobID = req.JobId
 			logEntry.ActionName = fmt.Sprintf("%v@%v", "Intra", "FetchResult")

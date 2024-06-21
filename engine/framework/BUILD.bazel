@@ -72,6 +72,7 @@ cc_library(
     deps = [
         ":party_info",
         ":tensor_table",
+        "//api:common_cc_proto",
         "//api:engine_cc_proto",
         "//engine/datasource:datasource_adaptor_mgr",
         "//engine/datasource:router",
@@ -102,6 +103,7 @@ cc_test(
     srcs = ["session_manager_test.cc"],
     deps = [
         ":session_manager",
+        "//engine/operator:test_util",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -121,6 +123,7 @@ cc_test(
     srcs = ["party_info_test.cc"],
     deps = [
         ":party_info",
+        "//engine/operator:test_util",
         "@com_google_googletest//:gtest_main",
     ],
 )

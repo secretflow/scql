@@ -17,6 +17,7 @@
 #include "spdlog/spdlog.h"
 
 namespace scql::engine {
+
 void Listener::AddChannel(
     const size_t rank,
     std::shared_ptr<yacl::link::transport::Channel> channel) {
@@ -24,7 +25,6 @@ void Listener::AddChannel(
   YACL_ENFORCE(channels_.count(rank) == 0,
                "add channel failed, rank={} exists before add.", rank);
   channels_.emplace(rank, channel);
-  return;
 }
 
 void Listener::OnRequest(const size_t rank,
@@ -43,7 +43,6 @@ void ListenerManager::AddListener(const std::string& link_id,
     YACL_THROW_LOGIC_ERROR("link_id:{} exist before add Listener.", link_id);
   }
   listeners_.emplace(link_id, listener);
-  return;
 }
 
 void ListenerManager::RemoveListener(const std::string& link_id) {
@@ -53,7 +52,6 @@ void ListenerManager::RemoveListener(const std::string& link_id) {
     return;
   }
   listeners_.erase(link_id);
-  return;
 }
 
 std::shared_ptr<Listener> ListenerManager::GetListener(

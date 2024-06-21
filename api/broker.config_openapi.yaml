@@ -15,28 +15,30 @@ openapiOptions:
             "status": {
               "code": 0
             },
-            "cost_time_s": 0.010912044,
-            "out_columns": [
-                {
-                    "name": "ID",
-                    "shape": {
-                        "dim": [
-                            {
-                                "dim_value": "2"
-                            },
-                            {
-                                "dim_value": "1"
-                            }
-                        ]
-                    },
-                    "elem_type": "STRING",
-                    "option": "VALUE",
-                    "string_data": [
-                      "alice",
-                      "bob"
-                    ]
-                }
-            ]
+            "result": {
+              "cost_time_s": 0.010912044,
+              "out_columns": [
+                  {
+                      "name": "ID",
+                      "shape": {
+                          "dim": [
+                              {
+                                  "dim_value": "2"
+                              },
+                              {
+                                  "dim_value": "1"
+                              }
+                          ]
+                      },
+                      "elem_type": "STRING",
+                      "option": "VALUE",
+                      "string_data": [
+                        "alice",
+                        "bob"
+                      ]
+                  }
+              ]
+            }
           }
     - message: scql.pb.SubmitResponse
       option:
@@ -54,6 +56,39 @@ openapiOptions:
           {
             "job_id": "your-job-id-from-submit"
           }
+    - message: scql.pb.FetchResultResponse
+      option:
+        example: |
+          {
+            "status": {
+              "code": 0,
+              "message": "successfully retrieved session result"
+            },
+            "result": {
+              "costTimeS": 51.09585244,
+              "outColumns": [
+                {
+                  "name": "cnt",
+                  "shape": {
+                    "dim": [
+                      {
+                        "dimValue": "1"
+                      },
+                      {
+                        "dimValue": "1"
+                      }
+                    ]
+                  },
+                  "elemType": "INT64",
+                  "annotation": {},
+                  "int64Data": [
+                    "19"
+                  ]
+                }
+              ]
+            }
+          }
+
     - message: scql.pb.CancelQueryRequest
       option:
         example: |
@@ -334,6 +369,3 @@ openapiOptions:
               }
             ]
           }
-
-
-
