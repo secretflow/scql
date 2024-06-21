@@ -1,5 +1,5 @@
-name: Error Issue Template
-description: Thank you for reporting the issue!
+name: Error Template
+description: To report any SCQL related error
 body:
   - type: markdown
     attributes:

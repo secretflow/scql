@@ -1,5 +1,5 @@
-name: Consulting issue template
-description: Thank you for reporting the issue!
+name: Consulting Template   
+description: To report any SCQL related consulting
 body:
   - type: markdown
     attributes:
