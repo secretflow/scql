@@ -119,7 +119,7 @@ jobs:
             ls ./linux/arm64
             ls ./scripts
 
-            TAG=$(grep "version" version.txt | awk -F'"' '{print $2}')
+            TAG=$(grep "version" ../version.txt | awk -F'"' '{print $2}')
             echo $TAG
             docker buildx create --name scql-image-builder --platform linux/arm64,linux/amd64 --use
             docker buildx build --platform linux/arm64,linux/amd64 -f scql-ubuntu.Dockerfile -t secretflow/scql:$TAG --push .
