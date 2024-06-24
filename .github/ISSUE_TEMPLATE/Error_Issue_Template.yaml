@@ -1,4 +1,4 @@
-name: Error Issue Template
+name: Error Template
 description: Thank you for reporting the issue!
 body:
   - type: markdown
