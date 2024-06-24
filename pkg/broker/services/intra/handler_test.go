@@ -64,7 +64,7 @@ func (s *intraTestSuite) bootstrap(manager *storage.MetaManager) {
 	txn := manager.CreateMetaTransaction()
 	defer txn.Finish(nil)
 	projConf, _ := json.Marshal(pb.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}})
-	s.NoError(txn.CreateProject(storage.Project{ID: "1", Name: "test project", Creator: "alice", ProjectConf: projConf}))
+	s.NoError(txn.CreateProject(storage.Project{ID: "1", Name: "test project", Creator: "alice", ProjectConf: string(projConf)}))
 }
 
 func (s *intraTestSuite) SetupTest() {
@@ -115,7 +115,7 @@ func (s *intraTestSuite) TestProcessInvitationNormal() {
 			s.NoError(err)
 			txn := s.testAppBuilder.AppBob.MetaMgr.CreateMetaTransaction()
 			defer txn.Finish(nil)
-			projecjConf, err := json.Marshal(pb.ProjectConfig{
+			projectConf, err := json.Marshal(pb.ProjectConfig{
 				SpuRuntimeCfg:        req.GetProject().GetConf().GetSpuRuntimeCfg(),
 				SessionExpireSeconds: req.GetProject().GetConf().SessionExpireSeconds,
 			})
@@ -126,7 +126,7 @@ func (s *intraTestSuite) TestProcessInvitationNormal() {
 				Description: req.GetProject().GetDescription(),
 				Creator:     req.GetProject().GetCreator(),
 				Member:      strings.Join(req.GetProject().GetMembers(), ";"),
-				ProjectConf: projecjConf,
+				ProjectConf: string(projectConf),
 				Inviter:     req.GetInviter(),
 				Invitee:     "bob",
 				InviteTime:  time.Now(),
@@ -167,7 +167,7 @@ func (s *intraTestSuite) TestListInvitations() {
 		{
 			ProjectID:   "mock_id1",
 			Name:        "mock_name1",
-			ProjectConf: projConf,
+			ProjectConf: string(projConf),
 			Creator:     "alice",
 			Member:      "alice;carol",
 			Inviter:     "alice",
@@ -177,7 +177,7 @@ func (s *intraTestSuite) TestListInvitations() {
 		{
 			ProjectID:   "mock_id2",
 			Name:        "mock_name2",
-			ProjectConf: projConf,
+			ProjectConf: string(projConf),
 			Creator:     "carol",
 			Member:      "alice;carol",
 			Inviter:     "carol",
@@ -187,7 +187,7 @@ func (s *intraTestSuite) TestListInvitations() {
 		{
 			ProjectID:   "mock_id3",
 			Name:        "mock_name3",
-			ProjectConf: projConf,
+			ProjectConf: string(projConf),
 			Creator:     "alice",
 			Member:      "alice;carol",
 			Inviter:     "alice",
@@ -251,7 +251,7 @@ func (s *intraTestSuite) TestProcessInvitationError() {
 				Description: req.GetProject().GetDescription(),
 				Creator:     req.GetProject().GetCreator(),
 				Member:      strings.Join(req.GetProject().GetMembers(), ";"),
-				ProjectConf: projConf,
+				ProjectConf: string(projConf),
 				Inviter:     req.GetInviter(),
 				Invitee:     "bob",
 				InviteTime:  time.Now(),

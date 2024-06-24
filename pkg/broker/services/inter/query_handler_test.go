@@ -64,7 +64,7 @@ func (s *interTestSuite) bootstrap(manager *storage.MetaManager) {
 	txn := manager.CreateMetaTransaction()
 	defer txn.Finish(nil)
 	projConf, _ := json.Marshal(scql.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}, SessionExpireSeconds: 86400})
-	s.NoError(txn.CreateProject(storage.Project{ID: "1", Name: "test project", Creator: "bob", ProjectConf: projConf}))
+	s.NoError(txn.CreateProject(storage.Project{ID: "1", Name: "test project", Creator: "bob", ProjectConf: string(projConf)}))
 	s.NoError(txn.AddProjectMembers([]storage.Member{storage.Member{ProjectID: "1", Member: "alice"}}))
 	s.NoError(txn.AddProjectMembers([]storage.Member{storage.Member{ProjectID: "1", Member: "carol"}}))
 	// mock table/ccl

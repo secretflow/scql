@@ -79,7 +79,7 @@ func (svc *grpcInterSvc) InviteToProject(c context.Context, req *pb.InviteToProj
 		Creator:          req.GetProject().GetCreator(),
 		ProjectCreatedAt: req.GetProject().GetCreatedAt().AsTime(),
 		Member:           strings.Join(req.GetProject().GetMembers(), ";"),
-		ProjectConf:      projConf,
+		ProjectConf:      string(projConf),
 		Inviter:          req.GetInviter(),
 		Invitee:          app.Conf.PartyCode,
 		InviteTime:       time.Now(),
