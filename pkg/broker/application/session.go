@@ -183,7 +183,7 @@ func NewSession(ctx context.Context, info *ExecutionInfo, app *App, asyncMode bo
 		}
 
 		var projConf pb.ProjectConfig
-		err = protojson.Unmarshal(project.ProjectConf, &projConf)
+		err = protojson.Unmarshal([]byte(project.ProjectConf), &projConf)
 		if err != nil {
 			return fmt.Errorf("NewSession: failed to deserialize project config stored in db: %v", err)
 		}

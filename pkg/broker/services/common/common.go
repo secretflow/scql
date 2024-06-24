@@ -149,13 +149,13 @@ func CheckInvitationCompatibleWithProj(invitation storage.Invitation, proj stora
 	}
 
 	var currentProj pb.ProjectConfig
-	err := json.Unmarshal(proj.ProjectConf, &currentProj)
+	err := json.Unmarshal([]byte(proj.ProjectConf), &currentProj)
 	if err != nil {
 		return fmt.Errorf("failed to deserialize project conf of current project")
 	}
 
 	var inviteProj pb.ProjectConfig
-	err = json.Unmarshal(invitation.ProjectConf, &inviteProj)
+	err = json.Unmarshal([]byte(invitation.ProjectConf), &inviteProj)
 
 	if err != nil {
 		return fmt.Errorf("failed to deserialize project conf of invitation project")

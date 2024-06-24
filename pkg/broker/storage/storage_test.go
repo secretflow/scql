@@ -59,10 +59,10 @@ func TestBootstrap(t *testing.T) {
 
 	alice := "alice"
 	// create project
-	err = transaction.CreateProject(Project{ID: projectID1, Name: projectName1, ProjectConf: projectConf, Creator: alice})
+	err = transaction.CreateProject(Project{ID: projectID1, Name: projectName1, ProjectConf: string(projectConf), Creator: alice})
 	r.NoError(err)
 	// create duplicated project
-	err = transaction.CreateProject(Project{ID: projectID1, Name: projectName1, ProjectConf: projectConf, Creator: alice})
+	err = transaction.CreateProject(Project{ID: projectID1, Name: projectName1, ProjectConf: string(projectConf), Creator: alice})
 	r.Error(err)
 	// test case sensitive
 	proj, err := transaction.GetProject("P1")
@@ -71,7 +71,7 @@ func TestBootstrap(t *testing.T) {
 	r.NoError(err)
 	// disturbance terms
 	unusedProjectName := "seems_wrong"
-	err = transaction.CreateProject(Project{ID: unusedProjectName, Name: "wrong_n1", ProjectConf: projectConf, Creator: alice})
+	err = transaction.CreateProject(Project{ID: unusedProjectName, Name: "wrong_n1", ProjectConf: string(projectConf), Creator: alice})
 	r.NoError(err)
 
 	projs, err := transaction.ListProjects([]string{})
@@ -122,12 +122,12 @@ func TestBootstrap(t *testing.T) {
 
 	// update project
 	newProjectConf, err := json.Marshal(pb.ProjectConfig{})
-	err = transaction.UpdateProject(Project{ID: projectID1, ProjectConf: newProjectConf})
+	err = transaction.UpdateProject(Project{ID: projectID1, ProjectConf: string(newProjectConf)})
 	r.NoError(err)
 	projWithMembers, err := transaction.GetProjectAndMembers(projectID1)
 	r.NoError(err)
 	proj = projWithMembers.Proj
-	r.Equal(newProjectConf, proj.ProjectConf)
+	r.Equal(string(newProjectConf), proj.ProjectConf)
 	// alter table
 	bob := "bob"
 	res, _, err = transaction.GetTableMetasByTableNames(projectID1, []string{})
@@ -142,7 +142,7 @@ func TestBootstrap(t *testing.T) {
 	// invitation
 	inviteBob := Invitation{
 		ProjectID:   projectID1,
-		ProjectConf: projectConf,
+		ProjectConf: string(projectConf),
 		Member:      strings.Join(projWithMembers.Members, ";"),
 		InviteTime:  time.Now(),
 		Inviter:     alice,
@@ -154,7 +154,7 @@ func TestBootstrap(t *testing.T) {
 	carol := "carol"
 	inviteCarol := Invitation{
 		ProjectID:   projectID1,
-		ProjectConf: projectConf,
+		ProjectConf: string(projectConf),
 		Member:      strings.Join(projWithMembers.Members, ";"),
 		InviteTime:  time.Now(),
 		Inviter:     alice,
@@ -165,7 +165,7 @@ func TestBootstrap(t *testing.T) {
 	// disturbance terms
 	inviteAnotherCarol := Invitation{
 		ProjectID:   unusedProjectName,
-		ProjectConf: projectConf,
+		ProjectConf: string(projectConf),
 		Member:      strings.Join(projWithMembers.Members, ";"),
 		InviteTime:  time.Now(),
 		Inviter:     alice,
@@ -173,7 +173,7 @@ func TestBootstrap(t *testing.T) {
 	}
 	inviteAnotherBob := Invitation{
 		ProjectID:   unusedProjectName,
-		ProjectConf: projectConf,
+		ProjectConf: string(projectConf),
 		Member:      strings.Join(projWithMembers.Members, ";"),
 		InviteTime:  time.Now(),
 		Inviter:     alice,

@@ -61,7 +61,7 @@ func TestQueryRunner(t *testing.T) {
 		}})
 	alice := "alice"
 	// create project
-	err = transaction.CreateProject(storage.Project{ID: projectID1, Name: projectName1, ProjectConf: projectConf, Creator: alice})
+	err = transaction.CreateProject(storage.Project{ID: projectID1, Name: projectName1, ProjectConf: string(projectConf), Creator: alice})
 	r.NoError(err)
 	tableName1 := "t1"
 	t1Identifier := storage.TableIdentifier{ProjectID: projectID1, TableName: tableName1}
@@ -185,7 +185,7 @@ func TestCaseSensitive(t *testing.T) {
 	projectConf, _ := json.Marshal(scql.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K}})
 	alice := "alice"
 	// create project
-	err = transaction.CreateProject(storage.Project{ID: projectID1, Name: "n1", ProjectConf: projectConf, Creator: alice})
+	err = transaction.CreateProject(storage.Project{ID: projectID1, Name: "n1", ProjectConf: string(projectConf), Creator: alice})
 	r.NoError(err)
 	tableName1 := "t1"
 	t1Identifier := storage.TableIdentifier{ProjectID: projectID1, TableName: tableName1}

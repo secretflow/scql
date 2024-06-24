@@ -62,7 +62,7 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 	}
 
 	var projConf pb.ProjectConfig
-	err = protojson.Unmarshal(existingProject.ProjectConf, &projConf)
+	err = protojson.Unmarshal([]byte(existingProject.ProjectConf), &projConf)
 	if err != nil {
 		return nil, err
 	}

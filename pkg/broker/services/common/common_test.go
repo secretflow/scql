@@ -168,7 +168,7 @@ func TestStorageWithCheck(t *testing.T) {
 	alice := "alice"
 	bob := "bob"
 	// create project
-	err = transaction.CreateProject(storage.Project{ID: projectID1, Name: projectName1, ProjectConf: projectConf, Creator: alice})
+	err = transaction.CreateProject(storage.Project{ID: projectID1, Name: projectName1, ProjectConf: string(projectConf), Creator: alice})
 	r.NoError(err)
 	err = transaction.AddProjectMembers([]storage.Member{storage.Member{ProjectID: projectID1, Member: bob}})
 	r.NoError(err)
