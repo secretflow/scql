@@ -90,8 +90,11 @@ jobs:
       - run:
           name: Build Docker image
           command: |
-            # login docker
+            # login dockerhub & secretflow aliyun docker registry
             docker login -u secretflow -p ${DOCKER_DEPLOY_TOKEN}
+            docker login -u ${ALIYUN_DOCKER_USERNAME} -p ${ALIYUN_DOCKER_PASSWORD}  secretflow-registry.cn-hangzhou.cr.aliyuncs.com
+
+            ALIYUN_IMAGE="secretflow-registry.cn-hangzhou.cr.aliyuncs.com/secretflow/scql"
 
             ls /tmp/binary/linux/amd64/
             ls /tmp/binary/linux/arm64/
@@ -125,6 +128,11 @@ jobs:
             docker buildx build --platform linux/arm64,linux/amd64 -f scql-ubuntu.Dockerfile -t secretflow/scql:$TAG --push .
             docker buildx build --platform linux/arm64,linux/amd64 -f scql-ubuntu.Dockerfile -t secretflow/scql:latest --push .
             docker buildx build --platform linux/arm64,linux/amd64 -f scql-ubuntu.Dockerfile -t secretflow/scql:stable --push .
+
+            # push to aliyun image repo
+            docker buildx build --platform linux/arm64,linux/amd64 -f scql-ubuntu.Dockerfile -t ${ALIYUN_IMAGE}:$TAG --push .
+            docker buildx build --platform linux/arm64,linux/amd64 -f scql-ubuntu.Dockerfile -t ${ALIYUN_IMAGE}:latest --push .
+            docker buildx build --platform linux/arm64,linux/amd64 -f scql-ubuntu.Dockerfile -t ${ALIYUN_IMAGE}:stable --push .
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
