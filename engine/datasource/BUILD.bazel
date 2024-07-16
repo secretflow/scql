@@ -25,6 +25,7 @@ cc_library(
         "//api:core_cc_proto",
         "//engine/core:arrow_helper",
         "//engine/core:tensor",
+        "@com_github_gabime_spdlog//:spdlog",
     ],
 )
 

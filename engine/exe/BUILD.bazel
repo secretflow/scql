@@ -14,6 +14,15 @@
 
 package(default_visibility = ["//visibility:public"])
 
+cc_library(
+    name = "flags",
+    srcs = ["flags.cc"],
+    hdrs = ["flags.h"],
+    deps = [
+        "@com_github_gflags_gflags//:gflags",
+    ],
+)
+
 cc_binary(
     name = "scqlengine",
     srcs = [
@@ -33,6 +42,7 @@ cc_binary(
         "//engine/services:prometheus_service_impl",
         "//engine/util:logging",
         "//engine/util:prometheus_monitor",
+        "//engine/exe:flags",
         "@com_github_brpc_brpc//:brpc",
         "@com_google_absl//absl/debugging:failure_signal_handler",
         "@com_google_absl//absl/debugging:symbolize",

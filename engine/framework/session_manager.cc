@@ -15,6 +15,9 @@
 #include "engine/framework/session_manager.h"
 
 #include <memory>
+
+#include "engine/util/logging.h"
+
 DEFINE_int32(psi_curve_type, psi::CURVE_FOURQ, "curve type used in PSI");
 DEFINE_int64(unbalance_psi_ratio_threshold, 5,
              "minimum LargePartySize/SmallPartySize ratio to choose unbalanced "
@@ -105,6 +108,9 @@ scql::engine::SessionOptions SessionManager::GenerateUpdatedSessionOptions(
     session_opt.psi_config.psi_curve_type = FLAGS_psi_curve_type;
   }
 
+  session_opt.log_config.enable_session_logger_separation =
+      params.log_cfg().enable_session_logger_separation();
+
   return session_opt;
 }
 
@@ -113,19 +119,11 @@ void SessionManager::CreateSession(const pb::JobStartParams& params,
   const std::string& job_id = params.job_id();
   YACL_ENFORCE(!job_id.empty(), "job_id is empty.");
 
-  // setup logger for new session
-  // sinks should be the same as the default logger
-  // If different loggers aim to write to the same output file all of them
-  // must share the same sink. Otherwise there will be strange results.
-  const auto& sinks = spdlog::default_logger()->sinks();
-  std::string logger_name = "job(" + job_id + ")";
-  auto session_logger =
-      std::make_shared<spdlog::logger>(logger_name, sinks.begin(), sinks.end());
-
   auto session_opt = GenerateUpdatedSessionOptions(params);
+
   auto new_session = std::make_unique<Session>(
-      session_opt, params, debug_opts, link_factory_.get(), session_logger,
-      ds_router_.get(), ds_mgr_.get(), allowed_spu_protocols_);
+      session_opt, params, debug_opts, link_factory_.get(), ds_router_.get(),
+      ds_mgr_.get(), allowed_spu_protocols_);
   {
     std::unique_lock<std::mutex> lock(mutex_);
     if (id_to_session_.find(job_id) != id_to_session_.end()) {

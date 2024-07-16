@@ -20,19 +20,15 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
-	"crypto/x509"
 	"encoding/base64"
-	"encoding/pem"
 	"errors"
 	"fmt"
-	"io"
-	"os"
 	"strings"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/tjfoc/gmsm/sm2"
-	smx509 "github.com/tjfoc/gmsm/x509"
+
+	"github.com/secretflow/scql/pkg/util/keyutil"
 )
 
 type AuthMethod int
@@ -97,7 +93,7 @@ func (b *CreateUserStmtBuilder) AuthByToken(token string) *CreateUserStmtBuilder
 
 func (b *CreateUserStmtBuilder) AuthByPubkeyWithPemFile(pemPath string) *CreateUserStmtBuilder {
 	b.authMethod = authMethodPubkey
-	b.privKey, b.err = LoadPrivateKeyFromPemFile(pemPath)
+	b.privKey, b.err = keyutil.LoadPrivateKeyFromPemFile(pemPath)
 	return b
 }
 
@@ -159,7 +155,7 @@ func (b *CreateUserStmtBuilder) ToSQL() (string, error) {
 			return "", err
 		}
 
-		pub, err := getPublicKeyInDER(b.privKey)
+		pub, err := keyutil.GetPublicKeyInDER(b.privKey)
 		if err != nil {
 			return "", err
 		}
@@ -177,37 +173,6 @@ func (b *CreateUserStmtBuilder) ToSQL() (string, error) {
 		}
 	}
 	return sb.String(), nil
-}
-
-// TODO(jingshi): move to appropriate place
-func LoadPrivateKeyFromPemFile(pemPath string) (any, error) {
-	file, err := os.Open(pemPath)
-	if err != nil {
-		return nil, err
-	}
-	data, err := io.ReadAll(file)
-	if err != nil {
-		return nil, err
-	}
-	return LoadPrivateKeyFromPem(data)
-}
-
-func LoadPrivateKeyFromPem(pemData []byte) (any, error) {
-	for block, rest := pem.Decode(pemData); block != nil; block, rest = pem.Decode(rest) {
-		if block.Type == "PRIVATE KEY" {
-			// find private key and parse it
-			pk, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-			if err != nil {
-				logrus.Warnf("%v\ntry sm2", err)
-				return smx509.ParsePKCS8PrivateKey(block.Bytes, nil)
-			}
-			return pk, err
-		}
-		if block.Type == "RSA PRIVATE KEY" {
-			return x509.ParsePKCS1PrivateKey(block.Bytes)
-		}
-	}
-	return nil, errors.New("failed to decode PEM block containing private key")
 }
 
 func signMessage(key any, msg []byte) (string, error) {
@@ -232,18 +197,4 @@ func signMessage(key any, msg []byte) (string, error) {
 	}
 
 	return base64.StdEncoding.EncodeToString(sig), nil
-}
-
-func getPublicKeyInDER(privKey any) ([]byte, error) {
-	switch priv := privKey.(type) {
-	case ed25519.PrivateKey:
-		pub := priv.Public()
-		return x509.MarshalPKIXPublicKey(pub)
-	case *rsa.PrivateKey:
-		return x509.MarshalPKIXPublicKey(&priv.PublicKey)
-	case *sm2.PrivateKey:
-		return smx509.MarshalSm2PublicKey(&priv.PublicKey)
-	default:
-		return nil, errors.New("unsupported type of private key")
-	}
 }

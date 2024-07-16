@@ -69,10 +69,15 @@ struct PsiConfig {
   int32_t psi_curve_type = 0;
 };
 
+struct LogConfig {
+  bool enable_session_logger_separation = false;
+};
+
 struct SessionOptions {
   util::LogOptions log_options;
   LinkConfig link_config;
   PsiConfig psi_config;
+  LogConfig log_config;
 };
 
 /// @brief Session holds everything needed to run the execution plan.
@@ -81,8 +86,7 @@ class Session {
   explicit Session(const SessionOptions& session_opt,
                    const pb::JobStartParams& params,
                    pb::DebugOptions debug_opts,
-                   yacl::link::ILinkFactory* link_factory,
-                   std::shared_ptr<spdlog::logger> logger, Router* router,
+                   yacl::link::ILinkFactory* link_factory, Router* router,
                    DatasourceAdaptorMgr* ds_mgr,
                    const std::vector<spu::ProtocolKind>& allowed_spu_protocols);
   ~Session();
@@ -246,5 +250,7 @@ class Session {
   std::string current_node_name_;
   std::chrono::time_point<std::chrono::system_clock> node_start_time_;
 };
+
+std::shared_ptr<spdlog::logger> ActiveLogger(const Session* session);
 
 }  // namespace scql::engine

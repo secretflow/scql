@@ -24,6 +24,7 @@ namespace scql::engine::util {
 struct LogOptions {
   bool enable_console_logger = false;
   bool enable_psi_detail_logger = false;
+  bool enable_session_logger_separation = false;
   std::string log_dir = "logs";
   size_t max_log_file_size = 500 * 1024 * 1024;
   size_t max_log_file_count = 10;
@@ -36,4 +37,11 @@ void SetupLogger(const LogOptions& opts = LogOptions());
 std::shared_ptr<spdlog::logger> CreateDetailLogger(
     const std::string& logger_name, const std::string& logger_file_name,
     const LogOptions& opts = LogOptions());
+
+std::shared_ptr<spdlog::logger> DupDefaultLogger(
+    const std::string& logger_name);
+
+std::shared_ptr<spdlog::logger> CreateLogger(
+    const std::string& logger_name, const std::string& logger_file_name,
+    const LogOptions& opts);
 }  // namespace scql::engine::util

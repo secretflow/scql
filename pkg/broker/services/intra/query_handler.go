@@ -85,6 +85,10 @@ func (svc *grpcIntraSvc) DoQuery(ctx context.Context, req *pb.QueryRequest) (res
 		UnbalancePsiLargerPartyRowsCountThreshold: jobConfig.UnbalancePsiLargerPartyRowsCountThreshold,
 	}
 
+	logCfg := &pb.LogConfig{
+		EnableSessionLoggerSeparation: jobConfig.EnableSessionLoggerSeparation,
+	}
+
 	info := &application.ExecutionInfo{
 		ProjectID: req.GetProjectId(),
 		JobID:     jobID,
@@ -98,6 +102,7 @@ func (svc *grpcIntraSvc) DoQuery(ctx context.Context, req *pb.QueryRequest) (res
 			SessionExpireSeconds: jobConfig.GetSessionExpireSeconds(),
 			LinkConfig:           linkCfg,
 			PsiConfig:            psiCfg,
+			LogConfig:            logCfg,
 		},
 	}
 	session, err := application.NewSession(ctx, info, app, false, req.GetDryRun())
@@ -170,6 +175,10 @@ func (svc *grpcIntraSvc) SubmitQuery(ctx context.Context, req *pb.QueryRequest) 
 		UnbalancePsiLargerPartyRowsCountThreshold: jobConfig.UnbalancePsiLargerPartyRowsCountThreshold,
 	}
 
+	logCfg := &pb.LogConfig{
+		EnableSessionLoggerSeparation: jobConfig.EnableSessionLoggerSeparation,
+	}
+
 	info := &application.ExecutionInfo{
 		ProjectID: req.GetProjectId(),
 		JobID:     jobID,
@@ -183,6 +192,7 @@ func (svc *grpcIntraSvc) SubmitQuery(ctx context.Context, req *pb.QueryRequest) 
 			SessionExpireSeconds: jobConfig.GetSessionExpireSeconds(),
 			LinkConfig:           linkCfg,
 			PsiConfig:            psiCfg,
+			LogConfig:            logCfg,
 			TimeZone:             req.GetJobConfig().GetTimeZone(),
 		},
 	}

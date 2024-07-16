@@ -73,6 +73,15 @@ void SinkBrpcLogWithDefaultLogger() {
   ::logging::SetMinLogLevel(::logging::BLOG_NOTICE);
 }
 
+auto GetConsoleSink() {
+  // sinks should be the same as the default logger
+  // If different loggers aim to write to the same output file, all of them
+  // must share the same sink. Otherwise there will be undefined behaviors.
+  static auto console_sink =
+      std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+  return console_sink;
+}
+
 }  // namespace
 
 std::shared_ptr<spdlog::logger> CreateLogger(
@@ -94,8 +103,7 @@ std::shared_ptr<spdlog::logger> CreateLogger(
 
   std::vector<spdlog::sink_ptr> sinks{file_sink};
   if (opts.enable_console_logger) {
-    auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    sinks.push_back(std::move(console_sink));
+    sinks.push_back(GetConsoleSink());
   }
 
   auto logger =
@@ -107,9 +115,15 @@ std::shared_ptr<spdlog::logger> CreateLogger(
   return logger;
 }
 
+std::shared_ptr<spdlog::logger> CreateLogger(
+    const std::string& logger_name, const std::string& logger_file_name,
+    const LogOptions& opts) {
+  return CreateLogger(logger_name, logger_file_name, opts, kFormatPattern);
+}
+
 void SetupLogger(const LogOptions& opts) {
   spdlog::set_default_logger(
-      CreateLogger("sciengine", "sciengine.log", opts, kFormatPattern));
+      CreateLogger("scqlengine", "scqlengine.log", opts, kFormatPattern));
 
   // sink brpc log.
   SinkBrpcLogWithDefaultLogger();
@@ -122,4 +136,17 @@ std::shared_ptr<spdlog::logger> CreateDetailLogger(
                       kDetailLogFormatPattern);
 }
 
+std::shared_ptr<spdlog::logger> DupDefaultLogger(
+    const std::string& logger_name) {
+  auto default_logger = spdlog::default_logger();
+  auto default_sinks = default_logger->sinks();
+
+  auto new_logger = std::make_shared<spdlog::logger>(
+      logger_name, default_sinks.begin(), default_sinks.end());
+  new_logger->set_level(default_logger->level());
+  new_logger->set_pattern(kFormatPattern);
+  new_logger->flush_on(spdlog::level::info);
+
+  return new_logger;
+}
 }  // namespace scql::engine::util

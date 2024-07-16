@@ -37,6 +37,7 @@ import (
 	"github.com/secretflow/scql/pkg/broker/config"
 	"github.com/secretflow/scql/pkg/broker/partymgr"
 	"github.com/secretflow/scql/pkg/broker/server"
+	"github.com/secretflow/scql/pkg/broker/services/auth"
 	"github.com/secretflow/scql/pkg/broker/storage"
 	"github.com/secretflow/scql/pkg/util/kusciaclient"
 )
@@ -117,6 +118,19 @@ func main() {
 		partyMgr, err = partymgr.NewFilePartyMgr(path)
 		if err != nil {
 			logrus.Fatalf("Failed to create file partyMgr: %v", err)
+		}
+	case "consul":
+		auth, err := auth.NewAuth(cfg)
+		if err != nil {
+			logrus.Fatalf("Failed to create auth from config: %v", err)
+		}
+		pubKey, err := auth.GetPubKey()
+		if err != nil {
+			logrus.Fatalf("Failed to get pubkey from auth: %v", err)
+		}
+		partyMgr, err = partymgr.NewConsulPartyMgr(cfg, pubKey)
+		if err != nil {
+			logrus.Fatalf("Failed to create consul partyMgr: %v", err)
 		}
 	case "kuscia":
 		if cfg.Discovery.Kuscia == nil {

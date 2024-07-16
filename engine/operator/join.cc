@@ -59,17 +59,18 @@ void Join::Validate(ExecContext* ctx) {
 }
 
 void Join::Execute(ExecContext* ctx) {
+  auto logger = ctx->GetActiveLogger();
   int64_t algorithm = ctx->GetInt64ValueFromAttribute(kAlgorithmAttr);
   if (algorithm == static_cast<int64_t>(util::PsiAlgo::kEcdhPsi)) {
-    SPDLOG_INFO("use server hint Ecdh");
+    SPDLOG_LOGGER_INFO(logger, "use server hint Ecdh");
     return Join::EcdhPsiJoin(ctx);
   } else if (algorithm == static_cast<int64_t>(util::PsiAlgo::kOprfPsi)) {
-    SPDLOG_INFO("use server hint Oprf");
+    SPDLOG_LOGGER_INFO(logger, "use server hint Oprf");
     return OprfPsiJoin(ctx, IsOprfServerAccordToHint(ctx));
   }
 
   // coordinate between engines
-  SPDLOG_INFO("coordinate between engines");
+  SPDLOG_LOGGER_INFO(logger, "coordinate between engines");
   util::PsiPlan psi_plan = util::CoordinatePsiPlan(ctx);
   std::string server_info;
   if (psi_plan.unbalanced) {
@@ -79,8 +80,8 @@ void Join::Execute(ExecContext* ctx) {
       server_info = ", is client";
     }
   }
-  SPDLOG_INFO("coordinate finished, is unbalanced: {} {}", psi_plan.unbalanced,
-              server_info);
+  SPDLOG_LOGGER_INFO(logger, "coordinate finished, is unbalanced: {} {}",
+                     psi_plan.unbalanced, server_info);
   if (psi_plan.unbalanced) {
     return Join::OprfPsiJoin(ctx, psi_plan.is_server, psi_plan.psi_size_info);
   } else {
@@ -146,6 +147,8 @@ bool Join::IsOprfServerAccordToHint(ExecContext* ctx) {
 
 void Join::EcdhPsiJoin(ExecContext* ctx) {
   const auto start_time = std::chrono::system_clock::now();
+  auto logger = ctx->GetActiveLogger();
+
   const auto& my_party_code = ctx->GetSession()->SelfPartyCode();
   std::vector<std::string> input_party_codes =
       ctx->GetStringValuesFromAttribute(kInputPartyCodesAttr);
@@ -179,7 +182,7 @@ void Join::EcdhPsiJoin(ExecContext* ctx) {
     options.target_rank = yacl::link::kAllRank;
     if (join_keys.size() > 0) {
       options.on_batch_finished = util::BatchFinishedCb(
-          ctx->GetSession()->Id(),
+          logger, ctx->GetSession()->Id(),
           (join_keys[0]->Length() + options.batch_size - 1) /
               options.batch_size);
     }
@@ -195,7 +198,8 @@ void Join::EcdhPsiJoin(ExecContext* ctx) {
   auto self_size = self_store->ItemCount();
   auto peer_size = peer_store->ItemCount();
   auto result_size = join_indices->Length();
-  SPDLOG_INFO(
+  SPDLOG_LOGGER_INFO(
+      logger,
       "ECDH PSI Join finish, my_party_code:{}, my_rank:{}, total "
       "self_item_count:{}, total peer_item_count:{}, result_size:{}",
       ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
@@ -211,6 +215,7 @@ void Join::EcdhPsiJoin(ExecContext* ctx) {
 
 void Join::OprfPsiJoin(ExecContext* ctx, bool is_server,
                        std::optional<util::PsiSizeInfo> psi_size_info) {
+  auto logger = ctx->GetActiveLogger();
   // PsiExecutionInfoTable for audit
   util::PsiExecutionInfoTable psi_info_table;
   psi_info_table.start_time = std::chrono::system_clock::now();
@@ -271,8 +276,8 @@ void Join::OprfPsiJoin(ExecContext* ctx, bool is_server,
                   psi_link);
   }
 
-  // audit
-  SPDLOG_INFO(
+  SPDLOG_LOGGER_INFO(
+      logger,
       "OPRF PSI Join finish, my_party_code:{}, my_rank:{}, total "
       "self_item_count:{}, total peer_item_count:{}, result size:{}",
       ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
@@ -282,7 +287,7 @@ void Join::OprfPsiJoin(ExecContext* ctx, bool is_server,
       *ctx, static_cast<int64_t>(psi_info_table.self_size),
       static_cast<int64_t>(psi_info_table.peer_size),
       psi_info_table.result_size, psi_info_table.start_time);
-  SPDLOG_INFO("OPRF PSI Join end");
+  SPDLOG_LOGGER_INFO(logger, "OPRF PSI Join end");
 }
 
 std::vector<TensorPtr> Join::GetJoinKeys(ExecContext* ctx, bool is_left) {
@@ -437,15 +442,17 @@ void Join::SendNullCount(ExecContext* ctx, int64_t peer_rank,
 
 void Join::SendMatchedSeqs(ExecContext* ctx, int64_t peer_rank,
                            const std::vector<uint64_t>& matched_seqs) {
-  SPDLOG_INFO("OPRF Join: start sending matched seqs, total count: {}",
-              matched_seqs.size());
+  auto logger = ctx->GetActiveLogger();
+  SPDLOG_LOGGER_INFO(logger,
+                     "OPRF Join: start sending matched seqs, total count: {}",
+                     matched_seqs.size());
 
   auto lctx = ctx->GetSession()->GetLink();
   auto tag = ctx->GetNodeName() + "-UbJoinMatchedSeqs";
 
   util::SendMassiveMsgpack<uint64_t>(lctx, tag, peer_rank, matched_seqs);
 
-  SPDLOG_INFO("OPRF Join: finish sending matched seqs");
+  SPDLOG_LOGGER_INFO(logger, "OPRF Join: finish sending matched seqs");
 }
 
 std::vector<uint64_t> Join::RecvMatchedSeqs(ExecContext* ctx,

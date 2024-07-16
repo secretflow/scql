@@ -15,9 +15,7 @@
 package application
 
 import (
-	"encoding/base64"
 	"fmt"
-	"os"
 	"slices"
 	"strings"
 	"time"
@@ -52,25 +50,9 @@ type App struct {
 }
 
 func NewApp(partyMgr partymgr.PartyMgr, metaMgr *storage.MetaManager, cfg *config.Config) (*App, error) {
-	var pemData []byte
-	if cfg.PrivateKeyPath != "" {
-		data, err := os.ReadFile(cfg.PrivateKeyPath)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read private key file %s: %w", cfg.PrivateKeyPath, err)
-		}
-		pemData = data
-	} else if cfg.PrivateKeyData != "" {
-		data, err := base64.StdEncoding.DecodeString(cfg.PrivateKeyData)
-		if err != nil {
-			return nil, fmt.Errorf("failed to decode base64 encoded private key data: %w", err)
-		}
-		pemData = data
-	} else {
-		return nil, fmt.Errorf("private key path and content are both empty, provide at least one")
-	}
-	auth, err := auth.NewAuth(pemData)
+	auth, err := auth.NewAuth(cfg)
 	if err != nil {
-		return nil, fmt.Errorf("create auth from private key: %v", err)
+		return nil, fmt.Errorf("failed to create auth from config: %v", err)
 	}
 
 	app := &App{

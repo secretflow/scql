@@ -79,6 +79,7 @@ cc_library(
         "//engine/util:logging",
         "//engine/util:prometheus_monitor",
         "//engine/util:psi_detail_logger",
+        "//engine/exe:flags",
         "@com_github_openssl_openssl//:openssl",
         "@spulib//libspu/core:config",
         "@spulib//libspu/core:context",

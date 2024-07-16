@@ -310,12 +310,12 @@ def _com_github_duckdb():
         http_archive,
         name = "com_github_duckdb",
         urls = [
-            "https://github.com/duckdb/duckdb/archive/refs/tags/v0.10.2.tar.gz",
+            "https://github.com/duckdb/duckdb/archive/refs/tags/v1.0.0.tar.gz",
         ],
         patch_args = ["-p1"],
         patches = ["@scql//engine/bazel:patches/duckdb.patch"],
-        sha256 = "662a0ba5c35d678ab6870db8f65ffa1c72e6096ad525a35b41b275139684cea6",
-        strip_prefix = "duckdb-0.10.2",
+        sha256 = "04e472e646f5cadd0a3f877a143610674b0d2bcf9f4102203ac3c3d02f1c5f26",
+        strip_prefix = "duckdb-1.0.0",
         build_file = "@scql//engine/bazel:duckdb.BUILD",
     )
 

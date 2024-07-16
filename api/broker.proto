@@ -489,6 +489,7 @@ message JobConfig {
   int64 link_recv_timeout_sec = 7;
   int64 link_throttle_window_size = 8;
   int64 link_chunked_send_parallel_size = 9;
+  bool enable_session_logger_separation = 10;
 }
 
 message InviteMemberRequest {

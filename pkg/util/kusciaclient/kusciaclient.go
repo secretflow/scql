@@ -16,16 +16,15 @@ package kusciaclient
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
-	"os"
 	"strings"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
+
+	"github.com/secretflow/scql/pkg/broker/config"
 )
 
 const (
@@ -52,7 +51,7 @@ func NewKusciaClientConn(endpoint string, tlsMode string, certPath, keyPath, cac
 
 		var creds credentials.TransportCredentials
 		if lowerTlsMode == string(MutualTLS) {
-			tlsConfig, err := loadTLSConfig(certPath, keyPath, cacertPath)
+			tlsConfig, err := config.LoadTLSConfig(lowerTlsMode, cacertPath, certPath, keyPath)
 			if err != nil {
 				return nil, err
 			}
@@ -77,25 +76,4 @@ func grpcClientTokenInterceptor(tokenStr string) grpc.UnaryClientInterceptor {
 		ctx = metadata.AppendToOutgoingContext(ctx, kusciaTokenHeader, tokenStr)
 		return invoker(ctx, method, req, reply, cc, opts...)
 	}
-}
-
-func loadTLSConfig(certPath, keyPath, cacertPath string) (*tls.Config, error) {
-	cert, err := tls.LoadX509KeyPair(certPath, keyPath)
-	if err != nil {
-		return nil, err
-	}
-
-	cacert, err := os.ReadFile(cacertPath)
-	if err != nil {
-		return nil, err
-	}
-
-	cacertPool := x509.NewCertPool()
-	cacertPool.AppendCertsFromPEM(cacert)
-
-	tlsConfig := &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		RootCAs:      cacertPool,
-	}
-	return tlsConfig, nil
 }

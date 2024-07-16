@@ -9,3 +9,6 @@
 # party authentication flags
 --enable_self_auth=false
 --enable_peer_auth=false
+
+# logger flags
+--log_enable_session_logger_separation=true

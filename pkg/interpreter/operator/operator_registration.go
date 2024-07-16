@@ -842,6 +842,41 @@ Out = {0, 1, NULL}
 			AllOpDef = append(AllOpDef, opDef)
 		}
 	}
+
+	{
+		{
+			opDef := &OperatorDef{}
+			opDef.SetName(OpNameCos)
+			opDef.AddInput("In", "the expression pass to cosine function", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+			opDef.AddOutput("Out", "Result", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+			opDef.SetDefinition("Definition: return the value of cosine function")
+			opDef.SetParamTypeConstraint(T, statusPrivateOrSecretOrPublic)
+			check(opDef.err)
+			AllOpDef = append(AllOpDef, opDef)
+		}
+
+		{
+			opDef := &OperatorDef{}
+			opDef.SetName(OpNameSin)
+			opDef.AddInput("In", "the expression pass to sine function", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+			opDef.AddOutput("Out", "Result", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+			opDef.SetDefinition("Definition: return the value of sine function")
+			opDef.SetParamTypeConstraint(T, statusPrivateOrSecretOrPublic)
+			check(opDef.err)
+			AllOpDef = append(AllOpDef, opDef)
+		}
+
+		{
+			opDef := &OperatorDef{}
+			opDef.SetName(OpNameACos)
+			opDef.AddInput("In", "the expression pass to arc cosine function", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+			opDef.AddOutput("Out", "Result", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+			opDef.SetDefinition("Definition: return the value of arc cosine function")
+			opDef.SetParamTypeConstraint(T, statusPrivateOrSecretOrPublic)
+			check(opDef.err)
+			AllOpDef = append(AllOpDef, opDef)
+		}
+	}
 }
 
 func GetAllOpDef() ([]*proto.OperatorDef, int) {

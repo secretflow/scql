@@ -27,7 +27,7 @@ func TestAuth(t *testing.T) {
 	r := require.New(t)
 	for i, tc := range authTestCases {
 		errMsg := fmt.Sprintf("#%d case failed", i)
-		auth, err := NewAuth([]byte(tc.privateKey))
+		auth, err := NewPemAuth([]byte(tc.privateKey))
 		r.NoError(err, errMsg)
 
 		interReq := &pb.InviteToProjectRequest{

@@ -17,6 +17,7 @@
 #include <memory>
 
 #include "brpc/channel.h"
+#include "spdlog/spdlog.h"
 
 namespace scql::engine {
 
@@ -37,6 +38,7 @@ class ChannelManager {
   void AddChannelOptions(RemoteRole role, const ChannelOptions& options);
 
   std::shared_ptr<google::protobuf::RpcChannel> Create(
+      const std::shared_ptr<spdlog::logger>& logger,
       const std::string& remote_addr, RemoteRole role);
 
  private:

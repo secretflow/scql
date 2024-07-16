@@ -21,6 +21,7 @@
 
 #include "engine/core/arrow_helper.h"
 #include "engine/core/type.h"
+#include "engine/util/logging.h"
 #include "engine/util/ndarray_to_arrow.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/table_util.h"
@@ -48,6 +49,7 @@ void Copy::Validate(ExecContext* ctx) {
 }
 
 void Copy::Execute(ExecContext* ctx) {
+  auto logger = ctx->GetActiveLogger();
   const auto& input_pbs = ctx->GetInput(kIn);
   const auto& output_pbs = ctx->GetOutput(kOut);
   const std::string& from_party =
@@ -84,8 +86,8 @@ void Copy::Execute(ExecContext* ctx) {
           yacl::ByteContainerView(buffer->mutable_data(), buffer->size()),
           ctx->GetNodeName());
 
-      SPDLOG_INFO("sent {} rows in batch {}, {} rows in total.", current_rows,
-                  count, total);
+      SPDLOG_LOGGER_INFO(logger, "sent {} rows in batch {}, {} rows in total.",
+                         current_rows, count, total);
     }
 
     // append a dummy batch to the tail of the batch to indicate
@@ -129,8 +131,9 @@ void Copy::Execute(ExecContext* ctx) {
       }
 
       count++;
-      SPDLOG_INFO("received {} rows in batch {}, {} rows in total.",
-                  current_rows, count, total);
+      SPDLOG_LOGGER_INFO(logger,
+                         "received {} rows in batch {}, {} rows in total.",
+                         current_rows, count, total);
     }
 
     InsertTensorsFromTable(ctx, output_pbs, std::move(merged_table));

@@ -99,9 +99,11 @@ static std::string GetS3Prefix(const std::string &url) {
 }
 
 static duckdb::unique_ptr<duckdb::TableRef> CSVTableReplacementScan(
-    duckdb::ClientContext &context, const std::string &table_name,
-    duckdb::ReplacementScanData *data) {
-  auto scan_data = dynamic_cast<CSVTableReplacementScanData *>(data);
+    duckdb::ClientContext &context, duckdb::ReplacementScanInput &input,
+    duckdb::optional_ptr<duckdb::ReplacementScanData> data) {
+  const std::string &table_name = input.table_name;
+
+  auto scan_data = dynamic_cast<CSVTableReplacementScanData *>(data.get());
   if (!scan_data || !scan_data->csvdb_conf) {
     return nullptr;
   }

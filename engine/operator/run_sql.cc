@@ -27,6 +27,7 @@ const std::string& RunSQL::Type() const { return kOpType; }
 
 void RunSQL::Execute(ExecContext* ctx) {
   const auto start_time = std::chrono::system_clock::now();
+  auto logger = ctx->GetActiveLogger();
   std::string select = ctx->GetStringValueFromAttribute(kSQLAttr);
 
   std::vector<std::string> table_refs =
@@ -64,15 +65,15 @@ void RunSQL::Execute(ExecContext* ctx) {
                                   outputs_pb[i].elem_type());
   }
 
-  auto results = adaptor->ExecQuery(select, expected_outputs);
+  auto results = adaptor->ExecQuery(logger, select, expected_outputs);
 
   YACL_ENFORCE(results.size() == expected_outputs.size(),
                "the size of ExecQuery results mismatch with expected_outputs");
   for (size_t i = 0; i < expected_outputs.size(); ++i) {
     ctx->GetTensorTable()->AddTensor(expected_outputs[i].name, results[i]);
   }
-  SPDLOG_INFO("get result row={}, column={}", results[0]->Length(),
-              results.size());
+  SPDLOG_LOGGER_INFO(logger, "get result row={}, column={}",
+                     results[0]->Length(), results.size());
 
   audit::RecordSqlNodeDetail(*ctx, select, results[0]->Length(), results.size(),
                              start_time);

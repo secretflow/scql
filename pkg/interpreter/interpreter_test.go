@@ -42,7 +42,172 @@ func TestCompile(t *testing.T) {
 	}
 }
 
+var commonSecurityConf = &proto.SecurityConfig{
+	ColumnControlList: []*proto.SecurityConfig_ColumnControl{
+		{
+			PartyCode:    "alice",
+			Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+			DatabaseName: "",
+			TableName:    "ta",
+			ColumnName:   "ID",
+		},
+		{
+			PartyCode:    "alice",
+			Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+			DatabaseName: "",
+			TableName:    "ta",
+			ColumnName:   "credit_rank",
+		},
+		{
+			PartyCode:    "bob",
+			Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_JOIN,
+			DatabaseName: "",
+			TableName:    "ta",
+			ColumnName:   "ID",
+		},
+		{
+			PartyCode:    "bob",
+			Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+			DatabaseName: "",
+			TableName:    "tb",
+			ColumnName:   "ID",
+		},
+		{
+			PartyCode:    "bob",
+			Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+			DatabaseName: "",
+			TableName:    "tb",
+			ColumnName:   "order_amount",
+		},
+		{
+			PartyCode:    "bob",
+			Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+			DatabaseName: "",
+			TableName:    "tb",
+			ColumnName:   "is_active",
+		},
+		{
+			PartyCode:    "alice",
+			Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_JOIN,
+			DatabaseName: "",
+			TableName:    "tb",
+			ColumnName:   "ID",
+		},
+		{
+			PartyCode:    "alice",
+			Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AS_JOIN_PAYLOAD,
+			DatabaseName: "",
+			TableName:    "tb",
+			ColumnName:   "order_amount",
+		},
+	},
+}
+
+var commonCatalog = &proto.Catalog{
+	Tables: []*proto.TableEntry{
+		{
+			TableName: "ta",
+			Columns: []*proto.TableEntry_Column{
+				{
+					Name: "ID",
+					Type: "string",
+				},
+				{
+					Name: "credit_rank",
+					Type: "int",
+				},
+				{
+					Name: "income",
+					Type: "int",
+				},
+				{
+					Name: "age",
+					Type: "int",
+				},
+			},
+			IsView:   false,
+			RefTable: "alice.user_credit",
+			DbType:   "mysql",
+			Owner: &proto.PartyId{
+				Code: "alice",
+			},
+		},
+		{
+			TableName: "tb",
+			Columns: []*proto.TableEntry_Column{
+				{
+					Name: "ID",
+					Type: "string",
+				},
+				{
+					Name: "order_amount",
+					Type: "double",
+				},
+				{
+					Name: "is_active",
+					Type: "int",
+				},
+			},
+			IsView:   false,
+			RefTable: "bob.user_stats",
+			DbType:   "mysql",
+			Owner: &proto.PartyId{
+				Code: "bob",
+			},
+		},
+	},
+}
+
 var testCases = []compileTestCase{
+	{
+		req: &proto.CompileQueryRequest{
+			Query:  "SELECT COS(ta.credit_rank) AS credit_rank_cos, SIN(tb.order_amount) AS order_amount_sin, ACOS(ta.credit_rank) AS credit_rank_acos FROM ta INNER JOIN tb ON ta.ID = tb.ID",
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "alice",
+			},
+			IssuerAsParticipant: true,
+			SecurityConf:        commonSecurityConf,
+			Catalog:             commonCatalog,
+			CompileOpts:         &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+			// TODO: add RuntimeConfig
+		},
+		ok:           true,
+		workPartyNum: 2,
+	},
+	{
+		req: &proto.CompileQueryRequest{
+			Query:  "SELECT SIN(credit_rank) AS sin_credit_rank FROM ta",
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "alice",
+			},
+			IssuerAsParticipant: true,
+			SecurityConf:        commonSecurityConf,
+			Catalog:             commonCatalog,
+			CompileOpts:         &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+			// TODO: add RuntimeConfig
+		},
+		ok:           true,
+		workPartyNum: 1,
+	},
+	{
+		req: &proto.CompileQueryRequest{
+			// is_active is not visible for alice
+			Query:  "SELECT SIN(tb.is_active) AS sin_is_active FROM ta ON tb ON ta.ID = tb.ID",
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "alice",
+			},
+			IssuerAsParticipant: true,
+			SecurityConf:        commonSecurityConf,
+			Catalog:             commonCatalog,
+			CompileOpts:         &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+			// TODO: add RuntimeConfig
+		},
+		ok:           false,
+		workPartyNum: 2,
+	},
 	{
 		req: &proto.CompileQueryRequest{
 			Query:  "SELECT ta.credit_rank, COUNT(*) as cnt, AVG(ta.income) as avg_income, AVG(tb.order_amount) as avg_amount FROM ta INNER JOIN tb ON ta.ID = tb.ID WHERE ta.age >= 20 AND ta.age <= 30 AND tb.is_active = 1 GROUP BY ta.credit_rank",
@@ -153,60 +318,7 @@ var testCases = []compileTestCase{
 					},
 				},
 			},
-			Catalog: &proto.Catalog{
-				Tables: []*proto.TableEntry{
-					{
-						TableName: "ta",
-						Columns: []*proto.TableEntry_Column{
-							{
-								Name: "ID",
-								Type: "string",
-							},
-							{
-								Name: "credit_rank",
-								Type: "int",
-							},
-							{
-								Name: "income",
-								Type: "int",
-							},
-							{
-								Name: "age",
-								Type: "int",
-							},
-						},
-						IsView:   false,
-						RefTable: "alice.user_credit",
-						DbType:   "mysql",
-						Owner: &proto.PartyId{
-							Code: "alice",
-						},
-					},
-					{
-						TableName: "tb",
-						Columns: []*proto.TableEntry_Column{
-							{
-								Name: "ID",
-								Type: "string",
-							},
-							{
-								Name: "order_amount",
-								Type: "double",
-							},
-							{
-								Name: "is_active",
-								Type: "int",
-							},
-						},
-						IsView:   false,
-						RefTable: "bob.user_stats",
-						DbType:   "mysql",
-						Owner: &proto.PartyId{
-							Code: "bob",
-						},
-					},
-				},
-			},
+			Catalog:     commonCatalog,
 			CompileOpts: &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
 			// TODO: add RuntimeConfig
 		},

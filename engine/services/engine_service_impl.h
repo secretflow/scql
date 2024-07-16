@@ -73,12 +73,15 @@ class EngineServiceImpl : public pb::SCQLEngineService {
   void RunPlanAsync(const pb::RunExecutionPlanRequest request, Session* session,
                     const std::string& source_ip);
 
-  bool CheckDriverCredential(const brpc::HttpHeader& http_header);
+  void CheckDriverCredential(const brpc::HttpHeader& http_header);
 
   void VerifyPublicKeys(const pb::JobStartParams& start_params);
 
   void ReportErrorToPeers(const pb::JobStartParams& params,
                           const pb::Code err_code, const std::string& err_msg);
+
+  std::shared_ptr<spdlog::logger> GetActiveLogger(
+      const std::string& session_id) const;
 
  private:
   const EngineServiceOptions service_options_;

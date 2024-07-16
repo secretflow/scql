@@ -14,10 +14,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 `Fixed` for any bug fixes.
 `Security` in case of vulnerabilities.
 
-
 ## Staging
 
 ### Added
+
+### Changed
+
+### Fixed
+
+## [0.8.1] - 2024-07-02
+
+### Added
+
+- Support session-based log isolation functioality in the SCQL Engine.
+- Support consul-based broker registration/discovery services, providing ACL/TLS authentication.
 
 ### Changed
 

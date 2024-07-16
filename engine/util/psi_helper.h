@@ -27,6 +27,7 @@
 #include "psi/utils/batch_provider.h"
 #include "psi/utils/ec_point_store.h"
 #include "psi/utils/ub_psi_cache.h"
+#include "spdlog/spdlog.h"
 
 #include "engine/core/tensor.h"
 #include "engine/framework/exec.h"
@@ -130,13 +131,15 @@ TensorPtr ComputeInResult(
 
 class BatchFinishedCb {
  public:
-  BatchFinishedCb(std::string task_id, size_t batch_total);
+  BatchFinishedCb(std::shared_ptr<spdlog::logger> logger, std::string task_id,
+                  size_t batch_total);
 
   void operator()(size_t batch_count);
 
  private:
   const std::string task_id_;
   size_t batch_total_;
+  std::shared_ptr<spdlog::logger> logger_;
 };
 
 class UbPsiCipherStore : public psi::IEcPointStore {
@@ -174,7 +177,6 @@ class UbPsiCipherStore : public psi::IEcPointStore {
   size_t item_count_ = 0;
 
  private:
-  static constexpr size_t kLogInterval = 10000;
   bool enable_cache_;
   std::unique_ptr<psi::io::OutputStream> out_;
 };

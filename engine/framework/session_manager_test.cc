@@ -132,7 +132,7 @@ TEST_F(SessionManagerTest, TestSessionCreation) {
                                                      spu::ProtocolKind::ABY3};
     EXPECT_THROW(std::make_shared<Session>(options, params, debug_opts,
                                            &g_mem_link_factory, nullptr,
-                                           nullptr, nullptr, allowed_protocols),
+                                           nullptr, allowed_protocols),
                  ::yacl::EnforceNotMet);
   };
 

@@ -101,6 +101,7 @@ message JobStartParams {
 
   LinkConfig link_cfg = 6;
   PsiConfig psi_cfg = 7;
+  LogConfig log_cfg = 8;
 }
 
 message GraphChecksum {

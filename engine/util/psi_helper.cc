@@ -63,8 +63,6 @@ PsiPlan GetPsiPlan(int64_t self_length, int64_t peer_length,
       server_info = ", is client";
     }
   }
-  SPDLOG_DEBUG("CoordinatePsiPlan finished, use UbPsi: {} {}",
-               psi_plan.unbalanced, server_info);
 
   psi_plan.psi_size_info.self_size = self_length;
   psi_plan.psi_size_info.peer_size = peer_length;
@@ -379,12 +377,16 @@ TensorPtr ComputeInResult(
   return resolver.FinalizeAndRestoreResultOrder();
 }
 
-BatchFinishedCb::BatchFinishedCb(std::string task_id, size_t batch_total)
-    : task_id_(task_id), batch_total_(batch_total) {}
+BatchFinishedCb::BatchFinishedCb(std::shared_ptr<spdlog::logger> logger,
+                                 std::string task_id, size_t batch_total)
+    : task_id_(std::move(task_id)),
+      batch_total_(batch_total),
+      logger_(std::move(logger)) {}
 
 void BatchFinishedCb::operator()(size_t batch_count) {
   if (batch_count % 100 == 0) {
-    SPDLOG_INFO(
+    SPDLOG_LOGGER_INFO(
+        logger_,
         "PSI task {} progress report: #{}/{} batches have been completed",
         task_id_, batch_count, batch_total_);
   }
@@ -406,30 +408,23 @@ void UbPsiCipherStore::Save(std::string ciphertext) {
     data_indices_[ciphertext].push_back(item_count_);
   }
   ++item_count_;
-  if (item_count_ % kLogInterval == 0) {
-    SPDLOG_DEBUG("client_items_count_={}", item_count_);
-  }
 }
 
 std::vector<std::string> FinalizeAndComputeIntersection(
     const std::shared_ptr<UbPsiCipherStore>& client_store,
     const std::shared_ptr<UbPsiCipherStore>& server_store) {
-  SPDLOG_DEBUG("Begin ComputeIntersection");
-
   client_store->Finalize();
   server_store->Finalize();
 
   std::vector<std::string> fields{UbPsiCipherStore::kDummyField};
   psi::CsvBatchProvider server_provider(server_store->GetPath(), fields,
                                         FLAGS_provider_batch_size);
-  size_t batch_count = 0;
 
   // may have duplicate items
   std::vector<std::string> results;
 
   while (true) {
     auto batch_server_data = server_provider.ReadNextBatch();
-    SPDLOG_DEBUG("read compare batch {}", batch_count);
 
     if (batch_server_data.empty()) {
       break;
@@ -441,20 +436,14 @@ std::vector<std::string> FinalizeAndComputeIntersection(
         results.push_back(server_item);
       }
     }
-
-    ++batch_count;
   }
 
-  SPDLOG_DEBUG("ComputeIntersection, batch_count:{}", batch_count);
-  SPDLOG_DEBUG("End ComputeIntersection");
   return results;
 }
 
 TensorPtr FinalizeAndComputeOprfInResult(
     const std::shared_ptr<UbPsiCipherStore>& client_store,
     const std::shared_ptr<UbPsiCipherStore>& server_store) {
-  SPDLOG_DEBUG("Begin ComputeInResult");
-
   client_store->Finalize();
   server_store->Finalize();
 
@@ -464,11 +453,9 @@ TensorPtr FinalizeAndComputeOprfInResult(
   std::vector<std::string> fields{UbPsiCipherStore::kDummyField};
   psi::CsvBatchProvider server_provider(server_store->GetPath(), fields,
                                         FLAGS_provider_batch_size);
-  size_t batch_count = 0;
 
   while (true) {
     auto batch_server_data = server_provider.ReadNextBatch();
-    SPDLOG_DEBUG("read compare batch {}", batch_count);
 
     if (batch_server_data.empty()) {
       break;
@@ -481,12 +468,7 @@ TensorPtr FinalizeAndComputeOprfInResult(
         client_indices.insert(indices.begin(), indices.end());
       }
     }
-
-    ++batch_count;
   }
-
-  SPDLOG_DEBUG("ComputeInResult, batch_count:{}", batch_count);
-  SPDLOG_DEBUG("ComputeInResult finish matching");
 
   result_builder.Reserve(static_cast<int64_t>(client_store->ItemCount()));
   for (uint64_t client_item_idx = 0;
@@ -507,7 +489,6 @@ std::pair<TensorPtr, std::vector<uint64_t>> FinalizeAndComputeOprfJoinResult(
     const std::shared_ptr<UbPsiCipherStore>& server_store,
     const std::shared_ptr<UbPsiCipherStore>& client_store,
     uint64_t* server_unmatched_count, uint64_t* client_unmatched_count) {
-  SPDLOG_DEBUG("Begin ComputeJoinResult");
   YACL_ENFORCE(
       server_unmatched_count == nullptr || client_unmatched_count == nullptr,
       "at least one of server_unmatched_count and client_unmatched_count "
@@ -535,10 +516,8 @@ std::pair<TensorPtr, std::vector<uint64_t>> FinalizeAndComputeOprfJoinResult(
   std::vector<std::string> fields{UbPsiCipherStore::kDummyField};
   psi::CsvBatchProvider server_provider(server_store->GetPath(), fields,
                                         FLAGS_provider_batch_size);
-  size_t batch_count = 0;
   while (true) {
     auto batch_server_data = server_provider.ReadNextBatch();
-    SPDLOG_DEBUG("read compare batch {}", batch_count);
 
     if (batch_server_data.empty()) {
       break;
@@ -556,9 +535,6 @@ std::pair<TensorPtr, std::vector<uint64_t>> FinalizeAndComputeOprfJoinResult(
       }
       ++server_seq;
     }
-
-    ++batch_count;
-    SPDLOG_DEBUG("ComputeInResult, batch_count:{}", batch_count);
   }
 
   if (client_unmatched_count != nullptr) {
@@ -575,7 +551,6 @@ std::pair<TensorPtr, std::vector<uint64_t>> FinalizeAndComputeOprfJoinResult(
       result_builder.UnsafeAppendNull();
     }
   }
-  SPDLOG_DEBUG("ComputeJoinResult finish matching");
 
   TensorPtr result_tensor;
   result_builder.Finish(&result_tensor);
@@ -585,8 +560,8 @@ std::pair<TensorPtr, std::vector<uint64_t>> FinalizeAndComputeOprfJoinResult(
 void UbPsiJoinCache::SaveData(yacl::ByteContainerView item, size_t index,
                               size_t shuffle_index) {
   if (idx_ >= seq_to_indice_.size()) {
-    SPDLOG_ERROR("idx:{} >= vector size:{}", idx_, seq_to_indice_.size());
-    YACL_THROW("UbPsiJoin idx out-of-bounds");
+    YACL_THROW("UbPsiJoin idx out-of-bounds, idx:{} >= vector size:{}", idx_,
+               seq_to_indice_.size());
   }
   seq_to_indice_[idx_++] = shuffle_index;
 }
@@ -597,7 +572,9 @@ void OprfPsiServerTransferServerItems(
     const std::shared_ptr<util::BatchProvider>& batch_provider,
     const std::shared_ptr<psi::ecdh::EcdhOprfPsiServer>& ec_oprf_psi_server,
     std::shared_ptr<psi::IUbPsiCache> ub_cache) {
-  SPDLOG_DEBUG(
+  auto logger = ctx->GetActiveLogger();
+  SPDLOG_LOGGER_INFO(
+      logger,
       "Oprf server start to transfer evaluated server items, my rank: {}, my "
       "party_code: {}",
       ctx->GetSession()->SelfRank(), ctx->GetSession()->SelfPartyCode());
@@ -609,26 +586,31 @@ void OprfPsiServerTransferServerItems(
           ? ec_oprf_psi_server->FullEvaluateAndSend(batch_provider, ub_cache)
           : ec_oprf_psi_server->FullEvaluateAndSend(batch_provider);
 
-  SPDLOG_INFO("Oprf server: evaluate and send {} items", self_item_count);
+  SPDLOG_LOGGER_INFO(logger, "Oprf server: evaluate and send {} items",
+                     self_item_count);
 }
 
 void OprfPsiServerTransferClientItems(
     ExecContext* ctx,
     const std::shared_ptr<psi::ecdh::EcdhOprfPsiServer>& ec_oprf_psi_server) {
-  SPDLOG_DEBUG(
+  auto logger = ctx->GetActiveLogger();
+  SPDLOG_LOGGER_INFO(
+      logger,
       "Oprf server start to transfer client items, my rank: {}, my "
       "party_code: {}",
       ctx->GetSession()->SelfRank(), ctx->GetSession()->SelfPartyCode());
 
   ec_oprf_psi_server->RecvBlindAndSendEvaluate();
-  SPDLOG_DEBUG("Oprf server finish transferring client items");
+  SPDLOG_LOGGER_INFO(logger, "Oprf server finish transferring client items");
 }
 
 void OprfPsiClientTransferServerItems(
     ExecContext* ctx, std::shared_ptr<yacl::link::Context> psi_link,
     const psi::ecdh::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<UbPsiCipherStore>& cipher_store) {
-  SPDLOG_DEBUG(
+  auto logger = ctx->GetActiveLogger();
+  SPDLOG_LOGGER_INFO(
+      logger,
       "Oprf client start to receive evaluated server items, my rank: {}, my "
       "party_code: {}",
       ctx->GetSession()->SelfRank(), ctx->GetSession()->SelfPartyCode());
@@ -638,7 +620,8 @@ void OprfPsiClientTransferServerItems(
   yacl::link::Barrier(psi_link, "Sync for UbPsi client and server");
 
   ec_oprf_psi_client_offline->RecvFinalEvaluatedItems(cipher_store);
-  SPDLOG_DEBUG(
+  SPDLOG_LOGGER_INFO(
+      logger,
       "Oprf client finish receiving evaluated server items, items count: {}",
       cipher_store->ItemCount());
 }
@@ -648,7 +631,9 @@ void OprfPsiClientTransferClientItems(
     const std::shared_ptr<util::BatchProvider>& batch_provider,
     const psi::ecdh::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<UbPsiCipherStore>& cipher_store) {
-  SPDLOG_DEBUG(
+  auto logger = ctx->GetActiveLogger();
+  SPDLOG_LOGGER_INFO(
+      logger,
       "Oprf client start to transfer client items, my rank: {}, my party_code: "
       "{}",
       ctx->GetSession()->SelfRank(), ctx->GetSession()->SelfPartyCode());
@@ -661,31 +646,37 @@ void OprfPsiClientTransferClientItems(
   });
   ec_oprf_psi_client_online->RecvEvaluatedItems(cipher_store);
   size_t self_items_count = f_client_send_blind.get();
-  SPDLOG_INFO("Oprf client send {} blinded items in UbPsiClientOnline",
-              self_items_count);
+  SPDLOG_LOGGER_INFO(logger,
+                     "Oprf client send {} blinded items in UbPsiClientOnline",
+                     self_items_count);
 
-  SPDLOG_DEBUG("Oprf client finish transferring client items, client_count: {}",
-               cipher_store->ItemCount());
+  SPDLOG_LOGGER_INFO(
+      logger, "Oprf client finish transferring client items, client_count: {}",
+      cipher_store->ItemCount());
 }
 
 void OprfServerTransferShuffledClientItems(
     ExecContext* ctx,
-    const std::shared_ptr<psi::ecdh::EcdhOprfPsiServer>& ec_oprf_psi_server,
+    const std::shared_ptr<psi::ecdh::EcdhOprfPsiServer>& dh_oprf_psi_server,
     const std::string& server_cache_path,
     std::vector<uint64_t>* matched_indices, size_t* self_item_count) {
-  SPDLOG_DEBUG(
+  auto logger = ctx->GetActiveLogger();
+  SPDLOG_LOGGER_INFO(
+      logger,
       "Oprf server start to transfer shuffled client items, my rank: {}, my "
       "party_code: {}",
       ctx->GetSession()->SelfRank(), ctx->GetSession()->SelfPartyCode());
-  ec_oprf_psi_server->RecvBlindAndShuffleSendEvaluate();
+  dh_oprf_psi_server->RecvBlindAndShuffleSendEvaluate();
 
   std::shared_ptr<psi::IShuffledBatchProvider> cache_provider =
       std::make_shared<psi::UbPsiCacheProvider>(
           server_cache_path, FLAGS_provider_batch_size,
-          ec_oprf_psi_server->GetCompareLength());
+          dh_oprf_psi_server->GetCompareLength());
 
   std::tie(*matched_indices, *self_item_count) =
-      ec_oprf_psi_server->RecvIntersectionMaskedItems(cache_provider);
+      dh_oprf_psi_server->RecvIntersectionMaskedItems(cache_provider);
+  SPDLOG_LOGGER_INFO(logger,
+                     "Oprf server finish transfering shuffled client items");
 }
 
 void OprfCLientTransferShuffledClientItems(
@@ -694,7 +685,9 @@ void OprfCLientTransferShuffledClientItems(
     const psi::ecdh::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<UbPsiCipherStore>& client_store,
     const std::shared_ptr<UbPsiCipherStore>& server_store) {
-  SPDLOG_DEBUG(
+  auto logger = ctx->GetActiveLogger();
+  SPDLOG_LOGGER_INFO(
+      logger,
       "Oprf client start to transfer shuffled client items, my rank: {}, my "
       "party_code: {}",
       ctx->GetSession()->SelfRank(), ctx->GetSession()->SelfPartyCode());
@@ -705,8 +698,9 @@ void OprfCLientTransferShuffledClientItems(
 
   size_t self_items_count =
       ub_psi_client_shuffle_online->SendBlindedItems(batch_provider);
-  SPDLOG_INFO("Oprf client send {} blinded items in UbPsiClientShuffleOnline",
-              self_items_count);
+  SPDLOG_LOGGER_INFO(
+      logger, "Oprf client send {} blinded items in UbPsiClientShuffleOnline",
+      self_items_count);
 
   ub_psi_client_shuffle_online->RecvEvaluatedItems(client_store);
 
@@ -717,6 +711,8 @@ void OprfCLientTransferShuffledClientItems(
                                                  FLAGS_provider_batch_size);
   ub_psi_client_shuffle_online->SendIntersectionMaskedItems(
       intersection_masked_provider);
+  SPDLOG_LOGGER_INFO(logger,
+                     "Oprf client finish transfering shuffled client items");
 }
 
 }  // namespace scql::engine::util

@@ -28,7 +28,8 @@ Checks: "abseil-cleanup-ctad,
   -readability-identifier-length,
   -readability-function-cognitive-complexity,
   -readability-magic-numbers,
-  -readability-named-parameter"
+  -readability-named-parameter,
+  concurrency-mt-unsafe"
 
 CheckOptions:
   - key: bugprone-argument-comment.StrictMode

@@ -127,6 +127,7 @@ type SessionOptions struct {
 	SessionExpireSeconds int64
 	LinkConfig           *pb.LinkConfig
 	PsiConfig            *pb.PsiConfig
+	LogConfig            *pb.LogConfig
 	TimeZone             string
 }
 

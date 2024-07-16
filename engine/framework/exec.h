@@ -37,7 +37,8 @@ class ExecContext {
 
   Session* GetSession() const { return session_; }
 
- public:
+  std::shared_ptr<spdlog::logger> GetActiveLogger() const;
+
   // interface for ExecNode
   const std::string& GetNodeName() const;
 

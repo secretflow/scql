@@ -78,8 +78,8 @@ std::shared_ptr<Session> Make1PCSession(Router* ds_router,
                                                    spu::ProtocolKind::CHEETAH,
                                                    spu::ProtocolKind::SEMI2K};
   return std::make_shared<Session>(options, params, debug_opts,
-                                   &g_mem_link_factory, nullptr, ds_router,
-                                   ds_mgr, allowed_protocols);
+                                   &g_mem_link_factory, ds_router, ds_mgr,
+                                   allowed_protocols);
 }
 
 std::vector<std::shared_ptr<Session>> MakeMultiPCSession(
@@ -106,7 +106,7 @@ std::vector<std::shared_ptr<Session>> MakeMultiPCSession(
                                                      spu::ProtocolKind::ABY3};
     return std::make_shared<Session>(options, params, debug_opts,
                                      &g_mem_link_factory, nullptr, nullptr,
-                                     nullptr, allowed_protocols);
+                                     allowed_protocols);
   };
   for (size_t i = 0; i < test_case.party_size; ++i) {
     pb::JobStartParams params;
