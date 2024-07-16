@@ -69,11 +69,13 @@ void Shape::Execute(ExecContext* ctx) {
 
 TensorPtr Shape::CreateShapeTensor(ExecContext* ctx,
                                    const std::pair<int64_t, int64_t>& shapes) {
+  auto logger = ctx->GetActiveLogger();
   int64_t axis = kAxisDefault;
   try {
     axis = ctx->GetInt64ValueFromAttribute(kAxis);
   } catch (const ::yacl::EnforceNotMet& e) {
-    SPDLOG_WARN(
+    SPDLOG_LOGGER_WARN(
+        logger,
         "not set attribute axis, default get {row count, 1}, exception={}",
         e.what());
   }

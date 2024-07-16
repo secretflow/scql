@@ -45,3 +45,14 @@ cc_library(
         "@yacl//yacl/crypto:key_utils",
     ],
 )
+
+cc_test(
+    name = "authenticator_test",
+    srcs = ["authenticator_test.cc"],
+    deps = [
+        ":authenticator",
+        "@com_github_brpc_brpc//:butil",
+        "@yacl//yacl/base:exception",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

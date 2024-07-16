@@ -287,7 +287,7 @@ void RecordJoinNodeDetail(const ExecContext& ctx, int64_t self_size,
 
   body->set_node_name(ctx.GetNodeName());
   body->set_self_party(ctx.GetSession()->SelfPartyCode());
-  body->set_self_rank(ctx.GetSession()->SelfRank());
+  body->set_self_rank(static_cast<int64_t>(ctx.GetSession()->SelfRank()));
   body->set_self_size(self_size);
   body->set_peer_size(peer_size);
   body->set_result_size(result_size);

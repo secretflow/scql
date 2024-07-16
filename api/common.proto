@@ -93,3 +93,7 @@ message PsiConfig {
   int64 unbalance_psi_larger_party_rows_count_threshold = 2;
   int32 psi_curve_type = 3;
 }
+
+message LogConfig {
+  bool enable_session_logger_separation = 1;
+}

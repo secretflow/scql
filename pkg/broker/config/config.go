@@ -15,6 +15,8 @@
 package config
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"os"
 	"strings"
@@ -50,6 +52,7 @@ type Config struct {
 	// self party code
 	PartyCode      string `yaml:"party_code"`
 	PrivateKeyPath string `yaml:"private_key_path"`
+	InterHost      string `yaml:"inter_host"`
 	// base64 encoded PEM-encoded private key
 	PrivateKeyData     string                 `yaml:"private_key_data"`
 	PartyInfoFile      string                 `yaml:"party_info_file"`
@@ -70,7 +73,22 @@ type DiscoveryConf struct {
 	// supported discovery types: "file", "kuscia"
 	Type   string          `yaml:"type"`
 	File   string          `yaml:"file"`
+	Consul *ConsulApiConf  `yaml:"consul"`
 	Kuscia *KusciaDiscConf `yaml:"kuscia"`
+}
+
+type TLSConf struct {
+	Mode       string `yaml:"mode"`
+	CertPath   string `yaml:"cert"`
+	KeyPath    string `yaml:"key"`
+	CACertPath string `yaml:"cacert"`
+}
+
+type ConsulApiConf struct {
+	Address    string   `yaml:"address"`
+	Token      string   `yaml:"token"`
+	TLS        *TLSConf `yaml:"tls"`
+	Datacenter string   `yaml:"datacenter"`
 }
 
 type KusciaDiscConf struct {
@@ -138,6 +156,12 @@ const (
 	StorageTypeMySQL  = "mysql"
 )
 
+const (
+	NoTLS     string = "notls"
+	TLS       string = "tls"
+	MutualTLS string = "mtls"
+)
+
 // NewConfig construsts Config from YAML file
 func NewConfig(configPath string) (*Config, error) {
 	content, err := os.ReadFile(configPath)
@@ -188,4 +212,35 @@ func newDefaultConfig() *Config {
 		},
 	}
 	return &config
+}
+
+func LoadTLSConfig(mode, cacertPath, certPath, keyPath string) (*tls.Config, error) {
+	var tlsConfig *tls.Config
+	cacert, err := os.ReadFile(cacertPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read cacert file")
+	}
+	cacertPool := x509.NewCertPool()
+	if !cacertPool.AppendCertsFromPEM(cacert) {
+		return nil, fmt.Errorf("failed to append CA certificates")
+	}
+
+	lowerMode := strings.ToLower(mode)
+	switch lowerMode {
+	case TLS:
+		tlsConfig = &tls.Config{
+			RootCAs: cacertPool,
+		}
+	case MutualTLS:
+		cert, err := tls.LoadX509KeyPair(certPath, keyPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load key pair")
+		}
+
+		tlsConfig = &tls.Config{
+			Certificates: []tls.Certificate{cert},
+			RootCAs:      cacertPool,
+		}
+	}
+	return tlsConfig, nil
 }

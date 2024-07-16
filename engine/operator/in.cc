@@ -69,36 +69,37 @@ void In::Validate(ExecContext* ctx) {
 }
 
 void In::Execute(ExecContext* ctx) {
+  auto logger = ctx->GetActiveLogger();
   int64_t in_type = ctx->GetInt64ValueFromAttribute(kInType);
   switch (in_type) {
     case static_cast<int64_t>(InType::kSecretShareIn):
-      SPDLOG_INFO("Execute In, In type = {}", "SecretShareIn");
+      SPDLOG_LOGGER_INFO(logger, "Execute In, In type = {}", "SecretShareIn");
       return SecretShareIn(ctx);
     case static_cast<int64_t>(InType::kPsiIn):
       // engines will coordinate proper PSI algorithm(EcdhPsi or OprfPsi)
       // according to the tensor size
-      SPDLOG_INFO("Execute In, In type = {}", "PsiIn");
+      SPDLOG_LOGGER_INFO(logger, "Execute In, In type = {}", "PsiIn");
       {
         auto algorithm = ctx->GetInt64ValueFromAttribute(kAlgorithmAttr);
         switch (algorithm) {
           case static_cast<int64_t>(util::PsiAlgo::kOprfPsi):
-            SPDLOG_INFO("Execute In, algo = {}", "OprfPsi");
+            SPDLOG_LOGGER_INFO(logger, "Execute In, algo = {}", "OprfPsi");
             // Besides letting the engines decide, Driver can directly choose
             // prefered PSI algorithm(EcdhPsi or OprfPsi) UbPsiServerHint is
             // indispensable when Driver explicitly choose OprfPsiIn
             return OprfPsiIn(ctx, IsOprfServerAccordToHint(ctx));
           case static_cast<int64_t>(util::PsiAlgo::kEcdhPsi):
-            SPDLOG_INFO("Execute In, algo = {}", "EcdhPsi");
+            SPDLOG_LOGGER_INFO(logger, "Execute In, algo = {}", "EcdhPsi");
             return EcdhPsiIn(ctx);
           case static_cast<int64_t>(util::PsiAlgo::kAutoPsi):
-            SPDLOG_INFO("Execute In, algo = {}", "AutoPsi");
+            SPDLOG_LOGGER_INFO(logger, "Execute In, algo = {}", "AutoPsi");
             return PsiIn(ctx);
           default:
             YACL_THROW("unsupported in algorithm id: {}", algorithm);
         }
       }
     case static_cast<int64_t>(InType::kLocalIn):
-      SPDLOG_INFO("Execute In, In type = {}", "LocalIn");
+      SPDLOG_LOGGER_INFO(logger, "Execute In, In type = {}", "LocalIn");
       return LocalIn(ctx);
     default:
       YACL_THROW("unsupported In type id: {}", in_type);
@@ -164,18 +165,20 @@ bool In::IsOprfServerAccordToHint(ExecContext* ctx) {
 }
 
 void In::PsiIn(ExecContext* ctx) {
+  auto logger = ctx->GetActiveLogger();
   auto psi_plan = util::CoordinatePsiPlan(ctx);
   if (psi_plan.unbalanced) {
-    SPDLOG_INFO("OprfPsi is chosen");
+    SPDLOG_LOGGER_INFO(logger, "OprfPsi is chosen");
     return OprfPsiIn(ctx, psi_plan.is_server, psi_plan.psi_size_info);
   } else {
-    SPDLOG_INFO("EcdhPsi is chosen");
+    SPDLOG_LOGGER_INFO(logger, "EcdhPsi is chosen");
     return EcdhPsiIn(ctx);
   }
 }
 
 void In::OprfPsiIn(ExecContext* ctx, bool is_server,
                    std::optional<util::PsiSizeInfo> psi_size_info) {
+  auto logger = ctx->GetActiveLogger();
   util::PsiExecutionInfoTable psi_info_table;
   psi_info_table.start_time = std::chrono::system_clock::now();
   // a temporary solution, related SPU-codes need to be modified someday
@@ -240,8 +243,8 @@ void In::OprfPsiIn(ExecContext* ctx, bool is_server,
                   batch_provider, &psi_info_table, psi_link);
   }
 
-  // audit
-  SPDLOG_INFO(
+  SPDLOG_LOGGER_INFO(
+      logger,
       "OPRF PSI In finish, my_party_code:{}, my_rank:{}, total "
       "self_item_count:{}, total peer_item_count:{}, result size:{}",
       ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
@@ -256,7 +259,9 @@ void In::OprfPsiIn(ExecContext* ctx, bool is_server,
 int64_t In::OprfServerHandleResult(ExecContext* ctx,
                                    const std::vector<uint64_t>& matched_indices,
                                    size_t self_item_count) {
-  SPDLOG_DEBUG(
+  auto logger = ctx->GetActiveLogger();
+  SPDLOG_LOGGER_INFO(
+      logger,
       "Server handle result, matched_indices size={}, self_item_count={}",
       matched_indices.size(), self_item_count);
   std::unordered_set<uint64_t> matched_indices_set(matched_indices.begin(),
@@ -371,6 +376,8 @@ int64_t In::OprfClientHandleResult(
 
 void In::EcdhPsiIn(ExecContext* ctx) {
   const auto start_time = std::chrono::system_clock::now();
+  auto logger = ctx->GetActiveLogger();
+
   const auto& my_party_code = ctx->GetSession()->SelfPartyCode();
 
   std::vector<std::string> input_party_codes =
@@ -415,7 +422,7 @@ void In::EcdhPsiIn(ExecContext* ctx) {
         ctx->GetSession()->GetSessionOptions().psi_config.psi_curve_type));
     options.target_rank = target_rank;
     options.on_batch_finished = util::BatchFinishedCb(
-        ctx->GetSession()->Id(),
+        logger, ctx->GetSession()->Id(),
         (in_tensor->Length() + options.batch_size - 1) / options.batch_size);
     if (ctx->GetSession()->GetPsiLogger()) {
       options.ecdh_logger = ctx->GetSession()->GetPsiLogger()->GetEcdhLogger();
@@ -434,7 +441,8 @@ void In::EcdhPsiIn(ExecContext* ctx) {
     self_size = self_store->ItemCount();
     peer_size = peer_store->ItemCount();
     result_size = result->Length();
-    SPDLOG_INFO(
+    SPDLOG_LOGGER_INFO(
+        logger,
         "ECDH PSI In finish, my_party_code:{}, my_rank:{}, total "
         "self_item_count:{}, total peer_item_count:{}, result size:{}",
         ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),

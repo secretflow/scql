@@ -50,11 +50,11 @@ def _secretflow_deps():
         name = "spulib",
         urls = [
             # "https://github.com/secretflow/spu/archive/%s.tar.gz" % SPU_COMMIT,
-            "https://github.com/secretflow/spu/archive/refs/tags/0.9.2dev20240703.tar.gz",
+            "https://github.com/secretflow/spu/archive/refs/tags/0.9.2dev20240711.tar.gz",
         ],
         # strip_prefix = "spu-%s" % SPU_COMMIT,
-        strip_prefix = "spu-0.9.2dev20240703",
-        sha256 = "0521dc6b2ae6c445066de42efe4f0d48fa88b1b356bde8d7116545889898fc23",
+        strip_prefix = "spu-0.9.2dev20240711",
+        sha256 = "b481d740af4f5043e61b3b9f729d6dbbabad2a11ec6578e29f4c5b625bfbc4b0",
     )
 
     maybe(
@@ -310,12 +310,12 @@ def _com_github_duckdb():
         http_archive,
         name = "com_github_duckdb",
         urls = [
-            "https://github.com/duckdb/duckdb/archive/refs/tags/v0.10.2.tar.gz",
+            "https://github.com/duckdb/duckdb/archive/refs/tags/v1.0.0.tar.gz",
         ],
         patch_args = ["-p1"],
         patches = ["@scql//engine/bazel:patches/duckdb.patch"],
-        sha256 = "662a0ba5c35d678ab6870db8f65ffa1c72e6096ad525a35b41b275139684cea6",
-        strip_prefix = "duckdb-0.10.2",
+        sha256 = "04e472e646f5cadd0a3f877a143610674b0d2bcf9f4102203ac3c3d02f1c5f26",
+        strip_prefix = "duckdb-1.0.0",
         build_file = "@scql//engine/bazel:duckdb.BUILD",
     )
 

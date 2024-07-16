@@ -47,10 +47,6 @@ void SendMassiveMsgpack(std::shared_ptr<yacl::link::Context> lctx,
              count_tag);
 
   for (size_t batch_idx = 0; batch_idx < batch_count; ++batch_idx) {
-    SPDLOG_INFO(
-        "SendMassiveMsgpack, total count: {}, batch count: {}, current batch: "
-        "{}",
-        data.size(), batch_count, batch_idx);
     auto start = batch_idx * kMsgpackBatchSize;
     auto end = std::min((batch_idx + 1) * kMsgpackBatchSize, data.size());
     auto sub_vec = std::vector<T>(data.begin() + start, data.begin() + end);

@@ -211,7 +211,7 @@ func (suite *ServerTestSuit) TestServer() {
 		}
 		pemData, err := os.ReadFile(suite.pemFilesMap[brokerutil.CarolPemFileKey])
 		suite.NoError(err)
-		auth, err := auth.NewAuth(pemData)
+		auth, err := auth.NewPemAuth(pemData)
 		suite.NoError(err)
 		err = auth.SignMessage(req)
 		suite.NoError(err)

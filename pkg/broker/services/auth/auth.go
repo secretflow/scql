@@ -20,11 +20,8 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
-	"crypto/x509"
 	"encoding/base64"
 	"fmt"
-
-	smx509 "github.com/tjfoc/gmsm/x509"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -32,28 +29,51 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/tjfoc/gmsm/sm2"
 
+	"github.com/secretflow/scql/pkg/broker/config"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
-	"github.com/secretflow/scql/pkg/util/sqlbuilder"
+	"github.com/secretflow/scql/pkg/util/keyutil"
 )
 
 type Auth struct {
 	privKey any
 }
 
-func NewAuth(pemData []byte) (*Auth, error) {
-	priv, err := sqlbuilder.LoadPrivateKeyFromPem(pemData)
-	if err != nil {
-		logrus.Errorf("NewAuth: %v", err)
-		return nil, fmt.Errorf("NewAuth: %v", err)
+func NewAuth(cfg *config.Config) (*Auth, error) {
+	if cfg.PrivateKeyPath != "" {
+		priv, err := keyutil.LoadPrivateKeyFromPemFile(cfg.PrivateKeyPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read private key file %s: %w", cfg.PrivateKeyPath, err)
+		}
+		return NewPrivAuth(priv)
+	} else if cfg.PrivateKeyData != "" {
+		pemData, err := base64.StdEncoding.DecodeString(cfg.PrivateKeyData)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode base64 encoded private key data: %w", err)
+		}
+		return NewPemAuth(pemData)
+	} else {
+		return nil, fmt.Errorf("private key path and content are both empty, provide at least one")
 	}
+}
 
+func NewPrivAuth(priv any) (*Auth, error) {
 	switch v := priv.(type) {
 	case ed25519.PrivateKey, *rsa.PrivateKey, *sm2.PrivateKey:
 		return &Auth{privKey: priv}, nil
 	default:
 		return nil, fmt.Errorf("NewAuth: unsupported private key type: %T", v)
 	}
+}
+
+func NewPemAuth(pemData []byte) (*Auth, error) {
+	priv, err := keyutil.LoadPrivateKeyFromPem(pemData)
+	if err != nil {
+		logrus.Errorf("NewAuth: %v", err)
+		return nil, fmt.Errorf("NewAuth: %v", err)
+	}
+
+	return NewPrivAuth(priv)
 }
 
 func (auth *Auth) sign(msg []byte) (signature []byte, err error) {
@@ -150,7 +170,7 @@ func (auth *Auth) CheckSign(msg proto.Message, pubKey string) (err error) {
 		return fmt.Errorf("failed to marshal msg: %v", err)
 	}
 
-	pub, err := parsePubKey(pubKey)
+	pub, err := keyutil.ParsePubKey(pubKey)
 	if err != nil {
 		return err
 	}
@@ -158,20 +178,6 @@ func (auth *Auth) CheckSign(msg proto.Message, pubKey string) (err error) {
 	return verify(pub, msgArray, sign)
 }
 
-func parsePubKey(pubKey string) (any, error) {
-	pubDER, err := base64.StdEncoding.DecodeString(pubKey)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse public key in base64 encoding: %v", err)
-	}
-
-	pub, err := x509.ParsePKIXPublicKey(pubDER)
-	if err != nil {
-		logrus.Warnf("%v, try sm2", err)
-		pub, err = smx509.ParseSm2PublicKey(pubDER)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse DER encoded public key: %v", err)
-		}
-	}
-
-	return pub, nil
+func (auth *Auth) GetPubKey() (string, error) {
+	return keyutil.GetPubKeyInPEM(auth.privKey)
 }

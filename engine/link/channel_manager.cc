@@ -31,14 +31,16 @@ void ChannelManager::AddChannelOptions(const RemoteRole role,
 }
 
 std::shared_ptr<google::protobuf::RpcChannel> ChannelManager::Create(
+    const std::shared_ptr<spdlog::logger>& logger,
     const std::string& remote_addr, RemoteRole role) {
   ChannelOptions options;
   auto iter = options_.find(role);
   if (iter != options_.end()) {
     options = iter->second;
   } else {
-    SPDLOG_WARN("not found options for role={}, default use http protocal",
-                static_cast<int>(role));
+    SPDLOG_LOGGER_WARN(
+        logger, "not found options for role={}, default use http protocal",
+        static_cast<int>(role));
     options.brpc_options.protocol = "http:proto";
   }
   auto result = std::make_shared<brpc::Channel>();

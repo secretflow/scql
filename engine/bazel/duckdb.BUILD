@@ -59,6 +59,7 @@ spu_cmake_external(
         "libparquet_extension.a",
         "libhttpfs_extension.a",
         "libduckdb_skiplistlib.a",
+        "libduckdb_yyjson.a",
     ],
     deps = [
         "@com_github_openssl_openssl//:openssl",

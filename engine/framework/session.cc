@@ -18,7 +18,6 @@
 #include <mutex>
 
 #include "algorithm"
-#include "arrow/array.h"
 #include "arrow/visit_array_inline.h"
 #include "libspu/core/config.h"
 #include "libspu/mpc/factory.h"
@@ -27,6 +26,7 @@
 #include "engine/core/arrow_helper.h"
 #include "engine/core/primitive_builder.h"
 #include "engine/core/string_tensor_builder.h"
+#include "engine/util/logging.h"
 #include "engine/util/prometheus_monitor.h"
 #include "engine/util/psi_detail_logger.h"
 
@@ -59,8 +59,7 @@ bool Session::ValidateSPUContext() {
 
 Session::Session(const SessionOptions& session_opt,
                  const pb::JobStartParams& params, pb::DebugOptions debug_opts,
-                 yacl::link::ILinkFactory* link_factory,
-                 std::shared_ptr<spdlog::logger> logger, Router* router,
+                 yacl::link::ILinkFactory* link_factory, Router* router,
                  DatasourceAdaptorMgr* ds_mgr,
                  const std::vector<spu::ProtocolKind>& allowed_spu_protocols)
     : id_(params.job_id()),
@@ -69,14 +68,20 @@ Session::Session(const SessionOptions& session_opt,
       parties_(params),
       state_(SessionState::INITIALIZED),
       link_factory_(link_factory),
-      logger_(std::move(logger)),
       router_(router),
       ds_mgr_(ds_mgr),
       debug_opts_(debug_opts),
       allowed_spu_protocols_(allowed_spu_protocols) {
   start_time_ = std::chrono::system_clock::now();
-  if (logger_ == nullptr) {
-    logger_ = spdlog::default_logger();
+
+  std::string logger_name = "job(" + id_ + ")";
+  if (session_opt.log_options.enable_session_logger_separation ||
+      session_opt.log_config.enable_session_logger_separation) {
+    std::string logger_file_name = logger_name + ".log";
+    logger_ = util::CreateLogger(logger_name, logger_file_name,
+                                 session_opt.log_options);
+  } else {
+    logger_ = util::DupDefaultLogger(logger_name);
   }
 
   tensor_table_ = std::make_unique<TensorTable>();
@@ -288,7 +293,7 @@ TensorPtr Session::HashToString(const Tensor& hash_tensor) {
 
 void Session::DelTensors(const std::vector<std::string>& tensor_names) {
   for (const auto& name : tensor_names) {
-    SPDLOG_INFO("remove tensor {}", name);
+    logger_->debug("remove tensor {}", name);
     if (tensor_table_->GetTensor(name) != nullptr) {
       tensor_table_->RemoveTensor(name);
     } else {
@@ -324,5 +329,18 @@ void Session::UpdateRefName(const std::vector<std::string>& input_ref_names,
     }
   }
   DelTensors(remove_tensor_names);
+}
+
+std::shared_ptr<spdlog::logger> ActiveLogger(const Session* session) {
+  if (session == nullptr) {
+    SPDLOG_WARN("can not get valid session");
+    return spdlog::default_logger();
+  }
+  auto session_logger = session->GetLogger();
+  if (session_logger == nullptr) {
+    SPDLOG_WARN("null session logger");
+    return spdlog::default_logger();
+  }
+  return session_logger;
 }
 }  // namespace scql::engine

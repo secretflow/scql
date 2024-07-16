@@ -616,6 +616,16 @@ func (plan *GraphBuilder) AddCoalesceNode(name string, inputs []*Tensor) (*Tenso
 	return output, nil
 }
 
+func (plan *GraphBuilder) AddTrigonometricFunction(opName string, opType string, input *Tensor, partyCodes []string) (*Tensor, error) {
+	output := plan.AddTensorAs(input)
+	output.DType = proto.PrimitiveDataType_FLOAT64
+	if _, err := plan.AddExecutionNode(opName, opType, map[string][]*Tensor{"In": {input}}, map[string][]*Tensor{"Out": {output}}, map[string]*Attribute{}, partyCodes); err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func (plan *GraphBuilder) AddCastNode(name string, outputDType proto.PrimitiveDataType, input *Tensor, partyCodes []string) (*Tensor, error) {
 	if len(partyCodes) > 1 && (input.DType == proto.PrimitiveDataType_STRING || outputDType == proto.PrimitiveDataType_STRING) {
 		return nil, fmt.Errorf("AddCastNode: not support cast for string in spu, which exists in hash form")

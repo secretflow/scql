@@ -57,6 +57,9 @@ var astName2NodeName = map[string]string{
 	ast.DateDiff:   operator.OpNameMinus,
 	ast.AddDate:    operator.OpNameAdd,
 	ast.SubDate:    operator.OpNameMinus,
+	ast.Sin:        operator.OpNameSin,
+	ast.Cos:        operator.OpNameCos,
+	ast.Acos:       operator.OpNameACos,
 }
 
 type translator struct {
@@ -616,6 +619,12 @@ func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors m
 			return nil, fmt.Errorf("missing arguments for coalesce function")
 		}
 		return t.ep.AddCoalesceNode("coalesce", inputs)
+	case ast.Cos, ast.Sin, ast.Acos:
+		if len(inputs) != 1 {
+			return nil, fmt.Errorf("incorrect arguments for function %v", f.FuncName.L)
+		}
+
+		return t.ep.AddTrigonometricFunction(astName2NodeName[f.FuncName.L], astName2NodeName[f.FuncName.L], inputs[0], inTensorPartyCodes)
 	}
 	return nil, fmt.Errorf("buildScalarFunction doesn't support %s", f.FuncName.L)
 }

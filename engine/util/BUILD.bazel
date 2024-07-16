@@ -53,6 +53,7 @@ cc_library(
         "//engine/core:string_tensor_builder",
         "//engine/framework:exec",
         "@com_github_msgpack_msgpack//:msgpack",
+        "@com_github_gabime_spdlog//:spdlog",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
         "@psi//psi/ecdh:ecdh_oprf_psi",

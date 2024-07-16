@@ -288,20 +288,16 @@ func (r *QueryRunner) CreateExecutor(plan *pb.CompiledPlan) (*executor.Executor,
 	session := r.session
 	conf := session.App.Conf
 	linkCfg := session.ExecuteInfo.SessionOptions.LinkConfig
-	if linkCfg == nil {
-		linkCfg = &pb.LinkConfig{}
-	}
-
 	psiCfg := session.ExecuteInfo.SessionOptions.PsiConfig
-	if psiCfg == nil {
-		psiCfg = &pb.PsiConfig{}
-	}
+	logCfg := session.ExecuteInfo.SessionOptions.LogConfig
+
 	startParams := &pb.JobStartParams{
 		PartyCode:     conf.PartyCode,
 		JobId:         session.ExecuteInfo.JobID,
 		SpuRuntimeCfg: plan.GetSpuRuntimeConf(),
 		LinkCfg:       linkCfg,
 		PsiCfg:        psiCfg,
+		LogCfg:        logCfg,
 		TimeZone:      session.ExecuteInfo.SessionOptions.TimeZone,
 	}
 	partyToRank := make(map[string]string)

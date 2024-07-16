@@ -16,12 +16,17 @@
 
 #include "yacl/base/exception.h"
 
+#include "engine/framework/session.h"
 #include "engine/util/tensor_util.h"
 
 namespace scql::engine {
 
 ExecContext::ExecContext(const pb::ExecNode& node, Session* session)
     : node_(node), session_(session) {}
+
+std::shared_ptr<spdlog::logger> ExecContext::GetActiveLogger() const {
+  return ActiveLogger(session_);
+}
 
 const std::string& ExecContext::GetNodeName() const {
   return node_.node_name();

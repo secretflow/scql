@@ -53,6 +53,9 @@ const (
 	OpNameIntDiv string = "IntDiv"
 	OpNameMod    string = "Mod"
 	OpNameNot    string = "Not"
+	OpNameSin    string = "Sin"
+	OpNameCos    string = "Cos"
+	OpNameACos   string = "ACos"
 	// agg
 	OpNameReduceSum string = "ReduceSum"
 	OpNameReduceMax string = "ReduceMax"

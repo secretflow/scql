@@ -15,7 +15,6 @@
 #include "engine/datasource/datasource_adaptor.h"
 
 #include "arrow/compute/cast.h"
-#include "spdlog/spdlog.h"
 #include "yacl/base/exception.h"
 
 #include "engine/core/arrow_helper.h"
@@ -23,6 +22,7 @@
 
 namespace scql::engine {
 std::vector<TensorPtr> DatasourceAdaptor::ConvertDataTypeToExpected(
+    const std::shared_ptr<spdlog::logger>& logger,
     std::vector<TensorPtr>& tensors,
     const std::vector<ColumnDesc>& expected_outputs) {
   YACL_ENFORCE_EQ(tensors.size(), expected_outputs.size(),
@@ -41,8 +41,8 @@ std::vector<TensorPtr> DatasourceAdaptor::ConvertDataTypeToExpected(
       auto to_type = ToArrowDataType(expected_outputs[i].dtype);
       YACL_ENFORCE(to_type, "unsupported column data type {}",
                    fmt::underlying(expected_outputs[i].dtype));
-      SPDLOG_WARN("arrow type mismatch, convert from {} to {}",
-                  chunked_arr->type()->ToString(), to_type->ToString());
+      SPDLOG_LOGGER_WARN(logger, "arrow type mismatch, convert from {} to {}",
+                         chunked_arr->type()->ToString(), to_type->ToString());
       arrow::Datum cast_result;
       ASSIGN_OR_THROW_ARROW_STATUS(cast_result,
                                    arrow::compute::Cast(chunked_arr, to_type));

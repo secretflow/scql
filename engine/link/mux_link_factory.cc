@@ -68,8 +68,8 @@ std::shared_ptr<yacl::link::Context> MuxLinkFactory::CreateContext(
       continue;
     }
     const auto& peer_host = desc.parties[rank].host;
-    auto rpc_channel =
-        channel_manager_->Create(peer_host, RemoteRole::PeerEngine);
+    auto rpc_channel = channel_manager_->Create(
+        spdlog::default_logger(), peer_host, RemoteRole::PeerEngine);
     YACL_ENFORCE(rpc_channel, "create rpc channel failed for rank={}", rank);
     auto link = std::make_shared<MuxLink>(
         self_rank, rank, desc.http_max_payload_size, desc.id, rpc_channel);

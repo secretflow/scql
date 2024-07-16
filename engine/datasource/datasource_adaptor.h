@@ -17,6 +17,8 @@
 #include <memory>
 #include <string>
 
+#include "spdlog/spdlog.h"
+
 #include "engine/core/tensor.h"
 
 #include "api/core.pb.h"
@@ -44,17 +46,24 @@ class DatasourceAdaptor {
 
   // ExecQuery execute query,
   std::vector<TensorPtr> ExecQuery(
-      const std::string& query,
+      const std::shared_ptr<spdlog::logger>& logger, const std::string& query,
       const std::vector<ColumnDesc>& expected_outputs) {
     auto tensors = GetQueryResult(query);
-    return ConvertDataTypeToExpected(tensors, expected_outputs);
+    return ConvertDataTypeToExpected(logger, tensors, expected_outputs);
+  }
+
+  std::vector<TensorPtr> ExecQuery(
+      const std::string& query,
+      const std::vector<ColumnDesc>& expected_outputs) {
+    return ExecQuery(spdlog::default_logger(), query, expected_outputs);
   }
 
  private:
   // Get result from data source
   virtual std::vector<TensorPtr> GetQueryResult(const std::string& query) = 0;
   // It will complain if the actual outputs not matched with expected_outputs.
-  std::vector<TensorPtr> ConvertDataTypeToExpected(
+  static std::vector<TensorPtr> ConvertDataTypeToExpected(
+      const std::shared_ptr<spdlog::logger>& logger,
       std::vector<TensorPtr>& tensors,
       const std::vector<ColumnDesc>& expected_outputs);
 };
