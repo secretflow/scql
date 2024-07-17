@@ -36,9 +36,10 @@ cc_library(
         ":group_he_sum",
         ":if",
         ":if_null",
-        ":is_null",
         ":in",
+        ":is_null",
         ":join",
+        ":plain_join",
         ":limit",
         ":logical",
         ":make_private",
@@ -48,11 +49,13 @@ cc_library(
         ":oblivious_group_mark",
         ":publish",
         ":reduce",
+        ":replicate",
         ":run_sql",
         ":shape",
         ":shuffle",
         ":sort",
         ":unique",
+        ":vertical_group_agg",
         "//engine/framework:registry",
     ],
 )
@@ -116,6 +119,30 @@ cc_test(
         ":join",
         ":test_util",
         "//engine/core:tensor_constructor",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "plain_join",
+    srcs = ["plain_join.cc"],
+    hdrs = ["plain_join.h"],
+    deps = [
+        "//engine/audit:audit_log",
+        "//engine/framework:operator",
+        "//engine/util:communicate_helper",
+        "//engine/util:psi_helper",
+    ],
+)
+
+cc_test(
+    name = "plain_join_test",
+    srcs = ["plain_join_test.cc"],
+    deps = [
+        ":plain_join",
+        ":test_util",
+        "//engine/core:tensor_constructor",
+        "//engine/util:psi_helper",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -558,10 +585,28 @@ cc_test(
 )
 
 cc_library(
+    name = "group_agg_helper",
+    srcs = ["group_agg_helper.cc"],
+    hdrs = ["group_agg_helper.h"],
+    deps = [
+        "//engine/util:spu_io",
+        "@spulib//libspu/kernel/hal:constants",
+        "@spulib//libspu/kernel/hal:shape_ops",
+        "@spulib//libspu/kernel/hlo:basic_binary",
+        "@spulib//libspu/kernel/hlo:basic_ternary",
+        "@spulib//libspu/kernel/hlo:casting",
+        "@spulib//libspu/kernel/hlo:const",
+        "@spulib//libspu/kernel/hlo:geometrical",
+        "@spulib//libspu/kernel/hlo:indexing",
+    ],
+)
+
+cc_library(
     name = "oblivious_group_agg",
     srcs = ["oblivious_group_agg.cc"],
     hdrs = ["oblivious_group_agg.h"],
     deps = [
+        ":group_agg_helper",
         "//engine/framework:operator",
         "//engine/util:spu_io",
         "//engine/util:tensor_util",
@@ -583,6 +628,39 @@ cc_test(
         ":all_ops_register",
         ":oblivious_group_agg",
         ":test_util",
+        "//engine/core:tensor_constructor",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "vertical_group_agg",
+    srcs = ["vertical_group_agg.cc"],
+    hdrs = ["vertical_group_agg.h"],
+    deps = [
+        ":group_agg_helper",
+        "//engine/framework:operator",
+        "//engine/util:spu_io",
+        "//engine/util:tensor_util",
+        "@spulib//libspu/kernel/hal:constants",
+        "@spulib//libspu/kernel/hal:shape_ops",
+        "@spulib//libspu/kernel/hlo:basic_binary",
+        "@spulib//libspu/kernel/hlo:basic_ternary",
+        "@spulib//libspu/kernel/hlo:casting",
+        "@spulib//libspu/kernel/hlo:const",
+        "@spulib//libspu/kernel/hlo:geometrical",
+        "@spulib//libspu/kernel/hlo:indexing",
+        "@spulib//libspu/kernel/hlo:reduce",
+    ],
+)
+
+cc_test(
+    name = "vertical_group_agg_test",
+    srcs = ["vertical_group_agg_test.cc"],
+    deps = [
+        ":all_ops_register",
+        ":test_util",
+        ":vertical_group_agg",
         "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
@@ -910,6 +988,27 @@ cc_test(
     srcs = ["coalesce_test.cc"],
     deps = [
         ":coalesce",
+        ":test_util",
+        "//engine/core:tensor_constructor",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "replicate",
+    srcs = ["replicate.cc"],
+    hdrs = ["replicate.h"],
+    deps = [
+        "//engine/framework:operator",
+        "//engine/util:tensor_util",
+    ],
+)
+
+cc_test(
+    name = "replicate_test",
+    srcs = ["replicate_test.cc"],
+    deps = [
+        ":replicate",
         ":test_util",
         "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",

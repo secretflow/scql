@@ -85,7 +85,7 @@ Session::Session(const SessionOptions& session_opt,
   if (lctx_->WorldSize() >= 2) {
     // spu SPUContext valid only when world_size >= 2
     auto config = params.spu_runtime_cfg();
-    config.set_experimental_enable_colocated_optimization(true);
+    // config.set_experimental_enable_colocated_optimization(true);
     spu::populateRuntimeConfig(config);
     spu_ctx_ = std::make_unique<spu::SPUContext>(config, lctx_);
 

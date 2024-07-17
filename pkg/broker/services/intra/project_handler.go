@@ -77,7 +77,7 @@ func (svc *grpcIntraSvc) CreateProject(c context.Context, req *pb.CreateProjectR
 		Description: req.GetDescription(),
 		Creator:     app.Conf.PartyCode,
 		Archived:    false,
-		ProjectConf: string(projConf),
+		ProjectConf: projConf,
 	}
 	if project.ID == "" {
 		id, err := application.GenerateProjectID()
@@ -125,7 +125,7 @@ func (svc *grpcIntraSvc) ListProjects(c context.Context, req *pb.ListProjectsReq
 	for _, projWithMember := range projectWithMembers {
 		proj := projWithMember.Proj
 		var projConf pb.ProjectConfig
-		err := protojson.Unmarshal([]byte(proj.ProjectConf), &projConf)
+		err := protojson.Unmarshal(proj.ProjectConf, &projConf)
 		if err != nil {
 			return nil, fmt.Errorf("ListProjects: unmarshal: %v", err)
 		}
@@ -200,7 +200,7 @@ func (svc *grpcIntraSvc) InviteMember(c context.Context, req *pb.InviteMemberReq
 	}
 
 	var projConf pb.ProjectConfig
-	err = protojson.Unmarshal([]byte(proj.ProjectConf), &projConf)
+	err = protojson.Unmarshal(proj.ProjectConf, &projConf)
 
 	if err != nil {
 		return nil, fmt.Errorf("InviteMember unmarshal: failed to deserialize project conf string: %v", err)
@@ -299,7 +299,7 @@ func (svc *grpcIntraSvc) ListInvitations(c context.Context, req *pb.ListInvitati
 	var invitationsList []*pb.ProjectInvitation
 	for _, inv := range invitations {
 		var projConf pb.ProjectConfig
-		err = protojson.Unmarshal([]byte(inv.ProjectConf), &projConf)
+		err = protojson.Unmarshal(inv.ProjectConf, &projConf)
 		if err != nil {
 			return nil, fmt.Errorf("ListInvitations: failed to deserialize spu config: %v", err)
 		}
@@ -431,7 +431,7 @@ func (svc *grpcIntraSvc) ProcessInvitation(c context.Context, req *pb.ProcessInv
 			Name:        invitation.Name,
 			Description: invitation.Description,
 			Archived:    false,
-			ProjectConf: string(invitation.ProjectConf),
+			ProjectConf: invitation.ProjectConf,
 			Creator:     invitation.Creator,
 			CreatedAt:   invitation.ProjectCreatedAt,
 		})

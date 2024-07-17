@@ -33,7 +33,7 @@ type Project struct {
 	Description string `gorm:"column:desc;type:varchar(64);comment:'description'"`
 	Creator     string `gorm:"column:creator;type:varchar(64);comment:'creator of the project'"`
 	Archived    bool   `gorm:"column:archived;comment:'if archived is true, whole project can't be modified'"`
-	ProjectConf string `gorm:"column:project_conf;type:text;comment:'project config in json format'"`
+	ProjectConf []byte `gorm:"column:project_conf;type:bytea;comment:'project config stored as byte array'"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
@@ -52,14 +52,14 @@ func (p *Project) Equals(other *Project) (bool, error) {
 	if len(p.ProjectConf) == 0 && len(other.ProjectConf) == 0 {
 		return true, nil
 	}
-	err := json.Unmarshal([]byte(p.ProjectConf), &projConf)
+	err := json.Unmarshal(p.ProjectConf, &projConf)
 
 	if err != nil {
 		return false, err
 	}
 
 	var otherProjConf pb.ProjectConfig
-	err = json.Unmarshal([]byte(other.ProjectConf), &otherProjConf)
+	err = json.Unmarshal(other.ProjectConf, &otherProjConf)
 
 	if err != nil {
 		return false, err
@@ -126,7 +126,7 @@ type Invitation struct {
 	Creator          string    `gorm:"column:creator;type:varchar(64);comment:'creator of the project'"`
 	ProjectCreatedAt time.Time `gorm:"column:proj_created_at;comment:'the create time of the project'"`
 	Member           string    `gorm:"column:member;type:string;not null;comment:'members, flattened string, like: alice;bob'"`
-	ProjectConf      string    `gorm:"column:project_conf;type:text;comment:'project config in json format'"`
+	ProjectConf      []byte    `gorm:"column:project_conf;type:bytea;comment:'project config stored as byte array'"`
 	Inviter          string    `gorm:"column:inviter;type:varchar(256);index:,composite:identifier;comment:'inviter'"`
 	Invitee          string    `gorm:"column:invitee;type:varchar(256);index:,composite:identifier;comment:'invitee'"`
 	// 0: default, not decided to accept invitation or not; 1: accepted; 2: rejected; 3: invalid

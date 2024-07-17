@@ -19,122 +19,17 @@
 #include <utility>
 #include <vector>
 
-#include "absl/numeric/bits.h"
 #include "libspu/kernel/hal/constants.h"
 #include "libspu/kernel/hlo/basic_binary.h"
 #include "libspu/kernel/hlo/basic_ternary.h"
 #include "libspu/kernel/hlo/casting.h"
 #include "libspu/kernel/hlo/const.h"
-#include "libspu/kernel/hlo/geometrical.h"
-#include "libspu/kernel/hlo/indexing.h"
 
+#include "engine/operator/group_agg_helper.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
 
 namespace scql::engine::op {
-
-namespace {
-
-int64_t RowCount(const spu::Value& value) {
-  return value.shape().size() > 0 ? value.shape()[0] : value.numel();
-}
-
-using IndexTuple = std::pair<spu::Index, spu::Index>;
-
-// Implements the most naive version of prefix sum tree structure.
-// Refer to
-// "Circuit representation of a work-efficient 16-input parallel prefix sum"
-// https://en.wikipedia.org/wiki/Prefix_sum#/media/File:Prefix_sum_16.svg
-std::vector<IndexTuple> GenScanIndex(std::size_t n) {
-  std::vector<IndexTuple> ret;
-  size_t k = absl::bit_width(n - 1u);
-
-  if (n < 2) {
-    return ret;
-  }
-
-  for (size_t i = 1; i < (k + 1); i++) {
-    IndexTuple it;
-    for (size_t j = ((1 << i) - 1); j < n; j += (1 << i)) {
-      it.first.emplace_back(j);
-      it.second.emplace_back(j - (1 << (i - 1)));
-    }
-    if (!it.first.empty()) {
-      ret.emplace_back(it);
-    }
-  }
-
-  for (size_t i = (k - 1); i > 0; i--) {
-    IndexTuple it;
-    for (size_t j = (3 * (1 << (i - 1)) - 1); j < n; j += (1 << i)) {
-      it.first.emplace_back(j);
-      it.second.emplace_back(j - (1 << (i - 1)));
-    }
-
-    if (!it.first.empty()) {
-      ret.emplace_back(it);
-    }
-  }
-
-  return ret;
-}
-
-// IN  GroupMask: 1 means end of the group while 0 means other conditions.
-// OUT GroupMask: 0 means start of the group while 1 means other conditions.
-// e.g. IN: [0, 0, 1, 0, 0, 1, 0, 1, 0, 1]
-//      OUT:[0, 1, 1, 0, 1, 1, 0, 1, 0, 1]
-spu::Value TransferGroupMask(spu::SPUContext* ctx, const spu::Value& in) {
-  const int64_t row_cnt = in.shape()[0];
-  spu::Value in_not = spu::kernel::hlo::Sub(
-      ctx, spu::kernel::hlo::Constant(ctx, 1, in.shape()), in);
-
-  auto zero = spu::kernel::hal::zeros(ctx, in_not.dtype(), {1});
-  if (in_not.vtype() == spu::VIS_SECRET) {
-    zero = spu::kernel::hlo::Seal(ctx, zero);
-  }
-
-  return spu::kernel::hlo::Concatenate(
-      ctx, {zero, spu::kernel::hlo::Slice(ctx, in_not, {0}, {row_cnt - 1}, {})},
-      0);
-}
-
-using ScanFn = std::function<std::pair<spu::Value, spu::Value>(
-    const spu::Value&, const spu::Value&, const spu::Value&,
-    const spu::Value&)>;
-
-// Reference: "Scape: Scalable Collaborative Analytics System on Private
-// Database with Malicious Security", Fig. 13
-//
-spu::Value Scan(spu::SPUContext* ctx, const spu::Value& origin_value,
-                const spu::Value& origin_group_mask, const ScanFn& scan_fn) {
-  const int64_t row_cnt = origin_value.shape()[0];
-  spu::Value group_mask = TransferGroupMask(ctx, origin_group_mask);
-  spu::Value value = origin_value.clone();
-  const std::vector<IndexTuple> indices = GenScanIndex(row_cnt);
-  for (const auto& index_tuple : indices) {
-    auto lhs_v = spu::kernel::hlo::LinearGather(ctx, value, index_tuple.first);
-    auto lhs_gm =
-        spu::kernel::hlo::LinearGather(ctx, group_mask, index_tuple.first);
-
-    auto rhs_v = spu::kernel::hlo::LinearGather(ctx, value, index_tuple.second);
-    auto rhs_gm =
-        spu::kernel::hlo::LinearGather(ctx, group_mask, index_tuple.second);
-
-    const auto [new_v, new_gm] = scan_fn(lhs_v, lhs_gm, rhs_v, rhs_gm);
-
-    YACL_ENFORCE_EQ(value.dtype(), new_v.dtype());
-    YACL_ENFORCE_EQ(group_mask.dtype(), new_gm.dtype());
-
-    spu::kernel::hlo::LinearScatterInPlace(ctx, value, new_v,
-                                           index_tuple.first);
-    spu::kernel::hlo::LinearScatterInPlace(ctx, group_mask, new_gm,
-                                           index_tuple.first);
-  }
-
-  return value;
-}
-
-}  // namespace
 
 void ObliviousGroupAggBase::Validate(ExecContext* ctx) {
   const auto& group = ctx->GetInput(kGroup);

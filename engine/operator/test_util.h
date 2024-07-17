@@ -121,6 +121,12 @@ inline pb::Tensor MakeSecretTensorReference(const std::string& name,
                              pb::TensorStatus::TENSORSTATUS_SECRET);
 }
 
+inline pb::Tensor MakePublicTensorReference(const std::string& name,
+                                            pb::PrimitiveDataType dtype) {
+  return MakeTensorReference(name, dtype,
+                             pb::TensorStatus::TENSORSTATUS_PUBLIC);
+}
+
 pb::Tensor MakeTensorAs(const std::string& name, const pb::Tensor& ref);
 
 struct NamedTensor {

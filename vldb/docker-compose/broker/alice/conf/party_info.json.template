@@ -1,0 +1,14 @@
+{
+  "participants": [
+    {
+      "party_code": "alice",
+      "endpoint": "https://broker_alice:8081",
+      "pubkey": "__ALICE_PUBLIC_KEY__"
+    },
+    {
+      "party_code": "bob",
+      "endpoint": "https://broker_bob:8081",
+      "pubkey": "__BOB_PUBLIC_KEY__"
+    }
+  ]
+}

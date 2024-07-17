@@ -756,6 +756,16 @@ definitions:
     properties:
       enable_psi_detail_log:
         type: boolean
+      join_type:
+        type: integer
+        format: int64
+        title: for test
+      secret_group_by_type:
+        type: integer
+        format: int64
+      agg_type:
+        type: integer
+        format: int64
   scql.pb.DistributeQueryResponse:
     type: object
     properties:
@@ -894,8 +904,8 @@ definitions:
         type: string
         format: uint64
     description: |-
-      IOStats contains input/output statistics for a job, including bytes sent and received,
-      as well as the number of send and receive actions performed.
+      IOStats contains input/output statistics for a job, including bytes sent and
+      received, as well as the number of send and receive actions performed.
   scql.pb.InvitationRespond:
     type: string
     enum:
@@ -1016,8 +1026,12 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/scql.pb.StageInfo'
-        description: A list of currently running stages, providing insight into which parts of the job are active.
-    description: JobProgress provides detailed information about the progress of a running job.
+        description: |-
+          A list of currently running stages, providing insight into which parts of
+          the job are active.
+    description: |-
+      JobProgress provides detailed information about the progress of a running
+      job.
   scql.pb.JobStatus:
     type: object
     properties:
@@ -1491,8 +1505,12 @@ definitions:
         title: Stage start time
       details:
         $ref: '#/definitions/google.protobuf.Any'
-        description: Personalized details that may have different structures depending on the stage type.
-    description: StageInfo provides information about an individual stage within a running job.
+        description: |-
+          Personalized details that may have different structures depending on the
+          stage type.
+    description: |-
+      StageInfo provides information about an individual stage within a running
+      job.
   scql.pb.Status:
     type: object
     properties:

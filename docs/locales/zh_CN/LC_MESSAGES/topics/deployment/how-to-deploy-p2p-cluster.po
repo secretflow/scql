@@ -8,14 +8,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-27 15:49+0800\n"
+"POT-Creation-Date: 2024-01-17 11:25+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.14.0\n"
+"Generated-By: Babel 2.13.0\n"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:3
 msgid "P2P Deployment"
@@ -85,6 +85,7 @@ msgstr ""
 "的源数据。当然，您也可以使用您喜欢的其他数据库服务或分开存储两种类型的数据。"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:38
+#, fuzzy
 msgid ""
 "The source data can be stored in a file called ``alice_init.sql`` with "
 "content like `alice_init.sql "
@@ -100,6 +101,7 @@ msgstr ""
 "tutorial/mysql/initdb/bob_init.sql>`_ 代替。"
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:40
+#, fuzzy
 msgid ""
 "The meta data can be stored in ``broker_init_alice.sql`` with content "
 "like `broker_init_alice.sql "
@@ -143,10 +145,10 @@ msgstr ""
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:91
 msgid ""
 "The ``__ENGINE_URL__`` should be replaced by **machine host/ip + engine "
-"published port**, like: 30.30.30.30:8003."
+"published port**, like: http://30.30.30.30:8003."
 msgstr ""
 "将 ``__ENGINE_URL__`` 替换为 **机器的对外 host/ip + 引擎对外端口**，如： "
-"30.30.30.30:8003 "
+"http://30.30.30.30:8003 "
 
 #: ../../topics/deployment/how-to-deploy-p2p-cluster.rst:93
 msgid ""

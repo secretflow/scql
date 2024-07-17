@@ -154,11 +154,11 @@ func (n *JoinNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error
 
 		// set and check ccl
 		leftSourceParties := colTracer.FindSourceParties(leftId)
-		rigthSourceParties := colTracer.FindSourceParties(rightId)
+		rightSourceParties := colTracer.FindSourceParties(rightId)
 		// temporaryly record payloadVisible for inner join only
 		if join.JoinType == core.InnerJoin {
 			for _, lp := range leftSourceParties {
-				for _, rp := range rigthSourceParties {
+				for _, rp := range rightSourceParties {
 					if _, ok := payloadVisible[lp]; !ok {
 						payloadVisible[lp] = make(map[string]bool)
 					}
@@ -183,7 +183,7 @@ func (n *JoinNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error
 			}
 		}
 
-		for _, p := range rigthSourceParties {
+		for _, p := range rightSourceParties {
 			if leftCc.LevelFor(p) == ccl.Join {
 				if join.JoinType == core.InnerJoin || join.JoinType == core.RightOuterJoin {
 					leftCc.SetLevelForParty(p, ccl.Plain)

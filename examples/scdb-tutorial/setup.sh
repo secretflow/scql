@@ -14,6 +14,14 @@ for file in $(grep -rl '__MYSQL_ROOT_PASSWD__' --exclude='*.sh' ${SCRIPT_DIR}/);
   sed "s/__MYSQL_ROOT_PASSWD__/${MYSQL_PASSWD}/g" $file >$newfile
 done
 
+# Check if the system is macOS and LibreSSL is installed
+if [[ "$(uname)" == "Darwin" ]] && openssl version | grep -q "LibreSSL"; then
+  echo "You are using macOS with LibreSSL, which does not support ed25519."
+  echo "Please install OpenSSL using the following command:"
+  echo "brew install openssl"
+  exit 1
+fi
+
 # generate private pem for each party
 PARTIES=("alice" "bob")
 for party in ${PARTIES[*]}; do

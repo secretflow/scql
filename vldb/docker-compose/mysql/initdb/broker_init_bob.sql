@@ -1,4 +1,7 @@
--- SCQLBroker MySQL db schema init script Example.
+
+DROP DATABASE IF EXISTS `brokerbob`;
+CREATE DATABASE `brokerbob`;
+USE `brokerbob`;
 
 --
 -- Table structure for table `projects`
@@ -15,7 +18,7 @@ CREATE TABLE `projects` (
   `archived` tinyint(1) DEFAULT NULL COMMENT '''if archived is true, whole project can''t be modified''',
   `created_at` datetime(3) DEFAULT NULL,
   `updated_at` datetime(3) DEFAULT NULL,
-  `project_conf` text,
+  `project_conf` blob,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -114,7 +117,7 @@ CREATE TABLE `invitations` (
   `invite_time` datetime(3) DEFAULT NULL,
   `created_at` datetime(3) DEFAULT NULL,
   `updated_at` datetime(3) DEFAULT NULL,
-  `project_conf` text,
+  `project_conf` blob,
   PRIMARY KEY (`id`),
   INDEX `idx_project_id_inviter_invitee_identifier` (`project_id`,`inviter`, `invitee`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
@@ -175,5 +178,5 @@ CREATE TABLE `locks` (
   `updated_at` datetime(3) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `idx_locks_id` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=101 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;

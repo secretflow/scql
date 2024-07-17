@@ -84,6 +84,29 @@ func (s *testTranslatorSuite) TearDownSuite(c *C) {
 
 type testConf struct {
 	groupThreshold int
+	joinType       uint32
+	aggType        uint32
+}
+
+func (t *testConf) ToString() string {
+	str := "{"
+	if t.groupThreshold != 0 {
+		str += fmt.Sprintf("groupThreshold: %d", t.groupThreshold)
+	}
+	if t.joinType != 0 {
+		if str != "{" {
+			str += ", "
+		}
+		str += fmt.Sprintf(",joinType: %d", t.joinType)
+	}
+	if t.aggType != 0 {
+		if str != "{" {
+			str += ", "
+		}
+		str += fmt.Sprintf(",aggType: %d", t.joinType)
+	}
+	str += "}"
+	return str
 }
 
 type sPair struct {

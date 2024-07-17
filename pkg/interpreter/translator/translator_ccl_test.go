@@ -46,7 +46,7 @@ func (s *testTranslatorSuite) TestTranslateWithCCL(c *C) {
 			groupThreshold = conf.groupThreshold
 		}
 		compileOpts := scql.CompileOptions{
-			SecurityCompromise: &scql.SecurityCompromiseConfig{RevealGroupMark: false, GroupByThreshold: uint64(groupThreshold)},
+			SecurityCompromise: &scql.SecurityCompromiseConfig{RevealGroupMark: false, GroupByThreshold: uint64(groupThreshold), JoinType: conf.joinType, AggType: conf.aggType},
 		}
 		t, err := NewTranslator(
 			s.engineInfo, &scql.SecurityConfig{ColumnControlList: ccl},
@@ -57,7 +57,7 @@ func (s *testTranslatorSuite) TestTranslateWithCCL(c *C) {
 		// if you want to copy the graph created by DumpGraphviz, uncomment this line
 		c.Log(ep.DumpGraphviz())
 		if recordTestOutput {
-			_, err := s.recordFile.WriteString(fmt.Sprintf("{`%s`, `%s`, testConf%+v},\n", sql, ep.DumpGraphviz(), conf))
+			_, err = s.recordFile.WriteString(fmt.Sprintf("{`%s`, `%s`, testConf%s},\n", sql, ep.DumpGraphviz(), conf.ToString()))
 			c.Assert(err, IsNil)
 		} else {
 			c.Assert(ep.DumpGraphviz(), Equals, dot, Commentf("for %s", sql))

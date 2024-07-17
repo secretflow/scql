@@ -32,6 +32,9 @@ var (
 	query              string
 	jobConf            string
 	enablePsiDetailLog bool
+	joinType           int32
+	sgbType            int32
+	aggType            int32
 
 	createCmd = &cobra.Command{
 		Use:   "create {project|table <name>|job}",
@@ -74,6 +77,9 @@ func init() {
 		"http_max_payload_size": 1048576 // Maximum payload size for HTTP requests
 	  }`)
 	createCmd.Flags().BoolVar(&enablePsiDetailLog, "enable-psi-detail-log", false, "whether enable psi detail log")
+	createCmd.Flags().Int32Var(&joinType, "join-type", 0, "join type, 0: default psi join; 1: secret join; 2: plaintext join")
+	createCmd.Flags().Int32Var(&sgbType, "sgb-type", 0, "secret group by type, 0: default vertical groupBy; 1: oblivious groupBy")
+	createCmd.Flags().Int32Var(&aggType, "agg-type", 0, "aggregation type, 0: default oblivious agg; 1: plaintext agg(reveal groupMark)")
 }
 
 func createProject() error {
@@ -134,7 +140,12 @@ func createJob() error {
 	if query == "" {
 		return fmt.Errorf("flags query must not be empty")
 	}
-	jobID, err := brokerCommand.CreateJob(projectID, query, &pb.DebugOptions{EnablePsiDetailLog: enablePsiDetailLog}, jobConf)
+	jobID, err := brokerCommand.CreateJob(projectID, query, &pb.DebugOptions{
+		EnablePsiDetailLog: enablePsiDetailLog,
+		JoinType:           uint32(joinType), // WARN, only for testing convenience, not safe
+		SecretGroupByType:  uint32(sgbType),
+		AggType:            uint32(aggType),
+	}, jobConf)
 	if err != nil {
 		return err
 	}
