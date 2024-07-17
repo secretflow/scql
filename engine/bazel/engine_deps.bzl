@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 
 def engine_deps():
     _com_github_nelhage_rules_boost()
@@ -50,11 +50,13 @@ def _secretflow_deps():
         name = "spulib",
         urls = [
             # "https://github.com/secretflow/spu/archive/%s.tar.gz" % SPU_COMMIT,
-            "https://github.com/secretflow/spu/archive/refs/tags/0.9.2dev20240703.tar.gz",
+            "https://github.com/secretflow/spu/archive/refs/tags/0.9.2dev20240711.tar.gz",
         ],
+        patch_args = ["-p1"],
+        patches = ["@scql//engine/bazel:patches/spu.patch"],
         # strip_prefix = "spu-%s" % SPU_COMMIT,
-        strip_prefix = "spu-0.9.2dev20240703",
-        sha256 = "0521dc6b2ae6c445066de42efe4f0d48fa88b1b356bde8d7116545889898fc23",
+        strip_prefix = "spu-0.9.2dev20240711",
+        sha256 = "b481d740af4f5043e61b3b9f729d6dbbabad2a11ec6578e29f4c5b625bfbc4b0",
     )
 
     maybe(

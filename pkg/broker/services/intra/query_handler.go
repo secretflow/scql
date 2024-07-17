@@ -65,7 +65,7 @@ func (svc *grpcIntraSvc) DoQuery(ctx context.Context, req *pb.QueryRequest) (res
 	}
 
 	var projConf pb.ProjectConfig
-	err = protojson.Unmarshal([]byte(existingProject.ProjectConf), &projConf)
+	err = protojson.Unmarshal(existingProject.ProjectConf, &projConf)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func (svc *grpcIntraSvc) SubmitQuery(ctx context.Context, req *pb.QueryRequest) 
 	}
 
 	var projConf pb.ProjectConfig
-	err = protojson.Unmarshal([]byte(existingProject.ProjectConf), &projConf)
+	err = protojson.Unmarshal(existingProject.ProjectConf, &projConf)
 	if err != nil {
 		return nil, err
 	}

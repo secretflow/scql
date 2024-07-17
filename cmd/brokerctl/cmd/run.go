@@ -54,10 +54,11 @@ func init() {
 		"http_max_payload_size": 1048576 // Maximum payload size for HTTP requests
 	  }
 	`)
+	runCmd.Flags().Int32Var(&aggType, "agg-type", 0, "1, reveal group mark; 0, not")
 }
 
 func runQuery(query string) error {
-	response, err := brokerCommand.DoQuery(projectID, query, &pb.DebugOptions{EnablePsiDetailLog: enablePsiDetailLog}, jobConf)
+	response, err := brokerCommand.DoQuery(projectID, query, &pb.DebugOptions{EnablePsiDetailLog: enablePsiDetailLog, AggType: uint32(aggType)}, jobConf)
 	if err != nil {
 		return fmt.Errorf("run query: %w", err)
 	}

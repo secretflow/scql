@@ -183,7 +183,7 @@ func NewSession(ctx context.Context, info *ExecutionInfo, app *App, asyncMode bo
 		}
 
 		var projConf pb.ProjectConfig
-		err = protojson.Unmarshal([]byte(project.ProjectConf), &projConf)
+		err = protojson.Unmarshal(project.ProjectConf, &projConf)
 		if err != nil {
 			return fmt.Errorf("NewSession: failed to deserialize project config stored in db: %v", err)
 		}
@@ -208,9 +208,19 @@ func NewSession(ctx context.Context, info *ExecutionInfo, app *App, asyncMode bo
 			PsiAlgorithmType: pb.PsiAlgorithmType_AUTO,
 		},
 	}
+	// set for vertical sort
+	info.CompileOpts.SpuConf.ExperimentalEnableColocatedOptimization = true
 	// NOTE(xiaoyuan): use ecdh psi when EnablePsiDetailLog is true
-	if info.DebugOpts != nil && info.DebugOpts.EnablePsiDetailLog {
-		info.CompileOpts.OptimizerHints.PsiAlgorithmType = pb.PsiAlgorithmType_ECDH
+	if info.DebugOpts != nil {
+		if info.DebugOpts.EnablePsiDetailLog {
+			info.CompileOpts.OptimizerHints.PsiAlgorithmType = pb.PsiAlgorithmType_ECDH
+		}
+		info.CompileOpts.SecurityCompromise.JoinType = info.DebugOpts.JoinType
+		info.CompileOpts.SecurityCompromise.SecretGroupByType = info.DebugOpts.SecretGroupByType
+		info.CompileOpts.SecurityCompromise.AggType = info.DebugOpts.AggType
+		if info.DebugOpts.SecretGroupByType == 1 {
+			info.CompileOpts.SpuConf.ExperimentalEnableColocatedOptimization = false
+		}
 	}
 	session = &Session{
 		CreatedAt:     time.Now(),

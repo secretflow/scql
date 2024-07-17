@@ -45,7 +45,7 @@ PsiPlan GetPsiPlan(int64_t self_length, int64_t peer_length,
   util::PsiPlan psi_plan;
   int64_t small_length = std::min(self_length, peer_length);
   int64_t big_length = std::max(self_length, peer_length);
-  YACL_ENFORCE(unbalance_psi_ratio_threshold > 1,
+  YACL_ENFORCE(unbalance_psi_ratio_threshold >= 1,
                "Invalid unbalance PSI ratio threshold");
   if (small_length > 0 &&
       big_length / small_length >= unbalance_psi_ratio_threshold &&
@@ -63,8 +63,8 @@ PsiPlan GetPsiPlan(int64_t self_length, int64_t peer_length,
       server_info = ", is client";
     }
   }
-  SPDLOG_DEBUG("CoordinatePsiPlan finished, use UbPsi: {} {}",
-               psi_plan.unbalanced, server_info);
+  SPDLOG_DEBUG("CoordinatePsiPlan finished, use UbPsi: {} {}", psi_plan.ublance,
+               server_info);
 
   psi_plan.psi_size_info.self_size = self_length;
   psi_plan.psi_size_info.peer_size = peer_length;

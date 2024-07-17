@@ -254,7 +254,6 @@ message JobStatus {
   JobProgress progress = 2;
 }
 
-
 message FetchResultResponse {
   Status status = 1;
 

@@ -107,6 +107,15 @@ message CompileOptions {
 message SecurityCompromiseConfig {
   bool reveal_group_mark = 1;
   uint64 group_by_threshold = 2;
+
+  /// options for vldb test
+
+  // 0: default psi join; 1: secret join; 2: plaintext join
+  uint32 join_type = 3;
+  // 0: default vertical groupBy; 1: oblivious groupBy
+  uint32 secret_group_by_type = 4;
+  // 0: default oblivious agg; 1: plaintext agg(reveal groupMark)
+  uint32 agg_type = 5;
 }
 
 message Catalog {

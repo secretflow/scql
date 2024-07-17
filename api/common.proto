@@ -30,6 +30,11 @@ message RequestHeader {
 
 message DebugOptions {
   bool enable_psi_detail_log = 1;
+
+  // for test
+  uint32 join_type = 10;
+  uint32 secret_group_by_type = 11;
+  uint32 agg_type = 12;
 }
 
 // (-- TODO: move SQLWarning to a proper place --)
@@ -38,8 +43,8 @@ message SQLWarning {
   string reason = 1;
 }
 
-// IOStats contains input/output statistics for a job, including bytes sent and received,
-// as well as the number of send and receive actions performed.
+// IOStats contains input/output statistics for a job, including bytes sent and
+// received, as well as the number of send and receive actions performed.
 message IOStats {
   uint64 send_bytes = 1;
   uint64 recv_bytes = 2;
@@ -47,7 +52,8 @@ message IOStats {
   uint64 recv_actions = 4;
 }
 
-// StageInfo provides information about an individual stage within a running job.
+// StageInfo provides information about an individual stage within a running
+// job.
 message StageInfo {
   // The name of the stage.
   string name = 1;
@@ -55,11 +61,13 @@ message StageInfo {
   string summary = 2;
   // Stage start time
   google.protobuf.Timestamp start_time = 3;
-  // Personalized details that may have different structures depending on the stage type.
+  // Personalized details that may have different structures depending on the
+  // stage type.
   google.protobuf.Any details = 4;
 }
 
-// JobProgress provides detailed information about the progress of a running job.
+// JobProgress provides detailed information about the progress of a running
+// job.
 message JobProgress {
   // Job start time
   google.protobuf.Timestamp start_time = 1;
@@ -68,7 +76,8 @@ message JobProgress {
   // The number of stages that have been executed so far.
   int32 executed_stages = 3;
   IOStats io_stats = 4;
-  // A list of currently running stages, providing insight into which parts of the job are active.
+  // A list of currently running stages, providing insight into which parts of
+  // the job are active.
   repeated StageInfo running_stages = 5;
 }
 

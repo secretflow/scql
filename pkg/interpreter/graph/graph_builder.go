@@ -397,6 +397,29 @@ func (plan *GraphBuilder) AddMakePublicNode(name string, input *Tensor, partyCod
 	return output, nil
 }
 
+func (plan *GraphBuilder) AddPlainJoinNode(name string, left []*Tensor, right []*Tensor, partyCode string) (*Tensor, *Tensor, error) {
+	inputs := make(map[string][]*Tensor)
+	inputs["Left"] = left
+	inputs["Right"] = right
+	leftOutput := plan.AddTensorAs(left[0])
+	leftOutput.DType = proto.PrimitiveDataType_INT64
+	leftOutput.SetStatus(proto.TensorStatus_TENSORSTATUS_PRIVATE)
+	leftOutput.OwnerPartyCode = partyCode
+
+	rightOutput := plan.AddTensorAs(right[0])
+	rightOutput.DType = proto.PrimitiveDataType_INT64
+	rightOutput.SetStatus(proto.TensorStatus_TENSORSTATUS_PRIVATE)
+	rightOutput.OwnerPartyCode = partyCode
+
+	outputs := make(map[string][]*Tensor)
+	outputs["LeftJoinIndex"] = []*Tensor{leftOutput}
+	outputs["RightJoinIndex"] = []*Tensor{rightOutput}
+	if _, err := plan.AddExecutionNode(name, operator.OpNamePlainJoin, inputs, outputs, map[string]*Attribute{}, []string{partyCode}); err != nil {
+		return nil, nil, err
+	}
+	return leftOutput, rightOutput, nil
+}
+
 // AddJoinNode adds a Join node, used in EQ join
 func (plan *GraphBuilder) AddJoinNode(name string, left []*Tensor, right []*Tensor, partyCodes []string, joinType int, psiAlg proto.PsiAlgorithmType) (*Tensor, *Tensor, error) {
 	partyAttr := &Attribute{}
@@ -449,6 +472,36 @@ func (plan *GraphBuilder) AddFilterByIndexNode(name string, filter *Tensor, ts [
 		return nil, err
 	}
 	return outputs, nil
+}
+
+// AddReplicateNode adds a Replicate node, used in cross join
+func (plan *GraphBuilder) AddReplicateNode(name string, left, right []*Tensor) (leftOut, rightOut []*Tensor, err error) {
+	// FIXME(yang.y): replicated node should check
+	// (1) All input tensors are from the same party
+	// (2) All input tensors are of status private
+	leftOutput := []*Tensor{}
+	for _, tensor := range left {
+		tt := plan.AddTensorAs(tensor)
+		leftOutput = append(leftOutput, tt)
+	}
+
+	rightOutput := []*Tensor{}
+	for _, tensor := range right {
+		tt := plan.AddTensorAs(tensor)
+		rightOutput = append(rightOutput, tt)
+	}
+
+	parties := []string{left[0].OwnerPartyCode, right[0].OwnerPartyCode}
+	partyAttr := &Attribute{}
+	partyAttr.SetStrings(parties)
+
+	if _, err := plan.AddExecutionNode(name, operator.OpNameReplicate, map[string][]*Tensor{"Left": left, "Right": right},
+		map[string][]*Tensor{"LeftOut": leftOutput, "RightOut": rightOutput},
+		map[string]*Attribute{operator.InputPartyCodesAttr: partyAttr}, parties); err != nil {
+		return nil, nil, err
+	}
+
+	return leftOutput, rightOutput, nil
 }
 
 var strTypeUnsupportedOpM = map[string]bool{

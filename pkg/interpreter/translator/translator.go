@@ -436,7 +436,7 @@ func convertDataType(typ *types.FieldType) (proto.PrimitiveDataType, error) {
 		return proto.PrimitiveDataType_BOOL, nil
 	case mysql.TypeFloat:
 		return proto.PrimitiveDataType_FLOAT32, nil
-	case mysql.TypeDouble, mysql.TypeNewDecimal:
+	case mysql.TypeDouble, mysql.TypeNewDecimal, mysql.TypeDecimal:
 		return proto.PrimitiveDataType_FLOAT64, nil
 	case mysql.TypeDatetime, mysql.TypeDate, mysql.TypeYear:
 		return proto.PrimitiveDataType_DATETIME, nil
@@ -1053,6 +1053,41 @@ func (t *translator) addObliviousGroupMarkNode(name string, key []*graph.Tensor)
 	}
 
 	return out, nil
+}
+
+func (t *translator) AddVerticalGroupAggNode(funcName string, group *graph.Tensor, in *graph.Tensor) (*graph.Tensor, error) {
+	opName, ok := operator.VerticalGroupAggOp[funcName]
+	if !ok {
+		return nil, fmt.Errorf("AddVerticalGroupAggNode: unsupported op %v", funcName)
+	}
+
+	// convert inputs to share
+	inA, err := t.converter.convertTo(
+		in, &sharePlacement{partyCodes: t.enginesInfo.GetParties()})
+	if err != nil {
+		return nil, fmt.Errorf("AddVerticalGroupAggNode: %v", err)
+	}
+
+	outA := t.ep.AddTensorAs(inA)
+	if funcName == ast.AggFuncAvg {
+		outA.DType = proto.PrimitiveDataType_FLOAT64
+	} else if funcName == ast.AggFuncCount {
+		outA.DType = proto.PrimitiveDataType_INT64
+	} else if funcName == ast.AggFuncSum {
+		if inA.DType == proto.PrimitiveDataType_BOOL {
+			outA.DType = proto.PrimitiveDataType_INT64
+		} else if graph.IsFloatOrDoubleType(inA.DType) {
+			outA.DType = proto.PrimitiveDataType_FLOAT64
+		}
+	}
+
+	if _, err := t.ep.AddExecutionNode(funcName, opName,
+		map[string][]*graph.Tensor{"Group": {group}, "In": {inA}}, map[string][]*graph.Tensor{"Out": {outA}},
+		map[string]*graph.Attribute{}, t.enginesInfo.GetParties()); err != nil {
+		return nil, fmt.Errorf("AddVerticalGroupAggNode: %v", err)
+	}
+
+	return outA, nil
 }
 
 func (t *translator) addObliviousGroupAggNode(funcName string, group *graph.Tensor, in *graph.Tensor) (*graph.Tensor, error) {

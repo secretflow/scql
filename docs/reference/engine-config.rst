@@ -241,7 +241,7 @@ datasources in embed_router_conf contain information for connecting MySQL/SQLite
       <value> == [~;]*
 
     PostgreSQL Connection string e.g:
-      ``dbname=${db} user=${user} password=${password} host=${host} port=${port}``
+      ``db=${db};user=${user};password=${password};host=${host}``
 
     CSVDB Connection string format:
       CSVDB support read csv from local and OSS/MinIO, since connection_str is an object in another json object, the format is a converted json string corresponding to `CsvdbConf <https://github.com/secretflow/scql/tree/main/engine/datasource/csvdb_conf.proto>`_

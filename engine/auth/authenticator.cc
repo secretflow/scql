@@ -32,8 +32,7 @@ Authenticator::Authenticator(AuthOption option) : option_(std::move(option)) {
     int64_t pkey_der_len = buf.size();
     YACL_ENFORCE(pkey_der_len > 0, "abnormal length of extracted public key");
 
-    self_public_key_ =
-        absl::Base64Escape({pkey_der, static_cast<size_t>(pkey_der_len)});
+    self_public_key_ = absl::Base64Escape({pkey_der, pkey_der_len});
   }
 
   if (option_.enable_peer_auth) {

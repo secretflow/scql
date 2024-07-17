@@ -1,0 +1,22 @@
+diff --git a/libspu/kernel/hal/permute.h b/libspu/kernel/hal/permute.h
+index 9025bbec..c228e5dc 100644
+--- a/libspu/kernel/hal/permute.h
++++ b/libspu/kernel/hal/permute.h
+@@ -45,6 +45,17 @@ enum class SortDirection {
+   Descending,
+ };
+
++namespace internal {
++std::vector<spu::Value> radix_sort(SPUContext *ctx,
++                                   absl::Span<spu::Value const> inputs,
++                                   SortDirection direction, int64_t num_keys,
++                                   int64_t valid_bits);
++
++std::vector<spu::Value> _apply_inv_perm_ss(SPUContext *ctx,
++                                           absl::Span<spu::Value const> x,
++                                           const spu::Value &perm);
++}  // namespace internal
++
+ // general sort1d with comparator
+ std::vector<spu::Value> sort1d(SPUContext *ctx,
+                                absl::Span<spu::Value const> inputs,

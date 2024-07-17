@@ -204,6 +204,33 @@ RightJoinIndex = {0,1,2,2,3} // shape:[K=5], rows after applied filter eq-join-l
 
 	{
 		opDef := &OperatorDef{}
+		opDef.SetName(OpNamePlainJoin)
+		opDef.AddInput("Left", "Left vector(shape [M][1])",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T1)
+		opDef.AddInput("Right", "Right vector(shape [N][1])",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T1)
+		opDef.AddOutput("LeftJoinIndex", "Joined rows index for left vector(shape [K][1])",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T2)
+		opDef.AddOutput("RightJoinIndex", "Joined rows index for right vector(shape [K][1])",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T2)
+		opDef.SetDefinition(`Definition: Create Join Index based on EQ-Join, return result's corresponding rows index in the original input.
+Example:
+` + "\n```python" + `
+// inner join example
+Left = {4,4,3,2,1} // shape:[M=5]
+Right = {1,3,4,5} // shape: [N=4]
+LeftJoinIndex = {4,2,0,1}  // shape:[K=4], rows after applied filter eq-join-list={1,3,4,4}
+RightJoinIndex = {0,1,2,2} // shape:[K=4], rows after applied filter eq-join-list={1,3,4,4}
+
+` + "```\n")
+		opDef.SetParamTypeConstraint(T1, statusPrivate)
+		opDef.SetParamTypeConstraint(T2, statusPrivate)
+		check(opDef.err)
+		AllOpDef = append(AllOpDef, opDef)
+	}
+
+	{
+		opDef := &OperatorDef{}
 		opDef.SetName(OpNameFilterByIndex)
 		opDef.AddInput("RowsIndexFilter", "Rows index filter vector(shape [K][1]).",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
@@ -551,6 +578,41 @@ Out = %s
 	}
 
 	{
+		type tmpl struct {
+			opName    string
+			aggResult string
+		}
+		for _, t := range []tmpl{
+			{opName: OpNameVerticalGroupSum, aggResult: `[{1, 3, 5, 9, 0}, {9, 8, 15, 21, 5}]`},
+			{opName: OpNameVerticalGroupCount, aggResult: `[{1, 1, 2, 3, 1}, {1, 1, 2, 3, 1}]`},
+			{opName: OpNameVerticalGroupMax, aggResult: `[{1, 3, 3, 4, 0}, {9, 8, 8, 8, 5}]`},
+			{opName: OpNameVerticalGroupMin, aggResult: `[{1, 3, 2, 2, 0}, {9, 8, 7, 6, 5}]`},
+			{opName: OpNameVerticalGroupAvg, aggResult: `[{1, 3, 2.5, 3, 0}, {9, 8, 7.5, 7, 5}]`},
+		} {
+			opDef := &OperatorDef{}
+			opDef.SetName(t.opName)
+			opDef.AddInput("Group",
+				"End of group indicator(shape [M][1]). Element 1 means the row is the last element of the group, 0 is not.",
+				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T1)
+			opDef.AddInput("In", "Values to be aggregated (shape [M][1]).",
+				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T2)
+			opDef.AddOutput("Out", "Partially aggregated values (shape [M][1]).",
+				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T2)
+			opDef.SetDefinition("Definition: partially aggregate `In` according to end of group indicator." + fmt.Sprintf(`
+Example:
+`+"\n```python"+`
+Group = {1, 0, 0, 1, 1}
+In = [{1, 3, 2, 4, 0}, {9, 8, 7, 6, 5}]
+Out = %s
+`, t.aggResult) + "```\n")
+			opDef.SetParamTypeConstraint(T1, statusPublic)
+			opDef.SetParamTypeConstraint(T2, statusSecret)
+			check(opDef.err)
+			AllOpDef = append(AllOpDef, opDef)
+		}
+	}
+
+	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameShuffle)
 		opDef.AddInput("In", "Input Value(shape [M][1]).",
@@ -841,6 +903,33 @@ Out = {0, 1, NULL}
 			check(opDef.err)
 			AllOpDef = append(AllOpDef, opDef)
 		}
+	}
+
+	{
+		opDef := &OperatorDef{}
+		opDef.SetName(OpNameReplicate)
+		opDef.AddInput("Left", "Left tensors to be replicated.",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.AddInput("Right", "Right tensors to be replicated.",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.AddOutput("LeftOut", "Left Output tensors.",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.AddOutput("RightOut", "Right Output tensors.",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.SetDefinition(`Replicate the Left with a given scale (rows of Right[0]) in interleaving way, when sending to the left party.
+And replicate the Right with a given scale (rows of Left[0]) in non-interleaving way, when sending to the right party.
+Output the replication result Out. Example:
+` + "\n```python" + `
+Left = {a, b, c, d} # i.e. scale = 4
+Right = {0, 1, 2} # i.e. scale = 3
+sending to the interleaving party:
+  LeftOut = {a, b, c, d, a, b, c, d, a, b, c, d}
+the other party:
+  RightOut = {0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2}
+` + "```\n")
+		opDef.SetParamTypeConstraint(T, statusPrivate)
+		check(opDef.err)
+		AllOpDef = append(AllOpDef, opDef)
 	}
 }
 

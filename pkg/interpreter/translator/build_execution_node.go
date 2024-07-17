@@ -183,8 +183,7 @@ func (t *translator) buildEQJoin(ln *JoinNode) (err error) {
 	}
 	left, right := ln.Children()[0], ln.Children()[1]
 
-	// step 1: create join index
-	var leftIndexT, rightIndexT *graph.Tensor
+	// get join key tensors
 	var leftTs = []*graph.Tensor{}
 	var rightTs = []*graph.Tensor{}
 	var parties []string
@@ -222,9 +221,80 @@ func (t *translator) buildEQJoin(ln *JoinNode) (err error) {
 		}
 	}
 
-	leftIndexT, rightIndexT, err = t.ep.AddJoinNode("join", leftTs, rightTs, parties, JoinTypeLpToEp[join.JoinType], t.CompileOpts.GetOptimizerHints().GetPsiAlgorithmType())
+	if t.CompileOpts.GetSecurityCompromise().GetJoinType() == 1 {
+		return t.buildSecretJoin(ln, parties)
+	}
+
+	if t.CompileOpts.GetSecurityCompromise().GetJoinType() == 2 {
+		return t.buildPlainJoin(ln, leftTs, rightTs, parties)
+	}
+
+	return t.buildPsiJoin(ln, leftTs, rightTs, parties, JoinTypeLpToEp[join.JoinType], t.CompileOpts.GetOptimizerHints().GetPsiAlgorithmType())
+}
+
+// TODO: add test in translator_ccl_input_for_test.go
+func (t *translator) buildPlainJoin(ln *JoinNode, leftTs, rightTs []*graph.Tensor, parties []string) (err error) {
+	// FIXME: default do plain join at partyies[0], remove this limitation later
+	leftParty := parties[0]
+	var new_rightTs = []*graph.Tensor{}
+	for _, rightT := range rightTs {
+		new_rightT, err := t.converter.convertTo(rightT, &privatePlacement{partyCode: leftParty})
+		if err != nil {
+			return fmt.Errorf("fail to convert right key to left: %v", err)
+		}
+		new_rightTs = append(new_rightTs, new_rightT)
+	}
+
+	// plain join
+	leftIndexT, rightIndexT, err := t.ep.AddPlainJoinNode("plainjoin", leftTs, new_rightTs, leftParty)
 	if err != nil {
-		return fmt.Errorf("buildEQJoin: %v", err)
+		return fmt.Errorf("buildPlainJoin: %v", err)
+	}
+
+	leftIndexT.CC, rightIndexT.CC = createCCLForIndexT(ln.childDataSourceParties)
+	rightIndexT.CC.SetLevelForParty(leftParty, ccl.Plain)
+	// apply join index
+	// record tensor id and tensor pointer in result table
+	resultIdToTensor := map[int64]*graph.Tensor{}
+	defer func() {
+		if err != nil {
+			return
+		}
+		err = setResultTable(ln, resultIdToTensor)
+	}()
+
+	{
+		left := ln.Children()[0]
+		leftTs := left.ResultTable()
+		leftParty := leftIndexT.OwnerPartyCode
+		leftFiltered, err := t.addFilterByIndexNode(leftIndexT, leftTs, leftParty)
+		if err != nil {
+			return fmt.Errorf("buildPsiJoin: %v", err)
+		}
+		for i, c := range left.Schema().Columns {
+			resultIdToTensor[c.UniqueID] = leftFiltered[i]
+		}
+	}
+	{
+		right := ln.Children()[1]
+		rightTs := right.ResultTable()
+		rightParty := rightIndexT.OwnerPartyCode
+		rightFiltered, err := t.addFilterByIndexNode(rightIndexT, rightTs, rightParty)
+		if err != nil {
+			return fmt.Errorf("buildPsiJoin: %v", err)
+		}
+		for i, c := range right.Schema().Columns {
+			resultIdToTensor[c.UniqueID] = rightFiltered[i]
+		}
+	}
+
+	return
+}
+
+func (t *translator) buildPsiJoin(ln *JoinNode, leftTs, rightTs []*graph.Tensor, parties []string, joinType int, psiType proto.PsiAlgorithmType) (err error) {
+	leftIndexT, rightIndexT, err := t.ep.AddJoinNode("join", leftTs, rightTs, parties, joinType, psiType)
+	if err != nil {
+		return fmt.Errorf("buildPsiJoin: %v", err)
 	}
 
 	leftIndexT.CC, rightIndexT.CC = createCCLForIndexT(ln.childDataSourceParties)
@@ -239,22 +309,24 @@ func (t *translator) buildEQJoin(ln *JoinNode) (err error) {
 	}()
 
 	{
+		left := ln.Children()[0]
 		leftTs := left.ResultTable()
 		leftParty := leftIndexT.OwnerPartyCode
 		leftFiltered, err := t.addFilterByIndexNode(leftIndexT, leftTs, leftParty)
 		if err != nil {
-			return fmt.Errorf("buildEQJoin: %v", err)
+			return fmt.Errorf("buildPsiJoin: %v", err)
 		}
 		for i, c := range left.Schema().Columns {
 			resultIdToTensor[c.UniqueID] = leftFiltered[i]
 		}
 	}
 	{
+		right := ln.Children()[1]
 		rightTs := right.ResultTable()
 		rightParty := rightIndexT.OwnerPartyCode
 		rightFiltered, err := t.addFilterByIndexNode(rightIndexT, rightTs, rightParty)
 		if err != nil {
-			return fmt.Errorf("buildEQJoin: %v", err)
+			return fmt.Errorf("buildPsiJoin: %v", err)
 		}
 		for i, c := range right.Schema().Columns {
 			resultIdToTensor[c.UniqueID] = rightFiltered[i]
@@ -262,6 +334,98 @@ func (t *translator) buildEQJoin(ln *JoinNode) (err error) {
 	}
 
 	return
+}
+
+func (t *translator) buildSecretJoin(ln *JoinNode, parties []string) error {
+	// cross join
+	left, right := ln.Children()[0], ln.Children()[1]
+	leftTs := left.ResultTable()
+	rightTs := right.ResultTable()
+	leftReplicated, rightReplicated, err := t.ep.AddReplicateNode("replicate", leftTs, rightTs)
+	if err != nil {
+		return fmt.Errorf("buildSecretJoin: %v", err)
+	}
+
+	// join key equation
+	join, ok := ln.lp.(*core.LogicalJoin)
+	if !ok {
+		return fmt.Errorf("assert failed while translator buildSecretJoin, expected: core.LogicalJoin, actual: %T", ln.lp)
+	}
+
+	var equalT *graph.Tensor
+	for i, equalCondition := range join.EqualConditions {
+		cols, err := extractEQColumns(equalCondition)
+		if err != nil {
+			return fmt.Errorf("buildEQJoin: %v", err)
+		}
+		leftIndexCol, rightIndexCol := cols[0], cols[1]
+		var leftKey, rightKey *graph.Tensor
+		for idx, col := range left.Schema().Columns {
+			if col.UniqueID == leftIndexCol.UniqueID {
+				leftKey = leftReplicated[idx]
+				break
+			}
+		}
+		for idx, col := range right.Schema().Columns {
+			if col.UniqueID == rightIndexCol.UniqueID {
+				rightKey = rightReplicated[idx]
+				break
+			}
+		}
+
+		if leftKey == nil || rightKey == nil {
+			return fmt.Errorf("buildSecretJoin: invalid join keys {%v,%v}, condition = %v", leftKey, rightKey, equalCondition)
+		}
+
+		// TODO: support multi input equations
+		tmpT, err := t.addBinaryNode(operator.OpNameEqual, operator.OpNameEqual, leftKey, rightKey)
+		if err != nil {
+			return fmt.Errorf("buildSecretJoin: build 'equal' for %v failed: %v", equalCondition, err)
+		}
+
+		if i == 0 {
+			equalT = tmpT
+		} else {
+			equalT, err = t.addBinaryNode(operator.OpNameLogicalAnd, operator.OpNameLogicalAnd, equalT, tmpT)
+			if err != nil {
+				return fmt.Errorf("buildSecretJoin:  build 'and' for %v failed: %v", equalCondition, err)
+			}
+		}
+	}
+
+	// filter
+	// FIXME(jingshi): 1) shuffle before make public for strict safety
+	//                 2) filter will reveal size of intersection, it should be configurable
+	for _, party := range t.enginesInfo.GetParties() {
+		equalT.CC.SetLevelForParty(party, ccl.Plain)
+	}
+	publicFilter, err := t.converter.convertTo(equalT, &publicPlacement{partyCodes: t.enginesInfo.GetParties()})
+	if err != nil {
+		return fmt.Errorf("buildSelection: %v", err)
+	}
+	leftFilted, err := t.ep.AddFilterNode("filter_cross_join", leftReplicated, publicFilter, []string{parties[0]})
+	if err != nil {
+		return fmt.Errorf("buildSecretJoin: filter left failed: %v", err)
+	}
+	rightFilted, err := t.ep.AddFilterNode("filter_cross_join", rightReplicated, publicFilter, []string{parties[1]})
+	if err != nil {
+		return fmt.Errorf("buildSecretJoin: filter right failed: %v", err)
+	}
+
+	// set result
+	resultIdToTensor := map[int64]*graph.Tensor{}
+	for i, c := range left.Schema().Columns {
+		resultIdToTensor[c.UniqueID] = leftFilted[i]
+	}
+	for i, c := range right.Schema().Columns {
+		resultIdToTensor[c.UniqueID] = rightFilted[i]
+	}
+
+	if err := setResultTable(ln, resultIdToTensor); err != nil {
+		return fmt.Errorf("buildSecretJoin: set result table: %v", err)
+	}
+
+	return nil
 }
 
 func createCCLForIndexT(childDataSourceParties [][]string) (left *ccl.CCL, right *ccl.CCL) {
@@ -811,6 +975,36 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 		sortKeys = append(sortKeys, sortKey)
 	}
 
+	freeTensorExist := false
+	if t.CompileOpts.GetSecurityCompromise().GetAggType() == 1 {
+		var freeTensor *graph.Tensor
+		for _, aggFunc := range agg.AggFuncs {
+			switch aggFunc.Name {
+			case ast.AggFuncMax, ast.AggFuncMin:
+				if freeTensor == nil {
+					freeTensor, err = t.buildExpression(aggFunc.Args[0], childColIdToTensor, false, ln)
+					if err != nil {
+						return fmt.Errorf("buildObliviousGroupAggregation: build free tensor failed: %v", err)
+					}
+				} else {
+					// FIXME: support more than one vertical group agg, only allow one free column temporarily
+					return fmt.Errorf("buildObliviousGroupAggregation: multi-column max/min not supported yet")
+				}
+			}
+		}
+
+		if freeTensor != nil && freeTensor.OwnerPartyCode != "" {
+			// insert freeTensor to the end of sortKeys
+			// FIXME: tricky, assuming the group by keys is in order of party
+			if sortKeys[len(sortKeys)-1].OwnerPartyCode == freeTensor.OwnerPartyCode {
+				freeTensorExist = true
+				sortKeys = append(sortKeys, freeTensor)
+			} else {
+				return fmt.Errorf("buildObliviousGroupAggregation: freeTensor can not merged to the end")
+			}
+		}
+	}
+
 	var sortPayload []*graph.Tensor
 	sortPayload = append(sortPayload, sortKeys...)
 	// TODO(jingshi): remove duplicated payload
@@ -821,6 +1015,9 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 		return fmt.Errorf("buildObliviousGroupAggregation: sort with groupIds err: %v", err)
 	}
 	sortedKeys := out[0:len(sortKeys)]
+	if freeTensorExist {
+		sortedKeys = sortedKeys[:len(sortedKeys)-1]
+	}
 	sortedTensors := out[len(sortKeys):]
 	sortedChildColIdToTensor := map[int64]*graph.Tensor{}
 	for i, tensor := range sortedTensors {
@@ -833,133 +1030,250 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 		return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 	}
 
-	// add agg funcs
 	colIdToTensor := map[int64]*graph.Tensor{}
-	for i, aggFunc := range agg.AggFuncs {
-		if len(aggFunc.Args) != 1 {
-			return fmt.Errorf("buildObliviousGroupAggregation: unsupported aggregation function %v", aggFunc)
+	// build vertical agg
+	if t.CompileOpts.GetSecurityCompromise().GetAggType() == 1 {
+		for _, p := range t.enginesInfo.GetParties() {
+			groupMark.CC.SetLevelForParty(p, ccl.Plain)
 		}
-		switch aggFunc.Name {
-		case ast.AggFuncFirstRow:
-			colT, err := t.buildExpression(aggFunc.Args[0], sortedChildColIdToTensor, false, ln)
-			if err != nil {
-				return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
-			}
-			colIdToTensor[ln.Schema().Columns[i].UniqueID] = colT
-		case ast.AggFuncSum, ast.AggFuncMax, ast.AggFuncMin, ast.AggFuncAvg:
-			// check arg type
-			if aggFunc.Args[0].GetType().EvalType() == types.ETString {
-				return fmt.Errorf("buildAggregation: unsupported aggregation function %s with a string type argument", aggFunc.Name)
-			}
-			colT, err := t.buildExpression(aggFunc.Args[0], sortedChildColIdToTensor, false, ln)
-			if err != nil {
-				return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
-			}
-			output, err := t.addObliviousGroupAggNode(aggFunc.Name, groupMark, colT)
-			if err != nil {
-				return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
-			}
-			output.SkipDTypeCheck = true
-			colIdToTensor[ln.Schema().Columns[i].UniqueID] = output
-		case ast.AggFuncCount:
-			// NOTE(yang.y): There are two mode for count function.
-			// - The CompleteMode is the default mode in queries like `select count(*) from t`.
-			//   In this mode, count function should be translated to ObliviousGroupCount.
-			// - The FinalMode appears at `select count(*) from (t1 union all t2)`.
-			//   The aggregation push down optimizer will rewrite the query plan to
-			//   `select count_final(*) from (select count(*) from t1 union all select count(*) from t2)`.
-			//   In this mode, count function will be translated to ObliviousGroupSum.
-			// do complete count
-			// sum up partial count
-			var output *graph.Tensor
-			switch aggFunc.Mode {
-			case aggregation.CompleteMode:
-				if aggFunc.HasDistinct {
-					colT, err := t.buildExpression(aggFunc.Args[0], sortedChildColIdToTensor, false, ln)
-					if err != nil {
-						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
-					}
-					// Sort with group by key(maybe keyTs or groupIds) and distinct column.
-					// Please note that group by key is the major sort key,
-					// so the groupMark is still valid.
-					var keyAndDistinct []*graph.Tensor
-					keyAndDistinct = append(keyAndDistinct, sortedKeys...)
-					keyAndDistinct = append(keyAndDistinct, colT)
 
-					// TODO(jingshi): using free column to avoid sort if possible
-					sortedDistinctCol, err := t.addSortNode("sort", keyAndDistinct, []*graph.Tensor{colT})
-					if err != nil {
-						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
-					}
-					// Use group by keys and distinctCol to create groupMarkFull,
-					// which is equivalent to the result of groupMark logic or groupMarkDistinct
-					groupMarkDistinct, err := t.addObliviousGroupMarkNode("group_mark", sortedDistinctCol)
-					if err != nil {
-						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
-					}
-					groupMarkFull, err := t.addBinaryNode(operator.OpNameLogicalOr, operator.OpNameLogicalOr, groupMark, groupMarkDistinct)
-					if err != nil {
-						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
-					}
-
-					output, err = t.addObliviousGroupAggNode(ast.AggFuncSum, groupMark, groupMarkFull)
-					if err != nil {
-						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
-					}
-				} else {
-					output, err = t.addObliviousGroupAggNode(ast.AggFuncCount, groupMark, groupMark)
-					if err != nil {
-						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
-					}
-				}
-			case aggregation.FinalMode:
-				switch x := aggFunc.Args[0].(type) {
-				case *expression.Column:
-					colT := sortedChildColIdToTensor[x.UniqueID]
-					output, err = t.addObliviousGroupAggNode(ast.AggFuncSum, groupMark, colT)
-					if err != nil {
-						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
-					}
-				default:
-					return fmt.Errorf("buildObliviousGroupAggregation: unsupported aggregation function %v", aggFunc)
-				}
-			default:
-				return fmt.Errorf("buildObliviousGroupAggregation: unrecognized count func mode %v", aggFunc.Mode)
-			}
-			colIdToTensor[ln.Schema().Columns[i].UniqueID] = output
-		default:
-			return fmt.Errorf("buildObliviousGroupAggregation: unsupported aggregation function %v", aggFunc)
-		}
-	}
-	rt, err := extractResultTable(ln, colIdToTensor)
-	if err != nil {
-		return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
-	}
-
-	// TODO(jingshi): temporary remove shuffle here for simplicity, make group_mark public and support aggregation with public group_mark later for efficiency
-	if !t.CompileOpts.GetSecurityCompromise().GetRevealGroupMark() {
-		// shuffle and replace 'rt' and 'groupMark'
-		shuffled, err := t.addShuffleNode("shuffle", append(rt, groupMark))
+		groupMarkPub, err := t.converter.convertTo(groupMark, &publicPlacement{partyCodes: t.enginesInfo.GetParties()})
 		if err != nil {
 			return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 		}
-		rt, groupMark = shuffled[:len(rt)], shuffled[len(rt)]
-	}
 
-	// set ccl plain if enabled revealGroupMark or after groupMark shuffled
-	for _, p := range t.enginesInfo.GetParties() {
-		groupMark.CC.SetLevelForParty(p, ccl.Plain)
+		for i, aggFunc := range agg.AggFuncs {
+			if len(aggFunc.Args) != 1 {
+				return fmt.Errorf("buildObliviousGroupAggregation: unsupported aggregation function %v", aggFunc)
+			}
+			switch aggFunc.Name {
+			case ast.AggFuncFirstRow:
+				colT, err := t.buildExpression(aggFunc.Args[0], sortedChildColIdToTensor, false, ln)
+				if err != nil {
+					return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+				}
+				partyCodes := t.enginesInfo.GetParties()
+				if colT.Status() == proto.TensorStatus_TENSORSTATUS_PRIVATE {
+					partyCodes = []string{colT.OwnerPartyCode}
+				}
+				colFilted, err := t.ep.AddFilterNode("filter", []*graph.Tensor{colT}, groupMarkPub, partyCodes)
+				if err != nil {
+					return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+				}
+				colIdToTensor[ln.Schema().Columns[i].UniqueID] = colFilted[0]
+
+			case ast.AggFuncSum, ast.AggFuncAvg, ast.AggFuncMax, ast.AggFuncMin:
+				if aggFunc.Args[0].GetType().EvalType() == types.ETString {
+					return fmt.Errorf("buildAggregation: unsupported aggregation function %s with a string type argument", aggFunc.Name)
+				}
+				colT, err := t.buildExpression(aggFunc.Args[0], sortedChildColIdToTensor, false, ln)
+				if err != nil {
+					return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+				}
+				output, err := t.AddVerticalGroupAggNode(aggFunc.Name, groupMarkPub, colT)
+				if err != nil {
+					return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+				}
+				output.SkipDTypeCheck = true
+				colIdToTensor[ln.Schema().Columns[i].UniqueID] = output
+
+			case ast.AggFuncCount:
+				var output *graph.Tensor
+				switch aggFunc.Mode {
+				case aggregation.CompleteMode:
+					if aggFunc.HasDistinct {
+						colT, err := t.buildExpression(aggFunc.Args[0], sortedChildColIdToTensor, false, ln)
+						if err != nil {
+							return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+						}
+						// Sort with group by key(maybe keyTs or groupIds) and distinct column.
+						// Please note that group by key is the major sort key,
+						// so the groupMark is still valid.
+						var keyAndDistinct []*graph.Tensor
+						keyAndDistinct = append(keyAndDistinct, sortedKeys...)
+						keyAndDistinct = append(keyAndDistinct, colT)
+
+						// TODO(jingshi): using free column to avoid sort if possible
+						sortedDistinctCol, err := t.addSortNode("sort", keyAndDistinct, []*graph.Tensor{colT})
+						if err != nil {
+							return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+						}
+						// Use group by keys and distinctCol to create groupMarkFull,
+						// which is equivalent to the result of groupMark logic or groupMarkDistinct
+						groupMarkDistinct, err := t.addObliviousGroupMarkNode("group_mark", sortedDistinctCol)
+						if err != nil {
+							return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+						}
+						groupMarkFull, err := t.addBinaryNode(operator.OpNameLogicalOr, operator.OpNameLogicalOr, groupMark, groupMarkDistinct)
+						if err != nil {
+							return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+						}
+
+						output, err = t.AddVerticalGroupAggNode(ast.AggFuncSum, groupMarkPub, groupMarkFull)
+						if err != nil {
+							return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+						}
+					} else {
+						output, err = t.AddVerticalGroupAggNode(ast.AggFuncCount, groupMarkPub, groupMark)
+						if err != nil {
+							return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+						}
+					}
+
+				case aggregation.FinalMode:
+					switch x := aggFunc.Args[0].(type) {
+					case *expression.Column:
+						colT := sortedChildColIdToTensor[x.UniqueID]
+						output, err = t.AddVerticalGroupAggNode(ast.AggFuncSum, groupMarkPub, colT)
+						if err != nil {
+							return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+						}
+					default:
+						return fmt.Errorf("buildObliviousGroupAggregation: unsupported aggregation function %v", aggFunc)
+					}
+
+				default:
+					return fmt.Errorf("buildObliviousGroupAggregation: unrecognized count func mode %v", aggFunc.Mode)
+				}
+				colIdToTensor[ln.Schema().Columns[i].UniqueID] = output
+			default:
+				return fmt.Errorf("buildObliviousGroupAggregation: unsupported aggregation function %v", aggFunc)
+			}
+		}
+
+		rt, err := extractResultTable(ln, colIdToTensor)
+		if err != nil {
+			return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+		}
+		return ln.SetResultTableWithDTypeCheck(rt)
+	} else {
+		// build oblivious agg
+		for i, aggFunc := range agg.AggFuncs {
+			if len(aggFunc.Args) != 1 {
+				return fmt.Errorf("buildObliviousGroupAggregation: unsupported aggregation function %v", aggFunc)
+			}
+			switch aggFunc.Name {
+			case ast.AggFuncFirstRow:
+				colT, err := t.buildExpression(aggFunc.Args[0], sortedChildColIdToTensor, false, ln)
+				if err != nil {
+					return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+				}
+				colIdToTensor[ln.Schema().Columns[i].UniqueID] = colT
+			case ast.AggFuncSum, ast.AggFuncMax, ast.AggFuncMin, ast.AggFuncAvg:
+				// check arg type
+				if aggFunc.Args[0].GetType().EvalType() == types.ETString {
+					return fmt.Errorf("buildAggregation: unsupported aggregation function %s with a string type argument", aggFunc.Name)
+				}
+				colT, err := t.buildExpression(aggFunc.Args[0], sortedChildColIdToTensor, false, ln)
+				if err != nil {
+					return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+				}
+				output, err := t.addObliviousGroupAggNode(aggFunc.Name, groupMark, colT)
+				if err != nil {
+					return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+				}
+				output.SkipDTypeCheck = true
+				colIdToTensor[ln.Schema().Columns[i].UniqueID] = output
+			case ast.AggFuncCount:
+				// NOTE(yang.y): There are two mode for count function.
+				// - The CompleteMode is the default mode in queries like `select count(*) from t`.
+				//   In this mode, count function should be translated to ObliviousGroupCount.
+				// - The FinalMode appears at `select count(*) from (t1 union all t2)`.
+				//   The aggregation push down optimizer will rewrite the query plan to
+				//   `select count_final(*) from (select count(*) from t1 union all select count(*) from t2)`.
+				//   In this mode, count function will be translated to ObliviousGroupSum.
+				// do complete count
+				// sum up partial count
+				var output *graph.Tensor
+				switch aggFunc.Mode {
+				case aggregation.CompleteMode:
+					if aggFunc.HasDistinct {
+						colT, err := t.buildExpression(aggFunc.Args[0], sortedChildColIdToTensor, false, ln)
+						if err != nil {
+							return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+						}
+						// Sort with group by key(maybe keyTs or groupIds) and distinct column.
+						// Please note that group by key is the major sort key,
+						// so the groupMark is still valid.
+						var keyAndDistinct []*graph.Tensor
+						keyAndDistinct = append(keyAndDistinct, sortedKeys...)
+						keyAndDistinct = append(keyAndDistinct, colT)
+
+						// TODO(jingshi): using free column to avoid sort if possible
+						sortedDistinctCol, err := t.addSortNode("sort", keyAndDistinct, []*graph.Tensor{colT})
+						if err != nil {
+							return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+						}
+						// Use group by keys and distinctCol to create groupMarkFull,
+						// which is equivalent to the result of groupMark logic or groupMarkDistinct
+						groupMarkDistinct, err := t.addObliviousGroupMarkNode("group_mark", sortedDistinctCol)
+						if err != nil {
+							return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+						}
+						groupMarkFull, err := t.addBinaryNode(operator.OpNameLogicalOr, operator.OpNameLogicalOr, groupMark, groupMarkDistinct)
+						if err != nil {
+							return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+						}
+
+						output, err = t.addObliviousGroupAggNode(ast.AggFuncSum, groupMark, groupMarkFull)
+						if err != nil {
+							return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+						}
+					} else {
+						output, err = t.addObliviousGroupAggNode(ast.AggFuncCount, groupMark, groupMark)
+						if err != nil {
+							return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+						}
+					}
+				case aggregation.FinalMode:
+					switch x := aggFunc.Args[0].(type) {
+					case *expression.Column:
+						colT := sortedChildColIdToTensor[x.UniqueID]
+						output, err = t.addObliviousGroupAggNode(ast.AggFuncSum, groupMark, colT)
+						if err != nil {
+							return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+						}
+					default:
+						return fmt.Errorf("buildObliviousGroupAggregation: unsupported aggregation function %v", aggFunc)
+					}
+				default:
+					return fmt.Errorf("buildObliviousGroupAggregation: unrecognized count func mode %v", aggFunc.Mode)
+				}
+				colIdToTensor[ln.Schema().Columns[i].UniqueID] = output
+			default:
+				return fmt.Errorf("buildObliviousGroupAggregation: unsupported aggregation function %v", aggFunc)
+			}
+		}
+		rt, err := extractResultTable(ln, colIdToTensor)
+		if err != nil {
+			return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+		}
+
+		// TODO(jingshi): temporary remove shuffle here for simplicity, make group_mark public and support aggregation with public group_mark later for efficiency
+		if !t.CompileOpts.GetSecurityCompromise().GetRevealGroupMark() {
+			// shuffle and replace 'rt' and 'groupMark'
+			shuffled, err := t.addShuffleNode("shuffle", append(rt, groupMark))
+			if err != nil {
+				return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+			}
+			rt, groupMark = shuffled[:len(rt)], shuffled[len(rt)]
+		}
+
+		// set ccl plain if enabled revealGroupMark or after groupMark shuffled
+		for _, p := range t.enginesInfo.GetParties() {
+			groupMark.CC.SetLevelForParty(p, ccl.Plain)
+		}
+		groupMarkPub, err := t.converter.convertTo(groupMark, &publicPlacement{partyCodes: t.enginesInfo.GetParties()})
+		if err != nil {
+			return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+		}
+		// filter
+		rtFiltered, err := t.ep.AddFilterNode("filter", rt, groupMarkPub, t.enginesInfo.GetParties())
+		if err != nil {
+			return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+		}
+		return ln.SetResultTableWithDTypeCheck(rtFiltered)
 	}
-	groupMarkPub, err := t.converter.convertTo(groupMark, &publicPlacement{partyCodes: t.enginesInfo.GetParties()})
-	if err != nil {
-		return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
-	}
-	// filter
-	rtFiltered, err := t.ep.AddFilterNode("filter", rt, groupMarkPub, t.enginesInfo.GetParties())
-	if err != nil {
-		return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
-	}
-	return ln.SetResultTableWithDTypeCheck(rtFiltered)
 }
 
 func (t *translator) buildUnion(ln *UnionAllNode) (err error) {
@@ -1057,7 +1371,9 @@ func isHeSuitable(aggFunc *aggregation.AggFuncDesc, cc *ccl.CCL) bool {
 	switch aggFunc.Name {
 	case ast.AggFuncSum:
 		parties := cc.GetVisibleParties()
-		return len(parties) > 0
+		// return len(parties) > 0
+		// FIXME(VLDB): temporary disable he sum to test oblivious sum aggregation, fix later
+		return len(parties) > 0 && false
 	default:
 		return false
 	}

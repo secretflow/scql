@@ -425,7 +425,8 @@ func (a *aggregationPushDownSolver) MarkAggCountFunc(p LogicalPlan) error {
 			break
 		}
 	}
-	if !hasCount {
+	// FIXME(VLDB): temporary disable adding additional count agg, fix later
+	if !hasCount && false {
 		countFunc, err := aggregation.NewAggFuncDesc(agg.ctx, ast.AggFuncCount, []expression.Expression{expression.One}, false)
 		if err != nil {
 			return err

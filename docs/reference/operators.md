@@ -1916,6 +1916,46 @@ Out = {21}
 
 
 
+### `Replicate`
+
+Replicate the Left with a given scale (rows of Right[0]) in interleaving way, when sending to the left party.
+And replicate the Right with a given scale (rows of Left[0]) in non-interleaving way, when sending to the right party.
+Output the replication result Out. Example:
+
+```python
+Left = {a, b, c, d} # i.e. scale = 4
+Right = {0, 1, 2} # i.e. scale = 3
+sending to the interleaving party:
+  LeftOut = {a, b, c, d, a, b, c, d, a, b, c, d}
+the other party:
+  RightOut = {0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2}
+```
+
+
+**Inputs:**
+
+1. `Left`(variadic, T): Left tensors to be replicated.
+
+1. `Right`(variadic, T): Right tensors to be replicated.
+
+
+**Outputs:**
+
+1. `LeftOut`(variadic, T): Left Output tensors.
+
+1. `RightOut`(variadic, T): Right Output tensors.
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: private
+
+
+
 ### `RunSQL`
 
 Definition: Run a SQL statement and return a list of tensors in private status  

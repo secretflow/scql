@@ -43,13 +43,16 @@
 #include "engine/operator/make_share.h"
 #include "engine/operator/oblivious_group_agg.h"
 #include "engine/operator/oblivious_group_mark.h"
+#include "engine/operator/plain_join.h"
 #include "engine/operator/publish.h"
 #include "engine/operator/reduce.h"
+#include "engine/operator/replicate.h"
 #include "engine/operator/run_sql.h"
 #include "engine/operator/shape.h"
 #include "engine/operator/shuffle.h"
 #include "engine/operator/sort.h"
 #include "engine/operator/unique.h"
+#include "engine/operator/vertical_group_agg.h"
 
 #ifndef ADD_OPERATOR_TO_REGISTRY
 #define ADD_OPERATOR_TO_REGISTRY(op_type)                                \
@@ -72,6 +75,7 @@ void RegisterAllOpsImpl() {
   ADD_OPERATOR_TO_REGISTRY(DumpFile);
 
   ADD_OPERATOR_TO_REGISTRY(Join);
+  ADD_OPERATOR_TO_REGISTRY(PlainJoin);
   ADD_OPERATOR_TO_REGISTRY(FilterByIndex);
 
   ADD_OPERATOR_TO_REGISTRY(In);
@@ -135,8 +139,16 @@ void RegisterAllOpsImpl() {
   ADD_OPERATOR_TO_REGISTRY(ObliviousGroupMax);
   ADD_OPERATOR_TO_REGISTRY(ObliviousGroupMin);
 
+  // vertical groupby
+  ADD_OPERATOR_TO_REGISTRY(VerticalGroupSum);
+  ADD_OPERATOR_TO_REGISTRY(VerticalGroupCount);
+  ADD_OPERATOR_TO_REGISTRY(VerticalGroupAvg);
+  ADD_OPERATOR_TO_REGISTRY(VerticalGroupMax);
+  ADD_OPERATOR_TO_REGISTRY(VerticalGroupMin);
+
   ADD_OPERATOR_TO_REGISTRY(Concat);
   ADD_OPERATOR_TO_REGISTRY(Cast);
+  ADD_OPERATOR_TO_REGISTRY(Replicate);
   ADD_OPERATOR_TO_REGISTRY(If);
   ADD_OPERATOR_TO_REGISTRY(IfNull);
   ADD_OPERATOR_TO_REGISTRY(IsNull);

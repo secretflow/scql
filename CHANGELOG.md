@@ -14,28 +14,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 `Fixed` for any bug fixes.
 `Security` in case of vulnerabilities.
 
-
 ## Staging
-
-### Added
-
-### Changed
-
-### Fixed
-
-## [0.8.0] - 2024-06-12
 
 ### Added
 
 - Enhanced `FetchResult` RPC and `brokerctl get result` command to report job progress when result is not ready.
 - Support project/query level configs
-- Support NULL for private data: including Arithmetic, Logic, Aggregation, etc., {IS [NOT] NULL, IFNULL, COALESCE} are also supported.
-- Support port isolation for engine link service and control panel service (RunExecutionPlan).
-- Add new CCL constraint `PLAINTEXT_AS_JOIN_PAYLOAD`.
 
 ### Changed
 
 - **breaking**: The response value type of Broker API `DoQuery` and `FetchResult` have incompatible changes.
+- Support NULL for private data: including Arithmetic, Logic, Aggregation, etc., {IS [NOT] NULL, IFNULL, COALESCE} are also supported.
+- Support port isolation for engine link service and control panel.
 
 ### Fixed
 

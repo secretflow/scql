@@ -13,13 +13,6 @@ Secure Collaborative Query Language (SCQL) is a system that translates SQL state
 
 
 
-
-## Docker Image Release
-
-- Official release docker image: [secretflow/scql](https://hub.docker.com/r/secretflow/scql/tags) 
-- We also have mirrors at Alibaba Cloud: secretflow-registry.cn-hangzhou.cr.aliyuncs.com/secretflow/scql:[tag] 
-
-
 ## Contribution Guidelines
 
 If you would like to contribute to SCQL, please see the [Contribution guidelines](CONTRIBUTING.md).

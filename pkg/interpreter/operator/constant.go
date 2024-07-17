@@ -23,6 +23,7 @@ const (
 	OpNameMakePublic    string = "MakePublic"
 	OpNameFilterByIndex string = "FilterByIndex"
 	OpNameJoin          string = "Join"
+	OpNamePlainJoin     string = "PlainJoin"
 	OpNameRunSQL        string = "RunSQL"
 	OpNamePublish       string = "Publish"
 	OpNameDumpFile      string = "DumpFile"
@@ -81,6 +82,11 @@ const (
 	OpNameObliviousGroupMax   string = "ObliviousGroupMax"
 	OpNameObliviousGroupMin   string = "ObliviousGroupMin"
 	OpNameObliviousGroupAvg   string = "ObliviousGroupAvg"
+	OpNameVerticalGroupSum    string = "VerticalGroupSum"
+	OpNameVerticalGroupMax    string = "VerticalGroupMax"
+	OpNameVerticalGroupMin    string = "VerticalGroupMin"
+	OpNameVerticalGroupAvg    string = "VerticalGroupAvg"
+	OpNameVerticalGroupCount  string = "VerticalGroupCount"
 	OpNameShuffle             string = "Shuffle"
 	// union all
 	OpNameConcat string = "Concat"
@@ -132,6 +138,14 @@ var ObliviousGroupAggOp = map[string]string{
 	ast.AggFuncMin:   OpNameObliviousGroupMin,
 	ast.AggFuncAvg:   OpNameObliviousGroupAvg,
 	ast.AggFuncCount: OpNameObliviousGroupCount,
+}
+
+var VerticalGroupAggOp = map[string]string{
+	ast.AggFuncSum:   OpNameVerticalGroupSum,
+	ast.AggFuncMax:   OpNameVerticalGroupMax,
+	ast.AggFuncMin:   OpNameVerticalGroupMin,
+	ast.AggFuncAvg:   OpNameVerticalGroupAvg,
+	ast.AggFuncCount: OpNameVerticalGroupCount,
 }
 
 var GroupAggOp = map[string]string{
