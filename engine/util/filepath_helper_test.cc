@@ -22,25 +22,32 @@
 
 namespace scql::engine::util {
 
-TEST(FilePathTest, GetAbsolutePath) {
+TEST(FilePathTest, CheckAndGetAbsolutePath) {
   std::string path = "/data/test.file";
-  EXPECT_EQ(path, GetAbsolutePath(path, false, "null"));
+  EXPECT_EQ(path, CheckAndGetAbsolutePath(path, false, "null"));
 
-  EXPECT_EQ(path, GetAbsolutePath(path, true, "/data"));
-  EXPECT_THROW(GetAbsolutePath(path, true, "/another_dir"),
+  EXPECT_EQ(path, CheckAndGetAbsolutePath(path, true, "/data"));
+  EXPECT_THROW(CheckAndGetAbsolutePath(path, true, "/another_dir"),
                yacl::EnforceNotMet);
-  EXPECT_THROW(GetAbsolutePath(path, true, ""), yacl::EnforceNotMet);
+  EXPECT_THROW(CheckAndGetAbsolutePath(path, true, ""), yacl::EnforceNotMet);
 
   std::string current_path = std::filesystem::current_path().string();
   EXPECT_EQ(current_path + "/test.file",
-            GetAbsolutePath("./test.file", false, ""));
+            CheckAndGetAbsolutePath("./test.file", false, ""));
 
   EXPECT_EQ(current_path + "/data/test.file",
-            GetAbsolutePath("./data/test.file", true, "./data"));
-  EXPECT_THROW(GetAbsolutePath("./data/../other_dir/test.file", true, "./data"),
-               yacl::EnforceNotMet);
-  EXPECT_THROW(GetAbsolutePath("../other_dir/test.file", true, "./data"),
-               yacl::EnforceNotMet);
+            CheckAndGetAbsolutePath("./data/test.file", true, "./data"));
+  EXPECT_THROW(
+      CheckAndGetAbsolutePath("./data/../other_dir/test.file", true, "./data"),
+      yacl::EnforceNotMet);
+  EXPECT_THROW(
+      CheckAndGetAbsolutePath("../other_dir/test.file", true, "./data"),
+      yacl::EnforceNotMet);
+
+  // test s3 file
+  EXPECT_EQ(
+      "bucket/dir2/test.file",
+      CheckAndGetAbsolutePath("bucket/dir/../dir2/test.file", true, "bucket"));
 }
 
 }  // namespace scql::engine::util

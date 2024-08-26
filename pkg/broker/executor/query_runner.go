@@ -354,8 +354,6 @@ func (r *QueryRunner) CreateExecutor(plan *pb.CompiledPlan) (*executor.Executor,
 		PubKey:    myPubKey,
 	}
 
-	partyInfo := graph.NewPartyInfo([]*graph.Participant{myself})
-
 	engineStub := executor.NewEngineStub(
 		session.ExecuteInfo.JobID,
 		conf.IntraServer.Protocol,
@@ -364,7 +362,6 @@ func (r *QueryRunner) CreateExecutor(plan *pb.CompiledPlan) (*executor.Executor,
 		session.ExecuteInfo.EngineClient,
 		conf.Engine.Protocol,
 		conf.Engine.ContentType,
-		partyInfo,
 	)
 
 	// p2p: party code who is not issuer doesn't have output tensors

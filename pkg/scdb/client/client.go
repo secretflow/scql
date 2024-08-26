@@ -91,7 +91,7 @@ func (c *Client) Submit(user *scql.SCDBCredential, sql string) (*scql.SCDBSubmit
 	}
 	defer resp.Body.Close()
 	response := &scql.SCDBSubmitResponse{}
-	_, err = message.DeserializeFrom(resp.Body, response)
+	_, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-Type"))
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func (c *Client) SubmitAndGet(user *scql.SCDBCredential, sql string) (*scql.SCDB
 	}
 	defer resp.Body.Close()
 	response := &scql.SCDBQueryResultResponse{}
-	_, err = message.DeserializeFrom(resp.Body, response)
+	_, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-Type"))
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +160,7 @@ func (c *Client) FetchOnce(user *scql.SCDBCredential, sessionId string) (*scql.S
 	}
 	defer resp.Body.Close()
 	response := &scql.SCDBQueryResultResponse{}
-	if _, err = message.DeserializeFrom(resp.Body, response); err != nil {
+	if _, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-Type")); err != nil {
 		return nil, err
 	}
 	return response, nil

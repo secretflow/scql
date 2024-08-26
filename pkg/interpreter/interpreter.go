@@ -22,6 +22,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/secretflow/scql/pkg/infoschema"
 	"github.com/secretflow/scql/pkg/interpreter/graph"
 	"github.com/secretflow/scql/pkg/interpreter/graph/optimizer"
@@ -77,11 +79,26 @@ func (intr *Interpreter) Compile(ctx context.Context, req *pb.CompileQueryReques
 	if err != nil {
 		return nil, err
 	}
+	plan, err := intr.compileCore(enginesInfo, req, lp, false)
+	if err != nil {
+		// Because streaming mode has not been fully implemented, if compiling fails, using non-streaming mode instead
+		plan, err = intr.compileCore(enginesInfo, req, lp, true)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return plan, nil
+}
+
+func (*Interpreter) compileCore(enginesInfo *graph.EnginesInfo, req *pb.CompileQueryRequest, lp core.LogicalPlan, forceToUnBatched bool) (*pb.CompiledPlan, error) {
 	t, err := translator.NewTranslator(enginesInfo, req.GetSecurityConf(), req.GetIssuer().GetCode(), req.GetCompileOpts())
 	if err != nil {
 		return nil, err
 	}
-
+	if forceToUnBatched {
+		t.CompileOpts.Batched = false
+	}
 	ep, err := t.Translate(lp)
 	if err != nil {
 		return nil, err
@@ -97,24 +114,24 @@ func (intr *Interpreter) Compile(ctx context.Context, req *pb.CompileQueryReques
 		return nil, err
 	}
 
-	mapper := optimizer.NewGraphMapper(ep, partitioner.SubDAGs)
+	mapper := optimizer.NewGraphMapper(ep, partitioner.Pipelines)
 	mapper.Map()
 
+	graphvizOutput := ep.DumpGraphviz()
 	plan := buildCompiledPlan(req.GetCompileOpts().GetSpuConf(), ep, mapper.Codes)
 	if req.GetCompileOpts().GetDumpExeGraph() {
 		plan.Explain = &pb.ExplainInfo{
-			ExeGraphDot: ep.DumpGraphviz(),
+			ExeGraphDot: graphvizOutput,
 		}
 	}
 	// calculate whole graph checksum
 	tableSchemaCrypt := sha256.New()
-	tableSchemaCrypt.Write([]byte(ep.DumpGraphviz()))
+	tableSchemaCrypt.Write([]byte(graphvizOutput))
 	plan.WholeGraphChecksum = fmt.Sprintf("%x", tableSchemaCrypt.Sum(nil))
 
 	plan.Warning = &pb.Warning{
 		MayAffectedByGroupThreshold: t.AffectedByGroupThreshold,
 	}
-
 	return plan, nil
 }
 
@@ -147,7 +164,6 @@ func buildCompiledPlan(spuConf *spu.RuntimeConfig, eGraph *graph.Graph, execPlan
 				Nodes: make(map[string]*pb.ExecNode),
 				Policy: &pb.SchedulingPolicy{
 					WorkerNum: int32(subGraph.Policy.WorkerNumber),
-					Subdags:   make([]*pb.SubDAG, 0),
 				},
 			}
 			// Fill Nodes
@@ -155,29 +171,44 @@ func buildCompiledPlan(spuConf *spu.RuntimeConfig, eGraph *graph.Graph, execPlan
 				graphProto.Nodes[strconv.Itoa(k)] = v.ToProto()
 			}
 			// Fill Policy subdags
-			for _, job := range subGraph.Policy.Jobs {
-				subdag := &pb.SubDAG{
-					Jobs:                     make([]*pb.SubDAG_Job, 0),
-					NeedCallBarrierAfterJobs: job.NeedCallBarrierAfterJobs,
-				}
-				for k, v := range job.Jobs {
-					var ids []string
-					for _, id := range v {
-						ids = append(ids, strconv.Itoa(id))
+			for _, pipelineJobs := range subGraph.Policy.PipelineJobs {
+				pipeline := &pb.Pipeline{}
+				for _, job := range pipelineJobs.Jobs {
+					subdag := &pb.SubDAG{
+						Jobs:                     make([]*pb.SubDAG_Job, 0),
+						NeedCallBarrierAfterJobs: job.NeedCallBarrierAfterJobs,
 					}
+					for k, v := range job.Jobs {
+						var ids []string
+						for _, id := range v {
+							ids = append(ids, strconv.Itoa(id))
+						}
 
-					j := &pb.SubDAG_Job{
-						WorkerId: int32(k),
-						NodeIds:  ids,
+						j := &pb.SubDAG_Job{
+							WorkerId: int32(k),
+							NodeIds:  ids,
+						}
+						subdag.Jobs = append(subdag.Jobs, j)
 					}
-					subdag.Jobs = append(subdag.Jobs, j)
+					pipeline.Subdags = append(pipeline.Subdags, subdag)
 				}
-				graphProto.Policy.Subdags = append(graphProto.Policy.Subdags, subdag)
+				if pipelineJobs.Batched {
+					pipeline.Batched = true
+					for _, t := range pipelineJobs.InputTensors {
+						pipeline.Inputs = append(pipeline.Inputs, t.ToProto())
+					}
+					for _, t := range pipelineJobs.OutputTensors {
+						pipeline.Outputs = append(pipeline.Outputs, t.ToProto())
+					}
+				}
+				graphProto.Policy.Pipelines = append(graphProto.Policy.Pipelines, pipeline)
 			}
 			// calculate checksum for each party
 			tableSchemaCrypt := sha256.New()
+			subGraphStr := graphProto.String()
+			logrus.Infof("subgraph of %s: %s", party, subGraphStr)
 			// write graph
-			tableSchemaCrypt.Write([]byte(graphProto.String()))
+			tableSchemaCrypt.Write([]byte(subGraphStr))
 			graphProto.SubGraphChecksum = fmt.Sprintf("%x", tableSchemaCrypt.Sum(nil))
 			plan.SubGraphs[party] = graphProto
 		}

@@ -1,0 +1,2222 @@
+{
+  "tbl_0": {
+    "columns": [
+      {
+        "column_name": "plain_int_0",
+        "dtype": "int",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_int_0",
+        "dtype": "int",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_int_0",
+        "dtype": "int",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_int_0",
+        "dtype": "int",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_int_0",
+        "dtype": "int",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_int_0",
+        "dtype": "int",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_int_0",
+        "dtype": "int",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_float_0",
+        "dtype": "float",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_float_0",
+        "dtype": "float",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_float_0",
+        "dtype": "float",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_float_0",
+        "dtype": "float",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_float_0",
+        "dtype": "float",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_float_0",
+        "dtype": "float",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_float_0",
+        "dtype": "float",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_string_0",
+        "dtype": "string",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_string_0",
+        "dtype": "string",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_string_0",
+        "dtype": "string",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_string_0",
+        "dtype": "string",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_string_0",
+        "dtype": "string",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_string_0",
+        "dtype": "string",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_string_0",
+        "dtype": "string",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_datetime_0",
+        "dtype": "datetime",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_datetime_0",
+        "dtype": "datetime",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_datetime_0",
+        "dtype": "datetime",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_datetime_0",
+        "dtype": "datetime",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_datetime_0",
+        "dtype": "datetime",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_datetime_0",
+        "dtype": "datetime",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_datetime_0",
+        "dtype": "datetime",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_int_1",
+        "dtype": "int",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_int_1",
+        "dtype": "int",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_int_1",
+        "dtype": "int",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_int_1",
+        "dtype": "int",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_int_1",
+        "dtype": "int",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_int_1",
+        "dtype": "int",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_int_1",
+        "dtype": "int",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_float_1",
+        "dtype": "float",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_float_1",
+        "dtype": "float",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_float_1",
+        "dtype": "float",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_float_1",
+        "dtype": "float",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_float_1",
+        "dtype": "float",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_float_1",
+        "dtype": "float",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_float_1",
+        "dtype": "float",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_string_1",
+        "dtype": "string",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_string_1",
+        "dtype": "string",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_string_1",
+        "dtype": "string",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_string_1",
+        "dtype": "string",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_string_1",
+        "dtype": "string",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_string_1",
+        "dtype": "string",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_string_1",
+        "dtype": "string",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_datetime_1",
+        "dtype": "datetime",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_datetime_1",
+        "dtype": "datetime",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_datetime_1",
+        "dtype": "datetime",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_datetime_1",
+        "dtype": "datetime",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_datetime_1",
+        "dtype": "datetime",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_datetime_1",
+        "dtype": "datetime",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_datetime_1",
+        "dtype": "datetime",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_timestamp_1",
+        "dtype": "timestamp",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_timestamp_1",
+        "dtype": "timestamp",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_timestamp_1",
+        "dtype": "timestamp",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_timestamp_1",
+        "dtype": "timestamp",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_timestamp_1",
+        "dtype": "timestamp",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_timestamp_1",
+        "dtype": "timestamp",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_timestamp_1",
+        "dtype": "timestamp",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_int_2",
+        "dtype": "int",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_int_2",
+        "dtype": "int",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_int_2",
+        "dtype": "int",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_int_2",
+        "dtype": "int",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_int_2",
+        "dtype": "int",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_int_2",
+        "dtype": "int",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_int_2",
+        "dtype": "int",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_float_2",
+        "dtype": "float",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_float_2",
+        "dtype": "float",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_float_2",
+        "dtype": "float",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_float_2",
+        "dtype": "float",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_float_2",
+        "dtype": "float",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_float_2",
+        "dtype": "float",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_float_2",
+        "dtype": "float",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_string_2",
+        "dtype": "string",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_string_2",
+        "dtype": "string",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_string_2",
+        "dtype": "string",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_string_2",
+        "dtype": "string",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_string_2",
+        "dtype": "string",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_string_2",
+        "dtype": "string",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_string_2",
+        "dtype": "string",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_datetime_2",
+        "dtype": "datetime",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_datetime_2",
+        "dtype": "datetime",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_datetime_2",
+        "dtype": "datetime",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_datetime_2",
+        "dtype": "datetime",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_datetime_2",
+        "dtype": "datetime",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_datetime_2",
+        "dtype": "datetime",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_datetime_2",
+        "dtype": "datetime",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_timestamp_2",
+        "dtype": "timestamp",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_timestamp_2",
+        "dtype": "timestamp",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_timestamp_2",
+        "dtype": "timestamp",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_timestamp_2",
+        "dtype": "timestamp",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_timestamp_2",
+        "dtype": "timestamp",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_timestamp_2",
+        "dtype": "timestamp",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_timestamp_2",
+        "dtype": "timestamp",
+        "ccl": [
+          "encrypt"
+        ]
+      }
+    ],
+    "db_name": "carol"
+  },
+  "tbl_1": {
+    "columns": [
+      {
+        "column_name": "plain_int_0",
+        "dtype": "int",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_int_0",
+        "dtype": "int",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_int_0",
+        "dtype": "int",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_int_0",
+        "dtype": "int",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_int_0",
+        "dtype": "int",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_int_0",
+        "dtype": "int",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_int_0",
+        "dtype": "int",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_float_0",
+        "dtype": "float",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_float_0",
+        "dtype": "float",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_float_0",
+        "dtype": "float",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_float_0",
+        "dtype": "float",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_float_0",
+        "dtype": "float",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_float_0",
+        "dtype": "float",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_float_0",
+        "dtype": "float",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_string_0",
+        "dtype": "string",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_string_0",
+        "dtype": "string",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_string_0",
+        "dtype": "string",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_string_0",
+        "dtype": "string",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_string_0",
+        "dtype": "string",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_string_0",
+        "dtype": "string",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_string_0",
+        "dtype": "string",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_datetime_0",
+        "dtype": "datetime",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_datetime_0",
+        "dtype": "datetime",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_datetime_0",
+        "dtype": "datetime",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_datetime_0",
+        "dtype": "datetime",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_datetime_0",
+        "dtype": "datetime",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_datetime_0",
+        "dtype": "datetime",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_datetime_0",
+        "dtype": "datetime",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_int_1",
+        "dtype": "int",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_int_1",
+        "dtype": "int",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_int_1",
+        "dtype": "int",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_int_1",
+        "dtype": "int",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_int_1",
+        "dtype": "int",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_int_1",
+        "dtype": "int",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_int_1",
+        "dtype": "int",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_float_1",
+        "dtype": "float",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_float_1",
+        "dtype": "float",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_float_1",
+        "dtype": "float",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_float_1",
+        "dtype": "float",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_float_1",
+        "dtype": "float",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_float_1",
+        "dtype": "float",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_float_1",
+        "dtype": "float",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_string_1",
+        "dtype": "string",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_string_1",
+        "dtype": "string",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_string_1",
+        "dtype": "string",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_string_1",
+        "dtype": "string",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_string_1",
+        "dtype": "string",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_string_1",
+        "dtype": "string",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_string_1",
+        "dtype": "string",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_datetime_1",
+        "dtype": "datetime",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_datetime_1",
+        "dtype": "datetime",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_datetime_1",
+        "dtype": "datetime",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_datetime_1",
+        "dtype": "datetime",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_datetime_1",
+        "dtype": "datetime",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_datetime_1",
+        "dtype": "datetime",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_datetime_1",
+        "dtype": "datetime",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_timestamp_1",
+        "dtype": "timestamp",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_timestamp_1",
+        "dtype": "timestamp",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_timestamp_1",
+        "dtype": "timestamp",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_timestamp_1",
+        "dtype": "timestamp",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_timestamp_1",
+        "dtype": "timestamp",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_timestamp_1",
+        "dtype": "timestamp",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_timestamp_1",
+        "dtype": "timestamp",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_int_2",
+        "dtype": "int",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_int_2",
+        "dtype": "int",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_int_2",
+        "dtype": "int",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_int_2",
+        "dtype": "int",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_int_2",
+        "dtype": "int",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_int_2",
+        "dtype": "int",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_int_2",
+        "dtype": "int",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_float_2",
+        "dtype": "float",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_float_2",
+        "dtype": "float",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_float_2",
+        "dtype": "float",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_float_2",
+        "dtype": "float",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_float_2",
+        "dtype": "float",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_float_2",
+        "dtype": "float",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_float_2",
+        "dtype": "float",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_string_2",
+        "dtype": "string",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_string_2",
+        "dtype": "string",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_string_2",
+        "dtype": "string",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_string_2",
+        "dtype": "string",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_string_2",
+        "dtype": "string",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_string_2",
+        "dtype": "string",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_string_2",
+        "dtype": "string",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_datetime_2",
+        "dtype": "datetime",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_datetime_2",
+        "dtype": "datetime",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_datetime_2",
+        "dtype": "datetime",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_datetime_2",
+        "dtype": "datetime",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_datetime_2",
+        "dtype": "datetime",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_datetime_2",
+        "dtype": "datetime",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_datetime_2",
+        "dtype": "datetime",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_timestamp_2",
+        "dtype": "timestamp",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_timestamp_2",
+        "dtype": "timestamp",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_timestamp_2",
+        "dtype": "timestamp",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_timestamp_2",
+        "dtype": "timestamp",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_timestamp_2",
+        "dtype": "timestamp",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_timestamp_2",
+        "dtype": "timestamp",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_timestamp_2",
+        "dtype": "timestamp",
+        "ccl": [
+          "encrypt"
+        ]
+      }
+    ],
+    "db_name": "carol"
+  },
+  "tbl_2": {
+    "columns": [
+      {
+        "column_name": "plain_int_0",
+        "dtype": "int",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_int_0",
+        "dtype": "int",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_int_0",
+        "dtype": "int",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_int_0",
+        "dtype": "int",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_int_0",
+        "dtype": "int",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_int_0",
+        "dtype": "int",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_int_0",
+        "dtype": "int",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_float_0",
+        "dtype": "float",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_float_0",
+        "dtype": "float",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_float_0",
+        "dtype": "float",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_float_0",
+        "dtype": "float",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_float_0",
+        "dtype": "float",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_float_0",
+        "dtype": "float",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_float_0",
+        "dtype": "float",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_string_0",
+        "dtype": "string",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_string_0",
+        "dtype": "string",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_string_0",
+        "dtype": "string",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_string_0",
+        "dtype": "string",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_string_0",
+        "dtype": "string",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_string_0",
+        "dtype": "string",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_string_0",
+        "dtype": "string",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_datetime_0",
+        "dtype": "datetime",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_datetime_0",
+        "dtype": "datetime",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_datetime_0",
+        "dtype": "datetime",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_datetime_0",
+        "dtype": "datetime",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_datetime_0",
+        "dtype": "datetime",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_datetime_0",
+        "dtype": "datetime",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_datetime_0",
+        "dtype": "datetime",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_int_1",
+        "dtype": "int",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_int_1",
+        "dtype": "int",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_int_1",
+        "dtype": "int",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_int_1",
+        "dtype": "int",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_int_1",
+        "dtype": "int",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_int_1",
+        "dtype": "int",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_int_1",
+        "dtype": "int",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_float_1",
+        "dtype": "float",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_float_1",
+        "dtype": "float",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_float_1",
+        "dtype": "float",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_float_1",
+        "dtype": "float",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_float_1",
+        "dtype": "float",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_float_1",
+        "dtype": "float",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_float_1",
+        "dtype": "float",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_string_1",
+        "dtype": "string",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_string_1",
+        "dtype": "string",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_string_1",
+        "dtype": "string",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_string_1",
+        "dtype": "string",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_string_1",
+        "dtype": "string",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_string_1",
+        "dtype": "string",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_string_1",
+        "dtype": "string",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_datetime_1",
+        "dtype": "datetime",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_datetime_1",
+        "dtype": "datetime",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_datetime_1",
+        "dtype": "datetime",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_datetime_1",
+        "dtype": "datetime",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_datetime_1",
+        "dtype": "datetime",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_datetime_1",
+        "dtype": "datetime",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_datetime_1",
+        "dtype": "datetime",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_timestamp_1",
+        "dtype": "timestamp",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_timestamp_1",
+        "dtype": "timestamp",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_timestamp_1",
+        "dtype": "timestamp",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_timestamp_1",
+        "dtype": "timestamp",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_timestamp_1",
+        "dtype": "timestamp",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_timestamp_1",
+        "dtype": "timestamp",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_timestamp_1",
+        "dtype": "timestamp",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_int_2",
+        "dtype": "int",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_int_2",
+        "dtype": "int",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_int_2",
+        "dtype": "int",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_int_2",
+        "dtype": "int",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_int_2",
+        "dtype": "int",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_int_2",
+        "dtype": "int",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_int_2",
+        "dtype": "int",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_float_2",
+        "dtype": "float",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_float_2",
+        "dtype": "float",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_float_2",
+        "dtype": "float",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_float_2",
+        "dtype": "float",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_float_2",
+        "dtype": "float",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_float_2",
+        "dtype": "float",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_float_2",
+        "dtype": "float",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_string_2",
+        "dtype": "string",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_string_2",
+        "dtype": "string",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_string_2",
+        "dtype": "string",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_string_2",
+        "dtype": "string",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_string_2",
+        "dtype": "string",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_string_2",
+        "dtype": "string",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_string_2",
+        "dtype": "string",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_datetime_2",
+        "dtype": "datetime",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_datetime_2",
+        "dtype": "datetime",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_datetime_2",
+        "dtype": "datetime",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_datetime_2",
+        "dtype": "datetime",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_datetime_2",
+        "dtype": "datetime",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_datetime_2",
+        "dtype": "datetime",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_datetime_2",
+        "dtype": "datetime",
+        "ccl": [
+          "encrypt"
+        ]
+      },
+      {
+        "column_name": "plain_timestamp_2",
+        "dtype": "timestamp",
+        "ccl": [
+          "plain"
+        ]
+      },
+      {
+        "column_name": "join_timestamp_2",
+        "dtype": "timestamp",
+        "ccl": [
+          "join"
+        ]
+      },
+      {
+        "column_name": "joinpayload_timestamp_2",
+        "dtype": "timestamp",
+        "ccl": [
+          "joinpayload"
+        ]
+      },
+      {
+        "column_name": "groupby_timestamp_2",
+        "dtype": "timestamp",
+        "ccl": [
+          "groupby"
+        ]
+      },
+      {
+        "column_name": "compare_timestamp_2",
+        "dtype": "timestamp",
+        "ccl": [
+          "compare"
+        ]
+      },
+      {
+        "column_name": "aggregate_timestamp_2",
+        "dtype": "timestamp",
+        "ccl": [
+          "aggregate"
+        ]
+      },
+      {
+        "column_name": "encrypt_timestamp_2",
+        "dtype": "timestamp",
+        "ccl": [
+          "encrypt"
+        ]
+      }
+    ],
+    "db_name": "carol"
+  }
+}

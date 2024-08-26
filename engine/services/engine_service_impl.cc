@@ -33,6 +33,7 @@
 #include "engine/framework/executor.h"
 #include "engine/framework/session.h"
 #include "engine/operator/all_ops_register.h"
+#include "engine/services/pipeline.h"
 #include "engine/util/logging.h"
 #include "engine/util/tensor_util.h"
 
@@ -98,12 +99,13 @@ namespace {
 
 int32_t CountTotalNodes(const scql::pb::SchedulingPolicy& policy) {
   int32_t nodes_count = 0;
-  for (const auto& subdag : policy.subdags()) {
-    for (const auto& job : subdag.jobs()) {
-      nodes_count += job.node_ids().size();
+  for (const auto& pipeline : policy.pipelines()) {
+    for (const auto& subdag : pipeline.subdags()) {
+      for (const auto& job : subdag.jobs()) {
+        nodes_count += job.node_ids().size();
+      }
     }
   }
-
   return nodes_count;
 }
 
@@ -483,57 +485,79 @@ void EngineServiceImpl::RunPlanCore(const pb::RunExecutionPlanRequest& request,
   const auto& policy = graph.policy();
   session->SetNodesCount(CountTotalNodes(policy));
   session->SetExecutedNodes(0);
-  for (const auto& subdag : policy.subdags()) {
-    for (const auto& job : subdag.jobs()) {
-      const auto& node_ids = job.node_ids();
-      for (const auto& node_id : node_ids) {
-        const auto& iter = graph.nodes().find(node_id);
-        YACL_ENFORCE(iter != graph.nodes().cend(),
-                     "no node for node_id={} in node_ids", node_id);
-        const auto& node = iter->second;
-        SPDLOG_LOGGER_INFO(logger,
-                           "session({}) start to execute node({}), op({})",
-                           session->Id(), node.node_name(), node.op_type());
-        auto start = std::chrono::system_clock::now();
-        session->SetCurrentNodeInfo(start, node.node_name());
+  if (policy.pipelines().size() > 1) {
+    session->EnableStreamingBatched();
+  }
+  for (int pipe_index = 0; pipe_index < policy.pipelines().size();
+       pipe_index++) {
+    const auto& pipeline = policy.pipelines()[pipe_index];
+    PipelineExecutor pipe_executor(pipeline, session);
+    for (size_t i = 0; i < pipe_executor.GetBatchNum(); i++) {
+      SPDLOG_LOGGER_INFO(logger,
+                         "session({}) start to execute pipeline({}) batch({})",
+                         session->Id(), pipe_index, i);
+      pipe_executor.UpdateTensorTable();
+      for (const auto& subdag : pipeline.subdags()) {
+        for (const auto& job : subdag.jobs()) {
+          const auto& node_ids = job.node_ids();
+          for (const auto& node_id : node_ids) {
+            const auto& iter = graph.nodes().find(node_id);
+            YACL_ENFORCE(iter != graph.nodes().cend(),
+                         "no node for node_id={} in node_ids", node_id);
+            const auto& node = iter->second;
+            SPDLOG_LOGGER_INFO(logger,
+                               "session({}) start to execute node({}) op({}) "
+                               "pipeline({}) batch({})",
+                               session->Id(), node.node_name(), node.op_type(),
+                               pipe_index, i);
+            auto start = std::chrono::system_clock::now();
+            session->SetCurrentNodeInfo(start, node.node_name());
 
-        YACL_ENFORCE(session->GetState() == SessionState::RUNNING,
-                     "session status not equal to running");
-        ExecContext context(node, session);
-        Executor executor;
-        executor.RunExecNode(&context);
+            YACL_ENFORCE(session->GetState() == SessionState::RUNNING,
+                         "session status not equal to running");
+            ExecContext context(node, session);
+            Executor executor;
+            executor.RunExecNode(&context);
 
-        auto end = std::chrono::system_clock::now();
-        SPDLOG_LOGGER_INFO(
-            logger,
-            "session({}) finished executing node({}), op({}), cost({})ms",
-            session->Id(), node.node_name(), node.op_type(),
-            std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
-                .count());
-
-        session->IncExecutedNodes();
-        YACL_ENFORCE(session->GetExecutedNodes() <= session->GetNodesCount(),
-                     "executed nodes: {}, total nodes count: {}",
-                     session->GetExecutedNodes(), session->GetNodesCount());
-
-        if (node.op_type() == "Publish") {
-          auto results = session->GetPublishResults();
-          for (const auto& result : results) {
-            pb::Tensor* out_column = response->add_out_columns();
-            out_column->CopyFrom(*result);
+            auto end = std::chrono::system_clock::now();
+            SPDLOG_LOGGER_INFO(
+                logger,
+                "session({}) finished executing node({}), op({}), cost({})ms",
+                session->Id(), node.node_name(), node.op_type(),
+                std::chrono::duration_cast<std::chrono::milliseconds>(end -
+                                                                      start)
+                    .count());
+            // TODO(xiaoyuan): fix progress in streaming mode later
+            session->IncExecutedNodes();
+            if (!session->GetStreamingOptions().batched) {
+              YACL_ENFORCE(
+                  session->GetExecutedNodes() <= session->GetNodesCount(),
+                  "executed nodes: {}, total nodes count: {}",
+                  session->GetExecutedNodes(), session->GetNodesCount());
+            }
+            if (node.op_type() == "Publish") {
+              auto results = session->GetPublishResults();
+              for (const auto& result : results) {
+                pb::Tensor* out_column = response->add_out_columns();
+                out_column->CopyFrom(*result);
+              }
+            } else if (node.op_type() == "DumpFile") {
+              auto affected_rows = session->GetAffectedRows();
+              response->set_num_rows_affected(affected_rows);
+            }
           }
-        } else if (node.op_type() == "DumpFile") {
-          auto affected_rows = session->GetAffectedRows();
-          response->set_num_rows_affected(affected_rows);
+        }
+        if (subdag.need_call_barrier_after_jobs()) {
+          yacl::link::Barrier(session->GetLink(), session->Id());
         }
       }
+      pipe_executor.FetchOutputTensors();
+      SPDLOG_LOGGER_INFO(
+          logger, "session({}) finished executing pipeline({}) batch({})",
+          session->Id(), pipe_index, i);
     }
-
-    if (subdag.need_call_barrier_after_jobs()) {
-      yacl::link::Barrier(session->GetLink(), session->Id());
-    }
+    pipe_executor.Finish();
   }
-
   SPDLOG_LOGGER_INFO(logger, "session({}) run plan policy succ", session->Id());
   response->mutable_status()->set_code(pb::Code::OK);
 }

@@ -76,7 +76,7 @@ func TestAddTensorStatusConversion(t *testing.T) {
 		},
 	})
 	newSimplePlan := func() *graph.GraphBuilder {
-		e1 := graph.NewGraphBuilder(pi)
+		e1 := graph.NewGraphBuilder(pi, false)
 		t1 := e1.AddTensor("alice.t1")
 		t1.CC.SetLevelForParty("party1", ccl.Plain)
 		t1.CC.SetLevelForParty("party2", ccl.Plain)
@@ -117,7 +117,7 @@ func TestConvertTo(t *testing.T) {
 			Token:     "bob_credential",
 		},
 	})
-	e1 := graph.NewGraphBuilder(partyInfo)
+	e1 := graph.NewGraphBuilder(partyInfo, false)
 	mockT1 := e1.AddTensor("t1.1")
 	mockT1.SetStatus(scql.TensorStatus_TENSORSTATUS_PRIVATE)
 	mockT1.OwnerPartyCode = "Alice"

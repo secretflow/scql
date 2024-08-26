@@ -158,7 +158,7 @@ func caseInvalidRequest(a *require.Assertions, submitUrl, fetchUrl string) {
 		a.Nil(err)
 		a.Equal(http.StatusOK, resp.StatusCode)
 		response := scql.SCDBSubmitResponse{}
-		_, err = message.DeserializeFrom(resp.Body, &response)
+		_, err = message.DeserializeFrom(resp.Body, &response, resp.Header.Get("Content-Type"))
 		a.Nil(err)
 		a.NotEqual(int32(scql.Code_OK), response.Status.Code)
 	}
@@ -169,7 +169,7 @@ func caseInvalidRequest(a *require.Assertions, submitUrl, fetchUrl string) {
 		a.Nil(err)
 		a.Equal(http.StatusOK, resp.StatusCode)
 		response := scql.SCDBQueryResultResponse{}
-		_, err = message.DeserializeFrom(resp.Body, &response)
+		_, err = message.DeserializeFrom(resp.Body, &response, resp.Header.Get("Content-Type"))
 		a.Nil(err)
 		a.NotEqual(int32(scql.Code_OK), response.Status.Code)
 	}
@@ -295,7 +295,7 @@ func (cb *cbMockServer) ReportQueryResult(c *gin.Context) {
 	cb.reqReceiveCount++
 
 	var result scql.SCDBQueryResultResponse
-	_, err := message.DeserializeFrom(c.Request.Body, &result)
+	_, err := message.DeserializeFrom(c.Request.Body, &result, "")
 	if err != nil {
 		cb.err = err
 		return

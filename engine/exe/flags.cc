@@ -82,10 +82,14 @@ DEFINE_int32(link_port, 8004, "port for link service");
 DEFINE_int32(idle_timeout_s, 30, "connections idle close delay in seconds");
 DEFINE_bool(server_enable_ssl, true,
             "whether brpc server's ssl enable/disable");
+DEFINE_bool(server_enable_ssl_client_verification, false,
+            "enable ssl client verification");
 DEFINE_string(server_ssl_certificate, "",
               "Certificate file path to enable SSL");
 DEFINE_string(server_ssl_private_key, "",
               "Private key file path to enable SSL");
+DEFINE_string(server_ssl_client_ca_certificate, "",
+              "the trusted CA file to verity the client's certificate");
 // Common flags for Brpc server and channel of peer engine.
 DEFINE_bool(enable_client_authorization, false,
             "if set true, server will check all requests' http header.");

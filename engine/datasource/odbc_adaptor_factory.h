@@ -15,6 +15,7 @@
 #pragma once
 
 #include "engine/datasource/datasource_adaptor_factory.h"
+#include "engine/datasource/odbc_adaptor.h"
 
 namespace scql::engine {
 

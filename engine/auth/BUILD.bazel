@@ -52,7 +52,7 @@ cc_test(
     deps = [
         ":authenticator",
         "@com_github_brpc_brpc//:butil",
-        "@yacl//yacl/base:exception",
         "@com_google_googletest//:gtest_main",
+        "@yacl//yacl/base:exception",
     ],
 )

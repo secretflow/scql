@@ -23,6 +23,7 @@
 #include "yacl/link/algorithm/gather.h"
 
 #include "engine/core/arrow_helper.h"
+#include "engine/core/tensor_constructor.h"
 #include "engine/core/type.h"
 #include "engine/util/ndarray_to_arrow.h"
 
@@ -151,9 +152,9 @@ TensorPtr SpuOutfeedHelper::DumpPublic(const std::string& name) {
   auto validity_val =
       symbols_->getVar(SpuVarNameEncoder::GetValidityName(name));
   auto validity = spu::kernel::hal::dump_public(sctx_, validity_val);
-  return std::make_shared<Tensor>(NdArrayToArrow(arr, &validity));
+  return TensorFrom(NdArrayToArrow(arr, &validity));
 #else
-  return std::make_shared<Tensor>(NdArrayToArrow(arr, nullptr));
+  return TensorFrom(NdArrayToArrow(arr, nullptr));
 #endif  // SCQL_WITH_NULL
 }
 
@@ -216,9 +217,9 @@ TensorPtr SpuOutfeedHelper::RevealTo(const std::string& name, size_t rank) {
     return nullptr;
   }
 #ifdef SCQL_WITH_NULL
-  return std::make_shared<Tensor>(NdArrayToArrow(arr, &validity));
+  return TensorFrom(NdArrayToArrow(arr, &validity));
 #else
-  return std::make_shared<Tensor>(NdArrayToArrow(arr, nullptr));
+  return TensorFrom(NdArrayToArrow(arr, nullptr));
 #endif  // SCQL_WITH_NULL
 }
 

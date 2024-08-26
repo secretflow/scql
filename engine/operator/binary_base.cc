@@ -16,6 +16,7 @@
 
 #include "libspu/kernel/hlo/basic_binary.h"
 
+#include "engine/util/context_util.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
 
@@ -122,32 +123,14 @@ void BinaryBase::ExecuteInPlain(ExecContext* ctx) {
     const auto& right_param = right_pbs[i];
     const auto& out_param = out_pbs[i];
 
-    TensorPtr left = GetPrivateOrPublicTensor(ctx, left_param);
-    TensorPtr right = GetPrivateOrPublicTensor(ctx, right_param);
+    TensorPtr left = util::GetPrivateOrPublicTensor(ctx, left_param);
+    TensorPtr right = util::GetPrivateOrPublicTensor(ctx, right_param);
     YACL_ENFORCE(left != nullptr);
     YACL_ENFORCE(right != nullptr);
 
     auto result = ComputeInPlain(*left, *right);
     ctx->GetTensorTable()->AddTensor(out_param.name(), std::move(result));
   }
-}
-
-TensorPtr BinaryBase::GetPrivateOrPublicTensor(ExecContext* ctx,
-                                               const pb::Tensor& t) {
-  TensorPtr ret;
-  if (util::IsTensorStatusMatched(t, pb::TENSORSTATUS_PUBLIC)) {
-    // read public tensor from spu device symbol table
-    auto spu_io = util::SpuOutfeedHelper(ctx->GetSession()->GetSpuContext(),
-                                         ctx->GetSession()->GetDeviceSymbols());
-    ret = spu_io.DumpPublic(t.name());
-
-    if (t.elem_type() == pb::PrimitiveDataType::STRING) {
-      ret = ctx->GetSession()->HashToString(*ret);
-    }
-  } else {
-    ret = ctx->GetTensorTable()->GetTensor(t.name());
-  }
-  return ret;
 }
 
 spu::Value BinaryBase::PropagateNulls(spu::SPUContext* sctx,

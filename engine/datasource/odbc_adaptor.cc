@@ -17,10 +17,7 @@
 #include <mutex>
 
 #include "Poco/Data/MetaColumn.h"
-#include "Poco/Data/MySQL/Connector.h"
-#include "Poco/Data/PostgreSQL/Connector.h"
 #include "Poco/Data/RecordSet.h"
-#include "Poco/Data/SQLite/Connector.h"
 #include "Poco/DateTime.h"
 #include "Poco/Timestamp.h"
 #include "yacl/base/exception.h"
@@ -32,26 +29,17 @@
 
 namespace scql::engine {
 
-namespace {
-std::once_flag mysql_register_flag;
+OdbcAdaptor::OdbcAdaptor(const std::string& db_kind,
+                         const std::string& connection_str, ConnectionType type,
+                         size_t pool_size) {
+  connector_ =
+      std::make_unique<OdbcConnector>(db_kind, connection_str, type, pool_size);
 }
 
-OdbcAdaptor::OdbcAdaptor(OdbcAdaptorOptions options)
-    : options_(std::move(options)), pool_(nullptr) {
+std::vector<TensorPtr> OdbcAdaptor::GetQueryResult(
+    const std::string& query, const TensorBuildOptions& options) {
   try {
-    Init();
-  } catch (const Poco::Data::DataException& e) {
-    // NOTE: Poco Exception's what() method only return the exception category
-    // without detail information, so we rethrow it with displayText() method.
-    // https://docs.pocoproject.org/current/Poco.Exception.html#13533
-    YACL_THROW("catch unexpected Poco::Data::DataException: {}",
-               e.displayText());
-  }
-}
-
-std::vector<TensorPtr> OdbcAdaptor::GetQueryResult(const std::string& query) {
-  try {
-    return GetQueryResultImpl(query);
+    return GetQueryResultImpl(query, options);
   } catch (const Poco::Data::DataException& e) {
     YACL_THROW("catch unexpected Poco::Data::DataException: {}",
                e.displayText());
@@ -59,8 +47,8 @@ std::vector<TensorPtr> OdbcAdaptor::GetQueryResult(const std::string& query) {
 }
 
 std::vector<TensorPtr> OdbcAdaptor::GetQueryResultImpl(
-    const std::string& query) {
-  auto session = CreateSession();
+    const std::string& query, const TensorBuildOptions& options) {
+  auto session = connector_->CreateSession();
 
   Poco::Data::Statement select(session);
   select << query;
@@ -185,44 +173,6 @@ std::vector<TensorPtr> OdbcAdaptor::GetQueryResultImpl(
     builders[i]->Finish(&results[i]);
   }
   return results;
-}
-
-Poco::Data::Session OdbcAdaptor::CreateSession() {
-  if (pool_) {
-    return pool_->get();
-  }
-  return Poco::Data::Session(connector_, options_.connection_str);
-}
-
-void OdbcAdaptor::Init() {
-  switch (options_.kind) {
-    case DataSourceKind::MYSQL:
-      connector_ = "mysql";
-      // `mysql_library_init` is not thread-safe in multithread environment,
-      // see: https://dev.mysql.com/doc/c-api/5.7/en/mysql-library-init.html
-      // MySQL::Connector::registerConnector() invokes `mysql_library_init`
-      // refer to
-      // https://github.com/pocoproject/poco/blob/poco-1.12.2-release/Data/MySQL/src/Connector.cpp#L55
-      std::call_once(mysql_register_flag,
-                     Poco::Data::MySQL::Connector::registerConnector);
-      break;
-    case DataSourceKind::SQLITE:
-      connector_ = "sqlite";
-      Poco::Data::SQLite::Connector::registerConnector();
-      break;
-    case DataSourceKind::POSTGRESQL:
-      connector_ = "postgresql";
-      Poco::Data::PostgreSQL::Connector::registerConnector();
-      break;
-    default:
-      YACL_THROW("unsupported DataSourceKind: {}",
-                 DataSourceKind_Name(options_.kind));
-  }
-
-  if (options_.connection_type == ConnectionType::Pooled) {
-    pool_ = std::make_unique<Poco::Data::SessionPool>(
-        connector_, options_.connection_str, 1, options_.pool_size);
-  }
 }
 
 }  // namespace scql::engine

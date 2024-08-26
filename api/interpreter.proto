@@ -102,6 +102,8 @@ message CompileOptions {
   // dump execution graph in graphviz dot format
   bool dump_exe_graph = 3;
   OptimizerHints optimizer_hints = 4;
+  // whether to run in streaming mode
+  bool batched = 5;
 }
 
 message SecurityCompromiseConfig {

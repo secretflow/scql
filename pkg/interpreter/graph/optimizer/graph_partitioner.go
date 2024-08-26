@@ -22,31 +22,45 @@ type SubDAG struct {
 	Nodes map[*graph.ExecutionNode]bool
 }
 
+type Pipeline struct {
+	Batched       bool
+	InputTensors  []*graph.Tensor
+	OutputTensors []*graph.Tensor
+	SubDAGs       []*SubDAG
+}
+
 type GraphPartitioner struct {
-	Graph   *graph.Graph
-	SubDAGs []*SubDAG
+	Graph     *graph.Graph
+	Pipelines []*Pipeline
 }
 
 func NewGraphPartitioner(input *graph.Graph) *GraphPartitioner {
 	return &GraphPartitioner{
-		Graph:   input,
-		SubDAGs: make([]*SubDAG, 0),
+		Graph: input,
 	}
 }
 
 // NaivePartition a graph by topological sort order
 func (p *GraphPartitioner) NaivePartition() error {
 	p.Graph.UpdateTensorRefNum()
-	nodes, err := p.Graph.TopologicalSort()
+	pipelineNodes, err := p.Graph.TopologicalSort()
 	if err != nil {
 		return err
 	}
-	for _, node := range nodes {
-		subDAG := &SubDAG{
-			Nodes: make(map[*graph.ExecutionNode]bool),
+	for i, nodes := range pipelineNodes {
+		pipeline := &Pipeline{Batched: p.Graph.Pipelines[i].Batched}
+		if pipeline.Batched {
+			pipeline.InputTensors = p.Graph.Pipelines[i].InputTensors
+			pipeline.OutputTensors = p.Graph.Pipelines[i].OutputTensors
 		}
-		subDAG.Nodes[node] = true
-		p.SubDAGs = append(p.SubDAGs, subDAG)
+		for _, node := range nodes {
+			subDAG := &SubDAG{
+				Nodes: make(map[*graph.ExecutionNode]bool),
+			}
+			subDAG.Nodes[node] = true
+			pipeline.SubDAGs = append(pipeline.SubDAGs, subDAG)
+		}
+		p.Pipelines = append(p.Pipelines, pipeline)
 	}
 	return nil
 }

@@ -18,10 +18,19 @@ import (
 	proto "github.com/secretflow/scql/pkg/proto-gen/scql"
 )
 
+type StreamingOpType int
+
+// This is by design
+const (
+	SinkOp StreamingOpType = iota
+	StreamingOp
+)
+
 // OperatorDef defines the signature of an operator
 type OperatorDef struct {
 	proto.OperatorDef
-	err error
+	err             error
+	opStreamingType StreamingOpType
 }
 
 // SetName sets name of an operator def
@@ -31,6 +40,14 @@ func (op *OperatorDef) SetName(name string) {
 
 func (op *OperatorDef) GetName() string {
 	return op.Name
+}
+
+func (op *OperatorDef) SetStreamingType(typ StreamingOpType) {
+	op.opStreamingType = typ
+}
+
+func (op *OperatorDef) GetStreamingType() StreamingOpType {
+	return op.opStreamingType
 }
 
 // SetDefinition adds detailed definition of the operator

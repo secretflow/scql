@@ -25,8 +25,6 @@ import (
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/secretflow/scql/pkg/interpreter/graph"
 )
 
 const (
@@ -83,8 +81,6 @@ type EngineStub struct {
 	webClient   EngineClient
 	protocol    string
 	contentType string
-
-	partyInfo *graph.PartyInfo
 }
 
 // NewEngineStub creates an engine stub instance
@@ -94,7 +90,7 @@ func NewEngineStub(sessionID string,
 	callBackPath string,
 	client EngineClient,
 	engineProtocol string,
-	contentType string, partyInfo *graph.PartyInfo) *EngineStub {
+	contentType string) *EngineStub {
 	scheme := strings.SplitN(engineProtocol, ":", 2)[0]
 	if scheme == "" {
 		scheme = "http"
@@ -111,6 +107,5 @@ func NewEngineStub(sessionID string,
 		webClient:       client,
 		protocol:        scheme,
 		contentType:     contentType,
-		partyInfo:       partyInfo,
 	}
 }

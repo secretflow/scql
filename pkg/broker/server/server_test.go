@@ -29,6 +29,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	gormlog "gorm.io/gorm/logger"
@@ -116,7 +117,7 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.NoError(err)
 
 		response := &pb.CreateProjectResponse{}
-		_, err = message.DeserializeFrom(resp.Body, response)
+		_, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-type"))
 		suite.NoError(err)
 		suite.Equal(response.GetStatus().GetCode(), int32(0), response.String())
 		resp.Body.Close()
@@ -130,7 +131,7 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.NoError(err)
 
 		response := &pb.ListProjectsResponse{}
-		_, err = message.DeserializeFrom(resp.Body, response)
+		_, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-type"))
 		suite.NoError(err)
 		suite.Equal(response.GetStatus().GetCode(), int32(0))
 		suite.Equal(len(response.GetProjects()), 1)
@@ -146,7 +147,7 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.NoError(err)
 
 		response := &pb.InviteMemberResponse{}
-		_, err = message.DeserializeFrom(resp.Body, response)
+		_, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-type"))
 		suite.NoError(err)
 		suite.Equal(response.GetStatus().GetCode(), int32(0))
 		resp.Body.Close()
@@ -160,7 +161,7 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.NoError(err)
 
 		response := &pb.ListInvitationsResponse{}
-		_, err = message.DeserializeFrom(resp.Body, response)
+		_, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-type"))
 		suite.NoError(err)
 		suite.Equal(response.GetStatus().GetCode(), int32(0))
 		suite.Equal(len(response.GetInvitations()), 1)
@@ -178,7 +179,7 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.NoError(err)
 
 		response := &pb.InviteMemberResponse{}
-		_, err = message.DeserializeFrom(resp.Body, response)
+		_, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-type"))
 		suite.NoError(err)
 		suite.Equal(response.GetStatus().GetCode(), int32(0))
 		resp.Body.Close()
@@ -192,7 +193,7 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.NoError(err)
 
 		response := &pb.ListInvitationsResponse{}
-		_, err = message.DeserializeFrom(resp.Body, response)
+		_, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-type"))
 		suite.NoError(err)
 		suite.Equal(response.GetStatus().GetCode(), int32(0))
 		suite.Equal(len(response.GetInvitations()), 2)
@@ -215,7 +216,8 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.NoError(err)
 		err = auth.SignMessage(req)
 		suite.NoError(err)
-		reqBytes, err := protojson.Marshal(req)
+		// returns the wire-format encoding of req
+		reqBytes, err := proto.Marshal(req)
 		suite.NoError(err)
 
 		resp, err := httpClient.Post(urlutil.JoinHostPath(fmt.Sprintf("http://localhost:%v", suite.freePorts[1]), constant.ReplyInvitationPath),
@@ -223,7 +225,7 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.NoError(err)
 
 		response := &pb.ReplyInvitationResponse{}
-		_, err = message.DeserializeFrom(resp.Body, response)
+		_, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-type"))
 		suite.NoError(err)
 		suite.Equal(response.GetStatus().GetCode(), int32(pb.Code_INTERNAL), protojson.Format(response))
 		resp.Body.Close()
@@ -237,7 +239,7 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.NoError(err)
 
 		response := &pb.ProcessInvitationResponse{}
-		_, err = message.DeserializeFrom(resp.Body, response)
+		_, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-type"))
 		suite.NoError(err)
 		suite.Equal(response.GetStatus().GetCode(), int32(0))
 		resp.Body.Close()
@@ -251,7 +253,7 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.NoError(err)
 
 		response := &pb.ListProjectsResponse{}
-		_, err = message.DeserializeFrom(resp.Body, response)
+		_, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-type"))
 		suite.NoError(err)
 		suite.Equal(response.GetStatus().GetCode(), int32(0))
 		suite.Equal(len(response.GetProjects()), 1)
@@ -266,7 +268,7 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.NoError(err)
 
 		response := &pb.ListInvitationsResponse{}
-		_, err = message.DeserializeFrom(resp.Body, response)
+		_, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-type"))
 		suite.NoError(err)
 		suite.Equal(response.GetStatus().GetCode(), int32(0))
 		suite.Equal(len(response.GetInvitations()), 2)
@@ -284,7 +286,7 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.NoError(err)
 
 		response := &pb.CreateTableResponse{}
-		_, err = message.DeserializeFrom(resp.Body, response)
+		_, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-type"))
 		suite.NoError(err)
 		suite.Equal(response.GetStatus().GetCode(), int32(0))
 		resp.Body.Close()
@@ -294,7 +296,7 @@ func (suite *ServerTestSuit) TestServer() {
 				"application/json", strings.NewReader(reqStr))
 			suite.NoError(err)
 			response := &pb.CreateTableResponse{}
-			_, err = message.DeserializeFrom(resp.Body, response)
+			_, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-type"))
 			suite.NoError(err)
 			suite.Equal(response.GetStatus().GetCode(), int32(pb.Code_INTERNAL))
 		}
@@ -309,7 +311,7 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.NoError(err)
 
 		response := &pb.ListTablesResponse{}
-		_, err = message.DeserializeFrom(resp.Body, response)
+		_, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-type"))
 		suite.NoError(err)
 		suite.Equal(response.GetStatus().GetCode(), int32(0))
 		suite.Equal(len(response.GetTables()), 1)
@@ -326,7 +328,7 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.NoError(err)
 
 		response := &pb.GrantCCLResponse{}
-		_, err = message.DeserializeFrom(resp.Body, response)
+		_, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-type"))
 		suite.NoError(err)
 		suite.Equal(response.GetStatus().GetCode(), int32(0))
 		resp.Body.Close()
@@ -341,7 +343,7 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.NoError(err)
 
 		response := &pb.ShowCCLResponse{}
-		_, err = message.DeserializeFrom(resp.Body, response)
+		_, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-type"))
 		suite.NoError(err)
 		suite.Equal(response.GetStatus().GetCode(), int32(0))
 		suite.Equal(len(response.GetColumnControlList()), 1)
@@ -419,7 +421,7 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.NoError(err)
 
 		response := &pb.RevokeCCLResponse{}
-		_, err = message.DeserializeFrom(resp.Body, response)
+		_, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-type"))
 		suite.NoError(err)
 		suite.Equal(response.GetStatus().GetCode(), int32(0))
 		resp.Body.Close()
@@ -434,7 +436,7 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.NoError(err)
 
 		response := &pb.ShowCCLResponse{}
-		_, err = message.DeserializeFrom(resp.Body, response)
+		_, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-type"))
 		suite.NoError(err)
 		suite.Equal(response.GetStatus().GetCode(), int32(0))
 		suite.Equal(len(response.GetColumnControlList()), 1)
@@ -451,7 +453,7 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.NoError(err)
 
 		response := &pb.DropTableResponse{}
-		_, err = message.DeserializeFrom(resp.Body, response)
+		_, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-type"))
 		suite.NoError(err)
 		suite.Equal(response.GetStatus().GetCode(), int32(0))
 		resp.Body.Close()
@@ -466,7 +468,7 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.NoError(err)
 
 		response := &pb.ListTablesResponse{}
-		_, err = message.DeserializeFrom(resp.Body, response)
+		_, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-type"))
 		suite.NoError(err)
 		suite.Equal(response.GetStatus().GetCode(), int32(0))
 		suite.Equal(len(response.GetTables()), 0)
@@ -499,7 +501,7 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.NoError(err)
 
 		response := &pb.FetchResultResponse{}
-		_, err = message.DeserializeFrom(resp.Body, response)
+		_, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-type"))
 		suite.NoError(err)
 		suite.Equal(response.GetStatus().GetCode(), int32(0), protojson.Format(response))
 		suite.Equal(response.GetResult().GetAffectedRows(), int64(10), protojson.Format(response))
@@ -522,7 +524,7 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.NoError(err)
 
 		response := &pb.CancelQueryResponse{}
-		_, err = message.DeserializeFrom(resp.Body, response)
+		_, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-type"))
 		suite.NoError(err)
 		suite.Equal(response.GetStatus().GetCode(), int32(0), protojson.Format(response))
 		resp.Body.Close()
@@ -542,9 +544,9 @@ func (suite *ServerTestSuit) TestServer() {
 		suite.NoError(err)
 
 		response := &pb.CheckAndUpdateStatusResponse{}
-		_, err = message.DeserializeFrom(resp.Body, response)
+		_, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-type"))
 		suite.NoError(err)
-		suite.Equal(response.GetStatus().GetCode(), int32(pb.Code_OK))
+		suite.Equal(response.GetStatus().GetCode(), int32(pb.Code_OK), protojson.Format(response))
 		resp.Body.Close()
 	}
 }

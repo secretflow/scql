@@ -16,6 +16,7 @@
 
 #include "arrow/compute/api.h"
 
+#include "engine/core/tensor_constructor.h"
 #include "engine/util/tensor_util.h"
 
 namespace scql::engine::op {
@@ -64,7 +65,7 @@ void IfNull::Execute(ExecContext* ctx) {
   YACL_ENFORCE(result.ok(), "caught error while invoking arrow coalesce: {}",
                result.status().ToString());
 
-  auto t = std::make_shared<Tensor>(result.ValueOrDie().chunked_array());
+  auto t = TensorFrom(result.ValueOrDie().chunked_array());
   ctx->GetTensorTable()->AddTensor(output_pb.name(), std::move(t));
 }
 

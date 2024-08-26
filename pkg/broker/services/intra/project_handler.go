@@ -31,8 +31,10 @@ import (
 	"github.com/secretflow/scql/pkg/broker/application"
 	"github.com/secretflow/scql/pkg/broker/services/common"
 	"github.com/secretflow/scql/pkg/broker/storage"
+	"github.com/secretflow/scql/pkg/constant"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
+	"github.com/secretflow/scql/pkg/util/message"
 )
 
 func (svc *grpcIntraSvc) CreateProject(c context.Context, req *pb.CreateProjectRequest) (resp *pb.CreateProjectResponse, err error) {
@@ -54,8 +56,21 @@ func (svc *grpcIntraSvc) CreateProject(c context.Context, req *pb.CreateProjectR
 	if projectConf.SessionExpireSeconds <= 0 {
 		projectConf.SessionExpireSeconds = int64(app.Conf.SessionExpireTime.Seconds())
 	}
+	// use value in config file if not set
+	groupByThreshold := app.Conf.SecurityCompromise.GroupByThreshold
+	if projectConf.GroupByThreshold != nil {
+		groupByThreshold = projectConf.GetGroupByThreshold()
+	}
+	if groupByThreshold == 0 {
+		groupByThreshold = constant.DefaultGroupByThreshold
+	}
 
-	projConf, err := json.Marshal(pb.ProjectConfig{
+	revealGroupMark := app.Conf.SecurityCompromise.RevealGroupMark
+	if projectConf.RevealGroupMark != nil {
+		revealGroupMark = projectConf.GetRevealGroupMark()
+	}
+
+	projConf, err := message.ProtoMarshal(&pb.ProjectConfig{
 		SpuRuntimeCfg:                             projectConf.GetSpuRuntimeCfg(),
 		SessionExpireSeconds:                      projectConf.GetSessionExpireSeconds(),
 		UnbalancePsiRatioThreshold:                projectConf.GetUnbalancePsiRatioThreshold(),
@@ -65,6 +80,8 @@ func (svc *grpcIntraSvc) CreateProject(c context.Context, req *pb.CreateProjectR
 		LinkRecvTimeoutSec:                        projectConf.GetLinkRecvTimeoutSec(),
 		LinkThrottleWindowSize:                    projectConf.GetLinkThrottleWindowSize(),
 		LinkChunkedSendParallelSize:               projectConf.GetLinkChunkedSendParallelSize(),
+		GroupByThreshold:                          &groupByThreshold,
+		RevealGroupMark:                           &revealGroupMark,
 	})
 
 	if err != nil {
@@ -125,31 +142,19 @@ func (svc *grpcIntraSvc) ListProjects(c context.Context, req *pb.ListProjectsReq
 	for _, projWithMember := range projectWithMembers {
 		proj := projWithMember.Proj
 		var projConf pb.ProjectConfig
-		err := protojson.Unmarshal([]byte(proj.ProjectConf), &projConf)
+		err := message.ProtoUnmarshal([]byte(proj.ProjectConf), &projConf)
 		if err != nil {
 			return nil, fmt.Errorf("ListProjects: unmarshal: %v", err)
 		}
-
-		spuConf := projConf.SpuRuntimeCfg
 
 		projectsList = append(projectsList, &pb.ProjectDesc{
 			ProjectId:   proj.ID,
 			Name:        proj.Name,
 			Description: proj.Description,
-			Conf: &pb.ProjectConfig{
-				SpuRuntimeCfg:                             spuConf,
-				SessionExpireSeconds:                      projConf.SessionExpireSeconds,
-				UnbalancePsiRatioThreshold:                projConf.UnbalancePsiRatioThreshold,
-				UnbalancePsiLargerPartyRowsCountThreshold: projConf.UnbalancePsiLargerPartyRowsCountThreshold,
-				PsiCurveType:                              projConf.PsiCurveType,
-				HttpMaxPayloadSize:                        projConf.HttpMaxPayloadSize,
-				LinkRecvTimeoutSec:                        projConf.LinkRecvTimeoutSec,
-				LinkThrottleWindowSize:                    projConf.LinkThrottleWindowSize,
-				LinkChunkedSendParallelSize:               projConf.LinkChunkedSendParallelSize,
-			},
-			Creator:   proj.Creator,
-			Members:   projWithMember.Members,
-			CreatedAt: timestamppb.New(proj.CreatedAt),
+			Conf:        &projConf,
+			Creator:     proj.Creator,
+			Members:     projWithMember.Members,
+			CreatedAt:   timestamppb.New(proj.CreatedAt),
 		})
 	}
 
@@ -200,13 +205,10 @@ func (svc *grpcIntraSvc) InviteMember(c context.Context, req *pb.InviteMemberReq
 	}
 
 	var projConf pb.ProjectConfig
-	err = protojson.Unmarshal([]byte(proj.ProjectConf), &projConf)
-
+	err = message.ProtoUnmarshal([]byte(proj.ProjectConf), &projConf)
 	if err != nil {
 		return nil, fmt.Errorf("InviteMember unmarshal: failed to deserialize project conf string: %v", err)
 	}
-
-	spuConf := projConf.SpuRuntimeCfg
 
 	// add invitation to metaMgr
 	invite := storage.Invitation{
@@ -240,20 +242,10 @@ func (svc *grpcIntraSvc) InviteMember(c context.Context, req *pb.InviteMemberReq
 			ProjectId:   proj.ID,
 			Name:        proj.Name,
 			Description: proj.Description,
-			Conf: &pb.ProjectConfig{
-				SpuRuntimeCfg:                             spuConf,
-				SessionExpireSeconds:                      projConf.SessionExpireSeconds,
-				UnbalancePsiRatioThreshold:                projConf.UnbalancePsiRatioThreshold,
-				UnbalancePsiLargerPartyRowsCountThreshold: projConf.UnbalancePsiLargerPartyRowsCountThreshold,
-				PsiCurveType:                              projConf.PsiCurveType,
-				HttpMaxPayloadSize:                        projConf.HttpMaxPayloadSize,
-				LinkRecvTimeoutSec:                        projConf.LinkRecvTimeoutSec,
-				LinkThrottleWindowSize:                    projConf.LinkThrottleWindowSize,
-				LinkChunkedSendParallelSize:               projConf.LinkChunkedSendParallelSize,
-			},
-			Creator:   proj.Creator,
-			Members:   projWithMember.Members,
-			CreatedAt: timestamppb.New(proj.CreatedAt),
+			Conf:        &projConf,
+			Creator:     proj.Creator,
+			Members:     projWithMember.Members,
+			CreatedAt:   timestamppb.New(proj.CreatedAt),
 		},
 		Inviter: app.Conf.PartyCode,
 	}
@@ -299,12 +291,10 @@ func (svc *grpcIntraSvc) ListInvitations(c context.Context, req *pb.ListInvitati
 	var invitationsList []*pb.ProjectInvitation
 	for _, inv := range invitations {
 		var projConf pb.ProjectConfig
-		err = protojson.Unmarshal([]byte(inv.ProjectConf), &projConf)
+		err = message.ProtoUnmarshal([]byte(inv.ProjectConf), &projConf)
 		if err != nil {
 			return nil, fmt.Errorf("ListInvitations: failed to deserialize spu config: %v", err)
 		}
-
-		spuConf := projConf.SpuRuntimeCfg
 
 		invitationsList = append(invitationsList, &pb.ProjectInvitation{
 			InvitationId: inv.ID,
@@ -312,19 +302,9 @@ func (svc *grpcIntraSvc) ListInvitations(c context.Context, req *pb.ListInvitati
 				ProjectId:   inv.ProjectID,
 				Name:        inv.Name,
 				Description: inv.Description,
-				Conf: &pb.ProjectConfig{
-					SpuRuntimeCfg:                             spuConf,
-					SessionExpireSeconds:                      projConf.SessionExpireSeconds,
-					UnbalancePsiRatioThreshold:                projConf.UnbalancePsiRatioThreshold,
-					UnbalancePsiLargerPartyRowsCountThreshold: projConf.UnbalancePsiLargerPartyRowsCountThreshold,
-					PsiCurveType:                              projConf.PsiCurveType,
-					HttpMaxPayloadSize:                        projConf.HttpMaxPayloadSize,
-					LinkRecvTimeoutSec:                        projConf.LinkRecvTimeoutSec,
-					LinkThrottleWindowSize:                    projConf.LinkThrottleWindowSize,
-					LinkChunkedSendParallelSize:               projConf.LinkChunkedSendParallelSize,
-				},
-				Creator: inv.Creator,
-				Members: strings.Split(inv.Member, ";"),
+				Conf:        &projConf,
+				Creator:     inv.Creator,
+				Members:     strings.Split(inv.Member, ";"),
 			},
 			Inviter: inv.Inviter,
 			Invitee: inv.Invitee,

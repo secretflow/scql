@@ -16,7 +16,6 @@ package inter_test
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"testing"
 	"time"
@@ -63,7 +62,7 @@ func (s *interTestSuite) SetupSuite() {
 func (s *interTestSuite) bootstrap(manager *storage.MetaManager) {
 	txn := manager.CreateMetaTransaction()
 	defer txn.Finish(nil)
-	projConf, _ := json.Marshal(scql.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}, SessionExpireSeconds: 86400})
+	projConf, _ := message.ProtoMarshal(&scql.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}, SessionExpireSeconds: 86400})
 	s.NoError(txn.CreateProject(storage.Project{ID: "1", Name: "test project", Creator: "bob", ProjectConf: string(projConf)}))
 	s.NoError(txn.AddProjectMembers([]storage.Member{storage.Member{ProjectID: "1", Member: "alice"}}))
 	s.NoError(txn.AddProjectMembers([]storage.Member{storage.Member{ProjectID: "1", Member: "carol"}}))
@@ -153,6 +152,7 @@ func (s *interTestSuite) TestDistributeQueryErrorQuery() {
 		ClientChecksum: &scql.Checksum{TableSchema: []byte{0x1}, Ccl: []byte{0x1}},
 		ServerChecksum: &scql.Checksum{TableSchema: []byte{0x1}, Ccl: []byte{0x1}},
 		JobConfig:      &scql.JobConfig{},
+		RunningOpts:    &scql.RunningOptions{Batched: true},
 	}
 	// failed to parse query
 	mockReq.Query = "select error query"
@@ -164,7 +164,7 @@ func (s *interTestSuite) TestDistributeQueryErrorQuery() {
 	serverAlice.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == constant.AskInfoPath {
 			var req scql.AskInfoRequest
-			inputEncodingType, err := message.DeserializeFrom(r.Body, &req)
+			inputEncodingType, err := message.DeserializeFrom(r.Body, &req, r.Header.Get("Content-Type"))
 			s.NoError(err)
 			resp, err := s.svcAlice.AskInfo(context.Background(), &req)
 			s.NoError(err)
@@ -176,7 +176,7 @@ func (s *interTestSuite) TestDistributeQueryErrorQuery() {
 	serverCarol.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == constant.AskInfoPath {
 			var req scql.AskInfoRequest
-			inputEncodingType, err := message.DeserializeFrom(r.Body, &req)
+			inputEncodingType, err := message.DeserializeFrom(r.Body, &req, r.Header.Get("Content-Type"))
 			s.NoError(err)
 			resp, err := s.svcCarol.AskInfo(context.Background(), &req)
 			s.NoError(err)
@@ -206,7 +206,7 @@ func (s *interTestSuite) TestDistributeQueryChecksumNotEqual2P() {
 		if r.URL.Path == constant.AskInfoPath {
 			chBroker <- true
 			var req scql.AskInfoRequest
-			inputEncodingType, err := message.DeserializeFrom(r.Body, &req)
+			inputEncodingType, err := message.DeserializeFrom(r.Body, &req, r.Header.Get("Content-Type"))
 			s.NoError(err)
 			resp, err := s.svcAlice.AskInfo(context.Background(), &req)
 			s.NoError(err)
@@ -326,7 +326,7 @@ func (s *interTestSuite) TestDistributeQueryChecksumEqual3P() {
 		if r.URL.Path == constant.ExchangeJobInfoPath {
 			chCarol <- true
 			var req scql.ExchangeJobInfoRequest
-			inputEncodingType, err := message.DeserializeFrom(r.Body, &req)
+			inputEncodingType, err := message.DeserializeFrom(r.Body, &req, r.Header.Get("Content-Type"))
 			s.NoError(err)
 			info := &application.ExecutionInfo{
 				ProjectID: req.ProjectId,
@@ -422,7 +422,7 @@ func (s *interTestSuite) TestDistributeQueryOtherPartyChecksumNotEqual3P() {
 		if r.URL.Path == constant.AskInfoPath {
 			chCarolAskInfo <- true
 			var req scql.AskInfoRequest
-			inputEncodingType, err := message.DeserializeFrom(r.Body, &req)
+			inputEncodingType, err := message.DeserializeFrom(r.Body, &req, r.Header.Get("Content-Type"))
 			s.NoError(err)
 			s.Equal(1, len(req.ResourceSpecs))
 			resp, err := s.svcCarol.AskInfo(context.Background(), &req)
@@ -434,7 +434,7 @@ func (s *interTestSuite) TestDistributeQueryOtherPartyChecksumNotEqual3P() {
 		if r.URL.Path == constant.ExchangeJobInfoPath {
 			chCarolExchange <- true
 			var req scql.ExchangeJobInfoRequest
-			inputEncodingType, err := message.DeserializeFrom(r.Body, &req)
+			inputEncodingType, err := message.DeserializeFrom(r.Body, &req, r.Header.Get("Content-Type"))
 			s.NoError(err)
 			info := &application.ExecutionInfo{
 				ProjectID: req.ProjectId,

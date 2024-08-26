@@ -38,7 +38,7 @@ func (app *App) FetchHandler(c *gin.Context) {
 	}
 
 	request := &scql.SCDBFetchRequest{}
-	inputEncodingType, err := message.DeserializeFrom(c.Request.Body, request)
+	inputEncodingType, err := message.DeserializeFrom(c.Request.Body, request, c.Request.Header.Get("Content-Type"))
 	if err != nil {
 		logEntry.Reason = constant.ReasonInvalidRequestFormat
 		logEntry.ErrorMsg = err.Error()

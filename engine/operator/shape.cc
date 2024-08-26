@@ -76,7 +76,7 @@ TensorPtr Shape::CreateShapeTensor(ExecContext* ctx,
   } catch (const ::yacl::EnforceNotMet& e) {
     SPDLOG_LOGGER_WARN(
         logger,
-        "not set attribute axis, default get {row count, 1}, exception={}",
+        "not set attribute axis, default get (row count, 1), exception={}",
         e.what());
   }
 

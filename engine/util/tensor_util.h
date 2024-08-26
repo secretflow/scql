@@ -65,6 +65,9 @@ void CopyValuesToProto(const std::shared_ptr<Tensor>& from_tensor,
 std::shared_ptr<Tensor> ConvertDateTimeToInt64(
     const std::shared_ptr<arrow::ChunkedArray> from_chunked_arr);
 
+std::shared_ptr<arrow::ChunkedArray> ConvertDateTimeToInt64(
+    const std::shared_ptr<arrow::Array> from_arr);
+
 void ConvertDateTimeAndCopyValuesToProto(
     const std::shared_ptr<Tensor>& from_tensor, pb::Tensor* to_proto);
 }  // namespace scql::engine::util

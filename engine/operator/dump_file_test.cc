@@ -52,16 +52,15 @@ INSTANTIATE_TEST_SUITE_P(
         DumpFileTestCase{
             .inputs =
                 {test::NamedTensor(
-                     "x1",
-                     TensorFromJSON(arrow::float64(),
-                                    "[-3.1415, 0.1, 99.999, 1000, null]")),
+                     "x1", TensorFrom(arrow::float64(),
+                                      "[-3.1415, 0.1, 99.999, 1000, null]")),
+                 test::NamedTensor("x2",
+                                   TensorFrom(arrow::boolean(),
+                                              "[true,false,false,true, null]")),
                  test::NamedTensor(
-                     "x2", TensorFromJSON(arrow::boolean(),
-                                          "[true,false,false,true, null]")),
-                 test::NamedTensor(
-                     "x3", TensorFromJSON(
-                               arrow::large_utf8(),
-                               R"json(["test str","","A","B", null])json"))},
+                     "x3",
+                     TensorFrom(arrow::large_utf8(),
+                                R"json(["test str","","A","B", null])json"))},
             .output_names = {"x1_dump", "x2_dump", "x3_dump"},
             .output_file_path = "./dumpfile_out.1",
             .output_file_content = R"csv("x1_dump","x2_dump","x3_dump"
@@ -73,16 +72,14 @@ NULL,NULL,NULL
 )csv"},
         DumpFileTestCase{
             .inputs =
-                {test::NamedTensor(
-                     "x1", TensorFromJSON(arrow::float64(),
-                                          "[-3.1415, 0.1, 99.999, 1000]")),
-                 test::NamedTensor("x2",
-                                   TensorFromJSON(arrow::boolean(),
-                                                  "[true,false,false,true]")),
+                {test::NamedTensor("x1",
+                                   TensorFrom(arrow::float64(),
+                                              "[-3.1415, 0.1, 99.999, 1000]")),
+                 test::NamedTensor("x2", TensorFrom(arrow::boolean(),
+                                                    "[true,false,false,true]")),
                  test::NamedTensor(
-                     "x3",
-                     TensorFromJSON(arrow::large_utf8(),
-                                    R"json(["test str","","A","B"])json"))},
+                     "x3", TensorFrom(arrow::large_utf8(),
+                                      R"json(["test str","","A","B"])json"))},
             .output_names = {"x1_dump", "x2_dump", "x3_dump"},
             .output_file_path = "./dumpfile_out.2",
             .line_terminator = ";\n",
@@ -96,8 +93,8 @@ NULL,NULL,NULL
 )csv"},
         DumpFileTestCase{
             .inputs = {test::NamedTensor(
-                "x1", TensorFromJSON(arrow::large_utf8(),
-                                     R"json(["D","C","","B","A"])json"))},
+                "x1", TensorFrom(arrow::large_utf8(),
+                                 R"json(["D","C","","B","A"])json"))},
             .output_names = {"x1_dump"},
             .output_file_path = "./dumpfile_out.3",
             .output_file_content = R"csv("x1_dump"
@@ -109,7 +106,7 @@ NULL,NULL,NULL
 )csv"},
         DumpFileTestCase{
             .inputs = {test::NamedTensor(
-                "x1", TensorFromJSON(arrow::int64(), "[-1,0,1,2,3,10,11,12]"))},
+                "x1", TensorFrom(arrow::int64(), "[-1,0,1,2,3,10,11,12]"))},
             .output_names = {"x1_dump"},
             .output_file_path = "./dump_test/dumpfile_out.4",
             .output_file_content = R"csv("x1_dump"

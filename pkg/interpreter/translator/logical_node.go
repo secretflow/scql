@@ -37,6 +37,7 @@ type logicalNode interface {
 	OutputNames() types.NameSlice
 	String() string
 	IntoOpt() *ast.SelectIntoOption
+	InsertTableOpt() *core.InsertTableOption
 	// buildCCL builds the column control list of logical node's table
 	buildCCL(*ccl.Context, *ccl.ColumnTracer) error
 	// CCL returns the column control list of the logical node's table
@@ -85,6 +86,10 @@ func (n *baseNode) Children() []logicalNode {
 
 func (n *baseNode) IntoOpt() *ast.SelectIntoOption {
 	return n.lp.IntoOpt()
+}
+
+func (n *baseNode) InsertTableOpt() *core.InsertTableOption {
+	return n.lp.InsertTableOpt()
 }
 
 func (n *baseNode) VisibleParty() []string {

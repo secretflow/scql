@@ -60,8 +60,10 @@ DECLARE_bool(enable_separate_link_port);
 DECLARE_int32(link_port);
 DECLARE_int32(idle_timeout_s);
 DECLARE_bool(server_enable_ssl);
+DECLARE_bool(server_enable_ssl_client_verification);
 DECLARE_string(server_ssl_certificate);
 DECLARE_string(server_ssl_private_key);
+DECLARE_string(server_ssl_client_ca_certificate);
 
 // Common flags for Brpc server and channel of peer engine.
 DECLARE_bool(enable_client_authorization);

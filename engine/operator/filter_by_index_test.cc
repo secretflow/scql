@@ -40,38 +40,37 @@ INSTANTIATE_TEST_SUITE_P(
     FilterByIndexBatchTest, FilterByIndexTest,
     testing::Values(
         FilterByIndexTestCase{
-            .indice = test::NamedTensor("indice", TensorFromJSON(arrow::int64(),
-                                                                 "[3,2,1,0]")),
+            .indice = test::NamedTensor("indice", TensorFrom(arrow::int64(),
+                                                             "[3,2,1,0]")),
             .datas = {test::NamedTensor(
-                          "x1",
-                          TensorFromJSON(arrow::large_utf8(),
-                                         R"json(["A",null,"C","D"])json")),
-                      test::NamedTensor("x2", TensorFromJSON(arrow::int64(),
-                                                             "[10,11,12,13]"))},
+                          "x1", TensorFrom(arrow::large_utf8(),
+                                           R"json(["A",null,"C","D"])json")),
+                      test::NamedTensor("x2", TensorFrom(arrow::int64(),
+                                                         "[10,11,12,13]"))},
             .expect_outs =
-                {test::NamedTensor(
-                     "y1", TensorFromJSON(arrow::large_utf8(),
-                                          R"json(["D","C",null,"A"])json")),
-                 test::NamedTensor("y2", TensorFromJSON(arrow::int64(),
-                                                        "[13,12,11,10]"))}},
+                {test::NamedTensor("y1",
+                                   TensorFrom(arrow::large_utf8(),
+                                              R"json(["D","C",null,"A"])json")),
+                 test::NamedTensor("y2", TensorFrom(arrow::int64(),
+                                                    "[13,12,11,10]"))}},
         FilterByIndexTestCase{
-            .indice = test::NamedTensor(
-                "indice", TensorFromJSON(arrow::int64(), "[3,2,2,0,null]")),
+            .indice = test::NamedTensor("indice", TensorFrom(arrow::int64(),
+                                                             "[3,2,2,0,null]")),
             .datas = {test::NamedTensor(
-                "x1", TensorFromJSON(arrow::large_utf8(),
-                                     R"json(["A","B","C",null,"E"])json"))},
+                "x1", TensorFrom(arrow::large_utf8(),
+                                 R"json(["A","B","C",null,"E"])json"))},
             .expect_outs = {test::NamedTensor(
-                "y1", TensorFromJSON(arrow::large_utf8(),
-                                     R"json([null,"C","C","A",null])json"))}},
+                "y1", TensorFrom(arrow::large_utf8(),
+                                 R"json([null,"C","C","A",null])json"))}},
         // testcase: empty indice
         FilterByIndexTestCase{
             .indice = test::NamedTensor("indice",
-                                        TensorFromJSON(arrow::int64(), "[]")),
+                                        TensorFrom(arrow::int64(), "[]")),
             .datas = {test::NamedTensor(
-                "x1", TensorFromJSON(arrow::large_utf8(),
-                                     R"json(["A","B","C",null,"E"])json"))},
+                "x1", TensorFrom(arrow::large_utf8(),
+                                 R"json(["A","B","C",null,"E"])json"))},
             .expect_outs = {test::NamedTensor(
-                "y1", TensorFromJSON(arrow::large_utf8(), R"json([])json"))}}));
+                "y1", TensorFrom(arrow::large_utf8(), R"json([])json"))}}));
 
 TEST_P(FilterByIndexTest, works) {
   // Given

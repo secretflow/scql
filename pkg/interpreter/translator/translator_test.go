@@ -84,10 +84,12 @@ func (s *testTranslatorSuite) TearDownSuite(c *C) {
 
 type testConf struct {
 	groupThreshold int
+	batched        bool
 }
 
 type sPair struct {
-	sql      string
-	dotGraph string
-	conf     testConf
+	sql           string
+	dotGraph      string
+	briefPipeline string
+	conf          testConf
 }

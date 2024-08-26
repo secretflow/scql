@@ -49,7 +49,7 @@ func TestSplitSimple(t *testing.T) {
 			Token:     "h3_credential",
 		},
 	})
-	e1 := graph.NewGraphBuilder(partyInfo)
+	e1 := graph.NewGraphBuilder(partyInfo, false)
 
 	t0 := e1.AddTensor("t0")
 	t0.SetStatus(proto.TensorStatus_TENSORSTATUS_PRIVATE)
@@ -86,14 +86,14 @@ func TestSplitSimple(t *testing.T) {
 	r.NoError(err)
 
 	graph := e1.Build()
-	nodes, err := graph.TopologicalSort()
+	pipelineNodes, err := graph.TopologicalSort()
 	r.NoError(err)
-	r.Equal(11, len(nodes))
+	r.Equal(11, len(pipelineNodes[0]))
 
 	p := NewGraphPartitioner(graph)
 	p.NaivePartition()
 	partySubDAGs := make(map[string][]*PartySubDAG)
-	for _, subDAG := range p.SubDAGs {
+	for _, subDAG := range p.Pipelines[0].SubDAGs {
 		dags, err := Split(subDAG)
 		r.NoError(err)
 		for code, partySubDAG := range dags {
@@ -158,7 +158,7 @@ func TestSplitComplex(t *testing.T) {
 	p := NewGraphPartitioner(ep)
 	p.NaivePartition()
 	partySubDAGs := make(map[string][]*PartySubDAG)
-	for _, subDAG := range p.SubDAGs {
+	for _, subDAG := range p.Pipelines[0].SubDAGs {
 		dags, err := Split(subDAG)
 		r.NoError(err)
 

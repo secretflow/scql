@@ -134,6 +134,8 @@ func (m *MetaManager) ClearExpiredSessions() error {
 
 	result := m.db.Where("expired_at < ?", time.Now()).Limit(100).Delete(&expiredResults)
 
+	logrus.Infof("ClearExpiredSessions rows:%d", result.RowsAffected)
+
 	if result.Error == nil && result.RowsAffected > 0 {
 		logrus.Infof("GC: clear %d expired results", result.RowsAffected)
 	}

@@ -177,7 +177,7 @@ func (exec *Executor) RunExecutionPlanCore(ctx context.Context, engineAsync bool
 		}
 		body := responseInfo.ResponseBody
 		response := &scql.RunExecutionPlanResponse{}
-		_, err := message.DeserializeFrom(io.NopCloser(strings.NewReader(body)), response)
+		_, err := message.DeserializeFrom(io.NopCloser(strings.NewReader(body)), response, exec.EngineStub.contentType)
 		if err != nil {
 			return constant.ReasonInvalidResponse, nil, err
 		}

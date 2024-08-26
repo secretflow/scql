@@ -44,59 +44,53 @@ INSTANTIATE_TEST_SUITE_P(
         testing::Values(
             ShapeTestCase{
                 .inputs =
-                    {test::NamedTensor("a",
-                                       TensorFromJSON(arrow::boolean(),
-                                                      "[true, false, true]")),
-                     test::NamedTensor("b",
-                                       TensorFromJSON(arrow::int64(),
-                                                      "[1,2,3,4,5,6,7,null]")),
+                    {test::NamedTensor("a", TensorFrom(arrow::boolean(),
+                                                       "[true, false, true]")),
+                     test::NamedTensor("b", TensorFrom(arrow::int64(),
+                                                       "[1,2,3,4,5,6,7,null]")),
                      test::NamedTensor(
-                         "c", TensorFromJSON(
+                         "c", TensorFrom(
                                   arrow::float32(),
                                   "[1.1025, 100.245, -10.2, 0.34, 3.1415926]")),
                      test::NamedTensor(
-                         "d", TensorFromJSON(arrow::large_utf8(),
-                                             R"json(["A","B","C","D"])json")),
-                     test::NamedTensor("e",
-                                       TensorFromJSON(arrow::int64(), "[]"))},
+                         "d", TensorFrom(arrow::large_utf8(),
+                                         R"json(["A","B","C","D"])json")),
+                     test::NamedTensor("e", TensorFrom(arrow::int64(), "[]"))},
                 .input_status = pb::TENSORSTATUS_PRIVATE,
                 .axis = Shape::kAxisDefault,
                 .expect_outs =
                     {test::NamedTensor("a_out",
-                                       TensorFromJSON(arrow::int64(), "[3,1]")),
+                                       TensorFrom(arrow::int64(), "[3,1]")),
                      test::NamedTensor("b_out",
-                                       TensorFromJSON(arrow::int64(), "[8,1]")),
+                                       TensorFrom(arrow::int64(), "[8,1]")),
                      test::NamedTensor("c_out",
-                                       TensorFromJSON(arrow::int64(), "[5,1]")),
+                                       TensorFrom(arrow::int64(), "[5,1]")),
                      test::NamedTensor("d_out",
-                                       TensorFromJSON(arrow::int64(), "[4,1]")),
-                     test::NamedTensor("e_out", TensorFromJSON(arrow::int64(),
-                                                               "[0,1]"))}},
+                                       TensorFrom(arrow::int64(), "[4,1]")),
+                     test::NamedTensor("e_out",
+                                       TensorFrom(arrow::int64(), "[0,1]"))}},
             ShapeTestCase{
                 .inputs =
-                    {test::NamedTensor(
-                         "a", TensorFromJSON(arrow::boolean(),
-                                             "[true, false, true]")),
+                    {test::NamedTensor("a", TensorFrom(arrow::boolean(),
+                                                       "[true, false, true]")),
+                     test::NamedTensor("b", TensorFrom(arrow::int64(),
+                                                       "[1,2,3,4,5,6,7,8]")),
                      test::NamedTensor(
-                         "b",
-                         TensorFromJSON(arrow::int64(), "[1,2,3,4,5,6,7,8]")),
-                     test::NamedTensor(
-                         "c", TensorFromJSON(
+                         "c", TensorFrom(
                                   arrow::float32(),
                                   "[1.1025, 100.245, -10.2, 0.34, 3.1415926]")),
-                     test::NamedTensor("d",
-                                       TensorFromJSON(arrow::int64(), "[]"))},
+                     test::NamedTensor("d", TensorFrom(arrow::int64(), "[]"))},
                 .input_status = pb::TENSORSTATUS_SECRET,
                 .axis = Shape::kAxisRow,
                 .expect_outs =
                     {test::NamedTensor("a_out",
-                                       TensorFromJSON(arrow::int64(), "[3]")),
+                                       TensorFrom(arrow::int64(), "[3]")),
                      test::NamedTensor("b_out",
-                                       TensorFromJSON(arrow::int64(), "[8]")),
+                                       TensorFrom(arrow::int64(), "[8]")),
                      test::NamedTensor("c_out",
-                                       TensorFromJSON(arrow::int64(), "[5]")),
-                     test::NamedTensor("d_out", TensorFromJSON(arrow::int64(),
-                                                               "[0]"))}})),
+                                       TensorFrom(arrow::int64(), "[5]")),
+                     test::NamedTensor("d_out",
+                                       TensorFrom(arrow::int64(), "[0]"))}})),
     TestParamNameGenerator(ShapeTest));
 
 TEST_P(ShapeTest, works) {

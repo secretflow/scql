@@ -23,6 +23,6 @@ import (
 func TestNewEngineClientConn(t *testing.T) {
 	r := require.New(t)
 	// no network io performed
-	_, err := NewEngineClientConn("xxx:1234", "")
+	_, err := NewEngineClientConn("xxx:1234", "", nil)
 	r.NoError(err)
 }

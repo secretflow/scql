@@ -21,6 +21,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
+#include "engine/core/primitive_builder.h"
 #include "engine/core/tensor_constructor.h"
 #include "engine/operator/test_util.h"
 #include "engine/util/psi_helper.h"
@@ -73,25 +74,25 @@ INSTANTIATE_TEST_SUITE_P(
             // case 1
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "id_a", TensorFromJSON(arrow::int64(), "[4,8,1,3,3,5]"))},
+                    "id_a", TensorFrom(arrow::int64(), "[4,8,1,3,3,5]"))},
                 .right_inputs = {test::NamedTensor(
-                    "id_b", TensorFromJSON(arrow::int64(), "[2,1,4,4,3,7,8]"))},
+                    "id_b", TensorFrom(arrow::int64(), "[2,1,4,4,3,7,8]"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kInnerJoin),
                 .join_indices = {"0,2", "0,3", "1,6", "2,1", "3,4", "4,4"}},
 
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "id_a", TensorFromJSON(arrow::int64(), "[4,8,1,3,3,5]"))},
+                    "id_a", TensorFrom(arrow::int64(), "[4,8,1,3,3,5]"))},
                 .right_inputs = {test::NamedTensor(
-                    "id_b", TensorFromJSON(arrow::int64(), "[2,1,4,4,3,7,8]"))},
+                    "id_b", TensorFrom(arrow::int64(), "[2,1,4,4,3,7,8]"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kLeftJoin),
                 .join_indices = {"0,2", "0,3", "1,6", "2,1", "3,4", "4,4",
                                  "5,null"}},
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "id_a", TensorFromJSON(arrow::int64(), "[4,8,1,3,3,5]"))},
+                    "id_a", TensorFrom(arrow::int64(), "[4,8,1,3,3,5]"))},
                 .right_inputs = {test::NamedTensor(
-                    "id_b", TensorFromJSON(arrow::int64(), "[2,1,4,4,3,7,8]"))},
+                    "id_b", TensorFrom(arrow::int64(), "[2,1,4,4,3,7,8]"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kRightJoin),
                 .join_indices = {"0,2", "0,3", "1,6", "2,1", "3,4", "4,4",
                                  "null,0", "null,5"}},
@@ -130,90 +131,89 @@ INSTANTIATE_TEST_SUITE_P(
         //                null, null, null,        4,    B,    3
             // clang-format on
             // auto tensorX_1 = test::NamedTensor(
-            //     "x_1", TensorFromJSON(arrow::large_utf8(),
+            //     "x_1", TensorFrom(arrow::large_utf8(),
             // R"json(["A","A","B","B","B","C"])json"));
 
             // case 2
             JoinTestCase{
                 .left_inputs =
                     {test::NamedTensor(
-                         "x_1", TensorFromJSON(
-                                    arrow::large_utf8(),
+                         "x_1",
+                         TensorFrom(arrow::large_utf8(),
                                     R"json(["A","A","B","B","B","C"])json")),
-                     test::NamedTensor("x_2", TensorFromJSON(arrow::int64(),
-                                                             "[1,2,1,1,2,1]"))},
+                     test::NamedTensor("x_2", TensorFrom(arrow::int64(),
+                                                         "[1,2,1,1,2,1]"))},
                 .right_inputs =
                     {test::NamedTensor(
-                         "y_1", TensorFromJSON(
-                                    arrow::large_utf8(),
+                         "y_1",
+                         TensorFrom(arrow::large_utf8(),
                                     R"json(["B","A","A","B","B","B"])json")),
-                     test::NamedTensor("y_2", TensorFromJSON(arrow::int64(),
-                                                             "[2,1,2,1,3,2]"))},
+                     test::NamedTensor("y_2", TensorFrom(arrow::int64(),
+                                                         "[2,1,2,1,3,2]"))},
                 .join_indices = {"0,1", "1,2", "2,3", "3,3", "4,0", "4,5"}},
 
             JoinTestCase{
                 .left_inputs =
                     {test::NamedTensor(
-                         "x_1", TensorFromJSON(
-                                    arrow::large_utf8(),
+                         "x_1",
+                         TensorFrom(arrow::large_utf8(),
                                     R"json(["A","A","B","B","B","C"])json")),
-                     test::NamedTensor("x_2", TensorFromJSON(arrow::int64(),
-                                                             "[1,2,1,1,2,1]"))},
+                     test::NamedTensor("x_2", TensorFrom(arrow::int64(),
+                                                         "[1,2,1,1,2,1]"))},
                 .right_inputs =
                     {test::NamedTensor(
-                         "y_1", TensorFromJSON(
-                                    arrow::large_utf8(),
+                         "y_1",
+                         TensorFrom(arrow::large_utf8(),
                                     R"json(["B","A","A","B","B","B"])json")),
-                     test::NamedTensor("y_2", TensorFromJSON(arrow::int64(),
-                                                             "[2,1,2,1,3,2]"))},
+                     test::NamedTensor("y_2", TensorFrom(arrow::int64(),
+                                                         "[2,1,2,1,3,2]"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kLeftJoin),
                 .join_indices = {"0,1", "1,2", "2,3", "3,3", "4,0", "4,5",
                                  "5,null"}},
             JoinTestCase{
                 .left_inputs =
                     {test::NamedTensor(
-                         "x_1", TensorFromJSON(
-                                    arrow::large_utf8(),
+                         "x_1",
+                         TensorFrom(arrow::large_utf8(),
                                     R"json(["A","A","B","B","B","C"])json")),
-                     test::NamedTensor("x_2", TensorFromJSON(arrow::int64(),
-                                                             "[1,2,1,1,2,1]"))},
+                     test::NamedTensor("x_2", TensorFrom(arrow::int64(),
+                                                         "[1,2,1,1,2,1]"))},
                 .right_inputs =
                     {test::NamedTensor(
-                         "y_1", TensorFromJSON(
-                                    arrow::large_utf8(),
+                         "y_1",
+                         TensorFrom(arrow::large_utf8(),
                                     R"json(["B","A","A","B","B","B"])json")),
-                     test::NamedTensor("y_2", TensorFromJSON(arrow::int64(),
-                                                             "[2,1,2,1,3,2]"))},
+                     test::NamedTensor("y_2", TensorFrom(arrow::int64(),
+                                                         "[2,1,2,1,3,2]"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kRightJoin),
                 .join_indices = {"0,1", "1,2", "2,3", "3,3", "4,0", "4,5",
                                  "null,4"}},
 
             // case 3
             // testcase: empty join output
+            JoinTestCase{.left_inputs = {test::NamedTensor(
+                             "x", TensorFrom(arrow::large_utf8(),
+                                             R"json(["A","B","C"])json"))},
+                         .right_inputs = {test::NamedTensor(
+                             "y", TensorFrom(arrow::large_utf8(),
+                                             R"json(["E","F","H","G"])json"))},
+                         .join_indices = {}},
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["A","B","C"])json"))},
+                    "x", TensorFrom(arrow::large_utf8(),
+                                    R"json(["A","B","C"])json"))},
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["E","F","H","G"])json"))},
-                .join_indices = {}},
-            JoinTestCase{
-                .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["A","B","C"])json"))},
-                .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["E","F","H","G"])json"))},
+                    "y", TensorFrom(arrow::large_utf8(),
+                                    R"json(["E","F","H","G"])json"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kLeftJoin),
                 .join_indices = {"0,null", "1,null", "2,null"}},
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["A","B","C"])json"))},
+                    "x", TensorFrom(arrow::large_utf8(),
+                                    R"json(["A","B","C"])json"))},
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["E","F","H","G"])json"))},
+                    "y", TensorFrom(arrow::large_utf8(),
+                                    R"json(["E","F","H","G"])json"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kRightJoin),
                 .join_indices = {"null,0", "null,1", "null,2", "null,3"}},
 
@@ -221,25 +221,25 @@ INSTANTIATE_TEST_SUITE_P(
             // testcase: empty input
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::large_utf8(), R"json([])json"))},
+                    "x", TensorFrom(arrow::large_utf8(), R"json([])json"))},
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["E","F","H","G"])json"))},
+                    "y", TensorFrom(arrow::large_utf8(),
+                                    R"json(["E","F","H","G"])json"))},
                 .join_indices = {}},
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::large_utf8(), R"json([])json"))},
+                    "x", TensorFrom(arrow::large_utf8(), R"json([])json"))},
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["E","F","H","G"])json"))},
+                    "y", TensorFrom(arrow::large_utf8(),
+                                    R"json(["E","F","H","G"])json"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kLeftJoin),
                 .join_indices = {}},
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::large_utf8(), R"json([])json"))},
+                    "x", TensorFrom(arrow::large_utf8(), R"json([])json"))},
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["E","F","H","G"])json"))},
+                    "y", TensorFrom(arrow::large_utf8(),
+                                    R"json(["E","F","H","G"])json"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kRightJoin),
                 .join_indices = {"null,0", "null,1", "null,2", "null,3"}},
 
@@ -250,9 +250,9 @@ INSTANTIATE_TEST_SUITE_P(
             // case 1
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "id_a", TensorFromJSON(arrow::int64(), "[4,8,1,3,3,5]"))},
+                    "id_a", TensorFrom(arrow::int64(), "[4,8,1,3,3,5]"))},
                 .right_inputs = {test::NamedTensor(
-                    "id_b", TensorFromJSON(arrow::int64(), "[2,1,4,4,3,7,8]"))},
+                    "id_b", TensorFrom(arrow::int64(), "[2,1,4,4,3,7,8]"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kInnerJoin),
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .join_indices = {"0,2", "0,3", "1,6", "2,1", "3,4", "4,4"},
@@ -260,9 +260,9 @@ INSTANTIATE_TEST_SUITE_P(
 
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "id_a", TensorFromJSON(arrow::int64(), "[4,8,1,3,3,5]"))},
+                    "id_a", TensorFrom(arrow::int64(), "[4,8,1,3,3,5]"))},
                 .right_inputs = {test::NamedTensor(
-                    "id_b", TensorFromJSON(arrow::int64(), "[2,1,4,4,3,7,8]"))},
+                    "id_b", TensorFrom(arrow::int64(), "[2,1,4,4,3,7,8]"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kLeftJoin),
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .join_indices = {"0,2", "0,3", "1,6", "2,1", "3,4", "4,4",
@@ -270,9 +270,9 @@ INSTANTIATE_TEST_SUITE_P(
                 .ub_server = 0},
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "id_a", TensorFromJSON(arrow::int64(), "[4,8,1,3,3,5]"))},
+                    "id_a", TensorFrom(arrow::int64(), "[4,8,1,3,3,5]"))},
                 .right_inputs = {test::NamedTensor(
-                    "id_b", TensorFromJSON(arrow::int64(), "[2,1,4,4,3,7,8]"))},
+                    "id_b", TensorFrom(arrow::int64(), "[2,1,4,4,3,7,8]"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kRightJoin),
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .join_indices = {"0,2", "0,3", "1,6", "2,1", "3,4", "4,4",
@@ -280,9 +280,9 @@ INSTANTIATE_TEST_SUITE_P(
                 .ub_server = 0},
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "id_a", TensorFromJSON(arrow::int64(), "[4,8,1,3,3,5]"))},
+                    "id_a", TensorFrom(arrow::int64(), "[4,8,1,3,3,5]"))},
                 .right_inputs = {test::NamedTensor(
-                    "id_b", TensorFromJSON(arrow::int64(), "[2,1,4,4,3,7,8]"))},
+                    "id_b", TensorFrom(arrow::int64(), "[2,1,4,4,3,7,8]"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kInnerJoin),
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .join_indices = {"0,2", "0,3", "1,6", "2,1", "3,4", "4,4"},
@@ -290,9 +290,9 @@ INSTANTIATE_TEST_SUITE_P(
 
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "id_a", TensorFromJSON(arrow::int64(), "[4,8,1,3,3,5]"))},
+                    "id_a", TensorFrom(arrow::int64(), "[4,8,1,3,3,5]"))},
                 .right_inputs = {test::NamedTensor(
-                    "id_b", TensorFromJSON(arrow::int64(), "[2,1,4,4,3,7,8]"))},
+                    "id_b", TensorFrom(arrow::int64(), "[2,1,4,4,3,7,8]"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kLeftJoin),
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .join_indices = {"0,2", "0,3", "1,6", "2,1", "3,4", "4,4",
@@ -300,9 +300,9 @@ INSTANTIATE_TEST_SUITE_P(
                 .ub_server = 1},
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "id_a", TensorFromJSON(arrow::int64(), "[4,8,1,3,3,5]"))},
+                    "id_a", TensorFrom(arrow::int64(), "[4,8,1,3,3,5]"))},
                 .right_inputs = {test::NamedTensor(
-                    "id_b", TensorFromJSON(arrow::int64(), "[2,1,4,4,3,7,8]"))},
+                    "id_b", TensorFrom(arrow::int64(), "[2,1,4,4,3,7,8]"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kRightJoin),
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .join_indices = {"0,2", "0,3", "1,6", "2,1", "3,4", "4,4",
@@ -313,18 +313,18 @@ INSTANTIATE_TEST_SUITE_P(
             JoinTestCase{
                 .left_inputs =
                     {test::NamedTensor(
-                         "x_1", TensorFromJSON(
-                                    arrow::large_utf8(),
+                         "x_1",
+                         TensorFrom(arrow::large_utf8(),
                                     R"json(["A","A","B","B","B","C"])json")),
-                     test::NamedTensor("x_2", TensorFromJSON(arrow::int64(),
-                                                             "[1,2,1,1,2,1]"))},
+                     test::NamedTensor("x_2", TensorFrom(arrow::int64(),
+                                                         "[1,2,1,1,2,1]"))},
                 .right_inputs =
                     {test::NamedTensor(
-                         "y_1", TensorFromJSON(
-                                    arrow::large_utf8(),
+                         "y_1",
+                         TensorFrom(arrow::large_utf8(),
                                     R"json(["B","A","A","B","B","B"])json")),
-                     test::NamedTensor("y_2", TensorFromJSON(arrow::int64(),
-                                                             "[2,1,2,1,3,2]"))},
+                     test::NamedTensor("y_2", TensorFrom(arrow::int64(),
+                                                         "[2,1,2,1,3,2]"))},
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .join_indices = {"0,1", "1,2", "2,3", "3,3", "4,0", "4,5"},
                 .ub_server = 0},
@@ -332,18 +332,18 @@ INSTANTIATE_TEST_SUITE_P(
             JoinTestCase{
                 .left_inputs =
                     {test::NamedTensor(
-                         "x_1", TensorFromJSON(
-                                    arrow::large_utf8(),
+                         "x_1",
+                         TensorFrom(arrow::large_utf8(),
                                     R"json(["A","A","B","B","B","C"])json")),
-                     test::NamedTensor("x_2", TensorFromJSON(arrow::int64(),
-                                                             "[1,2,1,1,2,1]"))},
+                     test::NamedTensor("x_2", TensorFrom(arrow::int64(),
+                                                         "[1,2,1,1,2,1]"))},
                 .right_inputs =
                     {test::NamedTensor(
-                         "y_1", TensorFromJSON(
-                                    arrow::large_utf8(),
+                         "y_1",
+                         TensorFrom(arrow::large_utf8(),
                                     R"json(["B","A","A","B","B","B"])json")),
-                     test::NamedTensor("y_2", TensorFromJSON(arrow::int64(),
-                                                             "[2,1,2,1,3,2]"))},
+                     test::NamedTensor("y_2", TensorFrom(arrow::int64(),
+                                                         "[2,1,2,1,3,2]"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kLeftJoin),
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .join_indices = {"0,1", "1,2", "2,3", "3,3", "4,0", "4,5",
@@ -352,18 +352,18 @@ INSTANTIATE_TEST_SUITE_P(
             JoinTestCase{
                 .left_inputs =
                     {test::NamedTensor(
-                         "x_1", TensorFromJSON(
-                                    arrow::large_utf8(),
+                         "x_1",
+                         TensorFrom(arrow::large_utf8(),
                                     R"json(["A","A","B","B","B","C"])json")),
-                     test::NamedTensor("x_2", TensorFromJSON(arrow::int64(),
-                                                             "[1,2,1,1,2,1]"))},
+                     test::NamedTensor("x_2", TensorFrom(arrow::int64(),
+                                                         "[1,2,1,1,2,1]"))},
                 .right_inputs =
                     {test::NamedTensor(
-                         "y_1", TensorFromJSON(
-                                    arrow::large_utf8(),
+                         "y_1",
+                         TensorFrom(arrow::large_utf8(),
                                     R"json(["B","A","A","B","B","B"])json")),
-                     test::NamedTensor("y_2", TensorFromJSON(arrow::int64(),
-                                                             "[2,1,2,1,3,2]"))},
+                     test::NamedTensor("y_2", TensorFrom(arrow::int64(),
+                                                         "[2,1,2,1,3,2]"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kRightJoin),
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .join_indices = {"0,1", "1,2", "2,3", "3,3", "4,0", "4,5",
@@ -373,18 +373,18 @@ INSTANTIATE_TEST_SUITE_P(
             JoinTestCase{
                 .left_inputs =
                     {test::NamedTensor(
-                         "x_1", TensorFromJSON(
-                                    arrow::large_utf8(),
+                         "x_1",
+                         TensorFrom(arrow::large_utf8(),
                                     R"json(["A","A","B","B","B","C"])json")),
-                     test::NamedTensor("x_2", TensorFromJSON(arrow::int64(),
-                                                             "[1,2,1,1,2,1]"))},
+                     test::NamedTensor("x_2", TensorFrom(arrow::int64(),
+                                                         "[1,2,1,1,2,1]"))},
                 .right_inputs =
                     {test::NamedTensor(
-                         "y_1", TensorFromJSON(
-                                    arrow::large_utf8(),
+                         "y_1",
+                         TensorFrom(arrow::large_utf8(),
                                     R"json(["B","A","A","B","B","B"])json")),
-                     test::NamedTensor("y_2", TensorFromJSON(arrow::int64(),
-                                                             "[2,1,2,1,3,2]"))},
+                     test::NamedTensor("y_2", TensorFrom(arrow::int64(),
+                                                         "[2,1,2,1,3,2]"))},
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .join_indices = {"0,1", "1,2", "2,3", "3,3", "4,0", "4,5"},
                 .ub_server = 1},
@@ -392,18 +392,18 @@ INSTANTIATE_TEST_SUITE_P(
             JoinTestCase{
                 .left_inputs =
                     {test::NamedTensor(
-                         "x_1", TensorFromJSON(
-                                    arrow::large_utf8(),
+                         "x_1",
+                         TensorFrom(arrow::large_utf8(),
                                     R"json(["A","A","B","B","B","C"])json")),
-                     test::NamedTensor("x_2", TensorFromJSON(arrow::int64(),
-                                                             "[1,2,1,1,2,1]"))},
+                     test::NamedTensor("x_2", TensorFrom(arrow::int64(),
+                                                         "[1,2,1,1,2,1]"))},
                 .right_inputs =
                     {test::NamedTensor(
-                         "y_1", TensorFromJSON(
-                                    arrow::large_utf8(),
+                         "y_1",
+                         TensorFrom(arrow::large_utf8(),
                                     R"json(["B","A","A","B","B","B"])json")),
-                     test::NamedTensor("y_2", TensorFromJSON(arrow::int64(),
-                                                             "[2,1,2,1,3,2]"))},
+                     test::NamedTensor("y_2", TensorFrom(arrow::int64(),
+                                                         "[2,1,2,1,3,2]"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kLeftJoin),
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .join_indices = {"0,1", "1,2", "2,3", "3,3", "4,0", "4,5",
@@ -412,18 +412,18 @@ INSTANTIATE_TEST_SUITE_P(
             JoinTestCase{
                 .left_inputs =
                     {test::NamedTensor(
-                         "x_1", TensorFromJSON(
-                                    arrow::large_utf8(),
+                         "x_1",
+                         TensorFrom(arrow::large_utf8(),
                                     R"json(["A","A","B","B","B","C"])json")),
-                     test::NamedTensor("x_2", TensorFromJSON(arrow::int64(),
-                                                             "[1,2,1,1,2,1]"))},
+                     test::NamedTensor("x_2", TensorFrom(arrow::int64(),
+                                                         "[1,2,1,1,2,1]"))},
                 .right_inputs =
                     {test::NamedTensor(
-                         "y_1", TensorFromJSON(
-                                    arrow::large_utf8(),
+                         "y_1",
+                         TensorFrom(arrow::large_utf8(),
                                     R"json(["B","A","A","B","B","B"])json")),
-                     test::NamedTensor("y_2", TensorFromJSON(arrow::int64(),
-                                                             "[2,1,2,1,3,2]"))},
+                     test::NamedTensor("y_2", TensorFrom(arrow::int64(),
+                                                         "[2,1,2,1,3,2]"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kRightJoin),
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .join_indices = {"0,1", "1,2", "2,3", "3,3", "4,0", "4,5",
@@ -434,64 +434,64 @@ INSTANTIATE_TEST_SUITE_P(
             // testcase: empty join output
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["A","B","C"])json"))},
+                    "x", TensorFrom(arrow::large_utf8(),
+                                    R"json(["A","B","C"])json"))},
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["E","F","H","G"])json"))},
+                    "y", TensorFrom(arrow::large_utf8(),
+                                    R"json(["E","F","H","G"])json"))},
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .join_indices = {},
                 .ub_server = 0},
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["A","B","C"])json"))},
+                    "x", TensorFrom(arrow::large_utf8(),
+                                    R"json(["A","B","C"])json"))},
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["E","F","H","G"])json"))},
+                    "y", TensorFrom(arrow::large_utf8(),
+                                    R"json(["E","F","H","G"])json"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kLeftJoin),
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .join_indices = {"0,null", "1,null", "2,null"},
                 .ub_server = 0},
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["A","B","C"])json"))},
+                    "x", TensorFrom(arrow::large_utf8(),
+                                    R"json(["A","B","C"])json"))},
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["E","F","H","G"])json"))},
+                    "y", TensorFrom(arrow::large_utf8(),
+                                    R"json(["E","F","H","G"])json"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kRightJoin),
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .join_indices = {"null,0", "null,1", "null,2", "null,3"},
                 .ub_server = 0},
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["A","B","C"])json"))},
+                    "x", TensorFrom(arrow::large_utf8(),
+                                    R"json(["A","B","C"])json"))},
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["E","F","H","G"])json"))},
+                    "y", TensorFrom(arrow::large_utf8(),
+                                    R"json(["E","F","H","G"])json"))},
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .join_indices = {},
                 .ub_server = 1},
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["A","B","C"])json"))},
+                    "x", TensorFrom(arrow::large_utf8(),
+                                    R"json(["A","B","C"])json"))},
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["E","F","H","G"])json"))},
+                    "y", TensorFrom(arrow::large_utf8(),
+                                    R"json(["E","F","H","G"])json"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kLeftJoin),
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .join_indices = {"0,null", "1,null", "2,null"},
                 .ub_server = 1},
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["A","B","C"])json"))},
+                    "x", TensorFrom(arrow::large_utf8(),
+                                    R"json(["A","B","C"])json"))},
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["E","F","H","G"])json"))},
+                    "y", TensorFrom(arrow::large_utf8(),
+                                    R"json(["E","F","H","G"])json"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kRightJoin),
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .join_indices = {"null,0", "null,1", "null,2", "null,3"},
@@ -501,58 +501,58 @@ INSTANTIATE_TEST_SUITE_P(
             // testcase: empty input
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::large_utf8(), R"json([])json"))},
+                    "x", TensorFrom(arrow::large_utf8(), R"json([])json"))},
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["E","F","H","G"])json"))},
+                    "y", TensorFrom(arrow::large_utf8(),
+                                    R"json(["E","F","H","G"])json"))},
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .join_indices = {},
                 .ub_server = 0},
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::large_utf8(), R"json([])json"))},
+                    "x", TensorFrom(arrow::large_utf8(), R"json([])json"))},
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["E","F","H","G"])json"))},
+                    "y", TensorFrom(arrow::large_utf8(),
+                                    R"json(["E","F","H","G"])json"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kLeftJoin),
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .join_indices = {},
                 .ub_server = 0},
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::large_utf8(), R"json([])json"))},
+                    "x", TensorFrom(arrow::large_utf8(), R"json([])json"))},
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["E","F","H","G"])json"))},
+                    "y", TensorFrom(arrow::large_utf8(),
+                                    R"json(["E","F","H","G"])json"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kRightJoin),
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .join_indices = {"null,0", "null,1", "null,2", "null,3"},
                 .ub_server = 0},
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::large_utf8(), R"json([])json"))},
+                    "x", TensorFrom(arrow::large_utf8(), R"json([])json"))},
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["E","F","H","G"])json"))},
+                    "y", TensorFrom(arrow::large_utf8(),
+                                    R"json(["E","F","H","G"])json"))},
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .join_indices = {},
                 .ub_server = 1},
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::large_utf8(), R"json([])json"))},
+                    "x", TensorFrom(arrow::large_utf8(), R"json([])json"))},
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["E","F","H","G"])json"))},
+                    "y", TensorFrom(arrow::large_utf8(),
+                                    R"json(["E","F","H","G"])json"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kLeftJoin),
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .join_indices = {},
                 .ub_server = 1},
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::large_utf8(), R"json([])json"))},
+                    "x", TensorFrom(arrow::large_utf8(), R"json([])json"))},
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["E","F","H","G"])json"))},
+                    "y", TensorFrom(arrow::large_utf8(),
+                                    R"json(["E","F","H","G"])json"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kRightJoin),
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
                 .join_indices = {"null,0", "null,1", "null,2", "null,3"},
@@ -574,9 +574,9 @@ INSTANTIATE_TEST_SUITE_P(
 
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "id_a", TensorFromJSON(arrow::int64(), "[4,8,1,3,3,5]"))},
+                    "id_a", TensorFrom(arrow::int64(), "[4,8,1,3,3,5]"))},
                 .right_inputs = {test::NamedTensor(
-                    "id_b", TensorFromJSON(arrow::int64(), "[2,1,4,4,3,7,8]"))},
+                    "id_b", TensorFrom(arrow::int64(), "[2,1,4,4,3,7,8]"))},
                 .join_type = static_cast<int64_t>(Join::JoinType::kInnerJoin),
                 .join_indices = {"0,2", "0,3", "1,6", "2,1", "3,4", "4,4"},
                 .ub_server = 1,
@@ -586,18 +586,18 @@ INSTANTIATE_TEST_SUITE_P(
             JoinTestCase{
                 .left_inputs =
                     {test::NamedTensor(
-                         "x_1", TensorFromJSON(
-                                    arrow::large_utf8(),
+                         "x_1",
+                         TensorFrom(arrow::large_utf8(),
                                     R"json(["A","A","B","B","B","C"])json")),
-                     test::NamedTensor("x_2", TensorFromJSON(arrow::int64(),
-                                                             "[1,2,1,1,2,1]"))},
+                     test::NamedTensor("x_2", TensorFrom(arrow::int64(),
+                                                         "[1,2,1,1,2,1]"))},
                 .right_inputs =
                     {test::NamedTensor(
-                         "y_1", TensorFromJSON(
-                                    arrow::large_utf8(),
+                         "y_1",
+                         TensorFrom(arrow::large_utf8(),
                                     R"json(["B","A","A","B","B","B"])json")),
-                     test::NamedTensor("y_2", TensorFromJSON(arrow::int64(),
-                                                             "[2,1,2,1,3,2]"))},
+                     test::NamedTensor("y_2", TensorFrom(arrow::int64(),
+                                                         "[2,1,2,1,3,2]"))},
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kAutoPsi),
                 .join_indices = {"0,1", "1,2", "2,3", "3,3", "4,0", "4,5"},
                 .ub_server = 1,
@@ -606,11 +606,11 @@ INSTANTIATE_TEST_SUITE_P(
             // case 3
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["A","B","C"])json"))},
+                    "x", TensorFrom(arrow::large_utf8(),
+                                    R"json(["A","B","C"])json"))},
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["E","F","H","G"])json"))},
+                    "y", TensorFrom(arrow::large_utf8(),
+                                    R"json(["E","F","H","G"])json"))},
                 .join_algo = static_cast<int64_t>(util::PsiAlgo::kEcdhPsi),
                 .join_indices = {},
                 .ub_server = 1,
@@ -619,10 +619,10 @@ INSTANTIATE_TEST_SUITE_P(
             // case 4
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
-                    "x", TensorFromJSON(arrow::large_utf8(), R"json([])json"))},
+                    "x", TensorFrom(arrow::large_utf8(), R"json([])json"))},
                 .right_inputs = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["E","F","H","G"])json"))},
+                    "y", TensorFrom(arrow::large_utf8(),
+                                    R"json(["E","F","H","G"])json"))},
                 .join_indices = {},
                 .ub_server = 1,
             }
@@ -662,10 +662,12 @@ TEST_P(JoinTest, works) {
   EXPECT_EQ(left_output->Length(), right_output->Length());
   EXPECT_EQ(left_output->Length(), test_case.join_indices.size());
 
-  auto left_join_result = util::StringifyVisitor(*left_output)
-                              .StringifyBatch(left_output->Length());
-  auto right_join_result = util::StringifyVisitor(*right_output)
-                               .StringifyBatch(right_output->Length());
+  auto left_join_result =
+      util::StringifyVisitor(left_output, left_output->Length())
+          .StringifyBatch();
+  auto right_join_result =
+      util::StringifyVisitor(right_output, right_output->Length())
+          .StringifyBatch();
 
   auto indices_got = util::Combine(left_join_result, right_join_result);
 

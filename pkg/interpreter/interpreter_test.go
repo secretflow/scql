@@ -100,6 +100,13 @@ var commonSecurityConf = &proto.SecurityConfig{
 			TableName:    "tb",
 			ColumnName:   "order_amount",
 		},
+		{
+			PartyCode:    "alice",
+			Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AS_JOIN_PAYLOAD,
+			DatabaseName: "",
+			TableName:    "tb",
+			ColumnName:   "is_active",
+		},
 	},
 }
 
@@ -159,6 +166,170 @@ var commonCatalog = &proto.Catalog{
 }
 
 var testCases = []compileTestCase{
+	{
+		req: &proto.CompileQueryRequest{
+			Query:  "SELECT ta.credit_rank, tb.order_amount, geodist(ta.credit_rank, ta.credit_rank, tb.order_amount, tb.order_amount) FROM ta INNER JOIN tb ON ta.ID = tb.ID",
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "alice",
+			},
+			IssuerAsParticipant: true,
+			SecurityConf: &proto.SecurityConfig{
+				ColumnControlList: []*proto.SecurityConfig_ColumnControl{
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "credit_rank",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_JOIN,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "order_amount",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_JOIN,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_COMPARE,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "order_amount",
+					},
+				},
+			},
+			Catalog:     commonCatalog,
+			CompileOpts: &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+		},
+		ok:           false,
+		workPartyNum: 2,
+	},
+	{
+		req: &proto.CompileQueryRequest{
+			Query:  "SELECT ta.credit_rank, geodist(ta.credit_rank, ta.credit_rank, tb.order_amount, tb.order_amount) FROM ta INNER JOIN tb ON ta.ID = tb.ID",
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "alice",
+			},
+			IssuerAsParticipant: true,
+			SecurityConf: &proto.SecurityConfig{
+				ColumnControlList: []*proto.SecurityConfig_ColumnControl{
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "credit_rank",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_JOIN,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "order_amount",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_JOIN,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_COMPARE,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "order_amount",
+					},
+				},
+			},
+			Catalog:     commonCatalog,
+			CompileOpts: &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+		},
+		ok:           true,
+		workPartyNum: 2,
+	},
+	{
+		req: &proto.CompileQueryRequest{
+			Query:  "SELECT geodist(ta.credit_rank, ta.credit_rank, ta.credit_rank, ta.credit_rank, 6300) FROM ta INNER JOIN tb ON ta.ID = tb.ID",
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "alice",
+			},
+			IssuerAsParticipant: true,
+			SecurityConf:        commonSecurityConf,
+			Catalog:             commonCatalog,
+			CompileOpts:         &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+		},
+		ok:           true,
+		workPartyNum: 2,
+	},
+	{
+		req: &proto.CompileQueryRequest{
+			Query:  "SELECT geodist(ta.credit_rank, ta.credit_rank, ta.credit_rank, ta.credit_rank) FROM ta INNER JOIN tb ON ta.ID = tb.ID",
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "alice",
+			},
+			IssuerAsParticipant: true,
+			SecurityConf:        commonSecurityConf,
+			Catalog:             commonCatalog,
+			CompileOpts:         &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+		},
+		ok:           true,
+		workPartyNum: 2,
+	},
 	{
 		req: &proto.CompileQueryRequest{
 			Query:  "SELECT COS(ta.credit_rank) AS credit_rank_cos, SIN(tb.order_amount) AS order_amount_sin, ACOS(ta.credit_rank) AS credit_rank_acos FROM ta INNER JOIN tb ON ta.ID = tb.ID",

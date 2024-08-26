@@ -15,12 +15,14 @@
 #include "engine/operator/filter.h"
 
 #include "arrow/compute/api_vector.h"
+#include "arrow/compute/exec.h"
 #include "libspu/device/io.h"
 #include "libspu/device/symbol_table.h"
 #include "libspu/kernel/hal/constants.h"
 #include "libspu/kernel/hal/public_helper.h"
 #include "libspu/kernel/hlo/indexing.h"
 
+#include "engine/core/tensor_constructor.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
 
@@ -100,8 +102,7 @@ void Filter::FilterPrivate(ExecContext* ctx, const pb::Tensor& filter_pb,
                result.status().ToString());
 
   ctx->GetTensorTable()->AddTensor(
-      output_name,
-      std::make_shared<Tensor>(result.ValueOrDie().chunked_array()));
+      output_name, TensorFrom(result.ValueOrDie().chunked_array()));
 }
 
 // filter status: PUBLIC, data status: SECRET, output status: SECRET

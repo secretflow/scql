@@ -23,6 +23,11 @@ cc_library(
     ],
 )
 
+config_setting(
+    name = "unset_tcmalloc",
+    define_values = {"disable_tcmalloc": "true"},
+)
+
 cc_binary(
     name = "scqlengine",
     srcs = [
@@ -34,6 +39,7 @@ cc_binary(
         "//engine/auth:authenticator",
         "//engine/datasource:http_router",
         "//engine/datasource:kuscia_datamesh_router",
+        "//engine/exe:flags",
         "//engine/link:mux_link_factory",
         "//engine/link:mux_receiver_service",
         "//engine/link:rpc_helper",
@@ -42,9 +48,11 @@ cc_binary(
         "//engine/services:prometheus_service_impl",
         "//engine/util:logging",
         "//engine/util:prometheus_monitor",
-        "//engine/exe:flags",
         "@com_github_brpc_brpc//:brpc",
         "@com_google_absl//absl/debugging:failure_signal_handler",
         "@com_google_absl//absl/debugging:symbolize",
-    ],
+    ] + select({
+        "unset_tcmalloc": [],
+        "//conditions:default": ["@com_github_gperftools_gperftools//:gperftools"],
+    }),
 )

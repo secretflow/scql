@@ -33,7 +33,7 @@ spu_cmake_external(
         "CURSES_INCLUDE_PATH": "$EXT_BUILD_DEPS/ncurses/include/",
         "INSTALL_INCLUDEDIR": "include/mysql",  # poco data needs <mysql/mysql.h>
         "CMAKE_C_COMPILER": "gcc",
-        "CMAKE_CXX_COMPILER": "g++"
+        "CMAKE_CXX_COMPILER": "g++",
     },
     install = False,
     lib_source = ":all_srcs",

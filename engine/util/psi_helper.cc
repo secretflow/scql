@@ -35,6 +35,7 @@
 #include "engine/core/arrow_helper.h"
 #include "engine/core/primitive_builder.h"
 #include "engine/core/tensor.h"
+#include "engine/core/tensor_constructor.h"
 
 DEFINE_int64(provider_batch_size, 8192, "batch size used in PSI Provider");
 
@@ -139,7 +140,7 @@ BatchProvider::BatchProvider(std::vector<TensorPtr> tensors, size_t batch_size)
     }
 
     stringify_visitors_.push_back(
-        std::make_unique<StringifyVisitor>(*tensors_[i]));
+        std::make_unique<StringifyVisitor>(tensors_[i], batch_size_));
   }
 }
 
@@ -148,13 +149,13 @@ std::vector<std::string> BatchProvider::ReadNextBatch() {
     return std::vector<std::string>{};
   }
 
-  auto keys = stringify_visitors_[0]->StringifyBatch(batch_size_);
+  auto keys = stringify_visitors_[0]->StringifyBatch();
   if (keys.empty()) {
     return keys;
   }
 
   for (size_t i = 1; i < tensors_.size(); ++i) {
-    auto another_keys = stringify_visitors_[i]->StringifyBatch(batch_size_);
+    auto another_keys = stringify_visitors_[i]->StringifyBatch();
     YACL_ENFORCE(keys.size() == another_keys.size(),
                  "tensor #{} batch size not equals with previous", i);
 
@@ -343,7 +344,7 @@ TensorPtr InResultResolver::FinalizeAndRestoreResultOrder() {
                result.status().ToString());
 
   auto chunked_arr = std::make_shared<arrow::ChunkedArray>(result.ValueOrDie());
-  return std::make_shared<Tensor>(chunked_arr);
+  return TensorFrom(chunked_arr);
 }
 
 }  // namespace

@@ -85,6 +85,7 @@ cc_library(
     visibility = ["//engine/exe:__pkg__"],
     deps = [
         ":error_collector_service_impl",
+        ":pipeline",
         "//api:common_cc_proto",
         "//api:engine_cc_proto",
         "//api:status_cc_proto",
@@ -112,5 +113,20 @@ cc_test(
         "//engine/operator:test_util",
         "@com_google_googletest//:gtest_main",
         "@org_pocoproject_poco//:poco",
+    ],
+)
+
+cc_library(
+    name = "pipeline",
+    srcs = ["pipeline.cc"],
+    hdrs = ["pipeline.h"],
+    visibility = ["//engine/exe:__pkg__"],
+    deps = [
+        "//api:engine_cc_proto",
+        "//engine/core:tensor",
+        "//engine/core:tensor_constructor",
+        "//engine/framework:session",
+        "//engine/util:filepath_helper",
+        "@org_apache_arrow//:arrow",
     ],
 )

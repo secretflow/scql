@@ -15,7 +15,6 @@
 package common
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -130,6 +129,16 @@ func FeedResponse(c *gin.Context, response proto.Message, err error, encodingTyp
 		c.String(http.StatusInternalServerError, fmt.Sprintf("FeedResponse: unable to serialize response: %+v", response))
 		return
 	}
+
+	switch encodingType {
+	case message.EncodingTypeJson:
+		c.Header("Content-Type", "application/json")
+	case message.EncodingTypeProtobuf:
+		c.Header("Content-Type", "application/x-protobuf")
+	default:
+		c.Header("Content-Type", "application/x-protobuf")
+	}
+
 	c.String(http.StatusOK, body)
 }
 
@@ -149,13 +158,13 @@ func CheckInvitationCompatibleWithProj(invitation storage.Invitation, proj stora
 	}
 
 	var currentProj pb.ProjectConfig
-	err := json.Unmarshal([]byte(proj.ProjectConf), &currentProj)
+	err := message.ProtoUnmarshal([]byte(proj.ProjectConf), &currentProj)
 	if err != nil {
 		return fmt.Errorf("failed to deserialize project conf of current project")
 	}
 
 	var inviteProj pb.ProjectConfig
-	err = json.Unmarshal([]byte(invitation.ProjectConf), &inviteProj)
+	err = message.ProtoUnmarshal([]byte(invitation.ProjectConf), &inviteProj)
 
 	if err != nil {
 		return fmt.Errorf("failed to deserialize project conf of invitation project")

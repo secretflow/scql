@@ -54,6 +54,11 @@ type Plan interface {
 	SelectBlockOffset() int
 }
 
+type InsertTableOption struct {
+	TableName string
+	Columns   []string
+}
+
 type LogicalPlan interface {
 	Plan
 
@@ -88,14 +93,17 @@ type LogicalPlan interface {
 	// Added for SCQL
 	SetIntoOpt(option *ast.SelectIntoOption)
 	IntoOpt() *ast.SelectIntoOption
+	SetInsertTableOpt(option *InsertTableOption)
+	InsertTableOpt() *InsertTableOption
 }
 
 type basePlan struct {
-	tp          string
-	id          int
-	ctx         sessionctx.Context
-	blockOffset int
-	intoOpt     *ast.SelectIntoOption
+	tp             string
+	id             int
+	ctx            sessionctx.Context
+	blockOffset    int
+	intoOpt        *ast.SelectIntoOption
+	insertTableOpt *InsertTableOption
 }
 
 func (p *basePlan) TP() string {
@@ -220,6 +228,14 @@ func (p *basePlan) SetIntoOpt(option *ast.SelectIntoOption) {
 
 func (p *basePlan) IntoOpt() *ast.SelectIntoOption {
 	return p.intoOpt
+}
+
+func (p *basePlan) SetInsertTableOpt(option *InsertTableOption) {
+	p.insertTableOpt = option
+}
+
+func (p *basePlan) InsertTableOpt() *InsertTableOption {
+	return p.insertTableOpt
 }
 
 func (p *baseLogicalPlan) SqlStmt(d Dialect) (*runSqlCtx, error) {

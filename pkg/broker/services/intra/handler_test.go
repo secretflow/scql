@@ -63,7 +63,7 @@ func (s *intraTestSuite) SetupSuite() {
 func (s *intraTestSuite) bootstrap(manager *storage.MetaManager) {
 	txn := manager.CreateMetaTransaction()
 	defer txn.Finish(nil)
-	projConf, _ := json.Marshal(pb.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}})
+	projConf, _ := message.ProtoMarshal(&pb.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}})
 	s.NoError(txn.CreateProject(storage.Project{ID: "1", Name: "test project", Creator: "alice", ProjectConf: string(projConf)}))
 }
 
@@ -97,7 +97,7 @@ func (s *intraTestSuite) TestProcessInvitationNormal() {
 	serverAlice.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == constant.ReplyInvitationPath {
 			var req pb.ReplyInvitationRequest
-			inputEncodingType, err := message.DeserializeFrom(r.Body, &req)
+			inputEncodingType, err := message.DeserializeFrom(r.Body, &req, r.Header.Get("Content-Type"))
 			s.NoError(err)
 			resp := &pb.ReplyInvitationResponse{
 				Status:      &pb.Status{Code: 0},
@@ -111,11 +111,11 @@ func (s *intraTestSuite) TestProcessInvitationNormal() {
 	serverBob.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == constant.InviteToProjectPath {
 			var req pb.InviteToProjectRequest
-			inputEncodingType, err := message.DeserializeFrom(r.Body, &req)
+			inputEncodingType, err := message.DeserializeFrom(r.Body, &req, r.Header.Get("Content-Type"))
 			s.NoError(err)
 			txn := s.testAppBuilder.AppBob.MetaMgr.CreateMetaTransaction()
 			defer txn.Finish(nil)
-			projectConf, err := json.Marshal(pb.ProjectConfig{
+			projectConf, err := message.ProtoMarshal(&pb.ProjectConfig{
 				SpuRuntimeCfg:        req.GetProject().GetConf().GetSpuRuntimeCfg(),
 				SessionExpireSeconds: req.GetProject().GetConf().SessionExpireSeconds,
 			})
@@ -157,7 +157,7 @@ func (s *intraTestSuite) TestProcessInvitationNormal() {
 
 func (s *intraTestSuite) TestListInvitations() {
 	txn := s.testAppBuilder.AppBob.MetaMgr.CreateMetaTransaction()
-	projConf, _ := json.Marshal(pb.ProjectConfig{
+	projConf, _ := message.ProtoMarshal(&pb.ProjectConfig{
 		SpuRuntimeCfg: &spu.RuntimeConfig{
 			Protocol: spu.ProtocolKind_SEMI2K,
 			Field:    spu.FieldType_FM64,
@@ -221,7 +221,7 @@ func (s *intraTestSuite) TestProcessInvitationError() {
 	serverAlice.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == constant.ReplyInvitationPath {
 			var req pb.ReplyInvitationRequest
-			inputEncodingType, err := message.DeserializeFrom(r.Body, &req)
+			inputEncodingType, err := message.DeserializeFrom(r.Body, &req, r.Header.Get("Content-Type"))
 			s.NoError(err)
 			resp := &pb.ReplyInvitationResponse{
 				Status:      &pb.Status{Code: int32(pb.Code_DATA_INCONSISTENCY)},
@@ -235,12 +235,12 @@ func (s *intraTestSuite) TestProcessInvitationError() {
 	serverBob.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == constant.InviteToProjectPath {
 			var req pb.InviteToProjectRequest
-			inputEncodingType, err := message.DeserializeFrom(r.Body, &req)
+			inputEncodingType, err := message.DeserializeFrom(r.Body, &req, r.Header.Get("Content-Type"))
 			s.NoError(err)
 			txn := s.testAppBuilder.AppBob.MetaMgr.CreateMetaTransaction()
 			defer txn.Finish(nil)
 			s.NoError(err)
-			projConf, _ := json.Marshal(pb.ProjectConfig{
+			projConf, _ := message.ProtoMarshal(&pb.ProjectConfig{
 				SpuRuntimeCfg:        req.Project.Conf.SpuRuntimeCfg,
 				SessionExpireSeconds: req.Project.Conf.SessionExpireSeconds,
 			})
@@ -373,7 +373,7 @@ func (s *intraTestSuite) TestCheckAndUpdateStatusNormal() {
 	serverBob.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == constant.AskInfoPath {
 			var req pb.AskInfoRequest
-			inputEncodingType, err := message.DeserializeFrom(r.Body, &req)
+			inputEncodingType, err := message.DeserializeFrom(r.Body, &req, r.Header.Get("Content-Type"))
 			s.NoError(err)
 			s.Equal(1, len(req.GetResourceSpecs()))
 			s.Equal(pb.ResourceSpec_All, req.GetResourceSpecs()[0].GetKind())

@@ -24,7 +24,12 @@ namespace scql::engine {
 
 class TensorTable {
  public:
+  // check tensor not existing before inserting to tensor table
   void AddTensor(const std::string& name, std::shared_ptr<Tensor> tensor);
+
+  // insert to tensor table without checking
+  void AddOrUpdateTensor(const std::string& name,
+                         std::shared_ptr<Tensor> tensor);
 
   std::shared_ptr<Tensor> GetTensor(const std::string& name) const;
 

@@ -50,7 +50,7 @@ REPLACE_MAP = {
 }
 
 INSERT_STR = """
-INSERT INTO {} VALUES ({});"""
+INSERT INTO {} VALUES {};"""
 SQL_FILE_LIST = {
     "alice": "alice_init.sql",
     "bob": "bob_init.sql",
@@ -128,11 +128,20 @@ def create_table(table_name, columns):
 
 
 def create_insert(table_name, columns, str_pool, rows):
-    insert_str = ""
-    for _ in range(rows):
+    batch_size = 50
+
+    insert_str = "START TRANSACTION;\n"
+    for _ in range((rows + batch_size - 1) // batch_size):
         _, data_types = fill_column_name(columns)
-        column_datas = []
-        for dt in data_types:
-            column_datas.append(str(create_data(dt, str_pool)))
-        insert_str += INSERT_STR.format(table_name, ", ".join(column_datas))
+        batch_insert = []
+        for _ in range(min(batch_size, rows)):
+            column_datas = []
+            for dt in data_types:
+                column_datas.append(str(create_data(dt, str_pool)))
+            batch_insert.append("({})".format(", ".join(column_datas)))
+
+        insert_str += INSERT_STR.format(table_name, ", ".join(batch_insert))
+        rows -= batch_size
+    insert_str += "\nCOMMIT;"
+
     return insert_str

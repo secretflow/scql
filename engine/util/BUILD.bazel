@@ -51,9 +51,10 @@ cc_library(
         ":stringify_visitor",
         "//engine/core:primitive_builder",
         "//engine/core:string_tensor_builder",
+        "//engine/core:tensor_constructor",
         "//engine/framework:exec",
-        "@com_github_msgpack_msgpack//:msgpack",
         "@com_github_gabime_spdlog//:spdlog",
+        "@com_github_msgpack_msgpack//:msgpack",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
         "@psi//psi/ecdh:ecdh_oprf_psi",
@@ -106,7 +107,7 @@ cc_library(
     deps = [
         "//engine/core:arrow_helper",
         "//engine/core:tensor",
-        "//engine/core:tensor_chunk",
+        "//engine/core:tensor_constructor",
     ],
 )
 
@@ -118,6 +119,7 @@ cc_library(
         ":ndarray_to_arrow",
         "//engine/core:arrow_helper",
         "//engine/core:tensor",
+        "//engine/core:tensor_constructor",
         "//engine/core:type",
         "@org_apache_arrow//:arrow",
         "@spulib//libspu/core:xt_helper",
@@ -146,6 +148,7 @@ cc_library(
     srcs = ["filepath_helper.cc"],
     hdrs = ["filepath_helper.h"],
     deps = [
+        "@boost//:uuid",
         "@com_google_absl//absl/strings",
         "@yacl//yacl/base:exception",
     ],
@@ -158,6 +161,7 @@ cc_library(
     deps = [
         "//engine/core:primitive_builder",
         "//engine/core:tensor",
+        "//engine/core:tensor_constructor",
         "@org_apache_arrow//:arrow",
         "@yacl//yacl/base:exception",
     ],
@@ -191,5 +195,16 @@ cc_library(
     deps = [
         "//engine/util:spu_io",
         "@com_github_msgpack_msgpack//:msgpack",
+    ],
+)
+
+cc_library(
+    name = "context_util",
+    srcs = ["context_util.cc"],
+    hdrs = ["context_util.h"],
+    deps = [
+        ":tensor_util",
+        "//engine/framework:exec",
+        "//engine/util:spu_io",
     ],
 )

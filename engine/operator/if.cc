@@ -18,10 +18,12 @@
 #include <vector>
 
 #include "arrow/compute/api_vector.h"
+#include "arrow/compute/exec.h"
 #include "libspu/kernel/hlo/basic_binary.h"
 #include "libspu/kernel/hlo/casting.h"
 #include "libspu/kernel/hlo/const.h"
 
+#include "engine/core/tensor_constructor.h"
 #include "engine/framework/exec.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
@@ -102,8 +104,7 @@ void If::IfPrivate(ExecContext* ctx, const pb::Tensor& cond_pb,
                "invoking arrow if_else function failed: err_msg={}",
                result.status().ToString());
   ctx->GetTensorTable()->AddTensor(
-      output_name,
-      std::make_shared<Tensor>(result.ValueOrDie().chunked_array()));
+      output_name, TensorFrom(result.ValueOrDie().chunked_array()));
 }
 
 void If::IfSecret(ExecContext* ctx, const pb::Tensor& cond_pb,

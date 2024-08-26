@@ -41,29 +41,28 @@ INSTANTIATE_TEST_SUITE_P(
             // test private status
             IsNullTestCase{
                 .input = test::NamedTensor(
-                    "in", TensorFromJSON(arrow::int64(), "[null, 2, 3, null]")),
+                    "in", TensorFrom(arrow::int64(), "[null, 2, 3, null]")),
                 .expect_out = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::boolean(),
-                                          "[true, false, false, true]"))},
+                    "out", TensorFrom(arrow::boolean(),
+                                      "[true, false, false, true]"))},
             IsNullTestCase{
                 .input = test::NamedTensor(
-                    "in", TensorFromJSON(arrow::float64(),
-                                         "[null, -0.1, 1.1, null]")),
+                    "in",
+                    TensorFrom(arrow::float64(), "[null, -0.1, 1.1, null]")),
                 .expect_out = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::boolean(),
-                                          "[true, false, false, true]"))},
+                    "out", TensorFrom(arrow::boolean(),
+                                      "[true, false, false, true]"))},
             IsNullTestCase{
                 .input = test::NamedTensor(
-                    "in", TensorFromJSON(arrow::large_utf8(),
-                                         R"json(["B", null, null ,"B"])json")),
+                    "in", TensorFrom(arrow::large_utf8(),
+                                     R"json(["B", null, null ,"B"])json")),
                 .expect_out = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::boolean(),
-                                          "[false, true, true, false]"))},
-            IsNullTestCase{
-                .input = test::NamedTensor(
-                    "in", TensorFromJSON(arrow::float64(), "[]")),
-                .expect_out = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::boolean(), "[]"))})),
+                    "out", TensorFrom(arrow::boolean(),
+                                      "[false, true, true, false]"))},
+            IsNullTestCase{.input = test::NamedTensor(
+                               "in", TensorFrom(arrow::float64(), "[]")),
+                           .expect_out = test::NamedTensor(
+                               "out", TensorFrom(arrow::boolean(), "[]"))})),
     TestParamNameGenerator(IsNullTest));
 
 TEST_P(IsNullTest, works) {

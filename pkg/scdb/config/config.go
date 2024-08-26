@@ -22,13 +22,13 @@ import (
 	"os"
 	"time"
 
-	"google.golang.org/protobuf/encoding/protojson"
 	"gopkg.in/yaml.v2"
 
 	"github.com/secretflow/scql/pkg/audit"
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/parser/auth"
 	"github.com/secretflow/scql/pkg/proto-gen/spu"
+	"github.com/secretflow/scql/pkg/util/message"
 )
 
 const (
@@ -187,7 +187,7 @@ func NewSpuRuntimeCfg(confStr string) (*spu.RuntimeConfig, error) {
 		return nil, fmt.Errorf("nil spu runtime config is unsupported")
 	}
 	runtimeConf := spu.RuntimeConfig{}
-	err := protojson.Unmarshal([]byte(confStr), &runtimeConf)
+	err := message.ProtoUnmarshal([]byte(confStr), &runtimeConf)
 	if err != nil {
 		return nil, err
 	}

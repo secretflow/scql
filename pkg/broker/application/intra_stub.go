@@ -55,7 +55,8 @@ func (stub *IntraStub) baseCall(url, path string, req proto.Message, response pr
 		return fmt.Errorf("status: %v, body: %s", intraResp.Status, body)
 	}
 	defer intraResp.Body.Close()
-	_, err = message.DeserializeFrom(intraResp.Body, response)
+
+	_, err = message.DeserializeFrom(intraResp.Body, response, intraResp.Header.Get("Content-Type"))
 	if err != nil {
 		return err
 	}

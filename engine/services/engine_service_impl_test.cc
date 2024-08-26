@@ -188,8 +188,9 @@ TEST_F(EngineServiceImplTest, RunExecutionPlan) {
   std::string node_id = "0";
   auto* graph = request.mutable_graph();
   (*graph->mutable_nodes())[node_id] = node;
-  auto subdag = graph->mutable_policy()->add_subdags();
-  auto job = subdag->add_jobs();
+  auto* pipeline = graph->mutable_policy()->add_pipelines();
+  auto* subdag = pipeline->add_subdags();
+  auto* job = subdag->add_jobs();
   job->add_node_ids(node_id);
 
   EXPECT_NO_THROW(
@@ -232,8 +233,9 @@ TEST_F(EngineServiceImplTest, RunExecutionPlanAsync) {
   std::string node_id = "0";
   auto* graph = request.mutable_graph();
   (*graph->mutable_nodes())[node_id] = node;
-  auto subdag = graph->mutable_policy()->add_subdags();
-  auto job = subdag->add_jobs();
+  auto* pipeline = graph->mutable_policy()->add_pipelines();
+  auto* subdag = pipeline->add_subdags();
+  auto* job = subdag->add_jobs();
   job->add_node_ids(node_id);
 
   EXPECT_NO_THROW(
@@ -582,8 +584,9 @@ void EngineServiceImpl2PartiesTest::AddRunSQLNode(
   auto node = node_builder.Build();
   auto* graph = request->mutable_graph();
   (*(graph->mutable_nodes()))[op::RunSQL::kOpType] = node;
-  auto subdag = graph->mutable_policy()->add_subdags();
-  auto job = subdag->add_jobs();
+  auto* pipeline = graph->mutable_policy()->add_pipelines();
+  auto* subdag = pipeline->add_subdags();
+  auto* job = subdag->add_jobs();
   job->add_node_ids(op::RunSQL::kOpType);
 }
 
@@ -620,7 +623,8 @@ void EngineServiceImpl2PartiesTest::AddJoinNode(
   auto node = builder.Build();
   auto* graph = request->mutable_graph();
   (*(graph->mutable_nodes()))[op::Join::kOpType] = node;
-  auto* subdag = graph->mutable_policy()->add_subdags();
+  auto* pipeline = graph->mutable_policy()->add_pipelines();
+  auto* subdag = pipeline->add_subdags();
   auto* job = subdag->add_jobs();
   job->add_node_ids(op::Join::kOpType);
 }
@@ -647,8 +651,9 @@ void EngineServiceImpl2PartiesTest::AddFilterByIndexNode(
   auto node = builder.Build();
   auto* graph = request->mutable_graph();
   (*(graph->mutable_nodes()))[op::FilterByIndex::kOpType] = node;
-  auto subdag = graph->mutable_policy()->add_subdags();
-  auto job = subdag->add_jobs();
+  auto pipeline = graph->mutable_policy()->add_pipelines();
+  auto* subdag = pipeline->add_subdags();
+  auto* job = subdag->add_jobs();
   job->add_node_ids(op::FilterByIndex::kOpType);
 }
 
@@ -672,8 +677,9 @@ void EngineServiceImpl2PartiesTest::AddPublishNode(
   auto node = builder.Build();
   auto* graph = request->mutable_graph();
   (*(graph->mutable_nodes()))[op::Publish::kOpType] = node;
-  auto subdag = graph->mutable_policy()->add_subdags();
-  auto job = subdag->add_jobs();
+  auto pipeline = graph->mutable_policy()->add_pipelines();
+  auto* subdag = pipeline->add_subdags();
+  auto* job = subdag->add_jobs();
   job->add_node_ids(op::Publish::kOpType);
 }
 

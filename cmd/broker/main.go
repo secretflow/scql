@@ -30,6 +30,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
@@ -230,8 +231,10 @@ func newDb(conf *config.StorageConf) (*gorm.DB, error) {
 		db, err = gorm.Open(sqlite.Open(conf.ConnStr), gormConfig)
 	case config.StorageTypeMySQL:
 		db, err = gorm.Open(mysql.Open(conf.ConnStr), gormConfig)
+	case config.StorageTypePostgres:
+		db, err = gorm.Open(postgres.Open(conf.ConnStr), gormConfig)
 	default:
-		return nil, fmt.Errorf("newDb: invalid config.StorageType %s, should be one of {sqlite,mysql}", conf.Type)
+		return nil, fmt.Errorf("newDb: invalid config.StorageType %s, should be one of {sqlite, mysql, postgres}", conf.Type)
 	}
 	if err != nil {
 		return nil, err

@@ -54,9 +54,6 @@ class BinaryBase : public Operator {
   // propagate nulls for arithmetic op
   static spu::Value PropagateNulls(spu::SPUContext* sctx, const spu::Value& lhs,
                                    const spu::Value& rhs);
-
-  static TensorPtr GetPrivateOrPublicTensor(ExecContext* ctx,
-                                            const pb::Tensor& t);
 };
 
 }  // namespace scql::engine::op

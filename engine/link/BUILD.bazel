@@ -30,8 +30,8 @@ cc_library(
     hdrs = ["channel_manager.h"],
     deps = [
         "@com_github_brpc_brpc//:brpc",
-        "@com_google_absl//absl/strings",
         "@com_github_gabime_spdlog//:spdlog",
+        "@com_google_absl//absl/strings",
         "@yacl//yacl/base:exception",
     ],
 )

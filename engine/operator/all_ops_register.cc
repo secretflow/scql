@@ -18,6 +18,7 @@
 
 #include "engine/operator/arithmetic.h"
 #include "engine/operator/broadcast_to.h"
+#include "engine/operator/bucket.h"
 #include "engine/operator/case_when.h"
 #include "engine/operator/cast.h"
 #include "engine/operator/coalesce.h"
@@ -34,6 +35,7 @@
 #include "engine/operator/if.h"
 #include "engine/operator/if_null.h"
 #include "engine/operator/in.h"
+#include "engine/operator/insert_table.h"
 #include "engine/operator/is_null.h"
 #include "engine/operator/join.h"
 #include "engine/operator/limit.h"
@@ -49,6 +51,7 @@
 #include "engine/operator/shape.h"
 #include "engine/operator/shuffle.h"
 #include "engine/operator/sort.h"
+#include "engine/operator/trigonometric.h"
 #include "engine/operator/unique.h"
 
 #ifndef ADD_OPERATOR_TO_REGISTRY
@@ -70,6 +73,7 @@ void RegisterAllOpsImpl() {
 
   ADD_OPERATOR_TO_REGISTRY(Publish);
   ADD_OPERATOR_TO_REGISTRY(DumpFile);
+  ADD_OPERATOR_TO_REGISTRY(InsertTable);
 
   ADD_OPERATOR_TO_REGISTRY(Join);
   ADD_OPERATOR_TO_REGISTRY(FilterByIndex);
@@ -141,6 +145,12 @@ void RegisterAllOpsImpl() {
   ADD_OPERATOR_TO_REGISTRY(IfNull);
   ADD_OPERATOR_TO_REGISTRY(IsNull);
   ADD_OPERATOR_TO_REGISTRY(Coalesce);
+
+  ADD_OPERATOR_TO_REGISTRY(Sine);
+  ADD_OPERATOR_TO_REGISTRY(Cosine);
+  ADD_OPERATOR_TO_REGISTRY(ACosine);
+
+  ADD_OPERATOR_TO_REGISTRY(Bucket);
 }
 
 }  // namespace

@@ -16,6 +16,7 @@
 
 #include "libspu/kernel/hlo/geometrical.h"
 
+#include "engine/core/tensor_constructor.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
 
@@ -55,7 +56,7 @@ void Limit::Execute(ExecContext* ctx) {
             tensor->ToArrowChunkedArray()->type());
       }
 
-      auto result = std::make_shared<Tensor>(std::move(sliced_arr));
+      auto result = TensorFrom(std::move(sliced_arr));
       ctx->GetTensorTable()->AddTensor(output_pbs[i].name(), std::move(result));
     } else {
       auto symbols = ctx->GetSession()->GetDeviceSymbols();

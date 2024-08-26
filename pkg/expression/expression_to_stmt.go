@@ -23,7 +23,9 @@ import (
 	"github.com/secretflow/scql/pkg/parser/ast"
 	"github.com/secretflow/scql/pkg/parser/format"
 	"github.com/secretflow/scql/pkg/parser/model"
+	"github.com/secretflow/scql/pkg/parser/mysql"
 	"github.com/secretflow/scql/pkg/parser/opcode"
+	"github.com/secretflow/scql/pkg/types"
 	driver "github.com/secretflow/scql/pkg/types/parser_driver"
 )
 
@@ -217,8 +219,64 @@ func (c ExprConverter) convertScalarFunction(dialect format.Dialect, expr *Scala
 		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
 	case *builtinDateFormatSig:
 		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
+	case *builtinGeoDist:
+		return c.buildGeoDistExpr(children, dialect, prec, idToExpr)
 	}
 	return nil, errors.Errorf("Unknown expr: %+v", expr.Function)
+}
+
+func radians(node ast.ExprNode) *ast.FuncCallExpr {
+	return &ast.FuncCallExpr{FnName: model.NewCIStr(ast.Radians), Args: []ast.ExprNode{node}}
+}
+
+func (c ExprConverter) buildGeoDistExpr(children []ast.ExprNode, dialect format.Dialect, prec int, idToExpr map[int64]ast.ExprNode) (ast.ExprNode, error) {
+	lo1 := children[0] //longtitude1
+	la1 := children[1] //latitude1
+	lo2 := children[2] //longtitude2
+	la2 := children[3] //latitude2
+
+	lo1Radians := radians(lo1)
+	la1Radians := radians(la1)
+	lo2Radians := radians(lo2)
+	la2Radians := radians(la2)
+
+	sinLa1 := &ast.FuncCallExpr{FnName: model.NewCIStr(ast.Sin), Args: []ast.ExprNode{la1Radians}}
+	sinLa2 := &ast.FuncCallExpr{FnName: model.NewCIStr(ast.Sin), Args: []ast.ExprNode{la2Radians}}
+	cosLa1 := &ast.FuncCallExpr{FnName: model.NewCIStr(ast.Cos), Args: []ast.ExprNode{la1Radians}}
+	cosLa2 := &ast.FuncCallExpr{FnName: model.NewCIStr(ast.Cos), Args: []ast.ExprNode{la2Radians}}
+
+	// lo1 - lo2
+	lo1MinusLo2 := &ast.BinaryOperationExpr{Op: opcode.Minus, L: lo1Radians, R: lo2Radians}
+	// cos(lo1 - lo2)
+	cosLo1MinusLo2 := &ast.FuncCallExpr{FnName: model.NewCIStr(ast.Cos), Args: []ast.ExprNode{lo1MinusLo2}}
+
+	// sin(la1) * sin(la2)
+	sinLa1MulSinLa2 := &ast.BinaryOperationExpr{Op: opcode.Mul, L: sinLa1, R: sinLa2}
+
+	// cos(la1) * cos(la2)
+	cosLa1MulCosLa2 := &ast.BinaryOperationExpr{Op: opcode.Mul, L: cosLa1, R: cosLa2}
+	// cos(la1) * cos(la2) * cos(lo1 - lo2)
+	cosMulCosMulCos := &ast.BinaryOperationExpr{Op: opcode.Mul, L: cosLa1MulCosLa2, R: cosLo1MinusLo2}
+	// sin(la1) * sin(la2) + cos(la1) * cos(la2) * cos(lo1 - lo2)
+	sinPlusCos := &ast.BinaryOperationExpr{Op: opcode.Plus, L: sinLa1MulSinLa2, R: cosMulCosMulCos}
+
+	// arccos(sin(la1) * sin(la2) + cos(la1) * cos(la2) * cos(lo1 - lo2))
+	arcCos := &ast.FuncCallExpr{FnName: model.NewCIStr(ast.Acos), Args: []ast.ExprNode{sinPlusCos}}
+
+	if len(children) == 4 {
+		radius := &Constant{
+			Value:   types.NewDatum(6371),
+			RetType: types.NewFieldType(mysql.TypeInt24),
+		}
+		radiusNode, err := c.ConvertExpressionToExprNode(dialect, radius, prec, idToExpr)
+		if err != nil {
+			return nil, err
+		}
+		return &ast.BinaryOperationExpr{Op: opcode.Mul, L: radiusNode, R: arcCos}, nil
+	} else {
+		radiusNode := children[4]
+		return &ast.BinaryOperationExpr{Op: opcode.Mul, L: radiusNode, R: arcCos}, nil
+	}
 }
 
 func IsCompareOp(expr *ScalarFunction) bool {

@@ -44,20 +44,19 @@ INSTANTIATE_TEST_SUITE_P(
         test::SpuTestValuesMultiPC,
         testing::Values(
             ShuffleTestCase{
-                .inputs = {test::NamedTensor("x1",
-                                             TensorFromJSON(arrow::int64(),
-                                                            "[1,2,3,4,5]")),
-                           test::NamedTensor(
-                               "x2", TensorFromJSON(arrow::int64(),
-                                                    "[10,11,12,13,14]"))},
+                .inputs = {test::NamedTensor("x1", TensorFrom(arrow::int64(),
+                                                              "[1,2,3,4,5]")),
+                           test::NamedTensor("x2",
+                                             TensorFrom(arrow::int64(),
+                                                        "[10,11,12,13,14]"))},
                 .output_names = {"y1", "y2"},
                 .output_values = {"1,10", "2,11", "3,12", "4,13", "5,14"}},
             ShuffleTestCase{.inputs = {test::NamedTensor(
-                                "x1", TensorFromJSON(arrow::int64(), "[1]"))},
+                                "x1", TensorFrom(arrow::int64(), "[1]"))},
                             .output_names = {"y1"},
                             .output_values = {"1"}},
             ShuffleTestCase{.inputs = {test::NamedTensor(
-                                "x1", TensorFromJSON(arrow::int64(), "[]"))},
+                                "x1", TensorFrom(arrow::int64(), "[]"))},
                             .output_names = {"y1"},
                             .output_values = {}})),
     TestParamNameGenerator(ShuffleTest));

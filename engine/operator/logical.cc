@@ -18,6 +18,7 @@
 #include "libspu/kernel/hlo/basic_binary.h"
 #include "libspu/kernel/hlo/basic_unary.h"
 
+#include "engine/core/tensor_constructor.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
 
@@ -88,7 +89,7 @@ void Not::ExecuteInPlain(ExecContext* ctx) {
     YACL_ENFORCE(result.ok(),
                  "caught error while invoking arrow invert function: {}",
                  result.status().ToString());
-    auto out_t = std::make_shared<Tensor>(result.ValueOrDie().chunked_array());
+    auto out_t = TensorFrom(result.ValueOrDie().chunked_array());
     tensor_table->AddTensor(output_pb.name(), std::move(out_t));
   }
 }
@@ -153,7 +154,7 @@ TensorPtr LogicalAnd::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
   YACL_ENFORCE(result.ok(),
                "caught error while invoking arrow and function: {}",
                result.status().ToString());
-  return std::make_shared<Tensor>(result.ValueOrDie().chunked_array());
+  return TensorFrom(result.ValueOrDie().chunked_array());
 }
 
 // ===========================
@@ -173,7 +174,7 @@ TensorPtr LogicalOr::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
       "or_kleene", {lhs.ToArrowChunkedArray(), rhs.ToArrowChunkedArray()});
   YACL_ENFORCE(result.ok(), "caught error while invoking arrow or function: {}",
                result.status().ToString());
-  return std::make_shared<Tensor>(result.ValueOrDie().chunked_array());
+  return TensorFrom(result.ValueOrDie().chunked_array());
 }
 
 }  // namespace scql::engine::op

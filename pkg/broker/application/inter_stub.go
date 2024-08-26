@@ -60,7 +60,7 @@ func (stub *InterStub) baseCall(url, path string, req proto.Message, response pr
 	}
 
 	defer interResp.Body.Close()
-	_, err = message.DeserializeFrom(interResp.Body, response)
+	_, err = message.DeserializeFrom(interResp.Body, response, interResp.Header.Get("Content-Type"))
 	if err != nil {
 		return err
 	}

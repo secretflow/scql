@@ -15,6 +15,7 @@
 #include "engine/core/tensor_builder.h"
 
 #include "engine/core/arrow_helper.h"
+#include "engine/core/tensor_constructor.h"
 
 namespace scql::engine {
 
@@ -26,7 +27,7 @@ void TensorBuilder::Finish(std::shared_ptr<Tensor>* out) {
   std::shared_ptr<arrow::ChunkedArray> chunked_arr;
   THROW_IF_ARROW_NOT_OK(std::move(result).Value(&chunked_arr));
 
-  *out = std::make_shared<Tensor>(std::move(chunked_arr));
+  *out = TensorFrom(std::move(chunked_arr));
 }
 
 void TensorBuilder::FinishInternal() {

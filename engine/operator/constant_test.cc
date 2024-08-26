@@ -41,20 +41,18 @@ INSTANTIATE_TEST_SUITE_P(
         test::SpuTestValuesMultiPC,
         testing::Values(
             ConstantTestCase{.scalar = {test::NamedTensor(
-                                 "x", TensorFromJSON(arrow::int64(), "[3]"))},
+                                 "x", TensorFrom(arrow::int64(), "[3]"))},
+                             .output_status = pb::TENSORSTATUS_PRIVATE},
+            ConstantTestCase{.scalar = {test::NamedTensor(
+                                 "y", TensorFrom(arrow::large_utf8(),
+                                                 R"json(["2022-11-22"])json"))},
+                             .output_status = pb::TENSORSTATUS_PRIVATE},
+            ConstantTestCase{.scalar = {test::NamedTensor(
+                                 "z", TensorFrom(arrow::boolean(), "[true]"))},
                              .output_status = pb::TENSORSTATUS_PRIVATE},
             ConstantTestCase{
-                .scalar = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["2022-11-22"])json"))},
-                .output_status = pb::TENSORSTATUS_PRIVATE},
-            ConstantTestCase{
-                .scalar = {test::NamedTensor(
-                    "z", TensorFromJSON(arrow::boolean(), "[true]"))},
-                .output_status = pb::TENSORSTATUS_PRIVATE},
-            ConstantTestCase{
-                .scalar = {test::NamedTensor(
-                    "zz", TensorFromJSON(arrow::float32(), "[3.1415]"))},
+                .scalar = {test::NamedTensor("zz", TensorFrom(arrow::float32(),
+                                                              "[3.1415]"))},
                 .output_status = pb::TENSORSTATUS_PRIVATE})),
     TestParamNameGenerator(ConstantTest));
 
@@ -64,20 +62,18 @@ INSTANTIATE_TEST_SUITE_P(
         test::SpuTestValuesMultiPC,
         testing::Values(
             ConstantTestCase{.scalar = {test::NamedTensor(
-                                 "x", TensorFromJSON(arrow::int64(), "[3]"))},
+                                 "x", TensorFrom(arrow::int64(), "[3]"))},
+                             .output_status = pb::TENSORSTATUS_PUBLIC},
+            ConstantTestCase{.scalar = {test::NamedTensor(
+                                 "y", TensorFrom(arrow::large_utf8(),
+                                                 R"json(["2022-11-22"])json"))},
+                             .output_status = pb::TENSORSTATUS_PUBLIC},
+            ConstantTestCase{.scalar = {test::NamedTensor(
+                                 "z", TensorFrom(arrow::boolean(), "[true]"))},
                              .output_status = pb::TENSORSTATUS_PUBLIC},
             ConstantTestCase{
-                .scalar = {test::NamedTensor(
-                    "y", TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["2022-11-22"])json"))},
-                .output_status = pb::TENSORSTATUS_PUBLIC},
-            ConstantTestCase{
-                .scalar = {test::NamedTensor(
-                    "z", TensorFromJSON(arrow::boolean(), "[true]"))},
-                .output_status = pb::TENSORSTATUS_PUBLIC},
-            ConstantTestCase{
-                .scalar = {test::NamedTensor(
-                    "zz", TensorFromJSON(arrow::float32(), "[3.1415]"))},
+                .scalar = {test::NamedTensor("zz", TensorFrom(arrow::float32(),
+                                                              "[3.1415]"))},
                 .output_status = pb::TENSORSTATUS_PUBLIC})),
     TestParamNameGenerator(ConstantTest));
 

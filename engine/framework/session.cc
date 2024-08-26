@@ -22,13 +22,23 @@
 #include "libspu/core/config.h"
 #include "libspu/mpc/factory.h"
 #include "openssl/sha.h"
+#include "spdlog/spdlog.h"
 
 #include "engine/core/arrow_helper.h"
 #include "engine/core/primitive_builder.h"
 #include "engine/core/string_tensor_builder.h"
+#include "engine/util/filepath_helper.h"
 #include "engine/util/logging.h"
 #include "engine/util/prometheus_monitor.h"
 #include "engine/util/psi_detail_logger.h"
+
+DEFINE_string(tmp_file_path, "/tmp", "dir to out tmp files");
+DEFINE_uint64(
+    streaming_row_num_threshold, 30 * 1000 * 1000,
+    "if input row num of join is more than threshold, use streaming mode");
+DEFINE_uint64(batch_row_num, 10 * 1000 * 1000,
+              "max row num in one batch, working when row num is more than "
+              "streaming_row_num_threshold");
 
 namespace scql::engine {
 
@@ -119,10 +129,23 @@ Session::Session(const SessionOptions& session_opt,
   }
 
   util::PrometheusMonitor::GetInstance()->IncSessionNumberTotal();
+  // default not streaming
+  streaming_options_.batched = false;
+  streaming_options_.streaming_row_num_threshold =
+      FLAGS_streaming_row_num_threshold;
+  streaming_options_.batch_row_num = FLAGS_batch_row_num;
 }
 
 Session::~Session() {
   util::PrometheusMonitor::GetInstance()->DecSessionNumberTotal();
+  if (streaming_options_.batched) {
+    std::error_code ec;
+    std::filesystem::remove_all(streaming_options_.dump_file_dir, ec);
+    if (ec.value() != 0) {
+      SPDLOG_WARN("can not remove tmp dir: {}, msg: {}",
+                  streaming_options_.dump_file_dir.string(), ec.message());
+    }
+  }
 }
 
 void Session::InitLink() {
@@ -134,6 +157,10 @@ void Session::InitLink() {
     ctx_desc.http_max_payload_size =
         session_opt_.link_config.http_max_payload_size;
     ctx_desc.parties.reserve(parties_.WorldSize());
+    // connect interval 100ms
+    ctx_desc.connect_retry_interval_ms = 100;
+    // connect retry times 100, then max waiting time = 10s
+    ctx_desc.connect_retry_times = 100;
     for (const auto& party : parties_.AllParties()) {
       yacl::link::ContextDesc::Party p;
       p.id = party.id;
@@ -154,6 +181,26 @@ void Session::MergeDeviceSymbolsFrom(const spu::device::SymbolTable& other) {
     YACL_ENFORCE(!device_symbols_.hasVar(kv.first), "symbol {} already exists",
                  kv.first);
     device_symbols_.setVar(kv.first, kv.second);
+  }
+}
+
+void Session::EnableStreamingBatched() {
+  streaming_options_.batched = true;
+  size_t data[2] = {streaming_options_.batch_row_num,
+                    streaming_options_.streaming_row_num_threshold};
+  // get checksum from other parties
+  auto bufs = yacl::link::AllGather(
+      GetLink(), yacl::ByteContainerView(data, 2 * sizeof(size_t)),
+      "streaming_options");
+  for (const auto& buf : bufs) {
+    streaming_options_.batch_row_num =
+        std::min(streaming_options_.batch_row_num, buf.data<size_t>()[0]);
+    streaming_options_.streaming_row_num_threshold = std::min(
+        streaming_options_.streaming_row_num_threshold, buf.data<size_t>()[1]);
+  }
+  if (streaming_options_.dump_file_dir.empty()) {
+    streaming_options_.dump_file_dir =
+        util::CreateDirWithRandSuffix(FLAGS_tmp_file_path, id_);
   }
 }
 
@@ -322,9 +369,17 @@ void Session::UpdateRefName(const std::vector<std::string>& input_ref_names,
     }
     for (const auto& ref_tuple : output_ref_nums) {
       auto name = std::get<0>(ref_tuple);
+      auto ref_count = std::get<1>(ref_tuple);
+      if (ref_count == 0) {
+        // ref by no one
+        remove_tensor_names.emplace_back(name);
+        continue;
+      }
       auto iter = tensor_ref_nums_.find(name);
-      YACL_ENFORCE(iter == tensor_ref_nums_.end(),
-                   "ref num of {} was set before created", name);
+      if (!streaming_options_.batched) {
+        YACL_ENFORCE(iter == tensor_ref_nums_.end(),
+                     "ref num of {} was set before created", name);
+      }
       tensor_ref_nums_[name] = std::get<1>(ref_tuple);
     }
   }

@@ -18,18 +18,18 @@
 
 #include "engine/core/arrow_helper.h"
 #include "engine/core/tensor.h"
-#include "engine/core/tensor_chunk.h"
+#include "engine/core/tensor_batch_reader.h"
 
 namespace scql::engine::util {
 
 /// @brief StringifyVisitor converts tensor to string representation
 class StringifyVisitor {
  public:
-  explicit StringifyVisitor(const Tensor& tensor);
+  explicit StringifyVisitor(TensorPtr tensor, size_t batch_size);
 
   /// @brief Stringify next batch_size elements
   /// @returns empty vector if reach end.
-  std::vector<std::string> StringifyBatch(size_t batch_size);
+  std::vector<std::string> StringifyBatch();
 
   template <typename T>
   arrow::Status Visit(const T& array) {
@@ -69,18 +69,11 @@ class StringifyVisitor {
     THROW_IF_ARROW_NOT_OK(arrow::VisitArrayInline(array, this));
   }
 
-  void FetchNextChunk();
-
-  TensorChunkReader reader_;
-
-  // current chunk_
-  std::shared_ptr<TensorChunk> chunk_;
-
-  // offset in current chunk
-  int64_t offset_ = 0;
-
   // intermediate string representation for elements
   std::vector<std::string> strs_;
+  std::shared_ptr<TensorBatchReader> reader_;
 };
+
+std::vector<std::string> Stringify(std::shared_ptr<arrow::ChunkedArray> arrays);
 
 }  // namespace scql::engine::util

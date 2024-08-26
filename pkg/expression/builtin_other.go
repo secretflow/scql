@@ -73,3 +73,32 @@ func (b *builtinInStringSig) Clone() builtinFunc {
 	newSig.cloneFrom(&b.baseBuiltinFunc)
 	return newSig
 }
+
+type builtinGeoDist struct {
+	baseBuiltinFunc
+}
+
+func (b *builtinGeoDist) Clone() builtinFunc {
+	newFunction := &builtinGeoDist{}
+	newFunction.cloneFrom(&b.baseBuiltinFunc)
+	return newFunction
+}
+
+type builtinGeoDistFunctionClass struct {
+	baseFunctionClass
+}
+
+func (c *builtinGeoDistFunctionClass) getFunction(ctx sessionctx.Context, args []Expression) (builtinFunc, error) {
+	if err := c.verifyArgs(args); err != nil {
+		return nil, err
+	}
+	var bf baseBuiltinFunc
+	if len(args) == 4 {
+		bf = newBaseBuiltinFuncWithTp(ctx, args, types.ETReal, types.ETReal, types.ETReal, types.ETReal, types.ETReal)
+	} else {
+		bf = newBaseBuiltinFuncWithTp(ctx, args, types.ETReal, types.ETReal, types.ETReal, types.ETReal, types.ETReal, types.ETReal)
+	}
+
+	sig := &builtinGeoDist{bf}
+	return sig, nil
+}

@@ -104,8 +104,9 @@ It is compatible with most MySQL DQL syntax. For syntax differences between SCQL
         [LINES TERMINATED BY 'terminal_string']
 
 .. note::
-   SCQL support ``export_options`` with limitations: only support '"' or '' for **enclosing_character**; **ESCAPED BY** is not supported.
-   **OPTIONALLY** in ``export_options`` controls quoting of fields, if omitted all fields are enclosed by the **enclosing_character**, otherwise only string fields are enclosed. see `mysql load data`_
+   - SCQL support ``export_options`` with limitations: only support '"' or '' for **enclosing_character**; **ESCAPED BY** is not supported.
+   - **OPTIONALLY** in ``export_options`` controls quoting of fields, if omitted all fields are enclosed by the **enclosing_character**, otherwise only string fields are enclosed. see `mysql load data`_
+   - **file_path** in ``into_option`` can be local path like '/data/file.csv' or oss path like 'oss://bucket_name/path/to/file', flags for writing should be set correctly, see :ref:`Engine configuration options <engine_config_options>` for more.
 
 
 

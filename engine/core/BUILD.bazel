@@ -16,21 +16,33 @@ package(default_visibility = ["//visibility:public"])
 
 cc_library(
     name = "tensor",
-    srcs = ["tensor.cc"],
-    hdrs = ["tensor.h"],
+    srcs = [
+        "tensor.cc",
+        "tensor_batch_reader.cc",
+    ],
+    hdrs = [
+        "tensor.h",
+        "tensor_batch_reader.h",
+    ],
     deps = [
         ":type",
         "//api:core_cc_proto",
+        "//engine/util/disk:arrow_reader",
+        "//engine/util/disk:arrow_writer",
         "@org_apache_arrow//:arrow",
         "@yacl//yacl/base:exception",
     ],
 )
 
-cc_library(
-    name = "tensor_chunk",
-    srcs = ["tensor_chunk.cc"],
-    hdrs = ["tensor_chunk.h"],
-    deps = [":tensor"],
+cc_test(
+    name = "tensor_batch_reader_test",
+    srcs = ["tensor_batch_reader_test.cc"],
+    deps = [
+        ":tensor",
+        "//engine/core:tensor_constructor",
+        "//engine/util:filepath_helper",
+        "@com_google_googletest//:gtest_main",
+    ],
 )
 
 cc_library(
@@ -40,6 +52,7 @@ cc_library(
     deps = [
         ":arrow_helper",
         ":tensor",
+        ":tensor_constructor",
     ],
 )
 
@@ -99,8 +112,18 @@ cc_library(
     hdrs = ["tensor_constructor.h"],
     deps = [
         ":arrow_helper",
-        ":primitive_builder",
         ":tensor",
+        "//engine/util/disk:arrow_writer",
+    ],
+)
+
+cc_test(
+    name = "tensor_constructor_test",
+    srcs = ["tensor_constructor_test.cc"],
+    deps = [
+        ":tensor_constructor",
+        "//engine/util:filepath_helper",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 

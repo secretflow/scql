@@ -35,7 +35,7 @@ mkdir -p google/api
 cp -f ${BAZEL_EXEC_ROOT}/external/googleapis/google/api/*.proto google/api
 
 GOBIN=${PWD}/tool-bin go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest
-PATH=${GOBIN}:${PATH} protoc --proto_path . \
+PATH=${GOBIN}:${PATH} protoc --proto_path . -I${BAZEL_EXEC_ROOT}/external/com_google_protobuf/src\
     --openapiv2_out ./docs \
     --openapiv2_opt output_format=yaml \
     --openapiv2_opt preserve_rpc_order=true \
@@ -46,7 +46,7 @@ PATH=${GOBIN}:${PATH} protoc --proto_path . \
     --openapiv2_opt openapi_configuration=api/broker.config_openapi.yaml \
     api/broker.proto
 
-PATH=${GOBIN}:${PATH} protoc --proto_path . \
+PATH=${GOBIN}:${PATH} protoc --proto_path . -I${BAZEL_EXEC_ROOT}/external/com_google_protobuf/src\
     --openapiv2_out ./docs \
     --openapiv2_opt output_format=yaml \
     --openapiv2_opt preserve_rpc_order=true \

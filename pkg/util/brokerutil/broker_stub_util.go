@@ -24,6 +24,7 @@ import (
 
 	"github.com/secretflow/scql/pkg/broker/application"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/util/message"
 )
 
 // Simplify the complexity of calling HTTP interfaces when writing debugging tools or test code.
@@ -43,7 +44,7 @@ func NewCommand(host string, timeoutS int) *Command {
 
 func (c *Command) CreateProject(projectID, projectConf string) (string, error) {
 	var projConf pb.ProjectConfig
-	err := protojson.Unmarshal([]byte(projectConf), &projConf)
+	err := message.ProtoUnmarshal([]byte(projectConf), &projConf)
 	if err != nil {
 		return "", fmt.Errorf("CreateProject: failed to deserialize project config: %v", err)
 	}
@@ -302,7 +303,7 @@ func (c *Command) RevokeCCL(projectID, party string, ccls []*pb.ColumnControl) e
 func (c *Command) DoQuery(projectID, query string, debugOpts *pb.DebugOptions, jobConfStr string) (*pb.QueryResponse, error) {
 	jobConf := pb.JobConfig{}
 
-	err := protojson.Unmarshal([]byte(jobConfStr), &jobConf)
+	err := message.ProtoUnmarshal([]byte(jobConfStr), &jobConf)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to deserialize job config: %v", err)
@@ -330,7 +331,7 @@ func (c *Command) DoQuery(projectID, query string, debugOpts *pb.DebugOptions, j
 
 func (c *Command) CreateJob(projectID, query string, debugOpts *pb.DebugOptions, jobConfStr string) (string, error) {
 	var jobConfig pb.JobConfig
-	err := protojson.Unmarshal([]byte(jobConfStr), &jobConfig)
+	err := message.ProtoUnmarshal([]byte(jobConfStr), &jobConfig)
 	if err != nil {
 		return "", fmt.Errorf("CreateJob: failed to deserialize job config: %v", err)
 	}

@@ -16,6 +16,7 @@ package translator
 
 import (
 	"fmt"
+	"math"
 	"sort"
 	"time"
 
@@ -93,7 +94,7 @@ func NewTranslator(
 			newSc.ColumnControlList = append(newSc.ColumnControlList, cc)
 		}
 	}
-	builder := graph.NewGraphBuilder(enginesInfo.GetPartyInfo())
+	builder := graph.NewGraphBuilder(enginesInfo.GetPartyInfo(), compileOpts.Batched)
 	return &translator{
 		ep:              builder,
 		issuerPartyCode: issuerPartyCode,
@@ -176,6 +177,9 @@ func (t *translator) Translate(lp core.LogicalPlan) (*graph.Graph, error) {
 			return nil, fmt.Errorf("translate: unable to find a candidate party to substitute the issuer %s in party list (%+v)", t.issuerPartyCode, ln.VisibleParty())
 		}
 		t.issuerPartyCode = candidateParties[0]
+		if ln.InsertTableOpt() != nil {
+			return nil, fmt.Errorf("translate: not allow to insert table when replaced issuer party")
+		}
 	}
 	return t.translate(ln)
 }
@@ -232,35 +236,27 @@ func (t *translator) translate(ln logicalNode) (*graph.Graph, error) {
 }
 
 func (t *translator) addResultNode(ln logicalNode) error {
-	if ln.IntoOpt() == nil {
-		return t.addPublishNode(ln)
+	if ln.IntoOpt() != nil {
+		return t.addDumpFileNode(ln)
+	} else if ln.InsertTableOpt() != nil {
+		return t.addInsertTableNode(ln)
 	}
-	return t.addDumpFileNode(ln)
+	return t.addPublishNode(ln)
+}
+
+func (t *translator) addInsertTableNode(ln logicalNode) error {
+	input, output, err := t.prepareResultNodeIo(ln)
+	if err != nil {
+		return fmt.Errorf("addInsertTableNode: prepare io failed: %v", err)
+	}
+
+	return t.ep.AddInsertTableNode("insert_table", input, output, t.issuerPartyCode, ln.InsertTableOpt())
 }
 
 func (t *translator) addPublishNode(ln logicalNode) error {
-	input := []*graph.Tensor{}
-	output := []*graph.Tensor{}
-	for i, it := range ln.ResultTable() {
-		var err error
-		// Reveal tensor to issuerPartyCode
-		it, err = t.converter.convertTo(it, &privatePlacement{partyCode: t.issuerPartyCode})
-		if err != nil {
-			return err
-		}
-		input = append(input, it)
-
-		ot := t.ep.AddTensorAs(it)
-
-		colName := ln.OutputNames()[i].ColName.String()
-		if len(colName) == 0 {
-			colName = ln.Schema().Columns[i].String()
-		}
-		ot.Name = colName
-		ot.Option = proto.TensorOptions_VALUE
-		ot.DType = proto.PrimitiveDataType_STRING
-		ot.StringS = []string{colName}
-		output = append(output, ot)
+	input, output, err := t.prepareResultNodeIo(ln)
+	if err != nil {
+		return fmt.Errorf("addPublishNode: prepare io failed: %v", err)
 	}
 
 	// Set execution plan's output tensor name
@@ -268,12 +264,7 @@ func (t *translator) addPublishNode(ln logicalNode) error {
 		t.ep.OutputName = append(t.ep.OutputName, ot.Name)
 	}
 
-	err := t.ep.AddPublishNode("publish", input, output, []string{t.issuerPartyCode})
-	if err != nil {
-		return fmt.Errorf("addPublishNode: %v", err)
-	}
-
-	return nil
+	return t.ep.AddPublishNode("publish", input, output, []string{t.issuerPartyCode})
 }
 
 func (t *translator) addDumpFileNode(ln logicalNode) error {
@@ -286,14 +277,20 @@ func (t *translator) addDumpFileNode(ln logicalNode) error {
 	if intoOpt.PartyCode != t.issuerPartyCode {
 		return fmt.Errorf("failed to check select into party code (%s) which is not equal to (%s)", intoOpt.PartyCode, t.issuerPartyCode)
 	}
-	var input []*graph.Tensor
-	var output []*graph.Tensor
+
+	input, output, err := t.prepareResultNodeIo(ln)
+	if err != nil {
+		return fmt.Errorf("addDumpFileNode: prepare io failed: %v", err)
+	}
+	return t.ep.AddDumpFileNode("dump_file", input, output, intoOpt)
+}
+
+func (t *translator) prepareResultNodeIo(ln logicalNode) (input, output []*graph.Tensor, err error) {
 	for i, it := range ln.ResultTable() {
-		var err error
 		// Reveal tensor to into party code
-		it, err = t.converter.convertTo(it, &privatePlacement{partyCode: intoOpt.PartyCode})
+		it, err = t.converter.convertTo(it, &privatePlacement{partyCode: t.issuerPartyCode})
 		if err != nil {
-			return err
+			return
 		}
 		input = append(input, it)
 
@@ -310,7 +307,7 @@ func (t *translator) addDumpFileNode(ln logicalNode) error {
 		ot.StringS = []string{colName}
 		output = append(output, ot)
 	}
-	return t.ep.AddDumpFileNode("dump_file", input, output, intoOpt)
+	return
 }
 
 // runSQLString create sql string from lp with dialect
@@ -367,12 +364,44 @@ func (t *translator) addRunSQLNode(ln logicalNode, sql string, tableRefs []strin
 	return ln.SetResultTableWithDTypeCheck(tensors)
 }
 
+func assertTensorsBelongTo(tensors []*graph.Tensor, partyCode string) error {
+	for _, it := range tensors {
+		if it.Status() != proto.TensorStatus_TENSORSTATUS_PRIVATE || it.OwnerPartyCode != partyCode {
+			return fmt.Errorf("all tensors must belong to the same party code %s, but got %s", partyCode, it.OwnerPartyCode)
+		}
+	}
+	return nil
+}
+
+func (t *translator) addBucketNode(joinKeys []*graph.Tensor, payloads []*graph.Tensor, partyCodes []string) (bucketKeys []*graph.Tensor, bucketPayloads []*graph.Tensor, err error) {
+	var joinKeyIds []int
+	for _, it := range joinKeys {
+		joinKeyIds = append(joinKeyIds, it.ID)
+	}
+	partyCode := payloads[0].OwnerPartyCode
+	if err = assertTensorsBelongTo(append(payloads, joinKeys...), partyCode); err != nil {
+		return nil, nil, fmt.Errorf("addBucketNode: %s", err.Error())
+	}
+	for _, it := range payloads {
+		ot := t.ep.AddTensorAs(it)
+		if slices.Contains(joinKeyIds, it.ID) {
+			bucketKeys = append(bucketKeys, ot)
+		}
+		bucketPayloads = append(bucketPayloads, ot)
+	}
+	partyAttr := graph.Attribute{}
+	partyAttr.SetStrings(partyCodes)
+	_, err = t.ep.AddExecutionNode("bucket", operator.OpNameBucket,
+		map[string][]*graph.Tensor{"In": payloads, "Key": joinKeys}, map[string][]*graph.Tensor{graph.Out: bucketPayloads}, map[string]*graph.Attribute{operator.InputPartyCodesAttr: &partyAttr}, []string{partyCode})
+	return
+}
+
 func (t *translator) addFilterByIndexNode(filter *graph.Tensor, ts []*graph.Tensor, partyCode string) ([]*graph.Tensor, error) {
 	// NOTE(xiaoyuan) ts must be private and its owner party code equals to partyCode when apply filter by index
 	partyToLocalTensors := map[string][]int{}
-	for i, t := range ts {
-		if t.Status() == proto.TensorStatus_TENSORSTATUS_PRIVATE && t.OwnerPartyCode != "" {
-			partyToLocalTensors[t.OwnerPartyCode] = append(partyToLocalTensors[t.OwnerPartyCode], i)
+	for i, tensor := range ts {
+		if tensor.Status() == proto.TensorStatus_TENSORSTATUS_PRIVATE && tensor.OwnerPartyCode != "" {
+			partyToLocalTensors[tensor.OwnerPartyCode] = append(partyToLocalTensors[tensor.OwnerPartyCode], i)
 		} else {
 			partyToLocalTensors[partyCode] = append(partyToLocalTensors[partyCode], i)
 		}
@@ -506,6 +535,147 @@ func (t *translator) addBroadcastToNodeOndemand(inputs []*graph.Tensor) ([]*grap
 	return outputTs, nil
 }
 
+func (t *translator) convertDegreeToRadians(input *graph.Tensor) (*graph.Tensor, error) {
+	coefficient := math.Pi / 180
+	degreeToRadians := types.NewFloat64Datum(coefficient)
+
+	constantTensor, err := t.addConstantNode(&degreeToRadians)
+	if err != nil {
+		return nil, err
+	}
+
+	outputs, err := t.addBroadcastToNodeOndemand([]*graph.Tensor{constantTensor, input})
+	if err != nil {
+		return nil, err
+	}
+
+	return t.addBinaryNode(astName2NodeName[ast.Mul], astName2NodeName[ast.Mul], outputs[0], outputs[1])
+}
+
+func (t *translator) buildGeoDistanceFunction(inputs []*graph.Tensor) (*graph.Tensor, error) {
+	// distance = radius * arc cos(sin(latitude1) * sin(latitude2) + cos(latitude1) * cos(latitude2) * cos(longtitude1 - longtidude2))
+
+	longtitude1Degree := inputs[0]
+	latitude1Degree := inputs[1]
+	longtitude2Degree := inputs[2]
+	latitude2Degree := inputs[3]
+
+	longtitude1, err := t.convertDegreeToRadians(longtitude1Degree)
+	if err != nil {
+		return nil, err
+	}
+
+	latitude1, err := t.convertDegreeToRadians(latitude1Degree)
+	if err != nil {
+		return nil, err
+	}
+
+	longtitude2, err := t.convertDegreeToRadians(longtitude2Degree)
+	if err != nil {
+		return nil, err
+	}
+
+	latitude2, err := t.convertDegreeToRadians(latitude2Degree)
+	if err != nil {
+		return nil, err
+	}
+
+	//sin(latitude1)
+	sinLatitude1Tensor, err := t.ep.AddTrigonometricFunction(astName2NodeName[ast.Sin], astName2NodeName[ast.Sin], latitude1, t.extractPartyCodeFromTensor(latitude1))
+	if err != nil {
+		return nil, err
+	}
+
+	//sin(latitude2)
+	singLatitude2Tensor, err := t.ep.AddTrigonometricFunction(astName2NodeName[ast.Sin], astName2NodeName[ast.Sin], latitude2, t.extractPartyCodeFromTensor(latitude2))
+	if err != nil {
+		return nil, err
+	}
+
+	// sin(latitude1) * sin(latitude2)
+	leftResult, err := t.addBinaryNode(astName2NodeName[ast.Mul], astName2NodeName[ast.Mul], sinLatitude1Tensor, singLatitude2Tensor)
+	if err != nil {
+		return nil, err
+	}
+
+	// cos(latitude1)
+	cosLatitude1Tensor, err := t.ep.AddTrigonometricFunction(astName2NodeName[ast.Cos], astName2NodeName[ast.Cos], latitude1, t.extractPartyCodeFromTensor(latitude1))
+	if err != nil {
+		return nil, err
+	}
+
+	// cos(latitude2)
+	cosLatitude2Tensor, err := t.ep.AddTrigonometricFunction(astName2NodeName[ast.Cos], astName2NodeName[ast.Cos], latitude2, t.extractPartyCodeFromTensor(latitude2))
+	if err != nil {
+		return nil, err
+	}
+
+	// longtitude1 - longtitude2
+	minusLongtitudeTensor, err := t.addBinaryNode(astName2NodeName[ast.Minus], astName2NodeName[ast.Minus], longtitude1, longtitude2)
+	if err != nil {
+		return nil, err
+	}
+
+	// cos(longtitude1 - longtitude2)
+	cosMinusLongtitudeTensor, err := t.ep.AddTrigonometricFunction(astName2NodeName[ast.Cos], astName2NodeName[ast.Cos], minusLongtitudeTensor, t.extractPartyCodeFromTensor(minusLongtitudeTensor))
+	if err != nil {
+		return nil, err
+	}
+
+	// cos(latittude1) * cos(latitude2)
+	mulTensor1, err := t.addBinaryNode(astName2NodeName[ast.Mul], astName2NodeName[ast.Mul], cosLatitude1Tensor, cosLatitude2Tensor)
+	if err != nil {
+		return nil, err
+	}
+
+	// cos(latitude1) * cos(latitude2) * cos(longtitude1 - longtitude2)
+	rightResult, err := t.addBinaryNode(astName2NodeName[ast.Mul], astName2NodeName[ast.Mul], mulTensor1, cosMinusLongtitudeTensor)
+	if err != nil {
+		return nil, err
+	}
+
+	// sin(latitude1) * sin(latitude2) + cos(latitude1) * cos(latitude2) * cos(longtitude1 - longtitude2)
+	plusTensor, err := t.addBinaryNode(astName2NodeName[ast.Plus], astName2NodeName[ast.Plus], leftResult, rightResult)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// arc cos(sin(latitude1) * sin(latitude2) + cos(latitude1) * cos(latitude2) * cos(longtitude1 - longtitude2))
+	arcCosTensor, err := t.ep.AddTrigonometricFunction(astName2NodeName[ast.Acos], astName2NodeName[ast.Acos], plusTensor, t.extractPartyCodeFromTensor(plusTensor))
+	if err != nil {
+		return nil, err
+	}
+
+	radius := &graph.Tensor{}
+	if len(inputs) == 4 {
+		averageRadius := 6371 // average radius of earth from https://simple.wikipedia.org/wiki/Earth_radius
+		radiusDatum := types.NewIntDatum(int64(averageRadius))
+		radius, err = t.addConstantNode(&radiusDatum)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		radius = inputs[4]
+	}
+
+	// radius * arc cos(sin(latitude1) * sin(latitude2) + cos(latitude1) * cos(latitude2) * cos(longtitude1 - longtitude2))
+	outputs, err := t.addBroadcastToNodeOndemand([]*graph.Tensor{radius, arcCosTensor})
+	if err != nil {
+		return nil, err
+	}
+
+	return t.addBinaryNode(astName2NodeName[ast.Mul], astName2NodeName[ast.Mul], outputs[0], outputs[1])
+}
+
+func (t *translator) extractPartyCodeFromTensor(input *graph.Tensor) []string {
+	if input.Status() == proto.TensorStatus_TENSORSTATUS_PRIVATE {
+		return []string{input.OwnerPartyCode}
+	} else {
+		return t.enginesInfo.GetPartyInfo().GetParties()
+	}
+}
+
 func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors map[int64]*graph.Tensor, isApply bool, ln logicalNode) (*graph.Tensor, error) {
 	if f.FuncName.L == ast.Now || f.FuncName.L == ast.Curdate {
 		unix_time := time.Unix(1e9, 0)
@@ -546,12 +716,8 @@ func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors m
 			return nil, err
 		}
 	}
-	var inTensorPartyCodes []string
-	if inputs[0].Status() == proto.TensorStatus_TENSORSTATUS_PRIVATE {
-		inTensorPartyCodes = []string{inputs[0].OwnerPartyCode}
-	} else {
-		inTensorPartyCodes = t.enginesInfo.GetPartyInfo().GetParties()
-	}
+
+	inTensorPartyCodes := t.extractPartyCodeFromTensor(inputs[0])
 	switch f.FuncName.L {
 	case ast.UnaryNot:
 		if len(inputs) != 1 {
@@ -564,12 +730,6 @@ func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors m
 	case ast.LT, ast.GT, ast.GE, ast.EQ, ast.LE, ast.NE, ast.LogicOr, ast.LogicAnd, ast.Plus, ast.Minus, ast.Mul, ast.Div, ast.IntDiv, ast.Mod, ast.AddDate, ast.SubDate, ast.DateDiff:
 		if len(inputs) != 2 {
 			return nil, fmt.Errorf("buildScalarFunction:err input for %s expected for %d got %d", f.FuncName.L, 2, len(inputs))
-		}
-		if isApply {
-			if f.FuncName.L == ast.EQ {
-				return t.addInNode(f, inputs[0], inputs[1])
-			}
-			return nil, fmt.Errorf("buildScalarFunction doesn't support function type %v", f.FuncName.L)
 		}
 		return t.addBinaryNode(astName2NodeName[f.FuncName.L], astName2NodeName[f.FuncName.L], inputs[0], inputs[1])
 	case ast.Cast:
@@ -625,6 +785,12 @@ func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors m
 		}
 
 		return t.ep.AddTrigonometricFunction(astName2NodeName[f.FuncName.L], astName2NodeName[f.FuncName.L], inputs[0], inTensorPartyCodes)
+	case ast.GeoDist:
+		if len(inputs) != 4 && len(inputs) != 5 {
+			return nil, fmt.Errorf("incorrect arguments for function %v, exepcting (longittude1, latitude1, longtitude2, latitude2)", f.FuncName.L)
+		}
+
+		return t.buildGeoDistanceFunction(inputs)
 	}
 	return nil, fmt.Errorf("buildScalarFunction doesn't support %s", f.FuncName.L)
 }

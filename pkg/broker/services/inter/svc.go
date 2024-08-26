@@ -360,7 +360,8 @@ func handlerWrapper[In, Out protoreflect.ProtoMessage](
 		logEntry.CostTime = time.Since(timeStart)
 		common.LogWithError(logEntry, err)
 	}()
-	inputEncodingType, err := message.DeserializeFrom(c.Request.Body, req)
+
+	inputEncodingType, err := message.DeserializeFrom(c.Request.Body, req, c.Request.Header.Get("Content-Type"))
 	if err != nil {
 		c.String(http.StatusBadRequest, "unable to parse request body: %v", err)
 		return

@@ -254,7 +254,6 @@ message JobStatus {
   JobProgress progress = 2;
 }
 
-
 message FetchResultResponse {
   Status status = 1;
 
@@ -473,6 +472,10 @@ message ProjectConfig {
   int64 link_recv_timeout_sec = 7;
   int64 link_throttle_window_size = 8;
   int64 link_chunked_send_parallel_size = 9;
+  // use value in config file if not set
+  optional uint64 group_by_threshold = 10;
+  // use value in config file if not set
+  optional bool reveal_group_mark = 11;
 }
 
 message JobConfig {
@@ -558,6 +561,11 @@ service InterBrokerService {
   rpc ExchangeJobInfo(ExchangeJobInfoRequest) returns (ExchangeJobInfoResponse);
 }
 
+// part of compile options which are nothing to do with safety
+message RunningOptions {
+  bool batched = 1;
+}
+
 message DistributeQueryRequest {
   RequestHeader header = 1;
   BrokerProtocolVersion client_protocol = 2;
@@ -576,6 +584,7 @@ message DistributeQueryRequest {
   bool dry_run = 13;
   string time_zone = 14;
   JobConfig job_config = 15;
+  RunningOptions running_opts = 16;
 }
 
 message DistributeQueryResponse {

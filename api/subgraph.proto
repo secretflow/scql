@@ -45,5 +45,13 @@ message SubDAG {
 
 message SchedulingPolicy {
   int32 worker_num = 1;
+  repeated Pipeline pipelines = 2;
+}
+
+message Pipeline {
+  // maybe need batch size later
+  bool batched = 1;
   repeated SubDAG subdags = 2;
+  repeated Tensor inputs = 3;
+  repeated Tensor outputs = 4;
 }

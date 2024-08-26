@@ -50,7 +50,7 @@ func (app *App) SubmitAndGetHandler(c *gin.Context) {
 	}
 
 	request := &scql.SCDBQueryRequest{}
-	inputEncodingType, err := message.DeserializeFrom(c.Request.Body, request)
+	inputEncodingType, err := message.DeserializeFrom(c.Request.Body, request, c.Request.Header.Get("Content-Type"))
 	if err != nil {
 		logEntry.Reason = constant.ReasonInvalidRequestFormat
 		logEntry.ErrorMsg = err.Error()
@@ -380,7 +380,6 @@ func (app *App) runDQL(ctx context.Context, s *session, async bool) (*scql.SCDBQ
 		app.engineClient,
 		app.config.Engine.Protocol,
 		app.config.Engine.ContentType,
-		partyInfo,
 	)
 
 	var outputNames []string

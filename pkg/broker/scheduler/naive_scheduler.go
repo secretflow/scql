@@ -15,21 +15,14 @@
 package scheduler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"net/url"
-	"strings"
 	"sync/atomic"
-	"time"
 
 	"github.com/secretflow/scql/pkg/broker/config"
+	exe "github.com/secretflow/scql/pkg/executor"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
-	"github.com/secretflow/scql/pkg/util/message"
-)
-
-const (
-	stopJobPath = "/SCQLEngineService/StopJob"
 )
 
 // naiveScheduler schedule job to resident engine services. It use round-robin algorithm to pick a engine for query job
@@ -40,12 +33,10 @@ type naiveScheduler struct {
 }
 
 type residentEngine struct {
-	SelfUri string `json:"self_uri"`
-	PeerUri string `json:"peer_uri"`
-	JobID   string `json:"job_id"`
-
-	postUri       string        // no need to marshal to text
-	clientTimeout time.Duration // no need to marshal to text
+	SelfUri string         `json:"self_uri"`
+	PeerUri string         `json:"peer_uri"`
+	JobID   string         `json:"job_id"`
+	TLSCfg  config.TLSConf `json:"tls_cfg"`
 }
 
 func NewNaiveScheduler(engine config.EngineConfig) (*naiveScheduler, error) {
@@ -71,18 +62,17 @@ func (s *naiveScheduler) Schedule(jobID string) (EngineInstance, error) {
 		// if self uri is empty, we should use peer uri instead
 		selfUri = s.engine.Uris[idx].ForPeer
 	}
-	url := url.URL{
-		Scheme: s.engine.Protocol,
-		Host:   selfUri,
-		Path:   stopJobPath,
-	}
 
 	return &residentEngine{
-		SelfUri:       selfUri,
-		PeerUri:       s.engine.Uris[idx].ForPeer,
-		JobID:         jobID,
-		postUri:       url.String(),
-		clientTimeout: s.engine.ClientTimeout,
+		SelfUri: selfUri,
+		PeerUri: s.engine.Uris[idx].ForPeer,
+		JobID:   jobID,
+		TLSCfg: config.TLSConf{
+			Mode:       s.engine.TLSCfg.Mode,
+			CertPath:   s.engine.TLSCfg.CertPath,
+			KeyPath:    s.engine.TLSCfg.KeyPath,
+			CACertPath: s.engine.TLSCfg.CACertPath,
+		},
 	}, nil
 }
 
@@ -92,13 +82,7 @@ func (s *naiveScheduler) ParseEngineInstance(jobInfo []byte) (EngineInstance, er
 	if err != nil {
 		return nil, err
 	}
-	url := url.URL{
-		Scheme: s.engine.Protocol,
-		Host:   engine.SelfUri,
-		Path:   stopJobPath,
-	}
-	engine.postUri = url.String()
-	engine.clientTimeout = s.engine.ClientTimeout
+
 	return &engine, err
 }
 
@@ -115,24 +99,23 @@ func (eng residentEngine) MarshalToText() ([]byte, error) {
 }
 
 func (eng residentEngine) Stop() error {
-	httpClient := &http.Client{Timeout: eng.clientTimeout}
-	reqStr := fmt.Sprintf(`{"job_id": "%s"}`, eng.JobID)
-	resp, err := httpClient.Post(eng.postUri,
-		"application/json", strings.NewReader(reqStr))
+	conn, err := exe.NewEngineClientConn(eng.SelfUri, "", &eng.TLSCfg)
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("stop failed, http status code: %d", resp.StatusCode)
+	client := pb.NewSCQLEngineServiceClient(conn)
+
+	req := pb.StopJobRequest{
+		JobId: eng.JobID,
 	}
-	defer resp.Body.Close()
-	var response pb.Status
-	_, err = message.DeserializeFrom(resp.Body, &response)
+
+	status, err := client.StopJob(context.TODO(), &req)
 	if err != nil {
 		return err
 	}
-	if response.Code != int32(pb.Code_OK) {
-		return fmt.Errorf("stop failed, response: %s", response.String())
+
+	if status.GetCode() != int32(pb.Code_OK) {
+		return fmt.Errorf("stop failed, response: %s", status.String())
 	}
 
 	return nil

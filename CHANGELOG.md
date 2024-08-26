@@ -22,6 +22,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.9.0] - 2024-08-01
+
+### Added
+- Support write outfile to OSS/MINIO via `select into` query.
+- Support `sin`, `cos`, `acos` function.
+- Support `geodist` function.
+- Broker support using postgres as metadata storage.
+
+### Changed
+- Reduce the memory peak of large-scale intersection tasks through streaming execution.
+- Link tcmalloc to solve the problem of memory increase.
+
+### Fixed
+- Fix crashes when dumpfile exceeds 2GB string column.
+- Reduce the probability of graph checksum inconsistency issues.
+
 ## [0.8.1] - 2024-07-02
 
 ### Added

@@ -1,0 +1,62 @@
+{
+  "tbl_3": {
+    "db_name": "alice",
+    "columns": [
+      {
+        "column_name": "gb_gb_gb_int_0",
+        "dtype": "int",
+        "ccl": ["groupby", "groupby", "groupby"]
+      },
+      {
+        "column_name": "cp_cp_cp_int_0",
+        "dtype": "int",
+        "ccl": ["compare", "compare", "compare"]
+      },
+      {
+        "column_name": "jn_jn_jn_int_0",
+        "dtype": "int",
+        "ccl": ["join", "join", "join"]
+      },
+      {
+        "column_name": "pl_jn_cp_int_0",
+        "dtype": "int",
+        "ccl": ["plain", "join", "compare"]
+      }
+    ]
+  },
+  "UPPER_table": {
+    "db_name": "alice",
+    "columns": [
+      {
+        "column_name": "GROUPBY_int_0",
+        "dtype": "int",
+        "ccl": ["groupby"]
+      },
+      {
+        "column_name": "groupby_int_1",
+        "dtype": "int",
+        "ccl": ["groupby"]
+      },
+      {
+        "column_name": "JOIN_string_0",
+        "dtype": "string",
+        "ccl": ["join"]
+      },
+      {
+        "column_name": "join_string_1",
+        "dtype": "string",
+        "ccl": ["join"]
+      },
+      {
+        "column_name": "COMPARE_float_0",
+        "dtype": "float",
+        "ccl": ["compare"]
+      },
+      {
+        "column_name": "compare_float_1",
+        "dtype": "float",
+        "ccl": ["compare"]
+      }
+    ]
+  }
+}

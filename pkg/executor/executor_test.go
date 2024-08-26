@@ -57,7 +57,7 @@ func TestSyncExecutor(t *testing.T) {
 			Token:     "bob_credential",
 		},
 	})
-	plan := graph.NewGraphBuilder(partyInfo)
+	plan := graph.NewGraphBuilder(partyInfo, false)
 
 	t1 := plan.AddTensor("alice.t1")
 	t1.SetStatus(scql.TensorStatus_TENSORSTATUS_PRIVATE)
@@ -77,7 +77,7 @@ func TestSyncExecutor(t *testing.T) {
 	p := optimizer.NewGraphPartitioner(graph)
 	p.NaivePartition()
 
-	m := optimizer.NewGraphMapper(p.Graph, p.SubDAGs)
+	m := optimizer.NewGraphMapper(p.Graph, p.Pipelines)
 	m.Map()
 	a.NoError(err)
 

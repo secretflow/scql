@@ -44,10 +44,11 @@ var isCompareOpMap = map[string]bool{
 }
 
 var isCompareAstFuncMap = map[string]bool{
-	ast.GT: true,
-	ast.GE: true,
-	ast.LT: true,
-	ast.LE: true,
-	ast.EQ: true,
-	ast.NE: true,
+	ast.GT:      true,
+	ast.GE:      true,
+	ast.LT:      true,
+	ast.LE:      true,
+	ast.EQ:      true,
+	ast.NE:      true,
+	ast.GeoDist: true,
 }

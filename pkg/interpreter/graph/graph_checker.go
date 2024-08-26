@@ -51,11 +51,13 @@ type checkTensorCCL struct {
 }
 
 func (c checkTensorCCL) checkGraph(graph *Graph) error {
-	for node := range graph.Nodes {
-		for _, ts := range node.Outputs {
-			for _, t := range ts {
-				if t.Status() == scql.TensorStatus_TENSORSTATUS_PRIVATE && t.CC.LevelFor(t.OwnerPartyCode) != ccl.Plain {
-					return fmt.Errorf("failed to check tensor ccl for tensor(%+v), ccl is not plaintext for it's owner", t)
+	for _, pipeline := range graph.Pipelines {
+		for node := range pipeline.Nodes {
+			for _, ts := range node.Outputs {
+				for _, t := range ts {
+					if t.Status() == scql.TensorStatus_TENSORSTATUS_PRIVATE && t.CC.LevelFor(t.OwnerPartyCode) != ccl.Plain {
+						return fmt.Errorf("failed to check tensor ccl for tensor(%+v), ccl is not plaintext for it's owner", t)
+					}
 				}
 			}
 		}

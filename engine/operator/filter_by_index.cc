@@ -15,9 +15,11 @@
 #include "engine/operator/filter_by_index.h"
 
 #include "arrow/compute/api_vector.h"
+#include "arrow/compute/exec.h"
 #include "arrow/datum.h"
 #include "arrow/result.h"
 
+#include "engine/core/tensor_constructor.h"
 #include "engine/util/tensor_util.h"
 
 namespace scql::engine::op {
@@ -77,7 +79,7 @@ TensorPtr FilterByIndex::Take(const Tensor& value, const Tensor& indice) {
                "caught error while invoking arrow take function: {}",
                result.status().ToString());
 
-  return std::make_shared<Tensor>(result.ValueOrDie().chunked_array());
+  return TensorFrom(result.ValueOrDie().chunked_array());
 }
 
 };  // namespace scql::engine::op

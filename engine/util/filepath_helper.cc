@@ -17,13 +17,28 @@
 #include <filesystem>
 
 #include "absl/strings/match.h"
+#include "boost/uuid/uuid.hpp"
+#include "boost/uuid/uuid_generators.hpp"
+#include "boost/uuid/uuid_io.hpp"
 #include "yacl/base/exception.h"
-
 namespace scql::engine::util {
 
-std::string GetAbsolutePath(const std::string& in_filepath, bool is_restricted,
-                            const std::string& restricted_filepath) {
+std::string GetS3LikeScheme(const std::string& url) {
+  const std::string schemes[] = {kSchemeS3, kSchemeMinIo, kSchemeOss};
+  for (auto& scheme : schemes) {
+    if (absl::StartsWith(url, scheme)) {
+      return scheme;
+    }
+  }
+  return "";
+}
+
+std::string CheckAndGetAbsolutePath(const std::string& in_filepath,
+                                    bool is_restricted,
+                                    const std::string& restricted_filepath) {
   YACL_ENFORCE(!in_filepath.empty());
+  YACL_ENFORCE(GetS3LikeScheme(restricted_filepath).empty(),
+               "restricted_path should remove s3 prefix like 's3://'");
   auto final_path =
       std::filesystem::weakly_canonical(std::filesystem::path(in_filepath));
   if (is_restricted) {
@@ -39,6 +54,41 @@ std::string GetAbsolutePath(const std::string& in_filepath, bool is_restricted,
   }
 
   return final_path.string();
+}
+
+std::filesystem::path CreateDir(const std::filesystem::path& parent_dir,
+                                const std::string& dir_name) {
+  auto dir = parent_dir / dir_name;
+  if (std::filesystem::exists(dir)) {
+    YACL_THROW("failed to create dir {}, due to dir already exist",
+               dir.string());
+  }
+  if (!std::filesystem::create_directories(dir)) {
+    YACL_THROW("failed to create dir {}", dir.string());
+  }
+  return dir;
+}
+
+std::filesystem::path CreateDirWithRandSuffix(
+    const std::filesystem::path& parent_dir, const std::string& dir_name) {
+  int tries = 0;
+
+  const int kMaxTries = 10;
+  boost::uuids::random_generator uuid_generator;
+
+  do {
+    auto uuid_str = boost::uuids::to_string(uuid_generator());
+    auto dir = parent_dir / fmt::format("{}-{}", dir_name, uuid_str);
+    tries++;
+    if (std::filesystem::exists(dir)) {
+      continue;
+    }
+    if (!std::filesystem::create_directory(dir)) {
+      YACL_THROW("failed to create dir {}", dir.string());
+    }
+    return dir;
+  } while (tries < kMaxTries);
+  YACL_THROW("failed to create dir {}", dir_name);
 }
 
 };  // namespace scql::engine::util

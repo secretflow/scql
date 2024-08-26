@@ -55,8 +55,7 @@ func TestSerializeResponseToJsonEmpty(t *testing.T) {
 	// GIVEN
 	a := require.New(t)
 	var response scql.SCDBSubmitResponse
-	response.ScdbSessionId = ""
-	expectResponseContent := `{"status":null, "scdb_session_id":""}`
+	expectResponseContent := `{"scdb_session_id":"", "status":null}`
 	// WHEN
 	actualContent, err := SerializeTo(&response, EncodingTypeJson)
 	// THEN
@@ -72,7 +71,7 @@ func TestDeserializeRequestFromJsonEmpty(t *testing.T) {
 	in := io.NopCloser(strings.NewReader(requestBody))
 	// WHEN
 	var request scql.SCDBFetchRequest
-	encodingType, err := DeserializeFrom(in, &request)
+	encodingType, err := DeserializeFrom(in, &request, "")
 	// THEN
 	a.Nil(err)
 	a.Equal(EncodingTypeJson, encodingType)
@@ -87,7 +86,7 @@ func TestDeserializeRequestFromJson1(t *testing.T) {
 	in := io.NopCloser(strings.NewReader(requestBody))
 	// WHEN
 	var request scql.SCDBFetchRequest
-	encodingType, err := DeserializeFrom(in, &request)
+	encodingType, err := DeserializeFrom(in, &request, "")
 	// THEN
 	a.Nil(err)
 	a.Equal(EncodingTypeJson, encodingType)
@@ -102,7 +101,7 @@ func TestDeserializeRequestFromJson2(t *testing.T) {
 	in := io.NopCloser(strings.NewReader(requestBody))
 	// WHEN
 	var request scql.SCDBFetchRequest
-	encodingType, err := DeserializeFrom(in, &request)
+	encodingType, err := DeserializeFrom(in, &request, "")
 	// THEN
 	a.Nil(err)
 	a.Equal(EncodingTypeJson, encodingType)
@@ -138,7 +137,7 @@ func TestDeserializeRequestFromProtobufBinary(t *testing.T) {
 	// WHEN 2
 	in := io.NopCloser(strings.NewReader(requestBody))
 	actualRequest := scql.SCDBFetchRequest{}
-	encodingType, err := DeserializeFrom(in, &actualRequest)
+	encodingType, err := DeserializeFrom(in, &actualRequest, "")
 	// THEN 2
 	a.Nil(err)
 	a.Equal(EncodingTypeProtobuf, encodingType)
@@ -152,7 +151,7 @@ func TestDeserializeRequestFromInvalidRequest(t *testing.T) {
 	in := io.NopCloser(strings.NewReader(requestBody))
 	// WHEN
 	var request scql.SCDBFetchRequest
-	encodingType, err := DeserializeFrom(in, &request)
+	encodingType, err := DeserializeFrom(in, &request, "")
 	// THEN
 	a.NotNil(err)
 	a.Equal(EncodingTypeUnknown, encodingType)
@@ -178,7 +177,7 @@ func TestDeserializeResponseFromEmpty(t *testing.T) {
 	var response scql.SCDBSubmitResponse
 
 	in := io.NopCloser(strings.NewReader(body))
-	encodingType, err := DeserializeFrom(in, &response)
+	encodingType, err := DeserializeFrom(in, &response, "")
 	a.Nil(err)
 	a.Equal(EncodingTypeProtobuf, encodingType)
 }

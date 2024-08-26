@@ -53,165 +53,154 @@ INSTANTIATE_TEST_SUITE_P(
         test::SpuTestValuesMultiPC,
         testing::Values(
             CaseWhenTestCase{
-                .conds =
-                    {test::NamedTensor("cond1", TensorFromJSON(arrow::int64(),
-                                                               "[1,0,0,0]")),
-                     test::NamedTensor(
-                         "cond2", TensorFromJSON(arrow::boolean(),
-                                                 "[true,true,false,false]")),
-                     test::NamedTensor("cond3",
-                                       TensorFromJSON(arrow::int64(),
-                                                      "[11,11,11,0]"))},
+                .conds = {test::NamedTensor("cond1", TensorFrom(arrow::int64(),
+                                                                "[1,0,0,0]")),
+                          test::NamedTensor(
+                              "cond2", TensorFrom(arrow::boolean(),
+                                                  "[true,true,false,false]")),
+                          test::NamedTensor("cond3",
+                                            TensorFrom(arrow::int64(),
+                                                       "[11,11,11,0]"))},
                 .cond_status = {pb::TENSORSTATUS_PUBLIC,
                                 pb::TENSORSTATUS_PUBLIC,
                                 pb::TENSORSTATUS_PUBLIC},
                 .values =
-                    {test::NamedTensor("value1", TensorFromJSON(arrow::int64(),
-                                                                "[1,1,1,1]")),
-                     test::NamedTensor("value2", TensorFromJSON(arrow::int64(),
-                                                                "[2,2,2,2]")),
-                     test::NamedTensor("value3", TensorFromJSON(arrow::int64(),
-                                                                "[3,3,3,3]"))},
+                    {test::NamedTensor("value1",
+                                       TensorFrom(arrow::int64(), "[1,1,1,1]")),
+                     test::NamedTensor("value2",
+                                       TensorFrom(arrow::int64(), "[2,2,2,2]")),
+                     test::NamedTensor("value3", TensorFrom(arrow::int64(),
+                                                            "[3,3,3,3]"))},
                 .value_status = {pb::TENSORSTATUS_PUBLIC,
                                  pb::TENSORSTATUS_PUBLIC,
                                  pb::TENSORSTATUS_PUBLIC},
                 .value_else = test::NamedTensor(
-                    "value_else", TensorFromJSON(arrow::int64(), "[4,4,4,4]")),
+                    "value_else", TensorFrom(arrow::int64(), "[4,4,4,4]")),
                 .value_else_status = pb::TENSORSTATUS_PUBLIC,
                 .expect_out = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::int64(), "[1,2,3,4]")),
+                    "out", TensorFrom(arrow::int64(), "[1,2,3,4]")),
                 .expect_out_status = pb::TENSORSTATUS_PUBLIC},
             CaseWhenTestCase{
                 .conds =
-                    {test::NamedTensor("cond1", TensorFromJSON(arrow::int64(),
-                                                               "[1,null,0,0]")),
+                    {test::NamedTensor("cond1", TensorFrom(arrow::int64(),
+                                                           "[1,null,0,0]")),
                      test::NamedTensor(
-                         "cond2", TensorFromJSON(arrow::boolean(),
-                                                 "[true,true,null,false]")),
-                     test::NamedTensor("cond3",
-                                       TensorFromJSON(arrow::int64(),
-                                                      "[11,11,11,null]"))},
+                         "cond2", TensorFrom(arrow::boolean(),
+                                             "[true,true,null,false]")),
+                     test::NamedTensor("cond3", TensorFrom(arrow::int64(),
+                                                           "[11,11,11,null]"))},
                 .cond_status = {pb::TENSORSTATUS_PRIVATE,
                                 pb::TENSORSTATUS_PRIVATE,
                                 pb::TENSORSTATUS_PRIVATE},
                 .values =
-                    {test::NamedTensor("value1", TensorFromJSON(arrow::int64(),
-                                                                "[1,1,1,1]")),
-                     test::NamedTensor("value2", TensorFromJSON(arrow::int64(),
-                                                                "[2,2,2,2]")),
-                     test::NamedTensor("value3", TensorFromJSON(arrow::int64(),
-                                                                "[3,3,3,3]"))},
+                    {test::NamedTensor("value1",
+                                       TensorFrom(arrow::int64(), "[1,1,1,1]")),
+                     test::NamedTensor("value2",
+                                       TensorFrom(arrow::int64(), "[2,2,2,2]")),
+                     test::NamedTensor("value3", TensorFrom(arrow::int64(),
+                                                            "[3,3,3,3]"))},
                 .value_status = {pb::TENSORSTATUS_PRIVATE,
                                  pb::TENSORSTATUS_PRIVATE,
                                  pb::TENSORSTATUS_PRIVATE},
                 .value_else = test::NamedTensor(
-                    "value_else", TensorFromJSON(arrow::int64(), "[4,4,4,4]")),
+                    "value_else", TensorFrom(arrow::int64(), "[4,4,4,4]")),
                 .value_else_status = pb::TENSORSTATUS_PRIVATE,
                 .expect_out = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::int64(), "[1,2,3,4]")),
+                    "out", TensorFrom(arrow::int64(), "[1,2,3,4]")),
                 .expect_out_status = pb::TENSORSTATUS_PRIVATE},
             CaseWhenTestCase{
-                .conds =
-                    {test::NamedTensor("cond1", TensorFromJSON(arrow::int64(),
-                                                               "[1,0,0,0]")),
-                     test::NamedTensor(
-                         "cond2", TensorFromJSON(arrow::boolean(),
-                                                 "[true,true,false,false]")),
-                     test::NamedTensor("cond3",
-                                       TensorFromJSON(arrow::int64(),
-                                                      "[11,11,11,0]"))},
+                .conds = {test::NamedTensor("cond1", TensorFrom(arrow::int64(),
+                                                                "[1,0,0,0]")),
+                          test::NamedTensor(
+                              "cond2", TensorFrom(arrow::boolean(),
+                                                  "[true,true,false,false]")),
+                          test::NamedTensor("cond3",
+                                            TensorFrom(arrow::int64(),
+                                                       "[11,11,11,0]"))},
                 .cond_status = {pb::TENSORSTATUS_SECRET,
                                 pb::TENSORSTATUS_PUBLIC,
                                 pb::TENSORSTATUS_PUBLIC},
                 .values =
-                    {test::NamedTensor("value1", TensorFromJSON(arrow::int64(),
-                                                                "[1,1,1,1]")),
-                     test::NamedTensor("value2", TensorFromJSON(arrow::int64(),
-                                                                "[2,2,2,2]")),
-                     test::NamedTensor("value3", TensorFromJSON(arrow::int64(),
-                                                                "[3,3,3,3]"))},
+                    {test::NamedTensor("value1",
+                                       TensorFrom(arrow::int64(), "[1,1,1,1]")),
+                     test::NamedTensor("value2",
+                                       TensorFrom(arrow::int64(), "[2,2,2,2]")),
+                     test::NamedTensor("value3", TensorFrom(arrow::int64(),
+                                                            "[3,3,3,3]"))},
                 .value_status = {pb::TENSORSTATUS_SECRET,
                                  pb::TENSORSTATUS_SECRET,
                                  pb::TENSORSTATUS_PUBLIC},
                 .value_else = test::NamedTensor(
-                    "value_else", TensorFromJSON(arrow::int64(), "[4,4,4,4]")),
+                    "value_else", TensorFrom(arrow::int64(), "[4,4,4,4]")),
                 .value_else_status = pb::TENSORSTATUS_PUBLIC,
                 .expect_out = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::int64(), "[1,2,3,4]")),
+                    "out", TensorFrom(arrow::int64(), "[1,2,3,4]")),
                 .expect_out_status = pb::TENSORSTATUS_SECRET},
             CaseWhenTestCase{
-                .conds =
-                    {test::NamedTensor("cond1", TensorFromJSON(arrow::int64(),
-                                                               "[-1,0,0,0]")),
-                     test::NamedTensor(
-                         "cond2", TensorFromJSON(arrow::boolean(),
-                                                 "[true,true,false,false]")),
-                     test::NamedTensor("cond3",
-                                       TensorFromJSON(arrow::int64(),
-                                                      "[-11,-11,-11,0]"))},
+                .conds = {test::NamedTensor("cond1", TensorFrom(arrow::int64(),
+                                                                "[-1,0,0,0]")),
+                          test::NamedTensor(
+                              "cond2", TensorFrom(arrow::boolean(),
+                                                  "[true,true,false,false]")),
+                          test::NamedTensor("cond3",
+                                            TensorFrom(arrow::int64(),
+                                                       "[-11,-11,-11,0]"))},
                 .cond_status = {pb::TENSORSTATUS_PRIVATE,
                                 pb::TENSORSTATUS_PRIVATE,
                                 pb::TENSORSTATUS_PRIVATE},
-                .values = {test::NamedTensor(
-                               "value1",
-                               TensorFromJSON(arrow::large_utf8(),
+                .values =
+                    {test::NamedTensor(
+                         "value1", TensorFrom(arrow::large_utf8(),
                                               R"json(["A","A","A","A"])json")),
-                           test::NamedTensor(
-                               "value2",
-                               TensorFromJSON(arrow::large_utf8(),
+                     test::NamedTensor(
+                         "value2", TensorFrom(arrow::large_utf8(),
                                               R"json(["B","B","B","B"])json")),
-                           test::NamedTensor(
-                               "value3",
-                               TensorFromJSON(arrow::large_utf8(),
+                     test::NamedTensor(
+                         "value3", TensorFrom(arrow::large_utf8(),
                                               R"json(["C","C","C","C"])json"))},
                 .value_status = {pb::TENSORSTATUS_PRIVATE,
                                  pb::TENSORSTATUS_PRIVATE,
                                  pb::TENSORSTATUS_PRIVATE},
                 .value_else = test::NamedTensor(
-                    "value_else",
-                    TensorFromJSON(arrow::large_utf8(),
-                                   R"json(["D","D","D","D"])json")),
+                    "value_else", TensorFrom(arrow::large_utf8(),
+                                             R"json(["D","D","D","D"])json")),
                 .value_else_status = pb::TENSORSTATUS_PRIVATE,
                 .expect_out = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::large_utf8(),
-                                          R"json(["A","B","C","D"])json")),
+                    "out", TensorFrom(arrow::large_utf8(),
+                                      R"json(["A","B","C","D"])json")),
                 .expect_out_status = pb::TENSORSTATUS_PRIVATE},
             CaseWhenTestCase{
-                .conds =
-                    {test::NamedTensor("cond1", TensorFromJSON(arrow::int64(),
-                                                               "[1,0,0,0]")),
-                     test::NamedTensor(
-                         "cond2", TensorFromJSON(arrow::boolean(),
-                                                 "[true,true,false,false]")),
-                     test::NamedTensor("cond3",
-                                       TensorFromJSON(arrow::int64(),
-                                                      "[-11,-11,-11,0]"))},
+                .conds = {test::NamedTensor("cond1", TensorFrom(arrow::int64(),
+                                                                "[1,0,0,0]")),
+                          test::NamedTensor(
+                              "cond2", TensorFrom(arrow::boolean(),
+                                                  "[true,true,false,false]")),
+                          test::NamedTensor("cond3",
+                                            TensorFrom(arrow::int64(),
+                                                       "[-11,-11,-11,0]"))},
                 .cond_status = {pb::TENSORSTATUS_SECRET,
                                 pb::TENSORSTATUS_PUBLIC,
                                 pb::TENSORSTATUS_PUBLIC},
-                .values = {test::NamedTensor(
-                               "value1",
-                               TensorFromJSON(arrow::large_utf8(),
+                .values =
+                    {test::NamedTensor(
+                         "value1", TensorFrom(arrow::large_utf8(),
                                               R"json(["A","A","A","A"])json")),
-                           test::NamedTensor(
-                               "value2",
-                               TensorFromJSON(arrow::large_utf8(),
+                     test::NamedTensor(
+                         "value2", TensorFrom(arrow::large_utf8(),
                                               R"json(["B","B","B","B"])json")),
-                           test::NamedTensor(
-                               "value3",
-                               TensorFromJSON(arrow::large_utf8(),
+                     test::NamedTensor(
+                         "value3", TensorFrom(arrow::large_utf8(),
                                               R"json(["C","C","C","C"])json"))},
                 .value_status = {pb::TENSORSTATUS_PUBLIC,
                                  pb::TENSORSTATUS_SECRET,
                                  pb::TENSORSTATUS_SECRET},
                 .value_else = test::NamedTensor(
-                    "value_else",
-                    TensorFromJSON(arrow::large_utf8(),
-                                   R"json(["D","D","D","D"])json")),
+                    "value_else", TensorFrom(arrow::large_utf8(),
+                                             R"json(["D","D","D","D"])json")),
                 .value_else_status = pb::TENSORSTATUS_PUBLIC,
                 .expect_out = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::large_utf8(),
-                                          R"json(["A","B","C","D"])json")),
+                    "out", TensorFrom(arrow::large_utf8(),
+                                      R"json(["A","B","C","D"])json")),
                 .expect_out_status = pb::TENSORSTATUS_SECRET})),
     TestParamNameGenerator(CaseWhenTest));
 
@@ -277,72 +266,69 @@ INSTANTIATE_TEST_SUITE_P(
         test::SpuTestValuesMultiPC,
         testing::Values(
             CaseWhenConditionTestCase{
-                .conds =
-                    {test::NamedTensor("cond1", TensorFromJSON(arrow::int64(),
-                                                               "[1,0,0,0]")),
-                     test::NamedTensor(
-                         "cond2", TensorFromJSON(arrow::boolean(),
-                                                 "[true,true,false,false]")),
-                     test::NamedTensor("cond3",
-                                       TensorFromJSON(arrow::int64(),
-                                                      "[11,11,11,0]"))},
+                .conds = {test::NamedTensor("cond1", TensorFrom(arrow::int64(),
+                                                                "[1,0,0,0]")),
+                          test::NamedTensor(
+                              "cond2", TensorFrom(arrow::boolean(),
+                                                  "[true,true,false,false]")),
+                          test::NamedTensor("cond3",
+                                            TensorFrom(arrow::int64(),
+                                                       "[11,11,11,0]"))},
                 .expect_out =
-                    {test::NamedTensor(
-                         "out1", TensorFromJSON(arrow::boolean(),
-                                                "[true,false,false,false]")),
+                    {test::NamedTensor("out1",
+                                       TensorFrom(arrow::boolean(),
+                                                  "[true,false,false,false]")),
+                     test::NamedTensor("out2",
+                                       TensorFrom(arrow::boolean(),
+                                                  "[false,true,false,false]")),
                      test::NamedTensor(
-                         "out2", TensorFromJSON(arrow::boolean(),
-                                                "[false,true,false,false]")),
+                         "out3", TensorFrom(arrow::boolean(),
+                                            "[false,false,true,false]")),
                      test::NamedTensor(
-                         "out3", TensorFromJSON(arrow::boolean(),
-                                                "[false,false,true,false]")),
-                     test::NamedTensor(
-                         "out4", TensorFromJSON(arrow::boolean(),
-                                                "[false,false,false,true]"))}},
+                         "out4", TensorFrom(arrow::boolean(),
+                                            "[false,false,false,true]"))}},
             CaseWhenConditionTestCase{
-                .conds =
-                    {test::NamedTensor("cond1", TensorFromJSON(arrow::int64(),
-                                                               "[-1,0,1,0]")),
-                     test::NamedTensor(
-                         "cond2", TensorFromJSON(arrow::boolean(),
-                                                 "[true,false,false,false]")),
-                     test::NamedTensor("cond3", TensorFromJSON(arrow::int64(),
-                                                               "[3,3,3,3]"))},
+                .conds = {test::NamedTensor("cond1", TensorFrom(arrow::int64(),
+                                                                "[-1,0,1,0]")),
+                          test::NamedTensor(
+                              "cond2", TensorFrom(arrow::boolean(),
+                                                  "[true,false,false,false]")),
+                          test::NamedTensor("cond3", TensorFrom(arrow::int64(),
+                                                                "[3,3,3,3]"))},
                 .expect_out =
                     {test::NamedTensor(
-                         "out1", TensorFromJSON(arrow::boolean(),
-                                                "[true,false,true,false]")),
+                         "out1", TensorFrom(arrow::boolean(),
+                                            "[true,false,true,false]")),
                      test::NamedTensor(
-                         "out2", TensorFromJSON(arrow::boolean(),
-                                                "[false,false,false,false]")),
+                         "out2", TensorFrom(arrow::boolean(),
+                                            "[false,false,false,false]")),
                      test::NamedTensor(
-                         "out3", TensorFromJSON(arrow::boolean(),
-                                                "[false,true,false,true]")),
+                         "out3", TensorFrom(arrow::boolean(),
+                                            "[false,true,false,true]")),
                      test::NamedTensor(
-                         "out4", TensorFromJSON(arrow::boolean(),
-                                                "[false,false,false,false]"))}},
+                         "out4", TensorFrom(arrow::boolean(),
+                                            "[false,false,false,false]"))}},
             CaseWhenConditionTestCase{
-                .conds =
-                    {test::NamedTensor("cond1", TensorFromJSON(arrow::int64(),
-                                                               "[0,0,0,0]")),
-                     test::NamedTensor(
-                         "cond2", TensorFromJSON(arrow::boolean(),
-                                                 "[false,false,false,false]")),
-                     test::NamedTensor("cond3", TensorFromJSON(arrow::int64(),
-                                                               "[0,0,0,0]"))},
+                .conds = {test::NamedTensor("cond1", TensorFrom(arrow::int64(),
+                                                                "[0,0,0,0]")),
+                          test::NamedTensor(
+                              "cond2", TensorFrom(arrow::boolean(),
+                                                  "[false,false,false,false]")),
+                          test::NamedTensor("cond3", TensorFrom(arrow::int64(),
+                                                                "[0,0,0,0]"))},
                 .expect_out =
                     {test::NamedTensor(
-                         "out1", TensorFromJSON(arrow::boolean(),
-                                                "[false,false,false,false]")),
+                         "out1", TensorFrom(arrow::boolean(),
+                                            "[false,false,false,false]")),
                      test::NamedTensor(
-                         "out2", TensorFromJSON(arrow::boolean(),
-                                                "[false,false,false,false]")),
+                         "out2", TensorFrom(arrow::boolean(),
+                                            "[false,false,false,false]")),
                      test::NamedTensor(
-                         "out3", TensorFromJSON(arrow::boolean(),
-                                                "[false,false,false,false]")),
+                         "out3", TensorFrom(arrow::boolean(),
+                                            "[false,false,false,false]")),
                      test::NamedTensor(
-                         "out4", TensorFromJSON(arrow::boolean(),
-                                                "[true,true,true,true]"))}})),
+                         "out4", TensorFrom(arrow::boolean(),
+                                            "[true,true,true,true]"))}})),
     TestParamNameGenerator(CaseWhenConditionTest));
 
 TEST_P(CaseWhenConditionTest, condition) {

@@ -15,7 +15,6 @@
 package storage
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -29,6 +28,7 @@ import (
 	gormlog "gorm.io/gorm/logger"
 
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/util/message"
 )
 
 func TestBootstrap(t *testing.T) {
@@ -55,7 +55,7 @@ func TestBootstrap(t *testing.T) {
 	transaction := manager.CreateMetaTransaction()
 	projectID1 := "p1"
 	projectName1 := "n1"
-	projectConf, err := json.Marshal(pb.ProjectConfig{})
+	projectConf, err := message.ProtoMarshal(&pb.ProjectConfig{})
 
 	alice := "alice"
 	// create project
@@ -121,7 +121,7 @@ func TestBootstrap(t *testing.T) {
 	r.Equal(1, len(res))
 
 	// update project
-	newProjectConf, err := json.Marshal(pb.ProjectConfig{})
+	newProjectConf, err := message.ProtoMarshal(&pb.ProjectConfig{})
 	err = transaction.UpdateProject(Project{ID: projectID1, ProjectConf: string(newProjectConf)})
 	r.NoError(err)
 	projWithMembers, err := transaction.GetProjectAndMembers(projectID1)

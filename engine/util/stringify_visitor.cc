@@ -16,42 +16,32 @@
 
 #include "fmt/format.h"
 
+#include "engine/core/tensor_constructor.h"
+
 namespace scql::engine::util {
 
-StringifyVisitor::StringifyVisitor(const Tensor& tensor) : reader_(tensor) {
-  FetchNextChunk();
+StringifyVisitor::StringifyVisitor(TensorPtr tensor, size_t batch_size) {
+  reader_ = tensor->CreateBatchReader(batch_size);
 }
 
-void StringifyVisitor::FetchNextChunk() {
-  chunk_ = reader_.ReadNext();
-  offset_ = 0;
-}
-
-std::vector<std::string> StringifyVisitor::StringifyBatch(size_t batch_size) {
-  if (chunk_ == nullptr) {
-    return std::vector<std::string>{};
+std::vector<std::string> StringifyVisitor::StringifyBatch() {
+  auto array = reader_->Next();
+  if (array == nullptr) {
+    return {};
+  }
+  strs_.clear();
+  strs_.reserve(array->length());
+  for (int i = 0; i < array->num_chunks(); i++) {
+    Stringify(*array->chunk(i));
   }
 
-  strs_.clear();
-  strs_.reserve(batch_size);
-
-  size_t len = batch_size;
-
-  do {
-    auto array = chunk_->ToArrowArray();
-    auto slice = array->Slice(offset_, len);
-
-    Stringify(*slice);
-
-    offset_ += slice->length();
-    len -= slice->length();
-
-    if (offset_ >= array->length()) {
-      FetchNextChunk();
-    }
-  } while (chunk_ != nullptr && len > 0);
-
   return std::move(strs_);
+}
+
+std::vector<std::string> Stringify(
+    std::shared_ptr<arrow::ChunkedArray> arrays) {
+  StringifyVisitor visitor(TensorFrom(arrays), arrays->length());
+  return visitor.StringifyBatch();
 }
 
 }  // namespace scql::engine::util

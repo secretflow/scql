@@ -44,7 +44,7 @@ CopyTestCase MockInt32TensorCase(const size_t tensor_length) {
   }
   tensor_str += "]";
   test_case.datas = {
-      test::NamedTensor("x1", TensorFromJSON(arrow::int32(), tensor_str))};
+      test::NamedTensor("x1", TensorFrom(arrow::int32(), tensor_str))};
   return test_case;
 };
 
@@ -65,7 +65,7 @@ CopyTestCase MockStringTensorCase(const size_t tensor_length) {
   }
   tensor_str += "]";
   test_case.datas = {
-      test::NamedTensor("x1", TensorFromJSON(arrow::large_utf8(), tensor_str))};
+      test::NamedTensor("x1", TensorFrom(arrow::large_utf8(), tensor_str))};
   return test_case;
 };
 
@@ -83,25 +83,23 @@ INSTANTIATE_TEST_SUITE_P(
         test::SpuTestValues2PC,
         testing::Values(
             CopyTestCase{
-                .datas =
-                    {test::NamedTensor(
-                         "x1", TensorFromJSON(arrow::float64(),
-                                              "[-3.1415, 0.1, 99.999, null]")),
-                     test::NamedTensor("x2", TensorFromJSON(arrow::boolean(),
-                                                            "[1,0,0,1]"))},
+                .datas = {test::NamedTensor(
+                              "x1", TensorFrom(arrow::float64(),
+                                               "[-3.1415, 0.1, 99.999, null]")),
+                          test::NamedTensor("x2", TensorFrom(arrow::boolean(),
+                                                             "[1,0,0,1]"))},
                 .output_names = {"x1_copy", "x2_copy"}},
             CopyTestCase{
                 .datas = {test::NamedTensor(
-                    "x1", TensorFromJSON(arrow::large_utf8(),
-                                         R"json(["D","C",null,"B","A"])json"))},
-                .output_names = {"x1_copy"}},
-            CopyTestCase{
-                .datas = {test::NamedTensor(
-                    "x1", TensorFromJSON(arrow::int64(),
-                                         "[null,0,1,2,3,10,11,12,13]"))},
+                    "x1", TensorFrom(arrow::large_utf8(),
+                                     R"json(["D","C",null,"B","A"])json"))},
                 .output_names = {"x1_copy"}},
             CopyTestCase{.datas = {test::NamedTensor(
-                             "x1", TensorFromJSON(arrow::int64(), "[]"))},
+                             "x1", TensorFrom(arrow::int64(),
+                                              "[null,0,1,2,3,10,11,12,13]"))},
+                         .output_names = {"x1_copy"}},
+            CopyTestCase{.datas = {test::NamedTensor(
+                             "x1", TensorFrom(arrow::int64(), "[]"))},
                          .output_names = {"x1_copy"}},
             MockInt32TensorCase(100), MockStringTensorCase(500),
             MockInt32TensorCase(2000), MockStringTensorCase(12000),

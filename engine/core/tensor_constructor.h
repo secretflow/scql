@@ -17,28 +17,71 @@
 #include <cstddef>
 #include <memory>
 
-#include "engine/core/primitive_builder.h"
 #include "engine/core/tensor.h"
+#include "engine/util/disk/arrow_writer.h"
 
 namespace scql::engine {
 
 /// @brief construct tensor from json
 /// It would be helpful in unittests.
 /// TODO(shunde.csd): use wrapped data type instead of arrow::DataType directly
-TensorPtr TensorFromJSON(const std::shared_ptr<arrow::DataType>& dtype,
-                         const std::string& json);
+TensorPtr TensorFrom(const std::shared_ptr<arrow::DataType>& dtype,
+                     const std::string& json);
 
-template <typename T>
-TensorPtr FullNumericTensor(size_t count, typename T::c_type value) {
-  NumericTensorBuilder<T> builder;
-  builder.Reserve(count);
-  for (size_t i = 0; i < count; ++i) {
-    builder.UnsafeAppend(value);
+TensorPtr TensorFrom(std::shared_ptr<arrow::ChunkedArray> arrays);
+
+class TensorWriter {
+ public:
+  TensorWriter(
+      std::shared_ptr<arrow::Schema> schema,
+      const std::filesystem::path parent_path,
+      int64_t max_single_file_row_num = std::numeric_limits<int64_t>::max())
+      : schema_(std::move(schema)),
+        parent_path_(std::move(parent_path)),
+        max_single_file_row_num_(max_single_file_row_num) {
+    YACL_ENFORCE(std::filesystem::is_empty(parent_path_),
+                 "directory for tensor writer must be empty: {}",
+                 parent_path_.string());
   }
 
-  TensorPtr result_tensor;
-  builder.Finish(&result_tensor);
-  return result_tensor;
-}
+  TensorWriter(
+      const std::string& field_name,
+      const std::shared_ptr<arrow::DataType>& data_type,
+      const std::filesystem::path parent_path,
+      int64_t max_single_file_row_num = std::numeric_limits<int64_t>::max())
+      : parent_path_(std::move(parent_path)),
+        max_single_file_row_num_(max_single_file_row_num) {
+    YACL_ENFORCE(std::filesystem::is_empty(parent_path_),
+                 "directory for tensor writer must be empty: {}",
+                 parent_path_.string());
+    auto field = std::make_shared<arrow::Field>(field_name, data_type);
+    arrow::FieldVector fields = {field};
+    schema_ = std::make_shared<arrow::Schema>(fields);
+  }
+
+  virtual ~TensorWriter() = default;
+
+  size_t WriteBatch(const arrow::RecordBatch& batch);
+  size_t WriteBatch(const arrow::ChunkedArray& batch);
+  // Return result of builder as a Tensor object.
+  void Finish(std::shared_ptr<Tensor>* out);
+
+  std::shared_ptr<arrow::Schema> GetSchema() const { return schema_; }
+
+  size_t GetFilesNum() const { return file_arrays_.size(); }
+
+ private:
+  void FreshCurWriter();
+
+  std::shared_ptr<arrow::Schema> schema_;
+  const std::filesystem::path parent_path_;
+  std::vector<FileArray> file_arrays_;
+  std::shared_ptr<util::disk::ArrowWriter> current_writer_;
+  size_t file_index_ = 0;
+
+  // max row num in a single file, if more than this, will create a new file
+  // to write.
+  const int64_t max_single_file_row_num_;
+};
 
 }  // namespace scql::engine

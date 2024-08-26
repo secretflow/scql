@@ -41,22 +41,22 @@ INSTANTIATE_TEST_SUITE_P(
         test::SpuTestValuesMultiPC,
         testing::Values(
             ConcatTestCase{
-                .inputs = {test::NamedTensor("a", TensorFromJSON(arrow::int64(),
-                                                                 "[1, 2]")),
-                           test::NamedTensor("b", TensorFromJSON(arrow::int64(),
-                                                                 "[3]"))},
+                .inputs = {test::NamedTensor("a", TensorFrom(arrow::int64(),
+                                                             "[1, 2]")),
+                           test::NamedTensor("b", TensorFrom(arrow::int64(),
+                                                             "[3]"))},
                 .expect_out = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::int64(), "[1, 2, 3]"))},
+                    "out", TensorFrom(arrow::int64(), "[1, 2, 3]"))},
             ConcatTestCase{
-                .inputs =
-                    {test::NamedTensor(
-                         "a", TensorFromJSON(arrow::large_utf8(),
-                                             R"json(["A", "B", "C"])json")),
-                     test::NamedTensor("b", TensorFromJSON(arrow::large_utf8(),
-                                                           R"json([])json"))},
+                .inputs = {test::NamedTensor(
+                               "a", TensorFrom(arrow::large_utf8(),
+                                               R"json(["A", "B", "C"])json")),
+                           test::NamedTensor("b",
+                                             TensorFrom(arrow::large_utf8(),
+                                                        R"json([])json"))},
                 .expect_out = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::large_utf8(),
-                                          R"json(["A", "B", "C"])json"))})),
+                    "out", TensorFrom(arrow::large_utf8(),
+                                      R"json(["A", "B", "C"])json"))})),
     TestParamNameGenerator(ConcatTest));
 
 TEST_P(ConcatTest, works) {

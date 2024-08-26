@@ -64,6 +64,8 @@ type Config struct {
 	SessionExpireTime    time.Duration `yaml:"session_expire_time"`
 	SessionCheckInterval time.Duration `yaml:"session_expire_check_time"`
 	PersistSession       bool          `yaml:"persist_session"`
+	// streaming
+	Batched bool `yaml:"batched"`
 	// exchange job info
 	ExchangeJobInfoRetryTimes    int           `yaml:"exchange_job_info_retry_times"`
 	ExchangeJobInfoRetryInterval time.Duration `yaml:"exchange_job_info_retry_interval"`
@@ -126,6 +128,7 @@ type StorageConf struct {
 type EngineConfig struct {
 	ClientTimeout time.Duration `yaml:"timeout"`
 	Protocol      string        `yaml:"protocol"`
+	TLSCfg        TLSConf       `yaml:"tls_cfg"`
 	ContentType   string        `yaml:"content_type"`
 	// supported schedulers: "kuscia" or "naive"
 	Scheduler string `yaml:"scheduler"`
@@ -152,8 +155,9 @@ type EngineUri struct {
 }
 
 const (
-	StorageTypeSQLite = "sqlite"
-	StorageTypeMySQL  = "mysql"
+	StorageTypeSQLite   = "sqlite"
+	StorageTypeMySQL    = "mysql"
+	StorageTypePostgres = "postgres"
 )
 
 const (

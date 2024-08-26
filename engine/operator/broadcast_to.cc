@@ -18,6 +18,7 @@
 #include "libspu/kernel/hal/shape_ops.h"
 
 #include "engine/core/arrow_helper.h"
+#include "engine/core/tensor_constructor.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
 
@@ -100,7 +101,7 @@ void BroadcastTo::BroadcastToPrivate(ExecContext* ctx,
 
     auto chunked_arr = std::make_shared<arrow::ChunkedArray>(array);
     ctx->GetTensorTable()->AddTensor(output_pbs[i].name(),
-                                     std::make_shared<Tensor>(chunked_arr));
+                                     TensorFrom(chunked_arr));
   }
 }
 

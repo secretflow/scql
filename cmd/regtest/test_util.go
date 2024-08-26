@@ -87,65 +87,98 @@ type ResultColumn struct {
 	Doubles []float64 `json:"float"`
 }
 
-type StringWithId struct {
-	str string
-	id  int
+func (c *ResultColumn) Getlen() int {
+	return len(c.Ss) + len(c.Int64s) + len(c.Bools) + len(c.Doubles)
 }
 
-type StringWithIds []StringWithId
+func roundTo3Decimals(val float64) float64 {
+	return math.Round(val*1000) / 1000
+}
 
-func (x StringWithIds) Len() int           { return len(x) }
-func (x StringWithIds) Less(i, j int) bool { return x[i].str < x[j].str }
-func (x StringWithIds) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
-func (x StringWithIds) GetOrders() []int {
-	var res []int
-	for i := 0; i < x.Len(); i++ {
-		res = append(res, x[i].id)
+func getColumnPrecedence(ta, tb *ResultTable) []int {
+	var roundColumnIndexes, preciseColumnIndexes []int
+	for i := range ta.Column {
+		// Lower the precedence of columns that are likely to introduce errors in comparisons.
+		if ta.Column[i].Doubles != nil || tb.Column[i].Doubles != nil {
+			roundColumnIndexes = append(roundColumnIndexes, i)
+		} else {
+			preciseColumnIndexes = append(preciseColumnIndexes, i)
+		}
 	}
-	return res
+	return append(roundColumnIndexes, preciseColumnIndexes...)
 }
 
-func (t *ResultTable) ConvertToRows() StringWithIds {
+func (t *ResultTable) getOrderedIndexes(columnPrecedence []int) []int {
+	len := t.Column[0].Getlen()
+	indexes := make([]int, len)
+	for i := 0; i < len; i++ {
+		indexes[i] = i
+	}
+
+	for _, i := range columnPrecedence {
+		col := t.Column[i]
+		if col.Ss != nil {
+			sort.SliceStable(indexes, func(i, j int) bool {
+				return col.Ss[indexes[i]] < col.Ss[indexes[j]]
+			})
+		}
+		if col.Int64s != nil {
+			sort.SliceStable(indexes, func(i, j int) bool {
+				return col.Int64s[indexes[i]] < col.Int64s[indexes[j]]
+			})
+		}
+		if col.Bools != nil {
+			sort.SliceStable(indexes, func(i, j int) bool {
+				return !col.Bools[indexes[i]] && col.Bools[indexes[j]]
+			})
+		}
+		if col.Doubles != nil {
+			sort.SliceStable(indexes, func(i, j int) bool {
+				return roundTo3Decimals(col.Doubles[indexes[i]]) < roundTo3Decimals(col.Doubles[indexes[j]])
+			})
+		}
+	}
+
+	return indexes
+}
+
+func (t *ResultTable) convertToRows() []string {
 	rowStrings := t.Column[0].toStringSlice()
 	for _, c := range t.Column[1:] {
 		for i, s := range c.toStringSlice() {
 			rowStrings[i] = rowStrings[i] + s
 		}
 	}
-	var res []StringWithId
-	for i, s := range rowStrings {
-		res = append(res, StringWithId{
-			str: s,
-			id:  i,
-		})
+	for i := range t.Column[0].toStringSlice() {
+		rowStrings[i] = fmt.Sprintf("[%d]", i) + rowStrings[i] + "\n"
 	}
-	return res
+	return rowStrings
 }
 
-func IsColumnNil(col *ResultColumn) bool {
+func isColumnNil(col *ResultColumn) bool {
 	if len(col.Bools) == 0 && len(col.Doubles) == 0 && len(col.Int64s) == 0 && len(col.Ss) == 0 {
 		return true
 	}
 	return false
 }
 
-func (t *ResultTable) EqualTo(o *ResultTable) bool {
+func (t *ResultTable) equalTo(o *ResultTable) bool {
 	if len(t.Column) != len(o.Column) {
 		return false
 	}
 	for i, col := range t.Column {
 		// if both of datas are nil return true
-		if IsColumnNil(col) && IsColumnNil(o.Column[i]) {
+		if isColumnNil(col) && isColumnNil(o.Column[i]) {
 			return true
 		}
-		if !col.EqualTo(o.Column[i]) {
+		if !col.equalTo(o.Column[i]) {
 			return false
 		}
 	}
 	return true
 }
 
-func (c *ResultColumn) ChangeOrders(orders []int) {
+func (c *ResultColumn) changeOrders(orders []int) {
 	if c.Ss != nil {
 		newSs := make([]string, len(c.Ss))
 		for i, order := range orders {
@@ -191,7 +224,7 @@ func (c *ResultColumn) toStringSlice() []string {
 	} else if c.Doubles != nil {
 		for _, f := range c.Doubles {
 			// NOTE(@yang.y): SCQL handles float differently from MySQL
-			res = append(res, fmt.Sprintf(`"%-.4f"f`, f))
+			res = append(res, fmt.Sprintf(`"%-.6f"f`, f))
 		}
 		return res
 	} else {
@@ -202,7 +235,7 @@ func (c *ResultColumn) toStringSlice() []string {
 	}
 }
 
-func (c *ResultColumn) EqualTo(o *ResultColumn) bool {
+func (c *ResultColumn) equalTo(o *ResultColumn) bool {
 	cLen := slices.Max([]int{len(c.Ss), len(c.Int64s), len(c.Bools), len(c.Doubles)})
 	oLen := slices.Max([]int{len(o.Ss), len(o.Int64s), len(o.Bools), len(o.Doubles)})
 	if cLen != oLen {
@@ -252,7 +285,7 @@ func (c *ResultColumn) EqualTo(o *ResultColumn) bool {
 	} else if c.Doubles != nil || o.Doubles != nil {
 		if c.Doubles != nil && o.Doubles != nil {
 			for i, d := range c.Doubles {
-				if !AlmostEqual(d, o.Doubles[i]) {
+				if !almostEqual(d, o.Doubles[i]) {
 					logrus.Infof("line number %d floats error float64(%f) != float64(%f)", i, d, o.Doubles[i])
 					return false
 				}
@@ -262,7 +295,7 @@ func (c *ResultColumn) EqualTo(o *ResultColumn) bool {
 
 		if o.Int64s != nil {
 			for i, d := range c.Doubles {
-				if !AlmostEqual(d, float64(o.Int64s[i])) {
+				if !almostEqual(d, float64(o.Int64s[i])) {
 					logrus.Infof("line number %d floats error float64(%f) != int(%d)", i, d, o.Int64s[i])
 					return false
 				}
@@ -272,7 +305,7 @@ func (c *ResultColumn) EqualTo(o *ResultColumn) bool {
 
 		if c.Int64s != nil {
 			for i, d := range o.Doubles {
-				if !AlmostEqual(d, float64(c.Int64s[i])) {
+				if !almostEqual(d, float64(c.Int64s[i])) {
 					logrus.Infof("line number %d floats error int(%d) != float32(%f)", i, c.Int64s[i], d)
 					return false
 				}
@@ -295,7 +328,7 @@ func (c *ResultColumn) EqualTo(o *ResultColumn) bool {
 	}
 }
 
-func AlmostEqual(a, b float64) bool {
+func almostEqual(a, b float64) bool {
 	return math.Abs(a-b) < NumericalPrecision
 }
 
@@ -341,7 +374,7 @@ func convertDateTimeToSqlFormat(datetime string) (string, error) {
 	return datetime, nil
 }
 
-func (ds *TestDataSource) GetQueryResultFromMySQL(query string, needConvertDateTime bool) (curCaseResult *ResultTable, err error) {
+func (ds *TestDataSource) getQueryResultFromMySQL(query string, needConvertDateTime bool) (curCaseResult *ResultTable, err error) {
 	db, err := ds.MysqlDb.DB()
 	if err != nil {
 		return
@@ -437,7 +470,7 @@ func (ds *TestDataSource) GetQueryResultFromMySQL(query string, needConvertDateT
 
 func CheckResult(testDataSource TestDataSource, expected *ResultTable, answer []*scql.Tensor, mysqlQueryString, errInfo string) (err error) {
 	if expected == nil {
-		expected, err = testDataSource.GetQueryResultFromMySQL(mysqlQueryString, true)
+		expected, err = testDataSource.getQueryResultFromMySQL(mysqlQueryString, true)
 		if err != nil {
 			return fmt.Errorf("%s Error Info (%s)", errInfo, err)
 		}
@@ -506,21 +539,19 @@ func compareResultTableWithoutRowOrder(expect, actual *ResultTable) error {
 		}
 	}
 
-	expectRows := expect.ConvertToRows()
-	actualRows := actual.ConvertToRows()
+	columnPrecedence := getColumnPrecedence(expect, actual)
+	expectedIndexes := expect.getOrderedIndexes(columnPrecedence)
+	actualIndexes := actual.getOrderedIndexes(columnPrecedence)
 
-	sort.Sort(expectRows)
-	sort.Sort(actualRows)
-
-	for _, col := range actual.Column {
-		col.ChangeOrders(actualRows.GetOrders())
-	}
 	for _, col := range expect.Column {
-		col.ChangeOrders(expectRows.GetOrders())
+		col.changeOrders(expectedIndexes)
+	}
+	for _, col := range actual.Column {
+		col.changeOrders(actualIndexes)
 	}
 
-	if !expect.EqualTo(actual) {
-		return fmt.Errorf("expected:\n%v\nactual:\n%v\n", expectRows, actualRows)
+	if !expect.equalTo(actual) {
+		return fmt.Errorf("expected:\n%v\nactual:\n%v", expect.convertToRows(), actual.convertToRows())
 	}
 	return nil
 }

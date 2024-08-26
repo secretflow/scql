@@ -38,13 +38,13 @@ INSTANTIATE_TEST_SUITE_P(
     PublishPrivateTest, PublishTest,
     testing::Values(
         PublishTestCase{
-            .inputs =
-                {test::NamedTensor("in0", TensorFromJSON(arrow::int64(),
-                                                         "[0,1,null,3]")),
-                 test::NamedTensor("in1", TensorFromJSON(arrow::int64(),
-                                                         "[0,10,null,1000]")),
-                 test::NamedTensor("in2", TensorFromJSON(arrow::int64(),
-                                                         "[0,10,null,1000]"))},
+            .inputs = {test::NamedTensor("in0", TensorFrom(arrow::int64(),
+                                                           "[0,1,null,3]")),
+                       test::NamedTensor("in1", TensorFrom(arrow::int64(),
+                                                           "[0,10,null,1000]")),
+                       test::NamedTensor("in2",
+                                         TensorFrom(arrow::int64(),
+                                                    "[0,10,null,1000]"))},
             .input_types =
                 {pb::PrimitiveDataType::INT64,
                  // affected by timezone, we use Beijing time in test_util
@@ -114,15 +114,14 @@ data_validity: false
 data_validity: true
 )"""}},
         PublishTestCase{
-            .inputs = {test::NamedTensor(
-                           "p0", TensorFromJSON(
-                                     arrow::large_utf8(),
-                                     R"json(["B","A","A","CCC","B"])json")),
-                       test::NamedTensor(
-                           "p1",
-                           TensorFromJSON(
-                               arrow::float32(),
-                               "[1.1025, 100.245, -10.2, 0.34, 3.1415926]"))},
+            .inputs =
+                {test::NamedTensor(
+                     "p0", TensorFrom(arrow::large_utf8(),
+                                      R"json(["B","A","A","CCC","B"])json")),
+                 test::NamedTensor(
+                     "p1",
+                     TensorFrom(arrow::float32(),
+                                "[1.1025, 100.245, -10.2, 0.34, 3.1415926]"))},
             .input_types = {pb::PrimitiveDataType::STRING,
                             pb::PrimitiveDataType::FLOAT32},
             .out_strs = {R"""(name: "col#0"

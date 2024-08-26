@@ -53,7 +53,7 @@ func (ts *testDMLSuite) TestDMLVisitorCover(c *C) {
 		{&WildCardField{}, 0, 0},
 
 		// TODO: cover childrens
-		{&InsertStmt{Table: tableRefsClause}, 1, 1},
+		{&InsertStmt{Table: tableRefsClause}, 0, 0},
 		{&UnionStmt{}, 0, 0},
 		{&UpdateStmt{TableRefs: tableRefsClause}, 1, 1},
 		{&SelectStmt{}, 0, 0},

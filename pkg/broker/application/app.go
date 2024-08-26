@@ -20,9 +20,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-co-op/gocron/v2"
 	"github.com/patrickmn/go-cache"
 	"github.com/sirupsen/logrus"
-	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/secretflow/scql/pkg/broker/config"
 	"github.com/secretflow/scql/pkg/broker/partymgr"
@@ -98,15 +98,20 @@ func NewApp(partyMgr partymgr.PartyMgr, metaMgr *storage.MetaManager, cfg *confi
 		return nil, fmt.Errorf("unsupported engine scheduler %s", cfg.Engine.Scheduler)
 	}
 
-	jobWatcher := executor.NewJobWatcher(func(jobId, reason string) {
+	jobWatcher, err := executor.NewJobWatcher(func(jobId, reason string) {
 		app.onJobDead(jobId, reason)
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create jobwatcher: %v", err)
+	}
 
 	app.JobWatcher = jobWatcher
 
 	if cfg.PersistSession {
-		go app.StorageGc()
-		go app.SessionGc()
+		err := app.startGc()
+		if err != nil {
+			return nil, fmt.Errorf("failed to start gc tasks: %v", err)
+		}
 	}
 
 	return app, nil
@@ -163,7 +168,7 @@ func (app *App) PersistSessionResult(sid string, resp *pb.QueryResponse, expired
 		return nil
 	}
 
-	ser, err := protojson.Marshal(resp)
+	ser, err := message.ProtoMarshal(resp)
 	if err != nil {
 		return fmt.Errorf("PersistSessionResult: marshal resp failed: %v", err)
 	}
@@ -202,7 +207,7 @@ func (app *App) GetSessionResult(sid string) (*pb.QueryResponse, error) {
 		res, err := app.MetaMgr.GetSessionResult(sid)
 		if err == nil {
 			var response pb.QueryResponse
-			err = protojson.Unmarshal(res.Result, &response)
+			err = message.ProtoUnmarshal(res.Result, &response)
 			if err != nil {
 				return nil, fmt.Errorf("unmarshal session result failed: %v", err)
 			}
@@ -240,6 +245,50 @@ func (app *App) CancelSession(info *storage.SessionInfo) error {
 	return nil
 }
 
+func (app *App) startGc() error {
+	locker, err := storage.NewDistributedLocker(app.MetaMgr, app.Conf.PartyCode, app.Conf.SessionCheckInterval)
+	if err != nil {
+		return fmt.Errorf("fail to create distributed locker: %v", err)
+	}
+
+	storageGcScheduler, err := gocron.NewScheduler(
+		gocron.WithDistributedLocker(locker),
+	)
+	if err != nil {
+		return fmt.Errorf("fail to create storageGc scheduler: %v", err)
+	}
+
+	_, err = storageGcScheduler.NewJob(
+		gocron.DurationJob(app.Conf.SessionCheckInterval),
+		gocron.NewTask(app.StorageGc),
+		gocron.WithName("storageGc"),
+	)
+	if err != nil {
+		storageGcScheduler.Shutdown()
+		return fmt.Errorf("fail to create storageGc task: %v", err)
+	}
+
+	storageGcScheduler.Start()
+
+	sessionGcScheduler, err := gocron.NewScheduler()
+	if err != nil {
+		return fmt.Errorf("fail to create sessionGc scheduler: %v", err)
+	}
+
+	_, err = sessionGcScheduler.NewJob(
+		gocron.DurationJob(app.Conf.SessionCheckInterval),
+		gocron.NewTask(app.SessionGc),
+	)
+	if err != nil {
+		storageGcScheduler.Shutdown()
+		sessionGcScheduler.Shutdown()
+		return fmt.Errorf("fail to create sessionGc task: %v", err)
+	}
+
+	sessionGcScheduler.Start()
+	return nil
+}
+
 func sessionInfo(session *Session) (info *storage.SessionInfo, err error) {
 	if session == nil {
 		err = fmt.Errorf("session is nil")
@@ -266,7 +315,7 @@ func sessionInfo(session *Session) (info *storage.SessionInfo, err error) {
 		engineUrlForSelf = session.Engine.GetEndpointForSelf()
 	}
 
-	warn, err := protojson.Marshal(session.Warning)
+	warn, err := message.ProtoMarshal(session.Warning)
 	if err != nil {
 		err = fmt.Errorf("PersistSessionInfo: marsha warning failed: %v", err)
 		return

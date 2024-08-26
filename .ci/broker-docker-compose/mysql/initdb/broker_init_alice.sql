@@ -176,7 +176,6 @@ CREATE TABLE `locks` (
   `id` tinyint NOT NULL AUTO_INCREMENT COMMENT '''lock id''',
   `owner` varchar(64) DEFAULT NULL COMMENT '''lock owner''',
   `updated_at` datetime(3) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `idx_locks_id` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=101 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;

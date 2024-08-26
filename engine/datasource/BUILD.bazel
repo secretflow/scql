@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_cc//cc:defs.bzl", "cc_proto_library")
+load("@rules_proto//proto:defs.bzl", "proto_library")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -25,6 +25,7 @@ cc_library(
         "//api:core_cc_proto",
         "//engine/core:arrow_helper",
         "//engine/core:tensor",
+        "//engine/core:tensor_constructor",
         "@com_github_gabime_spdlog//:spdlog",
     ],
 )
@@ -36,6 +37,7 @@ cc_library(
     deps = [
         ":datasource_adaptor",
         ":datasource_cc_proto",
+        "//engine/core:tensor_constructor",
         "//engine/util:spu_io",
         "@org_apache_arrow//:arrow",
     ],
@@ -53,12 +55,23 @@ cc_binary(
 )
 
 cc_library(
+    name = "odbc_connector",
+    srcs = ["odbc_connector.cc"],
+    hdrs = ["odbc_connector.h"],
+    deps = [
+        "@org_pocoproject_poco//:poco",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+cc_library(
     name = "odbc_adaptor",
     srcs = ["odbc_adaptor.cc"],
     hdrs = ["odbc_adaptor.h"],
     deps = [
         ":datasource_adaptor",
         ":datasource_cc_proto",
+        ":odbc_connector",
         "//engine/core:primitive_builder",
         "//engine/core:string_tensor_builder",
         "//engine/util:spu_io",
@@ -226,6 +239,7 @@ cc_library(
         ":datasource_cc_proto",
         ":duckdb_wrapper",
         "//api/v1:column_cpp_proto",
+        "//engine/core:tensor_constructor",
         "//engine/util:spu_io",
         "//engine/util:tensor_util",
         "@com_google_absl//absl/strings",
