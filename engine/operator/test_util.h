@@ -107,7 +107,7 @@ class ExecNodeBuilder {
 
 pb::Tensor MakeTensorReference(const std::string& name,
                                pb::PrimitiveDataType dtype,
-                               pb::TensorStatus visibility, int ref_count = 0);
+                               pb::TensorStatus visibility, int ref_count = 1);
 
 inline pb::Tensor MakePrivateTensorReference(const std::string& name,
                                              pb::PrimitiveDataType dtype) {

@@ -125,49 +125,45 @@ INSTANTIATE_TEST_SUITE_P(
             ObliviousGroupAggTestCase{
                 .op_type = ObliviousGroupSum::kOpType,
                 .inputs = {test::NamedTensor(
-                    "in",
-                    TensorFromJSON(arrow::boolean(), "[true, false, true]"))},
-                .group = test::NamedTensor(
-                    "group", TensorFromJSON(arrow::boolean(), "[0, 0, 1]")),
-                .outputs = {test::NamedTensor(
-                    "out", TensorFromJSON(arrow::int64(), "[1, 1, 2]"))}},
+                    "in", TensorFrom(arrow::boolean(), "[true, false, true]"))},
+                .group = test::NamedTensor("group", TensorFrom(arrow::boolean(),
+                                                               "[0, 0, 1]")),
+                .outputs = {test::NamedTensor("out", TensorFrom(arrow::int64(),
+                                                                "[1, 1, 2]"))}},
             ObliviousGroupAggTestCase{
                 .op_type = ObliviousGroupSum::kOpType,
-                .inputs = {test::NamedTensor(
-                    "in", TensorFromJSON(arrow::boolean(), "[true]"))},
-                .group = test::NamedTensor(
-                    "group", TensorFromJSON(arrow::boolean(), "[0]")),
-                .outputs = {test::NamedTensor(
-                    "out", TensorFromJSON(arrow::int64(), "[1]"))}},
-            ObliviousGroupAggTestCase{
-                .op_type = ObliviousGroupSum::kOpType,
-                .inputs = {test::NamedTensor(
-                    "in", TensorFromJSON(arrow::int64(), "[1, 1, 1, 1, 1]"))},
+                .inputs = {test::NamedTensor("in", TensorFrom(arrow::boolean(),
+                                                              "[true]"))},
                 .group = test::NamedTensor("group",
-                                           TensorFromJSON(arrow::boolean(),
-                                                          "[1, 0, 0, 1, 1]")),
-                .outputs = {test::NamedTensor(
-                    "out", TensorFromJSON(arrow::int64(), "[1, 1, 2, 3, 1]"))}},
+                                           TensorFrom(arrow::boolean(), "[0]")),
+                .outputs = {test::NamedTensor("out", TensorFrom(arrow::int64(),
+                                                                "[1]"))}},
             ObliviousGroupAggTestCase{
                 .op_type = ObliviousGroupSum::kOpType,
                 .inputs = {test::NamedTensor(
-                    "in", TensorFromJSON(arrow::float32(),
-                                         "[-3.14, 1.1, 10, 100, 31415.9]"))},
-                .group = test::NamedTensor("group",
-                                           TensorFromJSON(arrow::boolean(),
-                                                          "[1, 0, 0, 1, 1]")),
-                .outputs = {test::NamedTensor(
-                    "out",
-                    TensorFromJSON(arrow::float32(),
-                                   "[-3.14, 1.1, 11.1, 111.1, 31415.9]"))}},
-            ObliviousGroupAggTestCase{
-                .op_type = ObliviousGroupSum::kOpType,
-                .inputs = {test::NamedTensor(
-                    "in", TensorFromJSON(arrow::float32(), "[]"))},
+                    "in", TensorFrom(arrow::int64(), "[1, 1, 1, 1, 1]"))},
                 .group = test::NamedTensor(
-                    "group", TensorFromJSON(arrow::boolean(), "[]")),
+                    "group", TensorFrom(arrow::boolean(), "[1, 0, 0, 1, 1]")),
                 .outputs = {test::NamedTensor(
-                    "out", TensorFromJSON(arrow::float32(), "[]"))}})),
+                    "out", TensorFrom(arrow::int64(), "[1, 1, 2, 3, 1]"))}},
+            ObliviousGroupAggTestCase{
+                .op_type = ObliviousGroupSum::kOpType,
+                .inputs = {test::NamedTensor(
+                    "in", TensorFrom(arrow::float32(),
+                                     "[-3.14, 1.1, 10, 100, 31415.9]"))},
+                .group = test::NamedTensor(
+                    "group", TensorFrom(arrow::boolean(), "[1, 0, 0, 1, 1]")),
+                .outputs = {test::NamedTensor(
+                    "out", TensorFrom(arrow::float32(),
+                                      "[-3.14, 1.1, 11.1, 111.1, 31415.9]"))}},
+            ObliviousGroupAggTestCase{
+                .op_type = ObliviousGroupSum::kOpType,
+                .inputs = {test::NamedTensor("in", TensorFrom(arrow::float32(),
+                                                              "[]"))},
+                .group = test::NamedTensor("group",
+                                           TensorFrom(arrow::boolean(), "[]")),
+                .outputs = {test::NamedTensor(
+                    "out", TensorFrom(arrow::float32(), "[]"))}})),
     TestParamNameGenerator(ObliviousGroupAggTest));
 
 // =====================
@@ -182,30 +178,28 @@ INSTANTIATE_TEST_SUITE_P(
             ObliviousGroupAggTestCase{
                 .op_type = ObliviousGroupCount::kOpType,
                 .inputs = {test::NamedTensor(
-                    "in", TensorFromJSON(arrow::int64(), "[1, 2, 3, 4, 5]"))},
-                .group = test::NamedTensor("group",
-                                           TensorFromJSON(arrow::boolean(),
-                                                          "[1, 0, 0, 1, 1]")),
-                .outputs = {test::NamedTensor(
-                    "out", TensorFromJSON(arrow::int64(), "[1, 1, 2, 3, 1]"))}},
-            ObliviousGroupAggTestCase{
-                .op_type = ObliviousGroupCount::kOpType,
-                .inputs = {test::NamedTensor(
-                    "in", TensorFromJSON(arrow::float32(),
-                                         "[-3.14, 1.1, 10, 100, 31415.9]"))},
-                .group = test::NamedTensor("group",
-                                           TensorFromJSON(arrow::boolean(),
-                                                          "[1, 0, 0, 1, 1]")),
-                .outputs = {test::NamedTensor(
-                    "out", TensorFromJSON(arrow::int64(), "[1, 1, 2, 3, 1]"))}},
-            ObliviousGroupAggTestCase{
-                .op_type = ObliviousGroupCount::kOpType,
-                .inputs = {test::NamedTensor(
-                    "in", TensorFromJSON(arrow::float32(), "[]"))},
+                    "in", TensorFrom(arrow::int64(), "[1, 2, 3, 4, 5]"))},
                 .group = test::NamedTensor(
-                    "group", TensorFromJSON(arrow::boolean(), "[]")),
+                    "group", TensorFrom(arrow::boolean(), "[1, 0, 0, 1, 1]")),
                 .outputs = {test::NamedTensor(
-                    "out", TensorFromJSON(arrow::int64(), "[]"))}})),
+                    "out", TensorFrom(arrow::int64(), "[1, 1, 2, 3, 1]"))}},
+            ObliviousGroupAggTestCase{
+                .op_type = ObliviousGroupCount::kOpType,
+                .inputs = {test::NamedTensor(
+                    "in", TensorFrom(arrow::float32(),
+                                     "[-3.14, 1.1, 10, 100, 31415.9]"))},
+                .group = test::NamedTensor(
+                    "group", TensorFrom(arrow::boolean(), "[1, 0, 0, 1, 1]")),
+                .outputs = {test::NamedTensor(
+                    "out", TensorFrom(arrow::int64(), "[1, 1, 2, 3, 1]"))}},
+            ObliviousGroupAggTestCase{
+                .op_type = ObliviousGroupCount::kOpType,
+                .inputs = {test::NamedTensor("in", TensorFrom(arrow::float32(),
+                                                              "[]"))},
+                .group = test::NamedTensor("group",
+                                           TensorFrom(arrow::boolean(), "[]")),
+                .outputs = {test::NamedTensor("out", TensorFrom(arrow::int64(),
+                                                                "[]"))}})),
     TestParamNameGenerator(ObliviousGroupAggTest));
 
 // =====================
@@ -220,33 +214,29 @@ INSTANTIATE_TEST_SUITE_P(
             ObliviousGroupAggTestCase{
                 .op_type = ObliviousGroupAvg::kOpType,
                 .inputs = {test::NamedTensor(
-                    "in", TensorFromJSON(arrow::int64(), "[1, 2, 3, 4, 5]"))},
-                .group = test::NamedTensor("group",
-                                           TensorFromJSON(arrow::boolean(),
-                                                          "[1, 0, 0, 1, 1]")),
-                .outputs = {test::NamedTensor(
-                    "out",
-                    TensorFromJSON(arrow::float64(), "[1, 2, 2.5, 3, 5]"))}},
-            ObliviousGroupAggTestCase{
-                .op_type = ObliviousGroupAvg::kOpType,
-                .inputs = {test::NamedTensor(
-                    "in", TensorFromJSON(arrow::float32(),
-                                         "[-3.14, 1.3, 10, 100, 314.08]"))},
-                .group = test::NamedTensor("group",
-                                           TensorFromJSON(arrow::boolean(),
-                                                          "[1, 0, 0, 1, 1]")),
-                .outputs = {test::NamedTensor(
-                    "out",
-                    TensorFromJSON(arrow::float64(),
-                                   "[-3.14, 1.3, 5.65, 37.1, 314.08]"))}},
-            ObliviousGroupAggTestCase{
-                .op_type = ObliviousGroupAvg::kOpType,
-                .inputs = {test::NamedTensor(
-                    "in", TensorFromJSON(arrow::float32(), "[]"))},
+                    "in", TensorFrom(arrow::int64(), "[1, 2, 3, 4, 5]"))},
                 .group = test::NamedTensor(
-                    "group", TensorFromJSON(arrow::boolean(), "[]")),
+                    "group", TensorFrom(arrow::boolean(), "[1, 0, 0, 1, 1]")),
                 .outputs = {test::NamedTensor(
-                    "out", TensorFromJSON(arrow::float64(), "[]"))}})),
+                    "out", TensorFrom(arrow::float64(), "[1, 2, 2.5, 3, 5]"))}},
+            ObliviousGroupAggTestCase{
+                .op_type = ObliviousGroupAvg::kOpType,
+                .inputs = {test::NamedTensor(
+                    "in", TensorFrom(arrow::float32(),
+                                     "[-3.14, 1.3, 10, 100, 314.08]"))},
+                .group = test::NamedTensor(
+                    "group", TensorFrom(arrow::boolean(), "[1, 0, 0, 1, 1]")),
+                .outputs = {test::NamedTensor(
+                    "out", TensorFrom(arrow::float64(),
+                                      "[-3.14, 1.3, 5.65, 37.1, 314.08]"))}},
+            ObliviousGroupAggTestCase{
+                .op_type = ObliviousGroupAvg::kOpType,
+                .inputs = {test::NamedTensor("in", TensorFrom(arrow::float32(),
+                                                              "[]"))},
+                .group = test::NamedTensor("group",
+                                           TensorFrom(arrow::boolean(), "[]")),
+                .outputs = {test::NamedTensor(
+                    "out", TensorFrom(arrow::float64(), "[]"))}})),
     TestParamNameGenerator(ObliviousGroupAggTest));
 
 // =====================
@@ -261,31 +251,29 @@ INSTANTIATE_TEST_SUITE_P(
             ObliviousGroupAggTestCase{
                 .op_type = ObliviousGroupMax::kOpType,
                 .inputs = {test::NamedTensor(
-                    "in", TensorFromJSON(arrow::int64(), "[1, 2, 3, 4, 5]"))},
-                .group = test::NamedTensor("group",
-                                           TensorFromJSON(arrow::boolean(),
-                                                          "[1, 0, 0, 1, 1]")),
-                .outputs = {test::NamedTensor(
-                    "out", TensorFromJSON(arrow::int64(), "[1, 2, 3, 4, 5]"))}},
-            ObliviousGroupAggTestCase{
-                .op_type = ObliviousGroupMax::kOpType,
-                .inputs = {test::NamedTensor(
-                    "in", TensorFromJSON(arrow::float32(),
-                                         "[-3.14, 1.3, 10, 100, 314.08]"))},
-                .group = test::NamedTensor("group",
-                                           TensorFromJSON(arrow::boolean(),
-                                                          "[1, 0, 0, 1, 1]")),
-                .outputs = {test::NamedTensor(
-                    "out", TensorFromJSON(arrow::float32(),
-                                          "[-3.14, 1.3, 10, 100, 314.08]"))}},
-            ObliviousGroupAggTestCase{
-                .op_type = ObliviousGroupMax::kOpType,
-                .inputs = {test::NamedTensor(
-                    "in", TensorFromJSON(arrow::float32(), "[]"))},
+                    "in", TensorFrom(arrow::int64(), "[1, 2, 3, 4, 5]"))},
                 .group = test::NamedTensor(
-                    "group", TensorFromJSON(arrow::boolean(), "[]")),
+                    "group", TensorFrom(arrow::boolean(), "[1, 0, 0, 1, 1]")),
                 .outputs = {test::NamedTensor(
-                    "out", TensorFromJSON(arrow::float32(), "[]"))}})),
+                    "out", TensorFrom(arrow::int64(), "[1, 2, 3, 4, 5]"))}},
+            ObliviousGroupAggTestCase{
+                .op_type = ObliviousGroupMax::kOpType,
+                .inputs = {test::NamedTensor(
+                    "in", TensorFrom(arrow::float32(),
+                                     "[-3.14, 1.3, 10, 100, 314.08]"))},
+                .group = test::NamedTensor(
+                    "group", TensorFrom(arrow::boolean(), "[1, 0, 0, 1, 1]")),
+                .outputs = {test::NamedTensor(
+                    "out", TensorFrom(arrow::float32(),
+                                      "[-3.14, 1.3, 10, 100, 314.08]"))}},
+            ObliviousGroupAggTestCase{
+                .op_type = ObliviousGroupMax::kOpType,
+                .inputs = {test::NamedTensor("in", TensorFrom(arrow::float32(),
+                                                              "[]"))},
+                .group = test::NamedTensor("group",
+                                           TensorFrom(arrow::boolean(), "[]")),
+                .outputs = {test::NamedTensor(
+                    "out", TensorFrom(arrow::float32(), "[]"))}})),
     TestParamNameGenerator(ObliviousGroupAggTest));
 
 // =====================
@@ -300,39 +288,36 @@ INSTANTIATE_TEST_SUITE_P(
             ObliviousGroupAggTestCase{
                 .op_type = ObliviousGroupMin::kOpType,
                 .inputs = {test::NamedTensor(
-                    "in", TensorFromJSON(arrow::int64(), "[1, 2, 3, 4, 5]"))},
-                .group = test::NamedTensor("group",
-                                           TensorFromJSON(arrow::boolean(),
-                                                          "[1, 0, 0, 1, 1]")),
-                .outputs = {test::NamedTensor(
-                    "out", TensorFromJSON(arrow::int64(), "[1, 2, 2, 2, 5]"))}},
-            ObliviousGroupAggTestCase{
-                .op_type = ObliviousGroupMin::kOpType,
-                .inputs = {test::NamedTensor("in_a",
-                                             TensorFromJSON(arrow::int64(),
-                                                            "[1, 2, 3, 4, 5]")),
-                           test::NamedTensor(
-                               "in_b", TensorFromJSON(
-                                           arrow::float32(),
-                                           "[-3.14, 1.3, 10, 100, 314.08]"))},
-                .group = test::NamedTensor("group",
-                                           TensorFromJSON(arrow::boolean(),
-                                                          "[1, 0, 0, 1, 1]")),
-                .outputs = {test::NamedTensor(
-                                "out_a", TensorFromJSON(arrow::int64(),
-                                                        "[1, 2, 2, 2, 5]")),
-                            test::NamedTensor(
-                                "out_b", TensorFromJSON(arrow::float32(),
-                                                        "[-3.14, 1.3, 1.3, "
-                                                        "1.3, 314.08]"))}},
-            ObliviousGroupAggTestCase{
-                .op_type = ObliviousGroupMin::kOpType,
-                .inputs = {test::NamedTensor(
-                    "in", TensorFromJSON(arrow::float32(), "[]"))},
+                    "in", TensorFrom(arrow::int64(), "[1, 2, 3, 4, 5]"))},
                 .group = test::NamedTensor(
-                    "group", TensorFromJSON(arrow::boolean(), "[]")),
+                    "group", TensorFrom(arrow::boolean(), "[1, 0, 0, 1, 1]")),
                 .outputs = {test::NamedTensor(
-                    "out", TensorFromJSON(arrow::float32(), "[]"))}})),
+                    "out", TensorFrom(arrow::int64(), "[1, 2, 2, 2, 5]"))}},
+            ObliviousGroupAggTestCase{
+                .op_type = ObliviousGroupMin::kOpType,
+                .inputs =
+                    {test::NamedTensor("in_a", TensorFrom(arrow::int64(),
+                                                          "[1, 2, 3, 4, 5]")),
+                     test::NamedTensor(
+                         "in_b", TensorFrom(arrow::float32(),
+                                            "[-3.14, 1.3, 10, 100, 314.08]"))},
+                .group = test::NamedTensor(
+                    "group", TensorFrom(arrow::boolean(), "[1, 0, 0, 1, 1]")),
+                .outputs = {test::NamedTensor("out_a",
+                                              TensorFrom(arrow::int64(),
+                                                         "[1, 2, 2, 2, 5]")),
+                            test::NamedTensor("out_b",
+                                              TensorFrom(arrow::float32(),
+                                                         "[-3.14, 1.3, 1.3, "
+                                                         "1.3, 314.08]"))}},
+            ObliviousGroupAggTestCase{
+                .op_type = ObliviousGroupMin::kOpType,
+                .inputs = {test::NamedTensor("in", TensorFrom(arrow::float32(),
+                                                              "[]"))},
+                .group = test::NamedTensor("group",
+                                           TensorFrom(arrow::boolean(), "[]")),
+                .outputs = {test::NamedTensor(
+                    "out", TensorFrom(arrow::float32(), "[]"))}})),
     TestParamNameGenerator(ObliviousGroupAggTest));
 
 }  // namespace scql::engine::op

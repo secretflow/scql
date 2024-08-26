@@ -27,6 +27,8 @@ import (
 	"github.com/secretflow/scql/pkg/broker/storage"
 )
 
+type TaskFunc func()
+
 func TestSessionGc(t *testing.T) {
 	// if using short flag in go test, skip this case
 	// FIXME: fix this case in pipeline
@@ -71,7 +73,8 @@ func TestSessionGc(t *testing.T) {
 
 	r.Equal(app.Sessions.ItemCount(), 4)
 
-	go app.SessionGc()
+	stop := make(chan bool)
+	go StartTask(app.SessionGc, app.Conf.SessionCheckInterval, stop)
 
 	time.Sleep(app.Conf.SessionCheckInterval / 2)
 	r.Equal(app.Sessions.ItemCount(), 4)
@@ -79,6 +82,8 @@ func TestSessionGc(t *testing.T) {
 
 	// 2 cleared for expired, 1 cleared for canceled
 	r.Equal(app.Sessions.ItemCount(), 1)
+
+	stop <- true
 }
 
 func TestStorageGc(t *testing.T) {
@@ -104,7 +109,8 @@ func TestStorageGc(t *testing.T) {
 	r.NoError(err)
 	r.Equal(sr.SessionID, "s1")
 
-	go app.StorageGc()
+	stop := make(chan bool)
+	go StartTask(app.StorageGc, app.Conf.SessionCheckInterval, stop)
 
 	time.Sleep(app.Conf.SessionCheckInterval * 3)
 	sr, err = app.MetaMgr.GetSessionResult("s1")
@@ -114,6 +120,8 @@ func TestStorageGc(t *testing.T) {
 	time.Sleep(time.Second * time.Duration(expireSeconds) * 3)
 	sr, err = app.MetaMgr.GetSessionResult("s1")
 	r.Equal(err.Error(), "record not found")
+
+	stop <- true
 }
 
 func buildTestApp() (*App, error) {
@@ -140,4 +148,18 @@ func buildTestApp() (*App, error) {
 	}
 
 	return app, nil
+}
+
+func StartTask(task TaskFunc, interval time.Duration, stop chan bool) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			task()
+		case <-stop:
+			return
+		}
+	}
 }

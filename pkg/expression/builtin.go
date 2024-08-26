@@ -405,6 +405,9 @@ var funcs = map[string]functionClass{
 	ast.Curtime:     &currentTimeFunctionClass{baseFunctionClass{ast.Curtime, 0, 1}},
 	ast.Now:         &nowFunctionClass{baseFunctionClass{ast.Now, 0, 1}},
 	ast.LastDay:     &lastDayFunctionClass{baseFunctionClass{ast.LastDay, 1, 1}},
+
+	//built-in
+	ast.GeoDist: &builtinGeoDistFunctionClass{baseFunctionClass{ast.GeoDist, 4, 5}},
 }
 
 // baseBuiltinCastFunc will be contained in every struct that implement cast builtinFunc.

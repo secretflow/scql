@@ -34,7 +34,8 @@ class ArrowSqlAdaptor : public DatasourceAdaptor {
   ~ArrowSqlAdaptor() override;
 
  private:
-  std::vector<TensorPtr> GetQueryResult(const std::string& query) override;
+  std::vector<TensorPtr> GetQueryResult(
+      const std::string& query, const TensorBuildOptions& options) override;
   SqlClientPtr GetClientFromEndpoint(
       const arrow::flight::FlightEndpoint& endpoint);
 

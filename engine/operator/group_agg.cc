@@ -20,6 +20,7 @@
 #include "arrow/scalar.h"
 
 #include "engine/core/arrow_helper.h"
+#include "engine/core/tensor_constructor.h"
 #include "engine/core/type.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
@@ -124,7 +125,7 @@ TensorPtr GroupAggBase::BuildTensorFromScalarVector(
   THROW_IF_ARROW_NOT_OK(builder->Finish(&array));
 
   auto chunked_arr = std::make_shared<arrow::ChunkedArray>(array);
-  return std::make_shared<Tensor>(chunked_arr);
+  return TensorFrom(chunked_arr);
 }
 
 // ===========================

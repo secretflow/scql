@@ -22,12 +22,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/encoding/protojson"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	gormlog "gorm.io/gorm/logger"
 
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/util/message"
 )
 
 func TestSession(t *testing.T) {
@@ -84,7 +84,7 @@ func TestSession(t *testing.T) {
 			CostTimeS: 1.2345,
 		},
 	}
-	str, err := protojson.Marshal(resp)
+	str, err := message.ProtoMarshal(resp)
 	r.NoError(err)
 	// set SessionResult
 	err = manager.SetSessionResult(SessionResult{
@@ -100,7 +100,7 @@ func TestSession(t *testing.T) {
 	resultFetch, err := manager.GetSessionResult(sessionID)
 	r.NoError(err)
 	var respFetch pb.QueryResponse
-	err = protojson.Unmarshal([]byte(resultFetch.Result), &respFetch)
+	err = message.ProtoUnmarshal([]byte(resultFetch.Result), &respFetch)
 	r.NoError(err)
 	r.Equal(resp.Status, respFetch.Status)
 	r.Equal(resp.GetResult().GetOutColumns(), respFetch.GetResult().GetOutColumns())

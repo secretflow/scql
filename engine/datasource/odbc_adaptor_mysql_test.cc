@@ -61,12 +61,7 @@ class OdbcAdaptorMySQLTest : public ::testing::Test {
 
 TEST_F(OdbcAdaptorMySQLTest, works) {
   // Given
-  OdbcAdaptorOptions options;
-  options.kind = DataSourceKind::MYSQL;
-  options.connection_str = getConnectionStr();
-  options.connection_type = ConnectionType::Short;
-
-  OdbcAdaptor adaptor(options);
+  OdbcAdaptor adaptor("mysql", getConnectionStr());
 
   // When
   const std::string query = "SELECT name, age FROM person";

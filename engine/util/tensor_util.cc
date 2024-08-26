@@ -167,6 +167,13 @@ std::shared_ptr<Tensor> ConvertDateTimeToInt64(
   return convert_visitor.GetResultTensor();
 }
 
+std::shared_ptr<arrow::ChunkedArray> ConvertDateTimeToInt64(
+    const std::shared_ptr<arrow::Array> from_arr) {
+  ConvertDateTimeToInt64Visitor convert_visitor;
+  THROW_IF_ARROW_NOT_OK(arrow::VisitArrayInline(*from_arr, &convert_visitor));
+  return convert_visitor.GetResultTensor()->ToArrowChunkedArray();
+}
+
 void ConvertDateTimeAndCopyValuesToProto(
     const std::shared_ptr<Tensor>& from_tensor, pb::Tensor* to_proto) {
   ConvertDatetimeProtoVistor convert_copy_vistor(to_proto,

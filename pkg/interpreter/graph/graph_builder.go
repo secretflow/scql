@@ -16,6 +16,7 @@ package graph
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -23,30 +24,40 @@ import (
 	"github.com/secretflow/scql/pkg/interpreter/ccl"
 	"github.com/secretflow/scql/pkg/interpreter/operator"
 	"github.com/secretflow/scql/pkg/parser/ast"
-	"github.com/secretflow/scql/pkg/proto-gen/scql"
-	proto "github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/planner/core"
+	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
 	"github.com/secretflow/scql/pkg/types"
 )
+
+type PipelineExecNode struct {
+	Batched        bool
+	ExecutionNodes []*ExecutionNode
+}
 
 // GraphBuilder struct
 type GraphBuilder struct {
 	partyInfo *PartyInfo
 
-	ExecutionNodes []*ExecutionNode
-	Tensors        []*Tensor
-	tensorNum      int
-	OutputName     []string
+	PipelineExeNodes   []*PipelineExecNode
+	Tensors            []*Tensor
+	tensorNum          int
+	OutputName         []string
+	preOpStreamingType operator.StreamingOpType
+	batched            bool
 }
 
 // NewGraphBuilder returns a graph builder instance
-func NewGraphBuilder(partyInfo *PartyInfo) *GraphBuilder {
+func NewGraphBuilder(partyInfo *PartyInfo, batched bool) *GraphBuilder {
 	result := &GraphBuilder{
-		partyInfo:      partyInfo,
-		ExecutionNodes: make([]*ExecutionNode, 0),
-		Tensors:        make([]*Tensor, 0),
+		partyInfo: partyInfo,
+		batched:   batched,
 	}
 	return result
+}
+
+func (plan *GraphBuilder) GetLastPipelineExeNode() *PipelineExecNode {
+	return plan.PipelineExeNodes[len(plan.PipelineExeNodes)-1]
 }
 
 // AddTensor adds a tensor
@@ -72,8 +83,8 @@ func (plan *GraphBuilder) AddTensorAs(it *Tensor) *Tensor {
 }
 
 // AddColumn adds a column tensor
-func (plan *GraphBuilder) AddColumn(name string, status proto.TensorStatus,
-	option proto.TensorOptions, dType proto.PrimitiveDataType) *Tensor {
+func (plan *GraphBuilder) AddColumn(name string, status pb.TensorStatus,
+	option pb.TensorOptions, dType pb.PrimitiveDataType) *Tensor {
 	t := plan.AddTensor(name)
 	t.SetStatus(status)
 	t.Option = option
@@ -86,7 +97,7 @@ func (plan *GraphBuilder) GetPartyInfo() *PartyInfo {
 }
 
 type statusConstraint interface {
-	Status() scql.TensorStatus
+	Status() pb.TensorStatus
 }
 
 // CheckParamStatusConstraint check parameter status constraint strictly
@@ -101,7 +112,7 @@ func CheckParamStatusConstraint[T statusConstraint](op *operator.OperatorDef, in
 			opDef.Name, len(opDef.OutputParams), len(outputs))
 	}
 
-	constraintNameToStatus := map[string]proto.TensorStatus{}
+	constraintNameToStatus := map[string]pb.TensorStatus{}
 	if err := checkParamStatusConstraintInternal(constraintNameToStatus, inputs, opDef.InputParams, opDef.ParamStatusConstraints); err != nil {
 		return fmt.Errorf("opName %s %v", opDef.Name, err)
 	}
@@ -111,16 +122,16 @@ func CheckParamStatusConstraint[T statusConstraint](op *operator.OperatorDef, in
 	return nil
 }
 
-func checkParamStatusConstraintInternal[T statusConstraint](constraintNameToStatus map[string]proto.TensorStatus,
-	args map[string][]T, params []*proto.FormalParameter,
-	paramStatusConstraint map[string]*proto.TensorStatusList) error {
+func checkParamStatusConstraintInternal[T statusConstraint](constraintNameToStatus map[string]pb.TensorStatus,
+	args map[string][]T, params []*pb.FormalParameter,
+	paramStatusConstraint map[string]*pb.TensorStatusList) error {
 	for _, param := range params {
 		arguments, ok := args[param.ParamName]
 		if !ok {
 			return fmt.Errorf("can't find param:%v in arguments", param.ParamName)
 		}
 
-		if len(arguments) == 0 && param.Option == proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_OPTIONAL {
+		if len(arguments) == 0 && param.Option == pb.FormalParameterOptions_FORMALPARAMETEROPTIONS_OPTIONAL {
 			continue
 		}
 
@@ -190,7 +201,16 @@ func (plan *GraphBuilder) AddExecutionNode(name string, opType string,
 			}
 		}
 	}
-	plan.ExecutionNodes = append(plan.ExecutionNodes, node)
+	if len(plan.PipelineExeNodes) == 0 ||
+		(plan.batched && len(plan.GetLastPipelineExeNode().ExecutionNodes) > 0 && plan.preOpStreamingType != opDef.GetStreamingType()) {
+		plan.PipelineExeNodes = append(plan.PipelineExeNodes, &PipelineExecNode{})
+	}
+	curPipelineNode := plan.GetLastPipelineExeNode()
+	plan.preOpStreamingType = opDef.GetStreamingType()
+	curPipelineNode.ExecutionNodes = append(curPipelineNode.ExecutionNodes, node)
+	if plan.batched && len(curPipelineNode.ExecutionNodes) == 1 {
+		curPipelineNode.Batched = (opDef.GetStreamingType() == operator.StreamingOp)
+	}
 	return node, nil
 }
 
@@ -198,8 +218,10 @@ func (plan *GraphBuilder) AddExecutionNode(name string, opType string,
 func (plan *GraphBuilder) ToString() string {
 	var builder strings.Builder
 	fmt.Fprint(&builder, "execution plan:{")
-	for _, node := range plan.ExecutionNodes {
-		fmt.Fprintf(&builder, "%s,", node.ToString())
+	for _, pipelineNode := range plan.PipelineExeNodes {
+		for _, node := range pipelineNode.ExecutionNodes {
+			fmt.Fprintf(&builder, "%s,", node.ToString())
+		}
 	}
 
 	for _, t := range plan.Tensors {
@@ -209,44 +231,105 @@ func (plan *GraphBuilder) ToString() string {
 	return builder.String()
 }
 
+// fill pipeline input tensors and output tensors
+func (plan *GraphBuilder) FillPipeline(graph *Graph, idToTensor map[int]*Tensor) {
+	var pipelineCreatedTensors []map[int]bool
+	for _, pipeline := range graph.Pipelines {
+		curPipeOutputTensor := make(map[int]bool)
+		curPipeInputTensor := make(map[int]bool)
+		for node := range pipeline.Nodes {
+			for _, ts := range node.Inputs {
+				for _, t := range ts {
+					// TODO: Support share tensors
+					if t.Status() != pb.TensorStatus_TENSORSTATUS_PRIVATE {
+						pipeline.Batched = false
+					}
+					curPipeInputTensor[t.ID] = true
+				}
+			}
+			for _, ts := range node.Outputs {
+				for _, t := range ts {
+					// TODO: Support share tensors
+					if t.Status() != pb.TensorStatus_TENSORSTATUS_PRIVATE {
+						pipeline.Batched = false
+					}
+					curPipeOutputTensor[t.ID] = true
+				}
+			}
+		}
+
+		var pipelineInputTs []*Tensor
+		for id := range curPipeInputTensor {
+			if _, ok := curPipeOutputTensor[id]; !ok {
+				tmpT := idToTensor[id]
+				pipelineInputTs = append(pipelineInputTs, tmpT)
+			}
+		}
+		// sort to be determinism
+		sort.Slice(pipelineInputTs, func(i, j int) bool { return pipelineInputTs[i].ID < pipelineInputTs[j].ID })
+		pipeline.InputTensors = pipelineInputTs
+		pipelineCreatedTensors = append(pipelineCreatedTensors, curPipeOutputTensor)
+	}
+
+	// choose tensor created by current pipeline but consumed by downstream pipeline as current pipeline's output tensors
+	for i, outputTensors := range pipelineCreatedTensors {
+		pipelineOutputTensors := make(map[int]*Tensor, 0)
+		for j := i + 1; j < len(graph.Pipelines); j++ {
+			for _, t := range graph.Pipelines[j].InputTensors {
+				if _, ok := outputTensors[t.ID]; ok {
+					pipelineOutputTensors[t.ID] = t
+				}
+			}
+		}
+		for _, t := range pipelineOutputTensors {
+			graph.Pipelines[i].OutputTensors = append(graph.Pipelines[i].OutputTensors, t)
+		}
+		// sort to be determinism
+		sort.Slice(graph.Pipelines[i].OutputTensors, func(m, n int) bool {
+			return graph.Pipelines[i].OutputTensors[m].ID < graph.Pipelines[i].OutputTensors[n].ID
+		})
+	}
+}
+
 // Build builds an execution plan dag
 func (plan *GraphBuilder) Build() *Graph {
 	graph := &Graph{
-		Nodes:     make(map[*ExecutionNode]bool),
+		Pipelines: make([]*Pipeline, 0),
 		PartyInfo: plan.partyInfo,
 	}
-	// 1. create node
-	for _, node := range plan.ExecutionNodes {
-		node.ID = graph.NodeCnt
-		node.Edges = make(map[*Edge]bool)
-		graph.Nodes[node] = true
-		graph.NodeCnt++
-	}
-
-	// 2. create edge
 	inputTensorTo := make(map[int][]*ExecutionNode)
 	outputTensorFrom := make(map[int]*ExecutionNode)
 	tensorId2Tensor := make(map[int]*Tensor)
-
-	for node := range graph.Nodes {
-		for _, ts := range node.Inputs {
-			for _, t := range ts {
-				tensorId2Tensor[t.ID] = t
-				_, ok := inputTensorTo[t.ID]
-				if !ok {
-					inputTensorTo[t.ID] = make([]*ExecutionNode, 0)
+	for _, pipelineNode := range plan.PipelineExeNodes {
+		graphPipeline := &Pipeline{Nodes: make(map[*ExecutionNode]bool), Batched: pipelineNode.Batched}
+		// 1. create node
+		for _, node := range pipelineNode.ExecutionNodes {
+			node.ID = graph.NodeCnt
+			node.Edges = make(map[*Edge]bool)
+			graphPipeline.Nodes[node] = true
+			graph.NodeCnt++
+		}
+		// 2. create edge
+		for node := range graphPipeline.Nodes {
+			for _, ts := range node.Inputs {
+				for _, t := range ts {
+					tensorId2Tensor[t.ID] = t
+					_, ok := inputTensorTo[t.ID]
+					if !ok {
+						inputTensorTo[t.ID] = make([]*ExecutionNode, 0)
+					}
+					inputTensorTo[t.ID] = append(inputTensorTo[t.ID], node)
 				}
-				inputTensorTo[t.ID] = append(inputTensorTo[t.ID], node)
+			}
+			for _, ts := range node.Outputs {
+				for _, t := range ts {
+					tensorId2Tensor[t.ID] = t
+					outputTensorFrom[t.ID] = node
+				}
 			}
 		}
-		for _, ts := range node.Outputs {
-			for _, t := range ts {
-				tensorId2Tensor[t.ID] = t
-				outputTensorFrom[t.ID] = node
-			}
-		}
+		graph.Pipelines = append(graph.Pipelines, graphPipeline)
 	}
-
 	for k, v := range tensorId2Tensor {
 		for _, input := range inputTensorTo[k] {
 			edge := &Edge{
@@ -257,8 +340,11 @@ func (plan *GraphBuilder) Build() *Graph {
 			outputTensorFrom[k].Edges[edge] = true
 		}
 	}
-
 	graph.OutputNames = plan.OutputName
+	// for batched pipeline
+	if plan.batched {
+		plan.FillPipeline(graph, tensorId2Tensor)
+	}
 	return graph
 }
 
@@ -277,6 +363,19 @@ func (plan *GraphBuilder) AddRunSQLNode(name string, output []*Tensor,
 func (plan *GraphBuilder) AddPublishNode(name string, input []*Tensor, output []*Tensor, partyCodes []string) error {
 	_, err := plan.AddExecutionNode(name, operator.OpNamePublish, map[string][]*Tensor{"In": input},
 		map[string][]*Tensor{"Out": output}, map[string]*Attribute{}, partyCodes)
+	return err
+}
+
+func (plan *GraphBuilder) AddInsertTableNode(name string, input []*Tensor, output []*Tensor, partyCode string, opt *core.InsertTableOption) error {
+	tn := &Attribute{}
+	tn.SetString(opt.TableName)
+	cn := &Attribute{}
+	cn.SetStrings(opt.Columns)
+	_, err := plan.AddExecutionNode(name, operator.OpNameInsertTable,
+		map[string][]*Tensor{"In": input},
+		map[string][]*Tensor{"Out": output},
+		map[string]*Attribute{operator.TableNameAttr: tn, operator.ColumnNamesAttr: cn},
+		[]string{partyCode})
 	return err
 }
 
@@ -355,7 +454,7 @@ func (plan *GraphBuilder) AddMakePrivateNode(name string, input *Tensor, revealT
 		return nil, fmt.Errorf("fail to check ccl: input %+v is not visible for %s when making private", input, revealTo)
 	}
 	output := plan.AddTensorAs(input)
-	output.SetStatus(proto.TensorStatus_TENSORSTATUS_PRIVATE)
+	output.SetStatus(pb.TensorStatus_TENSORSTATUS_PRIVATE)
 	output.OwnerPartyCode = revealTo
 	output.SecretStringOwners = nil
 	attr := &Attribute{}
@@ -370,9 +469,9 @@ func (plan *GraphBuilder) AddMakePrivateNode(name string, input *Tensor, revealT
 // MakeShare node doesn't reveal more info, so no need check ccl here
 func (plan *GraphBuilder) AddMakeShareNode(name string, input *Tensor, partyCodes []string) (*Tensor, error) {
 	output := plan.AddTensorAs(input)
-	output.SetStatus(proto.TensorStatus_TENSORSTATUS_SECRET)
+	output.SetStatus(pb.TensorStatus_TENSORSTATUS_SECRET)
 	output.OwnerPartyCode = ""
-	if input.DType == proto.PrimitiveDataType_STRING {
+	if input.DType == pb.PrimitiveDataType_STRING {
 		output.SecretStringOwners = []string{input.OwnerPartyCode}
 	}
 	if _, err := plan.AddExecutionNode(name, operator.OpNameMakeShare, map[string][]*Tensor{"In": {input}},
@@ -389,7 +488,7 @@ func (plan *GraphBuilder) AddMakePublicNode(name string, input *Tensor, partyCod
 		}
 	}
 	output := plan.AddTensorAs(input)
-	output.SetStatus(proto.TensorStatus_TENSORSTATUS_PUBLIC)
+	output.SetStatus(pb.TensorStatus_TENSORSTATUS_PUBLIC)
 	if _, err := plan.AddExecutionNode(name, operator.OpNameMakePublic, map[string][]*Tensor{"In": {input}},
 		map[string][]*Tensor{"Out": {output}}, map[string]*Attribute{}, partyCodes); err != nil {
 		return nil, err
@@ -398,7 +497,7 @@ func (plan *GraphBuilder) AddMakePublicNode(name string, input *Tensor, partyCod
 }
 
 // AddJoinNode adds a Join node, used in EQ join
-func (plan *GraphBuilder) AddJoinNode(name string, left []*Tensor, right []*Tensor, partyCodes []string, joinType int, psiAlg proto.PsiAlgorithmType) (*Tensor, *Tensor, error) {
+func (plan *GraphBuilder) AddJoinNode(name string, left []*Tensor, right []*Tensor, partyCodes []string, joinType int, psiAlg pb.PsiAlgorithmType) (*Tensor, *Tensor, error) {
 	partyAttr := &Attribute{}
 	partyAttr.SetStrings(partyCodes)
 	joinTypeAttr := &Attribute{}
@@ -410,13 +509,13 @@ func (plan *GraphBuilder) AddJoinNode(name string, left []*Tensor, right []*Tens
 	inputs["Left"] = left
 	inputs["Right"] = right
 	leftOutput := plan.AddTensorAs(left[0])
-	leftOutput.DType = proto.PrimitiveDataType_INT64
-	leftOutput.SetStatus(proto.TensorStatus_TENSORSTATUS_PRIVATE)
+	leftOutput.DType = pb.PrimitiveDataType_INT64
+	leftOutput.SetStatus(pb.TensorStatus_TENSORSTATUS_PRIVATE)
 	leftOutput.OwnerPartyCode = partyCodes[0]
 
 	rightOutput := plan.AddTensorAs(right[0])
-	rightOutput.DType = proto.PrimitiveDataType_INT64
-	rightOutput.SetStatus(proto.TensorStatus_TENSORSTATUS_PRIVATE)
+	rightOutput.DType = pb.PrimitiveDataType_INT64
+	rightOutput.SetStatus(pb.TensorStatus_TENSORSTATUS_PRIVATE)
 	rightOutput.OwnerPartyCode = partyCodes[1]
 
 	outputs := make(map[string][]*Tensor)
@@ -467,13 +566,13 @@ var strTypeUnsupportedOpM = map[string]bool{
 func CheckBinaryOpInputType(opType string, left, right *Tensor) error {
 	// for datetime: left type maybe datetime or timestamp, right type maybe int64
 	if (opType == operator.OpNameIntDiv || opType == operator.OpNameMod) &&
-		((left.DType != proto.PrimitiveDataType_INT64 && left.DType != proto.PrimitiveDataType_DATETIME && left.DType != proto.PrimitiveDataType_TIMESTAMP) ||
-			(right.DType != proto.PrimitiveDataType_INT64)) {
-		return status.Wrap(proto.Code_NOT_SUPPORTED, fmt.Errorf("op %v requires both left and right operands be int64", opType))
+		((left.DType != pb.PrimitiveDataType_INT64 && left.DType != pb.PrimitiveDataType_DATETIME && left.DType != pb.PrimitiveDataType_TIMESTAMP) ||
+			(right.DType != pb.PrimitiveDataType_INT64)) {
+		return status.Wrap(pb.Code_NOT_SUPPORTED, fmt.Errorf("op %v requires both left and right operands be int64", opType))
 	}
 	if _, ok := strTypeUnsupportedOpM[opType]; ok &&
-		(left.DType == proto.PrimitiveDataType_STRING || right.DType == proto.PrimitiveDataType_STRING) {
-		return status.Wrap(proto.Code_NOT_SUPPORTED, fmt.Errorf("op %v doesn't support input type %v", opType, proto.PrimitiveDataType_STRING))
+		(left.DType == pb.PrimitiveDataType_STRING || right.DType == pb.PrimitiveDataType_STRING) {
+		return status.Wrap(pb.Code_NOT_SUPPORTED, fmt.Errorf("op %v doesn't support input type %v", opType, pb.PrimitiveDataType_STRING))
 	}
 	return nil
 }
@@ -498,30 +597,30 @@ func (plan *GraphBuilder) AddCompareNode(name string, opType string, inputs []*T
 }
 
 func (plan *GraphBuilder) AddConstantNode(name string, value *types.Datum, partyCodes []string) (*Tensor, error) {
-	var dType proto.PrimitiveDataType
+	var dType pb.PrimitiveDataType
 	attr := &Attribute{}
 	switch value.Kind() {
 	case types.KindFloat32:
-		dType = proto.PrimitiveDataType_FLOAT32
+		dType = pb.PrimitiveDataType_FLOAT32
 		attr.SetFloat(float32(value.GetFloat64()))
 	case types.KindFloat64:
-		dType = proto.PrimitiveDataType_FLOAT64
+		dType = pb.PrimitiveDataType_FLOAT64
 		attr.SetDouble(value.GetFloat64())
 	case types.KindInt64:
-		dType = proto.PrimitiveDataType_INT64
+		dType = pb.PrimitiveDataType_INT64
 		attr.SetInt64(value.GetInt64())
 	case types.KindMysqlDecimal:
 		// NOTE(shunde.csd): SCQL Internal does not distinguish decimal and float,
 		// It handles decimal as float.
 		// If users have requirements for precision, they should use integers.
-		dType = proto.PrimitiveDataType_FLOAT64
+		dType = pb.PrimitiveDataType_FLOAT64
 		v, err := value.GetMysqlDecimal().ToFloat64()
 		if err != nil {
 			return nil, fmt.Errorf("addConstantNode: convert decimal to float error: %v", err)
 		}
 		attr.SetDouble(v)
 	case types.KindString:
-		dType = proto.PrimitiveDataType_STRING
+		dType = pb.PrimitiveDataType_STRING
 		attr.SetString(value.GetString())
 	default:
 		return nil, fmt.Errorf("addConstantNode: unsupported data{%+v}", value)
@@ -533,8 +632,8 @@ func (plan *GraphBuilder) AddConstantNode(name string, value *types.Datum, party
 	}
 
 	output := plan.AddColumn(
-		"constant_data", proto.TensorStatus_TENSORSTATUS_PUBLIC,
-		proto.TensorOptions_REFERENCE, dType)
+		"constant_data", pb.TensorStatus_TENSORSTATUS_PUBLIC,
+		pb.TensorOptions_REFERENCE, dType)
 	output.CC = cc
 	output.IsConstScalar = true
 
@@ -559,12 +658,12 @@ func (plan *GraphBuilder) AddNotNode(name string, input *Tensor, partyCodes []st
 }
 
 func (plan *GraphBuilder) AddIsNullNode(name string, input *Tensor) (*Tensor, error) {
-	if input.Status() != proto.TensorStatus_TENSORSTATUS_PRIVATE {
+	if input.Status() != pb.TensorStatus_TENSORSTATUS_PRIVATE {
 		return nil, fmt.Errorf("AddIsNullNode: only support private input now")
 	}
 	output := plan.AddTensorAs(input)
 	output.Name = "isnull_out"
-	output.DType = proto.PrimitiveDataType_BOOL
+	output.DType = pb.PrimitiveDataType_BOOL
 	if _, err := plan.AddExecutionNode(name, operator.OpNameIsNull, map[string][]*Tensor{"In": {input}},
 		map[string][]*Tensor{"Out": {output}}, map[string]*Attribute{}, []string{input.OwnerPartyCode}); err != nil {
 		return nil, err
@@ -573,14 +672,11 @@ func (plan *GraphBuilder) AddIsNullNode(name string, input *Tensor) (*Tensor, er
 }
 
 func (plan *GraphBuilder) AddIfNullNode(name string, expr *Tensor, altValue *Tensor) (output *Tensor, err error) {
-	if expr.Status() != proto.TensorStatus_TENSORSTATUS_PRIVATE {
+	if expr.Status() != pb.TensorStatus_TENSORSTATUS_PRIVATE {
 		return nil, fmt.Errorf("AddIfNullNode: only support private expr now")
 	}
-	if altValue.Status() != proto.TensorStatus_TENSORSTATUS_PRIVATE {
+	if altValue.Status() != pb.TensorStatus_TENSORSTATUS_PRIVATE {
 		return nil, fmt.Errorf("AddIfNullNode: only support private altValue now")
-	}
-	if altValue.OwnerPartyCode != expr.OwnerPartyCode {
-		return nil, fmt.Errorf("AddIfNullNode: altValue and expr must belong to the same party")
 	}
 
 	output = plan.AddTensorAs(expr)
@@ -595,7 +691,7 @@ func (plan *GraphBuilder) AddIfNullNode(name string, expr *Tensor, altValue *Ten
 func (plan *GraphBuilder) AddCoalesceNode(name string, inputs []*Tensor) (*Tensor, error) {
 	for i, in := range inputs {
 		// TODO: check data type
-		if in.Status() != proto.TensorStatus_TENSORSTATUS_PRIVATE {
+		if in.Status() != pb.TensorStatus_TENSORSTATUS_PRIVATE {
 			return nil, fmt.Errorf("AddCoalesceNode: only support private inputs now")
 		}
 		if i > 0 && in.OwnerPartyCode != inputs[0].OwnerPartyCode {
@@ -605,9 +701,9 @@ func (plan *GraphBuilder) AddCoalesceNode(name string, inputs []*Tensor) (*Tenso
 
 	output := plan.AddTensorAs(inputs[0])
 	output.Name = "coalesce_out"
-	if inputs[0].DType == proto.PrimitiveDataType_FLOAT32 {
+	if inputs[0].DType == pb.PrimitiveDataType_FLOAT32 {
 		// Coalesce using DOUBLE as retType for FLOAT inputs, see coalesceFunctionClass.getFunction for details
-		output.DType = proto.PrimitiveDataType_FLOAT64
+		output.DType = pb.PrimitiveDataType_FLOAT64
 	}
 	if _, err := plan.AddExecutionNode(name, operator.OpNameCoalesce, map[string][]*Tensor{"Exprs": inputs},
 		map[string][]*Tensor{"Out": {output}}, map[string]*Attribute{}, []string{inputs[0].OwnerPartyCode}); err != nil {
@@ -618,7 +714,7 @@ func (plan *GraphBuilder) AddCoalesceNode(name string, inputs []*Tensor) (*Tenso
 
 func (plan *GraphBuilder) AddTrigonometricFunction(opName string, opType string, input *Tensor, partyCodes []string) (*Tensor, error) {
 	output := plan.AddTensorAs(input)
-	output.DType = proto.PrimitiveDataType_FLOAT64
+	output.DType = pb.PrimitiveDataType_FLOAT64
 	if _, err := plan.AddExecutionNode(opName, opType, map[string][]*Tensor{"In": {input}}, map[string][]*Tensor{"Out": {output}}, map[string]*Attribute{}, partyCodes); err != nil {
 		return nil, err
 	}
@@ -626,8 +722,8 @@ func (plan *GraphBuilder) AddTrigonometricFunction(opName string, opType string,
 	return output, nil
 }
 
-func (plan *GraphBuilder) AddCastNode(name string, outputDType proto.PrimitiveDataType, input *Tensor, partyCodes []string) (*Tensor, error) {
-	if len(partyCodes) > 1 && (input.DType == proto.PrimitiveDataType_STRING || outputDType == proto.PrimitiveDataType_STRING) {
+func (plan *GraphBuilder) AddCastNode(name string, outputDType pb.PrimitiveDataType, input *Tensor, partyCodes []string) (*Tensor, error) {
+	if len(partyCodes) > 1 && (input.DType == pb.PrimitiveDataType_STRING || outputDType == pb.PrimitiveDataType_STRING) {
 		return nil, fmt.Errorf("AddCastNode: not support cast for string in spu, which exists in hash form")
 	}
 	output := plan.AddTensorAs(input)
@@ -646,20 +742,20 @@ func (plan *GraphBuilder) AddReduceAggNode(aggName string, in *Tensor) (*Tensor,
 		return nil, fmt.Errorf("addReduceAggNode: unsupported aggregation fucntion %v", aggName)
 	}
 	partyCodes := plan.partyInfo.GetParties()
-	if in.Status() == proto.TensorStatus_TENSORSTATUS_PRIVATE {
+	if in.Status() == pb.TensorStatus_TENSORSTATUS_PRIVATE {
 		partyCodes = []string{in.OwnerPartyCode}
 	}
 	out := plan.AddTensorAs(in)
 	if aggName == ast.AggFuncAvg {
-		out.DType = proto.PrimitiveDataType_FLOAT64
+		out.DType = pb.PrimitiveDataType_FLOAT64
 	} else if aggName == ast.AggFuncSum {
-		if in.DType == proto.PrimitiveDataType_BOOL {
-			out.DType = proto.PrimitiveDataType_INT64
+		if in.DType == pb.PrimitiveDataType_BOOL {
+			out.DType = pb.PrimitiveDataType_INT64
 		} else if IsFloatOrDoubleType(in.DType) {
-			out.DType = proto.PrimitiveDataType_FLOAT64
+			out.DType = pb.PrimitiveDataType_FLOAT64
 		}
 	} else if aggName == ast.AggFuncCount {
-		out.DType = proto.PrimitiveDataType_INT64
+		out.DType = pb.PrimitiveDataType_INT64
 	}
 
 	if _, err := plan.AddExecutionNode("reduce_"+aggName, opType,
@@ -673,8 +769,8 @@ func (plan *GraphBuilder) AddReduceAggNode(aggName string, in *Tensor) (*Tensor,
 // AddShapeNode adds a Shape node
 func (plan *GraphBuilder) AddShapeNode(name string, in *Tensor, axis int, partyCode string) (*Tensor, error) {
 	out := plan.AddTensorAs(in)
-	out.SetStatus(proto.TensorStatus_TENSORSTATUS_PRIVATE)
-	out.DType = proto.PrimitiveDataType_INT64
+	out.SetStatus(pb.TensorStatus_TENSORSTATUS_PRIVATE)
+	out.DType = pb.PrimitiveDataType_INT64
 	out.OwnerPartyCode = partyCode
 	attr := &Attribute{}
 	attr.SetInt64(int64(axis))
@@ -693,9 +789,9 @@ func (plan *GraphBuilder) AddBroadcastToNode(name string, ins []*Tensor, shapeRe
 	for _, in := range ins {
 		out := plan.AddTensorAs(in)
 		out.IsConstScalar = false
-		if shapeRefTensor.Status() == proto.TensorStatus_TENSORSTATUS_PRIVATE {
+		if shapeRefTensor.Status() == pb.TensorStatus_TENSORSTATUS_PRIVATE {
 			partyCodes = []string{shapeRefTensor.OwnerPartyCode}
-			out.SetStatus(proto.TensorStatus_TENSORSTATUS_PRIVATE)
+			out.SetStatus(pb.TensorStatus_TENSORSTATUS_PRIVATE)
 			out.OwnerPartyCode = shapeRefTensor.OwnerPartyCode
 		}
 		outs = append(outs, out)
@@ -707,8 +803,8 @@ func (plan *GraphBuilder) AddBroadcastToNode(name string, ins []*Tensor, shapeRe
 	return outs, nil
 }
 
-func IsFloatOrDoubleType(tp proto.PrimitiveDataType) bool {
-	return tp == proto.PrimitiveDataType_FLOAT32 || tp == proto.PrimitiveDataType_FLOAT64
+func IsFloatOrDoubleType(tp pb.PrimitiveDataType) bool {
+	return tp == pb.PrimitiveDataType_FLOAT32 || tp == pb.PrimitiveDataType_FLOAT64
 }
 
 func (plan *GraphBuilder) AddLimitNode(name string, input []*Tensor, offset int, count int, partyCodes []string) ([]*Tensor, error) {

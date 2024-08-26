@@ -98,6 +98,19 @@ void NumericTensorBuilder<T>::AppendNull() {
   THROW_IF_ARROW_NOT_OK(builder_.AppendNull());
 }
 
+template <typename T>
+TensorPtr FullNumericTensor(size_t count, typename T::c_type value) {
+  NumericTensorBuilder<T> builder;
+  builder.Reserve(count);
+  for (size_t i = 0; i < count; ++i) {
+    builder.UnsafeAppend(value);
+  }
+
+  TensorPtr result_tensor;
+  builder.Finish(&result_tensor);
+  return result_tensor;
+}
+
 using UInt32TensorBuilder = NumericTensorBuilder<arrow::UInt32Type>;
 using Int64TensorBuilder = NumericTensorBuilder<arrow::Int64Type>;
 using UInt64TensorBuilder = NumericTensorBuilder<arrow::UInt64Type>;

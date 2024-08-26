@@ -19,12 +19,14 @@
 #include <iterator>
 
 #include "arrow/compute/api_aggregate.h"
+#include "arrow/compute/exec.h"
 #include "libspu/kernel/hal/shape_ops.h"
 #include "libspu/kernel/hlo/basic_binary.h"
 #include "libspu/kernel/hlo/const.h"
 #include "libspu/kernel/hlo/reduce.h"
 
 #include "engine/core/arrow_helper.h"
+#include "engine/core/tensor_constructor.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
 
@@ -66,8 +68,7 @@ void ReduceBase::Execute(ExecContext* ctx) {
     ASSIGN_OR_THROW_ARROW_STATUS(array, arrow::MakeArrayFromScalar(*scalar, 1));
     auto chunked_arr = std::make_shared<arrow::ChunkedArray>(array);
 
-    ctx->GetTensorTable()->AddTensor(output_pb.name(),
-                                     std::make_shared<Tensor>(chunked_arr));
+    ctx->GetTensorTable()->AddTensor(output_pb.name(), TensorFrom(chunked_arr));
   } else {
     auto sctx = ctx->GetSession()->GetSpuContext();
     auto symbols = ctx->GetSession()->GetDeviceSymbols();

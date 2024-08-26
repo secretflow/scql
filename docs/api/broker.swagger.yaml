@@ -1227,6 +1227,13 @@ definitions:
       link_chunked_send_parallel_size:
         type: string
         format: int64
+      group_by_threshold:
+        type: string
+        format: uint64
+        title: use value in config file if not set
+      reveal_group_mark:
+        type: boolean
+        title: use value in config file if not set
   scql.pb.ProjectConflict:
     type: object
     properties:
@@ -1429,6 +1436,12 @@ definitions:
     properties:
       status:
         $ref: '#/definitions/scql.pb.Status'
+  scql.pb.RunningOptions:
+    type: object
+    properties:
+      batched:
+        type: boolean
+    title: part of compile options which are nothing to do with safety
   scql.pb.SQLWarning:
     type: object
     properties:

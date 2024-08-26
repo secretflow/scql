@@ -19,6 +19,7 @@
 
 #include "engine/core/arrow_helper.h"
 #include "engine/core/primitive_builder.h"
+#include "engine/core/tensor_constructor.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/table_util.h"
 #include "engine/util/tensor_util.h"
@@ -80,7 +81,7 @@ void Group::Execute(ExecContext* ctx) {
   auto chunked_arr =
       std::make_shared<arrow::ChunkedArray>(id_chunks, arrow::uint32());
   ctx->GetTensorTable()->AddTensor(ctx->GetOutput(kOutId)[0].name(),
-                                   std::make_shared<Tensor>(chunked_arr));
+                                   TensorFrom(chunked_arr));
 
   UInt32TensorBuilder builder;
   builder.Append(grouper->num_groups());

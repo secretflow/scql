@@ -41,42 +41,41 @@ INSTANTIATE_TEST_SUITE_P(
         testing::Values(
             // test private status
             CoalesceTestCase{
-                .exprs = {test::NamedTensor(
-                              "expr1", TensorFromJSON(arrow::int64(),
-                                                      "[null, 2, 3, null]")),
-                          test::NamedTensor(
-                              "expr2", TensorFromJSON(arrow::int64(),
-                                                      "[null, 12, 13, 14]"))},
+                .exprs = {test::NamedTensor("expr1",
+                                            TensorFrom(arrow::int64(),
+                                                       "[null, 2, 3, null]")),
+                          test::NamedTensor("expr2",
+                                            TensorFrom(arrow::int64(),
+                                                       "[null, 12, 13, 14]"))},
                 .expect_out = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::int64(), "[null, 2, 3, 14]"))},
+                    "out", TensorFrom(arrow::int64(), "[null, 2, 3, 14]"))},
             CoalesceTestCase{
                 .exprs = {test::NamedTensor(
-                    "expr", TensorFromJSON(arrow::float64(),
-                                           "[null, -0.1, 1.1, null]"))},
-                .expect_out = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::float64(),
-                                          "[null, -0.1, 1.1, null]"))},
-            CoalesceTestCase{
-                .exprs =
-                    {test::NamedTensor(
-                         "expr1",
-                         TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["B", null, null ,"B"])json")),
-                     test::NamedTensor(
-                         "expr2",
-                         TensorFromJSON(arrow::large_utf8(),
-                                        R"json(["CC", null, "CC" ,"C"])json"))},
+                    "expr",
+                    TensorFrom(arrow::float64(), "[null, -0.1, 1.1, null]"))},
                 .expect_out = test::NamedTensor(
                     "out",
-                    TensorFromJSON(arrow::large_utf8(),
-                                   R"json(["B", null, "CC" ,"B"])json"))},
+                    TensorFrom(arrow::float64(), "[null, -0.1, 1.1, null]"))},
             CoalesceTestCase{
                 .exprs = {test::NamedTensor(
-                              "expr1", TensorFromJSON(arrow::float64(), "[]")),
+                              "expr1",
+                              TensorFrom(arrow::large_utf8(),
+                                         R"json(["B", null, null ,"B"])json")),
                           test::NamedTensor(
-                              "expr2", TensorFromJSON(arrow::float64(), "[]"))},
+                              "expr2",
+                              TensorFrom(
+                                  arrow::large_utf8(),
+                                  R"json(["CC", null, "CC" ,"C"])json"))},
                 .expect_out = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::float64(), "[]"))})),
+                    "out", TensorFrom(arrow::large_utf8(),
+                                      R"json(["B", null, "CC" ,"B"])json"))},
+            CoalesceTestCase{
+                .exprs = {test::NamedTensor("expr1",
+                                            TensorFrom(arrow::float64(), "[]")),
+                          test::NamedTensor(
+                              "expr2", TensorFrom(arrow::float64(), "[]"))},
+                .expect_out = test::NamedTensor(
+                    "out", TensorFrom(arrow::float64(), "[]"))})),
     TestParamNameGenerator(CoalesceTest));
 
 TEST_P(CoalesceTest, works) {

@@ -154,6 +154,22 @@ SCQLEngine can cooperate with upper-layer modules such as SCDB and SCQLBroker ac
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
 | null_string_to_write                            | NULL                | The string to write for NULL values                                                                                                     |
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
+| output_s3_endpoint                              | none                | The endpoint of output s3/minio/oss                                                                                                     |
++-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
+| output_s3_access_key                            | none                | The access key id of output s3/minio/oss                                                                                                |
++-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
+| output_s3_secret_key                            | none                | The secret access key of output s3/minio/oss                                                                                            |
++-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
+| output_s3_enalbe_ssl                            | true                | Default enable ssl, if s3 server not enable ssl, set to false                                                                           |
++-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
+| output_s3_ca_dir_path                           | /etc/ssl/certs/     | Directory where the certificates stored to verify s3 server                                                                             |
++-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
+| output_db_kind                                  | none                | The kind of output db, support mysql/sqlite/postgresql                                                                                  |
++-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
+| output_db_connection_str                        | none                | The :ref:`connection string <connection_str>` to connect to output db                                                                   |
++-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
+| output_s3_force_virtual_addressing              | true                | Default set to true to work with oss, for minio please set to false                                                                     |
++-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
 | psi_curve_type                                  | 2                   | Curve type used in PSI, default 2: CURVE_FOURQ, for more see `psi curve type`_                                                          |
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
 | unbalance_psi_ratio_threshold                   | 5                   | Mininum ratio (larger party's rows count / smaller's) to trigger unbalanced PSI                                                         |
@@ -168,9 +184,9 @@ SCQLEngine can cooperate with upper-layer modules such as SCDB and SCQLBroker ac
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
 | enable_tensor_life_cycle_manage                 | true                | Whether tensor life cycle manage is enable/disable                                                                                      |
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
-| disable_server_verification                     | false               | Whether disable server verification for ArrowSQL adaptor                                                                                |
+| arrow_client_disable_server_verification        | false               | Whether disable server verification for ArrowSQL adaptor                                                                                |
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
-| arrow_cert_pem_path                             | none                | Certificate file path for server verification when disable_server_verification is false                                                 |
+| arrow_cert_pem_path                             | none                | Certificate file path for server verification when arrow_client_disable_server_verification is false                                    |
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
 | arrow_client_key_pem_path                       | none                | Private key file path for ArrowSQL client to work in mtls                                                                               |
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
@@ -214,6 +230,8 @@ datasources in embed_router_conf contain information for connecting MySQL/SQLite
   kind: datasource type, currently support MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL.
 
   connection_str: string used to connect MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL.
+
+.. _connection_str:
 
     MySQL Connection string format:
       <str> == <assignment> | <assignment> ';' <str>

@@ -20,6 +20,7 @@
 #include "arrow/table.h"
 
 #include "engine/core/arrow_helper.h"
+#include "engine/core/tensor_constructor.h"
 #include "engine/core/type.h"
 #include "engine/util/logging.h"
 #include "engine/util/ndarray_to_arrow.h"
@@ -186,7 +187,7 @@ void Copy::InsertTensorsFromTable(ExecContext* ctx,
   for (int i = 0; i < output_pbs.size(); ++i) {
     auto chunked_arr = table->column(i);
     YACL_ENFORCE(chunked_arr, "get column(idx={}) from table failed", i);
-    auto tensor = std::make_shared<Tensor>(std::move(chunked_arr));
+    auto tensor = TensorFrom(std::move(chunked_arr));
 
     ctx->GetTensorTable()->AddTensor(output_pbs[i].name(), tensor);
   }

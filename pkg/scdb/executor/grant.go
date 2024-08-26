@@ -241,7 +241,7 @@ func (e *GrantExec) grantColumnPriv(tx *gorm.DB, priv mysql.PrivilegeType, user 
 		User:      user.User.Username,
 		Db:        e.Level.DBName,
 		TableName: e.Level.TableName,
-	}).Find(&storage.ColumnPriv{}, "column_name IN ?", colNames).Updates(attrs)
+	}).Where("column_name IN ?", colNames).Updates(attrs)
 	return result.Error
 }
 

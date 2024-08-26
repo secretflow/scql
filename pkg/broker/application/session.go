@@ -23,7 +23,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
-	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/secretflow/scql/pkg/broker/scheduler"
 	"github.com/secretflow/scql/pkg/broker/storage"
@@ -33,6 +32,7 @@ import (
 	"github.com/secretflow/scql/pkg/proto-gen/spu"
 	"github.com/secretflow/scql/pkg/sessionctx/stmtctx"
 	"github.com/secretflow/scql/pkg/sessionctx/variable"
+	"github.com/secretflow/scql/pkg/util/message"
 	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
 
@@ -175,39 +175,46 @@ func (e *ExecutionInfo) CheckProjectConf() error {
 	return nil
 }
 
-func NewSession(ctx context.Context, info *ExecutionInfo, app *App, asyncMode bool, dryRun bool) (session *Session, err error) {
+func NewSession(ctx context.Context, info *ExecutionInfo, app *App, asyncMode, dryRun bool) (session *Session, err error) {
 	spuConf := &spu.RuntimeConfig{}
+	var projConf pb.ProjectConfig
 	err = app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
 		project, err := txn.GetProject(info.ProjectID)
 		if err != nil {
 			return fmt.Errorf("NewSession: project %v not exists", project.ID)
 		}
-
-		var projConf pb.ProjectConfig
-		err = protojson.Unmarshal([]byte(project.ProjectConf), &projConf)
+		err = message.ProtoUnmarshal([]byte(project.ProjectConf), &projConf)
 		if err != nil {
 			return fmt.Errorf("NewSession: failed to deserialize project config stored in db: %v", err)
 		}
-		spuConf = projConf.SpuRuntimeCfg
-		return err
+		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
-	groupByThreshold := constant.DefaultGroupByThreshold
-	if app.Conf.SecurityCompromise.GroupByThreshold > 0 {
-		groupByThreshold = app.Conf.SecurityCompromise.GroupByThreshold
+	revealGroupMark := app.Conf.SecurityCompromise.RevealGroupMark
+	if projConf.RevealGroupMark != nil {
+		revealGroupMark = projConf.GetRevealGroupMark()
 	}
+	groupByThreshold := app.Conf.SecurityCompromise.GroupByThreshold
+	if projConf.GroupByThreshold != nil {
+		groupByThreshold = projConf.GetGroupByThreshold()
+	}
+	if groupByThreshold == 0 {
+		groupByThreshold = constant.DefaultGroupByThreshold
+	}
+	spuConf = projConf.SpuRuntimeCfg
 	info.CompileOpts = &pb.CompileOptions{
 		SpuConf: spuConf,
 		SecurityCompromise: &pb.SecurityCompromiseConfig{
-			RevealGroupMark:  app.Conf.SecurityCompromise.RevealGroupMark,
+			RevealGroupMark:  revealGroupMark,
 			GroupByThreshold: groupByThreshold,
 		},
 		DumpExeGraph: true,
 		OptimizerHints: &pb.OptimizerHints{
 			PsiAlgorithmType: pb.PsiAlgorithmType_AUTO,
 		},
+		Batched: app.Conf.Batched,
 	}
 	// NOTE(xiaoyuan): use ecdh psi when EnablePsiDetailLog is true
 	if info.DebugOpts != nil && info.DebugOpts.EnablePsiDetailLog {

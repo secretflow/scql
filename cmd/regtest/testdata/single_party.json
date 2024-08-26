@@ -1,6 +1,16 @@
 {
   "queries": [
     {
+      "name": "geodist test, param order(longtitude1, latitude1, longtitude2, latitude2, radius)",
+      "query": "select ta.plain_int_0, ta.plain_float_0, geodist(ta.plain_int_0, ta.plain_int_0, ta.plain_float_0, ta.plain_float_0, 6300) / 100 as distance from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0;",
+      "mysql_query": "select ta.plain_int_0, ta.plain_float_0, 6300 * acos(sin(radians(ta.plain_int_0)) * sin(radians(ta.plain_float_0)) + cos(radians(ta.plain_int_0)) * cos(radians(ta.plain_float_0)) * cos(radians(ta.plain_int_0) - radians(ta.plain_float_0))) / 100 as distance from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+    },
+    {
+      "name": "geodist test, param order(longtitude1, latitude1, longtitude2, latitude2)",
+      "query": "select ta.plain_int_0, ta.plain_float_0, geodist(ta.plain_int_0, ta.plain_int_0, ta.plain_float_0, ta.plain_float_0) / 100 as distance from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0;",
+      "mysql_query": "select ta.plain_int_0, ta.plain_float_0, 6371 * acos(sin(radians(ta.plain_int_0)) * sin(radians(ta.plain_float_0)) + cos(radians(ta.plain_int_0)) * cos(radians(ta.plain_float_0)) * cos(radians(ta.plain_int_0) - radians(ta.plain_float_0))) / 100 as distance from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+    },
+    {
       "name": "plain select",
       "query": "select plain_int_0, plain_datetime_0, plain_timestamp_0 from alice_tbl_1;",
       "mysql_query": "select plain_int_0, plain_datetime_0, plain_timestamp_0 from alice.tbl_1"
@@ -284,6 +294,21 @@
       "name": "date func (now, curdate, last_day, str_to_date, date_format) (csv)",
       "query": "select '2020-01-01 00:00:00' < curdate() as res1, last_day(plain_datetime_0) as res2, last_day(plain_timestamp_0) as res3, str_to_date('2017/08/10', '%Y/%m/%d') as res4, date_format(plain_datetime_0, '%Y-%m-%d %H:%M:%S') as res5 from bob_tbl_1;",
       "mysql_query": "select '2020-01-01 00:00:00' < curdate() as res1, last_day(plain_datetime_0) as res2, last_day(plain_timestamp_0) as res3, str_to_date('2017/08/10', '%Y/%m/%d') as res4, date_format(plain_datetime_0, '%Y-%m-%d %H:%i:%S') as res5 from bob.tbl_1;"
+    },
+    {
+      "name": "naive trigonometric function on csv",
+      "query": "select sin(plain_int_0) as sin_plain_int_0, cos(plain_int_0) as cos_plain_int_0, acos(plain_int_0 / 100000) as acos_plain_int_0 from bob_tbl_1;",
+      "mysql_query": "select sin(plain_int_0) as sin_plain_int_0, cos(plain_int_0) as cos_plain_int_0, acos(plain_int_0 / 100000) as acos_plain_int_0 from bob.tbl_1"
+    },
+    {
+      "name": "naive trigonometric function on mysql",
+      "query": "select sin(plain_int_0) as sin_plain_int_0, cos(plain_int_0) as cos_plain_int_0, acos(plain_int_0 / 100000) as acos_plain_int_0 from alice_tbl_1;",
+      "mysql_query": "select sin(plain_int_0) as sin_plain_int_0, cos(plain_int_0) as cos_plain_int_0, acos(plain_int_0 / 100000) as acos_plain_int_0 from alice.tbl_1"
+    },
+    {
+      "name": "naive trigonometric function on postgres",
+      "query": "select sin(plain_int_0) as sin_plain_int_0, cos(plain_int_0) as cos_plain_int_0, acos(plain_int_0 / 100000) as acos_plain_int_0 from carol_tbl_1;",
+      "mysql_query": "select sin(plain_int_0) as sin_plain_int_0, cos(plain_int_0) as cos_plain_int_0, acos(plain_int_0 / 100000) as acos_plain_int_0 from carol.tbl_1"
     }
   ]
 }

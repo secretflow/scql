@@ -41,43 +41,39 @@ INSTANTIATE_TEST_SUITE_P(
         testing::Values(
             // test private status
             IfNullTestCase{
-                .exp = test::NamedTensor("exp",
-                                         TensorFromJSON(arrow::int64(),
-                                                        "[null, 2, 3, null]")),
-                .alt = test::NamedTensor("alt",
-                                         TensorFromJSON(arrow::int64(),
-                                                        "[null, 12, 13, 14]")),
-                .expect_out = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::int64(), "[null, 2, 3, 14]"))},
-            IfNullTestCase{
                 .exp = test::NamedTensor(
-                    "exp", TensorFromJSON(arrow::float64(),
-                                          "[null, -0.1, 1.1, null]")),
+                    "exp", TensorFrom(arrow::int64(), "[null, 2, 3, null]")),
                 .alt = test::NamedTensor(
-                    "alt", TensorFromJSON(arrow::float64(),
-                                          "[null, -10.1, 11.1, 12.1]")),
+                    "alt", TensorFrom(arrow::int64(), "[null, 12, 13, 14]")),
                 .expect_out = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::float64(),
-                                          "[null, -0.1, 1.1, 12.1]"))},
+                    "out", TensorFrom(arrow::int64(), "[null, 2, 3, 14]"))},
             IfNullTestCase{
-                .exp = test::NamedTensor(
-                    "exp", TensorFromJSON(arrow::large_utf8(),
-                                          R"json(["B", null, null ,"B"])json")),
+                .exp = test::NamedTensor("exp",
+                                         TensorFrom(arrow::float64(),
+                                                    "[null, -0.1, 1.1, null]")),
                 .alt = test::NamedTensor(
                     "alt",
-                    TensorFromJSON(arrow::large_utf8(),
-                                   R"json(["CC", null, "CC" ,"C"])json")),
+                    TensorFrom(arrow::float64(), "[null, -10.1, 11.1, 12.1]")),
                 .expect_out = test::NamedTensor(
                     "out",
-                    TensorFromJSON(arrow::large_utf8(),
-                                   R"json(["B", null, "CC" ,"B"])json"))},
+                    TensorFrom(arrow::float64(), "[null, -0.1, 1.1, 12.1]"))},
             IfNullTestCase{
-                .exp = test::NamedTensor("exp", TensorFromJSON(arrow::float64(),
-                                                               "[]")),
-                .alt = test::NamedTensor("alt", TensorFromJSON(arrow::float64(),
-                                                               "[]")),
+                .exp = test::NamedTensor(
+                    "exp", TensorFrom(arrow::large_utf8(),
+                                      R"json(["B", null, null ,"B"])json")),
+                .alt = test::NamedTensor(
+                    "alt", TensorFrom(arrow::large_utf8(),
+                                      R"json(["CC", null, "CC" ,"C"])json")),
                 .expect_out = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::float64(), "[]"))})),
+                    "out", TensorFrom(arrow::large_utf8(),
+                                      R"json(["B", null, "CC" ,"B"])json"))},
+            IfNullTestCase{
+                .exp = test::NamedTensor("exp",
+                                         TensorFrom(arrow::float64(), "[]")),
+                .alt = test::NamedTensor("alt",
+                                         TensorFrom(arrow::float64(), "[]")),
+                .expect_out = test::NamedTensor(
+                    "out", TensorFrom(arrow::float64(), "[]"))})),
     TestParamNameGenerator(IfNullTest));
 
 TEST_P(IfNullTest, works) {

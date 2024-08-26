@@ -20,18 +20,11 @@
 #include "Poco/Data/SessionPool.h"
 
 #include "engine/datasource/datasource_adaptor.h"
+#include "engine/datasource/odbc_connector.h"
 
 #include "engine/datasource/datasource.pb.h"
 
 namespace scql::engine {
-
-struct OdbcAdaptorOptions {
-  DataSourceKind kind;
-  std::string connection_str;
-  ConnectionType connection_type;
-  // pool_size valid when connection_type = ConnectionType::Pooled
-  size_t pool_size;
-};
 
 /// @brief OdbcAdaptor provides a way to access general SQL databases.
 /// It is powered by [POCO Data](https://pocoproject.org/)
@@ -40,24 +33,25 @@ struct OdbcAdaptorOptions {
 ///   - SQLite
 class OdbcAdaptor : public DatasourceAdaptor {
  public:
-  explicit OdbcAdaptor(OdbcAdaptorOptions options);
+  explicit OdbcAdaptor(const std::string& db_kind,
+                       const std::string& connection_str)
+      : OdbcAdaptor(db_kind, connection_str, ConnectionType::Short, 0) {}
+  explicit OdbcAdaptor(const std::string& db_kind,
+                       const std::string& connection_str, ConnectionType type,
+                       size_t pool_size);
 
   ~OdbcAdaptor() override = default;
 
  private:
   void Init();
 
-  std::vector<TensorPtr> GetQueryResult(const std::string& query) override;
-  std::vector<TensorPtr> GetQueryResultImpl(const std::string& query);
+  std::vector<TensorPtr> GetQueryResult(
+      const std::string& query, const TensorBuildOptions& options) override;
+  std::vector<TensorPtr> GetQueryResultImpl(
+      const std::string& query, const TensorBuildOptions& options = {});
 
-  // Returns a session from session pool if using pooled session,
-  // Otherwise, creates a new session.
-  Poco::Data::Session CreateSession();
-
-  const OdbcAdaptorOptions options_;
-  // Poco data connector name
-  std::string connector_;
-  std::unique_ptr<Poco::Data::SessionPool> pool_;
+ private:
+  std::unique_ptr<OdbcConnector> connector_;
 };
 
 }  // namespace scql::engine

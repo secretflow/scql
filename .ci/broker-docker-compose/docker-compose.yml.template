@@ -111,4 +111,8 @@ services:
         target: 5432
     restart: always
     volumes:
-      - ../test-data/postgres:/docker-entrypoint-initdb.d/
+      - ./postgres/initdb/conf_init.sql:/docker-entrypoint-initdb.d/conf_init.sql
+      - ./postgres/initdb/broker_init_alice.sql:/docker-entrypoint-initdb.d/broker_init_alice.sql
+      - ./postgres/initdb/broker_init_bob.sql:/docker-entrypoint-initdb.d/broker_init_bob.sql
+      - ./postgres/initdb/broker_init_carol.sql:/docker-entrypoint-initdb.d/broker_init_carol.sql
+      - ../test-data/postgres/postgres_carol_init.sql:/docker-entrypoint-initdb.d/postgres_carol_init.sql

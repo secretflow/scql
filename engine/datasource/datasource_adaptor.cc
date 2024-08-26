@@ -18,6 +18,7 @@
 #include "yacl/base/exception.h"
 
 #include "engine/core/arrow_helper.h"
+#include "engine/core/tensor_constructor.h"
 #include "engine/core/type.h"
 
 namespace scql::engine {
@@ -30,14 +31,15 @@ std::vector<TensorPtr> DatasourceAdaptor::ConvertDataTypeToExpected(
                   tensors.size(), expected_outputs.size());
   std::vector<TensorPtr> converted_tensors;
   for (size_t i = 0; i < tensors.size(); ++i) {
-    auto chunked_arr = tensors[i]->ToArrowChunkedArray();
-    YACL_ENFORCE(chunked_arr, "get column(idx={}) from table failed", i);
+    auto tensor = tensors[i];
     if ((expected_outputs[i].dtype != pb::PrimitiveDataType::DATETIME &&
          expected_outputs[i].dtype != pb::PrimitiveDataType::TIMESTAMP &&
-         FromArrowDataType(chunked_arr->type()) != expected_outputs[i].dtype) ||
+         FromArrowDataType(tensor->ArrowType()) != expected_outputs[i].dtype) ||
         // scql don't support utf8, which limits size < 2G, so should be
         // converted to large_utf8() to support large scale
-        chunked_arr->type() == arrow::utf8()) {
+        tensors[i]->ArrowType() == arrow::utf8()) {
+      auto chunked_arr = tensor->ToArrowChunkedArray();
+      YACL_ENFORCE(chunked_arr, "get column(idx={}) from table failed", i);
       auto to_type = ToArrowDataType(expected_outputs[i].dtype);
       YACL_ENFORCE(to_type, "unsupported column data type {}",
                    fmt::underlying(expected_outputs[i].dtype));
@@ -47,8 +49,8 @@ std::vector<TensorPtr> DatasourceAdaptor::ConvertDataTypeToExpected(
       ASSIGN_OR_THROW_ARROW_STATUS(cast_result,
                                    arrow::compute::Cast(chunked_arr, to_type));
       chunked_arr = cast_result.chunked_array();
+      tensor = TensorFrom(std::move(chunked_arr));
     }
-    auto tensor = std::make_shared<Tensor>(std::move(chunked_arr));
     converted_tensors.push_back(std::move(tensor));
   }
   return converted_tensors;

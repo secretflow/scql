@@ -28,11 +28,9 @@ func TestNaiveScheduler(t *testing.T) {
 	r := require.New(t)
 	// test pod marshal unmarshal
 	engine := residentEngine{
-		PeerUri:       "for_peer",
-		SelfUri:       "engine.com",
-		JobID:         "job_id",
-		postUri:       "http://engine.com/SCQLEngineService/StopJob",
-		clientTimeout: time.Second,
+		PeerUri: "for_peer",
+		SelfUri: "engine.com",
+		JobID:   "job_id",
 	}
 	jobInfo, err := engine.MarshalToText()
 	r.NoError(err)

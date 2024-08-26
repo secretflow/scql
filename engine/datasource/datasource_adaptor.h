@@ -25,12 +25,6 @@
 
 namespace scql::engine {
 
-enum ConnectionType {
-  Unknown = 0,
-  Short = 1,
-  Pooled = 2,
-};
-
 /// @brief ColumnDesc contains column metadata information.
 struct ColumnDesc {
   std::string name;             // column name
@@ -47,20 +41,23 @@ class DatasourceAdaptor {
   // ExecQuery execute query,
   std::vector<TensorPtr> ExecQuery(
       const std::shared_ptr<spdlog::logger>& logger, const std::string& query,
-      const std::vector<ColumnDesc>& expected_outputs) {
-    auto tensors = GetQueryResult(query);
+      const std::vector<ColumnDesc>& expected_outputs,
+      const TensorBuildOptions& options = {}) {
+    auto tensors = GetQueryResult(query, options);
     return ConvertDataTypeToExpected(logger, tensors, expected_outputs);
   }
 
   std::vector<TensorPtr> ExecQuery(
-      const std::string& query,
-      const std::vector<ColumnDesc>& expected_outputs) {
-    return ExecQuery(spdlog::default_logger(), query, expected_outputs);
+      const std::string& query, const std::vector<ColumnDesc>& expected_outputs,
+      const TensorBuildOptions& options = {}) {
+    return ExecQuery(spdlog::default_logger(), query, expected_outputs,
+                     options);
   }
 
  private:
   // Get result from data source
-  virtual std::vector<TensorPtr> GetQueryResult(const std::string& query) = 0;
+  virtual std::vector<TensorPtr> GetQueryResult(
+      const std::string& query, const TensorBuildOptions& options) = 0;
   // It will complain if the actual outputs not matched with expected_outputs.
   static std::vector<TensorPtr> ConvertDataTypeToExpected(
       const std::shared_ptr<spdlog::logger>& logger,

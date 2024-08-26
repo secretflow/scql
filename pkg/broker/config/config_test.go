@@ -19,6 +19,9 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+
+	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/util/message"
 )
 
 func TestNewConfig(t *testing.T) {
@@ -71,4 +74,24 @@ func TestNewConfig(t *testing.T) {
 		},
 	}
 	r.Equal(cfg, expectedCfg)
+}
+
+func TestProjectConf(t *testing.T) {
+	r := require.New(t)
+	// set as default value
+	var groupByThreshold uint64 = 0
+	projecConf := &pb.ProjectConfig{
+		SessionExpireSeconds: 100,
+		GroupByThreshold:     &groupByThreshold,
+		// reveal group mark not set
+	}
+	marshalStr, err := message.ProtoMarshal(projecConf)
+	r.NoError(err)
+	r.JSONEq(`{"group_by_threshold":"0", "http_max_payload_size":"0", "link_chunked_send_parallel_size":"0", "link_recv_timeout_sec":"0", "link_throttle_window_size":"0", "psi_curve_type":0, "session_expire_seconds":"100", "spu_runtime_cfg":null, "unbalance_psi_larger_party_rows_count_threshold":"0", "unbalance_psi_ratio_threshold":"0"}`, string(marshalStr))
+	unmarshalStruct := &pb.ProjectConfig{}
+	r.NoError(message.ProtoUnmarshal(marshalStr, unmarshalStruct))
+	r.Nil(unmarshalStruct.RevealGroupMark)
+	r.NotNil(unmarshalStruct.GroupByThreshold)
+	r.Equal(uint64(0), unmarshalStruct.GetGroupByThreshold())
+	r.Equal(int64(100), unmarshalStruct.GetSessionExpireSeconds())
 }

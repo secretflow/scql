@@ -12,9 +12,7 @@ WORK_DIR=$(
 )
 
 cd ${SCRIPT_DIR}
-python mock_from_testdata.py -dd=testdata -s="testdata/db_alice.json"
-python mock_from_testdata.py -dd=testdata -s="testdata/db_bob.json"
-python mock_from_testdata.py -dd=testdata -s="testdata/db_carol.json"
+python mock_from_testdata.py -dd=testdata -s="testdata/db.json"
 
 mv testdata/mysql_*_init.sql ${WORK_DIR}/.ci/test-data/mysql/
 mv testdata/postgres_*_init.sql ${WORK_DIR}/.ci/test-data/postgres

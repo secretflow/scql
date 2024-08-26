@@ -17,8 +17,8 @@ engine:
   uris:
     - for_peer: engine-alice:8003
 storage:
-  type: mysql
-  conn_str: "root:${MYSQL_ROOT_PASSWORD}@tcp(mysql:3306)/brokera?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
+  type: "${DB_TYPE}"
+  conn_str: "${DB_CONN_STR}"
   max_idle_conns: 10
   max_open_conns: 300
   conn_max_idle_time: 2m

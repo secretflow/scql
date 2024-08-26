@@ -47,12 +47,7 @@ class OdbcAdaptorSQLiteTest : public ::testing::Test {
 
 TEST_F(OdbcAdaptorSQLiteTest, works) {
   // Given
-  OdbcAdaptorOptions options;
-  options.kind = DataSourceKind::SQLITE;
-  options.connection_str = db_connection_str_;
-  options.connection_type = ConnectionType::Short;
-
-  OdbcAdaptor adaptor(options);
+  OdbcAdaptor adaptor("sqlite", db_connection_str_);
 
   // When
   const std::string query = "SELECT name, age, credit FROM person";

@@ -17,9 +17,11 @@
 #include <ctime>
 
 #include "arrow/compute/api_scalar.h"
+#include "arrow/compute/exec.h"
 #include "spdlog/spdlog.h"
 #include "yacl/base/exception.h"
 
+#include "engine/core/tensor_constructor.h"
 namespace scql::engine::util {
 
 std::string ConvertEpochToStr(time_t epoch) {
@@ -67,7 +69,7 @@ std::shared_ptr<Tensor> CompensateTimeZone(
   YACL_ENFORCE(result.ok(),
                "caught error while invoking arrow add function: {}",
                result.status().ToString());
-  return std::make_shared<Tensor>(result.ValueOrDie().chunked_array());
+  return TensorFrom(result.ValueOrDie().chunked_array());
 }
 
 ConvertDatetimeProtoVistor::ConvertDatetimeProtoVistor(pb::Tensor* to_tensor,

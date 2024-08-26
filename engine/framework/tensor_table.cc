@@ -29,6 +29,12 @@ void TensorTable::AddTensor(const std::string& name,
   tensors_[name] = std::move(tensor);
 }
 
+void TensorTable::AddOrUpdateTensor(const std::string& name,
+                                    std::shared_ptr<Tensor> tensor) {
+  std::lock_guard<std::mutex> guard(lock_);
+  tensors_[name] = std::move(tensor);
+}
+
 std::shared_ptr<Tensor> TensorTable::GetTensor(const std::string& name) const {
   std::lock_guard<std::mutex> guard(lock_);
 

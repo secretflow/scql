@@ -19,6 +19,7 @@
 #include "libspu/kernel/hlo/casting.h"
 
 #include "engine/core/arrow_helper.h"
+#include "engine/core/tensor_constructor.h"
 #include "engine/core/type.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
@@ -63,7 +64,7 @@ void Cast::Execute(ExecContext* ctx) {
     YACL_ENFORCE(result.ok(), "caught error while invoking arrow cast: {}",
                  result.status().ToString());
 
-    auto t = std::make_shared<Tensor>(result.ValueOrDie().chunked_array());
+    auto t = TensorFrom(result.ValueOrDie().chunked_array());
     ctx->GetTensorTable()->AddTensor(output_pb.name(), std::move(t));
     return;
   }

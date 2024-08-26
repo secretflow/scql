@@ -1,0 +1,72 @@
+{
+  "tbl_3": {
+    "db_name": "carol",
+    "columns": [
+      {
+        "column_name": "cp_jn_pl_int_0",
+        "dtype": "int",
+        "ccl": ["compare", "join", "plain"]
+      },
+      {
+        "column_name": "cp_jn_pl_int_1",
+        "dtype": "int",
+        "ccl": ["compare", "join", "plain"]
+      },
+      {
+        "column_name": "gb_en_pl_int_0",
+        "dtype": "int",
+        "ccl": ["groupby", "encrypt", "plain"]
+      },
+      {
+        "column_name": "agg_en_pl_int_0",
+        "dtype": "int",
+        "ccl": ["aggregate", "encrypt", "plain"]
+      },
+      {
+        "column_name": "plain_datetime_0",
+        "dtype": "datetime",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "plain_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": ["plain"]
+      }
+    ]
+  },
+  "UPPER_table": {
+    "db_name": "carol",
+    "columns": [
+      {
+        "column_name": "GROUPBY_int_0",
+        "dtype": "int",
+        "ccl": ["groupby"]
+      },
+      {
+        "column_name": "groupby_int_1",
+        "dtype": "int",
+        "ccl": ["groupby"]
+      },
+      {
+        "column_name": "JOIN_string_0",
+        "dtype": "string",
+        "ccl": ["join"]
+      },
+      {
+        "column_name": "join_string_1",
+        "dtype": "string",
+        "ccl": ["join"]
+      },
+      {
+        "column_name": "COMPARE_float_0",
+        "dtype": "float",
+        "ccl": ["compare"]
+      },
+      {
+        "column_name": "compare_float_1",
+        "dtype": "float",
+        "ccl": ["compare"]
+      }
+    ]
+  }
+}

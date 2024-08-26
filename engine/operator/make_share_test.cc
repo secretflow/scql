@@ -46,42 +46,39 @@ INSTANTIATE_TEST_SUITE_P(
         test::SpuTestValuesMultiPC,
         testing::Values(
             MakeShareTestCase{
-                .inputs =
-                    {test::NamedTensor(
-                         "x", TensorFromJSON(arrow::large_utf8(),
-                                             R"json(["A", "B", "C"])json")),
-                     test::NamedTensor(
-                         "y", TensorFromJSON(arrow::large_utf8(),
-                                             R"json(["X", "Y", "Z"])json"))},
+                .inputs = {test::NamedTensor(
+                               "x", TensorFrom(arrow::large_utf8(),
+                                               R"json(["A", "B", "C"])json")),
+                           test::NamedTensor(
+                               "y", TensorFrom(arrow::large_utf8(),
+                                               R"json(["X", "Y", "Z"])json"))},
                 .owners = {0, 1},
                 .output_names = {"x_hat", "y_hat"}},
             MakeShareTestCase{
                 .inputs =
-                    {test::NamedTensor("x",
-                                       TensorFromJSON(arrow::int64(),
-                                                      "[1,2,3,4,5,6,7,8]")),
+                    {test::NamedTensor("x", TensorFrom(arrow::int64(),
+                                                       "[1,2,3,4,5,6,7,8]")),
                      test::NamedTensor(
                          "y",
-                         TensorFromJSON(
+                         TensorFrom(
                              arrow::float32(),
                              "[1.1025, 100.245, -10.2, 0.34, 3.1415926]"))},
                 .owners = {0, 1},
                 .output_names = {"x_hat", "y_hat"}},
             MakeShareTestCase{
-                .inputs =
-                    {test::NamedTensor(
-                         "x", TensorFromJSON(arrow::boolean(),
-                                             "[true, false, true, true]")),
-                     test::NamedTensor(
-                         "y", TensorFromJSON(arrow::boolean(),
-                                             "[false, false, false, true]"))},
+                .inputs = {test::NamedTensor(
+                               "x", TensorFrom(arrow::boolean(),
+                                               "[true, false, true, true]")),
+                           test::NamedTensor(
+                               "y", TensorFrom(arrow::boolean(),
+                                               "[false, false, false, true]"))},
                 .owners = {0, 1},
                 .output_names = {"x_hat", "y_hat"}},
             MakeShareTestCase{
-                .inputs = {test::NamedTensor("x", TensorFromJSON(arrow::int64(),
-                                                                 "[]")),
-                           test::NamedTensor(
-                               "y", TensorFromJSON(arrow::boolean(), "[]"))},
+                .inputs = {test::NamedTensor("x",
+                                             TensorFrom(arrow::int64(), "[]")),
+                           test::NamedTensor("y", TensorFrom(arrow::boolean(),
+                                                             "[]"))},
                 .owners = {0, 1},
                 .output_names = {"x_hat", "y_hat"}})),
     TestParamNameGenerator(MakeShareTest));

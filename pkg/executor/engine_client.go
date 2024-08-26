@@ -18,18 +18,31 @@ import (
 	"context"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
+
+	"github.com/secretflow/scql/pkg/broker/config"
 )
 
 const (
 	engineCredentialHeader = "Credential"
 )
 
-func NewEngineClientConn(endpoint string, credential string) (*grpc.ClientConn, error) {
+func NewEngineClientConn(endpoint, credential string, tlsCfg *config.TLSConf) (*grpc.ClientConn, error) {
+	creds := insecure.NewCredentials()
+
+	if tlsCfg != nil && (tlsCfg.Mode == config.TLS || tlsCfg.Mode == config.MutualTLS) {
+		tlsConfig, err := config.LoadTLSConfig(tlsCfg.Mode, tlsCfg.CACertPath, tlsCfg.CertPath, tlsCfg.KeyPath)
+		if err != nil {
+			return nil, err
+		}
+		creds = credentials.NewTLS(tlsConfig)
+	}
+
 	grpcDialOpts := []grpc.DialOption{
 		grpc.WithUnaryInterceptor(grpcClientCredentialInterceptor(credential)),
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithTransportCredentials(creds),
 	}
 	return grpc.NewClient(endpoint, grpcDialOpts...)
 }

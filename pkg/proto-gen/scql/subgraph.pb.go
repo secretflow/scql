@@ -143,8 +143,8 @@ type SchedulingPolicy struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	WorkerNum int32     `protobuf:"varint,1,opt,name=worker_num,json=workerNum,proto3" json:"worker_num,omitempty"`
-	Subdags   []*SubDAG `protobuf:"bytes,2,rep,name=subdags,proto3" json:"subdags,omitempty"`
+	WorkerNum int32       `protobuf:"varint,1,opt,name=worker_num,json=workerNum,proto3" json:"worker_num,omitempty"`
+	Pipelines []*Pipeline `protobuf:"bytes,2,rep,name=pipelines,proto3" json:"pipelines,omitempty"`
 }
 
 func (x *SchedulingPolicy) Reset() {
@@ -186,9 +186,80 @@ func (x *SchedulingPolicy) GetWorkerNum() int32 {
 	return 0
 }
 
-func (x *SchedulingPolicy) GetSubdags() []*SubDAG {
+func (x *SchedulingPolicy) GetPipelines() []*Pipeline {
+	if x != nil {
+		return x.Pipelines
+	}
+	return nil
+}
+
+type Pipeline struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Batched bool      `protobuf:"varint,1,opt,name=batched,proto3" json:"batched,omitempty"`
+	Subdags []*SubDAG `protobuf:"bytes,2,rep,name=subdags,proto3" json:"subdags,omitempty"`
+	Inputs  []*Tensor `protobuf:"bytes,3,rep,name=inputs,proto3" json:"inputs,omitempty"`
+	Outputs []*Tensor `protobuf:"bytes,4,rep,name=outputs,proto3" json:"outputs,omitempty"`
+}
+
+func (x *Pipeline) Reset() {
+	*x = Pipeline{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_subgraph_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Pipeline) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Pipeline) ProtoMessage() {}
+
+func (x *Pipeline) ProtoReflect() protoreflect.Message {
+	mi := &file_api_subgraph_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Pipeline.ProtoReflect.Descriptor instead.
+func (*Pipeline) Descriptor() ([]byte, []int) {
+	return file_api_subgraph_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *Pipeline) GetBatched() bool {
+	if x != nil {
+		return x.Batched
+	}
+	return false
+}
+
+func (x *Pipeline) GetSubdags() []*SubDAG {
 	if x != nil {
 		return x.Subdags
+	}
+	return nil
+}
+
+func (x *Pipeline) GetInputs() []*Tensor {
+	if x != nil {
+		return x.Inputs
+	}
+	return nil
+}
+
+func (x *Pipeline) GetOutputs() []*Tensor {
+	if x != nil {
+		return x.Outputs
 	}
 	return nil
 }
@@ -205,7 +276,7 @@ type SubDAG_Job struct {
 func (x *SubDAG_Job) Reset() {
 	*x = SubDAG_Job{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_api_subgraph_proto_msgTypes[4]
+		mi := &file_api_subgraph_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -218,7 +289,7 @@ func (x *SubDAG_Job) String() string {
 func (*SubDAG_Job) ProtoMessage() {}
 
 func (x *SubDAG_Job) ProtoReflect() protoreflect.Message {
-	mi := &file_api_subgraph_proto_msgTypes[4]
+	mi := &file_api_subgraph_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -280,14 +351,25 @@ var file_api_subgraph_proto_rawDesc = []byte{
 	0x72, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x08, 0x77, 0x6f, 0x72, 0x6b,
 	0x65, 0x72, 0x49, 0x64, 0x12, 0x19, 0x0a, 0x08, 0x6e, 0x6f, 0x64, 0x65, 0x5f, 0x69, 0x64, 0x73,
 	0x18, 0x02, 0x20, 0x03, 0x28, 0x09, 0x52, 0x07, 0x6e, 0x6f, 0x64, 0x65, 0x49, 0x64, 0x73, 0x22,
-	0x5c, 0x0a, 0x10, 0x53, 0x63, 0x68, 0x65, 0x64, 0x75, 0x6c, 0x69, 0x6e, 0x67, 0x50, 0x6f, 0x6c,
+	0x62, 0x0a, 0x10, 0x53, 0x63, 0x68, 0x65, 0x64, 0x75, 0x6c, 0x69, 0x6e, 0x67, 0x50, 0x6f, 0x6c,
 	0x69, 0x63, 0x79, 0x12, 0x1d, 0x0a, 0x0a, 0x77, 0x6f, 0x72, 0x6b, 0x65, 0x72, 0x5f, 0x6e, 0x75,
 	0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x65, 0x72, 0x4e,
-	0x75, 0x6d, 0x12, 0x29, 0x0a, 0x07, 0x73, 0x75, 0x62, 0x64, 0x61, 0x67, 0x73, 0x18, 0x02, 0x20,
-	0x03, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x73, 0x63, 0x71, 0x6c, 0x2e, 0x70, 0x62, 0x2e, 0x53, 0x75,
-	0x62, 0x44, 0x41, 0x47, 0x52, 0x07, 0x73, 0x75, 0x62, 0x64, 0x61, 0x67, 0x73, 0x42, 0x10, 0x5a,
-	0x0e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2d, 0x67, 0x65, 0x6e, 0x2f, 0x73, 0x63, 0x71, 0x6c, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x75, 0x6d, 0x12, 0x2f, 0x0a, 0x09, 0x70, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x73, 0x18,
+	0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x11, 0x2e, 0x73, 0x63, 0x71, 0x6c, 0x2e, 0x70, 0x62, 0x2e,
+	0x50, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x52, 0x09, 0x70, 0x69, 0x70, 0x65, 0x6c, 0x69,
+	0x6e, 0x65, 0x73, 0x22, 0xa3, 0x01, 0x0a, 0x08, 0x50, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65,
+	0x12, 0x18, 0x0a, 0x07, 0x62, 0x61, 0x74, 0x63, 0x68, 0x65, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x08, 0x52, 0x07, 0x62, 0x61, 0x74, 0x63, 0x68, 0x65, 0x64, 0x12, 0x29, 0x0a, 0x07, 0x73, 0x75,
+	0x62, 0x64, 0x61, 0x67, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x73, 0x63,
+	0x71, 0x6c, 0x2e, 0x70, 0x62, 0x2e, 0x53, 0x75, 0x62, 0x44, 0x41, 0x47, 0x52, 0x07, 0x73, 0x75,
+	0x62, 0x64, 0x61, 0x67, 0x73, 0x12, 0x27, 0x0a, 0x06, 0x69, 0x6e, 0x70, 0x75, 0x74, 0x73, 0x18,
+	0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x73, 0x63, 0x71, 0x6c, 0x2e, 0x70, 0x62, 0x2e,
+	0x54, 0x65, 0x6e, 0x73, 0x6f, 0x72, 0x52, 0x06, 0x69, 0x6e, 0x70, 0x75, 0x74, 0x73, 0x12, 0x29,
+	0x0a, 0x07, 0x6f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x73, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32,
+	0x0f, 0x2e, 0x73, 0x63, 0x71, 0x6c, 0x2e, 0x70, 0x62, 0x2e, 0x54, 0x65, 0x6e, 0x73, 0x6f, 0x72,
+	0x52, 0x07, 0x6f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x73, 0x42, 0x10, 0x5a, 0x0e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x2d, 0x67, 0x65, 0x6e, 0x2f, 0x73, 0x63, 0x71, 0x6c, 0x62, 0x06, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x33,
 }
 
 var (
@@ -302,26 +384,31 @@ func file_api_subgraph_proto_rawDescGZIP() []byte {
 	return file_api_subgraph_proto_rawDescData
 }
 
-var file_api_subgraph_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_api_subgraph_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_api_subgraph_proto_goTypes = []interface{}{
 	(*SubGraph)(nil),         // 0: scql.pb.SubGraph
 	(*SubDAG)(nil),           // 1: scql.pb.SubDAG
 	(*SchedulingPolicy)(nil), // 2: scql.pb.SchedulingPolicy
-	nil,                      // 3: scql.pb.SubGraph.NodesEntry
-	(*SubDAG_Job)(nil),       // 4: scql.pb.SubDAG.Job
-	(*ExecNode)(nil),         // 5: scql.pb.ExecNode
+	(*Pipeline)(nil),         // 3: scql.pb.Pipeline
+	nil,                      // 4: scql.pb.SubGraph.NodesEntry
+	(*SubDAG_Job)(nil),       // 5: scql.pb.SubDAG.Job
+	(*Tensor)(nil),           // 6: scql.pb.Tensor
+	(*ExecNode)(nil),         // 7: scql.pb.ExecNode
 }
 var file_api_subgraph_proto_depIdxs = []int32{
-	3, // 0: scql.pb.SubGraph.nodes:type_name -> scql.pb.SubGraph.NodesEntry
+	4, // 0: scql.pb.SubGraph.nodes:type_name -> scql.pb.SubGraph.NodesEntry
 	2, // 1: scql.pb.SubGraph.policy:type_name -> scql.pb.SchedulingPolicy
-	4, // 2: scql.pb.SubDAG.jobs:type_name -> scql.pb.SubDAG.Job
-	1, // 3: scql.pb.SchedulingPolicy.subdags:type_name -> scql.pb.SubDAG
-	5, // 4: scql.pb.SubGraph.NodesEntry.value:type_name -> scql.pb.ExecNode
-	5, // [5:5] is the sub-list for method output_type
-	5, // [5:5] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	5, // 2: scql.pb.SubDAG.jobs:type_name -> scql.pb.SubDAG.Job
+	3, // 3: scql.pb.SchedulingPolicy.pipelines:type_name -> scql.pb.Pipeline
+	1, // 4: scql.pb.Pipeline.subdags:type_name -> scql.pb.SubDAG
+	6, // 5: scql.pb.Pipeline.inputs:type_name -> scql.pb.Tensor
+	6, // 6: scql.pb.Pipeline.outputs:type_name -> scql.pb.Tensor
+	7, // 7: scql.pb.SubGraph.NodesEntry.value:type_name -> scql.pb.ExecNode
+	8, // [8:8] is the sub-list for method output_type
+	8, // [8:8] is the sub-list for method input_type
+	8, // [8:8] is the sub-list for extension type_name
+	8, // [8:8] is the sub-list for extension extendee
+	0, // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_api_subgraph_proto_init() }
@@ -367,7 +454,19 @@ func file_api_subgraph_proto_init() {
 				return nil
 			}
 		}
-		file_api_subgraph_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+		file_api_subgraph_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Pipeline); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_api_subgraph_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*SubDAG_Job); i {
 			case 0:
 				return &v.state
@@ -386,7 +485,7 @@ func file_api_subgraph_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_api_subgraph_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -35,6 +35,7 @@ import (
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
 	"github.com/secretflow/scql/pkg/util/brokerutil"
+	"github.com/secretflow/scql/pkg/util/message"
 	"github.com/secretflow/scql/pkg/util/parallel"
 	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
@@ -65,7 +66,7 @@ func (svc *grpcIntraSvc) DoQuery(ctx context.Context, req *pb.QueryRequest) (res
 	}
 
 	var projConf pb.ProjectConfig
-	err = protojson.Unmarshal([]byte(existingProject.ProjectConf), &projConf)
+	err = message.ProtoUnmarshal([]byte(existingProject.ProjectConf), &projConf)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +156,7 @@ func (svc *grpcIntraSvc) SubmitQuery(ctx context.Context, req *pb.QueryRequest) 
 	}
 
 	var projConf pb.ProjectConfig
-	err = protojson.Unmarshal([]byte(existingProject.ProjectConf), &projConf)
+	err = message.ProtoUnmarshal([]byte(existingProject.ProjectConf), &projConf)
 	if err != nil {
 		return nil, err
 	}
@@ -226,7 +227,7 @@ func (svc *grpcIntraSvc) SubmitQuery(ctx context.Context, req *pb.QueryRequest) 
 }
 
 func fetchSessionStatus(session_info *storage.SessionInfo) (resp *scql.QueryJobStatusResponse, err error) {
-	conn, err := exe.NewEngineClientConn(session_info.EngineUrlForSelf, "")
+	conn, err := exe.NewEngineClientConn(session_info.EngineUrlForSelf, "", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -447,6 +448,7 @@ func distributeQueryToOtherParty(session *application.Session, enginesInfo *grap
 			LinkThrottleWindowSize:      session.ExecuteInfo.SessionOptions.LinkConfig.LinkThrottleWindowSize,
 			LinkChunkedSendParallelSize: session.ExecuteInfo.SessionOptions.LinkConfig.LinkChunkedSendParallelSize,
 		},
+		RunningOpts: &pb.RunningOptions{Batched: executionInfo.CompileOpts.Batched},
 	}
 	if slices.Contains(executionInfo.DataParties, selfCode) {
 		selfInfoChecksum, err := session.GetSelfChecksum()

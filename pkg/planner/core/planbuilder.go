@@ -155,6 +155,8 @@ func (b *PlanBuilder) Build(ctx context.Context, node ast.Node) (Plan, error) {
 		return b.buildExplain(ctx, x)
 	case *ast.SetStmt:
 		return b.buildSet(ctx, x)
+	case *ast.InsertStmt:
+		return b.buildInsert(ctx, x)
 	}
 	return nil, ErrUnsupportedType.GenWithStack("Unsupported type %T", node)
 }
@@ -814,6 +816,57 @@ func (b *PlanBuilder) buildExplain(ctx context.Context, explain *ast.ExplainStmt
 		return nil, ErrUnsupportedType.GenWithStack("Unsupported explain stmt %T", explain.Stmt)
 	}
 	return b.buildShow(ctx, show)
+}
+
+func (b *PlanBuilder) buildInsert(ctx context.Context, insert *ast.InsertStmt) (Plan, error) {
+	ts, ok := insert.Table.TableRefs.Left.(*ast.TableSource)
+	if !ok {
+		return nil, fmt.Errorf("buildInsert: get table source failed")
+	}
+	tn, ok := ts.Source.(*ast.TableName)
+	if !ok {
+		return nil, fmt.Errorf("buildInsert: get table name failed")
+	}
+	fullTableName := tn.Name.String()
+	if fullTableName == "" {
+		return nil, fmt.Errorf("buildInsert: table name is empty")
+	}
+	if tn.Schema.String() != "" {
+		fullTableName = tn.Schema.String() + "." + fullTableName
+	}
+
+	var plainColumnNames []string
+	if len(insert.Columns) <= 0 {
+		return nil, fmt.Errorf("buildInsert: get column failed")
+	}
+	for _, col := range insert.Columns {
+		if col.Schema.String() != "" {
+			return nil, fmt.Errorf("buildInsert: column name should not contain schema")
+		}
+		if col.Table.String() != "" && col.Table.String() != fullTableName {
+			return nil, fmt.Errorf("buildInsert: table '%s' in column not equal to table '%s'", col.Table.String(), fullTableName)
+		}
+		plainColumnNames = append(plainColumnNames, col.Name.String())
+	}
+
+	if insert.Select == nil {
+		return nil, fmt.Errorf("buildInsert: get select failed, only support 'INSERT INTO ... SELECT ... '")
+	}
+
+	ss, ok := insert.Select.(*ast.SelectStmt)
+	if !ok {
+		return nil, fmt.Errorf("buildInsert: get select stmt failed")
+	}
+	p, err := b.buildSelect(ctx, ss)
+	if err != nil {
+		return nil, fmt.Errorf("buildInsert: buildSelect failed: %v", err)
+	}
+
+	p.SetInsertTableOpt(&InsertTableOption{
+		TableName: fullTableName,
+		Columns:   plainColumnNames,
+	})
+	return p, nil
 }
 
 func getWindowName(name string) string {

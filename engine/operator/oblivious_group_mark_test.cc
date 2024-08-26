@@ -40,31 +40,29 @@ INSTANTIATE_TEST_SUITE_P(
         testing::Values(
             ObliviousGroupMarkTestCase{
                 .inputs = {test::NamedTensor(
-                    "in", TensorFromJSON(arrow::int64(), "[0, 1, 1, 1, 2]"))},
-                .output = test::NamedTensor("out",
-                                            TensorFromJSON(arrow::boolean(),
-                                                           "[1, 0, 0, 1, 1]"))},
+                    "in", TensorFrom(arrow::int64(), "[0, 1, 1, 1, 2]"))},
+                .output = test::NamedTensor(
+                    "out", TensorFrom(arrow::boolean(), "[1, 0, 0, 1, 1]"))},
             ObliviousGroupMarkTestCase{
-                .inputs = {test::NamedTensor(
-                               "in_a", TensorFromJSON(arrow::int64(),
-                                                      "[0, 0, 1, 1, 1, 1]")),
+                .inputs = {test::NamedTensor("in_a",
+                                             TensorFrom(arrow::int64(),
+                                                        "[0, 0, 1, 1, 1, 1]")),
                            test::NamedTensor(
                                "in_b",
-                               TensorFromJSON(arrow::float32(),
-                                              "[-1, 0, 0, 3.14, 3.14, 3.14]"))},
+                               TensorFrom(arrow::float32(),
+                                          "[-1, 0, 0, 3.14, 3.14, 3.14]"))},
                 .output = test::NamedTensor(
-                    "out",
-                    TensorFromJSON(arrow::boolean(), "[1, 1, 1, 0, 0, 1]"))},
+                    "out", TensorFrom(arrow::boolean(), "[1, 1, 1, 0, 0, 1]"))},
             ObliviousGroupMarkTestCase{
-                .inputs = {test::NamedTensor(
-                    "in", TensorFromJSON(arrow::int64(), "[1]"))},
-                .output = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::boolean(), "[1]"))},
+                .inputs = {test::NamedTensor("in", TensorFrom(arrow::int64(),
+                                                              "[1]"))},
+                .output = test::NamedTensor("out", TensorFrom(arrow::boolean(),
+                                                              "[1]"))},
             ObliviousGroupMarkTestCase{
-                .inputs = {test::NamedTensor(
-                    "in", TensorFromJSON(arrow::int64(), "[]"))},
-                .output = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::boolean(), "[]"))})),
+                .inputs = {test::NamedTensor("in",
+                                             TensorFrom(arrow::int64(), "[]"))},
+                .output = test::NamedTensor("out", TensorFrom(arrow::boolean(),
+                                                              "[]"))})),
     TestParamNameGenerator(ObliviousGroupMarkTest));
 
 TEST_P(ObliviousGroupMarkTest, works) {

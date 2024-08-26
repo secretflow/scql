@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
@@ -40,9 +41,15 @@ var EncodingType2ContentType = map[ContentEncodingType]string{
 	EncodingTypeProtobuf: "application/x-protobuf",
 }
 
+var (
+	ProtoMarshal   = protojson.MarshalOptions{UseProtoNames: true, EmitUnpopulated: true}.Marshal
+	ProtoUnmarshal = protojson.UnmarshalOptions{}.Unmarshal
+)
+
 var maxPrintContentLength = 1000
 
-func DeserializeFrom(in io.ReadCloser, request proto.Message) (ContentEncodingType, error) {
+func DeserializeFrom(in io.ReadCloser, request proto.Message, contentType string) (ContentEncodingType, error) {
+	logrus.Infof("DeserializeFromWithContentType: %v", contentType)
 	if request == nil {
 		return EncodingTypeUnknown, fmt.Errorf("unexpected empty message")
 	}
@@ -50,15 +57,35 @@ func DeserializeFrom(in io.ReadCloser, request proto.Message) (ContentEncodingTy
 	if err != nil {
 		return EncodingTypeUnknown, err
 	}
-	// try parse order(fast&strict -> slow&loose): 1. protobuf 2. json
-	err = proto.Unmarshal(body, request)
-	if err == nil {
-		return EncodingTypeProtobuf, nil
+	switch contentType {
+	case "application/json":
+		err = ProtoUnmarshal(body, request)
+		if err == nil {
+			return EncodingTypeJson, nil
+		}
+	case "application/x-protobuf":
+		err = proto.Unmarshal(body, request)
+		if err == nil {
+			return EncodingTypeProtobuf, nil
+		}
+	default:
+		if contentType == "" {
+			logrus.Warning("empty content-type")
+		} else {
+			logrus.Warning("content-type is not one of application/json and application/x-protobuf")
+		}
+
+		// Try to parse protobuf first, then json
+		err = proto.Unmarshal(body, request)
+		if err == nil {
+			return EncodingTypeProtobuf, nil
+		}
+		err = ProtoUnmarshal(body, request)
+		if err == nil {
+			return EncodingTypeJson, nil
+		}
 	}
-	err = protojson.Unmarshal(body, request)
-	if err == nil {
-		return EncodingTypeJson, nil
-	}
+
 	highLimit := len(body)
 	if highLimit > maxPrintContentLength {
 		highLimit = maxPrintContentLength
@@ -75,13 +102,7 @@ func SerializeTo(response proto.Message, encodingType ContentEncodingType) (cont
 		c, err := proto.Marshal(response)
 		return string(c), err
 	case EncodingTypeJson:
-		options := &protojson.MarshalOptions{
-			Multiline:       false,
-			Indent:          "",
-			UseProtoNames:   true,
-			EmitUnpopulated: true,
-		}
-		c, err := options.Marshal(response)
+		c, err := ProtoMarshal(response)
 		return string(c), err
 	default:
 		return "", fmt.Errorf("not implemented")

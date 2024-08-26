@@ -14,11 +14,49 @@
 
 #pragma once
 
+#include <filesystem>
+#include <optional>
 #include <string>
+
+#include "spdlog/spdlog.h"
 
 namespace scql::engine::util {
 
-std::string GetAbsolutePath(const std::string& path, bool is_restricted,
-                            const std::string& restricted_path);
+static constexpr char kSchemeS3[] = "s3://";
+static constexpr char kSchemeMinIo[] = "minio://";
+static constexpr char kSchemeOss[] = "oss://";
 
-}
+std::string GetS3LikeScheme(const std::string& url);
+
+std::string CheckAndGetAbsolutePath(const std::string& in_filepath,
+                                    bool is_restricted,
+                                    const std::string& restricted_filepath);
+
+class ScopedDir {
+ public:
+  ScopedDir(const std::filesystem::path& dir) : dir_(dir) {}
+
+  const std::filesystem::path& path() const { return dir_; }
+
+  ~ScopedDir() {
+    if (!dir_.empty()) {
+      std::error_code ec;
+      std::filesystem::remove_all(dir_, ec);
+      if (ec.value() != 0) {
+        SPDLOG_WARN("can not remove tmp dir: {}, msg: {}", dir_.string(),
+                    ec.message());
+      }
+    }
+  }
+
+ private:
+  std::filesystem::path dir_;
+};
+
+std::filesystem::path CreateDir(const std::filesystem::path& parent_dir,
+                                const std::string& dir_name);
+
+std::filesystem::path CreateDirWithRandSuffix(
+    const std::filesystem::path& parent_dir, const std::string& dir_name);
+
+}  // namespace scql::engine::util

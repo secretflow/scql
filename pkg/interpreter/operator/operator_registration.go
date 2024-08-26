@@ -72,6 +72,7 @@ func registerAllOpDef() {
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameRunSQL)
+		opDef.SetStreamingType(SinkOp)
 		opDef.AddOutput("Out", "Result tensors of the SQL statement.", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.AddAttribute(SqlAttr, "SQL statement")
 		opDef.AddAttribute(TableRefsAttr, "tables referenced by query")
@@ -84,6 +85,7 @@ func registerAllOpDef() {
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNamePublish)
+		opDef.SetStreamingType(SinkOp)
 		opDef.AddInput("In", "Tensors to be published.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.AddOutput("Out", "Published name of input tensors. Tensors are in TensorOption VALUE.",
@@ -97,6 +99,7 @@ func registerAllOpDef() {
 	for _, opName := range BinaryOps {
 		opDef := &OperatorDef{}
 		opDef.SetName(opName)
+		opDef.SetStreamingType(StreamingOp)
 		opDef.AddInput("Left", "First operand.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.AddInput("Right", "Second operand.",
@@ -114,6 +117,9 @@ func registerAllOpDef() {
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameMakePublic)
+		// make public is not a sink op, but for now, we don't support concat share tensors
+		// TODO: fix sink op type
+		opDef.SetStreamingType(StreamingOp)
 		opDef.AddInput("In", "Input tensors.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T1)
 		opDef.AddOutput("Out", "Output tensors.",
@@ -128,6 +134,7 @@ func registerAllOpDef() {
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameMakePrivate)
+		opDef.SetStreamingType(StreamingOp)
 		opDef.AddInput("In", "Input tensors.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T1)
 		opDef.AddOutput("Out", "Output tensors.",
@@ -143,6 +150,9 @@ func registerAllOpDef() {
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameMakeShare)
+		// make share is not a sink op, but for now, we don't support concat share tensors
+		// TODO: fix sink op type
+		opDef.SetStreamingType(StreamingOp)
 		opDef.AddInput("In", "Input tensors.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T1)
 		opDef.AddOutput("Out", "Output tensors.",
@@ -157,6 +167,7 @@ func registerAllOpDef() {
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameJoin)
+		opDef.SetStreamingType(StreamingOp)
 		opDef.AddInput("Left", "Left vector(shape [M][1])",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T1)
 		opDef.AddInput("Right", "Right vector(shape [N][1])",
@@ -205,6 +216,7 @@ RightJoinIndex = {0,1,2,2,3} // shape:[K=5], rows after applied filter eq-join-l
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameFilterByIndex)
+		opDef.SetStreamingType(StreamingOp)
 		opDef.AddInput("RowsIndexFilter", "Rows index filter vector(shape [K][1]).",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 		opDef.AddInput("Data", "Input data tensor(shape [M][N]).",
@@ -226,6 +238,7 @@ Out = [{"d", "b", "a"}, {3, 1, 0}]
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameCopy)
+		opDef.SetStreamingType(StreamingOp)
 		opDef.AddInput("In", "source tensor", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T1)
 		opDef.AddOutput("Out", "target tensor", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T1)
 		opDef.AddAttribute(InputPartyCodesAttr, "Input tensor `In` belongs to")
@@ -239,6 +252,7 @@ Out = [{"d", "b", "a"}, {3, 1, 0}]
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameFilter)
+		opDef.SetStreamingType(StreamingOp)
 		opDef.AddInput("Filter", "Filter tensor.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T1)
 		opDef.AddInput("In", "Tensors to be filtered.",
@@ -262,6 +276,7 @@ Out = {a, d}
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameConstant)
+		opDef.SetStreamingType(SinkOp)
 		opDef.AddOutput("Out", "output tensor(shape [M]) from constant.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 		opDef.AddAttribute(ScalarAttr, "scalar attribute(with shape [M])")
@@ -282,6 +297,7 @@ Out = [{"a", "b", "c"}]
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameDumpFile)
+		opDef.SetStreamingType(SinkOp)
 		opDef.AddInput("In", "Tensors to be dumped.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.AddOutput("Out", "Tensors have been dumped.",
@@ -301,7 +317,23 @@ Out = [{"a", "b", "c"}]
 
 	{
 		opDef := &OperatorDef{}
+		opDef.SetName(OpNameInsertTable)
+		opDef.AddInput("In", "Tensors to be inserted to DB table.",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.AddOutput("Out", "Tensors have been inserted to DB table.",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.SetDefinition(`Definition: Insert the input tensor to existing table in Database. Note: This op will change the affected rows in the session`)
+		opDef.AddAttribute(TableNameAttr, "String. table to insert the tensors.")
+		opDef.AddAttribute(ColumnNamesAttr, "String array. column names of table.")
+		opDef.SetParamTypeConstraint(T, statusPrivate)
+		check(opDef.err)
+		AllOpDef = append(AllOpDef, opDef)
+	}
+
+	{
+		opDef := &OperatorDef{}
 		opDef.SetName(OpNameIn)
+		opDef.SetStreamingType(StreamingOp)
 		opDef.AddInput("Left", "First operand.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 		opDef.AddInput("Right", "Second operand.",
@@ -336,6 +368,7 @@ Out = {False, True, False, True}
 		// - ONNX: https://github.com/onnx/onnx/blob/master/docs/Operators.md#ReduceSum
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameReduceSum)
+		opDef.SetStreamingType(SinkOp)
 		opDef.AddInput("In", "Tensor to be summed (shape [M]).",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 		opDef.AddOutput("Out", "The summed Tensor (shape [1]).",
@@ -354,6 +387,7 @@ Out = {21}
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameReduceCount)
+		opDef.SetStreamingType(SinkOp)
 		opDef.AddInput("In", "Tensor to be counted (shape [M]).",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 		opDef.AddOutput("Out", "The counted Tensor (shape [1]).",
@@ -375,6 +409,7 @@ Out = {6}
 		// - ONNX: https://github.com/onnx/onnx/blob/master/docs/Operators.md#reducemax
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameReduceMax)
+		opDef.SetStreamingType(SinkOp)
 		opDef.AddInput("In", "Tensor to be maxed (shape [M]).",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 		opDef.AddOutput("Out", "The maxed Tensor (shape [1]).",
@@ -396,6 +431,7 @@ Out = {6}
 		// - ONNX: https://github.com/onnx/onnx/blob/master/docs/Operators.md#reducemin
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameReduceMin)
+		opDef.SetStreamingType(SinkOp)
 		opDef.AddInput("In", "Tensor to be mined (shape [M]).",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 		opDef.AddOutput("Out", "The mined Tensor (shape [1]).",
@@ -414,6 +450,7 @@ Out = {1}
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameReduceAvg)
+		opDef.SetStreamingType(SinkOp)
 		opDef.AddInput("In", "Tensor to be reduced (shape [M]).",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 		opDef.AddOutput("Out", "The average Tensor (shape [1]).",
@@ -435,6 +472,7 @@ Out = {2.5}
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameShape)
+		opDef.SetStreamingType(SinkOp)
 		opDef.AddInput("In", "Input Tensors",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.AddOutput("Out", "Shape Tensors",
@@ -456,6 +494,7 @@ Out = { {2, 1}, {2, 1}, {3, 1} }
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameUnique)
+		opDef.SetStreamingType(SinkOp)
 		opDef.AddInput("Key", "Input key tensors(shape [M][1]).",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 		opDef.AddOutput("UniqueKey", "Output unique key tensor(shape [K][1]).",
@@ -474,6 +513,7 @@ UniqueKey = {"a", "b", "d"}
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameSort)
+		opDef.SetStreamingType(SinkOp)
 		opDef.AddInput("Key", "Sort Key(shape [M][1]).",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.AddInput("In", "Sort Value(shape [M][1]).",
@@ -497,6 +537,7 @@ Out = [{1, 2, 3, 4}, {2, 3, 1, 4}, {8, 7, 9, 6}]
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameObliviousGroupMark)
+		opDef.SetStreamingType(SinkOp)
 		opDef.AddInput("Key", "Pre-sorted group keys (shape [M][1]).",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.AddOutput("Group",
@@ -530,6 +571,7 @@ Group = {0, 1, 1, 0, 1}
 		} {
 			opDef := &OperatorDef{}
 			opDef.SetName(t.opName)
+			opDef.SetStreamingType(SinkOp)
 			opDef.AddInput("Group",
 				"End of group indicator(shape [M][1]). Element 1 means the row is the last element of the group, 0 is not.",
 				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
@@ -553,6 +595,7 @@ Out = %s
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameShuffle)
+		opDef.SetStreamingType(SinkOp)
 		opDef.AddInput("In", "Input Value(shape [M][1]).",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.AddOutput("Out", "Output Value(shape [M][1])",
@@ -571,6 +614,7 @@ Out = [{4, 3, 2, 1}, {6, 7, 8, 9}]
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameBroadcastTo)
+		opDef.SetStreamingType(StreamingOp)
 		opDef.AddInput("In", "Input tensor", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.AddInput("ShapeRefTensor", "Shape reference tensor", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T1)
 		opDef.AddOutput("Out", "Result tensor", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T2)
@@ -590,6 +634,7 @@ Out = BroadcastTo(In, ShapeRefTensor) = [1, 1, 1]
 	for _, opName := range UnaryOps {
 		opDef := &OperatorDef{}
 		opDef.SetName(opName)
+		opDef.SetStreamingType(StreamingOp)
 		opDef.AddInput("In", "Input tensor.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 		opDef.AddOutput("Out", "Output tensor.",
@@ -603,6 +648,7 @@ Out = BroadcastTo(In, ShapeRefTensor) = [1, 1, 1]
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameConcat)
+		opDef.SetStreamingType(SinkOp)
 		opDef.AddInput("In", "Tensors to be concat.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.AddOutput("Out", "Concated Tensor.",
@@ -623,6 +669,7 @@ Out = {1, 2, 2, 3, 4, 3, 4, 5, 6}
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameGroup)
+		opDef.SetStreamingType(SinkOp)
 		opDef.AddInput("Key", "input key tensors(shape [M][1]).",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.AddOutput("GroupId", "group id vector(shape [M][1]).",
@@ -644,6 +691,7 @@ GroupNum = {3}
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameIf)
+		opDef.SetStreamingType(StreamingOp)
 		opDef.AddInput("Condition", "Condition tensor.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 		opDef.AddInput("ValueIfTrue", "Value if true tensor.",
@@ -671,6 +719,7 @@ Out = [0, 1, 0, 0]
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameCaseWhen)
+		opDef.SetStreamingType(StreamingOp)
 		opDef.AddInput("Condition", "Condition tensor.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.AddInput("Value", "Value if condition tensor is true and all previous conditions are false.",
@@ -712,6 +761,7 @@ Out = [0, 1, 2, 2]
 		} {
 			opDef := &OperatorDef{}
 			opDef.SetName(t.opName)
+			opDef.SetStreamingType(SinkOp)
 			opDef.AddInput("GroupId", "Input group id vector(shape [M][1]).",
 				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 			opDef.AddInput("GroupNum", "Input number of groups vector(shape [1][1]).",
@@ -737,6 +787,7 @@ Out = %s
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameGroupHeSum)
+		opDef.SetStreamingType(SinkOp)
 		opDef.AddInput("GroupId", "Input group id vector(shape [M][1]).",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 		opDef.AddInput("GroupNum", "Input number of groups vector(shape [1][1]).",
@@ -762,6 +813,7 @@ Out = {2, 4, 4}
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameCast)
+		opDef.SetStreamingType(StreamingOp)
 		opDef.AddInput("In", "Input tensor.", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 		opDef.AddOutput("Out", "Output tensor.", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 		opDef.SetDefinition(`Definition: Cast Input tensor's data type to Output tensor's.`)
@@ -773,6 +825,7 @@ Out = {2, 4, 4}
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameLimit)
+		opDef.SetStreamingType(SinkOp)
 		opDef.AddInput("In", "Tensors to be limited.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.AddOutput("Out", "Output tensor.",
@@ -795,6 +848,7 @@ Out = {b, c}
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameIsNull)
+		opDef.SetStreamingType(StreamingOp)
 		opDef.AddInput("In", "Input tensor.", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 		opDef.AddOutput("Out", "Output tensor.", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 		opDef.SetDefinition(`Definition: Test if Input tensor's data contains NULL.
@@ -811,6 +865,7 @@ Out = {false, false, true}
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameIfNull)
+		opDef.SetStreamingType(StreamingOp)
 		opDef.AddInput("Expr", "The expression to test whether is NULL", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 		opDef.AddInput("AltValue", "The value to return if Expr is NULL", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 		opDef.AddOutput("Out", "Result", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
@@ -828,6 +883,7 @@ Out = {0, 1, 10}
 		{
 			opDef := &OperatorDef{}
 			opDef.SetName(OpNameCoalesce)
+			opDef.SetStreamingType(StreamingOp)
 			opDef.AddInput("Exprs", "The expressions to coalesce", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 			opDef.AddOutput("Out", "Result", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 			opDef.SetDefinition(`Definition: Coalesce returns the first value of Exprs that is not NULL. NULL is returned only if Exprs are all NULL.
@@ -841,12 +897,27 @@ Out = {0, 1, NULL}
 			check(opDef.err)
 			AllOpDef = append(AllOpDef, opDef)
 		}
-	}
 
+		{
+			opDef := &OperatorDef{}
+			opDef.SetName(OpNameBucket)
+			opDef.SetStreamingType(SinkOp)
+			opDef.AddInput("Key", "Join Key Tensors", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+			opDef.AddInput("In", "Input Tensors", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+			opDef.AddOutput("Out", "Result", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+			opDef.AddAttribute(InputPartyCodesAttr, "List of parties the inputs belong to([PartyCodeLeft, PartyCodeRight]).")
+			opDef.SetDefinition(`Definition: Put the data into buckets based on the hash value of the join key.`)
+			opDef.SetParamTypeConstraint(T, statusPrivate)
+			check(opDef.err)
+			AllOpDef = append(AllOpDef, opDef)
+		}
+
+	}
 	{
 		{
 			opDef := &OperatorDef{}
 			opDef.SetName(OpNameCos)
+			opDef.SetStreamingType(StreamingOp)
 			opDef.AddInput("In", "the expression pass to cosine function", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 			opDef.AddOutput("Out", "Result", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 			opDef.SetDefinition("Definition: return the value of cosine function")
@@ -858,6 +929,7 @@ Out = {0, 1, NULL}
 		{
 			opDef := &OperatorDef{}
 			opDef.SetName(OpNameSin)
+			opDef.SetStreamingType(StreamingOp)
 			opDef.AddInput("In", "the expression pass to sine function", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 			opDef.AddOutput("Out", "Result", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 			opDef.SetDefinition("Definition: return the value of sine function")
@@ -869,6 +941,7 @@ Out = {0, 1, NULL}
 		{
 			opDef := &OperatorDef{}
 			opDef.SetName(OpNameACos)
+			opDef.SetStreamingType(StreamingOp)
 			opDef.AddInput("In", "the expression pass to arc cosine function", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 			opDef.AddOutput("Out", "Result", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 			opDef.SetDefinition("Definition: return the value of arc cosine function")

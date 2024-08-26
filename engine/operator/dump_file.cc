@@ -16,13 +16,18 @@
 
 #include <filesystem>
 
+#include "arrow/array/concatenate.h"
 #include "arrow/csv/writer.h"
+#include "arrow/filesystem/filesystem.h"
+#include "arrow/filesystem/s3fs.h"
 #include "arrow/io/file.h"
+#include "arrow/ipc/writer.h"
 #include "arrow/table.h"
 #include "gflags/gflags.h"
 
 #include "engine/audit/audit_log.h"
 #include "engine/core/arrow_helper.h"
+#include "engine/core/tensor_batch_reader.h"
 #include "engine/util/filepath_helper.h"
 #include "engine/util/tensor_util.h"
 namespace scql::engine::op {
@@ -34,12 +39,118 @@ DEFINE_bool(enable_restricted_write_path, true,
 DEFINE_string(
     restricted_write_path, "./data",
     "in where the file is allowed to write if enable restricted write path");
-
 DEFINE_string(null_string_to_write, "NULL",
               "the string to write for null values");
+// TODO: 1)work with kuscia, 2)support set in ENV
+DEFINE_string(output_s3_endpoint, "", "the endpoint of output s3/minio/oss");
+DEFINE_string(output_s3_access_key, "",
+              "the access key id of output s3/minio/oss");
+DEFINE_string(output_s3_secret_key, "",
+              "the secret access key of output s3/minio/oss");
+DEFINE_bool(output_s3_enalbe_ssl, true,
+            "default enable ssl, if s3 server not enable ssl, set to false");
+DEFINE_string(output_s3_ca_dir_path, "/etc/ssl/certs/",
+              "directory where the certificates stored to verify s3 server");
+DEFINE_bool(
+    output_s3_force_virtual_addressing, true,
+    "default set to true to work with oss, for minio please set to false");
 
 const std::string DumpFile::kOpType("DumpFile");
 const std::string& DumpFile::Type() const { return kOpType; }
+
+namespace {
+
+void InitS3Once() {
+  static std::once_flag flag;
+  std::call_once(flag, []() {
+    arrow::fs::FileSystemGlobalOptions global_options;
+    global_options.tls_ca_dir_path = FLAGS_output_s3_ca_dir_path;
+    THROW_IF_ARROW_NOT_OK(arrow::fs::Initialize(global_options));
+
+    arrow::fs::S3GlobalOptions output_s3_options;
+    output_s3_options.log_level = arrow::fs::S3LogLevel::Warn;
+    THROW_IF_ARROW_NOT_OK(arrow::fs::InitializeS3(output_s3_options));
+  });
+}
+
+std::shared_ptr<arrow::io::OutputStream> BuildStreamFromS3(
+    const std::string& prefix, const std::string& path_without_prefix) {
+  InitS3Once();
+  arrow::fs::S3Options options;
+  options.endpoint_override = FLAGS_output_s3_endpoint;
+  options.force_virtual_addressing = FLAGS_output_s3_force_virtual_addressing;
+  options.ConfigureAccessKey(FLAGS_output_s3_access_key,
+                             FLAGS_output_s3_secret_key);
+  if (!FLAGS_output_s3_enalbe_ssl) {
+    options.scheme = "http";
+  }
+  std::shared_ptr<arrow::fs::S3FileSystem> fs;
+  ASSIGN_OR_THROW_ARROW_STATUS(fs, arrow::fs::S3FileSystem::Make(options));
+
+  arrow::fs::FileInfo info;
+  ASSIGN_OR_THROW_ARROW_STATUS(info, fs->GetFileInfo(path_without_prefix));
+  YACL_ENFORCE(info.type() == arrow::fs::FileType::NotFound,
+               "s3 file={}{} exists before write", prefix, path_without_prefix);
+
+  std::shared_ptr<arrow::io::OutputStream> out_stream;
+  ASSIGN_OR_THROW_ARROW_STATUS(out_stream,
+                               fs->OpenOutputStream(path_without_prefix));
+  return out_stream;
+}
+
+std::shared_ptr<arrow::io::OutputStream> BuildOutputStream(
+    const std::string& in_filepath, bool is_restricted,
+    const std::string& restricted_filepath) {
+  auto prefix = util::GetS3LikeScheme(in_filepath);
+  auto filepath_without_prefix = in_filepath.substr(prefix.length());
+  auto absolute_path_file = util::CheckAndGetAbsolutePath(
+      filepath_without_prefix, is_restricted, restricted_filepath);
+  if (!prefix.empty()) {
+    // s3 file
+    return BuildStreamFromS3(prefix, filepath_without_prefix);
+  }
+  // local file
+  YACL_ENFORCE(!std::filesystem::exists(absolute_path_file),
+               "file={} exists before write", absolute_path_file);
+  std::filesystem::create_directories(
+      std::filesystem::path(absolute_path_file).parent_path());
+  std::shared_ptr<arrow::io::OutputStream> out_stream;
+  ASSIGN_OR_THROW_ARROW_STATUS(
+      out_stream, arrow::io::FileOutputStream::Open(absolute_path_file, false));
+  return out_stream;
+}
+
+void WriteTensors(
+    const std::shared_ptr<arrow::Schema>& schema,
+    const arrow::csv::WriteOptions& options,
+    const std::shared_ptr<arrow::io::OutputStream>& out_stream,
+    const std::vector<std::shared_ptr<TensorBatchReader>>& readers) {
+  std::shared_ptr<arrow::ipc::RecordBatchWriter> writer;
+  ASSIGN_OR_THROW_ARROW_STATUS(
+      writer, arrow::csv::MakeCSVWriter(out_stream, schema, options));
+  while (true) {
+    arrow::ArrayVector arrays;
+    bool read_to_end = false;
+    for (size_t i = 0; i < readers.size(); ++i) {
+      auto chunked_arr = readers[i]->Next();
+      if (chunked_arr == nullptr) {
+        read_to_end = true;
+        break;
+      }
+      arrays.emplace_back(
+          arrow::Concatenate(chunked_arr->chunks()).ValueOrDie());
+    }
+    if (read_to_end) {
+      break;
+    }
+    int64_t length = arrays[0]->length();
+    auto batch = arrow::RecordBatch::Make(schema, length, arrays);
+    THROW_IF_ARROW_NOT_OK(writer->WriteRecordBatch(*batch));
+  }
+  THROW_IF_ARROW_NOT_OK(writer->Close());
+}
+
+}  // namespace
 
 void DumpFile::Validate(ExecContext* ctx) {
   const auto& inputs = ctx->GetInput(kIn);
@@ -57,46 +168,33 @@ void DumpFile::Execute(ExecContext* ctx) {
   const auto& input_pbs = ctx->GetInput(kIn);
   const auto& output_pbs = ctx->GetOutput(kOut);
 
+  // 1.construct data to table
   std::vector<std::shared_ptr<arrow::Field>> fields;
-  std::vector<std::shared_ptr<arrow::ChunkedArray>> chunked_arrs;
   const auto start_time = std::chrono::system_clock::now();
-
+  int32_t batch_size = 1024 * 100;  // default 1024 is too small for large data
+  std::vector<std::shared_ptr<TensorBatchReader>> readers;
+  auto total_len = 0;
   for (int i = 0; i < input_pbs.size(); ++i) {
     const auto& input_pb = input_pbs[i];
     auto tensor = ctx->GetTensorTable()->GetTensor(input_pb.name());
     YACL_ENFORCE(tensor != nullptr, "get tensor={} from tensor table failed",
                  input_pb.name());
-    auto chunked_arr = tensor->ToArrowChunkedArray();
-
+    if (i == 0) {
+      total_len = tensor->Length();
+    } else {
+      YACL_ENFORCE(tensor->Length() == total_len,
+                   "input tensor length not equal");
+    }
+    auto reader = tensor->CreateBatchReader(batch_size);
+    readers.push_back(reader);
     auto column_out = util::GetStringValue(output_pbs[i]);
-    fields.emplace_back(arrow::field(column_out, chunked_arr->type()));
-    chunked_arrs.emplace_back(chunked_arr);
+    fields.emplace_back(arrow::field(column_out, tensor->ArrowType()));
   }
 
-  int64_t length = chunked_arrs[0]->length();
-  for (size_t i = 1; i < chunked_arrs.size(); ++i) {
-    YACL_ENFORCE(chunked_arrs[i]->length() == length,
-                 "length of chunked_arr#{} not equal to the previous", i);
-  }
-
-  auto table = arrow::Table::Make(arrow::schema(fields), chunked_arrs);
-  YACL_ENFORCE(table, "create table failed");
-
-  const auto& absolute_path_file = util::GetAbsolutePath(
-      ctx->GetStringValueFromAttribute(kFilePathAttr),
-      FLAGS_enable_restricted_write_path, FLAGS_restricted_write_path);
-  YACL_ENFORCE(!std::filesystem::exists(absolute_path_file),
-               "file={} exists before write", absolute_path_file);
-  std::filesystem::create_directories(
-      std::filesystem::path(absolute_path_file).parent_path());
-
-  std::shared_ptr<arrow::io::FileOutputStream> out_stream;
-  ASSIGN_OR_THROW_ARROW_STATUS(
-      out_stream, arrow::io::FileOutputStream::Open(absolute_path_file, false));
-
+  // 2.write table to file
   arrow::csv::WriteOptions options;
   options.null_string = FLAGS_null_string_to_write;
-  options.batch_size = 1024 * 100;  // default 1024 is too small for large data
+  options.batch_size = batch_size;
   options.delimiter =
       ctx->GetStringValueFromAttribute(kFieldDeliminatorAttr).front();
   options.eol = ctx->GetStringValueFromAttribute(kLineTerminatorAttr);
@@ -111,13 +209,15 @@ void DumpFile::Execute(ExecContext* ctx) {
     YACL_THROW("unsupported quoting style {}", quoting);
   }
 
-  THROW_IF_ARROW_NOT_OK(
-      arrow::csv::WriteCSV(*table, options, out_stream.get()));
+  auto file_path = ctx->GetStringValueFromAttribute(kFilePathAttr);
+  auto out_stream =
+      BuildOutputStream(file_path, FLAGS_enable_restricted_write_path,
+                        FLAGS_restricted_write_path);
+  YACL_ENFORCE(out_stream, "create output stream failed");
+  auto schema = arrow::schema(fields);
+  WriteTensors(schema, options, out_stream, readers);
+  ctx->GetSession()->SetAffectedRows(total_len);
 
-  ctx->GetSession()->SetAffectedRows(length);
-
-  audit::RecordDumpFileNodeDetail(*ctx, absolute_path_file, start_time);
-  // TODO(jingshi): support put file to oss/minio/s3
+  audit::RecordDumpFileNodeDetail(*ctx, file_path, start_time);
 }
-
 };  // namespace scql::engine::op

@@ -130,7 +130,7 @@ Configuration Options of SCQLBroker
 +--------------------------------------------------+-----------+---------------------------------------------------------------------------------------------------------------------------------+
 | discovery.consul.address                         | none      | The address for consul discovery to connect to the consul server                                                                |
 +--------------------------------------------------+-----------+---------------------------------------------------------------------------------------------------------------------------------+
-| discovery.consul.token                           | none      | The ACL token that should be presented when registering the service(party info) if ACLs are enabled.                                        |
+| discovery.consul.token                           | none      | The ACL token that should be presented when registering the service(party info) if ACLs are enabled.                            |
 +--------------------------------------------------+-----------+---------------------------------------------------------------------------------------------------------------------------------+
 | discovery.conusl.tls.mode                        | none      | Tls mode for consul discovery, supported mode: *NOTLS*/TLS/MTLS                                                                 |
 +--------------------------------------------------+-----------+---------------------------------------------------------------------------------------------------------------------------------+

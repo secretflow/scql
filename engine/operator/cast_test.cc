@@ -44,63 +44,63 @@ INSTANTIATE_TEST_SUITE_P(
         testing::Values(
             // test private status
             CastTestCase{
-                .input = test::NamedTensor(
-                    "in", TensorFromJSON(arrow::int64(), "[1, 2, 3, null]")),
+                .input = test::NamedTensor("in", TensorFrom(arrow::int64(),
+                                                            "[1, 2, 3, null]")),
                 .input_status = pb::TENSORSTATUS_PRIVATE,
                 .expect_out = test::NamedTensor(
                     "out",
-                    TensorFromJSON(arrow::float64(), "[1.0, 2.0, 3.0, null]"))},
+                    TensorFrom(arrow::float64(), "[1.0, 2.0, 3.0, null]"))},
             CastTestCase{
                 .input = test::NamedTensor(
-                    "in", TensorFromJSON(arrow::float64(),
-                                         "[-1.5, -0.1, 1.1, 2.3, 3.5, null]")),
+                    "in", TensorFrom(arrow::float64(),
+                                     "[-1.5, -0.1, 1.1, 2.3, 3.5, null]")),
                 .input_status = pb::TENSORSTATUS_PRIVATE,
                 .expect_out = test::NamedTensor(
                     "out",
-                    TensorFromJSON(arrow::int64(), "[-1, 0, 1, 2, 3, null]"))},
+                    TensorFrom(arrow::int64(), "[-1, 0, 1, 2, 3, null]"))},
             CastTestCase{.input = test::NamedTensor(
-                             "in", TensorFromJSON(arrow::float64(), "[]")),
+                             "in", TensorFrom(arrow::float64(), "[]")),
                          .input_status = pb::TENSORSTATUS_PRIVATE,
                          .expect_out = test::NamedTensor(
-                             "out", TensorFromJSON(arrow::int64(), "[]"))},
+                             "out", TensorFrom(arrow::int64(), "[]"))},
             // test public status
-            CastTestCase{.input = test::NamedTensor(
-                             "in", TensorFromJSON(arrow::int64(), "[1, 2, 3]")),
-                         .input_status = pb::TENSORSTATUS_PUBLIC,
-                         .expect_out = test::NamedTensor(
-                             "out", TensorFromJSON(arrow::float64(),
-                                                   "[1.0, 2.0, 3.0]"))},
             CastTestCase{
-                .input = test::NamedTensor(
-                    "in", TensorFromJSON(arrow::float64(),
-                                         "[-1.5, -0.1, 1.1, 2.3, 3.5]")),
+                .input = test::NamedTensor("in", TensorFrom(arrow::int64(),
+                                                            "[1, 2, 3]")),
                 .input_status = pb::TENSORSTATUS_PUBLIC,
                 .expect_out = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::int64(), "[-1, 0, 1, 2, 3]"))},
-            CastTestCase{.input = test::NamedTensor(
-                             "in", TensorFromJSON(arrow::float64(), "[]")),
-                         .input_status = pb::TENSORSTATUS_PUBLIC,
-                         .expect_out = test::NamedTensor(
-                             "out", TensorFromJSON(arrow::int64(), "[]"))},
-            // test secret status
-            CastTestCase{.input = test::NamedTensor(
-                             "in", TensorFromJSON(arrow::int64(), "[1, 2, 3]")),
-                         .input_status = pb::TENSORSTATUS_SECRET,
-                         .expect_out = test::NamedTensor(
-                             "out", TensorFromJSON(arrow::float64(),
-                                                   "[1.0, 2.0, 3.0]"))},
+                    "out", TensorFrom(arrow::float64(), "[1.0, 2.0, 3.0]"))},
             CastTestCase{
                 .input = test::NamedTensor(
-                    "in", TensorFromJSON(arrow::float64(),
-                                         "[-1.5, -0.1, 1.1, 2.3, 3.5]")),
+                    "in", TensorFrom(arrow::float64(),
+                                     "[-1.5, -0.1, 1.1, 2.3, 3.5]")),
+                .input_status = pb::TENSORSTATUS_PUBLIC,
+                .expect_out = test::NamedTensor(
+                    "out", TensorFrom(arrow::int64(), "[-1, 0, 1, 2, 3]"))},
+            CastTestCase{.input = test::NamedTensor(
+                             "in", TensorFrom(arrow::float64(), "[]")),
+                         .input_status = pb::TENSORSTATUS_PUBLIC,
+                         .expect_out = test::NamedTensor(
+                             "out", TensorFrom(arrow::int64(), "[]"))},
+            // test secret status
+            CastTestCase{
+                .input = test::NamedTensor("in", TensorFrom(arrow::int64(),
+                                                            "[1, 2, 3]")),
                 .input_status = pb::TENSORSTATUS_SECRET,
                 .expect_out = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::int64(), "[-1, 0, 1, 2, 3]"))},
+                    "out", TensorFrom(arrow::float64(), "[1.0, 2.0, 3.0]"))},
+            CastTestCase{
+                .input = test::NamedTensor(
+                    "in", TensorFrom(arrow::float64(),
+                                     "[-1.5, -0.1, 1.1, 2.3, 3.5]")),
+                .input_status = pb::TENSORSTATUS_SECRET,
+                .expect_out = test::NamedTensor(
+                    "out", TensorFrom(arrow::int64(), "[-1, 0, 1, 2, 3]"))},
             CastTestCase{.input = test::NamedTensor(
-                             "in", TensorFromJSON(arrow::float64(), "[]")),
+                             "in", TensorFrom(arrow::float64(), "[]")),
                          .input_status = pb::TENSORSTATUS_SECRET,
                          .expect_out = test::NamedTensor(
-                             "out", TensorFromJSON(arrow::int64(), "[]"))})),
+                             "out", TensorFrom(arrow::int64(), "[]"))})),
     TestParamNameGenerator(CastTest));
 
 TEST_P(CastTest, works) {

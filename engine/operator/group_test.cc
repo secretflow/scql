@@ -36,45 +36,43 @@ class GroupTest : public testing::TestWithParam<GroupTestCase> {
 INSTANTIATE_TEST_SUITE_P(
     GroupBatchTest, GroupTest,
     testing::Values(
-        GroupTestCase{.inputs = {test::NamedTensor(
-                          "in", TensorFromJSON(arrow::int64(),
-                                               "[2, 1, 1, 1, null, 0, null]"))},
-                      .group_id = test::NamedTensor(
-                          "out_id", TensorFromJSON(arrow::uint32(),
-                                                   "[0, 1, 1, 1, 2, 3, 2]")),
-                      .group_num = test::NamedTensor(
-                          "out_num", TensorFromJSON(arrow::uint32(), "[4]"))},
         GroupTestCase{
-            .inputs = {test::NamedTensor("in_a",
-                                         TensorFromJSON(arrow::int64(),
-                                                        "[0, 0, 1, 1, 1, 1]")),
-                       test::NamedTensor(
-                           "in_b",
-                           TensorFromJSON(arrow::float32(),
-                                          "[-1, 0, 0, 3.14, 3.14, 3.14]")),
-                       test::NamedTensor(
-                           "in_c",
-                           TensorFromJSON(
-                               arrow::large_utf8(),
-                               R"json(["A","B","B","CCC","CCC","CCC"])json"))},
-            .group_id = test::NamedTensor("out_id",
-                                          TensorFromJSON(arrow::uint32(),
-                                                         "[0, 1, 2, 3, 3, 3]")),
-            .group_num = test::NamedTensor(
-                "out_num", TensorFromJSON(arrow::uint32(), "[4]"))},
-        GroupTestCase{.inputs = {test::NamedTensor(
-                          "in", TensorFromJSON(arrow::int64(), "[1]"))},
-                      .group_id = test::NamedTensor(
-                          "out_id", TensorFromJSON(arrow::uint32(), "[0]")),
-                      .group_num = test::NamedTensor(
-                          "out_num", TensorFromJSON(arrow::uint32(), "[1]"))},
+            .inputs = {test::NamedTensor(
+                "in",
+                TensorFrom(arrow::int64(), "[2, 1, 1, 1, null, 0, null]"))},
+            .group_id = test::NamedTensor(
+                "out_id", TensorFrom(arrow::uint32(), "[0, 1, 1, 1, 2, 3, 2]")),
+            .group_num = test::NamedTensor("out_num",
+                                           TensorFrom(arrow::uint32(), "[4]"))},
+        GroupTestCase{
+            .inputs =
+                {test::NamedTensor("in_a", TensorFrom(arrow::int64(),
+                                                      "[0, 0, 1, 1, 1, 1]")),
+                 test::NamedTensor("in_b",
+                                   TensorFrom(arrow::float32(),
+                                              "[-1, 0, 0, 3.14, 3.14, 3.14]")),
+                 test::NamedTensor(
+                     "in_c",
+                     TensorFrom(arrow::large_utf8(),
+                                R"json(["A","B","B","CCC","CCC","CCC"])json"))},
+            .group_id = test::NamedTensor(
+                "out_id", TensorFrom(arrow::uint32(), "[0, 1, 2, 3, 3, 3]")),
+            .group_num = test::NamedTensor("out_num",
+                                           TensorFrom(arrow::uint32(), "[4]"))},
         GroupTestCase{
             .inputs = {test::NamedTensor("in",
-                                         TensorFromJSON(arrow::int64(), "[]"))},
-            .group_id = test::NamedTensor(
-                "out_id", TensorFromJSON(arrow::uint32(), "[]")),
+                                         TensorFrom(arrow::int64(), "[1]"))},
+            .group_id = test::NamedTensor("out_id",
+                                          TensorFrom(arrow::uint32(), "[0]")),
+            .group_num = test::NamedTensor("out_num",
+                                           TensorFrom(arrow::uint32(), "[1]"))},
+        GroupTestCase{
+            .inputs = {test::NamedTensor("in",
+                                         TensorFrom(arrow::int64(), "[]"))},
+            .group_id = test::NamedTensor("out_id",
+                                          TensorFrom(arrow::uint32(), "[]")),
             .group_num = test::NamedTensor(
-                "out_num", TensorFromJSON(arrow::uint32(), "[0]"))}));
+                "out_num", TensorFrom(arrow::uint32(), "[0]"))}));
 
 TEST_P(GroupTest, works) {
   // Given

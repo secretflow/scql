@@ -15,12 +15,12 @@
 package storage
 
 import (
-	"encoding/json"
 	"time"
 
 	"google.golang.org/protobuf/proto"
 
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/util/message"
 )
 
 const GcLockID = 100
@@ -52,14 +52,14 @@ func (p *Project) Equals(other *Project) (bool, error) {
 	if len(p.ProjectConf) == 0 && len(other.ProjectConf) == 0 {
 		return true, nil
 	}
-	err := json.Unmarshal([]byte(p.ProjectConf), &projConf)
+	err := message.ProtoUnmarshal([]byte(p.ProjectConf), &projConf)
 
 	if err != nil {
 		return false, err
 	}
 
 	var otherProjConf pb.ProjectConfig
-	err = json.Unmarshal([]byte(other.ProjectConf), &otherProjConf)
+	err = message.ProtoUnmarshal([]byte(other.ProjectConf), &otherProjConf)
 
 	if err != nil {
 		return false, err
@@ -140,7 +140,6 @@ type Invitation struct {
 type SessionInfo struct {
 	SessionID string `gorm:"column:session_id;type:varchar(64);primaryKey;uniqueIndex:;comment:'unique session id';->;<-:create"`
 	// 0: default, running; 1: finished; 2: canceled
-
 	Status           int8   `gorm:"column:status;default:0;comment:'session status'"`
 	TableChecksum    []byte `gorm:"column:table_checksum;type:varbinary(256);comment:'table checksum for self party'"`
 	CCLChecksum      []byte `gorm:"column:ccl_checksum;type:varbinary(256);comment:'ccl checksum for self party'"`

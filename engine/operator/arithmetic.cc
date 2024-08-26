@@ -21,6 +21,7 @@
 #include "libspu/kernel/hal/type_cast.h"
 #include "libspu/kernel/hlo/basic_binary.h"
 
+#include "engine/core/tensor_constructor.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
 
@@ -50,7 +51,7 @@ TensorPtr Add::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
   YACL_ENFORCE(result.ok(),
                "caught error while invoking arrow add function: {}",
                result.status().ToString());
-  return std::make_shared<Tensor>(result.ValueOrDie().chunked_array());
+  return TensorFrom(result.ValueOrDie().chunked_array());
 }
 
 // ===========================
@@ -73,7 +74,7 @@ TensorPtr Minus::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
   YACL_ENFORCE(result.ok(),
                "caught error while invoking arrow subtract function: {}",
                result.status().ToString());
-  return std::make_shared<Tensor>(result.ValueOrDie().chunked_array());
+  return TensorFrom(result.ValueOrDie().chunked_array());
 }
 
 // ===========================
@@ -96,7 +97,7 @@ TensorPtr Mul::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
   YACL_ENFORCE(result.ok(),
                "caught error while invoking arrow multiply function: {}",
                result.status().ToString());
-  return std::make_shared<Tensor>(result.ValueOrDie().chunked_array());
+  return TensorFrom(result.ValueOrDie().chunked_array());
 }
 
 // ===========================
@@ -136,7 +137,7 @@ TensorPtr Div::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
   YACL_ENFORCE(result.ok(),
                "caught error while invoking arrow divide function: {}",
                result.status().ToString());
-  return std::make_shared<Tensor>(result.ValueOrDie().chunked_array());
+  return TensorFrom(result.ValueOrDie().chunked_array());
 }
 
 // ===========================
@@ -163,7 +164,7 @@ TensorPtr IntDiv::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
   YACL_ENFORCE(result.ok(),
                "caught error while invoking arrow divide function: {}",
                result.status().ToString());
-  return std::make_shared<Tensor>(result.ValueOrDie().chunked_array());
+  return TensorFrom(result.ValueOrDie().chunked_array());
 }
 
 // ===========================
@@ -206,7 +207,7 @@ TensorPtr Mod::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
   YACL_ENFORCE(result.ok(),
                "caught error while invoking arrow subtract function: {}",
                result.status().ToString());
-  return std::make_shared<Tensor>(result.ValueOrDie().chunked_array());
+  return TensorFrom(result.ValueOrDie().chunked_array());
 }
 
 }  // namespace scql::engine::op

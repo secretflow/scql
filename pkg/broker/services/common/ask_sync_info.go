@@ -71,7 +71,6 @@ func PostSyncInfo(app *application.App, projectID string, action pb.ChangeEntry_
 				retCh <- fmt.Errorf("PostSyncInfo to %v: %v", p, err)
 				return
 			}
-
 			if response.GetStatus().GetCode() != 0 {
 				retCh <- fmt.Errorf("PostSyncInfo to %v: status: %+v", p, response.Status)
 				return

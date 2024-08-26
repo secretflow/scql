@@ -79,12 +79,55 @@ func (t *translator) buildApply(ln *ApplyNode) (err error) {
 		conditions := apply.EqualConditions
 		sFunc = conditions[0]
 	}
+	if sFunc.FuncName.L != ast.EQ || len(sFunc.GetArgs()) != 2 {
+		return fmt.Errorf("buildApply: type assertion failed")
+	}
 
-	filterT, err := t.buildExpression(sFunc, childIdToTensor, true, ln)
+	leftKeyT, err := t.buildExpression(sFunc.GetArgs()[0], childIdToTensor, true, ln)
 	if err != nil {
 		return err
 	}
-
+	rightKeyT, err := t.buildExpression(sFunc.GetArgs()[1], childIdToTensor, true, ln)
+	if err != nil {
+		return err
+	}
+	var filterT *graph.Tensor
+	if t.CompileOpts.Batched {
+		leftTs := ln.Children()[0].ResultTable()
+		rightTs := ln.Children()[1].ResultTable()
+		var parties []string
+		var leftKeyTs, rightKeyTs []*graph.Tensor
+		parties = append(parties, leftKeyT.OwnerPartyCode)
+		parties = append(parties, rightKeyT.OwnerPartyCode)
+		leftKeyTs, leftTs, err = t.addBucketNode([]*graph.Tensor{leftKeyT}, leftTs, parties)
+		if err != nil {
+			return err
+		}
+		rightKeyTs, rightTs, err = t.addBucketNode([]*graph.Tensor{rightKeyT}, rightTs, parties)
+		if err != nil {
+			return err
+		}
+		leftKeyT = leftKeyTs[0]
+		rightKeyT = rightKeyTs[0]
+		for i, c := range ln.Children()[0].Schema().Columns {
+			// replace not add new
+			if _, ok := colIdToTensor[c.UniqueID]; !ok {
+				continue
+			}
+			colIdToTensor[c.UniqueID] = leftTs[i]
+		}
+		for i, c := range ln.Children()[1].Schema().Columns {
+			// replace not add new
+			if _, ok := colIdToTensor[c.UniqueID]; !ok {
+				continue
+			}
+			colIdToTensor[c.UniqueID] = leftTs[i]
+		}
+	}
+	filterT, err = t.addInNode(sFunc, leftKeyT, rightKeyT)
+	if err != nil {
+		return err
+	}
 	// get result party list of IN-op result tensor
 	reverseFilter := func(filter *graph.Tensor) (*graph.Tensor, error) {
 		partyList := t.enginesInfo.GetParties()
@@ -105,9 +148,6 @@ func (t *translator) buildApply(ln *ApplyNode) (err error) {
 			filter = filterT
 		}
 		cs := ln.Schema().Columns
-		for _, c := range cs[:len(cs)-1] {
-			colIdToTensor[c.UniqueID] = childIdToTensor[c.UniqueID]
-		}
 		colIdToTensor[cs[len(cs)-1].UniqueID] = filter
 		return nil
 	}
@@ -185,8 +225,8 @@ func (t *translator) buildEQJoin(ln *JoinNode) (err error) {
 
 	// step 1: create join index
 	var leftIndexT, rightIndexT *graph.Tensor
-	var leftTs = []*graph.Tensor{}
-	var rightTs = []*graph.Tensor{}
+	var leftKeyTs = []*graph.Tensor{}
+	var rightKeyTs = []*graph.Tensor{}
 	var parties []string
 	for i, equalCondition := range join.EqualConditions {
 		cols, err := extractEQColumns(equalCondition)
@@ -198,12 +238,12 @@ func (t *translator) buildEQJoin(ln *JoinNode) (err error) {
 		if err != nil {
 			return fmt.Errorf("buildEQJoin: %v", err)
 		}
-		leftTs = append(leftTs, leftT)
+		leftKeyTs = append(leftKeyTs, leftT)
 		rightT, err := right.FindTensorByColumnId(rightIndexCol.UniqueID)
 		if err != nil {
 			return fmt.Errorf("buildEQJoin: %v", err)
 		}
-		rightTs = append(rightTs, rightT)
+		rightKeyTs = append(rightKeyTs, rightT)
 		if leftT.Status() != proto.TensorStatus_TENSORSTATUS_PRIVATE || rightT.Status() != proto.TensorStatus_TENSORSTATUS_PRIVATE {
 			return fmt.Errorf("buildEQJoin: failed to check tensor status = [%v, %v]", leftT.Status(), rightT.Status())
 		}
@@ -221,8 +261,19 @@ func (t *translator) buildEQJoin(ln *JoinNode) (err error) {
 			}
 		}
 	}
-
-	leftIndexT, rightIndexT, err = t.ep.AddJoinNode("join", leftTs, rightTs, parties, JoinTypeLpToEp[join.JoinType], t.CompileOpts.GetOptimizerHints().GetPsiAlgorithmType())
+	leftTs := left.ResultTable()
+	rightTs := right.ResultTable()
+	if t.CompileOpts.Batched {
+		leftKeyTs, leftTs, err = t.addBucketNode(leftKeyTs, leftTs, parties)
+		if err != nil {
+			return err
+		}
+		rightKeyTs, rightTs, err = t.addBucketNode(rightKeyTs, rightTs, parties)
+		if err != nil {
+			return err
+		}
+	}
+	leftIndexT, rightIndexT, err = t.ep.AddJoinNode("join", leftKeyTs, rightKeyTs, parties, JoinTypeLpToEp[join.JoinType], t.CompileOpts.GetOptimizerHints().GetPsiAlgorithmType())
 	if err != nil {
 		return fmt.Errorf("buildEQJoin: %v", err)
 	}
@@ -239,7 +290,6 @@ func (t *translator) buildEQJoin(ln *JoinNode) (err error) {
 	}()
 
 	{
-		leftTs := left.ResultTable()
 		leftParty := leftIndexT.OwnerPartyCode
 		leftFiltered, err := t.addFilterByIndexNode(leftIndexT, leftTs, leftParty)
 		if err != nil {
@@ -250,7 +300,6 @@ func (t *translator) buildEQJoin(ln *JoinNode) (err error) {
 		}
 	}
 	{
-		rightTs := right.ResultTable()
 		rightParty := rightIndexT.OwnerPartyCode
 		rightFiltered, err := t.addFilterByIndexNode(rightIndexT, rightTs, rightParty)
 		if err != nil {

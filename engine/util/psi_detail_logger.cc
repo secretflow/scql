@@ -24,6 +24,7 @@
 
 #include "absl/strings/escaping.h"
 #include "arrow/compute/api_vector.h"
+#include "arrow/compute/exec.h"
 #include "gflags/gflags.h"
 
 #include "engine/core/tensor.h"

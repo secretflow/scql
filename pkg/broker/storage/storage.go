@@ -15,14 +15,17 @@
 package storage
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"os"
 	"reflect"
+	"time"
 
+	"github.com/go-co-op/gocron/v2"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-
-	"github.com/sirupsen/logrus"
 
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/util/sliceutil"
@@ -39,6 +42,57 @@ type MetaManager struct {
 	// for now, no cache, all info store in db
 	db             *gorm.DB
 	persistSession bool
+}
+
+type DistributedLocker struct {
+	metaMgr *MetaManager
+	owner   string
+	ttl     time.Duration // lock will expired after ttl
+}
+
+func NewDistributedLocker(mm *MetaManager, owner string, ttl time.Duration) (*DistributedLocker, error) {
+	if host := os.Getenv("HOSTNAME"); host != "" {
+		owner = host
+	} else {
+		logrus.Warnf("cannot find HOSTNAME env, using party code as owner")
+	}
+	// Avoid situations where the lock is not released after the duration of the task has ended
+	locker := &DistributedLocker{metaMgr: mm, owner: owner, ttl: ttl - time.Second}
+
+	err := locker.metaMgr.InitGcLockIfNecessary()
+	if err != nil {
+		logrus.Errorf("failed to check gc lock for owner %s:%v", locker.owner, err)
+		return nil, fmt.Errorf("failed to check gc lock")
+	}
+
+	return locker, nil
+}
+
+// Lock acquires a lock
+// Implementation of the gocron lock interface
+func (l *DistributedLocker) Lock(ctx context.Context, key string) (gocron.Lock, error) {
+	err := l.metaMgr.HoldGcLock(l.owner, l.ttl)
+	if err != nil {
+		logrus.Warnf("failed to get gc lock for owner %s:%v", l.owner, err)
+		return nil, fmt.Errorf("failed to get gc lock")
+	}
+
+	logrus.Infof("Successfully acquired gc lock for owner: %s", l.owner)
+	return &DistributedLock{metaMgr: l.metaMgr, owner: l.owner}, nil
+}
+
+// GormLock represents a database lock
+type DistributedLock struct {
+	metaMgr *MetaManager
+	owner   string
+}
+
+// Unlock releases the lock
+// Implementation of the gocron unlock interface
+func (l *DistributedLock) Unlock(ctx context.Context) error {
+	// Not actively releasing locks to avoid lock being acquired immediately, which can put pressure on the database
+	// After ttl(DistributedLocker.ttl) time, the lock will be released automatically
+	return nil
 }
 
 func NewMetaManager(db *gorm.DB, ps bool) *MetaManager {
@@ -423,7 +477,7 @@ func (t *MetaTransaction) GetTableMetasByTableNames(projectID string, tableNames
 }
 
 func (t *MetaTransaction) GetTables(projectID string, tableNames []string) (tables []Table, allTableExist bool, err error) {
-	result := t.db.Model(&Table{}).Select("tables.table_name").Where("tables.project_id = ?", projectID).Where("tables.table_name in ?", tableNames).Scan(&tables)
+	result := t.db.Model(&Table{}).Where("tables.project_id = ?", projectID).Where("tables.table_name in ?", tableNames).Scan(&tables)
 	if result.Error != nil {
 		return nil, false, result.Error
 	}

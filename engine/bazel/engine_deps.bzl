@@ -16,6 +16,7 @@ load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 def engine_deps():
+    _com_github_gperftools_gperftools()
     _com_github_nelhage_rules_boost()
     _org_apache_arrow()
     _com_github_google_flatbuffers()
@@ -38,6 +39,13 @@ def engine_deps():
     _com_github_jupp0r_prometheus_cpp()
 
     _org_postgres()
+
+    # aws s3
+    _com_github_curl()
+    _com_aws_c_common()
+    _com_aws_checksums()
+    _com_aws_c_event_stream()
+    _com_aws_sdk()
 
 def _secretflow_deps():
     # SPU_COMMIT = "3ccae529b70b37f7312e1171eab7e5acc16ff136"
@@ -97,13 +105,26 @@ def _org_apache_arrow():
         http_archive,
         name = "org_apache_arrow",
         urls = [
-            "https://github.com/apache/arrow/archive/apache-arrow-10.0.0.tar.gz",
+            "https://github.com/apache/arrow/archive/apache-arrow-17.0.0.tar.gz",
         ],
         patch_args = ["-p1"],
         patches = ["@scql//engine/bazel:patches/arrow.patch"],
-        sha256 = "2852b21f93ee84185a9d838809c9a9c41bf6deca741bed1744e0fdba6cc19e3f",
-        strip_prefix = "arrow-apache-arrow-10.0.0",
+        sha256 = "8379554d89f19f2c8db63620721cabade62541f47a4e706dfb0a401f05a713ef",
+        strip_prefix = "arrow-apache-arrow-17.0.0",
         build_file = "@scql//engine/bazel:arrow.BUILD",
+    )
+
+def _com_github_gperftools_gperftools():
+    maybe(
+        http_archive,
+        name = "com_github_gperftools_gperftools",
+        type = "tar.gz",
+        strip_prefix = "gperftools-2.15",
+        sha256 = "c69fef855628c81ef56f12e3c58f2b7ce1f326c0a1fe783e5cae0b88cbbe9a80",
+        urls = [
+            "https://github.com/gperftools/gperftools/releases/download/gperftools-2.15/gperftools-2.15.tar.gz",
+        ],
+        build_file = "@scql//engine/bazel:gperftools.BUILD",
     )
 
 def _com_github_google_flatbuffers():
@@ -339,4 +360,69 @@ def _com_github_jupp0r_prometheus_cpp():
         ],
         strip_prefix = "prometheus-cpp-1.2.1",
         sha256 = "190734c4d8d0644c2af327ff8b5ef86cd7ea9074a48d777112394f558dd014f7",
+    )
+
+def _com_github_curl():
+    maybe(
+        http_archive,
+        name = "com_github_curl",
+        sha256 = "01ae0c123dee45b01bbaef94c0bc00ed2aec89cb2ee0fd598e0d302a6b5e0a98",
+        strip_prefix = "curl-7.69.1",
+        urls = [
+            "https://github.com/curl/curl/releases/download/curl-7_69_1/curl-7.69.1.tar.gz",
+            "https://curl.haxx.se/download/curl-7.69.1.tar.gz",
+        ],
+        build_file = "@scql//engine/bazel:curl.BUILD",
+    )
+
+def _com_aws_c_common():
+    maybe(
+        http_archive,
+        name = "aws_c_common",
+        urls = [
+            "https://github.com/awslabs/aws-c-common/archive/v0.4.29.tar.gz",
+        ],
+        sha256 = "01c2a58553a37b3aa5914d9e0bf7bf14507ff4937bc5872a678892ca20fcae1f",
+        strip_prefix = "aws-c-common-0.4.29",
+        build_file = "@scql//engine/bazel:aws_c_common.BUILD",
+    )
+
+def _com_aws_checksums():
+    maybe(
+        http_archive,
+        name = "aws_checksums",
+        urls = [
+            "https://github.com/awslabs/aws-checksums/archive/v0.1.5.tar.gz",
+        ],
+        sha256 = "6e6bed6f75cf54006b6bafb01b3b96df19605572131a2260fddaf0e87949ced0",
+        strip_prefix = "aws-checksums-0.1.5",
+        build_file = "@scql//engine/bazel:aws_checksums.BUILD",
+    )
+
+def _com_aws_c_event_stream():
+    maybe(
+        http_archive,
+        name = "aws_c_event_stream",
+        urls = [
+            "https://github.com/awslabs/aws-c-event-stream/archive/v0.1.4.tar.gz",
+        ],
+        sha256 = "31d880d1c868d3f3df1e1f4b45e56ac73724a4dc3449d04d47fc0746f6f077b6",
+        strip_prefix = "aws-c-event-stream-0.1.4",
+        build_file = "@scql//engine/bazel:aws_c_event_stream.BUILD",
+    )
+
+def _com_aws_sdk():
+    maybe(
+        http_archive,
+        name = "aws_sdk_cpp",
+        strip_prefix = "aws-sdk-cpp-1.7.336",
+        urls = [
+            "https://github.com/aws/aws-sdk-cpp/archive/1.7.336.tar.gz",
+        ],
+        sha256 = "758174f9788fed6cc1e266bcecb20bf738bd5ef1c3d646131c9ed15c2d6c5720",
+        build_file = "@scql//engine/bazel:aws_sdk_cpp.BUILD",
+        patch_cmds = [
+            """sed -i.bak 's/UUID::RandomUUID/Aws::Utils::UUID::RandomUUID/g' aws-cpp-sdk-core/source/client/AWSClient.cpp""",
+            """sed -i.bak 's/__attribute__((visibility("default")))//g' aws-cpp-sdk-core/include/aws/core/external/tinyxml2/tinyxml2.h """,
+        ],
     )

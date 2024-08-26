@@ -16,3 +16,62 @@ index 0d5e3c4c6..3fa92e385 100644
  // include for you)
 -#include "arrow/flight/sql/FlightSql.pb.cc"  // NOLINT
 +// #include "arrow/flight/sql/FlightSql.pb.cc"  // NOLINT
+diff --git a/cpp/src/arrow/filesystem/s3fs.cc b/cpp/src/arrow/filesystem/s3fs.cc
+index 99cee19ed..eb072798b 100644
+--- a/cpp/src/arrow/filesystem/s3fs.cc
++++ b/cpp/src/arrow/filesystem/s3fs.cc
+@@ -2240,10 +2240,10 @@ class S3FileSystem::Impl : public std::enable_shared_from_this<S3FileSystem::Imp
+           include_implicit_dirs(include_implicit_dirs),
+           io_context(std::move(io_context)),
+           holder(holder) {
+-      req.SetBucket(bucket);
++      req.SetBucket(ToAwsString(bucket));
+       req.SetMaxKeys(kListObjectsMaxKeys);
+       if (!key.empty()) {
+-        req.SetPrefix(key + kSep);
++        req.SetPrefix(ToAwsString(key) + kSep);
+       }
+       if (!select.recursive) {
+         req.SetDelimiter(Aws::String() + kSep);
+@@ -2263,7 +2263,8 @@ class S3FileSystem::Impl : public std::enable_shared_from_this<S3FileSystem::Imp
+       //   we get zero results then we know that there are no files under the directory
+       //   and the directory itself doesn't exist.  This should be considered PathNotFound
+       if (empty && !allow_not_found && !req.GetPrefix().empty()) {
+-        files_queue.Push(PathNotFound(req.GetBucket(), req.GetPrefix()));
++        files_queue.Push(PathNotFound(std::string(FromAwsString(req.GetBucket())),
++                                      std::string(FromAwsString(req.GetPrefix()))));
+       }
+     }
+
+@@ -2275,9 +2276,10 @@ class S3FileSystem::Impl : public std::enable_shared_from_this<S3FileSystem::Imp
+     // don't exist as objects in S3 but can be inferred.
+     std::vector<std::string> GetNewDirectories(const std::string_view& path) {
+       std::string current(path);
+-      std::string base = req.GetBucket();
++      std::string base(FromAwsString(req.GetBucket()));
+       if (!req.GetPrefix().empty()) {
+-        base = base + kSep + std::string(internal::RemoveTrailingSlash(req.GetPrefix()));
++        base = base + kSep +
++               std::string(internal::RemoveTrailingSlash(FromAwsString(req.GetPrefix())));
+       }
+       std::vector<std::string> new_directories;
+       while (true) {
+@@ -2329,7 +2331,7 @@ class S3FileSystem::Impl : public std::enable_shared_from_this<S3FileSystem::Imp
+       //   "depth" of 1
+       int base_depth = internal::GetAbstractPathDepth(prefix);
+       for (const auto& obj : result.GetContents()) {
+-        if (obj.GetKey() == prefix) {
++        if (FromAwsString(obj.GetKey()) == prefix) {
+           // S3 will return the basedir itself (if it is a file / empty file).  We don't
+           // want that.  But this is still considered "finding the basedir" and so we mark
+           // it "not empty".
+@@ -2423,7 +2425,8 @@ class S3FileSystem::Impl : public std::enable_shared_from_this<S3FileSystem::Imp
+       // trigger paging) but that would introduce race condition complexity for arguably
+       // little benefit.
+       std::vector<FileInfo> file_infos =
+-          ToFileInfos(state->req.GetBucket(), state->req.GetPrefix(), result);
++          ToFileInfos(std::string(FromAwsString(state->req.GetBucket())),
++                      std::string(FromAwsString(state->req.GetPrefix())), result);
+       if (file_infos.size() > 0) {
+         state->files_queue.Push(std::move(file_infos));
+       }

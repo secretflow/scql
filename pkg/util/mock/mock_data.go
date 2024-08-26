@@ -34,10 +34,10 @@ import (
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/scdb/storage"
 	"github.com/secretflow/scql/pkg/sessionctx"
+	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
 
-var mockDataPath = []string{"testdata/db_alice.json", "testdata/db_bob.json", "testdata/db_carol.json"}
-var allPartyCodes = []string{"alice", "bob", "carol"}
+var mockDBPath = "testdata/db.json"
 
 var dTypeString2FieldType = map[string]types.FieldType{
 	"int":       *(types.NewFieldType(mysql.TypeLong)),
@@ -59,7 +59,7 @@ var cclString2CCLLevel = map[string]ccl.CCLLevel{
 
 // TODO: rename PhysicalTableMeta
 type PhysicalTableMeta struct {
-	DbName    string
+	DBName    string
 	TableName string
 	DBType    string
 	Columns   []columnMeta
@@ -86,12 +86,12 @@ func (pt *PhysicalTableMeta) ToCreateTableStmt(newTblName string, ifNotExists bo
 		b.WriteString(fmt.Sprintf("%s %s", col.Name, col.DType))
 	}
 	b.WriteString(") ")
-	b.WriteString(fmt.Sprintf("REF_TABLE=%s.%s DB_TYPE='%s'", pt.DbName, pt.TableName, pt.DBType))
+	b.WriteString(fmt.Sprintf("REF_TABLE=%s.%s DB_TYPE='%s'", pt.DBName, pt.TableName, pt.DBType))
 	return b.String()
 }
 
 func (pt *PhysicalTableMeta) RefTable() string {
-	return fmt.Sprintf("%s.%s", pt.DbName, pt.TableName)
+	return fmt.Sprintf("%s.%s", pt.DBName, pt.TableName)
 }
 
 func (pt *PhysicalTableMeta) GetColumnDesc() []*scql.CreateTableRequest_ColumnDesc {
@@ -102,17 +102,28 @@ func (pt *PhysicalTableMeta) GetColumnDesc() []*scql.CreateTableRequest_ColumnDe
 	return result
 }
 
-type dbConifg struct {
-	DbName    string                 `json:"db_name"`
-	PartyCode string                 `json:"party_code"`
-	Tables    map[string]tableConfig `json:"tables"`
-	DBType    string                 `json:"db_type"`
+type allDBData struct {
+	DbName    string
+	PartyCode string
+	Tables    map[string]tableInfo
+	DBType    string
 }
 
-type tableConfig struct {
-	Columns []columnConfig `json:"columns"`
+type db struct {
+	TableFiles []string          `json:"table_files"`
+	DBInfo     map[string]dbInfo `json:"db_info"`
 }
-type columnConfig struct {
+
+type dbInfo struct {
+	PartyCode string `json:"party_code"`
+	DBType    string `json:"db_type"`
+}
+
+type tableInfo struct {
+	DbName  string       `json:"db_name"`
+	Columns []columnInfo `json:"columns"`
+}
+type columnInfo struct {
 	ColumnName string   `json:"column_name"`
 	Dtype      string   `json:"dtype"`
 	CCL        []string `json:"ccl"`
@@ -145,17 +156,16 @@ func getByteArrayFromJson(filePath string) (res []byte, err error) {
 	return re.ReplaceAll(byteValue, nil), nil
 }
 
-func getDataFromJson(filePath string) (res dbConifg, err error) {
+func getDataFromJson[retType any](filePath string) (res retType, err error) {
 	byteValue, err := getByteArrayFromJson(filePath)
 	if err != nil {
-		return dbConifg{}, err
+		return
 	}
 	err = json.Unmarshal(byteValue, &res)
-	return res, err
+	return
 }
 
-func getMockData(mockDataPath []string) ([]dbConifg, error) {
-	var res []dbConifg
+func getMockData() ([]allDBData, []string, error) {
 	pre := "util/mock"
 	dir, _ := os.Getwd()
 	re := regexp.MustCompile(".*/pkg")
@@ -168,14 +178,40 @@ func getMockData(mockDataPath []string) ([]dbConifg, error) {
 		dir, _ = filepath.Split(dir)
 		dir = dir + "pkg"
 	}
-	for _, file := range mockDataPath {
-		data, err := getDataFromJson(filepath.Join(filepath.Join(dir, pre), file))
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, data)
+	mock_db, err := getDataFromJson[db](filepath.Join(filepath.Join(dir, pre), mockDBPath))
+	if err != nil {
+		return nil, nil, err
 	}
-	return res, nil
+	all_dbs := make(map[string]allDBData)
+	for name, info := range mock_db.DBInfo {
+		all_dbs[name] = allDBData{
+			DbName:    name,
+			PartyCode: info.PartyCode,
+			DBType:    info.DBType,
+			Tables:    make(map[string]tableInfo),
+		}
+	}
+	for _, file := range mock_db.TableFiles {
+		mock_table, err := getDataFromJson[map[string]tableInfo](filepath.Join(filepath.Join(dir, pre), file))
+		if err != nil {
+			return nil, nil, err
+		}
+		for table_name, table := range mock_table {
+			if data, ok := all_dbs[table.DbName]; !ok {
+				return nil, nil, fmt.Errorf("db %s not found", table.DbName)
+			} else {
+				data.DbName = table.DbName
+				data.Tables[table_name] = table
+			}
+		}
+	}
+	var res []allDBData
+	var allPartyCodes []string
+	for _, key := range sliceutil.SortMapKeyForDeterminism(all_dbs) {
+		res = append(res, all_dbs[key])
+		allPartyCodes = append(allPartyCodes, all_dbs[key].PartyCode)
+	}
+	return res, allPartyCodes, nil
 }
 
 func AssignTableId(dbTables map[string][]*model.TableInfo) {
@@ -220,7 +256,7 @@ func createTableSchema(tableName string, columns map[string]types.FieldType) *mo
 }
 
 func MockAllTables() (map[string][]*model.TableInfo, error) {
-	data, err := getMockData(mockDataPath)
+	data, _, err := getMockData()
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +289,7 @@ func MockContext() sessionctx.Context {
 	return ctx
 }
 
-func GetCCLForParty(party, selfParty string, ccls []string) (ccl.CCLLevel, error) {
+func GetCCLForParty(party, selfParty string, allPartyCodes []string, ccls []string) (ccl.CCLLevel, error) {
 	if len(ccls) != len(allPartyCodes) && len(ccls) != 1 {
 		return ccl.Unknown, fmt.Errorf("err ccl conf: ccls(%+v) for parties(%+v)", ccls, allPartyCodes)
 	}
@@ -272,7 +308,7 @@ func GetCCLForParty(party, selfParty string, ccls []string) (ccl.CCLLevel, error
 }
 
 func GetAllCCL() ([]*MockCCLConfig, error) {
-	data, err := getMockData(mockDataPath)
+	data, allPartyCodes, err := getMockData()
 	if err != nil {
 		return nil, err
 	}
@@ -284,7 +320,7 @@ func GetAllCCL() ([]*MockCCLConfig, error) {
 					continue
 				}
 				for _, p := range allPartyCodes {
-					level, err := GetCCLForParty(p, db.PartyCode, column.CCL)
+					level, err := GetCCLForParty(p, db.PartyCode, allPartyCodes, column.CCL)
 					if err != nil {
 						return nil, err
 					}
@@ -345,7 +381,7 @@ type MockEnginesInfo struct {
 }
 
 func MockEngines() (*MockEnginesInfo, error) {
-	data, err := getMockData(mockDataPath)
+	data, allPartyCodes, err := getMockData()
 	if err != nil {
 		return nil, err
 	}
@@ -370,7 +406,7 @@ func MockEngines() (*MockEnginesInfo, error) {
 }
 
 func MockPhysicalTableMetas() (map[string]*PhysicalTableMeta, error) {
-	data, err := getMockData(mockDataPath)
+	data, _, err := getMockData()
 	if err != nil {
 		return nil, err
 	}
@@ -378,7 +414,7 @@ func MockPhysicalTableMetas() (map[string]*PhysicalTableMeta, error) {
 	for _, db := range data {
 		for tableName, tableConf := range db.Tables {
 			pt := &PhysicalTableMeta{
-				DbName:    db.DbName,
+				DBName:    db.DbName,
 				TableName: tableName,
 				DBType:    db.DBType,
 			}
@@ -388,7 +424,7 @@ func MockPhysicalTableMetas() (map[string]*PhysicalTableMeta, error) {
 					DType: col.Dtype,
 				})
 			}
-			result[fmt.Sprintf(`%s_%s`, pt.DbName, pt.TableName)] = pt
+			result[fmt.Sprintf(`%s_%s`, pt.DBName, pt.TableName)] = pt
 		}
 	}
 	return result, nil

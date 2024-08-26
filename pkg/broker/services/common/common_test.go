@@ -15,7 +15,6 @@
 package common
 
 import (
-	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -33,6 +32,7 @@ import (
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/proto-gen/spu"
 	"github.com/secretflow/scql/pkg/status"
+	"github.com/secretflow/scql/pkg/util/message"
 	prom "github.com/secretflow/scql/pkg/util/prometheus"
 )
 
@@ -156,7 +156,7 @@ func TestStorageWithCheck(t *testing.T) {
 	transaction := meta.CreateMetaTransaction()
 	projectID1 := "p1"
 	projectName1 := "n1"
-	projectConf, _ := json.Marshal(pb.ProjectConfig{
+	projectConf, _ := message.ProtoMarshal(&pb.ProjectConfig{
 		SpuRuntimeCfg: &spu.RuntimeConfig{
 			Protocol: spu.ProtocolKind_SEMI2K,
 			Field:    spu.FieldType_FM64,

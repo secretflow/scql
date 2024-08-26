@@ -28,7 +28,8 @@ class CsvdbAdaptor : public DatasourceAdaptor {
   ~CsvdbAdaptor() override = default;
 
  private:
-  std::vector<TensorPtr> GetQueryResult(const std::string& query) override;
+  std::vector<TensorPtr> GetQueryResult(
+      const std::string& query, const TensorBuildOptions& options) override;
 
   csv::CsvdbConf csvdb_conf_;
 };

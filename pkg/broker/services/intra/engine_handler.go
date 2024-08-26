@@ -21,7 +21,6 @@ import (
 	"strings"
 	"time"
 
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/sirupsen/logrus"
@@ -30,6 +29,7 @@ import (
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/executor"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/util/message"
 )
 
 var _ pb.EngineResultCallbackServer = &grpcIntraSvc{}
@@ -73,6 +73,7 @@ func (svc *grpcIntraSvc) Report(ctx context.Context, request *pb.ReportRequest) 
 		} else if err := engine.Stop(); err != nil {
 			logrus.Warnf("failed to stop query job: %v", err)
 		}
+		logrus.Infof("success to stop engine for job: %v", request.GetJobId())
 	}()
 
 	if request.GetStatus().GetCode() != int32(pb.Code_OK) {
@@ -102,7 +103,7 @@ func (svc *grpcIntraSvc) Report(ctx context.Context, request *pb.ReportRequest) 
 		return nil, err
 	}
 	var warn pb.Warning
-	if err := protojson.Unmarshal([]byte(info.Warning), &warn); err != nil {
+	if err := message.ProtoUnmarshal([]byte(info.Warning), &warn); err != nil {
 		err = fmt.Errorf("unmarshal warning err: %v", err)
 		result.Status = &pb.Status{
 			Code:    int32(pb.Code_INTERNAL),

@@ -15,6 +15,94 @@
 package translator
 
 var translateWithCCLTestCases = []sPair{
+	{`select ta.plain_int_0, ta.plain_int_0 in (select tb.plain_int_0 from bob.tbl_0 as tb) from alice.tbl_0 as ta`, `digraph G {
+0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select ta.plain_int_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select tb.plain_int_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
+2 [label="bucket:{in:[In:{t_0,},Key:{t_0,},],out:[Out:{t_2,},],attr:[input_party_codes:[alice bob],],party:[alice,]}"]
+3 [label="bucket:{in:[In:{t_1,},Key:{t_1,},],out:[Out:{t_3,},],attr:[input_party_codes:[alice bob],],party:[bob,]}"]
+4 [label="psi_in:{in:[Left:{t_2,},Right:{t_3,},],out:[Out:{t_4,},],attr:[in_type:0,input_party_codes:[alice bob],psi_algorithm:0,reveal_to:[alice],],party:[alice,bob,]}"]
+5 [label="publish:{in:[In:{t_2,t_4,},],out:[Out:{t_5,t_6,},],attr:[],party:[alice,]}"]
+0 -> 2 [label = "t_0:{plain_int_0:PRIVATE:INT64}"]
+0 -> 2 [label = "t_0:{plain_int_0:PRIVATE:INT64}"]
+1 -> 3 [label = "t_1:{plain_int_0:PRIVATE:INT64}"]
+1 -> 3 [label = "t_1:{plain_int_0:PRIVATE:INT64}"]
+2 -> 4 [label = "t_2:{plain_int_0:PRIVATE:INT64}"]
+2 -> 5 [label = "t_2:{plain_int_0:PRIVATE:INT64}"]
+3 -> 4 [label = "t_3:{plain_int_0:PRIVATE:INT64}"]
+4 -> 5 [label = "t_4:{psi_in_out:PRIVATE:BOOL}"]
+}`, `
+pipeline 0 {
+Batched: false
+node: [runsql_0 runsql_1 bucket_2 bucket_3]
+Inputs: []
+Outputs: [t_2 t_3]
+}
+pipeline 1 {
+Batched: true
+node: [psi_in_4]
+Inputs: [t_2 t_3]
+Outputs: [t_4]
+}
+pipeline 2 {
+Batched: false
+node: [publish_5]
+Inputs: [t_2 t_4]
+Outputs: []
+}
+`, testConf{groupThreshold: 0, batched: true}},
+	{`select ta.plain_int_0 from alice.tbl_0 as ta where ta.plain_int_0 in (select tb.plain_int_0 from bob.tbl_0 as tb)`, `digraph G {
+0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select ta.plain_int_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select tb.plain_int_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
+2 [label="bucket:{in:[In:{t_0,},Key:{t_0,},],out:[Out:{t_2,},],attr:[input_party_codes:[alice bob],],party:[alice,]}"]
+3 [label="bucket:{in:[In:{t_1,},Key:{t_1,},],out:[Out:{t_3,},],attr:[input_party_codes:[alice bob],],party:[bob,]}"]
+4 [label="psi_in:{in:[Left:{t_2,},Right:{t_3,},],out:[Out:{t_4,},],attr:[in_type:0,input_party_codes:[alice bob],psi_algorithm:0,reveal_to:[alice],],party:[alice,bob,]}"]
+5 [label="apply_filter:{in:[Filter:{t_4,},In:{t_2,},],out:[Out:{t_5,},],attr:[],party:[alice,]}"]
+6 [label="publish:{in:[In:{t_5,},],out:[Out:{t_6,},],attr:[],party:[alice,]}"]
+0 -> 2 [label = "t_0:{plain_int_0:PRIVATE:INT64}"]
+0 -> 2 [label = "t_0:{plain_int_0:PRIVATE:INT64}"]
+1 -> 3 [label = "t_1:{plain_int_0:PRIVATE:INT64}"]
+1 -> 3 [label = "t_1:{plain_int_0:PRIVATE:INT64}"]
+2 -> 4 [label = "t_2:{plain_int_0:PRIVATE:INT64}"]
+2 -> 5 [label = "t_2:{plain_int_0:PRIVATE:INT64}"]
+3 -> 4 [label = "t_3:{plain_int_0:PRIVATE:INT64}"]
+4 -> 5 [label = "t_4:{psi_in_out:PRIVATE:BOOL}"]
+5 -> 6 [label = "t_5:{plain_int_0:PRIVATE:INT64}"]
+}`, `
+pipeline 0 {
+Batched: false
+node: [runsql_0 runsql_1 bucket_2 bucket_3]
+Inputs: []
+Outputs: [t_2 t_3]
+}
+pipeline 1 {
+Batched: true
+node: [psi_in_4 apply_filter_5]
+Inputs: [t_2 t_3]
+Outputs: [t_5]
+}
+pipeline 2 {
+Batched: false
+node: [publish_6]
+Inputs: [t_5]
+Outputs: []
+}
+`, testConf{groupThreshold: 0, batched: true}},
+	{`select ta.plain_int_0 in (select tb.plain_int_0 from bob.tbl_0 as tb) and ta.plain_int_1 in (select tb.plain_int_1 from bob.tbl_0 as tb) from alice.tbl_0 as ta`, `digraph G {
+0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select ta.plain_int_0,ta.plain_int_1 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_2,},],attr:[sql:select tb.plain_int_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
+2 [label="psi_in:{in:[Left:{t_0,},Right:{t_2,},],out:[Out:{t_3,},],attr:[in_type:0,input_party_codes:[alice bob],psi_algorithm:0,reveal_to:[alice],],party:[alice,bob,]}"]
+3 [label="runsql:{in:[],out:[Out:{t_4,},],attr:[sql:select tb.plain_int_1 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
+4 [label="psi_in:{in:[Left:{t_1,},Right:{t_4,},],out:[Out:{t_5,},],attr:[in_type:0,input_party_codes:[alice bob],psi_algorithm:0,reveal_to:[alice],],party:[alice,bob,]}"]
+5 [label="LogicalAnd:{in:[Left:{t_3,},Right:{t_5,},],out:[Out:{t_6,},],attr:[],party:[alice,]}"]
+6 [label="publish:{in:[In:{t_6,},],out:[Out:{t_7,},],attr:[],party:[alice,]}"]
+0 -> 2 [label = "t_0:{plain_int_0:PRIVATE:INT64}"]
+0 -> 4 [label = "t_1:{plain_int_1:PRIVATE:INT64}"]
+1 -> 2 [label = "t_2:{plain_int_0:PRIVATE:INT64}"]
+2 -> 5 [label = "t_3:{psi_in_out:PRIVATE:BOOL}"]
+3 -> 4 [label = "t_4:{plain_int_1:PRIVATE:INT64}"]
+4 -> 5 [label = "t_5:{psi_in_out:PRIVATE:BOOL}"]
+5 -> 6 [label = "t_6:{LogicalAnd_out:PRIVATE:BOOL}"]
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select if(ta.plain_float_0, -1.0, -ta.plain_float_0) as res from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select ta.join_int_0,ta.plain_float_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_2,},],attr:[sql:select tb.join_int_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -45,22 +133,22 @@ var translateWithCCLTestCases = []sPair{
 8 -> 10 [label = "t_11:{Minus_out:PRIVATE:FLOAT64}"]
 8 -> 9 [label = "t_11:{Minus_out:PRIVATE:FLOAT64}"]
 9 -> 10 [label = "t_12:{constant_data:PRIVATE:FLOAT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`(SELECT count(alice.groupby_int_1) as test1 FROM alice.tbl_0 as alice WHERE alice.groupby_int_0 >= 0 GROUP BY alice.groupby_int_1 HAVING test1 > 0  limit 3) union all (select count(bob.groupby_int_0) as test1 FROM bob.tbl_0 as bob WHERE bob.groupby_int_0 >= 0  limit 3);`, `digraph G {
-0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select t_0.expr_183 from (select count(alice.groupby_int_1) as expr_183 from alice.tbl_0 as alice where alice.groupby_int_0>=0 group by alice.groupby_int_1 having (count(alice.groupby_int_1)>0) and (count(alice.groupby_int_1)>=4) limit 3) as t_0,table_refs:[alice.tbl_0],],party:[alice,]}"]
-1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select t_0.expr_92 from (select count(bob.groupby_int_0) as expr_92 from bob.tbl_0 as bob where bob.groupby_int_0>=0 limit 3) as t_0,table_refs:[bob.tbl_0],],party:[bob,]}"]
+0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select t_0.expr_212 from (select count(alice.groupby_int_1) as expr_212 from alice.tbl_0 as alice where alice.groupby_int_0>=0 group by alice.groupby_int_1 having (count(alice.groupby_int_1)>0) and (count(alice.groupby_int_1)>=4) limit 3) as t_0,table_refs:[alice.tbl_0],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select t_0.expr_106 from (select count(bob.groupby_int_0) as expr_106 from bob.tbl_0 as bob where bob.groupby_int_0>=0 limit 3) as t_0,table_refs:[bob.tbl_0],],party:[bob,]}"]
 2 [label="make_share:{in:[In:{t_0,},],out:[Out:{t_2,},],attr:[],party:[alice,bob,carol,]}"]
 3 [label="make_share:{in:[In:{t_1,},],out:[Out:{t_3,},],attr:[],party:[alice,bob,carol,]}"]
 4 [label="concat:{in:[In:{t_2,t_3,},],out:[Out:{t_4,},],attr:[axis:0,],party:[alice,bob,carol,]}"]
 5 [label="make_private:{in:[In:{t_4,},],out:[Out:{t_5,},],attr:[reveal_to:alice,],party:[alice,bob,carol,]}"]
 6 [label="publish:{in:[In:{t_5,},],out:[Out:{t_6,},],attr:[],party:[alice,]}"]
-0 -> 2 [label = "t_0:{Column#184:PRIVATE:INT64}"]
-1 -> 3 [label = "t_1:{Column#184:PRIVATE:INT64}"]
-2 -> 4 [label = "t_2:{Column#184:SECRET:INT64}"]
-3 -> 4 [label = "t_3:{Column#184:SECRET:INT64}"]
-4 -> 5 [label = "t_4:{Column#184:SECRET:INT64}"]
-5 -> 6 [label = "t_5:{Column#184:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+0 -> 2 [label = "t_0:{Column#213:PRIVATE:INT64}"]
+1 -> 3 [label = "t_1:{Column#213:PRIVATE:INT64}"]
+2 -> 4 [label = "t_2:{Column#213:SECRET:INT64}"]
+3 -> 4 [label = "t_3:{Column#213:SECRET:INT64}"]
+4 -> 5 [label = "t_4:{Column#213:SECRET:INT64}"]
+5 -> 6 [label = "t_5:{Column#213:PRIVATE:INT64}"]
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`(SELECT alice.groupby_int_1 is not null as c1, coalesce(alice.compare_float_0, alice.plain_float_1) as c2, ifnull(alice.join_string_0, "null") as c3 FROM alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_string_0=bob.join_string_0);`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,t_2,t_3,},],attr:[sql:select alice.compare_float_0,alice.groupby_int_1,alice.join_string_0,alice.plain_float_1 from alice.tbl_0 as alice,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_4,},],attr:[sql:select bob.join_string_0 from bob.tbl_0 as bob,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -94,10 +182,10 @@ var translateWithCCLTestCases = []sPair{
 7 -> 11 [label = "t_14:{coalesce_out:PRIVATE:FLOAT64}"]
 8 -> 9 [label = "t_15:{constant_data:PUBLIC:STRING}"]
 9 -> 10 [label = "t_16:{constant_data:PRIVATE:STRING}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`(SELECT count(alice.groupby_int_1) as test1 FROM alice.tbl_0 as alice WHERE alice.groupby_int_0 >= 0 GROUP BY alice.groupby_int_1 HAVING test1 > 0  limit 3) union (select count(bob.groupby_int_0) as test1 FROM bob.tbl_0 as bob WHERE bob.groupby_int_0 >= 0  limit 3);`, `digraph G {
-0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select any_value(t_0.expr_183) as expr_185 from (select count(alice.groupby_int_1) as expr_183 from alice.tbl_0 as alice where alice.groupby_int_0>=0 group by alice.groupby_int_1 having (count(alice.groupby_int_1)>0) and (count(alice.groupby_int_1)>=4) limit 3) as t_0 group by t_0.expr_183,table_refs:[alice.tbl_0],],party:[alice,]}"]
-1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select any_value(t_0.expr_92) as expr_185 from (select count(bob.groupby_int_0) as expr_92 from bob.tbl_0 as bob where bob.groupby_int_0>=0 limit 3) as t_0 group by t_0.expr_92,table_refs:[bob.tbl_0],],party:[bob,]}"]
+0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select any_value(t_0.expr_212) as expr_214 from (select count(alice.groupby_int_1) as expr_212 from alice.tbl_0 as alice where alice.groupby_int_0>=0 group by alice.groupby_int_1 having (count(alice.groupby_int_1)>0) and (count(alice.groupby_int_1)>=4) limit 3) as t_0 group by t_0.expr_212,table_refs:[alice.tbl_0],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select any_value(t_0.expr_106) as expr_214 from (select count(bob.groupby_int_0) as expr_106 from bob.tbl_0 as bob where bob.groupby_int_0>=0 limit 3) as t_0 group by t_0.expr_106,table_refs:[bob.tbl_0],],party:[bob,]}"]
 2 [label="make_share:{in:[In:{t_0,},],out:[Out:{t_2,},],attr:[],party:[alice,bob,carol,]}"]
 3 [label="make_share:{in:[In:{t_1,},],out:[Out:{t_3,},],attr:[],party:[alice,bob,carol,]}"]
 4 [label="concat:{in:[In:{t_2,t_3,},],out:[Out:{t_4,},],attr:[axis:0,],party:[alice,bob,carol,]}"]
@@ -105,17 +193,17 @@ var translateWithCCLTestCases = []sPair{
 6 [label="group:{in:[Key:{t_5,},],out:[GroupId:{t_6,},GroupNum:{t_7,},],attr:[],party:[alice,]}"]
 7 [label="firstrow:{in:[GroupId:{t_6,},GroupNum:{t_7,},In:{t_5,},],out:[Out:{t_8,},],attr:[],party:[alice,]}"]
 8 [label="publish:{in:[In:{t_8,},],out:[Out:{t_9,},],attr:[],party:[alice,]}"]
-0 -> 2 [label = "t_0:{Column#185:PRIVATE:INT64}"]
-1 -> 3 [label = "t_1:{Column#185:PRIVATE:INT64}"]
-2 -> 4 [label = "t_2:{Column#185:SECRET:INT64}"]
-3 -> 4 [label = "t_3:{Column#185:SECRET:INT64}"]
-4 -> 5 [label = "t_4:{Column#185:SECRET:INT64}"]
-5 -> 6 [label = "t_5:{Column#185:PRIVATE:INT64}"]
-5 -> 7 [label = "t_5:{Column#185:PRIVATE:INT64}"]
+0 -> 2 [label = "t_0:{Column#214:PRIVATE:INT64}"]
+1 -> 3 [label = "t_1:{Column#214:PRIVATE:INT64}"]
+2 -> 4 [label = "t_2:{Column#214:SECRET:INT64}"]
+3 -> 4 [label = "t_3:{Column#214:SECRET:INT64}"]
+4 -> 5 [label = "t_4:{Column#214:SECRET:INT64}"]
+5 -> 6 [label = "t_5:{Column#214:PRIVATE:INT64}"]
+5 -> 7 [label = "t_5:{Column#214:PRIVATE:INT64}"]
 6 -> 7 [label = "t_6:{group_id:PRIVATE:INT64}"]
 6 -> 7 [label = "t_7:{group_num:PRIVATE:INT64}"]
-7 -> 8 [label = "t_8:{Column#185_firstrow:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+7 -> 8 [label = "t_8:{Column#214_firstrow:PRIVATE:INT64}"]
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select if(ta.plain_int_0, -1, -ta.plain_int_0) as res from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select ta.join_int_0,ta.plain_int_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_2,},],attr:[sql:select tb.join_int_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -146,7 +234,7 @@ var translateWithCCLTestCases = []sPair{
 8 -> 10 [label = "t_11:{Minus_out:PRIVATE:INT64}"]
 8 -> 9 [label = "t_11:{Minus_out:PRIVATE:INT64}"]
 9 -> 10 [label = "t_12:{constant_data:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select count(tb.join_string_0) from  alice.tbl_0 as ta inner join bob.tbl_0 as tb on ta.join_string_0=tb.join_string_0;`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select ta.join_string_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select tb.join_string_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -165,10 +253,10 @@ var translateWithCCLTestCases = []sPair{
 4 -> 5 [label = "t_5:{join_string_0:PRIVATE:STRING}"]
 5 -> 6 [label = "t_6:{join_string_0:PRIVATE:INT64}"]
 6 -> 7 [label = "t_7:{join_string_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select tt.compare_int_0 > 0 from (select compare_int_0 from alice.tbl_0 UNION select compare_int_0 from bob.tbl_0) as tt;`, `digraph G {
-0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select any_value(tbl_0.compare_int_0) as expr_184 from alice.tbl_0 group by tbl_0.compare_int_0,table_refs:[alice.tbl_0],],party:[alice,]}"]
-1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select any_value(tbl_0.compare_int_0) as expr_184 from bob.tbl_0 group by tbl_0.compare_int_0,table_refs:[bob.tbl_0],],party:[bob,]}"]
+0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select any_value(tbl_0.compare_int_0) as expr_213 from alice.tbl_0 group by tbl_0.compare_int_0,table_refs:[alice.tbl_0],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select any_value(tbl_0.compare_int_0) as expr_213 from bob.tbl_0 group by tbl_0.compare_int_0,table_refs:[bob.tbl_0],],party:[bob,]}"]
 2 [label="make_share:{in:[In:{t_0,},],out:[Out:{t_2,},],attr:[],party:[alice,bob,carol,]}"]
 3 [label="make_share:{in:[In:{t_1,},],out:[Out:{t_3,},],attr:[],party:[alice,bob,carol,]}"]
 4 [label="concat:{in:[In:{t_2,t_3,},],out:[Out:{t_4,},],attr:[axis:0,],party:[alice,bob,carol,]}"]
@@ -182,29 +270,29 @@ var translateWithCCLTestCases = []sPair{
 12 [label="Greater:{in:[Left:{t_11,},Right:{t_13,},],out:[Out:{t_14,},],attr:[],party:[alice,bob,carol,]}"]
 13 [label="make_private:{in:[In:{t_14,},],out:[Out:{t_15,},],attr:[reveal_to:alice,],party:[alice,bob,carol,]}"]
 14 [label="publish:{in:[In:{t_15,},],out:[Out:{t_16,},],attr:[],party:[alice,]}"]
-0 -> 2 [label = "t_0:{Column#184:PRIVATE:INT64}"]
-1 -> 3 [label = "t_1:{Column#184:PRIVATE:INT64}"]
+0 -> 2 [label = "t_0:{Column#213:PRIVATE:INT64}"]
+1 -> 3 [label = "t_1:{Column#213:PRIVATE:INT64}"]
 10 -> 11 [label = "t_12:{constant_data:PUBLIC:INT64}"]
 11 -> 12 [label = "t_13:{constant_data:PUBLIC:INT64}"]
 12 -> 13 [label = "t_14:{Greater_out:SECRET:BOOL}"]
 13 -> 14 [label = "t_15:{Greater_out:PRIVATE:BOOL}"]
-2 -> 4 [label = "t_2:{Column#184:SECRET:INT64}"]
-3 -> 4 [label = "t_3:{Column#184:SECRET:INT64}"]
-4 -> 5 [label = "t_4:{Column#184:SECRET:INT64}"]
-4 -> 5 [label = "t_4:{Column#184:SECRET:INT64}"]
-4 -> 5 [label = "t_4:{Column#184:SECRET:INT64}"]
-5 -> 6 [label = "t_5:{Column#184:SECRET:INT64}"]
-5 -> 7 [label = "t_6:{Column#184:SECRET:INT64}"]
+2 -> 4 [label = "t_2:{Column#213:SECRET:INT64}"]
+3 -> 4 [label = "t_3:{Column#213:SECRET:INT64}"]
+4 -> 5 [label = "t_4:{Column#213:SECRET:INT64}"]
+4 -> 5 [label = "t_4:{Column#213:SECRET:INT64}"]
+4 -> 5 [label = "t_4:{Column#213:SECRET:INT64}"]
+5 -> 6 [label = "t_5:{Column#213:SECRET:INT64}"]
+5 -> 7 [label = "t_6:{Column#213:SECRET:INT64}"]
 6 -> 7 [label = "t_7:{group_mark:SECRET:BOOL}"]
 7 -> 8 [label = "t_9:{group_mark:SECRET:BOOL}"]
-7 -> 9 [label = "t_8:{Column#184:SECRET:INT64}"]
+7 -> 9 [label = "t_8:{Column#213:SECRET:INT64}"]
 8 -> 9 [label = "t_10:{group_mark:PUBLIC:BOOL}"]
-9 -> 11 [label = "t_11:{Column#184:SECRET:INT64}"]
-9 -> 12 [label = "t_11:{Column#184:SECRET:INT64}"]
-}`, testConf{groupThreshold: 0}},
+9 -> 11 [label = "t_11:{Column#213:SECRET:INT64}"]
+9 -> 12 [label = "t_11:{Column#213:SECRET:INT64}"]
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select ta.join_int_0, tb.join_int_0 from (select distinct tbl_0.join_int_0, tbl_0.join_int_1 from alice.tbl_0) as ta join (select distinct tbl_0.join_int_0, tbl_0.join_int_1 from bob.tbl_0) as tb on ta.join_int_0 = tb.join_int_0 and ta.join_int_1 = tb.join_int_1;`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select any_value(tbl_0.join_int_0) as expr_67,any_value(tbl_0.join_int_1) as expr_68 from alice.tbl_0 group by tbl_0.join_int_0,tbl_0.join_int_1,table_refs:[alice.tbl_0],],party:[alice,]}"]
-1 [label="runsql:{in:[],out:[Out:{t_2,t_3,},],attr:[sql:select any_value(tbl_0.join_int_0) as expr_157,any_value(tbl_0.join_int_1) as expr_158 from bob.tbl_0 group by tbl_0.join_int_0,tbl_0.join_int_1,table_refs:[bob.tbl_0],],party:[bob,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_2,t_3,},],attr:[sql:select any_value(tbl_0.join_int_0) as expr_172,any_value(tbl_0.join_int_1) as expr_173 from bob.tbl_0 group by tbl_0.join_int_0,tbl_0.join_int_1,table_refs:[bob.tbl_0],],party:[bob,]}"]
 2 [label="join:{in:[Left:{t_0,t_1,},Right:{t_2,t_3,},],out:[LeftJoinIndex:{t_4,},RightJoinIndex:{t_5,},],attr:[input_party_codes:[alice bob],join_type:0,psi_algorithm:0,],party:[alice,bob,]}"]
 3 [label="filter_by_index:{in:[Data:{t_0,t_1,},RowsIndexFilter:{t_4,},],out:[Out:{t_6,t_7,},],attr:[],party:[alice,]}"]
 4 [label="filter_by_index:{in:[Data:{t_2,t_3,},RowsIndexFilter:{t_5,},],out:[Out:{t_8,t_9,},],attr:[],party:[bob,]}"]
@@ -223,10 +311,10 @@ var translateWithCCLTestCases = []sPair{
 3 -> 6 [label = "t_6:{join_int_0:PRIVATE:INT64}"]
 4 -> 5 [label = "t_8:{join_int_0:PRIVATE:INT64}"]
 5 -> 6 [label = "t_11:{join_int_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select ta.groupby_int_0 from alice.tbl_0 as ta WHERE groupby_int_0>0 UNION (select tb.groupby_int_0 from bob.tbl_0 as tb GROUP BY tb.groupby_int_0);`, `digraph G {
-0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select any_value(ta.groupby_int_0) as expr_184 from alice.tbl_0 as ta where ta.groupby_int_0>0 group by ta.groupby_int_0,table_refs:[alice.tbl_0],],party:[alice,]}"]
-1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select any_value(t_0.expr_52) as expr_184 from (select any_value(tb.groupby_int_0) as expr_52,count(1) as expr_183 from bob.tbl_0 as tb group by tb.groupby_int_0 having count(1)>=4) as t_0 group by t_0.expr_52,table_refs:[bob.tbl_0],],party:[bob,]}"]
+0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select any_value(ta.groupby_int_0) as expr_213 from alice.tbl_0 as ta where ta.groupby_int_0>0 group by ta.groupby_int_0,table_refs:[alice.tbl_0],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select any_value(t_0.expr_52) as expr_213 from (select any_value(tb.groupby_int_0) as expr_52,count(1) as expr_212 from bob.tbl_0 as tb group by tb.groupby_int_0 having count(1)>=4) as t_0 group by t_0.expr_52,table_refs:[bob.tbl_0],],party:[bob,]}"]
 2 [label="make_share:{in:[In:{t_0,},],out:[Out:{t_2,},],attr:[],party:[alice,bob,carol,]}"]
 3 [label="make_share:{in:[In:{t_1,},],out:[Out:{t_3,},],attr:[],party:[alice,bob,carol,]}"]
 4 [label="concat:{in:[In:{t_2,t_3,},],out:[Out:{t_4,},],attr:[axis:0,],party:[alice,bob,carol,]}"]
@@ -234,17 +322,17 @@ var translateWithCCLTestCases = []sPair{
 6 [label="group:{in:[Key:{t_5,},],out:[GroupId:{t_6,},GroupNum:{t_7,},],attr:[],party:[alice,]}"]
 7 [label="firstrow:{in:[GroupId:{t_6,},GroupNum:{t_7,},In:{t_5,},],out:[Out:{t_8,},],attr:[],party:[alice,]}"]
 8 [label="publish:{in:[In:{t_8,},],out:[Out:{t_9,},],attr:[],party:[alice,]}"]
-0 -> 2 [label = "t_0:{Column#184:PRIVATE:INT64}"]
-1 -> 3 [label = "t_1:{Column#184:PRIVATE:INT64}"]
-2 -> 4 [label = "t_2:{Column#184:SECRET:INT64}"]
-3 -> 4 [label = "t_3:{Column#184:SECRET:INT64}"]
-4 -> 5 [label = "t_4:{Column#184:SECRET:INT64}"]
-5 -> 6 [label = "t_5:{Column#184:PRIVATE:INT64}"]
-5 -> 7 [label = "t_5:{Column#184:PRIVATE:INT64}"]
+0 -> 2 [label = "t_0:{Column#213:PRIVATE:INT64}"]
+1 -> 3 [label = "t_1:{Column#213:PRIVATE:INT64}"]
+2 -> 4 [label = "t_2:{Column#213:SECRET:INT64}"]
+3 -> 4 [label = "t_3:{Column#213:SECRET:INT64}"]
+4 -> 5 [label = "t_4:{Column#213:SECRET:INT64}"]
+5 -> 6 [label = "t_5:{Column#213:PRIVATE:INT64}"]
+5 -> 7 [label = "t_5:{Column#213:PRIVATE:INT64}"]
 6 -> 7 [label = "t_6:{group_id:PRIVATE:INT64}"]
 6 -> 7 [label = "t_7:{group_num:PRIVATE:INT64}"]
-7 -> 8 [label = "t_8:{Column#184_firstrow:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+7 -> 8 [label = "t_8:{Column#213_firstrow:PRIVATE:INT64}"]
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select count(distinct (if(ta.encrypt_int_0>1, tb.join_string_0, "aa"))) from  alice.tbl_0 as ta inner join bob.tbl_0 as tb on ta.join_string_0=tb.join_string_0 group by tb.groupby_int_0;`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select ta.encrypt_int_0,ta.join_string_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_2,t_3,},],attr:[sql:select tb.groupby_int_0,tb.join_string_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -349,10 +437,10 @@ var translateWithCCLTestCases = []sPair{
 9 -> 17 [label = "t_18:{join_string_0:SECRET:STRING}"]
 9 -> 19 [label = "t_18:{join_string_0:SECRET:STRING}"]
 9 -> 23 [label = "t_14:{groupby_int_0:SECRET:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select count(1) from (select aggregate_int_0 from alice.tbl_0 as ta union select aggregate_int_0 from bob.tbl_0) ua;`, `digraph G {
-0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select any_value(1) as expr_185,any_value(ta.aggregate_int_0) as expr_182 from alice.tbl_0 as ta group by ta.aggregate_int_0,table_refs:[alice.tbl_0],],party:[alice,]}"]
-1 [label="runsql:{in:[],out:[Out:{t_2,t_3,},],attr:[sql:select any_value(1) as expr_185,any_value(tbl_0.aggregate_int_0) as expr_182 from bob.tbl_0 group by tbl_0.aggregate_int_0,table_refs:[bob.tbl_0],],party:[bob,]}"]
+0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select any_value(1) as expr_214,any_value(ta.aggregate_int_0) as expr_211 from alice.tbl_0 as ta group by ta.aggregate_int_0,table_refs:[alice.tbl_0],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_2,t_3,},],attr:[sql:select any_value(1) as expr_214,any_value(tbl_0.aggregate_int_0) as expr_211 from bob.tbl_0 group by tbl_0.aggregate_int_0,table_refs:[bob.tbl_0],],party:[bob,]}"]
 2 [label="make_share:{in:[In:{t_0,},],out:[Out:{t_4,},],attr:[],party:[alice,bob,carol,]}"]
 3 [label="make_share:{in:[In:{t_2,},],out:[Out:{t_5,},],attr:[],party:[alice,bob,carol,]}"]
 4 [label="concat:{in:[In:{t_4,t_5,},],out:[Out:{t_6,},],attr:[axis:0,],party:[alice,bob,carol,]}"]
@@ -366,27 +454,27 @@ var translateWithCCLTestCases = []sPair{
 12 [label="filter:{in:[Filter:{t_16,},In:{t_14,},],out:[Out:{t_17,},],attr:[],party:[alice,bob,carol,]}"]
 13 [label="shape:{in:[In:{t_17,},],out:[Out:{t_18,},],attr:[axis:0,],party:[alice,]}"]
 14 [label="publish:{in:[In:{t_18,},],out:[Out:{t_19,},],attr:[],party:[alice,]}"]
-0 -> 2 [label = "t_0:{Column#185:PRIVATE:BOOL}"]
-0 -> 5 [label = "t_1:{Column#182:PRIVATE:INT64}"]
-1 -> 3 [label = "t_2:{Column#185:PRIVATE:BOOL}"]
-1 -> 6 [label = "t_3:{Column#182:PRIVATE:INT64}"]
+0 -> 2 [label = "t_0:{Column#214:PRIVATE:BOOL}"]
+0 -> 5 [label = "t_1:{Column#211:PRIVATE:INT64}"]
+1 -> 3 [label = "t_2:{Column#214:PRIVATE:BOOL}"]
+1 -> 6 [label = "t_3:{Column#211:PRIVATE:INT64}"]
 10 -> 11 [label = "t_15:{group_mark:SECRET:BOOL}"]
-10 -> 12 [label = "t_14:{Column#185:SECRET:BOOL}"]
+10 -> 12 [label = "t_14:{Column#214:SECRET:BOOL}"]
 11 -> 12 [label = "t_16:{group_mark:PUBLIC:BOOL}"]
-12 -> 13 [label = "t_17:{Column#185:SECRET:BOOL}"]
-13 -> 14 [label = "t_18:{Column#185:PRIVATE:INT64}"]
-2 -> 4 [label = "t_4:{Column#185:SECRET:BOOL}"]
-3 -> 4 [label = "t_5:{Column#185:SECRET:BOOL}"]
-4 -> 8 [label = "t_6:{Column#185:SECRET:BOOL}"]
-5 -> 7 [label = "t_7:{Column#182:SECRET:INT64}"]
-6 -> 7 [label = "t_8:{Column#182:SECRET:INT64}"]
-7 -> 8 [label = "t_9:{Column#182:SECRET:INT64}"]
-7 -> 8 [label = "t_9:{Column#182:SECRET:INT64}"]
-7 -> 8 [label = "t_9:{Column#182:SECRET:INT64}"]
-8 -> 10 [label = "t_11:{Column#185:SECRET:BOOL}"]
-8 -> 9 [label = "t_10:{Column#182:SECRET:INT64}"]
+12 -> 13 [label = "t_17:{Column#214:SECRET:BOOL}"]
+13 -> 14 [label = "t_18:{Column#214:PRIVATE:INT64}"]
+2 -> 4 [label = "t_4:{Column#214:SECRET:BOOL}"]
+3 -> 4 [label = "t_5:{Column#214:SECRET:BOOL}"]
+4 -> 8 [label = "t_6:{Column#214:SECRET:BOOL}"]
+5 -> 7 [label = "t_7:{Column#211:SECRET:INT64}"]
+6 -> 7 [label = "t_8:{Column#211:SECRET:INT64}"]
+7 -> 8 [label = "t_9:{Column#211:SECRET:INT64}"]
+7 -> 8 [label = "t_9:{Column#211:SECRET:INT64}"]
+7 -> 8 [label = "t_9:{Column#211:SECRET:INT64}"]
+8 -> 10 [label = "t_11:{Column#214:SECRET:BOOL}"]
+8 -> 9 [label = "t_10:{Column#211:SECRET:INT64}"]
 9 -> 10 [label = "t_13:{group_mark:SECRET:BOOL}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select ta.plain_int_0, ta.compare_int_0 < tb.compare_int_0 from alice.tbl_1 as ta inner join bob.tbl_1 as tb on ta.join_int_0=tb.join_int_0 limit 1,11;`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,t_2,},],attr:[sql:select ta.compare_int_0,ta.join_int_0,ta.plain_int_0 from alice.tbl_1 as ta,table_refs:[alice.tbl_1],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_3,t_4,},],attr:[sql:select tb.compare_int_0,tb.join_int_0 from bob.tbl_1 as tb,table_refs:[bob.tbl_1],],party:[bob,]}"]
@@ -418,7 +506,7 @@ var translateWithCCLTestCases = []sPair{
 7 -> 8 [label = "t_14:{Less_out:SECRET:BOOL}"]
 8 -> 10 [label = "t_15:{Less_out:SECRET:BOOL}"]
 9 -> 11 [label = "t_16:{plain_int_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select ta.plain_int_0,tb.plain_int_0, sum(tb.aggregate_int_0), count(tb.encrypt_string_1) from alice.tbl_1 as ta inner join bob.tbl_1 as tb on ta.join_int_0 = tb.join_int_0 group by ta.plain_int_0, tb.plain_int_0;`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select ta.join_int_0,ta.plain_int_0 from alice.tbl_1 as ta,table_refs:[alice.tbl_1],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_2,t_3,t_4,t_5,},],attr:[sql:select tb.aggregate_int_0,tb.encrypt_string_1,tb.join_int_0,tb.plain_int_0 from bob.tbl_1 as tb,table_refs:[bob.tbl_1],],party:[bob,]}"]
@@ -463,12 +551,12 @@ var translateWithCCLTestCases = []sPair{
 7 -> 11 [label = "t_17:{aggregate_int_0_sum:PRIVATE:INT64}"]
 8 -> 12 [label = "t_18:{group_id_count:PRIVATE:INT64}"]
 9 -> 12 [label = "t_19:{plain_int_0_firstrow:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 1}},
+}`, ``, testConf{groupThreshold: 1, batched: false}},
 	{`select plain_int_0 from alice.tbl_1 where plain_int_0 in (2, 5, 15) and plain_int_1 not in (2, 5, 15);`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select tbl_1.plain_int_0 from alice.tbl_1 where (tbl_1.plain_int_0=2 or tbl_1.plain_int_0=5 or tbl_1.plain_int_0=15) and (not(tbl_1.plain_int_1=2 or tbl_1.plain_int_1=5 or tbl_1.plain_int_1=15)),table_refs:[alice.tbl_1],],party:[alice,]}"]
 1 [label="publish:{in:[In:{t_0,},],out:[Out:{t_1,},],attr:[],party:[alice,]}"]
 0 -> 1 [label = "t_0:{plain_int_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select count(*), bob.gb_pl_en_int_0, carol.gb_en_pl_int_0, min(bob.ag_pl_en_int_0), max(carol.agg_en_pl_int_0) from alice.tbl_3 as alice join bob.tbl_3 as bob on alice.pl_jn_cp_int_0 = bob.jn_pl_cp_int_0 join carol.tbl_3 as carol on bob.cp_pl_jn_int_0 = carol.cp_jn_pl_int_0 group by bob.gb_pl_en_int_0, carol.gb_en_pl_int_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select alice.pl_jn_cp_int_0 from alice.tbl_3 as alice,table_refs:[alice.tbl_3],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_1,t_2,t_3,t_4,},],attr:[sql:select bob.ag_pl_en_int_0,bob.cp_pl_jn_int_0,bob.gb_pl_en_int_0,bob.jn_pl_cp_int_0 from bob.tbl_3 as bob,table_refs:[bob.tbl_3],],party:[bob,]}"]
@@ -593,7 +681,7 @@ var translateWithCCLTestCases = []sPair{
 9 -> 14 [label = "t_19:{ag_pl_en_int_0:PRIVATE:INT64}"]
 9 -> 15 [label = "t_20:{cp_pl_jn_int_0:PRIVATE:INT64}"]
 9 -> 16 [label = "t_22:{jn_pl_cp_int_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 4}},
+}`, ``, testConf{groupThreshold: 4, batched: false}},
 	{`select bob.cp_pl_jn_int_0 > carol.cp_jn_pl_int_0, bob.cp_pl_jn_int_1 > carol.cp_jn_pl_int_1 from alice.tbl_3 as alice join bob.tbl_3 as bob on alice.pl_jn_cp_int_0 = bob.jn_pl_cp_int_0 join carol.tbl_3 as carol on bob.cp_pl_jn_int_0 = carol.cp_jn_pl_int_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select alice.pl_jn_cp_int_0 from alice.tbl_3 as alice,table_refs:[alice.tbl_3],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_1,t_2,t_3,},],attr:[sql:select bob.cp_pl_jn_int_0,bob.cp_pl_jn_int_1,bob.jn_pl_cp_int_0 from bob.tbl_3 as bob,table_refs:[bob.tbl_3],],party:[bob,]}"]
@@ -645,7 +733,7 @@ var translateWithCCLTestCases = []sPair{
 7 -> 8 [label = "t_14:{cp_pl_jn_int_0:PRIVATE:INT64}"]
 9 -> 12 [label = "t_16:{cp_pl_jn_int_0:PRIVATE:INT64}"]
 9 -> 13 [label = "t_17:{cp_pl_jn_int_1:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select bob.cp_pl_jn_int_0 > carol.cp_jn_pl_int_0 from alice.tbl_3 as alice join bob.tbl_3 as bob on alice.pl_jn_cp_int_0 = bob.jn_pl_cp_int_0 join carol.tbl_3 as carol on bob.cp_pl_jn_int_0 = carol.cp_jn_pl_int_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select alice.pl_jn_cp_int_0 from alice.tbl_3 as alice,table_refs:[alice.tbl_3],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_1,t_2,},],attr:[sql:select bob.cp_pl_jn_int_0,bob.jn_pl_cp_int_0 from bob.tbl_3 as bob,table_refs:[bob.tbl_3],],party:[bob,]}"]
@@ -684,7 +772,7 @@ var translateWithCCLTestCases = []sPair{
 6 -> 9 [label = "t_9:{cp_pl_jn_int_0:PRIVATE:INT64}"]
 7 -> 8 [label = "t_11:{cp_pl_jn_int_0:PRIVATE:INT64}"]
 9 -> 12 [label = "t_13:{cp_pl_jn_int_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select if(ta.plain_int_0, tb.plain_int_0, ta.plain_int_0) as res,if(ta.compare_int_0 > tb.compare_int_0, ta.compare_int_0, tb.compare_int_0) > ta.compare_int_1 as res1, if(ta.plain_int_0, ta.compare_int_0, tb.compare_int_0) > ta.compare_int_1 as res1, if(ta.compare_int_0 > tb.compare_int_1, ta.plain_string_0, tb.plain_string_0) as res2 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,t_2,t_3,t_4,},],attr:[sql:select ta.compare_int_0,ta.compare_int_1,ta.join_int_0,ta.plain_int_0,ta.plain_string_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_5,t_6,t_7,t_8,t_9,},],attr:[sql:select tb.compare_int_0,tb.compare_int_1,tb.join_int_0,tb.plain_int_0,tb.plain_string_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -758,7 +846,7 @@ var translateWithCCLTestCases = []sPair{
 8 -> 14 [label = "t_25:{compare_int_0:SECRET:INT64}"]
 8 -> 9 [label = "t_25:{compare_int_0:SECRET:INT64}"]
 9 -> 10 [label = "t_26:{Greater_out:SECRET:BOOL}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select key1, key2, count(*) as c, count(distinct bob_encrypt) as cd, sum(bob_aggregate) as sb, max(carol_aggregate) as sc, min(carol_aggregate) as min_ca, avg(carol_aggregate) as avg_ca from (select bob.plain_int_0 as bob_encrypt, bob.plain_int_0 as bob_aggregate, carol.plain_int_0 as carol_aggregate, alice.plain_int_0 as alice_join, bob.plain_int_0 as bob_join, carol.plain_int_0 as carol_join, alice.plain_int_0 + bob.plain_int_0 as key1, carol.plain_int_0 + bob.plain_int_0 as key2 from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol) as tt where alice_join = bob_join and bob_join = carol_join group by key1, key2;`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select alice.plain_int_0 from alice.tbl_0 as alice,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select bob.plain_int_0 from bob.tbl_0 as bob,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -863,11 +951,11 @@ var translateWithCCLTestCases = []sPair{
 8 -> 12 [label = "t_10:{plain_int_0:PRIVATE:INT64}"]
 8 -> 22 [label = "t_10:{plain_int_0:PRIVATE:INT64}"]
 9 -> 11 [label = "t_11:{plain_int_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select count(*) from (select ta.groupby_string_0 from alice.tbl_0 as ta union select tb.groupby_string_0 from bob.tbl_0 as tb union select tc.groupby_string_0 from carol.tbl_0 as tc) as uu`, `digraph G {
-0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select any_value(1) as expr_275,any_value(ta.groupby_string_0) as expr_272 from alice.tbl_0 as ta group by ta.groupby_string_0,table_refs:[alice.tbl_0],],party:[alice,]}"]
-1 [label="runsql:{in:[],out:[Out:{t_2,t_3,},],attr:[sql:select any_value(1) as expr_275,any_value(tb.groupby_string_0) as expr_272 from bob.tbl_0 as tb group by tb.groupby_string_0,table_refs:[bob.tbl_0],],party:[bob,]}"]
-2 [label="runsql:{in:[],out:[Out:{t_4,t_5,},],attr:[sql:select any_value(1) as expr_275,any_value(tc.groupby_string_0) as expr_272 from carol.tbl_0 as tc group by tc.groupby_string_0,table_refs:[carol.tbl_0],],party:[carol,]}"]
+0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select any_value(1) as expr_319,any_value(ta.groupby_string_0) as expr_316 from alice.tbl_0 as ta group by ta.groupby_string_0,table_refs:[alice.tbl_0],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_2,t_3,},],attr:[sql:select any_value(1) as expr_319,any_value(tb.groupby_string_0) as expr_316 from bob.tbl_0 as tb group by tb.groupby_string_0,table_refs:[bob.tbl_0],],party:[bob,]}"]
+2 [label="runsql:{in:[],out:[Out:{t_4,t_5,},],attr:[sql:select any_value(1) as expr_319,any_value(tc.groupby_string_0) as expr_316 from carol.tbl_0 as tc group by tc.groupby_string_0,table_refs:[carol.tbl_0],],party:[carol,]}"]
 3 [label="make_share:{in:[In:{t_0,},],out:[Out:{t_6,},],attr:[],party:[alice,bob,carol,]}"]
 4 [label="make_share:{in:[In:{t_2,},],out:[Out:{t_7,},],attr:[],party:[alice,bob,carol,]}"]
 5 [label="make_share:{in:[In:{t_4,},],out:[Out:{t_8,},],attr:[],party:[alice,bob,carol,]}"]
@@ -883,28 +971,28 @@ var translateWithCCLTestCases = []sPair{
 15 [label="firstrow:{in:[GroupId:{t_16,},GroupNum:{t_17,},In:{t_18,},],out:[Out:{t_19,},],attr:[],party:[alice,]}"]
 16 [label="shape:{in:[In:{t_19,},],out:[Out:{t_20,},],attr:[axis:0,],party:[alice,]}"]
 17 [label="publish:{in:[In:{t_20,},],out:[Out:{t_21,},],attr:[],party:[alice,]}"]
-0 -> 3 [label = "t_0:{Column#275:PRIVATE:BOOL}"]
-0 -> 7 [label = "t_1:{Column#272:PRIVATE:STRING}"]
-1 -> 4 [label = "t_2:{Column#275:PRIVATE:BOOL}"]
-1 -> 8 [label = "t_3:{Column#272:PRIVATE:STRING}"]
-10 -> 11 [label = "t_13:{Column#272:SECRET:STRING}"]
-11 -> 12 [label = "t_14:{Column#272:PUBLIC:STRING}"]
-12 -> 13 [label = "t_15:{Column#272:PRIVATE:STRING}"]
+0 -> 3 [label = "t_0:{Column#319:PRIVATE:BOOL}"]
+0 -> 7 [label = "t_1:{Column#316:PRIVATE:STRING}"]
+1 -> 4 [label = "t_2:{Column#319:PRIVATE:BOOL}"]
+1 -> 8 [label = "t_3:{Column#316:PRIVATE:STRING}"]
+10 -> 11 [label = "t_13:{Column#316:SECRET:STRING}"]
+11 -> 12 [label = "t_14:{Column#316:PUBLIC:STRING}"]
+12 -> 13 [label = "t_15:{Column#316:PRIVATE:STRING}"]
 13 -> 15 [label = "t_16:{group_id:PRIVATE:INT64}"]
 13 -> 15 [label = "t_17:{group_num:PRIVATE:INT64}"]
-14 -> 15 [label = "t_18:{Column#275:PRIVATE:BOOL}"]
-15 -> 16 [label = "t_19:{Column#275_firstrow:PRIVATE:BOOL}"]
-16 -> 17 [label = "t_20:{Column#275_firstrow:PRIVATE:INT64}"]
-2 -> 5 [label = "t_4:{Column#275:PRIVATE:BOOL}"]
-2 -> 9 [label = "t_5:{Column#272:PRIVATE:STRING}"]
-3 -> 6 [label = "t_6:{Column#275:SECRET:BOOL}"]
-4 -> 6 [label = "t_7:{Column#275:SECRET:BOOL}"]
-5 -> 6 [label = "t_8:{Column#275:SECRET:BOOL}"]
-6 -> 14 [label = "t_9:{Column#275:SECRET:BOOL}"]
-7 -> 10 [label = "t_10:{Column#272:SECRET:STRING}"]
-8 -> 10 [label = "t_11:{Column#272:SECRET:STRING}"]
-9 -> 10 [label = "t_12:{Column#272:SECRET:STRING}"]
-}`, testConf{groupThreshold: 0}},
+14 -> 15 [label = "t_18:{Column#319:PRIVATE:BOOL}"]
+15 -> 16 [label = "t_19:{Column#319_firstrow:PRIVATE:BOOL}"]
+16 -> 17 [label = "t_20:{Column#319_firstrow:PRIVATE:INT64}"]
+2 -> 5 [label = "t_4:{Column#319:PRIVATE:BOOL}"]
+2 -> 9 [label = "t_5:{Column#316:PRIVATE:STRING}"]
+3 -> 6 [label = "t_6:{Column#319:SECRET:BOOL}"]
+4 -> 6 [label = "t_7:{Column#319:SECRET:BOOL}"]
+5 -> 6 [label = "t_8:{Column#319:SECRET:BOOL}"]
+6 -> 14 [label = "t_9:{Column#319:SECRET:BOOL}"]
+7 -> 10 [label = "t_10:{Column#316:SECRET:STRING}"]
+8 -> 10 [label = "t_11:{Column#316:SECRET:STRING}"]
+9 -> 10 [label = "t_12:{Column#316:SECRET:STRING}"]
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select alice.encrypt_float_1 from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.plain_int_0 = bob.join_int_0 and bob.join_int_1 = carol.join_int_1;`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select alice.encrypt_float_1,alice.plain_int_0 from alice.tbl_0 as alice,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_2,t_3,},],attr:[sql:select bob.join_int_0,bob.join_int_1 from bob.tbl_0 as bob,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -938,7 +1026,7 @@ var translateWithCCLTestCases = []sPair{
 6 -> 9 [label = "t_11:{join_int_1:PRIVATE:INT64}"]
 7 -> 8 [label = "t_13:{join_int_1:PRIVATE:INT64}"]
 8 -> 11 [label = "t_14:{encrypt_float_1:PRIVATE:FLOAT32}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select count(*) as c, count(distinct bob.encrypt_int_0) as cd, sum(bob.aggregate_int_0) as sb, sum(carol.aggregate_int_0) as sc from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_int_0 = bob.join_int_0 and bob.join_int_0 = carol.join_int_0 group by alice.groupby_int_0 + bob.groupby_int_0, carol.groupby_int_0 + bob.groupby_int_0;`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select alice.groupby_int_0,alice.join_int_0 from alice.tbl_0 as alice,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_2,t_3,t_4,t_5,},],attr:[sql:select bob.aggregate_int_0,bob.encrypt_int_0,bob.groupby_int_0,bob.join_int_0 from bob.tbl_0 as bob,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -1085,17 +1173,17 @@ var translateWithCCLTestCases = []sPair{
 9 -> 17 [label = "t_22:{aggregate_int_0:PRIVATE:INT64}"]
 9 -> 18 [label = "t_23:{encrypt_int_0:PRIVATE:INT64}"]
 9 -> 19 [label = "t_25:{join_int_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select plain_string_0 in (select plain_int_0 from alice.tbl_1) as da from alice.tbl_0;`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select tbl_0.plain_string_0 in (select tbl_1.plain_int_0 from alice.tbl_1) as da from alice.tbl_0,table_refs:[alice.tbl_0 alice.tbl_1],],party:[alice,]}"]
 1 [label="publish:{in:[In:{t_0,},],out:[Out:{t_1,},],attr:[],party:[alice,]}"]
-0 -> 1 [label = "t_0:{Column#181:PRIVATE:BOOL}"]
-}`, testConf{groupThreshold: 0}},
+0 -> 1 [label = "t_0:{Column#211:PRIVATE:BOOL}"]
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select plain_string_0 from alice.tbl_0 where plain_string_0 in (select plain_int_0 from alice.tbl_1)`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select tbl_0.plain_string_0 from alice.tbl_0 where tbl_0.plain_string_0 in (select tbl_1.plain_int_0 from alice.tbl_1),table_refs:[alice.tbl_0 alice.tbl_1],],party:[alice,]}"]
 1 [label="publish:{in:[In:{t_0,},],out:[Out:{t_1,},],attr:[],party:[alice,]}"]
 0 -> 1 [label = "t_0:{plain_string_0:PRIVATE:STRING}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select count(*) as c, count(distinct bob.encrypt_int_0) as cd, sum(bob.aggregate_int_0) as sb, sum(carol.aggregate_int_0) as sc from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_int_0 = bob.join_int_0 and bob.join_int_0 = carol.join_int_0 group by alice.groupby_int_0, bob.groupby_int_0, carol.groupby_int_0, carol.groupby_string_0;`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select alice.groupby_int_0,alice.join_int_0 from alice.tbl_0 as alice,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_2,t_3,t_4,t_5,},],attr:[sql:select bob.aggregate_int_0,bob.encrypt_int_0,bob.groupby_int_0,bob.join_int_0 from bob.tbl_0 as bob,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -1248,7 +1336,7 @@ var translateWithCCLTestCases = []sPair{
 9 -> 16 [label = "t_23:{aggregate_int_0:PRIVATE:INT64}"]
 9 -> 17 [label = "t_24:{encrypt_int_0:PRIVATE:INT64}"]
 9 -> 18 [label = "t_26:{join_int_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select count(*) as c, count(distinct bob.encrypt_int_0) as cd, sum(bob.aggregate_int_0) as sb, sum(carol.aggregate_int_0) as sc from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_int_0 = bob.join_int_0 and bob.join_int_0 = carol.join_int_0 group by alice.groupby_int_0;`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select alice.groupby_int_0,alice.join_int_0 from alice.tbl_0 as alice,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_2,t_3,t_4,},],attr:[sql:select bob.aggregate_int_0,bob.encrypt_int_0,bob.join_int_0 from bob.tbl_0 as bob,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -1376,7 +1464,7 @@ var translateWithCCLTestCases = []sPair{
 9 -> 13 [label = "t_19:{aggregate_int_0:PRIVATE:INT64}"]
 9 -> 14 [label = "t_20:{encrypt_int_0:PRIVATE:INT64}"]
 9 -> 15 [label = "t_21:{join_int_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select (alice.join_int_0 + bob.compare_int_0 + carol.compare_int_0) <> 0 as reduce_res from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_int_0 = bob.join_int_0 and bob.join_int_0 = carol.join_int_0;`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select alice.join_int_0 from alice.tbl_0 as alice,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_1,t_2,},],attr:[sql:select bob.compare_int_0,bob.join_int_0 from bob.tbl_0 as bob,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -1430,7 +1518,7 @@ var translateWithCCLTestCases = []sPair{
 7 -> 8 [label = "t_12:{join_int_0:PRIVATE:INT64}"]
 8 -> 11 [label = "t_13:{join_int_0:PRIVATE:INT64}"]
 9 -> 12 [label = "t_14:{compare_int_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select alice.plain_int_0 + bob.join_int_0 + carol.join_int_0 as add_res, alice.plain_int_0 - bob.join_int_0 - carol.join_int_0 as minus_res, alice.plain_int_0 * bob.join_int_0 * carol.join_int_0 as multi_res, alice.plain_int_0 / bob.join_int_0 / carol.join_int_0 as div_res from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_int_0 = bob.join_int_0 and bob.join_int_0 = carol.join_int_0;`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select alice.join_int_0,alice.plain_int_0 from alice.tbl_0 as alice,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_2,},],attr:[sql:select bob.join_int_0 from bob.tbl_0 as bob,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -1495,46 +1583,93 @@ var translateWithCCLTestCases = []sPair{
 8 -> 17 [label = "t_13:{plain_int_0:PRIVATE:INT64}"]
 8 -> 19 [label = "t_13:{plain_int_0:PRIVATE:INT64}"]
 9 -> 11 [label = "t_14:{join_int_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select concat(plain_string_0, plain_string_1) as tt from alice.tbl_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select concat(tbl_0.plain_string_0, tbl_0.plain_string_1) as tt from alice.tbl_0,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="publish:{in:[In:{t_0,},],out:[Out:{t_1,},],attr:[],party:[alice,]}"]
-0 -> 1 [label = "t_0:{Column#91:PRIVATE:STRING}"]
-}`, testConf{groupThreshold: 0}},
+0 -> 1 [label = "t_0:{Column#106:PRIVATE:STRING}"]
+}`, `
+pipeline 0 {
+Batched: false
+node: [runsql_0 publish_1]
+Inputs: []
+Outputs: []
+}
+`, testConf{groupThreshold: 0, batched: true}},
 	{`select count(*) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0 = tbl_2.plain_int_0 group by tbl_1.plain_float_0 having count(*) > 3`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select count(1) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having (count(1)>3) and (count(1)>=4),table_refs:[alice.tbl_1 alice.tbl_2],],party:[alice,]}"]
 1 [label="publish:{in:[In:{t_0,},],out:[Out:{t_1,},],attr:[],party:[alice,]}"]
-0 -> 1 [label = "t_0:{Column#182:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+0 -> 1 [label = "t_0:{Column#212:PRIVATE:INT64}"]
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select tbl_1.plain_float_0 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0 = tbl_2.plain_int_0 group by tbl_1.plain_float_0`, `digraph G {
-0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select any_value(tbl_1.plain_float_0) as expr_79 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having count(1)>=4,table_refs:[alice.tbl_1 alice.tbl_2],],party:[alice,]}"]
+0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select any_value(tbl_1.plain_float_0) as expr_94 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having count(1)>=4,table_refs:[alice.tbl_1 alice.tbl_2],],party:[alice,]}"]
 1 [label="publish:{in:[In:{t_0,},],out:[Out:{t_1,},],attr:[],party:[alice,]}"]
 0 -> 1 [label = "t_0:{plain_float_0:PRIVATE:FLOAT32}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select plain_int_0 from alice.tbl_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select tbl_0.plain_int_0 from alice.tbl_0,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="publish:{in:[In:{t_0,},],out:[Out:{t_1,},],attr:[],party:[alice,]}"]
 0 -> 1 [label = "t_0:{plain_int_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select count(*) as c, sum(plain_int_0) as b, max(plain_int_0) as a, min(plain_int_0) as d from alice.tbl_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,t_2,t_3,},],attr:[sql:select count(1) as c,sum(tbl_0.plain_int_0) as b,max(tbl_0.plain_int_0) as a,min(tbl_0.plain_int_0) as d from alice.tbl_0,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="publish:{in:[In:{t_0,t_1,t_2,t_3,},],out:[Out:{t_4,t_5,t_6,t_7,},],attr:[],party:[alice,]}"]
-0 -> 1 [label = "t_0:{Column#91:PRIVATE:INT64}"]
-0 -> 1 [label = "t_1:{Column#92:PRIVATE:INT64}"]
-0 -> 1 [label = "t_2:{Column#93:PRIVATE:INT64}"]
-0 -> 1 [label = "t_3:{Column#94:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+0 -> 1 [label = "t_0:{Column#106:PRIVATE:INT64}"]
+0 -> 1 [label = "t_1:{Column#107:PRIVATE:INT64}"]
+0 -> 1 [label = "t_2:{Column#108:PRIVATE:INT64}"]
+0 -> 1 [label = "t_3:{Column#109:PRIVATE:INT64}"]
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select plain_int_0 from alice.tbl_0 into outfile party_code 'alice' '/tmp/output.txt' fields terminated BY ','`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select tbl_0.plain_int_0 from alice.tbl_0,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="dump_file:{in:[In:{t_0,},],out:[Out:{t_1,},],attr:[field_deliminator:,,file_path:/tmp/output.txt,line_terminator:
 ,quoting_style:0,],party:[alice,]}"]
 0 -> 1 [label = "t_0:{plain_int_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select plain_int_0 from alice.tbl_0 into outfile party_code 'alice' '/tmp/output.txt' columns terminated BY '|' optionally enclosed BY '"' lines terminated BY 'end of line';`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select tbl_0.plain_int_0 from alice.tbl_0,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="dump_file:{in:[In:{t_0,},],out:[Out:{t_1,},],attr:[field_deliminator:|,file_path:/tmp/output.txt,line_terminator:end of line,quoting_style:1,],party:[alice,]}"]
 0 -> 1 [label = "t_0:{plain_int_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
+	{`insert into testdb.test_table (ci, cl) select a.plain_int_0, b.plain_string_0 from alice.tbl_0 a join bob.tbl_0  b on a.join_int_0=b.join_int_0`, `digraph G {
+0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select a.join_int_0,a.plain_int_0 from alice.tbl_0 as a,table_refs:[alice.tbl_0],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_2,t_3,},],attr:[sql:select b.join_int_0,b.plain_string_0 from bob.tbl_0 as b,table_refs:[bob.tbl_0],],party:[bob,]}"]
+2 [label="join:{in:[Left:{t_0,},Right:{t_2,},],out:[LeftJoinIndex:{t_4,},RightJoinIndex:{t_5,},],attr:[input_party_codes:[alice bob],join_type:0,psi_algorithm:0,],party:[alice,bob,]}"]
+3 [label="filter_by_index:{in:[Data:{t_0,t_1,},RowsIndexFilter:{t_4,},],out:[Out:{t_6,t_7,},],attr:[],party:[alice,]}"]
+4 [label="filter_by_index:{in:[Data:{t_2,t_3,},RowsIndexFilter:{t_5,},],out:[Out:{t_8,t_9,},],attr:[],party:[bob,]}"]
+5 [label="copy:{in:[In:{t_9,},],out:[Out:{t_11,},],attr:[input_party_codes:bob,output_party_codes:alice,],party:[bob,alice,]}"]
+6 [label="insert_table:{in:[In:{t_7,t_11,},],out:[Out:{t_10,t_12,},],attr:[column_names:[ci cl],table_name:testdb.test_table,],party:[alice,]}"]
+0 -> 2 [label = "t_0:{join_int_0:PRIVATE:INT64}"]
+0 -> 3 [label = "t_0:{join_int_0:PRIVATE:INT64}"]
+0 -> 3 [label = "t_1:{plain_int_0:PRIVATE:INT64}"]
+1 -> 2 [label = "t_2:{join_int_0:PRIVATE:INT64}"]
+1 -> 4 [label = "t_2:{join_int_0:PRIVATE:INT64}"]
+1 -> 4 [label = "t_3:{plain_string_0:PRIVATE:STRING}"]
+2 -> 3 [label = "t_4:{join_int_0:PRIVATE:INT64}"]
+2 -> 4 [label = "t_5:{join_int_0:PRIVATE:INT64}"]
+3 -> 6 [label = "t_7:{plain_int_0:PRIVATE:INT64}"]
+4 -> 5 [label = "t_9:{plain_string_0:PRIVATE:STRING}"]
+5 -> 6 [label = "t_11:{plain_string_0:PRIVATE:STRING}"]
+}`, ``, testConf{groupThreshold: 0, batched: false}},
+	{`insert into test_table (ci, cl) select a.plain_int_0, b.plain_string_0 from alice.tbl_0 a join bob.tbl_0  b on a.join_int_0=b.join_int_0`, `digraph G {
+0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select a.join_int_0,a.plain_int_0 from alice.tbl_0 as a,table_refs:[alice.tbl_0],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_2,t_3,},],attr:[sql:select b.join_int_0,b.plain_string_0 from bob.tbl_0 as b,table_refs:[bob.tbl_0],],party:[bob,]}"]
+2 [label="join:{in:[Left:{t_0,},Right:{t_2,},],out:[LeftJoinIndex:{t_4,},RightJoinIndex:{t_5,},],attr:[input_party_codes:[alice bob],join_type:0,psi_algorithm:0,],party:[alice,bob,]}"]
+3 [label="filter_by_index:{in:[Data:{t_0,t_1,},RowsIndexFilter:{t_4,},],out:[Out:{t_6,t_7,},],attr:[],party:[alice,]}"]
+4 [label="filter_by_index:{in:[Data:{t_2,t_3,},RowsIndexFilter:{t_5,},],out:[Out:{t_8,t_9,},],attr:[],party:[bob,]}"]
+5 [label="copy:{in:[In:{t_9,},],out:[Out:{t_11,},],attr:[input_party_codes:bob,output_party_codes:alice,],party:[bob,alice,]}"]
+6 [label="insert_table:{in:[In:{t_7,t_11,},],out:[Out:{t_10,t_12,},],attr:[column_names:[ci cl],table_name:test_table,],party:[alice,]}"]
+0 -> 2 [label = "t_0:{join_int_0:PRIVATE:INT64}"]
+0 -> 3 [label = "t_0:{join_int_0:PRIVATE:INT64}"]
+0 -> 3 [label = "t_1:{plain_int_0:PRIVATE:INT64}"]
+1 -> 2 [label = "t_2:{join_int_0:PRIVATE:INT64}"]
+1 -> 4 [label = "t_2:{join_int_0:PRIVATE:INT64}"]
+1 -> 4 [label = "t_3:{plain_string_0:PRIVATE:STRING}"]
+2 -> 3 [label = "t_4:{join_int_0:PRIVATE:INT64}"]
+2 -> 4 [label = "t_5:{join_int_0:PRIVATE:INT64}"]
+3 -> 6 [label = "t_7:{plain_int_0:PRIVATE:INT64}"]
+4 -> 5 [label = "t_9:{plain_string_0:PRIVATE:STRING}"]
+5 -> 6 [label = "t_11:{plain_string_0:PRIVATE:STRING}"]
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select (ta.compare_int_0 + tb.compare_int_0) > 0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0 into outfile party_code 'alice' '/tmp/output.txt' fields terminated BY ','`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select ta.compare_int_0,ta.join_int_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_2,t_3,},],attr:[sql:select tb.compare_int_0,tb.join_int_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -1568,7 +1703,7 @@ var translateWithCCLTestCases = []sPair{
 7 -> 9 [label = "t_12:{Add_out:SECRET:INT64}"]
 8 -> 9 [label = "t_13:{constant_data:PUBLIC:INT64}"]
 9 -> 10 [label = "t_14:{constant_data:PUBLIC:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select ta.plain_int_0, count(*) as c, sum(ta.plain_int_0) as b, max(ta.plain_int_0) as a, min(ta.plain_int_0) as d from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_int_0 = tb.plain_int_0 group by ta.plain_int_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select ta.plain_int_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select tb.plain_int_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -1623,69 +1758,108 @@ var translateWithCCLTestCases = []sPair{
 7 -> 14 [label = "t_9:{plain_int_0_sum:PRIVATE:INT64}"]
 8 -> 14 [label = "t_10:{plain_int_0_max:PRIVATE:INT64}"]
 9 -> 14 [label = "t_11:{plain_int_0_min:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select ta.groupby_int_0, count(distinct(ta.compare_int_0)), sum(ta.compare_int_0) as b, max(ta.compare_int_0) as a, min(ta.compare_int_0) as d from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_int_0 = tb.plain_int_0 group by ta.groupby_int_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,t_2,},],attr:[sql:select ta.compare_int_0,ta.groupby_int_0,ta.plain_int_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_3,},],attr:[sql:select tb.plain_int_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
-2 [label="join:{in:[Left:{t_2,},Right:{t_3,},],out:[LeftJoinIndex:{t_4,},RightJoinIndex:{t_5,},],attr:[input_party_codes:[alice bob],join_type:0,psi_algorithm:0,],party:[alice,bob,]}"]
-3 [label="filter_by_index:{in:[Data:{t_0,t_1,t_2,},RowsIndexFilter:{t_4,},],out:[Out:{t_6,t_7,t_8,},],attr:[],party:[alice,]}"]
-4 [label="filter_by_index:{in:[Data:{t_3,},RowsIndexFilter:{t_5,},],out:[Out:{t_9,},],attr:[],party:[bob,]}"]
-5 [label="group:{in:[Key:{t_7,},],out:[GroupId:{t_10,},GroupNum:{t_11,},],attr:[],party:[alice,]}"]
-6 [label="count_distinct:{in:[GroupId:{t_10,},GroupNum:{t_11,},In:{t_6,},],out:[Out:{t_12,},],attr:[],party:[alice,]}"]
-7 [label="sum:{in:[GroupId:{t_10,},GroupNum:{t_11,},In:{t_6,},],out:[Out:{t_13,},],attr:[],party:[alice,]}"]
-8 [label="max:{in:[GroupId:{t_10,},GroupNum:{t_11,},In:{t_6,},],out:[Out:{t_14,},],attr:[],party:[alice,]}"]
-9 [label="min:{in:[GroupId:{t_10,},GroupNum:{t_11,},In:{t_6,},],out:[Out:{t_15,},],attr:[],party:[alice,]}"]
-10 [label="firstrow:{in:[GroupId:{t_10,},GroupNum:{t_11,},In:{t_7,},],out:[Out:{t_16,},],attr:[],party:[alice,]}"]
-11 [label="count:{in:[GroupId:{t_10,},GroupNum:{t_11,},In:{t_10,},],out:[Out:{t_17,},],attr:[],party:[alice,]}"]
-12 [label="make_constant:{in:[],out:[Out:{t_18,},],attr:[scalar:4,to_status:1,],party:[alice,bob,carol,]}"]
-13 [label="broadcast:{in:[In:{t_18,},ShapeRefTensor:{t_17,},],out:[Out:{t_19,},],attr:[],party:[alice,]}"]
-14 [label="GreaterEqual:{in:[Left:{t_17,},Right:{t_19,},],out:[Out:{t_20,},],attr:[],party:[alice,]}"]
-15 [label="apply_filter:{in:[Filter:{t_20,},In:{t_16,t_12,t_13,t_14,t_15,t_17,},],out:[Out:{t_21,t_22,t_23,t_24,t_25,t_26,},],attr:[],party:[alice,]}"]
-16 [label="publish:{in:[In:{t_21,t_22,t_23,t_24,t_25,},],out:[Out:{t_27,t_28,t_29,t_30,t_31,},],attr:[],party:[alice,]}"]
+2 [label="bucket:{in:[In:{t_0,t_1,t_2,},Key:{t_2,},],out:[Out:{t_4,t_5,t_6,},],attr:[input_party_codes:[alice bob],],party:[alice,]}"]
+3 [label="bucket:{in:[In:{t_3,},Key:{t_3,},],out:[Out:{t_7,},],attr:[input_party_codes:[alice bob],],party:[bob,]}"]
+4 [label="join:{in:[Left:{t_6,},Right:{t_7,},],out:[LeftJoinIndex:{t_8,},RightJoinIndex:{t_9,},],attr:[input_party_codes:[alice bob],join_type:0,psi_algorithm:0,],party:[alice,bob,]}"]
+5 [label="filter_by_index:{in:[Data:{t_4,t_5,t_6,},RowsIndexFilter:{t_8,},],out:[Out:{t_10,t_11,t_12,},],attr:[],party:[alice,]}"]
+6 [label="filter_by_index:{in:[Data:{t_7,},RowsIndexFilter:{t_9,},],out:[Out:{t_13,},],attr:[],party:[bob,]}"]
+7 [label="group:{in:[Key:{t_11,},],out:[GroupId:{t_14,},GroupNum:{t_15,},],attr:[],party:[alice,]}"]
+8 [label="count_distinct:{in:[GroupId:{t_14,},GroupNum:{t_15,},In:{t_10,},],out:[Out:{t_16,},],attr:[],party:[alice,]}"]
+9 [label="sum:{in:[GroupId:{t_14,},GroupNum:{t_15,},In:{t_10,},],out:[Out:{t_17,},],attr:[],party:[alice,]}"]
+10 [label="max:{in:[GroupId:{t_14,},GroupNum:{t_15,},In:{t_10,},],out:[Out:{t_18,},],attr:[],party:[alice,]}"]
+11 [label="min:{in:[GroupId:{t_14,},GroupNum:{t_15,},In:{t_10,},],out:[Out:{t_19,},],attr:[],party:[alice,]}"]
+12 [label="firstrow:{in:[GroupId:{t_14,},GroupNum:{t_15,},In:{t_11,},],out:[Out:{t_20,},],attr:[],party:[alice,]}"]
+13 [label="count:{in:[GroupId:{t_14,},GroupNum:{t_15,},In:{t_14,},],out:[Out:{t_21,},],attr:[],party:[alice,]}"]
+14 [label="make_constant:{in:[],out:[Out:{t_22,},],attr:[scalar:4,to_status:1,],party:[alice,bob,carol,]}"]
+15 [label="broadcast:{in:[In:{t_22,},ShapeRefTensor:{t_21,},],out:[Out:{t_23,},],attr:[],party:[alice,]}"]
+16 [label="GreaterEqual:{in:[Left:{t_21,},Right:{t_23,},],out:[Out:{t_24,},],attr:[],party:[alice,]}"]
+17 [label="apply_filter:{in:[Filter:{t_24,},In:{t_20,t_16,t_17,t_18,t_19,t_21,},],out:[Out:{t_25,t_26,t_27,t_28,t_29,t_30,},],attr:[],party:[alice,]}"]
+18 [label="publish:{in:[In:{t_25,t_26,t_27,t_28,t_29,},],out:[Out:{t_31,t_32,t_33,t_34,t_35,},],attr:[],party:[alice,]}"]
+0 -> 2 [label = "t_0:{compare_int_0:PRIVATE:INT64}"]
+0 -> 2 [label = "t_1:{groupby_int_0:PRIVATE:INT64}"]
 0 -> 2 [label = "t_2:{plain_int_0:PRIVATE:INT64}"]
-0 -> 3 [label = "t_0:{compare_int_0:PRIVATE:INT64}"]
-0 -> 3 [label = "t_1:{groupby_int_0:PRIVATE:INT64}"]
-0 -> 3 [label = "t_2:{plain_int_0:PRIVATE:INT64}"]
-1 -> 2 [label = "t_3:{plain_int_0:PRIVATE:INT64}"]
-1 -> 4 [label = "t_3:{plain_int_0:PRIVATE:INT64}"]
-10 -> 15 [label = "t_16:{groupby_int_0_firstrow:PRIVATE:INT64}"]
-11 -> 13 [label = "t_17:{group_id_count:PRIVATE:INT64}"]
-11 -> 14 [label = "t_17:{group_id_count:PRIVATE:INT64}"]
-11 -> 15 [label = "t_17:{group_id_count:PRIVATE:INT64}"]
-12 -> 13 [label = "t_18:{constant_data:PUBLIC:INT64}"]
-13 -> 14 [label = "t_19:{constant_data:PRIVATE:INT64}"]
-14 -> 15 [label = "t_20:{GreaterEqual_out:PRIVATE:BOOL}"]
-15 -> 16 [label = "t_21:{groupby_int_0_firstrow:PRIVATE:INT64}"]
-15 -> 16 [label = "t_22:{compare_int_0_count_distinct:PRIVATE:INT64}"]
-15 -> 16 [label = "t_23:{compare_int_0_sum:PRIVATE:INT64}"]
-15 -> 16 [label = "t_24:{compare_int_0_max:PRIVATE:INT64}"]
-15 -> 16 [label = "t_25:{compare_int_0_min:PRIVATE:INT64}"]
-2 -> 3 [label = "t_4:{plain_int_0:PRIVATE:INT64}"]
-2 -> 4 [label = "t_5:{plain_int_0:PRIVATE:INT64}"]
-3 -> 10 [label = "t_7:{groupby_int_0:PRIVATE:INT64}"]
-3 -> 5 [label = "t_7:{groupby_int_0:PRIVATE:INT64}"]
-3 -> 6 [label = "t_6:{compare_int_0:PRIVATE:INT64}"]
-3 -> 7 [label = "t_6:{compare_int_0:PRIVATE:INT64}"]
-3 -> 8 [label = "t_6:{compare_int_0:PRIVATE:INT64}"]
-3 -> 9 [label = "t_6:{compare_int_0:PRIVATE:INT64}"]
-5 -> 10 [label = "t_10:{group_id:PRIVATE:INT64}"]
-5 -> 10 [label = "t_11:{group_num:PRIVATE:INT64}"]
-5 -> 11 [label = "t_10:{group_id:PRIVATE:INT64}"]
-5 -> 11 [label = "t_10:{group_id:PRIVATE:INT64}"]
-5 -> 11 [label = "t_11:{group_num:PRIVATE:INT64}"]
-5 -> 6 [label = "t_10:{group_id:PRIVATE:INT64}"]
-5 -> 6 [label = "t_11:{group_num:PRIVATE:INT64}"]
-5 -> 7 [label = "t_10:{group_id:PRIVATE:INT64}"]
-5 -> 7 [label = "t_11:{group_num:PRIVATE:INT64}"]
-5 -> 8 [label = "t_10:{group_id:PRIVATE:INT64}"]
-5 -> 8 [label = "t_11:{group_num:PRIVATE:INT64}"]
-5 -> 9 [label = "t_10:{group_id:PRIVATE:INT64}"]
-5 -> 9 [label = "t_11:{group_num:PRIVATE:INT64}"]
-6 -> 15 [label = "t_12:{compare_int_0_count_distinct:PRIVATE:INT64}"]
-7 -> 15 [label = "t_13:{compare_int_0_sum:PRIVATE:INT64}"]
-8 -> 15 [label = "t_14:{compare_int_0_max:PRIVATE:INT64}"]
-9 -> 15 [label = "t_15:{compare_int_0_min:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+0 -> 2 [label = "t_2:{plain_int_0:PRIVATE:INT64}"]
+1 -> 3 [label = "t_3:{plain_int_0:PRIVATE:INT64}"]
+1 -> 3 [label = "t_3:{plain_int_0:PRIVATE:INT64}"]
+10 -> 17 [label = "t_18:{compare_int_0_max:PRIVATE:INT64}"]
+11 -> 17 [label = "t_19:{compare_int_0_min:PRIVATE:INT64}"]
+12 -> 17 [label = "t_20:{groupby_int_0_firstrow:PRIVATE:INT64}"]
+13 -> 15 [label = "t_21:{group_id_count:PRIVATE:INT64}"]
+13 -> 16 [label = "t_21:{group_id_count:PRIVATE:INT64}"]
+13 -> 17 [label = "t_21:{group_id_count:PRIVATE:INT64}"]
+14 -> 15 [label = "t_22:{constant_data:PUBLIC:INT64}"]
+15 -> 16 [label = "t_23:{constant_data:PRIVATE:INT64}"]
+16 -> 17 [label = "t_24:{GreaterEqual_out:PRIVATE:BOOL}"]
+17 -> 18 [label = "t_25:{groupby_int_0_firstrow:PRIVATE:INT64}"]
+17 -> 18 [label = "t_26:{compare_int_0_count_distinct:PRIVATE:INT64}"]
+17 -> 18 [label = "t_27:{compare_int_0_sum:PRIVATE:INT64}"]
+17 -> 18 [label = "t_28:{compare_int_0_max:PRIVATE:INT64}"]
+17 -> 18 [label = "t_29:{compare_int_0_min:PRIVATE:INT64}"]
+2 -> 4 [label = "t_6:{plain_int_0:PRIVATE:INT64}"]
+2 -> 5 [label = "t_4:{compare_int_0:PRIVATE:INT64}"]
+2 -> 5 [label = "t_5:{groupby_int_0:PRIVATE:INT64}"]
+2 -> 5 [label = "t_6:{plain_int_0:PRIVATE:INT64}"]
+3 -> 4 [label = "t_7:{plain_int_0:PRIVATE:INT64}"]
+3 -> 6 [label = "t_7:{plain_int_0:PRIVATE:INT64}"]
+4 -> 5 [label = "t_8:{plain_int_0:PRIVATE:INT64}"]
+4 -> 6 [label = "t_9:{plain_int_0:PRIVATE:INT64}"]
+5 -> 10 [label = "t_10:{compare_int_0:PRIVATE:INT64}"]
+5 -> 11 [label = "t_10:{compare_int_0:PRIVATE:INT64}"]
+5 -> 12 [label = "t_11:{groupby_int_0:PRIVATE:INT64}"]
+5 -> 7 [label = "t_11:{groupby_int_0:PRIVATE:INT64}"]
+5 -> 8 [label = "t_10:{compare_int_0:PRIVATE:INT64}"]
+5 -> 9 [label = "t_10:{compare_int_0:PRIVATE:INT64}"]
+7 -> 10 [label = "t_14:{group_id:PRIVATE:INT64}"]
+7 -> 10 [label = "t_15:{group_num:PRIVATE:INT64}"]
+7 -> 11 [label = "t_14:{group_id:PRIVATE:INT64}"]
+7 -> 11 [label = "t_15:{group_num:PRIVATE:INT64}"]
+7 -> 12 [label = "t_14:{group_id:PRIVATE:INT64}"]
+7 -> 12 [label = "t_15:{group_num:PRIVATE:INT64}"]
+7 -> 13 [label = "t_14:{group_id:PRIVATE:INT64}"]
+7 -> 13 [label = "t_14:{group_id:PRIVATE:INT64}"]
+7 -> 13 [label = "t_15:{group_num:PRIVATE:INT64}"]
+7 -> 8 [label = "t_14:{group_id:PRIVATE:INT64}"]
+7 -> 8 [label = "t_15:{group_num:PRIVATE:INT64}"]
+7 -> 9 [label = "t_14:{group_id:PRIVATE:INT64}"]
+7 -> 9 [label = "t_15:{group_num:PRIVATE:INT64}"]
+8 -> 17 [label = "t_16:{compare_int_0_count_distinct:PRIVATE:INT64}"]
+9 -> 17 [label = "t_17:{compare_int_0_sum:PRIVATE:INT64}"]
+}`, `
+pipeline 0 {
+Batched: false
+node: [runsql_0 runsql_1 bucket_2 bucket_3]
+Inputs: []
+Outputs: [t_4 t_5 t_6 t_7]
+}
+pipeline 1 {
+Batched: true
+node: [join_4 filter_by_index_5 filter_by_index_6]
+Inputs: [t_4 t_5 t_6 t_7]
+Outputs: [t_10 t_11]
+}
+pipeline 2 {
+Batched: false
+node: [group_7 count_distinct_8 sum_9 max_10 min_11 firstrow_12 count_13 make_constant_14]
+Inputs: [t_10 t_11]
+Outputs: [t_16 t_17 t_18 t_19 t_20 t_21 t_22]
+}
+pipeline 3 {
+Batched: false
+node: [broadcast_15 GreaterEqual_16 apply_filter_17]
+Inputs: [t_16 t_17 t_18 t_19 t_20 t_21 t_22]
+Outputs: [t_25 t_26 t_27 t_28 t_29]
+}
+pipeline 4 {
+Batched: false
+node: [publish_18]
+Inputs: [t_25 t_26 t_27 t_28 t_29]
+Outputs: []
+}
+`, testConf{groupThreshold: 0, batched: true}},
 	{`select count(distinct(ta.compare_int_0)), sum(ta.compare_int_0) as b, max(ta.compare_int_0) as a, min(ta.compare_int_0) as d from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_int_0 = tb.plain_int_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select ta.compare_int_0,ta.plain_int_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_2,},],attr:[sql:select tb.plain_int_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -1714,7 +1888,7 @@ var translateWithCCLTestCases = []sPair{
 7 -> 10 [label = "t_10:{compare_int_0:PRIVATE:INT64}"]
 8 -> 10 [label = "t_11:{compare_int_0:PRIVATE:INT64}"]
 9 -> 10 [label = "t_12:{compare_int_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select ta.plain_int_0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_int_0 = tb.plain_int_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select ta.plain_int_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select tb.plain_int_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -1729,7 +1903,7 @@ var translateWithCCLTestCases = []sPair{
 2 -> 3 [label = "t_2:{plain_int_0:PRIVATE:INT64}"]
 2 -> 4 [label = "t_3:{plain_int_0:PRIVATE:INT64}"]
 3 -> 5 [label = "t_4:{plain_int_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select ta.plain_int_0 from alice.tbl_0 as ta left join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select ta.join_int_0,ta.plain_int_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_2,},],attr:[sql:select tb.join_int_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -1745,7 +1919,7 @@ var translateWithCCLTestCases = []sPair{
 2 -> 3 [label = "t_3:{join_int_0:PRIVATE:INT64}"]
 2 -> 4 [label = "t_4:{join_int_0:PRIVATE:INT64}"]
 3 -> 5 [label = "t_6:{plain_int_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select ta.plain_int_0 from alice.tbl_0 as ta left join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0 left join carol.tbl_0 as tc on tb.join_int_1 = tc.join_int_1`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select ta.join_int_0,ta.plain_int_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_2,t_3,},],attr:[sql:select tb.join_int_0,tb.join_int_1 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -1779,7 +1953,7 @@ var translateWithCCLTestCases = []sPair{
 6 -> 9 [label = "t_11:{join_int_1:PRIVATE:INT64}"]
 7 -> 8 [label = "t_13:{join_int_1:PRIVATE:INT64}"]
 8 -> 11 [label = "t_15:{plain_int_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select max(ta.aggregate_float_0 + ta.aggregate_float_0) from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_int_0 = tb.plain_int_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select ta.aggregate_float_0,ta.plain_int_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_2,},],attr:[sql:select tb.plain_int_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -1800,7 +1974,7 @@ var translateWithCCLTestCases = []sPair{
 3 -> 5 [label = "t_5:{aggregate_float_0:PRIVATE:FLOAT32}"]
 5 -> 6 [label = "t_8:{Add_out:PRIVATE:FLOAT64}"]
 6 -> 7 [label = "t_9:{Add_out:PRIVATE:FLOAT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select count(*) as c, sum(ta.plain_int_0) as b, max(ta.plain_int_0) as a, min(ta.plain_int_0) as d, avg(ta.plain_int_0) as f from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_int_0 = tb.plain_int_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select ta.plain_int_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select tb.plain_int_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -1829,7 +2003,7 @@ var translateWithCCLTestCases = []sPair{
 7 -> 10 [label = "t_8:{plain_int_0:PRIVATE:INT64}"]
 8 -> 10 [label = "t_9:{plain_int_0:PRIVATE:INT64}"]
 9 -> 10 [label = "t_10:{plain_int_0:PRIVATE:FLOAT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select ta.plain_int_0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_int_0 = tb.plain_int_0 where ta.plain_int_1 > tb.plain_int_1`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select ta.plain_int_0,ta.plain_int_1 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_2,t_3,},],attr:[sql:select tb.plain_int_0,tb.plain_int_1 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -1861,7 +2035,7 @@ var translateWithCCLTestCases = []sPair{
 6 -> 8 [label = "t_11:{Greater_out:PRIVATE:BOOL}"]
 7 -> 10 [label = "t_12:{plain_int_0:PRIVATE:INT64}"]
 8 -> 9 [label = "t_14:{Greater_out:PRIVATE:BOOL}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select ta.plain_int_0 * tb.plain_int_0 as t1, ta.plain_int_0 + tb.plain_int_0 as t2, ta.plain_int_0 - tb.plain_int_0 as t3, ta.plain_int_0 / tb.plain_int_0 as t1 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_int_0 = tb.plain_int_0 where ta.plain_int_1 > tb.plain_int_1`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select ta.plain_int_0,ta.plain_int_1 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_2,t_3,},],attr:[sql:select tb.plain_int_0,tb.plain_int_1 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -1912,7 +2086,7 @@ var translateWithCCLTestCases = []sPair{
 7 -> 14 [label = "t_12:{plain_int_0:PRIVATE:INT64}"]
 8 -> 9 [label = "t_14:{Greater_out:PRIVATE:BOOL}"]
 9 -> 10 [label = "t_15:{plain_int_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select ta.plain_int_0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_int_0 = tb.plain_int_0 where ta.plain_int_1 > tb.plain_int_1 and ta.compare_int_0 < tb.compare_int_0 and ta.compare_int_1 <> tb.compare_int_1 and ta.compare_int_2 >= tb.compare_int_2 and ta.compare_float_0 <= tb.compare_float_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,t_2,t_3,t_4,t_5,},],attr:[sql:select ta.compare_float_0,ta.compare_int_0,ta.compare_int_1,ta.compare_int_2,ta.plain_int_0,ta.plain_int_1 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_6,t_7,t_8,t_9,t_10,t_11,},],attr:[sql:select tb.compare_float_0,tb.compare_int_0,tb.compare_int_1,tb.compare_int_2,tb.plain_int_0,tb.plain_int_1 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -2008,7 +2182,7 @@ var translateWithCCLTestCases = []sPair{
 7 -> 9 [label = "t_28:{compare_int_0:SECRET:INT64}"]
 8 -> 9 [label = "t_29:{compare_int_0:SECRET:INT64}"]
 9 -> 19 [label = "t_30:{Less_out:SECRET:BOOL}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select ta.join_int_0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select ta.join_int_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select tb.join_int_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -2023,7 +2197,7 @@ var translateWithCCLTestCases = []sPair{
 2 -> 3 [label = "t_2:{join_int_0:PRIVATE:INT64}"]
 2 -> 4 [label = "t_3:{join_int_0:PRIVATE:INT64}"]
 3 -> 5 [label = "t_4:{join_int_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select ta.join_int_0 + 1 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select ta.join_int_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select tb.join_int_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -2045,7 +2219,7 @@ var translateWithCCLTestCases = []sPair{
 5 -> 6 [label = "t_6:{constant_data:PUBLIC:INT64}"]
 6 -> 7 [label = "t_7:{constant_data:PRIVATE:INT64}"]
 7 -> 8 [label = "t_8:{Add_out:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select ta.join_int_0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0 where ta.compare_int_0 > tb.compare_int_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select ta.compare_int_0,ta.join_int_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_2,t_3,},],attr:[sql:select tb.compare_int_0,tb.join_int_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -2081,7 +2255,7 @@ var translateWithCCLTestCases = []sPair{
 7 -> 8 [label = "t_12:{Greater_out:SECRET:BOOL}"]
 8 -> 9 [label = "t_13:{Greater_out:PRIVATE:BOOL}"]
 9 -> 12 [label = "t_15:{join_int_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select ta.plain_int_0 in (1,2,3) from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_int_0 = tb.plain_int_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select ta.plain_int_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select tb.plain_int_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -2123,7 +2297,7 @@ var translateWithCCLTestCases = []sPair{
 7 -> 15 [label = "t_8:{Equal_out:PRIVATE:BOOL}"]
 8 -> 9 [label = "t_9:{constant_data:PUBLIC:INT64}"]
 9 -> 10 [label = "t_10:{constant_data:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select ta.plain_int_0 in (select tb.plain_int_0 from bob.tbl_0 as tb) from alice.tbl_0 as ta`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select ta.plain_int_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select tb.plain_int_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -2132,7 +2306,7 @@ var translateWithCCLTestCases = []sPair{
 0 -> 2 [label = "t_0:{plain_int_0:PRIVATE:INT64}"]
 1 -> 2 [label = "t_1:{plain_int_0:PRIVATE:INT64}"]
 2 -> 3 [label = "t_2:{psi_in_out:PRIVATE:BOOL}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select ta.compare_int_0 in (select tb.compare_int_0 from bob.tbl_0 as tb) from alice.tbl_0 as ta`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select ta.compare_int_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select tb.compare_int_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -2141,7 +2315,7 @@ var translateWithCCLTestCases = []sPair{
 0 -> 2 [label = "t_0:{compare_int_0:PRIVATE:INT64}"]
 1 -> 2 [label = "t_1:{compare_int_0:PRIVATE:INT64}"]
 2 -> 3 [label = "t_2:{psi_in_out:PRIVATE:BOOL}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select ta.compare_int_0 from alice.tbl_0 as ta where ta.compare_int_0 in (select tb.compare_int_0 from bob.tbl_0 as tb)`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select ta.compare_int_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select tb.compare_int_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -2153,7 +2327,7 @@ var translateWithCCLTestCases = []sPair{
 1 -> 2 [label = "t_1:{compare_int_0:PRIVATE:INT64}"]
 2 -> 3 [label = "t_2:{psi_in_out:PRIVATE:BOOL}"]
 3 -> 4 [label = "t_3:{compare_int_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select ta.compare_int_0 from alice.tbl_0 as ta where ta.compare_int_0 not in (select tb.compare_int_0 from bob.tbl_0 as tb)`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select ta.compare_int_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select tb.compare_int_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -2167,7 +2341,7 @@ var translateWithCCLTestCases = []sPair{
 2 -> 3 [label = "t_2:{psi_in_out:PRIVATE:BOOL}"]
 3 -> 4 [label = "t_3:{psi_in_out:PRIVATE:BOOL}"]
 4 -> 5 [label = "t_4:{compare_int_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select not(ta.plain_int_0 > tb.plain_int_0) from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_int_0 = tb.plain_int_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select ta.plain_int_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select tb.plain_int_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -2189,7 +2363,7 @@ var translateWithCCLTestCases = []sPair{
 5 -> 6 [label = "t_6:{plain_int_0:PRIVATE:INT64}"]
 6 -> 7 [label = "t_7:{Greater_out:PRIVATE:BOOL}"]
 7 -> 8 [label = "t_8:{Greater_out:PRIVATE:BOOL}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select not(ta.compare_int_0 > tb.compare_int_0) from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_int_0 = tb.plain_int_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select ta.compare_int_0,ta.plain_int_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_2,t_3,},],attr:[sql:select tb.compare_int_0,tb.plain_int_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -2217,7 +2391,7 @@ var translateWithCCLTestCases = []sPair{
 7 -> 8 [label = "t_12:{Greater_out:SECRET:BOOL}"]
 8 -> 9 [label = "t_13:{Greater_out:SECRET:BOOL}"]
 9 -> 10 [label = "t_14:{Greater_out:PRIVATE:BOOL}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select (ta.compare_int_0 + tb.compare_int_0 - 3) > 0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_int_0 = tb.plain_int_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select ta.compare_int_0,ta.plain_int_0 from alice.tbl_0 as ta,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_2,t_3,},],attr:[sql:select tb.compare_int_0,tb.plain_int_0 from bob.tbl_0 as tb,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -2257,10 +2431,10 @@ var translateWithCCLTestCases = []sPair{
 7 -> 9 [label = "t_12:{Add_out:SECRET:INT64}"]
 8 -> 9 [label = "t_13:{constant_data:PUBLIC:INT64}"]
 9 -> 10 [label = "t_14:{constant_data:PUBLIC:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select distinct groupby_int_0 from (select ta.groupby_int_0 from alice.tbl_0 as ta union all select tb.groupby_int_0 from bob.tbl_0 as tb) as tt`, `digraph G {
-0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select any_value(ta.groupby_int_0) as expr_183 from alice.tbl_0 as ta group by ta.groupby_int_0,table_refs:[alice.tbl_0],],party:[alice,]}"]
-1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select any_value(tb.groupby_int_0) as expr_183 from bob.tbl_0 as tb group by tb.groupby_int_0,table_refs:[bob.tbl_0],],party:[bob,]}"]
+0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select any_value(ta.groupby_int_0) as expr_212 from alice.tbl_0 as ta group by ta.groupby_int_0,table_refs:[alice.tbl_0],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select any_value(tb.groupby_int_0) as expr_212 from bob.tbl_0 as tb group by tb.groupby_int_0,table_refs:[bob.tbl_0],],party:[bob,]}"]
 2 [label="make_share:{in:[In:{t_0,},],out:[Out:{t_2,},],attr:[],party:[alice,bob,carol,]}"]
 3 [label="make_share:{in:[In:{t_1,},],out:[Out:{t_3,},],attr:[],party:[alice,bob,carol,]}"]
 4 [label="concat:{in:[In:{t_2,t_3,},],out:[Out:{t_4,},],attr:[axis:0,],party:[alice,bob,carol,]}"]
@@ -2268,20 +2442,51 @@ var translateWithCCLTestCases = []sPair{
 6 [label="group:{in:[Key:{t_5,},],out:[GroupId:{t_6,},GroupNum:{t_7,},],attr:[],party:[alice,]}"]
 7 [label="firstrow:{in:[GroupId:{t_6,},GroupNum:{t_7,},In:{t_5,},],out:[Out:{t_8,},],attr:[],party:[alice,]}"]
 8 [label="publish:{in:[In:{t_8,},],out:[Out:{t_9,},],attr:[],party:[alice,]}"]
-0 -> 2 [label = "t_0:{Column#183:PRIVATE:INT64}"]
-1 -> 3 [label = "t_1:{Column#183:PRIVATE:INT64}"]
-2 -> 4 [label = "t_2:{Column#183:SECRET:INT64}"]
-3 -> 4 [label = "t_3:{Column#183:SECRET:INT64}"]
-4 -> 5 [label = "t_4:{Column#183:SECRET:INT64}"]
-5 -> 6 [label = "t_5:{Column#183:PRIVATE:INT64}"]
-5 -> 7 [label = "t_5:{Column#183:PRIVATE:INT64}"]
+0 -> 2 [label = "t_0:{Column#212:PRIVATE:INT64}"]
+1 -> 3 [label = "t_1:{Column#212:PRIVATE:INT64}"]
+2 -> 4 [label = "t_2:{Column#212:SECRET:INT64}"]
+3 -> 4 [label = "t_3:{Column#212:SECRET:INT64}"]
+4 -> 5 [label = "t_4:{Column#212:SECRET:INT64}"]
+5 -> 6 [label = "t_5:{Column#212:PRIVATE:INT64}"]
+5 -> 7 [label = "t_5:{Column#212:PRIVATE:INT64}"]
 6 -> 7 [label = "t_6:{group_id:PRIVATE:INT64}"]
 6 -> 7 [label = "t_7:{group_num:PRIVATE:INT64}"]
-7 -> 8 [label = "t_8:{Column#183_firstrow:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+7 -> 8 [label = "t_8:{Column#212_firstrow:PRIVATE:INT64}"]
+}`, `
+pipeline 0 {
+Batched: false
+node: [runsql_0 runsql_1]
+Inputs: []
+Outputs: [t_0 t_1]
+}
+pipeline 1 {
+Batched: false
+node: [make_share_2 make_share_3]
+Inputs: [t_0 t_1]
+Outputs: [t_2 t_3]
+}
+pipeline 2 {
+Batched: false
+node: [concat_4]
+Inputs: [t_2 t_3]
+Outputs: [t_4]
+}
+pipeline 3 {
+Batched: false
+node: [make_private_5]
+Inputs: [t_4]
+Outputs: [t_5]
+}
+pipeline 4 {
+Batched: false
+node: [group_6 firstrow_7 publish_8]
+Inputs: [t_5]
+Outputs: []
+}
+`, testConf{groupThreshold: 0, batched: true}},
 	{`select ta.groupby_int_0 from alice.tbl_0 as ta union select tb.groupby_int_0 from bob.tbl_0 as tb`, `digraph G {
-0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select any_value(ta.groupby_int_0) as expr_183 from alice.tbl_0 as ta group by ta.groupby_int_0,table_refs:[alice.tbl_0],],party:[alice,]}"]
-1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select any_value(tb.groupby_int_0) as expr_183 from bob.tbl_0 as tb group by tb.groupby_int_0,table_refs:[bob.tbl_0],],party:[bob,]}"]
+0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select any_value(ta.groupby_int_0) as expr_212 from alice.tbl_0 as ta group by ta.groupby_int_0,table_refs:[alice.tbl_0],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select any_value(tb.groupby_int_0) as expr_212 from bob.tbl_0 as tb group by tb.groupby_int_0,table_refs:[bob.tbl_0],],party:[bob,]}"]
 2 [label="make_share:{in:[In:{t_0,},],out:[Out:{t_2,},],attr:[],party:[alice,bob,carol,]}"]
 3 [label="make_share:{in:[In:{t_1,},],out:[Out:{t_3,},],attr:[],party:[alice,bob,carol,]}"]
 4 [label="concat:{in:[In:{t_2,t_3,},],out:[Out:{t_4,},],attr:[axis:0,],party:[alice,bob,carol,]}"]
@@ -2289,26 +2494,26 @@ var translateWithCCLTestCases = []sPair{
 6 [label="group:{in:[Key:{t_5,},],out:[GroupId:{t_6,},GroupNum:{t_7,},],attr:[],party:[alice,]}"]
 7 [label="firstrow:{in:[GroupId:{t_6,},GroupNum:{t_7,},In:{t_5,},],out:[Out:{t_8,},],attr:[],party:[alice,]}"]
 8 [label="publish:{in:[In:{t_8,},],out:[Out:{t_9,},],attr:[],party:[alice,]}"]
-0 -> 2 [label = "t_0:{Column#183:PRIVATE:INT64}"]
-1 -> 3 [label = "t_1:{Column#183:PRIVATE:INT64}"]
-2 -> 4 [label = "t_2:{Column#183:SECRET:INT64}"]
-3 -> 4 [label = "t_3:{Column#183:SECRET:INT64}"]
-4 -> 5 [label = "t_4:{Column#183:SECRET:INT64}"]
-5 -> 6 [label = "t_5:{Column#183:PRIVATE:INT64}"]
-5 -> 7 [label = "t_5:{Column#183:PRIVATE:INT64}"]
+0 -> 2 [label = "t_0:{Column#212:PRIVATE:INT64}"]
+1 -> 3 [label = "t_1:{Column#212:PRIVATE:INT64}"]
+2 -> 4 [label = "t_2:{Column#212:SECRET:INT64}"]
+3 -> 4 [label = "t_3:{Column#212:SECRET:INT64}"]
+4 -> 5 [label = "t_4:{Column#212:SECRET:INT64}"]
+5 -> 6 [label = "t_5:{Column#212:PRIVATE:INT64}"]
+5 -> 7 [label = "t_5:{Column#212:PRIVATE:INT64}"]
 6 -> 7 [label = "t_6:{group_id:PRIVATE:INT64}"]
 6 -> 7 [label = "t_7:{group_num:PRIVATE:INT64}"]
-7 -> 8 [label = "t_8:{Column#183_firstrow:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+7 -> 8 [label = "t_8:{Column#212_firstrow:PRIVATE:INT64}"]
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select plain_float_0 from (select plain_float_0 from alice.tbl_1 union all select plain_float_0 from alice.tbl_2) as tt group by plain_float_0`, `digraph G {
-0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select any_value(tt.expr_183) as plain_float_0 from ((select any_value(tbl_1.plain_float_0) as expr_183,count(1) as expr_184 from alice.tbl_1 group by tbl_1.plain_float_0) union all (select any_value(tbl_2.plain_float_0) as expr_183,count(1) as expr_184 from alice.tbl_2 group by tbl_2.plain_float_0)) as tt group by tt.expr_183 having count(tt.expr_184)>=4,table_refs:[alice.tbl_1 alice.tbl_2],],party:[alice,]}"]
+0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select any_value(tt.expr_213) as plain_float_0 from ((select any_value(tbl_1.plain_float_0) as expr_213,count(1) as expr_214 from alice.tbl_1 group by tbl_1.plain_float_0) union all (select any_value(tbl_2.plain_float_0) as expr_213,count(1) as expr_214 from alice.tbl_2 group by tbl_2.plain_float_0)) as tt group by tt.expr_213 having count(tt.expr_214)>=4,table_refs:[alice.tbl_1 alice.tbl_2],],party:[alice,]}"]
 1 [label="publish:{in:[In:{t_0,},],out:[Out:{t_1,},],attr:[],party:[alice,]}"]
-0 -> 1 [label = "t_0:{Column#181:PRIVATE:FLOAT32}"]
-}`, testConf{groupThreshold: 0}},
+0 -> 1 [label = "t_0:{Column#211:PRIVATE:FLOAT32}"]
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select count(*), max(aggregate_int_0) from (select aggregate_int_0, groupby_int_0 from alice.tbl_0 union all select aggregate_int_0, groupby_int_0 from bob.tbl_1 union all select aggregate_int_0, groupby_int_0 from carol.tbl_2) as u`, `digraph G {
-0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select count(1) as expr_275,max(tbl_0.aggregate_int_0) as expr_276 from alice.tbl_0,table_refs:[alice.tbl_0],],party:[alice,]}"]
-1 [label="runsql:{in:[],out:[Out:{t_2,t_3,},],attr:[sql:select count(1) as expr_275,max(tbl_1.aggregate_int_0) as expr_276 from bob.tbl_1,table_refs:[bob.tbl_1],],party:[bob,]}"]
-2 [label="runsql:{in:[],out:[Out:{t_4,t_5,},],attr:[sql:select count(1) as expr_275,max(tbl_2.aggregate_int_0) as expr_276 from carol.tbl_2,table_refs:[carol.tbl_2],],party:[carol,]}"]
+0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select count(1) as expr_320,max(tbl_0.aggregate_int_0) as expr_321 from alice.tbl_0,table_refs:[alice.tbl_0],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_2,t_3,},],attr:[sql:select count(1) as expr_320,max(tbl_1.aggregate_int_0) as expr_321 from bob.tbl_1,table_refs:[bob.tbl_1],],party:[bob,]}"]
+2 [label="runsql:{in:[],out:[Out:{t_4,t_5,},],attr:[sql:select count(1) as expr_320,max(tbl_2.aggregate_int_0) as expr_321 from carol.tbl_2,table_refs:[carol.tbl_2],],party:[carol,]}"]
 3 [label="make_share:{in:[In:{t_0,},],out:[Out:{t_6,},],attr:[],party:[alice,bob,carol,]}"]
 4 [label="make_share:{in:[In:{t_2,},],out:[Out:{t_7,},],attr:[],party:[alice,bob,carol,]}"]
 5 [label="make_share:{in:[In:{t_4,},],out:[Out:{t_8,},],attr:[],party:[alice,bob,carol,]}"]
@@ -2322,29 +2527,29 @@ var translateWithCCLTestCases = []sPair{
 13 [label="make_private:{in:[In:{t_14,},],out:[Out:{t_16,},],attr:[reveal_to:alice,],party:[alice,bob,carol,]}"]
 14 [label="make_private:{in:[In:{t_15,},],out:[Out:{t_18,},],attr:[reveal_to:alice,],party:[alice,bob,carol,]}"]
 15 [label="publish:{in:[In:{t_16,t_18,},],out:[Out:{t_17,t_19,},],attr:[],party:[alice,]}"]
-0 -> 3 [label = "t_0:{Column#275:PRIVATE:INT64}"]
-0 -> 7 [label = "t_1:{Column#276:PRIVATE:INT64}"]
-1 -> 4 [label = "t_2:{Column#275:PRIVATE:INT64}"]
-1 -> 8 [label = "t_3:{Column#276:PRIVATE:INT64}"]
-10 -> 12 [label = "t_13:{Column#276:SECRET:INT64}"]
-11 -> 13 [label = "t_14:{Column#275:SECRET:INT64}"]
-12 -> 14 [label = "t_15:{Column#276:SECRET:INT64}"]
-13 -> 15 [label = "t_16:{Column#275:PRIVATE:INT64}"]
-14 -> 15 [label = "t_18:{Column#276:PRIVATE:INT64}"]
-2 -> 5 [label = "t_4:{Column#275:PRIVATE:INT64}"]
-2 -> 9 [label = "t_5:{Column#276:PRIVATE:INT64}"]
-3 -> 6 [label = "t_6:{Column#275:SECRET:INT64}"]
-4 -> 6 [label = "t_7:{Column#275:SECRET:INT64}"]
-5 -> 6 [label = "t_8:{Column#275:SECRET:INT64}"]
-6 -> 11 [label = "t_9:{Column#275:SECRET:INT64}"]
-7 -> 10 [label = "t_10:{Column#276:SECRET:INT64}"]
-8 -> 10 [label = "t_11:{Column#276:SECRET:INT64}"]
-9 -> 10 [label = "t_12:{Column#276:SECRET:INT64}"]
-}`, testConf{groupThreshold: 0}},
+0 -> 3 [label = "t_0:{Column#320:PRIVATE:INT64}"]
+0 -> 7 [label = "t_1:{Column#321:PRIVATE:INT64}"]
+1 -> 4 [label = "t_2:{Column#320:PRIVATE:INT64}"]
+1 -> 8 [label = "t_3:{Column#321:PRIVATE:INT64}"]
+10 -> 12 [label = "t_13:{Column#321:SECRET:INT64}"]
+11 -> 13 [label = "t_14:{Column#320:SECRET:INT64}"]
+12 -> 14 [label = "t_15:{Column#321:SECRET:INT64}"]
+13 -> 15 [label = "t_16:{Column#320:PRIVATE:INT64}"]
+14 -> 15 [label = "t_18:{Column#321:PRIVATE:INT64}"]
+2 -> 5 [label = "t_4:{Column#320:PRIVATE:INT64}"]
+2 -> 9 [label = "t_5:{Column#321:PRIVATE:INT64}"]
+3 -> 6 [label = "t_6:{Column#320:SECRET:INT64}"]
+4 -> 6 [label = "t_7:{Column#320:SECRET:INT64}"]
+5 -> 6 [label = "t_8:{Column#320:SECRET:INT64}"]
+6 -> 11 [label = "t_9:{Column#320:SECRET:INT64}"]
+7 -> 10 [label = "t_10:{Column#321:SECRET:INT64}"]
+8 -> 10 [label = "t_11:{Column#321:SECRET:INT64}"]
+9 -> 10 [label = "t_12:{Column#321:SECRET:INT64}"]
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select count(*), max(aggregate_int_0) from (select aggregate_int_0, groupby_int_0 from alice.tbl_0 union all select aggregate_int_0, groupby_int_0 from bob.tbl_1 union all select aggregate_int_0, groupby_int_0 from carol.tbl_2) as u group by groupby_int_0`, `digraph G {
-0 [label="runsql:{in:[],out:[Out:{t_0,t_1,t_2,},],attr:[sql:select count(1) as expr_275,max(tbl_0.aggregate_int_0) as expr_276,any_value(tbl_0.groupby_int_0) as expr_272 from alice.tbl_0 group by tbl_0.groupby_int_0,table_refs:[alice.tbl_0],],party:[alice,]}"]
-1 [label="runsql:{in:[],out:[Out:{t_3,t_4,t_5,},],attr:[sql:select count(1) as expr_275,max(tbl_1.aggregate_int_0) as expr_276,any_value(tbl_1.groupby_int_0) as expr_272 from bob.tbl_1 group by tbl_1.groupby_int_0,table_refs:[bob.tbl_1],],party:[bob,]}"]
-2 [label="runsql:{in:[],out:[Out:{t_6,t_7,t_8,},],attr:[sql:select count(1) as expr_275,max(tbl_2.aggregate_int_0) as expr_276,any_value(tbl_2.groupby_int_0) as expr_272 from carol.tbl_2 group by tbl_2.groupby_int_0,table_refs:[carol.tbl_2],],party:[carol,]}"]
+0 [label="runsql:{in:[],out:[Out:{t_0,t_1,t_2,},],attr:[sql:select count(1) as expr_320,max(tbl_0.aggregate_int_0) as expr_321,any_value(tbl_0.groupby_int_0) as expr_317 from alice.tbl_0 group by tbl_0.groupby_int_0,table_refs:[alice.tbl_0],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_3,t_4,t_5,},],attr:[sql:select count(1) as expr_320,max(tbl_1.aggregate_int_0) as expr_321,any_value(tbl_1.groupby_int_0) as expr_317 from bob.tbl_1 group by tbl_1.groupby_int_0,table_refs:[bob.tbl_1],],party:[bob,]}"]
+2 [label="runsql:{in:[],out:[Out:{t_6,t_7,t_8,},],attr:[sql:select count(1) as expr_320,max(tbl_2.aggregate_int_0) as expr_321,any_value(tbl_2.groupby_int_0) as expr_317 from carol.tbl_2 group by tbl_2.groupby_int_0,table_refs:[carol.tbl_2],],party:[carol,]}"]
 3 [label="make_share:{in:[In:{t_0,},],out:[Out:{t_9,},],attr:[],party:[alice,bob,carol,]}"]
 4 [label="make_share:{in:[In:{t_3,},],out:[Out:{t_10,},],attr:[],party:[alice,bob,carol,]}"]
 5 [label="make_share:{in:[In:{t_6,},],out:[Out:{t_11,},],attr:[],party:[alice,bob,carol,]}"]
@@ -2368,44 +2573,44 @@ var translateWithCCLTestCases = []sPair{
 23 [label="GreaterEqual:{in:[Left:{t_25,},Right:{t_29,},],out:[Out:{t_30,},],attr:[],party:[alice,]}"]
 24 [label="apply_filter:{in:[Filter:{t_30,},In:{t_25,t_27,},],out:[Out:{t_31,t_32,},],attr:[],party:[alice,]}"]
 25 [label="publish:{in:[In:{t_31,t_32,},],out:[Out:{t_33,t_34,},],attr:[],party:[alice,]}"]
-0 -> 11 [label = "t_2:{Column#272:PRIVATE:INT64}"]
-0 -> 3 [label = "t_0:{Column#275:PRIVATE:INT64}"]
-0 -> 7 [label = "t_1:{Column#276:PRIVATE:INT64}"]
-1 -> 12 [label = "t_5:{Column#272:PRIVATE:INT64}"]
-1 -> 4 [label = "t_3:{Column#275:PRIVATE:INT64}"]
-1 -> 8 [label = "t_4:{Column#276:PRIVATE:INT64}"]
-10 -> 19 [label = "t_16:{Column#276:SECRET:INT64}"]
-11 -> 14 [label = "t_17:{Column#272:SECRET:INT64}"]
-12 -> 14 [label = "t_18:{Column#272:SECRET:INT64}"]
-13 -> 14 [label = "t_19:{Column#272:SECRET:INT64}"]
-14 -> 15 [label = "t_20:{Column#272:SECRET:INT64}"]
-15 -> 16 [label = "t_21:{Column#272:PRIVATE:INT64}"]
+0 -> 11 [label = "t_2:{Column#317:PRIVATE:INT64}"]
+0 -> 3 [label = "t_0:{Column#320:PRIVATE:INT64}"]
+0 -> 7 [label = "t_1:{Column#321:PRIVATE:INT64}"]
+1 -> 12 [label = "t_5:{Column#317:PRIVATE:INT64}"]
+1 -> 4 [label = "t_3:{Column#320:PRIVATE:INT64}"]
+1 -> 8 [label = "t_4:{Column#321:PRIVATE:INT64}"]
+10 -> 19 [label = "t_16:{Column#321:SECRET:INT64}"]
+11 -> 14 [label = "t_17:{Column#317:SECRET:INT64}"]
+12 -> 14 [label = "t_18:{Column#317:SECRET:INT64}"]
+13 -> 14 [label = "t_19:{Column#317:SECRET:INT64}"]
+14 -> 15 [label = "t_20:{Column#317:SECRET:INT64}"]
+15 -> 16 [label = "t_21:{Column#317:PRIVATE:INT64}"]
 16 -> 18 [label = "t_22:{group_id:PRIVATE:INT64}"]
 16 -> 18 [label = "t_23:{group_num:PRIVATE:INT64}"]
 16 -> 20 [label = "t_22:{group_id:PRIVATE:INT64}"]
 16 -> 20 [label = "t_23:{group_num:PRIVATE:INT64}"]
-17 -> 18 [label = "t_24:{Column#275:PRIVATE:INT64}"]
-18 -> 22 [label = "t_25:{Column#275_sum:PRIVATE:INT64}"]
-18 -> 23 [label = "t_25:{Column#275_sum:PRIVATE:INT64}"]
-18 -> 24 [label = "t_25:{Column#275_sum:PRIVATE:INT64}"]
-19 -> 20 [label = "t_26:{Column#276:PRIVATE:INT64}"]
-2 -> 13 [label = "t_8:{Column#272:PRIVATE:INT64}"]
-2 -> 5 [label = "t_6:{Column#275:PRIVATE:INT64}"]
-2 -> 9 [label = "t_7:{Column#276:PRIVATE:INT64}"]
-20 -> 24 [label = "t_27:{Column#276_max:PRIVATE:INT64}"]
+17 -> 18 [label = "t_24:{Column#320:PRIVATE:INT64}"]
+18 -> 22 [label = "t_25:{Column#320_sum:PRIVATE:INT64}"]
+18 -> 23 [label = "t_25:{Column#320_sum:PRIVATE:INT64}"]
+18 -> 24 [label = "t_25:{Column#320_sum:PRIVATE:INT64}"]
+19 -> 20 [label = "t_26:{Column#321:PRIVATE:INT64}"]
+2 -> 13 [label = "t_8:{Column#317:PRIVATE:INT64}"]
+2 -> 5 [label = "t_6:{Column#320:PRIVATE:INT64}"]
+2 -> 9 [label = "t_7:{Column#321:PRIVATE:INT64}"]
+20 -> 24 [label = "t_27:{Column#321_max:PRIVATE:INT64}"]
 21 -> 22 [label = "t_28:{constant_data:PUBLIC:INT64}"]
 22 -> 23 [label = "t_29:{constant_data:PRIVATE:INT64}"]
 23 -> 24 [label = "t_30:{GreaterEqual_out:PRIVATE:BOOL}"]
-24 -> 25 [label = "t_31:{Column#275_sum:PRIVATE:INT64}"]
-24 -> 25 [label = "t_32:{Column#276_max:PRIVATE:INT64}"]
-3 -> 6 [label = "t_9:{Column#275:SECRET:INT64}"]
-4 -> 6 [label = "t_10:{Column#275:SECRET:INT64}"]
-5 -> 6 [label = "t_11:{Column#275:SECRET:INT64}"]
-6 -> 17 [label = "t_12:{Column#275:SECRET:INT64}"]
-7 -> 10 [label = "t_13:{Column#276:SECRET:INT64}"]
-8 -> 10 [label = "t_14:{Column#276:SECRET:INT64}"]
-9 -> 10 [label = "t_15:{Column#276:SECRET:INT64}"]
-}`, testConf{groupThreshold: 0}},
+24 -> 25 [label = "t_31:{Column#320_sum:PRIVATE:INT64}"]
+24 -> 25 [label = "t_32:{Column#321_max:PRIVATE:INT64}"]
+3 -> 6 [label = "t_9:{Column#320:SECRET:INT64}"]
+4 -> 6 [label = "t_10:{Column#320:SECRET:INT64}"]
+5 -> 6 [label = "t_11:{Column#320:SECRET:INT64}"]
+6 -> 17 [label = "t_12:{Column#320:SECRET:INT64}"]
+7 -> 10 [label = "t_13:{Column#321:SECRET:INT64}"]
+8 -> 10 [label = "t_14:{Column#321:SECRET:INT64}"]
+9 -> 10 [label = "t_15:{Column#321:SECRET:INT64}"]
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select alice.plain_int_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_0 Div bob.compare_int_0 > bob.compare_int_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,t_2,},],attr:[sql:select alice.compare_int_0,alice.join_int_0,alice.plain_int_0 from alice.tbl_0 as alice,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_3,t_4,},],attr:[sql:select bob.compare_int_0,bob.join_int_0 from bob.tbl_0 as bob,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -2446,7 +2651,7 @@ var translateWithCCLTestCases = []sPair{
 8 -> 11 [label = "t_15:{Greater_out:SECRET:BOOL}"]
 8 -> 9 [label = "t_15:{Greater_out:SECRET:BOOL}"]
 9 -> 10 [label = "t_16:{Greater_out:PRIVATE:BOOL}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select alice.groupby_string_0,bob.groupby_string_0, count(*) as cnt from alice.tbl_0 as alice join bob.tbl_0 as bob where alice.join_int_0=bob.join_int_0 group by alice.groupby_string_0, bob.groupby_string_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select alice.groupby_string_0,alice.join_int_0 from alice.tbl_0 as alice,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_2,t_3,},],attr:[sql:select bob.groupby_string_0,bob.join_int_0 from bob.tbl_0 as bob,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -2526,7 +2731,7 @@ var translateWithCCLTestCases = []sPair{
 9 -> 10 [label = "t_15:{groupby_string_0:SECRET:STRING}"]
 9 -> 12 [label = "t_16:{groupby_string_0:SECRET:STRING}"]
 9 -> 12 [label = "t_18:{groupby_string_0:SECRET:STRING}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select case when alice.compare_int_0 > bob.compare_int_0 then alice.plain_int_0 else bob.plain_int_0 end as case_when1, case when bob.compare_int_0 > carol.compare_int_0 then 1 else 0 end as case_when2 from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_int_0 = bob.join_int_0 and bob.join_int_0 = carol.join_int_0;`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,t_2,},],attr:[sql:select alice.compare_int_0,alice.join_int_0,alice.plain_int_0 from alice.tbl_0 as alice,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_3,t_4,t_5,},],attr:[sql:select bob.compare_int_0,bob.join_int_0,bob.plain_int_0 from bob.tbl_0 as bob,table_refs:[bob.tbl_0],],party:[bob,]}"]
@@ -2602,7 +2807,7 @@ var translateWithCCLTestCases = []sPair{
 8 -> 16 [label = "t_21:{plain_int_0:PRIVATE:INT64}"]
 9 -> 12 [label = "t_22:{compare_int_0:PRIVATE:INT64}"]
 9 -> 15 [label = "t_24:{plain_int_0:PRIVATE:INT64}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
 	{`select alice.groupby_int_0, alice.GROUPBY_int_1, bob.join_string_0, bob.JOIN_STRING_0, carol.COMPARE_float_0 > 0, carol.compare_float_1 > 0 from alice.UPPER_table as alice, bob.UPPER_table as bob, carol.UPPER_table as carol where alice.join_string_0 = bob.JOIN_string_0 and bob.join_string_1 = carol.JOIN_string_1;`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,t_2,},],attr:[sql:select alice.GROUPBY_int_0,alice.JOIN_string_0,alice.groupby_int_1 from alice.UPPER_table as alice,table_refs:[alice.UPPER_table],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_3,t_4,},],attr:[sql:select bob.JOIN_string_0,bob.join_string_1 from bob.UPPER_table as bob,table_refs:[bob.UPPER_table],],party:[bob,]}"]
@@ -2665,5 +2870,50 @@ var translateWithCCLTestCases = []sPair{
 8 -> 20 [label = "t_18:{GROUPBY_int_0:PRIVATE:INT64}"]
 8 -> 20 [label = "t_20:{groupby_int_1:PRIVATE:INT64}"]
 9 -> 17 [label = "t_21:{JOIN_string_0:PRIVATE:STRING}"]
-}`, testConf{groupThreshold: 0}},
+}`, ``, testConf{groupThreshold: 0, batched: false}},
+	{`select ta.join_int_0, tb.plain_int_0 from alice.tbl_1 as ta inner join bob.tbl_1 as tb on ta.join_int_0=tb.join_int_0`, `digraph G {
+0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select ta.join_int_0 from alice.tbl_1 as ta,table_refs:[alice.tbl_1],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_1,t_2,},],attr:[sql:select tb.join_int_0,tb.plain_int_0 from bob.tbl_1 as tb,table_refs:[bob.tbl_1],],party:[bob,]}"]
+2 [label="bucket:{in:[In:{t_0,},Key:{t_0,},],out:[Out:{t_3,},],attr:[input_party_codes:[alice bob],],party:[alice,]}"]
+3 [label="bucket:{in:[In:{t_1,t_2,},Key:{t_1,},],out:[Out:{t_4,t_5,},],attr:[input_party_codes:[alice bob],],party:[bob,]}"]
+4 [label="join:{in:[Left:{t_3,},Right:{t_4,},],out:[LeftJoinIndex:{t_6,},RightJoinIndex:{t_7,},],attr:[input_party_codes:[alice bob],join_type:0,psi_algorithm:0,],party:[alice,bob,]}"]
+5 [label="filter_by_index:{in:[Data:{t_3,},RowsIndexFilter:{t_6,},],out:[Out:{t_8,},],attr:[],party:[alice,]}"]
+6 [label="filter_by_index:{in:[Data:{t_4,t_5,},RowsIndexFilter:{t_7,},],out:[Out:{t_9,t_10,},],attr:[],party:[bob,]}"]
+7 [label="copy:{in:[In:{t_10,},],out:[Out:{t_12,},],attr:[input_party_codes:bob,output_party_codes:alice,],party:[bob,alice,]}"]
+8 [label="publish:{in:[In:{t_8,t_12,},],out:[Out:{t_11,t_13,},],attr:[],party:[alice,]}"]
+0 -> 2 [label = "t_0:{join_int_0:PRIVATE:INT64}"]
+0 -> 2 [label = "t_0:{join_int_0:PRIVATE:INT64}"]
+1 -> 3 [label = "t_1:{join_int_0:PRIVATE:INT64}"]
+1 -> 3 [label = "t_1:{join_int_0:PRIVATE:INT64}"]
+1 -> 3 [label = "t_2:{plain_int_0:PRIVATE:INT64}"]
+2 -> 4 [label = "t_3:{join_int_0:PRIVATE:INT64}"]
+2 -> 5 [label = "t_3:{join_int_0:PRIVATE:INT64}"]
+3 -> 4 [label = "t_4:{join_int_0:PRIVATE:INT64}"]
+3 -> 6 [label = "t_4:{join_int_0:PRIVATE:INT64}"]
+3 -> 6 [label = "t_5:{plain_int_0:PRIVATE:INT64}"]
+4 -> 5 [label = "t_6:{join_int_0:PRIVATE:INT64}"]
+4 -> 6 [label = "t_7:{join_int_0:PRIVATE:INT64}"]
+5 -> 8 [label = "t_8:{join_int_0:PRIVATE:INT64}"]
+6 -> 7 [label = "t_10:{plain_int_0:PRIVATE:INT64}"]
+7 -> 8 [label = "t_12:{plain_int_0:PRIVATE:INT64}"]
+}`, `
+pipeline 0 {
+Batched: false
+node: [runsql_0 runsql_1 bucket_2 bucket_3]
+Inputs: []
+Outputs: [t_3 t_4 t_5]
+}
+pipeline 1 {
+Batched: true
+node: [join_4 filter_by_index_5 filter_by_index_6 copy_7]
+Inputs: [t_3 t_4 t_5]
+Outputs: [t_12 t_8]
+}
+pipeline 2 {
+Batched: false
+node: [publish_8]
+Inputs: [t_12 t_8]
+Outputs: []
+}
+`, testConf{groupThreshold: 0, batched: true}},
 }

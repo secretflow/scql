@@ -361,7 +361,6 @@ void RecordPublishNodeDetail(const ExecContext& ctx, int64_t num_rows,
   if (!audit_init_finished) {
     return;
   }
-  std::cout << "RecordPublishNodeDetail Start" << std::endl;
   AuditLog audit;
   auto* header = audit.mutable_header();
   header->mutable_time()->set_seconds(GetTimeSec(start_time));

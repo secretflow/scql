@@ -88,16 +88,6 @@ struct CSVTableReplacementScanData : public duckdb::ReplacementScanData {
   const csv::CsvdbConf *csvdb_conf;
 };
 
-static std::string GetS3Prefix(const std::string &url) {
-  const std::string prefixes[] = {"oss://", "minio://", "s3://"};
-  for (auto &prefix : prefixes) {
-    if (url.rfind(prefix, 0) == 0) {
-      return prefix;
-    }
-  }
-  return std::string();
-}
-
 static duckdb::unique_ptr<duckdb::TableRef> CSVTableReplacementScan(
     duckdb::ClientContext &context, duckdb::ReplacementScanInput &input,
     duckdb::optional_ptr<duckdb::ReplacementScanData> data) {
@@ -138,9 +128,9 @@ static duckdb::unique_ptr<duckdb::TableRef> CSVTableReplacementScan(
   // to s3://, then duckdb can parse the path url. When duckdb release
   // next version, we can considier inherit from duckdb::S3FileSystem
   // and make patch
-  auto prefix = GetS3Prefix(data_path);
-  if (!prefix.empty()) {
-    data_path.replace(0, prefix.length(), "s3://");
+  auto scheme = util::GetS3LikeScheme(data_path);
+  if (!scheme.empty()) {
+    data_path.replace(0, scheme.length(), "s3://");
   }
   children.emplace_back(
       duckdb::make_uniq<duckdb::ConstantExpression>(duckdb::Value(data_path)));
@@ -201,17 +191,18 @@ static std::string CheckTablePathsAndGetPrefix(
   for (const auto &table_conf : csvdb_conf.tables()) {
     // If path not s3 and not illegal, exception will be thrown.
     auto data_path = table_conf.data_path();
-    auto prefix = GetS3Prefix(data_path);
-    if (!prefix.empty()) {
+    auto scheme = util::GetS3LikeScheme(data_path);
+    if (!scheme.empty()) {
       if (!path_prefix.empty()) {
-        YACL_ENFORCE(path_prefix == prefix,
+        YACL_ENFORCE(path_prefix == scheme,
                      "csvdb_conf have different oss prefix");
       } else {
-        path_prefix = prefix;
+        path_prefix = scheme;
       }
     } else {
-      util::GetAbsolutePath(data_path, FLAGS_enable_restricted_read_path,
-                            FLAGS_restricted_read_path);
+      util::CheckAndGetAbsolutePath(data_path,
+                                    FLAGS_enable_restricted_read_path,
+                                    FLAGS_restricted_read_path);
     }
   }
 

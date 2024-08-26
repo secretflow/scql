@@ -18,8 +18,10 @@
 #include "absl/debugging/symbolize.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/strip.h"
+#include "arrow/filesystem/s3fs.h"
 #include "brpc/server.h"
 #include "butil/file_util.h"
+#include "flags.h"
 
 #include "engine/audit/audit_log.h"
 #include "engine/auth/authenticator.h"
@@ -209,6 +211,9 @@ std::unique_ptr<scql::engine::EngineServiceImpl> BuildEngineService(
     opts.enable_psi_detail_logger = true;
     opts.log_dir = FLAGS_psi_detail_logger_dir;
   }
+  if (FLAGS_log_enable_console_logger) {
+    opts.enable_console_logger = true;
+  }
   if (FLAGS_log_enable_session_logger_separation) {
     opts.enable_session_logger_separation = true;
   }
@@ -256,6 +261,10 @@ brpc::ServerOptions BuildServerOptions() {
     ssl_options->default_cert.certificate = FLAGS_server_ssl_certificate;
     ssl_options->default_cert.private_key = FLAGS_server_ssl_private_key;
     ssl_options->ciphers = "";
+    if (FLAGS_server_enable_ssl_client_verification) {
+      ssl_options->verify.verify_depth = 2;
+      ssl_options->verify.ca_file_path = FLAGS_server_ssl_client_ca_certificate;
+    }
   }
   if (FLAGS_enable_client_authorization) {
     options.auth = scql::engine::DefaultAuthenticator();
@@ -405,6 +414,15 @@ int main(int argc, char* argv[]) {
   if (FLAGS_enable_separate_link_port) {
     link_svr.Stop(0);
     link_svr.Join();
+  }
+
+  // Release arrow s3 file resources safely.
+  // TODO(jingshi): remove to DumpFile operator to reduce coupling
+  if (arrow::fs::IsS3Initialized()) {
+    auto status = arrow::fs::FinalizeS3();
+    if (!status.ok()) {
+      SPDLOG_ERROR("Fail to FinalizeS3, msg={}", status.ToString());
+    }
   }
 
   return 0;

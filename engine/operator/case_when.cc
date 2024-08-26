@@ -20,10 +20,12 @@
 #include <vector>
 
 #include "arrow/compute/api_vector.h"
+#include "arrow/compute/exec.h"
 #include "libspu/kernel/hlo/basic_binary.h"
 #include "libspu/kernel/hlo/const.h"
 
 #include "engine/core/tensor.h"
+#include "engine/core/tensor_constructor.h"
 #include "engine/framework/exec.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
@@ -152,8 +154,7 @@ void CaseWhen::CaseWhenPrivate(ExecContext* ctx) {
 
   const auto& output = ctx->GetOutput(kOut);
   ctx->GetTensorTable()->AddTensor(
-      output[0].name(),
-      std::make_shared<Tensor>(result.ValueOrDie().chunked_array()));
+      output[0].name(), TensorFrom(result.ValueOrDie().chunked_array()));
 }
 
 // condition:

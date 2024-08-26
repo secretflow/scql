@@ -22,6 +22,8 @@ DOCKER_COMPOSE_YAML_FILE = os.path.join(CUR_PATH, "docker-compose.yml")
 DOCKER_COMPOSE_TEMPLATE = os.path.join(CUR_PATH, "docker-compose.yml.template")
 
 PARTIES = ["alice", "bob", "carol"]
+PARTIES_DB = dict()
+DB_TYPE = ["MYSQL", "POSTGRES"]
 
 
 def random_password(length=13):
@@ -79,9 +81,19 @@ def render_files():
         tmpl_path = os.path.join(CUR_PATH, f"broker/conf/{p}/config.yml.template")
         dest_path = os.path.join(CUR_PATH, f"broker/conf/{p}/config.yml")
         with open(dest_path, "w") as f:
+            db_type = PARTIES_DB[p]
+            conn_str = ""
+            if db_type == "MYSQL":
+                conn_str = "root:{}@tcp(mysql:3306)/broker{}?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true".format(
+                    MYSQL_ROOT_PASSWORD, p[0]
+                )
+            elif db_type == "POSTGRES":
+                conn_str = "user=root password={} dbname=root port=5432 sslmode=disable TimeZone=Asia/Shanghai host=postgres search_path=broker{}".format(
+                    POSTGRES_PASSWORD, p[0]
+                )
             f.write(
                 Template(filename=tmpl_path).render(
-                    MYSQL_ROOT_PASSWORD=MYSQL_ROOT_PASSWORD,
+                    DB_TYPE=db_type.lower(), DB_CONN_STR=conn_str
                 )
             )
 
@@ -143,9 +155,9 @@ def generate_regtest_config():
     mysql_port = os.getenv(MYSQL_PORT_ENV_NAME)
     project_conf = os.getenv(PROJECT_CONF_ENV_NAME)
     spu_protocol = os.getenv(SPU_PROTOCOL_ENV_NAME)
-    conf["mysql_conn_str"] = (
-        f"root:{MYSQL_ROOT_PASSWORD}@tcp(localhost:{mysql_port})/alice?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
-    )
+    conf[
+        "mysql_conn_str"
+    ] = f"root:{MYSQL_ROOT_PASSWORD}@tcp(localhost:{mysql_port})/alice?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
     conf["spu_protocol"] = spu_protocol
     conf["project_conf"] = project_conf
     conf_path = os.path.join(CUR_PATH, "regtest.yml")
@@ -154,6 +166,23 @@ def generate_regtest_config():
 
 
 if __name__ == "__main__":
+    print(
+        "The broker uses mysql to store metadata by default, if you want to use specific db instead, use python setup.py postgres bob carol mysql alice"
+    )
+
+    if len(sys.argv) > 2:
+        db_type = "MYSQL"
+        for argv in sys.argv[1:]:
+            if argv.upper() in DB_TYPE:
+                db_type = argv.upper()
+            elif argv.lower() in PARTIES:
+                PARTIES_DB[argv.lower()] = db_type
+            else:
+                print("unknown argv")
+                print("db type supports MYSQL/POSTGRES only")
+                print("name must in party list")
+                exit(1)
+
     render_files()
     generate_private_keys()
     generate_party_info_json()

@@ -1484,11 +1484,12 @@ func (n *InsertStmt) Accept(v Visitor) (Node, bool) {
 		n.Select = node.(ResultSetNode)
 	}
 
-	node, ok := n.Table.Accept(v)
-	if !ok {
-		return n, false
-	}
-	n.Table = node.(*TableRefsClause)
+	// NOTE(jingshi): avoid preprocess inserting table, it may not exist in project
+	// node, ok := n.Table.Accept(v)
+	// if !ok {
+	// 	return n, false
+	// }
+	// n.Table = node.(*TableRefsClause)
 
 	for i, val := range n.Columns {
 		node, ok := val.Accept(v)

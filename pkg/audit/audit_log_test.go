@@ -27,6 +27,7 @@ import (
 
 	"github.com/secretflow/scql/pkg/proto-gen/audit"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/util/message"
 )
 
 var config = &AuditConf{
@@ -198,7 +199,7 @@ func TestDeserializeFromAuditJson(t *testing.T) {
 	t.Run("DeserializeFromUncategorized", func(t *testing.T) {
 		var auditLog audit.AuditLog
 		uncategorizedEvent := `{"header":{"time":"2022-10-01T02:00:00Z", "status":{"code":100, "message":"invalid request body", "details":[]}, "event_name":"UNCATEGORIZED", "session_id":""}, "body":{"uncategorized":{"url_path":"SubmitAndGet", "source_ip":"127.0.0.1"}}}`
-		err := protojson.Unmarshal([]byte(uncategorizedEvent), &auditLog)
+		err := message.ProtoUnmarshal([]byte(uncategorizedEvent), &auditLog)
 		r.NoError(err)
 		r.Equal(audit.EventName_UNCATEGORIZED, auditLog.Header.EventName)
 		r.Equal("invalid request body", auditLog.Header.Status.Message)
@@ -207,7 +208,7 @@ func TestDeserializeFromAuditJson(t *testing.T) {
 	t.Run("DeserializeFromFetchResult", func(t *testing.T) {
 		var auditLog audit.AuditLog
 		fetchResultEvent := `{"header":{"time":"2022-10-01T02:00:00Z","status":{"code":0,"message":"","details":[]},"event_name":"FETCH_RESULT","session_id":"a0b72d96-f305-11ed-833c-0242c0a82005"},"body":{"fetch_result":{"user_name":"alice","host_name":"%","source_ip":"127.0.0.1","num_rows":"2","affected_rows":"0"}}}`
-		err := protojson.Unmarshal([]byte(fetchResultEvent), &auditLog)
+		err := message.ProtoUnmarshal([]byte(fetchResultEvent), &auditLog)
 		r.NoError(err)
 		r.Equal(audit.EventName_FETCH_RESULT, auditLog.Header.EventName)
 		r.Equal(int64(2), auditLog.Body.GetFetchResult().NumRows)
@@ -215,7 +216,7 @@ func TestDeserializeFromAuditJson(t *testing.T) {
 	t.Run("DeserializeFromAsyncComplete", func(t *testing.T) {
 		var auditLog audit.AuditLog
 		asyncCompleteEvent := `{"header":{"time":"2022-10-01T02:00:00Z", "status":{"code":0, "message":"", "details":[]}, "event_name":"ASYNC_COMPLETE", "session_id":"a0b72d96-f305-11ed-833c-0242c0a82005"}, "body":{"async_complete":{"num_rows":"10", "affected_rows":"0"}}}`
-		err := protojson.Unmarshal([]byte(asyncCompleteEvent), &auditLog)
+		err := message.ProtoUnmarshal([]byte(asyncCompleteEvent), &auditLog)
 		r.NoError(err)
 		r.Equal(audit.EventName_ASYNC_COMPLETE, auditLog.Header.EventName)
 		r.Equal(int64(10), auditLog.Body.GetAsyncComplete().NumRows)
@@ -224,7 +225,7 @@ func TestDeserializeFromAuditJson(t *testing.T) {
 	t.Run("DeserializeFromRunSyncQuery", func(t *testing.T) {
 		var auditLog audit.AuditLog
 		runQueryEvent := `{"header":{"time":"2022-10-01T02:00:00Z","status":{"code":0,"message":"","details":[]},"event_name":"RUN_SYNC_QUERY","session_id":"a0b72d96-f305-11ed-833c-0242c0a82005"},"body":{"run_sync_query":{"user_name":"alice","host_name":"%","source_ip":"127.0.0.1","query":"select plain_int_0 from scdb.alice_tbl_1","type":"DQL","num_rows":"30","affected_rows":"0","cost_time":"3000"}}}`
-		err := protojson.Unmarshal([]byte(runQueryEvent), &auditLog)
+		err := message.ProtoUnmarshal([]byte(runQueryEvent), &auditLog)
 		r.NoError(err)
 		r.Equal(audit.EventName_RUN_SYNC_QUERY, auditLog.Header.EventName)
 		r.Equal("select plain_int_0 from scdb.alice_tbl_1", auditLog.Body.GetRunSyncQuery().Query)

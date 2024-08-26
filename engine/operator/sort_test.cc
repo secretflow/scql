@@ -47,54 +47,55 @@ INSTANTIATE_TEST_SUITE_P(
                 .reverse = false,
                 .input_status = pb::TENSORSTATUS_SECRET,
                 .sort_keys = {test::NamedTensor(
-                    "k1", TensorFromJSON(arrow::int64(), "[5,1,2,4,3]"))},
+                    "k1", TensorFrom(arrow::int64(), "[5,1,2,4,3]"))},
                 .inputs = {test::NamedTensor(
-                    "x1", TensorFromJSON(arrow::int64(), "[10,11,12,13,14]"))},
+                    "x1", TensorFrom(arrow::int64(), "[10,11,12,13,14]"))},
                 .outputs = {test::NamedTensor(
-                    "y1", TensorFromJSON(arrow::int64(), "[11,12,14,13,10]"))}},
+                    "y1", TensorFrom(arrow::int64(), "[11,12,14,13,10]"))}},
             SortTestCase{
                 .reverse = true,
                 .input_status = pb::TENSORSTATUS_SECRET,
                 .sort_keys = {test::NamedTensor(
-                    "k1", TensorFromJSON(arrow::int64(), "[5,1,2,4,3]"))},
+                    "k1", TensorFrom(arrow::int64(), "[5,1,2,4,3]"))},
                 .inputs = {test::NamedTensor(
-                    "x1", TensorFromJSON(arrow::int64(), "[10,11,12,13,14]"))},
+                    "x1", TensorFrom(arrow::int64(), "[10,11,12,13,14]"))},
                 .outputs = {test::NamedTensor(
-                    "y1", TensorFromJSON(arrow::int64(), "[10,13,14,12,11]"))}},
+                    "y1", TensorFrom(arrow::int64(), "[10,13,14,12,11]"))}},
             SortTestCase{
                 .reverse = false,
                 .input_status = pb::TENSORSTATUS_SECRET,
                 .sort_keys =
-                    {test::NamedTensor("k1", TensorFromJSON(arrow::int64(),
-                                                            "[2,1,2,4,3]")),
-                     test::NamedTensor("k2", TensorFromJSON(arrow::int64(),
-                                                            "[2,1,1,3,4]"))},
+                    {test::NamedTensor("k1", TensorFrom(arrow::int64(),
+                                                        "[2,1,2,4,3]")),
+                     test::NamedTensor("k2", TensorFrom(arrow::int64(),
+                                                        "[2,1,1,3,4]"))},
                 .inputs = {test::NamedTensor(
-                    "x1", TensorFromJSON(arrow::int64(), "[10,11,12,13,14]"))},
+                    "x1", TensorFrom(arrow::int64(), "[10,11,12,13,14]"))},
                 .outputs = {test::NamedTensor(
-                    "y1", TensorFromJSON(arrow::int64(), "[11,12,10,14,13]"))}},
+                    "y1", TensorFrom(arrow::int64(), "[11,12,10,14,13]"))}},
             // testcase: SimpleSort can sort by multiple keys
             SortTestCase{
                 .reverse = false,
                 .input_status = pb::TENSORSTATUS_SECRET,
                 .sort_keys =
-                    {test::NamedTensor("k1", TensorFromJSON(arrow::int64(),
-                                                            "[2,1,2,2,3]")),
-                     test::NamedTensor("k2", TensorFromJSON(arrow::int64(),
-                                                            "[3,1,1,2,4]"))},
+                    {test::NamedTensor("k1", TensorFrom(arrow::int64(),
+                                                        "[2,1,2,2,3]")),
+                     test::NamedTensor("k2", TensorFrom(arrow::int64(),
+                                                        "[3,1,1,2,4]"))},
                 .inputs = {test::NamedTensor(
-                    "x1", TensorFromJSON(arrow::int64(), "[10,11,12,13,14]"))},
+                    "x1", TensorFrom(arrow::int64(), "[10,11,12,13,14]"))},
                 .outputs = {test::NamedTensor(
-                    "y1", TensorFromJSON(arrow::int64(), "[11,12,13,10,14]"))}},
+                    "y1", TensorFrom(arrow::int64(), "[11,12,13,10,14]"))}},
             // testcase: empty inputs
-            SortTestCase{.reverse = false,
-                         .input_status = pb::TENSORSTATUS_SECRET,
-                         .sort_keys = {test::NamedTensor(
-                             "k1", TensorFromJSON(arrow::int64(), "[]"))},
-                         .inputs = {test::NamedTensor(
-                             "x1", TensorFromJSON(arrow::int64(), "[]"))},
-                         .outputs = {test::NamedTensor(
-                             "y1", TensorFromJSON(arrow::int64(), "[]"))}})),
+            SortTestCase{
+                .reverse = false,
+                .input_status = pb::TENSORSTATUS_SECRET,
+                .sort_keys = {test::NamedTensor("k1", TensorFrom(arrow::int64(),
+                                                                 "[]"))},
+                .inputs = {test::NamedTensor("x1",
+                                             TensorFrom(arrow::int64(), "[]"))},
+                .outputs = {test::NamedTensor("y1", TensorFrom(arrow::int64(),
+                                                               "[]"))}})),
     TestParamNameGenerator(SortTest));
 
 TEST_P(SortTest, Works) {

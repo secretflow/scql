@@ -102,45 +102,41 @@ INSTANTIATE_TEST_SUITE_P(
         testing::Values(
             GroupHeSumTestCase{
                 .group_id = test::NamedTensor(
-                    "group_id",
-                    TensorFromJSON(arrow::uint32(), "[0, 0, 1, 1, 2]")),
+                    "group_id", TensorFrom(arrow::uint32(), "[0, 0, 1, 1, 2]")),
                 .group_num = test::NamedTensor(
-                    "group_num", TensorFromJSON(arrow::uint32(), "[3]")),
-                .input = test::NamedTensor(
-                    "in", TensorFromJSON(arrow::boolean(), "[0, 0, 1, 1, 0]")),
-                .output = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::int64(), "[0, 2, 0]"))},
+                    "group_num", TensorFrom(arrow::uint32(), "[3]")),
+                .input = test::NamedTensor("in", TensorFrom(arrow::boolean(),
+                                                            "[0, 0, 1, 1, 0]")),
+                .output = test::NamedTensor("out", TensorFrom(arrow::int64(),
+                                                              "[0, 2, 0]"))},
             GroupHeSumTestCase{
                 .group_id = test::NamedTensor(
-                    "group_id",
-                    TensorFromJSON(arrow::uint32(), "[0, 0, 1, 1, 2]")),
+                    "group_id", TensorFrom(arrow::uint32(), "[0, 0, 1, 1, 2]")),
                 .group_num = test::NamedTensor(
-                    "group_num", TensorFromJSON(arrow::uint32(), "[3]")),
-                .input = test::NamedTensor(
-                    "in", TensorFromJSON(arrow::int64(), "[0, 0, 1, 1, 2]")),
-                .output = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::int64(), "[0, 2, 2]"))},
+                    "group_num", TensorFrom(arrow::uint32(), "[3]")),
+                .input = test::NamedTensor("in", TensorFrom(arrow::int64(),
+                                                            "[0, 0, 1, 1, 2]")),
+                .output = test::NamedTensor("out", TensorFrom(arrow::int64(),
+                                                              "[0, 2, 2]"))},
             GroupHeSumTestCase{
                 .group_id = test::NamedTensor(
-                    "group_id",
-                    TensorFromJSON(arrow::uint32(), "[0, 1, 1, 0, 2]")),
+                    "group_id", TensorFrom(arrow::uint32(), "[0, 1, 1, 0, 2]")),
                 .group_num = test::NamedTensor(
-                    "group_num", TensorFromJSON(arrow::uint32(), "[3]")),
+                    "group_num", TensorFrom(arrow::uint32(), "[3]")),
                 .input = test::NamedTensor(
-                    "in", TensorFromJSON(arrow::float64(),
-                                         "[-1.1, 2.2, 3.3, 4.4, 5.6]")),
-                .output = test::NamedTensor("out",
-                                            TensorFromJSON(arrow::float64(),
-                                                           "[3.3, 5.5, 5.6]"))},
+                    "in",
+                    TensorFrom(arrow::float64(), "[-1.1, 2.2, 3.3, 4.4, 5.6]")),
+                .output = test::NamedTensor(
+                    "out", TensorFrom(arrow::float64(), "[3.3, 5.5, 5.6]"))},
             GroupHeSumTestCase{
                 .group_id = test::NamedTensor(
-                    "group_id", TensorFromJSON(arrow::uint32(), "[]")),
+                    "group_id", TensorFrom(arrow::uint32(), "[]")),
                 .group_num = test::NamedTensor(
-                    "group_num", TensorFromJSON(arrow::uint32(), "[0]")),
-                .input = test::NamedTensor(
-                    "in", TensorFromJSON(arrow::float64(), "[]")),
-                .output = test::NamedTensor(
-                    "out", TensorFromJSON(arrow::float64(), "[]"))})),
+                    "group_num", TensorFrom(arrow::uint32(), "[0]")),
+                .input = test::NamedTensor("in",
+                                           TensorFrom(arrow::float64(), "[]")),
+                .output = test::NamedTensor("out", TensorFrom(arrow::float64(),
+                                                              "[]"))})),
     TestParamNameGenerator(GroupHeSumTest));
 
 }  // namespace scql::engine::op

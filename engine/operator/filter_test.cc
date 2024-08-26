@@ -45,54 +45,54 @@ INSTANTIATE_TEST_SUITE_P(
         testing::Values(
             FilterTestCase{
                 .filter = test::NamedTensor(
-                    "filter", TensorFromJSON(arrow::boolean(), "[1,0,0,1]")),
+                    "filter", TensorFrom(arrow::boolean(), "[1,0,0,1]")),
                 .filter_status = pb::TENSORSTATUS_PRIVATE,
-                .datas =
-                    {test::NamedTensor(
-                         "x1", TensorFromJSON(arrow::large_utf8(),
-                                              R"json(["A","B","C",null])json")),
-                     test::NamedTensor("x2", TensorFromJSON(arrow::int64(),
-                                                            "[10,11,12,13]"))},
+                .datas = {test::NamedTensor(
+                              "x1",
+                              TensorFrom(arrow::large_utf8(),
+                                         R"json(["A","B","C",null])json")),
+                          test::NamedTensor("x2", TensorFrom(arrow::int64(),
+                                                             "[10,11,12,13]"))},
                 .data_status = pb::TENSORSTATUS_PRIVATE,
-                .expect_outs =
-                    {test::NamedTensor("y1",
-                                       TensorFromJSON(arrow::large_utf8(),
-                                                      R"json(["A",null])json")),
-                     test::NamedTensor("y2", TensorFromJSON(arrow::int64(),
-                                                            "[10,13]"))}},
+                .expect_outs = {test::NamedTensor(
+                                    "y1", TensorFrom(arrow::large_utf8(),
+                                                     R"json(["A",null])json")),
+                                test::NamedTensor("y2",
+                                                  TensorFrom(arrow::int64(),
+                                                             "[10,13]"))}},
             // TODO: enable when support null in spu
             // FilterTestCase{
             //     .filter = test::NamedTensor("filter",
-            //                                 TensorFromJSON(arrow::boolean(),
+            //                                 TensorFrom(arrow::boolean(),
             //                                                "[0,0,1,1,null]")),
             //     .filter_status = pb::TENSORSTATUS_PUBLIC,
             //     .datas = {test::NamedTensor(
-            //         "x1", TensorFromJSON(arrow::large_utf8(),
+            //         "x1", TensorFrom(arrow::large_utf8(),
             //                              R"json(["A","B","C","null","E"])json"))},
             //     .data_status = pb::TENSORSTATUS_PRIVATE,
             //     .expect_outs = {test::NamedTensor(
-            //         "y1", TensorFromJSON(arrow::large_utf8(),
+            //         "y1", TensorFrom(arrow::large_utf8(),
             //                              R"json(["C",null])json"))}},
             FilterTestCase{
                 .filter = test::NamedTensor(
-                    "filter", TensorFromJSON(arrow::boolean(), "[0,0,1,1,0]")),
+                    "filter", TensorFrom(arrow::boolean(), "[0,0,1,1,0]")),
                 .filter_status = pb::TENSORSTATUS_PUBLIC,
                 .datas = {test::NamedTensor(
-                    "x1", TensorFromJSON(arrow::large_utf8(),
-                                         R"json(["A","B","C","D","E"])json"))},
+                    "x1", TensorFrom(arrow::large_utf8(),
+                                     R"json(["A","B","C","D","E"])json"))},
                 .data_status = pb::TENSORSTATUS_SECRET,
                 .expect_outs = {test::NamedTensor(
-                    "y1", TensorFromJSON(arrow::large_utf8(),
-                                         R"json(["C","D"])json"))}},
+                    "y1",
+                    TensorFrom(arrow::large_utf8(), R"json(["C","D"])json"))}},
             FilterTestCase{
                 .filter = test::NamedTensor(
-                    "filter", TensorFromJSON(arrow::boolean(), "[1,0,0,1]")),
+                    "filter", TensorFrom(arrow::boolean(), "[1,0,0,1]")),
                 .filter_status = pb::TENSORSTATUS_PUBLIC,
-                .datas = {test::NamedTensor(
-                    "x1", TensorFromJSON(arrow::int64(), "[10,11,12,13]"))},
+                .datas = {test::NamedTensor("x1", TensorFrom(arrow::int64(),
+                                                             "[10,11,12,13]"))},
                 .data_status = pb::TENSORSTATUS_SECRET,
                 .expect_outs = {test::NamedTensor(
-                    "y1", TensorFromJSON(arrow::int64(), "[10,13]"))}})),
+                    "y1", TensorFrom(arrow::int64(), "[10,13]"))}})),
     TestParamNameGenerator(FilterTest));
 
 TEST_P(FilterTest, works) {

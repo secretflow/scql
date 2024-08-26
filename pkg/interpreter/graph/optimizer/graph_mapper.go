@@ -41,9 +41,16 @@ type ParallelJobs struct {
 	NeedSyncSymbolBeforeJobs bool
 }
 
+type PipelineJobs struct {
+	Batched       bool
+	InputTensors  []*graph.Tensor
+	OutputTensors []*graph.Tensor
+	Jobs          []*ParallelJobs
+}
+
 type SchedulePolicy struct {
 	WorkerNumber int
-	Jobs         []*ParallelJobs
+	PipelineJobs []*PipelineJobs
 }
 
 type ExecutionPlan struct {
@@ -51,22 +58,39 @@ type ExecutionPlan struct {
 	Policy *SchedulePolicy
 }
 
+func NewExecutionPlan(workerNum, pipelinesNum int) *ExecutionPlan {
+	plan := &ExecutionPlan{
+		Nodes: make(map[int]*graph.ExecutionNode),
+		Policy: &SchedulePolicy{
+			WorkerNumber: workerNum,
+			PipelineJobs: make([]*PipelineJobs, pipelinesNum),
+		},
+	}
+	for i := 0; i < pipelinesNum; i++ {
+		plan.Policy.PipelineJobs[i] = &PipelineJobs{}
+	}
+	return plan
+}
+
 func (b *ExecutionPlan) DumpString() string {
 	var builder strings.Builder
 	fmt.Fprintf(&builder, "SchedulePolicy: {\n")
-
-	for i, job := range b.Policy.Jobs {
-		fmt.Fprintf(&builder, "  SubDAG %d {\n", i)
-		var keys []int
-		for k := range job.Jobs {
-			keys = append(keys, k)
+	for _, p := range b.Policy.PipelineJobs {
+		fmt.Fprintf(&builder, "  Pipeline {\n")
+		for _, j := range p.Jobs {
+			fmt.Fprintf(&builder, "    SubDAG {\n")
+			var keys []int
+			for k := range j.Jobs {
+				keys = append(keys, k)
+			}
+			sort.Ints(keys)
+			for _, k := range keys {
+				fmt.Fprintf(&builder, "      Worker %d, nodes: %v\n", k, j.Jobs[k])
+			}
+			fmt.Fprintf(&builder, "      CallBarrierAfterJobs: %v\n", j.NeedCallBarrierAfterJobs)
+			fmt.Fprintf(&builder, "      SyncSymbolBeforeJobs: %v\n", j.NeedSyncSymbolBeforeJobs)
+			fmt.Fprintf(&builder, "    }\n")
 		}
-		sort.Ints(keys)
-		for _, k := range keys {
-			fmt.Fprintf(&builder, "    Worker %d, nodes: %v\n", k, job.Jobs[k])
-		}
-		fmt.Fprintf(&builder, "    CallBarrierAfterJobs: %v\n", job.NeedCallBarrierAfterJobs)
-		fmt.Fprintf(&builder, "    SyncSymbolBeforeJobs: %v\n", job.NeedSyncSymbolBeforeJobs)
 		fmt.Fprintf(&builder, "  }\n")
 	}
 	fmt.Fprintf(&builder, "}")
@@ -74,28 +98,30 @@ func (b *ExecutionPlan) DumpString() string {
 }
 
 type GraphMapper struct {
-	graph   *graph.Graph
-	subDAGs []*SubDAG
+	graph     *graph.Graph
+	pipelines []*Pipeline
 
 	syncedTensorMap map[string]bool
 
 	Codes map[string]*ExecutionPlan // key is party code, value is execution plan
 }
 
-func NewGraphMapper(input *graph.Graph, subDAGs []*SubDAG) *GraphMapper {
+func NewGraphMapper(input *graph.Graph, pipelines []*Pipeline) *GraphMapper {
 	return &GraphMapper{
 		graph:           input,
-		subDAGs:         subDAGs,
+		pipelines:       pipelines,
 		Codes:           make(map[string]*ExecutionPlan),
 		syncedTensorMap: make(map[string]bool),
 	}
 }
 
 func (m *GraphMapper) InferenceWorkerNumber() int {
-	workerNum := len(m.subDAGs[0].Nodes)
-	for _, subDAG := range m.subDAGs {
-		if len(subDAG.Nodes) > workerNum {
-			workerNum = len(subDAG.Nodes)
+	workerNum := 1
+	for _, pipeline := range m.pipelines {
+		for _, subDAG := range pipeline.SubDAGs {
+			if len(subDAG.Nodes) > workerNum {
+				workerNum = len(subDAG.Nodes)
+			}
 		}
 	}
 	if workerNum <= workerNumLevel1 {
@@ -107,16 +133,17 @@ func (m *GraphMapper) InferenceWorkerNumber() int {
 	return workerNum / 2
 }
 
-func (m *GraphMapper) inferenceNeedCallBarrier(i int) {
+func (m *GraphMapper) inferenceNeedCallBarrier(pipelineIndex, jobIndex int) {
 	var partyCodes []string
 	for k, v := range m.Codes {
-		if len(v.Policy.Jobs[i].Jobs) != 0 {
+		if len(v.Policy.PipelineJobs[pipelineIndex].Jobs[jobIndex].Jobs) != 0 {
 			partyCodes = append(partyCodes, k)
 		}
+
 	}
 	if len(partyCodes) > 1 {
 		for _, v := range m.Codes {
-			v.Policy.Jobs[i].NeedCallBarrierAfterJobs = true
+			v.Policy.PipelineJobs[pipelineIndex].Jobs[jobIndex].NeedCallBarrierAfterJobs = true
 		}
 	}
 }
@@ -154,99 +181,103 @@ func (m *GraphMapper) UpdateSyncedTensorMap(inputs map[string][]*graph.Tensor) {
 	}
 }
 
-func (m *GraphMapper) inferenceNeedSyncSymbol(i int) {
-	// check need sync before jobs
+func (m *GraphMapper) inferenceNeedSyncSymbol(pipelineIndex, jobIndex int) {
 	for _, v := range m.Codes {
-		jobs := v.Policy.Jobs[i].Jobs
+		jobs := v.Policy.PipelineJobs[pipelineIndex].Jobs[jobIndex].Jobs
 		for _, ids := range jobs {
 			for _, id := range ids {
 				if needSyncSymbol(v.Nodes[id]) && !m.IsInputsSynced(v.Nodes[id]) {
-					v.Policy.Jobs[i].NeedSyncSymbolBeforeJobs = true
+					v.Policy.PipelineJobs[pipelineIndex].Jobs[jobIndex].NeedSyncSymbolBeforeJobs = true
 				}
 			}
 		}
 	}
 	// if synced in this subdag, set current SyncedTensorMap all true
 	for _, v := range m.Codes {
-		if v.Policy.Jobs[i].NeedSyncSymbolBeforeJobs {
+		if v.Policy.PipelineJobs[pipelineIndex].Jobs[jobIndex].NeedSyncSymbolBeforeJobs {
 			// set current to true
 			for key := range m.syncedTensorMap {
 				m.syncedTensorMap[key] = true
 			}
 		}
 		break
+
 	}
 	// put outputs in this subdag to SyncedTensorMap
 	for _, v := range m.Codes {
-		jobs := v.Policy.Jobs[i].Jobs
+		jobs := v.Policy.PipelineJobs[pipelineIndex].Jobs[jobIndex].Jobs
 		for _, ids := range jobs {
 			for _, id := range ids {
 				// update SyncedTensorMap with outputs
 				m.UpdateSyncedTensorMap(v.Nodes[id].Outputs)
 			}
 		}
+
 	}
 }
 
 func (m *GraphMapper) Map() {
-	for j, subDAG := range m.subDAGs {
-		partyCodeToParallelJobs := make(map[string]*ParallelJobs)
-		for _, partyCode := range m.graph.PartyInfo.GetParties() {
-			partyCodeToParallelJobs[partyCode] = &ParallelJobs{
-				Jobs: make(map[int][]int),
+	for i, pipeline := range m.pipelines {
+		for j, subDAG := range pipeline.SubDAGs {
+			partyCodeToParallelJobs := make(map[string]*ParallelJobs)
+			for _, partyCode := range m.graph.PartyInfo.GetParties() {
+				partyCodeToParallelJobs[partyCode] = &ParallelJobs{
+					Jobs: make(map[int][]int),
+				}
 			}
-		}
 
-		sortedNodes := make([]*graph.ExecutionNode, 0)
-		singlePartyNodes := make([]*graph.ExecutionNode, 0)
-		for node := range subDAG.Nodes {
-			if len(node.Parties) == 1 {
-				singlePartyNodes = append(singlePartyNodes, node)
-			} else {
-				sortedNodes = append(sortedNodes, node)
+			sortedNodes := make([]*graph.ExecutionNode, 0)
+			singlePartyNodes := make([]*graph.ExecutionNode, 0)
+			for node := range subDAG.Nodes {
+				if len(node.Parties) == 1 {
+					singlePartyNodes = append(singlePartyNodes, node)
+				} else {
+					sortedNodes = append(sortedNodes, node)
+				}
 			}
-		}
-		sort.Slice(sortedNodes, func(i, j int) bool { return sortedNodes[i].ID < sortedNodes[j].ID })
-		sort.Slice(singlePartyNodes, func(i, j int) bool { return singlePartyNodes[i].ID < singlePartyNodes[j].ID })
-		sortedNodes = append(sortedNodes, singlePartyNodes...)
+			sort.Slice(sortedNodes, func(i, j int) bool { return sortedNodes[i].ID < sortedNodes[j].ID })
+			sort.Slice(singlePartyNodes, func(i, j int) bool { return singlePartyNodes[i].ID < singlePartyNodes[j].ID })
+			sortedNodes = append(sortedNodes, singlePartyNodes...)
 
-		for i, node := range sortedNodes {
-			nodes := splitExecutionNode(node)
-			for k, v := range nodes {
+			for i, node := range sortedNodes {
+				nodes := splitExecutionNode(node)
+				for k, v := range nodes {
+					_, ok := m.Codes[k]
+					if !ok {
+						m.Codes[k] = NewExecutionPlan(m.InferenceWorkerNumber(), len(m.pipelines))
+					}
+					m.Codes[k].Nodes[v.ID] = v
+					workerID := i % m.Codes[k].Policy.WorkerNumber
+					_, ok = partyCodeToParallelJobs[k].Jobs[workerID]
+					if !ok {
+						partyCodeToParallelJobs[k].Jobs[workerID] = make([]int, 0)
+					}
+					partyCodeToParallelJobs[k].Jobs[workerID] = append(partyCodeToParallelJobs[k].Jobs[workerID], v.ID)
+				}
+			}
+			for k, v := range partyCodeToParallelJobs {
 				_, ok := m.Codes[k]
 				if !ok {
-					m.Codes[k] = &ExecutionPlan{
-						Nodes: make(map[int]*graph.ExecutionNode),
-						Policy: &SchedulePolicy{
-							WorkerNumber: m.InferenceWorkerNumber(),
-							Jobs:         make([]*ParallelJobs, 0),
-						},
-					}
+					m.Codes[k] = NewExecutionPlan(m.InferenceWorkerNumber(), len(m.pipelines))
 				}
-				m.Codes[k].Nodes[v.ID] = v
-				workerID := i % m.Codes[k].Policy.WorkerNumber
-				_, ok = partyCodeToParallelJobs[k].Jobs[workerID]
-				if !ok {
-					partyCodeToParallelJobs[k].Jobs[workerID] = make([]int, 0)
-				}
-				partyCodeToParallelJobs[k].Jobs[workerID] = append(partyCodeToParallelJobs[k].Jobs[workerID], v.ID)
+				m.Codes[k].Policy.PipelineJobs[i].Jobs = append(m.Codes[k].Policy.PipelineJobs[i].Jobs, v)
+			}
+			for _, code := range m.Codes {
+				code.Policy.PipelineJobs[i].Batched = pipeline.Batched
+			}
+			m.inferenceNeedCallBarrier(i, j)
+			m.inferenceNeedSyncSymbol(i, j)
+		}
+		if pipeline.Batched {
+			// TODO: support share tensors
+			for _, t := range pipeline.InputTensors {
+				m.Codes[t.OwnerPartyCode].Policy.PipelineJobs[i].InputTensors = append(m.Codes[t.OwnerPartyCode].Policy.PipelineJobs[i].InputTensors, t)
+			}
+			for _, t := range pipeline.OutputTensors {
+				m.Codes[t.OwnerPartyCode].Policy.PipelineJobs[i].OutputTensors = append(m.Codes[t.OwnerPartyCode].Policy.PipelineJobs[i].OutputTensors, t)
 			}
 		}
-		for k, v := range partyCodeToParallelJobs {
-			_, ok := m.Codes[k]
-			if !ok {
-				m.Codes[k] = &ExecutionPlan{
-					Nodes: make(map[int]*graph.ExecutionNode),
-					Policy: &SchedulePolicy{
-						WorkerNumber: m.InferenceWorkerNumber(),
-						Jobs:         make([]*ParallelJobs, 0),
-					},
-				}
-			}
-			m.Codes[k].Policy.Jobs = append(m.Codes[k].Policy.Jobs, v)
-		}
-		m.inferenceNeedCallBarrier(j)
-		m.inferenceNeedSyncSymbol(j)
+
 	}
 }
 
@@ -263,7 +294,6 @@ func (m *GraphMapper) CodeGen(params *scql.JobStartParams) map[string]*scql.RunE
 				Nodes: make(map[string]*scql.ExecNode),
 				Policy: &scql.SchedulingPolicy{
 					WorkerNum: int32(plan.Policy.WorkerNumber),
-					Subdags:   make([]*scql.SubDAG, 0),
 				},
 			},
 		}
@@ -271,23 +301,27 @@ func (m *GraphMapper) CodeGen(params *scql.JobStartParams) map[string]*scql.RunE
 		for k, v := range plan.Nodes {
 			pb.Graph.Nodes[strconv.Itoa(k)] = v.ToProto()
 		}
-		for _, job := range plan.Policy.Jobs {
-			subdag := &scql.SubDAG{
-				Jobs:                     make([]*scql.SubDAG_Job, 0),
-				NeedCallBarrierAfterJobs: job.NeedCallBarrierAfterJobs,
-			}
-			for k, v := range job.Jobs {
-				var ids []string
-				for _, id := range v {
-					ids = append(ids, strconv.Itoa(id))
+		for _, pipelineJobs := range plan.Policy.PipelineJobs {
+			pipeline := scql.Pipeline{Subdags: make([]*scql.SubDAG, 0)}
+			for _, job := range pipelineJobs.Jobs {
+				subdag := &scql.SubDAG{
+					Jobs:                     make([]*scql.SubDAG_Job, 0),
+					NeedCallBarrierAfterJobs: job.NeedCallBarrierAfterJobs,
 				}
-				j := &scql.SubDAG_Job{
-					WorkerId: int32(k),
-					NodeIds:  ids,
+				for k, v := range job.Jobs {
+					var ids []string
+					for _, id := range v {
+						ids = append(ids, strconv.Itoa(id))
+					}
+					j := &scql.SubDAG_Job{
+						WorkerId: int32(k),
+						NodeIds:  ids,
+					}
+					subdag.Jobs = append(subdag.Jobs, j)
 				}
-				subdag.Jobs = append(subdag.Jobs, j)
+				pipeline.Subdags = append(pipeline.Subdags, subdag)
 			}
-			pb.Graph.Policy.Subdags = append(pb.Graph.Policy.Subdags, subdag)
+			pb.Graph.Policy.Pipelines = append(pb.Graph.Policy.Pipelines, &pipeline)
 		}
 		result[partyCode] = pb
 	}

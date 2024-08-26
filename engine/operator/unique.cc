@@ -15,8 +15,10 @@
 #include "engine/operator/unique.h"
 
 #include "arrow/compute/api_vector.h"
+#include "arrow/compute/exec.h"
 
 #include "engine/core/arrow_helper.h"
+#include "engine/core/tensor_constructor.h"
 #include "engine/util/tensor_util.h"
 
 namespace scql::engine::op {
@@ -53,8 +55,7 @@ void Unique::Execute(ExecContext* ctx) {
 
   auto chunked_arr = std::make_shared<arrow::ChunkedArray>(array);
   const auto& output_pb = ctx->GetOutput(kOut)[0];
-  ctx->GetTensorTable()->AddTensor(output_pb.name(),
-                                   std::make_shared<Tensor>(chunked_arr));
+  ctx->GetTensorTable()->AddTensor(output_pb.name(), TensorFrom(chunked_arr));
 }
 
 }  // namespace scql::engine::op

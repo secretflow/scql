@@ -98,14 +98,41 @@ TEST_F(CsvdbAdaptorTest, NormalQuery) {
 
   // Then
   EXPECT_EQ(results.size(), 4);
-  CheckTensorEqual(results[0], TensorFromJSON(arrow::int64(), "[1,2,3,4]"));
-  CheckTensorEqual(results[1],
-                   TensorFromJSON(arrow::int64(), "[21,42,19,null]"));
+  CheckTensorEqual(results[0], TensorFrom(arrow::int64(), "[1,2,3,4]"));
+  CheckTensorEqual(results[1], TensorFrom(arrow::int64(), "[21,42,19,null]"));
   CheckTensorEqual(results[2],
-                   TensorFromJSON(arrow::large_utf8(),
-                                  R"json(["alice","bob","carol",null])json"));
-  CheckTensorEqual(results[3], TensorFromJSON(arrow::float64(),
-                                              "[2100.2,4500.8,1900.5,null]"));
+                   TensorFrom(arrow::large_utf8(),
+                              R"json(["alice","bob","carol",null])json"));
+  CheckTensorEqual(results[3],
+                   TensorFrom(arrow::float64(), "[2100.2,4500.8,1900.5,null]"));
+}
+
+TEST_F(CsvdbAdaptorTest, WriteToFile) {
+  // Given
+  CsvdbAdaptor csvdb_adaptor(csvdb_conf_str_);
+
+  const std::string query = "select * from csvdb.staff";
+  std::vector<ColumnDesc> outputs{{"id", pb::PrimitiveDataType::INT64},
+                                  {"age", pb::PrimitiveDataType::INT64},
+                                  {"name", pb::PrimitiveDataType::STRING},
+                                  {"salary", pb::PrimitiveDataType::FLOAT64}};
+
+  // When
+  auto results = csvdb_adaptor.ExecQuery(
+      query, outputs,
+      TensorBuildOptions{.dump_to_disk = true,
+                         .dump_dir = std::filesystem::temp_directory_path(),
+                         .max_row_num_one_file = 2});
+
+  // Then
+  EXPECT_EQ(results.size(), 4);
+  CheckTensorEqual(results[0], TensorFrom(arrow::int64(), "[1,2,3,4]"));
+  CheckTensorEqual(results[1], TensorFrom(arrow::int64(), "[21,42,19,null]"));
+  CheckTensorEqual(results[2],
+                   TensorFrom(arrow::large_utf8(),
+                              R"json(["alice","bob","carol",null])json"));
+  CheckTensorEqual(results[3],
+                   TensorFrom(arrow::float64(), "[2100.2,4500.8,1900.5,null]"));
 }
 
 TEST_F(CsvdbAdaptorTest, QueryWithAggregation) {
@@ -122,8 +149,8 @@ TEST_F(CsvdbAdaptorTest, QueryWithAggregation) {
 
   // Then
   EXPECT_EQ(results.size(), 2);
-  CheckTensorEqual(results[0], TensorFromJSON(arrow::int64(), "[82]"));
-  CheckTensorEqual(results[1], TensorFromJSON(arrow::float64(), "[8501.5]"));
+  CheckTensorEqual(results[0], TensorFrom(arrow::int64(), "[82]"));
+  CheckTensorEqual(results[1], TensorFrom(arrow::float64(), "[8501.5]"));
 }
 
 TEST_F(CsvdbAdaptorTest, QueryWithPredicate) {
@@ -142,10 +169,10 @@ TEST_F(CsvdbAdaptorTest, QueryWithPredicate) {
   // Then
   EXPECT_EQ(results.size(), 3);
 
-  CheckTensorEqual(results[0], TensorFromJSON(arrow::int64(), "[42]"));
+  CheckTensorEqual(results[0], TensorFrom(arrow::int64(), "[42]"));
   CheckTensorEqual(results[1],
-                   TensorFromJSON(arrow::large_utf8(), R"json(["bob"])json"));
-  CheckTensorEqual(results[2], TensorFromJSON(arrow::float64(), "[4500.8]"));
+                   TensorFrom(arrow::large_utf8(), R"json(["bob"])json"));
+  CheckTensorEqual(results[2], TensorFrom(arrow::float64(), "[4500.8]"));
 }
 
 TEST_F(CsvdbAdaptorTest, QueryWithDomainDataID) {
@@ -176,14 +203,13 @@ TEST_F(CsvdbAdaptorTest, QueryWithDomainDataID) {
 
   // Then
   EXPECT_EQ(results.size(), 4);
-  CheckTensorEqual(results[0], TensorFromJSON(arrow::int64(), "[1,2,3,4]"));
-  CheckTensorEqual(results[1],
-                   TensorFromJSON(arrow::int64(), "[21,42,19,null]"));
+  CheckTensorEqual(results[0], TensorFrom(arrow::int64(), "[1,2,3,4]"));
+  CheckTensorEqual(results[1], TensorFrom(arrow::int64(), "[21,42,19,null]"));
   CheckTensorEqual(results[2],
-                   TensorFromJSON(arrow::large_utf8(),
-                                  R"json(["alice","bob","carol",null])json"));
-  CheckTensorEqual(results[3], TensorFromJSON(arrow::float64(),
-                                              "[2100.2,4500.8,1900.5,null]"));
+                   TensorFrom(arrow::large_utf8(),
+                              R"json(["alice","bob","carol",null])json"));
+  CheckTensorEqual(results[3],
+                   TensorFrom(arrow::float64(), "[2100.2,4500.8,1900.5,null]"));
 }
 
 }  // namespace scql::engine

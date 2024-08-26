@@ -18,12 +18,13 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
+	"github.com/go-co-op/gocron/v2"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"github.com/sirupsen/logrus"
 
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 )
@@ -37,13 +38,13 @@ type JobWatcher struct {
 	// time interval of polling job status
 	interval time.Duration
 
-	stopped chan struct{}
-
 	onJobDeadCb OnJobDeadCb
 
 	// mutex
 	mu   sync.Mutex
 	jobs map[string]*jobStatus
+
+	scheduler gocron.Scheduler
 }
 
 type JobWatcherOption func(*JobWatcher)
@@ -54,20 +55,29 @@ func WithWatchInterval(t time.Duration) JobWatcherOption {
 	}
 }
 
-func NewJobWatcher(cb OnJobDeadCb, opts ...JobWatcherOption) *JobWatcher {
+func NewJobWatcher(cb OnJobDeadCb, opts ...JobWatcherOption) (*JobWatcher, error) {
+	s, err := gocron.NewScheduler()
+	if err != nil {
+		return nil, fmt.Errorf("fail to create jobwatcher scheduler: %v", err)
+	}
+
 	w := &JobWatcher{
 		interval:    time.Minute, // 1m
-		stopped:     make(chan struct{}),
 		onJobDeadCb: cb,
 		jobs:        make(map[string]*jobStatus),
+		scheduler:   s,
 	}
 
 	for _, opt := range opts {
 		opt(w)
 	}
 
-	go w.run()
-	return w
+	err = w.start()
+	if err != nil {
+		return nil, fmt.Errorf("fail to start scheduled jobs: %v", err)
+	}
+
+	return w, nil
 }
 
 // Add jobId to watch list
@@ -100,29 +110,32 @@ func (w *JobWatcher) onJobDead(jobId string) {
 	}
 }
 
-func (w *JobWatcher) run() {
-LOOP:
-	for {
-		select {
-		case <-w.stopped:
-			break LOOP
-		case <-time.After(w.interval):
-			{
-				jobs := w.collectJobs()
-				for _, job := range jobs {
-					alive, err := job.IsJobAlive()
-					if err != nil {
-						if s, ok := status.FromError(err); ok && s.Code() == codes.Unavailable {
-							job.inaccessibleTimes += 1
-						}
-						logrus.Warnf("failed to probe job status: jobId=%s, endpoint=%s, err=%v", job.jobId, job.engineEndpoint, err)
-					}
+func (w *JobWatcher) start() error {
+	_, err := w.scheduler.NewJob(
+		gocron.DurationJob(w.interval),
+		gocron.NewTask(w.checkJobs),
+		gocron.WithName("checkJobs"),
+	)
+	if err != nil {
+		return fmt.Errorf("fail to schedule job status check task: %v", err)
+	}
+	w.scheduler.Start()
+	return nil
+}
 
-					if job.inaccessibleTimes >= 3 || (err == nil && !alive) {
-						w.onJobDead(job.jobId)
-					}
-				}
+func (w *JobWatcher) checkJobs() {
+	jobs := w.collectJobs()
+	for _, job := range jobs {
+		alive, err := job.IsJobAlive()
+		if err != nil {
+			if s, ok := status.FromError(err); ok && s.Code() == codes.Unavailable {
+				job.inaccessibleTimes.Add(1)
 			}
+			logrus.Warnf("failed to probe job status: jobId=%s, endpoint=%s, err=%v", job.jobId, job.engineEndpoint, err)
+		}
+
+		if job.inaccessibleTimes.Load() >= 3 || (err == nil && !alive) {
+			w.onJobDead(job.jobId)
 		}
 	}
 }
@@ -137,9 +150,9 @@ func (w *JobWatcher) collectJobs() []*jobStatus {
 	return res
 }
 
-// stop watcher thread
+// stop all watched jobs
 func (w *JobWatcher) Stop() {
-	close(w.stopped)
+	w.scheduler.Shutdown()
 }
 
 type jobStatus struct {
@@ -147,12 +160,12 @@ type jobStatus struct {
 	engineEndpoint string
 
 	// number of engine inaccessible times
-	inaccessibleTimes int32
+	inaccessibleTimes atomic.Int32
 }
 
 // probe if the job is still alive
 func (j *jobStatus) IsJobAlive() (bool, error) {
-	conn, err := NewEngineClientConn(j.engineEndpoint, "")
+	conn, err := NewEngineClientConn(j.engineEndpoint, "", nil)
 	if err != nil {
 		return false, err
 	}

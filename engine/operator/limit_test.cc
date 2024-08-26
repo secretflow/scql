@@ -46,88 +46,73 @@ INSTANTIATE_TEST_SUITE_P(
         testing::Values(
             LimitTestCase{
                 .inputs =
-                    {test::NamedTensor("a",
-                                       TensorFromJSON(arrow::boolean(),
-                                                      "[true, false, true]")),
-                     test::NamedTensor("b",
-                                       TensorFromJSON(arrow::int64(),
-                                                      "[1,2,null,4,5,6,7,8]")),
+                    {test::NamedTensor("a", TensorFrom(arrow::boolean(),
+                                                       "[true, false, true]")),
+                     test::NamedTensor("b", TensorFrom(arrow::int64(),
+                                                       "[1,2,null,4,5,6,7,8]")),
                      test::NamedTensor(
-                         "c", TensorFromJSON(
+                         "c", TensorFrom(
                                   arrow::float64(),
                                   "[1.1025, 100.245, -10.2, 0.34, 3.1415926]")),
-                     test::NamedTensor("d",
-                                       TensorFromJSON(arrow::int64(), "[1]"))},
+                     test::NamedTensor("d", TensorFrom(arrow::int64(), "[1]"))},
                 .input_status = pb::TENSORSTATUS_PRIVATE,
                 .offset = 1,
                 .count = 2,
                 .expect_outs =
-                    {test::NamedTensor(
-                         "a_out",
-                         TensorFromJSON(arrow::boolean(), "[false,true]")),
-                     test::NamedTensor("b_out", TensorFromJSON(arrow::int64(),
-                                                               "[2,null]")),
-                     test::NamedTensor("c_out",
-                                       TensorFromJSON(arrow::float64(),
-                                                      "[100.245, -10.2]")),
+                    {test::NamedTensor("a_out", TensorFrom(arrow::boolean(),
+                                                           "[false,true]")),
+                     test::NamedTensor("b_out",
+                                       TensorFrom(arrow::int64(), "[2,null]")),
+                     test::NamedTensor("c_out", TensorFrom(arrow::float64(),
+                                                           "[100.245, -10.2]")),
                      test::NamedTensor("d_out",
-                                       TensorFromJSON(arrow::int64(), "[]"))}},
+                                       TensorFrom(arrow::int64(), "[]"))}},
             LimitTestCase{
                 .inputs =
-                    {test::NamedTensor(
-                         "a", TensorFromJSON(arrow::boolean(),
-                                             "[true, false, true]")),
+                    {test::NamedTensor("a", TensorFrom(arrow::boolean(),
+                                                       "[true, false, true]")),
+                     test::NamedTensor("b", TensorFrom(arrow::int64(),
+                                                       "[1,2,3,4,5,6,7,8]")),
                      test::NamedTensor(
-                         "b",
-                         TensorFromJSON(arrow::int64(), "[1,2,3,4,5,6,7,8]")),
-                     test::NamedTensor(
-                         "c", TensorFromJSON(
+                         "c", TensorFrom(
                                   arrow::float64(),
                                   "[1.1025, 100.245, -10.2, 0.34, 3.1415926]")),
-                     test::NamedTensor("d",
-                                       TensorFromJSON(arrow::int64(), "[1]"))},
+                     test::NamedTensor("d", TensorFrom(arrow::int64(), "[1]"))},
                 .input_status = pb::TENSORSTATUS_SECRET,
                 .offset = 1,
                 .count = 2,
                 .expect_outs =
-                    {test::NamedTensor(
-                         "a_out",
-                         TensorFromJSON(arrow::boolean(), "[false,true]")),
+                    {test::NamedTensor("a_out", TensorFrom(arrow::boolean(),
+                                                           "[false,true]")),
                      test::NamedTensor("b_out",
-                                       TensorFromJSON(arrow::int64(), "[2,3]")),
-                     test::NamedTensor("c_out",
-                                       TensorFromJSON(arrow::float64(),
-                                                      "[100.245, -10.2]")),
+                                       TensorFrom(arrow::int64(), "[2,3]")),
+                     test::NamedTensor("c_out", TensorFrom(arrow::float64(),
+                                                           "[100.245, -10.2]")),
                      test::NamedTensor("d_out",
-                                       TensorFromJSON(arrow::int64(), "[]"))}},
+                                       TensorFrom(arrow::int64(), "[]"))}},
             LimitTestCase{
                 .inputs =
-                    {test::NamedTensor(
-                         "a", TensorFromJSON(arrow::boolean(),
-                                             "[true, false, true]")),
+                    {test::NamedTensor("a", TensorFrom(arrow::boolean(),
+                                                       "[true, false, true]")),
+                     test::NamedTensor("b", TensorFrom(arrow::int64(),
+                                                       "[1,2,3,4,5,6,7,8]")),
                      test::NamedTensor(
-                         "b",
-                         TensorFromJSON(arrow::int64(), "[1,2,3,4,5,6,7,8]")),
-                     test::NamedTensor(
-                         "c", TensorFromJSON(
+                         "c", TensorFrom(
                                   arrow::float64(),
                                   "[1.1025, 100.245, -10.2, 0.34, 3.1415926]")),
-                     test::NamedTensor("d",
-                                       TensorFromJSON(arrow::int64(), "[1]"))},
+                     test::NamedTensor("d", TensorFrom(arrow::int64(), "[1]"))},
                 .input_status = pb::TENSORSTATUS_PUBLIC,
                 .offset = 1,
                 .count = 2,
                 .expect_outs =
-                    {test::NamedTensor(
-                         "a_out",
-                         TensorFromJSON(arrow::boolean(), "[false,true]")),
+                    {test::NamedTensor("a_out", TensorFrom(arrow::boolean(),
+                                                           "[false,true]")),
                      test::NamedTensor("b_out",
-                                       TensorFromJSON(arrow::int64(), "[2,3]")),
-                     test::NamedTensor("c_out",
-                                       TensorFromJSON(arrow::float64(),
-                                                      "[100.245, -10.2]")),
-                     test::NamedTensor("d_out", TensorFromJSON(arrow::int64(),
-                                                               "[]"))}})),
+                                       TensorFrom(arrow::int64(), "[2,3]")),
+                     test::NamedTensor("c_out", TensorFrom(arrow::float64(),
+                                                           "[100.245, -10.2]")),
+                     test::NamedTensor("d_out",
+                                       TensorFrom(arrow::int64(), "[]"))}})),
     TestParamNameGenerator(LimitTest));
 
 TEST_P(LimitTest, works) {

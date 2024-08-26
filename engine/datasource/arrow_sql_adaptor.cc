@@ -26,20 +26,22 @@
 #include "yacl/base/exception.h"
 
 #include "engine/core/arrow_helper.h"
+#include "engine/core/tensor_constructor.h"
 #include "engine/util/spu_io.h"
 
-// can't be set to true until update grpc version to 1.27 or higher
-DEFINE_bool(disable_server_verification, false, "disable server verification");
+DEFINE_bool(arrow_client_disable_server_verification, false,
+            "arrow sql client disable server verification");
 DEFINE_string(arrow_cert_pem_path, "",
               "work in tls/mtls, used in server verification when "
-              "disable_server_verification is false");
+              "arrow_client_disable_server_verification is false");
 DEFINE_string(arrow_client_key_pem_path, "", "work in mtls");
 DEFINE_string(arrow_client_cert_pem_path, "", "work in mtls");
 
 namespace scql::engine {
 arrow::flight::FlightClientOptions GetFlightClientOptions() {
   arrow::flight::FlightClientOptions options;
-  options.disable_server_verification = FLAGS_disable_server_verification;
+  options.disable_server_verification =
+      FLAGS_arrow_client_disable_server_verification;
   if ((!options.disable_server_verification) &&
       (!FLAGS_arrow_cert_pem_path.empty())) {
     std::string cert_pem_content;
@@ -75,6 +77,8 @@ ArrowSqlAdaptor::ArrowSqlAdaptor(const std::string& uri) {
       location.ValueOrDie(), GetFlightClientOptions());
   YACL_ENFORCE(flight_client.ok(), "fail to connect arrow sql server: {}",
                flight_client.status().ToString());
+  // arrow c++ doesn't support authenticate for now
+  // https://github.com/apache/arrow/blob/main/cpp/src/arrow/flight/transport.cc#L55
   sql_client_ = std::make_shared<arrow::flight::sql::FlightSqlClient>(
       std::move(flight_client.ValueOrDie()));
   client_map_.emplace(location->ToString(), sql_client_);
@@ -117,7 +121,7 @@ SqlClientPtr ArrowSqlAdaptor::GetClientFromEndpoint(
 }
 
 std::vector<TensorPtr> ArrowSqlAdaptor::GetQueryResult(
-    const std::string& query) {
+    const std::string& query, const TensorBuildOptions& options) {
   std::unique_ptr<arrow::flight::FlightInfo> flight_info;
   // use default call options
   // TODO(@xiaoyuan) set call options by long time benchmark
@@ -135,7 +139,7 @@ std::vector<TensorPtr> ArrowSqlAdaptor::GetQueryResult(
     ASSIGN_OR_THROW_ARROW_STATUS(table, stream->ToTable());
     THROW_IF_ARROW_NOT_OK(table->Validate());
     for (int i = 0; i < table->num_columns(); ++i) {
-      auto tensor = std::make_shared<Tensor>(table->column(i));
+      auto tensor = TensorFrom(table->column(i));
       tensors.push_back(tensor);
     }
   }

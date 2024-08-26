@@ -18,32 +18,6 @@ import os
 from pathlib import Path
 from typing import List
 
-DATABASES = {
-    "alice": {
-        "db_name": "alice",
-        "party_code": "alice",
-        "engine": ["engine-alice:8003"],
-        "credentials": ["alice_credential"],
-        "token": "alice_token",
-        "db_type": "MYSQL",
-    },
-    "bob": {
-        "db_name": "bob",
-        "party_code": "bob",
-        "engine": ["engine-bob:8003"],
-        "credentials": ["bob_credential"],
-        "token": "bob_token",
-        "db_type": "CSVDB",
-    },
-    "carol": {
-        "db_name": "carol",
-        "party_code": "carol",
-        "engine": ["engine-carol:8003"],
-        "credentials": ["carol_credential"],
-        "token": "carol_token",
-        "db_type": "POSTGRESQL",
-    },
-}
 COLUMN_COPY_NUM = 3
 TABLE_COPY_NUM = 3
 DATA_TYPE = ["int", "float", "string", "datetime", "timestamp"]
@@ -57,19 +31,23 @@ CCL_LEVEL = [
     "encrypt",
 ]
 CUR_PATH = Path(__file__).parent.resolve()
+DATABASES = ["alice", "bob", "carol"]
 
 
-def create_db(db_info):
+def create_table_for_db(db_name: str):
+    tables = dict()
     for i in range(TABLE_COPY_NUM):
-        name, table_info = create_table(i)
-        db_info["tables"][name] = table_info
+        name, table_info = create_table(i, db_name)
+        tables[name] = table_info
+    return tables
 
 
-def create_table(pos):
+def create_table(pos, db_name: str):
     table_name_prefix = "tbl"
     table = dict()
     table_name = f"{table_name_prefix}_{pos}"
     table["columns"] = list()
+    table["db_name"] = db_name
     for i in range(COLUMN_COPY_NUM):
         for dtype in DATA_TYPE:
             for level in CCL_LEVEL:
@@ -86,7 +64,7 @@ def create_column(data_type: str, levels: List[str], pos: int):
     return column
 
 
-def write_json(data, file_name):
+def write_table(file_name):
     path = os.path.join(CUR_PATH, f"testdata")
     if not os.path.exists(path):
         os.system(f"mkdir {path}")
@@ -97,14 +75,18 @@ def write_json(data, file_name):
 
 
 if __name__ == "__main__":
-    for key in DATABASES:
-        db_info = DATABASES[key]
-        dest_file = f"db_{db_info['db_name']}"
-        db_info["tables"] = {}
-        if os.path.exists(dest_file):
-            with open(dest_file, "r") as f:
-                old_info = json.dump(dest_file)
-                if "tables" in old_info:
-                    db_info["tables"] = old_info["tables"]
-        create_db(db_info)
-        write_json(db_info, dest_file)
+    for db_name in DATABASES:
+        file_name = f"generated_table_{db_name}.json"
+        path = os.path.join(CUR_PATH, f"testdata")
+        file = os.path.join(path, file_name)
+        if os.path.exists(file):
+            os.remove(file)
+        with open(file, "w", encoding="utf-8") as f:
+            json.dump(
+                create_table_for_db(db_name),
+                f,
+                indent=2,
+                separators=(",", ": "),
+                ensure_ascii=False,
+            )
+        print("write success")

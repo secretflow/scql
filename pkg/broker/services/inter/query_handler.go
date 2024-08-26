@@ -20,7 +20,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"golang.org/x/exp/slices"
-	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/secretflow/scql/pkg/broker/application"
 	"github.com/secretflow/scql/pkg/broker/executor"
@@ -30,6 +29,7 @@ import (
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
 	"github.com/secretflow/scql/pkg/util/brokerutil"
+	"github.com/secretflow/scql/pkg/util/message"
 )
 
 // only issuer can distribute query to other party
@@ -62,7 +62,7 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 	}
 
 	var projConf pb.ProjectConfig
-	err = protojson.Unmarshal([]byte(existingProject.ProjectConf), &projConf)
+	err = message.ProtoUnmarshal([]byte(existingProject.ProjectConf), &projConf)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,8 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 		return
 	}
 	logrus.Infof("create session %s with query %s in project %s from %s", req.JobId, req.Query, req.ProjectId, req.GetClientId().GetCode())
-
+	// use running options from issuer party
+	session.ExecuteInfo.CompileOpts.Batched = req.GetRunningOpts().GetBatched()
 	defer func(session *application.Session) {
 		if err != nil {
 			go session.OnError(err)

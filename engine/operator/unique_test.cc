@@ -37,36 +37,32 @@ INSTANTIATE_TEST_SUITE_P(
     testing::Values(
         UniqueTestCase{
             .input = test::NamedTensor(
-                "a", TensorFromJSON(arrow::boolean(),
-                                    "[true, false, true, null, false, null]")),
+                "a", TensorFrom(arrow::boolean(),
+                                "[true, false, true, null, false, null]")),
             .expect_out = test::NamedTensor(
-                "a_out",
-                TensorFromJSON(arrow::boolean(), "[true, false, null]"))},
+                "a_out", TensorFrom(arrow::boolean(), "[true, false, null]"))},
         UniqueTestCase{
             .input = test::NamedTensor(
-                "a",
-                TensorFromJSON(arrow::int64(), "[1,1,2,3,3,4,4,4,null,null]")),
+                "a", TensorFrom(arrow::int64(), "[1,1,2,3,3,4,4,4,null,null]")),
             .expect_out = test::NamedTensor(
-                "a_out", TensorFromJSON(arrow::int64(), "[1,2,3,4,null]"))},
+                "a_out", TensorFrom(arrow::int64(), "[1,2,3,4,null]"))},
         UniqueTestCase{
             .input = test::NamedTensor(
-                "a", TensorFromJSON(arrow::float32(),
-                                    "[-10.2, 3.14, 0.34, 3.14,null,null]")),
+                "a", TensorFrom(arrow::float32(),
+                                "[-10.2, 3.14, 0.34, 3.14,null,null]")),
             .expect_out = test::NamedTensor(
                 "a_out",
-                TensorFromJSON(arrow::float32(), "[-10.2, 3.14, 0.34,null]"))},
+                TensorFrom(arrow::float32(), "[-10.2, 3.14, 0.34,null]"))},
+        UniqueTestCase{.input = test::NamedTensor(
+                           "a", TensorFrom(arrow::large_utf8(),
+                                           R"json(["AB","AB",null,null])json")),
+                       .expect_out = test::NamedTensor(
+                           "a_out", TensorFrom(arrow::large_utf8(),
+                                               R"json(["AB",null])json"))},
         UniqueTestCase{
-            .input = test::NamedTensor(
-                "a", TensorFromJSON(arrow::large_utf8(),
-                                    R"json(["AB","AB",null,null])json")),
-            .expect_out = test::NamedTensor(
-                "a_out",
-                TensorFromJSON(arrow::large_utf8(), R"json(["AB",null])json"))},
-        UniqueTestCase{
-            .input = test::NamedTensor("a",
-                                       TensorFromJSON(arrow::int64(), "[]")),
-            .expect_out = test::NamedTensor(
-                "a_out", TensorFromJSON(arrow::int64(), "[]"))}));
+            .input = test::NamedTensor("a", TensorFrom(arrow::int64(), "[]")),
+            .expect_out = test::NamedTensor("a_out", TensorFrom(arrow::int64(),
+                                                                "[]"))}));
 
 TEST_P(UniqueTest, works) {
   // Given

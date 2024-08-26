@@ -28,7 +28,6 @@ import (
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/executor"
 	"github.com/secretflow/scql/pkg/interpreter/graph"
-	"github.com/secretflow/scql/pkg/interpreter/graph/optimizer"
 	"github.com/secretflow/scql/pkg/planner/core"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/scdb/auth"
@@ -59,7 +58,6 @@ type LogicalPlanInfo struct {
 
 type ExecutionPlanInfo struct {
 	parties []*scql.JobStartParams_Party
-	subDAGs []*optimizer.SubDAG
 	graph   *graph.Graph
 	attr    *graph.Attribute
 }

@@ -15,10 +15,12 @@
 #include "engine/operator/compare.h"
 
 #include "arrow/compute/api_vector.h"
+#include "arrow/compute/exec.h"
 #include "arrow/datum.h"
 #include "arrow/result.h"
 #include "libspu/kernel/hlo/basic_binary.h"
 
+#include "engine/core/tensor_constructor.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
 
@@ -56,7 +58,7 @@ TensorPtr Equal::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
   YACL_ENFORCE(result.ok(),
                "caught error while invoking arrow equal function: {}",
                result.status().ToString());
-  return std::make_shared<Tensor>(result.ValueOrDie().chunked_array());
+  return TensorFrom(result.ValueOrDie().chunked_array());
 }
 
 // ===========================
@@ -79,7 +81,7 @@ TensorPtr NotEqual::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
   YACL_ENFORCE(result.ok(),
                "caught error while invoking arrow not_equal function: {}",
                result.status().ToString());
-  return std::make_shared<Tensor>(result.ValueOrDie().chunked_array());
+  return TensorFrom(result.ValueOrDie().chunked_array());
 }
 
 // ===========================
@@ -102,7 +104,7 @@ TensorPtr Less::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
   YACL_ENFORCE(result.ok(),
                "caught error while invoking arrow less function: {}",
                result.status().ToString());
-  return std::make_shared<Tensor>(result.ValueOrDie().chunked_array());
+  return TensorFrom(result.ValueOrDie().chunked_array());
 }
 
 // ===========================
@@ -125,7 +127,7 @@ TensorPtr LessEqual::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
   YACL_ENFORCE(result.ok(),
                "caught error while invoking arrow less_equal function: {}",
                result.status().ToString());
-  return std::make_shared<Tensor>(result.ValueOrDie().chunked_array());
+  return TensorFrom(result.ValueOrDie().chunked_array());
 }
 
 // ===========================
@@ -149,7 +151,7 @@ TensorPtr GreaterEqual::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
   YACL_ENFORCE(result.ok(),
                "caught error while invoking arrow greater_equal function: {}",
                result.status().ToString());
-  return std::make_shared<Tensor>(result.ValueOrDie().chunked_array());
+  return TensorFrom(result.ValueOrDie().chunked_array());
 }
 
 // ===========================
@@ -172,7 +174,7 @@ TensorPtr Greater::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
   YACL_ENFORCE(result.ok(),
                "caught error while invoking arrow greater function: {}",
                result.status().ToString());
-  return std::make_shared<Tensor>(result.ValueOrDie().chunked_array());
+  return TensorFrom(result.ValueOrDie().chunked_array());
 }
 
 }  // namespace scql::engine::op

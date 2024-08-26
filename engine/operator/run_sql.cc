@@ -51,7 +51,6 @@ void RunSQL::Execute(ExecContext* ctx) {
       }
     }
   }
-
   auto adaptor =
       ctx->GetDatasourceAdaptorMgr()->GetAdaptor(datasource_specs[0]);
   YACL_ENFORCE(adaptor, "get adaptor failed");
@@ -65,7 +64,10 @@ void RunSQL::Execute(ExecContext* ctx) {
                                   outputs_pb[i].elem_type());
   }
 
-  auto results = adaptor->ExecQuery(logger, select, expected_outputs);
+  TensorBuildOptions options = {
+      .dump_to_disk = ctx->GetSession()->GetStreamingOptions().batched,
+      .dump_dir = ctx->GetSession()->GetStreamingOptions().dump_file_dir};
+  auto results = adaptor->ExecQuery(logger, select, expected_outputs, options);
 
   YACL_ENFORCE(results.size() == expected_outputs.size(),
                "the size of ExecQuery results mismatch with expected_outputs");

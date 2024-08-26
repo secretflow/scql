@@ -56,7 +56,7 @@ func engineHandlerCore(app *App, c *gin.Context) (report *scql.ReportRequest, er
 		return &scql.ReportRequest{}, fmt.Errorf(errMsg)
 	}
 	request := &scql.ReportRequest{}
-	_, err = message.DeserializeFrom(c.Request.Body, request)
+	_, err = message.DeserializeFrom(c.Request.Body, request, c.Request.Header.Get("Content-Type"))
 	if err != nil {
 		return &scql.ReportRequest{}, err
 	}

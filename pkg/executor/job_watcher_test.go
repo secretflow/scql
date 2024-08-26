@@ -17,6 +17,7 @@ package executor
 import (
 	"fmt"
 	"net"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -26,12 +27,13 @@ import (
 func TestJobWatcher(t *testing.T) {
 	r := require.New(t)
 
-	jobDead := false
+	var jobDead atomic.Bool
 	cb := func(jobID string, reason string) {
-		jobDead = true
+		jobDead.Store(true)
 	}
 
-	w := NewJobWatcher(cb, WithWatchInterval(time.Second))
+	w, err := NewJobWatcher(cb, WithWatchInterval(time.Second))
+	r.NoError(err)
 	defer w.Stop()
 
 	port, err := getFreePort()
@@ -41,7 +43,7 @@ func TestJobWatcher(t *testing.T) {
 	r.NoError(err)
 	// sleep 5s to wait query job been mark dead, since 5s > 1s*3
 	time.Sleep(time.Second * 5)
-	r.True(jobDead)
+	r.True(jobDead.Load())
 }
 
 func getFreePort() (int, error) {

@@ -80,6 +80,16 @@ struct SessionOptions {
   LogConfig log_config;
 };
 
+struct StreamingOptions {
+  std::filesystem::path dump_file_dir;
+  bool batched;
+  // if row num is less than this threshold, close streaming mode and keep all
+  // data in memory
+  size_t streaming_row_num_threshold;
+  // if working in streaming mode, max row num in one batch
+  size_t batch_row_num;
+};
+
 /// @brief Session holds everything needed to run the execution plan.
 class Session {
  public:
@@ -204,6 +214,12 @@ class Session {
 
   const SessionOptions& GetSessionOptions() const { return session_opt_; }
 
+  StreamingOptions GetStreamingOptions() { return streaming_options_; }
+  void SetStreamingOptions(const StreamingOptions& streaming_options) {
+    streaming_options_ = streaming_options;
+  }
+  void EnableStreamingBatched();
+
  private:
   void InitLink();
   bool ValidateSPUContext();
@@ -249,6 +265,9 @@ class Session {
   mutable std::mutex progress_mutex_;
   std::string current_node_name_;
   std::chrono::time_point<std::chrono::system_clock> node_start_time_;
+
+  // for streaming
+  StreamingOptions streaming_options_;
 };
 
 std::shared_ptr<spdlog::logger> ActiveLogger(const Session* session);

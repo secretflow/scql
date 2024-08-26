@@ -14,19 +14,13 @@
 
 #include "engine/datasource/odbc_adaptor_factory.h"
 
-#include "engine/datasource/odbc_adaptor.h"
-
 namespace scql::engine {
 
 std::unique_ptr<DatasourceAdaptor> OdbcAdaptorFactory::CreateAdaptor(
     const DataSource& datasource_spec) {
-  OdbcAdaptorOptions options;
-  options.kind = datasource_spec.kind();
-  options.connection_str = datasource_spec.connection_str();
-  options.connection_type = connection_type_;
-  options.pool_size = pool_size_;
-
-  return std::make_unique<OdbcAdaptor>(options);
+  return std::make_unique<OdbcAdaptor>(
+      DataSourceKind_Name(datasource_spec.kind()),
+      datasource_spec.connection_str(), connection_type_, pool_size_);
 }
 
 }  // namespace scql::engine

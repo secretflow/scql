@@ -327,6 +327,9 @@ const (
 
 	// TiDB internal function.
 	TiDBDecodeKey = "tidb_decode_key"
+
+	// get geography distance with two given points(longtidude, latitude)
+	GeoDist = "geodist"
 )
 
 var DateFunc = map[string]bool{

@@ -30,12 +30,11 @@ namespace scql::engine {
   do {                                                                        \
     if ((cntl).Failed()) {                                                    \
       if ((cntl).ErrorCode() == brpc::EHTTP) {                                \
-        std::string error_info = fmt::format(                                 \
+        YACL_THROW_LINK_ERROR(                                                \
+            0, (cntl).http_response().status_code(),                          \
             "send failed: {}, http code={}, message={}.", request_info,       \
             static_cast<int>((cntl).http_response().status_code()),           \
             (cntl).ErrorText());                                              \
-        YACL_THROW_LINK_ERROR(0, (cntl).http_response().status_code(),        \
-                              error_info);                                    \
       }                                                                       \
       YACL_THROW_LINK_ERROR((cntl).ErrorCode(), 0,                            \
                             "send failed: {}, rpc failed={}, message={}.",    \
@@ -46,9 +45,9 @@ namespace scql::engine {
           "send failed: {}, peer failed code={}, message={}.", request_info,  \
           static_cast<int>((response).error_code()), (response).error_msg()); \
       if ((response).error_code() == link::pb::ErrorCode::LINKID_NOT_FOUND) { \
-        YACL_THROW_NETWORK_ERROR(error_info);                                 \
+        YACL_THROW_NETWORK_ERROR("{}", error_info);                           \
       }                                                                       \
-      YACL_THROW(error_info);                                                 \
+      YACL_THROW("{}", error_info);                                           \
     }                                                                         \
   } while (false)
 #endif

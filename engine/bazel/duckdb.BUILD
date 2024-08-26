@@ -38,13 +38,13 @@ spu_cmake_external(
     name = "duckdb",
     build_args = ["-j 8"],
     cache_entries = common_cache_entries,
+    env = {
+        "CCACHE_DISABLE": "1",
+    },
     lib_source = ":all_srcs",
     linkopts = [
         "-lm",
     ],
-    env = {
-        "CCACHE_DISABLE": "1",
-    },
     out_static_libs = [
         "libduckdb_static.a",
         "libduckdb_pg_query.a",

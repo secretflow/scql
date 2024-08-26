@@ -21,6 +21,7 @@ cc_library(
     deps = [
         ":arithmetic",
         ":broadcast_to",
+        ":bucket",
         ":case_when",
         ":cast",
         ":coalesce",
@@ -36,8 +37,9 @@ cc_library(
         ":group_he_sum",
         ":if",
         ":if_null",
-        ":is_null",
         ":in",
+        ":insert_table",
+        ":is_null",
         ":join",
         ":limit",
         ":logical",
@@ -52,6 +54,7 @@ cc_library(
         ":shape",
         ":shuffle",
         ":sort",
+        ":trigonometric",
         ":unique",
         "//engine/framework:registry",
     ],
@@ -115,6 +118,7 @@ cc_test(
     deps = [
         ":join",
         ":test_util",
+        "//engine/core:primitive_builder",
         "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
@@ -208,6 +212,7 @@ cc_library(
     hdrs = ["binary_base.h"],
     deps = [
         "//engine/framework:operator",
+        "//engine/util:context_util",
         "//engine/util:spu_io",
         "//engine/util:tensor_util",
         "@spulib//libspu/kernel/hlo:basic_binary",
@@ -452,6 +457,40 @@ cc_test(
         "//engine/core:tensor_constructor",
         "@com_github_brpc_brpc//:butil",
         "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "insert_table",
+    srcs = ["insert_table.cc"],
+    hdrs = ["insert_table.h"],
+    deps = [
+        "//engine/datasource:odbc_connector",
+        "//engine/framework:operator",
+        "//engine/util:tensor_util",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_test(
+    name = "insert_table_test",
+    srcs = ["insert_table_test.cc"],
+    deps = [
+        ":insert_table",
+        ":test_util",
+        "//engine/core:tensor_constructor",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_binary(
+    name = "insert_table_mysql_pg_test",
+    srcs = ["insert_table_mysql_pg_test.cc"],
+    deps = [
+        ":insert_table",
+        ":test_util",
+        "//engine/core:tensor_constructor",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -910,6 +949,53 @@ cc_test(
     srcs = ["coalesce_test.cc"],
     deps = [
         ":coalesce",
+        ":test_util",
+        "//engine/core:tensor_constructor",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "trigonometric",
+    srcs = ["trigonometric.cc"],
+    hdrs = ["trigonometric.h"],
+    deps = [
+        "//engine/framework:operator",
+        "//engine/util:tensor_util",
+        "@spulib//libspu/kernel/hlo:basic_unary",
+    ],
+)
+
+cc_test(
+    name = "trigonometric_test",
+    srcs = ["trigonometric_test.cc"],
+    deps = [
+        ":test_util",
+        ":trigonometric",
+        "//engine/core:tensor_constructor",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "bucket",
+    srcs = ["bucket.cc"],
+    hdrs = ["bucket.h"],
+    deps = [
+        "//engine/core:primitive_builder",
+        "//engine/framework:operator",
+        "//engine/util:psi_helper",
+        "//engine/util:table_util",
+        "//engine/util:tensor_util",
+        "@org_apache_arrow//:arrow",
+    ],
+)
+
+cc_test(
+    name = "bucket_test",
+    srcs = ["bucket_test.cc"],
+    deps = [
+        ":bucket",
         ":test_util",
         "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",

@@ -31,6 +31,7 @@ func (s *testTranslatorSuite) TestTranslateWithCCL(c *C) {
 	for _, ca := range translateWithCCLTestCases {
 		sql := ca.sql
 		dot := ca.dotGraph
+		briefPipe := ca.briefPipeline
 		conf := ca.conf
 		comment := Commentf("for %s", sql)
 		stmt, err := s.ParseOneStmt(sql, "", "")
@@ -47,6 +48,7 @@ func (s *testTranslatorSuite) TestTranslateWithCCL(c *C) {
 		}
 		compileOpts := scql.CompileOptions{
 			SecurityCompromise: &scql.SecurityCompromiseConfig{RevealGroupMark: false, GroupByThreshold: uint64(groupThreshold)},
+			Batched:            conf.batched,
 		}
 		t, err := NewTranslator(
 			s.engineInfo, &scql.SecurityConfig{ColumnControlList: ccl},
@@ -54,13 +56,24 @@ func (s *testTranslatorSuite) TestTranslateWithCCL(c *C) {
 		c.Assert(err, IsNil)
 		ep, err := t.Translate(lp)
 		c.Assert(err, IsNil, Commentf("for %s", sql))
+		graphStr := ep.DumpGraphviz()
 		// if you want to copy the graph created by DumpGraphviz, uncomment this line
-		c.Log(ep.DumpGraphviz())
+		c.Log(graphStr)
+		actualPipe := ""
+		if conf.batched {
+			actualPipe = ep.DumpBriefPipeline()
+			// if you want to copy the graph created by DumpBriefPipeline, uncomment this line
+			c.Log(actualPipe)
+		} else {
+			c.Assert(len(ep.Pipelines), Equals, 1, Commentf("for %s", sql))
+			c.Assert(ep.Pipelines[0].Batched, Equals, false, Commentf("for %s", sql))
+		}
 		if recordTestOutput {
-			_, err := s.recordFile.WriteString(fmt.Sprintf("{`%s`, `%s`, testConf%+v},\n", sql, ep.DumpGraphviz(), conf))
+			_, err := s.recordFile.WriteString(fmt.Sprintf("{`%s`, `%s`, `%s` testConf%+v},\n", sql, graphStr, actualPipe, conf))
 			c.Assert(err, IsNil)
 		} else {
-			c.Assert(ep.DumpGraphviz(), Equals, dot, Commentf("for %s", sql))
+			c.Assert(graphStr, Equals, dot, Commentf("for %s", sql))
+			c.Assert(actualPipe, Equals, briefPipe, Commentf("for %s", sql))
 		}
 	}
 }

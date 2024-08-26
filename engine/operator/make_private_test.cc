@@ -43,42 +43,40 @@ INSTANTIATE_TEST_SUITE_P(
         test::SpuTestValuesMultiPC,
         testing::Values(
             MakePrivateTestCase{
-                .inputs =
-                    {test::NamedTensor(
-                         "x", TensorFromJSON(arrow::large_utf8(),
-                                             R"json(["A", "B", "C"])json")),
-                     test::NamedTensor(
-                         "y", TensorFromJSON(arrow::int64(),
-                                             "[42, -121, 9527, 1498672]"))},
+                .inputs = {test::NamedTensor(
+                               "x", TensorFrom(arrow::large_utf8(),
+                                               R"json(["A", "B", "C"])json")),
+                           test::NamedTensor(
+                               "y", TensorFrom(arrow::int64(),
+                                               "[42, -121, 9527, 1498672]"))},
                 .input_status = pb::TENSORSTATUS_PUBLIC,
                 .reveal_to = "bob",
                 .output_names = {"x_hat", "y_hat"}},
             MakePrivateTestCase{
                 .inputs =
-                    {test::NamedTensor(
-                         "x", TensorFromJSON(arrow::int64(),
-                                             "[42, -121, 9527, 1498672]")),
+                    {test::NamedTensor("x",
+                                       TensorFrom(arrow::int64(),
+                                                  "[42, -121, 9527, 1498672]")),
+                     test::NamedTensor("y",
+                                       TensorFrom(arrow::float32(),
+                                                  "[1.234, 0, -1.5, 2.75]")),
                      test::NamedTensor(
-                         "y", TensorFromJSON(arrow::float32(),
-                                             "[1.234, 0, -1.5, 2.75]")),
+                         "z", TensorFrom(arrow::large_utf8(),
+                                         R"json(["X", "Y", "ZZZ"])json")),
                      test::NamedTensor(
-                         "z", TensorFromJSON(arrow::large_utf8(),
-                                             R"json(["X", "Y", "ZZZ"])json")),
-                     test::NamedTensor(
-                         "k", TensorFromJSON(
-                                  arrow::boolean(),
-                                  R"json([true, false, false, false])json"))},
+                         "k",
+                         TensorFrom(arrow::boolean(),
+                                    R"json([true, false, false, false])json"))},
                 .input_status = pb::TENSORSTATUS_SECRET,
                 .reveal_to = "alice",
                 .output_names = {"x_hat", "y_hat", "z_hat", "k_hat"}},
             MakePrivateTestCase{
                 .inputs = {test::NamedTensor(
-                               "x",
-                               TensorFromJSON(arrow::int64(),
-                                              "[42, -121, 9527, 1498672]")),
+                               "x", TensorFrom(arrow::int64(),
+                                               "[42, -121, 9527, 1498672]")),
                            test::NamedTensor(
-                               "y", TensorFromJSON(arrow::float32(),
-                                                   "[1.234, 0, -1.5, 2.75]"))},
+                               "y", TensorFrom(arrow::float32(),
+                                               "[1.234, 0, -1.5, 2.75]"))},
                 .input_status = pb::TENSORSTATUS_SECRET,
                 .reveal_to = "bob",
                 .output_names = {"x_hat", "y_hat"}})),

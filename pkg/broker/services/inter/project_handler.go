@@ -30,6 +30,7 @@ import (
 	"github.com/secretflow/scql/pkg/broker/storage"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
+	"github.com/secretflow/scql/pkg/util/message"
 )
 
 func (svc *grpcInterSvc) InviteToProject(c context.Context, req *pb.InviteToProjectRequest) (resp *pb.InviteToProjectResponse, err error) {
@@ -56,18 +57,7 @@ func (svc *grpcInterSvc) InviteToProject(c context.Context, req *pb.InviteToProj
 		return nil, fmt.Errorf("InviteToProject: spu runtime config can not be null in project config")
 	}
 
-	projConf, err := json.Marshal(pb.ProjectConfig{
-		SpuRuntimeCfg:                             reqProjectConf.GetSpuRuntimeCfg(),
-		SessionExpireSeconds:                      reqProjectConf.GetSessionExpireSeconds(),
-		HttpMaxPayloadSize:                        reqProjectConf.GetHttpMaxPayloadSize(),
-		UnbalancePsiRatioThreshold:                reqProjectConf.GetUnbalancePsiRatioThreshold(),
-		UnbalancePsiLargerPartyRowsCountThreshold: reqProjectConf.GetUnbalancePsiLargerPartyRowsCountThreshold(),
-		PsiCurveType:                              reqProjectConf.GetPsiCurveType(),
-		LinkRecvTimeoutSec:                        reqProjectConf.GetLinkRecvTimeoutSec(),
-		LinkThrottleWindowSize:                    reqProjectConf.GetLinkThrottleWindowSize(),
-		LinkChunkedSendParallelSize:               reqProjectConf.GetLinkChunkedSendParallelSize(),
-	})
-
+	projConf, err := message.ProtoMarshal(reqProjectConf)
 	if err != nil {
 		return nil, fmt.Errorf("InviteToProject: failed to serialize project conf: %v", err)
 	}
@@ -112,14 +102,14 @@ func (svc *grpcInterSvc) ReplyInvitation(c context.Context, req *pb.ReplyInvitat
 		err = txn.Finish(err)
 	}()
 
-	proj, err := txn.GetProject(req.GetProjectId())
+	proj, err := storage.AddExclusiveLock(txn).GetProject(req.GetProjectId())
 	if err != nil {
 		return nil, fmt.Errorf("ReplyInvitation: %v", err)
 	}
 	if proj.Creator != svc.app.Conf.PartyCode {
 		return nil, fmt.Errorf("ReplyInvitation: project %v not owned by self party %v", proj.ID, svc.app.Conf.PartyCode)
 	}
-	members, err := storage.AddExclusiveLock(txn).GetProjectMembers(req.GetProjectId())
+	members, err := txn.GetProjectMembers(req.GetProjectId())
 	if err != nil {
 		return nil, fmt.Errorf("ReplyInvitation: %v", err)
 	}
@@ -169,7 +159,7 @@ func (svc *grpcInterSvc) ReplyInvitation(c context.Context, req *pb.ReplyInvitat
 
 	if needAddMember {
 		logrus.Infof("add member %s to project %s", req.GetClientId().GetCode(), req.GetProjectId())
-		err = txn.AddProjectMembers([]storage.Member{storage.Member{ProjectID: req.GetProjectId(), Member: req.GetClientId().GetCode()}})
+		err = txn.AddProjectMembers([]storage.Member{{ProjectID: req.GetProjectId(), Member: req.GetClientId().GetCode()}})
 		if err != nil {
 			return nil, fmt.Errorf("ReplyInvitation: %v", err)
 		}
@@ -181,6 +171,7 @@ func (svc *grpcInterSvc) ReplyInvitation(c context.Context, req *pb.ReplyInvitat
 				targetParties = append(targetParties, p)
 			}
 		}
+
 		go func() {
 			err := common.PostSyncInfo(svc.app, req.GetProjectId(), pb.ChangeEntry_AddProjectMember, req.GetClientId().GetCode(), targetParties)
 			if err != nil {
@@ -190,6 +181,7 @@ func (svc *grpcInterSvc) ReplyInvitation(c context.Context, req *pb.ReplyInvitat
 	}
 	// get newest project info
 	projAndMembers, err := txn.GetProjectAndMembers(req.GetProjectId())
+	logrus.Infof("newest project member: %v", projAndMembers.Members)
 	if err != nil {
 		return nil, fmt.Errorf("ReplyInvitation: %v", err)
 	}

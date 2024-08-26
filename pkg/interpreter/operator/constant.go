@@ -22,10 +22,12 @@ const (
 	OpNameMakeShare     string = "MakeShare"
 	OpNameMakePublic    string = "MakePublic"
 	OpNameFilterByIndex string = "FilterByIndex"
+	OpNameBucket        string = "Bucket"
 	OpNameJoin          string = "Join"
 	OpNameRunSQL        string = "RunSQL"
 	OpNamePublish       string = "Publish"
 	OpNameDumpFile      string = "DumpFile"
+	OpNameInsertTable   string = "InsertTable"
 	OpNameCopy          string = "Copy"
 	OpNameFilter        string = "Filter"
 	OpNameGreatest      string = "Greatest"
@@ -104,6 +106,9 @@ const (
 	// used by Limit
 	LimitCountAttr  = "count"
 	LimitOffsetAttr = "offset"
+	// used by WriteTable
+	TableNameAttr   = `table_name`
+	ColumnNamesAttr = `column_names`
 	// AlgorithmAttr
 	PsiAlgorithmAttr     = `psi_algorithm`
 	InTypeAttr           = `in_type`
