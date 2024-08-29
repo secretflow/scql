@@ -103,13 +103,15 @@ std::shared_ptr<arrow::io::OutputStream> BuildOutputStream(
     const std::string& restricted_filepath) {
   auto prefix = util::GetS3LikeScheme(in_filepath);
   auto filepath_without_prefix = in_filepath.substr(prefix.length());
-  auto absolute_path_file = util::CheckAndGetAbsolutePath(
-      filepath_without_prefix, is_restricted, restricted_filepath);
   if (!prefix.empty()) {
     // s3 file
+    util::CheckS3LikeUrl(filepath_without_prefix, is_restricted,
+                         restricted_filepath);
     return BuildStreamFromS3(prefix, filepath_without_prefix);
   }
   // local file
+  auto absolute_path_file = util::CheckAndGetAbsoluteLocalPath(
+      in_filepath, is_restricted, restricted_filepath);
   YACL_ENFORCE(!std::filesystem::exists(absolute_path_file),
                "file={} exists before write", absolute_path_file);
   std::filesystem::create_directories(

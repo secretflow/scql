@@ -28,9 +28,15 @@ static constexpr char kSchemeOss[] = "oss://";
 
 std::string GetS3LikeScheme(const std::string& url);
 
-std::string CheckAndGetAbsolutePath(const std::string& in_filepath,
-                                    bool is_restricted,
-                                    const std::string& restricted_filepath);
+// @param[path_without_prefix] should be the file path without prefix, e.g
+// "bucket/path/to/file.txt"
+// @param[restricted_path] should be a path without prefix, e.g: "bucket"
+void CheckS3LikeUrl(const std::string& path_without_prefix, bool is_restricted,
+                    const std::string& restricted_path);
+
+std::string CheckAndGetAbsoluteLocalPath(
+    const std::string& in_filepath, bool is_restricted,
+    const std::string& restricted_filepath);
 
 class ScopedDir {
  public:

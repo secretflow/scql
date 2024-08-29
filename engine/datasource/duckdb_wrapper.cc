@@ -200,9 +200,9 @@ static std::string CheckTablePathsAndGetPrefix(
         path_prefix = scheme;
       }
     } else {
-      util::CheckAndGetAbsolutePath(data_path,
-                                    FLAGS_enable_restricted_read_path,
-                                    FLAGS_restricted_read_path);
+      util::CheckAndGetAbsoluteLocalPath(data_path,
+                                         FLAGS_enable_restricted_read_path,
+                                         FLAGS_restricted_read_path);
     }
   }
 
