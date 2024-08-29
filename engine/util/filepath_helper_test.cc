@@ -47,8 +47,8 @@ TEST(FilePathTest, CheckAndGetAbsoluteLocalPath) {
 }
 
 TEST(FilePathTest, CheckS3LikeUrl) {
-  EXPECT_EQ("bucket/dir/test.file",
-            CheckS3LikeUrl("bucket/dir/test.file", true, "bucket"));
+  EXPECT_NO_THROW(CheckS3LikeUrl("bucket/dir/test.file", true, "bucket"));
+
   EXPECT_THROW(CheckS3LikeUrl("bucket/dir/../dir2/test.file", true, "bucket"),
                yacl::EnforceNotMet);
 }
