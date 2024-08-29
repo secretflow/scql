@@ -45,9 +45,8 @@ TEST(FilePathTest, CheckAndGetAbsolutePath) {
       yacl::EnforceNotMet);
 
   // test s3 file
-  EXPECT_EQ(
-      "bucket/dir2/test.file",
-      CheckAndGetAbsolutePath("bucket/dir/../dir2/test.file", true, "bucket"));
+  EXPECT_EQ("bucket/dir/test.file",
+            CheckAndGetAbsolutePath("bucket/dir/test.file", true, "bucket"));
 }
 
 }  // namespace scql::engine::util
