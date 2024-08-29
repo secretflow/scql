@@ -33,12 +33,25 @@ std::string GetS3LikeScheme(const std::string& url) {
   return "";
 }
 
-std::string CheckAndGetAbsolutePath(const std::string& in_filepath,
-                                    bool is_restricted,
-                                    const std::string& restricted_filepath) {
-  YACL_ENFORCE(!in_filepath.empty());
-  YACL_ENFORCE(GetS3LikeScheme(restricted_filepath).empty(),
+void CheckS3LikeUrl(const std::string& path_without_prefix, bool is_restricted,
+                    const std::string& restricted_path) {
+  // 1. only allow absolute path for s3
+  YACL_ENFORCE(GetS3LikeScheme(restricted_path).empty(),
                "restricted_path should remove s3 prefix like 's3://'");
+  YACL_ENFORCE(path_without_prefix.find("..") == std::string::npos,
+               "path={} cannot contain '..'", path_without_prefix);
+  // 2. if restricted, the path_without_prefix must start with restricted_path
+  if (is_restricted) {
+    YACL_ENFORCE(absl::StartsWith(path_without_prefix, restricted_path),
+                 "path={} not start with restricted_path={}",
+                 path_without_prefix, restricted_path);
+  }
+}
+
+std::string CheckAndGetAbsoluteLocalPath(
+    const std::string& in_filepath, bool is_restricted,
+    const std::string& restricted_filepath) {
+  YACL_ENFORCE(!in_filepath.empty());
   auto final_path =
       std::filesystem::weakly_canonical(std::filesystem::path(in_filepath));
   if (is_restricted) {

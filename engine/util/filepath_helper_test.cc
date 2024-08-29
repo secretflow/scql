@@ -22,32 +22,35 @@
 
 namespace scql::engine::util {
 
-TEST(FilePathTest, CheckAndGetAbsolutePath) {
+TEST(FilePathTest, CheckAndGetAbsoluteLocalPath) {
   std::string path = "/data/test.file";
-  EXPECT_EQ(path, CheckAndGetAbsolutePath(path, false, "null"));
+  EXPECT_EQ(path, CheckAndGetAbsoluteLocalPath(path, false, "null"));
 
-  EXPECT_EQ(path, CheckAndGetAbsolutePath(path, true, "/data"));
-  EXPECT_THROW(CheckAndGetAbsolutePath(path, true, "/another_dir"),
+  EXPECT_EQ(path, CheckAndGetAbsoluteLocalPath(path, true, "/data"));
+  EXPECT_THROW(CheckAndGetAbsoluteLocalPath(path, true, "/another_dir"),
                yacl::EnforceNotMet);
-  EXPECT_THROW(CheckAndGetAbsolutePath(path, true, ""), yacl::EnforceNotMet);
+  EXPECT_THROW(CheckAndGetAbsoluteLocalPath(path, true, ""),
+               yacl::EnforceNotMet);
 
   std::string current_path = std::filesystem::current_path().string();
   EXPECT_EQ(current_path + "/test.file",
-            CheckAndGetAbsolutePath("./test.file", false, ""));
+            CheckAndGetAbsoluteLocalPath("./test.file", false, ""));
 
   EXPECT_EQ(current_path + "/data/test.file",
-            CheckAndGetAbsolutePath("./data/test.file", true, "./data"));
+            CheckAndGetAbsoluteLocalPath("./data/test.file", true, "./data"));
+  EXPECT_THROW(CheckAndGetAbsoluteLocalPath("./data/../other_dir/test.file",
+                                            true, "./data"),
+               yacl::EnforceNotMet);
   EXPECT_THROW(
-      CheckAndGetAbsolutePath("./data/../other_dir/test.file", true, "./data"),
+      CheckAndGetAbsoluteLocalPath("../other_dir/test.file", true, "./data"),
       yacl::EnforceNotMet);
-  EXPECT_THROW(
-      CheckAndGetAbsolutePath("../other_dir/test.file", true, "./data"),
-      yacl::EnforceNotMet);
+}
 
-  // test s3 file
-  EXPECT_EQ(
-      "bucket/dir2/test.file",
-      CheckAndGetAbsolutePath("bucket/dir/../dir2/test.file", true, "bucket"));
+TEST(FilePathTest, CheckS3LikeUrl) {
+  EXPECT_NO_THROW(CheckS3LikeUrl("bucket/dir/test.file", true, "bucket"));
+
+  EXPECT_THROW(CheckS3LikeUrl("bucket/dir/../dir2/test.file", true, "bucket"),
+               yacl::EnforceNotMet);
 }
 
 }  // namespace scql::engine::util
