@@ -15,6 +15,7 @@
 package application
 
 import (
+	"context"
 	"fmt"
 	"slices"
 	"strings"
@@ -58,11 +59,17 @@ func NewApp(partyMgr partymgr.PartyMgr, metaMgr *storage.MetaManager, cfg *confi
 	app := &App{
 		Sessions: cache.New(time.Duration(cfg.SessionExpireTime),
 			time.Duration(cfg.SessionCheckInterval)),
-		PartyMgr:     partyMgr,
-		MetaMgr:      metaMgr,
-		Conf:         cfg,
-		Auth:         auth,
-		EngineClient: executor.NewEngineClient(cfg.Engine.ClientTimeout),
+		PartyMgr: partyMgr,
+		MetaMgr:  metaMgr,
+		Conf:     cfg,
+		Auth:     auth,
+		EngineClient: executor.NewEngineClient(
+			cfg.Engine.ClientMode,
+			cfg.Engine.ClientTimeout,
+			&cfg.Engine.TLSCfg,
+			cfg.Engine.ContentType,
+			cfg.Engine.Protocol,
+		),
 		InterStub: &InterStub{
 			Timeout:      cfg.InterTimeout,
 			EncodingType: message.EncodingTypeProtobuf,
@@ -98,8 +105,8 @@ func NewApp(partyMgr partymgr.PartyMgr, metaMgr *storage.MetaManager, cfg *confi
 		return nil, fmt.Errorf("unsupported engine scheduler %s", cfg.Engine.Scheduler)
 	}
 
-	jobWatcher, err := executor.NewJobWatcher(func(jobId, reason string) {
-		app.onJobDead(jobId, reason)
+	jobWatcher, err := executor.NewJobWatcher(app.MetaMgr, app.Conf.PartyCode, func(jobId, url, reason string) {
+		app.onJobDead(jobId, url, reason)
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create jobwatcher: %v", err)
@@ -128,19 +135,27 @@ func (app *App) GetSession(sid string) (*Session, bool) {
 	return nil, false
 }
 
-func (app *App) onJobDead(jobId string, reason string) {
+func (app *App) onJobDead(jobId, url, reason string) {
 	session, ok := app.GetSession(jobId)
 	if !ok {
-		logrus.Warnf("App.onJobDead error: session not found for job id %s", jobId)
+		logrus.Warnf("App.onJobDead warning: session not found for job id %s, job may come from other broker", jobId)
+		logrus.Warnf("error occurred during executing query job %s: %v", jobId, reason)
+		err := stopExternalEngine(jobId, url)
+		if err != nil {
+			logrus.Warnf("failed to stop engine on query job %s: %v", jobId, err)
+		} else {
+			logrus.Infof("success to stop engine on query job %s", jobId)
+		}
+	} else {
+		result := &pb.QueryResponse{
+			Status: &pb.Status{
+				Code:    int32(pb.Code_INTERNAL),
+				Message: reason,
+			},
+		}
+		session.SetResultSafely(result)
+		session.OnError(fmt.Errorf(reason))
 	}
-	result := &pb.QueryResponse{
-		Status: &pb.Status{
-			Code:    int32(pb.Code_INTERNAL),
-			Message: reason,
-		},
-	}
-	session.SetResultSafely(result)
-	session.OnError(fmt.Errorf(reason))
 }
 
 func (app *App) DeleteSession(sid string) {
@@ -160,6 +175,9 @@ func (app *App) PersistSessionInfo(session *Session) error {
 	if err != nil {
 		return fmt.Errorf("PersistSessionInfo: SessionInfo failed: %v", err)
 	}
+	// The job has only been submitted, it has not yet started to be executed by the engine.
+	info.Status = int8(storage.SessionSubmitted)
+
 	return app.MetaMgr.SetSessionInfo(*info)
 }
 
@@ -246,7 +264,7 @@ func (app *App) CancelSession(info *storage.SessionInfo) error {
 }
 
 func (app *App) startGc() error {
-	locker, err := storage.NewDistributedLocker(app.MetaMgr, app.Conf.PartyCode, app.Conf.SessionCheckInterval)
+	locker, err := storage.NewDistributedLocker(app.MetaMgr, storage.GcLockID, app.Conf.PartyCode, app.Conf.SessionCheckInterval)
 	if err != nil {
 		return fmt.Errorf("fail to create distributed locker: %v", err)
 	}
@@ -335,4 +353,28 @@ func sessionInfo(session *Session) (info *storage.SessionInfo, err error) {
 		CreatedAt:        session.CreatedAt,
 		ExpiredAt:        session.CreatedAt.Add(time.Duration(session.ExpireSeconds) * time.Second),
 	}, nil
+}
+
+func stopExternalEngine(jobId, url string) error {
+	conn, err := executor.NewEngineClientConn(url, "", nil)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+	client := pb.NewSCQLEngineServiceClient(conn)
+
+	req := pb.StopJobRequest{
+		JobId: jobId,
+	}
+
+	status, err := client.StopJob(context.TODO(), &req)
+	if err != nil {
+		return err
+	}
+
+	if status.GetCode() != int32(pb.Code_OK) {
+		return fmt.Errorf("stop failed, response: %s", status.String())
+	}
+
+	return nil
 }

@@ -16,7 +16,6 @@ def create_mock_data(source: dict, rows: int, dest_dir: str):
         schema_info = db_infos.get(db_name)
         tables = schema_info.get("table_info")
         contents = [""] * len(DB_TYPES)
-        print(tables)
         for table_name in tables:
             table = tables.get(table_name)
             columns = table.get("columns")
@@ -77,9 +76,9 @@ def get_db_from_json(source_file: str):
     for table_file in info.get("table_files"):
         table_info = parse_json(table_file)
         for table_name in table_info:
-            result[table_info[table_name]["db_name"]]["table_info"][
-                table_name
-            ] = table_info[table_name]
+            result[table_info[table_name]["db_name"]]["table_info"][table_name] = (
+                table_info[table_name]
+            )
     return result
 
 

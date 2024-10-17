@@ -85,6 +85,7 @@ cc_library(
         ":copy_to_proto_vistor",
         "//engine/core:arrow_helper",
         "//engine/core:tensor",
+        "//engine/util:spu_io",
         "//engine/util:time_util",
         "@yacl//yacl/base:exception",
     ],

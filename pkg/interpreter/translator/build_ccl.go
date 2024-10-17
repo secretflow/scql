@@ -555,5 +555,87 @@ func (n *SortNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error
 }
 
 func (n *WindowNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
-	return fmt.Errorf("window function not supported yet")
+	window, ok := n.lp.(*core.LogicalWindow)
+	if !ok {
+		return fmt.Errorf("assert failed while windowNode buildCCL, expected: core.LogicalWindow, actual: %T", n.lp)
+	}
+
+	if len(window.WindowFuncDescs) != 1 {
+		return fmt.Errorf("assert failed for window functions expect(1) but actual(%v)", len(window.WindowFuncDescs))
+	}
+
+	desc := window.WindowFuncDescs[0]
+	if ccl.IsRankWindowFunc(desc.Name) {
+		return n.buildRankWindowCCL(ctx, colTracer)
+	} else {
+		return n.buildAggWindowCCL(ctx, colTracer)
+	}
+
+}
+
+func (n *WindowNode) buildRankWindowCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
+	if err := n.buildChildCCL(ctx, colTracer); err != nil {
+		return err
+	}
+
+	childCCL, err := extractChildCCL(n)
+	if err != nil {
+		return fmt.Errorf("buildRankWindowCCL: failed to build child ccl for child node of WindowNode: %v", err)
+	}
+	window, ok := n.lp.(*core.LogicalWindow)
+	if !ok {
+		return fmt.Errorf("buildRankWindowCCL: assert failed while windowNode buildCCL, expected: core.LogicalWindow, actual: %T", n.lp)
+	}
+
+	if len(window.WindowFuncDescs) != 1 {
+		return fmt.Errorf("buildRankWindowCCL: assert failed for window functions expect(1) but actual(%v)", len(window.WindowFuncDescs))
+	}
+
+	if len(window.OrderBy) == 0 {
+		return fmt.Errorf("buildRankWindowCCL: order field is required in %v function", window.WindowFuncDescs[0].Name)
+	}
+
+	if len(window.PartitionBy) == 0 {
+		return fmt.Errorf("buildRankWindowCCL: partition field is required in %v function", window.WindowFuncDescs[0].Name)
+	}
+
+	result := make(map[int64]*ccl.CCL)
+	for id, cc := range childCCL {
+		result[id] = cc.Clone()
+	}
+
+	// the window func result is the last column
+	lastCol := window.Schema().Columns[len(window.Schema().Columns)-1]
+
+	var newCC *ccl.CCL
+	init, ok := childCCL[window.OrderBy[0].Col.UniqueID]
+	if !ok {
+		return fmt.Errorf("buildRankWindowCCL: failed to find ccl for col(%v: %v)", window.OrderBy[0].Col.OrigName, window.OrderBy[0].Col.UniqueID)
+	}
+
+	newCC = init.Clone()
+	for _, item := range window.OrderBy[1:] {
+		orderItemCCL, ok := childCCL[item.Col.UniqueID]
+		if !ok {
+			return fmt.Errorf("buildRankWindowCCL: failed to find ccl for col(%v: %v) in order list", item.Col.OrigName, item.Col.UniqueID)
+		}
+
+		newCC.UpdateMoreRestrictedCCLFrom(orderItemCCL)
+	}
+
+	for _, p := range ccl.ExtractPartyCodes([]*ccl.CCL{newCC}) {
+		if newCC.LevelFor(p) == ccl.Rank {
+			newCC.SetLevelForParty(p, ccl.Plain)
+		}
+	}
+
+	result[lastCol.UniqueID] = newCC
+	colTracer.AddSourceParties(lastCol.UniqueID, ccl.ExtractPartyCodes([]*ccl.CCL{newCC}))
+
+	n.ccl = result
+	return nil
+}
+
+func (n *WindowNode) buildAggWindowCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
+	return fmt.Errorf("buildAggWindowCCL: agg window does not support yet")
 }

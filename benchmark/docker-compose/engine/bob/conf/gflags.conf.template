@@ -1,0 +1,12 @@
+--listen_port=8003
+--datasource_router=embed
+--enable_driver_authorization=false
+--server_enable_ssl=false
+--driver_enable_ssl_as_client=false
+--peer_engine_enable_ssl_as_client=false
+--enable_restricted_read_path=false
+--embed_router_conf={"datasources":[{"id":"ds001","name":"csv db","kind":"CSVDB","connection_str":"${CONN_STR}"}],"rules":[{"db":"*","table":"*","datasource_id":"ds001"}]}
+
+# party authentication flags
+--enable_self_auth=false
+--enable_peer_auth=false

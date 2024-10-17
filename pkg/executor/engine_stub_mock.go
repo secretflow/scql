@@ -5,11 +5,10 @@
 package executor
 
 import (
-	context "context"
-	http "net/http"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	scql "github.com/secretflow/scql/pkg/proto-gen/scql"
 )
 
 // MockEngineClient is a mock of EngineClient interface.
@@ -35,55 +34,17 @@ func (m *MockEngineClient) EXPECT() *MockEngineClientMockRecorder {
 	return m.recorder
 }
 
-// Post mocks base method.
-func (m *MockEngineClient) Post(ctx context.Context, url, credential, content_type, body string) (string, error) {
+// RunExecutionPlan mocks base method.
+func (m *MockEngineClient) RunExecutionPlan(url, credential string, executionPlanReq *scql.RunExecutionPlanRequest) (*scql.RunExecutionPlanResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Post", ctx, url, credential, content_type, body)
-	ret0, _ := ret[0].(string)
+	ret := m.ctrl.Call(m, "RunExecutionPlan", url, credential, executionPlanReq)
+	ret0, _ := ret[0].(*scql.RunExecutionPlanResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Post indicates an expected call of Post.
-func (mr *MockEngineClientMockRecorder) Post(ctx, url, credential, content_type, body interface{}) *gomock.Call {
+// RunExecutionPlan indicates an expected call of RunExecutionPlan.
+func (mr *MockEngineClientMockRecorder) RunExecutionPlan(url, credential, executionPlanReq interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Post", reflect.TypeOf((*MockEngineClient)(nil).Post), ctx, url, credential, content_type, body)
-}
-
-// MockSimpleHttpClient is a mock of SimpleHttpClient interface.
-type MockSimpleHttpClient struct {
-	ctrl     *gomock.Controller
-	recorder *MockSimpleHttpClientMockRecorder
-}
-
-// MockSimpleHttpClientMockRecorder is the mock recorder for MockSimpleHttpClient.
-type MockSimpleHttpClientMockRecorder struct {
-	mock *MockSimpleHttpClient
-}
-
-// NewMockSimpleHttpClient creates a new mock instance.
-func NewMockSimpleHttpClient(ctrl *gomock.Controller) *MockSimpleHttpClient {
-	mock := &MockSimpleHttpClient{ctrl: ctrl}
-	mock.recorder = &MockSimpleHttpClientMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockSimpleHttpClient) EXPECT() *MockSimpleHttpClientMockRecorder {
-	return m.recorder
-}
-
-// Do mocks base method.
-func (m *MockSimpleHttpClient) Do(req *http.Request) (*http.Response, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Do", req)
-	ret0, _ := ret[0].(*http.Response)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Do indicates an expected call of Do.
-func (mr *MockSimpleHttpClientMockRecorder) Do(req interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Do", reflect.TypeOf((*MockSimpleHttpClient)(nil).Do), req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunExecutionPlan", reflect.TypeOf((*MockEngineClient)(nil).RunExecutionPlan), url, credential, executionPlanReq)
 }

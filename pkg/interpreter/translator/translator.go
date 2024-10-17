@@ -214,8 +214,7 @@ func (t *translator) translateInternal(ln logicalNode) error {
 	case *UnionAllNode:
 		return t.buildUnion(x)
 	case *WindowNode:
-		// TODO(xiaoyuan) add more code here
-		return fmt.Errorf("window node is unimplemented")
+		return t.buildWindow(x)
 	case *LimitNode:
 		return t.buildLimit(x)
 	default:

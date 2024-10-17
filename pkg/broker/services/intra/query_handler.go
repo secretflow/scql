@@ -40,38 +40,26 @@ import (
 	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
 
-func (svc *grpcIntraSvc) DoQuery(ctx context.Context, req *pb.QueryRequest) (resp *pb.QueryResponse, err error) {
-	if req == nil || req.GetProjectId() == "" || req.GetQuery() == "" {
-		return nil, status.New(pb.Code_BAD_REQUEST, "request for DoQuery is illegal")
-	}
-
-	app := svc.app
-
-	err = common.CheckMemberExistInProject(app.MetaMgr, req.GetProjectId(), app.Conf.PartyCode)
+func validateAndGetProjectConf(app *application.App, projectID string) (*pb.ProjectConfig, error) {
+	err := common.CheckMemberExistInProject(app.MetaMgr, projectID, app.Conf.PartyCode)
 	if err != nil {
 		return nil, err
 	}
-	jobID, err := application.GenerateJobID()
-	if err != nil {
-		return nil, fmt.Errorf("DoQuery: %v", err)
-	}
-
-	jobConfig := req.GetJobConfig()
-
 	var existingProject *storage.Project
-	existingProject, err = app.MetaMgr.GetProject(req.GetProjectId())
-
+	existingProject, err = app.MetaMgr.GetProject(projectID)
 	if err != nil {
 		return nil, err
 	}
-
-	var projConf pb.ProjectConfig
-	err = message.ProtoUnmarshal([]byte(existingProject.ProjectConf), &projConf)
+	projConf := &pb.ProjectConfig{}
+	err = message.ProtoUnmarshal([]byte(existingProject.ProjectConf), projConf)
 	if err != nil {
 		return nil, err
 	}
+	return projConf, nil
+}
 
-	jobConfig = brokerutil.UpdateJobConfig(jobConfig, &projConf)
+func genSessionOpts(jobConfig *pb.JobConfig, projConf *pb.ProjectConfig) *application.SessionOptions {
+	jobConfig = brokerutil.UpdateJobConfig(jobConfig, projConf)
 
 	linkCfg := &pb.LinkConfig{
 		LinkRecvTimeoutSec:          jobConfig.LinkRecvTimeoutSec,
@@ -90,6 +78,36 @@ func (svc *grpcIntraSvc) DoQuery(ctx context.Context, req *pb.QueryRequest) (res
 		EnableSessionLoggerSeparation: jobConfig.EnableSessionLoggerSeparation,
 	}
 
+	sessionOptions := &application.SessionOptions{
+		SessionExpireSeconds: jobConfig.GetSessionExpireSeconds(),
+		LinkConfig:           linkCfg,
+		PsiConfig:            psiCfg,
+		LogConfig:            logCfg,
+		TimeZone:             jobConfig.GetTimeZone(),
+	}
+
+	return sessionOptions
+}
+
+func (svc *grpcIntraSvc) DoQuery(ctx context.Context, req *pb.QueryRequest) (resp *pb.QueryResponse, err error) {
+	if req == nil || req.GetProjectId() == "" || req.GetQuery() == "" {
+		return nil, status.New(pb.Code_BAD_REQUEST, "request for DoQuery is illegal: empty project id or query")
+	}
+
+	app := svc.app
+
+	projConf, err := validateAndGetProjectConf(app, req.GetProjectId())
+	if err != nil {
+		return nil, fmt.Errorf("DoQuery: %v", err)
+	}
+
+	jobID, err := application.GenerateJobID()
+	if err != nil {
+		return nil, fmt.Errorf("DoQuery: %v", err)
+	}
+
+	sessionOptions := genSessionOpts(req.GetJobConfig(), projConf)
+
 	info := &application.ExecutionInfo{
 		ProjectID: req.GetProjectId(),
 		JobID:     jobID,
@@ -97,14 +115,9 @@ func (svc *grpcIntraSvc) DoQuery(ctx context.Context, req *pb.QueryRequest) (res
 		Issuer: &pb.PartyId{
 			Code: app.Conf.PartyCode,
 		},
-		EngineClient: app.EngineClient,
-		DebugOpts:    req.GetDebugOpts(),
-		SessionOptions: &application.SessionOptions{
-			SessionExpireSeconds: jobConfig.GetSessionExpireSeconds(),
-			LinkConfig:           linkCfg,
-			PsiConfig:            psiCfg,
-			LogConfig:            logCfg,
-		},
+		EngineClient:   app.EngineClient,
+		DebugOpts:      req.GetDebugOpts(),
+		SessionOptions: sessionOptions,
 	}
 	session, err := application.NewSession(ctx, info, app, false, req.GetDryRun())
 	if err != nil {
@@ -137,48 +150,17 @@ func (svc *grpcIntraSvc) SubmitQuery(ctx context.Context, req *pb.QueryRequest) 
 
 	app := svc.app
 
-	err = common.CheckMemberExistInProject(app.MetaMgr, req.GetProjectId(), app.Conf.PartyCode)
+	projConf, err := validateAndGetProjectConf(app, req.GetProjectId())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("SubmitQuery: %v", err)
 	}
+
 	jobID, err := application.GenerateJobID()
 	if err != nil {
 		return nil, fmt.Errorf("SubmitQuery: %v", err)
 	}
 
-	jobConfig := req.GetJobConfig()
-
-	var existingProject *storage.Project
-	existingProject, err = app.MetaMgr.GetProject(req.GetProjectId())
-
-	if err != nil {
-		return nil, err
-	}
-
-	var projConf pb.ProjectConfig
-	err = message.ProtoUnmarshal([]byte(existingProject.ProjectConf), &projConf)
-	if err != nil {
-		return nil, err
-	}
-
-	jobConfig = brokerutil.UpdateJobConfig(jobConfig, &projConf)
-
-	linkCfg := &pb.LinkConfig{
-		LinkRecvTimeoutSec:          jobConfig.LinkRecvTimeoutSec,
-		LinkThrottleWindowSize:      jobConfig.LinkThrottleWindowSize,
-		LinkChunkedSendParallelSize: jobConfig.LinkChunkedSendParallelSize,
-		HttpMaxPayloadSize:          jobConfig.HttpMaxPayloadSize,
-	}
-
-	psiCfg := &pb.PsiConfig{
-		PsiCurveType:                              jobConfig.PsiCurveType,
-		UnbalancePsiRatioThreshold:                jobConfig.UnbalancePsiRatioThreshold,
-		UnbalancePsiLargerPartyRowsCountThreshold: jobConfig.UnbalancePsiLargerPartyRowsCountThreshold,
-	}
-
-	logCfg := &pb.LogConfig{
-		EnableSessionLoggerSeparation: jobConfig.EnableSessionLoggerSeparation,
-	}
+	sessionOptions := genSessionOpts(req.GetJobConfig(), projConf)
 
 	info := &application.ExecutionInfo{
 		ProjectID: req.GetProjectId(),
@@ -187,15 +169,9 @@ func (svc *grpcIntraSvc) SubmitQuery(ctx context.Context, req *pb.QueryRequest) 
 		Issuer: &pb.PartyId{
 			Code: app.Conf.PartyCode,
 		},
-		EngineClient: app.EngineClient,
-		DebugOpts:    req.GetDebugOpts(),
-		SessionOptions: &application.SessionOptions{
-			SessionExpireSeconds: jobConfig.GetSessionExpireSeconds(),
-			LinkConfig:           linkCfg,
-			PsiConfig:            psiCfg,
-			LogConfig:            logCfg,
-			TimeZone:             req.GetJobConfig().GetTimeZone(),
-		},
+		EngineClient:   app.EngineClient,
+		DebugOpts:      req.GetDebugOpts(),
+		SessionOptions: sessionOptions,
 	}
 	session, err := application.NewSession(ctx, info, app, true /* async mode */, false)
 	if err != nil {
@@ -231,6 +207,8 @@ func fetchSessionStatus(session_info *storage.SessionInfo) (resp *scql.QueryJobS
 	if err != nil {
 		return nil, err
 	}
+	defer conn.Close()
+
 	client := pb.NewSCQLEngineServiceClient(conn)
 
 	req := pb.QueryJobStatusRequest{
@@ -362,6 +340,62 @@ func (svc *grpcIntraSvc) FetchResult(c context.Context, req *pb.FetchResultReque
 	}
 
 	return resp, nil
+}
+
+func (svc *grpcIntraSvc) ExplainQuery(ctx context.Context, req *pb.ExplainQueryRequest) (resp *pb.ExplainQueryResponse, err error) {
+	if req == nil || req.GetProjectId() == "" || req.GetQuery() == "" {
+		return nil, status.New(pb.Code_BAD_REQUEST, "request for ExplainQuery is illegal: empty project id or query")
+	}
+
+	app := svc.app
+
+	projConf, err := validateAndGetProjectConf(app, req.GetProjectId())
+	if err != nil {
+		return nil, fmt.Errorf("DoQuery: %v", err)
+	}
+
+	jobID, err := application.GenerateJobID()
+	if err != nil {
+		return nil, fmt.Errorf("DoQuery: %v", err)
+	}
+
+	sessionOptions := genSessionOpts(req.GetJobConfig(), projConf)
+
+	info := &application.ExecutionInfo{
+		ProjectID: req.GetProjectId(),
+		JobID:     jobID,
+		Query:     req.GetQuery(),
+		Issuer: &pb.PartyId{
+			Code: app.Conf.PartyCode,
+		},
+		EngineClient:   app.EngineClient,
+		SessionOptions: sessionOptions,
+	}
+
+	session, err := application.NewSession(ctx, info, app, false, true)
+	if err != nil {
+		return nil, err
+	}
+	logrus.Infof("create session %s with query '%s' in project %s", jobID, req.Query, req.ProjectId)
+
+	r := executor.NewQueryRunner(session)
+
+	usedTables, err := prepareQueryInfo(session, r)
+	if err != nil {
+		return nil, fmt.Errorf("ExplainQuery: %v", err)
+	}
+
+	plan, err := r.GetPlan(usedTables)
+	if err != nil {
+		return nil, fmt.Errorf("ExplainQuery: %v", err)
+	}
+	return &pb.ExplainQueryResponse{
+		Status: &pb.Status{
+			Code:    0,
+			Message: "ok",
+		},
+		Explain: plan.Explain,
+	}, nil
 }
 
 func (svc *grpcIntraSvc) CancelQuery(c context.Context, req *pb.CancelQueryRequest) (resp *pb.CancelQueryResponse, err error) {
@@ -502,32 +536,30 @@ func distributeQueryToOtherParty(session *application.Session, enginesInfo *grap
 	return &result, nil
 }
 
-func (svc *grpcIntraSvc) runQuery(session *application.Session) error {
+func prepareQueryInfo(session *application.Session, r *executor.QueryRunner) ([]core.DbTable, error) {
 	executionInfo := session.ExecuteInfo
-	r := executor.NewQueryRunner(session)
-	logrus.Infof("create query runner for job %s", session.ExecuteInfo.JobID)
 	usedTables, err := core.GetSourceTables(session.ExecuteInfo.Query)
 	if err != nil {
-		return fmt.Errorf("runQuery: %v", err)
+		return nil, fmt.Errorf("prepareQueryInfo GetSourceTables: %v", err)
 	}
 	logrus.Infof("get source tables %+v in project %s from storage", usedTables, executionInfo.ProjectID)
 	// prepare info, tableSchema, CCL...
 	dataParties, workParties, err := r.Prepare(usedTables)
 	if err != nil {
-		return fmt.Errorf("runQuery Prepare: %v", err)
+		return nil, fmt.Errorf("prepareQueryInfo: %v", err)
 	}
 	executionInfo.WorkParties = workParties
 	executionInfo.DataParties = dataParties
 	logrus.Infof("work parties: %+v; data parties: %+v for job %s", workParties, dataParties, session.ExecuteInfo.JobID)
 	err = executionInfo.CheckProjectConf()
 	if err != nil {
-		return fmt.Errorf("runQuery CheckProjectConf: %v", err)
+		return nil, fmt.Errorf("prepareQueryInfo CheckProjectConf: %v", err)
 	}
 
 	// sync info and get endpoints from other party
 	localChecksums, err := r.CreateChecksum()
 	if err != nil {
-		return fmt.Errorf("runQuery CreateChecksum: %v", err)
+		return nil, fmt.Errorf("prepareQueryInfo CreateChecksum: %v", err)
 	}
 	for code, checksum := range localChecksums {
 		session.SaveLocalChecksum(code, checksum)
@@ -539,7 +571,7 @@ func (svc *grpcIntraSvc) runQuery(session *application.Session) error {
 		return distributeQueryToOtherParty(session, r.GetEnginesInfo(), p)
 	})
 	if err != nil {
-		return fmt.Errorf("runQuery distribute: %v", err)
+		return nil, fmt.Errorf("prepareQueryInfo distribute: %v", err)
 	}
 	for _, result := range results {
 		if result.prepareAgain {
@@ -548,6 +580,16 @@ func (svc *grpcIntraSvc) runQuery(session *application.Session) error {
 		session.SaveEndpoint(result.party, result.endpoint)
 	}
 	logrus.Infof("distribute query completed for job %s", session.ExecuteInfo.JobID)
+	return usedTables, nil
+}
+
+func (svc *grpcIntraSvc) runQuery(session *application.Session) error {
+	r := executor.NewQueryRunner(session)
+	logrus.Infof("create query runner for job %s", session.ExecuteInfo.JobID)
+	usedTables, err := prepareQueryInfo(session, r)
+	if err != nil {
+		return fmt.Errorf("runQuery: %v", err)
+	}
 
 	if session.DryRun {
 		// NOTE: dry run doesn't need to persistent session info

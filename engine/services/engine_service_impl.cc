@@ -541,7 +541,8 @@ void EngineServiceImpl::RunPlanCore(const pb::RunExecutionPlanRequest& request,
                 pb::Tensor* out_column = response->add_out_columns();
                 out_column->CopyFrom(*result);
               }
-            } else if (node.op_type() == "DumpFile") {
+            } else if (node.op_type() == "DumpFile" ||
+                       node.op_type() == "InsertTable") {
               auto affected_rows = session->GetAffectedRows();
               response->set_num_rows_affected(affected_rows);
             }
@@ -594,6 +595,8 @@ void EngineServiceImpl::RunPlanSync(const pb::RunExecutionPlanRequest* request,
 
     SPDLOG_LOGGER_INFO(logger, "RunExecutionPlan success, sessionID={}",
                        session_id);
+    auto lctx = session->GetLink();
+    lctx->WaitLinkTaskFinish();
   } catch (const std::exception& e) {
     session->SetState(SessionState::FAILED);
 

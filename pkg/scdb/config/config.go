@@ -32,12 +32,13 @@ import (
 )
 
 const (
-	DefaultQueryResultCbTimeout = 200 * time.Millisecond // 200s
+	DefaultQueryResultCbTimeout = 200 * time.Millisecond // 200ms
 	DefaultSessionExpireTime    = 2 * 24 * time.Hour     // 2 days
 	DefaultSessionCheckInterval = 1 * time.Hour          // 1 hours
 	DefaultClientTimeout        = 120 * time.Second      // 120s
 	DefaultProtocol             = "https"
 	DefaultLogLevel             = "info"
+	DefaultEngineClientMode     = "HTTP"
 )
 
 const (
@@ -51,15 +52,19 @@ const (
 )
 
 type EngineConfig struct {
+	ClientMode    string        `yaml:"mode"`
 	ClientTimeout time.Duration `yaml:"timeout"`
 	Protocol      string        `yaml:"protocol"`
 	ContentType   string        `yaml:"content_type"`
 	SpuRuntimeCfg string        `yaml:"spu"`
+	TLSCfg        TlsConf       `yaml:"tls"`
 }
 
 type TlsConf struct {
-	CertFile string `yaml:"cert_file"`
-	KeyFile  string `yaml:"key_file"`
+	Mode       string `yaml:"mode"`
+	CACertFile string `yaml:"cacert_file"`
+	CertFile   string `yaml:"cert_file"`
+	KeyFile    string `yaml:"key_file"`
 }
 
 type SecurityCompromiseConf struct {
@@ -171,6 +176,7 @@ func NewDefaultConfig() *Config {
 		ConnMaxLifetime: -1,
 	}
 	config.Engine = EngineConfig{
+		ClientMode:    DefaultEngineClientMode,
 		ClientTimeout: DefaultClientTimeout,
 		Protocol:      DefaultProtocol,
 	}

@@ -30,6 +30,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/secretflow/scql/pkg/audit"
+	bcfg "github.com/secretflow/scql/pkg/broker/config"
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/executor"
 	"github.com/secretflow/scql/pkg/interpreter"
@@ -373,13 +374,24 @@ func (app *App) runDQL(ctx context.Context, s *session, async bool) (*scql.SCDBQ
 		}
 	}
 
-	s.engineStub = executor.NewEngineStub(s.id,
+	engineClient := executor.NewEngineClient(
+		executor.EngineClientTypeHTTP,
+		app.config.Engine.ClientTimeout,
+		&bcfg.TLSConf{
+			Mode:       app.config.Engine.TLSCfg.Mode,
+			CertPath:   app.config.Engine.TLSCfg.CertFile,
+			KeyPath:    app.config.Engine.TLSCfg.KeyFile,
+			CACertPath: app.config.Engine.TLSCfg.CACertFile,
+		},
+		app.config.Engine.ContentType,
+		app.config.Engine.Protocol,
+	)
+	s.engineStub = executor.NewEngineStub(
+		s.id,
 		app.config.Protocol,
 		app.config.SCDBHost,
 		engineCallbackPath,
-		app.engineClient,
-		app.config.Engine.Protocol,
-		app.config.Engine.ContentType,
+		engineClient,
 	)
 
 	var outputNames []string

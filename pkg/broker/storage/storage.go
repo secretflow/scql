@@ -24,6 +24,7 @@ import (
 
 	"github.com/go-co-op/gocron/v2"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/exp/rand"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
@@ -44,25 +45,106 @@ type MetaManager struct {
 	persistSession bool
 }
 
-type DistributedLocker struct {
-	metaMgr *MetaManager
-	owner   string
-	ttl     time.Duration // lock will expired after ttl
+var (
+	_ gocron.Elector = &DistributedElector{}
+	_ gocron.Locker  = &DistributedLocker{}
+	_ gocron.Lock    = &DistributedLock{}
+)
+
+type DistributedElector struct {
+	leader   bool
+	locker   *DistributedLocker
+	stopChan chan bool
 }
 
-func NewDistributedLocker(mm *MetaManager, owner string, ttl time.Duration) (*DistributedLocker, error) {
+func NewDistributedElector(mm *MetaManager, id DistLockID, owner string, ttl time.Duration) (*DistributedElector, error) {
+	locker, err := NewDistributedLocker(mm, id, owner, ttl)
+	if err != nil {
+		return nil, fmt.Errorf("fail to create distributed locker %d: %v", id, err)
+	}
+	return &DistributedElector{leader: false, locker: locker, stopChan: make(chan bool, 1)}, nil
+}
+
+func (elector *DistributedElector) IsLeader(ctx context.Context) error {
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("done")
+	default:
+	}
+
+	if !elector.leader {
+		// Try to run for election
+		err := elector.locker.metaMgr.HoldDistributedLock(elector.locker.id, elector.locker.owner, elector.locker.ttl)
+		if err != nil {
+			elector.leader = false
+			logrus.Warnf("%s failed election: %v", elector.locker.owner, err)
+			return fmt.Errorf("already elected leader")
+		}
+
+		elector.leader = true
+		go elector.renewLeaderLock()
+	} else {
+		owner, err := elector.locker.metaMgr.GetDistributedLockOwner(elector.locker.id)
+		if err != nil || owner != elector.locker.owner {
+			elector.leader = false
+			elector.StopRenewLeaderLock()
+
+			logrus.Warnf("%s failed to extend mandate: %v", elector.locker.owner, err)
+			return fmt.Errorf("failed to extent mandate")
+		}
+	}
+
+	logrus.Infof("%v is the leader", elector.locker.owner)
+	return nil
+}
+
+func (elector *DistributedElector) StopRenewLeaderLock() {
+	elector.stopChan <- true
+}
+
+func (elector *DistributedElector) renewLeaderLock() {
+	ticker := time.NewTicker(elector.locker.ttl / 2)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-elector.stopChan:
+			logrus.Infof("Stopping leader renewal for %s", elector.locker.owner)
+			return
+		case <-ticker.C:
+			// Periodically update the lock to prevent expiration
+			err := elector.locker.metaMgr.UpdateDistributedLock(elector.locker.id, elector.locker.owner, elector.locker.ttl)
+			if err != nil {
+				logrus.Warnf("failed to update distributed lock for owner %s: %v", elector.locker.owner, err)
+				// Handle error or break the loop if necessary
+			} else {
+				logrus.Infof("successfully updated distributed lock for owner %s", elector.locker.owner)
+			}
+		}
+	}
+}
+
+type DistributedLocker struct {
+	metaMgr *MetaManager
+	id      DistLockID
+	owner   string
+	ttl     time.Duration // lock holding ttl time
+}
+
+func NewDistributedLocker(mm *MetaManager, id DistLockID, owner string, ttl time.Duration) (*DistributedLocker, error) {
 	if host := os.Getenv("HOSTNAME"); host != "" {
 		owner = host
 	} else {
-		logrus.Warnf("cannot find HOSTNAME env, using party code as owner")
+		owner = owner + randString(8)
+		logrus.Warnf("cannot find HOSTNAME env, using %s as owner", owner)
 	}
-	// Avoid situations where the lock is not released after the duration of the task has ended
-	locker := &DistributedLocker{metaMgr: mm, owner: owner, ttl: ttl - time.Second}
 
-	err := locker.metaMgr.InitGcLockIfNecessary()
+	// Avoid situations where the lock is not released after the duration of the task has ended
+	locker := &DistributedLocker{metaMgr: mm, id: id, owner: owner, ttl: ttl - 100*time.Millisecond}
+
+	err := locker.metaMgr.InitDistributedLockIfNecessary(id)
 	if err != nil {
-		logrus.Errorf("failed to check gc lock for owner %s:%v", locker.owner, err)
-		return nil, fmt.Errorf("failed to check gc lock")
+		logrus.Errorf("failed to check distributed lock for owner %s:%v", locker.owner, err)
+		return nil, fmt.Errorf("failed to check distributed lock:%v", err)
 	}
 
 	return locker, nil
@@ -71,13 +153,13 @@ func NewDistributedLocker(mm *MetaManager, owner string, ttl time.Duration) (*Di
 // Lock acquires a lock
 // Implementation of the gocron lock interface
 func (l *DistributedLocker) Lock(ctx context.Context, key string) (gocron.Lock, error) {
-	err := l.metaMgr.HoldGcLock(l.owner, l.ttl)
+	err := l.metaMgr.HoldDistributedLock(l.id, l.owner, l.ttl)
 	if err != nil {
-		logrus.Warnf("failed to get gc lock for owner %s:%v", l.owner, err)
-		return nil, fmt.Errorf("failed to get gc lock")
+		logrus.Warnf("failed to get distributed lock %v for owner %s:%v", l.id, l.owner, err)
+		return nil, fmt.Errorf("failed to get distributed lock")
 	}
 
-	logrus.Infof("Successfully acquired gc lock for owner: %s", l.owner)
+	logrus.Infof("Successfully acquired distributed lock %v for owner: %s", l.id, l.owner)
 	return &DistributedLock{metaMgr: l.metaMgr, owner: l.owner}, nil
 }
 
@@ -100,6 +182,10 @@ func NewMetaManager(db *gorm.DB, ps bool) *MetaManager {
 		db:             db,
 		persistSession: ps,
 	}
+}
+
+func (manager *MetaManager) Persistent() bool {
+	return manager.persistSession
 }
 
 func (manager *MetaManager) tables() []interface{} {
@@ -574,4 +660,15 @@ func (t *MetaTransaction) GetProjectMeta(projectID string, tableNames []string, 
 	}
 	meta.CCLs = ccls
 	return &meta, nil
+}
+
+func randString(n int) string {
+	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+
+	rand.Seed(uint64(time.Now().UnixNano()))
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }

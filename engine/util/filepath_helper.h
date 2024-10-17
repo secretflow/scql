@@ -18,6 +18,7 @@
 #include <optional>
 #include <string>
 
+#include "absl/strings/match.h"
 #include "spdlog/spdlog.h"
 
 namespace scql::engine::util {
@@ -37,6 +38,10 @@ void CheckS3LikeUrl(const std::string& path_without_prefix, bool is_restricted,
 std::string CheckAndGetAbsoluteLocalPath(
     const std::string& in_filepath, bool is_restricted,
     const std::string& restricted_filepath);
+
+// Returns true if the endpoint prefix is https, false if it is http, and true
+// by default.
+bool GetAndRemoveS3EndpointPrefix(std::string& endpoint);
 
 class ScopedDir {
  public:

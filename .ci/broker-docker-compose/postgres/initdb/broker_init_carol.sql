@@ -123,5 +123,6 @@ CREATE TABLE locks (
   id SERIAL NOT NULL,
   "owner" VARCHAR(64),
   updated_at TIMESTAMP DEFAULT NULL,
+  expired_at TIMESTAMP DEFAULT NULL,
   PRIMARY KEY (id)
 );

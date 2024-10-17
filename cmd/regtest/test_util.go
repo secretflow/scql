@@ -337,18 +337,21 @@ type TestDataSource struct {
 }
 
 // connDB creates a connection to the MySQL instance
-func (ds *TestDataSource) ConnDB(conf *config.StorageConf) (err error) {
-	ds.MysqlDb, err = gorm.Open(mysql.Open(conf.ConnStr), &gorm.Config{})
-	if err != nil {
-		return err
-	}
-	sqlDB, _ := ds.MysqlDb.DB()
-	sqlDB.SetMaxOpenConns(conf.MaxOpenConns)
-	sqlDB.SetMaxIdleConns(conf.MaxIdleConns)
-	sqlDB.SetConnMaxLifetime(conf.ConnMaxLifetime)
-	sqlDB.SetConnMaxIdleTime(conf.ConnMaxIdleTime)
-	if err = sqlDB.Ping(); err != nil {
-		return err
+func (ds *TestDataSource) ConnDB(conf *config.StorageConf, maxRetries int, retryDelay time.Duration) (err error) {
+	for i := 0; i < maxRetries; i++ {
+		ds.MysqlDb, err = gorm.Open(mysql.Open(conf.ConnStr), &gorm.Config{})
+		if err == nil {
+			sqlDB, _ := ds.MysqlDb.DB()
+			sqlDB.SetMaxOpenConns(conf.MaxOpenConns)
+			sqlDB.SetMaxIdleConns(conf.MaxIdleConns)
+			sqlDB.SetConnMaxLifetime(conf.ConnMaxLifetime)
+			sqlDB.SetConnMaxIdleTime(conf.ConnMaxIdleTime)
+			if err = sqlDB.Ping(); err == nil {
+				return nil
+			}
+		}
+		fmt.Printf("Failed to connect to the database: %v (attempt %d/%d)\n", err, i+1, maxRetries)
+		time.Sleep(retryDelay)
 	}
 	return nil
 }

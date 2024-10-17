@@ -17,6 +17,7 @@
 #include <filesystem>
 
 #include "arrow/array/concatenate.h"
+#include "arrow/compute/cast.h"
 #include "arrow/csv/writer.h"
 #include "arrow/filesystem/filesystem.h"
 #include "arrow/filesystem/s3fs.h"
@@ -30,6 +31,7 @@
 #include "engine/core/tensor_batch_reader.h"
 #include "engine/util/filepath_helper.h"
 #include "engine/util/tensor_util.h"
+#include "engine/util/time_util.h"
 namespace scql::engine::op {
 
 // TODO(jingshi) : temporary add flags here to keep the simplicity of op's
@@ -77,11 +79,13 @@ std::shared_ptr<arrow::io::OutputStream> BuildStreamFromS3(
     const std::string& prefix, const std::string& path_without_prefix) {
   InitS3Once();
   arrow::fs::S3Options options;
-  options.endpoint_override = FLAGS_output_s3_endpoint;
+  std::string s3_endpoint = FLAGS_output_s3_endpoint;
+  bool use_ssl = util::GetAndRemoveS3EndpointPrefix(s3_endpoint);
+  options.endpoint_override = s3_endpoint;
   options.force_virtual_addressing = FLAGS_output_s3_force_virtual_addressing;
   options.ConfigureAccessKey(FLAGS_output_s3_access_key,
                              FLAGS_output_s3_secret_key);
-  if (!FLAGS_output_s3_enalbe_ssl) {
+  if (!use_ssl || !FLAGS_output_s3_enalbe_ssl) {
     options.scheme = "http";
   }
   std::shared_ptr<arrow::fs::S3FileSystem> fs;
@@ -139,6 +143,14 @@ void WriteTensors(
         read_to_end = true;
         break;
       }
+      if (arrow::is_temporal(schema->field(i)->type()->id())) {
+        auto result =
+            arrow::compute::Cast(chunked_arr, schema->field(i)->type());
+        YACL_ENFORCE(result.ok(), "caught error while cast to {}: {}",
+                     schema->field(i)->type()->ToString(),
+                     result.status().ToString());
+        chunked_arr = result.ValueOrDie().chunked_array();
+      }
       arrays.emplace_back(
           arrow::Concatenate(chunked_arr->chunks()).ValueOrDie());
     }
@@ -181,6 +193,11 @@ void DumpFile::Execute(ExecContext* ctx) {
     auto tensor = ctx->GetTensorTable()->GetTensor(input_pb.name());
     YACL_ENFORCE(tensor != nullptr, "get tensor={} from tensor table failed",
                  input_pb.name());
+    if (input_pb.elem_type() == pb::PrimitiveDataType::TIMESTAMP &&
+        !ctx->GetSession()->TimeZone().empty()) {
+      // FIXME(jingshi): avoid memory cost when time_zone set
+      tensor = util::CompensateTimeZone(tensor, ctx->GetSession()->TimeZone());
+    }
     if (i == 0) {
       total_len = tensor->Length();
     } else {
@@ -190,7 +207,12 @@ void DumpFile::Execute(ExecContext* ctx) {
     auto reader = tensor->CreateBatchReader(batch_size);
     readers.push_back(reader);
     auto column_out = util::GetStringValue(output_pbs[i]);
-    fields.emplace_back(arrow::field(column_out, tensor->ArrowType()));
+    auto arrow_type = tensor->ArrowType();
+    if (input_pb.elem_type() == pb::PrimitiveDataType::TIMESTAMP ||
+        input_pb.elem_type() == pb::PrimitiveDataType::DATETIME) {
+      arrow_type = arrow::timestamp(arrow::TimeUnit::SECOND);
+    }
+    fields.emplace_back(arrow::field(column_out, arrow_type));
   }
 
   // 2.write table to file

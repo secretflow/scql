@@ -68,21 +68,19 @@ func (c *Command) CreateProject(projectID, projectConf string) (string, error) {
 }
 
 func (c *Command) CreateTable(projectID, tableName, dbType, refTable string, columns []*pb.CreateTableRequest_ColumnDesc) error {
-	req := &pb.CreateTableRequest{
-		TableName: tableName,
-		DbType:    dbType,
-	}
 	if projectID == "" {
 		return fmt.Errorf("CreateTable: projectId must not be empty")
-	} else {
-		req.ProjectId = projectID
 	}
 	if refTable == "" {
 		return fmt.Errorf("CreateTable: refTable must not be empty")
-	} else {
-		req.RefTable = refTable
 	}
-	req.Columns = columns
+	req := &pb.CreateTableRequest{
+		TableName: tableName,
+		DbType:    dbType,
+		ProjectId: projectID,
+		RefTable:  refTable,
+		Columns:   columns,
+	}
 
 	response := &pb.CreateTableResponse{}
 	err := c.intraStub.CreateTable(c.host, req, response)
@@ -205,12 +203,13 @@ func (c *Command) GetInvitation() (*pb.ListInvitationsResponse, error) {
 }
 
 func (c *Command) GrantCCL(projectID string, ccls []*pb.ColumnControl) error {
-	req := &pb.GrantCCLRequest{}
 	if projectID == "" {
 		return fmt.Errorf("GrantCCL: projectID must not be empty")
-	} else {
-		req.ProjectId = projectID
 	}
+	req := &pb.GrantCCLRequest{
+		ProjectId: projectID,
+	}
+
 	req.ColumnControlList = ccls
 	response := &pb.GrantCCLResponse{}
 	err := c.intraStub.GrantCCL(c.host, req, response)
@@ -277,11 +276,11 @@ func (c *Command) ProcessInvitation(ids string, accept bool) error {
 }
 
 func (c *Command) RevokeCCL(projectID, party string, ccls []*pb.ColumnControl) error {
-	req := &pb.RevokeCCLRequest{}
 	if projectID == "" {
 		return fmt.Errorf("RevokeCCL: projectID must not be empty")
-	} else {
-		req.ProjectId = projectID
+	}
+	req := &pb.RevokeCCLRequest{
+		ProjectId: projectID,
 	}
 
 	req.ColumnControlList = ccls
@@ -358,11 +357,11 @@ func (c *Command) CreateJob(projectID, query string, debugOpts *pb.DebugOptions,
 }
 
 func (c *Command) GetResult(jobID string) (result *pb.FetchResultResponse, err error) {
-	req := &pb.FetchResultRequest{}
 	if jobID == "" {
 		return nil, fmt.Errorf("GetResult: jobID must not be empty")
-	} else {
-		req.JobId = jobID
+	}
+	req := &pb.FetchResultRequest{
+		JobId: jobID,
 	}
 
 	response := &pb.FetchResultResponse{}
@@ -377,6 +376,38 @@ func (c *Command) GetResult(jobID string) (result *pb.FetchResultResponse, err e
 		return response, nil
 	} else {
 		return nil, fmt.Errorf("GetResult status: %v", response.GetStatus())
+	}
+}
+
+func (c *Command) GetExplain(projectID, query, jobConfStr string) (result *pb.ExplainInfo, err error) {
+	if query == "" {
+		return nil, fmt.Errorf("GetExplain: query must not be empty")
+	}
+
+	jobConf := &pb.JobConfig{}
+	err = message.ProtoUnmarshal([]byte(jobConfStr), jobConf)
+	if err != nil {
+		return nil, fmt.Errorf("failed to deserialize job config: %v", err)
+	}
+
+	req := &pb.ExplainQueryRequest{
+		ProjectId: projectID,
+		Query:     query,
+		JobConfig: jobConf,
+	}
+
+	response := &pb.ExplainQueryResponse{}
+	err = c.intraStub.GetExplain(c.host, req, response)
+	if err != nil {
+		return nil, fmt.Errorf("GetExplain: failed to call getting explain service: %w", err)
+	}
+	if response.Status == nil {
+		return nil, fmt.Errorf("GetExplain: invalid response: status is nil")
+	}
+	if response.GetStatus().GetCode() == 0 {
+		return response.GetExplain(), nil
+	} else {
+		return nil, fmt.Errorf("GetExplain status: %v", response.GetStatus())
 	}
 }
 

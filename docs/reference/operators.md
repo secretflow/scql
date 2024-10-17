@@ -97,6 +97,38 @@ Out = BroadcastTo(In, ShapeRefTensor) = [1, 1, 1]
 
 
 
+### `Bucket`
+
+Definition: Put the data into buckets based on the hash value of the join key.
+
+**Inputs:**
+
+1. `Key`(variadic, T): Join Key Tensors
+
+1. `In`(variadic, T): Input Tensors
+
+
+**Outputs:**
+
+1. `Out`(variadic, T): Result
+
+
+
+**Attributes:**
+
+1. `input_party_codes`: List of parties the inputs belong to([PartyCodeLeft, PartyCodeRight]).
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: private
+
+
+
 ### `CaseWhen`
 
 The CaseWhen operator goes through conditions and returns a value when the first condition is met (like an if-then-else statement)

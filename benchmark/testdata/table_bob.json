@@ -1,0 +1,29 @@
+{
+  "t1": {
+    "row_num": 1000000,
+    "db_name": "bob",
+    "columns": [
+      {
+        "column_name": "ID",
+        "dtype": "string",
+        "ccl": ["join"],
+        "mock_type": "increment",
+        "str_len": 18
+      },
+      {
+        "column_name": "is_active",
+        "dtype": "int",
+        "ccl": ["compare"],
+        "mock_type": "random_pool",
+        "pool": [0, 1]
+      },
+      {
+        "column_name": "order_mount",
+        "dtype": "float",
+        "ccl": ["aggregate"],
+        "mock_type": "random_range",
+        "range": [0, 1000]
+      }
+    ]
+  }
+}

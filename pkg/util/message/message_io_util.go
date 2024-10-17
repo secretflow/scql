@@ -49,7 +49,6 @@ var (
 var maxPrintContentLength = 1000
 
 func DeserializeFrom(in io.ReadCloser, request proto.Message, contentType string) (ContentEncodingType, error) {
-	logrus.Infof("DeserializeFromWithContentType: %v", contentType)
 	if request == nil {
 		return EncodingTypeUnknown, fmt.Errorf("unexpected empty message")
 	}
@@ -58,12 +57,12 @@ func DeserializeFrom(in io.ReadCloser, request proto.Message, contentType string
 		return EncodingTypeUnknown, err
 	}
 	switch contentType {
-	case "application/json":
+	case EncodingType2ContentType[EncodingTypeJson]:
 		err = ProtoUnmarshal(body, request)
 		if err == nil {
 			return EncodingTypeJson, nil
 		}
-	case "application/x-protobuf":
+	case EncodingType2ContentType[EncodingTypeProtobuf]:
 		err = proto.Unmarshal(body, request)
 		if err == nil {
 			return EncodingTypeProtobuf, nil
@@ -72,7 +71,7 @@ func DeserializeFrom(in io.ReadCloser, request proto.Message, contentType string
 		if contentType == "" {
 			logrus.Warning("empty content-type")
 		} else {
-			logrus.Warning("content-type is not one of application/json and application/x-protobuf")
+			logrus.Warningf("content-type (%s) is not one of application/json and application/x-protobuf", contentType)
 		}
 
 		// Try to parse protobuf first, then json

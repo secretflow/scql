@@ -223,16 +223,19 @@ duckdb::DuckDB DuckDBWrapper::CreateDB(const csv::CsvdbConf *csvdb_conf) {
   duckdb::DuckDB db(nullptr, &config);
   if (!csvdb_conf->s3_conf().endpoint().empty()) {
     auto &db_config = duckdb::DBConfig::GetConfig(*db.instance);
-    db_config.SetOption("s3_endpoint",
-                        duckdb::Value(csvdb_conf->s3_conf().endpoint()));
+
+    std::string endpoint = csvdb_conf->s3_conf().endpoint();
+    bool use_ssl = util::GetAndRemoveS3EndpointPrefix(endpoint);
+
+    db_config.SetOption("s3_endpoint", duckdb::Value(endpoint));
     db_config.SetOption("s3_access_key_id",
                         duckdb::Value(csvdb_conf->s3_conf().access_key_id()));
     db_config.SetOption(
         "s3_secret_access_key",
         duckdb::Value(csvdb_conf->s3_conf().secret_access_key()));
+    db_config.SetOption("s3_use_ssl", duckdb::Value(use_ssl));
+
     if (path_prefix != "oss://") {
-      // minio not support https
-      db_config.SetOption("s3_use_ssl", false);
       // See
       // https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html
       db_config.SetOption("s3_url_style", duckdb::Value("path"));

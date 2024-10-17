@@ -709,6 +709,7 @@ var tokenMap = map[string]int{
 	"PLAINTEXT_AFTER_GROUP_BY":  plaintextAfterGroupBy,
 	"PLAINTEXT_AFTER_COMPARE":   plaintextAfterCompare,
 	"PLAINTEXT_AFTER_AGGREGATE": plaintextAfterAggregate,
+	"REVEAL_RANK":               revealRank,
 	"ENCRYPTED_ONLY":            encryptedOnly,
 	"TOKEN":                     tokenWord,
 	"ENDPOINT":                  endpoint,

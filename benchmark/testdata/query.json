@@ -1,0 +1,8 @@
+{
+  "queries": [
+    {
+      "issuer": "alice",
+      "query": "select count(*) from alice_t1 as t1 join bob_t1 as t2 on t1.ID = t2.ID;"
+    }
+  ]
+}

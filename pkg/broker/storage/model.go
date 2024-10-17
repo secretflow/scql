@@ -23,14 +23,30 @@ import (
 	"github.com/secretflow/scql/pkg/util/message"
 )
 
-const GcLockID = 100
+type DistLockID int8
+
+const (
+	GcLockID         DistLockID = 100
+	JobWatcherLockID DistLockID = 101
+)
+
+func (lid DistLockID) String() string {
+	switch lid {
+	case GcLockID:
+		return "gc_lock"
+	case JobWatcherLockID:
+		return "job_watcher_lock"
+	default:
+		return "unknown_lock"
+	}
+}
 
 type Project struct {
 	// ->;<-:create means read and create
 	// id can't be modified
 	ID          string `gorm:"column:id;type:varchar(64);primaryKey;uniqueIndex:;comment:'unique id';->;<-:create"`
 	Name        string `gorm:"column:name;type:varchar(64);not null;comment:'project name'"`
-	Description string `gorm:"column:desc;type:varchar(64);comment:'description'"`
+	Description string `gorm:"column:description;type:varchar(64);comment:'description'"`
 	Creator     string `gorm:"column:creator;type:varchar(64);comment:'creator of the project'"`
 	Archived    bool   `gorm:"column:archived;comment:'if archived is true, whole project can't be modified'"`
 	ProjectConf string `gorm:"column:project_conf;type:text;comment:'project config in json format'"`
@@ -122,7 +138,7 @@ type Invitation struct {
 	ID               uint64    `gorm:"column:id;primaryKey;comment:'auto generated increment id'"`
 	ProjectID        string    `gorm:"column:project_id;type:varchar(64);not null;index:,composite:identifier;comment:'project id'"`
 	Name             string    `gorm:"column:name;type:varchar(64);comment:'name'"`
-	Description      string    `gorm:"column:desc;type:varchar(64);comment:'description'"`
+	Description      string    `gorm:"column:description;type:varchar(64);comment:'description'"`
 	Creator          string    `gorm:"column:creator;type:varchar(64);comment:'creator of the project'"`
 	ProjectCreatedAt time.Time `gorm:"column:proj_created_at;comment:'the create time of the project'"`
 	Member           string    `gorm:"column:member;type:string;not null;comment:'members, flattened string, like: alice;bob'"`
@@ -166,4 +182,5 @@ type Lock struct {
 	ID        int8   `gorm:"column:id;primaryKey;uniqueIndex;comment:'lock id';->;<-:create"`
 	Owner     string `gorm:"column:owner;type:varchar(64);comment:'lock owner'"`
 	UpdatedAt time.Time
+	ExpiredAt time.Time
 }

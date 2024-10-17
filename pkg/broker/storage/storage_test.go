@@ -31,6 +31,40 @@ import (
 	"github.com/secretflow/scql/pkg/util/message"
 )
 
+func TestDistributedLock(t *testing.T) {
+	r := require.New(t)
+	id, err := uuid.NewUUID()
+	r.NoError(err)
+	connStr := fmt.Sprintf("file:%s?mode=memory&cache=shared", id)
+	db, err := gorm.Open(sqlite.Open(connStr),
+		&gorm.Config{
+			SkipDefaultTransaction: true,
+			Logger: gormlog.New(
+				logrus.StandardLogger(),
+				gormlog.Config{
+					SlowThreshold: 200 * time.Millisecond,
+					Colorful:      false,
+					LogLevel:      gormlog.Warn,
+				}),
+		})
+
+	r.NoError(err)
+	manager := NewMetaManager(db, true)
+	err = manager.Bootstrap()
+	r.NoError(err)
+
+	err = manager.InitDistributedLockIfNecessary(GcLockID)
+	r.NoError(err)
+
+	err = manager.HoldDistributedLock(GcLockID, "alice", 5*time.Second)
+	r.NoError(err)
+	// lock can be reentrant
+	err = manager.HoldDistributedLock(GcLockID, "alice", 5*time.Second)
+	r.NoError(err)
+	err = manager.HoldDistributedLock(GcLockID, "bob", 5*time.Second)
+	r.Error(err)
+}
+
 func TestBootstrap(t *testing.T) {
 	r := require.New(t)
 	id, err := uuid.NewUUID()

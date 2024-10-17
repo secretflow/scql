@@ -73,6 +73,14 @@ func TestSession(t *testing.T) {
 	info.UpdatedAt = infoFetch.UpdatedAt
 	r.Equal(info, infoFetch)
 
+	err = manager.UpdateSessionInfoStatusWithCondition(sessionID, SessionRunning, SessionFailed)
+	r.NoError(err)
+	infoFetch, err = manager.GetSessionInfo(sessionID)
+	r.NoError(err)
+	r.Equal(int8(SessionFailed), infoFetch.Status)
+	err = manager.UpdateSessionInfoStatusWithCondition(sessionID, SessionFailed, SessionRunning)
+	r.NoError(err)
+
 	// -----test SessionResult-----
 	resp := &pb.QueryResponse{
 		Status: &pb.Status{Code: 0},
@@ -120,17 +128,21 @@ func TestSession(t *testing.T) {
 	r.Error(err)
 
 	// -----test gc------
-	err = manager.InitGcLockIfNecessary()
+	err = manager.InitDistributedLockIfNecessary(GcLockID)
 	r.NoError(err)
-	err = manager.InitGcLockIfNecessary()
+	err = manager.InitDistributedLockIfNecessary(GcLockID)
 	r.NoError(err)
 	// test HoldGcLock
-	err = manager.HoldGcLock("alice", time.Second)
+	err = manager.HoldDistributedLock(GcLockID, "alice", time.Second)
 	r.NoError(err)
-	err = manager.HoldGcLock("alice", time.Second)
-	r.Equal(err.Error(), "hold lock failed: {row affected: 0 ; err: <nil>}")
+	// lock can be reentrant
+	err = manager.HoldDistributedLock(GcLockID, "alice", time.Second)
+	r.NoError(err)
+	err = manager.HoldDistributedLock(GcLockID, "bob", time.Second)
+	r.Equal(err.Error(), "hold distributed lock gc_lock(100) failed: {row affected: 0 ; err: <nil>}")
+
 	time.Sleep(time.Second)
-	err = manager.HoldGcLock("alice", time.Second)
+	err = manager.HoldDistributedLock(GcLockID, "alice", time.Second)
 	r.NoError(err)
 	// test ClearExpiredResults
 	expireSeconds := 5
@@ -160,4 +172,39 @@ func TestSession(t *testing.T) {
 	canceledIds, err := manager.CheckIdCanceled([]string{"not exist id", sessionID, "canceled id"})
 	r.NoError(err)
 	r.Equal(canceledIds, []string{"canceled id"})
+
+	// test watch job related
+	jobId := "jobId"
+	err = manager.SetSessionInfo(SessionInfo{
+		SessionID: jobId,
+		Status:    int8(SessionRunning),
+	})
+	r.NoError(err)
+
+	jobStatus, err := manager.GetWatchedJobs()
+	r.NoError(err)
+	r.Equal(len(jobStatus), 1)
+
+	err = manager.SetSessionStatus(jobId, SessionCanceled)
+	r.NoError(err)
+	status, err := manager.GetSessionStatus(jobId)
+	r.NoError(err)
+	r.Equal(status, SessionCanceled)
+
+	secondJobId := "jobId2"
+	err = manager.SetSessionInfo(SessionInfo{
+		SessionID: secondJobId,
+		Status:    int8(SessionRunning),
+	})
+	r.NoError(err)
+
+	ids := []string{jobId, secondJobId}
+	err = manager.SetMultipleSessionStatus(ids, SessionFailed)
+	r.NoError(err)
+	status, err = manager.GetSessionStatus(jobId)
+	r.NoError(err)
+	r.Equal(status, SessionFailed)
+	status, err = manager.GetSessionStatus(secondJobId)
+	r.NoError(err)
+	r.Equal(status, SessionFailed)
 }

@@ -216,10 +216,6 @@ void SessionManager::RemoveSession(const std::string& session_id) {
     // to run
     lock.unlock();
 
-    auto lctx = node_handle.mapped()->GetLink();
-    if (lctx && session_state == SessionState::SUCCEEDED) {
-      lctx->WaitLinkTaskFinish();
-    }
     auto end = std::chrono::system_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
         end - node_handle.mapped()->GetStartTime());

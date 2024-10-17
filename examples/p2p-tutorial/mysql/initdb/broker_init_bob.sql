@@ -13,11 +13,11 @@ DROP TABLE IF EXISTS `projects`;
 CREATE TABLE `projects` (
   `id` varchar(64) NOT NULL COMMENT '''unique id''',
   `name` varchar(64) NOT NULL COMMENT '''project name''',
-  `desc` varchar(64) DEFAULT NULL COMMENT '''description''',
+  `description` varchar(64) DEFAULT NULL COMMENT '''description''',
   `creator` varchar(64) DEFAULT NULL COMMENT '''creator of the project''',
   `archived` tinyint(1) DEFAULT NULL COMMENT '''if archived is true, whole project can''t be modified''',
-  `created_at` datetime(3) DEFAULT NULL,
-  `updated_at` datetime(3) DEFAULT NULL,
+  `created_at` timestamp DEFAULT NULL,
+  `updated_at` timestamp DEFAULT NULL,
   `project_conf` text,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
@@ -52,8 +52,8 @@ CREATE TABLE `tables` (
   `owner` varchar(64) DEFAULT NULL COMMENT '''ref table''',
   `is_view` tinyint(1) DEFAULT NULL COMMENT '''this table is a view''',
   `select_string` longtext DEFAULT NULL COMMENT '''the internal select query in string format, the field is valid only when IsView is true''',
-  `created_at` datetime(3) DEFAULT NULL,
-  `updated_at` datetime(3) DEFAULT NULL,
+  `created_at` timestamp DEFAULT NULL,
+  `updated_at` timestamp DEFAULT NULL,
   PRIMARY KEY (`project_id`,`table_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -70,8 +70,8 @@ CREATE TABLE `columns` (
   `table_name` varchar(64) NOT NULL,
   `column_name` varchar(64) NOT NULL,
   `data_type` varchar(64) DEFAULT NULL COMMENT '''data type like float''',
-  `created_at` datetime(3) DEFAULT NULL,
-  `updated_at` datetime(3) DEFAULT NULL,
+  `created_at` timestamp DEFAULT NULL,
+  `updated_at` timestamp DEFAULT NULL,
   PRIMARY KEY (`project_id`,`table_name`,`column_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -90,8 +90,8 @@ CREATE TABLE `column_privs` (
   `column_name` varchar(64) NOT NULL,
   `dest_party` varchar(64) NOT NULL,
   `priv` varchar(256) DEFAULT NULL COMMENT '''priv of column''',
-  `created_at` datetime(3) DEFAULT NULL,
-  `updated_at` datetime(3) DEFAULT NULL,
+  `created_at` timestamp DEFAULT NULL,
+  `updated_at` timestamp DEFAULT NULL,
   PRIMARY KEY (`project_id`,`table_name`,`column_name`,`dest_party`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -107,16 +107,16 @@ CREATE TABLE `invitations` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '''auto generated increment id''',
   `project_id` varchar(64) NOT NULL COMMENT '''project id''',
   `name` varchar(64) DEFAULT NULL COMMENT '''name''',
-  `desc` varchar(64) DEFAULT NULL COMMENT '''description''',
+  `description` varchar(64) DEFAULT NULL COMMENT '''description''',
   `creator` varchar(64) DEFAULT NULL COMMENT '''creator of the project''',
-  `proj_created_at` datetime(3) DEFAULT NULL COMMENT '''the create time of the project''',
+  `proj_created_at` timestamp DEFAULT NULL COMMENT '''the create time of the project''',
   `member` varchar(64) NOT NULL COMMENT '''members, flattened string, like: alice',
   `inviter` varchar(256) DEFAULT NULL COMMENT '''inviter''',
   `invitee` varchar(256) DEFAULT NULL COMMENT '''invitee''',
   `status` tinyint(4) DEFAULT '0' COMMENT '''0: default, not decided to accept invitation or not; 1: accepted; 2: rejected; 3: invalid''',
-  `invite_time` datetime(3) DEFAULT NULL,
-  `created_at` datetime(3) DEFAULT NULL,
-  `updated_at` datetime(3) DEFAULT NULL,
+  `invite_time` timestamp DEFAULT NULL,
+  `created_at` timestamp DEFAULT NULL,
+  `updated_at` timestamp DEFAULT NULL,
   `project_conf` text,
   PRIMARY KEY (`id`),
   INDEX `idx_project_id_inviter_invitee_identifier` (`project_id`,`inviter`, `invitee`)
@@ -141,9 +141,9 @@ CREATE TABLE `session_infos` (
   `work_parties` longtext NOT NULL COMMENT '''parties involved, flattened string, like: alice',
   `output_names` longtext COMMENT '''output column names, flattened string, like: col1,col2''',
   `warning` longblob COMMENT '''warning infos, serialized from pb.Warning''',
-  `created_at` datetime(3) DEFAULT NULL,
-  `updated_at` datetime(3) DEFAULT NULL,
-  `expired_at` datetime(3) DEFAULT NULL,
+  `created_at` timestamp DEFAULT NULL,
+  `updated_at` timestamp DEFAULT NULL,
+  `expired_at` timestamp DEFAULT NULL,
   PRIMARY KEY (`session_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -158,9 +158,9 @@ DROP TABLE IF EXISTS `session_results`;
 CREATE TABLE `session_results` (
   `session_id` varchar(64) NOT NULL COMMENT '''unique session id''',
   `result` longblob COMMENT '''query result, serialized from protobuf message''',
-  `created_at` datetime(3) DEFAULT NULL,
-  `updated_at` datetime(3) DEFAULT NULL,
-  `expired_at` datetime(3) DEFAULT NULL,
+  `created_at` timestamp DEFAULT NULL,
+  `updated_at` timestamp DEFAULT NULL,
+  `expired_at` timestamp DEFAULT NULL,
   PRIMARY KEY (`session_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -175,7 +175,8 @@ DROP TABLE IF EXISTS `locks`;
 CREATE TABLE `locks` (
   `id` tinyint NOT NULL AUTO_INCREMENT COMMENT '''lock id''',
   `owner` varchar(64) DEFAULT NULL COMMENT '''lock owner''',
-  `updated_at` datetime(3) DEFAULT NULL,
+  `updated_at` timestamp DEFAULT NULL,
+  `expired_at` timestamp DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;

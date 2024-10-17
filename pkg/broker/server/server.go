@@ -57,6 +57,7 @@ func NewIntraServer(app *application.App) (*http.Server, error) {
 	router.POST(constant.DoQueryPath, intraSvc.DoQueryHandler)
 	router.POST(constant.SubmitQueryPath, intraSvc.SubmitQueryHandler)
 	router.POST(constant.FetchResultPath, intraSvc.FetchResultHandler)
+	router.POST(constant.ExplainQueryPath, intraSvc.ExplainQueryHandler)
 	router.POST(constant.CancelQueryPath, intraSvc.CancelQueryHandler)
 	router.POST(constant.CreateProjectPath, intraSvc.CreateProjectHandler)
 	router.POST(constant.ListProjectsPath, intraSvc.ListProjectsHandler)

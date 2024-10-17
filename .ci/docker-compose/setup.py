@@ -1,3 +1,4 @@
+import socket
 from mako.template import Template
 from pathlib import Path
 from dotenv import load_dotenv
@@ -39,6 +40,60 @@ MYSQL_ROOT_PASSWORD = random_password()
 POSTGRES_PASSWORD = random_password()
 
 
+def find_free_port(hint, host="127.0.0.1"):
+    """
+    Find a free port near the specified port, changing the tens place to 0 and incrementing by 10.
+    """
+    start = (hint // 100) * 100 + (hint % 10)
+    increment = 10
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        for port in range(start, 65536, increment):
+            if port < 1024:
+                continue  # Skip invalid port numbers
+            try:
+                s.bind((host, port))
+                return port
+            except OSError:
+                continue
+        raise RuntimeError("No free ports available in the desired range")
+
+
+def get_available_port(port, tag=""):
+    port = int(port)
+    if tag != "":
+        print(f"Port for {tag}: ")
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(("127.0.0.1", port))
+            if tag != "":
+                print(f"Port {port} is available.")
+            return port
+    except OSError:
+        print(f"Port {port} is already in use. Trying to find a free port...")
+        port = find_free_port(port)
+        print(f"Port {port} is available.")
+        return port
+
+
+def set_ports_env():
+    load_dotenv(override=True)
+
+    mysql_port = os.getenv(MYSQL_PORT_ENV_NAME, "mysql")
+    os.environ[MYSQL_PORT_ENV_NAME] = str(get_available_port(mysql_port, "mysql"))
+    postgres_port = os.getenv(POSTGRES_PORT_ENV_NAME, "postgres")
+    os.environ[POSTGRES_PORT_ENV_NAME] = str(
+        get_available_port(postgres_port, "postgres")
+    )
+
+    scdb_ports = split_string(os.getenv(SCDB_PORTS_ENV_NAME))
+    new_scdb_ports = []
+    for scdb_port in scdb_ports:
+        new_port = get_available_port(scdb_port)
+        new_scdb_ports.append(str(new_port))
+    os.environ[SCDB_PORTS_ENV_NAME] = ",".join(new_scdb_ports)
+
+
 def split_string(str):
     splitted_str = str.split(",")
     trimmed_str = []
@@ -48,7 +103,6 @@ def split_string(str):
 
 
 def create_docker_compose_yaml():
-    load_dotenv(override=True)
     protocols = split_string(os.getenv(PROTOCOLS_ENV_NAME))
     scdb_ports = split_string(os.getenv(SCDB_PORTS_ENV_NAME))
     assert len(protocols) == len(scdb_ports)
@@ -177,9 +231,9 @@ def generate_regtest_config():
     conf["mpc_protocols"] = os.getenv(PROTOCOLS_ENV_NAME)
 
     mysql_port = os.getenv(MYSQL_PORT_ENV_NAME)
-    conf[
-        "mysql_conn_str"
-    ] = f"root:{MYSQL_ROOT_PASSWORD}@tcp(localhost:{mysql_port})/scdb?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
+    conf["mysql_conn_str"] = (
+        f"root:{MYSQL_ROOT_PASSWORD}@tcp(localhost:{mysql_port})/scdb?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
+    )
     for p in PARTY:
         pem_path = os.path.join(CUR_PATH, f"engine/{p}/conf/ed25519key.pem")
         conf["parties"][p]["private_key"] = pem_path
@@ -190,6 +244,7 @@ def generate_regtest_config():
 
 
 if __name__ == "__main__":
+    set_ports_env()
     create_docker_compose_yaml()
     generate_private_keys()
     generate_authorized_profiles()

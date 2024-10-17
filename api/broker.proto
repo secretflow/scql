@@ -23,6 +23,7 @@ option java_package = "org.secretflow.scql";
 import "api/common.proto";
 import "api/status.proto";
 import "api/core.proto";
+import "api/interpreter.proto";
 import "google/api/annotations.proto";
 import "google/api/field_behavior.proto";
 import "google/protobuf/timestamp.proto";
@@ -58,6 +59,15 @@ service IntraBrokerService {
   rpc FetchResult(FetchResultRequest) returns (FetchResultResponse) {
     option (google.api.http) = {
       post: "/intra/query/fetch"
+      body: "*"
+    };
+  }
+  // ExplainQuery
+  //
+  // Get explaination of a query
+  rpc ExplainQuery(ExplainQueryRequest) returns (ExplainQueryResponse) {
+    option (google.api.http) = {
+      post: "/intra/query/explain"
       body: "*"
     };
   }
@@ -261,6 +271,17 @@ message FetchResultResponse {
   QueryResult result = 2;
   // JobStatus may be provided when result is not ready
   JobStatus job_status = 3;
+}
+
+message ExplainQueryRequest {
+  string project_id = 1 [(google.api.field_behavior) = REQUIRED];
+  string query = 2 [(google.api.field_behavior) = REQUIRED];
+  JobConfig job_config = 3;
+}
+
+message ExplainQueryResponse {
+  Status status = 1;
+  ExplainInfo explain = 2;
 }
 
 message CancelQueryRequest {
@@ -781,4 +802,12 @@ enum Constraint {
   // In the above query, t2.col1 is used as join payload, t2.id is used as
   // join key.
   PLAINTEXT_AS_JOIN_PAYLOAD = 7;
+  // The column is not able to be revealed at the party_code but the rank of
+  // this column can be revealed at party_code
+  // e.g.
+  // SELECT ROW_NUMBER() OVER(PARTITITON BY department ORDER BY salary DESC)
+  // AS rank in the query above the salary and department are not supposed
+  // to be revealed to the party_code, however the rank of salary in this
+  // department is visible
+  REVEAL_RANK = 8;
 }

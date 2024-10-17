@@ -16,6 +16,7 @@ package storage
 
 import (
 	"fmt"
+	"strings"
 
 	"time"
 
@@ -25,14 +26,21 @@ import (
 type SessionStatus int8
 
 const (
-	SessionRunning  SessionStatus = 0
-	SessionFinished SessionStatus = 1
-	SessionCanceled SessionStatus = 2
-	SessionTimeout  SessionStatus = 3
+	SessionRunning   SessionStatus = 0
+	SessionFinished  SessionStatus = 1
+	SessionCanceled  SessionStatus = 2
+	SessionTimeout   SessionStatus = 3
+	SessionFailed    SessionStatus = 4
+	SessionSubmitted SessionStatus = 5
 )
 
 func (m *MetaManager) SetSessionInfo(info SessionInfo) error {
 	result := m.db.Create(&info)
+	return result.Error
+}
+
+func (m *MetaManager) UpdateSessionInfoStatusWithCondition(sessionID string, conditionStatus, targetStatus SessionStatus) error {
+	result := m.db.Model(&SessionInfo{}).Where(&SessionInfo{SessionID: sessionID, Status: int8(conditionStatus)}).Update("status", targetStatus)
 	return result.Error
 }
 
@@ -102,16 +110,16 @@ func (m *MetaManager) ClearSessionResult(id string) (err error) {
 	return result.Error
 }
 
-func (m *MetaManager) InitGcLockIfNecessary() error {
+func (m *MetaManager) InitDistributedLockIfNecessary(id DistLockID) error {
 	var lk Lock
-	// If a lock with id == LockID does not exist, create one and set updated_at to now - 24h to ensure expiration so that it can be acquired immediately
-	result := m.db.Where(Lock{ID: GcLockID}).Attrs(Lock{UpdatedAt: time.Now().Add(-24 * time.Hour)}).FirstOrCreate(&lk)
+	// If a lock with id does not exist, create one and set expired_at to now - 24h to ensure expiration so that it can be acquired immediately
+	result := m.db.Where(Lock{ID: int8(id)}).Attrs(Lock{ExpiredAt: time.Now().Add(-24 * time.Hour)}).FirstOrCreate(&lk)
 	if result.Error == nil {
 		switch result.RowsAffected {
 		case 0:
-			logrus.Info("gc locking info existing")
+			logrus.Infof("distributed lock %d existing", id)
 		case 1:
-			logrus.Infof("create gc locking info: %v", lk)
+			logrus.Infof("create distributed locking info: %v", lk)
 		default:
 			return fmt.Errorf("first or create error, row affected=%d", result.RowsAffected)
 		}
@@ -119,14 +127,44 @@ func (m *MetaManager) InitGcLockIfNecessary() error {
 	return result.Error
 }
 
-// NOTE: 1. FirstOrCreateGcLock must be called once before call HoldGcLock
-//  2. lock will expired after ttl, please make sure ttl is long enough for finished tasks
-func (m *MetaManager) HoldGcLock(owner string, ttl time.Duration) error {
-	result := m.db.Model(&Lock{}).Where(&Lock{ID: GcLockID}).Where("updated_at < ?", time.Now().Add(-ttl)).Updates(&Lock{Owner: owner, UpdatedAt: time.Now()})
+// NOTE: 1. InitDistributedLockIfNecessary must be called once before call HoldDistributedLock
+//  2. lock will expired after expired_at
+func (m *MetaManager) HoldDistributedLock(id DistLockID, owner string, ttl time.Duration) error {
+	result := m.db.Model(&Lock{}).
+		Where(&Lock{ID: int8(id)}).
+		Where("expired_at < ?", time.Now()).Or("owner = ?", owner).
+		Updates(map[string]interface{}{
+			"expired_at": time.Now().Add(ttl),
+			"owner":      owner,
+		})
+
 	if result.Error == nil && result.RowsAffected == 1 {
 		return nil
 	}
-	return fmt.Errorf("hold lock failed: {row affected: %d ; err: %+v}", result.RowsAffected, result.Error)
+	return fmt.Errorf("hold distributed lock %s(%d) failed: {row affected: %d ; err: %+v}", id, int8(id), result.RowsAffected, result.Error)
+}
+
+// UpdateDistributedLock only succeeds if holding the distributed lock
+func (m *MetaManager) UpdateDistributedLock(id DistLockID, owner string, ttl time.Duration) error {
+	result := m.db.Model(&Lock{}).
+		Where(&Lock{ID: int8(id), Owner: owner}).
+		Updates(map[string]interface{}{
+			"expired_at": time.Now().Add(ttl),
+			"owner":      owner,
+		})
+	if result.Error == nil && result.RowsAffected == 1 {
+		return nil
+	}
+	return fmt.Errorf("update distributed lock %d failed: {row affected: %d ; err: %+v}", id, result.RowsAffected, result.Error)
+}
+
+func (m *MetaManager) GetDistributedLockOwner(id DistLockID) (string, error) {
+	var owner string
+	result := m.db.Model(&Lock{}).
+		Select("owner").
+		Where(&Lock{ID: int8(id)}).
+		Scan(&owner)
+	return owner, result.Error
 }
 
 func (m *MetaManager) ClearExpiredSessions() error {
@@ -150,4 +188,58 @@ func (m *MetaManager) ClearExpiredSessions() error {
 	}
 
 	return result.Error
+}
+
+type WatchedJobStatus struct {
+	JobId          string `gorm:"column:session_id"`
+	EngineEndpoint string `gorm:"column:engine_url_for_self"`
+	// number of engine inaccessible times
+	InaccessibleTimes int `gorm:"-"`
+}
+
+func (m *MetaManager) GetWatchedJobs() ([]WatchedJobStatus, error) {
+	var watchedJobs []WatchedJobStatus
+	result := m.db.Model(&SessionInfo{}).
+		Select("session_id, engine_url_for_self").
+		Where("status = ?", int8(SessionRunning)).
+		Find(&watchedJobs)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	for i := range watchedJobs {
+		watchedJobs[i].InaccessibleTimes = 0
+	}
+	return watchedJobs, nil
+}
+
+func (m *MetaManager) SetSessionStatus(id string, status SessionStatus) error {
+	result := m.db.Model(&SessionInfo{}).Select("status", "updated_at").Where("session_id = ?", id).Updates(&SessionInfo{Status: int8(status), UpdatedAt: time.Now()})
+	return result.Error
+}
+
+func (m *MetaManager) GetSessionStatus(id string) (SessionStatus, error) {
+	var status SessionStatus
+	result := m.db.Model(&SessionInfo{}).Select("status").Where("session_id = ?", id).Scan(&status)
+	return status, result.Error
+}
+
+func (m *MetaManager) SetMultipleSessionStatus(ids []string, status SessionStatus) error {
+	if len(ids) == 0 {
+		return nil
+	}
+
+	quotedIds := make([]string, len(ids))
+	for i, id := range ids {
+		quotedIds[i] = fmt.Sprintf("'%s'", id)
+	}
+	updatedAt := time.Now().Format("2006-01-02 15:04:05")
+
+	sql := fmt.Sprintf("UPDATE session_infos SET status = %d, updated_at = '%s' WHERE session_id IN (%s)",
+		status,
+		updatedAt,
+		strings.Join(quotedIds, ","),
+	)
+
+	return m.db.Exec(sql).Error
 }

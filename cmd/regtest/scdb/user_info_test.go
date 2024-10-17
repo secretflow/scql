@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package scdb_test
+package scdb
 
 import (
 	proto "github.com/secretflow/scql/pkg/proto-gen/scql"

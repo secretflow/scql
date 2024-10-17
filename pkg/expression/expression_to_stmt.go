@@ -192,6 +192,8 @@ func (c ExprConverter) convertScalarFunction(dialect format.Dialect, expr *Scala
 		return &ast.PatternInExpr{Expr: children[0], List: children[1:]}, nil
 	case *builtinSubstring2ArgsSig, *builtinSubstring2ArgsUTF8Sig, *builtinSubstring3ArgsSig, *builtinSubstring3ArgsUTF8Sig:
 		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
+	case *builtinTrimSig:
+		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
 	case *builtinUnaryNotRealSig, *builtinUnaryNotDecimalSig, *builtinUnaryNotIntSig:
 		// not always need ()
 		return &ast.UnaryOperationExpr{Op: opcode.Not, V: &ast.ParenthesesExpr{Expr: children[0]}}, nil

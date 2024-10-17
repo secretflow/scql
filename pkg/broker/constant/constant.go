@@ -21,6 +21,7 @@ const (
 	SubmitQueryPath          = "/intra/query/submit"
 	FetchResultPath          = "/intra/query/fetch"
 	CancelQueryPath          = "/intra/query/cancel"
+	ExplainQueryPath         = "/intra/query/explain"
 	CreateProjectPath        = "/intra/project/create"
 	ListProjectsPath         = "/intra/project/list"
 	InviteMemberPath         = "/intra/member/invite"

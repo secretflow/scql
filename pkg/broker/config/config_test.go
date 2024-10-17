@@ -54,6 +54,7 @@ func TestNewConfig(t *testing.T) {
 		ExchangeJobInfoRetryTimes:    2,
 		ExchangeJobInfoRetryInterval: 10 * time.Second,
 		Engine: EngineConfig{
+			ClientMode:    DefaultEngineClientMode,
 			ClientTimeout: 120 * time.Second,
 			Protocol:      "http",
 			ContentType:   "application/json",

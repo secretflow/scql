@@ -66,6 +66,7 @@ func (b *TestAppBuilder) buildHandlerTestApp(partyCode, engineEndpoint string) (
 		ExchangeJobInfoRetryTimes:    3,
 		ExchangeJobInfoRetryInterval: time.Second,
 		Engine: config.EngineConfig{
+			ClientMode:    "HTTP",
 			ClientTimeout: 1 * time.Second,
 			Protocol:      "http",
 			ContentType:   "application/json",

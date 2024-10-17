@@ -22,6 +22,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.9.1] - 2024-10-16
+
+### Added
+- Support window function `ROW_NUMBER()` with PARTITION BY clause and ORDER BY clause.
+- Add new CCL constraint `REVAL_RANK`.
+- Add ExplainQuery API with path `/intra/query/explain`.
+- Support `INSERT INTO SELECT` syntax to allow writing query result back to db (mysql/sqlite/postgres).
+- Support `trim` function.
+
+### Changed
+
+- Improved the job watcher to work better in broker clustered mode.
+
+
 ## [0.9.0] - 2024-08-01
 
 ### Added

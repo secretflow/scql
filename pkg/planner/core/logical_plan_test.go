@@ -188,6 +188,15 @@ func (s *testPlanSuite) TestPlanBuilderSubstringOp(c *C) {
 	}
 }
 
+func (s *testPlanSuite) TestPlanBuilderTrimOp(c *C) {
+	defer testleak.AfterTest(c)()
+	var input, output []string
+	s.testData.GetTestCases(c, &input, &output)
+	for i, ca := range input {
+		s.testPlanBuilder(c, ca, output[i])
+	}
+}
+
 func (s *testPlanSuite) TestPlanBuildeLimitOp(c *C) {
 	defer testleak.AfterTest(c)()
 	var input, output []string

@@ -1,0 +1,25 @@
+intra_server:
+  host: 0.0.0.0
+  protocol: http
+  port: 8080
+inter_server:
+  protocol: http
+  port: 8081
+log_level: debug
+party_code: carol
+party_info_file: "/home/admin/configs/party_info.json"
+private_key_path: "/home/admin/configs/private_key.pem"
+intra_host: broker-carol:8080
+engine:
+  timeout: 120s
+  protocol: http
+  content_type: application/json
+  uris:
+    - for_peer: engine-carol:8003
+storage:
+  type: "mysql"
+  conn_str: "${DB_CONN_STR}"
+  max_idle_conns: 10
+  max_open_conns: 300
+  conn_max_idle_time: 2m
+  conn_max_lifetime: 5m

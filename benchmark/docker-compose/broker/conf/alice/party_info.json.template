@@ -1,0 +1,19 @@
+{
+  "participants": [
+    {
+      "party_code": "alice",
+      "endpoint": "http://broker-alice:8081",
+      "pubkey": "${ALICE_PUBKEY}"
+    },
+    {
+      "party_code": "bob",
+      "endpoint": "http://broker-bob:8081",
+      "pubkey": "${BOB_PUBKEY}"
+    },
+    {
+      "party_code": "carol",
+      "endpoint": "http://broker-carol:8081",
+      "pubkey": "${CAROL_PUBKEY}"
+    }
+  ]
+}

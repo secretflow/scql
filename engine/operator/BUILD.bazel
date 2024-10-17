@@ -56,6 +56,7 @@ cc_library(
         ":sort",
         ":trigonometric",
         ":unique",
+        ":window",
         "//engine/framework:registry",
     ],
 )
@@ -997,6 +998,29 @@ cc_test(
     deps = [
         ":bucket",
         ":test_util",
+        "//engine/core:tensor_constructor",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "window",
+    srcs = ["window.cc"],
+    hdrs = ["window.h"],
+    deps = [
+        "//engine/framework:operator",
+        "//engine/util:spu_io",
+        "//engine/util:table_util",
+        "//engine/util:tensor_util",
+    ],
+)
+
+cc_test(
+    name = "window_test",
+    srcs = ["window_test.cc"],
+    deps = [
+        ":test_util",
+        ":window",
         "//engine/core:tensor_constructor",
         "@com_google_googletest//:gtest_main",
     ],
