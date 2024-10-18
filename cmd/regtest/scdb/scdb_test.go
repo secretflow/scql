@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package scdb_test
+package scdb
 
 import (
 	"encoding/json"
@@ -165,9 +165,11 @@ func TestMain(m *testing.M) {
 		ConnMaxIdleTime: 120,
 		ConnMaxLifetime: 3000,
 	}
-	if err := testDataSource.ConnDB(mysqlConf); err != nil {
-		fmt.Fprintf(os.Stderr, "connect mysql(%s) failed: %v\n", testConf.MySQLConnStr, err)
-		os.Exit(1)
+	maxRetries := 8
+	retryDelay := 8 * time.Second
+	if err := testDataSource.ConnDB(mysqlConf, maxRetries, retryDelay); err != nil {
+		fmt.Printf("connect MySQL(%s) failed\n", testConf.MySQLConnStr)
+		panic(err)
 	}
 
 	os.Exit(m.Run())

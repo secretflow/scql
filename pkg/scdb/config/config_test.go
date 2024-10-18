@@ -110,6 +110,7 @@ security_compromise:
 			ConnMaxLifetime: time.Duration(5) * time.Minute,
 		},
 		Engine: EngineConfig{
+			ClientMode:    DefaultEngineClientMode,
 			ClientTimeout: 120 * time.Second,
 			Protocol:      "http",
 			ContentType:   "application/json",
@@ -212,6 +213,7 @@ party_auth:
 			ConnMaxLifetime: 5 * time.Minute,
 		},
 		Engine: EngineConfig{
+			ClientMode:    DefaultEngineClientMode,
 			ClientTimeout: 120 * time.Second,
 			Protocol:      "http",
 			ContentType:   "application/json",

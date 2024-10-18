@@ -17,9 +17,6 @@ package executor
 import (
 	"context"
 	"fmt"
-	"io"
-	"net/url"
-	"strings"
 	"sync"
 	"time"
 
@@ -30,10 +27,8 @@ import (
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/interpreter/graph"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
-	enginePb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
 	"github.com/secretflow/scql/pkg/util/logutil"
-	"github.com/secretflow/scql/pkg/util/message"
 )
 
 type Executor struct {
@@ -51,8 +46,8 @@ type Executor struct {
 }
 
 type ResponseInfo struct {
-	ResponseBody string
-	Err          error
+	Response *scql.RunExecutionPlanResponse
+	Err      error
 }
 
 func NewExecutor(plans map[string]*scql.RunExecutionPlanRequest, outputNames []string,
@@ -117,16 +112,14 @@ func (exec *Executor) RunExecutionPlanCore(ctx context.Context, engineAsync bool
 	var bodies []string
 	var partyCodes []string
 	var partyCredentials []string
+	var executionPlanReqs []*scql.RunExecutionPlanRequest
 	for partyCode, pb := range exec.ExecutionPlans {
-		url := url.URL{
-			Scheme: exec.EngineStub.protocol,
-			Host:   exec.PartyCodeToHost[pb.GetJobParams().GetPartyCode()],
-			Path:   runExecutionPlanPath,
-		}
-		urls = append(urls, url.String())
+		url := exec.PartyCodeToHost[pb.GetJobParams().GetPartyCode()]
+		urls = append(urls, url)
 
 		pb.Async = engineAsync
 		pb.CallbackUrl = exec.EngineStub.cbURL
+		executionPlanReqs = append(executionPlanReqs, pb)
 		m := protojson.MarshalOptions{UseProtoNames: true}
 		body, err := m.Marshal(pb)
 		if err != nil {
@@ -137,20 +130,20 @@ func (exec *Executor) RunExecutionPlanCore(ctx context.Context, engineAsync bool
 		partyCodes = append(partyCodes, partyCode)
 
 		partyCredentials = append(partyCredentials, exec.partyCodeToCredential[pb.GetJobParams().GetPartyCode()])
-		audit.RecordPlanDetail(partyCode, url.String(), pb)
-		audit.RecordSessionParameters(pb.GetJobParams(), url.String(), true)
+		audit.RecordPlanDetail(partyCode, url, pb)
+		audit.RecordSessionParameters(pb.GetJobParams(), url, true)
 	}
 
 	c := make(chan ResponseInfo, len(urls))
 	for i, url := range urls {
-		go func(partyCode string, url string, credential string, contentType string, postBody string) {
+		go func(partyCode, url, credential, rawRequest string, executionPlanReq *scql.RunExecutionPlanRequest) {
 			timeStart := time.Now()
 			logEntry := &logutil.MonitorLogEntry{
 				SessionID:  exec.SessionID,
 				ActionName: fmt.Sprintf("%v@%v", "Executor", "RunExecutionPlan"),
-				RawRequest: postBody,
+				RawRequest: rawRequest,
 			}
-			responseBody, err := exec.EngineStub.webClient.Post(ctx, url, credential, contentType, postBody)
+			response, err := exec.EngineStub.webClient.RunExecutionPlan(url, credential, executionPlanReq)
 			logEntry.CostTime = time.Since(timeStart)
 			if err != nil {
 				logEntry.ErrorMsg = err.Error()
@@ -159,10 +152,10 @@ func (exec *Executor) RunExecutionPlanCore(ctx context.Context, engineAsync bool
 				logrus.Infof("%v|PartyCode:%v|Url:%v", logEntry, partyCode, url)
 			}
 			c <- ResponseInfo{
-				ResponseBody: responseBody,
-				Err:          err,
+				Response: response,
+				Err:      err,
 			}
-		}(partyCodes[i], url, partyCredentials[i], exec.EngineStub.contentType, bodies[i])
+		}(partyCodes[i], url, partyCredentials[i], bodies[i], executionPlanReqs[i])
 	}
 
 	outCols := []*scql.Tensor{}
@@ -175,12 +168,7 @@ func (exec *Executor) RunExecutionPlanCore(ctx context.Context, engineAsync bool
 		if responseInfo.Err != nil {
 			return constant.ReasonCallEngineFail, nil, responseInfo.Err
 		}
-		body := responseInfo.ResponseBody
-		response := &scql.RunExecutionPlanResponse{}
-		_, err := message.DeserializeFrom(io.NopCloser(strings.NewReader(body)), response, exec.EngineStub.contentType)
-		if err != nil {
-			return constant.ReasonInvalidResponse, nil, err
-		}
+		response := responseInfo.Response
 		if response.GetStatus().GetCode() != int32(scql.Code_OK) {
 			return constant.ReasonInvalidResponse, nil, status.NewStatusFromProto(response.GetStatus())
 		}
@@ -258,7 +246,7 @@ func (exec *Executor) HandleResultCallback(req *scql.ReportRequest) (finished bo
 func (exec *Executor) MergeQueryResults() (*scql.SCDBQueryResultResponse, error) {
 	var affectedRows int64 = 0
 	var dimValue int64 = 0
-	outCols := []*enginePb.Tensor{}
+	outCols := []*scql.Tensor{}
 	isFirstCol := true
 	for _, req := range exec.intermediateResults {
 		if req.GetStatus().GetCode() != 0 {

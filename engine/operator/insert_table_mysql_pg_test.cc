@@ -29,7 +29,7 @@
 // NOTE: 1. you need to prepare table before test insert mysql/pg, like:
 //   CREATE DATABASE IF NOT EXISTS test_db;
 //   DROP TABLE IF EXISTS test_db.test_insert_table;
-//   CREATE TABLE test_db.test_insert_table (c0 integer, c1 double, c2 datetime, c3 timestamp, c4 varchar(64));
+//   CREATE TABLE test_db.test_insert_table (c0 integer, c1 timestamp, c2 datetime, c3 varchar(64), c4 double, c5 boolean);
 // 2. specify db_kind and db_connection_str in commond like below: (please replace the '?' to correct value)
 //   bazel-bin/engine/operator/insert_table_mysql_pg_test --output_db_kind="mysql"  --output_db_connection_str="db=test_db;user=?;password=?;host=?;port=?;"
 
@@ -71,14 +71,15 @@ INSTANTIATE_TEST_SUITE_P(
                                           R"json(["B","A","CCC","B"])json")),
              test::NamedTensor(
                  "c4", TensorFrom(arrow::float32(),
-                                  "[1.1025, 100.245, -10.2, 3.1415926]"))},
-        .input_types = {pb::PrimitiveDataType::INT64,
-                        pb::PrimitiveDataType::TIMESTAMP,
-                        pb::PrimitiveDataType::DATETIME,
-                        pb::PrimitiveDataType::STRING,
-                        pb::PrimitiveDataType::FLOAT32},
+                                  "[1.1025, 100.245, -10.2, 3.1415926]")),
+             test::NamedTensor("c5", TensorFrom(arrow::boolean(),
+                                                "[true, false, null, false]"))},
+        .input_types =
+            {pb::PrimitiveDataType::INT64, pb::PrimitiveDataType::TIMESTAMP,
+             pb::PrimitiveDataType::DATETIME, pb::PrimitiveDataType::STRING,
+             pb::PrimitiveDataType::FLOAT32, pb::PrimitiveDataType::BOOL},
         .tableName = "test_insert_table",
-        .columnNames = {"c0", "c1", "c2", "c3", "c4"}}));
+        .columnNames = {"c0", "c1", "c2", "c3", "c4", "c5"}}));
 
 TEST_P(InsertMysqlOrPgTest, Works) {
   // Give

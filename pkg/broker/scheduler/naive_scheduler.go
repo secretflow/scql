@@ -21,7 +21,7 @@ import (
 	"sync/atomic"
 
 	"github.com/secretflow/scql/pkg/broker/config"
-	exe "github.com/secretflow/scql/pkg/executor"
+	"github.com/secretflow/scql/pkg/executor"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 )
 
@@ -99,10 +99,12 @@ func (eng residentEngine) MarshalToText() ([]byte, error) {
 }
 
 func (eng residentEngine) Stop() error {
-	conn, err := exe.NewEngineClientConn(eng.SelfUri, "", &eng.TLSCfg)
+	conn, err := executor.NewEngineClientConn(eng.SelfUri, "", &eng.TLSCfg)
 	if err != nil {
 		return err
 	}
+	defer conn.Close()
+
 	client := pb.NewSCQLEngineServiceClient(conn)
 
 	req := pb.StopJobRequest{

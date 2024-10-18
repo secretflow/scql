@@ -3,7 +3,7 @@ port: 8080
 protocol: http
 query_result_callback_timeout: 3m
 session_expire_time: 3m
-session_expire_check_time: 100ms
+session_expire_check_time: 1m
 log_level: debug
 storage:
   type: sqlite

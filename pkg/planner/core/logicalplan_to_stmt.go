@@ -196,6 +196,52 @@ func (p *LogicalSort) SqlStmt(d Dialect) (*runSqlCtx, error) {
 	c.setOrderBy(byItems)
 	return c, nil
 }
+func (p *LogicalWindow) SqlStmt(d Dialect) (*runSqlCtx, error) {
+	c, err := BuildChildCtx(d, p.Children()[0])
+	if err != nil {
+		return nil, err
+	}
+	c, err = c.addClause(ClauseWindow)
+	if err != nil {
+		return nil, err
+	}
+	var partitionByCols []expression.Expression
+	for _, item := range p.PartitionBy {
+		partitionByCols = append(partitionByCols, item.Col)
+	}
+	updatedPartitionItems, err := c.updateExprNodeFromExpressions(d, partitionByCols, nil)
+	if err != nil {
+		return nil, err
+	}
+	var partitionByItems []*ast.ByItem
+	for _, item := range updatedPartitionItems {
+		partitionByItems = append(partitionByItems, &ast.ByItem{Expr: item})
+	}
+	var orderByCols []expression.Expression
+	for _, item := range p.OrderBy {
+		orderByCols = append(orderByCols, item.Col)
+	}
+	updatedOrderByItems, err := c.updateExprNodeFromExpressions(d, orderByCols, nil)
+	if err != nil {
+		return nil, err
+	}
+	var orderByItems []*ast.ByItem
+	for _, item := range updatedOrderByItems {
+		orderByItems = append(orderByItems, &ast.ByItem{Expr: item})
+	}
+	if len(p.WindowFuncDescs) != 1 {
+		return nil, fmt.Errorf("expect 1 window spec but get %v", len(p.WindowFuncDescs))
+	}
+	var spec ast.WindowSpec
+	spec.OrderBy = &ast.OrderByClause{
+		Items: orderByItems,
+	}
+	spec.PartitionBy = &ast.PartitionByClause{
+		Items: partitionByItems,
+	}
+	c.convertWindowFunc(p, spec)
+	return c, nil
+}
 
 func (p *LogicalAggregation) SqlStmt(d Dialect) (*runSqlCtx, error) {
 	c, err := BuildChildCtx(d, p.Children()[0])

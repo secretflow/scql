@@ -23,6 +23,7 @@
 
 #include "engine/core/tensor_constructor.h"
 #include "engine/operator/test_util.h"
+#include "engine/util/time_util.h"
 
 namespace scql::engine::op {
 
@@ -31,6 +32,7 @@ DECLARE_string(restricted_write_path);
 
 struct DumpFileTestCase {
   std::vector<test::NamedTensor> inputs;
+  std::vector<pb::PrimitiveDataType> input_types;
   std::vector<std::string> output_names;
   std::string output_file_path;
   std::string line_terminator = "\n";
@@ -61,6 +63,9 @@ INSTANTIATE_TEST_SUITE_P(
                      "x3",
                      TensorFrom(arrow::large_utf8(),
                                 R"json(["test str","","A","B", null])json"))},
+            .input_types = {pb::PrimitiveDataType::FLOAT64,
+                            pb::PrimitiveDataType::BOOL,
+                            pb::PrimitiveDataType::STRING},
             .output_names = {"x1_dump", "x2_dump", "x3_dump"},
             .output_file_path = "./dumpfile_out.1",
             .output_file_content = R"csv("x1_dump","x2_dump","x3_dump"
@@ -80,6 +85,9 @@ NULL,NULL,NULL
                  test::NamedTensor(
                      "x3", TensorFrom(arrow::large_utf8(),
                                       R"json(["test str","","A","B"])json"))},
+            .input_types = {pb::PrimitiveDataType::FLOAT64,
+                            pb::PrimitiveDataType::BOOL,
+                            pb::PrimitiveDataType::STRING},
             .output_names = {"x1_dump", "x2_dump", "x3_dump"},
             .output_file_path = "./dumpfile_out.2",
             .line_terminator = ";\n",
@@ -95,6 +103,7 @@ NULL,NULL,NULL
             .inputs = {test::NamedTensor(
                 "x1", TensorFrom(arrow::large_utf8(),
                                  R"json(["D","C","","B","A"])json"))},
+            .input_types = {pb::PrimitiveDataType::STRING},
             .output_names = {"x1_dump"},
             .output_file_path = "./dumpfile_out.3",
             .output_file_content = R"csv("x1_dump"
@@ -105,19 +114,29 @@ NULL,NULL,NULL
 "A"
 )csv"},
         DumpFileTestCase{
-            .inputs = {test::NamedTensor(
-                "x1", TensorFrom(arrow::int64(), "[-1,0,1,2,3,10,11,12]"))},
-            .output_names = {"x1_dump"},
-            .output_file_path = "./dump_test/dumpfile_out.4",
-            .output_file_content = R"csv("x1_dump"
--1
-0
-1
-2
-3
-10
-11
-12
+            .inputs =
+                {
+                    test::NamedTensor(
+                        "x1", TensorFrom(arrow::int64(),
+                                         "[10,946656000,null,1722244717]")),
+                    test::NamedTensor(
+                        "x2", TensorFrom(arrow::int64(),
+                                         "[10,946656000,null,1722244717]")),
+                    test::NamedTensor(
+                        "x3", TensorFrom(arrow::int64(),
+                                         "[10,946656000,null,1722244717]"))},
+            .input_types =
+                {pb::PrimitiveDataType::INT64,
+                 // affected by timezone, we use Beijing time in test_util
+                 pb::PrimitiveDataType::TIMESTAMP,
+                 pb::PrimitiveDataType::DATETIME},
+            .output_names = {"int64", "timestamp", "datetime"},
+            .output_file_path = "./dump_test/time_dump.csv",
+            .output_file_content = R"csv("int64","timestamp","datetime"
+10,1970-01-01 08:00:10,1970-01-01 00:00:10
+946656000,2000-01-01 00:00:00,1999-12-31 16:00:00
+NULL,NULL,NULL
+1722244717,2024-07-29 17:18:37,2024-07-29 09:18:37
 )csv"}));
 
 TEST_P(DumpFileTest, works) {
@@ -161,9 +180,9 @@ pb::ExecNode DumpFileTest::MakeDumpFileExecNode(const DumpFileTestCase& tc) {
   builder.AddInt64Attr(DumpFile::kQuotingStyleAttr, tc.quoting);
   // Add inputs
   std::vector<pb::Tensor> input_datas;
-  for (const auto& named_tensor : tc.inputs) {
-    auto data = test::MakePrivateTensorReference(named_tensor.name,
-                                                 named_tensor.tensor->Type());
+  for (size_t i = 0; i < tc.inputs.size(); ++i) {
+    auto data =
+        test::MakePrivateTensorReference(tc.inputs[i].name, tc.input_types[i]);
     input_datas.push_back(std::move(data));
   }
   builder.AddInput(DumpFile::kIn, input_datas);

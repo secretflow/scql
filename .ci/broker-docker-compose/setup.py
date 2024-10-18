@@ -1,3 +1,4 @@
+import socket
 from mako.template import Template
 from pathlib import Path
 from dotenv import load_dotenv
@@ -22,7 +23,7 @@ DOCKER_COMPOSE_YAML_FILE = os.path.join(CUR_PATH, "docker-compose.yml")
 DOCKER_COMPOSE_TEMPLATE = os.path.join(CUR_PATH, "docker-compose.yml.template")
 
 PARTIES = ["alice", "bob", "carol"]
-PARTIES_DB = dict()
+PARTIES_DB = {"alice": "MYSQL", "bob": "MYSQL", "carol": "MYSQL"}
 DB_TYPE = ["MYSQL", "POSTGRES"]
 
 
@@ -43,15 +44,77 @@ def split_string(str, separator=","):
     return trimmed_str
 
 
-def render_files():
+def find_free_port(hint, host="127.0.0.1"):
+    """
+    Find a free port near the specified port, changing the tens place to 0 and incrementing by 10.
+    """
+    start = (hint // 100) * 100 + (hint % 10)
+    increment = 10
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        for port in range(start, 65536, increment):
+            if port < 1024:
+                continue  # Skip invalid port numbers
+            try:
+                s.bind((host, port))
+                return port
+            except OSError:
+                continue
+        raise RuntimeError("No free ports available in the desired range")
+
+
+def get_available_port(port, tag=""):
+    port = int(port)
+    if tag != "":
+        print(f"Port for {tag}: ")
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(("127.0.0.1", port))
+            if tag != "":
+                print(f"Port {port} is available.")
+            return port
+    except OSError:
+        print(f"Port {port} is already in use. Trying to find a free port...")
+        port = find_free_port(port)
+        print(f"Port {port} is available.")
+        return port
+
+
+def set_ports_env():
     load_dotenv(override=True)
+
+    mysql_port = os.getenv(MYSQL_PORT_ENV_NAME, "mysql")
+    os.environ[MYSQL_PORT_ENV_NAME] = str(get_available_port(mysql_port, "mysql"))
+    postgres_port = os.getenv(POSTGRES_PORT_ENV_NAME, "postgres")
+    os.environ[POSTGRES_PORT_ENV_NAME] = str(
+        get_available_port(postgres_port, "postgres")
+    )
+
+    broker_addrs = os.getenv(BROKER_ADDRS_ENV_NAME)
+    if broker_addrs:
+        addresses = broker_addrs.split(",")
+        new_addresses = []
+
+        for address in addresses:
+            host, port = address.split(":")
+            assert host == "127.0.0.1"
+            new_port = get_available_port(port)
+            new_address = f"{host}:{new_port}"
+            new_addresses.append(new_address)
+
+        # 更新 BROKER_ADDRS 环境变量
+        new_broker_addrs = ",".join(new_addresses)
+        os.environ[BROKER_ADDRS_ENV_NAME] = new_broker_addrs
+
+
+def render_files():
     broker_addrs = split_string(os.getenv(BROKER_ADDRS_ENV_NAME))
     assert len(PARTIES) == len(broker_addrs)
     mysql_port = os.getenv(MYSQL_PORT_ENV_NAME)
     pg_port = os.getenv(POSTGRES_PORT_ENV_NAME)
     image_tag = os.getenv(SCQL_IMAGE_NAME_ENV_NAME)
     docker_compose_template = Template(filename=DOCKER_COMPOSE_TEMPLATE)
-    print(broker_addrs)
+    print(f"broker addrs: {broker_addrs}")
     docker_compose = docker_compose_template.render(
         MYSQL_PORT=mysql_port,
         POSTGRES_PORT=pg_port,
@@ -155,9 +218,9 @@ def generate_regtest_config():
     mysql_port = os.getenv(MYSQL_PORT_ENV_NAME)
     project_conf = os.getenv(PROJECT_CONF_ENV_NAME)
     spu_protocol = os.getenv(SPU_PROTOCOL_ENV_NAME)
-    conf[
-        "mysql_conn_str"
-    ] = f"root:{MYSQL_ROOT_PASSWORD}@tcp(localhost:{mysql_port})/alice?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
+    conf["mysql_conn_str"] = (
+        f"root:{MYSQL_ROOT_PASSWORD}@tcp(localhost:{mysql_port})/alice?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
+    )
     conf["spu_protocol"] = spu_protocol
     conf["project_conf"] = project_conf
     conf_path = os.path.join(CUR_PATH, "regtest.yml")
@@ -183,6 +246,7 @@ if __name__ == "__main__":
                 print("name must in party list")
                 exit(1)
 
+    set_ports_env()
     render_files()
     generate_private_keys()
     generate_party_info_json()

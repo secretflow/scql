@@ -52,6 +52,8 @@ func (svc *grpcIntraSvc) Report(ctx context.Context, request *pb.ReportRequest) 
 		return nil, nil
 	case int8(storage.SessionRunning):
 		break // check passed
+	case int8(storage.SessionSubmitted):
+		break // check passed
 	default:
 		return nil, fmt.Errorf("session status %d is not allowed to set result", info.Status)
 	}

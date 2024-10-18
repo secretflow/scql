@@ -273,6 +273,16 @@ func (c *runSqlCtx) updateExprNodeFromExpressions(d Dialect, exprs []expression.
 	return exprStmts, nil
 }
 
+func (c *runSqlCtx) convertWindowFunc(window *LogicalWindow, spec ast.WindowSpec) {
+	columns := window.Schema().Columns
+	lastCol := columns[len(columns)-1]
+	windowDesc := window.WindowFuncDescs[0]
+	c.colIdToExprNode[lastCol.UniqueID] = &ast.WindowFuncExpr{
+		F:    windowDesc.Name,
+		Spec: spec,
+	}
+}
+
 func (c *runSqlCtx) convertAggregateFunc(d Dialect, agg *LogicalAggregation) error {
 	for i, col := range agg.Schema().Columns {
 		f := agg.AggFuncs[i]

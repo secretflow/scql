@@ -119,6 +119,10 @@ func (stub *IntraStub) GetResult(url string, req *pb.FetchResultRequest, respons
 	return stub.baseCall(url, constant.FetchResultPath, req, response)
 }
 
+func (stub *IntraStub) GetExplain(url string, req *pb.ExplainQueryRequest, response *pb.ExplainQueryResponse) (err error) {
+	return stub.baseCall(url, constant.ExplainQueryPath, req, response)
+}
+
 func (stub *IntraStub) CancelJob(url string, req *pb.CancelQueryRequest, response *pb.CancelQueryResponse) (err error) {
 	return stub.baseCall(url, constant.CancelQueryPath, req, response)
 }

@@ -1,0 +1,111 @@
+version: '3.8'
+services:
+  engine-alice:
+    command:
+      - /home/admin/bin/scqlengine
+      - --flagfile=/home/admin/engine/conf/gflags.conf
+    image: ${SCQL_IMAGE_TAG}
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ./engine/alice/conf/gflags.conf:/home/admin/engine/conf/gflags.conf
+      - ./csv/:/data/
+    deploy:
+      resources:
+        limits:
+          cpus: '${ALICE_CPU_LIMIT}'
+          memory: ${ALICE_MEMORY_LIMIT}
+  engine-bob:
+    command:
+      - /home/admin/bin/scqlengine
+      - --flagfile=/home/admin/engine/conf/gflags.conf
+    image: ${SCQL_IMAGE_TAG}
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ./engine/bob/conf/gflags.conf:/home/admin/engine/conf/gflags.conf
+      - ./csv/:/data/
+    deploy:
+      resources:
+        limits:
+          cpus: '${BOB_CPU_LIMIT}'
+          memory: ${BOB_MEMORY_LIMIT}
+  engine-carol:
+    command:
+      - /home/admin/bin/scqlengine
+      - --flagfile=/home/admin/engine/conf/gflags.conf
+    image: ${SCQL_IMAGE_TAG}
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ./engine/carol/conf/gflags.conf:/home/admin/engine/conf/gflags.conf
+      - ./csv/:/data/
+    deploy:
+      resources:
+        limits:
+          cpus: '${CAROL_CPU_LIMIT}'
+          memory: ${CAROL_MEMORY_LIMIT}
+  broker-alice:
+    image: ${SCQL_IMAGE_TAG}
+    command:
+      - /home/admin/bin/broker
+      - -config=/home/admin/configs/config.yml
+    restart: always
+    ports:
+      - mode: host
+        protocol: tcp
+        published: ${ALICE_PORT}
+        target: 8080
+    volumes:
+      - ./broker/conf/alice/:/home/admin/configs/
+  broker-bob:
+    image: ${SCQL_IMAGE_TAG}
+    command:
+      - /home/admin/bin/broker
+      - -config=/home/admin/configs/config.yml
+    restart: always
+    ports:
+      - mode: host
+        protocol: tcp
+        published: ${BOB_PORT}
+        target: 8080
+    volumes:
+      - ./broker/conf/bob/:/home/admin/configs/
+  broker-carol:
+    image: ${SCQL_IMAGE_TAG}
+    command:
+      - /home/admin/bin/broker
+      - -config=/home/admin/configs/config.yml
+    restart: always
+    ports:
+      - mode: host
+        protocol: tcp
+        published: ${CAROL_PORT}
+        target: 8080
+    volumes:
+      - ./broker/conf/carol/:/home/admin/configs/
+  mysql:
+    image: mysql:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - TZ=Asia/Shanghai
+    healthcheck:
+      retries: 10
+      test:
+        - CMD
+        - mysqladmin
+        - ping
+        - -h
+        - mysql
+      timeout: 20s
+    expose:
+      - "3306"
+    ports:
+      - mode: host
+        protocol: tcp
+        published: ${MYSQL_PORT}
+        target: 3306
+    restart: always
+    volumes:
+      - ./mysql/initdb:/docker-entrypoint-initdb.d
+      - ./mysql/conf/my.cnf:/etc/my.cnf

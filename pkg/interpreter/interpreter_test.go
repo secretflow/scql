@@ -95,7 +95,7 @@ var commonSecurityConf = &proto.SecurityConfig{
 		},
 		{
 			PartyCode:    "alice",
-			Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AS_JOIN_PAYLOAD,
+			Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
 			DatabaseName: "",
 			TableName:    "tb",
 			ColumnName:   "order_amount",
@@ -166,6 +166,286 @@ var commonCatalog = &proto.Catalog{
 }
 
 var testCases = []compileTestCase{
+	{
+		req: &proto.CompileQueryRequest{
+			Query:  "SELECT ROW_NUMBER() OVER(PARTITION BY tb.is_active ORDER BY ta.age, tb.order_amount) as num FROM ta INNER JOIN tb ON ta.ID = tb.ID",
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "alice",
+			},
+			IssuerAsParticipant: true,
+			SecurityConf: &proto.SecurityConfig{
+				ColumnControlList: []*proto.SecurityConfig_ColumnControl{
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "age",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_JOIN,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "order_amount",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "is_active",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_JOIN,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_REVEAL_RANK,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "order_amount",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_REVEAL_RANK,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "is_active",
+					},
+				},
+			},
+			Catalog:     commonCatalog,
+			CompileOpts: &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+		},
+		ok:           true,
+		workPartyNum: 2,
+	},
+	{
+		req: &proto.CompileQueryRequest{
+			Query: `SELECT t.num, t.num1, t.num2, t.num3 FROM (SELECT
+				ROW_NUMBER() OVER(PARTITION BY ta.ID ORDER BY tb.order_amount) as num,
+					ROW_NUMBER() OVER(PARTITION BY CASE WHEN ta.ID = 1 THEN 1 ELSE 0 END ORDER BY CASE WHEN tb.order_amount > 1 THEN 1 ELSE 0 END) as num1,
+					ROW_NUMBER() OVER(PARTITION BY tb.ID ORDER BY tb.order_amount) as num2,
+					ROW_NUMBER() OVER(PARTITION BY ta.ID, ta.credit_rank ORDER BY tb.order_amount) as num3
+					FROM ta INNER JOIN tb ON ta.ID = tb.ID) AS t WHERE t.num = 1`,
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "alice",
+			},
+			IssuerAsParticipant: true,
+			SecurityConf: &proto.SecurityConfig{
+				ColumnControlList: []*proto.SecurityConfig_ColumnControl{
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "credit_rank",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AS_JOIN_PAYLOAD,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "credit_rank",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_JOIN,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "order_amount",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_JOIN,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_REVEAL_RANK,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "order_amount",
+					},
+				},
+			},
+			Catalog:     commonCatalog,
+			CompileOpts: &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+		},
+		ok:           true,
+		workPartyNum: 2,
+	},
+	{
+		req: &proto.CompileQueryRequest{
+			Query:  "SELECT ROW_NUMBER() OVER(PARTITION BY tb.ID ORDER BY tb.order_amount) as num, tb.order_amount FROM ta INNER JOIN tb ON ta.ID = tb.ID",
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "alice",
+			},
+			IssuerAsParticipant: true,
+			SecurityConf: &proto.SecurityConfig{
+				ColumnControlList: []*proto.SecurityConfig_ColumnControl{
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_JOIN,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "order_amount",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_JOIN,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_REVEAL_RANK,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "order_amount",
+					},
+				},
+			},
+			Catalog:     commonCatalog,
+			CompileOpts: &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+		},
+		ok:           false,
+		workPartyNum: 2,
+	},
+	{
+		req: &proto.CompileQueryRequest{
+			Query:  "SELECT ROW_NUMBER() OVER(PARTITION BY tb.ID ORDER BY tb.order_amount) as num FROM ta INNER JOIN tb ON ta.ID = tb.ID",
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "alice",
+			},
+			IssuerAsParticipant: true,
+			SecurityConf: &proto.SecurityConfig{
+				ColumnControlList: []*proto.SecurityConfig_ColumnControl{
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_JOIN,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "order_amount",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_JOIN,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_REVEAL_RANK,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "order_amount",
+					},
+				},
+			},
+			Catalog:     commonCatalog,
+			CompileOpts: &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+		},
+		ok:           true,
+		workPartyNum: 2,
+	},
 	{
 		req: &proto.CompileQueryRequest{
 			Query:  "SELECT ta.credit_rank, tb.order_amount, geodist(ta.credit_rank, ta.credit_rank, tb.order_amount, tb.order_amount) FROM ta INNER JOIN tb ON ta.ID = tb.ID",

@@ -18,6 +18,16 @@ This tutorial uses the P2P deployment architecture. If you would like to experie
 Prerequisites
 -------------
 
+Clone repo
+^^^^^^^^^^
+
+.. code-block:: bash
+
+    git clone git@github.com:secretflow/scql.git
+
+    # all the following operations will be executed in the scql directory
+    cd scql
+
 
 Build brokerctl
 ^^^^^^^^^^^^^^^

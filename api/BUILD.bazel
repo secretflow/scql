@@ -105,6 +105,7 @@ proto_library(
         ":common_proto",
         ":core_proto",
         ":status_proto",
+        ":interpreter_proto",
         "@com_google_protobuf//:timestamp_proto",
         "@googleapis//google/api:annotations_proto",
         "@googleapis//google/api:field_behavior_proto",

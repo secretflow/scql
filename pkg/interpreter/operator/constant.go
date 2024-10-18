@@ -94,6 +94,8 @@ const (
 	OpNameIf       string = "If"
 	OpNameIfNull   string = "IfNull"
 	OpNameCoalesce string = "Coalesce"
+
+	OpNameRowNumber string = "RowNumber"
 )
 
 const (

@@ -60,6 +60,15 @@ class ValueVistor {
     return arrow::Status::OK();
   }
 
+  arrow::Status Visit(const arrow::BooleanArray& array) {
+    for (int64_t i = 0; i < array.length(); i++) {
+      result_vector_->push_back(array.IsNull(i)    ? "NULL"
+                                : array.GetView(i) ? "TRUE"
+                                                   : "FALSE");
+    }
+    return arrow::Status::OK();
+  }
+
   arrow::Status Visit(const arrow::NumericArray<arrow::Int64Type>& array) {
     for (int64_t i = 0; i < array.length(); i++) {
       if (array.IsNull(i)) {
@@ -200,7 +209,7 @@ void InsertTable::InsertInTransaction(
       Poco::Data::Statement stmt(session);
       stmt << insert_stmt, Poco::Data::Keywords::now;
       // TODO(jingshi): try bind to prevent SQL injection
-      offset += values.size();
+      offset += columns[0].size();
     }
 
     session.commit();

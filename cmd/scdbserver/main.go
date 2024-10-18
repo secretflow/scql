@@ -114,7 +114,7 @@ func main() {
 		log.Fatalf("Failed to connect to database and bootstrap it: %v", err)
 	}
 
-	engineClient := executor.NewEngineClient(cfg.Engine.ClientTimeout * time.Second)
+	engineClient := executor.NewEngineClient(cfg.Engine.ClientMode, cfg.Engine.ClientTimeout*time.Second, nil, cfg.Engine.ContentType, cfg.Engine.Protocol)
 	svr, err := server.NewServer(cfg, store, engineClient)
 	if err != nil {
 		log.Fatalf("Failed to create scdb server: %v", err)

@@ -19,6 +19,7 @@
 
 #include "engine/core/arrow_helper.h"
 #include "engine/util/copy_to_proto_vistor.h"
+#include "engine/util/spu_io.h"
 #include "engine/util/time_util.h"
 
 namespace scql::engine::util {
@@ -30,6 +31,18 @@ std::string GetStringValue(const pb::Tensor& t) {
     YACL_THROW("tensor does not have string value");
   }
   return t.string_data(0);
+}
+
+uint32_t GetScalarUint32(std::shared_ptr<Tensor> t) {
+  auto num_array = util::ConcatenateChunkedArray(t->ToArrowChunkedArray());
+  auto* num_array_ptr =
+      dynamic_cast<const arrow::UInt32Array*>(num_array.get());
+  YACL_ENFORCE(num_array_ptr, "cast tensor to uint32_t failed");
+
+  YACL_ENFORCE(num_array_ptr->length() == 1,
+               "input tensor should be a scalar, but got {}",
+               num_array_ptr->length());
+  return num_array_ptr->Value(0);
 }
 
 std::vector<std::string> GetStringValues(const pb::Tensor& t) {

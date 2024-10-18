@@ -660,6 +660,54 @@ func (t *translator) buildGroupAggregation(ln *AggregationNode) (err error) {
 	}
 }
 
+// check whether there are any parties which can view all columns in partition and order by
+func (t *translator) findVisibleWindowParty(ln *WindowNode) (string, error) {
+	window, ok := ln.lp.(*core.LogicalWindow)
+	if !ok {
+		return "", fmt.Errorf("findVisibleWindowParty: failed to convert to logical window")
+	}
+
+	child := ln.Children()[0]
+
+	partyCandidate := map[string]bool{}
+	for _, pc := range t.enginesInfo.GetParties() {
+		partyCandidate[pc] = true
+	}
+
+	for _, item := range window.PartitionBy {
+		cc, err := ccl.InferExpressionCCL(item.Col, child.CCL())
+		if err != nil {
+			return "", fmt.Errorf("findVisibleWindowParty: %v", err)
+		}
+
+		for _, pc := range t.enginesInfo.GetParties() {
+			if !cc.IsVisibleFor(pc) {
+				delete(partyCandidate, pc)
+			}
+		}
+	}
+
+	for _, item := range window.OrderBy {
+		cc, err := ccl.InferExpressionCCL(item.Col, child.CCL())
+		if err != nil {
+			return "", fmt.Errorf("findVisibleWindowParty: %v", err)
+		}
+
+		for _, pc := range t.enginesInfo.GetParties() {
+			if !cc.IsVisibleFor(pc) {
+				delete(partyCandidate, pc)
+			}
+		}
+	}
+
+	partyCandidateSlice := sliceutil.SortMapKeyForDeterminism(partyCandidate)
+	if len(partyCandidateSlice) > 0 {
+		return partyCandidateSlice[0], nil
+	}
+
+	return "", nil
+}
+
 // find a party who:
 //  1. owns plaintext ccl for all group-by keys so it can calculate the group id;
 //  2. can handle all aggs: a) agg with plaintext ccl; b) simple count; c) HE suitable;
@@ -1110,4 +1158,202 @@ func isHeSuitable(aggFunc *aggregation.AggFuncDesc, cc *ccl.CCL) bool {
 	default:
 		return false
 	}
+}
+
+func (t *translator) buildWindow(ln *WindowNode) (err error) {
+	window, ok := ln.lp.(*core.LogicalWindow)
+	if !ok {
+		return fmt.Errorf("buildWindow: failed to convert to logical window")
+	}
+	if len(window.WindowFuncDescs) != 1 {
+		return fmt.Errorf("buildWindow: unsupported windowFuncDescs length 1(expected) != %v(actural)",
+			len(window.WindowFuncDescs))
+	}
+	desc := window.WindowFuncDescs[0]
+	isRankWindow := ccl.IsRankWindowFunc(desc.Name)
+
+	if isRankWindow {
+		return t.buildRankWindow(ln)
+	} else {
+		return t.buildAggWindow(ln)
+	}
+}
+
+func (t *translator) buildPartitionId(window *core.LogicalWindow, partyCode string, childColIdToTensor map[int64]*graph.Tensor) (*graph.Tensor, *graph.Tensor, error) {
+	partitionCol := []*graph.Tensor{}
+
+	for _, item := range window.PartitionBy {
+		tensor, err := t.getTensorFromColumn(item.Col, childColIdToTensor)
+		if err != nil {
+			return nil, nil, fmt.Errorf("buildPartitionId: %v", err)
+		}
+
+		partitionCol = append(partitionCol, tensor)
+	}
+
+	return t.addGroupNode("group", partitionCol, partyCode)
+}
+
+func (t *translator) extractOrderByBlock(window *core.LogicalWindow, colIdToTensor map[int64]*graph.Tensor, partyCode string) ([]*graph.Tensor, []string, error) {
+	sortReverse := make([]string, len(window.OrderBy))
+	sortKey := []*graph.Tensor{}
+	for i, item := range window.OrderBy {
+		if item.Desc {
+			sortReverse[i] = "1"
+		} else {
+			sortReverse[i] = "0"
+		}
+
+		tensor, err := t.getTensorFromColumn(item.Col, colIdToTensor)
+		if err != nil {
+			return nil, nil, fmt.Errorf("buildPartitionId: %v", err)
+		}
+
+		output, err := t.converter.convertTo(tensor, &privatePlacement{partyCode: partyCode})
+		if err != nil {
+			return nil, nil, fmt.Errorf("addPartitionNode: %v", err)
+		}
+
+		sortKey = append(sortKey, output)
+	}
+
+	return sortKey, sortReverse, nil
+}
+
+func (t *translator) buildObliviousRankWindow(ln *WindowNode) error {
+	window, ok := ln.lp.(*core.LogicalWindow)
+	if !ok {
+		return fmt.Errorf("buildObliviousRankWindow: assert failed expected *core.LogicalWindow, get %T", ln.LP())
+	}
+	child := ln.Children()[0]
+	childColIdToTensor := t.getNodeResultTensor(child)
+	sortKeys := []*graph.Tensor{}
+	partitionKeys := []*graph.Tensor{}
+	for _, col := range window.PartitionBy {
+		partitionKey, err := t.getTensorFromColumn(col.Col, childColIdToTensor)
+		if err != nil {
+			return fmt.Errorf("buildObliviousRankWindow: %v", err)
+		}
+		partitionKeys = append(partitionKeys, partitionKey)
+	}
+	orderKeys := []*graph.Tensor{}
+	for _, col := range window.OrderBy {
+		orderKey, err := t.getTensorFromColumn(col.Col, childColIdToTensor)
+		if err != nil {
+			return fmt.Errorf("builObliviousRankWindow: %v", err)
+		}
+		orderKeys = append(orderKeys, orderKey)
+	}
+	var sortPayload []*graph.Tensor
+	sortPayload = append(sortPayload, partitionKeys...)
+	sortPayload = append(sortPayload, orderKeys...)
+	sortPayload = append(sortPayload, child.ResultTable()...)
+	sortKeys = append(sortKeys, partitionKeys...)
+	sortKeys = append(sortKeys, orderKeys...)
+	out, err := t.addSortNode("sort", sortKeys, sortPayload)
+	if err != nil {
+		return fmt.Errorf("builObliviousRankWindow: sort with partition ids err: %v", err)
+	}
+	partitionedKeys := out[0:len(partitionKeys)]
+	sortedPayloadTensors := out[len(partitionKeys)+len(orderKeys):]
+	groupMark, err := t.addObliviousGroupMarkNode("partition_mark", partitionedKeys)
+	if err != nil {
+		return fmt.Errorf("builObliviousRankWindow: %v", err)
+	}
+	windowDesc := window.WindowFuncDescs[0]
+	lastCol := window.Schema().Columns[len(window.Schema().Columns)-1]
+	var output *graph.Tensor
+	switch windowDesc.Name {
+	case ast.WindowFuncRowNumber:
+		output, err = t.addObliviousGroupAggNode(ast.AggFuncCount, groupMark, groupMark)
+		if err != nil {
+			return fmt.Errorf("builObliviousRankWindow: %v", err)
+		}
+		childColIdToTensor[lastCol.UniqueID] = output
+	default:
+		return fmt.Errorf("buildObliviousRankWindow: unsupported window function %v", windowDesc.Name)
+	}
+
+	result := append(sortedPayloadTensors, output)
+	return ln.SetResultTableWithDTypeCheck(result)
+}
+
+func (t *translator) buildPrivateRankWindow(ln *WindowNode, party string, colIdToTensor map[int64]*graph.Tensor) (err error) {
+	defer func() {
+		if err != nil {
+			return
+		}
+
+		err = setResultTable(ln, colIdToTensor)
+	}()
+
+	window, ok := ln.lp.(*core.LogicalWindow)
+	if !ok {
+		return fmt.Errorf("buildPrivateRankWindow: failed to convert to logical window node")
+	}
+
+	partitionId, partitionNum, err := t.buildPartitionId(window, party, colIdToTensor)
+	if err != nil {
+		return fmt.Errorf("buildPrivateRankWindow: %v", err)
+	}
+
+	output := t.ep.AddTensor("Out")
+	output.DType = proto.PrimitiveDataType_INT64
+	output.SetStatus(proto.TensorStatus_TENSORSTATUS_PRIVATE)
+	lastCol := window.Schema().Columns[len(window.Schema().Columns)-1]
+	tensor, ok := colIdToTensor[lastCol.UniqueID]
+	if !ok {
+		cc := ccl.NewCCL()
+		cc.SetLevelForParty(party, ccl.Plain)
+		output.CC = cc
+		output.OwnerPartyCode = party
+	} else {
+		output.CC = tensor.CC.Clone()
+		output.OwnerPartyCode = party
+	}
+
+	// reverse is a string array, '1' for true, '0' for false, here convert to string array and concatenate into string.
+	sortKey, reverse, err := t.extractOrderByBlock(window, colIdToTensor, party)
+
+	reverseAttr := &graph.Attribute{}
+	reverseAttr.SetStrings(reverse)
+	colIdToTensor[lastCol.UniqueID] = output
+
+	for _, desc := range window.WindowFuncDescs {
+		switch desc.Name {
+		case ast.WindowFuncRowNumber:
+			//TODO: refactor this to graph builder
+			if _, err := t.ep.AddExecutionNode(operator.OpNameRowNumber, operator.OpNameRowNumber,
+				map[string][]*graph.Tensor{"Key": sortKey, "PartitionId": []*graph.Tensor{partitionId}, "PartitionNum": []*graph.Tensor{partitionNum}},
+				map[string][]*graph.Tensor{"Out": []*graph.Tensor{output}},
+				map[string]*graph.Attribute{operator.ReverseAttr: reverseAttr},
+				[]string{party}); err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("buildPrivateRankWindow: unsupported window function %v", desc.Name)
+		}
+	}
+
+	return nil
+}
+
+func (t *translator) buildRankWindow(ln *WindowNode) (err error) {
+	colIdToTensor := t.getNodeResultTensor(ln.Children()[0])
+
+	// if there are parties can view columns in partition and order, run this query in private mode
+	visibleParty, err := t.findVisibleWindowParty(ln)
+	if err != nil {
+		return fmt.Errorf("buildRankWindow: %v", err)
+	}
+
+	if visibleParty != "" {
+		return t.buildPrivateRankWindow(ln, visibleParty, colIdToTensor)
+	} else {
+		return t.buildObliviousRankWindow(ln)
+	}
+}
+
+func (t *translator) buildAggWindow(ln *WindowNode) (err error) {
+	return fmt.Errorf("aggregation window function is not supported")
 }

@@ -32,6 +32,7 @@ const (
 	AsJoinPayload CCLLevel = CCLLevel(proto.SecurityConfig_ColumnControl_PLAINTEXT_AS_JOIN_PAYLOAD)
 	// if CCLLevel of column/Tensor was setting unknown just meaning it can't be used in ccl infer
 	Unknown CCLLevel = CCLLevel(proto.SecurityConfig_ColumnControl_UNKNOWN)
+	Rank    CCLLevel = CCLLevel(proto.SecurityConfig_ColumnControl_REVEAL_RANK)
 )
 
 var isCompareOpMap = map[string]bool{
@@ -51,4 +52,8 @@ var isCompareAstFuncMap = map[string]bool{
 	ast.EQ:      true,
 	ast.NE:      true,
 	ast.GeoDist: true,
+}
+
+var isRankWindowFuncMap = map[string]bool{
+	ast.WindowFuncRowNumber: true,
 }

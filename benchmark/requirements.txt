@@ -1,0 +1,5 @@
+mako
+python-dotenv
+pyyaml
+pandas
+matplotlib

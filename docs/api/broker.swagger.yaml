@@ -78,6 +78,28 @@ paths:
             $ref: '#/definitions/scql.pb.FetchResultRequest'
       tags:
         - IntraBrokerService
+  /intra/query/explain:
+    post:
+      summary: ExplainQuery
+      description: Get explaination of a query
+      operationId: IntraBrokerService_ExplainQuery
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/scql.pb.ExplainQueryResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/google.rpc.Status'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/scql.pb.ExplainQueryRequest'
+      tags:
+        - IntraBrokerService
   /intra/query/cancel:
     post:
       summary: CancelQuery
@@ -809,6 +831,33 @@ definitions:
       expected_server_checksum:
         $ref: '#/definitions/scql.pb.Checksum'
         title: used when checksum result was not equal
+  scql.pb.ExplainInfo:
+    type: object
+    properties:
+      exe_graph_dot:
+        type: string
+        description: |-
+          execution graph in dot format.
+          It has value only when `dump_exe_graph` is true in request compile options.
+  scql.pb.ExplainQueryRequest:
+    type: object
+    properties:
+      project_id:
+        type: string
+      query:
+        type: string
+      job_config:
+        $ref: '#/definitions/scql.pb.JobConfig'
+    required:
+      - project_id
+      - query
+  scql.pb.ExplainQueryResponse:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
+      explain:
+        $ref: '#/definitions/scql.pb.ExplainInfo'
   scql.pb.FetchResultRequest:
     type: object
     example:

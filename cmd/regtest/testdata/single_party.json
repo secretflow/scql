@@ -256,6 +256,11 @@
       "mysql_query": "select substring(plain_string_0, 2, 3) as t from alice.tbl_1 where substring(plain_string_0, 2) != '';"
     },
     {
+      "name": "trim",
+      "query": "select trim(plain_string_0) as t from alice_tbl_1 where trim(plain_string_0) != '';",
+      "mysql_query": "select trim(plain_string_0) as t from alice.tbl_1 where trim(plain_string_0) != '';"
+    },
+    {
       "name": "apply in",
       "query": "select plain_int_0 in (select plain_int_0 from alice_tbl_1) as tt, plain_int_0 not in (select plain_int_0 from alice_tbl_1) as ff from alice_tbl_0",
       "mysql_query": "select plain_int_0 in (select plain_int_0 from alice.tbl_1) as tt, plain_int_0 not in (select plain_int_0 from alice.tbl_1) as ff from alice.tbl_0"

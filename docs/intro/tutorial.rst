@@ -7,6 +7,16 @@ In this tutorial, you will deploy the SCQL system on a single machine, then simu
 Prerequisites
 -------------
 
+Clone repo
+^^^^^^^^^^
+
+.. code-block:: bash
+
+    git clone git@github.com:secretflow/scql.git
+
+    # all the following operations will be executed in the scql directory
+    cd scql
+
 
 Build scdbclient & scqltool
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^

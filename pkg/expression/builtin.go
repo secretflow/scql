@@ -356,6 +356,7 @@ var funcs = map[string]functionClass{
 	ast.Coalesce:  &coalesceFunctionClass{baseFunctionClass{ast.Coalesce, 1, -1}},
 	ast.Length:    &lengthFunctionClass{baseFunctionClass{ast.Length, 1, 1}},
 	ast.Replace:   &replaceFunctionClass{baseFunctionClass{ast.Replace, 3, 3}},
+	ast.Trim:      &trimFunctionClass{baseFunctionClass{ast.Trim, 1, 1}},
 
 	// math functions
 	ast.Abs:      &absFunctionClass{baseFunctionClass{ast.Abs, 1, 1}},

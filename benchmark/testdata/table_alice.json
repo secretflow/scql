@@ -1,0 +1,34 @@
+{
+  "t1": {
+    "row_num": 1000000,
+    "db_name": "alice",
+    "columns": [
+      {
+        "column_name": "ID",
+        "dtype": "string",
+        "ccl": ["join"],
+        "mock_type": "increment",
+        "str_len": 18
+      },
+      {
+        "column_name": "age",
+        "dtype": "int",
+        "ccl": ["aggregate"],
+        "mock_type": "random_range",
+        "range": [0, 100]
+      },
+      {
+        "column_name": "credit_rank",
+        "dtype": "int",
+        "ccl": ["groupby"],
+        "mock_type": "random_pool",
+        "pool": [1, 2, 3, 4, 5]
+      },
+      {
+        "column_name": "income",
+        "dtype": "int",
+        "ccl": ["compare"]
+      }
+    ]
+  }
+}

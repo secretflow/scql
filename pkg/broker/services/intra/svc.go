@@ -147,6 +147,17 @@ func (svc *IntraSvc) FetchResultHandler(c *gin.Context) {
 		})
 }
 
+func (svc *IntraSvc) ExplainQueryHandler(c *gin.Context) {
+	handlerWrapper(c,
+		&pb.ExplainQueryRequest{},
+		&pb.ExplainQueryResponse{},
+		func(ctx context.Context, req *pb.ExplainQueryRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.ExplainQueryResponse, error) {
+			logEntry.RawRequest = req.String()
+			logEntry.ActionName = fmt.Sprintf("%v@%v", "Intra", "ExplainQuery")
+			return svc.ExplainQuery(ctx, req)
+		})
+}
+
 func (svc *IntraSvc) CancelQueryHandler(c *gin.Context) {
 	handlerWrapper(c,
 		&pb.CancelQueryRequest{},

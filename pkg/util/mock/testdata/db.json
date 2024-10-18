@@ -8,11 +8,11 @@
     "carol": { "party_code": "carol", "db_type": "POSTGRESQL" }
   },
   "table_files": [
-    "testdata/generated_table_alice.json",
-    "testdata/table_alice.json",
-    "testdata/generated_table_bob.json",
-    "testdata/table_bob.json",
-    "testdata/generated_table_carol.json",
-    "testdata/table_carol.json"
+    "generated_table_alice.json",
+    "table_alice.json",
+    "generated_table_bob.json",
+    "table_bob.json",
+    "generated_table_carol.json",
+    "table_carol.json"
   ]
 }

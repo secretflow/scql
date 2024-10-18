@@ -360,8 +360,6 @@ func (r *QueryRunner) CreateExecutor(plan *pb.CompiledPlan) (*executor.Executor,
 		session.CallBackHost,
 		constant.EngineCallbackPath,
 		session.ExecuteInfo.EngineClient,
-		conf.Engine.Protocol,
-		conf.Engine.ContentType,
 	)
 
 	// p2p: party code who is not issuer doesn't have output tensors
@@ -427,6 +425,14 @@ func (r *QueryRunner) Execute(usedTables []core.DbTable) error {
 	if ret.GetStatus().GetCode() != 0 {
 		return fmt.Errorf("status: %s", ret)
 	}
+	if s.AsyncMode {
+		// Only change the session status to running if it is submitted.
+		// The jobwatcher only monitors jobs in the running state.
+		err = s.App.MetaMgr.UpdateSessionInfoStatusWithCondition(s.ExecuteInfo.JobID, storage.SessionSubmitted, storage.SessionRunning)
+		if err != nil {
+			return fmt.Errorf("updated session info after run execution plan err: %v", err)
+		}
+	}
 
 	// store result to session when engines run in sync mode
 	if !s.AsyncMode {
@@ -445,8 +451,6 @@ func (r *QueryRunner) Execute(usedTables []core.DbTable) error {
 		}
 
 		s.SetResultSafely(result)
-	} else { // when engines run in async mode, result will be set in callback handler.
-		s.App.JobWatcher.Watch(s.ExecuteInfo.JobID, s.Engine.GetEndpointForSelf())
 	}
 
 	return nil
@@ -465,4 +469,19 @@ func (r *QueryRunner) DryRun(usedTables []core.DbTable) error {
 		return fmt.Errorf("failed to compile query: %w", err)
 	}
 	return nil
+}
+
+func (r *QueryRunner) GetPlan(usedTables []core.DbTable) (*pb.CompiledPlan, error) {
+	// 1. check data consistency
+	if err := r.session.CheckChecksum(); err != nil {
+		return nil, err
+	}
+	// 2. try compile query
+	compileReq := r.buildCompileQueryRequest()
+	intrpr := interpreter.NewInterpreter()
+	plan, err := intrpr.Compile(context.TODO(), compileReq)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compile query: %w", err)
+	}
+	return plan, nil
 }

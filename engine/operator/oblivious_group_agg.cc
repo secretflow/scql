@@ -39,18 +39,21 @@ int64_t RowCount(const spu::Value& value) {
   return value.shape().size() > 0 ? value.shape()[0] : value.numel();
 }
 
+using ScanFn = std::function<std::pair<spu::Value, spu::Value>(
+    const spu::Value&, const spu::Value&, const spu::Value&,
+    const spu::Value&)>;
 using IndexTuple = std::pair<spu::Index, spu::Index>;
+using ScanFnParallel = std::function<void(IndexTuple&)>;
 
 // Implements the most naive version of prefix sum tree structure.
 // Refer to
 // "Circuit representation of a work-efficient 16-input parallel prefix sum"
 // https://en.wikipedia.org/wiki/Prefix_sum#/media/File:Prefix_sum_16.svg
-std::vector<IndexTuple> GenScanIndex(std::size_t n) {
-  std::vector<IndexTuple> ret;
+void ScanParallel(std::size_t n, const ScanFnParallel& parallel_fn) {
   size_t k = absl::bit_width(n - 1u);
 
   if (n < 2) {
-    return ret;
+    return;
   }
 
   for (size_t i = 1; i < (k + 1); i++) {
@@ -60,7 +63,7 @@ std::vector<IndexTuple> GenScanIndex(std::size_t n) {
       it.second.emplace_back(j - (1 << (i - 1)));
     }
     if (!it.first.empty()) {
-      ret.emplace_back(it);
+      parallel_fn(it);
     }
   }
 
@@ -72,11 +75,10 @@ std::vector<IndexTuple> GenScanIndex(std::size_t n) {
     }
 
     if (!it.first.empty()) {
-      ret.emplace_back(it);
+      parallel_fn(it);
     }
   }
-
-  return ret;
+  return;
 }
 
 // IN  GroupMask: 1 means end of the group while 0 means other conditions.
@@ -98,10 +100,6 @@ spu::Value TransferGroupMask(spu::SPUContext* ctx, const spu::Value& in) {
       0);
 }
 
-using ScanFn = std::function<std::pair<spu::Value, spu::Value>(
-    const spu::Value&, const spu::Value&, const spu::Value&,
-    const spu::Value&)>;
-
 // Reference: "Scape: Scalable Collaborative Analytics System on Private
 // Database with Malicious Security", Fig. 13
 //
@@ -110,8 +108,7 @@ spu::Value Scan(spu::SPUContext* ctx, const spu::Value& origin_value,
   const int64_t row_cnt = origin_value.shape()[0];
   spu::Value group_mask = TransferGroupMask(ctx, origin_group_mask);
   spu::Value value = origin_value.clone();
-  const std::vector<IndexTuple> indices = GenScanIndex(row_cnt);
-  for (const auto& index_tuple : indices) {
+  auto parallel_scan_fn = [&](IndexTuple& index_tuple) {
     auto lhs_v = spu::kernel::hlo::LinearGather(ctx, value, index_tuple.first);
     auto lhs_gm =
         spu::kernel::hlo::LinearGather(ctx, group_mask, index_tuple.first);
@@ -129,8 +126,8 @@ spu::Value Scan(spu::SPUContext* ctx, const spu::Value& origin_value,
                                            index_tuple.first);
     spu::kernel::hlo::LinearScatterInPlace(ctx, group_mask, new_gm,
                                            index_tuple.first);
-  }
-
+  };
+  ScanParallel(row_cnt, parallel_scan_fn);
   return value;
 }
 

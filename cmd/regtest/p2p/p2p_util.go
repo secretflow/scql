@@ -1,4 +1,4 @@
-// Copyright 2023 Ant Group Co., Ltd.
+// Copyright 2024 Ant Group Co., Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,24 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package p2p_test
+package p2p
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
-	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v2"
 
 	"github.com/secretflow/scql/cmd/regtest"
-	"github.com/secretflow/scql/pkg/broker/application"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
-	"github.com/secretflow/scql/pkg/scdb/config"
 	"github.com/secretflow/scql/pkg/util/brokerutil"
 	"github.com/secretflow/scql/pkg/util/mock"
 )
@@ -44,8 +40,9 @@ const (
 const (
 	concurrentNum = 5
 	// timeout send request to intra broker
-	timeoutS        = 60
-	fetchIntervalMs = 100
+	timeoutS      = 60
+	fetchInterval = 100 * time.Millisecond
+	maxFetchCount = 1000
 	// party code
 	alice = "alice"
 	bob   = "bob"
@@ -65,9 +62,12 @@ var (
 	// test tables
 	tables = []string{"members", "column_privs", "columns", "tables", "invitations", "projects"}
 	dbs    = []string{"brokera", "brokerb", "brokerc"}
+
+	// test cases names, empty caseNames means all cases will be tested
+	caseNames stringArrayFlag
 )
 
-type testConfig struct {
+type TestConfig struct {
 	SkipCreateTableCCL   bool   `yaml:"skip_create_table_ccl"`
 	SkipConcurrentTest   bool   `yaml:"skip_concurrent_test"`
 	SkipPlaintextCCLTest bool   `yaml:"skip_plaintext_ccl_test"`
@@ -79,16 +79,36 @@ type testConfig struct {
 }
 
 var (
-	testConf *testConfig
+	testConf *TestConfig
 )
 
-type testFlag struct {
-	sync           bool
-	testConcurrent bool
-	testSerial     bool
+type TestFlag struct {
+	Sync           bool
+	TestConcurrent bool
+	TestSerial     bool
 }
 
-func readConf(path string) (*testConfig, error) {
+type fetchConf struct {
+	maxFetchCount int
+	fetchInterval time.Duration
+}
+
+type stringArrayFlag []string
+
+func (s *stringArrayFlag) String() string {
+	return strings.Join(*s, ",")
+}
+
+func (s *stringArrayFlag) Set(value string) error {
+	*s = append(*s, value)
+	return nil
+}
+
+func NewFetchConf(maxFetchCount int, fetchInterval time.Duration) *fetchConf {
+	return &fetchConf{maxFetchCount: maxFetchCount, fetchInterval: fetchInterval}
+}
+
+func ReadConf(path string) (*TestConfig, error) {
 	if len(path) == 0 {
 		return nil, fmt.Errorf("failed due to no conf file for p2p regtest")
 	}
@@ -98,14 +118,14 @@ func readConf(path string) (*testConfig, error) {
 		return nil, fmt.Errorf("failed to read test conf file %s: %v", path, err)
 	}
 
-	conf := &testConfig{}
+	conf := &TestConfig{}
 	if err := yaml.Unmarshal(content, conf); err != nil {
 		return nil, fmt.Errorf("failed to parse test conf: %v", err)
 	}
 	return conf, nil
 }
 
-func getUrlList(conf *testConfig) error {
+func GetUrlList(conf *TestConfig) error {
 	addrStr := conf.BrokerAddrs
 	addrs := strings.Split(addrStr, Deliminator)
 	httpProtocol := conf.HttpProtocol
@@ -131,91 +151,6 @@ func getUrlList(conf *testConfig) error {
 	return nil
 }
 
-func TestMain(m *testing.M) {
-	confFile := flag.String("conf", "", "/path/to/conf")
-	flag.Parse()
-	var err error
-	testConf, err = readConf(*confFile)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(1)
-	}
-	projectName = fmt.Sprintf("scdb_%s", testConf.SpuProtocol)
-	if len(testConf.BrokerAddrs) == 0 {
-		fmt.Println("Skipping testing due to empty BrokerAddrs")
-		return
-	}
-
-	mysqlConf := &config.StorageConf{
-		ConnStr:         testConf.MySQLConnStr,
-		MaxOpenConns:    100,
-		MaxIdleConns:    10,
-		ConnMaxIdleTime: 120,
-		ConnMaxLifetime: 3000,
-	}
-	if err := testDataSource.ConnDB(mysqlConf); err != nil {
-		fmt.Printf("connect mysql(%s) failed\n", testConf.MySQLConnStr)
-		panic(err)
-	}
-	os.Exit(m.Run())
-}
-
-func TestRunQueryWithNormalCCL(t *testing.T) {
-	r := require.New(t)
-
-	r.NoError(clearData())
-	r.NoError(getUrlList(testConf))
-	mockTables, err := mock.MockAllTables()
-	r.NoError(err)
-	regtest.FillTableToPartyCodeMap(mockTables)
-	cclList, err := mock.MockAllCCL()
-	r.NoError(err)
-	r.NoError(createProjectTableAndCcl(testConf.ProjectConf, cclList, testConf.SkipCreateTableCCL))
-	r.NoError(runQueryTest(alice, testConf.SpuProtocol, testFlag{sync: false, testConcurrent: !testConf.SkipConcurrentTest, testSerial: true}))
-	r.NoError(runQueryTest(alice, testConf.SpuProtocol, testFlag{sync: true, testConcurrent: !testConf.SkipConcurrentTest, testSerial: true}))
-
-	r.NoError(runQueryTestSessionExpired(alice, 1, 100))
-	r.Error(runQueryTestSessionExpired(alice, 10, 1))
-}
-
-func TestConcurrentModifyProject(t *testing.T) {
-	r := require.New(t)
-	r.NoError(clearData())
-	err := getUrlList(testConf)
-	r.NoError(err)
-	mockTables, err := mock.MockAllTables()
-	r.NoError(err)
-	regtest.FillTableToPartyCodeMap(mockTables)
-	if testConf.SkipConcurrentTest {
-		return
-	}
-	cclList, err := mock.MockAllCCL()
-	r.NoError(err)
-	testN := 1000
-	// mock project id
-	var projectIDs []string
-	for i := 0; i < testN; i++ {
-		projectID, err := application.GenerateProjectID()
-		r.NoError(err)
-		projectIDs = append(projectIDs, projectID)
-	}
-	outCh := make(chan error, testN)
-	inChan := make(chan int, concurrentNum)
-	go func() {
-		for _, id := range projectIDs {
-			inChan <- 0
-			go func(id string) {
-				err := concurrentModifyProjectTableAndCcl(id, testConf.ProjectConf, cclList)
-				outCh <- err
-				<-inChan
-			}(id)
-		}
-	}()
-	for i := 0; i < testN; i++ {
-		r.NoError(<-outCh)
-	}
-}
-
 func runQueryTestSessionExpired(user string, sleepSeconds int, sessionExpireSeconds int) error {
 	sql := "select plain_int_0, plain_datetime_0, plain_timestamp_0 from alice_tbl_1;"
 	jobID, err := stubMap[user].CreateJob(projectName, sql, &scql.DebugOptions{EnablePsiDetailLog: false}, fmt.Sprintf(`{"session_expire_seconds": %v}`, sessionExpireSeconds))
@@ -229,19 +164,18 @@ func runQueryTestSessionExpired(user string, sleepSeconds int, sessionExpireSeco
 	return err
 }
 
-func runQueryTest(user string, spu_protocol string, flags testFlag) (err error) {
-	fmt.Printf("test protocol: %s\n", spu_protocol)
-	path := map[string][]string{SEMI2K: {"../testdata/single_party.json", "../testdata/single_party_postgres.json", "../testdata/two_parties.json", "../testdata/multi_parties.json"}, CHEETAH: {"../testdata/two_parties.json"}, ABY3: {"../testdata/multi_parties.json"}}
+func runQueryTest(user string, spu_protocol string, flags TestFlag, path map[string][]string) (err error) {
+	fmt.Printf("test protocol: %s, sync=%v\n", spu_protocol, flags.Sync)
 	for _, fileName := range path[spu_protocol] {
-		if flags.testSerial {
+		if flags.TestSerial {
 			// use alice as issuer
-			if err := testCaseForSerial(fileName, flags.sync, user); err != nil {
+			if err := testCaseForSerial(fileName, flags.Sync, user); err != nil {
 				return err
 			}
 		}
-		if flags.testConcurrent {
+		if flags.TestConcurrent {
 			// use alice as issuer
-			if err := testCaseForConcurrent(fileName, flags.sync, user); err != nil {
+			if err := testCaseForConcurrent(fileName, flags.Sync, user); err != nil {
 				return err
 			}
 		}
@@ -249,25 +183,74 @@ func runQueryTest(user string, spu_protocol string, flags testFlag) (err error) 
 	return nil
 }
 
+func genComment(name, query, path string) string {
+	return fmt.Sprintf("Test case[%s], query=[%s] in testfile '%s'", name, query, path)
+}
+
+func filterQueries(queries []regtest.QueryCase, caseNames []string) ([]regtest.QueryCase, []string) {
+	if len(caseNames) == 0 {
+		return queries, nil
+	}
+
+	sort.Slice(queries, func(i, j int) bool {
+		return queries[i].Name < queries[j].Name
+	})
+
+	sort.Slice(caseNames, func(i, j int) bool {
+		return caseNames[i] < caseNames[j]
+	})
+
+	queryIndex := 0
+	nameIndex := 0
+	var filtered []regtest.QueryCase
+	var unmatchedNames []string
+	for queryIndex < len(queries) && nameIndex < len(caseNames) {
+		if queries[queryIndex].Name == caseNames[nameIndex] {
+			filtered = append(filtered, queries[queryIndex])
+			queryIndex++
+			nameIndex++
+		} else if queries[queryIndex].Name < caseNames[nameIndex] {
+			queryIndex++
+		} else {
+			unmatchedNames = append(unmatchedNames, caseNames[nameIndex])
+			nameIndex++
+		}
+	}
+	for nameIndex < len(caseNames) {
+		unmatchedNames = append(unmatchedNames, caseNames[nameIndex])
+		nameIndex++
+	}
+
+	return filtered, unmatchedNames
+}
+
 func testCaseForSerial(dataPath string, sync bool, issuer string) error {
 	var suit regtest.QueryTestSuit
 	if err := createSuit(dataPath, &suit); err != nil {
 		return err
 	}
-	for i, query := range suit.Queries {
-		comment := fmt.Sprintf("For query='%s', name='%s' in testfile='%s'", query.Query, query.Name, dataPath)
-		answer, err := runSql(stubMap[issuer], query.Query, sync, "{}")
+	filtered, unmatchedNames := filterQueries(suit.Queries, caseNames)
+	if len(unmatchedNames) > 0 {
+		fmt.Printf("testfile: %s, unmatched case names: %s\n", dataPath, strings.Join(unmatchedNames, ", "))
+	}
+	for i, query := range filtered {
+		comment := genComment(query.Name, query.Query, dataPath)
+		answer, err := runSql(stubMap[issuer], query.Query, sync, "{}", NewFetchConf(maxFetchCount, fetchInterval))
 		if err != nil {
 			return fmt.Errorf("%s Error Info (%s)", comment, err)
 		}
 		if err = regtest.CheckResult(testDataSource, query.Result, answer, query.MySQLQuery, comment); err != nil {
 			return err
 		}
-		fmt.Printf("testfile: %s, sync: %v, issuer: %s, serial execution", dataPath, sync, issuer)
-		percent := int64(float32(i+1) / float32(len(suit.Queries)) * 100)
-		fmt.Printf(" %d%% (%v/%v)\r", percent, i+1, len(suit.Queries))
+
+		fmt.Printf("\x1b[2K\r")
+		fmt.Printf("testfile: %s, sync: %v, issuer: %s, case name: [%s], serial execution", dataPath, sync, issuer, query.Name)
+		percent := int64(float32(i+1) / float32(len(filtered)) * 100)
+		fmt.Printf(" %d%% (%v/%v)", percent, i+1, len(filtered))
 	}
-	fmt.Println()
+	if len(filtered) > 0 {
+		fmt.Println()
+	}
 	return nil
 }
 
@@ -278,7 +261,11 @@ func testCaseForConcurrent(dataPath string, sync bool, issuer string) error {
 	}
 	inChan := make(chan int, concurrentNum)
 	outChan := make(chan error)
-	for i, query := range suit.Queries {
+	filtered, unmatchedNames := filterQueries(suit.Queries, caseNames)
+	if len(unmatchedNames) > 0 {
+		fmt.Printf("testfile: %s, unmatched case names: %s\n", dataPath, strings.Join(unmatchedNames, ", "))
+	}
+	for i, query := range filtered {
 		go func(num int, testCase regtest.QueryCase) {
 			var err error
 			inChan <- num
@@ -286,8 +273,8 @@ func testCaseForConcurrent(dataPath string, sync bool, issuer string) error {
 				outChan <- err
 				<-inChan
 			}()
-			comment := fmt.Sprintf("For query='%s', name='%s' in testfile='%s'", testCase.Query, testCase.Name, dataPath)
-			answer, err := runSql(stubMap[issuer], testCase.Query, sync, "{}")
+			comment := genComment(query.Name, query.Query, dataPath)
+			answer, err := runSql(stubMap[issuer], testCase.Query, sync, "{}", NewFetchConf(maxFetchCount, fetchInterval))
 			if err != nil {
 				return
 			}
@@ -296,16 +283,20 @@ func testCaseForConcurrent(dataPath string, sync bool, issuer string) error {
 			}
 		}(i, query)
 	}
-	for i := range suit.Queries {
+
+	for i := range filtered {
 		err := <-outChan
 		if err != nil {
 			return err
 		}
-		fmt.Printf("testfile: %s, sync: %v, issuer: %s, concurrent execution ", dataPath, sync, issuer)
-		percent := int64(float32(i+1) / float32(len(suit.Queries)) * 100)
-		fmt.Printf("%d%% (%v/%v)\r", percent, i+1, len(suit.Queries))
+		fmt.Printf("\x1b[2K\r")
+		fmt.Printf("testfile: %s, sync: %v, issuer: %s, concurrent execution", dataPath, sync, issuer)
+		percent := int64(float32(i+1) / float32(len(filtered)) * 100)
+		fmt.Printf(" %d%% (%v/%v)", percent, i+1, len(filtered))
 	}
-	fmt.Println()
+	if len(filtered) > 0 {
+		fmt.Println()
+	}
 	return nil
 }
 
@@ -334,9 +325,9 @@ func columnControlVisibilityToConstraint(level scql.SecurityConfig_ColumnControl
 	return scql.Constraint(scql.Constraint_value[scql.SecurityConfig_ColumnControl_Visibility_name[int32(level)]])
 }
 
-func createProjectTableAndCcl(projectConf string, cclList []*scql.SecurityConfig_ColumnControl, skipCreate bool) error {
+func CreateProjectTableAndCcl(projectConf string, cclList []*scql.SecurityConfig_ColumnControl, skipCreate bool) error {
 	if skipCreate {
-		fmt.Println("skip func createProjectTableAndCcl")
+		fmt.Println("skip func CreateProjectTableAndCcl")
 		return nil
 	}
 	// create project
@@ -472,10 +463,10 @@ func concurrentModifyProjectTableAndCcl(projectID, projectConf string, cclList [
 		}
 		go func(tableName string, ccls []*scql.ColumnControl) {
 			tableOwner := regtest.TableToPartyCode[tableName]
-			fmt.Println("Create Table...")
+			// fmt.Println("Create Table...")
 			err = stubMap[tableOwner].CreateTable(projectID, tableName, pt.DBType, pt.RefTable(), pt.GetColumnDesc())
 			errCh <- err
-			fmt.Println("Grant CCL...")
+			// fmt.Println("Grant CCL...")
 			err = stubMap[tableOwner].GrantCCL(projectID, ccls)
 			errCh <- err
 		}(tableName, ccls)
@@ -509,7 +500,7 @@ func concurrentModifyProjectTableAndCcl(projectID, projectConf string, cclList [
 	for tableName, ccls := range tableExistMap {
 		go func(tableName string, ccls []*scql.ColumnControl) {
 			tableOwner := regtest.TableToPartyCode[tableName]
-			fmt.Println("Drop Table...")
+			// fmt.Println("Drop Table...")
 			err = stubMap[tableOwner].DeleteTable(projectID, tableName)
 			errCh <- err
 		}(tableName, ccls)
@@ -520,7 +511,7 @@ func concurrentModifyProjectTableAndCcl(projectID, projectConf string, cclList [
 			return err
 		}
 	}
-	fmt.Println()
+	// fmt.Println()
 	return nil
 }
 
@@ -555,7 +546,11 @@ func processInvitation(stub *brokerutil.Command, projectID string) error {
 	return stub.ProcessInvitation(fmt.Sprintf("%d", inviteId), true)
 }
 
-func runSql(command *brokerutil.Command, sql string, sync bool, jobConf string) ([]*scql.Tensor, error) {
+func RunSql(issuer string, sql string, jobConf string, fc *fetchConf) ([]*scql.Tensor, error) {
+	return runSql(stubMap[issuer], sql, false, jobConf, fc)
+}
+
+func runSql(command *brokerutil.Command, sql string, sync bool, jobConf string, fc *fetchConf) ([]*scql.Tensor, error) {
 	if sync {
 		resp, err := command.DoQuery(projectName, sql, &scql.DebugOptions{EnablePsiDetailLog: false}, jobConf)
 		if err != nil {
@@ -570,11 +565,8 @@ func runSql(command *brokerutil.Command, sql string, sync bool, jobConf string) 
 		if err != nil {
 			return nil, err
 		}
-		count := 0
-		for {
-			if fetchIntervalMs*count > timeoutS*1000 {
-				return nil, fmt.Errorf("fetch result timeout")
-			}
+
+		for count := 0; count < fc.maxFetchCount; count++ {
 			resp, err := command.GetResult(jobID)
 			if err != nil {
 				return nil, err
@@ -582,23 +574,57 @@ func runSql(command *brokerutil.Command, sql string, sync bool, jobConf string) 
 			if resp.GetStatus().GetCode() == int32(scql.Code_OK) {
 				return resp.GetResult().GetOutColumns(), nil
 			} else if resp.GetStatus().GetCode() == int32(scql.Code_NOT_READY) {
-				count++
-				time.Sleep(fetchIntervalMs * time.Millisecond)
+				time.Sleep(fc.fetchInterval)
 			} else {
 				return nil, fmt.Errorf("GetResult status: %v", resp.GetStatus())
 			}
 		}
+		return nil, fmt.Errorf("fetch result timeout")
 	}
 }
 
-func clearData() error {
+func ClearData(ds *regtest.TestDataSource) error {
 	for _, dbName := range dbs {
 		for _, tableName := range tables {
-			err := testDataSource.TruncateTable(fmt.Sprintf("%s.%s", dbName, tableName))
+			err := ds.TruncateTable(fmt.Sprintf("%s.%s", dbName, tableName))
 			if err != nil {
 				return err
 			}
 		}
+	}
+	return nil
+}
+
+func validateParticipant(stub *brokerutil.Command) (err error) {
+	maxRetries := 8
+	retryDelay := 8 * time.Second
+	var empty_ids []string
+	for i := 0; i < maxRetries; i++ {
+		_, err := stub.CheckAndUpdateStatus(empty_ids)
+		if err == nil {
+			return nil
+		}
+		if i == maxRetries-1 {
+			return err
+		} else {
+			time.Sleep(retryDelay)
+		}
+	}
+	return err
+}
+
+func ValidateAllParticipants() (err error) {
+	if err = GetUrlList(testConf); err != nil {
+		return err
+	}
+	if err = validateParticipant(aliceStub); err != nil {
+		return err
+	}
+	if err = validateParticipant(bobStub); err != nil {
+		return err
+	}
+	if err = validateParticipant(carolStub); err != nil {
+		return err
 	}
 	return nil
 }

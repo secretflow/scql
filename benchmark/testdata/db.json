@@ -1,0 +1,10 @@
+{
+  "db_info": {
+    "alice": {
+      "party_code": "alice",
+      "db_type": "CSVDB"
+    },
+    "bob": { "party_code": "bob", "db_type": "CSVDB" }
+  },
+  "table_files": ["table_alice.json", "table_bob.json"]
+}

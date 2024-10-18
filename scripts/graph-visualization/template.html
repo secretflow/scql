@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Graph Visualization</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        .node circle {
+            cursor: pointer;
+        }
+
+        .node text {
+            font: 12px sans-serif;
+            pointer-events: none;
+            fill: #333;
+        }
+
+        .link {
+            fill: none;
+            stroke: #999;
+            stroke-width: 2px;
+            cursor: pointer;
+        }
+
+        .arrowhead {
+            fill: #999;
+        }
+
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            width: auto;
+            height: auto;
+            padding: 8px;
+            font: 12px sans-serif;
+            background: lightsteelblue;
+            border: 1px solid #aaa;
+            border-radius: 4px;
+            pointer-events: none;
+            opacity: 0;
+            white-space: pre-wrap;
+        }
+
+        .legend text {
+            font: 12px sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="tooltip" class="tooltip"></div>
+    <script>
+        const data = {
+            // Your nodes and links here
+        };
+
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        // Calculate each node's level
+        function calculateNodeLevels(nodes, links) {
+            const nodeLevels = {};
+            const inDegree = {};
+            const nodesSet = new Set(nodes.map(d => d.id));
+
+            nodes.forEach(node => {
+                inDegree[node.id] = 0;
+            });
+
+            links.forEach(link => {
+                inDegree[link.target]++;
+            });
+
+            let currentLevel = 0;
+            let maxLevel = 0;
+            while (nodesSet.size > 0) {
+                const currentLevelNodes = Array.from(nodesSet).filter(node => inDegree[node] === 0);
+                currentLevelNodes.forEach(node => {
+                    nodeLevels[node] = currentLevel;
+                    nodesSet.delete(node);
+                    links.forEach(link => {
+                        if (link.source === node) {
+                            inDegree[link.target]--;
+                        }
+                    });
+                });
+                maxLevel = currentLevel;
+                currentLevel++;
+            }
+            return { nodeLevels, levels: maxLevel + 1 };
+        }
+        const { nodeLevels, levels } = calculateNodeLevels(data.nodes, data.links);
+        const levelHeight = levels > 10 ? height * 2 / levels : height / levels;
+
+        // Combine links with the same source and target
+        const combinedLinks = {};
+        data.links.forEach(link => {
+            const key = `${link.source}-${link.target}`;
+            if (combinedLinks[key]) {
+                combinedLinks[key].label += `\n${link.label}`;
+            } else {
+                combinedLinks[key] = { ...link };
+            }
+        });
+        const combinedLinksArray = Object.values(combinedLinks);
+
+        const colors = d3.schemeCategory10.filter(c => c !== '#ff0000'); // Excluding red
+        const partyColors = {};
+        let colorIndex = 0;
+
+        data.nodes.forEach(node => {
+            const parties = node.label.match(/party:\[([^\]]+)\]/);
+            if (parties) {
+                const partyList = parties[1].split(',').map(party => party.trim()).slice(0, -1); // Exclude the last element
+                if (partyList.length === 1) {
+                    const party = partyList[0];
+                    if (!partyColors[party]) {
+                        partyColors[party] = colors[colorIndex % colors.length];
+                        colorIndex++;
+                    }
+                } else {
+                    partyColors[partyList.join(',')] = '#ff0000'; // Use red for nodes with multiple parties
+                }
+            }
+        });
+
+        // Adjust node levels based on the minimum target level
+        data.nodes.forEach(d => {
+            const linkedTargets = combinedLinksArray.filter(link => link.source === d.id).map(link => nodeLevels[link.target]);
+            const minTargetLevel = d3.min(linkedTargets);
+            const nodeLevel = nodeLevels[d.id];
+            if (minTargetLevel - nodeLevel > 1) {
+                nodeLevels[d.id] = minTargetLevel - 1;
+            }
+        });
+
+        // Add random x offset to nodes to avoid overlap
+        const xOffset = 20;
+        data.nodes.forEach(d => {
+            d.xOffset = (Math.random() - 0.5) * xOffset;
+        });
+
+        const svg = d3.select("body").append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .call(d3.zoom().on("zoom", (event) => {
+                svg.attr("transform", event.transform);
+            }))
+            .append("g");
+
+        // Define arrowhead marker
+        svg.append("defs").append("marker")
+            .attr("id", "arrowhead")
+            .attr("viewBox", "-0 -5 10 10")
+            .attr("refX", 13)
+            .attr("refY", 0)
+            .attr("orient", "auto")
+            .attr("markerWidth", 6)
+            .attr("markerHeight", 6)
+            .attr("xoverflow", "visible")
+            .append("svg:path")
+            .attr("d", "M 0,-5 L 10 ,0 L 0,5")
+            .attr("class", "arrowhead");
+
+        const tooltip = d3.select("#tooltip");
+
+        // Initialize simulation
+        const simulation = d3.forceSimulation(data.nodes)
+            .force("link", d3.forceLink(combinedLinksArray).id(d => d.id).distance(250))
+            .force("charge", d3.forceManyBody().strength(-500))
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .force("y", d3.forceY().strength(1).y(d => levelHeight * (nodeLevels[d.id] + 1)))
+            .force("x", d3.forceX().strength(1).x(d => {
+                const sameLevelNodes = data.nodes.filter(node => nodeLevels[node.id] === nodeLevels[d.id]);
+                const index = sameLevelNodes.indexOf(d);
+                const xSpacing = width / (sameLevelNodes.length + 1);
+                return xSpacing * (index + 1) + d.xOffset; // Apply random offset
+            }))
+            .alphaTarget(0.3)
+            .on("tick", ticked);
+
+        // Create links
+        const link = svg.append("g")
+            .attr("class", "links")
+            .selectAll("g")
+            .data(combinedLinksArray)
+            .enter().append("g")
+            .attr("class", "link");
+
+        const linkLine = link.append("line")
+            .attr("id", (d, i) => `link${i}`)
+            .attr("marker-end", "url(#arrowhead)")
+            .on("mouseover", function (event, d) {
+                tooltip.transition()
+                    .duration(200)
+                    .style("opacity", .9);
+                tooltip.html(d.label)
+                    .style("left", (event.pageX + 5) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            })
+            .on("mouseout", function (d) {
+                tooltip.transition()
+                    .duration(500)
+                    .style("opacity", 0);
+            });
+
+        // Create nodes
+        const node = svg.append("g")
+            .attr("class", "nodes")
+            .selectAll("g")
+            .data(data.nodes)
+            .enter().append("g")
+            .attr("class", "node")
+            .on("mouseover", function (event, d) {
+                tooltip.transition()
+                    .duration(200)
+                    .style("opacity", .9);
+                tooltip.html(d.label)
+                    .style("left", (event.pageX + 5) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            })
+            .on("mouseout", function (d) {
+                tooltip.transition()
+                    .duration(500)
+                    .style("opacity", 0);
+            });
+
+        node.append("circle")
+            .attr("r", 10)
+            .attr("fill", d => {
+                const parties = d.label.match(/party:\[([^\]]+)\]/);
+                if (parties) {
+                    const partyList = parties[1].split(',').map(party => party.trim()).slice(0, -1); // Exclude the last element
+                    if (partyList.length === 1) {
+                        return partyColors[partyList[0]];
+                    } else {
+                        return '#ff0000';
+                    }
+                }
+                return '#69b3a2'; // Default color if no party is specified
+            });
+
+        node.append("text")
+            .attr("dy", -3)
+            .attr("x", 15)
+            .text(d => d.label.split(":")[0]);
+
+        // Create legend
+        const legend = svg.append("g")
+            .attr("class", "legend")
+            .attr("transform", "translate(20, 20)");
+        Object.entries(partyColors).forEach(([party, color], i) => {
+            const legendRow = legend.append("g")
+                .attr("transform", `translate(0, ${i * 20})`);
+
+            legendRow.append("rect")
+                .attr("width", 18)
+                .attr("height", 18)
+                .attr("fill", color);
+
+            legendRow.append("text")
+                .attr("x", 24)
+                .attr("y", 9)
+                .attr("dy", "0.35em")
+                .text(party);
+        });
+
+        function ticked() {
+            linkLine
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+
+            node
+                .attr("transform", d => `translate(${d.x},${d.y})`);
+        }
+    </script>
+</body>
+
+</html>

@@ -43,6 +43,14 @@ func NewEngineClientConn(endpoint, credential string, tlsCfg *config.TLSConf) (*
 	grpcDialOpts := []grpc.DialOption{
 		grpc.WithUnaryInterceptor(grpcClientCredentialInterceptor(credential)),
 		grpc.WithTransportCredentials(creds),
+		// FLOW_CONTROL_ERROR is encountered when the window size is small.
+		// brpc issue: https://github.com/apache/brpc/issues/1087
+		grpc.WithInitialWindowSize(1 << 30),
+		grpc.WithInitialConnWindowSize(1 << 30),
+		grpc.WithDefaultCallOptions(
+			grpc.MaxCallRecvMsgSize(1<<30),
+			grpc.MaxCallSendMsgSize(1<<30),
+		),
 	}
 	return grpc.NewClient(endpoint, grpcDialOpts...)
 }

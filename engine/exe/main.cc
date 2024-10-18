@@ -343,14 +343,6 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  scql::engine::ErrorCollectorServiceImpl err_svc(
-      engine_svc->GetSessionManager());
-  SPDLOG_INFO("Adding ErrorCollectorService into brpc server");
-  if (server.AddService(&err_svc, brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
-    SPDLOG_ERROR("Fail to add ErrorCollectorService to server");
-    return -1;
-  }
-
   scql::engine::MetricsService metrics_exposer;
   metrics_exposer.RegisterCollectable(
       scql::engine::util::PrometheusMonitor::GetInstance()->GetRegistry());
@@ -361,6 +353,9 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
+  scql::engine::ErrorCollectorServiceImpl err_svc(
+      engine_svc->GetSessionManager());
+
   brpc::Server link_svr;
   scql::engine::MuxReceiverServiceImpl rcv_svc(&listener_manager);
   if (!FLAGS_enable_separate_link_port) {
@@ -369,10 +364,20 @@ int main(int argc, char* argv[]) {
       SPDLOG_ERROR("Fail to add MuxReceiverService to main server");
       return -1;
     }
+    SPDLOG_INFO("Adding ErrorCollectorService into main server...");
+    if (server.AddService(&err_svc, brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
+      SPDLOG_ERROR("Fail to add ErrorCollectorService to server");
+      return -1;
+    }
   } else {
     SPDLOG_INFO("Adding MuxReceiverService into seperate link server...");
     if (link_svr.AddService(&rcv_svc, brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
       SPDLOG_ERROR("Fail to add MuxReceiverService to seperate link server");
+      return -1;
+    }
+    SPDLOG_INFO("Adding ErrorCollectorService into seperate link server...");
+    if (link_svr.AddService(&err_svc, brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
+      SPDLOG_ERROR("Fail to add ErrorCollectorService to seperate link server");
       return -1;
     }
   }

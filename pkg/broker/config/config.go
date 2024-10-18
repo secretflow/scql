@@ -27,7 +27,7 @@ import (
 
 const (
 	DefaultSessionExpireTime            = 24 * time.Hour    // 24 hours
-	DefaultSessionCheckInterval         = 1 * time.Minute   // 1 minute
+	DefaultSessionCheckInterval         = 30 * time.Minute  // 30 minute
 	DefaultEngineClientTimeout          = 120 * time.Second // 120s
 	DefaultInterTimeout                 = 5 * time.Second   // 5s
 	DefaultBrokerIntraServerHost        = "127.0.0.1"       // default use localhost for safety
@@ -35,6 +35,7 @@ const (
 	DefaultEngineProtocol               = "http"
 	DefaultExchangeJobInfoRetryTimes    = 3
 	DefaultExchangeJobInfoRetryInterval = 200 * time.Millisecond
+	DefaultEngineClientMode             = "GRPC"
 )
 
 type SecurityCompromiseConf struct {
@@ -126,6 +127,7 @@ type StorageConf struct {
 }
 
 type EngineConfig struct {
+	ClientMode    string        `yaml:"mode"`
 	ClientTimeout time.Duration `yaml:"timeout"`
 	Protocol      string        `yaml:"protocol"`
 	TLSCfg        TLSConf       `yaml:"tls_cfg"`
@@ -207,6 +209,7 @@ func newDefaultConfig() *Config {
 		ConnMaxLifetime: -1,
 	}
 	config.Engine = EngineConfig{
+		ClientMode:    DefaultEngineClientMode,
 		ClientTimeout: DefaultEngineClientTimeout,
 		Protocol:      DefaultEngineProtocol,
 		KusciaSchedulerOption: &KusciaSchedulerConf{
@@ -238,7 +241,7 @@ func LoadTLSConfig(mode, cacertPath, certPath, keyPath string) (*tls.Config, err
 	case MutualTLS:
 		cert, err := tls.LoadX509KeyPair(certPath, keyPath)
 		if err != nil {
-			return nil, fmt.Errorf("failed to load key pair")
+			return nil, fmt.Errorf("failed to load X509 key pair: %w", err)
 		}
 
 		tlsConfig = &tls.Config{

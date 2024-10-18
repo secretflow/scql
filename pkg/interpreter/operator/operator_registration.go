@@ -950,6 +950,22 @@ Out = {0, 1, NULL}
 			AllOpDef = append(AllOpDef, opDef)
 		}
 	}
+
+	{
+		opDef := &OperatorDef{}
+		opDef.SetName(OpNameRowNumber)
+		opDef.SetStreamingType(SinkOp)
+		opDef.AddInput("Key", "the tensors which used for sorting in partition, e.g. [2,0,4,2,3,7]", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.AddInput("PartitionId", "the partitioned id, e.g. [0,0,0,1,1,1], the first 3 in a group and the others are in another group", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.AddInput("PartitionNum", "the partitioned num, e.g. [2]", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.AddOutput("Out", "row number output, e.g. [2,1,3,1,2,3]", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.SetDefinition("Definition: return the row number in each partition")
+		opDef.AddAttribute(ReverseAttr, `string array consits of "0" and "1", "0" means this input tensor sort by ascending, "1" means this tensor sort by descending.
+		e.g. ["0","1"] means the first input key sort by ascending, the second sort by descending`)
+		opDef.SetParamTypeConstraint(T, statusPrivateOrSecretOrPublic)
+		check(opDef.err)
+		AllOpDef = append(AllOpDef, opDef)
+	}
 }
 
 func GetAllOpDef() ([]*proto.OperatorDef, int) {

@@ -16,31 +16,32 @@ package executor
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 
 	"github.com/secretflow/scql/pkg/interpreter/graph"
 	"github.com/secretflow/scql/pkg/interpreter/graph/optimizer"
-	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	proto "github.com/secretflow/scql/pkg/proto-gen/scql"
-	"github.com/secretflow/scql/pkg/util/message"
 )
 
-type mockWebClient struct {
+type mockGrpcEngineStub struct {
 	sessionId string
 	// url -> OutColumns
 	responses map[string][]*proto.Tensor
 }
 
-func (client mockWebClient) Post(ctx context.Context, url string, credential string, content_type string, body string) (string, error) {
-	resp := &proto.RunExecutionPlanResponse{
-		Status:     &scql.Status{Code: int32(scql.Code_OK)},
+func (client *mockGrpcEngineStub) RunExecutionPlan(url, credential string, executionPlanReq *proto.RunExecutionPlanRequest) (*proto.RunExecutionPlanResponse, error) {
+	return &proto.RunExecutionPlanResponse{
+		Status:     &proto.Status{Code: int32(proto.Code_OK)},
 		JobId:      client.sessionId,
 		OutColumns: client.responses[url],
-	}
-	return message.SerializeTo(resp, message.EncodingTypeJson)
+	}, nil
+}
+
+func (client *mockGrpcEngineStub) Post(ctx context.Context, url, credential, content_type, body string) (string, error) {
+	return "", errors.New("cannot use gRPC engine client to run HTTP method")
 }
 
 func TestSyncExecutor(t *testing.T) {
@@ -60,13 +61,13 @@ func TestSyncExecutor(t *testing.T) {
 	plan := graph.NewGraphBuilder(partyInfo, false)
 
 	t1 := plan.AddTensor("alice.t1")
-	t1.SetStatus(scql.TensorStatus_TENSORSTATUS_PRIVATE)
+	t1.SetStatus(proto.TensorStatus_TENSORSTATUS_PRIVATE)
 	err := plan.AddRunSQLNode("RunSQLOp1", []*graph.Tensor{t1},
 		"select f1 from alice.t1", []string{"alice.t1"}, "alice")
 	a.NoError(err)
 
 	t2 := plan.AddTensor("bob.t2")
-	t2.SetStatus(scql.TensorStatus_TENSORSTATUS_PRIVATE)
+	t2.SetStatus(proto.TensorStatus_TENSORSTATUS_PRIVATE)
 	err = plan.AddRunSQLNode("RunSQLOp2", []*graph.Tensor{t2},
 		"select * from bob.t2", []string{"bob.t2"}, "bob")
 	a.NoError(err)
@@ -82,7 +83,7 @@ func TestSyncExecutor(t *testing.T) {
 	a.NoError(err)
 
 	sessionId := "mock"
-	startParams := &scql.JobStartParams{
+	startParams := &proto.JobStartParams{
 		JobId: sessionId,
 	}
 
@@ -91,13 +92,12 @@ func TestSyncExecutor(t *testing.T) {
 	// only alice publish t1
 	{
 		mockValue := []string{"test"}
-		stub := &EngineStub{
-			protocol: "http",
-		}
-		stub.webClient = mockWebClient{
+
+		stub := &EngineStub{}
+		stub.webClient = &mockGrpcEngineStub{
 			sessionId: sessionId,
 			responses: map[string][]*proto.Tensor{
-				fmt.Sprintf("http://alice.url%v", runExecutionPlanPath): {
+				"alice.url": {
 					{
 						Name:       t1.Name,
 						ElemType:   proto.PrimitiveDataType_STRING,

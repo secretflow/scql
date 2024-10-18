@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-29 19:47+0800\n"
+"POT-Creation-Date: 2024-08-05 10:22+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -41,37 +41,38 @@ msgid "Definition: return the value of arc cosine function"
 msgstr ""
 
 #: ../../reference/operators.md:12 ../../reference/operators.md:36
-#: ../../reference/operators.md:74 ../../reference/operators.md:114
-#: ../../reference/operators.md:148 ../../reference/operators.md:180
-#: ../../reference/operators.md:211 ../../reference/operators.md:256
-#: ../../reference/operators.md:295 ../../reference/operators.md:327
-#: ../../reference/operators.md:351 ../../reference/operators.md:381
-#: ../../reference/operators.md:428 ../../reference/operators.md:467
-#: ../../reference/operators.md:503 ../../reference/operators.md:529
-#: ../../reference/operators.md:559 ../../reference/operators.md:597
-#: ../../reference/operators.md:632 ../../reference/operators.md:669
-#: ../../reference/operators.md:706 ../../reference/operators.md:743
-#: ../../reference/operators.md:780 ../../reference/operators.md:823
-#: ../../reference/operators.md:860 ../../reference/operators.md:897
-#: ../../reference/operators.md:934 ../../reference/operators.md:976
-#: ../../reference/operators.md:1011 ../../reference/operators.md:1060
-#: ../../reference/operators.md:1092 ../../reference/operators.md:1129
-#: ../../reference/operators.md:1179 ../../reference/operators.md:1228
-#: ../../reference/operators.md:1258 ../../reference/operators.md:1297
-#: ../../reference/operators.md:1329 ../../reference/operators.md:1359
-#: ../../reference/operators.md:1389 ../../reference/operators.md:1421
-#: ../../reference/operators.md:1447 ../../reference/operators.md:1473
-#: ../../reference/operators.md:1503 ../../reference/operators.md:1533
-#: ../../reference/operators.md:1563 ../../reference/operators.md:1587
-#: ../../reference/operators.md:1625 ../../reference/operators.md:1659
-#: ../../reference/operators.md:1695 ../../reference/operators.md:1727
-#: ../../reference/operators.md:1761 ../../reference/operators.md:1795
-#: ../../reference/operators.md:1821 ../../reference/operators.md:1855
-#: ../../reference/operators.md:1886 ../../reference/operators.md:1917
-#: ../../reference/operators.md:1948 ../../reference/operators.md:1979
-#: ../../reference/operators.md:2003 ../../reference/operators.md:2042
-#: ../../reference/operators.md:2088 ../../reference/operators.md:2112
-#: ../../reference/operators.md:2144 ../../reference/operators.md:2190
+#: ../../reference/operators.md:74 ../../reference/operators.md:104
+#: ../../reference/operators.md:146 ../../reference/operators.md:180
+#: ../../reference/operators.md:212 ../../reference/operators.md:243
+#: ../../reference/operators.md:288 ../../reference/operators.md:327
+#: ../../reference/operators.md:359 ../../reference/operators.md:383
+#: ../../reference/operators.md:413 ../../reference/operators.md:460
+#: ../../reference/operators.md:499 ../../reference/operators.md:535
+#: ../../reference/operators.md:561 ../../reference/operators.md:591
+#: ../../reference/operators.md:629 ../../reference/operators.md:664
+#: ../../reference/operators.md:701 ../../reference/operators.md:738
+#: ../../reference/operators.md:775 ../../reference/operators.md:812
+#: ../../reference/operators.md:855 ../../reference/operators.md:892
+#: ../../reference/operators.md:929 ../../reference/operators.md:966
+#: ../../reference/operators.md:1008 ../../reference/operators.md:1043
+#: ../../reference/operators.md:1092 ../../reference/operators.md:1124
+#: ../../reference/operators.md:1161 ../../reference/operators.md:1211
+#: ../../reference/operators.md:1260 ../../reference/operators.md:1290
+#: ../../reference/operators.md:1329 ../../reference/operators.md:1361
+#: ../../reference/operators.md:1391 ../../reference/operators.md:1421
+#: ../../reference/operators.md:1453 ../../reference/operators.md:1479
+#: ../../reference/operators.md:1505 ../../reference/operators.md:1535
+#: ../../reference/operators.md:1565 ../../reference/operators.md:1595
+#: ../../reference/operators.md:1619 ../../reference/operators.md:1657
+#: ../../reference/operators.md:1691 ../../reference/operators.md:1727
+#: ../../reference/operators.md:1759 ../../reference/operators.md:1793
+#: ../../reference/operators.md:1827 ../../reference/operators.md:1853
+#: ../../reference/operators.md:1887 ../../reference/operators.md:1918
+#: ../../reference/operators.md:1949 ../../reference/operators.md:1980
+#: ../../reference/operators.md:2011 ../../reference/operators.md:2035
+#: ../../reference/operators.md:2074 ../../reference/operators.md:2120
+#: ../../reference/operators.md:2144 ../../reference/operators.md:2176
+#: ../../reference/operators.md:2222
 msgid "**Inputs:**"
 msgstr "**输入：**"
 
@@ -80,93 +81,95 @@ msgid "`In`(single, T): the expression pass to arc cosine function"
 msgstr "``In`` （单列数组，类型为 T ）：arcosine 的入参 。"
 
 #: ../../reference/operators.md:17 ../../reference/operators.md:43
-#: ../../reference/operators.md:81 ../../reference/operators.md:123
-#: ../../reference/operators.md:153 ../../reference/operators.md:185
-#: ../../reference/operators.md:216 ../../reference/operators.md:261
-#: ../../reference/operators.md:300 ../../reference/operators.md:332
-#: ../../reference/operators.md:358 ../../reference/operators.md:386
-#: ../../reference/operators.md:435 ../../reference/operators.md:474
-#: ../../reference/operators.md:510 ../../reference/operators.md:536
-#: ../../reference/operators.md:566 ../../reference/operators.md:602
-#: ../../reference/operators.md:641 ../../reference/operators.md:678
-#: ../../reference/operators.md:715 ../../reference/operators.md:752
-#: ../../reference/operators.md:789 ../../reference/operators.md:832
-#: ../../reference/operators.md:869 ../../reference/operators.md:906
-#: ../../reference/operators.md:943 ../../reference/operators.md:983
-#: ../../reference/operators.md:1018 ../../reference/operators.md:1065
-#: ../../reference/operators.md:1099 ../../reference/operators.md:1134
-#: ../../reference/operators.md:1186 ../../reference/operators.md:1235
-#: ../../reference/operators.md:1265 ../../reference/operators.md:1302
-#: ../../reference/operators.md:1336 ../../reference/operators.md:1366
-#: ../../reference/operators.md:1394 ../../reference/operators.md:1426
-#: ../../reference/operators.md:1452 ../../reference/operators.md:1480
-#: ../../reference/operators.md:1510 ../../reference/operators.md:1540
-#: ../../reference/operators.md:1568 ../../reference/operators.md:1594
-#: ../../reference/operators.md:1632 ../../reference/operators.md:1666
-#: ../../reference/operators.md:1700 ../../reference/operators.md:1734
-#: ../../reference/operators.md:1768 ../../reference/operators.md:1802
-#: ../../reference/operators.md:1826 ../../reference/operators.md:1860
-#: ../../reference/operators.md:1891 ../../reference/operators.md:1922
-#: ../../reference/operators.md:1953 ../../reference/operators.md:1984
-#: ../../reference/operators.md:2008 ../../reference/operators.md:2047
-#: ../../reference/operators.md:2093 ../../reference/operators.md:2117
-#: ../../reference/operators.md:2151 ../../reference/operators.md:2195
+#: ../../reference/operators.md:81 ../../reference/operators.md:111
+#: ../../reference/operators.md:155 ../../reference/operators.md:185
+#: ../../reference/operators.md:217 ../../reference/operators.md:248
+#: ../../reference/operators.md:293 ../../reference/operators.md:332
+#: ../../reference/operators.md:364 ../../reference/operators.md:390
+#: ../../reference/operators.md:418 ../../reference/operators.md:467
+#: ../../reference/operators.md:506 ../../reference/operators.md:542
+#: ../../reference/operators.md:568 ../../reference/operators.md:598
+#: ../../reference/operators.md:634 ../../reference/operators.md:673
+#: ../../reference/operators.md:710 ../../reference/operators.md:747
+#: ../../reference/operators.md:784 ../../reference/operators.md:821
+#: ../../reference/operators.md:864 ../../reference/operators.md:901
+#: ../../reference/operators.md:938 ../../reference/operators.md:975
+#: ../../reference/operators.md:1015 ../../reference/operators.md:1050
+#: ../../reference/operators.md:1097 ../../reference/operators.md:1131
+#: ../../reference/operators.md:1166 ../../reference/operators.md:1218
+#: ../../reference/operators.md:1267 ../../reference/operators.md:1297
+#: ../../reference/operators.md:1334 ../../reference/operators.md:1368
+#: ../../reference/operators.md:1398 ../../reference/operators.md:1426
+#: ../../reference/operators.md:1458 ../../reference/operators.md:1484
+#: ../../reference/operators.md:1512 ../../reference/operators.md:1542
+#: ../../reference/operators.md:1572 ../../reference/operators.md:1600
+#: ../../reference/operators.md:1626 ../../reference/operators.md:1664
+#: ../../reference/operators.md:1698 ../../reference/operators.md:1732
+#: ../../reference/operators.md:1766 ../../reference/operators.md:1800
+#: ../../reference/operators.md:1834 ../../reference/operators.md:1858
+#: ../../reference/operators.md:1892 ../../reference/operators.md:1923
+#: ../../reference/operators.md:1954 ../../reference/operators.md:1985
+#: ../../reference/operators.md:2016 ../../reference/operators.md:2040
+#: ../../reference/operators.md:2079 ../../reference/operators.md:2125
+#: ../../reference/operators.md:2149 ../../reference/operators.md:2183
+#: ../../reference/operators.md:2227
 msgid "**Outputs:**"
 msgstr "**输出：**"
 
-#: ../../reference/operators.md:19 ../../reference/operators.md:187
-#: ../../reference/operators.md:334 ../../reference/operators.md:985
-#: ../../reference/operators.md:2119
+#: ../../reference/operators.md:19 ../../reference/operators.md:219
+#: ../../reference/operators.md:366 ../../reference/operators.md:1017
+#: ../../reference/operators.md:2151
 msgid "`Out`(single, T): Result"
 msgstr "``Out`` （单列数组，类型为 T ）：结果 。"
 
 #: ../../reference/operators.md:26 ../../reference/operators.md:52
-#: ../../reference/operators.md:90 ../../reference/operators.md:132
-#: ../../reference/operators.md:162 ../../reference/operators.md:194
-#: ../../reference/operators.md:238 ../../reference/operators.md:285
-#: ../../reference/operators.md:317 ../../reference/operators.md:341
-#: ../../reference/operators.md:367 ../../reference/operators.md:418
-#: ../../reference/operators.md:444 ../../reference/operators.md:483
-#: ../../reference/operators.md:519 ../../reference/operators.md:545
-#: ../../reference/operators.md:575 ../../reference/operators.md:613
-#: ../../reference/operators.md:650 ../../reference/operators.md:687
-#: ../../reference/operators.md:724 ../../reference/operators.md:761
-#: ../../reference/operators.md:804 ../../reference/operators.md:841
-#: ../../reference/operators.md:878 ../../reference/operators.md:915
-#: ../../reference/operators.md:952 ../../reference/operators.md:992
-#: ../../reference/operators.md:1048 ../../reference/operators.md:1082
-#: ../../reference/operators.md:1108 ../../reference/operators.md:1143
-#: ../../reference/operators.md:1216 ../../reference/operators.md:1244
-#: ../../reference/operators.md:1274 ../../reference/operators.md:1319
-#: ../../reference/operators.md:1345 ../../reference/operators.md:1375
-#: ../../reference/operators.md:1409 ../../reference/operators.md:1435
-#: ../../reference/operators.md:1461 ../../reference/operators.md:1489
-#: ../../reference/operators.md:1519 ../../reference/operators.md:1549
-#: ../../reference/operators.md:1577 ../../reference/operators.md:1603
-#: ../../reference/operators.md:1641 ../../reference/operators.md:1675
-#: ../../reference/operators.md:1709 ../../reference/operators.md:1743
-#: ../../reference/operators.md:1777 ../../reference/operators.md:1811
-#: ../../reference/operators.md:1835 ../../reference/operators.md:1869
-#: ../../reference/operators.md:1900 ../../reference/operators.md:1931
-#: ../../reference/operators.md:1962 ../../reference/operators.md:1993
-#: ../../reference/operators.md:2025 ../../reference/operators.md:2069
-#: ../../reference/operators.md:2102 ../../reference/operators.md:2126
-#: ../../reference/operators.md:2173 ../../reference/operators.md:2204
+#: ../../reference/operators.md:90 ../../reference/operators.md:126
+#: ../../reference/operators.md:164 ../../reference/operators.md:194
+#: ../../reference/operators.md:226 ../../reference/operators.md:270
+#: ../../reference/operators.md:317 ../../reference/operators.md:349
+#: ../../reference/operators.md:373 ../../reference/operators.md:399
+#: ../../reference/operators.md:450 ../../reference/operators.md:476
+#: ../../reference/operators.md:515 ../../reference/operators.md:551
+#: ../../reference/operators.md:577 ../../reference/operators.md:607
+#: ../../reference/operators.md:645 ../../reference/operators.md:682
+#: ../../reference/operators.md:719 ../../reference/operators.md:756
+#: ../../reference/operators.md:793 ../../reference/operators.md:836
+#: ../../reference/operators.md:873 ../../reference/operators.md:910
+#: ../../reference/operators.md:947 ../../reference/operators.md:984
+#: ../../reference/operators.md:1024 ../../reference/operators.md:1080
+#: ../../reference/operators.md:1114 ../../reference/operators.md:1140
+#: ../../reference/operators.md:1175 ../../reference/operators.md:1248
+#: ../../reference/operators.md:1276 ../../reference/operators.md:1306
+#: ../../reference/operators.md:1351 ../../reference/operators.md:1377
+#: ../../reference/operators.md:1407 ../../reference/operators.md:1441
+#: ../../reference/operators.md:1467 ../../reference/operators.md:1493
+#: ../../reference/operators.md:1521 ../../reference/operators.md:1551
+#: ../../reference/operators.md:1581 ../../reference/operators.md:1609
+#: ../../reference/operators.md:1635 ../../reference/operators.md:1673
+#: ../../reference/operators.md:1707 ../../reference/operators.md:1741
+#: ../../reference/operators.md:1775 ../../reference/operators.md:1809
+#: ../../reference/operators.md:1843 ../../reference/operators.md:1867
+#: ../../reference/operators.md:1901 ../../reference/operators.md:1932
+#: ../../reference/operators.md:1963 ../../reference/operators.md:1994
+#: ../../reference/operators.md:2025 ../../reference/operators.md:2057
+#: ../../reference/operators.md:2101 ../../reference/operators.md:2134
+#: ../../reference/operators.md:2158 ../../reference/operators.md:2205
+#: ../../reference/operators.md:2236
 msgid "**TensorStatus(ShareType) Constraints:**"
 msgstr "**Tensor 类型约束：**"
 
 #: ../../reference/operators.md:28 ../../reference/operators.md:54
-#: ../../reference/operators.md:134 ../../reference/operators.md:164
-#: ../../reference/operators.md:343 ../../reference/operators.md:369
-#: ../../reference/operators.md:446 ../../reference/operators.md:547
-#: ../../reference/operators.md:577 ../../reference/operators.md:954
-#: ../../reference/operators.md:1110 ../../reference/operators.md:1246
-#: ../../reference/operators.md:1276 ../../reference/operators.md:1321
-#: ../../reference/operators.md:1347 ../../reference/operators.md:1377
-#: ../../reference/operators.md:1491 ../../reference/operators.md:1521
-#: ../../reference/operators.md:1551 ../../reference/operators.md:1579
-#: ../../reference/operators.md:1605 ../../reference/operators.md:2071
-#: ../../reference/operators.md:2128
+#: ../../reference/operators.md:166 ../../reference/operators.md:196
+#: ../../reference/operators.md:375 ../../reference/operators.md:401
+#: ../../reference/operators.md:478 ../../reference/operators.md:579
+#: ../../reference/operators.md:609 ../../reference/operators.md:986
+#: ../../reference/operators.md:1142 ../../reference/operators.md:1278
+#: ../../reference/operators.md:1308 ../../reference/operators.md:1353
+#: ../../reference/operators.md:1379 ../../reference/operators.md:1409
+#: ../../reference/operators.md:1523 ../../reference/operators.md:1553
+#: ../../reference/operators.md:1583 ../../reference/operators.md:1611
+#: ../../reference/operators.md:1637 ../../reference/operators.md:2103
+#: ../../reference/operators.md:2160
 msgid "`T`: public,private,secret"
 msgstr "``T`` ：公开，私有，密态"
 
@@ -178,55 +181,55 @@ msgstr "``Add``"
 msgid "Definition: Out = Left `Add` Right"
 msgstr "定义：对两个 tensor 进行求和运算， Out = (Left + Right) 。"
 
-#: ../../reference/operators.md:38 ../../reference/operators.md:353
-#: ../../reference/operators.md:430 ../../reference/operators.md:531
-#: ../../reference/operators.md:561 ../../reference/operators.md:1094
-#: ../../reference/operators.md:1230 ../../reference/operators.md:1260
-#: ../../reference/operators.md:1331 ../../reference/operators.md:1361
-#: ../../reference/operators.md:1475 ../../reference/operators.md:1505
-#: ../../reference/operators.md:1535 ../../reference/operators.md:1589
+#: ../../reference/operators.md:38 ../../reference/operators.md:385
+#: ../../reference/operators.md:462 ../../reference/operators.md:563
+#: ../../reference/operators.md:593 ../../reference/operators.md:1126
+#: ../../reference/operators.md:1262 ../../reference/operators.md:1292
+#: ../../reference/operators.md:1363 ../../reference/operators.md:1393
+#: ../../reference/operators.md:1507 ../../reference/operators.md:1537
+#: ../../reference/operators.md:1567 ../../reference/operators.md:1621
 msgid "`Left`(variadic, T): First operand."
 msgstr "``Left`` （多列数组，类型为 T ）： 第一个操作数。"
 
-#: ../../reference/operators.md:40 ../../reference/operators.md:355
-#: ../../reference/operators.md:432 ../../reference/operators.md:533
-#: ../../reference/operators.md:563 ../../reference/operators.md:1096
-#: ../../reference/operators.md:1232 ../../reference/operators.md:1262
-#: ../../reference/operators.md:1333 ../../reference/operators.md:1363
-#: ../../reference/operators.md:1477 ../../reference/operators.md:1507
-#: ../../reference/operators.md:1537 ../../reference/operators.md:1591
+#: ../../reference/operators.md:40 ../../reference/operators.md:387
+#: ../../reference/operators.md:464 ../../reference/operators.md:565
+#: ../../reference/operators.md:595 ../../reference/operators.md:1128
+#: ../../reference/operators.md:1264 ../../reference/operators.md:1294
+#: ../../reference/operators.md:1365 ../../reference/operators.md:1395
+#: ../../reference/operators.md:1509 ../../reference/operators.md:1539
+#: ../../reference/operators.md:1569 ../../reference/operators.md:1623
 msgid "`Right`(variadic, T1): Second operand."
 msgstr "``Right`` （多列数组，类型为 T1 ）： 第二个操作数。"
 
-#: ../../reference/operators.md:45 ../../reference/operators.md:360
-#: ../../reference/operators.md:437 ../../reference/operators.md:538
-#: ../../reference/operators.md:568 ../../reference/operators.md:1101
-#: ../../reference/operators.md:1237 ../../reference/operators.md:1267
-#: ../../reference/operators.md:1338 ../../reference/operators.md:1368
-#: ../../reference/operators.md:1482 ../../reference/operators.md:1512
-#: ../../reference/operators.md:1542 ../../reference/operators.md:1596
+#: ../../reference/operators.md:45 ../../reference/operators.md:392
+#: ../../reference/operators.md:469 ../../reference/operators.md:570
+#: ../../reference/operators.md:600 ../../reference/operators.md:1133
+#: ../../reference/operators.md:1269 ../../reference/operators.md:1299
+#: ../../reference/operators.md:1370 ../../reference/operators.md:1400
+#: ../../reference/operators.md:1514 ../../reference/operators.md:1544
+#: ../../reference/operators.md:1574 ../../reference/operators.md:1628
 msgid "`Out`(variadic, T2): Output Tensor."
 msgstr "``Out`` （多列数组，类型为 T2 ）：输出。 "
 
 #: ../../reference/operators.md:56 ../../reference/operators.md:94
-#: ../../reference/operators.md:136 ../../reference/operators.md:371
-#: ../../reference/operators.md:448 ../../reference/operators.md:549
-#: ../../reference/operators.md:579 ../../reference/operators.md:956
-#: ../../reference/operators.md:1112 ../../reference/operators.md:1248
-#: ../../reference/operators.md:1278 ../../reference/operators.md:1349
-#: ../../reference/operators.md:1379 ../../reference/operators.md:1493
-#: ../../reference/operators.md:1523 ../../reference/operators.md:1553
-#: ../../reference/operators.md:1607
+#: ../../reference/operators.md:168 ../../reference/operators.md:403
+#: ../../reference/operators.md:480 ../../reference/operators.md:581
+#: ../../reference/operators.md:611 ../../reference/operators.md:988
+#: ../../reference/operators.md:1144 ../../reference/operators.md:1280
+#: ../../reference/operators.md:1310 ../../reference/operators.md:1381
+#: ../../reference/operators.md:1411 ../../reference/operators.md:1525
+#: ../../reference/operators.md:1555 ../../reference/operators.md:1585
+#: ../../reference/operators.md:1639
 msgid "`T1`: public,private,secret"
 msgstr "``T1`` ：公开，私有，密态"
 
-#: ../../reference/operators.md:58 ../../reference/operators.md:373
-#: ../../reference/operators.md:450 ../../reference/operators.md:551
-#: ../../reference/operators.md:581 ../../reference/operators.md:1114
-#: ../../reference/operators.md:1250 ../../reference/operators.md:1280
-#: ../../reference/operators.md:1351 ../../reference/operators.md:1381
-#: ../../reference/operators.md:1495 ../../reference/operators.md:1525
-#: ../../reference/operators.md:1555 ../../reference/operators.md:1609
+#: ../../reference/operators.md:58 ../../reference/operators.md:405
+#: ../../reference/operators.md:482 ../../reference/operators.md:583
+#: ../../reference/operators.md:613 ../../reference/operators.md:1146
+#: ../../reference/operators.md:1282 ../../reference/operators.md:1312
+#: ../../reference/operators.md:1383 ../../reference/operators.md:1413
+#: ../../reference/operators.md:1527 ../../reference/operators.md:1557
+#: ../../reference/operators.md:1587 ../../reference/operators.md:1641
 msgid "`T2`: private,secret"
 msgstr "``T2`` ：公开，私有"
 
@@ -261,24 +264,75 @@ msgid "`T2`: public,private"
 msgstr "``T2`` ：公开，私有"
 
 #: ../../reference/operators.md:100
+msgid "`Bucket`"
+msgstr ""
+
+#: ../../reference/operators.md:102
+msgid ""
+"Definition: Put the data into buckets based on the hash value of the join"
+" key."
+msgstr "根据 hash 值对数据进行分桶"
+
+#: ../../reference/operators.md:106
+msgid "`Key`(variadic, T): Join Key Tensors"
+msgstr "``In`` （多列数组，类型为 T ）：输入 Tensor 。"
+
+#: ../../reference/operators.md:108 ../../reference/operators.md:2076
+msgid "`In`(variadic, T): Input Tensors"
+msgstr "``In`` （多列数组，类型为 T ）：输入 Tensor 。"
+
+#: ../../reference/operators.md:113
+msgid "`Out`(variadic, T): Result"
+msgstr "``Out`` （多列数组，类型为 T2 ）： 输出结果。"
+
+#: ../../reference/operators.md:117 ../../reference/operators.md:254
+#: ../../reference/operators.md:299 ../../reference/operators.md:338
+#: ../../reference/operators.md:424 ../../reference/operators.md:827
+#: ../../reference/operators.md:1056 ../../reference/operators.md:1103
+#: ../../reference/operators.md:1226 ../../reference/operators.md:1340
+#: ../../reference/operators.md:1432 ../../reference/operators.md:2046
+#: ../../reference/operators.md:2085 ../../reference/operators.md:2189
+msgid "**Attributes:**"
+msgstr "**属性：**"
+
+#: ../../reference/operators.md:119 ../../reference/operators.md:1228
+msgid ""
+"`input_party_codes`: List of parties the inputs belong to([PartyCodeLeft,"
+" PartyCodeRight])."
+msgstr "``input_party_codes`` ：join 操作的参与方。"
+
+#: ../../reference/operators.md:128 ../../reference/operators.md:228
+#: ../../reference/operators.md:452 ../../reference/operators.md:553
+#: ../../reference/operators.md:647 ../../reference/operators.md:684
+#: ../../reference/operators.md:721 ../../reference/operators.md:758
+#: ../../reference/operators.md:795 ../../reference/operators.md:838
+#: ../../reference/operators.md:875 ../../reference/operators.md:912
+#: ../../reference/operators.md:949 ../../reference/operators.md:1026
+#: ../../reference/operators.md:1082 ../../reference/operators.md:1116
+#: ../../reference/operators.md:1177 ../../reference/operators.md:1869
+#: ../../reference/operators.md:2059 ../../reference/operators.md:2238
+msgid "`T`: private"
+msgstr "``T`` ：私有"
+
+#: ../../reference/operators.md:132
 msgid "`CaseWhen`"
 msgstr "``CaseWhen``"
 
-#: ../../reference/operators.md:102
+#: ../../reference/operators.md:134
 msgid ""
 "The CaseWhen operator goes through conditions and returns a value when "
 "the first condition is met (like an if-then-else statement)"
 msgstr "CaseWhen 算子遍历 ``Condition`` 中的条件，并在遇到满足的第一个条件时返回对应值（类似于 if-then-else 语句）"
 
-#: ../../reference/operators.md:104
+#: ../../reference/operators.md:136
 msgid "Example:"
 msgstr "例子："
 
-#: ../../reference/operators.md:116
+#: ../../reference/operators.md:148
 msgid "`Condition`(variadic, T): Condition tensor."
 msgstr "``Condition`` （多列数组，类型为 T ）：条件 tensor 。"
 
-#: ../../reference/operators.md:118
+#: ../../reference/operators.md:150
 msgid ""
 "`Value`(variadic, T1): Value if condition tensor is true and all previous"
 " conditions are false."
@@ -286,72 +340,59 @@ msgstr ""
 "``Value`` （多列数组，类型为 T1）：如果 condition tensor 为真并且之前的所有 condition 都为假，则取该 "
 "Value 。"
 
-#: ../../reference/operators.md:120
+#: ../../reference/operators.md:152
 msgid "`ValueElse`(single, T2): Value if all condition tensors are false."
 msgstr "``ValueElse`` （单列数组，类型为 T2）：当所有 condition tensors 都为假，则取 ValueElse 。"
 
-#: ../../reference/operators.md:125 ../../reference/operators.md:945
+#: ../../reference/operators.md:157 ../../reference/operators.md:977
 msgid "`Out`(single, T3): Result tensor."
 msgstr "``Out`` （单列数组，类型为 T3 ）：结果 tensor 。"
 
-#: ../../reference/operators.md:138 ../../reference/operators.md:958
+#: ../../reference/operators.md:170 ../../reference/operators.md:990
 msgid "`T2`: public,private,secret"
 msgstr "``T2`` ：公开，私有，密态"
 
-#: ../../reference/operators.md:140 ../../reference/operators.md:960
+#: ../../reference/operators.md:172 ../../reference/operators.md:992
 msgid "`T3`: public,private,secret"
 msgstr "``T3`` ：公开，私有，密态"
 
-#: ../../reference/operators.md:144
+#: ../../reference/operators.md:176
 msgid "`Cast`"
 msgstr "``Cast``"
 
-#: ../../reference/operators.md:146
+#: ../../reference/operators.md:178
 msgid "Definition: Cast Input tensor's data type to Output tensor's."
 msgstr "定义：将输入 tensor 的数据类型转换为输出 tensor 的数据类型。"
 
-#: ../../reference/operators.md:150 ../../reference/operators.md:1131
-#: ../../reference/operators.md:1565
+#: ../../reference/operators.md:182 ../../reference/operators.md:1163
+#: ../../reference/operators.md:1597
 msgid "`In`(single, T): Input tensor."
 msgstr "``In`` （单列数组，类型为 T ）：输入 tensor 。"
 
-#: ../../reference/operators.md:155 ../../reference/operators.md:1136
-#: ../../reference/operators.md:1570
+#: ../../reference/operators.md:187 ../../reference/operators.md:1168
+#: ../../reference/operators.md:1602
 msgid "`Out`(single, T): Output tensor."
 msgstr "``Out`` （单列数组，类型为 T ）：输出 tensor 。"
 
-#: ../../reference/operators.md:168
+#: ../../reference/operators.md:200
 msgid "`Coalesce`"
 msgstr ""
 
-#: ../../reference/operators.md:170
+#: ../../reference/operators.md:202
 msgid ""
 "Definition: Coalesce returns the first value of Exprs that is not NULL. "
 "NULL is returned only if Exprs are all NULL.  Example:"
 msgstr ""
 
-#: ../../reference/operators.md:182
+#: ../../reference/operators.md:214
 msgid "`Exprs`(variadic, T): The expressions to coalesce"
 msgstr "``Exprs`` （多列数组，类型为 T ）：coalesce 的参数 。"
 
-#: ../../reference/operators.md:196 ../../reference/operators.md:420
-#: ../../reference/operators.md:521 ../../reference/operators.md:615
-#: ../../reference/operators.md:652 ../../reference/operators.md:689
-#: ../../reference/operators.md:726 ../../reference/operators.md:763
-#: ../../reference/operators.md:806 ../../reference/operators.md:843
-#: ../../reference/operators.md:880 ../../reference/operators.md:917
-#: ../../reference/operators.md:994 ../../reference/operators.md:1050
-#: ../../reference/operators.md:1084 ../../reference/operators.md:1145
-#: ../../reference/operators.md:1837 ../../reference/operators.md:2027
-#: ../../reference/operators.md:2206
-msgid "`T`: private"
-msgstr "``T`` ：私有"
-
-#: ../../reference/operators.md:200
+#: ../../reference/operators.md:232
 msgid "`Concat`"
 msgstr "``Concat``"
 
-#: ../../reference/operators.md:202
+#: ../../reference/operators.md:234
 msgid ""
 "Definition: Given a number of tensors In (variadic, each tensor's shape "
 "must be the same in every dimension except for the axis), concat the In "
@@ -360,191 +401,181 @@ msgstr ""
 "定义：给定一组 tensor ``In`` （多列数组，所有的 tensor 的大小在除了 axis 之外的所有维度上必须相同)，将它们在 "
 "axis 所指定的维度上进行拼接。例如："
 
-#: ../../reference/operators.md:213
+#: ../../reference/operators.md:245
 msgid "`In`(variadic, T): Tensors to be concat."
 msgstr "``In`` （多列数组，类型为 T ）：待拼接的 tensor 。"
 
-#: ../../reference/operators.md:218
+#: ../../reference/operators.md:250
 msgid "`Out`(single, T): Concated Tensor."
 msgstr "``Out`` （单列数组，类型为 T ）：拼接后的 tensor 。"
 
-#: ../../reference/operators.md:222 ../../reference/operators.md:267
-#: ../../reference/operators.md:306 ../../reference/operators.md:392
-#: ../../reference/operators.md:795 ../../reference/operators.md:1024
-#: ../../reference/operators.md:1071 ../../reference/operators.md:1194
-#: ../../reference/operators.md:1308 ../../reference/operators.md:1400
-#: ../../reference/operators.md:2014 ../../reference/operators.md:2053
-#: ../../reference/operators.md:2157
-msgid "**Attributes:**"
-msgstr "**属性：**"
-
-#: ../../reference/operators.md:224
+#: ../../reference/operators.md:256
 msgid "`axis`: Int64. Dimension along which to concatenate."
 msgstr "``axis`` ： Int64 类型，待拼接的维度。"
 
-#: ../../reference/operators.md:231 ../../reference/operators.md:278
-#: ../../reference/operators.md:407 ../../reference/operators.md:1039
-#: ../../reference/operators.md:1207 ../../reference/operators.md:2062
-#: ../../reference/operators.md:2166
+#: ../../reference/operators.md:263 ../../reference/operators.md:310
+#: ../../reference/operators.md:439 ../../reference/operators.md:1071
+#: ../../reference/operators.md:1239 ../../reference/operators.md:2094
+#: ../../reference/operators.md:2198
 msgid "**Default Attribute Values:**"
 msgstr "**默认值:**"
 
-#: ../../reference/operators.md:233
+#: ../../reference/operators.md:265
 msgid "`axis`: 0"
 msgstr "``axis`` : 0"
 
-#: ../../reference/operators.md:240 ../../reference/operators.md:1643
-#: ../../reference/operators.md:1677 ../../reference/operators.md:1745
-#: ../../reference/operators.md:1779 ../../reference/operators.md:1813
-#: ../../reference/operators.md:2104
+#: ../../reference/operators.md:272 ../../reference/operators.md:1675
+#: ../../reference/operators.md:1709 ../../reference/operators.md:1777
+#: ../../reference/operators.md:1811 ../../reference/operators.md:1845
+#: ../../reference/operators.md:2136
 msgid "`T`: secret"
 msgstr "``T`` ：私有"
 
-#: ../../reference/operators.md:244
+#: ../../reference/operators.md:276
 msgid "`Constant`"
 msgstr "``Constant``"
 
-#: ../../reference/operators.md:246
+#: ../../reference/operators.md:278
 msgid "Definition: Make constant from attribute. Example:"
 msgstr "定义：根据属性中的 ``scalar`` 和 ``to_status`` 参数生成对应的常量。例如："
 
-#: ../../reference/operators.md:258 ../../reference/operators.md:2005
+#: ../../reference/operators.md:290 ../../reference/operators.md:2037
 msgid "No input parameter."
 msgstr "无输入参数。"
 
-#: ../../reference/operators.md:263
+#: ../../reference/operators.md:295
 msgid "`Out`(single, T): output tensor(shape [M]) from constant."
 msgstr "``Out`` （单列数组，类型为 T ）：生成的常量，大小为 [M] 。"
 
-#: ../../reference/operators.md:269
+#: ../../reference/operators.md:301
 msgid "`scalar`: scalar attribute(with shape [M])"
 msgstr "``scalar`` ：大小为 [M] 的标量。"
 
-#: ../../reference/operators.md:271
+#: ../../reference/operators.md:303
 msgid "`to_status`: int64. to status, 0: to private, 1: to public."
 msgstr "``to_status`` ： int64 类型，生成的常量的状态,  0：私有状态, 1：公开状态。"
 
-#: ../../reference/operators.md:280
+#: ../../reference/operators.md:312
 msgid "`to_status`: 0"
 msgstr "``to_status`` : 0"
 
-#: ../../reference/operators.md:287
+#: ../../reference/operators.md:319
 msgid "`T`: public,private"
 msgstr "``T`` ：公共，私有"
 
-#: ../../reference/operators.md:291
+#: ../../reference/operators.md:323
 msgid "`Copy`"
 msgstr "``Copy``"
 
-#: ../../reference/operators.md:293
+#: ../../reference/operators.md:325
 msgid ""
 "Definition: Copy source tensor \"In\" to new tensor \"Out\" on target "
 "party"
 msgstr "定义：复制源 tensor 至目标 tensor 。"
 
-#: ../../reference/operators.md:297
+#: ../../reference/operators.md:329
 msgid "`In`(single, T1): source tensor"
 msgstr "``In`` （单列数组，类型为 T1 ）：源 tensor 。"
 
-#: ../../reference/operators.md:302
+#: ../../reference/operators.md:334
 msgid "`Out`(single, T1): target tensor"
 msgstr "``Out`` （单列数组，类型为 T1 ）：目标 tensor 。"
 
-#: ../../reference/operators.md:308
+#: ../../reference/operators.md:340
 msgid "`input_party_codes`: Input tensor `In` belongs to"
 msgstr "``input_party_codes``：输入 tensor ``In`` 的所属方。"
 
-#: ../../reference/operators.md:310
+#: ../../reference/operators.md:342
 msgid "`output_party_codes`: Output tensor `Out` belongs to"
 msgstr "``output_party_codes``：输出 tensor ``Out`` 的所属方。"
 
-#: ../../reference/operators.md:319 ../../reference/operators.md:1052
-#: ../../reference/operators.md:1218 ../../reference/operators.md:1463
-#: ../../reference/operators.md:2073
+#: ../../reference/operators.md:351 ../../reference/operators.md:1084
+#: ../../reference/operators.md:1250 ../../reference/operators.md:1495
+#: ../../reference/operators.md:2105
 msgid "`T1`: private"
 msgstr "``T1`` ：私有"
 
-#: ../../reference/operators.md:323
+#: ../../reference/operators.md:355
 msgid "`Cos`"
 msgstr ""
 
-#: ../../reference/operators.md:325
+#: ../../reference/operators.md:357
 msgid "Definition: return the value of cosine function"
 msgstr ""
 
-#: ../../reference/operators.md:329
+#: ../../reference/operators.md:361
 msgid "`In`(single, T): the expression pass to cosine function"
 msgstr "``In`` （单列数组，类型为 T cosine 的入参 。"
 
-#: ../../reference/operators.md:347
+#: ../../reference/operators.md:379
 msgid "`Div`"
 msgstr "``Div``"
 
-#: ../../reference/operators.md:349
+#: ../../reference/operators.md:381
 msgid "Definition: Out = Left `Div` Right"
 msgstr "定义：对两个 tensor 进行除法运算， Out = (Left / Right) 。"
 
-#: ../../reference/operators.md:377
+#: ../../reference/operators.md:409
 msgid "`DumpFile`"
 msgstr "`DumpFile`"
 
-#: ../../reference/operators.md:379
+#: ../../reference/operators.md:411
 msgid ""
 "Definition: Dump the input tensor. Note: This op will change the affected"
 " rows in the session"
 msgstr "定义：将输入的 tensor 存储到文件中。此操作将更改会话中受影响的行。"
 
-#: ../../reference/operators.md:383
+#: ../../reference/operators.md:415
 msgid "`In`(variadic, T): Tensors to be dumped."
 msgstr "``In`` （多列数组，类型为 T ）：待存储的 tensor。"
 
-#: ../../reference/operators.md:388
+#: ../../reference/operators.md:420
 msgid "`Out`(variadic, T): Tensors have been dumped."
 msgstr "``Out`` （多列数组，类型为 T ）： 已存储的 tensor。"
 
-#: ../../reference/operators.md:394
+#: ../../reference/operators.md:426
 msgid "`file_path`: String. Absolute file path to dump the tensors."
 msgstr "``file_path`` ：字符串类型。用于存储 tensor 的绝对文件路径。"
 
-#: ../../reference/operators.md:396
+#: ../../reference/operators.md:428
 msgid "`field_deliminator`: String. Column deliminator, e.g. `\\t`"
 msgstr "``field_deliminator`` ：字符串类型。列分隔符，例如：`\\t`"
 
-#: ../../reference/operators.md:398
+#: ../../reference/operators.md:430
 msgid ""
 "`quoting_style`: Int64. Strategies for using quotes, 0: do not use "
 "quotes; 1: use quotes for strings; 2: use quotes for all valid data"
 msgstr "`quoting_style`：Int64 。使用引用的策略，0：不使用引用；1：对字符串类型使用引用；2：对所有有效数据使用引用"
 
-#: ../../reference/operators.md:400
+#: ../../reference/operators.md:432
 msgid "`line_terminator`: String. Line terminator, e.g. `\\n`"
 msgstr "``line_terminator`` ：字符串类型。列分隔符，例如：`\\n`"
 
-#: ../../reference/operators.md:409
+#: ../../reference/operators.md:441
 msgid "`field_deliminator`: \\t"
 msgstr ""
 
-#: ../../reference/operators.md:411
+#: ../../reference/operators.md:443
 msgid "`line_terminator`: \\n"
 msgstr ""
 
-#: ../../reference/operators.md:413
+#: ../../reference/operators.md:445
 msgid "`quoting_style`: 0"
 msgstr ""
 
-#: ../../reference/operators.md:424
+#: ../../reference/operators.md:456
 msgid "`Equal`"
 msgstr "``Equal``"
 
-#: ../../reference/operators.md:426
+#: ../../reference/operators.md:458
 msgid "Definition: Out = Left `Equal` Right"
 msgstr "定义：对两个 tensor 进行比较运算， Out = (Left == Right) 。"
 
-#: ../../reference/operators.md:454
+#: ../../reference/operators.md:486
 msgid "`Filter`"
 msgstr "``Filter``"
 
-#: ../../reference/operators.md:456
+#: ../../reference/operators.md:488
 msgid ""
 "Definition: Given a boolean tensor Filter (its shape is [M]), and a "
 "number of tensors In (variadic, each tensor's shape must be [M]), for i "
@@ -554,123 +585,123 @@ msgstr ""
 "定义：给定一个布尔类型的 tensors ``Filter`` (其大小为 [M] )，以及一个输入 tensor ``In`` （多列数组，每个"
 " tensor 的大小均为 [M] ）。仅当 Filter 中第 i 个元素为真时，保留 In 中第 i 个元素。例:"
 
-#: ../../reference/operators.md:469
+#: ../../reference/operators.md:501
 msgid "`Filter`(single, T1): Filter tensor."
 msgstr "``Filter`` （单列数组，类型为 T1 ）：用来做筛选的 tensor 。"
 
-#: ../../reference/operators.md:471
+#: ../../reference/operators.md:503
 msgid "`In`(variadic, T): Tensors to be filtered."
 msgstr "``In`` （多列数组，类型为 T ）：待筛选的 tensor 。"
 
-#: ../../reference/operators.md:476 ../../reference/operators.md:1304
+#: ../../reference/operators.md:508 ../../reference/operators.md:1336
 msgid "`Out`(variadic, T): Output tensor."
 msgstr "``Out`` （多列数组，类型为 T ）：输出 tensor 。"
 
-#: ../../reference/operators.md:485 ../../reference/operators.md:1711
-#: ../../reference/operators.md:1871 ../../reference/operators.md:1902
-#: ../../reference/operators.md:1933 ../../reference/operators.md:1964
-#: ../../reference/operators.md:1995 ../../reference/operators.md:2175
+#: ../../reference/operators.md:517 ../../reference/operators.md:1743
+#: ../../reference/operators.md:1903 ../../reference/operators.md:1934
+#: ../../reference/operators.md:1965 ../../reference/operators.md:1996
+#: ../../reference/operators.md:2027 ../../reference/operators.md:2207
 msgid "`T`: private,secret"
 msgstr "``T`` ：私有，密态"
 
-#: ../../reference/operators.md:487
+#: ../../reference/operators.md:519
 msgid "`T1`: public,private"
 msgstr "``T1`` ：公开，私有"
 
-#: ../../reference/operators.md:491
+#: ../../reference/operators.md:523
 msgid "`FilterByIndex`"
 msgstr "``FilterByIndex``"
 
-#: ../../reference/operators.md:493
+#: ../../reference/operators.md:525
 msgid "Definition: Filter by rows index. Example:"
 msgstr "定义：按行索引筛选。例如："
 
-#: ../../reference/operators.md:505
+#: ../../reference/operators.md:537
 msgid "`RowsIndexFilter`(single, T): Rows index filter vector(shape [K][1])."
 msgstr "``RowsIndexFilter`` （单列数组，类型为 T ）：用于筛选的索引 tensor （大小为 [K][1] ）。"
 
-#: ../../reference/operators.md:507
+#: ../../reference/operators.md:539
 msgid "`Data`(variadic, T): Input data tensor(shape [M][N])."
 msgstr "``Data`` （多列数组，类型为 T ）：待筛选的 tensor （大小为 [M][N] ）。"
 
-#: ../../reference/operators.md:512
+#: ../../reference/operators.md:544
 msgid "`Out`(variadic, T): Output data tensor(shape [X][N])."
 msgstr "``Out`` （多列数组，类型为 T ）：输出结果 tensor （大小为 [X][N] ）。"
 
-#: ../../reference/operators.md:525
+#: ../../reference/operators.md:557
 msgid "`Greater`"
 msgstr "`Greater`"
 
-#: ../../reference/operators.md:527
+#: ../../reference/operators.md:559
 msgid "Definition: Out = Left `Greater` Right"
 msgstr "定义：对两个 tensor 进行比较运算， Out = (Left > Right) 。"
 
-#: ../../reference/operators.md:555
+#: ../../reference/operators.md:587
 msgid "`GreaterEqual`"
 msgstr "`GreaterEqual`"
 
-#: ../../reference/operators.md:557
+#: ../../reference/operators.md:589
 msgid "Definition: Out = Left `GreaterEqual` Right"
 msgstr "定义：对两个 tensor 进行比较运算， Out = (Left >= Right) 。"
 
-#: ../../reference/operators.md:585
+#: ../../reference/operators.md:617
 msgid "`Group`"
 msgstr "`Group`"
 
-#: ../../reference/operators.md:587
+#: ../../reference/operators.md:619
 msgid ""
 "Definition: Assign a group id(start from 0) for each input element. "
 "Example:"
 msgstr "定义：为每个输入元素分配一个group id (从0开始)。例如："
 
-#: ../../reference/operators.md:599
+#: ../../reference/operators.md:631
 msgid "`Key`(variadic, T): input key tensors(shape [M][1])."
 msgstr "``Key`` （多列数组，类型为 T ）： group key （大小为 [M][1] ）。"
 
-#: ../../reference/operators.md:604
+#: ../../reference/operators.md:636
 msgid "`GroupId`(single, T): group id vector(shape [M][1])."
 msgstr "``GroupId`` （单列数组，类型为 T ）： group id （大小为 [M][1] ）。"
 
-#: ../../reference/operators.md:606
+#: ../../reference/operators.md:638
 msgid "`GroupNum`(single, T): number of groups vector(shape [1][1])"
 msgstr "``GroupNum`` （单列数组，类型为 T ）： group 的数量（大小为 [1][1] ）。"
 
-#: ../../reference/operators.md:619
+#: ../../reference/operators.md:651
 msgid "`GroupAvg`"
 msgstr "``GroupAvg``"
 
-#: ../../reference/operators.md:621 ../../reference/operators.md:658
-#: ../../reference/operators.md:695 ../../reference/operators.md:732
-#: ../../reference/operators.md:812 ../../reference/operators.md:849
-#: ../../reference/operators.md:886
+#: ../../reference/operators.md:653 ../../reference/operators.md:690
+#: ../../reference/operators.md:727 ../../reference/operators.md:764
+#: ../../reference/operators.md:844 ../../reference/operators.md:881
+#: ../../reference/operators.md:918
 msgid "Definition: Aggregate `In` for each group. Example:"
 msgstr "定义：聚合每个 group 的 ``In`` 。例如:"
 
-#: ../../reference/operators.md:634 ../../reference/operators.md:671
-#: ../../reference/operators.md:708 ../../reference/operators.md:745
-#: ../../reference/operators.md:782 ../../reference/operators.md:825
-#: ../../reference/operators.md:862 ../../reference/operators.md:899
+#: ../../reference/operators.md:666 ../../reference/operators.md:703
+#: ../../reference/operators.md:740 ../../reference/operators.md:777
+#: ../../reference/operators.md:814 ../../reference/operators.md:857
+#: ../../reference/operators.md:894 ../../reference/operators.md:931
 msgid "`GroupId`(single, T): Input group id vector(shape [M][1])."
 msgstr "``GroupId`` （单列数组，类型为 T ）： group id （大小为 [M][1] ）。"
 
-#: ../../reference/operators.md:636 ../../reference/operators.md:673
-#: ../../reference/operators.md:710 ../../reference/operators.md:747
-#: ../../reference/operators.md:784 ../../reference/operators.md:827
-#: ../../reference/operators.md:864 ../../reference/operators.md:901
+#: ../../reference/operators.md:668 ../../reference/operators.md:705
+#: ../../reference/operators.md:742 ../../reference/operators.md:779
+#: ../../reference/operators.md:816 ../../reference/operators.md:859
+#: ../../reference/operators.md:896 ../../reference/operators.md:933
 msgid "`GroupNum`(single, T): Input number of groups vector(shape [1][1])."
 msgstr "``GroupNum`` （单列数组，类型为 T ）： group 的数量（大小为 [1][1] ）。"
 
-#: ../../reference/operators.md:638 ../../reference/operators.md:675
-#: ../../reference/operators.md:712 ../../reference/operators.md:749
-#: ../../reference/operators.md:829 ../../reference/operators.md:866
-#: ../../reference/operators.md:903
+#: ../../reference/operators.md:670 ../../reference/operators.md:707
+#: ../../reference/operators.md:744 ../../reference/operators.md:781
+#: ../../reference/operators.md:861 ../../reference/operators.md:898
+#: ../../reference/operators.md:935
 msgid "`In`(variadic, T): Input data tensor(shape [M][1])."
 msgstr "``In`` （单列数组，类型为 T ）：输入数据 （大小为 [M][1] ）。"
 
-#: ../../reference/operators.md:643 ../../reference/operators.md:680
-#: ../../reference/operators.md:717 ../../reference/operators.md:754
-#: ../../reference/operators.md:834 ../../reference/operators.md:871
-#: ../../reference/operators.md:908
+#: ../../reference/operators.md:675 ../../reference/operators.md:712
+#: ../../reference/operators.md:749 ../../reference/operators.md:786
+#: ../../reference/operators.md:866 ../../reference/operators.md:903
+#: ../../reference/operators.md:940
 msgid ""
 "`Out`(variadic, T): Output data tensors(shape [K][1], K equals to number "
 "of groups), Out[i] is the agg result for i-th group."
@@ -678,31 +709,31 @@ msgstr ""
 "``Out`` （多列数组，类型为 T ）：计算结果（大小为 [K][1] ， K 等于 group 的个数）， Out[i] 是第 i 个 "
 "group 的聚合结果。"
 
-#: ../../reference/operators.md:656
+#: ../../reference/operators.md:688
 msgid "`GroupCount`"
 msgstr "``GroupCount``"
 
-#: ../../reference/operators.md:693
+#: ../../reference/operators.md:725
 msgid "`GroupCountDistinct`"
 msgstr "``GroupCountDistinct``"
 
-#: ../../reference/operators.md:730
+#: ../../reference/operators.md:762
 msgid "`GroupFirstOf`"
 msgstr "``GroupFirstOf``"
 
-#: ../../reference/operators.md:767
+#: ../../reference/operators.md:799
 msgid "`GroupHeSum`"
 msgstr "``GroupHeSum``"
 
-#: ../../reference/operators.md:769
+#: ../../reference/operators.md:801
 msgid "Definition: Using HE to sum 'In' for each group. Example:"
 msgstr "定义：使用同态加密对每个 group 进行求合。例如:"
 
-#: ../../reference/operators.md:786
+#: ../../reference/operators.md:818
 msgid "`In`(single, T): Input data tensor(shape [M][1])."
 msgstr "``In`` （单列数组，类型为 T ）：输入数据 （大小为 [M][1] ）。"
 
-#: ../../reference/operators.md:791
+#: ../../reference/operators.md:823
 msgid ""
 "`Out`(single, T): Output data tensors(shape [K][1], K equals to number of"
 " groups), Out[i] is the agg result for i-th group."
@@ -710,69 +741,69 @@ msgstr ""
 "``Out`` （多列数组，类型为 T ）：计算结果（大小为 [K][1] ， K 等于 group 的个数）， Out[i] 是第 i 个 "
 "group 的聚合结果。"
 
-#: ../../reference/operators.md:797
+#: ../../reference/operators.md:829
 msgid ""
 "`input_party_codes`: List of parties the inputs belong "
 "to([PartyCodeForGroupId/Num, PartyCodeForIn])."
 msgstr "``input_party_codes`` ：join 操作的参与方列表。"
 
-#: ../../reference/operators.md:810
+#: ../../reference/operators.md:842
 msgid "`GroupMax`"
 msgstr "`GroupMax`"
 
-#: ../../reference/operators.md:847
+#: ../../reference/operators.md:879
 msgid "`GroupMin`"
 msgstr "`GroupMin`"
 
-#: ../../reference/operators.md:884
+#: ../../reference/operators.md:916
 msgid "`GroupSum`"
 msgstr "`GroupSum`"
 
-#: ../../reference/operators.md:921
+#: ../../reference/operators.md:953
 msgid "`If`"
 msgstr "`If`"
 
-#: ../../reference/operators.md:923
+#: ../../reference/operators.md:955
 msgid ""
 "The IF operator returns a value if a condition is TRUE, or another value "
 "if a condition is FALSE. Example:"
 msgstr "如果条件为 TRUE ，则 IF 算子返回一个值；如果条件为 FALSE ，则返回另一个值。"
 
-#: ../../reference/operators.md:936
+#: ../../reference/operators.md:968
 msgid "`Condition`(single, T): Condition tensor."
 msgstr "``Condition`` （多列数组，类型为 T ）：条件 tensor 。"
 
-#: ../../reference/operators.md:938
+#: ../../reference/operators.md:970
 msgid "`ValueIfTrue`(single, T1): Value if true tensor."
 msgstr "``Filter`` （单列数组，类型为 T1 ）：用来做筛选的 tensor 。"
 
-#: ../../reference/operators.md:940
+#: ../../reference/operators.md:972
 msgid "`ValueIfFalse`(single, T2): Value if false tensor."
 msgstr "``ValueIfFalse`` （单列数组，类型为 T2）：当条件为假，则取 ValueIfFalse 。"
 
-#: ../../reference/operators.md:964
+#: ../../reference/operators.md:996
 msgid "`IfNull`"
 msgstr ""
 
-#: ../../reference/operators.md:966
+#: ../../reference/operators.md:998
 msgid ""
 "Definition: If Expr is NULL, return AltValue. Otherwise, return Expr.  "
 "Example:"
 msgstr ""
 
-#: ../../reference/operators.md:978
+#: ../../reference/operators.md:1010
 msgid "`Expr`(single, T): The expression to test whether is NULL"
 msgstr ""
 
-#: ../../reference/operators.md:980
+#: ../../reference/operators.md:1012
 msgid "`AltValue`(single, T): The value to return if Expr is NULL"
 msgstr ""
 
-#: ../../reference/operators.md:998
+#: ../../reference/operators.md:1030
 msgid "`In`"
 msgstr "`In`"
 
-#: ../../reference/operators.md:1000
+#: ../../reference/operators.md:1032
 msgid ""
 "Definition: Given an input tensor Left (its shape is [M]), and another "
 "input tensor Right (its shape is [N]), check whether Left's element "
@@ -780,217 +811,211 @@ msgid ""
 "[M]). Left and Right must be the same type. Example:"
 msgstr ""
 
-#: ../../reference/operators.md:1013
+#: ../../reference/operators.md:1045
 msgid "`Left`(single, T): First operand."
 msgstr "``Left`` （单列数组 , 类型为 T ）： 第一个操作数。"
 
-#: ../../reference/operators.md:1015
+#: ../../reference/operators.md:1047
 msgid "`Right`(single, T1): Second operand."
 msgstr "``Right`` （单列数组 , 类型为 T1 ）： 第二个操作数。"
 
-#: ../../reference/operators.md:1020
+#: ../../reference/operators.md:1052
 msgid "`Out`(single, T): Output Tensor."
 msgstr "``Out`` （单列数组 , 类型为 T ）：输出结果，类型为布尔值。"
 
-#: ../../reference/operators.md:1026
+#: ../../reference/operators.md:1058
 msgid "`in_type`: Int64. 0: PSI In, 1: Share In, 2: Local In"
 msgstr "``in_type`` ： Int64 类型。 0: PSI In; 1: Share In; 2: Local In"
 
-#: ../../reference/operators.md:1028
+#: ../../reference/operators.md:1060
 msgid "`psi_algorithm`: Int64. PSI Algorithm for In. 0: Auto, 1: Ecdh, 2: Oprf;"
 msgstr "``psi_algorithm`` ： Int64 类型， In 算子使用的 PSI 算法，0: Auto; 1: Ecdh; 2: Oprf"
 
-#: ../../reference/operators.md:1030
+#: ../../reference/operators.md:1062
 msgid ""
 "`input_party_codes`: List of parties the inputs belong to. This attribute"
 " is required if algorithm = PSI."
 msgstr "``input_party_codes`` ： 参与该操作的参与方的列表。如果采用 PSI 算法，则需要此属性。"
 
-#: ../../reference/operators.md:1032
+#: ../../reference/operators.md:1064
 msgid ""
 "`reveal_to`: A party can see the result. This attribute is required if "
 "algorithm = PSI."
 msgstr "``reveal_to`` ：可以看到结果的参与方。如果采用 PSI 算法，则需要此属性。"
 
-#: ../../reference/operators.md:1041
+#: ../../reference/operators.md:1073
 msgid "`in_type`: 0"
 msgstr ""
 
-#: ../../reference/operators.md:1043 ../../reference/operators.md:1211
+#: ../../reference/operators.md:1075 ../../reference/operators.md:1243
 msgid "`psi_algorithm`: 0"
 msgstr ""
 
-#: ../../reference/operators.md:1056
+#: ../../reference/operators.md:1088
 msgid "`InsertTable`"
 msgstr ""
 
-#: ../../reference/operators.md:1058
+#: ../../reference/operators.md:1090
 msgid ""
 "Definition: Insert the input tensor to existing table in Database. Note: "
 "This op will change the affected rows in the session"
-msgstr "定义：将输入的 tensor 存储到数据库的表中。此操作将更改会话中受影响的行。"
+msgstr "定义：将输入的 tensor 存储到文件中。此操作将更改 session 中受影响的行。"
 
-#: ../../reference/operators.md:1062
+#: ../../reference/operators.md:1094
 msgid "`In`(variadic, T): Tensors to be inserted to DB table."
-msgstr "``In`` （多列数组，类型为 T ）：待存储到数据库的 tensor 。"
+msgstr "``In`` （多列数组，类型为 T ）：待插入的 tensor。"
 
-#: ../../reference/operators.md:1067
+#: ../../reference/operators.md:1099
 msgid "`Out`(variadic, T): Tensors have been inserted to DB table."
-msgstr "``Out`` （多列数组，类型为 T ）： 已存储到数据库的 tensor。"
+msgstr "``Out`` （多列数组，类型为 T ）： 已插入的 tensor。"
 
-#: ../../reference/operators.md:1073
+#: ../../reference/operators.md:1105
 msgid "`table_name`: String. table to insert the tensors."
-msgstr "``table_name`` ：字符串类型。待插入的表名称。"
+msgstr "``table_name`` ：字符串类型。用于存储 tensor 的表。"
 
-#: ../../reference/operators.md:1075
+#: ../../reference/operators.md:1107
 msgid "`column_names`: String array. column names of table."
-msgstr "``column_names`` ：字符串数组。数据表的 column 名称。"
+msgstr "``column_names`` ：字符串类型。表的列名。"
 
-#: ../../reference/operators.md:1088
+#: ../../reference/operators.md:1120
 msgid "`IntDiv`"
 msgstr "`IntDiv`"
 
-#: ../../reference/operators.md:1090
+#: ../../reference/operators.md:1122
 msgid "Definition: Out = Left `IntDiv` Right"
 msgstr "定义：对两个整数类型的 tensor 进行整形除法运算， Out = (Left / Right) 。"
 
-#: ../../reference/operators.md:1118
+#: ../../reference/operators.md:1150
 msgid "`IsNull`"
 msgstr ""
 
-#: ../../reference/operators.md:1120
+#: ../../reference/operators.md:1152
 msgid "Definition: Test if Input tensor's data contains NULL. Example:"
 msgstr "定义：测试输入 Tensor 是否含有 NULL。例子："
 
-#: ../../reference/operators.md:1149
+#: ../../reference/operators.md:1181
 msgid "`Join`"
 msgstr "`Join`"
 
-#: ../../reference/operators.md:1151
+#: ../../reference/operators.md:1183
 msgid ""
 "Definition: Create Join Index based on EQ-Join, return result's "
 "corresponding rows index in the original input. Example:"
 msgstr "定义：基于 EQ-Join 对输入进行求交，返回回原始输入中与交集对应的索引值。例如："
 
-#: ../../reference/operators.md:1181
+#: ../../reference/operators.md:1213
 msgid "`Left`(single, T1): Left vector(shape [M][1])"
 msgstr "``Left`` （单列数组 , 类型为 T1 ）：参与 join 操作的左侧输入（大小为 [M][1] ）。"
 
-#: ../../reference/operators.md:1183
+#: ../../reference/operators.md:1215
 msgid "`Right`(single, T1): Right vector(shape [N][1])"
 msgstr "``Right`` （单列数组 , 类型为 T1 ）：参与 join 操作的右侧输入（大小为 [M][1] ）。"
 
-#: ../../reference/operators.md:1188
+#: ../../reference/operators.md:1220
 msgid ""
 "`LeftJoinIndex`(single, T2): Joined rows index for left vector(shape "
 "[K][1])"
 msgstr "``LeftJoinIndex`` （单列数组 , 类型为 T2 ）：参与 join 操作的左侧输入的行索引。"
 
-#: ../../reference/operators.md:1190
+#: ../../reference/operators.md:1222
 msgid ""
 "`RightJoinIndex`(single, T2): Joined rows index for right vector(shape "
 "[K][1])"
 msgstr "``RightJoinIndex`` （单列数组 , 类型为 T2 ）：参与 join 操作的右侧输入的行索引。"
 
-#: ../../reference/operators.md:1196
-msgid ""
-"`input_party_codes`: List of parties the inputs belong to([PartyCodeLeft,"
-" PartyCodeRight])."
-msgstr "``input_party_codes`` ：join 操作的参与方。"
-
-#: ../../reference/operators.md:1198
+#: ../../reference/operators.md:1230
 msgid "`join_type`: Int64. 0: inner join; 1: left join; 2: right join;"
 msgstr ""
 "``join_type`` ： Int64 类型，join 算子的类型。 0: inner join; 1: left join; 2: "
 "right join;"
 
-#: ../../reference/operators.md:1200
+#: ../../reference/operators.md:1232
 msgid ""
 "`psi_algorithm`: Choose PSI join algorithm, Int64. 0: Auto; 1: Ecdh; 2: "
 "Oprf;"
 msgstr ""
 
-#: ../../reference/operators.md:1209
+#: ../../reference/operators.md:1241
 msgid "`join_type`: 0"
 msgstr "``join_type`` : 0"
 
-#: ../../reference/operators.md:1220 ../../reference/operators.md:1413
+#: ../../reference/operators.md:1252 ../../reference/operators.md:1445
 msgid "`T2`: private"
 msgstr "``T2`` ：私有"
 
-#: ../../reference/operators.md:1224
+#: ../../reference/operators.md:1256
 msgid "`Less`"
 msgstr "`Less`"
 
-#: ../../reference/operators.md:1226
+#: ../../reference/operators.md:1258
 msgid "Definition: Out = Left `Less` Right"
 msgstr "定义：对两个 tensor 进行比较运算， Out = (Left < Right) 。"
 
-#: ../../reference/operators.md:1254
+#: ../../reference/operators.md:1286
 msgid "`LessEqual`"
 msgstr "`LessEqual`"
 
-#: ../../reference/operators.md:1256
+#: ../../reference/operators.md:1288
 msgid "Definition: Out = Left `LessEqual` Right"
 msgstr "定义：对两个 tensor 进行比较运算， Out = (Left <= Right) 。"
 
-#: ../../reference/operators.md:1284
+#: ../../reference/operators.md:1316
 msgid "`Limit`"
 msgstr "``Limit``"
 
-#: ../../reference/operators.md:1286
+#: ../../reference/operators.md:1318
 msgid ""
 "Limit return part of data, the amount of data depends on limit attr, the "
 "offset of data depends on offset attr. Example:"
 msgstr "Limit 算子返回部分数据，数据量取决于 limit attr ，数据的起始位置取决于 offset attr 。 例子："
 
-#: ../../reference/operators.md:1299
+#: ../../reference/operators.md:1331
 msgid "`In`(variadic, T): Tensors to be limited."
 msgstr "``In`` （多列数组，类型为 T ）：待 limit 的 tensor 。"
 
-#: ../../reference/operators.md:1310
+#: ../../reference/operators.md:1342
 msgid "`offset`: offset in limit"
 msgstr "`offset`: limit 结果的起始位置"
 
-#: ../../reference/operators.md:1312
+#: ../../reference/operators.md:1344
 msgid "`count`: count in limit"
 msgstr "`count`: limit 结果的数据量"
 
-#: ../../reference/operators.md:1325
+#: ../../reference/operators.md:1357
 msgid "`LogicalAnd`"
 msgstr "`LogicalAnd`"
 
-#: ../../reference/operators.md:1327
+#: ../../reference/operators.md:1359
 msgid "Definition: Out = Left `LogicalAnd` Right"
 msgstr "定义：对两个 tensor 进行逻辑与运算， Out = (Left & Right) 。"
 
-#: ../../reference/operators.md:1355
+#: ../../reference/operators.md:1387
 msgid "`LogicalOr`"
 msgstr "`LogicalOr`"
 
-#: ../../reference/operators.md:1357
+#: ../../reference/operators.md:1389
 msgid "Definition: Out = Left `LogicalOr` Right"
 msgstr "定义：对两个 tensor 进行逻辑或运算， Out = (Left ｜ Right) 。"
 
-#: ../../reference/operators.md:1385
+#: ../../reference/operators.md:1417
 msgid "`MakePrivate`"
 msgstr "`MakePrivate`"
 
-#: ../../reference/operators.md:1387
+#: ../../reference/operators.md:1419
 msgid "Definition: Convert In tensor from share status to private status."
 msgstr "定义：将 tensor 从秘态转换为私有状态。"
 
-#: ../../reference/operators.md:1391 ../../reference/operators.md:1423
-#: ../../reference/operators.md:1449
+#: ../../reference/operators.md:1423 ../../reference/operators.md:1455
+#: ../../reference/operators.md:1481
 msgid "`In`(variadic, T1): Input tensors."
 msgstr "``In`` （多列数组，类型为 T1 ）：输入 tensor 。"
 
-#: ../../reference/operators.md:1396 ../../reference/operators.md:1428
-#: ../../reference/operators.md:1454
+#: ../../reference/operators.md:1428 ../../reference/operators.md:1460
+#: ../../reference/operators.md:1486
 msgid "`Out`(variadic, T2): Output tensors."
 msgstr "``Out`` （多列数组，类型为 T2 ）：输出 tensor 。"
 
-#: ../../reference/operators.md:1402
+#: ../../reference/operators.md:1434
 msgid ""
 "`reveal_to`: List of parties to see the private data. If it is revealed "
 "to one party only, the other party also needs to run the op, but does not"
@@ -999,93 +1024,93 @@ msgstr ""
 "``reveal_to`` ：可以获取结果的参与方列表。如果只有一方能获取结果，那么另一方也需要运行 ``MakePrivate`` "
 "操作，但它无法获取结果。只有被指定为 reveal_to 的参与方才能获取结果。"
 
-#: ../../reference/operators.md:1411
+#: ../../reference/operators.md:1443
 msgid "`T1`: secret,public"
 msgstr "``T1`` ：秘态，公开"
 
-#: ../../reference/operators.md:1417
+#: ../../reference/operators.md:1449
 msgid "`MakePublic`"
 msgstr "`MakePublic`"
 
-#: ../../reference/operators.md:1419
+#: ../../reference/operators.md:1451
 msgid "Definition: Convert In tensor from share/private status to public status."
 msgstr "定义：将 tensor 从私有或者秘态转变为公开状态。"
 
-#: ../../reference/operators.md:1437
+#: ../../reference/operators.md:1469
 msgid "`T1`: private,secret"
 msgstr "``T1`` ：私有，密态"
 
-#: ../../reference/operators.md:1439
+#: ../../reference/operators.md:1471
 msgid "`T2`: public"
 msgstr "`T2` ：公开"
 
-#: ../../reference/operators.md:1443
+#: ../../reference/operators.md:1475
 msgid "`MakeShare`"
 msgstr "`MakeShare`"
 
-#: ../../reference/operators.md:1445
+#: ../../reference/operators.md:1477
 msgid "Definition: Convert In tensor from private status to share status."
 msgstr "定义：将 tensor 从私有态转变为秘态。"
 
-#: ../../reference/operators.md:1465
+#: ../../reference/operators.md:1497
 msgid "`T2`: secret"
 msgstr "``T2`` : 密态"
 
-#: ../../reference/operators.md:1469
+#: ../../reference/operators.md:1501
 msgid "`Minus`"
 msgstr "`Minus`"
 
-#: ../../reference/operators.md:1471
+#: ../../reference/operators.md:1503
 msgid "Definition: Out = Left `Minus` Right"
 msgstr "定义：对两个 tensor 进行求最小值运算， Out = (Left ``Minus`` Right) 。"
 
-#: ../../reference/operators.md:1499
+#: ../../reference/operators.md:1531
 msgid "`Mod`"
 msgstr "`Mod`"
 
-#: ../../reference/operators.md:1501
+#: ../../reference/operators.md:1533
 msgid "Definition: Out = Left `Mod` Right"
 msgstr "定义：对两个 tensor 进行求余运算， Out = (Left % Right) 。"
 
-#: ../../reference/operators.md:1529
+#: ../../reference/operators.md:1561
 msgid "`Mul`"
 msgstr "`Mul`"
 
-#: ../../reference/operators.md:1531
+#: ../../reference/operators.md:1563
 msgid "Definition: Out = Left `Mul` Right"
 msgstr "定义：对两个 tensor 进行减法运算， Out = (Left - Right) 。"
 
-#: ../../reference/operators.md:1559
+#: ../../reference/operators.md:1591
 msgid "`Not`"
 msgstr "`Not`"
 
-#: ../../reference/operators.md:1561
+#: ../../reference/operators.md:1593
 msgid "Definition:  Out = Not In"
 msgstr "定义：对 tensor 进行逻辑非运算， Out = !In 。"
 
-#: ../../reference/operators.md:1583
+#: ../../reference/operators.md:1615
 msgid "`NotEqual`"
 msgstr "`NotEqual`"
 
-#: ../../reference/operators.md:1585
+#: ../../reference/operators.md:1617
 msgid "Definition: Out = Left `NotEqual` Right"
 msgstr "定义：对两个 tensor 进行比较运算， Out = (Left != Right) 。"
 
-#: ../../reference/operators.md:1613
+#: ../../reference/operators.md:1645
 msgid "`ObliviousGroupAvg`"
 msgstr "`ObliviousGroupAvg`"
 
-#: ../../reference/operators.md:1615 ../../reference/operators.md:1649
-#: ../../reference/operators.md:1717 ../../reference/operators.md:1751
-#: ../../reference/operators.md:1785
+#: ../../reference/operators.md:1647 ../../reference/operators.md:1681
+#: ../../reference/operators.md:1749 ../../reference/operators.md:1783
+#: ../../reference/operators.md:1817
 msgid ""
 "Definition: partially aggregate `In` according to end of group indicator."
 " Example:"
 msgstr "定义：根据 group mask 来对输入进行分组聚合。"
 
-#: ../../reference/operators.md:1627 ../../reference/operators.md:1661
-#: ../../reference/operators.md:1702 ../../reference/operators.md:1729
-#: ../../reference/operators.md:1763 ../../reference/operators.md:1797
+#: ../../reference/operators.md:1659 ../../reference/operators.md:1693
+#: ../../reference/operators.md:1734 ../../reference/operators.md:1761
+#: ../../reference/operators.md:1795 ../../reference/operators.md:1829
 msgid ""
 "`Group`(single, T): End of group indicator(shape [M][1]). Element 1 means"
 " the row is the last element of the group, 0 is not."
@@ -1093,183 +1118,183 @@ msgstr ""
 "``Group`` （单列数组，类型为 T ）： groupMark （大小为 [M][1] ），其中 1 "
 "表示该位置的输入对应的元素是该分组中的最后一元素，0 则表示不是最后一个元素。"
 
-#: ../../reference/operators.md:1629 ../../reference/operators.md:1663
-#: ../../reference/operators.md:1731 ../../reference/operators.md:1765
-#: ../../reference/operators.md:1799
+#: ../../reference/operators.md:1661 ../../reference/operators.md:1695
+#: ../../reference/operators.md:1763 ../../reference/operators.md:1797
+#: ../../reference/operators.md:1831
 msgid "`In`(variadic, T): Values to be aggregated (shape [M][1])."
 msgstr "``In`` （多列数组，类型为 T ）：待进行分组聚合的输入（大小为 [M][1] ）。"
 
-#: ../../reference/operators.md:1634 ../../reference/operators.md:1668
-#: ../../reference/operators.md:1736 ../../reference/operators.md:1770
-#: ../../reference/operators.md:1804
+#: ../../reference/operators.md:1666 ../../reference/operators.md:1700
+#: ../../reference/operators.md:1768 ../../reference/operators.md:1802
+#: ../../reference/operators.md:1836
 msgid "`Out`(variadic, T): Partially aggregated values (shape [M][1])."
 msgstr "``Out`` （多列数组，类型为 T ）：分组聚合的结果（大小为 [M][1] ）。"
 
-#: ../../reference/operators.md:1647
+#: ../../reference/operators.md:1679
 msgid "`ObliviousGroupCount`"
 msgstr "`ObliviousGroupCount`"
 
-#: ../../reference/operators.md:1681
+#: ../../reference/operators.md:1713
 msgid "`ObliviousGroupMark`"
 msgstr "`ObliviousGroupMark`"
 
-#: ../../reference/operators.md:1683
+#: ../../reference/operators.md:1715
 msgid ""
 "Definition: generate end of group indicator `Group` based on `Key`. The "
 "operator calculates Group[i] = not_eq(Key[i+1], Key[i]). Example:"
 msgstr "定义：根据输入的 key 生成一个 group ，group 的计算规则为 Group[i] = (Key[i+1] != Key[i] )。例如："
 
-#: ../../reference/operators.md:1697
+#: ../../reference/operators.md:1729
 msgid "`Key`(variadic, T): Pre-sorted group keys (shape [M][1])."
 msgstr "``Key`` （多列数组，类型为 T ）：排序过的 group key 。"
 
-#: ../../reference/operators.md:1715
+#: ../../reference/operators.md:1747
 msgid "`ObliviousGroupMax`"
 msgstr "`ObliviousGroupMax`"
 
-#: ../../reference/operators.md:1749
+#: ../../reference/operators.md:1781
 msgid "`ObliviousGroupMin`"
 msgstr "`ObliviousGroupMin`"
 
-#: ../../reference/operators.md:1783
+#: ../../reference/operators.md:1815
 msgid "`ObliviousGroupSum`"
 msgstr "`ObliviousGroupSum`"
 
-#: ../../reference/operators.md:1817
+#: ../../reference/operators.md:1849
 msgid "`Publish`"
 msgstr "`Publish`"
 
-#: ../../reference/operators.md:1819
+#: ../../reference/operators.md:1851
 msgid "Definition: This operator publishes the DAG results."
 msgstr "定义：将输入的 tensor 进行披露。"
 
-#: ../../reference/operators.md:1823
+#: ../../reference/operators.md:1855
 msgid "`In`(variadic, T): Tensors to be published."
 msgstr "``In`` （多列数组，类型为 T ）：要披露的 Tensors 。"
 
-#: ../../reference/operators.md:1828
+#: ../../reference/operators.md:1860
 msgid ""
 "`Out`(variadic, T): Published name of input tensors. Tensors are in "
 "TensorOption VALUE."
 msgstr "``Out`` （多列数组，类型为 T ）：输入 tensors 的披露结果。 Tensors 位于 TensorOption VALUE 。"
 
-#: ../../reference/operators.md:1841
+#: ../../reference/operators.md:1873
 msgid "`ReduceAvg`"
 msgstr "`ReduceAvg`"
 
-#: ../../reference/operators.md:1843
+#: ../../reference/operators.md:1875
 msgid ""
 "Definition: Given a input tensor In, return the average of input tensor's"
 " elements. Example:"
 msgstr "定义：给定一个输入 tensor ，返回输入 tensor 元素的平均值。例如："
 
-#: ../../reference/operators.md:1857
+#: ../../reference/operators.md:1889
 msgid "`In`(single, T): Tensor to be reduced (shape [M])."
 msgstr "``In`` （单列数组 , 类型为 T ）：需要求平均的输入（大小为 [M] ）。"
 
-#: ../../reference/operators.md:1862
+#: ../../reference/operators.md:1894
 msgid "`Out`(single, T): The average Tensor (shape [1])."
 msgstr "``Out``  （单列数组 , 类型为 T ）：计算结果（大小为 [1] ）。"
 
-#: ../../reference/operators.md:1875
+#: ../../reference/operators.md:1907
 msgid "`ReduceCount`"
 msgstr "`ReduceCount`"
 
-#: ../../reference/operators.md:1877
+#: ../../reference/operators.md:1909
 msgid ""
 "Definition: Given an input tensor In, return the count of input tensor's "
 "elements. Example:"
 msgstr "定义：给定一个输入 tensor ，返回输入 tensor 元素的数量。例如："
 
-#: ../../reference/operators.md:1888
+#: ../../reference/operators.md:1920
 msgid "`In`(single, T): Tensor to be counted (shape [M])."
 msgstr "``In`` （单列数组 , 类型为 T ）：需要计算元素数量的输入（大小为 [M] ）。"
 
-#: ../../reference/operators.md:1893
+#: ../../reference/operators.md:1925
 msgid "`Out`(single, T): The counted Tensor (shape [1])."
 msgstr "``Out`` （单列数组 , 类型为 T ）：计算结果（大小为 [1] ）。"
 
-#: ../../reference/operators.md:1906
+#: ../../reference/operators.md:1938
 msgid "`ReduceMax`"
 msgstr "`ReduceMax`"
 
-#: ../../reference/operators.md:1908
+#: ../../reference/operators.md:1940
 msgid ""
 "Definition: Given a input tensor In, return the max of input tensor's "
 "elements. Example:"
 msgstr "定义：给定一个输入 tensor ，返回输入 tensor 元素的最大值。例如："
 
-#: ../../reference/operators.md:1919
+#: ../../reference/operators.md:1951
 msgid "`In`(single, T): Tensor to be maxed (shape [M])."
 msgstr "``In`` （单列数组 , 类型为 T ）：需要计算最大值的输入（大小为 [M] ）。"
 
-#: ../../reference/operators.md:1924
+#: ../../reference/operators.md:1956
 msgid "`Out`(single, T): The maxed Tensor (shape [1])."
 msgstr "``Out`` （单列数组 , 类型为 T ）：计算结果（大小为 [1] ）。"
 
-#: ../../reference/operators.md:1937
+#: ../../reference/operators.md:1969
 msgid "`ReduceMin`"
 msgstr "`ReduceMin`"
 
-#: ../../reference/operators.md:1939
+#: ../../reference/operators.md:1971
 msgid ""
 "Definition: Given a input tensor In, return the min of input tensor's "
 "elements. Example:"
 msgstr "定义：给定一个输入 tensor ，返回输入 tensor 元素的最小值。例如："
 
-#: ../../reference/operators.md:1950
+#: ../../reference/operators.md:1982
 msgid "`In`(single, T): Tensor to be mined (shape [M])."
 msgstr "``In`` （单列数组 , 类型为 T ）：需要计算最小值的输入（大小为 [M] ）。"
 
-#: ../../reference/operators.md:1955
+#: ../../reference/operators.md:1987
 msgid "`Out`(single, T): The mined Tensor (shape [1])."
 msgstr "``Out`` （单列数组 , 类型为 T ）：计算结果（大小为 [1] ）。"
 
-#: ../../reference/operators.md:1968
+#: ../../reference/operators.md:2000
 msgid "`ReduceSum`"
 msgstr "`ReduceSum`"
 
-#: ../../reference/operators.md:1970
+#: ../../reference/operators.md:2002
 msgid ""
 "Definition: Given an input tensor In, return the sum of input tensor's "
 "elements. Example:"
 msgstr "定义：给定一个输入 tensor ，返回输入 tensor 元素的总和。例如："
 
-#: ../../reference/operators.md:1981
+#: ../../reference/operators.md:2013
 msgid "`In`(single, T): Tensor to be summed (shape [M])."
 msgstr "``In`` （单列数组 , 类型为 T ）：要求和的输入（大小为 [M] ）。"
 
-#: ../../reference/operators.md:1986
+#: ../../reference/operators.md:2018
 msgid "`Out`(single, T): The summed Tensor (shape [1])."
 msgstr "``Out`` （单列数组 , 类型为 T ）：计算结果（大小为 [1] ）。"
 
-#: ../../reference/operators.md:1999
+#: ../../reference/operators.md:2031
 msgid "`RunSQL`"
 msgstr "`RunSQL`"
 
-#: ../../reference/operators.md:2001
+#: ../../reference/operators.md:2033
 msgid ""
 "Definition: Run a SQL statement and return a list of tensors in private "
 "status"
 msgstr "定义：运行 SQL 语句并返回私有态的结果"
 
-#: ../../reference/operators.md:2010
+#: ../../reference/operators.md:2042
 msgid "`Out`(variadic, T): Result tensors of the SQL statement."
 msgstr "``Out`` （多列数组，类型为 T ）： SQL 语句的执行结果。"
 
-#: ../../reference/operators.md:2016
+#: ../../reference/operators.md:2048
 msgid "`sql`: SQL statement"
 msgstr "``sql`` ：SQL 语句"
 
-#: ../../reference/operators.md:2018
+#: ../../reference/operators.md:2050
 msgid "`table_refs`: tables referenced by query"
 msgstr "``table_refs`` ：SQL 语句中所引用的表格。"
 
-#: ../../reference/operators.md:2031
+#: ../../reference/operators.md:2063
 msgid "`Shape`"
 msgstr "`Shape`"
 
-#: ../../reference/operators.md:2033
+#: ../../reference/operators.md:2065
 msgid ""
 "Definition: Given tensors In, return shapes of each tensor. Axis starts "
 "from 0. If axis is set, dimensions of each shape are returned. If axis is"
@@ -1278,91 +1303,87 @@ msgstr ""
 "定义：从维度 0 开始计算 tensor 在各个维度的大小，如果设置了 Axis，则返回 Axis 所指定的维度上的大小，否则 ( Axis "
 "默认为 -1)，则返回 tensor 在所有维度上的大小。例如："
 
-#: ../../reference/operators.md:2044
-msgid "`In`(variadic, T): Input Tensors"
-msgstr "``In`` （多列数组，类型为 T ）：输入 Tensor 。"
-
-#: ../../reference/operators.md:2049
+#: ../../reference/operators.md:2081
 msgid "`Out`(variadic, T1): Shape Tensors"
 msgstr "``Out`` （多列数组，类型为 T1 ）： Tensor 在各个维度上的大小。"
 
-#: ../../reference/operators.md:2055
+#: ../../reference/operators.md:2087
 msgid "`axis`: Int64. Specific dimension of the shape."
 msgstr "``axis`` ： Int64 类型，特定的维度。"
 
-#: ../../reference/operators.md:2064
+#: ../../reference/operators.md:2096
 msgid "`axis`: -1"
 msgstr "``axis`` : -1"
 
-#: ../../reference/operators.md:2077
+#: ../../reference/operators.md:2109
 msgid "`Shuffle`"
 msgstr "`Shuffle`"
 
-#: ../../reference/operators.md:2079
+#: ../../reference/operators.md:2111
 msgid "Definition: Shuffle `In`. Example:"
 msgstr "定义：将输入 tensor 的顺序进行随机打乱。例如："
 
-#: ../../reference/operators.md:2090
+#: ../../reference/operators.md:2122
 msgid "`In`(variadic, T): Input Value(shape [M][1])."
 msgstr "``In`` （多列数组，类型为 T ）：输入 Tensor （大小为 [M][1] ）。"
 
-#: ../../reference/operators.md:2095
+#: ../../reference/operators.md:2127
 msgid "`Out`(variadic, T): Output Value(shape [M][1])"
 msgstr "``Out`` （多列数组，类型为 T ）：输出 Tensor （大小为 [M][1] ）。"
 
-#: ../../reference/operators.md:2108
+#: ../../reference/operators.md:2140
 msgid "`Sin`"
 msgstr ""
 
-#: ../../reference/operators.md:2110
+#: ../../reference/operators.md:2142
 msgid "Definition: return the value of sine function"
 msgstr ""
 
-#: ../../reference/operators.md:2114
+#: ../../reference/operators.md:2146
 msgid "`In`(single, T): the expression pass to sine function"
 msgstr "``In`` （单列数组，类型为 T sine 的入参。"
 
-#: ../../reference/operators.md:2132
+#: ../../reference/operators.md:2164
 msgid "`Sort`"
 msgstr "`Sort`"
 
-#: ../../reference/operators.md:2134
+#: ../../reference/operators.md:2166
 msgid "Definition: sort `In` using `Key`. Example:"
 msgstr "定义：根据排序键 ``Key`` 对输入 ``In`` 中的元素进行排序。例如："
 
-#: ../../reference/operators.md:2146
+#: ../../reference/operators.md:2178
 msgid "`Key`(variadic, T): Sort Key(shape [M][1])."
 msgstr "``Key`` （多列数组，类型为 T ）：排序键（大小为 [M][1] ）。"
 
-#: ../../reference/operators.md:2148
+#: ../../reference/operators.md:2180
 msgid "`In`(variadic, T): Sort Value(shape [M][1])."
 msgstr "``In`` （多列数组，类型为 T ）：所需排序的输入（大小为 [M][1] ）。"
 
-#: ../../reference/operators.md:2153
+#: ../../reference/operators.md:2185
 msgid "`Out`(variadic, T): Sorted Value(shape [M][1])"
 msgstr "``Out`` （多列数组，类型为 T ）：排序后的结果（大小为 [M][1] ）。"
 
-#: ../../reference/operators.md:2159
+#: ../../reference/operators.md:2191
 msgid "`reverse`: Bool. If True, the sorted tensor in descending order."
 msgstr "``reverse`` : 布尔类型, 如果为 True ，则表示按照从大到小的顺序进行排序。"
 
-#: ../../reference/operators.md:2168
+#: ../../reference/operators.md:2200
 msgid "`reverse`: false"
 msgstr "``reverse`` : false"
 
-#: ../../reference/operators.md:2179
+#: ../../reference/operators.md:2211
 msgid "`Unique`"
 msgstr "``Unique``"
 
-#: ../../reference/operators.md:2181
+#: ../../reference/operators.md:2213
 msgid "Definition: Unique of Key tensor. Example:"
 msgstr "定义：获取输入 tensor 中唯一元素。例如："
 
-#: ../../reference/operators.md:2192
+#: ../../reference/operators.md:2224
 msgid "`Key`(single, T): Input key tensors(shape [M][1])."
 msgstr "``Key`` （单列数组，类型为 T ）：输入 tensor （大小为 [M][1] ）。"
 
-#: ../../reference/operators.md:2197
+#: ../../reference/operators.md:2229
 msgid "`UniqueKey`(single, T): Output unique key tensor(shape [K][1])."
 msgstr "``UniqueKey`` （单列数组，类型为 T ）：输出结果（大小为 [K][1] ）。"
 

@@ -32,8 +32,8 @@ var (
 	jobId   string
 
 	getCmd = &cobra.Command{
-		Use:   "get {project|table [NAME1 [,NAME2]]|ccl|invitation|result}",
-		Short: "Show existing project|table|ccl|invitation or get job result",
+		Use:   "get {project|table [NAME1 [,NAME2]]|ccl|invitation|result|plan}",
+		Short: "Show existing project|table|ccl|invitation or get job result or query plan",
 		Args:  cobra.MatchAll(cobra.MinimumNArgs(1), cobra.MaximumNArgs(2)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var names []string
@@ -51,6 +51,8 @@ var (
 				return getInvitation()
 			case "result", "results":
 				return getResult()
+			case "explain", "explains":
+				return getExplain()
 			default:
 				return fmt.Errorf("not support get %v", args[0])
 			}
@@ -62,6 +64,7 @@ func init() {
 	getCmd.Flags().StringVar(&tables, "tables", "", "when get ccl, you can specify tables in format 'NAME [, NAME]', e.g: 'ta, tb'")
 	getCmd.Flags().StringVar(&parties, "parties", "", "when get ccl, you can specify parties in format 'NAME [, NAME]', e.g: 'alice, bob'")
 	getCmd.Flags().StringVar(&jobId, "job-id", "", "when get result, you must specify the job-id obtained after successfully creating the job")
+	getCmd.Flags().StringVar(&query, "query", "", "when get explain, you must specify the corresponding query")
 }
 
 func getProject() error {
@@ -133,6 +136,23 @@ func getResult() error {
 		return fmt.Errorf("GetResult failed, response status: %v", response.GetStatus())
 	}
 
+	return nil
+}
+
+func getExplain() error {
+	if projectID == "" {
+		return fmt.Errorf("flags project-id must not be empty")
+	}
+	if query == "" {
+		return fmt.Errorf("flags query must not be empty")
+	}
+	explain, err := brokerCommand.GetExplain(projectID, query, jobConf)
+	if err != nil {
+		return fmt.Errorf("get plan: %w", err)
+	}
+
+	fmt.Println("get plan succeeded")
+	fmt.Printf("plan explain: \n%s\n", explain.GetExeGraphDot())
 	return nil
 }
 

@@ -37,7 +37,7 @@ import (
 	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
 
-var mockDBPath = "testdata/db.json"
+var MockDBPath = "db.json"
 
 var dTypeString2FieldType = map[string]types.FieldType{
 	"int":       *(types.NewFieldType(mysql.TypeLong)),
@@ -166,22 +166,36 @@ func getDataFromJson[retType any](filePath string) (res retType, err error) {
 }
 
 func getMockData() ([]allDBData, []string, error) {
-	pre := "util/mock"
-	dir, _ := os.Getwd()
-	re := regexp.MustCompile(".*/pkg")
-	dir = re.FindString(dir)
+	var mock_db db
+	var err error
+	mockDBPath := MockDBPath
+	if filepath.IsAbs(MockDBPath) {
+		mock_db, err = getDataFromJson[db](MockDBPath)
+		if err != nil {
+			return nil, nil, err
+		}
+	} else {
+		pre := "util/mock/testdata"
+		workDir, _ := os.Getwd()
+		re := regexp.MustCompile(".*/pkg")
+		dir := re.FindString(workDir)
 
-	if dir == "" {
-		dir, _ = os.Getwd()
-		re := regexp.MustCompile(".*/cmd")
-		dir = re.FindString(dir)
-		dir, _ = filepath.Split(dir)
-		dir = dir + "pkg"
+		if dir == "" {
+			re = regexp.MustCompile(".*/cmd")
+			dir = re.FindString(workDir)
+			if dir == "" {
+				return nil, nil, fmt.Errorf("cannot find pkg dir")
+			}
+			dir, _ = filepath.Split(dir)
+			dir = dir + "pkg"
+		}
+		mockDBPath = filepath.Join(filepath.Join(dir, pre), MockDBPath)
+		mock_db, err = getDataFromJson[db](mockDBPath)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
-	mock_db, err := getDataFromJson[db](filepath.Join(filepath.Join(dir, pre), mockDBPath))
-	if err != nil {
-		return nil, nil, err
-	}
+
 	all_dbs := make(map[string]allDBData)
 	for name, info := range mock_db.DBInfo {
 		all_dbs[name] = allDBData{
@@ -192,7 +206,7 @@ func getMockData() ([]allDBData, []string, error) {
 		}
 	}
 	for _, file := range mock_db.TableFiles {
-		mock_table, err := getDataFromJson[map[string]tableInfo](filepath.Join(filepath.Join(dir, pre), file))
+		mock_table, err := getDataFromJson[map[string]tableInfo](filepath.Join(filepath.Dir(mockDBPath), file))
 		if err != nil {
 			return nil, nil, err
 		}

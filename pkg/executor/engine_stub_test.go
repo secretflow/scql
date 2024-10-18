@@ -15,14 +15,17 @@
 package executor
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/encoding/protojson"
+
+	"github.com/secretflow/scql/pkg/proto-gen/scql"
 )
 
 type TestBody struct {
@@ -33,37 +36,46 @@ type TestBody struct {
 
 func TestHttpClientPost(t *testing.T) {
 	r := require.New(t)
-	cli := NewEngineClient(time.Second)
-	body := TestBody{
-		Name:     "name",
-		ID:       123,
-		FullName: "full_name",
+	cli := NewEngineClient("HTTP", time.Second, nil, "application/json", "http")
+	req := &scql.RunExecutionPlanRequest{
+		Async:       false,
+		CallbackUrl: "http://example.com/callback",
 	}
+	resp := &scql.RunExecutionPlanResponse{
+		JobId:           "job_id_example",
+		PartyCode:       "party_code_example",
+		NumRowsAffected: 100,
+	}
+
+	respBody, err := protojson.Marshal(resp)
+	r.NoError(err)
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "POST" {
 			t.Errorf("Expected 'POST' request, got '%s'", r.Method)
 		}
-		var b TestBody
+		var b scql.RunExecutionPlanRequest
 		err := json.NewDecoder(r.Body).Decode(&b)
 		if err != nil {
 			t.Errorf("Error when unmarshaling json body: %v", err)
 		}
-		if b.Name != body.Name {
-			t.Errorf("Expect %s got %s", body.Name, b.Name)
+		if b.Async != req.Async {
+			t.Errorf("Expect %t got %t", req.Async, b.Async)
 		}
-		if b.ID != body.ID {
-			t.Errorf("Expect %d got %d", body.ID, b.ID)
+		if b.CallbackUrl != req.CallbackUrl {
+			t.Errorf("Expect %s got %s", req.CallbackUrl, b.CallbackUrl)
 		}
-		if b.FullName != body.FullName {
-			t.Errorf("Expect %s got %s", body.FullName, b.FullName)
-		}
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
+		w.Write(respBody)
 	}))
 	defer ts.Close()
-	ctx := context.Background()
-	b, err := json.Marshal(body)
-	r.NoError(err)
-	_, err = cli.Post(ctx, ts.URL, "credential", "application/json", string(b))
+
+	u, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Fatalf("Error parsing URL: %v", err)
+	}
+
+	_, err = cli.RunExecutionPlan(u.Host, "credential", req)
 	r.NoError(err)
 }

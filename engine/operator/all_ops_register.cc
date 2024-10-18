@@ -53,6 +53,7 @@
 #include "engine/operator/sort.h"
 #include "engine/operator/trigonometric.h"
 #include "engine/operator/unique.h"
+#include "engine/operator/window.h"
 
 #ifndef ADD_OPERATOR_TO_REGISTRY
 #define ADD_OPERATOR_TO_REGISTRY(op_type)                                \
@@ -151,6 +152,8 @@ void RegisterAllOpsImpl() {
   ADD_OPERATOR_TO_REGISTRY(ACosine);
 
   ADD_OPERATOR_TO_REGISTRY(Bucket);
+
+  ADD_OPERATOR_TO_REGISTRY(RowNumber);
 }
 
 }  // namespace

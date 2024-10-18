@@ -3,6 +3,11 @@
     "name": "TestRunSQL",
     "cases": [
       {
+        "sql": "SELECT tbl_1.plain_int_0, tbl_1.plain_float_0, ROW_NUMBER() OVER(PARTITION BY tbl_1.plain_int_0 ORDER BY tbl_1.plain_float_0) AS number from alice.tbl_1 as tbl_1",
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_1.plain_int_0,tbl_1.plain_float_0,row_number() over (partition by tbl_1.plain_int_0 order by tbl_1.plain_float_0) as number from alice.tbl_1 as tbl_1"
+      },
+      {
         "sql": "SELECT geodist(plain_int_0, plain_float_0, plain_int_0, plain_float_0, 6300) from alice.tbl_1 as tbl_1",
         "skip_projection": false,
         "rewritten_sql": "select 6300*acos(sin(radians(tbl_1.plain_float_0))*sin(radians(tbl_1.plain_float_0))+cos(radians(tbl_1.plain_float_0))*cos(radians(tbl_1.plain_float_0))*cos(radians(tbl_1.plain_int_0)-radians(tbl_1.plain_int_0))) as expr_106 from alice.tbl_1 as tbl_1"
@@ -461,6 +466,11 @@
         "sql": "select length(plain_string_0) as a from alice.tbl_1",
         "skip_projection": false,
         "rewritten_sql": "select length(tbl_1.plain_string_0) as a from alice.tbl_1"
+      },
+      {
+        "sql": "select trim(plain_string_0) as a from alice.tbl_1",
+        "skip_projection": false,
+        "rewritten_sql": "select trim(tbl_1.plain_string_0) as a from alice.tbl_1"
       },
       {
         "sql": "select instr(plain_string_0, 'teststr') as a from alice.tbl_1",

@@ -253,6 +253,7 @@ const (
 	PlaintextAfterAggregatePriv
 	PlaintextAfterComparePriv
 	EncryptedOnlyPriv
+	RevealRankPriv
 )
 
 // AllPrivMask is the mask for PrivilegeType with all bits set to 1.
@@ -333,6 +334,7 @@ var Priv2UserCol = map[PrivilegeType]string{
 	PlaintextAfterGroupByPriv:   "Plaintext_after_group_by_priv",
 	PlaintextAfterComparePriv:   "PLAINTEXT_AFTER_COMPARE_priv",
 	PlaintextAfterAggregatePriv: "PLAINTEXT_AFTER_AGGREGATE_priv",
+	RevealRankPriv:              "Reveal_rank_priv",
 	EncryptedOnlyPriv:           "Encrypted_only_priv",
 }
 
@@ -374,6 +376,7 @@ var Col2PrivType = map[string]PrivilegeType{
 	"Plaintext_after_group_by_priv":  PlaintextAfterGroupByPriv,
 	"PLAINTEXT_AFTER_COMPARE_priv":   PlaintextAfterComparePriv,
 	"PLAINTEXT_AFTER_AGGREGATE_priv": PlaintextAfterAggregatePriv,
+	"Reveal_rank_priv":               RevealRankPriv,
 	"Encrypted_only_priv":            EncryptedOnlyPriv,
 }
 
@@ -451,6 +454,7 @@ var Priv2Str = map[PrivilegeType]string{
 	PlaintextAfterGroupByPriv:   "SELECT PLAINTEXT_AFTER_GROUP_BY",
 	PlaintextAfterComparePriv:   "SELECT PLAINTEXT_AFTER_COMPARE",
 	PlaintextAfterAggregatePriv: "SELECT PLAINTEXT_AFTER_AGGREGATE",
+	RevealRankPriv:              "SELECT REVEAL_RANK",
 	EncryptedOnlyPriv:           "SELECT ENCRYPTED_ONLY",
 }
 
@@ -490,7 +494,7 @@ var SetStr2Priv = map[string]PrivilegeType{
 }
 
 // AllGlobalPrivs is all the privileges in global scope.
-var AllGlobalPrivs = []PrivilegeType{SelectPriv, InsertPriv, UpdatePriv, DeletePriv, CreatePriv, DropPriv, ProcessPriv, ReferencesPriv, AlterPriv, ShowDBPriv, SuperPriv, ExecutePriv, IndexPriv, CreateUserPriv, TriggerPriv, CreateViewPriv, ShowViewPriv, CreateRolePriv, DropRolePriv, CreateTMPTablePriv, LockTablesPriv, CreateRoutinePriv, AlterRoutinePriv, EventPriv, ShutdownPriv, ReloadPriv, FilePriv, DescribePriv, ShowPriv, PlaintextPriv, PlaintextAfterJoinPriv, PlaintextAsJoinPayloadPriv, PlaintextAfterGroupByPriv, PlaintextAfterAggregatePriv, PlaintextAfterComparePriv, EncryptedOnlyPriv}
+var AllGlobalPrivs = []PrivilegeType{SelectPriv, InsertPriv, UpdatePriv, DeletePriv, CreatePriv, DropPriv, ProcessPriv, ReferencesPriv, AlterPriv, ShowDBPriv, SuperPriv, ExecutePriv, IndexPriv, CreateUserPriv, TriggerPriv, CreateViewPriv, ShowViewPriv, CreateRolePriv, DropRolePriv, CreateTMPTablePriv, LockTablesPriv, CreateRoutinePriv, AlterRoutinePriv, EventPriv, ShutdownPriv, ReloadPriv, FilePriv, DescribePriv, ShowPriv, PlaintextPriv, PlaintextAfterJoinPriv, PlaintextAsJoinPayloadPriv, PlaintextAfterGroupByPriv, PlaintextAfterAggregatePriv, PlaintextAfterComparePriv, EncryptedOnlyPriv, RevealRankPriv}
 
 // AllDBPrivs is all the privileges in database scope.
 var AllDBPrivs = []PrivilegeType{SelectPriv, InsertPriv, UpdatePriv, DeletePriv, CreatePriv, DropPriv, AlterPriv, ExecutePriv, IndexPriv, CreateViewPriv, ShowViewPriv, DescribePriv, ShowPriv}

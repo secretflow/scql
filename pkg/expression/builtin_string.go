@@ -443,3 +443,29 @@ func (b *builtinInstrSig) evalInt(row chunk.Row) (int64, bool, error) {
 	}
 	return int64(idx + 1), false, nil
 }
+
+type builtinTrimSig struct {
+	baseBuiltinFunc
+}
+
+func (b *builtinTrimSig) Clone() builtinFunc {
+	newFunction := &builtinTrimSig{}
+	newFunction.cloneFrom(&b.baseBuiltinFunc)
+	return newFunction
+}
+
+type trimFunctionClass struct {
+	baseFunctionClass
+}
+
+func (c *trimFunctionClass) getFunction(ctx sessionctx.Context, args []Expression) (builtinFunc, error) {
+	if err := c.verifyArgs(args); err != nil {
+		return nil, err
+	}
+	bf := newBaseBuiltinFuncWithTp(ctx, args, types.ETString, types.ETString)
+	argTp := args[0].GetType()
+	bf.tp.Flen = argTp.Flen
+	SetBinFlagOrBinStr(argTp, bf.tp)
+	sig := &builtinTrimSig{bf}
+	return sig, nil
+}

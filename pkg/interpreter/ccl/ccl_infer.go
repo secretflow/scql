@@ -17,6 +17,7 @@ package ccl
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/secretflow/scql/pkg/expression"
 )
@@ -150,4 +151,12 @@ func IsCompareOp(expr expression.Expression) (bool, error) {
 	}
 	isCompare := isCompareAstFuncMap[sf.FuncName.L]
 	return isCompare, nil
+}
+
+func IsRankWindowFunc(name string) bool {
+	if _, ok := isRankWindowFuncMap[strings.ToLower(name)]; ok {
+		return true
+	}
+
+	return false
 }

@@ -68,14 +68,15 @@ INSTANTIATE_TEST_SUITE_P(
                                           R"json(["B","A","CCC","B"])json")),
              test::NamedTensor(
                  "c4", TensorFrom(arrow::float32(),
-                                  "[1.1025, 100.245, -10.2, 3.1415926]"))},
-        .input_types = {pb::PrimitiveDataType::INT64,
-                        pb::PrimitiveDataType::TIMESTAMP,
-                        pb::PrimitiveDataType::DATETIME,
-                        pb::PrimitiveDataType::STRING,
-                        pb::PrimitiveDataType::FLOAT32},
+                                  "[1.1025, 100.245, -10.2, 3.1415926]")),
+             test::NamedTensor("c5", TensorFrom(arrow::boolean(),
+                                                "[true, false, null, false]"))},
+        .input_types =
+            {pb::PrimitiveDataType::INT64, pb::PrimitiveDataType::TIMESTAMP,
+             pb::PrimitiveDataType::DATETIME, pb::PrimitiveDataType::STRING,
+             pb::PrimitiveDataType::FLOAT32, pb::PrimitiveDataType::BOOL},
         .tableName = "test_table",
-        .columnNames = {"c0", "c1", "c2", "c3", "c4"}}));
+        .columnNames = {"c0", "c1", "c2", "c3", "c4", "c5"}}));
 
 TEST_P(InsertTableTest, Works) {
   // Give
@@ -134,6 +135,8 @@ void InsertTableTest::CreateTable(const InsertTableTestCase& tc) {
 
   auto sqlite_type = [](pb::PrimitiveDataType type) {
     switch (type) {
+      case pb::PrimitiveDataType::BOOL:
+        return "BOOLEAN";
       case pb::PrimitiveDataType::INT32:
       case pb::PrimitiveDataType::INT64:
       case pb::PrimitiveDataType::TIMESTAMP:

@@ -27,6 +27,8 @@ std::string GetStringValue(const pb::Tensor& t);
 
 std::vector<std::string> GetStringValues(const pb::Tensor& t);
 
+uint32_t GetScalarUint32(std::shared_ptr<Tensor> t);
+
 void SetStringValues(pb::Tensor* t, const std::vector<std::string>& values);
 
 int64_t GetInt64Value(const pb::Tensor& t);
