@@ -70,11 +70,11 @@ def _secretflow_deps():
         name = "psi",
         urls = [
             #"https://github.com/secretflow/psi/archive/%s.tar.gz" % PSI_COMMIT,
-            "https://github.com/secretflow/psi/archive/refs/tags/v0.4.0.dev240524.tar.gz",
+            "https://github.com/secretflow/psi/archive/refs/tags/v0.5.0.dev241016.tar.gz",
         ],
         # strip_prefix = "psi-%s" % PSI_COMMIT,
-        strip_prefix = "psi-0.4.0.dev240524",
-        sha256 = "c2868fa6a9d804e6bbed9922dab6dc819ec6e180e15eafe7eb1b661302508c88",
+        strip_prefix = "psi-0.5.0.dev241016",
+        sha256 = "1672e4284f819c40e34c65b0d5b1dfe4cc959b81d6f63daef7b39f7eb8d742e2",
     )
 
     maybe(
