@@ -48,7 +48,7 @@ def engine_deps():
     _com_aws_sdk()
 
 def _secretflow_deps():
-    # SPU_COMMIT = "3ccae529b70b37f7312e1171eab7e5acc16ff136"
+    SPU_COMMIT = "fde113cb9d0229ac72310815316f766acc2a0aa4"
     # PSI_COMMIT = "47aaeb9c9ccd92deb8c150b2d55302ac0070f723"
     # HEU_COMMIT = "afa15a0ad009cb5d5e40bd1dce885b9e4d472083"
     # KUSCIA_COMMIT = "1979d1f4f17db5c2bd6c57be7a690e88fa9ce7ed"
@@ -57,12 +57,12 @@ def _secretflow_deps():
         http_archive,
         name = "spulib",
         urls = [
-            # "https://github.com/secretflow/spu/archive/%s.tar.gz" % SPU_COMMIT,
-            "https://github.com/secretflow/spu/archive/refs/tags/0.9.3dev20240821.tar.gz",
+            "https://github.com/secretflow/spu/archive/%s.tar.gz" % SPU_COMMIT,
+            # "https://github.com/secretflow/spu/archive/refs/tags/0.9.3dev20240821.tar.gz",
         ],
-        # strip_prefix = "spu-%s" % SPU_COMMIT,
-        strip_prefix = "spu-0.9.3dev20240821",
-        sha256 = "c04e6a6eb61e7eb16a267a499020adc6867ecf7e640464bbdec986023b0edecb",
+        strip_prefix = "spu-%s" % SPU_COMMIT,
+        # strip_prefix = "spu-0.9.3dev20240821",
+        sha256 = "2956e3ee7e339e5d63aab652fdd2596b1868a9e74e24b6599cc96e7c8e5efbf7",
     )
 
     maybe(
@@ -82,11 +82,11 @@ def _secretflow_deps():
         name = "com_alipay_sf_heu",
         urls = [
             # "https://github.com/secretflow/heu/archive/%s.tar.gz" % HEU_COMMIT,
-            "https://github.com/secretflow/heu/archive/refs/tags/0.6.0.dev20240529.tar.gz",
+            "https://github.com/secretflow/heu/archive/refs/tags/0.6.0.dev20241015.tar.gz",
         ],
         # strip_prefix = "heu-%s" % HEU_COMMIT,
-        strip_prefix = "heu-0.6.0.dev20240529",
-        sha256 = "1430a17385286c11792e78c7b038860f12b6a0716e8fe8a547fb4626be60195f",
+        strip_prefix = "heu-0.6.0.dev20241015",
+        sha256 = "c28a914aa3da4238a2a0550310c1e8bbe8079d82f4a00f59b807a82f7468b4ad",
     )
 
     maybe(
