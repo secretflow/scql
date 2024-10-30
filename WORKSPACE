@@ -61,6 +61,10 @@ rules_foreign_cc_dependencies(
     register_preinstalled_tools = True,
 )
 
+load("@bazel_features//:deps.bzl", "bazel_features_deps")
+
+bazel_features_deps()
+
 load("@xla//:workspace4.bzl", "xla_workspace4")
 
 xla_workspace4()
