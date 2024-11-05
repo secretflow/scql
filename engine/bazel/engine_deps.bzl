@@ -58,10 +58,10 @@ def _secretflow_deps():
         name = "spulib",
         urls = [
             "https://github.com/secretflow/spu/archive/%s.tar.gz" % SPU_COMMIT,
-            # "https://github.com/secretflow/spu/archive/refs/tags/0.9.3dev20240821.tar.gz",
+            # "https://github.com/secretflow/spu/archive/refs/tags/0.9.3dev20241009.tar.gz",
         ],
         strip_prefix = "spu-%s" % SPU_COMMIT,
-        # strip_prefix = "spu-0.9.3dev20240821",
+        # strip_prefix = "spu-0.9.3dev20241009",
         sha256 = "2956e3ee7e339e5d63aab652fdd2596b1868a9e74e24b6599cc96e7c8e5efbf7",
     )
 
