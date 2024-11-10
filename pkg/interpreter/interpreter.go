@@ -18,6 +18,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"golang.org/x/exp/slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -68,14 +69,18 @@ func (intr *Interpreter) Compile(ctx context.Context, req *pb.CompileQueryReques
 	if err != nil {
 		return nil, err
 	}
-	selectIntoIssuer := false
+	issuerAsParticipant := req.GetIssuerAsParticipant()
+	var intoPartyCodes []string
 	if lp.IntoOpt() != nil {
-		if lp.IntoOpt().PartyCode != req.GetIssuer().GetCode() {
-			return nil, fmt.Errorf("expect select into issuer party code %s but got %s", req.GetIssuer().GetCode(), lp.IntoOpt().PartyCode)
+		if len(lp.IntoOpt().PartyFiles) == 1 && lp.IntoOpt().PartyFiles[0].PartyCode == "" {
+			lp.IntoOpt().PartyFiles[0].PartyCode = req.GetIssuer().GetCode()
 		}
-		selectIntoIssuer = true
+		for _, partyFile := range lp.IntoOpt().PartyFiles {
+			intoPartyCodes = append(intoPartyCodes, partyFile.PartyCode)
+		}
+		issuerAsParticipant = true
 	}
-	enginesInfo, err := buildEngineInfo(lp, req.GetCatalog(), req.GetDbName(), req.GetIssuer().GetCode(), req.GetIssuerAsParticipant() || selectIntoIssuer)
+	enginesInfo, err := buildEngineInfo(lp, req.GetCatalog(), req.GetDbName(), req.GetIssuer().GetCode(), issuerAsParticipant, intoPartyCodes)
 	if err != nil {
 		return nil, err
 	}
@@ -290,7 +295,7 @@ func collectDataSourceNode(lp core.LogicalPlan) []*core.DataSource {
 	return nil
 }
 
-func buildEngineInfo(lp core.LogicalPlan, catalog *pb.Catalog, currentDb string, queryIssuer string, issuerAsParticipant bool) (*graph.EnginesInfo, error) {
+func buildEngineInfo(lp core.LogicalPlan, catalog *pb.Catalog, currentDb string, queryIssuer string, issuerAsParticipant bool, intoPartyCodes []string) (*graph.EnginesInfo, error) {
 	// construct catalog map
 	catalogMap := make(map[string]*pb.TableEntry)
 	for _, table := range catalog.GetTables() {
@@ -363,9 +368,20 @@ func buildEngineInfo(lp core.LogicalPlan, catalog *pb.Catalog, currentDb string,
 		}
 	}
 
+	if len(intoPartyCodes) > 0 {
+		for _, partyCode := range intoPartyCodes {
+			parties = append(parties, &graph.Participant{
+				PartyCode: partyCode,
+			})
+		}
+	}
+
 	// sort parties by party code for deterministic in p2p
 	sort.Slice(parties, func(i, j int) bool {
 		return parties[i].PartyCode < parties[j].PartyCode
+	})
+	parties = slices.CompactFunc(parties, func(i, j *graph.Participant) bool {
+		return i.PartyCode == j.PartyCode
 	})
 
 	partyInfo := graph.NewPartyInfo(parties)
