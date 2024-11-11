@@ -2341,9 +2341,10 @@ func (n *SelectIntoOption) Restore(ctx *RestoreCtx) error {
 		return errors.New("Unsupported SelectionInto type")
 	}
 
-	ctx.WriteKeyWord("INTO OUTFILE ")
+	ctx.WriteKeyWord("INTO OUTFILE")
 	if n.PartyFiles != nil {
 		for i, partyFile := range n.PartyFiles {
+			ctx.WriteKeyWord(" ")
 			if err := partyFile.Restore(ctx); err != nil {
 				return errors.Annotatef(err, "An error occurred while restore UpdateStmt.TableHints[%d]", i)
 			}
