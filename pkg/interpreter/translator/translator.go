@@ -150,13 +150,26 @@ func (t *translator) Translate(lp core.LogicalPlan) (*graph.Graph, error) {
 	if err != nil {
 		return nil, err
 	}
-	// Check if the result is visible to the issuerPartyCode
-	for i, col := range ln.Schema().Columns {
-		cc := ln.CCL()[col.UniqueID]
-		if !cc.IsVisibleFor(t.issuerPartyCode) {
-			return nil, status.New(
-				proto.Code_CCL_CHECK_FAILED,
-				fmt.Sprintf("ccl check failed: the %dth column %s in the result is not visibile (%s) to party %s", i+1, col.OrigName, cc.LevelFor(t.issuerPartyCode).String(), t.issuerPartyCode))
+	// Check if the result is visible to the intoOpt PartyCode
+	cclCheckPartyList := []string{t.issuerPartyCode}
+	if lp.IntoOpt() != nil {
+		if len(lp.IntoOpt().PartyFiles) == 1 && lp.IntoOpt().PartyFiles[0].PartyCode == "" {
+			lp.IntoOpt().PartyFiles[0].PartyCode = t.issuerPartyCode
+		}
+		for _, partyFile := range lp.IntoOpt().PartyFiles {
+			if partyFile.PartyCode != t.issuerPartyCode {
+				cclCheckPartyList = append(cclCheckPartyList, partyFile.PartyCode)
+			}
+		}
+	}
+	for _, partyCode := range cclCheckPartyList {
+		for i, col := range ln.Schema().Columns {
+			cc := ln.CCL()[col.UniqueID]
+			if !cc.IsVisibleFor(partyCode) {
+				return nil, status.New(
+					proto.Code_CCL_CHECK_FAILED,
+					fmt.Sprintf("ccl check failed: the %dth column %s in the result is not visibile (%s) to party %s", i+1, col.OrigName, cc.LevelFor(partyCode).String(), partyCode))
+			}
 		}
 	}
 	// find one of the qualified computation parties to act as the query issuer
@@ -268,26 +281,32 @@ func (t *translator) addPublishNode(ln logicalNode) error {
 
 func (t *translator) addDumpFileNode(ln logicalNode) error {
 	intoOpt := ln.IntoOpt()
-	// issuer party code can see all outputs
-	if intoOpt.PartyCode == "" {
-		intoOpt.PartyCode = t.issuerPartyCode
-	}
-	// if into party code is not equal to issuer, refuse this query
-	if intoOpt.PartyCode != t.issuerPartyCode {
-		return fmt.Errorf("failed to check select into party code (%s) which is not equal to (%s)", intoOpt.PartyCode, t.issuerPartyCode)
+
+	if len(intoOpt.PartyFiles) == 1 && intoOpt.PartyFiles[0].PartyCode == "" {
+		intoOpt.PartyFiles[0].PartyCode = t.issuerPartyCode
 	}
 
-	input, output, err := t.prepareResultNodeIo(ln)
-	if err != nil {
-		return fmt.Errorf("addDumpFileNode: prepare io failed: %v", err)
+	for _, partyFile := range intoOpt.PartyFiles {
+		input, output, err := t.prepareResultNodeIoForParty(ln, partyFile.PartyCode)
+		if err != nil {
+			return fmt.Errorf("addDumpFileNode: prepare io failed: %v", err)
+		}
+		err = t.ep.AddDumpFileNodeForParty("dump_file", input, output, intoOpt, partyFile)
+		if err != nil {
+			return fmt.Errorf("AddDumpFileNode: %v", err)
+		}
 	}
-	return t.ep.AddDumpFileNode("dump_file", input, output, intoOpt)
+	return nil
 }
 
 func (t *translator) prepareResultNodeIo(ln logicalNode) (input, output []*graph.Tensor, err error) {
+	return t.prepareResultNodeIoForParty(ln, t.issuerPartyCode)
+}
+
+func (t *translator) prepareResultNodeIoForParty(ln logicalNode, partyCode string) (input, output []*graph.Tensor, err error) {
 	for i, it := range ln.ResultTable() {
 		// Reveal tensor to into party code
-		it, err = t.converter.convertTo(it, &privatePlacement{partyCode: t.issuerPartyCode})
+		it, err = t.converter.convertTo(it, &privatePlacement{partyCode: partyCode})
 		if err != nil {
 			return
 		}

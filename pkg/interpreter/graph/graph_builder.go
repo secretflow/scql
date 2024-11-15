@@ -386,9 +386,9 @@ const (
 	_quotingAllValid int64 = 2
 )
 
-func (plan *GraphBuilder) AddDumpFileNode(name string, in []*Tensor, out []*Tensor, intoOpt *ast.SelectIntoOption) error {
+func (plan *GraphBuilder) AddDumpFileNodeForParty(name string, in []*Tensor, out []*Tensor, intoOpt *ast.SelectIntoOption, partyFile *ast.PartyFile) error {
 	fp := &Attribute{}
-	fp.SetString(intoOpt.FileName)
+	fp.SetString(partyFile.FileName)
 	terminator := &Attribute{}
 	terminator.SetString(intoOpt.LinesInfo.Terminated)
 	del := &Attribute{}
@@ -418,7 +418,7 @@ func (plan *GraphBuilder) AddDumpFileNode(name string, in []*Tensor, out []*Tens
 			operator.FieldDeliminatorAttr: del,
 			operator.QuotingStyleAttr:     qs,
 			operator.LineTerminatorAttr:   terminator,
-		}, []string{intoOpt.PartyCode})
+		}, []string{partyFile.PartyCode})
 	if err != nil {
 		return fmt.Errorf("AddDumpFileNode: %v", err)
 	}

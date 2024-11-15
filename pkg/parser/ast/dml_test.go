@@ -51,6 +51,7 @@ func (ts *testDMLSuite) TestDMLVisitorCover(c *C) {
 		{tableRefsClause, 1, 1},
 		{&TableSource{Source: &TableName{}}, 0, 0},
 		{&WildCardField{}, 0, 0},
+		{&SelectIntoOption{Tp: SelectIntoOutfile, PartyFiles: []*PartyFile{{}, {}}, FieldsInfo: &FieldsClause{}, LinesInfo: &LinesClause{}}, 0, 0},
 
 		// TODO: cover childrens
 		{&InsertStmt{Table: tableRefsClause}, 0, 0},
@@ -72,6 +73,19 @@ func (ts *testDMLSuite) TestDMLVisitorCover(c *C) {
 		c.Check(ce.leaveCnt, Equals, v.expectedLeaveCnt)
 		v.node.Accept(visitor1{})
 	}
+}
+
+func (tc *testDMLSuite) TestSelectIntoRestore(c *C) {
+	testCases := []NodeRestoreTestCase{
+		{"into outfile '/tmp/output.txt'", "INTO OUTFILE '/tmp/output.txt'"},
+		{"into outfile party_code 'alice' '/tmp/output.txt' fields terminated BY ','", "INTO OUTFILE PARTY_CODE 'alice' '/tmp/output.txt' FIELDS TERMINATED BY ','"},
+		{"into outfile party_code 'alice' '/tmp/output_alice.txt' party_code 'bob' '/tmp/output_bob.txt' columns terminated BY '|' optionally enclosed BY '\"' lines terminated BY 'end of line'", "INTO OUTFILE PARTY_CODE 'alice' '/tmp/output_alice.txt' PARTY_CODE 'bob' '/tmp/output_bob.txt' FIELDS TERMINATED BY '|' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY 'end of line'"},
+		{"into outfile party_code 'alice' '/tmp/output_alice.txt' party_code 'bob' '/tmp/output_bob.txt' party_code 'carol' '/tmp/output_carol.txt'", "INTO OUTFILE PARTY_CODE 'alice' '/tmp/output_alice.txt' PARTY_CODE 'bob' '/tmp/output_bob.txt' PARTY_CODE 'carol' '/tmp/output_carol.txt'"},
+	}
+	extractNodeFunc := func(node Node) Node {
+		return node.(*SelectStmt).SelectIntoOpt
+	}
+	RunNodeRestoreTest(c, testCases, "SELECT * FROM t1 %s;", extractNodeFunc)
 }
 
 func (tc *testDMLSuite) TestTableNameRestore(c *C) {

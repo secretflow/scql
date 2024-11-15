@@ -7,6 +7,7 @@ docs/_build
 # go
 bin/*
 tool-bin/*
+/vendor
 
 # cloudide
 .cloudide/
@@ -27,3 +28,8 @@ logs/scdbserver.log
 *.pyc
 
 .venv
+
+# 排除 ide 文件
+.idea/
+# 排除mac本地文件
+*.DS_Store

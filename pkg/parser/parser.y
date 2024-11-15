@@ -1153,6 +1153,8 @@ import (
 	EngineOpt                              "SCQLEngine credential and endpoint information"
 	EndpointOpt                            "SCQLEngine endpoint information"
 	TypeName                               "Column Type Name"
+	PartyFile                              "party file"
+	PartyFileList                          "party file list"
 
 %type	<ident>
 	AsOpt             "AS or EmptyString"
@@ -7385,9 +7387,13 @@ SelectStmtIntoOption:
 	}
 |	"INTO" "OUTFILE" stringLit Fields Lines
 	{
+        partyFiles := []*ast.PartyFile{}
+        partyFile := &ast.PartyFile{
+            FileName: $3,
+        }
 		x := &ast.SelectIntoOption{
-			Tp:       ast.SelectIntoOutfile,
-			FileName: $3,
+			Tp:         ast.SelectIntoOutfile,
+			PartyFiles: append(partyFiles, partyFile),
 		}
 		if $4 != nil {
 			x.FieldsInfo = $4.(*ast.FieldsClause)
@@ -7398,22 +7404,40 @@ SelectStmtIntoOption:
 
 		$$ = x
 	}
-|	"INTO" "OUTFILE" "PARTY_CODE" stringLit stringLit Fields Lines
+|	"INTO" "OUTFILE" PartyFileList Fields Lines
 	{
 		x := &ast.SelectIntoOption{
-			Tp:        ast.SelectIntoOutfile,
-			PartyCode: $4,
-			FileName:  $5,
+			Tp:         ast.SelectIntoOutfile,
+			PartyFiles: $3.([]*ast.PartyFile),
 		}
-		if $6 != nil {
-			x.FieldsInfo = $6.(*ast.FieldsClause)
+		if $4 != nil {
+			x.FieldsInfo = $4.(*ast.FieldsClause)
 		}
-		if $7 != nil {
-			x.LinesInfo = $7.(*ast.LinesClause)
+		if $5 != nil {
+			x.LinesInfo = $5.(*ast.LinesClause)
 		}
 
 		$$ = x
 	}
+
+PartyFile:
+    "PARTY_CODE" stringLit stringLit
+    {
+        $$ = &ast.PartyFile{
+            PartyCode: $2,
+            FileName:  $3,
+        }
+    }
+
+PartyFileList:
+    PartyFile
+    {
+        $$ = []*ast.PartyFile{$1.(*ast.PartyFile)}
+    }
+|   PartyFileList PartyFile
+    {
+        $$ = append($1.([]*ast.PartyFile), $2.(*ast.PartyFile))
+    }
 
 // See https://dev.mysql.com/doc/refman/5.7/en/subqueries.html
 SubSelect:

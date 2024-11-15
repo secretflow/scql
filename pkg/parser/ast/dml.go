@@ -2329,8 +2329,7 @@ type SelectIntoOption struct {
 	node
 
 	Tp         SelectIntoType
-	PartyCode  string
-	FileName   string
+	PartyFiles []*PartyFile
 	FieldsInfo *FieldsClause
 	LinesInfo  *LinesClause
 }
@@ -2342,13 +2341,16 @@ func (n *SelectIntoOption) Restore(ctx *RestoreCtx) error {
 		return errors.New("Unsupported SelectionInto type")
 	}
 
-	ctx.WriteKeyWord("INTO OUTFILE ")
-	if n.PartyCode != "" {
-		ctx.WriteKeyWord("PARTY_CODE ")
-		ctx.WriteString(n.PartyCode)
-		ctx.WritePlain(" ")
+	ctx.WriteKeyWord("INTO OUTFILE")
+	if n.PartyFiles != nil {
+		for i, partyFile := range n.PartyFiles {
+			ctx.WriteKeyWord(" ")
+			if err := partyFile.Restore(ctx); err != nil {
+				return errors.Annotatef(err, "An error occurred while restore UpdateStmt.TableHints[%d]", i)
+			}
+		}
 	}
-	ctx.WriteString(n.FileName)
+
 	if n.FieldsInfo != nil {
 		if err := n.FieldsInfo.Restore(ctx); err != nil {
 			return errors.Annotate(err, "An error occurred while restore SelectInto.FieldsInfo")
@@ -2369,6 +2371,22 @@ func (n *SelectIntoOption) Accept(v Visitor) (Node, bool) {
 		return v.Leave(newNode)
 	}
 	return v.Leave(n)
+}
+
+type PartyFile struct {
+	PartyCode string
+	FileName  string
+}
+
+// Restore implements Node interface.
+func (n *PartyFile) Restore(ctx *RestoreCtx) error {
+	if n.PartyCode != "" {
+		ctx.WriteKeyWord("PARTY_CODE ")
+		ctx.WriteString(n.PartyCode)
+		ctx.WritePlain(" ")
+	}
+	ctx.WriteString(n.FileName)
+	return nil
 }
 
 // PartitionByClause represents partition by clause.

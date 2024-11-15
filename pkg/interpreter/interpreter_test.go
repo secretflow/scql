@@ -829,6 +829,108 @@ var testCases = []compileTestCase{
 	},
 	{
 		req: &proto.CompileQueryRequest{
+			Query:  "SELECT tb.data as avg_amount FROM tb into outfile '/data/output11.txt' fields terminated BY ','",
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "alice",
+			},
+			IssuerAsParticipant: false,
+			SecurityConf: &proto.SecurityConfig{
+				ColumnControlList: []*proto.SecurityConfig_ColumnControl{
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "data",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "data",
+					},
+				},
+			},
+			Catalog: &proto.Catalog{
+				Tables: []*proto.TableEntry{
+					{
+						TableName: "tb",
+						Columns: []*proto.TableEntry_Column{
+							{
+								Name: "data",
+								Type: "string",
+							},
+						},
+						IsView:   false,
+						RefTable: "bob.user_stats",
+						DbType:   "mysql",
+						Owner: &proto.PartyId{
+							Code: "bob",
+						},
+					},
+				},
+			},
+			CompileOpts: &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+			// TODO: add RuntimeConfig
+		},
+		ok:           true,
+		workPartyNum: 2,
+	},
+	{
+		req: &proto.CompileQueryRequest{
+			Query:  "SELECT tb.data as avg_amount FROM tb into outfile party_code 'bob' '/data/output11.txt' fields terminated BY ','",
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "alice",
+			},
+			IssuerAsParticipant: false,
+			SecurityConf: &proto.SecurityConfig{
+				ColumnControlList: []*proto.SecurityConfig_ColumnControl{
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "data",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "data",
+					},
+				},
+			},
+			Catalog: &proto.Catalog{
+				Tables: []*proto.TableEntry{
+					{
+						TableName: "tb",
+						Columns: []*proto.TableEntry_Column{
+							{
+								Name: "data",
+								Type: "string",
+							},
+						},
+						IsView:   false,
+						RefTable: "bob.user_stats",
+						DbType:   "mysql",
+						Owner: &proto.PartyId{
+							Code: "bob",
+						},
+					},
+				},
+			},
+			CompileOpts: &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+			// TODO: add RuntimeConfig
+		},
+		ok:           true,
+		workPartyNum: 2,
+	},
+	{
+		req: &proto.CompileQueryRequest{
 			Query:  "SELECT tb.data as avg_amount FROM tb into outfile party_code 'bob' '/data/output11.txt' fields terminated BY ','",
 			DbName: "",
 			Issuer: &proto.PartyId{
@@ -877,6 +979,108 @@ var testCases = []compileTestCase{
 		},
 		ok:           true,
 		workPartyNum: 1,
+	},
+	{
+		req: &proto.CompileQueryRequest{
+			Query:  "SELECT tb.data as avg_amount FROM tb into outfile party_code 'alice' '/data/output11.txt' fields terminated BY ','",
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "bob",
+			},
+			IssuerAsParticipant: false,
+			SecurityConf: &proto.SecurityConfig{
+				ColumnControlList: []*proto.SecurityConfig_ColumnControl{
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "data",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "data",
+					},
+				},
+			},
+			Catalog: &proto.Catalog{
+				Tables: []*proto.TableEntry{
+					{
+						TableName: "tb",
+						Columns: []*proto.TableEntry_Column{
+							{
+								Name: "data",
+								Type: "string",
+							},
+						},
+						IsView:   false,
+						RefTable: "bob.user_stats",
+						DbType:   "mysql",
+						Owner: &proto.PartyId{
+							Code: "bob",
+						},
+					},
+				},
+			},
+			CompileOpts: &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+			// TODO: add RuntimeConfig
+		},
+		ok:           true,
+		workPartyNum: 2,
+	},
+	{
+		req: &proto.CompileQueryRequest{
+			Query:  "SELECT tb.data as avg_amount FROM tb into outfile party_code 'alice' '/data/output11.txt' party_code 'bob' '/data/output11.txt' fields terminated BY ','",
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "bob",
+			},
+			IssuerAsParticipant: false,
+			SecurityConf: &proto.SecurityConfig{
+				ColumnControlList: []*proto.SecurityConfig_ColumnControl{
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "data",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "data",
+					},
+				},
+			},
+			Catalog: &proto.Catalog{
+				Tables: []*proto.TableEntry{
+					{
+						TableName: "tb",
+						Columns: []*proto.TableEntry_Column{
+							{
+								Name: "data",
+								Type: "string",
+							},
+						},
+						IsView:   false,
+						RefTable: "bob.user_stats",
+						DbType:   "mysql",
+						Owner: &proto.PartyId{
+							Code: "bob",
+						},
+					},
+				},
+			},
+			CompileOpts: &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+			// TODO: add RuntimeConfig
+		},
+		ok:           true,
+		workPartyNum: 2,
 	},
 	{
 		req: &proto.CompileQueryRequest{
