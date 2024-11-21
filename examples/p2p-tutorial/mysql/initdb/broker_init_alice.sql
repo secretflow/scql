@@ -13,7 +13,7 @@ DROP TABLE IF EXISTS `projects`;
 CREATE TABLE `projects` (
   `id` varchar(64) NOT NULL COMMENT '''unique id''',
   `name` varchar(64) NOT NULL COMMENT '''project name''',
-  `description` varchar(64) DEFAULT NULL COMMENT '''description''',
+  `desc` varchar(64) DEFAULT NULL COMMENT '''description''',
   `creator` varchar(64) DEFAULT NULL COMMENT '''creator of the project''',
   `archived` tinyint(1) DEFAULT NULL COMMENT '''if archived is true, whole project can''t be modified''',
   `created_at` timestamp DEFAULT NULL,
@@ -107,7 +107,7 @@ CREATE TABLE `invitations` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '''auto generated increment id''',
   `project_id` varchar(64) NOT NULL COMMENT '''project id''',
   `name` varchar(64) DEFAULT NULL COMMENT '''name''',
-  `description` varchar(64) DEFAULT NULL COMMENT '''description''',
+  `desc` varchar(64) DEFAULT NULL COMMENT '''description''',
   `creator` varchar(64) DEFAULT NULL COMMENT '''creator of the project''',
   `proj_created_at` timestamp DEFAULT NULL COMMENT '''the create time of the project''',
   `member` varchar(64) NOT NULL COMMENT '''members, flattened string, like: alice',
