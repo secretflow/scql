@@ -13,7 +13,7 @@ DROP TABLE IF EXISTS `projects`;
 CREATE TABLE `projects` (
   `id` varchar(64) NOT NULL COMMENT '''unique id''',
   `name` varchar(64) NOT NULL COMMENT '''project name''',
-  `description` varchar(64) DEFAULT NULL COMMENT '''description''',
+  `desc` varchar(64) DEFAULT NULL COMMENT '''description''',
   `creator` varchar(64) DEFAULT NULL COMMENT '''creator of the project''',
   `archived` tinyint(1) DEFAULT NULL COMMENT '''if archived is true, whole project can''t be modified''',
   `created_at` timestamp DEFAULT NULL,
