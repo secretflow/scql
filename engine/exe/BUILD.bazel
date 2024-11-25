@@ -34,6 +34,14 @@ cc_binary(
         "main.cc",
         "version.h",
     ],
+    copts = select({
+        "@platforms//os:osx": [
+            # Fix nil_t error in msgpack,
+            # See: https://github.com/msgpack/msgpack-c/issues/699
+            "-DMSGPACK_DISABLE_LEGACY_NIL",
+        ],
+        "//conditions:default": [],
+    }),
     linkopts = ["-pie"],
     deps = [
         "//engine/auth:authenticator",
