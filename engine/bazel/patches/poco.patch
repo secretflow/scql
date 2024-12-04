@@ -1,0 +1,22 @@
+diff --git a/Data/MySQL/src/MySQLStatementImpl.cpp b/Data/MySQL/src/MySQLStatementImpl.cpp
+index 7bc39e8ad..00c836c52 100644
+--- a/Data/MySQL/src/MySQLStatementImpl.cpp
++++ b/Data/MySQL/src/MySQLStatementImpl.cpp
+@@ -153,6 +153,17 @@ void MySQLStatementImpl::bindImpl()
+ 	try
+ 	{
+ 		_stmt.execute();
++        if (!extractions().size() && !isStoredProcedure())
++		{
++		    _metadata.reset();
++		    _metadata.init(_stmt);
++		    if (_metadata.columnsReturned() > 0)
++            {
++			    _stmt.bindResult(_metadata.row());
++                makeExtractors(_metadata.columnsReturned());
++		        fixupExtraction();
++            }
++		}
+ 	}
+ 	catch (MySQLException& exc)
+ 	{

@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 
 def engine_deps():
     _com_github_gperftools_gperftools()
@@ -300,6 +300,8 @@ def _org_pocoproject_poco():
         strip_prefix = "poco-poco-1.12.2-release",
         sha256 = "30442ccb097a0074133f699213a59d6f8c77db5b2c98a7c1ad9c5eeb3a2b06f3",
         build_file = "@scql//engine/bazel:poco.BUILD",
+        patch_args = ["-p1"],
+        patches = ["@scql//engine/bazel:patches/poco.patch"],
     )
 
 def _ncurses():
