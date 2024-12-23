@@ -17,6 +17,7 @@ package optimizer
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -150,7 +151,7 @@ func TestSplitComplex(t *testing.T) {
 	compileOpts := proto.CompileOptions{
 		SecurityCompromise: &proto.SecurityCompromiseConfig{RevealGroupMark: false, GroupByThreshold: 4},
 	}
-	trans, err := translator.NewTranslator(info, &proto.SecurityConfig{ColumnControlList: ccl}, "alice", &compileOpts)
+	trans, err := translator.NewTranslator(info, &proto.SecurityConfig{ColumnControlList: ccl}, "alice", &compileOpts, time.Now())
 	r.NoError(err)
 	ep, err := trans.Translate(lp)
 	r.Nil(err)

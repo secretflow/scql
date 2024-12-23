@@ -16,6 +16,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <mutex>
@@ -33,6 +34,7 @@
 #include "engine/framework/party_info.h"
 #include "engine/framework/tensor_table.h"
 #include "engine/util/logging.h"
+#include "engine/util/progress_util.h"
 #include "engine/util/psi_detail_logger.h"
 
 #include "api/common.pb.h"
@@ -152,29 +154,40 @@ class Session {
 
   int64_t GetAffectedRows() const { return affected_rows_; }
 
-  void SetNodesCount(int32_t nodes_count) { nodes_count_ = nodes_count; }
-
-  int32_t GetNodesCount() const { return nodes_count_; }
-
-  void IncExecutedNodes() { ++executed_nodes_; }
-
-  void SetExecutedNodes(int32_t executed_nodes) {
-    executed_nodes_ = executed_nodes;
+  std::shared_ptr<engine::util::ProgressStats> GetProgressStats() {
+    if (progres_stats_ == nullptr) {
+      SPDLOG_WARN("progress stats is not initialized");
+      progres_stats_ = std::make_shared<engine::util::DefaultProgressStats>();
+    }
+    return progres_stats_;
   }
 
-  int32_t GetExecutedNodes() const { return executed_nodes_; }
-
-  auto GetCurrentNodeInfo() {
-    std::lock_guard<std::mutex> guard(progress_mutex_);
-    return std::make_pair(node_start_time_, current_node_name_);
-  }
-
-  void SetCurrentNodeInfo(
-      std::chrono::time_point<std::chrono::system_clock> start_time,
-      const std::string& name) {
-    std::lock_guard<std::mutex> guard(progress_mutex_);
-    node_start_time_ = start_time;
-    current_node_name_ = name;
+  void InitProgressStats(const ::scql::pb::SchedulingPolicy& policy) {
+    if (policy.pipelines().size() <= 1) {
+      size_t total_nodes_cnt = 0;
+      for (const auto& pipeline : policy.pipelines()) {
+        for (const auto& subdag : pipeline.subdags()) {
+          for (const auto& job : subdag.jobs()) {
+            total_nodes_cnt += job.node_ids().size();
+          }
+        }
+      }
+      progres_stats_ =
+          std::make_shared<engine::util::NormalProgressStats>(total_nodes_cnt);
+    } else {
+      std::vector<size_t> pipeline_nodes_cnt;
+      for (const auto& pipeline : policy.pipelines()) {
+        size_t nodes_cnt = 0;
+        for (const auto& subdag : pipeline.subdags()) {
+          for (const auto& job : subdag.jobs()) {
+            nodes_cnt += job.node_ids().size();
+          }
+        }
+        pipeline_nodes_cnt.push_back(nodes_cnt);
+      }
+      progres_stats_ = std::make_shared<engine::util::BatchedProgressStats>(
+          pipeline_nodes_cnt);
+    }
   }
 
   void StorePeerError(const std::string& party_code, const pb::Status& status) {
@@ -224,7 +237,6 @@ class Session {
   void InitLink();
   bool ValidateSPUContext();
 
- private:
   const std::string id_;
   const SessionOptions session_opt_;
   const std::string time_zone_;
@@ -265,11 +277,12 @@ class Session {
   mutable std::mutex progress_mutex_;
   std::string current_node_name_;
   std::chrono::time_point<std::chrono::system_clock> node_start_time_;
-
+  std::shared_ptr<engine::util::ProgressStats> progres_stats_;
   // for streaming
   StreamingOptions streaming_options_;
 };
 
 std::shared_ptr<spdlog::logger> ActiveLogger(const Session* session);
 
+size_t CryptoHash(const std::string& str);
 }  // namespace scql::engine

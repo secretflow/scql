@@ -14,7 +14,9 @@
 
 #include "engine/operator/bucket.h"
 
+#include <boost/container_hash/hash.hpp>
 #include <filesystem>
+#include <future>
 
 #include "absl/strings/escaping.h"
 #include "arrow/array/concatenate.h"
@@ -128,9 +130,9 @@ std::vector<arrow::ChunkedArrayVector> HashBucket(
           keys = util::Combine(keys, another_keys);
         }
       }
+      boost::hash<std::string> hasher;
       for (size_t i = 0; i < keys.size(); i++) {
-        auto base64 = absl::Base64Escape(keys[i]);
-        result_builder[std::hash<std::string>()(base64) % bucket_num].Append(i);
+        result_builder[hasher(keys[i]) % bucket_num].Append(i);
       }
     }
     for (size_t i = 0; i < bucket_num; i++) {
@@ -263,10 +265,13 @@ void Bucket::Execute(ExecContext* ctx) {
                   HashBucket(batch_arrays[j], key_pos, join_key_pbs, output_pbs,
                              bucket_num);
               {
-                std::lock_guard lock(write_mtx);
+                std::unique_lock lock(write_mtx);
+                write_cv.wait(lock, [&] {
+                  return output_arrays.size() <= kBatchParallelism;
+                });
                 output_arrays.push_back(out_arrays);
+                write_cv.notify_all();
               }
-              write_cv.notify_all();
             }
           });
     }
@@ -288,6 +293,7 @@ void Bucket::Execute(ExecContext* ctx) {
           continue;
         }
         std::swap(output_arrays, batch_arrays);
+        write_cv.notify_all();
       }
       for (auto& batch_array : batch_arrays) {
         WriteArrays(out_writers, batch_array, bucket_num);

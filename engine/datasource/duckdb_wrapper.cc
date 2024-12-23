@@ -235,9 +235,7 @@ duckdb::DuckDB DuckDBWrapper::CreateDB(const csv::CsvdbConf *csvdb_conf) {
         duckdb::Value(csvdb_conf->s3_conf().secret_access_key()));
     db_config.SetOption("s3_use_ssl", duckdb::Value(use_ssl));
 
-    if (path_prefix != "oss://") {
-      // See
-      // https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html
+    if (!csvdb_conf->s3_conf().virtualhost()) {
       db_config.SetOption("s3_url_style", duckdb::Value("path"));
     }
   }

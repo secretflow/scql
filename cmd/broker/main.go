@@ -20,7 +20,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -41,29 +40,12 @@ import (
 	"github.com/secretflow/scql/pkg/broker/services/auth"
 	"github.com/secretflow/scql/pkg/broker/storage"
 	"github.com/secretflow/scql/pkg/util/kusciaclient"
+	"github.com/secretflow/scql/pkg/util/logutil"
 )
 
 const (
 	defaultConfigPath = "cmd/broker/config.yml"
 )
-
-var version = "scql version"
-
-// custom monitor formatter, e.g.: "2020-07-14 16:59:47.7144 INFO main.go:107 |msg"
-type CustomMonitorFormatter struct {
-	logrus.TextFormatter
-}
-
-func (f *CustomMonitorFormatter) Format(entry *logrus.Entry) ([]byte, error) {
-	var fileWithLine string
-	if entry.HasCaller() {
-		fileWithLine = fmt.Sprintf("%s:%d", filepath.Base(entry.Caller.File), entry.Caller.Line)
-	} else {
-		fileWithLine = ":"
-	}
-	return []byte(fmt.Sprintf("%s %s %s %s\n", entry.Time.Format(f.TimestampFormat),
-		strings.ToUpper(entry.Level.String()), fileWithLine, entry.Message)), nil
-}
 
 const (
 	LogFileName                 = "logs/broker.log"
@@ -72,6 +54,8 @@ const (
 	LogOptionMaxAgeInDays       = 0
 	LogOptionCompress           = false
 )
+
+var version = "scql version"
 
 func main() {
 	confFile := flag.String("config", defaultConfigPath, "Path to broker configuration file")
@@ -84,7 +68,7 @@ func main() {
 	}
 
 	logrus.SetReportCaller(true)
-	logrus.SetFormatter(&CustomMonitorFormatter{logrus.TextFormatter{TimestampFormat: "2006-01-02 15:04:05.123"}})
+	logrus.SetFormatter(logutil.NewCustomMonitorFormatter("2006-01-02 15:04:05.123"))
 	rollingLogger := &lumberjack.Logger{
 		Filename:   LogFileName,
 		MaxSize:    LogOptionMaxSizeInMegaBytes, // megabytes
@@ -95,6 +79,7 @@ func main() {
 	mOut := io.MultiWriter(os.Stdout, rollingLogger)
 	logrus.SetOutput(mOut)
 
+	logrus.Infof("Broker version: %s", version)
 	logrus.Infof("Starting to read config file: %s", *confFile)
 	cfg, err := config.NewConfig(*confFile)
 	if err != nil {
@@ -142,7 +127,7 @@ func main() {
 		if err != nil {
 			logrus.Fatalf("Failed to create kuscia client connection: %v", err)
 		}
-		partyMgr, err = partymgr.NewKusciaPartyMgr(conn)
+		partyMgr, err = partymgr.NewKusciaPartyMgr(conn, kuscia.ClusterDefine)
 		if err != nil {
 			logrus.Fatalf("Failed to create kuscia partyMgr: %v", err)
 		}
@@ -157,7 +142,7 @@ func main() {
 		logrus.Fatalf("Failed to create broker db: %v", err)
 	}
 
-	metaMgr := storage.NewMetaManager(db, cfg.PersistSession)
+	metaMgr := storage.NewMetaManager(db)
 	if metaMgr.NeedBootstrap() {
 		logrus.Info("Start to bootstrap meta manager...")
 		err = metaMgr.Bootstrap()

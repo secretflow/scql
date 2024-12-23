@@ -16,7 +16,6 @@ package storage
 
 import (
 	"fmt"
-	"strings"
 
 	"time"
 
@@ -25,95 +24,37 @@ import (
 
 type SessionStatus int8
 
+// This is by design
 const (
-	SessionRunning   SessionStatus = 0
-	SessionFinished  SessionStatus = 1
-	SessionCanceled  SessionStatus = 2
-	SessionTimeout   SessionStatus = 3
-	SessionFailed    SessionStatus = 4
-	SessionSubmitted SessionStatus = 5
+	SessionRunning SessionStatus = iota
+	SessionFinished
+	SessionCanceled
+	SessionTimeout
+	SessionFailed
+	SessionSubmitted
 )
 
-func (m *MetaManager) SetSessionInfo(info SessionInfo) error {
-	result := m.db.Create(&info)
-	return result.Error
+type DistributeLockGuard struct {
+	txn             *MetaTransaction
+	postProcessFunc func(error)
 }
 
-func (m *MetaManager) UpdateSessionInfoStatusWithCondition(sessionID string, conditionStatus, targetStatus SessionStatus) error {
-	result := m.db.Model(&SessionInfo{}).Where(&SessionInfo{SessionID: sessionID, Status: int8(conditionStatus)}).Update("status", targetStatus)
-	return result.Error
-}
-
-func (m *MetaManager) GetSessionInfo(id string) (SessionInfo, error) {
-	var info SessionInfo
-	result := m.db.Model(&SessionInfo{}).Where(&SessionInfo{SessionID: id}).First(&info)
-	return info, result.Error
-}
-
-func (m *MetaManager) CheckIdCanceled(ids []string) ([]string, error) {
-	// TODO: limit length of ids
-	var canceledIds []string
-	if len(ids) == 0 {
-		return canceledIds, nil
+// Every time a lock operation is performed, a new guard must be used.
+func NewDistributeLockGuard(m *MetaManager) *DistributeLockGuard {
+	lm := &DistributeLockGuard{
+		txn: m.CreateMetaTransaction(),
 	}
-	result := m.db.Model(&SessionInfo{}).Select("session_id").Where("session_id in ?", ids).Where("status", int8(SessionCanceled)).Scan(&canceledIds)
-	return canceledIds, result.Error
-}
-
-func (m *MetaManager) CheckIdExpired(ids []string) ([]string, error) {
-	var expiredIds []string
-	if len(ids) == 0 {
-		return expiredIds, nil
+	lm.postProcessFunc = func(err error) {
+		lm.txn.Finish(err)
 	}
-
-	result := m.db.Model(&SessionInfo{}).Select("session_id").Where("session_id in ?", ids).Where("expired_at < ?", time.Now()).Scan(&expiredIds)
-
-	return expiredIds, result.Error
+	return lm
 }
 
-// NOTE: check SessionInfo exist before calling
-func (m *MetaManager) SetSessionResult(sr SessionResult) (err error) {
-	txn := m.CreateMetaTransaction()
-	defer func() {
-		txn.Finish(err)
-	}()
-	// update session status to finished
-	result := txn.db.Model(&SessionInfo{}).Where(&SessionInfo{SessionID: sr.SessionID}).Update("status", int8(SessionFinished))
-	if result.Error != nil {
-		return result.Error
-	}
-
-	result = txn.db.Create(&sr)
-	return result.Error
-}
-
-func (m *MetaManager) GetSessionResult(id string) (SessionResult, error) {
-	var sr SessionResult
-	result := m.db.Model(&SessionResult{}).Where(&SessionResult{SessionID: id}).First(&sr)
-	return sr, result.Error
-}
-
-func (m *MetaManager) ClearSessionResult(id string) (err error) {
-	txn := m.CreateMetaTransaction()
-	defer func() {
-		txn.Finish(err)
-	}()
-
-	// update session status to canceled
-	result := txn.db.Model(&SessionInfo{}).Where(&SessionInfo{SessionID: id}).Update("status", int8(SessionCanceled))
-	if result.Error != nil {
-		return result.Error
-	}
-
-	// clear SessionResult
-	result = txn.db.Where("session_id = ?", id).Delete(&SessionResult{})
-	return result.Error
-}
-
-func (m *MetaManager) InitDistributedLockIfNecessary(id DistLockID) error {
+func (lm *DistributeLockGuard) InitDistributedLockIfNecessary(id int8) (err error) {
+	defer lm.postProcessFunc(err)
 	var lk Lock
 	// If a lock with id does not exist, create one and set expired_at to now - 24h to ensure expiration so that it can be acquired immediately
-	result := m.db.Where(Lock{ID: int8(id)}).Attrs(Lock{ExpiredAt: time.Now().Add(-24 * time.Hour)}).FirstOrCreate(&lk)
+	result := lm.txn.db.Where(Lock{ID: id}).Attrs(Lock{ExpiredAt: time.Now().Add(-24 * time.Hour)}).FirstOrCreate(&lk)
 	if result.Error == nil {
 		switch result.RowsAffected {
 		case 0:
@@ -127,62 +68,147 @@ func (m *MetaManager) InitDistributedLockIfNecessary(id DistLockID) error {
 	return result.Error
 }
 
-// NOTE: 1. InitDistributedLockIfNecessary must be called once before call HoldDistributedLock
+// NOTE: 1. InitDistributedLockIfNecessary must be called once before call DistributedLockExpired
 //  2. lock will expired after expired_at
-func (m *MetaManager) HoldDistributedLock(id DistLockID, owner string, ttl time.Duration) error {
-	result := m.db.Model(&Lock{}).
-		Where(&Lock{ID: int8(id)}).
-		Where("expired_at < ?", time.Now()).Or("owner = ?", owner).
-		Updates(map[string]interface{}{
-			"expired_at": time.Now().Add(ttl),
-			"owner":      owner,
-		})
-
-	if result.Error == nil && result.RowsAffected == 1 {
-		return nil
-	}
-	return fmt.Errorf("hold distributed lock %s(%d) failed: {row affected: %d ; err: %+v}", id, int8(id), result.RowsAffected, result.Error)
+func (lm *DistributeLockGuard) DistributedLockExpired(id int8, owner string) (expired bool, err error) {
+	defer lm.postProcessFunc(err)
+	result := lm.txn.db.Model(&Lock{}).
+		Where(&Lock{ID: id}).
+		Select("expired_at < ?", time.Now()).
+		Scan(&expired)
+	return expired, result.Error
 }
 
-// UpdateDistributedLock only succeeds if holding the distributed lock
-func (m *MetaManager) UpdateDistributedLock(id DistLockID, owner string, ttl time.Duration) error {
-	result := m.db.Model(&Lock{}).
-		Where(&Lock{ID: int8(id), Owner: owner}).
+func (lm *DistributeLockGuard) PreemptDistributedLock(id int8, owner string, ttl time.Duration) (ok bool, err error) {
+	defer lm.postProcessFunc(err)
+	result := lm.txn.db.Model(&Lock{}).
+		Where(&Lock{ID: id}).
+		Where("expired_at < ?", time.Now()).
 		Updates(map[string]interface{}{
-			"expired_at": time.Now().Add(ttl),
+			// other instance can get lock after 2 * ttl
+			"expired_at": time.Now().Add(2 * ttl),
 			"owner":      owner,
 		})
-	if result.Error == nil && result.RowsAffected == 1 {
-		return nil
-	}
-	return fmt.Errorf("update distributed lock %d failed: {row affected: %d ; err: %+v}", id, result.RowsAffected, result.Error)
+	return result.RowsAffected == 1, result.Error
 }
 
-func (m *MetaManager) GetDistributedLockOwner(id DistLockID) (string, error) {
-	var owner string
-	result := m.db.Model(&Lock{}).
+func (lm *DistributeLockGuard) RenewDistributedLock(id int8, owner string, ttl time.Duration) (ok bool, err error) {
+	defer lm.postProcessFunc(err)
+	result := lm.txn.db.Model(&Lock{}).
+		Where(&Lock{ID: id, Owner: owner}).
+		Updates(map[string]interface{}{
+			// other instance can get lock after 2 * ttl
+			"expired_at": time.Now().Add(2 * ttl),
+		})
+	return result.RowsAffected == 1, result.Error
+}
+
+func (lm *DistributeLockGuard) GetDistributedLockOwner(id int8) (owner string, err error) {
+	defer lm.postProcessFunc(err)
+	result := lm.txn.db.Model(&Lock{}).
 		Select("owner").
-		Where(&Lock{ID: int8(id)}).
+		Where(&Lock{ID: id}).
 		Scan(&owner)
 	return owner, result.Error
 }
 
-func (m *MetaManager) ClearExpiredSessions() error {
-	var expiredResults []SessionResult
+func (txn *MetaTransaction) SetSessionInfo(info *SessionInfo) error {
+	result := txn.db.Create(info)
+	return result.Error
+}
 
-	result := m.db.Where("expired_at < ?", time.Now()).Limit(100).Delete(&expiredResults)
+func (txn *MetaTransaction) UpdateSessionInfo(info *SessionInfo) error {
+	result := txn.db.Model(&SessionInfo{}).Where(&SessionInfo{SessionID: info.SessionID}).Updates(info)
+	return result.Error
+}
 
-	logrus.Infof("ClearExpiredSessions rows:%d", result.RowsAffected)
+func (txn *MetaTransaction) UpdateSessionInfoStatusWithCondition(sessionID string, conditionStatus, targetStatus SessionStatus) error {
+	result := txn.db.Model(&SessionInfo{}).Where(&SessionInfo{SessionID: sessionID, Status: int8(conditionStatus)}).Update("status", targetStatus)
+	return result.Error
+}
 
-	if result.Error == nil && result.RowsAffected > 0 {
-		logrus.Infof("GC: clear %d expired results", result.RowsAffected)
+func (txn *MetaTransaction) GetSessionInfo(id string) (*SessionInfo, error) {
+	var info SessionInfo
+	result := txn.db.Model(&SessionInfo{}).Where(&SessionInfo{SessionID: id}).First(&info)
+	return &info, result.Error
+}
+
+func (txn *MetaTransaction) CheckIdCanceled(ids []string) ([]string, error) {
+	// TODO: limit length of ids
+	var canceledIds []string
+	if len(ids) == 0 {
+		return canceledIds, nil
+	}
+	result := txn.db.Model(&SessionInfo{}).Select("session_id").Where("session_id in ?", ids).Where("status", int8(SessionCanceled)).Scan(&canceledIds)
+	return canceledIds, result.Error
+}
+
+func (txn *MetaTransaction) CheckIdExpired(ids []string) ([]string, error) {
+	var expiredIds []string
+	if len(ids) == 0 {
+		return expiredIds, nil
 	}
 
+	result := txn.db.Model(&SessionInfo{}).Select("session_id").Where("session_id in ?", ids).Where("expired_at < ?", time.Now()).Scan(&expiredIds)
+
+	return expiredIds, result.Error
+}
+
+// NOTE: check SessionInfo exist before calling
+func (txn *MetaTransaction) SetSessionResult(sr SessionResult) (err error) {
+	// update session status to finished
+	result := txn.db.Model(&SessionInfo{}).Where(&SessionInfo{SessionID: sr.SessionID}).Update("status", int8(SessionFinished))
 	if result.Error != nil {
 		return result.Error
 	}
 
-	result = m.db.Model(&SessionInfo{}).Where("expired_at < ? AND status <> ?", time.Now(), int8(SessionTimeout)).Update("status", int8(SessionTimeout))
+	result = txn.db.Create(&sr)
+	return result.Error
+}
+
+func (txn *MetaTransaction) GetSessionResult(id string) (SessionResult, error) {
+	var sr SessionResult
+	result := txn.db.Model(&SessionResult{}).Where(&SessionResult{SessionID: id}).First(&sr)
+	return sr, result.Error
+}
+
+func (txn *MetaTransaction) ClearSessionResult(id string) (err error) {
+
+	// update session status to canceled
+	result := txn.db.Model(&SessionInfo{}).Where(&SessionInfo{SessionID: id}).Update("status", int8(SessionCanceled))
+	if result.Error != nil {
+		return result.Error
+	}
+
+	// clear SessionResult
+	result = txn.db.Where("session_id = ?", id).Delete(&SessionResult{})
+	return result.Error
+}
+
+func (txn *MetaTransaction) ClearSessionInfo(id string) (err error) {
+	// clear SessionResult
+	result := txn.db.Where(&SessionResult{SessionID: id}).Delete(&SessionResult{})
+	if result.Error != nil {
+		return result.Error
+	}
+	// clear SessionInfo
+	result = txn.db.Where(&SessionInfo{SessionID: id}).Delete(&SessionInfo{})
+	return result.Error
+}
+
+func (txn *MetaTransaction) ClearExpiredSessions() (err error) {
+	var expiredResults []SessionResult
+
+	result := txn.db.Where("expired_at < ?", time.Now()).Limit(100).Delete(&expiredResults)
+	if result.Error != nil {
+		return result.Error
+	}
+	logrus.Infof("ClearExpiredSessions rows:%d", result.RowsAffected)
+	if result.RowsAffected > 0 {
+		logrus.Infof("GC: clear %d expired results", result.RowsAffected)
+	}
+
+	result = txn.db.Model(&SessionInfo{}).Where("expired_at < ? AND status <> ?", time.Now(), int8(SessionTimeout)).Update("status", int8(SessionTimeout))
 	if result.Error == nil && result.RowsAffected > 0 {
 		logrus.Infof("GC: set %d sessions' status to be 'expired'", result.RowsAffected)
 	}
@@ -190,56 +216,38 @@ func (m *MetaManager) ClearExpiredSessions() error {
 	return result.Error
 }
 
-type WatchedJobStatus struct {
-	JobId          string `gorm:"column:session_id"`
-	EngineEndpoint string `gorm:"column:engine_url_for_self"`
-	// number of engine inaccessible times
-	InaccessibleTimes int `gorm:"-"`
-}
-
-func (m *MetaManager) GetWatchedJobs() ([]WatchedJobStatus, error) {
-	var watchedJobs []WatchedJobStatus
-	result := m.db.Model(&SessionInfo{}).
-		Select("session_id, engine_url_for_self").
+func (txn *MetaTransaction) GetWatchedJobs() ([]*SessionInfo, error) {
+	var watchedJobs []*SessionInfo
+	result := txn.db.Model(&SessionInfo{}).
 		Where("status = ?", int8(SessionRunning)).
-		Find(&watchedJobs)
+		Scan(&watchedJobs)
 	if result.Error != nil {
 		return nil, result.Error
-	}
-
-	for i := range watchedJobs {
-		watchedJobs[i].InaccessibleTimes = 0
 	}
 	return watchedJobs, nil
 }
 
-func (m *MetaManager) SetSessionStatus(id string, status SessionStatus) error {
-	result := m.db.Model(&SessionInfo{}).Select("status", "updated_at").Where("session_id = ?", id).Updates(&SessionInfo{Status: int8(status), UpdatedAt: time.Now()})
+func (txn *MetaTransaction) SetSessionStatus(id string, status SessionStatus) error {
+	result := txn.db.Model(&SessionInfo{}).Where("session_id = ?", id).Updates(&SessionInfo{Status: int8(status), UpdatedAt: time.Now()})
 	return result.Error
 }
 
-func (m *MetaManager) GetSessionStatus(id string) (SessionStatus, error) {
+func (txn *MetaTransaction) GetSessionStatus(id string) (SessionStatus, error) {
 	var status SessionStatus
-	result := m.db.Model(&SessionInfo{}).Select("status").Where("session_id = ?", id).Scan(&status)
+	result := txn.db.Model(&SessionInfo{}).Select("status").Where("session_id = ?", id).Scan(&status)
 	return status, result.Error
 }
 
-func (m *MetaManager) SetMultipleSessionStatus(ids []string, status SessionStatus) error {
+func (txn *MetaTransaction) SetMultipleSessionStatus(ids []string, status SessionStatus) error {
 	if len(ids) == 0 {
 		return nil
 	}
+	return txn.db.Model(&SessionInfo{}).Where("session_id in ?", ids).Updates(&SessionInfo{Status: int8(status), UpdatedAt: time.Now()}).Error
+}
 
-	quotedIds := make([]string, len(ids))
-	for i, id := range ids {
-		quotedIds[i] = fmt.Sprintf("'%s'", id)
+func (txn *MetaTransaction) UpdateSessionUpdatedAt(ids []string) error {
+	if len(ids) == 0 {
+		return nil
 	}
-	updatedAt := time.Now().Format("2006-01-02 15:04:05")
-
-	sql := fmt.Sprintf("UPDATE session_infos SET status = %d, updated_at = '%s' WHERE session_id IN (%s)",
-		status,
-		updatedAt,
-		strings.Join(quotedIds, ","),
-	)
-
-	return m.db.Exec(sql).Error
+	return txn.db.Model(&SessionInfo{}).Where("session_id in ?", ids).Updates(&SessionInfo{UpdatedAt: time.Now()}).Error
 }

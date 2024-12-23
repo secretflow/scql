@@ -150,7 +150,7 @@ func TestStorageWithCheck(t *testing.T) {
 		})
 
 	r.NoError(err)
-	meta := storage.NewMetaManager(db, false)
+	meta := storage.NewMetaManager(db)
 	err = meta.Bootstrap()
 	r.NoError(err)
 	transaction := meta.CreateMetaTransaction()

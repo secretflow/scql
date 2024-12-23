@@ -24,16 +24,14 @@ CAROL_MEM_ENV_NAME = "CAROL_MEMORY_LIMIT"
 ALICE_CPU_ENV_NAME = "ALICE_CPU_LIMIT"
 BOB_CPU_ENV_NAME = "BOB_CPU_LIMIT"
 CAROL_CPU_ENV_NAME = "CAROL_CPU_LIMIT"
+PSI_TYPE_ENV_NAME = "PSI_TYPE"
+STREAMING_ENV_NAME = "STREAMING"
 
 
 DOCKER_COMPOSE_YAML_FILE = os.path.join(CUR_PATH, "docker-compose.yml")
 DOCKER_COMPOSE_TEMPLATE = os.path.join(CUR_PATH, "docker-compose.yml.template")
 
 PARTIES = ["alice", "bob", "carol"]
-
-
-def load_env(path: str):
-    load_dotenv(path, override=True)
 
 
 def random_mysql_password(length=13):
@@ -126,6 +124,26 @@ def get_available_port(port, tag=""):
         return port
 
 
+def set_ports_env():
+    mysql_port = os.getenv(MYSQL_PORT_ENV_NAME, "mysql")
+    os.environ[MYSQL_PORT_ENV_NAME] = str(get_available_port(mysql_port, "mysql"))
+
+    broker_addrs = os.getenv(BROKER_ADDRS_ENV_NAME)
+    if broker_addrs:
+        addresses = broker_addrs.split(",")
+        new_addresses = []
+
+        for address in addresses:
+            host, port = address.split(":")
+            assert host == "127.0.0.1"
+            new_port = get_available_port(port)
+            new_address = f"{host}:{new_port}"
+            new_addresses.append(new_address)
+
+        new_broker_addrs = ",".join(new_addresses)
+        os.environ[BROKER_ADDRS_ENV_NAME] = new_broker_addrs
+
+
 def render_files():
     broker_addrs = split_string(os.getenv(BROKER_ADDRS_ENV_NAME))
     assert len(PARTIES) == len(broker_addrs)
@@ -136,10 +154,10 @@ def render_files():
     print(f"original broker addrs: {broker_addrs}")
 
     docker_compose = docker_compose_template.render(
-        MYSQL_PORT=get_available_port(mysql_port, "mysql"),
-        ALICE_PORT=get_available_port(split_string(broker_addrs[0], ":")[1], "alice"),
-        BOB_PORT=get_available_port(split_string(broker_addrs[1], ":")[1], "bob"),
-        CAROL_PORT=get_available_port(split_string(broker_addrs[2], ":")[1], "carol"),
+        MYSQL_PORT=mysql_port,
+        ALICE_PORT=split_string(broker_addrs[0], ":")[1],
+        BOB_PORT=split_string(broker_addrs[1], ":")[1],
+        CAROL_PORT=split_string(broker_addrs[2], ":")[1],
         SCQL_IMAGE_TAG=image_tag,
         MYSQL_ROOT_PASSWORD=MYSQL_ROOT_PASSWORD,
         ALICE_CPU_LIMIT=os.getenv(ALICE_CPU_ENV_NAME),
@@ -178,7 +196,12 @@ def render_files():
             conn_str = "root:{}@tcp(mysql:3306)/broker{}?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true".format(
                 MYSQL_ROOT_PASSWORD, p[0]
             )
-            f.write(Template(filename=tmpl_path).render(DB_CONN_STR=conn_str))
+            f.write(
+                Template(filename=tmpl_path).render(
+                    DB_CONN_STR=conn_str,
+                    STREAMING=os.getenv(STREAMING_ENV_NAME, "false"),
+                )
+            )
 
 
 # generate private key for broker and engine
@@ -229,6 +252,7 @@ def generate_regtest_config():
     mysql_conn_str:
     spu_protocol:
     project_conf:
+    psi_type:
     """
     conf = yaml.safe_load(conf)
     # populate conf content
@@ -236,18 +260,22 @@ def generate_regtest_config():
     mysql_port = os.getenv(MYSQL_PORT_ENV_NAME)
     project_conf = os.getenv(PROJECT_CONF_ENV_NAME)
     spu_protocol = os.getenv(SPU_PROTOCOL_ENV_NAME)
+    psi_type = os.getenv(PSI_TYPE_ENV_NAME)
     conf["mysql_conn_str"] = (
         f"root:{MYSQL_ROOT_PASSWORD}@tcp(localhost:{mysql_port})/brokera?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
     )
     conf["spu_protocol"] = spu_protocol
     conf["project_conf"] = project_conf
+    conf["psi_type"] = int(psi_type)
     conf_path = os.path.join(CUR_PATH, "regtest.yml")
     yaml.safe_dump(conf, open(conf_path, "w"), indent=2)
     print(f"run p2p regtest with --conf={conf_path}\n")
 
 
 if __name__ == "__main__":
-    load_env(sys.argv[1])
+    load_dotenv(sys.argv[1], False)
+    set_ports_env()
+
     render_files()
     generate_private_keys()
     generate_party_info_json()

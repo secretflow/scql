@@ -208,3 +208,7 @@ type SortNode struct {
 type WindowNode struct {
 	baseNode
 }
+
+type MaxOneRowNode struct {
+	baseNode
+}

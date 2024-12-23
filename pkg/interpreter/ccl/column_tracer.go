@@ -26,6 +26,23 @@ type Context struct {
 // ColumnTracer trace column source info
 type ColumnTracer struct {
 	colToSourceParties map[int64][]string
+
+	// This map is used for synchronizing the changes of CCLs of the result and parameters of trivial unary functions
+	// For trivial unary functions(trim, lower, upper, etc.)
+	// rootArgMap[{UniqueID_of_trim(lower(col))}] = {UniqueID_of_col}
+	rootArgMap map[int64]int64
+}
+
+func (t *ColumnTracer) GetRootArg(x int64) int64 {
+	p, ok := t.rootArgMap[x]
+	if !ok {
+		return x
+	}
+	return p
+}
+
+func (t *ColumnTracer) SetRootArg(x, root int64) {
+	t.rootArgMap[x] = root
 }
 
 func (t *ColumnTracer) FindSourceParties(uniqueID int64) []string {
@@ -52,5 +69,6 @@ func (t *ColumnTracer) SetSourcePartiesFromExpr(uniqueID int64, expr expression.
 func NewColumnTracer() *ColumnTracer {
 	return &ColumnTracer{
 		colToSourceParties: make(map[int64][]string),
+		rootArgMap:         make(map[int64]int64),
 	}
 }

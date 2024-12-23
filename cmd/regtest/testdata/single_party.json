@@ -1,14 +1,24 @@
 {
   "queries": [
     {
+      "name": "row_number multi partition by/order by",
+      "query": "select u.* from (select ta.plain_int_0, row_number() over(partition by ta.plain_int_0, ta.plain_int_1 order by ta.plain_float_0, ta.plain_float_1) as num from alice_tbl_0 as ta) as u where u.num = 1;",
+      "mysql_query": "select u.* from (select ta.plain_int_0, row_number() over(partition by ta.plain_int_0, ta.plain_int_1 order by ta.plain_float_0, ta.plain_float_1) as num from alice.tbl_0 as ta) as u where u.num = 1;"
+    },
+    {
+      "name": "row_number",
+      "query": "select ta.plain_int_0, row_number() over(partition by ta.plain_int_0 order by ta.plain_float_0) as num from alice_tbl_0 as ta;",
+      "mysql_query": "select ta.plain_int_0, row_number() over(partition by ta.plain_int_0 order by ta.plain_float_0) as num from alice.tbl_0 as ta;"
+    },
+    {
       "name": "geodist test, param order(longtitude1, latitude1, longtitude2, latitude2, radius)",
-      "query": "select ta.plain_int_0, ta.plain_float_0, geodist(ta.plain_int_0, ta.plain_int_0, ta.plain_float_0, ta.plain_float_0, 6300) / 100 as distance from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0;",
-      "mysql_query": "select ta.plain_int_0, ta.plain_float_0, 6300 * acos(sin(radians(ta.plain_int_0)) * sin(radians(ta.plain_float_0)) + cos(radians(ta.plain_int_0)) * cos(radians(ta.plain_float_0)) * cos(radians(ta.plain_int_0) - radians(ta.plain_float_0))) / 100 as distance from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+      "query": "select ta.plain_int_0, ta.plain_float_0, geodist(ta.plain_int_0, ta.plain_int_0, ta.plain_float_0, ta.plain_float_0, 6300) / 100 as distance from alice_tbl_0 as ta;",
+      "mysql_query": "select ta.plain_int_0, ta.plain_float_0, 6300 * acos(sin(radians(ta.plain_int_0)) * sin(radians(ta.plain_float_0)) + cos(radians(ta.plain_int_0)) * cos(radians(ta.plain_float_0)) * cos(radians(ta.plain_int_0) - radians(ta.plain_float_0))) / 100 as distance from alice.tbl_0 as ta;"
     },
     {
       "name": "geodist test, param order(longtitude1, latitude1, longtitude2, latitude2)",
-      "query": "select ta.plain_int_0, ta.plain_float_0, geodist(ta.plain_int_0, ta.plain_int_0, ta.plain_float_0, ta.plain_float_0) / 100 as distance from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0;",
-      "mysql_query": "select ta.plain_int_0, ta.plain_float_0, 6371 * acos(sin(radians(ta.plain_int_0)) * sin(radians(ta.plain_float_0)) + cos(radians(ta.plain_int_0)) * cos(radians(ta.plain_float_0)) * cos(radians(ta.plain_int_0) - radians(ta.plain_float_0))) / 100 as distance from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+      "query": "select ta.plain_int_0, ta.plain_float_0, geodist(ta.plain_int_0, ta.plain_int_0, ta.plain_float_0, ta.plain_float_0) / 100 as distance from alice_tbl_0 as ta;",
+      "mysql_query": "select ta.plain_int_0, ta.plain_float_0, 6371 * acos(sin(radians(ta.plain_int_0)) * sin(radians(ta.plain_float_0)) + cos(radians(ta.plain_int_0)) * cos(radians(ta.plain_float_0)) * cos(radians(ta.plain_int_0) - radians(ta.plain_float_0))) / 100 as distance from alice.tbl_0 as ta;"
     },
     {
       "name": "plain select",
@@ -302,18 +312,18 @@
     },
     {
       "name": "naive trigonometric function on csv",
-      "query": "select sin(plain_int_0) as sin_plain_int_0, cos(plain_int_0) as cos_plain_int_0, acos(plain_int_0 / 100000) as acos_plain_int_0 from bob_tbl_1;",
-      "mysql_query": "select sin(plain_int_0) as sin_plain_int_0, cos(plain_int_0) as cos_plain_int_0, acos(plain_int_0 / 100000) as acos_plain_int_0 from bob.tbl_1"
+      "query": "select plain_int_0, sin(plain_int_0) as sin_plain_int_0, cos(plain_int_0) as cos_plain_int_0, acos(plain_int_0 / 100000) as acos_plain_int_0 from bob_tbl_1;",
+      "mysql_query": "select plain_int_0, sin(plain_int_0) as sin_plain_int_0, cos(plain_int_0) as cos_plain_int_0, acos(plain_int_0 / 100000) as acos_plain_int_0 from bob.tbl_1"
     },
     {
       "name": "naive trigonometric function on mysql",
-      "query": "select sin(plain_int_0) as sin_plain_int_0, cos(plain_int_0) as cos_plain_int_0, acos(plain_int_0 / 100000) as acos_plain_int_0 from alice_tbl_1;",
-      "mysql_query": "select sin(plain_int_0) as sin_plain_int_0, cos(plain_int_0) as cos_plain_int_0, acos(plain_int_0 / 100000) as acos_plain_int_0 from alice.tbl_1"
+      "query": "select plain_int_0, sin(plain_int_0) as sin_plain_int_0, cos(plain_int_0) as cos_plain_int_0, acos(plain_int_0 / 100000) as acos_plain_int_0 from alice_tbl_1;",
+      "mysql_query": "select plain_int_0, sin(plain_int_0) as sin_plain_int_0, cos(plain_int_0) as cos_plain_int_0, acos(plain_int_0 / 100000) as acos_plain_int_0 from alice.tbl_1"
     },
     {
       "name": "naive trigonometric function on postgres",
-      "query": "select sin(plain_int_0) as sin_plain_int_0, cos(plain_int_0) as cos_plain_int_0, acos(plain_int_0 / 100000) as acos_plain_int_0 from carol_tbl_1;",
-      "mysql_query": "select sin(plain_int_0) as sin_plain_int_0, cos(plain_int_0) as cos_plain_int_0, acos(plain_int_0 / 100000) as acos_plain_int_0 from carol.tbl_1"
+      "query": "select plain_int_0, sin(plain_int_0) as sin_plain_int_0, cos(plain_int_0) as cos_plain_int_0, acos(plain_int_0 / 100000) as acos_plain_int_0 from carol_tbl_1;",
+      "mysql_query": "select plain_int_0, sin(plain_int_0) as sin_plain_int_0, cos(plain_int_0) as cos_plain_int_0, acos(plain_int_0 / 100000) as acos_plain_int_0 from carol.tbl_1"
     }
   ]
 }

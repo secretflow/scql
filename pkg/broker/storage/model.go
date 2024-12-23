@@ -23,23 +23,7 @@ import (
 	"github.com/secretflow/scql/pkg/util/message"
 )
 
-type DistLockID int8
-
-const (
-	GcLockID         DistLockID = 100
-	JobWatcherLockID DistLockID = 101
-)
-
-func (lid DistLockID) String() string {
-	switch lid {
-	case GcLockID:
-		return "gc_lock"
-	case JobWatcherLockID:
-		return "job_watcher_lock"
-	default:
-		return "unknown_lock"
-	}
-}
+const DistributedLockID = 100
 
 type Project struct {
 	// ->;<-:create means read and create

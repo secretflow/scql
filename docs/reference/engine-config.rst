@@ -24,7 +24,7 @@ Configuration Options of SCQLEngine
 SCQLEngine can cooperate with upper-layer modules such as SCDB and SCQLBroker according to the deployment mode. ``Driver`` is used in the configuration items to represent these upper-layer modules.
 
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
-| Name                                            | Default             | Description                                                                                                                             |
+|                      Name                       |       Default       |                                                               Description                                                               |
 +=================================================+=====================+=========================================================================================================================================+
 | log_enable_console_logger                       | true                | Whether logging to stdout while logging to file                                                                                         |
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
@@ -42,9 +42,9 @@ SCQLEngine can cooperate with upper-layer modules such as SCDB and SCQLBroker ac
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
 | audit_max_files                                 | 180                 | The maximum number of old audit log files to retain                                                                                     |
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
-| peer_engine_protocol                            | `http:proto`        | The rpc protocol between engine and engine                                                                                              |
+| peer_engine_protocol                            | baidu_std           | The rpc protocol between engine and engine                                                                                              |
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
-| peer_engine_connection_type                     | pooled              | The rpc connection type between engine and engine                                                                                       |
+| peer_engine_connection_type                     | single              | The rpc connection type between engine and engine                                                                                       |
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
 | peer_engine_load_balancer                       | none                | The rpc load balancer between engine and engine, can be rr or empty string                                                              |
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
@@ -275,7 +275,7 @@ datasources in embed_router_conf contain information for connecting MySQL/SQLite
     CSVDB Connection string e.g:
       local csv: "{\\\"db_name\\\":\\\"csvdb\\\",\\\"tables\\\":[{\\\"table_name\\\":\\\"staff\\\",\\\"data_path\\\":\\\"test.csv\\\",\\\"columns\\\":[{\\\"column_name\\\":\\\"id\\\",\\\"column_type\\\":\\\"1\\\"}]}]}"
       
-      OSS/MinIO csv: "{\\\"db_name\\\":\\\"csvdb\\\",\\\"S3Conf\\\":{\\\"endpoint\\\":\\\"test_endpoint\\\",\\\"access_key_id\\\":\\\"test_id\\\",\\\"secret_access_key\\\":\\\"test_key\\\"},\\\"tables\\\":[{\\\"table_name\\\":\\\"staff\\\",\\\"data_path\\\":\\\"oss://test_bucket/test.csv\\\",\\\"columns\\\":[{\\\"column_name\\\":\\\"id\\\",\\\"column_type\\\":\\\"1\\\"}]}]}"
+      OSS csv: "{\\\"db_name\\\":\\\"csvdb\\\",\\\"s3_conf\\\":{\\\"endpoint\\\":\\\"test_endpoint\\\",\\\"access_key_id\\\":\\\"test_id\\\",\\\"secret_access_key\\\":\\\"test_key\\\",\\\"virtualhost\\\": true },\\\"tables\\\":[{\\\"table_name\\\":\\\"staff\\\",\\\"data_path\\\":\\\"oss://test_bucket/test.csv\\\",\\\"columns\\\":[{\\\"column_name\\\":\\\"id\\\",\\\"column_type\\\":\\\"string\\\"}]}]}"
 
     ArrowSQL Connection string format:
       grpc+<scheme>://host:port

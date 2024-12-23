@@ -18,11 +18,12 @@ clean:
 mock-data:
 	python $(PWD)/scripts/mock_data.py -dd=$(PWD)/docker-compose/csv -s=$(PWD)/testdata/db.json
 
-all: clean start-docker mock-data set-wan test analysis plot
+all: clean mock-data start-docker set-wan test analysis plot
 	@echo "well done!"
 
 
 test:
+	@[ ! -d "$(PWD)/logs" ] && mkdir -p "$(PWD)/logs" && echo "Directory created." || echo "Directory already exists."
 	go test -bench . -v -timeout=300m -args --conf=$(PWD)/docker-compose/regtest.yml --output_dir=$(PWD)/logs --container_names="${DOCKER_PROJ_NAME}-engine-alice-1,${DOCKER_PROJ_NAME}-engine-bob-1,${DOCKER_PROJ_NAME}-engine-carol-1"
 
 analysis:
@@ -34,6 +35,6 @@ set-wan:
 	@bash $(PWD)/scripts/setup_wan.sh ${DOCKER_PROJ_NAME}-engine-carol-1 ${LATENCY} ${BANDWIDTH}
 
 plot:
-	@python $(PWD)/scripts/plot_csv_data.py $(PWD)/logs/alice_op.csv $(PWD)/logs/${DOCKER_PROJ_NAME}-engine-alice-1.csv $(PWD)/logs/alice
-	@python $(PWD)/scripts/plot_csv_data.py $(PWD)/logs/bob_op.csv $(PWD)/logs/${DOCKER_PROJ_NAME}-engine-bob-1.csv $(PWD)/logs/bob
-	@python $(PWD)/scripts/plot_csv_data.py $(PWD)/logs/carol_op.csv $(PWD)/logs/${DOCKER_PROJ_NAME}-engine-carol-1.csv $(PWD)/logs/carol
+	@python $(PWD)/scripts/plot_csv_data.py $(PWD)/logs alice alice_op.csv ${DOCKER_PROJ_NAME}-engine-alice-1.csv
+	@python $(PWD)/scripts/plot_csv_data.py $(PWD)/logs bob bob_op.csv ${DOCKER_PROJ_NAME}-engine-bob-1.csv
+	@python $(PWD)/scripts/plot_csv_data.py $(PWD)/logs carol carol_op.csv ${DOCKER_PROJ_NAME}-engine-carol-1.csv

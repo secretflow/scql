@@ -36,7 +36,7 @@ binary: clean prepare fmt vet gogenerate
 
 pb: clean
 	$(RM) -rf pkg/proto-gen/*
-	./api/generate_proto.sh && ./pkg/audit/generate_audit.sh
+	./api/generate_proto.sh && ./pkg/audit/generate_audit.sh && bash ./contrib/agent/proto/generate_proto.sh
 
 fmt:
 	go fmt ./pkg/...
@@ -82,7 +82,7 @@ GOLINT-exists:
 	$(if $(shell command -v golangci-lint 2> /dev/null),$(info Found `golangci-lint`),$(shell curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ${TOOLBIN} v1.42.0))
 
 GO-package:
-	@GOBIN=${TOOLBIN} go install github.com/golang/mock/mockgen@v1.6.0 && \
+	@GOBIN=${TOOLBIN} go install go.uber.org/mock/mockgen@latest && \
 	GOBIN=${TOOLBIN} go install golang.org/x/tools/cmd/goyacc@latest && \
 	GOBIN=${TOOLBIN} go install golang.org/x/tools/cmd/cover@latest && \
 	GOBIN=${TOOLBIN} go install github.com/mattn/goveralls@latest && \

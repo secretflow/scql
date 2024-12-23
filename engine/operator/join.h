@@ -67,6 +67,7 @@ class Join : public Operator {
   static void EcdhPsiJoin(ExecContext* ctx);
   static void OprfPsiJoin(ExecContext* ctx, bool is_server,
                           std::optional<util::PsiSizeInfo> psi_size_info = {});
+  static void Rr22PsiJoin(ExecContext* ctx);
 
   static std::vector<TensorPtr> GetJoinKeys(ExecContext* ctx, bool is_left);
   static void SetJoinResult(ExecContext* ctx, bool is_left,

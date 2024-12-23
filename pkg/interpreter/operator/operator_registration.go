@@ -41,6 +41,8 @@ var BinaryOps = []string{
 	OpNameDiv,
 	OpNameIntDiv,
 	OpNameMod,
+	OpNameATan2,
+	OpNamePow,
 }
 
 var UnaryOps = []string{
@@ -177,7 +179,6 @@ func registerAllOpDef() {
 		opDef.AddOutput("RightJoinIndex", "Joined rows index for right vector(shape [K][1])",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T2)
 		opDef.AddAttribute(InputPartyCodesAttr, "List of parties the inputs belong to([PartyCodeLeft, PartyCodeRight]).")
-		// TODO(xiaoyuan) support outer join later
 		opDef.AddAttribute(JoinTypeAttr, "Int64. 0: inner join; 1: left join; 2: right join;")
 		opDef.AddDefaultAttributeValue(JoinTypeAttr, CreateIntAttribute(0))
 		opDef.AddAttribute(PsiAlgorithmAttr, "Choose PSI join algorithm, Int64. 0: Auto; 1: Ecdh; 2: Oprf;")
@@ -341,7 +342,7 @@ Out = [{"a", "b", "c"}]
 		opDef.AddOutput("Out", "Output Tensor.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 		opDef.AddAttribute(InTypeAttr, "Int64. 0: PSI In, 1: Share In, 2: Local In")
-		opDef.AddDefaultAttributeValue(InTypeAttr, CreateIntAttribute(0))
+		opDef.AddDefaultAttributeValue(InTypeAttr, CreateIntAttribute(PsiIn))
 		opDef.AddAttribute(PsiAlgorithmAttr, "Int64. PSI Algorithm for In. 0: Auto, 1: Ecdh, 2: Oprf;")
 		opDef.AddDefaultAttributeValue(PsiAlgorithmAttr, CreateIntAttribute(0))
 		opDef.AddAttribute(InputPartyCodesAttr, "List of parties the inputs belong to. This attribute is required if algorithm = PSI.")
@@ -914,37 +915,23 @@ Out = {0, 1, NULL}
 
 	}
 	{
-		{
-			opDef := &OperatorDef{}
-			opDef.SetName(OpNameCos)
-			opDef.SetStreamingType(StreamingOp)
-			opDef.AddInput("In", "the expression pass to cosine function", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
-			opDef.AddOutput("Out", "Result", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
-			opDef.SetDefinition("Definition: return the value of cosine function")
-			opDef.SetParamTypeConstraint(T, statusPrivateOrSecretOrPublic)
-			check(opDef.err)
-			AllOpDef = append(AllOpDef, opDef)
+		trigonoOp := map[string]string{
+			OpNameCos:  "cosine",
+			OpNameSin:  "sine",
+			OpNameTan:  "tangent",
+			OpNameCot:  "cotangent",
+			OpNameACos: "arc cosine",
+			OpNameASin: "arc sine",
+			OpNameATan: "arc tangent",
 		}
 
-		{
+		for op, description := range trigonoOp {
 			opDef := &OperatorDef{}
-			opDef.SetName(OpNameSin)
+			opDef.SetName(op)
 			opDef.SetStreamingType(StreamingOp)
-			opDef.AddInput("In", "the expression pass to sine function", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+			opDef.AddInput("In", fmt.Sprintf("the expression pass to %s function", description), proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 			opDef.AddOutput("Out", "Result", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
-			opDef.SetDefinition("Definition: return the value of sine function")
-			opDef.SetParamTypeConstraint(T, statusPrivateOrSecretOrPublic)
-			check(opDef.err)
-			AllOpDef = append(AllOpDef, opDef)
-		}
-
-		{
-			opDef := &OperatorDef{}
-			opDef.SetName(OpNameACos)
-			opDef.SetStreamingType(StreamingOp)
-			opDef.AddInput("In", "the expression pass to arc cosine function", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
-			opDef.AddOutput("Out", "Result", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
-			opDef.SetDefinition("Definition: return the value of arc cosine function")
+			opDef.SetDefinition(fmt.Sprintf("Definition: return the value of %s function", description))
 			opDef.SetParamTypeConstraint(T, statusPrivateOrSecretOrPublic)
 			check(opDef.err)
 			AllOpDef = append(AllOpDef, opDef)
@@ -963,6 +950,131 @@ Out = {0, 1, NULL}
 		opDef.AddAttribute(ReverseAttr, `string array consits of "0" and "1", "0" means this input tensor sort by ascending, "1" means this tensor sort by descending.
 		e.g. ["0","1"] means the first input key sort by ascending, the second sort by descending`)
 		opDef.SetParamTypeConstraint(T, statusPrivateOrSecretOrPublic)
+		check(opDef.err)
+		AllOpDef = append(AllOpDef, opDef)
+	}
+
+	{
+		opDef := &OperatorDef{}
+		opDef.SetName(OpNameSecretJoin)
+		opDef.SetStreamingType(SinkOp)
+		opDef.AddInput("LeftKey", "Left keys for join", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.AddInput("RightKey", "Right keys for join", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.AddInput("Left", "Left payloads for join", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.AddInput("Right", "Right payloads for join", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.AddOutput("LeftOutput", "Left payloads after join", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.AddOutput("RightOutput", "Right payloads after join", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.SetDefinition(`Definition: inner join the left and right payloads based on the left and right keys.
+Example:
+` + "\n```python" + `
+LeftKey = {{1,2,1,3,5}} // shape:[5*1]
+RightKey = {{1,2,1,2}}  // shape:[4*1]
+Left = {{0,1,2,3,4}}
+Right = {{0,1,2,3}}
+LeftOutput = {0,0,2,2,1,1}
+RightOutput = {0,2,0,2,1,3}
+` + "```\n")
+		opDef.SetParamTypeConstraint(T, statusSecret)
+		check(opDef.err)
+		AllOpDef = append(AllOpDef, opDef)
+	}
+
+	{
+		unaryNumericOps := map[string]bool{
+			OpNameAbs:     true,
+			OpNameCeil:    true,
+			OpNameFloor:   true,
+			OpNameRound:   true,
+			OpNameRadians: true,
+			OpNameDegrees: true,
+			OpNameLn:      true,
+			OpNameLog10:   true,
+			OpNameLog2:    true,
+			OpNameSqrt:    true,
+			OpNameExp:     true,
+		}
+
+		for op := range unaryNumericOps {
+			opDef := &OperatorDef{}
+			opDef.SetName(op)
+			opDef.SetStreamingType(SinkOp)
+			opDef.AddInput("In", fmt.Sprintf("the expression pass to %s function", op), proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+			opDef.AddOutput("Out", "Result", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+			opDef.SetDefinition(fmt.Sprintf("Definition: return the value of %s function", op))
+			opDef.SetParamTypeConstraint(T, statusPrivateOrSecretOrPublic)
+			check(opDef.err)
+			AllOpDef = append(AllOpDef, opDef)
+		}
+	}
+
+	{
+		opDef := &OperatorDef{}
+		opDef.SetName(OpNameGreatest)
+		opDef.SetStreamingType(StreamingOp)
+		opDef.AddInput("In", "expressions passed for getting greatest value", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.AddOutput("Out", "greatest value", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.SetDefinition(`return the greatest value in the given expressions.`)
+		opDef.SetParamTypeConstraint(T, statusPrivateOrSecretOrPublic)
+		check(opDef.err)
+		AllOpDef = append(AllOpDef, opDef)
+	}
+
+	{
+		opDef := &OperatorDef{}
+		opDef.SetName(OpNameLeast)
+		opDef.SetStreamingType(StreamingOp)
+		opDef.AddInput("In", "expressions passed for getting least value", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.AddOutput("Out", "least value", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.SetDefinition(`return the least value in the given expressions.`)
+		opDef.SetParamTypeConstraint(T, statusPrivateOrSecretOrPublic)
+		check(opDef.err)
+		AllOpDef = append(AllOpDef, opDef)
+	}
+
+	{
+		opDef := &OperatorDef{}
+		opDef.SetName(OpNameArrowFunc)
+		opDef.SetStreamingType(StreamingOp)
+		opDef.AddInput("In", "Input tensors.", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.AddAttribute(FuncNameAttr, "the name of arrow function, e.g: add/ifnull/...")
+		opDef.AddOutput("Out", "Output tensors.", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.SetDefinition(`Definition: Call arrow functions to finish calculation.
+Example:
+` + "\n```python" + `
+In = {{0, 1, NULL}}
+func_name = "ifnull"
+Out = {{false, false, true}}
+` + "```\n")
+		opDef.SetParamTypeConstraint(T, statusPrivate)
+		check(opDef.err)
+		AllOpDef = append(AllOpDef, opDef)
+	}
+
+	{
+		opDef := &OperatorDef{}
+		opDef.SetName(OpNameReplicate)
+		opDef.SetStreamingType(SinkOp)
+		opDef.AddInput("Left", "Left tensors to be replicated.",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.AddInput("Right", "Right tensors to be replicated.",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.AddOutput("LeftOut", "Left Output tensors.",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.AddOutput("RightOut", "Right Output tensors.",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.AddAttribute(InputPartyCodesAttr, "List of parties the inputs belong to([PartyCodeLeft, PartyCodeRight])")
+		opDef.SetDefinition(`Replicate the Left with a given scale (rows of Right[0]) in interleaving way, when sending to the left party.
+And replicate the Right with a given scale (rows of Left[0]) in non-interleaving way, when sending to the right party.
+Output the replication result Out. Example:
+` + "\n```python" + `
+Left = {a, b, c, d} # i.e. scale = 4
+Right = {0, 1, 2} # i.e. scale = 3
+sending to the interleaving party:
+  LeftOut = {a, b, c, d, a, b, c, d, a, b, c, d}
+the other party:
+  RightOut = {0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2}
+` + "```\n")
+		opDef.SetParamTypeConstraint(T, statusPrivate)
 		check(opDef.err)
 		AllOpDef = append(AllOpDef, opDef)
 	}

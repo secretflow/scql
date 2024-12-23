@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   broker_alice:
     image: ${SCQL_IMAGE:-secretflow/scql:latest}
@@ -55,7 +54,7 @@ services:
       - ./tls/engine_alice-ca.crt:/home/admin/engine/conf/cert.crt
       - ./tls/engine_alice-ca.key:/home/admin/engine/conf/key.key
   mysql:
-    image: mysql:latest
+    image: mysql:8.0.39
     environment:
       - MYSQL_ROOT_PASSWORD=__MYSQL_ROOT_PASSWD__
       - TZ=Asia/Shanghai

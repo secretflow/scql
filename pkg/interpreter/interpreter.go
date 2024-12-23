@@ -18,10 +18,11 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
-	"golang.org/x/exp/slices"
 	"sort"
 	"strconv"
 	"strings"
+
+	"golang.org/x/exp/slices"
 
 	"github.com/sirupsen/logrus"
 
@@ -69,18 +70,17 @@ func (intr *Interpreter) Compile(ctx context.Context, req *pb.CompileQueryReques
 	if err != nil {
 		return nil, err
 	}
-	issuerAsParticipant := req.GetIssuerAsParticipant()
 	var intoPartyCodes []string
 	if lp.IntoOpt() != nil {
-		if len(lp.IntoOpt().PartyFiles) == 1 && lp.IntoOpt().PartyFiles[0].PartyCode == "" {
-			lp.IntoOpt().PartyFiles[0].PartyCode = req.GetIssuer().GetCode()
-		}
 		for _, partyFile := range lp.IntoOpt().PartyFiles {
-			intoPartyCodes = append(intoPartyCodes, partyFile.PartyCode)
+			if partyFile.PartyCode == "" {
+				intoPartyCodes = append(intoPartyCodes, req.GetIssuer().GetCode())
+			} else {
+				intoPartyCodes = append(intoPartyCodes, partyFile.PartyCode)
+			}
 		}
-		issuerAsParticipant = true
 	}
-	enginesInfo, err := buildEngineInfo(lp, req.GetCatalog(), req.GetDbName(), req.GetIssuer().GetCode(), issuerAsParticipant, intoPartyCodes)
+	enginesInfo, err := buildEngineInfo(lp, req.GetCatalog(), req.GetDbName(), req.GetIssuer().GetCode(), req.GetIssuerAsParticipant(), intoPartyCodes)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (intr *Interpreter) Compile(ctx context.Context, req *pb.CompileQueryReques
 }
 
 func (*Interpreter) compileCore(enginesInfo *graph.EnginesInfo, req *pb.CompileQueryRequest, lp core.LogicalPlan, forceToUnBatched bool) (*pb.CompiledPlan, error) {
-	t, err := translator.NewTranslator(enginesInfo, req.GetSecurityConf(), req.GetIssuer().GetCode(), req.GetCompileOpts())
+	t, err := translator.NewTranslator(enginesInfo, req.GetSecurityConf(), req.GetIssuer().GetCode(), req.GetCompileOpts(), req.CreatedAt.AsTime())
 	if err != nil {
 		return nil, err
 	}

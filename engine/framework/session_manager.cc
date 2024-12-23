@@ -15,8 +15,13 @@
 #include "engine/framework/session_manager.h"
 
 #include <memory>
+#include <thread>
 
 #include "engine/util/logging.h"
+
+#ifndef DISABLE_TCMALLOC
+#include "gperftools/malloc_extension.h"
+#endif
 
 DEFINE_int32(psi_curve_type, psi::CURVE_FOURQ, "curve type used in PSI");
 DEFINE_int64(unbalance_psi_ratio_threshold, 5,
@@ -24,8 +29,10 @@ DEFINE_int64(unbalance_psi_ratio_threshold, 5,
              "PSI, LargePartySize means the rows count of the larger party");
 DEFINE_int64(unbalance_psi_larger_party_rows_count_threshold, 81920,
              "minimum rows count of the larger party to choose unbalanced PSI");
+DEFINE_bool(
+    disable_release_mem_to_sys_actively, false,
+    "default false, release memory to system when no session is running");
 namespace scql::engine {
-
 SessionManager::SessionManager(
     const SessionOptions& session_opt, ListenerManager* listener_manager,
     std::unique_ptr<yacl::link::ILinkFactory> link_factory,
@@ -207,13 +214,19 @@ void SessionManager::RemoveSession(const std::string& session_id) {
         session_state != SessionState::SUCCEEDED) {
       YACL_THROW_LOGIC_ERROR(
           "session({}), status({}) not belong to FAILED/SUCCEEDED, so can't "
-          "stop.",
+          "remove.",
           session_id, static_cast<size_t>(session_state));
     }
 
     auto node_handle = id_to_session_.extract(iter);
-    // unlock in time, since the following WaitLinkTaskFinish() may take a while
-    // to run
+#ifndef DISABLE_TCMALLOC
+    if (id_to_session_.empty() && !FLAGS_disable_release_mem_to_sys_actively) {
+      MallocExtension::instance()->ReleaseFreeMemory();
+    }
+#endif
+
+    // unlock in time, since the following WaitLinkTaskFinish() may take a
+    // while to run
     lock.unlock();
 
     auto end = std::chrono::system_clock::now();
@@ -265,6 +278,7 @@ void SessionManager::WatchSessionTimeoutThread() {
     // 3.find one timeout session.
     std::optional<std::string> timeout_session = GetTimeoutSession();
 
+    using namespace std::chrono_literals;
     // 4.remove session.
     if (timeout_session.has_value()) {
       try {
@@ -276,7 +290,7 @@ void SessionManager::WatchSessionTimeoutThread() {
             "[TIMEOUT] remove session({}) failed, err={}, sleep 60s before "
             "retry",
             timeout_session.value(), ex.what());
-        sleep(60);
+        std::this_thread::sleep_for(60s);
       }
     }
   }

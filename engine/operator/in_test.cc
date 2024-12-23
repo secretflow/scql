@@ -59,6 +59,63 @@ INSTANTIATE_TEST_SUITE_P(
                 .right_input = test::NamedTensor(
                     "y",
                     TensorFrom(arrow::int64(), "[1, 2, 3, -1, 34, 43, 99]")),
+                .in_algo = static_cast<int64_t>(util::PsiAlgo::kRr22Psi),
+                .left_party = test::kPartyAlice,
+                .right_party = test::kPartyBob,
+                .reveal_to = test::kPartyAlice,
+                .output = test::NamedTensor(
+                    "z",
+                    TensorFrom(arrow::boolean(),
+                               "[false, false, true, true, true, false]"))},
+            InTestCase{
+                .left_input = test::NamedTensor(
+                    "x", TensorFrom(arrow::large_utf8(),
+                                    R"json(["A", "E", "D", "F", "A"])json")),
+                .right_input = test::NamedTensor(
+                    "y", TensorFrom(arrow::large_utf8(),
+                                    R"json(["C", "D", "B", "A", "G"])json")),
+                .in_algo = static_cast<int64_t>(util::PsiAlgo::kRr22Psi),
+                .left_party = test::kPartyAlice,
+                .right_party = test::kPartyBob,
+                .reveal_to = test::kPartyAlice,
+                .output = test::NamedTensor(
+                    "z", TensorFrom(arrow::boolean(),
+                                    "[true, false, true, false, true]"))},
+            // testcase: right input empty
+            InTestCase{
+                .left_input = test::NamedTensor(
+                    "x", TensorFrom(arrow::large_utf8(),
+                                    R"json(["A", "E", "D", "F", "A"])json")),
+                .right_input = test::NamedTensor(
+                    "y", TensorFrom(arrow::large_utf8(), R"json([])json")),
+                .in_algo = static_cast<int64_t>(util::PsiAlgo::kRr22Psi),
+                .left_party = test::kPartyAlice,
+                .right_party = test::kPartyBob,
+                .reveal_to = test::kPartyAlice,
+                .output = test::NamedTensor(
+                    "z", TensorFrom(arrow::boolean(),
+                                    "[false, false, false, false, false]"))},
+            // testcase: left input empty
+            InTestCase{
+                .left_input = test::NamedTensor(
+                    "x", TensorFrom(arrow::large_utf8(), R"json([])json")),
+                .right_input = test::NamedTensor(
+                    "y", TensorFrom(arrow::large_utf8(),
+                                    R"json(["A", "E", "D", "F", "A"])json")),
+                .in_algo = static_cast<int64_t>(util::PsiAlgo::kRr22Psi),
+                .left_party = test::kPartyAlice,
+                .right_party = test::kPartyBob,
+                .reveal_to = test::kPartyAlice,
+                .output = test::NamedTensor("z", TensorFrom(arrow::boolean(),
+                                                            "[]"))},
+            // EcdhPsi
+            InTestCase{
+                .left_input = test::NamedTensor(
+                    "x",
+                    TensorFrom(arrow::int64(), "[10, 100, 2, -1, 34, 42]")),
+                .right_input = test::NamedTensor(
+                    "y",
+                    TensorFrom(arrow::int64(), "[1, 2, 3, -1, 34, 43, 99]")),
                 .in_algo = static_cast<int64_t>(util::PsiAlgo::kEcdhPsi),
                 .left_party = test::kPartyAlice,
                 .right_party = test::kPartyBob,
@@ -291,7 +348,24 @@ INSTANTIATE_TEST_SUITE_P(
                 .reveal_to = test::kPartyAlice,
                 .output = test::NamedTensor("z",
                                             TensorFrom(arrow::boolean(), "[]")),
-                .ub_server = -1})),
+                .ub_server = -1},
+            // local
+            InTestCase{
+                .left_input = test::NamedTensor(
+                    "x",
+                    TensorFrom(arrow::int64(), "[10, 100, 2, -1, 34, 42]")),
+                .right_input = test::NamedTensor(
+                    "y",
+                    TensorFrom(arrow::int64(), "[1, 2, 3, -1, 34, 43, 99]")),
+                //.in_algo = static_cast<int64_t>(util::PsiAlgo::kRr22Psi),
+                .in_type = static_cast<int64_t>(In::InType::kLocalIn),
+                .left_party = test::kPartyAlice,
+                .right_party = test::kPartyAlice,
+                .reveal_to = test::kPartyAlice,
+                .output = test::NamedTensor(
+                    "z",
+                    TensorFrom(arrow::boolean(),
+                               "[false, false, true, true, true, false]"))})),
     TestParamNameGenerator(InTest));
 
 TEST_P(InTest, Works) {
@@ -301,20 +375,33 @@ TEST_P(InTest, Works) {
   std::unordered_set<int64_t> supported_algos{
       static_cast<int64_t>(util::PsiAlgo::kAutoPsi),
       static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
-      static_cast<int64_t>(util::PsiAlgo::kEcdhPsi)};
+      static_cast<int64_t>(util::PsiAlgo::kEcdhPsi),
+      static_cast<int64_t>(util::PsiAlgo::kRr22Psi)};
   if (supported_algos.count(tc.in_algo) == 0) {
     FAIL() << "In algorithm " << tc.in_algo << " not supported yet";
   }
   auto node = MakeExecNode(tc);
-  auto sessions = test::MakeMultiPCSession(std::get<0>(parm));
+  std::vector<std::shared_ptr<Session>> sessions;
+  if (tc.in_type == static_cast<int64_t>(In::InType::kLocalIn)) {
+    sessions = {test::Make1PCSession()};
+  } else {
+    sessions = test::MakeMultiPCSession(std::get<0>(parm));
+  }
 
   ExecContext alice_ctx(node, sessions[0].get());
-  ExecContext bob_ctx(node, sessions[1].get());
+  ExecContext bob_ctx(node, sessions[0].get());
 
-  FeedInputs({&alice_ctx, &bob_ctx}, tc);
+  if (tc.in_type == static_cast<int64_t>(In::InType::kLocalIn)) {
+    FeedInputs({&alice_ctx}, tc);
+    EXPECT_NO_THROW(test::RunAsync<In>({&alice_ctx}));
+  } else {
+    ExecContext bob_ctx(node, sessions[1].get());
 
-  // When
-  EXPECT_NO_THROW(test::RunAsync<In>({&alice_ctx, &bob_ctx}));
+    FeedInputs({&alice_ctx, &bob_ctx}, tc);
+
+    // When
+    EXPECT_NO_THROW(test::RunAsync<In>({&alice_ctx, &bob_ctx}));
+  }
 
   // Then
   if (supported_algos.count(tc.in_algo) > 0) {
@@ -377,7 +464,9 @@ void InTest::FeedInputs(const std::vector<ExecContext*>& ctxs,
     auto party_code = ctx->GetSession()->SelfPartyCode();
     if (party_code == tc.left_party) {
       test::FeedInputsAsPrivate(ctx, {tc.left_input});
-    } else if (party_code == tc.right_party) {
+    }
+
+    if (party_code == tc.right_party) {
       test::FeedInputsAsPrivate(ctx, {tc.right_input});
     }
   }

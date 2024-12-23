@@ -20,6 +20,7 @@
 #include "Poco/Data/MySQL/Connector.h"
 #include "Poco/Data/PostgreSQL/Connector.h"
 #include "Poco/Data/SQLite/Connector.h"
+#include "spdlog/spdlog.h"
 #include "yacl/base/exception.h"
 
 namespace scql::engine {
@@ -63,13 +64,37 @@ OdbcConnector::OdbcConnector(const std::string& db_kind,
   }
 }
 
+void OdbcConnector::SetUtcTimezone(Poco::Data::Session& session) {
+  Poco::Data::Statement timezone_stmt(session);
+  std::string set_utc_time_zone = "";
+
+  if (db_kind_ == "mysql") {
+    set_utc_time_zone = "SET time_zone = 'UTC';";
+  } else if (db_kind_ == "postgresql") {
+    set_utc_time_zone = "SET TIME ZONE 'UTC';";
+  } else if (db_kind_ == "sqlite") {
+    return;
+  } else {
+    SPDLOG_WARN("unsupported DatabaseKind: {}", db_kind_);
+    return;
+  }
+
+  timezone_stmt << set_utc_time_zone;
+  timezone_stmt.execute();
+}
+
 Poco::Data::Session OdbcConnector::CreateSession() {
   try {
     if (pool_) {
-      return pool_->get();
+      Poco::Data::Session session = pool_->get();
+      SetUtcTimezone(session);
+      return session;
     }
 
-    return Poco::Data::Session(db_kind_, connection_str_);
+    Poco::Data::Session session =
+        Poco::Data::Session(db_kind_, connection_str_);
+    SetUtcTimezone(session);
+    return session;
   } catch (const Poco::Data::DataException& e) {
     YACL_THROW("create session catch unexpected Poco::Data::DataException: {}",
                e.displayText());

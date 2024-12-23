@@ -103,4 +103,40 @@ class Greater : public CompareBase {
   TensorPtr ComputeInPlain(const Tensor& lhs, const Tensor& rhs) override;
 };
 
+class Variadic : public Operator {
+ public:
+  static constexpr char kIn[] = "In";
+  static constexpr char kOut[] = "Out";
+
+ protected:
+  void Validate(ExecContext* ctx) override;
+  void Execute(ExecContext* ctx) override;
+  void ExecuteInPlain(ExecContext* ctx);
+  void ExecuteOnSpu(ExecContext* ctx);
+  virtual TensorPtr ComputeInPlain(const std::vector<TensorPtr>& inputs) = 0;
+  virtual spu::Value ComputeOnSpu(spu::SPUContext* sctx,
+                                  const std::vector<spu::Value>& inputs) = 0;
+};
+
+class Greatest : public Variadic {
+ public:
+  static const std::string kOpType;
+  const std::string& Type() const override;
+
+ protected:
+  TensorPtr ComputeInPlain(const std::vector<TensorPtr>& inputs) override;
+  spu::Value ComputeOnSpu(spu::SPUContext* sctx,
+                          const std::vector<spu::Value>& inputs) override;
+};
+
+class Least : public Variadic {
+ public:
+  static const std::string kOpType;
+  const std::string& Type() const override;
+
+ protected:
+  TensorPtr ComputeInPlain(const std::vector<TensorPtr>& inputs) override;
+  spu::Value ComputeOnSpu(spu::SPUContext* sctx,
+                          const std::vector<spu::Value>& inputs) override;
+};
 }  // namespace scql::engine::op

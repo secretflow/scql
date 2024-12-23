@@ -18,6 +18,10 @@ import sys
 import os
 
 
+def get_subdir(dir):
+    return [name for name in os.listdir(dir) if os.path.isdir(os.path.join(dir, name))]
+
+
 def plot_cpu(op_csv_path, docker_csv_path, output_path):
     df1 = pd.read_csv(docker_csv_path)
     df2 = pd.read_csv(op_csv_path)
@@ -27,7 +31,7 @@ def plot_cpu(op_csv_path, docker_csv_path, output_path):
     plt.figure(figsize=(10, 6))
     plt.plot(df1.index, df1["cpu_usage"], marker="o", linestyle="-", color="b")
     zeros = [0 for _ in range(len(df2))]
-    plt.scatter(df2["running_time_s"], zeros, color="r", marker="*", label="Values")
+    plt.scatter(df2["running_time_s"], zeros, color="r", marker="*", label="op")
     for i, row in df2.iterrows():
         plt.text(
             row["running_time_s"],
@@ -56,7 +60,7 @@ def plot_mem(op_csv_path, docker_csv_path, output_path):
     plt.figure(figsize=(10, 6))
     plt.plot(df1.index, df1["mem_usage"], marker="o", linestyle="-", color="b")
     zeros = [0 for _ in range(len(df2))]
-    plt.scatter(df2["running_time_s"], zeros, color="r", marker="*", label="Values")
+    plt.scatter(df2["running_time_s"], zeros, color="r", marker="*", label="op")
     for i, row in df2.iterrows():
         plt.text(
             row["running_time_s"],
@@ -68,7 +72,7 @@ def plot_mem(op_csv_path, docker_csv_path, output_path):
         )
     plt.title("mem over Time")
     plt.xlabel("running time sec")
-    plt.ylabel("mem")
+    plt.ylabel("mem MB")
     plt.grid(True)
     plt.xticks(rotation=45)
 
@@ -76,8 +80,47 @@ def plot_mem(op_csv_path, docker_csv_path, output_path):
     plt.show()
 
 
+def plot_net(op_csv_path, docker_csv_path, output_path):
+    df1 = pd.read_csv(docker_csv_path)
+    df2 = pd.read_csv(op_csv_path)
+    df1.set_index("running_time_s", inplace=True)
+    plt.figure(figsize=(10, 6))
+    plt.plot(
+        df1.index, df1["network_tx"], marker="o", linestyle="-", color="b", label="tx"
+    )
+    plt.plot(
+        df1.index, df1["network_rx"], marker="o", linestyle="--", color="b", label="rx"
+    )
+    zeros = [0 for _ in range(len(df2))]
+    plt.scatter(df2["running_time_s"], zeros, color="r", marker="*", label="op")
+    for i, row in df2.iterrows():
+        plt.text(
+            row["running_time_s"],
+            0,
+            str(row["op"]),
+            fontsize=9,
+            ha="right",
+            rotation=45,
+        )
+    plt.legend()
+    plt.title("network")
+    plt.xlabel("running time sec")
+    plt.ylabel("network b/s")
+    plt.grid(True)
+    plt.xticks(rotation=45)
+    plt.savefig(output_path)
+    plt.show()
+
+
 if __name__ == "__main__":
-    if not os.path.exists(sys.argv[3]):
-        os.makedirs(sys.argv[3])
-    plot_cpu(sys.argv[1], sys.argv[2], os.path.join(sys.argv[3], "cpu.png"))
-    plot_mem(sys.argv[1], sys.argv[2], os.path.join(sys.argv[3], "mem.png"))
+    for i, subdir in enumerate(get_subdir(sys.argv[1])):
+        subdir_path = os.path.join(sys.argv[1], subdir)
+        write_dir = os.path.join(subdir_path, sys.argv[2])
+        if not os.path.exists(write_dir):
+            os.makedirs(write_dir)
+        op_path = os.path.join(subdir_path, sys.argv[3])
+        docker_path = os.path.join(subdir_path, sys.argv[4])
+        if os.path.exists(op_path) and os.path.exists(docker_path):
+            plot_cpu(op_path, docker_path, os.path.join(write_dir, "cpu.png"))
+            plot_mem(op_path, docker_path, os.path.join(write_dir, "mem.png"))
+            plot_net(op_path, docker_path, os.path.join(write_dir, "net.png"))

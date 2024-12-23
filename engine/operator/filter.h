@@ -39,12 +39,11 @@ class Filter : public Operator {
 
  private:
   static void FilterPrivate(ExecContext* ctx, const pb::Tensor& filter_pb,
-                            const pb::Tensor& data_pb,
-                            const std::string& output_name);
-
+                            const RepeatedPbTensor& data_pbs,
+                            const RepeatedPbTensor& output_pbs);
   static void FilterSecret(ExecContext* ctx, const pb::Tensor& filter_pb,
-                           const pb::Tensor& data_pb,
-                           const std::string& output_name);
+                           const RepeatedPbTensor& data_pbs,
+                           const RepeatedPbTensor& output_pbs);
 
   static TensorPtr GetPrivateOrPublicTensor(ExecContext* ctx,
                                             const pb::Tensor& input_pb);

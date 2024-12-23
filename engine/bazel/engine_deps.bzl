@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 
 def engine_deps():
     _com_github_gperftools_gperftools()
@@ -29,6 +29,7 @@ def engine_deps():
     _io_opentelemetry_cpp()
     _com_github_google_snappy()
     _com_github_lz4_lz4()
+    _com_github_utf8proc()
     _secretflow_deps()
     _com_mysql()
     _org_pocoproject_poco()
@@ -70,11 +71,23 @@ def _secretflow_deps():
         name = "psi",
         urls = [
             #"https://github.com/secretflow/psi/archive/%s.tar.gz" % PSI_COMMIT,
-            "https://github.com/secretflow/psi/archive/refs/tags/v0.5.0.dev241016.tar.gz",
+            "https://github.com/secretflow/psi/archive/refs/tags/v0.5.0b0.tar.gz",
         ],
         # strip_prefix = "psi-%s" % PSI_COMMIT,
-        strip_prefix = "psi-0.5.0.dev241016",
-        sha256 = "1672e4284f819c40e34c65b0d5b1dfe4cc959b81d6f63daef7b39f7eb8d742e2",
+        strip_prefix = "psi-0.5.0b0",
+        sha256 = "23f08ae61f9221717bab78c083163fe36f6af5c253c8706fb792fd37d60887fd",
+        patch_args = ["-p1"],
+        patches = ["@scql//engine/bazel:patches/psi.patch"],
+    )
+
+    maybe(
+        http_archive,
+        name = "dataproxy",
+        urls = [
+            "https://github.com/secretflow/dataproxy/archive/refs/tags/v0.3.0b0.tar.gz",
+        ],
+        strip_prefix = "dataproxy-0.3.0b0",
+        sha256 = "016915d16bd9331e2b7766d2a4090166c7c9f5e58b3ba75f68df3e23cde9846a",
     )
 
     maybe(
@@ -94,10 +107,10 @@ def _secretflow_deps():
         name = "kuscia",
         urls = [
             # "https://github.com/secretflow/kuscia/archive/%s.tar.gz" % KUSCIA_COMMIT,
-            "https://github.com/secretflow/kuscia/archive/refs/tags/v0.7.0b0.tar.gz",
+            "https://github.com/secretflow/kuscia/archive/refs/tags/v0.13.0b0.tar.gz",
         ],
-        strip_prefix = "kuscia-0.7.0b0",
-        sha256 = "76e396f9b148ec741e3c938d0a54ce9e91709466254d2f6effc8a4d50a77ff97",
+        strip_prefix = "kuscia-0.13.0b0",
+        sha256 = "8c7b638ef510a665af12f7b92ed0c43de7712154234e52ef4d8609b8afebfdac",
     )
 
 def _org_apache_arrow():
@@ -247,6 +260,19 @@ def _com_github_lz4_lz4():
         type = "tar.gz",
         strip_prefix = "lz4-1.9.3",
         build_file = "@scql//engine/bazel:lz4.BUILD",
+    )
+
+def _com_github_utf8proc():
+    maybe(
+        http_archive,
+        name = "com_github_utf8proc",
+        urls = [
+            "https://github.com/JuliaStrings/utf8proc/archive/v2.7.0.tar.gz",
+        ],
+        sha256 = "4bb121e297293c0fd55f08f83afab6d35d48f0af4ecc07523ad8ec99aa2b12a1",
+        type = "tar.gz",
+        strip_prefix = "utf8proc-2.7.0",
+        build_file = "@scql//engine/bazel:utf8proc.BUILD",
     )
 
 def _com_github_nelhage_rules_boost():

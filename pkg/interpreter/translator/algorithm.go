@@ -142,6 +142,8 @@ func NewAlgCreator() *algCreator {
 			operator.OpNameIn:           createInAlg,
 			operator.OpNameIf:           createIfAlg,
 			operator.OpNameCaseWhen:     createCaseWhenAlg,
+			operator.OpNameATan2:        createBinaryAlg,
+			operator.OpNamePow:          createBinaryAlg,
 		},
 	}
 	return creator
@@ -310,10 +312,6 @@ func createInAlg(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, allParties
 			for _, outp := range createPlacementByCCL(out[graph.Out][0], allParties) {
 				// left and right tensor must be private
 				if !areStatusesAllPrivate(lp.Status(), rp.Status(), outp.Status()) {
-					continue
-				}
-				// left and right tensor must not be in the same side
-				if lp.partyList()[0] == rp.partyList()[0] {
 					continue
 				}
 				if outp.partyList()[0] != lp.partyList()[0] && outp.partyList()[0] != rp.partyList()[0] {

@@ -16,6 +16,8 @@ persist_session: false
 exchange_job_info_retry_times: 2
 exchange_job_info_retry_interval: 10s
 intra_host: localhost:8081
+security_compromise:
+  reveal_group_count: true
 engine:
   timeout: 120s
   protocol: http

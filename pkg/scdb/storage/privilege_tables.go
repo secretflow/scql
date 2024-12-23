@@ -171,6 +171,7 @@ var VisibilityPrivColName = map[mysql.PrivilegeType]string{
 	mysql.PlaintextAfterJoinPriv:      VisibilityPrivColumnName,
 	mysql.PlaintextAsJoinPayloadPriv:  VisibilityPrivColumnName,
 	mysql.PlaintextAfterGroupByPriv:   VisibilityPrivColumnName,
+	mysql.RevealRankPriv:              VisibilityPrivColumnName,
 }
 
 var TablePrivColName = map[mysql.PrivilegeType]string{

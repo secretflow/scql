@@ -307,6 +307,7 @@ int main(int argc, char* argv[]) {
     SPDLOG_ERROR("Fail to setup logger, msg={}", e.what());
     return -1;
   }
+  SPDLOG_INFO("Engine version: {}", ENGINE_VERSION_STRING);
 
   // Set default authenticator for brpc channel.
   if (FLAGS_enable_client_authorization) {

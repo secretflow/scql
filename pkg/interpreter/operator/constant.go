@@ -24,6 +24,7 @@ const (
 	OpNameFilterByIndex string = "FilterByIndex"
 	OpNameBucket        string = "Bucket"
 	OpNameJoin          string = "Join"
+	OpNameSecretJoin    string = "SecretJoin"
 	OpNameRunSQL        string = "RunSQL"
 	OpNamePublish       string = "Publish"
 	OpNameDumpFile      string = "DumpFile"
@@ -38,6 +39,7 @@ const (
 	OpNameCast          string = "Cast"
 	OpNameLimit         string = "Limit"
 	OpNameIsNull        string = "IsNull"
+	OpNameArrowFunc     string = "ArrowFunc"
 	// binary ops
 	OpNameLess         string = "Less"
 	OpNameLessEqual    string = "LessEqual"
@@ -47,6 +49,7 @@ const (
 	OpNameNotEqual     string = "NotEqual"
 	OpNameLogicalAnd   string = "LogicalAnd"
 	OpNameLogicalOr    string = "LogicalOr"
+	OpNamePow          string = "Pow"
 	// arithmetic ops
 	OpNameAdd    string = "Add"
 	OpNameMinus  string = "Minus"
@@ -58,6 +61,12 @@ const (
 	OpNameSin    string = "Sin"
 	OpNameCos    string = "Cos"
 	OpNameACos   string = "ACos"
+	OpNameASin   string = "ASin"
+	OpNameTan    string = "Tan"
+	OpNameCot    string = "Cot"
+	OpNameATan   string = "ATan"
+	OpNameATan2  string = "ATan2"
+	// OpNameACot   string = "ACot"
 	// agg
 	OpNameReduceSum string = "ReduceSum"
 	OpNameReduceMax string = "ReduceMax"
@@ -96,6 +105,17 @@ const (
 	OpNameCoalesce string = "Coalesce"
 
 	OpNameRowNumber string = "RowNumber"
+	OpNameAbs       string = "Abs"
+	OpNameCeil      string = "Ceil"
+	OpNameFloor     string = "Floor"
+	OpNameRound     string = "Round"
+	OpNameDegrees   string = "Degrees"
+	OpNameRadians   string = "Radians"
+	OpNameLn        string = "Ln"
+	OpNameLog10     string = "Log10"
+	OpNameLog2      string = "Log2"
+	OpNameSqrt      string = "Sqrt"
+	OpNameExp       string = "Exp"
 )
 
 const (
@@ -125,6 +145,10 @@ const (
 	LineTerminatorAttr   = `line_terminator`
 	AxisAttr             = `axis`
 	ReverseAttr          = `reverse`
+
+	FuncNameAttr    = `func_name`
+	FuncOptAttr     = `func_options`
+	FuncOptTypeAttr = `func_opt_type`
 )
 
 var ReduceAggOp = map[string]string{
@@ -152,3 +176,9 @@ var GroupAggOp = map[string]string{
 	ast.AggFuncCount:    OpNameGroupCount,
 	ast.AggFuncFirstRow: OpNameGroupFirstOf,
 }
+
+const (
+	PsiIn = 0
+	// SecretShareIn = 1
+	LocalIn = 2
+)

@@ -138,6 +138,7 @@ void RankWindowBase::Execute(ExecContext* ctx) {
   for (int i = 0; i < input_pbs.size(); i++) {
     const auto& input_pb = input_pbs[i];
     auto in_t = ctx->GetTensorTable()->GetTensor(input_pb.name());
+    YACL_ENFORCE(in_t, "failed to find tensor '{}'", input_pb.name());
     fields.push_back(arrow::field(input_pb.name(), in_t->ArrowType()));
   }
   std::shared_ptr<arrow::Schema> schema = arrow::schema(fields);

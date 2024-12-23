@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"fmt"
 	"runtime"
+	"slices"
 	"strings"
 	"testing"
 
@@ -4791,11 +4792,10 @@ func (checker *nodeTextCleaner) Enter(in ast.Node) (out ast.Node, skipChildren b
 			// col.Tp.Charset = strings.ToUpper(col.Tp.Charset)
 			// col.Tp.Collate = strings.ToUpper(col.Tp.Collate)
 
-			for i, option := range col.Options {
-				if option.Tp == 0 && option.Expr == nil && option.Stored == false && option.Refer == nil {
-					col.Options = append(col.Options[:i], col.Options[i+1:]...)
-				}
+			invalidOption := func(option *ast.ColumnOption) bool {
+				return option.Tp == 0 && option.Expr == nil && option.Stored == false && option.Refer == nil
 			}
+			col.Options = slices.DeleteFunc(col.Options, invalidOption)
 		}
 		if node.Partition != nil && node.Partition.Expr != nil {
 			var tmpCleaner nodeTextCleaner

@@ -97,7 +97,7 @@ Create a file called ``docker-compose.yaml`` in your workspace and paste the fol
         - ./ed25519key.pem:/home/admin/engine/conf/ed25519key.pem
         - ./authorized_profile.json:/home/admin/engine/conf/authorized_profile.json
     mysql:
-      image: mysql:latest
+      image: mysql:8.0
       environment:
         - MYSQL_ROOT_PASSWORD=__MYSQL_ROOT_PASSWORD__
         - TZ=Asia/Shanghai
@@ -260,7 +260,7 @@ Create a file called ``docker-compose.yaml`` in your workspace and paste the fol
       volumes:
         - ./config.yml:/home/admin/configs/config.yml
     mysql:
-      image: mysql:latest
+      image: mysql:8.0
       environment:
         - MYSQL_ROOT_PASSWORD=__MYSQL_ROOT_PASSWORD__
         - MYSQL_DATABASE=scdb

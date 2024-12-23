@@ -14,11 +14,17 @@
 
 #include "engine/operator/sort.h"
 
+#include "arrow/api.h"
+#include "arrow/compute/api.h"
+#include "arrow/table.h"
 #include "libspu/kernel/hlo/basic_binary.h"
 #include "libspu/kernel/hlo/const.h"
 #include "libspu/kernel/hlo/sort.h"
 
+#include "engine/core/arrow_helper.h"
+#include "engine/core/tensor_constructor.h"
 #include "engine/util/spu_io.h"
+#include "engine/util/table_util.h"
 #include "engine/util/tensor_util.h"
 
 namespace scql::engine::op {
@@ -55,7 +61,73 @@ void Sort::Execute(ExecContext* ctx) {
 }
 
 void Sort::SortInPlain(ExecContext* ctx) {
-  YACL_THROW("SortInPlain is unimplemented");
+  const auto& sort_key_pbs = ctx->GetInput(kInKey);
+  const auto& in_pbs = ctx->GetInput(kIn);
+
+  std::vector<arrow::compute::SortKey> sort_keys;
+
+  // TODO: sort the table by the keys with different direction
+  bool reverse = ctx->GetBooleanValueFromAttribute(kReverseAttr);
+  arrow::compute::SortOrder order = reverse
+                                        ? arrow::compute::SortOrder::Descending
+                                        : arrow::compute::SortOrder::Ascending;
+  for (int i = 0; i < sort_key_pbs.size(); i++) {
+    sort_keys.push_back(arrow::compute::SortKey(sort_key_pbs[i].name(), order));
+  }
+
+  RepeatedPbTensor input_tensors;
+
+  std::vector<std::string> fields;
+  for (int i = 0; i < in_pbs.size(); i++) {
+    // TODO: if the duplicate columns are unavoidable in some scenarios consider
+    // to maitain the mapping relationship and reconstruct the table after
+    // sorting
+    YACL_ENFORCE(std::find(fields.begin(), fields.end(), in_pbs[i].name()) ==
+                     fields.end(),
+                 "duplicate field '{}'", in_pbs[i].name());
+    fields.push_back(in_pbs[i].name());
+
+    // From protobuf doc:
+    // Copying to the end of this RepeatedPtrField is slowest of all; it can't
+    // reliably copy-construct to the last element of this RepeatedPtrField, for
+    // example (unlike std::vector).
+    // We currently block this API.  The right way to add to the end is to call
+    // Add() and modify the element it points to.
+    // If you must add an existing value, call *Add() = value;
+    *(input_tensors.Add()) = in_pbs[i];
+  }
+
+  for (int i = 0; i < sort_key_pbs.size(); i++) {
+    // payload fields already contains sort key
+    if (std::find(fields.begin(), fields.end(), sort_key_pbs[i].name()) !=
+        fields.end()) {
+      continue;
+    }
+    *(input_tensors.Add()) = sort_key_pbs[i];
+  }
+
+  std::shared_ptr<arrow::Table> input_table =
+      util::ConstructTableFromTensors(ctx, input_tensors);
+
+  arrow::compute::SortOptions sort_options(sort_keys);
+
+  auto status = arrow::compute::SortIndices(input_table, sort_options);
+  YACL_ENFORCE(status.ok(), "failed to sort indices");
+  std::shared_ptr<arrow::Array> indices = status.ValueOrDie();
+
+  auto output_status = arrow::compute::Take(input_table, indices);
+  YACL_ENFORCE(output_status.ok(), "failed to take indices after sorting");
+  auto output_table = output_status.ValueOrDie().table();
+  YACL_ENFORCE(output_table, "failed to convert datum to table");
+
+  const auto& out_pbs = ctx->GetOutput(kOut);
+  YACL_ENFORCE(out_pbs.size() <= (int)output_table->fields().size(),
+               "tensors' size after sorted({}) is less than expected({})",
+               output_table->fields().size(), out_pbs.size());
+  for (int i = 0; i < out_pbs.size(); i++) {
+    ctx->GetTensorTable()->AddTensor(
+        out_pbs[i].name(), TensorFrom(std::move(output_table->column(i))));
+  }
 }
 
 void Sort::SortInSecret(ExecContext* ctx) {

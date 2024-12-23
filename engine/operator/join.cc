@@ -16,10 +16,14 @@
 
 #include <sys/types.h>
 
+#include <algorithm>
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
+#include <future>
 #include <memory>
 #include <optional>
+#include <string>
 #include <tuple>
 #include <unordered_map>
 #include <unordered_set>
@@ -29,8 +33,10 @@
 #include "gflags/gflags.h"
 #include "msgpack.hpp"
 #include "psi/cryptor/cryptor_selector.h"
-#include "psi/ecdh/ecdh_oprf_psi.h"
 #include "psi/ecdh/ecdh_psi.h"
+#include "psi/ecdh/ub_psi/ecdh_oprf_psi.h"
+#include "psi/rr22/common.h"
+#include "psi/rr22/rr22_psi.h"
 #include "yacl/crypto/rand/rand.h"
 
 #include "engine/audit/audit_log.h"
@@ -67,6 +73,8 @@ void Join::Execute(ExecContext* ctx) {
   } else if (algorithm == static_cast<int64_t>(util::PsiAlgo::kOprfPsi)) {
     SPDLOG_LOGGER_INFO(logger, "use server hint Oprf");
     return OprfPsiJoin(ctx, IsOprfServerAccordToHint(ctx));
+  } else if (algorithm == static_cast<int64_t>(util::PsiAlgo::kRr22Psi)) {
+    return Rr22PsiJoin(ctx);
   }
 
   // coordinate between engines
@@ -101,7 +109,8 @@ void Join::ValidateJoinTypeAndAlgo(ExecContext* ctx) {
   static std::unordered_set<int64_t> supported_algorithms{
       static_cast<int64_t>(util::PsiAlgo::kAutoPsi),
       static_cast<int64_t>(util::PsiAlgo::kEcdhPsi),
-      static_cast<int64_t>(util::PsiAlgo::kOprfPsi)};
+      static_cast<int64_t>(util::PsiAlgo::kOprfPsi),
+      static_cast<int64_t>(util::PsiAlgo::kRr22Psi)};
   YACL_ENFORCE(supported_algorithms.count(algorithm) > 0,
                "Invalid join algorithm: {}", algorithm);
 }
@@ -213,6 +222,66 @@ void Join::EcdhPsiJoin(ExecContext* ctx) {
                               start_time);
 }
 
+void Join::Rr22PsiJoin(ExecContext* ctx) {
+  const auto start_time = std::chrono::system_clock::now();
+  auto logger = ctx->GetActiveLogger();
+  const auto& my_party_code = ctx->GetSession()->SelfPartyCode();
+  std::vector<std::string> input_party_codes =
+      ctx->GetStringValuesFromAttribute(kInputPartyCodesAttr);
+
+  bool is_left = my_party_code == input_party_codes.at(0);
+  auto join_keys = GetJoinKeys(ctx, is_left);
+  if (ctx->GetSession()->GetPsiLogger()) {
+    ctx->GetSession()->GetPsiLogger()->LogInput(join_keys);
+  }
+  auto psi_link = ctx->GetSession()->GetLink();
+  if (psi_link->WorldSize() > 2) {
+    psi_link = psi_link->SubWorld(ctx->GetNodeName() + "-Rr22PsiJoin",
+                                  input_party_codes);
+  }
+  auto self_size = static_cast<size_t>(join_keys[0]->Length());
+  auto batch_provider = std::make_shared<util::BatchProvider>(
+      join_keys, FLAGS_provider_batch_size);
+  auto provider = util::MemoryBucketProvider(batch_provider);
+  auto peer_size = util::ExchangeSetSize(psi_link, self_size);
+  provider.InitBucket(psi_link, self_size, peer_size);
+  auto bucket_num = provider.GetBucketNum();
+  std::vector<TensorPtr> result_ts(bucket_num);
+  int64_t join_type = ctx->GetInt64ValueFromAttribute(kJoinTypeAttr);
+  psi::rr22::PreProcessFunc pre_f =
+      [&](size_t idx) -> std::vector<psi::HashBucketCache::BucketItem> {
+    YACL_ENFORCE(idx < bucket_num);
+    return provider.GetDeDupItemsInBucket(idx);
+  };
+  psi::rr22::PostProcessFunc post_f =
+      [&](size_t bucket_idx,
+          const std::vector<psi::HashBucketCache::BucketItem>& bucket_items,
+          const std::vector<uint32_t>& indices,
+          const std::vector<uint32_t>& peer_cnt) {
+        result_ts[bucket_idx] = provider.CalIntersection(
+            psi_link->Spawn(std::to_string(bucket_idx)), bucket_idx, is_left,
+            join_type, bucket_items, indices, peer_cnt);
+        provider.CleanBucket(bucket_idx);
+      };
+  psi::rr22::Rr22Runner runner(psi_link,
+                               psi::rr22::GenerateRr22PsiOptions(false),
+                               bucket_num, true, pre_f, post_f);
+  // left as sender
+  runner.ParallelRun(0, is_left);
+  auto join_indices = util::ConcatTensors(result_ts);
+  auto result_size = join_indices->Length();
+  SPDLOG_LOGGER_INFO(
+      logger,
+      "RR22 PSI Join finish, my_party_code:{}, my_rank:{}, total "
+      "self_item_count:{}, total peer_item_count:{}, result_size:{}",
+      ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
+      self_size, peer_size, result_size);
+  SetJoinResult(ctx, is_left, std::move(join_indices));
+  audit::RecordJoinNodeDetail(*ctx, static_cast<int64_t>(self_size),
+                              static_cast<int64_t>(peer_size), result_size,
+                              start_time);
+}
+
 void Join::OprfPsiJoin(ExecContext* ctx, bool is_server,
                        std::optional<util::PsiSizeInfo> psi_size_info) {
   auto logger = ctx->GetActiveLogger();
@@ -251,10 +320,12 @@ void Join::OprfPsiJoin(ExecContext* ctx, bool is_server,
     psi_link = psi_link->SubWorld(ctx->GetNodeName() + "-OprfPsiJoin",
                                   input_party_codes);
   }
-  psi_options.link0 = psi_link;
-  YACL_ENFORCE(psi_options.link0, "fail to getlink0 for OprfPsiJoin");
-  psi_options.link1 = psi_options.link0->Spawn();
-  YACL_ENFORCE(psi_options.link1, "fail to getlink1 for OprfPsiJoin");
+  psi_options.cache_transfer_link = psi_link;
+  YACL_ENFORCE(psi_options.cache_transfer_link,
+               "fail to create cache_transfer_link for OprfPsiJoin");
+  psi_options.online_link = psi_options.cache_transfer_link->Spawn();
+  YACL_ENFORCE(psi_options.online_link,
+               "fail to create online_link for OprfPsiJoin");
 
   psi_options.curve_type = static_cast<psi::CurveType>(
       ctx->GetSession()->GetSessionOptions().psi_config.psi_curve_type);
@@ -352,7 +423,7 @@ void Join::OprfPsiServer(
       std::async(std::launch::async, util::OprfPsiServerTransferServerItems,
                  ctx, psi_link, batch_provider, ec_oprf_psi_server, ub_cache);
   util::OprfPsiServerTransferClientItems(ctx, ec_oprf_psi_server);
-  transfer_server_items_future.wait();
+  transfer_server_items_future.get();
 
   uint64_t client_unmatched_count = 0;
   if (join_role == JoinRole::kLeftOrRightJoinNullParty) {
@@ -387,7 +458,7 @@ void Join::OprfPsiClient(
       std::make_shared<util::UbPsiCipherStore>(client_cipher_store_path, true);
   util::OprfPsiClientTransferClientItems(ctx, batch_provider, psi_options,
                                          client_cipher_store);
-  transfer_server_items_future.wait();
+  transfer_server_items_future.get();
 
   std::vector<uint64_t> match_server_seqs;
 

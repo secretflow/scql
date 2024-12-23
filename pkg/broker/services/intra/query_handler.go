@@ -23,6 +23,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/exp/slices"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/secretflow/scql/pkg/broker/application"
 	"github.com/secretflow/scql/pkg/broker/executor"
@@ -34,7 +35,6 @@ import (
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
-	"github.com/secretflow/scql/pkg/util/brokerutil"
 	"github.com/secretflow/scql/pkg/util/message"
 	"github.com/secretflow/scql/pkg/util/parallel"
 	"github.com/secretflow/scql/pkg/util/sliceutil"
@@ -58,37 +58,6 @@ func validateAndGetProjectConf(app *application.App, projectID string) (*pb.Proj
 	return projConf, nil
 }
 
-func genSessionOpts(jobConfig *pb.JobConfig, projConf *pb.ProjectConfig) *application.SessionOptions {
-	jobConfig = brokerutil.UpdateJobConfig(jobConfig, projConf)
-
-	linkCfg := &pb.LinkConfig{
-		LinkRecvTimeoutSec:          jobConfig.LinkRecvTimeoutSec,
-		LinkThrottleWindowSize:      jobConfig.LinkThrottleWindowSize,
-		LinkChunkedSendParallelSize: jobConfig.LinkChunkedSendParallelSize,
-		HttpMaxPayloadSize:          jobConfig.HttpMaxPayloadSize,
-	}
-
-	psiCfg := &pb.PsiConfig{
-		PsiCurveType:                              jobConfig.PsiCurveType,
-		UnbalancePsiRatioThreshold:                jobConfig.UnbalancePsiRatioThreshold,
-		UnbalancePsiLargerPartyRowsCountThreshold: jobConfig.UnbalancePsiLargerPartyRowsCountThreshold,
-	}
-
-	logCfg := &pb.LogConfig{
-		EnableSessionLoggerSeparation: jobConfig.EnableSessionLoggerSeparation,
-	}
-
-	sessionOptions := &application.SessionOptions{
-		SessionExpireSeconds: jobConfig.GetSessionExpireSeconds(),
-		LinkConfig:           linkCfg,
-		PsiConfig:            psiCfg,
-		LogConfig:            logCfg,
-		TimeZone:             jobConfig.GetTimeZone(),
-	}
-
-	return sessionOptions
-}
-
 func (svc *grpcIntraSvc) DoQuery(ctx context.Context, req *pb.QueryRequest) (resp *pb.QueryResponse, err error) {
 	if req == nil || req.GetProjectId() == "" || req.GetQuery() == "" {
 		return nil, status.New(pb.Code_BAD_REQUEST, "request for DoQuery is illegal: empty project id or query")
@@ -106,7 +75,7 @@ func (svc *grpcIntraSvc) DoQuery(ctx context.Context, req *pb.QueryRequest) (res
 		return nil, fmt.Errorf("DoQuery: %v", err)
 	}
 
-	sessionOptions := genSessionOpts(req.GetJobConfig(), projConf)
+	sessionOptions := common.GenSessionOpts(req.GetJobConfig(), projConf)
 
 	info := &application.ExecutionInfo{
 		ProjectID: req.GetProjectId(),
@@ -118,25 +87,27 @@ func (svc *grpcIntraSvc) DoQuery(ctx context.Context, req *pb.QueryRequest) (res
 		EngineClient:   app.EngineClient,
 		DebugOpts:      req.GetDebugOpts(),
 		SessionOptions: sessionOptions,
+		CreatedAt:      time.Now(),
 	}
 	session, err := application.NewSession(ctx, info, app, false, req.GetDryRun())
 	if err != nil {
 		return nil, err
 	}
-	app.AddSession(jobID, session)
 	logrus.Infof("create session %s with query '%s' in project %s", jobID, req.Query, req.ProjectId)
-
 	defer func() {
 		if session.Engine != nil {
 			if err := session.Engine.Stop(); err != nil {
 				logrus.Warnf("failed to stop engine for query job=%s: %v", jobID, err)
 			}
 		}
-		app.DeleteSession(jobID)
 	}()
 
-	err = svc.runQuery(session)
-	return session.GetResultSafely(), err
+	resp, err = runQuery(session)
+	if err != nil {
+		return
+	}
+	// for audit purpose
+	return resp, err
 }
 
 func (svc *grpcIntraSvc) SubmitQuery(ctx context.Context, req *pb.QueryRequest) (resp *pb.SubmitResponse, err error) {
@@ -154,13 +125,15 @@ func (svc *grpcIntraSvc) SubmitQuery(ctx context.Context, req *pb.QueryRequest) 
 	if err != nil {
 		return nil, fmt.Errorf("SubmitQuery: %v", err)
 	}
-
-	jobID, err := application.GenerateJobID()
-	if err != nil {
-		return nil, fmt.Errorf("SubmitQuery: %v", err)
+	jobID := req.GetJobId()
+	if jobID == "" {
+		jobID, err = application.GenerateJobID()
+		if err != nil {
+			return nil, fmt.Errorf("SubmitQuery: %v", err)
+		}
 	}
 
-	sessionOptions := genSessionOpts(req.GetJobConfig(), projConf)
+	sessionOptions := common.GenSessionOpts(req.GetJobConfig(), projConf)
 
 	info := &application.ExecutionInfo{
 		ProjectID: req.GetProjectId(),
@@ -172,23 +145,21 @@ func (svc *grpcIntraSvc) SubmitQuery(ctx context.Context, req *pb.QueryRequest) 
 		EngineClient:   app.EngineClient,
 		DebugOpts:      req.GetDebugOpts(),
 		SessionOptions: sessionOptions,
+		CreatedAt:      time.Now(),
 	}
 	session, err := application.NewSession(ctx, info, app, true /* async mode */, false)
 	if err != nil {
 		return nil, err
 	}
-	app.AddSession(jobID, session)
-	logrus.Infof("create session %s with query '%s' in project %s", jobID, req.Query, req.ProjectId)
-
-	defer func(session *application.Session) {
-		if err != nil {
-			go session.OnError(err)
-			app.DeleteSession(jobID)
-			// NOTE: no need to clear session info in DB, since the PersistSession is called in the end of runQuery
+	defer func() { // clean engine when error happened
+		if err != nil && session.Engine != nil {
+			if err := session.Engine.Stop(); err != nil {
+				logrus.Warnf("failed to stop engine for query job=%s: %v", jobID, err)
+			}
 		}
-	}(session)
+	}()
 
-	err = svc.runQuery(session)
+	_, err = runQuery(session)
 	if err != nil {
 		return nil, fmt.Errorf("SubmitQuery: %w", err)
 	}
@@ -262,7 +233,10 @@ func makeJobStatus(statusResp *pb.QueryJobStatusResponse) (jobStatus *pb.JobStat
 		executedStages := statusResp.Progress.GetExecutedStages()
 		stageStr := ""
 		if totalStages > 0 {
-			stageStr = fmt.Sprintf(", %.3f%% of stages executed(%d/%d)", 100.0*float64(executedStages)/float64(totalStages), executedStages, totalStages)
+			stageStr = fmt.Sprintf(", progress %.3f%%", 100.0*float64(executedStages)/float64(totalStages))
+			if len(statusResp.Progress.GetRunningStages()) > 0 {
+				stageStr = fmt.Sprintf("%s, %s", stageStr, statusResp.Progress.GetRunningStages()[0].Summary)
+			}
 		}
 		jobStatus.Summary = fmt.Sprintf("job is running%s", stageStr)
 	case pb.JobState_JOB_SUCCEEDED:
@@ -359,7 +333,7 @@ func (svc *grpcIntraSvc) ExplainQuery(ctx context.Context, req *pb.ExplainQueryR
 		return nil, fmt.Errorf("DoQuery: %v", err)
 	}
 
-	sessionOptions := genSessionOpts(req.GetJobConfig(), projConf)
+	sessionOptions := common.GenSessionOpts(req.GetJobConfig(), projConf)
 
 	info := &application.ExecutionInfo{
 		ProjectID: req.GetProjectId(),
@@ -370,6 +344,7 @@ func (svc *grpcIntraSvc) ExplainQuery(ctx context.Context, req *pb.ExplainQueryR
 		},
 		EngineClient:   app.EngineClient,
 		SessionOptions: sessionOptions,
+		CreatedAt:      time.Now(),
 	}
 
 	session, err := application.NewSession(ctx, info, app, false, true)
@@ -481,8 +456,10 @@ func distributeQueryToOtherParty(session *application.Session, enginesInfo *grap
 			LinkRecvTimeoutSec:          session.ExecuteInfo.SessionOptions.LinkConfig.LinkRecvTimeoutSec,
 			LinkThrottleWindowSize:      session.ExecuteInfo.SessionOptions.LinkConfig.LinkThrottleWindowSize,
 			LinkChunkedSendParallelSize: session.ExecuteInfo.SessionOptions.LinkConfig.LinkChunkedSendParallelSize,
+			PsiType:                     session.ExecuteInfo.SessionOptions.PsiConfig.PsiType,
 		},
 		RunningOpts: &pb.RunningOptions{Batched: executionInfo.CompileOpts.Batched},
+		CreatedAt:   timestamppb.New(executionInfo.CreatedAt),
 	}
 	if slices.Contains(executionInfo.DataParties, selfCode) {
 		selfInfoChecksum, err := session.GetSelfChecksum()
@@ -565,6 +542,11 @@ func prepareQueryInfo(session *application.Session, r *executor.QueryRunner) ([]
 		session.SaveLocalChecksum(code, checksum)
 	}
 	selfCode := session.GetSelfPartyCode()
+	logrus.Infof("create session %s with query '%s' in project %s", executionInfo.JobID, executionInfo.Query, executionInfo.ProjectID)
+	err = session.App.AddSession(session)
+	if err != nil {
+		return nil, fmt.Errorf("prepareQueryInfo add session: %v", err)
+	}
 	// if alice submit a two-party query which data comes from bob and carol, it must run by a three-party protocol
 	results, err := parallel.ParallelRun(sliceutil.Subtraction(session.ExecuteInfo.WorkParties, []string{selfCode}), func(p string) (*distributeRet, error) {
 		logrus.Infof("distribute query to party %s for job %s", p, session.ExecuteInfo.JobID)
@@ -583,18 +565,18 @@ func prepareQueryInfo(session *application.Session, r *executor.QueryRunner) ([]
 	return usedTables, nil
 }
 
-func (svc *grpcIntraSvc) runQuery(session *application.Session) error {
+func runQuery(session *application.Session) (syncResult *pb.QueryResponse, err error) {
 	r := executor.NewQueryRunner(session)
 	logrus.Infof("create query runner for job %s", session.ExecuteInfo.JobID)
 	usedTables, err := prepareQueryInfo(session, r)
 	if err != nil {
-		return fmt.Errorf("runQuery: %v", err)
+		return nil, fmt.Errorf("runQuery: %v", err)
 	}
 
 	if session.DryRun {
 		// NOTE: dry run doesn't need to persistent session info
 		if err := r.DryRun(usedTables); err != nil {
-			return err
+			return nil, err
 		}
 
 		result := &pb.QueryResponse{
@@ -604,16 +586,15 @@ func (svc *grpcIntraSvc) runQuery(session *application.Session) error {
 			},
 		}
 
-		session.SetResultSafely(result)
-		return nil
+		return result, nil
 	}
 
-	err = r.Execute(usedTables)
+	result, err := r.Execute(usedTables)
 	if err != nil {
-		return fmt.Errorf("runQuery Execute err: %w", err)
+		return nil, fmt.Errorf("runQuery Execute err: %w", err)
 	}
 
-	return nil
+	return result, nil
 }
 
 // Try to notify party to cancel jobId

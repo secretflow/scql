@@ -50,9 +50,7 @@ func (svc *grpcIntraSvc) Report(ctx context.Context, request *pb.ReportRequest) 
 	switch info.Status {
 	case int8(storage.SessionFinished):
 		return nil, nil
-	case int8(storage.SessionRunning):
-		break // check passed
-	case int8(storage.SessionSubmitted):
+	case int8(storage.SessionRunning), int8(storage.SessionSubmitted):
 		break // check passed
 	default:
 		return nil, fmt.Errorf("session status %d is not allowed to set result", info.Status)
@@ -61,13 +59,14 @@ func (svc *grpcIntraSvc) Report(ctx context.Context, request *pb.ReportRequest) 
 	result := &pb.QueryResponse{}
 	defer func() {
 		// stop engine whether persist failed or successfully
-		if err := app.PersistSessionResult(request.GetJobId(), result, info.ExpiredAt); err != nil {
+		if _, err := app.SetSessionResult(request.GetJobId(), result); err != nil {
+			if err != nil {
+				result = &pb.QueryResponse{Status: &pb.Status{Code: int32(pb.Code_INTERNAL), Message: err.Error()}}
+				if _, err := app.SetSessionResult(request.GetJobId(), result); err != nil {
+					logrus.Warnf("failed to persist session result: %v", err)
+				}
+			}
 			logrus.Warnf("failed to persist session result: %v", err)
-		}
-		session, ok := app.GetSession(request.GetJobId())
-		if ok {
-			session.SetResultSafely(result)
-			session.App.JobWatcher.Unwatch(request.GetJobId())
 		}
 
 		if engine, err := app.Scheduler.ParseEngineInstance(info.JobInfo); err != nil {

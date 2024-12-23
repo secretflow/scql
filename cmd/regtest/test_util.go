@@ -142,17 +142,15 @@ func (t *ResultTable) getOrderedIndexes(columnPrecedence []int) []int {
 	return indexes
 }
 
-func (t *ResultTable) convertToRows() []string {
-	rowStrings := t.Column[0].toStringSlice()
+func (t *ResultTable) convertToRow(index int) string {
+	row := t.Column[0].toStringSlice()[index]
+
 	for _, c := range t.Column[1:] {
-		for i, s := range c.toStringSlice() {
-			rowStrings[i] = rowStrings[i] + s
-		}
+		row = row + c.toStringSlice()[index]
 	}
-	for i := range t.Column[0].toStringSlice() {
-		rowStrings[i] = fmt.Sprintf("[%d]", i) + rowStrings[i] + "\n"
-	}
-	return rowStrings
+
+	row = fmt.Sprintf("[%d]", index) + row + "\n"
+	return row
 }
 
 func isColumnNil(col *ResultColumn) bool {
@@ -162,20 +160,22 @@ func isColumnNil(col *ResultColumn) bool {
 	return false
 }
 
-func (t *ResultTable) equalTo(o *ResultTable) bool {
+func (t *ResultTable) equalTo(o *ResultTable) (bool, int, error) {
 	if len(t.Column) != len(o.Column) {
-		return false
+		return false, 0, nil
 	}
 	for i, col := range t.Column {
 		// if both of datas are nil return true
 		if isColumnNil(col) && isColumnNil(o.Column[i]) {
-			return true
+			return true, 0, nil
 		}
-		if !col.equalTo(o.Column[i]) {
-			return false
+
+		eq, index, err := col.equalTo(o.Column[i])
+		if !eq {
+			return false, index, err
 		}
 	}
-	return true
+	return true, 0, nil
 }
 
 func (c *ResultColumn) changeOrders(orders []int) {
@@ -235,96 +235,102 @@ func (c *ResultColumn) toStringSlice() []string {
 	}
 }
 
-func (c *ResultColumn) equalTo(o *ResultColumn) bool {
+func (c *ResultColumn) equalTo(o *ResultColumn) (bool, int, error) {
 	cLen := slices.Max([]int{len(c.Ss), len(c.Int64s), len(c.Bools), len(c.Doubles)})
 	oLen := slices.Max([]int{len(o.Ss), len(o.Int64s), len(o.Bools), len(o.Doubles)})
 	if cLen != oLen {
-		logrus.Infof("the number of rows is not equal: %d != %d", cLen, oLen)
-		return false
+		return false, 0, fmt.Errorf("the number of rows is not equal: %d != %d", cLen, oLen)
 	}
 	if c.Ss != nil {
-		return reflect.DeepEqual(c.Ss, o.Ss)
+		for i, d := range c.Ss {
+			if !reflect.DeepEqual(d, o.Ss[i]) {
+				logrus.Infof("line number %d strings error %v != %v", i, d, o.Ss[i])
+				return false, i, nil
+			}
+		}
+
+		return true, 0, nil
 	} else if c.Bools != nil || o.Bools != nil {
 		if c.Bools != nil && o.Bools != nil {
 			for i, d := range c.Bools {
 				if d != o.Bools[i] {
 					logrus.Infof("line number %d bools error %v != %v", i, d, o.Bools[i])
-					return false
+					return false, i, nil
 				}
 			}
-			return true
+			return true, 0, nil
 		}
 		if o.Int64s != nil {
 			for i, data := range c.Bools {
 				if data && o.Int64s[i] != 1 {
 					logrus.Infof("line number %d bools error bool(%v) != int(%d)", i, data, o.Int64s[i])
-					return false
+					return false, i, nil
 				}
 				if !data && o.Int64s[i] != 0 {
 					logrus.Infof("line number %d bools error bool(%v) != int(%d)", i, data, o.Int64s[i])
-					return false
+					return false, i, nil
 				}
 			}
-			return true
+			return true, 0, nil
 		}
 		if c.Int64s != nil {
 			for i, data := range o.Bools {
 				if data && c.Int64s[i] != 1 {
 					logrus.Infof("line number %d bools error int(%d) != bool(%v)", i, c.Int64s[i], data)
-					return false
+					return false, i, nil
 				}
 				if !data && c.Int64s[i] != 0 {
 					logrus.Infof("line number %d bools error int(%d) != bool(%v)", i, c.Int64s[i], data)
-					return false
+					return false, i, nil
 				}
 			}
-			return true
+			return true, 0, nil
 		}
 		logrus.Info("unexpected data type for bool")
-		return false
+		return false, 0, nil
 	} else if c.Doubles != nil || o.Doubles != nil {
 		if c.Doubles != nil && o.Doubles != nil {
 			for i, d := range c.Doubles {
 				if !almostEqual(d, o.Doubles[i]) {
 					logrus.Infof("line number %d floats error float64(%f) != float64(%f)", i, d, o.Doubles[i])
-					return false
+					return false, i, nil
 				}
 			}
-			return true
+			return true, 0, nil
 		}
 
 		if o.Int64s != nil {
 			for i, d := range c.Doubles {
 				if !almostEqual(d, float64(o.Int64s[i])) {
 					logrus.Infof("line number %d floats error float64(%f) != int(%d)", i, d, o.Int64s[i])
-					return false
+					return false, i, nil
 				}
 			}
-			return true
+			return true, 0, nil
 		}
 
 		if c.Int64s != nil {
 			for i, d := range o.Doubles {
 				if !almostEqual(d, float64(c.Int64s[i])) {
 					logrus.Infof("line number %d floats error int(%d) != float32(%f)", i, c.Int64s[i], d)
-					return false
+					return false, i, nil
 				}
 			}
-			return true
+			return true, 0, nil
 		}
 		logrus.Info("unexpected data type for float")
-		return false
+		return false, 0, nil
 	} else if c.Int64s != nil && o.Int64s != nil {
 		for i, d := range c.Int64s {
 			if d != o.Int64s[i] {
 				logrus.Infof("line number %d floats error int(%d) != int(%d)", i, d, o.Int64s[i])
-				return false
+				return false, i, nil
 			}
 		}
-		return true
+		return true, 0, nil
 	} else {
 		logrus.Info("unsupported data type not in (bool, string, int float)")
-		return false
+		return false, 0, nil
 	}
 }
 
@@ -553,8 +559,12 @@ func compareResultTableWithoutRowOrder(expect, actual *ResultTable) error {
 		col.changeOrders(actualIndexes)
 	}
 
-	if !expect.equalTo(actual) {
-		return fmt.Errorf("expected:\n%v\nactual:\n%v", expect.convertToRows(), actual.convertToRows())
+	eq, index, err := expect.equalTo(actual)
+	if !eq {
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("expected:\n%v\nactual:\n%v", expect.convertToRow(index), actual.convertToRow(index))
 	}
 	return nil
 }

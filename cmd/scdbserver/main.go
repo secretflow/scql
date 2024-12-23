@@ -19,8 +19,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -31,6 +29,7 @@ import (
 	"github.com/secretflow/scql/pkg/scdb/config"
 	"github.com/secretflow/scql/pkg/scdb/server"
 	"github.com/secretflow/scql/pkg/scdb/storage"
+	"github.com/secretflow/scql/pkg/util/logutil"
 
 	"gopkg.in/natefinch/lumberjack.v2"
 )
@@ -39,24 +38,6 @@ const (
 	defaultConfigPath = "cmd/scdbserver/config.yml"
 )
 
-var version = "scql version"
-
-// custom monitor formatter, e.g.: "2020-07-14 16:59:47.7144 INFO main.go:107 |msg"
-type CustomMonitorFormatter struct {
-	log.TextFormatter
-}
-
-func (f *CustomMonitorFormatter) Format(entry *log.Entry) ([]byte, error) {
-	var fileWithLine string
-	if entry.HasCaller() {
-		fileWithLine = fmt.Sprintf("%s:%d", filepath.Base(entry.Caller.File), entry.Caller.Line)
-	} else {
-		fileWithLine = ":"
-	}
-	return []byte(fmt.Sprintf("%s %s %s %s\n", entry.Time.Format(f.TimestampFormat),
-		strings.ToUpper(entry.Level.String()), fileWithLine, entry.Message)), nil
-}
-
 const (
 	LogFileName                 = "logs/scdbserver.log"
 	LogOptionMaxSizeInMegaBytes = 500
@@ -64,6 +45,8 @@ const (
 	LogOptionMaxAgeInDays       = 0
 	LogOptionCompress           = false
 )
+
+var version = "scql version"
 
 func main() {
 	confFile := flag.String("config", defaultConfigPath, "Path to scdb server configuration file")
@@ -76,7 +59,7 @@ func main() {
 	}
 
 	log.SetReportCaller(true)
-	log.SetFormatter(&CustomMonitorFormatter{log.TextFormatter{TimestampFormat: "2006-01-02 15:04:05.123"}})
+	log.SetFormatter(logutil.NewCustomMonitorFormatter("2006-01-02 15:04:05.123"))
 	rollingLogger := &lumberjack.Logger{
 		Filename:   LogFileName,
 		MaxSize:    LogOptionMaxSizeInMegaBytes, // megabytes
@@ -89,6 +72,7 @@ func main() {
 
 	gin.SetMode(gin.ReleaseMode)
 
+	log.Infof("SCDB version: %s", version)
 	log.Infof("Starting to read config file: %s", *confFile)
 	cfg, err := config.NewConfig(*confFile)
 	if err != nil {

@@ -10,6 +10,7 @@ party_code: bob
 party_info_file: "/home/admin/configs/party_info.json"
 private_key_path: "/home/admin/configs/private_key.pem"
 intra_host: broker-bob:8080
+batched: ${STREAMING}
 engine:
   timeout: 120s
   protocol: http

@@ -1,4 +1,4 @@
-FROM ubuntu:jammy as base
+FROM ubuntu:jammy AS base
 
 ARG TARGETPLATFORM
 
@@ -7,7 +7,7 @@ ENV TZ=Asia/Shanghai
 RUN apt update \
     && apt upgrade -y \
     && apt install -y libgomp1 \
-    && apt install -y curl iputils-ping \
+    && apt install -y tzdata curl iputils-ping \
     && apt clean
 
 COPY ./$TARGETPLATFORM/scqlengine /home/admin/bin/scqlengine
@@ -15,9 +15,10 @@ COPY ./$TARGETPLATFORM/scdbserver /home/admin/bin/scdbserver
 COPY ./$TARGETPLATFORM/scdbclient /home/admin/bin/scdbclient
 COPY ./$TARGETPLATFORM/broker /home/admin/bin/broker
 COPY ./$TARGETPLATFORM/brokerctl /home/admin/bin/brokerctl
+COPY ./$TARGETPLATFORM/agent /home/admin/bin/agent
 COPY ./scripts/kuscia-templates /home/admin/scripts/kuscia-templates
 
-FROM base as image-dev
+FROM base AS image-dev
 
 ARG GO_VERSION=1.21.5
 
@@ -46,4 +47,4 @@ RUN go install github.com/go-delve/delve/cmd/dlv@latest
 # Add GOPATH to PATH
 ENV PATH="${PATH}:/root/go/bin"
 
-FROM base as image-prod
+FROM base AS image-prod

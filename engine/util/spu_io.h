@@ -22,6 +22,8 @@
 
 namespace scql::engine::util {
 
+spu::DataType GetWiderSpuType(const spu::DataType& t1, const spu::DataType& t2);
+
 std::shared_ptr<arrow::Array> ConcatenateChunkedArray(
     const std::shared_ptr<arrow::ChunkedArray>& chunked_arr);
 

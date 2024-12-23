@@ -15,6 +15,7 @@
 #pragma once
 
 #include <filesystem>
+#include <iostream>
 #include <memory>
 
 #include "arrow/chunked_array.h"
@@ -103,8 +104,9 @@ class DiskTensor : public Tensor,
       std::error_code ec;
       std::filesystem::remove(file_array.file_path, ec);
       if (ec.value() != 0) {
-        SPDLOG_WARN("can not remove tmp dir: {}, msg: {}",
-                    file_array.file_path.string(), ec.message());
+        // avoid throwing fmt exceptions in the destructor
+        std::cerr << "can not remove tmp dir: " << file_array.file_path.string()
+                  << ", msg: " << ec.message() << std::endl;
       }
     }
   }

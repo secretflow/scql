@@ -65,6 +65,14 @@ type logicalOptRule interface {
 	name() string
 }
 
+var customizedCheckRules = []customizedCheckRule{
+	&maxOneRowCheck{},
+}
+
+type customizedCheckRule interface {
+	check(lp LogicalPlan) error
+}
+
 // NOTE(yang.y): the order of applying the optimization rule matters, so
 // we should create temporary place holders for optimizers that yet to be
 // implemented.
@@ -132,6 +140,13 @@ func logicalOptimize(ctx context.Context, flag uint64, logic LogicalPlan) (Logic
 			return nil, err
 		}
 	}
+
+	for _, c := range customizedCheckRules {
+		err = c.check(logic)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return logic, err
 }
 
@@ -154,5 +169,54 @@ func CheckPrivilege(activeRoles []*auth.RoleIdentity, pm privilege.Manager, vs [
 			return v.err
 		}
 	}
+	return nil
+}
+
+type maxOneRowCheck struct{}
+
+func (m maxOneRowCheck) check(lp LogicalPlan) error {
+	maxOneRow, ok := lp.(*LogicalMaxOneRow)
+	if !ok {
+		for _, child := range lp.Children() {
+			err := m.check(child)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	children := maxOneRow.Children()
+	for _, child := range children {
+		agg, ok := child.(*LogicalAggregation)
+
+		// SELECT ... WHERE col > (SELECT AVG(a) ...)
+		if ok {
+			if len(agg.GetGroupByCols()) > 0 {
+				return nil
+			}
+
+			for _, child := range agg.Children() {
+				err := m.check(child)
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			projection, ok := child.(*LogicalProjection)
+			if !ok {
+				return fmt.Errorf("child node of MaxOneRow must be Aggregation or Projection, but got %s", child.TP())
+			}
+
+			projChildren := projection.Children()
+			// SELECT ... WHERE col > (SELECT SUM(a) + AVG(b) ...)
+			for _, projChild := range projChildren {
+				_, ok := projChild.(*LogicalAggregation)
+				if !ok {
+					return fmt.Errorf("child node of Projection must be Aggregation, but got %s", projChild.TP())
+				}
+			}
+		}
+	}
+
 	return nil
 }

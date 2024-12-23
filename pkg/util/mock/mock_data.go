@@ -55,6 +55,7 @@ var cclString2CCLLevel = map[string]ccl.CCLLevel{
 	"aggregate":   ccl.Aggregate,
 	"compare":     ccl.Compare,
 	"encrypt":     ccl.Encrypt,
+	"rank":        ccl.Rank,
 }
 
 // TODO: rename PhysicalTableMeta

@@ -22,6 +22,7 @@ import (
 	"github.com/secretflow/scql/pkg/parser/model"
 	"github.com/secretflow/scql/pkg/parser/mysql"
 	"github.com/secretflow/scql/pkg/types"
+	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
 
 type columnPruner struct {
@@ -105,18 +106,7 @@ func (p *LogicalJoin) extractUsedCols(parentUsedCols []*expression.Column) (left
 }
 
 func (p *LogicalJoin) mergeSchema() {
-	lChild := p.children[0]
-	rChild := p.children[1]
-	composedSchema := expression.MergeSchema(lChild.Schema(), rChild.Schema())
-	if p.JoinType == SemiJoin || p.JoinType == AntiSemiJoin {
-		p.schema = lChild.Schema().Clone()
-	} else if p.JoinType == LeftOuterSemiJoin || p.JoinType == AntiLeftOuterSemiJoin {
-		joinCol := p.schema.Columns[len(p.schema.Columns)-1]
-		p.schema = lChild.Schema().Clone()
-		p.schema.Append(joinCol)
-	} else {
-		p.schema = composedSchema
-	}
+	p.schema = buildLogicalJoinSchema(p.JoinType, p)
 }
 
 func (p *LogicalJoin) PruneColumns(parentUsedCols []*expression.Column) error {
@@ -141,12 +131,9 @@ func (p *LogicalProjection) PruneColumns(parentUsedCols []*expression.Column) er
 	child := p.children[0]
 	used := getUsedList(parentUsedCols, p.schema)
 
-	for i := len(used) - 1; i >= 0; i-- {
-		if !used[i] {
-			p.schema.Columns = append(p.schema.Columns[:i], p.schema.Columns[i+1:]...)
-			p.Exprs = append(p.Exprs[:i], p.Exprs[i+1:]...)
-		}
-	}
+	p.schema.Columns = sliceutil.Take(p.schema.Columns, used)
+	p.Exprs = sliceutil.Take(p.Exprs, used)
+
 	selfUsedCols := make([]*expression.Column, 0, len(p.Exprs))
 	selfUsedCols = expression.ExtractColumnsFromExpressions(selfUsedCols, p.Exprs, nil)
 	return child.PruneColumns(selfUsedCols)
@@ -229,12 +216,9 @@ func (ds *DataSource) PruneColumns(parentUsedCols []*expression.Column) error {
 	)
 	originSchemaColumns := ds.schema.Columns
 	originColumns := ds.Columns
-	for i := len(used) - 1; i >= 0; i-- {
-		if !used[i] {
-			ds.schema.Columns = append(ds.schema.Columns[:i], ds.schema.Columns[i+1:]...)
-			ds.Columns = append(ds.Columns[:i], ds.Columns[i+1:]...)
-		}
-	}
+	ds.schema.Columns = sliceutil.Take(ds.schema.Columns, used)
+	ds.Columns = sliceutil.Take(ds.Columns, used)
+
 	// For SQL like `select 1 from t`, we'll force to push one if schema doesn't have any column.
 	if ds.schema.Len() == 0 {
 		if len(originColumns) > 0 {
@@ -256,12 +240,8 @@ func (la *LogicalAggregation) PruneColumns(parentUsedCols []*expression.Column) 
 	child := la.children[0]
 	used := getUsedList(parentUsedCols, la.Schema())
 
-	for i := len(used) - 1; i >= 0; i-- {
-		if !used[i] {
-			la.schema.Columns = append(la.schema.Columns[:i], la.schema.Columns[i+1:]...)
-			la.AggFuncs = append(la.AggFuncs[:i], la.AggFuncs[i+1:]...)
-		}
-	}
+	la.schema.Columns = sliceutil.Take(la.schema.Columns, used)
+	la.AggFuncs = sliceutil.Take(la.AggFuncs, used)
 	var selfUsedCols []*expression.Column
 	for _, aggrFunc := range la.AggFuncs {
 		selfUsedCols = expression.ExtractColumnsFromExpressions(selfUsedCols, aggrFunc.Args, nil)
@@ -335,11 +315,7 @@ func (p *LogicalUnionAll) PruneColumns(parentUsedCols []*expression.Column) erro
 		copy(parentUsedCols, p.schema.Columns)
 	} else {
 		// Issue 10341: p.schema.Columns might contain table name (AsName), but p.Children()0].Schema().Columns does not.
-		for i := len(used) - 1; i >= 0; i-- {
-			if !used[i] {
-				p.schema.Columns = append(p.schema.Columns[:i], p.schema.Columns[i+1:]...)
-			}
-		}
+		p.schema.Columns = sliceutil.Take(p.schema.Columns, used)
 	}
 	for _, child := range p.Children() {
 		err := child.PruneColumns(parentUsedCols)

@@ -189,6 +189,8 @@ Configuration Options of SCQLBroker
 || batched                                         || false    || Whether to run in streaming mode to reduce memory usage.                                                                                                                                                     |
 ||                                                 ||          || **Warning**: Experimental feature; do not use in production.                                                                                                                                                 |
 +--------------------------------------------------+-----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| authorized_writable_parties                      | none      |  List of parties authorized to write files, the party authorized can SELECT result into your files                                                                                                            |
++--------------------------------------------------+-----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 
 Config for ServerConfig

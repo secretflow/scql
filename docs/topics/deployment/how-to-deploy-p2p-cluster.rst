@@ -156,7 +156,7 @@ Create a file called ``docker-compose.yaml`` in your workspace and paste the fol
       volumes:
         - ./gflags.conf:/home/admin/engine/conf/gflags.conf
     mysql:
-      image: mysql:latest
+      image: mysql:8.0
       environment:
         - MYSQL_ROOT_PASSWORD=__MYSQL_ROOT_PASSWORD__
         - TZ=Asia/Shanghai

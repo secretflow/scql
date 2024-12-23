@@ -102,6 +102,18 @@ INSTANTIATE_TEST_SUITE_P(
                     TensorFrom(arrow::int64(), "[1,0,0,-1,0,0,1,0,0,-1,0,0]"))},
                 .output_status = pb::TENSORSTATUS_SECRET,
             },
+            BinaryTestCase{
+                .op_type = Pow::kOpType,
+                .left_inputs = {test::NamedTensor(
+                    "x", TensorFrom(arrow::int64(), "[1,2,3]"))},
+                .left_input_status = pb::TENSORSTATUS_SECRET,
+                .right_inputs = {test::NamedTensor(
+                    "y", TensorFrom(arrow::int64(), "[2,2,2]"))},
+                .right_input_status = pb::TENSORSTATUS_SECRET,
+                .outputs = {test::NamedTensor("z", TensorFrom(arrow::int64(),
+                                                              "[1,4,9]"))},
+                .output_status = pb::TENSORSTATUS_SECRET,
+            },
             // testcase with empty inputs
             BinaryTestCase{
                 .op_type = Add::kOpType,
@@ -165,6 +177,18 @@ INSTANTIATE_TEST_SUITE_P(
             },
             BinaryTestCase{
                 .op_type = Mod::kOpType,
+                .left_inputs = {test::NamedTensor(
+                    "x", TensorFrom(arrow::int64(), "[]"))},
+                .left_input_status = pb::TENSORSTATUS_SECRET,
+                .right_inputs = {test::NamedTensor(
+                    "y", TensorFrom(arrow::int64(), "[]"))},
+                .right_input_status = pb::TENSORSTATUS_SECRET,
+                .outputs = {test::NamedTensor("z", TensorFrom(arrow::int64(),
+                                                              "[]"))},
+                .output_status = pb::TENSORSTATUS_SECRET,
+            },
+            BinaryTestCase{
+                .op_type = Pow::kOpType,
                 .left_inputs = {test::NamedTensor(
                     "x", TensorFrom(arrow::int64(), "[]"))},
                 .left_input_status = pb::TENSORSTATUS_SECRET,
@@ -261,6 +285,18 @@ INSTANTIATE_TEST_SUITE_P(
                     "z",
                     TensorFrom(arrow::int64(),
                                "[1,0,0,-1,0,0,1,0,0,-1,0,0,null,null,null]"))},
+                .output_status = pb::TENSORSTATUS_PRIVATE,
+            },
+            BinaryTestCase{
+                .op_type = Pow::kOpType,
+                .left_inputs = {test::NamedTensor(
+                    "x", TensorFrom(arrow::int64(), "[1,2,3,4]"))},
+                .left_input_status = pb::TENSORSTATUS_PRIVATE,
+                .right_inputs = {test::NamedTensor(
+                    "y", TensorFrom(arrow::int64(), "[2,2,2,null]"))},
+                .right_input_status = pb::TENSORSTATUS_PRIVATE,
+                .outputs = {test::NamedTensor("z", TensorFrom(arrow::int64(),
+                                                              "[1,4,9,null]"))},
                 .output_status = pb::TENSORSTATUS_PRIVATE,
             })),
     TestParamNameGenerator(BinaryComputeInPlainTest));

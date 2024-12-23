@@ -51,14 +51,15 @@ void Publish::Execute(ExecContext* ctx) {
 
     auto from_tensor = ctx->GetTensorTable()->GetTensor(input_pb.name());
     YACL_ENFORCE(from_tensor, "get private tensor={} failed", input_pb.name());
-    if (elem_type == pb::PrimitiveDataType::TIMESTAMP &&
+    if ((elem_type == pb::PrimitiveDataType::TIMESTAMP ||
+         elem_type == pb::PrimitiveDataType::DATETIME) &&
         !ctx->GetSession()->TimeZone().empty()) {
       from_tensor =
           util::CompensateTimeZone(from_tensor, ctx->GetSession()->TimeZone());
     }
 
     auto proto_result = std::make_shared<pb::Tensor>();
-    SetProtoMeta(from_tensor, output_name, proto_result, elem_type);
+    SetProtoMeta(from_tensor.get(), output_name, proto_result, elem_type);
 
     if (elem_type == pb::PrimitiveDataType::DATETIME) {
       // DATETIME need format to publish
@@ -79,8 +80,7 @@ void Publish::Execute(ExecContext* ctx) {
   audit::RecordPublishNodeDetail(*ctx, num_rows, start_time);
 }
 
-void Publish::SetProtoMeta(const std::shared_ptr<Tensor> from_tensor,
-                           const std::string& name,
+void Publish::SetProtoMeta(const Tensor* from_tensor, const std::string& name,
                            std::shared_ptr<pb::Tensor> to_proto,
                            pb::PrimitiveDataType elem_type) {
   to_proto->set_name(name);

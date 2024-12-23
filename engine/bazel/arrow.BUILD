@@ -43,48 +43,8 @@ genrule(
            "-e 's/cmakedefine ARROW_HDFS/undef ARROW_HDFS/g' " +
            "-e 's/cmakedefine ARROW_USE_GLOG/undef ARROW_USE_GLOG/g' " +
            "-e 's/cmakedefine ARROW_WITH_RE2/undef ARROW_WITH_RE2/g' " +
-           "-e 's/cmakedefine ARROW_WITH_UTF8PROC/undef ARROW_WITH_UTF8PROC/g' " +
            "-e 's/cmakedefine/define/g' " +
            "$< >$@"),
-)
-
-proto_library(
-    name = "flight_proto",
-    srcs = ["cpp/src/arrow/flight/Flight.proto"],
-    deps = [
-        "@com_google_protobuf//:descriptor_proto",
-        "@com_google_protobuf//:timestamp_proto",
-    ],
-)
-
-cc_proto_library(
-    name = "flight_cc_proto",
-    deps = [":flight_proto"],
-)
-
-cc_grpc_library(
-    name = "flight_grpc_cc_proto",
-    srcs = ["flight_proto"],
-    grpc_only = True,
-    deps = [":flight_cc_proto"],
-)
-
-proto_library(
-    name = "flight_sql_proto",
-    srcs = ["cpp/src/arrow/flight/sql/FlightSql.proto"],
-    deps = ["@com_google_protobuf//:descriptor_proto"],
-)
-
-cc_proto_library(
-    name = "flight_sql_cc_proto",
-    deps = [":flight_sql_proto"],
-)
-
-cc_grpc_library(
-    name = "flight_sql_grpc_cc_proto",
-    srcs = ["flight_sql_proto"],
-    grpc_only = True,
-    deps = [":flight_sql_cc_proto"],
 )
 
 genrule(
@@ -135,8 +95,6 @@ cc_library(
             "cpp/src/arrow/c/*.cc",
             "cpp/src/arrow/array/*.cc",
             "cpp/src/arrow/csv/*.cc",
-            "cpp/src/arrow/flight/**/*.cc",
-            "cpp/src/arrow/flight/**/*.h",
             "cpp/src/arrow/extension/**/*.cc",
             "cpp/src/arrow/extension/**/*.h",
             "cpp/src/arrow/filesystem/*.cc",
@@ -169,10 +127,6 @@ cc_library(
             "cpp/src/**/*_test.cc",
             "cpp/src/**/test_*.h",
             "cpp/src/**/test_*.cc",
-            "cpp/src/arrow/flight/sql/example/*.h",
-            "cpp/src/arrow/flight/sql/example/*.cc",
-            "cpp/src/arrow/flight/transport/ucx/*.cc",
-            "cpp/src/arrow/flight/transport/ucx/*.h",
             "cpp/src/**/benchmark_util.h",
             "cpp/src/**/benchmark_util.cc",
             "cpp/src/**/*hdfs*.cc",
@@ -190,11 +144,6 @@ cc_library(
             "cpp/src/arrow/util/bpacking_neon.cc",
             "cpp/src/arrow/util/tracing_internal.cc",
             "cpp/src/arrow/compute/**/*_avx2.cc",
-            "cpp/src/arrow/flight/try_compile/*.cc",
-            "cpp/src/arrow/flight/try_compile/*.h",
-            "cpp/src/arrow/flight/perf_server.cc",
-            "cpp/src/arrow/flight/otel_logging.cc",
-            "cpp/src/arrow/flight/otel_logging.h",
         ],
     ),
     hdrs = [
@@ -219,10 +168,6 @@ cc_library(
     ],
     deps = [
         ":arrow_vendored",
-        ":flight_cc_proto",
-        ":flight_grpc_cc_proto",
-        ":flight_sql_cc_proto",
-        ":flight_sql_grpc_cc_proto",
         "@aws_sdk_cpp//:s3",
         "@boost//:multiprecision",
         "@brotli",
@@ -230,14 +175,89 @@ cc_library(
         "@com_github_facebook_zstd//:zstd",
         "@com_github_gflags_gflags//:gflags",
         "@com_github_google_snappy//:snappy",
-        "@com_github_grpc_grpc//:grpc++",
-        "@com_github_grpc_grpc//:grpc++_reflection",
         "@com_github_lz4_lz4//:lz4",
         "@com_github_tencent_rapidjson//:rapidjson",
+        "@com_github_utf8proc//:utf8proc",
         "@com_github_xtensor_xsimd//:xsimd",
         "@com_google_double_conversion//:double-conversion",
         "@com_google_googletest//:gtest",
         "@org_apache_thrift//:thrift",
         "@zlib",
+    ],
+)
+
+proto_library(
+    name = "flight_proto",
+    srcs = ["cpp/src/arrow/flight/Flight.proto"],
+    deps = [
+        "@com_google_protobuf//:descriptor_proto",
+        "@com_google_protobuf//:timestamp_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "flight_cc_proto",
+    deps = [":flight_proto"],
+)
+
+cc_grpc_library(
+    name = "flight_grpc_cc_proto",
+    srcs = ["flight_proto"],
+    grpc_only = True,
+    deps = [":flight_cc_proto"],
+)
+
+proto_library(
+    name = "flight_sql_proto",
+    srcs = ["cpp/src/arrow/flight/sql/FlightSql.proto"],
+    deps = ["@com_google_protobuf//:descriptor_proto"],
+)
+
+cc_proto_library(
+    name = "flight_sql_cc_proto",
+    deps = [":flight_sql_proto"],
+)
+
+cc_grpc_library(
+    name = "flight_sql_grpc_cc_proto",
+    srcs = ["flight_sql_proto"],
+    grpc_only = True,
+    deps = [":flight_sql_cc_proto"],
+)
+
+cc_library(
+    name = "arrow_flight",
+    srcs = glob(
+        [
+            "cpp/src/arrow/flight/**/*.h",
+            "cpp/src/arrow/flight/**/*.cc",
+        ],
+        exclude = [
+            "cpp/src/arrow/flight/**/test_*",
+            "cpp/src/arrow/flight/integration_tests/**/*",
+            "cpp/src/arrow/flight/**/*_test.cc",
+            "cpp/src/arrow/flight/transport/ucx/*",
+            "cpp/src/arrow/flight/**/*_benchmark.cc",
+            "cpp/src/arrow/flight/perf_server.cc",
+            "cpp/src/arrow/flight/sql/example/*.h",
+            "cpp/src/arrow/flight/sql/example/*.cc",
+            "cpp/src/arrow/flight/try_compile/*.cc",
+            "cpp/src/arrow/flight/try_compile/*.h",
+            "cpp/src/arrow/flight/otel_logging.cc",
+            "cpp/src/arrow/flight/otel_logging.h",
+        ],
+    ),
+    includes = [
+        "cpp/src",
+    ],
+    deps = [
+        ":arrow",
+        ":flight_cc_proto",
+        ":flight_grpc_cc_proto",
+        ":flight_sql_cc_proto",
+        ":flight_sql_grpc_cc_proto",
+        "@com_github_grpc_grpc//:grpc",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++_reflection",
     ],
 )

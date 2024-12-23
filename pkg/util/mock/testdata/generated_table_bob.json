@@ -51,6 +51,13 @@
         ]
       },
       {
+        "column_name": "rank_int_0",
+        "dtype": "int",
+        "ccl": [
+          "rank"
+        ]
+      },
+      {
         "column_name": "plain_float_0",
         "dtype": "float",
         "ccl": [
@@ -97,6 +104,13 @@
         "dtype": "float",
         "ccl": [
           "encrypt"
+        ]
+      },
+      {
+        "column_name": "rank_float_0",
+        "dtype": "float",
+        "ccl": [
+          "rank"
         ]
       },
       {
@@ -149,6 +163,13 @@
         ]
       },
       {
+        "column_name": "rank_string_0",
+        "dtype": "string",
+        "ccl": [
+          "rank"
+        ]
+      },
+      {
         "column_name": "plain_datetime_0",
         "dtype": "datetime",
         "ccl": [
@@ -195,6 +216,13 @@
         "dtype": "datetime",
         "ccl": [
           "encrypt"
+        ]
+      },
+      {
+        "column_name": "rank_datetime_0",
+        "dtype": "datetime",
+        "ccl": [
+          "rank"
         ]
       },
       {
@@ -247,6 +275,13 @@
         ]
       },
       {
+        "column_name": "rank_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": [
+          "rank"
+        ]
+      },
+      {
         "column_name": "plain_int_1",
         "dtype": "int",
         "ccl": [
@@ -293,6 +328,13 @@
         "dtype": "int",
         "ccl": [
           "encrypt"
+        ]
+      },
+      {
+        "column_name": "rank_int_1",
+        "dtype": "int",
+        "ccl": [
+          "rank"
         ]
       },
       {
@@ -345,6 +387,13 @@
         ]
       },
       {
+        "column_name": "rank_float_1",
+        "dtype": "float",
+        "ccl": [
+          "rank"
+        ]
+      },
+      {
         "column_name": "plain_string_1",
         "dtype": "string",
         "ccl": [
@@ -391,6 +440,13 @@
         "dtype": "string",
         "ccl": [
           "encrypt"
+        ]
+      },
+      {
+        "column_name": "rank_string_1",
+        "dtype": "string",
+        "ccl": [
+          "rank"
         ]
       },
       {
@@ -443,6 +499,13 @@
         ]
       },
       {
+        "column_name": "rank_datetime_1",
+        "dtype": "datetime",
+        "ccl": [
+          "rank"
+        ]
+      },
+      {
         "column_name": "plain_timestamp_1",
         "dtype": "timestamp",
         "ccl": [
@@ -489,6 +552,13 @@
         "dtype": "timestamp",
         "ccl": [
           "encrypt"
+        ]
+      },
+      {
+        "column_name": "rank_timestamp_1",
+        "dtype": "timestamp",
+        "ccl": [
+          "rank"
         ]
       },
       {
@@ -541,6 +611,13 @@
         ]
       },
       {
+        "column_name": "rank_int_2",
+        "dtype": "int",
+        "ccl": [
+          "rank"
+        ]
+      },
+      {
         "column_name": "plain_float_2",
         "dtype": "float",
         "ccl": [
@@ -587,6 +664,13 @@
         "dtype": "float",
         "ccl": [
           "encrypt"
+        ]
+      },
+      {
+        "column_name": "rank_float_2",
+        "dtype": "float",
+        "ccl": [
+          "rank"
         ]
       },
       {
@@ -639,6 +723,13 @@
         ]
       },
       {
+        "column_name": "rank_string_2",
+        "dtype": "string",
+        "ccl": [
+          "rank"
+        ]
+      },
+      {
         "column_name": "plain_datetime_2",
         "dtype": "datetime",
         "ccl": [
@@ -688,6 +779,13 @@
         ]
       },
       {
+        "column_name": "rank_datetime_2",
+        "dtype": "datetime",
+        "ccl": [
+          "rank"
+        ]
+      },
+      {
         "column_name": "plain_timestamp_2",
         "dtype": "timestamp",
         "ccl": [
@@ -734,6 +832,13 @@
         "dtype": "timestamp",
         "ccl": [
           "encrypt"
+        ]
+      },
+      {
+        "column_name": "rank_timestamp_2",
+        "dtype": "timestamp",
+        "ccl": [
+          "rank"
         ]
       }
     ],
@@ -791,6 +896,13 @@
         ]
       },
       {
+        "column_name": "rank_int_0",
+        "dtype": "int",
+        "ccl": [
+          "rank"
+        ]
+      },
+      {
         "column_name": "plain_float_0",
         "dtype": "float",
         "ccl": [
@@ -837,6 +949,13 @@
         "dtype": "float",
         "ccl": [
           "encrypt"
+        ]
+      },
+      {
+        "column_name": "rank_float_0",
+        "dtype": "float",
+        "ccl": [
+          "rank"
         ]
       },
       {
@@ -889,6 +1008,13 @@
         ]
       },
       {
+        "column_name": "rank_string_0",
+        "dtype": "string",
+        "ccl": [
+          "rank"
+        ]
+      },
+      {
         "column_name": "plain_datetime_0",
         "dtype": "datetime",
         "ccl": [
@@ -935,6 +1061,13 @@
         "dtype": "datetime",
         "ccl": [
           "encrypt"
+        ]
+      },
+      {
+        "column_name": "rank_datetime_0",
+        "dtype": "datetime",
+        "ccl": [
+          "rank"
         ]
       },
       {
@@ -987,6 +1120,13 @@
         ]
       },
       {
+        "column_name": "rank_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": [
+          "rank"
+        ]
+      },
+      {
         "column_name": "plain_int_1",
         "dtype": "int",
         "ccl": [
@@ -1033,6 +1173,13 @@
         "dtype": "int",
         "ccl": [
           "encrypt"
+        ]
+      },
+      {
+        "column_name": "rank_int_1",
+        "dtype": "int",
+        "ccl": [
+          "rank"
         ]
       },
       {
@@ -1085,6 +1232,13 @@
         ]
       },
       {
+        "column_name": "rank_float_1",
+        "dtype": "float",
+        "ccl": [
+          "rank"
+        ]
+      },
+      {
         "column_name": "plain_string_1",
         "dtype": "string",
         "ccl": [
@@ -1131,6 +1285,13 @@
         "dtype": "string",
         "ccl": [
           "encrypt"
+        ]
+      },
+      {
+        "column_name": "rank_string_1",
+        "dtype": "string",
+        "ccl": [
+          "rank"
         ]
       },
       {
@@ -1183,6 +1344,13 @@
         ]
       },
       {
+        "column_name": "rank_datetime_1",
+        "dtype": "datetime",
+        "ccl": [
+          "rank"
+        ]
+      },
+      {
         "column_name": "plain_timestamp_1",
         "dtype": "timestamp",
         "ccl": [
@@ -1229,6 +1397,13 @@
         "dtype": "timestamp",
         "ccl": [
           "encrypt"
+        ]
+      },
+      {
+        "column_name": "rank_timestamp_1",
+        "dtype": "timestamp",
+        "ccl": [
+          "rank"
         ]
       },
       {
@@ -1281,6 +1456,13 @@
         ]
       },
       {
+        "column_name": "rank_int_2",
+        "dtype": "int",
+        "ccl": [
+          "rank"
+        ]
+      },
+      {
         "column_name": "plain_float_2",
         "dtype": "float",
         "ccl": [
@@ -1327,6 +1509,13 @@
         "dtype": "float",
         "ccl": [
           "encrypt"
+        ]
+      },
+      {
+        "column_name": "rank_float_2",
+        "dtype": "float",
+        "ccl": [
+          "rank"
         ]
       },
       {
@@ -1379,6 +1568,13 @@
         ]
       },
       {
+        "column_name": "rank_string_2",
+        "dtype": "string",
+        "ccl": [
+          "rank"
+        ]
+      },
+      {
         "column_name": "plain_datetime_2",
         "dtype": "datetime",
         "ccl": [
@@ -1428,6 +1624,13 @@
         ]
       },
       {
+        "column_name": "rank_datetime_2",
+        "dtype": "datetime",
+        "ccl": [
+          "rank"
+        ]
+      },
+      {
         "column_name": "plain_timestamp_2",
         "dtype": "timestamp",
         "ccl": [
@@ -1474,6 +1677,13 @@
         "dtype": "timestamp",
         "ccl": [
           "encrypt"
+        ]
+      },
+      {
+        "column_name": "rank_timestamp_2",
+        "dtype": "timestamp",
+        "ccl": [
+          "rank"
         ]
       }
     ],
@@ -1531,6 +1741,13 @@
         ]
       },
       {
+        "column_name": "rank_int_0",
+        "dtype": "int",
+        "ccl": [
+          "rank"
+        ]
+      },
+      {
         "column_name": "plain_float_0",
         "dtype": "float",
         "ccl": [
@@ -1577,6 +1794,13 @@
         "dtype": "float",
         "ccl": [
           "encrypt"
+        ]
+      },
+      {
+        "column_name": "rank_float_0",
+        "dtype": "float",
+        "ccl": [
+          "rank"
         ]
       },
       {
@@ -1629,6 +1853,13 @@
         ]
       },
       {
+        "column_name": "rank_string_0",
+        "dtype": "string",
+        "ccl": [
+          "rank"
+        ]
+      },
+      {
         "column_name": "plain_datetime_0",
         "dtype": "datetime",
         "ccl": [
@@ -1675,6 +1906,13 @@
         "dtype": "datetime",
         "ccl": [
           "encrypt"
+        ]
+      },
+      {
+        "column_name": "rank_datetime_0",
+        "dtype": "datetime",
+        "ccl": [
+          "rank"
         ]
       },
       {
@@ -1727,6 +1965,13 @@
         ]
       },
       {
+        "column_name": "rank_timestamp_0",
+        "dtype": "timestamp",
+        "ccl": [
+          "rank"
+        ]
+      },
+      {
         "column_name": "plain_int_1",
         "dtype": "int",
         "ccl": [
@@ -1773,6 +2018,13 @@
         "dtype": "int",
         "ccl": [
           "encrypt"
+        ]
+      },
+      {
+        "column_name": "rank_int_1",
+        "dtype": "int",
+        "ccl": [
+          "rank"
         ]
       },
       {
@@ -1825,6 +2077,13 @@
         ]
       },
       {
+        "column_name": "rank_float_1",
+        "dtype": "float",
+        "ccl": [
+          "rank"
+        ]
+      },
+      {
         "column_name": "plain_string_1",
         "dtype": "string",
         "ccl": [
@@ -1871,6 +2130,13 @@
         "dtype": "string",
         "ccl": [
           "encrypt"
+        ]
+      },
+      {
+        "column_name": "rank_string_1",
+        "dtype": "string",
+        "ccl": [
+          "rank"
         ]
       },
       {
@@ -1923,6 +2189,13 @@
         ]
       },
       {
+        "column_name": "rank_datetime_1",
+        "dtype": "datetime",
+        "ccl": [
+          "rank"
+        ]
+      },
+      {
         "column_name": "plain_timestamp_1",
         "dtype": "timestamp",
         "ccl": [
@@ -1969,6 +2242,13 @@
         "dtype": "timestamp",
         "ccl": [
           "encrypt"
+        ]
+      },
+      {
+        "column_name": "rank_timestamp_1",
+        "dtype": "timestamp",
+        "ccl": [
+          "rank"
         ]
       },
       {
@@ -2021,6 +2301,13 @@
         ]
       },
       {
+        "column_name": "rank_int_2",
+        "dtype": "int",
+        "ccl": [
+          "rank"
+        ]
+      },
+      {
         "column_name": "plain_float_2",
         "dtype": "float",
         "ccl": [
@@ -2067,6 +2354,13 @@
         "dtype": "float",
         "ccl": [
           "encrypt"
+        ]
+      },
+      {
+        "column_name": "rank_float_2",
+        "dtype": "float",
+        "ccl": [
+          "rank"
         ]
       },
       {
@@ -2119,6 +2413,13 @@
         ]
       },
       {
+        "column_name": "rank_string_2",
+        "dtype": "string",
+        "ccl": [
+          "rank"
+        ]
+      },
+      {
         "column_name": "plain_datetime_2",
         "dtype": "datetime",
         "ccl": [
@@ -2168,6 +2469,13 @@
         ]
       },
       {
+        "column_name": "rank_datetime_2",
+        "dtype": "datetime",
+        "ccl": [
+          "rank"
+        ]
+      },
+      {
         "column_name": "plain_timestamp_2",
         "dtype": "timestamp",
         "ccl": [
@@ -2214,6 +2522,13 @@
         "dtype": "timestamp",
         "ccl": [
           "encrypt"
+        ]
+      },
+      {
+        "column_name": "rank_timestamp_2",
+        "dtype": "timestamp",
+        "ccl": [
+          "rank"
         ]
       }
     ],

@@ -61,6 +61,47 @@ var astName2NodeName = map[string]string{
 	ast.Sin:        operator.OpNameSin,
 	ast.Cos:        operator.OpNameCos,
 	ast.Acos:       operator.OpNameACos,
+	ast.Asin:       operator.OpNameASin,
+	ast.Tan:        operator.OpNameTan,
+	ast.Cot:        operator.OpNameCot,
+	ast.Atan:       operator.OpNameATan,
+	ast.Atan2:      operator.OpNameATan2,
+	// tidb parser does not suport acot function
+	// ast.Acot:       operator.OpNameACot,
+	ast.Abs:     operator.OpNameAbs,
+	ast.Ceil:    operator.OpNameCeil,
+	ast.Floor:   operator.OpNameFloor,
+	ast.Round:   operator.OpNameRound,
+	ast.Degrees: operator.OpNameDegrees,
+	ast.Radians: operator.OpNameRadians,
+	ast.Ln:      operator.OpNameLn,
+	ast.Log2:    operator.OpNameLog2,
+	ast.Log10:   operator.OpNameLog10,
+	ast.Sqrt:    operator.OpNameSqrt,
+	ast.Exp:     operator.OpNameExp,
+	ast.Pow:     operator.OpNamePow,
+}
+
+var floatOutputBinaryOp = map[string]bool{
+	operator.OpNameDiv:   true,
+	operator.OpNameATan2: true,
+}
+
+var skipTypeCheckAst = map[string]bool{
+	ast.Pow: true,
+}
+
+var unaryOutputType = map[string]proto.PrimitiveDataType{
+	ast.Ceil:    proto.PrimitiveDataType_INT64,
+	ast.Floor:   proto.PrimitiveDataType_INT64,
+	ast.Round:   proto.PrimitiveDataType_INT64,
+	ast.Degrees: proto.PrimitiveDataType_FLOAT64,
+	ast.Radians: proto.PrimitiveDataType_FLOAT64,
+	ast.Ln:      proto.PrimitiveDataType_FLOAT64,
+	ast.Log2:    proto.PrimitiveDataType_FLOAT64,
+	ast.Log10:   proto.PrimitiveDataType_FLOAT64,
+	ast.Sqrt:    proto.PrimitiveDataType_FLOAT64,
+	ast.Exp:     proto.PrimitiveDataType_FLOAT64,
 }
 
 type translator struct {
@@ -72,12 +113,13 @@ type translator struct {
 
 	AffectedByGroupThreshold bool
 	converter                *statusConverter
+	createdAt                time.Time
 }
 
 func NewTranslator(
 	enginesInfo *graph.EnginesInfo,
 	sc *proto.SecurityConfig,
-	issuerPartyCode string, compileOpts *proto.CompileOptions) (
+	issuerPartyCode string, compileOpts *proto.CompileOptions, createdAt time.Time) (
 	*translator, error) {
 	if sc == nil {
 		return nil, fmt.Errorf("translate: empty CCL")
@@ -102,6 +144,7 @@ func NewTranslator(
 		enginesInfo:     enginesInfo,
 		CompileOpts:     compileOpts,
 		converter:       newStatusConverter(builder),
+		createdAt:       createdAt,
 	}, nil
 }
 
@@ -150,9 +193,10 @@ func (t *translator) Translate(lp core.LogicalPlan) (*graph.Graph, error) {
 	if err != nil {
 		return nil, err
 	}
-	// Check if the result is visible to the intoOpt PartyCode
+	// Check if the result is visible to the issuer PartyCode and intoOpt PartyCode
 	cclCheckPartyList := []string{t.issuerPartyCode}
 	if lp.IntoOpt() != nil {
+		// support select into case without partyCode, e.g: select xxx into outfile 'path/to/file'
 		if len(lp.IntoOpt().PartyFiles) == 1 && lp.IntoOpt().PartyFiles[0].PartyCode == "" {
 			lp.IntoOpt().PartyFiles[0].PartyCode = t.issuerPartyCode
 		}
@@ -230,6 +274,10 @@ func (t *translator) translateInternal(ln logicalNode) error {
 		return t.buildWindow(x)
 	case *LimitNode:
 		return t.buildLimit(x)
+	case *SortNode:
+		return t.buildSort(x)
+	case *MaxOneRowNode:
+		return t.buildMaxOneRow(x)
 	default:
 		return fmt.Errorf("translate: unsupported logical node type %T", ln)
 	}
@@ -281,10 +329,6 @@ func (t *translator) addPublishNode(ln logicalNode) error {
 
 func (t *translator) addDumpFileNode(ln logicalNode) error {
 	intoOpt := ln.IntoOpt()
-
-	if len(intoOpt.PartyFiles) == 1 && intoOpt.PartyFiles[0].PartyCode == "" {
-		intoOpt.PartyFiles[0].PartyCode = t.issuerPartyCode
-	}
 
 	for _, partyFile := range intoOpt.PartyFiles {
 		input, output, err := t.prepareResultNodeIoForParty(ln, partyFile.PartyCode)
@@ -694,24 +738,95 @@ func (t *translator) extractPartyCodeFromTensor(input *graph.Tensor) []string {
 	}
 }
 
+func (t *translator) buildCompareNode(name string, inputs []*graph.Tensor) (*graph.Tensor, error) {
+	nodeInputs := []*graph.Tensor{}
+
+	allVisibleParty, err := t.findPartyWithAccessToAllTensors(inputs)
+	if err != nil {
+		return nil, err
+	}
+
+	var parties []string
+	if allVisibleParty == "" {
+		for _, input := range inputs {
+			it, err := t.converter.convertTo(input, &sharePlacement{partyCodes: t.enginesInfo.GetParties()})
+			if err != nil {
+				return nil, err
+			}
+
+			nodeInputs = append(nodeInputs, it)
+		}
+		parties = t.enginesInfo.GetParties()
+	} else {
+		parties = []string{allVisibleParty}
+		for _, input := range inputs {
+			if input.OwnerPartyCode != allVisibleParty {
+				it, err := t.converter.convertTo(input, &privatePlacement{partyCode: allVisibleParty})
+				if err != nil {
+					return nil, err
+				}
+
+				nodeInputs = append(nodeInputs, it)
+			} else {
+				nodeInputs = append(nodeInputs, input)
+			}
+		}
+	}
+
+	return t.ep.AddVariadicCompareNode(name, name, nodeInputs, parties)
+}
+
 func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors map[int64]*graph.Tensor, isApply bool, ln logicalNode) (*graph.Tensor, error) {
 	if f.FuncName.L == ast.Now || f.FuncName.L == ast.Curdate {
-		unix_time := time.Unix(1e9, 0)
-		seconds := unix_time.Unix()
-		date_seconds := time.Date(unix_time.Year(), unix_time.Month(), unix_time.Day(), 0, 0, 0, 0, time.UTC).Unix()
-		time_seconds := seconds - date_seconds
-		var secondsDatum types.Datum
+		unix_time := t.createdAt
+		date := time.Date(unix_time.Year(), unix_time.Month(), unix_time.Day(), 0, 0, 0, 0, t.createdAt.Location())
+		var timeDatum types.Datum
 		if f.FuncName.L == ast.Now {
-			secondsDatum = types.NewIntDatum(seconds)
+			timeDatum = types.NewTimeDatum(types.NewTime(types.NewMysqlTime(unix_time), mysql.TypeDate, types.DefaultFsp))
 		} else if f.FuncName.L == ast.Curdate {
-			secondsDatum = types.NewIntDatum(date_seconds)
+			timeDatum = types.NewTimeDatum(types.NewTime(types.NewMysqlTime(date), mysql.TypeDate, types.DefaultFsp))
 		} else {
-			secondsDatum = types.NewIntDatum(time_seconds)
+			return nil, fmt.Errorf("buildScalarFunction: unsupported function %s", f.FuncName.L)
 		}
-		return t.addConstantNode(&secondsDatum)
+		return t.addConstantNode(&timeDatum)
 	}
 
 	args := f.GetArgs()
+	if f.FuncName.L == ast.Substr || f.FuncName.L == ast.Substring {
+		strInput, err := t.getTensorFromExpression(args[0], tensors)
+		if err != nil {
+			return nil, fmt.Errorf("buildScalarFunction:err input for %s", f.FuncName.L)
+		}
+		if strInput.DType != proto.PrimitiveDataType_STRING {
+			// TODO: support other types
+			return nil, fmt.Errorf("buildScalarFunction:err input type{%s} for %s", strInput.DType, f.FuncName.L)
+		}
+		opt := SliceOptions{
+			Start: 0,
+			Stop:  math.MaxInt64,
+			Step:  1,
+		}
+		// substr(str, start) or substr(str, start, length)
+		if len(args) >= 2 {
+			// arrow index start from 0 while mysql substr start from 1
+			start, ok := args[1].(*expression.Constant)
+			if !ok {
+				return nil, fmt.Errorf("buildScalarFunction: args[1] should be constant for %s", f.FuncName.L)
+			}
+			opt.Start = start.Value.GetInt64() - 1
+		}
+		// substr(str, start, length)
+		if len(args) >= 3 {
+			length, ok := args[2].(*expression.Constant)
+			if !ok {
+				return nil, fmt.Errorf("buildScalarFunction: args[2] should be constant for %s", f.FuncName.L)
+			}
+			opt.Stop = opt.Start + length.Value.GetInt64()
+		}
+
+		return t.ep.AddArrowFuncNode("arrow_substr", "utf8_slice_codeunits", opt, []*graph.Tensor{strInput}, strInput.DType)
+	}
+
 	inputs := []*graph.Tensor{}
 	if f.FuncName.L == ast.AddDate || f.FuncName.L == ast.SubDate {
 		var err error
@@ -739,17 +854,51 @@ func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors m
 	switch f.FuncName.L {
 	case ast.UnaryNot:
 		if len(inputs) != 1 {
-			return nil, fmt.Errorf("buildScalarFunction:err input for %s expected for %d got %d", f.FuncName.L, 1, len(inputs))
+			return nil, fmt.Errorf("buildScalarFunction: err input for %s expected for %d got %d", f.FuncName.L, 1, len(inputs))
 		}
 		return t.ep.AddNotNode("not", inputs[0], inTensorPartyCodes)
 	case ast.IsNull:
 		return t.ep.AddIsNullNode("is_null", inputs[0])
+	case ast.Lower:
+		return t.ep.AddArrowFuncNode("arrow_lower", "utf8_lower", nil, inputs, inputs[0].DType)
+	case ast.Upper:
+		return t.ep.AddArrowFuncNode("arrow_upper", "utf8_upper", nil, inputs, inputs[0].DType)
+	case ast.Trim:
+		// TODO: support more trim options, only support trim whitespace now
+		return t.ep.AddArrowFuncNode("arrow_trim", "utf8_trim", TrimOptions{Characters: " "}, inputs, inputs[0].DType)
+	case ast.Concat:
+		var seperator types.Datum
+		seperator.SetString("") // only support nil seperator now
+		sepTensor, err := t.addConstantNode(&seperator)
+		if err != nil {
+			return nil, fmt.Errorf("buildScalarFunction: build seperator for concat failed: %v ", err)
+		}
+		// arrow function 'binary_join_element_wise' treats the last input as seperator
+		ins, err := t.addBroadcastToNodeOndemand(append(inputs, sepTensor))
+		if err != nil {
+			return nil, fmt.Errorf("buildScalarFunction: broadcast for concat failed: %v ", err)
+		}
+		var privateIns []*graph.Tensor
+		for _, in := range ins {
+			privateIn, err := t.converter.convertTo(in, &privatePlacement{partyCode: t.issuerPartyCode})
+			if err != nil {
+				return nil, fmt.Errorf("buildScalarFunction: convert inputs to issuer '%s' failed: %v", ins[0].OwnerPartyCode, err)
+			}
+			privateIns = append(privateIns, privateIn)
+		}
+
+		return t.ep.AddArrowFuncNode("arrow_concat", "binary_join_element_wise", nil, privateIns, proto.PrimitiveDataType_STRING)
 	// binary function
-	case ast.LT, ast.GT, ast.GE, ast.EQ, ast.LE, ast.NE, ast.LogicOr, ast.LogicAnd, ast.Plus, ast.Minus, ast.Mul, ast.Div, ast.IntDiv, ast.Mod, ast.AddDate, ast.SubDate, ast.DateDiff:
+	case ast.LT, ast.GT, ast.GE, ast.EQ, ast.LE, ast.NE, ast.LogicOr, ast.LogicAnd, ast.Plus, ast.Minus, ast.Mul, ast.Div, ast.IntDiv, ast.Mod, ast.AddDate, ast.SubDate, ast.DateDiff, ast.Pow:
 		if len(inputs) != 2 {
 			return nil, fmt.Errorf("buildScalarFunction:err input for %s expected for %d got %d", f.FuncName.L, 2, len(inputs))
 		}
-		return t.addBinaryNode(astName2NodeName[f.FuncName.L], astName2NodeName[f.FuncName.L], inputs[0], inputs[1])
+
+		output, err := t.addBinaryNode(astName2NodeName[f.FuncName.L], astName2NodeName[f.FuncName.L], inputs[0], inputs[1])
+		if skipTypeCheckAst[f.FuncName.L] {
+			output.SkipDTypeCheck = true
+		}
+		return output, err
 	case ast.Cast:
 		if len(inputs) != 1 {
 			return nil, fmt.Errorf("buildScalarFunction:err input for %s expected for %d got %d", f.FuncName.L, 1, len(inputs))
@@ -760,7 +909,7 @@ func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors m
 		}
 		return t.ep.AddCastNode("cast", tp, inputs[0], inTensorPartyCodes)
 	case ast.Greatest, ast.Least:
-		return t.ep.AddCompareNode(astName2NodeName[f.FuncName.L], astName2NodeName[f.FuncName.L], inputs)
+		return t.buildCompareNode(astName2NodeName[f.FuncName.L], inputs)
 	case ast.Case:
 		if len(inputs)%2 != 1 {
 			return nil, fmt.Errorf("missing else clause for CASE WHEN statement")
@@ -797,7 +946,28 @@ func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors m
 			return nil, fmt.Errorf("missing arguments for coalesce function")
 		}
 		return t.ep.AddCoalesceNode("coalesce", inputs)
-	case ast.Cos, ast.Sin, ast.Acos:
+	case ast.Cot:
+		if len(inputs) != 1 {
+			return nil, fmt.Errorf("incorrect arguments for function %v", f.FuncName.L)
+		}
+
+		one := types.NewIntDatum(int64(1))
+		oneConst, err := t.addConstantNode(&one)
+		if err != nil {
+			return nil, fmt.Errorf("buildScalarFunction: err %s", err)
+		}
+
+		tanOp, err := t.ep.AddTrigonometricFunction(astName2NodeName[ast.Tan], astName2NodeName[ast.Tan], inputs[0], inTensorPartyCodes)
+		if err != nil {
+			return nil, fmt.Errorf("buildScalarFunction: err %s", err)
+		}
+
+		oneScalar, err := t.addBroadcastToNodeOndemand([]*graph.Tensor{oneConst, tanOp})
+		if err != nil {
+			return nil, fmt.Errorf("buildScalarFunction: err %s", err)
+		}
+		return t.addBinaryNode(astName2NodeName[ast.Div], astName2NodeName[ast.Div], oneScalar[0], oneScalar[1])
+	case ast.Cos, ast.Sin, ast.Acos, ast.Asin, ast.Tan, ast.Atan:
 		if len(inputs) != 1 {
 			return nil, fmt.Errorf("incorrect arguments for function %v", f.FuncName.L)
 		}
@@ -809,6 +979,23 @@ func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors m
 		}
 
 		return t.buildGeoDistanceFunction(inputs)
+	case ast.Atan2:
+		if len(inputs) != 2 {
+			return nil, fmt.Errorf("incorrect arguments for function ATAN2, expecting 2 but get %v", len(inputs))
+		}
+
+		return t.addBinaryNode(astName2NodeName[f.FuncName.L], astName2NodeName[f.FuncName.L], inputs[0], inputs[1])
+	case ast.Abs, ast.Ceil, ast.Floor, ast.Round, ast.Radians, ast.Degrees, ast.Ln, ast.Log10, ast.Log2, ast.Sqrt, ast.Exp:
+		if len(inputs) != 1 {
+			return nil, fmt.Errorf("buildScalarFunction: incorrect arguments for function %v, exepcting 1 but got %v", f.FuncName.L, len(inputs))
+		}
+		var outputType proto.PrimitiveDataType
+		var exist bool
+		if outputType, exist = unaryOutputType[f.FuncName.L]; !exist {
+			outputType = inputs[0].DType
+		}
+
+		return t.ep.AddUnaryNumericNode(astName2NodeName[f.FuncName.L], astName2NodeName[f.FuncName.L], inputs[0], outputType, inTensorPartyCodes)
 	}
 	return nil, fmt.Errorf("buildScalarFunction doesn't support %s", f.FuncName.L)
 }
@@ -842,12 +1029,12 @@ func (t *translator) addFilterNode(filter *graph.Tensor, tensorToFilter map[int6
 		// convert filter to public here, so filter must be visible to all parties
 		publicFilter, err := t.converter.convertTo(filter, &publicPlacement{partyCodes: t.enginesInfo.GetPartyInfo().GetParties()})
 		if err != nil {
-			return nil, fmt.Errorf("buildSelection: %v", err)
+			return nil, fmt.Errorf("addFilterNode: %v", err)
 		}
 		// handling share tensors here
 		output, err := t.ep.AddFilterNode("apply_filter", shareTensors, publicFilter, t.enginesInfo.GetPartyInfo().GetParties())
 		if err != nil {
-			return nil, fmt.Errorf("buildSelection: %v", err)
+			return nil, fmt.Errorf("addFilterNode: %v", err)
 		}
 		for i, id := range shareIds {
 			resultIdToTensor[id] = output[i]
@@ -862,11 +1049,11 @@ func (t *translator) addFilterNode(filter *graph.Tensor, tensorToFilter map[int6
 			}
 			newFilter, err := t.converter.convertTo(filter, &privatePlacement{partyCode: p})
 			if err != nil {
-				return nil, fmt.Errorf("buildSelection: %v", err)
+				return nil, fmt.Errorf("addFilterNode: %v", err)
 			}
 			output, err := t.ep.AddFilterNode("apply_filter", ts, newFilter, []string{p})
 			if err != nil {
-				return nil, fmt.Errorf("buildSelection: %v", err)
+				return nil, fmt.Errorf("addFilterNode: %v", err)
 			}
 			for i, id := range privateIdsMap[p] {
 				resultIdToTensor[id] = output[i]
@@ -876,7 +1063,6 @@ func (t *translator) addFilterNode(filter *graph.Tensor, tensorToFilter map[int6
 	return resultIdToTensor, nil
 }
 
-// For now, only support psi in
 func (t *translator) addInNode(f *expression.ScalarFunction, left, right *graph.Tensor) (*graph.Tensor, error) {
 	if left.DType != right.DType {
 		return nil, fmt.Errorf("addInNode: left type %v should be same with right %v", left.DType, right.DType)
@@ -913,12 +1099,11 @@ func (t *translator) addInNode(f *expression.ScalarFunction, left, right *graph.
 	if right, err = t.converter.convertTo(right, bestAlg.inputPlacement[graph.Right][0]); err != nil {
 		return nil, fmt.Errorf("addBinaryNode: %v", err)
 	}
-	// TODO(xiaoyuan) add share in/local in later
-	return t.addPSIInNode(left, right, outCc, bestAlg.outputPlacement[graph.Out][0].partyList()[0], t.CompileOpts.GetOptimizerHints().GetPsiAlgorithmType())
+	// TODO(xiaoyuan) add share in later
+	return t.addBasicInNode(left, right, outCc, bestAlg.outputPlacement[graph.Out][0].partyList()[0], t.CompileOpts.GetOptimizerHints().GetPsiAlgorithmType())
 }
 
-// AddPSIInNode adds psi-in node
-func (t *translator) addPSIInNode(left *graph.Tensor, right *graph.Tensor, outCCL *ccl.CCL, revealParty string, psiAlg proto.PsiAlgorithmType) (*graph.Tensor, error) {
+func (t *translator) addBasicInNode(left *graph.Tensor, right *graph.Tensor, outCCL *ccl.CCL, revealParty string, psiAlg proto.PsiAlgorithmType) (*graph.Tensor, error) {
 	nodeName := "psi_in"
 	output := t.ep.AddTensor(nodeName + "_out")
 	output.Option = proto.TensorOptions_REFERENCE
@@ -933,6 +1118,11 @@ func (t *translator) addPSIInNode(left *graph.Tensor, right *graph.Tensor, outCC
 	attr2 := &graph.Attribute{}
 	attr2.SetStrings([]string{revealParty})
 	attrs := map[string]*graph.Attribute{operator.PsiAlgorithmAttr: attr0, operator.InputPartyCodesAttr: attr1, operator.RevealToAttr: attr2}
+	if left.OwnerPartyCode == right.OwnerPartyCode {
+		localInAttr := &graph.Attribute{}
+		localInAttr.SetInt64(operator.LocalIn)
+		attrs[operator.InTypeAttr] = localInAttr
+	}
 	if _, err := t.ep.AddExecutionNode(nodeName, operator.OpNameIn, map[string][]*graph.Tensor{graph.Left: {left}, graph.Right: {right}},
 		map[string][]*graph.Tensor{graph.Out: {output}}, attrs, []string{left.OwnerPartyCode, right.OwnerPartyCode}); err != nil {
 		return nil, err
@@ -958,6 +1148,8 @@ var arithOpMap = map[string]bool{
 	operator.OpNameDiv:    true,
 	operator.OpNameIntDiv: true,
 	operator.OpNameMod:    true,
+	operator.OpNameATan2:  true,
+	operator.OpNamePow:    true,
 }
 
 func inferBinaryOpOutputType(opType string, left, right *graph.Tensor) (proto.PrimitiveDataType, error) {
@@ -976,9 +1168,10 @@ func inferBinaryOpOutputType(opType string, left, right *graph.Tensor) (proto.Pr
 		return left.DType, nil
 	}
 	if _, ok := arithOpMap[opType]; ok {
-		if opType == operator.OpNameDiv {
+		if floatOutputBinaryOp[opType] {
 			return proto.PrimitiveDataType_FLOAT64, nil
 		}
+
 		if opType == operator.OpNameIntDiv || opType == operator.OpNameMod {
 			return proto.PrimitiveDataType_INT64, nil
 		}
@@ -1158,7 +1351,7 @@ func (t *translator) addUniqueNode(name string, input *graph.Tensor, partyCode s
 }
 
 // if inputs tensors include share data or private tensors coming from different party, make all tensor share
-func (t *translator) addSortNode(name string, key, in []*graph.Tensor) ([]*graph.Tensor, error) {
+func (t *translator) addSortNode(name string, key, in []*graph.Tensor, reverse bool) ([]*graph.Tensor, error) {
 	makeShareFlag := false
 	privatePartyCodes := make(map[string]bool)
 	for _, tensor := range append(in, key...) {
@@ -1213,9 +1406,14 @@ func (t *translator) addSortNode(name string, key, in []*graph.Tensor) ([]*graph
 			break
 		}
 	}
+
+	sortAttr := make(map[string]*graph.Attribute)
+	reverseAttr := &graph.Attribute{}
+	reverseAttr.SetBool(reverse)
+	sortAttr[operator.ReverseAttr] = reverseAttr
 	if _, err := t.ep.AddExecutionNode(name, operator.OpNameSort,
 		map[string][]*graph.Tensor{"Key": keyA, "In": inA}, map[string][]*graph.Tensor{"Out": outA},
-		map[string]*graph.Attribute{}, partyCodes); err != nil {
+		sortAttr, partyCodes); err != nil {
 		return nil, fmt.Errorf("addSortNode: %v", err)
 	}
 
@@ -1289,7 +1487,7 @@ func (t *translator) addShuffleNode(name string, inTs []*graph.Tensor) ([]*graph
 		out, err := t.converter.convertTo(
 			in, &sharePlacement{partyCodes: t.enginesInfo.GetParties()})
 		if err != nil {
-			return nil, fmt.Errorf("addSortNode: %v", err)
+			return nil, fmt.Errorf("addShuffleNode: %v", err)
 		}
 		inA = append(inA, out)
 	}
@@ -1460,7 +1658,7 @@ func (t *translator) addGroupHeSumNode(name string, groupId, groupNum, in *graph
 		return nil, fmt.Errorf("addGroupHeSumNode: name %v, convert agg err: %v", name, err)
 	}
 
-	output := t.ep.AddTensorAs(in)
+	output := t.ep.AddTensorAs(inP)
 	output.Name = output.Name + "_sum"
 	if graph.IsFloatOrDoubleType(in.DType) {
 		output.DType = proto.PrimitiveDataType_FLOAT64
@@ -1520,4 +1718,32 @@ func (t *translator) addIfNode(name string, cond, tTrue, tFalse *graph.Tensor) (
 		return nil, fmt.Errorf("addIfNode: %v", err)
 	}
 	return out, nil
+}
+
+func (t *translator) buildCrossJoin(left logicalNode, right logicalNode) (map[int64]*graph.Tensor, error) {
+	rval := map[int64]*graph.Tensor{}
+	leftOutput := []*graph.Tensor{}
+	for i, tensor := range left.ResultTable() {
+		tt := t.ep.AddTensorAs(tensor)
+		leftOutput = append(leftOutput, tt)
+		rval[left.Schema().Columns[i].UniqueID] = tt
+	}
+	leftPartyCode := left.ResultTable()[0].OwnerPartyCode
+
+	rightOutput := []*graph.Tensor{}
+	for i, tensor := range right.ResultTable() {
+		tt := t.ep.AddTensorAs(tensor)
+		rightOutput = append(rightOutput, tt)
+		rval[right.Schema().Columns[i].UniqueID] = tt
+	}
+	rightPartyCode := right.ResultTable()[0].OwnerPartyCode
+	attr := &graph.Attribute{}
+	attr.SetStrings([]string{leftPartyCode, rightPartyCode})
+	_, err := t.ep.AddReplicateNode(operator.OpNameReplicate, left.ResultTable(), right.ResultTable(),
+		leftOutput, rightOutput, map[string]*graph.Attribute{operator.InputPartyCodesAttr: attr}, []string{leftPartyCode, rightPartyCode})
+	if err != nil {
+		return nil, fmt.Errorf("buildCrossJoin: %v", err)
+	}
+
+	return rval, nil
 }

@@ -29,242 +29,118 @@ import (
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 )
 
-type OnJobDeadCb func(jobId, url, reason string)
+type OnJobDeadCb func(jobId, reason string)
 
 // tracking job lifecycle and progress
 // TODO: implement running progress tracking
 
 type JobWatcher struct {
-	// time interval of polling job status
-	interval time.Duration
-
 	onJobDeadCb OnJobDeadCb
 
-	scheduler gocron.Scheduler
-
-	elector *storage.DistributedElector
-
-	metaManager *storage.MetaManager
-
-	mu sync.Mutex
-
-	jobStatus map[string]*storage.WatchedJobStatus
+	metaManager        *storage.MetaManager
+	maxUnavailableTime time.Duration
+	mu                 sync.Mutex
 }
 
 type JobWatcherOption func(*JobWatcher)
 
-func WithWatchInterval(t time.Duration) JobWatcherOption {
+func WithMaxUnavailableDuration(maxUnavailableTime time.Duration) JobWatcherOption {
 	return func(w *JobWatcher) {
-		w.interval = t
+		w.maxUnavailableTime = maxUnavailableTime
 	}
 }
 
-func NewJobWatcher(metaManager *storage.MetaManager, partyCode string, cb OnJobDeadCb, opts ...JobWatcherOption) (*JobWatcher, error) {
+func NewJobWatcher(metaManager *storage.MetaManager, cb OnJobDeadCb, opts ...JobWatcherOption) (*JobWatcher, error) {
 	w := &JobWatcher{
-		interval:    time.Minute, // 1m
-		onJobDeadCb: cb,
-		metaManager: metaManager,
-		jobStatus:   make(map[string]*storage.WatchedJobStatus),
+		onJobDeadCb:        cb,
+		metaManager:        metaManager,
+		maxUnavailableTime: time.Minute * 3,
 	}
 
 	for _, opt := range opts {
 		opt(w)
 	}
 
-	err := w.start(partyCode)
-	if err != nil {
-		return nil, fmt.Errorf("fail to start scheduled jobs: %v", err)
-	}
-
 	return w, nil
 }
 
-// Add jobId to watch list
-func (w *JobWatcher) Watch(jobId, engEndpoint string) error {
-	w.mu.Lock()
-	defer w.mu.Unlock()
-
-	_, ok := w.jobStatus[jobId]
-	if ok {
-		return fmt.Errorf("job %s is already been watched", jobId)
-	}
-
-	jobStatus := &storage.WatchedJobStatus{
-		JobId:             jobId,
-		EngineEndpoint:    engEndpoint,
-		InaccessibleTimes: 0,
-	}
-	w.jobStatus[jobId] = jobStatus
-
-	return nil
-}
-
-// Remove jobId from watch list
-func (w *JobWatcher) Unwatch(jobId string) error {
-	w.mu.Lock()
-	defer w.mu.Unlock()
-
-	delete(w.jobStatus, jobId)
-	return nil
-}
-
-func (w *JobWatcher) onJobDead(jobId, url, reason string) error {
-	err := w.Unwatch(jobId)
-	if err != nil {
-		return err
-	}
-
+func (w *JobWatcher) onJobDead(jobId, reason string) error {
 	if w.onJobDeadCb != nil {
-		w.onJobDeadCb(jobId, url, reason)
+		w.onJobDeadCb(jobId, reason)
 	}
 
-	if w.metaManager.Persistent() {
-		return w.metaManager.SetSessionStatus(jobId, storage.SessionFailed)
-	}
-
-	return nil
+	return w.metaManager.ExecInMetaTransaction(func(txn *storage.MetaTransaction) (err error) {
+		return txn.SetSessionStatus(jobId, storage.SessionFailed)
+	})
 }
 
-func (w *JobWatcher) start(partyCode string) error {
-	var s gocron.Scheduler
-	var err error
-
-	if w.metaManager.Persistent() {
-		w.elector, err = storage.NewDistributedElector(w.metaManager, storage.JobWatcherLockID, partyCode, w.interval)
-		if err != nil {
-			return fmt.Errorf("fail to create distributed elector: %v", err)
-		}
-		s, err = gocron.NewScheduler(gocron.WithDistributedElector(w.elector))
-	} else {
-		s, err = gocron.NewScheduler()
-	}
+func (w *JobWatcher) collectJobs() []*storage.SessionInfo {
+	// update jobStatus from db first
+	var jobs []*storage.SessionInfo
+	err := w.metaManager.ExecInMetaTransaction(func(txn *storage.MetaTransaction) (err error) {
+		jobs, err = txn.GetWatchedJobs()
+		return err
+	})
 	if err != nil {
-		return fmt.Errorf("fail to create jobwatcher scheduler: %v", err)
+		logrus.Warningf("JobWatcher collectJobs error: %v", err)
 	}
-
-	w.scheduler = s
-	_, err = w.scheduler.NewJob(
-		gocron.DurationJob(w.interval),
-		gocron.NewTask(w.checkJobs),
-		gocron.WithName("checkJobs"),
-	)
-	if err != nil {
-		return fmt.Errorf("fail to schedule job status check task: %v", err)
-	}
-
-	w.scheduler.Start()
-	return nil
+	return jobs
 }
 
-func (w *JobWatcher) collectJobs() map[string]*storage.WatchedJobStatus {
+func (w *JobWatcher) CheckJobs() {
 	w.mu.Lock()
 	defer w.mu.Unlock()
-
-	// update jobStatus from db first
-	if w.metaManager.Persistent() {
-		jobs, err := w.metaManager.GetWatchedJobs()
-		if err != nil {
-			logrus.Warningf("JobWatcher collectJobs error: %v", err)
-		}
-		for _, job := range jobs {
-			_, ok := w.jobStatus[job.JobId]
-			if !ok {
-				w.jobStatus[job.JobId] = &job
-			}
-		}
-
-		jobIDSet := make(map[string]struct{})
-		for _, job := range jobs {
-			jobIDSet[job.JobId] = struct{}{}
-		}
-		// remove keys not in jobIDSet, their status is no longer running
-		for jobId := range w.jobStatus {
-			if _, exists := jobIDSet[jobId]; !exists {
-				delete(w.jobStatus, jobId)
-			}
-		}
-	}
-
-	res := make(map[string]*storage.WatchedJobStatus)
-	for _, v := range w.jobStatus {
-		res[v.JobId] = v
-	}
-	return res
-}
-
-func (w *JobWatcher) checkJobs() {
 	jobs := w.collectJobs()
 
-	failedJobReason := make(map[string]string)
-	modifiedJobStatus := make(map[string]*storage.WatchedJobStatus)
+	var unAliveJob []*storage.SessionInfo
+	var unReachedJobs []*storage.SessionInfo
+	var aliveJobIds []string
 	for _, job := range jobs {
 		alive, err := IsJobAlive(job)
-		logrus.Infof("job id: %v, inaccess: %v", job.JobId, job.InaccessibleTimes)
 		if err != nil {
 			if s, ok := status.FromError(err); ok && s.Code() == codes.Unavailable {
-				job.InaccessibleTimes++
-				modifiedJobStatus[job.JobId] = job
+				unReachedJobs = append(unReachedJobs, job)
 			}
-			logrus.Warnf("failed to probe job status: jobId=%s, endpoint=%s, err=%v", job.JobId, job.EngineEndpoint, err)
-		} else {
-			if job.InaccessibleTimes != 0 {
-				job.InaccessibleTimes = 0
-				modifiedJobStatus[job.JobId] = job
-			}
+			logrus.Warnf("failed to probe job status: jobId=%s, endpoint=%s, err=%v", job.SessionID, job.EngineUrlForSelf, err)
+			continue
 		}
+		if !alive {
+			unAliveJob = append(unAliveJob, job)
+			continue
+		}
+		aliveJobIds = append(aliveJobIds, job.SessionID)
+	}
 
-		if job.InaccessibleTimes >= 3 {
-			failedJobReason[job.JobId] = "job has failed in engine, likely due to either engine crash or being OOM killed"
-			delete(modifiedJobStatus, job.JobId)
-		} else if err == nil && !alive {
-			failedJobReason[job.JobId] = "session not found, maybe removed by engine due to session timeout or engine restarted"
-			delete(modifiedJobStatus, job.JobId)
-		}
+	err := w.metaManager.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
+		return txn.UpdateSessionUpdatedAt(aliveJobIds)
+	})
+	if err != nil {
+		logrus.Warnf("failed to update session updated_at: %v", err)
 	}
 
 	var failedJobIds []string
-	// check again, some jobs may already have their status set to finished.
-	// TODO:
-	// There are still problems with clustering information out of sync, e.g. after collectingJobs, the status of a task changes to finished.
-	currentRunningJobs := w.collectJobs()
-	for jobId, reason := range failedJobReason {
-		// whether job still in running
-		_, ok := currentRunningJobs[jobId]
-		if ok {
-			failedJobIds = append(failedJobIds, jobId)
-			w.onJobDead(jobId, jobs[jobId].EngineEndpoint, reason)
+	for _, job := range unReachedJobs {
+		if job.UpdatedAt.Add(w.maxUnavailableTime).Before(time.Now()) {
+			failedJobIds = append(failedJobIds, job.SessionID)
+			w.onJobDeadCb(job.SessionID, "job is unavailable, maybe oom or crashed")
 		}
 	}
-
-	if w.metaManager.Persistent() {
-		err := w.metaManager.SetMultipleSessionStatus(failedJobIds, storage.SessionFailed)
-		if err != nil {
-			logrus.Warnf("failed to update status in session_infos: %v", err)
-		}
+	for _, job := range unAliveJob {
+		failedJobIds = append(failedJobIds, job.SessionID)
+		w.onJobDeadCb(job.SessionID, "job is not found, maybe timeout or engine crashed")
 	}
 
-	w.mu.Lock()
-	defer w.mu.Unlock()
-
-	for _, job := range modifiedJobStatus {
-		_, ok := w.jobStatus[job.JobId]
-		if ok {
-			w.jobStatus[job.JobId].InaccessibleTimes = job.InaccessibleTimes
-		}
+	err = w.metaManager.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
+		return txn.SetMultipleSessionStatus(failedJobIds, storage.SessionFailed)
+	})
+	if err != nil {
+		logrus.Warnf("failed to update status in session_infos: %v", err)
 	}
-}
-
-// stop all watched jobs
-func (w *JobWatcher) Stop() {
-	if w.metaManager.Persistent() {
-		w.elector.StopRenewLeaderLock()
-	}
-	w.scheduler.Shutdown()
 }
 
 // probe if the job is still alive
-func IsJobAlive(j *storage.WatchedJobStatus) (bool, error) {
-	conn, err := NewEngineClientConn(j.EngineEndpoint, "", nil)
+func IsJobAlive(j *storage.SessionInfo) (bool, error) {
+	conn, err := NewEngineClientConn(j.EngineUrlForSelf, "", nil)
 	if err != nil {
 		return false, err
 	}
@@ -273,7 +149,7 @@ func IsJobAlive(j *storage.WatchedJobStatus) (bool, error) {
 	client := pb.NewSCQLEngineServiceClient(conn)
 
 	req := pb.QueryJobStatusRequest{
-		JobId: j.JobId,
+		JobId: j.SessionID,
 	}
 	resp, err := client.QueryJobStatus(context.TODO(), &req)
 	if err != nil {
@@ -287,4 +163,21 @@ func IsJobAlive(j *storage.WatchedJobStatus) (bool, error) {
 		return false, fmt.Errorf("rpc QueryJobStatus responses error: %v", resp.GetStatus())
 	}
 	return true, nil
+}
+
+func StartJobWatcherScheduler(w *JobWatcher, interval time.Duration) (func() error, error) {
+	s, err := gocron.NewScheduler()
+	if err != nil {
+		return nil, fmt.Errorf("fail to create jobwatcher scheduler: %v", err)
+	}
+	_, err = s.NewJob(
+		gocron.DurationJob(interval),
+		gocron.NewTask(w.CheckJobs),
+		gocron.WithName("job watcher"),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("fail to schedule job status check task: %v", err)
+	}
+	s.Start()
+	return s.Shutdown, nil
 }

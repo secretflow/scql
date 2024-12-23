@@ -1,4 +1,4 @@
-FROM openanolis/anolisos:8.6 as base
+FROM openanolis/anolisos:8.6 AS base
 
 ARG TARGETPLATFORM
 ENV TARGETPLATFORM=$TARGETPLATFORM
@@ -12,14 +12,17 @@ RUN yum install -y iproute-tc
 # libgomp is used in spu to speed up psi.
 RUN yum install -y libgomp
 
+RUN yum install -y tzdata
+
 COPY ./$TARGETPLATFORM/scqlengine /home/admin/bin/scqlengine
 COPY ./$TARGETPLATFORM/scdbserver /home/admin/bin/scdbserver
 COPY ./$TARGETPLATFORM/scdbclient /home/admin/bin/scdbclient
 COPY ./$TARGETPLATFORM/broker /home/admin/bin/broker
 COPY ./$TARGETPLATFORM/brokerctl /home/admin/bin/brokerctl
+COPY ./$TARGETPLATFORM/agent /home/admin/bin/agent
 COPY ./scripts/kuscia-templates /home/admin/scripts/kuscia-templates
 
-FROM base as image-dev
+FROM base AS image-dev
 
 ARG GO_VERSION=1.21.5
 
@@ -50,4 +53,4 @@ ENV PATH="${PATH}:/root/go/bin"
 
 RUN yum install -y jq mysql
 
-FROM base as image-prod
+FROM base AS image-prod

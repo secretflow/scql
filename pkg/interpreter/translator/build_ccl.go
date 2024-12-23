@@ -17,8 +17,6 @@ package translator
 import (
 	"fmt"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/secretflow/scql/pkg/expression"
 	"github.com/secretflow/scql/pkg/interpreter/ccl"
 	"github.com/secretflow/scql/pkg/interpreter/operator"
@@ -29,6 +27,12 @@ import (
 	"github.com/secretflow/scql/pkg/types"
 	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
+
+var isTrivialUnaryAstFuncMap = map[string]bool{
+	ast.Trim:  true,
+	ast.Upper: true,
+	ast.Lower: true,
+}
 
 func (n *baseNode) buildChildCCL(ctx *ccl.Context, columnTracer *ccl.ColumnTracer) error {
 	n.dataSourceParties = []string{}
@@ -66,6 +70,11 @@ func (n *DataSourceNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer)
 }
 
 func (n *ProjectionNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
+	proj, ok := n.lp.(*core.LogicalProjection)
+	if !ok {
+		return fmt.Errorf("assert failed while projectionNode buildCCL, expected: core.LogicalProjection, actual: %T", n.lp)
+	}
+
 	if err := n.buildChildCCL(ctx, colTracer); err != nil {
 		return err
 	}
@@ -73,10 +82,7 @@ func (n *ProjectionNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer)
 	if err != nil {
 		return fmt.Errorf("buildCCL for ProjectionNode: %v", err)
 	}
-	proj, ok := n.lp.(*core.LogicalProjection)
-	if !ok {
-		return fmt.Errorf("assert failed while projectionNode buildCCL, expected: core.LogicalProjection, actual: %T", n.lp)
-	}
+
 	resultCCL := make(map[int64]*ccl.CCL)
 	for i, expr := range proj.Exprs {
 		cc, err := ccl.InferExpressionCCL(expr, childCCL)
@@ -94,7 +100,55 @@ func (n *ProjectionNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer)
 	return nil
 }
 
+func findThenRecordRootArg(n logicalNode, colTracer *ccl.ColumnTracer) error {
+	projNode, ok := n.(*ProjectionNode)
+	if !ok {
+		return nil
+	}
+
+	proj, ok := projNode.lp.(*core.LogicalProjection)
+	if !ok {
+		return fmt.Errorf("assert failed while projectionNode buildColumnUnion, expected: core.LogicalProjection, actual: %T", projNode.lp)
+	}
+
+	for i, expr := range proj.Exprs {
+		sf, ok := expr.(*expression.ScalarFunction)
+		if !ok {
+			continue
+		}
+		isTrivialUnaryFunc := isTrivialUnaryAstFuncMap[sf.FuncName.L]
+		if !isTrivialUnaryFunc {
+			continue
+		}
+
+		var arg expression.Expression
+		for isTrivialUnaryFunc {
+			if len(sf.GetArgs()) != 1 {
+				return fmt.Errorf("the number of %s's argument is %d, which does not meet the definition of TrivialUnaryFunc", sf.FuncName.L, len(sf.GetArgs()))
+			}
+			arg = sf.GetArgs()[0]
+			sf, ok = arg.(*expression.ScalarFunction)
+			if !ok {
+				break
+			}
+			isTrivialUnaryFunc = isTrivialUnaryAstFuncMap[sf.FuncName.L]
+		}
+
+		col, ok := arg.(*expression.Column)
+		if ok {
+			colTracer.SetRootArg(proj.Schema().Columns[i].UniqueID, col.UniqueID)
+		}
+
+	}
+	return nil
+}
+
 func (n *JoinNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
+	join, ok := n.lp.(*core.LogicalJoin)
+	if !ok {
+		return fmt.Errorf("assert failed while joinNode buildCCL, expected: core.LogicalJoin, actual: %T", n.lp)
+	}
+
 	if err := n.buildChildCCL(ctx, colTracer); err != nil {
 		return err
 	}
@@ -103,10 +157,6 @@ func (n *JoinNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error
 		return fmt.Errorf("buildCCL for JoinNode: %v", err)
 	}
 
-	join, ok := n.lp.(*core.LogicalJoin)
-	if !ok {
-		return fmt.Errorf("assert failed while joinNode buildCCL, expected: core.LogicalJoin, actual: %T", n.lp)
-	}
 	joinKeyCCLs := make(map[int64]*ccl.CCL)
 	allJoinColumnUniqueIds := make(map[int64]bool)
 	// extract data source party of join tables
@@ -130,6 +180,14 @@ func (n *JoinNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error
 	var joinKeyPairs []joinKeyPair
 	// if table_alice joins table_bob, then alice and bob can see each other's join payload: payloadVisible[alice][bob] = payloadVisible[bob][alice] = true
 	payloadVisible := make(map[string]map[string]bool)
+
+	for _, c := range n.Children() {
+		err := findThenRecordRootArg(c, colTracer)
+		if err != nil {
+			return fmt.Errorf("joinNode.buildCCL: %v", err)
+		}
+	}
+
 	for _, equalCondition := range join.EqualConditions {
 		cols, err := extractEQColumns(equalCondition)
 		if err != nil {
@@ -171,6 +229,7 @@ func (n *JoinNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error
 				}
 			}
 		}
+
 		for _, p := range leftSourceParties {
 			if rightCc.LevelFor(p) == ccl.Join {
 				if join.JoinType == core.InnerJoin || join.JoinType == core.LeftOuterJoin {
@@ -228,7 +287,6 @@ func (n *JoinNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error
 					for _, sp := range colTracer.FindSourceParties(c.UniqueID) {
 						if payloadVisible[p][sp] {
 							cc.SetLevelForParty(p, ccl.Plain)
-							logrus.Infof("set '%+v' from PLAINTEXT_AS_JOIN_PAYLOAD to PLAINTEXT for %s", c, p)
 							break
 						}
 					}
@@ -239,11 +297,23 @@ func (n *JoinNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error
 		result[c.UniqueID] = cc
 	}
 
+	for keyCol, keyCc := range joinKeyCCLs {
+		parentCol := colTracer.GetRootArg(keyCol)
+		if _, ok := result[parentCol]; ok {
+			result[parentCol] = keyCc
+		}
+	}
+
 	n.ccl = result
 	return nil
 }
 
 func (n *SelectionNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
+	sel, ok := n.lp.(*core.LogicalSelection)
+	if !ok {
+		return fmt.Errorf("assert failed while selectionNode buildCCL, expected: core.LogicalSelection, actual: %T", n.lp)
+	}
+
 	if err := n.buildChildCCL(ctx, colTracer); err != nil {
 		return err
 	}
@@ -252,13 +322,11 @@ func (n *SelectionNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) 
 		return fmt.Errorf("buildCCL for SelectionNode: %v", err)
 	}
 
-	sel, ok := n.lp.(*core.LogicalSelection)
-	if !ok {
-		return fmt.Errorf("assert failed while selectionNode buildCCL, expected: core.LogicalSelection, actual: %T", n.lp)
-	}
-	for i, expr := range sel.Conditions {
+	var newConditions []expression.Expression
+	for _, expr := range sel.Conditions {
 		col, ok := expr.(*expression.Column)
 		if (!ok) || (!col.UseAsThreshold) {
+			newConditions = append(newConditions, expr)
 			continue
 		}
 		if ctx.GroupByThreshold <= 0 {
@@ -273,13 +341,11 @@ func (n *SelectionNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) 
 			if err != nil {
 				return fmt.Errorf("SelectionNode buildCCL: %s", err)
 			}
-			sel.Conditions[i] = newExpr
+			newConditions = append(newConditions, newExpr)
 			sel.AffectedByGroupThreshold = true
-		} else {
-			// remove the threshold condition, may cause empty selection node
-			sel.Conditions = append(sel.Conditions[:i], sel.Conditions[i+1:]...)
 		}
 	}
+	sel.Conditions = newConditions
 	if len(sel.Conditions) == 0 {
 		n.ccl = childCCL
 		return nil
@@ -330,6 +396,11 @@ func extractChildCCL(n logicalNode) (map[int64]*ccl.CCL, error) {
 }
 
 func (n *ApplyNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
+	apply, ok := n.lp.(*core.LogicalApply)
+	if !ok {
+		return fmt.Errorf("assert failed while applyNode buildCCL, expected: core.LogicalApply, actual: %T", n.lp)
+	}
+
 	if err := n.buildChildCCL(ctx, colTracer); err != nil {
 		return err
 	}
@@ -337,13 +408,13 @@ func (n *ApplyNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) erro
 	if err != nil {
 		return fmt.Errorf("buildCCL for ApplyNode: %v", err)
 	}
-	apply, ok := n.lp.(*core.LogicalApply)
-	if !ok {
-		return fmt.Errorf("assert failed while applyNode buildCCL, expected: core.LogicalApply, actual: %T", n.lp)
+
+	// no conditions, regard the child ccl as the result ccl
+	if len(apply.OtherConditions) == 0 && len(apply.EqualConditions) == 0 {
+		n.ccl = childCCL
+		return nil
 	}
-	if len(apply.OtherConditions)+len(apply.EqualConditions) != 1 {
-		return fmt.Errorf("fail to check conditions: Apply.buildCCL doesn't support condition other:%s, equal:%s", apply.OtherConditions, apply.EqualConditions)
-	}
+
 	var sFunc *expression.ScalarFunction
 	if len(apply.OtherConditions) > 0 {
 		ok := false
@@ -394,6 +465,11 @@ func SetAllPlainWhenLevelGroupBy(cc *ccl.CCL) {
 }
 
 func (n *AggregationNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
+	agg, ok := n.lp.(*core.LogicalAggregation)
+	if !ok {
+		return fmt.Errorf("assert failed while aggregationNode buildCCL, expected: core.LogicalAggregation, actual: %T", n.lp)
+	}
+
 	if err := n.buildChildCCL(ctx, colTracer); err != nil {
 		return err
 	}
@@ -401,10 +477,7 @@ func (n *AggregationNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer
 	if err != nil {
 		return fmt.Errorf("buildCCL for AggregationNode: %v", err)
 	}
-	agg, ok := n.lp.(*core.LogicalAggregation)
-	if !ok {
-		return fmt.Errorf("assert failed while aggregationNode buildCCL, expected: core.LogicalAggregation, actual: %T", n.lp)
-	}
+
 	childCCLAfterGroupBy := make(map[int64]*ccl.CCL)
 	for id, cc := range childCCL {
 		childCCLAfterGroupBy[id] = cc.Clone()
@@ -497,13 +570,15 @@ func (n *AggregationNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer
 }
 
 func (n *UnionAllNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
-	if err := n.buildChildCCL(ctx, colTracer); err != nil {
-		return err
-	}
 	union, ok := n.lp.(*core.LogicalUnionAll)
 	if !ok {
 		return fmt.Errorf("assert failed while buildCCL, expected: *core.LogicalUnionAll, actual: %T", n.lp)
 	}
+
+	if err := n.buildChildCCL(ctx, colTracer); err != nil {
+		return err
+	}
+
 	result := map[int64]*ccl.CCL{}
 	var ccls []*ccl.CCL
 	for _, child := range n.Children() {
@@ -551,7 +626,17 @@ func (n *LimitNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) erro
 }
 
 func (n *SortNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
-	return fmt.Errorf("sort function not supported yet")
+	if err := n.buildChildCCL(ctx, colTracer); err != nil {
+		return err
+	}
+
+	childCCL, err := extractChildCCL(n)
+	if err != nil {
+		return fmt.Errorf("buildCCL for SortNode: %v", err)
+	}
+
+	n.ccl = childCCL
+	return nil
 }
 
 func (n *WindowNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
@@ -574,17 +659,17 @@ func (n *WindowNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) err
 }
 
 func (n *WindowNode) buildRankWindowCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
-	if err := n.buildChildCCL(ctx, colTracer); err != nil {
-		return err
-	}
-
-	childCCL, err := extractChildCCL(n)
-	if err != nil {
-		return fmt.Errorf("buildRankWindowCCL: failed to build child ccl for child node of WindowNode: %v", err)
-	}
 	window, ok := n.lp.(*core.LogicalWindow)
 	if !ok {
 		return fmt.Errorf("buildRankWindowCCL: assert failed while windowNode buildCCL, expected: core.LogicalWindow, actual: %T", n.lp)
+	}
+
+	if err := n.buildChildCCL(ctx, colTracer); err != nil {
+		return err
+	}
+	childCCL, err := extractChildCCL(n)
+	if err != nil {
+		return fmt.Errorf("buildRankWindowCCL: failed to build child ccl for child node of WindowNode: %v", err)
 	}
 
 	if len(window.WindowFuncDescs) != 1 {
@@ -638,4 +723,15 @@ func (n *WindowNode) buildRankWindowCCL(ctx *ccl.Context, colTracer *ccl.ColumnT
 
 func (n *WindowNode) buildAggWindowCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
 	return fmt.Errorf("buildAggWindowCCL: agg window does not support yet")
+}
+
+func (m *MaxOneRowNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
+	m.buildChildCCL(ctx, colTracer)
+	childCCL, err := extractChildCCL(m)
+	if err != nil {
+		return err
+	}
+
+	m.ccl = childCCL
+	return nil
 }

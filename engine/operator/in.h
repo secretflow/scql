@@ -43,6 +43,7 @@ class In : public Operator {
   static constexpr char kRevealToAttr[] = "reveal_to";
 
   static constexpr char kUbPsiServerHint[] = "ub_psi_server_hint";
+  const static std::vector<InType> ImplementedInTypes;
 
   const std::string& Type() const override;
 
@@ -55,11 +56,12 @@ class In : public Operator {
   static void PsiIn(ExecContext* ctx);
   static void LocalIn(ExecContext* ctx);
   static void EcdhPsiIn(ExecContext* ctx);
+  static void Rr22PsiIn(ExecContext* ctx);
   static void OprfPsiIn(ExecContext* ctx, bool is_server,
                         std::optional<util::PsiSizeInfo> = {});
 
-  static void ValidateInputAndOutputForPsi(ExecContext* ctx);
-  static void ValidatePartyCodesForPsi(ExecContext* ctx);
+  static void ValidateInputAndOutput(ExecContext* ctx);
+  static void ValidatePartyCodes(ExecContext* ctx);
 
   // oprf psi
   static bool IsOprfServerAccordToHint(ExecContext* ctx);

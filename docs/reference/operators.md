@@ -29,6 +29,108 @@ Definition: return the value of arc cosine function
 
 
 
+### `ASin`
+
+Definition: return the value of arc sine function
+
+**Inputs:**
+
+1. `In`(single, T): the expression pass to arc sine function
+
+
+**Outputs:**
+
+1. `Out`(single, T): Result
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: public,private,secret
+
+
+
+### `ATan`
+
+Definition: return the value of arc tangent function
+
+**Inputs:**
+
+1. `In`(single, T): the expression pass to arc tangent function
+
+
+**Outputs:**
+
+1. `Out`(single, T): Result
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: public,private,secret
+
+
+
+### `ATan2`
+
+Definition: Out = Left `ATan2` Right
+
+**Inputs:**
+
+1. `Left`(variadic, T): First operand.
+
+1. `Right`(variadic, T1): Second operand.
+
+
+**Outputs:**
+
+1. `Out`(variadic, T2): Output Tensor.
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: public,private,secret
+
+1. `T1`: public,private,secret
+
+1. `T2`: private,secret
+
+
+
+### `Abs`
+
+Definition: return the value of Abs function
+
+**Inputs:**
+
+1. `In`(single, T): the expression pass to Abs function
+
+
+**Outputs:**
+
+1. `Out`(single, T): Result
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: public,private,secret
+
+
+
 ### `Add`
 
 Definition: Out = Left `Add` Right  
@@ -56,6 +158,44 @@ Definition: Out = Left `Add` Right
 1. `T1`: public,private,secret
 
 1. `T2`: private,secret
+
+
+
+### `ArrowFunc`
+
+Definition: Call arrow functions to finish calculation.
+Example:
+
+```python
+In = {{0, 1, NULL}}
+func_name = "ifnull"
+Out = {{false, false, true}}
+```
+
+
+**Inputs:**
+
+1. `In`(variadic, T): Input tensors.
+
+
+**Outputs:**
+
+1. `Out`(variadic, T): Output tensors.
+
+
+
+**Attributes:**
+
+1. `func_name`: the name of arrow function, e.g: add/ifnull/...
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: private
 
 
 
@@ -185,6 +325,30 @@ Definition: Cast Input tensor's data type to Output tensor's.
 **Outputs:**  
 
 1. `Out`(single, T): Output tensor.
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: public,private,secret
+
+
+
+### `Ceil`
+
+Definition: return the value of Ceil function
+
+**Inputs:**
+
+1. `In`(single, T): the expression pass to Ceil function
+
+
+**Outputs:**
+
+1. `Out`(single, T): Result
 
 
 
@@ -376,6 +540,54 @@ Definition: return the value of cosine function
 
 
 
+### `Cot`
+
+Definition: return the value of cotangent function
+
+**Inputs:**
+
+1. `In`(single, T): the expression pass to cotangent function
+
+
+**Outputs:**
+
+1. `Out`(single, T): Result
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: public,private,secret
+
+
+
+### `Degrees`
+
+Definition: return the value of Degrees function
+
+**Inputs:**
+
+1. `In`(single, T): the expression pass to Degrees function
+
+
+**Outputs:**
+
+1. `Out`(single, T): Result
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: public,private,secret
+
+
+
 ### `Div`
 
 Definition: Out = Left `Div` Right  
@@ -483,6 +695,30 @@ Definition: Out = Left `Equal` Right
 
 
 
+### `Exp`
+
+Definition: return the value of Exp function
+
+**Inputs:**
+
+1. `In`(single, T): the expression pass to Exp function
+
+
+**Outputs:**
+
+1. `Out`(single, T): Result
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: public,private,secret
+
+
+
 ### `Filter`
 
 Definition: Given a boolean tensor Filter (its shape is [M]), and a number of tensors In
@@ -554,6 +790,30 @@ Out = [{"d", "b", "a"}, {3, 1, 0}]
 
 
 
+### `Floor`
+
+Definition: return the value of Floor function
+
+**Inputs:**
+
+1. `In`(single, T): the expression pass to Floor function
+
+
+**Outputs:**
+
+1. `Out`(single, T): Result
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: public,private,secret
+
+
+
 ### `Greater`
 
 Definition: Out = Left `Greater` Right  
@@ -611,6 +871,30 @@ Definition: Out = Left `GreaterEqual` Right
 1. `T1`: public,private,secret
 
 1. `T2`: private,secret
+
+
+
+### `Greatest`
+
+return the greatest value in the given expressions.
+
+**Inputs:**
+
+1. `In`(variadic, T): expressions passed for getting greatest value
+
+
+**Outputs:**
+
+1. `Out`(variadic, T): greatest value
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: public,private,secret
 
 
 
@@ -1253,18 +1537,42 @@ RightJoinIndex = {0,1,2,2,3} // shape:[K=5], rows after applied filter eq-join-l
 
 
 
+### `Least`
+
+return the least value in the given expressions.
+
+**Inputs:**
+
+1. `In`(variadic, T): expressions passed for getting least value
+
+
+**Outputs:**
+
+1. `Out`(variadic, T): least value
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: public,private,secret
+
+
+
 ### `Less`
 
-Definition: Out = Left `Less` Right  
+Definition: Out = Left `Less` Right
 
-**Inputs:**  
+**Inputs:**
 
 1. `Left`(variadic, T): First operand.
 
 1. `Right`(variadic, T1): Second operand.
 
 
-**Outputs:**  
+**Outputs:**
 
 1. `Out`(variadic, T2): Output Tensor.
 
@@ -1285,16 +1593,16 @@ Definition: Out = Left `Less` Right
 
 ### `LessEqual`
 
-Definition: Out = Left `LessEqual` Right  
+Definition: Out = Left `LessEqual` Right
 
-**Inputs:**  
+**Inputs:**
 
 1. `Left`(variadic, T): First operand.
 
 1. `Right`(variadic, T1): Second operand.
 
 
-**Outputs:**  
+**Outputs:**
 
 1. `Out`(variadic, T2): Output Tensor.
 
@@ -1324,24 +1632,96 @@ count = 2
 In = {a, b, c, d, e}
 Out = {b, c}
 ```
-  
 
-**Inputs:**  
+
+**Inputs:**
 
 1. `In`(variadic, T): Tensors to be limited.
 
 
-**Outputs:**  
+**Outputs:**
 
 1. `Out`(variadic, T): Output tensor.
 
 
 
-**Attributes:**  
+**Attributes:**
 
 1. `offset`: offset in limit
 
 1. `count`: count in limit
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: public,private,secret
+
+
+
+### `Ln`
+
+Definition: return the value of Ln function
+
+**Inputs:**
+
+1. `In`(single, T): the expression pass to Ln function
+
+
+**Outputs:**
+
+1. `Out`(single, T): Result
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: public,private,secret
+
+
+
+### `Log10`
+
+Definition: return the value of Log10 function
+
+**Inputs:**
+
+1. `In`(single, T): the expression pass to Log10 function
+
+
+**Outputs:**
+
+1. `Out`(single, T): Result
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: public,private,secret
+
+
+
+### `Log2`
+
+Definition: return the value of Log2 function
+
+**Inputs:**
+
+1. `In`(single, T): the expression pass to Log2 function
+
+
+**Outputs:**
+
+1. `Out`(single, T): Result
 
 
 
@@ -1846,6 +2226,36 @@ Out = [{1, 3, 5, 9, 0}, {9, 8, 15, 21, 5}]
 
 
 
+### `Pow`
+
+Definition: Out = Left `Pow` Right
+
+**Inputs:**
+
+1. `Left`(variadic, T): First operand.
+
+1. `Right`(variadic, T1): Second operand.
+
+
+**Outputs:**
+
+1. `Out`(variadic, T2): Output Tensor.
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: public,private,secret
+
+1. `T1`: public,private,secret
+
+1. `T2`: private,secret
+
+
+
 ### `Publish`
 
 Definition: This operator publishes the DAG results.  
@@ -1867,6 +2277,30 @@ Definition: This operator publishes the DAG results.
 **TensorStatus(ShareType) Constraints:**
 
 1. `T`: private
+
+
+
+### `Radians`
+
+Definition: return the value of Radians function
+
+**Inputs:**
+
+1. `In`(single, T): the expression pass to Radians function
+
+
+**Outputs:**
+
+1. `Out`(single, T): Result
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: public,private,secret
 
 
 
@@ -2028,6 +2462,111 @@ Out = {21}
 
 
 
+### `Replicate`
+
+Replicate the Left with a given scale (rows of Right[0]) in interleaving way, when sending to the left party.
+And replicate the Right with a given scale (rows of Left[0]) in non-interleaving way, when sending to the right party.
+Output the replication result Out. Example:
+
+```python
+Left = {a, b, c, d} # i.e. scale = 4
+Right = {0, 1, 2} # i.e. scale = 3
+sending to the interleaving party:
+  LeftOut = {a, b, c, d, a, b, c, d, a, b, c, d}
+the other party:
+  RightOut = {0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2}
+```
+
+
+**Inputs:**
+
+1. `Left`(variadic, T): Left tensors to be replicated.
+
+1. `Right`(variadic, T): Right tensors to be replicated.
+
+
+**Outputs:**
+
+1. `LeftOut`(variadic, T): Left Output tensors.
+
+1. `RightOut`(variadic, T): Right Output tensors.
+
+
+
+**Attributes:**
+
+1. `input_party_codes`: List of parties the inputs belong to([PartyCodeLeft, PartyCodeRight])
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: private
+
+
+
+### `Round`
+
+Definition: return the value of Round function
+
+**Inputs:**
+
+1. `In`(single, T): the expression pass to Round function
+
+
+**Outputs:**
+
+1. `Out`(single, T): Result
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: public,private,secret
+
+
+
+### `RowNumber`
+
+Definition: return the row number in each partition
+
+**Inputs:**
+
+1. `Key`(variadic, T): the tensors which used for sorting in partition, e.g. [2,0,4,2,3,7]
+
+1. `PartitionId`(single, T): the partitioned id, e.g. [0,0,0,1,1,1], the first 3 in a group and the others are in another group
+
+1. `PartitionNum`(single, T): the partitioned num, e.g. [2]
+
+
+**Outputs:**
+
+1. `Out`(single, T): row number output, e.g. [2,1,3,1,2,3]
+
+
+
+**Attributes:**
+
+1. `reverse`: string array consits of "0" and "1", "0" means this input tensor sort by ascending, "1" means this tensor sort by descending.
+		e.g. ["0","1"] means the first input key sort by ascending, the second sort by descending
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: public,private,secret
+
+
+
 ### `RunSQL`
 
 Definition: Run a SQL statement and return a list of tensors in private status  
@@ -2057,6 +2596,49 @@ No input parameter.
 **TensorStatus(ShareType) Constraints:**
 
 1. `T`: private
+
+
+
+### `SecretJoin`
+
+Definition: inner join the left and right payloads based on the left and right keys.
+Example:
+
+```python
+LeftKey = {{1,2,1,3,5}} // shape:[5*1]
+RightKey = {{1,2,1,2}}  // shape:[4*1]
+Left = {{0,1,2,3,4}}
+Right = {{0,1,2,3}}
+LeftOutput = {0,0,2,2,1,1}
+RightOutput = {0,2,0,2,1,3}
+```
+
+
+**Inputs:**
+
+1. `LeftKey`(variadic, T): Left keys for join
+
+1. `RightKey`(variadic, T): Right keys for join
+
+1. `Left`(variadic, T): Left payloads for join
+
+1. `Right`(variadic, T): Right payloads for join
+
+
+**Outputs:**
+
+1. `LeftOutput`(variadic, T): Left payloads after join
+
+1. `RightOutput`(variadic, T): Right payloads after join
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: secret
 
 
 
@@ -2205,6 +2787,54 @@ Out = [{1, 2, 3, 4}, {2, 3, 1, 4}, {8, 7, 9, 6}]
 **TensorStatus(ShareType) Constraints:**
 
 1. `T`: private,secret
+
+
+
+### `Sqrt`
+
+Definition: return the value of Sqrt function
+
+**Inputs:**
+
+1. `In`(single, T): the expression pass to Sqrt function
+
+
+**Outputs:**
+
+1. `Out`(single, T): Result
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: public,private,secret
+
+
+
+### `Tan`
+
+Definition: return the value of tangent function
+
+**Inputs:**
+
+1. `In`(single, T): the expression pass to tangent function
+
+
+**Outputs:**
+
+1. `Out`(single, T): Result
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: public,private,secret
 
 
 

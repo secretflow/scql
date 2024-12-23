@@ -210,4 +210,25 @@ TensorPtr Mod::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
   return TensorFrom(result.ValueOrDie().chunked_array());
 }
 
+// ===========================
+//   Pow impl
+// ===========================
+const std::string Pow::kOpType("Pow");
+const std::string& Pow::Type() const { return kOpType; }
+
+spu::Value Pow::ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
+                             const spu::Value& rhs) {
+  return spu::kernel::hlo::Power(sctx, lhs, rhs);
+}
+
+TensorPtr Pow::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
+  auto left = lhs.ToArrowChunkedArray();
+  auto right = rhs.ToArrowChunkedArray();
+
+  auto result = arrow::compute::Power(left, right);
+  YACL_ENFORCE(result.ok(),
+               "caught error while invoking arrow pow function: {}",
+               result.status().ToString());
+  return TensorFrom(result.ValueOrDie().chunked_array());
+}
 }  // namespace scql::engine::op

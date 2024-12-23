@@ -481,8 +481,7 @@ func (suite *ServerTestSuit) TestServer() {
 			// prepare session for reporting
 			app := suite.appAlice
 			session := NewTestSession(app)
-			app.AddSession("job_id", session)
-			err := app.PersistSessionInfo(session)
+			err := app.AddSession(session)
 			suite.NoError(err)
 		}
 		reqStr := `{"status":{"code": 0, "message": "ok"}, "job_id": "job_id", "num_rows_affected": 10}`
@@ -510,13 +509,8 @@ func (suite *ServerTestSuit) TestServer() {
 
 	// Cancel Query: alice cancel query
 	{
-		sessionAlice := NewTestSession(suite.appAlice)
-		suite.appAlice.AddSession("job_id", NewTestSession(suite.appAlice))
-		suite.appAlice.PersistSessionInfo(sessionAlice)
-
-		sessionBob := NewTestSession(suite.appBob)
-		suite.appBob.AddSession("job_id", NewTestSession(suite.appBob))
-		suite.appBob.PersistSessionInfo(sessionBob)
+		suite.appAlice.AddSession(NewTestSession(suite.appAlice))
+		suite.appBob.AddSession(NewTestSession(suite.appBob))
 
 		reqStr := `{"job_id":"job_id"}`
 		resp, err := httpClient.Post(urlutil.JoinHostPath(urlAlice, constant.CancelQueryPath),
@@ -530,10 +524,12 @@ func (suite *ServerTestSuit) TestServer() {
 		resp.Body.Close()
 		// Check session release
 		time.Sleep(20 * time.Millisecond)
-		_, ok := suite.appAlice.GetSession("job_id")
-		suite.False(ok)
-		_, ok = suite.appBob.GetSession("job_id")
-		suite.False(ok)
+		sess, err := suite.appAlice.GetSessionInfo("job_id")
+		suite.NoError(err)
+		suite.Equal(int8(storage.SessionCanceled), sess.Status)
+		sess, err = suite.appBob.GetSessionInfo("job_id")
+		suite.NoError(err)
+		suite.Equal(int8(storage.SessionCanceled), sess.Status)
 	}
 
 	// CheckAndUpdateStatus: alice check and update project status
@@ -595,7 +591,7 @@ func buildTestApp(party string, ports []int, partyInfoPath, privatePemPath strin
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create broker db: %v", err)
 	}
-	metaMgr := storage.NewMetaManager(db, false)
+	metaMgr := storage.NewMetaManager(db)
 	err = metaMgr.Bootstrap()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to boot strap meta manager: %v", err)
@@ -660,6 +656,7 @@ func NewTestSession(app *application.App) *application.Session {
 		SessionOptions: &application.SessionOptions{
 			SessionExpireSeconds: 86400,
 		},
+		CreatedAt: time.Now(),
 	}
 	session, _ := application.NewSession(context.Background(), info, app, false, false)
 	session.Engine = &MockEngineInstance{}

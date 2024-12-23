@@ -57,8 +57,11 @@ cc_library(
         "@com_github_msgpack_msgpack//:msgpack",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
-        "@psi//psi/ecdh:ecdh_oprf_psi",
+        "@psi//psi/ecdh/ub_psi:ecdh_oprf_psi",
+        "@psi//psi/rr22:rr22_psi",
+        "@psi//psi/rr22:common",
         "@psi//psi/utils:batch_provider",
+        "@psi//psi/utils:batch_provider_impl",
         "@psi//psi/utils:ec_point_store",
         "@psi//psi/utils:ub_psi_cache",
     ],
@@ -98,6 +101,16 @@ cc_test(
         ":psi_helper",
         "//engine/core:primitive_builder",
         "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_binary(
+    name = "psi_helper_bench",
+    srcs = ["psi_helper_bench.cc"],
+    deps = [
+        ":psi_helper",
+        "//engine/core:primitive_builder",
+        "@com_github_google_benchmark//:benchmark_main",
     ],
 )
 
@@ -207,5 +220,22 @@ cc_library(
         ":tensor_util",
         "//engine/framework:exec",
         "//engine/util:spu_io",
+    ],
+)
+
+cc_library(
+    name = "prefix_sum",
+    srcs = ["prefix_sum.cc"],
+    hdrs = ["prefix_sum.h"],
+    deps = [
+        "@spulib//libspu/kernel/hlo:indexing",
+    ],
+)
+
+cc_library(
+    name = "progress_util",
+    hdrs = ["progress_util.h"],
+    deps = [
+        "@com_github_fmtlib_fmt//:fmtlib",
     ],
 )

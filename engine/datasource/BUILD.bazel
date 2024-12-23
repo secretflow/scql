@@ -40,6 +40,7 @@ cc_library(
         "//engine/core:tensor_constructor",
         "//engine/util:spu_io",
         "@org_apache_arrow//:arrow",
+        "@org_apache_arrow//:arrow_flight",
     ],
 )
 
@@ -160,6 +161,7 @@ cc_library(
         ":csvdb_adaptor_factory",
         ":datasource_adaptor",
         ":datasource_cc_proto",
+        ":dp_adaptor_factory",
         ":odbc_adaptor_factory",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/synchronization",
@@ -247,6 +249,57 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "dp_adaptor",
+    srcs = ["dp_adaptor.cc"],
+    hdrs = ["dp_adaptor.h"],
+    deps = [
+        ":datasource_adaptor",
+        ":datasource_cc_proto",
+        ":duckdb_wrapper",
+        "//api/v1:column_cpp_proto",
+        "//engine/core:tensor_constructor",
+        "//engine/exe:flags",
+        "//engine/util:spu_io",
+        "//engine/util:tensor_util",
+        "@com_google_absl//absl/strings",
+        "@dataproxy//dataproxy_sdk/cc:data_proxy_stream",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+cc_binary(
+    name = "dp_adaptor_kuscia_test",
+    srcs = ["dp_adaptor_kuscia_test.cc"],
+    deps = [
+        ":dp_adaptor",
+        "@com_google_absl//absl/debugging:failure_signal_handler",
+        "@com_google_absl//absl/debugging:symbolize",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/flags:parse",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+cc_test(
+    name = "dp_adaptor_test",
+    srcs = ["dp_adaptor_test.cc"],
+    deps = [
+        ":dp_adaptor",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "dp_adaptor_factory",
+    srcs = ["dp_adaptor_factory.cc"],
+    hdrs = ["dp_adaptor_factory.h"],
+    deps = [
+        ":datasource_adaptor_factory",
+        ":dp_adaptor",
+    ],
+)
+
 cc_test(
     name = "csvdb_adaptor_test",
     srcs = ["csvdb_adaptor_test.cc"],
@@ -305,6 +358,7 @@ cc_library(
     deps = [
         ":csvdb_conf_cc_proto",
         ":router",
+        "//engine/util:filepath_helper",
         "@com_github_brpc_brpc//:bthread",
         "@com_github_brpc_brpc//:butil",
         "@com_github_grpc_grpc//:grpc++",

@@ -15,6 +15,7 @@
 #pragma once
 
 #include "engine/framework/operator.h"
+#include "engine/operator/binary_base.h"
 
 namespace scql::engine::op {
 class TrigonometricFunction : public Operator {
@@ -60,6 +61,46 @@ class ACosine : public TrigonometricFunction {
   void ExecuteInPlain(ExecContext* ctx) override;
   spu::Value ComputeOnSpu(spu::SPUContext* sctx,
                           const spu::Value& value) override;
+};
+
+class ASine : public TrigonometricFunction {
+ public:
+  static const std::string kOpType;
+  const std::string& Type() const override;
+  void ExecuteInPlain(ExecContext* ctx) override;
+  spu::Value ComputeOnSpu(spu::SPUContext* sctx,
+                          const spu::Value& value) override;
+};
+
+class Tan : public TrigonometricFunction {
+ public:
+  static const std::string kOpType;
+  const std::string& Type() const override;
+  void ExecuteInPlain(ExecContext* ctx) override;
+  spu::Value ComputeOnSpu(spu::SPUContext* sctx,
+                          const spu::Value& value) override;
+};
+
+class ATan : public TrigonometricFunction {
+ public:
+  static const std::string kOpType;
+  const std::string& Type() const override;
+  void ExecuteInPlain(ExecContext* ctx) override;
+  spu::Value ComputeOnSpu(spu::SPUContext* sctx,
+                          const spu::Value& value) override;
+};
+
+class ATan2 : public BinaryBase {
+ public:
+  static const std::string kOpType;
+  const std::string& Type() const override;
+
+ protected:
+  void ValidateIoDataTypes(ExecContext* ctx) override;
+
+  spu::Value ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& left,
+                          const spu::Value& right) override;
+  TensorPtr ComputeInPlain(const Tensor& left, const Tensor& right) override;
 };
 
 }  // namespace scql::engine::op

@@ -64,6 +64,42 @@ struct SpuPtBufferViewConverter {
 
 }  // namespace
 
+spu::DataType GetWiderSpuType(const spu::DataType& t1,
+                              const spu::DataType& t2) {
+  std::unordered_map<spu::DataType, int> type_index{
+      // 1
+      {spu::DataType::DT_I1, 1},
+      // 8
+      {spu::DataType::DT_I8, 2},
+      {spu::DataType::DT_U8, 3},
+      // 16
+      {spu::DataType::DT_I16, 4},
+      {spu::DataType::DT_U16, 5},
+      {spu::DataType::DT_F16, 6},
+      // 32
+      {spu::DataType::DT_I32, 7},
+      {spu::DataType::DT_U32, 8},
+      {spu::DataType::DT_F32, 9},
+      // 64
+      {spu::DataType::DT_I64, 10},
+      {spu::DataType::DT_U64, 11},
+      {spu::DataType::DT_F64, 12}};
+
+  if (type_index.find(t1) == type_index.end()) {
+    return t2;
+  }
+
+  if (type_index.find(t2) == type_index.end()) {
+    return t1;
+  }
+
+  if (type_index[t1] > type_index[t2]) {
+    return t1;
+  } else {
+    return t2;
+  }
+}
+
 std::shared_ptr<arrow::Array> ConcatenateChunkedArray(
     const std::shared_ptr<arrow::ChunkedArray>& chunked_arr) {
   arrow::Result<std::shared_ptr<arrow::Array>> result;

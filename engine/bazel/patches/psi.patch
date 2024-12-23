@@ -1,0 +1,12 @@
+diff --git a/psi/utils/BUILD.bazel b/psi/utils/BUILD.bazel
+index c9ca51f..c1b642d 100644
+--- a/psi/utils/BUILD.bazel
++++ b/psi/utils/BUILD.bazel
+@@ -67,6 +67,7 @@ psi_cc_library(
+     hdrs = ["pb_helper.h"],
+     deps = [
+         ":io",
++        "@com_google_protobuf//:protobuf",
+         "@yacl//yacl/base:exception",
+     ],
+ )

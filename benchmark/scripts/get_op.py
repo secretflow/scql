@@ -27,21 +27,32 @@ def get_time(str):
     )
 
 
-def dump_csv(inputs, dump_file):
-    with open(dump_file, "w") as f:
-        f.write("op,duration_ms,start_time_s,running_time_s\n")
-        for p in inputs:
-            f.write(
-                "{}, {:.2f}, {:.0f}, {:.0f}\n".format(p[0], p[1] * 1000, p[2], p[3])
-            )
+def dump_csv(inputs, dump_dir, file_name):
+    for i, query_input in enumerate(inputs):
+        dump_file = os.path.join(os.path.join(dump_dir, f"query_{i}"), file_name)
+        with open(dump_file, "w") as f:
+            f.write("op,duration_ms,start_time_s,running_time_s\n")
+            for p in query_input:
+                f.write(
+                    "{}, {:.2f}, {:.0f}, {:.0f}\n".format(p[0], p[1] * 1000, p[2], p[3])
+                )
 
 
 def get_time_list(file):
     start = []
     end = []
+    split_start = []
+    split_end = []
     with open(file, "r") as f:
         line = f.readline()
         while line:
+            if "report success" in line:
+                start.append(split_start)
+                end.append(split_end)
+                split_start = []
+                split_end = []
+                line = f.readline()
+                continue
             times = line.split(" [info]")
             if len(times) > 1:
                 times[0] = times[0].strip("\n").strip(" ")
@@ -52,7 +63,7 @@ def get_time_list(file):
                     re.M | re.I,
                 )
                 if matchObj:
-                    start.append(
+                    split_start.append(
                         (get_time(times[0].strip("\n").strip(" ")), matchObj.group(1))
                     )
 
@@ -63,28 +74,31 @@ def get_time_list(file):
                     re.M | re.I,
                 )
                 if matchObj:
-                    end.append(
+                    split_end.append(
                         (get_time(times[0].strip("\n").strip(" ")), matchObj.group(1))
                     )
             line = f.readline()
     return start, end
 
 
-def main(file, dump_file):
+def main(file, dump_dir, file_name):
     start, end = get_time_list(file)
     cost = []
-    for i, t in enumerate(start):
-        assert start[i][1] == end[i][1]
-        cost.append(
-            (
-                start[i][1],
-                end[i][0] - start[i][0],
-                start[i][0],
-                start[i][0] - start[0][0],
+    for i, split_start in enumerate(start):
+        split_cost = []
+        for j, _ in enumerate(split_start):
+            assert start[i][j][1] == end[i][j][1]
+            split_cost.append(
+                (
+                    start[i][j][1],
+                    end[i][j][0] - start[i][j][0],
+                    start[i][j][0],
+                    start[i][j][0] - start[i][0][0],
+                )
             )
-        )
-    dump_csv(cost, dump_file)
+        cost.append(split_cost)
+    dump_csv(cost, dump_dir, file_name)
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2])
+    main(sys.argv[1], sys.argv[2], sys.argv[3])

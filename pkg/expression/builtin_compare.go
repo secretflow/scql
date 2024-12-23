@@ -16,6 +16,7 @@ package expression
 import (
 	"fmt"
 	"math"
+	"strings"
 
 	"github.com/secretflow/scql/pkg/parser/ast"
 	"github.com/secretflow/scql/pkg/parser/mysql"
@@ -851,6 +852,8 @@ func (c *greatestFunctionClass) getFunction(ctx sessionctx.Context, args []Expre
 	case types.ETString:
 		sig = &builtinGreatestStringSig{bf}
 		//sig.setPbCode(tipb.ScalarFuncSig_GreatestString)
+	case types.ETDatetime, types.ETTimestamp:
+		sig = &builtinGreatestTimeSig{bf}
 	default:
 		//sig = &builtinGreatestTimeSig{bf}
 		//sig.setPbCode(tipb.ScalarFuncSig_GreatestTime)
@@ -993,52 +996,52 @@ func (b *builtinGreatestStringSig) evalString(row chunk.Row) (max string, isNull
 	return
 }
 
-// type builtinGreatestTimeSig struct {
-// 	baseBuiltinFunc
-// }
+type builtinGreatestTimeSig struct {
+	baseBuiltinFunc
+}
 
-// func (b *builtinGreatestTimeSig) Clone() builtinFunc {
-// 	newSig := &builtinGreatestTimeSig{}
-// 	newSig.cloneFrom(&b.baseBuiltinFunc)
-// 	return newSig
-// }
+func (b *builtinGreatestTimeSig) Clone() builtinFunc {
+	newSig := &builtinGreatestTimeSig{}
+	newSig.cloneFrom(&b.baseBuiltinFunc)
+	return newSig
+}
 
-// // evalString evals a builtinGreatestTimeSig.
-// // See http://dev.mysql.com/doc/refman/5.7/en/comparison-operators.html#function_greatest
-// func (b *builtinGreatestTimeSig) evalString(row chunk.Row) (res string, isNull bool, err error) {
-// 	var (
-// 		strRes  string
-// 		timeRes types.Time
-// 	)
-// 	sc := b.ctx.GetSessionVars().StmtCtx
-// 	for i := 0; i < len(b.args); i++ {
-// 		v, isNull, err := b.args[i].EvalString(b.ctx, row)
-// 		if isNull || err != nil {
-// 			return "", true, err
-// 		}
-// 		t, err := types.ParseDatetime(sc, v)
-// 		if err != nil {
-// 			if err = handleInvalidTimeError(b.ctx, err); err != nil {
-// 				return v, true, err
-// 			}
-// 		} else {
-// 			v = t.String()
-// 		}
-// 		// In MySQL, if the compare result is zero, than we will try to use the string comparison result
-// 		if i == 0 || strings.Compare(v, strRes) > 0 {
-// 			strRes = v
-// 		}
-// 		if i == 0 || t.Compare(timeRes) > 0 {
-// 			timeRes = t
-// 		}
-// 	}
-// 	if timeRes.IsZero() {
-// 		res = strRes
-// 	} else {
-// 		res = timeRes.String()
-// 	}
-// 	return res, false, nil
-// }
+// evalString evals a builtinGreatestTimeSig.
+// See http://dev.mysql.com/doc/refman/5.7/en/comparison-operators.html#function_greatest
+func (b *builtinGreatestTimeSig) evalString(row chunk.Row) (res string, isNull bool, err error) {
+	var (
+		strRes  string
+		timeRes types.Time
+	)
+	sc := b.ctx.GetSessionVars().StmtCtx
+	for i := 0; i < len(b.args); i++ {
+		v, isNull, err := b.args[i].EvalString(b.ctx, row)
+		if isNull || err != nil {
+			return "", true, err
+		}
+		t, err := types.ParseDatetime(sc, v)
+		if err != nil {
+			if err = handleInvalidTimeError(b.ctx, err); err != nil {
+				return v, true, err
+			}
+		} else {
+			v = t.String()
+		}
+		// In MySQL, if the compare result is zero, than we will try to use the string comparison result
+		if i == 0 || strings.Compare(v, strRes) > 0 {
+			strRes = v
+		}
+		if i == 0 || t.Compare(timeRes) > 0 {
+			timeRes = t
+		}
+	}
+	if timeRes.IsZero() {
+		res = strRes
+	} else {
+		res = timeRes.String()
+	}
+	return res, false, nil
+}
 
 type leastFunctionClass struct {
 	baseFunctionClass
@@ -1080,6 +1083,8 @@ func (c *leastFunctionClass) getFunction(ctx sessionctx.Context, args []Expressi
 	case types.ETString:
 		sig = &builtinLeastStringSig{bf}
 		//sig.setPbCode(tipb.ScalarFuncSig_LeastString)
+	case types.ETDatetime, types.ETTimestamp:
+		sig = &builtinLeastTimeSig{bf}
 	default:
 		//sig = &builtinLeastTimeSig{bf}
 		//sig.setPbCode(tipb.ScalarFuncSig_LeastTime)
@@ -1209,53 +1214,53 @@ func (b *builtinLeastStringSig) evalString(row chunk.Row) (min string, isNull bo
 	return
 }
 
-// type builtinLeastTimeSig struct {
-// 	baseBuiltinFunc
-// }
+type builtinLeastTimeSig struct {
+	baseBuiltinFunc
+}
 
-// func (b *builtinLeastTimeSig) Clone() builtinFunc {
-// 	newSig := &builtinLeastTimeSig{}
-// 	newSig.cloneFrom(&b.baseBuiltinFunc)
-// 	return newSig
-// }
+func (b *builtinLeastTimeSig) Clone() builtinFunc {
+	newSig := &builtinLeastTimeSig{}
+	newSig.cloneFrom(&b.baseBuiltinFunc)
+	return newSig
+}
 
-// // evalString evals a builtinLeastTimeSig.
-// // See http://dev.mysql.com/doc/refman/5.7/en/comparison-operators.html#functionleast
-// func (b *builtinLeastTimeSig) evalString(row chunk.Row) (res string, isNull bool, err error) {
-// 	var (
-// 		// timeRes will be converted to a strRes only when the arguments is a valid datetime value.
-// 		strRes  string     // Record the strRes of each arguments.
-// 		timeRes types.Time // Record the time representation of a valid arguments.
-// 	)
-// 	sc := b.ctx.GetSessionVars().StmtCtx
-// 	for i := 0; i < len(b.args); i++ {
-// 		v, isNull, err := b.args[i].EvalString(b.ctx, row)
-// 		if isNull || err != nil {
-// 			return "", true, err
-// 		}
-// 		t, err := types.ParseDatetime(sc, v)
-// 		if err != nil {
-// 			if err = handleInvalidTimeError(b.ctx, err); err != nil {
-// 				return v, true, err
-// 			}
-// 		} else {
-// 			v = t.String()
-// 		}
-// 		if i == 0 || strings.Compare(v, strRes) < 0 {
-// 			strRes = v
-// 		}
-// 		if i == 0 || t.Compare(timeRes) < 0 {
-// 			timeRes = t
-// 		}
-// 	}
+// evalString evals a builtinLeastTimeSig.
+// See http://dev.mysql.com/doc/refman/5.7/en/comparison-operators.html#functionleast
+func (b *builtinLeastTimeSig) evalString(row chunk.Row) (res string, isNull bool, err error) {
+	var (
+		// timeRes will be converted to a strRes only when the arguments is a valid datetime value.
+		strRes  string     // Record the strRes of each arguments.
+		timeRes types.Time // Record the time representation of a valid arguments.
+	)
+	sc := b.ctx.GetSessionVars().StmtCtx
+	for i := 0; i < len(b.args); i++ {
+		v, isNull, err := b.args[i].EvalString(b.ctx, row)
+		if isNull || err != nil {
+			return "", true, err
+		}
+		t, err := types.ParseDatetime(sc, v)
+		if err != nil {
+			if err = handleInvalidTimeError(b.ctx, err); err != nil {
+				return v, true, err
+			}
+		} else {
+			v = t.String()
+		}
+		if i == 0 || strings.Compare(v, strRes) < 0 {
+			strRes = v
+		}
+		if i == 0 || t.Compare(timeRes) < 0 {
+			timeRes = t
+		}
+	}
 
-// 	if timeRes.IsZero() {
-// 		res = strRes
-// 	} else {
-// 		res = timeRes.String()
-// 	}
-// 	return res, false, nil
-// }
+	if timeRes.IsZero() {
+		res = strRes
+	} else {
+		res = timeRes.String()
+	}
+	return res, false, nil
+}
 
 // coalesceFunctionClass returns the first non-NULL value in the list,
 // or NULL if there are no non-NULL values.

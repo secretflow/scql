@@ -19,6 +19,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/secretflow/scql/pkg/interpreter/operator"
 	proto "github.com/secretflow/scql/pkg/proto-gen/scql"
 )
 
@@ -78,6 +79,10 @@ func (node *ExecutionNode) ToString() string {
 	}
 	sort.Strings(keys)
 	for _, k := range keys {
+		if k == operator.FuncOptAttr {
+			// avoid print serialized options
+			continue
+		}
 		fmt.Fprintf(&builder, "%s:%s,", k, node.Attributes[k].ToString())
 	}
 	fmt.Fprint(&builder, "],")

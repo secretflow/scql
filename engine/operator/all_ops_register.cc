@@ -17,6 +17,7 @@
 #include <mutex>
 
 #include "engine/operator/arithmetic.h"
+#include "engine/operator/arrow_func.h"
 #include "engine/operator/broadcast_to.h"
 #include "engine/operator/bucket.h"
 #include "engine/operator/case_when.h"
@@ -47,11 +48,14 @@
 #include "engine/operator/oblivious_group_mark.h"
 #include "engine/operator/publish.h"
 #include "engine/operator/reduce.h"
+#include "engine/operator/replicate.h"
 #include "engine/operator/run_sql.h"
+#include "engine/operator/secret_join.h"
 #include "engine/operator/shape.h"
 #include "engine/operator/shuffle.h"
 #include "engine/operator/sort.h"
 #include "engine/operator/trigonometric.h"
+#include "engine/operator/unary.h"
 #include "engine/operator/unique.h"
 #include "engine/operator/window.h"
 
@@ -78,6 +82,8 @@ void RegisterAllOpsImpl() {
 
   ADD_OPERATOR_TO_REGISTRY(Join);
   ADD_OPERATOR_TO_REGISTRY(FilterByIndex);
+  ADD_OPERATOR_TO_REGISTRY(SecretJoin);
+  ADD_OPERATOR_TO_REGISTRY(Replicate);
 
   ADD_OPERATOR_TO_REGISTRY(In);
   ADD_OPERATOR_TO_REGISTRY(Filter);
@@ -92,6 +98,7 @@ void RegisterAllOpsImpl() {
   ADD_OPERATOR_TO_REGISTRY(Div);
   ADD_OPERATOR_TO_REGISTRY(IntDiv);
   ADD_OPERATOR_TO_REGISTRY(Mod);
+  ADD_OPERATOR_TO_REGISTRY(Pow);
 
   ADD_OPERATOR_TO_REGISTRY(Equal);
   ADD_OPERATOR_TO_REGISTRY(NotEqual);
@@ -99,6 +106,8 @@ void RegisterAllOpsImpl() {
   ADD_OPERATOR_TO_REGISTRY(LessEqual);
   ADD_OPERATOR_TO_REGISTRY(GreaterEqual);
   ADD_OPERATOR_TO_REGISTRY(Greater);
+  ADD_OPERATOR_TO_REGISTRY(Greatest);
+  ADD_OPERATOR_TO_REGISTRY(Least);
 
   ADD_OPERATOR_TO_REGISTRY(Not);
   ADD_OPERATOR_TO_REGISTRY(LogicalAnd);
@@ -150,10 +159,28 @@ void RegisterAllOpsImpl() {
   ADD_OPERATOR_TO_REGISTRY(Sine);
   ADD_OPERATOR_TO_REGISTRY(Cosine);
   ADD_OPERATOR_TO_REGISTRY(ACosine);
+  ADD_OPERATOR_TO_REGISTRY(ASine);
+  ADD_OPERATOR_TO_REGISTRY(Tan);
+  ADD_OPERATOR_TO_REGISTRY(ATan);
+  ADD_OPERATOR_TO_REGISTRY(ATan2);
 
   ADD_OPERATOR_TO_REGISTRY(Bucket);
 
   ADD_OPERATOR_TO_REGISTRY(RowNumber);
+
+  ADD_OPERATOR_TO_REGISTRY(Abs);
+  ADD_OPERATOR_TO_REGISTRY(Ceil);
+  ADD_OPERATOR_TO_REGISTRY(Floor);
+  ADD_OPERATOR_TO_REGISTRY(Round);
+  ADD_OPERATOR_TO_REGISTRY(Radians);
+  ADD_OPERATOR_TO_REGISTRY(Degrees);
+  ADD_OPERATOR_TO_REGISTRY(Ln);
+  ADD_OPERATOR_TO_REGISTRY(Log10);
+  ADD_OPERATOR_TO_REGISTRY(Log2);
+  ADD_OPERATOR_TO_REGISTRY(Sqrt);
+  ADD_OPERATOR_TO_REGISTRY(Exp);
+
+  ADD_OPERATOR_TO_REGISTRY(ArrowFunc);
 }
 
 }  // namespace

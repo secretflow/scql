@@ -113,6 +113,9 @@ func (b *logicalNodeBuilder) build(lp core.LogicalPlan) (logicalNode, error) {
 	case *core.LogicalWindow:
 		expectChildNum = 1
 		ln = &WindowNode{baseNode: baseNode{lp: x, children: children}}
+	case *core.LogicalMaxOneRow:
+		expectChildNum = 1
+		ln = &MaxOneRowNode{baseNode: baseNode{lp: x, children: children}}
 	default:
 		return nil, fmt.Errorf("logicalNodeBuilder.build: unsupported logical plan type %T", lp)
 	}

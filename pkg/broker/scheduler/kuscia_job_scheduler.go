@@ -73,7 +73,11 @@ type KusciaJobSchedulerOption func(*kusciaJobScheduler)
 
 func WithAppImage(image string) KusciaJobSchedulerOption {
 	return func(k *kusciaJobScheduler) {
-		k.appImage = image
+		if image != "" {
+			k.appImage = image
+		} else {
+			logrus.Warnf("not support setting empty app image, keep origin '%s'", k.appImage)
+		}
 	}
 }
 
@@ -154,12 +158,12 @@ func (s *kusciaJobScheduler) Schedule(jobID string) (EngineInstance, error) {
 	pod, err := s.waitJobRunningAndGetEnginePod(kusciaJobID)
 	if err != nil {
 		if !s.keepJobAliveForDebug {
-			logrus.Infof("failed to wait for kuscia job %s tobe running, it will be deleted...", kusciaJobID)
+			logrus.Infof("failed to wait for kuscia job %s tobe running, reason: %v, it will be deleted...", kusciaJobID, err)
 			if err := deleteKusciaJob(context.TODO(), s.client, kusciaJobID); err != nil {
 				logrus.Warnf("failed to delete kuscia job %s: %v", kusciaJobID, err)
 			}
 		}
-		return nil, fmt.Errorf("failed to wait for kuscia job %s tobe running", kusciaJobID)
+		return nil, fmt.Errorf("failed to wait for kuscia job %s tobe running, reason: %v", kusciaJobID, err)
 	}
 	pod.JobId = jobID
 	logrus.Debugf("pod endpoint_for_self: %v, endpoint_for_peer: %v", pod.Endpoint, pod.EndpointForPeer)

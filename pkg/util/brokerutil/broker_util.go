@@ -66,7 +66,7 @@ func (b *TestAppBuilder) buildHandlerTestApp(partyCode, engineEndpoint string) (
 		ExchangeJobInfoRetryTimes:    3,
 		ExchangeJobInfoRetryInterval: time.Second,
 		Engine: config.EngineConfig{
-			ClientMode:    "HTTP",
+			ClientMode:    "http",
 			ClientTimeout: 1 * time.Second,
 			Protocol:      "http",
 			ContentType:   "application/json",
@@ -92,7 +92,8 @@ func (b *TestAppBuilder) buildHandlerTestApp(partyCode, engineEndpoint string) (
 	if err != nil {
 		return nil, err
 	}
-	metaMgr := storage.NewMetaManager(db, false)
+	metaMgr := storage.NewMetaManager(db)
+	metaMgr.Bootstrap()
 	return application.NewApp(partyMgr, metaMgr, &cfg)
 }
 

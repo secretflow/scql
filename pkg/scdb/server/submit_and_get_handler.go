@@ -36,12 +36,15 @@ import (
 	"github.com/secretflow/scql/pkg/interpreter"
 	"github.com/secretflow/scql/pkg/interpreter/graph"
 	"github.com/secretflow/scql/pkg/planner/core"
+	"github.com/secretflow/scql/pkg/planner/util"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/scdb/auth"
 	"github.com/secretflow/scql/pkg/scdb/config"
 	"github.com/secretflow/scql/pkg/scdb/storage"
 	"github.com/secretflow/scql/pkg/status"
 	"github.com/secretflow/scql/pkg/util/logutil"
 	"github.com/secretflow/scql/pkg/util/message"
+	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
 
 func (app *App) SubmitAndGetHandler(c *gin.Context) {
@@ -89,6 +92,7 @@ func (app *App) submitAndGet(ctx context.Context, req *scql.SCDBQueryRequest) *s
 	}
 
 	// authentication
+	auth.BindPartyAuthenticator(session, app.partyAuthenticator)
 	if err = session.authenticateUser(req.User); err != nil {
 		return newErrorSCDBQueryResultResponse(scql.Code_UNAUTHENTICATED, err.Error())
 	}
@@ -155,7 +159,11 @@ func (app *App) buildCompileRequest(ctx context.Context, s *session) (*scql.Comp
 		return nil, fmt.Errorf("failed to build catalog: %v", err)
 	}
 
-	securityConfig, err := buildSecurityConfig(s.GetSessionVars().Storage, issuerPartyCode, catalog.Tables)
+	intoParties, err := util.CollectIntoParties(s.request.GetQuery())
+	if err != nil {
+		return nil, fmt.Errorf("failed to collect select into parties from query: %v", err)
+	}
+	securityConfig, err := buildSecurityConfig(s.GetSessionVars().Storage, intoParties, issuerPartyCode, catalog.Tables)
 	if err != nil {
 		return nil, err
 	}
@@ -184,6 +192,7 @@ func (app *App) buildCompileRequest(ctx context.Context, s *session) (*scql.Comp
 			SecurityCompromise: &scql.SecurityCompromiseConfig{
 				RevealGroupMark:  app.config.SecurityCompromise.RevealGroupMark,
 				GroupByThreshold: groupByThreshold,
+				RevealGroupCount: app.config.SecurityCompromise.RevealGroupCount,
 			},
 			DumpExeGraph: true,
 		},
@@ -192,20 +201,17 @@ func (app *App) buildCompileRequest(ctx context.Context, s *session) (*scql.Comp
 	return req, nil
 }
 
-func buildSecurityConfig(store *gorm.DB, issuerPartyCode string, tables []*scql.TableEntry) (*scql.SecurityConfig, error) {
-	parties := make([]string, 0, len(tables))
+func buildSecurityConfig(store *gorm.DB, intoParties []string, issuerParty string, tables []*scql.TableEntry) (*scql.SecurityConfig, error) {
+	parties := append(intoParties, issuerParty)
 	for _, tbl := range tables {
 		if !tbl.IsView {
 			parties = append(parties, tbl.GetOwner().GetCode())
 		}
 	}
+	parties = sliceutil.SliceDeDup(parties)
 
 	var ccl []*scql.SecurityConfig_ColumnControl
-	foundQueryIssuer := false
 	for _, party := range parties {
-		if party == issuerPartyCode {
-			foundQueryIssuer = true
-		}
 		cc, err := collectCCLForParty(store, party, tables)
 		if err != nil {
 			return nil, err
@@ -213,14 +219,6 @@ func buildSecurityConfig(store *gorm.DB, issuerPartyCode string, tables []*scql.
 		ccl = append(ccl, cc...)
 	}
 
-	// SecurityConfig should contains the query issuer
-	if !foundQueryIssuer {
-		cc, err := collectCCLForParty(store, issuerPartyCode, tables)
-		if err != nil {
-			return nil, err
-		}
-		ccl = append(ccl, cc...)
-	}
 	return &scql.SecurityConfig{
 		ColumnControlList: ccl,
 	}, nil

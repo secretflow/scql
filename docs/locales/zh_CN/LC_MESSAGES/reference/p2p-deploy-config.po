@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-08-05 10:55+0800\n"
+"POT-Creation-Date: 2024-11-29 14:14+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -130,6 +130,7 @@ msgstr ""
 #: ../../reference/p2p-deploy-config.rst:165
 #: ../../reference/p2p-deploy-config.rst:167
 #: ../../reference/p2p-deploy-config.rst:169
+#: ../../reference/p2p-deploy-config.rst:192
 msgid "none"
 msgstr ""
 
@@ -811,17 +812,27 @@ msgstr "是否在 streaming 模式下运行以减少内存消耗"
 msgid "**Warning**: Experimental feature; do not use in production."
 msgstr "**Warning**: 实验特性请勿在生产中使用"
 
-#: ../../reference/p2p-deploy-config.rst:195
+#: ../../reference/p2p-deploy-config.rst:192
+msgid "authorized_writable_parties"
+msgstr ""
+
+#: ../../reference/p2p-deploy-config.rst:192
+msgid ""
+"List of parties authorized to write files, the party authorized can "
+"SELECT result into your files"
+msgstr "被授权写文件权限的参与方列表，授权后相关参与方可以通过 SELECT INTO 将产出写到您的文件中"
+
+#: ../../reference/p2p-deploy-config.rst:197
 msgid "Config for ServerConfig"
 msgstr "ServerConfig 配置"
 
-#: ../../reference/p2p-deploy-config.rst:196
+#: ../../reference/p2p-deploy-config.rst:198
 msgid ""
 "SCQLBroker accept intra-domain requests through IntraServer, while accept"
 " requests between different SCQLBrokers through InterServer."
 msgstr "SCQLBroker 通过IntraServer 接收域内请求，而通过 InterServer 接收不同 SCQLBroker 之间的请求。"
 
-#: ../../reference/p2p-deploy-config.rst:198
+#: ../../reference/p2p-deploy-config.rst:200
 msgid ""
 "IntraServer is recommended to use localhost host or LAN address to avoid "
 "external attacks, while InterServer is recommended to enable HTTPS to "
@@ -830,13 +841,13 @@ msgstr ""
 "IntraServer 建议使用 localhost 或 LAN 地址以避免外部攻击，而 InterServer 建议启用 HTTPS "
 "以提高安全性。"
 
-#: ../../reference/p2p-deploy-config.rst:202
+#: ../../reference/p2p-deploy-config.rst:204
 msgid ""
 "Please refer to the following configuration to enable HTTPS for "
 "InterServer: (similar to IntraServer)"
 msgstr "请参考以下配置为 InterServer 启用 HTTPS ：（IntraServer 类似）"
 
-#: ../../reference/p2p-deploy-config.rst:215
+#: ../../reference/p2p-deploy-config.rst:217
 msgid ""
 "Self-signed CA files may not be trusted by default, please refer to "
 "`Trouble shooting <https://github.com/secretflow/scql/tree/main/test-"
@@ -846,11 +857,11 @@ msgstr ""
 "<https://github.com/secretflow/scql/tree/main/test-tools#trouble-"
 "shooting>`_ 获取帮助。"
 
-#: ../../reference/p2p-deploy-config.rst:217
+#: ../../reference/p2p-deploy-config.rst:219
 msgid "Please change the endpoints in **party_info.json** from http to https."
 msgstr "请将 **party_info.json** 中的 endpoints 从 http 更改为 https"
 
-#: ../../reference/p2p-deploy-config.rst:219
+#: ../../reference/p2p-deploy-config.rst:221
 msgid ""
 "We have enabled HTTPS in the `p2p examples "
 "<https://github.com/secretflow/scql/blob/main/examples/p2p-"
@@ -860,7 +871,7 @@ msgstr ""
 "我们在 `p2p examples <https://github.com/secretflow/scql/blob/main/examples"
 "/p2p-tutorial/README.md>`_ 中启用了 HTTPS，相关配置的初始化过程也许能提供一些帮助"
 
-#: ../../reference/p2p-deploy-config.rst:221
+#: ../../reference/p2p-deploy-config.rst:223
 msgid ""
 "For SCQLEngine to work with SSL, please refer :ref:`Config for SSL in "
 "SCQLEngine <scqlengine-tls>`."
@@ -868,11 +879,11 @@ msgstr ""
 "除此之外，用户还需要设置 :ref:`SCQLEngine 的 SSL 配置 <scqlengine-tls>`，以保证 SCQLEngine "
 "能正常工作。"
 
-#: ../../reference/p2p-deploy-config.rst:224
+#: ../../reference/p2p-deploy-config.rst:226
 msgid "Reused Config"
 msgstr "复用的配置"
 
-#: ../../reference/p2p-deploy-config.rst:226
+#: ../../reference/p2p-deploy-config.rst:228
 msgid ""
 "For more about SecurityCompromise, see :ref:`Config for "
 "SecurityCompromise <config_security_compromise_options>`"
@@ -880,7 +891,7 @@ msgstr ""
 "有关 SecurityCompromise 的更多信息，请参阅 :ref:`安全退让配置 "
 "<config_security_compromise_options>`"
 
-#: ../../reference/p2p-deploy-config.rst:228
+#: ../../reference/p2p-deploy-config.rst:230
 msgid ""
 "For more about Storage, see :ref:`Config for storage "
 "<config_storage_options>`"
@@ -991,9 +1002,9 @@ msgstr "系统中保留的审计日志文件的最大数量，0 表示保留所�
 msgid "peer_engine_protocol"
 msgstr "peer_engine_protocol"
 
-#: ../../reference/engine-config.rst:45 ../../reference/engine-config.rst:69
-msgid "`http:proto`"
-msgstr "`http:proto`"
+#: ../../reference/engine-config.rst:45
+msgid "baidu_std"
+msgstr ""
 
 #: ../../reference/engine-config.rst:45
 msgid "The rpc protocol between engine and engine"
@@ -1003,9 +1014,9 @@ msgstr "SCQLEngine 与 SCQLEngine 之间的rpc协议"
 msgid "peer_engine_connection_type"
 msgstr "peer_engine_connection_type"
 
-#: ../../reference/engine-config.rst:47 ../../reference/engine-config.rst:71
-msgid "pooled"
-msgstr "pooled"
+#: ../../reference/engine-config.rst:47
+msgid "single"
+msgstr ""
 
 #: ../../reference/engine-config.rst:47
 msgid "The rpc connection type between engine and engine"
@@ -1118,12 +1129,20 @@ msgid "driver_protocol"
 msgstr "driver_protocol"
 
 #: ../../reference/engine-config.rst:69
+msgid "`http:proto`"
+msgstr "`http:proto`"
+
+#: ../../reference/engine-config.rst:69
 msgid "The rpc protocol between engine and Driver"
 msgstr "SCQLEngine 与 Driver 之间的 rpc 协议"
 
 #: ../../reference/engine-config.rst:71
 msgid "driver_connection_type"
 msgstr "driver_connection_type"
+
+#: ../../reference/engine-config.rst:71
+msgid "pooled"
+msgstr "pooled"
 
 #: ../../reference/engine-config.rst:71
 msgid "The rpc connection type between engine and Driver"
@@ -1899,8 +1918,10 @@ msgstr ""
 
 #: ../../reference/engine-config.rst:278
 msgid ""
-"OSS/MinIO csv: "
-"\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"S3Conf\\\\\\\":{\\\\\\\"endpoint\\\\\\\":\\\\\\\"test_endpoint\\\\\\\",\\\\\\\"access_key_id\\\\\\\":\\\\\\\"test_id\\\\\\\",\\\\\\\"secret_access_key\\\\\\\":\\\\\\\"test_key\\\\\\\"},\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"oss://test_bucket/test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
+"OSS csv: "
+"\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"s3_conf\\\\\\\":{\\\\\\\"endpoint\\\\\\\":\\\\\\\"test_endpoint\\\\\\\",\\\\\\\"access_key_id\\\\\\\":\\\\\\\"test_id\\\\\\\",\\\\\\\"secret_access_key\\\\\\\":\\\\\\\"test_key\\\\\\\",\\\\\\\"virtualhost\\\\\\\":"
+" true "
+"},\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"oss://test_bucket/test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"string\\\\\\\"}]}]}\""
 msgstr ""
 
 #: ../../reference/engine-config.rst:283
@@ -2063,12 +2084,12 @@ msgstr ""
 "``authorized_profile_path`` 中的公钥匹配。"
 
 #~ msgid ""
-#~ "本地 csv: "
-#~ "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
+#~ "OSS csv: "
+#~ "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"S3Conf\\\\\\\":{\\\\\\\"endpoint\\\\\\\":\\\\\\\"test_endpoint\\\\\\\",\\\\\\\"access_key_id\\\\\\\":\\\\\\\"test_id\\\\\\\",\\\\\\\"secret_access_key\\\\\\\":\\\\\\\"test_key\\\\\\\",\\\\\\\"virtualhost\\\\\\\":"
+#~ " true "
+#~ "},\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"oss://test_bucket/test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
 #~ msgstr ""
 
-#~ msgid ""
-#~ "if **for_self** is empty, **for_peer** "
-#~ "is used instead, valid when scheduler"
-#~ " is naive"
-#~ msgstr "如果 **for_self** 为空，则默认使用 **for_peer** 来代替"
+#~ msgid "write_authorized_parties"
+#~ msgstr ""
+

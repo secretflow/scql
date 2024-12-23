@@ -90,7 +90,7 @@ TEST_F(MuxReceiverServiceImplTest, Works) {
     futures[rank] = std::async(proc, mux_link_factorys[rank].get(), rank);
   }
   for (size_t rank = 0; rank < kWorldSize; rank++) {
-    futures[rank].wait();
+    futures[rank].get();
   }
 }
 

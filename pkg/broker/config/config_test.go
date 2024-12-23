@@ -53,6 +53,9 @@ func TestNewConfig(t *testing.T) {
 		SessionCheckInterval:         1 * time.Minute,
 		ExchangeJobInfoRetryTimes:    2,
 		ExchangeJobInfoRetryInterval: 10 * time.Second,
+		SecurityCompromise: SecurityCompromiseConf{
+			RevealGroupCount: true,
+		},
 		Engine: EngineConfig{
 			ClientMode:    DefaultEngineClientMode,
 			ClientTimeout: 120 * time.Second,

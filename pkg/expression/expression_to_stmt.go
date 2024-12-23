@@ -16,6 +16,7 @@ package expression
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/pingcap/errors"
@@ -142,7 +143,7 @@ func (c ExprConverter) convertScalarFunction(dialect format.Dialect, expr *Scala
 		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
 	case ast.If:
 		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
-	case ast.Abs, ast.Round, ast.Log10, ast.Ceil, ast.Floor, ast.Instr, ast.Length, ast.Sin, ast.Acos, ast.Cos:
+	case ast.Abs, ast.Round, ast.Log10, ast.Ceil, ast.Floor, ast.Instr, ast.Length, ast.Sin, ast.Acos, ast.Cos, ast.Tan, ast.Cot, ast.Asin, ast.Atan, ast.Atan2, ast.Degrees, ast.Ln, ast.Log2, ast.Sqrt, ast.Pow, ast.Greatest, ast.Least, ast.Radians, ast.Exp:
 		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
 	}
 	switch expr.Function.(type) {
@@ -183,7 +184,12 @@ func (c ExprConverter) convertScalarFunction(dialect format.Dialect, expr *Scala
 	case *builtinLogicXorSig:
 		return &ast.BinaryOperationExpr{Op: opcode.LogicXor, L: children[0], R: children[1]}, nil
 	case *builtinLikeSig:
-		return &ast.PatternLikeExpr{Expr: children[0], Pattern: children[1], Escape: '\\'}, nil
+		switch value := children[2].(type) {
+		case *driver.ValueExpr:
+			return &ast.PatternLikeExpr{Expr: children[0], Pattern: children[1], Escape: byte(value.GetInt64())}, nil
+		default:
+			return nil, fmt.Errorf("value type assertion for like statement failed, type of escape: %s", reflect.TypeOf(value))
+		}
 	// case *builtinRegexpSig, *builtinRegexpUTF8Sig:
 	// 	return  &ast.ColumnNameExpr{Name: &ast.ColumnName{Table: children[0].}}, nil
 	case *builtinDecimalIsNullSig, *builtinIntIsNullSig, *builtinRealIsNullSig, *builtinStringIsNullSig:
@@ -207,7 +213,7 @@ func (c ExprConverter) convertScalarFunction(dialect format.Dialect, expr *Scala
 			result.ElseClause = children[len(children)-1]
 		}
 		return result, nil
-	case *builtinConcatSig:
+	case *builtinConcatSig, *builtinLowerSig, *builtinUpperUTF8Sig:
 		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
 	case *builtinTruncateDecimalSig, *builtinTruncateIntSig, *builtinTruncateRealSig, *builtinTruncateUintSig:
 		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
@@ -224,7 +230,7 @@ func (c ExprConverter) convertScalarFunction(dialect format.Dialect, expr *Scala
 	case *builtinGeoDist:
 		return c.buildGeoDistExpr(children, dialect, prec, idToExpr)
 	}
-	return nil, errors.Errorf("Unknown expr: %+v", expr.Function)
+	return nil, errors.Errorf("Unknown expr: %+v(%s)", expr.Function, expr.FuncName)
 }
 
 func radians(node ast.ExprNode) *ast.FuncCallExpr {

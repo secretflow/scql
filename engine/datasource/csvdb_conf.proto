@@ -35,6 +35,9 @@ message S3Conf {
   string endpoint = 2;
   string access_key_id = 3;
   string secret_access_key = 4;
+  // See
+  // https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html
+  bool virtualhost = 5;
 }
 
 message CsvdbConf {
