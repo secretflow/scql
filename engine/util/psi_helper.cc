@@ -17,19 +17,27 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <future>
 #include <memory>
+#include <mutex>
 #include <numeric>
 #include <random>
 #include <string>
 #include <tuple>
+#include <type_traits>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "arrow/compute/api.h"
+#include "arrow/compute/exec.h"
 #include "gflags/gflags.h"
 #include "msgpack.hpp"
+#include "psi/rr22/rr22_psi.h"
+#include "psi/utils/batch_provider_impl.h"
+#include "psi/utils/serialize.h"
 #include "yacl/crypto/rand/rand.h"
 
 #include "engine/core/arrow_helper.h"
@@ -76,6 +84,15 @@ constexpr char kPsiInLeft[] = "Left";
 constexpr char kPsiInRight[] = "Right";
 constexpr char kPsiInputPartyCodesAttr[] = "input_party_codes";
 }  // namespace
+
+size_t ExchangeSetSize(const std::shared_ptr<yacl::link::Context>& link_ctx,
+                       size_t items_size) {
+  YACL_ENFORCE(link_ctx->WorldSize() == 2, "currently only support 2 parties");
+  auto result =
+      yacl::link::AllGather(link_ctx, psi::utils::SerializeSize(items_size),
+                            fmt::format("EXCHANGE_SIZE"));
+  return psi::utils::DeserializeSize(result[link_ctx->NextRank()]);
+}
 
 PsiPlan CoordinatePsiPlan(ExecContext* ctx) {
   // get related party codes and ranks
@@ -165,13 +182,13 @@ std::vector<std::string> BatchProvider::ReadNextBatch() {
   return keys;
 }
 
-std::tuple<std::vector<std::string>, std::vector<size_t>, std::vector<size_t>>
+psi::IShuffledBatchProvider::ShuffledBatch
 BatchProvider::ReadNextShuffledBatch() {
   std::vector<size_t> batch_indices;
   std::vector<size_t> shuffle_indices;
   if (tensors_.empty()) {
     std::vector<std::string> keys;
-    return std::make_tuple(keys, batch_indices, shuffle_indices);
+    return {keys, batch_indices, shuffle_indices, {}};
   }
 
   auto keys = ReadNextBatch();
@@ -193,7 +210,8 @@ BatchProvider::ReadNextShuffledBatch() {
 
   idx_ += keys.size();
 
-  return std::make_tuple(keys, batch_indices, shuffle_indices);
+  return {keys, batch_indices, shuffle_indices,
+          std::vector<uint32_t>(keys.size(), 0)};
 }
 
 std::vector<std::string> Combine(const std::vector<std::string>& col1,
@@ -308,30 +326,16 @@ TensorPtr FinalizeAndComputeInResult(
   }
 }
 
-namespace {
-
-/// @brief restore back the `in` output order via sorting output by index
-class InResultResolver {
- public:
-  void Append(bool mask, uint64_t index);
-
-  TensorPtr FinalizeAndRestoreResultOrder();
-
- private:
-  arrow::BooleanBuilder mask_builder;
-  arrow::UInt64Builder index_builder;
-};
-
 void InResultResolver::Append(bool mask, uint64_t index) {
-  THROW_IF_ARROW_NOT_OK(mask_builder.Append(mask));
-  THROW_IF_ARROW_NOT_OK(index_builder.Append(index));
+  THROW_IF_ARROW_NOT_OK(mask_builder_.Append(mask));
+  THROW_IF_ARROW_NOT_OK(index_builder_.Append(index));
 }
 
 TensorPtr InResultResolver::FinalizeAndRestoreResultOrder() {
   std::shared_ptr<arrow::UInt64Array> index;
-  THROW_IF_ARROW_NOT_OK(index_builder.Finish(&index));
+  THROW_IF_ARROW_NOT_OK(index_builder_.Finish(&index));
   std::shared_ptr<arrow::BooleanArray> mask;
-  THROW_IF_ARROW_NOT_OK(mask_builder.Finish(&mask));
+  THROW_IF_ARROW_NOT_OK(mask_builder_.Finish(&mask));
 
   auto sort_indices =
       arrow::compute::SortIndices(*index, arrow::compute::SortOrder::Ascending);
@@ -346,8 +350,6 @@ TensorPtr InResultResolver::FinalizeAndRestoreResultOrder() {
   auto chunked_arr = std::make_shared<arrow::ChunkedArray>(result.ValueOrDie());
   return TensorFrom(chunked_arr);
 }
-
-}  // namespace
 
 TensorPtr ComputeInResult(
     const std::shared_ptr<psi::HashBucketEcPointStore>& left,
@@ -403,12 +405,16 @@ UbPsiCipherStore::UbPsiCipherStore(std::string csv_path, bool enable_cache)
 
 UbPsiCipherStore::~UbPsiCipherStore() { out_->Close(); }
 
-void UbPsiCipherStore::Save(std::string ciphertext) {
-  out_->Write(fmt::format("{}\n", ciphertext));
-  if (enable_cache_) {
-    data_indices_[ciphertext].push_back(item_count_);
+void UbPsiCipherStore::Save(const std::string& ciphertext,
+                            uint32_t duplicate_cnt) {
+  auto escaped_ciphertext = absl::Base64Escape(ciphertext);
+  for (size_t i = 0; i < duplicate_cnt + 1; ++i) {
+    out_->Write(fmt::format("{}\n", escaped_ciphertext));
+    if (enable_cache_) {
+      data_indices_[escaped_ciphertext].push_back(item_count_);
+    }
+    ++item_count_;
   }
-  ++item_count_;
 }
 
 std::vector<std::string> FinalizeAndComputeIntersection(
@@ -670,9 +676,8 @@ void OprfServerTransferShuffledClientItems(
   dh_oprf_psi_server->RecvBlindAndShuffleSendEvaluate();
 
   std::shared_ptr<psi::IShuffledBatchProvider> cache_provider =
-      std::make_shared<psi::UbPsiCacheProvider>(
-          server_cache_path, FLAGS_provider_batch_size,
-          dh_oprf_psi_server->GetCompareLength());
+      std::make_shared<psi::UbPsiCacheProvider>(server_cache_path,
+                                                FLAGS_provider_batch_size);
 
   std::tie(*matched_indices, *self_item_count) =
       dh_oprf_psi_server->RecvIntersectionMaskedItems(cache_provider);
@@ -716,4 +721,192 @@ void OprfCLientTransferShuffledClientItems(
                      "Oprf client finish transfering shuffled client items");
 }
 
+void MemoryBucketProvider::InitBucket(
+    const std::shared_ptr<yacl::link::Context>& lctx, size_t self_size,
+    size_t peer_size) {
+  auto bucket_size =
+      std::min(kBucketSize, util::ExchangeSetSize(lctx, kBucketSize));
+  size_t bucket_num =
+      (std::max(self_size, peer_size) + bucket_size - 1) / bucket_size;
+  bucket_num = std::max(bucket_num, static_cast<size_t>(1));
+  bucket_items_.resize(bucket_num);
+  bucket_dup_idx_.resize(bucket_num);
+  while (true) {
+    auto inputs = batch_provider_->ReadNextBatch();
+    if (inputs.empty()) {
+      break;
+    }
+    for (auto& in_str : inputs) {
+      auto base64_data = absl::Base64Escape(in_str);
+      bucket_items_[std::hash<std::string>()(base64_data) % bucket_num]
+          .emplace_back(base64_data, item_index_);
+      item_index_++;
+    }
+  }
+}
+
+std::vector<MemoryBucketProvider::DataPair> MemoryBucketProvider::GetBucketIdx(
+    size_t idx) {
+  YACL_ENFORCE(idx < bucket_items_.size());
+  return bucket_items_[idx];
+}
+
+std::vector<psi::HashBucketCache::BucketItem>
+MemoryBucketProvider::GetDeDupItemsInBucket(size_t idx) {
+  auto items = GetBucketIdx(idx);
+  if (items.size() == 0) {
+    return {};
+  }
+  std::vector<psi::HashBucketCache::BucketItem> bucket_items;
+  std::unordered_map<std::string, std::vector<size_t>> cur_bucket_dup_idx;
+  for (auto& item : items) {
+    const auto& iter = cur_bucket_dup_idx.find(item.first);
+    if (iter != cur_bucket_dup_idx.end()) {
+      iter->second.push_back(item.second);
+    } else {
+      cur_bucket_dup_idx.insert({item.first, {item.second}});
+      psi::HashBucketCache::BucketItem bucket_item;
+      bucket_item.index = bucket_items.size();
+      bucket_item.extra_dup_cnt = 0;
+      bucket_item.base64_data = item.first;
+      bucket_items.push_back(bucket_item);
+    }
+  }
+  for (auto& bucket_item : bucket_items) {
+    bucket_item.extra_dup_cnt =
+        cur_bucket_dup_idx[bucket_item.base64_data].size() - 1;
+  }
+  bucket_dup_idx_[idx] = std::move(cur_bucket_dup_idx);
+  return bucket_items;
+}
+
+TensorPtr MemoryBucketProvider::CalIntersection(
+    const std::shared_ptr<yacl::link::Context>& lctx, size_t bucket_idx,
+    bool is_left, int64_t join_type,
+    const std::vector<psi::HashBucketCache::BucketItem>& bucket_items,
+    const std::vector<uint32_t>& indices,
+    const std::vector<uint32_t>& peer_cnt) {
+  YACL_ENFORCE(bucket_idx < bucket_items_.size());
+  UInt64TensorBuilder builder;
+  TensorPtr t;
+  auto bucket_dup_idx = bucket_dup_idx_[bucket_idx];
+  for (size_t i = 0; i < indices.size(); i++) {
+    const auto& bucket_item = bucket_items[indices[i]];
+    auto dup_idx = bucket_dup_idx[bucket_item.base64_data];
+    if (is_left) {
+      for (size_t k = 0; k < peer_cnt[i] + 1; k++) {
+        for (size_t j = 0; j < dup_idx.size(); j++) {
+          builder.Append(dup_idx[j]);
+        }
+      }
+    } else {
+      for (size_t j = 0; j < dup_idx.size(); j++) {
+        for (size_t k = 0; k < peer_cnt[i] + 1; k++) {
+          builder.Append(dup_idx[j]);
+        }
+      }
+    }
+  }
+  if ((join_type == kLeftJoin && is_left) ||
+      (join_type == kRightJoin && !is_left)) {
+    size_t null_cnt = 0;
+    std::unordered_set<uint32_t> indices_set(indices.size());
+    for (const auto indice : indices) {
+      indices_set.insert(indice);
+    }
+    for (size_t i = 0; i < bucket_items.size(); i++) {
+      if (indices_set.find(i) == indices_set.end()) {
+        for (const auto idx : bucket_dup_idx[bucket_items[i].base64_data]) {
+          builder.Append(idx);
+          null_cnt++;
+        }
+      }
+    }
+    lctx->Send(lctx->NextRank(),
+               yacl::ByteContainerView(&null_cnt, sizeof(null_cnt)),
+               "null count");
+  } else if (join_type == kLeftJoin || join_type == kRightJoin) {
+    auto data = lctx->Recv(lctx->NextRank(), "null count");
+    auto* null_cnt = data.data<size_t>();
+    for (size_t i = 0; i < *null_cnt; i++) {
+      builder.AppendNull();
+    }
+  }
+  builder.Finish(&t);
+  return t;
+}
+
+void InResultResolverWithBucket::FeedBucketData(
+    size_t bucket_idx,
+    const std::vector<psi::HashBucketCache::BucketItem>& bucket_items,
+    const std::vector<uint32_t>& indices,
+    const std::unordered_map<std::string, std::vector<size_t>>&
+        origin_indices) {
+  arrow::BooleanBuilder mask_builder;
+  arrow::UInt64Builder index_builder;
+  // build set
+  absl::flat_hash_set<size_t> intersection_set;
+  for (const auto& indice : indices) {
+    intersection_set.emplace(indice);
+  }
+  for (size_t i = 0; i < bucket_items.size(); i++) {
+    const auto& bucket_item = bucket_items[i];
+    auto it = origin_indices.find(bucket_item.base64_data);
+    YACL_ENFORCE(it != origin_indices.end());
+    if (intersection_set.contains(i)) {
+      for (const auto& idx : it->second) {
+        THROW_IF_ARROW_NOT_OK(mask_builder.Append(true));
+        THROW_IF_ARROW_NOT_OK(index_builder.Append(idx));
+      }
+    } else {
+      for (const auto& idx : it->second) {
+        THROW_IF_ARROW_NOT_OK(mask_builder.Append(false));
+        THROW_IF_ARROW_NOT_OK(index_builder.Append(idx));
+      }
+    }
+  }
+  std::shared_ptr<arrow::UInt64Array> index;
+  THROW_IF_ARROW_NOT_OK(index_builder.Finish(&index));
+  std::shared_ptr<arrow::BooleanArray> mask;
+  THROW_IF_ARROW_NOT_OK(mask_builder.Finish(&mask));
+  mask_arrays_[bucket_idx] = mask;
+  index_arrays_[bucket_idx] = index;
+}
+
+TensorPtr InResultResolverWithBucket::ComputeInResult() {
+  arrow::ArrayVector mask_arrays;
+  for (const auto& mask : mask_arrays_) {
+    mask_arrays.push_back(mask);
+  }
+  auto mask_chunked_array = arrow::ChunkedArray::Make(mask_arrays).ValueOrDie();
+  arrow::ArrayVector index_arrays;
+  for (const auto& index : index_arrays_) {
+    index_arrays.push_back(index);
+  }
+  auto index_chunked_array =
+      arrow::ChunkedArray::Make(index_arrays).ValueOrDie();
+  auto sort_indices = arrow::compute::SortIndices(
+      *index_chunked_array, arrow::compute::SortOrder::Ascending);
+  YACL_ENFORCE(sort_indices.ok(),
+               "invoking arrow compute::SortIndices error: {}",
+               sort_indices.status().ToString());
+  auto result = arrow::compute::CallFunction(
+      "take", {mask_chunked_array, sort_indices.ValueOrDie()});
+  YACL_ENFORCE(result.ok(), "invoking arrow compute::Take error: {}",
+               result.status().ToString());
+  return TensorFrom(result.ValueOrDie().chunked_array());
+}
+
+TensorPtr ConcatTensors(const std::vector<TensorPtr>& tensors) {
+  for (const auto& tensor : tensors) {
+    YACL_ENFORCE(typeid(*tensor) == typeid(MemTensor));
+  }
+  arrow::ArrayVector arrays;
+  for (const auto& tensor : tensors) {
+    auto tmp_v = tensor->ToArrowChunkedArray();
+    arrays.insert(arrays.end(), tmp_v->chunks().begin(), tmp_v->chunks().end());
+  }
+  return std::make_shared<MemTensor>(
+      arrow::ChunkedArray::Make(arrays).ValueOrDie());
+}
 }  // namespace scql::engine::util

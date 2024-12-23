@@ -49,20 +49,19 @@ func TestDistributedLock(t *testing.T) {
 		})
 
 	r.NoError(err)
-	manager := NewMetaManager(db, true)
+	manager := NewMetaManager(db)
 	err = manager.Bootstrap()
 	r.NoError(err)
 
-	err = manager.InitDistributedLockIfNecessary(GcLockID)
+	err = NewDistributeLockGuard(manager).InitDistributedLockIfNecessary(DistributedLockID)
 	r.NoError(err)
 
-	err = manager.HoldDistributedLock(GcLockID, "alice", 5*time.Second)
+	ok, err := NewDistributeLockGuard(manager).PreemptDistributedLock(DistributedLockID, "alice", 5*time.Second)
 	r.NoError(err)
-	// lock can be reentrant
-	err = manager.HoldDistributedLock(GcLockID, "alice", 5*time.Second)
+	r.True(ok)
+	ok, err = NewDistributeLockGuard(manager).PreemptDistributedLock(DistributedLockID, "alice", 5*time.Second)
 	r.NoError(err)
-	err = manager.HoldDistributedLock(GcLockID, "bob", 5*time.Second)
-	r.Error(err)
+	r.False(ok)
 }
 
 func TestBootstrap(t *testing.T) {
@@ -83,7 +82,7 @@ func TestBootstrap(t *testing.T) {
 		})
 
 	r.NoError(err)
-	manager := NewMetaManager(db, false)
+	manager := NewMetaManager(db)
 	err = manager.Bootstrap()
 	r.NoError(err)
 	transaction := manager.CreateMetaTransaction()
@@ -229,7 +228,7 @@ func TestBootstrap(t *testing.T) {
 		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: alice}, Priv: "plain"},
 		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: bob}, Priv: "encrypt"},
 	}
-	err = transaction.AddProjectMembers([]Member{Member{ProjectID: c1Identifier.ProjectID, Member: bob}})
+	err = transaction.AddProjectMembers([]Member{{ProjectID: c1Identifier.ProjectID, Member: bob}})
 	r.NoError(err)
 	// project member [alice], but grant to [alice, bob]
 	err = transaction.GrantColumnConstraints(privs)

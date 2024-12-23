@@ -17,6 +17,7 @@ package translator
 import (
 	"context"
 	"fmt"
+	"time"
 
 	. "github.com/pingcap/check"
 
@@ -28,7 +29,10 @@ import (
 func (s *testTranslatorSuite) TestTranslateWithCCL(c *C) {
 	ccl, err := mock.MockAllCCL()
 	c.Assert(err, IsNil)
-	for _, ca := range translateWithCCLTestCases {
+	testCases := []sPair{}
+	testCases = append(testCases, translateNumericTestCases...)
+	testCases = append(testCases, translateWithCCLTestCases...)
+	for _, ca := range testCases {
 		sql := ca.sql
 		dot := ca.dotGraph
 		briefPipe := ca.briefPipeline
@@ -47,12 +51,12 @@ func (s *testTranslatorSuite) TestTranslateWithCCL(c *C) {
 			groupThreshold = conf.groupThreshold
 		}
 		compileOpts := scql.CompileOptions{
-			SecurityCompromise: &scql.SecurityCompromiseConfig{RevealGroupMark: false, GroupByThreshold: uint64(groupThreshold)},
+			SecurityCompromise: &scql.SecurityCompromiseConfig{RevealGroupMark: false, GroupByThreshold: uint64(groupThreshold), RevealGroupCount: ca.conf.revealGroupCount},
 			Batched:            conf.batched,
 		}
 		t, err := NewTranslator(
 			s.engineInfo, &scql.SecurityConfig{ColumnControlList: ccl},
-			s.issuerParty, &compileOpts)
+			s.issuerParty, &compileOpts, time.Now())
 		c.Assert(err, IsNil)
 		ep, err := t.Translate(lp)
 		c.Assert(err, IsNil, Commentf("for %s", sql))
@@ -62,7 +66,6 @@ func (s *testTranslatorSuite) TestTranslateWithCCL(c *C) {
 		actualPipe := ""
 		if conf.batched {
 			actualPipe = ep.DumpBriefPipeline()
-			// if you want to copy the graph created by DumpBriefPipeline, uncomment this line
 			c.Log(actualPipe)
 		} else {
 			c.Assert(len(ep.Pipelines), Equals, 1, Commentf("for %s", sql))
@@ -97,7 +100,7 @@ func (s *testTranslatorSuite) TestBuildCCL(c *C) {
 		}
 		t, err := NewTranslator(
 			s.engineInfo, &scql.SecurityConfig{ColumnControlList: ccl},
-			s.issuerParty, &compileOpts)
+			s.issuerParty, &compileOpts, time.Now())
 		c.Assert(err, IsNil)
 		builder, err := newLogicalNodeBuilder(t.issuerPartyCode, t.enginesInfo, convertOriginalCCL(t.sc), 4)
 		if err != nil {

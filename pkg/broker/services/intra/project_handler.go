@@ -25,6 +25,7 @@ import (
 	"golang.org/x/exp/slices"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"gorm.io/gorm"
 
 	"github.com/sirupsen/logrus"
 
@@ -70,6 +71,10 @@ func (svc *grpcIntraSvc) CreateProject(c context.Context, req *pb.CreateProjectR
 		revealGroupMark = projectConf.GetRevealGroupMark()
 	}
 
+	revealGroupCount := app.Conf.SecurityCompromise.RevealGroupCount
+	if projectConf.RevealGroupCount != nil {
+		revealGroupCount = projectConf.GetRevealGroupCount()
+	}
 	projConf, err := message.ProtoMarshal(&pb.ProjectConfig{
 		SpuRuntimeCfg:                             projectConf.GetSpuRuntimeCfg(),
 		SessionExpireSeconds:                      projectConf.GetSessionExpireSeconds(),
@@ -82,6 +87,7 @@ func (svc *grpcIntraSvc) CreateProject(c context.Context, req *pb.CreateProjectR
 		LinkChunkedSendParallelSize:               projectConf.GetLinkChunkedSendParallelSize(),
 		GroupByThreshold:                          &groupByThreshold,
 		RevealGroupMark:                           &revealGroupMark,
+		RevealGroupCount:                          &revealGroupCount,
 	})
 
 	if err != nil {
@@ -110,6 +116,13 @@ func (svc *grpcIntraSvc) CreateProject(c context.Context, req *pb.CreateProjectR
 	}
 
 	err = app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
+		_, err := txn.GetProject(project.ID)
+		if err == nil {
+			return fmt.Errorf("CreateProject: project %s already exists", project.ID)
+		}
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
 		return txn.CreateProject(project)
 	})
 	if err != nil {
@@ -253,7 +266,7 @@ func (svc *grpcIntraSvc) InviteMember(c context.Context, req *pb.InviteMemberReq
 	response := &pb.InviteToProjectResponse{}
 	err = app.InterStub.InviteToProject(url, interReq, response)
 	if err != nil {
-		return nil, fmt.Errorf("InviteMember not success: error occur when inviting %s err %v", req.GetInvitee(), err)
+		return nil, fmt.Errorf("InviteMember: failed to invite party %s for project %s: %v", req.GetInvitee(), proj.ID, err)
 	}
 
 	if response.GetStatus().GetCode() != 0 {

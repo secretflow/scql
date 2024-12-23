@@ -33,6 +33,37 @@ type MysqlTime struct {
 	day         uint8  // day <= 31
 	minute      uint8  // minute <= 59
 	second      uint8  // second <= 59
+	location    *gotime.Location
+}
+
+func NewMysqlTime(time gotime.Time) MysqlTime {
+	year, month, day := time.Date()
+	hour := time.Hour()
+	minute := time.Minute()
+	second := time.Second()
+	microsecond := time.Nanosecond() / 1000
+
+	mysqlTime := MysqlTime{
+		year:        uint16(year),
+		month:       uint8(month),
+		day:         uint8(day),
+		hour:        uint32(hour),
+		minute:      uint8(minute),
+		second:      uint8(second),
+		microsecond: uint32(microsecond),
+		location:    time.Location(),
+	}
+
+	return mysqlTime
+}
+
+// return seconds since 1970-01-01 00:00:00 UTC.
+func (mt MysqlTime) ToUnixTimestamp() int64 {
+	t := gotime.Date(int(mt.year), gotime.Month(mt.month), int(mt.day), int(mt.hour), int(mt.minute), int(mt.second), int(mt.microsecond)*1000, mt.location)
+
+	unixTimestamp := t.Unix()
+
+	return unixTimestamp
 }
 
 // String implements fmt.Stringer.

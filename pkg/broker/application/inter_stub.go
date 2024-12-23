@@ -46,17 +46,18 @@ func (stub *InterStub) baseCall(url, path string, req proto.Message, response pr
 		return
 	}
 	httpClient := &http.Client{Timeout: stub.Timeout}
-	interResp, err := httpClient.Post(urlutil.JoinHostPath(url, path),
+	targetUrl := urlutil.JoinHostPath(url, path)
+	interResp, err := httpClient.Post(targetUrl,
 		message.EncodingType2ContentType[stub.EncodingType], strings.NewReader(requestStr))
 	if err != nil {
-		return
+		return fmt.Errorf("failed to request url %s: %w", targetUrl, err)
 	}
 	if interResp.StatusCode != http.StatusOK {
 		body, err := io.ReadAll(interResp.Body)
 		if err != nil {
-			return fmt.Errorf("status: %v, read body err: %v", interResp.Status, err)
+			return fmt.Errorf("failed to request url %s: status: %v, read body err: %v", targetUrl, interResp.Status, err)
 		}
-		return fmt.Errorf("status: %v, body: %s", interResp.Status, body)
+		return fmt.Errorf("failed to request url %s: status: %v, body: %s", targetUrl, interResp.Status, body)
 	}
 
 	defer interResp.Body.Close()

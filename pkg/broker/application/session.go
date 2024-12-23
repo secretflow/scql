@@ -73,54 +73,15 @@ type Session struct {
 
 	DryRun bool
 
-	AsyncMode   bool
-	OutputNames []string
-	Warning     *pb.Warning
-	// mu protects the Result when running in async mode
-	mu            sync.Mutex
+	AsyncMode     bool
+	OutputNames   []string
+	Warning       *pb.Warning
 	Result        *pb.QueryResponse
 	ExpireSeconds int64
 }
 
-func (s *Session) GetResultSafely() *pb.QueryResponse {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	return s.Result
-}
-
-func (s *Session) SetResultSafely(result *pb.QueryResponse) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if s.Result == nil {
-		s.Result = result
-	} else {
-		logrus.Warnf("session %s already has result, ignore new one", s.ExecuteInfo.JobID)
-	}
-}
-
 func (s *Session) GetSelfPartyCode() string {
 	return s.App.Conf.PartyCode
-}
-
-// OnError is called when query job failed
-func (s *Session) OnError(err error) {
-	logrus.Warnf("error occurred during executing query job %s: %v", s.ExecuteInfo.JobID, err)
-
-	if s.Engine != nil {
-		if err := s.Engine.Stop(); err != nil {
-			logrus.Warnf("failed to stop engine on query job %s: %v", s.ExecuteInfo.JobID, err)
-		}
-	}
-	// TODO: add more actions on error
-}
-
-// OnSuccess is called when query job success
-func (s *Session) OnSuccess() {
-	if s.Engine != nil {
-		if err := s.Engine.Stop(); err != nil {
-			logrus.Warnf("failed to stop engine on query job %s: %v", s.ExecuteInfo.JobID, err)
-		}
-	}
 }
 
 type SessionOptions struct {
@@ -152,6 +113,8 @@ type ExecutionInfo struct {
 	DebugOpts *pb.DebugOptions
 
 	SessionOptions *SessionOptions
+
+	CreatedAt time.Time
 }
 
 func (e *ExecutionInfo) CheckProjectConf() error {
@@ -203,16 +166,21 @@ func NewSession(ctx context.Context, info *ExecutionInfo, app *App, asyncMode, d
 	if groupByThreshold == 0 {
 		groupByThreshold = constant.DefaultGroupByThreshold
 	}
+	revealGroupCount := app.Conf.SecurityCompromise.RevealGroupCount
+	if projConf.RevealGroupCount != nil {
+		revealGroupCount = projConf.GetRevealGroupCount()
+	}
 	spuConf = projConf.SpuRuntimeCfg
 	info.CompileOpts = &pb.CompileOptions{
 		SpuConf: spuConf,
 		SecurityCompromise: &pb.SecurityCompromiseConfig{
 			RevealGroupMark:  revealGroupMark,
 			GroupByThreshold: groupByThreshold,
+			RevealGroupCount: revealGroupCount,
 		},
 		DumpExeGraph: true,
 		OptimizerHints: &pb.OptimizerHints{
-			PsiAlgorithmType: pb.PsiAlgorithmType_AUTO,
+			PsiAlgorithmType: info.SessionOptions.PsiConfig.GetPsiType(),
 		},
 		Batched: app.Conf.Batched,
 	}

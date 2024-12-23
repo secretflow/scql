@@ -287,13 +287,13 @@ TensorPtr RevealSecret(const std::vector<ExecContext*>& ctxs,
     return io.RevealTo(name, 0);
   };
   std::vector<std::future<TensorPtr>> futures;
-  for (size_t i = 0; i < ctxs.size(); ++i) {
-    auto future = std::async(reveal, ctxs[i], name);
+  for (auto* ctx : ctxs) {
+    auto future = std::async(reveal, ctx, name);
     futures.push_back(std::move(future));
   }
 
-  for (size_t i = 0; i < futures.size(); ++i) {
-    futures[i].wait();
+  for (size_t i = 1; i < futures.size(); ++i) {
+    futures[i].get();
   }
   return futures[0].get();
 }

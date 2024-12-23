@@ -107,11 +107,11 @@ func (s *testRunSQLSuite) TestRewriteSQLWithDomainDataId(c *C) {
 	cases := []rewriteCase{
 		{
 			originSql:  "select plain_int_0 from bob.tbl_0",
-			rewriteSql: `select "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9"."plain_int_0" from "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9"`,
+			rewriteSql: `select "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9"."plain_int_0" from "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9";`,
 		},
 		{
 			originSql:  "select distinct t0.plain_int_0, t0.groupby_float_0 from bob.tbl_0 as t0 join bob.tbl_1 as t1 where t0.join_string_0=t1.join_string_0",
-			rewriteSql: `select "t0"."plain_int_0","t0"."groupby_float_0" from "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9" as "t0" join "domain-data-id-as-table-name" as "t1" on "t0"."join_string_0"="t1"."join_string_0" group by "t0"."plain_int_0","t0"."groupby_float_0"`,
+			rewriteSql: `select "t0"."plain_int_0","t0"."groupby_float_0" from "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9" as "t0" join "domain-data-id-as-table-name" as "t1" on "t0"."join_string_0"="t1"."join_string_0" group by "t0"."plain_int_0","t0"."groupby_float_0";`,
 		},
 	}
 

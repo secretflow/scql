@@ -16,46 +16,17 @@ package application
 
 import (
 	"github.com/sirupsen/logrus"
+
+	"github.com/secretflow/scql/pkg/broker/storage"
 )
 
 // NOTE: StorageGc will continue GC until program exits
 func (app *App) StorageGc() {
 	// scan table to get all expired ids
-	err := app.MetaMgr.ClearExpiredSessions()
+	err := app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
+		return txn.ClearExpiredSessions()
+	})
 	if err != nil {
 		logrus.Warnf("GC err: %s", err.Error())
-	}
-}
-
-// NOTE: SessionGc will continue GC until program exits
-func (app *App) SessionGc() {
-	var ids []string
-	items := app.Sessions.Items()
-	for k := range items {
-		ids = append(ids, k)
-	}
-	deleteSet := make(map[string]bool)
-
-	canceledIds, err := app.MetaMgr.CheckIdCanceled(ids)
-	if err != nil {
-		logrus.Errorf("check canceled session failed: %v", err)
-		return
-	}
-	for _, id := range canceledIds {
-		deleteSet[id] = true
-	}
-
-	expiredSessions, err := app.MetaMgr.CheckIdExpired(ids)
-	if err != nil {
-		logrus.Errorf("check expired session ids failed: %v", err)
-		return
-	}
-
-	for _, id := range expiredSessions {
-		deleteSet[id] = true
-	}
-
-	for id := range deleteSet {
-		app.DeleteSession(id)
 	}
 }

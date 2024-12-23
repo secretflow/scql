@@ -98,6 +98,8 @@ func mysqlPrivilegeType2CCLVisibility(priv mysql.PrivilegeType) scql.SecurityCon
 		return scql.SecurityConfig_ColumnControl_PLAINTEXT_AS_JOIN_PAYLOAD
 	case mysql.PlaintextAfterGroupByPriv:
 		return scql.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_GROUP_BY
+	case mysql.RevealRankPriv:
+		return scql.SecurityConfig_ColumnControl_REVEAL_RANK
 	}
 	return scql.SecurityConfig_ColumnControl_UNKNOWN
 }

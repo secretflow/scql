@@ -104,10 +104,10 @@ shape {
 elem_type: DATETIME
 annotation {
 }
-string_data: "1970-01-01 00:00:00"
-string_data: "1970-01-01 00:00:10"
-string_data: "1970-01-01 00:00:00"
-string_data: "1970-01-01 00:16:40"
+string_data: "1970-01-01 08:00:00"
+string_data: "1970-01-01 08:00:10"
+string_data: "1970-01-01 08:00:00"
+string_data: "1970-01-01 08:16:40"
 data_validity: true
 data_validity: true
 data_validity: false

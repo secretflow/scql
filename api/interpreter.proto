@@ -21,9 +21,11 @@ option go_package = "proto-gen/scql";
 
 import "api/status.proto";
 import "api/ccl.proto";
+import "api/common.proto";
 import "api/core.proto";
 import "api/subgraph.proto";
 import "libspu/spu.proto";
+import "google/protobuf/timestamp.proto";
 
 service InterpreterService {
   rpc CompileQuery(CompileQueryRequest) returns (CompileQueryResponse);
@@ -40,6 +42,7 @@ message CompileQueryRequest {
   SecurityConfig security_conf = 5;
   Catalog catalog = 6;
   CompileOptions compile_opts = 7;
+  google.protobuf.Timestamp created_at = 8;
 }
 
 message CompileQueryResponse {
@@ -84,13 +87,6 @@ message ColumnDesc {
   string type = 2;
 }
 
-enum PsiAlgorithmType {
-  // auto means choosing psi type by engine
-  AUTO = 0;
-  ECDH = 1;
-  OPRF = 2;
-}
-
 message OptimizerHints {
   // auto means choosing psi type by engine
   PsiAlgorithmType psi_algorithm_type = 1;
@@ -109,6 +105,7 @@ message CompileOptions {
 message SecurityCompromiseConfig {
   bool reveal_group_mark = 1;
   uint64 group_by_threshold = 2;
+  bool reveal_group_count = 3;
 }
 
 message Catalog {

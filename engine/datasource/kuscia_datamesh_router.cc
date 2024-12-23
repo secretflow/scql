@@ -14,11 +14,18 @@
 
 #include "engine/datasource/kuscia_datamesh_router.h"
 
+#include <cctype>
+#include <string>
+#include <utility>
+
+#include "absl/strings/ascii.h"
 #include "absl/strings/str_split.h"
 #include "butil/files/file_path.h"
 #include "google/protobuf/util/json_util.h"
 #include "grpcpp/grpcpp.h"
 #include "yacl/base/exception.h"
+
+#include "engine/util/filepath_helper.h"
 
 #include "engine/datasource/csvdb_conf.pb.h"
 #include "kuscia/proto/api/v1alpha1/datamesh/domaindata.grpc.pb.h"
@@ -102,10 +109,11 @@ DataSource MakeCSVDataSourceFromOSS(const std::string& datasource_id,
     s3_conf->set_endpoint(oss.endpoint());
     s3_conf->set_access_key_id(oss.access_key_id());
     s3_conf->set_secret_access_key(oss.access_key_secret());
+    s3_conf->set_virtualhost(oss.virtualhost());
 
     auto csv_tbl = csv_conf.add_tables();
     csv_tbl->set_table_name(domaindata.domaindata_id());
-    std::string s3_url = oss.storage_type() + "://" + oss.bucket();
+    std::string s3_url = util::kSchemeS3 + oss.bucket();
     if (!oss.prefix().empty()) {
       s3_url += "/" + oss.prefix();
     }
@@ -125,6 +133,86 @@ DataSource MakeCSVDataSourceFromOSS(const std::string& datasource_id,
     result.set_connection_str(connection_str);
   }
 
+  return result;
+}
+
+std::pair<std::string, std::string> SplitHost(const std::string& host) {
+  std::string host_str = host;
+  std::string port_str;
+  size_t pos = host.find_last_of(':');
+  if (pos != std::string::npos) {
+    host_str = host.substr(0, pos);
+    port_str = host.substr(pos + 1);
+  }
+  return std::make_pair(host_str, port_str);
+}
+
+DataSource MakeMYSQLDataSource(const std::string& datasource_id,
+                               const dm::DomainData& domaindata,
+                               const dm::DomainDataSource& domaindata_source) {
+  DataSource result;
+  // use datasource_id due to domaindata in same datasource must have same id
+  result.set_id(datasource_id);
+  result.set_name(domaindata.name());
+  result.set_kind(DataSourceKind::MYSQL);
+  /// Connection string format:
+  ///     <str> == <assignment> | <assignment> ';' <str>
+  ///     <assignment> == <name> '=' <value>
+  ///     <name> == 'host' | 'port' | 'user' | 'password' | 'db' | 'compress' |
+  ///     'auto-reconnect' | 'reset' | 'fail-readonly'
+  ///     <value> == [~;]*
+  const auto database_source = domaindata_source.info().database();
+  std::string host;
+  std::string port;
+  std::tie(host, port) = SplitHost(database_source.endpoint());
+  auto connection_str = fmt::format(
+      "db={};user={};password={};host={};", database_source.database(),
+      database_source.user(), database_source.password(), host);
+  if (port != "") {
+    connection_str += fmt::format("port={};", port);
+  }
+  connection_str += "auto-reconnect=true";
+  result.set_connection_str(connection_str);
+  return result;
+}
+
+DataSource MakePgDataSource(const std::string& datasource_id,
+                            const dm::DomainData& domaindata,
+                            const dm::DomainDataSource& domaindata_source) {
+  DataSource result;
+  // use datasource_id due to domaindata in same datasource must have same id
+  result.set_id(datasource_id);
+  result.set_name(domaindata.name());
+  result.set_kind(DataSourceKind::POSTGRESQL);
+  /// Connection string format:
+  /// <str> == <assignment> | <assignment> ' ' <str>
+  /// <assignment> == <name> '=' <value>
+  /// <name> == 'host' | 'port' | 'user' | 'password' | 'dbname' |
+  /// 'connect_timeout' <value> == [~;]*
+  const auto database_source = domaindata_source.info().database();
+  std::string host;
+  std::string port;
+  std::tie(host, port) = SplitHost(database_source.endpoint());
+  auto connection_str = fmt::format(
+      "host={} dbname={} user={} password={}", host, database_source.database(),
+      database_source.user(), database_source.password());
+  if (port != "") {
+    connection_str += fmt::format(" port={}", port);
+  }
+  result.set_connection_str(connection_str);
+  return result;
+}
+
+DataSource MakeDataProxyDataSource(
+    const std::string& datasource_id, const dm::DomainData& domaindata,
+    const dm::DomainDataSource& domaindata_source) {
+  DataSource result;
+  // use datasource_id due to domaindata in same datasource must have same id
+  result.set_id(datasource_id);
+  result.set_name(domaindata.name());
+  result.set_kind(DataSourceKind::DATAPROXY);
+  // dataproxy use datasource_id to get ak/sk
+  result.set_connection_str(datasource_id);
   return result;
 }
 
@@ -179,15 +267,25 @@ DataSource KusciaDataMeshRouter::SingleRoute(
 
   // TODO(optimization): use cache to speed-up
   auto datasource = QueryDomainDataSource(channel, domaindata.datasource_id());
-
-  if (datasource.type() == "localfs") {
+  std::string lower_type = absl::AsciiStrToLower(datasource.type());
+  // TODO(xiaoyuan): Determines whether to use access_directly to select the
+  // data source type
+  if (lower_type == "localfs") {
     return MakeCSVDataSourceFromLocalfs(datasource.datasource_id(),
                                         datasource.name(), domaindata,
                                         datasource.info().localfs());
-  } else if (datasource.type() == "oss") {
+  } else if (lower_type == "oss") {
     return MakeCSVDataSourceFromOSS(datasource.datasource_id(),
                                     datasource.name(), domaindata,
                                     datasource.info().oss());
+  } else if (lower_type == "mysql") {
+    return MakeMYSQLDataSource(datasource.datasource_id(), domaindata,
+                               datasource);
+  } else if (lower_type == "postgres") {
+    return MakePgDataSource(datasource.datasource_id(), domaindata, datasource);
+  } else if (lower_type == "odps") {
+    return MakeDataProxyDataSource(datasource.datasource_id(), domaindata,
+                                   datasource);
   } else {
     YACL_THROW("unsupported datasource type: {}", datasource.type());
   }

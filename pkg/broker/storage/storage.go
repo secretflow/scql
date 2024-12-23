@@ -15,16 +15,11 @@
 package storage
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
-	"os"
 	"reflect"
-	"time"
 
-	"github.com/go-co-op/gocron/v2"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/rand"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
@@ -36,164 +31,21 @@ const (
 	InsertBatchSize = 1000
 )
 
-var allTables = []interface{}{&Member{}, &Project{}, &Table{}, &Column{}, &ColumnPriv{}, &Invitation{}}
-var sessionTables = []interface{}{&SessionInfo{}, &SessionResult{}, &Lock{}}
+var allTables = []interface{}{&Member{}, &Project{}, &Table{}, &Column{}, &ColumnPriv{}, &Invitation{}, &SessionInfo{}, &SessionResult{}, &Lock{}}
 
 type MetaManager struct {
 	// for now, no cache, all info store in db
-	db             *gorm.DB
-	persistSession bool
+	db *gorm.DB
 }
 
-var (
-	_ gocron.Elector = &DistributedElector{}
-	_ gocron.Locker  = &DistributedLocker{}
-	_ gocron.Lock    = &DistributedLock{}
-)
-
-type DistributedElector struct {
-	leader   bool
-	locker   *DistributedLocker
-	stopChan chan bool
-}
-
-func NewDistributedElector(mm *MetaManager, id DistLockID, owner string, ttl time.Duration) (*DistributedElector, error) {
-	locker, err := NewDistributedLocker(mm, id, owner, ttl)
-	if err != nil {
-		return nil, fmt.Errorf("fail to create distributed locker %d: %v", id, err)
-	}
-	return &DistributedElector{leader: false, locker: locker, stopChan: make(chan bool, 1)}, nil
-}
-
-func (elector *DistributedElector) IsLeader(ctx context.Context) error {
-	select {
-	case <-ctx.Done():
-		return fmt.Errorf("done")
-	default:
-	}
-
-	if !elector.leader {
-		// Try to run for election
-		err := elector.locker.metaMgr.HoldDistributedLock(elector.locker.id, elector.locker.owner, elector.locker.ttl)
-		if err != nil {
-			elector.leader = false
-			logrus.Warnf("%s failed election: %v", elector.locker.owner, err)
-			return fmt.Errorf("already elected leader")
-		}
-
-		elector.leader = true
-		go elector.renewLeaderLock()
-	} else {
-		owner, err := elector.locker.metaMgr.GetDistributedLockOwner(elector.locker.id)
-		if err != nil || owner != elector.locker.owner {
-			elector.leader = false
-			elector.StopRenewLeaderLock()
-
-			logrus.Warnf("%s failed to extend mandate: %v", elector.locker.owner, err)
-			return fmt.Errorf("failed to extent mandate")
-		}
-	}
-
-	logrus.Infof("%v is the leader", elector.locker.owner)
-	return nil
-}
-
-func (elector *DistributedElector) StopRenewLeaderLock() {
-	elector.stopChan <- true
-}
-
-func (elector *DistributedElector) renewLeaderLock() {
-	ticker := time.NewTicker(elector.locker.ttl / 2)
-	defer ticker.Stop()
-	for {
-		select {
-		case <-elector.stopChan:
-			logrus.Infof("Stopping leader renewal for %s", elector.locker.owner)
-			return
-		case <-ticker.C:
-			// Periodically update the lock to prevent expiration
-			err := elector.locker.metaMgr.UpdateDistributedLock(elector.locker.id, elector.locker.owner, elector.locker.ttl)
-			if err != nil {
-				logrus.Warnf("failed to update distributed lock for owner %s: %v", elector.locker.owner, err)
-				// Handle error or break the loop if necessary
-			} else {
-				logrus.Infof("successfully updated distributed lock for owner %s", elector.locker.owner)
-			}
-		}
-	}
-}
-
-type DistributedLocker struct {
-	metaMgr *MetaManager
-	id      DistLockID
-	owner   string
-	ttl     time.Duration // lock holding ttl time
-}
-
-func NewDistributedLocker(mm *MetaManager, id DistLockID, owner string, ttl time.Duration) (*DistributedLocker, error) {
-	if host := os.Getenv("HOSTNAME"); host != "" {
-		owner = host
-	} else {
-		owner = owner + randString(8)
-		logrus.Warnf("cannot find HOSTNAME env, using %s as owner", owner)
-	}
-
-	// Avoid situations where the lock is not released after the duration of the task has ended
-	locker := &DistributedLocker{metaMgr: mm, id: id, owner: owner, ttl: ttl - 100*time.Millisecond}
-
-	err := locker.metaMgr.InitDistributedLockIfNecessary(id)
-	if err != nil {
-		logrus.Errorf("failed to check distributed lock for owner %s:%v", locker.owner, err)
-		return nil, fmt.Errorf("failed to check distributed lock:%v", err)
-	}
-
-	return locker, nil
-}
-
-// Lock acquires a lock
-// Implementation of the gocron lock interface
-func (l *DistributedLocker) Lock(ctx context.Context, key string) (gocron.Lock, error) {
-	err := l.metaMgr.HoldDistributedLock(l.id, l.owner, l.ttl)
-	if err != nil {
-		logrus.Warnf("failed to get distributed lock %v for owner %s:%v", l.id, l.owner, err)
-		return nil, fmt.Errorf("failed to get distributed lock")
-	}
-
-	logrus.Infof("Successfully acquired distributed lock %v for owner: %s", l.id, l.owner)
-	return &DistributedLock{metaMgr: l.metaMgr, owner: l.owner}, nil
-}
-
-// GormLock represents a database lock
-type DistributedLock struct {
-	metaMgr *MetaManager
-	owner   string
-}
-
-// Unlock releases the lock
-// Implementation of the gocron unlock interface
-func (l *DistributedLock) Unlock(ctx context.Context) error {
-	// Not actively releasing locks to avoid lock being acquired immediately, which can put pressure on the database
-	// After ttl(DistributedLocker.ttl) time, the lock will be released automatically
-	return nil
-}
-
-func NewMetaManager(db *gorm.DB, ps bool) *MetaManager {
+func NewMetaManager(db *gorm.DB) *MetaManager {
 	return &MetaManager{
-		db:             db,
-		persistSession: ps,
+		db: db,
 	}
-}
-
-func (manager *MetaManager) Persistent() bool {
-	return manager.persistSession
 }
 
 func (manager *MetaManager) tables() []interface{} {
-	tables := allTables
-	if manager.persistSession {
-		tables = append(tables, sessionTables...)
-	}
-	return tables
+	return allTables
 }
 
 // NeedBootstrap checks if the store is empty
@@ -298,7 +150,7 @@ func (t *MetaTransaction) CreateProject(project Project) error {
 		return result.Error
 	}
 	// add first member
-	err := t.AddProjectMembers([]Member{Member{ProjectID: project.ID, Member: project.Creator}})
+	err := t.AddProjectMembers([]Member{{ProjectID: project.ID, Member: project.Creator}})
 	return err
 }
 
@@ -660,15 +512,4 @@ func (t *MetaTransaction) GetProjectMeta(projectID string, tableNames []string, 
 	}
 	meta.CCLs = ccls
 	return &meta, nil
-}
-
-func randString(n int) string {
-	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-
-	rand.Seed(uint64(time.Now().UnixNano()))
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(b)
 }

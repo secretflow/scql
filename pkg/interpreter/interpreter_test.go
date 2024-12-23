@@ -18,8 +18,10 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	proto "github.com/secretflow/scql/pkg/proto-gen/scql"
 )
@@ -33,7 +35,7 @@ func TestCompile(t *testing.T) {
 
 		if tc.ok {
 			assert.NoError(err)
-			assert.Equal(tc.workPartyNum, len(compiledPlan.Parties))
+			assert.Equal(tc.workPartyNum, len(compiledPlan.Parties), "query: %s", tc.req.Query)
 			fmt.Printf("%s\n", compiledPlan.String())
 			// TODO: check plan
 		} else {
@@ -107,6 +109,20 @@ var commonSecurityConf = &proto.SecurityConfig{
 			TableName:    "tb",
 			ColumnName:   "is_active",
 		},
+		{
+			PartyCode:    "alice",
+			Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+			DatabaseName: "",
+			TableName:    "ta",
+			ColumnName:   "income",
+		},
+		{
+			PartyCode:    "bob",
+			Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_AGGREGATE,
+			DatabaseName: "",
+			TableName:    "ta",
+			ColumnName:   "income",
+		},
 	},
 }
 
@@ -166,6 +182,258 @@ var commonCatalog = &proto.Catalog{
 }
 
 var testCases = []compileTestCase{
+	{
+		req: &proto.CompileQueryRequest{
+			Query:  "SELECT ta.ID, ta.income FROM ta WHERE ta.income > ALL(SELECT ta.income AS avg_income FROM ta INNER JOIN tb ON ta.ID = tb.ID)",
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "alice",
+			},
+			IssuerAsParticipant: true,
+			SecurityConf:        commonSecurityConf,
+			Catalog:             commonCatalog,
+			CompileOpts:         &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+			CreatedAt:           timestamppb.New(time.Now()),
+		},
+		ok:           true,
+		workPartyNum: 2,
+	},
+	{
+		req: &proto.CompileQueryRequest{
+			Query:  "SELECT ta.ID, ta.income FROM ta WHERE ta.income > (SELECT AVG(ta.income) AS avg_income FROM ta INNER JOIN tb ON ta.ID = tb.ID)",
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "alice",
+			},
+			IssuerAsParticipant: true,
+			SecurityConf:        commonSecurityConf,
+			Catalog:             commonCatalog,
+			CompileOpts:         &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+			CreatedAt:           timestamppb.New(time.Now()),
+		},
+		ok:           true,
+		workPartyNum: 2,
+	},
+	{
+		req: &proto.CompileQueryRequest{
+			Query:  "SELECT ta.ID, tb.order_amount FROM ta INNER JOIN tb ON ta.ID = tb.ID ORDER BY ta.ID desc, tb.order_amount asc",
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "alice",
+			},
+			IssuerAsParticipant: true,
+			SecurityConf:        commonSecurityConf,
+			Catalog:             commonCatalog,
+			CompileOpts:         &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+			CreatedAt:           timestamppb.New(time.Now()),
+		},
+		ok:           false,
+		workPartyNum: 2,
+	},
+	{
+		req: &proto.CompileQueryRequest{
+			Query:  "SELECT u.ID, SUM(u.is_active) as s, COUNT(u.is_active) as c, MIN(u.is_active) as min, MAX(u.is_active) as max, AVG(u.is_active) as a FROM (SELECT ta.ID, tb.is_active FROM ta INNER JOIN tb ON ta.ID = tb.ID ORDER BY tb.order_amount) as u GROUP BY u.ID",
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "alice",
+			},
+			IssuerAsParticipant: true,
+			SecurityConf: &proto.SecurityConfig{
+				ColumnControlList: []*proto.SecurityConfig_ColumnControl{
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "age",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_JOIN,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "order_amount",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "is_active",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_JOIN,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_REVEAL_RANK,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "order_amount",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_AGGREGATE,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "is_active",
+					},
+				},
+			},
+			Catalog:     commonCatalog,
+			CompileOpts: &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+			CreatedAt:   timestamppb.New(time.Now()),
+		},
+		ok:           true,
+		workPartyNum: 2,
+	},
+	{
+		req: &proto.CompileQueryRequest{
+			Query:  "SELECT u.ID, SUM(tb.order_amount) FROM (SELECT ta.ID, tb.order_amount FROM ta INNER JOIN tb ON ta.ID = tb.ID ORDER BY tb.order_amount) as u GROUP BY u.ID",
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "alice",
+			},
+			IssuerAsParticipant: true,
+			SecurityConf: &proto.SecurityConfig{
+				ColumnControlList: []*proto.SecurityConfig_ColumnControl{
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "age",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_JOIN,
+						DatabaseName: "",
+						TableName:    "ta",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "order_amount",
+					},
+					{
+						PartyCode:    "bob",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "is_active",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_JOIN,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "ID",
+					},
+					{
+						PartyCode:    "alice",
+						Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_AGGREGATE,
+						DatabaseName: "",
+						TableName:    "tb",
+						ColumnName:   "order_amount",
+					},
+				},
+			},
+			Catalog:     commonCatalog,
+			CompileOpts: &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+			CreatedAt:   timestamppb.New(time.Now()),
+		},
+		ok:           false,
+		workPartyNum: 2,
+	},
+	{
+		req: &proto.CompileQueryRequest{
+			Query:  "SELECT ta.ID, tb.order_amount FROM ta INNER JOIN tb ON ta.ID = tb.ID ORDER BY ta.ID",
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "alice",
+			},
+			IssuerAsParticipant: true,
+			SecurityConf:        commonSecurityConf,
+			Catalog:             commonCatalog,
+			CompileOpts:         &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+			CreatedAt:           timestamppb.New(time.Now()),
+		},
+		ok:           true,
+		workPartyNum: 2,
+	},
+	{
+		req: &proto.CompileQueryRequest{
+			Query:  "SELECT now() as now, ta.ID FROM ta INNER JOIN tb ON ta.ID = tb.ID",
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "alice",
+			},
+			IssuerAsParticipant: true,
+			SecurityConf:        commonSecurityConf,
+			Catalog:             commonCatalog,
+			CompileOpts:         &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+			CreatedAt:           timestamppb.New(time.Now()),
+		},
+		ok:           true,
+		workPartyNum: 2,
+	},
+	{
+		req: &proto.CompileQueryRequest{
+			Query:  "SELECT SIN(ta.ID) FROM ta INNER JOIN tb ON ta.ID = tb.ID",
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "alice",
+			},
+			IssuerAsParticipant: true,
+			SecurityConf:        commonSecurityConf,
+			Catalog:             commonCatalog,
+			CompileOpts:         &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+		},
+		ok:           false,
+		workPartyNum: 2,
+	},
 	{
 		req: &proto.CompileQueryRequest{
 			Query:  "SELECT ROW_NUMBER() OVER(PARTITION BY tb.is_active ORDER BY ta.age, tb.order_amount) as num FROM ta INNER JOIN tb ON ta.ID = tb.ID",
@@ -927,16 +1195,16 @@ var testCases = []compileTestCase{
 			// TODO: add RuntimeConfig
 		},
 		ok:           true,
-		workPartyNum: 2,
+		workPartyNum: 1,
 	},
 	{
 		req: &proto.CompileQueryRequest{
 			Query:  "SELECT tb.data as avg_amount FROM tb into outfile party_code 'bob' '/data/output11.txt' fields terminated BY ','",
 			DbName: "",
 			Issuer: &proto.PartyId{
-				Code: "bob",
+				Code: "alice",
 			},
-			IssuerAsParticipant: false,
+			IssuerAsParticipant: true,
 			SecurityConf: &proto.SecurityConfig{
 				ColumnControlList: []*proto.SecurityConfig_ColumnControl{
 					{
@@ -978,7 +1246,7 @@ var testCases = []compileTestCase{
 			// TODO: add RuntimeConfig
 		},
 		ok:           true,
-		workPartyNum: 1,
+		workPartyNum: 2,
 	},
 	{
 		req: &proto.CompileQueryRequest{

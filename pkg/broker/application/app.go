@@ -15,15 +15,14 @@
 package application
 
 import (
-	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
 	"time"
 
-	"github.com/go-co-op/gocron/v2"
-	"github.com/patrickmn/go-cache"
 	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 
 	"github.com/secretflow/scql/pkg/broker/config"
 	"github.com/secretflow/scql/pkg/broker/partymgr"
@@ -37,7 +36,6 @@ import (
 )
 
 type App struct {
-	Sessions     *cache.Cache
 	PartyMgr     partymgr.PartyMgr
 	MetaMgr      *storage.MetaManager
 	Conf         *config.Config
@@ -57,8 +55,6 @@ func NewApp(partyMgr partymgr.PartyMgr, metaMgr *storage.MetaManager, cfg *confi
 	}
 
 	app := &App{
-		Sessions: cache.New(time.Duration(cfg.SessionExpireTime),
-			time.Duration(cfg.SessionCheckInterval)),
 		PartyMgr: partyMgr,
 		MetaMgr:  metaMgr,
 		Conf:     cfg,
@@ -76,7 +72,6 @@ func NewApp(partyMgr partymgr.PartyMgr, metaMgr *storage.MetaManager, cfg *confi
 			Auth:         auth,
 		},
 	}
-
 	switch strings.ToLower(cfg.Engine.Scheduler) {
 	case "kuscia":
 		kusciaSchedulerOpt := cfg.Engine.KusciaSchedulerOption
@@ -90,6 +85,7 @@ func NewApp(partyMgr partymgr.PartyMgr, metaMgr *storage.MetaManager, cfg *confi
 			scheduler.WithMaxPollTimes(kusciaSchedulerOpt.MaxPollTimes),
 			scheduler.WithMaxWaitTime(kusciaSchedulerOpt.MaxWaitTime),
 			scheduler.WithPollInterval(kusciaSchedulerOpt.PollInterval),
+			scheduler.WithAppImage(kusciaSchedulerOpt.AppImage),
 			scheduler.WithKeepJobAliveForDebug(kusciaSchedulerOpt.KeepJobAliveForDebug))
 		if err != nil {
 			return nil, fmt.Errorf("failed to create kuscia job scheduler: %v", err)
@@ -104,136 +100,136 @@ func NewApp(partyMgr partymgr.PartyMgr, metaMgr *storage.MetaManager, cfg *confi
 	default:
 		return nil, fmt.Errorf("unsupported engine scheduler %s", cfg.Engine.Scheduler)
 	}
-
-	jobWatcher, err := executor.NewJobWatcher(app.MetaMgr, app.Conf.PartyCode, func(jobId, url, reason string) {
-		app.onJobDead(jobId, url, reason)
-	})
+	// TODO: fix default unavailable time for job is 3 minutes
+	jobWatcher, err := executor.NewJobWatcher(app.MetaMgr, func(jobId, reason string) {
+		app.onJobDead(jobId, reason)
+	}, executor.WithMaxUnavailableDuration(time.Minute*3))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create jobwatcher: %v", err)
 	}
 
 	app.JobWatcher = jobWatcher
-
-	if cfg.PersistSession {
-		err := app.startGc()
-		if err != nil {
-			return nil, fmt.Errorf("failed to start gc tasks: %v", err)
-		}
+	w, err := NewCronJobWorker(time.Minute, app.MetaMgr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create worker: %v", err)
 	}
+	w.addTask(&task{name: "storage gc", interval: app.Conf.SessionCheckInterval, fn: app.StorageGc})
+	w.addTask(&task{name: "job watcher", interval: time.Minute, fn: app.JobWatcher.CheckJobs})
+	w.start()
 
 	return app, nil
 }
 
-func (app *App) GetSession(sid string) (*Session, bool) {
-	value, exists := app.Sessions.Get(sid)
-	if !exists {
-		return nil, false
+func (app *App) onJobDead(jobId, reason string) {
+	logrus.Warnf("error occurred during executing query job %s: %v", jobId, reason)
+	result := &pb.QueryResponse{
+		Status: &pb.Status{
+			Code:    int32(pb.Code_INTERNAL),
+			Message: reason,
+		},
 	}
-	if result, ok := value.(*Session); ok {
-		return result, exists
+	info, err := app.SetSessionResult(jobId, result)
+	engine, err := app.Scheduler.ParseEngineInstance(info.JobInfo)
+	if err != nil {
+		logrus.Warnf("failed to get engine from info: %v", err)
 	}
-	return nil, false
+	if err := engine.Stop(); err != nil {
+		logrus.Warnf("failed to stop query job: %v", err)
+	}
+	logrus.Infof("success to stop query job %s", jobId)
 }
 
-func (app *App) onJobDead(jobId, url, reason string) {
-	session, ok := app.GetSession(jobId)
-	if !ok {
-		logrus.Warnf("App.onJobDead warning: session not found for job id %s, job may come from other broker", jobId)
-		logrus.Warnf("error occurred during executing query job %s: %v", jobId, reason)
-		err := stopExternalEngine(jobId, url)
-		if err != nil {
-			logrus.Warnf("failed to stop engine on query job %s: %v", jobId, err)
-		} else {
-			logrus.Infof("success to stop engine on query job %s", jobId)
-		}
-	} else {
-		result := &pb.QueryResponse{
-			Status: &pb.Status{
-				Code:    int32(pb.Code_INTERNAL),
-				Message: reason,
-			},
-		}
-		session.SetResultSafely(result)
-		session.OnError(fmt.Errorf(reason))
-	}
-}
-
-func (app *App) DeleteSession(sid string) {
-	app.Sessions.Delete(sid)
-}
-
-func (app *App) AddSession(sid string, session *Session) {
-	app.Sessions.SetDefault(sid, session)
-}
-
-func (app *App) PersistSessionInfo(session *Session) error {
-	if !app.Conf.PersistSession {
-		return nil
-	}
-
+func (app *App) AddSession(session *Session) error {
 	info, err := sessionInfo(session)
 	if err != nil {
 		return fmt.Errorf("PersistSessionInfo: SessionInfo failed: %v", err)
 	}
 	// The job has only been submitted, it has not yet started to be executed by the engine.
 	info.Status = int8(storage.SessionSubmitted)
-
-	return app.MetaMgr.SetSessionInfo(*info)
+	return app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) (err error) {
+		return txn.SetSessionInfo(info)
+	})
 }
 
-func (app *App) PersistSessionResult(sid string, resp *pb.QueryResponse, expiredAt time.Time) error {
-	if !app.Conf.PersistSession {
-		return nil
+func (app *App) UpdateSession(session *Session) error {
+	info, err := sessionInfo(session)
+	if err != nil {
+		return fmt.Errorf("PersistSessionInfo: SessionInfo failed: %v", err)
 	}
+	return app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) (err error) {
+		return txn.UpdateSessionInfo(info)
+	})
+}
 
+func (app *App) SetSessionResult(sid string, resp *pb.QueryResponse) (info *storage.SessionInfo, err error) {
 	ser, err := message.ProtoMarshal(resp)
 	if err != nil {
-		return fmt.Errorf("PersistSessionResult: marshal resp failed: %v", err)
+		return nil, fmt.Errorf("PersistSessionResult: marshal resp failed: %v", err)
 	}
-	return app.MetaMgr.SetSessionResult(storage.SessionResult{
-		SessionID: sid,
-		Result:    ser,
-		ExpiredAt: expiredAt,
+	err = app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) (err error) {
+		info, err = txn.GetSessionInfo(sid)
+		if err != nil {
+			return err
+		}
+		if info.Status != int8(storage.SessionRunning) && info.Status != int8(storage.SessionSubmitted) {
+			return fmt.Errorf("failed to set session result due to session %s status is not running", sid)
+		}
+		if resp.Status.Code == 0 {
+			err = txn.SetSessionStatus(sid, storage.SessionFinished)
+		} else {
+			err = txn.SetSessionStatus(sid, storage.SessionFailed)
+		}
+		if err != nil {
+			return err
+		}
+		return txn.SetSessionResult(storage.SessionResult{
+			SessionID: sid,
+			Result:    ser,
+			ExpiredAt: info.ExpiredAt,
+		})
+	})
+	return
+}
+
+func (app *App) SetSessionStatus(sid string, status storage.SessionStatus) error {
+	return app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) (err error) {
+		return txn.SetSessionStatus(sid, status)
 	})
 }
 
 func (app *App) GetSessionInfo(sid string) (*storage.SessionInfo, error) {
-	if app.Conf.PersistSession {
-		// TODO: possible optimization: check memory before checking DB
-		info, err := app.MetaMgr.GetSessionInfo(sid)
-		if err != nil {
-			return nil, err
-		}
-		return &info, nil
+	var info *storage.SessionInfo
+	err := app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) (err error) {
+		info, err = txn.GetSessionInfo(sid)
+		return err
+	})
+	if err != nil {
+		return nil, err
 	}
+	return info, nil
 
-	session, ok := app.GetSession(sid)
-	if !ok {
-		return nil, fmt.Errorf("session{%s} not found", sid)
-	}
-	return sessionInfo(session)
 }
 
 func (app *App) GetSessionResult(sid string) (*pb.QueryResponse, error) {
-	var result *pb.QueryResponse
-	session, ok := app.GetSession(sid)
-	if ok {
-		result = session.GetResultSafely()
-	}
-
-	if result == nil && app.Conf.PersistSession {
-		res, err := app.MetaMgr.GetSessionResult(sid)
-		if err == nil {
-			var response pb.QueryResponse
-			err = message.ProtoUnmarshal(res.Result, &response)
-			if err != nil {
-				return nil, fmt.Errorf("unmarshal session result failed: %v", err)
-			}
-			result = &response
+	var res storage.SessionResult
+	err := app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) (err error) {
+		res, err = txn.GetSessionResult(sid)
+		return err
+	})
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
 		}
+		return nil, err
 	}
 
-	return result, nil
+	var response pb.QueryResponse
+	err = message.ProtoUnmarshal(res.Result, &response)
+	if err != nil {
+		return nil, fmt.Errorf("unmarshal session result failed: %v", err)
+	}
+	return &response, nil
+
 }
 
 // cancel session to release memory and engine resource
@@ -247,63 +243,13 @@ func (app *App) CancelSession(info *storage.SessionInfo) error {
 		logrus.Warnf("failed to stop query job: %v", err)
 	}
 
-	// release memory
-	_, ok := app.GetSession(info.SessionID)
-	if ok {
-		app.DeleteSession(info.SessionID)
-	}
-
-	if app.Conf.PersistSession {
-		// NOTE: only clear SessionResult, the SessionInfo is not cleared currently
-		err := app.MetaMgr.ClearSessionResult(info.SessionID)
-		if err != nil {
-			return fmt.Errorf("CancelSession: ClearSessionResult failed: %v", err)
-		}
-	}
-	return nil
-}
-
-func (app *App) startGc() error {
-	locker, err := storage.NewDistributedLocker(app.MetaMgr, storage.GcLockID, app.Conf.PartyCode, app.Conf.SessionCheckInterval)
+	// NOTE: only clear SessionResult, the SessionInfo is not cleared currently
+	err = app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) (err error) {
+		return txn.ClearSessionResult(info.SessionID)
+	})
 	if err != nil {
-		return fmt.Errorf("fail to create distributed locker: %v", err)
+		return fmt.Errorf("CancelSession: ClearSessionResult failed: %v", err)
 	}
-
-	storageGcScheduler, err := gocron.NewScheduler(
-		gocron.WithDistributedLocker(locker),
-	)
-	if err != nil {
-		return fmt.Errorf("fail to create storageGc scheduler: %v", err)
-	}
-
-	_, err = storageGcScheduler.NewJob(
-		gocron.DurationJob(app.Conf.SessionCheckInterval),
-		gocron.NewTask(app.StorageGc),
-		gocron.WithName("storageGc"),
-	)
-	if err != nil {
-		storageGcScheduler.Shutdown()
-		return fmt.Errorf("fail to create storageGc task: %v", err)
-	}
-
-	storageGcScheduler.Start()
-
-	sessionGcScheduler, err := gocron.NewScheduler()
-	if err != nil {
-		return fmt.Errorf("fail to create sessionGc scheduler: %v", err)
-	}
-
-	_, err = sessionGcScheduler.NewJob(
-		gocron.DurationJob(app.Conf.SessionCheckInterval),
-		gocron.NewTask(app.SessionGc),
-	)
-	if err != nil {
-		storageGcScheduler.Shutdown()
-		sessionGcScheduler.Shutdown()
-		return fmt.Errorf("fail to create sessionGc task: %v", err)
-	}
-
-	sessionGcScheduler.Start()
 	return nil
 }
 
@@ -339,7 +285,6 @@ func sessionInfo(session *Session) (info *storage.SessionInfo, err error) {
 		return
 	}
 	return &storage.SessionInfo{
-
 		SessionID:        session.ExecuteInfo.JobID,
 		Status:           0,
 		TableChecksum:    checksum.TableSchema,
@@ -353,28 +298,4 @@ func sessionInfo(session *Session) (info *storage.SessionInfo, err error) {
 		CreatedAt:        session.CreatedAt,
 		ExpiredAt:        session.CreatedAt.Add(time.Duration(session.ExpireSeconds) * time.Second),
 	}, nil
-}
-
-func stopExternalEngine(jobId, url string) error {
-	conn, err := executor.NewEngineClientConn(url, "", nil)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-	client := pb.NewSCQLEngineServiceClient(conn)
-
-	req := pb.StopJobRequest{
-		JobId: jobId,
-	}
-
-	status, err := client.StopJob(context.TODO(), &req)
-	if err != nil {
-		return err
-	}
-
-	if status.GetCode() != int32(pb.Code_OK) {
-		return fmt.Errorf("stop failed, response: %s", status.String())
-	}
-
-	return nil
 }

@@ -24,6 +24,7 @@
 #include "arrow/type_fwd.h"
 #include "arrow/type_traits.h"
 #include "arrow/util/checked_cast.h"
+#include "libspu/kernel/hlo/basic_binary.h"
 #include "libspu/kernel/hlo/basic_unary.h"
 #include "libspu/kernel/hlo/casting.h"
 
@@ -73,7 +74,6 @@ void TrigonometricFunction::ExecuteInSecret(ExecContext* ctx) {
 
     if (!spu_value.isFxp()) {
       auto to_type = spu::DataType::DT_F64;
-
       spu_value =
           spu::kernel::hlo::Cast(sctx, spu_value, spu_value.vtype(), to_type);
     }
@@ -147,5 +147,70 @@ void ACosine::ExecuteInPlain(ExecContext* ctx) {
 spu::Value ACosine::ComputeOnSpu(spu::SPUContext* sctx,
                                  const spu::Value& value) {
   return spu::kernel::hlo::Acos(sctx, value);
+}
+
+// ===========================
+//   Tan impl
+// ===========================
+const std::string Tan::kOpType("Tan");
+
+const std::string& Tan::Type() const { return kOpType; }
+
+void Tan::ExecuteInPlain(ExecContext* ctx) {
+  ExecuteTrigonometricFunction(ctx, "tan");
+}
+
+spu::Value Tan::ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& value) {
+  YACL_THROW("secret tangent function is not implemented");
+}
+
+// ===========================
+//   Arc sine impl
+// ===========================
+const std::string ASine::kOpType("ASin");
+const std::string& ASine::Type() const { return kOpType; }
+void ASine::ExecuteInPlain(ExecContext* ctx) {
+  ExecuteTrigonometricFunction(ctx, "asin");
+}
+spu::Value ASine::ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& value) {
+  return spu::kernel::hlo::Asin(sctx, value);
+}
+
+// ===========================
+//   Arc tan impl
+// ===========================
+const std::string ATan::kOpType("ATan");
+const std::string& ATan::Type() const { return kOpType; }
+void ATan::ExecuteInPlain(ExecContext* ctx) {
+  ExecuteTrigonometricFunction(ctx, "atan");
+}
+spu::Value ATan::ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& value) {
+  YACL_THROW("secret atan function is not implemented");
+}
+
+// ===========================
+//   ATan2 impl
+// ===========================
+const std::string ATan2::kOpType("ATan2");
+const std::string& ATan2::Type() const { return kOpType; }
+
+void ATan2::ValidateIoDataTypes(ExecContext* ctx) {
+  const auto& output = ctx->GetOutput(kOut);
+  YACL_ENFORCE(output.size() == 1, "output size of atan2 must be 1");
+  YACL_ENFORCE(output[0].elem_type() == pb::PrimitiveDataType::FLOAT64 ||
+                   output[0].elem_type() == pb::PrimitiveDataType::FLOAT32,
+               "output data type must be float");
+}
+
+TensorPtr ATan2::ComputeInPlain(const Tensor& lhs, const Tensor& rhs) {
+  arrow::Result<arrow::Datum> result = arrow::compute::CallFunction(
+      "atan2", {lhs.ToArrowChunkedArray(), rhs.ToArrowChunkedArray()});
+  YACL_ENFORCE(result.ok(), "failed to run atan2 function");
+  return TensorFrom(result.ValueOrDie().chunked_array());
+}
+
+spu::Value ATan2::ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
+                               const spu::Value& rhs) {
+  return spu::kernel::hlo::Atan2(sctx, lhs, rhs);
 }
 }  // namespace scql::engine::op

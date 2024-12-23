@@ -70,6 +70,7 @@ type TlsConf struct {
 type SecurityCompromiseConf struct {
 	GroupByThreshold uint64 `yaml:"group_by_threshold"`
 	RevealGroupMark  bool   `yaml:"reveal_group_mark"`
+	RevealGroupCount bool   `yaml:"reveal_group_count"`
 }
 
 // Config contains bootstrap configuration for SCDB

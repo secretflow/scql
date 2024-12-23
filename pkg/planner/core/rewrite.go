@@ -228,7 +228,7 @@ func RewriteSQLFromLP(lp LogicalPlan, m map[DbTable]DbTable, needRewrite bool) (
 		return "", nil, err
 	}
 
-	return b.String(), newTableRefs, nil
+	return b.String() + ";", newTableRefs, nil
 }
 
 func ReplaceTableNameInSQL(sql string, dialect format.Dialect, restoreFlags format.RestoreFlags, m map[DbTable]DbTable) (newSql string, err error) {

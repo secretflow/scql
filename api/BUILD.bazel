@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 load("@rules_cc//cc:defs.bzl", "cc_proto_library")
 load("@rules_java//java:defs.bzl", "java_proto_library")
-load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
+load("@rules_proto//proto:defs.bzl", "proto_library")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -104,8 +104,8 @@ proto_library(
     deps = [
         ":common_proto",
         ":core_proto",
-        ":status_proto",
         ":interpreter_proto",
+        ":status_proto",
         "@com_google_protobuf//:timestamp_proto",
         "@googleapis//google/api:annotations_proto",
         "@googleapis//google/api:field_behavior_proto",
@@ -132,10 +132,12 @@ proto_library(
     name = "interpreter_proto",
     srcs = ["interpreter.proto"],
     deps = [
+        ":common_proto",
         ":ccl_proto",
         ":core_proto",
         ":status_proto",
         ":subgraph_proto",
+        "@com_google_protobuf//:timestamp_proto",
         "@spulib//libspu:spu_proto",
     ],
 )

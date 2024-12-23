@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-08-01 16:03+0800\n"
+"POT-Creation-Date: 2024-11-21 17:45+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -64,7 +64,7 @@ msgstr "log_enable_console_logger"
 #: ../../reference/engine-config.rst:97 ../../reference/engine-config.rst:133
 #: ../../reference/engine-config.rst:137 ../../reference/engine-config.rst:145
 #: ../../reference/engine-config.rst:151 ../../reference/engine-config.rst:163
-#: ../../reference/engine-config.rst:171 ../../reference/engine-config.rst:185
+#: ../../reference/engine-config.rst:167 ../../reference/engine-config.rst:185
 msgid "true"
 msgstr ""
 
@@ -160,8 +160,8 @@ msgstr "系统中保留的审计日志文件的最大数量，0 表示保留所�
 msgid "peer_engine_protocol"
 msgstr ""
 
-#: ../../reference/engine-config.rst:45 ../../reference/engine-config.rst:69
-msgid "`http:proto`"
+#: ../../reference/engine-config.rst:45
+msgid "baidu_std"
 msgstr ""
 
 #: ../../reference/engine-config.rst:45
@@ -172,8 +172,8 @@ msgstr "SCQLEngine 与 SCQLEngine 之间的rpc协议"
 msgid "peer_engine_connection_type"
 msgstr ""
 
-#: ../../reference/engine-config.rst:47 ../../reference/engine-config.rst:71
-msgid "pooled"
+#: ../../reference/engine-config.rst:47
+msgid "single"
 msgstr ""
 
 #: ../../reference/engine-config.rst:47
@@ -193,8 +193,8 @@ msgstr ""
 #: ../../reference/engine-config.rst:127 ../../reference/engine-config.rst:129
 #: ../../reference/engine-config.rst:135 ../../reference/engine-config.rst:139
 #: ../../reference/engine-config.rst:157 ../../reference/engine-config.rst:159
-#: ../../reference/engine-config.rst:161 ../../reference/engine-config.rst:167
-#: ../../reference/engine-config.rst:169 ../../reference/engine-config.rst:189
+#: ../../reference/engine-config.rst:161 ../../reference/engine-config.rst:169
+#: ../../reference/engine-config.rst:171 ../../reference/engine-config.rst:189
 #: ../../reference/engine-config.rst:191 ../../reference/engine-config.rst:193
 msgid "none"
 msgstr "无"
@@ -310,11 +310,19 @@ msgid "driver_protocol"
 msgstr ""
 
 #: ../../reference/engine-config.rst:69
+msgid "`http:proto`"
+msgstr ""
+
+#: ../../reference/engine-config.rst:69
 msgid "The rpc protocol between engine and Driver"
 msgstr "SCQLEngine 与 Driver 之间的 rpc 协议"
 
 #: ../../reference/engine-config.rst:71
 msgid "driver_connection_type"
+msgstr ""
+
+#: ../../reference/engine-config.rst:71
+msgid "pooled"
 msgstr ""
 
 #: ../../reference/engine-config.rst:71
@@ -757,28 +765,28 @@ msgid "Directory where the certificates stored to verify s3 server"
 msgstr "存储 ca 证书的目录，用于验证 s3 server 的证书"
 
 #: ../../reference/engine-config.rst:167
-msgid "output_db_kind"
-msgstr ""
-
-#: ../../reference/engine-config.rst:167
-msgid "The kind of output db, support mysql/sqlite/postgresql"
-msgstr "输出的数据库类型，支持 mysql/sqlite/postgresql"
-
-#: ../../reference/engine-config.rst:169
-msgid "output_db_connection_str"
-msgstr ""
-
-#: ../../reference/engine-config.rst:169
-msgid "The :ref:`connection string <connection_str>` to connect to output db"
-msgstr "用于连接输出数据库的 :ref:`连接串 <connection_str>`"
-
-#: ../../reference/engine-config.rst:171
 msgid "output_s3_force_virtual_addressing"
 msgstr ""
 
-#: ../../reference/engine-config.rst:171
+#: ../../reference/engine-config.rst:167
 msgid "Default set to true to work with oss, for minio please set to false"
 msgstr "默认为 true，以便写入 oss，对于 minio 请设置为 false"
+
+#: ../../reference/engine-config.rst:169
+msgid "output_db_kind"
+msgstr ""
+
+#: ../../reference/engine-config.rst:169
+msgid "The kind of output db, support mysql/sqlite/postgresql"
+msgstr "输出的数据库类型，支持 mysql/sqlite/postgresql"
+
+#: ../../reference/engine-config.rst:171
+msgid "output_db_connection_str"
+msgstr ""
+
+#: ../../reference/engine-config.rst:171
+msgid "The :ref:`connection string <connection_str>` to connect to output db"
+msgstr "用于连接输出数据库的 :ref:`连接串 <connection_str>`"
 
 #: ../../reference/engine-config.rst:173
 msgid "psi_curve_type"
@@ -1092,8 +1100,10 @@ msgstr ""
 
 #: ../../reference/engine-config.rst:278
 msgid ""
-"OSS/MinIO csv: "
-"\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"S3Conf\\\\\\\":{\\\\\\\"endpoint\\\\\\\":\\\\\\\"test_endpoint\\\\\\\",\\\\\\\"access_key_id\\\\\\\":\\\\\\\"test_id\\\\\\\",\\\\\\\"secret_access_key\\\\\\\":\\\\\\\"test_key\\\\\\\"},\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"oss://test_bucket/test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
+"OSS csv: "
+"\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"s3_conf\\\\\\\":{\\\\\\\"endpoint\\\\\\\":\\\\\\\"test_endpoint\\\\\\\",\\\\\\\"access_key_id\\\\\\\":\\\\\\\"test_id\\\\\\\",\\\\\\\"secret_access_key\\\\\\\":\\\\\\\"test_key\\\\\\\",\\\\\\\"virtualhost\\\\\\\":"
+" true "
+"},\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"oss://test_bucket/test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"string\\\\\\\"}]}]}\""
 msgstr ""
 
 #: ../../reference/engine-config.rst:283
@@ -1256,7 +1266,9 @@ msgstr ""
 "``authorized_profile_path`` 中的公钥匹配。"
 
 #~ msgid ""
-#~ "本地 csv: "
-#~ "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
+#~ "OSS csv: "
+#~ "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"S3Conf\\\\\\\":{\\\\\\\"endpoint\\\\\\\":\\\\\\\"test_endpoint\\\\\\\",\\\\\\\"access_key_id\\\\\\\":\\\\\\\"test_id\\\\\\\",\\\\\\\"secret_access_key\\\\\\\":\\\\\\\"test_key\\\\\\\",\\\\\\\"virtualhost\\\\\\\":"
+#~ " true "
+#~ "},\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"oss://test_bucket/test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
 #~ msgstr ""
 

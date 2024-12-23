@@ -16,6 +16,7 @@ import (
 	"context"
 
 	"github.com/secretflow/scql/pkg/expression"
+	"github.com/secretflow/scql/pkg/types"
 )
 
 // canProjectionBeEliminatedLoose checks whether a projection can be eliminated,
@@ -237,4 +238,84 @@ func (ls *LogicalSort) replaceExprColumns(replace map[string]*expression.Column)
 
 func (*projectionEliminator) name() string {
 	return "projection_eliminate"
+}
+
+// buildQuantifierPlan adds extra condition for any / all subquery.
+func (er *expressionRewriter) buildQuantifierPlan(plan4Agg *LogicalAggregation, cond, lexpr, rexpr expression.Expression, all bool) {
+	// innerIsNull := expression.NewFunctionInternal(er.sctx, ast.IsNull, types.NewFieldType(mysql.TypeTiny), rexpr)
+	//outerIsNull := expression.NewFunctionInternal(er.sctx, ast.IsNull, types.NewFieldType(mysql.TypeTiny), lexpr)
+
+	// funcSum, err := aggregation.NewAggFuncDesc(er.sctx, ast.AggFuncSum, []expression.Expression{innerIsNull}, false)
+	// if err != nil {
+	// 	er.err = err
+	// 	return
+	// }
+	// colSum := &expression.Column{
+	// 	UniqueID: er.sctx.GetSessionVars().AllocPlanColumnID(),
+	// 	RetType:  funcSum.RetTp,
+	// }
+	// plan4Agg.AggFuncs = append(plan4Agg.AggFuncs, funcSum)
+	// plan4Agg.schema.Append(colSum)
+	// innerHasNull := expression.NewFunctionInternal(er.sctx, ast.NE, types.NewFieldType(mysql.TypeTiny), colSum, expression.Zero)
+
+	// Build `count(1)` aggregation to check if subquery is empty.
+	// funcCount, err := aggregation.NewAggFuncDesc(er.sctx, ast.AggFuncCount, []expression.Expression{expression.One}, false)
+	// if err != nil {
+	// 	er.err = err
+	// 	return
+	// }
+	// colCount := &expression.Column{
+	// 	UniqueID: er.sctx.GetSessionVars().AllocPlanColumnID(),
+	// 	RetType:  funcCount.RetTp,
+	// }
+	// plan4Agg.AggFuncs = append(plan4Agg.AggFuncs, funcCount)
+	// plan4Agg.schema.Append(colCount)
+
+	// if all {
+	// 	// All of the inner record set should not contain null value. So for t.id < all(select s.id from s), it
+	// 	// should be rewrote to t.id < min(s.id) and if(sum(s.id is null) != 0, null, true).
+	// 	innerNullChecker := expression.NewFunctionInternal(er.sctx, ast.If, types.NewFieldType(mysql.TypeTiny), innerHasNull, expression.Null, expression.One)
+	// 	cond = expression.ComposeCNFCondition(er.sctx, cond, innerNullChecker)
+	// 	// If the subquery is empty, it should always return true.
+	// 	emptyChecker := expression.NewFunctionInternal(er.sctx, ast.EQ, types.NewFieldType(mysql.TypeTiny), colCount, expression.Zero)
+	// 	// If outer key is null, and subquery is not empty, it should always return null, even when it is `null = all (1, 2)`.
+	// 	outerNullChecker := expression.NewFunctionInternal(er.sctx, ast.If, types.NewFieldType(mysql.TypeTiny), outerIsNull, expression.Null, expression.Zero)
+	// 	cond = expression.ComposeDNFCondition(er.sctx, cond, emptyChecker, outerNullChecker)
+	// } else {
+	// 	// For "any" expression, if the subquery has null and the cond returns false, the result should be NULL.
+	// 	// Specifically, `t.id < any (select s.id from s)` would be rewrote to `t.id < max(s.id) or if(sum(s.id is null) != 0, null, false)`
+	// 	innerNullChecker := expression.NewFunctionInternal(er.sctx, ast.If, types.NewFieldType(mysql.TypeTiny), innerHasNull, expression.Null, expression.Zero)
+	// 	cond = expression.ComposeDNFCondition(er.sctx, cond, innerNullChecker)
+	// 	// If the subquery is empty, it should always return false.
+	// 	emptyChecker := expression.NewFunctionInternal(er.sctx, ast.NE, types.NewFieldType(mysql.TypeTiny), colCount, expression.Zero)
+	// 	// If outer key is null, and subquery is not empty, it should return null.
+	// 	outerNullChecker := expression.NewFunctionInternal(er.sctx, ast.If, types.NewFieldType(mysql.TypeTiny), outerIsNull, expression.Null, expression.One)
+	// 	cond = expression.ComposeCNFCondition(er.sctx, cond, emptyChecker, outerNullChecker)
+	// }
+
+	// TODO: Add a Projection if any argument of aggregate funcs or group by items are scalar functions.
+	// plan4Agg.buildProjectionIfNecessary()
+	if !er.asScalar {
+		// For Semi LogicalApply without aux column, the result is no matter false or null. So we can add it to join predicate.
+		er.p, er.err = er.b.buildSemiApply(er.p, plan4Agg, []expression.Expression{cond}, false, false)
+		return
+	}
+	// If we treat the result as a scalar value, we will add a projection with a extra column to output true, false or null.
+	outerSchemaLen := er.p.Schema().Len()
+	er.p = er.b.buildApplyWithJoinType(er.p, plan4Agg, InnerJoin)
+	joinSchema := er.p.Schema()
+	proj := LogicalProjection{
+		Exprs: expression.Column2Exprs(joinSchema.Clone().Columns[:outerSchemaLen]),
+	}.Init(er.sctx, er.b.getSelectOffset())
+	proj.names = make([]*types.FieldName, outerSchemaLen, outerSchemaLen+1)
+	copy(proj.names, er.p.OutputNames())
+	proj.SetSchema(expression.NewSchema(joinSchema.Clone().Columns[:outerSchemaLen]...))
+	proj.Exprs = append(proj.Exprs, cond)
+	proj.schema.Append(&expression.Column{
+		UniqueID: er.sctx.GetSessionVars().AllocPlanColumnID(),
+		RetType:  cond.GetType(),
+	})
+	proj.names = append(proj.names, types.EmptyName)
+	proj.SetChildren(er.p)
+	er.p = proj
 }

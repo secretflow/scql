@@ -51,6 +51,7 @@ class OdbcConnector {
   std::string db_kind_;
   std::string connection_str_;
   std::unique_ptr<Poco::Data::SessionPool> pool_;
+  void SetUtcTimezone(Poco::Data::Session& session);
 };
 
 }  // namespace scql::engine

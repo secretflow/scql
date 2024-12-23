@@ -22,6 +22,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.9.2] - 2024-12-23
+
+### Added
+- Enhancement: Support `JOIN` after `UNION` operation.
+- Add SCQL Agent to facilitate running SCQL query tasks in Kuscia, making it easier to integrate into SecretPad.
+- Support writing results into multi-parties via `SELECT INTO OUTFILE` syntax.
+- Support datasource `ODPS` via integrating with [dataproxy](https://github.com/secretflow/dataproxy).
+- Support `order by`.
+- Support a lot of single-party operators, such as `ABS`, `ASIN`, `EXP`, `FLOOR`, `SQRT` etc.
+
+### Changed
+- Improve the `JOIN` and `IN` performance via integrating [RR22 PSI](https://github.com/secretflow/psi/blob/v0.5.0b0/psi/proto/psi_v2.proto#L62).
+- Improve the aggregation with group by performance if `reveal_group_count` enabled.
+
+### Fixed
+- Fixed an occasional crash issue when canceling query job.
+- Fixed `select now()` is not supported issue.
+
 ## [0.9.1] - 2024-10-16
 
 ### Added

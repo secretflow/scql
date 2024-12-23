@@ -36,6 +36,7 @@ var (
 	_ LogicalPlan = &LogicalSort{}
 	_ LogicalPlan = &LogicalLimit{}
 	_ LogicalPlan = &LogicalUnionAll{}
+	_ LogicalPlan = &LogicalMaxOneRow{}
 )
 
 type JoinType int

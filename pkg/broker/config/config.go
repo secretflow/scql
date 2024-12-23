@@ -41,6 +41,7 @@ const (
 type SecurityCompromiseConf struct {
 	GroupByThreshold uint64 `yaml:"group_by_threshold"`
 	RevealGroupMark  bool   `yaml:"reveal_group_mark"`
+	RevealGroupCount bool   `yaml:"reveal_group_count"`
 }
 
 type Config struct {
@@ -64,12 +65,14 @@ type Config struct {
 	// cache
 	SessionExpireTime    time.Duration `yaml:"session_expire_time"`
 	SessionCheckInterval time.Duration `yaml:"session_expire_check_time"`
-	PersistSession       bool          `yaml:"persist_session"`
+	// PersistSession       bool          `yaml:"persist_session"`
 	// streaming
 	Batched bool `yaml:"batched"`
 	// exchange job info
 	ExchangeJobInfoRetryTimes    int           `yaml:"exchange_job_info_retry_times"`
 	ExchangeJobInfoRetryInterval time.Duration `yaml:"exchange_job_info_retry_interval"`
+
+	AuthorizedWritableParties []string `yaml:"authorized_writable_parties"`
 }
 
 type DiscoveryConf struct {
@@ -96,6 +99,7 @@ type ConsulApiConf struct {
 
 type KusciaDiscConf struct {
 	KusciaApiConf `yaml:",inline"`
+	ClusterDefine string `yaml:"cluster_define"`
 }
 
 type KusciaApiConf struct {
@@ -146,6 +150,7 @@ type KusciaSchedulerConf struct {
 	MaxPollTimes int           `yaml:"max_poll_times"`
 	PollInterval time.Duration `yaml:"poll_interval"`
 	MaxWaitTime  time.Duration `yaml:"max_wait_time"`
+	AppImage     string        `yaml:"app_image"`
 
 	// default value is false, set true for debugging purpose
 	KeepJobAliveForDebug bool `yaml:"keep_job_alive_for_debug"`
@@ -199,7 +204,6 @@ func newDefaultConfig() *Config {
 
 	config.SessionExpireTime = DefaultSessionExpireTime
 	config.SessionCheckInterval = DefaultSessionCheckInterval
-	config.PersistSession = true
 	config.ExchangeJobInfoRetryTimes = DefaultExchangeJobInfoRetryTimes
 	config.ExchangeJobInfoRetryInterval = DefaultExchangeJobInfoRetryInterval
 	config.Storage = StorageConf{

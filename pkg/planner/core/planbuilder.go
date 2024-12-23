@@ -36,6 +36,36 @@ import (
 	"github.com/secretflow/scql/pkg/types"
 )
 
+type indexNestedLoopJoinTables struct {
+	inljTables  []hintTableInfo
+	inlhjTables []hintTableInfo
+	inlmjTables []hintTableInfo
+}
+
+type tableHintInfo struct {
+	indexNestedLoopJoinTables
+	sortMergeJoinTables []hintTableInfo
+	hashJoinTables      []hintTableInfo
+	indexHintList       []indexHintInfo
+	tiflashTables       []hintTableInfo
+	tikvTables          []hintTableInfo
+	aggHints            aggHintInfo
+	indexMergeHintList  []indexHintInfo
+}
+
+type hintTableInfo struct {
+	dbName       model.CIStr
+	tblName      model.CIStr
+	selectOffset int
+	matched      bool
+}
+
+type indexHintInfo struct {
+	dbName    model.CIStr
+	tblName   model.CIStr
+	indexHint *ast.IndexHint
+}
+
 type visitInfo struct {
 	privilege mysql.PrivilegeType
 	db        string
@@ -86,7 +116,8 @@ type PlanBuilder struct {
 	// colMapper stores the column that must be pre-resolved.
 	colMapper map[*ast.ColumnNameExpr]int
 	// visitInfo is used for privilege check.
-	visitInfo []visitInfo
+	visitInfo     []visitInfo
+	tableHintInfo []tableHintInfo
 	// optFlag indicates the flags of the optimizer rules.
 	optFlag uint64
 

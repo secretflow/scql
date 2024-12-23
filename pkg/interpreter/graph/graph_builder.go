@@ -15,11 +15,15 @@
 package graph
 
 import (
+	"encoding/base64"
 	"fmt"
 	"sort"
 	"strings"
 
 	"github.com/sirupsen/logrus"
+
+	"github.com/apache/arrow/go/v17/arrow/compute"
+	"github.com/apache/arrow/go/v17/arrow/memory"
 
 	"github.com/secretflow/scql/pkg/interpreter/ccl"
 	"github.com/secretflow/scql/pkg/interpreter/operator"
@@ -28,6 +32,7 @@ import (
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
 	"github.com/secretflow/scql/pkg/types"
+	typeutil "github.com/secretflow/scql/pkg/util/type"
 )
 
 type PipelineExecNode struct {
@@ -528,6 +533,34 @@ func (plan *GraphBuilder) AddJoinNode(name string, left []*Tensor, right []*Tens
 	return leftOutput, rightOutput, nil
 }
 
+func (plan *GraphBuilder) AddSecretJoinNode(name string, leftKeys, rightKeys, leftPayloads, rightPayloads []*Tensor, partyCodes []string) ([]*Tensor, []*Tensor, error) {
+	partyAttr := &Attribute{}
+	partyAttr.SetStrings(partyCodes)
+
+	inputs := make(map[string][]*Tensor)
+	inputs["LeftKey"] = leftKeys
+	inputs["RightKey"] = rightKeys
+	inputs["Left"] = leftPayloads
+	inputs["Right"] = rightPayloads
+	var leftOutput []*Tensor
+	for _, t := range leftPayloads {
+		leftOutput = append(leftOutput, plan.AddTensorAs(t))
+	}
+	var rightOutput []*Tensor
+	for _, t := range rightPayloads {
+		rightOutput = append(rightOutput, plan.AddTensorAs(t))
+	}
+
+	outputs := make(map[string][]*Tensor)
+	outputs["LeftOutput"] = leftOutput
+	outputs["RightOutput"] = rightOutput
+	if _, err := plan.AddExecutionNode(name, operator.OpNameSecretJoin, inputs, outputs,
+		map[string]*Attribute{operator.InputPartyCodesAttr: partyAttr}, partyCodes); err != nil {
+		return nil, nil, err
+	}
+	return leftOutput, rightOutput, nil
+}
+
 func (plan *GraphBuilder) AddFilterByIndexNode(name string, filter *Tensor, ts []*Tensor, partyCode string) ([]*Tensor, error) {
 	inputs := make(map[string][]*Tensor)
 	inputs["RowsIndexFilter"] = []*Tensor{filter}
@@ -591,9 +624,37 @@ func (plan *GraphBuilder) AddFilterNode(name string, input []*Tensor, mask *Tens
 }
 
 // compare node used in least and greatest function
-func (plan *GraphBuilder) AddCompareNode(name string, opType string, inputs []*Tensor) (*Tensor, error) {
-	// TODO(xiaoyuan) implement when algorithm related code merged
-	return nil, fmt.Errorf("compare operators(least/greatest) are unimplemented")
+func (plan *GraphBuilder) AddVariadicCompareNode(name string, opType string, inputs []*Tensor, parties []string) (*Tensor, error) {
+	output := plan.AddTensorAs(inputs[0])
+	output.SkipDTypeCheck = true
+	isFirstTensorTimestamp := typeutil.IsTimeType(inputs[0].DType)
+
+	for _, tensor := range inputs {
+		if !typeutil.IsNumericDtype(tensor.DType) && !typeutil.IsTimeType(tensor.DType) {
+			return nil, fmt.Errorf("AddVariadicCompareNode: unsupported dtype %v, only support numeric types or timestamp", tensor.DType)
+		}
+
+		if (isFirstTensorTimestamp && typeutil.IsNumericDtype(tensor.DType)) || (!isFirstTensorTimestamp && typeutil.IsTimeType(tensor.DType)) {
+			return nil, fmt.Errorf("AddVariadicCompareNode: timestamp and numeric type cannot be mixed")
+		}
+
+		output.CC.UpdateMoreRestrictedCCLFrom(tensor.CC)
+
+		if !isFirstTensorTimestamp {
+			dType, err := typeutil.GetWiderType(tensor.DType, output.DType)
+			if err != nil {
+				return nil, fmt.Errorf("AddVariadicCompareNode: %v", err)
+			}
+
+			output.DType = dType
+		}
+	}
+
+	_, err := plan.AddExecutionNode(name, opType, map[string][]*Tensor{In: inputs}, map[string][]*Tensor{Out: {output}}, map[string]*Attribute{}, parties)
+	if err != nil {
+		return nil, fmt.Errorf("AddVariadicCompareNode: %v", err)
+	}
+	return output, nil
 }
 
 func (plan *GraphBuilder) AddConstantNode(name string, value *types.Datum, partyCodes []string) (*Tensor, error) {
@@ -622,6 +683,13 @@ func (plan *GraphBuilder) AddConstantNode(name string, value *types.Datum, party
 	case types.KindString:
 		dType = pb.PrimitiveDataType_STRING
 		attr.SetString(value.GetString())
+	case types.KindMysqlTime:
+		dType = pb.PrimitiveDataType_DATETIME
+		time := value.GetMysqlTime()
+
+		timestamp := time.CoreTime().ToUnixTimestamp()
+
+		attr.SetInt64(timestamp)
 	default:
 		return nil, fmt.Errorf("addConstantNode: unsupported data{%+v}", value)
 	}
@@ -671,6 +739,45 @@ func (plan *GraphBuilder) AddIsNullNode(name string, input *Tensor) (*Tensor, er
 	return output, nil
 }
 
+func (plan *GraphBuilder) AddArrowFuncNode(nodeName, funcName string, funcOpt compute.FunctionOptions, inputs []*Tensor, outputType pb.PrimitiveDataType) (*Tensor, error) {
+	for i, input := range inputs {
+		// TODO: support constant input
+		if input.Status() != pb.TensorStatus_TENSORSTATUS_PRIVATE {
+			return nil, fmt.Errorf("AddArrowFuncNode: only support private input now, illegal input {%v}", input)
+		}
+		if i > 0 && input.OwnerPartyCode != inputs[0].OwnerPartyCode {
+			return nil, fmt.Errorf("AddArrowFuncNode: inputs must belong to the same party")
+		}
+	}
+	output := plan.AddTensorAs(inputs[0])
+	output.Name = nodeName + "_out"
+	output.DType = outputType
+
+	attrs := make(map[string]*Attribute)
+	nameAttr := &Attribute{}
+	nameAttr.SetString(funcName)
+	attrs[operator.FuncNameAttr] = nameAttr
+	if funcOpt != nil {
+		optTypeAttr := &Attribute{}
+		optTypeAttr.SetString(funcOpt.TypeName())
+		attrs[operator.FuncOptTypeAttr] = optTypeAttr
+
+		buf, err := compute.SerializeOptions(funcOpt, memory.DefaultAllocator)
+		if err != nil {
+			return nil, fmt.Errorf("AddArrowFuncNode: serialize func options failed: %v", err)
+		}
+		optAttr := &Attribute{}
+		// encode to base64, attribute not support bytes yet.
+		optAttr.SetString(base64.StdEncoding.EncodeToString(buf.Bytes()))
+		attrs[operator.FuncOptAttr] = optAttr
+	}
+	if _, err := plan.AddExecutionNode(nodeName, operator.OpNameArrowFunc, map[string][]*Tensor{"In": inputs},
+		map[string][]*Tensor{"Out": {output}}, attrs, []string{inputs[0].OwnerPartyCode}); err != nil {
+		return nil, err
+	}
+	return output, nil
+}
+
 func (plan *GraphBuilder) AddIfNullNode(name string, expr *Tensor, altValue *Tensor) (output *Tensor, err error) {
 	if expr.Status() != pb.TensorStatus_TENSORSTATUS_PRIVATE {
 		return nil, fmt.Errorf("AddIfNullNode: only support private expr now")
@@ -713,9 +820,26 @@ func (plan *GraphBuilder) AddCoalesceNode(name string, inputs []*Tensor) (*Tenso
 }
 
 func (plan *GraphBuilder) AddTrigonometricFunction(opName string, opType string, input *Tensor, partyCodes []string) (*Tensor, error) {
+	if !typeutil.IsNumericDtype(input.DType) {
+		return nil, fmt.Errorf("AddTrigonometricFunction: only support numeric data type, but get %v", input.DType.String())
+	}
 	output := plan.AddTensorAs(input)
 	output.DType = pb.PrimitiveDataType_FLOAT64
 	if _, err := plan.AddExecutionNode(opName, opType, map[string][]*Tensor{"In": {input}}, map[string][]*Tensor{"Out": {output}}, map[string]*Attribute{}, partyCodes); err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func (plan *GraphBuilder) AddUnaryNumericNode(name string, opType string, input *Tensor, outputType pb.PrimitiveDataType, partyCodes []string) (*Tensor, error) {
+	if !typeutil.IsNumericDtype(input.DType) {
+		return nil, fmt.Errorf("AddUnaryNumericNode: only support numeric data type, but get %v", input.DType.String())
+	}
+
+	output := plan.AddTensorAs(input)
+	output.DType = outputType
+	if _, err := plan.AddExecutionNode(name, opType, map[string][]*Tensor{"In": {input}}, map[string][]*Tensor{"Out": {output}}, map[string]*Attribute{}, partyCodes); err != nil {
 		return nil, err
 	}
 
@@ -739,7 +863,7 @@ func (plan *GraphBuilder) AddCastNode(name string, outputDType pb.PrimitiveDataT
 func (plan *GraphBuilder) AddReduceAggNode(aggName string, in *Tensor) (*Tensor, error) {
 	opType, ok := operator.ReduceAggOp[aggName]
 	if !ok {
-		return nil, fmt.Errorf("addReduceAggNode: unsupported aggregation fucntion %v", aggName)
+		return nil, fmt.Errorf("AddReduceAggNode: unsupported aggregation fucntion %v", aggName)
 	}
 	partyCodes := plan.partyInfo.GetParties()
 	if in.Status() == pb.TensorStatus_TENSORSTATUS_PRIVATE {
@@ -761,7 +885,7 @@ func (plan *GraphBuilder) AddReduceAggNode(aggName string, in *Tensor) (*Tensor,
 	if _, err := plan.AddExecutionNode("reduce_"+aggName, opType,
 		map[string][]*Tensor{"In": {in}}, map[string][]*Tensor{"Out": {out}},
 		map[string]*Attribute{}, partyCodes); err != nil {
-		return nil, fmt.Errorf("addReduceAggNode: %v", err)
+		return nil, fmt.Errorf("AddReduceAggNode: %v", err)
 	}
 	return out, nil
 }
@@ -798,7 +922,7 @@ func (plan *GraphBuilder) AddBroadcastToNode(name string, ins []*Tensor, shapeRe
 	}
 
 	if _, err := plan.AddExecutionNode(name, operator.OpNameBroadcastTo, map[string][]*Tensor{"In": ins, "ShapeRefTensor": {shapeRefTensor}}, map[string][]*Tensor{"Out": outs}, map[string]*Attribute{}, partyCodes); err != nil {
-		return nil, fmt.Errorf("graphBuilder.AddBroadcastToNode: %v", err)
+		return nil, fmt.Errorf("AddBroadcastToNode: %v", err)
 	}
 	return outs, nil
 }
@@ -822,4 +946,44 @@ func (plan *GraphBuilder) AddLimitNode(name string, input []*Tensor, offset int,
 		return nil, fmt.Errorf("AddLimitNode: %v", err)
 	}
 	return output, nil
+}
+
+// AddReplicateNode adds a Replicate node, used in cross join
+func (plan *GraphBuilder) AddReplicateNode(name string, left []*Tensor,
+	right []*Tensor, leftOutput []*Tensor, rightOutput []*Tensor,
+	attr map[string]*Attribute, partyCodes []string) (*ExecutionNode, error) {
+	if len(left) == 0 || len(right) == 0 {
+		return nil, fmt.Errorf("AddReplicateNode: left and right should not be empty")
+	}
+
+	if len(left) != len(leftOutput) || len(right) != len(rightOutput) {
+		return nil, fmt.Errorf("AddReplicateNode: input(%v/%v) should have same length with output(%v/%v)", len(left), len(right), len(leftOutput), len(rightOutput))
+	}
+
+	leftFirstTensor := left[0]
+	if leftFirstTensor.status != pb.TensorStatus_TENSORSTATUS_PRIVATE {
+		return nil, fmt.Errorf("AddReplicateNode: all input tensors should be private")
+	}
+
+	for _, tensor := range left[1:] {
+		if tensor.OwnerPartyCode != leftFirstTensor.OwnerPartyCode {
+			return nil, fmt.Errorf("AddReplicateNode: all input tensors should be from the same party")
+		}
+		if tensor.status != pb.TensorStatus_TENSORSTATUS_PRIVATE {
+			return nil, fmt.Errorf("AddReplicateNode: all input tensors should be private")
+		}
+	}
+
+	rightFirstTensor := right[0]
+
+	for _, tensor := range right[1:] {
+		if tensor.OwnerPartyCode != rightFirstTensor.OwnerPartyCode {
+			return nil, fmt.Errorf("AddReplicateNode: all input tensors should be from the same party")
+		}
+		if tensor.status != pb.TensorStatus_TENSORSTATUS_PRIVATE {
+			return nil, fmt.Errorf("AddReplicateNode: all input tensors should be private")
+		}
+	}
+	return plan.AddExecutionNode(name, operator.OpNameReplicate, map[string][]*Tensor{"Left": left, "Right": right},
+		map[string][]*Tensor{"LeftOut": leftOutput, "RightOut": rightOutput}, attr, partyCodes)
 }

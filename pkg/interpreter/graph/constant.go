@@ -37,6 +37,7 @@ const (
 	ValueIfFalse string = "ValueIfFalse"
 	Value        string = "Value"
 	ValueElse    string = "ValueElse"
+	In           string = "In"
 	Out          string = "Out"
 )
 

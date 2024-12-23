@@ -74,11 +74,11 @@ def get_db_from_json(source_file: str):
         result[db_name] = db_info[db_name]
         result[db_name]["table_info"] = dict()
     for table_file in info.get("table_files"):
-        table_info = parse_json(table_file)
+        table_info = parse_json(os.path.join(f"testdata", table_file))
         for table_name in table_info:
-            result[table_info[table_name]["db_name"]]["table_info"][table_name] = (
-                table_info[table_name]
-            )
+            result[table_info[table_name]["db_name"]]["table_info"][
+                table_name
+            ] = table_info[table_name]
     return result
 
 

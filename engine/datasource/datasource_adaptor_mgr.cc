@@ -18,6 +18,7 @@
 
 #include "engine/datasource/arrow_sql_adaptor_factory.h"
 #include "engine/datasource/csvdb_adaptor_factory.h"
+#include "engine/datasource/dp_adaptor_factory.h"
 #include "engine/datasource/odbc_adaptor_factory.h"
 
 namespace scql::engine {
@@ -70,6 +71,8 @@ void DatasourceAdaptorMgr::RegisterBuiltinAdaptorFactories() {
   factory_maps_.insert({DataSourceKind::MYSQL, odbc_adaptor_factory});
   factory_maps_.insert({DataSourceKind::SQLITE, odbc_adaptor_factory});
   factory_maps_.insert({DataSourceKind::POSTGRESQL, odbc_adaptor_factory});
+  factory_maps_.insert(
+      {DataSourceKind::DATAPROXY, std::make_shared<DpAdaptorFactory>()});
   factory_maps_.insert(
       {DataSourceKind::CSVDB, std::make_shared<CsvdbAdaptorFactory>()});
   factory_maps_.insert(

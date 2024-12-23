@@ -2088,3 +2088,42 @@ func extractWindowFuncs(fields []*ast.SelectField) []*ast.WindowFuncExpr {
 	}
 	return extractor.windowFuncs
 }
+
+// LogicalMaxOneRow checks if a query returns no more than one row.
+type LogicalMaxOneRow struct {
+	baseLogicalPlan
+}
+
+func (b *PlanBuilder) buildMaxOneRow(p LogicalPlan) LogicalPlan {
+	maxOneRow := LogicalMaxOneRow{}.Init(b.ctx, b.getSelectOffset())
+	maxOneRow.SetChildren(p)
+	return maxOneRow
+}
+
+// buildApplyWithJoinType builds apply plan with outerPlan and innerPlan, which apply join with particular join type for
+// every row from outerPlan and the whole innerPlan.
+func (b *PlanBuilder) buildApplyWithJoinType(outerPlan, innerPlan LogicalPlan, tp JoinType) LogicalPlan {
+	b.optFlag = b.optFlag | flagPredicatePushDown | flagBuildKeyInfo | flagDecorrelate
+	ap := LogicalApply{LogicalJoin: LogicalJoin{JoinType: tp}}.Init(b.ctx, b.getSelectOffset())
+	ap.SetChildren(outerPlan, innerPlan)
+	ap.names = make([]*types.FieldName, outerPlan.Schema().Len()+innerPlan.Schema().Len())
+	copy(ap.names, outerPlan.OutputNames())
+	ap.SetSchema(expression.MergeSchema(outerPlan.Schema(), innerPlan.Schema()))
+	// Note that, tp can only be LeftOuterJoin or InnerJoin, so we don't consider other outer joins.
+	if tp == LeftOuterJoin {
+		b.optFlag = b.optFlag | flagEliminateOuterJoin
+		resetNotNullFlag(ap.schema, outerPlan.Schema().Len(), ap.schema.Len())
+	}
+	for i := outerPlan.Schema().Len(); i < ap.Schema().Len(); i++ {
+		ap.names[i] = types.EmptyName
+	}
+	return ap
+}
+
+// TableHints returns the *tableHintInfo of PlanBuilder.
+func (b *PlanBuilder) TableHints() *tableHintInfo {
+	if len(b.tableHintInfo) == 0 {
+		return nil
+	}
+	return &(b.tableHintInfo[len(b.tableHintInfo)-1])
+}

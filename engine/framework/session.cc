@@ -80,7 +80,7 @@ Session::Session(const SessionOptions& session_opt,
       link_factory_(link_factory),
       router_(router),
       ds_mgr_(ds_mgr),
-      debug_opts_(debug_opts),
+      debug_opts_(std::move(debug_opts)),
       allowed_spu_protocols_(allowed_spu_protocols) {
   start_time_ = std::chrono::system_clock::now();
 
@@ -204,8 +204,6 @@ void Session::EnableStreamingBatched() {
   }
 }
 
-namespace {
-
 // The std::hash for std::string is not crypto-safe. Hence it cannot be used to
 // simulate a random oracle. Currently we still want the hash function to
 // generate a 64 bits fingerprint. Now we choose SHA256 and treat the first 64
@@ -234,6 +232,8 @@ size_t CryptoHash(const std::string& str) {
   std::memcpy(&ret, hash, sizeof(ret));
   return ret >> 1;  // spu FM64 only used 63 bit to calculate
 }
+
+namespace {
 
 class StringToHashConverter {
  public:

@@ -95,22 +95,6 @@ class CredentialExpception : std::runtime_error {
 
 namespace scql::engine {
 
-namespace {
-
-int32_t CountTotalNodes(const scql::pb::SchedulingPolicy& policy) {
-  int32_t nodes_count = 0;
-  for (const auto& pipeline : policy.pipelines()) {
-    for (const auto& subdag : pipeline.subdags()) {
-      for (const auto& job : subdag.jobs()) {
-        nodes_count += job.node_ids().size();
-      }
-    }
-  }
-  return nodes_count;
-}
-
-}  // namespace
-
 EngineServiceImpl::EngineServiceImpl(
     const EngineServiceOptions& options,
     std::unique_ptr<SessionManager> session_mgr,
@@ -192,7 +176,7 @@ void EngineServiceImpl::StopJob(::google::protobuf::RpcController* cntl,
   }
 }
 
-void CheckGraphChecksum(const pb::RunExecutionPlanRequest*& request,
+void CheckGraphChecksum(const pb::RunExecutionPlanRequest* request,
                         Session* session) {
   auto logger = (session != nullptr && session->GetLogger() != nullptr)
                     ? session->GetLogger()
@@ -237,9 +221,13 @@ void CheckGraphChecksum(const pb::RunExecutionPlanRequest*& request,
     auto local_sub_graph_checksum = std::string(iter->second);
     auto peer_sub_graph_checksum = peer_checksum.substr(
         whole_graph_checksum.size(), local_sub_graph_checksum.size());
-    YACL_ENFORCE(peer_sub_graph_checksum == local_sub_graph_checksum,
-                 "peer_checksum: {} != local_sub_graph_checksum: {}",
-                 peer_sub_graph_checksum, local_sub_graph_checksum);
+    if (peer_sub_graph_checksum != local_sub_graph_checksum) {
+      SPDLOG_LOGGER_WARN(logger,
+                         "graph checksum mismatch for rank {}, self sub graph "
+                         "checksum: {}, peer sub graph checksum: {}",
+                         rank, local_sub_graph_checksum,
+                         peer_sub_graph_checksum);
+    }
   }
 }
 
@@ -404,20 +392,22 @@ void EngineServiceImpl::QueryJobStatus(::google::protobuf::RpcController* cntl,
     progress->mutable_start_time()->CopyFrom(
         chronoTimePointToTimestamp(session->GetStartTime()));
 
-    progress->set_stages_count(session->GetNodesCount());
-    progress->set_executed_stages(session->GetExecutedNodes());
+    progress->set_stages_count(session->GetProgressStats()->GetNodesCnt());
+    progress->set_executed_stages(
+        session->GetProgressStats()->GetExecutedNodes());
 
     auto link_stats = session->GetLinkStats();
     progress->mutable_io_stats()->set_send_bytes(link_stats->sent_bytes);
     progress->mutable_io_stats()->set_recv_bytes(link_stats->recv_bytes);
     progress->mutable_io_stats()->set_send_actions(link_stats->sent_actions);
     progress->mutable_io_stats()->set_recv_actions(link_stats->recv_actions);
-
     auto* current_stage = progress->add_running_stages();
-    auto [node_start_time, current_node_name] = session->GetCurrentNodeInfo();
+    auto [node_start_time, current_node_name] =
+        session->GetProgressStats()->GetCurrentNodeInfo();
     current_stage->mutable_start_time()->CopyFrom(
         chronoTimePointToTimestamp(node_start_time));
     current_stage->set_name(current_node_name);
+    current_stage->set_summary(session->GetProgressStats()->Summary());
   }
 
   SPDLOG_LOGGER_INFO(
@@ -483,8 +473,7 @@ void EngineServiceImpl::RunPlanCore(const pb::RunExecutionPlanRequest& request,
   auto logger = ActiveLogger(session);
   const auto& graph = request.graph();
   const auto& policy = graph.policy();
-  session->SetNodesCount(CountTotalNodes(policy));
-  session->SetExecutedNodes(0);
+  session->InitProgressStats(policy);
   if (policy.pipelines().size() > 1) {
     session->EnableStreamingBatched();
   }
@@ -492,6 +481,8 @@ void EngineServiceImpl::RunPlanCore(const pb::RunExecutionPlanRequest& request,
        pipe_index++) {
     const auto& pipeline = policy.pipelines()[pipe_index];
     PipelineExecutor pipe_executor(pipeline, session);
+    session->GetProgressStats()->SetBatchCntInPipeline(
+        pipe_executor.GetBatchNum());
     for (size_t i = 0; i < pipe_executor.GetBatchNum(); i++) {
       SPDLOG_LOGGER_INFO(logger,
                          "session({}) start to execute pipeline({}) batch({})",
@@ -511,7 +502,8 @@ void EngineServiceImpl::RunPlanCore(const pb::RunExecutionPlanRequest& request,
                                session->Id(), node.node_name(), node.op_type(),
                                pipe_index, i);
             auto start = std::chrono::system_clock::now();
-            session->SetCurrentNodeInfo(start, node.node_name());
+            session->GetProgressStats()->SetCurrentNodeInfo(start,
+                                                            node.node_name());
 
             YACL_ENFORCE(session->GetState() == SessionState::RUNNING,
                          "session status not equal to running");
@@ -528,12 +520,13 @@ void EngineServiceImpl::RunPlanCore(const pb::RunExecutionPlanRequest& request,
                                                                       start)
                     .count());
             // TODO(xiaoyuan): fix progress in streaming mode later
-            session->IncExecutedNodes();
+            session->GetProgressStats()->IncExecutedNodes();
             if (!session->GetStreamingOptions().batched) {
-              YACL_ENFORCE(
-                  session->GetExecutedNodes() <= session->GetNodesCount(),
-                  "executed nodes: {}, total nodes count: {}",
-                  session->GetExecutedNodes(), session->GetNodesCount());
+              YACL_ENFORCE(session->GetProgressStats()->GetExecutedNodes() <=
+                               session->GetProgressStats()->GetNodesCnt(),
+                           "executed nodes: {}, total nodes count: {}",
+                           session->GetProgressStats()->GetExecutedNodes(),
+                           session->GetProgressStats()->GetNodesCnt());
             }
             if (node.op_type() == "Publish") {
               auto results = session->GetPublishResults();
@@ -553,11 +546,13 @@ void EngineServiceImpl::RunPlanCore(const pb::RunExecutionPlanRequest& request,
         }
       }
       pipe_executor.FetchOutputTensors();
+      session->GetProgressStats()->IncExecutedBatch();
       SPDLOG_LOGGER_INFO(
           logger, "session({}) finished executing pipeline({}) batch({})",
           session->Id(), pipe_index, i);
     }
     pipe_executor.Finish();
+    session->GetProgressStats()->IncExecutedPipeline();
   }
   SPDLOG_LOGGER_INFO(logger, "session({}) run plan policy succ", session->Id());
   response->mutable_status()->set_code(pb::Code::OK);

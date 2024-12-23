@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   scdb:
     image: secretflow/scql:latest
@@ -36,7 +35,7 @@ services:
       - ./engine/bob/conf/ed25519key.pem:/home/admin/engine/conf/ed25519key.pem
       - ./engine/bob/conf/authorized_profile.json:/home/admin/engine/conf/authorized_profile.json
   mysql:
-    image: mysql:latest
+    image: mysql:8.0.39
     environment:
       - MYSQL_ROOT_PASSWORD=__MYSQL_ROOT_PASSWD__
       - TZ=Asia/Shanghai

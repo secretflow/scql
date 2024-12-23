@@ -121,8 +121,8 @@ func (graph *Graph) TopologicalSort() ([][]*ExecutionNode, error) {
 	return outputs, nil
 }
 
-// DumpGraphviz dumps a graph viz for visualization
-func (graph *Graph) DumpGraphviz() string {
+// DumpGraphvizBase is a helper function to dump graphviz with custom labeler
+func (graph *Graph) DumpGraphvizBase(nodeLabeler func(*ExecutionNode) string, edgeValueLabeler func(*Tensor) string) string {
 	var builder strings.Builder
 	fmt.Fprintln(&builder, "digraph G {")
 	convertToSingleQuote := func(s string) string {
@@ -138,20 +138,36 @@ func (graph *Graph) DumpGraphviz() string {
 	sort.Slice(nodes, func(i, j int) bool { return nodes[i].ID < nodes[j].ID })
 
 	for _, node := range nodes {
-		fmt.Fprintf(&builder, "%d [label=\"%s\"]\n", node.ID, convertToSingleQuote(node.ToString()))
+		fmt.Fprintf(&builder, "%d [label=\"%s\"]\n", node.ID, convertToSingleQuote(nodeLabeler(node)))
 	}
 
 	var all []string
 	for _, node := range nodes {
 		for edge := range node.Edges {
 			all = append(all, fmt.Sprintf("%d -> %d [label = \"%s\"]\n", edge.From.ID,
-				edge.To.ID, convertToSingleQuote(edge.Value.ToString())))
+				edge.To.ID, convertToSingleQuote(edgeValueLabeler(edge.Value))))
 		}
 	}
 	sort.Strings(all)
 	fmt.Fprint(&builder, strings.Join(all, ""))
 	fmt.Fprint(&builder, "}")
 	return builder.String()
+}
+
+// DumpGraphviz dumps a graph viz for visualization
+func (graph *Graph) DumpGraphviz() string {
+	return graph.DumpGraphvizBase(
+		func(node *ExecutionNode) string { return node.ToString() },
+		func(edgeValue *Tensor) string { return edgeValue.ToString() },
+	)
+}
+
+// DumpBriefGraphviz dumps a brief graph viz for visualization
+func (graph *Graph) DumpBriefGraphviz() string {
+	return graph.DumpGraphvizBase(
+		func(node *ExecutionNode) string { return node.ToBriefString() },
+		func(edgeValue *Tensor) string { return edgeValue.ToBriefString() },
+	)
 }
 
 // DumpBriefPipeline dumps pipeline to string
@@ -185,38 +201,6 @@ func (graph *Graph) DumpBriefPipeline() string {
 		fmt.Fprint(&builder, fmt.Sprintf("Outputs: %+v\n", outputTensorIDs))
 		fmt.Fprint(&builder, "}\n")
 	}
-	return builder.String()
-}
-
-// DumpBriefGraphviz dumps a brief graph viz for visualization
-func (graph *Graph) DumpBriefGraphviz() string {
-	var builder strings.Builder
-	fmt.Fprintln(&builder, "digraph G {")
-	convertToSingleQuote := func(s string) string {
-		return strings.ReplaceAll(s, "\"", "'")
-	}
-	nodes := []*ExecutionNode{}
-	for _, pipeline := range graph.Pipelines {
-		for n := range pipeline.Nodes {
-			nodes = append(nodes, n)
-		}
-	}
-	sort.Slice(nodes, func(i, j int) bool { return nodes[i].ID < nodes[j].ID })
-
-	for _, node := range nodes {
-		fmt.Fprintf(&builder, "%d [label=\"%s\"]\n", node.ID, convertToSingleQuote(node.ToBriefString()))
-	}
-
-	var all []string
-	for _, node := range nodes {
-		for edge := range node.Edges {
-			all = append(all, fmt.Sprintf("%d -> %d [label = \"%s\"]\n", edge.From.ID,
-				edge.To.ID, convertToSingleQuote(edge.Value.ToBriefString())))
-		}
-	}
-	sort.Strings(all)
-	fmt.Fprint(&builder, strings.Join(all, ""))
-	fmt.Fprint(&builder, "}")
 	return builder.String()
 }
 

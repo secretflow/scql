@@ -18,7 +18,10 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 	"unicode/utf8"
+
+	"golang.org/x/exp/rand"
 
 	"github.com/pingcap/errors"
 
@@ -319,4 +322,15 @@ func RemoveSensitiveInfo(sqlStr string) string {
 		return sqlStr[:match[1]] + "***"
 	}
 	return sqlStr
+}
+
+func RandString(n int) string {
+	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+
+	rand.Seed(uint64(time.Now().UnixNano()))
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }

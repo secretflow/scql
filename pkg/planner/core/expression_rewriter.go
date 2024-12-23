@@ -21,6 +21,7 @@ import (
 	"github.com/pingcap/errors"
 
 	"github.com/secretflow/scql/pkg/expression"
+	"github.com/secretflow/scql/pkg/expression/aggregation"
 	"github.com/secretflow/scql/pkg/infoschema"
 	"github.com/secretflow/scql/pkg/parser/ast"
 	"github.com/secretflow/scql/pkg/parser/mysql"
@@ -325,14 +326,77 @@ func (er *expressionRewriter) Enter(inNode ast.Node) (ast.Node, bool) {
 		if _, ok := expression.DisableFoldFunctions[v.FnName.L]; ok {
 			er.disableFoldCounter++
 		}
+	case *ast.SubqueryExpr:
+		return er.handleScalarSubquery(er.ctx, v)
+	case *ast.CompareSubqueryExpr:
+		return er.handleCompareSubquery(er.ctx, v)
 	case *ast.ParenthesesExpr:
-	case *ast.CompareSubqueryExpr, *ast.ExistsSubqueryExpr, *ast.SubqueryExpr,
+	case *ast.ExistsSubqueryExpr,
 		*ast.ValuesExpr:
 		er.err = fmt.Errorf("unsupported expression type %T", v)
 	default:
 		er.asScalar = true
 	}
 	return inNode, false
+}
+
+func (er *expressionRewriter) handleScalarSubquery(ctx context.Context, v *ast.SubqueryExpr) (ast.Node, bool) {
+	np, err := er.buildSubquery(ctx, v)
+	if err != nil {
+		er.err = err
+		return v, true
+	}
+
+	// below code are from tidb
+	np = er.b.buildMaxOneRow(np)
+	// if len(np.extractCorrelatedCols()) > 0 {
+	er.p = er.b.buildApplyWithJoinType(er.p, np, LeftOuterJoin)
+	if np.Schema().Len() > 1 {
+		newCols := make([]expression.Expression, 0, np.Schema().Len())
+		for _, col := range np.Schema().Columns {
+			newCols = append(newCols, col)
+		}
+		expr, err1 := er.newFunction(ast.RowFunc, newCols[0].GetType(), newCols...)
+		if err1 != nil {
+			er.err = err1
+			return v, true
+		}
+		er.ctxStackAppend(expr, types.EmptyName)
+	} else {
+		er.ctxStackAppend(er.p.Schema().Columns[er.p.Schema().Len()-1], er.p.OutputNames()[er.p.Schema().Len()-1])
+	}
+	return v, true
+	// }
+	// physicalPlan, _, err := DoOptimize(ctx, er.b.optFlag, np)
+	// if err != nil {
+	// 	er.err = err
+	// 	return v, true
+	// }
+	// rows, err := EvalSubquery(ctx, physicalPlan, er.b.is, er.b.ctx)
+	// if err != nil {
+	// 	er.err = err
+	// 	return v, true
+	// }
+	// if np.Schema().Len() > 1 {
+	// 	newCols := make([]expression.Expression, 0, np.Schema().Len())
+	// 	for i, data := range rows[0] {
+	// 		newCols = append(newCols, &expression.Constant{
+	// 			Value:   data,
+	// 			RetType: np.Schema().Columns[i].GetType()})
+	// 	}
+	// 	expr, err1 := er.newFunction(ast.RowFunc, newCols[0].GetType(), newCols...)
+	// 	if err1 != nil {
+	// 		er.err = err1
+	// 		return v, true
+	// 	}
+	// 	er.ctxStackAppend(expr, types.EmptyName)
+	// } else {
+	// 	er.ctxStackAppend(&expression.Constant{
+	// 		Value:   rows[0][0],
+	// 		RetType: np.Schema().Columns[0].GetType(),
+	// 	}, types.EmptyName)
+	// }
+	// return v, true
 }
 
 func (er *expressionRewriter) handleInSubquery(ctx context.Context, v *ast.PatternInExpr) (ast.Node, bool) {
@@ -412,7 +476,7 @@ func (er *expressionRewriter) Leave(originInNode ast.Node) (retNode ast.Node, ok
 	}
 	var inNode = originInNode
 	switch v := inNode.(type) {
-	case *ast.AggregateFuncExpr, *ast.ColumnNameExpr, *ast.ParenthesesExpr, *ast.SubqueryExpr, *ast.WhenClause, *ast.WindowFuncExpr: // do nothing
+	case *ast.AggregateFuncExpr, *ast.ColumnNameExpr, *ast.ParenthesesExpr, *ast.SubqueryExpr, *ast.WhenClause, *ast.WindowFuncExpr, *ast.CompareSubqueryExpr: // do nothing
 	case *driver.ValueExpr:
 		value := &expression.Constant{Value: v.Datum, RetType: &v.Type}
 		er.ctxStackAppend(value, types.EmptyName)
@@ -881,4 +945,211 @@ func (er *expressionRewriter) toColumn(v *ast.ColumnName) {
 		er.b.curClause = orderByClause
 	}
 	er.err = ErrUnknownColumn.GenWithStackByArgs(v.String(), clauseMsg[er.b.curClause])
+}
+
+func (er *expressionRewriter) handleCompareSubquery(ctx context.Context, v *ast.CompareSubqueryExpr) (ast.Node, bool) {
+	v.L.Accept(er)
+	if er.err != nil {
+		return v, true
+	}
+	lexpr := er.ctxStack[len(er.ctxStack)-1]
+	subq, ok := v.R.(*ast.SubqueryExpr)
+	if !ok {
+		er.err = errors.Errorf("Unknown compare type %T.", v.R)
+		return v, true
+	}
+	np, err := er.buildSubquery(ctx, subq)
+	if err != nil {
+		er.err = err
+		return v, true
+	}
+	// Only (a,b,c) = any (...) and (a,b,c) != all (...) can use row expression.
+	canMultiCol := (!v.All && v.Op == opcode.EQ) || (v.All && v.Op == opcode.NE)
+	if !canMultiCol && (expression.GetRowLen(lexpr) != 1 || np.Schema().Len() != 1) {
+		er.err = expression.ErrOperandColumns.GenWithStackByArgs(1)
+		return v, true
+	}
+	lLen := expression.GetRowLen(lexpr)
+	if lLen != np.Schema().Len() {
+		er.err = expression.ErrOperandColumns.GenWithStackByArgs(lLen)
+		return v, true
+	}
+	var rexpr expression.Expression
+	if np.Schema().Len() == 1 {
+		rexpr = np.Schema().Columns[0]
+	} else {
+		args := make([]expression.Expression, 0, np.Schema().Len())
+		for _, col := range np.Schema().Columns {
+			args = append(args, col)
+		}
+		rexpr, er.err = er.newFunction(ast.RowFunc, args[0].GetType(), args...)
+		if er.err != nil {
+			return v, true
+		}
+	}
+	switch v.Op {
+	// Only EQ, NE and NullEQ can be composed with and.
+	case opcode.EQ, opcode.NE, opcode.NullEQ:
+		if v.Op == opcode.EQ {
+			if v.All {
+				er.handleEQAll(lexpr, rexpr, np)
+			} else {
+				// `a = any(subq)` will be rewriten as `a in (subq)`.
+				er.buildSemiApplyFromEqualSubq(np, lexpr, rexpr, false)
+				if er.err != nil {
+					return v, true
+				}
+			}
+		} else if v.Op == opcode.NE {
+			if v.All {
+				// `a != all(subq)` will be rewriten as `a not in (subq)`.
+				er.buildSemiApplyFromEqualSubq(np, lexpr, rexpr, true)
+				if er.err != nil {
+					return v, true
+				}
+			} else {
+				er.handleNEAny(lexpr, rexpr, np)
+			}
+		} else {
+			// TODO: Support this in future.
+			er.err = errors.New("We don't support <=> all or <=> any now")
+			return v, true
+		}
+	default:
+		// When < all or > any , the agg function should use min.
+		useMin := ((v.Op == opcode.LT || v.Op == opcode.LE) && v.All) || ((v.Op == opcode.GT || v.Op == opcode.GE) && !v.All)
+		er.handleOtherComparableSubq(lexpr, rexpr, np, useMin, v.Op.String(), v.All)
+	}
+	if er.asScalar {
+		// The parent expression only use the last column in schema, which represents whether the condition is matched.
+		er.ctxStack[len(er.ctxStack)-1] = er.p.Schema().Columns[er.p.Schema().Len()-1]
+		er.ctxNameStk[len(er.ctxNameStk)-1] = er.p.OutputNames()[er.p.Schema().Len()-1]
+	}
+	return v, true
+}
+
+func (er *expressionRewriter) buildSemiApplyFromEqualSubq(np LogicalPlan, l, r expression.Expression, not bool) {
+	var condition expression.Expression
+	if rCol, ok := r.(*expression.Column); ok && (er.asScalar || not) {
+		rCol.InOperand = true
+		// If both input columns of `!= all / = any` expression are not null, we can treat the expression
+		// as normal column equal condition.
+		if lCol, ok := l.(*expression.Column); ok && mysql.HasNotNullFlag(lCol.GetType().Flag) && mysql.HasNotNullFlag(rCol.GetType().Flag) {
+			rCol.InOperand = false
+		}
+	}
+	condition, er.err = er.constructBinaryOpFunction(l, r, ast.EQ)
+	if er.err != nil {
+		return
+	}
+	er.p, er.err = er.b.buildSemiApply(er.p, np, []expression.Expression{condition}, er.asScalar, not)
+}
+
+// handleNEAny handles the case of != any. For example, if the query is t.id != any (select s.id from s), it will be rewrote to
+// t.id != s.id or count(distinct s.id) > 1 or [any checker]. If there are two different values in s.id ,
+// there must exist a s.id that doesn't equal to t.id.
+func (er *expressionRewriter) handleNEAny(lexpr, rexpr expression.Expression, np LogicalPlan) {
+	firstRowFunc, err := aggregation.NewAggFuncDesc(er.sctx, ast.AggFuncFirstRow, []expression.Expression{rexpr}, false)
+	if err != nil {
+		er.err = err
+		return
+	}
+	countFunc, err := aggregation.NewAggFuncDesc(er.sctx, ast.AggFuncCount, []expression.Expression{rexpr}, true)
+	if err != nil {
+		er.err = err
+		return
+	}
+	plan4Agg := LogicalAggregation{
+		AggFuncs: []*aggregation.AggFuncDesc{firstRowFunc, countFunc},
+	}.Init(er.sctx, er.b.getSelectOffset())
+	if hint := er.b.TableHints(); hint != nil {
+		plan4Agg.aggHints = hint.aggHints
+	}
+	plan4Agg.SetChildren(np)
+	firstRowResultCol := &expression.Column{
+		UniqueID: er.sctx.GetSessionVars().AllocPlanColumnID(),
+		RetType:  firstRowFunc.RetTp,
+	}
+	count := &expression.Column{
+		UniqueID: er.sctx.GetSessionVars().AllocPlanColumnID(),
+		RetType:  countFunc.RetTp,
+	}
+	plan4Agg.names = append(plan4Agg.names, types.EmptyName, types.EmptyName)
+	plan4Agg.SetSchema(expression.NewSchema(firstRowResultCol, count))
+	gtFunc := expression.NewFunctionInternal(er.sctx, ast.GT, types.NewFieldType(mysql.TypeTiny), count, expression.One)
+	neCond := expression.NewFunctionInternal(er.sctx, ast.NE, types.NewFieldType(mysql.TypeTiny), lexpr, firstRowResultCol)
+	cond := expression.ComposeDNFCondition(er.sctx, gtFunc, neCond)
+	er.buildQuantifierPlan(plan4Agg, cond, lexpr, rexpr, false)
+}
+
+// handleOtherComparableSubq handles the queries like < any, < max, etc. For example, if the query is t.id < any (select s.id from s),
+// it will be rewrote to t.id < (select max(s.id) from s).
+func (er *expressionRewriter) handleOtherComparableSubq(lexpr, rexpr expression.Expression, np LogicalPlan, useMin bool, cmpFunc string, all bool) {
+	plan4Agg := LogicalAggregation{}.Init(er.sctx, er.b.getSelectOffset())
+	if hint := er.b.TableHints(); hint != nil {
+		plan4Agg.aggHints = hint.aggHints
+	}
+	plan4Agg.SetChildren(np)
+
+	// Create a "max" or "min" aggregation.
+	funcName := ast.AggFuncMax
+	if useMin {
+		funcName = ast.AggFuncMin
+	}
+	funcMaxOrMin, err := aggregation.NewAggFuncDesc(er.sctx, funcName, []expression.Expression{rexpr}, false)
+	if err != nil {
+		er.err = err
+		return
+	}
+
+	// Create a column and append it to the schema of that aggregation.
+	colMaxOrMin := &expression.Column{
+		UniqueID: er.sctx.GetSessionVars().AllocPlanColumnID(),
+		RetType:  funcMaxOrMin.RetTp,
+	}
+	schema := expression.NewSchema(colMaxOrMin)
+
+	plan4Agg.names = append(plan4Agg.names, types.EmptyName)
+	plan4Agg.SetSchema(schema)
+	plan4Agg.AggFuncs = []*aggregation.AggFuncDesc{funcMaxOrMin}
+
+	cond := expression.NewFunctionInternal(er.sctx, cmpFunc, types.NewFieldType(mysql.TypeTiny), lexpr, colMaxOrMin)
+	er.buildQuantifierPlan(plan4Agg, cond, lexpr, rexpr, all)
+}
+
+// handleEQAll handles the case of = all. For example, if the query is t.id = all (select s.id from s), it will be rewrote to
+// t.id = (select s.id from s having count(distinct s.id) <= 1 and [all checker]).
+func (er *expressionRewriter) handleEQAll(lexpr, rexpr expression.Expression, np LogicalPlan) {
+	firstRowFunc, err := aggregation.NewAggFuncDesc(er.sctx, ast.AggFuncFirstRow, []expression.Expression{rexpr}, false)
+	if err != nil {
+		er.err = err
+		return
+	}
+	countFunc, err := aggregation.NewAggFuncDesc(er.sctx, ast.AggFuncCount, []expression.Expression{rexpr}, true)
+	if err != nil {
+		er.err = err
+		return
+	}
+	plan4Agg := LogicalAggregation{
+		AggFuncs: []*aggregation.AggFuncDesc{firstRowFunc, countFunc},
+	}.Init(er.sctx, er.b.getSelectOffset())
+	if hint := er.b.TableHints(); hint != nil {
+		plan4Agg.aggHints = hint.aggHints
+	}
+	plan4Agg.SetChildren(np)
+	plan4Agg.names = append(plan4Agg.names, types.EmptyName)
+	firstRowResultCol := &expression.Column{
+		UniqueID: er.sctx.GetSessionVars().AllocPlanColumnID(),
+		RetType:  firstRowFunc.RetTp,
+	}
+	plan4Agg.names = append(plan4Agg.names, types.EmptyName)
+	count := &expression.Column{
+		UniqueID: er.sctx.GetSessionVars().AllocPlanColumnID(),
+		RetType:  countFunc.RetTp,
+	}
+	plan4Agg.SetSchema(expression.NewSchema(firstRowResultCol, count))
+	leFunc := expression.NewFunctionInternal(er.sctx, ast.LE, types.NewFieldType(mysql.TypeTiny), count, expression.One)
+	eqCond := expression.NewFunctionInternal(er.sctx, ast.EQ, types.NewFieldType(mysql.TypeTiny), lexpr, firstRowResultCol)
+	cond := expression.ComposeCNFCondition(er.sctx, leFunc, eqCond)
+	er.buildQuantifierPlan(plan4Agg, cond, lexpr, rexpr, true)
 }

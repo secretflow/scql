@@ -17,12 +17,14 @@ package executor
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/secretflow/scql/pkg/broker/application"
 	"github.com/secretflow/scql/pkg/broker/constant"
@@ -34,6 +36,7 @@ import (
 	"github.com/secretflow/scql/pkg/interpreter/graph"
 	"github.com/secretflow/scql/pkg/parser/model"
 	"github.com/secretflow/scql/pkg/planner/core"
+	"github.com/secretflow/scql/pkg/planner/util"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
@@ -99,7 +102,7 @@ func (r *QueryRunner) CreateChecksum() (map[string]application.Checksum, error) 
 	return checksumMap, nil
 }
 
-func (r *QueryRunner) prepareData(usedTableNames []string) (dataParties []string, workParties []string, err error) {
+func (r *QueryRunner) prepareData(usedTableNames, intoParties []string) (dataParties []string, workParties []string, err error) {
 	session := r.session
 	txn := session.App.MetaMgr.CreateMetaTransaction()
 	defer func() {
@@ -159,7 +162,8 @@ func (r *QueryRunner) prepareData(usedTableNames []string) (dataParties []string
 	}
 	// SliceDeDup sort parties and compact
 	dataParties = sliceutil.SliceDeDup(parties)
-	workParties = sliceutil.SliceDeDup(append(dataParties, session.ExecuteInfo.Issuer.Code))
+	workParties = append(dataParties, session.ExecuteInfo.Issuer.Code)
+	workParties = sliceutil.SliceDeDup(append(workParties, intoParties...))
 	partyInfo, err := session.App.PartyMgr.GetPartyInfoByParties(workParties)
 	if err != nil {
 		return
@@ -180,7 +184,15 @@ func (r *QueryRunner) Prepare(usedTables []core.DbTable) (dataParties []string, 
 	for _, t := range usedTables {
 		usedTableNames = append(usedTableNames, t.GetTableName())
 	}
-	dataParties, workParties, err = r.prepareData(usedTableNames)
+	intoParties, err := util.CollectIntoParties(r.session.ExecuteInfo.Query)
+	if err != nil {
+		return nil, nil, fmt.Errorf("collect select into parties err: %s", err)
+	}
+	if err := r.checkWritePrivilege(intoParties); err != nil {
+		return nil, nil, fmt.Errorf("Prepare: check write privilege err: %s", err)
+	}
+
+	dataParties, workParties, err = r.prepareData(usedTableNames, intoParties)
 	if err != nil {
 		return
 	}
@@ -252,6 +264,7 @@ func (r *QueryRunner) buildCompileQueryRequest() *pb.CompileQueryRequest {
 		},
 		Catalog:     catalog,
 		CompileOpts: s.ExecuteInfo.CompileOpts,
+		CreatedAt:   timestamppb.New(s.ExecuteInfo.CreatedAt),
 	}
 	return req
 }
@@ -373,24 +386,24 @@ func (r *QueryRunner) CreateExecutor(plan *pb.CompiledPlan) (*executor.Executor,
 	return executor.NewExecutor(planReqs, outputNames, engineStub, r.session.ExecuteInfo.JobID, graph.NewPartyInfo([]*graph.Participant{myself}))
 }
 
-func (r *QueryRunner) Execute(usedTables []core.DbTable) error {
+func (r *QueryRunner) Execute(usedTables []core.DbTable) (syncResult *pb.QueryResponse, err error) {
 	s := r.session
 	if r.prepareAgain {
 		logrus.Infof("ask info has been triggered, get data from storage again")
 		_, _, err := r.Prepare(usedTables)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		localChecksums, err := r.CreateChecksum()
 		if err != nil {
-			return err
+			return nil, err
 		}
 		for code, checksum := range localChecksums {
 			s.SaveLocalChecksum(code, checksum)
 		}
 		// check checksum again
 		if err := s.CheckChecksum(); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
@@ -398,62 +411,56 @@ func (r *QueryRunner) Execute(usedTables []core.DbTable) error {
 	intrpr := interpreter.NewInterpreter()
 	compiledPlan, err := intrpr.Compile(context.Background(), compileReq)
 	if err != nil {
-		return fmt.Errorf("failed to compile query to plan: %w", err)
+		return nil, fmt.Errorf("failed to compile query to plan: %w", err)
 	}
 
 	logrus.Infof("Execution Plan:\n%s\n", compiledPlan.GetExplain().GetExeGraphDot())
 
 	executor, err := r.CreateExecutor(compiledPlan)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	s.OutputNames = executor.OutputNames
 	s.Warning = compiledPlan.Warning
-	if s.IsIssuer() {
-		// we must persist session info before executing to avoid engine reporting failure
-		// persist session info need to contain more infos: Warning/OutputNames...
-		err = s.App.PersistSessionInfo(s)
-		if err != nil {
-			return fmt.Errorf("runQuery persist session info err: %v", err)
-		}
+	err = s.App.UpdateSession(s)
+	if err != nil {
+		return nil, err
 	}
 	// TODO: sync err to issuer
 	ret, err := executor.RunExecutionPlan(s.Ctx, s.AsyncMode)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if ret.GetStatus().GetCode() != 0 {
-		return fmt.Errorf("status: %s", ret)
+		return nil, fmt.Errorf("status: %s", ret)
 	}
 	if s.AsyncMode {
 		// Only change the session status to running if it is submitted.
 		// The jobwatcher only monitors jobs in the running state.
-		err = s.App.MetaMgr.UpdateSessionInfoStatusWithCondition(s.ExecuteInfo.JobID, storage.SessionSubmitted, storage.SessionRunning)
+		err = s.App.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
+			return txn.UpdateSessionInfoStatusWithCondition(s.ExecuteInfo.JobID, storage.SessionSubmitted, storage.SessionRunning)
+		})
 		if err != nil {
-			return fmt.Errorf("updated session info after run execution plan err: %v", err)
+			return nil, fmt.Errorf("updated session info after run execution plan err: %v", err)
 		}
+		return nil, nil
 	}
 
-	// store result to session when engines run in sync mode
-	if !s.AsyncMode {
-		result := &pb.QueryResponse{
-			Status: ret.Status,
-			Result: &pb.QueryResult{
-				OutColumns:   ret.GetOutColumns(),
-				AffectedRows: ret.GetAffectedRows(),
-				CostTimeS:    time.Since(s.CreatedAt).Seconds(),
-			},
-		}
-		if compiledPlan.Warning.MayAffectedByGroupThreshold {
-			reason := fmt.Sprintf("for safety, we filter the results for groups which contain less than %d items.", compileReq.CompileOpts.SecurityCompromise.GroupByThreshold)
-			logrus.Infof("%v", reason)
-			result.Result.Warnings = append(result.Result.Warnings, &pb.SQLWarning{Reason: reason})
-		}
-
-		s.SetResultSafely(result)
+	result := &pb.QueryResponse{
+		Status: ret.Status,
+		Result: &pb.QueryResult{
+			OutColumns:   ret.GetOutColumns(),
+			AffectedRows: ret.GetAffectedRows(),
+			CostTimeS:    time.Since(s.CreatedAt).Seconds(),
+		},
+	}
+	if compiledPlan.Warning.MayAffectedByGroupThreshold {
+		reason := fmt.Sprintf("for safety, we filter the results for groups which contain less than %d items.", compileReq.CompileOpts.SecurityCompromise.GroupByThreshold)
+		logrus.Infof("%v", reason)
+		result.Result.Warnings = append(result.Result.Warnings, &pb.SQLWarning{Reason: reason})
 	}
 
-	return nil
+	return result, nil
 }
 
 func (r *QueryRunner) DryRun(usedTables []core.DbTable) error {
@@ -484,4 +491,23 @@ func (r *QueryRunner) GetPlan(usedTables []core.DbTable) (*pb.CompiledPlan, erro
 		return nil, fmt.Errorf("failed to compile query: %w", err)
 	}
 	return plan, nil
+}
+
+func (r *QueryRunner) checkWritePrivilege(intoParties []string) error {
+	if !slices.Contains(intoParties, r.session.GetSelfPartyCode()) {
+		return nil
+	}
+
+	issuer := r.session.ExecuteInfo.Issuer.Code
+	// If any of the following conditions are met, issuer owns write privilege:
+	// 1. issuer is self party
+	// 2. in the config: write_authorized_parties
+	if r.session.IsIssuer() {
+		return nil
+	}
+	if slices.Contains(r.session.App.Conf.AuthorizedWritableParties, issuer) {
+		return nil
+	}
+
+	return fmt.Errorf("issuer '%s' does not have privilege to write file to '%s'", issuer, r.session.GetSelfPartyCode())
 }

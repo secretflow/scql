@@ -76,8 +76,8 @@ func TestMain(m *testing.M) {
 
 func TestRunQueryWithNormalCCL(t *testing.T) {
 	r := require.New(t)
-
-	r.NoError(ClearData(&testDataSource))
+	// try to clear data
+	ClearData(&testDataSource)
 	r.NoError(GetUrlList(testConf))
 	mockTables, err := mock.MockAllTables()
 	r.NoError(err)

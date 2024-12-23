@@ -78,13 +78,8 @@ func (s *intraTestSuite) SetupTest() {
 
 func (s *intraTestSuite) TearDownTest() {
 	s.NoError(s.testAppBuilder.AppAlice.MetaMgr.DropTables())
-	s.testAppBuilder.AppAlice.Sessions.Flush()
-
 	s.NoError(s.testAppBuilder.AppBob.MetaMgr.DropTables())
-	s.testAppBuilder.AppBob.Sessions.Flush()
-
 	s.NoError(s.testAppBuilder.AppCarol.MetaMgr.DropTables())
-	s.testAppBuilder.AppCarol.Sessions.Flush()
 }
 
 func (s *intraTestSuite) TestProcessInvitationNormal() {
@@ -209,6 +204,16 @@ func (s *intraTestSuite) TestListInvitations() {
 	invitationsRes, err = s.svcBob.ListInvitations(s.ctx, &pb.ListInvitationsRequest{Filter: &pb.ListInvitationsRequest_Status{Status: pb.InvitationStatus_INVALID}})
 	s.NoError(err)
 	s.Equal(1, len(invitationsRes.Invitations))
+}
+
+func (s *intraTestSuite) TestCreateProject() {
+	_, err := s.svcAlice.CreateProject(s.ctx, &pb.CreateProjectRequest{ProjectId: "test1", Name: "test", Conf: &pb.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}}})
+	s.NoError(err)
+	_, err = s.svcAlice.CreateProject(s.ctx, &pb.CreateProjectRequest{ProjectId: "test1", Name: "test", Conf: &pb.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}}})
+	s.Error(err)
+	s.Equal("CreateProject: failed to create table in meta database: CreateProject: project test1 already exists", err.Error())
+	_, err = s.svcAlice.CreateProject(s.ctx, &pb.CreateProjectRequest{ProjectId: "test2", Name: "test", Conf: &pb.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}}})
+	s.NoError(err)
 }
 
 func (s *intraTestSuite) TestProcessInvitationError() {

@@ -18,7 +18,7 @@
 set -ex
 set -o pipefail
 
-pip install --root-user-action=ignore pwntools "pyelftools==0.29"
+pip install --root-user-action=ignore pwntools "pyelftools==0.29" "unicorn==2.0.1.post1"
 
 BINARY=$1
 

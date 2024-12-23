@@ -97,12 +97,13 @@ func TestQueryRunner(t *testing.T) {
 		{ColumnPrivIdentifier: storage.ColumnPrivIdentifier{ProjectID: c2Identifier.ProjectID, TableName: c2Identifier.TableName, ColumnName: c2Identifier.ColumnName, DestParty: bob}, Priv: "plaintext"},
 	}
 	// add bob to project before granting ccl
-	err = transaction.AddProjectMembers([]storage.Member{storage.Member{ProjectID: t1Identifier.ProjectID, Member: bob}})
+	err = transaction.AddProjectMembers([]storage.Member{{ProjectID: t1Identifier.ProjectID, Member: bob}})
 	r.NoError(err)
 	err = common.GrantColumnConstraintsWithCheck(transaction, t1Identifier.ProjectID, privsAlice, common.OwnerChecker{Owner: alice})
 	r.NoError(err)
 	err = common.GrantColumnConstraintsWithCheck(transaction, t2Identifier.ProjectID, privsBob, common.OwnerChecker{Owner: bob})
 	r.NoError(err)
+	transaction.Finish(nil)
 	filesMap, err := brokerutil.CreateTestPemFiles(nil, t.TempDir())
 	r.NoError(err)
 	// mock config
@@ -124,8 +125,8 @@ func TestQueryRunner(t *testing.T) {
 		SessionOptions: &application.SessionOptions{
 			SessionExpireSeconds: 86400,
 		},
+		CreatedAt: time.Now(),
 	}
-	transaction.Finish(nil)
 	session, err := application.NewSession(context.Background(), info, app, false, false)
 	r.NoError(err)
 	executionInfo := session.ExecuteInfo
@@ -159,8 +160,8 @@ func TestQueryRunner(t *testing.T) {
 	compiledPlan, err := intrpr.Compile(context.Background(), compileReq)
 	r.NoError(err)
 	r.Equal(`digraph G {
-0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select t1.id from real.t1,table_refs:[real.t1],],party:[alice,]}"]
-1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select t2.id from real.t2,table_refs:[real.t2],],party:[bob,]}"]
+0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select t1.id from real.t1;,table_refs:[real.t1],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select t2.id from real.t2;,table_refs:[real.t2],],party:[bob,]}"]
 2 [label="join:{in:[Left:{t_0,},Right:{t_1,},],out:[LeftJoinIndex:{t_2,},RightJoinIndex:{t_3,},],attr:[input_party_codes:[alice bob],join_type:0,psi_algorithm:1,],party:[alice,bob,]}"]
 3 [label="filter_by_index:{in:[Data:{t_0,},RowsIndexFilter:{t_2,},],out:[Out:{t_4,},],attr:[],party:[alice,]}"]
 4 [label="filter_by_index:{in:[Data:{t_1,},RowsIndexFilter:{t_3,},],out:[Out:{t_5,},],attr:[],party:[bob,]}"]
@@ -173,7 +174,7 @@ func TestQueryRunner(t *testing.T) {
 2 -> 4 [label = "t_3:{id:PRIVATE:INT64}"]
 3 -> 5 [label = "t_4:{id:PRIVATE:INT64}"]
 }`, compiledPlan.Explain.GetExeGraphDot())
-	r.Equal("8b6a91c03d6a9d977d6d55919b890caff6874e2b6a49ade0e669fcad17d24469", compiledPlan.WholeGraphChecksum)
+	r.Equal("838e54c039780ca1234077411fcf3a9e1c701d83dbccca05876fb5cc0d93c471", compiledPlan.WholeGraphChecksum)
 }
 
 func TestCaseSensitive(t *testing.T) {
@@ -264,6 +265,7 @@ func TestCaseSensitive(t *testing.T) {
 		SessionOptions: &application.SessionOptions{
 			SessionExpireSeconds: 86400,
 		},
+		CreatedAt: time.Now(),
 	}
 	session, err := application.NewSession(context.Background(), info, app, false, false)
 	r.NoError(err)
@@ -283,14 +285,14 @@ func TestCaseSensitive(t *testing.T) {
 	// check alice
 	attrSQL, ok := compiledPlan.SubGraphs["alice"].Nodes["0"].Attributes["sql"].Value.(*scql.AttributeValue_T)
 	r.True(ok)
-	r.Equal("select T1.Data,T1.id from real.T1", attrSQL.T.GetStringData()[0])
+	r.Equal("select T1.Data,T1.id from real.T1;", attrSQL.T.GetStringData()[0])
 	attrTable, ok := compiledPlan.SubGraphs["alice"].Nodes["0"].Attributes["table_refs"].Value.(*scql.AttributeValue_T)
 	r.True(ok)
 	r.Equal("real.T1", attrTable.T.GetStringData()[0])
 	// check bob
 	attrSQL, ok = compiledPlan.SubGraphs["bob"].Nodes["1"].Attributes["sql"].Value.(*scql.AttributeValue_T)
 	r.True(ok)
-	r.Equal("select t2.Data,t2.id from real.t2 as t2", attrSQL.T.GetStringData()[0])
+	r.Equal("select t2.Data,t2.id from real.t2 as t2;", attrSQL.T.GetStringData()[0])
 	attrTable, ok = compiledPlan.SubGraphs["bob"].Nodes["1"].Attributes["table_refs"].Value.(*scql.AttributeValue_T)
 	r.True(ok)
 	r.Equal("real.t2", attrTable.T.GetStringData()[0])
@@ -334,14 +336,14 @@ func TestCaseSensitive(t *testing.T) {
 	// check alice
 	attrSQL, ok = compiledPlan.SubGraphs["alice"].Nodes["0"].Attributes["sql"].Value.(*scql.AttributeValue_T)
 	r.True(ok)
-	r.Equal("select t1.Data,t1.id from real.T1 as t1", attrSQL.T.GetStringData()[0])
+	r.Equal("select t1.Data,t1.id from real.T1 as t1;", attrSQL.T.GetStringData()[0])
 	attrTable, ok = compiledPlan.SubGraphs["alice"].Nodes["0"].Attributes["table_refs"].Value.(*scql.AttributeValue_T)
 	r.True(ok)
 	r.Equal("real.T1", attrTable.T.GetStringData()[0])
 	// check bob
 	attrSQL, ok = compiledPlan.SubGraphs["bob"].Nodes["1"].Attributes["sql"].Value.(*scql.AttributeValue_T)
 	r.True(ok)
-	r.Equal("select t2.Data,t2.id from real.t2 as t2", attrSQL.T.GetStringData()[0])
+	r.Equal("select t2.Data,t2.id from real.t2 as t2;", attrSQL.T.GetStringData()[0])
 	attrTable, ok = compiledPlan.SubGraphs["bob"].Nodes["1"].Attributes["table_refs"].Value.(*scql.AttributeValue_T)
 	r.True(ok)
 
@@ -385,14 +387,14 @@ func TestCaseSensitive(t *testing.T) {
 	// check alice
 	attrSQL, ok = compiledPlan.SubGraphs["alice"].Nodes["0"].Attributes["sql"].Value.(*scql.AttributeValue_T)
 	r.True(ok)
-	r.Equal("select t1.Data,t1.id from real.UpperT1 as t1", attrSQL.T.GetStringData()[0])
+	r.Equal("select t1.Data,t1.id from real.UpperT1 as t1;", attrSQL.T.GetStringData()[0])
 	attrTable, ok = compiledPlan.SubGraphs["alice"].Nodes["0"].Attributes["table_refs"].Value.(*scql.AttributeValue_T)
 	r.True(ok)
 	r.Equal("real.UpperT1", attrTable.T.GetStringData()[0])
 	// check bob
 	attrSQL, ok = compiledPlan.SubGraphs["bob"].Nodes["1"].Attributes["sql"].Value.(*scql.AttributeValue_T)
 	r.True(ok)
-	r.Equal("select t2.Data,t2.id from real.t2 as t2", attrSQL.T.GetStringData()[0])
+	r.Equal("select t2.Data,t2.id from real.t2 as t2;", attrSQL.T.GetStringData()[0])
 	attrTable, ok = compiledPlan.SubGraphs["bob"].Nodes["1"].Attributes["table_refs"].Value.(*scql.AttributeValue_T)
 	r.True(ok)
 
@@ -428,6 +430,39 @@ func TestCaseSensitive(t *testing.T) {
 	transaction.Finish(nil)
 }
 
+func TestCheckWritePrivilege(t *testing.T) {
+	r := require.New(t)
+
+	sess := &application.Session{
+		App: &application.App{
+			Conf: &config.Config{
+				PartyCode:                 "bob",
+				AuthorizedWritableParties: []string{"alice"},
+			},
+		},
+		ExecuteInfo: &application.ExecutionInfo{
+			Issuer: &scql.PartyId{
+				Code: "alice",
+			},
+		},
+	}
+	runner := QueryRunner{
+		session: sess,
+	}
+
+	r.NoError(runner.checkWritePrivilege(nil))
+	r.NoError(runner.checkWritePrivilege([]string{"alice"}))
+	r.NoError(runner.checkWritePrivilege([]string{"alice", "bob"}))
+
+	// write authorized parties not include issuer
+	sess.App.Conf.AuthorizedWritableParties = nil
+	r.Error(runner.checkWritePrivilege([]string{"bob"}))
+	r.NoError(runner.checkWritePrivilege([]string{"alice"})) // ok when not write into bob
+	sess.ExecuteInfo.Issuer.Code = "bob"
+	r.NoError(runner.checkWritePrivilege([]string{"bob"})) // ok when issuer is bob
+
+}
+
 // create different in memory db
 func buildTestStorage() (*storage.MetaManager, error) {
 	id, err := uuid.NewUUID()
@@ -451,7 +486,7 @@ func buildTestStorage() (*storage.MetaManager, error) {
 	if err != nil {
 		return nil, err
 	}
-	meta := storage.NewMetaManager(db, false)
+	meta := storage.NewMetaManager(db)
 	err = meta.Bootstrap()
 	if err != nil {
 		return nil, err

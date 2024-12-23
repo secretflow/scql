@@ -30,6 +30,7 @@ import (
 	"github.com/secretflow/scql/pkg/parser"
 	"github.com/secretflow/scql/pkg/parser/ast"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
+	"github.com/secretflow/scql/pkg/scdb/auth"
 	scdbexecutor "github.com/secretflow/scql/pkg/scdb/executor"
 	"github.com/secretflow/scql/pkg/scdb/storage"
 	"github.com/secretflow/scql/pkg/status"
@@ -98,7 +99,9 @@ func (app *App) submit(ctx context.Context, req *scql.SCDBQueryRequest) *scql.SC
 	if err != nil {
 		return newErrorSCDBSubmitResponse(scql.Code_INTERNAL, err.Error())
 	}
+
 	// authentication
+	auth.BindPartyAuthenticator(session, app.partyAuthenticator)
 	if err = session.authenticateUser(req.User); err != nil {
 		return newErrorSCDBSubmitResponse(scql.Code_UNAUTHENTICATED, err.Error())
 	}

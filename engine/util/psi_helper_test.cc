@@ -100,7 +100,7 @@ class JoinIndicesTest : public ::testing::TestWithParam<JoinTestCase> {
         std::make_shared<psi::HashBucketEcPointStore>("/tmp", kNumBins);
 
     for (const auto& str : tc.left) {
-      store->Save(str);
+      store->Save(str, 0);
     }
 
     return store;
@@ -111,7 +111,7 @@ class JoinIndicesTest : public ::testing::TestWithParam<JoinTestCase> {
     auto store =
         std::make_shared<psi::HashBucketEcPointStore>("/tmp", kNumBins);
     for (const auto& str : tc.right) {
-      store->Save(str);
+      store->Save(str, 0);
     }
 
     return store;

@@ -49,7 +49,7 @@ func TestSession(t *testing.T) {
 		})
 
 	r.NoError(err)
-	manager := NewMetaManager(db, true)
+	manager := NewMetaManager(db)
 	err = manager.Bootstrap()
 	r.NoError(err)
 
@@ -63,24 +63,6 @@ func TestSession(t *testing.T) {
 		CCLChecksum:   []byte("ccl_checksum"),
 		JobInfo:       []byte("{}"),
 	}
-
-	err = manager.SetSessionInfo(info)
-	r.NoError(err)
-
-	infoFetch, err := manager.GetSessionInfo(sessionID)
-	r.NoError(err)
-	info.CreatedAt = infoFetch.CreatedAt // update timestamp before comparison
-	info.UpdatedAt = infoFetch.UpdatedAt
-	r.Equal(info, infoFetch)
-
-	err = manager.UpdateSessionInfoStatusWithCondition(sessionID, SessionRunning, SessionFailed)
-	r.NoError(err)
-	infoFetch, err = manager.GetSessionInfo(sessionID)
-	r.NoError(err)
-	r.Equal(int8(SessionFailed), infoFetch.Status)
-	err = manager.UpdateSessionInfoStatusWithCondition(sessionID, SessionFailed, SessionRunning)
-	r.NoError(err)
-
 	// -----test SessionResult-----
 	resp := &pb.QueryResponse{
 		Status: &pb.Status{Code: 0},
@@ -94,18 +76,56 @@ func TestSession(t *testing.T) {
 	}
 	str, err := message.ProtoMarshal(resp)
 	r.NoError(err)
+
+	// -----test gc------
+	err = NewDistributeLockGuard(manager).InitDistributedLockIfNecessary(DistributedLockID)
+	r.NoError(err)
+	err = NewDistributeLockGuard(manager).InitDistributedLockIfNecessary(DistributedLockID)
+	r.NoError(err)
+	// test HoldGcLock
+	ok, err := NewDistributeLockGuard(manager).PreemptDistributedLock(DistributedLockID, "alice", time.Second)
+	r.NoError(err)
+	r.True(ok)
+	ok, err = NewDistributeLockGuard(manager).PreemptDistributedLock(DistributedLockID, "alice", time.Second)
+	r.NoError(err)
+	r.False(ok)
+	ok, err = NewDistributeLockGuard(manager).RenewDistributedLock(DistributedLockID, "alice", time.Second)
+	r.NoError(err)
+	r.True(ok)
+	owner, err := NewDistributeLockGuard(manager).GetDistributedLockOwner(DistributedLockID)
+	r.NoError(err)
+	r.Equal("alice", owner)
+
+	txn := manager.CreateMetaTransaction()
+	defer txn.Finish(err)
+	err = txn.SetSessionInfo(&info)
+	r.NoError(err)
+
+	infoFetch, err := txn.GetSessionInfo(sessionID)
+	r.NoError(err)
+	info.CreatedAt = infoFetch.CreatedAt // update timestamp before comparison
+	info.UpdatedAt = infoFetch.UpdatedAt
+	r.Equal(info, *infoFetch)
+
+	err = txn.UpdateSessionInfoStatusWithCondition(sessionID, SessionRunning, SessionFailed)
+	r.NoError(err)
+	infoFetch, err = txn.GetSessionInfo(sessionID)
+	r.NoError(err)
+	r.Equal(int8(SessionFailed), infoFetch.Status)
+	err = txn.UpdateSessionInfoStatusWithCondition(sessionID, SessionFailed, SessionRunning)
+	r.NoError(err)
 	// set SessionResult
-	err = manager.SetSessionResult(SessionResult{
+	err = txn.SetSessionResult(SessionResult{
 		SessionID: sessionID,
 		Result:    str,
 	})
 	r.NoError(err)
 
 	// get SessionResult
-	info2, err := manager.GetSessionInfo(sessionID)
+	info2, err := txn.GetSessionInfo(sessionID)
 	r.NoError(err)
 	r.Equal(info2.Status, int8(SessionFinished))
-	resultFetch, err := manager.GetSessionResult(sessionID)
+	resultFetch, err := txn.GetSessionResult(sessionID)
 	r.NoError(err)
 	var respFetch pb.QueryResponse
 	err = message.ProtoUnmarshal([]byte(resultFetch.Result), &respFetch)
@@ -115,96 +135,90 @@ func TestSession(t *testing.T) {
 	r.Equal(resp.GetResult().GetCostTimeS(), respFetch.GetResult().GetCostTimeS())
 
 	// clear SessionResult
-	err = manager.ClearSessionResult(sessionID)
+	err = txn.ClearSessionResult(sessionID)
 	r.NoError(err)
-	err = manager.ClearSessionResult(sessionID) // clear repeatedly should be ok
+	err = txn.ClearSessionResult(sessionID) // clear repeatedly should be ok
 	r.NoError(err)
 
-	info3, err := manager.GetSessionInfo(sessionID)
+	info3, err := txn.GetSessionInfo(sessionID)
 	r.NoError(err)
 	r.Equal(info3.Status, int8(SessionCanceled))
 
-	_, err = manager.GetSessionResult(sessionID)
+	_, err = txn.GetSessionResult(sessionID)
 	r.Error(err)
 
-	// -----test gc------
-	err = manager.InitDistributedLockIfNecessary(GcLockID)
-	r.NoError(err)
-	err = manager.InitDistributedLockIfNecessary(GcLockID)
-	r.NoError(err)
-	// test HoldGcLock
-	err = manager.HoldDistributedLock(GcLockID, "alice", time.Second)
-	r.NoError(err)
-	// lock can be reentrant
-	err = manager.HoldDistributedLock(GcLockID, "alice", time.Second)
-	r.NoError(err)
-	err = manager.HoldDistributedLock(GcLockID, "bob", time.Second)
-	r.Equal(err.Error(), "hold distributed lock gc_lock(100) failed: {row affected: 0 ; err: <nil>}")
-
-	time.Sleep(time.Second)
-	err = manager.HoldDistributedLock(GcLockID, "alice", time.Second)
-	r.NoError(err)
 	// test ClearExpiredResults
 	expireSeconds := 5
-	err = manager.SetSessionResult(SessionResult{
+	err = txn.SetSessionResult(SessionResult{
 		SessionID: sessionID,
 		Result:    str,
 		CreatedAt: time.Now(),
 		ExpiredAt: time.Now().Add(time.Duration(expireSeconds) * time.Second),
 	})
 	r.NoError(err)
-	err = manager.ClearExpiredSessions()
+	err = txn.ClearExpiredSessions()
 	r.NoError(err)
-	_, err = manager.GetSessionResult(sessionID)
+	_, err = txn.GetSessionResult(sessionID)
 	r.NoError(err)
 	time.Sleep(time.Duration(2*expireSeconds) * time.Second)
-	err = manager.ClearExpiredSessions()
+	err = txn.ClearExpiredSessions()
 	r.NoError(err)
-	_, err = manager.GetSessionResult(sessionID)
+	_, err = txn.GetSessionResult(sessionID)
 	r.Equal(err.Error(), "record not found")
 
 	// test CheckIdCanceled
-	err = manager.SetSessionInfo(SessionInfo{
+	err = txn.SetSessionInfo(&SessionInfo{
 		SessionID: "canceled id",
 		Status:    int8(SessionCanceled),
 	})
 	r.NoError(err)
-	canceledIds, err := manager.CheckIdCanceled([]string{"not exist id", sessionID, "canceled id"})
+	canceledIds, err := txn.CheckIdCanceled([]string{"not exist id", sessionID, "canceled id"})
 	r.NoError(err)
 	r.Equal(canceledIds, []string{"canceled id"})
 
 	// test watch job related
 	jobId := "jobId"
-	err = manager.SetSessionInfo(SessionInfo{
+	err = txn.SetSessionInfo(&SessionInfo{
 		SessionID: jobId,
 		Status:    int8(SessionRunning),
 	})
 	r.NoError(err)
 
-	jobStatus, err := manager.GetWatchedJobs()
+	jobStatus, err := txn.GetWatchedJobs()
 	r.NoError(err)
 	r.Equal(len(jobStatus), 1)
 
-	err = manager.SetSessionStatus(jobId, SessionCanceled)
+	err = txn.SetSessionStatus(jobId, SessionCanceled)
 	r.NoError(err)
-	status, err := manager.GetSessionStatus(jobId)
+	status, err := txn.GetSessionStatus(jobId)
 	r.NoError(err)
 	r.Equal(status, SessionCanceled)
 
+	err = txn.UpdateSessionInfo(&SessionInfo{
+		SessionID: jobId,
+		Status:    int8(SessionFinished),
+		EngineUrl: "engine_bob.com",
+	})
+	sessionInfo, err := txn.GetSessionInfo(jobId)
+	r.NoError(err)
+	r.Equal(sessionInfo.Status, int8(SessionFinished))
+	r.Equal(sessionInfo.EngineUrl, "engine_bob.com")
+
 	secondJobId := "jobId2"
-	err = manager.SetSessionInfo(SessionInfo{
+	err = txn.SetSessionInfo(&SessionInfo{
 		SessionID: secondJobId,
 		Status:    int8(SessionRunning),
 	})
 	r.NoError(err)
 
 	ids := []string{jobId, secondJobId}
-	err = manager.SetMultipleSessionStatus(ids, SessionFailed)
+	err = txn.SetMultipleSessionStatus(ids, SessionFailed)
 	r.NoError(err)
-	status, err = manager.GetSessionStatus(jobId)
-	r.NoError(err)
-	r.Equal(status, SessionFailed)
-	status, err = manager.GetSessionStatus(secondJobId)
+	status, err = txn.GetSessionStatus(jobId)
 	r.NoError(err)
 	r.Equal(status, SessionFailed)
+	status, err = txn.GetSessionStatus(secondJobId)
+	r.NoError(err)
+	r.Equal(status, SessionFailed)
+
 }

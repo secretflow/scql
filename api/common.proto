@@ -88,10 +88,19 @@ message LinkConfig {
   int64 http_max_payload_size = 4;
 }
 
+enum PsiAlgorithmType {
+  // auto means choosing psi type by engine
+  AUTO = 0;
+  ECDH = 1;
+  OPRF = 2;
+  RR22 = 3;
+}
+
 message PsiConfig {
   int64 unbalance_psi_ratio_threshold = 1;
   int64 unbalance_psi_larger_party_rows_count_threshold = 2;
   int32 psi_curve_type = 3;
+  PsiAlgorithmType psi_type = 4;
 }
 
 message LogConfig {

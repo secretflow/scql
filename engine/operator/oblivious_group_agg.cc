@@ -26,8 +26,8 @@
 #include "libspu/kernel/hlo/casting.h"
 #include "libspu/kernel/hlo/const.h"
 #include "libspu/kernel/hlo/geometrical.h"
-#include "libspu/kernel/hlo/indexing.h"
 
+#include "engine/util/prefix_sum.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
 
@@ -37,48 +37,6 @@ namespace {
 
 int64_t RowCount(const spu::Value& value) {
   return value.shape().size() > 0 ? value.shape()[0] : value.numel();
-}
-
-using ScanFn = std::function<std::pair<spu::Value, spu::Value>(
-    const spu::Value&, const spu::Value&, const spu::Value&,
-    const spu::Value&)>;
-using IndexTuple = std::pair<spu::Index, spu::Index>;
-using ScanFnParallel = std::function<void(IndexTuple&)>;
-
-// Implements the most naive version of prefix sum tree structure.
-// Refer to
-// "Circuit representation of a work-efficient 16-input parallel prefix sum"
-// https://en.wikipedia.org/wiki/Prefix_sum#/media/File:Prefix_sum_16.svg
-void ScanParallel(std::size_t n, const ScanFnParallel& parallel_fn) {
-  size_t k = absl::bit_width(n - 1u);
-
-  if (n < 2) {
-    return;
-  }
-
-  for (size_t i = 1; i < (k + 1); i++) {
-    IndexTuple it;
-    for (size_t j = ((1 << i) - 1); j < n; j += (1 << i)) {
-      it.first.emplace_back(j);
-      it.second.emplace_back(j - (1 << (i - 1)));
-    }
-    if (!it.first.empty()) {
-      parallel_fn(it);
-    }
-  }
-
-  for (size_t i = (k - 1); i > 0; i--) {
-    IndexTuple it;
-    for (size_t j = (3 * (1 << (i - 1)) - 1); j < n; j += (1 << i)) {
-      it.first.emplace_back(j);
-      it.second.emplace_back(j - (1 << (i - 1)));
-    }
-
-    if (!it.first.empty()) {
-      parallel_fn(it);
-    }
-  }
-  return;
 }
 
 // IN  GroupMask: 1 means end of the group while 0 means other conditions.
@@ -98,37 +56,6 @@ spu::Value TransferGroupMask(spu::SPUContext* ctx, const spu::Value& in) {
   return spu::kernel::hlo::Concatenate(
       ctx, {zero, spu::kernel::hlo::Slice(ctx, in_not, {0}, {row_cnt - 1}, {})},
       0);
-}
-
-// Reference: "Scape: Scalable Collaborative Analytics System on Private
-// Database with Malicious Security", Fig. 13
-//
-spu::Value Scan(spu::SPUContext* ctx, const spu::Value& origin_value,
-                const spu::Value& origin_group_mask, const ScanFn& scan_fn) {
-  const int64_t row_cnt = origin_value.shape()[0];
-  spu::Value group_mask = TransferGroupMask(ctx, origin_group_mask);
-  spu::Value value = origin_value.clone();
-  auto parallel_scan_fn = [&](IndexTuple& index_tuple) {
-    auto lhs_v = spu::kernel::hlo::LinearGather(ctx, value, index_tuple.first);
-    auto lhs_gm =
-        spu::kernel::hlo::LinearGather(ctx, group_mask, index_tuple.first);
-
-    auto rhs_v = spu::kernel::hlo::LinearGather(ctx, value, index_tuple.second);
-    auto rhs_gm =
-        spu::kernel::hlo::LinearGather(ctx, group_mask, index_tuple.second);
-
-    const auto [new_v, new_gm] = scan_fn(lhs_v, lhs_gm, rhs_v, rhs_gm);
-
-    YACL_ENFORCE_EQ(value.dtype(), new_v.dtype());
-    YACL_ENFORCE_EQ(group_mask.dtype(), new_gm.dtype());
-
-    spu::kernel::hlo::LinearScatterInPlace(ctx, value, new_v,
-                                           index_tuple.first);
-    spu::kernel::hlo::LinearScatterInPlace(ctx, group_mask, new_gm,
-                                           index_tuple.first);
-  };
-  ScanParallel(row_cnt, parallel_scan_fn);
-  return value;
 }
 
 }  // namespace
@@ -159,8 +86,9 @@ void ObliviousGroupAggBase::Execute(ExecContext* ctx) {
   auto sctx = ctx->GetSession()->GetSpuContext();
 
   const auto& group = ctx->GetInput(kGroup)[0];
-  auto group_value =
-      symbols->getVar(util::SpuVarNameEncoder::GetValueName(group.name()));
+  auto group_value = TransferGroupMask(
+      sctx,
+      symbols->getVar(util::SpuVarNameEncoder::GetValueName(group.name())));
 
   for (int i = 0; i < input_pbs.size(); ++i) {
     auto value = symbols->getVar(
@@ -201,15 +129,16 @@ spu::Value ObliviousGroupSum::CalculateResult(spu::SPUContext* sctx,
     value_hat = value;
   }
 
-  return Scan(sctx, value_hat, group,
-              [&](const spu::Value& lhs_v, const spu::Value& lhs_gm,
-                  const spu::Value& rhs_v, const spu::Value& rhs_gm) {
-                spu::Value new_v = spu::kernel::hlo::Add(
-                    sctx, lhs_v, spu::kernel::hlo::Mul(sctx, lhs_gm, rhs_v));
-                spu::Value new_gm = spu::kernel::hlo::Mul(sctx, lhs_gm, rhs_gm);
+  return util::Scan(
+      sctx, value_hat, group,
+      [&](const spu::Value& lhs_v, const spu::Value& lhs_gm,
+          const spu::Value& rhs_v, const spu::Value& rhs_gm) {
+        spu::Value new_v = spu::kernel::hlo::Add(
+            sctx, lhs_v, spu::kernel::hlo::Mul(sctx, lhs_gm, rhs_v));
+        spu::Value new_gm = spu::kernel::hlo::Mul(sctx, lhs_gm, rhs_gm);
 
-                return std::make_pair(new_v, new_gm);
-              });
+        return std::make_pair(new_v, new_gm);
+      });
 }
 
 // ===========================
@@ -229,15 +158,16 @@ spu::Value ObliviousGroupCount::CalculateResult(spu::SPUContext* sctx,
   spu::Value ones = spu::kernel::hlo::Seal(
       sctx, spu::kernel::hlo::Constant(sctx, int64_t(1), value.shape()));
 
-  return Scan(sctx, ones, group,
-              [&](const spu::Value& lhs_v, const spu::Value& lhs_gm,
-                  const spu::Value& rhs_v, const spu::Value& rhs_gm) {
-                spu::Value new_v = spu::kernel::hlo::Add(
-                    sctx, lhs_v, spu::kernel::hlo::Mul(sctx, lhs_gm, rhs_v));
-                spu::Value new_gm = spu::kernel::hlo::Mul(sctx, lhs_gm, rhs_gm);
+  return util::Scan(
+      sctx, ones, group,
+      [&](const spu::Value& lhs_v, const spu::Value& lhs_gm,
+          const spu::Value& rhs_v, const spu::Value& rhs_gm) {
+        spu::Value new_v = spu::kernel::hlo::Add(
+            sctx, lhs_v, spu::kernel::hlo::Mul(sctx, lhs_gm, rhs_v));
+        spu::Value new_gm = spu::kernel::hlo::Mul(sctx, lhs_gm, rhs_gm);
 
-                return std::make_pair(new_v, new_gm);
-              });
+        return std::make_pair(new_v, new_gm);
+      });
 }
 
 // ===========================
@@ -277,16 +207,16 @@ spu::Value ObliviousGroupMax::CalculateResult(spu::SPUContext* sctx,
   int64_t row_count = RowCount(value);
   YACL_ENFORCE(row_count == RowCount(group));
 
-  return Scan(sctx, value, group,
-              [&](const spu::Value& lhs_v, const spu::Value& lhs_gm,
-                  const spu::Value& rhs_v, const spu::Value& rhs_gm) {
-                spu::Value new_v = spu::kernel::hlo::Select(
-                    sctx, lhs_gm, spu::kernel::hlo::Max(sctx, lhs_v, rhs_v),
-                    lhs_v);
-                spu::Value new_gm = spu::kernel::hlo::Mul(sctx, lhs_gm, rhs_gm);
+  return util::Scan(
+      sctx, value, group,
+      [&](const spu::Value& lhs_v, const spu::Value& lhs_gm,
+          const spu::Value& rhs_v, const spu::Value& rhs_gm) {
+        spu::Value new_v = spu::kernel::hlo::Select(
+            sctx, lhs_gm, spu::kernel::hlo::Max(sctx, lhs_v, rhs_v), lhs_v);
+        spu::Value new_gm = spu::kernel::hlo::Mul(sctx, lhs_gm, rhs_gm);
 
-                return std::make_pair(new_v, new_gm);
-              });
+        return std::make_pair(new_v, new_gm);
+      });
 }
 
 // ===========================
@@ -303,16 +233,16 @@ spu::Value ObliviousGroupMin::CalculateResult(spu::SPUContext* sctx,
   int64_t row_count = RowCount(value);
   YACL_ENFORCE(row_count == RowCount(group));
 
-  return Scan(sctx, value, group,
-              [&](const spu::Value& lhs_v, const spu::Value& lhs_gm,
-                  const spu::Value& rhs_v, const spu::Value& rhs_gm) {
-                spu::Value new_v = spu::kernel::hlo::Select(
-                    sctx, lhs_gm, spu::kernel::hlo::Min(sctx, lhs_v, rhs_v),
-                    lhs_v);
-                spu::Value new_gm = spu::kernel::hlo::Mul(sctx, lhs_gm, rhs_gm);
+  return util::Scan(
+      sctx, value, group,
+      [&](const spu::Value& lhs_v, const spu::Value& lhs_gm,
+          const spu::Value& rhs_v, const spu::Value& rhs_gm) {
+        spu::Value new_v = spu::kernel::hlo::Select(
+            sctx, lhs_gm, spu::kernel::hlo::Min(sctx, lhs_v, rhs_v), lhs_v);
+        spu::Value new_gm = spu::kernel::hlo::Mul(sctx, lhs_gm, rhs_gm);
 
-                return std::make_pair(new_v, new_gm);
-              });
+        return std::make_pair(new_v, new_gm);
+      });
 }
 
 };  // namespace scql::engine::op

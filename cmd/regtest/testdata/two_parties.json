@@ -1,14 +1,59 @@
 {
   "queries": [
     {
+      "name": "compare subquery(lt)",
+      "query": "select ta.plain_int_0 from alice_tbl_0 as ta where ta.plain_int_0 < any(select ta.plain_int_0 + tb.plain_int_0 from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0)",
+      "mysql_query": "select ta.plain_int_0 from alice.tbl_0 as ta where ta.plain_int_0 < any(select ta.plain_int_0 + tb.plain_int_0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0)"
+    },
+    {
+      "name": "compare subquery(gt)",
+      "query": "select ta.plain_int_0 from alice_tbl_0 as ta where ta.plain_int_0 > all(select ta.plain_int_0 + tb.plain_int_0 from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0)",
+      "mysql_query": "select ta.plain_int_0 from alice.tbl_0 as ta where ta.plain_int_0 > all(select ta.plain_int_0 + tb.plain_int_0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0)"
+    },
+    {
+      "name": "compare subquery(ne)",
+      "query": "select ta.plain_int_0 from alice_tbl_0 as ta where ta.plain_int_0 != all(select ta.plain_int_0 + tb.plain_int_0 from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0)",
+      "mysql_query": "select ta.plain_int_0 from alice.tbl_0 as ta where ta.plain_int_0 != all(select ta.plain_int_0 + tb.plain_int_0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0)"
+    },
+    {
+      "name": "compare subquery(eq)",
+      "query": "select ta.plain_int_0 from alice_tbl_0 as ta where ta.plain_int_0 = any(select ta.plain_int_0 + tb.plain_int_0 from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0)",
+      "mysql_query": "select ta.plain_int_0 from alice.tbl_0 as ta where ta.plain_int_0 = any(select ta.plain_int_0 + tb.plain_int_0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0)"
+    },
+    {
+      "name": "row_number(secret) with filter",
+      "query": "select u.* from(select ta.plain_int_0, row_number() over (partition by ta.plain_int_0 order by tb.rank_float_0, tb.rank_float_1) as num from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0) as u where u.num = 1;",
+      "mysql_query": "select u.* from (select ta.plain_int_0, row_number() over (partition by ta.plain_int_0 order by tb.rank_float_0, tb.rank_float_1) as num from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0) as u where u.num = 1;"
+    },
+    {
+      "name": "row_number(secret)",
+      "query": "select ta.plain_int_0, row_number() over (partition by ta.plain_int_0 order by tb.rank_float_0, tb.rank_float_1) as num from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0;",
+      "mysql_query": "select ta.plain_int_0, row_number() over (partition by ta.plain_int_0 order by tb.rank_float_0, tb.rank_float_1) as num from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+    },
+    {
+      "name": "row_number(private) with filter",
+      "query": "select u.* from (select ta.plain_int_0, row_number() over (partition by ta.join_int_0, ta.plain_int_0 order by ta.plain_float_0 desc, ta.plain_float_1 asc) as num from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0) as u where u.num = 1;",
+      "mysql_query": "select u.* from(select ta.plain_int_0, row_number() over (partition by ta.join_int_0, ta.plain_int_0 order by ta.plain_float_0 desc, ta.plain_float_1 asc) as num from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0) as u where u.num = 1;"
+    },
+    {
+      "name": "row_number(private)",
+      "query": "select ta.plain_int_0, row_number() over (partition by ta.join_int_0, ta.plain_int_0 order by ta.plain_float_0 desc, ta.plain_float_1 asc) as num from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0;",
+      "mysql_query": "select ta.plain_int_0, row_number() over (partition by ta.join_int_0, ta.plain_int_0 order by ta.plain_float_0 desc, ta.plain_float_1 asc) as num from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+    },
+    {
+      "name": "select with constant",
+      "query": "select ta.plain_float_0, 1 as constant_value from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0",
+      "mysql_query": "select ta.plain_float_0, 1 as constant_value from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0"
+    },
+    {
       "name": "geodist test, param order(longtitude1, latitude1, longtitude2, latitude2, radius)",
-      "query": "select geodist(ta.plain_float_0, ta.plain_float_0, tb.plain_float_0, tb.plain_float_0, 6300) / 100 as distance from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0;",
-      "mysql_query": "select 6300 * acos(sin(radians(ta.plain_float_0)) * sin(radians(tb.plain_float_0)) + cos(radians(ta.plain_float_0)) * cos(radians(tb.plain_float_0)) * cos(radians(ta.plain_float_0) - radians(tb.plain_float_0))) / 100 as distance from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+      "query": "select ta.plain_int_0, geodist(ta.plain_float_0, ta.plain_float_0, tb.plain_float_0, tb.plain_float_0, 6300) / 100 as distance from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0;",
+      "mysql_query": "select ta.plain_int_0, 6300 * acos(sin(radians(ta.plain_float_0)) * sin(radians(tb.plain_float_0)) + cos(radians(ta.plain_float_0)) * cos(radians(tb.plain_float_0)) * cos(radians(ta.plain_float_0) - radians(tb.plain_float_0))) / 100 as distance from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
     },
     {
       "name": "geodist test, param order(longtitude1, latitude1, longtitude2, latitude2)",
-      "query": "select geodist(ta.plain_float_0, ta.plain_float_0, tb.plain_float_0, tb.plain_float_0) / 100 as distance from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0;",
-      "mysql_query": "select 6371 * acos(sin(radians(ta.plain_float_0)) * sin(radians(tb.plain_float_0)) + cos(radians(ta.plain_float_0)) * cos(radians(tb.plain_float_0)) * cos(radians(ta.plain_float_0) - radians(tb.plain_float_0))) / 100 as distance from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+      "query": "select ta.plain_int_0, geodist(ta.plain_float_0, ta.plain_float_0, tb.plain_float_0, tb.plain_float_0) / 100 as distance from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0;",
+      "mysql_query": "select ta.plain_int_0, 6371 * acos(sin(radians(ta.plain_float_0)) * sin(radians(tb.plain_float_0)) + cos(radians(ta.plain_float_0)) * cos(radians(tb.plain_float_0)) * cos(radians(ta.plain_float_0) - radians(tb.plain_float_0))) / 100 as distance from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
     },
     {
       "name": "geodist test(secret), param order(longtitude1, latitude1, longtitude2, latitude2)",
@@ -37,13 +82,13 @@
     },
     {
       "name": "naive trigonometric",
-      "query": "select sin(ta.plain_float_0) as sin_plain_float_0, cos(ta.plain_float_0) as cos_plain_float_0, acos(ta.plain_float_0 / 10000) as acos_plain_float_0 from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0;",
-      "mysql_query": "select sin(ta.plain_float_0) as sin_plain_float_0, cos(ta.plain_float_0) as cos_plain_float_0, acos(ta.plain_float_0 / 10000) as acos_plain_float_0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+      "query": "select ta.plain_int_0, sin(ta.plain_float_0) as sin_plain_float_0, cos(ta.plain_float_0) as cos_plain_float_0, acos(ta.plain_float_0 / 10000) as acos_plain_float_0 from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0;",
+      "mysql_query": "select ta.plain_int_0, sin(ta.plain_float_0) as sin_plain_float_0, cos(ta.plain_float_0) as cos_plain_float_0, acos(ta.plain_float_0 / 10000) as acos_plain_float_0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
     },
     {
       "name": "naive trigonometric sin/cos/acos",
-      "query": "select sin(ta.plain_float_0 * 1.5) as sin_plain_float_0, cos(ta.plain_float_0) as cos_plain_float_0, acos(ta.plain_float_0 / 10000) as acos_plain_float_0 from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0;",
-      "mysql_query": "select sin(ta.plain_float_0 * 1.5) as sin_plain_float_0, cos(ta.plain_float_0) as cos_plain_float_0, acos(ta.plain_float_0 / 10000) as acos_plain_float_0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+      "query": "select ta.plain_int_0, sin(ta.plain_float_0 * 1.5) as sin_plain_float_0, cos(ta.plain_float_0) as cos_plain_float_0, acos(ta.plain_float_0 / 10000) as acos_plain_float_0 from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0;",
+      "mysql_query": "select ta.plain_int_0, sin(ta.plain_float_0 * 1.5) as sin_plain_float_0, cos(ta.plain_float_0) as cos_plain_float_0, acos(ta.plain_float_0 / 10000) as acos_plain_float_0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
     },
     {
       "name": "trigonometric add with constant integer value",
@@ -56,7 +101,7 @@
       "mysql_query": "select ta.plain_float_0 + sin(3.14) as sin_plain_float_0, ta.plain_float_0 + cos(3.14) as cos_plain_float_0, ta.plain_float_0 + acos(0.5) as acos_plain_float_0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
     },
     {
-      "name": "count & distinct & if after join",
+      "name": "if after inner join",
       "query": "select if(alice.encrypt_int_0>1, -alice.plain_int_0, -1) as cd from alice_tbl_0 as alice inner join bob_tbl_0 as bob on alice.join_string_0=bob.join_string_0;",
       "mysql_query": "select if(alice.encrypt_int_0>1, -alice.plain_int_0, -1) as cd from alice.tbl_0 as alice inner join bob.tbl_0 as bob on alice.join_string_0=bob.join_string_0;"
     },

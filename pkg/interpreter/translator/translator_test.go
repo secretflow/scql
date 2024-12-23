@@ -83,8 +83,9 @@ func (s *testTranslatorSuite) TearDownSuite(c *C) {
 }
 
 type testConf struct {
-	groupThreshold int
-	batched        bool
+	groupThreshold   int
+	batched          bool
+	revealGroupCount bool
 }
 
 type sPair struct {

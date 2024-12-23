@@ -29,6 +29,7 @@ CCL_LEVEL = [
     "compare",
     "aggregate",
     "encrypt",
+    "rank",
 ]
 CUR_PATH = Path(__file__).parent.resolve()
 DATABASES = ["alice", "bob", "carol"]

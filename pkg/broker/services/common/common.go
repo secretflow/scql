@@ -27,12 +27,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
+	"github.com/secretflow/scql/pkg/broker/application"
 	"github.com/secretflow/scql/pkg/broker/storage"
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/parser"
 	"github.com/secretflow/scql/pkg/planner/core"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
+	"github.com/secretflow/scql/pkg/util/brokerutil"
 	"github.com/secretflow/scql/pkg/util/logutil"
 	"github.com/secretflow/scql/pkg/util/message"
 	prom "github.com/secretflow/scql/pkg/util/prometheus"
@@ -194,4 +196,36 @@ func CheckMemberExistInProject(manager *storage.MetaManager, projectID string, m
 		}
 		return nil
 	})
+}
+
+func GenSessionOpts(jobConfig *pb.JobConfig, projConf *pb.ProjectConfig) *application.SessionOptions {
+	jobConfig = brokerutil.UpdateJobConfig(jobConfig, projConf)
+
+	linkCfg := &pb.LinkConfig{
+		LinkRecvTimeoutSec:          jobConfig.LinkRecvTimeoutSec,
+		LinkThrottleWindowSize:      jobConfig.LinkThrottleWindowSize,
+		LinkChunkedSendParallelSize: jobConfig.LinkChunkedSendParallelSize,
+		HttpMaxPayloadSize:          jobConfig.HttpMaxPayloadSize,
+	}
+
+	psiCfg := &pb.PsiConfig{
+		PsiCurveType:                              jobConfig.PsiCurveType,
+		UnbalancePsiRatioThreshold:                jobConfig.UnbalancePsiRatioThreshold,
+		UnbalancePsiLargerPartyRowsCountThreshold: jobConfig.UnbalancePsiLargerPartyRowsCountThreshold,
+		PsiType: jobConfig.GetPsiType(),
+	}
+
+	logCfg := &pb.LogConfig{
+		EnableSessionLoggerSeparation: jobConfig.EnableSessionLoggerSeparation,
+	}
+
+	sessionOptions := &application.SessionOptions{
+		SessionExpireSeconds: jobConfig.GetSessionExpireSeconds(),
+		LinkConfig:           linkCfg,
+		PsiConfig:            psiCfg,
+		LogConfig:            logCfg,
+		TimeZone:             jobConfig.GetTimeZone(),
+	}
+
+	return sessionOptions
 }

@@ -26,10 +26,14 @@
 #include <unordered_set>
 #include <vector>
 
+#include "arrow/compute/api.h"
+#include "arrow/compute/exec.h"
 #include "butil/files/scoped_temp_dir.h"
 #include "psi/cryptor/cryptor_selector.h"
-#include "psi/ecdh/ecdh_oprf_psi.h"
 #include "psi/ecdh/ecdh_psi.h"
+#include "psi/ecdh/ub_psi/ecdh_oprf_psi.h"
+#include "psi/rr22/common.h"
+#include "psi/rr22/rr22_psi.h"
 #include "psi/utils/ec_point_store.h"
 #include "yacl/crypto/rand/rand.h"
 
@@ -37,6 +41,7 @@
 #include "engine/core/arrow_helper.h"
 #include "engine/core/primitive_builder.h"
 #include "engine/core/tensor.h"
+#include "engine/core/tensor_constructor.h"
 #include "engine/framework/exec.h"
 #include "engine/util/psi_detail_logger.h"
 #include "engine/util/psi_helper.h"
@@ -48,20 +53,28 @@ const std::string In::kOpType("In");
 
 const std::string& In::Type() const { return kOpType; }
 
+const std::vector<In::InType> In::ImplementedInTypes = {InType::kPsiIn,
+                                                        InType::kLocalIn};
+
 void In::Validate(ExecContext* ctx) {
   int64_t in_type = ctx->GetInt64ValueFromAttribute(kInType);
   if (in_type < 0 || in_type >= static_cast<int64_t>(InType::kInTypeNums)) {
     YACL_THROW("Unknown in type: {}", in_type);
   }
+  auto type = static_cast<InType>(in_type);
 
-  if (in_type == static_cast<int64_t>(InType::kPsiIn)) {
-    int64_t algorithm = ctx->GetInt64ValueFromAttribute(kAlgorithmAttr);
-    if (algorithm < 0 ||
-        algorithm >= static_cast<int64_t>(util::PsiAlgo::kAlgoNums)) {
-      YACL_THROW("Unknown psi algorithm value: {}", algorithm);
+  if (std::find(ImplementedInTypes.begin(), ImplementedInTypes.end(), type) !=
+      ImplementedInTypes.end()) {
+    if (type == InType::kPsiIn) {
+      int64_t algorithm = ctx->GetInt64ValueFromAttribute(kAlgorithmAttr);
+      if (algorithm < 0 ||
+          algorithm >= static_cast<int64_t>(util::PsiAlgo::kAlgoNums)) {
+        YACL_THROW("Unknown psi algorithm value: {}", algorithm);
+      }
     }
-    ValidateInputAndOutputForPsi(ctx);
-    ValidatePartyCodesForPsi(ctx);
+
+    ValidateInputAndOutput(ctx);
+    ValidatePartyCodes(ctx);
   } else {
     // TODO(shunde.csd): implement other in algorithm
     YACL_THROW("to be implemented");
@@ -73,26 +86,29 @@ void In::Execute(ExecContext* ctx) {
   int64_t in_type = ctx->GetInt64ValueFromAttribute(kInType);
   switch (in_type) {
     case static_cast<int64_t>(InType::kSecretShareIn):
-      SPDLOG_LOGGER_INFO(logger, "Execute In, In type = {}", "SecretShareIn");
+      SPDLOG_LOGGER_INFO(logger, "Execute In, In type = SecretShareIn");
       return SecretShareIn(ctx);
     case static_cast<int64_t>(InType::kPsiIn):
       // engines will coordinate proper PSI algorithm(EcdhPsi or OprfPsi)
       // according to the tensor size
-      SPDLOG_LOGGER_INFO(logger, "Execute In, In type = {}", "PsiIn");
+      SPDLOG_LOGGER_INFO(logger, "Execute In, In type = PsiIn");
       {
         auto algorithm = ctx->GetInt64ValueFromAttribute(kAlgorithmAttr);
         switch (algorithm) {
           case static_cast<int64_t>(util::PsiAlgo::kOprfPsi):
-            SPDLOG_LOGGER_INFO(logger, "Execute In, algo = {}", "OprfPsi");
+            SPDLOG_LOGGER_INFO(logger, "Execute In, algo = OprfPsi");
             // Besides letting the engines decide, Driver can directly choose
             // prefered PSI algorithm(EcdhPsi or OprfPsi) UbPsiServerHint is
             // indispensable when Driver explicitly choose OprfPsiIn
             return OprfPsiIn(ctx, IsOprfServerAccordToHint(ctx));
           case static_cast<int64_t>(util::PsiAlgo::kEcdhPsi):
-            SPDLOG_LOGGER_INFO(logger, "Execute In, algo = {}", "EcdhPsi");
+            SPDLOG_LOGGER_INFO(logger, "Execute In, algo = EcdhPsi");
             return EcdhPsiIn(ctx);
+          case static_cast<int64_t>(util::PsiAlgo::kRr22Psi):
+            SPDLOG_LOGGER_INFO(logger, "Execute In, algo = Rr22Psi");
+            return Rr22PsiIn(ctx);
           case static_cast<int64_t>(util::PsiAlgo::kAutoPsi):
-            SPDLOG_LOGGER_INFO(logger, "Execute In, algo = {}", "AutoPsi");
+            SPDLOG_LOGGER_INFO(logger, "Execute In, algo = AutoPsi");
             return PsiIn(ctx);
           default:
             YACL_THROW("unsupported in algorithm id: {}", algorithm);
@@ -106,7 +122,7 @@ void In::Execute(ExecContext* ctx) {
   }
 }
 
-void In::ValidateInputAndOutputForPsi(ExecContext* ctx) {
+void In::ValidateInputAndOutput(ExecContext* ctx) {
   const auto& left = ctx->GetInput(kInLeft);
   const auto& right = ctx->GetInput(kInRight);
   const auto& out = ctx->GetOutput(kOut);
@@ -131,8 +147,8 @@ void In::ValidateInputAndOutputForPsi(ExecContext* ctx) {
                "be private");
 }
 
-void In::ValidatePartyCodesForPsi(ExecContext* ctx) {
-  // only support 2 party PSI in this implementation
+void In::ValidatePartyCodes(ExecContext* ctx) {
+  // only support 2 party
   const auto& input_party_codes =
       ctx->GetStringValuesFromAttribute(kInputPartyCodesAttr);
   YACL_ENFORCE(input_party_codes.size() == 2,
@@ -223,10 +239,12 @@ void In::OprfPsiIn(ExecContext* ctx, bool is_server,
     psi_link = psi_link->SubWorld(ctx->GetNodeName() + "-OprfPsiIn",
                                   input_party_codes);
   }
-  psi_options.link0 = psi_link;
-  YACL_ENFORCE(psi_options.link0, "fail to getlink0 for OprfPsiIn");
-  psi_options.link1 = psi_options.link0->Spawn();
-  YACL_ENFORCE(psi_options.link1, "fail to getlink1 for OprfPsiIn");
+  psi_options.cache_transfer_link = psi_link;
+  YACL_ENFORCE(psi_options.cache_transfer_link,
+               "fail to create cache_transfer_link for OprfPsiIn");
+  psi_options.online_link = psi_options.cache_transfer_link->Spawn();
+  YACL_ENFORCE(psi_options.online_link,
+               "fail to create online_link for OprfPsiIn");
 
   psi_options.curve_type = static_cast<psi::CurveType>(
       ctx->GetSession()->GetSessionOptions().psi_config.psi_curve_type);
@@ -303,8 +321,8 @@ void In::OprfPsiServer(
     std::shared_ptr<psi::IUbPsiCache> ub_cache;
     std::vector<std::string> dummy_fields{};
     ub_cache = std::make_shared<psi::UbPsiCache>(
-        server_cache_path, ec_oprf_psi_server->GetCompareLength(),
-        dummy_fields);
+        server_cache_path, ec_oprf_psi_server->GetCompareLength(), dummy_fields,
+        private_key);
 
     util::OprfPsiServerTransferServerItems(ctx, psi_link, batch_provider,
                                            ec_oprf_psi_server, ub_cache);
@@ -321,7 +339,7 @@ void In::OprfPsiServer(
         std::async(std::launch::async, util::OprfPsiServerTransferServerItems,
                    ctx, psi_link, batch_provider, ec_oprf_psi_server, nullptr);
     util::OprfPsiServerTransferClientItems(ctx, ec_oprf_psi_server);
-    transfer_server_items_future.wait();
+    transfer_server_items_future.get();
     psi_info_table->result_size = 0;
   }
 }
@@ -354,7 +372,7 @@ void In::OprfPsiClient(
                    ctx, psi_link, psi_options, server_store);
     OprfPsiClientTransferClientItems(ctx, batch_provider, psi_options,
                                      client_store);
-    transfer_server_items_future.wait();
+    transfer_server_items_future.get();
     psi_info_table->result_size =
         OprfClientHandleResult(ctx, client_store, server_store);
   }
@@ -459,7 +477,116 @@ void In::EcdhPsiIn(ExecContext* ctx) {
                             start_time);
 }
 
-void In::LocalIn(ExecContext* ctx) { YACL_THROW("unimplemented"); }
+void In::Rr22PsiIn(ExecContext* ctx) {
+  const auto start_time = std::chrono::system_clock::now();
+  auto logger = ctx->GetActiveLogger();
+
+  const auto& my_party_code = ctx->GetSession()->SelfPartyCode();
+
+  std::vector<std::string> input_party_codes =
+      ctx->GetStringValuesFromAttribute(kInputPartyCodesAttr);
+  std::string reveal_to = ctx->GetStringValueFromAttribute(kRevealToAttr);
+
+  bool is_left = my_party_code == input_party_codes.at(0);
+  auto target_rank = ctx->GetSession()->GetPartyRank(reveal_to);
+  YACL_ENFORCE(target_rank != -1, "unknown rank for party {}", reveal_to);
+
+  auto param_name = ctx->GetInput(kInLeft)[0].name();
+  if (!is_left) {
+    param_name = ctx->GetInput(kInRight)[0].name();
+  }
+  auto in_tensor = ctx->GetTensorTable()->GetTensor(param_name);
+  YACL_ENFORCE(in_tensor != nullptr, "{} not found in tensor table",
+               param_name);
+  auto psi_link = ctx->GetSession()->GetLink();
+  if (psi_link->WorldSize() > 2) {
+    psi_link = psi_link->SubWorld(ctx->GetNodeName() + "-Rr22PsiJoin",
+                                  input_party_codes);
+  }
+  auto self_size = static_cast<size_t>(in_tensor->Length());
+  auto peer_size = util::ExchangeSetSize(psi_link, self_size);
+  auto batch_provider = std::make_shared<util::BatchProvider>(
+      std::vector<TensorPtr>{in_tensor}, FLAGS_provider_batch_size);
+  auto provider = util::MemoryBucketProvider(batch_provider);
+  provider.InitBucket(psi_link, self_size, peer_size);
+  auto bucket_num = provider.GetBucketNum();
+  std::shared_ptr<util::InResultResolverWithBucket> result_solver;
+  if (reveal_to == my_party_code) {
+    result_solver =
+        std::make_shared<util::InResultResolverWithBucket>(bucket_num);
+  }
+  psi::rr22::PreProcessFunc pre_f =
+      [&](size_t idx) -> std::vector<psi::HashBucketCache::BucketItem> {
+    YACL_ENFORCE(idx < bucket_num);
+    return provider.GetDeDupItemsInBucket(idx);
+  };
+  psi::rr22::PostProcessFunc post_f =
+      [&](size_t bucket_idx,
+          const std::vector<psi::HashBucketCache::BucketItem>& bucket_items,
+          const std::vector<uint32_t>& indices,
+          const std::vector<uint32_t>& peer_cnt) {
+        if (reveal_to == my_party_code) {
+          result_solver->FeedBucketData(bucket_idx, bucket_items, indices,
+                                        provider.GetDupIndices(bucket_idx));
+        }
+        provider.CleanBucket(bucket_idx);
+      };
+  psi::rr22::Rr22Runner runner(psi_link,
+                               psi::rr22::GenerateRr22PsiOptions(false),
+                               bucket_num, false, pre_f, post_f);
+  // reveal party as receiver
+  runner.ParallelRun(0, reveal_to != my_party_code);
+  // reveal to me
+  int64_t result_size = 0;
+  if (reveal_to == my_party_code) {
+    auto result = result_solver->ComputeInResult();
+    result_size = result->Length();
+    SPDLOG_LOGGER_INFO(
+        logger,
+        "ECDH PSI In finish, my_party_code:{}, my_rank:{}, total "
+        "self_item_count:{}, total peer_item_count:{}, result size:{}",
+        ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
+        self_size, peer_size, result_size);
+    const auto& output_pb = ctx->GetOutput(kOut)[0];
+    if (ctx->GetSession()->GetPsiLogger()) {
+      ctx->GetSession()->GetPsiLogger()->LogOutput(result);
+    }
+    ctx->GetSession()->GetTensorTable()->AddTensor(output_pb.name(),
+                                                   std::move(result));
+  }
+  audit::RecordInNodeDetail(*ctx, static_cast<int64_t>(self_size),
+                            static_cast<int64_t>(peer_size), result_size,
+                            start_time);
+}
+
+void In::LocalIn(ExecContext* ctx) {
+  std::vector<std::string> input_party_codes =
+      ctx->GetStringValuesFromAttribute(kInputPartyCodesAttr);
+  std::string my_party_code = ctx->GetSession()->SelfPartyCode();
+  YACL_ENFORCE(input_party_codes.size() == 2,
+               "input_party_codes size must be 2");
+  YACL_ENFORCE(input_party_codes[0] == input_party_codes[1],
+               "input_party_codes must be same");
+  if (input_party_codes[0] == my_party_code) {
+    auto left =
+        ctx->GetTensorTable()->GetTensor(ctx->GetInput(kInLeft)[0].name());
+    auto right =
+        ctx->GetTensorTable()->GetTensor(ctx->GetInput(kInRight)[0].name());
+    YACL_ENFORCE(left, "left tensor not found");
+    YACL_ENFORCE(right, "right tensor not found");
+    std::shared_ptr<arrow::ChunkedArray> result;
+    auto result_status = arrow::compute::IsIn(left->ToArrowChunkedArray(),
+                                              right->ToArrowChunkedArray());
+    YACL_ENFORCE(result_status.ok(), "failed to compute isin, error:{}",
+                 result_status->ToString());
+    result = result_status.ValueOrDie().chunked_array();
+    auto output_pb = ctx->GetOutput(kOut)[0];
+    ctx->GetSession()->GetTensorTable()->AddTensor(output_pb.name(),
+                                                   TensorFrom(result));
+  } else {
+    YACL_THROW("tensors are in {}'s side", my_party_code);
+  }
+}
 void In::SecretShareIn(ExecContext* ctx) { YACL_THROW("unimplemented"); }
 
 }  // namespace scql::engine::op

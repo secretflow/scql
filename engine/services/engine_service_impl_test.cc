@@ -14,7 +14,10 @@
 
 #include "engine/services/engine_service_impl.h"
 
+#include <cstddef>
 #include <cstdint>
+#include <string>
+#include <vector>
 
 #include "Poco/Data/SQLite/Connector.h"
 #include "Poco/Data/Session.h"
@@ -134,6 +137,18 @@ class EngineServiceImplTest : public ::testing::Test {
   EngineServiceOptions engine_service_options;
 };
 
+void MockPipeline(pb::SchedulingPolicy* policy,
+                  const std::vector<size_t>& nodes_cnt_in_subdag) {
+  auto* pipeline = policy->add_pipelines();
+  for (size_t i : nodes_cnt_in_subdag) {
+    auto* subdag = pipeline->add_subdags();
+    for (size_t j = 0; j < i; ++j) {
+      auto* job = subdag->add_jobs();
+      job->add_node_ids(std::to_string(j));
+    }
+  }
+}
+
 TEST_F(EngineServiceImplTest, QueryJobStatus) {
   // Given
   //  bypass RunExecutionPlan, control the session's state manually.
@@ -161,13 +176,54 @@ TEST_F(EngineServiceImplTest, QueryJobStatus) {
   SetAndCheckJobStatus(SessionState::SUCCEEDED);
   SetAndCheckJobStatus(SessionState::FAILED);
 
-  CheckJobNodeCount(-1, -1);
+  // Given
+  CheckJobNodeCount(0, 0);
   auto* session = session_manager->GetSession(global_session_id);
-  const int32_t nodes_count = 10;
-  const int32_t executed_nodes = 5;
-  session->SetNodesCount(nodes_count);
-  session->SetExecutedNodes(executed_nodes);
-  CheckJobNodeCount(nodes_count, executed_nodes);
+  // add first pipeline
+  pb::SchedulingPolicy policy;
+  MockPipeline(&policy, {5, 5});
+  session->InitProgressStats(policy);
+  CheckJobNodeCount(10, 0);
+  session->GetProgressStats()->IncExecutedNodes();
+  session->GetProgressStats()->IncExecutedNodes();
+  CheckJobNodeCount(10, 2);
+  EXPECT_EQ(2, session->GetProgressStats()->GetExecutedNodes());
+  EXPECT_EQ("stages executed 2/10", session->GetProgressStats()->Summary());
+  // running to second subdag
+  for (int i = 0; i < 5; ++i) {
+    session->GetProgressStats()->IncExecutedNodes();
+  }
+  EXPECT_EQ(7, session->GetProgressStats()->GetExecutedNodes());
+  EXPECT_EQ("stages executed 7/10", session->GetProgressStats()->Summary());
+  pb::SchedulingPolicy batched_policy;
+  // batched policy, 2 pipelines
+  MockPipeline(&batched_policy, {6, 4});
+  MockPipeline(&batched_policy, {4, 6});
+  session->InitProgressStats(batched_policy);
+  CheckJobNodeCount(20, 0);
+  session->GetProgressStats()->SetBatchCntInPipeline(10);
+  session->GetProgressStats()->IncExecutedBatch();
+  session->GetProgressStats()->IncExecutedBatch();
+  CheckJobNodeCount(20, 0);
+  EXPECT_EQ(0, session->GetProgressStats()->GetExecutedNodes());
+  session->GetProgressStats()->SetCurrentNodeInfo(
+      std::chrono::system_clock::now(), "mock_node1");
+  EXPECT_EQ(
+      "executed pipeline:0/2 executed batch:2/10 node:mock_node1 in current "
+      "pipeline 1",
+      session->GetProgressStats()->Summary());
+  // running to second pipeline
+  session->GetProgressStats()->IncExecutedPipeline();
+  session->GetProgressStats()->SetBatchCntInPipeline(5);
+  session->GetProgressStats()->IncExecutedBatch();
+  session->GetProgressStats()->IncExecutedBatch();
+  EXPECT_EQ(10, session->GetProgressStats()->GetExecutedNodes());
+  session->GetProgressStats()->SetCurrentNodeInfo(
+      std::chrono::system_clock::now(), "mock_node2");
+  EXPECT_EQ(
+      "executed pipeline:1/2 executed batch:2/5 node:mock_node2 in current "
+      "pipeline 2",
+      session->GetProgressStats()->Summary());
 }
 
 TEST_F(EngineServiceImplTest, RunExecutionPlan) {
@@ -398,10 +454,10 @@ TEST_P(EngineServiceImpl2PartiesTest, RunExecutionPlan) {
   auto future_bob =
       std::async(proc, engine_svcs[1].get(), &request_bob, &response_bob);
   // Then
-  EXPECT_NO_THROW(future_alice.wait());
+  EXPECT_NO_THROW(future_alice.get());
   SPDLOG_INFO("out: \n{}", response_alice.DebugString());
 
-  EXPECT_NO_THROW(future_bob.wait());
+  EXPECT_NO_THROW(future_bob.get());
   SPDLOG_INFO("out: \n{}", response_bob.DebugString());
 
   auto check_equal = [](const pb::Tensor& actual_result,
@@ -452,8 +508,8 @@ TEST_P(EngineServiceImpl2PartiesTest, RunExecutionPlan) {
     auto future_bob =
         std::async(proc, engine_svcs[1].get(), &request_bob, &response_bob);
 
-    EXPECT_NO_THROW(future_alice.wait());
-    EXPECT_NO_THROW(future_bob.wait());
+    EXPECT_NO_THROW(future_alice.get());
+    EXPECT_NO_THROW(future_bob.get());
 
     ASSERT_EQ(response_alice.status().code(), 0);
     ASSERT_EQ(response_bob.status().code(), 0);

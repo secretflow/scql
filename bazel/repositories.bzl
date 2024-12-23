@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("//engine/bazel:engine_deps.bzl", "engine_deps")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("//engine/bazel:engine_deps.bzl", "engine_deps")
 
 def scql_deps():
     engine_deps()

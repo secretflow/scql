@@ -33,153 +33,123 @@ import (
 
 func TestJobWatcher(t *testing.T) {
 	r := require.New(t)
-	manager, unreachableAddr, err := dbSetUp(true)
+	manager, _, err := dbSetUp()
 	r.NoError(err)
 
 	var jobDead atomic.Bool
-	cb := func(jobID, url, reason string) {
+	cb := func(jobID, reason string) {
 		jobDead.Store(true)
 	}
 
-	w, err := NewJobWatcher(manager, "alice", cb, WithWatchInterval(time.Second))
+	w, err := NewJobWatcher(manager, cb, WithMaxUnavailableDuration(time.Second*3))
 	r.NoError(err)
-	defer w.Stop()
-
+	stopFn, err := StartJobWatcherScheduler(w, time.Second)
+	r.NoError(err)
+	defer stopFn()
 	jobId := "test-job-id"
-	err = w.Watch(jobId, unreachableAddr)
-	r.NoError(err)
+	// err = w.metaManager.ExecInMetaTransaction(func(txn *storage.MetaTransaction) (err error) {
+	// 	return txn.SetSessionInfo(&storage.SessionInfo{SessionID: jobId, Status: int8(storage.SessionRunning), EngineUrl: unreachableAddr, EngineUrlForSelf: unreachableAddr})
+	// })
+	// r.NoError(err)
 
 	// sleep 5s to wait query job been mark dead, since 5s > 1s*3
 	time.Sleep(time.Second * 5)
 	r.True(jobDead.Load())
-
-	sessionInfo, err := manager.GetSessionInfo(jobId)
+	var sessionInfo *storage.SessionInfo
+	err = manager.ExecInMetaTransaction(func(txn *storage.MetaTransaction) (err error) {
+		sessionInfo, err = txn.GetSessionInfo(jobId)
+		return err
+	})
 	r.NoError(err)
 	r.Equal(sessionInfo.Status, int8(storage.SessionFailed))
 }
 
 func TestJobWatcherBeforeEngineExecute(t *testing.T) {
 	r := require.New(t)
-	manager, _, err := dbSetUp(true)
+	manager, _, err := dbSetUp()
 	r.NoError(err)
 
 	jobId := "test-job-id"
-	manager.UpdateSessionInfoStatusWithCondition(jobId, storage.SessionRunning, storage.SessionSubmitted)
-
+	err = manager.ExecInMetaTransaction(func(txn *storage.MetaTransaction) (err error) {
+		return txn.UpdateSessionInfoStatusWithCondition(jobId, storage.SessionRunning, storage.SessionSubmitted)
+	})
+	r.NoError(err)
 	var jobDead atomic.Bool
-	cb := func(jobID, url, reason string) {
+	cb := func(jobID, reason string) {
 		jobDead.Store(true)
 	}
 
-	w, err := NewJobWatcher(manager, "alice", cb, WithWatchInterval(time.Second))
+	w, err := NewJobWatcher(manager, cb, WithMaxUnavailableDuration(time.Second*3))
 	r.NoError(err)
-	defer w.Stop()
+	stopFn, err := StartJobWatcherScheduler(w, time.Second)
+	r.NoError(err)
+	defer stopFn()
 
 	// job isn't watched because the statu is SessionSubmitted
 	time.Sleep(time.Second * 5)
 	r.False(jobDead.Load())
 
-	// mock engine execute the job
-	manager.UpdateSessionInfoStatusWithCondition(jobId, storage.SessionSubmitted, storage.SessionRunning)
-
+	err = manager.ExecInMetaTransaction(func(txn *storage.MetaTransaction) (err error) {
+		return txn.UpdateSessionInfoStatusWithCondition(jobId, storage.SessionSubmitted, storage.SessionRunning)
+	})
+	r.NoError(err)
 	// sleep 5s to wait query job been mark dead, since 5s > 1s*3
 	time.Sleep(time.Second * 5)
 	r.True(jobDead.Load())
 
-	sessionInfo, err := manager.GetSessionInfo(jobId)
+	var sessionInfo *storage.SessionInfo
+	err = manager.ExecInMetaTransaction(func(txn *storage.MetaTransaction) (err error) {
+		sessionInfo, err = txn.GetSessionInfo(jobId)
+		return err
+	})
 	r.NoError(err)
 	r.Equal(sessionInfo.Status, int8(storage.SessionFailed))
 }
 
 func TestJobWatcherReStart(t *testing.T) {
 	r := require.New(t)
-	manager, unreachableAddr, err := dbSetUp(true)
+	manager, unreachableAddr, err := dbSetUp()
 	r.NoError(err)
 
 	var jobDead atomic.Bool
-	cb := func(jobID, url, reason string) {
+	cb := func(jobID, reason string) {
 		jobDead.Store(true)
 	}
 
-	w, err := NewJobWatcher(manager, "alice", cb, WithWatchInterval(time.Second))
+	w, err := NewJobWatcher(manager, cb, WithMaxUnavailableDuration(time.Second*3))
 	r.NoError(err)
 
 	jobId := "test-job-id"
-	err = w.Watch(jobId, unreachableAddr)
-	r.NoError(err)
+	err = w.metaManager.ExecInMetaTransaction(func(txn *storage.MetaTransaction) (err error) {
+		return txn.SetSessionInfo(&storage.SessionInfo{SessionID: jobId, Status: int8(storage.SessionRunning), EngineUrl: unreachableAddr, EngineUrlForSelf: unreachableAddr})
+	})
 
 	time.Sleep(time.Second)
-	w.Stop()
+	stopFn, err := StartJobWatcherScheduler(w, time.Second)
+	r.NoError(err)
+	defer stopFn()
 
 	// restart
-	w, err = NewJobWatcher(manager, "alice", cb, WithWatchInterval(time.Second))
+	w, err = NewJobWatcher(manager, cb)
 	r.NoError(err)
-	defer w.Stop()
+	stopFn, err = StartJobWatcherScheduler(w, time.Second)
+	r.NoError(err)
+	defer stopFn()
 
 	// sleep 5s to wait query job been mark dead, since 5s > 1s*3
 	time.Sleep(time.Second * 5)
 	r.True(jobDead.Load())
 
-	sessionInfo, err := manager.GetSessionInfo(jobId)
+	var sessionInfo *storage.SessionInfo
+	err = manager.ExecInMetaTransaction(func(txn *storage.MetaTransaction) (err error) {
+		sessionInfo, err = txn.GetSessionInfo(jobId)
+		return err
+	})
 	r.NoError(err)
 	r.Equal(sessionInfo.Status, int8(storage.SessionFailed))
 }
 
-func TestJobWatcherCluster(t *testing.T) {
-	r := require.New(t)
-	manager, unreachableAddr, err := dbSetUp(true)
-	r.NoError(err)
-
-	var jobDead atomic.Bool
-	cb := func(jobID, url, reason string) {
-		jobDead.Store(true)
-	}
-
-	w1, err := NewJobWatcher(manager, "alice", cb, WithWatchInterval(time.Second))
-	r.NoError(err)
-	w2, err := NewJobWatcher(manager, "alice2", cb, WithWatchInterval(time.Second))
-	r.NoError(err)
-
-	jobId := "test-job-id"
-	err = w1.Watch(jobId, unreachableAddr)
-	r.NoError(err)
-	defer w2.Stop()
-
-	time.Sleep(time.Second)
-	w1.Stop()
-
-	time.Sleep(time.Second * 5)
-	r.True(jobDead.Load())
-
-	sessionInfo, err := manager.GetSessionInfo(jobId)
-	r.NoError(err)
-	r.Equal(sessionInfo.Status, int8(storage.SessionFailed))
-}
-
-func TestJobWatcherUnpersistent(t *testing.T) {
-	r := require.New(t)
-	manager, unreachableAddr, err := dbSetUp(false)
-	r.NoError(err)
-
-	var jobDead atomic.Bool
-	cb := func(jobID, url, reason string) {
-		jobDead.Store(true)
-	}
-
-	w, err := NewJobWatcher(manager, "alice", cb, WithWatchInterval(time.Second))
-	r.NoError(err)
-	defer w.Stop()
-
-	jobId := "test-job-id"
-	err = w.Watch(jobId, unreachableAddr)
-	r.NoError(err)
-
-	// sleep 5s to wait query job been mark dead, since 5s > 1s*3
-	time.Sleep(time.Second * 5)
-	r.True(jobDead.Load())
-}
-
-func dbSetUp(persistent bool) (*storage.MetaManager, string, error) {
+func dbSetUp() (*storage.MetaManager, string, error) {
 	id, err := uuid.NewUUID()
 	if err != nil {
 		return nil, "", err
@@ -194,14 +164,14 @@ func dbSetUp(persistent bool) (*storage.MetaManager, string, error) {
 				gormlog.Config{
 					SlowThreshold: 200 * time.Millisecond,
 					Colorful:      false,
-					LogLevel:      gormlog.Warn,
+					LogLevel:      gormlog.Info,
 				}),
 		})
 	if err != nil {
 		return nil, "", err
 	}
 
-	manager := storage.NewMetaManager(db, persistent)
+	manager := storage.NewMetaManager(db)
 	err = manager.Bootstrap()
 	if err != nil {
 		return nil, "", err
@@ -213,16 +183,16 @@ func dbSetUp(persistent bool) (*storage.MetaManager, string, error) {
 	}
 	unreachableAddr := fmt.Sprintf("127.0.0.1:%d", port)
 
-	if persistent {
-		sessionInfo := storage.SessionInfo{
-			SessionID:        "test-job-id",
-			EngineUrlForSelf: unreachableAddr,
-			Status:           int8(storage.SessionRunning),
-		}
-		err = manager.SetSessionInfo(sessionInfo)
-		if err != nil {
-			return nil, "", err
-		}
+	sessionInfo := storage.SessionInfo{
+		SessionID:        "test-job-id",
+		EngineUrlForSelf: unreachableAddr,
+		Status:           int8(storage.SessionRunning),
+	}
+	err = manager.ExecInMetaTransaction(func(txn *storage.MetaTransaction) (err error) {
+		return txn.SetSessionInfo(&sessionInfo)
+	})
+	if err != nil {
+		return nil, "", err
 	}
 
 	return manager, unreachableAddr, nil

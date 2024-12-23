@@ -16,12 +16,13 @@
 
 #include "absl/debugging/failure_signal_handler.h"
 #include "absl/debugging/symbolize.h"
+#include "absl/strings/str_split.h"
 #include "butil/file_util.h"
 #include "gflags/gflags.h"
 #include "yacl/base/exception.h"
 
 DEFINE_string(kuscia_datamesh_endpoint, "", "kuscia datamesh server endpoint");
-DEFINE_string(domaindata_id, "", "domain data id");
+DEFINE_string(domaindata_id, "", "domain data id split by ','");
 DEFINE_string(ca_cert, "", "");
 DEFINE_string(key, "", "");
 DEFINE_string(cert, "", "");
@@ -56,8 +57,18 @@ int main(int argc, char* argv[]) {
   KusciaDataMeshRouter router(FLAGS_kuscia_datamesh_endpoint, channel_creds);
 
   try {
-    auto datasources =
-        router.Route(std::vector<std::string>{FLAGS_domaindata_id});
+    auto datasources = router.Route(absl::StrSplit(FLAGS_domaindata_id, ','));
+    // check datasource id coming from runsql
+    if (datasources.size() > 1) {
+      for (size_t i = 1; i < datasources.size(); ++i) {
+        if (datasources[i].id() != datasources[0].id()) {
+          YACL_THROW(
+              "RunSQL operator could not handle query across datasource, "
+              "table_refs=[{}]",
+              FLAGS_domaindata_id);
+        }
+      }
+    }
     for (const auto& datasource : datasources) {
       std::cout << "Datasource: " << datasource.ShortDebugString() << std::endl;
     }

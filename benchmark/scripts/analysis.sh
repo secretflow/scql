@@ -17,6 +17,6 @@ docker cp ${project_name}-engine-alice-1:/logs/scqlengine.log ${output_logs}/ali
 docker cp ${project_name}-engine-bob-1:/logs/scqlengine.log ${output_logs}/bob_scqlengine.log
 docker cp ${project_name}-engine-carol-1:/logs/scqlengine.log ${output_logs}/carol_scqlengine.log
 # read log
-python ${SCRIPT_DIR}/get_op.py ${output_logs}/alice_scqlengine.log ${output_logs}/alice_op.csv
-python ${SCRIPT_DIR}/get_op.py ${output_logs}/bob_scqlengine.log ${output_logs}/bob_op.csv
-python ${SCRIPT_DIR}/get_op.py ${output_logs}/carol_scqlengine.log ${output_logs}/carol_op.csv
+python ${SCRIPT_DIR}/get_op.py ${output_logs}/alice_scqlengine.log ${output_logs} alice_op.csv
+python ${SCRIPT_DIR}/get_op.py ${output_logs}/bob_scqlengine.log ${output_logs} bob_op.csv
+python ${SCRIPT_DIR}/get_op.py ${output_logs}/carol_scqlengine.log ${output_logs} carol_op.csv

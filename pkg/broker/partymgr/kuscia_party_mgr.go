@@ -21,24 +21,49 @@ import (
 	"encoding/pem"
 	"fmt"
 
+	"github.com/secretflow/kuscia/proto/api/v1alpha1/appconfig"
 	"github.com/secretflow/kuscia/proto/api/v1alpha1/kusciaapi"
 	"google.golang.org/grpc"
 
 	"github.com/secretflow/scql/pkg/interpreter/graph"
+	"github.com/secretflow/scql/pkg/util/message"
 )
 
 type kusciaPartyMgr struct {
-	client kusciaapi.DomainServiceClient
+	client        kusciaapi.DomainServiceClient
+	clusterDefine *appconfig.ClusterDefine
 }
 
-func NewKusciaPartyMgr(conn grpc.ClientConnInterface) (PartyMgr, error) {
+func NewKusciaPartyMgr(conn grpc.ClientConnInterface, cluster string) (PartyMgr, error) {
 	client := kusciaapi.NewDomainServiceClient(conn)
-	return &kusciaPartyMgr{
+	mgr := &kusciaPartyMgr{
 		client: client,
-	}, nil
+	}
+	if cluster != "" {
+		clusterDefine := &appconfig.ClusterDefine{}
+		err := message.ProtoUnmarshal([]byte(cluster), clusterDefine)
+		if err != nil {
+			return nil, fmt.Errorf("failed to deserialize cluster define: %v", err)
+		}
+		mgr.clusterDefine = clusterDefine
+	}
+
+	return mgr, nil
 }
 
 func (k *kusciaPartyMgr) GetBrokerUrlByParty(party string) (string, error) {
+	if k.clusterDefine != nil {
+		for _, p := range k.clusterDefine.Parties {
+			if party == p.Name {
+				for _, svc := range p.Services {
+					if svc.PortName == "inter" {
+						return fmt.Sprintf("http://%s", svc.Endpoints[0]), nil
+					}
+				}
+			}
+		}
+		return "", fmt.Errorf("failed to find broker url for party %s, cluster_define: %v", party, k.clusterDefine)
+	}
 	return fmt.Sprintf("http://scql-broker-inter.%s.svc", party), nil
 }
 

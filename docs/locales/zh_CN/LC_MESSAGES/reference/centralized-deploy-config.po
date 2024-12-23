@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-08-05 10:22+0800\n"
+"POT-Creation-Date: 2024-11-21 17:45+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -804,9 +804,9 @@ msgstr "系统中保留的审计日志文件的最大数量，0 表示保留所�
 msgid "peer_engine_protocol"
 msgstr "peer_engine_protocol"
 
-#: ../../reference/engine-config.rst:45 ../../reference/engine-config.rst:69
-msgid "`http:proto`"
-msgstr "`http:proto`"
+#: ../../reference/engine-config.rst:45
+msgid "baidu_std"
+msgstr ""
 
 #: ../../reference/engine-config.rst:45
 msgid "The rpc protocol between engine and engine"
@@ -816,9 +816,9 @@ msgstr "SCQLEngine 与 SCQLEngine 之间的rpc协议"
 msgid "peer_engine_connection_type"
 msgstr "peer_engine_connection_type"
 
-#: ../../reference/engine-config.rst:47 ../../reference/engine-config.rst:71
-msgid "pooled"
-msgstr "pooled"
+#: ../../reference/engine-config.rst:47
+msgid "single"
+msgstr ""
 
 #: ../../reference/engine-config.rst:47
 msgid "The rpc connection type between engine and engine"
@@ -935,12 +935,20 @@ msgid "driver_protocol"
 msgstr "driver_protocol"
 
 #: ../../reference/engine-config.rst:69
+msgid "`http:proto`"
+msgstr "`http:proto`"
+
+#: ../../reference/engine-config.rst:69
 msgid "The rpc protocol between engine and Driver"
 msgstr "SCQLEngine 与 Driver 之间的 rpc 协议"
 
 #: ../../reference/engine-config.rst:71
 msgid "driver_connection_type"
 msgstr "driver_connection_type"
+
+#: ../../reference/engine-config.rst:71
+msgid "pooled"
+msgstr "pooled"
 
 #: ../../reference/engine-config.rst:71
 msgid "The rpc connection type between engine and Driver"
@@ -1712,8 +1720,10 @@ msgstr ""
 
 #: ../../reference/engine-config.rst:278
 msgid ""
-"OSS/MinIO csv: "
-"\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"S3Conf\\\\\\\":{\\\\\\\"endpoint\\\\\\\":\\\\\\\"test_endpoint\\\\\\\",\\\\\\\"access_key_id\\\\\\\":\\\\\\\"test_id\\\\\\\",\\\\\\\"secret_access_key\\\\\\\":\\\\\\\"test_key\\\\\\\"},\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"oss://test_bucket/test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
+"OSS csv: "
+"\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"s3_conf\\\\\\\":{\\\\\\\"endpoint\\\\\\\":\\\\\\\"test_endpoint\\\\\\\",\\\\\\\"access_key_id\\\\\\\":\\\\\\\"test_id\\\\\\\",\\\\\\\"secret_access_key\\\\\\\":\\\\\\\"test_key\\\\\\\",\\\\\\\"virtualhost\\\\\\\":"
+" true "
+"},\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"oss://test_bucket/test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"string\\\\\\\"}]}]}\""
 msgstr ""
 
 #: ../../reference/engine-config.rst:283
@@ -1872,7 +1882,9 @@ msgstr ""
 "``authorized_profile_path`` 中的公钥匹配。"
 
 #~ msgid ""
-#~ "本地 csv: "
-#~ "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
+#~ "OSS csv: "
+#~ "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"S3Conf\\\\\\\":{\\\\\\\"endpoint\\\\\\\":\\\\\\\"test_endpoint\\\\\\\",\\\\\\\"access_key_id\\\\\\\":\\\\\\\"test_id\\\\\\\",\\\\\\\"secret_access_key\\\\\\\":\\\\\\\"test_key\\\\\\\",\\\\\\\"virtualhost\\\\\\\":"
+#~ " true "
+#~ "},\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"oss://test_bucket/test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
 #~ msgstr ""
 

@@ -20,6 +20,7 @@ cc_library(
     hdrs = ["all_ops_register.h"],
     deps = [
         ":arithmetic",
+        ":arrow_func",
         ":broadcast_to",
         ":bucket",
         ":case_when",
@@ -50,11 +51,14 @@ cc_library(
         ":oblivious_group_mark",
         ":publish",
         ":reduce",
+        ":replicate",
         ":run_sql",
+        ":secret_join",
         ":shape",
         ":shuffle",
         ":sort",
         ":trigonometric",
+        ":unary",
         ":unique",
         ":window",
         "//engine/framework:registry",
@@ -108,8 +112,8 @@ cc_library(
         "//engine/util:psi_helper",
         "@com_github_msgpack_msgpack//:msgpack",
         "@psi//psi/cryptor:cryptor_selector",
-        "@psi//psi/ecdh:ecdh_oprf_psi",
         "@psi//psi/ecdh:ecdh_psi",
+        "@psi//psi/ecdh/ub_psi:ecdh_oprf_psi",
     ],
 )
 
@@ -397,8 +401,8 @@ cc_library(
         "//engine/util:psi_detail_logger",
         "//engine/util:psi_helper",
         "@psi//psi/cryptor:cryptor_selector",
-        "@psi//psi/ecdh:ecdh_oprf_psi",
         "@psi//psi/ecdh:ecdh_psi",
+        "@psi//psi/ecdh/ub_psi:ecdh_oprf_psi",
     ],
 )
 
@@ -552,6 +556,7 @@ cc_library(
     deps = [
         "//engine/framework:operator",
         "//engine/util:spu_io",
+        "//engine/util:table_util",
         "//engine/util:tensor_util",
         "@spulib//libspu/kernel/hlo:basic_binary",
         "@spulib//libspu/kernel/hlo:const",
@@ -603,6 +608,7 @@ cc_library(
     hdrs = ["oblivious_group_agg.h"],
     deps = [
         "//engine/framework:operator",
+        "//engine/util:prefix_sum",
         "//engine/util:spu_io",
         "//engine/util:tensor_util",
         "@spulib//libspu/kernel/hal:constants",
@@ -612,7 +618,6 @@ cc_library(
         "@spulib//libspu/kernel/hlo:casting",
         "@spulib//libspu/kernel/hlo:const",
         "@spulib//libspu/kernel/hlo:geometrical",
-        "@spulib//libspu/kernel/hlo:indexing",
     ],
 )
 
@@ -894,6 +899,27 @@ cc_test(
 )
 
 cc_library(
+    name = "arrow_func",
+    srcs = ["arrow_func.cc"],
+    hdrs = ["arrow_func.h"],
+    deps = [
+        "//engine/framework:operator",
+        "//engine/util:tensor_util",
+    ],
+)
+
+cc_test(
+    name = "arrow_func_test",
+    srcs = ["arrow_func_test.cc"],
+    deps = [
+        ":arrow_func",
+        ":test_util",
+        "//engine/core:tensor_constructor",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "is_null",
     srcs = ["is_null.cc"],
     hdrs = ["is_null.h"],
@@ -962,7 +988,9 @@ cc_library(
     hdrs = ["trigonometric.h"],
     deps = [
         "//engine/framework:operator",
+        "//engine/operator:binary_base",
         "//engine/util:tensor_util",
+        "@spulib//libspu/kernel/hlo:basic_binary",
         "@spulib//libspu/kernel/hlo:basic_unary",
     ],
 )
@@ -1003,6 +1031,21 @@ cc_test(
     ],
 )
 
+cc_binary(
+    name = "bucket_bench",
+    srcs = ["bucket_bench.cc"],
+    deps = [
+        ":bucket",
+        ":test_util",
+        "//engine/core:tensor_constructor",
+        "//engine/util:filepath_helper",
+        "//engine/util/disk:arrow_reader",
+        "//engine/util/disk:arrow_writer",
+        "@com_github_google_benchmark//:benchmark_main",
+        "@yacl//yacl/utils:parallel",
+    ],
+)
+
 cc_library(
     name = "window",
     srcs = ["window.cc"],
@@ -1022,6 +1065,99 @@ cc_test(
         ":test_util",
         ":window",
         "//engine/core:tensor_constructor",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "secret_join",
+    srcs = ["secret_join.cc"],
+    hdrs = ["secret_join.h"],
+    deps = [
+        "//engine/framework:operator",
+        "//engine/util:prefix_sum",
+        "//engine/util:spu_io",
+        "//engine/util:tensor_util",
+        "@spulib//libspu/kernel/hal:public_helper",
+        "@spulib//libspu/kernel/hal:shape_ops",
+        "@spulib//libspu/kernel/hal:type_cast",
+        "@spulib//libspu/kernel/hlo:basic_binary",
+        "@spulib//libspu/kernel/hlo:basic_ternary",
+        "@spulib//libspu/kernel/hlo:basic_unary",
+        "@spulib//libspu/kernel/hlo:casting",
+        "@spulib//libspu/kernel/hlo:const",
+        "@spulib//libspu/kernel/hlo:geometrical",
+        "@spulib//libspu/kernel/hlo:indexing",
+        "@spulib//libspu/kernel/hlo:sort",
+    ],
+)
+
+cc_test(
+    name = "secret_join_test",
+    srcs = ["secret_join_test.cc"],
+    deps = [
+        ":secret_join",
+        ":test_util",
+        "//engine/core:tensor_constructor",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "unary_base",
+    srcs = ["unary_base.cc"],
+    hdrs = ["unary_base.h"],
+    deps = [
+        "//engine/framework:operator",
+        "//engine/util:context_util",
+        "//engine/util:spu_io",
+        "//engine/util:tensor_util",
+    ],
+)
+
+cc_library(
+    name = "unary",
+    srcs = ["unary.cc"],
+    hdrs = ["unary.h"],
+    deps = [
+        ":unary_base",
+        "//engine/core:tensor_constructor",
+        "@spulib//libspu/kernel/hlo:basic_binary",
+        "@spulib//libspu/kernel/hlo:basic_unary",
+        "@spulib//libspu/kernel/hlo:const",
+    ],
+)
+
+cc_test(
+    name = "unary_test",
+    srcs = ["unary_test.cc"],
+    deps = [
+        ":all_ops_register",
+        ":test_util",
+        ":unary",
+        "//engine/framework:registry",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "replicate",
+    srcs = ["replicate.cc"],
+    hdrs = ["replicate.h"],
+    deps = [
+        "//engine/framework:operator",
+        "//engine/util:context_util",
+        "//engine/util:tensor_util",
+    ],
+)
+
+cc_test(
+    name = "replicate_test",
+    srcs = ["replicate_test.cc"],
+    deps = [
+        ":replicate",
+        ":test_util",
+        ":unary",
         "@com_google_googletest//:gtest_main",
     ],
 )

@@ -28,7 +28,6 @@ import (
 	"github.com/secretflow/scql/pkg/planner/core"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
-	"github.com/secretflow/scql/pkg/util/brokerutil"
 	"github.com/secretflow/scql/pkg/util/message"
 )
 
@@ -67,36 +66,16 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 		return nil, err
 	}
 
-	jobConf := req.GetJobConfig()
-
-	jobConf = brokerutil.UpdateJobConfig(jobConf, &projConf)
-
-	linkCfg := &pb.LinkConfig{
-		LinkRecvTimeoutSec:          jobConf.LinkRecvTimeoutSec,
-		LinkThrottleWindowSize:      jobConf.LinkThrottleWindowSize,
-		LinkChunkedSendParallelSize: jobConf.LinkChunkedSendParallelSize,
-		HttpMaxPayloadSize:          jobConf.HttpMaxPayloadSize,
-	}
-
-	psiCfg := &pb.PsiConfig{
-		PsiCurveType:                              jobConf.PsiCurveType,
-		UnbalancePsiRatioThreshold:                jobConf.UnbalancePsiRatioThreshold,
-		UnbalancePsiLargerPartyRowsCountThreshold: jobConf.UnbalancePsiLargerPartyRowsCountThreshold,
-	}
-
+	sessionOptions := common.GenSessionOpts(req.GetJobConfig(), &projConf)
 	info := &application.ExecutionInfo{
-		ProjectID:    req.GetProjectId(),
-		JobID:        req.GetJobId(),
-		Query:        req.GetQuery(),
-		Issuer:       req.GetClientId(),
-		EngineClient: app.EngineClient,
-		DebugOpts:    req.GetDebugOpts(),
-		SessionOptions: &application.SessionOptions{
-			SessionExpireSeconds: projConf.SessionExpireSeconds,
-			LinkConfig:           linkCfg,
-			PsiConfig:            psiCfg,
-			TimeZone:             req.GetTimeZone(),
-		},
+		ProjectID:      req.GetProjectId(),
+		JobID:          req.GetJobId(),
+		Query:          req.GetQuery(),
+		Issuer:         req.GetClientId(),
+		EngineClient:   app.EngineClient,
+		DebugOpts:      req.GetDebugOpts(),
+		SessionOptions: sessionOptions,
+		CreatedAt:      req.CreatedAt.AsTime(),
 	}
 
 	session, err := application.NewSession(ctx, info, app, req.GetIsAsync(), req.GetDryRun())
@@ -106,12 +85,6 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 	logrus.Infof("create session %s with query %s in project %s from %s", req.JobId, req.Query, req.ProjectId, req.GetClientId().GetCode())
 	// use running options from issuer party
 	session.ExecuteInfo.CompileOpts.Batched = req.GetRunningOpts().GetBatched()
-	defer func(session *application.Session) {
-		if err != nil {
-			go session.OnError(err)
-			// TODO: Clear session and DB meta
-		}
-	}(session)
 
 	// 3.1 parse query
 	r := executor.NewQueryRunner(session)
@@ -151,16 +124,10 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 		session.SaveLocalChecksum(code, checksum)
 	}
 	// persist session info for other party to exchange job info if necessary
-	err = app.PersistSessionInfo(session)
+	err = app.AddSession(session)
 	if err != nil {
 		return
 	}
-	app.AddSession(req.JobId, session)
-	defer func() {
-		if err != nil {
-			app.DeleteSession(req.JobId)
-		}
-	}()
 	js := newJobSync(session, r.GetEnginesInfo())
 	if session.DryRun {
 		// if parties is more than two, get checksum from other parties
@@ -182,16 +149,13 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 				r.SetPrepareAgain()
 			}
 			defer func() {
-				// clear session and DB meta if in sync mode or errors occurs
 				if !req.GetIsAsync() || err != nil {
 					if err := session.Engine.Stop(); err != nil {
 						logrus.Warnf("failed to stop engine on query job %s: %v", req.GetJobId(), err)
 					}
-					app.DeleteSession(req.GetJobId())
-					// TODO: clear SessionInfo in DB, ignore it temporarily to reduce DB write times
 				}
 			}()
-			err = r.Execute(usedTables)
+			_, err = r.Execute(usedTables)
 			if err != nil {
 				logrus.Errorf("runsql err: %s", err)
 				return

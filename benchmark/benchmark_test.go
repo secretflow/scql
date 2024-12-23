@@ -35,13 +35,16 @@ import (
 
 	"github.com/secretflow/scql/cmd/regtest"
 	"github.com/secretflow/scql/cmd/regtest/p2p"
+	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/scdb/config"
+	"github.com/secretflow/scql/pkg/util/message"
 	"github.com/secretflow/scql/pkg/util/mock"
 )
 
 var (
 	testConf       *p2p.TestConfig
 	projectName    string
+	psiType        scql.PsiAlgorithmType
 	testDataSource regtest.TestDataSource
 	spuProtocol    string
 	containerNames []string
@@ -76,6 +79,7 @@ func TestMain(m *testing.M) {
 		fmt.Println("Skipping testing due to empty BrokerAddrs")
 		os.Exit(1)
 	}
+	psiType = testConf.PsiType
 	containerNames = []string{}
 	if *containerNameStr == "" {
 		fmt.Println("Skipping testing due to empty containerNameStr")
@@ -90,43 +94,34 @@ func TestMain(m *testing.M) {
 		ConnMaxIdleTime: 120,
 		ConnMaxLifetime: 3000,
 	}
-	start := time.Now()
+	err = p2p.GetUrlList(testConf)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
+	}
 	maxRetries := 8
 	retryDelay := 8 * time.Second
 	if err := testDataSource.ConnDB(mysqlConf, maxRetries, retryDelay); err != nil {
 		fmt.Printf("connect MySQL(%s) failed\n", testConf.MySQLConnStr)
 		panic(err)
 	}
-	ConnTime := time.Since(start)
-	if ConnTime >= retryDelay {
-		fmt.Println("Participant may be in initialization, start to validate all participants")
-		if err = p2p.ValidateAllParticipants(); err != nil {
-			fmt.Println("Validate all participants failed")
-			panic(err)
-		}
+
+	fmt.Println("Participant may be in initialization, start to validate all participants")
+	if err = p2p.ValidateAllParticipants(); err != nil {
+		fmt.Println("Validate all participants failed")
+		panic(err)
 	}
+
 	os.Exit(m.Run())
 }
 
 type statsData struct {
 	memUsage uint64
 	cpuUsage float64
-	time     time.Time
-}
-
-func WriteToCsv(data []statsData, fileName string) {
-	file, err := os.Create(fileName)
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-	writer := csv.NewWriter(file)
-	defer writer.Flush()
-	record := make([]string, len(data))
-	for i, d := range data {
-		record[i] = fmt.Sprintf("%d,%f,%d\n", d.time.Unix(), d.cpuUsage, d.memUsage)
-	}
-	writer.Write(record)
+	// b/s
+	netSpeedTx uint64
+	netSpeedRx uint64
+	time       time.Time
 }
 
 func GetDockerStats(containerName string, interval time.Duration, closeCh chan bool, waitCh chan bool, dir string) {
@@ -137,6 +132,8 @@ func GetDockerStats(containerName string, interval time.Duration, closeCh chan b
 	}
 	prevSysCpuNs := uint64(0)
 	prevTotalCpuNs := uint64(0)
+	prevNetBytesTx := uint64(0)
+	prevNetBytesRx := uint64(0)
 	stats, err := cli.ContainerStats(ctx, containerName, true)
 	if err != nil {
 		panic(err)
@@ -156,7 +153,7 @@ func GetDockerStats(containerName string, interval time.Duration, closeCh chan b
 	defer file.Close()
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
-	writer.Write([]string{"timestamp", "cpu_usage", "mem_usage", "running_time_s"})
+	writer.Write([]string{"timestamp", "cpu_usage", "mem_usage", "network_tx", "network_rx", "running_time_s"})
 	startTime := time.Now()
 	for {
 		select {
@@ -167,12 +164,22 @@ func GetDockerStats(containerName string, interval time.Duration, closeCh chan b
 			}
 			data := statsData{}
 			data.time = time.Now()
-			data.memUsage = containerStats.MemoryStats.Usage
+			data.memUsage = (containerStats.MemoryStats.Usage - containerStats.MemoryStats.Stats["inactive_file"]) / 1024 / 1024
+			totalBytesTx := uint64(0)
+			totalBytesRx := uint64(0)
+			for _, network := range containerStats.Networks {
+				totalBytesTx += network.TxBytes
+				totalBytesRx += network.RxBytes
+			}
+			data.netSpeedTx = (totalBytesTx - prevNetBytesTx) * 8
+			data.netSpeedRx = (totalBytesRx - prevNetBytesRx) * 8
+			prevNetBytesRx = totalBytesRx
+			prevNetBytesTx = totalBytesTx
 			data.cpuUsage = float64(containerStats.CPUStats.CPUUsage.TotalUsage-prevTotalCpuNs) /
 				float64(containerStats.CPUStats.SystemUsage-prevSysCpuNs) * 100.0 * float64(runtime.NumCPU())
 			prevTotalCpuNs = containerStats.CPUStats.CPUUsage.TotalUsage
 			prevSysCpuNs = containerStats.CPUStats.SystemUsage
-			writer.Write([]string{fmt.Sprintf("%d", data.time.Unix()), fmt.Sprintf("%.2f", data.cpuUsage), fmt.Sprintf("%d", data.memUsage), fmt.Sprintf("%d", data.time.Unix()-startTime.Unix())})
+			writer.Write([]string{fmt.Sprintf("%d", data.time.Unix()), fmt.Sprintf("%.2f", data.cpuUsage), fmt.Sprintf("%d", data.memUsage), fmt.Sprintf("%d", data.netSpeedTx), fmt.Sprintf("%d", data.netSpeedRx), fmt.Sprintf("%d", data.time.Unix()-startTime.Unix())})
 		case <-closeCh:
 			waitCh <- true
 			return
@@ -188,7 +195,6 @@ func BenchmarkRunQuery(b *testing.B) {
 	queries := &QueryInfos{}
 	err = yaml.Unmarshal(content, queries)
 	r.NoError(err)
-	r.NoError(p2p.GetUrlList(testConf))
 	curDir, err := os.Getwd()
 	r.NoError(err)
 	mock.MockDBPath = filepath.Join(curDir, "testdata/db.json")
@@ -200,23 +206,29 @@ func BenchmarkRunQuery(b *testing.B) {
 	if !testConf.SkipCreateTableCCL {
 		r.NoError(p2p.CreateProjectTableAndCcl(testConf.ProjectConf, cclList, testConf.SkipCreateTableCCL))
 	}
-	closeCh := make(chan bool, 1)
-	outputCh := make(chan bool, len(containerNames))
-	for _, name := range containerNames {
-		go GetDockerStats(name, 10*time.Second, closeCh, outputCh, outputDir)
-	}
-
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		fmt.Println("run query")
-		for _, query := range queries.Queries {
-			_, err = p2p.RunSql(query.Issuer, query.Query, "{}", p2p.NewFetchConf(100000, time.Second))
+		for i, query := range queries.Queries {
+			closeCh := make(chan bool, 1)
+			outputCh := make(chan bool, len(containerNames))
+			tmpDir := filepath.Join(outputDir, fmt.Sprintf("query_%d", i))
+			for _, name := range containerNames {
+				go GetDockerStats(name, 10*time.Second, closeCh, outputCh, tmpDir)
+			}
+			// test rr22
+			jobConf := scql.JobConfig{
+				PsiType: psiType,
+			}
+			jobConfStr, err := message.ProtoMarshal(&jobConf)
 			r.NoError(err)
+			_, err = p2p.RunSql(query.Issuer, query.Query, string(jobConfStr), p2p.NewFetchConf(100000, time.Second))
+			r.NoError(err)
+			close(closeCh)
+			//wait for write csv
+			for range containerNames {
+				<-outputCh
+			}
 		}
-	}
-	close(closeCh)
-	//wait for write csv
-	for range containerNames {
-		<-outputCh
 	}
 }

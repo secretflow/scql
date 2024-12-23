@@ -75,10 +75,10 @@ func (c *Checksum) TruncateString() string {
 	result := ""
 	checksumTruncateNum := 10
 	if len(c.TableSchema) > 0 {
-		result += fmt.Sprintf("table schema: %+v;", c.TableSchema[:min(len(c.TableSchema), checksumTruncateNum)])
+		result += fmt.Sprintf("table schema: %x;", c.TableSchema[:min(len(c.TableSchema), checksumTruncateNum)])
 	}
 	if len(c.CCL) > 0 {
-		result += fmt.Sprintf("ccl: %+v", c.CCL[:min(len(c.TableSchema), checksumTruncateNum)])
+		result += fmt.Sprintf("ccl: %x", c.CCL[:min(len(c.TableSchema), checksumTruncateNum)])
 	}
 	return result
 }

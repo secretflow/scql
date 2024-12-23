@@ -88,3 +88,15 @@ func (p LogicalShow) Init(ctx sessionctx.Context) *LogicalShow {
 	p.baseLogicalPlan = newBaseLogicalPlan(ctx, plancodec.TypeShow, &p, 0)
 	return &p
 }
+
+// Init initializes LogicalApply.
+func (la LogicalApply) Init(ctx sessionctx.Context, offset int) *LogicalApply {
+	la.baseLogicalPlan = newBaseLogicalPlan(ctx, plancodec.TypeApply, &la, offset)
+	return &la
+}
+
+// Init initializes LogicalMaxOneRow.
+func (p LogicalMaxOneRow) Init(ctx sessionctx.Context, offset int) *LogicalMaxOneRow {
+	p.baseLogicalPlan = newBaseLogicalPlan(ctx, plancodec.TypeMaxOneRow, &p, offset)
+	return &p
+}

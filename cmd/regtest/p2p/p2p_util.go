@@ -27,6 +27,7 @@ import (
 	"github.com/secretflow/scql/cmd/regtest"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/util/brokerutil"
+	"github.com/secretflow/scql/pkg/util/message"
 	"github.com/secretflow/scql/pkg/util/mock"
 )
 
@@ -39,10 +40,11 @@ const (
 
 const (
 	concurrentNum = 5
-	// timeout send request to intra broker
-	timeoutS      = 60
 	fetchInterval = 100 * time.Millisecond
-	maxFetchCount = 1000
+	maxFetchCount = 2000
+	// timeout send request to intra broker
+	// timeoutS = fetchInterval * maxFetchCount
+	timeoutS = 200
 	// party code
 	alice = "alice"
 	bob   = "bob"
@@ -68,14 +70,15 @@ var (
 )
 
 type TestConfig struct {
-	SkipCreateTableCCL   bool   `yaml:"skip_create_table_ccl"`
-	SkipConcurrentTest   bool   `yaml:"skip_concurrent_test"`
-	SkipPlaintextCCLTest bool   `yaml:"skip_plaintext_ccl_test"`
-	ProjectConf          string `yaml:"project_conf"`
-	HttpProtocol         string `yaml:"http_protocol"`
-	BrokerAddrs          string `yaml:"broker_addrs"`
-	SpuProtocol          string `yaml:"spu_protocol"`
-	MySQLConnStr         string `yaml:"mysql_conn_str"`
+	SkipCreateTableCCL   bool                  `yaml:"skip_create_table_ccl"`
+	SkipConcurrentTest   bool                  `yaml:"skip_concurrent_test"`
+	SkipPlaintextCCLTest bool                  `yaml:"skip_plaintext_ccl_test"`
+	ProjectConf          string                `yaml:"project_conf"`
+	HttpProtocol         string                `yaml:"http_protocol"`
+	BrokerAddrs          string                `yaml:"broker_addrs"`
+	SpuProtocol          string                `yaml:"spu_protocol"`
+	MySQLConnStr         string                `yaml:"mysql_conn_str"`
+	PsiType              scql.PsiAlgorithmType `yaml:"psi_type"`
 }
 
 var (
@@ -233,9 +236,17 @@ func testCaseForSerial(dataPath string, sync bool, issuer string) error {
 	if len(unmatchedNames) > 0 {
 		fmt.Printf("testfile: %s, unmatched case names: %s\n", dataPath, strings.Join(unmatchedNames, ", "))
 	}
+	// test rr22
+	jobConf := scql.JobConfig{
+		PsiType: scql.PsiAlgorithmType_RR22,
+	}
+	jobConfStr, err := message.ProtoMarshal(&jobConf)
+	if err != nil {
+		return err
+	}
 	for i, query := range filtered {
 		comment := genComment(query.Name, query.Query, dataPath)
-		answer, err := runSql(stubMap[issuer], query.Query, sync, "{}", NewFetchConf(maxFetchCount, fetchInterval))
+		answer, err := runSql(stubMap[issuer], query.Query, sync, string(jobConfStr), NewFetchConf(maxFetchCount, fetchInterval))
 		if err != nil {
 			return fmt.Errorf("%s Error Info (%s)", comment, err)
 		}
@@ -614,9 +625,6 @@ func validateParticipant(stub *brokerutil.Command) (err error) {
 }
 
 func ValidateAllParticipants() (err error) {
-	if err = GetUrlList(testConf); err != nil {
-		return err
-	}
 	if err = validateParticipant(aliceStub); err != nil {
 		return err
 	}

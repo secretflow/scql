@@ -67,3 +67,27 @@ func Equal[S ~[]E, E constraints.Ordered](left S, right S) bool {
 	sortSlice(right)
 	return slices.Equal(left, right)
 }
+
+// please ensure len(slice) <= len(predicate) before calling this function.
+func Take[T any](slice []T, predicate []bool) []T {
+	var result []T
+	for i, item := range slice {
+		if predicate[i] {
+			result = append(result, item)
+		}
+	}
+	return result
+}
+
+// please ensure len(slice) <= len(predicate) before calling this function.
+func InplaceTake[T any](slice []T, predicate []bool) []T {
+	newIndex := 0
+	for oldIndex := 0; oldIndex < len(slice); oldIndex++ {
+		if predicate[oldIndex] {
+			slice[newIndex] = slice[oldIndex]
+			newIndex++
+		}
+	}
+	clear(slice[newIndex:])
+	return slice[:newIndex]
+}

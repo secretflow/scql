@@ -102,4 +102,14 @@ class Mod : public ArithmeticBase {
   TensorPtr ComputeInPlain(const Tensor& lhs, const Tensor& rhs) override;
 };
 
+class Pow : public ArithmeticBase {
+ public:
+  static const std::string kOpType;
+  const std::string& Type() const override;
+
+ protected:
+  spu::Value ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
+                          const spu::Value& rhs) override;
+  TensorPtr ComputeInPlain(const Tensor& lhs, const Tensor& rhs) override;
+};
 }  // namespace scql::engine::op

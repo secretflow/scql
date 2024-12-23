@@ -72,43 +72,43 @@ void Filter::Execute(ExecContext* ctx) {
   const auto& filter_pb = ctx->GetInput(kInFilter)[0];
   const auto& data_pbs = ctx->GetInput(kInData);
   const auto& output_pbs = ctx->GetOutput(kOut);
-  for (int i = 0; i < data_pbs.size(); ++i) {
-    const auto& data_pb = data_pbs[i];
-    const auto& output_pb = output_pbs[i];
-    if (util::IsTensorStatusMatched(data_pb, pb::TENSORSTATUS_PRIVATE)) {
-      FilterPrivate(ctx, filter_pb, data_pb, output_pb.name());
-    } else if (util::IsTensorStatusMatched(data_pb, pb::TENSORSTATUS_SECRET)) {
-      FilterSecret(ctx, filter_pb, data_pb, output_pb.name());
-    } else {
-      YACL_THROW("not support to filter data with status={}",
-                 pb::TensorStatus_Name(util::GetTensorStatus(data_pb)));
-    }
+  auto data_status = util::GetTensorStatus(data_pbs[0]);
+  if (data_status == pb::TENSORSTATUS_PRIVATE) {
+    FilterPrivate(ctx, filter_pb, data_pbs, output_pbs);
+  } else if (data_status == pb::TENSORSTATUS_SECRET) {
+    FilterSecret(ctx, filter_pb, data_pbs, output_pbs);
+  } else {
+    YACL_THROW("not support to filter data with status={}",
+               pb::TensorStatus_Name(data_status));
   }
 }
 
 // filter status: PUBLIC/PRIVATE, data status: PRIVATE, output status: PRIVATE
 void Filter::FilterPrivate(ExecContext* ctx, const pb::Tensor& filter_pb,
-                           const pb::Tensor& data_pb,
-                           const std::string& output_name) {
+                           const RepeatedPbTensor& data_pbs,
+                           const RepeatedPbTensor& output_pbs) {
   auto filter = GetPrivateOrPublicTensor(ctx, filter_pb);
   YACL_ENFORCE(filter != nullptr, "get null tensor {}", filter_pb.name());
-  auto data = ctx->GetTensorTable()->GetTensor(data_pb.name());
-  YACL_ENFORCE(data != nullptr, "not find tensor {} in symbol table",
-               data_pb.name());
-
-  auto result = arrow::compute::CallFunction(
-      "filter", {data->ToArrowChunkedArray(), filter->ToArrowChunkedArray()});
-  YACL_ENFORCE(result.ok(), "invoking arrow filter function failed: err_msg={}",
-               result.status().ToString());
-
-  ctx->GetTensorTable()->AddTensor(
-      output_name, TensorFrom(result.ValueOrDie().chunked_array()));
+  for (int idx = 0; idx < data_pbs.size(); ++idx) {
+    const auto& data_pb = data_pbs[idx];
+    const auto& data = ctx->GetTensorTable()->GetTensor(data_pb.name());
+    YACL_ENFORCE(data != nullptr, "not find tensor {} in symbol table",
+                 data_pb.name());
+    auto result = arrow::compute::CallFunction(
+        "filter", {data->ToArrowChunkedArray(), filter->ToArrowChunkedArray()});
+    YACL_ENFORCE(result.ok(),
+                 "invoking arrow filter function failed: err_msg={}",
+                 result.status().ToString());
+    auto output_name = output_pbs[idx].name();
+    ctx->GetTensorTable()->AddTensor(
+        output_name, TensorFrom(result.ValueOrDie().chunked_array()));
+  }
 }
 
 // filter status: PUBLIC, data status: SECRET, output status: SECRET
 void Filter::FilterSecret(ExecContext* ctx, const pb::Tensor& filter_pb,
-                          const pb::Tensor& data_pb,
-                          const std::string& output_name) {
+                          const RepeatedPbTensor& data_pbs,
+                          const RepeatedPbTensor& output_pbs) {
   auto* symbols = ctx->GetSession()->GetDeviceSymbols();
   auto* sctx = ctx->GetSession()->GetSpuContext();
 
@@ -131,25 +131,29 @@ void Filter::FilterSecret(ExecContext* ctx, const pb::Tensor& filter_pb,
   }
 #endif  // SCQL_WITH_NULL
 
-  const auto data_value_name =
-      util::SpuVarNameEncoder::GetValueName(data_pb.name());
-  auto data_value = symbols->getVar(data_value_name);
+  for (int idx = 0; idx < data_pbs.size(); ++idx) {
+    const auto& data_pb = data_pbs[idx];
+    const auto data_value_name =
+        util::SpuVarNameEncoder::GetValueName(data_pb.name());
+    const auto& output_name = output_pbs[idx].name();
+    auto data_value = symbols->getVar(data_value_name);
 
-  auto result = spu::kernel::hlo::FilterByMask(sctx, data_value, filter_span);
+    auto result = spu::kernel::hlo::FilterByMask(sctx, data_value, filter_span);
 
-  symbols->setVar(util::SpuVarNameEncoder::GetValueName(output_name), result);
+    symbols->setVar(util::SpuVarNameEncoder::GetValueName(output_name), result);
 
 #ifdef SCQL_WITH_NULL
-  const auto data_validity_name =
-      util::SpuVarNameEncoder::GetValidityName(data_pb.name());
-  auto data_validity = symbols->getVar(data_validity_name);
+    const auto data_validity_name =
+        util::SpuVarNameEncoder::GetValidityName(data_pb.name());
+    auto data_validity = symbols->getVar(data_validity_name);
 
-  auto result_validity =
-      spu::kernel::hlo::FilterByMask(sctx, data_validity, filter_span);
+    auto result_validity =
+        spu::kernel::hlo::FilterByMask(sctx, data_validity, filter_span);
 
-  symbols->setVar(util::SpuVarNameEncoder::GetValidityName(output_name),
-                  result_validity);
+    symbols->setVar(util::SpuVarNameEncoder::GetValidityName(output_name),
+                    result_validity);
 #endif  // SCQL_WITH_NULL
+  }
 }
 
 TensorPtr Filter::GetPrivateOrPublicTensor(ExecContext* ctx,
