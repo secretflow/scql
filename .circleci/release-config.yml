@@ -73,6 +73,7 @@ jobs:
             cp bin/scdbclient ${DIR}
             cp bin/broker ${DIR}
             cp bin/brokerctl ${DIR}
+            cp bin/agent ${DIR}
             ls ${DIR}
       - persist_to_workspace:
           root: "/tmp/binary/linux"
@@ -108,12 +109,14 @@ jobs:
             cp /tmp/binary/linux/amd64/scdbclient linux/amd64/scdbclient
             cp /tmp/binary/linux/amd64/broker     linux/amd64/broker
             cp /tmp/binary/linux/amd64/brokerctl  linux/amd64/brokerctl
+            cp /tmp/binary/linux/amd64/agent      linux/amd64/agent
 
             cp /tmp/binary/linux/arm64/scqlengine linux/arm64/scqlengine
             cp /tmp/binary/linux/arm64/scdbserver linux/arm64/scdbserver
             cp /tmp/binary/linux/arm64/scdbclient linux/arm64/scdbclient
             cp /tmp/binary/linux/arm64/broker     linux/arm64/broker
             cp /tmp/binary/linux/arm64/brokerctl  linux/arm64/brokerctl
+            cp /tmp/binary/linux/arm64/agent      linux/arm64/agent
 
             # copy scripts
             cp -r ../scripts ./scripts
