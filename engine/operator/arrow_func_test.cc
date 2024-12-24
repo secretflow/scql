@@ -27,13 +27,9 @@ namespace scql::engine::op {
 struct ArrowFuncTestCase {
   std::vector<test::NamedTensor> ins;
   std::string func_name;
-  arrow::compute::FunctionOptions* func_opt = nullptr;
+  std::shared_ptr<arrow::compute::FunctionOptions> func_opt;
   std::vector<test::NamedTensor> expect_outs;
 };
-
-arrow::compute::TrimOptions trim_options(" ");
-arrow::compute::SliceOptions slice_options(4 /* start */, 10 /* stop */,
-                                           1 /* step */);
 
 class ArrowFuncTest
     : public testing::TestWithParam<
@@ -66,7 +62,7 @@ INSTANTIATE_TEST_SUITE_P(
                                      R"json(["alice  ", "  Bob", " CAROL ",
                         " "])json"))},
                 .func_name = "utf8_trim",
-                .func_opt = &trim_options,
+                .func_opt = std::make_shared<arrow::compute::TrimOptions>(" "),
                 .expect_outs = {test::NamedTensor(
                     "out", TensorFrom(arrow::large_utf8(),
                                       R"json(["alice", "Bob", "CAROL",
@@ -77,7 +73,8 @@ INSTANTIATE_TEST_SUITE_P(
                                      R"json(["alice", "Bob", "CAROL",
                         "AA#Bb.cc"])json"))},
                 .func_name = "utf8_slice_codeunits",
-                .func_opt = &slice_options,
+                .func_opt = std::make_shared<arrow::compute::SliceOptions>(4 /* start */, 10 /* stop */,
+                                           1 /* step */),
                 .expect_outs = {test::NamedTensor(
                     "out", TensorFrom(arrow::large_utf8(),
                                       R"json(["e", "", "L",
