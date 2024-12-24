@@ -281,7 +281,7 @@ DataSource KusciaDataMeshRouter::SingleRoute(
   } else if (lower_type == "mysql") {
     return MakeMYSQLDataSource(datasource.datasource_id(), domaindata,
                                datasource);
-  } else if (lower_type == "postgres") {
+  } else if (lower_type == "postgresql" || lower_type == "postgres") {
     return MakePgDataSource(datasource.datasource_id(), domaindata, datasource);
   } else if (lower_type == "odps") {
     return MakeDataProxyDataSource(datasource.datasource_id(), domaindata,
