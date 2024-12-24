@@ -167,8 +167,7 @@ void Replicate::Execute(ExecContext* ctx) {
           lctx->NextRank() >= 0 && lctx->NextRank() < length_bufs.size(),
           "invalid rank({}) for buf size({})", lctx->NextRank(),
           length_bufs.size());
-      const uint64_t* right_length =
-          length_bufs[lctx->NextRank()].data<size_t>();
+      const size_t* right_length = length_bufs[lctx->NextRank()].data<size_t>();
       YACL_ENFORCE(right_length);
       BuildReplicate(ctx, left, *right_length, left_out, true);
     }
@@ -186,7 +185,7 @@ void Replicate::Execute(ExecContext* ctx) {
           lctx, yacl::ByteContainerView(&right_length, sizeof(right_length)),
           tag);
 
-      const uint64_t* left_length;
+      const size_t* left_length;
       YACL_ENFORCE(
           lctx->NextRank() >= 0 && lctx->NextRank() < length_bufs.size(),
           "invalid rank({}) for buf size({})", lctx->NextRank(),
