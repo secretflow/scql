@@ -31,7 +31,7 @@ binary: clean prepare fmt vet gogenerate
 	echo "Binary version: ${SCQL_VERSION}"
 	GOBIN=${PWD}/bin go install -ldflags "-X main.version=${SCQL_VERSION}" ./cmd/...
 	pip install numpy
-	bazel build //engine/exe:scqlengine -c opt
+	bazel --host_jvm_args=-Xmx16g build //engine/exe:scqlengine -c opt --jobs=10
 	bash ${PWD}/version_build.sh -r
 
 pb: clean
