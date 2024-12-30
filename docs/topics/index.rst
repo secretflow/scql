@@ -2,6 +2,9 @@ Topics
 ======
 
 .. toctree::
+    faq
+
+.. toctree::
     :maxdepth: 1
     :caption: SCQL System
 
