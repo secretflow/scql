@@ -45,7 +45,7 @@ Project Preparation Issues
 
    SCQL is compatible with MySQL syntax. For specific details, please refer to the documentation. For differences from MySQL syntax, please also refer to :doc:`/reference/lang/manual`.
 
-**Q**:. How to choose between synchronous(DoQuery) and asynchronous(SubmitQuery/FetchResult) mode?
+**Q**: How to choose between synchronous(DoQuery) and asynchronous(SubmitQuery/FetchResult) mode?
 
    Synchronous mode is used for small data volumes, where you directly obtain the results through the response after submitting the query. Asynchronous mode is used for large data volumes, where the execution time is long, to avoid request timeouts. After submitting the query, you need to repeatedly call fetch result to check the results.
 
@@ -92,4 +92,6 @@ Configuration Issues
 
 **Q**: How to configure relevant timeout settings when the network quality is poor.
 
-   In a poor network environment, you can appropriately increase **link_recv_timeout_ms** (the waiting time for the receiving party) and decrease **link_throttle_window_size** (the size of the channel sliding window). You can also appropriately configure **http_max_payload_size** (the size of individual packets when splitting data for transmission) and **link_chunked_send_parallel_size** (the number of chunks sent in parallel). For specific configurations, please refer to the configuration documentation :doc:`/reference/engine-config`. The key is to avoid "get data timeout" during protocol communication between engines.
+   In a poor network environment, you can appropriately increase **link_recv_timeout_ms** (the waiting time for the receiving party) and decrease **link_throttle_window_size** (the size of the channel sliding window). You can also appropriately configure **http_max_payload_size** (the size of individual packets when splitting data for transmission) and **link_chunked_send_parallel_size** (the number of chunks sent in parallel). 
+   
+   For specific configurations, please refer to the configuration documentation :doc:`/reference/engine-config`.
