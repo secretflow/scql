@@ -1,0 +1,317 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023 Ant Group Co., Ltd.
+# This file is distributed under the same license as the SCQL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: SCQL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-01-08 08:39+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.14.0\n"
+
+#: ../../topics/faq.rst:2
+msgid "Frequently Asked Questions (FAQ)"
+msgstr "常见问题汇总（FAQ）"
+
+#: ../../topics/faq.rst:4
+msgid ""
+"We will collect some popular questions from users and update this part "
+"promptly."
+msgstr "这里收集了使用 SCQL 常见的问题，并持续更新。"
+
+#: ../../topics/faq.rst:7
+msgid "Deploy Issues"
+msgstr "部署相关问题"
+
+#: ../../topics/faq.rst:9
+msgid "**Q**: System/CPU architectures supported by SCQL"
+msgstr "**Q**: SCQL 支持的系统/CPU架构"
+
+#: ../../topics/faq.rst:11
+msgid ""
+"System: Supports Linux and macOS with M-series chips (but macOS requires "
+"self-verification). CPU architectures: ARM and x86-64"
+msgstr "系统：支持 linux 和 macOS（macOS 需要自行验证）。CPU架构：支持 ARM 和 x86-64"
+
+#: ../../topics/faq.rst:13
+msgid "**Q**: Network timeout when pulling Go packages/GitHub packages"
+msgstr "**Q**: 拉取 go 包/ GitHub 包超时"
+
+#: ../../topics/faq.rst:15
+msgid "Add an appropriate GOPROXY"
+msgstr "添加合适的 GOPROXY"
+
+#: ../../topics/faq.rst:17
+msgid ""
+"**Q**: When deploying the broker, should the host be configured as "
+"0.0.0.0 or 127.0.0.1?"
+msgstr "**Q**: 部署 broker 时，host ip 配置为 0.0.0.0 还是 127.0.0.1？"
+
+#: ../../topics/faq.rst:19
+msgid ""
+"127.0.0.1 is the local loopback address, used for local application "
+"access. If a service is bound to 127.0.0.1 in a container, it may prevent"
+" external services from accessing the bound service via the container's "
+"IP. If the service inside the container needs to be accessed externally "
+"by IP, 0.0.0.0 can be used."
+msgstr ""
+"127.0.0.1 是本地回环地址，用于本地应用访问。如果容器内的服务绑定到 127.0.0.1 "
+"可能会导致容器外部无法访问的问题。如果容器内的服务需要通过 IP 访问，可以使用 0.0.0.0"
+
+#: ../../topics/faq.rst:21
+msgid "**Q**: Does SCQL support outsourcing computation"
+msgstr "**Q**: SCQL 是否支持外包计算"
+
+#: ../../topics/faq.rst:23
+msgid "Not supported for now"
+msgstr "目前还不支持"
+
+#: ../../topics/faq.rst:26
+msgid "Project Preparation Issues"
+msgstr "项目准备相关问题"
+
+#: ../../topics/faq.rst:28
+msgid "**Q**: To which parties should the data be granted CCL?"
+msgstr "**Q**: CCL 需要向哪些参与方授权？"
+
+#: ../../topics/faq.rst:30
+msgid ""
+"CCL needs to be granted to all participating parties, including the data "
+"owner."
+msgstr "CCL 需要对所有参与方授权，包括提供数据的参与方。"
+
+#: ../../topics/faq.rst:32
+msgid "**Q**: How to choose between P2P and Centralized deployment architecture?"
+msgstr "**Q**: 如何选择 P2P 和中心化部署架构？"
+
+#: ../../topics/faq.rst:34
+msgid ""
+"Please refer to the deployment architecture :doc:`/topics/system/deploy-"
+"arch`."
+msgstr "请参考部署文档 :doc:`/topics/system/deploy-arch`。"
+
+#: ../../topics/faq.rst:36
+msgid "**Q**: What is the data scale supported by SCQL?"
+msgstr "**Q**: SCQL 支持多大的数据规模？"
+
+#: ../../topics/faq.rst:38
+msgid ""
+"The data scale supported by SCQL is mainly limited by resource "
+"configurations (such as network, memory, etc.) and the complexity of the "
+"query. With sufficient memory, SCQL can support intersection tasks at the"
+" scale of billions. For more detailed scenarios, a benchmark test based "
+"on the available resources is needed to determine the exact capacity."
+msgstr ""
+"SCQL 支持的数据规模主要受到资源配置（如网络、内存等）和 query 的复杂度的影响。内存充足的情况下，SCQL "
+"可以支持十亿级别的数据规模。更加详细的场景，需要基于实际的资源配置进行性能测试来确定。"
+
+#: ../../topics/faq.rst:40
+msgid "**Q**: How many participating parties does SCQL support?"
+msgstr "**Q**: SCQL 支持多少参与方？"
+
+#: ../../topics/faq.rst:42
+msgid ""
+"SCQL does not have a limit on the number of participating parties in a "
+"project, but the number of parties that can simultaneously participate in"
+" computations is restricted based on the secure computation protocols "
+"used. Specifically, CHEETAH supports only two parties, ABY3 supports only"
+" three parties, and SEMI2K supports any number of participating parties."
+msgstr ""
+"SCQL 不限制一个项目中参与方数量，但是同时参与计算的参与方数量受到使用的安全计算协议的影响。例如，CHEETAH 只支持两个参与方，ABY3 "
+"只支持三个参与方，SEMI2K 支持任意数量的参与方。"
+
+#: ../../topics/faq.rst:44
+msgid "**Q**: Which syntax does SCQL support?"
+msgstr "**Q**: SCQL 支持哪些 SQL 语法"
+
+#: ../../topics/faq.rst:46
+msgid ""
+"SCQL is compatible with MySQL syntax. For specific details, please refer "
+"to the documentation. For differences from MySQL syntax, please also "
+"refer to :doc:`/reference/lang/manual`."
+msgstr ""
+"SCQL 兼容 MySQL 语法，具体细节请参考文档。对于与 MySQL 语法的差异，请参考 "
+":doc:`/reference/lang/manual`。"
+
+#: ../../topics/faq.rst:48
+#, fuzzy
+msgid ""
+"**Q**: How to choose between synchronous(DoQuery) and "
+"asynchronous(SubmitQuery/FetchResult) mode?"
+msgstr "**Q**: 如何选择同步（DoQuery）和异步（SubmitQuery/FetchResult）接口？"
+
+#: ../../topics/faq.rst:50
+msgid ""
+"Synchronous mode is used for small data volumes, where you directly "
+"obtain the results through the response after submitting the query. "
+"Asynchronous mode is used for large data volumes, where the execution "
+"time is long, to avoid request timeouts. After submitting the query, you "
+"need to repeatedly call fetch result to check the results."
+msgstr "同步接口用于小数据量的场景，直接通过返回结果。异步接口用于大数据量的场景，执行时间较长，避免请求超时。提交请求后，需要异步轮训查看结果。"
+
+#: ../../topics/faq.rst:52
+msgid ""
+"**Note:** If the number of results returned by the query exceeds 10w, "
+"please choose the asynchronous mode to avoid potential issues."
+msgstr "**Note:** 如果查询结果超过 10w 条，请选择异步接口，避免潜在问题。"
+
+#: ../../topics/faq.rst:54
+msgid "**Q**: What data sources does the engine support?"
+msgstr "**Q**: 引擎支持哪些数据源？"
+
+#: ../../topics/faq.rst:56
+msgid "SCQL directly supports the following data sources:"
+msgstr "SCQL 支持下面这些数据源："
+
+#: ../../topics/faq.rst:58
+msgid "CSV (including local files, OSS, Minio)"
+msgstr "CSV（包括本地文件、OSS、Minio）"
+
+#: ../../topics/faq.rst:59
+msgid "MySQL and databases compatible with the MySQL protocol"
+msgstr "MySQL 和兼容 MySQL 协议的数据库"
+
+#: ../../topics/faq.rst:60
+msgid "Postgres"
+msgstr ""
+
+#: ../../topics/faq.rst:62
+msgid "SCQL can be extended to support the following data sources:"
+msgstr "SCQL 可以扩展支持下列数据源："
+
+#: ../../topics/faq.rst:64
+msgid ""
+"On Kuscia, additional support for ODPS. **NOTE:** When using Kuscia, "
+"users can register data source information (such as CSV file locations, "
+"database connection string of MySQL and Postgres) in Kuscia DomainData. "
+"SCQL can then access this information through Kuscia Datamesh and process"
+" it accordingly."
+msgstr ""
+"在 Kuscia 中运行的时候，可以扩展支持 ODPS 数据源。**NOTE:** 在 Kuscia 中运行的时候，用户可以在 Kuscia "
+"DomainData 中注册数据源信息（比如 CSV 文件位置，MySQL 和 Postgres 数据库链接串）。SCQL 可以通过 "
+"DataMesh 获取注册到 Kuscia 的信息"
+
+#: ../../topics/faq.rst:65
+msgid ""
+"SCQL supports the Arrow SQL client, and users can implement their own "
+"data sources by providing an Arrow SQL server"
+msgstr "SCQL 支持 Arrow SQL client，用户可以自行实现 Arrow SQL server，作为提供给 SCQL 的数据源"
+
+#: ../../topics/faq.rst:68
+msgid "Errors Occurred During Execution"
+msgstr "运行时报错"
+
+#: ../../topics/faq.rst:70
+msgid "**Q**: The engine reported a \"Get data timeout\" error during execution."
+msgstr "**Q**: engine 执行时上报 \"Get data timeout\" 错误"
+
+#: ../../topics/faq.rst:72
+msgid ""
+"It is necessary to troubleshoot based on the specific situation, whether "
+"the request was intercepted by the gateway, or if there was an error in "
+"the execution of the engine on the other side. It could also be due to "
+"poor network conditions. If the issue is caused by poor network "
+"conditions, you can alleviate this error by modifying the relevant "
+"network configuration. Please refer to the configuration documentation "
+"for detailed settings :doc:`/reference/p2p-deploy-config` "
+":doc:`/reference/centralized-deploy-config`."
+msgstr ""
+"需要根据具体的场景来分析，可能是被网关拦截了，或者对方引擎执行出错了，也有可能是因为网络条件不好导致数据传输超时。如果是网络条件不好导致的错误，可以通过修改配置来缓解这个问题，具体配置可以参考"
+" :doc:`/reference/p2p-deploy-config` 和 :doc:`/reference/centralized-"
+"deploy-config`。"
+
+#: ../../topics/faq.rst:74
+msgid ""
+"**Q**: SCQL results from executing group by related syntax are incomplete"
+" or do not match the MySQL results?"
+msgstr "**Q**: SCQL 执行 group by 相关语法的结果不完整或者和 MySQL 结果不一致？"
+
+#: ../../topics/faq.rst:76
+msgid ""
+"SCQL, to protect data privacy and prevent the malicious theft of data "
+"within groups, hides groups where the number of data items within a group"
+" is less than the GroupByThreshold. For specific details, please refer to"
+" the security_compromise.group_by_threshold configuration option in the "
+"documentation :doc:`/reference/p2p-deploy-config` (by default, groups "
+"with fewer than 4 data items are not displayed). Setting this value to 1 "
+"will disable the group filtering operation."
+msgstr ""
+"SCQL 为了保护隐私数据避免被恶意偷取，会过滤掉组内数据项数量小于 GroupByThreshold 的组。具体可以参考 "
+":doc:`/reference/p2p-deploy-config` 的 "
+"security_compromise.group_by_threshold 配置，默认会将 group 内部元素数量小于 4 的 group "
+"过滤掉。将该值设置为 1 可以关闭过滤操作。"
+
+#: ../../topics/faq.rst:78
+msgid "**Q**: There are precision errors in the numerical calculations."
+msgstr "**Q**: 计算过程中出现数值误差？"
+
+#: ../../topics/faq.rst:80
+msgid ""
+"When SCQL enters secure MPC protocol, it needs to encode the data into "
+"Ring64 or Ring128 and then perform the secure computation. Numerical "
+"inaccuracies can occur during both the encoding and the secure "
+"computation processes, and this is unavoidable."
+msgstr ""
+"SCQL 中的数据进入 MPC 协议前需要先对数据进行 Ring64 或 Ring128 "
+"的编码，然后进行密态计算，编码和密态计算过程中都会产生数值误差，这是无法避免的。"
+
+#: ../../topics/faq.rst:83
+msgid "Configuration Issues"
+msgstr "配置相关问题"
+
+#: ../../topics/faq.rst:85
+msgid "**Q**: How to configure HTTPS?"
+msgstr "**Q**: 如何配置 HTTPS？"
+
+#: ../../topics/faq.rst:87
+msgid ""
+"Please refer to the deployment documentation :doc:`/reference/p2p-deploy-"
+"config` for configuring HTTPS in P2P mode. Please refer to the deployment"
+" documentation :doc:`/reference/centralized-deploy-config` for "
+"configuring HTTPS in centralized mode."
+msgstr ""
+"P2P 下的配置请参考部署文档 :doc:`/reference/p2p-deploy-config`，中心化配置请参考 "
+":doc:`/reference/centralized-deploy-config`。"
+
+#: ../../topics/faq.rst:89
+msgid "**Q**: Data source configuration for different data sources."
+msgstr "**Q**: 不同的数据源需要使用不同的配置。"
+
+#: ../../topics/faq.rst:91
+msgid ""
+"Please refer to the deployment documentation :doc:`/reference/engine-"
+"config`."
+msgstr "请参考部署文档 :doc:`/reference/engine-config`。"
+
+#: ../../topics/faq.rst:93
+msgid ""
+"**Q**: How to configure relevant timeout settings when the network "
+"quality is poor."
+msgstr "**Q**: 网络环境不好的时候，如何配置超时相关配置？"
+
+#: ../../topics/faq.rst:95
+msgid ""
+"In a poor network environment, you can appropriately increase "
+"**link_recv_timeout_ms** (the waiting time for the receiving party) and "
+"decrease **link_throttle_window_size** (the size of the channel sliding "
+"window). You can also appropriately configure **http_max_payload_size** "
+"(the size of individual packets when splitting data for transmission) and"
+" **link_chunked_send_parallel_size** (the number of chunks sent in "
+"parallel)."
+msgstr "网络环境不好的场景，可以适当增加接收方等待时间(link_recv_timeout_ms)，减少 channel 的滑动窗口大小 (link_throttle_window_size)。带宽小的情况下，可以适当减小单个 http payload 的大小 (http_max_payload_size) 以及并发的 chunk 数量 (link_chunked_send_parallel_size)。"
+
+#: ../../topics/faq.rst:97
+msgid ""
+"For specific configurations, please refer to the configuration "
+"documentation :doc:`/reference/engine-config`."
+msgstr "更加具体的配置请参考 :doc:`/reference/engine-config`。"
