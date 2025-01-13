@@ -47,6 +47,7 @@ def engine_deps():
     _com_aws_checksums()
     _com_aws_c_event_stream()
     _com_aws_sdk()
+    _buildbuddy()
 
 def _secretflow_deps():
     SPU_COMMIT = "fde113cb9d0229ac72310815316f766acc2a0aa4"
@@ -451,4 +452,13 @@ def _com_aws_sdk():
             """sed -i.bak 's/UUID::RandomUUID/Aws::Utils::UUID::RandomUUID/g' aws-cpp-sdk-core/source/client/AWSClient.cpp""",
             """sed -i.bak 's/__attribute__((visibility("default")))//g' aws-cpp-sdk-core/include/aws/core/external/tinyxml2/tinyxml2.h """,
         ],
+    )
+
+def _buildbuddy():
+    maybe(
+        http_archive,
+        name = "io_buildbuddy_buildbuddy_toolchain",
+        sha256 = "ed025abeceed55c4df080b8820f715ac55cfb3dc5d3e168894406108b4ed717c",
+        strip_prefix = "buildbuddy-toolchain-3d86f2afb5a986ea13a3ab22b0be54dd9cb0e453",
+        urls = ["https://github.com/buildbuddy-io/buildbuddy-toolchain/archive/3d86f2afb5a986ea13a3ab22b0be54dd9cb0e453.tar.gz"],
     )

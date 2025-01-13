@@ -39,3 +39,23 @@ build:linux --copt=-fopenmp
 build:linux --linkopt=-fopenmp
 build:linux --action_env=BAZEL_LINKOPTS=-static-libstdc++:-static-libgcc
 build:linux --action_env=BAZEL_LINKLIBS=-l%:libstdc++.a:-l%:libgcc.a
+
+
+# build buddy
+build --bes_results_url=https://app.buildbuddy.io/invocation/
+build --bes_backend=grpcs://remote.buildbuddy.io
+build --remote_cache=grpcs://remote.buildbuddy.io
+build --remote_timeout=3600
+build --remote_header=x-buildbuddy-api-key=eX74fHo03f5Fc81UOogO
+
+# build buddy remote execution
+build --remote_executor=grpcs://remote.buildbuddy.io
+# //:docker_image_platform   @buildbuddy_toolchain//:platform
+build --host_platform=//:docker_image_platform
+build --platforms=//:docker_image_platform
+build --extra_execution_platforms=//:docker_image_platform
+
+build --crosstool_top=@buildbuddy_toolchain//:toolchain
+build --extra_toolchains=@buildbuddy_toolchain//:cc_toolchain
+build --define=EXECUTOR=remote
+

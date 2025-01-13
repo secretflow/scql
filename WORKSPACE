@@ -102,3 +102,22 @@ rules_proto_grpc_repos()
 load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
 
 boost_deps()
+
+#
+# buildbuddy
+#
+
+load("@io_buildbuddy_buildbuddy_toolchain//:deps.bzl", "buildbuddy_deps")
+
+buildbuddy_deps()
+
+# load("@io_buildbuddy_buildbuddy_toolchain//:rules.bzl", "buildbuddy")
+
+# buildbuddy(name = "buildbuddy_toolchain")
+
+load("@io_buildbuddy_buildbuddy_toolchain//:rules.bzl", "UBUNTU22_04_IMAGE", "buildbuddy")
+
+buildbuddy(
+    name = "buildbuddy_toolchain",
+    container_image = UBUNTU22_04_IMAGE,
+)
