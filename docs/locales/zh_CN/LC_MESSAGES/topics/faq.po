@@ -132,7 +132,7 @@ msgstr ""
 
 #: ../../topics/faq.rst:44
 msgid "**Q**: Which syntax does SCQL support?"
-msgstr "**Q**: SCQL 支持哪些 sql 语法"
+msgstr "**Q**: SCQL 支持哪些 SQL 语法"
 
 #: ../../topics/faq.rst:46
 msgid ""
