@@ -39,6 +39,8 @@ build:linux --copt=-fopenmp
 build:linux --linkopt=-fopenmp
 build:linux --action_env=BAZEL_LINKOPTS=-static-libstdc++:-static-libgcc
 build:linux --action_env=BAZEL_LINKLIBS=-l%:libstdc++.a:-l%:libgcc.a
+build:linux --action_env=PATH=/root/miniconda3/bin:/root/miniconda3/condabin:/usr/local/go/bin:/usr/local/bin:/root/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
 
 
 # build buddy

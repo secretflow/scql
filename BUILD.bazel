@@ -22,6 +22,6 @@ platform(
     exec_properties = {
         "OSFamily": "Linux",
         "dockerNetwork": "off",
-        "container-image": "docker://secretflow/scql-ci:latest",
+        "container-image": "docker://fosshua/scql-ci:1.2",
     },
 )
