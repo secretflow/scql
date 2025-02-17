@@ -705,11 +705,8 @@ func (plan *GraphBuilder) AddConstantNode(name string, value *types.Datum, party
 	output.CC = cc
 	output.IsConstScalar = true
 
-	attr1 := &Attribute{}
-	var statusPublic int64 = 1
-	attr1.SetInt64(statusPublic)
 	if _, err := plan.AddExecutionNode(name, operator.OpNameConstant, map[string][]*Tensor{},
-		map[string][]*Tensor{"Out": {output}}, map[string]*Attribute{operator.ScalarAttr: attr, operator.ToStatusAttr: attr1}, partyCodes); err != nil {
+		map[string][]*Tensor{"Out": {output}}, map[string]*Attribute{operator.ScalarAttr: attr}, partyCodes); err != nil {
 		return nil, err
 	}
 	return output, nil

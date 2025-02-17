@@ -281,13 +281,10 @@ Out = {a, d}
 		opDef.AddOutput("Out", "output tensor(shape [M]) from constant.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 		opDef.AddAttribute(ScalarAttr, "scalar attribute(with shape [M])")
-		opDef.AddAttribute(ToStatusAttr, "int64. to status, 0: to private, 1: to public.")
-		opDef.AddDefaultAttributeValue(ToStatusAttr, CreateIntAttribute(0))
 		opDef.SetDefinition(`Definition: Make constant from attribute.
 Example:
 ` + "\n```python" + `
 scalar = [{"a", "b", "c"}]
-to_status = 0
 Out = [{"a", "b", "c"}]
 ` + "```\n")
 		opDef.SetParamTypeConstraint(T, statusPrivateOrPublic)
