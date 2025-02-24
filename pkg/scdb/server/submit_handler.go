@@ -56,6 +56,15 @@ func newSuccessSCDBSubmitResponse(sessionID string) *scql.SCDBSubmitResponse {
 	}
 }
 
+func setResponseContentType(c *gin.Context, encodingTp message.ContentEncodingType) {
+	switch encodingTp {
+	case message.EncodingTypeJson:
+		c.Header("Content-Type", "application/json")
+	case message.EncodingTypeProtobuf:
+		c.Header("Content-Type", "application/x-protobuf")
+	}
+}
+
 func (app *App) SubmitHandler(c *gin.Context) {
 	timeStart := time.Now()
 	logEntry := &logutil.MonitorLogEntry{
@@ -79,6 +88,7 @@ func (app *App) SubmitHandler(c *gin.Context) {
 	logEntry.CostTime = time.Since(timeStart)
 	logEntry.RawRequest = SCDBQueryRequestToLogString(request)
 
+	setResponseContentType(c, inputEncodingType)
 	c.String(http.StatusOK, body)
 	if resp.Status.Code != int32(scql.Code_OK) {
 		logEntry.Reason = constant.ReasonInvalidRequest

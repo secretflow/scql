@@ -88,6 +88,13 @@ single_version_override(
     version = "1.66.0.bcr.4",
 )
 
+# use sf.bcr
+bazel_dep(name = "curl", version = "8.4.0.bcr.2")
+single_version_override(
+    module_name = "curl",
+    version = "8.4.0.bcr.2",
+)
+
 new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl", "new_local_repository")
 
 new_local_repository(
