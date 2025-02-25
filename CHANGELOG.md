@@ -28,7 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for datasource `Doris 2.1.7`.
 - Support `PERCENT_RANK` window function.
 - Support various string-related single-party operators, including `UPPER`, `LOWER`, `SUBSTRING`, `TRIM`, `CONCAT` and others.
-- Support `Scalar Subquery` and `Compare Subquery`(except '= ANY(SELECT ...)').
+- Support `Scalar Subquery`, the subquery in the right is scalar value, e.g. SELECT * FROM ta JOIN tb ON ta.ID = tb.ID WHERE ta.salary > (SELECT AVG(ta.salary) FROM ta).
+- Support `Compare Subquery`, allows comparison with ANY or ALL of the subquery results, e.g. SELECT * FROM ta JOIN tb ON ta.ID = tb.ID WHERE ta.salary > ANY(SELECT ta.salary FROM ta), However, comparisons using = or != are not supported in the HAVING clause. For instance, HAVING SUM(ta.salary) = ANY(SELECT salary FROM ta) is not supported.
 
 ### Changed
 - Improved `JOIN` and `IN` performance in streaming mode.
