@@ -25,20 +25,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.9.3] - 2025-02-25
 
 ### Added
-- Support datasource `Doris 2.1.7`.
+- Support for datasource `Doris 2.1.7`.
 - Support `PERCENT_RANK` window function.
-- Support some string related single-party operators, such as `UPPER`, `LOWER`, `SUBSTRING`, `TRIM`, `CONCAT` etc.
-- Support  `Scalar Subquery` and `Compare Subquery`, but '= ANY(SELECT ...)' is not supported yet.
+- Support various string-related single-party operators, including `UPPER`, `LOWER`, `SUBSTRING`, `TRIM`, `CONCAT` and others.
+- Support `Scalar Subquery` and `Compare Subquery`(except '= ANY(SELECT ...)').
 
 ### Changed
-- Improved the proformance of `JOIN` and `IN` in streaming mode.
-- Implemented a more reliable secret join algorithm inspired by [Scape](https://ieeexplore.ieee.org/document/9835540/).
-- Optimized the the pruning logic of Logical Plan to clean up the redundant columns left in nodes like Join, Selection, Window and so on.
+- Improved `JOIN` and `IN` performance in streaming mode.
+- Implemented a more reliable `secret join algorithm`(only works in SEMI2K protocol) inspired by [Scape](https://ieeexplore.ieee.org/document/9835540/).
+- Optimized the the pruning logic in the Logical Plan to remove redundant columns in nodes such as Join, Selection, Window and so on.
 
 ### Fixed
-- Disabled access to SCQLEngine metrics using additional paths like "engine_ip:engine_port/metrics/additional/path".
-- Disabled creation of tables with the same ref_table name but different db_type to avoid exceptions
-- Fixed an error when user creating job with 'OPRF-PSI' selected but did not provide the 'server hint'.
+- Restricted access to SCQLEngine metrics using additional paths like "engine_ip:engine_port/metrics/additional/path".
+- Prevented creation of tables with the same ref_table name but different db_type
+- Fixed job creation error when selecting 'OPRF-PSI' but 'server hint' was missing.
 
 ## [0.9.2] - 2024-12-23
 
