@@ -292,8 +292,8 @@
     },
     {
       "name": "logic after join",
-      "query": "select alice.plain_int_0 as res0, alice.plain_int_0 > bob.plain_int_0 and alice.plain_int_0 >= bob.plain_int_0 as and_result, (alice.plain_int_0 <= bob.plain_int_0) or (alice.plain_int_0 <> bob.plain_int_0) as or_result from alice_tbl_0 as alice join bob_tbl_0 as bob on alice.join_int_0 = bob.join_int_0;",
-      "mysql_query": "select alice.plain_int_0 as res0, alice.plain_int_0 > bob.plain_int_0 and alice.plain_int_0 >= bob.plain_int_0 as and_result, (alice.plain_int_0 <= bob.plain_int_0) or (alice.plain_int_0 <> bob.plain_int_0) as or_result from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+      "query": "select alice.plain_int_0 as res0, alice.plain_int_0 > bob.plain_int_0 and alice.plain_int_0 >= bob.plain_int_0 as and_log, (alice.plain_int_0 <= bob.plain_int_0) or (alice.plain_int_0 <> bob.plain_int_0) as or_log from alice_tbl_0 as alice join bob_tbl_0 as bob on alice.join_int_0 = bob.join_int_0;",
+      "mysql_query": "select alice.plain_int_0 as res0, alice.plain_int_0 > bob.plain_int_0 and alice.plain_int_0 >= bob.plain_int_0 as and_log, (alice.plain_int_0 <= bob.plain_int_0) or (alice.plain_int_0 <> bob.plain_int_0) as or_log from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
     },
     {
       "name": "cast(private) after join",
@@ -447,13 +447,13 @@
     },
     {
       "name": "logic where(null)",
-      "query": "select alice.plain_int_0 as res0, alice.plain_int_0 > bob.plain_int_0 and alice.plain_int_0 >= bob.plain_int_0 as and_result, (alice.plain_int_0 <= bob.plain_int_0) or (alice.plain_int_0 <> bob.plain_int_0) as or_result from alice_tbl_0 as alice join bob_tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_0 > bob.compare_int_0;",
-      "mysql_query": "select alice.plain_int_0 as res0, alice.plain_int_0 > bob.plain_int_0 and alice.plain_int_0 >= bob.plain_int_0 as and_result, (alice.plain_int_0 <= bob.plain_int_0) or (alice.plain_int_0 <> bob.plain_int_0) as or_result from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_0 > bob.compare_int_0;"
+      "query": "select alice.plain_int_0 as res0, alice.plain_int_0 > bob.plain_int_0 and alice.plain_int_0 >= bob.plain_int_0 as and_log, (alice.plain_int_0 <= bob.plain_int_0) or (alice.plain_int_0 <> bob.plain_int_0) as or_log from alice_tbl_0 as alice join bob_tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_0 > bob.compare_int_0;",
+      "mysql_query": "select alice.plain_int_0 as res0, alice.plain_int_0 > bob.plain_int_0 and alice.plain_int_0 >= bob.plain_int_0 as and_log, (alice.plain_int_0 <= bob.plain_int_0) or (alice.plain_int_0 <> bob.plain_int_0) as or_log from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_0 > bob.compare_int_0;"
     },
     {
       "name": "in where(null)",
       "query": "select alice.compare_int_0 in (select compare_int_0 from bob_tbl_0) as in_column from alice_tbl_0 as alice where alice.compare_int_0 > 1000;",
-      "mysql_query": "select alice.compare_int_0 in (select compare_int_0 from bob.tbl_0) as in_column from alice.tbl_0 as alice where alice.compare_int_0 > 1000;"
+      "mysql_query": "select  alice.compare_int_0 in (select compare_int_0 from bob.tbl_0) as in_column from alice.tbl_0 as alice where alice.compare_int_0 > 1000;"
     },
     {
       "name": "not in where(null)",
