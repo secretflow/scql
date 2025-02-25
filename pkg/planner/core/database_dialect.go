@@ -30,7 +30,6 @@ const (
 	DBTypePostgres
 	DBTypeCSVDB
 	DBTypeODPS
-	DBTypeView
 )
 
 var dbTypeMap = map[string]DBType{
@@ -39,8 +38,12 @@ var dbTypeMap = map[string]DBType{
 	"postgresql": DBTypePostgres,
 	"csvdb":      DBTypeCSVDB,
 	"odps":       DBTypeODPS,
-	"view":       DBTypeView,
 }
+
+// give View a special value since it is not a real "DbType"
+const (
+	View DBType = 1000
+)
 
 var dbTypeNameMap = map[DBType]string{
 	DBTypeUnknown:  "unknown",
@@ -59,7 +62,12 @@ func (t DBType) String() string {
 }
 
 func ParseDBType(tp string) (DBType, error) {
-	if v, ok := dbTypeMap[strings.ToLower(tp)]; ok {
+	tp = strings.ToLower(tp)
+	if tp == "view" {
+		return View, nil
+	}
+
+	if v, ok := dbTypeMap[tp]; ok {
 		return v, nil
 	}
 	return DBTypeUnknown, fmt.Errorf("unknown db type: %s", tp)
