@@ -40,6 +40,8 @@ func addSelection(p LogicalPlan, child LogicalPlan, conditions []expression.Expr
 	}
 	selection := LogicalSelection{Conditions: conditions}.Init(p.SCtx(), p.SelectBlockOffset())
 	selection.SetChildren(child)
+	selection.SetSchema(child.Schema().Clone())
+	selection.SetOutputNames(child.OutputNames())
 	p.Children()[chIdx] = selection
 }
 
@@ -179,7 +181,7 @@ func (p *LogicalJoin) PredicatePushDown(predicates []expression.Expression) (ret
 		p.LeftJoinKeys = append(p.LeftJoinKeys, eqCond.GetArgs()[0].(*expression.Column))
 		p.RightJoinKeys = append(p.RightJoinKeys, eqCond.GetArgs()[1].(*expression.Column))
 	}
-	p.mergeSchema()
+	p.mergeSchema(p.Schema().Columns)
 	buildKeyInfo(p)
 	// except semi
 	switch p.JoinType {
@@ -203,6 +205,8 @@ func (p *LogicalJoin) PredicatePushDown(predicates []expression.Expression) (ret
 
 		if !nilLeftCond || !nilOtherCond || !nilRightCond {
 			selection := LogicalSelection{Conditions: conditonsNeedPushToSelection}.Init(p.SCtx(), 0)
+			selection.SetSchema(p.Schema().Clone())
+			selection.SetOutputNames(p.OutputNames())
 			selection.SetChildren(p)
 			return ret, selection.self
 		}

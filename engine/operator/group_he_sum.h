@@ -36,9 +36,9 @@ class GroupHeSum : public Operator {
   void Execute(ExecContext* ctx) override;
 
  private:
-  std::shared_ptr<arrow::Array> GetGroupId(ExecContext* ctx);
+  static std::shared_ptr<arrow::Array> GetGroupId(ExecContext* ctx);
 
-  uint32_t GetGroupNum(ExecContext* ctx);
+  static uint32_t GetGroupNum(ExecContext* ctx);
 };
 
 }  // namespace scql::engine::op

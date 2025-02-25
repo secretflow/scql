@@ -14,9 +14,7 @@
 
 #include "engine/link/mux_link_factory.h"
 
-#include "brpc/closure_guard.h"
-#include "bthread/bthread.h"
-#include "bthread/condition_variable.h"
+#include "brpc/controller.h"
 #include "spdlog/spdlog.h"
 
 namespace scql::engine {
@@ -125,7 +123,8 @@ std::unique_ptr<::google::protobuf::Message> MuxLink::PackChunkedRequest(
 void MuxLink::UnpackMonoRequest(const ::google::protobuf::Message& request,
                                 std::string* key,
                                 yacl::ByteContainerView* value) const {
-  auto real_request = static_cast<const link::pb::MuxPushRequest*>(&request);
+  const auto* real_request =
+      static_cast<const link::pb::MuxPushRequest*>(&request);
   *key = real_request->msg().key();
   *value = real_request->msg().value();
 }
@@ -134,7 +133,8 @@ void MuxLink::UnpackChunckRequest(const ::google::protobuf::Message& request,
                                   std::string* key,
                                   yacl::ByteContainerView* value,
                                   size_t* offset, size_t* total_length) const {
-  auto real_request = static_cast<const link::pb::MuxPushRequest*>(&request);
+  const auto* real_request =
+      static_cast<const link::pb::MuxPushRequest*>(&request);
   *key = real_request->msg().key();
   *value = real_request->msg().value();
   *offset = real_request->msg().chunk_info().chunk_offset();
@@ -143,15 +143,16 @@ void MuxLink::UnpackChunckRequest(const ::google::protobuf::Message& request,
 
 void MuxLink::FillResponseOk(const ::google::protobuf::Message& request,
                              ::google::protobuf::Message* response) const {
-  auto real_response = static_cast<link::pb::MuxPushResponse*>(response);
+  auto* real_response = static_cast<link::pb::MuxPushResponse*>(response);
   real_response->set_error_code(link::pb::ErrorCode::SUCCESS);
   real_response->set_error_msg("");
 }
 
 void MuxLink::FillResponseError(const ::google::protobuf::Message& request,
                                 ::google::protobuf::Message* response) const {
-  auto real_response = static_cast<link::pb::MuxPushResponse*>(response);
-  auto real_request = static_cast<const link::pb::MuxPushRequest*>(&request);
+  auto* real_response = static_cast<link::pb::MuxPushResponse*>(response);
+  const auto* real_request =
+      static_cast<const link::pb::MuxPushRequest*>(&request);
 
   real_response->set_error_code(link::pb::ErrorCode::INVALID_REQUEST);
   real_response->set_error_msg(
@@ -162,12 +163,14 @@ void MuxLink::FillResponseError(const ::google::protobuf::Message& request,
 
 bool MuxLink::IsChunkedRequest(
     const ::google::protobuf::Message& request) const {
-  auto real_request = static_cast<const link::pb::MuxPushRequest*>(&request);
+  const auto* real_request =
+      static_cast<const link::pb::MuxPushRequest*>(&request);
   return real_request->msg().trans_type() == link::pb::TransType::CHUNKED;
 }
 
 bool MuxLink::IsMonoRequest(const ::google::protobuf::Message& request) const {
-  auto real_request = static_cast<const link::pb::MuxPushRequest*>(&request);
+  const auto* real_request =
+      static_cast<const link::pb::MuxPushRequest*>(&request);
   return real_request->msg().trans_type() == link::pb::TransType::MONO;
 }
 
@@ -179,7 +182,8 @@ void MuxLink::SendRequest(const ::google::protobuf::Message& request,
     cntl.set_timeout_ms(timeout);
   }
   link::pb::MuxReceiverService::Stub stub(rpc_channel_.get());
-  auto push_request = static_cast<const link::pb::MuxPushRequest*>(&request);
+  const auto* push_request =
+      static_cast<const link::pb::MuxPushRequest*>(&request);
   stub.Push(&cntl, push_request, &response, nullptr);
 
   std::string request_info =

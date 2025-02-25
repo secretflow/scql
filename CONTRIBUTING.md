@@ -57,17 +57,15 @@ docker exec -it scql-dev-$(whoami) bash
 
 
 ```sh
-# prerequisite
-# spu needs numpy
-pip install numpy
 
 # build SCQL engine as release
 bazel build //engine/exe:scqlengine -c opt
 
-# test
-
 # run unittests for SCQL engine
 bazel test //engine/...
+
+# build with address sanitizer
+bazel build --config=asan //engine/exe:scqlengine
 
 # build scdb code
 make

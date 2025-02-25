@@ -18,15 +18,12 @@
 
 #include "engine/auth/authenticator.h"
 #include "engine/datasource/datasource_adaptor_mgr.h"
-#include "engine/datasource/embed_router.h"
 #include "engine/framework/session_manager.h"
 #include "engine/link/channel_manager.h"
 
-#include "api/common.pb.h"
 #include "api/engine.pb.h"
 #include "api/status.pb.h"
 #include "api/status_code.pb.h"
-#include "engine/audit/audit.pb.h"
 
 namespace scql::engine {
 
@@ -55,7 +52,7 @@ class EngineServiceImpl : public pb::SCQLEngineService {
                       ::google::protobuf::Closure* done) override;
 
   void StopJob(::google::protobuf::RpcController* cntl,
-               const pb::StopJobRequest* request, pb::Status* response,
+               const pb::StopJobRequest* request, pb::Status* status,
                ::google::protobuf::Closure* done) override;
 
   SessionManager* GetSessionManager() { return session_mgr_.get(); }
@@ -64,21 +61,22 @@ class EngineServiceImpl : public pb::SCQLEngineService {
   void ReportResult(const std::string& session_id, const std::string& cb_url,
                     const std::string& report_info_str);
 
-  void RunPlanCore(const pb::RunExecutionPlanRequest& request, Session* session,
-                   pb::RunExecutionPlanResponse* response);
+  static void RunPlanCore(const pb::RunExecutionPlanRequest& request,
+                          Session* session,
+                          pb::RunExecutionPlanResponse* response);
 
   void RunPlanSync(const pb::RunExecutionPlanRequest* request, Session* session,
                    pb::RunExecutionPlanResponse* response);
 
-  void RunPlanAsync(const pb::RunExecutionPlanRequest request, Session* session,
-                    const std::string& source_ip);
+  void RunPlanAsync(const pb::RunExecutionPlanRequest& request,
+                    Session* session, const std::string& source_ip);
 
   void CheckDriverCredential(const brpc::HttpHeader& http_header);
 
   void VerifyPublicKeys(const pb::JobStartParams& start_params);
 
-  void ReportErrorToPeers(const pb::JobStartParams& params,
-                          const pb::Code err_code, const std::string& err_msg);
+  void ReportErrorToPeers(const pb::JobStartParams& params, pb::Code err_code,
+                          const std::string& err_msg);
 
   std::shared_ptr<spdlog::logger> GetActiveLogger(
       const std::string& session_id) const;

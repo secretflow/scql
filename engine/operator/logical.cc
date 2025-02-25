@@ -76,7 +76,7 @@ void Not::ExecuteInPlain(ExecContext* ctx) {
   const auto& input_pbs = ctx->GetInput(kIn);
   const auto& output_pbs = ctx->GetOutput(kOut);
 
-  auto tensor_table = ctx->GetSession()->GetTensorTable();
+  auto* tensor_table = ctx->GetSession()->GetTensorTable();
   for (int i = 0; i < input_pbs.size(); ++i) {
     const auto input_pb = input_pbs[i];
     const auto output_pb = output_pbs[i];
@@ -98,8 +98,8 @@ void Not::ExecuteInSecret(ExecContext* ctx) {
   const auto& input_pbs = ctx->GetInput(kIn);
   const auto& output_pbs = ctx->GetOutput(kOut);
 
-  auto sctx = ctx->GetSession()->GetSpuContext();
-  auto symbols = ctx->GetSession()->GetDeviceSymbols();
+  auto* sctx = ctx->GetSession()->GetSpuContext();
+  auto* symbols = ctx->GetSession()->GetDeviceSymbols();
   for (int i = 0; i < input_pbs.size(); ++i) {
     const auto input_pb = input_pbs[i];
     const auto output_pb = output_pbs[i];

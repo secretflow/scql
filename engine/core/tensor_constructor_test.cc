@@ -16,7 +16,6 @@
 
 #include <filesystem>
 
-#include "arrow/array.h"
 #include "arrow/compute/cast.h"
 #include "arrow/testing/random.h"
 #include "arrow/type.h"

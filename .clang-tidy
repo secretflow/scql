@@ -29,6 +29,9 @@ Checks: "abseil-cleanup-ctad,
   -readability-function-cognitive-complexity,
   -readability-magic-numbers,
   -readability-named-parameter,
+  -readability-math-missing-parentheses,
+  -readability-redundant-access-specifiers,
+  -readability-simplify-boolean-expr,
   concurrency-mt-unsafe"
 
 CheckOptions:

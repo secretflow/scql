@@ -15,7 +15,7 @@ Example configuration for SCDB
 
 .. code-block:: yaml
 
-  scdb_host: http://localhost:8080
+  scdb_host: localhost:8080
   port: 8080
   protocol: http
   query_result_callback_timeout: 200ms
@@ -23,10 +23,6 @@ Example configuration for SCDB
   session_expire_check_time: 100ms
   password_check: true
   log_level: info
-  enable_audit_logger: true
-  audit:
-    audit_log_file: audit/audit.log
-    audit_detail_file: audit/detail.log
   security_compromise:
     reveal_group_mark: false
   storage:
@@ -72,20 +68,6 @@ Configuration Options of SCDB
 | password_check                        | true             | Whether to validate password strength when create a user                                                                                         |
 +---------------------------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
 | log_level                             | info             | The type and severity of a logged event                                                                                                          |
-+---------------------------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| enable_audit_logger                   | true             | Whether to enable audit logger                                                                                                                   |
-+---------------------------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| audit.audit_log_file                  | audit/audit.log  | The file to save basic information about a query                                                                                                 |
-+---------------------------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| audit.audit_detail_file               | audit/detail.log | The file to save more detailed information about a query                                                                                         |
-+---------------------------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| audit.audit_max_size                  | 500              | The maximum size of the audit log file before it gets rotated, unit: MB                                                                          |
-+---------------------------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| audit.audit_max_backups               | 0                | The maximum number of old audit log files to retain, default 0 to retain all old log files                                                       |
-+---------------------------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| audit.audit_max_age_days              | 180              | The maximum number of days to retain old log files                                                                                               |
-+---------------------------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| audit.audit_max_compress              | false            | Whether the rotated log files should be compressed                                                                                               |
 +---------------------------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
 | security_compromise.reveal_group_mark | false            | Whether to reveal group_mark directly for group by                                                                                               |
 +---------------------------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -195,19 +177,6 @@ A typical config of storage can be like:
 
 .. note::
   To handle time.Time correctly, you need to include parseTime as a parameter. To fully support UTF-8 encoding, you need to change ``charset=utf8`` to ``charset=utf8mb4``.
-
-
-Config for audit
-^^^^^^^^^^^^^^^^
-
-Audit log are used to record the SCDB activities during query execution. It has two types: basic audit log and detail audit log.
-
-  The basic audit log are used to record the basic information of a query, such as the result and user information, while the detail audit log records more detailed information such as execution plan and CCL details. you can see `scdb_audit <https://github.com/secretflow/scql/blob/main/pkg/audit/audit.proto>`_ for more information.
-
-When the audit log has reaches the maximum size ( set by ``audit_max_size``), SCDB will save the audit log as ``name-timestamp.ext``, where the `name` is the filename set in ``audit_log_file`` without the extension, `timestamp` is the time at which the log was rotated formatted with local time format of `2006-01-02T15-04-05.000`,
-`ext` is the extension set in ``audit_log_file``.
-
-  For example, if ``audit_log_file`` set as `audit/audit.log`, a backup created at 6:30pm on Nov 11 2016 would be saved to `./audit/audit-2016-11-04T18-30-00.000.log`
 
 
 Password check

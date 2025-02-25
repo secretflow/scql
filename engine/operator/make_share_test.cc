@@ -14,14 +14,10 @@
 
 #include "engine/operator/make_share.h"
 
-#include "arrow/compute/cast.h"
 #include "gtest/gtest.h"
 
 #include "engine/core/tensor_constructor.h"
-#include "engine/core/type.h"
 #include "engine/operator/test_util.h"
-#include "engine/util/ndarray_to_arrow.h"
-#include "engine/util/spu_io.h"
 
 namespace scql::engine::op {
 
@@ -91,14 +87,16 @@ TEST_P(MakeShareTest, works) {
   auto sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
   std::vector<ExecContext> exec_ctxs;
-  for (size_t idx = 0; idx < sessions.size(); ++idx) {
-    exec_ctxs.emplace_back(node, sessions[idx].get());
+  exec_ctxs.reserve(sessions.size());
+  for (auto& session : sessions) {
+    exec_ctxs.emplace_back(node, session.get());
   }
 
   // feed inputs
   std::vector<ExecContext*> ctx_ptrs;
-  for (size_t idx = 0; idx < exec_ctxs.size(); ++idx) {
-    ctx_ptrs.emplace_back(&exec_ctxs[idx]);
+  ctx_ptrs.reserve(exec_ctxs.size());
+  for (auto& exec_ctx : exec_ctxs) {
+    ctx_ptrs.emplace_back(&exec_ctx);
   }
   FeedInputs(ctx_ptrs[0], tc);
   FeedInputs(ctx_ptrs[1], tc);
@@ -154,7 +152,7 @@ pb::ExecNode MakeShareTest::MakeExecNode(const MakeShareTestCase& tc) {
 }
 
 void MakeShareTest::FeedInputs(ExecContext* ctx, const MakeShareTestCase& tc) {
-  auto tensor_table = ctx->GetTensorTable();
+  auto* tensor_table = ctx->GetTensorTable();
 
   auto lctx = ctx->GetSession()->GetLink();
   for (size_t i = 0; i < tc.owners.size(); ++i) {

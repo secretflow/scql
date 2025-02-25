@@ -14,8 +14,6 @@
 
 #include "engine/auth/authenticator.h"
 
-#include <sstream>
-
 #include "butil/files/temp_file.h"
 #include "gtest/gtest.h"
 #include "yacl/base/exception.h"

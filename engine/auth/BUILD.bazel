@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("//engine/bazel:scql.bzl", "scql_cc_test")
+
 package(default_visibility = ["//visibility:public"])
 
 proto_library(
@@ -30,6 +32,7 @@ cc_library(
     hdrs = ["authorized_profile.h"],
     deps = [
         ":authorized_profile_cc_proto",
+        "@com_google_protobuf//:json_util",
         "@yacl//yacl/base:exception",
     ],
 )
@@ -40,19 +43,20 @@ cc_library(
     hdrs = ["authenticator.h"],
     deps = [
         ":authorized_profile",
-        "@com_github_brpc_brpc//:butil",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/strings",
+        "@brpc//:butil",
         "@yacl//yacl/crypto:key_utils",
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "authenticator_test",
     srcs = ["authenticator_test.cc"],
     deps = [
         ":authenticator",
-        "@com_github_brpc_brpc//:butil",
-        "@com_google_googletest//:gtest_main",
+        # NOTE:  include @brpc//:bthread to fix circle dependency between `@brpc//:bthread` and `@brpc//:butil`
+        "@brpc//:bthread",
+        "@brpc//:butil",
         "@yacl//yacl/base:exception",
     ],
 )

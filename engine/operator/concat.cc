@@ -18,7 +18,6 @@
 #include "libspu/kernel/hlo/casting.h"
 #include "libspu/kernel/hlo/geometrical.h"
 
-#include "engine/core/primitive_builder.h"
 #include "engine/core/type.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
@@ -48,8 +47,8 @@ void Concat::Validate(ExecContext* ctx) {
 void Concat::Execute(ExecContext* ctx) {
   const auto& input_pbs = ctx->GetInput(kIn);
   const auto& output_pb = ctx->GetOutput(kOut)[0];
-  auto sctx = ctx->GetSession()->GetSpuContext();
-  auto symbols = ctx->GetSession()->GetDeviceSymbols();
+  auto* sctx = ctx->GetSession()->GetSpuContext();
+  auto* symbols = ctx->GetSession()->GetDeviceSymbols();
 
   spu::DataType output_type = spu::DataType::DT_INVALID;
   if (output_pb.elem_type() != pb::PrimitiveDataType::STRING) {

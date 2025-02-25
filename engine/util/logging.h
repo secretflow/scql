@@ -17,7 +17,7 @@
 #include <memory>
 #include <string>
 
-#include "spdlog/spdlog.h"
+#include "spdlog/logger.h"
 
 namespace scql::engine::util {
 

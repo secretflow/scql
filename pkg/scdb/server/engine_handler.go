@@ -25,7 +25,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
-	"github.com/secretflow/scql/pkg/audit"
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
@@ -53,7 +52,7 @@ func engineHandlerCore(app *App, c *gin.Context) (report *scql.ReportRequest, er
 	if c.Request == nil || c.Request.Body == nil {
 		errMsg := "invalid request"
 		c.JSON(http.StatusBadRequest, gin.H{"error": errMsg})
-		return &scql.ReportRequest{}, fmt.Errorf(errMsg)
+		return &scql.ReportRequest{}, errors.New(errMsg)
 	}
 	request := &scql.ReportRequest{}
 	_, err = message.DeserializeFrom(c.Request.Body, request, c.Request.Header.Get("Content-Type"))
@@ -105,7 +104,6 @@ func newErrorCallbackResult(sessionId string, code scql.Code, err error) *scql.S
 }
 
 func (app *App) finishSession(session *session, result *scql.SCDBQueryResultResponse, sessionDestroyReason string) {
-	audit.RecordAsyncCompleteEvent(result)
 	if session.queryResultCbURL != "" {
 		_, err := callbackFrontend(session.ctx, result, session.queryResultCbURL)
 		// rewrite local copy of sessionDestroyReason even on callback error

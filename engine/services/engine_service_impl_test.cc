@@ -25,6 +25,7 @@
 #include "gtest/gtest.h"
 #include "spdlog/spdlog.h"
 
+#include "engine/datasource/embed_router.h"
 #include "engine/framework/session.h"
 #include "engine/link/mux_link_factory.h"
 #include "engine/link/mux_receiver_service.h"
@@ -33,7 +34,6 @@
 #include "engine/operator/publish.h"
 #include "engine/operator/run_sql.h"
 #include "engine/operator/test_util.h"
-#include "engine/util/psi_helper.h"
 
 #include "api/status_code.pb.h"
 #include "engine/services/mock_report_service.pb.h"
@@ -389,7 +389,7 @@ class EngineServiceImpl2PartiesTest
                              const std::string& out_name, int ref_count);
 
  protected:
-  const size_t kWorldSize = 2u;
+  const size_t kWorldSize = 2U;
   std::vector<std::unique_ptr<ListenerManager>> listener_managers;
   std::vector<std::unique_ptr<MuxReceiverServiceImpl>> services;
   std::vector<brpc::Server> servers;
@@ -464,7 +464,7 @@ TEST_P(EngineServiceImpl2PartiesTest, RunExecutionPlan) {
                         std::vector<std::string>& expect_result) {
     std::vector<std::string> tmp;
     tmp.reserve(actual_result.string_data_size());
-    for (auto item : actual_result.string_data()) {
+    for (const auto& item : actual_result.string_data()) {
       tmp.push_back(item);
     }
     std::sort(tmp.begin(), tmp.end());
@@ -612,7 +612,7 @@ void EngineServiceImpl2PartiesTest::AddSessionParameters(
   params->set_job_id("test_session_id");
   params->set_party_code("party" + std::to_string(self_rank));
   for (size_t rank = 0; rank < servers.size(); rank++) {
-    auto party = params->add_parties();
+    auto* party = params->add_parties();
     party->set_code("party" + std::to_string(rank));
     party->set_name(party->code());
     party->set_host(
@@ -707,7 +707,7 @@ void EngineServiceImpl2PartiesTest::AddFilterByIndexNode(
   auto node = builder.Build();
   auto* graph = request->mutable_graph();
   (*(graph->mutable_nodes()))[op::FilterByIndex::kOpType] = node;
-  auto pipeline = graph->mutable_policy()->add_pipelines();
+  auto* pipeline = graph->mutable_policy()->add_pipelines();
   auto* subdag = pipeline->add_subdags();
   auto* job = subdag->add_jobs();
   job->add_node_ids(op::FilterByIndex::kOpType);
@@ -733,7 +733,7 @@ void EngineServiceImpl2PartiesTest::AddPublishNode(
   auto node = builder.Build();
   auto* graph = request->mutable_graph();
   (*(graph->mutable_nodes()))[op::Publish::kOpType] = node;
-  auto pipeline = graph->mutable_policy()->add_pipelines();
+  auto* pipeline = graph->mutable_policy()->add_pipelines();
   auto* subdag = pipeline->add_subdags();
   auto* job = subdag->add_jobs();
   job->add_node_ids(op::Publish::kOpType);

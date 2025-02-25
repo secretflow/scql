@@ -104,9 +104,7 @@ func AskInfoByChecksumResult(session *application.Session, compRes pb.ChecksumCo
 // use this function if you don't know table owner and set source parties as project members except self
 func AskProjectInfoFromParties(app *application.App, projectID string, tableNames []string, cclDestParties []string, sourceParties []string) (err error) {
 	resource := &pb.ResourceSpec{Kind: pb.ResourceSpec_All, ProjectId: projectID, DestParties: cclDestParties}
-	for _, tableName := range tableNames {
-		resource.TableNames = append(resource.TableNames, tableName)
-	}
+	resource.TableNames = append(resource.TableNames, tableNames...)
 	updater := InfoAskerAndUpdater{sourceParties: sourceParties, app: app, resources: []*pb.ResourceSpec{resource}}
 	return updater.askInfoAndUpdateStorage()
 }

@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 set -e
-bazel build //api:scql_go_proto //api:spu_go_proto
+bazel build --remote_cache="" //api:scql_go_proto //api:spu_go_proto
 mkdir -p pkg/proto-gen/scql
 proto_gen_package=github.com/secretflow/scql/pkg/proto-gen
 # copy files execpt spu.pb.go
@@ -29,13 +29,13 @@ trap "rm -rf libspu google" EXIT
 # symlink for "bazel-<workspace-name>"
 BAZEL_EXEC_ROOT=bazel-$(basename $(pwd))
 mkdir -p libspu
-cp -f ${BAZEL_EXEC_ROOT}/external/spulib/libspu/spu.proto libspu/spu.proto
+cp -f ${BAZEL_EXEC_ROOT}/external/spulib~/libspu/spu.proto libspu/spu.proto
 # note: protoc need google api
 mkdir -p google/api
-cp -f ${BAZEL_EXEC_ROOT}/external/googleapis/google/api/*.proto google/api
+cp -f ${BAZEL_EXEC_ROOT}/external/googleapis~/google/api/*.proto google/api
 
 GOBIN=${PWD}/tool-bin go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest
-PATH=${GOBIN}:${PATH} protoc --proto_path . -I${BAZEL_EXEC_ROOT}/external/com_google_protobuf/src\
+PATH=${GOBIN}:${PATH} protoc --proto_path . -I${BAZEL_EXEC_ROOT}/external/protobuf~/src\
     --openapiv2_out ./docs \
     --openapiv2_opt output_format=yaml \
     --openapiv2_opt preserve_rpc_order=true \
@@ -46,7 +46,7 @@ PATH=${GOBIN}:${PATH} protoc --proto_path . -I${BAZEL_EXEC_ROOT}/external/com_go
     --openapiv2_opt openapi_configuration=api/broker.config_openapi.yaml \
     api/broker.proto
 
-PATH=${GOBIN}:${PATH} protoc --proto_path . -I${BAZEL_EXEC_ROOT}/external/com_google_protobuf/src\
+PATH=${GOBIN}:${PATH} protoc --proto_path . -I${BAZEL_EXEC_ROOT}/external/protobuf~/src\
     --openapiv2_out ./docs \
     --openapiv2_opt output_format=yaml \
     --openapiv2_opt preserve_rpc_order=true \

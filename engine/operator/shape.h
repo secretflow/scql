@@ -38,8 +38,8 @@ class Shape : public Operator {
   void Execute(ExecContext* ctx) override;
 
  private:
-  TensorPtr CreateShapeTensor(ExecContext* ctx,
-                              const std::pair<int64_t, int64_t>& shapes);
+  TensorPtr static CreateShapeTensor(ExecContext* ctx,
+                                     const std::pair<int64_t, int64_t>& shapes);
 };
 
 }  // namespace scql::engine::op

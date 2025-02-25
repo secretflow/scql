@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/spf13/cobra"
 )
@@ -38,7 +39,9 @@ var (
 
 func init() {
 	cancelCmd.Flags().StringVar(&jobId, "job-id", "", "when cancel job, you must specify the job-id obtained after successfully creating the job")
-	cancelCmd.MarkFlagRequired("job-id")
+	if err := cancelCmd.MarkFlagRequired("job-id"); err != nil {
+		log.Fatalf("failed to mark flag required: %v", err)
+	}
 }
 
 func cancelJob() error {

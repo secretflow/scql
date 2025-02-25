@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/spf13/cobra"
 )
@@ -40,7 +41,9 @@ var (
 
 func init() {
 	processCmd.Flags().StringVar(&response, "response", "", "accept or decline the invitation")
-	processCmd.MarkFlagRequired("response")
+	if err := processCmd.MarkFlagRequired("response"); err != nil {
+		log.Fatalf("failed to mark flag required: %v", err)
+	}
 }
 
 func processInvitation(ids string) error {

@@ -18,7 +18,6 @@
 #include "libspu/core/encoding.h"
 #include "libspu/kernel/hlo/casting.h"
 
-#include "engine/core/arrow_helper.h"
 #include "engine/core/tensor_constructor.h"
 #include "engine/core/type.h"
 #include "engine/util/spu_io.h"
@@ -72,8 +71,8 @@ void Cast::Execute(ExecContext* ctx) {
   YACL_ENFORCE(input_pb.elem_type() != pb::PrimitiveDataType::STRING &&
                    output_pb.elem_type() != pb::PrimitiveDataType::STRING,
                "string in spu is hash, not support cast");
-  auto symbols = ctx->GetSession()->GetDeviceSymbols();
-  auto sctx = ctx->GetSession()->GetSpuContext();
+  auto* symbols = ctx->GetSession()->GetDeviceSymbols();
+  auto* sctx = ctx->GetSession()->GetSpuContext();
   auto to_type = spu::getEncodeType(DataTypeToSpuPtType(output_pb.elem_type()));
 
   auto value =

@@ -169,7 +169,7 @@ func registerAllOpDef() {
 	{
 		opDef := &OperatorDef{}
 		opDef.SetName(OpNameJoin)
-		opDef.SetStreamingType(StreamingOp)
+		opDef.SetStreamingType(SinkOp)
 		opDef.AddInput("Left", "Left vector(shape [M][1])",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T1)
 		opDef.AddInput("Right", "Right vector(shape [N][1])",
@@ -566,6 +566,7 @@ Group = {0, 1, 1, 0, 1}
 			{opName: OpNameObliviousGroupMax, aggResult: `[{1, 3, 3, 4, 0}, {9, 8, 8, 8, 5}]`},
 			{opName: OpNameObliviousGroupMin, aggResult: `[{1, 3, 2, 2, 0}, {9, 8, 7, 6, 5}]`},
 			{opName: OpNameObliviousGroupAvg, aggResult: `[{1, 3, 2.5, 3, 0}, {9, 8, 7.5, 7, 5}]`},
+			{opName: OpNameObliviousPercentRank, aggResult: `[{1, 0.3333, 0.6666, 1, 1, 1}, {1, 0.3333, 0.6666, 1, 1, 1}]`},
 		} {
 			opDef := &OperatorDef{}
 			opDef.SetName(t.opName)
@@ -936,19 +937,26 @@ Out = {0, 1, NULL}
 	}
 
 	{
-		opDef := &OperatorDef{}
-		opDef.SetName(OpNameRowNumber)
-		opDef.SetStreamingType(SinkOp)
-		opDef.AddInput("Key", "the tensors which used for sorting in partition, e.g. [2,0,4,2,3,7]", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
-		opDef.AddInput("PartitionId", "the partitioned id, e.g. [0,0,0,1,1,1], the first 3 in a group and the others are in another group", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
-		opDef.AddInput("PartitionNum", "the partitioned num, e.g. [2]", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
-		opDef.AddOutput("Out", "row number output, e.g. [2,1,3,1,2,3]", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
-		opDef.SetDefinition("Definition: return the row number in each partition")
-		opDef.AddAttribute(ReverseAttr, `string array consits of "0" and "1", "0" means this input tensor sort by ascending, "1" means this tensor sort by descending.
+		windowOp := map[string]string{
+			OpNameRowNumber:   "row number",
+			OpNamePercentRank: "percent rank",
+		}
+
+		for op, decription := range windowOp {
+			opDef := &OperatorDef{}
+			opDef.SetName(op)
+			opDef.SetStreamingType(SinkOp)
+			opDef.AddInput("Key", "the tensors which used for sorting in partition, e.g. [2,0,4,2,3,7]", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+			opDef.AddInput("PartitionId", "the partitioned id, e.g. [0,0,0,1,1,1], the first 3 in a group and the others are in another group", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+			opDef.AddInput("PartitionNum", "the partitioned num, e.g. [2]", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+			opDef.AddOutput("Out", fmt.Sprintf("%s output", decription), proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+			opDef.SetDefinition(fmt.Sprintf("Definition: return the %s in each partition", decription))
+			opDef.AddAttribute(ReverseAttr, `string array consits of "0" and "1", "0" means this input tensor sort by ascending, "1" means this tensor sort by descending.
 		e.g. ["0","1"] means the first input key sort by ascending, the second sort by descending`)
-		opDef.SetParamTypeConstraint(T, statusPrivateOrSecretOrPublic)
-		check(opDef.err)
-		AllOpDef = append(AllOpDef, opDef)
+			opDef.SetParamTypeConstraint(T, statusPrivateOrSecretOrPublic)
+			check(opDef.err)
+			AllOpDef = append(AllOpDef, opDef)
+		}
 	}
 
 	{

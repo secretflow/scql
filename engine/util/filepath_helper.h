@@ -15,10 +15,9 @@
 #pragma once
 
 #include <filesystem>
-#include <optional>
 #include <string>
+#include <utility>
 
-#include "absl/strings/match.h"
 #include "spdlog/spdlog.h"
 
 namespace scql::engine::util {
@@ -45,7 +44,7 @@ bool GetAndRemoveS3EndpointPrefix(std::string& endpoint);
 
 class ScopedDir {
  public:
-  ScopedDir(const std::filesystem::path& dir) : dir_(dir) {}
+  explicit ScopedDir(std::filesystem::path dir) : dir_(std::move(dir)) {}
 
   const std::filesystem::path& path() const { return dir_; }
 

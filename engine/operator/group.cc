@@ -20,7 +20,6 @@
 #include "engine/core/arrow_helper.h"
 #include "engine/core/primitive_builder.h"
 #include "engine/core/tensor_constructor.h"
-#include "engine/util/spu_io.h"
 #include "engine/util/table_util.h"
 #include "engine/util/tensor_util.h"
 
@@ -54,8 +53,8 @@ void Group::Execute(ExecContext* ctx) {
   YACL_ENFORCE(table, "construct table failed");
 
   std::vector<arrow::TypeHolder> key_types;
-  for (auto field : table->schema()->fields()) {
-    key_types.push_back(field->type());
+  for (const auto& field : table->schema()->fields()) {
+    key_types.emplace_back(field->type());
   }
   std::unique_ptr<arrow::compute::Grouper> grouper;
   ASSIGN_OR_THROW_ARROW_STATUS(grouper,

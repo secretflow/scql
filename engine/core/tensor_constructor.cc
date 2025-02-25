@@ -14,13 +14,14 @@
 
 #include "engine/core/tensor_constructor.h"
 
+#include <memory>
+
 #include "arrow/array/array_base.h"
-#include "arrow/io/file.h"
 #include "arrow/ipc/json_simple.h"
 #include "arrow/record_batch.h"
-#include "yacl/base/exception.h"
 
 #include "engine/core/arrow_helper.h"
+#include "engine/core/tensor.h"
 #include "engine/core/type.h"
 
 namespace scql::engine {
@@ -40,13 +41,26 @@ TensorPtr TensorFrom(std::shared_ptr<arrow::ChunkedArray> arrays) {
   return std::make_shared<MemTensor>(arrays);
 }
 
+TensorPtr ConcatTensors(const std::vector<TensorPtr>& tensors) {
+  for (const auto& tensor : tensors) {
+    YACL_ENFORCE(typeid(*tensor) == typeid(MemTensor));
+  }
+  arrow::ArrayVector arrays;
+  for (const auto& tensor : tensors) {
+    auto tmp_v = tensor->ToArrowChunkedArray();
+    arrays.insert(arrays.end(), tmp_v->chunks().begin(), tmp_v->chunks().end());
+  }
+  return std::make_shared<MemTensor>(
+      arrow::ChunkedArray::Make(arrays).ValueOrDie());
+}
+
 // create a new writer to write when current writer is null or current writer is
 // full
 void TensorWriter::FreshCurWriter() {
   if (current_writer_ != nullptr) {
-    FileArray file_array = {.file_path = current_writer_->GetFilePath(),
-                            .len = current_writer_->GetRowNum(),
-                            .null_count = current_writer_->GetNullCount()};
+    auto file_array = std::make_shared<FileArray>(
+        current_writer_->GetFilePath(), current_writer_->GetRowNum(),
+        current_writer_->GetNullCount());
     file_arrays_.push_back(file_array);
   }
   std::filesystem::path path = parent_path_ / std::to_string(file_index_);
@@ -95,15 +109,63 @@ size_t TensorWriter::WriteBatch(const arrow::ChunkedArray& batch) {
 void TensorWriter::Finish(std::shared_ptr<Tensor>* out) {
   // add last file to tensor
   if (current_writer_ != nullptr && current_writer_->GetRowNum() > 0) {
-    FileArray file_array = {.file_path = current_writer_->GetFilePath(),
-                            .len = current_writer_->GetRowNum(),
-                            .null_count = current_writer_->GetNullCount()};
+    auto file_array = std::make_shared<FileArray>(
+        current_writer_->GetFilePath(), current_writer_->GetRowNum(),
+        current_writer_->GetNullCount());
     file_arrays_.push_back(file_array);
   }
+
   current_writer_.reset();
   *out = std::make_shared<DiskTensor>(
       file_arrays_, FromArrowDataType(schema_->field(0)->type()),
       schema_->field(0)->type());
 }
 
+void DiskBucketTensorConstructor::InsertBucket(const TensorPtr& tensor,
+                                               size_t bucket_index) {
+  InsertBucket(tensor->ToArrowChunkedArray(), bucket_index);
+}
+
+void DiskBucketTensorConstructor::InsertBucket(
+    const std::shared_ptr<arrow::ChunkedArray>& arrays, size_t bucket_index) {
+  writers_[bucket_index]->WriteBatch(*arrays);
+}
+
+void DiskBucketTensorConstructor::Finish(TensorPtr* tensor) {
+  std::vector<std::shared_ptr<FileArray>> file_arrays(writers_.size());
+  for (size_t j = 0; j < file_arrays.size(); j++) {
+    auto file_array = std::make_shared<FileArray>(writers_[j]->GetFilePath(),
+                                                  writers_[j]->GetRowNum(),
+                                                  writers_[j]->GetNullCount());
+    file_arrays[j] = file_array;
+  }
+  auto type = writers_[0]->GetSchema()->field(0)->type();
+  // remove writers to call ipc writer close()
+  writers_.clear();
+  auto disk_tensor =
+      std::make_shared<DiskTensor>(file_arrays, dtype_, data_type_);
+  disk_tensor->SetAsBucketTensor();
+  *tensor = std::move(disk_tensor);
+}
+
+void MemoryBucketTensorConstructor::InsertBucket(const TensorPtr& tensor,
+                                                 size_t bucket_index) {
+  InsertBucket(tensor->ToArrowChunkedArray(), bucket_index);
+}
+void MemoryBucketTensorConstructor::InsertBucket(
+    const std::shared_ptr<arrow::ChunkedArray>& arrays, size_t bucket_index) {
+  array_vecs_[bucket_index].push_back(arrays);
+}
+void MemoryBucketTensorConstructor::Finish(TensorPtr* tensor) {
+  arrow::ArrayVector arrays;
+  for (const auto& arrs : array_vecs_) {
+    for (const auto& tmp_v : arrs) {
+      arrays.insert(arrays.end(), tmp_v->chunks().begin(),
+                    tmp_v->chunks().end());
+    }
+  }
+  // TODO: no bucket mem tensor for now, add it later if needed
+  *tensor = std::make_shared<MemTensor>(
+      arrow::ChunkedArray::Make(arrays).ValueOrDie());
+}
 }  // namespace scql::engine

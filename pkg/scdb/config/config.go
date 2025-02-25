@@ -24,7 +24,6 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/secretflow/scql/pkg/audit"
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/parser/auth"
 	"github.com/secretflow/scql/pkg/proto-gen/spu"
@@ -39,16 +38,6 @@ const (
 	DefaultProtocol             = "https"
 	DefaultLogLevel             = "info"
 	DefaultEngineClientMode     = "HTTP"
-)
-
-const (
-	DefaultEnableAudit             = true
-	DefaultAuditLogFile            = "audit/audit.log"
-	DefaultAudiDetailFile          = "audit/detail.log"
-	DefaultAuditMaxSizeInMegaBytes = 500
-	DefaultAuditMaxBackupsCount    = 10
-	DefaultAuditMaxAgeInDays       = 180
-	DefaultAuditMaxCompress        = false
 )
 
 type EngineConfig struct {
@@ -85,8 +74,6 @@ type Config struct {
 	AuthEncType          string                 `yaml:"auth_enc_type"`
 	PasswordCheck        bool                   `yaml:"password_check"`
 	LogLevel             string                 `yaml:"log_level"`
-	EnableAuditLogger    bool                   `yaml:"enable_audit_logger"`
-	AuditConfig          audit.AuditConf        `yaml:"audit"`
 	TlsConfig            TlsConf                `yaml:"tls"`
 	Storage              StorageConf            `yaml:"storage"`
 	Engine               EngineConfig           `yaml:"engine"`
@@ -157,15 +144,6 @@ func CheckConfigValues(config *Config) error {
 func NewDefaultConfig() *Config {
 	var config Config
 	config.LogLevel = DefaultLogLevel
-	config.EnableAuditLogger = DefaultEnableAudit
-	config.AuditConfig = audit.AuditConf{
-		AuditLogFile:            DefaultAuditLogFile,
-		AuditDetailFile:         DefaultAudiDetailFile,
-		AuditMaxSizeInMegaBytes: DefaultAuditMaxSizeInMegaBytes,
-		AuditMaxBackupsCount:    DefaultAuditMaxBackupsCount,
-		AuditMaxAgeInDays:       DefaultAuditMaxAgeInDays,
-		AuditMaxCompress:        DefaultAuditMaxCompress,
-	}
 	config.QueryResultCbTimeout = DefaultQueryResultCbTimeout
 	config.SessionExpireTime = DefaultSessionExpireTime
 	config.SessionCheckInterval = DefaultSessionCheckInterval

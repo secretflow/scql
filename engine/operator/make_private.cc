@@ -87,7 +87,7 @@ void MakePrivate::Execute(ExecContext* ctx) {
   }
 }
 
-TensorPtr MakePrivate::RevealPublicString(ExecContext* ctx, TensorPtr t,
+TensorPtr MakePrivate::RevealPublicString(ExecContext* ctx, const TensorPtr& t,
                                           bool reveal_to_me,
                                           size_t reveal_to_rank) {
   // TODO(jingshi): optimization: remove "__null__" in string_t to reduce

@@ -14,6 +14,7 @@
 
 load("@rules_cc//cc:defs.bzl", "cc_proto_library")
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("//engine/bazel:scql.bzl", "scql_cc_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -26,7 +27,7 @@ cc_library(
         "//engine/core:arrow_helper",
         "//engine/core:tensor",
         "//engine/core:tensor_constructor",
-        "@com_github_gabime_spdlog//:spdlog",
+        "@spdlog",
     ],
 )
 
@@ -49,9 +50,9 @@ cc_binary(
     srcs = ["arrow_sql_adaptor_test.cc"],
     deps = [
         ":arrow_sql_adaptor",
-        "@com_google_absl//absl/flags:flag",
-        "@com_google_absl//absl/flags:parse",
-        "@com_google_googletest//:gtest",
+        "@abseil-cpp//absl/flags:flag",
+        "@abseil-cpp//absl/flags:parse",
+        "@googletest//:gtest",
     ],
 )
 
@@ -81,12 +82,11 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "odbc_adaptor_sqlite_test",
     srcs = ["odbc_adaptor_sqlite_test.cc"],
     deps = [
         ":odbc_adaptor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -97,9 +97,9 @@ cc_binary(
     srcs = ["odbc_adaptor_mysql_test.cc"],
     deps = [
         ":odbc_adaptor",
-        "@com_google_absl//absl/flags:flag",
-        "@com_google_absl//absl/flags:parse",
-        "@com_google_googletest//:gtest",
+        "@abseil-cpp//absl/flags:flag",
+        "@abseil-cpp//absl/flags:parse",
+        "@googletest//:gtest",
     ],
 )
 
@@ -137,18 +137,18 @@ cc_library(
     deps = [
         ":embed_router_cc_proto",
         ":router",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/strings",
+        "@com_google_protobuf//:json_util",
         "@yacl//yacl/base:exception",
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "embed_router_test",
     srcs = ["embed_router_test.cc"],
     deps = [
         ":embed_router",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -163,8 +163,8 @@ cc_library(
         ":datasource_cc_proto",
         ":dp_adaptor_factory",
         ":odbc_adaptor_factory",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/synchronization",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/synchronization",
     ],
 )
 
@@ -214,21 +214,20 @@ cc_library(
         ":csvdb_conf_cc_proto",
         "//api/v1:column_cpp_proto",
         "//engine/util:filepath_helper",
+        "@abseil-cpp//absl/strings",
         "@com_github_duckdb//:duckdb",
-        "@com_github_gflags_gflags//:gflags",
-        "@com_google_absl//absl/strings",
+        "@gflags",
         "@yacl//yacl/base:exception",
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "duckdb_wrapper_test",
     srcs = ["duckdb_wrapper_test.cc"],
     deps = [
         ":duckdb_wrapper",
-        "@com_github_brpc_brpc//:butil",
-        "@com_github_fmtlib_fmt//:fmtlib",
-        "@com_google_googletest//:gtest_main",
+        "@brpc//:butil",
+        "@fmt",
     ],
 )
 
@@ -244,7 +243,7 @@ cc_library(
         "//engine/core:tensor_constructor",
         "//engine/util:spu_io",
         "//engine/util:tensor_util",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/strings",
         "@yacl//yacl/base:exception",
     ],
 )
@@ -262,7 +261,7 @@ cc_library(
         "//engine/exe:flags",
         "//engine/util:spu_io",
         "//engine/util:tensor_util",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/strings",
         "@dataproxy//dataproxy_sdk/cc:data_proxy_stream",
         "@yacl//yacl/base:exception",
     ],
@@ -273,20 +272,19 @@ cc_binary(
     srcs = ["dp_adaptor_kuscia_test.cc"],
     deps = [
         ":dp_adaptor",
-        "@com_google_absl//absl/debugging:failure_signal_handler",
-        "@com_google_absl//absl/debugging:symbolize",
-        "@com_google_absl//absl/flags:flag",
-        "@com_google_absl//absl/flags:parse",
-        "@com_google_googletest//:gtest",
+        "@abseil-cpp//absl/debugging:failure_signal_handler",
+        "@abseil-cpp//absl/debugging:symbolize",
+        "@abseil-cpp//absl/flags:flag",
+        "@abseil-cpp//absl/flags:parse",
+        "@googletest//:gtest",
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "dp_adaptor_test",
     srcs = ["dp_adaptor_test.cc"],
     deps = [
         ":dp_adaptor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -300,14 +298,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "csvdb_adaptor_test",
     srcs = ["csvdb_adaptor_test.cc"],
     deps = [
         ":csvdb_adaptor",
         "//engine/core:tensor_constructor",
-        "@com_github_brpc_brpc//:butil",
-        "@com_google_googletest//:gtest_main",
+        "@brpc//:butil",
     ],
 )
 
@@ -345,8 +342,8 @@ cc_library(
     deps = [
         ":http_router_cc_proto",
         ":router",
-        "@com_github_brpc_brpc//:brpc",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/strings",
+        "@brpc",
         "@yacl//yacl/base:exception",
     ],
 )
@@ -359,10 +356,10 @@ cc_library(
         ":csvdb_conf_cc_proto",
         ":router",
         "//engine/util:filepath_helper",
-        "@com_github_brpc_brpc//:bthread",
-        "@com_github_brpc_brpc//:butil",
-        "@com_github_grpc_grpc//:grpc++",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/strings",
+        "@brpc//:bthread",
+        "@brpc//:butil",
+        "@grpc//:grpc++",
         "@kuscia//proto/api/v1alpha1/datamesh:domaindata_cpp_grpc",
         "@kuscia//proto/api/v1alpha1/datamesh:domaindatasource_cpp_grpc",
         "@yacl//yacl/base:exception",
@@ -376,7 +373,7 @@ cc_binary(
     ],
     deps = [
         ":kuscia_datamesh_router",
-        "@com_google_absl//absl/debugging:failure_signal_handler",
-        "@com_google_absl//absl/debugging:symbolize",
+        "@abseil-cpp//absl/debugging:failure_signal_handler",
+        "@abseil-cpp//absl/debugging:symbolize",
     ],
 )

@@ -16,7 +16,6 @@
 
 #include <filesystem>
 
-#include "arrow/array.h"
 #include "arrow/testing/random.h"
 #include "arrow/type.h"
 #include "gtest/gtest.h"
@@ -61,7 +60,9 @@ TEST_F(TensorBatchReaderTest, ReadDisk) {
   size_t offset = 0;
   while (true) {
     auto array = reader->Next();
-    if (!array) break;
+    if (!array) {
+      break;
+    }
     offset += array->length();
     ASSERT_TRUE(batch_size == static_cast<size_t>(array->length()) ||
                 offset == array_num * array_num_rows);
@@ -94,7 +95,9 @@ TEST_F(TensorBatchReaderTest, ReadDiskOnlyOneBatch) {
   size_t offset = 0;
   while (true) {
     auto array = reader->Next();
-    if (!array) break;
+    if (!array) {
+      break;
+    }
     offset += array->length();
     ASSERT_TRUE(batch_size == static_cast<size_t>(array->length()) ||
                 offset == array_num * array_num_rows);
@@ -121,7 +124,9 @@ TEST_F(TensorBatchReaderTest, ReadMemory) {
   size_t offset = 0;
   while (true) {
     auto array = reader->Next();
-    if (!array) break;
+    if (!array) {
+      break;
+    }
     offset += array->length();
     ASSERT_TRUE(batch_size == static_cast<size_t>(array->length()) ||
                 offset == array_num * array_num_rows);

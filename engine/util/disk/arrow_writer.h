@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <utility>
+
 #include "arrow/ipc/writer.h"
 #include "arrow/type.h"
 
@@ -22,15 +24,15 @@ namespace scql::engine::util::disk {
 class ArrowWriter final {
  public:
   explicit ArrowWriter(std::shared_ptr<arrow::Schema> schema,
-                       const std::string& file_path)
-      : schema_(std::move(schema)), file_path_(file_path) {
+                       std::string file_path)
+      : schema_(std::move(schema)), file_path_(std::move(file_path)) {
     Init();
   }
 
   explicit ArrowWriter(const std::string& field_name,
                        const std::shared_ptr<arrow::DataType>& data_type,
-                       const std::string& file_path)
-      : file_path_(file_path) {
+                       std::string file_path)
+      : file_path_(std::move(file_path)) {
     auto field = std::make_shared<arrow::Field>(field_name, data_type);
     arrow::FieldVector fields = {field};
     schema_ = std::make_shared<arrow::Schema>(fields);
@@ -46,8 +48,8 @@ class ArrowWriter final {
   size_t WriteBatch(const arrow::RecordBatch& batch);
   size_t WriteBatch(const arrow::ChunkedArray& batch);
 
-  size_t GetRowNum() { return num_rows_; }
-  size_t GetNullCount() { return null_count_; }
+  size_t GetRowNum() const { return num_rows_; }
+  size_t GetNullCount() const { return null_count_; }
   std::shared_ptr<arrow::Schema> GetSchema() { return schema_; }
   std::string GetFilePath() { return file_path_; }
 

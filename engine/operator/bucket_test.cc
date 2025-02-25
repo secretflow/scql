@@ -16,7 +16,7 @@
 
 #include "arrow/array/concatenate.h"
 #include "arrow/compute/api_vector.h"
-#include "arrow/compute/exec.h"
+#include "arrow/compute/exec.h"  // NOLINT
 #include "arrow/type.h"
 #include "gtest/gtest.h"
 
@@ -64,8 +64,8 @@ BucketTestCase MockTestCase(const size_t tensor_length) {
   tc.keys.push_back(MockStringTensor("key", tensor_length));
   tc.datas.push_back(MockInt32Tensor("data1", tensor_length));
   tc.datas.push_back(MockStringTensor("data2", tensor_length));
-  tc.output_names.push_back("data1_out");
-  tc.output_names.push_back("data2_out");
+  tc.output_names.emplace_back("data1_out");
+  tc.output_names.emplace_back("data2_out");
   return tc;
 }
 
@@ -97,12 +97,12 @@ INSTANTIATE_TEST_SUITE_P(
         MockTestCase(100), MockTestCase(1100), MockTestCase(10000)));
 
 std::shared_ptr<arrow::Array> SortChunkedArray(
-    std::shared_ptr<arrow::ChunkedArray> arr) {
-  auto indices = arrow::compute::SortIndices(
-                     *arr.get(), arrow::compute::SortOrder::Ascending)
-                     .ValueOrDie();
+    const std::shared_ptr<arrow::ChunkedArray>& arr) {
+  auto indices =
+      arrow::compute::SortIndices(*arr, arrow::compute::SortOrder::Ascending)
+          .ValueOrDie();
   auto concat_array = arrow::Concatenate(arr->chunks()).ValueOrDie();
-  return arrow::compute::Take(*concat_array.get(), *indices.get()).ValueOrDie();
+  return arrow::compute::Take(*concat_array, *indices).ValueOrDie();
 }
 
 TEST_P(BucketTest, works) {
@@ -122,7 +122,7 @@ TEST_P(BucketTest, works) {
   EXPECT_NO_THROW({ op.Run(&ctx); });
 
   // Then check bob output
-  auto tensor_table = ctx.GetTensorTable();
+  auto* tensor_table = ctx.GetTensorTable();
   for (size_t i = 0; i < tc.output_names.size(); ++i) {
     auto in_arr = tc.datas[i].tensor->ToArrowChunkedArray();
     auto out = tensor_table->GetTensor(tc.output_names[i]);

@@ -137,9 +137,9 @@ func (pe *projectionEliminator) eliminate(p LogicalPlan, replace map[string]*exp
 
 	switch x := p.(type) {
 	case *LogicalJoin:
-		x.schema = buildLogicalJoinSchema(x.JoinType, x)
+		x.schema = buildLogicalJoinSchema(x.JoinType, x, x.Schema().Columns)
 	case *LogicalApply:
-		x.schema = buildLogicalJoinSchema(x.JoinType, x)
+		x.schema = buildLogicalJoinSchema(x.JoinType, x, x.Schema().Columns)
 	default:
 		for _, dst := range p.Schema().Columns {
 			resolveColumnAndReplace(dst, replace)
@@ -295,11 +295,11 @@ func (er *expressionRewriter) buildQuantifierPlan(plan4Agg *LogicalAggregation, 
 
 	// TODO: Add a Projection if any argument of aggregate funcs or group by items are scalar functions.
 	// plan4Agg.buildProjectionIfNecessary()
-	if !er.asScalar {
-		// For Semi LogicalApply without aux column, the result is no matter false or null. So we can add it to join predicate.
-		er.p, er.err = er.b.buildSemiApply(er.p, plan4Agg, []expression.Expression{cond}, false, false)
-		return
-	}
+	// if !er.asScalar {
+	// 	// For Semi LogicalApply without aux column, the result is no matter false or null. So we can add it to join predicate.
+	// 	er.p, er.err = er.b.buildSemiApply(er.p, plan4Agg, []expression.Expression{cond}, false, false)
+	// 	return
+	// }
 	// If we treat the result as a scalar value, we will add a projection with a extra column to output true, false or null.
 	outerSchemaLen := er.p.Schema().Len()
 	er.p = er.b.buildApplyWithJoinType(er.p, plan4Agg, InnerJoin)
@@ -318,4 +318,7 @@ func (er *expressionRewriter) buildQuantifierPlan(plan4Agg *LogicalAggregation, 
 	proj.names = append(proj.names, types.EmptyName)
 	proj.SetChildren(er.p)
 	er.p = proj
+
+	//scql change
+	er.asScalar = true
 }

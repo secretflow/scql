@@ -14,7 +14,7 @@
 
 #include <filesystem>
 
-#include "arrow/array.h"
+#include "arrow/chunked_array.h"
 #include "arrow/testing/random.h"
 #include "arrow/type.h"
 #include "benchmark/benchmark.h"

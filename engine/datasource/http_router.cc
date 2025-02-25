@@ -72,8 +72,8 @@ std::vector<DataSource> HttpRouter::Route(
     std::string res = cntl.response_attachment().to_string();
     google::protobuf::util::JsonParseOptions opts;
     opts.case_insensitive_enum_parsing = true;
-    auto status = google::protobuf::util::JsonStringToMessage(
-        google::protobuf::StringPiece(res), &response, opts);
+    auto status =
+        google::protobuf::util::JsonStringToMessage(res, &response, opts);
 
     if (!status.ok()) {
       YACL_THROW("Failed to parse rpc response to RouteResponse, reason={}",

@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "engine/framework/registry.h"
+#include "engine/framework/registry.h"  // NOLINT
 
 namespace scql::engine::op {
 

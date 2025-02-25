@@ -17,6 +17,7 @@ package graph
 import (
 	"encoding/base64"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
@@ -143,6 +144,7 @@ func checkParamStatusConstraintInternal[T statusConstraint](constraintNameToStat
 		if len(arguments) == 0 {
 			return fmt.Errorf("param:%v must contains at least one argument", param.ParamName)
 		}
+
 		expectedStatus, ok := constraintNameToStatus[param.ParameterStatusConstraintName]
 		if !ok {
 			statusConstraint, ok := paramStatusConstraint[param.ParameterStatusConstraintName]
@@ -150,21 +152,15 @@ func checkParamStatusConstraintInternal[T statusConstraint](constraintNameToStat
 				return fmt.Errorf("CheckParamStatusConstraint: can't find constraint for param:%v, constraintName:%v",
 					param.ParamName, param.ParameterStatusConstraintName)
 			}
-			found := false
-			for _, s := range statusConstraint.Status {
-				if args[param.ParamName][0].Status() == s {
-					found = true
-					break
-				}
-			}
-			if !found {
-				return fmt.Errorf("CheckParamStatusConstraint: invalid param status actual:%v, expected:%v", args[param.ParamName][0].Status(), statusConstraint)
+
+			if !slices.Contains(statusConstraint.Status, args[param.ParamName][0].Status()) {
+				return fmt.Errorf("CheckParamStatusConstraint: invalid status for param[%v] actual:%v, expected:%v", param.ParamName, args[param.ParamName][0].Status(), statusConstraint)
 			}
 			constraintNameToStatus[param.ParameterStatusConstraintName] = args[param.ParamName][0].Status()
-			continue
-		}
-		if args[param.ParamName][0].Status() != expectedStatus {
-			return fmt.Errorf("param status mismatch, actual:%v, expected:%v", args[param.ParamName][0].Status(), expectedStatus)
+		} else {
+			if args[param.ParamName][0].Status() != expectedStatus {
+				return fmt.Errorf("param status mismatch, actual:%v, expected:%v", args[param.ParamName][0].Status(), expectedStatus)
+			}
 		}
 	}
 	return nil
@@ -723,9 +719,6 @@ func (plan *GraphBuilder) AddNotNode(name string, input *Tensor, partyCodes []st
 }
 
 func (plan *GraphBuilder) AddIsNullNode(name string, input *Tensor) (*Tensor, error) {
-	if input.Status() != pb.TensorStatus_TENSORSTATUS_PRIVATE {
-		return nil, fmt.Errorf("AddIsNullNode: only support private input now")
-	}
 	output := plan.AddTensorAs(input)
 	output.Name = "isnull_out"
 	output.DType = pb.PrimitiveDataType_BOOL
@@ -776,13 +769,6 @@ func (plan *GraphBuilder) AddArrowFuncNode(nodeName, funcName string, funcOpt co
 }
 
 func (plan *GraphBuilder) AddIfNullNode(name string, expr *Tensor, altValue *Tensor) (output *Tensor, err error) {
-	if expr.Status() != pb.TensorStatus_TENSORSTATUS_PRIVATE {
-		return nil, fmt.Errorf("AddIfNullNode: only support private expr now")
-	}
-	if altValue.Status() != pb.TensorStatus_TENSORSTATUS_PRIVATE {
-		return nil, fmt.Errorf("AddIfNullNode: only support private altValue now")
-	}
-
 	output = plan.AddTensorAs(expr)
 	output.Name = "ifnull_out"
 	if _, err := plan.AddExecutionNode(name, operator.OpNameIfNull, map[string][]*Tensor{"Expr": {expr}, "AltValue": {altValue}},

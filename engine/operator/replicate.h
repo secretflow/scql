@@ -41,7 +41,7 @@ class Replicate : public Operator {
                       bool interleaving);
 
  private:
-  std::shared_ptr<arrow::ChunkedArray> ExtendArray(
+  static std::shared_ptr<arrow::ChunkedArray> ExtendArray(
       const std::shared_ptr<arrow::ChunkedArray>& array, int64_t extend_size,
       bool interleaving);
 };

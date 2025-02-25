@@ -31,6 +31,7 @@ var (
 	dbType             string
 	query              string
 	jobConf            string
+	view               string
 	enablePsiDetailLog bool
 
 	createCmd = &cobra.Command{
@@ -39,14 +40,16 @@ var (
 		Args:  cobra.MatchAll(cobra.MinimumNArgs(1), cobra.MaximumNArgs(2)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			switch args[0] {
-			case "project":
+			case Project:
 				return createProject()
-			case "table":
+			case Table:
 				if len(args) != 2 {
 					return fmt.Errorf("missing <name> for creating table")
 				}
 				return createTable(args[1])
-			case "job":
+			case View:
+				return createView(args[1])
+			case Job:
 				return createJob()
 			default:
 				return fmt.Errorf("not support create %v", args[0])
@@ -61,6 +64,7 @@ func init() {
 	createCmd.Flags().StringVar(&refTable, "ref-table", "", "the physical table name corresponding to the new table, e.g: 'test_table'")
 	createCmd.Flags().StringVar(&dbType, "db-type", "mysql", "the database type to which the table belongs, e.g: 'mysql'")
 	createCmd.Flags().StringVar(&query, "query", "", "the sql query for create job, e.g: 'select count(*) from ta'")
+	createCmd.Flags().StringVar(&view, "view", "", "the view body")
 	createCmd.Flags().StringVar(&jobConf, "job-conf", `{}`, `job conf in json format, e.g.: '{"session_expire_seconds": 86400}'
 	{
 		"session_expire_seconds": 86400, // Duration in seconds after which a session expires. If set to 0, falls back to project default setting
@@ -74,6 +78,18 @@ func init() {
 		"http_max_payload_size": 1048576 // Maximum payload size for HTTP requests
 	  }`)
 	createCmd.Flags().BoolVar(&enablePsiDetailLog, "enable-psi-detail-log", false, "whether enable psi detail log")
+}
+
+func createView(name string) error {
+	if projectID == "" {
+		return fmt.Errorf("flags project-id must not be empty")
+	}
+	err := brokerCommand.CreateView(projectID, name, view)
+	if err != nil {
+		return err
+	}
+	fmt.Println("create view succeeded")
+	return nil
 }
 
 func createProject() error {

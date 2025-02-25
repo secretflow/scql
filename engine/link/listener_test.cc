@@ -15,7 +15,6 @@
 #include "engine/link/listener.h"
 
 #include "gtest/gtest.h"
-#include "yacl/link/transport/channel_mem.h"
 
 namespace scql::engine {
 

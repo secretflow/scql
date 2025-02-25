@@ -21,7 +21,6 @@
 
 #include "engine/core/tensor_constructor.h"
 #include "engine/operator/test_util.h"
-#include "engine/util/psi_helper.h"
 
 namespace scql::engine::op {
 
@@ -405,7 +404,7 @@ TEST_P(InTest, Works) {
 
   // Then
   if (supported_algos.count(tc.in_algo) > 0) {
-    auto tensor_table = alice_ctx.GetSession()->GetTensorTable();
+    auto* tensor_table = alice_ctx.GetSession()->GetTensorTable();
     if (tc.reveal_to != test::kPartyAlice) {
       tensor_table = bob_ctx.GetSession()->GetTensorTable();
     }

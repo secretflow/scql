@@ -18,7 +18,7 @@
 
 #include "brpc/server.h"
 #include "gtest/gtest.h"
-#include "yacl/link/link.h"
+#include "yacl/link/link.h"  // NOLINT
 
 #include "engine/link/mux_link_factory.h"
 
@@ -28,7 +28,7 @@ namespace scql::engine {
 class MuxReceiverServiceImplTest : public ::testing::Test {};
 
 TEST_F(MuxReceiverServiceImplTest, Works) {
-  constexpr size_t kWorldSize = 3u;
+  constexpr size_t kWorldSize = 3U;
   std::vector<std::unique_ptr<ListenerManager>> listener_managers;
   std::vector<std::unique_ptr<MuxReceiverServiceImpl>> services;
   std::vector<brpc::Server> servers(kWorldSize);
@@ -48,12 +48,13 @@ TEST_F(MuxReceiverServiceImplTest, Works) {
   for (size_t rank = 0; rank < kWorldSize; rank++) {
     const std::string rank_host =
         butil::endpoint2str(servers[rank].listen_address()).c_str();
-    link_desc.parties.push_back({fmt::format("party{}", rank), rank_host});
+    link_desc.parties.emplace_back(fmt::format("party{}", rank), rank_host);
   }
   std::string new_id = link_desc.id + "new";
 
   auto proc = [&](yacl::link::ILinkFactory* factory, size_t self_rank) -> void {
-    std::shared_ptr<yacl::link::Context> lc0, lc1;
+    std::shared_ptr<yacl::link::Context> lc0;
+    std::shared_ptr<yacl::link::Context> lc1;
     EXPECT_NO_THROW(lc0 = factory->CreateContext(link_desc, self_rank));
     EXPECT_TRUE(lc0 != nullptr);
     EXPECT_NO_THROW(lc0->ConnectToMesh());

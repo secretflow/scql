@@ -70,7 +70,6 @@ jobs:
           command: |
             set +e
             declare -i test_status
-            pip install numpy
             bazel --host_jvm_args=-Xmx16g test //engine/... -c opt --jobs=10 --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
 
             sh ../devtools/rename-junit-xml.sh
@@ -130,7 +129,6 @@ jobs:
           command: |
             set +e
             declare -i test_status
-            pip install numpy
             bazel --host_jvm_args=-Xmx16g test //engine/... -c opt --jobs=10 --ui_event_filters=-info,-debug,-warning --test_output=errors| tee test_result.log; test_status=${PIPESTATUS[0]}
 
             sh ../devtools/rename-junit-xml.sh

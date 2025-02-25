@@ -14,6 +14,7 @@
 
 #include "engine/operator/copy.h"
 
+#include "arrow/buffer.h"
 #include "arrow/io/memory.h"
 #include "arrow/ipc/reader.h"
 #include "arrow/ipc/writer.h"
@@ -21,14 +22,32 @@
 
 #include "engine/core/arrow_helper.h"
 #include "engine/core/tensor_constructor.h"
-#include "engine/core/type.h"
-#include "engine/util/logging.h"
-#include "engine/util/ndarray_to_arrow.h"
-#include "engine/util/spu_io.h"
 #include "engine/util/table_util.h"
 #include "engine/util/tensor_util.h"
 
 namespace scql::engine::op {
+
+namespace {
+
+// the TakeYaclBuffer will take ownership of the yacl buffer to avoid copying
+class TakeYaclBuffer : public arrow::Buffer {
+ public:
+  explicit TakeYaclBuffer(yacl::Buffer buf)
+      : arrow::Buffer(nullptr, 0), buf_(std::move(buf)) {
+    is_mutable_ = false;
+    data_ = buf_.data<const uint8_t>();
+    size_ = buf_.size();
+    capacity_ = size_;
+    is_cpu_ = true;
+  }
+
+  ~TakeYaclBuffer() = default;
+
+ private:
+  yacl::Buffer buf_;
+};
+
+}  // namespace
 
 const std::string Copy::kOpType("Copy");
 
@@ -161,9 +180,7 @@ std::shared_ptr<arrow::Buffer> Copy::SerializeRecordBatch(
 }
 
 std::shared_ptr<arrow::Table> Copy::DeserializeTable(yacl::Buffer value) {
-  auto buffer = std::make_shared<arrow::Buffer>(value.data<const uint8_t>(),
-                                                value.size());
-  value.release();  // buffer owns datas.
+  auto buffer = std::make_shared<TakeYaclBuffer>(std::move(value));
 
   auto buffer_reader = std::make_shared<arrow::io::BufferReader>(buffer);
 

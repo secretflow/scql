@@ -15,8 +15,7 @@
 #include "engine/util/logging.h"
 
 #include "butil/file_util.h"
-#include "fmt/format.h"
-#include "fmt/printf.h"
+#include "fmt/base.h"
 #include "spdlog/sinks/rotating_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"

@@ -14,21 +14,15 @@
 
 #include "engine/operator/trigonometric.h"
 
-#include "arrow/array.h"
-#include "arrow/chunked_array.h"
-#include "arrow/compute/api_scalar.h"
-#include "arrow/compute/cast.h"
+#include "arrow/compute/exec.h"
 #include "arrow/datum.h"
 #include "arrow/result.h"
 #include "arrow/type.h"
 #include "arrow/type_fwd.h"
-#include "arrow/type_traits.h"
-#include "arrow/util/checked_cast.h"
 #include "libspu/kernel/hlo/basic_binary.h"
 #include "libspu/kernel/hlo/basic_unary.h"
 #include "libspu/kernel/hlo/casting.h"
 
-#include "engine/core/arrow_helper.h"
 #include "engine/core/tensor.h"
 #include "engine/core/tensor_constructor.h"
 #include "engine/util/spu_io.h"
@@ -65,8 +59,8 @@ void TrigonometricFunction::ExecuteInSecret(ExecContext* ctx) {
   const auto& input_pb = ctx->GetInput(kIn);
   const auto& output_pb = ctx->GetOutput(kOut);
 
-  auto device_symbols = ctx->GetSession()->GetDeviceSymbols();
-  auto sctx = ctx->GetSession()->GetSpuContext();
+  auto* device_symbols = ctx->GetSession()->GetDeviceSymbols();
+  auto* sctx = ctx->GetSession()->GetSpuContext();
 
   for (int i = 0; i < input_pb.size(); i++) {
     auto spu_value = device_symbols->getVar(

@@ -27,14 +27,28 @@ var (
 		Args:  cobra.MatchAll(cobra.ExactArgs(2)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			switch args[0] {
-			case "table":
+			case Table:
 				return deleteTable(args[1])
+			case View:
+				return deleteView(args[1])
 			default:
 				return fmt.Errorf("not support delete %v", args[0])
 			}
 		},
 	}
 )
+
+func deleteView(name string) error {
+	if projectID == "" {
+		return fmt.Errorf("flags project-id must not be empty")
+	}
+	err := brokerCommand.DeleteView(projectID, name)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("delete view '%s' in '%s' succeeded\n", name, projectID)
+	return nil
+}
 
 func deleteTable(name string) error {
 	if projectID == "" {

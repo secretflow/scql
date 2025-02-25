@@ -177,7 +177,7 @@ pb::ExecNode CastTest::MakeExecNode(const CastTestCase& tc) {
 void CastTest::FeedInputs(const std::vector<ExecContext*>& ctxs,
                           const CastTestCase& tc) {
   if (tc.input_status == pb::TensorStatus::TENSORSTATUS_PRIVATE) {
-    for (auto ctx : ctxs) {
+    for (auto* ctx : ctxs) {
       test::FeedInputsAsPrivate(ctx, {tc.input});
     }
   } else if (tc.input_status == pb::TensorStatus::TENSORSTATUS_SECRET) {

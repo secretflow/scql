@@ -17,7 +17,6 @@
 #include "gtest/gtest.h"
 
 #include "engine/core/tensor_constructor.h"
-#include "engine/operator/if.h"
 #include "engine/operator/test_util.h"
 
 namespace scql::engine::op {
@@ -235,14 +234,16 @@ TEST_P(IfTest, works) {
   auto sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
   std::vector<ExecContext> exec_ctxs;
-  for (size_t idx = 0; idx < sessions.size(); ++idx) {
-    exec_ctxs.emplace_back(node, sessions[idx].get());
+  exec_ctxs.reserve(sessions.size());
+  for (auto& session : sessions) {
+    exec_ctxs.emplace_back(node, session.get());
   }
 
   // feed inputs
   std::vector<ExecContext*> ctx_ptrs;
-  for (size_t idx = 0; idx < exec_ctxs.size(); ++idx) {
-    ctx_ptrs.emplace_back(&exec_ctxs[idx]);
+  ctx_ptrs.reserve(exec_ctxs.size());
+  for (auto& exec_ctx : exec_ctxs) {
+    ctx_ptrs.emplace_back(&exec_ctx);
   }
   FeedInputs(ctx_ptrs, tc);
 
@@ -254,7 +255,7 @@ TEST_P(IfTest, works) {
   }
 
   // Then check alice's outputs
-  auto tensor_table = ctx_ptrs[0]->GetTensorTable();
+  auto* tensor_table = ctx_ptrs[0]->GetTensorTable();
 
   TensorPtr out;
   if (tc.value_false_status == pb::TENSORSTATUS_PRIVATE) {

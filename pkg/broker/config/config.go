@@ -147,7 +147,6 @@ type EngineConfig struct {
 type KusciaSchedulerConf struct {
 	KusciaApiConf `yaml:",inline"`
 
-	MaxPollTimes int           `yaml:"max_poll_times"`
 	PollInterval time.Duration `yaml:"poll_interval"`
 	MaxWaitTime  time.Duration `yaml:"max_wait_time"`
 	AppImage     string        `yaml:"app_image"`
@@ -217,7 +216,6 @@ func newDefaultConfig() *Config {
 		ClientTimeout: DefaultEngineClientTimeout,
 		Protocol:      DefaultEngineProtocol,
 		KusciaSchedulerOption: &KusciaSchedulerConf{
-			MaxPollTimes: 20,
 			PollInterval: time.Second,
 			MaxWaitTime:  time.Minute,
 		},

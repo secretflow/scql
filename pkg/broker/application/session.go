@@ -171,6 +171,8 @@ func NewSession(ctx context.Context, info *ExecutionInfo, app *App, asyncMode, d
 		revealGroupCount = projConf.GetRevealGroupCount()
 	}
 	spuConf = projConf.SpuRuntimeCfg
+	// TODO make ColocatedOptimization configurable
+	spuConf.ExperimentalEnableColocatedOptimization = true
 	info.CompileOpts = &pb.CompileOptions{
 		SpuConf: spuConf,
 		SecurityCompromise: &pb.SecurityCompromiseConfig{

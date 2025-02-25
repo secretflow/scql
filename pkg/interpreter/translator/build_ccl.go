@@ -15,6 +15,7 @@
 package translator
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/secretflow/scql/pkg/expression"
@@ -158,18 +159,11 @@ func (n *JoinNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error
 	}
 
 	joinKeyCCLs := make(map[int64]*ccl.CCL)
-	allJoinColumnUniqueIds := make(map[int64]bool)
-	// extract data source party of join tables
-	for _, col := range join.Schema().Columns {
-		allJoinColumnUniqueIds[col.UniqueID] = true
-	}
 	// fill child data source parties
 	for i, child := range join.Children() {
 		var childDataSourceParty []string
 		for _, column := range child.Schema().Columns {
-			if allJoinColumnUniqueIds[column.UniqueID] {
-				childDataSourceParty = append(childDataSourceParty, colTracer.FindSourceParties(column.UniqueID)...)
-			}
+			childDataSourceParty = append(childDataSourceParty, colTracer.FindSourceParties(column.UniqueID)...)
 		}
 		n.childDataSourceParties[i] = sliceutil.SliceDeDup(childDataSourceParty)
 	}
@@ -602,7 +596,7 @@ func (n *UnionAllNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) e
 				for _, child := range n.Children() {
 					childCCLStr += fmt.Sprintf(" ccl of child %d is (%v)", i, child.CCL()[child.Schema().Columns[i].UniqueID])
 				}
-				return fmt.Errorf(childCCLStr)
+				return errors.New(childCCLStr)
 			}
 		}
 		result[c.UniqueID] = newCC
@@ -726,7 +720,9 @@ func (n *WindowNode) buildAggWindowCCL(ctx *ccl.Context, colTracer *ccl.ColumnTr
 }
 
 func (m *MaxOneRowNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
-	m.buildChildCCL(ctx, colTracer)
+	if err := m.buildChildCCL(ctx, colTracer); err != nil {
+		return err
+	}
 	childCCL, err := extractChildCCL(m)
 	if err != nil {
 		return err

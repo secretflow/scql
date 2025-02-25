@@ -18,7 +18,6 @@
 #include <memory>
 
 #include "gtest/gtest.h"
-#include "libspu/core/config.h"
 
 #include "engine/framework/session.h"
 #include "engine/operator/test_util.h"
@@ -27,7 +26,7 @@ namespace scql::engine {
 
 class TestFactory : public yacl::link::ILinkFactory {
  public:
-  TestFactory(ListenerManager* listener_manager)
+  explicit TestFactory(ListenerManager* listener_manager)
       : listener_manager_(listener_manager) {}
 
   std::shared_ptr<yacl::link::Context> CreateContext(

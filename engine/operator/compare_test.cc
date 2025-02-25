@@ -679,14 +679,16 @@ TEST_P(VariadicCompareTest, Works) {
   auto node = MakeExecNode(tc);
   auto sessions = test::MakeMultiPCSession(std::get<0>(parm));
   std::vector<ExecContext> exec_ctxs;
-  for (size_t idx = 0; idx < sessions.size(); ++idx) {
-    exec_ctxs.emplace_back(node, sessions[idx].get());
+  exec_ctxs.reserve(sessions.size());
+  for (auto& session : sessions) {
+    exec_ctxs.emplace_back(node, session.get());
   }
 
   // feed inputs
   std::vector<ExecContext*> ctx_ptrs;
-  for (size_t idx = 0; idx < exec_ctxs.size(); ++idx) {
-    ctx_ptrs.emplace_back(&exec_ctxs[idx]);
+  ctx_ptrs.reserve(exec_ctxs.size());
+  for (auto& exec_ctx : exec_ctxs) {
+    ctx_ptrs.emplace_back(&exec_ctx);
   }
   FeedInputs(ctx_ptrs, tc);
 

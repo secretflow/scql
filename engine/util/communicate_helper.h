@@ -16,14 +16,11 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <memory>
 #include <utility>
 #include <vector>
 
 #include "msgpack.hpp"
-#include "yacl/base/exception.h"
-
-#include "engine/util/spu_io.h"
+#include "yacl/link/context.h"
 
 namespace scql::engine::util {
 
@@ -32,7 +29,7 @@ static constexpr char kCountSuffix[] = "count info";
 static constexpr char kBatchSuffix[] = "batch";
 
 template <typename T>
-void SendMassiveMsgpack(std::shared_ptr<yacl::link::Context> lctx,
+void SendMassiveMsgpack(const std::shared_ptr<yacl::link::Context>& lctx,
                         const std::string& tag, int64_t peer_rank,
                         const std::vector<T>& data) {
   // send total count and batch count
@@ -59,8 +56,9 @@ void SendMassiveMsgpack(std::shared_ptr<yacl::link::Context> lctx,
 }
 
 template <typename T>
-std::vector<T> RecvMassiveMsgpack(std::shared_ptr<yacl::link::Context> lctx,
-                                  const std::string& tag, int64_t peer_rank) {
+std::vector<T> RecvMassiveMsgpack(
+    const std::shared_ptr<yacl::link::Context>& lctx, const std::string& tag,
+    int64_t peer_rank) {
   auto count_tag = fmt::format("{} {}", tag, kCountSuffix);
   auto count_buf = lctx->Recv(peer_rank, count_tag);
   auto oh =

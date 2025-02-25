@@ -33,8 +33,10 @@ void Shuffle::Validate(ExecContext* ctx) {
   YACL_ENFORCE(inputs.size() == outputs.size(),
                "operator Shuffle output and input should have the same size");
 
-  YACL_ENFORCE(util::AreTensorsStatusMatched(inputs, pb::TENSORSTATUS_SECRET));
-  YACL_ENFORCE(util::AreTensorsStatusMatched(outputs, pb::TENSORSTATUS_SECRET));
+  YACL_ENFORCE(util::AreTensorsStatusMatchedOneOf(
+      inputs, {pb::TENSORSTATUS_SECRET, pb::TENSORSTATUS_PUBLIC}));
+  YACL_ENFORCE(util::AreTensorsStatusMatchedOneOf(
+      outputs, {pb::TENSORSTATUS_SECRET, pb::TENSORSTATUS_PUBLIC}));
 }
 
 void Shuffle::Execute(ExecContext* ctx) {

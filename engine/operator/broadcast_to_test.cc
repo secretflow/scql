@@ -117,20 +117,22 @@ TEST_P(BroadcastToTest, works) {
   auto sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
   std::vector<ExecContext> exec_ctxs;
-  for (size_t idx = 0; idx < sessions.size(); ++idx) {
-    exec_ctxs.emplace_back(node, sessions[idx].get());
+  exec_ctxs.reserve(sessions.size());
+  for (auto& session : sessions) {
+    exec_ctxs.emplace_back(node, session.get());
   }
 
   // feed inputs
   std::vector<ExecContext*> ctx_ptrs;
-  for (size_t idx = 0; idx < exec_ctxs.size(); ++idx) {
-    ctx_ptrs.emplace_back(&exec_ctxs[idx]);
+  ctx_ptrs.reserve(exec_ctxs.size());
+  for (auto& exec_ctx : exec_ctxs) {
+    ctx_ptrs.emplace_back(&exec_ctx);
   }
   FeedInputs(ctx_ptrs, tc);
 
   // When
   BroadcastTo op;
-  EXPECT_NO_THROW(op.Run(&exec_ctxs[0]));
+  EXPECT_NO_THROW(op.Run(exec_ctxs.data()));
 
   // Then
   // check alice output
@@ -139,8 +141,8 @@ TEST_P(BroadcastToTest, works) {
     if (tc.ref_tensor_status == pb::TENSORSTATUS_PRIVATE) {
       actual_out = exec_ctxs[0].GetTensorTable()->GetTensor(expect_t.name);
     } else {
-      auto sctx = exec_ctxs[0].GetSession()->GetSpuContext();
-      auto device_symbols = exec_ctxs[0].GetSession()->GetDeviceSymbols();
+      auto* sctx = exec_ctxs[0].GetSession()->GetSpuContext();
+      auto* device_symbols = exec_ctxs[0].GetSession()->GetDeviceSymbols();
       util::SpuOutfeedHelper outfeed_helper(sctx, device_symbols);
 
       actual_out = outfeed_helper.DumpPublic(expect_t.name);

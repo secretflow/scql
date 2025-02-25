@@ -175,8 +175,8 @@ func (graph *Graph) DumpBriefPipeline() string {
 	var builder strings.Builder
 	fmt.Fprintln(&builder)
 	for i, pipeline := range graph.Pipelines {
-		fmt.Fprintln(&builder, fmt.Sprintf("pipeline %d {", i))
-		fmt.Fprintln(&builder, fmt.Sprintf("Batched: %v", pipeline.Batched))
+		fmt.Fprintf(&builder, "pipeline %d {\n", i)
+		fmt.Fprintf(&builder, "Batched: %v\n", pipeline.Batched)
 		nodes := []*ExecutionNode{}
 		for n := range pipeline.Nodes {
 			nodes = append(nodes, n)
@@ -197,8 +197,8 @@ func (graph *Graph) DumpBriefPipeline() string {
 		}
 		slices.Sort(inputTensorIDs)
 		slices.Sort(outputTensorIDs)
-		fmt.Fprint(&builder, fmt.Sprintf("Inputs: %+v\n", inputTensorIDs))
-		fmt.Fprint(&builder, fmt.Sprintf("Outputs: %+v\n", outputTensorIDs))
+		fmt.Fprintf(&builder, "Inputs: %+v\n", inputTensorIDs)
+		fmt.Fprintf(&builder, "Outputs: %+v\n", outputTensorIDs)
 		fmt.Fprint(&builder, "}\n")
 	}
 	return builder.String()

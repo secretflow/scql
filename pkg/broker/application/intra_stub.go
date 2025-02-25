@@ -95,6 +95,18 @@ func (stub *IntraStub) ListTables(url string, req *pb.ListTablesRequest, respons
 	return stub.baseCall(url, constant.ListTablesPath, req, response)
 }
 
+func (stub *IntraStub) CreateView(url string, req *pb.CreateViewRequest, response *pb.CreateViewResponse) (err error) {
+	return stub.baseCall(url, constant.CreateViewPath, req, response)
+}
+
+func (stub *IntraStub) DropView(url string, req *pb.DropViewRequest, response *pb.DropViewResponse) (err error) {
+	return stub.baseCall(url, constant.DropViewPath, req, response)
+}
+
+func (stub *IntraStub) ListViews(url string, req *pb.ListViewsRequest, response *pb.ListViewsResponse) (err error) {
+	return stub.baseCall(url, constant.ListViewsPath, req, response)
+}
+
 func (stub *IntraStub) GrantCCL(url string, req *pb.GrantCCLRequest, response *pb.GrantCCLResponse) (err error) {
 	return stub.baseCall(url, constant.GrantCCLPath, req, response)
 }

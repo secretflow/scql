@@ -29,7 +29,6 @@ import (
 	"google.golang.org/protobuf/proto"
 	"gorm.io/gorm"
 
-	"github.com/secretflow/scql/pkg/audit"
 	bcfg "github.com/secretflow/scql/pkg/broker/config"
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/executor"
@@ -61,7 +60,6 @@ func (app *App) SubmitAndGetHandler(c *gin.Context) {
 		logEntry.CostTime = time.Since(timeStart)
 		logrus.Errorf("%v|ClientIP:%v", logEntry, c.ClientIP())
 		c.String(http.StatusOK, errorResponse(scql.Code_BAD_REQUEST, "invalid request body", message.EncodingTypeJson))
-		audit.RecordUncategorizedEvent(status.New(scql.Code_BAD_REQUEST, "invalid request body"), c.ClientIP(), "submitAndGet")
 		return
 	}
 
@@ -74,7 +72,6 @@ func (app *App) SubmitAndGetHandler(c *gin.Context) {
 	logEntry.RawRequest = SCDBQueryRequestToLogString(request)
 	logEntry.CostTime = time.Since(timeStart)
 
-	audit.RecordRunSyncQueryEvent(request, resp, timeStart, c.ClientIP())
 	if resp.Status.Code != int32(scql.Code_OK) {
 		logEntry.Reason = constant.ReasonInvalidRequest
 		logEntry.ErrorMsg = resp.Status.Message
@@ -373,7 +370,7 @@ func (app *App) runDQL(ctx context.Context, s *session, async bool) (*scql.SCDBQ
 	}
 
 	engineClient := executor.NewEngineClient(
-		executor.EngineClientTypeHTTP,
+		app.config.Engine.ClientMode,
 		app.config.Engine.ClientTimeout,
 		&bcfg.TLSConf{
 			Mode:       app.config.Engine.TLSCfg.Mode,

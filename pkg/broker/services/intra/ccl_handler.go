@@ -20,6 +20,8 @@ import (
 
 	"golang.org/x/exp/slices"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/secretflow/scql/pkg/broker/services/common"
 	"github.com/secretflow/scql/pkg/broker/storage"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
@@ -69,7 +71,13 @@ func (svc *grpcIntraSvc) GrantCCL(ctx context.Context, req *pb.GrantCCLRequest) 
 			targetParties = append(targetParties, p)
 		}
 	}
-	go common.PostSyncInfo(svc.app, req.GetProjectId(), pb.ChangeEntry_GrantCCL, privs, targetParties)
+
+	go func() {
+		postSyncErr := common.PostSyncInfo(svc.app, req.GetProjectId(), pb.ChangeEntry_GrantCCL, privs, targetParties)
+		if postSyncErr != nil {
+			logrus.Errorf("SyncInfo failed: %v", postSyncErr)
+		}
+	}()
 
 	return &pb.GrantCCLResponse{
 		Status: &pb.Status{
@@ -113,7 +121,10 @@ func (svc *grpcIntraSvc) RevokeCCL(c context.Context, req *pb.RevokeCCLRequest) 
 				targetParties = append(targetParties, p)
 			}
 		}
-		common.PostSyncInfo(svc.app, req.GetProjectId(), pb.ChangeEntry_RevokeCCL, privIDs, targetParties)
+		postSyncErr := common.PostSyncInfo(svc.app, req.GetProjectId(), pb.ChangeEntry_RevokeCCL, privIDs, targetParties)
+		if postSyncErr != nil {
+			logrus.Errorf("PostSyncInfo failed: %v", postSyncErr)
+		}
 	}()
 
 	return &pb.RevokeCCLResponse{

@@ -12,10 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "arrow/array.h"
-
 #include "engine/core/tensor.h"
-#include "engine/core/tensor_batch_reader.h"
 #include "engine/core/tensor_constructor.h"
 #include "engine/framework/session.h"
 

@@ -58,8 +58,8 @@ CREATE TABLE `columns` (
   `ordinal_position` bigint(20) unsigned DEFAULT NULL COMMENT '''ordinal position''',
   `type` varchar(32) DEFAULT NULL COMMENT '''column type''',
   `description` varchar(1024) DEFAULT NULL COMMENT '''column description''',
-  `created_at` timestamp DEFAULT NULL,
-  `updated_at` timestamp DEFAULT NULL,
+  `created_at` timestamp(6) DEFAULT NULL,
+  `updated_at` timestamp(6) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_db_table_col` (`db`,`table_name`,`column_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
@@ -83,8 +83,8 @@ CREATE TABLE `database_privs` (
   `describe_priv` tinyint(1) DEFAULT NULL COMMENT '''describe privilege''',
   `show_priv` tinyint(1) DEFAULT NULL COMMENT '''show privilege''',
   `create_view_priv` tinyint(1) DEFAULT NULL COMMENT '''create view privilege''',
-  `created_at` timestamp DEFAULT NULL,
-  `updated_at` timestamp DEFAULT NULL,
+  `created_at` timestamp(6) DEFAULT NULL,
+  `updated_at` timestamp(6) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_host_user_db` (`host`,`db`,`user`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
@@ -100,8 +100,8 @@ DROP TABLE IF EXISTS `databases`;
 CREATE TABLE `databases` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '''unique id''',
   `db` varchar(64) DEFAULT NULL COMMENT '''database name''',
-  `created_at` timestamp DEFAULT NULL,
-  `updated_at` timestamp DEFAULT NULL,
+  `created_at` timestamp(6) DEFAULT NULL,
+  `updated_at` timestamp(6) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_db` (`db`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
@@ -124,8 +124,8 @@ CREATE TABLE `table_privs` (
   `drop_priv` tinyint(1) DEFAULT NULL COMMENT '''drop privilege''',
   `grant_priv` tinyint(1) DEFAULT NULL COMMENT '''grant privilege''',
   `visibility_priv` bigint(20) unsigned DEFAULT NULL COMMENT '''visibility privilege''',
-  `created_at` timestamp DEFAULT NULL,
-  `updated_at` timestamp DEFAULT NULL,
+  `created_at` timestamp(6) DEFAULT NULL,
+  `updated_at` timestamp(6) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_host_user_db_table` (`host`,`db`,`user`,`table_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
@@ -150,8 +150,8 @@ CREATE TABLE `tables` (
   `is_view` tinyint(1) DEFAULT NULL COMMENT '''this table is a view''',
   `select_string` longtext COMMENT '''the internal select query in string format''',
   `db_type` bigint(20) DEFAULT 0 COMMENT '''database type where table data stored''',
-  `created_at` timestamp DEFAULT NULL,
-  `updated_at` timestamp DEFAULT NULL,
+  `created_at` timestamp(6) DEFAULT NULL,
+  `updated_at` timestamp(6) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_db_table` (`db`,`table_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
@@ -181,8 +181,8 @@ CREATE TABLE `users` (
   `eng_token` varchar(256) DEFAULT NULL,
   `eng_pubkey` varchar(256) DEFAULT NULL,
   `eng_endpoints` varchar(256) DEFAULT NULL,
-  `created_at` timestamp DEFAULT NULL,
-  `updated_at` timestamp DEFAULT NULL,
+  `created_at` timestamp(6) DEFAULT NULL,
+  `updated_at` timestamp(6) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_host_user` (`host`,`user`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;

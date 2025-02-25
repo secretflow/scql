@@ -1,6 +1,7 @@
 FROM ubuntu:jammy AS base
 
 ARG TARGETPLATFORM
+RUN echo "I'm building for $TARGETPLATFORM"
 
 ENV TZ=Asia/Shanghai
 

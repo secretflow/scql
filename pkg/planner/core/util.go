@@ -17,6 +17,7 @@ import (
 	"github.com/secretflow/scql/pkg/expression"
 	"github.com/secretflow/scql/pkg/parser/ast"
 	"github.com/secretflow/scql/pkg/types"
+	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
 
 // AggregateFuncExtractor visits Expr tree.
@@ -100,7 +101,7 @@ func (s *logicalSchemaProducer) SetSchema(schema *expression.Schema) {
 	s.schema = schema
 }
 
-func buildLogicalJoinSchema(joinType JoinType, join LogicalPlan) *expression.Schema {
+func buildLogicalJoinSchema(joinType JoinType, join LogicalPlan, parentUsedCols []*expression.Column) *expression.Schema {
 	leftSchema := join.Children()[0].Schema()
 	switch joinType {
 	case SemiJoin, AntiSemiJoin:
@@ -115,6 +116,13 @@ func buildLogicalJoinSchema(joinType JoinType, join LogicalPlan) *expression.Sch
 		resetNotNullFlag(newSchema, leftSchema.Len(), newSchema.Len())
 	} else if joinType == RightOuterJoin {
 		resetNotNullFlag(newSchema, 0, leftSchema.Len())
+	}
+	if len(parentUsedCols) != 0 {
+		used := GetUsedList(parentUsedCols, newSchema)
+		newSchema.Columns = sliceutil.Take(newSchema.Columns, used)
+	} else {
+		// if parent node don't use any column, we only keep the first column
+		newSchema.Columns = []*expression.Column{newSchema.Columns[0]}
 	}
 	return newSchema
 }
@@ -151,4 +159,13 @@ func (s *baseSchemaProducer) SetSchema(schema *expression.Schema) {
 func (s *baseSchemaProducer) setSchemaAndNames(schema *expression.Schema, names types.NameSlice) {
 	s.schema = schema
 	s.names = names
+}
+
+func GetUsedList(usedCols []*expression.Column, schema *expression.Schema) []bool {
+	tmpSchema := expression.NewSchema(usedCols...)
+	used := make([]bool, schema.Len())
+	for i, col := range schema.Columns {
+		used[i] = tmpSchema.Contains(col)
+	}
+	return used
 }

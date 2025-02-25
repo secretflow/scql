@@ -120,7 +120,10 @@ func (r *QueryRunner) prepareData(usedTableNames, intoParties []string) (dataPar
 			return
 		}
 		// finish old transaction
-		txn.Finish(nil)
+		err = txn.Finish(nil)
+		if err != nil {
+			logrus.Errorf("prepareData: finish old transaction err: %s", err)
+		}
 		err = common.AskProjectInfoFromParties(session.App, session.ExecuteInfo.ProjectID, notFoundTables, []string{}, sliceutil.Subtraction(members, []string{session.App.Conf.PartyCode}))
 		if err != nil {
 			logrus.Warningf("prepareData: get not found tables %+v err: %s", notFoundTables, err)
@@ -136,6 +139,12 @@ func (r *QueryRunner) prepareData(usedTableNames, intoParties []string) (dataPar
 			return nil, nil, fmt.Errorf("prepareData: table %+v not found", notFoundTables)
 		}
 	}
+
+	r.tables, err = common.ExpandTablesInView(txn, session.ExecuteInfo.ProjectID, r.tables)
+	if err != nil {
+		return nil, nil, fmt.Errorf("prepareData: expand tables in view err: %s", err)
+	}
+
 	var parties []string
 	party2Tables := make(map[string][]core.DbTable)
 	tableToRefs := make(map[core.DbTable]core.DbTable)
@@ -171,7 +180,11 @@ func (r *QueryRunner) prepareData(usedTableNames, intoParties []string) (dataPar
 	r.info = graph.NewEnginesInfo(partyInfo, party2Tables)
 	r.info.UpdateTableToRefs(tableToRefs)
 	// get ccls
-	columnPrivs, err := txn.ListColumnConstraints(session.ExecuteInfo.ProjectID, usedTableNames, workParties)
+	var actualUsedTableNames []string
+	for _, t := range r.tables {
+		actualUsedTableNames = append(actualUsedTableNames, t.Table.TableName)
+	}
+	columnPrivs, err := txn.ListColumnConstraints(session.ExecuteInfo.ProjectID, actualUsedTableNames, workParties)
 	r.ccls = storage.ColumnPrivs2ColumnControls(columnPrivs)
 	return
 }
@@ -219,7 +232,12 @@ func (r *QueryRunner) CreateInfoSchema(tables []storage.TableMeta) (result infos
 			State:       model.StatePublic,
 			PKIsHandle:  false,
 		}
-		// TODO: support view
+		if tbl.Table.IsView {
+			tblInfo.View = &model.ViewInfo{
+				Algorithm:  model.AlgorithmMerge,
+				SelectStmt: tbl.Table.SelectString,
+			}
+		}
 
 		for i, col := range tbl.Columns {
 			colTyp := strings.ToLower(col.DType)
@@ -274,13 +292,13 @@ func buildCatalog(tables []storage.TableMeta) *pb.Catalog {
 	for _, tbl := range tables {
 		tblEntry := &pb.TableEntry{
 			TableName: fmt.Sprintf("%s.%s", tbl.Table.ProjectID, tbl.Table.TableName),
-			// TODO: support view
-			IsView:   false,
-			RefTable: tbl.Table.RefTable,
-			DbType:   tbl.Table.DBType,
+			IsView:    tbl.Table.IsView,
+			RefTable:  tbl.Table.RefTable,
+			DbType:    tbl.Table.DBType,
 			Owner: &pb.PartyId{
 				Code: tbl.Table.Owner,
 			},
+			SelectString: tbl.Table.SelectString,
 		}
 		for _, col := range tbl.Columns {
 			colEntry := &pb.TableEntry_Column{
@@ -399,7 +417,10 @@ func (r *QueryRunner) Execute(usedTables []core.DbTable) (syncResult *pb.QueryRe
 			return nil, err
 		}
 		for code, checksum := range localChecksums {
-			s.SaveLocalChecksum(code, checksum)
+			err = s.SaveLocalChecksum(code, checksum)
+			if err != nil {
+				return nil, fmt.Errorf("failed to save local checksum: %v", err)
+			}
 		}
 		// check checksum again
 		if err := s.CheckChecksum(); err != nil {

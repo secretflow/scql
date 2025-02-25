@@ -20,8 +20,6 @@ import (
 	"strconv"
 	"time"
 
-	"google.golang.org/protobuf/encoding/protojson"
-
 	"github.com/secretflow/scql/pkg/broker/application"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/util/message"
@@ -32,6 +30,53 @@ type Command struct {
 	host      string
 	timeoutS  int
 	intraStub application.IntraStub
+}
+
+type ResponseCheck interface {
+	GetStatusCode() int32
+	FormatResponse() string
+}
+
+type ResponseWrapper[T StatusGetter] struct {
+	Response T
+}
+
+type StatusGetter interface {
+	GetStatus() *pb.Status
+}
+
+func (resp *ResponseWrapper[T]) GetStatusCode() int32 {
+	status := resp.Response.GetStatus()
+	if status == nil {
+		return -1
+	}
+	return status.GetCode()
+}
+
+func (resp *ResponseWrapper[T]) FormatResponse() string {
+	status := resp.Response.GetStatus()
+	if status == nil {
+		return "status is nil"
+	}
+	return fmt.Sprintf("status: %d, message: %s", status.GetCode(), status.GetMessage())
+}
+
+func handleResponse(response ResponseCheck, name string) error {
+	if response.GetStatusCode() == -1 {
+		return fmt.Errorf("%s: invalid response: status is nil", name)
+	}
+
+	if response.GetStatusCode() == 0 {
+		return nil
+	} else {
+		return fmt.Errorf("%s response: %v", name, response.FormatResponse())
+	}
+}
+
+func NewResponseWrapper[T StatusGetter](response T) *ResponseWrapper[T] {
+	return &ResponseWrapper[T]{
+		Response: response,
+	}
 }
 
 func NewCommand(host string, timeoutS int) *Command {
@@ -67,6 +112,34 @@ func (c *Command) CreateProject(projectID, projectConf string) (string, error) {
 	}
 }
 
+func (c *Command) CreateView(projectId, viewName, body string) error {
+	if projectId == "" {
+		return fmt.Errorf("CreateView: projectId must not be empty")
+	}
+
+	if viewName == "" {
+		return fmt.Errorf("CreateView: viewName must not be empty")
+	}
+
+	if body == "" {
+		return fmt.Errorf("CreateView: body must not be empty")
+	}
+
+	req := &pb.CreateViewRequest{
+		ProjectId: projectId,
+		ViewName:  viewName,
+		Query:     body,
+	}
+
+	response := &pb.CreateViewResponse{}
+	err := c.intraStub.CreateView(c.host, req, response)
+	if err != nil {
+		return fmt.Errorf("CreateView: failed to call creating view service: %v", err)
+	}
+	wrapper := NewResponseWrapper(response)
+	return handleResponse(wrapper, "CreateView")
+}
+
 func (c *Command) CreateTable(projectID, tableName, dbType, refTable string, columns []*pb.CreateTableRequest_ColumnDesc) error {
 	if projectID == "" {
 		return fmt.Errorf("CreateTable: projectId must not be empty")
@@ -87,14 +160,26 @@ func (c *Command) CreateTable(projectID, tableName, dbType, refTable string, col
 	if err != nil {
 		return fmt.Errorf("CreateTable: failed to call creating table service: %v", err)
 	}
-	if response.Status == nil {
-		return fmt.Errorf("CreateTable: invalid response: status is nil")
+	wrapper := NewResponseWrapper(response)
+	return handleResponse(wrapper, "CreateTable")
+}
+
+func (c *Command) DeleteView(projectID, viewName string) error {
+	if projectID == "" {
+		return fmt.Errorf("DeleteView: projectId must not be empty")
 	}
-	if response.GetStatus().GetCode() == 0 {
-		return nil
-	} else {
-		return fmt.Errorf("CreateTable status: %v", response.GetStatus())
+
+	req := &pb.DropViewRequest{
+		ProjectId: projectID,
+		ViewName:  viewName,
 	}
+	response := &pb.DropViewResponse{}
+	err := c.intraStub.DropView(c.host, req, response)
+	if err != nil {
+		return fmt.Errorf("DeleteView: failed to call deleting view service: %v", err)
+	}
+	wrapper := NewResponseWrapper(response)
+	return handleResponse(wrapper, "DeleteView")
 }
 
 func (c *Command) DeleteTable(projectID, name string) error {
@@ -110,15 +195,8 @@ func (c *Command) DeleteTable(projectID, name string) error {
 	if err != nil {
 		return fmt.Errorf("DeleteTable: failed to call dropping table service: %v", err)
 	}
-	if response.Status == nil {
-		return fmt.Errorf("DeleteTable: invalid response: status is nil")
-	}
-	if response.GetStatus().GetCode() == 0 {
-		return nil
-	} else {
-		return fmt.Errorf("DeleteTable response: %v", protojson.Format(response))
-	}
-
+	wrapper := NewResponseWrapper(response)
+	return handleResponse(wrapper, "DeleteTable")
 }
 
 func (c *Command) GetProject(projectID string) (*pb.ListProjectsResponse, error) {
@@ -131,11 +209,34 @@ func (c *Command) GetProject(projectID string) (*pb.ListProjectsResponse, error)
 	if err != nil {
 		return nil, fmt.Errorf("GetProject: failed to call listing project service: %v", err)
 	}
-	if response.Status == nil {
-		return nil, fmt.Errorf("GetProject: invalid response: status is nil")
+	wrapper := NewResponseWrapper(response)
+	err = handleResponse(wrapper, "GetProject")
+	if err != nil {
+		return nil, err
 	}
-	if response.GetStatus().GetCode() != 0 {
-		return nil, fmt.Errorf("GetProject response: %v", protojson.Format(response))
+	return response, nil
+}
+
+func (c *Command) GetView(projectID string, viewNames []string) (*pb.ListViewsResponse, error) {
+	if projectID == "" {
+		return nil, fmt.Errorf("GetView: projectId must not be empty")
+	}
+
+	req := &pb.ListViewsRequest{
+		ProjectId: projectID,
+		Names:     viewNames,
+	}
+
+	response := &pb.ListViewsResponse{}
+
+	err := c.intraStub.ListViews(c.host, req, response)
+	if err != nil {
+		return nil, fmt.Errorf("GetView: failed to call listing view service: %v", err)
+	}
+	wrapper := NewResponseWrapper(response)
+	err = handleResponse(wrapper, "GetView")
+	if err != nil {
+		return nil, err
 	}
 	return response, nil
 }
@@ -153,11 +254,10 @@ func (c *Command) GetTable(projectID string, tableNames []string) (*pb.ListTable
 	if err != nil {
 		return nil, fmt.Errorf("GetTable: failed to call getting talbe info service: %v", err)
 	}
-	if response.Status == nil {
-		return nil, fmt.Errorf("GetTable: invalid response: status is nil")
-	}
-	if response.GetStatus().GetCode() != 0 {
-		return nil, fmt.Errorf("GetTable response: %v", protojson.Format(response))
+	wrapper := NewResponseWrapper(response)
+	err = handleResponse(wrapper, "GetTable")
+	if err != nil {
+		return nil, err
 	}
 	return response, nil
 }
@@ -177,11 +277,11 @@ func (c *Command) GetCCL(projectID string, tables, destParties []string) (*pb.Sh
 	if err != nil {
 		return nil, fmt.Errorf("GetCCL: failed to call listing CCL service: %v", err)
 	}
-	if response.Status == nil {
-		return nil, fmt.Errorf("GetCCL: invalid response: status is nil")
-	}
-	if response.GetStatus().GetCode() != 0 {
-		return nil, fmt.Errorf("GetCCL response: %v", protojson.Format(response))
+
+	wrapper := NewResponseWrapper(response)
+	err = handleResponse(wrapper, "GetCCL")
+	if err != nil {
+		return nil, err
 	}
 	return response, nil
 }
@@ -193,11 +293,10 @@ func (c *Command) GetInvitation() (*pb.ListInvitationsResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("GetInvitation: failed to call listing invitation service: %v", err)
 	}
-	if response.Status == nil {
-		return nil, fmt.Errorf("GetInvitation: invalid response: status is nil")
-	}
-	if response.GetStatus().GetCode() != 0 {
-		return nil, fmt.Errorf("GetInvitation response: %v", protojson.Format(response))
+	wrapper := NewResponseWrapper(response)
+	err = handleResponse(wrapper, "GetInvitation")
+	if err != nil {
+		return nil, err
 	}
 	return response, nil
 }
@@ -216,14 +315,8 @@ func (c *Command) GrantCCL(projectID string, ccls []*pb.ColumnControl) error {
 	if err != nil {
 		return fmt.Errorf("GrantCCL: failed to call granting CLL service: %v", err)
 	}
-	if response.Status == nil {
-		return fmt.Errorf("GrantCCL: invalid response: status is nil")
-	}
-	if response.GetStatus().GetCode() == 0 {
-		return nil
-	} else {
-		return fmt.Errorf("GrantCCL response: %v", protojson.Format(response))
-	}
+	wrapper := NewResponseWrapper(response)
+	return handleResponse(wrapper, "GrantCCL")
 }
 
 func (c *Command) InviteMember(projectID, member string) error {
@@ -236,14 +329,8 @@ func (c *Command) InviteMember(projectID, member string) error {
 	if err != nil {
 		return fmt.Errorf("InviteMember: failed to call inviting member service: %v", err)
 	}
-	if response.Status == nil {
-		return fmt.Errorf("InviteMember: invalid response: status is nil")
-	}
-	if response.GetStatus().GetCode() == 0 {
-		return nil
-	} else {
-		return fmt.Errorf("InviteMember response: %v", protojson.Format(response))
-	}
+	wrapper := NewResponseWrapper(response)
+	return handleResponse(wrapper, "InviteMember")
 }
 
 func (c *Command) ProcessInvitation(ids string, accept bool) error {
@@ -265,14 +352,8 @@ func (c *Command) ProcessInvitation(ids string, accept bool) error {
 	if err != nil {
 		return fmt.Errorf("ProcessInvitation: failed to call processing invitation service: %v", err)
 	}
-	if response.Status == nil {
-		return fmt.Errorf("ProcessInvitation: invalid response: status is nil")
-	}
-	if response.GetStatus().GetCode() == 0 {
-		return nil
-	} else {
-		return fmt.Errorf("ProcessInvitation response: %v", protojson.Format(response))
-	}
+	wrapper := NewResponseWrapper(response)
+	return handleResponse(wrapper, "ProcessInvitation")
 }
 
 func (c *Command) RevokeCCL(projectID, party string, ccls []*pb.ColumnControl) error {
@@ -289,14 +370,9 @@ func (c *Command) RevokeCCL(projectID, party string, ccls []*pb.ColumnControl) e
 	if err != nil {
 		return fmt.Errorf("RevokeCCL: failed to call revoking CCL service: %v", err)
 	}
-	if response.Status == nil {
-		return fmt.Errorf("RevokeCCL: invalid response: status is nil")
-	}
-	if response.GetStatus().GetCode() == 0 {
-		return nil
-	} else {
-		return fmt.Errorf("RevokeCCL response: %v", protojson.Format(response))
-	}
+
+	wrapper := NewResponseWrapper(response)
+	return handleResponse(wrapper, "RevokeCCL")
 }
 
 func (c *Command) DoQuery(projectID, query string, debugOpts *pb.DebugOptions, jobConfStr string) (*pb.QueryResponse, error) {
@@ -319,11 +395,11 @@ func (c *Command) DoQuery(projectID, query string, debugOpts *pb.DebugOptions, j
 	if err != nil {
 		return nil, fmt.Errorf("DoQuery: failed to call query service: %v", err)
 	}
-	if response.Status == nil {
-		return nil, fmt.Errorf("DoQuery: invalid response: status is nil")
-	}
-	if response.GetStatus().GetCode() != 0 {
-		return nil, fmt.Errorf("DoQuery response: %v", protojson.Format(response))
+
+	wrapper := NewResponseWrapper(response)
+	err = handleResponse(wrapper, "DoQuery")
+	if err != nil {
+		return nil, err
 	}
 	return response, nil
 }
@@ -420,14 +496,9 @@ func (c *Command) CancelJob(jobID string) error {
 	if err != nil {
 		return fmt.Errorf("CancelJob: failed to call canceling job service: %w", err)
 	}
-	if response.Status == nil {
-		return fmt.Errorf("CancelJob: invalid response: status is nil")
-	}
-	if response.GetStatus().GetCode() == 0 {
-		return nil
-	} else {
-		return fmt.Errorf("CancelJob status: %v", response.GetStatus())
-	}
+
+	wrapper := NewResponseWrapper(response)
+	return handleResponse(wrapper, "CancelJob")
 }
 
 func (c *Command) CheckAndUpdateStatus(ids []string) (*pb.CheckAndUpdateStatusResponse, error) {

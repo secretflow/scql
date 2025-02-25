@@ -106,7 +106,6 @@ func (svc *grpcIntraSvc) DoQuery(ctx context.Context, req *pb.QueryRequest) (res
 	if err != nil {
 		return
 	}
-	// for audit purpose
 	return resp, err
 }
 
@@ -515,7 +514,7 @@ func distributeQueryToOtherParty(session *application.Session, enginesInfo *grap
 
 func prepareQueryInfo(session *application.Session, r *executor.QueryRunner) ([]core.DbTable, error) {
 	executionInfo := session.ExecuteInfo
-	usedTables, err := core.GetSourceTables(session.ExecuteInfo.Query)
+	usedTables, err := core.GetSourceTables(executionInfo.Query)
 	if err != nil {
 		return nil, fmt.Errorf("prepareQueryInfo GetSourceTables: %v", err)
 	}
@@ -539,7 +538,10 @@ func prepareQueryInfo(session *application.Session, r *executor.QueryRunner) ([]
 		return nil, fmt.Errorf("prepareQueryInfo CreateChecksum: %v", err)
 	}
 	for code, checksum := range localChecksums {
-		session.SaveLocalChecksum(code, checksum)
+		err = session.SaveLocalChecksum(code, checksum)
+		if err != nil {
+			return nil, fmt.Errorf("prepareQueryInfo SaveLocalChecksum: %v", err)
+		}
 	}
 	selfCode := session.GetSelfPartyCode()
 	logrus.Infof("create session %s with query '%s' in project %s", executionInfo.JobID, executionInfo.Query, executionInfo.ProjectID)

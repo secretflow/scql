@@ -12,10 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "Poco/Data/SQLite/Connector.h"
-#include "Poco/Data/Session.h"
-#include "absl/strings/match.h"
-#include "absl/strings/str_format.h"
 #include "gflags/gflags.h"
 #include "gtest/gtest.h"
 

@@ -23,10 +23,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
-	"github.com/secretflow/scql/pkg/audit"
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
-	"github.com/secretflow/scql/pkg/status"
 	"github.com/secretflow/scql/pkg/util/logutil"
 	"github.com/secretflow/scql/pkg/util/message"
 )
@@ -45,7 +43,6 @@ func (app *App) FetchHandler(c *gin.Context) {
 		logrus.Errorf("%v|ClientIP:%v", logEntry, c.ClientIP())
 		body, _ := message.SerializeTo(newErrorFetchResponse("", scql.Code_BAD_REQUEST, "invalid request body"), message.EncodingTypeJson)
 		c.String(http.StatusOK, body)
-		audit.RecordUncategorizedEvent(status.New(scql.Code_BAD_REQUEST, "invalid request body"), c.ClientIP(), "fetchResult")
 		return
 	}
 	logEntry.RawRequest = SCDBFetchRequestToLogString(request)
@@ -56,7 +53,6 @@ func (app *App) FetchHandler(c *gin.Context) {
 	logEntry.SessionID = resp.ScdbSessionId
 	body, _ := message.SerializeTo(resp, inputEncodingType)
 	c.String(http.StatusOK, body)
-	audit.RecordFetchResultEvent(request, resp, c.ClientIP())
 	if resp.Status.Code != int32(scql.Code_OK) {
 		logEntry.Reason = constant.ReasonInvalidRequest
 		logEntry.ErrorMsg = resp.Status.Message

@@ -27,7 +27,7 @@ std::string GetStringValue(const pb::Tensor& t);
 
 std::vector<std::string> GetStringValues(const pb::Tensor& t);
 
-uint32_t GetScalarUint32(std::shared_ptr<Tensor> t);
+uint32_t GetScalarUint32(const std::shared_ptr<Tensor>& t);
 
 void SetStringValues(pb::Tensor* t, const std::vector<std::string>& values);
 
@@ -65,11 +65,13 @@ void CopyValuesToProto(const std::shared_ptr<Tensor>& from_tensor,
                        pb::Tensor* to_proto);
 
 std::shared_ptr<Tensor> ConvertDateTimeToInt64(
-    const std::shared_ptr<arrow::ChunkedArray> from_chunked_arr);
+    const std::shared_ptr<arrow::ChunkedArray>& from_chunked_arr);
 
 std::shared_ptr<arrow::ChunkedArray> ConvertDateTimeToInt64(
-    const std::shared_ptr<arrow::Array> from_arr);
+    const std::shared_ptr<arrow::Array>& from_arr);
 
 void ConvertDateTimeAndCopyValuesToProto(
     const std::shared_ptr<Tensor>& from_tensor, pb::Tensor* to_proto);
+
+bool AreAllBucketTensor(const std::vector<TensorPtr>& tensors);
 }  // namespace scql::engine::util

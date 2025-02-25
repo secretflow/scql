@@ -114,6 +114,6 @@ func (s *testCCLSuite) testCheckCCL(c *C, testCase TestCaseCCLString) {
 	c.Assert(err, IsNil)
 	ln, err := builder.buildLogicalNode(lp)
 	c.Assert(err, IsNil, comment)
-	// c.Log(ToString(ln, !testCase.PrintDSCCL))
+	c.Log(ToString(ln, !testCase.PrintDSCCL))
 	c.Assert(ToString(ln, !testCase.PrintDSCCL) == expected, IsTrue, comment)
 }

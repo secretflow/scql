@@ -63,7 +63,6 @@ func TestNewConfig(t *testing.T) {
 			ContentType:   "application/json",
 			Uris:          []EngineUri{{ForPeer: "alice.com", ForSelf: "alice.com"}},
 			KusciaSchedulerOption: &KusciaSchedulerConf{
-				MaxPollTimes: 20,
 				MaxWaitTime:  time.Minute,
 				PollInterval: time.Second,
 			},

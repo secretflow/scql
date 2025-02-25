@@ -122,7 +122,7 @@ func (node *ExecutionNode) ToProto() *proto.ExecNode {
 		OpType:   node.OpType,
 	}
 
-	if node.Inputs != nil && len(node.Inputs) > 0 {
+	if len(node.Inputs) > 0 {
 		pb.Inputs = make(map[string]*proto.TensorList)
 		for k, inputs := range node.Inputs {
 
@@ -135,7 +135,7 @@ func (node *ExecutionNode) ToProto() *proto.ExecNode {
 		}
 	}
 
-	if node.Outputs != nil && len(node.Outputs) > 0 {
+	if len(node.Outputs) > 0 {
 		pb.Outputs = make(map[string]*proto.TensorList)
 		for k, outputs := range node.Outputs {
 			pb.Outputs[k] = &proto.TensorList{
@@ -146,7 +146,7 @@ func (node *ExecutionNode) ToProto() *proto.ExecNode {
 			}
 		}
 	}
-	if node.Attributes != nil && len(node.Attributes) > 0 {
+	if len(node.Attributes) > 0 {
 		pb.Attributes = make(map[string]*proto.AttributeValue)
 		for k, attr := range node.Attributes {
 			pb.Attributes[k] = attr.ToProto()

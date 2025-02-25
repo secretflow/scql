@@ -14,6 +14,7 @@
 
 #include "engine/link/rpc_helper.h"
 
+#include "brpc/channel.h"
 #include "brpc/server.h"
 #include "gtest/gtest.h"
 
@@ -47,7 +48,7 @@ class RecvTestImpl : public link::pb::MuxReceiverService {
   }
 };
 
-static SimpleAuthenticator g_my_auth("test");
+SimpleAuthenticator g_my_auth("test");
 }  // namespace
 
 class RpcHelperTest : public testing::Test {
@@ -87,7 +88,7 @@ TEST_F(RpcHelperTest, RpcNoAuth) {
   stub.Push(&cntl, &request, &response, nullptr);
 
   EXPECT_TRUE(cntl.Failed());
-  EXPECT_EQ(EHOSTDOWN, cntl.ErrorCode());
+  EXPECT_EQ(brpc::ERPCAUTH, cntl.ErrorCode());
 }
 
 TEST_F(RpcHelperTest, RpcWithRetryAndAuth) {

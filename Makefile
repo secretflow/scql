@@ -30,13 +30,12 @@ binary: clean prepare fmt vet gogenerate
 	$(eval SCQL_VERSION := $(shell bash ${PWD}/version_build.sh))
 	echo "Binary version: ${SCQL_VERSION}"
 	GOBIN=${PWD}/bin go install -ldflags "-X main.version=${SCQL_VERSION}" ./cmd/...
-	pip install numpy
-	bazel --host_jvm_args=-Xmx16g build //engine/exe:scqlengine -c opt --jobs=10
+	bazel --host_jvm_args=-Xmx8g build //engine/exe:scqlengine -c opt --jobs=32
 	bash ${PWD}/version_build.sh -r
 
 pb: clean
 	$(RM) -rf pkg/proto-gen/*
-	./api/generate_proto.sh && ./pkg/audit/generate_audit.sh && bash ./contrib/agent/proto/generate_proto.sh
+	./api/generate_proto.sh && bash ./contrib/agent/proto/generate_proto.sh
 
 fmt:
 	go fmt ./pkg/...
@@ -53,7 +52,7 @@ doc-cn:
 	cd docs && rm -rf _build && PYTHONPATH=$PWD/../ bash build.sh -l zh_CN
 
 lint: GOLINT-exists
-	-${TOOLBIN}/golangci-lint run ./pkg/scdb/...
+	-${TOOLBIN}/golangci-lint run --out-format=colored-line-number
 
 detect-shadowing:
 	go vet -vettool=$(shell which shadow) -strict ./...
@@ -77,9 +76,11 @@ prepare: GO-exists GO-package
 
 GO-exists:
 	$(if $(shell command -v go 2> /dev/null),$(info Found `go`),$(error Please install go (prefer v1.22): refer to `https://golang.org/dl/`))
+	go version
+	go env GOPROXY
 
 GOLINT-exists:
-	$(if $(shell command -v golangci-lint 2> /dev/null),$(info Found `golangci-lint`),$(shell curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ${TOOLBIN} v1.42.0))
+	$(if $(shell command -v golangci-lint 2> /dev/null),$(info Found `golangci-lint`),$(shell curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ${TOOLBIN} v1.61.0))
 
 GO-package:
 	@GOBIN=${TOOLBIN} go install go.uber.org/mock/mockgen@latest && \

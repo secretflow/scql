@@ -32,8 +32,8 @@ class Sort : public Operator {
   void Execute(ExecContext* ctx) override;
 
  private:
-  void SortInPlain(ExecContext* ctx);
-  void SortInSecret(ExecContext* ctx);
+  static void SortInPlain(ExecContext* ctx);
+  static void SortInSecret(ExecContext* ctx);
 };
 
 }  // namespace scql::engine::op

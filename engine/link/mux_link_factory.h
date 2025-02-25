@@ -14,11 +14,8 @@
 
 #pragma once
 
-#include <algorithm>
-#include <atomic>
 #include <memory>
 
-#include "brpc/channel.h"
 #include "yacl/link/factory.h"
 
 #include "engine/link/channel_manager.h"

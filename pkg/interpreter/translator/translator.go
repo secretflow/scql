@@ -15,6 +15,7 @@
 package translator
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"sort"
@@ -169,16 +170,6 @@ func convertOriginalCCL(sc *proto.SecurityConfig) map[string]*ccl.CCL {
 	return result
 }
 
-func exclude(ss []string, e string) []string {
-	var rval []string
-	for _, s := range ss {
-		if s != e {
-			rval = append(rval, s)
-		}
-	}
-	return rval
-}
-
 func (t *translator) Translate(lp core.LogicalPlan) (*graph.Graph, error) {
 	// preprocessing lp
 	processor := LpPrePocessor{}
@@ -228,7 +219,7 @@ func (t *translator) Translate(lp core.LogicalPlan) (*graph.Graph, error) {
 
 		// substitute query issuer
 		candidateParties := ln.VisibleParty()
-		candidateParties = exclude(candidateParties, t.issuerPartyCode)
+		candidateParties = sliceutil.Exclude(candidateParties, t.issuerPartyCode)
 		sort.Strings(candidateParties) // sort to enforce determinism
 		if len(candidateParties) == 0 {
 			return nil, fmt.Errorf("translate: unable to find a candidate party to substitute the issuer %s in party list (%+v)", t.issuerPartyCode, ln.VisibleParty())
@@ -440,21 +431,31 @@ func (t *translator) addBucketNode(joinKeys []*graph.Tensor, payloads []*graph.T
 	for _, it := range joinKeys {
 		joinKeyIds = append(joinKeyIds, it.ID)
 	}
-	partyCode := payloads[0].OwnerPartyCode
+	partyCode := joinKeys[0].OwnerPartyCode
 	if err = assertTensorsBelongTo(append(payloads, joinKeys...), partyCode); err != nil {
 		return nil, nil, fmt.Errorf("addBucketNode: %s", err.Error())
 	}
+	bucketTsMap := make(map[int]*graph.Tensor)
 	for _, it := range payloads {
 		ot := t.ep.AddTensorAs(it)
-		if slices.Contains(joinKeyIds, it.ID) {
-			bucketKeys = append(bucketKeys, ot)
-		}
+		bucketTsMap[it.ID] = ot
 		bucketPayloads = append(bucketPayloads, ot)
+	}
+	for _, it := range joinKeys {
+		if _, ok := bucketTsMap[it.ID]; ok {
+			continue
+		}
+		ot := t.ep.AddTensorAs(it)
+		bucketTsMap[it.ID] = ot
+	}
+	bucketKeys = make([]*graph.Tensor, len(joinKeyIds))
+	for i, id := range joinKeyIds {
+		bucketKeys[i] = bucketTsMap[id]
 	}
 	partyAttr := graph.Attribute{}
 	partyAttr.SetStrings(partyCodes)
 	_, err = t.ep.AddExecutionNode("bucket", operator.OpNameBucket,
-		map[string][]*graph.Tensor{"In": payloads, "Key": joinKeys}, map[string][]*graph.Tensor{graph.Out: bucketPayloads}, map[string]*graph.Attribute{operator.InputPartyCodesAttr: &partyAttr}, []string{partyCode})
+		map[string][]*graph.Tensor{"In": mergeTensors(joinKeys, payloads), "Key": joinKeys}, map[string][]*graph.Tensor{graph.Out: mergeTensors(bucketKeys, bucketPayloads)}, map[string]*graph.Attribute{operator.InputPartyCodesAttr: &partyAttr}, []string{partyCode})
 	return
 }
 
@@ -508,7 +509,7 @@ func (t *translator) buildExpression(expr expression.Expression, tensors map[int
 	case *expression.Column:
 		return t.getTensorFromColumn(x, tensors)
 	case *expression.ScalarFunction:
-		return t.buildScalarFunction(x, tensors, isApply, ln)
+		return t.buildScalarFunction(x, tensors, isApply)
 	default:
 		return nil, fmt.Errorf("buildExpression doesn't support condition type %T", x)
 	}
@@ -553,7 +554,7 @@ func (t *translator) getTensorFromExpression(arg expression.Expression, tensors 
 	case *expression.Column:
 		return t.getTensorFromColumn(x, tensors)
 	case *expression.ScalarFunction:
-		return t.buildScalarFunction(x, tensors, false, nil)
+		return t.buildScalarFunction(x, tensors, false)
 	case *expression.Constant:
 		return t.addConstantNode(&x.Value)
 	}
@@ -776,7 +777,7 @@ func (t *translator) buildCompareNode(name string, inputs []*graph.Tensor) (*gra
 	return t.ep.AddVariadicCompareNode(name, name, nodeInputs, parties)
 }
 
-func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors map[int64]*graph.Tensor, isApply bool, ln logicalNode) (*graph.Tensor, error) {
+func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors map[int64]*graph.Tensor, isApply bool) (*graph.Tensor, error) {
 	if f.FuncName.L == ast.Now || f.FuncName.L == ast.Curdate {
 		unix_time := t.createdAt
 		date := time.Date(unix_time.Year(), unix_time.Month(), unix_time.Day(), 0, 0, 0, 0, t.createdAt.Location())
@@ -1460,7 +1461,7 @@ func (t *translator) addObliviousGroupAggNode(funcName string, group *graph.Tens
 	}
 
 	outA := t.ep.AddTensorAs(inA)
-	if funcName == ast.AggFuncAvg {
+	if funcName == ast.AggFuncAvg || funcName == ast.WindowFuncPercentRank {
 		outA.DType = proto.PrimitiveDataType_FLOAT64
 	} else if funcName == ast.AggFuncCount {
 		outA.DType = proto.PrimitiveDataType_INT64
@@ -1484,6 +1485,10 @@ func (t *translator) addShuffleNode(name string, inTs []*graph.Tensor) ([]*graph
 	var inA []*graph.Tensor
 	// convert inputs to share
 	for _, in := range inTs {
+		if in.Status() == proto.TensorStatus_TENSORSTATUS_PUBLIC {
+			inA = append(inA, in)
+			continue
+		}
 		out, err := t.converter.convertTo(
 			in, &sharePlacement{partyCodes: t.enginesInfo.GetParties()})
 		if err != nil {
@@ -1515,7 +1520,7 @@ func (t *translator) addConcatNode(inputs []*graph.Tensor) (*graph.Tensor, error
 			for _, t := range inputs {
 				errStr += fmt.Sprintf(" ccl of child %d is (%v)", i, t.CC)
 			}
-			return nil, fmt.Errorf(errStr)
+			return nil, errors.New(errStr)
 		}
 	}
 
@@ -1570,6 +1575,24 @@ func (t *translator) addGroupNode(name string, inputs []*graph.Tensor, partyCode
 		return nil, nil, err
 	}
 	return outputId, outputNum, nil
+}
+
+func (t *translator) addWindowNode(name string,
+	key []*graph.Tensor,
+	partitionId *graph.Tensor,
+	partitionNum *graph.Tensor,
+	output *graph.Tensor,
+	attr *graph.Attribute,
+	party string) error {
+	if _, err := t.ep.AddExecutionNode(name, name,
+		map[string][]*graph.Tensor{"Key": key, "PartitionId": []*graph.Tensor{partitionId}, "PartitionNum": []*graph.Tensor{partitionNum}},
+		map[string][]*graph.Tensor{"Out": []*graph.Tensor{output}},
+		map[string]*graph.Attribute{operator.ReverseAttr: attr},
+		[]string{party}); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func checkInputTypeNotString(inputs []*graph.Tensor) error {

@@ -27,7 +27,6 @@ import (
 
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/executor"
-	"github.com/secretflow/scql/pkg/interpreter/graph"
 	"github.com/secretflow/scql/pkg/planner/core"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/scdb/auth"
@@ -47,19 +46,6 @@ type App struct {
 	sessions           *cache.Cache
 	queryDoneChan      chan string
 	partyAuthenticator *auth.PartyAuthenticator
-}
-
-type LogicalPlanInfo struct {
-	lp          core.LogicalPlan
-	issuer      string
-	engineInfos *graph.EnginesInfo
-	ccls        []*scql.SecurityConfig_ColumnControl
-}
-
-type ExecutionPlanInfo struct {
-	parties []*scql.JobStartParams_Party
-	graph   *graph.Graph
-	attr    *graph.Attribute
 }
 
 func NewApp(conf *config.Config, storage *gorm.DB, engineClient executor.EngineClient) (*App, error) {
@@ -93,12 +79,8 @@ func (app *App) notifyQueryJobDone(sid string) {
 // startQueryJobFinishHandler starts a background goroutine to handle finished query job
 func (app *App) startQueryJobFinishHandler() {
 	go func() {
-		for {
-			// quit the forloop when server is about to shutdown
-			select {
-			case sid := <-app.queryDoneChan:
-				app.onQueryJobDone(sid)
-			}
+		for sid := range app.queryDoneChan {
+			app.onQueryJobDone(sid)
 		}
 	}()
 }

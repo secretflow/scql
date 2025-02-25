@@ -23,7 +23,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/encoding/protojson"
 
-	"github.com/secretflow/scql/pkg/audit"
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/interpreter/graph"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
@@ -130,8 +129,6 @@ func (exec *Executor) RunExecutionPlanCore(ctx context.Context, engineAsync bool
 		partyCodes = append(partyCodes, partyCode)
 
 		partyCredentials = append(partyCredentials, exec.partyCodeToCredential[pb.GetJobParams().GetPartyCode()])
-		audit.RecordPlanDetail(partyCode, url, pb)
-		audit.RecordSessionParameters(pb.GetJobParams(), url, true)
 	}
 
 	c := make(chan ResponseInfo, len(urls))

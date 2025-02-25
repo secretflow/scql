@@ -287,17 +287,16 @@ func NewFilePartyMgr(partyPath string) (PartyMgr, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal from json: %v", err)
 	}
-	filePartyMgr := filePartyMgr{
+	mgr := filePartyMgr{
 		urlMap:    map[string]string{},
 		pubKeyMap: map[string]string{},
 	}
 	for _, party := range partyInfo.Participants {
-		filePartyMgr.urlMap[party.PartyCode] = party.Endpoint
-		filePartyMgr.pubKeyMap[party.PartyCode] = party.PubKey
+		mgr.urlMap[party.PartyCode] = party.Endpoint
+		mgr.pubKeyMap[party.PartyCode] = party.PubKey
 	}
 
-	return &filePartyMgr, nil
-
+	return &mgr, nil
 }
 
 func (m *filePartyMgr) GetBrokerUrlByParty(party string) (string, error) {

@@ -86,13 +86,15 @@ TEST_P(ConstantTest, Works) {
   auto sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
   std::vector<ExecContext> exec_ctxs;
-  for (size_t idx = 0; idx < sessions.size(); ++idx) {
-    exec_ctxs.emplace_back(node, sessions[idx].get());
+  exec_ctxs.reserve(sessions.size());
+  for (auto& session : sessions) {
+    exec_ctxs.emplace_back(node, session.get());
   }
 
   std::vector<ExecContext*> ctx_ptrs;
-  for (size_t idx = 0; idx < exec_ctxs.size(); ++idx) {
-    ctx_ptrs.emplace_back(&exec_ctxs[idx]);
+  ctx_ptrs.reserve(exec_ctxs.size());
+  for (auto& exec_ctx : exec_ctxs) {
+    ctx_ptrs.emplace_back(&exec_ctx);
   }
 
   // When
@@ -104,8 +106,8 @@ TEST_P(ConstantTest, Works) {
   if (tc.output_status == pb::TENSORSTATUS_PRIVATE) {
     out = exec_ctxs[0].GetTensorTable()->GetTensor(tc.scalar.name);
   } else {
-    auto sctx = exec_ctxs[0].GetSession()->GetSpuContext();
-    auto device_symbols = exec_ctxs[0].GetSession()->GetDeviceSymbols();
+    auto* sctx = exec_ctxs[0].GetSession()->GetSpuContext();
+    auto* device_symbols = exec_ctxs[0].GetSession()->GetDeviceSymbols();
     util::SpuOutfeedHelper outfeed_helper(sctx, device_symbols);
     out = outfeed_helper.DumpPublic(tc.scalar.name);
     // convert hash to string for string tensor in spu

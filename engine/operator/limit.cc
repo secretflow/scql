@@ -59,8 +59,8 @@ void Limit::Execute(ExecContext* ctx) {
       auto result = TensorFrom(std::move(sliced_arr));
       ctx->GetTensorTable()->AddTensor(output_pbs[i].name(), std::move(result));
     } else {
-      auto symbols = ctx->GetSession()->GetDeviceSymbols();
-      auto sctx = ctx->GetSession()->GetSpuContext();
+      auto* symbols = ctx->GetSession()->GetDeviceSymbols();
+      auto* sctx = ctx->GetSession()->GetSpuContext();
       auto value = symbols->getVar(
           util::SpuVarNameEncoder::GetValueName(input_pb.name()));
 

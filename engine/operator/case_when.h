@@ -37,7 +37,7 @@ class CaseWhen : public Operator {
   void Execute(ExecContext* ctx) override;
 
  private:
-  void CaseWhenPrivate(ExecContext* ctx);
+  static void CaseWhenPrivate(ExecContext* ctx);
   void CaseWhenShare(ExecContext* ctx);
 };
 

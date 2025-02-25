@@ -15,7 +15,6 @@
 #include "engine/link/mux_receiver_service.h"
 
 #include "brpc/closure_guard.h"
-#include "spdlog/spdlog.h"
 
 namespace scql::engine {
 

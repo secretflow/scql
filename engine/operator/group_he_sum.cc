@@ -204,7 +204,7 @@ void GroupHeSum::Execute(ExecContext* ctx) {
     if (group_id_arr->length() == 0) {
       return;
     }
-    auto group_id_ptr =
+    const auto* group_id_ptr =
         dynamic_cast<const arrow::NumericArray<arrow::UInt32Type>*>(
             group_id_arr.get());
     YACL_ENFORCE(group_id_ptr != nullptr,
@@ -281,7 +281,7 @@ uint32_t GroupHeSum::GetGroupNum(ExecContext* ctx) {
   YACL_ENFORCE(group_num_t, "no group_num={}", group_num.name());
   auto num_array =
       util::ConcatenateChunkedArray(group_num_t->ToArrowChunkedArray());
-  auto* num_array_ptr =
+  const auto* num_array_ptr =
       dynamic_cast<const arrow::UInt32Array*>(num_array.get());
   YACL_ENFORCE(num_array_ptr, "cast group num to uint32_t failed");
   return num_array_ptr->Value(0);

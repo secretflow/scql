@@ -22,6 +22,7 @@ import (
 	"sync/atomic"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
 	"github.com/secretflow/scql/pkg/parser/auth"
@@ -228,7 +229,9 @@ type Handle struct {
 // NewHandle returns a Handle.
 func NewHandle(ctx sessionctx.Context) *Handle {
 	h := &Handle{}
-	h.Update(ctx)
+	if err := h.Update(ctx); err != nil {
+		logrus.Error(err)
+	}
 	return h
 }
 

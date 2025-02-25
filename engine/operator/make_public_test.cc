@@ -76,27 +76,29 @@ TEST_P(MakePublicTest, works) {
   auto sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
   std::vector<ExecContext> exec_ctxs;
-  for (size_t idx = 0; idx < sessions.size(); ++idx) {
-    exec_ctxs.emplace_back(node, sessions[idx].get());
+  exec_ctxs.reserve(sessions.size());
+  for (auto& session : sessions) {
+    exec_ctxs.emplace_back(node, session.get());
   }
 
   // feed inputs
   std::vector<ExecContext*> ctx_ptrs;
-  for (size_t idx = 0; idx < exec_ctxs.size(); ++idx) {
-    ctx_ptrs.emplace_back(&exec_ctxs[idx]);
+  ctx_ptrs.reserve(exec_ctxs.size());
+  for (auto& exec_ctx : exec_ctxs) {
+    ctx_ptrs.emplace_back(&exec_ctx);
   }
   FeedInputs(ctx_ptrs, tc);
 
   // When
   EXPECT_NO_THROW(test::RunAsync<MakePublic>(ctx_ptrs));
 
-  auto check_out = [&](ExecContext* ctx, TensorPtr in,
+  auto check_out = [&](ExecContext* ctx, const TensorPtr& in,
                        const std::string& out_name) {
     auto input_arr = in->ToArrowChunkedArray();
     ASSERT_NE(nullptr, input_arr);
 
-    auto sctx = ctx->GetSession()->GetSpuContext();
-    auto device_symbols = ctx->GetSession()->GetDeviceSymbols();
+    auto* sctx = ctx->GetSession()->GetSpuContext();
+    auto* device_symbols = ctx->GetSession()->GetDeviceSymbols();
     util::SpuOutfeedHelper outfeed_helper(sctx, device_symbols);
     auto output = outfeed_helper.DumpPublic(out_name);
     ASSERT_NE(nullptr, output) << "Output name: " << out_name;

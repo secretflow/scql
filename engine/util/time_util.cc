@@ -16,9 +16,7 @@
 
 #include <ctime>
 
-#include "arrow/compute/api_scalar.h"
 #include "arrow/compute/exec.h"
-#include "spdlog/spdlog.h"
 #include "yacl/base/exception.h"
 
 #include "engine/core/tensor_constructor.h"

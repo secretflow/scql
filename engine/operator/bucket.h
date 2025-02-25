@@ -14,7 +14,13 @@
 
 #pragma once
 
+#include <utility>
+
+#include "arrow/array/array_base.h"
+#include "arrow/type_fwd.h"
+
 #include "engine/framework/operator.h"
+#include "engine/util/concurrent_queue.h"
 
 namespace scql::engine::op {
 
@@ -35,7 +41,24 @@ class Bucket : public Operator {
   void Execute(ExecContext* ctx) override;
 
  private:
+  struct ReadResult {
+    arrow::ArrayVector data_arrays;
+    bool is_end;
+    arrow::ChunkedArrayVector indice;
+
+   public:
+    ReadResult() = default;
+    ReadResult(arrow::ArrayVector data_arrays, bool is_end,
+               arrow::ChunkedArrayVector indice)
+        : data_arrays(std::move(data_arrays)),
+          is_end(is_end),
+          indice(std::move(indice)) {}
+  };
   static constexpr int kBatchParallelism = 10;
+  util::BlockingConcurrentQueue<ReadResult> read_queue_{kBatchParallelism};
+  util::BlockingConcurrentQueue<
+      std::pair<std::vector<arrow::ChunkedArrayVector>, bool>>
+      write_queue_{kBatchParallelism};
 };
 
 }  // namespace scql::engine::op

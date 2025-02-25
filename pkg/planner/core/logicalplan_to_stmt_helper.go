@@ -95,6 +95,8 @@ func getSchemaProducer(in LogicalPlan) *logicalSchemaProducer {
 		return &x.logicalSchemaProducer
 	case *LogicalProjection:
 		return &x.logicalSchemaProducer
+	case *LogicalSelection:
+		return &x.logicalSchemaProducer
 	}
 	return nil
 }

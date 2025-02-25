@@ -22,7 +22,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/secretflow/scql/pkg/audit"
 	"github.com/secretflow/scql/pkg/proto-gen/spu"
 )
 
@@ -31,7 +30,7 @@ func TestNewConfig(t *testing.T) {
 
 	// given
 	yamlContent := `
-scdb_host: http://example.com
+scdb_host: example.com:8080
 port: 8080
 protocol: http
 query_result_callback_timeout: 1m
@@ -39,9 +38,6 @@ session_expire_time: 1h
 session_expire_check_time: 20s
 password_check: true
 log_level: debug
-audit:
-  audit_log_file: another/audit.log
-  audit_detail_file: another/detail.log
 storage:
   type: sqlite
   conn_str: ":memory:"
@@ -84,23 +80,14 @@ security_compromise:
 
 	// then
 	expectedCfg := &Config{
-		SCDBHost:             "http://example.com",
+		SCDBHost:             "example.com:8080",
 		Port:                 8080,
 		Protocol:             "http",
 		QueryResultCbTimeout: 1 * time.Minute,
 		SessionExpireTime:    1 * time.Hour,
 		SessionCheckInterval: 20 * time.Second,
 		LogLevel:             "debug",
-		EnableAuditLogger:    true,
-		AuditConfig: audit.AuditConf{
-			AuditLogFile:            "another/audit.log",
-			AuditDetailFile:         "another/detail.log",
-			AuditMaxSizeInMegaBytes: DefaultAuditMaxSizeInMegaBytes,
-			AuditMaxBackupsCount:    DefaultAuditMaxBackupsCount,
-			AuditMaxAgeInDays:       DefaultAuditMaxAgeInDays,
-			AuditMaxCompress:        DefaultAuditMaxCompress,
-		},
-		PasswordCheck: true,
+		PasswordCheck:        true,
 		Storage: StorageConf{
 			Type:            "sqlite",
 			ConnStr:         ":memory:",
@@ -141,7 +128,7 @@ func TestNewConfigWithEnv(t *testing.T) {
 
 	// given
 	yamlContent := `
-scdb_host: http://example.com
+scdb_host: example.com:8080
 port: 8080
 protocol: http
 query_result_callback_timeout: 1m
@@ -187,7 +174,7 @@ party_auth:
 
 	// then
 	expectedCfg := &Config{
-		SCDBHost:             "http://example.com",
+		SCDBHost:             "example.com:8080",
 		Port:                 8080,
 		Protocol:             "http",
 		QueryResultCbTimeout: 1 * time.Minute,
@@ -195,15 +182,6 @@ party_auth:
 		SessionCheckInterval: 20 * time.Second,
 		PasswordCheck:        false,
 		LogLevel:             "info",
-		EnableAuditLogger:    true,
-		AuditConfig: audit.AuditConf{
-			AuditLogFile:            DefaultAuditLogFile,
-			AuditDetailFile:         DefaultAudiDetailFile,
-			AuditMaxSizeInMegaBytes: DefaultAuditMaxSizeInMegaBytes,
-			AuditMaxBackupsCount:    DefaultAuditMaxBackupsCount,
-			AuditMaxAgeInDays:       DefaultAuditMaxAgeInDays,
-			AuditMaxCompress:        DefaultAuditMaxCompress,
-		},
 		Storage: StorageConf{
 			Type:            "sqlite",
 			ConnStr:         "db-str-from-env",

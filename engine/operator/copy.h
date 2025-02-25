@@ -35,14 +35,14 @@ class Copy : public Operator {
   void Execute(ExecContext* ctx) override;
 
  private:
-  std::shared_ptr<arrow::Buffer> SerializeRecordBatch(
+  static std::shared_ptr<arrow::Buffer> SerializeRecordBatch(
       std::shared_ptr<arrow::RecordBatch> batch);
 
-  std::shared_ptr<arrow::Table> DeserializeTable(yacl::Buffer value);
+  static std::shared_ptr<arrow::Table> DeserializeTable(yacl::Buffer value);
 
-  void InsertTensorsFromTable(ExecContext* ctx,
-                              const RepeatedPbTensor& output_pbs,
-                              std::shared_ptr<arrow::Table> table);
+  static void InsertTensorsFromTable(ExecContext* ctx,
+                                     const RepeatedPbTensor& output_pbs,
+                                     std::shared_ptr<arrow::Table> table);
 
   size_t batch_size_ = 1000 * 1000;
 };

@@ -17,11 +17,8 @@
 #include "arrow/api.h"
 #include "arrow/compute/api.h"
 #include "arrow/table.h"
-#include "libspu/kernel/hlo/basic_binary.h"
-#include "libspu/kernel/hlo/const.h"
 #include "libspu/kernel/hlo/sort.h"
 
-#include "engine/core/arrow_helper.h"
 #include "engine/core/tensor_constructor.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/table_util.h"
@@ -71,8 +68,9 @@ void Sort::SortInPlain(ExecContext* ctx) {
   arrow::compute::SortOrder order = reverse
                                         ? arrow::compute::SortOrder::Descending
                                         : arrow::compute::SortOrder::Ascending;
-  for (int i = 0; i < sort_key_pbs.size(); i++) {
-    sort_keys.push_back(arrow::compute::SortKey(sort_key_pbs[i].name(), order));
+  sort_keys.reserve(sort_key_pbs.size());
+  for (const auto& sort_key_pb : sort_key_pbs) {
+    sort_keys.emplace_back(sort_key_pb.name(), order);
   }
 
   RepeatedPbTensor input_tensors;
@@ -113,7 +111,7 @@ void Sort::SortInPlain(ExecContext* ctx) {
 
   auto status = arrow::compute::SortIndices(input_table, sort_options);
   YACL_ENFORCE(status.ok(), "failed to sort indices");
-  std::shared_ptr<arrow::Array> indices = status.ValueOrDie();
+  const std::shared_ptr<arrow::Array>& indices = status.ValueOrDie();
 
   auto output_status = arrow::compute::Take(input_table, indices);
   YACL_ENFORCE(output_status.ok(), "failed to take indices after sorting");
@@ -125,8 +123,8 @@ void Sort::SortInPlain(ExecContext* ctx) {
                "tensors' size after sorted({}) is less than expected({})",
                output_table->fields().size(), out_pbs.size());
   for (int i = 0; i < out_pbs.size(); i++) {
-    ctx->GetTensorTable()->AddTensor(
-        out_pbs[i].name(), TensorFrom(std::move(output_table->column(i))));
+    ctx->GetTensorTable()->AddTensor(out_pbs[i].name(),
+                                     TensorFrom(output_table->column(i)));
   }
 }
 
@@ -137,7 +135,7 @@ void Sort::SortInSecret(ExecContext* ctx) {
 
   bool reverse = ctx->GetBooleanValueFromAttribute(kReverseAttr);
 
-  auto symbols = ctx->GetSession()->GetDeviceSymbols();
+  auto* symbols = ctx->GetSession()->GetDeviceSymbols();
   std::vector<spu::Value> inputs;
   for (const auto& sort_key_pb : sort_key_pbs) {
     auto value = symbols->getVar(
@@ -153,7 +151,7 @@ void Sort::SortInSecret(ExecContext* ctx) {
     inputs.push_back(value);
   }
 
-  auto sctx = ctx->GetSession()->GetSpuContext();
+  auto* sctx = ctx->GetSession()->GetSpuContext();
   auto sort_direction = spu::kernel::hal::SortDirection::Ascending;
   if (reverse) {
     sort_direction = spu::kernel::hal::SortDirection::Descending;

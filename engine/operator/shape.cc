@@ -51,7 +51,7 @@ void Shape::Execute(ExecContext* ctx) {
                    input_pb.name());
       shapes.first = tensor->Length();
     } else if (util::IsTensorStatusMatched(input_pb, pb::TENSORSTATUS_SECRET)) {
-      auto device_symbols = ctx->GetSession()->GetDeviceSymbols();
+      auto* device_symbols = ctx->GetSession()->GetDeviceSymbols();
       auto value = device_symbols->getVar(
           util::SpuVarNameEncoder::GetValueName(input_pb.name()));
       shapes.first =

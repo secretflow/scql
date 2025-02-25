@@ -24,7 +24,7 @@
 #include "engine/core/primitive_builder.h"
 #include "engine/core/tensor_constructor.h"
 #include "engine/operator/test_util.h"
-#include "engine/util/psi_helper.h"
+#include "engine/util/psi/common.h"
 
 namespace scql::engine::op {
 
@@ -73,7 +73,15 @@ INSTANTIATE_TEST_SUITE_P(
         // TODO: clean duplicated tests
         testing::Values(
             // ECDH PSI
-
+            // case 4
+            JoinTestCase{
+                .left_inputs = {test::NamedTensor(
+                    "x", TensorFrom(arrow::large_utf8(), R"json([])json"))},
+                .right_inputs = {test::NamedTensor(
+                    "y", TensorFrom(arrow::large_utf8(),
+                                    R"json(["E","F","H","G"])json"))},
+                .join_algo = util::PsiAlgo::kEcdhPsi,
+                .join_indices = {}},
             // case 1
             JoinTestCase{
                 .left_inputs = {test::NamedTensor(
@@ -635,8 +643,8 @@ TEST_P(JoinTest, works) {
   auto test_case = std::get<1>(parm);
   std::vector<util::PsiAlgo> test_algo_types;
   if (test_case.join_algo == util::PsiAlgo::kAutoPsi) {
-    // default test rr22
-    test_algo_types = {util::PsiAlgo::kRr22Psi};
+    // default test rr22/ecdh
+    test_algo_types = {util::PsiAlgo::kRr22Psi, util::PsiAlgo::kEcdhPsi};
   } else {
     test_algo_types = {test_case.join_algo};
   }
@@ -735,7 +743,7 @@ pb::ExecNode JoinTest::MakeJoinExecNode(const JoinTestCase& tc,
 
 void JoinTest::FeedInputs(ExecContext* ctx,
                           const std::vector<test::NamedTensor>& tensors) {
-  auto tensor_table = ctx->GetTensorTable();
+  auto* tensor_table = ctx->GetTensorTable();
   for (const auto& named_tensor : tensors) {
     tensor_table->AddTensor(named_tensor.name, named_tensor.tensor);
   }

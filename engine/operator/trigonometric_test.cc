@@ -14,21 +14,12 @@
 
 #include "engine/operator/trigonometric.h"
 
-#include "arrow/array.h"
-#include "arrow/chunked_array.h"
-#include "arrow/compute/api_scalar.h"
-#include "arrow/compute/cast.h"
-#include "arrow/datum.h"
-#include "arrow/result.h"
 #include "arrow/type.h"
 #include "arrow/type_fwd.h"
-#include "arrow/type_traits.h"
-#include "arrow/util/checked_cast.h"
 #include "gtest/gtest.h"
 
 #include "engine/core/tensor_constructor.h"
 #include "engine/operator/test_util.h"
-#include "engine/util/spu_io.h"
 
 namespace scql::engine::op {
 struct TrigonometricFunctionTestCase {
@@ -131,7 +122,7 @@ void TrigonometricFunctionTest::FeedInputs(
     const std::vector<ExecContext*>& ctxs,
     const TrigonometricFunctionTestCase& tc) {
   if (tc.input_status == pb::TensorStatus::TENSORSTATUS_PRIVATE) {
-    for (auto ctx : ctxs) {
+    for (auto* ctx : ctxs) {
       test::FeedInputsAsPrivate(ctx, {tc.input});
     }
   } else if (tc.input_status == pb::TensorStatus::TENSORSTATUS_SECRET) {
@@ -179,13 +170,15 @@ TEST_P(ATan2Test, atan2_works) {
   std::vector<std::shared_ptr<scql::engine::Session>> sessions;
   sessions = test::MakeMultiPCSession(std::get<0>(param));
   std::vector<ExecContext> exec_ctx;
-  for (size_t i = 0; i < sessions.size(); i++) {
-    exec_ctx.emplace_back(node, sessions[i].get());
+  exec_ctx.reserve(sessions.size());
+  for (auto& session : sessions) {
+    exec_ctx.emplace_back(node, session.get());
   }
 
   std::vector<ExecContext*> ctx_ptrs;
-  for (size_t i = 0; i < exec_ctx.size(); i++) {
-    ctx_ptrs.emplace_back(&exec_ctx[i]);
+  ctx_ptrs.reserve(exec_ctx.size());
+  for (auto& i : exec_ctx) {
+    ctx_ptrs.emplace_back(&i);
   }
 
   FeedInputs(ctx_ptrs, tc);
@@ -390,35 +383,37 @@ TEST_P(TrigonometricFunctionTest, works) {
   }
 
   std::vector<ExecContext> exec_ctx;
-  for (size_t i = 0; i < sessions.size(); i++) {
-    exec_ctx.emplace_back(node, sessions[i].get());
+  exec_ctx.reserve(sessions.size());
+  for (auto& session : sessions) {
+    exec_ctx.emplace_back(node, session.get());
   }
 
   std::vector<ExecContext*> ctx_ptrs;
-  for (size_t i = 0; i < exec_ctx.size(); i++) {
-    ctx_ptrs.emplace_back(&exec_ctx[i]);
+  ctx_ptrs.reserve(exec_ctx.size());
+  for (auto& i : exec_ctx) {
+    ctx_ptrs.emplace_back(&i);
   }
 
   FeedInputs(ctx_ptrs, tc);
   std::unordered_map<std::string,
                      std::function<void(std::vector<ExecContext*>)>>
       func_handlers;
-  func_handlers[SinOp] = [](std::vector<ExecContext*> execs) {
+  func_handlers[SinOp] = [](const std::vector<ExecContext*>& execs) {
     test::RunAsync<Sine>(execs);
   };
-  func_handlers[CosOp] = [](std::vector<ExecContext*> execs) {
+  func_handlers[CosOp] = [](const std::vector<ExecContext*>& execs) {
     test::RunAsync<Cosine>(execs);
   };
-  func_handlers[ACosOp] = [](std::vector<ExecContext*> execs) {
+  func_handlers[ACosOp] = [](const std::vector<ExecContext*>& execs) {
     test::RunAsync<ACosine>(execs);
   };
-  func_handlers[ASinOp] = [](std::vector<ExecContext*> execs) {
+  func_handlers[ASinOp] = [](const std::vector<ExecContext*>& execs) {
     test::RunAsync<ASine>(execs);
   };
-  func_handlers[TanOp] = [](std::vector<ExecContext*> execs) {
+  func_handlers[TanOp] = [](const std::vector<ExecContext*>& execs) {
     test::RunAsync<Tan>(execs);
   };
-  func_handlers[ATanOp] = [](std::vector<ExecContext*> execs) {
+  func_handlers[ATanOp] = [](const std::vector<ExecContext*>& execs) {
     test::RunAsync<ATan>(execs);
   };
 

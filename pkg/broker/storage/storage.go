@@ -81,7 +81,10 @@ func (manager *MetaManager) DropTables() error {
 func (manager *MetaManager) GetProject(projectId string) (*Project, error) {
 	txn := manager.CreateMetaTransaction()
 	project, err := txn.GetProject(projectId)
-	txn.Finish(err)
+	err = txn.Finish(err)
+	if err != nil {
+		return nil, err
+	}
 	return &project, err
 }
 
@@ -389,12 +392,38 @@ func (t *MetaTransaction) GetTableMetasByTableNames(projectID string, tableNames
 	if result.Error != nil {
 		return nil, nil, result.Error
 	}
+
+	var tblInfos []Table
+
+	result = t.db.Model(&Table{}).Where("project_id = ?", projectID).Scan(&tblInfos)
+	if result.Error != nil {
+		return nil, nil, result.Error
+	}
+	infoMap := make(map[string]*Table)
+	for _, tbl := range tblInfos {
+		infoMap[tbl.TableName] = &tbl
+	}
 	// fill columns into TableMeta
 	tableMap := map[string]*TableMeta{}
 	for _, tableCol := range tableColumns {
 		tableMeta, exist := tableMap[tableCol.TableName]
 		if !exist {
-			tableMeta = &TableMeta{Table: Table{TableIdentifier: TableIdentifier{ProjectID: projectID, TableName: tableCol.TableName}, RefTable: tableCol.RefTable, DBType: tableCol.DBType, Owner: tableCol.Owner}}
+			tableInfo, tblExist := infoMap[tableCol.TableName]
+			if !tblExist {
+				logrus.Warningf("table %s not found", tableCol.TableName)
+				continue
+			}
+
+			tableMeta = &TableMeta{
+				Table: Table{
+					TableIdentifier: TableIdentifier{
+						ProjectID: projectID,
+						TableName: tableCol.TableName},
+					RefTable:     tableInfo.RefTable,
+					DBType:       tableInfo.DBType,
+					Owner:        tableInfo.Owner,
+					IsView:       tableInfo.IsView,
+					SelectString: tableInfo.SelectString}}
 			tableMap[tableCol.TableName] = tableMeta
 		}
 		columnMeta := ColumnMeta{ColumnName: tableCol.ColumnName, DType: tableCol.DType}
@@ -412,6 +441,14 @@ func (t *MetaTransaction) GetTableMetasByTableNames(projectID string, tableNames
 		}
 	}
 	return
+}
+
+func (t *MetaTransaction) GetAllTables(projectID string) (tables []Table, err error) {
+	result := t.db.Model(&Table{}).Where("tables.project_id = ?", projectID).Scan(&tables)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return tables, nil
 }
 
 func (t *MetaTransaction) GetTables(projectID string, tableNames []string) (tables []Table, allTableExist bool, err error) {

@@ -20,7 +20,10 @@
 #include "engine/core/tensor.h"
 #include "engine/framework/exec.h"
 #include "engine/framework/operator.h"
-#include "engine/util/psi_helper.h"
+#include "engine/util/psi/batch_provider.h"
+#include "engine/util/psi/cipher_intersection.h"
+#include "engine/util/psi/common.h"
+#include "engine/util/psi/ub_helper.h"
 
 namespace scql::engine::op {
 
@@ -75,14 +78,14 @@ class Join : public Operator {
   static JoinRole GetJoinRole(int64_t join_type, bool is_left);
 
   // oprf psi
-  static bool IsOprfServerAccordToHint(ExecContext* ctx);
-  static void OprfPsiServer(
+  static bool IsOprfServerAccordToHint(ExecContext* ctx, int64_t server_hint);
+  static TensorPtr OprfPsiServer(
       ExecContext* ctx, JoinRole join_role, const std::string& tmp_dir,
       const psi::ecdh::EcdhOprfPsiOptions& psi_options,
       const std::shared_ptr<util::BatchProvider>& batch_provider, bool is_left,
       int64_t peer_rank, util::PsiExecutionInfoTable* psi_info_table,
       std::shared_ptr<yacl::link::Context> psi_link);
-  static void OprfPsiClient(
+  static TensorPtr OprfPsiClient(
       ExecContext* ctx, JoinRole join_role, const std::string& tmp_dir,
       const psi::ecdh::EcdhOprfPsiOptions& psi_options,
       const std::shared_ptr<util::BatchProvider>& batch_provider, bool is_left,

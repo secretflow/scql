@@ -62,6 +62,6 @@ spu_cmake_external(
         "libduckdb_yyjson.a",
     ],
     deps = [
-        "@com_github_openssl_openssl//:openssl",
+        "@openssl",
     ],
 )

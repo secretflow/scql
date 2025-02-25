@@ -1277,6 +1277,8 @@ func (b *PlanBuilder) buildSelection(
 	}
 	selection.Conditions = expressions
 	selection.SetChildren(p)
+	selection.SetSchema(p.Schema().Clone())
+	selection.SetOutputNames(p.OutputNames())
 	return selection, nil
 }
 

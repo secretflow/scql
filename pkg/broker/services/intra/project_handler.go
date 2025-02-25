@@ -352,17 +352,15 @@ func (svc *grpcIntraSvc) ProcessInvitation(c context.Context, req *pb.ProcessInv
 		// use new transaction to set invitation invalid
 		// whether commit or rollback, we need to set invitation invalid if invalidInvitation is true
 		if invalidInvitation {
-			svc.app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
+			invalidInvitationErr := svc.app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
 				return txn.SetInvitationInvalidByID(invitation.ID)
 			})
+			if invalidInvitationErr != nil {
+				logrus.Errorf("ProcessInvitation: failed to set invitation invalid: %v", invalidInvitationErr)
+			}
 		}
 		if finishErr != nil {
-			// commit error, user should try to process again
-			if err == nil {
-				err = fmt.Errorf("ProcessInvitation: commit error, please try it again")
-				return
-			}
-			// rollback, just return
+			err = finishErr
 			return
 		}
 		// add members not in invitations
@@ -390,7 +388,7 @@ func (svc *grpcIntraSvc) ProcessInvitation(c context.Context, req *pb.ProcessInv
 				}
 			}
 			if len(newMembers) > 0 {
-				svc.app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
+				err = svc.app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
 					// lock project
 					_, lockErr := storage.AddExclusiveLock(txn).GetProject(invitation.ProjectID)
 					if lockErr != nil {
@@ -399,6 +397,10 @@ func (svc *grpcIntraSvc) ProcessInvitation(c context.Context, req *pb.ProcessInv
 					}
 					return txn.AddProjectMembers(newMembers)
 				})
+
+				if err != nil {
+					logrus.Errorf("ProcessInvitation: failed to add project members: %v", err)
+				}
 			}
 		}
 	}()

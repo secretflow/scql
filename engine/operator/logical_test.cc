@@ -75,14 +75,16 @@ TEST_P(NotTest, Works) {
   auto sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
   std::vector<ExecContext> exec_ctxs;
-  for (size_t idx = 0; idx < sessions.size(); ++idx) {
-    exec_ctxs.emplace_back(node, sessions[idx].get());
+  exec_ctxs.reserve(sessions.size());
+  for (auto& session : sessions) {
+    exec_ctxs.emplace_back(node, session.get());
   }
 
   // feed inputs
   std::vector<ExecContext*> ctx_ptrs;
-  for (size_t idx = 0; idx < exec_ctxs.size(); ++idx) {
-    ctx_ptrs.emplace_back(&exec_ctxs[idx]);
+  ctx_ptrs.reserve(exec_ctxs.size());
+  for (auto& exec_ctx : exec_ctxs) {
+    ctx_ptrs.emplace_back(&exec_ctx);
   }
   FeedInputs(ctx_ptrs, tc);
 
@@ -90,7 +92,7 @@ TEST_P(NotTest, Works) {
     Not alice_op;
     EXPECT_NO_THROW({ alice_op.Run(ctx_ptrs[0]); });
 
-    auto tensor_table = ctx_ptrs[0]->GetTensorTable();
+    auto* tensor_table = ctx_ptrs[0]->GetTensorTable();
     for (const auto& named_tensor : tc.outputs) {
       auto t = tensor_table->GetTensor(named_tensor.name);
       ASSERT_TRUE(t != nullptr) << named_tensor.name << " not found";

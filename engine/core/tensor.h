@@ -17,10 +17,9 @@
 #include <filesystem>
 #include <iostream>
 #include <memory>
+#include <utility>
 
 #include "arrow/chunked_array.h"
-#include "spdlog/spdlog.h"
-#include "yacl/base/exception.h"
 
 #include "api/core.pb.h"
 
@@ -56,6 +55,8 @@ class Tensor {
   virtual std::shared_ptr<TensorBatchReader> CreateBatchReader(
       size_t batch_size) = 0;
 
+  virtual bool IsBucketTensor() = 0;
+
  protected:
   pb::PrimitiveDataType dtype_;
 };
@@ -82,34 +83,42 @@ class MemTensor : public Tensor,
   std::shared_ptr<TensorBatchReader> CreateBatchReader(
       size_t batch_size) override;
 
+  // for now, no memory bucket tensor
+  bool IsBucketTensor() override { return false; }
+
  private:
   std::shared_ptr<arrow::ChunkedArray> chunked_arr_;
 };
 
-struct FileArray {
-  std::filesystem::path file_path;
-  size_t len;
-  size_t null_count;
+class FileArray {
+ public:
+  FileArray(std::filesystem::path file_path, size_t len, size_t null_count)
+      : file_path_(std::move(file_path)), len_(len), null_count_(null_count) {}
+  ~FileArray() {
+    std::error_code ec;
+    std::filesystem::remove(file_path_, ec);
+    if (ec.value() != 0) {
+      // avoid throwing fmt exceptions in the destructor
+      std::cerr << "can not remove tmp dir: " << file_path_.string()
+                << ", msg: " << ec.message() << "\n";
+    }
+  }
+  std::filesystem::path GetFilePath() const { return file_path_; }
+  size_t GetLen() const { return len_; }
+  size_t GetNullCount() const { return null_count_; }
+
+ private:
+  std::filesystem::path file_path_;
+  size_t len_;
+  size_t null_count_;
 };
 
 class DiskTensor : public Tensor,
                    public std::enable_shared_from_this<DiskTensor> {
  public:
-  explicit DiskTensor(std::vector<FileArray> file_arrays,
+  explicit DiskTensor(std::vector<std::shared_ptr<FileArray>> file_arrays,
                       scql::pb::PrimitiveDataType dtype,
                       std::shared_ptr<arrow::DataType> arrow_type);
-
-  ~DiskTensor() {
-    for (auto& file_array : file_arrays_) {
-      std::error_code ec;
-      std::filesystem::remove(file_array.file_path, ec);
-      if (ec.value() != 0) {
-        // avoid throwing fmt exceptions in the destructor
-        std::cerr << "can not remove tmp dir: " << file_array.file_path.string()
-                  << ", msg: " << ec.message() << std::endl;
-      }
-    }
-  }
 
   int64_t Length() const override { return len_; }
 
@@ -126,21 +135,25 @@ class DiskTensor : public Tensor,
   std::shared_ptr<TensorBatchReader> CreateBatchReader(
       size_t batch_size) override;
 
+  bool IsBucketTensor() override { return is_bucket_tensor_; }
+
+ protected:
   void SetAsBucketTensor() { is_bucket_tensor_ = true; }
 
-  bool IsBucketTensor() const { return is_bucket_tensor_; }
-
  private:
-  FileArray GetFileArray(size_t i) const { return file_arrays_[i]; }
+  std::shared_ptr<FileArray> GetFileArray(size_t i) const {
+    return file_arrays_[i];
+  }
   size_t GetFileNum() const { return file_arrays_.size(); }
 
  private:
   friend class DiskTensorBatchReader;
   friend class DiskTensorSlice;
+  friend class DiskBucketTensorConstructor;
   size_t len_ = 0;
   size_t null_count_ = 0;
   bool is_bucket_tensor_ = false;
-  std::vector<FileArray> file_arrays_;
+  std::vector<std::shared_ptr<FileArray>> file_arrays_;
   std::shared_ptr<arrow::DataType> arrow_type_;
 };
 

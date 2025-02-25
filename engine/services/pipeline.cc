@@ -14,127 +14,27 @@
 
 #include "engine/services/pipeline.h"
 
-#include <filesystem>
+#include <algorithm>
 #include <memory>
 
-#include "arrow/array.h"
-#include "arrow/type.h"
 #include "yacl/base/exception.h"
 
+#include "engine/core/tensor_batch_reader.h"
 #include "engine/core/tensor_constructor.h"
+#include "engine/core/tensor_slice.h"
 #include "engine/core/type.h"
 #include "engine/util/filepath_helper.h"
 
 namespace scql::engine {
 
-class TensorSlice {
- public:
-  TensorSlice(size_t slice_size) {}
-  /// @returns tensor ptr, return nullptr if no more slices
-  virtual TensorPtr Next() = 0;
-  virtual size_t GetSliceNum() = 0;
-};
-
-class MemTensorSlice : public TensorSlice {
- public:
-  MemTensorSlice(std::shared_ptr<MemTensor> tensor,
-                 size_t slice_size = std::numeric_limits<size_t>::max())
-      : TensorSlice(slice_size) {
-    reader_ = std::make_shared<MemTensorBatchReader>(tensor, slice_size);
-  }
-  MemTensorSlice(MemTensorSlice&) = delete;
-
-  TensorPtr Next() override {
-    auto arrays = reader_->Next();
-    if (arrays == nullptr) {
-      return nullptr;
-    }
-    return TensorFrom(arrays);
-  }
-
-  size_t GetSliceNum() override { return 1; }
-
- private:
-  std::shared_ptr<MemTensorBatchReader> reader_;
-};
-
-class DiskTensorSlice : public TensorSlice {
- public:
-  DiskTensorSlice(std::shared_ptr<DiskTensor> tensor,
-                  size_t slice_size = std::numeric_limits<size_t>::max())
-      : TensorSlice(slice_size), tensor_(std::move(tensor)) {
-    if (!tensor_->IsBucketTensor()) {
-      reader_ = std::make_shared<DiskTensorBatchReader>(tensor_, slice_size);
-    }
-  }
-  DiskTensorSlice(DiskTensorSlice&) = delete;
-
-  TensorPtr Next() override {
-    // specially for tensor created by bucket op
-    if (tensor_->IsBucketTensor()) {
-      if (cur_slice_idx_ >= tensor_->GetFileNum()) {
-        return nullptr;
-      }
-      std::vector<FileArray> cur_path = {tensor_->GetFileArray(cur_slice_idx_)};
-      auto result_tensor = std::make_shared<DiskTensor>(
-          cur_path, tensor_->Type(), tensor_->ArrowType());
-      cur_slice_idx_++;
-      offset_ += result_tensor->Length();
-      return result_tensor;
-    }
-
-    if (offset_ >= tensor_->Length() || tensor_->GetFileNum() == 0) {
-      return nullptr;
-    }
-
-    auto arrays = reader_->Next();
-    if (arrays == nullptr) {
-      return nullptr;
-    }
-    offset_ += arrays->length();
-    return TensorFrom(arrays);
-  }
-
-  size_t GetSliceNum() override {
-    if (tensor_->IsBucketTensor()) {
-      return tensor_->GetFileNum();
-    }
-    return 1;
-  }
-
- private:
-  std::shared_ptr<DiskTensor> tensor_;
-  std::shared_ptr<DiskTensorBatchReader> reader_;
-  // file index
-  size_t cur_slice_idx_ = 0;
-  int64_t offset_ = 0;
-};
-
-std::shared_ptr<TensorSlice> CreateTensorSlice(
-    std::shared_ptr<Tensor> tensor,
-    size_t slice_size = std::numeric_limits<size_t>::max()) {
-  if (typeid(*tensor) == typeid(MemTensor)) {
-    std::shared_ptr<MemTensor> mem_tensor =
-        std::dynamic_pointer_cast<MemTensor>(tensor);
-    return std::make_shared<MemTensorSlice>(mem_tensor);
-  } else if (typeid(*tensor) == typeid(DiskTensor)) {
-    std::shared_ptr<DiskTensor> disk_tensor =
-        std::dynamic_pointer_cast<DiskTensor>(tensor);
-    return std::make_shared<DiskTensorSlice>(disk_tensor);
-  }
-  YACL_THROW("unsupported tensor type");
-}
-
 size_t GetMaxSliceNum(const std::shared_ptr<yacl::link::Context>& link,
                       size_t self_slice_num) {
-  auto tag = "get_peer_slice_num";
+  const auto* tag = "get_peer_slice_num";
   auto num_bufs = yacl::link::AllGather(
       link, yacl::ByteContainerView(&self_slice_num, sizeof(size_t)), tag);
   size_t max_slice_num = 0;
   for (const auto& o : num_bufs) {
-    if (o.data<size_t>()[0] > max_slice_num) {
-      max_slice_num = o.data<size_t>()[0];
-    }
+    max_slice_num = std::max(o.data<size_t>()[0], max_slice_num);
   }
   return max_slice_num;
 }
@@ -149,7 +49,7 @@ PipelineExecutor::PipelineExecutor(const pb::Pipeline& pipeline,
     return;
   }
   for (int i = 0; i < pipeline.inputs().size(); i++) {
-    auto& pb_tensor = pipeline.inputs()[i];
+    const auto& pb_tensor = pipeline.inputs()[i];
     auto tensor = session->GetTensorTable()->GetTensor(pb_tensor.name());
     YACL_ENFORCE(tensor != nullptr, "failed to get input tensor: {}",
                  pb_tensor.name());
@@ -171,7 +71,7 @@ PipelineExecutor::PipelineExecutor(const pb::Pipeline& pipeline,
     batched_ = false;
     return;
   }
-  for (auto& pb_tensor : pipeline.outputs()) {
+  for (const auto& pb_tensor : pipeline.outputs()) {
     output_tensor_names_.push_back(pb_tensor.name());
   }
 }
@@ -207,7 +107,7 @@ void PipelineExecutor::FetchOutputTensors() {
               session_->GetStreamingOptions().dump_file_dir,
               output_tensor_names_[i])));
     }
-    output_writers_[i]->WriteBatch(*tensor->ToArrowChunkedArray().get());
+    output_writers_[i]->WriteBatch(*tensor->ToArrowChunkedArray());
   }
   if (first_batch_) {
     first_batch_ = false;

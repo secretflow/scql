@@ -21,11 +21,8 @@ namespace scql::engine::util {
 
 PrometheusMonitor::PrometheusMonitor() {
   metrics_registry_ = std::make_unique<prometheus::Registry>();
-  YACL_ENFORCE(metrics_registry_);
-
   // add default metric
   stats_ = std::make_unique<Stats>(*metrics_registry_);
-  YACL_ENFORCE(stats_);
 }
 
 PrometheusMonitor::Stats::Stats(prometheus::Registry& registry)

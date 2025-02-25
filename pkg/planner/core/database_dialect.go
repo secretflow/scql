@@ -30,6 +30,7 @@ const (
 	DBTypePostgres
 	DBTypeCSVDB
 	DBTypeODPS
+	DBTypeView
 )
 
 var dbTypeMap = map[string]DBType{
@@ -38,6 +39,7 @@ var dbTypeMap = map[string]DBType{
 	"postgresql": DBTypePostgres,
 	"csvdb":      DBTypeCSVDB,
 	"odps":       DBTypeODPS,
+	"view":       DBTypeView,
 }
 
 var dbTypeNameMap = map[DBType]string{

@@ -14,13 +14,11 @@
 
 #include "engine/util/stringify_visitor.h"
 
-#include "fmt/format.h"
-
 #include "engine/core/tensor_constructor.h"
 
 namespace scql::engine::util {
 
-StringifyVisitor::StringifyVisitor(TensorPtr tensor, size_t batch_size) {
+StringifyVisitor::StringifyVisitor(const TensorPtr& tensor, size_t batch_size) {
   reader_ = tensor->CreateBatchReader(batch_size);
 }
 
@@ -39,8 +37,14 @@ std::vector<std::string> StringifyVisitor::StringifyBatch() {
 }
 
 std::vector<std::string> Stringify(
-    std::shared_ptr<arrow::ChunkedArray> arrays) {
+    const std::shared_ptr<arrow::ChunkedArray>& arrays) {
   StringifyVisitor visitor(TensorFrom(arrays), arrays->length());
+  return visitor.StringifyBatch();
+}
+
+std::vector<std::string> Stringify(const std::shared_ptr<arrow::Array>& array) {
+  auto arrays = arrow::ChunkedArray::Make({array}).ValueOrDie();
+  StringifyVisitor visitor(TensorFrom(arrays), array->length());
   return visitor.StringifyBatch();
 }
 

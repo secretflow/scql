@@ -16,6 +16,9 @@
 
 #include <cstddef>
 #include <memory>
+#include <vector>
+
+#include "yacl/base/exception.h"
 
 #include "engine/core/tensor.h"
 #include "engine/util/disk/arrow_writer.h"
@@ -30,11 +33,12 @@ TensorPtr TensorFrom(const std::shared_ptr<arrow::DataType>& dtype,
 
 TensorPtr TensorFrom(std::shared_ptr<arrow::ChunkedArray> arrays);
 
+TensorPtr ConcatTensors(const std::vector<TensorPtr>& tensors);
+
 class TensorWriter {
  public:
   TensorWriter(
-      std::shared_ptr<arrow::Schema> schema,
-      const std::filesystem::path parent_path,
+      std::shared_ptr<arrow::Schema> schema, std::filesystem::path parent_path,
       int64_t max_single_file_row_num = std::numeric_limits<int64_t>::max())
       : schema_(std::move(schema)),
         parent_path_(std::move(parent_path)),
@@ -47,7 +51,7 @@ class TensorWriter {
   TensorWriter(
       const std::string& field_name,
       const std::shared_ptr<arrow::DataType>& data_type,
-      const std::filesystem::path parent_path,
+      std::filesystem::path parent_path,
       int64_t max_single_file_row_num = std::numeric_limits<int64_t>::max())
       : parent_path_(std::move(parent_path)),
         max_single_file_row_num_(max_single_file_row_num) {
@@ -75,13 +79,58 @@ class TensorWriter {
 
   std::shared_ptr<arrow::Schema> schema_;
   const std::filesystem::path parent_path_;
-  std::vector<FileArray> file_arrays_;
+  std::vector<std::shared_ptr<FileArray>> file_arrays_;
   std::shared_ptr<util::disk::ArrowWriter> current_writer_;
   size_t file_index_ = 0;
 
   // max row num in a single file, if more than this, will create a new file
   // to write.
   const int64_t max_single_file_row_num_;
+};
+
+class BucketTensorConstructor {
+ public:
+  virtual void InsertBucket(const TensorPtr& tensor, size_t bucket_index) = 0;
+  virtual void InsertBucket(const std::shared_ptr<arrow::ChunkedArray>& arrays,
+                            size_t bucket_index) = 0;
+  virtual void Finish(TensorPtr* tensor) = 0;
+};
+
+class DiskBucketTensorConstructor : public BucketTensorConstructor {
+ public:
+  DiskBucketTensorConstructor(const std::string& field_name,
+                              const std::shared_ptr<arrow::DataType>& data_type,
+                              scql::pb::PrimitiveDataType dtype,
+                              const std::string& file_path, size_t bucket_num)
+      : writers_(bucket_num), data_type_(data_type), dtype_(dtype) {
+    for (size_t j = 0; j < bucket_num; j++) {
+      writers_[j] = std::make_shared<util::disk::ArrowWriter>(
+          field_name, data_type,
+          std::filesystem::path(file_path) / std::to_string(j));
+    }
+  }
+  void InsertBucket(const TensorPtr& tensor, size_t bucket_index) override;
+  void InsertBucket(const std::shared_ptr<arrow::ChunkedArray>& arrays,
+                    size_t bucket_index) override;
+  void Finish(TensorPtr* tensor) override;
+
+ private:
+  std::vector<std::shared_ptr<util::disk::ArrowWriter>> writers_;
+  std::shared_ptr<arrow::DataType> data_type_;
+  scql::pb::PrimitiveDataType dtype_;
+};
+
+class MemoryBucketTensorConstructor : public BucketTensorConstructor {
+ public:
+  explicit MemoryBucketTensorConstructor(size_t bucket_num)
+      : array_vecs_(bucket_num) {}
+  void InsertBucket(const TensorPtr& tensor, size_t bucket_index) override;
+  void InsertBucket(const std::shared_ptr<arrow::ChunkedArray>& arrays,
+                    size_t bucket_index) override;
+  void Finish(TensorPtr* tensor) override;
+
+ private:
+  std::vector<arrow::ChunkedArrayVector> array_vecs_;
 };
 
 }  // namespace scql::engine

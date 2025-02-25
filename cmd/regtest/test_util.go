@@ -64,17 +64,6 @@ type QueryTestSuit struct {
 	Queries []QueryCase
 }
 
-type mysqlServerConfig struct {
-	Host            string `json:"host"`
-	Username        string `json:"username"`
-	Passwd          string `json:"passwd"`
-	Dbname          string `json:"dbname"`
-	MaxOpenConns    int    `json:"max_open_conn"`
-	MaxIdleConns    int    `json:"max_idle_conn"`
-	ConnMaxLifetime int    `json:"conn_max_life_time"`
-	Port            int    `json:"port"`
-}
-
 type ResultTable struct {
 	Column []*ResultColumn `json:"column"`
 }

@@ -1,0 +1,13 @@
+diff --git a/dataproxy_sdk/bazel/defs.bzl b/dataproxy_sdk/bazel/defs.bzl
+index 7aac85c..3d2f7fb 100644
+--- a/dataproxy_sdk/bazel/defs.bzl
++++ b/dataproxy_sdk/bazel/defs.bzl
+@@ -67,7 +67,7 @@ def dataproxy_cc_library(
+         linkopts = linkopts,
+         copts = _dataproxy_copts() + copts,
+         deps = deps + [
+-            "@com_github_gabime_spdlog//:spdlog",
++            "@spdlog",
+         ],
+         **kargs
+     )

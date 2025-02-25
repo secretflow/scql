@@ -14,25 +14,30 @@
 
 #include "engine/operator/bucket.h"
 
+#include <atomic>
 #include <boost/container_hash/hash.hpp>
+#include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <future>
+#include <memory>
+#include <queue>
+#include <string>
 
-#include "absl/strings/escaping.h"
 #include "arrow/array/concatenate.h"
-#include "arrow/compute/api_vector.h"
 #include "arrow/compute/exec.h"
 #include "arrow/result.h"
 #include "spdlog/spdlog.h"
 
-#include "engine/core/arrow_helper.h"
 #include "engine/core/primitive_builder.h"
+#include "engine/core/tensor.h"
 #include "engine/core/tensor_batch_reader.h"
+#include "engine/core/tensor_constructor.h"
 #include "engine/core/type.h"
+#include "engine/util/concurrent_queue.h"
 #include "engine/util/disk/arrow_writer.h"
 #include "engine/util/filepath_helper.h"
-#include "engine/util/ndarray_to_arrow.h"
-#include "engine/util/psi_helper.h"
+#include "engine/util/psi/batch_provider.h"
 #include "engine/util/tensor_util.h"
 
 namespace scql::engine::op {
@@ -68,7 +73,7 @@ void Bucket::Validate(ExecContext* ctx) {
 }
 
 size_t GetMaxRowNum(ExecContext* ctx, size_t local_row_num,
-                    std::vector<std::string> input_party_codes) {
+                    const std::vector<std::string>& input_party_codes) {
   auto tag = ctx->GetNodeName() + "-ExchangeRowNum";
   auto link = ctx->GetSession()->GetLink();
   if (link->WorldSize() > 2) {
@@ -85,83 +90,56 @@ size_t GetMaxRowNum(ExecContext* ctx, size_t local_row_num,
 
 // return false, if no more batch to read
 bool ReadArrays(std::vector<std::shared_ptr<TensorBatchReader>>& readers,
-                arrow::ChunkedArrayVector* arrays) {
+                arrow::ArrayVector* arrays) {
+  arrow::ChunkedArrayVector read_datas;
   for (const auto& reader : readers) {
     auto data = reader->Next();
     if (data == nullptr) {
       return false;
     }
-    arrays->push_back(data);
+    read_datas.push_back(data);
+  }
+  for (auto& read_data : read_datas) {
+    arrays->push_back(arrow::Concatenate(read_data->chunks()).ValueOrDie());
   }
   return true;
 }
 
-void WriteArrays(
-    std::vector<std::vector<std::shared_ptr<util::disk::ArrowWriter>>>& writers,
-    std::vector<arrow::ChunkedArrayVector>& arrays, size_t bucket_num) {
+void WriteArrays(std::vector<std::shared_ptr<BucketTensorConstructor>>& writers,
+                 std::vector<arrow::ChunkedArrayVector>& arrays,
+                 size_t bucket_num) {
   for (size_t i = 0; i < writers.size(); i++) {
-    yacl::parallel_for(0, bucket_num, [&, i](int64_t begin, int64_t end) {
-      for (int64_t j = begin; j < end; j++) {
-        writers[i][j]->WriteBatch(*arrays[i][j]);
-        // delete immediately to save memory
-        arrays[i][j].reset();
-      }
-    });
+    for (size_t j = 0; j < bucket_num; j++) {
+      writers[i]->InsertBucket(arrays[i][j], j);
+      // delete immediately to save memory
+      arrays[i][j].reset();
+    }
   }
 }
 
-std::vector<arrow::ChunkedArrayVector> HashBucket(
-    const arrow::ChunkedArrayVector& batch_arrays,
-    const std::vector<int>& key_pos,
-    const scql::engine::RepeatedPbTensor& join_key_pbs,
+std::vector<arrow::ChunkedArrayVector> FilterByIndex(
+    const arrow::ArrayVector& arrays, const arrow::ChunkedArrayVector& indices,
     const scql::engine::RepeatedPbTensor& output_pbs, size_t bucket_num) {
-  std::vector<std::shared_ptr<arrow::ChunkedArray>> indices(bucket_num);
-  {
-    std::vector<UInt64TensorBuilder> result_builder(bucket_num);
-    {
-      std::vector<std::string> keys;
-      {
-        keys = util::Stringify(batch_arrays[key_pos[0]]);
-        for (int i = 1; i < join_key_pbs.size(); ++i) {
-          auto another_keys = util::Stringify(batch_arrays[key_pos[i]]);
-          YACL_ENFORCE(keys.size() == another_keys.size(),
-                       "tensor #{} batch size not equals with previous", i);
-
-          keys = util::Combine(keys, another_keys);
-        }
-      }
-      boost::hash<std::string> hasher;
-      for (size_t i = 0; i < keys.size(); i++) {
-        result_builder[hasher(keys[i]) % bucket_num].Append(i);
-      }
-    }
-    for (size_t i = 0; i < bucket_num; i++) {
-      TensorPtr indice;
-      result_builder[i].Finish(&indice);
-      indices[i] = indice->ToArrowChunkedArray();
-    }
-  }
   std::vector<arrow::ChunkedArrayVector> result(output_pbs.size());
   for (int i = 0; i < output_pbs.size(); i++) {
     // when calling function take, it will concatenate input array.
     // to avoid duplicated concatenating chunk, concatenate it when reading
-    std::shared_ptr<arrow::Array> current_chunk =
-        arrow::Concatenate(batch_arrays[i]->chunks()).ValueOrDie();
-    auto arr = arrow::ChunkedArray::Make(
-                   std::vector<std::shared_ptr<arrow::Array>>{current_chunk})
-                   .ValueOrDie();
+    auto arr = arrow::ChunkedArray::Make({arrays[i]}).ValueOrDie();
     arrow::ChunkedArrayVector arrays(bucket_num);
-    for (size_t j = 0; j < bucket_num; j++) {
-      arrow::Result<arrow::Datum> tmp;
-      // delegate to apache arrow's take function
-      tmp = arrow::compute::CallFunction("take", {arr, indices[j]});
-      YACL_ENFORCE(tmp.ok(),
-                   "caught error while invoking arrow take function:{}",
-                   tmp.status().ToString());
-      arrays[j] = tmp.ValueOrDie().chunked_array();
-    }
+    yacl::parallel_for(0, bucket_num, [&](int64_t begin, int64_t end) {
+      for (int64_t j = begin; j < end; j++) {
+        arrow::Result<arrow::Datum> tmp;
+        // delegate to apache arrow's take function
+        tmp = arrow::compute::CallFunction("take", {arr, indices[j]});
+        YACL_ENFORCE(tmp.ok(),
+                     "caught error while invoking arrow take function:{}",
+                     tmp.status().ToString());
+        arrays[j] = tmp.ValueOrDie().chunked_array();
+      }
+    });
     result[i] = std::move(arrays);
   }
+
   return result;
 }
 
@@ -191,29 +169,24 @@ void Bucket::Execute(ExecContext* ctx) {
     return;
   }
   // create readers
-  std::vector<std::shared_ptr<TensorBatchReader>> readers;
+  std::vector<std::shared_ptr<TensorBatchReader>> readers(input_pbs.size());
   for (int i = 0; i < input_pbs.size(); i++) {
-    readers.push_back(input_tensors[i]->CreateBatchReader(
+    readers[i] = (input_tensors[i]->CreateBatchReader(
         streaming_options.batch_row_num / kBatchParallelism));
   }
   // create writer
-  std::vector<std::vector<std::shared_ptr<util::disk::ArrowWriter>>>
-      out_writers;
+  std::vector<std::shared_ptr<BucketTensorConstructor>> tensor_constructors(
+      output_pbs.size());
   auto bucket_num = (max_length + streaming_options.batch_row_num - 1) /
                     streaming_options.batch_row_num;
 
   SPDLOG_INFO("bucket num: {}", bucket_num);
   for (int i = 0; i < output_pbs.size(); i++) {
-    std::vector<std::shared_ptr<util::disk::ArrowWriter>> arrow_writers(
-        bucket_num);
     std::filesystem::path out_dir = util::CreateDirWithRandSuffix(
         streaming_options.dump_file_dir, output_pbs[i].name());
-    for (size_t j = 0; j < bucket_num; j++) {
-      arrow_writers[j] = std::make_shared<util::disk::ArrowWriter>(
-          output_pbs[i].name(), ToArrowDataType(output_pbs[i].elem_type()),
-          out_dir / std::to_string(j));
-    }
-    out_writers.push_back(std::move(arrow_writers));
+    tensor_constructors[i] = std::make_shared<DiskBucketTensorConstructor>(
+        output_pbs[i].name(), ToArrowDataType(output_pbs[i].elem_type()),
+        output_pbs[i].elem_type(), out_dir, bucket_num);
   }
   std::vector<int> key_pos;
   for (int i = 0; i < join_key_pbs.size(); i++) {
@@ -229,129 +202,103 @@ void Bucket::Execute(ExecContext* ctx) {
                  join_key_pbs[i].name());
   }
 
-  std::vector<arrow::ChunkedArrayVector> input_arrays;
-  std::vector<std::vector<arrow::ChunkedArrayVector>> output_arrays;
-  std::mutex read_mtx;
-  std::mutex write_mtx;
-  std::condition_variable read_cv;
-  std::condition_variable write_cv;
-  bool read_completed = false;
-  bool bucket_completed = false;
   auto cal_future = std::async(std::launch::async, [&] {
+    std::vector<std::future<void>> futures;
+    int i = 0;
     while (true) {
-      std::vector<arrow::ChunkedArrayVector> batch_arrays;
-      {
-        std::unique_lock lock(read_mtx);
-        if (read_completed && input_arrays.empty()) {
-          bucket_completed = true;
-          write_cv.notify_all();
-          break;
-        }
-        if (!read_completed) {
-          read_cv.wait(lock,
-                       [&] { return !input_arrays.empty() || read_completed; });
-        }
-        if (input_arrays.empty()) {
-          continue;
-        }
-        std::swap(input_arrays, batch_arrays);
+      auto read_result = read_queue_.Pop();
+      if (read_result.is_end) {
+        SPDLOG_INFO("Take to end");
+        break;
       }
-      read_cv.notify_all();
-      SPDLOG_INFO("hash parallel size {}", batch_arrays.size());
-      yacl::parallel_for(
-          0, batch_arrays.size(), [&](int64_t begin, int64_t end) {
-            for (int64_t j = begin; j < end; j++) {
-              auto out_arrays =
-                  HashBucket(batch_arrays[j], key_pos, join_key_pbs, output_pbs,
-                             bucket_num);
-              {
-                std::unique_lock lock(write_mtx);
-                write_cv.wait(lock, [&] {
-                  return output_arrays.size() <= kBatchParallelism;
-                });
-                output_arrays.push_back(out_arrays);
-                write_cv.notify_all();
-              }
-            }
-          });
+      SPDLOG_INFO("Take batch: {}", i);
+      auto out_arrays = FilterByIndex(
+          read_result.data_arrays, read_result.indice, output_pbs, bucket_num);
+      write_queue_.Push({out_arrays, false});
+      i++;
     }
+    write_queue_.Push({{}, true});
   });
 
   auto write_future = std::async(std::launch::async, [&] {
+    int i = 0;
     while (true) {
-      std::vector<std::vector<arrow::ChunkedArrayVector>> batch_arrays;
-      {
-        std::unique_lock<std::mutex> lock(write_mtx);
-        if (bucket_completed && output_arrays.empty()) {
-          break;
-        }
-        if (!bucket_completed) {
-          write_cv.wait(
-              lock, [&] { return !output_arrays.empty() || bucket_completed; });
-        }
-        if (output_arrays.empty()) {
-          continue;
-        }
-        std::swap(output_arrays, batch_arrays);
-        write_cv.notify_all();
+      auto data = write_queue_.Pop();
+      if (data.second) {
+        SPDLOG_INFO("Write to end");
+        break;
       }
-      for (auto& batch_array : batch_arrays) {
-        WriteArrays(out_writers, batch_array, bucket_num);
-      }
+      SPDLOG_INFO("Write batch: {}", i);
+      WriteArrays(tensor_constructors, data.first, bucket_num);
+      i++;
     }
   });
 
-  int i = 0;
   try {
+    std::queue<std::future<void>> futures;
+    int num = 0;
     while (true) {
-      arrow::ChunkedArrayVector batch_arrays;
+      arrow::ArrayVector batch_arrays;
       if (!ReadArrays(readers, &batch_arrays)) {
-        {
-          std::unique_lock<std::mutex> lock(read_mtx);
-          read_completed = true;
-        }
-        read_cv.notify_all();
         break;
       }
-      SPDLOG_INFO("Read batch {}", i);
-      i++;
-      {
-        std::unique_lock<std::mutex> lock(read_mtx);
-        read_cv.wait(lock,
-                     [&] { return input_arrays.size() < kBatchParallelism; });
-        input_arrays.push_back(std::move(batch_arrays));
+      SPDLOG_INFO("Read batch {}", num);
+      // parallel calculate filter indices
+      auto f = std::async(
+          std::launch::async,
+          [&](arrow::ArrayVector&& batch_arrays) {
+            arrow::ChunkedArrayVector indices(bucket_num);
+            std::vector<UInt64TensorBuilder> result_builder(indices.size());
+            {
+              std::vector<std::string> keys;
+              {
+                keys = util::Stringify(batch_arrays[key_pos[0]]);
+                for (size_t i = 1; i < key_pos.size(); ++i) {
+                  auto another_keys = util::Stringify(batch_arrays[key_pos[i]]);
+                  YACL_ENFORCE(keys.size() == another_keys.size(),
+                               "tensor #{} batch size not equals with previous",
+                               i);
+
+                  keys = util::Combine(keys, another_keys);
+                }
+              }
+              boost::hash<std::string> hasher;
+              for (size_t i = 0; i < keys.size(); i++) {
+                result_builder[hasher(keys[i]) % indices.size()].Append(i);
+              }
+            }
+            for (size_t i = 0; i < indices.size(); i++) {
+              TensorPtr indice;
+              result_builder[i].Finish(&indice);
+              indices[i] = indice->ToArrowChunkedArray();
+            }
+            read_queue_.Push({batch_arrays, false, indices});
+          },
+          std::move(batch_arrays));
+      futures.push(std::move(f));
+      if (futures.size() >= kBatchParallelism) {
+        futures.front().get();
+        futures.pop();
       }
-      read_cv.notify_all();
+      num++;
     }
+    while (!futures.empty()) {
+      futures.front().get();
+      futures.pop();
+    }
+    read_queue_.Push({{}, true, {}});
+    SPDLOG_INFO("Read to end");
     cal_future.get();
   } catch (const std::exception& e) {
     SPDLOG_ERROR("read/cal error: {}", e.what());
-    {
-      std::unique_lock<std::mutex> lock(read_mtx);
-      read_completed = true;
-    }
-    {
-      std::unique_lock<std::mutex> lock(write_mtx);
-      bucket_completed = true;
-    }
-    read_cv.notify_all();
-    write_cv.notify_all();
+    read_queue_.Push({{}, true, {}});
+    write_queue_.Push({{}, true});
     throw e;
   }
   write_future.get();
   for (int i = 0; i < output_pbs.size(); i++) {
-    std::vector<FileArray> file_arrays(bucket_num);
-    for (size_t j = 0; j < bucket_num; j++) {
-      file_arrays[j].file_path = out_writers[i][j]->GetFilePath();
-      file_arrays[j].len = out_writers[i][j]->GetRowNum();
-      file_arrays[j].null_count = out_writers[i][j]->GetNullCount();
-    }
-    auto type = out_writers[i][0]->GetSchema()->field(0)->type();
-    // remove writers to call ipc writer close()
-    out_writers[i].clear();
-    auto tensor = std::make_shared<DiskTensor>(file_arrays,
-                                               output_pbs[i].elem_type(), type);
-    tensor->SetAsBucketTensor();
+    TensorPtr tensor;
+    tensor_constructors[i]->Finish(&tensor);
     ctx->GetTensorTable()->AddTensor(output_pbs[i].name(), tensor);
   }
 }

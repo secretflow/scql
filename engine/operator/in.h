@@ -19,7 +19,10 @@
 
 #include "engine/framework/exec.h"
 #include "engine/framework/operator.h"
-#include "engine/util/psi_helper.h"
+#include "engine/util/psi/batch_provider.h"
+#include "engine/util/psi/cipher_intersection.h"
+#include "engine/util/psi/common.h"
+#include "engine/util/psi/ub_helper.h"
 
 namespace scql::engine::op {
 
@@ -64,7 +67,7 @@ class In : public Operator {
   static void ValidatePartyCodes(ExecContext* ctx);
 
   // oprf psi
-  static bool IsOprfServerAccordToHint(ExecContext* ctx);
+  static bool IsOprfServerAccordToHint(ExecContext* ctx, int64_t server_hint);
   static void OprfPsiServer(
       ExecContext* ctx, bool reveal_to_server, const std::string& tmp_dir,
       const psi::ecdh::EcdhOprfPsiOptions& psi_options,

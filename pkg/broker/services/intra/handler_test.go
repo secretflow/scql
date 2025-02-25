@@ -206,6 +206,37 @@ func (s *intraTestSuite) TestListInvitations() {
 	s.Equal(1, len(invitationsRes.Invitations))
 }
 
+func (s *intraTestSuite) TestCreateView() {
+	_, err := s.svcAlice.CreateProject(s.ctx, &pb.CreateProjectRequest{ProjectId: "test1", Name: "test", Conf: &pb.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}}})
+	s.NoError(err)
+	_, err = s.svcAlice.CreateTable(s.ctx, &pb.CreateTableRequest{ProjectId: "test1", TableName: "test_table", RefTable: "alice.table", DbType: "mysql", Columns: []*pb.CreateTableRequest_ColumnDesc{{Name: "a", Dtype: "int"}}})
+	s.NoError(err)
+	_, err = s.svcAlice.CreateView(s.ctx, &pb.CreateViewRequest{ProjectId: "test1", ViewName: "view1", Query: "SELECT * FROM test_table"})
+	s.NoError(err)
+	_, err = s.svcAlice.CreateView(s.ctx, &pb.CreateViewRequest{ProjectId: "test1", ViewName: "view1", Query: "SELECT * FROM test_table"})
+	s.Error(err)
+	s.Equal("CreateView: entity view1 already exists", err.Error())
+
+	_, err = s.svcAlice.CreateView(s.ctx, &pb.CreateViewRequest{ProjectId: "test1", ViewName: "view2", Query: "SELECT * FROM view1"})
+	s.NoError(err)
+
+	_, err = s.svcAlice.CreateView(s.ctx, &pb.CreateViewRequest{ProjectId: "test1", ViewName: "not_exsit", Query: "SELECT * FROM not_exsit_table"})
+	s.Error(err)
+
+	_, err = s.svcAlice.CreateView(s.ctx, &pb.CreateViewRequest{ProjectId: "test1", ViewName: "invalid", Query: "SELECT * FROM test_table JOIN"})
+	s.Error(err)
+}
+
+func (s *intraTestSuite) TestCreateTable() {
+	_, err := s.svcAlice.CreateProject(s.ctx, &pb.CreateProjectRequest{ProjectId: "test1", Name: "test", Conf: &pb.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}}})
+	s.NoError(err)
+	_, err = s.svcAlice.CreateTable(s.ctx, &pb.CreateTableRequest{ProjectId: "test1", TableName: "test_table", RefTable: "alice.table", DbType: "mysql", Columns: []*pb.CreateTableRequest_ColumnDesc{{Name: "a", Dtype: "int"}}})
+	s.NoError(err)
+	_, err = s.svcAlice.CreateTable(s.ctx, &pb.CreateTableRequest{ProjectId: "test1", TableName: "test_table_1", RefTable: "alice.table", DbType: "postgresql", Columns: []*pb.CreateTableRequest_ColumnDesc{&pb.CreateTableRequest_ColumnDesc{Name: "test", Dtype: "int"}}})
+	s.Error(err)
+	s.Equal("CreateTable: ref table alice.table conflicts, it already existed with db_type=mysql", err.Error())
+}
+
 func (s *intraTestSuite) TestCreateProject() {
 	_, err := s.svcAlice.CreateProject(s.ctx, &pb.CreateProjectRequest{ProjectId: "test1", Name: "test", Conf: &pb.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}}})
 	s.NoError(err)

@@ -85,7 +85,14 @@ func TestRunQueryWithNormalCCL(t *testing.T) {
 	cclList, err := mock.MockAllCCL()
 	r.NoError(err)
 	r.NoError(CreateProjectTableAndCcl(testConf.ProjectConf, cclList, testConf.SkipCreateTableCCL))
-	path := map[string][]string{SEMI2K: {"../testdata/single_party.json", "../testdata/single_party_postgres.json", "../testdata/two_parties.json", "../testdata/multi_parties.json"}, CHEETAH: {"../testdata/two_parties.json"}, ABY3: {"../testdata/multi_parties.json"}}
+	path := map[string][]string{
+		SEMI2K: {"../testdata/single_party.json",
+			"../testdata/single_party_postgres.json",
+			"../testdata/two_parties.json",
+			"../testdata/multi_parties_semi2k.json",
+			"../testdata/multi_parties.json"},
+		CHEETAH: {"../testdata/two_parties.json"},
+		ABY3:    {"../testdata/multi_parties.json"}}
 	r.NoError(runQueryTest(alice, testConf.SpuProtocol, TestFlag{Sync: false, TestConcurrent: !testConf.SkipConcurrentTest, TestSerial: true}, path))
 	r.NoError(runQueryTest(alice, testConf.SpuProtocol, TestFlag{Sync: true, TestConcurrent: !testConf.SkipConcurrentTest, TestSerial: true}, path))
 

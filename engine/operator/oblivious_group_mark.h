@@ -32,7 +32,7 @@ class ObliviousGroupMark : public Operator {
   void Execute(ExecContext* ctx) override;
 
  private:
-  spu::Value GetFullGroupMark(ExecContext* ctx);
+  static spu::Value GetFullGroupMark(ExecContext* ctx);
 };
 
 }  // namespace scql::engine::op
