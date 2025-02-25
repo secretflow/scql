@@ -867,13 +867,13 @@ func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors m
 		// TODO: support more trim options, only support trim whitespace now
 		return t.ep.AddArrowFuncNode("arrow_trim", "utf8_trim", TrimOptions{Characters: " "}, inputs, inputs[0].DType)
 	case ast.Concat:
-		var separator types.Datum
-		separator.SetString("") // only support nil separator now
-		sepTensor, err := t.addConstantNode(&separator)
+		var seperator types.Datum
+		seperator.SetString("") // only support nil seperator now
+		sepTensor, err := t.addConstantNode(&seperator)
 		if err != nil {
-			return nil, fmt.Errorf("buildScalarFunction: build separator for concat failed: %v ", err)
+			return nil, fmt.Errorf("buildScalarFunction: build seperator for concat failed: %v ", err)
 		}
-		// arrow function 'binary_join_element_wise' treats the last input as separator
+		// arrow function 'binary_join_element_wise' treats the last input as seperator
 		ins, err := t.addBroadcastToNodeOndemand(append(inputs, sepTensor))
 		if err != nil {
 			return nil, fmt.Errorf("buildScalarFunction: broadcast for concat failed: %v ", err)
