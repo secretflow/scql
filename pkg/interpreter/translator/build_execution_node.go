@@ -114,20 +114,13 @@ func (t *translator) buildApply(ln *ApplyNode) (err error) {
 		if err != nil {
 			return err
 		}
-		rightKeyTs, rightTs, err = t.addBucketNode([]*graph.Tensor{rightKeyT}, rightTs, parties)
+		rightKeyTs, _, err = t.addBucketNode([]*graph.Tensor{rightKeyT}, rightTs, parties)
 		if err != nil {
 			return err
 		}
 		leftKeyT = leftKeyTs[0]
 		rightKeyT = rightKeyTs[0]
 		for i, c := range ln.Children()[0].Schema().Columns {
-			// replace not add new
-			if _, ok := colIdToTensor[c.UniqueID]; !ok {
-				continue
-			}
-			colIdToTensor[c.UniqueID] = leftTs[i]
-		}
-		for i, c := range ln.Children()[1].Schema().Columns {
 			// replace not add new
 			if _, ok := colIdToTensor[c.UniqueID]; !ok {
 				continue
@@ -257,10 +250,12 @@ func (t *translator) buildEQJoin(ln *JoinNode) (err error) {
 			hasSharedKey = true
 		}
 	}
-	leftTs := left.ResultTable()
-	rightTs := right.ResultTable()
+	leftUsed := core.GetUsedList(join.Schema().Columns, left.Schema())
+	rightUsed := core.GetUsedList(join.Schema().Columns, right.Schema())
+	leftTs := sliceutil.Take(left.ResultTable(), leftUsed)
+	rightTs := sliceutil.Take(right.ResultTable(), rightUsed)
 	if hasSharedKey {
-		return t.buildSecretEQJoin(ln, leftKeyTs, rightKeyTs, leftTs, rightTs)
+		return t.buildSecretEQJoin(ln, leftKeyTs, rightKeyTs, leftTs, rightTs, sliceutil.Take(left.Schema().Columns, leftUsed), sliceutil.Take(right.Schema().Columns, rightUsed))
 	}
 
 	// step 2: build join index with psi join
@@ -308,23 +303,23 @@ func (t *translator) buildEQJoin(ln *JoinNode) (err error) {
 		err = setResultTable(ln, resultIdToTensor)
 	}()
 
-	{
+	if len(leftTs) > 0 {
 		leftParty := leftIndexT.OwnerPartyCode
 		leftFiltered, err := t.addFilterByIndexNode(leftIndexT, leftTs, leftParty)
 		if err != nil {
 			return fmt.Errorf("buildEQJoin: %v", err)
 		}
-		for i, c := range left.Schema().Columns {
+		for i, c := range sliceutil.Take(left.Schema().Columns, leftUsed) {
 			resultIdToTensor[c.UniqueID] = leftFiltered[i]
 		}
 	}
-	{
+	if len(rightTs) > 0 {
 		rightParty := rightIndexT.OwnerPartyCode
 		rightFiltered, err := t.addFilterByIndexNode(rightIndexT, rightTs, rightParty)
 		if err != nil {
 			return fmt.Errorf("buildEQJoin: %v", err)
 		}
-		for i, c := range right.Schema().Columns {
+		for i, c := range sliceutil.Take(right.Schema().Columns, rightUsed) {
 			resultIdToTensor[c.UniqueID] = rightFiltered[i]
 		}
 	}
@@ -332,7 +327,7 @@ func (t *translator) buildEQJoin(ln *JoinNode) (err error) {
 	return
 }
 
-func (t *translator) buildSecretEQJoin(ln *JoinNode, leftKeyTs, rightKeyTs, leftTs, rightTs []*graph.Tensor) (err error) {
+func (t *translator) buildSecretEQJoin(ln *JoinNode, leftKeyTs, rightKeyTs, leftTs, rightTs []*graph.Tensor, leftColumns, rightColumns []*expression.Column) (err error) {
 	join, ok := ln.lp.(*core.LogicalJoin)
 	if !ok {
 		return fmt.Errorf("assert failed while translator buildSecretEQJoin, expected: core.LogicalJoin, actual: %T", ln.lp)
@@ -367,11 +362,10 @@ func (t *translator) buildSecretEQJoin(ln *JoinNode, leftKeyTs, rightKeyTs, left
 
 	resultIdToTensor := make(map[int64]*graph.Tensor)
 
-	left, right := ln.Children()[0], ln.Children()[1]
-	for i, c := range left.Schema().Columns {
+	for i, c := range leftColumns {
 		resultIdToTensor[c.UniqueID] = leftTs[i]
 	}
-	for i, c := range right.Schema().Columns {
+	for i, c := range rightColumns {
 		resultIdToTensor[c.UniqueID] = rightTs[i]
 	}
 
@@ -1319,7 +1313,7 @@ func (t *translator) buildSort(ln *SortNode) (err error) {
 			return
 		}
 
-		setResultTable(ln, colIdToTensor)
+		err = setResultTable(ln, colIdToTensor)
 	}()
 
 	childIdToTensor := t.getNodeResultTensor(ln.children[0])
@@ -1471,18 +1465,25 @@ func (t *translator) buildObliviousRankWindow(ln *WindowNode) error {
 		}
 		orderKeys = append(orderKeys, orderKey)
 	}
-	var sortPayload []*graph.Tensor
-	sortPayload = append(sortPayload, partitionKeys...)
-	sortPayload = append(sortPayload, orderKeys...)
-	sortPayload = append(sortPayload, child.ResultTable()...)
+	var sortPayloads []*graph.Tensor
+	sortPayloads = append(sortPayloads, partitionKeys...)
+	for _, col := range window.Schema().Columns[0 : len(window.Schema().Columns)-1] {
+		payload, err := t.getTensorFromColumn(col, childColIdToTensor)
+		if err != nil {
+			return fmt.Errorf("buildObliviousRankWindow: %v", err)
+		}
+		sortPayloads = append(sortPayloads, payload)
+	}
 	sortKeys = append(sortKeys, partitionKeys...)
 	sortKeys = append(sortKeys, orderKeys...)
-	out, err := t.addSortNode("sort", sortKeys, sortPayload, false)
+
+	out, err := t.addSortNode("sort", sortKeys, sortPayloads, false)
 	if err != nil {
 		return fmt.Errorf("builObliviousRankWindow: sort with partition ids err: %v", err)
 	}
+
 	partitionedKeys := out[0:len(partitionKeys)]
-	sortedPayloadTensors := out[len(partitionKeys)+len(orderKeys):]
+	sortedPayloadTensors := out[len(partitionKeys):]
 	groupMark, err := t.addObliviousGroupMarkNode("partition_mark", partitionedKeys)
 	if err != nil {
 		return fmt.Errorf("builObliviousRankWindow: %v", err)
@@ -1497,6 +1498,11 @@ func (t *translator) buildObliviousRankWindow(ln *WindowNode) error {
 			return fmt.Errorf("builObliviousRankWindow: %v", err)
 		}
 		childColIdToTensor[lastCol.UniqueID] = output
+	case ast.WindowFuncPercentRank:
+		output, err = t.addObliviousGroupAggNode(ast.WindowFuncPercentRank, groupMark, groupMark)
+		if err != nil {
+			return fmt.Errorf("builObliviousRankWindow: %v", err)
+		}
 	default:
 		return fmt.Errorf("buildObliviousRankWindow: unsupported window function %v", windowDesc.Name)
 	}
@@ -1525,7 +1531,7 @@ func (t *translator) buildPrivateRankWindow(ln *WindowNode, party string, colIdT
 	}
 
 	output := t.ep.AddTensor("Out")
-	output.DType = proto.PrimitiveDataType_INT64
+
 	output.SetStatus(proto.TensorStatus_TENSORSTATUS_PRIVATE)
 	lastCol := window.Schema().Columns[len(window.Schema().Columns)-1]
 	tensor, ok := colIdToTensor[lastCol.UniqueID]
@@ -1549,14 +1555,11 @@ func (t *translator) buildPrivateRankWindow(ln *WindowNode, party string, colIdT
 	for _, desc := range window.WindowFuncDescs {
 		switch desc.Name {
 		case ast.WindowFuncRowNumber:
-			//TODO: refactor this to graph builder
-			if _, err := t.ep.AddExecutionNode(operator.OpNameRowNumber, operator.OpNameRowNumber,
-				map[string][]*graph.Tensor{"Key": sortKey, "PartitionId": []*graph.Tensor{partitionId}, "PartitionNum": []*graph.Tensor{partitionNum}},
-				map[string][]*graph.Tensor{"Out": []*graph.Tensor{output}},
-				map[string]*graph.Attribute{operator.ReverseAttr: reverseAttr},
-				[]string{party}); err != nil {
-				return err
-			}
+			output.DType = proto.PrimitiveDataType_INT64
+			return t.addWindowNode(operator.OpNameRowNumber, sortKey, partitionId, partitionNum, output, reverseAttr, party)
+		case ast.WindowFuncPercentRank:
+			output.DType = proto.PrimitiveDataType_FLOAT64
+			return t.addWindowNode(operator.OpNamePercentRank, sortKey, partitionId, partitionNum, output, reverseAttr, party)
 		default:
 			return fmt.Errorf("buildPrivateRankWindow: unsupported window function %v", desc.Name)
 		}

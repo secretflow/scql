@@ -46,14 +46,16 @@ TEST_P(ObliviousGroupAggTest, works) {
   auto sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
   std::vector<ExecContext> exec_ctxs;
-  for (size_t idx = 0; idx < sessions.size(); ++idx) {
-    exec_ctxs.emplace_back(node, sessions[idx].get());
+  exec_ctxs.reserve(sessions.size());
+  for (auto& session : sessions) {
+    exec_ctxs.emplace_back(node, session.get());
   }
 
   // feed inputs
   std::vector<ExecContext*> ctx_ptrs;
-  for (size_t idx = 0; idx < exec_ctxs.size(); ++idx) {
-    ctx_ptrs.emplace_back(&exec_ctxs[idx]);
+  ctx_ptrs.reserve(exec_ctxs.size());
+  for (auto& exec_ctx : exec_ctxs) {
+    ctx_ptrs.emplace_back(&exec_ctx);
   }
   test::FeedInputsAsSecret(ctx_ptrs, tc.inputs);
   test::FeedInputsAsSecret(ctx_ptrs, {tc.group});
@@ -318,6 +320,38 @@ INSTANTIATE_TEST_SUITE_P(
                                            TensorFrom(arrow::boolean(), "[]")),
                 .outputs = {test::NamedTensor(
                     "out", TensorFrom(arrow::float32(), "[]"))}})),
+    TestParamNameGenerator(ObliviousGroupAggTest));
+
+INSTANTIATE_TEST_SUITE_P(
+    ObliviousPercentRankTest, ObliviousGroupAggTest,
+    testing::Combine(
+        test::SpuTestValuesMultiPC,
+        testing::Values(
+            ObliviousGroupAggTestCase{
+                .op_type = ObliviousPercentRank::kOpType,
+                .inputs = {test::NamedTensor(
+                    "in", TensorFrom(arrow::int64(), "[1, 2, 3, 4, 5]"))},
+                .group = test::NamedTensor(
+                    "group", TensorFrom(arrow::boolean(), "[1, 0, 0, 0, 1]")),
+                .outputs = {test::NamedTensor(
+                    "out", TensorFrom(arrow::float64(),
+                                      "[1.0, 0.25, 0.5, 0.75, 1.0]"))}},
+            ObliviousGroupAggTestCase{
+                .op_type = ObliviousPercentRank::kOpType,
+                .inputs = {test::NamedTensor("in", TensorFrom(arrow::int64(),
+                                                              "[1]"))},
+                .group = test::NamedTensor("group",
+                                           TensorFrom(arrow::boolean(), "[1]")),
+                .outputs = {test::NamedTensor(
+                    "out", TensorFrom(arrow::float64(), "[1.0]"))}},
+            ObliviousGroupAggTestCase{
+                .op_type = ObliviousPercentRank::kOpType,
+                .inputs = {test::NamedTensor("in", TensorFrom(arrow::int64(),
+                                                              "[1,2]"))},
+                .group = test::NamedTensor("group", TensorFrom(arrow::boolean(),
+                                                               "[1,1]")),
+                .outputs = {test::NamedTensor(
+                    "out", TensorFrom(arrow::float64(), "[1.0,1.0]"))}})),
     TestParamNameGenerator(ObliviousGroupAggTest));
 
 }  // namespace scql::engine::op

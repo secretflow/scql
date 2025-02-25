@@ -16,6 +16,7 @@
 #include "gtest/gtest.h"
 
 #include "engine/core/tensor_constructor.h"
+#include "engine/operator/all_ops_register.h"
 #include "engine/operator/test_util.h"
 
 namespace scql::engine::op {
@@ -160,6 +161,19 @@ INSTANTIATE_TEST_SUITE_P(
             .outputs = {test::NamedTensor(
                 "out", TensorFrom(arrow::int64(),
                                   MakeLargeIncrementTensorInput(1024 * 1024)))},
+            .reverse = {"0"}},
+        WindowTestCase{
+            .op_type = PercentRank::kOpType,
+            .inputs = {test::NamedTensor(
+                "in_a", TensorFrom(arrow::int64(), "[5,5,5,5,6,5,6,5]"))},
+            .partition_id = test::NamedTensor("partition_id",
+                                              TensorFrom(arrow::uint32(),
+                                                         "[0,1,1,1,0,0,1,0]")),
+            .partition_num = test::NamedTensor(
+                "partition_num", TensorFrom(arrow::uint32(), "[2]")),
+            .outputs = {test::NamedTensor(
+                "out", TensorFrom(arrow::float64(),
+                                  "[0.25,0.25,0.5,0.75,1.0,0.5,1.0,0.75]"))},
             .reverse = {"0"}}));
 
 TEST_P(WindowTest, work) {
@@ -172,12 +186,13 @@ TEST_P(WindowTest, work) {
   test::FeedInputsAsPrivate(&ctx, tc.inputs);
   test::FeedInputsAsPrivate(&ctx, {tc.partition_id, tc.partition_num});
 
-  RowNumber op;
+  RegisterAllOps();
+  auto op = GetOpRegistry()->GetOperator(tc.op_type);
 
   if (tc.ok) {
-    EXPECT_NO_THROW(op.Run(&ctx));
+    EXPECT_NO_THROW(op->Run(&ctx));
   } else {
-    EXPECT_ANY_THROW(op.Run(&ctx));
+    EXPECT_ANY_THROW(op->Run(&ctx));
   }
 
   SPDLOG_INFO("start to compare result");

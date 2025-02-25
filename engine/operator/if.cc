@@ -17,10 +17,8 @@
 #include <string>
 #include <vector>
 
-#include "arrow/compute/api_vector.h"
 #include "arrow/compute/exec.h"
 #include "libspu/kernel/hlo/basic_binary.h"
-#include "libspu/kernel/hlo/casting.h"
 #include "libspu/kernel/hlo/const.h"
 
 #include "engine/core/tensor_constructor.h"

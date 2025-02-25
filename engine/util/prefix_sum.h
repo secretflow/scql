@@ -15,7 +15,6 @@
 #pragma once
 
 #include <functional>
-#include <vector>
 
 #include "libspu/core/context.h"
 

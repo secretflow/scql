@@ -35,12 +35,16 @@ class SecretJoin : public Operator {
 
  protected:
   void Validate(ExecContext* ctx) override;
+
   void Execute(ExecContext* ctx) override;
 
  private:
+  void SetEmptyResult(ExecContext* ctx);
+
   std::tuple<std::vector<spu::Value>, std::vector<spu::Value>> MergeInputs(
       ExecContext* ctx);
-  std::tuple<spu::Value, spu::Value> CountKeyGroup(
+
+  std::tuple<spu::Value, spu::Value, spu::Value> CountKeyGroup(
       spu::SPUContext* sctx, const std::vector<spu::Value>& keys,
       const spu::Value& item_origin_mark);
 };

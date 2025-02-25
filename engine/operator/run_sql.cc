@@ -17,8 +17,6 @@
 #include "spdlog/spdlog.h"
 #include "yacl/base/exception.h"
 
-#include "engine/audit/audit_log.h"
-
 namespace scql::engine::op {
 
 const std::string RunSQL::kOpType("RunSQL");
@@ -26,7 +24,6 @@ const std::string RunSQL::kOpType("RunSQL");
 const std::string& RunSQL::Type() const { return kOpType; }
 
 void RunSQL::Execute(ExecContext* ctx) {
-  const auto start_time = std::chrono::system_clock::now();
   auto logger = ctx->GetActiveLogger();
   std::string select = ctx->GetStringValueFromAttribute(kSQLAttr);
 
@@ -59,9 +56,9 @@ void RunSQL::Execute(ExecContext* ctx) {
   YACL_ENFORCE(outputs_pb.size() > 0, "no output for RunSQL");
 
   std::vector<ColumnDesc> expected_outputs;
-  for (int i = 0; i < outputs_pb.size(); ++i) {
-    expected_outputs.emplace_back(outputs_pb[i].name(),
-                                  outputs_pb[i].elem_type());
+  expected_outputs.reserve(outputs_pb.size());
+  for (const auto& i : outputs_pb) {
+    expected_outputs.emplace_back(i.name(), i.elem_type());
   }
 
   TensorBuildOptions options = {
@@ -76,9 +73,6 @@ void RunSQL::Execute(ExecContext* ctx) {
   }
   SPDLOG_LOGGER_INFO(logger, "get result row={}, column={}",
                      results[0]->Length(), results.size());
-
-  audit::RecordSqlNodeDetail(*ctx, select, results[0]->Length(), results.size(),
-                             start_time);
 }
 
 }  // namespace scql::engine::op

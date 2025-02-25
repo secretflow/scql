@@ -17,18 +17,14 @@
 #include <memory>
 #include <utility>
 
-#include "arrow/array.h"
 #include "arrow/testing/random.h"
 #include "arrow/type.h"
 #include "benchmark/benchmark.h"
-#include "yacl/utils/parallel.h"
 
 #include "engine/core/tensor.h"
 #include "engine/core/tensor_constructor.h"
 #include "engine/operator/bucket.h"
 #include "engine/operator/test_util.h"
-#include "engine/util/disk/arrow_reader.h"
-#include "engine/util/disk/arrow_writer.h"
 #include "engine/util/filepath_helper.h"
 
 namespace scql::engine::op {
@@ -102,8 +98,8 @@ void RunBucketBench(std::vector<TensorPtr>& join_keys,
   auto session = test::Make1PCSession();
   auto options = session->GetStreamingOptions();
   // 1kw
-  options.batch_row_num = 10 * 1000 * 1000;
-  options.streaming_row_num_threshold = 10 * 1000 * 1000;
+  options.batch_row_num = 20 * 1000 * 1000;
+  options.streaming_row_num_threshold = 20 * 1000 * 1000;
   session->SetStreamingOptions(options);
   ExecContext ctx(node, session.get());
   // feed inputs, test copy from alice to bob.
@@ -117,8 +113,12 @@ TensorPtr CreateTmpTensor(const std::filesystem::path& path,
                           const std::shared_ptr<arrow::Field>& field,
                           size_t num) {
   constexpr arrow::random::SeedType randomSeed = 0x0ff1ce;
+  constexpr size_t batch_size = 1000 * 1000;
   arrow::ArrayVector arrays;
-  arrays.push_back(arrow::random::GenerateArray(*field, num, randomSeed));
+  for (size_t i = 0; i < num; i += batch_size) {
+    arrays.push_back(
+        arrow::random::GenerateArray(*field, batch_size, randomSeed));
+  }
   arrow::FieldVector fields = {field};
   auto schema = std::make_shared<arrow::Schema>(fields);
   auto expected_chunked_array = std::make_shared<arrow::ChunkedArray>(arrays);
@@ -156,4 +156,4 @@ static void BM_BucketTest(benchmark::State& state) {
   }
 }
 
-BENCHMARK(BM_BucketTest)->Unit(benchmark::kMillisecond)->Arg(100 * 1000 * 1000);
+BENCHMARK(BM_BucketTest)->Unit(benchmark::kMillisecond)->Arg(500 * 1000 * 1000);

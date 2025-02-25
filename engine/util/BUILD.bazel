@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("//engine/bazel:scql.bzl", "scql_cc_test")
+
 package(default_visibility = ["//visibility:public"])
 
 cc_library(
@@ -27,8 +29,8 @@ cc_library(
     srcs = ["logging.cc"],
     hdrs = ["logging.h"],
     deps = [
-        "@com_github_brpc_brpc//:butil",
-        "@com_github_gabime_spdlog//:spdlog",
+        "@brpc//:butil",
+        "@spdlog",
         "@yacl//yacl/base:exception",
     ],
 )
@@ -38,45 +40,8 @@ cc_library(
     srcs = ["prometheus_monitor.cc"],
     hdrs = ["prometheus_monitor.h"],
     deps = [
-        "@com_github_jupp0r_prometheus_cpp//core",
+        "@prometheus-cpp//core",
         "@yacl//yacl/base:exception",
-    ],
-)
-
-cc_library(
-    name = "psi_helper",
-    srcs = ["psi_helper.cc"],
-    hdrs = ["psi_helper.h"],
-    deps = [
-        ":stringify_visitor",
-        "//engine/core:primitive_builder",
-        "//engine/core:string_tensor_builder",
-        "//engine/core:tensor_constructor",
-        "//engine/framework:exec",
-        "@com_github_gabime_spdlog//:spdlog",
-        "@com_github_msgpack_msgpack//:msgpack",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/container:flat_hash_set",
-        "@psi//psi/ecdh/ub_psi:ecdh_oprf_psi",
-        "@psi//psi/rr22:rr22_psi",
-        "@psi//psi/rr22:common",
-        "@psi//psi/utils:batch_provider",
-        "@psi//psi/utils:batch_provider_impl",
-        "@psi//psi/utils:ec_point_store",
-        "@psi//psi/utils:ub_psi_cache",
-    ],
-)
-
-cc_library(
-    name = "psi_detail_logger",
-    srcs = ["psi_detail_logger.cc"],
-    hdrs = ["psi_detail_logger.h"],
-    deps = [
-        ":logging",
-        ":spu_io",
-        "//engine/core:tensor",
-        "@psi//psi/cryptor:ecc_cryptor",
-        "@psi//psi/ecdh:ecdh_logger",
     ],
 )
 
@@ -91,26 +56,6 @@ cc_library(
         "//engine/util:spu_io",
         "//engine/util:time_util",
         "@yacl//yacl/base:exception",
-    ],
-)
-
-cc_test(
-    name = "psi_helper_test",
-    srcs = ["psi_helper_test.cc"],
-    deps = [
-        ":psi_helper",
-        "//engine/core:primitive_builder",
-        "@com_google_googletest//:gtest_main",
-    ],
-)
-
-cc_binary(
-    name = "psi_helper_bench",
-    srcs = ["psi_helper_bench.cc"],
-    deps = [
-        ":psi_helper",
-        "//engine/core:primitive_builder",
-        "@com_github_google_benchmark//:benchmark_main",
     ],
 )
 
@@ -131,6 +76,7 @@ cc_library(
     hdrs = ["spu_io.h"],
     deps = [
         ":ndarray_to_arrow",
+        ":prefix_sum",
         "//engine/core:arrow_helper",
         "//engine/core:tensor",
         "//engine/core:tensor_constructor",
@@ -140,7 +86,9 @@ cc_library(
         "@spulib//libspu/device:io",
         "@spulib//libspu/kernel/hal:constants",
         "@spulib//libspu/kernel/hal:public_helper",
+        "@spulib//libspu/kernel/hlo:basic_binary",
         "@spulib//libspu/kernel/hlo:casting",
+        "@spulib//libspu/kernel/hlo:geometrical",
     ],
 )
 
@@ -162,8 +110,8 @@ cc_library(
     srcs = ["filepath_helper.cc"],
     hdrs = ["filepath_helper.h"],
     deps = [
-        "@boost//:uuid",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/strings",
+        "@boost.uuid",
         "@yacl//yacl/base:exception",
     ],
 )
@@ -181,7 +129,7 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "filepath_helper_test",
     srcs = ["filepath_helper_test.cc"],
     linkopts = [
@@ -189,7 +137,6 @@ cc_test(
     ],
     deps = [
         ":filepath_helper",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -208,7 +155,7 @@ cc_library(
     hdrs = ["communicate_helper.h"],
     deps = [
         "//engine/util:spu_io",
-        "@com_github_msgpack_msgpack//:msgpack",
+        "@msgpack-c//:msgpack",
     ],
 )
 
@@ -236,6 +183,11 @@ cc_library(
     name = "progress_util",
     hdrs = ["progress_util.h"],
     deps = [
-        "@com_github_fmtlib_fmt//:fmtlib",
+        "@fmt",
     ],
+)
+
+cc_library(
+    name = "concurrent_queue",
+    hdrs = ["concurrent_queue.h"],
 )

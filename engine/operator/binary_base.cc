@@ -134,9 +134,9 @@ void BinaryBase::ExecuteInPlain(ExecContext* ctx) {
 }
 
 spu::Value BinaryBase::PropagateNulls(spu::SPUContext* sctx,
-                                      const spu::Value& left,
-                                      const spu::Value& right) {
-  return spu::kernel::hlo::And(sctx, left, right);
+                                      const spu::Value& lhs,
+                                      const spu::Value& rhs) {
+  return spu::kernel::hlo::And(sctx, lhs, rhs);
 }
 
 }  // namespace scql::engine::op

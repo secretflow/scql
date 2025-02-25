@@ -14,8 +14,6 @@
 
 #include "engine/framework/operator.h"
 
-#include <tuple>
-
 #include "gflags/gflags.h"
 
 DEFINE_bool(enable_tensor_life_cycle_manage, true,

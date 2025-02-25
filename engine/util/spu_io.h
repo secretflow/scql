@@ -1,4 +1,3 @@
-// Copyright 2023 Ant Group Co., Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,13 +13,24 @@
 
 #pragma once
 
+#include <utility>
+
 #include "arrow/api.h"
-#include "libspu/core/xt_helper.h"
 #include "libspu/device/io.h"
+#include "libspu/kernel/hlo/basic_binary.h"
+#include "libspu/kernel/hlo/geometrical.h"
 
 #include "engine/core/tensor.h"
+#include "engine/util/prefix_sum.h"
 
 namespace scql::engine::util {
+
+// expand value from botom to top for each group, mark using '0' to mark
+// the group end, e.g: inputs = {{0, 0, 1, 0, 2}}, mark = {1, 1, 0, 1, 0}
+//            output = {{1, 1, 1, 2, 2}}
+std::vector<spu::Value> ExpandGroupValueReversely(
+    spu::SPUContext* sctx, const std::vector<spu::Value>& inputs,
+    const spu::Value& mark);
 
 spu::DataType GetWiderSpuType(const spu::DataType& t1, const spu::DataType& t2);
 
@@ -36,14 +46,14 @@ class SpuVarNameEncoder {
 /// @brief helper class for infeeding tensor to SPU device
 class SpuInfeedHelper {
  public:
-  SpuInfeedHelper(spu::device::ColocatedIo* cio) : cio_(cio) {}
+  explicit SpuInfeedHelper(spu::device::ColocatedIo* cio) : cio_(cio) {}
 
   void InfeedTensorAsPublic(const std::string& name, const Tensor& tensor) {
-    return InfeedTensor(name, tensor, spu::VIS_PUBLIC);
+    InfeedTensor(name, tensor, spu::VIS_PUBLIC);
   }
 
   void InfeedTensorAsSecret(const std::string& name, const Tensor& tensor) {
-    return InfeedTensor(name, tensor, spu::VIS_SECRET);
+    InfeedTensor(name, tensor, spu::VIS_SECRET);
   }
 
   void Sync();
@@ -59,7 +69,7 @@ class SpuInfeedHelper {
     PtView(spu::PtBufferView val, spu::PtBufferView validity)
         : value(val), validity(validity) {}
 #else
-    explicit PtView(spu::PtBufferView val) : value(val) {}
+    explicit PtView(spu::PtBufferView val) : value(std::move(val)) {}
 #endif  // SCQL_WITH_NULL
 
     PtView() = delete;

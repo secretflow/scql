@@ -55,5 +55,6 @@ var isCompareAstFuncMap = map[string]bool{
 }
 
 var isRankWindowFuncMap = map[string]bool{
-	ast.WindowFuncRowNumber: true,
+	ast.WindowFuncRowNumber:   true,
+	ast.WindowFuncPercentRank: true,
 }

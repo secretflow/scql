@@ -16,26 +16,21 @@
 
 #include <chrono>
 #include <cstddef>
-#include <cstdint>
 #include <cstring>
 #include <exception>
 #include <memory>
 #include <stdexcept>
 #include <utility>
 
-#include "brpc/channel.h"
 #include "brpc/closure_guard.h"
 #include "google/protobuf/util/json_util.h"
 #include "psi/utils/sync.h"
 
-#include "engine/audit/audit_log.h"
 #include "engine/framework/exec.h"
 #include "engine/framework/executor.h"
 #include "engine/framework/session.h"
 #include "engine/operator/all_ops_register.h"
 #include "engine/services/pipeline.h"
-#include "engine/util/logging.h"
-#include "engine/util/tensor_util.h"
 
 #include "engine/services/error_collector_service.pb.h"
 
@@ -62,7 +57,6 @@ std::string MessageToJsonString(const google::protobuf::Message& message) {
   ::google::protobuf::util::JsonOptions opts;
   opts.add_whitespace = false;
   opts.preserve_proto_field_names = true;
-  opts.always_print_primitive_fields = true;
   opts.always_print_enums_as_ints = true;
   std::string result;
   ::google::protobuf::util::MessageToJsonString(message, &result, opts);
@@ -136,7 +130,7 @@ void EngineServiceImpl::StopJob(::google::protobuf::RpcController* cntl,
                                 ::google::protobuf::Closure* done) {
   brpc::ClosureGuard done_guard(done);
   // check illegal request.
-  auto controller = static_cast<brpc::Controller*>(cntl);
+  auto* controller = static_cast<brpc::Controller*>(cntl);
   std::string source_ip =
       butil::endpoint2str(controller->remote_side()).c_str();
   auto session_id = request->job_id();
@@ -144,14 +138,12 @@ void EngineServiceImpl::StopJob(::google::protobuf::RpcController* cntl,
     CheckDriverCredential(controller->http_request());
   } catch (const std::exception& e) {
     LOG_ERROR_AND_SET_STATUS(status, pb::Code::UNAUTHENTICATED, e.what());
-    audit::RecordUncategorizedEvent(*status, session_id, source_ip, "StopJob");
     return;
   }
 
   if (session_id.empty()) {
     std::string err_msg = "session_id in request is empty";
     LOG_ERROR_AND_SET_STATUS(status, pb::Code::INVALID_ARGUMENT, err_msg);
-    audit::RecordUncategorizedEvent(*status, session_id, source_ip, "StopJob");
     return;
   }
 
@@ -163,7 +155,6 @@ void EngineServiceImpl::StopJob(::google::protobuf::RpcController* cntl,
     session_mgr_->StopSession(session_id);
 
     status->set_code(pb::Code::OK);
-    audit::RecordStopJobEvent(*request, *status, source_ip);
     return;
   } catch (const std::exception& e) {
     std::string err_msg =
@@ -171,7 +162,6 @@ void EngineServiceImpl::StopJob(::google::protobuf::RpcController* cntl,
                     session_id, e.what());
     LOG_ERROR_AND_SET_STATUS_IMPL(logger, status,
                                   pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
-    audit::RecordStopJobEvent(*request, *status, source_ip);
     return;
   }
 }
@@ -237,7 +227,7 @@ void EngineServiceImpl::RunExecutionPlan(
     pb::RunExecutionPlanResponse* response, ::google::protobuf::Closure* done) {
   brpc::ClosureGuard done_guard(done);
   auto start_time = std::chrono::system_clock::now();
-  auto controller = static_cast<brpc::Controller*>(cntl);
+  auto* controller = static_cast<brpc::Controller*>(cntl);
   std::string source_ip =
       butil::endpoint2str(controller->remote_side()).c_str();
 
@@ -246,9 +236,6 @@ void EngineServiceImpl::RunExecutionPlan(
   } catch (const std::exception& e) {
     LOG_ERROR_AND_SET_STATUS(response->mutable_status(),
                              pb::Code::UNAUTHENTICATED, e.what());
-    audit::RecordUncategorizedEvent(response->status(),
-                                    request->job_params().job_id(), source_ip,
-                                    "RunExecutionPlan");
     return;
   }
 
@@ -263,7 +250,6 @@ void EngineServiceImpl::RunExecutionPlan(
         session_id);
     LOG_ERROR_AND_SET_STATUS(response->mutable_status(), pb::Code::BAD_REQUEST,
                              err_msg);
-    audit::RecordRunExecPlanEvent(*request, *response, start_time, source_ip);
 
     ReportErrorToPeers(request->job_params(), pb::Code::BAD_REQUEST, err_msg);
     return;
@@ -281,8 +267,6 @@ void EngineServiceImpl::RunExecutionPlan(
     CheckGraphChecksum(request, session);
     ::scql::pb::Status status;
     status.set_code(0);
-    audit::RecordCreateSessionEvent(status, request->job_params(), true,
-                                    source_ip);
   } catch (const std::exception& e) {
     std::string err_msg = fmt::format(
         "RunExecutionPlan create session({}) failed, catch "
@@ -290,8 +274,6 @@ void EngineServiceImpl::RunExecutionPlan(
         session_id, e.what());
     LOG_ERROR_AND_SET_STATUS(response->mutable_status(),
                              pb::Code::UNKNOWN_ENGINE_ERROR, err_msg);
-    audit::RecordCreateSessionEvent(response->status(), request->job_params(),
-                                    true, source_ip);
     ReportErrorToPeers(request->job_params(), pb::Code::UNKNOWN_ENGINE_ERROR,
                        err_msg);
     return;
@@ -315,7 +297,6 @@ void EngineServiceImpl::RunExecutionPlan(
   } else {
     // run in sync mode
     RunPlanSync(request, session, response);
-    audit::RecordRunExecPlanEvent(*request, *response, start_time, source_ip);
 
     try {
       session_mgr_->RemoveSession(session_id);
@@ -608,7 +589,7 @@ void EngineServiceImpl::RunPlanSync(const pb::RunExecutionPlanRequest* request,
   MergePeerErrors(session->GetPeerErrors(), response->mutable_status());
 }
 
-void EngineServiceImpl::RunPlanAsync(const pb::RunExecutionPlanRequest request,
+void EngineServiceImpl::RunPlanAsync(const pb::RunExecutionPlanRequest& request,
                                      Session* session,
                                      const std::string& source_ip) {
   auto start_time = std::chrono::system_clock::now();
@@ -618,7 +599,6 @@ void EngineServiceImpl::RunPlanAsync(const pb::RunExecutionPlanRequest request,
   response.set_party_code(request.job_params().party_code());
 
   RunPlanSync(&request, session, &response);
-  audit::RecordRunExecPlanEvent(request, response, start_time, source_ip);
 
   // prepare report info
   pb::ReportRequest report;

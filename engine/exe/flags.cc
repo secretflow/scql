@@ -25,13 +25,6 @@ DEFINE_bool(log_enable_console_logger, true,
 DEFINE_bool(log_enable_session_logger_separation, false,
             "whether output session-related logs to a dedicated file");
 
-DEFINE_bool(enable_audit_logger, true, "whether enable audit log");
-DEFINE_string(audit_log_file, "audit/audit.log", "audit basic log filename");
-DEFINE_string(audit_detail_file, "audit/detail.log",
-              "audit detail log filename");
-DEFINE_int32(audit_max_files, 180,
-             "maximum number of old audit log files to retain");
-
 // Brpc channel flags for peer engine.
 DEFINE_string(peer_engine_protocol, "baidu_std", "rpc protocol");
 DEFINE_string(peer_engine_connection_type, "single", "connection type");

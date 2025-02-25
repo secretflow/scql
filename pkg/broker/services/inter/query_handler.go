@@ -16,6 +16,7 @@ package inter
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/sirupsen/logrus"
@@ -46,7 +47,7 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 	if _, err := app.GetSessionInfo(req.JobId); err == nil {
 		errStr := fmt.Sprintf("DistributeQuery: already existing job for id %s, err: %v", req.JobId, err)
 		logrus.Warning(errStr)
-		return nil, fmt.Errorf(errStr)
+		return nil, errors.New(errStr)
 	}
 	err = common.CheckMemberExistInProject(app.MetaMgr, req.GetProjectId(), req.GetClientId().GetCode())
 	if err != nil {
@@ -121,7 +122,10 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 		return
 	}
 	for code, checksum := range localChecksums {
-		session.SaveLocalChecksum(code, checksum)
+		err = session.SaveLocalChecksum(code, checksum)
+		if err != nil {
+			return nil, fmt.Errorf("failed to save local checksum for party %s: %v", code, err)
+		}
 	}
 	// persist session info for other party to exchange job info if necessary
 	err = app.AddSession(session)

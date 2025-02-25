@@ -16,6 +16,7 @@
 
 #include <mutex>
 
+#include "engine/framework/registry.h"
 #include "engine/operator/arithmetic.h"
 #include "engine/operator/arrow_func.h"
 #include "engine/operator/broadcast_to.h"
@@ -149,6 +150,8 @@ void RegisterAllOpsImpl() {
   ADD_OPERATOR_TO_REGISTRY(ObliviousGroupMax);
   ADD_OPERATOR_TO_REGISTRY(ObliviousGroupMin);
 
+  ADD_OPERATOR_TO_REGISTRY(ObliviousPercentRank);
+
   ADD_OPERATOR_TO_REGISTRY(Concat);
   ADD_OPERATOR_TO_REGISTRY(Cast);
   ADD_OPERATOR_TO_REGISTRY(If);
@@ -167,6 +170,7 @@ void RegisterAllOpsImpl() {
   ADD_OPERATOR_TO_REGISTRY(Bucket);
 
   ADD_OPERATOR_TO_REGISTRY(RowNumber);
+  ADD_OPERATOR_TO_REGISTRY(PercentRank);
 
   ADD_OPERATOR_TO_REGISTRY(Abs);
   ADD_OPERATOR_TO_REGISTRY(Ceil);

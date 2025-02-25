@@ -124,7 +124,7 @@ TEST_P(CopyTest, works) {
   EXPECT_NO_THROW(test::RunAsync<Copy>({&alice_ctx, &bob_ctx}));
 
   // Then check bob output
-  auto tensor_table = bob_ctx.GetTensorTable();
+  auto* tensor_table = bob_ctx.GetTensorTable();
   for (size_t i = 0; i < tc.output_names.size(); ++i) {
     auto in_arr = tc.datas[i].tensor->ToArrowChunkedArray();
     auto out = tensor_table->GetTensor(tc.output_names[i]);

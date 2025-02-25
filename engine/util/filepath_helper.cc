@@ -17,15 +17,14 @@
 #include <filesystem>
 
 #include "absl/strings/match.h"
-#include "boost/uuid/uuid.hpp"
-#include "boost/uuid/uuid_generators.hpp"
+#include "boost/uuid/random_generator.hpp"
 #include "boost/uuid/uuid_io.hpp"
 #include "yacl/base/exception.h"
 namespace scql::engine::util {
 
 std::string GetS3LikeScheme(const std::string& url) {
   const std::string schemes[] = {kSchemeS3, kSchemeMinIo, kSchemeOss};
-  for (auto& scheme : schemes) {
+  for (const auto& scheme : schemes) {
     if (absl::StartsWith(url, scheme)) {
       return scheme;
     }

@@ -29,7 +29,7 @@ using ScanFnParallel = std::function<void(IndexTuple&)>;
 // "Circuit representation of a work-efficient 16-input parallel prefix sum"
 // https://en.wikipedia.org/wiki/Prefix_sum#/media/File:Prefix_sum_16.svg
 void ScanParallel(std::size_t n, const ScanFnParallel& parallel_fn) {
-  size_t k = absl::bit_width(n - 1u);
+  size_t k = absl::bit_width(n - 1U);
 
   if (n < 2) {
     return;
@@ -57,7 +57,6 @@ void ScanParallel(std::size_t n, const ScanFnParallel& parallel_fn) {
       parallel_fn(it);
     }
   }
-  return;
 }
 
 }  // namespace

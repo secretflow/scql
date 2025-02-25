@@ -14,7 +14,6 @@
 
 #include "engine/util/disk/arrow_reader.h"
 
-#include "arrow/compute/cast.h"
 #include "arrow/table.h"
 #include "spdlog/spdlog.h"
 

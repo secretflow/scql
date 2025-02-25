@@ -45,7 +45,10 @@ func NewDistributeLockGuard(m *MetaManager) *DistributeLockGuard {
 		txn: m.CreateMetaTransaction(),
 	}
 	lm.postProcessFunc = func(err error) {
-		lm.txn.Finish(err)
+		err = lm.txn.Finish(err)
+		if err != nil {
+			logrus.Error(err)
+		}
 	}
 	return lm
 }

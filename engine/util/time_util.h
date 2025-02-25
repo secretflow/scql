@@ -16,8 +16,6 @@
 
 #include <string>
 
-#include "arrow/array.h"
-
 #include "engine/core/primitive_builder.h"
 
 #include "api/core.pb.h"
@@ -70,7 +68,7 @@ class ConvertDateTimeToInt64Visitor {
 
   std::shared_ptr<Tensor> GetResultTensor();
 
-  int64_t DateUnitCountPerSecond(arrow::TimeUnit::type unit_type);
+  static int64_t DateUnitCountPerSecond(arrow::TimeUnit::type unit_type);
 
   template <typename T>
   arrow::Status Visit(const T& array) {

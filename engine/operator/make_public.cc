@@ -84,13 +84,13 @@ void MakePublic::PrivateToPublic(ExecContext* ctx,
 void MakePublic::SecretToPublic(ExecContext* ctx,
                                 const RepeatedPbTensor& inputs,
                                 const RepeatedPbTensor& outputs) {
-  auto symbols = ctx->GetSession()->GetDeviceSymbols();
+  auto* symbols = ctx->GetSession()->GetDeviceSymbols();
   for (int i = 0; i < inputs.size(); ++i) {
     const auto& in_name = inputs[i].name();
     auto secret_in_value =
         symbols->getVar(util::SpuVarNameEncoder::GetValueName(in_name));
 
-    auto sctx = ctx->GetSession()->GetSpuContext();
+    auto* sctx = ctx->GetSession()->GetSpuContext();
     auto public_out_value = spu::kernel::hal::reveal(sctx, secret_in_value);
 
     const auto& out_name = outputs[i].name();

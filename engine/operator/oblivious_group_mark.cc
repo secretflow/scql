@@ -44,8 +44,8 @@ void ObliviousGroupMark::Validate(ExecContext* ctx) {
 void ObliviousGroupMark::Execute(ExecContext* ctx) {
   const auto& input_pbs = ctx->GetInput(kIn);
 
-  auto symbols = ctx->GetSession()->GetDeviceSymbols();
-  auto sctx = ctx->GetSession()->GetSpuContext();
+  auto* symbols = ctx->GetSession()->GetDeviceSymbols();
+  auto* sctx = ctx->GetSession()->GetSpuContext();
   // TODO(jingshi) : check and calculate validity
   auto first_value = symbols->getVar(
       util::SpuVarNameEncoder::GetValueName(input_pbs[0].name()));
@@ -70,8 +70,8 @@ void ObliviousGroupMark::Execute(ExecContext* ctx) {
 // result = {1, 0, 0, 1}, full_result need to add tail = {1}
 spu::Value ObliviousGroupMark::GetFullGroupMark(ExecContext* ctx) {
   const auto& input_pbs = ctx->GetInput(kIn);
-  auto symbols = ctx->GetSession()->GetDeviceSymbols();
-  auto sctx = ctx->GetSession()->GetSpuContext();
+  auto* symbols = ctx->GetSession()->GetDeviceSymbols();
+  auto* sctx = ctx->GetSession()->GetSpuContext();
   auto first_value = symbols->getVar(
       util::SpuVarNameEncoder::GetValueName(input_pbs[0].name()));
   int64_t row_count = first_value.shape().size() > 0 ? first_value.shape()[0]

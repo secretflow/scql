@@ -15,7 +15,7 @@
 #include "engine/operator/unique.h"
 
 #include "arrow/compute/api_vector.h"
-#include "arrow/compute/exec.h"
+#include "arrow/datum.h"
 
 #include "engine/core/arrow_helper.h"
 #include "engine/core/tensor_constructor.h"

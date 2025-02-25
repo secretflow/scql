@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <signal.h>
+
 #include <memory>
 
 #include "absl/debugging/failure_signal_handler.h"
@@ -23,7 +25,6 @@
 #include "butil/file_util.h"
 #include "flags.h"
 
-#include "engine/audit/audit_log.h"
 #include "engine/auth/authenticator.h"
 #include "engine/datasource/datasource_adaptor_mgr.h"
 #include "engine/datasource/embed_router.h"
@@ -40,6 +41,12 @@
 #include "engine/services/prometheus_service_impl.h"
 #include "engine/util/logging.h"
 #include "engine/util/prometheus_monitor.h"
+
+namespace brpc {
+
+DECLARE_bool(graceful_quit_on_sigterm);
+
+}
 
 grpc::SslCredentialsOptions LoadSslCredentialsOptions(
     const std::string& key_file, const std::string& cert_file,
@@ -273,6 +280,10 @@ brpc::ServerOptions BuildServerOptions() {
   return options;
 }
 
+void termination_handler(int signum) {
+  SPDLOG_WARN("Received signal: {}, shutting down", strsignal(signum));
+}
+
 int main(int argc, char* argv[]) {
   // Initialize the symbolizer to get a human-readable stack trace
   {
@@ -294,15 +305,6 @@ int main(int argc, char* argv[]) {
       opts.enable_console_logger = true;
     }
     scql::engine::util::SetupLogger(opts);
-
-    if (FLAGS_enable_audit_logger) {
-      scql::engine::audit::AuditOptions auditOpts;
-      auditOpts.audit_log_file = FLAGS_audit_log_file;
-      auditOpts.audit_detail_file = FLAGS_audit_detail_file;
-      auditOpts.audit_max_files = FLAGS_audit_max_files;
-      scql::engine::audit::SetupAudit(auditOpts);
-    }
-
   } catch (const std::exception& e) {
     SPDLOG_ERROR("Fail to setup logger, msg={}", e.what());
     return -1;
@@ -414,7 +416,18 @@ int main(int argc, char* argv[]) {
                 butil::endpoint2str(link_svr.listen_address()).c_str());
   }
 
-  // Wait until Ctrl-C is pressed, then Stop() and Join() the server.
+  {
+    // replace SIGTERM handler in absl
+    struct sigaction action;
+    action.sa_handler = termination_handler;
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = 0;
+    sigaction(SIGTERM, &action, nullptr);
+    // enable graceful quit on SIGTERM in brpc
+    brpc::FLAGS_graceful_quit_on_sigterm = true;
+  }
+  // Wait until Ctrl-C is pressed or SIGTERM received, then Stop() and Join()
+  // the server.
   server.RunUntilAskedToQuit();
 
   if (FLAGS_enable_separate_link_port) {

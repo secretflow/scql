@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("//engine/bazel:scql.bzl", "scql_cc_test")
+
 proto_library(
     name = "mock_report_service_proto",
     srcs = ["mock_report_service.proto"],
@@ -59,7 +61,7 @@ cc_library(
         "//api:engine_cc_proto",
         "//api:status_cc_proto",
         "//engine/framework:session_manager",
-        "@com_github_brpc_brpc//:brpc",
+        "@brpc",
     ],
 )
 
@@ -72,8 +74,8 @@ cc_library(
         ":prometheus_service_cc_proto",
         "//api:status_cc_proto",
         "//engine/util:prometheus_monitor",
-        "@com_github_brpc_brpc//:brpc",
-        "@com_github_brpc_brpc//:butil",
+        "@brpc",
+        "@brpc//:butil",
         "@yacl//yacl/base:exception",
     ],
 )
@@ -89,7 +91,6 @@ cc_library(
         "//api:common_cc_proto",
         "//api:engine_cc_proto",
         "//api:status_cc_proto",
-        "//engine/audit:audit_log",
         "//engine/auth:authenticator",
         "//engine/datasource:datasource_adaptor_mgr",
         "//engine/datasource:embed_router",
@@ -104,14 +105,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "engine_service_impl_test",
     srcs = ["engine_service_impl_test.cc"],
     deps = [
         ":engine_service_impl",
         ":mock_report_service_cc_proto",
         "//engine/operator:test_util",
-        "@com_google_googletest//:gtest_main",
         "@org_pocoproject_poco//:poco",
     ],
 )
@@ -125,6 +125,7 @@ cc_library(
         "//api:engine_cc_proto",
         "//engine/core:tensor",
         "//engine/core:tensor_constructor",
+        "//engine/core:tensor_slice",
         "//engine/framework:session",
         "//engine/util:filepath_helper",
         "@org_apache_arrow//:arrow",

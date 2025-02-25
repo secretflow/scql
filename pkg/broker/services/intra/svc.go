@@ -203,6 +203,33 @@ func (svc *IntraSvc) DropTableHandler(c *gin.Context) {
 		})
 }
 
+func (svc *IntraSvc) CreateViewHandler(c *gin.Context) {
+	handlerWrapper(c, &pb.CreateViewRequest{}, &pb.CreateViewResponse{},
+		func(ctx context.Context, req *pb.CreateViewRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.CreateViewResponse, error) {
+			logEntry.RawRequest = req.String()
+			logEntry.ActionName = fmt.Sprintf("%v@%v", "Intra", "CreateView")
+			return svc.CreateView(ctx, req)
+		})
+}
+
+func (svc *IntraSvc) ListViewsHandler(c *gin.Context) {
+	handlerWrapper(c, &pb.ListViewsRequest{}, &pb.ListViewsResponse{},
+		func(ctx context.Context, req *pb.ListViewsRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.ListViewsResponse, error) {
+			logEntry.RawRequest = req.String()
+			logEntry.ActionName = fmt.Sprintf("%v@%v", "Intra", "ListViews")
+			return svc.ListViews(ctx, req)
+		})
+}
+
+func (svc *IntraSvc) DropViewHandler(c *gin.Context) {
+	handlerWrapper(c, &pb.DropViewRequest{}, &pb.DropViewResponse{},
+		func(ctx context.Context, req *pb.DropViewRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.DropViewResponse, error) {
+			logEntry.RawRequest = req.String()
+			logEntry.ActionName = fmt.Sprintf("%v@%v", "Intra", "DropView")
+			return svc.DropView(ctx, req)
+		})
+}
+
 func (svc *IntraSvc) GrantCCLHandler(c *gin.Context) {
 	handlerWrapper(c,
 		&pb.GrantCCLRequest{},

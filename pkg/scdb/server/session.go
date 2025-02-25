@@ -24,7 +24,6 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/secretflow/scql/pkg/executor"
-	"github.com/secretflow/scql/pkg/interpreter/graph"
 	"github.com/secretflow/scql/pkg/parser/auth"
 	"github.com/secretflow/scql/pkg/privilege"
 	"github.com/secretflow/scql/pkg/privilege/privileges"
@@ -61,8 +60,6 @@ type session struct {
 
 	// all sessions have independent stub to avoid concurrent problems
 	engineStub *executor.EngineStub
-	partyInfo  *graph.PartyInfo
-	parties    []*scql.JobStartParams_Party
 }
 
 // SetValue implements sessionctx.Context SetValue interface.
@@ -138,19 +135,5 @@ func (s *session) setResultWithOutputColumnsAndAffectedRows(columns []*scql.Tens
 		reason := fmt.Sprintf("for safety, we filter the results for groups which contain less than %d items.", s.GetSessionVars().GroupByThreshold)
 		logrus.Infof("%v", reason)
 		s.result.Warnings = append(s.result.Warnings, &scql.SQLWarning{Reason: reason})
-	}
-}
-
-func (sc *session) fillPartyInfo(enginesInfo *graph.EnginesInfo) {
-	sc.partyInfo = enginesInfo.GetPartyInfo()
-	for i, participant := range sc.partyInfo.GetParticipants() {
-		sc.parties = append(
-			sc.parties, &scql.JobStartParams_Party{
-				Code:      participant.PartyCode,
-				Name:      participant.PartyCode,
-				Rank:      int32(i),
-				Host:      participant.Endpoints[0],
-				PublicKey: participant.PubKey,
-			})
 	}
 }

@@ -14,8 +14,6 @@
 
 #include "engine/operator/publish.h"
 
-#include "engine/audit/audit_log.h"
-#include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
 #include "engine/util/time_util.h"
 
@@ -39,7 +37,6 @@ void Publish::Validate(ExecContext* ctx) {
 }
 
 void Publish::Execute(ExecContext* ctx) {
-  const auto start_time = std::chrono::system_clock::now();
   const auto& input_pbs = ctx->GetInput(kIn);
   const auto& output_pbs = ctx->GetOutput(kOut);
   int64_t num_rows = 0;
@@ -77,16 +74,15 @@ void Publish::Execute(ExecContext* ctx) {
 
     ctx->GetSession()->AddPublishResult(proto_result);
   }
-  audit::RecordPublishNodeDetail(*ctx, num_rows, start_time);
 }
 
 void Publish::SetProtoMeta(const Tensor* from_tensor, const std::string& name,
-                           std::shared_ptr<pb::Tensor> to_proto,
+                           const std::shared_ptr<pb::Tensor>& to_proto,
                            pb::PrimitiveDataType elem_type) {
   to_proto->set_name(name);
   // set shape (rows, cols)
-  auto shape = to_proto->mutable_shape();
-  auto dim = shape->add_dim();
+  auto* shape = to_proto->mutable_shape();
+  auto* dim = shape->add_dim();
   dim->set_dim_value(from_tensor->Length());  // rows
   dim = shape->add_dim();
   dim->set_dim_value(kColumnNumInProto);

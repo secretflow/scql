@@ -172,9 +172,9 @@ func TestSplitComplex(t *testing.T) {
 		}
 	}
 
-	r.Equal(28, len(partySubDAGs["alice"]))
+	r.Equal(27, len(partySubDAGs["alice"]))
 	r.Equal(1, len(partySubDAGs["alice"][0].Nodes))
 
-	r.Equal(22, len(partySubDAGs["bob"]))
+	r.Equal(20, len(partySubDAGs["bob"]))
 	r.Equal(1, len(partySubDAGs["bob"][0].Nodes))
 }

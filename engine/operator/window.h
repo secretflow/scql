@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include "arrow/builder.h"
+
 #include "engine/framework/operator.h"
 
 namespace scql::engine::op {
@@ -26,25 +28,84 @@ class RankWindowBase : public Operator {
   static constexpr char kReverseAttr[] = "reverse";
 
  protected:
-  uint32_t GetPartitionNum(ExecContext* ctx);
-  std::shared_ptr<arrow::Array> GetPartitionId(ExecContext* ctx);
+  static uint32_t GetPartitionNum(ExecContext* ctx);
+  static std::shared_ptr<arrow::Array> GetPartitionId(ExecContext* ctx);
   TensorPtr BuildTensorFromScalarVector(
       const arrow::ScalarVector& scalars,
       std::shared_ptr<arrow::DataType> empty_type);
 
   virtual void RunWindowFunc(ExecContext* ctx,
                              std::shared_ptr<arrow::Table> input,
-                             const std::vector<int64_t>& positions,
-                             std::vector<int64_t>& window_result) = 0;
+                             const std::vector<int64_t>& positions) = 0;
   void Validate(ExecContext* ctx) override;
   void Execute(ExecContext* ctx) override;
-  std::shared_ptr<arrow::ChunkedArray> VectorToChunkedArray(
-      const std::vector<int64_t>& vec);
-  std::shared_ptr<arrow::Array> GetSortedIndices(
-      ExecContext* ctx, std::shared_ptr<arrow::Table> input);
-  std::vector<std::shared_ptr<arrow::ListArray>> GetPartitionedInputs(
+  static std::shared_ptr<arrow::Array> GetSortedIndices(
+      ExecContext* ctx, const std::shared_ptr<arrow::Table>& input);
+  static std::vector<std::shared_ptr<arrow::ListArray>> GetPartitionedInputs(
       ExecContext* ctx, const arrow::UInt32Array* partition_id,
       uint32_t partition_num);
+  virtual std::shared_ptr<arrow::ChunkedArray> GetWindowResult() = 0;
+  virtual void ExecuteInSecret(ExecContext* ctx) = 0;
+  void ExecuteInPlain(ExecContext* ctx);
+  virtual void ReserveWindowResult(size_t size) = 0;
+
+  template <typename T>
+  std::shared_ptr<arrow::ChunkedArray> VectorToChunkedArray(
+      std::vector<T>& vec) {
+    using BuilderType = typename arrow::CTypeTraits<T>::BuilderType;
+    BuilderType builder;
+
+    arrow::Status status;
+    status = builder.Reserve(vec.size());
+    YACL_ENFORCE(status.ok(), "Reserve memory failed");
+
+    for (const auto& value : vec) {
+      auto status = builder.Append(value);
+      YACL_ENFORCE(status.ok(), "Append value failed");
+    }
+
+    std::shared_ptr<arrow::Array> chunk;
+    status = builder.Finish(&chunk);
+    YACL_ENFORCE(status.ok(), "Finish array failed");
+
+    std::vector<std::shared_ptr<arrow::Array>> chunks;
+    chunks.push_back(chunk);
+    return std::make_shared<arrow::ChunkedArray>(chunks);
+  }
+
+  template <typename ValueType>
+  void ProcessResults(const int length,
+                      const std::unordered_map<int64_t, ValueType>& rank_map,
+                      const std::vector<int64_t>& positions,
+                      std::vector<ValueType>& window_results) {
+    YACL_ENFORCE(length == (int64_t)positions.size(),
+                 "position vector size not equal to that of input value");
+    for (int64_t i = 0; i < length; ++i) {
+      YACL_ENFORCE(rank_map.find(i) != rank_map.end(),
+                   "failed to find the indice of position {}", i);
+      YACL_ENFORCE(
+          positions[i] >= 0 && positions[i] < (int64_t)window_results.size(),
+          "position {} is out of range [0, {}", positions[i],
+          window_results.size());
+      window_results[positions[i]] = rank_map.at(i);
+    }
+  }
+
+  template <typename ValueType, typename ValueGenerator>
+  void BuildRankMap(arrow::Int64Array* int_array,
+                    std::unordered_map<int64_t, ValueType>& rank_map,
+                    ValueGenerator gen) {
+    const int64_t total = int_array->length();
+    int64_t rank = 1;
+    for (int64_t i = 0; i < total; ++i) {
+      int64_t key = int_array->Value(i);
+      YACL_ENFORCE(rank_map.find(key) == rank_map.end(),
+                   "duplicate row number");
+      rank_map[key] = gen(rank, total);
+
+      rank++;
+    }
+  }
 };
 
 class RowNumber : public RankWindowBase {
@@ -54,7 +115,40 @@ class RowNumber : public RankWindowBase {
 
  protected:
   void RunWindowFunc(ExecContext* ctx, std::shared_ptr<arrow::Table> input,
-                     const std::vector<int64_t>& positions,
-                     std::vector<int64_t>& window_result) override;
+                     const std::vector<int64_t>& positions) override;
+  void ExecuteInSecret(ExecContext* ctx) override {
+    YACL_THROW("not support in secret mode");
+  }
+  std::shared_ptr<arrow::ChunkedArray> GetWindowResult() override {
+    return VectorToChunkedArray(window_results_);
+  }
+  void ReserveWindowResult(size_t size) override {
+    window_results_ = std::vector<int64_t>(size, 0);
+  };
+
+ private:
+  std::vector<int64_t> window_results_;
+};
+
+class PercentRank : public RankWindowBase {
+ public:
+  static const std::string kOpType;
+  const std::string& Type() const override;
+
+ protected:
+  void RunWindowFunc(ExecContext* ctx, std::shared_ptr<arrow::Table> input,
+                     const std::vector<int64_t>& positions) override;
+  void ExecuteInSecret(ExecContext* ctx) override {
+    YACL_THROW("not support in secret mode");
+  }
+  std::shared_ptr<arrow::ChunkedArray> GetWindowResult() override {
+    return VectorToChunkedArray(window_results_);
+  };
+  void ReserveWindowResult(size_t size) override {
+    window_results_ = std::vector<double>(size, 0.0);
+  };
+
+ private:
+  std::vector<double> window_results_;
 };
 }  // namespace scql::engine::op

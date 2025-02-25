@@ -89,7 +89,7 @@ TEST_P(FilterByIndexTest, works) {
   EXPECT_NO_THROW({ op.Run(&ctx); });
 
   // check output
-  auto tensor_table = ctx.GetTensorTable();
+  auto* tensor_table = ctx.GetTensorTable();
   for (const auto& expect_t : test_case.expect_outs) {
     auto out = tensor_table->GetTensor(expect_t.name);
     EXPECT_TRUE(out != nullptr);
@@ -138,7 +138,7 @@ pb::ExecNode FilterByIndexTest::MakeFilterByIndexExecNode(
 
 void FilterByIndexTest::FeedInputs(ExecContext* ctx,
                                    const FilterByIndexTestCase& tc) {
-  auto tensor_table = ctx->GetTensorTable();
+  auto* tensor_table = ctx->GetTensorTable();
   tensor_table->AddTensor(tc.indice.name, tc.indice.tensor);
   for (const auto& named_tensor : tc.datas) {
     tensor_table->AddTensor(named_tensor.name, named_tensor.tensor);

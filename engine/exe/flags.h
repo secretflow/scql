@@ -23,11 +23,6 @@ DECLARE_string(log_dir);
 DECLARE_bool(log_enable_console_logger);
 DECLARE_bool(log_enable_session_logger_separation);
 
-DECLARE_bool(enable_audit_logger);
-DECLARE_string(audit_log_file);
-DECLARE_string(audit_detail_file);
-DECLARE_int32(audit_max_files);
-
 // Brpc channel flags for peer engine.
 DECLARE_string(peer_engine_protocol);
 DECLARE_string(peer_engine_connection_type);

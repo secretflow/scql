@@ -52,7 +52,7 @@ class SimpleArrowReader final {
 class FileBatchReader {
  public:
   explicit FileBatchReader(std::string file_name)
-      : reader_(std::move(SimpleArrowReader(std::move(file_name)))) {
+      : reader_(SimpleArrowReader(std::move(file_name))) {
     // read first batch
     cur_batch_ = reader_.ReadNext();
   }

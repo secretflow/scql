@@ -33,11 +33,11 @@ class MakePublic : public Operator {
   void Execute(ExecContext* ctx) override;
 
  private:
-  void PrivateToPublic(ExecContext* ctx, const RepeatedPbTensor& inputs,
-                       const RepeatedPbTensor& outputs);
+  static void PrivateToPublic(ExecContext* ctx, const RepeatedPbTensor& inputs,
+                              const RepeatedPbTensor& outputs);
 
-  void SecretToPublic(ExecContext* ctx, const RepeatedPbTensor& inputs,
-                      const RepeatedPbTensor& outputs);
+  static void SecretToPublic(ExecContext* ctx, const RepeatedPbTensor& inputs,
+                             const RepeatedPbTensor& outputs);
 };
 
 }  // namespace scql::engine::op

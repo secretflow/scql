@@ -10,8 +10,8 @@ CREATE TABLE projects (
   "desc" VARCHAR(64),
   creator VARCHAR(64),
   archived BOOLEAN,
-  created_at TIMESTAMP DEFAULT NULL,
-  updated_at TIMESTAMP DEFAULT NULL,
+  created_at timestamp(6) DEFAULT NULL,
+  updated_at timestamp(6) DEFAULT NULL,
   project_conf TEXT,
   PRIMARY KEY (id)
 );
@@ -34,8 +34,8 @@ CREATE TABLE tables (
   "owner" VARCHAR(64),
   is_view BOOLEAN,
   select_string TEXT,
-  created_at TIMESTAMP DEFAULT NULL,
-  updated_at TIMESTAMP DEFAULT NULL,
+  created_at timestamp(6) DEFAULT NULL,
+  updated_at timestamp(6) DEFAULT NULL,
   PRIMARY KEY (project_id, table_name)
 );
 
@@ -46,8 +46,8 @@ CREATE TABLE columns (
   table_name VARCHAR(64) NOT NULL,
   column_name VARCHAR(64) NOT NULL,
   data_type VARCHAR(64),
-  created_at TIMESTAMP DEFAULT NULL,
-  updated_at TIMESTAMP DEFAULT NULL,
+  created_at timestamp(6) DEFAULT NULL,
+  updated_at timestamp(6) DEFAULT NULL,
   PRIMARY KEY (project_id, table_name, column_name)
 );
 
@@ -59,8 +59,8 @@ CREATE TABLE column_privs (
   column_name VARCHAR(64) NOT NULL,
   dest_party VARCHAR(64) NOT NULL,
   priv VARCHAR(256),
-  created_at TIMESTAMP DEFAULT NULL,
-  updated_at TIMESTAMP DEFAULT NULL,
+  created_at timestamp(6) DEFAULT NULL,
+  updated_at timestamp(6) DEFAULT NULL,
   PRIMARY KEY (project_id, table_name, column_name, dest_party)
 );
 
@@ -72,14 +72,14 @@ CREATE TABLE invitations (
   name VARCHAR(64),
   "desc" VARCHAR(64),
   creator VARCHAR(64),
-  proj_created_at TIMESTAMP DEFAULT NULL,
+  proj_created_at timestamp(6) DEFAULT NULL,
   member VARCHAR(64) NOT NULL,
   inviter VARCHAR(256),
   invitee VARCHAR(256),
   status SMALLINT DEFAULT 0,
-  invite_time TIMESTAMP DEFAULT NULL,
-  created_at TIMESTAMP DEFAULT NULL,
-  updated_at TIMESTAMP DEFAULT NULL,
+  invite_time timestamp(6) DEFAULT NULL,
+  created_at timestamp(6) DEFAULT NULL,
+  updated_at timestamp(6) DEFAULT NULL,
   project_conf TEXT,
   PRIMARY KEY (id)
 );
@@ -100,9 +100,9 @@ CREATE TABLE session_infos (
   work_parties TEXT NOT NULL,
   output_names TEXT,
   warning BYTEA,
-  created_at TIMESTAMP DEFAULT NULL,
-  updated_at TIMESTAMP DEFAULT NULL,
-  expired_at TIMESTAMP DEFAULT NULL,
+  created_at timestamp(6) DEFAULT NULL,
+  updated_at timestamp(6) DEFAULT NULL,
+  expired_at timestamp(6) DEFAULT NULL,
   PRIMARY KEY (session_id)
 );
 
@@ -111,9 +111,9 @@ DROP TABLE IF EXISTS session_results;
 CREATE TABLE session_results (
   session_id VARCHAR(64) NOT NULL,
   result BYTEA,
-  created_at TIMESTAMP DEFAULT NULL,
-  updated_at TIMESTAMP DEFAULT NULL,
-  expired_at TIMESTAMP DEFAULT NULL,
+  created_at timestamp(6) DEFAULT NULL,
+  updated_at timestamp(6) DEFAULT NULL,
+  expired_at timestamp(6) DEFAULT NULL,
   PRIMARY KEY (session_id)
 );
 
@@ -122,7 +122,7 @@ DROP TABLE IF EXISTS locks;
 CREATE TABLE locks (
   id SERIAL NOT NULL,
   "owner" VARCHAR(64),
-  updated_at TIMESTAMP DEFAULT NULL,
-  expired_at TIMESTAMP DEFAULT NULL,
+  updated_at timestamp(6) DEFAULT NULL,
+  expired_at timestamp(6) DEFAULT NULL,
   PRIMARY KEY (id)
 );

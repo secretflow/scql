@@ -18,7 +18,6 @@
 #include <string>
 
 #include "brpc/authenticator.h"
-#include "brpc/channel.h"
 
 namespace scql::engine {
 
@@ -26,7 +25,7 @@ namespace scql::engine {
 // remain accessible at all times
 class SimpleAuthenticator : public brpc::Authenticator {
  public:
-  SimpleAuthenticator(std::string credential)
+  explicit SimpleAuthenticator(std::string credential)
       : credential_(std::move(credential)) {}
 
   virtual ~SimpleAuthenticator() = default;

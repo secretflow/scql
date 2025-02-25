@@ -14,7 +14,6 @@
 
 #include "engine/operator/filter_by_index.h"
 
-#include "arrow/compute/api_vector.h"
 #include "arrow/compute/exec.h"
 #include "arrow/datum.h"
 #include "arrow/result.h"

@@ -569,6 +569,11 @@
       "name": "negative constant",
       "query": "select if(ta.plain_float_0, -1.0, -ta.plain_float_0) as res from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0;",
       "mysql_query": "select if(ta.plain_float_0, -1.0, -ta.plain_float_0) as res from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+    },
+    {
+      "name": "arrow func (upper, lower, substring, trim, concat)",
+      "query": "select upper(ta.plain_string_0) as up, lower(ta.plain_string_0) as lo, substring(ta.plain_string_0, 2, 3) as sl, trim(ta.plain_string_0) as tr, concat(ta.plain_string_0, ta.join_string_0) as co from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0;",
+      "mysql_query": "select upper(ta.plain_string_0) as up, lower(ta.plain_string_0) as lo, substring(ta.plain_string_0, 2, 3) as sl, trim(ta.plain_string_0) as tr, concat(ta.plain_string_0, ta.join_string_0) as co from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
     }
   ]
 }

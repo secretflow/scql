@@ -22,8 +22,6 @@
 #include "libspu/kernel/hlo/basic_binary.h"
 
 #include "engine/core/tensor_constructor.h"
-#include "engine/util/spu_io.h"
-#include "engine/util/tensor_util.h"
 
 namespace scql::engine::op {
 

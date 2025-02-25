@@ -35,7 +35,7 @@
 #include "engine/framework/tensor_table.h"
 #include "engine/util/logging.h"
 #include "engine/util/progress_util.h"
-#include "engine/util/psi_detail_logger.h"
+#include "engine/util/psi/detail_logger.h"
 
 #include "api/common.pb.h"
 #include "api/engine.pb.h"

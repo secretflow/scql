@@ -23,7 +23,6 @@
 
 #include "engine/core/tensor_constructor.h"
 #include "engine/operator/test_util.h"
-#include "engine/util/time_util.h"
 
 namespace scql::engine::op {
 

@@ -37,15 +37,6 @@ func (*columnPruner) name() string {
 	return "column_prune"
 }
 
-func getUsedList(usedCols []*expression.Column, schema *expression.Schema) []bool {
-	tmpSchema := expression.NewSchema(usedCols...)
-	used := make([]bool, schema.Len())
-	for i, col := range schema.Columns {
-		used[i] = tmpSchema.Contains(col)
-	}
-	return used
-}
-
 // ExprsHasSideEffects checks if any of the expressions has side effects.
 func ExprsHasSideEffects(exprs []expression.Expression) bool {
 	for _, expr := range exprs {
@@ -76,8 +67,17 @@ func exprHasSetVarOrSleep(expr expression.Expression) bool {
 // PruneColumns implements LogicalPlan interface.
 func (p *LogicalSelection) PruneColumns(parentUsedCols []*expression.Column) error {
 	child := p.children[0]
+	used := GetUsedList(parentUsedCols, p.schema)
+	p.schema.Columns = sliceutil.Take(p.schema.Columns, used)
 	parentUsedCols = expression.ExtractColumnsFromExpressions(parentUsedCols, p.Conditions, nil)
-	return child.PruneColumns(parentUsedCols)
+	err := child.PruneColumns(parentUsedCols)
+	if err != nil {
+		return err
+	}
+	if len(p.schema.Columns) == 0 {
+		p.schema.Columns = []*expression.Column{child.Schema().Columns[0]}
+	}
+	return nil
 }
 
 func (p *LogicalJoin) extractUsedCols(parentUsedCols []*expression.Column) (leftCols []*expression.Column, rightCols []*expression.Column) {
@@ -105,8 +105,8 @@ func (p *LogicalJoin) extractUsedCols(parentUsedCols []*expression.Column) (left
 	return leftCols, rightCols
 }
 
-func (p *LogicalJoin) mergeSchema() {
-	p.schema = buildLogicalJoinSchema(p.JoinType, p)
+func (p *LogicalJoin) mergeSchema(parentUsedCols []*expression.Column) {
+	p.schema = buildLogicalJoinSchema(p.JoinType, p, parentUsedCols)
 }
 
 func (p *LogicalJoin) PruneColumns(parentUsedCols []*expression.Column) error {
@@ -122,14 +122,14 @@ func (p *LogicalJoin) PruneColumns(parentUsedCols []*expression.Column) error {
 		return err
 	}
 
-	p.mergeSchema()
+	p.mergeSchema(parentUsedCols)
 	return nil
 }
 
 // PruneColumns implements LogicalPlan interface.
 func (p *LogicalProjection) PruneColumns(parentUsedCols []*expression.Column) error {
 	child := p.children[0]
-	used := getUsedList(parentUsedCols, p.schema)
+	used := GetUsedList(parentUsedCols, p.schema)
 
 	p.schema.Columns = sliceutil.Take(p.schema.Columns, used)
 	p.Exprs = sliceutil.Take(p.Exprs, used)
@@ -141,8 +141,9 @@ func (p *LogicalProjection) PruneColumns(parentUsedCols []*expression.Column) er
 
 // PruneColumns implements LogicalPlan interface.
 func (p *LogicalWindow) PruneColumns(parentUsedCols []*expression.Column) error {
+	var selfUsedCols []*expression.Column
 	windowColumns := p.GetWindowResultColumns()
-	len := 0
+
 	for _, col := range parentUsedCols {
 		used := false
 		for _, windowColumn := range windowColumns {
@@ -152,35 +153,35 @@ func (p *LogicalWindow) PruneColumns(parentUsedCols []*expression.Column) error 
 			}
 		}
 		if !used {
-			parentUsedCols[len] = col
-			len++
+			selfUsedCols = append(selfUsedCols, col)
 		}
 	}
-	parentUsedCols = parentUsedCols[:len]
-	parentUsedCols = p.extractUsedCols(parentUsedCols)
-	err := p.children[0].PruneColumns(parentUsedCols)
+
+	selfUsedCols = p.extractUsedCols(selfUsedCols)
+	err := p.children[0].PruneColumns(selfUsedCols)
 	if err != nil {
 		return err
 	}
 
-	p.SetSchema(p.children[0].Schema().Clone())
-	p.Schema().Append(windowColumns...)
+	used := GetUsedList(parentUsedCols, p.schema)
+	p.schema.Columns = sliceutil.Take(p.schema.Columns, used)
+
 	return nil
 }
 
-func (p *LogicalWindow) extractUsedCols(parentUsedCols []*expression.Column) []*expression.Column {
+func (p *LogicalWindow) extractUsedCols(usedCols []*expression.Column) []*expression.Column {
 	for _, desc := range p.WindowFuncDescs {
 		for _, arg := range desc.Args {
-			parentUsedCols = append(parentUsedCols, expression.ExtractColumns(arg)...)
+			usedCols = append(usedCols, expression.ExtractColumns(arg)...)
 		}
 	}
 	for _, by := range p.PartitionBy {
-		parentUsedCols = append(parentUsedCols, by.Col)
+		usedCols = append(usedCols, by.Col)
 	}
 	for _, by := range p.OrderBy {
-		parentUsedCols = append(parentUsedCols, by.Col)
+		usedCols = append(usedCols, by.Col)
 	}
-	return parentUsedCols
+	return usedCols
 }
 
 // PruneColumns implements LogicalPlan interface.
@@ -202,13 +203,13 @@ func (la *LogicalApply) PruneColumns(parentUsedCols []*expression.Column) error 
 		return err
 	}
 
-	la.mergeSchema()
+	la.mergeSchema(parentUsedCols)
 	return nil
 }
 
 // PruneColumns implements LogicalPlan interface.
 func (ds *DataSource) PruneColumns(parentUsedCols []*expression.Column) error {
-	used := getUsedList(parentUsedCols, ds.schema)
+	used := GetUsedList(parentUsedCols, ds.schema)
 
 	var (
 		handleCol     *expression.Column
@@ -238,7 +239,7 @@ func (ds *DataSource) PruneColumns(parentUsedCols []*expression.Column) error {
 // PruneColumns implements LogicalPlan interface.
 func (la *LogicalAggregation) PruneColumns(parentUsedCols []*expression.Column) error {
 	child := la.children[0]
-	used := getUsedList(parentUsedCols, la.Schema())
+	used := GetUsedList(parentUsedCols, la.Schema())
 
 	la.schema.Columns = sliceutil.Take(la.schema.Columns, used)
 	la.AggFuncs = sliceutil.Take(la.AggFuncs, used)
@@ -301,7 +302,7 @@ func (ls *LogicalSort) PruneColumns(parentUsedCols []*expression.Column) error {
 
 // PruneColumns implements LogicalPlan interface.
 func (p *LogicalUnionAll) PruneColumns(parentUsedCols []*expression.Column) error {
-	used := getUsedList(parentUsedCols, p.schema)
+	used := GetUsedList(parentUsedCols, p.schema)
 
 	hasBeenUsed := false
 	for i := range used {

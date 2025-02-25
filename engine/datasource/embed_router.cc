@@ -71,8 +71,8 @@ std::vector<DataSource> EmbedRouter::Route(
 std::unique_ptr<EmbedRouter> EmbedRouter::FromJsonStr(
     std::string_view json_str) {
   EmbedRouterConf router_conf;
-  auto status = google::protobuf::util::JsonStringToMessage(
-      google::protobuf::StringPiece(json_str), &router_conf);
+  auto status =
+      google::protobuf::util::JsonStringToMessage(json_str, &router_conf);
   if (!status.ok()) {
     YACL_THROW("Fail to parse json_str to `EmbedRouterConf`, reason={}",
                status.ToString());

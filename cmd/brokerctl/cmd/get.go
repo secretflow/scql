@@ -41,17 +41,19 @@ var (
 				names = splitNames(args[1])
 			}
 			switch args[0] {
-			case "project", "projects":
+			case Project, Projects:
 				return getProject()
-			case "table", "tables":
+			case Table, Tables:
 				return getTable(names)
-			case "ccl", "ccls":
+			case View, Views:
+				return getViews(names)
+			case CCL, CCLs:
 				return getCCL()
-			case "invitation", "invitations":
+			case Invitation, Invitations:
 				return getInvitation()
-			case "result", "results":
+			case Result, Results:
 				return getResult()
-			case "explain", "explains":
+			case Explain, Explains:
 				return getExplain()
 			default:
 				return fmt.Errorf("not support get %v", args[0])
@@ -74,6 +76,19 @@ func getProject() error {
 	}
 	fmt.Println("get project succeeded")
 	printProjects(response.GetProjects())
+	return nil
+}
+
+func getViews(names []string) error {
+	if projectID == "" {
+		fmt.Printf("flags project-id must not be empty")
+	}
+	response, err := brokerCommand.GetView(projectID, names)
+	if err != nil {
+		return err
+	}
+	fmt.Println("get view succeeded")
+	printViews(response.GetViews())
 	return nil
 }
 
@@ -230,6 +245,32 @@ func printInvitations(invitations []*pb.ProjectInvitation) {
 	table.Render()
 }
 
+func printViews(views []*pb.TableMeta) {
+	fmt.Fprintf(os.Stdout, "[fetch]\n")
+	if len(views) == 0 {
+		fmt.Println("No existing views")
+		return
+	}
+
+	for _, view := range views {
+		fmt.Printf("ViewName: %s, Owner: %s, DBType: %s\n", view.GetTableName(), view.GetTableOwner(), view.GetDbType())
+		fmt.Printf("SelectString: %s\n", view.GetSelectString())
+		fmt.Print("Columns:\n")
+
+		table := tablewriter.NewWriter(os.Stdout)
+		table.SetAutoWrapText(false)
+		table.SetAutoFormatHeaders(false)
+		table.SetHeader([]string{"ColumnName", "DataType"})
+
+		for _, col := range view.GetColumns() {
+			table.Append([]string{col.GetName(), col.GetDtype()})
+		}
+
+		table.Render()
+		fmt.Println()
+	}
+}
+
 func printTables(tables []*pb.TableMeta) {
 	fmt.Fprintf(os.Stdout, "[fetch]\n")
 	if len(tables) == 0 {
@@ -250,6 +291,7 @@ func printTables(tables []*pb.TableMeta) {
 		}
 
 		table.Render()
+		fmt.Println()
 	}
 }
 

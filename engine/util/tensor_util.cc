@@ -18,6 +18,7 @@
 #include "yacl/base/exception.h"
 
 #include "engine/core/arrow_helper.h"
+#include "engine/core/tensor.h"
 #include "engine/util/copy_to_proto_vistor.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/time_util.h"
@@ -33,9 +34,9 @@ std::string GetStringValue(const pb::Tensor& t) {
   return t.string_data(0);
 }
 
-uint32_t GetScalarUint32(std::shared_ptr<Tensor> t) {
+uint32_t GetScalarUint32(const std::shared_ptr<Tensor>& t) {
   auto num_array = util::ConcatenateChunkedArray(t->ToArrowChunkedArray());
-  auto* num_array_ptr =
+  const auto* num_array_ptr =
       dynamic_cast<const arrow::UInt32Array*>(num_array.get());
   YACL_ENFORCE(num_array_ptr, "cast tensor to uint32_t failed");
 
@@ -105,12 +106,10 @@ pb::TensorStatus GetTensorStatus(const pb::Tensor& t) {
 
 bool AreTensorsStatusMatched(const RepeatedPbTensor& tensors,
                              pb::TensorStatus expect_status) {
-  for (const auto& t : tensors) {
-    if (!IsTensorStatusMatched(t, expect_status)) {
-      return false;
-    }
-  }
-  return true;
+  return std::all_of(tensors.begin(), tensors.end(),
+                     [&expect_status](const auto& t) {
+                       return IsTensorStatusMatched(t, expect_status);
+                     });
 }
 
 bool AreTensorsStatusMatchedOneOf(
@@ -152,12 +151,9 @@ bool AreTensorsStatusEqualAndOneOf(const RepeatedPbTensor& tensors,
       return false;
     }
   }
-  for (const auto& elem : status_set) {
-    if (st == elem) {
-      return true;
-    }
-  }
-  return false;
+  return std::any_of(
+      status_set.begin(), status_set.end(),
+      [&st](const pb::TensorStatus& elem) { return st == elem; });
 }
 
 void CopyValuesToProto(const std::shared_ptr<Tensor>& from_tensor,
@@ -171,7 +167,7 @@ void CopyValuesToProto(const std::shared_ptr<Tensor>& from_tensor,
 }
 
 std::shared_ptr<Tensor> ConvertDateTimeToInt64(
-    const std::shared_ptr<arrow::ChunkedArray> from_chunked_arr) {
+    const std::shared_ptr<arrow::ChunkedArray>& from_chunked_arr) {
   ConvertDateTimeToInt64Visitor convert_visitor;
   for (int i = 0; i < from_chunked_arr->num_chunks(); ++i) {
     THROW_IF_ARROW_NOT_OK(arrow::VisitArrayInline(*(from_chunked_arr->chunk(i)),
@@ -181,7 +177,7 @@ std::shared_ptr<Tensor> ConvertDateTimeToInt64(
 }
 
 std::shared_ptr<arrow::ChunkedArray> ConvertDateTimeToInt64(
-    const std::shared_ptr<arrow::Array> from_arr) {
+    const std::shared_ptr<arrow::Array>& from_arr) {
   ConvertDateTimeToInt64Visitor convert_visitor;
   THROW_IF_ARROW_NOT_OK(arrow::VisitArrayInline(*from_arr, &convert_visitor));
   return convert_visitor.GetResultTensor()->ToArrowChunkedArray();
@@ -189,13 +185,18 @@ std::shared_ptr<arrow::ChunkedArray> ConvertDateTimeToInt64(
 
 void ConvertDateTimeAndCopyValuesToProto(
     const std::shared_ptr<Tensor>& from_tensor, pb::Tensor* to_proto) {
-  ConvertDatetimeProtoVistor convert_copy_vistor(to_proto,
-                                                 from_tensor->GetNullCount());
+  ConvertDatetimeProtoVistor convert_copy_vistor(
+      to_proto, from_tensor->GetNullCount() != 0);
   const auto& chunked_arr = from_tensor->ToArrowChunkedArray();
   for (int i = 0; i < chunked_arr->num_chunks(); ++i) {
     THROW_IF_ARROW_NOT_OK(arrow::VisitArrayInline(*(chunked_arr->chunk(i)),
                                                   &convert_copy_vistor));
   }
+}
+
+bool AreAllBucketTensor(const std::vector<TensorPtr>& tensors) {
+  return std::all_of(tensors.begin(), tensors.end(),
+                     [](const TensorPtr& t) { return t->IsBucketTensor(); });
 }
 
 }  // namespace scql::engine::util

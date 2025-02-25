@@ -14,11 +14,6 @@
 
 #include "engine/link/rpc_helper.h"
 
-#include "bthread/bthread.h"
-#include "spdlog/spdlog.h"
-
-#include "engine/link/mux_receiver.pb.h"
-
 namespace scql::engine {
 static std::unique_ptr<brpc::Authenticator> default_authenticator;
 

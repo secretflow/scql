@@ -2,9 +2,12 @@ common --experimental_repo_remote_exec
 common --experimental_cc_shared_library
 common --experimental_ui_max_stdouterr_bytes=-1
 
-common --experimental_remote_download_regex='.*\/scqlengine$'
+common --remote_download_regex='.*\/scqlengine$'
+common --registry=https://raw.githubusercontent.com/secretflow/bazel-registry/main
+common --registry=https://bcr.bazel.build
+common --registry=https://baidu.github.io/babylon/registry
 
-build --incompatible_new_actions_api=false 
+build --incompatible_new_actions_api=false
 build --copt=-fdiagnostics-color=always
 build --enable_platform_specific_config
 
@@ -28,14 +31,26 @@ test --test_timeout=1800
 
 # platform specific config
 # Bazel will automatic pick platform config since we have enable_platform_specific_config set
-build:macos --copt="-Xpreprocessor -fopenmp"
+build:macos --copt=-Xclang=-fopenmp
 build:macos --copt=-Wno-unused-command-line-argument
 build:macos --features=-supports_dynamic_linker
-build:macos --macos_minimum_os=12.0
-build:macos --host_macos_minimum_os=12.0
+build:macos --macos_minimum_os=13.0
+build:macos --host_macos_minimum_os=13.0
+build:macos --action_env MACOSX_DEPLOYMENT_TARGET=13.0
 
 # static link libstdc++ & libgcc on Linux
 build:linux --copt=-fopenmp
 build:linux --linkopt=-fopenmp
 build:linux --action_env=BAZEL_LINKOPTS=-static-libstdc++:-static-libgcc
 build:linux --action_env=BAZEL_LINKLIBS=-l%:libstdc++.a:-l%:libgcc.a
+
+build:asan --strip=never
+build:asan --copt -fno-sanitize-recover=all
+build:asan --copt -fsanitize=address
+build:asan --copt -Og
+build:asan --copt -g
+build:asan --copt -fno-omit-frame-pointer
+build:asan --linkopt -fsanitize=address
+build:asan --define disable_tcmalloc=true
+build:asan --copt="-Wno-error=uninitialized"
+build:asan --copt="-Wno-error=maybe-uninitialized"

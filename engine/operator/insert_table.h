@@ -37,7 +37,7 @@ class InsertTable : public Operator {
   void Execute(ExecContext* ctx) override;
 
  private:
-  void InsertInTransaction(
+  static void InsertInTransaction(
       ExecContext* ctx, const std::vector<TensorPtr>& tensors,
       const std::vector<pb::PrimitiveDataType>& input_types);
 };

@@ -23,6 +23,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/secretflow/scql/pkg/broker/storage"
+	"github.com/secretflow/scql/pkg/planner/core"
 	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
 
@@ -80,6 +81,10 @@ func GrantColumnConstraintsWithCheck(t *storage.MetaTransaction, projectID strin
 		// check table owner if party is not empty string
 		if !columnOwnerChecker.SkipOwnerCheck && tableMeta.Table.Owner != columnOwnerChecker.Owner {
 			return fmt.Errorf("GrantColumnConstraintsWithCheck: grant ccl to columns in table %s by %s, but owner is %s", tableMeta.Table.TableName, columnOwnerChecker.Owner, tableMeta.Table.Owner)
+		}
+
+		if tableMeta.Table.IsView {
+			return fmt.Errorf("GrantColumnConstraintsWithCheck: table %s is view, not support grant ccl", tableMeta.Table.TableName)
 		}
 	}
 	// transfer column case
@@ -223,4 +228,85 @@ func DropTableWithCheck(t *storage.MetaTransaction, projectID, party string, tab
 		return true, fmt.Errorf("DropTableWithCheck: %v", err)
 	}
 	return true, nil
+}
+
+func ExpandTablesInView(txn *storage.MetaTransaction, projectId string, tableEntries []storage.TableMeta) ([]storage.TableMeta, error) {
+	additionalTables := []storage.TableMeta{}
+	for _, tbl := range tableEntries {
+		if tbl.Table.IsView {
+			views := make(map[string]struct{})
+			views[tbl.Table.TableName] = struct{}{}
+			viewRelatedTables, err := GetViewRelatedTable(txn, tbl.Table.ProjectID, tbl.Table.SelectString, views)
+			if err != nil {
+				return nil, err
+			}
+
+			additionalTables = append(additionalTables, viewRelatedTables...)
+		}
+	}
+
+	dedupMap := make(map[string]struct{})
+	for _, tbl := range tableEntries {
+		dedupMap[tbl.Table.TableName] = struct{}{}
+	}
+
+	for _, tbl := range additionalTables {
+		if _, ok := dedupMap[tbl.Table.TableName]; !ok {
+			dedupMap[tbl.Table.TableName] = struct{}{}
+			tableEntries = append(tableEntries, tbl)
+		}
+	}
+
+	return tableEntries, nil
+}
+
+func GetViewRelatedTable(txn *storage.MetaTransaction, projectId string, viewBody string, views map[string]struct{}) ([]storage.TableMeta, error) {
+	tablesMap := make(map[string]storage.TableMeta)
+
+	usedTables, err := core.GetSourceTables(viewBody)
+	if err != nil {
+		return nil, fmt.Errorf("GetViewRelatedTable: get source tables error: %v", err)
+	}
+
+	var tableNames []string
+	for _, tbl := range usedTables {
+		tableNames = append(tableNames, tbl.GetTableName())
+	}
+
+	tableMetas, notFound, err := txn.GetTableMetasByTableNames(projectId, tableNames)
+	if err != nil {
+		return nil, fmt.Errorf("GetViewRelatedTable: get table err: %v", err)
+	}
+
+	if len(notFound) > 0 {
+		return nil, fmt.Errorf("GetViewRelatedTable: table not found: %v", notFound)
+	}
+
+	for _, tbl := range tableMetas {
+		if tbl.Table.IsView {
+			if _, ok := views[tbl.Table.TableName]; ok {
+				return nil, fmt.Errorf("GetViewRelatedTable: circular reference: %s", tbl.Table.TableName)
+			}
+
+			views[tbl.Table.TableName] = struct{}{}
+			expanded, err := GetViewRelatedTable(txn, projectId, tbl.Table.SelectString, views)
+			if err != nil {
+				return nil, fmt.Errorf("GetViewRelatedTable: get view related table error: %v", err)
+			}
+			delete(views, tbl.Table.TableName)
+
+			for _, expandedTbl := range expanded {
+				tablesMap[expandedTbl.Table.TableName] = expandedTbl
+			}
+		}
+
+		tablesMap[tbl.Table.TableName] = tbl
+	}
+
+	var tables []storage.TableMeta
+	for _, tbl := range tablesMap {
+		tables = append(tables, tbl)
+	}
+
+	return tables, nil
 }

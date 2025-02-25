@@ -170,7 +170,7 @@ func (t *Tensor) ToProto() *proto.Tensor {
 			Status: t.Status()}
 	}
 
-	if t.Shape != nil && len(t.Shape) > 0 {
+	if len(t.Shape) > 0 {
 		pb.Shape = &proto.TensorShape{
 			Dim: []*proto.TensorShape_Dimension{},
 		}

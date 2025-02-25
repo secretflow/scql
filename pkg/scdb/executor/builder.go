@@ -29,12 +29,10 @@ import (
 // executorBuilder builds an Executor from a Plan.
 // The InfoSchema must not change during execution.
 type executorBuilder struct {
-	ctx     sessionctx.Context
-	is      infoschema.InfoSchema
-	startTS uint64 // cached when the first time getStartTS() is called
+	ctx sessionctx.Context
+	is  infoschema.InfoSchema
 	// err is set when there is error happened during Executor building process.
-	err               error
-	isSelectForUpdate bool
+	err error
 }
 
 func newExecutorBuilder(ctx sessionctx.Context, is infoschema.InfoSchema) *executorBuilder {

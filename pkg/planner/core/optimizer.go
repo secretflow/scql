@@ -35,6 +35,7 @@ const (
 	flagEliminateProjection
 	flagMaxMinEliminate
 	flagPredicatePushDown
+	flagPrunColumnsDouble // eliminate unused columns added by predicate push down
 	flagEliminateOuterJoin
 	flagPartitionProcessor
 	flagPushDownAgg
@@ -51,6 +52,7 @@ var optRuleList = []logicalOptRule{
 	&projectionEliminator{},
 	&optPlaceHolder{},
 	&ppdSolver{},
+	&columnPruner{},
 	&optPlaceHolder{},
 	&optPlaceHolder{},
 	&aggregationPushDownSolver{},
@@ -118,7 +120,7 @@ func BuildLogicalPlanWithOptimization(ctx context.Context, sctx sessionctx.Conte
 		return nil, nil, err
 	}
 
-	lp, err := logicalOptimize(ctx, builder.optFlag|flagDoubleCheckEliminateProjection, p.(LogicalPlan))
+	lp, err := logicalOptimize(ctx, builder.optFlag|flagDoubleCheckEliminateProjection|flagPrunColumnsDouble, p.(LogicalPlan))
 	if err != nil {
 		return nil, nil, err
 	}

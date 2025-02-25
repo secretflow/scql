@@ -175,7 +175,10 @@ func executor(sql string) {
 		curDBName = items[1]
 		return
 	}
-	runSql(curDBName, sql, &curUser, sync)
+	err := runSql(curDBName, sql, &curUser, sync)
+	if err != nil {
+		log.Fatalf("run sql err: %v", err)
+	}
 }
 
 func completer(d prompt.Document) []prompt.Suggest {
@@ -346,8 +349,8 @@ func fetchResult(user *scql.SCDBCredential, sessionId string, maxFetchNum int, f
 
 func main() {
 	initFlags()
-	err := rootCmd.Execute()
-	if err != nil {
+
+	if err := rootCmd.Execute(); err != nil {
 		log.Fatalf("Failed to execute cobra.Command: %v", err)
 	}
 }

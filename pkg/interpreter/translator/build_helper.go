@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/secretflow/scql/pkg/expression"
+	"github.com/secretflow/scql/pkg/interpreter/graph"
 	"github.com/secretflow/scql/pkg/parser/ast"
 )
 
@@ -32,4 +33,20 @@ func extractEQColumns(exp *expression.ScalarFunction) ([]*expression.Column, err
 		return nil, fmt.Errorf("extractEQColumns: unsupported eq condition %v", exp)
 	}
 	return []*expression.Column{leftCol, rightCol}, nil
+}
+
+// stable merge
+func mergeTensors(ts1, ts2 []*graph.Tensor) []*graph.Tensor {
+	result := make([]*graph.Tensor, 0, len(ts1)+len(ts2))
+	result = append(result, ts1...)
+	tsMap := make(map[int]interface{}, len(ts1))
+	for _, t := range ts1 {
+		tsMap[t.ID] = struct{}{}
+	}
+	for _, t := range ts2 {
+		if _, ok := tsMap[t.ID]; !ok {
+			result = append(result, t)
+		}
+	}
+	return result
 }

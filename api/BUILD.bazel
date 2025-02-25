@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 load("@rules_cc//cc:defs.bzl", "cc_proto_library")
+load("@rules_go//proto:def.bzl", "go_proto_library")
 load("@rules_java//java:defs.bzl", "java_proto_library")
 load("@rules_proto//proto:defs.bzl", "proto_library")
 
@@ -132,8 +132,8 @@ proto_library(
     name = "interpreter_proto",
     srcs = ["interpreter.proto"],
     deps = [
-        ":common_proto",
         ":ccl_proto",
+        ":common_proto",
         ":core_proto",
         ":status_proto",
         ":subgraph_proto",
@@ -160,7 +160,7 @@ go_proto_library(
 
 go_proto_library(
     name = "scql_go_proto",
-    compilers = ["@io_bazel_rules_go//proto:go_grpc"],
+    compilers = ["@rules_go//proto:go_grpc"],
     importpath = "github.com/secretflow/scql/pkg/proto-gen/scql",
     protos = [
         ":broker_proto",

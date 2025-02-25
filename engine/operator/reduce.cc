@@ -14,7 +14,6 @@
 
 #include "engine/operator/reduce.h"
 
-#include <cstddef>
 #include <functional>
 #include <iterator>
 
@@ -70,8 +69,8 @@ void ReduceBase::Execute(ExecContext* ctx) {
 
     ctx->GetTensorTable()->AddTensor(output_pb.name(), TensorFrom(chunked_arr));
   } else {
-    auto sctx = ctx->GetSession()->GetSpuContext();
-    auto symbols = ctx->GetSession()->GetDeviceSymbols();
+    auto* sctx = ctx->GetSession()->GetSpuContext();
+    auto* symbols = ctx->GetSession()->GetDeviceSymbols();
     auto in_value =
         symbols->getVar(util::SpuVarNameEncoder::GetValueName(input_pb.name()));
     auto out_value = SecretReduceImpl(sctx, in_value);
@@ -119,7 +118,7 @@ const std::string ReduceSum::kOpType("ReduceSum");
 const std::string& ReduceSum::Type() const { return kOpType; }
 
 spu::Value ReduceSum::GetInitValue(spu::SPUContext* sctx) {
-  return spu::kernel::hlo::Constant(sctx, int64_t(0), {1});
+  return spu::kernel::hlo::Constant(sctx, static_cast<int64_t>(0), {1});
 }
 
 ReduceBase::ReduceFn ReduceSum::GetReduceFn(spu::SPUContext* sctx) {

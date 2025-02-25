@@ -29,8 +29,7 @@ namespace scql::engine {
 
 class SessionManager {
  public:
-  SessionManager(const SessionOptions& session_opt,
-                 ListenerManager* listener_manager,
+  SessionManager(SessionOptions session_opt, ListenerManager* listener_manager,
                  std::unique_ptr<yacl::link::ILinkFactory> link_factory,
                  std::unique_ptr<Router> ds_router,
                  std::unique_ptr<DatasourceAdaptorMgr> ds_mgr,
@@ -43,7 +42,7 @@ class SessionManager {
   SessionManager& operator=(const SessionManager&) = delete;
 
   void CreateSession(const pb::JobStartParams& params,
-                     pb::DebugOptions debug_opts);
+                     const pb::DebugOptions& debug_opts);
 
   Session* GetSession(const std::string& session_id);
 
@@ -63,7 +62,7 @@ class SessionManager {
   std::optional<std::string> GetTimeoutSession();
 
   scql::engine::SessionOptions GenerateUpdatedSessionOptions(
-      const pb::JobStartParams& jobParams);
+      const pb::JobStartParams& job_params);
 
  private:
   // used to construct session

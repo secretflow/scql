@@ -35,9 +35,9 @@ class GroupAggBase : public Operator {
   void Execute(ExecContext* ctx) override;
 
  private:
-  uint32_t GetGroupNum(ExecContext* ctx);
+  static uint32_t GetGroupNum(ExecContext* ctx);
 
-  std::shared_ptr<arrow::Array> GetGroupId(ExecContext* ctx);
+  static std::shared_ptr<arrow::Array> GetGroupId(ExecContext* ctx);
 
   // default use type of 'scalars' to build Tensor, if 'scalars' is empty, use
   // 'empty_type'

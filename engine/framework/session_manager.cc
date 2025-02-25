@@ -16,8 +16,7 @@
 
 #include <memory>
 #include <thread>
-
-#include "engine/util/logging.h"
+#include <utility>
 
 #ifndef DISABLE_TCMALLOC
 #include "gperftools/malloc_extension.h"
@@ -34,12 +33,12 @@ DEFINE_bool(
     "default false, release memory to system when no session is running");
 namespace scql::engine {
 SessionManager::SessionManager(
-    const SessionOptions& session_opt, ListenerManager* listener_manager,
+    SessionOptions session_opt, ListenerManager* listener_manager,
     std::unique_ptr<yacl::link::ILinkFactory> link_factory,
     std::unique_ptr<Router> ds_router,
     std::unique_ptr<DatasourceAdaptorMgr> ds_mgr, int32_t session_timeout_s,
     const std::vector<spu::ProtocolKind>& allowed_spu_protocols)
-    : session_opt_(session_opt),
+    : session_opt_(std::move(session_opt)),
       listener_manager_(listener_manager),
       link_factory_(std::move(link_factory)),
       ds_router_(std::move(ds_router)),
@@ -69,60 +68,62 @@ SessionManager::~SessionManager() {
 }
 
 scql::engine::SessionOptions SessionManager::GenerateUpdatedSessionOptions(
-    const pb::JobStartParams& params) {
+    const pb::JobStartParams& job_params) {
   struct SessionOptions session_opt = session_opt_;
   // to make the config unit consistent, here to use second instead of
   // miliseconds
-  if (params.link_cfg().link_recv_timeout_sec() > 0) {
+  if (job_params.link_cfg().link_recv_timeout_sec() > 0) {
     session_opt.link_config.link_recv_timeout_ms =
-        params.link_cfg().link_recv_timeout_sec() * 1000;
+        job_params.link_cfg().link_recv_timeout_sec() * 1000;
   }
 
-  if (params.link_cfg().link_throttle_window_size() > 0) {
+  if (job_params.link_cfg().link_throttle_window_size() > 0) {
     session_opt.link_config.link_throttle_window_size =
-        params.link_cfg().link_throttle_window_size();
+        job_params.link_cfg().link_throttle_window_size();
   }
 
-  if (params.link_cfg().link_chunked_send_parallel_size() > 0) {
+  if (job_params.link_cfg().link_chunked_send_parallel_size() > 0) {
     session_opt.link_config.link_chunked_send_parallel_size =
-        params.link_cfg().link_chunked_send_parallel_size();
+        job_params.link_cfg().link_chunked_send_parallel_size();
   }
 
-  if (params.link_cfg().http_max_payload_size() > 0) {
+  if (job_params.link_cfg().http_max_payload_size() > 0) {
     session_opt.link_config.http_max_payload_size =
-        params.link_cfg().http_max_payload_size();
+        job_params.link_cfg().http_max_payload_size();
   }
 
-  if (params.psi_cfg().unbalance_psi_larger_party_rows_count_threshold() > 0) {
+  if (job_params.psi_cfg().unbalance_psi_larger_party_rows_count_threshold() >
+      0) {
     session_opt.psi_config.unbalance_psi_larger_party_rows_count_threshold =
-        params.psi_cfg().unbalance_psi_larger_party_rows_count_threshold();
+        job_params.psi_cfg().unbalance_psi_larger_party_rows_count_threshold();
   } else {
     session_opt.psi_config.unbalance_psi_larger_party_rows_count_threshold =
         FLAGS_unbalance_psi_larger_party_rows_count_threshold;
   }
 
-  if (params.psi_cfg().unbalance_psi_ratio_threshold() > 0) {
+  if (job_params.psi_cfg().unbalance_psi_ratio_threshold() > 0) {
     session_opt.psi_config.unbalance_psi_ratio_threshold =
-        params.psi_cfg().unbalance_psi_ratio_threshold();
+        job_params.psi_cfg().unbalance_psi_ratio_threshold();
   } else {
     session_opt.psi_config.unbalance_psi_ratio_threshold =
         FLAGS_unbalance_psi_ratio_threshold;
   }
 
-  if (params.psi_cfg().psi_curve_type() > 0) {
-    session_opt.psi_config.psi_curve_type = params.psi_cfg().psi_curve_type();
+  if (job_params.psi_cfg().psi_curve_type() > 0) {
+    session_opt.psi_config.psi_curve_type =
+        job_params.psi_cfg().psi_curve_type();
   } else {
     session_opt.psi_config.psi_curve_type = FLAGS_psi_curve_type;
   }
 
   session_opt.log_config.enable_session_logger_separation =
-      params.log_cfg().enable_session_logger_separation();
+      job_params.log_cfg().enable_session_logger_separation();
 
   return session_opt;
 }
 
 void SessionManager::CreateSession(const pb::JobStartParams& params,
-                                   pb::DebugOptions debug_opts) {
+                                   const pb::DebugOptions& debug_opts) {
   const std::string& job_id = params.job_id();
   YACL_ENFORCE(!job_id.empty(), "job_id is empty.");
 

@@ -25,7 +25,7 @@ class Executor {
 
   ~Executor() = default;
 
-  void RunExecNode(ExecContext* context);
+  static void RunExecNode(ExecContext* context);
 };
 
 }  // namespace scql::engine

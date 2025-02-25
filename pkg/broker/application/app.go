@@ -82,7 +82,6 @@ func NewApp(partyMgr partymgr.PartyMgr, metaMgr *storage.MetaManager, cfg *confi
 		}
 
 		scheduler, err := scheduler.NewKusciaJobScheduler(conn, cfg.PartyCode,
-			scheduler.WithMaxPollTimes(kusciaSchedulerOpt.MaxPollTimes),
 			scheduler.WithMaxWaitTime(kusciaSchedulerOpt.MaxWaitTime),
 			scheduler.WithPollInterval(kusciaSchedulerOpt.PollInterval),
 			scheduler.WithAppImage(kusciaSchedulerOpt.AppImage),
@@ -115,7 +114,10 @@ func NewApp(partyMgr partymgr.PartyMgr, metaMgr *storage.MetaManager, cfg *confi
 	}
 	w.addTask(&task{name: "storage gc", interval: app.Conf.SessionCheckInterval, fn: app.StorageGc})
 	w.addTask(&task{name: "job watcher", interval: time.Minute, fn: app.JobWatcher.CheckJobs})
-	w.start()
+	err = w.start()
+	if err != nil {
+		return nil, fmt.Errorf("failed to start cron job worker: %v", err)
+	}
 
 	return app, nil
 }
@@ -129,6 +131,9 @@ func (app *App) onJobDead(jobId, reason string) {
 		},
 	}
 	info, err := app.SetSessionResult(jobId, result)
+	if err != nil {
+		logrus.Errorf("failed to set session result: %v", err)
+	}
 	engine, err := app.Scheduler.ParseEngineInstance(info.JobInfo)
 	if err != nil {
 		logrus.Warnf("failed to get engine from info: %v", err)

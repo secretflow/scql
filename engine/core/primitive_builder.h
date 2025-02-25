@@ -16,7 +16,6 @@
 
 #include <cstdint>
 
-#include "arrow/builder.h"
 #include "arrow_helper.h"
 
 #include "engine/core/arrow_helper.h"
@@ -54,7 +53,7 @@ class BooleanTensorBuilder : public TensorBuilder {
 template <typename T>
 class NumericTensorBuilder : public TensorBuilder {
  public:
-  using value_type = typename T::c_type;
+  using ValueType = typename T::c_type;
 
   NumericTensorBuilder()
       : TensorBuilder(arrow::TypeTraits<T>::type_singleton()) {}
@@ -70,13 +69,13 @@ class NumericTensorBuilder : public TensorBuilder {
 
   void AppendNull() override;
 
-  void Append(const value_type val) {
+  void Append(const ValueType val) {
     THROW_IF_ARROW_NOT_OK(builder_.Append(val));
   }
 
   // Note: make sure Reserve is called to attain enough capacity before calling
   // UnsafeAppend
-  void UnsafeAppend(const value_type val) { builder_.UnsafeAppend(val); }
+  void UnsafeAppend(const ValueType val) { builder_.UnsafeAppend(val); }
 
   // Note: make sure Reserve is called to attain enough capacity before calling
   // UnsafeAppendNull

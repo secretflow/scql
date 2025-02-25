@@ -64,16 +64,6 @@ func NewJobWatcher(metaManager *storage.MetaManager, cb OnJobDeadCb, opts ...Job
 	return w, nil
 }
 
-func (w *JobWatcher) onJobDead(jobId, reason string) error {
-	if w.onJobDeadCb != nil {
-		w.onJobDeadCb(jobId, reason)
-	}
-
-	return w.metaManager.ExecInMetaTransaction(func(txn *storage.MetaTransaction) (err error) {
-		return txn.SetSessionStatus(jobId, storage.SessionFailed)
-	})
-}
-
 func (w *JobWatcher) collectJobs() []*storage.SessionInfo {
 	// update jobStatus from db first
 	var jobs []*storage.SessionInfo

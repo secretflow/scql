@@ -36,9 +36,9 @@ class Publish : public Operator {
   void Execute(ExecContext* ctx) override;
 
  private:
-  void SetProtoMeta(const Tensor* from_tensor, const std::string& name,
-                    std::shared_ptr<pb::Tensor> to_proto,
-                    pb::PrimitiveDataType elem_type);
+  static void SetProtoMeta(const Tensor* from_tensor, const std::string& name,
+                           const std::shared_ptr<pb::Tensor>& to_proto,
+                           pb::PrimitiveDataType elem_type);
 
  private:
   static constexpr int32_t kColumnNumInProto = 1;  // only cantain one column.

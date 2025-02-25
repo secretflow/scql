@@ -324,3 +324,8 @@ func (p *LogicalApply) SqlStmt(d Dialect) (*runSqlCtx, error) {
 	}
 	return ctx, nil
 }
+
+func (p *LogicalMaxOneRow) SqlStmt(d Dialect) (*runSqlCtx, error) {
+	c, err := BuildChildCtx(d, p.Children()[0])
+	return c, err
+}

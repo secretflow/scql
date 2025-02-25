@@ -24,7 +24,6 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/secretflow/scql/pkg/audit"
 	"github.com/secretflow/scql/pkg/executor"
 	"github.com/secretflow/scql/pkg/scdb/config"
 	"github.com/secretflow/scql/pkg/scdb/server"
@@ -83,11 +82,6 @@ func main() {
 	if cfg.LogLevel != "" {
 		if lvl, err := log.ParseLevel(cfg.LogLevel); err == nil {
 			log.SetLevel(lvl)
-		}
-	}
-	if cfg.EnableAuditLogger {
-		if err := audit.InitAudit(&cfg.AuditConfig); err != nil {
-			log.Fatalf("Failed to init audit with error: %v", err)
 		}
 	}
 

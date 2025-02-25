@@ -14,7 +14,11 @@
 
 #include "engine/core/tensor.h"
 
+#include <cstddef>
+#include <memory>
+
 #include "arrow/compute/cast.h"
+#include "spdlog/spdlog.h"
 #include "yacl/base/exception.h"
 
 #include "engine/core/tensor_batch_reader.h"
@@ -67,7 +71,7 @@ std::shared_ptr<TensorBatchReader> MemTensor::CreateBatchReader(
   return std::make_shared<MemTensorBatchReader>(shared_from_this(), batch_size);
 }
 
-DiskTensor::DiskTensor(std::vector<FileArray> file_arrays,
+DiskTensor::DiskTensor(std::vector<std::shared_ptr<FileArray>> file_arrays,
                        scql::pb::PrimitiveDataType dtype,
                        std::shared_ptr<arrow::DataType> arrow_type)
     : Tensor(dtype),
@@ -75,11 +79,12 @@ DiskTensor::DiskTensor(std::vector<FileArray> file_arrays,
       arrow_type_(std::move(arrow_type)) {
   auto to_type = GetExpectedConvertType(arrow_type_);
   for (auto& file_array : file_arrays_) {
-    len_ += file_array.len;
-    null_count_ += file_array.null_count;
+    len_ += file_array->GetLen();
+    null_count_ += file_array->GetNullCount();
     if (to_type->id() != arrow_type_->id()) {
-      util::disk::FileBatchReader reader(file_array.file_path);
-      std::string new_file_name = file_array.file_path.string() + "-converted";
+      util::disk::FileBatchReader reader(file_array->GetFilePath());
+      std::string new_file_name =
+          file_array->GetFilePath().string() + "-converted";
       util::disk::ArrowWriter writer("mock_name", to_type, new_file_name);
       constexpr size_t batch_size = 1000 * 1000;
       while (true) {
@@ -92,12 +97,13 @@ DiskTensor::DiskTensor(std::vector<FileArray> file_arrays,
         writer.WriteBatch(*tmp);
       }
       std::error_code ec;
-      std::filesystem::remove(file_array.file_path, ec);
+      std::filesystem::remove(file_array->GetFilePath(), ec);
       if (ec.value() != 0) {
         SPDLOG_WARN("can not remove tmp dir: {}, msg: {}",
-                    file_array.file_path.string(), ec.message());
+                    file_array->GetFilePath().string(), ec.message());
       }
-      file_array.file_path = new_file_name;
+      file_array = std::make_shared<FileArray>(
+          new_file_name, file_array->GetLen(), file_array->GetNullCount());
     }
   }
   if (to_type->id() != arrow_type_->id()) {
@@ -114,7 +120,8 @@ std::shared_ptr<TensorBatchReader> DiskTensor::CreateBatchReader(
 std::shared_ptr<arrow::ChunkedArray> DiskTensor::ToArrowChunkedArray() const {
   std::vector<std::shared_ptr<arrow::Array>> result_arrays;
   for (size_t i = 0; i < GetFileNum(); i++) {
-    auto chunked_array = util::disk::ReadFileArray(GetFileArray(i).file_path);
+    auto chunked_array =
+        util::disk::ReadFileArray(GetFileArray(i)->GetFilePath());
     if (chunked_array == nullptr) {
       continue;
     }

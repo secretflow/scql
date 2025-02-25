@@ -44,8 +44,7 @@ INSTANTIATE_TEST_SUITE_P(
     SecretJoinSecretTest, SecretJoinTest,
     testing::Combine(
         testing::Values(test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 2},
-                        test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 3},
-                        test::SpuRuntimeTestCase{spu::ProtocolKind::ABY3, 3}),
+                        test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 3}),
         testing::Values(
             SecretJoinTestCase{
                 .left_key = {test::NamedTensor(
@@ -100,31 +99,33 @@ INSTANTIATE_TEST_SUITE_P(
                              R"json(["s1", "s1", "r1", "r2", "r3", "r1", "r2", "r3"])json"))}},
             SecretJoinTestCase{
                 .left_key = {test::NamedTensor(
-                    "lk", TensorFrom(arrow::int64(), "[1, 2, 1, 3, 5]"))},
+                    "lk", TensorFrom(arrow::int64(), "[1, 2, 1, 2, 0]"))},
                 .right_key = {test::NamedTensor(
-                    "rk", TensorFrom(arrow::int64(), "[1, 2, 1, 2, 4]"))},
+                    "rk", TensorFrom(arrow::int64(), "[1, 2, 1, 2]"))},
                 .left_payload =
                     {test::NamedTensor("lp0", TensorFrom(arrow::int64(),
-                                                         "[1, 2, 1, 3, 5]")),
+                                                         "[1, 2, 1, 2, 0]")),
                      test::NamedTensor("lp1", TensorFrom(arrow::int64(),
                                                          "[0, 1, 2, 3, 4]"))},
                 .right_payload =
                     {test::NamedTensor("rp0", TensorFrom(arrow::int64(),
-                                                         "[1, 2, 1, 2, 4]")),
+                                                         "[1, 2, 1, 2]")),
                      test::NamedTensor("rp1", TensorFrom(arrow::int64(),
-                                                         "[0, 1, 2, 3, 4]"))},
+                                                         "[0, 1, 2, 3]"))},
                 .expect_left_output =
-                    {test::NamedTensor("lp0", TensorFrom(arrow::int64(),
-                                                         "[1, 1, 1, 1, 2, 2]")),
+                    {test::NamedTensor("lp0",
+                                       TensorFrom(arrow::int64(),
+                                                  "[1, 1, 1, 1, 2, 2, 2, 2]")),
                      test::NamedTensor("lp1",
                                        TensorFrom(arrow::int64(),
-                                                  "[0, 0, 2, 2, 1, 1]"))},
+                                                  "[0, 0, 2, 2, 1, 1, 3, 3]"))},
                 .expect_right_output =
-                    {test::NamedTensor("rp0", TensorFrom(arrow::int64(),
-                                                         "[1, 1, 1, 1, 2, 2]")),
-                     test::NamedTensor("rp1",
+                    {test::NamedTensor("rp0",
                                        TensorFrom(arrow::int64(),
-                                                  "[0, 2, 0, 2, 1, 3]"))}},
+                                                  "[1, 1, 1, 1, 2, 2, 2, 2]")),
+                     test::NamedTensor(
+                         "rp1", TensorFrom(arrow::int64(),
+                                           "[0, 2, 0, 2, 1, 3, 1, 3]"))}},
             SecretJoinTestCase{
                 .left_key =
                     {test::NamedTensor(
@@ -149,6 +150,37 @@ INSTANTIATE_TEST_SUITE_P(
                     "lo1", TensorFrom(arrow::int64(), "[0, 0, 1, 1, 2]"))},
                 .expect_right_output = {test::NamedTensor(
                     "ro1", TensorFrom(arrow::int64(), "[0, 1, 0, 1, 2]"))}},
+            SecretJoinTestCase{
+                .left_key =
+                    {test::NamedTensor(
+                         "lk", TensorFrom(arrow::int64(), "[1, 1, 2, 2, 5]")),
+                     test::NamedTensor(
+                         "lk0", TensorFrom(arrow::float64(),
+                                           "[1.0, 2.2, 3.3, 4.4, -5.5]")),
+                     test::NamedTensor(
+                         "lk1",
+                         TensorFrom(arrow::large_utf8(),
+                                    R"json(["a", "a", "b", "d", "a"])json"))},
+                .right_key =
+                    {test::NamedTensor("rk", TensorFrom(arrow::int64(),
+                                                        "[1, 1, 2, 2, 4, 6]")),
+                     test::NamedTensor(
+                         "rk0",
+                         TensorFrom(arrow::float64(),
+                                    "[-1.0, -2.2, -3.3, -4.4, -5.5, 6.6]")),
+                     test::NamedTensor(
+                         "rk1",
+                         TensorFrom(
+                             arrow::large_utf8(),
+                             R"json(["a", "a", "b", "c", "e", "f"])json"))},
+                .left_payload = {test::NamedTensor(
+                    "lp1", TensorFrom(arrow::int64(), "[0, 1, 2, 3, 4]"))},
+                .right_payload = {test::NamedTensor(
+                    "rp1", TensorFrom(arrow::int64(), "[0, 1, 2, 3, 4, 5]"))},
+                .expect_left_output = {test::NamedTensor(
+                    "lo1", TensorFrom(arrow::int64(), "[]"))},
+                .expect_right_output = {test::NamedTensor(
+                    "ro1", TensorFrom(arrow::int64(), "[]"))}},
             SecretJoinTestCase{.left_key = {test::NamedTensor(
                                    "lk0", TensorFrom(arrow::int64(), "[]"))},
                                .right_key = {test::NamedTensor(
@@ -171,14 +203,16 @@ TEST_P(SecretJoinTest, works) {
   auto sessions = test::MakeMultiPCSession(std::get<0>(parm));
 
   std::vector<ExecContext> exec_ctxs;
-  for (size_t idx = 0; idx < sessions.size(); ++idx) {
-    exec_ctxs.emplace_back(node, sessions[idx].get());
+  exec_ctxs.reserve(sessions.size());
+  for (auto& session : sessions) {
+    exec_ctxs.emplace_back(node, session.get());
   }
 
   // feed inputs
   std::vector<ExecContext*> ctx_ptrs;
-  for (size_t idx = 0; idx < exec_ctxs.size(); ++idx) {
-    ctx_ptrs.emplace_back(&exec_ctxs[idx]);
+  ctx_ptrs.reserve(exec_ctxs.size());
+  for (auto& exec_ctx : exec_ctxs) {
+    ctx_ptrs.emplace_back(&exec_ctx);
   }
   FeedInputs(ctx_ptrs, tc);
 

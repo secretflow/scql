@@ -14,51 +14,15 @@
 
 #include "engine/operator/oblivious_group_agg.h"
 
-#include <cstddef>
 #include <cstdint>
 #include <utility>
 #include <vector>
-
-#include "absl/numeric/bits.h"
-#include "libspu/kernel/hal/constants.h"
-#include "libspu/kernel/hlo/basic_binary.h"
-#include "libspu/kernel/hlo/basic_ternary.h"
-#include "libspu/kernel/hlo/casting.h"
-#include "libspu/kernel/hlo/const.h"
-#include "libspu/kernel/hlo/geometrical.h"
 
 #include "engine/util/prefix_sum.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
 
 namespace scql::engine::op {
-
-namespace {
-
-int64_t RowCount(const spu::Value& value) {
-  return value.shape().size() > 0 ? value.shape()[0] : value.numel();
-}
-
-// IN  GroupMask: 1 means end of the group while 0 means other conditions.
-// OUT GroupMask: 0 means start of the group while 1 means other conditions.
-// e.g. IN: [0, 0, 1, 0, 0, 1, 0, 1, 0, 1]
-//      OUT:[0, 1, 1, 0, 1, 1, 0, 1, 0, 1]
-spu::Value TransferGroupMask(spu::SPUContext* ctx, const spu::Value& in) {
-  const int64_t row_cnt = in.shape()[0];
-  spu::Value in_not = spu::kernel::hlo::Sub(
-      ctx, spu::kernel::hlo::Constant(ctx, 1, in.shape()), in);
-
-  auto zero = spu::kernel::hal::zeros(ctx, in_not.dtype(), {1});
-  if (in_not.vtype() == spu::VIS_SECRET) {
-    zero = spu::kernel::hlo::Seal(ctx, zero);
-  }
-
-  return spu::kernel::hlo::Concatenate(
-      ctx, {zero, spu::kernel::hlo::Slice(ctx, in_not, {0}, {row_cnt - 1}, {})},
-      0);
-}
-
-}  // namespace
 
 void ObliviousGroupAggBase::Validate(ExecContext* ctx) {
   const auto& group = ctx->GetInput(kGroup);
@@ -82,8 +46,8 @@ void ObliviousGroupAggBase::Execute(ExecContext* ctx) {
   const auto& input_pbs = ctx->GetInput(kIn);
   const auto& output_pbs = ctx->GetOutput(kOut);
 
-  auto symbols = ctx->GetSession()->GetDeviceSymbols();
-  auto sctx = ctx->GetSession()->GetSpuContext();
+  auto* symbols = ctx->GetSession()->GetDeviceSymbols();
+  auto* sctx = ctx->GetSession()->GetSpuContext();
 
   const auto& group = ctx->GetInput(kGroup)[0];
   auto group_value = TransferGroupMask(
@@ -156,7 +120,8 @@ spu::Value ObliviousGroupCount::CalculateResult(spu::SPUContext* sctx,
   YACL_ENFORCE(row_count == RowCount(group));
 
   spu::Value ones = spu::kernel::hlo::Seal(
-      sctx, spu::kernel::hlo::Constant(sctx, int64_t(1), value.shape()));
+      sctx,
+      spu::kernel::hlo::Constant(sctx, static_cast<int64_t>(1), value.shape()));
 
   return util::Scan(
       sctx, ones, group,
@@ -245,4 +210,22 @@ spu::Value ObliviousGroupMin::CalculateResult(spu::SPUContext* sctx,
       });
 }
 
+const std::string ObliviousPercentRank::kOpType("ObliviousPercentRank");
+const std::string& ObliviousPercentRank::Type() const { return kOpType; }
+
+spu::Value ObliviousPercentRank::CalculateResult(spu::SPUContext* sctx,
+                                                 const spu::Value& value,
+                                                 const spu::Value& partition) {
+  auto op = ObliviousGroupCount();
+  spu::Value row_number = op.CalculateResult(sctx, value, partition);
+  spu::Value reverted_partition = RevertGroupMaskTransfer(sctx, partition);
+  spu::Value reversed_mark = spu::kernel::hlo::Sub(
+      sctx, spu::kernel::hlo::Constant(sctx, 1, partition.shape()),
+      reverted_partition);
+  std::vector<spu::Value> group_count =
+      util::ExpandGroupValueReversely(sctx, {row_number}, reversed_mark);
+  spu::Value float_row_number = spu::kernel::hlo::Cast(
+      sctx, row_number, row_number.vtype(), spu::DataType::DT_F64);
+  return spu::kernel::hlo::Div(sctx, float_row_number, group_count[0]);
+}
 };  // namespace scql::engine::op

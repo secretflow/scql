@@ -146,7 +146,7 @@
       {
         "sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0 = tbl_2.plain_int_0;",
         "skip_projection": true,
-        "rewritten_sql": "select tbl_1.plain_float_0,tbl_1.plain_int_0,tbl_2.plain_int_0 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0"
+        "rewritten_sql": "select tbl_1.plain_float_0 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0"
       },
       {
         "sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0 = tbl_2.plain_int_0 limit 1,2;",
@@ -562,12 +562,12 @@
         "rewritten_sql": "select count(1) as expr_242 from (select tbl_1.plain_float_0+tbl_1.plain_float_1 as f1 from alice.tbl_1) as ta join alice.tbl_2 on ta.f1=tbl_2.plain_float_1"
       },
       {
-        "sql": "select bank_type, count(1) from (select case when t1.b4 in ('1', '2', '3') then '1' else '2' end as bank_type from (select str_to_date(plain_string_0, '%Y-%m-%d') as partition_date, plain_string_1 as b4, plain_string_2 as b5 from alice.tbl_1) t1 where t1.partition_date = '2022-02-02') tt group by bank_type;;",
+        "sql": "select bank_type, count(1) from (select case when t1.b4 in ('1', '2', '3') then '1' else '2' end as bank_type from (select str_to_date(plain_string_0, '%Y-%m-%d') as partition_date, plain_string_1 as b4, plain_string_2 as b5 from alice.tbl_1) t1 where t1.partition_date = '2022-02-02') tt group by bank_type;",
         "skip_projection": false,
         "skip_odps_test": true,
         "skip_pg_test": true,
         "skip_csv_test": true,
-        "rewritten_sql": "select any_value(case when (t_0.b4='1' or t_0.b4='2' or t_0.b4='3') then '1' else '2' end) as bank_type,count(1) as expr_123 from (select str_to_date(tbl_1.plain_string_0, '%Y-%m-%d') as partition_date,tbl_1.plain_string_1 as b4 from alice.tbl_1 where str_to_date(tbl_1.plain_string_0, '%Y-%m-%d')='2022-02-02') as t_0 group by case when (t_0.b4='1' or t_0.b4='2' or t_0.b4='3') then '1' else '2' end"
+        "rewritten_sql": "select any_value(case when (tbl_1.plain_string_1='1' or tbl_1.plain_string_1='2' or tbl_1.plain_string_1='3') then '1' else '2' end) as bank_type,count(1) as expr_123 from alice.tbl_1 where str_to_date(tbl_1.plain_string_0, '%Y-%m-%d')='2022-02-02' group by case when (tbl_1.plain_string_1='1' or tbl_1.plain_string_1='2' or tbl_1.plain_string_1='3') then '1' else '2' end"
       },
       {
         "sql": "select a.plain_int_0, b.plain_int_0 from alice.tbl_0 a left join (select distinct plain_int_0, plain_int_1 from alice.tbl_1) b on a.plain_int_0 = b.plain_int_0;",

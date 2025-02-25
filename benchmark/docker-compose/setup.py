@@ -261,9 +261,9 @@ def generate_regtest_config():
     project_conf = os.getenv(PROJECT_CONF_ENV_NAME)
     spu_protocol = os.getenv(SPU_PROTOCOL_ENV_NAME)
     psi_type = os.getenv(PSI_TYPE_ENV_NAME)
-    conf["mysql_conn_str"] = (
-        f"root:{MYSQL_ROOT_PASSWORD}@tcp(localhost:{mysql_port})/brokera?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
-    )
+    conf[
+        "mysql_conn_str"
+    ] = f"root:{MYSQL_ROOT_PASSWORD}@tcp(localhost:{mysql_port})/brokera?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
     conf["spu_protocol"] = spu_protocol
     conf["project_conf"] = project_conf
     conf["psi_type"] = int(psi_type)

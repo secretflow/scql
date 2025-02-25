@@ -21,31 +21,27 @@
 #include <future>
 #include <memory>
 #include <optional>
-#include <tuple>
-#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 #include "arrow/compute/api.h"
-#include "arrow/compute/exec.h"
 #include "butil/files/scoped_temp_dir.h"
+#include "psi/algorithm/ecdh/ecdh_psi.h"
+#include "psi/algorithm/ecdh/ub_psi/ecdh_oprf_psi.h"
+#include "psi/algorithm/rr22/common.h"
+#include "psi/algorithm/rr22/rr22_psi.h"
 #include "psi/cryptor/cryptor_selector.h"
-#include "psi/ecdh/ecdh_psi.h"
-#include "psi/ecdh/ub_psi/ecdh_oprf_psi.h"
-#include "psi/rr22/common.h"
-#include "psi/rr22/rr22_psi.h"
 #include "psi/utils/ec_point_store.h"
 #include "yacl/crypto/rand/rand.h"
 
-#include "engine/audit/audit_log.h"
-#include "engine/core/arrow_helper.h"
 #include "engine/core/primitive_builder.h"
 #include "engine/core/tensor.h"
 #include "engine/core/tensor_constructor.h"
 #include "engine/framework/exec.h"
-#include "engine/util/psi_detail_logger.h"
-#include "engine/util/psi_helper.h"
+#include "engine/util/psi/common.h"
 #include "engine/util/tensor_util.h"
+
+DECLARE_int64(provider_batch_size);
 
 namespace scql::engine::op {
 
@@ -89,31 +85,8 @@ void In::Execute(ExecContext* ctx) {
       SPDLOG_LOGGER_INFO(logger, "Execute In, In type = SecretShareIn");
       return SecretShareIn(ctx);
     case static_cast<int64_t>(InType::kPsiIn):
-      // engines will coordinate proper PSI algorithm(EcdhPsi or OprfPsi)
-      // according to the tensor size
       SPDLOG_LOGGER_INFO(logger, "Execute In, In type = PsiIn");
-      {
-        auto algorithm = ctx->GetInt64ValueFromAttribute(kAlgorithmAttr);
-        switch (algorithm) {
-          case static_cast<int64_t>(util::PsiAlgo::kOprfPsi):
-            SPDLOG_LOGGER_INFO(logger, "Execute In, algo = OprfPsi");
-            // Besides letting the engines decide, Driver can directly choose
-            // prefered PSI algorithm(EcdhPsi or OprfPsi) UbPsiServerHint is
-            // indispensable when Driver explicitly choose OprfPsiIn
-            return OprfPsiIn(ctx, IsOprfServerAccordToHint(ctx));
-          case static_cast<int64_t>(util::PsiAlgo::kEcdhPsi):
-            SPDLOG_LOGGER_INFO(logger, "Execute In, algo = EcdhPsi");
-            return EcdhPsiIn(ctx);
-          case static_cast<int64_t>(util::PsiAlgo::kRr22Psi):
-            SPDLOG_LOGGER_INFO(logger, "Execute In, algo = Rr22Psi");
-            return Rr22PsiIn(ctx);
-          case static_cast<int64_t>(util::PsiAlgo::kAutoPsi):
-            SPDLOG_LOGGER_INFO(logger, "Execute In, algo = AutoPsi");
-            return PsiIn(ctx);
-          default:
-            YACL_THROW("unsupported in algorithm id: {}", algorithm);
-        }
-      }
+      return PsiIn(ctx);
     case static_cast<int64_t>(InType::kLocalIn):
       SPDLOG_LOGGER_INFO(logger, "Execute In, In type = {}", "LocalIn");
       return LocalIn(ctx);
@@ -167,8 +140,7 @@ void In::ValidatePartyCodes(ExecContext* ctx) {
                "In result should only reveal to left party");
 }
 
-bool In::IsOprfServerAccordToHint(ExecContext* ctx) {
-  auto server_hint = ctx->GetInt64ValueFromAttribute(kUbPsiServerHint);
+bool In::IsOprfServerAccordToHint(ExecContext* ctx, int64_t server_hint) {
   YACL_ENFORCE(server_hint >= 0 && server_hint <= 1, "invalid server hint: {}",
                server_hint);
 
@@ -182,12 +154,38 @@ bool In::IsOprfServerAccordToHint(ExecContext* ctx) {
 
 void In::PsiIn(ExecContext* ctx) {
   auto logger = ctx->GetActiveLogger();
-  auto psi_plan = util::CoordinatePsiPlan(ctx);
+
+  auto algorithm = ctx->GetInt64ValueFromAttribute(kAlgorithmAttr);
+  switch (algorithm) {
+    case static_cast<int64_t>(util::PsiAlgo::kOprfPsi): {
+      SPDLOG_LOGGER_INFO(logger, "use OprfPsi for In according to attribute");
+      auto server_hint = ctx->TryGetInt64ValueFromAttribute(kUbPsiServerHint);
+      if (server_hint.has_value()) {
+        SPDLOG_LOGGER_INFO(logger, "OprfPsi: use server hint");
+        return OprfPsiIn(ctx,
+                         IsOprfServerAccordToHint(ctx, server_hint.value()));
+      }
+      break;
+    }
+    case static_cast<int64_t>(util::PsiAlgo::kEcdhPsi):
+      SPDLOG_LOGGER_INFO(logger, "use EcdhPsi for In according to attribute");
+      return EcdhPsiIn(ctx);
+    case static_cast<int64_t>(util::PsiAlgo::kRr22Psi):
+      SPDLOG_LOGGER_INFO(logger, "use Rr22Psi for In according to attribute");
+      return Rr22PsiIn(ctx);
+    case static_cast<int64_t>(util::PsiAlgo::kAutoPsi):
+      break;
+    default:
+      YACL_THROW("unsupported in algorithm id: {}", algorithm);
+  }
+
+  auto psi_plan = util::CoordinatePsiPlan(
+      ctx, algorithm == static_cast<int64_t>(util::PsiAlgo::kOprfPsi));
   if (psi_plan.unbalanced) {
-    SPDLOG_LOGGER_INFO(logger, "OprfPsi is chosen");
+    SPDLOG_LOGGER_INFO(logger, "OprfPsi is chosen after coordination");
     return OprfPsiIn(ctx, psi_plan.is_server, psi_plan.psi_size_info);
   } else {
-    SPDLOG_LOGGER_INFO(logger, "EcdhPsi is chosen");
+    SPDLOG_LOGGER_INFO(logger, "EcdhPsi is chosen after coordination");
     return EcdhPsiIn(ctx);
   }
 }
@@ -268,10 +266,6 @@ void In::OprfPsiIn(ExecContext* ctx, bool is_server,
       ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
       psi_info_table.self_size, psi_info_table.peer_size,
       psi_info_table.result_size);
-  audit::RecordInNodeDetail(
-      *ctx, static_cast<int64_t>(psi_info_table.self_size),
-      static_cast<int64_t>(psi_info_table.peer_size),
-      psi_info_table.result_size, psi_info_table.start_time);
 }
 
 int64_t In::OprfServerHandleResult(ExecContext* ctx,
@@ -393,7 +387,6 @@ int64_t In::OprfClientHandleResult(
 }
 
 void In::EcdhPsiIn(ExecContext* ctx) {
-  const auto start_time = std::chrono::system_clock::now();
   auto logger = ctx->GetActiveLogger();
 
   const auto& my_party_code = ctx->GetSession()->SelfPartyCode();
@@ -472,13 +465,9 @@ void In::EcdhPsiIn(ExecContext* ctx) {
     ctx->GetSession()->GetTensorTable()->AddTensor(output_pb.name(),
                                                    std::move(result));
   }
-  audit::RecordInNodeDetail(*ctx, static_cast<int64_t>(self_size),
-                            static_cast<int64_t>(peer_size), result_size,
-                            start_time);
 }
 
 void In::Rr22PsiIn(ExecContext* ctx) {
-  const auto start_time = std::chrono::system_clock::now();
   auto logger = ctx->GetActiveLogger();
 
   const auto& my_party_code = ctx->GetSession()->SelfPartyCode();
@@ -505,15 +494,13 @@ void In::Rr22PsiIn(ExecContext* ctx) {
   }
   auto self_size = static_cast<size_t>(in_tensor->Length());
   auto peer_size = util::ExchangeSetSize(psi_link, self_size);
-  auto batch_provider = std::make_shared<util::BatchProvider>(
-      std::vector<TensorPtr>{in_tensor}, FLAGS_provider_batch_size);
-  auto provider = util::MemoryBucketProvider(batch_provider);
+  auto provider = util::BucketProvider({in_tensor});
   provider.InitBucket(psi_link, self_size, peer_size);
   auto bucket_num = provider.GetBucketNum();
   std::shared_ptr<util::InResultResolverWithBucket> result_solver;
   if (reveal_to == my_party_code) {
     result_solver =
-        std::make_shared<util::InResultResolverWithBucket>(bucket_num);
+        std::make_shared<util::InResultResolverWithBucket>(self_size);
   }
   psi::rr22::PreProcessFunc pre_f =
       [&](size_t idx) -> std::vector<psi::HashBucketCache::BucketItem> {
@@ -554,9 +541,6 @@ void In::Rr22PsiIn(ExecContext* ctx) {
     ctx->GetSession()->GetTensorTable()->AddTensor(output_pb.name(),
                                                    std::move(result));
   }
-  audit::RecordInNodeDetail(*ctx, static_cast<int64_t>(self_size),
-                            static_cast<int64_t>(peer_size), result_size,
-                            start_time);
 }
 
 void In::LocalIn(ExecContext* ctx) {

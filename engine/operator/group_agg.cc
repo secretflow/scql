@@ -14,7 +14,6 @@
 
 #include "engine/operator/group_agg.h"
 
-#include "arrow/array.h"
 #include "arrow/compute/exec.h"
 #include "arrow/compute/row/grouper.h"
 #include "arrow/scalar.h"
@@ -53,7 +52,8 @@ void GroupAggBase::Validate(ExecContext* ctx) {
 
 void GroupAggBase::Execute(ExecContext* ctx) {
   auto group_array = GetGroupId(ctx);
-  auto* group_cast = dynamic_cast<const arrow::UInt32Array*>(group_array.get());
+  const auto* group_cast =
+      dynamic_cast<const arrow::UInt32Array*>(group_array.get());
   YACL_ENFORCE(group_cast, "cast group id to uint32_t failed");
   std::shared_ptr<arrow::ListArray> groupings;
   ASSIGN_OR_THROW_ARROW_STATUS(
@@ -96,7 +96,7 @@ uint32_t GroupAggBase::GetGroupNum(ExecContext* ctx) {
   YACL_ENFORCE(group_num_t, "no group_num={}", group_num.name());
   auto num_array =
       util::ConcatenateChunkedArray(group_num_t->ToArrowChunkedArray());
-  auto* num_array_ptr =
+  const auto* num_array_ptr =
       dynamic_cast<const arrow::UInt32Array*>(num_array.get());
   YACL_ENFORCE(num_array_ptr, "cast group num to uint32_t failed");
   return num_array_ptr->Value(0);

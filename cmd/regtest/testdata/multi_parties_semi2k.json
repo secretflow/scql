@@ -1,0 +1,9 @@
+{
+  "queries": [
+    {
+      "name": "secret join with union all",
+      "query": "select ta.join_int_0, ta.groupby_string_0, tu.plain_float_0 from alice_tbl_0 as ta inner join (select tb.join_int_0, tb.plain_float_0 from bob_tbl_0 as tb union all select tc.join_int_0, tc.plain_float_0 from carol_tbl_0 as tc) as tu on ta.join_int_0=tu.join_int_0;",
+      "mysql_query": "select ta.join_int_0, ta.groupby_string_0, tu.plain_float_0 from alice.tbl_0 as ta inner join (select tb.join_int_0, tb.plain_float_0 from bob.tbl_0 as tb union all select tc.join_int_0, tc.plain_float_0 from carol.tbl_0 as tc) as tu on ta.join_int_0=tu.join_int_0;"
+    }
+  ]
+}

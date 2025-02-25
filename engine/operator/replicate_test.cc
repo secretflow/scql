@@ -138,13 +138,15 @@ TEST_P(ReplicateTest, Works) {
   }
 
   std::vector<ExecContext> exec_ctx;
-  for (size_t i = 0; i < sessions.size(); i++) {
-    exec_ctx.emplace_back(node, sessions[i].get());
+  exec_ctx.reserve(sessions.size());
+  for (auto& session : sessions) {
+    exec_ctx.emplace_back(node, session.get());
   }
 
   std::vector<ExecContext*> ctx_ptrs;
-  for (size_t i = 0; i < exec_ctx.size(); i++) {
-    ctx_ptrs.emplace_back(&exec_ctx[i]);
+  ctx_ptrs.reserve(exec_ctx.size());
+  for (auto& i : exec_ctx) {
+    ctx_ptrs.emplace_back(&i);
   }
   FeedInputs(ctx_ptrs, tc);
   EXPECT_NO_THROW(test::RunAsync<Replicate>(ctx_ptrs));
@@ -226,7 +228,8 @@ pb::ExecNode ReplicateTest::MakeExecNode(const ReplicateTestCase& tc,
 
   {
     std::vector<pb::Tensor> left_tensors;
-    for (auto& left : tc.left_inputs) {
+    left_tensors.reserve(tc.left_inputs.size());
+    for (const auto& left : tc.left_inputs) {
       left_tensors.push_back(test::MakeTensorReference(
           left.name, left.tensor->Type(), pb::TENSORSTATUS_PRIVATE));
     }
@@ -236,7 +239,8 @@ pb::ExecNode ReplicateTest::MakeExecNode(const ReplicateTestCase& tc,
 
   {
     std::vector<pb::Tensor> right_tensors;
-    for (auto& right : tc.right_inputs) {
+    right_tensors.reserve(tc.right_inputs.size());
+    for (const auto& right : tc.right_inputs) {
       right_tensors.emplace_back(test::MakeTensorReference(
           right.name, right.tensor->Type(), pb::TENSORSTATUS_PRIVATE));
     }
@@ -245,7 +249,8 @@ pb::ExecNode ReplicateTest::MakeExecNode(const ReplicateTestCase& tc,
 
   {
     std::vector<pb::Tensor> left_output_tensors;
-    for (auto& left : tc.left_outputs) {
+    left_output_tensors.reserve(tc.left_outputs.size());
+    for (const auto& left : tc.left_outputs) {
       left_output_tensors.push_back(test::MakeTensorReference(
           left.name, left.tensor->Type(), pb::TENSORSTATUS_PRIVATE));
     }
@@ -255,7 +260,8 @@ pb::ExecNode ReplicateTest::MakeExecNode(const ReplicateTestCase& tc,
 
   {
     std::vector<pb::Tensor> right_output_tensors;
-    for (auto& right : tc.right_outputs) {
+    right_output_tensors.reserve(tc.right_outputs.size());
+    for (const auto& right : tc.right_outputs) {
       right_output_tensors.push_back(test::MakeTensorReference(
           right.name, right.tensor->Type(), pb::TENSORSTATUS_PRIVATE));
     }

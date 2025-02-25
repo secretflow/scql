@@ -14,8 +14,6 @@
 
 #include "engine/operator/insert_table.h"
 
-#include "absl/strings/match.h"
-#include "arrow/array.h"
 #include "arrow/visit_array_inline.h"
 #include "gflags/gflags.h"
 
@@ -33,7 +31,7 @@ DEFINE_string(output_db_connection_str, "",
 
 namespace {
 
-static constexpr int64_t kBatchSize = 1000;
+constexpr int64_t kBatchSize = 1000;
 
 class ValueVistor {
  public:
@@ -62,9 +60,9 @@ class ValueVistor {
 
   arrow::Status Visit(const arrow::BooleanArray& array) {
     for (int64_t i = 0; i < array.length(); i++) {
-      result_vector_->push_back(array.IsNull(i)    ? "NULL"
-                                : array.GetView(i) ? "TRUE"
-                                                   : "FALSE");
+      result_vector_->emplace_back(array.IsNull(i)    ? "NULL"
+                                   : array.GetView(i) ? "TRUE"
+                                                      : "FALSE");
     }
     return arrow::Status::OK();
   }
@@ -72,7 +70,7 @@ class ValueVistor {
   arrow::Status Visit(const arrow::NumericArray<arrow::Int64Type>& array) {
     for (int64_t i = 0; i < array.length(); i++) {
       if (array.IsNull(i)) {
-        result_vector_->push_back("NULL");
+        result_vector_->emplace_back("NULL");
       } else {
         if (is_time_) {
           auto time_str = QuotingString(
@@ -99,7 +97,7 @@ class ValueVistor {
   }
 
  private:
-  std::string QuotingString(std::string_view str) {
+  std::string static QuotingString(std::string_view str) {
     // FIXME(jingshi): the string may cantain "'", which should be escaped
     return absl::StrCat("'", str, "'");
   }

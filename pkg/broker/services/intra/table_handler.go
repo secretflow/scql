@@ -18,6 +18,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/secretflow/scql/pkg/broker/services/common"
 	"github.com/secretflow/scql/pkg/broker/storage"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
@@ -40,12 +42,28 @@ func (svc *grpcIntraSvc) CreateTable(c context.Context, req *pb.CreateTableReque
 	if err != nil {
 		return nil, fmt.Errorf("CreateTable: get project %v err: %v", req.GetProjectId(), err)
 	}
-	tables, exist, err := txn.GetTables(req.GetProjectId(), []string{req.GetTableName()})
+	tables, err := txn.GetAllTables(req.GetProjectId())
 	if err != nil {
 		return nil, fmt.Errorf("CreateTable: %s", err.Error())
 	}
-	if exist {
-		return nil, fmt.Errorf("CreateTable: table %v already exists owned by %s", req.GetTableName(), tables[0].Owner)
+
+	var existence *storage.Table
+	var conflictRef *storage.Table
+	for _, t := range tables {
+		if t.TableName == req.GetTableName() {
+			existence = &t
+			break
+		}
+		if t.Owner == svc.app.Conf.PartyCode && t.RefTable == req.GetRefTable() && t.DBType != req.GetDbType() {
+			conflictRef = &t
+			break
+		}
+	}
+	if existence != nil {
+		return nil, fmt.Errorf("CreateTable: table %v already exists owned by %s", req.GetTableName(), existence.Owner)
+	}
+	if conflictRef != nil {
+		return nil, fmt.Errorf("CreateTable: ref table %v conflicts, it already existed with db_type=%s", req.GetRefTable(), conflictRef.DBType)
 	}
 
 	var columns []storage.ColumnMeta
@@ -128,6 +146,9 @@ func (svc *grpcIntraSvc) ListTables(ctx context.Context, req *pb.ListTablesReque
 	}
 	var tableList []*pb.TableMeta
 	for _, table := range tables {
+		if table.Table.IsView {
+			continue
+		}
 		var columns []*pb.TableMeta_Column
 		for _, column := range table.Columns {
 			columns = append(columns, &pb.TableMeta_Column{
@@ -183,7 +204,10 @@ func (svc *grpcIntraSvc) DropTable(c context.Context, req *pb.DropTableRequest) 
 	}
 	go func() {
 		targetParties := sliceutil.Subtraction(members, []string{app.Conf.PartyCode})
-		common.PostSyncInfo(svc.app, req.GetProjectId(), pb.ChangeEntry_DropTable, tableId, targetParties)
+		postSyncErr := common.PostSyncInfo(svc.app, req.GetProjectId(), pb.ChangeEntry_DropTable, tableId, targetParties)
+		if postSyncErr != nil {
+			logrus.Errorf("DropTable: PostSyncInfo err: %v", postSyncErr)
+		}
 	}()
 
 	return &pb.DropTableResponse{

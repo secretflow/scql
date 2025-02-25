@@ -80,11 +80,11 @@ func (b *statusConverter) addTensorStatusConversion(tensor *graph.Tensor, placem
 			oldPartyCode := tensor.OwnerPartyCode
 			partyCode := placement.partyList()[0]
 			if oldPartyCode != partyCode {
-				tensor, err := b.plan.AddCopyNode("copy", tensor, oldPartyCode, partyCode)
+				output, err := b.plan.AddCopyNode("copy", tensor, oldPartyCode, partyCode)
 				if err != nil {
 					return nil, fmt.Errorf("addTensorStatusConversion: %v", err)
 				}
-				return tensor, nil
+				return output, nil
 			}
 			return tensor, nil
 		case proto.TensorStatus_TENSORSTATUS_SECRET:
@@ -196,24 +196,6 @@ func getStatusConversionCost(inputT *graph.Tensor, newPlacement placement) (algC
 func areStatusesAllPrivate(ss ...proto.TensorStatus) bool {
 	for _, s := range ss {
 		if s != proto.TensorStatus_TENSORSTATUS_PRIVATE {
-			return false
-		}
-	}
-	return true
-}
-
-func areStatusesAllShare(ss ...proto.TensorStatus) bool {
-	for _, s := range ss {
-		if s != proto.TensorStatus_TENSORSTATUS_SECRET {
-			return false
-		}
-	}
-	return true
-}
-
-func areStatusesAllPublic(ss ...proto.TensorStatus) bool {
-	for _, s := range ss {
-		if s != proto.TensorStatus_TENSORSTATUS_PUBLIC {
 			return false
 		}
 	}

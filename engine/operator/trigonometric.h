@@ -31,7 +31,8 @@ class TrigonometricFunction : public Operator {
   void ExecuteInSecret(ExecContext* ctx);
 
   virtual void ExecuteInPlain(ExecContext* ctx) = 0;
-  void ExecuteTrigonometricFunction(ExecContext* ctx, const std::string& func);
+  static void ExecuteTrigonometricFunction(ExecContext* ctx,
+                                           const std::string& func);
   virtual spu::Value ComputeOnSpu(spu::SPUContext* sctx,
                                   const spu::Value& value) = 0;
 };
@@ -98,9 +99,9 @@ class ATan2 : public BinaryBase {
  protected:
   void ValidateIoDataTypes(ExecContext* ctx) override;
 
-  spu::Value ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& left,
-                          const spu::Value& right) override;
-  TensorPtr ComputeInPlain(const Tensor& left, const Tensor& right) override;
+  spu::Value ComputeOnSpu(spu::SPUContext* sctx, const spu::Value& lhs,
+                          const spu::Value& rhs) override;
+  TensorPtr ComputeInPlain(const Tensor& lhs, const Tensor& rhs) override;
 };
 
 }  // namespace scql::engine::op

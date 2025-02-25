@@ -21,7 +21,6 @@
 #include "yacl/base/exception.h"
 
 #include "engine/core/arrow_helper.h"
-#include "engine/core/type.h"
 
 namespace scql::engine::util::disk {
 

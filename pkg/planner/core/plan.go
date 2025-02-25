@@ -239,5 +239,5 @@ func (p *basePlan) InsertTableOpt() *InsertTableOption {
 }
 
 func (p *baseLogicalPlan) SqlStmt(d Dialect) (*runSqlCtx, error) {
-	return nil, fmt.Errorf("unsupported logical plan baseLogicalPlan")
+	return nil, fmt.Errorf("unsupported logical plan baseLogicalPlan: %s", p.TP())
 }

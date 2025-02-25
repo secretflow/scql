@@ -15,16 +15,13 @@
 #include "engine/operator/case_when.h"
 
 #include <cstddef>
-#include <cstdint>
 #include <string>
 #include <vector>
 
-#include "arrow/compute/api_vector.h"
 #include "arrow/compute/exec.h"
 #include "libspu/kernel/hlo/basic_binary.h"
 #include "libspu/kernel/hlo/const.h"
 
-#include "engine/core/tensor.h"
 #include "engine/core/tensor_constructor.h"
 #include "engine/framework/exec.h"
 #include "engine/util/spu_io.h"
@@ -100,9 +97,8 @@ void CaseWhen::Validate(ExecContext* ctx) {
 void CaseWhen::Execute(ExecContext* ctx) {
   const auto& output = ctx->GetOutput(kOut);
   auto out_status = util::GetTensorStatus(output[0]);
-  return out_status == pb::TensorStatus::TENSORSTATUS_PRIVATE
-             ? CaseWhenPrivate(ctx)
-             : CaseWhenShare(ctx);
+  out_status == pb::TensorStatus::TENSORSTATUS_PRIVATE ? CaseWhenPrivate(ctx)
+                                                       : CaseWhenShare(ctx);
 }
 
 void CaseWhen::CaseWhenPrivate(ExecContext* ctx) {

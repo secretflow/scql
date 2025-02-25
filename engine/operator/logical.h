@@ -33,8 +33,8 @@ class Not : public Operator {
   void Validate(ExecContext* ctx) override;
   void Execute(ExecContext* ctx) override;
 
-  void ExecuteInPlain(ExecContext* ctx);
-  void ExecuteInSecret(ExecContext* ctx);
+  static void ExecuteInPlain(ExecContext* ctx);
+  static void ExecuteInSecret(ExecContext* ctx);
 };
 
 class LogicalBase : public BinaryBase {

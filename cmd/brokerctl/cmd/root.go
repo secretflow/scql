@@ -15,6 +15,8 @@
 package cmd
 
 import (
+	"log"
+
 	"github.com/spf13/cobra"
 
 	"github.com/secretflow/scql/pkg/util/brokerutil"
@@ -48,7 +50,10 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&host, "host", "", "host to access broker, e.g: http://localhost:8080")
 	rootCmd.PersistentFlags().StringVar(&projectID, "project-id", "", "unique identifier for project")
 	rootCmd.PersistentFlags().IntVar(&timeoutS, "timeout", 1, "timeout seconds for http requests to broker")
-	rootCmd.MarkPersistentFlagRequired("host")
+	if err := rootCmd.MarkPersistentFlagRequired("host"); err != nil {
+		log.Fatalf("failed to mark flag required: %v", err)
+		return
+	}
 
 	rootCmd.AddCommand(createCmd)
 	rootCmd.AddCommand(deleteCmd)

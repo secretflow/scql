@@ -23,10 +23,8 @@
 #include "arrow/filesystem/s3fs.h"
 #include "arrow/io/file.h"
 #include "arrow/ipc/writer.h"
-#include "arrow/table.h"
 #include "gflags/gflags.h"
 
-#include "engine/audit/audit_log.h"
 #include "engine/core/arrow_helper.h"
 #include "engine/core/tensor_batch_reader.h"
 #include "engine/util/filepath_helper.h"
@@ -184,7 +182,6 @@ void DumpFile::Execute(ExecContext* ctx) {
 
   // 1.construct data to table
   std::vector<std::shared_ptr<arrow::Field>> fields;
-  const auto start_time = std::chrono::system_clock::now();
   int32_t batch_size = 1024 * 100;  // default 1024 is too small for large data
   std::vector<std::shared_ptr<TensorBatchReader>> readers;
   auto total_len = 0;
@@ -241,7 +238,5 @@ void DumpFile::Execute(ExecContext* ctx) {
   auto schema = arrow::schema(fields);
   WriteTensors(schema, options, out_stream, readers);
   ctx->GetSession()->SetAffectedRows(total_len);
-
-  audit::RecordDumpFileNodeDetail(*ctx, file_path, start_time);
 }
 };  // namespace scql::engine::op

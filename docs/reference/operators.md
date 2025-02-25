@@ -2226,6 +2226,75 @@ Out = [{1, 3, 5, 9, 0}, {9, 8, 15, 21, 5}]
 
 
 
+### `ObliviousPercentRank`
+
+Definition: partially aggregate `In` according to end of group indicator.
+Example:
+
+```python
+Group = {1, 0, 0, 1, 1}
+In = [{1, 3, 2, 4, 0}, {9, 8, 7, 6, 5}]
+Out = [{1, 0.3333, 0.6666, 1, 1, 1}, {1, 0.3333, 0.6666, 1, 1, 1}]
+```
+
+
+**Inputs:**
+
+1. `Group`(single, T): End of group indicator(shape [M][1]). Element 1 means the row is the last element of the group, 0 is not.
+
+1. `In`(variadic, T): Values to be aggregated (shape [M][1]).
+
+
+**Outputs:**
+
+1. `Out`(variadic, T): Partially aggregated values (shape [M][1]).
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: secret
+
+
+
+### `PercentRank`
+
+Definition: return the percent rank in each partition
+
+**Inputs:**
+
+1. `Key`(variadic, T): the tensors which used for sorting in partition, e.g. [2,0,4,2,3,7]
+
+1. `PartitionId`(single, T): the partitioned id, e.g. [0,0,0,1,1,1], the first 3 in a group and the others are in another group
+
+1. `PartitionNum`(single, T): the partitioned num, e.g. [2]
+
+
+**Outputs:**
+
+1. `Out`(single, T): percent rank output
+
+
+
+**Attributes:**
+
+1. `reverse`: string array consits of "0" and "1", "0" means this input tensor sort by ascending, "1" means this tensor sort by descending.
+		e.g. ["0","1"] means the first input key sort by ascending, the second sort by descending
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: public,private,secret
+
+
+
 ### `Pow`
 
 Definition: Out = Left `Pow` Right
@@ -2547,7 +2616,7 @@ Definition: return the row number in each partition
 
 **Outputs:**
 
-1. `Out`(single, T): row number output, e.g. [2,1,3,1,2,3]
+1. `Out`(single, T): row number output
 
 
 

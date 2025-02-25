@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("//engine/bazel:scql.bzl", "scql_cc_test")
+
 package(default_visibility = ["//visibility:public"])
 
 proto_library(
@@ -29,9 +31,9 @@ cc_library(
     srcs = ["channel_manager.cc"],
     hdrs = ["channel_manager.h"],
     deps = [
-        "@com_github_brpc_brpc//:brpc",
-        "@com_github_gabime_spdlog//:spdlog",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/strings",
+        "@brpc",
+        "@spdlog",
         "@yacl//yacl/base:exception",
     ],
 )
@@ -42,17 +44,16 @@ cc_library(
     hdrs = ["rpc_helper.h"],
     deps = [
         ":mux_receiver_cc_proto",
-        "@com_github_brpc_brpc//:brpc",
-        "@com_github_gabime_spdlog//:spdlog",
+        "@brpc",
+        "@spdlog",
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "rpc_helper_test",
     srcs = ["rpc_helper_test.cc"],
     deps = [
         ":rpc_helper",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -66,14 +67,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "listener_test",
     srcs = ["listener_test.cc"],
     # add -lm for channel_mem
     linkopts = ["-lm"],
     deps = [
         ":listener",
-        "@com_google_googletest//:gtest_main",
         "@yacl//yacl/link/transport:channel_mem",
     ],
 )
@@ -85,17 +85,16 @@ cc_library(
     deps = [
         ":listener",
         ":mux_receiver_cc_proto",
-        "@com_github_brpc_brpc//:brpc",
+        "@brpc",
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "mux_receiver_service_test",
     srcs = ["mux_receiver_service_test.cc"],
     deps = [
         ":mux_link_factory",
         ":mux_receiver_service",
-        "@com_google_googletest//:gtest_main",
         "@yacl//yacl/link",
     ],
 )
@@ -108,17 +107,17 @@ cc_library(
         ":channel_manager",
         ":listener",
         ":mux_receiver_cc_proto",
-        "@com_github_brpc_brpc//:brpc",
+        "@brpc",
         "@yacl//yacl/link:factory",
     ],
 )
 
 # FIXME(shunde.csd): Add mux_link_factory_test back
-# cc_test(
+# scql_cc_test(
 #     name = "mux_link_factory_test",
 #     srcs = ["mux_link_factory_test.cc"],
 #     deps = [
 #         ":mux_link_factory",
-#         "@com_google_googletest//:gtest_main",
+#
 #     ],
 # )

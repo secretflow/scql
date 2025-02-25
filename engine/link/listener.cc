@@ -19,16 +19,14 @@
 namespace scql::engine {
 
 void Listener::AddChannel(
-    const size_t rank,
-    std::shared_ptr<yacl::link::transport::Channel> channel) {
+    size_t rank, std::shared_ptr<yacl::link::transport::Channel> channel) {
   YACL_ENFORCE(channel, "add channel failed, channel can't be nullptr.");
   YACL_ENFORCE(channels_.count(rank) == 0,
                "add channel failed, rank={} exists before add.", rank);
   channels_.emplace(rank, channel);
 }
 
-void Listener::OnRequest(const size_t rank,
-                         const link::pb::MuxPushRequest* request,
+void Listener::OnRequest(size_t rank, const link::pb::MuxPushRequest* request,
                          link::pb::MuxPushResponse* response) {
   auto iter = channels_.find(rank);
   YACL_ENFORCE(iter != channels_.end(), "channel for rank:{} not exist", rank);

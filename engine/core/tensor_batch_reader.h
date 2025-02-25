@@ -14,9 +14,7 @@
 
 #pragma once
 
-#include "arrow/array.h"
 #include "arrow/table.h"
-#include "yacl/base/exception.h"
 
 #include "engine/core/tensor.h"
 #include "engine/util/disk/arrow_reader.h"
@@ -25,7 +23,8 @@ namespace scql::engine {
 
 class TensorBatchReader {
  public:
-  TensorBatchReader(size_t batch_size) : batch_size_(batch_size), offset_(0) {}
+  explicit TensorBatchReader(size_t batch_size)
+      : batch_size_(batch_size), offset_(0) {}
   /// @returns tensor ptr, return nullptr if no more batches
   virtual std::shared_ptr<arrow::ChunkedArray> Next() = 0;
 
@@ -36,10 +35,10 @@ class TensorBatchReader {
 
 class MemTensorBatchReader : public TensorBatchReader {
  public:
-  MemTensorBatchReader(std::shared_ptr<MemTensor> tensor,
-                       size_t batch_size = std::numeric_limits<size_t>::max())
-      : TensorBatchReader(batch_size),
-        arrays_(std::move(tensor->ToArrowChunkedArray())) {}
+  explicit MemTensorBatchReader(
+      const std::shared_ptr<MemTensor>& tensor,
+      size_t batch_size = std::numeric_limits<size_t>::max())
+      : TensorBatchReader(batch_size), arrays_(tensor->ToArrowChunkedArray()) {}
 
   MemTensorBatchReader(const MemTensorBatchReader&) = delete;
 
@@ -53,8 +52,9 @@ class MemTensorBatchReader : public TensorBatchReader {
 
 class DiskTensorBatchReader : public TensorBatchReader {
  public:
-  DiskTensorBatchReader(std::shared_ptr<DiskTensor> tensor,
-                        size_t batch_size = std::numeric_limits<size_t>::max())
+  explicit DiskTensorBatchReader(
+      std::shared_ptr<DiskTensor> tensor,
+      size_t batch_size = std::numeric_limits<size_t>::max())
       : TensorBatchReader(batch_size), tensor_(std::move(tensor)) {}
 
   DiskTensorBatchReader(const DiskTensorBatchReader&) = delete;
@@ -67,14 +67,14 @@ class DiskTensorBatchReader : public TensorBatchReader {
   bool FreshReader() {
     // skip empty files;
     while (cur_file_idx_ < tensor_->GetFileNum() &&
-           tensor_->GetFileArray(cur_file_idx_).len == 0) {
+           tensor_->GetFileArray(cur_file_idx_)->GetLen() == 0) {
       cur_file_idx_++;
     }
     if (cur_file_idx_ >= tensor_->GetFileNum()) {
       return false;
     }
     cur_reader_ = std::make_shared<util::disk::FileBatchReader>(
-        tensor_->GetFileArray(cur_file_idx_).file_path);
+        tensor_->GetFileArray(cur_file_idx_)->GetFilePath());
     cur_file_idx_++;
     return true;
   }

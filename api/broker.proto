@@ -173,6 +173,36 @@ service IntraBrokerService {
     };
   }
 
+  // CreateView
+  //
+  // Create a view of selection of table
+  rpc CreateView(CreateViewRequest) returns (CreateViewResponse) {
+    option (google.api.http) = {
+      post: "/intra/view/create"
+      body: "*"
+    };
+  }
+
+  // ListViews
+  //
+  // List all views in specified Project
+  rpc ListViews(ListViewsRequest) returns (ListViewsResponse) {
+    option (google.api.http) = {
+      post: "/intra/view/list",
+      body: "*"
+    };
+  }
+
+  // DropView
+  //
+  // Drop a view you owned in specified Project
+  rpc DropView(DropViewRequest) returns (DropViewResponse) {
+    option (google.api.http) = {
+      post: "/intra/view/drop",
+      body: "*"
+    };
+  }
+
   // CCL related
 
   // GrantCCL
@@ -422,6 +452,18 @@ message CreateTableRequest {
   repeated ColumnDesc columns = 5 [(google.api.field_behavior) = REQUIRED];
 }
 
+message CreateViewRequest {
+  string project_id = 1 [(google.api.field_behavior) = REQUIRED];
+  string view_name = 2 [(google.api.field_behavior) = REQUIRED];
+  // This field is used to store the content for defining a view.
+  // It can be in the form of a CREATE VIEW statement or a direct SELECT query.
+  string query = 3 [(google.api.field_behavior) = REQUIRED];
+}
+
+message CreateViewResponse {
+  Status status = 1;
+}
+
 message CreateTableResponse {
   Status status = 1;
 }
@@ -438,6 +480,18 @@ message ListTablesResponse {
   repeated TableMeta tables = 2;
 }
 
+message ListViewsRequest {
+  // Project id
+  string project_id = 1 [(google.api.field_behavior) = REQUIRED];
+  // The names of views to be listed, if empty, all views will be listed
+  repeated string names = 2;
+}
+
+message ListViewsResponse {
+  Status status = 1;
+  repeated TableMeta views = 2;
+}
+
 message DropTableRequest {
   // Project id
   string project_id = 1 [(google.api.field_behavior) = REQUIRED];
@@ -445,6 +499,16 @@ message DropTableRequest {
   string table_name = 2 [(google.api.field_behavior) = REQUIRED];
 }
 message DropTableResponse {
+  Status status = 1;
+}
+
+message DropViewRequest {
+  // Project id
+  string project_id = 1 [(google.api.field_behavior) = REQUIRED];
+  // The name of view to be droped
+  string view_name = 2 [(google.api.field_behavior) = REQUIRED];
+}
+message DropViewResponse {
   Status status = 1;
 }
 
@@ -761,6 +825,7 @@ message TableMeta {
     string dtype = 2;
   }
   repeated Column columns = 5;
+  string select_string = 6;
 }
 
 message PrivacyPolicy {

@@ -33,7 +33,7 @@ class Constant : public Operator {
   void Execute(ExecContext* ctx) override;
 
  private:
-  std::shared_ptr<Tensor> BuildTensorFromScalar(
+  static std::shared_ptr<Tensor> BuildTensorFromScalar(
       const pb::AttributeValue& scalar_attr);
 };
 

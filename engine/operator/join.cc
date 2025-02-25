@@ -16,8 +16,6 @@
 
 #include <sys/types.h>
 
-#include <algorithm>
-#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <future>
@@ -25,28 +23,29 @@
 #include <optional>
 #include <string>
 #include <tuple>
-#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 #include "butil/files/scoped_temp_dir.h"
-#include "gflags/gflags.h"
 #include "msgpack.hpp"
+#include "psi/algorithm/ecdh/ecdh_psi.h"
+#include "psi/algorithm/ecdh/ub_psi/ecdh_oprf_psi.h"
+#include "psi/algorithm/rr22/common.h"
+#include "psi/algorithm/rr22/rr22_psi.h"
 #include "psi/cryptor/cryptor_selector.h"
-#include "psi/ecdh/ecdh_psi.h"
-#include "psi/ecdh/ub_psi/ecdh_oprf_psi.h"
-#include "psi/rr22/common.h"
-#include "psi/rr22/rr22_psi.h"
 #include "yacl/crypto/rand/rand.h"
 
-#include "engine/audit/audit_log.h"
 #include "engine/core/primitive_builder.h"
 #include "engine/core/tensor.h"
+#include "engine/core/tensor_constructor.h"
+#include "engine/core/tensor_slice.h"
 #include "engine/framework/exec.h"
 #include "engine/util/communicate_helper.h"
-#include "engine/util/psi_detail_logger.h"
-#include "engine/util/psi_helper.h"
+#include "engine/util/filepath_helper.h"
+#include "engine/util/psi/batch_provider.h"
 #include "engine/util/tensor_util.h"
+
+DECLARE_int64(provider_batch_size);
 
 namespace scql::engine::op {
 
@@ -66,33 +65,39 @@ void Join::Validate(ExecContext* ctx) {
 
 void Join::Execute(ExecContext* ctx) {
   auto logger = ctx->GetActiveLogger();
+
   int64_t algorithm = ctx->GetInt64ValueFromAttribute(kAlgorithmAttr);
-  if (algorithm == static_cast<int64_t>(util::PsiAlgo::kEcdhPsi)) {
-    SPDLOG_LOGGER_INFO(logger, "use server hint Ecdh");
-    return Join::EcdhPsiJoin(ctx);
-  } else if (algorithm == static_cast<int64_t>(util::PsiAlgo::kOprfPsi)) {
-    SPDLOG_LOGGER_INFO(logger, "use server hint Oprf");
-    return OprfPsiJoin(ctx, IsOprfServerAccordToHint(ctx));
-  } else if (algorithm == static_cast<int64_t>(util::PsiAlgo::kRr22Psi)) {
-    return Rr22PsiJoin(ctx);
+  switch (algorithm) {
+    case static_cast<int64_t>(util::PsiAlgo::kOprfPsi): {
+      SPDLOG_LOGGER_INFO(logger, "use OprfPsi for join according to attribute");
+      auto server_hint = ctx->TryGetInt64ValueFromAttribute(kUbPsiServerHint);
+      if (server_hint.has_value()) {
+        SPDLOG_LOGGER_INFO(logger, "OprfPsi: use server hint");
+        return OprfPsiJoin(ctx,
+                           IsOprfServerAccordToHint(ctx, server_hint.value()));
+      }
+      break;
+    }
+    case static_cast<int64_t>(util::PsiAlgo::kEcdhPsi):
+      SPDLOG_LOGGER_INFO(logger, "use EcdhPsi for join according to attribute");
+      return Join::EcdhPsiJoin(ctx);
+    case static_cast<int64_t>(util::PsiAlgo::kRr22Psi):
+      SPDLOG_LOGGER_INFO(logger, "use Rr22Psi for join according to attribute");
+      return Rr22PsiJoin(ctx);
+    case static_cast<int64_t>(util::PsiAlgo::kAutoPsi):
+      break;
+    default:
+      YACL_THROW("unsupported in algorithm id: {}", algorithm);
   }
 
-  // coordinate between engines
-  SPDLOG_LOGGER_INFO(logger, "coordinate between engines");
-  util::PsiPlan psi_plan = util::CoordinatePsiPlan(ctx);
-  std::string server_info;
+  util::PsiPlan psi_plan = util::CoordinatePsiPlan(
+      ctx, algorithm == static_cast<int64_t>(util::PsiAlgo::kOprfPsi));
+
   if (psi_plan.unbalanced) {
-    if (psi_plan.is_server) {
-      server_info = ", is server";
-    } else {
-      server_info = ", is client";
-    }
-  }
-  SPDLOG_LOGGER_INFO(logger, "coordinate finished, is unbalanced: {} {}",
-                     psi_plan.unbalanced, server_info);
-  if (psi_plan.unbalanced) {
+    SPDLOG_LOGGER_INFO(logger, "OprfPsi is chosen after coordination");
     return Join::OprfPsiJoin(ctx, psi_plan.is_server, psi_plan.psi_size_info);
   } else {
+    SPDLOG_LOGGER_INFO(logger, "EcdhPsi is chosen after coordination");
     return Join::EcdhPsiJoin(ctx);
   }
 }
@@ -141,8 +146,7 @@ void Join::ValidatePsiVisibility(ExecContext* ctx) {
       "be private");
 }
 
-bool Join::IsOprfServerAccordToHint(ExecContext* ctx) {
-  auto server_hint = ctx->GetInt64ValueFromAttribute(kUbPsiServerHint);
+bool Join::IsOprfServerAccordToHint(ExecContext* ctx, int64_t server_hint) {
   YACL_ENFORCE(server_hint >= 0 && server_hint <= 1, "invalid server hint: {}",
                server_hint);
 
@@ -155,7 +159,6 @@ bool Join::IsOprfServerAccordToHint(ExecContext* ctx) {
 }
 
 void Join::EcdhPsiJoin(ExecContext* ctx) {
-  const auto start_time = std::chrono::system_clock::now();
   auto logger = ctx->GetActiveLogger();
 
   const auto& my_party_code = ctx->GetSession()->SelfPartyCode();
@@ -167,63 +170,94 @@ void Join::EcdhPsiJoin(ExecContext* ctx) {
   if (ctx->GetSession()->GetPsiLogger()) {
     ctx->GetSession()->GetPsiLogger()->LogInput(join_keys);
   }
-  auto batch_provider = std::make_shared<util::BatchProvider>(
-      join_keys, FLAGS_provider_batch_size);
-  // NOTE(shunde.csd): There are some possible ways to optimize the performance
-  // of compute join indices.
-  //   1. Try to adjust bins number based on the both input sizes and memory
-  // amounts.
-  //   2. Try to use pure memory store when the input size is small.
-  auto self_store =
-      std::make_shared<psi::HashBucketEcPointStore>("/tmp", util::kNumBins);
-  auto peer_store =
-      std::make_shared<psi::HashBucketEcPointStore>("/tmp", util::kNumBins);
-  {
-    psi::ecdh::EcdhPsiOptions options;
-    options.link_ctx = ctx->GetSession()->GetLink();
-    if (options.link_ctx->WorldSize() > 2) {
-      options.link_ctx = options.link_ctx->SubWorld(
-          ctx->GetNodeName() + "-EcdhPsiJoin", input_party_codes);
-    }
-
-    options.ecc_cryptor = psi::CreateEccCryptor(static_cast<psi::CurveType>(
-        ctx->GetSession()->GetSessionOptions().psi_config.psi_curve_type));
-    options.target_rank = yacl::link::kAllRank;
-    if (join_keys.size() > 0) {
-      options.on_batch_finished = util::BatchFinishedCb(
-          logger, ctx->GetSession()->Id(),
-          (join_keys[0]->Length() + options.batch_size - 1) /
-              options.batch_size);
-    }
-    if (ctx->GetSession()->GetPsiLogger()) {
-      options.ecdh_logger = ctx->GetSession()->GetPsiLogger()->GetEcdhLogger();
-    }
-    psi::ecdh::RunEcdhPsi(options, batch_provider, self_store, peer_store);
+  std::vector<std::shared_ptr<TensorSlice>> slices(join_keys.size());
+  for (size_t i = 0; i < join_keys.size(); ++i) {
+    slices[i] = CreateTensorSlice(join_keys[i]);
   }
+  std::string output_name = kOutLeftJoinIndex;
+  if (!is_left) {
+    output_name = kOutRightJoinIndex;
+  }
+  const auto& output_pb = ctx->GetOutput(output_name)[0];
+  std::shared_ptr<BucketTensorConstructor> tensor_constructor;
+  bool is_bucket_tensor = util::AreAllBucketTensor(join_keys);
+  if (is_bucket_tensor) {
+    auto streaming_options = ctx->GetSession()->GetStreamingOptions();
+    std::filesystem::path out_dir = util::CreateDirWithRandSuffix(
+        streaming_options.dump_file_dir, output_pb.name());
+    tensor_constructor = std::make_shared<DiskBucketTensorConstructor>(
+        output_pb.name(), arrow::uint64(), output_pb.elem_type(), out_dir,
+        slices[0]->GetSliceNum());
+  } else {
+    tensor_constructor = std::make_shared<MemoryBucketTensorConstructor>(
+        slices[0]->GetSliceNum());
+  }
+  size_t total_self_size = 0;
+  size_t total_peer_size = 0;
+  for (size_t i = 0; i < slices[0]->GetSliceNum(); ++i) {
+    std::vector<TensorPtr> keys(join_keys.size());
+    for (size_t j = 0; j < slices.size(); ++j) {
+      keys[j] = slices[j]->GetSlice(i);
+    }
+    auto batch_provider =
+        std::make_shared<util::BatchProvider>(keys, FLAGS_provider_batch_size);
+    // NOTE(shunde.csd): There are some possible ways to optimize the
+    // performance of compute join indices.
+    //   1. Try to adjust bins number based on the both input sizes and memory
+    // amounts.
+    //   2. Try to use pure memory store when the input size is small.
+    // TODO: modify num of bins by data num
+    auto self_store =
+        std::make_shared<psi::HashBucketEcPointStore>("/tmp", util::kNumBins);
+    auto peer_store =
+        std::make_shared<psi::HashBucketEcPointStore>("/tmp", util::kNumBins);
+    {
+      psi::ecdh::EcdhPsiOptions options;
+      options.link_ctx = ctx->GetSession()->GetLink();
+      if (options.link_ctx->WorldSize() > 2) {
+        options.link_ctx = options.link_ctx->SubWorld(
+            ctx->GetNodeName() + "-EcdhPsiJoin", input_party_codes);
+      }
 
-  int64_t join_type = ctx->GetInt64ValueFromAttribute(kJoinTypeAttr);
-  auto join_indices = util::FinalizeAndComputeJoinIndices(
-      is_left, self_store, peer_store, join_type);
-  auto self_size = self_store->ItemCount();
-  auto peer_size = peer_store->ItemCount();
+      options.ecc_cryptor = psi::CreateEccCryptor(static_cast<psi::CurveType>(
+          ctx->GetSession()->GetSessionOptions().psi_config.psi_curve_type));
+      options.target_rank = yacl::link::kAllRank;
+      if (join_keys.size() > 0) {
+        options.on_batch_finished = util::BatchFinishedCb(
+            logger, ctx->GetSession()->Id(),
+            (join_keys[0]->Length() + options.batch_size - 1) /
+                options.batch_size);
+      }
+      if (ctx->GetSession()->GetPsiLogger()) {
+        options.ecdh_logger =
+            ctx->GetSession()->GetPsiLogger()->GetEcdhLogger();
+      }
+      psi::ecdh::RunEcdhPsi(options, batch_provider, self_store, peer_store);
+    }
+
+    int64_t join_type = ctx->GetInt64ValueFromAttribute(kJoinTypeAttr);
+    auto join_indices = util::FinalizeAndComputeJoinIndices(
+        is_left, self_store, peer_store, join_type);
+    tensor_constructor->InsertBucket(join_indices, i);
+    total_self_size += self_store->ItemCount();
+    total_peer_size += peer_store->ItemCount();
+  }
+  TensorPtr join_indices;
+  tensor_constructor->Finish(&join_indices);
   auto result_size = join_indices->Length();
   SPDLOG_LOGGER_INFO(
       logger,
       "ECDH PSI Join finish, my_party_code:{}, my_rank:{}, total "
       "self_item_count:{}, total peer_item_count:{}, result_size:{}",
       ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
-      self_size, peer_size, result_size);
+      total_self_size, total_peer_size, result_size);
   if (ctx->GetSession()->GetPsiLogger()) {
     ctx->GetSession()->GetPsiLogger()->LogOutput(join_indices, join_keys);
   }
   SetJoinResult(ctx, is_left, std::move(join_indices));
-  audit::RecordJoinNodeDetail(*ctx, static_cast<int64_t>(self_size),
-                              static_cast<int64_t>(peer_size), result_size,
-                              start_time);
 }
 
 void Join::Rr22PsiJoin(ExecContext* ctx) {
-  const auto start_time = std::chrono::system_clock::now();
   auto logger = ctx->GetActiveLogger();
   const auto& my_party_code = ctx->GetSession()->SelfPartyCode();
   std::vector<std::string> input_party_codes =
@@ -239,15 +273,30 @@ void Join::Rr22PsiJoin(ExecContext* ctx) {
     psi_link = psi_link->SubWorld(ctx->GetNodeName() + "-Rr22PsiJoin",
                                   input_party_codes);
   }
+  std::string output_name = kOutLeftJoinIndex;
+  if (!is_left) {
+    output_name = kOutRightJoinIndex;
+  }
+  const auto& output_pb = ctx->GetOutput(output_name)[0];
   auto self_size = static_cast<size_t>(join_keys[0]->Length());
-  auto batch_provider = std::make_shared<util::BatchProvider>(
-      join_keys, FLAGS_provider_batch_size);
-  auto provider = util::MemoryBucketProvider(batch_provider);
+  auto provider = util::BucketProvider(join_keys);
   auto peer_size = util::ExchangeSetSize(psi_link, self_size);
   provider.InitBucket(psi_link, self_size, peer_size);
   auto bucket_num = provider.GetBucketNum();
   std::vector<TensorPtr> result_ts(bucket_num);
   int64_t join_type = ctx->GetInt64ValueFromAttribute(kJoinTypeAttr);
+  std::shared_ptr<BucketTensorConstructor> tensor_constructor;
+  if (provider.IsBucketTensor()) {
+    auto streaming_options = ctx->GetSession()->GetStreamingOptions();
+    std::filesystem::path out_dir = util::CreateDirWithRandSuffix(
+        streaming_options.dump_file_dir, output_pb.name());
+    tensor_constructor = std::make_shared<DiskBucketTensorConstructor>(
+        output_pb.name(), arrow::uint64(), output_pb.elem_type(), out_dir,
+        bucket_num);
+  } else {
+    tensor_constructor =
+        std::make_shared<MemoryBucketTensorConstructor>(bucket_num);
+  }
   psi::rr22::PreProcessFunc pre_f =
       [&](size_t idx) -> std::vector<psi::HashBucketCache::BucketItem> {
     YACL_ENFORCE(idx < bucket_num);
@@ -258,9 +307,10 @@ void Join::Rr22PsiJoin(ExecContext* ctx) {
           const std::vector<psi::HashBucketCache::BucketItem>& bucket_items,
           const std::vector<uint32_t>& indices,
           const std::vector<uint32_t>& peer_cnt) {
-        result_ts[bucket_idx] = provider.CalIntersection(
+        auto indices_t = provider.CalIntersection(
             psi_link->Spawn(std::to_string(bucket_idx)), bucket_idx, is_left,
             join_type, bucket_items, indices, peer_cnt);
+        tensor_constructor->InsertBucket(indices_t, bucket_idx);
         provider.CleanBucket(bucket_idx);
       };
   psi::rr22::Rr22Runner runner(psi_link,
@@ -268,7 +318,8 @@ void Join::Rr22PsiJoin(ExecContext* ctx) {
                                bucket_num, true, pre_f, post_f);
   // left as sender
   runner.ParallelRun(0, is_left);
-  auto join_indices = util::ConcatTensors(result_ts);
+  TensorPtr join_indices;
+  tensor_constructor->Finish(&join_indices);
   auto result_size = join_indices->Length();
   SPDLOG_LOGGER_INFO(
       logger,
@@ -277,18 +328,13 @@ void Join::Rr22PsiJoin(ExecContext* ctx) {
       ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
       self_size, peer_size, result_size);
   SetJoinResult(ctx, is_left, std::move(join_indices));
-  audit::RecordJoinNodeDetail(*ctx, static_cast<int64_t>(self_size),
-                              static_cast<int64_t>(peer_size), result_size,
-                              start_time);
 }
 
 void Join::OprfPsiJoin(ExecContext* ctx, bool is_server,
                        std::optional<util::PsiSizeInfo> psi_size_info) {
   auto logger = ctx->GetActiveLogger();
-  // PsiExecutionInfoTable for audit
   util::PsiExecutionInfoTable psi_info_table;
   psi_info_table.start_time = std::chrono::system_clock::now();
-  // a temporary solution, related SPU-codes need to be modified someday
   if (psi_size_info.has_value()) {
     psi_info_table.self_size = psi_size_info->self_size;
     psi_info_table.peer_size = psi_size_info->peer_size;
@@ -310,8 +356,6 @@ void Join::OprfPsiJoin(ExecContext* ctx, bool is_server,
 
   // prepare input
   auto join_keys = GetJoinKeys(ctx, is_left);
-  auto batch_provider = std::make_shared<util::BatchProvider>(
-      join_keys, FLAGS_provider_batch_size);
 
   // set EcdhOprfPsiOptions
   psi::ecdh::EcdhOprfPsiOptions psi_options;
@@ -330,23 +374,56 @@ void Join::OprfPsiJoin(ExecContext* ctx, bool is_server,
   psi_options.curve_type = static_cast<psi::CurveType>(
       ctx->GetSession()->GetSessionOptions().psi_config.psi_curve_type);
 
-  // create temp dir
-  butil::ScopedTempDir tmp_dir;
-  YACL_ENFORCE(tmp_dir.CreateUniqueTempDir(), "fail to create temp dir");
-
   int64_t join_type = ctx->GetInt64ValueFromAttribute(kJoinTypeAttr);
   JoinRole join_role = GetJoinRole(join_type, is_left);
-
-  if (is_server) {
-    OprfPsiServer(ctx, join_role, tmp_dir.path().value(), psi_options,
-                  batch_provider, is_left, peer_rank, &psi_info_table,
-                  psi_link);
-  } else {
-    OprfPsiClient(ctx, join_role, tmp_dir.path().value(), psi_options,
-                  batch_provider, is_left, peer_rank, &psi_info_table,
-                  psi_link);
+  std::vector<std::shared_ptr<TensorSlice>> slices(join_keys.size());
+  for (size_t i = 0; i < join_keys.size(); ++i) {
+    slices[i] = CreateTensorSlice(join_keys[i]);
   }
-
+  std::string output_name = kOutLeftJoinIndex;
+  if (!is_left) {
+    output_name = kOutRightJoinIndex;
+  }
+  const auto& output_pb = ctx->GetOutput(output_name)[0];
+  std::shared_ptr<BucketTensorConstructor> tensor_constructor;
+  bool is_bucket_tensor = util::AreAllBucketTensor(join_keys);
+  if (is_bucket_tensor) {
+    auto streaming_options = ctx->GetSession()->GetStreamingOptions();
+    std::filesystem::path out_dir = util::CreateDirWithRandSuffix(
+        streaming_options.dump_file_dir, output_pb.name());
+    tensor_constructor = std::make_shared<DiskBucketTensorConstructor>(
+        output_pb.name(), arrow::uint64(), output_pb.elem_type(), out_dir,
+        slices[0]->GetSliceNum());
+  } else {
+    tensor_constructor = std::make_shared<MemoryBucketTensorConstructor>(
+        slices[0]->GetSliceNum());
+  }
+  for (size_t i = 0; i < slices[0]->GetSliceNum(); ++i) {
+    std::vector<TensorPtr> keys(join_keys.size());
+    for (size_t j = 0; j < slices.size(); ++j) {
+      keys[j] = slices[j]->GetSlice(i);
+    }
+    // create temp dir
+    butil::ScopedTempDir tmp_dir;
+    YACL_ENFORCE(tmp_dir.CreateUniqueTempDir(), "fail to create temp dir");
+    auto batch_provider =
+        std::make_shared<util::BatchProvider>(keys, FLAGS_provider_batch_size);
+    TensorPtr indices;
+    if (is_server) {
+      indices = OprfPsiServer(ctx, join_role, tmp_dir.path().value(),
+                              psi_options, batch_provider, is_left, peer_rank,
+                              &psi_info_table, psi_link);
+    } else {
+      indices = OprfPsiClient(ctx, join_role, tmp_dir.path().value(),
+                              psi_options, batch_provider, is_left, peer_rank,
+                              &psi_info_table, psi_link);
+    }
+    tensor_constructor->InsertBucket(indices, i);
+  }
+  TensorPtr join_indices;
+  tensor_constructor->Finish(&join_indices);
+  SetJoinResult(ctx, is_left, join_indices);
+  psi_info_table.result_size = join_indices->Length();
   SPDLOG_LOGGER_INFO(
       logger,
       "OPRF PSI Join finish, my_party_code:{}, my_rank:{}, total "
@@ -354,11 +431,6 @@ void Join::OprfPsiJoin(ExecContext* ctx, bool is_server,
       ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
       psi_info_table.self_size, psi_info_table.peer_size,
       psi_info_table.result_size);
-  audit::RecordJoinNodeDetail(
-      *ctx, static_cast<int64_t>(psi_info_table.self_size),
-      static_cast<int64_t>(psi_info_table.peer_size),
-      psi_info_table.result_size, psi_info_table.start_time);
-  SPDLOG_LOGGER_INFO(logger, "OPRF PSI Join end");
 }
 
 std::vector<TensorPtr> Join::GetJoinKeys(ExecContext* ctx, bool is_left) {
@@ -405,7 +477,7 @@ auto Join::GetJoinRole(int64_t join_type, bool is_left) -> JoinRole {
   return JoinRole::kInValid;
 }
 
-void Join::OprfPsiServer(
+TensorPtr Join::OprfPsiServer(
     ExecContext* ctx, JoinRole join_role, const std::string& tmp_dir,
     const psi::ecdh::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<util::BatchProvider>& batch_provider, bool is_left,
@@ -431,14 +503,11 @@ void Join::OprfPsiServer(
   }
 
   auto matched_seqs = RecvMatchedSeqs(ctx, peer_rank);
-  TensorPtr result_tensor =
-      BuildServerResult(matched_seqs, ub_cache, client_unmatched_count,
-                        join_role, batch_provider);
-  psi_info_table->result_size = result_tensor->Length();
-  SetJoinResult(ctx, is_left, std::move(result_tensor));
+  return BuildServerResult(matched_seqs, ub_cache, client_unmatched_count,
+                           join_role, batch_provider);
 }
 
-void Join::OprfPsiClient(
+TensorPtr Join::OprfPsiClient(
     ExecContext* ctx, JoinRole join_role, const std::string& tmp_dir,
     const psi::ecdh::EcdhOprfPsiOptions& psi_options,
     const std::shared_ptr<util::BatchProvider>& batch_provider, bool is_left,
@@ -489,8 +558,7 @@ void Join::OprfPsiClient(
   };
 
   SendMatchedSeqs(ctx, peer_rank, matched_seqs);
-  psi_info_table->result_size = result_tensor->Length();
-  SetJoinResult(ctx, is_left, std::move(result_tensor));
+  return result_tensor;
 }
 
 uint64_t Join::RecvNullCount(ExecContext* ctx, int64_t peer_rank) {

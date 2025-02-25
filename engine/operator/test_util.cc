@@ -14,6 +14,7 @@
 
 #include "engine/operator/test_util.h"
 
+#include <future>
 #include <memory>
 
 #include "libspu/core/config.h"
@@ -49,12 +50,13 @@ pb::JobStartParams::Party BuildParty(const std::string& code, int32_t rank) {
 }
 
 spu::RuntimeConfig MakeSpuRuntimeConfigForTest(
-    const spu::ProtocolKind protocol_kind) {
+    spu::ProtocolKind protocol_kind, bool enable_colocated_optimization) {
   spu::RuntimeConfig config;
   config.set_protocol(protocol_kind);
   config.set_field(spu::FieldType::FM64);
   config.set_sigmoid_mode(spu::RuntimeConfig::SIGMOID_REAL);
-  config.set_experimental_enable_colocated_optimization(true);
+  config.set_experimental_enable_colocated_optimization(
+      enable_colocated_optimization);
 
   spu::populateRuntimeConfig(config);
   return config;
@@ -91,8 +93,8 @@ std::vector<std::shared_ptr<Session>> MakeMultiPCSession(
     auto* p = common_params.add_parties();
     p->CopyFrom(party);
   }
-  common_params.mutable_spu_runtime_cfg()->CopyFrom(
-      MakeSpuRuntimeConfigForTest(test_case.protocol));
+  common_params.mutable_spu_runtime_cfg()->CopyFrom(MakeSpuRuntimeConfigForTest(
+      test_case.protocol, test_case.enable_colocated_optimization));
 
   std::vector<std::future<std::shared_ptr<Session>>> futures;
   SessionOptions options;
@@ -116,8 +118,9 @@ std::vector<std::shared_ptr<Session>> MakeMultiPCSession(
   }
 
   std::vector<std::shared_ptr<Session>> results;
-  for (size_t i = 0; i < futures.size(); i++) {
-    results.push_back(futures[i].get());
+  results.reserve(futures.size());
+  for (auto& future : futures) {
+    results.push_back(future.get());
   }
 
   return results;
@@ -173,8 +176,8 @@ ExecNodeBuilder& ExecNodeBuilder::AddInt64Attr(const std::string& name,
   return AddInt64sAttr(name, std::vector<int64_t>{value});
 }
 
-ExecNodeBuilder& ExecNodeBuilder::AddInt64sAttr(const std::string& name,
-                                                std::vector<int64_t> values) {
+ExecNodeBuilder& ExecNodeBuilder::AddInt64sAttr(
+    const std::string& name, const std::vector<int64_t>& values) {
   auto& attrs = *node_.mutable_attributes();
   util::SetInt64Values(attrs[name].mutable_t(), values);
   return *this;

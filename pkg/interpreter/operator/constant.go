@@ -86,16 +86,17 @@ const (
 	OpNameGroupFirstOf       string = "GroupFirstOf"
 	OpNameGroupHeSum         string = "GroupHeSum"
 
-	OpNameUnique              string = "Unique"
-	OpNameShape               string = "Shape"
-	OpNameSort                string = "Sort"
-	OpNameObliviousGroupMark  string = "ObliviousGroupMark"
-	OpNameObliviousGroupCount string = "ObliviousGroupCount"
-	OpNameObliviousGroupSum   string = "ObliviousGroupSum"
-	OpNameObliviousGroupMax   string = "ObliviousGroupMax"
-	OpNameObliviousGroupMin   string = "ObliviousGroupMin"
-	OpNameObliviousGroupAvg   string = "ObliviousGroupAvg"
-	OpNameShuffle             string = "Shuffle"
+	OpNameUnique               string = "Unique"
+	OpNameShape                string = "Shape"
+	OpNameSort                 string = "Sort"
+	OpNameObliviousGroupMark   string = "ObliviousGroupMark"
+	OpNameObliviousGroupCount  string = "ObliviousGroupCount"
+	OpNameObliviousGroupSum    string = "ObliviousGroupSum"
+	OpNameObliviousGroupMax    string = "ObliviousGroupMax"
+	OpNameObliviousGroupMin    string = "ObliviousGroupMin"
+	OpNameObliviousGroupAvg    string = "ObliviousGroupAvg"
+	OpNameObliviousPercentRank string = "ObliviousPercentRank"
+	OpNameShuffle              string = "Shuffle"
 	// union all
 	OpNameConcat string = "Concat"
 	// condition ops
@@ -104,18 +105,19 @@ const (
 	OpNameIfNull   string = "IfNull"
 	OpNameCoalesce string = "Coalesce"
 
-	OpNameRowNumber string = "RowNumber"
-	OpNameAbs       string = "Abs"
-	OpNameCeil      string = "Ceil"
-	OpNameFloor     string = "Floor"
-	OpNameRound     string = "Round"
-	OpNameDegrees   string = "Degrees"
-	OpNameRadians   string = "Radians"
-	OpNameLn        string = "Ln"
-	OpNameLog10     string = "Log10"
-	OpNameLog2      string = "Log2"
-	OpNameSqrt      string = "Sqrt"
-	OpNameExp       string = "Exp"
+	OpNameRowNumber   string = "RowNumber"
+	OpNamePercentRank string = "PercentRank"
+	OpNameAbs         string = "Abs"
+	OpNameCeil        string = "Ceil"
+	OpNameFloor       string = "Floor"
+	OpNameRound       string = "Round"
+	OpNameDegrees     string = "Degrees"
+	OpNameRadians     string = "Radians"
+	OpNameLn          string = "Ln"
+	OpNameLog10       string = "Log10"
+	OpNameLog2        string = "Log2"
+	OpNameSqrt        string = "Sqrt"
+	OpNameExp         string = "Exp"
 )
 
 const (
@@ -161,11 +163,12 @@ var ReduceAggOp = map[string]string{
 }
 
 var ObliviousGroupAggOp = map[string]string{
-	ast.AggFuncSum:   OpNameObliviousGroupSum,
-	ast.AggFuncMax:   OpNameObliviousGroupMax,
-	ast.AggFuncMin:   OpNameObliviousGroupMin,
-	ast.AggFuncAvg:   OpNameObliviousGroupAvg,
-	ast.AggFuncCount: OpNameObliviousGroupCount,
+	ast.AggFuncSum:            OpNameObliviousGroupSum,
+	ast.AggFuncMax:            OpNameObliviousGroupMax,
+	ast.AggFuncMin:            OpNameObliviousGroupMin,
+	ast.AggFuncAvg:            OpNameObliviousGroupAvg,
+	ast.AggFuncCount:          OpNameObliviousGroupCount,
+	ast.WindowFuncPercentRank: OpNameObliviousPercentRank,
 }
 
 var GroupAggOp = map[string]string{

@@ -164,17 +164,14 @@ func TestQueryRunner(t *testing.T) {
 1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select t2.id from real.t2;,table_refs:[real.t2],],party:[bob,]}"]
 2 [label="join:{in:[Left:{t_0,},Right:{t_1,},],out:[LeftJoinIndex:{t_2,},RightJoinIndex:{t_3,},],attr:[input_party_codes:[alice bob],join_type:0,psi_algorithm:1,],party:[alice,bob,]}"]
 3 [label="filter_by_index:{in:[Data:{t_0,},RowsIndexFilter:{t_2,},],out:[Out:{t_4,},],attr:[],party:[alice,]}"]
-4 [label="filter_by_index:{in:[Data:{t_1,},RowsIndexFilter:{t_3,},],out:[Out:{t_5,},],attr:[],party:[bob,]}"]
-5 [label="publish:{in:[In:{t_4,},],out:[Out:{t_6,},],attr:[],party:[alice,]}"]
+4 [label="publish:{in:[In:{t_4,},],out:[Out:{t_5,},],attr:[],party:[alice,]}"]
 0 -> 2 [label = "t_0:{id:PRIVATE:INT64}"]
 0 -> 3 [label = "t_0:{id:PRIVATE:INT64}"]
 1 -> 2 [label = "t_1:{id:PRIVATE:INT64}"]
-1 -> 4 [label = "t_1:{id:PRIVATE:INT64}"]
 2 -> 3 [label = "t_2:{id:PRIVATE:INT64}"]
-2 -> 4 [label = "t_3:{id:PRIVATE:INT64}"]
-3 -> 5 [label = "t_4:{id:PRIVATE:INT64}"]
+3 -> 4 [label = "t_4:{id:PRIVATE:INT64}"]
 }`, compiledPlan.Explain.GetExeGraphDot())
-	r.Equal("838e54c039780ca1234077411fcf3a9e1c701d83dbccca05876fb5cc0d93c471", compiledPlan.WholeGraphChecksum)
+	r.Equal("c3f81f58a5aaabd797c15be7c9567c1d18cfd286b080ab63c776f4ae0527cfd1", compiledPlan.WholeGraphChecksum)
 }
 
 func TestCaseSensitive(t *testing.T) {

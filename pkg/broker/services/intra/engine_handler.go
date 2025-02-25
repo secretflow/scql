@@ -60,11 +60,9 @@ func (svc *grpcIntraSvc) Report(ctx context.Context, request *pb.ReportRequest) 
 	defer func() {
 		// stop engine whether persist failed or successfully
 		if _, err := app.SetSessionResult(request.GetJobId(), result); err != nil {
-			if err != nil {
-				result = &pb.QueryResponse{Status: &pb.Status{Code: int32(pb.Code_INTERNAL), Message: err.Error()}}
-				if _, err := app.SetSessionResult(request.GetJobId(), result); err != nil {
-					logrus.Warnf("failed to persist session result: %v", err)
-				}
+			result = &pb.QueryResponse{Status: &pb.Status{Code: int32(pb.Code_INTERNAL), Message: err.Error()}}
+			if _, err := app.SetSessionResult(request.GetJobId(), result); err != nil {
+				logrus.Warnf("failed to persist session result: %v", err)
 			}
 			logrus.Warnf("failed to persist session result: %v", err)
 		}

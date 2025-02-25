@@ -50,7 +50,7 @@ void Constant::Execute(ExecContext* ctx) {
 
     ctx->GetTensorTable()->AddTensor(output.name(), std::move(tensor));
   } else if (output_status == pb::TensorStatus::TENSORSTATUS_PUBLIC) {
-    auto sctx = ctx->GetSession()->GetSpuContext();
+    auto* sctx = ctx->GetSession()->GetSpuContext();
     spu::device::ColocatedIo cio(sctx);
     util::SpuInfeedHelper infeed_helper(&cio);
 
@@ -76,7 +76,7 @@ void Constant::Execute(ExecContext* ctx) {
     spu::device::IoClient io(lctx->WorldSize(), sctx->config());
     auto shares = io.makeShares(bv, spu::VIS_PUBLIC);
 
-    auto device_symbols = ctx->GetSession()->GetDeviceSymbols();
+    auto* device_symbols = ctx->GetSession()->GetDeviceSymbols();
     device_symbols->setVar(value_name, shares[ctx->GetSession()->SelfRank()]);
 #ifdef SCQL_WITH_NULL
     const auto validity_name =

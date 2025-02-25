@@ -81,12 +81,6 @@ func WithAppImage(image string) KusciaJobSchedulerOption {
 	}
 }
 
-func WithMaxPollTimes(times int) KusciaJobSchedulerOption {
-	return func(k *kusciaJobScheduler) {
-		k.maxPollTimes = times
-	}
-}
-
 func WithMaxWaitTime(t time.Duration) KusciaJobSchedulerOption {
 	return func(k *kusciaJobScheduler) {
 		k.maxWaitTime = t
@@ -178,7 +172,7 @@ func (s *kusciaJobScheduler) waitJobRunningAndGetEnginePod(kusciaJobID string) (
 	// NOTE: First set ticker to very small duration, let the first query job request be sent immediately
 	ticker := time.NewTicker(time.Nanosecond)
 	defer ticker.Stop()
-	for i := 0; i < s.maxPollTimes; i++ {
+	for {
 		select {
 		case <-timer.C:
 			return nil, fmt.Errorf("timeout to wait kuscia job %s running, job status %s", kusciaJobID, jobStatus)
@@ -220,8 +214,6 @@ func (s *kusciaJobScheduler) waitJobRunningAndGetEnginePod(kusciaJobID string) (
 			return pod, nil
 		}
 	}
-
-	return nil, fmt.Errorf("timeout to wait kuscia job %s running, exceed max poll times, job status %s", kusciaJobID, jobStatus)
 }
 
 // If kuscia job/task is ready, it returns (true, nil), otherwise returns (false, nil)

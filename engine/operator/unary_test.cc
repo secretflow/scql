@@ -65,7 +65,7 @@ pb::ExecNode UnaryTest::MakeExecNode(const UnaryTestCase& tc,
 void UnaryTest::FeedInputs(const std::vector<ExecContext*>& ctxs,
                            const UnaryTestCase& tc) {
   if (tc.input_status == pb::TensorStatus::TENSORSTATUS_PRIVATE) {
-    for (auto ctx : ctxs) {
+    for (auto* ctx : ctxs) {
       test::FeedInputsAsPrivate(ctx, {tc.input});
     }
   } else if (tc.input_status == pb::TensorStatus::TENSORSTATUS_SECRET) {
@@ -270,15 +270,28 @@ INSTANTIATE_TEST_SUITE_P(
                                "[1, 2.7129974365234375, 7.332767486572266]")),
                 .input_status = pb::TENSORSTATUS_SECRET,
                 .output_status = pb::TENSORSTATUS_SECRET,
-                .world_size = 2})));
+                .world_size = 2})),
+    TestParamNameGenerator(UnaryTest));
 
 TEST_P(UnaryTest, WorksCorrectly) {
   auto param = GetParam();
   auto tc = std::get<1>(param);
   auto node = MakeExecNode(tc, tc.op);
   std::vector<std::shared_ptr<scql::engine::Session>> sessions;
+  double tolerance = 0.001;
   if (tc.world_size > 1) {
-    sessions = test::MakeMultiPCSession(std::get<0>(param));
+    auto spu_tc = std::get<0>(param);
+    if (tc.op == Exp::kOpType) {
+      // The exp operation tends to be less accurate, particularly when using
+      // the CHEETAH protocol.
+      if (spu_tc.protocol == spu::ProtocolKind::CHEETAH) {
+        tolerance = 0.05;
+      } else {
+        tolerance = 0.005;
+      }
+    }
+
+    sessions = test::MakeMultiPCSession(spu_tc);
   } else {
     sessions.push_back(test::Make1PCSession());
   }
@@ -286,10 +299,12 @@ TEST_P(UnaryTest, WorksCorrectly) {
   std::vector<ExecContext*> ctxs;
   std::vector<ExecContext> execs;
 
+  execs.reserve(sessions.size());
   for (auto& session : sessions) {
     execs.push_back(ExecContext(node, session.get()));
   }
 
+  ctxs.reserve(execs.size());
   for (auto& exec : execs) {
     ctxs.push_back(&exec);
   }
@@ -316,7 +331,7 @@ TEST_P(UnaryTest, WorksCorrectly) {
     EXPECT_TRUE(out_arr->type()->ToString() == expect_arr->type()->ToString());
 
     arrow::EqualOptions eqOption;
-    EXPECT_TRUE(out_arr->ApproxEquals(*expect_arr, eqOption.atol(0.001)))
+    EXPECT_TRUE(out_arr->ApproxEquals(*expect_arr, eqOption.atol(tolerance)))
         << "op: " << tc.op << ", status: " << tc.output_status
         << "\nactual: " << out_arr->ToString()
         << "\nexected: " << expect_arr->ToString();

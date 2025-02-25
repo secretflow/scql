@@ -14,11 +14,8 @@
 
 #include "engine/operator/filter.h"
 
-#include "arrow/compute/api_vector.h"
 #include "arrow/compute/exec.h"
-#include "libspu/device/io.h"
 #include "libspu/device/symbol_table.h"
-#include "libspu/kernel/hal/constants.h"
 #include "libspu/kernel/hal/public_helper.h"
 #include "libspu/kernel/hlo/indexing.h"
 

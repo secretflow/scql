@@ -21,7 +21,6 @@
 
 #include "brpc/builtin/prometheus_metrics_service.h"
 #include "butil/iobuf.h"
-#include "yacl/base/exception.h"
 
 namespace scql::engine {
 
@@ -33,10 +32,15 @@ void MetricsService::default_method(
   brpc::ClosureGuard done_guard(done);
   brpc::Controller* cntl = static_cast<brpc::Controller*>(cntl_base);
 
+  if (cntl->http_request().unresolved_path() != "") {
+    cntl->SetFailed(brpc::ENOMETHOD, "404 page not found");
+    return;
+  }
+
   // collect metrics from all collectables
   auto collected_metrics = std::vector<::prometheus::MetricFamily>{};
-  for (auto collectable : collectables_) {
-    if (!collectable) {
+  for (auto* collectable : collectables_) {
+    if (collectable == nullptr) {
       continue;
     }
 

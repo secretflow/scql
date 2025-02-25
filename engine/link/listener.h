@@ -29,10 +29,10 @@ class Listener {
 
   ~Listener() = default;
 
-  void AddChannel(const size_t rank,
+  void AddChannel(size_t rank,
                   std::shared_ptr<yacl::link::transport::Channel> channel);
 
-  void OnRequest(const size_t rank, const link::pb::MuxPushRequest* request,
+  void OnRequest(size_t rank, const link::pb::MuxPushRequest* request,
                  link::pb::MuxPushResponse* response);
 
  private:

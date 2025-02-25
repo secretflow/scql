@@ -25,7 +25,7 @@ namespace scql::engine::util {
 /// @brief StringifyVisitor converts tensor to string representation
 class StringifyVisitor {
  public:
-  explicit StringifyVisitor(TensorPtr tensor, size_t batch_size);
+  explicit StringifyVisitor(const TensorPtr& tensor, size_t batch_size);
 
   /// @brief Stringify next batch_size elements
   /// @returns empty vector if reach end.
@@ -49,9 +49,9 @@ class StringifyVisitor {
   arrow::Status Visit(const arrow::BooleanArray& array) {
     for (int64_t i = 0; i < array.length(); i++) {
       if (array.IsNull(i)) {
-        strs_.push_back("null");
+        strs_.emplace_back("null");
       } else {
-        strs_.push_back(array.GetView(i) ? "true" : "false");
+        strs_.emplace_back(array.GetView(i) ? "true" : "false");
       }
     }
     return arrow::Status::OK();
@@ -74,6 +74,9 @@ class StringifyVisitor {
   std::shared_ptr<TensorBatchReader> reader_;
 };
 
-std::vector<std::string> Stringify(std::shared_ptr<arrow::ChunkedArray> arrays);
+std::vector<std::string> Stringify(const std::shared_ptr<arrow::Array>& array);
+
+std::vector<std::string> Stringify(
+    const std::shared_ptr<arrow::ChunkedArray>& arrays);
 
 }  // namespace scql::engine::util

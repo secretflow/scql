@@ -34,14 +34,6 @@ SCQLEngine can cooperate with upper-layer modules such as SCDB and SCQLBroker ac
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
 | log_level                                       | info                | Log level, can be trace/debug/info/warning/error/critical/off                                                                           |
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
-| enable_audit_logger                             | true                | Whether to enable audit log                                                                                                             |
-+-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
-| audit_log_file                                  | audit/audit.log     | The file to save basic information about a query                                                                                        |
-+-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
-| audit_detail_file                               | audit/detail.log    | The file to save more detailed information about a query                                                                                |
-+-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
-| audit_max_files                                 | 180                 | The maximum number of old audit log files to retain                                                                                     |
-+-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
 | peer_engine_protocol                            | baidu_std           | The rpc protocol between engine and engine                                                                                              |
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
 | peer_engine_connection_type                     | single              | The rpc connection type between engine and engine                                                                                       |
@@ -273,7 +265,7 @@ datasources in embed_router_conf contain information for connecting MySQL/SQLite
       CSVDB support read csv from local and OSS/MinIO, since connection_str is an object in another json object, the format is a converted json string corresponding to `CsvdbConf <https://github.com/secretflow/scql/tree/main/engine/datasource/csvdb_conf.proto>`_
 
     CSVDB Connection string e.g:
-      local csv: "{\\\"db_name\\\":\\\"csvdb\\\",\\\"tables\\\":[{\\\"table_name\\\":\\\"staff\\\",\\\"data_path\\\":\\\"test.csv\\\",\\\"columns\\\":[{\\\"column_name\\\":\\\"id\\\",\\\"column_type\\\":\\\"1\\\"}]}]}"
+      local csv: "{\\\"db_name\\\":\\\"csvdb\\\",\\\"tables\\\":[{\\\"table_name\\\":\\\"staff\\\",\\\"data_path\\\":\\\"test.csv\\\",\\\"columns\\\":[{\\\"column_name\\\":\\\"id\\\",\\\"column_type\\\":\\\"string\\\"}]}]}"
       
       OSS csv: "{\\\"db_name\\\":\\\"csvdb\\\",\\\"s3_conf\\\":{\\\"endpoint\\\":\\\"test_endpoint\\\",\\\"access_key_id\\\":\\\"test_id\\\",\\\"secret_access_key\\\":\\\"test_key\\\",\\\"virtualhost\\\": true },\\\"tables\\\":[{\\\"table_name\\\":\\\"staff\\\",\\\"data_path\\\":\\\"oss://test_bucket/test.csv\\\",\\\"columns\\\":[{\\\"column_name\\\":\\\"id\\\",\\\"column_type\\\":\\\"string\\\"}]}]}"
 
@@ -324,17 +316,6 @@ If you want to enable SSL in SCQLEngine, add FLAGS as follows. Additionally, it 
   --peer_engine_enable_ssl_as_client=true
   # set driver_enable_ssl_as_client to true when the Driver has https enabled (SCDB or SCQLBroker's IntraServer)
   --driver_enable_ssl_as_client=true
-
-Config for audit
-^^^^^^^^^^^^^^^^
-The audit log in SCQLEngine is used to record the SCQLEngine activities during the execution of tasks from Driver. Just like the audit in Driver, it also can be divided into two types: common audit log and detail audit log.
-
-  The common audit is used to record some basic information about a task, while the detail audit is used to record more detailed information of the task. See `engine_audit <https://github.com/secretflow/scql/blob/main/engine/audit/audit.proto>`_ for more information
-
-The log file is rotated in every 24:00:00 in local time, and the filename is generated in the format ``name-date.ext``, where `name` is the filename set in ``audit_log_file`` without the extension, `date` is the time at which the log was rotated formatted with local time format of `YYYY-MM-DD`,
-`ext` is the extension set in ``audit_log_file``.
-
-  For example, if you set ``audit_log_file`` as `audit/audit.log`, a backup created on Nov 11 2016 would be saved to `/audit/audit_2016-11-04.log`
 
 Config for party authentication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

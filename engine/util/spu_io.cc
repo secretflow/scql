@@ -16,17 +16,16 @@
 
 #include "arrow/array/util.h"
 #include "gflags/gflags.h"
+#include "libspu/core/encoding.h"
 #include "libspu/device/io.h"
-#include "libspu/kernel/hal/constants.h"
 #include "libspu/kernel/hal/public_helper.h"
-#include "libspu/kernel/hlo/casting.h"
-#include "yacl/link/algorithm/gather.h"
+#include "libspu/kernel/hal/type_cast.h"
+#include "libspu/mpc/common/pv2k.h"
 
 #include "engine/core/arrow_helper.h"
 #include "engine/core/tensor_constructor.h"
 #include "engine/core/type.h"
 #include "engine/util/ndarray_to_arrow.h"
-
 DEFINE_int64(max_chunk_size, 128UL * 1024 * 1024,
              "max chunk size of value proto");
 
@@ -98,6 +97,31 @@ spu::DataType GetWiderSpuType(const spu::DataType& t1,
   } else {
     return t2;
   }
+}
+
+std::vector<spu::Value> ExpandGroupValueReversely(
+    spu::SPUContext* sctx, const std::vector<spu::Value>& inputs,
+    const spu::Value& mark) {
+  // TODO: Scan api support vector inputs to speed up
+  std::vector<spu::Value> ret;
+  auto reversed_mark = spu::kernel::hlo::Reverse(sctx, mark, {0});
+  for (auto v : inputs) {
+    auto reversed_v = util::Scan(
+        sctx, spu::kernel::hlo::Reverse(sctx, v, {0}), reversed_mark,
+        [&](const spu::Value& lhs_v, const spu::Value& lhs_gm,
+            const spu::Value& rhs_v, const spu::Value& rhs_gm) {
+          spu::Value new_v = spu::kernel::hlo::Add(
+              sctx, lhs_v,
+              spu::kernel::hlo::Mul(sctx, lhs_gm,
+                                    spu::kernel::hlo::Sub(sctx, rhs_v, lhs_v)));
+          spu::Value new_gm = spu::kernel::hlo::Mul(sctx, lhs_gm, rhs_gm);
+
+          return std::make_pair(new_v, new_gm);
+        });
+
+    ret.push_back(spu::kernel::hlo::Reverse(sctx, reversed_v, {0}));
+  }
+  return ret;
 }
 
 std::shared_ptr<arrow::Array> ConcatenateChunkedArray(
@@ -194,68 +218,48 @@ TensorPtr SpuOutfeedHelper::DumpPublic(const std::string& name) {
 #endif  // SCQL_WITH_NULL
 }
 
-spu::NdArrayRef RevealSpuValue(const spu::SPUContext* sctx,
-                               const spu::Value& value, size_t rank) {
-  const auto& lctx = sctx->lctx();
-  spu::device::IoClient io(lctx->WorldSize(), sctx->config());
-  std::string value_content;
-  auto value_proto = value.toProto(FLAGS_max_chunk_size);
-  std::vector<std::vector<yacl::Buffer>> value_buffers;
-  for (const auto& chunk : value_proto.chunks) {
-    chunk.SerializeToString(&value_content);
-    value_buffers.emplace_back(yacl::link::Gather(
-        lctx, yacl::ByteContainerView(value_content), rank, "reveal_value"));
+spu::NdArrayRef RevealValueTo(spu::SPUContext* sctx, spu::device::IoClient& io,
+                              const spu::Value& value, size_t rank) {
+  auto private_value = spu::kernel::hal::reveal_to(sctx, value, rank);
+  if (sctx->lctx()->Rank() != rank) {
+    return spu::NdArrayRef();
   }
-  if (lctx->Rank() != rank) {
-    return {};
-  }
-  std::vector<spu::ValueProto> value_protos(lctx->WorldSize());
-  for (auto& v_proto : value_protos) {
-    v_proto.meta = value_proto.meta;
-    v_proto.chunks =
-        std::vector<spu::ValueChunkProto>(value_proto.chunks.size());
-  }
+  auto dtype = private_value.dtype();
+  auto pt_type = io.getPtType({private_value});
+  auto fxp_bits = sctx->getFxpBits();
 
-  for (size_t i = 0; i < value_buffers.size(); i++) {
-    for (size_t j = 0; j < value_buffers[i].size(); j++) {
-      spu::ValueChunkProto v;
-      YACL_ENFORCE(v.ParseFromArray(value_buffers[i][j].data(),
-                                    value_buffers[i][j].size()));
-      value_protos[j].chunks[i] = v;
-    }
-  }
-  std::vector<spu::Value> value_shares;
-  for (size_t i = 0; i < lctx->WorldSize(); i++) {
-    value_shares.push_back(spu::Value::fromProto(value_protos[i]));
-  }
+  spu::NdArrayRef decoded(spu::makePtType(pt_type), private_value.shape());
+  spu::PtBufferView pv(decoded.data(), pt_type, decoded.shape(),
+                       decoded.strides());
 
-  auto pt_type = io.getPtType(value_shares);
-  spu::NdArrayRef ret(makePtType(pt_type), value_shares.front().shape());
-  spu::PtBufferView pv(ret.data(), pt_type, ret.shape(), ret.strides());
-  io.combineShares(value_shares, &pv);
-  return ret;
+  spu::decodeFromRing(private_value.data(), dtype, fxp_bits, &pv);
+
+  return decoded;
 }
 
 TensorPtr SpuOutfeedHelper::RevealTo(const std::string& name, size_t rank) {
   const auto& lctx = sctx_->lctx();
-  spu::device::IoClient io(lctx->WorldSize(), sctx_->config());
 
   auto value = symbols_->getVar(SpuVarNameEncoder::GetValueName(name));
-  auto arr = RevealSpuValue(sctx_, value, rank);
+  if (value.isPublic()) {
+    return DumpPublic(name);
+  }
+
+  spu::device::IoClient io(lctx->WorldSize(), sctx_->config());
+  auto revealed_value = RevealValueTo(sctx_, io, value, rank);
 
 #ifdef SCQL_WITH_NULL
-  auto validity_val =
-      symbols_->getVar(SpuVarNameEncoder::GetValidityName(name));
-  auto validity = RevealSpuValue(sctx_, validity_val, rank);
+  auto validity = symbols_->getVar(SpuVarNameEncoder::GetValidityName(name));
+  auto revealed_validity = RevealValueTo(sctx_, io, validity, rank);
 #endif  // SCQL_WITH_NULL
 
   if (lctx->Rank() != rank) {
     return nullptr;
   }
 #ifdef SCQL_WITH_NULL
-  return TensorFrom(NdArrayToArrow(arr, &validity));
+  return TensorFrom(NdArrayToArrow(revealed_value, &revealed_validity));
 #else
-  return TensorFrom(NdArrayToArrow(arr, nullptr));
+  return TensorFrom(NdArrayToArrow(revealed_value, nullptr));
 #endif  // SCQL_WITH_NULL
 }
 

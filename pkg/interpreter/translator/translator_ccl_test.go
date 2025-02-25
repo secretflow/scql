@@ -72,7 +72,7 @@ func (s *testTranslatorSuite) TestTranslateWithCCL(c *C) {
 			c.Assert(ep.Pipelines[0].Batched, Equals, false, Commentf("for %s", sql))
 		}
 		if recordTestOutput {
-			_, err := s.recordFile.WriteString(fmt.Sprintf("{`%s`, `%s`, `%s` testConf%+v},\n", sql, graphStr, actualPipe, conf))
+			_, err := s.recordFile.WriteString(fmt.Sprintf("{`%s`, `%s`, `%s`, testConf{groupThreshold:%d, batched:%t, revealGroupCount:%t}},\n", sql, graphStr, actualPipe, conf.groupThreshold, conf.batched, conf.revealGroupCount))
 			c.Assert(err, IsNil)
 		} else {
 			c.Assert(graphStr, Equals, dot, Commentf("for %s", sql))
@@ -108,7 +108,7 @@ func (s *testTranslatorSuite) TestBuildCCL(c *C) {
 		}
 		ln, err := builder.buildLogicalNode(lp)
 		if err != nil {
-			c.Assert(err, IsNil)
+			c.Assert(err, IsNil, Commentf("for %s", ca.sql))
 		}
 		visibleToIssuer := true
 		// Check if the result is visible to the issuerPartyCode

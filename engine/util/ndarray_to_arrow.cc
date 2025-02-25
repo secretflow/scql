@@ -51,7 +51,7 @@ class NdArrayConverter {
     return VisitNative<T>();
   }
   // default case
-  arrow::Status Visit(const arrow::DataType& type) {
+  static arrow::Status Visit(const arrow::DataType& type) {
     return arrow::Status::NotImplemented(fmt::format(
         "NdArrayConverter doesn't implement <{}> conversion", type.ToString()));
   }

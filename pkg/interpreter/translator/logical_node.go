@@ -145,7 +145,7 @@ func (n *baseNode) CCL() map[int64]*ccl.CCL {
 	return n.ccl
 }
 
-func (n *baseNode) buildCCL(colTracer *ccl.ColumnTracer) error {
+func (n *baseNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error {
 	return fmt.Errorf("please implement this function in child")
 }
 

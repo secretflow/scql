@@ -62,6 +62,16 @@ func Subtraction[S ~[]E, E comparable](a S, b S) S {
 	return result
 }
 
+func Exclude[S ~[]E, E comparable](set S, excludeElement E) S {
+	var result []E
+	for _, element := range set {
+		if element != excludeElement {
+			result = append(result, element)
+		}
+	}
+	return result
+}
+
 func Equal[S ~[]E, E constraints.Ordered](left S, right S) bool {
 	sortSlice(left)
 	sortSlice(right)

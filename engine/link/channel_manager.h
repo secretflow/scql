@@ -17,7 +17,7 @@
 #include <memory>
 
 #include "brpc/channel.h"
-#include "spdlog/spdlog.h"
+#include "spdlog/logger.h"
 
 namespace scql::engine {
 

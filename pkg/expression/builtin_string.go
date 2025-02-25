@@ -23,7 +23,6 @@ import (
 	"unicode/utf8"
 
 	"github.com/pingcap/errors"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/secretflow/scql/pkg/parser/mysql"
 	"github.com/secretflow/scql/pkg/sessionctx"
@@ -85,7 +84,7 @@ func (c *concatFunctionClass) getFunction(ctx sessionctx.Context, args []Express
 
 		if argType.Flen < 0 {
 			bf.tp.Flen = mysql.MaxBlobWidth
-			log.Errorf("unexpected `Flen` value(-1) in CONCAT's args: arg's index %d", i)
+			// log.Errorf("unexpected `Flen` value(-1) in CONCAT's args: arg's index %d", i)
 		}
 		bf.tp.Flen += argType.Flen
 	}

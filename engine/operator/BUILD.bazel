@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("//engine/bazel:scql.bzl", "scql_cc_test")
+
 package(default_visibility = ["//visibility:public"])
 
 cc_library(
@@ -65,12 +67,11 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "all_ops_register_test",
     srcs = ["all_ops_register_test.cc"],
     deps = [
         ":all_ops_register",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -79,12 +80,11 @@ cc_library(
     srcs = ["run_sql.cc"],
     hdrs = ["run_sql.h"],
     deps = [
-        "//engine/audit:audit_log",
         "//engine/framework:operator",
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "run_sql_test",
     srcs = ["run_sql_test.cc"],
     deps = [
@@ -92,10 +92,9 @@ cc_test(
         ":test_util",
         "//engine/datasource:datasource_adaptor_mgr",
         "//engine/datasource:embed_router",
-        "@com_google_absl//absl/debugging:failure_signal_handler",
-        "@com_google_absl//absl/debugging:symbolize",
-        "@com_google_absl//absl/flags:parse",
-        "@com_google_googletest//:gtest_main",
+        "@abseil-cpp//absl/debugging:failure_signal_handler",
+        "@abseil-cpp//absl/debugging:symbolize",
+        "@abseil-cpp//absl/flags:parse",
         "@org_pocoproject_poco//:poco",
     ],
 )
@@ -105,19 +104,22 @@ cc_library(
     srcs = ["join.cc"],
     hdrs = ["join.h"],
     deps = [
-        "//engine/audit:audit_log",
+        "//engine/core:tensor_slice",
         "//engine/framework:operator",
         "//engine/util:communicate_helper",
-        "//engine/util:psi_detail_logger",
-        "//engine/util:psi_helper",
-        "@com_github_msgpack_msgpack//:msgpack",
+        "//engine/util/psi:batch_provider",
+        "//engine/util/psi:cipher_intersection",
+        "//engine/util/psi:detail_logger",
+        "//engine/util/psi:ub_helper",
+        "@msgpack-c//:msgpack",
+        "@psi//psi/algorithm/ecdh:ecdh_psi",
+        "@psi//psi/algorithm/ecdh/ub_psi:ecdh_oprf_psi",
+        "@psi//psi/algorithm/rr22:common",
         "@psi//psi/cryptor:cryptor_selector",
-        "@psi//psi/ecdh:ecdh_psi",
-        "@psi//psi/ecdh/ub_psi:ecdh_oprf_psi",
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "join_test",
     srcs = ["join_test.cc"],
     deps = [
@@ -125,7 +127,6 @@ cc_test(
         ":test_util",
         "//engine/core:primitive_builder",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -141,7 +142,7 @@ cc_library(
         "//engine/framework:session",
         "//engine/util:spu_io",
         "//engine/util:tensor_util",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
         "@spulib//libspu/core:config",
     ],
 )
@@ -156,14 +157,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "filter_by_index_test",
     srcs = ["filter_by_index_test.cc"],
     deps = [
         ":filter_by_index",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -178,14 +178,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "make_share_test",
     srcs = ["make_share_test.cc"],
     deps = [
         ":make_share",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -194,20 +193,18 @@ cc_library(
     srcs = ["publish.cc"],
     hdrs = ["publish.h"],
     deps = [
-        "//engine/audit:audit_log",
         "//engine/framework:operator",
         "//engine/util:spu_io",
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "publish_test",
     srcs = ["publish_test.cc"],
     deps = [
         ":publish",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -231,7 +228,7 @@ cc_library(
         ":all_ops_register",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )
 
@@ -245,13 +242,12 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "arithmetic_test",
     srcs = ["arithmetic_test.cc"],
     deps = [
         ":arithmetic",
         ":binary_test",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -267,14 +263,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "make_private_test",
     srcs = ["make_private_test.cc"],
     deps = [
         ":make_private",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -291,14 +286,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "filter_test",
     srcs = ["filter_test.cc"],
     deps = [
         ":filter",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -314,14 +308,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "make_public_test",
     srcs = ["make_public_test.cc"],
     deps = [
         ":make_public",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -335,13 +328,12 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "compare_test",
     srcs = ["compare_test.cc"],
     deps = [
         ":binary_test",
         ":compare",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -356,7 +348,7 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "logical_test",
     srcs = ["logical_test.cc"],
     deps = [
@@ -364,7 +356,6 @@ cc_test(
         ":logical",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -380,14 +371,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "copy_test",
     srcs = ["copy_test.cc"],
     deps = [
         ":copy",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -396,24 +386,25 @@ cc_library(
     srcs = ["in.cc"],
     hdrs = ["in.h"],
     deps = [
-        "//engine/audit:audit_log",
         "//engine/framework:operator",
-        "//engine/util:psi_detail_logger",
-        "//engine/util:psi_helper",
+        "//engine/util/psi:batch_provider",
+        "//engine/util/psi:cipher_intersection",
+        "//engine/util/psi:detail_logger",
+        "//engine/util/psi:ub_helper",
+        "@psi//psi/algorithm/ecdh:ecdh_psi",
+        "@psi//psi/algorithm/ecdh/ub_psi:ecdh_oprf_psi",
+        "@psi//psi/algorithm/rr22:common",
         "@psi//psi/cryptor:cryptor_selector",
-        "@psi//psi/ecdh:ecdh_psi",
-        "@psi//psi/ecdh/ub_psi:ecdh_oprf_psi",
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "in_test",
     srcs = ["in_test.cc"],
     deps = [
         ":in",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -430,14 +421,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "constant_test",
     srcs = ["constant_test.cc"],
     deps = [
         ":constant",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -446,22 +436,20 @@ cc_library(
     srcs = ["dump_file.cc"],
     hdrs = ["dump_file.h"],
     deps = [
-        "//engine/audit:audit_log",
         "//engine/framework:operator",
         "//engine/util:filepath_helper",
         "//engine/util:tensor_util",
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "dump_file_test",
     srcs = ["dump_file_test.cc"],
     deps = [
         ":dump_file",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_github_brpc_brpc//:butil",
-        "@com_google_googletest//:gtest_main",
+        "@brpc//:butil",
     ],
 )
 
@@ -473,18 +461,17 @@ cc_library(
         "//engine/datasource:odbc_connector",
         "//engine/framework:operator",
         "//engine/util:tensor_util",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/strings",
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "insert_table_test",
     srcs = ["insert_table_test.cc"],
     deps = [
         ":insert_table",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -495,7 +482,7 @@ cc_binary(
         ":insert_table",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )
 
@@ -514,7 +501,7 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "reduce_test",
     srcs = ["reduce_test.cc"],
     deps = [
@@ -522,7 +509,6 @@ cc_test(
         ":reduce",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -538,14 +524,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "shape_test",
     srcs = ["shape_test.cc"],
     deps = [
         ":shape",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -564,14 +549,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "sort_test",
     srcs = ["sort_test.cc"],
     deps = [
         ":sort",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -591,14 +575,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "oblivious_group_mark_test",
     srcs = ["oblivious_group_mark_test.cc"],
     deps = [
         ":oblivious_group_mark",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -621,7 +604,7 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "oblivious_group_agg_test",
     srcs = ["oblivious_group_agg_test.cc"],
     deps = [
@@ -629,7 +612,6 @@ cc_test(
         ":oblivious_group_agg",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -645,15 +627,14 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "shuffle_test",
     srcs = ["shuffle_test.cc"],
     deps = [
         ":shuffle",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "//engine/util:psi_helper",
-        "@com_google_googletest//:gtest_main",
+        "//engine/util/psi:batch_provider",
     ],
 )
 
@@ -669,14 +650,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "broadcast_to_test",
     srcs = ["broadcast_to_test.cc"],
     deps = [
         ":broadcast_to",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -690,14 +670,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "unique_test",
     srcs = ["unique_test.cc"],
     deps = [
         ":test_util",
         ":unique",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -713,14 +692,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "concat_test",
     srcs = ["concat_test.cc"],
     deps = [
         ":concat",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -737,14 +715,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "group_test",
     srcs = ["group_test.cc"],
     deps = [
         ":group",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -759,7 +736,7 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "group_agg_test",
     srcs = ["group_agg_test.cc"],
     deps = [
@@ -767,7 +744,6 @@ cc_test(
         ":group_agg",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -786,19 +762,18 @@ cc_library(
         "//engine/framework:operator",
         "//engine/util:spu_io",
         "//engine/util:tensor_util",
-        "@com_alipay_sf_heu//heu/library/numpy",
-        "@com_github_gflags_gflags//:gflags",
+        "@gflags",
+        "@heu//heu/library/numpy",
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "group_he_sum_test",
     srcs = ["group_he_sum_test.cc"],
     deps = [
         ":group_he_sum",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -813,14 +788,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "cast_test",
     srcs = ["cast_test.cc"],
     deps = [
         ":cast",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -838,14 +812,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "case_when_test",
     srcs = ["case_when_test.cc"],
     deps = [
         ":case_when",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -864,14 +837,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "if_test",
     srcs = ["if_test.cc"],
     deps = [
         ":if",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -887,14 +859,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "limit_test",
     srcs = ["limit_test.cc"],
     deps = [
         ":limit",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -908,14 +879,14 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "arrow_func_test",
     srcs = ["arrow_func_test.cc"],
     deps = [
+    ] + [
         ":arrow_func",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -929,14 +900,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "is_null_test",
     srcs = ["is_null_test.cc"],
     deps = [
         ":is_null",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -950,14 +920,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "if_null_test",
     srcs = ["if_null_test.cc"],
     deps = [
         ":if_null",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -971,14 +940,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "coalesce_test",
     srcs = ["coalesce_test.cc"],
     deps = [
         ":coalesce",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -995,14 +963,13 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "trigonometric_test",
     srcs = ["trigonometric_test.cc"],
     deps = [
         ":test_util",
         ":trigonometric",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1013,21 +980,21 @@ cc_library(
     deps = [
         "//engine/core:primitive_builder",
         "//engine/framework:operator",
-        "//engine/util:psi_helper",
+        "//engine/util:concurrent_queue",
         "//engine/util:table_util",
         "//engine/util:tensor_util",
+        "//engine/util/psi:batch_provider",
         "@org_apache_arrow//:arrow",
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "bucket_test",
     srcs = ["bucket_test.cc"],
     deps = [
         ":bucket",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1035,13 +1002,14 @@ cc_binary(
     name = "bucket_bench",
     srcs = ["bucket_bench.cc"],
     deps = [
+        "@google_benchmark//:benchmark_main",
+    ] + [
         ":bucket",
         ":test_util",
         "//engine/core:tensor_constructor",
         "//engine/util:filepath_helper",
         "//engine/util/disk:arrow_reader",
         "//engine/util/disk:arrow_writer",
-        "@com_github_google_benchmark//:benchmark_main",
         "@yacl//yacl/utils:parallel",
     ],
 )
@@ -1058,14 +1026,14 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "window_test",
     srcs = ["window_test.cc"],
     deps = [
+        ":all_ops_register",
         ":test_util",
         ":window",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1078,6 +1046,7 @@ cc_library(
         "//engine/util:prefix_sum",
         "//engine/util:spu_io",
         "//engine/util:tensor_util",
+        "@spulib//libspu/kernel/hal:debug",
         "@spulib//libspu/kernel/hal:public_helper",
         "@spulib//libspu/kernel/hal:shape_ops",
         "@spulib//libspu/kernel/hal:type_cast",
@@ -1088,18 +1057,20 @@ cc_library(
         "@spulib//libspu/kernel/hlo:const",
         "@spulib//libspu/kernel/hlo:geometrical",
         "@spulib//libspu/kernel/hlo:indexing",
+        "@spulib//libspu/kernel/hlo:permute",
+        "@spulib//libspu/kernel/hlo:shuffle",
+        "@spulib//libspu/kernel/hlo:soprf",
         "@spulib//libspu/kernel/hlo:sort",
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "secret_join_test",
     srcs = ["secret_join_test.cc"],
     deps = [
         ":secret_join",
         ":test_util",
         "//engine/core:tensor_constructor",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1128,7 +1099,7 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "unary_test",
     srcs = ["unary_test.cc"],
     deps = [
@@ -1136,7 +1107,6 @@ cc_test(
         ":test_util",
         ":unary",
         "//engine/framework:registry",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1151,13 +1121,12 @@ cc_library(
     ],
 )
 
-cc_test(
+scql_cc_test(
     name = "replicate_test",
     srcs = ["replicate_test.cc"],
     deps = [
         ":replicate",
         ":test_util",
         ":unary",
-        "@com_google_googletest//:gtest_main",
     ],
 )
