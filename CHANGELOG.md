@@ -17,14 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Staging
 
 ### Added
-
-### Changed
-
-### Fixed
-
-## [0.9.3] - 2025-02-25
-
-### Added
 - Support for datasource `Doris 2.1.7`.
 - Support `PERCENT_RANK` window function.
 - Support various string-related single-party operators, including `UPPER`, `LOWER`, `SUBSTRING`, `TRIM`, `CONCAT` and others.
