@@ -40,11 +40,6 @@ var dbTypeMap = map[string]DBType{
 	"odps":       DBTypeODPS,
 }
 
-// give View a special value since it is not a real "DbType"
-const (
-	View DBType = 1000
-)
-
 var dbTypeNameMap = map[DBType]string{
 	DBTypeUnknown:  "unknown",
 	DBTypeMySQL:    "mysql",
@@ -62,12 +57,7 @@ func (t DBType) String() string {
 }
 
 func ParseDBType(tp string) (DBType, error) {
-	tp = strings.ToLower(tp)
-	if tp == "view" {
-		return View, nil
-	}
-
-	if v, ok := dbTypeMap[tp]; ok {
+	if v, ok := dbTypeMap[strings.ToLower(tp)]; ok {
 		return v, nil
 	}
 	return DBTypeUnknown, fmt.Errorf("unknown db type: %s", tp)
