@@ -117,8 +117,8 @@ jobs:
       - run:
           name: "Install homebrew dependencies"
           command: |
-            brew install bazelisk cmake ninja libomp wget go@1.22 md5sha1sum
-            brew link go@1.22
+            brew install bazelisk cmake ninja libomp wget go@1.24 md5sha1sum
+            brew link go@1.24
       - run:
           name: Setup GCS
           command: |
@@ -129,7 +129,7 @@ jobs:
           command: |
             set +e
             declare -i test_status
-            bazel --host_jvm_args=-Xmx16g test //engine/... -c opt --jobs=10 --ui_event_filters=-info,-debug,-warning --test_output=errors| tee test_result.log; test_status=${PIPESTATUS[0]}
+            bazel --host_jvm_args=-Xmx16g test //engine/... --jobs=10 --ui_event_filters=-info,-debug,-warning --test_output=errors| tee test_result.log; test_status=${PIPESTATUS[0]}
 
             sh ../devtools/rename-junit-xml.sh
             find bazel-bin/ -perm +111 -type f -name "*_test"  -print0 | xargs -0 tar -cvzf test_binary.tar.gz
