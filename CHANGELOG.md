@@ -34,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Improved `JOIN` and `IN` performance in streaming mode.
 - Implemented a more reliable `secret join algorithm`(only works in SEMI2K protocol) inspired by [Scape](https://ieeexplore.ieee.org/document/9835540/).
-- Optimized the the pruning logic in the Logical Plan to remove redundant columns in nodes such as Join, Selection, Window and so on.
+- Optimized the column pruning rule for Join, Selection, and Window nodes in the Logical Optimizer to more effectively remove redundant columns.
 
 ### Fixed
 - Restricted access to SCQLEngine metrics using additional paths like "engine_ip:engine_port/metrics/additional/path".
