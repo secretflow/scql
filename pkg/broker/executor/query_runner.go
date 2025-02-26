@@ -161,12 +161,17 @@ func (r *QueryRunner) prepareData(usedTableNames, intoParties []string) (dataPar
 		if err != nil {
 			return
 		}
-		var dbType core.DBType
-		dbType, err = core.ParseDBType(t.Table.DBType)
-		if err != nil {
-			return
+		if t.Table.DBType != "" {
+			var dbType core.DBType
+			dbType, err = core.ParseDBType(t.Table.DBType)
+			if err != nil {
+				return
+			}
+			refDbTable.SetDBType(dbType)
+		} else {
+			logrus.Infof("DB type of %s is empty", t.Table.TableName)
 		}
-		refDbTable.SetDBType(dbType)
+
 		tableToRefs[dbTable] = refDbTable
 	}
 	// SliceDeDup sort parties and compact

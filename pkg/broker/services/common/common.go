@@ -42,10 +42,16 @@ import (
 
 func VerifyTableMeta(meta storage.TableMeta) error {
 	// 1. check DB type
-	_, err := core.ParseDBType(meta.Table.DBType)
-	if err != nil {
-		return fmt.Errorf("VerifyTableMeta: %s", err)
+	var err error
+	if meta.Table.DBType != "" {
+		_, err := core.ParseDBType(meta.Table.DBType)
+		if err != nil {
+			return fmt.Errorf("VerifyTableMeta: %s", err)
+		}
+	} else {
+		logrus.Infof("DB type of %s is empty", meta.Table.TableName)
 	}
+
 	// 2. check column type
 	for _, col := range meta.Columns {
 		if ok := constant.SupportTypes[col.DType]; !ok {
