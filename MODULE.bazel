@@ -14,7 +14,7 @@
 
 module(
     name = "scql",
-    version = "0.9.3",
+    version = "0.9.3dev",
     compatibility_level = 1,
 )
 
