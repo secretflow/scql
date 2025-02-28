@@ -47,11 +47,11 @@ jobs:
       - run:
           name: "Build binary"
           command: |
-            set +e 
+            set +e
             mkdir -p image
             cp docker/scql-ubuntu.Dockerfile image
             docker run -d -it --name scql-dev -v $(pwd):/home/admin/dev/ -w /home/admin/dev --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --cap-add=NET_ADMIN --privileged=true --entrypoint=bash secretflow/scql-ci:latest
-            docker exec -it scql-dev bash -c "make && bazel build //engine/exe:scqlengine -c opt --ui_event_filters=-info,-debug,-warning" 
+            docker exec -it scql-dev bash -c "make && bazelisk build //engine/exe:scqlengine -c opt --ui_event_filters=-info,-debug,-warning"
 
             MACHINE_TYPE=`arch`
             if [ ${MACHINE_TYPE} == 'x86_64' ]; then
@@ -87,7 +87,7 @@ jobs:
             cd .ci/docker-compose
             python3 -m pip install -r requirements.txt
             python3 setup.py
-            docker compose -p regtest up -d 
+            docker compose -p regtest up -d
             docker ps | grep regtest
       - run:
           name: "Run regtest"

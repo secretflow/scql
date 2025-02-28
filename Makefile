@@ -30,7 +30,7 @@ binary: clean prepare fmt vet gogenerate
 	$(eval SCQL_VERSION := $(shell bash ${PWD}/version_build.sh))
 	echo "Binary version: ${SCQL_VERSION}"
 	GOBIN=${PWD}/bin go install -ldflags "-X main.version=${SCQL_VERSION}" ./cmd/...
-	bazel --host_jvm_args=-Xmx8g build //engine/exe:scqlengine -c opt --jobs=32
+	bazelisk --host_jvm_args=-Xmx8g build //engine/exe:scqlengine -c opt --jobs=32
 	bash ${PWD}/version_build.sh -r
 
 pb: clean
@@ -89,5 +89,3 @@ GO-package:
 	GOBIN=${TOOLBIN} go install github.com/mattn/goveralls@latest && \
 	GOBIN=${TOOLBIN} go install github.com/rakyll/gotest@latest && \
 	GOBIN=${TOOLBIN} go install golang.org/x/tools/go/analysis/passes/shadow/cmd/shadow@latest
-
-

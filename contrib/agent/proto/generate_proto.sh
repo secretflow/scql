@@ -15,6 +15,6 @@
 # limitations under the License.
 #
 set -e
-bazel build --remote_cache="" //contrib/agent/proto:task_config_go_proto
+bazelisk build --remote_cache="" //contrib/agent/proto:task_config_go_proto
 cp -f bazel-bin/contrib/agent/proto/task_config_go_proto_/github.com/secretflow/scql/contrib/agent/proto/task_config.pb.go contrib/agent/proto/task_config.pb.go
 chmod -R -x+X contrib/agent/proto
