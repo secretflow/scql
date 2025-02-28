@@ -12,5 +12,5 @@ jobs:
         with:
           last-activity: 1 # FIXME: change this to 7 after test passed
           labels: 'OSCP,documentation'
-          message: '由于您未能在规定时间内完成任务，该任务已重新开放认领。如需继续完成，请重新认领；同时也欢迎其他开发者参与认领。\n\nDue to your inactivity, the issue has been unassigned. If you would like to continue working on it, please reassign yourself. Other contributors are also welcome to claim the issue.'
+          message: '由于您未能在规定时间内完成任务，该任务已重新开放认领。如需继续完成，请重新认领；同时也欢迎其他开发者参与认领。\n\nAs the task was not completed within the specified time, it has been unassigned for claiming. If you wish to continue working on it, please reclaim the task. Other developers are also welcome to claim it.'
 
