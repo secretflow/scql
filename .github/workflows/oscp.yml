@@ -1,0 +1,16 @@
+name: Unassign Stale OSCP Issues
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Run at midnight every day
+
+jobs:
+  unassign-stale-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: boundfoxstudios/action-unassign-contributor-after-days-of-inactivity@v1.0.2
+        with:
+          last-activity: 1 # FIXME: change this to 7 after test passed
+          labels: 'OSCP,documentation'
+          message: '由于您未能在规定时间内完成任务，该任务已重新开放认领。如需继续完成，请重新认领；同时也欢迎其他开发者参与认领。\n\nAs the task was not completed within the specified time, it has been unassigned for claiming. If you wish to continue working on it, please reclaim the task. Other developers are also welcome to claim it.'
+
