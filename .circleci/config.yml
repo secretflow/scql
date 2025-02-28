@@ -60,6 +60,8 @@ workflows:
             engine/.* run_unittest true
             pkg/.* run_unittest true
             .bazelrc run_unittest true
+            MODULE.bazel run_unittest true
+            .bazeliskrc run_unittest true
             .circleci/unittest-config.yml run_unittest true
   run_regtest:
     when: << pipeline.parameters.enable_regtest >>
