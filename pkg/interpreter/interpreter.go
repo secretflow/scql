@@ -342,11 +342,11 @@ func buildEngineInfo(lp core.LogicalPlan, catalog *pb.Catalog, currentDb string,
 		if err != nil {
 			return nil, fmt.Errorf("failed to create DbTable from %s: %+v", tblEntry.GetRefTable(), err)
 		}
-		dbType, err := core.ParseDBType(tblEntry.GetDbType())
+
+		err = refDbTable.SetDBTypeFromString(tblEntry.GetDbType(), tblEntry.TableName)
 		if err != nil {
-			return nil, fmt.Errorf("unknown DBType of table %s： %v", tn, err)
+			return nil, fmt.Errorf("buildEngineInfo: %v", err)
 		}
-		refDbTable.SetDBType(dbType)
 
 		tableToRefs[dbTable] = refDbTable
 	}

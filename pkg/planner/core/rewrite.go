@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/secretflow/scql/pkg/parser"
 	"github.com/secretflow/scql/pkg/parser/ast"
 	"github.com/secretflow/scql/pkg/parser/format"
@@ -29,6 +31,19 @@ type DbTable struct {
 	dbName    string
 	tableName string
 	dbType    DBType // db type of table stored
+}
+
+func (dt *DbTable) SetDBTypeFromString(dbStr, tableName string) error {
+	if dbStr != "" {
+		dbType, err := ParseDBType(dbStr)
+		if err != nil {
+			return fmt.Errorf("failed to set db type of %s: %v", tableName, err)
+		}
+		dt.SetDBType(dbType)
+	} else {
+		logrus.Infof("DB type of %s is empty", tableName)
+	}
+	return nil
 }
 
 func (dt *DbTable) String() string {
