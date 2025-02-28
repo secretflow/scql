@@ -161,15 +161,10 @@ func (r *QueryRunner) prepareData(usedTableNames, intoParties []string) (dataPar
 		if err != nil {
 			return
 		}
-		if t.Table.DBType != "" {
-			var dbType core.DBType
-			dbType, err = core.ParseDBType(t.Table.DBType)
-			if err != nil {
-				return
-			}
-			refDbTable.SetDBType(dbType)
-		} else {
-			logrus.Infof("DB type of %s is empty", t.Table.TableName)
+
+		err = refDbTable.SetDBTypeFromString(t.Table.DBType, t.Table.TableName)
+		if err != nil {
+			return
 		}
 
 		tableToRefs[dbTable] = refDbTable
