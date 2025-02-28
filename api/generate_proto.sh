@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 set -e
-bazel build --remote_cache="" //api:scql_go_proto //api:spu_go_proto
+bazelisk build --remote_cache="" //api:scql_go_proto //api:spu_go_proto
 mkdir -p pkg/proto-gen/scql
 proto_gen_package=github.com/secretflow/scql/pkg/proto-gen
 # copy files execpt spu.pb.go
