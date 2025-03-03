@@ -157,8 +157,8 @@
     },
     {
       "name": "ifnull & coalesce",
-      "query": "select plain_int_0, plain_string_0, ifnull(plain_string_0, plain_int_0) as mul, coalesce(plain_float_0, plain_float_1, 1.0) as cl from alice_tbl_1;",
-      "mysql_query": "select plain_int_0, plain_string_0, ifnull(plain_string_0, plain_int_0) as mul, coalesce(plain_float_0, plain_float_1, 1.0) as cl from alice.tbl_1;"
+      "query": "select plain_int_0, plain_string_0, ifnull(plain_string_0, plain_int_0) as ifn, coalesce(plain_float_0, plain_float_1, 1.0) as cl from alice_tbl_1;",
+      "mysql_query": "select plain_int_0, plain_string_0, ifnull(plain_string_0, plain_int_0) as ifn, coalesce(plain_float_0, plain_float_1, 1.0) as cl from alice.tbl_1;"
     },
     {
       "name": "if",
