@@ -184,7 +184,7 @@ var commonCatalog = &proto.Catalog{
 var testCases = []compileTestCase{
 	{
 		req: &proto.CompileQueryRequest{
-			Query:  "SELECT ta.ID, ta.income FROM ta WHERE ta.income > ALL(SELECT ta.income AS avg_income FROM ta INNER JOIN tb ON ta.ID = tb.ID)",
+			Query:  "SELECT ta.ID, ta.income FROM ta WHERE ta.income > ALL(SELECT ta.income AS joined_income FROM ta INNER JOIN tb ON ta.ID = tb.ID)",
 			DbName: "",
 			Issuer: &proto.PartyId{
 				Code: "alice",
