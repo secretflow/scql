@@ -1042,7 +1042,7 @@ func (er *expressionRewriter) buildSemiApplyFromEqualSubq(np LogicalPlan, l, r e
 	if er.err != nil {
 		return
 	}
-	er.asScalar = true
+	er.asScalar = true // scql change
 	er.p, er.err = er.b.buildSemiApply(er.p, np, []expression.Expression{condition}, er.asScalar, not)
 }
 
