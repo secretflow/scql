@@ -20,9 +20,55 @@ parameters:
   enable_regtest:
     type: boolean
     default: false
-  run_unittest:
+  run_scdb_ut:
     type: boolean
     default: false
+  run_engine_ut:
+    type: boolean
+    default: false
+
+commands:
+  setup_engine:
+    steps:
+      - run:
+          name: "Checkout devtools"
+          command: git clone https://github.com/secretflow/devtools.git ../devtools
+      - run:
+          name: Setup GCS
+          command: |
+            echo ${gcs_content} > ../gcs.data
+            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
+  run_scdb_test:
+    description: "Run scdb tests"
+    steps:
+      - run:
+          name: "SCDB Test"
+          command: |
+            set +e
+            go mod tidy
+            go test -timeout=30m -v -short ./pkg/... ./contrib/...
+  run_engine_test:
+    description: "Run engine tests and collect artifacts"
+    parameters:
+      extra_bazel_args:
+        type: string
+        default: ""
+      find_executable_flag:
+        type: string
+        default: "-executable"
+    steps:
+      - run:
+          name: "Engine Test"
+          command: |
+            set +e
+            declare -i test_status
+            bazel --host_jvm_args=-Xmx8g test //engine/... << parameters.extra_bazel_args >> --jobs=32 --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
+
+            sh ../devtools/rename-junit-xml.sh
+            find bazel-bin/ << parameters.find_executable_flag >> -type f -name "*_test" -print0 | xargs -0 tar -cvzf test_binary.tar.gz
+            find bazel-testlogs/ -type f -name "test.log" -print0 | xargs -0 tar -cvzf test_logs.tar.gz
+            exit ${test_status}
+
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
@@ -40,12 +86,7 @@ jobs:
     # See: https://circleci.com/docs/2.0/configuration-reference/#steps
     steps:
       - checkout
-      - run:
-          name: "SCDB Test"
-          command: |
-            set +e
-            go mod tidy
-            go test -timeout=30m -v -short ./pkg/...
+      - run_scdb_test
   linux_engine_ut:
     docker:
       - image: secretflow/scql-ci:latest
@@ -57,25 +98,10 @@ jobs:
     # See: https://circleci.com/docs/2.0/configuration-reference/#steps
     steps:
       - checkout
-      - run:
-          name: "Checkout devtools"
-          command: git clone https://github.com/secretflow/devtools.git ../devtools
-      - run:
-          name: Setup GCS
-          command: |
-            echo ${gcs_content} > ../gcs.data
-            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
-      - run:
-          name: "Engine Test"
-          command: |
-            set +e
-            declare -i test_status
-            bazelisk --host_jvm_args=-Xmx8g test //engine/... -c opt --jobs=32 --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
-
-            sh ../devtools/rename-junit-xml.sh
-            find bazel-bin/ -executable -type f -name "*_test"  -print0 | xargs -0 tar -cvzf test_binary.tar.gz
-            find bazel-testlogs/ -type f -name "test.log"  -print0 | xargs -0 tar -cvzf test_logs.tar.gz
-            exit ${test_status}
+      - setup_engine
+      - run_engine_test:
+          extra_bazel_args: "-c opt"
+          find_executable_flag: "-executable"
       - store_test_results:
           path: test-results
       - store_artifacts:
@@ -92,12 +118,7 @@ jobs:
           name: "Install homebrew dependencies"
           command: |
             brew install wget go
-      - run:
-          name: "SCDB Test"
-          command: |
-            set +e
-            go mod tidy
-            go test -timeout=30m -v -short ./pkg/...
+      - run_scdb_test
   macOS_engine_ut:
     macos:
       xcode: 16.0.0
@@ -112,29 +133,14 @@ jobs:
             curl -X POST --header "Content-Type: application/json" "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/cancel?circle-token=${BUILD_TIMER_TOKEN}"
       - checkout
       - run:
-          name: "Checkout devtools"
-          command: git clone https://github.com/secretflow/devtools.git ../devtools
-      - run:
           name: "Install homebrew dependencies"
           command: |
             brew install bazelisk cmake ninja libomp wget go@1.24 md5sha1sum
             brew link go@1.24
-      - run:
-          name: Setup GCS
-          command: |
-            echo ${gcs_content} > ../gcs.data
-            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
-      - run:
-          name: "Engine Test"
-          command: |
-            set +e
-            declare -i test_status
-            bazelisk --host_jvm_args=-Xmx8g test //engine/... --jobs=32 --ui_event_filters=-info,-debug,-warning --test_output=errors| tee test_result.log; test_status=${PIPESTATUS[0]}
-
-            sh ../devtools/rename-junit-xml.sh
-            find bazel-bin/ -perm +111 -type f -name "*_test"  -print0 | xargs -0 tar -cvzf test_binary.tar.gz
-            find bazel-testlogs/ -type f -name "test.log"  -print0 | xargs -0 tar -cvzf test_logs.tar.gz
-            exit ${test_status}
+      - engine_setup
+      - run_engine_test:
+          extra_bazel_args: ""  
+          find_executable_flag: "-perm +111"
       - store_test_results:
           path: test-results
       - store_artifacts:
@@ -145,16 +151,19 @@ jobs:
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  unittest:
-    when: << pipeline.parameters.run_unittest >>
+  run_scdb_ut:
+    when: << pipeline.parameters.run_scdb_ut >>
     jobs:
       - linux_scdb_ut:
           matrix:
             parameters:
               resource_class: ["2xlarge", "arm-xlarge"]
+      - macOS_scdb_ut
+  run_engine_ut:
+    when: << pipeline.parameters.run_engine_ut >>
+    jobs:
       - linux_engine_ut:
           matrix:
             parameters:
               resource_class: ["2xlarge", "arm-xlarge"]
-      - macOS_scdb_ut
       - macOS_engine_ut
