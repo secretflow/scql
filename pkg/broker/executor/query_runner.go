@@ -161,12 +161,12 @@ func (r *QueryRunner) prepareData(usedTableNames, intoParties []string) (dataPar
 		if err != nil {
 			return
 		}
-		var dbType core.DBType
-		dbType, err = core.ParseDBType(t.Table.DBType)
+
+		err = refDbTable.SetDBTypeFromString(t.Table.DBType, t.Table.TableName)
 		if err != nil {
 			return
 		}
-		refDbTable.SetDBType(dbType)
+
 		tableToRefs[dbTable] = refDbTable
 	}
 	// SliceDeDup sort parties and compact
