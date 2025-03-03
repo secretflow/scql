@@ -1393,7 +1393,7 @@ definitions:
     type: object
     properties:
       spu_runtime_cfg:
-        $ref: '#/definitions/spu.RuntimeConfig'
+        $ref: '#/definitions/spu.pb.RuntimeConfig'
         description: The spu runtime configuration.
       session_expire_seconds:
         type: string
@@ -1917,7 +1917,7 @@ definitions:
     properties:
       status:
         $ref: '#/definitions/scql.pb.Status'
-  spu.CheetahConfig:
+  spu.pb.CheetahConfig:
     type: object
     properties:
       disable_matmul_pack:
@@ -1927,16 +1927,16 @@ definitions:
         type: boolean
         title: allow least significant bits error for point-wise mul
       ot_kind:
-        $ref: '#/definitions/spu.CheetahOtKind'
+        $ref: '#/definitions/spu.pb.CheetahOtKind'
         title: Setup for cheetah ot
-  spu.CheetahOtKind:
+  spu.pb.CheetahOtKind:
     type: string
     enum:
       - YACL_Ferret
       - YACL_Softspoken
       - EMP_Ferret
     default: YACL_Ferret
-  spu.ClientSSLConfig:
+  spu.pb.ClientSSLConfig:
     type: object
     properties:
       certificate:
@@ -1958,7 +1958,7 @@ definitions:
         title: |-
           Maximum depth of the certificate chain for verification
           If 0, turn off the verification
-  spu.FieldType:
+  spu.pb.FieldType:
     type: string
     enum:
       - FT_INVALID
@@ -1974,7 +1974,7 @@ definitions:
        - FM32: Ring 2^32
        - FM64: Ring 2^64
        - FM128: Ring 2^128
-  spu.ProtocolKind:
+  spu.pb.ProtocolKind:
     type: string
     enum:
       - PROT_INVALID
@@ -2001,14 +2001,14 @@ definitions:
       fast 2PC protocol.
        - SECURENN: A semi-honest 3PC-protocol for Neural Network, P2 as the helper,
       (https://eprint.iacr.org/2018/442)
-  spu.RuntimeConfig:
+  spu.pb.RuntimeConfig:
     type: object
     properties:
       protocol:
-        $ref: '#/definitions/spu.ProtocolKind'
+        $ref: '#/definitions/spu.pb.ProtocolKind'
         description: The protocol kind.
       field:
-        $ref: '#/definitions/spu.FieldType'
+        $ref: '#/definitions/spu.pb.FieldType'
         description: The field type.
       fxp_fraction_bits:
         type: string
@@ -2071,7 +2071,7 @@ definitions:
           max chunk size for Value::toProto
           default: 128 * 1024 * 1024
       sort_method:
-        $ref: '#/definitions/spu.RuntimeConfig.SortMethod'
+        $ref: '#/definitions/spu.pb.RuntimeConfig.SortMethod'
         description: |-
           SPU supports multiple sorting algorithms.
            -for 2pc, only sorting network is supported.
@@ -2090,7 +2090,7 @@ definitions:
           The iterations use in f_div with Goldschmidt method.
           0(default) indicates implementation defined.
       fxp_exp_mode:
-        $ref: '#/definitions/spu.RuntimeConfig.ExpMode'
+        $ref: '#/definitions/spu.pb.RuntimeConfig.ExpMode'
         description: The exponent approximation method.
       fxp_exp_iters:
         type: string
@@ -2099,7 +2099,7 @@ definitions:
           Number of iterations of `exp` approximation, 0(default) indicates impl
           defined.
       fxp_log_mode:
-        $ref: '#/definitions/spu.RuntimeConfig.LogMode'
+        $ref: '#/definitions/spu.pb.RuntimeConfig.LogMode'
         description: The logarithm approximation method.
       fxp_log_iters:
         type: string
@@ -2112,7 +2112,7 @@ definitions:
         format: int64
         description: Number of orders of `log` approximation, 0(default) indicates impl defined.
       sigmoid_mode:
-        $ref: '#/definitions/spu.RuntimeConfig.SigmoidMode'
+        $ref: '#/definitions/spu.pb.RuntimeConfig.SigmoidMode'
         description: The sigmoid function approximation model.
       enable_lower_accuracy_rsqrt:
         type: boolean
@@ -2122,13 +2122,13 @@ definitions:
         format: int64
         title: Sine/Cosine approximation iterations
       beaver_type:
-        $ref: '#/definitions/spu.RuntimeConfig.BeaverType'
+        $ref: '#/definitions/spu.pb.RuntimeConfig.BeaverType'
         description: beaver config, works for semi2k and spdz2k for now.
       ttp_beaver_config:
-        $ref: '#/definitions/spu.TTPBeaverConfig'
+        $ref: '#/definitions/spu.pb.TTPBeaverConfig'
         description: TrustedThirdParty configs.
       cheetah_2pc_config:
-        $ref: '#/definitions/spu.CheetahConfig'
+        $ref: '#/definitions/spu.pb.CheetahConfig'
         description: Cheetah 2PC configs.
       trunc_allow_msb_error:
         type: boolean
@@ -2182,7 +2182,7 @@ definitions:
     description: |+
       The SPU runtime configuration.
 
-  spu.RuntimeConfig.BeaverType:
+  spu.pb.RuntimeConfig.BeaverType:
     type: string
     enum:
       - TrustedFirstParty
@@ -2194,7 +2194,7 @@ definitions:
       WARNING: It is NOT SAFE and SHOULD NOT BE used in production.
        - TrustedThirdParty: Generate beaver triple through an additional trusted third party.
        - MultiParty: Generate beaver triple through multi-party.
-  spu.RuntimeConfig.ExpMode:
+  spu.pb.RuntimeConfig.ExpMode:
     type: string
     enum:
       - EXP_DEFAULT
@@ -2209,7 +2209,7 @@ definitions:
        - EXP_PADE: The pade approximation.
        - EXP_TAYLOR: Taylor series approximation.
        - EXP_PRIME: exp prime only available for some implementations
-  spu.RuntimeConfig.LogMode:
+  spu.pb.RuntimeConfig.LogMode:
     type: string
     enum:
       - LOG_DEFAULT
@@ -2224,7 +2224,7 @@ definitions:
        - LOG_PADE: The pade approximation.
        - LOG_NEWTON: The newton approximation.
        - LOG_MINMAX: The minmax approximation.
-  spu.RuntimeConfig.SigmoidMode:
+  spu.pb.RuntimeConfig.SigmoidMode:
     type: string
     enum:
       - SIGMOID_DEFAULT
@@ -2244,7 +2244,7 @@ definitions:
              0            if  -4 > x
        - SIGMOID_REAL: The real definition, which depends on exp's accuracy.
       f(x) = 1 / (1 + exp(-x))
-  spu.RuntimeConfig.SortMethod:
+  spu.pb.RuntimeConfig.SortMethod:
     type: string
     enum:
       - SORT_DEFAULT
@@ -2257,7 +2257,7 @@ definitions:
        - SORT_RADIX: The radix sort (stable sort, need efficient shuffle).
        - SORT_QUICK: The quick sort (unstable, need efficient shuffle).
        - SORT_NETWORK: The odd-even sorting network (unstable, most general).
-  spu.TTPBeaverConfig:
+  spu.pb.TTPBeaverConfig:
     type: object
     properties:
       server_host:
@@ -2281,5 +2281,5 @@ definitions:
         type: string
         title: Transport protocol, support ["http", "h2"]
       ssl_config:
-        $ref: '#/definitions/spu.ClientSSLConfig'
+        $ref: '#/definitions/spu.pb.ClientSSLConfig'
         title: Configurations related to SSL
