@@ -137,7 +137,7 @@ jobs:
           command: |
             brew install bazelisk cmake ninja libomp wget go@1.24 md5sha1sum
             brew link go@1.24
-      - engine_setup
+      - setup_engine
       - run_engine_test:
           extra_bazel_args: ""  
           find_executable_flag: "-perm +111"
