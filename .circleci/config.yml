@@ -61,7 +61,8 @@ workflows:
             bazel/.* run_engine_ut true
             engine/.* run_engine_ut true
             .bazelrc run_engine_ut true
-            .circleci/unittest-config.yml run_scdb_ut true run_engine_ut true
+            .circleci/unittest-config.yml run_scdb_ut true 
+            .circleci/unittest-config.yml run_engine_ut true
   run_regtest:
     when: << pipeline.parameters.enable_regtest >>
     jobs:
