@@ -20,15 +20,15 @@ parameters:
   enable_regtest:
     type: boolean
     default: false
-  run_scdb_ut:
+  run_go_ut:
     type: boolean
     default: false
-  run_engine_ut:
+  run_cpp_ut:
     type: boolean
     default: false
 
 commands:
-  setup_engine:
+  setup_cpp_test:
     steps:
       - run:
           name: "Checkout devtools"
@@ -38,17 +38,17 @@ commands:
           command: |
             echo ${gcs_content} > ../gcs.data
             ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
-  run_scdb_test:
-    description: "Run scdb tests"
+  run_go_test:
+    description: "Run go tests"
     steps:
       - run:
-          name: "SCDB Test"
+          name: "Go Test"
           command: |
             set +e
             go mod tidy
             go test -timeout=30m -v -short ./pkg/... ./contrib/...
-  run_engine_test:
-    description: "Run engine tests and collect artifacts"
+  run_cpp_test:
+    description: "Run cpp tests and collect artifacts"
     parameters:
       extra_bazel_args:
         type: string
@@ -58,7 +58,7 @@ commands:
         default: "-executable"
     steps:
       - run:
-          name: "Engine Test"
+          name: "Cpp Test"
           command: |
             set +e
             declare -i test_status
@@ -73,7 +73,7 @@ commands:
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
-  linux_scdb_ut:
+  linux_go_ut:
     # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
     # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
     docker:
@@ -86,8 +86,8 @@ jobs:
     # See: https://circleci.com/docs/2.0/configuration-reference/#steps
     steps:
       - checkout
-      - run_scdb_test
-  linux_engine_ut:
+      - run_go_test
+  linux_cpp_ut:
     docker:
       - image: secretflow/scql-ci:latest
     parameters:
@@ -98,8 +98,8 @@ jobs:
     # See: https://circleci.com/docs/2.0/configuration-reference/#steps
     steps:
       - checkout
-      - setup_engine
-      - run_engine_test:
+      - setup_cpp_test
+      - run_cpp_test:
           extra_bazel_args: "-c opt"
           find_executable_flag: "-executable"
       - store_test_results:
@@ -108,7 +108,7 @@ jobs:
           path: test_binary.tar.gz
       - store_artifacts:
           path: test_logs.tar.gz
-  macOS_scdb_ut:
+  macOS_go_ut:
     macos:
       xcode: 16.0.0
     resource_class: macos.m1.large.gen1
@@ -118,8 +118,8 @@ jobs:
           name: "Install homebrew dependencies"
           command: |
             brew install wget go
-      - run_scdb_test
-  macOS_engine_ut:
+      - run_go_test
+  macOS_cpp_ut:
     macos:
       xcode: 16.0.0
     resource_class: macos.m1.large.gen1
@@ -137,8 +137,8 @@ jobs:
           command: |
             brew install bazelisk cmake ninja libomp wget go@1.24 md5sha1sum
             brew link go@1.24
-      - setup_engine
-      - run_engine_test:
+      - setup_cpp_test
+      - run_cpp_test:
           extra_bazel_args: ""  
           find_executable_flag: "-perm +111"
       - store_test_results:
@@ -151,19 +151,19 @@ jobs:
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  run_scdb_ut:
-    when: << pipeline.parameters.run_scdb_ut >>
+  run_go_ut:
+    when: << pipeline.parameters.run_go_ut >>
     jobs:
-      - linux_scdb_ut:
+      - linux_go_ut:
           matrix:
             parameters:
               resource_class: ["2xlarge", "arm-xlarge"]
-      - macOS_scdb_ut
-  run_engine_ut:
-    when: << pipeline.parameters.run_engine_ut >>
+      - macOS_go_ut
+  run_cpp_ut:
+    when: << pipeline.parameters.run_cpp_ut >>
     jobs:
-      - linux_engine_ut:
+      - linux_cpp_ut:
           matrix:
             parameters:
               resource_class: ["2xlarge", "arm-xlarge"]
-      - macOS_engine_ut
+      - macOS_cpp_ut
