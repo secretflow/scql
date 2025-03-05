@@ -54,13 +54,17 @@ workflows:
           base-revision: main
           config-path: .circleci/unittest-config.yml
           mapping: |
-            api/.* run_unittest true
-            bazel/.* run_unittest true
-            cmd/.* run_unittest true
-            engine/.* run_unittest true
-            pkg/.* run_unittest true
-            .bazelrc run_unittest true
-            .circleci/unittest-config.yml run_unittest true
+            api/.* run_go_ut true
+            cmd/.* run_go_ut true
+            pkg/.* run_go_ut true
+            contrib/.* run_go_ut true
+            .circleci/unittest-config.yml run_go_ut true 
+            bazel/.* run_cpp_ut true
+            engine/.* run_cpp_ut true
+            .bazelrc run_cpp_ut true
+            .bazeliskrc run_cpp_ut true
+            MODULE.bazel run_cpp_ut true
+            .circleci/unittest-config.yml run_cpp_ut true
   run_regtest:
     when: << pipeline.parameters.enable_regtest >>
     jobs:
