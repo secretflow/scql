@@ -59,13 +59,13 @@ docker exec -it scql-dev-$(whoami) bash
 ```sh
 
 # build SCQL engine as release
-bazel build //engine/exe:scqlengine -c opt
+bazelisk build //engine/exe:scqlengine -c opt
 
 # run unittests for SCQL engine
-bazel test //engine/...
+bazelisk test //engine/...
 
 # build with address sanitizer
-bazel build --config=asan //engine/exe:scqlengine
+bazelisk build --config=asan //engine/exe:scqlengine
 
 # build scdb code
 make

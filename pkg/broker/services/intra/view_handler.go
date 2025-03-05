@@ -151,7 +151,6 @@ func (svc *grpcIntraSvc) CreateView(ctx context.Context, req *pb.CreateViewReque
 				ProjectID: req.GetProjectId(),
 				TableName: req.GetViewName(),
 			},
-			DBType:       "view",
 			RefTable:     "",
 			Owner:        app.Conf.PartyCode,
 			IsView:       true,
