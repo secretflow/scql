@@ -226,15 +226,15 @@ std::unique_ptr<scql::engine::EngineServiceImpl> BuildEngineService(
   }
   session_opt.log_options = opts;
 
-  std::vector<spu::ProtocolKind> allowed_protocols;
+  std::vector<spu::pb::ProtocolKind> allowed_protocols;
 
   std::vector<absl::string_view> protocols_str =
       absl::StrSplit(FLAGS_spu_allowed_protocols, ',');
   for (auto& protocol_str : protocols_str) {
     std::string stripped_str(absl::StripAsciiWhitespace(protocol_str));
-    spu::ProtocolKind protocol_kind;
+    spu::pb::ProtocolKind protocol_kind;
 
-    YACL_ENFORCE(spu::ProtocolKind_Parse(stripped_str, &protocol_kind),
+    YACL_ENFORCE(spu::pb::ProtocolKind_Parse(stripped_str, &protocol_kind),
                  fmt::format("invalid protocol provided: {}", stripped_str));
     allowed_protocols.push_back(protocol_kind);
   }

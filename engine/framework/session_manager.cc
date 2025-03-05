@@ -37,7 +37,7 @@ SessionManager::SessionManager(
     std::unique_ptr<yacl::link::ILinkFactory> link_factory,
     std::unique_ptr<Router> ds_router,
     std::unique_ptr<DatasourceAdaptorMgr> ds_mgr, int32_t session_timeout_s,
-    const std::vector<spu::ProtocolKind>& allowed_spu_protocols)
+    const std::vector<spu::pb::ProtocolKind>& allowed_spu_protocols)
     : session_opt_(std::move(session_opt)),
       listener_manager_(listener_manager),
       link_factory_(std::move(link_factory)),

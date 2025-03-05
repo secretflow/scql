@@ -43,8 +43,8 @@ class SecretJoinTest
 INSTANTIATE_TEST_SUITE_P(
     SecretJoinSecretTest, SecretJoinTest,
     testing::Combine(
-        testing::Values(test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 2},
-                        test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 3}),
+        testing::Values(test::SpuRuntimeTestCase{spu::pb::ProtocolKind::SEMI2K, 2},
+                        test::SpuRuntimeTestCase{spu::pb::ProtocolKind::SEMI2K, 3}),
         testing::Values(
             SecretJoinTestCase{
                 .left_key = {test::NamedTensor(

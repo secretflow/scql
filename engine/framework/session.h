@@ -100,7 +100,7 @@ class Session {
                    pb::DebugOptions debug_opts,
                    yacl::link::ILinkFactory* link_factory, Router* router,
                    DatasourceAdaptorMgr* ds_mgr,
-                   const std::vector<spu::ProtocolKind>& allowed_spu_protocols);
+                   const std::vector<spu::pb::ProtocolKind>& allowed_spu_protocols);
   ~Session();
   /// @return session id
   std::string Id() const { return id_; }
@@ -269,7 +269,7 @@ class Session {
   std::shared_ptr<util::PsiDetailLogger> psi_logger_ = nullptr;
   pb::DebugOptions debug_opts_;
 
-  const std::vector<spu::ProtocolKind> allowed_spu_protocols_;
+  const std::vector<spu::pb::ProtocolKind> allowed_spu_protocols_;
 
   // for progress exposure
   std::atomic_int32_t nodes_count_ = -1;

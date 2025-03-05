@@ -164,7 +164,7 @@ void SecretJoin::Validate(ExecContext* ctx) {
       util::AreTensorsStatusMatched(right_output, pb::TENSORSTATUS_SECRET));
   // TODO: support ABY3/CHEETAH after spu supported
   YACL_ENFORCE(ctx->GetSession()->GetSpuContext()->config().protocol() ==
-                   spu::ProtocolKind::SEMI2K,
+                   spu::pb::ProtocolKind::SEMI2K,
                "secret join only support SEMI2K protocol now");
 }
 
@@ -288,10 +288,10 @@ void SecretJoin::Execute(ExecContext* ctx) {
 
   spu::Value left_perm;
   spu::Value right_perm;
-  if (sctx->config().field() == spu::FM64) {
+  if (sctx->config().field() == spu::pb::FM64) {
     left_perm = BuildPerm<uint64_t>(sctx, pl, seq_shuffled);
     right_perm = BuildPerm<uint64_t>(sctx, pr, seq_shuffled);
-  } else if (sctx->config().field() == spu::FM128) {
+  } else if (sctx->config().field() == spu::pb::FM128) {
     left_perm = BuildPerm<uint128_t>(sctx, pl, seq_shuffled);
     right_perm = BuildPerm<uint128_t>(sctx, pr, seq_shuffled);
   } else {

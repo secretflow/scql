@@ -37,7 +37,7 @@ class NdArrayConverter {
       : pool_(arrow::default_memory_pool()),
         arr_(arr),
         validity_(validity),
-        pt_type_(spu::PT_INVALID),
+        pt_type_(spu::pb::PT_INVALID),
         type_(nullptr),
         null_bitmap_(nullptr) {
     length_ = arr_.numel();
@@ -100,7 +100,7 @@ class NdArrayConverter {
           "NdArrayConverter doesn't support strided arrays");
     }
 
-    if (pt_type_ == spu::PT_I1) {
+    if (pt_type_ == spu::pb::PT_I1) {
       int64_t nbytes = arrow::bit_util::BytesForBits(length_);
       ARROW_ASSIGN_OR_RAISE(auto buffer, arrow::AllocateBuffer(nbytes, pool_));
 
@@ -153,7 +153,7 @@ class NdArrayConverter {
 
   const spu::NdArrayRef& arr_;
   const spu::NdArrayRef* validity_;
-  spu::PtType pt_type_;
+  spu::pb::PtType pt_type_;
 
   int64_t length_;
   std::shared_ptr<arrow::DataType> type_;
@@ -179,7 +179,7 @@ arrow::Status NdArrayConverter::Convert() {
 
   if (type_ == nullptr) {
     return arrow::Status::Invalid(
-        fmt::format("unsupported spu::PtType {}", spu::PtType_Name(pt_type_)));
+        fmt::format("unsupported spu::pb::PtType {}", spu::pb::PtType_Name(pt_type_)));
   }
 
   // Visit the type to perform conversion

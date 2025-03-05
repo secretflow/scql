@@ -53,7 +53,7 @@ void Concat::Execute(ExecContext* ctx) {
   spu::DataType output_type = spu::DataType::DT_INVALID;
   if (output_pb.elem_type() != pb::PrimitiveDataType::STRING) {
     output_type =
-        spu::getEncodeType(DataTypeToSpuPtType(output_pb.elem_type()));
+        spu::getEncodeType(spu::PtType(output_pb.elem_type()));
   }
 
   std::vector<spu::Value> values;

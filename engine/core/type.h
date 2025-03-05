@@ -17,7 +17,7 @@
 #include "arrow/type.h"
 
 #include "api/core.pb.h"
-#include "libspu/spu.pb.h"
+#include "libspu/spu.h"
 namespace scql::engine {
 
 enum class Visibility {
@@ -37,16 +37,16 @@ pb::PrimitiveDataType FromArrowDataType(
 std::shared_ptr<arrow::DataType> ToArrowDataType(pb::PrimitiveDataType dtype);
 
 /// @brief convert arrow data type to spu plaintext type enum
-/// @returns spu::PT_INVALID if @param[in] dtype is not supported
-spu::PtType ArrowDataTypeToSpuPtType(
+/// @returns spu::pb::PT_INVALID if @param[in] dtype is not supported
+spu::pb::PtType Arrowspu::PtType(
     const std::shared_ptr<arrow::DataType>& dtype);
 
 /// @brief convert spu plaintext type enum to arrow data type
 /// @returns nullptr if @param[in] pt_type is not supported
-std::shared_ptr<arrow::DataType> SpuPtTypeToArrowDataType(spu::PtType pt_type);
+std::shared_ptr<arrow::DataType> SpuPtTypeToArrowDataType(spu::pb::PtType pt_type);
 
 /// @brief convert scql primitive data type to spu plaintext type enum
-/// @returns spu::PT_INVALID if @param[in] dtype is not supported
-spu::PtType DataTypeToSpuPtType(pb::PrimitiveDataType dtype);
+/// @returns spu::pb::PT_INVALID if @param[in] dtype is not supported
+spu::pb::PtType spu::PtType(pb::PrimitiveDataType dtype);
 
 }  // namespace scql::engine

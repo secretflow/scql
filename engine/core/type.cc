@@ -101,83 +101,83 @@ std::shared_ptr<arrow::DataType> ToArrowDataType(pb::PrimitiveDataType dtype) {
   return dt;
 }
 
-spu::PtType ArrowDataTypeToSpuPtType(
+spu::pb::PtType Arrowspu::PtType(
     const std::shared_ptr<arrow::DataType>& dtype) {
-  spu::PtType pt;
+  spu::pb::PtType pt;
   switch (dtype->id()) {
     case arrow::Type::BOOL:
-      pt = spu::PT_I1;
+      pt = spu::pb::PT_I1;
       break;
     case arrow::Type::UINT8:
-      pt = spu::PT_U8;
+      pt = spu::pb::PT_U8;
       break;
     case arrow::Type::INT8:
-      pt = spu::PT_I8;
+      pt = spu::pb::PT_I8;
       break;
     case arrow::Type::UINT16:
-      pt = spu::PT_U16;
+      pt = spu::pb::PT_U16;
       break;
     case arrow::Type::INT16:
-      pt = spu::PT_I16;
+      pt = spu::pb::PT_I16;
       break;
     case arrow::Type::UINT32:
-      pt = spu::PT_U32;
+      pt = spu::pb::PT_U32;
       break;
     case arrow::Type::INT32:
-      pt = spu::PT_I32;
+      pt = spu::pb::PT_I32;
       break;
     case arrow::Type::UINT64:
-      pt = spu::PT_U64;
+      pt = spu::pb::PT_U64;
       break;
     case arrow::Type::INT64:
-      pt = spu::PT_I64;
+      pt = spu::pb::PT_I64;
       break;
     case arrow::Type::FLOAT:
-      pt = spu::PT_F32;
+      pt = spu::pb::PT_F32;
       break;
     case arrow::Type::DOUBLE:
-      pt = spu::PT_F64;
+      pt = spu::pb::PT_F64;
       break;
     default:
-      pt = spu::PT_INVALID;
+      pt = spu::pb::PT_INVALID;
   }
   return pt;
 }
 
-std::shared_ptr<arrow::DataType> SpuPtTypeToArrowDataType(spu::PtType pt_type) {
+std::shared_ptr<arrow::DataType> SpuPtTypeToArrowDataType(spu::pb::PtType pt_type) {
   std::shared_ptr<arrow::DataType> dt;
   switch (pt_type) {
-    case spu::PT_I8:
+    case spu::pb::PT_I8:
       dt = arrow::int8();
       break;
-    case spu::PT_U8:
+    case spu::pb::PT_U8:
       dt = arrow::uint8();
       break;
-    case spu::PT_I16:
+    case spu::pb::PT_I16:
       dt = arrow::int16();
       break;
-    case spu::PT_U16:
+    case spu::pb::PT_U16:
       dt = arrow::uint16();
       break;
-    case spu::PT_I32:
+    case spu::pb::PT_I32:
       dt = arrow::int32();
       break;
-    case spu::PT_U32:
+    case spu::pb::PT_U32:
       dt = arrow::uint32();
       break;
-    case spu::PT_I64:
+    case spu::pb::PT_I64:
       dt = arrow::int64();
       break;
-    case spu::PT_U64:
+    case spu::pb::PT_U64:
       dt = arrow::uint64();
       break;
-    case spu::PT_F32:
+    case spu::pb::PT_F32:
       dt = arrow::float32();
       break;
-    case spu::PT_F64:
+    case spu::pb::PT_F64:
       dt = arrow::float64();
       break;
-    case spu::PT_I1:
+    case spu::pb::PT_I1:
       dt = arrow::boolean();
       break;
     default:
@@ -186,34 +186,34 @@ std::shared_ptr<arrow::DataType> SpuPtTypeToArrowDataType(spu::PtType pt_type) {
   return dt;
 }
 
-spu::PtType DataTypeToSpuPtType(pb::PrimitiveDataType dtype) {
-  spu::PtType pt;
+spu::pb::PtType spu::PtType(pb::PrimitiveDataType dtype) {
+  spu::pb::PtType pt;
   switch (dtype) {
     case pb::PrimitiveDataType::INT8:
-      pt = spu::PT_I8;
+      pt = spu::pb::PT_I8;
       break;
     case pb::PrimitiveDataType::INT16:
-      pt = spu::PT_I16;
+      pt = spu::pb::PT_I16;
       break;
     case pb::PrimitiveDataType::INT32:
-      pt = spu::PT_I32;
+      pt = spu::pb::PT_I32;
       break;
     case pb::PrimitiveDataType::INT64:
     case pb::PrimitiveDataType::DATETIME:
     case pb::PrimitiveDataType::TIMESTAMP:
-      pt = spu::PT_I64;
+      pt = spu::pb::PT_I64;
       break;
     case pb::PrimitiveDataType::BOOL:
-      pt = spu::PT_I1;
+      pt = spu::pb::PT_I1;
       break;
     case pb::PrimitiveDataType::FLOAT32:
-      pt = spu::PT_F32;
+      pt = spu::pb::PT_F32;
       break;
     case pb::PrimitiveDataType::FLOAT64:
-      pt = spu::PT_F64;
+      pt = spu::pb::PT_F64;
       break;
     default:
-      pt = spu::PT_INVALID;
+      pt = spu::pb::PT_INVALID;
   }
   return pt;
 }

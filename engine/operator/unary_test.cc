@@ -284,7 +284,7 @@ TEST_P(UnaryTest, WorksCorrectly) {
     if (tc.op == Exp::kOpType) {
       // The exp operation tends to be less accurate, particularly when using
       // the CHEETAH protocol.
-      if (spu_tc.protocol == spu::ProtocolKind::CHEETAH) {
+      if (spu_tc.protocol == spu::pb::ProtocolKind::CHEETAH) {
         tolerance = 0.05;
       } else {
         tolerance = 0.005;

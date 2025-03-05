@@ -71,8 +71,8 @@ class EngineServiceImplTest : public ::testing::Test {
     EXPECT_NE(nullptr, factory.get());
     engine_service_options.enable_authorization = true;
     engine_service_options.credential = "alice_credential";
-    std::vector<spu::ProtocolKind> allowed_protocols = {
-        spu::ProtocolKind::SEMI2K};
+    std::vector<spu::pb::ProtocolKind> allowed_protocols = {
+        spu::pb::ProtocolKind::SEMI2K};
     impl = std::make_unique<EngineServiceImpl>(
         engine_service_options,
         std::make_unique<SessionManager>(session_options, &listener_manager,
@@ -92,7 +92,7 @@ class EngineServiceImplTest : public ::testing::Test {
           "Credential", fmt::format("{}_credential", op::test::kPartyAlice));
 
       global_params.mutable_spu_runtime_cfg()->CopyFrom(
-          op::test::MakeSpuRuntimeConfigForTest(spu::ProtocolKind::SEMI2K));
+          op::test::MakeSpuRuntimeConfigForTest(spu::pb::ProtocolKind::SEMI2K));
     }
   }
 
@@ -162,7 +162,7 @@ TEST_F(EngineServiceImplTest, QueryJobStatus) {
     alice->CopyFrom(op::test::BuildParty(op::test::kPartyAlice, 0));
 
     params.mutable_spu_runtime_cfg()->CopyFrom(
-        op::test::MakeSpuRuntimeConfigForTest(spu::ProtocolKind::SEMI2K));
+        op::test::MakeSpuRuntimeConfigForTest(spu::pb::ProtocolKind::SEMI2K));
   }
 
   // When
@@ -340,8 +340,8 @@ class EngineServiceImpl2PartiesTest
       service_options.enable_authorization = true;
       service_options.credential = "alice_credential";
       SessionOptions session_options;
-      std::vector<spu::ProtocolKind> allowed_protocols = {
-          spu::ProtocolKind::SEMI2K};
+      std::vector<spu::pb::ProtocolKind> allowed_protocols = {
+          spu::pb::ProtocolKind::SEMI2K};
       auto impl = std::make_unique<EngineServiceImpl>(
           service_options,
           std::make_unique<SessionManager>(
@@ -621,7 +621,7 @@ void EngineServiceImpl2PartiesTest::AddSessionParameters(
   }
 
   params->mutable_spu_runtime_cfg()->CopyFrom(
-      op::test::MakeSpuRuntimeConfigForTest(spu::ProtocolKind::SEMI2K));
+      op::test::MakeSpuRuntimeConfigForTest(spu::pb::ProtocolKind::SEMI2K));
 }
 
 void EngineServiceImpl2PartiesTest::AddRunSQLNode(

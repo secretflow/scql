@@ -73,7 +73,7 @@ void Cast::Execute(ExecContext* ctx) {
                "string in spu is hash, not support cast");
   auto* symbols = ctx->GetSession()->GetDeviceSymbols();
   auto* sctx = ctx->GetSession()->GetSpuContext();
-  auto to_type = spu::getEncodeType(DataTypeToSpuPtType(output_pb.elem_type()));
+  auto to_type = spu::getEncodeType(spu::PtType(output_pb.elem_type()));
 
   auto value =
       symbols->getVar(util::SpuVarNameEncoder::GetValueName(input_pb.name()));

@@ -69,7 +69,7 @@ INSTANTIATE_TEST_SUITE_P(
     JoinBatchTest, JoinTest,
     testing::Combine(
         // any protocol is ok
-        testing::Values(test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 2}),
+        testing::Values(test::SpuRuntimeTestCase{spu::pb::ProtocolKind::SEMI2K, 2}),
         // TODO: clean duplicated tests
         testing::Values(
             // ECDH PSI

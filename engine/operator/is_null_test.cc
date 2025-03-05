@@ -36,7 +36,7 @@ class IsNullTest : public testing::TestWithParam<
 INSTANTIATE_TEST_SUITE_P(
     IsNullBatchTest, IsNullTest,
     testing::Combine(
-        testing::Values(test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 2}),
+        testing::Values(test::SpuRuntimeTestCase{spu::pb::ProtocolKind::SEMI2K, 2}),
         testing::Values(
             // test private status
             IsNullTestCase{

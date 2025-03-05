@@ -119,10 +119,10 @@ pb::ExecNode ObliviousGroupAggTest::MakeExecNode(
 INSTANTIATE_TEST_SUITE_P(
     ObliviousGroupSumTest, ObliviousGroupAggTest,
     testing::Combine(
-        testing::Values(test::SpuRuntimeTestCase{spu::ProtocolKind::CHEETAH, 2},
-                        test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 2},
-                        test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 3},
-                        test::SpuRuntimeTestCase{spu::ProtocolKind::ABY3, 3}),
+        testing::Values(test::SpuRuntimeTestCase{spu::pb::ProtocolKind::CHEETAH, 2},
+                        test::SpuRuntimeTestCase{spu::pb::ProtocolKind::SEMI2K, 2},
+                        test::SpuRuntimeTestCase{spu::pb::ProtocolKind::SEMI2K, 3},
+                        test::SpuRuntimeTestCase{spu::pb::ProtocolKind::ABY3, 3}),
         testing::Values(
             ObliviousGroupAggTestCase{
                 .op_type = ObliviousGroupSum::kOpType,

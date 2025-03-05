@@ -42,7 +42,7 @@ class ArrowFuncTest
 INSTANTIATE_TEST_SUITE_P(
     ArrowFuncBatchTest, ArrowFuncTest,
     testing::Combine(
-        testing::Values(test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 2}),
+        testing::Values(test::SpuRuntimeTestCase{spu::pb::ProtocolKind::SEMI2K, 2}),
         testing::Values(
             ArrowFuncTestCase{
                 .ins = {test::NamedTensor(

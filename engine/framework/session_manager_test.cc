@@ -49,8 +49,8 @@ class SessionManagerTest : public ::testing::Test {
     factory = std::make_unique<TestFactory>(&listener_manager);
     EXPECT_NE(nullptr, factory.get());
     SessionOptions options;
-    std::vector<spu::ProtocolKind> allowed_spu_protocols = {
-        spu::ProtocolKind::SEMI2K, spu::ProtocolKind::CHEETAH};
+    std::vector<spu::pb::ProtocolKind> allowed_spu_protocols = {
+        spu::pb::ProtocolKind::SEMI2K, spu::pb::ProtocolKind::CHEETAH};
     mgr = std::make_unique<SessionManager>(options, &listener_manager,
                                            std::move(factory), nullptr, nullptr,
                                            1, allowed_spu_protocols);
@@ -75,7 +75,7 @@ TEST_F(SessionManagerTest, Works) {
     alice->CopyFrom(op::test::BuildParty(op::test::kPartyAlice, 0));
 
     params.mutable_spu_runtime_cfg()->CopyFrom(
-        op::test::MakeSpuRuntimeConfigForTest(spu::ProtocolKind::SEMI2K));
+        op::test::MakeSpuRuntimeConfigForTest(spu::pb::ProtocolKind::SEMI2K));
   }
   pb::DebugOptions debug_opts;
   // When
@@ -121,14 +121,14 @@ TEST_F(SessionManagerTest, TestSessionCreation) {
   SessionOptions options;
 
   common_params.mutable_spu_runtime_cfg()->CopyFrom(
-      op::test::MakeSpuRuntimeConfigForTest(spu::ProtocolKind::REF2K));
+      op::test::MakeSpuRuntimeConfigForTest(spu::pb::ProtocolKind::REF2K));
   auto create_session = [&](const pb::JobStartParams& params) {
     pb::DebugOptions debug_opts;
 
     // not allowed to create session with REF2K.
-    std::vector<spu::ProtocolKind> allowed_protocols{spu::ProtocolKind::CHEETAH,
-                                                     spu::ProtocolKind::SEMI2K,
-                                                     spu::ProtocolKind::ABY3};
+    std::vector<spu::pb::ProtocolKind> allowed_protocols{spu::pb::ProtocolKind::CHEETAH,
+                                                     spu::pb::ProtocolKind::SEMI2K,
+                                                     spu::pb::ProtocolKind::ABY3};
     EXPECT_THROW(std::make_shared<Session>(options, params, debug_opts,
                                            &g_mem_link_factory, nullptr,
                                            nullptr, allowed_protocols),

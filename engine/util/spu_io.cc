@@ -151,8 +151,8 @@ std::string SpuVarNameEncoder::GetValidityName(const std::string& name) {
 
 SpuInfeedHelper::PtView SpuInfeedHelper::ConvertArrowArrayToPtView(
     const std::shared_ptr<arrow::Array>& array) {
-  spu::PtType pt = ArrowDataTypeToSpuPtType(array->type());
-  YACL_ENFORCE(pt != spu::PT_INVALID, "unsupported arrow data type: {}",
+  spu::pb::PtType pt = Arrowspu::PtType(array->type());
+  YACL_ENFORCE(pt != spu::pb::PT_INVALID, "unsupported arrow data type: {}",
                array->type()->ToString());
 
   SpuPtBufferViewConverter converter;
@@ -168,7 +168,7 @@ SpuInfeedHelper::PtView SpuInfeedHelper::ConvertArrowArrayToPtView(
   const uint8_t* null_bitmap = array->null_bitmap_data();
 
   auto validity = spu::PtBufferView(static_cast<void const*>(null_bitmap),
-                                    spu::PT_I1, {array->length()}, {1}, true);
+                                    spu::pb::PT_I1, {array->length()}, {1}, true);
   return PtView(value, validity);
 #endif  // SCQL_WITH_NULL
 

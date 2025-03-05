@@ -29,7 +29,7 @@
 #define TestParamNameGenerator(TestCaseClass)                               \
   [](const testing::TestParamInfo<TestCaseClass::ParamType>& info) {        \
     return std::to_string(info.index) +                                     \
-           spu::ProtocolKind_Name(std::get<0>(info.param).protocol) + "p" + \
+           spu::pb::ProtocolKind_Name(std::get<0>(info.param).protocol) + "p" + \
            std::to_string(std::get<0>(info.param).party_size) +             \
            (std::get<0>(info.param).enable_colocated_optimization ? "opt"   \
                                                                   : "");    \
@@ -44,40 +44,40 @@ constexpr char kPartyBob[] = "bob";
 constexpr char kPartyCarol[] = "carol";
 constexpr const char* kPartyCodes[] = {"alice", "bob", "carol"};
 
-spu::RuntimeConfig GetSpuRuntimeConfigForTest();
+spu::pb::RuntimeConfig GetSpuRuntimeConfigForTest();
 
 struct SpuRuntimeTestCase {
-  spu::ProtocolKind protocol;
+  spu::pb::ProtocolKind protocol;
   size_t party_size;
   bool enable_colocated_optimization;
 };
 
 static const auto SpuTestValues2PC = testing::Values(
-    test::SpuRuntimeTestCase{spu::ProtocolKind::CHEETAH, 2, true},
-    test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 2, true},
-    test::SpuRuntimeTestCase{spu::ProtocolKind::CHEETAH, 2, false},
-    test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 2, false});
+    test::SpuRuntimeTestCase{spu::pb::ProtocolKind::CHEETAH, 2, true},
+    test::SpuRuntimeTestCase{spu::pb::ProtocolKind::SEMI2K, 2, true},
+    test::SpuRuntimeTestCase{spu::pb::ProtocolKind::CHEETAH, 2, false},
+    test::SpuRuntimeTestCase{spu::pb::ProtocolKind::SEMI2K, 2, false});
 
 static const auto SpuTestValuesMultiPC = testing::Values(
-    test::SpuRuntimeTestCase{spu::ProtocolKind::CHEETAH, 2, true},
-    test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 2, true},
-    test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 3, true},
-    test::SpuRuntimeTestCase{spu::ProtocolKind::ABY3, 3, true},
-    test::SpuRuntimeTestCase{spu::ProtocolKind::CHEETAH, 2, false},
-    test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 2, false},
-    test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 3, false},
-    test::SpuRuntimeTestCase{spu::ProtocolKind::ABY3, 3, false});
+    test::SpuRuntimeTestCase{spu::pb::ProtocolKind::CHEETAH, 2, true},
+    test::SpuRuntimeTestCase{spu::pb::ProtocolKind::SEMI2K, 2, true},
+    test::SpuRuntimeTestCase{spu::pb::ProtocolKind::SEMI2K, 3, true},
+    test::SpuRuntimeTestCase{spu::pb::ProtocolKind::ABY3, 3, true},
+    test::SpuRuntimeTestCase{spu::pb::ProtocolKind::CHEETAH, 2, false},
+    test::SpuRuntimeTestCase{spu::pb::ProtocolKind::SEMI2K, 2, false},
+    test::SpuRuntimeTestCase{spu::pb::ProtocolKind::SEMI2K, 3, false},
+    test::SpuRuntimeTestCase{spu::pb::ProtocolKind::ABY3, 3, false});
 
 static const auto SpuTestValuesMultiPCDisableColocated = testing::Values(
-    test::SpuRuntimeTestCase{spu::ProtocolKind::CHEETAH, 2, false},
-    test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 2, false},
-    test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 3, false},
-    test::SpuRuntimeTestCase{spu::ProtocolKind::ABY3, 3, false});
+    test::SpuRuntimeTestCase{spu::pb::ProtocolKind::CHEETAH, 2, false},
+    test::SpuRuntimeTestCase{spu::pb::ProtocolKind::SEMI2K, 2, false},
+    test::SpuRuntimeTestCase{spu::pb::ProtocolKind::SEMI2K, 3, false},
+    test::SpuRuntimeTestCase{spu::pb::ProtocolKind::ABY3, 3, false});
 
 pb::JobStartParams::Party BuildParty(const std::string& code, int32_t rank);
 
-spu::RuntimeConfig MakeSpuRuntimeConfigForTest(
-    spu::ProtocolKind protocol_kind,
+spu::pb::RuntimeConfig MakeSpuRuntimeConfigForTest(
+    spu::pb::ProtocolKind protocol_kind,
     bool enable_colocated_optimization = false);
 
 // make single party session

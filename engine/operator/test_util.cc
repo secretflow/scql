@@ -49,12 +49,12 @@ pb::JobStartParams::Party BuildParty(const std::string& code, int32_t rank) {
   return party;
 }
 
-spu::RuntimeConfig MakeSpuRuntimeConfigForTest(
-    spu::ProtocolKind protocol_kind, bool enable_colocated_optimization) {
-  spu::RuntimeConfig config;
+spu::pb::RuntimeConfig MakeSpuRuntimeConfigForTest(
+    spu::pb::ProtocolKind protocol_kind, bool enable_colocated_optimization) {
+  spu::pb::RuntimeConfig config;
   config.set_protocol(protocol_kind);
-  config.set_field(spu::FieldType::FM64);
-  config.set_sigmoid_mode(spu::RuntimeConfig::SIGMOID_REAL);
+  config.set_field(spu::pb::FieldType::FM64);
+  config.set_sigmoid_mode(spu::pb::RuntimeConfig::SIGMOID_REAL);
   config.set_experimental_enable_colocated_optimization(
       enable_colocated_optimization);
 
@@ -69,16 +69,16 @@ std::shared_ptr<Session> Make1PCSession(Router* ds_router,
   params.set_job_id("1PC-session");
   params.set_time_zone("+08:00");
   params.mutable_spu_runtime_cfg()->CopyFrom(
-      MakeSpuRuntimeConfigForTest(spu::ProtocolKind::REF2K));
+      MakeSpuRuntimeConfigForTest(spu::pb::ProtocolKind::REF2K));
   SessionOptions options;
   auto* alice = params.add_parties();
   alice->CopyFrom(BuildParty(kPartyAlice, 0));
   pb::DebugOptions debug_opts;
   // When there is only one party involved, the protocol will not be validated,
   // so the related parameters are dummy.
-  std::vector<spu::ProtocolKind> allowed_protocols{spu::ProtocolKind::REF2K,
-                                                   spu::ProtocolKind::CHEETAH,
-                                                   spu::ProtocolKind::SEMI2K};
+  std::vector<spu::pb::ProtocolKind> allowed_protocols{spu::pb::ProtocolKind::REF2K,
+                                                   spu::pb::ProtocolKind::CHEETAH,
+                                                   spu::pb::ProtocolKind::SEMI2K};
   return std::make_shared<Session>(options, params, debug_opts,
                                    &g_mem_link_factory, ds_router, ds_mgr,
                                    allowed_protocols);
@@ -103,9 +103,9 @@ std::vector<std::shared_ptr<Session>> MakeMultiPCSession(
   options.psi_config.psi_curve_type = psi::CURVE_FOURQ;
   auto create_session = [&](const pb::JobStartParams& params) {
     pb::DebugOptions debug_opts;
-    std::vector<spu::ProtocolKind> allowed_protocols{spu::ProtocolKind::CHEETAH,
-                                                     spu::ProtocolKind::SEMI2K,
-                                                     spu::ProtocolKind::ABY3};
+    std::vector<spu::pb::ProtocolKind> allowed_protocols{spu::pb::ProtocolKind::CHEETAH,
+                                                     spu::pb::ProtocolKind::SEMI2K,
+                                                     spu::pb::ProtocolKind::ABY3};
     return std::make_shared<Session>(options, params, debug_opts,
                                      &g_mem_link_factory, nullptr, nullptr,
                                      allowed_protocols);

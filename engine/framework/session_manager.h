@@ -34,7 +34,7 @@ class SessionManager {
                  std::unique_ptr<Router> ds_router,
                  std::unique_ptr<DatasourceAdaptorMgr> ds_mgr,
                  int32_t session_timeout_s,
-                 const std::vector<spu::ProtocolKind>& allowed_spu_protocols);
+                 const std::vector<spu::pb::ProtocolKind>& allowed_spu_protocols);
 
   ~SessionManager();
 
@@ -80,7 +80,7 @@ class SessionManager {
   std::atomic<bool> to_stop_{false};
   std::unique_ptr<std::thread> watch_thread_;
   std::queue<std::string> session_timeout_queue_;
-  const std::vector<spu::ProtocolKind> allowed_spu_protocols_;
+  const std::vector<spu::pb::ProtocolKind> allowed_spu_protocols_;
 };
 
 }  // namespace scql::engine

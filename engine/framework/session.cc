@@ -63,7 +63,7 @@ bool Session::ValidateSPUContext() {
   YACL_ENFORCE(spu_ctx_ != nullptr,
                "SPU context is not initialized successfully.");
   return std::find(allowed_spu_protocols_.begin(), allowed_spu_protocols_.end(),
-                   spu_ctx_->config().protocol()) !=
+                   spu_ctx_->config().protocol) !=
          allowed_spu_protocols_.end();
 }
 
@@ -71,7 +71,7 @@ Session::Session(const SessionOptions& session_opt,
                  const pb::JobStartParams& params, pb::DebugOptions debug_opts,
                  yacl::link::ILinkFactory* link_factory, Router* router,
                  DatasourceAdaptorMgr* ds_mgr,
-                 const std::vector<spu::ProtocolKind>& allowed_spu_protocols)
+                 const std::vector<spu::pb::ProtocolKind>& allowed_spu_protocols)
     : id_(params.job_id()),
       session_opt_(session_opt),
       time_zone_(params.time_zone()),
@@ -112,10 +112,10 @@ Session::Session(const SessionOptions& session_opt,
             std::accumulate(
                 allowed_spu_protocols_.begin(), allowed_spu_protocols_.end(),
                 std::string{},
-                [](const std::string& acc, const spu::ProtocolKind& protocol) {
+                [](const std::string& acc, const spu::pb::ProtocolKind& protocol) {
                   return acc.empty()
-                             ? spu::ProtocolKind_Name(protocol)
-                             : acc + ", " + spu::ProtocolKind_Name(protocol);
+                             ? spu::pb::ProtocolKind_Name(protocol)
+                             : acc + ", " + spu::pb::ProtocolKind_Name(protocol);
                 })));
     spu::mpc::Factory::RegisterProtocol(spu_ctx_.get(), lctx_);
   }
