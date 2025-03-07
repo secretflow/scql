@@ -1411,17 +1411,14 @@ msgid "`ObliviousGroupSum`"
 msgstr "`ObliviousGroupSum`"
 
 #: ../../reference/operators.md:2219
-#, fuzzy
 msgid "`ObliviousPercentRank`"
-msgstr "``"
+msgstr "`ObliviousPercentRank`"
 
 #: ../../reference/operators.md:2253
-#, fuzzy
 msgid "`PercentRank`"
-msgstr "````"
+msgstr "`PercentRank`"
 
 #: ../../reference/operators.md:2255
-#, fuzzy
 msgid "Definition: return the percent rank in each partition"
 msgstr "定义：当前行占该分区的百分比"
 
@@ -1442,12 +1439,10 @@ msgid "`PartitionNum`(single, T): the partitioned num, e.g. [2]"
 msgstr "``PartitionNum`` （单列数组，类型为 T ）：总的分区数量， 例如： [2]"
 
 #: ../../reference/operators.md:2268
-#, fuzzy
 msgid "`Out`(single, T): percent rank output"
 msgstr "``Out`` （单列数组，类型为 T ）：所占位置的百分比 。"
 
 #: ../../reference/operators.md:2274 ../../reference/operators.md:2615
-#, fuzzy
 msgid ""
 "`reverse`: string array consits of \"0\" and \"1\", \"0\" means this "
 "input tensor sort by ascending, \"1\" means this tensor sort by "
@@ -1633,14 +1628,13 @@ msgstr "``In`` （单列数组，类型为 T） Round 的入参 。"
 
 #: ../../reference/operators.md:2594
 msgid "`RowNumber`"
-msgstr ""
+msgstr "`RowNumber`"
 
 #: ../../reference/operators.md:2596
 msgid "Definition: return the row number in each partition"
 msgstr "定义：返回每个分区的行号"
 
 #: ../../reference/operators.md:2609
-#, fuzzy
 msgid "`Out`(single, T): row number output"
 msgstr "``Out`` （单列数组，类型为 T ）：输出的行号，例如： [2,1,3,1,2,3]"
 
