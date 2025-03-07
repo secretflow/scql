@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 `Fixed` for any bug fixes.
 `Security` in case of vulnerabilities.
 
-## Staging
+## [0.9.3] - 2025-03-07
 
 ### Added
 - Support for datasource `Doris 2.1.7`.
