@@ -323,8 +323,8 @@ func (t *MetaTransaction) AddTable(table TableMeta) error {
 		return fmt.Errorf("failed to create table %+v, with affected rows num %d", table.Table, result.RowsAffected)
 	}
 	var columns []Column
-	for _, columnMeta := range table.Columns {
-		columns = append(columns, Column{ColumnIdentifier: ColumnIdentifier{ProjectID: table.Table.ProjectID, TableName: table.Table.TableName, ColumnName: columnMeta.ColumnName}, DType: columnMeta.DType})
+	for idx, columnMeta := range table.Columns {
+		columns = append(columns, Column{ColumnIdentifier: ColumnIdentifier{ProjectID: table.Table.ProjectID, TableName: table.Table.TableName, ColumnName: columnMeta.ColumnName}, DType: columnMeta.DType, Idx: int64(idx)})
 	}
 	result = t.db.Create(&columns)
 	if result.Error != nil {
@@ -368,6 +368,7 @@ type tableColumn struct {
 	Owner      string
 	ColumnName string
 	DType      string `gorm:"column:data_type"`
+	Idx        int64  `gorm:"column:idx"`
 }
 
 func (t *MetaTransaction) ListDedupTableOwners(projectID string, tableNames []string) ([]string, error) {
@@ -383,12 +384,12 @@ func (t *MetaTransaction) ListDedupTableOwners(projectID string, tableNames []st
 // return err if ANY table DOESN'T exist
 func (t *MetaTransaction) GetTableMetasByTableNames(projectID string, tableNames []string) (tableMetas []TableMeta, notFoundTables []string, err error) {
 	var tableColumns []tableColumn
-	// SELECT tables.table_name, tables.ref_table, tables.db_type, tables.owner, columns.column_name, columns.data_type FROM `tables` join columns on tables.project_id = columns.project_id and tables.table_name = columns.table_name where columns.project_id = ?
-	result := t.db.Model(&Table{}).Select("tables.table_name, tables.ref_table, tables.db_type, tables.owner, columns.column_name, columns.data_type").Joins("join columns on tables.project_id = columns.project_id and tables.table_name = columns.table_name").Where("columns.project_id = ?", projectID)
+	// SELECT tables.table_name, tables.ref_table, tables.db_type, tables.owner, columns.column_name, columns.data_type, columns.idx FROM `tables` join columns on tables.project_id = columns.project_id and tables.table_name = columns.table_name where columns.project_id = ? order by columns.idx;
+	result := t.db.Model(&Table{}).Select("tables.table_name, tables.ref_table, tables.db_type, tables.owner, columns.column_name, columns.data_type, columns.idx").Joins("join columns on tables.project_id = columns.project_id and tables.table_name = columns.table_name").Where("columns.project_id = ?", projectID)
 	if len(tableNames) != 0 {
 		result = result.Where("tables.table_name in ?", tableNames)
 	}
-	result = result.Scan(&tableColumns)
+	result = result.Order("columns.idx").Scan(&tableColumns)
 	if result.Error != nil {
 		return nil, nil, result.Error
 	}
