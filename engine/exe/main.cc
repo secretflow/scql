@@ -234,7 +234,7 @@ std::unique_ptr<scql::engine::EngineServiceImpl> BuildEngineService(
     std::string stripped_str(absl::StripAsciiWhitespace(protocol_str));
     spu::ProtocolKind protocol_kind;
 
-    YACL_ENFORCE(spu::ProtocolKind_Parse(stripped_str, &protocol_kind),
+    YACL_ENFORCE(spu::ParseProtocolKind(stripped_str, &protocol_kind),
                  fmt::format("invalid protocol provided: {}", stripped_str));
     allowed_protocols.push_back(protocol_kind);
   }

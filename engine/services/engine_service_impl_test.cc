@@ -92,7 +92,7 @@ class EngineServiceImplTest : public ::testing::Test {
           "Credential", fmt::format("{}_credential", op::test::kPartyAlice));
 
       global_params.mutable_spu_runtime_cfg()->CopyFrom(
-          op::test::MakeSpuRuntimeConfigForTest(spu::ProtocolKind::SEMI2K));
+          op::test::MakeSpuRuntimeConfigForTest(spu::ProtocolKind::SEMI2K).ToProto());
     }
   }
 
@@ -162,7 +162,7 @@ TEST_F(EngineServiceImplTest, QueryJobStatus) {
     alice->CopyFrom(op::test::BuildParty(op::test::kPartyAlice, 0));
 
     params.mutable_spu_runtime_cfg()->CopyFrom(
-        op::test::MakeSpuRuntimeConfigForTest(spu::ProtocolKind::SEMI2K));
+        op::test::MakeSpuRuntimeConfigForTest(spu::ProtocolKind::SEMI2K).ToProto());
   }
 
   // When
@@ -621,7 +621,7 @@ void EngineServiceImpl2PartiesTest::AddSessionParameters(
   }
 
   params->mutable_spu_runtime_cfg()->CopyFrom(
-      op::test::MakeSpuRuntimeConfigForTest(spu::ProtocolKind::SEMI2K));
+      op::test::MakeSpuRuntimeConfigForTest(spu::ProtocolKind::SEMI2K).ToProto());
 }
 
 void EngineServiceImpl2PartiesTest::AddRunSQLNode(

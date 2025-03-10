@@ -20,7 +20,14 @@ module(
 
 bazel_dep(name = "yacl", version = "0.4.5b10-nightly-20250110")
 bazel_dep(name = "psi", version = "0.6.0.dev250123")
-bazel_dep(name = "spulib", version = "0.9.4.dev20250227")
+bazel_dep(name = "spulib", version = "0.9.4.dev20250310")
+git_override(
+    module_name = "spulib",
+    commit = "f27ac079d8011752506131f8bb3a835d2a1cc611",
+    remote = "git@github.com:secretflow/spu.git",
+    strip_prefix = "src/",
+)
+
 bazel_dep(name = "heu", version = "0.6.0.dev20250123")
 bazel_dep(name = "dataproxy", version = "0.3.0b1")
 bazel_dep(name = "kuscia", version = "0.13.0b1")
@@ -54,6 +61,7 @@ single_version_override(
     module_name = "rules_foreign_cc",
     version = "0.12.0",
 )
+
 
 bazel_dep(name = "bazel_features", version = "1.20.0")
 bazel_dep(name = "platforms", version = "0.0.8")
