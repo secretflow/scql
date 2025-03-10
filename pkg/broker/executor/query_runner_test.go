@@ -282,14 +282,14 @@ func TestCaseSensitive(t *testing.T) {
 	// check alice
 	attrSQL, ok := compiledPlan.SubGraphs["alice"].Nodes["0"].Attributes["sql"].Value.(*scql.AttributeValue_T)
 	r.True(ok)
-	r.Equal("select T1.Data,T1.id from real.T1;", attrSQL.T.GetStringData()[0])
+	r.Equal("select T1.id,T1.Data from real.T1;", attrSQL.T.GetStringData()[0])
 	attrTable, ok := compiledPlan.SubGraphs["alice"].Nodes["0"].Attributes["table_refs"].Value.(*scql.AttributeValue_T)
 	r.True(ok)
 	r.Equal("real.T1", attrTable.T.GetStringData()[0])
 	// check bob
 	attrSQL, ok = compiledPlan.SubGraphs["bob"].Nodes["1"].Attributes["sql"].Value.(*scql.AttributeValue_T)
 	r.True(ok)
-	r.Equal("select t2.Data,t2.id from real.t2 as t2;", attrSQL.T.GetStringData()[0])
+	r.Equal("select t2.id,t2.Data from real.t2 as t2;", attrSQL.T.GetStringData()[0])
 	attrTable, ok = compiledPlan.SubGraphs["bob"].Nodes["1"].Attributes["table_refs"].Value.(*scql.AttributeValue_T)
 	r.True(ok)
 	r.Equal("real.t2", attrTable.T.GetStringData()[0])
@@ -333,14 +333,14 @@ func TestCaseSensitive(t *testing.T) {
 	// check alice
 	attrSQL, ok = compiledPlan.SubGraphs["alice"].Nodes["0"].Attributes["sql"].Value.(*scql.AttributeValue_T)
 	r.True(ok)
-	r.Equal("select t1.Data,t1.id from real.T1 as t1;", attrSQL.T.GetStringData()[0])
+	r.Equal("select t1.id,t1.Data from real.T1 as t1;", attrSQL.T.GetStringData()[0])
 	attrTable, ok = compiledPlan.SubGraphs["alice"].Nodes["0"].Attributes["table_refs"].Value.(*scql.AttributeValue_T)
 	r.True(ok)
 	r.Equal("real.T1", attrTable.T.GetStringData()[0])
 	// check bob
 	attrSQL, ok = compiledPlan.SubGraphs["bob"].Nodes["1"].Attributes["sql"].Value.(*scql.AttributeValue_T)
 	r.True(ok)
-	r.Equal("select t2.Data,t2.id from real.t2 as t2;", attrSQL.T.GetStringData()[0])
+	r.Equal("select t2.id,t2.Data from real.t2 as t2;", attrSQL.T.GetStringData()[0])
 	attrTable, ok = compiledPlan.SubGraphs["bob"].Nodes["1"].Attributes["table_refs"].Value.(*scql.AttributeValue_T)
 	r.True(ok)
 
@@ -384,14 +384,14 @@ func TestCaseSensitive(t *testing.T) {
 	// check alice
 	attrSQL, ok = compiledPlan.SubGraphs["alice"].Nodes["0"].Attributes["sql"].Value.(*scql.AttributeValue_T)
 	r.True(ok)
-	r.Equal("select t1.Data,t1.id from real.UpperT1 as t1;", attrSQL.T.GetStringData()[0])
+	r.Equal("select t1.id,t1.Data from real.UpperT1 as t1;", attrSQL.T.GetStringData()[0])
 	attrTable, ok = compiledPlan.SubGraphs["alice"].Nodes["0"].Attributes["table_refs"].Value.(*scql.AttributeValue_T)
 	r.True(ok)
 	r.Equal("real.UpperT1", attrTable.T.GetStringData()[0])
 	// check bob
 	attrSQL, ok = compiledPlan.SubGraphs["bob"].Nodes["1"].Attributes["sql"].Value.(*scql.AttributeValue_T)
 	r.True(ok)
-	r.Equal("select t2.Data,t2.id from real.t2 as t2;", attrSQL.T.GetStringData()[0])
+	r.Equal("select t2.id,t2.Data from real.t2 as t2;", attrSQL.T.GetStringData()[0])
 	attrTable, ok = compiledPlan.SubGraphs["bob"].Nodes["1"].Attributes["table_refs"].Value.(*scql.AttributeValue_T)
 	r.True(ok)
 
