@@ -553,7 +553,7 @@ message ShowCCLResponse {
 
 message ProjectConfig {
   // The spu runtime configuration.
-  spu.RuntimeConfig spu_runtime_cfg = 1;
+  spu.pb.RuntimeConfig spu_runtime_cfg = 1;
   int64 session_expire_seconds = 2;
   int64 unbalance_psi_ratio_threshold = 3;
   int64 unbalance_psi_larger_party_rows_count_threshold = 4;

@@ -17,7 +17,8 @@
 #include "arrow/type.h"
 
 #include "api/core.pb.h"
-#include "libspu/spu.pb.h"
+#include "libspu/spu.h"
+
 namespace scql::engine {
 
 enum class Visibility {

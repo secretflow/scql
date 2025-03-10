@@ -54,7 +54,7 @@ message CompiledPlan {
   // schema of query result
   TableSchema schema = 1;
   Warning warning = 2;
-  spu.RuntimeConfig spu_runtime_conf = 3;
+  spu.pb.RuntimeConfig spu_runtime_conf = 3;
   // participants in execution graph.
   // The position order matters, the parties[0]'s rank is 0.
   repeated PartyId parties = 4;
@@ -93,7 +93,7 @@ message OptimizerHints {
 }
 
 message CompileOptions {
-  spu.RuntimeConfig spu_conf = 1;
+  spu.pb.RuntimeConfig spu_conf = 1;
   SecurityCompromiseConfig security_compromise = 2;
   // dump execution graph in graphviz dot format
   bool dump_exe_graph = 3;
