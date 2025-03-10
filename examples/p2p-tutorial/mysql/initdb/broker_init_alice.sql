@@ -70,7 +70,7 @@ CREATE TABLE `columns` (
   `table_name` varchar(64) NOT NULL,
   `column_name` varchar(64) NOT NULL,
   `data_type` varchar(64) DEFAULT NULL COMMENT '''data type like float''',
-  `idx` bigint DEFAULT NULL COMMENT '''column idx in the table''',
+  `idx` int DEFAULT 0 COMMENT '''column idx in the table''',
   `created_at` timestamp(6) DEFAULT NULL,
   `updated_at` timestamp(6) DEFAULT NULL,
   PRIMARY KEY (`project_id`,`table_name`,`column_name`)
