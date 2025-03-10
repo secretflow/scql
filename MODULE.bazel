@@ -23,7 +23,7 @@ bazel_dep(name = "psi", version = "0.6.0.dev250123")
 bazel_dep(name = "spulib", version = "0.9.4.dev20250310")
 git_override(
     module_name = "spulib",
-    commit = "f27ac079d8011752506131f8bb3a835d2a1cc611",
+    commit = "d4ba2f20a63ac48c8f3daf6a525d0cdde49b5465",
     remote = "git@github.com:secretflow/spu.git",
     strip_prefix = "src/",
 )
