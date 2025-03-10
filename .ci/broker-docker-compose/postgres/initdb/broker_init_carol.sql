@@ -46,7 +46,7 @@ CREATE TABLE columns (
   table_name VARCHAR(64) NOT NULL,
   column_name VARCHAR(64) NOT NULL,
   data_type VARCHAR(64),
-  idx INT,
+  original_position INT DEFAULT 0,
   created_at timestamp(6) DEFAULT NULL,
   updated_at timestamp(6) DEFAULT NULL,
   PRIMARY KEY (project_id, table_name, column_name)
