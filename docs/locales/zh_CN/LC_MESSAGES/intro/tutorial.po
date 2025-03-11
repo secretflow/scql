@@ -113,7 +113,16 @@ msgid ""
 "queries to it via scdbclient."
 msgstr "SCDBServer 监听 ``http://localhost:8080`` ，你可以通过 scdbclient 向它发送查询。"
 
-#: ../../intro/tutorial.rst:84
+#: ../../intro/p2p-tutorial.rst:84
+msgid ""
+"If your MySQL fails to start,"
+"please check whether the directory examples/p2p-tutorial/mysql/initdb has appropriate permissions."
+"If not, you can set the permissions using a command like: chmod -R 755 ./mysql/initdb."
+msgstr ""
+"如果你的mysql无法启动，请检查examples/p2p-tutorial/mysql/initdb目录是否有相应的权限，"
+"如果没有，可以配置一下权限，例如chmod -R 755 ./mysql/initdb。"
+
+#: ../../intro/tutorial.rst:85
 msgid ""
 "Please checkout `examples/scdb-tutorial/README.md "
 "<https://github.com/secretflow/scql/tree/main/examples/scdb-"
