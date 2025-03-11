@@ -81,7 +81,8 @@ You could start SCQL service via `docker-compose <https://github.com/secretflow/
 SCQLBroker for alice is listening on ``http://localhost:8081`` while bob is on ``http://localhost:8082`` you could send requests to them via brokerctl.
 
 .. note::
-    Please checkout `examples/p2p-tutorial/README.md <https://github.com/secretflow/scql/tree/main/examples/p2p-tutorial/README.md>`_ troubleshooting section for help if you encounter any problems.
+    1. If your MySQL fails to start, please check whether the directory examples/p2p-tutorial/mysql/initdb has appropriate permissions. If not, you can set the permissions using a command like: chmod -R 755 ./mysql/initdb.
+    2. Please checkout `examples/p2p-tutorial/README.md <https://github.com/secretflow/scql/tree/main/examples/p2p-tutorial/README.md>`_ troubleshooting section for help if you encounter any problems.
 
 
 
@@ -241,4 +242,7 @@ Do query
     |           5 |   6 | 18069.77597427368 | 7743.392951965332 |
     |           6 |   4 | 336016.8590965271 | 5499.404067993164 |
     +-------------+-----+-------------------+-------------------+
+
+.. note::
+    If the request times out, you can adjust the timeout parameter appropriately (e.g., 30).
 
