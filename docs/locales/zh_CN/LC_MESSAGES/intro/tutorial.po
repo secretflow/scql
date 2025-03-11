@@ -113,7 +113,7 @@ msgid ""
 "queries to it via scdbclient."
 msgstr "SCDBServer 监听 ``http://localhost:8080`` ，你可以通过 scdbclient 向它发送查询。"
 
-#: ../../intro/p2p-tutorial.rst:84
+#: ../../intro/tutorial.rst:84
 msgid ""
 "If your MySQL fails to start,"
 "please check whether the directory examples/p2p-tutorial/mysql/initdb has appropriate permissions."
