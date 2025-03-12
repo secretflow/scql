@@ -242,7 +242,7 @@ Do query
     |           5 |   6 | 18069.77597427368 | 7743.392951965332 |
     |           6 |   4 | 336016.8590965271 | 5499.404067993164 |
     +-------------+-----+-------------------+-------------------+
-
+.. Possible timeout-related issues and troubleshooting approaches.
 .. note::
     If the request times out, you can adjust the timeout parameter appropriately (e.g., 30).
 
