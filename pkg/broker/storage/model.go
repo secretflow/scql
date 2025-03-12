@@ -100,6 +100,7 @@ type ColumnIdentifier struct {
 type Column struct {
 	ColumnIdentifier
 	DType     string `gorm:"column:data_type;type:varchar(64);comment:'data type like float'"`
+	Position  int    `gorm:"column:original_position;default:0;comment:'column origin position in the table'"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
