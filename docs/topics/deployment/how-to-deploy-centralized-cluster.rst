@@ -160,21 +160,21 @@ The file your workspace should be as follows:
     └── gflags.conf
 
 Then you can start engine service by running docker compose up
-
+.. The default configuration during verification is -
 .. code-block:: bash
 
   # If you install docker with Compose V1, please use `docker-compose` instead of `docker compose`
   $ docker compose -f docker-compose.yaml up -d
 
   Creating network "engine_default" with the default driver
-  Creating engine_engine_1 ... done
-  Creating engine_mysql_1  ... done
+  Creating engine-engine-1 ... done
+  Creating engine-mysql-1  ... done
 
 You can use docker logs to check whether engine works well
-
+.. The default configuration during verification is -
 .. code-block:: bash
 
-  $ docker logs -f engine_engine_1
+  $ docker logs -f engine-engine-1
 
   [info] [main.cc:main:297] Started engine rpc server success, listen on: 0.0.0.0:8080
 
@@ -297,20 +297,20 @@ The file your workspace should be as follows:
     └── docker-compose.yaml
 
 Then you can start engine service by running docker compose up
-
+.. The default configuration during verification is -
 .. code-block:: bash
 
   # If you install docker with Compose V1, please use `docker-compose` instead of `docker compose`
   $ docker compose -f docker-compose.yaml up -d
 
-  Creating scdb_mysql_1 ... done
-  Creating scdb_scdb_1  ... done
+  Creating scdb-mysql-1 ... done
+  Creating scdb-scdb-1  ... done
 
 You can use docker logs to check whether engine works well
-
+.. The default configuration during verification is -
 .. code-block:: bash
 
-  $ docker logs -f scdb_scdb_1
+  $ docker logs -f scdb-scdb-1
 
   INFO main.go:122 Starting to serve request with http...
 
