@@ -19,7 +19,6 @@ import (
 
 	"time"
 
-	"github.com/go-sql-driver/mysql"
 	"github.com/sirupsen/logrus"
 )
 
@@ -169,9 +168,7 @@ func (txn *MetaTransaction) SetSessionResult(sr SessionResult) (err error) {
 	result = txn.db.Create(&sr)
 	err = result.Error
 	if err != nil {
-		if _, ok := err.(*mysql.MySQLError); ok {
-			err = fmt.Errorf("result err: %s, maybe caused by result size(%d) is too long", err.Error(), len(sr.Result))
-		}
+		err = fmt.Errorf("%s, maybe caused by result size(%d) is too long", err.Error(), len(sr.Result))
 	}
 	return
 }
