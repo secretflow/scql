@@ -119,7 +119,7 @@ msgid ""
 "please check whether the directory examples/p2p-tutorial/mysql/initdb has appropriate permissions."
 "If not, you can set the permissions using a command like: chmod -R 755 ./mysql/initdb."
 msgstr ""
-"如果你的mysql无法启动，请检查examples/p2p-tutorial/mysql/initdb目录是否有相应的权限，"
+"如果你的mysql无法启动，请检查examples/scdb-tutorial/mysql/initdb目录是否有相应的权限，"
 "如果没有，可以配置一下权限，例如chmod -R 755 ./mysql/initdb。"
 
 #: ../../intro/tutorial.rst:85
