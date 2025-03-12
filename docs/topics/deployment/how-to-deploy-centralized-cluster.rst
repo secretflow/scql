@@ -171,7 +171,7 @@ Then you can start engine service by running docker compose up
   Creating engine-mysql-1  ... done
 
 You can use docker logs to check whether engine works well
-.. The default configuration during verification is -
+
 .. code-block:: bash
 
   $ docker logs -f engine-engine-1
