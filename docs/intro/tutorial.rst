@@ -81,7 +81,8 @@ You could start SCQL service via `docker-compose <https://github.com/secretflow/
 SCDBServer is listening on ``http://localhost:8080``, you could send queries to it via scdbclient.
 
 .. note::
-    Please checkout `examples/scdb-tutorial/README.md <https://github.com/secretflow/scql/tree/main/examples/scdb-tutorial/README.md>`_ troubleshooting section for help if you encounter any problems.
+    1.If your MySQL fails to start, please check whether the directory examples/p2p-tutorial/mysql/initdb has appropriate permissions. If not, you can set the permissions using a command like: chmod -R 755 ./mysql/initdb.
+    2.Please checkout `examples/scdb-tutorial/README.md <https://github.com/secretflow/scql/tree/main/examples/scdb-tutorial/README.md>`_ troubleshooting section for help if you encounter any problems.
 
 
 
