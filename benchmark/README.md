@@ -23,6 +23,11 @@ Look at json files in 'benchmark/testdata' and put your table schema into json f
 - random. same as random_pool but choose rand value in a default pool
 - increment. same as the auto-increment in MySQL
 
+## Install Requirements
+```python
+pip install -r requirements.txt
+```
+
 ## Run Benchmark
 
 put your query into 'benchmark/testdata/query.json' and run the script:

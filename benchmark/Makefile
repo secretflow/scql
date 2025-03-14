@@ -14,6 +14,7 @@ start-docker:
 
 clean:
 	@(docker compose -p ${DOCKER_PROJ_NAME} down)
+	@rm -rf logs
 
 mock-data:
 	python $(PWD)/scripts/mock_data.py -dd=$(PWD)/docker-compose/csv -s=$(PWD)/testdata/db.json
