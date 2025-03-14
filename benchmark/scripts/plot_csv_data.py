@@ -48,6 +48,7 @@ def plot_cpu(op_csv_path, docker_csv_path, output_path):
     plt.xticks(rotation=45)
 
     plt.savefig(output_path)
+    print(f"save to {output_path}")
     plt.show()
 
 
@@ -77,6 +78,7 @@ def plot_mem(op_csv_path, docker_csv_path, output_path):
     plt.xticks(rotation=45)
 
     plt.savefig(output_path)
+    print(f"save to {output_path}")
     plt.show()
 
 
@@ -109,6 +111,7 @@ def plot_net(op_csv_path, docker_csv_path, output_path):
     plt.grid(True)
     plt.xticks(rotation=45)
     plt.savefig(output_path)
+    print(f"save to {output_path}")
     plt.show()
 
 
@@ -124,3 +127,5 @@ if __name__ == "__main__":
             plot_cpu(op_path, docker_path, os.path.join(write_dir, "cpu.png"))
             plot_mem(op_path, docker_path, os.path.join(write_dir, "mem.png"))
             plot_net(op_path, docker_path, os.path.join(write_dir, "net.png"))
+        else:
+            print(f"op or docker csv not found in {subdir_path}")
