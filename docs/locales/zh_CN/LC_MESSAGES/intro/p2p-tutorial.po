@@ -144,6 +144,15 @@ msgstr ""
 
 #: ../../intro/p2p-tutorial.rst:84
 msgid ""
+"If your MySQL fails to start,"
+"please check whether the directory examples/p2p-tutorial/mysql/initdb has appropriate permissions."
+"If not, you can set the permissions using a command like: chmod -R 755 ./mysql/initdb."
+msgstr ""
+"如果你的mysql无法启动，请检查examples/p2p-tutorial/mysql/initdb目录是否有相应的权限，"
+"如果没有，可以配置一下权限，例如chmod -R 755 ./mysql/initdb。"
+
+#: ../../intro/p2p-tutorial.rst:85
+msgid ""
 "Please checkout `examples/p2p-tutorial/README.md "
 "<https://github.com/secretflow/scql/tree/main/examples/p2p-"
 "tutorial/README.md>`_ troubleshooting section for help if you encounter "
@@ -168,3 +177,7 @@ msgstr "授权 CCL"
 #: ../../intro/p2p-tutorial.rst:230
 msgid "Do query"
 msgstr "查询"
+
+#: ../../intro/p2p-tutorial.rst:247
+msgid "If the request times out, you can adjust the timeout parameter appropriately (e.g., 30)."
+msgstr "如果结果返回超时，可以适当调整timeout的参数,例如：30"
