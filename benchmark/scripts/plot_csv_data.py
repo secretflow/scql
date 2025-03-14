@@ -127,5 +127,3 @@ if __name__ == "__main__":
             plot_cpu(op_path, docker_path, os.path.join(write_dir, "cpu.png"))
             plot_mem(op_path, docker_path, os.path.join(write_dir, "mem.png"))
             plot_net(op_path, docker_path, os.path.join(write_dir, "net.png"))
-        else:
-            print(f"op or docker csv not found in {subdir_path}")
