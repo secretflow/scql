@@ -530,9 +530,6 @@ func (plan *GraphBuilder) AddJoinNode(name string, left []*Tensor, right []*Tens
 }
 
 func (plan *GraphBuilder) AddSecretJoinNode(name string, leftKeys, rightKeys, leftPayloads, rightPayloads []*Tensor, partyCodes []string) ([]*Tensor, []*Tensor, error) {
-	partyAttr := &Attribute{}
-	partyAttr.SetStrings(partyCodes)
-
 	inputs := make(map[string][]*Tensor)
 	inputs["LeftKey"] = leftKeys
 	inputs["RightKey"] = rightKeys
@@ -551,7 +548,7 @@ func (plan *GraphBuilder) AddSecretJoinNode(name string, leftKeys, rightKeys, le
 	outputs["LeftOutput"] = leftOutput
 	outputs["RightOutput"] = rightOutput
 	if _, err := plan.AddExecutionNode(name, operator.OpNameSecretJoin, inputs, outputs,
-		map[string]*Attribute{operator.InputPartyCodesAttr: partyAttr}, partyCodes); err != nil {
+		map[string]*Attribute{}, partyCodes); err != nil {
 		return nil, nil, err
 	}
 	return leftOutput, rightOutput, nil
