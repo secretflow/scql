@@ -166,7 +166,10 @@ func (txn *MetaTransaction) SetSessionResult(sr SessionResult) (err error) {
 	}
 
 	result = txn.db.Create(&sr)
-	return result.Error
+	if result.Error != nil {
+		return fmt.Errorf("%s, result size(%d)", result.Error.Error(), len(sr.Result))
+	}
+	return nil
 }
 
 func (txn *MetaTransaction) GetSessionResult(id string) (SessionResult, error) {
