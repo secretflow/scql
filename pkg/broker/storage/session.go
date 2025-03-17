@@ -167,7 +167,7 @@ func (txn *MetaTransaction) SetSessionResult(sr SessionResult) (err error) {
 
 	result = txn.db.Create(&sr)
 	if result.Error != nil {
-		return fmt.Errorf("%s, maybe caused by result size(%d) is too long", result.Error.Error(), len(sr.Result))
+		return fmt.Errorf("%s, result size(%d)", result.Error.Error(), len(sr.Result))
 	}
 	return nil
 }
