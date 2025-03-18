@@ -121,15 +121,15 @@ func (a *baseFuncDesc) typeInfer4PercentileDisc(ctx sessionctx.Context) error {
 		return errors.New("PERCENTILE_DISC should take 2 arguments")
 	}
 
-	percent, isNull, err := a.Args[1].EvalInt(ctx, chunk.Row{})
+	percent, isNull, err := a.Args[1].EvalReal(ctx, chunk.Row{})
 	if err != nil {
 		return fmt.Errorf("PERCENTILE_DISC: Invalid argument %s", a.Args[1].String())
 	}
-	if percent <= 0 || percent > 100 || isNull {
+	if percent < 0 || percent > 1 || isNull {
 		if isNull {
 			return errors.New("PERCENTILE_DISC: Percentage value cannot be NULL")
 		}
-		return fmt.Errorf("Percentage value %d is out of range [1, 100]", percent)
+		return fmt.Errorf("Percentage value %f is out of range [0, 1]", percent)
 	}
 
 	switch a.Args[0].GetType().Tp {
