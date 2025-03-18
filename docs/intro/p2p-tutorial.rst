@@ -79,8 +79,8 @@ You could start SCQL service via `docker-compose <https://github.com/secretflow/
     (cd examples/p2p-tutorial && docker compose up -d)
 
 SCQLBroker for alice is listening on ``http://localhost:8081`` while bob is on ``http://localhost:8082`` you could send requests to them via brokerctl.
-.. Possible causes and troubleshooting directions for MySQL database startup failures.
 
+.. Possible causes and troubleshooting directions for MySQL database startup failures.
 .. note::
 
     1. If your MySQL fails to start, please check whether the directory examples/p2p-tutorial/mysql/initdb has appropriate permissions. If not, you can set the permissions using a command like: chmod -R 755 ./mysql/initdb.
