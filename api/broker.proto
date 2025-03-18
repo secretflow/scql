@@ -74,10 +74,9 @@ service IntraBrokerService {
 
   // CancelQuery
   //
-  // Cancel asynchronous query, currently only valid in the
-  // [KUSCIA](https://github.com/secretflow/kuscia). It will release the
-  // occupied local computing resources in time, but only try to notify
-  // other members to release their corresponding resources.
+  // Cancel asynchronous query
+  // It will release the occupied local computing resources in time, but only
+  // try to notify other members to release their corresponding resources
   rpc CancelQuery(CancelQueryRequest) returns (CancelQueryResponse) {
     option (google.api.http) = {
       post: "/intra/query/cancel"
