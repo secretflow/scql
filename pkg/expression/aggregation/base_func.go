@@ -116,6 +116,9 @@ func (a *baseFuncDesc) typeInfer(ctx sessionctx.Context) error {
 	return nil
 }
 
+// This function is copied from
+// https://github.com/pingcap/tidb/blob/80d6b5683c5c9e655d1eab432b198d7fea9b7d5f/pkg/expression/aggregation/base_func.go#L181,
+// and did some modifications, which is mainly on the percent parameter the range of which is changed to [0, 1] from [0, 100]
 func (a *baseFuncDesc) typeInfer4PercentileDisc(ctx sessionctx.Context) error {
 	if len(a.Args) != 2 {
 		return errors.New("PERCENTILE_DISC should take 2 arguments")
