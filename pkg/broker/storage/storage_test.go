@@ -44,7 +44,7 @@ func TestDistributedLock(t *testing.T) {
 				gormlog.Config{
 					SlowThreshold: 200 * time.Millisecond,
 					Colorful:      false,
-					LogLevel:      gormlog.Warn,
+					LogLevel:      gormlog.Info,
 				}),
 		})
 
@@ -77,7 +77,7 @@ func TestBootstrap(t *testing.T) {
 				gormlog.Config{
 					SlowThreshold: 200 * time.Millisecond,
 					Colorful:      false,
-					LogLevel:      gormlog.Warn,
+					LogLevel:      gormlog.Info,
 				}),
 		})
 
