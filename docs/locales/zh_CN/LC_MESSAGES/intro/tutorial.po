@@ -113,7 +113,7 @@ msgid ""
 "queries to it via scdbclient."
 msgstr "SCDBServer 监听 ``http://localhost:8080`` ，你可以通过 scdbclient 向它发送查询。"
 
-#: ../../intro/tutorial.rst:84
+#: ../../intro/tutorial.rst:85
 msgid ""
 "If your MySQL fails to start,"
 "please check whether the directory examples/scdb-tutorial/mysql/initdb has appropriate permissions."
@@ -122,7 +122,7 @@ msgstr ""
 "如果你的mysql无法启动，请检查examples/scdb-tutorial/mysql/initdb目录是否有相应的权限，"
 "如果没有，可以配置一下权限，例如chmod -R 755 ./mysql/initdb。"
 
-#: ../../intro/tutorial.rst:85
+#: ../../intro/tutorial.rst:87
 msgid ""
 "Please checkout `examples/scdb-tutorial/README.md "
 "<https://github.com/secretflow/scql/tree/main/examples/scdb-"
@@ -133,18 +133,18 @@ msgstr ""
 "<https://github.com/secretflow/scql/tree/main/examples/scdb-"
 "tutorial/README.md>`_ 故障排除部分以获得帮助。"
 
-#: ../../intro/tutorial.rst:89
+#: ../../intro/tutorial.rst:91
 msgid "Create database, user and tables"
 msgstr "创建数据库、用户和数据表"
 
-#: ../../intro/tutorial.rst:175
+#: ../../intro/tutorial.rst:177
 msgid "Register SCQLEngine Endpoints"
 msgstr "注册 SCQLEngine Endpoints"
 
-#: ../../intro/tutorial.rst:185
+#: ../../intro/tutorial.rst:187
 msgid "Grant CCL"
 msgstr "授权 CCL"
 
-#: ../../intro/tutorial.rst:236
+#: ../../intro/tutorial.rst:238
 msgid "Do query"
 msgstr "查询"
