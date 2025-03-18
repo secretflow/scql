@@ -1124,8 +1124,10 @@ func (t *translator) addBasicInNode(left *graph.Tensor, right *graph.Tensor, out
 		localInAttr.SetInt64(operator.LocalIn)
 		attrs[operator.InTypeAttr] = localInAttr
 	}
+	parties := []string{left.OwnerPartyCode, right.OwnerPartyCode}
+	parties = sliceutil.SliceDeDup(parties)
 	if _, err := t.ep.AddExecutionNode(nodeName, operator.OpNameIn, map[string][]*graph.Tensor{graph.Left: {left}, graph.Right: {right}},
-		map[string][]*graph.Tensor{graph.Out: {output}}, attrs, []string{left.OwnerPartyCode, right.OwnerPartyCode}); err != nil {
+		map[string][]*graph.Tensor{graph.Out: {output}}, attrs, parties); err != nil {
 		return nil, err
 	}
 	return output, nil
@@ -1763,7 +1765,7 @@ func (t *translator) buildCrossJoin(left logicalNode, right logicalNode) (map[in
 	attr := &graph.Attribute{}
 	attr.SetStrings([]string{leftPartyCode, rightPartyCode})
 	_, err := t.ep.AddReplicateNode(operator.OpNameReplicate, left.ResultTable(), right.ResultTable(),
-		leftOutput, rightOutput, map[string]*graph.Attribute{operator.InputPartyCodesAttr: attr}, []string{leftPartyCode, rightPartyCode})
+		leftOutput, rightOutput, map[string]*graph.Attribute{operator.InputPartyCodesAttr: attr}, sliceutil.SliceDeDup([]string{leftPartyCode, rightPartyCode}))
 	if err != nil {
 		return nil, fmt.Errorf("buildCrossJoin: %v", err)
 	}
