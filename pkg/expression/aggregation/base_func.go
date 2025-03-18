@@ -134,21 +134,8 @@ func (a *baseFuncDesc) typeInfer4PercentileDisc(ctx sessionctx.Context) error {
 		}
 		return fmt.Errorf("Percentage value %f is out of range [0, 1]", percent)
 	}
-
-	switch a.Args[0].GetType().Tp {
-	case mysql.TypeTiny, mysql.TypeShort, mysql.TypeInt24, mysql.TypeLong, mysql.TypeLonglong:
-		a.RetTp = types.NewFieldType(mysql.TypeLonglong)
-	case mysql.TypeDouble, mysql.TypeFloat:
-		a.RetTp = types.NewFieldType(mysql.TypeDouble)
-	case mysql.TypeNewDecimal:
-		a.RetTp = types.NewFieldType(mysql.TypeNewDecimal)
-		a.RetTp.Flen = mysql.MaxDecimalWidth
-		a.RetTp.Decimal = types.UnspecifiedLength
-	case mysql.TypeDate, mysql.TypeDatetime, mysql.TypeNewDate, mysql.TypeTimestamp:
-		a.RetTp = a.Args[0].GetType().Clone()
-	default:
-		a.RetTp = a.Args[0].GetType().Clone()
-	}
+	a.RetTp = a.Args[0].GetType().Clone()
+	// a.RetTp.Flag &^= mysql.NotNullFlag, not sure why this line is needed in MaxMin
 	return nil
 }
 
