@@ -15,6 +15,7 @@ package aggregation
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 
 	"github.com/pingcap/errors"
@@ -25,6 +26,7 @@ import (
 	"github.com/secretflow/scql/pkg/parser/mysql"
 	"github.com/secretflow/scql/pkg/sessionctx"
 	"github.com/secretflow/scql/pkg/types"
+	"github.com/secretflow/scql/pkg/util/chunk"
 	"github.com/secretflow/scql/pkg/util/mathutil"
 )
 
@@ -96,6 +98,8 @@ func (a *baseFuncDesc) typeInfer(ctx sessionctx.Context) error {
 		a.typeInfer4MaxMin(ctx)
 	case ast.AggFuncStddevPop:
 		a.typeInfer4PopOrSamp(ctx)
+	case ast.AggPercentileDisc:
+		a.typeInfer4PercentileDisc(ctx)
 	case ast.WindowFuncRowNumber, ast.WindowFuncRank, ast.WindowFuncDenseRank:
 		a.typeInfer4NumberFuncs()
 	case ast.WindowFuncCumeDist:
@@ -108,6 +112,39 @@ func (a *baseFuncDesc) typeInfer(ctx sessionctx.Context) error {
 		a.typeInfer4LeadLag(ctx)
 	default:
 		return errors.Errorf("unsupported agg function: %s", a.Name)
+	}
+	return nil
+}
+
+func (a *baseFuncDesc) typeInfer4PercentileDisc(ctx sessionctx.Context) error {
+	if len(a.Args) != 2 {
+		return errors.New("PERCENTILE_DISC should take 2 arguments")
+	}
+
+	percent, isNull, err := a.Args[1].EvalInt(ctx, chunk.Row{})
+	if err != nil {
+		return fmt.Errorf("PERCENTILE_DISC: Invalid argument %s", a.Args[1].String())
+	}
+	if percent <= 0 || percent > 100 || isNull {
+		if isNull {
+			return errors.New("PERCENTILE_DISC: Percentage value cannot be NULL")
+		}
+		return fmt.Errorf("Percentage value %d is out of range [1, 100]", percent)
+	}
+
+	switch a.Args[0].GetType().Tp {
+	case mysql.TypeTiny, mysql.TypeShort, mysql.TypeInt24, mysql.TypeLong, mysql.TypeLonglong:
+		a.RetTp = types.NewFieldType(mysql.TypeLonglong)
+	case mysql.TypeDouble, mysql.TypeFloat:
+		a.RetTp = types.NewFieldType(mysql.TypeDouble)
+	case mysql.TypeNewDecimal:
+		a.RetTp = types.NewFieldType(mysql.TypeNewDecimal)
+		a.RetTp.Flen = mysql.MaxDecimalWidth
+		a.RetTp.Decimal = types.UnspecifiedLength
+	case mysql.TypeDate, mysql.TypeDatetime, mysql.TypeNewDate, mysql.TypeTimestamp:
+		a.RetTp = a.Args[0].GetType().Clone()
+	default:
+		a.RetTp = a.Args[0].GetType().Clone()
 	}
 	return nil
 }
