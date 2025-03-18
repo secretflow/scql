@@ -478,6 +478,7 @@ var tokenMap = map[string]int{
 	"PARTY_CODE":                partyCode,
 	"PASSWORD":                  password,
 	"PESSIMISTIC":               pessimistic,
+	"PERCENTILE_DISC":           percentileDisc,
 	"PER_TABLE":                 per_table,
 	"PER_DB":                    per_db,
 	"PLUGINS":                   plugins,
