@@ -839,6 +839,8 @@
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/sparsehash/2.0.4/MODULE.bazel": "ea8db90d9b4bc36123f42ffb95f046b0e82c1d2e6a11abcdcf1ba72ac22349b6",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/sparsehash/2.0.4/source.json": "7b5e5e0ef7851171f1993758b79388403511374fc68645914a87211478fc9091",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/spdlog/1.14.1/MODULE.bazel": "not found",
+    "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/spulib/0.9.4.dev20250319/MODULE.bazel": "1db94492e89ad9ec91f5a0affeff5284b7d3dc94f94d77328d94eb8fd961214d",
+    "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/spulib/0.9.4.dev20250319/source.json": "3b74d23e251fbfccf409cb352efb4f8b4b8a9f5237186632b205dc92e31e278c",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/sse2neon/1.7.0-20240330-8df2f48/MODULE.bazel": "081a14fbd5a93be88ba373f3d87b642afb319188ac374f65678be0d57ff41d21",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/sse2neon/1.7.0-20240330-8df2f48/source.json": "fe5c2a9140de213657d8a35e653f3f01695ab34b996e13594a863e3cc91df1ed",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/stablehlo/20240808.0-24d1807/MODULE.bazel": "7869bb25b7993ad94b82ec6616690a9852ab9857513dee31fb7fa7ab3721bf86",
@@ -875,7 +877,7 @@
     "//bazel:defs.bzl%non_module_dependencies": {
       "general": {
         "bzlTransitiveDigest": "klEmpjNC1WHT/ZVR9b9FjhZRsul/OS1ZYICoaOjJTZU=",
-        "usagesDigest": "fgMFtiXyaYnKpWmFmGtytb/5E+16gBjv1th33M7GEUI=",
+        "usagesDigest": "SB2dpOKMD6a6rN4I33N74ys2cWVdaTrm2V4kqyPv1KA=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -5390,7 +5392,7 @@
     "@@spulib~//bazel:defs.bzl%non_module_dependencies": {
       "general": {
         "bzlTransitiveDigest": "JT8ZLEUdrYXN19gijrHtztFq/cEAhJlRlNjhtQUlDIE=",
-        "usagesDigest": "gd27P4ZW2JVdPOqhNTnl3FiFcB60JlziSrxjfEF9NKs=",
+        "usagesDigest": "3k7ESh35aN/bFXTFjbdTvRCawjsAhTTIRhC4/wYqoSE=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
