@@ -104,10 +104,9 @@ paths:
     post:
       summary: CancelQuery
       description: |-
-        Cancel asynchronous query, currently only valid in the
-        [KUSCIA](https://github.com/secretflow/kuscia). It will release the
-        occupied local computing resources in time, but only try to notify
-        other members to release their corresponding resources.
+        Cancel asynchronous query
+        It will release the occupied local computing resources in time, but only
+        try to notify other members to release their corresponding resources
       operationId: IntraBrokerService_CancelQuery
       responses:
         "200":

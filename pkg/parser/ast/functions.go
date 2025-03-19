@@ -866,6 +866,8 @@ const (
 	// Added by SCQL
 	// AggFuncMedian is the name of Median function.
 	AggFuncMedian = "median"
+
+	AggPercentileDisc = "percentile_disc"
 )
 
 // AggregateFuncExpr represents aggregate function expression.

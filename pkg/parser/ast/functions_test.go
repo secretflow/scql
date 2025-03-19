@@ -105,6 +105,7 @@ func (ts *testFunctionsSuite) TestAggregateFuncExprRestore(c *C) {
 		{"VAR_SAMP(test_score)", "VAR_SAMP(`test_score`)"},
 		{"VARIANCE(test_score)", "VAR_POP(`test_score`)"},
 		{"MEDIAN(test_score)", "MEDIAN(`test_score`)"},
+		{"PERCENTILE_DISC(test_score, 0.8)", "PERCENTILE_DISC(`test_score`, 0.8)"},
 	}
 	extractNodeFunc := func(node Node) Node {
 		return node.(*SelectStmt).Fields.Fields[0].Expr
