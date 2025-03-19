@@ -126,7 +126,7 @@ func (a *baseFuncDesc) typeInfer4PercentileDisc(ctx sessionctx.Context) error {
 
 	percent, isNull, err := a.Args[1].EvalReal(ctx, chunk.Row{})
 	if err != nil {
-		return fmt.Errorf("PERCENTILE_DISC: Invalid argument %s", a.Args[1].String())
+		return fmt.Errorf("PERCENTILE_DISC: Invalid argument %s, error: ", a.Args[1].String(), err)
 	}
 	if percent < 0 || percent > 1 || isNull {
 		if isNull {
