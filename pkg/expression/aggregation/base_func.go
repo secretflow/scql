@@ -15,6 +15,7 @@ package aggregation
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 
 	"github.com/pingcap/errors"
@@ -25,6 +26,7 @@ import (
 	"github.com/secretflow/scql/pkg/parser/mysql"
 	"github.com/secretflow/scql/pkg/sessionctx"
 	"github.com/secretflow/scql/pkg/types"
+	"github.com/secretflow/scql/pkg/util/chunk"
 	"github.com/secretflow/scql/pkg/util/mathutil"
 )
 
@@ -96,6 +98,8 @@ func (a *baseFuncDesc) typeInfer(ctx sessionctx.Context) error {
 		a.typeInfer4MaxMin(ctx)
 	case ast.AggFuncStddevPop:
 		a.typeInfer4PopOrSamp(ctx)
+	case ast.AggPercentileDisc:
+		a.typeInfer4PercentileDisc(ctx)
 	case ast.WindowFuncRowNumber, ast.WindowFuncRank, ast.WindowFuncDenseRank:
 		a.typeInfer4NumberFuncs()
 	case ast.WindowFuncCumeDist:
@@ -109,6 +113,29 @@ func (a *baseFuncDesc) typeInfer(ctx sessionctx.Context) error {
 	default:
 		return errors.Errorf("unsupported agg function: %s", a.Name)
 	}
+	return nil
+}
+
+// This function is copied from
+// https://github.com/pingcap/tidb/blob/80d6b5683c5c9e655d1eab432b198d7fea9b7d5f/pkg/expression/aggregation/base_func.go#L181,
+// and did some modifications, which is mainly on the percent parameter the range of which is changed to [0, 1] from [0, 100]
+func (a *baseFuncDesc) typeInfer4PercentileDisc(ctx sessionctx.Context) error {
+	if len(a.Args) != 2 {
+		return errors.New("PERCENTILE_DISC should take 2 arguments")
+	}
+
+	percent, isNull, err := a.Args[1].EvalReal(ctx, chunk.Row{})
+	if err != nil {
+		return fmt.Errorf("PERCENTILE_DISC: Invalid argument %s, error: %v", a.Args[1].String(), err)
+	}
+	if percent < 0 || percent > 1 || isNull {
+		if isNull {
+			return errors.New("PERCENTILE_DISC: Percentage value cannot be NULL")
+		}
+		return fmt.Errorf("Percentage value %f is out of range [0, 1]", percent)
+	}
+	a.RetTp = a.Args[0].GetType().Clone()
+	// a.RetTp.Flag &^= mysql.NotNullFlag, not sure why this line is needed in MaxMin
 	return nil
 }
 
