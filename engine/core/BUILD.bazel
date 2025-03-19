@@ -132,7 +132,7 @@ cc_library(
     deps = [
         "//api:core_cc_proto",
         "@org_apache_arrow//:arrow",
-        "@spulib//libspu:spu_cc_proto",
+        "@spulib//libspu:spu",
     ],
 )
 

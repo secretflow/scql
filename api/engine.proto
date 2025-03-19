@@ -94,7 +94,7 @@ message JobStartParams {
   string job_id = 3;
 
   // The spu runtime configuration.
-  spu.RuntimeConfig spu_runtime_cfg = 4;
+  spu.pb.RuntimeConfig spu_runtime_cfg = 4;
 
   // The query job time zone, only support time offset, like: '+08:00'
   string time_zone = 5;
