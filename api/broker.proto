@@ -74,10 +74,9 @@ service IntraBrokerService {
 
   // CancelQuery
   //
-  // Cancel asynchronous query, currently only valid in the
-  // [KUSCIA](https://github.com/secretflow/kuscia). It will release the
-  // occupied local computing resources in time, but only try to notify
-  // other members to release their corresponding resources.
+  // Cancel asynchronous query
+  // It will release the occupied local computing resources in time, but only
+  // try to notify other members to release their corresponding resources
   rpc CancelQuery(CancelQueryRequest) returns (CancelQueryResponse) {
     option (google.api.http) = {
       post: "/intra/query/cancel"
@@ -553,7 +552,7 @@ message ShowCCLResponse {
 
 message ProjectConfig {
   // The spu runtime configuration.
-  spu.RuntimeConfig spu_runtime_cfg = 1;
+  spu.pb.RuntimeConfig spu_runtime_cfg = 1;
   int64 session_expire_seconds = 2;
   int64 unbalance_psi_ratio_threshold = 3;
   int64 unbalance_psi_larger_party_rows_count_threshold = 4;

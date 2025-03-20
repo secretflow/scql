@@ -179,7 +179,7 @@ arrow::Status NdArrayConverter::Convert() {
 
   if (type_ == nullptr) {
     return arrow::Status::Invalid(
-        fmt::format("unsupported spu::PtType {}", spu::PtType_Name(pt_type_)));
+        fmt::format("unsupported spu::PtType {}", spu::GetPtTypeName(pt_type_)));
   }
 
   // Visit the type to perform conversion
