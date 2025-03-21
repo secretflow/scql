@@ -15,9 +15,9 @@
 #pragma once
 
 #include "arrow/type.h"
+#include "libspu/spu.h"
 
 #include "api/core.pb.h"
-#include "libspu/spu.h"
 
 namespace scql::engine {
 
