@@ -138,10 +138,11 @@ import (
 	"sort"
 	"strings"
 
+	"slices"
+
 	"github.com/cznic/mathutil"
 	"github.com/cznic/sortutil"
 	"github.com/cznic/strutil"
-	"golang.org/x/exp/slices"
 	parser "modernc.org/parser/yacc"
 	"modernc.org/y"
 )

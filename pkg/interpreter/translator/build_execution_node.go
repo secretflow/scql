@@ -588,7 +588,7 @@ func (t *translator) buildProjection(ln *ProjectionNode) (err error) {
 		return fmt.Errorf("buildProjection: %v", err)
 	}
 
-	for i, _ := range proj.Exprs {
+	for i := range proj.Exprs {
 		cid := ln.Schema().Columns[i].UniqueID
 		resultIdToTensor[cid] = outputs[i]
 	}

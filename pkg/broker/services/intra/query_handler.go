@@ -20,8 +20,9 @@ import (
 	"strings"
 	"time"
 
+	"slices"
+
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/slices"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
 

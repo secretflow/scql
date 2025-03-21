@@ -22,7 +22,7 @@ import (
 	"strings"
 	"sync"
 
-	"golang.org/x/exp/slices"
+	"slices"
 
 	"github.com/sirupsen/logrus"
 

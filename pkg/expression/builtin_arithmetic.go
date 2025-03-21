@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"math"
 
-	"golang.org/x/exp/slices"
+	"slices"
 
 	"github.com/secretflow/scql/pkg/parser/mysql"
 	"github.com/secretflow/scql/pkg/parser/terror"
