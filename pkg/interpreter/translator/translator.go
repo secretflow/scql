@@ -1289,7 +1289,7 @@ func (t *translator) getBestAlg(opType string, inputs map[string][]*graph.Tensor
 	return bestAlg, nil
 }
 
-func (t *translator) addGroupAggNode(name string, opType string, groupId, groupNum *graph.Tensor, in []*graph.Tensor, partyCode string) ([]*graph.Tensor, error) {
+func (t *translator) addGroupAggNode(name string, opType string, groupId, groupNum *graph.Tensor, in []*graph.Tensor, partyCode string, attr map[string]*graph.Attribute) ([]*graph.Tensor, error) {
 	placement := &privatePlacement{partyCode: partyCode}
 	inP := []*graph.Tensor{}
 	for i, it := range in {
@@ -1331,7 +1331,7 @@ func (t *translator) addGroupAggNode(name string, opType string, groupId, groupN
 			"GroupNum": {groupNumP},
 			"In":       inP,
 		}, map[string][]*graph.Tensor{"Out": outputs},
-		map[string]*graph.Attribute{}, []string{partyCode}); err != nil {
+		attr, []string{partyCode}); err != nil {
 		return nil, fmt.Errorf("addGroupAggNode: name %v, opType %v, err %v", name, opType, err)
 	}
 	return outputs, nil

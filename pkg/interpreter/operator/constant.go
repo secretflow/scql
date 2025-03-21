@@ -76,15 +76,16 @@ const (
 	OpNameReduceCount string = "ReduceCount"
 
 	// private group by
-	OpNameGroup              string = "Group"
-	OpNameGroupSum           string = "GroupSum"
-	OpNameGroupCount         string = "GroupCount"
-	OpNameGroupCountDistinct string = "GroupCountDistinct"
-	OpNameGroupAvg           string = "GroupAvg"
-	OpNameGroupMin           string = "GroupMin"
-	OpNameGroupMax           string = "GroupMax"
-	OpNameGroupFirstOf       string = "GroupFirstOf"
-	OpNameGroupHeSum         string = "GroupHeSum"
+	OpNameGroup               string = "Group"
+	OpNameGroupSum            string = "GroupSum"
+	OpNameGroupCount          string = "GroupCount"
+	OpNameGroupCountDistinct  string = "GroupCountDistinct"
+	OpNameGroupAvg            string = "GroupAvg"
+	OpNameGroupMin            string = "GroupMin"
+	OpNameGroupMax            string = "GroupMax"
+	OpNameGroupFirstOf        string = "GroupFirstOf"
+	OpNameGroupHeSum          string = "GroupHeSum"
+	OpNameGroupPercentileDisc string = "GroupPercentileDisc"
 
 	OpNameUnique               string = "Unique"
 	OpNameShape                string = "Shape"
@@ -172,12 +173,13 @@ var ObliviousGroupAggOp = map[string]string{
 }
 
 var GroupAggOp = map[string]string{
-	ast.AggFuncSum:      OpNameGroupSum,
-	ast.AggFuncMax:      OpNameGroupMax,
-	ast.AggFuncMin:      OpNameGroupMin,
-	ast.AggFuncAvg:      OpNameGroupAvg,
-	ast.AggFuncCount:    OpNameGroupCount,
-	ast.AggFuncFirstRow: OpNameGroupFirstOf,
+	ast.AggFuncSum:        OpNameGroupSum,
+	ast.AggFuncMax:        OpNameGroupMax,
+	ast.AggFuncMin:        OpNameGroupMin,
+	ast.AggFuncAvg:        OpNameGroupAvg,
+	ast.AggFuncCount:      OpNameGroupCount,
+	ast.AggFuncFirstRow:   OpNameGroupFirstOf,
+	ast.AggPercentileDisc: OpNameGroupPercentileDisc,
 }
 
 const (

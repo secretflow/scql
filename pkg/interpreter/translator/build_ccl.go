@@ -554,6 +554,10 @@ func (n *AggregationNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer
 					outputCCL.SetLevelForParty(p, ccl.Plain)
 				}
 			}
+		case ast.AggPercentileDisc:
+			for _, cc := range groupKeyCC {
+				outputCCL.UpdateMoreRestrictedCCLFrom(cc)
+			}
 		default:
 			return fmt.Errorf("unimplemented op: %s", aggFunc.Name)
 		}
