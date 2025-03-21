@@ -80,13 +80,13 @@ jobs:
     steps:
       - checkout
       - run:
-        name: Clone tools repo
-        command: |
-          git clone https://github.com/secretflow/devtools.git ../tools
+          name: Clone tools repo
+          command: |
+            git clone https://github.com/secretflow/devtools.git ../tools
       - run:
-        name: Run clang-format check
-        command: |
-          ../tools/lint-clang-format.sh
+          name: Run clang-format check
+          command: |
+            ../tools/lint-clang-format.sh
   linux_go_ut:
     # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
     # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
