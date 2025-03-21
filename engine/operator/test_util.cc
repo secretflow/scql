@@ -93,8 +93,10 @@ std::vector<std::shared_ptr<Session>> MakeMultiPCSession(
     auto* p = common_params.add_parties();
     p->CopyFrom(party);
   }
-  common_params.mutable_spu_runtime_cfg()->CopyFrom(MakeSpuRuntimeConfigForTest(
-      test_case.protocol, test_case.enable_colocated_optimization).ToProto());
+  common_params.mutable_spu_runtime_cfg()->CopyFrom(
+      MakeSpuRuntimeConfigForTest(test_case.protocol,
+                                  test_case.enable_colocated_optimization)
+          .ToProto());
 
   std::vector<std::future<std::shared_ptr<Session>>> futures;
   SessionOptions options;
