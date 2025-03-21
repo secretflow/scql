@@ -21,7 +21,7 @@ import (
 	"sort"
 	"time"
 
-	"golang.org/x/exp/slices"
+	"slices"
 
 	"github.com/secretflow/scql/pkg/expression"
 	"github.com/secretflow/scql/pkg/interpreter/ccl"

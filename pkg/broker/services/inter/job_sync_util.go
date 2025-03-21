@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"time"
 
-	"golang.org/x/exp/slices"
+	"slices"
 
 	"github.com/sirupsen/logrus"
 

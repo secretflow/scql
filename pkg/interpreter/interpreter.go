@@ -22,7 +22,7 @@ import (
 	"strconv"
 	"strings"
 
-	"golang.org/x/exp/slices"
+	"slices"
 
 	"github.com/sirupsen/logrus"
 

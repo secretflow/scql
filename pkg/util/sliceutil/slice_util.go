@@ -15,30 +15,22 @@
 package sliceutil
 
 import (
-	"sort"
-
-	"golang.org/x/exp/constraints"
-	"golang.org/x/exp/slices"
+	"cmp"
+	"slices"
 )
 
-func SliceDeDup[S ~[]E, E constraints.Ordered](s S) S {
+func SliceDeDup[S ~[]E, E cmp.Ordered](s S) S {
 	newS := slices.Clone(s)
-	sortSlice(newS)
+	slices.Sort(newS)
 	return slices.Compact(newS)
 }
 
-func sortSlice[T constraints.Ordered](s []T) {
-	sort.Slice(s, func(i, j int) bool {
-		return s[i] < s[j]
-	})
-}
-
-func SortMapKeyForDeterminism[k constraints.Ordered, v any](m map[k]v) []k {
+func SortMapKeyForDeterminism[k cmp.Ordered, v any](m map[k]v) []k {
 	var keys []k
 	for k := range m {
 		keys = append(keys, k)
 	}
-	sortSlice(keys)
+	slices.Sort(keys)
 	return keys
 }
 
@@ -72,9 +64,9 @@ func Exclude[S ~[]E, E comparable](set S, excludeElement E) S {
 	return result
 }
 
-func Equal[S ~[]E, E constraints.Ordered](left S, right S) bool {
-	sortSlice(left)
-	sortSlice(right)
+func Equal[S ~[]E, E cmp.Ordered](left S, right S) bool {
+	slices.Sort(left)
+	slices.Sort(right)
 	return slices.Equal(left, right)
 }
 
