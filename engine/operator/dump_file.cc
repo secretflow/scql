@@ -135,7 +135,7 @@ void WriteTensors(
   while (true) {
     arrow::ArrayVector arrays;
     bool read_to_end = false;
-    for (size_t i = 0; i < readers.size(); ++i) {
+    for (size_t i = 0; i < readers.size()    ; ++i) {
       auto chunked_arr = readers[i]->Next();
       if (chunked_arr == nullptr) {
         read_to_end = true;
