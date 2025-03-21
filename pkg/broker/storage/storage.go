@@ -368,7 +368,7 @@ type tableColumn struct {
 	Owner      string
 	ColumnName string
 	DType      string `gorm:"column:data_type"`
-	Idx        int64  `gorm:"column:idx"`
+	Position   int    `gorm:"column:original_position"`
 }
 
 func (t *MetaTransaction) ListDedupTableOwners(projectID string, tableNames []string) ([]string, error) {
