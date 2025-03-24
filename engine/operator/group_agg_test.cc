@@ -249,7 +249,7 @@ INSTANTIATE_TEST_SUITE_P(
                                           TensorFrom(arrow::float32(),
                                                      "[0, 3.3, 5.5]"))},
             .double_attr = std::make_pair(
-                "percent", 0.5)  // the index of each group should be [0, 1, 0]
+                GroupPercentileDisc::kPercent, 0.5)  // the index of each group should be [0, 1, 0]
         },
         GroupAggTestCase{
             .op_type = GroupPercentileDisc::kOpType,
