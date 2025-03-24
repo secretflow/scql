@@ -971,7 +971,7 @@ func (t *translator) buildPrivateGroupAggregation(ln *AggregationNode, party str
 			}
 		case ast.AggPercentileDisc:
 			if len(aggFunc.Args) != 2 {
-				return fmt.Errorf("buildPrivateGroupAggregation: percentile_disc should have 2 arguments, but got %v", len(aggFunc.Args))
+				return fmt.Errorf("buildPrivateGroupAggregation: percentile_disc requires 2 arguments, but received %d", len(aggFunc.Args))
 			}
 			attr := &graph.Attribute{}
 			percent, err := strconv.ParseFloat(aggFunc.Args[1].String(), 64)
