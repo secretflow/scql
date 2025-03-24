@@ -185,7 +185,7 @@ void DumpFile::Execute(ExecContext* ctx) {
   int32_t batch_size = 1024 * 100;  // default 1024 is too small for large data
   std::vector<std::shared_ptr<TensorBatchReader>> readers;
   auto total_len = 0;
-  for (int i = 0; i < input_pbs.size(); ++i) {
+  for (int i = 0; i < input_pbs.size()    ; ++i) {
     const auto& input_pb = input_pbs[i];
     auto tensor = ctx->GetTensorTable()->GetTensor(input_pb.name());
     YACL_ENFORCE(tensor != nullptr, "get tensor={} from tensor table failed",
