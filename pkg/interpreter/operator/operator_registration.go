@@ -781,6 +781,26 @@ Out = %s
 			check(opDef.err)
 			AllOpDef = append(AllOpDef, opDef)
 		}
+
+		opDef := &OperatorDef{}
+		opDef.SetName(OpNameGroupPercentileDisc)
+		opDef.SetStreamingType(SinkOp)
+		opDef.AddInput("GroupId", "Input group id vector(shape [M][1]).", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.AddInput("GroupNum", "Input number of groups vector(shape [1][1]).", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.AddInput("In", "Input data tensor(shape [M][1]).", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.AddOutput("Out", "Output data tensors(shape [K][1], K equals to number of groups), Out[i] is the agg result for i-th group.", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.SetParamTypeConstraint(T, statusPrivate)
+		opDef.AddAttribute("percent", "Float. The percentile to calculate the range of which is [0.0, 1.0], 0.0 means the first one, 1.0 means the last one.")
+		opDef.SetDefinition("Definition: find the value of given percentile of `In` for each group." + fmt.Sprintf(`
+Example:
+`+"\n```python"+`
+GroupId = {0, 1, 0, 1, 2}
+GroupNum = {3}
+In = [{0, 1, 2, 3, 4}, {9, 8, 7, 6, 5}]
+the percent is 0.5, the index of each group is = upper_bound(0.5 * group_size) - 1
+Out = [{0, 1, 4}, {7, 6, 5}]`))
+		check(opDef.err)
+		AllOpDef = append(AllOpDef, opDef)
 	}
 
 	{
