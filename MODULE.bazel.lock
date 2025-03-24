@@ -321,8 +321,6 @@
     "https://bcr.bazel.build/modules/grpc-java/1.66.0/source.json": "f841b339ff8516c86c3a5272cd053194dd0cb2fdd63157123835e1157a28328d",
     "https://bcr.bazel.build/modules/grpc-proto/0.0.0-20240627-ec30f58/MODULE.bazel": "88de79051e668a04726e9ea94a481ec6f1692086735fd6f488ab908b3b909238",
     "https://bcr.bazel.build/modules/grpc-proto/0.0.0-20240627-ec30f58/source.json": "5035d379c61042930244ab59e750106d893ec440add92ec0df6a0098ca7f131d",
-    "https://bcr.bazel.build/modules/grpc/1.66.0.bcr.3/MODULE.bazel": "f6047e89faf488f5e3e65cb2594c6f5e86992abec7487163ff6b623526e543b0",
-    "https://bcr.bazel.build/modules/grpc/1.66.0.bcr.3/source.json": "9377efe9ad6931697793667a3af7f3225dee207fec1b57ffd507462a0ef7c211",
     "https://bcr.bazel.build/modules/jsoncpp/1.9.5/MODULE.bazel": "31271aedc59e815656f5736f282bb7509a97c7ecb43e927ac1a37966e0578075",
     "https://bcr.bazel.build/modules/jsoncpp/1.9.5/source.json": "4108ee5085dd2885a341c7fab149429db457b3169b86eb081fa245eadf69169d",
     "https://bcr.bazel.build/modules/libpfm/4.11.0/MODULE.bazel": "45061ff025b301940f1e30d2c16bea596c25b176c8b6b3087e92615adbd52902",
@@ -710,7 +708,8 @@
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/grpc-java/1.62.2/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/grpc-java/1.66.0/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/grpc-proto/0.0.0-20240627-ec30f58/MODULE.bazel": "not found",
-    "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/grpc/1.66.0.bcr.3/MODULE.bazel": "not found",
+    "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/grpc/1.66.0.bcr.4/MODULE.bazel": "b11b05fac8fd8dec75c91d0f023d039f1208373b4bc80b1711bc84213a160f83",
+    "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/grpc/1.66.0.bcr.4/source.json": "125d1728dd00c5846c21ed0d4a44e6f6511dd77822fb4decfcd2651ea7e5800d",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/gsl/4.0.0/MODULE.bazel": "193f5221b7a9f280481905f186d50f6a7b8f2ae09ffdbce59105d52067012e83",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/gsl/4.0.0/source.json": "692503164338d148de46f5812b80bbb9b2ae719e683b0c889ece13f038525cbf",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/hash_drbg/0.0.0-20230516-2411fa9/MODULE.bazel": "12ca3c056d6d524b1c68e495e1d78dd23a07a1537f88e06e62becf1f4beb0e3f",
@@ -1375,7 +1374,7 @@
     "@@googleapis~//:extensions.bzl%switched_rules": {
       "general": {
         "bzlTransitiveDigest": "vG6fuTzXD8MMvHWZEQud0MMH7eoC4GXY0va7VrFFh04=",
-        "usagesDigest": "i0yPH5x/NUGnJ/+dhJc9XegrfrzWRO98eab/iSjM9aE=",
+        "usagesDigest": "cs2fO6xTJ2sb3Eu/dCqT4FsnqhjkmHYMbV23DayWzio=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -1543,7 +1542,7 @@
     "@@grpc~//bazel:grpc_deps.bzl%grpc_repo_deps_ext": {
       "general": {
         "bzlTransitiveDigest": "5TfzYlp8Y+UKkVz5RlvJ+WoMjs6d3+Y3sHhn1c7I86o=",
-        "usagesDigest": "OUkYqxwiW68XOh89iRa4YujrS8PCreBmwKiC0BdRz7I=",
+        "usagesDigest": "1eMIqi5dORV/U/qhnyfh+vm4MzWYt3L+ru89nRp4d/A=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
