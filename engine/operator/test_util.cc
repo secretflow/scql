@@ -192,6 +192,18 @@ ExecNodeBuilder& ExecNodeBuilder::AddBooleanAttr(const std::string& name,
   return *this;
 }
 
+ExecNodeBuilder& ExecNodeBuilder::AddDoubleAttr(const std::string& name,
+                                                double value) {
+  return AddDoubleAttrs(name, std::vector<double>{value});
+}
+
+ExecNodeBuilder& ExecNodeBuilder::AddDoubleAttrs(
+    const std::string& name, const std::vector<double>& value) {
+  auto& attrs = *node_.mutable_attributes();
+  util::SetDoubleValues(attrs[name].mutable_t(), value);
+  return *this;
+}
+
 ExecNodeBuilder& ExecNodeBuilder::AddAttr(const std::string& name,
                                           const pb::Tensor& tensor) {
   auto& attrs = *node_.mutable_attributes();

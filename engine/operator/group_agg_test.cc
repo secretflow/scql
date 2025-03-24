@@ -29,6 +29,7 @@ struct GroupAggTestCase {
   test::NamedTensor group_id;
   test::NamedTensor group_num;
   std::vector<test::NamedTensor> outputs;
+  std::optional<std::pair<std::string, double>> double_attr;
 };
 
 class GroupAggTest : public testing::TestWithParam<GroupAggTestCase> {
@@ -74,6 +75,9 @@ pb::ExecNode GroupAggTest::MakeExecNode(const GroupAggTestCase& tc) {
   test::ExecNodeBuilder builder(tc.op_type);
 
   builder.SetNodeName("plaintext-group-agg-test");
+  if (tc.double_attr.has_value()) {
+    builder.AddDoubleAttr(tc.double_attr->first, tc.double_attr->second);
+  }
 
   std::vector<pb::Tensor> inputs;
   for (const auto& named_tensor : tc.inputs) {
@@ -222,11 +226,71 @@ INSTANTIATE_TEST_SUITE_P(
                 "group_id", TensorFrom(arrow::uint32(), "[0, 0, 1, 1, 2]")),
             .group_num = test::NamedTensor("group_num",
                                            TensorFrom(arrow::uint32(), "[3]")),
-            .outputs = {
-                test::NamedTensor("out_a",
-                                  TensorFrom(arrow::int64(), "[1, 3, null]")),
-                test::NamedTensor("out_b", TensorFrom(arrow::float32(),
-                                                      "[1.1, 3.3, 4.4]"))}}));
+            .outputs = {test::NamedTensor("out_a", TensorFrom(arrow::int64(),
+                                                              "[1, 3, null]")),
+                        test::NamedTensor("out_b",
+                                          TensorFrom(arrow::float32(),
+                                                     "[1.1, 3.3, 4.4]"))}},
+        GroupAggTestCase{
+            .op_type = GroupPercentileDisc::kOpType,
+            .inputs =
+                {test::NamedTensor("in_a", TensorFrom(arrow::int64(),
+                                                      "[0, 1, 2, 3, 4, null]")),
+                 test::NamedTensor(
+                     "in_b", TensorFrom(arrow::float32(),
+                                        "[0, 1.1, 2.2, 3.3, 4.4, 5.5]"))},
+            .group_id = test::NamedTensor(
+                "group_id", TensorFrom(arrow::uint32(), "[0, 0, 1, 1, 1, 2]")),
+            .group_num = test::NamedTensor("group_num",
+                                           TensorFrom(arrow::uint32(), "[3]")),
+            .outputs = {test::NamedTensor("out_a", TensorFrom(arrow::int64(),
+                                                              "[0, 3, null]")),
+                        test::NamedTensor("out_b",
+                                          TensorFrom(arrow::float32(),
+                                                     "[0, 3.3, 5.5]"))},
+            .double_attr = std::make_pair(
+                "percent", 0.5)  // the index of each group should be [0, 1, 0]
+        },
+        GroupAggTestCase{
+            .op_type = GroupPercentileDisc::kOpType,
+            .inputs =
+                {test::NamedTensor("in_a", TensorFrom(arrow::int64(),
+                                                      "[0, 1, 2, 3, 4, null]")),
+                 test::NamedTensor(
+                     "in_b", TensorFrom(arrow::float32(),
+                                        "[0, 1.1, 2.2, 3.3, 4.4, 5.5]"))},
+            .group_id = test::NamedTensor(
+                "group_id", TensorFrom(arrow::uint32(), "[0, 0, 1, 1, 1, 2]")),
+            .group_num = test::NamedTensor("group_num",
+                                           TensorFrom(arrow::uint32(), "[3]")),
+            .outputs = {test::NamedTensor("out_a", TensorFrom(arrow::int64(),
+                                                              "[0, 2, null]")),
+                        test::NamedTensor("out_b",
+                                          TensorFrom(arrow::float32(),
+                                                     "[0, 2.2, 5.5]"))},
+            .double_attr = std::make_pair(
+                "percent", 0)  // the index of each group should be [0, 0, 0]
+        },
+        GroupAggTestCase{
+            .op_type = GroupPercentileDisc::kOpType,
+            .inputs =
+                {test::NamedTensor("in_a", TensorFrom(arrow::int64(),
+                                                      "[0, 1, 2, 3, 4, null]")),
+                 test::NamedTensor(
+                     "in_b", TensorFrom(arrow::float32(),
+                                        "[0, 1.1, 2.2, 3.3, 4.4, 5.5]"))},
+            .group_id = test::NamedTensor(
+                "group_id", TensorFrom(arrow::uint32(), "[0, 0, 1, 1, 1, 2]")),
+            .group_num = test::NamedTensor("group_num",
+                                           TensorFrom(arrow::uint32(), "[3]")),
+            .outputs = {test::NamedTensor("out_a", TensorFrom(arrow::int64(),
+                                                              "[1, 4, null]")),
+                        test::NamedTensor("out_b",
+                                          TensorFrom(arrow::float32(),
+                                                     "[1.1, 4.4, 5.5]"))},
+            .double_attr = std::make_pair(
+                "percent", 1)  // the index of each group should be [1, 2, 0]
+        }));
 
 INSTANTIATE_TEST_SUITE_P(
     GroupBatchEmptyTest, GroupAggTest,
@@ -312,6 +376,19 @@ INSTANTIATE_TEST_SUITE_P(
                                           TensorFrom(arrow::float32(), "[]"))}},
         GroupAggTestCase{
             .op_type = GroupMax::kOpType,
+            .inputs =
+                {test::NamedTensor("in_a", TensorFrom(arrow::int64(), "[]")),
+                 test::NamedTensor("in_b", TensorFrom(arrow::float32(), "[]"))},
+            .group_id = test::NamedTensor("group_id",
+                                          TensorFrom(arrow::uint32(), "[]")),
+            .group_num = test::NamedTensor("group_num",
+                                           TensorFrom(arrow::uint32(), "[0]")),
+            .outputs = {test::NamedTensor("out_a",
+                                          TensorFrom(arrow::int64(), "[]")),
+                        test::NamedTensor("out_b",
+                                          TensorFrom(arrow::float32(), "[]"))}},
+        GroupAggTestCase{
+            .op_type = GroupPercentileDisc::kOpType,
             .inputs =
                 {test::NamedTensor("in_a", TensorFrom(arrow::int64(), "[]")),
                  test::NamedTensor("in_b", TensorFrom(arrow::float32(), "[]"))},
