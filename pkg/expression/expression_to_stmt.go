@@ -229,6 +229,8 @@ func (c ExprConverter) convertScalarFunction(dialect format.Dialect, expr *Scala
 		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
 	case *builtinGeoDist:
 		return c.buildGeoDistExpr(children, dialect, prec, idToExpr)
+	case *builtinReplaceSig:
+		return &ast.FuncCallExpr{FnName: expr.FuncName, Args: children}, nil
 	}
 	return nil, errors.Errorf("Unknown expr: %+v(%s)", expr.Function, expr.FuncName)
 }

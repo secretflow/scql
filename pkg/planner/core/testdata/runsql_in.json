@@ -597,6 +597,11 @@
         "rewritten_sql_pg": "select t_0.expr_243 from ((select avg(tbl_0.plain_int_0) as expr_243 from alice.tbl_0) union all (select cast(sum(tbl_0.plain_int_0) as numeric(65, 30)) as expr_243 from alice.tbl_0)) as t_0",
         "rewritten_sql_csv": "select t_0.expr_243 from ((select avg(tbl_0.plain_int_0) as expr_243 from alice.tbl_0) union all (select cast(sum(tbl_0.plain_int_0) as numeric) as expr_243 from alice.tbl_0)) as t_0",
         "rewritten_sql_odps": "select t_0.expr_243 from ((select avg(tbl_0.plain_int_0) as expr_243 from alice.tbl_0) union all (select cast(sum(tbl_0.plain_int_0) as decimal) as expr_243 from alice.tbl_0)) as t_0"
+      },
+      {
+        "sql": "select replace(plain_string_0, 'a', 'b') as res1 from alice.tbl_0;",
+        "skip_projection": false,
+        "rewritten_sql": "select replace(tbl_0.plain_string_0, 'a', 'b') as res1 from alice.tbl_0"
       }
     ]
   }
