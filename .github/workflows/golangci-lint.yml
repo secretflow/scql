@@ -17,13 +17,11 @@ on:
   push:
     branches:
       - main
-      - release/*
     paths:
       - '**.go'
   pull_request:
     branches:
       - main
-      - release/*
     paths:
       - '**.go'
 

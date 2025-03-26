@@ -17,9 +17,19 @@ on:
   push:
     branches:
     - main
+    paths:
+      - '**.cpp'
+      - '**.hpp'
+      - '**.h'
+      - '**.proto'
   pull_request:
     branches:
     - main
+    paths:
+      - '**.cpp'
+      - '**.hpp'
+      - '**.h'
+      - '**.proto'
 permissions:
   contents: read
 jobs:
