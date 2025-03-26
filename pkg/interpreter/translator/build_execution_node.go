@@ -1207,7 +1207,7 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 			attr := &graph.Attribute{}
 			percent, err := strconv.ParseFloat(aggFunc.Args[1].String(), 64)
 			if err != nil {
-				return fmt.Errorf("buildPrivateGroupAggregation: %s is not a valid float value", aggFunc.Args[1].String())
+return fmt.Errorf("buildObliviousGroupAggregation: %s is not a valid float value", aggFunc.Args[1].String())
 			}
 
 			if percent < 0 || percent > 1 {
