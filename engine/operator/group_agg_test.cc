@@ -397,9 +397,11 @@ INSTANTIATE_TEST_SUITE_P(
                                           TensorFrom(arrow::uint32(), "[]")),
             .group_num = test::NamedTensor("group_num",
                                            TensorFrom(arrow::uint32(), "[0]")),
-            .outputs = {
-                test::NamedTensor("out_a", TensorFrom(arrow::int64(), "[]")),
-                test::NamedTensor("out_b",
-                                  TensorFrom(arrow::float32(), "[]"))}}));
+            .outputs = {test::NamedTensor("out_a",
+                                          TensorFrom(arrow::int64(), "[]")),
+                        test::NamedTensor("out_b",
+                                          TensorFrom(arrow::float32(), "[]"))},
+            .double_attr = std::make_pair(GroupPercentileDisc::kPercent,
+                                          0.5)}));
 
 }  // namespace scql::engine::op
