@@ -235,10 +235,8 @@ const std::string GroupPercentileDisc::kOpType("GroupPercentileDisc");
 
 std::shared_ptr<arrow::Scalar> GroupPercentileDisc::AggImpl(
     ExecContext* ctx, std::shared_ptr<arrow::Array> arr) {
-  if (arr == nullptr || arr->length() == 0) {
-    return nullptr;
-  }
-
+  YACL_ENFORCE(arr != nullptr && arr->length() > 0,
+               "input array should not be null or empty");
   double percent = ctx->GetDoubleValueFromAttribute(kPercent);
   YACL_ENFORCE(percent >= 0.0 && percent <= 1.0,
                "percent should be in [0.0, 1.0], but got {}", percent);
