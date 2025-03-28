@@ -730,7 +730,7 @@ func (t *translator) buildAggregation(ln *AggregationNode) (err error) {
 			}
 			percent, err := strconv.ParseFloat(aggFunc.Args[1].String(), 64)
 			if err != nil {
-				return fmt.Errorf("buildAggregation: %v", err)
+				return fmt.Errorf("buildAggregation: invalid percentile %s given, error; %v", aggFunc.Args[1].String(), err)
 			}
 
 			if percent < 0 || percent > 1 {
