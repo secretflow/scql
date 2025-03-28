@@ -213,12 +213,12 @@ type tensorStatusPair struct {
 }
 
 var binaryIOStatusMap = map[tensorStatusPair]scql.TensorStatus{
-	tensorStatusPair{scql.TensorStatus_TENSORSTATUS_PRIVATE, scql.TensorStatus_TENSORSTATUS_PRIVATE}: scql.TensorStatus_TENSORSTATUS_PRIVATE,
-	tensorStatusPair{scql.TensorStatus_TENSORSTATUS_PRIVATE, scql.TensorStatus_TENSORSTATUS_PUBLIC}:  scql.TensorStatus_TENSORSTATUS_PRIVATE,
-	tensorStatusPair{scql.TensorStatus_TENSORSTATUS_PUBLIC, scql.TensorStatus_TENSORSTATUS_PRIVATE}:  scql.TensorStatus_TENSORSTATUS_PRIVATE,
-	tensorStatusPair{scql.TensorStatus_TENSORSTATUS_SECRET, scql.TensorStatus_TENSORSTATUS_SECRET}:   scql.TensorStatus_TENSORSTATUS_SECRET,
-	tensorStatusPair{scql.TensorStatus_TENSORSTATUS_PUBLIC, scql.TensorStatus_TENSORSTATUS_SECRET}:   scql.TensorStatus_TENSORSTATUS_SECRET,
-	tensorStatusPair{scql.TensorStatus_TENSORSTATUS_SECRET, scql.TensorStatus_TENSORSTATUS_PUBLIC}:   scql.TensorStatus_TENSORSTATUS_SECRET,
+	{scql.TensorStatus_TENSORSTATUS_PRIVATE, scql.TensorStatus_TENSORSTATUS_PRIVATE}: scql.TensorStatus_TENSORSTATUS_PRIVATE,
+	{scql.TensorStatus_TENSORSTATUS_PRIVATE, scql.TensorStatus_TENSORSTATUS_PUBLIC}:  scql.TensorStatus_TENSORSTATUS_PRIVATE,
+	{scql.TensorStatus_TENSORSTATUS_PUBLIC, scql.TensorStatus_TENSORSTATUS_PRIVATE}:  scql.TensorStatus_TENSORSTATUS_PRIVATE,
+	{scql.TensorStatus_TENSORSTATUS_SECRET, scql.TensorStatus_TENSORSTATUS_SECRET}:   scql.TensorStatus_TENSORSTATUS_SECRET,
+	{scql.TensorStatus_TENSORSTATUS_PUBLIC, scql.TensorStatus_TENSORSTATUS_SECRET}:   scql.TensorStatus_TENSORSTATUS_SECRET,
+	{scql.TensorStatus_TENSORSTATUS_SECRET, scql.TensorStatus_TENSORSTATUS_PUBLIC}:   scql.TensorStatus_TENSORSTATUS_SECRET,
 }
 
 // create algs for binary ops which need communication when status is share
