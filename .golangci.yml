@@ -1,6 +1,6 @@
 # This file contains all available configuration options
 # with their default values.
-version: v2
+version: "2"
 
 # options for analysis running
 run:
@@ -165,7 +165,3 @@ linters:
     - staticcheck
     - gosimple
     - bodyclose
-  disable:
-    - deadcode
-    - structcheck
-    - varcheck
