@@ -1,5 +1,6 @@
 # This file contains all available configuration options
 # with their default values.
+version: v2
 
 # options for analysis running
 run:
@@ -22,6 +23,7 @@ run:
 output:
   # sort linter result
   sort-results: true
+
   # sort order
   sort-order:
     - linter
@@ -163,5 +165,7 @@ linters:
     - staticcheck
     - gosimple
     - bodyclose
-  disable-all: true
-  fast: false
+  disable:
+    - deadcode
+    - structcheck
+    - varcheck
