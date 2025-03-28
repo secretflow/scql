@@ -156,7 +156,6 @@ linters:
     - errcheck
     - goconst
     - dupl
-    - goimports
     - gosec
     - staticcheck
     - gosimple
