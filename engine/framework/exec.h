@@ -61,6 +61,7 @@ class ExecContext {
   std::string GetStringValueFromAttribute(const std::string& name) const;
   int64_t GetInt64ValueFromAttribute(const std::string& name) const;
   bool GetBooleanValueFromAttribute(const std::string& name) const;
+  double GetDoubleValueFromAttribute(const std::string& name) const;
   bool HasAttribute(const std::string& name) const {
     return node_.attributes().count(name) > 0;
   }
@@ -71,6 +72,8 @@ class ExecContext {
   std::optional<int64_t> TryGetInt64ValueFromAttribute(
       const std::string& name) const;
   std::optional<bool> TryGetBooleanValueFromAttribute(
+      const std::string& name) const;
+  std::optional<double> TryGetDoubleValueFromAttribute(
       const std::string& name) const;
 
  private:

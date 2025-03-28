@@ -14,6 +14,7 @@
 
 #include "engine/operator/group_agg.h"
 
+#include "arrow/compute/api.h"
 #include "arrow/compute/exec.h"
 #include "arrow/compute/row/grouper.h"
 #include "arrow/scalar.h"
@@ -80,7 +81,7 @@ void GroupAggBase::Execute(ExecContext* ctx) {
       if (slice->length() == 0) {
         continue;
       }
-      aggregated_scalars.push_back(AggImpl(slice));
+      aggregated_scalars.push_back(AggImpl(ctx, slice));
     }
 
     auto t = BuildTensorFromScalarVector(
@@ -135,7 +136,7 @@ TensorPtr GroupAggBase::BuildTensorFromScalarVector(
 const std::string GroupFirstOf::kOpType("GroupFirstOf");
 
 std::shared_ptr<arrow::Scalar> GroupFirstOf::AggImpl(
-    std::shared_ptr<arrow::Array> arr) {
+    ExecContext* ctx, std::shared_ptr<arrow::Array> arr) {
   std::shared_ptr<arrow::Scalar> ret;
   ASSIGN_OR_THROW_ARROW_STATUS(ret, arr->GetScalar(0));
   return ret;
@@ -148,7 +149,7 @@ std::shared_ptr<arrow::Scalar> GroupFirstOf::AggImpl(
 const std::string GroupCountDistinct::kOpType("GroupCountDistinct");
 
 std::shared_ptr<arrow::Scalar> GroupCountDistinct::AggImpl(
-    std::shared_ptr<arrow::Array> arr) {
+    ExecContext* ctx, std::shared_ptr<arrow::Array> arr) {
   auto ret = arrow::compute::CallFunction("count_distinct", {arr});
   YACL_ENFORCE(ret.ok(),
                "invoking arrow function 'count_distinct' failed: err_msg = {} ",
@@ -163,7 +164,7 @@ std::shared_ptr<arrow::Scalar> GroupCountDistinct::AggImpl(
 const std::string GroupCount::kOpType("GroupCount");
 
 std::shared_ptr<arrow::Scalar> GroupCount::AggImpl(
-    std::shared_ptr<arrow::Array> arr) {
+    ExecContext* ctx, std::shared_ptr<arrow::Array> arr) {
   auto ret = arrow::compute::CallFunction("count", {arr});
   YACL_ENFORCE(ret.ok(),
                "invoking arrow function 'count' failed: err_msg = {} ",
@@ -178,7 +179,7 @@ std::shared_ptr<arrow::Scalar> GroupCount::AggImpl(
 const std::string GroupSum::kOpType("GroupSum");
 
 std::shared_ptr<arrow::Scalar> GroupSum::AggImpl(
-    std::shared_ptr<arrow::Array> arr) {
+    ExecContext* ctx, std::shared_ptr<arrow::Array> arr) {
   auto ret = arrow::compute::CallFunction("sum", {arr});
   YACL_ENFORCE(ret.ok(), "invoking arrow function 'sum' failed: err_msg = {} ",
                ret.status().ToString());
@@ -192,7 +193,7 @@ std::shared_ptr<arrow::Scalar> GroupSum::AggImpl(
 const std::string GroupAvg::kOpType("GroupAvg");
 
 std::shared_ptr<arrow::Scalar> GroupAvg::AggImpl(
-    std::shared_ptr<arrow::Array> arr) {
+    ExecContext* ctx, std::shared_ptr<arrow::Array> arr) {
   auto ret = arrow::compute::CallFunction("mean", {arr});
   YACL_ENFORCE(ret.ok(), "invoking arrow function 'mean' failed: err_msg = {} ",
                ret.status().ToString());
@@ -206,7 +207,7 @@ std::shared_ptr<arrow::Scalar> GroupAvg::AggImpl(
 const std::string GroupMin::kOpType("GroupMin");
 
 std::shared_ptr<arrow::Scalar> GroupMin::AggImpl(
-    std::shared_ptr<arrow::Array> arr) {
+    ExecContext* ctx, std::shared_ptr<arrow::Array> arr) {
   auto ret = arrow::compute::CallFunction("min", {arr});
   YACL_ENFORCE(ret.ok(), "invoking arrow function 'min' failed: err_msg = {} ",
                ret.status().ToString());
@@ -220,11 +221,44 @@ std::shared_ptr<arrow::Scalar> GroupMin::AggImpl(
 const std::string GroupMax::kOpType("GroupMax");
 
 std::shared_ptr<arrow::Scalar> GroupMax::AggImpl(
-    std::shared_ptr<arrow::Array> arr) {
+    ExecContext* ctx, std::shared_ptr<arrow::Array> arr) {
   auto ret = arrow::compute::CallFunction("max", {arr});
   YACL_ENFORCE(ret.ok(), "invoking arrow function 'max' failed: err_msg = {} ",
                ret.status().ToString());
   return ret.ValueOrDie().scalar();
 }
 
+// ===========================
+//   GroupPercentileDisc impl
+// ===========================
+const std::string GroupPercentileDisc::kOpType("GroupPercentileDisc");
+
+std::shared_ptr<arrow::Scalar> GroupPercentileDisc::AggImpl(
+    ExecContext* ctx, std::shared_ptr<arrow::Array> arr) {
+  YACL_ENFORCE(arr != nullptr && arr->length() > 0,
+               "input array should not be null or empty");
+  double percent = ctx->GetDoubleValueFromAttribute(kPercent);
+  YACL_ENFORCE(percent >= 0.0 && percent <= 1.0,
+               "percent should be in [0.0, 1.0], but got {}", percent);
+  int64_t length = arr->length();
+
+  int pos =
+      static_cast<int>(std::ceil(percent * static_cast<double>(length)) - 1);
+  pos = std::max(pos, 0);
+  pos = std::min(pos, static_cast<int>(length - 1));
+
+  arrow::compute::PartitionNthOptions options(pos);
+  auto result =
+      arrow::compute::CallFunction("partition_nth_indices", {arr}, &options);
+
+  YACL_ENFORCE(result.ok(),
+               "failed to call partition_nth_indices function, error = {}",
+               result.status().ToString());
+  auto partitioned_indices = std::static_pointer_cast<arrow::UInt64Array>(
+      result.ValueOrDie().make_array());
+  auto value = arr->GetScalar(partitioned_indices->Value(pos));
+  YACL_ENFORCE(value.ok(), "failed to get scalar from array, error = {}",
+               value.status().ToString());
+  return value.ValueOrDie();
+}
 };  // namespace scql::engine::op

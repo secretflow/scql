@@ -92,6 +92,11 @@ bool ExecContext::GetBooleanValueFromAttribute(const std::string& name) const {
   return util::GetBooleanValue(attr.t());
 }
 
+double ExecContext::GetDoubleValueFromAttribute(const std::string& name) const {
+  const auto& attr = GetAttribute(name);
+  return util::GetDoubleValue(attr.t());
+}
+
 std::optional<std::vector<std::string>>
 ExecContext::TryGetStringValuesFromAttribute(const std::string& name) const {
   if (!HasAttribute(name)) {
@@ -126,6 +131,15 @@ std::optional<bool> ExecContext::TryGetBooleanValueFromAttribute(
   }
   const auto& attr = GetAttribute(name);
   return util::GetBooleanValue(attr.t());
+}
+
+std::optional<double> ExecContext::TryGetDoubleValueFromAttribute(
+    const std::string& name) const {
+  if (!HasAttribute(name)) {
+    return {};
+  }
+  const auto& attr = GetAttribute(name);
+  return util::GetDoubleValue(attr.t());
 }
 
 }  // namespace scql::engine
