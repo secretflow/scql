@@ -37,6 +37,9 @@ issues:
   max-issues-per-linter: 0
 
 formatters:
+  enable:
+    - gofmt
+    - goimports
   settings:
     gofmt:
       # simplify code: gofmt with `-s` option, true by default
@@ -44,12 +47,8 @@ formatters:
     goimports:
       # put imports beginning with prefix after 3rd-party packages;
       # it's a comma-separated list of prefixes
-      local-prefixes: github.com/secretflow/scql
-
-# all available settings of specific linters
-# from https://golangci-lint.run/usage/linters/
-linters-settings:
-  
+      local-prefixes: 
+        - github.com/secretflow/scql
 
 linters:
   exclusions:
@@ -108,7 +107,7 @@ linters:
       # Default is to use a neutral variety of English.
       # Setting locale to US will correct the British spelling of 'colour' to 'color'.
       locale: US
-      ignore-words:
+      ignore-rules:
         - someword
     lll:
       # max line length, lines longer will be reported. Default is 120.
@@ -162,3 +161,4 @@ linters:
     - staticcheck
     - gosimple
     - bodyclose
+  default: none
