@@ -621,7 +621,7 @@ func (t *translator) buildAggregation(ln *AggregationNode) (err error) {
 	// Aggregation Function
 	childColIdToTensor := t.getNodeResultTensor(child)
 	for i, aggFunc := range agg.AggFuncs {
-		if len(aggFunc.Args) != 1 {
+		if len(aggFunc.Args) != 1 && aggFunc.Name != ast.AggPercentileDisc {
 			return fmt.Errorf("buildAggregation: unsupported aggregation function %v", aggFunc)
 		}
 		switch aggFunc.Name {
@@ -634,7 +634,7 @@ func (t *translator) buildAggregation(ln *AggregationNode) (err error) {
 			if err != nil {
 				return fmt.Errorf("buildAggregation: %v", err)
 			}
-			output, err := t.ep.AddReduceAggNode(aggFunc.Name, colT)
+			output, err := t.ep.AddReduceAggNode(aggFunc.Name, colT, map[string]*graph.Attribute{})
 			if err != nil {
 				return fmt.Errorf("buildAggregation: %v", err)
 			}
@@ -662,7 +662,7 @@ func (t *translator) buildAggregation(ln *AggregationNode) (err error) {
 						if err != nil {
 							return fmt.Errorf("buildAggregation: add unique node: %v", err)
 						}
-						out, err = t.ep.AddReduceAggNode(ast.AggFuncCount, colT)
+						out, err = t.ep.AddReduceAggNode(ast.AggFuncCount, colT, map[string]*graph.Attribute{})
 						if err != nil {
 							return fmt.Errorf("buildAggregation: count: %v", err)
 						}
@@ -679,7 +679,7 @@ func (t *translator) buildAggregation(ln *AggregationNode) (err error) {
 							return fmt.Errorf("buildAggregation: %v", err)
 						}
 						// 3. sum(mark)
-						out, err = t.ep.AddReduceAggNode(ast.AggFuncSum, groupMarkDistinct)
+						out, err = t.ep.AddReduceAggNode(ast.AggFuncSum, groupMarkDistinct, map[string]*graph.Attribute{})
 						if err != nil {
 							return fmt.Errorf("buildAggregation: %v", err)
 						}
@@ -704,7 +704,7 @@ func (t *translator) buildAggregation(ln *AggregationNode) (err error) {
 					if err != nil {
 						return fmt.Errorf("buildAggregation: %v", err)
 					}
-					out, err = t.ep.AddReduceAggNode(ast.AggFuncCount, colT)
+					out, err = t.ep.AddReduceAggNode(ast.AggFuncCount, colT, map[string]*graph.Attribute{})
 					if err != nil {
 						return fmt.Errorf("buildAggregation: %v", err)
 					}
@@ -715,7 +715,7 @@ func (t *translator) buildAggregation(ln *AggregationNode) (err error) {
 				if err != nil {
 					return fmt.Errorf("buildAggregation: %v", err)
 				}
-				output, err := t.ep.AddReduceAggNode(ast.AggFuncSum, colT)
+				output, err := t.ep.AddReduceAggNode(ast.AggFuncSum, colT, map[string]*graph.Attribute{})
 				if err != nil {
 					return fmt.Errorf("buildAggregation: %v", err)
 				}
@@ -723,6 +723,23 @@ func (t *translator) buildAggregation(ln *AggregationNode) (err error) {
 			default:
 				return fmt.Errorf("buildAggregation: unrecognized count func mode %v", aggFunc.Mode)
 			}
+		case ast.AggPercentileDisc:
+			colT, err := t.buildExpression(aggFunc.Args[0], childColIdToTensor, false, ln)
+			if err != nil {
+				return fmt.Errorf("buildAggregation: %v", err)
+			}
+			percent, err := strconv.ParseFloat(aggFunc.Args[1].String(), 64)
+			if err != nil {
+				return fmt.Errorf("buildAggregation: %v", err)
+			}
+			attr := &graph.Attribute{}
+			attr.SetDouble(percent)
+			output, err := t.ep.AddReduceAggNode(ast.AggPercentileDisc, colT, map[string]*graph.Attribute{"percent": attr})
+			if err != nil {
+				return fmt.Errorf("buildAggregation: %v", err)
+			}
+
+			colIdToTensor[ln.Schema().Columns[i].UniqueID] = output
 		default:
 			return fmt.Errorf("buildAggregation: unsupported aggregation function %v", aggFunc)
 		}
