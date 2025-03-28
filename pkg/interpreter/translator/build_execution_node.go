@@ -732,6 +732,10 @@ func (t *translator) buildAggregation(ln *AggregationNode) (err error) {
 			if err != nil {
 				return fmt.Errorf("buildAggregation: %v", err)
 			}
+
+			if percent < 0 || percent > 1 {
+				return fmt.Errorf("buildAggregation: invalid percentile value %v, it should be in [0, 1]", percent)
+			}
 			attr := &graph.Attribute{}
 			attr.SetDouble(percent)
 			output, err := t.ep.AddReduceAggNode(ast.AggPercentileDisc, colT, map[string]*graph.Attribute{"percent": attr})
