@@ -30,7 +30,7 @@ output:
 
   # colored-line-number|line-number|json|tab|checkstyle|code-climate, default is "colored-line-number"
   formats:
-    - format: json
+    json:
       path: stderr
 
   # print lines of code with issue, default is true
