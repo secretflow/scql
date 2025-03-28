@@ -65,6 +65,8 @@ func (app *App) SubmitAndGetHandler(c *gin.Context) {
 
 	resp := app.submitAndGet(c.Request.Context(), request)
 	body, _ := message.SerializeTo(resp, inputEncodingType)
+
+	setResponseContentType(c, inputEncodingType)
 	c.String(http.StatusOK, body)
 
 	logEntry.RequestID = request.BizRequestId
