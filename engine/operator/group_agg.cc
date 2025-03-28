@@ -247,13 +247,18 @@ std::shared_ptr<arrow::Scalar> GroupPercentileDisc::AggImpl(
   pos = std::max(pos, 0);
   pos = std::min(pos, static_cast<int>(length - 1));
 
-  arrow::Result result = arrow::compute::SortIndices(*arr);
-  YACL_ENFORCE(result.ok(), "failed to sort indices");
-  auto sort_indices =
-      std::static_pointer_cast<arrow::UInt64Array>(result.ValueOrDie());
-  auto index = sort_indices->Value(pos);
-  auto value = arr->GetScalar(index);
-  YACL_ENFORCE(value.ok(), "failed to get scalar at index {}", index);
+  arrow::compute::PartitionNthOptions options(pos);
+  auto result =
+      arrow::compute::CallFunction("partition_nth_indices", {arr}, &options);
+
+  YACL_ENFORCE(result.ok(),
+               "failed to call partition_nth_indices function, error = {}",
+               result.status().ToString());
+  auto partitioned_indices = std::static_pointer_cast<arrow::UInt64Array>(
+      result.ValueOrDie().make_array());
+  auto value = arr->GetScalar(partitioned_indices->Value(pos));
+  YACL_ENFORCE(value.ok(), "failed to get scalar from array, error = {}",
+               value.status().ToString());
   return value.ValueOrDie();
 }
 };  // namespace scql::engine::op

@@ -238,7 +238,7 @@ INSTANTIATE_TEST_SUITE_P(
                                                       "[0, 1, 2, 3, 4, null]")),
                  test::NamedTensor(
                      "in_b", TensorFrom(arrow::float32(),
-                                        "[0, 1.1, 2.2, 3.3, 4.4, 5.5]"))},
+                                        "[0, 1.1, 3.3, 2.2, 4.4, 5.5]"))},
             .group_id = test::NamedTensor(
                 "group_id", TensorFrom(arrow::uint32(), "[0, 0, 1, 1, 1, 2]")),
             .group_num = test::NamedTensor("group_num",
@@ -250,7 +250,7 @@ INSTANTIATE_TEST_SUITE_P(
                                                      "[0, 3.3, 5.5]"))},
             .double_attr = std::make_pair(
                 GroupPercentileDisc::kPercent,
-                0.5)  // the index of each group should be [0, 1, 0]
+                0.5)  // the index of each group should be [0, 0, 0]
         },
         GroupAggTestCase{
             .op_type = GroupPercentileDisc::kOpType,
