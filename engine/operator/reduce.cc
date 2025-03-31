@@ -57,8 +57,9 @@ void ReduceBase::Execute(ExecContext* ctx) {
     YACL_ENFORCE(tensor, "get private tensor failed, name={}", input_pb.name());
 
     const std::string& arrow_fun_name = GetArrowFunName();
-    auto result = arrow::compute::CallFunction(arrow_fun_name,
-                                               {tensor->ToArrowChunkedArray()});
+    auto option = GetOptions(ctx);
+    auto result = arrow::compute::CallFunction(
+        arrow_fun_name, {tensor->ToArrowChunkedArray()}, option.get());
     YACL_ENFORCE(result.ok(), "invoking arrow function '{}' failed: err_msg={}",
                  arrow_fun_name, result.status().ToString());
 
@@ -221,5 +222,15 @@ ReduceBase::ReduceFn ReduceMax::GetReduceFn(spu::SPUContext* sctx) {
     return spu::kernel::hlo::Max(sctx, lhs, rhs);
   };
 }
+
+// =====================
+// ReducePercentileDisc impl
+// =====================
+
+const std::string ReducePercentileDisc::kOpType("ReducePercentileDisc");
+const std::string& ReducePercentileDisc::Type() const { return kOpType; }
+
+std::unique_ptr<const arrow::compute::FunctionOptions>
+ReducePercentileDisc::GetOptions(ExecContext* ctx) {}
 
 }  // namespace scql::engine::op

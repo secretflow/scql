@@ -14,6 +14,9 @@
 
 #pragma once
 
+#include "arrow/compute/api.h"
+#include "arrow/compute/exec.h"
+
 #include "engine/framework/operator.h"
 
 namespace scql::engine::op {
@@ -46,6 +49,11 @@ class ReduceBase : public Operator {
   virtual spu::Value AggregateFinalize(spu::SPUContext* sctx,
                                        const spu::Value& value) {
     return value;
+  }
+
+  virtual std::unique_ptr<const arrow::compute::FunctionOptions> GetOptions(
+      ExecContext* sctx) {
+    return nullptr;
   }
 };
 
@@ -132,6 +140,21 @@ class ReduceMax : public ReduceBase {
 
  private:
   spu::Value init_value_;
+};
+
+class ReducePercentileDisc : public ReduceBase {
+ public:
+  static const std::string kOpType;
+  static constexpr char kPercent[] = "percent";
+  const std::string& Type() const override;
+
+ protected:
+  std::string GetArrowFunName() override { return "partition_nth_indices"; }
+  void AggregateInit(spu::SPUContext* sctx, const spu::Value& in) override;
+  spu::Value GetInitValue(spu::SPUContext* sctx) override;
+  ReduceFn GetReduceFn(spu::SPUContext* sctx) override;
+  std::unique_ptr<const arrow::compute::FunctionOptions> GetOptions(
+      ExecContext* sctx) override;
 };
 
 }  // namespace scql::engine::op
