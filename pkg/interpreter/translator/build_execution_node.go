@@ -985,8 +985,10 @@ func (t *translator) buildPrivateGroupAggregation(ln *AggregationNode, party str
 
 			attr.SetDouble(percent)
 			outputs, err := t.addGroupAggNode(ast.AggPercentileDisc, operator.OpNameGroupPercentileDisc, groupId, groupNum, []*graph.Tensor{colT}, party, map[string]*graph.Attribute{"percent": attr})
+			if err != nil {
+				return fmt.Errorf("buildPrivateGroupAggregation: %v", err)
+			}
 			colIdToTensor[ln.Schema().Columns[i].UniqueID] = outputs[0]
-
 		default:
 			return fmt.Errorf("buildPrivateGroupAggregation: unsupported aggregation function %v", aggFunc)
 		}
