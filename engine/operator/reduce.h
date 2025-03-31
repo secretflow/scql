@@ -52,9 +52,11 @@ class ReduceBase : public Operator {
   }
 
   virtual std::unique_ptr<const arrow::compute::FunctionOptions> GetOptions(
-      ExecContext* sctx) {
+      std::shared_ptr<Tensor> tensor) {
     return nullptr;
   }
+
+  virtual void InitAttribute(ExecContext* ctx) {}
 };
 
 class ReduceSum : public ReduceBase {
@@ -154,7 +156,11 @@ class ReducePercentileDisc : public ReduceBase {
   spu::Value GetInitValue(spu::SPUContext* sctx) override;
   ReduceFn GetReduceFn(spu::SPUContext* sctx) override;
   std::unique_ptr<const arrow::compute::FunctionOptions> GetOptions(
-      ExecContext* sctx) override;
+      std::shared_ptr<Tensor> tensor) override;
+  void InitAttribute(ExecContext* ctx) override;
+
+ private:
+  double percent_;
 };
 
 }  // namespace scql::engine::op

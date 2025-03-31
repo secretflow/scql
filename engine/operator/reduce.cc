@@ -52,12 +52,13 @@ void ReduceBase::Execute(ExecContext* ctx) {
   const auto& input_pb = ctx->GetInput(kIn)[0];
   const auto& output_pb = ctx->GetOutput(kOut)[0];
 
+  InitAttribute(ctx);
   if (util::GetTensorStatus(input_pb) == pb::TENSORSTATUS_PRIVATE) {
     auto tensor = ctx->GetTensorTable()->GetTensor(input_pb.name());
     YACL_ENFORCE(tensor, "get private tensor failed, name={}", input_pb.name());
 
     const std::string& arrow_fun_name = GetArrowFunName();
-    auto option = GetOptions(ctx);
+    auto option = GetOptions(tensor);
     auto result = arrow::compute::CallFunction(
         arrow_fun_name, {tensor->ToArrowChunkedArray()}, option.get());
     YACL_ENFORCE(result.ok(), "invoking arrow function '{}' failed: err_msg={}",
@@ -230,7 +231,33 @@ ReduceBase::ReduceFn ReduceMax::GetReduceFn(spu::SPUContext* sctx) {
 const std::string ReducePercentileDisc::kOpType("ReducePercentileDisc");
 const std::string& ReducePercentileDisc::Type() const { return kOpType; }
 
-std::unique_ptr<const arrow::compute::FunctionOptions>
-ReducePercentileDisc::GetOptions(ExecContext* ctx) {}
+void ReducePercentileDisc::InitAttribute(ExecContext* ctx) {
+  percent_ = ctx->GetDoubleValueFromAttribute(kPercent);
+  YACL_ENFORCE(percent_ >= 0 && percent_ <= 1,
+               "percent should be in [0, 1], but got={}", percent_);
+}
 
+std::unique_ptr<const arrow::compute::FunctionOptions>
+ReducePercentileDisc::GetOptions(std::shared_ptr<Tensor> tensor) {
+  auto length = tensor->Length();
+
+  int pos =
+      static_cast<int>(std::ceil(percent_ * static_cast<double>(length)) - 1);
+  pos = std::max(pos, 0);
+  pos = std::min(pos, static_cast<int>(length - 1));
+
+  return std::make_unique<arrow::compute::PartitionNthOptions>(pos);
+}
+void ReducePercentileDisc::AggregateInit(spu::SPUContext* sctx,
+                                         const spu::Value& in) {
+  // do nothing
+}
+
+spu::Value ReducePercentileDisc::GetInitValue(spu::SPUContext* sctx) {
+  YACL_THROW("unsupported reduce func: percentile_disc");
+}
+
+ReduceBase::ReduceFn ReducePercentileDisc::GetReduceFn(spu::SPUContext* sctx) {
+  YACL_THROW("unsupported reduce func: percentile_disc");
+}
 }  // namespace scql::engine::op
