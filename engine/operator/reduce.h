@@ -33,7 +33,10 @@ class ReduceBase : public Operator {
  protected:
   virtual std::string GetArrowFunName() = 0;
 
-  spu::Value SecretReduceImpl(spu::SPUContext* sctx, const spu::Value& in);
+  virtual spu::Value SecretReduceImpl(spu::SPUContext* sctx,
+                                      const spu::Value& in);
+  virtual void ExecuteInPlain(ExecContext* ctx, const pb::Tensor& in,
+                              const pb::Tensor& out);
 
   virtual spu::Value HandleEmptyInput(const spu::Value& in) { return in; }
 
@@ -50,12 +53,6 @@ class ReduceBase : public Operator {
                                        const spu::Value& value) {
     return value;
   }
-
-  virtual std::unique_ptr<const arrow::compute::FunctionOptions> GetOptions(
-      std::shared_ptr<Tensor> tensor) {
-    return nullptr;
-  }
-
   virtual void InitAttribute(ExecContext* ctx) {}
 };
 
@@ -155,12 +152,22 @@ class ReducePercentileDisc : public ReduceBase {
   void AggregateInit(spu::SPUContext* sctx, const spu::Value& in) override;
   spu::Value GetInitValue(spu::SPUContext* sctx) override;
   ReduceFn GetReduceFn(spu::SPUContext* sctx) override;
-  std::unique_ptr<const arrow::compute::FunctionOptions> GetOptions(
-      std::shared_ptr<Tensor> tensor) override;
   void InitAttribute(ExecContext* ctx) override;
+  spu::Value SecretReduceImpl(spu::SPUContext* sctx,
+                              const spu::Value& in) override;
+  void ExecuteInPlain(ExecContext* ctx, const pb::Tensor& in,
+                      const pb::Tensor& out) override;
 
  private:
   double percent_;
+
+  int64_t GetPointIndex(size_t length) const {
+    int64_t pos = static_cast<size_t>(
+        std::ceil(percent_ * static_cast<double>(length)) - 1);
+    pos = std::max(pos, static_cast<int64_t>(0));
+    pos = std::min(pos, static_cast<int64_t>(length) - 1);
+    return pos;
+  }
 };
 
 }  // namespace scql::engine::op

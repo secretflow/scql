@@ -19,10 +19,13 @@
 
 #include "arrow/compute/api_aggregate.h"
 #include "arrow/compute/exec.h"
+#include "libspu/kernel/hal/constants.h"
 #include "libspu/kernel/hal/shape_ops.h"
 #include "libspu/kernel/hlo/basic_binary.h"
 #include "libspu/kernel/hlo/const.h"
+#include "libspu/kernel/hlo/indexing.h"
 #include "libspu/kernel/hlo/reduce.h"
+#include "libspu/kernel/hlo/sort.h"
 
 #include "engine/core/arrow_helper.h"
 #include "engine/core/tensor_constructor.h"
@@ -54,22 +57,7 @@ void ReduceBase::Execute(ExecContext* ctx) {
 
   InitAttribute(ctx);
   if (util::GetTensorStatus(input_pb) == pb::TENSORSTATUS_PRIVATE) {
-    auto tensor = ctx->GetTensorTable()->GetTensor(input_pb.name());
-    YACL_ENFORCE(tensor, "get private tensor failed, name={}", input_pb.name());
-
-    const std::string& arrow_fun_name = GetArrowFunName();
-    auto option = GetOptions(tensor);
-    auto result = arrow::compute::CallFunction(
-        arrow_fun_name, {tensor->ToArrowChunkedArray()}, option.get());
-    YACL_ENFORCE(result.ok(), "invoking arrow function '{}' failed: err_msg={}",
-                 arrow_fun_name, result.status().ToString());
-
-    auto scalar = result.ValueOrDie().scalar();
-    std::shared_ptr<arrow::Array> array;
-    ASSIGN_OR_THROW_ARROW_STATUS(array, arrow::MakeArrayFromScalar(*scalar, 1));
-    auto chunked_arr = std::make_shared<arrow::ChunkedArray>(array);
-
-    ctx->GetTensorTable()->AddTensor(output_pb.name(), TensorFrom(chunked_arr));
+    ExecuteInPlain(ctx, input_pb, output_pb);
   } else {
     auto* sctx = ctx->GetSession()->GetSpuContext();
     auto* symbols = ctx->GetSession()->GetDeviceSymbols();
@@ -82,6 +70,24 @@ void ReduceBase::Execute(ExecContext* ctx) {
     // TODO: complete null propagation in aggregation
 #endif
   }
+}
+
+void ReduceBase::ExecuteInPlain(ExecContext* ctx, const pb::Tensor& input_pb,
+                                const pb::Tensor& output_pb) {
+  const auto tensor = ctx->GetTensorTable()->GetTensor(input_pb.name());
+  YACL_ENFORCE(tensor, "get private tensor failed, name={}", input_pb.name());
+
+  const std::string& arrow_fun_name = GetArrowFunName();
+  auto result = arrow::compute::CallFunction(arrow_fun_name,
+                                             {tensor->ToArrowChunkedArray()});
+  YACL_ENFORCE(result.ok(), "invoking arrow function '{}' failed: err_msg={}",
+               arrow_fun_name, result.status().ToString());
+  auto scalar = result.ValueOrDie().scalar();
+  std::shared_ptr<arrow::Array> array;
+  ASSIGN_OR_THROW_ARROW_STATUS(array, arrow::MakeArrayFromScalar(*scalar, 1));
+  auto chunked_arr = std::make_shared<arrow::ChunkedArray>(array);
+
+  ctx->GetTensorTable()->AddTensor(output_pb.name(), TensorFrom(chunked_arr));
 }
 
 spu::Value ReduceBase::SecretReduceImpl(spu::SPUContext* sctx,
@@ -237,17 +243,6 @@ void ReducePercentileDisc::InitAttribute(ExecContext* ctx) {
                "percent should be in [0, 1], but got={}", percent_);
 }
 
-std::unique_ptr<const arrow::compute::FunctionOptions>
-ReducePercentileDisc::GetOptions(std::shared_ptr<Tensor> tensor) {
-  auto length = tensor->Length();
-
-  int pos =
-      static_cast<int>(std::ceil(percent_ * static_cast<double>(length)) - 1);
-  pos = std::max(pos, 0);
-  pos = std::min(pos, static_cast<int>(length - 1));
-
-  return std::make_unique<arrow::compute::PartitionNthOptions>(pos);
-}
 void ReducePercentileDisc::AggregateInit(spu::SPUContext* sctx,
                                          const spu::Value& in) {
   // do nothing
@@ -259,5 +254,80 @@ spu::Value ReducePercentileDisc::GetInitValue(spu::SPUContext* sctx) {
 
 ReduceBase::ReduceFn ReducePercentileDisc::GetReduceFn(spu::SPUContext* sctx) {
   YACL_THROW("unsupported reduce func: percentile_disc");
+}
+
+void ReducePercentileDisc::ExecuteInPlain(ExecContext* ctx,
+                                          const pb::Tensor& in,
+                                          const pb::Tensor& out) {
+  auto tensor = ctx->GetTensorTable()->GetTensor(in.name());
+  YACL_ENFORCE(tensor, "get private tensor failed, name={}", in.name());
+  if (tensor->Length() == 0) {
+    ctx->GetTensorTable()->AddTensor(out.name(), tensor);
+    return;
+  }
+  int64_t pos = GetPointIndex(tensor->Length());
+  arrow::compute::PartitionNthOptions options(pos);
+
+  const arrow::compute::FunctionOptions* options_ptr = &options;
+  std::shared_ptr<arrow::Array> array;
+  ASSIGN_OR_THROW_ARROW_STATUS(
+      array, arrow::Concatenate(tensor->ToArrowChunkedArray()->chunks(),
+                                arrow::default_memory_pool()));
+  auto result = arrow::compute::CallFunction("partition_nth_indices", {array},
+                                             options_ptr);
+
+  YACL_ENFORCE(result.ok(),
+               "invoking arrow function 'partition_nth_indices' "
+               "failed: err_msg={}",
+               result.status().ToString());
+  auto partitioned_indices = std::static_pointer_cast<arrow::UInt64Array>(
+      result.ValueOrDie().make_array());
+  std::shared_ptr<arrow::Scalar> scalar;
+  ASSIGN_OR_THROW_ARROW_STATUS(
+      scalar, array->GetScalar(partitioned_indices->Value(pos)));
+  ASSIGN_OR_THROW_ARROW_STATUS(array, arrow::MakeArrayFromScalar(*scalar, 1));
+  auto chunked_arr = std::make_shared<arrow::ChunkedArray>(array);
+
+  ctx->GetTensorTable()->AddTensor(out.name(), TensorFrom(chunked_arr));
+}
+
+spu::Value ReducePercentileDisc::SecretReduceImpl(spu::SPUContext* sctx,
+                                                  const spu::Value& in) {
+  auto length = in.shape()[0];
+  if (length == 0) {
+    return in;
+  }
+  auto sorted = spu::kernel::hlo::SimpleSort(
+      sctx, {in}, 0, spu::kernel::hal::SortDirection::Ascending, 1);
+
+  auto pos =
+      static_cast<int>(std::ceil(percent_ * static_cast<double>(length)) - 1);
+  pos = std::max(pos, 0);
+  pos = std::min(pos, static_cast<int>(length - 1));
+
+  spu::Value left_zeros = spu::kernel::hlo::Constant(sctx, 0, {pos});
+  spu::Value right_zeros =
+      spu::kernel::hlo::Constant(sctx, 0, {length - pos - 1});
+  spu::Value concat = spu::kernel::hlo::Concatenate(
+      sctx, {left_zeros, spu::kernel::hlo::Constant(sctx, 1, {1}), right_zeros},
+      0);
+  auto gathered = spu::kernel::hlo::Mul(sctx, sorted[0], concat);
+
+  spu::kernel::hlo::BatchedValueBinaryFn reducer =
+      [sctx](absl::Span<spu::Value const> lhs,
+             absl::Span<spu::Value const> rhs) {
+        std::vector<spu::Value> out;
+        std::transform(lhs.begin(), lhs.end(), rhs.begin(),
+                       std::back_inserter(out),
+                       [sctx](const spu::Value& lhs, const spu::Value& rhs) {
+                         return spu::kernel::hlo::Add(sctx, lhs, rhs);
+                       });
+        return out;
+      };
+  auto zero = spu::kernel::hlo::Constant(sctx, 0, {1});
+  auto result = spu::kernel::hlo::Reduce(
+      sctx, std::vector<spu::Value>{gathered}, std::vector<spu::Value>{zero},
+      spu::Axes{0}, reducer);
+  return result[0];
 }
 }  // namespace scql::engine::op
