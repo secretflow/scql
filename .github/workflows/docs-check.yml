@@ -1,0 +1,37 @@
+---
+name: Check Docs
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  check-docs:
+    name: check docs
+    runs-on: [ubuntu-latest]
+    container:
+      image: secretflow/scql-ci:20250228
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
+      - name: make docs
+        run: |
+          # avoid {{ and {# in docs
+          if [ $(grep -E '({{|{#)' --include=\*.{rst,md,ipynb,po} --exclude=run-scql-on-kuscia.* -rnw 'docs' | wc -l) != 0 ];
+          then
+            echo "({{|{#) is not allowed in rst,md,ipynb,po files. Thank you for cooperation."
+            grep -E '({{|{#)' --include=\*.{rst,md,ipynb,po} --exclude=run-scql-on-kuscia.* -rnw 'docs'
+            exit 1
+          fi

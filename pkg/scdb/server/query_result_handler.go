@@ -52,6 +52,7 @@ func (app *App) FetchHandler(c *gin.Context) {
 	logEntry.CostTime = time.Since(timeStart)
 	logEntry.SessionID = resp.ScdbSessionId
 	body, _ := message.SerializeTo(resp, inputEncodingType)
+	setResponseContentType(c, inputEncodingType)
 	c.String(http.StatusOK, body)
 	if resp.Status.Code != int32(scql.Code_OK) {
 		logEntry.Reason = constant.ReasonInvalidRequest

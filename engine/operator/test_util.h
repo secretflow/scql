@@ -113,6 +113,9 @@ class ExecNodeBuilder {
   ExecNodeBuilder& AddInt64Attr(const std::string& name, int64_t value);
   ExecNodeBuilder& AddInt64sAttr(const std::string& name,
                                  const std::vector<int64_t>& values);
+  ExecNodeBuilder& AddDoubleAttr(const std::string& name, double value);
+  ExecNodeBuilder& AddDoubleAttrs(const std::string& name,
+                                  const std::vector<double>& value);
 
   ExecNodeBuilder& AddBooleanAttr(const std::string& name, bool value);
 
