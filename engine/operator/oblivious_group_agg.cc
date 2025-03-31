@@ -18,6 +18,8 @@
 #include <utility>
 #include <vector>
 
+#include "libspu/kernel/hlo/basic_unary.h"
+
 #include "engine/util/prefix_sum.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
@@ -45,6 +47,8 @@ void ObliviousGroupAggBase::Validate(ExecContext* ctx) {
 void ObliviousGroupAggBase::Execute(ExecContext* ctx) {
   const auto& input_pbs = ctx->GetInput(kIn);
   const auto& output_pbs = ctx->GetOutput(kOut);
+
+  InitAttribute(ctx);
 
   auto* symbols = ctx->GetSession()->GetDeviceSymbols();
   auto* sctx = ctx->GetSession()->GetSpuContext();
@@ -210,6 +214,10 @@ spu::Value ObliviousGroupMin::CalculateResult(spu::SPUContext* sctx,
       });
 }
 
+// ===========================
+//   PercentRank impl
+// ===========================
+
 const std::string ObliviousPercentRank::kOpType("ObliviousPercentRank");
 const std::string& ObliviousPercentRank::Type() const { return kOpType; }
 
@@ -228,4 +236,64 @@ spu::Value ObliviousPercentRank::CalculateResult(spu::SPUContext* sctx,
       sctx, row_number, row_number.vtype(), spu::DataType::DT_F64);
   return spu::kernel::hlo::Div(sctx, float_row_number, group_count[0]);
 }
+
+// ===========================
+//   PercentileDisc impl
+// ===========================
+
+const std::string ObliviousPercentileDisc::kOpType("ObliviousPercentileDisc");
+const std::string& ObliviousPercentileDisc::Type() const { return kOpType; }
+
+void ObliviousPercentileDisc::InitAttribute(ExecContext* ctx) {
+  percent_ = ctx->GetDoubleValueFromAttribute(kPercent);
+  YACL_ENFORCE(percent_ >= 0 && percent_ <= 1, "percent must be in [0, 1]");
+}
+
+// the group is in the format of [0, 1, 1, 0, 1, 1, 1]
+spu::Value ObliviousPercentileDisc::CalculateResult(spu::SPUContext* sctx,
+                                                    const spu::Value& value,
+                                                    const spu::Value& group) {
+  const double epsilon = 1e-9;
+  YACL_ENFORCE(percent_ >= 0 && percent_ <= 1, "percent must be in [0, 1]");
+  // percent = 1
+  if (1 - percent_ < epsilon) {
+    return ObliviousGroupMax().CalculateResult(sctx, value, group);
+  }
+
+  // percent = 0
+  if (percent_ < epsilon) {
+    return ObliviousGroupMin().CalculateResult(sctx, value, group);
+  }
+  spu::Value count = ObliviousGroupCount().CalculateResult(sctx, value, group);
+  spu::Value recovered_group = RevertGroupMaskTransfer(
+
+      sctx, group);  // reverse group from [0, 1, 1, 0, 1, 1, 1] to [0, 0, 1, 0,
+                     // 0, 0, 1]
+  spu::Value reversed_mark = spu::kernel::hlo::Sub(
+      sctx, spu::kernel::hlo::Constant(sctx, 1, group.shape()),
+      recovered_group);  // [0, 0, 1, 0, 0, 0, 1] to [1, 1, 0, 1, 1, 1, 0]
+  spu::Value percent_arr =
+      spu::kernel::hlo::Constant(sctx, percent_, group.shape());
+  // calculate the rank of the target percentile
+  spu::Value one = spu::kernel::hlo::Constant(sctx, 1, group.shape());
+  // target_pos = ceil(count * percent) - 1, but the count is start from 1, so
+  // the
+  // `-1` is no need here
+  spu::Value target_pos = spu::kernel::hlo::Ceil(
+      sctx, spu::kernel::hlo::Mul(sctx, count, percent_arr));
+  // index = rank * group, [0, 0, 0, index0, 0,..., 0, index1, 0, ...,0, indexn]
+  spu::Value index_values =
+      spu::kernel::hlo::Mul(sctx, target_pos, recovered_group);
+
+  auto expanded_index = util::ExpandGroupValueReversely(
+      sctx, {index_values},
+      reversed_mark);  // [index0, index0, index0, index1, index1, index1,
+                       // index1]
+  auto percentile_values = spu::kernel::hlo::Mul(
+      sctx, value,
+      spu::kernel::hlo::Equal(
+          sctx, expanded_index[0],
+          count));  // [0, arr[index0],...0, arr[index1], ..., 0]
+  return ObliviousGroupSum().CalculateResult(sctx, percentile_values, group);
+}  // namespace scql::engine::op
 };  // namespace scql::engine::op

@@ -27,6 +27,7 @@ struct ObliviousGroupAggTestCase {
   std::vector<test::NamedTensor> inputs;
   test::NamedTensor group;
   std::vector<test::NamedTensor> outputs;
+  std::optional<std::pair<std::string, double>> double_attribute;
 };
 
 class ObliviousGroupAggTest
@@ -87,6 +88,10 @@ pb::ExecNode ObliviousGroupAggTest::MakeExecNode(
     const ObliviousGroupAggTestCase& tc) {
   test::ExecNodeBuilder builder(tc.op_type);
 
+  if (tc.double_attribute.has_value()) {
+    builder.AddDoubleAttr(tc.double_attribute->first,
+                          tc.double_attribute->second);
+  }
   builder.SetNodeName("oblivious-group-agg-test");
 
   std::vector<pb::Tensor> inputs;
@@ -352,6 +357,57 @@ INSTANTIATE_TEST_SUITE_P(
                                                                "[1,1]")),
                 .outputs = {test::NamedTensor(
                     "out", TensorFrom(arrow::float64(), "[1.0,1.0]"))}})),
+    TestParamNameGenerator(ObliviousGroupAggTest));
+
+INSTANTIATE_TEST_SUITE_P(
+    ObliviousPercentileDiscTest, ObliviousGroupAggTest,
+    testing::Combine(
+        test::SpuTestValuesMultiPC,
+        testing::Values(
+            ObliviousGroupAggTestCase{
+                .op_type = ObliviousPercentileDisc::kOpType,
+                .inputs = {test::NamedTensor(
+                    "in",
+                    TensorFrom(arrow::int64(), "[1, 2, 3, 4, 5, 6, 7, 8]"))},
+                .group = test::NamedTensor(
+                    "group",
+                    TensorFrom(arrow::boolean(), "[1, 0, 0, 0, 1, 0, 0, 1]")),
+                .outputs = {test::NamedTensor(
+                    "out", TensorFrom(arrow::int64(),
+                                      "[1, 0, 3, 3, 3, 0, 7, 7]"))},  // ceil(0.5*length)
+                                                                      // - 1
+                .double_attribute =
+                    std::make_pair(ObliviousPercentileDisc::kPercent, 0.5)},
+            ObliviousGroupAggTestCase{
+                .op_type = ObliviousPercentileDisc::kOpType,
+                .inputs = {test::NamedTensor(
+                    "in", TensorFrom(arrow::int64(), "[1, 2, 3, 4, 5]"))},
+                .group = test::NamedTensor(
+                    "group", TensorFrom(arrow::boolean(), "[1, 0, 0, 0, 1]")),
+                .outputs = {test::NamedTensor(
+                    "out", TensorFrom(arrow::int64(), "[1, 2, 2, 2, 2]"))},
+                .double_attribute =
+                    std::make_pair(ObliviousPercentileDisc::kPercent, 0)},
+            ObliviousGroupAggTestCase{
+                .op_type = ObliviousPercentileDisc::kOpType,
+                .inputs = {test::NamedTensor(
+                    "in", TensorFrom(arrow::int64(), "[1, 2, 3, 4, 5]"))},
+                .group = test::NamedTensor(
+                    "group", TensorFrom(arrow::boolean(), "[1, 0, 0, 0, 1]")),
+                .outputs = {test::NamedTensor(
+                    "out", TensorFrom(arrow::int64(), "[1, 2, 3, 4, 5]"))},
+                .double_attribute =
+                    std::make_pair(ObliviousPercentileDisc::kPercent, 1)},
+            ObliviousGroupAggTestCase{
+                .op_type = ObliviousPercentileDisc::kOpType,
+                .inputs = {test::NamedTensor("in", TensorFrom(arrow::float32(),
+                                                              "[]"))},
+                .group = test::NamedTensor("group",
+                                           TensorFrom(arrow::boolean(), "[]")),
+                .outputs = {test::NamedTensor(
+                    "out", TensorFrom(arrow::float32(), "[]"))},
+                .double_attribute =
+                    std::make_pair(ObliviousPercentileDisc::kPercent, 0.5)})),
     TestParamNameGenerator(ObliviousGroupAggTest));
 
 }  // namespace scql::engine::op
