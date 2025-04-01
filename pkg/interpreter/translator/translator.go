@@ -1076,8 +1076,8 @@ func (t *translator) addInNode(f *expression.ScalarFunction, left, right *graph.
 	if creator == nil {
 		return nil, fmt.Errorf("fail to get algorithm creator for op type %s", operator.OpNameIn)
 	}
-	algs, err := creator(map[string][]*ccl.CCL{graph.Left: []*ccl.CCL{left.CC},
-		graph.Right: []*ccl.CCL{right.CC}}, map[string][]*ccl.CCL{graph.Out: []*ccl.CCL{outCc}}, t.enginesInfo.GetParties())
+	algs, err := creator(map[string][]*ccl.CCL{graph.Left: {left.CC},
+		graph.Right: {right.CC}}, map[string][]*ccl.CCL{graph.Out: {outCc}}, t.enginesInfo.GetParties())
 	if err != nil {
 		return nil, fmt.Errorf("addInNode: %v", err)
 	}
@@ -1211,8 +1211,8 @@ func (t *translator) addBinaryNode(opName string, opType string, left *graph.Ten
 	if creator == nil {
 		return nil, fmt.Errorf("fail to get algorithm creator for op type %s", opType)
 	}
-	algs, err := creator(map[string][]*ccl.CCL{graph.Left: []*ccl.CCL{left.CC},
-		graph.Right: []*ccl.CCL{right.CC}}, map[string][]*ccl.CCL{graph.Out: []*ccl.CCL{outputCCL}}, t.enginesInfo.GetParties())
+	algs, err := creator(map[string][]*ccl.CCL{graph.Left: {left.CC},
+		graph.Right: {right.CC}}, map[string][]*ccl.CCL{graph.Out: {outputCCL}}, t.enginesInfo.GetParties())
 	if err != nil {
 		return nil, fmt.Errorf("addBinaryNode: %v", err)
 	}
@@ -1587,8 +1587,8 @@ func (t *translator) addWindowNode(name string,
 	attr *graph.Attribute,
 	party string) error {
 	if _, err := t.ep.AddExecutionNode(name, name,
-		map[string][]*graph.Tensor{"Key": key, "PartitionId": []*graph.Tensor{partitionId}, "PartitionNum": []*graph.Tensor{partitionNum}},
-		map[string][]*graph.Tensor{"Out": []*graph.Tensor{output}},
+		map[string][]*graph.Tensor{"Key": key, "PartitionId": {partitionId}, "PartitionNum": {partitionNum}},
+		map[string][]*graph.Tensor{"Out": {output}},
 		map[string]*graph.Attribute{operator.ReverseAttr: attr},
 		[]string{party}); err != nil {
 		return err

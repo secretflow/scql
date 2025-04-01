@@ -125,7 +125,7 @@ func CreateIntsAttribute(datas []int64) *proto.AttributeValue {
 				ElemType:  proto.PrimitiveDataType_INT64,
 				Int64Data: datas,
 				Shape: &proto.TensorShape{
-					Dim: []*proto.TensorShape_Dimension{&proto.TensorShape_Dimension{
+					Dim: []*proto.TensorShape_Dimension{{
 						Value: &proto.TensorShape_Dimension_DimValue{DimValue: int64(len(datas))},
 					}},
 				},
