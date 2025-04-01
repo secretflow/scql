@@ -1010,7 +1010,6 @@ func (t *translator) buildPrivateGroupAggregation(ln *AggregationNode, party str
 				return fmt.Errorf("buildPrivateGroupAggregation: %v", err)
 			}
 			colIdToTensor[ln.Schema().Columns[i].UniqueID] = outputs[0]
-
 		default:
 			return fmt.Errorf("buildPrivateGroupAggregation: unsupported aggregation function %v", aggFunc)
 		}
@@ -1132,7 +1131,7 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 	// add agg funcs
 	colIdToTensor := map[int64]*graph.Tensor{}
 	for i, aggFunc := range agg.AggFuncs {
-		if len(aggFunc.Args) != 1 {
+		if len(aggFunc.Args) != 1 && aggFunc.Name != ast.AggPercentileDisc {
 			return fmt.Errorf("buildObliviousGroupAggregation: unsupported aggregation function %v", aggFunc)
 		}
 		switch aggFunc.Name {
@@ -1151,7 +1150,7 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 			if err != nil {
 				return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 			}
-			output, err := t.addObliviousGroupAggNode(aggFunc.Name, groupMark, colT)
+			output, err := t.addObliviousGroupAggNode(aggFunc.Name, groupMark, colT, map[string]*graph.Attribute{})
 			if err != nil {
 				return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 			}
@@ -1198,12 +1197,12 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 					}
 
-					output, err = t.addObliviousGroupAggNode(ast.AggFuncSum, groupMark, groupMarkFull)
+					output, err = t.addObliviousGroupAggNode(ast.AggFuncSum, groupMark, groupMarkFull, map[string]*graph.Attribute{})
 					if err != nil {
 						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 					}
 				} else {
-					output, err = t.addObliviousGroupAggNode(ast.AggFuncCount, groupMark, groupMark)
+					output, err = t.addObliviousGroupAggNode(ast.AggFuncCount, groupMark, groupMark, map[string]*graph.Attribute{})
 					if err != nil {
 						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 					}
@@ -1212,7 +1211,7 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 				switch x := aggFunc.Args[0].(type) {
 				case *expression.Column:
 					colT := sortedChildColIdToTensor[x.UniqueID]
-					output, err = t.addObliviousGroupAggNode(ast.AggFuncSum, groupMark, colT)
+					output, err = t.addObliviousGroupAggNode(ast.AggFuncSum, groupMark, colT, map[string]*graph.Attribute{})
 					if err != nil {
 						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 					}
@@ -1221,6 +1220,27 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 				}
 			default:
 				return fmt.Errorf("buildObliviousGroupAggregation: unrecognized count func mode %v", aggFunc.Mode)
+			}
+			colIdToTensor[ln.Schema().Columns[i].UniqueID] = output
+		case ast.AggPercentileDisc:
+			colT, err := t.buildExpression(aggFunc.Args[0], sortedChildColIdToTensor, false, ln)
+			if err != nil {
+				return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+			}
+			attr := &graph.Attribute{}
+			percent, err := strconv.ParseFloat(aggFunc.Args[1].String(), 64)
+			if err != nil {
+				return fmt.Errorf("buildObliviousGroupAggregation: %s is not a valid float value", aggFunc.Args[1].String())
+			}
+
+			if percent < 0 || percent > 1 {
+				return fmt.Errorf("buildPrivateGroupAggregation: percent should be in [0, 1], but got %v", percent)
+			}
+
+			attr.SetDouble(percent)
+			output, err := t.addObliviousGroupAggNode(aggFunc.Name, groupMark, colT, map[string]*graph.Attribute{"percent": attr})
+			if err != nil {
+				return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 			}
 			colIdToTensor[ln.Schema().Columns[i].UniqueID] = output
 		default:
@@ -1535,13 +1555,13 @@ func (t *translator) buildObliviousRankWindow(ln *WindowNode) error {
 	var output *graph.Tensor
 	switch windowDesc.Name {
 	case ast.WindowFuncRowNumber:
-		output, err = t.addObliviousGroupAggNode(ast.AggFuncCount, groupMark, groupMark)
+		output, err = t.addObliviousGroupAggNode(ast.AggFuncCount, groupMark, groupMark, map[string]*graph.Attribute{})
 		if err != nil {
 			return fmt.Errorf("builObliviousRankWindow: %v", err)
 		}
 		childColIdToTensor[lastCol.UniqueID] = output
 	case ast.WindowFuncPercentRank:
-		output, err = t.addObliviousGroupAggNode(ast.WindowFuncPercentRank, groupMark, groupMark)
+		output, err = t.addObliviousGroupAggNode(ast.WindowFuncPercentRank, groupMark, groupMark, map[string]*graph.Attribute{})
 		if err != nil {
 			return fmt.Errorf("builObliviousRankWindow: %v", err)
 		}
