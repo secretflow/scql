@@ -33,7 +33,6 @@ import (
 	exe "github.com/secretflow/scql/pkg/executor"
 	"github.com/secretflow/scql/pkg/interpreter/graph"
 	"github.com/secretflow/scql/pkg/planner/core"
-	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
 	"github.com/secretflow/scql/pkg/util/message"
@@ -173,7 +172,7 @@ func (svc *grpcIntraSvc) SubmitQuery(ctx context.Context, req *pb.QueryRequest) 
 
 }
 
-func fetchSessionStatus(session_info *storage.SessionInfo) (resp *scql.QueryJobStatusResponse, err error) {
+func fetchSessionStatus(session_info *storage.SessionInfo) (resp *pb.QueryJobStatusResponse, err error) {
 	conn, err := exe.NewEngineClientConn(session_info.EngineUrlForSelf, "", nil)
 	if err != nil {
 		return nil, err
@@ -208,7 +207,7 @@ func (svc *grpcIntraSvc) getAndCheckSessionResult(sid string) (resp *pb.FetchRes
 	if queryResp.GetStatus().GetCode() != int32(pb.Code_OK) {
 		return nil, fmt.Errorf("QueryResponse error: status = %v", queryResp.GetStatus())
 	}
-	resp = &scql.FetchResultResponse{
+	resp = &pb.FetchResultResponse{
 		Status: &pb.Status{
 			Code:    int32(pb.Code_OK),
 			Message: "successfully retrieved session result",
