@@ -113,9 +113,6 @@ func (r *QueryRunner) prepareData(usedTableNames, intoParties []string) (dataPar
 	if err != nil {
 		return
 	}
-	a := "test"
-	b := "test2"
-	b = "test3"
 	if len(notFoundTables) > 0 && !r.prepareAgain {
 		var members []string
 		members, err = txn.GetProjectMembers(session.ExecuteInfo.ProjectID)
