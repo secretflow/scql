@@ -29,8 +29,11 @@ output:
 
   # colored-line-number|line-number|json|tab|checkstyle|code-climate, default is "colored-line-number"
   formats:
-    json:
-      path: stderr
+    text:
+      path: stdout
+      print-linter-name: true
+      print-issued-lines: true
+      colors: true
 
 issues:
   max-same-issues: 0
