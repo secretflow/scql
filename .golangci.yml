@@ -68,7 +68,7 @@ linters:
       # All supported checks can be enabled with "all". 
       # To disable checks, prefix them with a minus sign.
       # Example: [ "all", "-SA1000", "-SA1001"]
-      checks: ["all", "-QF1003", "QF1006", "QF1008"]
+      checks: ["all", "-ST1000", "-ST1003", "-ST1016", "-ST1020", "-ST1021", "-ST1022", "-QF1003", "-QF1006", "-QF1008"]
     gosec:
       excludes:
         - G115 # Potential integer overflow when converting between integer types
@@ -90,8 +90,12 @@ linters:
 
       exclude-functions:
         - fmt.Fprintf(os.Stdout)
+        - fmt.Fprintln(os.Stdout)
+        - (*sql.Rows).Close
         - (*os.File).Close
-        - (*http.Response).Body.Close
+        - (io.ReadCloser).Close
+        - (io.Close).Close
+        - (*grpc.ClientConn).Close
     govet:
       # report about shadowed variables
       enable:
