@@ -295,5 +295,5 @@ spu::Value ObliviousPercentileDisc::CalculateResult(spu::SPUContext* sctx,
           sctx, expanded_index[0],
           count));  // [0, arr[index0],...0, arr[index1], ..., 0]
   return ObliviousGroupSum().CalculateResult(sctx, percentile_values, group);
-}  // namespace scql::engine::op
+}
 };  // namespace scql::engine::op
