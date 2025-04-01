@@ -469,6 +469,24 @@ Out = {2.5}
 
 	{
 		opDef := &OperatorDef{}
+		opDef.SetName(OpNameReducePercentileDisc)
+		opDef.SetStreamingType(SinkOp)
+		opDef.AddInput("In", "Tensor to be reduced (shape [M]).", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.AddOutput("Out", "The value of given percentile position(shape [1]).", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.SetDefinition(`Definition: Given a input tensor In, return the value of given percentile position.
+Example:
+` + "\n```python" + `
+In = {1, 2, 3, 4, 5}
+percent = 0.5 // the position is ceil(percent * length) - 1, which is 2 here
+Out = {3}
+` + "```\n")
+		opDef.SetParamTypeConstraint(T, statusPrivateOrSecret)
+		opDef.AddAttribute("percent", "Float. The percentile position, the range is [0, 1].")
+		AllOpDef = append(AllOpDef, opDef)
+	}
+
+	{
+		opDef := &OperatorDef{}
 		opDef.SetName(OpNameShape)
 		opDef.SetStreamingType(SinkOp)
 		opDef.AddInput("In", "Input Tensors",
@@ -822,7 +840,7 @@ Example:
 GroupId = {0, 1, 0, 1, 2}
 GroupNum = {3}
 In = [{0, 1, 2, 3, 4}, {9, 8, 7, 6, 5}]
-the percent is 0.5, the index of each group is = upper_bound(0.5 * group_size) - 1
+percent = 0.5 //the percent is 0.5, the index of each group is = ceil(0.5 * group_size) - 1
 Out = [{0, 1, 4}, {7, 6, 5}]`))
 		check(opDef.err)
 		AllOpDef = append(AllOpDef, opDef)

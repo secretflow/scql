@@ -72,8 +72,9 @@ const (
 	OpNameReduceMax string = "ReduceMax"
 	OpNameReduceMin string = "ReduceMin"
 	// OpNameReduceMedian string = "ReduceMedian"
-	OpNameReduceAvg   string = "ReduceAvg"
-	OpNameReduceCount string = "ReduceCount"
+	OpNameReduceAvg            string = "ReduceAvg"
+	OpNameReduceCount          string = "ReduceCount"
+	OpNameReducePercentileDisc string = "ReducePercentileDisc"
 
 	// private group by
 	OpNameGroup               string = "Group"
@@ -160,8 +161,9 @@ var ReduceAggOp = map[string]string{
 	ast.AggFuncMax: OpNameReduceMax,
 	ast.AggFuncMin: OpNameReduceMin,
 	// ast.AggFuncMedian: OpNameReduceMedian,
-	ast.AggFuncAvg:   OpNameReduceAvg,
-	ast.AggFuncCount: OpNameReduceCount,
+	ast.AggFuncAvg:        OpNameReduceAvg,
+	ast.AggFuncCount:      OpNameReduceCount,
+	ast.AggPercentileDisc: OpNameReducePercentileDisc,
 }
 
 var ObliviousGroupAggOp = map[string]string{

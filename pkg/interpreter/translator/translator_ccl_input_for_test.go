@@ -74,6 +74,39 @@ var translateNumericTestCases = []sPair{
 }
 
 var translateWithCCLTestCases = []sPair{
+	{`SELECT PERCENTILE_DISC(u.int_0, 0.3) AS _30percent FROM (SELECT ta.plain_int_0 as int_0 FROM alice.tbl_0 AS ta UNION ALL SELECT tb.plain_int_0 as int_0 FROM bob.tbl_0 AS tb) as u`, `digraph G {
+0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select ta.plain_int_0 from alice.tbl_0 as ta;,table_refs:[alice.tbl_0],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select tb.plain_int_0 from bob.tbl_0 as tb;,table_refs:[bob.tbl_0],],party:[bob,]}"]
+2 [label="make_share:{in:[In:{t_0,},],out:[Out:{t_2,},],attr:[],party:[alice,bob,carol,]}"]
+3 [label="make_share:{in:[In:{t_1,},],out:[Out:{t_3,},],attr:[],party:[alice,bob,carol,]}"]
+4 [label="concat:{in:[In:{t_2,t_3,},],out:[Out:{t_4,},],attr:[axis:0,],party:[alice,bob,carol,]}"]
+5 [label="reduce_percentile_disc:{in:[In:{t_4,},],out:[Out:{t_5,},],attr:[percent:0.3,],party:[alice,bob,carol,]}"]
+6 [label="make_private:{in:[In:{t_5,},],out:[Out:{t_6,},],attr:[reveal_to:alice,],party:[alice,bob,carol,]}"]
+7 [label="publish:{in:[In:{t_6,},],out:[Out:{t_7,},],attr:[],party:[alice,]}"]
+0 -> 2 [label = "t_0:{Column#241:PRIVATE:INT64}"]
+1 -> 3 [label = "t_1:{Column#241:PRIVATE:INT64}"]
+2 -> 4 [label = "t_2:{Column#241:SECRET:INT64}"]
+3 -> 4 [label = "t_3:{Column#241:SECRET:INT64}"]
+4 -> 5 [label = "t_4:{Column#241:SECRET:INT64}"]
+5 -> 6 [label = "t_5:{Column#241:SECRET:INT64}"]
+6 -> 7 [label = "t_6:{Column#241:PRIVATE:INT64}"]
+}`, ``, testConf{groupThreshold: 0, batched: false},
+	},
+	{`SELECT PERCENTILE_DISC(ta.plain_int_0, 0.3) AS _30percent_plain_int FROM alice.tbl_0 AS ta JOIN bob.tbl_0 AS tb ON ta.join_int_0 = tb.join_int_0`, `digraph G {
+0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select ta.join_int_0,ta.plain_int_0 from alice.tbl_0 as ta;,table_refs:[alice.tbl_0],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_2,},],attr:[sql:select tb.join_int_0 from bob.tbl_0 as tb;,table_refs:[bob.tbl_0],],party:[bob,]}"]
+2 [label="join:{in:[Left:{t_0,},Right:{t_2,},],out:[LeftJoinIndex:{t_3,},RightJoinIndex:{t_4,},],attr:[input_party_codes:[alice bob],join_type:0,psi_algorithm:0,],party:[alice,bob,]}"]
+3 [label="filter_by_index:{in:[Data:{t_1,},RowsIndexFilter:{t_3,},],out:[Out:{t_5,},],attr:[],party:[alice,]}"]
+4 [label="reduce_percentile_disc:{in:[In:{t_5,},],out:[Out:{t_6,},],attr:[percent:0.3,],party:[alice,]}"]
+5 [label="publish:{in:[In:{t_6,},],out:[Out:{t_7,},],attr:[],party:[alice,]}"]
+0 -> 2 [label = "t_0:{join_int_0:PRIVATE:INT64}"]
+0 -> 3 [label = "t_1:{plain_int_0:PRIVATE:INT64}"]
+1 -> 2 [label = "t_2:{join_int_0:PRIVATE:INT64}"]
+2 -> 3 [label = "t_3:{join_int_0:PRIVATE:INT64}"]
+3 -> 4 [label = "t_5:{plain_int_0:PRIVATE:INT64}"]
+4 -> 5 [label = "t_6:{plain_int_0:PRIVATE:INT64}"]
+}`, ``, testConf{groupThreshold: 0, batched: false}},
+
 	{`select ta.groupby_string_0,tb.groupby_string_0, percentile_disc(ta.aggregate_int_0, 0.5) _50percent from alice.tbl_0 AS ta JOIN bob.tbl_0 AS tb ON ta.join_int_0 = tb.join_int_0 group by ta.groupby_string_0,tb.groupby_string_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,t_2,},],attr:[sql:select ta.aggregate_int_0,ta.groupby_string_0,ta.join_int_0 from alice.tbl_0 as ta;,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_3,t_4,},],attr:[sql:select tb.groupby_string_0,tb.join_int_0 from bob.tbl_0 as tb;,table_refs:[bob.tbl_0],],party:[bob,]}"]
