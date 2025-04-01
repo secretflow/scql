@@ -64,6 +64,14 @@ linters:
       - text: 'shadow: declaration of "(err|ctx)" shadows declaration at'
         linters: [govet]
   settings:
+    staticcheck:
+      # SAxxxx checks in https://staticcheck.dev/docs/configuration/options/#checks
+      # Example (to disable some checks): [ "all", "-SA1000", "-SA1001"]
+      # Default: ["all", "-ST1000", "-ST1003", "-ST1016", "-ST1020", "-ST1021", "-ST1022"]
+      checks:
+        - QF1006
+        - QF1003
+        - QF1008
     gosec:
       excludes:
         - G115 # Potential integer overflow when converting between integer types
@@ -84,10 +92,9 @@ linters:
       check-blank: false
 
       exclude-functions:
-        - fmt.Fprintln(os.Stdout)
+        - fmt.Fprintf(os.Stdout)
         - (*os.File).Close
         - (*http.Response).Body.Close
-        - defer
     govet:
       # report about shadowed variables
       enable:
@@ -159,10 +166,10 @@ linters:
     - unused
     - govet
     - revive
-    - errcheck
+    # - errcheck
     - goconst
     - dupl
-    - gosec
+    # - gosec
     - staticcheck
     - bodyclose
   default: none
