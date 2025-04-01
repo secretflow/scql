@@ -91,11 +91,11 @@ linters:
       exclude-functions:
         - fmt.Fprintf(os.Stdout)
         - fmt.Fprintln(os.Stdout)
-        - (*sql.Rows).Close
+        - (sql.Rows).Close
         - (*os.File).Close
         - (io.ReadCloser).Close
         - (io.Close).Close
-        - (*grpc.ClientConn).Close
+        - (grpc.ClientConn).Close
     govet:
       # report about shadowed variables
       enable:
