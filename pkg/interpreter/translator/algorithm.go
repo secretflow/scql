@@ -239,11 +239,11 @@ func createBinaryAlg(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, allPar
 			alg := &materializedAlgorithm{
 				cost: newAlgCost(0, 0),
 				inputPlacement: map[string][]placement{
-					graph.Left:  []placement{lp},
-					graph.Right: []placement{rp},
+					graph.Left:  {lp},
+					graph.Right: {rp},
 				},
 				outputPlacement: map[string][]placement{
-					graph.Out: []placement{},
+					graph.Out: {},
 				}}
 			status, exist := binaryIOStatusMap[tensorStatusPair{left: lp.Status(), right: rp.Status()}]
 			if !exist {
@@ -320,11 +320,11 @@ func createInAlg(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, allParties
 				alg := &materializedAlgorithm{
 					cost: newAlgCost(psiInCommCost, psiCalCost),
 					inputPlacement: map[string][]placement{
-						graph.Left:  []placement{lp},
-						graph.Right: []placement{rp},
+						graph.Left:  {lp},
+						graph.Right: {rp},
 					},
 					outputPlacement: map[string][]placement{
-						graph.Out: []placement{outp},
+						graph.Out: {outp},
 					}}
 				result = append(result, alg)
 			}
