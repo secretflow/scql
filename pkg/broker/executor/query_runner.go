@@ -116,9 +116,9 @@ func (r *QueryRunner) prepareData(usedTableNames, intoParties []string) (dataPar
 	if len(notFoundTables) > 0 && !r.prepareAgain {
 		var members []string
 		members, err = txn.GetProjectMembers(session.ExecuteInfo.ProjectID)
-		if err != nil {
-			return
-		}
+		// if err != nil {
+		// 	return
+		// }
 		// finish old transaction
 		err = txn.Finish(nil)
 		if err != nil {

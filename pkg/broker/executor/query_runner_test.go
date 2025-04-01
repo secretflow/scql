@@ -177,7 +177,7 @@ func TestQueryRunner(t *testing.T) {
 func TestCaseSensitive(t *testing.T) {
 	r := require.New(t)
 	meta, err := buildTestStorage()
-	r.NoError(err     )
+	r.NoError(err)
 	transaction := meta.CreateMetaTransaction()
 	projectID1 := "Project1"
 	projectConf, _ := json.Marshal(scql.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K}})
