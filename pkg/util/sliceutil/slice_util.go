@@ -21,6 +21,13 @@ import (
 	"slices"
 )
 
+// SliceDeDup removes duplicate elements from a slice.
+func SliceDeDup[S ~[]E, E cmp.Ordered](s S) S {
+	newS := slices.Clone(s)
+	slices.Sort(newS)
+	return slices.Compact(newS)
+}
+
 // AllOf returns true if all elements in slice satisfy the predicate function.
 func AllOf[S ~[]E, E any](slice S, predicate func(E) bool) bool {
 	for _, element := range slice {
@@ -44,43 +51,6 @@ func Filter[T any](slice []T, predicate func(T) bool) []T {
 		}
 	}
 	return result
-}
-
-// SliceDeDup removes duplicate elements from a slice.
-func SliceDeDup[S ~[]E, E cmp.Ordered](s S) S {
-	newS := slices.Clone(s)
-	slices.Sort(newS)
-	return slices.Compact(newS)
-}
-
-// SortMapKeyForDeterminism returns a slice of keys from a map in sorted order.
-func SortMapKeyForDeterminism[k cmp.Ordered, v any](m map[k]v) []k {
-	keys := maps.Keys(m)
-	return slices.Sorted(keys)
-}
-
-// SortedMap returns an iterator that yields key-value pairs from a map in sorted key order
-func SortedMap[k cmp.Ordered, v any](m map[k]v) iter.Seq2[k, v] {
-	return func(yield func(k, v) bool) {
-		keys := SortMapKeyForDeterminism(m)
-		for _, key := range keys {
-			if !yield(key, m[key]) {
-				return
-			}
-		}
-	}
-}
-
-// ValueSortedByMapKey returns an iterator that yields values from a map in sorted key order.
-func ValueSortedByMapKey[k cmp.Ordered, v any](m map[k]v) iter.Seq[v] {
-	return func(yield func(v) bool) {
-		keys := SortMapKeyForDeterminism(m)
-		for _, key := range keys {
-			if !yield(m[key]) {
-				return
-			}
-		}
-	}
 }
 
 // Contains reports whether all elements in sub are present in super.
@@ -128,4 +98,34 @@ func InplaceTake[T any](slice []T, predicate []bool) []T {
 	}
 	clear(slice[newIndex:])
 	return slice[:newIndex]
+}
+
+// SortMapKeyForDeterminism returns a slice of keys from a map in sorted order.
+func SortMapKeyForDeterminism[k cmp.Ordered, v any](m map[k]v) []k {
+	keys := maps.Keys(m)
+	return slices.Sorted(keys)
+}
+
+// SortedMap returns an iterator that yields key-value pairs from a map in sorted key order
+func SortedMap[k cmp.Ordered, v any](m map[k]v) iter.Seq2[k, v] {
+	return func(yield func(k, v) bool) {
+		keys := SortMapKeyForDeterminism(m)
+		for _, key := range keys {
+			if !yield(key, m[key]) {
+				return
+			}
+		}
+	}
+}
+
+// ValueSortedByMapKey returns an iterator that yields values from a map in sorted key order.
+func ValueSortedByMapKey[k cmp.Ordered, v any](m map[k]v) iter.Seq[v] {
+	return func(yield func(v) bool) {
+		keys := SortMapKeyForDeterminism(m)
+		for _, key := range keys {
+			if !yield(m[key]) {
+				return
+			}
+		}
+	}
 }
