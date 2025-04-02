@@ -469,6 +469,24 @@ Out = {2.5}
 
 	{
 		opDef := &OperatorDef{}
+		opDef.SetName(OpNameReducePercentileDisc)
+		opDef.SetStreamingType(SinkOp)
+		opDef.AddInput("In", "Tensor to be reduced (shape [M]).", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.AddOutput("Out", "The value of given percentile position(shape [1]).", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.SetDefinition(`Definition: Given a input tensor In, return the value of given percentile position.
+Example:
+` + "\n```python" + `
+In = {1, 2, 3, 4, 5}
+percent = 0.5 // the position is ceil(percent * length) - 1, which is 2 here
+Out = {3}
+` + "```\n")
+		opDef.SetParamTypeConstraint(T, statusPrivateOrSecret)
+		opDef.AddAttribute("percent", "Float. The percentile position, the range is [0, 1].")
+		AllOpDef = append(AllOpDef, opDef)
+	}
+
+	{
+		opDef := &OperatorDef{}
 		opDef.SetName(OpNameShape)
 		opDef.SetStreamingType(SinkOp)
 		opDef.AddInput("In", "Input Tensors",
@@ -586,6 +604,31 @@ In = [{1, 3, 2, 4, 0}, {9, 8, 7, 6, 5}]
 Out = %s
 `, t.aggResult) + "```\n")
 			opDef.SetParamTypeConstraint(T, statusSecret)
+			check(opDef.err)
+			AllOpDef = append(AllOpDef, opDef)
+		}
+
+		{
+			opDef := &OperatorDef{}
+			opDef.SetName(OpNameObliviousPercentileDisc)
+			opDef.SetStreamingType(SinkOp)
+			opDef.AddInput("Group",
+				"End of group indicator(shape [M][1]). Element 1 means the row is the last element of the group, 0 is not.",
+				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+			opDef.AddInput("In", "Values to be aggregated (shape [M][1]).",
+				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+			opDef.AddOutput("Out", "Partially aggregated values (shape [M][1]).",
+				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+			opDef.SetParamTypeConstraint(T, statusSecret)
+			opDef.AddAttribute("percent", "Float. The percentile to calculate the range of which is [0.0, 1.0], 0.0 means the first one, 1.0 means the last one.")
+			opDef.SetDefinition("Definition: find the value of given percentile of `In` for each group." + fmt.Sprintf(`
+Example:
+`+"\n```python"+`
+GroupId = {0, 1, 0, 1, 2}
+GroupNum = {3}
+In = [{0, 1, 2, 3, 4}, {9, 8, 7, 6, 5}]
+the percent is 0.5, the index of each group is = upper_bound(0.5 * group_size) - 1
+Out = [{0, 1, 4}, {7, 6, 5}]`))
 			check(opDef.err)
 			AllOpDef = append(AllOpDef, opDef)
 		}
@@ -797,7 +840,7 @@ Example:
 GroupId = {0, 1, 0, 1, 2}
 GroupNum = {3}
 In = [{0, 1, 2, 3, 4}, {9, 8, 7, 6, 5}]
-the percent is 0.5, the index of each group is = upper_bound(0.5 * group_size) - 1
+percent = 0.5 //the percent is 0.5, the index of each group is = ceil(0.5 * group_size) - 1
 Out = [{0, 1, 4}, {7, 6, 5}]`))
 		check(opDef.err)
 		AllOpDef = append(AllOpDef, opDef)

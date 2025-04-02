@@ -7,15 +7,23 @@ on:
       - main
     paths:
       - '**.go'
+      - '.golangci.yml'
   pull_request:
     branches:
       - main
     paths:
       - '**.go'
+      - '.golangci.yml'
 
 env:
   GO_VERSION: 1.24
   GOLANGCI_LINT_VERSION: v2.0
+
+permissions:
+  # Required: allow read access to the content for analysis.
+  contents: read
+  # Optional: allow read access to pull request. Use with `only-new-issues` option.
+  pull-requests: read
 
 jobs:
   detect-modules:

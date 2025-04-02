@@ -231,9 +231,9 @@ def generate_regtest_config():
     conf["mpc_protocols"] = os.getenv(PROTOCOLS_ENV_NAME)
 
     mysql_port = os.getenv(MYSQL_PORT_ENV_NAME)
-    conf[
-        "mysql_conn_str"
-    ] = f"root:{MYSQL_ROOT_PASSWORD}@tcp(localhost:{mysql_port})/scdb?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
+    conf["mysql_conn_str"] = (
+        f"root:{MYSQL_ROOT_PASSWORD}@tcp(localhost:{mysql_port})/scdb?charset=utf8mb4&parseTime=True&loc=Local&interpolateParams=true"
+    )
     for p in PARTY:
         pem_path = os.path.join(CUR_PATH, f"engine/{p}/conf/ed25519key.pem")
         conf["parties"][p]["private_key"] = pem_path

@@ -153,6 +153,7 @@ void RegisterAllOpsImpl() {
   ADD_OPERATOR_TO_REGISTRY(ObliviousGroupMin);
 
   ADD_OPERATOR_TO_REGISTRY(ObliviousPercentRank);
+  ADD_OPERATOR_TO_REGISTRY(ObliviousPercentileDisc);
 
   ADD_OPERATOR_TO_REGISTRY(Concat);
   ADD_OPERATOR_TO_REGISTRY(Cast);

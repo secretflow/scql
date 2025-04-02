@@ -72,8 +72,9 @@ const (
 	OpNameReduceMax string = "ReduceMax"
 	OpNameReduceMin string = "ReduceMin"
 	// OpNameReduceMedian string = "ReduceMedian"
-	OpNameReduceAvg   string = "ReduceAvg"
-	OpNameReduceCount string = "ReduceCount"
+	OpNameReduceAvg            string = "ReduceAvg"
+	OpNameReduceCount          string = "ReduceCount"
+	OpNameReducePercentileDisc string = "ReducePercentileDisc"
 
 	// private group by
 	OpNameGroup               string = "Group"
@@ -87,17 +88,18 @@ const (
 	OpNameGroupHeSum          string = "GroupHeSum"
 	OpNameGroupPercentileDisc string = "GroupPercentileDisc"
 
-	OpNameUnique               string = "Unique"
-	OpNameShape                string = "Shape"
-	OpNameSort                 string = "Sort"
-	OpNameObliviousGroupMark   string = "ObliviousGroupMark"
-	OpNameObliviousGroupCount  string = "ObliviousGroupCount"
-	OpNameObliviousGroupSum    string = "ObliviousGroupSum"
-	OpNameObliviousGroupMax    string = "ObliviousGroupMax"
-	OpNameObliviousGroupMin    string = "ObliviousGroupMin"
-	OpNameObliviousGroupAvg    string = "ObliviousGroupAvg"
-	OpNameObliviousPercentRank string = "ObliviousPercentRank"
-	OpNameShuffle              string = "Shuffle"
+	OpNameUnique                  string = "Unique"
+	OpNameShape                   string = "Shape"
+	OpNameSort                    string = "Sort"
+	OpNameObliviousGroupMark      string = "ObliviousGroupMark"
+	OpNameObliviousGroupCount     string = "ObliviousGroupCount"
+	OpNameObliviousGroupSum       string = "ObliviousGroupSum"
+	OpNameObliviousGroupMax       string = "ObliviousGroupMax"
+	OpNameObliviousGroupMin       string = "ObliviousGroupMin"
+	OpNameObliviousGroupAvg       string = "ObliviousGroupAvg"
+	OpNameObliviousPercentRank    string = "ObliviousPercentRank"
+	OpNameObliviousPercentileDisc string = "ObliviousPercentileDisc"
+	OpNameShuffle                 string = "Shuffle"
 	// union all
 	OpNameConcat string = "Concat"
 	// condition ops
@@ -159,8 +161,9 @@ var ReduceAggOp = map[string]string{
 	ast.AggFuncMax: OpNameReduceMax,
 	ast.AggFuncMin: OpNameReduceMin,
 	// ast.AggFuncMedian: OpNameReduceMedian,
-	ast.AggFuncAvg:   OpNameReduceAvg,
-	ast.AggFuncCount: OpNameReduceCount,
+	ast.AggFuncAvg:        OpNameReduceAvg,
+	ast.AggFuncCount:      OpNameReduceCount,
+	ast.AggPercentileDisc: OpNameReducePercentileDisc,
 }
 
 var ObliviousGroupAggOp = map[string]string{
@@ -170,6 +173,7 @@ var ObliviousGroupAggOp = map[string]string{
 	ast.AggFuncAvg:            OpNameObliviousGroupAvg,
 	ast.AggFuncCount:          OpNameObliviousGroupCount,
 	ast.WindowFuncPercentRank: OpNameObliviousPercentRank,
+	ast.AggPercentileDisc:     OpNameObliviousPercentileDisc,
 }
 
 var GroupAggOp = map[string]string{

@@ -1076,8 +1076,8 @@ func (t *translator) addInNode(f *expression.ScalarFunction, left, right *graph.
 	if creator == nil {
 		return nil, fmt.Errorf("fail to get algorithm creator for op type %s", operator.OpNameIn)
 	}
-	algs, err := creator(map[string][]*ccl.CCL{graph.Left: []*ccl.CCL{left.CC},
-		graph.Right: []*ccl.CCL{right.CC}}, map[string][]*ccl.CCL{graph.Out: []*ccl.CCL{outCc}}, t.enginesInfo.GetParties())
+	algs, err := creator(map[string][]*ccl.CCL{graph.Left: {left.CC},
+		graph.Right: {right.CC}}, map[string][]*ccl.CCL{graph.Out: {outCc}}, t.enginesInfo.GetParties())
 	if err != nil {
 		return nil, fmt.Errorf("addInNode: %v", err)
 	}
@@ -1211,8 +1211,8 @@ func (t *translator) addBinaryNode(opName string, opType string, left *graph.Ten
 	if creator == nil {
 		return nil, fmt.Errorf("fail to get algorithm creator for op type %s", opType)
 	}
-	algs, err := creator(map[string][]*ccl.CCL{graph.Left: []*ccl.CCL{left.CC},
-		graph.Right: []*ccl.CCL{right.CC}}, map[string][]*ccl.CCL{graph.Out: []*ccl.CCL{outputCCL}}, t.enginesInfo.GetParties())
+	algs, err := creator(map[string][]*ccl.CCL{graph.Left: {left.CC},
+		graph.Right: {right.CC}}, map[string][]*ccl.CCL{graph.Out: {outputCCL}}, t.enginesInfo.GetParties())
 	if err != nil {
 		return nil, fmt.Errorf("addBinaryNode: %v", err)
 	}
@@ -1449,7 +1449,7 @@ func (t *translator) addObliviousGroupMarkNode(name string, key []*graph.Tensor)
 	return out, nil
 }
 
-func (t *translator) addObliviousGroupAggNode(funcName string, group *graph.Tensor, in *graph.Tensor) (*graph.Tensor, error) {
+func (t *translator) addObliviousGroupAggNode(funcName string, group *graph.Tensor, in *graph.Tensor, attr map[string]*graph.Attribute) (*graph.Tensor, error) {
 	opName, ok := operator.ObliviousGroupAggOp[funcName]
 	if !ok {
 		return nil, fmt.Errorf("addObliviousGroupAggNode: unsupported op %v", funcName)
@@ -1476,7 +1476,7 @@ func (t *translator) addObliviousGroupAggNode(funcName string, group *graph.Tens
 	}
 	if _, err := t.ep.AddExecutionNode(funcName, opName,
 		map[string][]*graph.Tensor{"Group": {group}, "In": {inA}}, map[string][]*graph.Tensor{"Out": {outA}},
-		map[string]*graph.Attribute{}, t.enginesInfo.GetParties()); err != nil {
+		attr, t.enginesInfo.GetParties()); err != nil {
 		return nil, fmt.Errorf("addObliviousGroupAggNode: %v", err)
 	}
 
@@ -1587,8 +1587,8 @@ func (t *translator) addWindowNode(name string,
 	attr *graph.Attribute,
 	party string) error {
 	if _, err := t.ep.AddExecutionNode(name, name,
-		map[string][]*graph.Tensor{"Key": key, "PartitionId": []*graph.Tensor{partitionId}, "PartitionNum": []*graph.Tensor{partitionNum}},
-		map[string][]*graph.Tensor{"Out": []*graph.Tensor{output}},
+		map[string][]*graph.Tensor{"Key": key, "PartitionId": {partitionId}, "PartitionNum": {partitionNum}},
+		map[string][]*graph.Tensor{"Out": {output}},
 		map[string]*graph.Attribute{operator.ReverseAttr: attr},
 		[]string{party}); err != nil {
 		return err
