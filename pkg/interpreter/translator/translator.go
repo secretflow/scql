@@ -1012,8 +1012,7 @@ func (t *translator) addFilterNode(filter *graph.Tensor, tensorToFilter map[int6
 	// private tensors need record it's owner party
 	privateTensorsMap := make(map[string][]*graph.Tensor)
 	privateIdsMap := make(map[string][]int64)
-	for _, tensorId := range sliceutil.SortMapKeyForDeterminism(tensorToFilter) {
-		it := tensorToFilter[tensorId]
+	for tensorId, it := range sliceutil.SortedMap(tensorToFilter) {
 		switch it.Status() {
 		case proto.TensorStatus_TENSORSTATUS_SECRET:
 			shareTensors = append(shareTensors, it)
@@ -1043,8 +1042,7 @@ func (t *translator) addFilterNode(filter *graph.Tensor, tensorToFilter map[int6
 	}
 	// handling private tensors here
 	if len(privateTensorsMap) > 0 {
-		for _, p := range sliceutil.SortMapKeyForDeterminism(privateTensorsMap) {
-			ts := privateTensorsMap[p]
+		for p, ts := range sliceutil.SortedMap(privateTensorsMap) {
 			if !filter.CC.IsVisibleFor(p) {
 				return nil, fmt.Errorf("failed to check ccl: filter (%+v) is not visible to %s", filter, p)
 			}
@@ -1256,8 +1254,7 @@ func (t *translator) getBestAlg(opType string, inputs map[string][]*graph.Tensor
 	}
 	for _, alg := range algs {
 		unsupportedAlgFlag := false
-		for _, key := range sliceutil.SortMapKeyForDeterminism(inputs) {
-			tensors := inputs[key]
+		for key, tensors := range sliceutil.SortedMap(inputs) {
 			for i, tensor := range tensors {
 				newPlacement := alg.inputPlacement[key][i]
 				cost, err := t.converter.getStatusConversionCost(tensor, newPlacement)

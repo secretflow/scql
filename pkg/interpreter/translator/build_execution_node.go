@@ -479,8 +479,7 @@ func (t *translator) buildSelection(ln *SelectionNode) (err error) {
 	// private tensors need record it's owner party
 	privateTensorsMap := make(map[string][]*graph.Tensor)
 	privateIdsMap := make(map[string][]int64)
-	for _, columnId := range sliceutil.SortMapKeyForDeterminism(colIdToTensor) {
-		it := colIdToTensor[columnId]
+	for columnId, it := range sliceutil.SortedMap(colIdToTensor) {
 		if len(filter.CC.GetVisibleParties()) == len(t.enginesInfo.GetParties()) {
 			switch it.Status() {
 			case proto.TensorStatus_TENSORSTATUS_SECRET:
@@ -534,8 +533,7 @@ func (t *translator) buildSelection(ln *SelectionNode) (err error) {
 	}
 	// handling private tensors here
 	if len(privateTensorsMap) > 0 {
-		for _, p := range sliceutil.SortMapKeyForDeterminism(privateTensorsMap) {
-			ts := privateTensorsMap[p]
+		for p, ts := range sliceutil.SortedMap(privateTensorsMap) {
 			newFilter, err := t.converter.convertTo(filter, &privatePlacement{partyCode: p})
 			if err != nil {
 				return fmt.Errorf("buildSelection: %v", err)
@@ -1327,8 +1325,7 @@ func (t *translator) buildLimit(ln *LimitNode) (err error) {
 	privateTensors := make(map[string][]*graph.Tensor)
 	privateIds := make(map[string][]int64)
 	childColIdToTensor := t.getNodeResultTensor(ln.Children()[0])
-	for _, id := range sliceutil.SortMapKeyForDeterminism(childColIdToTensor) {
-		it := childColIdToTensor[id]
+	for id, it := range sliceutil.SortedMap(childColIdToTensor) {
 		if it.Status() == proto.TensorStatus_TENSORSTATUS_SECRET || it.Status() == proto.TensorStatus_TENSORSTATUS_PUBLIC {
 			shareTensors = append(shareTensors, it)
 			shareIds = append(shareIds, id)
@@ -1350,8 +1347,8 @@ func (t *translator) buildLimit(ln *LimitNode) (err error) {
 		}
 	}
 
-	for _, party := range sliceutil.SortMapKeyForDeterminism(privateTensors) {
-		output, err := t.ep.AddLimitNode("limit", privateTensors[party], int(limit.Offset), int(limit.Count), []string{party})
+	for party, tensors := range sliceutil.SortedMap(privateTensors) {
+		output, err := t.ep.AddLimitNode("limit", tensors, int(limit.Offset), int(limit.Count), []string{party})
 		if err != nil {
 			return fmt.Errorf("buildLimit: %v", err)
 		}

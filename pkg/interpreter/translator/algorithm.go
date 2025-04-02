@@ -364,8 +364,8 @@ func createIfAlg(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, allParties
 
 func extractCCLsFromMap(in map[string][]*ccl.CCL) []*ccl.CCL {
 	var result []*ccl.CCL
-	for _, key := range sliceutil.SortMapKeyForDeterminism(in) {
-		result = append(result, in[key]...)
+	for ccls := range sliceutil.ValueSortedByMapKey(in) {
+		result = append(result, ccls...)
 	}
 	return result
 }
@@ -376,13 +376,14 @@ func createPrivateAlgForParty(in map[string][]*ccl.CCL, out map[string][]*ccl.CC
 		inputPlacement:  make(map[string][]placement),
 		outputPlacement: make(map[string][]placement),
 	}
-	for _, key := range sliceutil.SortMapKeyForDeterminism(in) {
-		for range in[key] {
+
+	for key, ccls := range sliceutil.SortedMap(in) {
+		for range ccls {
 			alg.inputPlacement[key] = append(alg.inputPlacement[key], &privatePlacement{partyCode: party})
 		}
 	}
-	for _, key := range sliceutil.SortMapKeyForDeterminism(out) {
-		for range out[key] {
+	for key, ccls := range sliceutil.SortedMap(out) {
+		for range ccls {
 			alg.outputPlacement[key] = append(alg.outputPlacement[key], &privatePlacement{partyCode: party})
 		}
 	}
@@ -412,13 +413,13 @@ func createAllShareAlgs(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, all
 		inputPlacement:  make(map[string][]placement),
 		outputPlacement: make(map[string][]placement),
 	}
-	for _, key := range sliceutil.SortMapKeyForDeterminism(in) {
-		for range in[key] {
+	for key, ccls := range sliceutil.SortedMap(in) {
+		for range ccls {
 			alg.inputPlacement[key] = append(alg.inputPlacement[key], &sharePlacement{partyCodes: allParties})
 		}
 	}
-	for _, key := range sliceutil.SortMapKeyForDeterminism(out) {
-		for range out[key] {
+	for key, ccls := range sliceutil.SortedMap(out) {
+		for range ccls {
 			alg.outputPlacement[key] = append(alg.outputPlacement[key], &sharePlacement{partyCodes: allParties})
 		}
 	}
@@ -432,8 +433,8 @@ func createSharePublicAlgs(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, 
 		outputPlacement: make(map[string][]placement),
 	}
 	hasShareInput := false
-	for _, key := range sliceutil.SortMapKeyForDeterminism(in) {
-		for _, cc := range in[key] {
+	for key, ccls := range sliceutil.SortedMap(in) {
+		for _, cc := range ccls {
 			if cc.IsVisibleForParties(allParties) {
 				alg.inputPlacement[key] = append(alg.inputPlacement[key], &publicPlacement{partyCodes: allParties})
 			} else {
@@ -443,8 +444,8 @@ func createSharePublicAlgs(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, 
 			}
 		}
 	}
-	for _, key := range sliceutil.SortMapKeyForDeterminism(out) {
-		for _, cc := range out[key] {
+	for key, ccls := range sliceutil.SortedMap(out) {
+		for _, cc := range ccls {
 			if cc.IsVisibleForParties(allParties) && !hasShareInput {
 				alg.outputPlacement[key] = append(alg.outputPlacement[key], &publicPlacement{partyCodes: allParties})
 			} else {

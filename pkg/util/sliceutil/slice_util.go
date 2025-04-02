@@ -16,6 +16,8 @@ package sliceutil
 
 import (
 	"cmp"
+	"iter"
+	"maps"
 	"slices"
 )
 
@@ -26,12 +28,31 @@ func SliceDeDup[S ~[]E, E cmp.Ordered](s S) S {
 }
 
 func SortMapKeyForDeterminism[k cmp.Ordered, v any](m map[k]v) []k {
-	var keys []k
-	for k := range m {
-		keys = append(keys, k)
+	keys := maps.Keys(m)
+	return slices.Sorted(keys)
+}
+
+// SortedMap returns an iterator that yields key-value pairs from a map in sorted key order
+func SortedMap[k cmp.Ordered, v any](m map[k]v) iter.Seq2[k, v] {
+	return func(yield func(k, v) bool) {
+		keys := SortMapKeyForDeterminism(m)
+		for _, key := range keys {
+			if !yield(key, m[key]) {
+				return
+			}
+		}
 	}
-	slices.Sort(keys)
-	return keys
+}
+
+func ValueSortedByMapKey[k cmp.Ordered, v any](m map[k]v) iter.Seq[v] {
+	return func(yield func(v) bool) {
+		keys := SortMapKeyForDeterminism(m)
+		for _, key := range keys {
+			if !yield(m[key]) {
+				return
+			}
+		}
+	}
 }
 
 // Contains reports whether all elements in sub are present in super.
