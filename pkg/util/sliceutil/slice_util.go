@@ -21,12 +21,39 @@ import (
 	"slices"
 )
 
+// AllOf returns true if all elements in slice satisfy the predicate function.
+func AllOf[S ~[]E, E any](slice S, predicate func(E) bool) bool {
+	for _, element := range slice {
+		if !predicate(element) {
+			return false
+		}
+	}
+	return true
+}
+
+// Filter returns a new slice containing only elements that satisfy the predicate function.
+// Returns nil if the input slice is empty.
+func Filter[T any](slice []T, predicate func(T) bool) []T {
+	if len(slice) == 0 {
+		return nil
+	}
+	var result []T
+	for _, item := range slice {
+		if predicate(item) {
+			result = append(result, item)
+		}
+	}
+	return result
+}
+
+// SliceDeDup removes duplicate elements from a slice.
 func SliceDeDup[S ~[]E, E cmp.Ordered](s S) S {
 	newS := slices.Clone(s)
 	slices.Sort(newS)
 	return slices.Compact(newS)
 }
 
+// SortMapKeyForDeterminism returns a slice of keys from a map in sorted order.
 func SortMapKeyForDeterminism[k cmp.Ordered, v any](m map[k]v) []k {
 	keys := maps.Keys(m)
 	return slices.Sorted(keys)
@@ -44,6 +71,7 @@ func SortedMap[k cmp.Ordered, v any](m map[k]v) iter.Seq2[k, v] {
 	}
 }
 
+// ValueSortedByMapKey returns an iterator that yields values from a map in sorted key order.
 func ValueSortedByMapKey[k cmp.Ordered, v any](m map[k]v) iter.Seq[v] {
 	return func(yield func(v) bool) {
 		keys := SortMapKeyForDeterminism(m)
@@ -57,41 +85,27 @@ func ValueSortedByMapKey[k cmp.Ordered, v any](m map[k]v) iter.Seq[v] {
 
 // Contains reports whether all elements in sub are present in super.
 func ContainsAll[S ~[]E, E comparable](super S, sub S) bool {
-	for _, element := range sub {
-		if !slices.Contains(super, element) {
-			return false
-		}
-	}
-	return true
+	return AllOf(sub, func(element E) bool {
+		return slices.Contains(super, element)
+	})
 }
 
+// Subtraction returns a new slice containing elements in a that are not present in b.
 func Subtraction[S ~[]E, E comparable](a S, b S) S {
-	var result []E
-	for _, element := range a {
-		if !slices.Contains(b, element) {
-			result = append(result, element)
-		}
-	}
-	return result
+	return Filter(a, func(element E) bool {
+		return !slices.Contains(b, element)
+	})
 }
 
+// Exclude returns a new slice containing elements in set that are not equal to excludeElement.
 func Exclude[S ~[]E, E comparable](set S, excludeElement E) S {
-	var result []E
-	for _, element := range set {
-		if element != excludeElement {
-			result = append(result, element)
-		}
-	}
-	return result
+	return Filter(set, func(element E) bool {
+		return element != excludeElement
+	})
 }
 
-func Equal[S ~[]E, E cmp.Ordered](left S, right S) bool {
-	slices.Sort(left)
-	slices.Sort(right)
-	return slices.Equal(left, right)
-}
-
-// please ensure len(slice) <= len(predicate) before calling this function.
+// Take returns a new slice containing elements from slice where the corresponding element in predicate is true.
+// Please ensure len(slice) <= len(predicate) before calling this function.
 func Take[T any](slice []T, predicate []bool) []T {
 	var result []T
 	for i, item := range slice {
@@ -102,10 +116,11 @@ func Take[T any](slice []T, predicate []bool) []T {
 	return result
 }
 
-// please ensure len(slice) <= len(predicate) before calling this function.
+// InplaceTake modifies the slice in place to contain only elements where the corresponding element in predicate is true.
+// Please ensure len(slice) <= len(predicate) before calling this function.
 func InplaceTake[T any](slice []T, predicate []bool) []T {
 	newIndex := 0
-	for oldIndex := 0; oldIndex < len(slice); oldIndex++ {
+	for oldIndex := range slice {
 		if predicate[oldIndex] {
 			slice[newIndex] = slice[oldIndex]
 			newIndex++
