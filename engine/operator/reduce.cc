@@ -72,22 +72,74 @@ void ReduceBase::Execute(ExecContext* ctx) {
   }
 }
 
+std::shared_ptr<arrow::ChunkedArray> MakeEmptyChunkedArrayAs(
+    const std::shared_ptr<arrow::Scalar>& scalar) {
+  std::shared_ptr<arrow::Array> empty_array;
+  std::unique_ptr<arrow::ArrayBuilder> builder = nullptr;
+  switch (scalar->type->id()) {
+    case arrow::Type::NA:
+      builder = std::make_unique<arrow::NullBuilder>();
+      break;
+    case arrow::Type::BOOL:
+      builder = std::make_unique<arrow::BooleanBuilder>();
+      break;
+    case arrow::Type::INT32:
+      builder = std::make_unique<arrow::Int32Builder>();
+      break;
+    case arrow::Type::UINT32:
+      builder = std::make_unique<arrow::UInt32Builder>();
+      break;
+    case arrow::Type::FLOAT:
+      builder = std::make_unique<arrow::FloatBuilder>();
+      break;
+    case arrow::Type::INT64:
+      builder = std::make_unique<arrow::Int64Builder>();
+      break;
+    case arrow::Type::DOUBLE:
+      builder = std::make_unique<arrow::DoubleBuilder>();
+      break;
+    default:
+      YACL_THROW("unsupported type: {}", scalar->type->ToString());
+  }
+  YACL_ENFORCE(builder->Finish(&empty_array).ok(),
+               "make empty array failed, type={}", scalar->type->ToString());
+  return std::make_shared<arrow::ChunkedArray>(empty_array);
+}
+
 void ReduceBase::ExecuteInPlain(ExecContext* ctx, const pb::Tensor& input_pb,
                                 const pb::Tensor& output_pb) {
   const auto tensor = ctx->GetTensorTable()->GetTensor(input_pb.name());
   YACL_ENFORCE(tensor, "get private tensor failed, name={}", input_pb.name());
 
   const std::string& arrow_fun_name = GetArrowFunName();
-  auto result = arrow::compute::CallFunction(arrow_fun_name,
-                                             {tensor->ToArrowChunkedArray()});
+  auto option = GetOption();
+  auto result = arrow::compute::CallFunction(
+      arrow_fun_name, {tensor->ToArrowChunkedArray()}, option.get());
+
   YACL_ENFORCE(result.ok(), "invoking arrow function '{}' failed: err_msg={}",
                arrow_fun_name, result.status().ToString());
-  auto scalar = result.ValueOrDie().scalar();
-  std::shared_ptr<arrow::Array> array;
-  ASSIGN_OR_THROW_ARROW_STATUS(array, arrow::MakeArrayFromScalar(*scalar, 1));
-  auto chunked_arr = std::make_shared<arrow::ChunkedArray>(array);
+  auto datum = result.ValueOrDie();
+  std::shared_ptr<arrow::Scalar> scalar;
+  if (datum.is_scalar()) {
+    scalar = datum.scalar();
+  } else if (datum.is_array()) {
+    YACL_ENFORCE(datum.length() <= 1,
+                 "invoking arrow function '{}' failed: err_msg={}",
+                 arrow_fun_name, "result length should <= 1");
+    ASSIGN_OR_THROW_ARROW_STATUS(scalar, datum.make_array()->GetScalar(0));
+  }
 
-  ctx->GetTensorTable()->AddTensor(output_pb.name(), TensorFrom(chunked_arr));
+  if (scalar->is_valid == false) {
+    // if the result is null, create an empty array instead of returning null
+    auto empty_array = MakeEmptyChunkedArrayAs(scalar);
+    ctx->GetTensorTable()->AddTensor(output_pb.name(), TensorFrom(empty_array));
+  } else {
+    std::shared_ptr<arrow::Array> array;
+    ASSIGN_OR_THROW_ARROW_STATUS(array, arrow::MakeArrayFromScalar(*scalar, 1));
+    auto chunked_arr = std::make_shared<arrow::ChunkedArray>(array);
+
+    ctx->GetTensorTable()->AddTensor(output_pb.name(), TensorFrom(chunked_arr));
+  }
 }
 
 spu::Value ReduceBase::SecretReduceImpl(spu::SPUContext* sctx,
@@ -254,41 +306,6 @@ spu::Value ReducePercentileDisc::GetInitValue(spu::SPUContext* sctx) {
 
 ReduceBase::ReduceFn ReducePercentileDisc::GetReduceFn(spu::SPUContext* sctx) {
   YACL_THROW("unsupported reduce func: percentile_disc");
-}
-
-void ReducePercentileDisc::ExecuteInPlain(ExecContext* ctx,
-                                          const pb::Tensor& in,
-                                          const pb::Tensor& out) {
-  auto tensor = ctx->GetTensorTable()->GetTensor(in.name());
-  YACL_ENFORCE(tensor, "get private tensor failed, name={}", in.name());
-  if (tensor->Length() == 0) {
-    ctx->GetTensorTable()->AddTensor(out.name(), tensor);
-    return;
-  }
-  int64_t pos = GetPointIndex(tensor->Length());
-  arrow::compute::PartitionNthOptions options(pos);
-
-  const arrow::compute::FunctionOptions* options_ptr = &options;
-  std::shared_ptr<arrow::Array> array;
-  ASSIGN_OR_THROW_ARROW_STATUS(
-      array, arrow::Concatenate(tensor->ToArrowChunkedArray()->chunks(),
-                                arrow::default_memory_pool()));
-  auto result = arrow::compute::CallFunction("partition_nth_indices", {array},
-                                             options_ptr);
-
-  YACL_ENFORCE(result.ok(),
-               "invoking arrow function 'partition_nth_indices' "
-               "failed: err_msg={}",
-               result.status().ToString());
-  auto partitioned_indices = std::static_pointer_cast<arrow::UInt64Array>(
-      result.ValueOrDie().make_array());
-  std::shared_ptr<arrow::Scalar> scalar;
-  ASSIGN_OR_THROW_ARROW_STATUS(
-      scalar, array->GetScalar(partitioned_indices->Value(pos)));
-  ASSIGN_OR_THROW_ARROW_STATUS(array, arrow::MakeArrayFromScalar(*scalar, 1));
-  auto chunked_arr = std::make_shared<arrow::ChunkedArray>(array);
-
-  ctx->GetTensorTable()->AddTensor(out.name(), TensorFrom(chunked_arr));
 }
 
 spu::Value ReducePercentileDisc::SecretReduceImpl(spu::SPUContext* sctx,
