@@ -57,8 +57,7 @@ func (b *statusConverter) convertTo(inputT *graph.Tensor, expectPlace placement)
 
 func (b *statusConverter) convertStatusForMap(inputT map[string][]*graph.Tensor, expect map[string][]placement) (map[string][]*graph.Tensor, error) {
 	result := make(map[string][]*graph.Tensor)
-	for _, key := range sliceutil.SortMapKeyForDeterminism(inputT) {
-		ts := inputT[key]
+	for key, ts := range sliceutil.SortedMap(inputT) {
 		for i, t := range ts {
 			convertedT, err := b.convertTo(t, expect[key][i])
 			if err != nil {

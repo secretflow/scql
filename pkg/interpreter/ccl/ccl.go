@@ -84,8 +84,8 @@ func (cc *CCL) IsVisibleForParties(parties []string) bool {
 
 func (cc *CCL) String() string {
 	levelString := ""
-	for _, p := range sliceutil.SortMapKeyForDeterminism(cc.partyLevels) {
-		levelString += fmt.Sprintf("%s->%s,", p, cc.partyLevels[p].String())
+	for p, level := range sliceutil.SortedMap(cc.partyLevels) {
+		levelString += fmt.Sprintf("%s->%s,", p, level.String())
 	}
 	return fmt.Sprintf("{ccl level: %v}", levelString)
 }
