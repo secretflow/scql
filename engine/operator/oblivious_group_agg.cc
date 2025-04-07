@@ -276,24 +276,27 @@ spu::Value ObliviousPercentileDisc::CalculateResult(spu::SPUContext* sctx,
       spu::kernel::hlo::Constant(sctx, percent_, group.shape());
   // calculate the rank of the target percentile
   spu::Value one = spu::kernel::hlo::Constant(sctx, 1, group.shape());
-  // target_pos = ceil(count * percent) - 1, but the count is start from 1, so
-  // the
-  // `-1` is no need here
-  spu::Value target_pos = spu::kernel::hlo::Ceil(
-      sctx, spu::kernel::hlo::Mul(sctx, count, percent_arr));
+  spu::Value index = spu::kernel::hlo::Sub(
+      sctx, count, one);  // count starts with 1, index starts with 0
+  spu::Value target_index = spu::kernel::hlo::Floor(
+      sctx,
+      spu::kernel::hlo::Mul(
+          sctx, count,
+          percent_arr));  // if the length is 4(even), the target_index is 2, if
+                          // the length is 5(odd), the target_index is 2
   // index = rank * group, [0, 0, 0, index0, 0,..., 0, index1, 0, ...,0, indexn]
-  spu::Value index_values =
-      spu::kernel::hlo::Mul(sctx, target_pos, recovered_group);
+  spu::Value expected_index =
+      spu::kernel::hlo::Mul(sctx, target_index, recovered_group);
 
   auto expanded_index = util::ExpandGroupValueReversely(
-      sctx, {index_values},
+      sctx, {expected_index},
       reversed_mark);  // [index0, index0, index0, index1, index1, index1,
                        // index1]
   auto percentile_values = spu::kernel::hlo::Mul(
       sctx, value,
       spu::kernel::hlo::Equal(
           sctx, expanded_index[0],
-          count));  // [0, arr[index0],...0, arr[index1], ..., 0]
+          index));  // [0, arr[index0],...0, arr[index1], ..., 0]
   return ObliviousGroupSum().CalculateResult(sctx, percentile_values, group);
 }
 };  // namespace scql::engine::op
