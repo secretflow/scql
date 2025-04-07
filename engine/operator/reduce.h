@@ -161,11 +161,11 @@ class ReducePercentileDisc : public ReduceBase {
   std::unique_ptr<const arrow::compute::FunctionOptions> GetOption() override {
 #ifdef SCQL_WITH_NULL
     return std::make_unique<arrow::compute::QuantileOptions>(
-        percent_, arrow::compute::QuantileOptions::LOWER,
+        percent_, arrow::compute::QuantileOptions::HIGHER,
         true);  // the 3rd parameter determines whether skip null or not
 #endif
     return std::make_unique<arrow::compute::QuantileOptions>(
-        percent_, arrow::compute::QuantileOptions::LOWER);
+        percent_, arrow::compute::QuantileOptions::HIGHER);
   }
 
  private:

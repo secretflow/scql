@@ -147,7 +147,7 @@ INSTANTIATE_TEST_SUITE_P(
                 .input = test::NamedTensor("x", TensorFrom(arrow::float32(),
                                                            "[3, 2, 1, 4]")),
                 .output = test::NamedTensor("y", TensorFrom(arrow::float32(),
-                                                            "[2]")),
+                                                            "[3]")),
                 .double_attr = std::make_pair(ReducePercentileDisc::kPercent,
                                               0.5)},
             ReduceTestCase{
@@ -294,7 +294,7 @@ INSTANTIATE_TEST_SUITE_P(
                 .input = test::NamedTensor("x", TensorFrom(arrow::float32(),
                                                            "[3, 2, 1, 4]")),
                 .output = test::NamedTensor("y", TensorFrom(arrow::float32(),
-                                                            "[2]")),
+                                                            "[3]")),
                 .double_attr = std::make_pair(ReducePercentileDisc::kPercent,
                                               0.5)},
             ReduceTestCase{
