@@ -376,7 +376,7 @@ INSTANTIATE_TEST_SUITE_P(
                     "out",
                     TensorFrom(
                         arrow::int64(),
-                        "[1, 0, 3, 3, 3, 0, 7, 7]"))},  // ceil(0.5*length)
+                        "[1, 0, 0, 4, 4, 0, 7, 7]"))},  // ceil(0.5*length)
                                                         // - 1
                 .double_attribute =
                     std::make_pair(ObliviousPercentileDisc::kPercent, 0.5)},

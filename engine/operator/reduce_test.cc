@@ -31,6 +31,46 @@ struct ReduceTestCase {
   std::optional<std::pair<std::string, double>> double_attr;
 };
 
+static ReduceTestCase GeneratePercentileDiscCase(pb::TensorStatus status,
+                                                 double percent,
+                                                 size_t input_size) {
+  std::string op_type = ReducePercentileDisc::kOpType;
+  std::string input_name = "x";
+  std::string output_name = "y";
+
+  int start_value = 0;
+  std::vector<int> input;
+  while (input.size() < input_size) {
+    input.push_back(start_value);
+    start_value += 1;
+  }
+  int expected_index = std::floor(percent * input_size);
+  expected_index = std::min((int)input_size - 1, expected_index);
+  int expected_value = input[expected_index];
+  std::random_device rd;
+  std::mt19937 g(rd());
+  std::shuffle(input.begin(), input.end(), g);
+  std::string input_str = "[";
+  for (size_t i = 0; i < input.size(); ++i) {
+    input_str += std::to_string(input[i]);
+    if (i != input.size() - 1) {
+      input_str += ", ";
+    }
+  }
+  input_str += "]";
+  std::string output_str = "[" + std::to_string(expected_value) + "]";
+  auto input_tensor = TensorFrom(arrow::int32(), input_str);
+  auto output_tensor = TensorFrom(arrow::int32(), output_str);
+
+  return ReduceTestCase{
+      .op_type = op_type,
+      .status = status,
+      .input = test::NamedTensor(input_name, input_tensor),
+      .output = test::NamedTensor(output_name, output_tensor),
+      .double_attr = std::make_pair(ReducePercentileDisc::kPercent, percent),
+  };
+}
+
 class ReduceTest : public ::testing::TestWithParam<
                        std::tuple<test::SpuRuntimeTestCase, ReduceTestCase>> {
  protected:
@@ -176,7 +216,14 @@ INSTANTIATE_TEST_SUITE_P(
                 .output = test::NamedTensor("y",
                                             TensorFrom(arrow::float32(), "[]")),
                 .double_attr = std::make_pair(ReducePercentileDisc::kPercent,
-                                              0.5)})),
+                                              0.5)},
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_PRIVATE, 0, 10000),
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_PRIVATE, 1, 10000),
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_PRIVATE, 0.314, 10000),
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_PRIVATE, 0.442, 10000),
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_PRIVATE, 0.314, 10001),
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_PRIVATE, 0.442,
+                                       10001))),
     TestParamNameGenerator(ReduceTest));
 
 INSTANTIATE_TEST_SUITE_P(
@@ -323,7 +370,13 @@ INSTANTIATE_TEST_SUITE_P(
                 .output = test::NamedTensor("y",
                                             TensorFrom(arrow::float32(), "[]")),
                 .double_attr = std::make_pair(ReducePercentileDisc::kPercent,
-                                              0.5)})),
+                                              0.5)},
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_SECRET, 0, 10000),
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_SECRET, 1, 10000),
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_SECRET, 0.314, 10000),
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_SECRET, 0.442, 10000),
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_SECRET, 0.314, 10001),
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_SECRET, 0.442, 10001))),
     TestParamNameGenerator(ReduceTest));
 
 TEST_P(ReduceTest, Works) {

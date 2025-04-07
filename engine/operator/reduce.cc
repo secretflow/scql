@@ -314,14 +314,14 @@ spu::Value ReducePercentileDisc::SecretReduceImpl(spu::SPUContext* sctx,
   if (length == 0) {
     return in;
   }
-  auto sorted = spu::kernel::hlo::SimpleSort(
-      sctx, {in}, 0, spu::kernel::hal::SortDirection::Ascending, 1);
 
   auto pos =
       static_cast<int>(std::floor(percent_ * static_cast<double>(length)));
   pos = std::max(pos, 0);
   pos = std::min(pos, static_cast<int>(length - 1));
 
+  auto sorted = spu::kernel::hlo::SimpleSort(
+      sctx, {in}, 0, spu::kernel::hal::SortDirection::Ascending, 1);
   spu::Value left_zeros = spu::kernel::hlo::Constant(sctx, 0, {pos});
   spu::Value right_zeros =
       spu::kernel::hlo::Constant(sctx, 0, {length - pos - 1});
