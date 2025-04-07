@@ -170,14 +170,6 @@ class ReducePercentileDisc : public ReduceBase {
 
  private:
   double percent_;
-
-  int64_t GetPointIndex(size_t length) const {
-    int64_t pos = static_cast<size_t>(
-        std::ceil(percent_ * static_cast<double>(length)) - 1);
-    pos = std::max(pos, static_cast<int64_t>(0));
-    pos = std::min(pos, static_cast<int64_t>(length) - 1);
-    return pos;
-  }
 };
 
 }  // namespace scql::engine::op
