@@ -63,8 +63,7 @@ bool Session::ValidateSPUContext() {
   YACL_ENFORCE(spu_ctx_ != nullptr,
                "SPU context is not initialized successfully.");
   return std::find(allowed_spu_protocols_.begin(), allowed_spu_protocols_.end(),
-                   spu_ctx_->config().protocol()) !=
-         allowed_spu_protocols_.end();
+                   spu_ctx_->config().protocol) != allowed_spu_protocols_.end();
 }
 
 Session::Session(const SessionOptions& session_opt,
@@ -99,7 +98,7 @@ Session::Session(const SessionOptions& session_opt,
   InitLink();
   if (lctx_->WorldSize() >= 2) {
     // spu SPUContext valid only when world_size >= 2
-    auto config = params.spu_runtime_cfg();
+    auto config = spu::RuntimeConfig(params.spu_runtime_cfg());
     spu::populateRuntimeConfig(config);
     spu_ctx_ = std::make_unique<spu::SPUContext>(config, lctx_);
 
@@ -108,14 +107,15 @@ Session::Session(const SessionOptions& session_opt,
         fmt::format(
             "SPU runtime validation failed. Protocol {} is "
             "not allowed in current scenario, only [{}] are allowed",
-            spu_ctx_->config().protocol(),
+            spu_ctx_->config().protocol,
             std::accumulate(
                 allowed_spu_protocols_.begin(), allowed_spu_protocols_.end(),
                 std::string{},
                 [](const std::string& acc, const spu::ProtocolKind& protocol) {
                   return acc.empty()
-                             ? spu::ProtocolKind_Name(protocol)
-                             : acc + ", " + spu::ProtocolKind_Name(protocol);
+                             ? spu::GetProtocolKindName(protocol)
+                             : fmt::format("{},{}", acc,
+                                           spu::GetProtocolKindName(protocol));
                 })));
     spu::mpc::Factory::RegisterProtocol(spu_ctx_.get(), lctx_);
   }

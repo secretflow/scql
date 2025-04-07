@@ -1,0 +1,26 @@
+---
+name: Run clang-format Linter
+on:
+  push:
+    branches:
+    - main
+    paths:
+      - '**.cc'
+      - '**.cpp'
+      - '**.hpp'
+      - '**.h'
+      - '**.proto'
+  pull_request:
+    branches:
+    - main
+    paths:
+      - '**.cc'
+      - '**.cpp'
+      - '**.hpp'
+      - '**.h'
+      - '**.proto'
+permissions:
+  contents: read
+jobs:
+  run-clang-format:
+    uses: secretflow/.github/.github/workflows/clang-format.yml@main

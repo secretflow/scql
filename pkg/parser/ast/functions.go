@@ -334,10 +334,12 @@ const (
 
 var DateFunc = map[string]bool{
 	AddDate:    true,
+	DateAdd:    true,
 	Curdate:    true,
 	DateDiff:   true,
 	Now:        true,
 	SubDate:    true,
+	DateSub:    true,
 	LastDay:    true,
 	StrToDate:  true,
 	DateFormat: true,
@@ -375,7 +377,7 @@ func (n *FuncCallExpr) RestoreDateFuncWithMysqlDialect(ctx *RestoreCtx) (err err
 	ctx.WriteKeyWord(n.FnName.O)
 	ctx.WritePlain("(")
 	switch n.FnName.L {
-	case AddDate, SubDate:
+	case AddDate, SubDate, DateAdd, DateSub:
 		if err = n.Args[0].Restore(ctx); err != nil {
 			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[0]")
 		}
@@ -412,7 +414,7 @@ func (n *FuncCallExpr) RestoreDateFuncWithPostgresDialect(ctx *RestoreCtx) (err 
 		ctx.WritePlain("()")
 	case Curdate:
 		ctx.WriteKeyWord(ctx.Dialect.GetSpecialFuncName(n.FnName.L))
-	case AddDate, SubDate:
+	case AddDate, SubDate, DateAdd, DateSub:
 		if err = n.Args[0].Restore(ctx); err != nil {
 			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[0]")
 		}
@@ -457,7 +459,7 @@ func (n *FuncCallExpr) RestoreDateFuncWithCSVDBDialect(ctx *RestoreCtx) (err err
 	case Now:
 		ctx.WriteKeyWord(ctx.Dialect.GetSpecialFuncName(n.FnName.L))
 		ctx.WritePlain("()")
-	case AddDate, SubDate:
+	case AddDate, SubDate, DateAdd, DateSub:
 		if err = n.Args[0].Restore(ctx); err != nil {
 			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[0]")
 		}
@@ -866,6 +868,8 @@ const (
 	// Added by SCQL
 	// AggFuncMedian is the name of Median function.
 	AggFuncMedian = "median"
+
+	AggPercentileDisc = "percentile_disc"
 )
 
 // AggregateFuncExpr represents aggregate function expression.

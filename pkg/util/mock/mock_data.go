@@ -222,9 +222,9 @@ func getMockData() ([]allDBData, []string, error) {
 	}
 	var res []allDBData
 	var allPartyCodes []string
-	for _, key := range sliceutil.SortMapKeyForDeterminism(all_dbs) {
-		res = append(res, all_dbs[key])
-		allPartyCodes = append(allPartyCodes, all_dbs[key].PartyCode)
+	for db := range sliceutil.ValueSortedByMapKey(all_dbs) {
+		res = append(res, db)
+		allPartyCodes = append(allPartyCodes, db.PartyCode)
 	}
 	return res, allPartyCodes, nil
 }

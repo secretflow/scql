@@ -19,8 +19,9 @@ import (
 	"errors"
 	"fmt"
 
+	"slices"
+
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/slices"
 
 	"github.com/secretflow/scql/pkg/broker/application"
 	"github.com/secretflow/scql/pkg/broker/executor"

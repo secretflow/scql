@@ -213,12 +213,12 @@ type tensorStatusPair struct {
 }
 
 var binaryIOStatusMap = map[tensorStatusPair]scql.TensorStatus{
-	tensorStatusPair{scql.TensorStatus_TENSORSTATUS_PRIVATE, scql.TensorStatus_TENSORSTATUS_PRIVATE}: scql.TensorStatus_TENSORSTATUS_PRIVATE,
-	tensorStatusPair{scql.TensorStatus_TENSORSTATUS_PRIVATE, scql.TensorStatus_TENSORSTATUS_PUBLIC}:  scql.TensorStatus_TENSORSTATUS_PRIVATE,
-	tensorStatusPair{scql.TensorStatus_TENSORSTATUS_PUBLIC, scql.TensorStatus_TENSORSTATUS_PRIVATE}:  scql.TensorStatus_TENSORSTATUS_PRIVATE,
-	tensorStatusPair{scql.TensorStatus_TENSORSTATUS_SECRET, scql.TensorStatus_TENSORSTATUS_SECRET}:   scql.TensorStatus_TENSORSTATUS_SECRET,
-	tensorStatusPair{scql.TensorStatus_TENSORSTATUS_PUBLIC, scql.TensorStatus_TENSORSTATUS_SECRET}:   scql.TensorStatus_TENSORSTATUS_SECRET,
-	tensorStatusPair{scql.TensorStatus_TENSORSTATUS_SECRET, scql.TensorStatus_TENSORSTATUS_PUBLIC}:   scql.TensorStatus_TENSORSTATUS_SECRET,
+	{scql.TensorStatus_TENSORSTATUS_PRIVATE, scql.TensorStatus_TENSORSTATUS_PRIVATE}: scql.TensorStatus_TENSORSTATUS_PRIVATE,
+	{scql.TensorStatus_TENSORSTATUS_PRIVATE, scql.TensorStatus_TENSORSTATUS_PUBLIC}:  scql.TensorStatus_TENSORSTATUS_PRIVATE,
+	{scql.TensorStatus_TENSORSTATUS_PUBLIC, scql.TensorStatus_TENSORSTATUS_PRIVATE}:  scql.TensorStatus_TENSORSTATUS_PRIVATE,
+	{scql.TensorStatus_TENSORSTATUS_SECRET, scql.TensorStatus_TENSORSTATUS_SECRET}:   scql.TensorStatus_TENSORSTATUS_SECRET,
+	{scql.TensorStatus_TENSORSTATUS_PUBLIC, scql.TensorStatus_TENSORSTATUS_SECRET}:   scql.TensorStatus_TENSORSTATUS_SECRET,
+	{scql.TensorStatus_TENSORSTATUS_SECRET, scql.TensorStatus_TENSORSTATUS_PUBLIC}:   scql.TensorStatus_TENSORSTATUS_SECRET,
 }
 
 // create algs for binary ops which need communication when status is share
@@ -239,11 +239,11 @@ func createBinaryAlg(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, allPar
 			alg := &materializedAlgorithm{
 				cost: newAlgCost(0, 0),
 				inputPlacement: map[string][]placement{
-					graph.Left:  []placement{lp},
-					graph.Right: []placement{rp},
+					graph.Left:  {lp},
+					graph.Right: {rp},
 				},
 				outputPlacement: map[string][]placement{
-					graph.Out: []placement{},
+					graph.Out: {},
 				}}
 			status, exist := binaryIOStatusMap[tensorStatusPair{left: lp.Status(), right: rp.Status()}]
 			if !exist {
@@ -320,11 +320,11 @@ func createInAlg(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, allParties
 				alg := &materializedAlgorithm{
 					cost: newAlgCost(psiInCommCost, psiCalCost),
 					inputPlacement: map[string][]placement{
-						graph.Left:  []placement{lp},
-						graph.Right: []placement{rp},
+						graph.Left:  {lp},
+						graph.Right: {rp},
 					},
 					outputPlacement: map[string][]placement{
-						graph.Out: []placement{outp},
+						graph.Out: {outp},
 					}}
 				result = append(result, alg)
 			}
@@ -364,8 +364,8 @@ func createIfAlg(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, allParties
 
 func extractCCLsFromMap(in map[string][]*ccl.CCL) []*ccl.CCL {
 	var result []*ccl.CCL
-	for _, key := range sliceutil.SortMapKeyForDeterminism(in) {
-		result = append(result, in[key]...)
+	for ccls := range sliceutil.ValueSortedByMapKey(in) {
+		result = append(result, ccls...)
 	}
 	return result
 }
@@ -376,13 +376,14 @@ func createPrivateAlgForParty(in map[string][]*ccl.CCL, out map[string][]*ccl.CC
 		inputPlacement:  make(map[string][]placement),
 		outputPlacement: make(map[string][]placement),
 	}
-	for _, key := range sliceutil.SortMapKeyForDeterminism(in) {
-		for range in[key] {
+
+	for key, ccls := range sliceutil.SortedMap(in) {
+		for range ccls {
 			alg.inputPlacement[key] = append(alg.inputPlacement[key], &privatePlacement{partyCode: party})
 		}
 	}
-	for _, key := range sliceutil.SortMapKeyForDeterminism(out) {
-		for range out[key] {
+	for key, ccls := range sliceutil.SortedMap(out) {
+		for range ccls {
 			alg.outputPlacement[key] = append(alg.outputPlacement[key], &privatePlacement{partyCode: party})
 		}
 	}
@@ -412,13 +413,13 @@ func createAllShareAlgs(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, all
 		inputPlacement:  make(map[string][]placement),
 		outputPlacement: make(map[string][]placement),
 	}
-	for _, key := range sliceutil.SortMapKeyForDeterminism(in) {
-		for range in[key] {
+	for key, ccls := range sliceutil.SortedMap(in) {
+		for range ccls {
 			alg.inputPlacement[key] = append(alg.inputPlacement[key], &sharePlacement{partyCodes: allParties})
 		}
 	}
-	for _, key := range sliceutil.SortMapKeyForDeterminism(out) {
-		for range out[key] {
+	for key, ccls := range sliceutil.SortedMap(out) {
+		for range ccls {
 			alg.outputPlacement[key] = append(alg.outputPlacement[key], &sharePlacement{partyCodes: allParties})
 		}
 	}
@@ -432,8 +433,8 @@ func createSharePublicAlgs(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, 
 		outputPlacement: make(map[string][]placement),
 	}
 	hasShareInput := false
-	for _, key := range sliceutil.SortMapKeyForDeterminism(in) {
-		for _, cc := range in[key] {
+	for key, ccls := range sliceutil.SortedMap(in) {
+		for _, cc := range ccls {
 			if cc.IsVisibleForParties(allParties) {
 				alg.inputPlacement[key] = append(alg.inputPlacement[key], &publicPlacement{partyCodes: allParties})
 			} else {
@@ -443,8 +444,8 @@ func createSharePublicAlgs(in map[string][]*ccl.CCL, out map[string][]*ccl.CCL, 
 			}
 		}
 	}
-	for _, key := range sliceutil.SortMapKeyForDeterminism(out) {
-		for _, cc := range out[key] {
+	for key, ccls := range sliceutil.SortedMap(out) {
+		for _, cc := range ccls {
 			if cc.IsVisibleForParties(allParties) && !hasShareInput {
 				alg.outputPlacement[key] = append(alg.outputPlacement[key], &publicPlacement{partyCodes: allParties})
 			} else {

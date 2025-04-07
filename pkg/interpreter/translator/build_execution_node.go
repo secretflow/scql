@@ -16,6 +16,7 @@ package translator
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/secretflow/scql/pkg/expression"
 	"github.com/secretflow/scql/pkg/expression/aggregation"
@@ -478,8 +479,7 @@ func (t *translator) buildSelection(ln *SelectionNode) (err error) {
 	// private tensors need record it's owner party
 	privateTensorsMap := make(map[string][]*graph.Tensor)
 	privateIdsMap := make(map[string][]int64)
-	for _, columnId := range sliceutil.SortMapKeyForDeterminism(colIdToTensor) {
-		it := colIdToTensor[columnId]
+	for columnId, it := range sliceutil.SortedMap(colIdToTensor) {
 		if len(filter.CC.GetVisibleParties()) == len(t.enginesInfo.GetParties()) {
 			switch it.Status() {
 			case proto.TensorStatus_TENSORSTATUS_SECRET:
@@ -533,8 +533,7 @@ func (t *translator) buildSelection(ln *SelectionNode) (err error) {
 	}
 	// handling private tensors here
 	if len(privateTensorsMap) > 0 {
-		for _, p := range sliceutil.SortMapKeyForDeterminism(privateTensorsMap) {
-			ts := privateTensorsMap[p]
+		for p, ts := range sliceutil.SortedMap(privateTensorsMap) {
 			newFilter, err := t.converter.convertTo(filter, &privatePlacement{partyCode: p})
 			if err != nil {
 				return fmt.Errorf("buildSelection: %v", err)
@@ -588,7 +587,7 @@ func (t *translator) buildProjection(ln *ProjectionNode) (err error) {
 		return fmt.Errorf("buildProjection: %v", err)
 	}
 
-	for i, _ := range proj.Exprs {
+	for i := range proj.Exprs {
 		cid := ln.Schema().Columns[i].UniqueID
 		resultIdToTensor[cid] = outputs[i]
 	}
@@ -620,7 +619,7 @@ func (t *translator) buildAggregation(ln *AggregationNode) (err error) {
 	// Aggregation Function
 	childColIdToTensor := t.getNodeResultTensor(child)
 	for i, aggFunc := range agg.AggFuncs {
-		if len(aggFunc.Args) != 1 {
+		if len(aggFunc.Args) != 1 && aggFunc.Name != ast.AggPercentileDisc {
 			return fmt.Errorf("buildAggregation: unsupported aggregation function %v", aggFunc)
 		}
 		switch aggFunc.Name {
@@ -633,7 +632,7 @@ func (t *translator) buildAggregation(ln *AggregationNode) (err error) {
 			if err != nil {
 				return fmt.Errorf("buildAggregation: %v", err)
 			}
-			output, err := t.ep.AddReduceAggNode(aggFunc.Name, colT)
+			output, err := t.ep.AddReduceAggNode(aggFunc.Name, colT, map[string]*graph.Attribute{})
 			if err != nil {
 				return fmt.Errorf("buildAggregation: %v", err)
 			}
@@ -661,7 +660,7 @@ func (t *translator) buildAggregation(ln *AggregationNode) (err error) {
 						if err != nil {
 							return fmt.Errorf("buildAggregation: add unique node: %v", err)
 						}
-						out, err = t.ep.AddReduceAggNode(ast.AggFuncCount, colT)
+						out, err = t.ep.AddReduceAggNode(ast.AggFuncCount, colT, map[string]*graph.Attribute{})
 						if err != nil {
 							return fmt.Errorf("buildAggregation: count: %v", err)
 						}
@@ -678,7 +677,7 @@ func (t *translator) buildAggregation(ln *AggregationNode) (err error) {
 							return fmt.Errorf("buildAggregation: %v", err)
 						}
 						// 3. sum(mark)
-						out, err = t.ep.AddReduceAggNode(ast.AggFuncSum, groupMarkDistinct)
+						out, err = t.ep.AddReduceAggNode(ast.AggFuncSum, groupMarkDistinct, map[string]*graph.Attribute{})
 						if err != nil {
 							return fmt.Errorf("buildAggregation: %v", err)
 						}
@@ -703,7 +702,7 @@ func (t *translator) buildAggregation(ln *AggregationNode) (err error) {
 					if err != nil {
 						return fmt.Errorf("buildAggregation: %v", err)
 					}
-					out, err = t.ep.AddReduceAggNode(ast.AggFuncCount, colT)
+					out, err = t.ep.AddReduceAggNode(ast.AggFuncCount, colT, map[string]*graph.Attribute{})
 					if err != nil {
 						return fmt.Errorf("buildAggregation: %v", err)
 					}
@@ -714,7 +713,7 @@ func (t *translator) buildAggregation(ln *AggregationNode) (err error) {
 				if err != nil {
 					return fmt.Errorf("buildAggregation: %v", err)
 				}
-				output, err := t.ep.AddReduceAggNode(ast.AggFuncSum, colT)
+				output, err := t.ep.AddReduceAggNode(ast.AggFuncSum, colT, map[string]*graph.Attribute{})
 				if err != nil {
 					return fmt.Errorf("buildAggregation: %v", err)
 				}
@@ -722,6 +721,27 @@ func (t *translator) buildAggregation(ln *AggregationNode) (err error) {
 			default:
 				return fmt.Errorf("buildAggregation: unrecognized count func mode %v", aggFunc.Mode)
 			}
+		case ast.AggPercentileDisc:
+			colT, err := t.buildExpression(aggFunc.Args[0], childColIdToTensor, false, ln)
+			if err != nil {
+				return fmt.Errorf("buildAggregation: %v", err)
+			}
+			percent, err := strconv.ParseFloat(aggFunc.Args[1].String(), 64)
+			if err != nil {
+				return fmt.Errorf("buildAggregation: invalid percentile %s given, error; %v", aggFunc.Args[1].String(), err)
+			}
+
+			if percent < 0 || percent > 1 {
+				return fmt.Errorf("buildAggregation: invalid percentile value %v, it should be in [0, 1]", percent)
+			}
+			attr := &graph.Attribute{}
+			attr.SetDouble(percent)
+			output, err := t.ep.AddReduceAggNode(ast.AggPercentileDisc, colT, map[string]*graph.Attribute{"percent": attr})
+			if err != nil {
+				return fmt.Errorf("buildAggregation: %v", err)
+			}
+
+			colIdToTensor[ln.Schema().Columns[i].UniqueID] = output
 		default:
 			return fmt.Errorf("buildAggregation: unsupported aggregation function %v", aggFunc)
 		}
@@ -845,7 +865,7 @@ func (t *translator) findPartyHandleAll(ln *AggregationNode) (string, error) {
 	for _, party_candidate := range partyCandidateSlice {
 		canHandleAggs := true
 		for _, aggFunc := range agg.AggFuncs {
-			if len(aggFunc.Args) != 1 {
+			if len(aggFunc.Args) != 1 && aggFunc.Name != ast.AggPercentileDisc {
 				return "", fmt.Errorf("findPartyHandleAll: args length > 1 for %v", aggFunc)
 			}
 			cc, err := ccl.InferExpressionCCL(aggFunc.Args[0], child.CCL())
@@ -896,12 +916,12 @@ func (t *translator) buildPrivateGroupAggregation(ln *AggregationNode, party str
 	}
 	childColIdToTensor := t.getNodeResultTensor(ln.Children()[0])
 	for i, aggFunc := range agg.AggFuncs {
-		if len(aggFunc.Args) != 1 {
+		if len(aggFunc.Args) != 1 && aggFunc.Name != ast.AggPercentileDisc {
 			return fmt.Errorf("buildPrivateGroupAggregation: unsupported aggregation function %v, expect len(aggFunc.Args)=1, but got %v", aggFunc, len(aggFunc.Args))
 		}
 		// deal with simple count, which no need to buildExpression
 		if isSimpleCount(aggFunc) {
-			outputs, err := t.addGroupAggNode(ast.AggFuncCount, operator.OpNameGroupCount, groupId, groupNum, []*graph.Tensor{groupId}, party)
+			outputs, err := t.addGroupAggNode(ast.AggFuncCount, operator.OpNameGroupCount, groupId, groupNum, []*graph.Tensor{groupId}, party, map[string]*graph.Attribute{})
 			if err != nil {
 				return fmt.Errorf("buildPrivateGroupAggregation: count(*): %v", err)
 			}
@@ -918,7 +938,7 @@ func (t *translator) buildPrivateGroupAggregation(ln *AggregationNode, party str
 			switch aggFunc.Mode {
 			case aggregation.CompleteMode:
 				if aggFunc.HasDistinct {
-					outputs, err := t.addGroupAggNode("count_distinct", operator.OpNameGroupCountDistinct, groupId, groupNum, []*graph.Tensor{colT}, party)
+					outputs, err := t.addGroupAggNode("count_distinct", operator.OpNameGroupCountDistinct, groupId, groupNum, []*graph.Tensor{colT}, party, map[string]*graph.Attribute{})
 					if err != nil {
 						return fmt.Errorf("buildPrivateGroupAggregation: count distinct complete mode: %v", err)
 					}
@@ -929,7 +949,7 @@ func (t *translator) buildPrivateGroupAggregation(ln *AggregationNode, party str
 			case aggregation.FinalMode:
 				switch aggFunc.Args[0].(type) {
 				case *expression.Column:
-					outputs, err := t.addGroupAggNode(ast.AggFuncSum, operator.OpNameGroupSum, groupId, groupNum, []*graph.Tensor{colT}, party)
+					outputs, err := t.addGroupAggNode(ast.AggFuncSum, operator.OpNameGroupSum, groupId, groupNum, []*graph.Tensor{colT}, party, map[string]*graph.Attribute{})
 					if err != nil {
 						return fmt.Errorf("buildPrivateGroupAggregation: count final mode: %v", err)
 					}
@@ -941,14 +961,14 @@ func (t *translator) buildPrivateGroupAggregation(ln *AggregationNode, party str
 				return fmt.Errorf("buildPrivateGroupAggregation: aggFunc.Mode %v", aggFunc.Mode)
 			}
 		case ast.AggFuncFirstRow, ast.AggFuncMin, ast.AggFuncMax, ast.AggFuncAvg:
-			outputs, err := t.addGroupAggNode(aggFunc.Name, operator.GroupAggOp[aggFunc.Name], groupId, groupNum, []*graph.Tensor{colT}, party)
+			outputs, err := t.addGroupAggNode(aggFunc.Name, operator.GroupAggOp[aggFunc.Name], groupId, groupNum, []*graph.Tensor{colT}, party, map[string]*graph.Attribute{})
 			if err != nil {
 				return fmt.Errorf("buildPrivateGroupAggregation: %v", err)
 			}
 			colIdToTensor[ln.Schema().Columns[i].UniqueID] = outputs[0]
 		case ast.AggFuncSum: // deal with agg which may run in HE
 			if colT.CC.IsVisibleFor(party) {
-				outputs, err := t.addGroupAggNode(ast.AggFuncSum, operator.OpNameGroupSum, groupId, groupNum, []*graph.Tensor{colT}, party)
+				outputs, err := t.addGroupAggNode(ast.AggFuncSum, operator.OpNameGroupSum, groupId, groupNum, []*graph.Tensor{colT}, party, map[string]*graph.Attribute{})
 				if err != nil {
 					return fmt.Errorf("buildPrivateGroupAggregation: %v", err)
 				}
@@ -968,7 +988,26 @@ func (t *translator) buildPrivateGroupAggregation(ln *AggregationNode, party str
 				}
 				colIdToTensor[ln.Schema().Columns[i].UniqueID] = output
 			}
+		case ast.AggPercentileDisc:
+			if len(aggFunc.Args) != 2 {
+				return fmt.Errorf("buildPrivateGroupAggregation: percentile_disc requires 2 arguments, but received %d", len(aggFunc.Args))
+			}
+			attr := &graph.Attribute{}
+			percent, err := strconv.ParseFloat(aggFunc.Args[1].String(), 64)
+			if err != nil {
+				return fmt.Errorf("buildPrivateGroupAggregation: %s is not a valid float value", aggFunc.Args[1].String())
+			}
 
+			if percent < 0 || percent > 1 {
+				return fmt.Errorf("buildPrivateGroupAggregation: percent should be in [0, 1], but got %v", percent)
+			}
+
+			attr.SetDouble(percent)
+			outputs, err := t.addGroupAggNode(ast.AggPercentileDisc, operator.OpNameGroupPercentileDisc, groupId, groupNum, []*graph.Tensor{colT}, party, map[string]*graph.Attribute{"percent": attr})
+			if err != nil {
+				return fmt.Errorf("buildPrivateGroupAggregation: %v", err)
+			}
+			colIdToTensor[ln.Schema().Columns[i].UniqueID] = outputs[0]
 		default:
 			return fmt.Errorf("buildPrivateGroupAggregation: unsupported aggregation function %v", aggFunc)
 		}
@@ -1090,7 +1129,7 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 	// add agg funcs
 	colIdToTensor := map[int64]*graph.Tensor{}
 	for i, aggFunc := range agg.AggFuncs {
-		if len(aggFunc.Args) != 1 {
+		if len(aggFunc.Args) != 1 && aggFunc.Name != ast.AggPercentileDisc {
 			return fmt.Errorf("buildObliviousGroupAggregation: unsupported aggregation function %v", aggFunc)
 		}
 		switch aggFunc.Name {
@@ -1109,7 +1148,7 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 			if err != nil {
 				return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 			}
-			output, err := t.addObliviousGroupAggNode(aggFunc.Name, groupMark, colT)
+			output, err := t.addObliviousGroupAggNode(aggFunc.Name, groupMark, colT, map[string]*graph.Attribute{})
 			if err != nil {
 				return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 			}
@@ -1156,12 +1195,12 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 					}
 
-					output, err = t.addObliviousGroupAggNode(ast.AggFuncSum, groupMark, groupMarkFull)
+					output, err = t.addObliviousGroupAggNode(ast.AggFuncSum, groupMark, groupMarkFull, map[string]*graph.Attribute{})
 					if err != nil {
 						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 					}
 				} else {
-					output, err = t.addObliviousGroupAggNode(ast.AggFuncCount, groupMark, groupMark)
+					output, err = t.addObliviousGroupAggNode(ast.AggFuncCount, groupMark, groupMark, map[string]*graph.Attribute{})
 					if err != nil {
 						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 					}
@@ -1170,7 +1209,7 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 				switch x := aggFunc.Args[0].(type) {
 				case *expression.Column:
 					colT := sortedChildColIdToTensor[x.UniqueID]
-					output, err = t.addObliviousGroupAggNode(ast.AggFuncSum, groupMark, colT)
+					output, err = t.addObliviousGroupAggNode(ast.AggFuncSum, groupMark, colT, map[string]*graph.Attribute{})
 					if err != nil {
 						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 					}
@@ -1179,6 +1218,27 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 				}
 			default:
 				return fmt.Errorf("buildObliviousGroupAggregation: unrecognized count func mode %v", aggFunc.Mode)
+			}
+			colIdToTensor[ln.Schema().Columns[i].UniqueID] = output
+		case ast.AggPercentileDisc:
+			colT, err := t.buildExpression(aggFunc.Args[0], sortedChildColIdToTensor, false, ln)
+			if err != nil {
+				return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+			}
+			attr := &graph.Attribute{}
+			percent, err := strconv.ParseFloat(aggFunc.Args[1].String(), 64)
+			if err != nil {
+				return fmt.Errorf("buildObliviousGroupAggregation: %s is not a valid float value", aggFunc.Args[1].String())
+			}
+
+			if percent < 0 || percent > 1 {
+				return fmt.Errorf("buildPrivateGroupAggregation: percent should be in [0, 1], but got %v", percent)
+			}
+
+			attr.SetDouble(percent)
+			output, err := t.addObliviousGroupAggNode(aggFunc.Name, groupMark, colT, map[string]*graph.Attribute{"percent": attr})
+			if err != nil {
+				return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 			}
 			colIdToTensor[ln.Schema().Columns[i].UniqueID] = output
 		default:
@@ -1265,8 +1325,7 @@ func (t *translator) buildLimit(ln *LimitNode) (err error) {
 	privateTensors := make(map[string][]*graph.Tensor)
 	privateIds := make(map[string][]int64)
 	childColIdToTensor := t.getNodeResultTensor(ln.Children()[0])
-	for _, id := range sliceutil.SortMapKeyForDeterminism(childColIdToTensor) {
-		it := childColIdToTensor[id]
+	for id, it := range sliceutil.SortedMap(childColIdToTensor) {
 		if it.Status() == proto.TensorStatus_TENSORSTATUS_SECRET || it.Status() == proto.TensorStatus_TENSORSTATUS_PUBLIC {
 			shareTensors = append(shareTensors, it)
 			shareIds = append(shareIds, id)
@@ -1288,8 +1347,8 @@ func (t *translator) buildLimit(ln *LimitNode) (err error) {
 		}
 	}
 
-	for _, party := range sliceutil.SortMapKeyForDeterminism(privateTensors) {
-		output, err := t.ep.AddLimitNode("limit", privateTensors[party], int(limit.Offset), int(limit.Count), []string{party})
+	for party, tensors := range sliceutil.SortedMap(privateTensors) {
+		output, err := t.ep.AddLimitNode("limit", tensors, int(limit.Offset), int(limit.Count), []string{party})
 		if err != nil {
 			return fmt.Errorf("buildLimit: %v", err)
 		}
@@ -1493,13 +1552,13 @@ func (t *translator) buildObliviousRankWindow(ln *WindowNode) error {
 	var output *graph.Tensor
 	switch windowDesc.Name {
 	case ast.WindowFuncRowNumber:
-		output, err = t.addObliviousGroupAggNode(ast.AggFuncCount, groupMark, groupMark)
+		output, err = t.addObliviousGroupAggNode(ast.AggFuncCount, groupMark, groupMark, map[string]*graph.Attribute{})
 		if err != nil {
 			return fmt.Errorf("builObliviousRankWindow: %v", err)
 		}
 		childColIdToTensor[lastCol.UniqueID] = output
 	case ast.WindowFuncPercentRank:
-		output, err = t.addObliviousGroupAggNode(ast.WindowFuncPercentRank, groupMark, groupMark)
+		output, err = t.addObliviousGroupAggNode(ast.WindowFuncPercentRank, groupMark, groupMark, map[string]*graph.Attribute{})
 		if err != nil {
 			return fmt.Errorf("builObliviousRankWindow: %v", err)
 		}

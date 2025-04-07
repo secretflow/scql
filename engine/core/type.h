@@ -15,9 +15,10 @@
 #pragma once
 
 #include "arrow/type.h"
+#include "libspu/spu.h"
 
 #include "api/core.pb.h"
-#include "libspu/spu.pb.h"
+
 namespace scql::engine {
 
 enum class Visibility {

@@ -141,6 +141,7 @@ void RegisterAllOpsImpl() {
   ADD_OPERATOR_TO_REGISTRY(GroupMin);
   ADD_OPERATOR_TO_REGISTRY(GroupMax);
   ADD_OPERATOR_TO_REGISTRY(GroupHeSum);
+  ADD_OPERATOR_TO_REGISTRY(GroupPercentileDisc);
 
   // oblivious groupby
   ADD_OPERATOR_TO_REGISTRY(ObliviousGroupMark);
@@ -151,6 +152,7 @@ void RegisterAllOpsImpl() {
   ADD_OPERATOR_TO_REGISTRY(ObliviousGroupMin);
 
   ADD_OPERATOR_TO_REGISTRY(ObliviousPercentRank);
+  ADD_OPERATOR_TO_REGISTRY(ObliviousPercentileDisc);
 
   ADD_OPERATOR_TO_REGISTRY(Concat);
   ADD_OPERATOR_TO_REGISTRY(Cast);

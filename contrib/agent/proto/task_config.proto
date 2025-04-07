@@ -39,4 +39,6 @@ message ScqlTaskInputConfig {
   string initiator = 6;
 }
 
-message TableList { repeated TableMeta tbls = 1; }
+message TableList {
+  repeated TableMeta tbls = 1;
+}

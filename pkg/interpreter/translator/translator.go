@@ -21,7 +21,7 @@ import (
 	"sort"
 	"time"
 
-	"golang.org/x/exp/slices"
+	"slices"
 
 	"github.com/secretflow/scql/pkg/expression"
 	"github.com/secretflow/scql/pkg/interpreter/ccl"
@@ -1012,8 +1012,7 @@ func (t *translator) addFilterNode(filter *graph.Tensor, tensorToFilter map[int6
 	// private tensors need record it's owner party
 	privateTensorsMap := make(map[string][]*graph.Tensor)
 	privateIdsMap := make(map[string][]int64)
-	for _, tensorId := range sliceutil.SortMapKeyForDeterminism(tensorToFilter) {
-		it := tensorToFilter[tensorId]
+	for tensorId, it := range sliceutil.SortedMap(tensorToFilter) {
 		switch it.Status() {
 		case proto.TensorStatus_TENSORSTATUS_SECRET:
 			shareTensors = append(shareTensors, it)
@@ -1043,8 +1042,7 @@ func (t *translator) addFilterNode(filter *graph.Tensor, tensorToFilter map[int6
 	}
 	// handling private tensors here
 	if len(privateTensorsMap) > 0 {
-		for _, p := range sliceutil.SortMapKeyForDeterminism(privateTensorsMap) {
-			ts := privateTensorsMap[p]
+		for p, ts := range sliceutil.SortedMap(privateTensorsMap) {
 			if !filter.CC.IsVisibleFor(p) {
 				return nil, fmt.Errorf("failed to check ccl: filter (%+v) is not visible to %s", filter, p)
 			}
@@ -1076,8 +1074,8 @@ func (t *translator) addInNode(f *expression.ScalarFunction, left, right *graph.
 	if creator == nil {
 		return nil, fmt.Errorf("fail to get algorithm creator for op type %s", operator.OpNameIn)
 	}
-	algs, err := creator(map[string][]*ccl.CCL{graph.Left: []*ccl.CCL{left.CC},
-		graph.Right: []*ccl.CCL{right.CC}}, map[string][]*ccl.CCL{graph.Out: []*ccl.CCL{outCc}}, t.enginesInfo.GetParties())
+	algs, err := creator(map[string][]*ccl.CCL{graph.Left: {left.CC},
+		graph.Right: {right.CC}}, map[string][]*ccl.CCL{graph.Out: {outCc}}, t.enginesInfo.GetParties())
 	if err != nil {
 		return nil, fmt.Errorf("addInNode: %v", err)
 	}
@@ -1211,8 +1209,8 @@ func (t *translator) addBinaryNode(opName string, opType string, left *graph.Ten
 	if creator == nil {
 		return nil, fmt.Errorf("fail to get algorithm creator for op type %s", opType)
 	}
-	algs, err := creator(map[string][]*ccl.CCL{graph.Left: []*ccl.CCL{left.CC},
-		graph.Right: []*ccl.CCL{right.CC}}, map[string][]*ccl.CCL{graph.Out: []*ccl.CCL{outputCCL}}, t.enginesInfo.GetParties())
+	algs, err := creator(map[string][]*ccl.CCL{graph.Left: {left.CC},
+		graph.Right: {right.CC}}, map[string][]*ccl.CCL{graph.Out: {outputCCL}}, t.enginesInfo.GetParties())
 	if err != nil {
 		return nil, fmt.Errorf("addBinaryNode: %v", err)
 	}
@@ -1256,8 +1254,7 @@ func (t *translator) getBestAlg(opType string, inputs map[string][]*graph.Tensor
 	}
 	for _, alg := range algs {
 		unsupportedAlgFlag := false
-		for _, key := range sliceutil.SortMapKeyForDeterminism(inputs) {
-			tensors := inputs[key]
+		for key, tensors := range sliceutil.SortedMap(inputs) {
 			for i, tensor := range tensors {
 				newPlacement := alg.inputPlacement[key][i]
 				cost, err := t.converter.getStatusConversionCost(tensor, newPlacement)
@@ -1289,7 +1286,7 @@ func (t *translator) getBestAlg(opType string, inputs map[string][]*graph.Tensor
 	return bestAlg, nil
 }
 
-func (t *translator) addGroupAggNode(name string, opType string, groupId, groupNum *graph.Tensor, in []*graph.Tensor, partyCode string) ([]*graph.Tensor, error) {
+func (t *translator) addGroupAggNode(name string, opType string, groupId, groupNum *graph.Tensor, in []*graph.Tensor, partyCode string, attr map[string]*graph.Attribute) ([]*graph.Tensor, error) {
 	placement := &privatePlacement{partyCode: partyCode}
 	inP := []*graph.Tensor{}
 	for i, it := range in {
@@ -1331,7 +1328,7 @@ func (t *translator) addGroupAggNode(name string, opType string, groupId, groupN
 			"GroupNum": {groupNumP},
 			"In":       inP,
 		}, map[string][]*graph.Tensor{"Out": outputs},
-		map[string]*graph.Attribute{}, []string{partyCode}); err != nil {
+		attr, []string{partyCode}); err != nil {
 		return nil, fmt.Errorf("addGroupAggNode: name %v, opType %v, err %v", name, opType, err)
 	}
 	return outputs, nil
@@ -1449,7 +1446,7 @@ func (t *translator) addObliviousGroupMarkNode(name string, key []*graph.Tensor)
 	return out, nil
 }
 
-func (t *translator) addObliviousGroupAggNode(funcName string, group *graph.Tensor, in *graph.Tensor) (*graph.Tensor, error) {
+func (t *translator) addObliviousGroupAggNode(funcName string, group *graph.Tensor, in *graph.Tensor, attr map[string]*graph.Attribute) (*graph.Tensor, error) {
 	opName, ok := operator.ObliviousGroupAggOp[funcName]
 	if !ok {
 		return nil, fmt.Errorf("addObliviousGroupAggNode: unsupported op %v", funcName)
@@ -1476,7 +1473,7 @@ func (t *translator) addObliviousGroupAggNode(funcName string, group *graph.Tens
 	}
 	if _, err := t.ep.AddExecutionNode(funcName, opName,
 		map[string][]*graph.Tensor{"Group": {group}, "In": {inA}}, map[string][]*graph.Tensor{"Out": {outA}},
-		map[string]*graph.Attribute{}, t.enginesInfo.GetParties()); err != nil {
+		attr, t.enginesInfo.GetParties()); err != nil {
 		return nil, fmt.Errorf("addObliviousGroupAggNode: %v", err)
 	}
 
@@ -1587,8 +1584,8 @@ func (t *translator) addWindowNode(name string,
 	attr *graph.Attribute,
 	party string) error {
 	if _, err := t.ep.AddExecutionNode(name, name,
-		map[string][]*graph.Tensor{"Key": key, "PartitionId": []*graph.Tensor{partitionId}, "PartitionNum": []*graph.Tensor{partitionNum}},
-		map[string][]*graph.Tensor{"Out": []*graph.Tensor{output}},
+		map[string][]*graph.Tensor{"Key": key, "PartitionId": {partitionId}, "PartitionNum": {partitionNum}},
+		map[string][]*graph.Tensor{"Out": {output}},
 		map[string]*graph.Attribute{operator.ReverseAttr: attr},
 		[]string{party}); err != nil {
 		return err

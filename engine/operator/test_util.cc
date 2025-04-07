@@ -52,11 +52,11 @@ pb::JobStartParams::Party BuildParty(const std::string& code, int32_t rank) {
 spu::RuntimeConfig MakeSpuRuntimeConfigForTest(
     spu::ProtocolKind protocol_kind, bool enable_colocated_optimization) {
   spu::RuntimeConfig config;
-  config.set_protocol(protocol_kind);
-  config.set_field(spu::FieldType::FM64);
-  config.set_sigmoid_mode(spu::RuntimeConfig::SIGMOID_REAL);
-  config.set_experimental_enable_colocated_optimization(
-      enable_colocated_optimization);
+  config.protocol = protocol_kind;
+  config.field = spu::FieldType::FM64;
+  config.sigmoid_mode = spu::RuntimeConfig::SIGMOID_REAL;
+  config.experimental_enable_colocated_optimization =
+      enable_colocated_optimization;
 
   spu::populateRuntimeConfig(config);
   return config;
@@ -69,7 +69,7 @@ std::shared_ptr<Session> Make1PCSession(Router* ds_router,
   params.set_job_id("1PC-session");
   params.set_time_zone("+08:00");
   params.mutable_spu_runtime_cfg()->CopyFrom(
-      MakeSpuRuntimeConfigForTest(spu::ProtocolKind::REF2K));
+      MakeSpuRuntimeConfigForTest(spu::ProtocolKind::REF2K).ToProto());
   SessionOptions options;
   auto* alice = params.add_parties();
   alice->CopyFrom(BuildParty(kPartyAlice, 0));
@@ -93,8 +93,10 @@ std::vector<std::shared_ptr<Session>> MakeMultiPCSession(
     auto* p = common_params.add_parties();
     p->CopyFrom(party);
   }
-  common_params.mutable_spu_runtime_cfg()->CopyFrom(MakeSpuRuntimeConfigForTest(
-      test_case.protocol, test_case.enable_colocated_optimization));
+  common_params.mutable_spu_runtime_cfg()->CopyFrom(
+      MakeSpuRuntimeConfigForTest(test_case.protocol,
+                                  test_case.enable_colocated_optimization)
+          .ToProto());
 
   std::vector<std::future<std::shared_ptr<Session>>> futures;
   SessionOptions options;
@@ -187,6 +189,18 @@ ExecNodeBuilder& ExecNodeBuilder::AddBooleanAttr(const std::string& name,
                                                  bool value) {
   auto& attrs = *node_.mutable_attributes();
   util::SetBooleanValues(attrs[name].mutable_t(), std::vector<bool>{value});
+  return *this;
+}
+
+ExecNodeBuilder& ExecNodeBuilder::AddDoubleAttr(const std::string& name,
+                                                double value) {
+  return AddDoubleAttrs(name, std::vector<double>{value});
+}
+
+ExecNodeBuilder& ExecNodeBuilder::AddDoubleAttrs(
+    const std::string& name, const std::vector<double>& value) {
+  auto& attrs = *node_.mutable_attributes();
+  util::SetDoubleValues(attrs[name].mutable_t(), value);
   return *this;
 }
 

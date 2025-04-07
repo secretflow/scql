@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <cmath>
 #include <functional>
 #include <vector>
 
@@ -26,13 +27,13 @@
 #include "engine/framework/session.h"
 
 #ifndef TestParamNameGenerator
-#define TestParamNameGenerator(TestCaseClass)                               \
-  [](const testing::TestParamInfo<TestCaseClass::ParamType>& info) {        \
-    return std::to_string(info.index) +                                     \
-           spu::ProtocolKind_Name(std::get<0>(info.param).protocol) + "p" + \
-           std::to_string(std::get<0>(info.param).party_size) +             \
-           (std::get<0>(info.param).enable_colocated_optimization ? "opt"   \
-                                                                  : "");    \
+#define TestParamNameGenerator(TestCaseClass)                                \
+  [](const testing::TestParamInfo<TestCaseClass::ParamType>& info) {         \
+    return fmt::format(                                                      \
+        "{}{}p{}{}", info.index,                                             \
+        spu::GetProtocolKindName(std::get<0>(info.param).protocol),          \
+        std::get<0>(info.param).party_size,                                  \
+        std::get<0>(info.param).enable_colocated_optimization ? "opt" : ""); \
   }
 #endif
 
@@ -112,6 +113,9 @@ class ExecNodeBuilder {
   ExecNodeBuilder& AddInt64Attr(const std::string& name, int64_t value);
   ExecNodeBuilder& AddInt64sAttr(const std::string& name,
                                  const std::vector<int64_t>& values);
+  ExecNodeBuilder& AddDoubleAttr(const std::string& name, double value);
+  ExecNodeBuilder& AddDoubleAttrs(const std::string& name,
+                                  const std::vector<double>& value);
 
   ExecNodeBuilder& AddBooleanAttr(const std::string& name, bool value);
 

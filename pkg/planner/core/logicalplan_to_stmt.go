@@ -17,7 +17,7 @@ package core
 import (
 	"fmt"
 
-	"golang.org/x/exp/slices"
+	"slices"
 
 	"github.com/secretflow/scql/pkg/expression"
 	"github.com/secretflow/scql/pkg/parser/ast"

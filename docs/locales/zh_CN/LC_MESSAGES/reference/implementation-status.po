@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-11-16 10:08+0800\n"
+"POT-Creation-Date: 2025-04-03 11:35+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.12.1\n"
+"Generated-By: Babel 2.16.0\n"
 
 #: ../../reference/implementation-status.rst:2
 msgid "SCQL Implementation Status"
@@ -31,14 +31,14 @@ msgid "syntax"
 msgstr "语法"
 
 #: ../../reference/implementation-status.rst:8
-#: ../../reference/implementation-status.rst:32
-#: ../../reference/implementation-status.rst:71
+#: ../../reference/implementation-status.rst:37
+#: ../../reference/implementation-status.rst:82
 msgid "supported(fully/partial/no)"
 msgstr "支持程度(完全/部分/未支持)"
 
 #: ../../reference/implementation-status.rst:8
-#: ../../reference/implementation-status.rst:32
-#: ../../reference/implementation-status.rst:71
+#: ../../reference/implementation-status.rst:37
+#: ../../reference/implementation-status.rst:82
 msgid "notes"
 msgstr "说明"
 
@@ -47,16 +47,20 @@ msgid "join"
 msgstr "join"
 
 #: ../../reference/implementation-status.rst:10
-#: ../../reference/implementation-status.rst:48
-#: ../../reference/implementation-status.rst:52
-#: ../../reference/implementation-status.rst:54
-#: ../../reference/implementation-status.rst:56
-#: ../../reference/implementation-status.rst:58
-#: ../../reference/implementation-status.rst:60
-#: ../../reference/implementation-status.rst:62
-#: ../../reference/implementation-status.rst:64
+#: ../../reference/implementation-status.rst:26
+#: ../../reference/implementation-status.rst:51
+#: ../../reference/implementation-status.rst:55
+#: ../../reference/implementation-status.rst:59
+#: ../../reference/implementation-status.rst:61
+#: ../../reference/implementation-status.rst:63
+#: ../../reference/implementation-status.rst:65
+#: ../../reference/implementation-status.rst:67
+#: ../../reference/implementation-status.rst:69
+#: ../../reference/implementation-status.rst:71
+#: ../../reference/implementation-status.rst:73
 #: ../../reference/implementation-status.rst:75
-#: ../../reference/implementation-status.rst:77
+#: ../../reference/implementation-status.rst:86
+#: ../../reference/implementation-status.rst:88
 msgid "partial"
 msgstr "部分"
 
@@ -73,15 +77,18 @@ msgstr "where 子句"
 #: ../../reference/implementation-status.rst:16
 #: ../../reference/implementation-status.rst:18
 #: ../../reference/implementation-status.rst:20
-#: ../../reference/implementation-status.rst:34
-#: ../../reference/implementation-status.rst:36
-#: ../../reference/implementation-status.rst:38
-#: ../../reference/implementation-status.rst:40
-#: ../../reference/implementation-status.rst:42
-#: ../../reference/implementation-status.rst:44
-#: ../../reference/implementation-status.rst:46
-#: ../../reference/implementation-status.rst:50
-#: ../../reference/implementation-status.rst:73
+#: ../../reference/implementation-status.rst:22
+#: ../../reference/implementation-status.rst:24
+#: ../../reference/implementation-status.rst:28
+#: ../../reference/implementation-status.rst:39
+#: ../../reference/implementation-status.rst:41
+#: ../../reference/implementation-status.rst:43
+#: ../../reference/implementation-status.rst:45
+#: ../../reference/implementation-status.rst:47
+#: ../../reference/implementation-status.rst:49
+#: ../../reference/implementation-status.rst:53
+#: ../../reference/implementation-status.rst:57
+#: ../../reference/implementation-status.rst:84
 msgid "fully"
 msgstr "完全"
 
@@ -105,186 +112,244 @@ msgstr "distinct 子句"
 msgid "limit clause"
 msgstr "limit 子句"
 
-#: ../../reference/implementation-status.rst:22
-#: ../../reference/implementation-status.rst:24
-msgid "no"
-msgstr "未支持"
-
 #: ../../reference/implementation-status.rst:24
 msgid "order by clause"
 msgstr "order by 子句"
 
-#: ../../reference/implementation-status.rst:29
-#: ../../reference/implementation-status.rst:32
+#: ../../reference/implementation-status.rst:24
+msgid "`REVEAL_RANK` ccl could help with this"
+msgstr "可以配合`REVEAL_RANK` CCL一起使用"
+
+#: ../../reference/implementation-status.rst:26
+#, fuzzy
+msgid "subquery clause"
+msgstr "subquery 子句"
+
+#: ../../reference/implementation-status.rst:26
+msgid "support partial scalar subquery and compare subquery"
+msgstr "支持部分scalar subquery和compare subquery"
+
+#: ../../reference/implementation-status.rst:28
+#, fuzzy
+msgid "in clause"
+msgstr "in 子句"
+
+#: ../../reference/implementation-status.rst:34
+#: ../../reference/implementation-status.rst:37
 msgid "Functions and Operators"
 msgstr "函数和运算符"
 
-#: ../../reference/implementation-status.rst:32
+#: ../../reference/implementation-status.rst:37
 msgid "Category"
 msgstr "类别"
 
-#: ../../reference/implementation-status.rst:34
-#: ../../reference/implementation-status.rst:36
-#: ../../reference/implementation-status.rst:38
-#: ../../reference/implementation-status.rst:40
-#: ../../reference/implementation-status.rst:42
+#: ../../reference/implementation-status.rst:39
+#: ../../reference/implementation-status.rst:41
+#: ../../reference/implementation-status.rst:43
+#: ../../reference/implementation-status.rst:45
+#: ../../reference/implementation-status.rst:47
 msgid "aggregation"
 msgstr "聚合运算"
 
-#: ../../reference/implementation-status.rst:34
+#: ../../reference/implementation-status.rst:39
 msgid "sum"
 msgstr "sum"
 
-#: ../../reference/implementation-status.rst:36
+#: ../../reference/implementation-status.rst:41
 msgid "count"
 msgstr "count"
 
-#: ../../reference/implementation-status.rst:38
+#: ../../reference/implementation-status.rst:43
 msgid "avg"
 msgstr "avg"
 
-#: ../../reference/implementation-status.rst:40
+#: ../../reference/implementation-status.rst:45
 msgid "min"
 msgstr "min"
 
-#: ../../reference/implementation-status.rst:42
+#: ../../reference/implementation-status.rst:47
 msgid "max"
 msgstr "max"
 
-#: ../../reference/implementation-status.rst:44
-msgid "arithmetic"
-msgstr "算术运算"
+#: ../../reference/implementation-status.rst:49
+#, fuzzy
+msgid "binary arithmetic"
+msgstr "二元算术运算"
 
-#: ../../reference/implementation-status.rst:44
+#: ../../reference/implementation-status.rst:49
 msgid "+,-,*,/,div"
 msgstr ""
 
-#: ../../reference/implementation-status.rst:44
+#: ../../reference/implementation-status.rst:49
 msgid "div means ``integer division``"
 msgstr "div: 整数除法"
 
-#: ../../reference/implementation-status.rst:46
+#: ../../reference/implementation-status.rst:51
+#, fuzzy
+msgid "unary arithmetic"
+msgstr "一元算术运算"
+
+#: ../../reference/implementation-status.rst:51
+#, fuzzy
+msgid ""
+"trigonometric, abs, round, ceil, floor, round, radians, degrees, ln, "
+"log10, log2, sqrt, exp, etc"
+msgstr ""
+"三角函数, abs, ceil, floor, round, radians, degrees, ln, log10, log2, sqrt, "
+"exp, etc"
+
+#: ../../reference/implementation-status.rst:51
+msgid "log2, log10, round does not support secret input"
+msgstr "log2, log10, round运算不支持密态运算"
+
+#: ../../reference/implementation-status.rst:53
 msgid "logical"
 msgstr "逻辑运算"
 
-#: ../../reference/implementation-status.rst:46
+#: ../../reference/implementation-status.rst:53
 msgid "logical_and,logical_or,not"
 msgstr "logical_and,logical_or,not"
 
-#: ../../reference/implementation-status.rst:48
-#: ../../reference/implementation-status.rst:50
+#: ../../reference/implementation-status.rst:55
+#: ../../reference/implementation-status.rst:57
 msgid "compare"
 msgstr "比较运算"
 
-#: ../../reference/implementation-status.rst:48
+#: ../../reference/implementation-status.rst:55
 msgid "<,<=,>,>="
 msgstr "<,<=,>,>="
 
-#: ../../reference/implementation-status.rst:48
+#: ../../reference/implementation-status.rst:55
 msgid "string data comparison is not supported"
 msgstr "不支持字符串类型数据比较"
 
-#: ../../reference/implementation-status.rst:50
+#: ../../reference/implementation-status.rst:57
 msgid "=, !="
 msgstr "=, !="
 
-#: ../../reference/implementation-status.rst:52
+#: ../../reference/implementation-status.rst:59
 msgid "in"
 msgstr "in"
 
-#: ../../reference/implementation-status.rst:52
+#: ../../reference/implementation-status.rst:59
 msgid "in, not in"
 msgstr "in, not in"
 
-#: ../../reference/implementation-status.rst:52
+#: ../../reference/implementation-status.rst:59
 msgid "all arguments should be of the same type"
 msgstr "所有参数应为同一类型"
 
-#: ../../reference/implementation-status.rst:54
-#: ../../reference/implementation-status.rst:56
-#: ../../reference/implementation-status.rst:58
-#: ../../reference/implementation-status.rst:60
-#: ../../reference/implementation-status.rst:62
-#: ../../reference/implementation-status.rst:64
+#: ../../reference/implementation-status.rst:61
+#: ../../reference/implementation-status.rst:63
+#: ../../reference/implementation-status.rst:65
+#: ../../reference/implementation-status.rst:67
+#: ../../reference/implementation-status.rst:69
+#: ../../reference/implementation-status.rst:71
 msgid "datetime"
 msgstr ""
 
-#: ../../reference/implementation-status.rst:54
+#: ../../reference/implementation-status.rst:61
 msgid "now"
 msgstr ""
 
-#: ../../reference/implementation-status.rst:54
+#: ../../reference/implementation-status.rst:61
 msgid "no arguments, affected by timezone"
 msgstr "无参数，受时区影响"
 
-#: ../../reference/implementation-status.rst:56
+#: ../../reference/implementation-status.rst:63
 msgid "curdate"
 msgstr ""
 
-#: ../../reference/implementation-status.rst:56
+#: ../../reference/implementation-status.rst:63
 msgid ""
 "no arguments, different datasource may have different result because of "
 "timezone"
 msgstr "无参数，受时区影响，不同的数据源可能有不同的结果"
 
-#: ../../reference/implementation-status.rst:58
+#: ../../reference/implementation-status.rst:65
 msgid "last_day"
 msgstr ""
 
-#: ../../reference/implementation-status.rst:58
-#: ../../reference/implementation-status.rst:60
+#: ../../reference/implementation-status.rst:65
+#: ../../reference/implementation-status.rst:67
 msgid "arguments must be datetime or timestamp, not supported by PostgreSQL"
 msgstr "参数必须是 datetime 或者 timestamp ，不支持 PostgreSQL "
 
-#: ../../reference/implementation-status.rst:60
+#: ../../reference/implementation-status.rst:67
 msgid "str_to_date, date_format"
 msgstr ""
 
-#: ../../reference/implementation-status.rst:62
+#: ../../reference/implementation-status.rst:69
 msgid "adddate, subdate"
 msgstr ""
 
-#: ../../reference/implementation-status.rst:62
+#: ../../reference/implementation-status.rst:69
 msgid ""
 "the first argument must be datetime or timestamp, second argument is "
 "interval"
 msgstr "第一个参数必须是 datetime 或者 timestamp，第二个参数是间隔"
 
-#: ../../reference/implementation-status.rst:64
+#: ../../reference/implementation-status.rst:71
 msgid "datediff"
 msgstr ""
 
-#: ../../reference/implementation-status.rst:64
+#: ../../reference/implementation-status.rst:71
 msgid ""
 "arguments must be datetime or timestamp, not supported by PostgreSQL and "
 "csv"
 msgstr "参数必须是 datetime 或者 timestamp ，不支持 PostgreSQL 和 csv "
 
-#: ../../reference/implementation-status.rst:68
-msgid "Data Source"
-msgstr "数据源"
-
-#: ../../reference/implementation-status.rst:71
-msgid "Database Type"
-msgstr "数据库类型"
+#: ../../reference/implementation-status.rst:73
+msgid "string"
+msgstr ""
 
 #: ../../reference/implementation-status.rst:73
-msgid "MySQL"
+msgid "substr, lower, upper, trim, concat"
+msgstr ""
+
+#: ../../reference/implementation-status.rst:73
+msgid "do not support secret input"
+msgstr "不支持密态运算"
+
+#: ../../reference/implementation-status.rst:75
+msgid "window"
 msgstr ""
 
 #: ../../reference/implementation-status.rst:75
+msgid "row_number, percent_rank"
+msgstr ""
+
+#: ../../reference/implementation-status.rst:75
+msgid ""
+"the order of `order by` key must be revealable, see the `REVEAL_RANK` ccl"
+" for detail"
+msgstr "涉及到的`order by`的key的顺序必须是可见的，可以参考`REVEAL_RANK` CCL的定义查看更多信息"
+
+#: ../../reference/implementation-status.rst:79
+msgid "Data Source"
+msgstr "数据源"
+
+#: ../../reference/implementation-status.rst:82
+msgid "Database Type"
+msgstr "数据库类型"
+
+#: ../../reference/implementation-status.rst:84
+msgid "MySQL"
+msgstr ""
+
+#: ../../reference/implementation-status.rst:86
 msgid "PostgreSQL"
 msgstr ""
 
-#: ../../reference/implementation-status.rst:77
+#: ../../reference/implementation-status.rst:88
 msgid "CSV"
 msgstr ""
 
-#: ../../reference/implementation-status.rst:77
+#: ../../reference/implementation-status.rst:88
 msgid "Data stored in csv files"
 msgstr "数据源为 CSV 文件"
 
-#: ../../reference/implementation-status.rst:81
+#: ../../reference/implementation-status.rst:92
 msgid ""
 "SCQL supports different databases as data source, but there may be minor "
 "differences in the results due to data type differences built in "

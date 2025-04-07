@@ -591,6 +591,7 @@ import (
 	min                   "MIN"
 	max                   "MAX"
 	now                   "NOW"
+	percentileDisc        "PERCENTILE_DISC"
 	position              "POSITION"
 	recent                "RECENT"
 	staleness             "STALENESS"
@@ -621,34 +622,34 @@ import (
 	optRuleBlacklist      "OPT_RULE_BLACKLIST"
 
 	/* The following tokens belong to TiDBKeyword. Notice: make sure these tokens are contained in TiDBKeyword. */
-	admin              "ADMIN"
-	buckets            "BUCKETS"
-	builtins           "BUILTINS"
-	cancel             "CANCEL"
-	cmSketch           "CMSKETCH"
-	ddl                "DDL"
-	depth              "DEPTH"
-	drainer            "DRAINER"
-	jobs               "JOBS"
-	job                "JOB"
-	nodeID             "NODE_ID"
-	nodeState          "NODE_STATE"
-	optimistic         "OPTIMISTIC"
-	pessimistic        "PESSIMISTIC"
-	pump               "PUMP"
-	samples            "SAMPLES"
-	stats              "STATS"
-	statsMeta          "STATS_META"
-	statsHistograms    "STATS_HISTOGRAMS"
-	statsBuckets       "STATS_BUCKETS"
-	statsHealthy       "STATS_HEALTHY"
-	tidb               "TIDB"
-	tiFlash            "TIFLASH"
-	topn               "TOPN"
-	split              "SPLIT"
-	width              "WIDTH"
-	regions            "REGIONS"
-	region             "REGION"
+	admin                 "ADMIN"
+	buckets               "BUCKETS"
+	builtins              "BUILTINS"
+	cancel                "CANCEL"
+	cmSketch              "CMSKETCH"
+	ddl                   "DDL"
+	depth                 "DEPTH"
+	drainer               "DRAINER"
+	jobs                  "JOBS"
+	job                   "JOB"
+	nodeID                "NODE_ID"
+	nodeState             "NODE_STATE"
+	optimistic            "OPTIMISTIC"
+	pessimistic           "PESSIMISTIC"
+	pump                  "PUMP"
+	samples               "SAMPLES"
+	stats                 "STATS"
+	statsMeta             "STATS_META"
+	statsHistograms       "STATS_HISTOGRAMS"
+	statsBuckets          "STATS_BUCKETS"
+	statsHealthy          "STATS_HEALTHY"
+	tidb                  "TIDB"
+	tiFlash               "TIFLASH"
+	topn                  "TOPN"
+	split                 "SPLIT"
+	width                 "WIDTH"
+	regions               "REGIONS"
+	region                "REGION"
 	builtinAddDate
 	builtinBitAnd
 	builtinBitOr
@@ -664,6 +665,7 @@ import (
 	builtinMax
 	builtinMin
 	builtinNow
+	builtinPercentileDisc
 	builtinPosition
 	builtinSubDate
 	builtinSubstring
@@ -4963,6 +4965,7 @@ NotKeywordToken:
 |	"MAX"
 |	"NOW"
 |	"RECENT"
+|	"PERCENTILE_DISC"
 |	"POSITION"
 |	"SUBDATE"
 |	"SUBSTRING"
@@ -6019,6 +6022,10 @@ SumExpr:
 		} else {
 			$$ = &ast.AggregateFuncExpr{F: $1, Args: []ast.ExprNode{$4}, Distinct: $3.(bool)}
 		}
+	}
+|	builtinPercentileDisc '(' ExpressionList ')'
+	{
+		$$ = &ast.AggregateFuncExpr{F: $1, Args: $3.([]ast.ExprNode)}
 	}
 |	builtinSum '(' BuggyDefaultFalseDistinctOpt Expression ')' OptWindowingClause
 	{
@@ -7387,10 +7394,10 @@ SelectStmtIntoOption:
 	}
 |	"INTO" "OUTFILE" stringLit Fields Lines
 	{
-        partyFiles := []*ast.PartyFile{}
-        partyFile := &ast.PartyFile{
-            FileName: $3,
-        }
+		partyFiles := []*ast.PartyFile{}
+		partyFile := &ast.PartyFile{
+			FileName: $3,
+		}
 		x := &ast.SelectIntoOption{
 			Tp:         ast.SelectIntoOutfile,
 			PartyFiles: append(partyFiles, partyFile),
@@ -7421,23 +7428,23 @@ SelectStmtIntoOption:
 	}
 
 PartyFile:
-    "PARTY_CODE" stringLit stringLit
-    {
-        $$ = &ast.PartyFile{
-            PartyCode: $2,
-            FileName:  $3,
-        }
-    }
+	"PARTY_CODE" stringLit stringLit
+	{
+		$$ = &ast.PartyFile{
+			PartyCode: $2,
+			FileName:  $3,
+		}
+	}
 
 PartyFileList:
-    PartyFile
-    {
-        $$ = []*ast.PartyFile{$1.(*ast.PartyFile)}
-    }
-|   PartyFileList PartyFile
-    {
-        $$ = append($1.([]*ast.PartyFile), $2.(*ast.PartyFile))
-    }
+	PartyFile
+	{
+		$$ = []*ast.PartyFile{$1.(*ast.PartyFile)}
+	}
+|	PartyFileList PartyFile
+	{
+		$$ = append($1.([]*ast.PartyFile), $2.(*ast.PartyFile))
+	}
 
 // See https://dev.mysql.com/doc/refman/5.7/en/subqueries.html
 SubSelect:
