@@ -242,7 +242,7 @@ std::shared_ptr<arrow::Scalar> GroupPercentileDisc::AggImpl(
                "percent should be in [0.0, 1.0], but got {}", percent);
 
   arrow::compute::QuantileOptions options(
-      percent, arrow::compute::QuantileOptions::LOWER);
+      percent, arrow::compute::QuantileOptions::HIGHER);
   auto result = arrow::compute::CallFunction("quantile", {arr}, &options);
 
   YACL_ENFORCE(result.ok(),

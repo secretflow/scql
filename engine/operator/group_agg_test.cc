@@ -244,10 +244,10 @@ INSTANTIATE_TEST_SUITE_P(
             .group_num = test::NamedTensor("group_num",
                                            TensorFrom(arrow::uint32(), "[3]")),
             .outputs = {test::NamedTensor("out_a", TensorFrom(arrow::int64(),
-                                                              "[0, 3, null]")),
+                                                              "[1, 3, null]")),
                         test::NamedTensor("out_b",
                                           TensorFrom(arrow::float32(),
-                                                     "[0, 3.3, 5.5]"))},
+                                                     "[1.1, 3.3, 5.5]"))},
             .double_attr = std::make_pair(
                 GroupPercentileDisc::kPercent,
                 0.5)  // the index of each group should be [0, 0, 0]
