@@ -25,7 +25,7 @@
 
 namespace scql::engine::util {
 
-// expand value from botom to top for each group, mark using '0' to mark
+// expand value from bottom to top for each group, mark using '0' to mark
 // the group end, e.g: inputs = {{0, 0, 1, 0, 2}}, mark = {1, 1, 0, 1, 0}
 //            output = {{1, 1, 1, 2, 2}}
 std::vector<spu::Value> ExpandGroupValueReversely(

@@ -75,7 +75,8 @@ TEST_F(SessionManagerTest, Works) {
     alice->CopyFrom(op::test::BuildParty(op::test::kPartyAlice, 0));
 
     params.mutable_spu_runtime_cfg()->CopyFrom(
-        op::test::MakeSpuRuntimeConfigForTest(spu::ProtocolKind::SEMI2K));
+        op::test::MakeSpuRuntimeConfigForTest(spu::ProtocolKind::SEMI2K)
+            .ToProto());
   }
   pb::DebugOptions debug_opts;
   // When
@@ -121,7 +122,8 @@ TEST_F(SessionManagerTest, TestSessionCreation) {
   SessionOptions options;
 
   common_params.mutable_spu_runtime_cfg()->CopyFrom(
-      op::test::MakeSpuRuntimeConfigForTest(spu::ProtocolKind::REF2K));
+      op::test::MakeSpuRuntimeConfigForTest(spu::ProtocolKind::REF2K)
+          .ToProto());
   auto create_session = [&](const pb::JobStartParams& params) {
     pb::DebugOptions debug_opts;
 

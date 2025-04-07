@@ -23,10 +23,10 @@ import (
 
 func ConvertMockEnginesToEnginesInfo(info *mock.MockEnginesInfo) (*graph.EnginesInfo, error) {
 	participants := make([]*graph.Participant, 0, len(info.PartyToUrls))
-	for _, code := range sliceutil.SortMapKeyForDeterminism(info.PartyToUrls) {
+	for code, url := range sliceutil.SortedMap(info.PartyToUrls) {
 		participants = append(participants, &graph.Participant{
 			PartyCode: code,
-			Endpoints: []string{info.PartyToUrls[code]},
+			Endpoints: []string{url},
 			Token:     info.PartyToCredentials[code],
 		})
 	}

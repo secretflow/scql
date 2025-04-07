@@ -20,7 +20,8 @@ import (
 	"net/http"
 	"unicode"
 
-	"golang.org/x/exp/slices"
+	"slices"
+
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 

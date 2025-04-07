@@ -1,0 +1,119 @@
+header:
+  license:
+    spdx-id: Apache-2.0
+    copyright-owner: Ant Group Co., Ltd.
+    copyright-year: auto
+    software-name: secretflow
+
+    pattern: |
+      Licensed under the Apache License, Version 2.0 \(the "License"\);
+      you may not use this file except in compliance with the License.
+      You may obtain a copy of the License at
+
+          http[s]?://www\.apache\.org/licenses/LICENSE-2\.0
+
+      Unless required by applicable law or agreed to in writing, software
+      distributed under the License is distributed on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+      See the License for the specific language governing permissions and
+      limitations under the License.
+
+  paths:
+    - '**'
+
+  paths-ignore:
+    - '.ci/broker-docker-compose'
+    - '.ci/docker-compose'
+    - '.ci/test-data'
+    - '.circleci'
+    - '.github'
+    - '.vscode'
+    - 'benchmark/docker-compose/broker'
+    - 'benchmark/docker-compose/engine'
+    - 'benchmark/docker-compose/mysql'
+    - 'benchmark/testdata'
+    - 'contrib/agent/kusciastub/mock_kusciaapi/mock_kusciaapi.go'
+    - 'docs/_static'
+    - 'docs/imgs'
+    - 'examples'
+    - 'pkg/executor/engine_stub_mock.go'
+    - 'pkg/expression'
+    - 'pkg/infoschema'
+    - 'pkg/parser'
+    - 'pkg/planner/core'
+    - 'pkg/planner/property'
+    - 'pkg/planner/util/path.go'
+    - 'pkg/privilege'
+    - 'pkg/scdb/client/client_mock.go'
+    - 'pkg/scdb/executor'
+    - 'pkg/sessionctx'
+    - 'pkg/table'
+    - 'pkg/types'
+    - 'pkg/util/chunk'
+    - 'pkg/util/codec'
+    - 'pkg/util/execdetails'
+    - 'pkg/util/hack'
+    - 'pkg/util/math'
+    - 'pkg/util/mathutil'
+    - 'pkg/util/misc.go'
+    - 'pkg/util/mvmap'
+    - 'pkg/util/plancodec'
+    - 'pkg/util/ranger'
+    - 'pkg/util/stringutil'
+    - 'pkg/util/testleak'
+    - 'pkg/util/testutil'
+    - 'pkg/util/texttree'
+    - 'scripts'
+    - '**/*.template'
+    - '**/*.patch'
+    - '**/*.pb.go'
+    - '**/*.md'
+    - '**/*.json'
+    - '**/*.yaml'
+    - '**/*.yml'
+    - '**/*.txt'
+    - '**/*.Dockerfile'
+    - '**/Dockerfile'
+    - '**/*.po'
+    - '**/*.svg'
+    - '**/*.bat'
+    - '**/*.rst'
+    - '**/*.patch'
+    - '**/*.csv'
+    - '**/*.tmpl'
+    - 'LICENSE'
+    - 'NOTICE'
+    - 'MODULE.bazel.lock'
+    - '.bazeliskrc'
+    - '.bazelrc'
+    - '.clang-format'
+    - '.clang-tidy'
+    - '**/.gitignore'
+    - '**/.env'
+    - 'go.mod'
+    - 'go.sum'
+    - '**/Makefile'
+
+  comment: never
+
+  license-location-threshold: 80
+
+  language:
+    Starlark:
+      extensions:
+        - ".bazel"
+        - ".bazelrc"
+        - "BUILD"
+        - ".bzl"
+        - "WORKSPACE"
+      comment_style_id: PythonStyle
+    Cpp:
+      extensions:
+        - ".cc"
+        - ".h"
+        - ".cu"
+      comment_style_id: DoubleSlash
+    Python:
+      extensions:
+        - ".py"
+      comment_style_id: PythonStyle

@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"golang.org/x/exp/slices"
+	"slices"
 
 	"github.com/sirupsen/logrus"
 

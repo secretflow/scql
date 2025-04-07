@@ -71,15 +71,21 @@
   },
   {
     "name": "TestPlanBuilderCoalesceOp",
-    "cases": ["select coalesce(plain_int_0, plain_int_1) from alice.tbl_0"]
+    "cases": [
+      "select coalesce(plain_int_0, plain_int_1) from alice.tbl_0"
+    ]
   },
   {
     "name": "TestPlanBuilderLengthOp",
-    "cases": ["select length(plain_int_0) from alice.tbl_0"]
+    "cases": [
+      "select length(plain_int_0) from alice.tbl_0"
+    ]
   },
   {
     "name": "TestPlanBuilderReplaceOp",
-    "cases": ["select replace(plain_string_0, 'old', 'new') from alice.tbl_0"]
+    "cases": [
+      "select replace(plain_string_0, 'old', 'new') from alice.tbl_0"
+    ]
   },
   {
     "name": "TestPlanBuildeLikeRlikeOp",
@@ -103,11 +109,15 @@
   },
   {
     "name": "TestPlanBuildeLimitOp",
-    "cases": ["select plain_int_0 from alice.tbl_0 limit 5;"]
+    "cases": [
+      "select plain_int_0 from alice.tbl_0 limit 5;"
+    ]
   },
   {
     "name": "TestPlanBuilderInstrOp",
-    "cases": ["select instr(plain_string_0, plain_string_1) from alice.tbl_0"]
+    "cases": [
+      "select instr(plain_string_0, plain_string_1) from alice.tbl_0"
+    ]
   },
   {
     "name": "TestPlanBuilderGreatestLeastOp",
@@ -159,7 +169,9 @@
   },
   {
     "name": "TestPlanBuilderCast",
-    "cases": ["select cast(plain_int_0 as float) from alice.tbl_0;"]
+    "cases": [
+      "select cast(plain_int_0 as float) from alice.tbl_0;"
+    ]
   },
   {
     "name": "TestPlanBuilderSimpleWithOptimization",
@@ -179,7 +191,7 @@
       "select count(plain_int_1) from alice.tbl_0 group by plain_int_1",
       "select sum(plain_int_1) from alice.tbl_0 group by plain_int_1",
       "select count(plain_int_0) div count(plain_int_0) from alice.tbl_0 group by plain_int_0",
-      "select max(plain_int_0), min(plain_int_0), median(plain_int_0) from alice.tbl_0 group by plain_int_1",
+      "select max(plain_int_0), min(plain_int_0), median(plain_int_0), percentile_disc(plain_int_0, 0.8) from alice.tbl_0 group by plain_int_1",
       "select t from (select (plain_int_0 + plain_int_1) as t from alice.tbl_0) as alice group by t",
       // order by
       "select plain_int_0 from alice.tbl_0 order by plain_int_0",

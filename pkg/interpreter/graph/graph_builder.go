@@ -840,7 +840,7 @@ func (plan *GraphBuilder) AddCastNode(name string, outputDType pb.PrimitiveDataT
 }
 
 // AddReduceAggNode adds a ReduceAgg node
-func (plan *GraphBuilder) AddReduceAggNode(aggName string, in *Tensor) (*Tensor, error) {
+func (plan *GraphBuilder) AddReduceAggNode(aggName string, in *Tensor, attr map[string]*Attribute) (*Tensor, error) {
 	opType, ok := operator.ReduceAggOp[aggName]
 	if !ok {
 		return nil, fmt.Errorf("AddReduceAggNode: unsupported aggregation fucntion %v", aggName)
@@ -864,7 +864,7 @@ func (plan *GraphBuilder) AddReduceAggNode(aggName string, in *Tensor) (*Tensor,
 
 	if _, err := plan.AddExecutionNode("reduce_"+aggName, opType,
 		map[string][]*Tensor{"In": {in}}, map[string][]*Tensor{"Out": {out}},
-		map[string]*Attribute{}, partyCodes); err != nil {
+		attr, partyCodes); err != nil {
 		return nil, fmt.Errorf("AddReduceAggNode: %v", err)
 	}
 	return out, nil

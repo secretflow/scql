@@ -84,6 +84,7 @@ class ObliviousGroupAggBase : public Operator {
   void Validate(ExecContext* ctx) override;
 
   void Execute(ExecContext* ctx) override;
+  virtual void InitAttribute(ExecContext* ctx) {};
 };
 
 class ObliviousGroupSum : public ObliviousGroupAggBase {
@@ -171,5 +172,22 @@ class ObliviousPercentRank : public ObliviousGroupAggBase {
 
   spu::Value CalculateResult(spu::SPUContext* sctx, const spu::Value& value,
                              const spu::Value& partition_value) override;
+};
+
+class ObliviousPercentileDisc : public ObliviousGroupAggBase {
+ public:
+  static const std::string kOpType;
+  static constexpr char kPercent[] = "percent";
+  const std::string& Type() const override;
+
+ public:
+  spu::Value CalculateResult(spu::SPUContext* sctx, const spu::Value& value,
+                             const spu::Value& group_value) override;
+
+ protected:
+  void InitAttribute(ExecContext* ctx) override;
+
+ private:
+  double percent_ = -1;
 };
 }  // namespace scql::engine::op

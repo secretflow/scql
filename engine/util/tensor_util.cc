@@ -84,6 +84,24 @@ void SetInt64Values(pb::Tensor* t, const std::vector<int64_t>& values) {
   }
 }
 
+void SetDoubleValues(pb::Tensor* t, const std::vector<double>& values) {
+  t->set_option(pb::TensorOptions::VALUE);
+  t->set_elem_type(pb::PrimitiveDataType::FLOAT64);
+  for (const auto& value : values) {
+    t->add_double_data(value);
+  }
+}
+
+double GetDoubleValue(const pb::Tensor& t) {
+  if (t.option() != pb::TensorOptions::VALUE ||
+      (t.elem_type() != pb::PrimitiveDataType::FLOAT32 &&
+       t.elem_type() != pb::PrimitiveDataType::FLOAT64) ||
+      t.double_data_size() < 1) {
+    YACL_THROW("tensor does not have double value");
+  }
+  return t.double_data(0);
+}
+
 bool GetBooleanValue(const pb::Tensor& t) {
   if (t.option() != pb::TensorOptions::VALUE ||
       t.elem_type() != pb::PrimitiveDataType::BOOL || t.bool_data_size() < 1) {

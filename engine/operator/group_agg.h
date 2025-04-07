@@ -27,7 +27,7 @@ class GroupAggBase : public Operator {
 
  public:
   virtual std::shared_ptr<arrow::Scalar> AggImpl(
-      std::shared_ptr<arrow::Array> arr) = 0;
+      ExecContext* ctx, std::shared_ptr<arrow::Array> arr) = 0;
 
  protected:
   void Validate(ExecContext* ctx) override;
@@ -54,7 +54,7 @@ class GroupFirstOf : public GroupAggBase {
 
  public:
   std::shared_ptr<arrow::Scalar> AggImpl(
-      std::shared_ptr<arrow::Array> arr) override;
+      ExecContext* ctx, std::shared_ptr<arrow::Array> arr) override;
 };
 
 class GroupCountDistinct : public GroupAggBase {
@@ -64,7 +64,7 @@ class GroupCountDistinct : public GroupAggBase {
   const std::string& Type() const override { return kOpType; }
 
   std::shared_ptr<arrow::Scalar> AggImpl(
-      std::shared_ptr<arrow::Array> arr) override;
+      ExecContext* ctx, std::shared_ptr<arrow::Array> arr) override;
 };
 
 class GroupCount : public GroupAggBase {
@@ -74,7 +74,7 @@ class GroupCount : public GroupAggBase {
   const std::string& Type() const override { return kOpType; }
 
   std::shared_ptr<arrow::Scalar> AggImpl(
-      std::shared_ptr<arrow::Array> arr) override;
+      ExecContext* ctx, std::shared_ptr<arrow::Array> arr) override;
 };
 
 class GroupSum : public GroupAggBase {
@@ -84,7 +84,7 @@ class GroupSum : public GroupAggBase {
   const std::string& Type() const override { return kOpType; }
 
   std::shared_ptr<arrow::Scalar> AggImpl(
-      std::shared_ptr<arrow::Array> arr) override;
+      ExecContext* ctx, std::shared_ptr<arrow::Array> arr) override;
 };
 
 class GroupAvg : public GroupAggBase {
@@ -94,7 +94,7 @@ class GroupAvg : public GroupAggBase {
   const std::string& Type() const override { return kOpType; }
 
   std::shared_ptr<arrow::Scalar> AggImpl(
-      std::shared_ptr<arrow::Array> arr) override;
+      ExecContext* ctx, std::shared_ptr<arrow::Array> arr) override;
 };
 
 class GroupMin : public GroupAggBase {
@@ -104,7 +104,7 @@ class GroupMin : public GroupAggBase {
   const std::string& Type() const override { return kOpType; }
 
   std::shared_ptr<arrow::Scalar> AggImpl(
-      std::shared_ptr<arrow::Array> arr) override;
+      ExecContext* ctx, std::shared_ptr<arrow::Array> arr) override;
 };
 
 class GroupMax : public GroupAggBase {
@@ -114,7 +114,17 @@ class GroupMax : public GroupAggBase {
   const std::string& Type() const override { return kOpType; }
 
   std::shared_ptr<arrow::Scalar> AggImpl(
-      std::shared_ptr<arrow::Array> arr) override;
+      ExecContext* ctx, std::shared_ptr<arrow::Array> arr) override;
+};
+
+class GroupPercentileDisc : public GroupAggBase {
+ public:
+  static const std::string kOpType;
+  const std::string& Type() const override { return kOpType; }
+  static constexpr char kPercent[] = "percent";
+
+  std::shared_ptr<arrow::Scalar> AggImpl(
+      ExecContext* ctx, std::shared_ptr<arrow::Array> arr) override;
 };
 
 }  // namespace scql::engine::op
