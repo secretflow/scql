@@ -105,6 +105,65 @@ pb::ExecNode GroupAggTest::MakeExecNode(const GroupAggTestCase& tc) {
   return builder.Build();
 }
 
+static GroupAggTestCase GeneratePercentileDiscTestCase(
+    double percent, std::vector<int> input_sizes) {
+  std::string op_type = GroupPercentileDisc::kOpType;
+  std::string input_name = "x";
+  std::string output_name = "y";
+
+  std::string group_id_str = "[";
+  std::string output_str = "[";
+  std::string input_str = "[";
+  int group_num = 0;
+  for (const auto input_size : input_sizes) {
+    std::vector<int> input;
+    std::vector<int> group_id;
+    int start_value = 0;
+    while (input.size() < input_size) {
+      input.push_back(start_value);
+      start_value += 1;
+      group_id.push_back(group_num);
+    }
+    group_num++;
+    int expected_index = static_cast<int>(std::ceil(percent * input_size)) - 1;
+    expected_index = std::min(input_size - 1, expected_index);
+    int expected_value = input[expected_index];
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(input.begin(), input.end(), g);
+    for (size_t i = 0; i < input.size(); ++i) {
+      input_str += std::to_string(input[i]);
+      input_str += ",";
+
+      group_id_str += std::to_string(group_id[i]);
+      group_id_str += ",";
+    }
+    output_str += std::to_string(expected_value) + ",";
+  }
+
+  input_str.pop_back();
+  input_str += "]";
+  output_str.pop_back();
+  output_str += "]";
+  group_id_str.pop_back();
+  group_id_str += "]";
+
+  auto group_id_tensor = TensorFrom(arrow::uint32(), group_id_str);
+
+  return GroupAggTestCase{
+      .op_type = op_type,
+      .inputs = {test::NamedTensor(input_name,
+                                   TensorFrom(arrow::int32(), input_str))},
+      .group_id = test::NamedTensor("group_id", group_id_tensor),
+      .group_num = test::NamedTensor(
+          "group_num",
+          TensorFrom(arrow::uint32(),
+                     "[" + std::to_string(input_sizes.size()) + "]")),
+      .outputs = {test::NamedTensor(output_name,
+                                    TensorFrom(arrow::int32(), output_str))},
+      .double_attr = std::make_pair(GroupPercentileDisc::kPercent, percent)};
+}
+
 INSTANTIATE_TEST_SUITE_P(
     GroupBatchTest, GroupAggTest,
     testing::Values(
@@ -244,10 +303,10 @@ INSTANTIATE_TEST_SUITE_P(
             .group_num = test::NamedTensor("group_num",
                                            TensorFrom(arrow::uint32(), "[3]")),
             .outputs = {test::NamedTensor("out_a", TensorFrom(arrow::int64(),
-                                                              "[1, 3, null]")),
+                                                              "[0, 3, null]")),
                         test::NamedTensor("out_b",
                                           TensorFrom(arrow::float32(),
-                                                     "[1.1, 3.3, 5.5]"))},
+                                                     "[0, 3.3, 5.5]"))},
             .double_attr = std::make_pair(
                 GroupPercentileDisc::kPercent,
                 0.5)  // the index of each group should be [0, 0, 0]
@@ -291,7 +350,9 @@ INSTANTIATE_TEST_SUITE_P(
                                                      "[1.1, 4.4, 5.5]"))},
             .double_attr = std::make_pair(
                 "percent", 1)  // the index of each group should be [1, 2, 0]
-        }));
+        },
+        GeneratePercentileDiscTestCase(0.333, {1000, 200, 1}),
+        GeneratePercentileDiscTestCase(0.43, {2, 987, 1241, 876})));
 
 INSTANTIATE_TEST_SUITE_P(
     GroupBatchEmptyTest, GroupAggTest,

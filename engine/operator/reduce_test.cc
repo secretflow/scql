@@ -221,6 +221,7 @@ INSTANTIATE_TEST_SUITE_P(
                 .double_attr = std::make_pair(ReducePercentileDisc::kPercent,
                                               0.5)},
             GeneratePercentileDiscCase(pb::TENSORSTATUS_PRIVATE, 0.5, 2),
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_PRIVATE, 0.6, 4),
             GeneratePercentileDiscCase(pb::TENSORSTATUS_PRIVATE, 0, 10000),
             GeneratePercentileDiscCase(pb::TENSORSTATUS_PRIVATE, 1, 10000),
             GeneratePercentileDiscCase(pb::TENSORSTATUS_PRIVATE, 0.3112234, 10),
