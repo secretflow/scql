@@ -299,7 +299,7 @@ spu::Value ReducePercentileDisc::SecretReduceImpl(spu::SPUContext* sctx,
   }
 
   auto pos =
-      static_cast<int>(std::floor(percent_ * static_cast<double>(length)));
+      static_cast<int>(std::ceil(percent_ * static_cast<double>(length)) - 1);
   pos = std::max(pos, 0);
   pos = std::min(pos, static_cast<int>(length - 1));
 
