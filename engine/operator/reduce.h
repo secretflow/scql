@@ -38,9 +38,6 @@ class ReduceBase : public Operator {
   virtual void ExecuteInPlain(ExecContext* ctx, const pb::Tensor& in,
                               const pb::Tensor& out);
 
-  virtual std::unique_ptr<const arrow::compute::FunctionOptions> GetOption() {
-    return nullptr;
-  }
   virtual spu::Value HandleEmptyInput(const spu::Value& in) { return in; }
 
   virtual void AggregateInit(spu::SPUContext* sctx, const spu::Value& in) {}
@@ -151,22 +148,17 @@ class ReducePercentileDisc : public ReduceBase {
   const std::string& Type() const override;
 
  protected:
-  std::string GetArrowFunName() override { return "quantile"; }
+  std::string GetArrowFunName() override {
+    YACL_THROW("unsupported reduce func: percentile_disc");
+  }
   void AggregateInit(spu::SPUContext* sctx, const spu::Value& in) override;
   spu::Value GetInitValue(spu::SPUContext* sctx) override;
   ReduceFn GetReduceFn(spu::SPUContext* sctx) override;
   void InitAttribute(ExecContext* ctx) override;
   spu::Value SecretReduceImpl(spu::SPUContext* sctx,
                               const spu::Value& in) override;
-  std::unique_ptr<const arrow::compute::FunctionOptions> GetOption() override {
-#ifdef SCQL_WITH_NULL
-    return std::make_unique<arrow::compute::QuantileOptions>(
-        percent_, arrow::compute::QuantileOptions::HIGHER,
-        true);  // the 3rd parameter determines whether skip null or not
-#endif
-    return std::make_unique<arrow::compute::QuantileOptions>(
-        percent_, arrow::compute::QuantileOptions::HIGHER);
-  }
+  void ExecuteInPlain(ExecContext* ctx, const pb::Tensor& in,
+                      const pb::Tensor& out) override;
 
  private:
   double percent_;
