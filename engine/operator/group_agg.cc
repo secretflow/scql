@@ -240,20 +240,25 @@ std::shared_ptr<arrow::Scalar> GroupPercentileDisc::AggImpl(
   double percent = ctx->GetDoubleValueFromAttribute(kPercent);
   YACL_ENFORCE(percent >= 0.0 && percent <= 1.0,
                "percent should be in [0.0, 1.0], but got {}", percent);
+  int64_t length = arr->length();
 
-  arrow::compute::QuantileOptions options(
-      percent, arrow::compute::QuantileOptions::HIGHER);
-  auto result = arrow::compute::CallFunction("quantile", {arr}, &options);
+  int pos =
+      static_cast<int>(std::ceil(percent * static_cast<double>(length)) - 1);
+  pos = std::max(pos, 0);
+  pos = std::min(pos, static_cast<int>(length - 1));
+
+  arrow::compute::PartitionNthOptions options(pos);
+  auto result =
+      arrow::compute::CallFunction("partition_nth_indices", {arr}, &options);
 
   YACL_ENFORCE(result.ok(),
                "failed to call partition_nth_indices function, error = {}",
                result.status().ToString());
-  auto datum = result.ValueOrDie();
-  YACL_ENFORCE(datum.length() == 1,
-               "invoking arrow function 'quantile' failed: err_msg = {}",
-               "result length should be 1");
-  std::shared_ptr<arrow::Scalar> scalar;
-  ASSIGN_OR_THROW_ARROW_STATUS(scalar, datum.make_array()->GetScalar(0));
-  return scalar;
+  auto partitioned_indices = std::static_pointer_cast<arrow::UInt64Array>(
+      result.ValueOrDie().make_array());
+  auto value = arr->GetScalar(partitioned_indices->Value(pos));
+  YACL_ENFORCE(value.ok(), "failed to get scalar from array, error = {}",
+               value.status().ToString());
+  return value.ValueOrDie();
 }
 };  // namespace scql::engine::op
