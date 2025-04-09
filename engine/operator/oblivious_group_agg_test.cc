@@ -359,6 +359,69 @@ INSTANTIATE_TEST_SUITE_P(
                     "out", TensorFrom(arrow::float64(), "[1.0,1.0]"))}})),
     TestParamNameGenerator(ObliviousGroupAggTest));
 
+static ObliviousGroupAggTestCase GenerateObliviousPercentileDiscTestCase(
+    double percentile, std::vector<int> groups) {
+  std::vector<int> in;
+  std::vector<int> out;
+  std::vector<int> group;
+  for (const auto group_size : groups) {
+    int count = 0;
+    std::vector<int> current_in;
+    while (count < group_size) {
+      if (count == group_size - 1) {
+        group.push_back(1);
+      } else {
+        group.push_back(0);
+      }
+      current_in.push_back(count);
+      count++;
+    }
+
+    int index = static_cast<int>(std::ceil(percentile * group_size)) - 1;
+    index = std::min(group_size - 1, index);
+    int value = current_in[index];
+    for (int i = 0; i < index; i++) {
+      out.push_back(0);
+    }
+
+    for (int i = index; i < group_size; i++) {
+      out.push_back(value);
+    }
+    in.insert(in.end(), current_in.begin(), current_in.end());
+  }
+
+  std::string in_str = "[";
+  std::string group_str = "[";
+  std::string out_str = "[";
+  for (size_t i = 0; i < in.size(); i++) {
+    in_str += std::to_string(in[i]);
+    group_str += std::to_string(group[i]);
+    out_str += std::to_string(out[i]);
+    if (i != in.size() - 1) {
+      in_str += ",";
+      group_str += ",";
+      out_str += ",";
+    }
+  }
+
+  in_str += "]";
+  group_str += "]";
+  out_str += "]";
+
+  ObliviousGroupAggTestCase tc{
+      .op_type = ObliviousPercentileDisc::kOpType,
+      .inputs = {test::NamedTensor("in", TensorFrom(arrow::int64(), in_str))},
+      .group =
+          test::NamedTensor("group", TensorFrom(arrow::boolean(), group_str)),
+      .outputs = {test::NamedTensor("out",
+                                    TensorFrom(arrow::int64(), out_str))},
+      .double_attribute =
+          std::make_pair(ObliviousPercentileDisc::kPercent, percentile)};
+  ;
+
+  return tc;
+}
+
 INSTANTIATE_TEST_SUITE_P(
     ObliviousPercentileDiscTest, ObliviousGroupAggTest,
     testing::Combine(
@@ -409,7 +472,10 @@ INSTANTIATE_TEST_SUITE_P(
                 .outputs = {test::NamedTensor(
                     "out", TensorFrom(arrow::float32(), "[]"))},
                 .double_attribute =
-                    std::make_pair(ObliviousPercentileDisc::kPercent, 0.5)})),
+                    std::make_pair(ObliviousPercentileDisc::kPercent, 0.5)},
+            GenerateObliviousPercentileDiscTestCase(0.343, {10, 100}),
+            GenerateObliviousPercentileDiscTestCase(0.43, {10, 100, 1234}),
+            GenerateObliviousPercentileDiscTestCase(0.3, {10, 100, 3215}))),
     TestParamNameGenerator(ObliviousGroupAggTest));
 
 }  // namespace scql::engine::op
