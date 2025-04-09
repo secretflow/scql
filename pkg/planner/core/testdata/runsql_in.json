@@ -500,6 +500,13 @@
         "rewritten_sql_csv": "select tbl_1.plain_datetime_0<current_date as a from alice.tbl_1"
       },
       {
+        "sql": "select date_add(plain_datetime_0, INTERVAL 30 DAY) as a from alice.tbl_1;",
+        "skip_projection": false,
+        "rewritten_sql": "select date_add(tbl_1.plain_datetime_0, interval 30 DAY) as a from alice.tbl_1",
+        "rewritten_sql_pg": "select tbl_1.plain_datetime_0+ interval '30 DAY' as a from alice.tbl_1",
+        "rewritten_sql_csv": "select tbl_1.plain_datetime_0+interval 30 DAY as a from alice.tbl_1"
+      },
+      {
         "sql": "select adddate(plain_datetime_0, INTERVAL 30 DAY) as a from alice.tbl_1;",
         "skip_projection": false,
         "rewritten_sql": "select adddate(tbl_1.plain_datetime_0, interval 30 DAY) as a from alice.tbl_1",
