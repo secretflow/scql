@@ -1088,6 +1088,8 @@ type UnionStmt struct {
 	SelectList *UnionSelectList
 	OrderBy    *OrderByClause
 	Limit      *Limit
+	// SelectIntoOpt is the select-into option.
+	SelectIntoOpt *SelectIntoOption
 }
 
 // Restore implements Node interface.
@@ -1107,6 +1109,13 @@ func (n *UnionStmt) Restore(ctx *RestoreCtx) error {
 		ctx.WritePlain(" ")
 		if err := n.Limit.Restore(ctx); err != nil {
 			return errors.Annotate(err, "An error occurred while restore UnionStmt.Limit")
+		}
+	}
+
+	if n.SelectIntoOpt != nil {
+		ctx.WritePlain(" ")
+		if err := n.SelectIntoOpt.Restore(ctx); err != nil {
+			return errors.Annotate(err, "An error occurred while restore UnionStmt.SelectIntoOpt")
 		}
 	}
 	return nil
