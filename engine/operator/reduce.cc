@@ -249,11 +249,11 @@ void ReducePercentileDisc::AggregateInit(spu::SPUContext* sctx,
 }
 
 spu::Value ReducePercentileDisc::GetInitValue(spu::SPUContext* sctx) {
-  YACL_THROW("unsupported reduce func: percentile_disc");
+  YACL_THROW("should not reach here");
 }
 
 ReduceBase::ReduceFn ReducePercentileDisc::GetReduceFn(spu::SPUContext* sctx) {
-  YACL_THROW("unsupported reduce func: percentile_disc");
+  YACL_THROW("should not reach here");
 }
 
 void ReducePercentileDisc::ExecuteInPlain(ExecContext* ctx,

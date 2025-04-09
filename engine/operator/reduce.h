@@ -149,7 +149,7 @@ class ReducePercentileDisc : public ReduceBase {
 
  protected:
   std::string GetArrowFunName() override {
-    YACL_THROW("unsupported reduce func: percentile_disc");
+    YACL_THROW("should not reach here");
   }
   void AggregateInit(spu::SPUContext* sctx, const spu::Value& in) override;
   spu::Value GetInitValue(spu::SPUContext* sctx) override;
