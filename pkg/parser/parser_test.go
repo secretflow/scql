@@ -3606,6 +3606,14 @@ func (s *testParserSuite) TestUnion(c *C) {
 		{"insert into t select c1 from t1 union select c2 from t2", true, "INSERT INTO `t` SELECT `c1` FROM `t1` UNION SELECT `c2` FROM `t2`"},
 		{"insert into t (c) select c1 from t1 union select c2 from t2", true, "INSERT INTO `t` (`c`) SELECT `c1` FROM `t1` UNION SELECT `c2` FROM `t2`"},
 		{"select 2 as a from dual union select 1 as b from dual order by a", true, "SELECT 2 AS `a` UNION SELECT 1 AS `b` ORDER BY `a`"},
+		// into outfile option
+		{"select c1 from t1 union select c2 from t2 into outfile party_code 'alice' '/data/alice.csv' fields terminated by ','", true, "SELECT `c1` FROM `t1` UNION SELECT `c2` FROM `t2` INTO OUTFILE PARTY_CODE 'alice' '/data/alice.csv' FIELDS TERMINATED BY ','"},
+		{"select c1 from t1 union (select c2 from t2) into outfile party_code 'alice' '/data/alice.csv' fields terminated by ','", true, "SELECT `c1` FROM `t1` UNION (SELECT `c2` FROM `t2`) INTO OUTFILE PARTY_CODE 'alice' '/data/alice.csv' FIELDS TERMINATED BY ','"},
+		{"select c1 from t1 union (select c2 from t2) order by c1 into outfile party_code 'alice' '/data/alice.csv' fields terminated by ','", true, "SELECT `c1` FROM `t1` UNION (SELECT `c2` FROM `t2`) ORDER BY `c1` INTO OUTFILE PARTY_CODE 'alice' '/data/alice.csv' FIELDS TERMINATED BY ','"},
+		{"select c1 from t1 union (select c2 from t2) limit 1, 1 into outfile party_code 'alice' '/data/alice.csv' fields terminated by ','", true, "SELECT `c1` FROM `t1` UNION (SELECT `c2` FROM `t2`) LIMIT 1 OFFSET 1 INTO OUTFILE PARTY_CODE 'alice' '/data/alice.csv' FIELDS TERMINATED BY ','"},
+		{"(select c1 from t1) union select c2 from t2 union (select c3 from t3) order by c1 limit 1 into outfile party_code 'alice' '/data/alice.csv' fields terminated by ','", true, "(SELECT `c1` FROM `t1`) UNION SELECT `c2` FROM `t2` UNION (SELECT `c3` FROM `t3`) ORDER BY `c1` LIMIT 1 INTO OUTFILE PARTY_CODE 'alice' '/data/alice.csv' FIELDS TERMINATED BY ','"},
+		{"select * from (select 1 union select 2) as a into outfile party_code 'alice' '/data/alice.csv' fields terminated by ','", true, "SELECT * FROM (SELECT 1 UNION SELECT 2) AS `a` INTO OUTFILE PARTY_CODE 'alice' '/data/alice.csv' FIELDS TERMINATED BY ','"},
+		{"select 2 as a from dual union select 1 as b from dual order by a into outfile party_code 'alice' '/data/alice.csv' fields terminated by ','", true, "SELECT 2 AS `a` UNION SELECT 1 AS `b` ORDER BY `a` INTO OUTFILE PARTY_CODE 'alice' '/data/alice.csv' FIELDS TERMINATED BY ','"},
 	}
 	s.RunTest(c, table)
 }

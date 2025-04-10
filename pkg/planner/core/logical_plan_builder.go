@@ -2025,7 +2025,16 @@ func (b *PlanBuilder) buildUnion(ctx context.Context, union *ast.UnionStmt) (Log
 		}
 		proj.names = unionPlan.OutputNames()[:oldLen]
 		proj.SetSchema(schema)
+
+		if union.SelectIntoOpt != nil {
+			proj.SetIntoOpt(union.SelectIntoOpt)
+		}
+
 		return proj, nil
+	}
+
+	if union.SelectIntoOpt != nil {
+		unionPlan.SetIntoOpt(union.SelectIntoOpt)
 	}
 
 	return unionPlan, nil
