@@ -74,6 +74,28 @@ var translateNumericTestCases = []sPair{
 }
 
 var translateWithCCLTestCases = []sPair{
+	{`select ta.groupby_int_0 from alice.tbl_0 as ta union select tb.groupby_int_0 from bob.tbl_0 as tb into outfile party_code 'alice' '/tmp/output.txt' columns terminated BY '|'`, `digraph G {
+0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select any_value(ta.groupby_int_0) as expr_242 from alice.tbl_0 as ta group by ta.groupby_int_0;,table_refs:[alice.tbl_0],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select any_value(tb.groupby_int_0) as expr_242 from bob.tbl_0 as tb group by tb.groupby_int_0;,table_refs:[bob.tbl_0],],party:[bob,]}"]
+2 [label="make_share:{in:[In:{t_0,},],out:[Out:{t_2,},],attr:[],party:[alice,bob,carol,]}"]
+3 [label="make_share:{in:[In:{t_1,},],out:[Out:{t_3,},],attr:[],party:[alice,bob,carol,]}"]
+4 [label="concat:{in:[In:{t_2,t_3,},],out:[Out:{t_4,},],attr:[axis:0,],party:[alice,bob,carol,]}"]
+5 [label="make_private:{in:[In:{t_4,},],out:[Out:{t_5,},],attr:[reveal_to:alice,],party:[alice,bob,carol,]}"]
+6 [label="group:{in:[Key:{t_5,},],out:[GroupId:{t_6,},GroupNum:{t_7,},],attr:[],party:[alice,]}"]
+7 [label="firstrow:{in:[GroupId:{t_6,},GroupNum:{t_7,},In:{t_5,},],out:[Out:{t_8,},],attr:[],party:[alice,]}"]
+8 [label="dump_file:{in:[In:{t_8,},],out:[Out:{t_9,},],attr:[field_deliminator:|,file_path:/tmp/output.txt,line_terminator:
+,quoting_style:0,],party:[alice,]}"]
+0 -> 2 [label = "t_0:{Column#242:PRIVATE:INT64}"]
+1 -> 3 [label = "t_1:{Column#242:PRIVATE:INT64}"]
+2 -> 4 [label = "t_2:{Column#242:SECRET:INT64}"]
+3 -> 4 [label = "t_3:{Column#242:SECRET:INT64}"]
+4 -> 5 [label = "t_4:{Column#242:SECRET:INT64}"]
+5 -> 6 [label = "t_5:{Column#242:PRIVATE:INT64}"]
+5 -> 7 [label = "t_5:{Column#242:PRIVATE:INT64}"]
+6 -> 7 [label = "t_6:{group_id:PRIVATE:INT64}"]
+6 -> 7 [label = "t_7:{group_num:PRIVATE:INT64}"]
+7 -> 8 [label = "t_8:{Column#242_firstrow:PRIVATE:INT64}"]
+}`, ``, testConf{groupThreshold: 0, batched: false, revealGroupCount: false}},
 	{`SELECT PERCENTILE_DISC(u.int_0, 0.3) AS _30percent FROM (SELECT ta.plain_int_0 as int_0 FROM alice.tbl_0 AS ta UNION ALL SELECT tb.plain_int_0 as int_0 FROM bob.tbl_0 AS tb) as u`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select ta.plain_int_0 from alice.tbl_0 as ta;,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select tb.plain_int_0 from bob.tbl_0 as tb;,table_refs:[bob.tbl_0],],party:[bob,]}"]
