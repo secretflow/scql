@@ -21,7 +21,7 @@
 
     // Use 'postCreateCommand' to run commands after the container is created.
     // Installs development dependencies using the Makefile target.
-    "postCreateCommand": "make install-dev-deps",
+    "postCreateCommand": "echo 'hello world'",
 
     // Configure tool-specific properties.
     // "customizations": {},
