@@ -1,0 +1,36 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/cpp
+{
+    // A name for the dev container which can be displayed in UI.
+    "name": "SCQL Dev Container",
+
+    // Sets the run context to one level up instead of the .devcontainer folder.
+    "context": "..",
+
+    // Update the VARIANT arg in docker-compose.yml to pick a Debian OS version: bullseye, buster
+    // Use Python 3.10 to align with SCQL's CI/CD environment if possible, adjust if needed.
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+
+    // Features to add to the dev container. More info: https://containers.dev/features.
+    // "features": {},
+
+    // Use 'forwardPorts' to make a list of ports inside the container available locally.
+    // "forwardPorts": [],
+
+    // Use 'postCreateCommand' to run commands after the container is created.
+    // Installs development dependencies using the Makefile target.
+    "postCreateCommand": "echo 'hello world'",
+
+    // Configure tool-specific properties.
+    // "customizations": {},
+
+    // Specifies the user the container will run as. Default is root.
+    // Using a non-root user 'vscode' is recommended for security.
+    "remoteUser": "vscode",
+
+    // Mount the workspace folder.
+    "workspaceFolder": "/workspaces/scql",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/scql,type=bind,consistency=cached"
+}
