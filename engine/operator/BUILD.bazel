@@ -498,6 +498,7 @@ cc_library(
         "@spulib//libspu/kernel/hlo:basic_binary",
         "@spulib//libspu/kernel/hlo:const",
         "@spulib//libspu/kernel/hlo:reduce",
+        "@spulib//libspu/kernel/hlo:sort",
     ],
 )
 
