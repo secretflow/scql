@@ -28,7 +28,51 @@ struct ReduceTestCase {
   pb::TensorStatus status;
   test::NamedTensor input;
   test::NamedTensor output;
+  std::optional<std::pair<std::string, double>> double_attr;
 };
+
+static ReduceTestCase GeneratePercentileDiscCase(pb::TensorStatus status,
+                                                 double percent,
+                                                 size_t input_size) {
+  std::string op_type = ReducePercentileDisc::kOpType;
+  std::string input_name = "x";
+  std::string output_name = "y";
+
+  int start_value = 0;
+  std::vector<int> input;
+  while (input.size() < input_size) {
+    input.push_back(start_value);
+    start_value += 1;
+  }
+  int expected_index = static_cast<int>(std::ceil(percent * input_size)) - 1;
+  expected_index = std::min((int)input_size - 1, expected_index);
+  expected_index = std::max(0, expected_index);
+  int expected_value = input[expected_index];
+  std::random_device rd;
+  std::mt19937 g(rd());
+  std::shuffle(input.begin(), input.end(), g);
+  std::string input_str = "[";
+  for (size_t i = 0; i < input.size(); ++i) {
+    input_str += std::to_string(input[i]);
+    if (i != input.size() - 1) {
+      input_str += ", ";
+    }
+  }
+  input_str += "]";
+  std::string output_str = "[" + std::to_string(expected_value) + "]";
+  SPDLOG_INFO("input_str: {}", input_str);
+  SPDLOG_INFO("output_str: {}", output_str);
+  auto input_tensor = TensorFrom(arrow::int32(), input_str);
+  auto output_tensor = TensorFrom(arrow::int32(), output_str);
+
+  return ReduceTestCase{
+      .op_type = op_type,
+      .status = status,
+      .input = test::NamedTensor(input_name, input_tensor),
+      .output = test::NamedTensor(output_name, output_tensor),
+      .double_attr = std::make_pair(ReducePercentileDisc::kPercent, percent),
+  };
+}
 
 class ReduceTest : public ::testing::TestWithParam<
                        std::tuple<test::SpuRuntimeTestCase, ReduceTestCase>> {
@@ -129,8 +173,61 @@ INSTANTIATE_TEST_SUITE_P(
                 .input = test::NamedTensor(
                     "x", TensorFrom(arrow::float32(),
                                     "[null, 2.34, null, 1.99, null]")),
-                .output = test::NamedTensor("y", TensorFrom(arrow::int64(),
-                                                            "[2]"))})),
+                .output = test::NamedTensor("y",
+                                            TensorFrom(arrow::int64(), "[2]"))},
+            ReduceTestCase{
+                .op_type = ReducePercentileDisc::kOpType,
+                .status = pb::TENSORSTATUS_PRIVATE,
+                .input = test::NamedTensor("x", TensorFrom(arrow::float32(),
+                                                           "[3, 2, 1, 4, 5]")),
+                .output = test::NamedTensor("y", TensorFrom(arrow::float32(),
+                                                            "[3]")),
+                .double_attr = std::make_pair(ReducePercentileDisc::kPercent,
+                                              0.5)},
+            ReduceTestCase{
+                .op_type = ReducePercentileDisc::kOpType,
+                .status = pb::TENSORSTATUS_PRIVATE,
+                .input = test::NamedTensor("x", TensorFrom(arrow::float32(),
+                                                           "[3, 2, 1, 4]")),
+                .output = test::NamedTensor("y", TensorFrom(arrow::float32(),
+                                                            "[2]")),
+                .double_attr = std::make_pair(ReducePercentileDisc::kPercent,
+                                              0.5)},
+            ReduceTestCase{
+                .op_type = ReducePercentileDisc::kOpType,
+                .status = pb::TENSORSTATUS_PRIVATE,
+                .input = test::NamedTensor("x", TensorFrom(arrow::float32(),
+                                                           "[3, 2, 1, 4]")),
+                .output = test::NamedTensor("y", TensorFrom(arrow::float32(),
+                                                            "[1]")),
+                .double_attr = std::make_pair(ReducePercentileDisc::kPercent,
+                                              0)},
+            ReduceTestCase{
+                .op_type = ReducePercentileDisc::kOpType,
+                .status = pb::TENSORSTATUS_PRIVATE,
+                .input = test::NamedTensor("x", TensorFrom(arrow::float32(),
+                                                           "[3, 2, 1, 4]")),
+                .output = test::NamedTensor("y", TensorFrom(arrow::float32(),
+                                                            "[4]")),
+                .double_attr = std::make_pair(ReducePercentileDisc::kPercent,
+                                              1)},
+            ReduceTestCase{
+                .op_type = ReducePercentileDisc::kOpType,
+                .status = pb::TENSORSTATUS_PRIVATE,
+                .input = test::NamedTensor("x",
+                                           TensorFrom(arrow::float32(), "[]")),
+                .output = test::NamedTensor("y",
+                                            TensorFrom(arrow::float32(), "[]")),
+                .double_attr = std::make_pair(ReducePercentileDisc::kPercent,
+                                              0.5)},
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_PRIVATE, 0.5, 2),
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_PRIVATE, 0.6, 4),
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_PRIVATE, 0, 10000),
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_PRIVATE, 1, 10000),
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_PRIVATE, 0.3112234, 10),
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_PRIVATE, 0.314, 10001),
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_PRIVATE, 0.442,
+                                       10001))),
     TestParamNameGenerator(ReduceTest));
 
 INSTANTIATE_TEST_SUITE_P(
@@ -232,7 +329,58 @@ INSTANTIATE_TEST_SUITE_P(
                 .input = test::NamedTensor("x",
                                            TensorFrom(arrow::float32(), "[]")),
                 .output = test::NamedTensor("y", TensorFrom(arrow::float32(),
-                                                            "[]"))})),
+                                                            "[]"))},
+            ReduceTestCase{
+                .op_type = ReducePercentileDisc::kOpType,
+                .status = pb::TENSORSTATUS_SECRET,
+                .input = test::NamedTensor("x", TensorFrom(arrow::float32(),
+                                                           "[3, 2, 1, 4, 5]")),
+                .output = test::NamedTensor("y", TensorFrom(arrow::float32(),
+                                                            "[3]")),
+                .double_attr = std::make_pair(ReducePercentileDisc::kPercent,
+                                              0.5)},
+            ReduceTestCase{
+                .op_type = ReducePercentileDisc::kOpType,
+                .status = pb::TENSORSTATUS_SECRET,
+                .input = test::NamedTensor("x", TensorFrom(arrow::float32(),
+                                                           "[3, 2, 1, 4]")),
+                .output = test::NamedTensor("y", TensorFrom(arrow::float32(),
+                                                            "[2]")),
+                .double_attr = std::make_pair(ReducePercentileDisc::kPercent,
+                                              0.5)},
+            ReduceTestCase{
+                .op_type = ReducePercentileDisc::kOpType,
+                .status = pb::TENSORSTATUS_SECRET,
+                .input = test::NamedTensor("x", TensorFrom(arrow::float32(),
+                                                           "[3, 2, 1, 4]")),
+                .output = test::NamedTensor("y", TensorFrom(arrow::float32(),
+                                                            "[1]")),
+                .double_attr = std::make_pair(ReducePercentileDisc::kPercent,
+                                              0)},
+            ReduceTestCase{
+                .op_type = ReducePercentileDisc::kOpType,
+                .status = pb::TENSORSTATUS_SECRET,
+                .input = test::NamedTensor("x", TensorFrom(arrow::float32(),
+                                                           "[3, 2, 1, 4]")),
+                .output = test::NamedTensor("y", TensorFrom(arrow::float32(),
+                                                            "[4]")),
+                .double_attr = std::make_pair(ReducePercentileDisc::kPercent,
+                                              1)},
+            ReduceTestCase{
+                .op_type = ReducePercentileDisc::kOpType,
+                .status = pb::TENSORSTATUS_SECRET,
+                .input = test::NamedTensor("x",
+                                           TensorFrom(arrow::float32(), "[]")),
+                .output = test::NamedTensor("y",
+                                            TensorFrom(arrow::float32(), "[]")),
+                .double_attr = std::make_pair(ReducePercentileDisc::kPercent,
+                                              0.5)},
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_SECRET, 0, 10000),
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_SECRET, 1, 10000),
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_SECRET, 0.314, 10000),
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_SECRET, 0.442, 10000),
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_SECRET, 0.314, 10001),
+            GeneratePercentileDiscCase(pb::TENSORSTATUS_SECRET, 0.442, 10001))),
     TestParamNameGenerator(ReduceTest));
 
 TEST_P(ReduceTest, Works) {
@@ -295,6 +443,9 @@ pb::ExecNode ReduceTest::MakeExecNode(const ReduceTestCase& tc) {
   auto output = test::MakeTensorReference(tc.output.name,
                                           tc.output.tensor->Type(), tc.status);
   builder.AddOutput(ReduceBase::kOut, {output});
+  if (tc.double_attr.has_value()) {
+    builder.AddDoubleAttr(tc.double_attr->first, tc.double_attr->second);
+  }
 
   return builder.Build();
 }

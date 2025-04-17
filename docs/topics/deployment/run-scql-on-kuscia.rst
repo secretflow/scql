@@ -11,21 +11,21 @@ SCQL can run on `Kuscia <https://github.com/secretflow/kuscia>`_. Deploying and 
 
 The following section will describe how to deploy SCQL on Kuscia.
 
-Only the SCQL P2P mode is compatible with Kuscia. SCQLBroker is deployed as resident service via `KusciaDeployment <https://www.secretflow.org.cn/zh-CN/docs/kuscia/v0.7.0b0/reference/concepts/kusciadeployment_cn>`_.
+Only the SCQL P2P mode is compatible with Kuscia. SCQLBroker is deployed as resident service via `KusciaDeployment <https://www.secretflow.org.cn/zh-CN/docs/kuscia/v0.14.0b0/reference/concepts/kusciadeployment_cn>`_.
 
 Prerequisites
 =============
 
 If you have not installed Kuscia yet, please refer to the following docs to complete the installation.
 
-- `Kuscia quickstart on single-node <https://www.secretflow.org.cn/zh-CN/docs/kuscia/v0.7.0b0/getting_started/quickstart_cn>`_
-- `Kuscia Multi-Node Deployment <https://www.secretflow.org.cn/zh-CN/docs/kuscia/v0.7.0b0/deployment/Docker_deployment_kuscia/deploy_p2p_cn>`_
+- `Kuscia quickstart on single-node <https://www.secretflow.org.cn/zh-CN/docs/kuscia/v0.14.0b0/getting_started/quickstart_cn>`_
+- `Kuscia Multi-Node Deployment <https://www.secretflow.org.cn/zh-CN/docs/kuscia/v0.14.0b0/deployment/Docker_deployment_kuscia/deploy_p2p_cn>`_
 
 
 Prepare SCQL AppImage
 =====================
 
-`AppImage <https://www.secretflow.org.cn/zh-CN/docs/kuscia/v0.7.0b0/reference/concepts/appimage_cn>`_ is a fundamental concept in Kuscia, it contains the app deployment configuration and image information. The following YAML file is an example SCQL AppImage template.
+`AppImage <https://www.secretflow.org.cn/zh-CN/docs/kuscia/v0.14.0b0/reference/concepts/appimage_cn>`_ is a fundamental concept in Kuscia, it contains the app deployment configuration and image information. The following YAML file is an example SCQL AppImage template.
 
 .. literalinclude:: ../../../scripts/kuscia-templates/scql-image.yaml
     :language: yaml
