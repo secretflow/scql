@@ -20,7 +20,7 @@ module(
 
 bazel_dep(name = "yacl", version = "0.4.5b10-nightly-20250110")
 bazel_dep(name = "psi", version = "0.6.0.dev250123")
-bazel_dep(name = "spulib", version = "0.9.4.dev20250319")
+bazel_dep(name = "spulib", version = "0.9.4.dev20250416")
 bazel_dep(name = "heu", version = "0.6.0.dev20250123")
 bazel_dep(name = "dataproxy", version = "0.3.0b1")
 bazel_dep(name = "kuscia", version = "0.13.0b1")
