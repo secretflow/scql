@@ -68,7 +68,7 @@ func NewServer(conf *config.Config, storage *gorm.DB, engineClient executor.Engi
 	router.Use(ginLogger())
 	router.Use(gin.RecoveryWithWriter(logrus.StandardLogger().Out))
 	router.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"http://localhost:80"},
+		AllowOrigins: []string{"*"},
 		AllowMethods: []string{"GET", "PUT", "POST", "OPTIONS"},
 		AllowHeaders: []string{
 			"Origin", "Authorization", "Content-Type"},
