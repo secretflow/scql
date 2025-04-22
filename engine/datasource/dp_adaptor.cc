@@ -27,7 +27,7 @@
 #include "arrow/result.h"
 #include "arrow/status.h"
 #include "arrow/table.h"
-#include "dataproxy_sdk/cc/data_proxy_stream.h"
+#include "dataproxy_sdk/data_proxy_stream.h"
 #include "gflags/gflags.h"
 
 #include "engine/core/tensor.h"

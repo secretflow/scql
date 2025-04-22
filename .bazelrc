@@ -1,6 +1,9 @@
 common --experimental_repo_remote_exec
 common --experimental_cc_shared_library
 common --experimental_ui_max_stdouterr_bytes=-1
+common --experimental_remote_cache_compression
+common --experimental_remote_cache_compression_threshold=100
+common --nolegacy_important_outputs
 
 common --remote_download_regex='.*\/scqlengine$'
 common --registry=https://raw.githubusercontent.com/secretflow/bazel-registry/main

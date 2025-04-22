@@ -262,7 +262,7 @@ cc_library(
         "//engine/util:spu_io",
         "//engine/util:tensor_util",
         "@abseil-cpp//absl/strings",
-        "@dataproxy//dataproxy_sdk/cc:data_proxy_stream",
+        "@dataproxy_sdk_cc//dataproxy_sdk:dataproxy_sdk_api",
         "@yacl//yacl/base:exception",
     ],
 )
