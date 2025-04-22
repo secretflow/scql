@@ -19,7 +19,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
@@ -38,15 +37,6 @@ func NewIntraServer(app *application.App) (*http.Server, error) {
 	router := gin.New()
 	router.Use(ginLogger())
 	router.Use(gin.RecoveryWithWriter(logrus.StandardLogger().Out))
-	router.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"*"},
-		AllowMethods: []string{"GET", "PUT", "POST", "OPTIONS"},
-		AllowHeaders: []string{
-			"Origin", "Authorization", "Content-Type"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           50 * time.Second,
-	}))
 	router.Use(prom.GetMonitor().Middleware)
 	router.GET(prom.MetricsPath, func(ctx *gin.Context) {
 		promhttp.Handler().ServeHTTP(ctx.Writer, ctx.Request)
@@ -89,15 +79,6 @@ func NewInterServer(
 	router := gin.New()
 	router.Use(ginLogger())
 	router.Use(gin.RecoveryWithWriter(logrus.StandardLogger().Out))
-	router.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"*"},
-		AllowMethods: []string{"GET", "PUT", "POST", "OPTIONS"},
-		AllowHeaders: []string{
-			"Origin", "Authorization", "Content-Type"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           50 * time.Second,
-	}))
 
 	interSvc := inter.NewInterSvc(app)
 	router.POST(constant.InviteToProjectPath, interSvc.InviteToProjectHandler)
