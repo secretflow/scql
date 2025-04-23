@@ -33,3 +33,6 @@ logs/scdbserver.log
 .idea/
 # 排除mac本地文件
 *.DS_Store
+
+# ignore bazelrc for remote cache
+.remote.bazelrc
