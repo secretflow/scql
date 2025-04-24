@@ -562,7 +562,7 @@ func (t *translator) getTensorFromExpression(arg expression.Expression, tensors 
 			if stringutil.IsDateString(strVal) {
 				tsMilli, err := stringutil.StringToUnixMilli(strVal)
 				if err != nil {
-					return nil, fmt.Errorf("parse datetime constant %q failed: %v", strVal, err)
+					return nil, fmt.Errorf("getTensorFromExpression: failed to parse date/time constant %q: %v", strVal, err)
 				}
 				x.Value.SetInt64(tsMilli)
 			}
