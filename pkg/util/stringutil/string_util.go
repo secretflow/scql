@@ -346,14 +346,14 @@ func StringToUnixMilli(s string) (int64, error) {
 	var err error
 
 	if len(s) == len("2006-01-02 15:04:05") {
-		t, err = time.ParseInLocation("2006-01-02 15:04:05", s, time.UTC)
+		t, err = time.Parse("2006-01-02 15:04:05", s)
 		if err == nil {
 			return t.UnixMilli(), nil
 		}
 	}
 
 	if len(s) == len("2006-01-02") {
-		t, err = time.ParseInLocation("2006-01-02", s, time.UTC)
+		t, err = time.Parse("2006-01-02", s)
 		if err == nil {
 			return t.UnixMilli(), nil
 		}
