@@ -34,6 +34,7 @@ import (
 	"github.com/secretflow/scql/pkg/status"
 	"github.com/secretflow/scql/pkg/types"
 	"github.com/secretflow/scql/pkg/util/sliceutil"
+	"github.com/secretflow/scql/pkg/util/stringutil"
 )
 
 var astName2NodeName = map[string]string{
@@ -556,6 +557,16 @@ func (t *translator) getTensorFromExpression(arg expression.Expression, tensors 
 	case *expression.ScalarFunction:
 		return t.buildScalarFunction(x, tensors, false)
 	case *expression.Constant:
+		if x.Value.Kind() == types.KindString {
+			strVal := x.Value.GetString()
+			if stringutil.IsDateString(strVal) {
+				tsMilli, err := stringutil.StringToUnixMilli(strVal)
+				if err != nil {
+					return nil, fmt.Errorf("parse datetime constant %q failed: %v", strVal, err)
+				}
+				x.Value.SetInt64(tsMilli)
+			}
+		}
 		return t.addConstantNode(&x.Value)
 	}
 	return nil, fmt.Errorf("getTensorFromExpression doesn't support arg type %T", arg)
