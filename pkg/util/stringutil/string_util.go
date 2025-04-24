@@ -334,3 +334,30 @@ func RandString(n int) string {
 	}
 	return string(b)
 }
+
+func IsDateString(s string) bool {
+	matchedFull, _ := regexp.MatchString(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$`, s)
+	matchedShort, _ := regexp.MatchString(`^\d{4}-\d{2}-\d{2}$`, s)
+	return matchedFull || matchedShort
+}
+
+func StringToUnixMilli(s string) (int64, error) {
+	var t time.Time
+	var err error
+
+	if len(s) == len("2006-01-02 15:04:05") {
+		t, err = time.ParseInLocation("2006-01-02 15:04:05", s, time.UTC)
+		if err == nil {
+			return t.UnixNano() / 1e6, nil
+		}
+	}
+
+	if len(s) == len("2006-01-02") {
+		t, err = time.ParseInLocation("2006-01-02", s, time.UTC)
+		if err == nil {
+			return t.UnixNano() / 1e6, nil
+		}
+	}
+
+	return 0, fmt.Errorf("StringToUnixMilli: unsupported date/time format: %s", s)
+}
