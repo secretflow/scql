@@ -1,4 +1,4 @@
-FROM secretflow/ubuntu-base-ci:latest
+FROM secretflow/ubuntu-base-ci:latest@sha256:287cd98a952bd2b6eb08214db8ade6d5b2a287c2221346bdcf54be4980666a3a
 
 ARG TARGETPLATFORM
 ARG GO_VERSION=1.24.0
