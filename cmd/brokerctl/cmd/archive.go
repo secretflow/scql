@@ -32,10 +32,11 @@ func archiveProject() error {
 	if projectID == "" {
 		return fmt.Errorf("flags project-id must not be empty")
 	}
-	err := brokerCommand.ArchiveProject(projectID)
+	msg, err := brokerCommand.ArchiveProject(projectID)
 	if err != nil {
 		return err
 	}
-	fmt.Println("archive project succeeded")
+
+	fmt.Println(msg)
 	return nil
 }
