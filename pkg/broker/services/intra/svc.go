@@ -65,6 +65,17 @@ func (svc *IntraSvc) CreateProjectHandler(c *gin.Context) {
 		})
 }
 
+func (svc *IntraSvc) ArchiveProjectHandler(c *gin.Context) {
+	handlerWrapper(c,
+		&pb.ArchiveProjectRequest{},
+		&pb.ArchiveProjectResponse{},
+		func(ctx context.Context, req *pb.ArchiveProjectRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.ArchiveProjectResponse, error) {
+			logEntry.RawRequest = req.String()
+			logEntry.ActionName = fmt.Sprintf("%v@%v", "Intra", "ArchiveProject")
+			return svc.ArchiveProject(ctx, req)
+		})
+}
+
 func (svc *IntraSvc) ListProjectsHandler(c *gin.Context) {
 	handlerWrapper(c,
 		&pb.ListProjectsRequest{},

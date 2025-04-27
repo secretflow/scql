@@ -182,7 +182,93 @@ func (svc *grpcIntraSvc) ListProjects(c context.Context, req *pb.ListProjectsReq
 }
 
 func (svc *grpcIntraSvc) ArchiveProject(c context.Context, req *pb.ArchiveProjectRequest) (resp *pb.ArchiveProjectResponse, err error) {
-	return nil, errors.New("method ArchiveProject not implemented")
+	if req == nil {
+		return nil, status.New(pb.Code_BAD_REQUEST, "ArchiveProject: illegal empty request")
+	}
+	if req.GetProjectId() == "" {
+		return nil, status.New(pb.Code_BAD_REQUEST, "ArchiveProject: project_id cannot be empty")
+	}
+
+	app := svc.app
+	txn := app.MetaMgr.CreateMetaTransaction()
+	defer func() {
+		err = txn.Finish(err)
+	}()
+
+	project, err := txn.GetProject(req.GetProjectId())
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &pb.ArchiveProjectResponse{
+				Status: &pb.Status{
+					Code:    int32(pb.Code_NOT_FOUND),
+					Message: "project not found",
+				},
+			}, nil
+		}
+		return nil, fmt.Errorf("ArchiveProject: failed to get project info in meta database: %v", err)
+	}
+
+	if project.Archived == true {
+		return &pb.ArchiveProjectResponse{
+			Status: &pb.Status{
+				Code:    int32(pb.Code_OK),
+				Message: "project already archived",
+			},
+		}, nil
+	}
+
+	// Send archive project request to the project creator first.
+	// If it fails, immediately return archive failure.
+	err = common.PostSyncInfo(svc.app, req.GetProjectId(), pb.ChangeEntry_ArchiveProject, nil, []string{project.Creator})
+	if err != nil {
+		return nil, fmt.Errorf("ArchiveProject: failed to sync: %v", err)
+	}
+
+	project.Archived = true
+	err = txn.UpdateProject(project)
+	if err != nil {
+		return nil, fmt.Errorf("ArchiveProject: failed to update project: %v", err)
+	}
+
+	members, err := txn.GetProjectMembers(req.GetProjectId())
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &pb.ArchiveProjectResponse{
+				Status: &pb.Status{
+					Code:    int32(pb.Code_NOT_FOUND),
+					Message: "project members not found",
+				},
+			}, nil
+		}
+		return nil, fmt.Errorf("ArchiveProject: failed to get project members info in meta database: %v", err)
+	}
+
+	var targetParties []string
+	for _, p := range members {
+		if p != app.Conf.PartyCode && p != project.Creator {
+			targetParties = append(targetParties, p)
+		}
+	}
+
+	err = common.PostSyncInfo(app, req.GetProjectId(), pb.ChangeEntry_ArchiveProject, nil, targetParties)
+	if err != nil {
+		// still need to archive project locally
+		err = nil
+		// some members need to execute CheckAndUpdateStatus
+		return &pb.ArchiveProjectResponse{
+			Status: &pb.Status{
+				Code:    int32(pb.Code_OK),
+				Message: "archive project is partially successful",
+			},
+		}, nil
+	}
+
+	return &pb.ArchiveProjectResponse{
+		Status: &pb.Status{
+			Code:    int32(pb.Code_OK),
+			Message: "archive project succeed",
+		},
+	}, nil
 }
 
 func (svc *grpcIntraSvc) InviteMember(c context.Context, req *pb.InviteMemberRequest) (resp *pb.InviteMemberResponse, err error) {
