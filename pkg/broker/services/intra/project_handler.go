@@ -254,11 +254,10 @@ func (svc *grpcIntraSvc) ArchiveProject(c context.Context, req *pb.ArchiveProjec
 	if err != nil {
 		// still need to archive project locally
 		err = nil
-		// some members need to execute CheckAndUpdateStatus
 		return &pb.ArchiveProjectResponse{
 			Status: &pb.Status{
 				Code:    int32(pb.Code_OK),
-				Message: "archive project is partially successful",
+				Message: "archive project is partially successful, some members need to execute CheckAndUpdateStatus",
 			},
 		}, nil
 	}
