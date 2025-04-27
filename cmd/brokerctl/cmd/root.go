@@ -56,6 +56,7 @@ func init() {
 	}
 
 	rootCmd.AddCommand(createCmd)
+	rootCmd.AddCommand(archiveCmd)
 	rootCmd.AddCommand(deleteCmd)
 	rootCmd.AddCommand(getCmd)
 	rootCmd.AddCommand(inviteCmd)
