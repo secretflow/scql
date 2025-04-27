@@ -53,6 +53,15 @@ func (svc *grpcInterSvc) SyncInfo(c context.Context, req *pb.SyncInfoRequest) (r
 
 	action := req.GetChangeEntry().GetAction()
 	switch action {
+	case pb.ChangeEntry_ArchiveProject:
+		proj, err := storage.AddShareLock(txn).GetProject(req.GetProjectId())
+		if err != nil {
+			return nil, fmt.Errorf("SyncInfo: get project %v err: %v", req.GetProjectId(), err)
+		}
+		err = common.ArchiveProjectWithCheck(txn, &proj, req.GetClientId().GetCode())
+		if err != nil {
+			return nil, fmt.Errorf("SyncInfo ArchiveProject: archive project %v err: %v", req.GetProjectId(), err)
+		}
 	case pb.ChangeEntry_AddProjectMember:
 		proj, err := storage.AddShareLock(txn).GetProject(req.GetProjectId())
 		if err != nil {
