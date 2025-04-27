@@ -204,8 +204,12 @@ func checkConflict(app *application.App, local, remote *storage.ProjectMeta, loc
 	// check project conflict
 	localProj := local.Proj.Proj
 	remoteProj := remote.Proj.Proj
-	remoteProj.CreatedAt = localProj.CreatedAt // ignore comparing created time
-	remoteProj.UpdatedAt = localProj.UpdatedAt // ignore comparing updated time
+	remoteProjArchived := remoteProj.Archived
+	remoteProj.Archived = localProj.Archived // ignore comparing Archived
+	defer func() {
+		remoteProj.Archived = remoteProjArchived
+	}()
+
 	eq, err := localProj.Equals(&remoteProj)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compare project between local project and remote project, %v", err)
@@ -254,9 +258,19 @@ func updateStatus(app *application.App, local, remote *storage.ProjectMeta, remo
 		err = txn.Finish(err)
 	}()
 
-	// add project members
 	proj := local.Proj.Proj
 	if proj.Creator == remoteParty {
+		// update archive status
+		if proj.Archived != remote.Proj.Proj.Archived {
+			proj.Archived = remote.Proj.Proj.Archived
+			err = txn.UpdateProject(proj)
+			if err != nil {
+				return fmt.Errorf("updateStatus: update project archive status err: %v", err)
+			}
+			logrus.Infof("updateStatus for project %s: update archive status to %v", proj.ID, proj.Archived)
+		}
+
+		// add project members
 		var membersToAdd []storage.Member
 		for _, member := range sliceutil.Subtraction(remote.Proj.Members, local.Proj.Members) {
 			membersToAdd = append(membersToAdd, storage.Member{
