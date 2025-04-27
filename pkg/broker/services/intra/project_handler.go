@@ -219,9 +219,11 @@ func (svc *grpcIntraSvc) ArchiveProject(c context.Context, req *pb.ArchiveProjec
 
 	// Send archive project request to the project creator first.
 	// If it fails, immediately return archive failure.
-	err = common.PostSyncInfo(svc.app, req.GetProjectId(), pb.ChangeEntry_ArchiveProject, nil, []string{project.Creator})
-	if err != nil {
-		return nil, fmt.Errorf("ArchiveProject: failed to sync: %v", err)
+	if app.Conf.PartyCode != project.Creator {
+		err = common.PostSyncInfo(svc.app, req.GetProjectId(), pb.ChangeEntry_ArchiveProject, nil, []string{project.Creator})
+		if err != nil {
+			return nil, fmt.Errorf("ArchiveProject: failed to sync: %v", err)
+		}
 	}
 
 	project.Archived = true
