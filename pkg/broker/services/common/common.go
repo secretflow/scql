@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
 	"unicode"
 
 	"slices"
@@ -235,4 +236,33 @@ func GenSessionOpts(jobConfig *pb.JobConfig, projConf *pb.ProjectConfig) *applic
 	}
 
 	return sessionOptions
+}
+
+func ArchivedProjectErrorResponse[T any](opName, projectID string) (*T, bool) {
+	var resp T
+	status := &pb.Status{
+		Code:    int32(pb.Code_NOT_SUPPORTED),
+		Message: fmt.Sprintf("%s: project %v is archived", opName, projectID),
+	}
+	v := reflect.ValueOf(&resp).Elem().FieldByName("Status")
+	if !v.IsValid() {
+		panic("Response struct must have a Status field")
+	}
+	v.Set(reflect.ValueOf(status))
+	return &resp, true
+}
+
+func CheckProjectArchived[T any](
+	txn *storage.MetaTransaction,
+	projectID, opName string,
+) (resp *T, shouldReturn bool, err error) {
+	project, err := txn.GetProject(projectID)
+	if err != nil {
+		return nil, true, fmt.Errorf("%s: get project %v err: %v", opName, projectID, err)
+	}
+	if project.Archived {
+		resp, _ := ArchivedProjectErrorResponse[T](opName, projectID)
+		return resp, true, nil
+	}
+	return nil, false, nil
 }

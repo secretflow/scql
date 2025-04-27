@@ -38,16 +38,9 @@ func (svc *grpcIntraSvc) CreateTable(c context.Context, req *pb.CreateTableReque
 		err = txn.Finish(err)
 	}()
 
-	project, err := txn.GetProject(req.GetProjectId())
-	if err != nil {
-		return nil, fmt.Errorf("CreateTable: get project %v err: %v", req.GetProjectId(), err)
-	}
-	if project.Archived {
-		return &pb.CreateTableResponse{
-			Status: &pb.Status{
-				Code:    int32(pb.Code_NOT_SUPPORTED),
-				Message: fmt.Sprintf("CreateTable: project %v is archived", req.GetProjectId()),
-			}}, nil
+	resp, shouldReturn, err := common.CheckProjectArchived[pb.CreateTableResponse](txn, req.GetProjectId(), "CreateTable")
+	if shouldReturn {
+		return resp, err
 	}
 
 	members, err := txn.GetProjectMembers(req.GetProjectId())
@@ -198,16 +191,9 @@ func (svc *grpcIntraSvc) DropTable(c context.Context, req *pb.DropTableRequest) 
 		err = txn.Finish(err)
 	}()
 
-	project, err := txn.GetProject(req.GetProjectId())
-	if err != nil {
-		return nil, fmt.Errorf("DropTable: get project %v err: %v", req.GetProjectId(), err)
-	}
-	if project.Archived {
-		return &pb.DropTableResponse{
-			Status: &pb.Status{
-				Code:    int32(pb.Code_NOT_SUPPORTED),
-				Message: fmt.Sprintf("DropTable: project %v is archived", req.GetProjectId()),
-			}}, nil
+	resp, shouldReturn, err := common.CheckProjectArchived[pb.DropTableResponse](txn, req.GetProjectId(), "DropTable")
+	if shouldReturn {
+		return resp, err
 	}
 
 	tableId := storage.TableIdentifier{
