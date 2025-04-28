@@ -45,15 +45,6 @@ func (svc *grpcIntraSvc) CreateProject(c context.Context, req *pb.CreateProjectR
 	}
 
 	app := svc.app
-	txn := app.MetaMgr.CreateMetaTransaction()
-	defer func() {
-		err = txn.Finish(err)
-	}()
-
-	resp, shouldReturn, err := common.CheckProjectArchived[pb.CreateProjectResponse](txn, req.GetProjectId(), "CreateProject")
-	if shouldReturn {
-		return resp, err
-	}
 
 	projectConf := req.GetConf()
 	if projectConf == nil {
@@ -125,18 +116,19 @@ func (svc *grpcIntraSvc) CreateProject(c context.Context, req *pb.CreateProjectR
 		return nil, fmt.Errorf("CreateProject: failed to veriry project ID: %v", err)
 	}
 
-	_, err = txn.GetProject(project.ID)
-	if err == nil {
-		return nil, fmt.Errorf("CreateProject: project %s already exists", project.ID)
-	}
-	if !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, err
-	}
-	err = txn.CreateProject(project)
+	err = app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
+		_, err := txn.GetProject(project.ID)
+		if err == nil {
+			return fmt.Errorf("CreateProject: project %s already exists", project.ID)
+		}
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+		return txn.CreateProject(project)
+	})
 	if err != nil {
 		return nil, fmt.Errorf("CreateProject: failed to create table in meta database: %v", err)
 	}
-
 	return &pb.CreateProjectResponse{
 		Status: &pb.Status{
 			Code:    int32(0),
