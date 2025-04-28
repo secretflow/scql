@@ -19,7 +19,7 @@ version: 2.1
 setup: true
 
 orbs:
-  path-filtering: circleci/path-filtering@1.0.0
+  path-filtering: circleci/path-filtering@1.2.0
   continuation: circleci/continuation@1.0.0
 
 parameters:
@@ -52,6 +52,7 @@ workflows:
     jobs:
       - path-filtering/filter:
           base-revision: main
+          tag: '3.10' # specific cimg/python
           config-path: .circleci/unittest-config.yml
           mapping: |
             api/.* run_go_ut true
@@ -70,6 +71,7 @@ workflows:
     jobs:
       - path-filtering/filter:
           base-revision: main
+          tag: '3.10'
           config-path: .circleci/regtest-config.yml
           mapping: |
             api/.* run_regtest true
