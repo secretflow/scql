@@ -345,7 +345,7 @@ func (s *intraTestSuite) TestParameterCheck() {
 	listCCLsReq := &pb.ShowCCLRequest{ProjectId: "not_exist"}
 	_, err = s.svcAlice.ShowCCL(s.ctx, listCCLsReq)
 	s.Error(err)
-	s.Equal("ShowCCL: GetProjectAndMembers err: record not found", err.Error())
+	s.Equal("ShowCCL: get project not_exist err: record not found", err.Error())
 	listCCLsReq = &pb.ShowCCLRequest{ProjectId: "1", Tables: []string{"not_exist_table"}}
 	_, err = s.svcAlice.ShowCCL(s.ctx, listCCLsReq)
 	s.Error(err)
@@ -365,7 +365,7 @@ func (s *intraTestSuite) TestParameterCheck() {
 	grantCCLReq = &pb.GrantCCLRequest{ProjectId: "not_exist", ColumnControlList: []*pb.ColumnControl{&pb.ColumnControl{Col: &pb.ColumnDef{ColumnName: "not_exist_col", TableName: "not_exist_table"}, PartyCode: "alice", Constraint: 10}}}
 	_, err = s.svcAlice.GrantCCL(s.ctx, grantCCLReq)
 	s.Error(err)
-	s.Equal("GrantCCL: project not_exist has no members or project doesn't exist", err.Error())
+	s.Equal("GrantCCL: get project not_exist err: record not found", err.Error())
 	revokeCCLReq := &pb.RevokeCCLRequest{ProjectId: "1", ColumnControlList: []*pb.ColumnControl{&pb.ColumnControl{Col: &pb.ColumnDef{ColumnName: "not_exist_col", TableName: "not_exist_table"}, PartyCode: "alice"}}}
 	_, err = s.svcAlice.RevokeCCL(s.ctx, revokeCCLReq)
 	s.Error(err)
