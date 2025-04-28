@@ -208,7 +208,7 @@ func (svc *grpcIntraSvc) ArchiveProject(c context.Context, req *pb.ArchiveProjec
 		return nil, fmt.Errorf("ArchiveProject: failed to get project info in meta database: %v", err)
 	}
 
-	if project.Archived == true {
+	if project.Archived {
 		return &pb.ArchiveProjectResponse{
 			Status: &pb.Status{
 				Code:    int32(pb.Code_OK),
