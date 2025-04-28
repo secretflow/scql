@@ -502,10 +502,6 @@ func (svc *grpcIntraSvc) ProcessInvitation(c context.Context, req *pb.ProcessInv
 	if err != nil {
 		return nil, fmt.Errorf("ProcessInvitation: GetUnhandledInvitationWithID: %v", err)
 	}
-	resp, shouldReturn, err := common.CheckProjectArchived[pb.ProcessInvitationResponse](txn, invitation.ProjectID, "ProcessInvitation")
-	if shouldReturn {
-		return resp, err
-	}
 	if invitation.Invitee != svc.app.Conf.PartyCode {
 		invalidInvitation = true
 		return nil, fmt.Errorf("ProcessInvitation: invitee{%v} != selfParty{%v}", invitation.Invitee, svc.app.Conf.PartyCode)
