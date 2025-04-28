@@ -286,8 +286,8 @@ func (svc *grpcIntraSvc) InviteMember(c context.Context, req *pb.InviteMemberReq
 		err = txn.Finish(err)
 	}()
 
-	resp, shouldReturn, err := common.CheckProjectArchived[pb.InviteMemberResponse](txn, req.GetProjectId(), "InviteMember")
-	if shouldReturn {
+	resp, err = common.CheckProjectArchived[pb.InviteMemberResponse](txn, req.GetProjectId(), "InviteMember")
+	if resp != nil || err != nil {
 		return resp, err
 	}
 

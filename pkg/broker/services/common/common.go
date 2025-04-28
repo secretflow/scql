@@ -255,14 +255,14 @@ func ArchivedProjectErrorResponse[T any](opName, projectID string) (*T, bool) {
 func CheckProjectArchived[T any](
 	txn *storage.MetaTransaction,
 	projectID, opName string,
-) (resp *T, shouldReturn bool, err error) {
+) (resp *T, err error) {
 	project, err := txn.GetProject(projectID)
 	if err != nil {
-		return nil, true, fmt.Errorf("%s: get project %v err: %v", opName, projectID, err)
+		return nil, fmt.Errorf("%s: get project %v err: %v", opName, projectID, err)
 	}
 	if project.Archived {
 		resp, _ := ArchivedProjectErrorResponse[T](opName, projectID)
-		return resp, true, nil
+		return resp, nil
 	}
-	return nil, false, nil
+	return nil, nil
 }

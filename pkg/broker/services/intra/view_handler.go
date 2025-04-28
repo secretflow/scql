@@ -125,8 +125,8 @@ func (svc *grpcIntraSvc) CreateView(ctx context.Context, req *pb.CreateViewReque
 		err = txn.Finish(err)
 	}()
 
-	resp, shouldReturn, err := common.CheckProjectArchived[pb.CreateViewResponse](txn, req.GetProjectId(), "CreateView")
-	if shouldReturn {
+	resp, err = common.CheckProjectArchived[pb.CreateViewResponse](txn, req.GetProjectId(), "CreateView")
+	if resp != nil || err != nil {
 		return resp, err
 	}
 
@@ -209,8 +209,8 @@ func (svc *grpcIntraSvc) DropView(ctx context.Context, req *pb.DropViewRequest) 
 		err = txn.Finish(err)
 	}()
 
-	resp, shouldReturn, err := common.CheckProjectArchived[pb.DropViewResponse](txn, req.GetProjectId(), "DropView")
-	if shouldReturn {
+	resp, err = common.CheckProjectArchived[pb.DropViewResponse](txn, req.GetProjectId(), "DropView")
+	if resp != nil || err != nil {
 		return resp, err
 	}
 
