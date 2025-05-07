@@ -34,7 +34,6 @@ import (
 	"github.com/secretflow/scql/pkg/status"
 	"github.com/secretflow/scql/pkg/types"
 	"github.com/secretflow/scql/pkg/util/sliceutil"
-	"github.com/secretflow/scql/pkg/util/stringutil"
 )
 
 var astName2NodeName = map[string]string{
@@ -557,16 +556,6 @@ func (t *translator) getTensorFromExpression(arg expression.Expression, tensors 
 	case *expression.ScalarFunction:
 		return t.buildScalarFunction(x, tensors, false)
 	case *expression.Constant:
-		if x.Value.Kind() == types.KindString {
-			strVal := x.Value.GetString()
-			if stringutil.IsDateString(strVal) {
-				tsMilli, err := stringutil.StringToUnixMilli(strVal)
-				if err != nil {
-					return nil, fmt.Errorf("getTensorFromExpression: failed to parse date/time constant %q: %v", strVal, err)
-				}
-				x.Value.SetInt64(tsMilli)
-			}
-		}
 		return t.addConstantNode(&x.Value)
 	}
 	return nil, fmt.Errorf("getTensorFromExpression doesn't support arg type %T", arg)
@@ -1203,10 +1192,46 @@ func inferBinaryOpOutputType(opType string, left, right *graph.Tensor) (proto.Pr
 	return proto.PrimitiveDataType_PrimitiveDataType_UNDEFINED, fmt.Errorf("cannot infer output type for opType=%s", opType)
 }
 
+var constTensorNeedCastOp = map[string]bool{
+	operator.OpNameLess:         true,
+	operator.OpNameLessEqual:    true,
+	operator.OpNameGreater:      true,
+	operator.OpNameGreaterEqual: true,
+	operator.OpNameEqual:        true,
+	operator.OpNameAdd:          true,
+	operator.OpNameMinus:        true,
+}
+
 func (t *translator) addBinaryNode(opName string, opType string, left *graph.Tensor, right *graph.Tensor) (*graph.Tensor, error) {
 	if ok := slices.Contains(operator.BinaryOps, opType); !ok {
 		return nil, fmt.Errorf("failed to check op type AddBinaryNode: invalid opType %v", opType)
 	}
+
+	// only support string to time currently
+	if _, ok := constTensorNeedCastOp[opType]; ok {
+		var err error
+
+		castIfNeeded := func(constTensor, otherTensor *graph.Tensor, targetType proto.PrimitiveDataType) (*graph.Tensor, error) {
+			if constTensor.Name == "constant_data" && (otherTensor.DType == proto.PrimitiveDataType_DATETIME || otherTensor.DType == proto.PrimitiveDataType_TIMESTAMP) {
+				inTensorPartyCodes := t.extractPartyCodeFromTensor(constTensor)
+				return t.ep.AddCastNode("cast", targetType, constTensor, inTensorPartyCodes)
+			}
+			return constTensor, nil
+		}
+
+		if left.Name == "constant_data" {
+			left, err = castIfNeeded(left, right, right.DType)
+			if err != nil {
+				return nil, err
+			}
+		} else if right.Name == "constant_data" {
+			right, err = castIfNeeded(right, left, left.DType)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	if err := graph.CheckBinaryOpInputType(opType, left, right); err != nil {
 		return nil, fmt.Errorf("addBinaryNode: %w", err)
 	}
