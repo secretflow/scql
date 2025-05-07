@@ -246,7 +246,7 @@ func ArchivedProjectErrorResponse[T any](opName, projectID string) (*T, bool) {
 	}
 	v := reflect.ValueOf(&resp).Elem().FieldByName("Status")
 	if !v.IsValid() {
-		panic("Response struct must have a Status field")
+		return nil, false
 	}
 	v.Set(reflect.ValueOf(status))
 	return &resp, true
@@ -261,7 +261,10 @@ func CheckProjectArchived[T any](
 		return nil, fmt.Errorf("%s: get project %v err: %v", opName, projectID, err)
 	}
 	if project.Archived {
-		resp, _ := ArchivedProjectErrorResponse[T](opName, projectID)
+		resp, valid := ArchivedProjectErrorResponse[T](opName, projectID)
+		if !valid {
+			return nil, fmt.Errorf("%s: Response struct must have a Status field", opName)
+		}
 		return resp, nil
 	}
 	return nil, nil
