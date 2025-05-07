@@ -254,6 +254,7 @@ func (svc *grpcIntraSvc) ArchiveProject(c context.Context, req *pb.ArchiveProjec
 
 	err = common.PostSyncInfo(app, req.GetProjectId(), pb.ChangeEntry_ArchiveProject, nil, targetParties)
 	if err != nil {
+		logrus.Warningf("ArchiveProject: fail to PostSyncInfo %v", err)
 		// still need to archive project locally
 		err = nil
 		return &pb.ArchiveProjectResponse{

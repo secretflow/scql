@@ -159,7 +159,7 @@ func ArchiveProjectWithCheck(t *storage.MetaTransaction, project *storage.Projec
 	project.Archived = true
 	err = t.UpdateProject(*project)
 	if err != nil {
-		return fmt.Errorf("ArchiveProjectWithCheck: AddTable %v", err)
+		return fmt.Errorf("ArchiveProjectWithCheck: update project status error: %v", err)
 	}
 	return nil
 }
