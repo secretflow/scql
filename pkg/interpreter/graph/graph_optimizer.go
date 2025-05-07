@@ -89,9 +89,6 @@ func (rule optConstantCast) optimize(graph *Graph) error {
 
 			// cast value
 			scalarAttr := node.Attributes["scalar"]
-			if scalarAttr == nil {
-				return fmt.Errorf("GraphOptimizer: constant node doesn't have scalar attribute")
-			}
 			err := castValue(scalarAttr, originType, castType)
 			if err != nil {
 				return fmt.Errorf("GraphOptimizer: failed to cast value: %v", err)
@@ -127,30 +124,63 @@ func (rule optConstantCast) optimize(graph *Graph) error {
 
 			// remove castNode
 			delete(pipeline.Nodes, castNode)
-			graph.NodeCnt--
 		}
 	}
 	return nil
 }
 
 func isValidCast(originType, castType proto.PrimitiveDataType) bool {
-	switch originType {
-	case proto.PrimitiveDataType_STRING:
-		return castType == proto.PrimitiveDataType_INT64 || castType == proto.PrimitiveDataType_FLOAT64 || castType == proto.PrimitiveDataType_DATETIME || castType == proto.PrimitiveDataType_TIMESTAMP
-	case proto.PrimitiveDataType_INT32, proto.PrimitiveDataType_INT64:
-		return castType == proto.PrimitiveDataType_FLOAT32 || castType == proto.PrimitiveDataType_FLOAT64 || castType == proto.PrimitiveDataType_STRING
-	case proto.PrimitiveDataType_FLOAT32, proto.PrimitiveDataType_FLOAT64:
-		return castType == proto.PrimitiveDataType_INT32 || castType == proto.PrimitiveDataType_INT64 || castType == proto.PrimitiveDataType_STRING
-	case proto.PrimitiveDataType_BOOL:
-		return castType == proto.PrimitiveDataType_INT32 || castType == proto.PrimitiveDataType_STRING
-	case proto.PrimitiveDataType_DATETIME, proto.PrimitiveDataType_TIMESTAMP:
-		return castType == proto.PrimitiveDataType_STRING || castType == proto.PrimitiveDataType_INT64
-	default:
-		return originType == castType
+	validCasts := map[proto.PrimitiveDataType]map[proto.PrimitiveDataType]bool{
+		proto.PrimitiveDataType_STRING: {
+			proto.PrimitiveDataType_INT64:     true,
+			proto.PrimitiveDataType_FLOAT64:   true,
+			proto.PrimitiveDataType_DATETIME:  true,
+			proto.PrimitiveDataType_TIMESTAMP: true,
+		},
+		proto.PrimitiveDataType_INT32: {
+			proto.PrimitiveDataType_FLOAT32: true,
+			proto.PrimitiveDataType_FLOAT64: true,
+			proto.PrimitiveDataType_STRING:  true,
+		},
+		proto.PrimitiveDataType_INT64: {
+			proto.PrimitiveDataType_FLOAT32: true,
+			proto.PrimitiveDataType_FLOAT64: true,
+			proto.PrimitiveDataType_STRING:  true,
+		},
+		proto.PrimitiveDataType_FLOAT32: {
+			proto.PrimitiveDataType_INT64:  true,
+			proto.PrimitiveDataType_STRING: true,
+		},
+		proto.PrimitiveDataType_FLOAT64: {
+			proto.PrimitiveDataType_INT64:  true,
+			proto.PrimitiveDataType_STRING: true,
+		},
+		proto.PrimitiveDataType_BOOL: {
+			proto.PrimitiveDataType_INT32:  true,
+			proto.PrimitiveDataType_STRING: true,
+		},
+		proto.PrimitiveDataType_DATETIME: {
+			proto.PrimitiveDataType_STRING: true,
+			proto.PrimitiveDataType_INT64:  true,
+		},
+		proto.PrimitiveDataType_TIMESTAMP: {
+			proto.PrimitiveDataType_STRING: true,
+			proto.PrimitiveDataType_INT64:  true,
+		},
 	}
+
+	if validCastMap, ok := validCasts[originType]; ok {
+		return validCastMap[castType]
+	}
+
+	return originType == castType
 }
 
 func castValue(scalarAttr *Attribute, originType, castType proto.PrimitiveDataType) error {
+	if scalarAttr == nil {
+		return fmt.Errorf("constant node doesn't have scalar attribute")
+	}
+
 	originalValue := scalarAttr.GetAttrValue()
 	if originalValue == nil {
 		return fmt.Errorf("constant node doesn't have value")
