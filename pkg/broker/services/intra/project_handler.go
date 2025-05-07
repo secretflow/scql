@@ -514,6 +514,14 @@ func (svc *grpcIntraSvc) ProcessInvitation(c context.Context, req *pb.ProcessInv
 		return nil, fmt.Errorf("ProcessInvitation: existing project{%+v} conflicts with invitation{%+v}", proj, invitation)
 	}
 
+	if proj.Archived {
+		return &pb.ProcessInvitationResponse{
+			Status: &pb.Status{
+				Code:    int32(pb.Code_NOT_SUPPORTED),
+				Message: fmt.Sprintf("ProcessInvitation: project %v is already archived", proj.ID),
+			}}, nil
+	}
+
 	status := pb.InvitationStatus_DECLINED
 	if req.GetRespond() == pb.InvitationRespond_ACCEPT {
 		logrus.Infof("ProcessInvitation: accept invitation invited by %s to project %s with conf %+v", invitation.Inviter, invitation.ProjectID, invitation.ProjectConf)

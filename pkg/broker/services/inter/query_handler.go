@@ -44,6 +44,16 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 	}
 
 	app := svc.app
+	// check whether project is archived
+	txn := app.MetaMgr.CreateMetaTransaction()
+	defer func() {
+		err = txn.Finish(err)
+	}()
+	res, err = common.CheckProjectArchived[pb.DistributeQueryResponse](txn, req.GetProjectId(), "DistributeQuery")
+	if res != nil || err != nil {
+		return res, err
+	}
+
 	// 2. create session
 	if _, err := app.GetSessionInfo(req.JobId); err == nil {
 		errStr := fmt.Sprintf("DistributeQuery: already existing job for id %s, err: %v", req.JobId, err)
