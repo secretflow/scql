@@ -1210,21 +1210,22 @@ func (t *translator) addBinaryNode(opName string, opType string, left *graph.Ten
 	// only support string to time currently
 	if _, ok := constTensorNeedCastOp[opType]; ok {
 		var err error
+		const ConstantDataName = "constant_data"
 
 		castIfNeeded := func(constTensor, otherTensor *graph.Tensor, targetType proto.PrimitiveDataType) (*graph.Tensor, error) {
-			if constTensor.Name == "constant_data" && (otherTensor.DType == proto.PrimitiveDataType_DATETIME || otherTensor.DType == proto.PrimitiveDataType_TIMESTAMP) {
+			if (constTensor.Name == ConstantDataName && constTensor.DType == proto.PrimitiveDataType_STRING) && (otherTensor.DType == proto.PrimitiveDataType_DATETIME || otherTensor.DType == proto.PrimitiveDataType_TIMESTAMP) {
 				inTensorPartyCodes := t.extractPartyCodeFromTensor(constTensor)
 				return t.ep.AddCastNode("cast", targetType, constTensor, inTensorPartyCodes)
 			}
 			return constTensor, nil
 		}
 
-		if left.Name == "constant_data" {
+		if left.Name == ConstantDataName {
 			left, err = castIfNeeded(left, right, right.DType)
 			if err != nil {
 				return nil, err
 			}
-		} else if right.Name == "constant_data" {
+		} else if right.Name == ConstantDataName {
 			right, err = castIfNeeded(right, left, left.DType)
 			if err != nil {
 				return nil, err
