@@ -242,7 +242,7 @@ func ArchivedProjectErrorResponse[T any](opName, projectID string) (*T, bool) {
 	var resp T
 	status := &pb.Status{
 		Code:    int32(pb.Code_NOT_SUPPORTED),
-		Message: fmt.Sprintf("%s: project %v is archived", opName, projectID),
+		Message: fmt.Sprintf("%s: project %v is already archived", opName, projectID),
 	}
 	v := reflect.ValueOf(&resp).Elem().FieldByName("Status")
 	if !v.IsValid() {
