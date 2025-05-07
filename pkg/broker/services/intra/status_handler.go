@@ -204,18 +204,13 @@ func checkConflict(app *application.App, local, remote *storage.ProjectMeta, loc
 	// check project conflict
 	localProj := local.Proj.Proj
 	remoteProj := remote.Proj.Proj
-	remoteProjArchived := remoteProj.Archived
-	remoteProj.Archived = localProj.Archived // ignore comparing Archived
-	defer func() {
-		remoteProj.Archived = remoteProjArchived
-	}()
 
-	eq, err := localProj.Equals(&remoteProj)
+	hasConflict, err := localProj.Conflicts(&remoteProj)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compare project between local project and remote project, %v", err)
 	}
 
-	if !eq {
+	if hasConflict {
 		conflict.Items = append(conflict.Items, &pb.ProjectConflict_ConflictItem{
 			Message: fmt.Sprintf("project info conflict: '%+v' in party %s; '%+v' in party %s", localProj, localParty, remoteProj, remoteParty),
 		})
