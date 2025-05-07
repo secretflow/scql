@@ -45,11 +45,16 @@ func validateAndGetProjectConf(app *application.App, projectID string) (*pb.Proj
 	if err != nil {
 		return nil, err
 	}
+
 	var existingProject *storage.Project
 	existingProject, err = app.MetaMgr.GetProject(projectID)
 	if err != nil {
 		return nil, err
 	}
+	if existingProject.Archived {
+		return nil, fmt.Errorf("project %s is archived", projectID)
+	}
+
 	projConf := &pb.ProjectConfig{}
 	err = message.ProtoUnmarshal([]byte(existingProject.ProjectConf), projConf)
 	if err != nil {

@@ -125,6 +125,11 @@ func (svc *grpcIntraSvc) CreateView(ctx context.Context, req *pb.CreateViewReque
 		err = txn.Finish(err)
 	}()
 
+	resp, err = common.CheckProjectArchived[pb.CreateViewResponse](txn, req.GetProjectId(), "CreateView")
+	if resp != nil || err != nil {
+		return resp, err
+	}
+
 	tables, err := txn.GetAllTables(req.GetProjectId())
 	if err != nil {
 		return nil, fmt.Errorf("CreateView: %s", err.Error())
@@ -193,20 +198,35 @@ func (svc *grpcIntraSvc) CreateView(ctx context.Context, req *pb.CreateViewReque
 		}}, nil
 }
 
-func (svc *grpcIntraSvc) DropView(ctx context.Context, req *pb.DropViewRequest) (*pb.DropViewResponse, error) {
+func (svc *grpcIntraSvc) DropView(ctx context.Context, req *pb.DropViewRequest) (resp *pb.DropViewResponse, err error) {
+	if req == nil || req.GetProjectId() == "" || req.GetViewName() == "" {
+		return nil, status.New(pb.Code_BAD_REQUEST, "DropView: illegal request")
+	}
+
+	app := svc.app
+	txn := app.MetaMgr.CreateMetaTransaction()
+	defer func() {
+		err = txn.Finish(err)
+	}()
+
+	resp, err = common.CheckProjectArchived[pb.DropViewResponse](txn, req.GetProjectId(), "DropView")
+	if resp != nil || err != nil {
+		return resp, err
+	}
+
 	dropTableReq := &pb.DropTableRequest{
 		ProjectId: req.GetProjectId(),
 		TableName: req.GetViewName(),
 	}
-	resp, err := svc.DropTable(ctx, dropTableReq)
+	dropTableResp, err := svc.DropTable(ctx, dropTableReq)
 	if err != nil {
 		return nil, fmt.Errorf("DropView: drop table err: %v", err)
 	}
 
-	if resp.Status == nil {
+	if dropTableResp.Status == nil {
 		return nil, fmt.Errorf("DropView: status is nil")
 	}
-	if resp.GetStatus().GetCode() == 0 {
+	if dropTableResp.GetStatus().GetCode() == 0 {
 		return &pb.DropViewResponse{
 			Status: &pb.Status{
 				Code:    int32(0),
@@ -216,8 +236,8 @@ func (svc *grpcIntraSvc) DropView(ctx context.Context, req *pb.DropViewRequest) 
 	} else {
 		return &pb.DropViewResponse{
 			Status: &pb.Status{
-				Code:    resp.GetStatus().GetCode(),
-				Message: resp.GetStatus().GetMessage(),
+				Code:    dropTableResp.GetStatus().GetCode(),
+				Message: dropTableResp.GetStatus().GetMessage(),
 			},
 		}, nil
 	}

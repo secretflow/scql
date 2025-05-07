@@ -38,9 +38,14 @@ func (svc *grpcIntraSvc) CreateTable(c context.Context, req *pb.CreateTableReque
 		err = txn.Finish(err)
 	}()
 
+	resp, err = common.CheckProjectArchived[pb.CreateTableResponse](txn, req.GetProjectId(), "CreateTable")
+	if resp != nil || err != nil {
+		return resp, err
+	}
+
 	members, err := txn.GetProjectMembers(req.GetProjectId())
 	if err != nil {
-		return nil, fmt.Errorf("CreateTable: get project %v err: %v", req.GetProjectId(), err)
+		return nil, fmt.Errorf("CreateTable: get project members err: %v", err)
 	}
 	tables, err := txn.GetAllTables(req.GetProjectId())
 	if err != nil {
@@ -185,6 +190,11 @@ func (svc *grpcIntraSvc) DropTable(c context.Context, req *pb.DropTableRequest) 
 	defer func() {
 		err = txn.Finish(err)
 	}()
+
+	resp, err = common.CheckProjectArchived[pb.DropTableResponse](txn, req.GetProjectId(), "DropTable")
+	if resp != nil || err != nil {
+		return resp, err
+	}
 
 	tableId := storage.TableIdentifier{
 		ProjectID: req.GetProjectId(),
