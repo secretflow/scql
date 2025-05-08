@@ -109,6 +109,11 @@ func (*Interpreter) compileCore(enginesInfo *graph.EnginesInfo, req *pb.CompileQ
 		return nil, err
 	}
 
+	graphOptimizer := graph.NewGraphOptimizer()
+	if err := graphOptimizer.Optimize(ep); err != nil {
+		return nil, err
+	}
+
 	graphChecker := graph.NewGraphChecker()
 	if err := graphChecker.Check(ep); err != nil {
 		return nil, err

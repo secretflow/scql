@@ -228,3 +228,48 @@ func TestRemoveSensitiveInfo(t *testing.T) {
 		r.Equal(expected, actual)
 	}
 }
+
+func TestIsDateString(t *testing.T) {
+	r := require.New(t)
+	type pair struct {
+		in     string
+		expect bool
+	}
+	testCases := []pair{
+		{"2024-05-01", true},
+		{"2024-5-1", false},
+		{"2024-05-01 11:12:13", true},
+		{"2024-05-01T11:12:13Z", false},
+		{"05/01/2024", false},
+		{"", false},
+		{"2024-05-01 1:12:13", false},
+	}
+	for _, ca := range testCases {
+		r.Equal(ca.expect, IsDateString(ca.in), ca.in)
+	}
+}
+
+func TestStringToUnixMilli(t *testing.T) {
+	r := require.New(t)
+	type pair struct {
+		in         string
+		expectUnix int64
+		expectErr  bool
+	}
+	testCases := []pair{
+		{"2024-05-01", 1714521600000, false},
+		{"2024-05-01 11:12:13", 1714561933000, false},
+		{"2024-05-01T11:12:13Z", 0, true},
+		{"", 0, true},
+		{"2024-05-01 1:12:13", 0, true},
+	}
+	for _, ca := range testCases {
+		unixMilli, err := StringToUnixMilli(ca.in)
+		if ca.expectErr {
+			r.Error(err, ca.in)
+		} else {
+			r.NoError(err, ca.in)
+			r.Equal(ca.expectUnix, unixMilli, ca.in)
+		}
+	}
+}

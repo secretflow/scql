@@ -21,6 +21,7 @@ import (
 
 	. "github.com/pingcap/check"
 
+	"github.com/secretflow/scql/pkg/interpreter/graph"
 	"github.com/secretflow/scql/pkg/planner/core"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/util/mock"
@@ -60,6 +61,11 @@ func (s *testTranslatorSuite) TestTranslateWithCCL(c *C) {
 		c.Assert(err, IsNil)
 		ep, err := t.Translate(lp)
 		c.Assert(err, IsNil, Commentf("for %s", sql))
+
+		graphOptimizer := graph.NewGraphOptimizer()
+		err = graphOptimizer.Optimize(ep)
+		c.Assert(err, IsNil)
+
 		graphStr := ep.DumpGraphviz()
 		// if you want to copy the graph created by DumpGraphviz, uncomment this line
 		c.Log(graphStr)
