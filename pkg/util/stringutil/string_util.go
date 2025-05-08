@@ -336,9 +336,8 @@ func RandString(n int) string {
 }
 
 func IsDateString(s string) bool {
-	matchedFull, _ := regexp.MatchString(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$`, s)
-	matchedShort, _ := regexp.MatchString(`^\d{4}-\d{2}-\d{2}$`, s)
-	return matchedFull || matchedShort
+	matched, _ := regexp.MatchString(`^\d{4}-\d{2}-\d{2}(\s\d{2}:\d{2}:\d{2})?$`, s)
+	return matched
 }
 
 func StringToUnixMilli(s string) (int64, error) {
