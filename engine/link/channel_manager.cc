@@ -47,12 +47,13 @@ std::shared_ptr<google::protobuf::RpcChannel> ChannelManager::Create(
   auto addr = remote_addr;
   // add "http://" prefix if protocol is http:proto/http or load balancer is not
   // empty
+  // reference:
+  // https://github.com/apache/brpc/pull/1973/files#diff-2a8e66afb2c4f2cbc0c9d5dca8180a1f9ef53b0d4ce8649bd64ee602fec44165R430
   bool need_prefix_for_http =
       std::string(options.brpc_options.protocol.name()) == "http:proto" ||
       std::string(options.brpc_options.protocol.name()) == "http" ||
+      std::string(options.brpc_options.protocol.name()) == "http:json" ||
       options.load_balancer != "";
-  // add "http://" prefix if load balancer is not empty and no "http[s]://"
-  // prefix
   if (need_prefix_for_http && !absl::StartsWith(addr, "http://") &&
       !absl::StartsWith(addr, "https://")) {
     addr = absl::StrCat("http://", addr);
