@@ -60,6 +60,10 @@ func (rule optConstantCast) optimize(graph *Graph) error {
 
 			// find broadcast node
 			var broadCastNode *ExecutionNode
+			// only support constant -> broadcast -> cast single path
+			if len(node.Edges) != 1 {
+				return nil
+			}
 			for edge := range node.Edges {
 				if edge.To.OpType == "BroadcastTo" {
 					broadCastNode = edge.To
@@ -71,6 +75,9 @@ func (rule optConstantCast) optimize(graph *Graph) error {
 
 			// find cast node
 			var castNode *ExecutionNode
+			if len(broadCastNode.Edges) != 1 {
+				return nil
+			}
 			for edge := range broadCastNode.Edges {
 				if edge.To.OpType == "Cast" {
 					castNode = edge.To
