@@ -147,6 +147,23 @@ func RevokeColumnConstraintsWithCheck(t *storage.MetaTransaction, projectID, par
 	return nil
 }
 
+func ArchiveProjectWithCheck(t *storage.MetaTransaction, project *storage.Project, party string) error {
+	members, err := t.GetProjectMembers(project.ID)
+	if err != nil {
+		return fmt.Errorf("ArchiveProjectWithCheck: GetProject %v", err)
+	}
+	if !slices.Contains(members, party) {
+		return fmt.Errorf("ArchiveProjectWithCheck: party %s is not in project %s", party, project.ID)
+	}
+
+	project.Archived = true
+	err = t.UpdateProject(*project)
+	if err != nil {
+		return fmt.Errorf("ArchiveProjectWithCheck: update project status error: %v", err)
+	}
+	return nil
+}
+
 func AddTableWithCheck(t *storage.MetaTransaction, projectID, party string, table storage.TableMeta) error {
 	// check owner
 	if table.Table.Owner != party {

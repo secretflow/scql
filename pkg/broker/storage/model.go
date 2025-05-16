@@ -38,34 +38,35 @@ type Project struct {
 	UpdatedAt   time.Time
 }
 
-func (p *Project) Equals(other *Project) (bool, error) {
-	// compare each field except for time fields
+// Util func for CheckAndUpdateStatus
+// Returns true if the two projects conflict
+func (p *Project) Conflicts(other *Project) (bool, error) {
+	// compare each field except for time/archived fields
 	if p.ID != other.ID ||
 		p.Name != other.Name ||
 		p.Description != other.Description ||
-		p.Creator != other.Creator ||
-		p.Archived != other.Archived {
-		return false, nil
+		p.Creator != other.Creator {
+		return true, nil
 	}
 
 	var projConf pb.ProjectConfig
 	if len(p.ProjectConf) == 0 && len(other.ProjectConf) == 0 {
-		return true, nil
+		return false, nil
 	}
 	err := message.ProtoUnmarshal([]byte(p.ProjectConf), &projConf)
 
 	if err != nil {
-		return false, err
+		return true, err
 	}
 
 	var otherProjConf pb.ProjectConfig
 	err = message.ProtoUnmarshal([]byte(other.ProjectConf), &otherProjConf)
 
 	if err != nil {
-		return false, err
+		return true, err
 	}
 
-	return proto.Equal(&projConf, &otherProjConf), nil
+	return !proto.Equal(&projConf, &otherProjConf), nil
 }
 
 type Member struct {

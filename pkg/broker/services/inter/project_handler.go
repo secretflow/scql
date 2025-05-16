@@ -106,6 +106,14 @@ func (svc *grpcInterSvc) ReplyInvitation(c context.Context, req *pb.ReplyInvitat
 	if err != nil {
 		return nil, fmt.Errorf("ReplyInvitation: %v", err)
 	}
+	if proj.Archived {
+		return &pb.ReplyInvitationResponse{
+			Status: &pb.Status{
+				Code:    int32(pb.Code_NOT_SUPPORTED),
+				Message: fmt.Sprintf("ProcessInvitation: project %v is already archived", proj.ID),
+			}}, nil
+	}
+
 	if proj.Creator != svc.app.Conf.PartyCode {
 		return nil, fmt.Errorf("ReplyInvitation: project %v not owned by self party %v", proj.ID, svc.app.Conf.PartyCode)
 	}

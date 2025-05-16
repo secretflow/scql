@@ -40,6 +40,11 @@ func (svc *grpcIntraSvc) GrantCCL(ctx context.Context, req *pb.GrantCCLRequest) 
 		err = txn.Finish(err)
 	}()
 
+	resp, err = common.CheckProjectArchived[pb.GrantCCLResponse](txn, req.GetProjectId(), "GrantCCL")
+	if resp != nil || err != nil {
+		return resp, err
+	}
+
 	members, err := txn.GetProjectMembers(req.GetProjectId())
 	if err != nil {
 		return nil, fmt.Errorf("GrantCCL: get project %s err: %v", req.GetProjectId(), err)
@@ -95,24 +100,30 @@ func (svc *grpcIntraSvc) RevokeCCL(c context.Context, req *pb.RevokeCCLRequest) 
 	if err != nil {
 		return nil, fmt.Errorf("RevokeCCL: %v", err)
 	}
+
 	app := svc.app
-	var members []string
-	err = app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
-		var err error
-		err = common.RevokeColumnConstraintsWithCheck(txn, req.GetProjectId(), app.Conf.PartyCode, privIDs)
-		if err != nil {
-			return fmt.Errorf("RevokeCCL: %v", err)
-		}
-		// get sync parties
-		members, err = txn.GetProjectMembers(req.GetProjectId())
-		if err != nil {
-			return fmt.Errorf("RevokeCCL: GetProject: %v", err)
-		}
-		return nil
-	})
-	if err != nil {
-		return nil, err
+	txn := app.MetaMgr.CreateMetaTransaction()
+	defer func() {
+		err = txn.Finish(err)
+	}()
+
+	resp, err = common.CheckProjectArchived[pb.RevokeCCLResponse](txn, req.GetProjectId(), "RevokeCCL")
+	if resp != nil || err != nil {
+		return resp, err
 	}
+
+	err = common.RevokeColumnConstraintsWithCheck(txn, req.GetProjectId(), app.Conf.PartyCode, privIDs)
+	if err != nil {
+		return nil, fmt.Errorf("RevokeCCL: %v", err)
+	}
+
+	// get sync parties
+	var members []string
+	members, err = txn.GetProjectMembers(req.GetProjectId())
+	if err != nil {
+		return nil, fmt.Errorf("RevokeCCL: GetProject: %v", err)
+	}
+
 	// sync to other parties
 	go func() {
 		var targetParties []string
@@ -145,6 +156,12 @@ func (svc *grpcIntraSvc) ShowCCL(ctx context.Context, req *pb.ShowCCLRequest) (r
 	defer func() {
 		err = txn.Finish(err)
 	}()
+
+	resp, err = common.CheckProjectArchived[pb.ShowCCLResponse](txn, req.GetProjectId(), "ShowCCL")
+	if resp != nil || err != nil {
+		return resp, err
+	}
+
 	// check project exist
 	projectAndMembers, err := txn.GetProjectAndMembers(req.GetProjectId())
 	if err != nil {

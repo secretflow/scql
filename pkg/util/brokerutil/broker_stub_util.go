@@ -112,6 +112,28 @@ func (c *Command) CreateProject(projectID, projectConf string) (string, error) {
 	}
 }
 
+func (c *Command) ArchiveProject(projectID string) (string, error) {
+	if projectID == "" {
+		return "", fmt.Errorf("ArchiveProject: projectId must not be empty")
+	}
+
+	req := &pb.ArchiveProjectRequest{ProjectId: projectID}
+	response := &pb.ArchiveProjectResponse{}
+	err := c.intraStub.ArchiveProject(c.host, req, response)
+	if err != nil {
+		return "", fmt.Errorf("ArchiveProject: failed to call archiving project service: %v", err)
+	}
+
+	if response.Status == nil {
+		return "", fmt.Errorf("ArchiveProject: invalid response: status is nil")
+	}
+	if response.GetStatus().GetCode() == 0 {
+		return response.GetStatus().Message, nil
+	} else {
+		return "", fmt.Errorf("ArchiveProject: status: %v", response.GetStatus())
+	}
+}
+
 func (c *Command) CreateView(projectId, viewName, body string) error {
 	if projectId == "" {
 		return fmt.Errorf("CreateView: projectId must not be empty")

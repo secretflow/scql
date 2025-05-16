@@ -51,8 +51,22 @@ func (svc *grpcInterSvc) SyncInfo(c context.Context, req *pb.SyncInfoRequest) (r
 		err = txn.Finish(err)
 	}()
 
+	resp, err = common.CheckProjectArchived[pb.SyncInfoResponse](txn, req.GetProjectId(), "SyncInfo")
+	if resp != nil || err != nil {
+		return resp, err
+	}
+
 	action := req.GetChangeEntry().GetAction()
 	switch action {
+	case pb.ChangeEntry_ArchiveProject:
+		proj, err := storage.AddShareLock(txn).GetProject(req.GetProjectId())
+		if err != nil {
+			return nil, fmt.Errorf("SyncInfo: get project %v err: %v", req.GetProjectId(), err)
+		}
+		err = common.ArchiveProjectWithCheck(txn, &proj, req.GetClientId().GetCode())
+		if err != nil {
+			return nil, fmt.Errorf("SyncInfo ArchiveProject: archive project %v err: %v", req.GetProjectId(), err)
+		}
 	case pb.ChangeEntry_AddProjectMember:
 		proj, err := storage.AddShareLock(txn).GetProject(req.GetProjectId())
 		if err != nil {
@@ -225,6 +239,15 @@ func (svc *grpcInterSvc) AskInfo(c context.Context, req *pb.AskInfoRequest) (res
 func (svc *grpcInterSvc) ExchangeJobInfo(ctx context.Context, req *pb.ExchangeJobInfoRequest) (resp *pb.ExchangeJobInfoResponse, err error) {
 	if req == nil || req.GetProjectId() == "" || req.GetJobId() == "" {
 		return nil, status.New(pb.Code_BAD_REQUEST, fmt.Sprintf("ExchangeJobInfo illegal request: %+v", req))
+	}
+
+	txn := svc.app.MetaMgr.CreateMetaTransaction()
+	defer func() {
+		err = txn.Finish(err)
+	}()
+	resp, err = common.CheckProjectArchived[pb.ExchangeJobInfoResponse](txn, req.GetProjectId(), "ExchangeJobInfo")
+	if resp != nil || err != nil {
+		return resp, err
 	}
 
 	info, err := svc.app.GetSessionInfo(req.GetJobId())

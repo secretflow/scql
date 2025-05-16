@@ -23,6 +23,7 @@ const (
 	CancelQueryPath          = "/intra/query/cancel"
 	ExplainQueryPath         = "/intra/query/explain"
 	CreateProjectPath        = "/intra/project/create"
+	ArchiveProjectPath       = "/intra/project/archive"
 	ListProjectsPath         = "/intra/project/list"
 	InviteMemberPath         = "/intra/member/invite"
 	ListInvitationsPath      = "/intra/invitation/list"
