@@ -123,6 +123,20 @@ var commonSecurityConf = &proto.SecurityConfig{
 			TableName:    "ta",
 			ColumnName:   "income",
 		},
+		{
+			PartyCode:    "alice",
+			Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+			DatabaseName: "",
+			TableName:    "ta",
+			ColumnName:   "date",
+		},
+		{
+			PartyCode:    "bob",
+			Visibility:   proto.SecurityConfig_ColumnControl_PLAINTEXT,
+			DatabaseName: "",
+			TableName:    "ta",
+			ColumnName:   "date",
+		},
 	},
 }
 
@@ -146,6 +160,10 @@ var commonCatalog = &proto.Catalog{
 				{
 					Name: "age",
 					Type: "int",
+				},
+				{
+					Name: "date",
+					Type: "datetime",
 				},
 			},
 			IsView:   false,
@@ -182,6 +200,22 @@ var commonCatalog = &proto.Catalog{
 }
 
 var testCases = []compileTestCase{
+	{
+		req: &proto.CompileQueryRequest{
+			Query:  "SELECT ta.ID, ta.date FROM ta right join tb on ta.ID = tb.ID where ta.date > '2025-04-23 12:25:42'",
+			DbName: "",
+			Issuer: &proto.PartyId{
+				Code: "alice",
+			},
+			IssuerAsParticipant: true,
+			SecurityConf:        commonSecurityConf,
+			Catalog:             commonCatalog,
+			CompileOpts:         &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
+			CreatedAt:           timestamppb.New(time.Now()),
+		},
+		ok:           true,
+		workPartyNum: 2,
+	},
 	{
 		req: &proto.CompileQueryRequest{
 			Query:  "SELECT ta.ID, ta.income FROM ta WHERE ta.income > ALL(SELECT ta.income AS joined_income FROM ta INNER JOIN tb ON ta.ID = tb.ID)",
