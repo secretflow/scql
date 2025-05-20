@@ -14,6 +14,8 @@
 
 #include "engine/datasource/csvdb_adaptor.h"
 
+#include <exception>
+
 #include "arrow/type.h"
 #include "butil/files/temp_file.h"
 #include "gflags/gflags.h"
@@ -95,7 +97,6 @@ TEST_F(CsvdbAdaptorTest, NormalQuery) {
 
   // When
   auto results = csvdb_adaptor.ExecQuery(query, outputs);
-
   // Then
   EXPECT_EQ(results.size(), 4);
   CheckTensorEqual(results[0], TensorFrom(arrow::int64(), "[1,2,3,4]"));

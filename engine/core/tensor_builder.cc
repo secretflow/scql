@@ -28,6 +28,7 @@ void TensorBuilder::Finish(std::shared_ptr<Tensor>* out) {
   THROW_IF_ARROW_NOT_OK(std::move(result).Value(&chunked_arr));
 
   *out = TensorFrom(std::move(chunked_arr));
+  chunks_.clear();
 }
 
 void TensorBuilder::FinishInternal() {
@@ -35,6 +36,7 @@ void TensorBuilder::FinishInternal() {
 
   arrow::ArrayBuilder* builder = GetBaseBuilder();
   THROW_IF_ARROW_NOT_OK(builder->Finish(&arr));
+  builder->Reset();
 
   chunks_.push_back(std::move(arr));
 }

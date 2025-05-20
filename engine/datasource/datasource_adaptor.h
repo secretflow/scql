@@ -14,12 +14,17 @@
 
 #pragma once
 
+#include <future>
 #include <memory>
+#include <optional>
 #include <string>
+#include <vector>
 
 #include "spdlog/spdlog.h"
 
 #include "engine/core/tensor.h"
+#include "engine/core/tensor_constructor.h"
+#include "engine/util/concurrent_queue.h"
 
 #include "api/core.pb.h"
 
@@ -34,6 +39,13 @@ struct ColumnDesc {
       : name(std::move(name)), dtype(dtype) {}
 };
 
+class ChunkedResult {
+ public:
+  virtual ~ChunkedResult() = default;
+  virtual std::optional<arrow::ChunkedArrayVector> Fetch() = 0;
+  virtual std::shared_ptr<arrow::Schema> GetSchema() = 0;
+};
+
 class DatasourceAdaptor {
  public:
   virtual ~DatasourceAdaptor() = default;
@@ -42,10 +54,7 @@ class DatasourceAdaptor {
   std::vector<TensorPtr> ExecQuery(
       const std::shared_ptr<spdlog::logger>& logger, const std::string& query,
       const std::vector<ColumnDesc>& expected_outputs,
-      const TensorBuildOptions& options = {}) {
-    auto tensors = GetQueryResult(query, options);
-    return ConvertDataTypeToExpected(logger, tensors, expected_outputs);
-  }
+      const TensorBuildOptions& options = {});
 
   std::vector<TensorPtr> ExecQuery(
       const std::string& query, const std::vector<ColumnDesc>& expected_outputs,
@@ -55,14 +64,26 @@ class DatasourceAdaptor {
   }
 
  private:
-  // Get result from data source
-  virtual std::vector<TensorPtr> GetQueryResult(
-      const std::string& query, const TensorBuildOptions& options) = 0;
+  // Send query and return schema
+  virtual std::shared_ptr<ChunkedResult> SendQuery(
+      const std::string& query) = 0;
   // It will complain if the actual outputs not matched with expected_outputs.
-  static std::vector<TensorPtr> ConvertDataTypeToExpected(
+  static arrow::ChunkedArrayVector ConvertDataTypeToExpected(
       const std::shared_ptr<spdlog::logger>& logger,
-      std::vector<TensorPtr>& tensors,
+      const arrow::ChunkedArrayVector& chunked_arrs,
       const std::vector<ColumnDesc>& expected_outputs);
+
+  static std::vector<TensorPtr> CreateDiskTensor(
+      const std::shared_ptr<spdlog::logger>& logger,
+      const std::vector<ColumnDesc>& expected_outputs,
+      const TensorBuildOptions& options,
+      util::SimpleChannel<arrow::ChunkedArrayVector>& data_queue);
+
+  static std::vector<TensorPtr> CreateMemTensor(
+      const std::shared_ptr<spdlog::logger>& logger,
+      const std::vector<ColumnDesc>& expected_outputs,
+      [[maybe_unused]] const TensorBuildOptions& options,
+      util::SimpleChannel<arrow::ChunkedArrayVector>& data_queue);
 };
 
 }  // namespace scql::engine

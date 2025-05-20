@@ -29,13 +29,13 @@ class TensorBuilder {
 
   // Return result of builder as a Tensor object.
   void Finish(std::shared_ptr<Tensor>* out);
+  std::shared_ptr<arrow::DataType> Type() { return GetBaseBuilder()->type(); }
 
   // Append a null value to builder
   virtual void AppendNull() = 0;
 
  protected:
   void FinishInternal();
-
   virtual arrow::ArrayBuilder* GetBaseBuilder() = 0;
 
   arrow::ArrayVector chunks_;

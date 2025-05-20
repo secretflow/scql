@@ -43,22 +43,19 @@ class Bucket : public Operator {
  private:
   struct ReadResult {
     arrow::ArrayVector data_arrays;
-    bool is_end;
     arrow::ChunkedArrayVector indice;
 
    public:
     ReadResult() = default;
-    ReadResult(arrow::ArrayVector data_arrays, bool is_end,
-               arrow::ChunkedArrayVector indice)
+    ReadResult(arrow::ArrayVector data_arrays, arrow::ChunkedArrayVector indice)
         : data_arrays(std::move(data_arrays)),
-          is_end(is_end),
+
           indice(std::move(indice)) {}
   };
   static constexpr int kBatchParallelism = 10;
-  util::BlockingConcurrentQueue<ReadResult> read_queue_{kBatchParallelism};
-  util::BlockingConcurrentQueue<
-      std::pair<std::vector<arrow::ChunkedArrayVector>, bool>>
-      write_queue_{kBatchParallelism};
+  util::SimpleChannel<ReadResult> read_queue_{kBatchParallelism};
+  util::SimpleChannel<std::vector<arrow::ChunkedArrayVector>> write_queue_{
+      kBatchParallelism};
 };
 
 }  // namespace scql::engine::op

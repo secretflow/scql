@@ -21,6 +21,7 @@
 #include <filesystem>
 #include <future>
 #include <memory>
+#include <optional>
 #include <queue>
 #include <string>
 
@@ -205,32 +206,27 @@ void Bucket::Execute(ExecContext* ctx) {
   auto cal_future = std::async(std::launch::async, [&] {
     std::vector<std::future<void>> futures;
     int i = 0;
-    while (true) {
-      auto read_result = read_queue_.Pop();
-      if (read_result.is_end) {
-        SPDLOG_INFO("Take to end");
-        break;
-      }
+    auto read_result = read_queue_.Pop();
+    while (read_result.has_value()) {
       SPDLOG_INFO("Take batch: {}", i);
-      auto out_arrays = FilterByIndex(
-          read_result.data_arrays, read_result.indice, output_pbs, bucket_num);
-      write_queue_.Push({out_arrays, false});
+      auto out_arrays =
+          FilterByIndex(read_result.value().data_arrays,
+                        read_result.value().indice, output_pbs, bucket_num);
+      write_queue_.Push(out_arrays);
       i++;
+      read_result = read_queue_.Pop();
     }
-    write_queue_.Push({{}, true});
+    write_queue_.Close();
   });
 
   auto write_future = std::async(std::launch::async, [&] {
     int i = 0;
-    while (true) {
-      auto data = write_queue_.Pop();
-      if (data.second) {
-        SPDLOG_INFO("Write to end");
-        break;
-      }
+    auto data = write_queue_.Pop();
+    while (data.has_value()) {
       SPDLOG_INFO("Write batch: {}", i);
-      WriteArrays(tensor_constructors, data.first, bucket_num);
+      WriteArrays(tensor_constructors, data.value(), bucket_num);
       i++;
+      data = write_queue_.Pop();
     }
   });
 
@@ -272,7 +268,7 @@ void Bucket::Execute(ExecContext* ctx) {
               result_builder[i].Finish(&indice);
               indices[i] = indice->ToArrowChunkedArray();
             }
-            read_queue_.Push({batch_arrays, false, indices});
+            read_queue_.Push({batch_arrays, indices});
           },
           std::move(batch_arrays));
       futures.push(std::move(f));
@@ -286,13 +282,13 @@ void Bucket::Execute(ExecContext* ctx) {
       futures.front().get();
       futures.pop();
     }
-    read_queue_.Push({{}, true, {}});
-    SPDLOG_INFO("Read to end");
+    // close read queue
+    read_queue_.Close();
     cal_future.get();
   } catch (const std::exception& e) {
     SPDLOG_ERROR("read/cal error: {}", e.what());
-    read_queue_.Push({{}, true, {}});
-    write_queue_.Push({{}, true});
+    // close read queue
+    read_queue_.Close();
     throw e;
   }
   write_future.get();
