@@ -14,20 +14,32 @@
 
 #pragma once
 
+#include <atomic>
 #include <condition_variable>
 #include <mutex>
+#include <optional>
 #include <queue>
+#include <utility>
+
+#include "yacl/base/exception.h"
 
 namespace scql::engine::util {
 template <typename T>
-class BlockingConcurrentQueue {
+class SimpleChannel {
  public:
-  explicit BlockingConcurrentQueue(size_t capacity) { capacity_ = capacity; }
-  ~BlockingConcurrentQueue() {}
+  explicit SimpleChannel(size_t capacity) : capacity_(capacity) {}
+  ~SimpleChannel() {}
 
   void Push(T& item) {
+    if (closed_) {
+      cond_.notify_all();
+      YACL_THROW("send data to a closed queue");
+    }
     {
       std::unique_lock<std::mutex> lock(mutex_);
+      if (closed_) {
+        YACL_THROW("send data to a closed queue");
+      }
       while (queue_.size() >= capacity_) {
         cond_.wait(lock, [&] { return queue_.size() < capacity_; });
       }
@@ -37,22 +49,34 @@ class BlockingConcurrentQueue {
   }
 
   void Push(T&& item) {
+    if (closed_) {
+      cond_.notify_all();
+      YACL_THROW("send data to a closed queue");
+    }
     {
       std::unique_lock<std::mutex> lock(mutex_);
+      if (closed_) {
+        YACL_THROW("send data to a closed queue");
+      }
       while (queue_.size() >= capacity_) {
         cond_.wait(lock, [&] { return queue_.size() < capacity_; });
       }
       queue_.push(std::forward<T>(item));
     }
+
     cond_.notify_all();
   }
 
-  T Pop() {
+  std::optional<T> Pop() {
     T item;
     {
       std::unique_lock<std::mutex> lock(mutex_);
-      while (queue_.empty()) {
-        cond_.wait(lock, [&] { return !queue_.empty(); });
+      while (queue_.empty() && !closed_) {
+        cond_.wait(lock, [&] { return !queue_.empty() || closed_; });
+      }
+      // return empty item if queue is closed and queue is empty
+      if (closed_ && queue_.empty()) {
+        return std::nullopt;
       }
       item = queue_.front();
       queue_.pop();
@@ -61,10 +85,22 @@ class BlockingConcurrentQueue {
     return item;
   }
 
+  // close queue, if a queue is empty, all Pop() will return empty item.
+  void Close() {
+    if (closed_) {
+      YACL_THROW("close a closed queue");
+    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    closed_ = true;
+    cond_.notify_all();
+  }
+  bool IsClosed() { return closed_; }
+
  private:
-  std::queue<T> queue_;
+  std::atomic_bool closed_{false};
   std::mutex mutex_;
   std::condition_variable cond_;
   size_t capacity_;
+  std::queue<T> queue_;
 };
 }  // namespace scql::engine::util

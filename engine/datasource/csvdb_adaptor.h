@@ -14,12 +14,30 @@
 
 #pragma once
 
+#include <utility>
+
+#include "duckdb/main/query_result.hpp"
+
 #include "engine/datasource/datasource_adaptor.h"
 
 #include "engine/datasource/csvdb_conf.pb.h"
 #include "engine/datasource/datasource.pb.h"
 
 namespace scql::engine {
+
+class CsvdbChunkedResult : public ChunkedResult {
+ public:
+  CsvdbChunkedResult(std::shared_ptr<arrow::Schema>& schema,
+                     std::unique_ptr<duckdb::QueryResult> duck_result)
+      : schema_(schema), duck_result_(std::move(duck_result)) {}
+
+  std::optional<arrow::ChunkedArrayVector> Fetch() override;
+  std::shared_ptr<arrow::Schema> GetSchema() override { return schema_; };
+
+ private:
+  std::shared_ptr<arrow::Schema> schema_;
+  std::unique_ptr<duckdb::QueryResult> duck_result_;
+};
 
 class CsvdbAdaptor : public DatasourceAdaptor {
  public:
@@ -28,10 +46,9 @@ class CsvdbAdaptor : public DatasourceAdaptor {
   ~CsvdbAdaptor() override = default;
 
  private:
-  std::vector<TensorPtr> GetQueryResult(
-      const std::string& query, const TensorBuildOptions& options) override;
+  // Send query and return schema
+  std::shared_ptr<ChunkedResult> SendQuery(const std::string& query) override;
 
   csv::CsvdbConf csvdb_conf_;
 };
-
 }  // namespace scql::engine

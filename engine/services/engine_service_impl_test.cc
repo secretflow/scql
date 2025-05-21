@@ -518,6 +518,7 @@ TEST_P(EngineServiceImpl2PartiesTest, RunExecutionPlan) {
 
     usleep(100 * 1000);  // wait report
     ASSERT_EQ(service.req_id, "test_session_id");
+    ASSERT_EQ(service.status.message(), "");
     ASSERT_EQ(service.status.code(), 0);
     check_equal(service.first_tensor, test_case.inner_join_result);
 

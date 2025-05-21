@@ -27,6 +27,9 @@ cc_library(
         "//engine/core:arrow_helper",
         "//engine/core:tensor",
         "//engine/core:tensor_constructor",
+        "//engine/util:concurrent_queue",
+        "//engine/util:filepath_helper",
+        "//engine/util:tensor_util",
         "@spdlog",
     ],
 )
@@ -277,14 +280,6 @@ cc_binary(
         "@abseil-cpp//absl/flags:flag",
         "@abseil-cpp//absl/flags:parse",
         "@googletest//:gtest",
-    ],
-)
-
-scql_cc_test(
-    name = "dp_adaptor_test",
-    srcs = ["dp_adaptor_test.cc"],
-    deps = [
-        ":dp_adaptor",
     ],
 )
 

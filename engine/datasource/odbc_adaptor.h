@@ -16,15 +16,38 @@
 
 #include <memory>
 
+#include "Poco/Data/RecordSet.h"
 #include "Poco/Data/Session.h"
 #include "Poco/Data/SessionPool.h"
+#include "arrow/type_fwd.h"
 
+#include "engine/core/primitive_builder.h"
+#include "engine/core/string_tensor_builder.h"
 #include "engine/datasource/datasource_adaptor.h"
 #include "engine/datasource/odbc_connector.h"
 
 #include "engine/datasource/datasource.pb.h"
 
 namespace scql::engine {
+
+class OdbcChunkedResult : public ChunkedResult {
+ public:
+  explicit OdbcChunkedResult(std::unique_ptr<Poco::Data::RecordSet> rs)
+      : rs_(std::move(rs)) {
+    Init();
+  }
+
+  std::optional<arrow::ChunkedArrayVector> Fetch() override;
+  std::shared_ptr<arrow::Schema> GetSchema() override { return schema_; };
+
+ private:
+  void Init();
+  std::unique_ptr<Poco::Data::RecordSet> rs_;
+  std::shared_ptr<arrow::Schema> schema_;
+  bool more_ = false;
+  std::vector<std::unique_ptr<TensorBuilder>> builders_;
+  std::vector<std::function<void(Poco::Dynamic::Var&)>> column_value_handlers_;
+};
 
 /// @brief OdbcAdaptor provides a way to access general SQL databases.
 /// It is powered by [POCO Data](https://pocoproject.org/)
@@ -45,10 +68,8 @@ class OdbcAdaptor : public DatasourceAdaptor {
  private:
   void Init();
 
-  std::vector<TensorPtr> GetQueryResult(
-      const std::string& query, const TensorBuildOptions& options) override;
-  std::vector<TensorPtr> GetQueryResultImpl(
-      const std::string& query, const TensorBuildOptions& options = {});
+  // Send query and return schema
+  std::shared_ptr<ChunkedResult> SendQuery(const std::string& query) override;
 
  private:
   std::unique_ptr<OdbcConnector> connector_;

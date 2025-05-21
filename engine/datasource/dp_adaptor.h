@@ -14,7 +14,11 @@
 
 #pragma once
 
+#include <future>
 #include <utility>
+
+#include "arrow/type_fwd.h"
+#include "dataproxy_sdk/data_proxy_stream.h"
 
 #include "engine/datasource/datasource_adaptor.h"
 
@@ -22,13 +26,20 @@
 
 namespace scql::engine {
 
-namespace Dataproxy {
-// convert datetime to int64
-// return input for other datatype
-std::shared_ptr<arrow::ChunkedArray> ConvertDatetimeToInt64(
-    const std::shared_ptr<arrow::ChunkedArray>& array);
-}  // namespace Dataproxy
+class DpChunkedResult : public ChunkedResult {
+ public:
+  DpChunkedResult(
+      std::unique_ptr<dataproxy_sdk::DataProxyStreamReader> stream_reader)
+      : stream_reader_(std::move(stream_reader)) {}
 
+  std::optional<arrow::ChunkedArrayVector> Fetch() override;
+  std::shared_ptr<arrow::Schema> GetSchema() override {
+    return stream_reader_->Schema();
+  };
+
+ private:
+  std::unique_ptr<dataproxy_sdk::DataProxyStreamReader> stream_reader_;
+};
 class DpAdaptor : public DatasourceAdaptor {
  public:
   explicit DpAdaptor(std::string datasource_id)
@@ -37,8 +48,8 @@ class DpAdaptor : public DatasourceAdaptor {
   ~DpAdaptor() override = default;
 
  private:
-  std::vector<TensorPtr> GetQueryResult(
-      const std::string& query, const TensorBuildOptions& options) override;
+  // Send query and return schema
+  std::shared_ptr<ChunkedResult> SendQuery(const std::string& query) override;
 
   std::string datasource_id_;
 };
