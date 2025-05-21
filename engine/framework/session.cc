@@ -104,19 +104,18 @@ Session::Session(const SessionOptions& session_opt,
 
     YACL_ENFORCE(
         ValidateSPUContext(),
-        fmt::format(
-            "SPU runtime validation failed. Protocol {} is "
-            "not allowed in current scenario, only [{}] are allowed",
-            spu_ctx_->config().protocol,
-            std::accumulate(
-                allowed_spu_protocols_.begin(), allowed_spu_protocols_.end(),
-                std::string{},
-                [](const std::string& acc, const spu::ProtocolKind& protocol) {
-                  return acc.empty()
-                             ? spu::GetProtocolKindName(protocol)
-                             : fmt::format("{},{}", acc,
-                                           spu::GetProtocolKindName(protocol));
-                })));
+        "SPU runtime validation failed. Protocol {} is "
+        "not allowed in current scenario, only [{}] are allowed",
+        spu::GetProtocolKindName(spu_ctx_->config().protocol),
+        std::accumulate(
+            allowed_spu_protocols_.begin(), allowed_spu_protocols_.end(),
+            std::string{},
+            [](const std::string& acc, const spu::ProtocolKind& protocol) {
+              return acc.empty()
+                         ? std::string(spu::GetProtocolKindName(protocol))
+                         : fmt::format("{},{}", acc,
+                                       spu::GetProtocolKindName(protocol));
+            }));
     spu::mpc::Factory::RegisterProtocol(spu_ctx_.get(), lctx_);
   }
 
