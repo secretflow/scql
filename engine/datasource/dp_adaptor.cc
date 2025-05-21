@@ -16,7 +16,9 @@
 
 #include <cstddef>
 #include <filesystem>
+#include <future>
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include "absl/strings/ascii.h"
@@ -30,26 +32,11 @@
 #include "dataproxy_sdk/data_proxy_stream.h"
 #include "gflags/gflags.h"
 
-#include "engine/core/tensor.h"
-#include "engine/core/tensor_constructor.h"
 #include "engine/exe/flags.h"
 
 namespace scql::engine {
 
-std::shared_ptr<arrow::ChunkedArray> Dataproxy::ConvertDatetimeToInt64(
-    const std::shared_ptr<arrow::ChunkedArray>& array) {
-  if (arrow::is_temporal(array->type()->id())) {
-    auto result =
-        arrow::compute::Cast(array, arrow::timestamp(arrow::TimeUnit::SECOND))
-            .ValueOrDie();
-    result = arrow::compute::Cast(result, arrow::int64()).ValueOrDie();
-    return result.chunked_array();
-  }
-  return array;
-}
-
-std::vector<TensorPtr> DpAdaptor::GetQueryResult(
-    const std::string& query, const TensorBuildOptions& options) {
+std::shared_ptr<ChunkedResult> DpAdaptor::SendQuery(const std::string& query) {
   dataproxy_sdk::proto::DataProxyConfig config;
   config.set_data_proxy_addr(FLAGS_kuscia_datamesh_endpoint);
   config.mutable_tls_config()->set_certificate_path(
@@ -63,24 +50,23 @@ std::vector<TensorPtr> DpAdaptor::GetQueryResult(
   dataproxy_sdk::proto::SQLInfo sql_info;
   sql_info.set_sql(query);
   sql_info.set_datasource_id(datasource_id_);
-  auto reader = stream->GetReader(sql_info);
-  YACL_ENFORCE(reader != nullptr);
-  arrow::RecordBatchVector batches;
-  // TODO(xiaoyuan): supporting streaming mode by writing record batched to file
-  while (true) {
-    std::shared_ptr<arrow::RecordBatch> batch;
-    reader->Get(&batch);
-    if (batch == nullptr || batch->num_rows() == 0) {
-      break;
-    }
-    batches.push_back(batch);
+  auto stream_reader = stream->GetReader(sql_info);
+  YACL_ENFORCE(stream_reader != nullptr);
+  return std::make_shared<DpChunkedResult>(std::move(stream_reader));
+}
+
+std::optional<arrow::ChunkedArrayVector> DpChunkedResult::Fetch() {
+  std::shared_ptr<arrow::RecordBatch> batch;
+  stream_reader_->Get(&batch);
+  if (batch == nullptr || batch->num_rows() == 0) {
+    return std::nullopt;
   }
-  auto table = arrow::Table::FromRecordBatches(batches).ValueOrDie();
-  std::vector<TensorPtr> tensors;
-  for (const auto& col : table->columns()) {
-    tensors.push_back(TensorFrom(Dataproxy::ConvertDatetimeToInt64(col)));
+  arrow::ChunkedArrayVector chunked_arrs;
+  for (int i = 0; i < batch->num_columns(); ++i) {
+    chunked_arrs.push_back(
+        arrow::ChunkedArray::Make({batch->column(i)}).ValueOrDie());
   }
-  return tensors;
+  return chunked_arrs;
 }
 
 }  // namespace scql::engine

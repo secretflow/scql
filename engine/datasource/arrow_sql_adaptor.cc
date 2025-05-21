@@ -14,8 +14,11 @@
 
 #include "engine/datasource/arrow_sql_adaptor.h"
 
+#include <future>
 #include <memory>
+#include <optional>
 #include <sstream>
+#include <utility>
 
 #include "arrow/flight/client.h"
 #include "arrow/status.h"
@@ -70,21 +73,28 @@ arrow::flight::FlightClientOptions GetFlightClientOptions() {
   return options;
 }
 
-ArrowSqlAdaptor::ArrowSqlAdaptor(const std::string& uri) {
+void ArrowClientManager::CreateDefaultClient(const std::string& uri) {
+  // TODO(@xiaoyuan): add authenticate code
   auto location = arrow::flight::Location::Parse(uri);
   YACL_ENFORCE(location.ok(), "fail to parse arrow uri: {}", uri);
   auto flight_client = arrow::flight::FlightClient::Connect(
       location.ValueOrDie(), GetFlightClientOptions());
   YACL_ENFORCE(flight_client.ok(), "fail to connect arrow sql server: {}",
                flight_client.status().ToString());
-  // arrow c++ doesn't support authenticate for now
-  // https://github.com/apache/arrow/blob/main/cpp/src/arrow/flight/transport.cc#L55
   sql_client_ = std::make_shared<arrow::flight::sql::FlightSqlClient>(
       std::move(flight_client.ValueOrDie()));
   client_map_.emplace(location->ToString(), sql_client_);
 }
 
-SqlClientPtr ArrowSqlAdaptor::GetClientFromEndpoint(
+ArrowSqlAdaptor::ArrowSqlAdaptor(const std::string& uri) {
+  // use default call options
+  // TODO(@xiaoyuan) set call options by long time benchmark
+  arrow::flight::FlightCallOptions call_options;
+  client_creator_ = std::make_shared<ArrowClientManager>(call_options);
+  client_creator_->CreateDefaultClient(uri);
+}
+
+SqlClientPtr ArrowClientManager::GetClientFromEndpoint(
     const arrow::flight::FlightEndpoint& endpoint) {
   SqlClientPtr client;
   if (endpoint.locations.empty()) {
@@ -106,7 +116,7 @@ SqlClientPtr ArrowSqlAdaptor::GetClientFromEndpoint(
         if (flight_client.ok()) {
           client = std::make_shared<arrow::flight::sql::FlightSqlClient>(
               std::move(flight_client.ValueOrDie()));
-          client_map_.emplace(endpoint.locations[0].ToString(), sql_client_);
+          client_map_.emplace(endpoint.locations[0].ToString(), client);
           return client;
         }
       }
@@ -120,31 +130,40 @@ SqlClientPtr ArrowSqlAdaptor::GetClientFromEndpoint(
   return client;
 }
 
-std::vector<TensorPtr> ArrowSqlAdaptor::GetQueryResult(
-    const std::string& query, const TensorBuildOptions& options) {
+std::shared_ptr<ChunkedResult> ArrowSqlAdaptor::SendQuery(
+    const std::string& query) {
   std::unique_ptr<arrow::flight::FlightInfo> flight_info;
-  // use default call options
-  // TODO(@xiaoyuan) set call options by long time benchmark
   ASSIGN_OR_THROW_ARROW_STATUS(flight_info,
-                               sql_client_->Execute(call_options_, query));
-  std::vector<TensorPtr> tensors;
-  for (const arrow::flight::FlightEndpoint& endpoint :
-       flight_info->endpoints()) {
-    std::unique_ptr<arrow::flight::FlightStreamReader> stream;
-    SqlClientPtr client = GetClientFromEndpoint(endpoint);
-
-    ASSIGN_OR_THROW_ARROW_STATUS(stream,
-                                 client->DoGet(call_options_, endpoint.ticket));
-    std::shared_ptr<arrow::Table> table;
-    ASSIGN_OR_THROW_ARROW_STATUS(table, stream->ToTable());
-    THROW_IF_ARROW_NOT_OK(table->Validate());
-    for (int i = 0; i < table->num_columns(); ++i) {
-      auto tensor = TensorFrom(table->column(i));
-      tensors.push_back(tensor);
-    }
-  }
-  return tensors;
+                               client_creator_->GetDefaultClient()->Execute(
+                                   client_creator_->GetCallOptions(), query));
+  arrow::ipc::DictionaryMemo memo;
+  auto schema = flight_info->GetSchema(&memo).ValueOrDie();
+  return std::make_shared<ArrowSqlChunkedResult>(schema, std::move(flight_info),
+                                                 client_creator_);
 }
 
-ArrowSqlAdaptor::~ArrowSqlAdaptor() { static_cast<void>(sql_client_->Close()); }
+std::optional<arrow::ChunkedArrayVector> ArrowSqlChunkedResult::Fetch() {
+  if (endpoint_index_ >= flight_info_->endpoints().size()) {
+    return std::nullopt;
+  }
+  arrow::ChunkedArrayVector arrs;
+  auto endpoint = flight_info_->endpoints()[endpoint_index_];
+  endpoint_index_++;
+  std::unique_ptr<arrow::flight::FlightStreamReader> stream;
+  SqlClientPtr client = client_creator_->GetClientFromEndpoint(endpoint);
+  ASSIGN_OR_THROW_ARROW_STATUS(
+      stream,
+      client->DoGet(client_creator_->GetCallOptions(), endpoint.ticket));
+  std::shared_ptr<arrow::Table> table;
+  // stream read data until all data has been read or error occurs
+  // TODO(@xiaoyuan): maybe we should use stream.Next() to get data by batch
+  ASSIGN_OR_THROW_ARROW_STATUS(table, stream->ToTable());
+  THROW_IF_ARROW_NOT_OK(table->Validate());
+  for (int i = 0; i < table->num_columns(); ++i) {
+    arrs.push_back(table->column(i));
+  }
+
+  return arrs;
+}
+
 }  // namespace scql::engine
