@@ -110,7 +110,7 @@ func (s *testCCLSuite) testCheckCCL(c *C, testCase TestCaseCCLString) {
 	processor := LpPrePocessor{}
 	err = processor.process(lp)
 	c.Assert(err, IsNil)
-	builder, err := newLogicalNodeBuilder(t.issuerPartyCode, t.enginesInfo, convertOriginalCCL(t.sc), 4)
+	builder, err := newLogicalNodeBuilder(t.issuerPartyCode, t.enginesInfo, convertOriginalCCL(t.sc), 4, scql.PsiAlgorithmType_RR22)
 	c.Assert(err, IsNil)
 	ln, err := builder.buildLogicalNode(lp)
 	c.Assert(err, IsNil, comment)

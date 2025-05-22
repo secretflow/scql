@@ -68,14 +68,21 @@ func TestSplitSimple(t *testing.T) {
 	t2.OwnerPartyCode = "hospital3"
 	e1.AddRunSQLNode("RunSQLOp3", []*graph.Tensor{t2},
 		"select test.h3.in_hospital_day from test.h3", []string{"test.h3"}, "hospital3")
-
-	leftIndex, rightIndex, err := e1.AddJoinNode("join", []*graph.Tensor{t0}, []*graph.Tensor{t1}, []string{"hospital1", "hospital2"}, graph.InnerJoin, 0)
+	joinArgs := graph.JoinNodeArgs{
+		HasLeftResult:  true,
+		HasRightResult: true,
+		PartyCodes:     []string{"hospital1", "hospital2"},
+		JoinType:       graph.InnerJoin,
+		PsiAlg:         0,
+	}
+	leftIndex, rightIndex, err := e1.AddJoinNode("join", []*graph.Tensor{t0}, []*graph.Tensor{t1}, &joinArgs)
 	r.NoError(err)
 	t0AfterFilters, err := e1.AddFilterByIndexNode("filter", leftIndex, []*graph.Tensor{t0}, "hospital1")
 	r.NoError(err)
 	t1AfterFilters, err := e1.AddFilterByIndexNode("filter", rightIndex, []*graph.Tensor{t1}, "hospital2")
 	r.NoError(err)
-	leftIndex, rightIndex, err = e1.AddJoinNode("join", []*graph.Tensor{t0AfterFilters[0]}, []*graph.Tensor{t2}, []string{"hospital1", "hospital3"}, graph.InnerJoin, 0)
+	joinArgs.PartyCodes = []string{"hospital1", "hospital3"}
+	leftIndex, rightIndex, err = e1.AddJoinNode("join", []*graph.Tensor{t0AfterFilters[0]}, []*graph.Tensor{t2}, &joinArgs)
 	r.NoError(err)
 	_, err = e1.AddFilterByIndexNode("filter", leftIndex, []*graph.Tensor{t0AfterFilters[0]}, "hospital1")
 	r.NoError(err)

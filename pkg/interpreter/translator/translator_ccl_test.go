@@ -108,7 +108,7 @@ func (s *testTranslatorSuite) TestBuildCCL(c *C) {
 			s.engineInfo, &scql.SecurityConfig{ColumnControlList: ccl},
 			s.issuerParty, &compileOpts, time.Now())
 		c.Assert(err, IsNil)
-		builder, err := newLogicalNodeBuilder(t.issuerPartyCode, t.enginesInfo, convertOriginalCCL(t.sc), 4)
+		builder, err := newLogicalNodeBuilder(t.issuerPartyCode, t.enginesInfo, convertOriginalCCL(t.sc), 4, scql.PsiAlgorithmType_RR22)
 		if err != nil {
 			c.Assert(err, IsNil)
 		}
