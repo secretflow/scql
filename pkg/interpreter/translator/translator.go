@@ -176,7 +176,7 @@ func (t *translator) Translate(lp core.LogicalPlan) (*graph.Graph, error) {
 	if err := processor.process(lp); err != nil {
 		return nil, err
 	}
-	builder, err := newLogicalNodeBuilder(t.issuerPartyCode, t.enginesInfo, convertOriginalCCL(t.sc), t.CompileOpts.GetSecurityCompromise().GetGroupByThreshold())
+	builder, err := newLogicalNodeBuilder(t.issuerPartyCode, t.enginesInfo, convertOriginalCCL(t.sc), t.CompileOpts.GetSecurityCompromise().GetGroupByThreshold(), t.CompileOpts.GetOptimizerHints().GetPsiAlgorithmType())
 	if err != nil {
 		return nil, err
 	}

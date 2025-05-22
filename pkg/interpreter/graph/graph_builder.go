@@ -497,33 +497,48 @@ func (plan *GraphBuilder) AddMakePublicNode(name string, input *Tensor, partyCod
 	return output, nil
 }
 
+type JoinNodeArgs struct {
+	PartyCodes     []string
+	JoinType       int
+	PsiAlg         pb.PsiAlgorithmType
+	HasLeftResult  bool
+	HasRightResult bool
+}
+
 // AddJoinNode adds a Join node, used in EQ join
-func (plan *GraphBuilder) AddJoinNode(name string, left []*Tensor, right []*Tensor, partyCodes []string, joinType int, psiAlg pb.PsiAlgorithmType) (*Tensor, *Tensor, error) {
+func (plan *GraphBuilder) AddJoinNode(name string, left []*Tensor, right []*Tensor, joinArgs *JoinNodeArgs) (*Tensor, *Tensor, error) {
 	partyAttr := &Attribute{}
-	partyAttr.SetStrings(partyCodes)
+	partyAttr.SetStrings(joinArgs.PartyCodes)
 	joinTypeAttr := &Attribute{}
-	joinTypeAttr.SetInt64(int64(joinType))
+	joinTypeAttr.SetInt64(int64(joinArgs.JoinType))
 	psiAlgAttr := &Attribute{}
-	psiAlgAttr.SetInt64(int64(psiAlg))
+	psiAlgAttr.SetInt64(int64(joinArgs.PsiAlg))
 
 	inputs := make(map[string][]*Tensor)
 	inputs["Left"] = left
 	inputs["Right"] = right
-	leftOutput := plan.AddTensorAs(left[0])
-	leftOutput.DType = pb.PrimitiveDataType_INT64
-	leftOutput.SetStatus(pb.TensorStatus_TENSORSTATUS_PRIVATE)
-	leftOutput.OwnerPartyCode = partyCodes[0]
-
-	rightOutput := plan.AddTensorAs(right[0])
-	rightOutput.DType = pb.PrimitiveDataType_INT64
-	rightOutput.SetStatus(pb.TensorStatus_TENSORSTATUS_PRIVATE)
-	rightOutput.OwnerPartyCode = partyCodes[1]
 
 	outputs := make(map[string][]*Tensor)
-	outputs["LeftJoinIndex"] = []*Tensor{leftOutput}
-	outputs["RightJoinIndex"] = []*Tensor{rightOutput}
+	outputs["LeftJoinIndex"] = []*Tensor{}
+	outputs["RightJoinIndex"] = []*Tensor{}
+	var leftOutput *Tensor = nil
+	var rightOutput *Tensor = nil
+	if joinArgs.HasLeftResult {
+		leftOutput = plan.AddTensorAs(left[0])
+		leftOutput.DType = pb.PrimitiveDataType_INT64
+		leftOutput.SetStatus(pb.TensorStatus_TENSORSTATUS_PRIVATE)
+		leftOutput.OwnerPartyCode = joinArgs.PartyCodes[0]
+		outputs["LeftJoinIndex"] = append(outputs["LeftJoinIndex"], leftOutput)
+	}
+	if joinArgs.HasRightResult {
+		rightOutput = plan.AddTensorAs(right[0])
+		rightOutput.DType = pb.PrimitiveDataType_INT64
+		rightOutput.SetStatus(pb.TensorStatus_TENSORSTATUS_PRIVATE)
+		rightOutput.OwnerPartyCode = joinArgs.PartyCodes[1]
+		outputs["RightJoinIndex"] = append(outputs["RightJoinIndex"], rightOutput)
+	}
 	if _, err := plan.AddExecutionNode(name, operator.OpNameJoin, inputs, outputs,
-		map[string]*Attribute{operator.InputPartyCodesAttr: partyAttr, operator.JoinTypeAttr: joinTypeAttr, operator.PsiAlgorithmAttr: psiAlgAttr}, partyCodes); err != nil {
+		map[string]*Attribute{operator.InputPartyCodesAttr: partyAttr, operator.JoinTypeAttr: joinTypeAttr, operator.PsiAlgorithmAttr: psiAlgAttr}, joinArgs.PartyCodes); err != nil {
 		return nil, nil, err
 	}
 	return leftOutput, rightOutput, nil
