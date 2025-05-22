@@ -105,7 +105,7 @@ class Join : public Operator {
       uint64_t client_unmatched_count, JoinRole join_role,
       const std::shared_ptr<util::BatchProvider>& batch_provider);
   static size_t GetTargetRank(ExecContext* ctx,
-                              std::shared_ptr<yacl::link::Context>& lctx);
+                              const std::shared_ptr<yacl::link::Context>& lctx);
 };
 
 }  // namespace scql::engine::op

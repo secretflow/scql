@@ -159,7 +159,7 @@ bool Join::IsOprfServerAccordToHint(ExecContext* ctx, int64_t server_hint) {
 }
 
 size_t Join::GetTargetRank(ExecContext* ctx,
-                           std::shared_ptr<yacl::link::Context>& lctx) {
+                           const std::shared_ptr<yacl::link::Context>& lctx) {
   std::vector<std::string> input_party_codes =
       ctx->GetStringValuesFromAttribute(kInputPartyCodesAttr);
   const auto& my_party_code = ctx->GetSession()->SelfPartyCode();
@@ -176,7 +176,7 @@ size_t Join::GetTargetRank(ExecContext* ctx,
   return yacl::link::kAllRank;
 }
 
-bool TouchResult(std::shared_ptr<yacl::link::Context>& lctx,
+bool TouchResult(const std::shared_ptr<yacl::link::Context>& lctx,
                  size_t target_rank) {
   return target_rank == yacl::link::kAllRank || lctx->Rank() == target_rank;
 }
