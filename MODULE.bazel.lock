@@ -670,7 +670,7 @@
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/brotli/1.1.0/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/brpc/1.11.0-20241212-282bc90/MODULE.bazel": "5a196ed0f1f129bde2001f3db5f1a991812714b207aa61ade34dcc78ec02a054",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/brpc/1.13.0/MODULE.bazel": "b8ce8072664fb99db6479134cae5d383402aebf48f2c171b8ca9cc1d0e236178",
-    "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/brpc/1.13.0/source.json": "180639525f5aa3d00c88a8e51d4e1ab5ab313085f2c40ee0e6f26f84f0eb48bd",
+    "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/brpc/1.13.0/source.json": "cc0a693969df7fb38819ee09184b53e33bd3e7037ac3b48b26f531c3150ee21b",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/buildozer/7.1.2/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/bzip2/1.0.8.bcr.1/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/c-ares/1.15.0/MODULE.bazel": "not found",
