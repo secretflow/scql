@@ -179,7 +179,7 @@ std::optional<arrow::ChunkedArrayVector> OdbcChunkedResult::Fetch() {
     return std::nullopt;
   }
   using Poco::Data::MetaColumn;
-  constexpr size_t batch_size = 3;
+  constexpr size_t batch_size = 10240;
   std::size_t column_cnt = rs_->columnCount();
   for (size_t i = 0; i < batch_size && more_; ++i) {
     for (std::size_t col_index = 0; col_index < column_cnt; col_index++) {
