@@ -175,9 +175,9 @@ func registerAllOpDef() {
 		opDef.AddInput("Right", "Right vector(shape [N][1])",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T1)
 		opDef.AddOutput("LeftJoinIndex", "Joined rows index for left vector(shape [K][1])",
-			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T2)
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_OPTIONAL, T2)
 		opDef.AddOutput("RightJoinIndex", "Joined rows index for right vector(shape [K][1])",
-			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T2)
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_OPTIONAL, T2)
 		opDef.AddAttribute(InputPartyCodesAttr, "List of parties the inputs belong to([PartyCodeLeft, PartyCodeRight]).")
 		opDef.AddAttribute(JoinTypeAttr, "Int64. 0: inner join; 1: left join; 2: right join;")
 		opDef.AddDefaultAttributeValue(JoinTypeAttr, CreateIntAttribute(0))

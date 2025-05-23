@@ -287,13 +287,22 @@ func (t *translator) buildEQJoin(ln *JoinNode) (err error) {
 			return err
 		}
 	}
-
-	leftIndexT, rightIndexT, err := t.ep.AddJoinNode("join", leftKeyTs, rightKeyTs, parties, JoinTypeLpToEp[join.JoinType], t.CompileOpts.GetOptimizerHints().GetPsiAlgorithmType())
+	joinArgs := graph.JoinNodeArgs{
+		HasLeftResult:  len(leftTs) > 0,
+		HasRightResult: len(rightTs) > 0,
+		PartyCodes:     parties,
+		JoinType:       JoinTypeLpToEp[join.JoinType],
+		PsiAlg:         t.CompileOpts.GetOptimizerHints().GetPsiAlgorithmType(),
+	}
+	// for ub psi, we think both parties get result by default
+	joinArgs.HasLeftResult = joinArgs.HasLeftResult || joinArgs.PsiAlg == proto.PsiAlgorithmType_OPRF || join.JoinType == core.LeftOuterJoin
+	joinArgs.HasRightResult = joinArgs.HasRightResult || joinArgs.PsiAlg == proto.PsiAlgorithmType_OPRF || join.JoinType == core.RightOuterJoin
+	leftIndexT, rightIndexT, err := t.ep.AddJoinNode("join", leftKeyTs, rightKeyTs, &joinArgs)
 	if err != nil {
 		return fmt.Errorf("buildEQJoin: %v", err)
 	}
 
-	leftIndexT.CC, rightIndexT.CC = createCCLForIndexT(ln.childDataSourceParties)
+	leftIndexCC, rightIndexCC := createCCLForIndexT(ln.childDataSourceParties)
 	// step 3: apply join index
 	// record tensor id and tensor pointer in result table
 	resultIdToTensor := map[int64]*graph.Tensor{}
@@ -306,6 +315,7 @@ func (t *translator) buildEQJoin(ln *JoinNode) (err error) {
 
 	if len(leftTs) > 0 {
 		leftParty := leftIndexT.OwnerPartyCode
+		leftIndexT.CC = leftIndexCC
 		leftFiltered, err := t.addFilterByIndexNode(leftIndexT, leftTs, leftParty)
 		if err != nil {
 			return fmt.Errorf("buildEQJoin: %v", err)
@@ -316,6 +326,7 @@ func (t *translator) buildEQJoin(ln *JoinNode) (err error) {
 	}
 	if len(rightTs) > 0 {
 		rightParty := rightIndexT.OwnerPartyCode
+		rightIndexT.CC = rightIndexCC
 		rightFiltered, err := t.addFilterByIndexNode(rightIndexT, rightTs, rightParty)
 		if err != nil {
 			return fmt.Errorf("buildEQJoin: %v", err)

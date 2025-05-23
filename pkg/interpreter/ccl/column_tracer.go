@@ -16,11 +16,13 @@ package ccl
 
 import (
 	"github.com/secretflow/scql/pkg/expression"
+	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
 
 type Context struct {
 	GroupByThreshold uint64
+	PsiType          scql.PsiAlgorithmType
 }
 
 // ColumnTracer trace column source info

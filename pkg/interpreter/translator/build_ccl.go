@@ -24,6 +24,7 @@ import (
 	"github.com/secretflow/scql/pkg/parser/ast"
 	"github.com/secretflow/scql/pkg/parser/mysql"
 	"github.com/secretflow/scql/pkg/planner/core"
+	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/sessionctx"
 	"github.com/secretflow/scql/pkg/types"
 	"github.com/secretflow/scql/pkg/util/sliceutil"
@@ -223,14 +224,21 @@ func (n *JoinNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error
 				}
 			}
 		}
-
+		left, right := n.Children()[0], n.Children()[1]
+		leftUsed := core.GetUsedList(join.Schema().Columns, left.Schema())
+		rightUsed := core.GetUsedList(join.Schema().Columns, right.Schema())
+		leftTs := sliceutil.Take(left.ResultTable(), leftUsed)
+		rightTs := sliceutil.Take(right.ResultTable(), rightUsed)
+		leftTouchResult := len(leftTs) > 0 || ctx.PsiType == scql.PsiAlgorithmType_OPRF || join.JoinType == core.LeftOuterJoin
+		rightTouchResult := len(rightTs) > 0 || ctx.PsiType == scql.PsiAlgorithmType_OPRF || join.JoinType == core.RightOuterJoin
 		for _, p := range leftSourceParties {
 			if rightCc.LevelFor(p) == ccl.Join {
 				if join.JoinType == core.InnerJoin || join.JoinType == core.LeftOuterJoin {
 					rightCc.SetLevelForParty(p, ccl.Plain)
 				}
 			}
-			if !rightCc.IsVisibleFor(p) && rightCc.LevelFor(p) != ccl.Join {
+
+			if leftTouchResult && !rightCc.IsVisibleFor(p) && rightCc.LevelFor(p) != ccl.Join {
 				return fmt.Errorf("joinNode.buildCCL: join on condition (%s) failed: column(%s) ccl(%v) for party(%s) does not belong to (PLAINTEXT_AFTER_JOIN, PLAINTEXT)",
 					equalCondition.String(), equalCondition.GetArgs()[1].String(), rightCc.LevelFor(p).String(), p)
 			}
@@ -242,7 +250,7 @@ func (n *JoinNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer) error
 					leftCc.SetLevelForParty(p, ccl.Plain)
 				}
 			}
-			if !leftCc.IsVisibleFor(p) && leftCc.LevelFor(p) != ccl.Join {
+			if rightTouchResult && !leftCc.IsVisibleFor(p) && leftCc.LevelFor(p) != ccl.Join {
 				return fmt.Errorf("joinNode.buildCCL: join on condition (%s) failed: column(%s) ccl(%v) for party(%s) does not belong to (PLAINTEXT_AFTER_JOIN, PLAINTEXT)",
 					equalCondition.String(), equalCondition.GetArgs()[0].String(), leftCc.LevelFor(p).String(), p)
 			}

@@ -158,6 +158,29 @@ bool Join::IsOprfServerAccordToHint(ExecContext* ctx, int64_t server_hint) {
   return (is_left && server_hint == 0) || (!is_left && server_hint == 1);
 }
 
+size_t Join::GetTargetRank(ExecContext* ctx,
+                           const std::shared_ptr<yacl::link::Context>& lctx) {
+  std::vector<std::string> input_party_codes =
+      ctx->GetStringValuesFromAttribute(kInputPartyCodesAttr);
+  const auto& my_party_code = ctx->GetSession()->SelfPartyCode();
+  bool is_left = my_party_code == input_party_codes.at(0);
+  if (ctx->GetOutput(kOutLeftJoinIndex).size() == 0 ||
+      ctx->GetOutput(kOutRightJoinIndex).size() == 0) {
+    if ((ctx->GetOutput(kOutLeftJoinIndex).size() != 0 && is_left) ||
+        (ctx->GetOutput(kOutRightJoinIndex).size() != 0 && !is_left)) {
+      return lctx->Rank();
+    } else {
+      return lctx->NextRank();
+    }
+  }
+  return yacl::link::kAllRank;
+}
+
+bool TouchResult(const std::shared_ptr<yacl::link::Context>& lctx,
+                 size_t target_rank) {
+  return target_rank == yacl::link::kAllRank || lctx->Rank() == target_rank;
+}
+
 void Join::EcdhPsiJoin(ExecContext* ctx) {
   auto logger = ctx->GetActiveLogger();
 
@@ -165,7 +188,6 @@ void Join::EcdhPsiJoin(ExecContext* ctx) {
   std::vector<std::string> input_party_codes =
       ctx->GetStringValuesFromAttribute(kInputPartyCodesAttr);
   bool is_left = my_party_code == input_party_codes.at(0);
-
   auto join_keys = GetJoinKeys(ctx, is_left);
   if (ctx->GetSession()->GetPsiLogger()) {
     ctx->GetSession()->GetPsiLogger()->LogInput(join_keys);
@@ -194,6 +216,13 @@ void Join::EcdhPsiJoin(ExecContext* ctx) {
   }
   size_t total_self_size = 0;
   size_t total_peer_size = 0;
+  auto psi_link = ctx->GetSession()->GetLink();
+  if (psi_link->WorldSize() > 2) {
+    psi_link = psi_link->SubWorld(ctx->GetNodeName() + "-EcdhPsiJoin",
+                                  input_party_codes);
+  }
+  size_t target_rank = GetTargetRank(ctx, psi_link);
+  bool touch_result = TouchResult(psi_link, target_rank);
   for (size_t i = 0; i < slices[0]->GetSliceNum(); ++i) {
     std::vector<TensorPtr> keys(join_keys.size());
     for (size_t j = 0; j < slices.size(); ++j) {
@@ -213,15 +242,10 @@ void Join::EcdhPsiJoin(ExecContext* ctx) {
         std::make_shared<psi::HashBucketEcPointStore>("/tmp", util::kNumBins);
     {
       psi::ecdh::EcdhPsiOptions options;
-      options.link_ctx = ctx->GetSession()->GetLink();
-      if (options.link_ctx->WorldSize() > 2) {
-        options.link_ctx = options.link_ctx->SubWorld(
-            ctx->GetNodeName() + "-EcdhPsiJoin", input_party_codes);
-      }
-
+      options.link_ctx = psi_link;
       options.ecc_cryptor = psi::CreateEccCryptor(static_cast<psi::CurveType>(
           ctx->GetSession()->GetSessionOptions().psi_config.psi_curve_type));
-      options.target_rank = yacl::link::kAllRank;
+      options.target_rank = target_rank;
       if (join_keys.size() > 0) {
         options.on_batch_finished = util::BatchFinishedCb(
             logger, ctx->GetSession()->Id(),
@@ -234,27 +258,39 @@ void Join::EcdhPsiJoin(ExecContext* ctx) {
       }
       psi::ecdh::RunEcdhPsi(options, batch_provider, self_store, peer_store);
     }
-
-    int64_t join_type = ctx->GetInt64ValueFromAttribute(kJoinTypeAttr);
-    auto join_indices = util::FinalizeAndComputeJoinIndices(
-        is_left, self_store, peer_store, join_type);
-    tensor_constructor->InsertBucket(join_indices, i);
+    if (touch_result) {
+      int64_t join_type = ctx->GetInt64ValueFromAttribute(kJoinTypeAttr);
+      auto join_indices = util::FinalizeAndComputeJoinIndices(
+          is_left, self_store, peer_store, join_type);
+      tensor_constructor->InsertBucket(join_indices, i);
+    }
     total_self_size += self_store->ItemCount();
+    // TODO(FIXME): @xiaoyuan fix peer size if self doesn't touch result
     total_peer_size += peer_store->ItemCount();
   }
-  TensorPtr join_indices;
-  tensor_constructor->Finish(&join_indices);
-  auto result_size = join_indices->Length();
-  SPDLOG_LOGGER_INFO(
-      logger,
-      "ECDH PSI Join finish, my_party_code:{}, my_rank:{}, total "
-      "self_item_count:{}, total peer_item_count:{}, result_size:{}",
-      ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
-      total_self_size, total_peer_size, result_size);
-  if (ctx->GetSession()->GetPsiLogger()) {
-    ctx->GetSession()->GetPsiLogger()->LogOutput(join_indices, join_keys);
+  if (touch_result) {
+    TensorPtr join_indices;
+    tensor_constructor->Finish(&join_indices);
+    auto result_size = join_indices->Length();
+    SPDLOG_LOGGER_INFO(
+        logger,
+        "ECDH PSI Join finish, my_party_code:{}, my_rank:{}, total "
+        "self_item_count:{}, total peer_item_count:{}, result_size:{}",
+        ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
+        total_self_size, total_peer_size, result_size);
+    if (ctx->GetSession()->GetPsiLogger()) {
+      ctx->GetSession()->GetPsiLogger()->LogOutput(join_indices, join_keys);
+    }
+    SetJoinResult(ctx, is_left, std::move(join_indices));
+  } else {
+    SPDLOG_LOGGER_INFO(
+        logger,
+        "ECDH PSI Join finish, my_party_code:{}, my_rank:{}, total "
+        "self_item_count:{}, total peer_item_count:{}, self doesn't touch "
+        "result",
+        ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
+        total_self_size, total_peer_size);
   }
-  SetJoinResult(ctx, is_left, std::move(join_indices));
 }
 
 void Join::Rr22PsiJoin(ExecContext* ctx) {
@@ -273,6 +309,8 @@ void Join::Rr22PsiJoin(ExecContext* ctx) {
     psi_link = psi_link->SubWorld(ctx->GetNodeName() + "-Rr22PsiJoin",
                                   input_party_codes);
   }
+  auto target_rank = GetTargetRank(ctx, psi_link);
+  bool touch_result = TouchResult(psi_link, target_rank);
   std::string output_name = kOutLeftJoinIndex;
   if (!is_left) {
     output_name = kOutRightJoinIndex;
@@ -307,27 +345,44 @@ void Join::Rr22PsiJoin(ExecContext* ctx) {
           const std::vector<psi::HashBucketCache::BucketItem>& bucket_items,
           const std::vector<uint32_t>& indices,
           const std::vector<uint32_t>& peer_cnt) {
-        auto indices_t = provider.CalIntersection(
-            psi_link->Spawn(std::to_string(bucket_idx)), bucket_idx, is_left,
-            join_type, bucket_items, indices, peer_cnt);
-        tensor_constructor->InsertBucket(indices_t, bucket_idx);
+        if (touch_result) {
+          auto indices_t = provider.CalIntersection(
+              psi_link->Spawn(std::to_string(bucket_idx)), bucket_idx, is_left,
+              join_type, bucket_items, indices, peer_cnt);
+          tensor_constructor->InsertBucket(indices_t, bucket_idx);
+        }
         provider.CleanBucket(bucket_idx);
       };
-  psi::rr22::Rr22Runner runner(psi_link,
-                               psi::rr22::GenerateRr22PsiOptions(false),
-                               bucket_num, true, pre_f, post_f);
-  // left as sender
-  runner.ParallelRun(0, is_left);
-  TensorPtr join_indices;
-  tensor_constructor->Finish(&join_indices);
-  auto result_size = join_indices->Length();
-  SPDLOG_LOGGER_INFO(
-      logger,
-      "RR22 PSI Join finish, my_party_code:{}, my_rank:{}, total "
-      "self_item_count:{}, total peer_item_count:{}, result_size:{}",
-      ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
-      self_size, peer_size, result_size);
-  SetJoinResult(ctx, is_left, std::move(join_indices));
+  psi::rr22::Rr22Runner runner(
+      psi_link, psi::rr22::GenerateRr22PsiOptions(false), bucket_num,
+      target_rank == yacl::link::kAllRank, pre_f, post_f);
+  bool is_sender = is_left;
+  if (target_rank != yacl::link::kAllRank) {
+    // receiver get result
+    is_sender = target_rank != psi_link->Rank();
+  }
+  runner.ParallelRun(0, is_sender);
+  size_t result_size = 0;
+  if (touch_result) {
+    TensorPtr join_indices;
+    tensor_constructor->Finish(&join_indices);
+    result_size = join_indices->Length();
+    SPDLOG_LOGGER_INFO(
+        logger,
+        "RR22 PSI Join finish, my_party_code:{}, my_rank:{}, total "
+        "self_item_count:{}, total peer_item_count:{}, result_size:{}",
+        ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
+        self_size, peer_size, result_size);
+    SetJoinResult(ctx, is_left, std::move(join_indices));
+  } else {
+    SPDLOG_LOGGER_INFO(
+        logger,
+        "RR22 PSI Join finish, my_party_code:{}, my_rank:{}, total "
+        "self_item_count:{}, total peer_item_count:{}, self doesn't touch "
+        "result",
+        ctx->GetSession()->SelfPartyCode(), ctx->GetSession()->SelfRank(),
+        self_size, peer_size);
+  }
 }
 
 void Join::OprfPsiJoin(ExecContext* ctx, bool is_server,
