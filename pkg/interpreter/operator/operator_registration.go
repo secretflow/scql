@@ -619,6 +619,8 @@ Out = %s
 				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 			opDef.AddOutput("Out", "Partially aggregated values (shape [M][1]).",
 				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+			opDef.AddOutput("OutGroup", "Adjusted group ids (shape [M][1]).",
+				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 			opDef.SetParamTypeConstraint(T, statusSecret)
 			opDef.AddAttribute("percent", "Float. The percentile to calculate the range of which is [0.0, 1.0], 0.0 means the first one, 1.0 means the last one.")
 			opDef.SetDefinition("Definition: find the value of given percentile of `In` for each group." + fmt.Sprintf(`

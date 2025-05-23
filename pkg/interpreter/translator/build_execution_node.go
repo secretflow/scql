@@ -1139,6 +1139,8 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 
 	// add agg funcs
 	colIdToTensor := map[int64]*graph.Tensor{}
+	var adjustedFilters []*graph.Tensor
+	var adjustedIndexes []int
 	for i, aggFunc := range agg.AggFuncs {
 		if len(aggFunc.Args) != 1 && aggFunc.Name != ast.AggPercentileDisc {
 			return fmt.Errorf("buildObliviousGroupAggregation: unsupported aggregation function %v", aggFunc)
@@ -1159,7 +1161,7 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 			if err != nil {
 				return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 			}
-			output, err := t.addObliviousGroupAggNode(aggFunc.Name, groupMark, colT, map[string]*graph.Attribute{})
+			output, err := t.addObliviousGroupAggNode(aggFunc.Name, groupMark, colT, make(map[string][]*graph.Tensor), map[string]*graph.Attribute{})
 			if err != nil {
 				return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 			}
@@ -1206,12 +1208,12 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 					}
 
-					output, err = t.addObliviousGroupAggNode(ast.AggFuncSum, groupMark, groupMarkFull, map[string]*graph.Attribute{})
+					output, err = t.addObliviousGroupAggNode(ast.AggFuncSum, groupMark, groupMarkFull, make(map[string][]*graph.Tensor), map[string]*graph.Attribute{})
 					if err != nil {
 						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 					}
 				} else {
-					output, err = t.addObliviousGroupAggNode(ast.AggFuncCount, groupMark, groupMark, map[string]*graph.Attribute{})
+					output, err = t.addObliviousGroupAggNode(ast.AggFuncCount, groupMark, groupMark, make(map[string][]*graph.Tensor), map[string]*graph.Attribute{})
 					if err != nil {
 						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 					}
@@ -1220,7 +1222,7 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 				switch x := aggFunc.Args[0].(type) {
 				case *expression.Column:
 					colT := sortedChildColIdToTensor[x.UniqueID]
-					output, err = t.addObliviousGroupAggNode(ast.AggFuncSum, groupMark, colT, map[string]*graph.Attribute{})
+					output, err = t.addObliviousGroupAggNode(ast.AggFuncSum, groupMark, colT, make(map[string][]*graph.Tensor), map[string]*graph.Attribute{})
 					if err != nil {
 						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 					}
@@ -1245,30 +1247,56 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 			if percent < 0 || percent > 1 {
 				return fmt.Errorf("buildPrivateGroupAggregation: percent should be in [0, 1], but got %v", percent)
 			}
+			var payloadSorted []*graph.Tensor
+			payloadSorted = append(payloadSorted, sortedKeys...)
+			payloadSorted = append(payloadSorted, colT)
+			sortedCol, err := t.addSortNode("sort", payloadSorted, []*graph.Tensor{colT}, false)
+			if err != nil {
+				return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+			}
 
 			attr.SetDouble(percent)
-			output, err := t.addObliviousGroupAggNode(aggFunc.Name, groupMark, colT, map[string]*graph.Attribute{"percent": attr})
+			adjustGroup := t.ep.AddTensorAs(groupMark)
+			out := make(map[string][]*graph.Tensor)
+			out["OutGroup"] = []*graph.Tensor{adjustGroup}
+
+			output, err := t.addObliviousGroupAggNode(aggFunc.Name, groupMark, sortedCol[0], out, map[string]*graph.Attribute{"percent": attr})
 			if err != nil {
 				return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 			}
 			colIdToTensor[ln.Schema().Columns[i].UniqueID] = output
+
+			adjustedFilters = append(adjustedFilters, adjustGroup)
+			adjustedIndexes = append(adjustedIndexes, i)
 		default:
 			return fmt.Errorf("buildObliviousGroupAggregation: unsupported aggregation function %v", aggFunc)
 		}
 	}
-	rt, err := extractResultTable(ln, colIdToTensor)
+	originRt, err := extractResultTable(ln, colIdToTensor)
 	if err != nil {
 		return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 	}
 
 	// TODO(jingshi): temporary remove shuffle here for simplicity, make group_mark public and support aggregation with public group_mark later for efficiency
-	if !t.CompileOpts.GetSecurityCompromise().GetRevealGroupMark() {
+	// If there are adjusted filters, we can not shuffle the group_mark, since it would break the order of results
+	if !t.CompileOpts.GetSecurityCompromise().GetRevealGroupMark() && len(adjustedFilters) == 0 {
 		// shuffle and replace 'rt' and 'groupMark'
-		shuffled, err := t.addShuffleNode("shuffle", append(rt, groupMark))
+		shuffled, err := t.addShuffleNode("shuffle", append(originRt, groupMark))
 		if err != nil {
 			return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 		}
-		rt, groupMark = shuffled[:len(rt)], shuffled[len(rt)]
+		originRt, groupMark = shuffled[:len(originRt)], shuffled[len(originRt)]
+	}
+
+	rt := make([]*graph.Tensor, len(originRt))
+	copy(rt, originRt)
+
+	// remove the special group tensors
+	for i := len(adjustedIndexes) - 1; i >= 0; i-- {
+		idx := adjustedIndexes[i]
+		if idx >= 0 && idx < len(rt) {
+			rt = append(rt[:idx], rt[idx+1:]...)
+		}
 	}
 
 	// set ccl plain if enabled revealGroupMark or after groupMark shuffled
@@ -1280,9 +1308,44 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 		return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 	}
 	// filter
-	rtFiltered, err := t.ep.AddFilterNode("filter", rt, groupMarkPub, t.enginesInfo.GetParties())
-	if err != nil {
-		return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+	var rtFiltered []*graph.Tensor
+	if len(rt) > 0 {
+		filtered, err := t.ep.AddFilterNode("filter", rt, groupMarkPub, t.enginesInfo.GetParties())
+		if err != nil {
+			return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+		}
+
+		rtFiltered = filtered
+	}
+
+	// each special agg could have different filters, here to filter the result one by one
+	var adjustedTensorFiltered []*graph.Tensor
+	for i, adjustedFilter := range adjustedFilters {
+		for _, p := range t.enginesInfo.GetParties() {
+			adjustedFilter.CC.SetLevelForParty(p, ccl.Plain)
+		}
+		adjustedFilterPub, err := t.converter.convertTo(adjustedFilter, &publicPlacement{partyCodes: t.enginesInfo.GetParties()})
+		if err != nil {
+			return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+		}
+
+		idx := adjustedIndexes[i]
+		specialAgg := originRt[idx]
+		filtered, err := t.ep.AddFilterNode("filter", []*graph.Tensor{specialAgg}, adjustedFilterPub, t.enginesInfo.GetParties())
+		if err != nil {
+			return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+		}
+
+		adjustedTensorFiltered = append(adjustedTensorFiltered, filtered[0])
+	}
+
+	// restore the original order with the filtered special agg tensors
+	for i, idx := range adjustedIndexes {
+		if idx >= len(rtFiltered) {
+			rtFiltered = append(rtFiltered, adjustedTensorFiltered[i])
+		} else {
+			rtFiltered = append(rtFiltered[:idx], append([]*graph.Tensor{adjustedTensorFiltered[i]}, rtFiltered[idx:]...)...)
+		}
 	}
 	return ln.SetResultTableWithDTypeCheck(rtFiltered)
 }
@@ -1563,13 +1626,13 @@ func (t *translator) buildObliviousRankWindow(ln *WindowNode) error {
 	var output *graph.Tensor
 	switch windowDesc.Name {
 	case ast.WindowFuncRowNumber:
-		output, err = t.addObliviousGroupAggNode(ast.AggFuncCount, groupMark, groupMark, map[string]*graph.Attribute{})
+		output, err = t.addObliviousGroupAggNode(ast.AggFuncCount, groupMark, groupMark, make(map[string][]*graph.Tensor), map[string]*graph.Attribute{})
 		if err != nil {
 			return fmt.Errorf("builObliviousRankWindow: %v", err)
 		}
 		childColIdToTensor[lastCol.UniqueID] = output
 	case ast.WindowFuncPercentRank:
-		output, err = t.addObliviousGroupAggNode(ast.WindowFuncPercentRank, groupMark, groupMark, map[string]*graph.Attribute{})
+		output, err = t.addObliviousGroupAggNode(ast.WindowFuncPercentRank, groupMark, groupMark, make(map[string][]*graph.Tensor), map[string]*graph.Attribute{})
 		if err != nil {
 			return fmt.Errorf("builObliviousRankWindow: %v", err)
 		}

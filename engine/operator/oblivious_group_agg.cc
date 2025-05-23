@@ -64,9 +64,9 @@ void ObliviousGroupAggBase::Execute(ExecContext* ctx) {
 
     spu::Value result;
     if (RowCount(value) == 0) {
-      result = HandleEmptyInput(value);
+      result = HandleEmptyInput(ctx, value);
     } else {
-      result = CalculateResult(sctx, value, group_value);
+      result = CalculateResult(ctx, value, group_value);
     }
 
     symbols->setVar(util::SpuVarNameEncoder::GetValueName(output_pbs[i].name()),
@@ -82,7 +82,7 @@ const std::string ObliviousGroupSum::kOpType("ObliviousGroupSum");
 
 const std::string& ObliviousGroupSum::Type() const { return kOpType; }
 
-spu::Value ObliviousGroupSum::CalculateResult(spu::SPUContext* sctx,
+spu::Value ObliviousGroupSum::CalculateResult(ExecContext* ctx,
                                               const spu::Value& value,
                                               const spu::Value& group) {
   int64_t row_count = RowCount(value);
@@ -90,6 +90,7 @@ spu::Value ObliviousGroupSum::CalculateResult(spu::SPUContext* sctx,
 
   spu::Value value_hat;
 
+  auto* sctx = ctx->GetSession()->GetSpuContext();
   // NOTE: hack for boolean value.
   if (value.dtype() == spu::DT_I1) {
     value_hat = spu::kernel::hlo::Cast(sctx, value, value.vtype(), spu::DT_I64);
@@ -117,12 +118,13 @@ const std::string ObliviousGroupCount::kOpType("ObliviousGroupCount");
 
 const std::string& ObliviousGroupCount::Type() const { return kOpType; }
 
-spu::Value ObliviousGroupCount::CalculateResult(spu::SPUContext* sctx,
+spu::Value ObliviousGroupCount::CalculateResult(ExecContext* ctx,
                                                 const spu::Value& value,
                                                 const spu::Value& group) {
   int64_t row_count = RowCount(value);
   YACL_ENFORCE(row_count == RowCount(group));
 
+  auto* sctx = ctx->GetSession()->GetSpuContext();
   spu::Value ones = spu::kernel::hlo::Seal(
       sctx,
       spu::kernel::hlo::Constant(sctx, static_cast<int64_t>(1), value.shape()));
@@ -147,11 +149,12 @@ const std::string ObliviousGroupAvg::kOpType("ObliviousGroupAvg");
 
 const std::string& ObliviousGroupAvg::Type() const { return kOpType; }
 
-spu::Value ObliviousGroupAvg::CalculateResult(spu::SPUContext* sctx,
+spu::Value ObliviousGroupAvg::CalculateResult(ExecContext* ctx,
                                               const spu::Value& value,
                                               const spu::Value& group) {
-  auto sum_result = ObliviousGroupSum().CalculateResult(sctx, value, group);
-  auto count_result = ObliviousGroupCount().CalculateResult(sctx, value, group);
+  auto* sctx = ctx->GetSession()->GetSpuContext();
+  auto sum_result = ObliviousGroupSum().CalculateResult(ctx, value, group);
+  auto count_result = ObliviousGroupCount().CalculateResult(ctx, value, group);
 
   if (sum_result.dtype() != spu::DT_F64) {
     const auto sum_result_f64 = spu::kernel::hlo::Cast(
@@ -170,12 +173,12 @@ const std::string ObliviousGroupMax::kOpType("ObliviousGroupMax");
 
 const std::string& ObliviousGroupMax::Type() const { return kOpType; }
 
-spu::Value ObliviousGroupMax::CalculateResult(spu::SPUContext* sctx,
+spu::Value ObliviousGroupMax::CalculateResult(ExecContext* ctx,
                                               const spu::Value& value,
                                               const spu::Value& group) {
   int64_t row_count = RowCount(value);
   YACL_ENFORCE(row_count == RowCount(group));
-
+  auto* sctx = ctx->GetSession()->GetSpuContext();
   return util::Scan(
       sctx, value, group,
       [&](const spu::Value& lhs_v, const spu::Value& lhs_gm,
@@ -196,12 +199,12 @@ const std::string ObliviousGroupMin::kOpType("ObliviousGroupMin");
 
 const std::string& ObliviousGroupMin::Type() const { return kOpType; }
 
-spu::Value ObliviousGroupMin::CalculateResult(spu::SPUContext* sctx,
+spu::Value ObliviousGroupMin::CalculateResult(ExecContext* ctx,
                                               const spu::Value& value,
                                               const spu::Value& group) {
   int64_t row_count = RowCount(value);
   YACL_ENFORCE(row_count == RowCount(group));
-
+  auto* sctx = ctx->GetSession()->GetSpuContext();
   return util::Scan(
       sctx, value, group,
       [&](const spu::Value& lhs_v, const spu::Value& lhs_gm,
@@ -221,11 +224,12 @@ spu::Value ObliviousGroupMin::CalculateResult(spu::SPUContext* sctx,
 const std::string ObliviousPercentRank::kOpType("ObliviousPercentRank");
 const std::string& ObliviousPercentRank::Type() const { return kOpType; }
 
-spu::Value ObliviousPercentRank::CalculateResult(spu::SPUContext* sctx,
+spu::Value ObliviousPercentRank::CalculateResult(ExecContext* ctx,
                                                  const spu::Value& value,
                                                  const spu::Value& partition) {
+  auto* sctx = ctx->GetSession()->GetSpuContext();
   auto op = ObliviousGroupCount();
-  spu::Value row_number = op.CalculateResult(sctx, value, partition);
+  spu::Value row_number = op.CalculateResult(ctx, value, partition);
   spu::Value reverted_partition = RevertGroupMaskTransfer(sctx, partition);
   spu::Value reversed_mark = spu::kernel::hlo::Sub(
       sctx, spu::kernel::hlo::Constant(sctx, 1, partition.shape()),
@@ -250,25 +254,42 @@ void ObliviousPercentileDisc::InitAttribute(ExecContext* ctx) {
 }
 
 // the group is in the format of [0, 1, 1, 0, 1, 1, 1]
-spu::Value ObliviousPercentileDisc::CalculateResult(spu::SPUContext* sctx,
+spu::Value ObliviousPercentileDisc::CalculateResult(ExecContext* ctx,
                                                     const spu::Value& value,
                                                     const spu::Value& group) {
+  auto* sctx = ctx->GetSession()->GetSpuContext();
   const double epsilon = 1e-9;
   YACL_ENFORCE(percent_ >= 0 && percent_ <= 1, "percent must be in [0, 1]");
-  // percent = 1
-  if (1 - percent_ < epsilon) {
-    return ObliviousGroupMax().CalculateResult(sctx, value, group);
-  }
 
-  // percent = 0
-  if (percent_ < epsilon) {
-    return ObliviousGroupMin().CalculateResult(sctx, value, group);
-  }
-  spu::Value count = ObliviousGroupCount().CalculateResult(sctx, value, group);
+  const auto& output_group = ctx->GetOutput(kOutGroup);
+  auto* symbols = ctx->GetSession()->GetDeviceSymbols();
+  spu::Value count = ObliviousGroupCount().CalculateResult(ctx, value, group);
   spu::Value recovered_group = RevertGroupMaskTransfer(
 
       sctx, group);  // reverse group from [0, 1, 1, 0, 1, 1, 1] to [0, 0, 1, 0,
                      // 0, 0, 1]
+  // percent = 1
+  if (1 - percent_ < epsilon) {
+    auto origin_group = spu::kernel::hlo::Equal(
+        sctx, recovered_group,
+        spu::kernel::hlo::Constant(sctx, 1, recovered_group.shape()));
+    symbols->setVar(
+        util::SpuVarNameEncoder::GetValueName(output_group[0].name()),
+        origin_group);
+    return ObliviousGroupMax().CalculateResult(ctx, value, group);
+  }
+
+  // percent = 0
+  if (percent_ < epsilon) {
+    auto origin_group = spu::kernel::hlo::Equal(
+        sctx, recovered_group,
+        spu::kernel::hlo::Constant(sctx, 1, recovered_group.shape()));
+    symbols->setVar(
+        util::SpuVarNameEncoder::GetValueName(output_group[0].name()),
+        origin_group);
+    return ObliviousGroupMin().CalculateResult(ctx, value, group);
+  }
+
   spu::Value reversed_mark = spu::kernel::hlo::Sub(
       sctx, spu::kernel::hlo::Constant(sctx, 1, group.shape()),
       recovered_group);  // [0, 0, 1, 0, 0, 0, 1] to [1, 1, 0, 1, 1, 1, 0]
@@ -289,11 +310,13 @@ spu::Value ObliviousPercentileDisc::CalculateResult(spu::SPUContext* sctx,
       sctx, {index_values},
       reversed_mark);  // [index0, index0, index0, index1, index1, index1,
                        // index1]
+  auto adjusted_group = spu::kernel::hlo::Equal(sctx, expanded_index[0], count);
+  symbols->setVar(util::SpuVarNameEncoder::GetValueName(output_group[0].name()),
+                  adjusted_group);
   auto percentile_values = spu::kernel::hlo::Mul(
       sctx, value,
-      spu::kernel::hlo::Equal(
-          sctx, expanded_index[0],
-          count));  // [0, arr[index0],...0, arr[index1], ..., 0]
-  return ObliviousGroupSum().CalculateResult(sctx, percentile_values, group);
+      adjusted_group);  // [0, arr[index0],...0, arr[index1], ..., 0]
+
+  return percentile_values;
 }
 };  // namespace scql::engine::op
