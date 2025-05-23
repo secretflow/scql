@@ -1483,7 +1483,7 @@ func (t *translator) addObliviousGroupMarkNode(name string, key []*graph.Tensor)
 	return out, nil
 }
 
-func (t *translator) addObliviousGroupAggNode(funcName string, group *graph.Tensor, in *graph.Tensor, attr map[string]*graph.Attribute) (*graph.Tensor, error) {
+func (t *translator) addObliviousGroupAggNode(funcName string, group *graph.Tensor, in *graph.Tensor, out map[string][]*graph.Tensor, attr map[string]*graph.Attribute) (*graph.Tensor, error) {
 	opName, ok := operator.ObliviousGroupAggOp[funcName]
 	if !ok {
 		return nil, fmt.Errorf("addObliviousGroupAggNode: unsupported op %v", funcName)
@@ -1508,8 +1508,10 @@ func (t *translator) addObliviousGroupAggNode(funcName string, group *graph.Tens
 			outA.DType = proto.PrimitiveDataType_FLOAT64
 		}
 	}
+
+	out["Out"] = []*graph.Tensor{outA}
 	if _, err := t.ep.AddExecutionNode(funcName, opName,
-		map[string][]*graph.Tensor{"Group": {group}, "In": {inA}}, map[string][]*graph.Tensor{"Out": {outA}},
+		map[string][]*graph.Tensor{"Group": {group}, "In": {inA}}, out,
 		attr, t.enginesInfo.GetParties()); err != nil {
 		return nil, fmt.Errorf("addObliviousGroupAggNode: %v", err)
 	}

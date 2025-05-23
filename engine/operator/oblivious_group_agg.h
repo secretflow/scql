@@ -22,6 +22,7 @@
 #include "libspu/kernel/hlo/geometrical.h"
 
 #include "engine/framework/operator.h"
+#include "engine/util/spu_io.h"
 
 namespace scql::engine::op {
 namespace {
@@ -72,12 +73,14 @@ class ObliviousGroupAggBase : public Operator {
   static constexpr char kGroup[] = "Group";
   static constexpr char kIn[] = "In";
   static constexpr char kOut[] = "Out";
+  static constexpr char kOutGroup[] = "OutGroup";
 
  public:
-  virtual spu::Value HandleEmptyInput(const spu::Value& in) { return in; }
+  virtual spu::Value HandleEmptyInput(ExecContext* ctx, const spu::Value& in) {
+    return in;
+  }
 
-  virtual spu::Value CalculateResult(spu::SPUContext* sctx,
-                                     const spu::Value& value,
+  virtual spu::Value CalculateResult(ExecContext* sctx, const spu::Value& value,
                                      const spu::Value& group_value) = 0;
 
  protected:
@@ -94,7 +97,7 @@ class ObliviousGroupSum : public ObliviousGroupAggBase {
   const std::string& Type() const override;
 
  public:
-  spu::Value HandleEmptyInput(const spu::Value& in) override {
+  spu::Value HandleEmptyInput(ExecContext* ctx, const spu::Value& in) override {
     // Sum(bool tensor) should return int64
     if (in.dtype() == spu::DT_I1) {
       return in.clone().setDtype(spu::DT_I64, true);
@@ -103,7 +106,7 @@ class ObliviousGroupSum : public ObliviousGroupAggBase {
     }
   }
 
-  spu::Value CalculateResult(spu::SPUContext* sctx, const spu::Value& value,
+  spu::Value CalculateResult(ExecContext* sctx, const spu::Value& value,
                              const spu::Value& group_value) override;
 };
 
@@ -114,11 +117,11 @@ class ObliviousGroupCount : public ObliviousGroupAggBase {
   const std::string& Type() const override;
 
  public:
-  spu::Value HandleEmptyInput(const spu::Value& in) override {
+  spu::Value HandleEmptyInput(ExecContext* ctx, const spu::Value& in) override {
     return in.clone().setDtype(spu::DT_I64, true);
   }
 
-  spu::Value CalculateResult(spu::SPUContext* sctx, const spu::Value& value,
+  spu::Value CalculateResult(ExecContext* sctx, const spu::Value& value,
                              const spu::Value& group_value) override;
 };
 
@@ -129,11 +132,11 @@ class ObliviousGroupAvg : public ObliviousGroupAggBase {
   const std::string& Type() const override;
 
  public:
-  spu::Value HandleEmptyInput(const spu::Value& in) override {
+  spu::Value HandleEmptyInput(ExecContext* ctx, const spu::Value& in) override {
     return in.clone().setDtype(spu::DT_F64, true);
   }
 
-  spu::Value CalculateResult(spu::SPUContext* sctx, const spu::Value& value,
+  spu::Value CalculateResult(ExecContext* sctx, const spu::Value& value,
                              const spu::Value& group_value) override;
 };
 
@@ -144,7 +147,7 @@ class ObliviousGroupMax : public ObliviousGroupAggBase {
   const std::string& Type() const override;
 
  public:
-  spu::Value CalculateResult(spu::SPUContext* sctx, const spu::Value& value,
+  spu::Value CalculateResult(ExecContext* sctx, const spu::Value& value,
                              const spu::Value& group_value) override;
 };
 
@@ -155,7 +158,7 @@ class ObliviousGroupMin : public ObliviousGroupAggBase {
   const std::string& Type() const override;
 
  public:
-  spu::Value CalculateResult(spu::SPUContext* sctx, const spu::Value& value,
+  spu::Value CalculateResult(ExecContext* sctx, const spu::Value& value,
                              const spu::Value& group_value) override;
 };
 // TODO(jingshi) : Add ObliviousGroupMedian.
@@ -166,11 +169,11 @@ class ObliviousPercentRank : public ObliviousGroupAggBase {
   const std::string& Type() const override;
 
  public:
-  spu::Value HandleEmptyInput(const spu::Value& in) override {
+  spu::Value HandleEmptyInput(ExecContext* ctx, const spu::Value& in) override {
     return in.clone().setDtype(spu::DT_F64, true);
   }
 
-  spu::Value CalculateResult(spu::SPUContext* sctx, const spu::Value& value,
+  spu::Value CalculateResult(ExecContext* sctx, const spu::Value& value,
                              const spu::Value& partition_value) override;
 };
 
@@ -181,8 +184,17 @@ class ObliviousPercentileDisc : public ObliviousGroupAggBase {
   const std::string& Type() const override;
 
  public:
-  spu::Value CalculateResult(spu::SPUContext* sctx, const spu::Value& value,
+  spu::Value CalculateResult(ExecContext* sctx, const spu::Value& value,
                              const spu::Value& group_value) override;
+  spu::Value HandleEmptyInput(ExecContext* ctx, const spu::Value& in) override {
+    const auto& output_group = ctx->GetOutput(kOutGroup);
+    auto* symbols = ctx->GetSession()->GetDeviceSymbols();
+    auto* sctx = ctx->GetSession()->GetSpuContext();
+    symbols->setVar(
+        util::SpuVarNameEncoder::GetValueName(output_group[0].name()),
+        spu::kernel::hlo::Constant(sctx, false, in.shape()));
+    return in;
+  }
 
  protected:
   void InitAttribute(ExecContext* ctx) override;
