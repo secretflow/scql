@@ -33,9 +33,10 @@ type logicalNodeBuilder struct {
 	originCCL        map[string]*ccl.CCL
 	columnTracer     *ccl.ColumnTracer
 	groupByThreshold uint64
+	psiType          pb.PsiAlgorithmType
 }
 
-func newLogicalNodeBuilder(issuer string, info *graph.EnginesInfo, ccls map[string]*ccl.CCL, groupByThreshold uint64) (*logicalNodeBuilder, error) {
+func newLogicalNodeBuilder(issuer string, info *graph.EnginesInfo, ccls map[string]*ccl.CCL, groupByThreshold uint64, psiType pb.PsiAlgorithmType) (*logicalNodeBuilder, error) {
 	return &logicalNodeBuilder{
 		issuerPartyCode:  issuer,
 		numOfParties:     len(info.GetParties()),
@@ -44,6 +45,7 @@ func newLogicalNodeBuilder(issuer string, info *graph.EnginesInfo, ccls map[stri
 		originCCL:        ccls,
 		columnTracer:     ccl.NewColumnTracer(),
 		groupByThreshold: groupByThreshold,
+		psiType:          psiType,
 	}, nil
 }
 
@@ -53,7 +55,7 @@ func (b *logicalNodeBuilder) buildLogicalNode(lp core.LogicalPlan) (logicalNode,
 		return nil, err
 	}
 	if b.originCCL != nil {
-		if err := ln.buildCCL(&ccl.Context{GroupByThreshold: b.groupByThreshold}, b.columnTracer); err != nil {
+		if err := ln.buildCCL(&ccl.Context{GroupByThreshold: b.groupByThreshold, PsiType: b.psiType}, b.columnTracer); err != nil {
 			return nil, status.New(pb.Code_CCL_CHECK_FAILED, err.Error())
 		}
 	}

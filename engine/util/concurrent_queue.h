@@ -31,13 +31,10 @@ class SimpleChannel {
   ~SimpleChannel() {}
 
   void Push(T& item) {
-    if (closed_) {
-      cond_.notify_all();
-      YACL_THROW("send data to a closed queue");
-    }
     {
       std::unique_lock<std::mutex> lock(mutex_);
       if (closed_) {
+        cond_.notify_all();
         YACL_THROW("send data to a closed queue");
       }
       while (queue_.size() >= capacity_) {
@@ -49,13 +46,10 @@ class SimpleChannel {
   }
 
   void Push(T&& item) {
-    if (closed_) {
-      cond_.notify_all();
-      YACL_THROW("send data to a closed queue");
-    }
     {
       std::unique_lock<std::mutex> lock(mutex_);
       if (closed_) {
+        cond_.notify_all();
         YACL_THROW("send data to a closed queue");
       }
       while (queue_.size() >= capacity_) {

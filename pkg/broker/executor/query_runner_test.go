@@ -162,16 +162,16 @@ func TestQueryRunner(t *testing.T) {
 	r.Equal(`digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select t1.id from real.t1;,table_refs:[real.t1],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select t2.id from real.t2;,table_refs:[real.t2],],party:[bob,]}"]
-2 [label="join:{in:[Left:{t_0,},Right:{t_1,},],out:[LeftJoinIndex:{t_2,},RightJoinIndex:{t_3,},],attr:[input_party_codes:[alice bob],join_type:0,psi_algorithm:1,],party:[alice,bob,]}"]
-3 [label="filter_by_index:{in:[Data:{t_0,},RowsIndexFilter:{t_2,},],out:[Out:{t_4,},],attr:[],party:[alice,]}"]
-4 [label="publish:{in:[In:{t_4,},],out:[Out:{t_5,},],attr:[],party:[alice,]}"]
+2 [label="join:{in:[Left:{t_0,},Right:{t_1,},],out:[LeftJoinIndex:{t_2,},RightJoinIndex:{},],attr:[input_party_codes:[alice bob],join_type:0,psi_algorithm:1,],party:[alice,bob,]}"]
+3 [label="filter_by_index:{in:[Data:{t_0,},RowsIndexFilter:{t_2,},],out:[Out:{t_3,},],attr:[],party:[alice,]}"]
+4 [label="publish:{in:[In:{t_3,},],out:[Out:{t_4,},],attr:[],party:[alice,]}"]
 0 -> 2 [label = "t_0:{id:PRIVATE:INT64}"]
 0 -> 3 [label = "t_0:{id:PRIVATE:INT64}"]
 1 -> 2 [label = "t_1:{id:PRIVATE:INT64}"]
 2 -> 3 [label = "t_2:{id:PRIVATE:INT64}"]
-3 -> 4 [label = "t_4:{id:PRIVATE:INT64}"]
+3 -> 4 [label = "t_3:{id:PRIVATE:INT64}"]
 }`, compiledPlan.Explain.GetExeGraphDot())
-	r.Equal("c3f81f58a5aaabd797c15be7c9567c1d18cfd286b080ab63c776f4ae0527cfd1", compiledPlan.WholeGraphChecksum)
+	r.Equal("6726f527c0139a176ff83b1bb144de0c9ecd8ac4fe867b943541a31c8f65bff1", compiledPlan.WholeGraphChecksum)
 }
 
 func TestCaseSensitive(t *testing.T) {
