@@ -1267,6 +1267,7 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 	}
 
 	// TODO(jingshi): temporary remove shuffle here for simplicity, make group_mark public and support aggregation with public group_mark later for efficiency
+	// If there are adjusted filters, we can not shuffle the group_mark, since it would break the order of results
 	if !t.CompileOpts.GetSecurityCompromise().GetRevealGroupMark() && len(adjustedFilters) == 0 {
 		// shuffle and replace 'rt' and 'groupMark'
 		shuffled, err := t.addShuffleNode("shuffle", append(originRt, groupMark))
@@ -1279,6 +1280,7 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 	rt := make([]*graph.Tensor, len(originRt))
 	copy(rt, originRt)
 
+	// remove the special group tensors
 	for i := len(adjustedIndexes) - 1; i >= 0; i-- {
 		idx := adjustedIndexes[i]
 		if idx >= 0 && idx < len(rt) {
@@ -1305,6 +1307,7 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 		rtFiltered = filtered
 	}
 
+	// each special agg could have different filters, here to filter the result one by one
 	var adjustedTensorFiltered []*graph.Tensor
 	for i, adjustedFilter := range adjustedFilters {
 		for _, p := range t.enginesInfo.GetParties() {
@@ -1325,6 +1328,7 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 		adjustedTensorFiltered = append(adjustedTensorFiltered, filtered[0])
 	}
 
+	// restore the original order with the filtered special agg tensors
 	for i, idx := range adjustedIndexes {
 		if idx >= len(rtFiltered) {
 			rtFiltered = append(rtFiltered, adjustedTensorFiltered[i])
