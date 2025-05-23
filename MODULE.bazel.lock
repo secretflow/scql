@@ -323,6 +323,8 @@
     "https://bcr.bazel.build/modules/jsoncpp/1.9.5/source.json": "4108ee5085dd2885a341c7fab149429db457b3169b86eb081fa245eadf69169d",
     "https://bcr.bazel.build/modules/libpfm/4.11.0/MODULE.bazel": "45061ff025b301940f1e30d2c16bea596c25b176c8b6b3087e92615adbd52902",
     "https://bcr.bazel.build/modules/libpfm/4.11.0/source.json": "caaffb3ac2b59b8aac456917a4ecf3167d40478ee79f15ab7a877ec9273937c9",
+    "https://bcr.bazel.build/modules/libunwind/1.8.1/MODULE.bazel": "d9b947b15135786aed51671c22872a93e2637c74caa20e94f2061fd3b1efd6c3",
+    "https://bcr.bazel.build/modules/libunwind/1.8.1/source.json": "2b4e58e2fa6ed7204862ab1a4e5978e4107340884c3217596ff7910b8dfae919",
     "https://bcr.bazel.build/modules/lz4/1.9.4/MODULE.bazel": "e3d307b1d354d70f6c809167eafecf5d622c3f27e3971ab7273410f429c7f83a",
     "https://bcr.bazel.build/modules/lz4/1.9.4/source.json": "233f0bdfc21f254e3dda14683ddc487ca68c6a3a83b7d5db904c503f85bd089b",
     "https://bcr.bazel.build/modules/magic_enum/0.9.6/MODULE.bazel": "2b8db5bbd5d456dfb1e05cafd4a572374d461ffd2e0bd6970b9060dca2200618",
@@ -342,7 +344,8 @@
     "https://bcr.bazel.build/modules/opentracing-cpp/1.6.0/MODULE.bazel": "b3925269f63561b8b880ae7cf62ccf81f6ece55b62cd791eda9925147ae116ec",
     "https://bcr.bazel.build/modules/opentracing-cpp/1.6.0/source.json": "da1cb1add160f5e5074b7272e9db6fd8f1b3336c15032cd0a653af9d2f484aed",
     "https://bcr.bazel.build/modules/platforms/0.0.10/MODULE.bazel": "8cb8efaf200bdeb2150d93e162c40f388529a25852b332cec879373771e48ed5",
-    "https://bcr.bazel.build/modules/platforms/0.0.10/source.json": "f22828ff4cf021a6b577f1bf6341cb9dcd7965092a439f64fc1bb3b7a5ae4bd5",
+    "https://bcr.bazel.build/modules/platforms/0.0.11/MODULE.bazel": "0daefc49732e227caa8bfa834d65dc52e8cc18a2faf80df25e8caea151a9413f",
+    "https://bcr.bazel.build/modules/platforms/0.0.11/source.json": "f7e188b79ebedebfe75e9e1d098b8845226c7992b307e28e1496f23112e8fc29",
     "https://bcr.bazel.build/modules/platforms/0.0.4/MODULE.bazel": "9b328e31ee156f53f3c416a64f8491f7eb731742655a47c9eec4703a71644aee",
     "https://bcr.bazel.build/modules/platforms/0.0.5/MODULE.bazel": "5733b54ea419d5eaf7997054bb55f6a1d0b5ff8aedf0176fef9eea44f3acda37",
     "https://bcr.bazel.build/modules/platforms/0.0.6/MODULE.bazel": "ad6eeef431dc52aefd2d77ed20a4b353f8ebf0f4ecdd26a807d2da5aa8cd0615",
@@ -403,7 +406,8 @@
     "https://bcr.bazel.build/modules/rules_license/0.0.4/MODULE.bazel": "6a88dd22800cf1f9f79ba32cacad0d3a423ed28efa2c2ed5582eaa78dd3ac1e5",
     "https://bcr.bazel.build/modules/rules_license/0.0.7/MODULE.bazel": "088fbeb0b6a419005b89cf93fe62d9517c0a2b8bb56af3244af65ecfe37e7d5d",
     "https://bcr.bazel.build/modules/rules_license/0.0.8/MODULE.bazel": "5669c6fe49b5134dbf534db681ad3d67a2d49cfc197e4a95f1ca2fd7f3aebe96",
-    "https://bcr.bazel.build/modules/rules_license/0.0.8/source.json": "ccfd3964cd0cd1739202efb8dbf9a06baab490e61e174b2ad4790f9c4e610beb",
+    "https://bcr.bazel.build/modules/rules_license/1.0.0/MODULE.bazel": "a7fda60eefdf3d8c827262ba499957e4df06f659330bbe6cdbdb975b768bb65c",
+    "https://bcr.bazel.build/modules/rules_license/1.0.0/source.json": "a52c89e54cc311196e478f8382df91c15f7a2bfdf4c6cd0e2675cc2ff0b56efb",
     "https://bcr.bazel.build/modules/rules_nodejs/5.8.2/MODULE.bazel": "6bc03c8f37f69401b888023bf511cb6ee4781433b0cb56236b2e55a21e3a026a",
     "https://bcr.bazel.build/modules/rules_nodejs/5.8.2/source.json": "6e82cf5753d835ea18308200bc79b9c2e782efe2e2a4edc004a9162ca93382ca",
     "https://bcr.bazel.build/modules/rules_pkg/0.7.0/MODULE.bazel": "df99f03fc7934a4737122518bb87e667e62d780b610910f0447665a7e2be62dc",
@@ -456,11 +460,14 @@
     "https://bcr.bazel.build/modules/upb/0.0.0-20230907-e7430e6/source.json": "6e513de1d26d1ded97a1c98a8ee166ff9be371a71556d4bc91220332dd3aa48e",
     "https://bcr.bazel.build/modules/xsimd/8.1.0/MODULE.bazel": "fffec88a77a4313f35ef30a47d07efb0e356bdd3eec444c6e9d2f5ee5f5f8b46",
     "https://bcr.bazel.build/modules/xsimd/8.1.0/source.json": "85c0ff08b997e49f6cd6316bd12e209623f6dacbb7cbc5259214b947411e86d1",
+    "https://bcr.bazel.build/modules/xz/5.4.5.bcr.5/MODULE.bazel": "b93d7035ac14c900dfdf7624e42cfcbfc34415aa8d3c83a6f225867c48d28dad",
+    "https://bcr.bazel.build/modules/xz/5.4.5.bcr.5/source.json": "30c4e5c856087a60d92e2522eafd316c0661671f4478ca94c6b7bd877010210a",
     "https://bcr.bazel.build/modules/zlib/1.2.11/MODULE.bazel": "07b389abc85fdbca459b69e2ec656ae5622873af3f845e1c9d80fe179f3effa0",
     "https://bcr.bazel.build/modules/zlib/1.2.13/MODULE.bazel": "aa6deb1b83c18ffecd940c4119aff9567cd0a671d7bba756741cb2ef043a29d5",
     "https://bcr.bazel.build/modules/zlib/1.3.1.bcr.1/MODULE.bazel": "6a9fe6e3fc865715a7be9823ce694ceb01e364c35f7a846bf0d2b34762bc066b",
     "https://bcr.bazel.build/modules/zlib/1.3.1.bcr.3/MODULE.bazel": "af322bc08976524477c79d1e45e241b6efbeb918c497e8840b8ab116802dda79",
-    "https://bcr.bazel.build/modules/zlib/1.3.1.bcr.3/source.json": "2be409ac3c7601245958cd4fcdff4288be79ed23bd690b4b951f500d54ee6e7d",
+    "https://bcr.bazel.build/modules/zlib/1.3.1.bcr.5/MODULE.bazel": "eec517b5bbe5492629466e11dae908d043364302283de25581e3eb944326c4ca",
+    "https://bcr.bazel.build/modules/zlib/1.3.1.bcr.5/source.json": "22bc55c47af97246cfc093d0acf683a7869377de362b5d1c552c2c2e16b7a806",
     "https://bcr.bazel.build/modules/zlib/1.3/MODULE.bazel": "6a9c02f19a24dcedb05572b2381446e27c272cd383aed11d41d99da9e3167a72",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/bazel_registry.json": "8a28e4aff06ee60aed2a8c281907fb8bcbf3b753c91fb5a5c57da3215d5b3497",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/abseil-cpp/20210324.2/MODULE.bazel": "not found",
@@ -661,9 +668,9 @@
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/boost.xpressive/1.83.0/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/boringssl/0.0.0-20230215-5c22014/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/brotli/1.1.0/MODULE.bazel": "not found",
-    "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/brpc/1.11.0-20241119-72ce354/MODULE.bazel": "422ee90e00a7929e5e04bb8486018afa12f0ea547bfb0bb351e9194293492f4a",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/brpc/1.11.0-20241212-282bc90/MODULE.bazel": "5a196ed0f1f129bde2001f3db5f1a991812714b207aa61ade34dcc78ec02a054",
-    "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/brpc/1.11.0-20241212-282bc90/source.json": "f6e42db7df330bf035a012fe56130ddd8e64bfacfbb007c3798ac417a9635665",
+    "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/brpc/1.13.0/MODULE.bazel": "b8ce8072664fb99db6479134cae5d383402aebf48f2c171b8ca9cc1d0e236178",
+    "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/brpc/1.13.0/source.json": "cc0a693969df7fb38819ee09184b53e33bd3e7037ac3b48b26f531c3150ee21b",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/buildozer/7.1.2/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/bzip2/1.0.8.bcr.1/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/c-ares/1.15.0/MODULE.bazel": "not found",
@@ -729,6 +736,7 @@
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/libsodium/1.0.18/source.json": "85abb5d41e1f38b3909f24a92eca547d337bee936649d39461037b0582ec6cd1",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/libtommath/0.0.0-20240407-42b3fb0/MODULE.bazel": "09c54cc493f68ec486a6c36b4b494a67936532a075fec29089cc1b8e1143e30d",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/libtommath/0.0.0-20240407-42b3fb0/source.json": "ffeac1c889d6d8eb4c6ed0d7243bfd298a94f0fb3a3670a31e88045b8c95fc02",
+    "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/libunwind/1.8.1/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/llvm-raw/20240809.0-35f55f5/MODULE.bazel": "569ffa91a1497f0cbfc2a39b03b3155d2f7e7c360e2fdf5b31418868a1a9f1b8",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/llvm-raw/20240809.0-35f55f5/source.json": "eccb7418d37d4ffc5ccf7c5b737f051d11299b7510fc85895f4cd5f8b948a5a6",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/log4cplus/2.1.1/MODULE.bazel": "76862ff5868200f79b0d5ba641fe9eab2dba35324b4ec21559572568148348cc",
@@ -755,6 +763,7 @@
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/pailliercryptolib/2.0.0-20231102-fdc2135/MODULE.bazel": "1ddfd40690e4955de2faf5a19093c4634ffe95cea4e618da80cba8fd6284aa29",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/pailliercryptolib/2.0.0-20231102-fdc2135/source.json": "25ad090a3cc56c8b1df8fa968c01ac98a2e2b3905062aa6b1f6d49ae9ce0975c",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/platforms/0.0.10/MODULE.bazel": "not found",
+    "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/platforms/0.0.11/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/platforms/0.0.4/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/platforms/0.0.5/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/platforms/0.0.6/MODULE.bazel": "not found",
@@ -803,6 +812,7 @@
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/rules_license/0.0.4/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/rules_license/0.0.7/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/rules_license/0.0.8/MODULE.bazel": "not found",
+    "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/rules_license/1.0.0/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/rules_nodejs/5.8.2/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/rules_pkg/0.7.0/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/rules_pkg/0.9.1/MODULE.bazel": "not found",
@@ -861,6 +871,7 @@
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/xla/20240814.0-64bdcc5/MODULE.bazel": "5348a789c31fdf43215efa633e471bf2851ff5c5044ac2a7fd04da3a3746b72d",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/xla/20240814.0-64bdcc5/source.json": "2045ff3085f2e0ea4e391d7bde507fa0689256de98bc748370e5a5c301c1cba3",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/xsimd/8.1.0/MODULE.bazel": "not found",
+    "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/xz/5.4.5.bcr.5/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/yacl/0.4.5b10-nightly-20241224/MODULE.bazel": "b8503c783401674db7cfb194e14b96cac57973dc596ce4bd60c90ceaaf939c70",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/yacl/0.4.5b10-nightly-20250110/MODULE.bazel": "984e37b3d6d982edb1430f6dc100607569f78378bc3b662ac03802671d0b7c7a",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/yacl/0.4.5b10-nightly-20250110/source.json": "8ca56ae0ba48aefadf631c303ef3e0c3bb3cc2f6e0e717264a32b633c5dc4b05",
@@ -868,6 +879,7 @@
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/zlib/1.2.13/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/zlib/1.3.1.bcr.1/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/zlib/1.3.1.bcr.3/MODULE.bazel": "not found",
+    "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/zlib/1.3.1.bcr.5/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/zlib/1.3/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/zstd/1.5.6/MODULE.bazel": "b838bc765643a0b30bc0292173f514d61eea67a521f70579c1bc3856fd2a0b44",
     "https://raw.githubusercontent.com/secretflow/bazel-registry/main/modules/zstd/1.5.6/source.json": "5f6589b80186a21e14258e5e526de1614bc85abbb985199bb8baf39066016dca"
@@ -1633,23 +1645,6 @@
             "grpc~"
           ]
         ]
-      }
-    },
-    "@@platforms//host:extension.bzl%host_platform": {
-      "general": {
-        "bzlTransitiveDigest": "xelQcPZH8+tmuOHVjL9vDxMnnQNMlwj0SlvgoqBkm4U=",
-        "usagesDigest": "hgylFkgWSg0ulUwWZzEM1aIftlUnbmw2ynWLdEfHnZc=",
-        "recordedFileInputs": {},
-        "recordedDirentsInputs": {},
-        "envVariables": {},
-        "generatedRepoSpecs": {
-          "host_platform": {
-            "bzlFile": "@@platforms//host:extension.bzl",
-            "ruleClassName": "host_platform_repo",
-            "attributes": {}
-          }
-        },
-        "recordedRepoMappingEntries": []
       }
     },
     "@@rules_buf~//buf:extensions.bzl%ext": {
