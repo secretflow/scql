@@ -152,7 +152,7 @@ msgstr "执行阶段"
 
 #: ../../topics/system/usage.rst:52
 msgid "8.0 submit a DQL"
-msgstr "8.0 提交查询（DQL）。"
+msgstr "8.0 提交查询（DQL）"
 
 #: ../../topics/system/usage.rst:52
 msgid ""
