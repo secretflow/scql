@@ -157,11 +157,6 @@ func (svc *grpcIntraSvc) ShowCCL(ctx context.Context, req *pb.ShowCCLRequest) (r
 		err = txn.Finish(err)
 	}()
 
-	resp, err = common.CheckProjectArchived[pb.ShowCCLResponse](txn, req.GetProjectId(), "ShowCCL")
-	if resp != nil || err != nil {
-		return resp, err
-	}
-
 	// check project exist
 	projectAndMembers, err := txn.GetProjectAndMembers(req.GetProjectId())
 	if err != nil {
