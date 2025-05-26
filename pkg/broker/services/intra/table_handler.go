@@ -39,7 +39,7 @@ func (svc *grpcIntraSvc) CreateTable(c context.Context, req *pb.CreateTableReque
 	}()
 
 	resp, err = common.CheckProjectArchived[pb.CreateTableResponse](txn, req.GetProjectId(), "CreateTable")
-	if resp != nil || err != nil {
+	if err != nil || resp != nil {
 		return resp, err
 	}
 
@@ -192,7 +192,7 @@ func (svc *grpcIntraSvc) DropTable(c context.Context, req *pb.DropTableRequest) 
 	}()
 
 	resp, err = common.CheckProjectArchived[pb.DropTableResponse](txn, req.GetProjectId(), "DropTable")
-	if resp != nil || err != nil {
+	if err != nil || resp != nil {
 		return resp, err
 	}
 

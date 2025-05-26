@@ -288,7 +288,7 @@ func (svc *grpcIntraSvc) InviteMember(c context.Context, req *pb.InviteMemberReq
 	}()
 
 	resp, err = common.CheckProjectArchived[pb.InviteMemberResponse](txn, req.GetProjectId(), "InviteMember")
-	if resp != nil || err != nil {
+	if err != nil || resp != nil {
 		return resp, err
 	}
 

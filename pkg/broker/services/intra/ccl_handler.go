@@ -41,7 +41,7 @@ func (svc *grpcIntraSvc) GrantCCL(ctx context.Context, req *pb.GrantCCLRequest) 
 	}()
 
 	resp, err = common.CheckProjectArchived[pb.GrantCCLResponse](txn, req.GetProjectId(), "GrantCCL")
-	if resp != nil || err != nil {
+	if err != nil || resp != nil {
 		return resp, err
 	}
 
@@ -108,7 +108,7 @@ func (svc *grpcIntraSvc) RevokeCCL(c context.Context, req *pb.RevokeCCLRequest) 
 	}()
 
 	resp, err = common.CheckProjectArchived[pb.RevokeCCLResponse](txn, req.GetProjectId(), "RevokeCCL")
-	if resp != nil || err != nil {
+	if err != nil || resp != nil {
 		return resp, err
 	}
 
@@ -156,11 +156,6 @@ func (svc *grpcIntraSvc) ShowCCL(ctx context.Context, req *pb.ShowCCLRequest) (r
 	defer func() {
 		err = txn.Finish(err)
 	}()
-
-	resp, err = common.CheckProjectArchived[pb.ShowCCLResponse](txn, req.GetProjectId(), "ShowCCL")
-	if resp != nil || err != nil {
-		return resp, err
-	}
 
 	// check project exist
 	projectAndMembers, err := txn.GetProjectAndMembers(req.GetProjectId())

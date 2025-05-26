@@ -52,7 +52,7 @@ func (svc *grpcInterSvc) SyncInfo(c context.Context, req *pb.SyncInfoRequest) (r
 	}()
 
 	resp, err = common.CheckProjectArchived[pb.SyncInfoResponse](txn, req.GetProjectId(), "SyncInfo")
-	if resp != nil || err != nil {
+	if err != nil || resp != nil {
 		return resp, err
 	}
 
@@ -246,7 +246,7 @@ func (svc *grpcInterSvc) ExchangeJobInfo(ctx context.Context, req *pb.ExchangeJo
 		err = txn.Finish(err)
 	}()
 	resp, err = common.CheckProjectArchived[pb.ExchangeJobInfoResponse](txn, req.GetProjectId(), "ExchangeJobInfo")
-	if resp != nil || err != nil {
+	if err != nil || resp != nil {
 		return resp, err
 	}
 
