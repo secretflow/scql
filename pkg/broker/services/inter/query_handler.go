@@ -46,11 +46,9 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 	app := svc.app
 	// check whether project is archived
 	txn := app.MetaMgr.CreateMetaTransaction()
-	defer func() {
-		err = txn.Finish(err)
-	}()
 	res, err = common.CheckProjectArchived[pb.DistributeQueryResponse](txn, req.GetProjectId(), "DistributeQuery")
-	if res != nil || err != nil {
+	err = txn.Finish(err)
+	if err != nil || res != nil {
 		return res, err
 	}
 
