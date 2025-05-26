@@ -345,7 +345,7 @@ func (s *intraTestSuite) TestParameterCheck() {
 	listCCLsReq := &pb.ShowCCLRequest{ProjectId: "not_exist"}
 	_, err = s.svcAlice.ShowCCL(s.ctx, listCCLsReq)
 	s.Error(err)
-	s.Equal("ShowCCL: get project not_exist err: record not found", err.Error())
+	s.Equal("ShowCCL: GetProjectAndMembers err: record not found", err.Error())
 	listCCLsReq = &pb.ShowCCLRequest{ProjectId: "1", Tables: []string{"not_exist_table"}}
 	_, err = s.svcAlice.ShowCCL(s.ctx, listCCLsReq)
 	s.Error(err)
