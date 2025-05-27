@@ -1236,10 +1236,10 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 			if err != nil {
 				return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 			}
-			var payloadSorted []*graph.Tensor
-			payloadSorted = append(payloadSorted, sortedKeys...)
-			payloadSorted = append(payloadSorted, colT)
-			sortedCol, err := t.addSortNode("sort", payloadSorted, []*graph.Tensor{colT}, false)
+			var keysForPercentileSort []*graph.Tensor
+			keysForPercentileSort = append(keysForPercentileSort, sortedKeys...)
+			keysForPercentileSort = append(keysForPercentileSort, colT)
+			sortedCol, err := t.addSortNode("sort", keysForPercentileSort, []*graph.Tensor{colT}, false)
 			if err != nil {
 				return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 			}
