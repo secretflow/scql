@@ -28,51 +28,51 @@ msgid ""
 "prepare and query. In the prepare stage, the system is set up, and the "
 "necessary tables are created and initialized. In the query stage, queries"
 " are submitted, processed, and results are returned."
-msgstr ""
+msgstr "下述流程图展示了如何使用 SCQL 系统。总的来说，该系统包含两个阶段：准备阶段和查询阶段。在准备阶段，用户需对系统进行初步设置，并对必要的表格进行创建和初始化。在查询阶段，用户向 SCDB 提交查询请求，SCDB 处理请求并返回查询结果。"
 
 #: ../../topics/system/usage.rst:7
 msgid ""
 "All requests from user to SCDB can be submitted through :ref:`synchronous"
 " api<sync_api>` or :ref:`asynchronous api<async_api>`."
-msgstr ""
+msgstr "用户对 SCDB 的所有请求均可通过 :ref:`同步 api<sync_api>` 或 :ref:`异步 api<async_api>` 提交。"
 
 #: ../../topics/system/usage.rst:10
 msgid "Workflow"
-msgstr ""
+msgstr "工作流程"
 
 #: ../../topics/system/usage.rst:-1
 msgid "how_to_use_scql"
-msgstr ""
+msgstr "SCQL 使用流程"
 
 #: ../../topics/system/usage.rst:15
 msgid "Participants"
-msgstr ""
+msgstr "参与方"
 
 #: ../../topics/system/usage.rst:17
 msgid "Alice: the user in party alice"
-msgstr ""
+msgstr "Alice: 参与方 alice 中的用户"
 
 #: ../../topics/system/usage.rst:18
 msgid "Bob: the user in party bob"
-msgstr ""
+msgstr "Bob: 参与方 bob 中的用户"
 
 #: ../../topics/system/usage.rst:19
 msgid "SCDB: the SCDB server"
-msgstr ""
+msgstr "SCDB: SCDB 服务器"
 
 #: ../../topics/system/usage.rst:22
 msgid ""
 "Before the start of the project, Alice and Bob need to obtain the root "
 "user's username and password from the admin."
-msgstr ""
+msgstr "开始前，Alice 和 Bob 需要从管理员处获取 root 账户的用户名和密码。"
 
 #: ../../topics/system/usage.rst:25
 msgid "Prepare stage"
-msgstr ""
+msgstr "准备阶段"
 
 #: ../../topics/system/usage.rst:28
 msgid "1.0 create database"
-msgstr ""
+msgstr "1.0 数据库创建"
 
 #: ../../topics/system/usage.rst:28
 msgid ""
@@ -80,102 +80,102 @@ msgid ""
 ":ref:`CREATE DATABASE Statement <create_database_stm>`, which can be "
 "considered a new project, SCQL supports running multiple projects "
 "simultaneously."
-msgstr ""
+msgstr "Alice 或 Bob 通过 :ref:`CREATE DATABASE Statement <create_database_stm>` 使用 root 账户创建一个新的数据库，该数据库可视为一个新项目。SCQL 支持同时运行多个项目。"
 
 #: ../../topics/system/usage.rst:31
 msgid "2.0 create and grant user"
-msgstr ""
+msgstr "2.0 Alice 账户创建并授权"
 
 #: ../../topics/system/usage.rst:31
 msgid ""
 "Alice creates user account \"Alice\" in SCDB using the root user account "
 "by :ref:`CREATE USER Statement <create_user_stm>`, and grants access to "
 "the relevant database by :ref:`GRANT Statement <scql_grant_revoke>`"
-msgstr ""
+msgstr "在 SCDB 中，Alice 通过 root 账户使用 :ref:`CREATE USER Statement <create_user_stm>` 创建账户 \"Alice\"，并通过 :ref:`GRANT Statement <scql_grant_revoke>` 授予其对相关数据库的访问权限。"
 
 #: ../../topics/system/usage.rst:34
 msgid "3.0 create and grant user"
-msgstr ""
+msgstr "3.0 Bob 账户创建并授权"
 
 #: ../../topics/system/usage.rst:34
 msgid ""
 "Bob creates user account \"Bob\" in SCDB using the root user account by "
 ":ref:`CREATE USER Statement <create_user_stm>`, and grants access to the "
 "relevant database by :ref:`GRANT Statement <scql_grant_revoke>`"
-msgstr ""
+msgstr "在 SCDB 中，Bob 通过 root 账户使用 :ref:`CREATE USER Statement <create_user_stm>` 创建账户 \"Bob\"，并通过 :ref:`GRANT Statement <scql_grant_revoke>` 授予其对相关数据库的访问权限。"
 
 #: ../../topics/system/usage.rst:37
 msgid "4.0 create table"
-msgstr ""
+msgstr "4.0 Alice 建表"
 
 #: ../../topics/system/usage.rst:37
 msgid ""
 "Alice creates table in SCDB using the account \"Alice\" by :ref:`CREATE "
 "TABLE Statement <create_table>`."
-msgstr ""
+msgstr "Alice 使用账号 \"Alice\" 通过 :ref:`CREATE TABLE Statement <create_table>` 在 SCDB 中创建表。"
 
 #: ../../topics/system/usage.rst:40
 msgid "5.0 create table"
-msgstr ""
+msgstr "5.0 Bob 建表"
 
 #: ../../topics/system/usage.rst:40
 msgid ""
 "Bob creates table in SCDB using the account \"Bob\" by :ref:`CREATE TABLE"
 " Statement <create_table>`."
-msgstr ""
+msgstr "Bob 使用账号 \"Bob\" 通过 :ref:`CREATE TABLE Statement <create_table>` 在 SCDB 中创建表。"
 
 #: ../../topics/system/usage.rst:43
 msgid "6.0 grant CCL"
-msgstr ""
+msgstr "6.0 Alice 授权 CCL"
 
 #: ../../topics/system/usage.rst:43
 msgid ""
 "Alice grants CCL about the table created by Alice for Alice and Bob in "
 "SCDB using the account \"Alice\", see :doc:`/topics/ccl/intro` for more "
 "information."
-msgstr ""
+msgstr "Alice 使用账户 \"Alice\" 为在 SCDB 中由 Alice 创建并供 Alice 和 Bob 使用的表授予 CCL 权限，更多信息请参见 :doc:`/topics/ccl/intro`。"
 
 #: ../../topics/system/usage.rst:46
 msgid "7.0 grant CCL"
-msgstr ""
+msgstr "7.0 Bob 授权 CCL"
 
 #: ../../topics/system/usage.rst:46
 msgid ""
 "Bob grants CCL about the table created by Bob for Alice and Bob in SCDB "
 "using the account \"Bob\", see :doc:`/topics/ccl/intro` for more "
 "information."
-msgstr ""
+msgstr "Bob 使用账户 \"Bob\" 为在 SCDB 中由 Bob 创建并供 Alice 和 Bob 使用的表授予 CCL 权限，更多信息请参见 :doc:`/topics/ccl/intro`。"
 
 #: ../../topics/system/usage.rst:49
 msgid "Execute stage"
-msgstr ""
+msgstr "执行阶段"
 
 #: ../../topics/system/usage.rst:52
 msgid "8.0 submit a DQL"
-msgstr ""
+msgstr "8.0 提交查询（DQL）"
 
 #: ../../topics/system/usage.rst:52
 msgid ""
 "Alice submits a DQL to SCDB through :ref:`public/submit_query "
 "<submit_query>` or :ref:`public/submit_and_get <submit_and_get>` using "
 "the account \"Alice\"."
-msgstr ""
+msgstr "Alice 使用账户 \"Alice\" 通过 :ref:`public/submit_query <submit_query>` 或 :ref:`public/submit_and_get <submit_and_get>` 向 SCDB 提交 DQL 查询。"
 
 #: ../../topics/system/usage.rst:55
 msgid "9.0 process query"
-msgstr ""
+msgstr "9.0 执行查询"
 
 #: ../../topics/system/usage.rst:55
 msgid "SCDB will check ccl and execute query with engines."
-msgstr ""
+msgstr "SCDB 将检查 CCL 并使用引擎执行查询。"
 
 #: ../../topics/system/usage.rst:57
 msgid "10.0 return result"
-msgstr ""
+msgstr "10.0 返回结果"
 
 #: ../../topics/system/usage.rst:58
 msgid "SCDB return the query result to Alice."
-msgstr ""
+msgstr "SCDB 将查询结果返回给 Alice。"
 
 #~ msgid ""
 #~ "SCDB retrieves table schema information "
