@@ -17,6 +17,7 @@ package translator
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	. "github.com/pingcap/check"
@@ -51,8 +52,12 @@ func (s *testTranslatorSuite) TestTranslateWithCCL(c *C) {
 		if conf.groupThreshold > 0 {
 			groupThreshold = conf.groupThreshold
 		}
+		revealGroupMark := false
+		if strings.Contains(strings.ToUpper(sql), "PERCENTILE_DISC") {
+			revealGroupMark = true
+		}
 		compileOpts := scql.CompileOptions{
-			SecurityCompromise: &scql.SecurityCompromiseConfig{RevealGroupMark: false, GroupByThreshold: uint64(groupThreshold), RevealGroupCount: ca.conf.revealGroupCount},
+			SecurityCompromise: &scql.SecurityCompromiseConfig{RevealGroupMark: revealGroupMark, GroupByThreshold: uint64(groupThreshold), RevealGroupCount: ca.conf.revealGroupCount},
 			Batched:            conf.batched,
 		}
 		t, err := NewTranslator(
@@ -81,6 +86,12 @@ func (s *testTranslatorSuite) TestTranslateWithCCL(c *C) {
 			_, err := s.recordFile.WriteString(fmt.Sprintf("{`%s`, `%s`, `%s`, testConf{groupThreshold:%d, batched:%t, revealGroupCount:%t}},\n", sql, graphStr, actualPipe, conf.groupThreshold, conf.batched, conf.revealGroupCount))
 			c.Assert(err, IsNil)
 		} else {
+			if graphStr != dot {
+				fmt.Println(graphStr)
+				fmt.Println("=======")
+				fmt.Println(dot)
+				fmt.Println(sql)
+			}
 			c.Assert(graphStr, Equals, dot, Commentf("for %s", sql))
 			c.Assert(actualPipe, Equals, briefPipe, Commentf("for %s", sql))
 		}
