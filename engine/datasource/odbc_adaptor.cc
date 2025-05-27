@@ -14,18 +14,24 @@
 
 #include "engine/datasource/odbc_adaptor.h"
 
-#include <future>
+#include <cstddef>
+#include <cstdint>
 #include <memory>
-#include <mutex>
 #include <optional>
+#include <vector>
 
 #include "Poco/Data/MetaColumn.h"
+#include "Poco/Data/Range.h"
 #include "Poco/DateTime.h"
+#include "Poco/Dynamic/Var.h"
 #include "Poco/Timestamp.h"
 #include "yacl/base/exception.h"
 
 #include "engine/core/arrow_helper.h"
+#include "engine/core/primitive_builder.h"
+#include "engine/core/string_tensor_builder.h"
 #include "engine/core/tensor.h"
+#include "engine/core/tensor_constructor.h"
 #include "engine/util/spu_io.h"
 
 namespace scql::engine {
@@ -37,126 +43,92 @@ OdbcAdaptor::OdbcAdaptor(const std::string& db_kind,
       std::make_unique<OdbcConnector>(db_kind, connection_str, type, pool_size);
 }
 
-void OdbcChunkedResult::Init() {
+namespace {
+using Poco::Data::MetaColumn;
+#define META_COLUMN_TYPE_CASE(type) case MetaColumn::ColumnDataType::type:
+
+#define SWITCH_DATE_TIME_BRANCH   \
+  META_COLUMN_TYPE_CASE(FDT_DATE) \
+  META_COLUMN_TYPE_CASE(FDT_TIME) \
+  META_COLUMN_TYPE_CASE(FDT_TIMESTAMP)
+#define SWITCH_DATE_BRANCH        \
+  META_COLUMN_TYPE_CASE(FDT_DATE) \
+  META_COLUMN_TYPE_CASE(FDT_TIME) \
+  META_COLUMN_TYPE_CASE(FDT_TIMESTAMP)
+
+#define SWITCH_BOOL_BRANCH META_COLUMN_TYPE_CASE(FDT_BOOL)
+
+// FIXME: convert uint64 to int64 may overflow
+#define SWITCH_INT64_BRANCH         \
+  META_COLUMN_TYPE_CASE(FDT_INT8)   \
+  META_COLUMN_TYPE_CASE(FDT_UINT8)  \
+  META_COLUMN_TYPE_CASE(FDT_INT16)  \
+  META_COLUMN_TYPE_CASE(FDT_UINT16) \
+  META_COLUMN_TYPE_CASE(FDT_INT32)  \
+  META_COLUMN_TYPE_CASE(FDT_UINT32) \
+  META_COLUMN_TYPE_CASE(FDT_INT64)  \
+  META_COLUMN_TYPE_CASE(FDT_UINT64)
+
+#define SWITCH_FLOAT_BRANCH META_COLUMN_TYPE_CASE(FDT_FLOAT)
+#define SWITCH_DOUBLE_BRANCH META_COLUMN_TYPE_CASE(FDT_DOUBLE)
+#define SWITCH_STRING_BRANCH         \
+  META_COLUMN_TYPE_CASE(FDT_STRING)  \
+  META_COLUMN_TYPE_CASE(FDT_WSTRING) \
+  META_COLUMN_TYPE_CASE(FDT_BLOB)    \
+  META_COLUMN_TYPE_CASE(FDT_CLOB)
+
+#define CONVERT_DATA_ARRAY(builder_type, convert_func, recordset, begin, end, \
+                           chunk_size)                                        \
+  do {                                                                        \
+    auto builder = std::make_unique<builder_type>();                          \
+    for (int64_t row_index = begin * chunk_size;                              \
+         row_index < end * chunk_size &&                                      \
+         static_cast<size_t>(row_index) < recordset->rowCount();              \
+         ++row_index) {                                                       \
+      if (recordset->isNull(col_index, row_index)) {                          \
+        builder->AppendNull();                                                \
+      } else {                                                                \
+        builder->Append(recordset->value(col_index, row_index).convert_func); \
+      }                                                                       \
+    }                                                                         \
+    builder->Finish(&t);                                                      \
+  } while (false);
+}  // namespace
+
+void OdbcChunkedResult::Init(const std::string& query) {
+  select_ = std::make_shared<Poco::Data::Statement>(session_);
+  *select_ << query, Poco::Data::Keywords::limit(OdbcChunkedResult::kBatchSize);
+  rs_ = std::make_unique<Poco::Data::RecordSet>(*select_);
+  // execute to get first batch
+  select_->execute();
+  rs_->moveFirst();
+  more_ = rs_->totalRowCount() > 0;
   using Poco::Data::MetaColumn;
   try {
-    more_ = rs_->moveFirst();
     arrow::FieldVector fields;
     std::size_t column_cnt = rs_->columnCount();
-    builders_.reserve(column_cnt);
-    column_value_handlers_.reserve(column_cnt);
     for (std::size_t i = 0; i < column_cnt; ++i) {
       std::shared_ptr<arrow::DataType> field_arrow_type;
       switch (rs_->columnType(i)) {
-        case MetaColumn::ColumnDataType::FDT_BOOL: {
-          auto concrete_builder = std::make_unique<BooleanTensorBuilder>();
-          field_arrow_type = concrete_builder->Type();
-          BooleanTensorBuilder* typed_ptr = concrete_builder.get();
-
-          column_value_handlers_.emplace_back(
-              [typed_ptr](Poco::Dynamic::Var& var) {
-                if (var.isEmpty()) {
-                  typed_ptr->AppendNull();
-                } else {
-                  typed_ptr->Append(var.convert<bool>());
-                }
-              });
-          builders_.push_back(std::move(concrete_builder));
+        SWITCH_BOOL_BRANCH {
+          field_arrow_type = arrow::boolean();
           break;
         }
-        case MetaColumn::ColumnDataType::FDT_INT8:
-        case MetaColumn::ColumnDataType::FDT_UINT8:
-        case MetaColumn::ColumnDataType::FDT_INT16:
-        case MetaColumn::ColumnDataType::FDT_UINT16:
-        case MetaColumn::ColumnDataType::FDT_INT32:
-        case MetaColumn::ColumnDataType::FDT_UINT32:
-        case MetaColumn::ColumnDataType::FDT_INT64:
-        // FIXME: convert uint64 to int64 may overflow
-        case MetaColumn::ColumnDataType::FDT_UINT64: {
-          auto concrete_builder = std::make_unique<Int64TensorBuilder>();
-          field_arrow_type = concrete_builder->Type();
-          Int64TensorBuilder* typed_ptr = concrete_builder.get();
-
-          column_value_handlers_.emplace_back(
-              [typed_ptr](Poco::Dynamic::Var& var) {
-                if (var.isEmpty()) {
-                  typed_ptr->AppendNull();
-                } else {
-                  typed_ptr->Append(var.convert<int64_t>());
-                }
-              });
-          builders_.push_back(std::move(concrete_builder));
+        SWITCH_DATE_BRANCH
+        SWITCH_INT64_BRANCH {
+          field_arrow_type = arrow::int64();
           break;
         }
-        case MetaColumn::ColumnDataType::FDT_DATE:
-        case MetaColumn::ColumnDataType::FDT_TIME:
-        case MetaColumn::ColumnDataType::FDT_TIMESTAMP: {
-          auto concrete_builder = std::make_unique<Int64TensorBuilder>();
-          field_arrow_type = concrete_builder->Type();
-          Int64TensorBuilder* typed_ptr = concrete_builder.get();
-
-          column_value_handlers_.emplace_back(
-              [typed_ptr](Poco::Dynamic::Var& var) {
-                if (var.isEmpty()) {
-                  typed_ptr->AppendNull();
-                } else {
-                  auto epoch =
-                      var.convert<Poco::DateTime>().timestamp().epochTime();
-                  typed_ptr->Append(static_cast<int64_t>(epoch));
-                }
-              });
-          builders_.push_back(std::move(concrete_builder));
+        SWITCH_FLOAT_BRANCH {
+          field_arrow_type = arrow::float32();
           break;
         }
-        case MetaColumn::ColumnDataType::FDT_FLOAT: {
-          auto concrete_builder = std::make_unique<FloatTensorBuilder>();
-          field_arrow_type = concrete_builder->Type();
-          FloatTensorBuilder* typed_ptr = concrete_builder.get();
-
-          column_value_handlers_.emplace_back(
-              [typed_ptr](Poco::Dynamic::Var& var) {
-                if (var.isEmpty()) {
-                  typed_ptr->AppendNull();
-                } else {
-                  typed_ptr->Append(var.convert<float>());
-                }
-              });
-          builders_.push_back(std::move(concrete_builder));
+        SWITCH_DOUBLE_BRANCH {
+          field_arrow_type = arrow::float64();
           break;
         }
-        case MetaColumn::ColumnDataType::FDT_DOUBLE: {
-          auto concrete_builder = std::make_unique<DoubleTensorBuilder>();
-          field_arrow_type = concrete_builder->Type();
-          DoubleTensorBuilder* typed_ptr = concrete_builder.get();
-
-          column_value_handlers_.emplace_back(
-              [typed_ptr](Poco::Dynamic::Var& var) {
-                if (var.isEmpty()) {
-                  typed_ptr->AppendNull();
-                } else {
-                  typed_ptr->Append(var.convert<double>());
-                }
-              });
-          builders_.push_back(std::move(concrete_builder));
-          break;
-        }
-        case MetaColumn::ColumnDataType::FDT_STRING:
-        case MetaColumn::ColumnDataType::FDT_WSTRING:
-        case MetaColumn::ColumnDataType::FDT_BLOB:
-        case MetaColumn::ColumnDataType::FDT_CLOB: {
-          auto concrete_builder = std::make_unique<StringTensorBuilder>();
-          field_arrow_type = concrete_builder->Type();
-          StringTensorBuilder* typed_ptr = concrete_builder.get();
-
-          column_value_handlers_.emplace_back(
-              [typed_ptr](Poco::Dynamic::Var& var) {
-                if (var.isEmpty()) {
-                  typed_ptr->AppendNull();
-                } else {
-                  typed_ptr->Append(var.convert<std::string>());
-                }
-              });
-          builders_.push_back(std::move(concrete_builder));
+        SWITCH_STRING_BRANCH {
+          field_arrow_type = arrow::large_utf8();
           break;
         }
         default:
@@ -178,21 +150,71 @@ std::optional<arrow::ChunkedArrayVector> OdbcChunkedResult::Fetch() {
   if (!more_) {
     return std::nullopt;
   }
-  using Poco::Data::MetaColumn;
-  constexpr size_t batch_size = 3;
-  std::size_t column_cnt = rs_->columnCount();
-  for (size_t i = 0; i < batch_size && more_; ++i) {
-    for (std::size_t col_index = 0; col_index < column_cnt; col_index++) {
-      auto var = (*rs_)[col_index];
-      column_value_handlers_[col_index](var);
-    }
-    more_ = rs_->moveNext();
+  select_->wait();
+  more_ = !select_->done();
+  auto batch_num = yacl::get_num_threads();
+  // if row number in one batch is too small, we will use single thread to
+  // convert
+  if (rs_->rowCount() < kBatchSize / batch_num) {
+    batch_num = 1;
+  }
+  auto chunk_size = yacl::divup(rs_->rowCount(), batch_num);
+  std::vector<std::vector<TensorPtr>> tensor_vecs(
+      rs_->columnCount(), std::vector<TensorPtr>(batch_num));
+  try {
+    yacl::parallel_for(0, batch_num, 1, [&](int64_t begin, int64_t end) {
+      for (size_t col_index = 0; col_index < rs_->columnCount(); ++col_index) {
+        TensorPtr t;
+        switch (rs_->columnType(col_index)) {
+          SWITCH_BOOL_BRANCH {
+            CONVERT_DATA_ARRAY(BooleanTensorBuilder, convert<bool>(), rs_,
+                               begin, end, chunk_size)
+            break;
+          }
+          SWITCH_INT64_BRANCH {
+            CONVERT_DATA_ARRAY(Int64TensorBuilder, convert<int64_t>(), rs_,
+                               begin, end, chunk_size)
+            break;
+          }
+          SWITCH_DATE_BRANCH {
+            CONVERT_DATA_ARRAY(
+                Int64TensorBuilder,
+                convert<Poco::DateTime>().timestamp().epochTime(), rs_, begin,
+                end, chunk_size)
+            break;
+          }
+          SWITCH_FLOAT_BRANCH {
+            CONVERT_DATA_ARRAY(FloatTensorBuilder, convert<float>(), rs_, begin,
+                               end, chunk_size)
+            break;
+          }
+          SWITCH_DOUBLE_BRANCH {
+            CONVERT_DATA_ARRAY(DoubleTensorBuilder, convert<double>(), rs_,
+                               begin, end, chunk_size)
+            break;
+          }
+          SWITCH_STRING_BRANCH {
+            CONVERT_DATA_ARRAY(StringTensorBuilder, convert<std::string>(), rs_,
+                               begin, end, chunk_size)
+            break;
+          }
+          default:
+            YACL_THROW("unsupported Poco::Data::MetaColumn::ColumnDataType {}",
+                       fmt::underlying(rs_->columnType(col_index)));
+        }
+        tensor_vecs[col_index][begin] = t;
+      }
+    });
+  } catch (const Poco::Data::DataException& e) {
+    YACL_THROW("catch unexpected Poco::Data::DataException: {}",
+               e.displayText());
+  }
+  if (more_) {
+    select_->executeAsync();
   }
   arrow::ChunkedArrayVector chunked_arrs;
-  for (const auto& builder : builders_) {
-    TensorPtr t;
-    builder->Finish(&t);
-    chunked_arrs.push_back(t->ToArrowChunkedArray());
+  for (auto& tensor_v : tensor_vecs) {
+    chunked_arrs.push_back(ConcatTensors(tensor_v)->ToArrowChunkedArray());
   }
   return chunked_arrs;
 }
@@ -201,13 +223,7 @@ std::shared_ptr<ChunkedResult> OdbcAdaptor::SendQuery(
     const std::string& query) {
   try {
     auto session = connector_->CreateSession();
-
-    Poco::Data::Statement select(session);
-    select << query;
-    select.execute();
-
-    auto rs = std::make_unique<Poco::Data::RecordSet>(select);
-    return std::make_shared<OdbcChunkedResult>(std::move(rs));
+    return std::make_shared<OdbcChunkedResult>(session, query);
   } catch (const Poco::Data::DataException& e) {
     YACL_THROW("catch unexpected Poco::Data::DataException: {}",
                e.displayText());
