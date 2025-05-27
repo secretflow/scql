@@ -1236,6 +1236,13 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 			if err != nil {
 				return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 			}
+			var keysForPercentileSort []*graph.Tensor
+			keysForPercentileSort = append(keysForPercentileSort, sortedKeys...)
+			keysForPercentileSort = append(keysForPercentileSort, colT)
+			sortedCol, err := t.addSortNode("sort", keysForPercentileSort, []*graph.Tensor{colT}, false)
+			if err != nil {
+				return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
+			}
 			attr := &graph.Attribute{}
 			percent, err := strconv.ParseFloat(aggFunc.Args[1].String(), 64)
 			if err != nil {
@@ -1247,7 +1254,7 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 			}
 
 			attr.SetDouble(percent)
-			output, err := t.addObliviousGroupAggNode(aggFunc.Name, groupMark, colT, map[string]*graph.Attribute{"percent": attr})
+			output, err := t.addObliviousGroupAggNode(aggFunc.Name, groupMark, sortedCol[0], map[string]*graph.Attribute{"percent": attr})
 			if err != nil {
 				return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 			}

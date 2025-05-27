@@ -1187,6 +1187,50 @@ Out = [{0, 1, 4}, {7, 6, 5}]
 
 
 
+### `GroupPercentileDisc`
+
+Definition: find the value of given percentile of `In` for each group.
+Example:
+
+```python
+GroupId = {0, 1, 0, 1, 2}
+GroupNum = {3}
+In = [{0, 1, 2, 3, 4}, {9, 8, 7, 6, 5}]
+percent = 0.5 //the percent is 0.5, the index of each group is = ceil(0.5 * group_size) - 1
+Out = [{0, 1, 4}, {7, 6, 5}]
+```
+  
+
+**Inputs:**  
+
+1. `GroupId`(single, T): Input group id vector(shape [M][1]).
+
+1. `GroupNum`(single, T): Input number of groups vector(shape [1][1]).
+
+1. `In`(variadic, T): Input data tensor(shape [M][1]).
+
+
+**Outputs:**  
+
+1. `Out`(variadic, T): Output data tensors(shape [K][1], K equals to number of groups), Out[i] is the agg result for i-th group.
+
+
+
+**Attributes:**  
+
+1. `percent`: Float. The percentile to calculate the range of which is [0, 1], 0 means the min one, 1 means the max one.
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: private
+
+
+
 ### `GroupSum`
 
 Definition: Aggregate `In` for each group.
@@ -1491,9 +1535,9 @@ RightJoinIndex = {0,1,2,2,3} // shape:[K=5], rows after applied filter eq-join-l
 
 **Outputs:**  
 
-1. `LeftJoinIndex`(single, T2): Joined rows index for left vector(shape [K][1])
+1. `LeftJoinIndex`(optional, T2): Joined rows index for left vector(shape [K][1])
 
-1. `RightJoinIndex`(single, T2): Joined rows index for right vector(shape [K][1])
+1. `RightJoinIndex`(optional, T2): Joined rows index for right vector(shape [K][1])
 
 
 
@@ -2250,6 +2294,48 @@ Out = [{1, 0.3333, 0.6666, 1, 1, 1}, {1, 0.3333, 0.6666, 1, 1, 1}]
 
 
 
+### `ObliviousPercentileDisc`
+
+Definition: find the value of given percentile of `In` for each group.
+Example:
+
+```python
+GroupId = {0, 1, 0, 1, 2}
+GroupNum = {3}
+In = [{0, 1, 2, 3, 4}, {9, 8, 7, 6, 5}]
+the percent is 0.5, the index of each group is = upper_bound(0.5 * group_size) - 1
+Out = [{0, 1, 4}, {7, 6, 5}]
+```
+  
+
+**Inputs:**  
+
+1. `Group`(single, T): End of group indicator(shape [M][1]). Element 1 means the row is the last element of the group, 0 is not.
+
+1. `In`(variadic, T): Values to be aggregated (shape [M][1]).
+
+
+**Outputs:**  
+
+1. `Out`(variadic, T): Partially aggregated values (shape [M][1]).
+
+
+
+**Attributes:**  
+
+1. `percent`: Float. The percentile to calculate the range of which is [0, 1], 0 means the min one, 1 means the max one.
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: secret
+
+
+
 ### `PercentRank`
 
 Definition: return the percent rank in each partition  
@@ -2478,6 +2564,44 @@ Out = {1}
 **Outputs:**  
 
 1. `Out`(single, T): The mined Tensor (shape [1]).
+
+
+
+
+
+
+**TensorStatus(ShareType) Constraints:**
+
+1. `T`: private,secret
+
+
+
+### `ReducePercentileDisc`
+
+Definition: Given a input tensor In, return the value of given percentile position.
+Example:
+
+```python
+In = {1, 2, 3, 4, 5}
+percent = 0.5 // the position is ceil(percent * length) - 1, which is 2 here
+Out = {3}
+```
+  
+
+**Inputs:**  
+
+1. `In`(single, T): Tensor to be reduced (shape [M]).
+
+
+**Outputs:**  
+
+1. `Out`(single, T): The value of given percentile position(shape [1]).
+
+
+
+**Attributes:**  
+
+1. `percent`: Float. The percentile to calculate the range of which is [0, 1], 0 means the min one, 1 means the max one.
 
 
 

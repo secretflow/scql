@@ -481,7 +481,7 @@ percent = 0.5 // the position is ceil(percent * length) - 1, which is 2 here
 Out = {3}
 ` + "```\n")
 		opDef.SetParamTypeConstraint(T, statusPrivateOrSecret)
-		opDef.AddAttribute("percent", "Float. The percentile position, the range is [0, 1].")
+		opDef.AddAttribute("percent", "Float. The percentile to calculate the range of which is [0, 1], 0 means the min one, 1 means the max one.")
 		AllOpDef = append(AllOpDef, opDef)
 	}
 
@@ -620,7 +620,7 @@ Out = %s
 			opDef.AddOutput("Out", "Partially aggregated values (shape [M][1]).",
 				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 			opDef.SetParamTypeConstraint(T, statusSecret)
-			opDef.AddAttribute("percent", "Float. The percentile to calculate the range of which is [0.0, 1.0], 0.0 means the first one, 1.0 means the last one.")
+			opDef.AddAttribute("percent", "Float. The percentile to calculate the range of which is [0, 1], 0 means the min one, 1 means the max one.")
 			opDef.SetDefinition("Definition: find the value of given percentile of `In` for each group." + fmt.Sprintf(`
 Example:
 `+"\n```python"+`
@@ -628,7 +628,7 @@ GroupId = {0, 1, 0, 1, 2}
 GroupNum = {3}
 In = [{0, 1, 2, 3, 4}, {9, 8, 7, 6, 5}]
 the percent is 0.5, the index of each group is = upper_bound(0.5 * group_size) - 1
-Out = [{0, 1, 4}, {7, 6, 5}]`))
+Out = [{0, 1, 4}, {7, 6, 5}]`+"\n```\n"))
 			check(opDef.err)
 			AllOpDef = append(AllOpDef, opDef)
 		}
@@ -833,7 +833,7 @@ Out = %s
 		opDef.AddInput("In", "Input data tensor(shape [M][1]).", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.AddOutput("Out", "Output data tensors(shape [K][1], K equals to number of groups), Out[i] is the agg result for i-th group.", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.SetParamTypeConstraint(T, statusPrivate)
-		opDef.AddAttribute("percent", "Float. The percentile to calculate the range of which is [0.0, 1.0], 0.0 means the first one, 1.0 means the last one.")
+		opDef.AddAttribute("percent", "Float. The percentile to calculate the range of which is [0, 1], 0 means the min one, 1 means the max one.")
 		opDef.SetDefinition("Definition: find the value of given percentile of `In` for each group." + fmt.Sprintf(`
 Example:
 `+"\n```python"+`
@@ -841,7 +841,7 @@ GroupId = {0, 1, 0, 1, 2}
 GroupNum = {3}
 In = [{0, 1, 2, 3, 4}, {9, 8, 7, 6, 5}]
 percent = 0.5 //the percent is 0.5, the index of each group is = ceil(0.5 * group_size) - 1
-Out = [{0, 1, 4}, {7, 6, 5}]`))
+Out = [{0, 1, 4}, {7, 6, 5}]`+"\n```\n"))
 		check(opDef.err)
 		AllOpDef = append(AllOpDef, opDef)
 	}
