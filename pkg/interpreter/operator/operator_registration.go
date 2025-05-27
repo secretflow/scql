@@ -622,7 +622,7 @@ Out = %s
 			opDef.AddOutput("OutGroup", "Adjusted group ids (shape [M][1]). Element 1 means the row is of the given percentile position",
 				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 			opDef.SetParamTypeConstraint(T, statusSecret)
-			opDef.AddAttribute("percent", "Float. The percentile to calculate the range of which is [0.0, 1.0], 0.0 means the first one, 1.0 means the last one.")
+			opDef.AddAttribute("percent", "Float. The percentile to calculate the range of which is [0, 1], 0 means the min one, 1 means the max one.")
 			opDef.SetDefinition("Definition: find the value of given percentile of `In` for each group." + fmt.Sprintf(`
 Example:
 `+"\n```python"+`
@@ -835,7 +835,7 @@ Out = %s
 		opDef.AddInput("In", "Input data tensor(shape [M][1]).", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.AddOutput("Out", "Output data tensors(shape [K][1], K equals to number of groups), Out[i] is the agg result for i-th group.", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.SetParamTypeConstraint(T, statusPrivate)
-		opDef.AddAttribute("percent", "Float. The percentile to calculate the range of which is [0.0, 1.0], 0.0 means the first one, 1.0 means the last one.")
+		opDef.AddAttribute("percent", "Float. The percentile to calculate the range of which is [0, 1], 0 means the min one, 1 means the max one.")
 		opDef.SetDefinition("Definition: find the value of given percentile of `In` for each group." + fmt.Sprintf(`
 Example:
 `+"\n```python"+`

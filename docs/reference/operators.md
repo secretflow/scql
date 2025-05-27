@@ -2303,7 +2303,7 @@ Example:
 Group = {1, 0, 0, 1, 0, 0, 0, 1}
 In = [{1, 2, 3, 4, 5, 6, 7, 8}]
 Percent = 0.5 // the index = ceil(group_size * 0.5) - 1
-Out = [{1, 0, 3, 0, 0, 6, 0, 0}]
+Out = [{1, 2, 3, 4, 5, 6, 7, 8}]
 OutGroup = [{1, 0, 1, 0, 0, 1, 0, 0}]
 ```
   
@@ -2312,12 +2312,12 @@ OutGroup = [{1, 0, 1, 0, 0, 1, 0, 0}]
 
 1. `Group`(single, T): End of group indicator(shape [M][1]). Element 1 means the row is the last element of the group, 0 is not.
 
-1. `In`(variadic, T): Values to be aggregated (shape [M][1]).
+1. `In`(variadic, T): Sorted values to be aggregated (shape [M][1]).
 
 
 **Outputs:**  
 
-1. `Out`(variadic, T): Partially aggregated values (shape [M][1]).
+1. `Out`(variadic, T): The same value of input (shape [M][1]).
 
 1. `OutGroup`(variadic, T): Adjusted group ids (shape [M][1]). Element 1 means the row is of the given percentile position
 

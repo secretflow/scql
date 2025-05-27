@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-27 11:31+0800\n"
+"POT-Creation-Date: 2025-05-27 13:41+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -1404,14 +1404,12 @@ msgstr ""
 #: ../../reference/operators.md:2075 ../../reference/operators.md:2109
 #: ../../reference/operators.md:2177 ../../reference/operators.md:2211
 #: ../../reference/operators.md:2245 ../../reference/operators.md:2279
-#: ../../reference/operators.md:2315
 msgid "`In`(variadic, T): Values to be aggregated (shape [M][1])."
 msgstr "``In`` （多列数组，类型为 T ）：待进行分组聚合的输入（大小为 [M][1] ）。"
 
 #: ../../reference/operators.md:2080 ../../reference/operators.md:2114
 #: ../../reference/operators.md:2182 ../../reference/operators.md:2216
 #: ../../reference/operators.md:2250 ../../reference/operators.md:2284
-#: ../../reference/operators.md:2320
 msgid "`Out`(variadic, T): Partially aggregated values (shape [M][1])."
 msgstr "``Out`` （多列数组，类型为 T ）：分组聚合的结果（大小为 [M][1] ）。"
 
@@ -1453,6 +1451,16 @@ msgstr "`ObliviousPercentRank`"
 #, fuzzy
 msgid "`ObliviousPercentileDisc`"
 msgstr "`ObliviousPercentileDisc`"
+
+#: ../../reference/operators.md:2315
+#, fuzzy
+msgid "`In`(variadic, T): Sorted values to be aggregated (shape [M][1])."
+msgstr "``In`` （多列数组，类型为 T ）：已排序好的输入（大小为 [M][1] ）。"
+
+#: ../../reference/operators.md:2320
+#, fuzzy
+msgid "`Out`(variadic, T): The same value of input (shape [M][1])."
+msgstr "``Out`` （多列数组，类型为 T ）：与输入相同（大小为 [M][1] ）。"
 
 #: ../../reference/operators.md:2322
 #, fuzzy
