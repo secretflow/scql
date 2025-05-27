@@ -267,6 +267,7 @@ spu::Value ObliviousPercentileDisc::CalculateResult(ExecContext* ctx,
   spu::Value count = ObliviousGroupCount().CalculateResult(ctx, value, group);
 
   spu::Value percentile_index;
+  // percent = 0, the value should be the first element in each group
   if (percent_ < epsilon) {
     percentile_index = spu::kernel::hlo::Constant(sctx, 1, group.shape());
   } else {
@@ -287,10 +288,6 @@ spu::Value ObliviousPercentileDisc::CalculateResult(ExecContext* ctx,
     spu::Value target_pos = spu::kernel::hlo::Ceil(
         sctx, spu::kernel::hlo::Mul(sctx, count, percent_arr));
 
-    // percent = 0
-    if (percent_ < epsilon) {
-      target_pos = spu::kernel::hlo::Constant(sctx, 1, group.shape());
-    }
     // index = rank * group, [0, 0, 0, index0, 0,..., 0, index1, 0, ...,0,
     // indexn]
     spu::Value index_values =
