@@ -74,7 +74,7 @@ using Poco::Data::MetaColumn;
   META_COLUMN_TYPE_CASE(FDT_CLOB)
 
 #define CONVERT_DATA_ARRAY(builder_type, convert_func, recordset, begin, end, \
-                           chunk_size)                                        \
+                           chunk_size, tensor_ptr)                            \
   do {                                                                        \
     auto builder = std::make_unique<builder_type>();                          \
     for (int64_t row_index = begin * chunk_size;                              \
@@ -87,7 +87,7 @@ using Poco::Data::MetaColumn;
         builder->Append(recordset->value(col_index, row_index).convert_func); \
       }                                                                       \
     }                                                                         \
-    builder->Finish(&t);                                                      \
+    builder->Finish(&tensor_ptr);                                             \
   } while (false);
 }  // namespace
 
@@ -164,34 +164,34 @@ std::optional<arrow::ChunkedArrayVector> OdbcChunkedResult::Fetch() {
         switch (rs_->columnType(col_index)) {
           SWITCH_BOOL_BRANCH {
             CONVERT_DATA_ARRAY(BooleanTensorBuilder, convert<bool>(), rs_,
-                               begin, end, chunk_size)
+                               begin, end, chunk_size, t)
             break;
           }
           SWITCH_INT64_BRANCH {
             CONVERT_DATA_ARRAY(Int64TensorBuilder, convert<int64_t>(), rs_,
-                               begin, end, chunk_size)
+                               begin, end, chunk_size, t)
             break;
           }
           SWITCH_DATE_BRANCH {
             CONVERT_DATA_ARRAY(
                 Int64TensorBuilder,
                 convert<Poco::DateTime>().timestamp().epochTime(), rs_, begin,
-                end, chunk_size)
+                end, chunk_size, t)
             break;
           }
           SWITCH_FLOAT_BRANCH {
             CONVERT_DATA_ARRAY(FloatTensorBuilder, convert<float>(), rs_, begin,
-                               end, chunk_size)
+                               end, chunk_size, t)
             break;
           }
           SWITCH_DOUBLE_BRANCH {
             CONVERT_DATA_ARRAY(DoubleTensorBuilder, convert<double>(), rs_,
-                               begin, end, chunk_size)
+                               begin, end, chunk_size, t)
             break;
           }
           SWITCH_STRING_BRANCH {
             CONVERT_DATA_ARRAY(StringTensorBuilder, convert<std::string>(), rs_,
-                               begin, end, chunk_size)
+                               begin, end, chunk_size, t)
             break;
           }
           default:
