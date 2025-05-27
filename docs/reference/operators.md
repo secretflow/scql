@@ -1218,7 +1218,7 @@ Out = [{0, 1, 4}, {7, 6, 5}]
 
 **Attributes:**  
 
-1. `percent`: Float. The percentile to calculate the range of which is [0.0, 1.0], 0.0 means the first one, 1.0 means the last one.
+1. `percent`: Float. The percentile to calculate the range of which is [0, 1], 0 means the min one, 1 means the max one.
 
 
 
@@ -2325,7 +2325,7 @@ OutGroup = [{1, 0, 1, 0, 0, 1, 0, 0}]
 
 **Attributes:**  
 
-1. `percent`: Float. The percentile to calculate the range of which is [0.0, 1.0], 0.0 means the first one, 1.0 means the last one.
+1. `percent`: Float. The percentile to calculate the range of which is [0, 1], 0 means the min one, 1 means the max one.
 
 
 

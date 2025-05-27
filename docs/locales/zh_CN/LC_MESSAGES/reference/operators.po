@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-27 11:11+0800\n"
+"POT-Creation-Date: 2025-05-27 11:31+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -975,10 +975,11 @@ msgid ""
 msgstr "定义：根据给定的百分比，找到每个分组`In`中对应位置的值 。例如:"
 
 #: ../../reference/operators.md:1221 ../../reference/operators.md:2328
+#, fuzzy
 msgid ""
-"`percent`: Float. The percentile to calculate the range of which is [0.0,"
-" 1.0], 0.0 means the first one, 1.0 means the last one."
-msgstr "`percent`: Float. 百分比，取值范围是 [0.0, 1.0]，0.0 表示第一个元素，1.0 表示最后一个元素。"
+"`percent`: Float. The percentile to calculate the range of which is [0, "
+"1], 0 means the min one, 1 means the max one."
+msgstr "`percent`: Float. 百分比，取值范围是 [0, 1]，0表示最小的元素，1表示最大的元素。"
 
 #: ../../reference/operators.md:1234
 msgid "`GroupSum`"
@@ -1458,8 +1459,7 @@ msgstr "`ObliviousPercentileDisc`"
 msgid ""
 "`OutGroup`(variadic, T): Adjusted group ids (shape [M][1]). Element 1 "
 "means the row is of the given percentile position"
-msgstr ""
-"``Group`` （单列数组，类型为 T ）： 根据百分比得到的每个分组所在的位置([M][1]). 每个1表示该行是该百分比位置。"
+msgstr "``Group`` （单列数组，类型为 T ）： 根据百分比得到的每个分组所在的位置([M][1]). 每个1表示该行是该百分比位置。"
 
 #: ../../reference/operators.md:2341
 msgid "`PercentRank`"
