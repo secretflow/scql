@@ -34,7 +34,7 @@ msgstr "下述流程图展示了如何使用 SCQL 系统。总的来说，该系
 msgid ""
 "All requests from user to SCDB can be submitted through :ref:`synchronous"
 " api<sync_api>` or :ref:`asynchronous api<async_api>`."
-msgstr "用户对 SCDB 的所有请求均可通过同步 api 或异步 api 提交。"
+msgstr "用户对 SCDB 的所有请求均可通过 :ref:`同步 api<sync_api>` 或 :ref:`异步 api<async_api>` 提交。"
 
 #: ../../topics/system/usage.rst:10
 msgid "Workflow"
