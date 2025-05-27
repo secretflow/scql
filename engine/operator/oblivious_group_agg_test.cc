@@ -404,20 +404,18 @@ static ObliviousGroupAggTestCase GenerateObliviousPercentileDiscTestCase(
 
     int index = static_cast<int>(std::ceil(percentile * group_size)) - 1;
     index = std::min(group_size - 1, index);
-    int value = current_in[index];
     for (int i = 0; i < index; i++) {
-      out.push_back(0);
+      out.push_back(i);
       out_group.push_back(0);
     }
 
     for (int i = index; i < group_size; i++) {
       if (i == index) {
-        out.push_back(value);
         out_group.push_back(1);
       } else {
-        out.push_back(0);
         out_group.push_back(0);
       }
+      out.push_back(i);
     }
     in.insert(in.end(), current_in.begin(), current_in.end());
   }
@@ -477,7 +475,7 @@ INSTANTIATE_TEST_SUITE_P(
                     "out",
                     TensorFrom(
                         arrow::int64(),
-                        "[1, 0, 3, 0, 0, 0, 7, 0]"))},  // ceil(0.5*length)
+                        "[1, 2, 3, 4, 5, 6, 7, 8]"))},  // ceil(0.5*length)
                                                         // - 1
                 .double_attribute =
                     std::make_pair(ObliviousPercentileDisc::kPercent, 0.5),
@@ -491,12 +489,12 @@ INSTANTIATE_TEST_SUITE_P(
                 .group = test::NamedTensor(
                     "group", TensorFrom(arrow::boolean(), "[1, 0, 0, 0, 1]")),
                 .outputs = {test::NamedTensor(
-                    "out", TensorFrom(arrow::int64(), "[1, 2, 2, 2, 2]"))},
+                    "out", TensorFrom(arrow::int64(), "[1, 2, 3, 4, 5]"))},
                 .double_attribute =
                     std::make_pair(ObliviousPercentileDisc::kPercent, 0),
                 .output_group = test::NamedTensor(
                     "group_mark2",
-                    TensorFrom(arrow::boolean(), "[1, 0, 0, 0, 1]"))},
+                    TensorFrom(arrow::boolean(), "[1, 1, 0, 0, 0]"))},
             ObliviousGroupAggTestCase{
                 .op_type = ObliviousPercentileDisc::kOpType,
                 .inputs = {test::NamedTensor(
