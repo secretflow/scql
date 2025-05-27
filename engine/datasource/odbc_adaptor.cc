@@ -47,10 +47,6 @@ namespace {
 using Poco::Data::MetaColumn;
 #define META_COLUMN_TYPE_CASE(type) case MetaColumn::ColumnDataType::type:
 
-#define SWITCH_DATE_TIME_BRANCH   \
-  META_COLUMN_TYPE_CASE(FDT_DATE) \
-  META_COLUMN_TYPE_CASE(FDT_TIME) \
-  META_COLUMN_TYPE_CASE(FDT_TIMESTAMP)
 #define SWITCH_DATE_BRANCH        \
   META_COLUMN_TYPE_CASE(FDT_DATE) \
   META_COLUMN_TYPE_CASE(FDT_TIME) \
