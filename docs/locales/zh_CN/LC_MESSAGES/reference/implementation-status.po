@@ -175,7 +175,7 @@ msgstr "max"
 
 #: ../../reference/implementation-status.rst:49
 msgid "percentile_disc"
-msgstr "percentile_disc"
+msgstr "离散百分位计算"
 
 #: ../../reference/implementation-status.rst:51
 #, fuzzy
