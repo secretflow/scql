@@ -615,9 +615,9 @@ Out = %s
 			opDef.AddInput("Group",
 				"End of group indicator(shape [M][1]). Element 1 means the row is the last element of the group, 0 is not.",
 				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
-			opDef.AddInput("In", "Values to be aggregated (shape [M][1]).",
+			opDef.AddInput("In", "Sorted values to be aggregated (shape [M][1]).",
 				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
-			opDef.AddOutput("Out", "Partially aggregated values (shape [M][1]).",
+			opDef.AddOutput("Out", "The same value of input (shape [M][1]).",
 				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 			opDef.AddOutput("OutGroup", "Adjusted group ids (shape [M][1]). Element 1 means the row is of the given percentile position",
 				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
@@ -629,7 +629,7 @@ Example:
 Group = {1, 0, 0, 1, 0, 0, 0, 1}
 In = [{1, 2, 3, 4, 5, 6, 7, 8}]
 Percent = 0.5 // the index = ceil(group_size * 0.5) - 1
-Out = [{1, 0, 3, 0, 0, 6, 0, 0}]
+Out = [{1, 2, 3, 4, 5, 6, 7, 8}]
 OutGroup = [{1, 0, 1, 0, 0, 1, 0, 0}]`+"\n```\n"))
 			check(opDef.err)
 			AllOpDef = append(AllOpDef, opDef)

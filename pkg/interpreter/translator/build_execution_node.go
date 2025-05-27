@@ -1279,7 +1279,10 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 
 	// TODO(jingshi): temporary remove shuffle here for simplicity, make group_mark public and support aggregation with public group_mark later for efficiency
 	// If there are adjusted filters, we can not shuffle the group_mark, since it would break the order of results
-	if !t.CompileOpts.GetSecurityCompromise().GetRevealGroupMark() && len(adjustedFilters) == 0 {
+	if !t.CompileOpts.GetSecurityCompromise().GetRevealGroupMark() {
+		if len(adjustedIndexes) > 0 {
+			return fmt.Errorf("buildObliviousGroupAggregation: the PERCENTILE_DISC function is not supported when the 'reveal_group_mark' security compromise is not enabled, please check the project config.")
+		}
 		// shuffle and replace 'rt' and 'groupMark'
 		shuffled, err := t.addShuffleNode("shuffle", append(originRt, groupMark))
 		if err != nil {
