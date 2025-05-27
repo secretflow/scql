@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-14 16:45+0800\n"
+"POT-Creation-Date: 2025-05-27 10:59+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -17,7 +17,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.14.0\n"
+"Generated-By: Babel 2.16.0\n"
 
 #: ../../topics/deployment/run-scql-on-kuscia.rst:3
 msgid "Run SCQL on Kusica"
@@ -62,10 +62,11 @@ msgid "The following section will describe how to deploy SCQL on Kuscia."
 msgstr "以下部分将介绍如何在 Kuscia 上部署 SCQL。"
 
 #: ../../topics/deployment/run-scql-on-kuscia.rst:14
+#, fuzzy
 msgid ""
 "Only the SCQL P2P mode is compatible with Kuscia. SCQLBroker is deployed "
 "as resident service via `KusciaDeployment <https://www.secretflow.org.cn"
-"/zh-CN/docs/kuscia/v0.7.0b0/reference/concepts/kusciadeployment_cn>`_."
+"/zh-CN/docs/kuscia/v0.14.0b0/reference/concepts/kusciadeployment_cn>`_."
 msgstr ""
 "Kuscia 仅兼容 SCQL P2P 模式， SCQLBroker 通过 `KusciaDeployment "
 "<https://www.secretflow.org.cn/zh-"
@@ -85,13 +86,13 @@ msgstr "如果您尚未安装 Kuscia ，请参考以下文档完成安装。"
 #: ../../topics/deployment/run-scql-on-kuscia.rst:21
 msgid ""
 "`Kuscia quickstart on single-node <https://www.secretflow.org.cn/zh-"
-"CN/docs/kuscia/v0.7.0b0/getting_started/quickstart_cn>`_"
+"CN/docs/kuscia/v0.14.0b0/getting_started/quickstart_cn>`_"
 msgstr ""
 
 #: ../../topics/deployment/run-scql-on-kuscia.rst:22
 msgid ""
 "`Kuscia Multi-Node Deployment <https://www.secretflow.org.cn/zh-"
-"CN/docs/kuscia/v0.7.0b0/deployment/Docker_deployment_kuscia/deploy_p2p_cn>`_"
+"CN/docs/kuscia/v0.14.0b0/deployment/Docker_deployment_kuscia/deploy_p2p_cn>`_"
 msgstr ""
 
 #: ../../topics/deployment/run-scql-on-kuscia.rst:26
@@ -99,9 +100,10 @@ msgid "Prepare SCQL AppImage"
 msgstr "准备 SCQL AppImage"
 
 #: ../../topics/deployment/run-scql-on-kuscia.rst:28
+#, fuzzy
 msgid ""
 "`AppImage <https://www.secretflow.org.cn/zh-"
-"CN/docs/kuscia/v0.7.0b0/reference/concepts/appimage_cn>`_ is a "
+"CN/docs/kuscia/v0.14.0b0/reference/concepts/appimage_cn>`_ is a "
 "fundamental concept in Kuscia, it contains the app deployment "
 "configuration and image information. The following YAML file is an "
 "example SCQL AppImage template."
@@ -174,7 +176,9 @@ msgstr "SCQLBroker 的 KusciaDeployment yaml 文件如下所示。"
 msgid ""
 "Please modify ``.spec.initiator`` and ``.spec.parties[0].domainID`` to "
 "the actual DomainID(DomainID is a Kuscia concept) you wish to deploy."
-msgstr "请将 ``.spec.initiator`` 和 ``.spec.parties[0].domainID`` 修改为您希望部署的实际 DomainID（DomainID 是 Kuscia 概念）。"
+msgstr ""
+"请将 ``.spec.initiator`` 和 ``.spec.parties[0].domainID`` 修改为您希望部署的实际 "
+"DomainID（DomainID 是 Kuscia 概念）。"
 
 #: ../../topics/deployment/run-scql-on-kuscia.rst:77
 msgid "Let's go and deploy it"
@@ -199,4 +203,16 @@ msgstr ""
 "本文主要讨论 SCQL AppImage 和 SCQLBroker Deployment 的 YAML 配置。 请从 kuscia 的角度阅读教程"
 " `在 Kuscia 中运行 SCQL <https://www.secretflow.org.cn/zh-"
 "CN/docs/kuscia/main/tutorial/run_scql_on_kuscia_cn>`_，了解更详细的分步说明。"
+
+#~ msgid ""
+#~ "`Kuscia quickstart on single-node "
+#~ "<https://www.secretflow.org.cn/zh-"
+#~ "CN/docs/kuscia/v0.7.0b0/getting_started/quickstart_cn>`_"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "`Kuscia Multi-Node Deployment "
+#~ "<https://www.secretflow.org.cn/zh-"
+#~ "CN/docs/kuscia/v0.7.0b0/deployment/Docker_deployment_kuscia/deploy_p2p_cn>`_"
+#~ msgstr ""
 

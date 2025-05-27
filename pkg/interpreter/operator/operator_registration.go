@@ -479,7 +479,7 @@ Example:
 In = {1, 2, 3, 4, 5}
 percent = 0.5 // the position is ceil(percent * length) - 1, which is 2 here
 Out = {3}
-` + "```\n")
+` + "\n```\n")
 		opDef.SetParamTypeConstraint(T, statusPrivateOrSecret)
 		opDef.AddAttribute("percent", "Float. The percentile position, the range is [0, 1].")
 		AllOpDef = append(AllOpDef, opDef)
@@ -619,18 +619,18 @@ Out = %s
 				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 			opDef.AddOutput("Out", "Partially aggregated values (shape [M][1]).",
 				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
-			opDef.AddOutput("OutGroup", "Adjusted group ids (shape [M][1]).",
+			opDef.AddOutput("OutGroup", "Adjusted group ids (shape [M][1]). Element 1 means the row is of the given percentile position",
 				proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 			opDef.SetParamTypeConstraint(T, statusSecret)
 			opDef.AddAttribute("percent", "Float. The percentile to calculate the range of which is [0.0, 1.0], 0.0 means the first one, 1.0 means the last one.")
 			opDef.SetDefinition("Definition: find the value of given percentile of `In` for each group." + fmt.Sprintf(`
 Example:
 `+"\n```python"+`
-GroupId = {0, 1, 0, 1, 2}
-GroupNum = {3}
-In = [{0, 1, 2, 3, 4}, {9, 8, 7, 6, 5}]
-the percent is 0.5, the index of each group is = upper_bound(0.5 * group_size) - 1
-Out = [{0, 1, 4}, {7, 6, 5}]`))
+Group = {1, 0, 0, 1, 0, 0, 0, 1}
+In = [{1, 2, 3, 4, 5, 6, 7, 8}]
+Percent = 0.5 // the index = ceil(group_size * 0.5) - 1
+Out = [{1, 0, 3, 0, 0, 6, 0, 0}]
+OutGroup = [{1, 0, 1, 0, 0, 1, 0, 0}]`+"\n```\n"))
 			check(opDef.err)
 			AllOpDef = append(AllOpDef, opDef)
 		}
@@ -843,7 +843,7 @@ GroupId = {0, 1, 0, 1, 2}
 GroupNum = {3}
 In = [{0, 1, 2, 3, 4}, {9, 8, 7, 6, 5}]
 percent = 0.5 //the percent is 0.5, the index of each group is = ceil(0.5 * group_size) - 1
-Out = [{0, 1, 4}, {7, 6, 5}]`))
+Out = [{0, 1, 4}, {7, 6, 5}]`+"\n```\n"))
 		check(opDef.err)
 		AllOpDef = append(AllOpDef, opDef)
 	}
