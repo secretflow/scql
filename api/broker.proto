@@ -375,6 +375,7 @@ message ProjectDesc {
   repeated string members = 6;
   // created_at is the time the project was first created
   google.protobuf.Timestamp created_at = 7;
+  bool archived = 8;
 }
 
 message ArchiveProjectRequest {
