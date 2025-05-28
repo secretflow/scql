@@ -16,6 +16,8 @@
 
 #include <atomic>
 #include <condition_variable>
+#include <cstddef>
+#include <exception>
 #include <mutex>
 #include <optional>
 #include <queue>
@@ -61,12 +63,23 @@ class SimpleChannel {
     cond_.notify_all();
   }
 
+  void Push(std::exception_ptr e) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    exception_ = std::move(e);
+    cond_.notify_all();
+  }
+
   std::optional<T> Pop() {
     T item;
     {
       std::unique_lock<std::mutex> lock(mutex_);
-      while (queue_.empty() && !closed_) {
-        cond_.wait(lock, [&] { return !queue_.empty() || closed_; });
+      while (queue_.empty() && !closed_ && exception_ == nullptr) {
+        cond_.wait(lock, [&] {
+          return !queue_.empty() || closed_ || exception_ != nullptr;
+        });
+      }
+      if (exception_ != nullptr) {
+        std::rethrow_exception(exception_);
       }
       // return empty item if queue is closed and queue is empty
       if (closed_ && queue_.empty()) {
@@ -96,5 +109,6 @@ class SimpleChannel {
   std::condition_variable cond_;
   size_t capacity_;
   std::queue<T> queue_;
+  std::exception_ptr exception_{nullptr};
 };
 }  // namespace scql::engine::util
