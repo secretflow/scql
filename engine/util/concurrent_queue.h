@@ -64,8 +64,12 @@ class SimpleChannel {
   }
 
   void Push(std::exception_ptr e) {
+    if (exception_ == nullptr) {
+      return;
+    }
     std::unique_lock<std::mutex> lock(mutex_);
     exception_ = std::move(e);
+    closed_ = true;
     cond_.notify_all();
   }
 
