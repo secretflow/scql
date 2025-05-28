@@ -63,7 +63,7 @@ class SimpleChannel {
     cond_.notify_all();
   }
 
-  void Push(std::exception_ptr e) {
+  void SetException(std::exception_ptr e) {
     if (exception_ == nullptr) {
       return;
     }
