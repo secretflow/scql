@@ -64,10 +64,13 @@ class SimpleChannel {
   }
 
   void SetException(std::exception_ptr e) {
-    if (exception_ != nullptr || e == nullptr) {
+    if (e == nullptr) {
       return;
     }
     std::unique_lock<std::mutex> lock(mutex_);
+    if (exception_ != nullptr) {
+      return;
+    }
     exception_ = std::move(e);
     closed_ = true;
     cond_.notify_all();
