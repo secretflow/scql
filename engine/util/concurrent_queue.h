@@ -64,7 +64,7 @@ class SimpleChannel {
   }
 
   void SetException(std::exception_ptr e) {
-    if (exception_ == nullptr) {
+    if (exception_ != nullptr || e == nullptr) {
       return;
     }
     std::unique_lock<std::mutex> lock(mutex_);
