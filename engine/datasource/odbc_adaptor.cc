@@ -16,6 +16,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -73,22 +74,27 @@ using Poco::Data::MetaColumn;
   META_COLUMN_TYPE_CASE(FDT_BLOB)    \
   META_COLUMN_TYPE_CASE(FDT_CLOB)
 
-#define CONVERT_DATA_ARRAY(builder_type, convert_func, recordset, begin, end, \
-                           chunk_size, tensor_ptr)                            \
-  do {                                                                        \
-    auto builder = std::make_unique<builder_type>();                          \
-    for (int64_t row_index = begin * chunk_size;                              \
-         row_index < end * chunk_size &&                                      \
-         static_cast<size_t>(row_index) < recordset->rowCount();              \
-         ++row_index) {                                                       \
-      if (recordset->isNull(col_index, row_index)) {                          \
-        builder->AppendNull();                                                \
-      } else {                                                                \
-        builder->Append(recordset->value(col_index, row_index).convert_func); \
-      }                                                                       \
-    }                                                                         \
-    builder->Finish(&tensor_ptr);                                             \
-  } while (false);
+template <typename builder_type, typename data_type>
+void ConvertDataToArray(
+    const std::unique_ptr<Poco::Data::RecordSet>& recordset,
+    const int64_t col_index, const int64_t begin, const int64_t end,
+    const int64_t chunk_size,
+    const std::function<data_type(const Poco::Dynamic::Var&)>& convert_func,
+    TensorPtr* t) {
+  auto builder = builder_type();
+  for (int64_t row_index = begin * chunk_size;
+       row_index < end * chunk_size &&
+       static_cast<size_t>(row_index) < recordset->rowCount();
+       ++row_index) {
+    if (recordset->isNull(col_index, row_index)) {
+      builder.AppendNull();
+    } else {
+      builder.Append(convert_func(recordset->value(col_index, row_index)));
+    }
+  }
+  builder.Finish(t);
+};
+
 }  // namespace
 
 void OdbcChunkedResult::Init(const std::string& query) {
@@ -163,35 +169,59 @@ std::optional<arrow::ChunkedArrayVector> OdbcChunkedResult::Fetch() {
         TensorPtr t;
         switch (rs_->columnType(col_index)) {
           SWITCH_BOOL_BRANCH {
-            CONVERT_DATA_ARRAY(BooleanTensorBuilder, convert<bool>(), rs_,
-                               begin, end, chunk_size, t)
+            ConvertDataToArray<BooleanTensorBuilder, bool>(
+                rs_, col_index, begin, end, chunk_size,
+                [](const Poco::Dynamic::Var& value) {
+                  return value.convert<bool>();
+                },
+                &t);
             break;
           }
           SWITCH_INT64_BRANCH {
-            CONVERT_DATA_ARRAY(Int64TensorBuilder, convert<int64_t>(), rs_,
-                               begin, end, chunk_size, t)
+            ConvertDataToArray<Int64TensorBuilder, int64_t>(
+                rs_, col_index, begin, end, chunk_size,
+                [](const Poco::Dynamic::Var& value) {
+                  return value.convert<int64_t>();
+                },
+                &t);
             break;
           }
           SWITCH_DATE_BRANCH {
-            CONVERT_DATA_ARRAY(
-                Int64TensorBuilder,
-                convert<Poco::DateTime>().timestamp().epochTime(), rs_, begin,
-                end, chunk_size, t)
+            ConvertDataToArray<Int64TensorBuilder, int64_t>(
+                rs_, col_index, begin, end, chunk_size,
+                [](const Poco::Dynamic::Var& value) {
+                  return value.convert<Poco::DateTime>()
+                      .timestamp()
+                      .epochTime();
+                },
+                &t);
             break;
           }
           SWITCH_FLOAT_BRANCH {
-            CONVERT_DATA_ARRAY(FloatTensorBuilder, convert<float>(), rs_, begin,
-                               end, chunk_size, t)
+            ConvertDataToArray<FloatTensorBuilder, float>(
+                rs_, col_index, begin, end, chunk_size,
+                [](const Poco::Dynamic::Var& value) {
+                  return value.convert<float>();
+                },
+                &t);
             break;
           }
           SWITCH_DOUBLE_BRANCH {
-            CONVERT_DATA_ARRAY(DoubleTensorBuilder, convert<double>(), rs_,
-                               begin, end, chunk_size, t)
+            ConvertDataToArray<DoubleTensorBuilder, double>(
+                rs_, col_index, begin, end, chunk_size,
+                [](const Poco::Dynamic::Var& value) {
+                  return value.convert<double>();
+                },
+                &t);
             break;
           }
           SWITCH_STRING_BRANCH {
-            CONVERT_DATA_ARRAY(StringTensorBuilder, convert<std::string>(), rs_,
-                               begin, end, chunk_size, t)
+            ConvertDataToArray<StringTensorBuilder, std::string>(
+                rs_, col_index, begin, end, chunk_size,
+                [](const Poco::Dynamic::Var& value) {
+                  return value.convert<std::string>();
+                },
+                &t);
             break;
           }
           default:
