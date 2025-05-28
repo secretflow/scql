@@ -76,15 +76,8 @@ void Join::Execute(ExecContext* ctx) {
         return OprfPsiJoin(ctx,
                            IsOprfServerAccordToHint(ctx, server_hint.value()));
       }
-      auto psi_plan = util::CoordinatePsiPlan(
-          ctx, algorithm == static_cast<int64_t>(util::PsiAlgo::kOprfPsi));
-      if (psi_plan.unbalanced) {
-        SPDLOG_LOGGER_INFO(logger, "OprfPsi is chosen after coordination");
-        return OprfPsiJoin(ctx, psi_plan.is_server, psi_plan.psi_size_info);
-      } else {
-        SPDLOG_LOGGER_INFO(logger, "EcdhPsi is chosen after coordination");
-        return EcdhPsiJoin(ctx);
-      }
+      auto psi_plan = util::CoordinatePsiPlan(ctx, true);
+      return OprfPsiJoin(ctx, psi_plan.is_server, psi_plan.psi_size_info);
     }
     case static_cast<int64_t>(util::PsiAlgo::kEcdhPsi):
       SPDLOG_LOGGER_INFO(logger, "use EcdhPsi for join according to attribute");
