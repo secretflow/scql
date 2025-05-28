@@ -165,7 +165,15 @@ void In::PsiIn(ExecContext* ctx) {
         return OprfPsiIn(ctx,
                          IsOprfServerAccordToHint(ctx, server_hint.value()));
       }
-      break;
+      auto psi_plan = util::CoordinatePsiPlan(
+          ctx, algorithm == static_cast<int64_t>(util::PsiAlgo::kOprfPsi));
+      if (psi_plan.unbalanced) {
+        SPDLOG_LOGGER_INFO(logger, "OprfPsi is chosen after coordination");
+        return OprfPsiIn(ctx, psi_plan.is_server, psi_plan.psi_size_info);
+      } else {
+        SPDLOG_LOGGER_INFO(logger, "EcdhPsi is chosen after coordination");
+        return EcdhPsiIn(ctx);
+      }
     }
     case static_cast<int64_t>(util::PsiAlgo::kEcdhPsi):
       SPDLOG_LOGGER_INFO(logger, "use EcdhPsi for In according to attribute");
@@ -173,20 +181,12 @@ void In::PsiIn(ExecContext* ctx) {
     case static_cast<int64_t>(util::PsiAlgo::kRr22Psi):
       SPDLOG_LOGGER_INFO(logger, "use Rr22Psi for In according to attribute");
       return Rr22PsiIn(ctx);
+    // use rr22 as default
     case static_cast<int64_t>(util::PsiAlgo::kAutoPsi):
-      break;
+      SPDLOG_LOGGER_INFO(logger, "use Rr22Psi as default psi type");
+      return Rr22PsiIn(ctx);
     default:
       YACL_THROW("unsupported in algorithm id: {}", algorithm);
-  }
-
-  auto psi_plan = util::CoordinatePsiPlan(
-      ctx, algorithm == static_cast<int64_t>(util::PsiAlgo::kOprfPsi));
-  if (psi_plan.unbalanced) {
-    SPDLOG_LOGGER_INFO(logger, "OprfPsi is chosen after coordination");
-    return OprfPsiIn(ctx, psi_plan.is_server, psi_plan.psi_size_info);
-  } else {
-    SPDLOG_LOGGER_INFO(logger, "EcdhPsi is chosen after coordination");
-    return EcdhPsiIn(ctx);
   }
 }
 

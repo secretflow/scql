@@ -226,7 +226,6 @@ void EngineServiceImpl::RunExecutionPlan(
     const pb::RunExecutionPlanRequest* request,
     pb::RunExecutionPlanResponse* response, ::google::protobuf::Closure* done) {
   brpc::ClosureGuard done_guard(done);
-  auto start_time = std::chrono::system_clock::now();
   auto* controller = static_cast<brpc::Controller*>(cntl);
   std::string source_ip =
       butil::endpoint2str(controller->remote_side()).c_str();
@@ -592,8 +591,6 @@ void EngineServiceImpl::RunPlanSync(const pb::RunExecutionPlanRequest* request,
 void EngineServiceImpl::RunPlanAsync(const pb::RunExecutionPlanRequest& request,
                                      Session* session,
                                      const std::string& source_ip) {
-  auto start_time = std::chrono::system_clock::now();
-
   pb::RunExecutionPlanResponse response;
   response.set_job_id(request.job_params().job_id());
   response.set_party_code(request.job_params().party_code());
