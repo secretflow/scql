@@ -66,14 +66,19 @@ func (col *Column) Equal(_ sessionctx.Context, expr Expression) bool {
 
 func (col *Column) Clone() Expression {
 	newCol := *col
+	if col.hashcode != nil {
+		newCol.hashcode = make([]byte, len(col.hashcode))
+		copy(newCol.hashcode, col.hashcode)
+	}
 	return &newCol
 }
 
 // HashCode implements Expression interface.
 func (col *Column) HashCode(_ *stmtctx.StatementContext) []byte {
-	if len(col.hashcode) != 0 {
-		return col.hashcode
-	}
+	// TODO: refine HashCode for Column
+	// if len(col.hashcode) != 0 {
+	// 	return col.hashcode
+	// }
 	col.hashcode = make([]byte, 0, 9)
 	col.hashcode = append(col.hashcode, columnFlag)
 	col.hashcode = codec.EncodeInt(col.hashcode, int64(col.UniqueID))

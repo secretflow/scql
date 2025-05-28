@@ -574,7 +574,7 @@
         "skip_odps_test": true,
         "skip_pg_test": true,
         "skip_csv_test": true,
-        "rewritten_sql": "select any_value(case when (tbl_1.plain_string_1='1' or tbl_1.plain_string_1='2' or tbl_1.plain_string_1='3') then '1' else '2' end) as bank_type,count(1) as expr_123 from alice.tbl_1 where str_to_date(tbl_1.plain_string_0, '%Y-%m-%d')='2022-02-02' group by case when (tbl_1.plain_string_1='1' or tbl_1.plain_string_1='2' or tbl_1.plain_string_1='3') then '1' else '2' end"
+        "rewritten_sql": "select any_value(t_0.bank_type) as bank_type,count(1) as expr_123 from (select case when (tbl_1.plain_string_1='1' or tbl_1.plain_string_1='2' or tbl_1.plain_string_1='3') then '1' else '2' end as bank_type from alice.tbl_1 where str_to_date(tbl_1.plain_string_0, '%Y-%m-%d')='2022-02-02') as t_0 group by t_0.bank_type"
       },
       {
         "sql": "select a.plain_int_0, b.plain_int_0 from alice.tbl_0 a left join (select distinct plain_int_0, plain_int_1 from alice.tbl_1) b on a.plain_int_0 = b.plain_int_0;",
