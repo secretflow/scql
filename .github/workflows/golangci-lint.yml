@@ -7,13 +7,13 @@ on:
       - main
     paths:
       - '**.go'
-      - '.golangci.yml'
+      - '.golangci-lint.yml'
   pull_request:
     branches:
       - main
     paths:
       - '**.go'
-      - '.golangci.yml'
+      - '.golangci-lint.yml'
 
 env:
   GO_VERSION: 1.24

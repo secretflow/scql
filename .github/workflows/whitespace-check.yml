@@ -1,0 +1,41 @@
+name: Whitespace Check
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.cc'
+      - '**.cpp'
+      - '**.hpp'
+      - '**.h'
+      - '**.proto'
+      - '**.go'
+      - '**.py'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '**.cc'
+      - '**.cpp'
+      - '**.hpp'
+      - '**.h'
+      - '**.proto'
+      - '**.go'
+      - '**.py'
+
+jobs:
+  lint-whitespace:
+    name: Lint Whitespace
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main repository code
+        uses: actions/checkout@v4
+      - name: Clone secretflow/devtools to ../tools
+        run: |
+          cd ..
+          git clone https://github.com/secretflow/devtools.git tools
+      - name: Make lint script executable
+        run: chmod +x ../tools/lint-whitespace.sh
+      - name: Run lint-whitespace.sh script
+        run: ../tools/lint-whitespace.sh
