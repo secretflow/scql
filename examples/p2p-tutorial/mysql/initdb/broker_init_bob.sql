@@ -182,23 +182,3 @@ CREATE TABLE `locks` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `rules`
---
-
-DROP TABLE IF EXISTS `rules`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `rules` (
-  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '''auto generated increment id''',
-  `rule_id` varchar(128) DEFAULT NULL COMMENT '''rule name''',
-  `project_id` varchar(128) DEFAULT NULL COMMENT '''project id''',
-  `query` longtext DEFAULT NULL COMMENT '''query string''',
-  `compile_info` longblob COMMENT '''compile info''',
-  `job_config` longblob COMMENT '''job config''',
-  `placeholder_types` longblob COMMENT '''placeholder types''',
-  `owner` varchar(64) DEFAULT NULL COMMENT '''the user that creates the rule''',
-  `desc` longtext DEFAULT NULL COMMENT '''description''',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
-/*!40101 SET character_set_client = @saved_cs_client */;

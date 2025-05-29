@@ -1252,6 +1252,7 @@ definitions:
           members:
             - alice
           project_id: proj_id
+          created_at: YYYY-MM-DD hh:mm:ss
           archived: false
       status:
         code: 0
