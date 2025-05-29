@@ -85,6 +85,42 @@ var translateNumericTestCases = []sPair{
 }`, ``, testConf{groupThreshold: 0, batched: false, revealGroupCount: false}},
 }
 var translateWithCCLTestCases = []sPair{
+	{`SELECT ta.join_int_0, ta.plain_datetime_0 from alice.tbl_0 as ta right join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0 where ta.plain_datetime_0 between '2025-04-23 12:25:42' and '2025-05-29 15:36:36'`, `digraph G {
+0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select ta.join_int_0,ta.plain_datetime_0 from alice.tbl_0 as ta;,table_refs:[alice.tbl_0],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_2,},],attr:[sql:select tb.join_int_0 from bob.tbl_0 as tb;,table_refs:[bob.tbl_0],],party:[bob,]}"]
+2 [label="join:{in:[Left:{t_0,},Right:{t_2,},],out:[LeftJoinIndex:{t_3,},RightJoinIndex:{t_4,},],attr:[input_party_codes:[alice bob],join_type:2,psi_algorithm:0,],party:[alice,bob,]}"]
+3 [label="filter_by_index:{in:[Data:{t_0,t_1,},RowsIndexFilter:{t_3,},],out:[Out:{t_5,t_6,},],attr:[],party:[alice,]}"]
+4 [label="make_constant:{in:[],out:[Out:{t_7,},],attr:[scalar:1745411142000,],party:[alice,bob,carol,]}"]
+5 [label="broadcast:{in:[In:{t_7,},ShapeRefTensor:{t_6,},],out:[Out:{t_8,},],attr:[],party:[alice,]}"]
+7 [label="GreaterEqual:{in:[Left:{t_6,},Right:{t_8,},],out:[Out:{t_10,},],attr:[],party:[alice,]}"]
+8 [label="make_constant:{in:[],out:[Out:{t_11,},],attr:[scalar:1748532996000,],party:[alice,bob,carol,]}"]
+9 [label="broadcast:{in:[In:{t_11,},ShapeRefTensor:{t_6,},],out:[Out:{t_12,},],attr:[],party:[alice,]}"]
+11 [label="LessEqual:{in:[Left:{t_6,},Right:{t_12,},],out:[Out:{t_14,},],attr:[],party:[alice,]}"]
+12 [label="logical_and:{in:[Left:{t_10,},Right:{t_14,},],out:[Out:{t_15,},],attr:[],party:[alice,]}"]
+13 [label="apply_filter:{in:[Filter:{t_15,},In:{t_5,t_6,},],out:[Out:{t_16,t_17,},],attr:[],party:[alice,]}"]
+14 [label="publish:{in:[In:{t_16,t_17,},],out:[Out:{t_18,t_19,},],attr:[],party:[alice,]}"]
+0 -> 2 [label = "t_0:{join_int_0:PRIVATE:INT64}"]
+0 -> 3 [label = "t_0:{join_int_0:PRIVATE:INT64}"]
+0 -> 3 [label = "t_1:{plain_datetime_0:PRIVATE:DATETIME}"]
+1 -> 2 [label = "t_2:{join_int_0:PRIVATE:INT64}"]
+11 -> 12 [label = "t_14:{LessEqual_out:PRIVATE:BOOL}"]
+12 -> 13 [label = "t_15:{logical_and_out:PRIVATE:BOOL}"]
+13 -> 14 [label = "t_16:{join_int_0:PRIVATE:INT64}"]
+13 -> 14 [label = "t_17:{plain_datetime_0:PRIVATE:DATETIME}"]
+2 -> 3 [label = "t_3:{join_int_0:PRIVATE:INT64}"]
+3 -> 11 [label = "t_6:{plain_datetime_0:PRIVATE:DATETIME}"]
+3 -> 13 [label = "t_5:{join_int_0:PRIVATE:INT64}"]
+3 -> 13 [label = "t_6:{plain_datetime_0:PRIVATE:DATETIME}"]
+3 -> 5 [label = "t_6:{plain_datetime_0:PRIVATE:DATETIME}"]
+3 -> 7 [label = "t_6:{plain_datetime_0:PRIVATE:DATETIME}"]
+3 -> 9 [label = "t_6:{plain_datetime_0:PRIVATE:DATETIME}"]
+4 -> 5 [label = "t_7:{constant_data:PUBLIC:INT64}"]
+5 -> 7 [label = "t_8:{constant_data:PRIVATE:INT64}"]
+7 -> 12 [label = "t_10:{GreaterEqual_out:PRIVATE:BOOL}"]
+8 -> 9 [label = "t_11:{constant_data:PUBLIC:INT64}"]
+9 -> 11 [label = "t_12:{constant_data:PRIVATE:INT64}"]
+}`, ``, testConf{groupThreshold: 0, batched: false},
+	},
 	{`SELECT ta.join_int_0, ta.plain_datetime_0 from alice.tbl_0 as ta right join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0 where ta.plain_datetime_0 > '2025-04-23 12:25:42'`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select ta.join_int_0,ta.plain_datetime_0 from alice.tbl_0 as ta;,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_2,},],attr:[sql:select tb.join_int_0 from bob.tbl_0 as tb;,table_refs:[bob.tbl_0],],party:[bob,]}"]
