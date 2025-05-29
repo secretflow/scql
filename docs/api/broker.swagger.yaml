@@ -1465,6 +1465,8 @@ definitions:
         type: string
         format: date-time
         title: created_at is the time the project was first created
+      archived:
+        type: boolean
   scql.pb.ProjectInvitation:
     type: object
     properties:
