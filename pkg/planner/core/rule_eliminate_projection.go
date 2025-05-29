@@ -63,10 +63,19 @@ func canProjectionBeEliminatedLoose(p *LogicalProjection) bool {
 
 func resolveColumnAndReplace(origin *expression.Column, replace map[string]*expression.Column) {
 	dst := replace[string(origin.HashCode(nil))]
-	if dst != nil {
+	// different from original code
+	// use for to loop until dst is nil rather than a if statement
+	// TODO: refine this
+	for dst != nil {
 		retType, inOperand := origin.RetType, origin.InOperand
 		*origin = *dst
 		origin.RetType, origin.InOperand = retType, inOperand
+
+		dst = replace[string(origin.HashCode(nil))]
+		if dst != nil && dst.UniqueID == origin.UniqueID {
+			// avoid infinite loop
+			dst = nil
+		}
 	}
 }
 
