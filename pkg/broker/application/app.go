@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
 	"github.com/secretflow/scql/pkg/broker/config"
@@ -49,6 +50,21 @@ type App struct {
 }
 
 func NewApp(partyMgr partymgr.PartyMgr, metaMgr *storage.MetaManager, cfg *config.Config) (*App, error) {
+	// test
+	password := "supersecretpassword"
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, fmt.Errorf("Error hashing password: %v", err)
+	}     
+
+	fmt.Println("Hashed password:", string(hash))
+
+	if bcrypt.CompareHashAndPassword(hash, []byte(password)) == nil {
+		fmt.Println("Password is valid")
+	} else {
+		fmt.Println("Invalid password")
+	}
+
 	auth, err := auth.NewAuth(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create auth from config: %v", err)
