@@ -169,6 +169,7 @@ func (svc *grpcIntraSvc) ListProjects(c context.Context, req *pb.ListProjectsReq
 			Creator:     proj.Creator,
 			Members:     projWithMember.Members,
 			CreatedAt:   timestamppb.New(proj.CreatedAt),
+			Archived:    proj.Archived,
 		})
 	}
 
