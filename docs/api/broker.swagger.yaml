@@ -1252,6 +1252,7 @@ definitions:
           members:
             - alice
           project_id: proj_id
+          archived: false
       status:
         code: 0
         message: list projects succeed
