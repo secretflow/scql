@@ -64,7 +64,7 @@ do
 		echo "${dash} ${sha} ${etc}"
 		;;
 	esac
-done <<< "$(git log --check --pretty=format:"---% h% s" "${baseCommit}"..)"
+done <<< "$(git diff --check "${baseCommit}" HEAD)"
 
 if test ${#problems[*]} -gt 0
 then
