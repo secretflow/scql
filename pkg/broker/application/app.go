@@ -17,12 +17,13 @@ package application
 import (
 	"errors"
 	"fmt"
+	"log"
 	"slices"
 	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/text/language"
 	"gorm.io/gorm"
 
 	"github.com/secretflow/scql/pkg/broker/config"
@@ -50,19 +51,16 @@ type App struct {
 }
 
 func NewApp(partyMgr partymgr.PartyMgr, metaMgr *storage.MetaManager, cfg *config.Config) (*App, error) {
-	// test
-	password := "supersecretpassword"
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	// Example usage of a function from the vulnerable package.
+	acceptLanguageHeader := "en-US,en;q=0.9,fr-CA;q=0.8,*"
+	tags, _, err := language.ParseAcceptLanguage(acceptLanguageHeader)
 	if err != nil {
-		return nil, fmt.Errorf("Error hashing password: %v", err)
-	}     
-
-	fmt.Println("Hashed password:", string(hash))
-
-	if bcrypt.CompareHashAndPassword(hash, []byte(password)) == nil {
-		fmt.Println("Password is valid")
+		log.Printf("Could not parse Accept-Language header: %v (this is expected for the demo if input is odd)\n", err)
 	} else {
-		fmt.Println("Invalid password")
+		fmt.Println("Parsed language tags:")
+		for _, tag := range tags {
+			fmt.Printf("- %s\n", tag.String())
+		}
 	}
 
 	auth, err := auth.NewAuth(cfg)
