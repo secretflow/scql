@@ -22,9 +22,7 @@ header:
     - '**'
 
   paths-ignore:
-    - '.ci/broker-docker-compose'
-    - '.ci/docker-compose'
-    - '.ci/test-data'
+    - '.ci'
     - '.circleci'
     - '.github'
     - '.vscode'
