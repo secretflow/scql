@@ -7,13 +7,17 @@ on:
       - main
     paths:
       - '**.go'
-      - '.govulncheck.yml'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/workflows/govulncheck.yml'
   pull_request:
     branches:
       - main
     paths:
       - '**.go'
-      - '.govulncheck.yml'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/workflows/govulncheck.yml'
 
 jobs:
   govulncheck_job:
@@ -23,7 +27,6 @@ jobs:
       - id: govulncheck
         uses: golang/govulncheck-action@v1
         with:
-           go-version-input: 1.24
            go-package: ./...
            go-version-file: 'go.mod'
            output-format: 'text'
