@@ -1,41 +1,25 @@
 name: Whitespace Check
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - '**.cc'
-      - '**.cpp'
-      - '**.hpp'
-      - '**.h'
-      - '**.proto'
-      - '**.go'
-      - '**.py'
   pull_request:
-    branches:
-      - main
-    paths:
-      - '**.cc'
-      - '**.cpp'
-      - '**.hpp'
-      - '**.h'
-      - '**.proto'
-      - '**.go'
-      - '**.py'
+    types: [opened, synchronize]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  lint-whitespace:
-    name: Lint Whitespace
+  check-whitespace:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout main repository code
+      - name: Checkout code
         uses: actions/checkout@v4
-      - name: Clone secretflow/devtools to ../tools
+        with:
+          fetch-depth: 0
+
+      - name: Check for whitespace issues
         run: |
-          cd ..
-          git clone https://github.com/secretflow/devtools.git tools
-      - name: Make lint script executable
-        run: chmod +x ../tools/lint-whitespace.sh
-      - name: Run lint-whitespace.sh script
-        run: ../tools/lint-whitespace.sh
+          .ci/script/check-whitespace.sh \
+            "${{ github.event.pull_request.base.sha }}" \
+            "$GITHUB_STEP_SUMMARY" \
+            "https://github.com/${{ github.repository }}"
