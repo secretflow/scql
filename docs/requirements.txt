@@ -1,12 +1,7 @@
-sphinx==6.2.1
-nbsphinx==0.8.9
-# nbsphinx>0.9.1 has issues with MyST anchors
-# nbsphinx>0.8.9 has issues with smart quotes in .po files
-linkify-it-py
-myst-parser
-sphinx-intl
-sphinx_design
-sphinxcontrib-mermaid
-secretflow-doctools
+sphinx~=8.0
+linkify-it-py~=2.0
+myst-parser~=4.0
+sphinx-intl~=2.3
+sphinxcontrib-mermaid~=1.0
+secretflow-doctools~=0.8.3
 sphinx-autobuild
-pydata-sphinx-theme
