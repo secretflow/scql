@@ -982,3 +982,20 @@ func (plan *GraphBuilder) AddReplicateNode(name string, left []*Tensor,
 	return plan.AddExecutionNode(name, operator.OpNameReplicate, map[string][]*Tensor{"Left": left, "Right": right},
 		map[string][]*Tensor{"LeftOut": leftOutput, "RightOut": rightOutput}, attr, partyCodes)
 }
+
+func (plan *GraphBuilder) AddStrToDateNode(name string, left *Tensor, right *Tensor, partyCodes []string) (*Tensor, error) {
+	if left.Name != "constant_data" && left.Status() != pb.TensorStatus_TENSORSTATUS_PRIVATE {
+		return nil, fmt.Errorf("AddStrToDateNode: only support private left input now, illegal left input {%v}", left)
+	}
+
+	output := plan.AddTensorAs(left)
+	output.Name = name + "_out"
+	output.DType = pb.PrimitiveDataType_DATETIME
+
+	_, err := plan.AddExecutionNode(name, operator.OpNameStrToDate, map[string][]*Tensor{"Left": {left}, "Right": {right}}, map[string][]*Tensor{"Out": {output}}, map[string]*Attribute{}, partyCodes)
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
