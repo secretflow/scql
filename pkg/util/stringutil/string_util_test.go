@@ -273,3 +273,113 @@ func TestStringToUnixMilli(t *testing.T) {
 		}
 	}
 }
+
+func TestStrptimeToGoLayout(t *testing.T) {
+	r := require.New(t)
+
+	type testCase struct {
+		name           string
+		strptimeFormat string
+		expectedLayout string
+		expectErr      bool
+		expectedErrMsg string
+	}
+
+	testCases := []testCase{
+		{
+			name:           "YYYY-MM-DD",
+			strptimeFormat: "%Y-%m-%d",
+			expectedLayout: "2006-01-02",
+			expectErr:      false,
+		},
+		{
+			name:           "HH:MM:SS",
+			strptimeFormat: "%H:%i:%S",
+			expectedLayout: "15:04:05",
+			expectErr:      false,
+		},
+		{
+			name:           "YYYY-MM-DD HH:MM:SS",
+			strptimeFormat: "%Y-%m-%d %H:%i:%S",
+			expectedLayout: "2006-01-02 15:04:05",
+			expectErr:      false,
+		},
+		{
+			name:           "YYYY/MM/DD with T",
+			strptimeFormat: "%Y/%m/%d %T",
+			expectedLayout: "2006/01/02 15:04:05",
+			expectErr:      false,
+		},
+		{
+			name:           "MySQL full datetime with microseconds",
+			strptimeFormat: "%Y-%m-%d %H:%i:%s.%f",
+			expectedLayout: "2006-01-02 15:04:05.000000",
+			expectErr:      false,
+		},
+		{
+			name:           "Abbreviated month and day",
+			strptimeFormat: "%b %d, %Y",
+			expectedLayout: "Jan 02, 2006",
+			expectErr:      false,
+		},
+		{
+			name:           "Literal percent sign",
+			strptimeFormat: "Rate: %%", // strptime "%%" means literal "%"
+			expectedLayout: "Rate: %",
+			expectErr:      false,
+		},
+		{
+			name:           "Literal percent sign with other specifiers",
+			strptimeFormat: "%%Y is %Y", // "%%Y" -> "%Y", "%Y" -> "2006"
+			expectedLayout: "%Y is 2006",
+			expectErr:      false,
+		},
+		{
+			name:           "Empty format string",
+			strptimeFormat: "",
+			expectedLayout: "",
+			expectErr:      false,
+		},
+		{
+			name:           "Unsupported specifier",
+			strptimeFormat: "%Y-%m-%q", // %q is not in our map
+			expectedLayout: "",
+			expectErr:      true,
+			expectedErrMsg: "unsupported strptime specifier: %q",
+		},
+		{
+			name:           "Dangling percent",
+			strptimeFormat: "%Y-%m-%",
+			expectedLayout: "",
+			expectErr:      true,
+			expectedErrMsg: "invalid format string: trailing %",
+		},
+		{
+			name:           "No specifiers, just literals",
+			strptimeFormat: "Year-Month-Day",
+			expectedLayout: "Year-Month-Day",
+			expectErr:      false,
+		},
+		{
+			name:           "12-hour format with AM/PM",
+			strptimeFormat: "%h:%i:%S %p",
+			expectedLayout: "03:04:05 PM",
+			expectErr:      false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			goLayout, err := StrptimeToGoLayout(tc.strptimeFormat)
+			if tc.expectErr {
+				r.Error(err, "strptimeFormat: %s", tc.strptimeFormat)
+				if tc.expectedErrMsg != "" {
+					r.Contains(err.Error(), tc.expectedErrMsg, "Error message mismatch for %s", tc.strptimeFormat)
+				}
+			} else {
+				r.NoError(err, "strptimeFormat: %s", tc.strptimeFormat)
+				r.Equal(tc.expectedLayout, goLayout, "Layout mismatch for strptimeFormat: %s", tc.strptimeFormat)
+			}
+		})
+	}
+}

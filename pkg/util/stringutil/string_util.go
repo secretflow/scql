@@ -360,3 +360,58 @@ func StringToUnixMilli(s string) (int64, error) {
 
 	return 0, fmt.Errorf("StringToUnixMilli: unsupported date/time format: %s", s)
 }
+
+func StrptimeToGoLayout(strptimeFormat string) (string, error) {
+	var mapping = map[string]string{
+		"%Y": "2006",        // Year, four digits
+		"%y": "06",          // Year, two digits (00-99)
+		"%m": "01",          // Month as a decimal number (01-12)
+		"%d": "02",          // Day of the month as a decimal number (01-31)
+		"%H": "15",          // Hour (24-hour clock) (00-23)
+		"%h": "03",          // Hour (12-hour clock) (01-12) %I in C
+		"%i": "04",          // MySQL's synonym for %M
+		"%S": "05",          // Second as a decimal number (00-59)
+		"%s": "05",          // MySQL's synonym for %S
+		"%T": "15:04:05",    // %H:%M:%S
+		"%r": "03:04:05 PM", // %I:%M:%S %p
+		"%p": "PM",          // AM or PM
+		"%f": "000000",      // Microsecond (000000-999999). Go: .000 (ms), .000000 (us), .000000000 (ns)
+		"%D": "01/02/06",    // %m/%d/%y
+		"%F": "2006-01-02",  // %Y-%m-%d
+		"%a": "Mon",
+		"%W": "Monday",
+		"%b": "Jan",
+		"%M": "January",
+	}
+
+	var goLayout strings.Builder
+	runes := []rune(strptimeFormat)
+	i := 0
+	for i < len(runes) {
+		if runes[i] == '%' {
+			if i+1 < len(runes) {
+				specifierRune := runes[i+1]
+				// Handle %% separately
+				if specifierRune == '%' {
+					goLayout.WriteRune('%')
+					i += 2
+					continue
+				}
+
+				specifier := "%" + string(specifierRune)
+				if layoutPart, ok := mapping[specifier]; ok {
+					goLayout.WriteString(layoutPart)
+				} else {
+					return "", fmt.Errorf("unsupported strptime specifier: %s", specifier)
+				}
+				i += 2
+			} else {
+				return "", fmt.Errorf("invalid format string: trailing %%")
+			}
+		} else {
+			goLayout.WriteRune(runes[i])
+			i += 1
+		}
+	}
+	return goLayout.String(), nil
+}
