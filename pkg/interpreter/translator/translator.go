@@ -30,7 +30,6 @@ import (
 	"github.com/secretflow/scql/pkg/parser/ast"
 	"github.com/secretflow/scql/pkg/parser/mysql"
 	"github.com/secretflow/scql/pkg/planner/core"
-	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	proto "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
 	"github.com/secretflow/scql/pkg/types"
@@ -1009,11 +1008,11 @@ func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors m
 		dateStrConst, dateIsConst := dateStrExpr.(*expression.Constant)
 		formatStrConst, formatIsConst := formatStrExpr.(*expression.Constant)
 
-		if left.DType != pb.PrimitiveDataType_STRING {
-			return nil, fmt.Errorf("buildScalarFunction: invalid left argument type for the STR_TO_DATE function, exepecting string but got %s", pb.PrimitiveDataType_name[int32(left.DType)])
+		if left.DType != proto.PrimitiveDataType_STRING {
+			return nil, fmt.Errorf("buildScalarFunction: invalid left argument type for the STR_TO_DATE function, exepecting string but got %s", proto.PrimitiveDataType_name[int32(left.DType)])
 		}
-		if right.DType != pb.PrimitiveDataType_STRING || !formatIsConst {
-			return nil, fmt.Errorf("buildScalarFunction: invalid right argument type for the STR_TO_DATE function, exepecting constant string but got %s", pb.PrimitiveDataType_name[int32(right.DType)])
+		if right.DType != proto.PrimitiveDataType_STRING || !formatIsConst {
+			return nil, fmt.Errorf("buildScalarFunction: invalid right argument type for the STR_TO_DATE function, exepecting constant string but got %s", proto.PrimitiveDataType_name[int32(right.DType)])
 		}
 
 		// add constant node for constant dateStr - str_to_date('2025-06-05', '%Y-%m-%d')
