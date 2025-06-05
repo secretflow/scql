@@ -59,6 +59,7 @@ cc_library(
         ":shape",
         ":shuffle",
         ":sort",
+        ":str_to_date",
         ":trigonometric",
         ":unary",
         ":unique",
@@ -1129,5 +1130,25 @@ scql_cc_test(
         ":replicate",
         ":test_util",
         ":unary",
+    ],
+)
+
+cc_library(
+    name = "str_to_date",
+    srcs = ["str_to_date.cc"],
+    hdrs = ["str_to_date.h"],
+    deps = [
+        "//engine/framework:operator",
+        "//engine/util:tensor_util",
+    ],
+)
+
+scql_cc_test(
+    name = "str_to_date_test",
+    srcs = ["str_to_date_test.cc"],
+    deps = [
+        ":str_to_date",
+        ":test_util",
+        "//engine/core:tensor_constructor",
     ],
 )
