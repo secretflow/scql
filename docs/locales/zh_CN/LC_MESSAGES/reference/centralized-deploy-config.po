@@ -579,11 +579,11 @@ msgid ""
 "different mpc protocol by setting SPU runtime config. Protocol **SEMI2K**"
 " is suggested, which is fully tested and support multi parties. See `SPU "
 "runtime config "
-"<https://www.secretflow.org.cn/docs/spu/en/reference/runtime_config.html>`_"
+"<https://www.secretflow.org.cn/docs/spu/reference/runtime_config>`_"
 " to get more information."
 msgstr ""
 "SCQL 的底层 MPC 协议由 SPU 控制，你可以通过更改 SPU 相关配置来选择不同的 MPC 协议， 更多信息请参考 `SPU 配置 "
-"<https://www.secretflow.org.cn/docs/spu/en/reference/runtime_config.html>`_"
+"<https://www.secretflow.org.cn/docs/spu/reference/runtime_config>`_"
 " 。"
 
 #: ../../reference/engine-config.rst:5
