@@ -109,4 +109,4 @@ workflows:
       - linux_regtest:
           matrix:
             parameters:
-              resource_class: ["2xlarge", "arm-xlarge"]
+              resource_class: ["xlarge", "arm-xlarge"]

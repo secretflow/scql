@@ -145,7 +145,7 @@ workflows:
       - build_binary:
           matrix:
             parameters:
-              resource_class: ["2xlarge", "arm.2xlarge"]
+              resource_class: ["xlarge", "arm-xlarge"]
           # This is mandatory to trigger a pipeline when pushing a tag
           filters:
             tags:

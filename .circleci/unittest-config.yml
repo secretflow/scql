@@ -69,7 +69,6 @@ commands:
             find bazel-testlogs/ -type f -name "test.log" -print0 | xargs -0 tar -cvzf test_logs.tar.gz
             exit ${test_status}
 
-
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
@@ -139,7 +138,7 @@ jobs:
             brew link go@1.24
       - setup_cpp_test
       - run_cpp_test:
-          extra_bazel_args: ""  
+          extra_bazel_args: ""
           find_executable_flag: "-perm +111"
       - store_test_results:
           path: test-results
@@ -157,7 +156,7 @@ workflows:
       - linux_go_ut:
           matrix:
             parameters:
-              resource_class: ["2xlarge", "arm-xlarge"]
+              resource_class: ["xlarge", "arm-xlarge"]
       - macOS_go_ut
   run_cpp_ut:
     when: << pipeline.parameters.run_cpp_ut >>
@@ -165,5 +164,5 @@ workflows:
       - linux_cpp_ut:
           matrix:
             parameters:
-              resource_class: ["2xlarge", "arm-xlarge"]
+              resource_class: ["xlarge", "arm-xlarge"]
       - macOS_cpp_ut
