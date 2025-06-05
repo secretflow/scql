@@ -266,7 +266,7 @@ datasources in embed_router_conf contain information for connecting MySQL/SQLite
 
     CSVDB Connection string e.g:
       local csv: "{\\\"db_name\\\":\\\"csvdb\\\",\\\"tables\\\":[{\\\"table_name\\\":\\\"staff\\\",\\\"data_path\\\":\\\"test.csv\\\",\\\"columns\\\":[{\\\"column_name\\\":\\\"id\\\",\\\"column_type\\\":\\\"string\\\"}]}]}"
-      
+
       OSS csv: "{\\\"db_name\\\":\\\"csvdb\\\",\\\"s3_conf\\\":{\\\"endpoint\\\":\\\"test_endpoint\\\",\\\"access_key_id\\\":\\\"test_id\\\",\\\"secret_access_key\\\":\\\"test_key\\\",\\\"virtualhost\\\": true },\\\"tables\\\":[{\\\"table_name\\\":\\\"staff\\\",\\\"data_path\\\":\\\"oss://test_bucket/test.csv\\\",\\\"columns\\\":[{\\\"column_name\\\":\\\"id\\\",\\\"column_type\\\":\\\"string\\\"}]}]}"
 
     ArrowSQL Connection string format:
@@ -321,7 +321,7 @@ Config for party authentication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 For security, SCQLEngine enables party authentication by default. SCQLEngine will check it's public key in the Driver request matches the local public key in ``private_key_pem_path``, and that the other participant's public key also matches the one in ``authorized_profile_path``.
 
-.. _heu/ou: https://www.secretflow.org.cn/docs/heu/latest/zh-Hans/getting_started/algo_choice#ou-paillier
+.. _heu/ou: https://www.secretflow.org.cn/docs/heu/getting_started/algo_choice#ou-paillier
 
 .. _psi curve type: https://www.secretflow.org.cn/en/docs/psi/main/reference/psi_config#curvetype
 

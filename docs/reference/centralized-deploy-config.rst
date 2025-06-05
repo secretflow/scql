@@ -209,7 +209,7 @@ Additionally, it is necessary to configure the SCQLEngine to work with SSL, plea
 
 Config for SPU
 ^^^^^^^^^^^^^^
-SCQL supports different mpc protocol powered by SPU, you can choose different mpc protocol by setting SPU runtime config. Protocol **SEMI2K** is suggested, which is fully tested and support multi parties. See `SPU runtime config <https://www.secretflow.org.cn/docs/spu/en/reference/runtime_config.html>`_ to get more information.
+SCQL supports different mpc protocol powered by SPU, you can choose different mpc protocol by setting SPU runtime config. Protocol **SEMI2K** is suggested, which is fully tested and support multi parties. See `SPU runtime config <https://www.secretflow.org.cn/docs/spu/reference/runtime_config>`_ to get more information.
 
 .. code-block:: yaml
 
