@@ -264,12 +264,12 @@ func TestStringToUnixMilli(t *testing.T) {
 		{"2024-05-01 1:12:13", 0, true},
 	}
 	for _, ca := range testCases {
-		unixMilli, err := StringToUnixSec(ca.in)
+		unixSec, err := StringToUnixSec(ca.in)
 		if ca.expectErr {
 			r.Error(err, ca.in)
 		} else {
 			r.NoError(err, ca.in)
-			r.Equal(ca.expectUnix, unixMilli, ca.in)
+			r.Equal(ca.expectUnix, unixSec, ca.in)
 		}
 	}
 }
