@@ -988,6 +988,9 @@ func (plan *GraphBuilder) AddStrToDateNode(name string, left *Tensor, right *Ten
 		return nil, fmt.Errorf("AddStrToDateNode: only support private left input now, illegal left input {%v}", left)
 	}
 
+	right.status = pb.TensorStatus_TENSORSTATUS_PRIVATE
+	right.OwnerPartyCode = left.OwnerPartyCode
+
 	output := plan.AddTensorAs(left)
 	output.Name = name + "_out"
 	output.DType = pb.PrimitiveDataType_DATETIME
