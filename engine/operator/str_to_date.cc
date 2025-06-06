@@ -19,6 +19,7 @@
 
 #include "engine/core/tensor_constructor.h"
 #include "engine/framework/exec.h"
+#include "engine/util/string_util.h"
 #include "engine/util/tensor_util.h"
 
 namespace scql::engine::op {
@@ -86,6 +87,7 @@ void StrToDate::Execute(ExecContext* ctx) {
   } else {
     YACL_ENFORCE(false, "StrToDate: format string tensor has no chunks");
   }
+  format_pattern = util::MySQLDateFormatToArrowFormat(format_pattern);
 
   arrow::compute::StrptimeOptions strptime_options;
   strptime_options.format = format_pattern;

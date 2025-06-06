@@ -1139,6 +1139,7 @@ cc_library(
     hdrs = ["str_to_date.h"],
     deps = [
         "//engine/framework:operator",
+        "//engine/util:string_util",
         "//engine/util:tensor_util",
     ],
 )

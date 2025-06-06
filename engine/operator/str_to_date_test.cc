@@ -59,8 +59,10 @@ INSTANTIATE_TEST_SUITE_P(
                                R"json(["2023-03-20 10:30:45"])json")),
                 .format_str_input = test::NamedTensor(
                     "format_str",
-                    TensorFrom(arrow::large_utf8(),
-                               R"json(["%Y-%m-%d %H:%M:%S"])json")),
+                    TensorFrom(
+                        arrow::large_utf8(),
+                        R"json(["%Y-%m-%d %H:%i:%S"])json")),  // arrow uses %M
+                                                               // for minutes
                 .expect_out = test::NamedTensor(
                     "out_timestamp",
                     TensorFrom(arrow::int64(), R"json([1679308245])json"))},
