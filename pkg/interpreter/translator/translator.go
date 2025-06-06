@@ -34,6 +34,7 @@ import (
 	"github.com/secretflow/scql/pkg/status"
 	"github.com/secretflow/scql/pkg/types"
 	"github.com/secretflow/scql/pkg/util/sliceutil"
+	"github.com/secretflow/scql/pkg/util/stringutil"
 )
 
 var astName2NodeName = map[string]string{
@@ -843,7 +844,7 @@ func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors m
 		}
 		inputs = append(inputs, t)
 	}
-	if !isApply {
+	if !isApply && f.FuncName.L != ast.StrToDate {
 		var err error
 		inputs, err = t.addBroadcastToNodeOndemand(inputs)
 		if err != nil {
@@ -997,6 +998,45 @@ func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors m
 		}
 
 		return t.ep.AddUnaryNumericNode(astName2NodeName[f.FuncName.L], astName2NodeName[f.FuncName.L], inputs[0], outputType, inTensorPartyCodes)
+	case ast.StrToDate:
+		if len(inputs) != 2 {
+			return nil, fmt.Errorf("incorrect arguments for function StrToDate, expecting 2 but get %v", len(inputs))
+		}
+
+		left, right := inputs[0], inputs[1]
+		dateStrExpr, formatStrExpr := f.GetArgs()[0], f.GetArgs()[1]
+		dateStrConst, dateIsConst := dateStrExpr.(*expression.Constant)
+		formatStrConst, formatIsConst := formatStrExpr.(*expression.Constant)
+
+		if left.DType != proto.PrimitiveDataType_STRING {
+			return nil, fmt.Errorf("buildScalarFunction: invalid left argument type for the STR_TO_DATE function, exepecting string but got %s", proto.PrimitiveDataType_name[int32(left.DType)])
+		}
+		if right.DType != proto.PrimitiveDataType_STRING || !formatIsConst {
+			return nil, fmt.Errorf("buildScalarFunction: invalid right argument type for the STR_TO_DATE function, exepecting constant string but got %s", proto.PrimitiveDataType_name[int32(right.DType)])
+		}
+
+		// add constant node for constant dateStr - str_to_date('2025-06-05', '%Y-%m-%d')
+		if dateIsConst && formatIsConst {
+			formatStr := formatStrConst.Value.GetString()
+			goLayout, err := stringutil.MySQLDateFormatToGoLayout(formatStr)
+			if err != nil {
+				return nil, fmt.Errorf("buildScalarFunction: STR_TO_DATE format string '%s' is invalid: %w", formatStr, err)
+			}
+
+			dateStr := dateStrConst.Value.GetString()
+			parsedTime, err := time.Parse(goLayout, dateStr)
+			if err != nil {
+				return nil, fmt.Errorf("buildScalarFunction: STR_TO_DATE date string '%s' is invalid: %w", dateStr, err)
+			}
+
+			unixSec := parsedTime.Unix()
+			var datum types.Datum
+			datum.SetInt64(unixSec)
+
+			return t.addConstantNode(&datum)
+		}
+
+		return t.ep.AddStrToDateNode("str_to_date", inputs[0], inputs[1], inTensorPartyCodes)
 	}
 	return nil, fmt.Errorf("buildScalarFunction doesn't support %s", f.FuncName.L)
 }
