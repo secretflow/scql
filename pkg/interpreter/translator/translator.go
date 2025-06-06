@@ -1017,22 +1017,21 @@ func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors m
 
 		// add constant node for constant dateStr - str_to_date('2025-06-05', '%Y-%m-%d')
 		if dateIsConst && formatIsConst {
-			dateStr := dateStrConst.Value.GetString()
 			formatStr := formatStrConst.Value.GetString()
-
-			goLayout, err := stringutil.StrptimeToGoLayout(formatStr)
+			goLayout, err := stringutil.MySQLDateFormatToGoLayout(formatStr)
 			if err != nil {
 				return nil, fmt.Errorf("buildScalarFunction: STR_TO_DATE format string '%s' is invalid: %w", formatStr, err)
 			}
 
+			dateStr := dateStrConst.Value.GetString()
 			parsedTime, err := time.Parse(goLayout, dateStr)
 			if err != nil {
 				return nil, fmt.Errorf("buildScalarFunction: STR_TO_DATE date string '%s' is invalid: %w", dateStr, err)
 			}
 
-			millis := parsedTime.UnixMilli()
+			unixSec := parsedTime.Unix()
 			var datum types.Datum
-			datum.SetInt64(millis)
+			datum.SetInt64(unixSec)
 
 			return t.addConstantNode(&datum)
 		}

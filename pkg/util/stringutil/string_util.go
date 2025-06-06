@@ -340,52 +340,55 @@ func IsDateString(s string) bool {
 	return matched
 }
 
-func StringToUnixMilli(s string) (int64, error) {
+func StringToUnixSec(s string) (int64, error) {
 	var t time.Time
 	var err error
 
 	if len(s) == len("2006-01-02 15:04:05") {
 		t, err = time.Parse("2006-01-02 15:04:05", s)
 		if err == nil {
-			return t.UnixMilli(), nil
+			return t.Unix(), nil
 		}
 	}
 
 	if len(s) == len("2006-01-02") {
 		t, err = time.Parse("2006-01-02", s)
 		if err == nil {
-			return t.UnixMilli(), nil
+			return t.Unix(), nil
 		}
 	}
 
 	return 0, fmt.Errorf("StringToUnixMilli: unsupported date/time format: %s", s)
 }
 
-func StrptimeToGoLayout(strptimeFormat string) (string, error) {
+func MySQLDateFormatToGoLayout(mysqlFormat string) (string, error) {
 	var mapping = map[string]string{
 		"%Y": "2006",        // Year, four digits
-		"%y": "06",          // Year, two digits (00-99)
-		"%m": "01",          // Month as a decimal number (01-12)
-		"%d": "02",          // Day of the month as a decimal number (01-31)
-		"%H": "15",          // Hour (24-hour clock) (00-23)
-		"%h": "03",          // Hour (12-hour clock) (01-12) %I in C
-		"%i": "04",          // MySQL's synonym for %M
-		"%S": "05",          // Second as a decimal number (00-59)
-		"%s": "05",          // MySQL's synonym for %S
-		"%T": "15:04:05",    // %H:%M:%S
-		"%r": "03:04:05 PM", // %I:%M:%S %p
+		"%y": "06",          // Year, two digits
+		"%m": "01",          // Month (01–12)
+		"%c": "1",           // Month (1–12)
+		"%d": "02",          // Day (01–31)
+		"%e": "2",           // Day (1–31)
+		"%H": "15",          // Hour (00–23)
+		"%k": "15",          // Hour (0–23)
+		"%h": "03",          // Hour (01–12)
+		"%I": "03",          // Hour (01–12)
+		"%l": "3",           // Hour (1–12)
+		"%i": "04",          // Minute (00–59)
+		"%S": "05",          // Second (00–59)
+		"%s": "05",          // Same as %S
+		"%f": "000000",      // Microsecond
 		"%p": "PM",          // AM or PM
-		"%f": "000000",      // Microsecond (000000-999999). Go: .000 (ms), .000000 (us), .000000000 (ns)
-		"%D": "01/02/06",    // %m/%d/%y
-		"%F": "2006-01-02",  // %Y-%m-%d
-		"%a": "Mon",
-		"%W": "Monday",
-		"%b": "Jan",
-		"%M": "January",
+		"%T": "15:04:05",    // Time in 24-hour format
+		"%r": "03:04:05 PM", // Time in 12-hour format
+		"%b": "Jan",         // Abbreviated month name
+		"%M": "January",     // Full month name
+		"%a": "Mon",         // Abbreviated weekday
+		"%W": "Monday",      // Full weekday
 	}
 
 	var goLayout strings.Builder
-	runes := []rune(strptimeFormat)
+	runes := []rune(mysqlFormat)
 	i := 0
 	for i < len(runes) {
 		if runes[i] == '%' {
@@ -397,12 +400,11 @@ func StrptimeToGoLayout(strptimeFormat string) (string, error) {
 					i += 2
 					continue
 				}
-
 				specifier := "%" + string(specifierRune)
 				if layoutPart, ok := mapping[specifier]; ok {
 					goLayout.WriteString(layoutPart)
 				} else {
-					return "", fmt.Errorf("unsupported strptime specifier: %s", specifier)
+					return "", fmt.Errorf("unsupported MySQL format specifier: %s", specifier)
 				}
 				i += 2
 			} else {
