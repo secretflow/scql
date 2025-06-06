@@ -215,11 +215,11 @@ func castValue(scalarAttr *Attribute, originType, castType proto.PrimitiveDataTy
 			return nil
 		} else if castType == proto.PrimitiveDataType_DATETIME || castType == proto.PrimitiveDataType_TIMESTAMP { // return int64 value
 			if stringutil.IsDateString(strVal) {
-				tsMilli, err := stringutil.StringToUnixMilli(strVal)
+				tsSec, err := stringutil.StringToUnixSec(strVal)
 				if err != nil {
 					return fmt.Errorf("failed to parse date/time constant %q: %v", strVal, err)
 				}
-				scalarAttr.SetInt64(tsMilli)
+				scalarAttr.SetInt64(tsSec)
 				return nil
 			}
 			return fmt.Errorf("date/time constant format should be 'YYYY-MM-DD hh:mm:ss'")
@@ -275,11 +275,11 @@ func castValue(scalarAttr *Attribute, originType, castType proto.PrimitiveDataTy
 			return nil
 		} else if castType == proto.PrimitiveDataType_INT64 {
 			if stringutil.IsDateString(strVal) {
-				tsMilli, err := stringutil.StringToUnixMilli(strVal)
+				tsSec, err := stringutil.StringToUnixSec(strVal)
 				if err != nil {
 					return fmt.Errorf("failed to parse date/time constant %q: %v", strVal, err)
 				}
-				scalarAttr.SetInt64(tsMilli)
+				scalarAttr.SetInt64(tsSec)
 				return nil
 			}
 			return fmt.Errorf("date/time constant format should be 'YYYY-MM-DD hh:mm:ss'")
