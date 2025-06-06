@@ -340,21 +340,21 @@ func IsDateString(s string) bool {
 	return matched
 }
 
-func StringToUnixSec(s string) (int64, error) {
+func StringToUnixMilli(s string) (int64, error) {
 	var t time.Time
 	var err error
 
 	if len(s) == len("2006-01-02 15:04:05") {
 		t, err = time.Parse("2006-01-02 15:04:05", s)
 		if err == nil {
-			return t.Unix(), nil
+			return t.UnixMilli(), nil
 		}
 	}
 
 	if len(s) == len("2006-01-02") {
 		t, err = time.Parse("2006-01-02", s)
 		if err == nil {
-			return t.Unix(), nil
+			return t.UnixMilli(), nil
 		}
 	}
 

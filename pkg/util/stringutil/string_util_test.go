@@ -257,14 +257,14 @@ func TestStringToUnixMilli(t *testing.T) {
 		expectErr  bool
 	}
 	testCases := []pair{
-		{"2024-05-01", 1714521600, false},
-		{"2024-05-01 11:12:13", 1714561933, false},
+		{"2024-05-01", 1714521600000, false},
+		{"2024-05-01 11:12:13", 1714561933000, false},
 		{"2024-05-01T11:12:13Z", 0, true},
 		{"", 0, true},
 		{"2024-05-01 1:12:13", 0, true},
 	}
 	for _, ca := range testCases {
-		unixMilli, err := StringToUnixSec(ca.in)
+		unixMilli, err := StringToUnixMilli(ca.in)
 		if ca.expectErr {
 			r.Error(err, ca.in)
 		} else {
