@@ -1,0 +1,25 @@
+name: Whitespace Check
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-whitespace:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for whitespace issues
+        run: |
+          .ci/script/check-whitespace.sh \
+            "${{ github.event.pull_request.base.sha }}" \
+            "$GITHUB_STEP_SUMMARY" \
+            "https://github.com/${{ github.repository }}"

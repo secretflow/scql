@@ -77,9 +77,7 @@
   },
   {
     "name": "TestPlanBuilderLengthOp",
-    "cases": [
-      "DataScan(tbl_0)->Projection([length(alice.tbl_0.plain_int_0)])"
-    ]
+    "cases": ["DataScan(tbl_0)->Projection([length(alice.tbl_0.plain_int_0)])"]
   },
   {
     "name": "TestPlanBuilderReplaceOp",
@@ -109,9 +107,7 @@
   },
   {
     "name": "TestPlanBuildeLimitOp",
-    "cases": [
-      "DataScan(tbl_0)->Projection([alice.tbl_0.plain_int_0])->Limit"
-    ]
+    "cases": ["DataScan(tbl_0)->Projection([alice.tbl_0.plain_int_0])->Limit"]
   },
   {
     "name": "TestPlanBuilderInstrOp",
@@ -169,9 +165,7 @@
   },
   {
     "name": "TestPlanBuilderCast",
-    "cases": [
-      "DataScan(tbl_0)->Projection([cast(alice.tbl_0.plain_int_0)])"
-    ]
+    "cases": ["DataScan(tbl_0)->Projection([cast(alice.tbl_0.plain_int_0)])"]
   },
   {
     "Name": "TestPlanBuilderSimpleWithOptimization",
@@ -192,7 +186,7 @@
       "DataScan(tbl_0)->Aggr(sum(alice.tbl_0.plain_int_1),count(1))->Projection([Column#121])",
       "DataScan(tbl_0)->Aggr(count(alice.tbl_0.plain_int_0))->Projection([intdiv(Column#121, Column#121)])",
       "DataScan(tbl_0)->Aggr(max(alice.tbl_0.plain_int_0),min(alice.tbl_0.plain_int_0),median(alice.tbl_0.plain_int_0),percentile_disc(alice.tbl_0.plain_int_0, 0.8),count(1))->Projection([Column#121 Column#122 Column#123 Column#124])",
-      "DataScan(tbl_0)->Aggr(firstrow(plus(alice.tbl_0.plain_int_0, alice.tbl_0.plain_int_1)),count(1))->Projection([Column#121])",
+      "DataScan(tbl_0)->Projection([plus(alice.tbl_0.plain_int_0, alice.tbl_0.plain_int_1)])->Aggr(firstrow(Column#121),count(1))->Projection([Column#121])",
       // order by
       "DataScan(tbl_0)->Projection([alice.tbl_0.plain_int_0])->Sort(alice.tbl_0.plain_int_0)",
       "DataScan(tbl_0)->Projection([alice.tbl_0.plain_int_0])->Sort(alice.tbl_0.plain_int_0 desc)",

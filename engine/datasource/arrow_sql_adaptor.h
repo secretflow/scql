@@ -71,7 +71,8 @@ class ArrowSqlChunkedResult : public ChunkedResult {
 class ArrowSqlAdaptor : public DatasourceAdaptor {
  public:
   // example: grpc+tcp://127.0.0.1:12929
-  explicit ArrowSqlAdaptor(const std::string& uri);
+  // with authorization: grpc+tcp://127.0.0.1:12929@username:password
+  explicit ArrowSqlAdaptor(const std::string& conn_str);
 
   ~ArrowSqlAdaptor() override = default;
 

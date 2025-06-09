@@ -15,6 +15,7 @@
 #pragma once
 
 #include <memory>
+#include <utility>
 
 #include "Poco/Data/RecordSet.h"
 #include "Poco/Data/Session.h"
@@ -32,21 +33,24 @@ namespace scql::engine {
 
 class OdbcChunkedResult : public ChunkedResult {
  public:
-  explicit OdbcChunkedResult(std::unique_ptr<Poco::Data::RecordSet> rs)
-      : rs_(std::move(rs)) {
-    Init();
+  explicit OdbcChunkedResult(Poco::Data::Session session,
+                             const std::string& query)
+      : session_(std::move(session)) {
+    Init(query);
   }
 
   std::optional<arrow::ChunkedArrayVector> Fetch() override;
   std::shared_ptr<arrow::Schema> GetSchema() override { return schema_; };
+  // 1M
+  static const size_t kBatchSize = 1024 * 1024;
 
  private:
-  void Init();
+  void Init(const std::string& query);
+  Poco::Data::Session session_;
+  std::shared_ptr<Poco::Data::Statement> select_;
   std::unique_ptr<Poco::Data::RecordSet> rs_;
   std::shared_ptr<arrow::Schema> schema_;
   bool more_ = false;
-  std::vector<std::unique_ptr<TensorBuilder>> builders_;
-  std::vector<std::function<void(Poco::Dynamic::Var&)>> column_value_handlers_;
 };
 
 /// @brief OdbcAdaptor provides a way to access general SQL databases.

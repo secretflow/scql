@@ -18,11 +18,14 @@
 #include <memory>
 #include <optional>
 #include <sstream>
+#include <string>
 #include <utility>
 
+#include "absl/strings/str_split.h"
 #include "arrow/flight/client.h"
 #include "arrow/status.h"
 #include "arrow/table.h"
+#include "arrow/util/base64.h"
 #include "butil/file_util.h"
 #include "gflags/gflags.h"
 #include "spdlog/spdlog.h"
@@ -74,7 +77,6 @@ arrow::flight::FlightClientOptions GetFlightClientOptions() {
 }
 
 void ArrowClientManager::CreateDefaultClient(const std::string& uri) {
-  // TODO(@xiaoyuan): add authenticate code
   auto location = arrow::flight::Location::Parse(uri);
   YACL_ENFORCE(location.ok(), "fail to parse arrow uri: {}", uri);
   auto flight_client = arrow::flight::FlightClient::Connect(
@@ -86,12 +88,23 @@ void ArrowClientManager::CreateDefaultClient(const std::string& uri) {
   client_map_.emplace(location->ToString(), sql_client_);
 }
 
-ArrowSqlAdaptor::ArrowSqlAdaptor(const std::string& uri) {
+ArrowSqlAdaptor::ArrowSqlAdaptor(const std::string& conn_str) {
   // use default call options
   // TODO(@xiaoyuan) set call options by long time benchmark
   arrow::flight::FlightCallOptions call_options;
+  constexpr char kAuthHeader[] = "authorization";
+  constexpr char kBasicPrefix[] = "Basic";
+  std::vector<absl::string_view> fields = absl::StrSplit(conn_str, '@');
+  YACL_ENFORCE(fields.size() <= 2,
+               "invalid conn_str for arrow sql with more than one '@'");
+  if (fields.size() == 2) {
+    call_options.headers.emplace_back(
+        kAuthHeader, fmt::format("{} {}", kBasicPrefix,
+                                 arrow::util::base64_encode(fields[1])));
+  }
   client_creator_ = std::make_shared<ArrowClientManager>(call_options);
-  client_creator_->CreateDefaultClient(uri);
+
+  client_creator_->CreateDefaultClient(std::string(fields[0]));
 }
 
 SqlClientPtr ArrowClientManager::GetClientFromEndpoint(

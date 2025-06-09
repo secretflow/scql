@@ -484,21 +484,25 @@ func (a *aggregationPushDownSolver) aggPushDown(p LogicalPlan) (_ LogicalPlan, e
 				//	}
 				//}
 			} else if proj, ok1 := child.(*LogicalProjection); ok1 {
+				/// WARNING: this optimization is disable when projection exprs contains scalar function. Because it does not make the engine plan more efficient.
+				/// On the contrary, it will bring more computation cost. e.g.: compute the same expression more than once.
 				// TODO: This optimization is not always reasonable. We have not supported pushing projection to kv layer yet,
 				// so we must do this optimization.
-				for i, gbyItem := range agg.GroupByItems {
-					agg.GroupByItems[i] = expression.ColumnSubstitute(gbyItem, proj.schema, proj.Exprs)
-				}
-				agg.collectGroupByColumns()
-				for _, aggFunc := range agg.AggFuncs {
-					newArgs := make([]expression.Expression, 0, len(aggFunc.Args))
-					for _, arg := range aggFunc.Args {
-						newArgs = append(newArgs, expression.ColumnSubstitute(arg, proj.schema, proj.Exprs))
+				if canProjectionBeEliminatedLoose(proj) {
+					for i, gbyItem := range agg.GroupByItems {
+						agg.GroupByItems[i] = expression.ColumnSubstitute(gbyItem, proj.schema, proj.Exprs)
 					}
-					aggFunc.Args = newArgs
+					agg.collectGroupByColumns()
+					for _, aggFunc := range agg.AggFuncs {
+						newArgs := make([]expression.Expression, 0, len(aggFunc.Args))
+						for _, arg := range aggFunc.Args {
+							newArgs = append(newArgs, expression.ColumnSubstitute(arg, proj.schema, proj.Exprs))
+						}
+						aggFunc.Args = newArgs
+					}
+					projChild := proj.children[0]
+					agg.SetChildren(projChild)
 				}
-				projChild := proj.children[0]
-				agg.SetChildren(projChild)
 			} else if union, ok1 := child.(*LogicalUnionAll); ok1 {
 				if err := a.tryAggPushDownForUnion(union, agg); err != nil {
 					return nil, err

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-10 17:30+0800\n"
+"POT-Creation-Date: 2025-06-03 12:59+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -49,59 +49,51 @@ msgid "``integer``"
 msgstr "``integer``"
 
 #: ../../reference/lang/manual.rst:15
-msgid "``int``, ``long``, ``int64``"
-msgstr "``int``, ``long``, ``int64``"
+msgid "``int``, ``int32``, ``int64``"
+msgstr "``int``, ``int32``, ``int64``"
 
 #: ../../reference/lang/manual.rst:17
 msgid "``float``"
 msgstr "``float``"
 
 #: ../../reference/lang/manual.rst:17
-msgid "``float32``"
-msgstr "``float32``"
+msgid "``float64``, ``double``"
+msgstr "``float64``, ``double``"
 
 #: ../../reference/lang/manual.rst:19
-msgid "``double``"
-msgstr "``double``"
-
-#: ../../reference/lang/manual.rst:19
-msgid "``float64``"
-msgstr "``float64``"
-
-#: ../../reference/lang/manual.rst:21
 msgid "``string``"
 msgstr "``string``"
 
-#: ../../reference/lang/manual.rst:21
+#: ../../reference/lang/manual.rst:19
 msgid "``str``"
 msgstr "``str``"
 
-#: ../../reference/lang/manual.rst:23
+#: ../../reference/lang/manual.rst:21
 msgid "``datetime``"
 msgstr "``datetime``"
 
-#: ../../reference/lang/manual.rst:23
+#: ../../reference/lang/manual.rst:21
 msgid ""
 "Used for values that contain both date and time parts. SCQL retrieves and"
 " displays in 'YYYY-MM-DD hh:mm:ss' format"
 msgstr "包含日期和时间两部分， SCQL 使用 'YYYY-MM-DD hh:mm:ss' 格式识别及表示"
 
-#: ../../reference/lang/manual.rst:25
+#: ../../reference/lang/manual.rst:23
 msgid "``timestamp``"
 msgstr "``timestamp``"
 
-#: ../../reference/lang/manual.rst:25
+#: ../../reference/lang/manual.rst:23
 msgid ""
 "Used for values that contain both date and time parts. SCQL retrieves in "
 "'YYYY-MM-DD hh:mm:ss' format and displays in int64 value affected by time"
 " zone"
 msgstr "包含日期和时间两部分， SCQL 使用 'YYYY-MM-DD hh:mm:ss' 格式识别，但表示为受时区影响的 int64 值"
 
-#: ../../reference/lang/manual.rst:32
+#: ../../reference/lang/manual.rst:30
 msgid "SCQL Query Syntax"
 msgstr "SCQL 查询语法"
 
-#: ../../reference/lang/manual.rst:34
+#: ../../reference/lang/manual.rst:32
 msgid ""
 "It is compatible with most MySQL DQL syntax. For syntax differences "
 "between SCQL and MySQL, please read :doc:`/reference/lang/mysql-"
@@ -110,20 +102,20 @@ msgstr ""
 "SCQL 兼容大多数 MySQL 语法。关于 SCQL 和 MySQL 之间的语法差异，请阅读 :doc:`/reference/lang"
 "/mysql-compatibility` 。"
 
-#: ../../reference/lang/manual.rst:107
+#: ../../reference/lang/manual.rst:105
 msgid ""
 "SCQL support ``export_options`` with limitations: only support '\"' or ''"
 " for **enclosing_character**; **ESCAPED BY** is not supported."
 msgstr "SCQL 在一定限制下支持 ``export_options``: 目前只支持 '\"' 或者 '' 作为 **enclosing_character**；暂时不支持 **ESCAPED BY** 语法。"
 
-#: ../../reference/lang/manual.rst:108
+#: ../../reference/lang/manual.rst:106
 msgid ""
 "**OPTIONALLY** in ``export_options`` controls quoting of fields, if "
 "omitted all fields are enclosed by the **enclosing_character**, otherwise"
 " only string fields are enclosed. see `mysql load data`_"
 msgstr "``export_options`` 中的 **OPTIONALLY** 用于控制字段的引用行为，如果省略则所有类型的字段都会使用 **enclosing_character** 括起来，否则只有 string 类型的字段被括起来, 参考 `mysql load data`_"
 
-#: ../../reference/lang/manual.rst:109
+#: ../../reference/lang/manual.rst:107
 msgid ""
 "**file_path** in ``into_option`` can be local path like '/data/file.csv' "
 "or oss path like 'oss://bucket_name/path/to/file', flags for writing "
@@ -131,15 +123,15 @@ msgid ""
 "<engine_config_options>` for more."
 msgstr "``into_option`` 中的 **file_path** 可以是一个本地路径： '/data/file.csv' ，或者一个 oss 路径： 'oss://bucket_name/path/to/file' ， write 相关的 flag 应该正确设置，参考 :ref:`Engine 配置项 <engine_config_options>`"
 
-#: ../../reference/lang/manual.rst:114
+#: ../../reference/lang/manual.rst:112
 msgid "Functions and Operators"
 msgstr "函数与操作符"
 
-#: ../../reference/lang/manual.rst:116
+#: ../../reference/lang/manual.rst:114
 msgid "Todo"
 msgstr "待办"
 
-#: ../../reference/lang/manual.rst:116
+#: ../../reference/lang/manual.rst:114
 msgid "this part is not ready, please check later"
 msgstr "该部分尚未准备好，请之后查看"
 

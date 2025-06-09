@@ -507,6 +507,8 @@ func (er *expressionRewriter) Leave(originInNode ast.Node) (retNode ast.Node, ok
 		er.unaryOpToExpression(v)
 	case *ast.BinaryOperationExpr:
 		er.binaryOpToExpression(v)
+	case *ast.BetweenExpr:
+		er.betweenToExpression(v)
 	case *ast.PatternInExpr:
 		if v.Sel == nil {
 			er.inToExpression(len(v.List), v.Not, &v.Type)
@@ -621,6 +623,39 @@ func (er *expressionRewriter) binaryOpToExpression(v *ast.BinaryOperationExpr) {
 		return
 	}
 	er.ctxStackPop(2)
+	er.ctxStackAppend(function, types.EmptyName)
+}
+
+func (er *expressionRewriter) betweenToExpression(v *ast.BetweenExpr) {
+	stkLen := len(er.ctxStack)
+	er.err = expression.CheckArgsNotMultiColumnRow(er.ctxStack[stkLen-3:]...)
+	if er.err != nil {
+		return
+	}
+
+	expr, lexp, rexp := er.ctxStack[stkLen-3], er.ctxStack[stkLen-2], er.ctxStack[stkLen-1]
+	var l, r expression.Expression
+	l, er.err = expression.NewFunction(er.sctx, ast.GE, &v.Type, expr, lexp)
+	if er.err != nil {
+		return
+	}
+	r, er.err = expression.NewFunction(er.sctx, ast.LE, &v.Type, expr, rexp)
+	if er.err != nil {
+		return
+	}
+	function, err := er.newFunction(ast.LogicAnd, &v.Type, l, r)
+	if err != nil {
+		er.err = err
+		return
+	}
+	if v.Not {
+		function, err = er.newFunction(ast.UnaryNot, &v.Type, function)
+		if err != nil {
+			er.err = err
+			return
+		}
+	}
+	er.ctxStackPop(3)
 	er.ctxStackAppend(function, types.EmptyName)
 }
 
