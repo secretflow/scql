@@ -358,5 +358,32 @@ func StringToUnixSec(s string) (int64, error) {
 		}
 	}
 
-	return 0, fmt.Errorf("StringToUnixMilli: unsupported date/time format: %s", s)
+	return 0, fmt.Errorf("unsupported datetime format: %s", s)
+}
+
+func StringToUnixSecWithTimezone(s string) (int64, error) {
+	supportedLayouts := []string{
+		// e.g., "2024-10-25T10:00:00+08:00" or "2024-10-25T02:00:00Z"
+		time.RFC3339,
+		// e.g., "2024-10-25T10:00:00+0800"
+		"2006-01-02T15:04:05Z0700",
+		// e.g., "2024-10-25 10:00:00+08:00"
+		"2006-01-02 15:04:05Z07:00",
+		// e.g., "2024-10-25 10:00:00+0800"
+		"2006-01-02 15:04:05Z0700",
+		// e.g., "2024-10-25 10:00:00 PST"
+		"2006-01-02 15:04:05 MST",
+	}
+
+	var t time.Time
+	var err error
+
+	for _, layout := range supportedLayouts {
+		t, err = time.Parse(layout, s)
+		if err == nil {
+			return t.Unix(), nil
+		}
+	}
+
+	return 0, fmt.Errorf("unsupported timestamp format or missing timezone: %q", s)
 }

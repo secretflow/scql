@@ -273,3 +273,89 @@ func TestStringToUnixMilli(t *testing.T) {
 		}
 	}
 }
+
+func TestStringToUnixSecWithTimezone(t *testing.T) {
+	// Define a specific point in time: May 1, 2024, 10:00:00 UTC.
+	// The corresponding Unix timestamp in seconds is 1714557600.
+	const targetUnixTime = 1714557600
+
+	type testCase struct {
+		in         string
+		expectUnix int64
+		expectErr  bool
+		comment    string
+	}
+
+	testCases := []testCase{
+		// --- Success Cases ---
+		// All successful test cases should resolve to the same point in time (targetUnixTime).
+		{
+			in:         "2024-05-01T10:00:00Z",
+			expectUnix: targetUnixTime,
+			expectErr:  false,
+			comment:    "Standard UTC format using 'Z'",
+		},
+		{
+			in:         "2024-05-01T18:00:00+08:00",
+			expectUnix: targetUnixTime,
+			expectErr:  false,
+			comment:    "Positive offset (+08:00), should convert to the same UTC time",
+		},
+		{
+			in:         "2024-05-01T06:00:00-04:00",
+			expectUnix: targetUnixTime,
+			expectErr:  false,
+			comment:    "Negative offset (-04:00), should convert to the same UTC time",
+		},
+		{
+			in:         "2024-05-01 13:00:00+03:00",
+			expectUnix: targetUnixTime,
+			expectErr:  false,
+			comment:    "Space separator with a positive offset",
+		},
+		// --- Failure Cases ---
+		{
+			in:         "2024-05-01 10:00:00",
+			expectUnix: 0,
+			expectErr:  true,
+			comment:    "Failure: missing timezone information",
+		},
+		{
+			in:         "2024-05-01",
+			expectUnix: 0,
+			expectErr:  true,
+			comment:    "Failure: date only, missing time and timezone",
+		},
+		{
+			in:         "2024-05-01T10:00:00",
+			expectUnix: 0,
+			expectErr:  true,
+			comment:    "Failure: 'T' separator but missing timezone information",
+		},
+		{
+			in:         "not-a-real-date",
+			expectUnix: 0,
+			expectErr:  true,
+			comment:    "Failure: completely malformed string",
+		},
+		{
+			in:         "",
+			expectUnix: 0,
+			expectErr:  true,
+			comment:    "Failure: empty string",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.comment, func(t *testing.T) {
+			unixSec, err := StringToUnixSecWithTimezone(tc.in)
+
+			if tc.expectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectUnix, unixSec)
+			}
+		})
+	}
+}
