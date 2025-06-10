@@ -371,8 +371,6 @@ func StringToUnixSecWithTimezone(s string) (int64, error) {
 		"2006-01-02 15:04:05Z07:00",
 		// e.g., "2024-10-25 10:00:00+0800"
 		"2006-01-02 15:04:05Z0700",
-		// e.g., "2024-10-25 10:00:00 PST"
-		"2006-01-02 15:04:05 MST",
 	}
 
 	var t time.Time

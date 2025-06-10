@@ -344,6 +344,18 @@ func TestStringToUnixSecWithTimezone(t *testing.T) {
 			expectErr:  true,
 			comment:    "Failure: empty string",
 		},
+		{
+			in:         "2024-11-20 10:00:00 MST",
+			expectUnix: 0,
+			expectErr:  true,
+			comment:    "Failure: mbiguous formats",
+		},
+		{
+			in:         "2024-12-10 15:00:00 PST",
+			expectUnix: 0,
+			expectErr:  true,
+			comment:    "Failure: mbiguous formats",
+		},
 	}
 
 	for _, tc := range testCases {
