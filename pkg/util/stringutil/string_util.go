@@ -360,3 +360,60 @@ func StringToUnixSec(s string) (int64, error) {
 
 	return 0, fmt.Errorf("StringToUnixMilli: unsupported date/time format: %s", s)
 }
+
+func MySQLDateFormatToGoLayout(mysqlFormat string) (string, error) {
+	var mapping = map[string]string{
+		"%Y": "2006",        // Year, four digits
+		"%y": "06",          // Year, two digits
+		"%m": "01",          // Month (01–12)
+		"%c": "1",           // Month (1–12)
+		"%d": "02",          // Day (01–31)
+		"%e": "2",           // Day (1–31)
+		"%H": "15",          // Hour (00–23)
+		"%k": "15",          // Hour (0–23)
+		"%h": "03",          // Hour (01–12)
+		"%I": "03",          // Hour (01–12)
+		"%l": "3",           // Hour (1–12)
+		"%i": "04",          // Minute (00–59)
+		"%S": "05",          // Second (00–59)
+		"%s": "05",          // Same as %S
+		"%f": "000000",      // Microsecond
+		"%p": "PM",          // AM or PM
+		"%T": "15:04:05",    // Time in 24-hour format
+		"%r": "03:04:05 PM", // Time in 12-hour format
+		"%b": "Jan",         // Abbreviated month name
+		"%M": "January",     // Full month name
+		"%a": "Mon",         // Abbreviated weekday
+		"%W": "Monday",      // Full weekday
+	}
+
+	var goLayout strings.Builder
+	runes := []rune(mysqlFormat)
+	i := 0
+	for i < len(runes) {
+		if runes[i] == '%' {
+			if i+1 < len(runes) {
+				specifierRune := runes[i+1]
+				// Handle %% separately
+				if specifierRune == '%' {
+					goLayout.WriteRune('%')
+					i += 2
+					continue
+				}
+				specifier := "%" + string(specifierRune)
+				if layoutPart, ok := mapping[specifier]; ok {
+					goLayout.WriteString(layoutPart)
+				} else {
+					return "", fmt.Errorf("unsupported MySQL format specifier: %s", specifier)
+				}
+				i += 2
+			} else {
+				return "", fmt.Errorf("invalid format string: trailing %%")
+			}
+		} else {
+			goLayout.WriteRune(runes[i])
+			i += 1
+		}
+	}
+	return goLayout.String(), nil
+}

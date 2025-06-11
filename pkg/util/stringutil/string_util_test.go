@@ -273,3 +273,39 @@ func TestStringToUnixMilli(t *testing.T) {
 		}
 	}
 }
+
+func TestMySQLDateFormatToGoLayout(t *testing.T) {
+	r := require.New(t)
+
+	type testCase struct {
+		mysqlFormat string
+		expectedGo  string
+		expectErr   bool
+	}
+
+	cases := []testCase{
+		{"%Y-%m-%d", "2006-01-02", false},
+		{"%Y-%m-%d %H:%i:%s", "2006-01-02 15:04:05", false},
+		{"%r", "03:04:05 PM", false},
+		{"%T", "15:04:05", false},
+		{"%b %d, %Y", "Jan 02, 2006", false},
+		{"%M %d, %Y", "January 02, 2006", false},
+		{"%H:%i", "15:04", false},
+		{"%p", "PM", false},
+		{"%%", "%", false},
+		{"%Y/%m/%d", "2006/01/02", false},
+		{"2024-%m-%d", "2024-01-02", false},
+		{"%x-%m-%d", "", true}, // unsupported specifier %x
+		{"%Y-%m-%", "", true},  // trailing %
+	}
+
+	for _, ca := range cases {
+		out, err := MySQLDateFormatToGoLayout(ca.mysqlFormat)
+		if ca.expectErr {
+			r.Error(err, ca.mysqlFormat)
+		} else {
+			r.NoError(err, ca.mysqlFormat)
+			r.Equal(ca.expectedGo, out, ca.mysqlFormat)
+		}
+	}
+}
