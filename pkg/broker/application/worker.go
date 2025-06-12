@@ -146,7 +146,7 @@ func (w *cronJobWorker) start() error {
 				}
 				ok, err := storage.NewDistributeLockGuard(w.manager).PreemptDistributedLock(storage.DistributedLockID, w.id, w.interval)
 				if err != nil {
-					logrus.Infof("current instance fails to preempt lock and works as slave: %v", err)
+					logrus.Infof("current instance failed to preempt lock, continues as follower: %v", err)
 					return
 				}
 				if ok {
@@ -156,7 +156,7 @@ func (w *cronJobWorker) start() error {
 						return
 					}
 					w.setRole(Leader)
-					logrus.Infof("current instance is successfully elected and works as leader with name %s", w.id)
+					logrus.Infof("current instance successfully elected, now acting as leader %s", w.id)
 				}
 				return
 			}
@@ -169,8 +169,10 @@ func (w *cronJobWorker) start() error {
 					return
 				}
 				w.setRole(Worker)
+				logrus.Infof("current instance failed to renew leader lock, now acting as follower: %v", err)
+			} else {
+				logrus.Infof("leader lock renewed, current instance continues as leader %s", w.id)
 			}
-			logrus.Infof("current instance re-elects and works as leader with name %s", w.id)
 		}),
 		gocron.WithName("election"),
 	)
