@@ -146,7 +146,7 @@ func (w *cronJobWorker) start() error {
 				}
 				ok, err := storage.NewDistributeLockGuard(w.manager).PreemptDistributedLock(storage.DistributedLockID, w.id, w.interval)
 				if err != nil {
-					logrus.Warnf("fail to preempt lock: %v", err)
+					logrus.Infof("current instance fails to preempt lock and works as slave: %v", err)
 					return
 				}
 				if ok {
@@ -156,7 +156,7 @@ func (w *cronJobWorker) start() error {
 						return
 					}
 					w.setRole(Leader)
-					logrus.Infof("current instance work as leader with name %s", w.id)
+					logrus.Infof("current instance is successfully elected and works as leader with name %s", w.id)
 				}
 				return
 			}
@@ -170,6 +170,7 @@ func (w *cronJobWorker) start() error {
 				}
 				w.setRole(Worker)
 			}
+			logrus.Infof("current instance re-elects and works as leader with name %s", w.id)
 		}),
 		gocron.WithName("election"),
 	)
