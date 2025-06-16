@@ -166,14 +166,6 @@ func isValidCast(originType, castType proto.PrimitiveDataType) bool {
 			proto.PrimitiveDataType_INT32:  true,
 			proto.PrimitiveDataType_STRING: true,
 		},
-		proto.PrimitiveDataType_DATETIME: {
-			proto.PrimitiveDataType_STRING: true,
-			proto.PrimitiveDataType_INT64:  true,
-		},
-		proto.PrimitiveDataType_TIMESTAMP: {
-			proto.PrimitiveDataType_STRING: true,
-			proto.PrimitiveDataType_INT64:  true,
-		},
 	}
 
 	if validCastMap, ok := validCasts[originType]; ok {
@@ -222,7 +214,7 @@ func castValue(scalarAttr *Attribute, originType, castType proto.PrimitiveDataTy
 				scalarAttr.SetInt64(unixSec)
 				return nil
 			}
-			return fmt.Errorf("datetime constant format should be 'YYYY-MM-DD hh:mm:ss'")
+			return fmt.Errorf("datetime constant format should be 'YYYY-MM-DD hh:mm:ss', but got %s", strVal)
 		} else if castType == proto.PrimitiveDataType_TIMESTAMP {
 			unixSec, err := stringutil.StringToUnixSecWithTimezone(strVal)
 			if err != nil {
