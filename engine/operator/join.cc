@@ -175,7 +175,7 @@ bool TouchResult(const std::shared_ptr<yacl::link::Context>& lctx,
 
 std::shared_ptr<BucketTensorConstructor> CreateBucketTensorConstructor(
     ExecContext* ctx, bool touch_result, bool is_bucket_tensor,
-    const std::string& output_name, int bucket_num) {
+    const std::string& output_name, size_t bucket_num) {
   if (!touch_result) {
     return nullptr;
   }
