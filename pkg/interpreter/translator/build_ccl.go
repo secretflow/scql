@@ -553,7 +553,7 @@ func (n *AggregationNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer
 
 		// TODO(xiaoyuan) support AggFuncStddevPop, AggFuncMedian later
 		// sum,avg,max,min are all aggregate operators
-		case ast.AggFuncSum, ast.AggFuncAvg, ast.AggFuncMax, ast.AggFuncMin:
+		case ast.AggFuncSum, ast.AggFuncAvg, ast.AggFuncMax, ast.AggFuncMin, ast.AggPercentileDisc:
 			for _, cc := range groupKeyCC {
 				outputCCL.UpdateMoreRestrictedCCLFrom(cc)
 			}
@@ -561,10 +561,6 @@ func (n *AggregationNode) buildCCL(ctx *ccl.Context, colTracer *ccl.ColumnTracer
 				if outputCCL.LevelFor(p) == ccl.Aggregate {
 					outputCCL.SetLevelForParty(p, ccl.Plain)
 				}
-			}
-		case ast.AggPercentileDisc:
-			for _, cc := range groupKeyCC {
-				outputCCL.UpdateMoreRestrictedCCLFrom(cc)
 			}
 		default:
 			return fmt.Errorf("unimplemented op: %s", aggFunc.Name)

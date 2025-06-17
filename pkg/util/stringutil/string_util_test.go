@@ -257,19 +257,117 @@ func TestStringToUnixMilli(t *testing.T) {
 		expectErr  bool
 	}
 	testCases := []pair{
-		{"2024-05-01", 1714521600000, false},
-		{"2024-05-01 11:12:13", 1714561933000, false},
+		{"2024-05-01", 1714521600, false},
+		{"2024-05-01 11:12:13", 1714561933, false},
 		{"2024-05-01T11:12:13Z", 0, true},
 		{"", 0, true},
 		{"2024-05-01 1:12:13", 0, true},
 	}
 	for _, ca := range testCases {
-		unixMilli, err := StringToUnixMilli(ca.in)
+		unixSec, err := StringToUnixSec(ca.in)
 		if ca.expectErr {
 			r.Error(err, ca.in)
 		} else {
 			r.NoError(err, ca.in)
-			r.Equal(ca.expectUnix, unixMilli, ca.in)
+			r.Equal(ca.expectUnix, unixSec, ca.in)
 		}
+	}
+}
+
+func TestStringToUnixSecWithTimezone(t *testing.T) {
+	// Define a specific point in time: May 1, 2024, 10:00:00 UTC.
+	// The corresponding Unix timestamp in seconds is 1714557600.
+	const targetUnixTime = 1714557600
+
+	type testCase struct {
+		in         string
+		expectUnix int64
+		expectErr  bool
+		comment    string
+	}
+
+	testCases := []testCase{
+		// --- Success Cases ---
+		// All successful test cases should resolve to the same point in time (targetUnixTime).
+		{
+			in:         "2024-05-01T10:00:00Z",
+			expectUnix: targetUnixTime,
+			expectErr:  false,
+			comment:    "Standard UTC format using 'Z'",
+		},
+		{
+			in:         "2024-05-01T18:00:00+08:00",
+			expectUnix: targetUnixTime,
+			expectErr:  false,
+			comment:    "Positive offset (+08:00), should convert to the same UTC time",
+		},
+		{
+			in:         "2024-05-01T06:00:00-04:00",
+			expectUnix: targetUnixTime,
+			expectErr:  false,
+			comment:    "Negative offset (-04:00), should convert to the same UTC time",
+		},
+		{
+			in:         "2024-05-01 13:00:00+03:00",
+			expectUnix: targetUnixTime,
+			expectErr:  false,
+			comment:    "Space separator with a positive offset",
+		},
+		// --- Failure Cases ---
+		{
+			in:         "2024-05-01 10:00:00",
+			expectUnix: 0,
+			expectErr:  true,
+			comment:    "Failure: missing timezone information",
+		},
+		{
+			in:         "2024-05-01",
+			expectUnix: 0,
+			expectErr:  true,
+			comment:    "Failure: date only, missing time and timezone",
+		},
+		{
+			in:         "2024-05-01T10:00:00",
+			expectUnix: 0,
+			expectErr:  true,
+			comment:    "Failure: 'T' separator but missing timezone information",
+		},
+		{
+			in:         "not-a-real-date",
+			expectUnix: 0,
+			expectErr:  true,
+			comment:    "Failure: completely malformed string",
+		},
+		{
+			in:         "",
+			expectUnix: 0,
+			expectErr:  true,
+			comment:    "Failure: empty string",
+		},
+		{
+			in:         "2024-11-20 10:00:00 MST",
+			expectUnix: 0,
+			expectErr:  true,
+			comment:    "Failure: mbiguous formats",
+		},
+		{
+			in:         "2024-12-10 15:00:00 PST",
+			expectUnix: 0,
+			expectErr:  true,
+			comment:    "Failure: mbiguous formats",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.comment, func(t *testing.T) {
+			unixSec, err := StringToUnixSecWithTimezone(tc.in)
+
+			if tc.expectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectUnix, unixSec)
+			}
+		})
 	}
 }
