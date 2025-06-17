@@ -173,6 +173,25 @@ bool TouchResult(const std::shared_ptr<yacl::link::Context>& lctx,
   return target_rank == yacl::link::kAllRank || lctx->Rank() == target_rank;
 }
 
+std::shared_ptr<BucketTensorConstructor> CreateBucketTensorConstructor(
+    ExecContext* ctx, bool touch_result, bool is_bucket_tensor,
+    const std::string& output_name, size_t bucket_num) {
+  if (!touch_result) {
+    return nullptr;
+  }
+  const auto& output_pb = ctx->GetOutput(output_name)[0];
+  if (is_bucket_tensor) {
+    auto streaming_options = ctx->GetSession()->GetStreamingOptions();
+    std::filesystem::path out_dir = util::CreateDirWithRandSuffix(
+        streaming_options.dump_file_dir, output_pb.name());
+    return std::make_shared<DiskBucketTensorConstructor>(
+        output_pb.name(), arrow::uint64(), output_pb.elem_type(), out_dir,
+        bucket_num);
+  } else {
+    return std::make_shared<MemoryBucketTensorConstructor>(bucket_num);
+  }
+}
+
 void Join::EcdhPsiJoin(ExecContext* ctx) {
   auto logger = ctx->GetActiveLogger();
 
@@ -192,20 +211,6 @@ void Join::EcdhPsiJoin(ExecContext* ctx) {
   if (!is_left) {
     output_name = kOutRightJoinIndex;
   }
-  const auto& output_pb = ctx->GetOutput(output_name)[0];
-  std::shared_ptr<BucketTensorConstructor> tensor_constructor;
-  bool is_bucket_tensor = util::AreAllBucketTensor(join_keys);
-  if (is_bucket_tensor) {
-    auto streaming_options = ctx->GetSession()->GetStreamingOptions();
-    std::filesystem::path out_dir = util::CreateDirWithRandSuffix(
-        streaming_options.dump_file_dir, output_pb.name());
-    tensor_constructor = std::make_shared<DiskBucketTensorConstructor>(
-        output_pb.name(), arrow::uint64(), output_pb.elem_type(), out_dir,
-        slices[0]->GetSliceNum());
-  } else {
-    tensor_constructor = std::make_shared<MemoryBucketTensorConstructor>(
-        slices[0]->GetSliceNum());
-  }
   size_t total_self_size = 0;
   size_t total_peer_size = 0;
   auto psi_link = ctx->GetSession()->GetLink();
@@ -215,6 +220,10 @@ void Join::EcdhPsiJoin(ExecContext* ctx) {
   }
   size_t target_rank = GetTargetRank(ctx, psi_link);
   bool touch_result = TouchResult(psi_link, target_rank);
+  bool is_bucket_tensor = util::AreAllBucketTensor(join_keys);
+  std::shared_ptr<BucketTensorConstructor> tensor_constructor =
+      CreateBucketTensorConstructor(ctx, touch_result, is_bucket_tensor,
+                                    output_name, slices[0]->GetSliceNum());
   for (size_t i = 0; i < slices[0]->GetSliceNum(); ++i) {
     std::vector<TensorPtr> keys(join_keys.size());
     for (size_t j = 0; j < slices.size(); ++j) {
@@ -251,6 +260,7 @@ void Join::EcdhPsiJoin(ExecContext* ctx) {
       psi::ecdh::RunEcdhPsi(options, batch_provider, self_store, peer_store);
     }
     if (touch_result) {
+      YACL_ENFORCE(tensor_constructor != nullptr);
       int64_t join_type = ctx->GetInt64ValueFromAttribute(kJoinTypeAttr);
       auto join_indices = util::FinalizeAndComputeJoinIndices(
           is_left, self_store, peer_store, join_type);
@@ -261,6 +271,7 @@ void Join::EcdhPsiJoin(ExecContext* ctx) {
     total_peer_size += peer_store->ItemCount();
   }
   if (touch_result) {
+    YACL_ENFORCE(tensor_constructor != nullptr);
     TensorPtr join_indices;
     tensor_constructor->Finish(&join_indices);
     auto result_size = join_indices->Length();
@@ -307,7 +318,6 @@ void Join::Rr22PsiJoin(ExecContext* ctx) {
   if (!is_left) {
     output_name = kOutRightJoinIndex;
   }
-  const auto& output_pb = ctx->GetOutput(output_name)[0];
   auto self_size = static_cast<size_t>(join_keys[0]->Length());
   auto provider = util::BucketProvider(join_keys);
   auto peer_size = util::ExchangeSetSize(psi_link, self_size);
@@ -315,18 +325,10 @@ void Join::Rr22PsiJoin(ExecContext* ctx) {
   auto bucket_num = provider.GetBucketNum();
   std::vector<TensorPtr> result_ts(bucket_num);
   int64_t join_type = ctx->GetInt64ValueFromAttribute(kJoinTypeAttr);
-  std::shared_ptr<BucketTensorConstructor> tensor_constructor;
-  if (provider.IsBucketTensor()) {
-    auto streaming_options = ctx->GetSession()->GetStreamingOptions();
-    std::filesystem::path out_dir = util::CreateDirWithRandSuffix(
-        streaming_options.dump_file_dir, output_pb.name());
-    tensor_constructor = std::make_shared<DiskBucketTensorConstructor>(
-        output_pb.name(), arrow::uint64(), output_pb.elem_type(), out_dir,
-        bucket_num);
-  } else {
-    tensor_constructor =
-        std::make_shared<MemoryBucketTensorConstructor>(bucket_num);
-  }
+  std::shared_ptr<BucketTensorConstructor> tensor_constructor =
+      CreateBucketTensorConstructor(ctx, touch_result,
+                                    provider.IsBucketTensor(), output_name,
+                                    bucket_num);
   psi::rr22::PreProcessFunc pre_f =
       [&](size_t idx) -> std::vector<psi::HashBucketCache::BucketItem> {
     YACL_ENFORCE(idx < bucket_num);
@@ -338,6 +340,7 @@ void Join::Rr22PsiJoin(ExecContext* ctx) {
           const std::vector<uint32_t>& indices,
           const std::vector<uint32_t>& peer_cnt) {
         if (touch_result) {
+          YACL_ENFORCE(tensor_constructor != nullptr);
           auto indices_t = provider.CalIntersection(
               psi_link->Spawn(std::to_string(bucket_idx)), bucket_idx, is_left,
               join_type, bucket_items, indices, peer_cnt);
@@ -356,6 +359,7 @@ void Join::Rr22PsiJoin(ExecContext* ctx) {
   runner.ParallelRun(0, is_sender);
   size_t result_size = 0;
   if (touch_result) {
+    YACL_ENFORCE(tensor_constructor != nullptr);
     TensorPtr join_indices;
     tensor_constructor->Finish(&join_indices);
     result_size = join_indices->Length();
@@ -431,20 +435,12 @@ void Join::OprfPsiJoin(ExecContext* ctx, bool is_server,
   if (!is_left) {
     output_name = kOutRightJoinIndex;
   }
-  const auto& output_pb = ctx->GetOutput(output_name)[0];
-  std::shared_ptr<BucketTensorConstructor> tensor_constructor;
   bool is_bucket_tensor = util::AreAllBucketTensor(join_keys);
-  if (is_bucket_tensor) {
-    auto streaming_options = ctx->GetSession()->GetStreamingOptions();
-    std::filesystem::path out_dir = util::CreateDirWithRandSuffix(
-        streaming_options.dump_file_dir, output_pb.name());
-    tensor_constructor = std::make_shared<DiskBucketTensorConstructor>(
-        output_pb.name(), arrow::uint64(), output_pb.elem_type(), out_dir,
-        slices[0]->GetSliceNum());
-  } else {
-    tensor_constructor = std::make_shared<MemoryBucketTensorConstructor>(
-        slices[0]->GetSliceNum());
-  }
+  // ub psi always touch result
+  bool touch_result = true;
+  std::shared_ptr<BucketTensorConstructor> tensor_constructor =
+      CreateBucketTensorConstructor(ctx, touch_result, is_bucket_tensor,
+                                    output_name, slices[0]->GetSliceNum());
   for (size_t i = 0; i < slices[0]->GetSliceNum(); ++i) {
     std::vector<TensorPtr> keys(join_keys.size());
     for (size_t j = 0; j < slices.size(); ++j) {
