@@ -417,3 +417,63 @@ func MySQLDateFormatToGoLayout(mysqlFormat string) (string, error) {
 	}
 	return goLayout.String(), nil
 }
+
+var kMySQLToArrowFormatMapping = map[string]string{
+	"%Y": "%Y",          // 4-digit year
+	"%y": "%y",          // 2-digit year
+	"%m": "%m",          // Month (01-12)
+	"%c": "%-m",         // Month (1-12), '%-m' in Arrow is for non-padded month
+	"%d": "%d",          // Day (01-31)
+	"%e": "%-d",         // Day (1-31), '%-d' in Arrow is for non-padded day
+	"%H": "%H",          // Hour (00-23)
+	"%k": "%-H",         // Hour (0-23), '%-H' in Arrow is for non-padded hour
+	"%h": "%I",          // Hour (01-12), maps to 12-hour format
+	"%I": "%I",          // Hour (01-12)
+	"%l": "%-I",         // Hour (1-12), '%-I' in Arrow is for non-padded 12-hour
+	"%i": "%M",          // MySQL minute -> standard strptime minute (%M)
+	"%S": "%S",          // Second (00-59)
+	"%s": "%S",          // MySQL second alias -> standard strptime second (%S)
+	"%f": "%f",          // Microsecond
+	"%p": "%p",          // AM/PM
+	"%T": "%H:%M:%S",    // Shortcut: 24-hour time
+	"%r": "%I:%M:%S %p", // Shortcut: 12-hour time
+	"%b": "%b",          // Abbreviated month name
+	"%M": "%B",          // MySQL full month name -> standard strptime full month name (%B)
+	"%a": "%a",          // Abbreviated weekday name
+	"%W": "%A",          // MySQL full weekday name -> standard strptime full weekday name (%A)
+}
+
+func MySQLDateFormatToArrowFormat(mysqlFormat string) (string, error) {
+	var result strings.Builder
+	i := 0
+	for i < len(mysqlFormat) {
+		if mysqlFormat[i] == '%' {
+			// Check for a dangling '%' at the end of the string.
+			if i+1 >= len(mysqlFormat) {
+				return "", fmt.Errorf("invalid format string: trailing %%")
+			}
+
+			// Special case '%%', which represents a literal '%' character.
+			if mysqlFormat[i+1] == '%' {
+				result.WriteByte('%')
+				i += 2
+				continue
+			}
+
+			// Extract the two-character specifier, e.g., "%Y".
+			specifier := mysqlFormat[i : i+2]
+			arrowSpecifier, ok := kMySQLToArrowFormatMapping[specifier]
+			if !ok {
+				return "", fmt.Errorf("unsupported MySQL format specifier: %s", specifier)
+			}
+
+			result.WriteString(arrowSpecifier)
+			i += 2
+		} else {
+			// Non-'%' characters are treated as literals and appended directly.
+			result.WriteByte(mysqlFormat[i])
+			i++
+		}
+	}
+	return result.String(), nil
+}
