@@ -101,7 +101,7 @@ func testCastConversion(t *testing.T, originValue interface{}, originType proto.
 
 func TestOptConstantCast(t *testing.T) {
 	// Test for string to datetime conversion
-	testCastConversion(t, "2025-05-08", proto.PrimitiveDataType_STRING, proto.PrimitiveDataType_DATETIME, int64(1746662400000))
+	testCastConversion(t, "2025-05-08", proto.PrimitiveDataType_STRING, proto.PrimitiveDataType_DATETIME, int64(1746662400))
 
 	// Test for int to float conversion
 	testCastConversion(t, int64(12), proto.PrimitiveDataType_INT64, proto.PrimitiveDataType_FLOAT64, float64(12))
