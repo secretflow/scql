@@ -55,7 +55,6 @@
 #include "engine/operator/shape.h"
 #include "engine/operator/shuffle.h"
 #include "engine/operator/sort.h"
-#include "engine/operator/str_to_date.h"
 #include "engine/operator/trigonometric.h"
 #include "engine/operator/unary.h"
 #include "engine/operator/unique.h"
@@ -189,7 +188,6 @@ void RegisterAllOpsImpl() {
   ADD_OPERATOR_TO_REGISTRY(Exp);
 
   ADD_OPERATOR_TO_REGISTRY(ArrowFunc);
-  ADD_OPERATOR_TO_REGISTRY(StrToDate);
 }
 
 }  // namespace
