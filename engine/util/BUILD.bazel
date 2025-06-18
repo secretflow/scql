@@ -191,23 +191,3 @@ cc_library(
     name = "concurrent_queue",
     hdrs = ["concurrent_queue.h"],
 )
-
-cc_library(
-    name = "string_util",
-    srcs = ["string_util.cc"],
-    hdrs = ["string_util.h"],
-    deps = [
-        "@yacl//yacl/base:exception",
-    ],
-)
-
-scql_cc_test(
-    name = "string_util_test",
-    srcs = ["string_util_test.cc"],
-    linkopts = [
-        "-lm",
-    ],
-    deps = [
-        ":string_util",
-    ],
-)
