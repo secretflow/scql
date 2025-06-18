@@ -18,6 +18,7 @@ import "github.com/apache/arrow/go/v17/arrow/compute"
 
 var _ compute.FunctionOptions = &SliceOptions{}
 var _ compute.FunctionOptions = &TrimOptions{}
+var _ compute.FunctionOptions = &StrptimeOptions{}
 
 type SliceOptions struct {
 	Start int64 `compute:"start"`
@@ -32,3 +33,12 @@ type TrimOptions struct {
 }
 
 func (TrimOptions) TypeName() string { return "TrimOptions" }
+
+type StrptimeOptions struct {
+	Format      string `compute:"format"`
+	Unit        string `compute:"unit"`
+	ErrorIsNull bool   `compute:"error_is_null"`
+}
+
+// TypeName 返回此 Option 类型的名称
+func (StrptimeOptions) TypeName() string { return "StrptimeOptions" }
