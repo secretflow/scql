@@ -1015,9 +1015,9 @@ func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors m
 			return nil, fmt.Errorf("buildScalarFunction: invalid right argument type for the STR_TO_DATE function, exepecting constant string but got %s", proto.PrimitiveDataType_name[int32(right.DType)])
 		}
 
+		formatStr := formatStrConst.Value.GetString()
 		// add constant node for constant dateStr - str_to_date('2025-06-05', '%Y-%m-%d')
 		if dateIsConst && formatIsConst {
-			formatStr := formatStrConst.Value.GetString()
 			goLayout, err := stringutil.MySQLDateFormatToGoLayout(formatStr)
 			if err != nil {
 				return nil, fmt.Errorf("buildScalarFunction: STR_TO_DATE format string '%s' is invalid: %w", formatStr, err)
@@ -1036,7 +1036,18 @@ func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors m
 			return t.addConstantNode(&datum)
 		}
 
-		return t.ep.AddStrToDateNode("str_to_date", inputs[0], inputs[1], inTensorPartyCodes)
+		arrowFormatStr, err := stringutil.MySQLDateFormatToArrowFormat(formatStr)
+		if err != nil {
+			return nil, fmt.Errorf("buildScalarFunction: STR_TO_DATE format string '%s' is invalid: %w", formatStr, err)
+		}
+
+		opt := &StrptimeOptions{
+			Format:      arrowFormatStr,
+			Unit:        "s",
+			ErrorIsNull: true,
+		}
+
+		return t.ep.AddArrowFuncNode("str_to_date", "strptime", opt, []*graph.Tensor{inputs[0]}, proto.PrimitiveDataType_DATETIME)
 	}
 	return nil, fmt.Errorf("buildScalarFunction doesn't support %s", f.FuncName.L)
 }
