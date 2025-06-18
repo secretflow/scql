@@ -1147,27 +1147,6 @@ the other party:
 		AllOpDef = append(AllOpDef, opDef)
 	}
 
-	{
-		opDef := &OperatorDef{}
-		opDef.SetName(OpNameStrToDate)
-		opDef.SetStreamingType(StreamingOp)
-		opDef.AddInput("Left", "Left tensor to be converted to a date/datetime.",
-			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
-		opDef.AddInput("Right", "Right tensor describing the layout of Left tensor.",
-			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
-		opDef.AddOutput("Out", "The resulting date/datetime tensor after conversion.",
-			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
-		opDef.SetDefinition(`Definition: Converts a string to a datetime value based on the specified format string.
-Example:
-` + "\n```python" + `
-Left = {"2023-01-15", "2024-02-16"}
-Right = {"%Y-%m-%d"}
-Out = {DATETIME(2023,1,15,0,0,0), DATETIME(2024,2,16,0,0,0)}
-` + "```\n")
-		opDef.SetParamTypeConstraint(T, statusPrivate)
-		check(opDef.err)
-		AllOpDef = append(AllOpDef, opDef)
-	}
 }
 
 func GetAllOpDef() ([]*proto.OperatorDef, int) {
