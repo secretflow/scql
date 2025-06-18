@@ -40,5 +40,4 @@ type StrptimeOptions struct {
 	ErrorIsNull bool   `compute:"error_is_null"`
 }
 
-// TypeName 返回此 Option 类型的名称
 func (StrptimeOptions) TypeName() string { return "StrptimeOptions" }
