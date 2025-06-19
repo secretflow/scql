@@ -73,17 +73,22 @@ void ArrowFunc::Execute(ExecContext* ctx) {
   YACL_ENFORCE(result.ok(), "invoking arrow func '{}' caught error: {}",
                func_name, result.status().ToString());
 
-  auto datum = result.ValueOrDie();
-  if (datum.is_chunked_array()) {
-    YACL_ENFORCE(out_pb.size() == 1,
-                 "arrow func result is chunked array, output size {} != 1",
-                 out_pb.size());
+  const auto& val = result.ValueOrDie();
+  YACL_ENFORCE(val.is_chunked_array(),
+               "unsupported arrow func result type: {}, func_name: {}",
+               arrow::ToString(val.kind()), func_name);
 
-    ctx->GetTensorTable()->AddTensor(out_pb[0].name(),
-                                     TensorFrom(datum.chunked_array()));
+  YACL_ENFORCE(out_pb.size() == 1,
+               "arrow func result is chunked array, output size {} != 1",
+               out_pb.size());
+
+  const auto& arr = val.chunked_array();
+
+  if (func_name == "strptime") {
+    auto resultTensor = util::ConvertDateTimeToInt64(arr);
+    ctx->GetTensorTable()->AddTensor(out_pb[0].name(), std::move(resultTensor));
   } else {
-    YACL_THROW("not support arrow func result type: {}",
-               arrow::ToString(datum.kind()));
+    ctx->GetTensorTable()->AddTensor(out_pb[0].name(), TensorFrom(arr));
   }
 }
 

@@ -58,6 +58,19 @@ INSTANTIATE_TEST_SUITE_P(
                                       R"json(["A*", "B?2", "3"])json"))}},
             ArrowFuncTestCase{
                 .ins = {test::NamedTensor(
+                    "in_date_str", TensorFrom(arrow::large_utf8(),
+                                     R"json(["2024-06-18", null, "2025-01-01", "invalid-date"])json"))},
+                .func_name = "strptime",
+                .func_opt = std::make_shared<arrow::compute::StrptimeOptions>(
+                    "%Y-%m-%d",
+                    arrow::TimeUnit::SECOND,
+                    true),
+                .expect_outs = {test::NamedTensor(
+                    "out",
+                    TensorFrom(arrow::int64(),
+                               R"json([1718668800, null, 1735689600, null])json"))}},
+            ArrowFuncTestCase{
+                .ins = {test::NamedTensor(
                     "in", TensorFrom(arrow::large_utf8(),
                                      R"json(["alice  ", "  Bob", " CAROL ",
                         " "])json"))},

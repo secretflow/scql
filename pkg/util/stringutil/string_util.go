@@ -385,3 +385,120 @@ func StringToUnixSecWithTimezone(s string) (int64, error) {
 
 	return 0, fmt.Errorf("unsupported timestamp format or missing timezone: %q", s)
 }
+
+func MySQLDateFormatToGoLayout(mysqlFormat string) (string, error) {
+	var mapping = map[string]string{
+		"%Y": "2006",        // Year, four digits
+		"%y": "06",          // Year, two digits
+		"%m": "01",          // Month (01–12)
+		"%c": "1",           // Month (1–12)
+		"%d": "02",          // Day (01–31)
+		"%e": "2",           // Day (1–31)
+		"%H": "15",          // Hour (00–23)
+		"%k": "15",          // Hour (0–23)
+		"%h": "03",          // Hour (01–12)
+		"%I": "03",          // Hour (01–12)
+		"%l": "3",           // Hour (1–12)
+		"%i": "04",          // Minute (00–59)
+		"%S": "05",          // Second (00–59)
+		"%s": "05",          // Same as %S
+		"%f": "000000",      // Microsecond
+		"%p": "PM",          // AM or PM
+		"%T": "15:04:05",    // Time in 24-hour format
+		"%r": "03:04:05 PM", // Time in 12-hour format
+		"%b": "Jan",         // Abbreviated month name
+		"%M": "January",     // Full month name
+		"%a": "Mon",         // Abbreviated weekday
+		"%W": "Monday",      // Full weekday
+	}
+
+	var goLayout strings.Builder
+	runes := []rune(mysqlFormat)
+	i := 0
+	for i < len(runes) {
+		if runes[i] == '%' {
+			if i+1 < len(runes) {
+				specifierRune := runes[i+1]
+				// Handle %% separately
+				if specifierRune == '%' {
+					goLayout.WriteRune('%')
+					i += 2
+					continue
+				}
+				specifier := "%" + string(specifierRune)
+				if layoutPart, ok := mapping[specifier]; ok {
+					goLayout.WriteString(layoutPart)
+				} else {
+					return "", fmt.Errorf("unsupported MySQL format specifier: %s", specifier)
+				}
+				i += 2
+			} else {
+				return "", fmt.Errorf("invalid format string: trailing %%")
+			}
+		} else {
+			goLayout.WriteRune(runes[i])
+			i += 1
+		}
+	}
+	return goLayout.String(), nil
+}
+
+var kMySQLToArrowFormatMapping = map[string]string{
+	"%Y": "%Y",          // 4-digit year
+	"%y": "%y",          // 2-digit year
+	"%m": "%m",          // Month (01-12)
+	"%c": "%-m",         // Month (1-12), '%-m' in Arrow is for non-padded month
+	"%d": "%d",          // Day (01-31)
+	"%e": "%-d",         // Day (1-31), '%-d' in Arrow is for non-padded day
+	"%H": "%H",          // Hour (00-23)
+	"%k": "%-H",         // Hour (0-23), '%-H' in Arrow is for non-padded hour
+	"%h": "%I",          // Hour (01-12), maps to 12-hour format
+	"%I": "%I",          // Hour (01-12)
+	"%l": "%-I",         // Hour (1-12), '%-I' in Arrow is for non-padded 12-hour
+	"%i": "%M",          // MySQL minute -> standard strptime minute (%M)
+	"%S": "%S",          // Second (00-59)
+	"%s": "%S",          // MySQL second alias -> standard strptime second (%S)
+	"%f": "%f",          // Microsecond
+	"%p": "%p",          // AM/PM
+	"%T": "%H:%M:%S",    // Shortcut: 24-hour time
+	"%r": "%I:%M:%S %p", // Shortcut: 12-hour time
+	"%b": "%b",          // Abbreviated month name
+	"%M": "%B",          // MySQL full month name -> standard strptime full month name (%B)
+	"%a": "%a",          // Abbreviated weekday name
+	"%W": "%A",          // MySQL full weekday name -> standard strptime full weekday name (%A)
+}
+
+func MySQLDateFormatToArrowFormat(mysqlFormat string) (string, error) {
+	var result strings.Builder
+	i := 0
+	for i < len(mysqlFormat) {
+		if mysqlFormat[i] == '%' {
+			// Check for a dangling '%' at the end of the string.
+			if i+1 >= len(mysqlFormat) {
+				return "", fmt.Errorf("invalid format string: trailing %%")
+			}
+
+			// Special case '%%', which represents a literal '%' character.
+			if mysqlFormat[i+1] == '%' {
+				result.WriteByte('%')
+				i += 2
+				continue
+			}
+
+			// Extract the two-character specifier, e.g., "%Y".
+			specifier := mysqlFormat[i : i+2]
+			arrowSpecifier, ok := kMySQLToArrowFormatMapping[specifier]
+			if !ok {
+				return "", fmt.Errorf("unsupported MySQL format specifier: %s", specifier)
+			}
+
+			result.WriteString(arrowSpecifier)
+			i += 2
+		} else {
+			// Non-'%' characters are treated as literals and appended directly.
+			result.WriteByte(mysqlFormat[i])
+			i++
+		}
+	}
+	return result.String(), nil
+}

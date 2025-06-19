@@ -14,10 +14,14 @@
 
 package translator
 
-import "github.com/apache/arrow/go/v17/arrow/compute"
+import (
+	"github.com/apache/arrow/go/v17/arrow"
+	"github.com/apache/arrow/go/v17/arrow/compute"
+)
 
 var _ compute.FunctionOptions = &SliceOptions{}
 var _ compute.FunctionOptions = &TrimOptions{}
+var _ compute.FunctionOptions = &StrptimeOptions{}
 
 type SliceOptions struct {
 	Start int64 `compute:"start"`
@@ -32,3 +36,11 @@ type TrimOptions struct {
 }
 
 func (TrimOptions) TypeName() string { return "TrimOptions" }
+
+type StrptimeOptions struct {
+	Format      string         `compute:"format"`
+	Unit        arrow.TimeUnit `compute:"unit"`
+	ErrorIsNull bool           `compute:"error_is_null"`
+}
+
+func (StrptimeOptions) TypeName() string { return "StrptimeOptions" }
