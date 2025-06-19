@@ -23,6 +23,8 @@ import (
 
 	"slices"
 
+	"github.com/apache/arrow/go/v17/arrow"
+
 	"github.com/secretflow/scql/pkg/expression"
 	"github.com/secretflow/scql/pkg/interpreter/ccl"
 	"github.com/secretflow/scql/pkg/interpreter/graph"
@@ -1043,7 +1045,7 @@ func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors m
 
 		opt := &StrptimeOptions{
 			Format:      arrowFormatStr,
-			Unit:        "s",
+			Unit:        arrow.Second,
 			ErrorIsNull: true,
 		}
 
