@@ -121,7 +121,6 @@ const (
 	OpNameLog2        string = "Log2"
 	OpNameSqrt        string = "Sqrt"
 	OpNameExp         string = "Exp"
-	OpNameStrToDate   string = "StrToDate"
 )
 
 const (

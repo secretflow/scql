@@ -1146,7 +1146,6 @@ the other party:
 		check(opDef.err)
 		AllOpDef = append(AllOpDef, opDef)
 	}
-
 }
 
 func GetAllOpDef() ([]*proto.OperatorDef, int) {
