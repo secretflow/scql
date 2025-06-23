@@ -60,7 +60,7 @@ func ConvertToTable(tensors []*scql.Tensor, table *tablewriter.Table) error {
 			case scql.PrimitiveDataType_INT64, scql.PrimitiveDataType_TIMESTAMP:
 				curRow = append(curRow, fmt.Sprint(t.GetInt64Data()[i]))
 			default:
-				return fmt.Errorf("unsupported type:%T", t.ElemType)
+				return fmt.Errorf("unsupported type:%s", t.ElemType)
 			}
 		}
 		table.Append(curRow)
