@@ -51,6 +51,8 @@ TEST(FilePathTest, CheckS3LikeUrl) {
 
   EXPECT_THROW(CheckS3LikeUrl("bucket/dir/../dir2/test.file", true, "bucket"),
                yacl::EnforceNotMet);
+
+  EXPECT_EQ(CppCoverageTest(), "123456");
 }
 
 }  // namespace scql::engine::util
