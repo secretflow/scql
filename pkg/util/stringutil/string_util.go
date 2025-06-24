@@ -394,7 +394,3 @@ func GoCoverageTest() string {
 func GoCoverageTest1() string {
 	return "1"
 }
-
-func GoCoverageTest2() string {
-	return "2"
-}

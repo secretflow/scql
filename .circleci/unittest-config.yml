@@ -118,6 +118,7 @@ jobs:
           branch: << pipeline.parameters.CIRCLE_BRANCH >>
           pr: << pipeline.parameters.CIRCLE_PULL_REQUEST >>
           sha: << pipeline.parameters.CIRCLE_SHA1 >>
+          verbose: true
 
   linux_cpp_ut:
     docker:
@@ -156,6 +157,7 @@ jobs:
           branch: << pipeline.parameters.CIRCLE_BRANCH >>
           pr: << pipeline.parameters.CIRCLE_PULL_REQUEST >>
           sha: << pipeline.parameters.CIRCLE_SHA1 >>
+          verbose: true
       - store_test_results:
           path: test-results
       - store_artifacts:
@@ -188,6 +190,7 @@ jobs:
           branch: << pipeline.parameters.CIRCLE_BRANCH >>
           pr: << pipeline.parameters.CIRCLE_PULL_REQUEST >>
           sha: << pipeline.parameters.CIRCLE_SHA1 >>
+          verbose: true
 
   macOS_cpp_ut:
     macos:
@@ -228,6 +231,7 @@ jobs:
           branch: << pipeline.parameters.CIRCLE_BRANCH >>
           pr: << pipeline.parameters.CIRCLE_PULL_REQUEST >>
           sha: << pipeline.parameters.CIRCLE_SHA1 >>
+          verbose: true
       - store_test_results:
           path: test-results
       - store_artifacts:
