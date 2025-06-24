@@ -97,7 +97,7 @@ jobs:
       - run_go_test
       - codecov/upload:
           files: coverage.out
-          flags: go,linux,<< parameters.resource_class >>
+          flags: go-linux-<< parameters.resource_class >>
 
   linux_cpp_ut:
     docker:
@@ -121,7 +121,7 @@ jobs:
           find_executable_flag: "-executable"
       - codecov/upload:
           files: bazel-out/_coverage/_coverage_report.dat
-          flags: cpp,linux,<< parameters.resource_class >>
+          flags: cpp-linux-<< parameters.resource_class >>
       - store_test_results:
           path: test-results
       - store_artifacts:
@@ -142,7 +142,7 @@ jobs:
       - run_go_test
       - codecov/upload:
           files: coverage.out
-          flags: go,macos
+          flags: go-macos
 
   macOS_cpp_ut:
     macos:
@@ -168,7 +168,7 @@ jobs:
           find_executable_flag: "-perm +111"
       - codecov/upload:
           files: bazel-out/_coverage/_coverage_report.dat
-          flags: cpp,macos
+          flags: cpp-macos
       - store_test_results:
           path: test-results
       - store_artifacts:
