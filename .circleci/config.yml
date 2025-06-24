@@ -55,17 +55,47 @@ workflows:
           tag: '3.10' # specific cimg/python
           config-path: .circleci/unittest-config.yml
           mapping: |
-            api/.* run_go_ut true CIRCLE_PULL_REQUEST "$CIRCLE_PULL_REQUEST" CIRCLE_SHA1 "$CIRCLE_SHA1" CIRCLE_BRANCH "$CIRCLE_BRANCH"
-            cmd/.* run_go_ut true CIRCLE_PULL_REQUEST "$CIRCLE_PULL_REQUEST" CIRCLE_SHA1 "$CIRCLE_SHA1" CIRCLE_BRANCH "$CIRCLE_BRANCH"
-            pkg/.* run_go_ut true CIRCLE_PULL_REQUEST "$CIRCLE_PULL_REQUEST" CIRCLE_SHA1 "$CIRCLE_SHA1" CIRCLE_BRANCH "$CIRCLE_BRANCH"
-            contrib/.* run_go_ut true CIRCLE_PULL_REQUEST "$CIRCLE_PULL_REQUEST" CIRCLE_SHA1 "$CIRCLE_SHA1" CIRCLE_BRANCH "$CIRCLE_BRANCH"
-            .circleci/unittest-config.yml run_go_ut true CIRCLE_PULL_REQUEST "$CIRCLE_PULL_REQUEST" CIRCLE_SHA1 "$CIRCLE_SHA1" CIRCLE_BRANCH "$CIRCLE_BRANCH"
-            bazel/.* run_cpp_ut true CIRCLE_PULL_REQUEST "$CIRCLE_PULL_REQUEST" CIRCLE_SHA1 "$CIRCLE_SHA1" CIRCLE_BRANCH "$CIRCLE_BRANCH"
-            engine/.* run_cpp_ut true CIRCLE_PULL_REQUEST "$CIRCLE_PULL_REQUEST" CIRCLE_SHA1 "$CIRCLE_SHA1" CIRCLE_BRANCH "$CIRCLE_BRANCH"
-            .bazelrc run_cpp_ut true CIRCLE_PULL_REQUEST "$CIRCLE_PULL_REQUEST" CIRCLE_SHA1 "$CIRCLE_SHA1" CIRCLE_BRANCH "$CIRCLE_BRANCH"
-            .bazeliskrc run_cpp_ut true CIRCLE_PULL_REQUEST "$CIRCLE_PULL_REQUEST" CIRCLE_SHA1 "$CIRCLE_SHA1" CIRCLE_BRANCH "$CIRCLE_BRANCH"
-            MODULE.bazel run_cpp_ut true CIRCLE_PULL_REQUEST "$CIRCLE_PULL_REQUEST" CIRCLE_SHA1 "$CIRCLE_SHA1" CIRCLE_BRANCH "$CIRCLE_BRANCH"
-            .circleci/unittest-config.yml run_cpp_ut true CIRCLE_PULL_REQUEST "$CIRCLE_PULL_REQUEST" CIRCLE_SHA1 "$CIRCLE_SHA1" CIRCLE_BRANCH "$CIRCLE_BRANCH"
+            api/.* run_go_ut true
+            cmd/.* run_go_ut true
+            pkg/.* run_go_ut true
+            contrib/.* run_go_ut true
+            .circleci/unittest-config.yml run_go_ut true
+            bazel/.* run_cpp_ut true
+            engine/.* run_cpp_ut true
+            .bazelrc run_cpp_ut true
+            .bazeliskrc run_cpp_ut true
+            MODULE.bazel run_cpp_ut true
+            .circleci/unittest-config.yml run_cpp_ut true
+            api/.* CIRCLE_PULL_REQUEST "$CIRCLE_PULL_REQUEST"
+            api/.* CIRCLE_SHA1 "$CIRCLE_SHA1"
+            api/.* CIRCLE_BRANCH "$CIRCLE_BRANCH"
+            cmd/.* CIRCLE_PULL_REQUEST "$CIRCLE_PULL_REQUEST"
+            cmd/.* CIRCLE_SHA1 "$CIRCLE_SHA1"
+            cmd/.* CIRCLE_BRANCH "$CIRCLE_BRANCH"
+            pkg/.* CIRCLE_PULL_REQUEST "$CIRCLE_PULL_REQUEST"
+            pkg/.* CIRCLE_SHA1 "$CIRCLE_SHA1"
+            pkg/.* CIRCLE_BRANCH "$CIRCLE_BRANCH"
+            contrib/.* CIRCLE_PULL_REQUEST "$CIRCLE_PULL_REQUEST"
+            contrib/.* CIRCLE_SHA1 "$CIRCLE_SHA1"
+            contrib/.* CIRCLE_BRANCH "$CIRCLE_BRANCH"
+            .circleci/unittest-config.yml CIRCLE_PULL_REQUEST "$CIRCLE_PULL_REQUEST"
+            .circleci/unittest-config.yml CIRCLE_SHA1 "$CIRCLE_SHA1"
+            .circleci/unittest-config.yml CIRCLE_BRANCH "$CIRCLE_BRANCH"
+            bazel/.* CIRCLE_PULL_REQUEST "$CIRCLE_PULL_REQUEST"
+            bazel/.* CIRCLE_SHA1 "$CIRCLE_SHA1"
+            bazel/.* CIRCLE_BRANCH "$CIRCLE_BRANCH"
+            engine/.* CIRCLE_PULL_REQUEST "$CIRCLE_PULL_REQUEST"
+            engine/.* CIRCLE_SHA1 "$CIRCLE_SHA1"
+            engine/.* CIRCLE_BRANCH "$CIRCLE_BRANCH"
+            .bazelrc CIRCLE_PULL_REQUEST "$CIRCLE_PULL_REQUEST"
+            .bazelrc CIRCLE_SHA1 "$CIRCLE_SHA1"
+            .bazelrc CIRCLE_BRANCH "$CIRCLE_BRANCH"
+            .bazeliskrc CIRCLE_PULL_REQUEST "$CIRCLE_PULL_REQUEST"
+            .bazeliskrc CIRCLE_SHA1 "$CIRCLE_SHA1"
+            .bazeliskrc CIRCLE_BRANCH "$CIRCLE_BRANCH"
+            MODULE.bazel CIRCLE_PULL_REQUEST "$CIRCLE_PULL_REQUEST"
+            MODULE.bazel CIRCLE_SHA1 "$CIRCLE_SHA1"
+            MODULE.bazel CIRCLE_BRANCH "$CIRCLE_BRANCH"
   run_regtest:
     when: << pipeline.parameters.enable_regtest >>
     jobs:
