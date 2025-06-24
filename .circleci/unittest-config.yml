@@ -39,14 +39,17 @@ commands:
             echo ${gcs_content} > ../gcs.data
             ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
   run_go_test:
-    description: "Run go tests"
+    description: "Run go tests and generate HTML coverage report"
     steps:
       - run:
-          name: "Go Test"
+          name: "Go Test and Generate HTML Report"
           command: |
             set +e
             go mod tidy
-            go test -timeout=30m -v -short ./pkg/... ./contrib/...
+            # go test -timeout=30m -v -short ./pkg/... ./contrib/...
+            go test -timeout=30m -v -short -coverprofile=coverage.out ./pkg/... ./contrib/...
+            mkdir -p go-coverage
+            go tool cover -html=coverage.out -o go-coverage/index.html
   run_cpp_test:
     description: "Run cpp tests and collect artifacts"
     parameters:
@@ -87,6 +90,9 @@ jobs:
     steps:
       - checkout
       - run_go_test
+      - store_artifacts:
+          path: go-coverage
+          destination: go-coverage-linux-<< parameters.resource_class >>
   linux_cpp_ut:
     docker:
       - image: secretflow/scql-ci:latest
@@ -119,6 +125,9 @@ jobs:
           command: |
             brew install wget go
       - run_go_test
+      - store_artifacts:
+          path: go-coverage
+          destination: go-coverage-macos
   macOS_cpp_ut:
     macos:
       xcode: 16.0.0
