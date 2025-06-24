@@ -92,8 +92,8 @@ jobs:
       - run:
           name: "Install GPG for Codecov"
           command: |
-            sudo apt-get update
-            sudo apt-get install -y gnupg
+            apt-get update
+            apt-get install -y gnupg
       - run_go_test
       - codecov/upload:
           files: coverage.out
@@ -113,8 +113,8 @@ jobs:
       - run:
           name: "Install GPG for Codecov"
           command: |
-            sudo apt-get update
-            sudo apt-get install -y gnupg
+            apt-get update
+            apt-get install -y gnupg
       - setup_cpp_test
       - run_cpp_test:
           extra_bazel_args: "-c opt"
