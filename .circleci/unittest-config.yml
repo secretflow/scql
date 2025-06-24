@@ -104,6 +104,14 @@ jobs:
             apt-get update
             apt-get install -y gnupg
       - run_go_test
+      - run:
+          name: "Debug: Inspect Go Coverage Report"
+          command: |
+            echo "--- Checking Go coverage file existence and size ---"
+            ls -lh coverage.out
+
+            echo "--- Printing first 20 lines of Go coverage file ---"
+            head -n 20 coverage.out
       - codecov/upload:
           files: coverage.out
           flags: go-linux-<< parameters.resource_class >>
@@ -131,6 +139,17 @@ jobs:
       - run_cpp_test:
           extra_bazel_args: "-c opt"
           find_executable_flag: "-executable"
+      - run:
+          name: "Debug: Inspect Coverage Report File"
+          command: |
+            echo "--- Checking coverage file existence and size ---"
+            ls -lh bazel-out/_coverage/_coverage_report.dat
+
+            echo "--- Printing first 20 lines of coverage file ---"
+            head -n 20 bazel-out/_coverage/_coverage_report.dat
+
+            echo "--- Printing last 20 lines of coverage file ---"
+            tail -n 20 bazel-out/_coverage/_coverage_report.dat
       - codecov/upload:
           files: bazel-out/_coverage/_coverage_report.dat
           flags: cpp-linux-<< parameters.resource_class >>
@@ -155,6 +174,14 @@ jobs:
           command: |
             brew install wget go
       - run_go_test
+      - run:
+          name: "Debug: Inspect Go Coverage Report"
+          command: |
+            echo "--- Checking Go coverage file existence and size ---"
+            ls -lh coverage.out
+
+            echo "--- Printing first 20 lines of Go coverage file ---"
+            head -n 20 coverage.out
       - codecov/upload:
           files: coverage.out
           flags: go-macos
@@ -184,6 +211,17 @@ jobs:
       - run_cpp_test:
           extra_bazel_args: ""  
           find_executable_flag: "-perm +111"
+      - run:
+          name: "Debug: Inspect Coverage Report File"
+          command: |
+            echo "--- Checking coverage file existence and size ---"
+            ls -lh bazel-out/_coverage/_coverage_report.dat
+
+            echo "--- Printing first 20 lines of coverage file ---"
+            head -n 20 bazel-out/_coverage/_coverage_report.dat
+
+            echo "--- Printing last 20 lines of coverage file ---"
+            tail -n 20 bazel-out/_coverage/_coverage_report.dat
       - codecov/upload:
           files: bazel-out/_coverage/_coverage_report.dat
           flags: cpp-macos
