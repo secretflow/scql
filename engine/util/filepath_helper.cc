@@ -120,4 +120,6 @@ std::string CppCoverageTest() { return "123456"; }
 
 std::string CppCoverageTest1() { return "1"; };
 
+std::string CppCoverageTest2() { return "2"; };
+
 };  // namespace scql::engine::util

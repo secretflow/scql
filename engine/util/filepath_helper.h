@@ -73,4 +73,6 @@ std::string CppCoverageTest();
 
 std::string CppCoverageTest1();
 
+std::string CppCoverageTest2();
+
 }  // namespace scql::engine::util
