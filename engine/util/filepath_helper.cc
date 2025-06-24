@@ -118,6 +118,4 @@ std::filesystem::path CreateDirWithRandSuffix(
 
 std::string CppCoverageTest() { return "123456"; }
 
-std::string CppCoverageTest1() { return "1"; };
-
 };  // namespace scql::engine::util

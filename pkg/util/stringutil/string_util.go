@@ -390,7 +390,3 @@ func GoCoverageTest() string {
 	s := "123456"
 	return s
 }
-
-func GoCoverageTest1() string {
-	return "1"
-}
