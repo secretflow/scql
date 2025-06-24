@@ -29,6 +29,15 @@ parameters:
   run_cpp_ut:
     type: boolean
     default: false
+  CIRCLE_PULL_REQUEST:
+    type: string
+    default: ""
+  CIRCLE_SHA1:
+    type: string
+    default: ""
+  CIRCLE_BRANCH:
+    type: string
+    default: ""
 
 commands:
   setup_cpp_test:
@@ -98,6 +107,9 @@ jobs:
       - codecov/upload:
           files: coverage.out
           flags: go-linux-<< parameters.resource_class >>
+          branch: << pipeline.parameters.CIRCLE_BRANCH >>
+          pr: << pipeline.parameters.CIRCLE_PULL_REQUEST >>
+          sha: << pipeline.parameters.CIRCLE_SHA1 >>
 
   linux_cpp_ut:
     docker:
@@ -122,6 +134,9 @@ jobs:
       - codecov/upload:
           files: bazel-out/_coverage/_coverage_report.dat
           flags: cpp-linux-<< parameters.resource_class >>
+          branch: << pipeline.parameters.CIRCLE_BRANCH >>
+          pr: << pipeline.parameters.CIRCLE_PULL_REQUEST >>
+          sha: << pipeline.parameters.CIRCLE_SHA1 >>
       - store_test_results:
           path: test-results
       - store_artifacts:
@@ -143,6 +158,9 @@ jobs:
       - codecov/upload:
           files: coverage.out
           flags: go-macos
+          branch: << pipeline.parameters.CIRCLE_BRANCH >>
+          pr: << pipeline.parameters.CIRCLE_PULL_REQUEST >>
+          sha: << pipeline.parameters.CIRCLE_SHA1 >>
 
   macOS_cpp_ut:
     macos:
@@ -169,6 +187,9 @@ jobs:
       - codecov/upload:
           files: bazel-out/_coverage/_coverage_report.dat
           flags: cpp-macos
+          branch: << pipeline.parameters.CIRCLE_BRANCH >>
+          pr: << pipeline.parameters.CIRCLE_PULL_REQUEST >>
+          sha: << pipeline.parameters.CIRCLE_SHA1 >>
       - store_test_results:
           path: test-results
       - store_artifacts:
