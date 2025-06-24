@@ -387,7 +387,6 @@ func StringToUnixSecWithTimezone(s string) (int64, error) {
 }
 
 func GoCoverageTest() string {
-	s := "123"
-	s += "456"
+	s := "123456"
 	return s
 }
