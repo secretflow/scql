@@ -116,4 +116,10 @@ std::filesystem::path CreateDirWithRandSuffix(
   YACL_THROW("failed to create dir {}", dir_name);
 }
 
+std::string CppCoverageTest() {
+  std::string str = "123";
+  str += "456";
+  return str;
+}
+
 };  // namespace scql::engine::util
