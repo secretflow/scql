@@ -51,7 +51,7 @@ commands:
             mkdir -p go-coverage
             go tool cover -html=coverage.out -o go-coverage/index.html
   run_cpp_test:
-    description: "Run cpp tests and collect artifacts"
+    description: "Run cpp tests and generate HTML coverage report"
     parameters:
       extra_bazel_args:
         type: string
@@ -61,11 +61,14 @@ commands:
         default: "-executable"
     steps:
       - run:
-          name: "Cpp Test"
+          name: "Cpp Test and Generate HTML Report"
           command: |
             set +e
             declare -i test_status
-            bazelisk --host_jvm_args=-Xmx8g test //engine/... << parameters.extra_bazel_args >> --jobs=32 --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
+            # bazelisk --host_jvm_args=-Xmx8g test //engine/... << parameters.extra_bazel_args >> --jobs=32 --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
+            bazelisk --host_jvm_args=-Xmx8g coverage //engine/... << parameters.extra_bazel_args >> --combined_report=lcov --jobs=32 --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
+
+            genhtml bazel-out/_coverage/_coverage_report.dat --output-directory cpp-coverage
 
             sh ../devtools/rename-junit-xml.sh
             find bazel-bin/ << parameters.find_executable_flag >> -type f -name "*_test" -print0 | xargs -0 tar -cvzf test_binary.tar.gz
@@ -104,6 +107,10 @@ jobs:
     # See: https://circleci.com/docs/2.0/configuration-reference/#steps
     steps:
       - checkout
+      - run:
+          name: Install lcov
+          command: |
+            sudo apt-get update && sudo apt-get install -y lcov
       - setup_cpp_test
       - run_cpp_test:
           extra_bazel_args: "-c opt"
@@ -114,6 +121,9 @@ jobs:
           path: test_binary.tar.gz
       - store_artifacts:
           path: test_logs.tar.gz
+      - store_artifacts:
+          path: cpp-coverage
+          destination: cpp-coverage-linux-<< parameters.resource_class >>
   macOS_go_ut:
     macos:
       xcode: 16.0.0
@@ -145,6 +155,7 @@ jobs:
           name: "Install homebrew dependencies"
           command: |
             brew install bazelisk cmake ninja libomp wget go@1.24 md5sha1sum
+            brew install lcov
             brew link go@1.24
       - setup_cpp_test
       - run_cpp_test:
@@ -156,6 +167,9 @@ jobs:
           path: test_binary.tar.gz
       - store_artifacts:
           path: test_logs.tar.gz
+      - store_artifacts:
+          path: cpp-coverage
+          destination: cpp-coverage-macos
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
