@@ -154,11 +154,6 @@ workflows:
               only: /.*(?<!dev\d{8})$/
 
   run_coverage_check:
-    when:
-      and:
-        - matches:
-            pattern: ".*\\[run-coverage\\].*"
-            value: "<< pipeline.trigger_parameters.github_app.commit_message >>"
     jobs:
       - gatekeeper_check_coverage_run
       - go_coverage_job_linux_amd:
