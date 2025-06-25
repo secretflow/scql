@@ -371,8 +371,3 @@ func TestStringToUnixSecWithTimezone(t *testing.T) {
 		})
 	}
 }
-
-func TestGoCoverageTest(t *testing.T) {
-	r := require.New(t)
-	r.Equal(GoCoverageTest(), "123456")
-}

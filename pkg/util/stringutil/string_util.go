@@ -385,8 +385,3 @@ func StringToUnixSecWithTimezone(s string) (int64, error) {
 
 	return 0, fmt.Errorf("unsupported timestamp format or missing timezone: %q", s)
 }
-
-func GoCoverageTest() string {
-	s := "123456"
-	return s
-}

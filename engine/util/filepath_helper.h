@@ -69,6 +69,4 @@ std::filesystem::path CreateDir(const std::filesystem::path& parent_dir,
 std::filesystem::path CreateDirWithRandSuffix(
     const std::filesystem::path& parent_dir, const std::string& dir_name);
 
-std::string CppCoverageTest();
-
 }  // namespace scql::engine::util

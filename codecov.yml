@@ -1,5 +1,5 @@
 fixes:
-  - "::github.com/secretflow/scql/"
+  - "github.com/secretflow/scql/::"
 
 coverage:
   status:
