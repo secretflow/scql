@@ -385,3 +385,10 @@ func StringToUnixSecWithTimezone(s string) (int64, error) {
 
 	return 0, fmt.Errorf("unsupported timestamp format or missing timezone: %q", s)
 }
+
+func ReturnString(str string) string {
+	if len(str) > 2 {
+		return "> 2"
+	}
+	return "<= 2"
+}
