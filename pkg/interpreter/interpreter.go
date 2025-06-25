@@ -37,6 +37,7 @@ import (
 	"github.com/secretflow/scql/pkg/proto-gen/spu"
 	"github.com/secretflow/scql/pkg/sessionctx"
 	"github.com/secretflow/scql/pkg/sessionctx/stmtctx"
+	"github.com/secretflow/scql/pkg/util/stringutil"
 )
 
 type Interpreter struct{}
@@ -46,6 +47,8 @@ func NewInterpreter() *Interpreter {
 }
 
 func (intr *Interpreter) Compile(ctx context.Context, req *pb.CompileQueryRequest) (*pb.CompiledPlan, error) {
+	str := stringutil.TestString("123")
+	logrus.Infof("str %v", str)
 	p := parser.New()
 	stmts, _, err := p.Parse(req.GetQuery(), "", "")
 	if err != nil {

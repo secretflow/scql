@@ -1,93 +1,88 @@
-# Copyright 2023 Ant Group Co., Ltd.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# file: .circleci/debug-config.yml
 
-# Use the latest 2.1 version of CircleCI pipeline process engine.
-# See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
 
-setup: true
-
 orbs:
-  path-filtering: circleci/path-filtering@1.2.0
-  continuation: circleci/continuation@1.0.0
+  codecov: codecov/codecov@5.4.3
 
-parameters:
-  GHA_Actor:
-    type: string
-    default: ""
-  GHA_Action:
-    type: string
-    default: ""
-  GHA_Event:
-    type: string
-    default: ""
-  GHA_Meta:
-    type: string
-    default: ""
-  enable_regtest:
-    type: boolean
-    default: false
+commands:
+  run_go_test:
+    description: "Run go tests and generate coverage profile for Codecov"
+    steps:
+      - run:
+          name: "Go Test with Coverage"
+          command: |
+            set +e
+            go mod tidy
+            go test -timeout=30m -v -short -coverprofile=coverage.out ./pkg/... ./contrib/...
 
-# Invoke jobs via workflows
-# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
+  run_cpp_test:
+    description: "Run cpp tests and collect coverage for Codecov"
+    steps:
+      - run:
+          name: "Cpp Test and Coverage"
+          command: |
+            set +e
+            declare -i test_status
+            bazelisk --host_jvm_args=-Xmx8g coverage //engine/... --nocache_test_results --combined_report=lcov --jobs=32 --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
+            exit ${test_status}
+
+  setup_cpp_test:
+    steps:
+      - run:
+          name: "Checkout devtools"
+          command: git clone https://github.com/secretflow/devtools.git ../devtools
+      - run:
+          name: Setup GCS
+          command: |
+            echo ${gcs_content} > ../gcs.data
+            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
+
+jobs:
+  # 这里包含了我们所有的 job 定义
+  go_test_job:
+    docker:
+      - image: secretflow/scql-ci:latest
+    resource_class: 2xlarge
+    steps:
+      - checkout
+      - run: { name: "Install GPG", command: "apt-get update && apt-get install -y gnupg" }
+      - run_go_test
+      - run:
+          name: "Debug: Inspect Go Coverage Report"
+          command: |
+            echo "--- Checking Go coverage file existence and size ---"
+            ls -lh coverage.out
+            echo "--- Printing first 20 lines of Go coverage file ---"
+            head -n 20 coverage.out
+      - codecov/upload:
+          files: coverage.out
+          flags: go-linux-debug
+
+  cpp_test_job:
+    docker:
+      - image: secretflow/scql-ci:latest
+    resource_class: 2xlarge
+    steps:
+      - checkout
+      - run: { name: "Install GPG", command: "apt-get update && apt-get install -y gnupg" }
+      - setup_cpp_test
+      - run_cpp_test
+      - run:
+          name: "Debug: Inspect Coverage Report File"
+          command: |
+            echo "--- Checking coverage file existence and size ---"
+            ls -lh bazel-out/_coverage/_coverage_report.dat
+            echo "--- Printing first 20 lines of coverage file ---"
+            head -n 20 bazel-out/_coverage/_coverage_report.dat
+            echo "--- Printing last 20 lines of coverage file ---"
+            tail -n 20 bazel-out/_coverage/_coverage_report.dat
+      - codecov/upload:
+          files: bazel-out/_coverage/_coverage_report.dat
+          flags: cpp-linux-debug
+
 workflows:
-  run_ut:
-    when:
-      and:
-        - not: << pipeline.parameters.enable_regtest >>
-        - not: << pipeline.parameters.GHA_Action >>
-        - not: << pipeline.parameters.GHA_Meta >>
-        - not: << pipeline.parameters.GHA_Event >>
+  debug_workflow:
     jobs:
-      - path-filtering/filter:
-          base-revision: main
-          tag: '3.10' # specific cimg/python
-          config-path: .circleci/unittest-config.yml
-          mapping: |
-            api/.* run_go_ut true
-            cmd/.* run_go_ut true
-            pkg/.* run_go_ut true
-            contrib/.* run_go_ut true
-            .circleci/unittest-config.yml run_go_ut true 
-            bazel/.* run_cpp_ut true
-            engine/.* run_cpp_ut true
-            .bazelrc run_cpp_ut true
-            .bazeliskrc run_cpp_ut true
-            MODULE.bazel run_cpp_ut true
-            .circleci/unittest-config.yml run_cpp_ut true
-  run_regtest:
-    when: << pipeline.parameters.enable_regtest >>
-    jobs:
-      - path-filtering/filter:
-          base-revision: main
-          tag: '3.10'
-          config-path: .circleci/regtest-config.yml
-          mapping: |
-            api/.* run_regtest true
-            bazel/.* run_regtest true
-            cmd/.* run_regtest true
-            engine/.* run_regtest true
-            pkg/.* run_regtest true
-            .bazelrc run_regtest true
-            .circleci/regtest-config.yml run_regtest true
-  publish-workflow:
-    when:
-      equal: [ "release", << pipeline.parameters.GHA_Event >> ]
-    jobs:
-      - continuation/continue:
-          configuration_path: .circleci/release-config.yml
-          # This is mandatory to trigger a pipeline when pushing a tag
-          filters:
-            tags:
-              only: /.*(?<!dev\d{8})$/
+      - go_test_job
+      - cpp_test_job
