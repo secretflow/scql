@@ -21,6 +21,7 @@ setup: true
 orbs:
   path-filtering: circleci/path-filtering@1.2.0
   continuation: circleci/continuation@1.0.0
+  codecov: codecov/codecov@5.4.3
 
 parameters:
   GHA_Actor:
@@ -38,6 +39,47 @@ parameters:
   enable_regtest:
     type: boolean
     default: false
+
+jobs:
+  go_coverage_job_linux_amd:
+    docker:
+      - image: secretflow/scql-ci:latest
+    resource_class: 2xlarge
+    steps:
+      - checkout
+      - run:
+          name: "Install GPG for Codecov"
+          command: apt-get update && apt-get install -y gnupg
+      - run:
+          name: "Run Go Test with Coverage"
+          command: go test -v -coverprofile=coverage.out ./pkg/... ./contrib/...
+      - codecov/upload:
+          files: "coverage.out"
+          flags: "go-linux-amd"
+
+  cpp_coverage_job_linux_amd:
+    docker:
+      - image: secretflow/scql-ci:latest
+    resource_class: 2xlarge
+    steps:
+      - checkout
+      - run:
+          name: "Install GPG for Codecov"
+          command: apt-get update && apt-get install -y gnupg
+      - run:
+          name: "Checkout devtools"
+          command: git clone https://github.com/secretflow/devtools.git ../devtools
+      - run:
+          name: "Setup GCS"
+          command: |
+            echo ${gcs_content} > ../gcs.data
+            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
+      - run:
+          name: "Run Cpp Test with Coverage"
+          command: bazelisk --host_jvm_args=-Xmx8g coverage //engine/... --nocache_test_results --combined_report=lcov --jobs=32
+      - codecov/upload:
+          files: "bazel-out/_coverage/_coverage_report.dat"
+          flags: "cpp-linux-amd"
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
@@ -66,6 +108,7 @@ workflows:
             .bazeliskrc run_cpp_ut true
             MODULE.bazel run_cpp_ut true
             .circleci/unittest-config.yml run_cpp_ut true
+
   run_regtest:
     when: << pipeline.parameters.enable_regtest >>
     jobs:
@@ -81,6 +124,7 @@ workflows:
             pkg/.* run_regtest true
             .bazelrc run_regtest true
             .circleci/regtest-config.yml run_regtest true
+
   publish-workflow:
     when:
       equal: [ "release", << pipeline.parameters.GHA_Event >> ]
@@ -91,3 +135,12 @@ workflows:
           filters:
             tags:
               only: /.*(?<!dev\d{8})$/
+
+  run_coverage_check:
+    when:
+      matches:
+        subject: /.*\[run-coverage\].*/
+        on: git.commit_message
+    jobs:
+      - go_coverage_job_linux_amd
+      - cpp_coverage_job_linux_amd
