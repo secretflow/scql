@@ -141,7 +141,7 @@ workflows:
       and:
         - matches:
             pattern: ".*\\[run-coverage\\].*"
-            value: "<< pipeline.git.commit_message >>"
+            value: "<< pipeline.trigger_parameters.github_app.commit_message >>"
     jobs:
       - go_coverage_job_linux_amd
       - cpp_coverage_job_linux_amd
