@@ -138,9 +138,10 @@ workflows:
 
   run_coverage_check:
     when:
-      matches:
-        subject: /.*\[run-coverage\].*/
-        on: git.commit_message
+      and:
+        - matches:
+            pattern: ".*\\[run-coverage\\].*"
+            value: "<< pipeline.git.commit_message >>"
     jobs:
       - go_coverage_job_linux_amd
       - cpp_coverage_job_linux_amd
