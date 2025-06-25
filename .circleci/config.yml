@@ -41,28 +41,50 @@ parameters:
     default: false
 
 jobs:
-  gatekeeper_check_coverage_run:
+  decider_check_coverage_run:
     docker:
       - image: cimg/base:stable
     steps:
       - checkout
       - run:
-          name: Check for [run-coverage] tag in commit message
+          name: Decide which coverage jobs to run
           command: |
-            FULL_COMMIT_MESSAGE=$(git log --format=%B -n 1 $CIRCLE_SHA1)
+            mkdir -p /tmp/workspace
+            echo "export RUN_GO_COVERAGE=false" > /tmp/workspace/decision.env
+            echo "export RUN_CPP_COVERAGE=false" >> /tmp/workspace/decision.env
 
-            if [[ $FULL_COMMIT_MESSAGE != *"[run-coverage]"* ]]; then
-              echo "Commit message does not contain [run-coverage]. Halting workflow."
-              circleci-agent step halt
-            else
-              echo "Found [run-coverage] tag. Proceeding with coverage jobs."
+            COMMIT_SUBJECT=$(git log -1 --pretty=%s)
+            echo "Commit subject: $COMMIT_SUBJECT"
+
+            if [[ $COMMIT_SUBJECT == *"[run-go-coverage]"* || $COMMIT_SUBJECT == *"[run-coverage]"* ]]; then
+              echo "Approving Go coverage job to run."
+              echo "export RUN_GO_COVERAGE=true" >> /tmp/workspace/decision.env
             fi
+
+            if [[ $COMMIT_SUBJECT == *"[run-cpp-coverage]"* || $COMMIT_SUBJECT == *"[run-coverage]"* ]]; then
+              echo "Approving Cpp coverage job to run."
+              echo "export RUN_CPP_COVERAGE=true" >> /tmp/workspace/decision.env
+            fi
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - decision.env
 
   go_coverage_job_linux_amd:
     docker:
       - image: secretflow/scql-ci:latest
     resource_class: 2xlarge
     steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Check decision before running
+          command: |
+            source /tmp/workspace/decision.env
+            if [ "$RUN_GO_COVERAGE" != "true" ]; then
+              echo "Halting job: RUN_GO_COVERAGE is not set to true."
+              circleci-agent step halt
+            fi
       - checkout
       - run:
           name: "Install GPG for Codecov"
@@ -79,6 +101,16 @@ jobs:
       - image: secretflow/scql-ci:latest
     resource_class: 2xlarge
     steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Check decision before running
+          command: |
+            source /tmp/workspace/decision.env
+            if [ "$RUN_CPP_COVERAGE" != "true" ]; then
+              echo "Halting job: RUN_CPP_COVERAGE is not set to true."
+              circleci-agent step halt
+            fi
       - checkout
       - run:
           name: "Install GPG for Codecov"
