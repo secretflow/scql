@@ -160,10 +160,10 @@ workflows:
       - gatekeeper_check_coverage_run
       - go_coverage_job_linux_amd:
           requires:
-            - gatekeeper_check_coverage_run
+            - decider_check_coverage_run
       - cpp_coverage_job_linux_amd:
           requires:
-            - gatekeeper_check_coverage_run
+            - decider_check_coverage_run
 
   run_regtest:
     when: << pipeline.parameters.enable_regtest >>
