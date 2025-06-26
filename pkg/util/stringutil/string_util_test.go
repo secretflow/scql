@@ -249,7 +249,7 @@ func TestIsDateString(t *testing.T) {
 	}
 }
 
-func TestStringToUnixMilli(t *testing.T) {
+func TestStringToUnixSec(t *testing.T) {
 	r := require.New(t)
 	type pair struct {
 		in         string
@@ -367,6 +367,130 @@ func TestStringToUnixSecWithTimezone(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, tc.expectUnix, unixSec)
+			}
+		})
+	}
+}
+
+func TestMySQLDateFormatToGoLayout(t *testing.T) {
+	r := require.New(t)
+
+	type testCase struct {
+		mysqlFormat string
+		expectedGo  string
+		expectErr   bool
+	}
+
+	cases := []testCase{
+		{"%Y-%m-%d", "2006-01-02", false},
+		{"%Y-%m-%d %H:%i:%s", "2006-01-02 15:04:05", false},
+		{"%r", "03:04:05 PM", false},
+		{"%T", "15:04:05", false},
+		{"%b %d, %Y", "Jan 02, 2006", false},
+		{"%M %d, %Y", "January 02, 2006", false},
+		{"%H:%i", "15:04", false},
+		{"%p", "PM", false},
+		{"%%", "%", false},
+		{"%Y/%m/%d", "2006/01/02", false},
+		{"2024-%m-%d", "2024-01-02", false},
+		{"%x-%m-%d", "", true}, // unsupported specifier %x
+		{"%Y-%m-%", "", true},  // trailing %
+	}
+
+	for _, ca := range cases {
+		out, err := MySQLDateFormatToGoLayout(ca.mysqlFormat)
+		if ca.expectErr {
+			r.Error(err, ca.mysqlFormat)
+		} else {
+			r.NoError(err, ca.mysqlFormat)
+			r.Equal(ca.expectedGo, out, ca.mysqlFormat)
+		}
+	}
+}
+
+func TestMySQLDateFormatToArrowFormat(t *testing.T) {
+	r := require.New(t)
+
+	type testCase struct {
+		name             string
+		mysqlFormat      string
+		expectedArrowFmt string
+		expectErr        bool
+	}
+
+	// A slice of test cases covering various scenarios.
+	cases := []testCase{
+		{
+			name:             "Common MySQL datetime format with %i and %s",
+			mysqlFormat:      "%Y-%m-%d %H:%i:%s",
+			expectedArrowFmt: "%Y-%m-%d %H:%M:%S", // %i -> %M, %s -> %S
+			expectErr:        false,
+		},
+		{
+			name:             "Format with full month name (%M) and non-padded day (%e)",
+			mysqlFormat:      "%M %e, %Y",
+			expectedArrowFmt: "%B %-d, %Y", // %M -> %B, %e -> %-d
+			expectErr:        false,
+		},
+		{
+			name:             "12-hour format shortcut (%r)",
+			mysqlFormat:      "%r",
+			expectedArrowFmt: "%I:%M:%S %p",
+			expectErr:        false,
+		},
+		{
+			name:             "24-hour format shortcut (%T) with microseconds (%f)",
+			mysqlFormat:      "%T.%f",
+			expectedArrowFmt: "%H:%M:%S.%f",
+			expectErr:        false,
+		},
+		{
+			name:             "Format with literal percent sign (%%)",
+			mysqlFormat:      "Progress: 100%%",
+			expectedArrowFmt: "Progress: 100%",
+			expectErr:        false,
+		},
+		{
+			name:             "Format with abbreviated names",
+			mysqlFormat:      "%a, %d %b %Y",
+			expectedArrowFmt: "%a, %d %b %Y", // These map directly
+			expectErr:        false,
+		},
+		{
+			name:             "Empty format string",
+			mysqlFormat:      "",
+			expectedArrowFmt: "",
+			expectErr:        false,
+		},
+		{
+			name:             "Unsupported specifier %j",
+			mysqlFormat:      "%Y-%j", // %j for day of year is not in our map
+			expectedArrowFmt: "",
+			expectErr:        true,
+		},
+		{
+			name:             "Dangling percent at the end",
+			mysqlFormat:      "Error %",
+			expectedArrowFmt: "",
+			expectErr:        true,
+		},
+		{
+			name:             "Plain string with no specifiers",
+			mysqlFormat:      "A simple literal string",
+			expectedArrowFmt: "A simple literal string",
+			expectErr:        false,
+		},
+	}
+
+	for _, ca := range cases {
+		t.Run(ca.name, func(t *testing.T) {
+			arrowFmt, err := MySQLDateFormatToArrowFormat(ca.mysqlFormat)
+
+			if ca.expectErr {
+				r.Error(err, "Expected an error for mysqlFormat: '%s'", ca.mysqlFormat)
+			} else {
+				r.NoError(err, "Did not expect an error for mysqlFormat: '%s'", ca.mysqlFormat)
+				r.Equal(ca.expectedArrowFmt, arrowFmt, "Format string mismatch for mysqlFormat: '%s'", ca.mysqlFormat)
 			}
 		})
 	}
