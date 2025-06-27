@@ -3,7 +3,7 @@ name: "Trigger CircleCI Workflows"
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-  
+
   pull_request_target:
     types: [labeled]
 
@@ -38,7 +38,7 @@ jobs:
             }
         env:
           CCI_TOKEN: ${{ secrets.CCI_TOKEN }}
-      
+
       - name: "Trigger Go Coverage on Label"
         if: (github.event_name == 'pull_request_target') && (github.event.label.name == 'run go coverage')
         uses: CircleCI-Public/trigger-circleci-pipeline-action@v1.2.0
