@@ -39,107 +39,41 @@ parameters:
   enable_regtest:
     type: boolean
     default: false
+  run_unit_test: { type: boolean, default: false }
+  run_go_coverage: { type: boolean, default: false }
+  run_cpp_coverage: { type: boolean, default: false }
+  pr_number: { type: integer, default: 0 }
 
 jobs:
-  decider_check_coverage_run:
-    docker:
-      - image: cimg/base:stable
+  go_coverage_job:
+    docker: { image: secretflow/scql-ci:latest, resource_class: 2xlarge }
     steps:
       - checkout
-      - run:
-          name: Decide which coverage jobs to run
-          command: |
-            mkdir -p /tmp/workspace
-            echo "export RUN_GO_COVERAGE=false" > /tmp/workspace/decision.env
-            echo "export RUN_CPP_COVERAGE=false" >> /tmp/workspace/decision.env
-
-            COMMIT_SUBJECT=$(git log -1 --pretty=%s)
-            echo "Commit subject: $COMMIT_SUBJECT"
-
-            if [[ $COMMIT_SUBJECT == *"[run-go-coverage]"* || $COMMIT_SUBJECT == *"[run-coverage]"* ]]; then
-              echo "Approving Go coverage job to run."
-              echo "export RUN_GO_COVERAGE=true" >> /tmp/workspace/decision.env
-            fi
-
-            if [[ $COMMIT_SUBJECT == *"[run-cpp-coverage]"* || $COMMIT_SUBJECT == *"[run-coverage]"* ]]; then
-              echo "Approving Cpp coverage job to run."
-              echo "export RUN_CPP_COVERAGE=true" >> /tmp/workspace/decision.env
-            fi
-      - persist_to_workspace:
-          root: /tmp/workspace
-          paths:
-            - decision.env
-
-  go_coverage_job_linux_amd:
-    docker:
-      - image: secretflow/scql-ci:latest
-    resource_class: 2xlarge
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - run:
-          name: Check decision before running
-          command: |
-            source /tmp/workspace/decision.env
-            if [ "$RUN_GO_COVERAGE" != "true" ]; then
-              echo "Halting job: RUN_GO_COVERAGE is not set to true."
-              circleci-agent step halt
-            fi
-      - checkout
-      - run:
-          name: "Install GPG for Codecov"
-          command: apt-get update && apt-get install -y gnupg
-      - run:
-          name: "Run Go Test with Coverage"
-          command: go test -v -coverprofile=coverage.out ./pkg/... ./contrib/...
+      - run: { name: "Install GPG", command: "apt-get update && apt-get install -y gnupg" }
+      - run: { name: "Run Go Test with Coverage", command: "go test -v -coverprofile=coverage.out ./pkg/... ./contrib/..." }
       - codecov/upload:
           files: "coverage.out"
           flags: "go-linux-amd"
+          pr: << pipeline.parameters.pr_number >>
 
-  cpp_coverage_job_linux_amd:
-    docker:
-      - image: secretflow/scql-ci:latest
-    resource_class: 2xlarge
+  cpp_coverage_job:
+    docker: { image: secretflow/scql-ci:latest, resource_class: 2xlarge }
     steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - run:
-          name: Check decision before running
-          command: |
-            source /tmp/workspace/decision.env
-            if [ "$RUN_CPP_COVERAGE" != "true" ]; then
-              echo "Halting job: RUN_CPP_COVERAGE is not set to true."
-              circleci-agent step halt
-            fi
       - checkout
-      - run:
-          name: "Install GPG for Codecov"
-          command: apt-get update && apt-get install -y gnupg
-      - run:
-          name: "Checkout devtools"
-          command: git clone https://github.com/secretflow/devtools.git ../devtools
-      - run:
-          name: "Setup GCS"
-          command: |
-            echo ${gcs_content} > ../gcs.data
-            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
-      - run:
-          name: "Run Cpp Test with Coverage"
-          command: bazelisk --host_jvm_args=-Xmx8g coverage //engine/... --nocache_test_results --combined_report=lcov --jobs=32
+      - run: { name: "Install GPG", command: "apt-get update && apt-get install -y gnupg" }
+      - run: { name: "Checkout devtools", command: "git clone https://github.com/secretflow/devtools.git ../devtools" }
+      - run: { name: "Setup GCS", command: "echo ${gcs_content} > ../gcs.data && ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download" }
+      - run: { name: "Run Cpp Test with Coverage", command: "bazelisk --host_jvm_args=-Xmx8g coverage //engine/... --nocache_test_results --combined_report=lcov --jobs=32" }
       - codecov/upload:
           files: "bazel-out/_coverage/_coverage_report.dat"
           flags: "cpp-linux-amd"
+          pr: << pipeline.parameters.pr_number >>
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
   run_ut:
-    when:
-      and:
-        - not: << pipeline.parameters.enable_regtest >>
-        - not: << pipeline.parameters.GHA_Action >>
-        - not: << pipeline.parameters.GHA_Meta >>
-        - not: << pipeline.parameters.GHA_Event >>
+    when: << pipeline.parameters.run_unit_test >>
     jobs:
       - path-filtering/filter:
           base-revision: main
@@ -157,13 +91,13 @@ workflows:
             .bazeliskrc run_cpp_ut true
             MODULE.bazel run_cpp_ut true
             .circleci/unittest-config.yml run_cpp_ut true
-      - decider_check_coverage_run
-      - go_coverage_job_linux_amd:
-          requires:
-            - decider_check_coverage_run
-      - cpp_coverage_job_linux_amd:
-          requires:
-            - decider_check_coverage_run
+
+  run_coverage:
+    jobs:
+      - go_coverage_job:
+        when: << pipeline.parameters.run_go_coverage >>
+      - cpp_coverage_job:
+        when: << pipeline.parameters.run_cpp_coverage >>
 
   run_regtest:
     when: << pipeline.parameters.enable_regtest >>

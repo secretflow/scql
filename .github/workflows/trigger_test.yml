@@ -1,0 +1,80 @@
+name: "Trigger CircleCI Workflows"
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  
+  pull_request_target:
+    types: [labeled]
+
+jobs:
+  trigger-circleci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Trigger Unit Tests for Members on Push"
+        if: |
+          (github.event_name == 'pull_request') &&
+          (github.event.pull_request.author_association == 'MEMBER' || github.event.pull_request.author_association == 'OWNER')
+        uses: CircleCI-Public/trigger-circleci-pipeline-action@v1.2.0
+        with:
+          branch: ${{ github.head_ref }}
+          pipeline-parameters: |
+            {
+              "run_unit_test": true,
+              "pr_number": ${{ github.event.pull_request.number }}
+            }
+        env:
+          CCI_TOKEN: ${{ secrets.CCI_TOKEN }}
+
+      - name: "Trigger Unit Tests on Label"
+        if: (github.event_name == 'pull_request_target') && (github.event.label.name == 'run unittest')
+        uses: CircleCI-Public/trigger-circleci-pipeline-action@v1.2.0
+        with:
+          branch: ${{ github.event.pull_request.head.ref }}
+          pipeline-parameters: |
+            {
+              "run_unit_test": true,
+              "pr_number": ${{ github.event.pull_request.number }}
+            }
+        env:
+          CCI_TOKEN: ${{ secrets.CCI_TOKEN }}
+      
+      - name: "Trigger Go Coverage on Label"
+        if: (github.event_name == 'pull_request_target') && (github.event.label.name == 'run go coverage')
+        uses: CircleCI-Public/trigger-circleci-pipeline-action@v1.2.0
+        with:
+          branch: ${{ github.event.pull_request.head.ref }}
+          pipeline-parameters: |
+            {
+              "run_go_coverage": true,
+              "pr_number": ${{ github.event.pull_request.number }}
+            }
+        env:
+          CCI_TOKEN: ${{ secrets.CCI_TOKEN }}
+
+      - name: "Trigger Cpp Coverage on Label"
+        if: (github.event_name == 'pull_request_target') && (github.event.label.name == 'run cpp coverage')
+        uses: CircleCI-Public/trigger-circleci-pipeline-action@v1.2.0
+        with:
+          branch: ${{ github.event.pull_request.head.ref }}
+          pipeline-parameters: |
+            {
+              "run_cpp_coverage": true,
+              "pr_number": ${{ github.event.pull_request.number }}
+            }
+        env:
+          CCI_TOKEN: ${{ secrets.CCI_TOKEN }}
+
+      - name: "Trigger All Coverage on Label"
+        if: (github.event_name == 'pull_request_target') && (github.event.label.name == 'run coverage')
+        uses: CircleCI-Public/trigger-circleci-pipeline-action@v1.2.0
+        with:
+          branch: ${{ github.event.pull_request.head.ref }}
+          pipeline-parameters: |
+            {
+              "run_go_coverage": true,
+              "run_cpp_coverage": true,
+              "pr_number": ${{ github.event.pull_request.number }}
+            }
+        env:
+          CCI_TOKEN: ${{ secrets.CCI_TOKEN }}
