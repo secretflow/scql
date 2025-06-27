@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-06-12 17:11+0800\n"
+"POT-Creation-Date: 2025-06-27 06:49+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.13.0\n"
+"Generated-By: Babel 2.17.0\n"
 
 #: ../../topics/ccl/intro.rst:2
 msgid "SCQL CCL"
@@ -114,9 +114,9 @@ msgstr "``PLAINTEXT``: 允许以任何形式（包括明文）进行计算和披
 
 #: ../../topics/ccl/intro.rst:24
 msgid ""
-"``PLAINTEXT_AFTER_JOIN``: The data is allowed to be used as the key of "
-"INNER JOIN, and can be revealed in plaintext after JOIN."
-msgstr "``PLAINTEXT_AFTER_JOIN``: 允许作为 INNER JOIN 的 key，经过 JOIN 后可以明文披露。"
+"``PLAINTEXT_AFTER_JOIN``: The data can be revealed in plaintext after "
+"JOIN."
+msgstr "``PLAINTEXT_AFTER_JOIN``: 通过 JOIN 获取的交集结果可以明文披露。"
 
 #: ../../topics/ccl/intro.rst:25
 msgid ""
@@ -219,7 +219,7 @@ msgstr ""
 "Logical Plan。Translator 将检查根节点即结果的CCL，仅当结果对 query 发起者的约束为 ``PLAINTEXT`` "
 "时，才允许 query 继续执行，否则拒绝此 query 的执行。"
 
-#: ../../topics/ccl/intro.rst:-1
+#: ../../topics/ccl/intro.rst:49
 msgid "Logical Plan with CCL"
 msgstr ""
 
@@ -258,12 +258,15 @@ msgid ""
 " intersection result is ``PLAINTEXT`` for **InnerJoin**; for "
 "**LeftOuterJoin**, only the intersection of the right JOIN key becomes "
 "``PLAINTEXT``; for **RightOutJoin**, the intersection of the left JOIN "
-"key becomes ``PLAINTEXT``."
+"key becomes ``PLAINTEXT``. Please note that for parties who do not "
+"retrieve join results or use join payloads, it is not necessary to set "
+"them to ``PLAINTEXT_AFTER_JOIN``."
 msgstr ""
 "当 JOIN keys 的 CCL constraint 均为 ``PLAINTEXT_AFTER_JOIN`` 或 ``PLAINTEXT`` "
 "时，则对于 **InnerJoin** ， JOIN keys 交集结果的 CCL 变为 ``PLAINTEXT`` ，对于 "
 "**LeftOuterJoin** ，只有右 JOIN key 的交集结果的 CCL 变为 ``PLAINTEXT`` ， 对于 "
-"**RightOuterJoin** ，则是左 JOIN key 的交集结果变为 ``PLAINTEXT`` 。"
+"**RightOuterJoin** ，则是左 JOIN key 的交集结果变为 ``PLAINTEXT`` 。请注意对于完全不获取 join "
+"keys 也不使用 join payloads 的参与方则不必设置为 ``PLAINTEXT_AFTER_JOIN``。"
 
 #: ../../topics/ccl/intro.rst:65
 msgid "**Group By**"

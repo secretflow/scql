@@ -43,6 +43,22 @@ CCL settings of table t2 at Bob
 .. code-block:: SQL
 
     -- Both Alice and Bob can get the intersection of ids
+    select t1.id, t2.id from t1 join t2 on t1.id = t2.id;
+
+Only one party the intersection of ids using join
+"""""""""""""""""""""""""""""""""""""""""""""""""
+
+CCL settings of table t1 at Alice
+  * ``<id, Bob, ENCRYPTED_ONLY>``
+  * ``<id, Alice, PLAINTEXT>``
+
+CCL settings of table t2 at Bob
+  * ``<id, Alice, PLAINTEXT_AFTER_JOIN>``
+  * ``<id, Bob, PLAINTEXT>``
+
+.. code-block:: SQL
+
+    -- Alice can get the intersection of ids, but Bob Can't
     select t1.id from t1 join t2 on t1.id = t2.id;
 
 Get ids both in t1.id and in t2.id using in
