@@ -50,6 +50,7 @@ jobs:
       - image: secretflow/scql-ci:latest
     resource_class: 2xlarge
     steps:
+      - run: echo "run_go_coverage is << pipeline.parameters.run_go_coverage >>"
       - when:
           condition:
             equal: [true, << pipeline.parameters.run_go_coverage >>]
@@ -67,6 +68,7 @@ jobs:
       - image: secretflow/scql-ci:latest
     resource_class: 2xlarge
     steps:
+      - run: echo "run_cpp_coverage is << pipeline.parameters.run_cpp_coverage >>"
       - when:
           condition:
             equal: [true, << pipeline.parameters.run_cpp_coverage >>]
