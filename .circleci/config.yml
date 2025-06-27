@@ -45,31 +45,6 @@ parameters:
   pr_number: { type: integer, default: 0 }
 
 jobs:
-  unit_test_job:
-    docker:
-      - image: cimg/python:3.10
-    steps:
-      - when:
-          condition:
-            equal: [true, << pipeline.parameters.run_unit_test >>]
-          steps:
-            - path-filtering/filter:
-                base-revision: main
-                # tag: '3.10' # specific cimg/python
-                config-path: .circleci/unittest-config.yml
-                mapping: |
-                  api/.* run_go_ut true
-                  cmd/.* run_go_ut true
-                  pkg/.* run_go_ut true
-                  contrib/.* run_go_ut true
-                  .circleci/unittest-config.yml run_go_ut true
-                  bazel/.* run_cpp_ut true
-                  engine/.* run_cpp_ut true
-                  .bazelrc run_cpp_ut true
-                  .bazeliskrc run_cpp_ut true
-                  MODULE.bazel run_cpp_ut true
-                  .circleci/unittest-config.yml run_cpp_ut true
-
   go_coverage_job:
     docker:
       - image: secretflow/scql-ci:latest
@@ -117,7 +92,22 @@ workflows:
           - equal: [true, << pipeline.parameters.run_go_coverage >>]
           - equal: [true, << pipeline.parameters.run_cpp_coverage >>]
     jobs:
-      - unit_test_job
+      - path-filtering/filter:
+          base-revision: main
+          tag: '3.10' # specific cimg/python
+          config-path: .circleci/unittest-config.yml
+          mapping: |
+            api/.* run_go_ut true
+            cmd/.* run_go_ut true
+            pkg/.* run_go_ut true
+            contrib/.* run_go_ut true
+            .circleci/unittest-config.yml run_go_ut true
+            bazel/.* run_cpp_ut true
+            engine/.* run_cpp_ut true
+            .bazelrc run_cpp_ut true
+            .bazeliskrc run_cpp_ut true
+            MODULE.bazel run_cpp_ut true
+            .circleci/unittest-config.yml run_cpp_ut true
       - go_coverage_job
       - cpp_coverage_job
 
