@@ -46,6 +46,8 @@ parameters:
 
 jobs:
   unit_test_job:
+    docker:
+      - image: cimg/python:3.10
     steps:
       - when:
           condition:
@@ -53,7 +55,7 @@ jobs:
           steps:
             - path-filtering/filter:
               base-revision: main
-              tag: '3.10' # specific cimg/python
+              # tag: '3.10' # specific cimg/python
               config-path: .circleci/unittest-config.yml
               mapping: |
                 api/.* run_go_ut true
@@ -107,7 +109,7 @@ jobs:
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  run_ut:
+  run_ut_cov:
     when:
       condition:
         or:
