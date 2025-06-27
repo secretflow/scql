@@ -58,7 +58,7 @@ CCL settings of table t2 at Bob
 
 .. code-block:: SQL
 
-    -- Alice can get the intersection of ids, but Bob Can't
+    -- Alice can get the intersection of ids, but Bob cannot
     select t1.id from t1 join t2 on t1.id = t2.id;
 
 Get ids both in t1.id and in t2.id using in

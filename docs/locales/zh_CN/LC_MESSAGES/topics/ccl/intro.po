@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-27 06:49+0000\n"
+"POT-Creation-Date: 2025-06-27 07:43+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -114,8 +114,8 @@ msgstr "``PLAINTEXT``: 允许以任何形式（包括明文）进行计算和披
 
 #: ../../topics/ccl/intro.rst:24
 msgid ""
-"``PLAINTEXT_AFTER_JOIN``: The data can be revealed in plaintext after "
-"JOIN."
+"``PLAINTEXT_AFTER_JOIN``: Allows the join intersection to be revealed in "
+"plaintext when this column is used as a join key."
 msgstr "``PLAINTEXT_AFTER_JOIN``: 通过 JOIN 获取的交集结果可以明文披露。"
 
 #: ../../topics/ccl/intro.rst:25
