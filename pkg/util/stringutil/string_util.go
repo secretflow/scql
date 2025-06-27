@@ -502,7 +502,3 @@ func MySQLDateFormatToArrowFormat(mysqlFormat string) (string, error) {
 	}
 	return result.String(), nil
 }
-
-func TestString() string {
-	return "test"
-}
