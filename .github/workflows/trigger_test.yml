@@ -20,8 +20,7 @@ jobs:
           branch: ${{ github.head_ref }}
           pipeline-parameters: |
             {
-              "run_unit_test": true,
-              "pr_number": ${{ github.event.pull_request.number }}
+              "run_unit_test": true
             }
         env:
           CCI_TOKEN: ${{ secrets.CCI_TOKEN }}
@@ -33,8 +32,7 @@ jobs:
           branch: ${{ github.event.pull_request.head.ref }}
           pipeline-parameters: |
             {
-              "run_unit_test": true,
-              "pr_number": ${{ github.event.pull_request.number }}
+              "run_unit_test": true
             }
         env:
           CCI_TOKEN: ${{ secrets.CCI_TOKEN }}
@@ -47,7 +45,7 @@ jobs:
           pipeline-parameters: |
             {
               "run_go_coverage": true,
-              "pr_number": ${{ github.event.pull_request.number }}
+              "pr_number": "${{ github.event.pull_request.number }}"
             }
         env:
           CCI_TOKEN: ${{ secrets.CCI_TOKEN }}
@@ -60,7 +58,7 @@ jobs:
           pipeline-parameters: |
             {
               "run_cpp_coverage": true,
-              "pr_number": ${{ github.event.pull_request.number }}
+              "pr_number": "${{ github.event.pull_request.number }}"
             }
         env:
           CCI_TOKEN: ${{ secrets.CCI_TOKEN }}
@@ -74,7 +72,7 @@ jobs:
             {
               "run_go_coverage": true,
               "run_cpp_coverage": true,
-              "pr_number": ${{ github.event.pull_request.number }}
+              "pr_number": "${{ github.event.pull_request.number }}"
             }
         env:
           CCI_TOKEN: ${{ secrets.CCI_TOKEN }}

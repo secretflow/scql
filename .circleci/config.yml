@@ -42,7 +42,7 @@ parameters:
   run_unit_test: { type: boolean, default: false }
   run_go_coverage: { type: boolean, default: false }
   run_cpp_coverage: { type: boolean, default: false }
-  pr_number: { type: integer, default: 0 }
+  pr_number: { type: string, default: "0" }
 
 jobs:
   go_coverage_job:
