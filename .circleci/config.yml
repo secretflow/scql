@@ -45,59 +45,79 @@ parameters:
   pr_number: { type: integer, default: 0 }
 
 jobs:
-  go_coverage_job:
-    docker: { image: secretflow/scql-ci:latest, resource_class: 2xlarge }
+  unit_test_job:
     steps:
-      - checkout
-      - run: { name: "Install GPG", command: "apt-get update && apt-get install -y gnupg" }
-      - run: { name: "Run Go Test with Coverage", command: "go test -v -coverprofile=coverage.out ./pkg/... ./contrib/..." }
-      - codecov/upload:
-          files: "coverage.out"
-          flags: "go-linux-amd"
-          pr: << pipeline.parameters.pr_number >>
+      - when:
+        condition:
+          equal: [true, << pipeline.parameters.run_unit_test >>]
+        steps:
+          - path-filtering/filter:
+            base-revision: main
+            tag: '3.10' # specific cimg/python
+            config-path: .circleci/unittest-config.yml
+            mapping: |
+              api/.* run_go_ut true
+              cmd/.* run_go_ut true
+              pkg/.* run_go_ut true
+              contrib/.* run_go_ut true
+              .circleci/unittest-config.yml run_go_ut true
+              bazel/.* run_cpp_ut true
+              engine/.* run_cpp_ut true
+              .bazelrc run_cpp_ut true
+              .bazeliskrc run_cpp_ut true
+              MODULE.bazel run_cpp_ut true
+              .circleci/unittest-config.yml run_cpp_ut true
+
+  go_coverage_job:
+    docker:
+      - image: secretflow/scql-ci:latest
+    resource_class: 2xlarge
+    steps:
+      - when:
+        condition:
+          equal: [true, << pipeline.parameters.run_go_coverage >>]
+        steps:
+          - checkout
+          - run: { name: "Install GPG", command: "apt-get update && apt-get install -y gnupg" }
+          - run: { name: "Run Go Test with Coverage", command: "go test -v -coverprofile=coverage.out ./pkg/... ./contrib/..." }
+          - codecov/upload:
+              files: "coverage.out"
+              flags: "go-linux-amd"
+              pr: << pipeline.parameters.pr_number >>
 
   cpp_coverage_job:
-    docker: { image: secretflow/scql-ci:latest, resource_class: 2xlarge }
+    docker:
+      - image: secretflow/scql-ci:latest
+    resource_class: 2xlarge
     steps:
-      - checkout
-      - run: { name: "Install GPG", command: "apt-get update && apt-get install -y gnupg" }
-      - run: { name: "Checkout devtools", command: "git clone https://github.com/secretflow/devtools.git ../devtools" }
-      - run: { name: "Setup GCS", command: "echo ${gcs_content} > ../gcs.data && ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download" }
-      - run: { name: "Run Cpp Test with Coverage", command: "bazelisk --host_jvm_args=-Xmx8g coverage //engine/... --nocache_test_results --combined_report=lcov --jobs=32" }
-      - codecov/upload:
-          files: "bazel-out/_coverage/_coverage_report.dat"
-          flags: "cpp-linux-amd"
-          pr: << pipeline.parameters.pr_number >>
+      - when:
+        condition:
+          equal: [true, << pipeline.parameters.run_cpp_coverage >>]
+        steps:
+          - checkout
+          - run: { name: "Install GPG", command: "apt-get update && apt-get install -y gnupg" }
+          - run: { name: "Checkout devtools", command: "git clone https://github.com/secretflow/devtools.git ../devtools" }
+          - run: { name: "Setup GCS", command: "echo ${gcs_content} > ../gcs.data && ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download" }
+          - run: { name: "Run Cpp Test with Coverage", command: "bazelisk --host_jvm_args=-Xmx8g coverage //engine/... --nocache_test_results --combined_report=lcov --jobs=32" }
+          - codecov/upload:
+              files: "bazel-out/_coverage/_coverage_report.dat"
+              flags: "cpp-linux-amd"
+              pr: << pipeline.parameters.pr_number >>
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
   run_ut:
-    when: << pipeline.parameters.run_unit_test >>
+    when:
+      condition:
+        or:
+          - equal: [true, << pipeline.parameters.run_unit_test >>]
+          - equal: [true, << pipeline.parameters.run_go_coverage >>]
+          - equal: [true, << pipeline.parameters.run_cpp_coverage >>]
     jobs:
-      - path-filtering/filter:
-          base-revision: main
-          tag: '3.10' # specific cimg/python
-          config-path: .circleci/unittest-config.yml
-          mapping: |
-            api/.* run_go_ut true
-            cmd/.* run_go_ut true
-            pkg/.* run_go_ut true
-            contrib/.* run_go_ut true
-            .circleci/unittest-config.yml run_go_ut true 
-            bazel/.* run_cpp_ut true
-            engine/.* run_cpp_ut true
-            .bazelrc run_cpp_ut true
-            .bazeliskrc run_cpp_ut true
-            MODULE.bazel run_cpp_ut true
-            .circleci/unittest-config.yml run_cpp_ut true
-
-  run_coverage:
-    jobs:
-      - go_coverage_job:
-        when: << pipeline.parameters.run_go_coverage >>
-      - cpp_coverage_job:
-        when: << pipeline.parameters.run_cpp_coverage >>
+      - unit_test_job
+      - go_coverage_job
+      - cpp_coverage_job
 
   run_regtest:
     when: << pipeline.parameters.enable_regtest >>
