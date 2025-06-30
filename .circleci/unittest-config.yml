@@ -16,6 +16,9 @@
 # See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
 
+orbs:
+  coveralls: coveralls/coveralls@2.2.5
+
 parameters:
   enable_regtest:
     type: boolean
@@ -46,7 +49,7 @@ commands:
           command: |
             set +e
             go mod tidy
-            go test -timeout=30m -v -short ./pkg/... ./contrib/...
+            go test -timeout=30m -v -short -coverprofile=coverage.out ./pkg/... ./contrib/...
   run_cpp_test:
     description: "Run cpp tests and collect artifacts"
     parameters:
@@ -62,7 +65,7 @@ commands:
           command: |
             set +e
             declare -i test_status
-            bazelisk --host_jvm_args=-Xmx8g test //engine/... << parameters.extra_bazel_args >> --jobs=32 --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
+            bazelisk --host_jvm_args=-Xmx8g coverage //engine/... << parameters.extra_bazel_args >> --combined_report=lcov --jobs=32 --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
 
             sh ../devtools/rename-junit-xml.sh
             find bazel-bin/ << parameters.find_executable_flag >> -type f -name "*_test" -print0 | xargs -0 tar -cvzf test_binary.tar.gz
@@ -87,6 +90,7 @@ jobs:
     steps:
       - checkout
       - run_go_test
+
   linux_cpp_ut:
     docker:
       - image: secretflow/scql-ci:latest
@@ -108,6 +112,7 @@ jobs:
           path: test_binary.tar.gz
       - store_artifacts:
           path: test_logs.tar.gz
+
   macOS_go_ut:
     macos:
       xcode: 16.0.0
@@ -119,6 +124,11 @@ jobs:
           command: |
             brew install wget go
       - run_go_test
+      - coveralls/upload:
+          coverage_file: coverage.out
+          coverage_format: golang
+          flag_name: "go-tests"
+
   macOS_cpp_ut:
     macos:
       xcode: 16.0.0
@@ -141,6 +151,10 @@ jobs:
       - run_cpp_test:
           extra_bazel_args: ""  
           find_executable_flag: "-perm +111"
+      - coveralls/upload:
+          coverage_file: bazel-out/_coverage/_coverage_report.dat
+          coverage_format: lcov
+          flag_name: "cpp-tests"
       - store_test_results:
           path: test-results
       - store_artifacts:
