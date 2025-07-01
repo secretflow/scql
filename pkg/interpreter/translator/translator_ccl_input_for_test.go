@@ -84,7 +84,25 @@ var translateNumericTestCases = []sPair{
 9 -> 15 [label = "t_10:{plain_int_0:PRIVATE:FLOAT64}"]
 }`, ``, testConf{groupThreshold: 0, batched: false, revealGroupCount: false}},
 }
-var translateWithCCLTestCases = []sPair{
+var translateWithCCLTestCases = []sPair{{`SELECT rank() OVER(PARTITION BY ta.join_int_0 ORDER BY ta.plain_int_0) FROM alice.tbl_0 as ta JOIN bob.tbl_0 as tb ON ta.join_int_0 = tb.join_int_0`, `digraph G {
+0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select ta.join_int_0,ta.plain_int_0 from alice.tbl_0 as ta;,table_refs:[alice.tbl_0],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_2,},],attr:[sql:select tb.join_int_0 from bob.tbl_0 as tb;,table_refs:[bob.tbl_0],],party:[bob,]}"]
+2 [label="join:{in:[Left:{t_0,},Right:{t_2,},],out:[LeftJoinIndex:{t_3,},RightJoinIndex:{},],attr:[input_party_codes:[alice bob],join_type:0,psi_algorithm:0,],party:[alice,bob,]}"]
+3 [label="filter_by_index:{in:[Data:{t_0,t_1,},RowsIndexFilter:{t_3,},],out:[Out:{t_4,t_5,},],attr:[],party:[alice,]}"]
+4 [label="group:{in:[Key:{t_4,},],out:[GroupId:{t_6,},GroupNum:{t_7,},],attr:[],party:[alice,]}"]
+5 [label="Rank:{in:[Key:{t_5,},PartitionId:{t_6,},PartitionNum:{t_7,},],out:[Out:{t_8,},],attr:[reverse:[0],],party:[alice,]}"]
+6 [label="publish:{in:[In:{t_8,},],out:[Out:{t_9,},],attr:[],party:[alice,]}"]
+0 -> 2 [label = "t_0:{join_int_0:PRIVATE:INT64}"]
+0 -> 3 [label = "t_0:{join_int_0:PRIVATE:INT64}"]
+0 -> 3 [label = "t_1:{plain_int_0:PRIVATE:INT64}"]
+1 -> 2 [label = "t_2:{join_int_0:PRIVATE:INT64}"]
+2 -> 3 [label = "t_3:{join_int_0:PRIVATE:INT64}"]
+3 -> 4 [label = "t_4:{join_int_0:PRIVATE:INT64}"]
+3 -> 5 [label = "t_5:{plain_int_0:PRIVATE:INT64}"]
+4 -> 5 [label = "t_6:{group_id:PRIVATE:INT64}"]
+4 -> 5 [label = "t_7:{group_num:PRIVATE:INT64}"]
+5 -> 6 [label = "t_8:{Out:PRIVATE:INT64}"]
+}`, ``, testConf{groupThreshold: 0, batched: false, revealGroupCount: false}},
 	{`SELECT ta.join_int_0, ta.plain_datetime_0 from alice.tbl_0 as ta right join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0 where ta.plain_datetime_0 > str_to_date(tb.plain_string_0, '%Y-%m-%d')`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select ta.join_int_0,ta.plain_datetime_0 from alice.tbl_0 as ta;,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_2,t_3,},],attr:[sql:select tb.join_int_0,tb.plain_string_0 from bob.tbl_0 as tb;,table_refs:[bob.tbl_0],],party:[bob,]}"]
