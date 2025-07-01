@@ -14,6 +14,7 @@
 
 #include "engine/util/table_util.h"
 
+#include "arrow/array.h"
 #include "yacl/base/exception.h"
 
 namespace scql::engine::util {
@@ -41,6 +42,28 @@ std::shared_ptr<arrow::Table> ConstructTableFromTensors(
 
   auto table = arrow::Table::Make(arrow::schema(fields), chunked_arrs);
   return table;
+}
+
+std::vector<std::shared_ptr<arrow::Scalar>> GetRow(
+    const std::shared_ptr<arrow::Table>& table, int64_t idx) {
+  std::vector<std::shared_ptr<arrow::Scalar>> row;
+  int num_cols = table->num_columns();
+  for (int col = 0; col < num_cols; ++col) {
+    auto chunked_array = table->column(col);
+    int64_t offset = idx;
+    for (const auto& array : chunked_array->chunks()) {
+      if (offset < array->length()) {
+        arrow::Result<std::shared_ptr<arrow::Scalar>> scalar_result =
+            array->GetScalar(offset);
+        YACL_ENFORCE(scalar_result.ok(), "get scalar failed");
+        row.push_back(scalar_result.ValueOrDie());
+      } else {
+        offset -= array->length();
+      }
+    }
+  }
+
+  return row;
 }
 
 }  // namespace scql::engine::util

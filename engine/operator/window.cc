@@ -23,9 +23,34 @@
 #include "engine/core/arrow_helper.h"
 #include "engine/core/tensor_constructor.h"
 #include "engine/util/spu_io.h"
+#include "engine/util/table_util.h"
 #include "engine/util/tensor_util.h"
 
 namespace scql::engine::op {
+bool AreRowsEqual(const std::shared_ptr<arrow::Table>& table, int64_t i,
+                  int64_t j) {
+  auto row_i = util::GetRow(table, i);
+  auto row_j = util::GetRow(table, j);
+  if (row_i.size() != row_j.size()) {
+    return false;
+  }
+
+  for (size_t col = 0; col < row_i.size(); col++) {
+    if ((row_i[col] == nullptr && row_j[col] != nullptr) ||
+        (row_i[col] != nullptr && row_j[col] == nullptr)) {
+      return false;
+    }
+
+    if (row_i[col] != nullptr && row_j[col] != nullptr) {
+      if (!row_i[col]->Equals(*row_j[col])) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 const std::string RowNumber::kOpType("RowNumber");
 const std::string& RowNumber::Type() const { return RowNumber::kOpType; }
 
@@ -214,6 +239,40 @@ void PercentRank::RunWindowFunc(ExecContext* ctx,
                [](int64_t rank, int64_t total) { return 1.0 * rank / total; });
 
   ProcessResults(int_array->length(), percent_rank, positions, window_results_);
+}
+
+const std::string Rank::kOpType("Rank");
+const std::string& Rank::Type() const { return Rank::kOpType; }
+
+void Rank::RunWindowFunc(ExecContext* ctx, std::shared_ptr<arrow::Table> input,
+                         const std::vector<int64_t>& positions) {
+  std::shared_ptr<arrow::Array> sort_indices = GetSortedIndices(ctx, input);
+  auto int_array = std::static_pointer_cast<arrow::Int64Array>(sort_indices);
+
+  std::unordered_map<int64_t, int64_t> rank_map;
+  int64_t rank = -1;
+  int64_t last_key = -1;
+
+  for (int64_t i = 0; i < int_array->length(); i++) {
+    int64_t key = int_array->Value(i);
+    YACL_ENFORCE(rank_map.find(key) == rank_map.end(),
+                 "duplicated key in rank");
+    if (rank == -1) {
+      rank = 1;
+      last_key = key;
+    } else {
+      if (AreRowsEqual(input, last_key, key)) {
+        last_key = key;
+      } else {
+        rank = i + 1;
+        last_key = key;
+      }
+    }
+
+    rank_map[key] = rank;
+  }
+
+  ProcessResults(int_array->length(), rank_map, positions, window_results_);
 }
 
 }  // namespace scql::engine::op
