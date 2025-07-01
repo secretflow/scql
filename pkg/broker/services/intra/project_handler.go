@@ -113,7 +113,7 @@ func (svc *grpcIntraSvc) CreateProject(c context.Context, req *pb.CreateProjectR
 	// check project ID validity when working as db name
 	err = common.VerifyProjectID(project.ID)
 	if err != nil {
-		return nil, fmt.Errorf("CreateProject: failed to veriry project ID: %v", err)
+		return nil, fmt.Errorf("CreateProject: failed to verify project ID: %v", err)
 	}
 
 	err = app.MetaMgr.ExecInMetaTransaction(func(txn *storage.MetaTransaction) error {
