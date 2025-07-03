@@ -50,18 +50,10 @@ std::vector<std::shared_ptr<arrow::Scalar>> GetRow(
   int num_cols = table->num_columns();
   for (int col = 0; col < num_cols; ++col) {
     auto chunked_array = table->column(col);
-    int64_t offset = idx;
-    for (const auto& array : chunked_array->chunks()) {
-      if (offset < array->length()) {
-        arrow::Result<std::shared_ptr<arrow::Scalar>> scalar_result =
-            array->GetScalar(offset);
-        YACL_ENFORCE(scalar_result.ok(), "get scalar failed");
-        row.push_back(scalar_result.ValueOrDie());
-        break;
-      } else {
-        offset -= array->length();
-      }
-    }
+    arrow::Result<std::shared_ptr<arrow::Scalar>> scalar_result =
+        chunked_array->GetScalar(idx);
+    YACL_ENFORCE(scalar_result.ok(), "get scalar failed");
+    row.push_back(scalar_result.ValueOrDie());
   }
 
   return row;
