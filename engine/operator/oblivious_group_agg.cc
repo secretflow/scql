@@ -296,4 +296,32 @@ spu::Value ObliviousPercentileDisc::CalculateResult(spu::SPUContext* sctx,
           count));  // [0, arr[index0],...0, arr[index1], ..., 0]
   return ObliviousGroupSum().CalculateResult(sctx, percentile_values, group);
 }
+
+// ===========================
+//   ObliviousRank impl
+// ===========================
+const std::string ObliviousRank::kOpType("ObliviousRank");
+const std::string& ObliviousRank::Type() const { return kOpType; }
+
+spu::Value ObliviousRank::CalculateResult(
+    spu::SPUContext* sctx, const spu::Value& order_key_mark,
+    const spu::Value& partition_key_mark) {
+  spu::Value count = ObliviousGroupCount().CalculateResult(sctx, order_key_mark,
+                                                           partition_key_mark);
+  spu::Value recovered_group =
+      RevertGroupMaskTransfer(sctx, partition_key_mark);
+
+  spu::Value order_mask = TransferGroupMask(sctx, order_key_mark);
+  spu::Value group_min_value =
+      ObliviousGroupMin().CalculateResult(sctx, count, order_mask);
+  spu::Value rank =
+      spu::kernel::hlo::Mul(sctx, group_min_value, order_key_mark);
+  spu::Value transferred_order_key_mark = spu::kernel::hlo::Sub(
+      sctx, spu::kernel::hlo::Constant(sctx, 1, partition_key_mark.shape()),
+      order_key_mark);
+  std::vector<spu::Value> expanded_rank =
+      util::ExpandGroupValueReversely(sctx, {rank}, transferred_order_key_mark);
+
+  return expanded_rank[0];
+}
 };  // namespace scql::engine::op
