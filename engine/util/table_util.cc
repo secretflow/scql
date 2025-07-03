@@ -57,6 +57,7 @@ std::vector<std::shared_ptr<arrow::Scalar>> GetRow(
             array->GetScalar(offset);
         YACL_ENFORCE(scalar_result.ok(), "get scalar failed");
         row.push_back(scalar_result.ValueOrDie());
+        break;
       } else {
         offset -= array->length();
       }

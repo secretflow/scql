@@ -261,13 +261,11 @@ void Rank::RunWindowFunc(ExecContext* ctx, std::shared_ptr<arrow::Table> input,
       rank = 1;
       last_key = key;
     } else {
-      if (AreRowsEqual(input, last_key, key)) {
-        last_key = key;
-      } else {
+      if (!AreRowsEqual(input, last_key, key)) {
         rank = i + 1;
-        last_key = key;
       }
     }
+    last_key = key;
 
     rank_map[key] = rank;
   }
