@@ -2,8 +2,8 @@
   "queries": [
     {
       "name": "row_number and rank(private)",
-      "query": "select ta.plain_int_0, rank() over (partition by ta.join_int_1, ta.plain_int_0 order by ta.plain_float_0 desc, ta.plain_float_1 asc) as num, row_number() over (partition by ta.join_int_0, ta.plain_int_0 order by ta.plain_float_0 desc, ta.plain_float_1 asc) as num from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0;",
-      "mysql_query": "select ta.plain_int_0, rank() over (partition by ta.join_int_1, ta.plain_int_0 order by ta.plain_float_0 desc, ta.plain_float_1 asc) as num, row_number() over (partition by ta.join_int_0, ta.plain_int_0 order by ta.plain_float_0 desc, ta.plain_float_1 asc) as num from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+      "query": "select ta.plain_int_0, rank() over (partition by ta.join_int_1, ta.plain_int_0 order by ta.plain_float_0 desc, ta.plain_float_1 asc) as rank_num, row_number() over (partition by ta.join_int_0, ta.plain_int_0 order by ta.plain_float_0 desc, ta.plain_float_1 asc) as row_number_num from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0;",
+      "mysql_query": "select ta.plain_int_0, rank() over (partition by ta.join_int_1, ta.plain_int_0 order by ta.plain_float_0 desc, ta.plain_float_1 asc) as rank_num, row_number() over (partition by ta.join_int_0, ta.plain_int_0 order by ta.plain_float_0 desc, ta.plain_float_1 asc) as row_number_num from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
     },
     {
       "name": "rank(private)",
