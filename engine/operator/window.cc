@@ -259,7 +259,6 @@ void Rank::RunWindowFunc(ExecContext* ctx, std::shared_ptr<arrow::Table> input,
                  "duplicated key in rank");
     if (rank == -1) {
       rank = 1;
-      last_key = key;
     } else {
       if (!AreRowsEqual(input, last_key, key)) {
         rank = i + 1;
