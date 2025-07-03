@@ -151,4 +151,26 @@ class PercentRank : public RankWindowBase {
  private:
   std::vector<double> window_results_;
 };
+
+class Rank : public RankWindowBase {
+ public:
+  static const std::string kOpType;
+  const std::string& Type() const override;
+
+ protected:
+  void RunWindowFunc(ExecContext* ctx, std::shared_ptr<arrow::Table> input,
+                     const std::vector<int64_t>& positions) override;
+  void ExecuteInSecret(ExecContext* ctx) override {
+    YACL_THROW("not support in secret mode");
+  }
+  std::shared_ptr<arrow::ChunkedArray> GetWindowResult() override {
+    return VectorToChunkedArray(window_results_);
+  }
+  void ReserveWindowResult(size_t size) override {
+    window_results_ = std::vector<int64_t>(size, 0);
+  };
+
+ private:
+  std::vector<int64_t> window_results_;
+};
 }  // namespace scql::engine::op

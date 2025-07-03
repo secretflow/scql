@@ -24,4 +24,6 @@ namespace scql::engine::util {
 std::shared_ptr<arrow::Table> ConstructTableFromTensors(
     ExecContext* ctx, const RepeatedPbTensor& input_pbs);
 
-}
+std::vector<std::shared_ptr<arrow::Scalar>> GetRow(
+    const std::shared_ptr<arrow::Table>& table, int64_t idx);
+}  // namespace scql::engine::util

@@ -1,6 +1,11 @@
 {
   "queries": [
     {
+      "name": "rank",
+      "query": "select ta.plain_int_0, rank() over(partition by ta.plain_int_0 order by ta.plain_float_0) as num from alice_tbl_0 as ta;",
+      "mysql_query": "select ta.plain_int_0, rank() over(partition by ta.plain_int_0 order by ta.plain_float_0) as num from alice.tbl_0 as ta;"
+    },
+    {
       "name": "row_number multi partition by/order by",
       "query": "select u.* from (select ta.plain_int_0, row_number() over(partition by ta.plain_int_0, ta.plain_int_1 order by ta.plain_float_0, ta.plain_float_1) as num from alice_tbl_0 as ta) as u where u.num = 1;",
       "mysql_query": "select u.* from (select ta.plain_int_0, row_number() over(partition by ta.plain_int_0, ta.plain_int_1 order by ta.plain_float_0, ta.plain_float_1) as num from alice.tbl_0 as ta) as u where u.num = 1;"

@@ -1003,6 +1003,7 @@ Out = {0, 1, NULL}
 		windowOp := map[string]string{
 			OpNameRowNumber:   "row number",
 			OpNamePercentRank: "percent rank",
+			OpNameRank:        "rank",
 		}
 
 		for op, decription := range windowOp {

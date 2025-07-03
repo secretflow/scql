@@ -110,6 +110,7 @@ const (
 
 	OpNameRowNumber   string = "RowNumber"
 	OpNamePercentRank string = "PercentRank"
+	OpNameRank        string = "Rank"
 	OpNameAbs         string = "Abs"
 	OpNameCeil        string = "Ceil"
 	OpNameFloor       string = "Floor"

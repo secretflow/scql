@@ -1637,6 +1637,9 @@ func (t *translator) buildPrivateRankWindow(ln *WindowNode, party string, colIdT
 		case ast.WindowFuncPercentRank:
 			output.DType = proto.PrimitiveDataType_FLOAT64
 			return t.addWindowNode(operator.OpNamePercentRank, sortKey, partitionId, partitionNum, output, reverseAttr, party)
+		case ast.WindowFuncRank:
+			output.DType = proto.PrimitiveDataType_INT64
+			return t.addWindowNode(operator.OpNameRank, sortKey, partitionId, partitionNum, output, reverseAttr, party)
 		default:
 			return fmt.Errorf("buildPrivateRankWindow: unsupported window function %v", desc.Name)
 		}
