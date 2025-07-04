@@ -1583,7 +1583,12 @@ func (t *translator) buildObliviousRankWindow(ln *WindowNode) error {
 		}
 		childColIdToTensor[lastCol.UniqueID] = output
 	case ast.WindowFuncPercentRank:
-		output, err = t.addObliviousGroupAggNode(ast.WindowFuncPercentRank, groupMark, groupMark, map[string]*graph.Attribute{})
+		orderMark, err := t.addObliviousGroupMarkNode("order_mark", orderKeys)
+		if err != nil {
+			return fmt.Errorf("builObliviousRankWindow: %v", err)
+		}
+		orderMark.DType = proto.PrimitiveDataType_INT64
+		output, err = t.addObliviousGroupAggNode(ast.WindowFuncPercentRank, groupMark, orderMark, map[string]*graph.Attribute{})
 		if err != nil {
 			return fmt.Errorf("builObliviousRankWindow: %v", err)
 		}
