@@ -49,7 +49,8 @@ commands:
           command: |
             set +e
             go mod tidy
-            go test -timeout=30m -v -short -coverprofile=coverage.out ./pkg/... ./contrib/...
+            go test -timeout=30m -v -short -coverprofile=coverage.tmp ./pkg/... ./contrib/...
+            cat coverage.tmp | grep -v '\.pb\.go:\|_mock\.go:' > coverage.out
   run_cpp_test:
     description: "Run cpp tests and collect artifacts"
     parameters:
@@ -66,6 +67,7 @@ commands:
             set +e
             declare -i test_status
             bazelisk --host_jvm_args=-Xmx8g coverage //engine/... << parameters.extra_bazel_args >> --combined_report=lcov --jobs=32 --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
+            lcov --remove bazel-out/_coverage/_coverage_report.dat '*.pb.h' '*.pb.cc' -o bazel-out/_coverage/_coverage_report_filtered.dat
 
             sh ../devtools/rename-junit-xml.sh
             find bazel-bin/ << parameters.find_executable_flag >> -type f -name "*_test" -print0 | xargs -0 tar -cvzf test_binary.tar.gz
@@ -152,7 +154,7 @@ jobs:
           extra_bazel_args: ""  
           find_executable_flag: "-perm +111"
       - coveralls/upload:
-          coverage_file: bazel-out/_coverage/_coverage_report.dat
+          coverage_file: bazel-out/_coverage/_coverage_report_filtered.dat
           coverage_format: lcov
           flag_name: "cpp-tests"
       - store_test_results:
