@@ -216,9 +216,17 @@ void RowNumber::RunWindowFunc(ExecContext* ctx,
   auto int_array = std::static_pointer_cast<arrow::Int64Array>(sort_indices);
 
   // key: the indice, value: the rank number
-  std::unordered_map<int64_t, int64_t> row_number_count;
-  BuildRankMap(int_array.get(), row_number_count,
-               [](int64_t rank, int64_t /*total*/) { return rank; });
+  std::vector<int64_t> row_number_count(int_array->length(), -1);
+  int64_t rank = 1;
+  const auto total = int_array->length();
+  for (int64_t i = 0; i < total; ++i) {
+    int64_t key = int_array->Value(i);
+    YACL_ENFORCE(key >= 0 && key < total && row_number_count[key] < 0,
+                 "invalid row number");
+    row_number_count[key] = rank;
+
+    rank++;
+  }
 
   ProcessResults(int_array->length(), row_number_count, positions,
                  window_results_);
@@ -234,9 +242,25 @@ void PercentRank::RunWindowFunc(ExecContext* ctx,
   auto int_array = std::static_pointer_cast<arrow::Int64Array>(sort_indices);
 
   // key: the indice, value: the percent rank
-  std::unordered_map<int64_t, double> percent_rank;
-  BuildRankMap(int_array.get(), percent_rank,
-               [](int64_t rank, int64_t total) { return 1.0 * rank / total; });
+  std::vector<double> percent_rank(int_array->length(), -1);
+  int64_t rank = -1;
+  int64_t last_key = -1;
+  const auto total = int_array->length();
+  for (int64_t i = 0; i < int_array->length(); i++) {
+    int64_t key = int_array->Value(i);
+    YACL_ENFORCE(key >= 0 && key < total && percent_rank[key] < 0,
+                 "invalid key in rank");
+    if (rank == -1) {
+      rank = 1;
+    } else {
+      if (!AreRowsEqual(input, last_key, key)) {
+        rank = i + 1;
+      }
+    }
+    last_key = key;
+
+    percent_rank[key] = total == 1 ? 0 : 1.0 * (rank - 1) / (total - 1);
+  }
 
   ProcessResults(int_array->length(), percent_rank, positions, window_results_);
 }
@@ -249,13 +273,13 @@ void Rank::RunWindowFunc(ExecContext* ctx, std::shared_ptr<arrow::Table> input,
   std::shared_ptr<arrow::Array> sort_indices = GetSortedIndices(ctx, input);
   auto int_array = std::static_pointer_cast<arrow::Int64Array>(sort_indices);
 
-  std::unordered_map<int64_t, int64_t> rank_map;
+  const auto total = int_array->length();
+  std::vector<int64_t> rank_map(total, -1);
   int64_t rank = -1;
   int64_t last_key = -1;
-
   for (int64_t i = 0; i < int_array->length(); i++) {
     int64_t key = int_array->Value(i);
-    YACL_ENFORCE(rank_map.find(key) == rank_map.end(),
+    YACL_ENFORCE(key >= 0 && key < total && rank_map[key] < 0,
                  "duplicated key in rank");
     if (rank == -1) {
       rank = 1;

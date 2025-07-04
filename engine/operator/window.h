@@ -74,36 +74,19 @@ class RankWindowBase : public Operator {
   }
 
   template <typename ValueType>
-  void ProcessResults(const int length,
-                      const std::unordered_map<int64_t, ValueType>& rank_map,
+  void ProcessResults(const int length, const std::vector<ValueType>& rank_map,
                       const std::vector<int64_t>& positions,
                       std::vector<ValueType>& window_results) {
     YACL_ENFORCE(length == (int64_t)positions.size(),
                  "position vector size not equal to that of input value");
     for (int64_t i = 0; i < length; ++i) {
-      YACL_ENFORCE(rank_map.find(i) != rank_map.end(),
+      YACL_ENFORCE(i >= 0 && i < rank_map.size(),
                    "failed to find the indice of position {}", i);
       YACL_ENFORCE(
           positions[i] >= 0 && positions[i] < (int64_t)window_results.size(),
           "position {} is out of range [0, {}", positions[i],
           window_results.size());
       window_results[positions[i]] = rank_map.at(i);
-    }
-  }
-
-  template <typename ValueType, typename ValueGenerator>
-  void BuildRankMap(arrow::Int64Array* int_array,
-                    std::unordered_map<int64_t, ValueType>& rank_map,
-                    ValueGenerator gen) {
-    const int64_t total = int_array->length();
-    int64_t rank = 1;
-    for (int64_t i = 0; i < total; ++i) {
-      int64_t key = int_array->Value(i);
-      YACL_ENFORCE(rank_map.find(key) == rank_map.end(),
-                   "duplicate row number");
-      rank_map[key] = gen(rank, total);
-
-      rank++;
     }
   }
 };

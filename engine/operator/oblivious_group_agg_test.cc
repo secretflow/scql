@@ -349,12 +349,12 @@ INSTANTIATE_TEST_SUITE_P(
             ObliviousGroupAggTestCase{
                 .op_type = ObliviousPercentRank::kOpType,
                 .inputs = {test::NamedTensor(
-                    "in", TensorFrom(arrow::int64(), "[1, 2, 3, 4, 5]"))},
+                    "in", TensorFrom(arrow::int64(), "[1, 1, 1, 1, 1]"))},
                 .group = test::NamedTensor(
                     "group", TensorFrom(arrow::boolean(), "[1, 0, 0, 0, 1]")),
                 .outputs = {test::NamedTensor(
                     "out", TensorFrom(arrow::float64(),
-                                      "[1.0, 0.25, 0.5, 0.75, 1.0]"))}},
+                                      "[0.0, 0, 0.333, 0.666, 1.0]"))}},
             ObliviousGroupAggTestCase{
                 .op_type = ObliviousPercentRank::kOpType,
                 .inputs = {test::NamedTensor("in", TensorFrom(arrow::int64(),
@@ -362,15 +362,15 @@ INSTANTIATE_TEST_SUITE_P(
                 .group = test::NamedTensor("group",
                                            TensorFrom(arrow::boolean(), "[1]")),
                 .outputs = {test::NamedTensor(
-                    "out", TensorFrom(arrow::float64(), "[1.0]"))}},
+                    "out", TensorFrom(arrow::float64(), "[0]"))}},
             ObliviousGroupAggTestCase{
                 .op_type = ObliviousPercentRank::kOpType,
                 .inputs = {test::NamedTensor("in", TensorFrom(arrow::int64(),
-                                                              "[1,2]"))},
+                                                              "[1,1]"))},
                 .group = test::NamedTensor("group", TensorFrom(arrow::boolean(),
                                                                "[1,1]")),
                 .outputs = {test::NamedTensor(
-                    "out", TensorFrom(arrow::float64(), "[1.0,1.0]"))}})),
+                    "out", TensorFrom(arrow::float64(), "[0.0,0.0]"))}})),
     TestParamNameGenerator(ObliviousGroupAggTest));
 
 static ObliviousGroupAggTestCase GenerateObliviousPercentileDiscTestCase(

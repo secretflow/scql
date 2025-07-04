@@ -224,17 +224,24 @@ const std::string& ObliviousPercentRank::Type() const { return kOpType; }
 spu::Value ObliviousPercentRank::CalculateResult(spu::SPUContext* sctx,
                                                  const spu::Value& value,
                                                  const spu::Value& partition) {
+  spu::Value rank = ObliviousRank().CalculateResult(sctx, value, partition);
   auto op = ObliviousGroupCount();
-  spu::Value row_number = op.CalculateResult(sctx, value, partition);
   spu::Value reverted_partition = RevertGroupMaskTransfer(sctx, partition);
   spu::Value reversed_mark = spu::kernel::hlo::Sub(
       sctx, spu::kernel::hlo::Constant(sctx, 1, partition.shape()),
       reverted_partition);
-  std::vector<spu::Value> group_count =
-      util::ExpandGroupValueReversely(sctx, {row_number}, reversed_mark);
-  spu::Value float_row_number = spu::kernel::hlo::Cast(
-      sctx, row_number, row_number.vtype(), spu::DataType::DT_F64);
-  return spu::kernel::hlo::Div(sctx, float_row_number, group_count[0]);
+
+  spu::Value rank_minus_1 = spu::kernel::hlo::Sub(
+      sctx, rank, spu::kernel::hlo::Constant(sctx, 1, rank.shape()));
+
+  spu::Value total_count_minus_1 =
+      util::ExpandGroupValueReversely(sctx, {rank_minus_1}, reversed_mark)[0];
+  spu::Value ones = spu::kernel::hlo::Constant(sctx, static_cast<int64_t>(1),
+                                               rank_minus_1.shape());
+  total_count_minus_1 = spu::kernel::hlo::Max(sctx, ones, total_count_minus_1);
+  spu::Value float_rank = spu::kernel::hlo::Cast(
+      sctx, rank_minus_1, rank.vtype(), spu::DataType::DT_F64);
+  return spu::kernel::hlo::Div(sctx, float_rank, total_count_minus_1);
 }
 
 // ===========================
