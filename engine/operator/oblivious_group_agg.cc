@@ -234,8 +234,13 @@ spu::Value ObliviousPercentRank::CalculateResult(spu::SPUContext* sctx,
   spu::Value rank_minus_1 = spu::kernel::hlo::Sub(
       sctx, rank, spu::kernel::hlo::Constant(sctx, 1, rank.shape()));
 
-  spu::Value total_count_minus_1 =
-      util::ExpandGroupValueReversely(sctx, {rank_minus_1}, reversed_mark)[0];
+  spu::Value total_count =
+      ObliviousGroupCount().CalculateResult(sctx, value, partition);
+  spu::Value total_count_minus_1 = spu::kernel::hlo::Sub(
+      sctx, total_count,
+      spu::kernel::hlo::Constant(sctx, 1, total_count.shape()));
+  total_count_minus_1 = util::ExpandGroupValueReversely(
+      sctx, {total_count_minus_1}, reversed_mark)[0];
   spu::Value ones = spu::kernel::hlo::Constant(sctx, static_cast<int64_t>(1),
                                                rank_minus_1.shape());
   total_count_minus_1 = spu::kernel::hlo::Max(sctx, ones, total_count_minus_1);
@@ -318,17 +323,13 @@ spu::Value ObliviousRank::CalculateResult(
   spu::Value recovered_group =
       RevertGroupMaskTransfer(sctx, partition_key_mark);
 
-  spu::Value order_mask = TransferGroupMask(sctx, order_key_mark);
-  spu::Value group_min_value =
-      ObliviousGroupMin().CalculateResult(sctx, count, order_mask);
+  spu::Value order_mask = spu::kernel::hlo::Cast(
+      sctx, order_key_mark, recovered_group.vtype(), recovered_group.dtype());
+  spu::Value merged_mask =
+      spu::kernel::hlo::Max(sctx, order_mask, recovered_group);
+  spu::Value inner_order_group_mark = TransferGroupMask(sctx, merged_mask);
   spu::Value rank =
-      spu::kernel::hlo::Mul(sctx, group_min_value, order_key_mark);
-  spu::Value transferred_order_key_mark = spu::kernel::hlo::Sub(
-      sctx, spu::kernel::hlo::Constant(sctx, 1, partition_key_mark.shape()),
-      order_key_mark);
-  std::vector<spu::Value> expanded_rank =
-      util::ExpandGroupValueReversely(sctx, {rank}, transferred_order_key_mark);
-
-  return expanded_rank[0];
+      ObliviousGroupMin().CalculateResult(sctx, count, inner_order_group_mark);
+  return rank;
 }
 };  // namespace scql::engine::op
