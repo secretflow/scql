@@ -320,16 +320,18 @@ spu::Value ObliviousRank::CalculateResult(
     const spu::Value& partition_key_mark) {
   spu::Value count = ObliviousGroupCount().CalculateResult(sctx, order_key_mark,
                                                            partition_key_mark);
-  spu::Value recovered_group =
-      RevertGroupMaskTransfer(sctx, partition_key_mark);
 
-  spu::Value order_mask = spu::kernel::hlo::Cast(
-      sctx, order_key_mark, recovered_group.vtype(), recovered_group.dtype());
-  spu::Value merged_mask =
-      spu::kernel::hlo::Max(sctx, order_mask, recovered_group);
-  spu::Value inner_order_group_mark = TransferGroupMask(sctx, merged_mask);
-  spu::Value rank =
-      ObliviousGroupMin().CalculateResult(sctx, count, inner_order_group_mark);
+  spu::Value inner_order_group_mark = TransferGroupMask(sctx, order_key_mark);
+
+  spu::Value inner_count = ObliviousGroupCount().CalculateResult(
+      sctx, inner_order_group_mark, inner_order_group_mark);
+  spu::Value count_minus_inner_count =
+      spu::kernel::hlo::Sub(sctx, count, inner_count);
+  // rank = count - inner_count + 1
+  spu::Value rank = spu::kernel::hlo::Add(
+      sctx, count_minus_inner_count,
+      spu::kernel::hlo::Constant(sctx, 1, count_minus_inner_count.shape()));
+
   return rank;
 }
 };  // namespace scql::engine::op

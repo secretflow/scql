@@ -334,12 +334,7 @@ INSTANTIATE_TEST_SUITE_P(
         testing::Values(ObliviousGroupAggTestCase{
             .op_type = ObliviousRank::kOpType,
             .inputs = {test::NamedTensor(
-                "in",
-                TensorFrom(
-                    arrow::int64(),
-                    "[1, 0, 1, 0, 0, 1, 1]"))},  // maybe [0, 1, 1, 2, 2, 2, 3],
-                                                 // the group are [0], [1, 1, 2,
-                                                 // 2], [2, 3]
+                "in", TensorFrom(arrow::int64(), "[1, 0, 1, 0, 1, 1, 1]"))},
             .group = test::NamedTensor(
                 "group", TensorFrom(arrow::boolean(), "[1, 0, 0, 0, 1, 0, 1]")),
             .outputs = {test::NamedTensor(
