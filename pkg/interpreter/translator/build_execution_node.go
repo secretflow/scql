@@ -1561,12 +1561,10 @@ func (t *translator) buildObliviousRankWindow(ln *WindowNode) error {
 	}
 
 	partitionedKeys := out[0:len(partitionKeys)]
-	orderKeys = out[0 : len(partitionKeys)+len(orderKeys)]
+	orderMarkKeys := out[0 : len(partitionKeys)+len(orderKeys)]
 	var sortedPayloadTensors []*graph.Tensor
 
-	if len(out) > len(orderKeys) {
-		sortedPayloadTensors = out[len(orderKeys):]
-	}
+	sortedPayloadTensors = out[len(orderMarkKeys):]
 
 	groupMark, err := t.addObliviousGroupMarkNode("partition_mark", partitionedKeys)
 	if err != nil {
@@ -1583,7 +1581,7 @@ func (t *translator) buildObliviousRankWindow(ln *WindowNode) error {
 		}
 		childColIdToTensor[lastCol.UniqueID] = output
 	case ast.WindowFuncPercentRank:
-		orderMark, err := t.addObliviousGroupMarkNode("order_mark", orderKeys)
+		orderMark, err := t.addObliviousGroupMarkNode("order_mark", orderMarkKeys)
 		if err != nil {
 			return fmt.Errorf("builObliviousRankWindow: %v", err)
 		}
@@ -1593,7 +1591,7 @@ func (t *translator) buildObliviousRankWindow(ln *WindowNode) error {
 			return fmt.Errorf("builObliviousRankWindow: %v", err)
 		}
 	case ast.WindowFuncRank:
-		orderMark, err := t.addObliviousGroupMarkNode("order_mark", orderKeys)
+		orderMark, err := t.addObliviousGroupMarkNode("order_mark", orderMarkKeys)
 		if err != nil {
 			return fmt.Errorf("builObliviousRankWindow: %v", err)
 		}
