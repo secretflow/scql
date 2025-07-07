@@ -14,6 +14,7 @@
 package core
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"math"
@@ -809,6 +810,11 @@ func sortWindowSpecs(groupedFuncs map[*ast.WindowSpec][]*ast.WindowFuncExpr) []w
 	lItemsBuf := make([]*ast.ByItem, 0, 4)
 	rItemsBuf := make([]*ast.ByItem, 0, 4)
 	sort.SliceStable(windows, func(i, j int) bool {
+		l := windows[i].funcs[0].F
+		r := windows[j].funcs[0].F
+		if l != r {
+			return cmp.Compare(l, r) > 0
+		}
 		lItemsBuf = getAllByItems(lItemsBuf, windows[i].spec)
 		rItemsBuf = getAllByItems(rItemsBuf, windows[j].spec)
 		return !compareItems(lItemsBuf, rItemsBuf)
