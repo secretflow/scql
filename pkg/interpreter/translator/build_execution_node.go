@@ -1562,9 +1562,7 @@ func (t *translator) buildObliviousRankWindow(ln *WindowNode) error {
 
 	partitionedKeys := out[0:len(partitionKeys)]
 	orderMarkKeys := out[0 : len(partitionKeys)+len(orderKeys)]
-	var sortedPayloadTensors []*graph.Tensor
-
-	sortedPayloadTensors = out[len(orderMarkKeys):]
+	sortedPayloadTensors := out[len(orderMarkKeys):]
 
 	groupMark, err := t.addObliviousGroupMarkNode("partition_mark", partitionedKeys)
 	if err != nil {
