@@ -218,7 +218,6 @@ TEST_P(WindowTest, work) {
   EXPECT_TRUE(actual_arr->ApproxEquals(*expect_arr))
       << "\nexpect result = " << expect_arr->ToString()
       << "\nactual result = " << actual_arr->ToString();
-  SPDLOG_INFO("finish compare result");
 }
 
 pb::ExecNode WindowTest::MakeExecNode(const WindowTestCase& tc) {
