@@ -1542,6 +1542,7 @@ func (t *translator) buildObliviousRankWindow(ln *WindowNode) error {
 		}
 		orderKeys = append(orderKeys, orderKey)
 	}
+	// TODO: if partition keys and order keys are same, the sorting and group mark can be reused
 	var sortPayloads []*graph.Tensor
 	sortPayloads = append(sortPayloads, partitionKeys...)
 	sortPayloads = append(sortPayloads, orderKeys...)
