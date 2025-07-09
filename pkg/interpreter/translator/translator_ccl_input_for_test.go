@@ -84,7 +84,7 @@ var translateNumericTestCases = []sPair{
 9 -> 15 [label = "t_10:{plain_int_0:PRIVATE:FLOAT64}"]
 }`, ``, testConf{groupThreshold: 0, batched: false, revealGroupCount: false}},
 }
-var translateWithCCLTestCases = []sPair{{`SELECT ta.rank_int_0, rank() over (partition by ta.rank_int_0 order by tb.rank_float_0, tb.rank_float_1) as rank_num, row_number() over (partition by ta.rank_int_0 order by tb.rank_float_0, tb.rank_float_1) as row_number_num  
+var translateWithCCLTestCases = []sPair{{`SELECT ta.rank_int_0, rank() over (partition by ta.rank_int_0 order by tb.rank_float_0, tb.rank_float_1) as rank_num, row_number() over (partition by ta.rank_int_0 order by tb.rank_float_0, tb.rank_float_1) as row_number_num
 FROM alice.tbl_0 as ta JOIN bob.tbl_0 as tb ON ta.join_int_0 = tb.join_int_0`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select ta.join_int_0,ta.rank_int_0 from alice.tbl_0 as ta;,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_2,t_3,t_4,},],attr:[sql:select tb.join_int_0,tb.rank_float_0,tb.rank_float_1 from bob.tbl_0 as tb;,table_refs:[bob.tbl_0],],party:[bob,]}"]
