@@ -810,6 +810,7 @@ func sortWindowSpecs(groupedFuncs map[*ast.WindowSpec][]*ast.WindowFuncExpr) []w
 	lItemsBuf := make([]*ast.ByItem, 0, 4)
 	rItemsBuf := make([]*ast.ByItem, 0, 4)
 	sort.SliceStable(windows, func(i, j int) bool {
+		// here is to make the order of window functions with the same partition by and order by clause consistent.
 		l := windows[i].funcs[0].F
 		r := windows[j].funcs[0].F
 		if l != r {
