@@ -224,28 +224,33 @@ const std::string& ObliviousPercentRank::Type() const { return kOpType; }
 spu::Value ObliviousPercentRank::CalculateResult(spu::SPUContext* sctx,
                                                  const spu::Value& value,
                                                  const spu::Value& partition) {
-  spu::Value rank = ObliviousRank().CalculateResult(sctx, value, partition);
-  auto op = ObliviousGroupCount();
+  spu::Value count =
+      ObliviousGroupCount().CalculateResult(sctx, value, partition);
+
+  spu::Value inner_order_group_mark = TransferGroupMask(sctx, value);
+
+  spu::Value inner_count = ObliviousGroupCount().CalculateResult(
+      sctx, inner_order_group_mark, inner_order_group_mark);
+  spu::Value count_minus_inner_count =
+      spu::kernel::hlo::Sub(sctx, count, inner_count);
+  // rank = count - inner_count + 1
+  // rank_minus_1 = rank - 1
+  // rank_minus_1 = count - inner_count
+  spu::Value rank_minus_1 = count_minus_inner_count;
   spu::Value reverted_partition = RevertGroupMaskTransfer(sctx, partition);
   spu::Value reversed_mark = spu::kernel::hlo::Sub(
       sctx, spu::kernel::hlo::Constant(sctx, 1, partition.shape()),
       reverted_partition);
 
-  spu::Value rank_minus_1 = spu::kernel::hlo::Sub(
-      sctx, rank, spu::kernel::hlo::Constant(sctx, 1, rank.shape()));
-
-  spu::Value total_count =
-      ObliviousGroupCount().CalculateResult(sctx, value, partition);
   spu::Value total_count_minus_1 = spu::kernel::hlo::Sub(
-      sctx, total_count,
-      spu::kernel::hlo::Constant(sctx, 1, total_count.shape()));
+      sctx, count, spu::kernel::hlo::Constant(sctx, 1, count.shape()));
   total_count_minus_1 = util::ExpandGroupValueReversely(
       sctx, {total_count_minus_1}, reversed_mark)[0];
   spu::Value ones = spu::kernel::hlo::Constant(sctx, static_cast<int64_t>(1),
                                                rank_minus_1.shape());
   total_count_minus_1 = spu::kernel::hlo::Max(sctx, ones, total_count_minus_1);
   spu::Value float_rank = spu::kernel::hlo::Cast(
-      sctx, rank_minus_1, rank.vtype(), spu::DataType::DT_F64);
+      sctx, rank_minus_1, rank_minus_1.vtype(), spu::DataType::DT_F64);
   return spu::kernel::hlo::Div(sctx, float_rank, total_count_minus_1);
 }
 
