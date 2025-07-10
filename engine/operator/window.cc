@@ -29,20 +29,25 @@
 namespace scql::engine::op {
 bool AreRowsEqual(const std::shared_ptr<arrow::Table>& table, int64_t i,
                   int64_t j) {
-  auto row_i = util::GetRow(table, i);
-  auto row_j = util::GetRow(table, j);
-  if (row_i.size() != row_j.size()) {
-    return false;
-  }
+  int num_cols = table->num_columns();
+  for (int col = 0; col < num_cols; col++) {
+    auto chunked_array = table->column(col);
+    arrow::Result<std::shared_ptr<arrow::Scalar>> scalar_i_result =
+        chunked_array->GetScalar(i);
+    YACL_ENFORCE(scalar_i_result.ok(), "get scalar failed");
+    arrow::Result<std::shared_ptr<arrow::Scalar>> scalar_j_result =
+        chunked_array->GetScalar(j);
+    YACL_ENFORCE(scalar_j_result.ok(), "get scalar failed");
 
-  for (size_t col = 0; col < row_i.size(); col++) {
-    if ((row_i[col] == nullptr && row_j[col] != nullptr) ||
-        (row_i[col] != nullptr && row_j[col] == nullptr)) {
+    auto scalar_i = scalar_i_result.ValueOrDie();
+    auto scalar_j = scalar_j_result.ValueOrDie();
+    if ((scalar_i == nullptr && scalar_j != nullptr) ||
+        (scalar_i != nullptr && scalar_j == nullptr)) {
       return false;
     }
 
-    if (row_i[col] != nullptr && row_j[col] != nullptr) {
-      if (!row_i[col]->Equals(*row_j[col])) {
+    if (scalar_i != nullptr && scalar_j != nullptr) {
+      if (!scalar_i->Equals(*scalar_j)) {
         return false;
       }
     }
