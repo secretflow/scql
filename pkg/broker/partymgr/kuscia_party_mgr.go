@@ -32,12 +32,14 @@ import (
 type kusciaPartyMgr struct {
 	client        kusciaapi.DomainServiceClient
 	clusterDefine *appconfig.ClusterDefine
+	appImage      string
 }
 
-func NewKusciaPartyMgr(conn grpc.ClientConnInterface, cluster string) (PartyMgr, error) {
+func NewKusciaPartyMgr(conn grpc.ClientConnInterface, cluster string, appImage *string) (PartyMgr, error) {
 	client := kusciaapi.NewDomainServiceClient(conn)
 	mgr := &kusciaPartyMgr{
-		client: client,
+		client:   client,
+		appImage: "scql",
 	}
 	if cluster != "" {
 		clusterDefine := &appconfig.ClusterDefine{}
@@ -46,6 +48,10 @@ func NewKusciaPartyMgr(conn grpc.ClientConnInterface, cluster string) (PartyMgr,
 			return nil, fmt.Errorf("failed to deserialize cluster define: %v", err)
 		}
 		mgr.clusterDefine = clusterDefine
+	}
+
+	if appImage != nil && *appImage != "" {
+		mgr.appImage = *appImage
 	}
 
 	return mgr, nil
@@ -64,7 +70,7 @@ func (k *kusciaPartyMgr) GetBrokerUrlByParty(party string) (string, error) {
 		}
 		return "", fmt.Errorf("failed to find broker url for party %s, cluster_define: %v", party, k.clusterDefine)
 	}
-	return fmt.Sprintf("http://scql-broker-inter.%s.svc", party), nil
+	return fmt.Sprintf("http://%s-broker-inter.%s.svc", k.appImage, party), nil
 }
 
 func (k *kusciaPartyMgr) GetPubKeyByParty(party string) (string, error) {
