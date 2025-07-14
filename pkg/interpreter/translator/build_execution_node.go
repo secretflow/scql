@@ -1536,6 +1536,9 @@ func (t *translator) buildObliviousRankWindow(ln *WindowNode) error {
 	}
 	orderKeys := []*graph.Tensor{}
 	for _, col := range window.OrderBy {
+		if col.Desc {
+			return fmt.Errorf("buildObliviousRankWindow: desc order key is not supported in secret window implementation")
+		}
 		orderKey, err := t.getTensorFromColumn(col.Col, childColIdToTensor)
 		if err != nil {
 			return fmt.Errorf("builObliviousRankWindow: %v", err)
