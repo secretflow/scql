@@ -80,7 +80,7 @@ class RankWindowBase : public Operator {
     YACL_ENFORCE(length == (int64_t)positions.size(),
                  "position vector size not equal to that of input value");
     for (int64_t i = 0; i < length; ++i) {
-      YACL_ENFORCE(i >= 0 && i < rank_map.size(),
+      YACL_ENFORCE(i < rank_map.size(),
                    "failed to find the indice of position {}", i);
       YACL_ENFORCE(
           positions[i] >= 0 && positions[i] < (int64_t)window_results.size(),
