@@ -129,6 +129,27 @@ jobs:
       - codecov/upload:
           files: "bazel-out/_coverage/_coverage_report.dat"
           flags: "cpp-linux-amd"
+  docs_publish:
+    docker:
+      - image: cimg/python:3.10-node
+    shell: /bin/bash --login -eo pipefail
+    steps:
+      - checkout
+      - run:
+          name: Build docs and publish
+          command: |
+            set -ex
+            cd docs
+            export DRY_RUN=0
+            export DOCTOOLS_PUBLISH_NPM_TOKEN=${DOCTOOLS_PUBLISH_NPM_TOKEN}
+            sudo apt-get update && sudo apt install -y git
+            python3 -m venv ~/.venv/docs
+            source ~/.venv/docs/bin/activate
+            python -m pip install -r requirements.txt
+            secretflow-doctools build --lang zh_CN --lang en
+            secretflow-doctools publish \
+              --name @secretflow/x-kuscia \
+              --index-js _build/esm/index.js
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
@@ -191,3 +212,11 @@ workflows:
           filters:
             tags:
               only: /.*(?<!dev\d{8})$/
+  doc-publish-workflow:
+    jobs:
+      - docs_publish:
+          filters:
+            branches:
+              only: main
+            tags:
+              only: /^v.*/
