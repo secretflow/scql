@@ -148,7 +148,7 @@ jobs:
             python -m pip install -r requirements.txt
             secretflow-doctools build --lang zh_CN --lang en
             secretflow-doctools publish \
-              --name @secretflow/x-kuscia \
+              --name @secretflow/x-scql \
               --index-js _build/esm/index.js
 
 # Invoke jobs via workflows
