@@ -43,20 +43,4 @@ std::shared_ptr<arrow::Table> ConstructTableFromTensors(
   auto table = arrow::Table::Make(arrow::schema(fields), chunked_arrs);
   return table;
 }
-
-std::vector<std::shared_ptr<arrow::Scalar>> GetRow(
-    const std::shared_ptr<arrow::Table>& table, int64_t idx) {
-  std::vector<std::shared_ptr<arrow::Scalar>> row;
-  int num_cols = table->num_columns();
-  for (int col = 0; col < num_cols; ++col) {
-    auto chunked_array = table->column(col);
-    arrow::Result<std::shared_ptr<arrow::Scalar>> scalar_result =
-        chunked_array->GetScalar(idx);
-    YACL_ENFORCE(scalar_result.ok(), "get scalar failed");
-    row.push_back(scalar_result.ValueOrDie());
-  }
-
-  return row;
-}
-
 }  // namespace scql::engine::util

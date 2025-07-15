@@ -1536,14 +1536,19 @@ func (t *translator) buildObliviousRankWindow(ln *WindowNode) error {
 	}
 	orderKeys := []*graph.Tensor{}
 	for _, col := range window.OrderBy {
+		if col.Desc {
+			return fmt.Errorf("buildObliviousRankWindow: desc order key is not supported in secret window implementation")
+		}
 		orderKey, err := t.getTensorFromColumn(col.Col, childColIdToTensor)
 		if err != nil {
 			return fmt.Errorf("builObliviousRankWindow: %v", err)
 		}
 		orderKeys = append(orderKeys, orderKey)
 	}
+	// TODO: if partition keys and order keys are same, the sorting and group mark can be reused
 	var sortPayloads []*graph.Tensor
 	sortPayloads = append(sortPayloads, partitionKeys...)
+	sortPayloads = append(sortPayloads, orderKeys...)
 	for _, col := range window.Schema().Columns[0 : len(window.Schema().Columns)-1] {
 		payload, err := t.getTensorFromColumn(col, childColIdToTensor)
 		if err != nil {
@@ -1560,7 +1565,9 @@ func (t *translator) buildObliviousRankWindow(ln *WindowNode) error {
 	}
 
 	partitionedKeys := out[0:len(partitionKeys)]
-	sortedPayloadTensors := out[len(partitionKeys):]
+	orderMarkKeys := out[0 : len(partitionKeys)+len(orderKeys)]
+	sortedPayloadTensors := out[len(orderMarkKeys):]
+
 	groupMark, err := t.addObliviousGroupMarkNode("partition_mark", partitionedKeys)
 	if err != nil {
 		return fmt.Errorf("builObliviousRankWindow: %v", err)
@@ -1576,7 +1583,22 @@ func (t *translator) buildObliviousRankWindow(ln *WindowNode) error {
 		}
 		childColIdToTensor[lastCol.UniqueID] = output
 	case ast.WindowFuncPercentRank:
-		output, err = t.addObliviousGroupAggNode(ast.WindowFuncPercentRank, groupMark, groupMark, map[string]*graph.Attribute{})
+		orderMark, err := t.addObliviousGroupMarkNode("order_mark", orderMarkKeys)
+		if err != nil {
+			return fmt.Errorf("builObliviousRankWindow: %v", err)
+		}
+		orderMark.DType = proto.PrimitiveDataType_INT64
+		output, err = t.addObliviousGroupAggNode(ast.WindowFuncPercentRank, groupMark, orderMark, map[string]*graph.Attribute{})
+		if err != nil {
+			return fmt.Errorf("builObliviousRankWindow: %v", err)
+		}
+	case ast.WindowFuncRank:
+		orderMark, err := t.addObliviousGroupMarkNode("order_mark", orderMarkKeys)
+		if err != nil {
+			return fmt.Errorf("builObliviousRankWindow: %v", err)
+		}
+		orderMark.DType = proto.PrimitiveDataType_INT64
+		output, err = t.addObliviousGroupAggNode(ast.WindowFuncRank, groupMark, orderMark, map[string]*graph.Attribute{})
 		if err != nil {
 			return fmt.Errorf("builObliviousRankWindow: %v", err)
 		}
