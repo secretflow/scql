@@ -185,6 +185,12 @@ workflows:
       - cpp_coverage_job_linux_amd:
           requires:
             - decider_check_coverage_run
+      - docs_publish:
+          filters:
+            branches:
+              only: main
+            tags:
+              only: /^v.*/
 
   run_regtest:
     when: << pipeline.parameters.enable_regtest >>
@@ -212,11 +218,3 @@ workflows:
           filters:
             tags:
               only: /.*(?<!dev\d{8})$/
-  doc-publish-workflow:
-    jobs:
-      - docs_publish:
-          filters:
-            branches:
-              only: main
-            tags:
-              only: /^v.*/
