@@ -1,6 +1,11 @@
 {
   "queries": [
     {
+      "name": "percent_rank",
+      "query": "select ta.plain_int_0, percent_rank() over(partition by ta.plain_int_0 order by ta.plain_float_0) as num from alice_tbl_0 as ta;",
+      "mysql_query": "select ta.plain_int_0, percent_rank() over(partition by ta.plain_int_0 order by ta.plain_float_0) as num from alice.tbl_0 as ta;"
+    },
+    {
       "name": "rank",
       "query": "select ta.plain_int_0, rank() over(partition by ta.plain_int_0 order by ta.plain_float_0) as num from alice_tbl_0 as ta;",
       "mysql_query": "select ta.plain_int_0, rank() over(partition by ta.plain_int_0 order by ta.plain_float_0) as num from alice.tbl_0 as ta;"
