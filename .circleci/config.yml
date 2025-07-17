@@ -59,7 +59,6 @@ workflows:
     jobs:
       - path-filtering/filter:
           base-revision: main
-          tag: '3.10'
           config-path: .circleci/regtest-config.yml
           mapping: .circleci/path-filtering/regtest.conf
 
