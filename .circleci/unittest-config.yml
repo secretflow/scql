@@ -41,16 +41,28 @@ commands:
           command: |
             echo ${gcs_content} > ../gcs.data
             ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
+
   run_go_test:
     description: "Run go tests"
+    parameters:
+      enable_coverage:
+        type: boolean
+        default: false
     steps:
       - run:
           name: "Go Test"
           command: |
             set +e
             go mod tidy
-            go test -timeout=30m -v -short -coverprofile=coverage.tmp ./pkg/... ./contrib/...
-            cat coverage.tmp | grep -v '\.pb\.go:\|_mock\.go:' > coverage.out
+            if << parameters.enable_coverage >>; then
+              echo "Running tests with coverage..."
+              go test -timeout=30m -v -short -coverprofile=coverage.tmp ./pkg/... ./contrib/...
+              cat coverage.tmp | grep -v '\.pb\.go:\|_mock\.go:' > coverage.out
+            else
+              echo "Running tests without coverage..."
+              go test -timeout=30m -v -short ./pkg/... ./contrib/...
+            fi
+
   run_cpp_test:
     description: "Run cpp tests and collect artifacts"
     parameters:
@@ -60,14 +72,26 @@ commands:
       find_executable_flag:
         type: string
         default: "-executable"
+      enable_coverage:
+        type: boolean
+        default: false
     steps:
       - run:
           name: "Cpp Test"
           command: |
             set +e
             declare -i test_status
-            bazelisk --host_jvm_args=-Xmx8g coverage //engine/... << parameters.extra_bazel_args >> --combined_report=lcov --jobs=32 --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
-            lcov --remove bazel-out/_coverage/_coverage_report.dat '*.pb.h' '*.pb.cc' -o bazel-out/_coverage/_coverage_report_filtered.dat
+
+            if << parameters.enable_coverage >>; then
+              echo "Running tests with coverage..."
+              bazelisk --host_jvm_args=-Xmx8g coverage //engine/... << parameters.extra_bazel_args >> --profile=bazel-profile.json.gz --combined_report=lcov --jobs=32 --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
+
+              echo "Processing coverage..."
+              lcov --remove bazel-out/_coverage/_coverage_report.dat '*.pb.h' '*.pb.cc' -o bazel-out/_coverage/_coverage_report_filtered.dat
+            else
+              echo "Running tests without coverage..."
+              bazelisk --host_jvm_args=-Xmx8g test //engine/... << parameters.extra_bazel_args >> --jobs=32 --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
+            fi
 
             sh ../devtools/rename-junit-xml.sh
             find bazel-bin/ << parameters.find_executable_flag >> -type f -name "*_test" -print0 | xargs -0 tar -cvzf test_binary.tar.gz
@@ -91,7 +115,8 @@ jobs:
     # See: https://circleci.com/docs/2.0/configuration-reference/#steps
     steps:
       - checkout
-      - run_go_test
+      - run_go_test:
+          enable_coverage: true
       - when:
           condition:
             equal: [ "<< parameters.resource_class >>", "2xlarge" ]
@@ -117,6 +142,7 @@ jobs:
       - run_cpp_test:
           extra_bazel_args: "-c opt"
           find_executable_flag: "-executable"
+          enable_coverage: true
       - when:
           condition:
             equal: [ "<< parameters.resource_class >>", "2xlarge" ]
@@ -131,6 +157,8 @@ jobs:
           path: test_binary.tar.gz
       - store_artifacts:
           path: test_logs.tar.gz
+      - store_artifacts:
+        path: bazel-profile.json.gz
 
   macOS_go_ut:
     macos:
@@ -141,7 +169,7 @@ jobs:
       - run:
           name: "Install homebrew dependencies"
           command: |
-            brew install wget go md5sha1sum
+            brew install wget go
       - run_go_test
 
   macOS_cpp_ut:
@@ -160,7 +188,7 @@ jobs:
       - run:
           name: "Install homebrew dependencies"
           command: |
-            brew install bazelisk cmake ninja libomp wget go@1.24 md5sha1sum lcov
+            brew install bazelisk cmake ninja libomp wget go@1.24 md5sha1sum
             brew link go@1.24
       - setup_cpp_test
       - run_cpp_test:
