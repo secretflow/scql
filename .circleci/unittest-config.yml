@@ -158,7 +158,7 @@ jobs:
       - store_artifacts:
           path: test_logs.tar.gz
       - store_artifacts:
-        path: bazel-profile.json.gz
+          path: bazel-profile.json.gz
 
   macOS_go_ut:
     macos:
