@@ -122,7 +122,7 @@ jobs:
       - run:
           name: "Install homebrew dependencies"
           command: |
-            brew install wget go
+            brew install wget go md5sha1sum
       - run_go_test
       - coveralls/upload:
           coverage_file: coverage.out
