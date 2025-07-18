@@ -123,6 +123,7 @@ jobs:
           name: "Install homebrew dependencies"
           command: |
             brew install wget go md5sha1sum
+            echo 'export PATH="/opt/homebrew/bin:$PATH"' >> $BASH_ENV
       - run_go_test
       - coveralls/upload:
           coverage_file: coverage.out
