@@ -63,6 +63,16 @@ INSTANTIATE_TEST_SUITE_P(
                          .input_status = pb::TENSORSTATUS_PRIVATE,
                          .expect_out = test::NamedTensor(
                              "out", TensorFrom(arrow::int64(), "[]"))},
+            CastTestCase{
+                .input = test::NamedTensor(
+                    "in",
+                    TensorFrom(
+                        arrow::large_utf8(),
+                        R"json(["2023-01-01T12:30:45", "2021-12-01", "2023-10-27 15:45:00"])json")),
+                .input_status = pb::TENSORSTATUS_PRIVATE,
+                .expect_out = test::NamedTensor(
+                    "out", TensorFrom(arrow::int64(),
+                                      "[1672576245, 1638316800, 1698421500]"))},
             // test public status
             CastTestCase{
                 .input = test::NamedTensor("in", TensorFrom(arrow::int64(),
