@@ -73,6 +73,13 @@ INSTANTIATE_TEST_SUITE_P(
                 .expect_out = test::NamedTensor(
                     "out", TensorFrom(arrow::int64(),
                                       "[1672576245, 1638316800, 1698421500]"))},
+            CastTestCase{
+                .input = test::NamedTensor(
+                    "in", TensorFrom(arrow::large_utf8(),
+                                     R"json(["123", "456", "789"])json")),
+                .input_status = pb::TENSORSTATUS_PRIVATE,
+                .expect_out = test::NamedTensor(
+                    "out", TensorFrom(arrow::int64(), "[123, 456, 789]"))},
             // test public status
             CastTestCase{
                 .input = test::NamedTensor("in", TensorFrom(arrow::int64(),

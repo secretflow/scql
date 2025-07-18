@@ -57,24 +57,26 @@ void Cast::Execute(ExecContext* ctx) {
     YACL_ENFORCE(to_type, "no arrow type for tensor type={}",
                  pb::PrimitiveDataType_Name(output_pb.elem_type()));
 
-    arrow::Result<arrow::Datum> result;
     arrow::compute::CastOptions options;
     options.allow_float_truncate = true;
-    if ((in_type->id() == arrow::Type::STRING ||
+
+    auto result =
+        arrow::compute::Cast(tensor->ToArrowChunkedArray(), to_type, options);
+
+    if (!result.ok() &&
+        (in_type->id() == arrow::Type::STRING ||
          in_type->id() == arrow::Type::LARGE_STRING) &&
         to_type->id() == arrow::Type::INT64) {
       auto intermediate_type = arrow::timestamp(arrow::TimeUnit::SECOND);
       auto intermediate_result = arrow::compute::Cast(
           tensor->ToArrowChunkedArray(), intermediate_type);
-      YACL_ENFORCE(intermediate_result.ok(),
-                   "Failed to cast string to datetime: {}",
-                   intermediate_result.status().ToString());
-      result = arrow::compute::Cast(
-          intermediate_result.ValueOrDie().chunked_array(), to_type, options);
-    } else {
-      result =
-          arrow::compute::Cast(tensor->ToArrowChunkedArray(), to_type, options);
+
+      if (intermediate_result.ok()) {
+        result = arrow::compute::Cast(
+            intermediate_result.ValueOrDie().chunked_array(), to_type, options);
+      }
     }
+
     YACL_ENFORCE(result.ok(), "caught error while invoking arrow cast: {}",
                  result.status().ToString());
 
