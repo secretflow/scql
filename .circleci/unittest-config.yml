@@ -92,6 +92,14 @@ jobs:
     steps:
       - checkout
       - run_go_test
+      - when:
+          condition:
+            equal: [ "<< parameters.resource_class >>", "2xlarge" ]
+          steps:
+            - coveralls/upload:
+                coverage_file: coverage.out
+                coverage_format: golang
+                flag_name: "go-tests"
 
   linux_cpp_ut:
     docker:
@@ -106,6 +114,14 @@ jobs:
       - run_cpp_test:
           extra_bazel_args: "-c opt"
           find_executable_flag: "-executable"
+      - when:
+          condition:
+            equal: [ "<< parameters.resource_class >>", "2xlarge" ]
+          steps:
+            - coveralls/upload:
+                coverage_file: bazel-out/_coverage/_coverage_report_filtered.dat
+                coverage_format: lcov
+                flag_name: "cpp-tests"
       - store_test_results:
           path: test-results
       - store_artifacts:
@@ -122,12 +138,8 @@ jobs:
       - run:
           name: "Install homebrew dependencies"
           command: |
-            brew install wget go coreutils
+            brew install wget go md5sha1sum
       - run_go_test
-      - coveralls/upload:
-          coverage_file: coverage.out
-          coverage_format: golang
-          flag_name: "go-tests"
 
   macOS_cpp_ut:
     macos:
@@ -145,16 +157,12 @@ jobs:
       - run:
           name: "Install homebrew dependencies"
           command: |
-            brew install bazelisk cmake ninja libomp wget go@1.24 coreutils
+            brew install bazelisk cmake ninja libomp wget go@1.24 md5sha1sum
             brew link go@1.24
       - setup_cpp_test
       - run_cpp_test:
           extra_bazel_args: ""  
           find_executable_flag: "-perm +111"
-      - coveralls/upload:
-          coverage_file: bazel-out/_coverage/_coverage_report_filtered.dat
-          coverage_format: lcov
-          flag_name: "cpp-tests"
       - store_test_results:
           path: test-results
       - store_artifacts:
