@@ -110,6 +110,9 @@ jobs:
     resource_class: << parameters.resource_class >>
     steps:
       - checkout
+      - run:
+          name: "Install lcov"
+          command: apt-get update && apt-get install -y lcov
       - setup_cpp_test
       - run_cpp_test:
           extra_bazel_args: "-c opt"
@@ -157,7 +160,7 @@ jobs:
       - run:
           name: "Install homebrew dependencies"
           command: |
-            brew install bazelisk cmake ninja libomp wget go@1.24 md5sha1sum
+            brew install bazelisk cmake ninja libomp wget go@1.24 md5sha1sum lcov
             brew link go@1.24
       - setup_cpp_test
       - run_cpp_test:
