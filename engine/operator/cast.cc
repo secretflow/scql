@@ -52,14 +52,31 @@ void Cast::Execute(ExecContext* ctx) {
     YACL_ENFORCE(tensor != nullptr, "get tensor={} from tensor table failed",
                  input_pb.name());
 
+    auto in_type = tensor->ArrowType();
     auto to_type = ToArrowDataType(output_pb.elem_type());
     YACL_ENFORCE(to_type, "no arrow type for tensor type={}",
                  pb::PrimitiveDataType_Name(output_pb.elem_type()));
 
     arrow::compute::CastOptions options;
     options.allow_float_truncate = true;
+
     auto result =
         arrow::compute::Cast(tensor->ToArrowChunkedArray(), to_type, options);
+
+    if (!result.ok() &&
+        (in_type->id() == arrow::Type::STRING ||
+         in_type->id() == arrow::Type::LARGE_STRING) &&
+        to_type->id() == arrow::Type::INT64) {
+      auto intermediate_type = arrow::timestamp(arrow::TimeUnit::SECOND);
+      auto intermediate_result = arrow::compute::Cast(
+          tensor->ToArrowChunkedArray(), intermediate_type);
+
+      if (intermediate_result.ok()) {
+        result = arrow::compute::Cast(
+            intermediate_result.ValueOrDie().chunked_array(), to_type, options);
+      }
+    }
+
     YACL_ENFORCE(result.ok(), "caught error while invoking arrow cast: {}",
                  result.status().ToString());
 
