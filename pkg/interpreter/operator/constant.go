@@ -99,6 +99,7 @@ const (
 	OpNameObliviousGroupAvg       string = "ObliviousGroupAvg"
 	OpNameObliviousPercentRank    string = "ObliviousPercentRank"
 	OpNameObliviousPercentileDisc string = "ObliviousPercentileDisc"
+	OpNameObliviousRank           string = "ObliviousRank"
 	OpNameShuffle                 string = "Shuffle"
 	// union all
 	OpNameConcat string = "Concat"
@@ -110,6 +111,7 @@ const (
 
 	OpNameRowNumber   string = "RowNumber"
 	OpNamePercentRank string = "PercentRank"
+	OpNameRank        string = "Rank"
 	OpNameAbs         string = "Abs"
 	OpNameCeil        string = "Ceil"
 	OpNameFloor       string = "Floor"
@@ -174,6 +176,7 @@ var ObliviousGroupAggOp = map[string]string{
 	ast.AggFuncCount:          OpNameObliviousGroupCount,
 	ast.WindowFuncPercentRank: OpNameObliviousPercentRank,
 	ast.AggPercentileDisc:     OpNameObliviousPercentileDisc,
+	ast.WindowFuncRank:        OpNameObliviousRank,
 }
 
 var GroupAggOp = map[string]string{

@@ -165,15 +165,29 @@ INSTANTIATE_TEST_SUITE_P(
         WindowTestCase{
             .op_type = PercentRank::kOpType,
             .inputs = {test::NamedTensor(
-                "in_a", TensorFrom(arrow::int64(), "[5,5,5,5,6,5,6,5]"))},
-            .partition_id = test::NamedTensor("partition_id",
-                                              TensorFrom(arrow::uint32(),
-                                                         "[0,1,1,1,0,0,1,0]")),
+                "in_a",
+                TensorFrom(arrow::int64(), "[1, 2, 3, 4, 5, 6, 6, 7, 8]"))},
+            .partition_id = test::NamedTensor(
+                "partition_id",
+                TensorFrom(arrow::uint32(), "[0, 0, 0, 0, 0, 1, 1, 1, 2]")),
+            .partition_num = test::NamedTensor(
+                "partition_num", TensorFrom(arrow::uint32(), "[3]")),
+            .outputs = {test::NamedTensor(
+                "out", TensorFrom(arrow::float64(),
+                                  "[0, 0.25, 0.5, 0.75, 1, 0, 0, 1, 0]"))},
+            .reverse = {"0"}},
+        WindowTestCase{
+            .op_type = Rank::kOpType,
+            .inputs = {test::NamedTensor(
+                "in_a", TensorFrom(arrow::int64(), "[1,2,4,4,5,6,7,7,9]"))},
+            .partition_id = test::NamedTensor(
+                "partition_id",
+                TensorFrom(arrow::uint32(), "[0,0,0,0,0,1,1,1,1]")),
             .partition_num = test::NamedTensor(
                 "partition_num", TensorFrom(arrow::uint32(), "[2]")),
             .outputs = {test::NamedTensor(
-                "out", TensorFrom(arrow::float64(),
-                                  "[0.25,0.25,0.5,0.75,1.0,0.5,1.0,0.75]"))},
+                "out",
+                TensorFrom(arrow::int64(), "[1, 2, 3, 3, 5, 1, 2, 2, 4]"))},
             .reverse = {"0"}}));
 
 TEST_P(WindowTest, work) {

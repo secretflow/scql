@@ -14,6 +14,7 @@
 
 #include "engine/util/table_util.h"
 
+#include "arrow/array.h"
 #include "yacl/base/exception.h"
 
 namespace scql::engine::util {
@@ -42,5 +43,4 @@ std::shared_ptr<arrow::Table> ConstructTableFromTensors(
   auto table = arrow::Table::Make(arrow::schema(fields), chunked_arrs);
   return table;
 }
-
 }  // namespace scql::engine::util

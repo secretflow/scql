@@ -154,6 +154,7 @@ void RegisterAllOpsImpl() {
 
   ADD_OPERATOR_TO_REGISTRY(ObliviousPercentRank);
   ADD_OPERATOR_TO_REGISTRY(ObliviousPercentileDisc);
+  ADD_OPERATOR_TO_REGISTRY(ObliviousRank);
 
   ADD_OPERATOR_TO_REGISTRY(Concat);
   ADD_OPERATOR_TO_REGISTRY(Cast);
@@ -174,6 +175,7 @@ void RegisterAllOpsImpl() {
 
   ADD_OPERATOR_TO_REGISTRY(RowNumber);
   ADD_OPERATOR_TO_REGISTRY(PercentRank);
+  ADD_OPERATOR_TO_REGISTRY(Rank);
 
   ADD_OPERATOR_TO_REGISTRY(Abs);
   ADD_OPERATOR_TO_REGISTRY(Ceil);

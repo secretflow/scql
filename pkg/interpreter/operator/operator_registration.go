@@ -585,6 +585,7 @@ Group = {0, 1, 1, 0, 1}
 			{opName: OpNameObliviousGroupMin, aggResult: `[{1, 3, 2, 2, 0}, {9, 8, 7, 6, 5}]`},
 			{opName: OpNameObliviousGroupAvg, aggResult: `[{1, 3, 2.5, 3, 0}, {9, 8, 7.5, 7, 5}]`},
 			{opName: OpNameObliviousPercentRank, aggResult: `[{1, 0.3333, 0.6666, 1, 1, 1}, {1, 0.3333, 0.6666, 1, 1, 1}]`},
+			{opName: OpNameObliviousRank, aggResult: `[{2, 2, 1, 3, 1}, {}]`},
 		} {
 			opDef := &OperatorDef{}
 			opDef.SetName(t.opName)
@@ -1003,6 +1004,7 @@ Out = {0, 1, NULL}
 		windowOp := map[string]string{
 			OpNameRowNumber:   "row number",
 			OpNamePercentRank: "percent rank",
+			OpNameRank:        "rank",
 		}
 
 		for op, decription := range windowOp {

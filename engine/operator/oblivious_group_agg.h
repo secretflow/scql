@@ -190,4 +190,14 @@ class ObliviousPercentileDisc : public ObliviousGroupAggBase {
  private:
   double percent_ = -1;
 };
+
+class ObliviousRank : public ObliviousGroupAggBase {
+ public:
+  static const std::string kOpType;
+  const std::string& Type() const override;
+
+ public:
+  spu::Value CalculateResult(spu::SPUContext* sctx, const spu::Value& value,
+                             const spu::Value& group_value) override;
+};
 }  // namespace scql::engine::op
