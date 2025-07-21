@@ -45,7 +45,7 @@ vet:
 
 doc:
 	go run ./cmd/docgen/main.go
-	cd docs && rm -rf _build && PYTHONPATH=$PWD/../ bash build.sh -l en
+	cd docs && rm -rf _build && make build
 
 doc-cn:
 	go run ./cmd/docgen/main.go

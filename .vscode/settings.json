@@ -11,5 +11,7 @@
         "**/.cache/**": true,
         "**/bazel-*/**": true,
         "**/external/**": true
-    }
+    },
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true
 }
