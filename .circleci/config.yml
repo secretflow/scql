@@ -143,7 +143,7 @@ workflows:
     jobs:
       - path-filtering/filter:
           base-revision: main
-          tag: "3.10" # specific cimg/python
+          tag: '3.10' # specific cimg/python
           config-path: .circleci/unittest-config.yml
           mapping: |
             api/.* run_go_ut true
@@ -170,7 +170,7 @@ workflows:
     jobs:
       - path-filtering/filter:
           base-revision: main
-          tag: "3.10"
+          tag: '3.10'
           config-path: .circleci/regtest-config.yml
           mapping: |
             api/.* run_regtest true
@@ -183,7 +183,7 @@ workflows:
 
   publish-workflow:
     when:
-      equal: ["release", << pipeline.parameters.GHA_Event >>]
+      equal: [ "release", << pipeline.parameters.GHA_Event >> ]
     jobs:
       - continuation/continue:
           configuration_path: .circleci/release-config.yml
