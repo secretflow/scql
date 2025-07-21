@@ -1,0 +1,10 @@
+# Configure whether the Coveralls status check fails when coverage decreases
+fail_on_coverage_decrease: false
+
+coverage:
+  status:
+    pull_request:
+      default:
+        # Set a coverage threshold for the changed lines of code.
+        target: 70%
+
