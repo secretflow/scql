@@ -99,8 +99,12 @@ commands:
               # Capture the exit status of the Bazel command
               test_status=${PIPESTATUS[0]}
 
-              echo "Processing coverage..."
-              lcov --remove bazel-out/_coverage/_coverage_report.dat '*.pb.h' '*.pb.cc' -o bazel-out/_coverage/_coverage_report_filtered.dat
+              if [ ${test_status} -eq 0 ]; then
+                echo "Processing coverage..."
+                lcov --remove bazel-out/_coverage/_coverage_report.dat '*.pb.h' '*.pb.cc' -o bazel-out/_coverage/_coverage_report_filtered.dat
+              else
+                echo "Bazel coverage failed, skipping lcov processing."
+              fi
             else
               echo "Running tests without coverage..."
               bazelisk --host_jvm_args=-Xmx8g test //engine/... \
