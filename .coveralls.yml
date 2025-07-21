@@ -3,9 +3,16 @@ fail_on_coverage_decrease: false
 
 coverage:
   status:
-    pull_request:
-      default:
+    project:
+      go-tests:
         # Set a coverage threshold for the changed lines of code.
+        target: 70%
+
+      cpp-tests:
+        target: 70%
+
+    patch:
+      default:
         target: 70%
 
 comment:

@@ -506,3 +506,7 @@ func MySQLDateFormatToArrowFormat(mysqlFormat string) (string, error) {
 func GoChangeCov() bool {
 	return true
 }
+
+func GoChangeCov1() bool {
+	return false
+}
