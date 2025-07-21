@@ -495,8 +495,3 @@ func TestMySQLDateFormatToArrowFormat(t *testing.T) {
 		})
 	}
 }
-
-func TestGoChangeCov(t *testing.T) {
-	r := require.New(t)
-	r.Equal(GoChangeCov(), true)
-}

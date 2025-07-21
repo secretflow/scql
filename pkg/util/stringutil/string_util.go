@@ -502,11 +502,3 @@ func MySQLDateFormatToArrowFormat(mysqlFormat string) (string, error) {
 	}
 	return result.String(), nil
 }
-
-func GoChangeCov() bool {
-	return true
-}
-
-func GoChangeCov1() bool {
-	return false
-}

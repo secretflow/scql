@@ -42,8 +42,6 @@ std::string CheckAndGetAbsoluteLocalPath(
 // by default.
 bool GetAndRemoveS3EndpointPrefix(std::string& endpoint);
 
-bool GetAndRemoveS3EndpointPrefixForTest(std::string& endpoint);
-
 class ScopedDir {
  public:
   explicit ScopedDir(std::filesystem::path dir) : dir_(std::move(dir)) {}
