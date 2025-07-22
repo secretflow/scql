@@ -1,0 +1,26 @@
+# Configure whether the Coveralls status check fails when coverage decreases
+fail_on_coverage_decrease: false
+
+coverage:
+  status:
+    project:
+      go-tests:
+        # Set a coverage threshold for the changed lines of code.
+        target: 70%
+
+      cpp-tests:
+        target: 70%
+
+    patch:
+      default:
+        target: 70%
+
+comment:
+  pull_request:
+    # update a comment
+    behavior: default
+
+    # diff:  Shows overall coverage change and coverage of changed lines
+    # flags: If upload multiple reports (C++ and Go), they will be displayed separately
+    # files: Lists the files where coverage has changed
+    layout: "diff, flags, files"
