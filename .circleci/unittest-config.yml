@@ -92,7 +92,7 @@ commands:
               bazelisk --host_jvm_args=-Xmx8g coverage //engine/... \
                   << parameters.extra_bazel_args >> \
                   --combined_report=lcov \
-                  --jobs=32 \
+                  --jobs=auto \
                   --ui_event_filters=-info,-debug,-warning \
                   --test_output=errors | tee test_result.log
 
@@ -109,7 +109,7 @@ commands:
               echo "Running tests without coverage..."
               bazelisk --host_jvm_args=-Xmx8g test //engine/... \
                   << parameters.extra_bazel_args >> \
-                  --jobs=32 \
+                  --jobs=auto \
                   --ui_event_filters=-info,-debug,-warning \
                   --test_output=errors | tee test_result.log
 
