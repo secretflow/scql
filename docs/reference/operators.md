@@ -2502,7 +2502,7 @@ Definition: return the rank in each partition
 
 **Attributes:**
 
-1. `reverse`: string array consits of "0" and "1", "0" means this input tensor sort by ascending, "1" means this tensor sort by descending.
+1. `reverse`: string array consists of "0" and "1", "0" means this input tensor sort by ascending, "1" means this tensor sort by descending.
 		e.g. ["0","1"] means the first input key sort by ascending, the second sort by descending
 
 
