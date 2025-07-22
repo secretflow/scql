@@ -2479,7 +2479,7 @@ Definition: return the value of Radians function
 
 **TensorStatus(ShareType) Constraints:**
 
-1. `T`:
+1. `T`: private
 
 ### `Rank`
 
