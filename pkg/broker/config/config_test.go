@@ -41,7 +41,8 @@ func TestNewConfig(t *testing.T) {
 			KeyFile:  "key_file",
 		},
 		InterServer: ServerConfig{
-			Port: 8082,
+			Port:     8082,
+			Protocol: "http",
 		},
 		InterTimeout:                 5 * time.Second,
 		IntraHost:                    "localhost:8081",
