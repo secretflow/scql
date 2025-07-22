@@ -178,7 +178,6 @@ jobs:
           path: test_binary.tar.gz
       - store_artifacts:
           path: test_logs.tar.gz
-    when: always
 
   macOS_go_ut:
     macos:
@@ -212,7 +211,7 @@ jobs:
             brew link go@1.24
       - setup_cpp_test
       - run_cpp_test:
-          extra_bazel_args: ""  
+          extra_bazel_args: ""
           find_executable_flag: "-perm +111"
       - store_test_results:
           path: test-results
