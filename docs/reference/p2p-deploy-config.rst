@@ -18,6 +18,7 @@ Example configuration for SCQLBroker
 
   intra_server:
     port: 8080
+    protocol: http
   inter_server:
     host: 0.0.0.0
     port: 8081
@@ -30,7 +31,7 @@ Example configuration for SCQLBroker
   session_expire_check_time: 1m
   party_info_file: "/home/admin/configs/party_info.json"
   private_key_path: "/home/admin/configs/private_key.pem"
-  intra_host: http://broker_alice:8080
+  intra_host: broker_alice:8080
   engine:
     timeout: 120s
     protocol: http
