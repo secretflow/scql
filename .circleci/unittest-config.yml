@@ -125,6 +125,13 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Skip job if not needed
+          command: |
+            if [ "<< pipeline.parameters.run_go_ut >>" != "true" ]; then
+              echo "Skipping go coverage"
+              circleci-agent step halt
+            fi
+      - run:
           name: Install gcov2lcov
           command: go install github.com/jandelgado/gcov2lcov@latest
       - run_go_test:
@@ -160,6 +167,13 @@ jobs:
     resource_class: "2xlarge"
     steps:
       - checkout
+      - run:
+          name: Skip job if not needed
+          command: |
+            if [ "<< pipeline.parameters.run_cpp_ut >>" != "true" ]; then
+              echo "Skipping cpp coverage"
+              circleci-agent step halt
+            fi
       - run:
           name: "Install lcov"
           command: apt-get update && apt-get install -y lcov
@@ -231,7 +245,6 @@ workflows:
             parameters:
               resource_class: ["2xlarge", "arm-xlarge"]
       - macOS_go_ut
-      - linux_go_cov
   run_cpp_ut:
     when: << pipeline.parameters.run_cpp_ut >>
     jobs:
@@ -240,4 +253,11 @@ workflows:
             parameters:
               resource_class: ["2xlarge", "arm-xlarge"]
       - macOS_cpp_ut
+  run_cov:
+    when:
+      or:
+        - << pipeline.parameters.run_go_ut >>
+        - << pipeline.parameters.run_cpp_ut >>
+    jobs:
+      - linux_go_cov
       - linux_cpp_cov
