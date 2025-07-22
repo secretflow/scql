@@ -56,8 +56,9 @@ commands:
             go mod tidy
             if << parameters.enable_coverage >>; then
               echo "Running tests with coverage..."
-              go test -timeout=30m -v -short -coverprofile=coverage.tmp ./pkg/... ./contrib/...
+              go test -timeout=30m -v -cover -race -coverprofile=coverage.tmp ./pkg/... ./contrib/...
               cat coverage.tmp | grep -v '\.pb\.go:\|_mock\.go:' > coverage.out
+              gcov2lcov -infile=coverage.out -outfile=coverage.lcov
             else
               echo "Running tests without coverage..."
               go test -timeout=30m -v -short ./pkg/... ./contrib/...
@@ -84,7 +85,7 @@ commands:
 
             if << parameters.enable_coverage >>; then
               echo "Running tests with coverage..."
-              bazelisk --host_jvm_args=-Xmx8g coverage //engine/... << parameters.extra_bazel_args >> --profile=bazel-profile.json.gz --combined_report=lcov --jobs=32 --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
+              bazelisk --host_jvm_args=-Xmx8g coverage //engine/... << parameters.extra_bazel_args >> --combined_report=lcov --jobs=32 --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
 
               echo "Processing coverage..."
               lcov --remove bazel-out/_coverage/_coverage_report.dat '*.pb.h' '*.pb.cc' -o bazel-out/_coverage/_coverage_report_filtered.dat
@@ -115,16 +116,23 @@ jobs:
     # See: https://circleci.com/docs/2.0/configuration-reference/#steps
     steps:
       - checkout
+      - run_go_test
+
+  linux_go_cov:
+    docker:
+      - image: secretflow/scql-ci:latest
+    resource_class: "2xlarge"
+    steps:
+      - checkout
+      - run:
+          name: Install gcov2lcov
+          command: go install github.com/jandelgado/gcov2lcov@latest
       - run_go_test:
           enable_coverage: true
-      - when:
-          condition:
-            equal: [ "<< parameters.resource_class >>", "2xlarge" ]
-          steps:
-            - coveralls/upload:
-                coverage_file: coverage.out
-                coverage_format: golang
-                flag_name: "go-tests"
+      - coveralls/upload:
+          coverage_file: coverage.lcov
+          coverage_format: lcov
+          flag_name: "go-tests"
 
   linux_cpp_ut:
     docker:
@@ -135,6 +143,23 @@ jobs:
     resource_class: << parameters.resource_class >>
     steps:
       - checkout
+      - setup_cpp_test
+      - run_cpp_test:
+          extra_bazel_args: "-c opt"
+          find_executable_flag: "-executable"
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test_binary.tar.gz
+      - store_artifacts:
+          path: test_logs.tar.gz
+
+  linux_cpp_cov:
+    docker:
+      - image: secretflow/scql-ci:latest
+    resource_class: "2xlarge"
+    steps:
+      - checkout
       - run:
           name: "Install lcov"
           command: apt-get update && apt-get install -y lcov
@@ -143,22 +168,17 @@ jobs:
           extra_bazel_args: "-c opt"
           find_executable_flag: "-executable"
           enable_coverage: true
-      - when:
-          condition:
-            equal: [ "<< parameters.resource_class >>", "2xlarge" ]
-          steps:
-            - coveralls/upload:
-                coverage_file: bazel-out/_coverage/_coverage_report_filtered.dat
-                coverage_format: lcov
-                flag_name: "cpp-tests"
+      - coveralls/upload:
+          coverage_file: bazel-out/_coverage/_coverage_report_filtered.dat
+          coverage_format: lcov
+          flag_name: "cpp-tests"
       - store_test_results:
           path: test-results
       - store_artifacts:
           path: test_binary.tar.gz
       - store_artifacts:
           path: test_logs.tar.gz
-      - store_artifacts:
-          path: bazel-profile.json.gz
+    when: always
 
   macOS_go_ut:
     macos:
@@ -212,6 +232,7 @@ workflows:
             parameters:
               resource_class: ["2xlarge", "arm-xlarge"]
       - macOS_go_ut
+      - linux_go_cov
   run_cpp_ut:
     when: << pipeline.parameters.run_cpp_ut >>
     jobs:
@@ -220,3 +241,4 @@ workflows:
             parameters:
               resource_class: ["2xlarge", "arm-xlarge"]
       - macOS_cpp_ut
+      - linux_cpp_cov
