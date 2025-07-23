@@ -58,6 +58,8 @@ commands:
             echo "Authenticating with gsutil..."
             gcloud auth activate-service-account --key-file=../gcs.json
 
+            gsutil ls -p skilled-mission-410013
+
             echo "Checking for cache entries uploaded today..."
             set +e
             gsutil ls -l gs://secretflow/** | grep "$(date +%Y-%m-%d)" > /tmp/gcs_check_output.log
@@ -66,7 +68,7 @@ commands:
 
             if [ ${GCS_CHECK_STATUS} -eq 0 ]; then
               echo "[SUCCESS] Found cache entries uploaded today:"
-              cat /tmp/gcs_check_output.log | head -n 10 # 显示前10条结果
+              cat /tmp/gcs_check_output.log | head -n 10
             else
               echo "[FAILURE] No cache entries were found for today. This strongly suggests the upload failed."
             fi
