@@ -26,6 +26,7 @@ namespace scql::engine::op {
 struct CastTestCase {
   test::NamedTensor input;
   pb::TensorStatus input_status;
+  bool string2datetime;
   test::NamedTensor expect_out;
 };
 
@@ -70,6 +71,7 @@ INSTANTIATE_TEST_SUITE_P(
                         arrow::large_utf8(),
                         R"json(["2023-01-01T12:30:45", "2021-12-01", "2023-10-27 15:45:00"])json")),
                 .input_status = pb::TENSORSTATUS_PRIVATE,
+                .string2datetime = true,
                 .expect_out = test::NamedTensor(
                     "out", TensorFrom(arrow::int64(),
                                       "[1672576245, 1638316800, 1698421500]"))},
@@ -183,8 +185,14 @@ pb::ExecNode CastTest::MakeExecNode(const CastTestCase& tc) {
   }
 
   {
-    auto t = test::MakeTensorReference(
-        tc.expect_out.name, tc.expect_out.tensor->Type(), tc.input_status);
+    pb::Tensor t;
+    if (tc.string2datetime) {
+      t = test::MakeTensorReference(
+          tc.expect_out.name, pb::PrimitiveDataType::DATETIME, tc.input_status);
+    } else {
+      t = test::MakeTensorReference(
+          tc.expect_out.name, tc.expect_out.tensor->Type(), tc.input_status);
+    }
     builder.AddOutput(Cast::kOut, {t});
   }
 
