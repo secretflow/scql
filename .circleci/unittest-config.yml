@@ -42,6 +42,36 @@ commands:
             echo ${gcs_content} > ../gcs.data
             ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
 
+            echo "--- Starting GCS Cache Check ---"
+
+            if ! command -v gcloud &> /dev/null
+            then
+                echo "Google Cloud SDK not found. Installing..."
+                apt-get update -y && apt-get install -y curl gnupg
+                echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+                curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+                apt-get update -y && apt-get install -y google-cloud-sdk
+            else
+                echo "Google Cloud SDK is already installed."
+            fi
+
+            echo "Authenticating with gsutil..."
+            gcloud auth activate-service-account --key-file=../gcs.json
+
+            echo "Checking for cache entries uploaded today..."
+            set +e
+            gsutil ls -l gs://secretflow/** | grep "$(date +%Y-%m-%d)" > /tmp/gcs_check_output.log
+            GCS_CHECK_STATUS=${PIPESTATUS[0]}
+            set -e
+
+            if [ ${GCS_CHECK_STATUS} -eq 0 ]; then
+              echo "[SUCCESS] Found cache entries uploaded today:"
+              cat /tmp/gcs_check_output.log | head -n 10 # 显示前10条结果
+            else
+              echo "[FAILURE] No cache entries were found for today. This strongly suggests the upload failed."
+            fi
+            echo "--- GCS Cache Check Finished ---"
+
   run_go_test:
     description: "Run go tests"
     parameters:
