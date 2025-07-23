@@ -58,19 +58,20 @@ commands:
             echo "Authenticating with gsutil..."
             gcloud auth activate-service-account --key-file=../gcs.json
 
-            gsutil ls -p skilled-mission-410013
+            echo "Testing bucket access..."
+            if gsutil ls gs://secretflow/ > /dev/null 2>&1; then
+                echo "Successfully authenticated and can access gs://secretflow/"
 
-            echo "Checking for cache entries uploaded today..."
-            set +e
-            gsutil ls -l gs://secretflow/** | grep "$(date +%Y-%m-%d)" > /tmp/gcs_check_output.log
-            GCS_CHECK_STATUS=${PIPESTATUS[0]}
-            set -e
+                echo "Cache directory structure:"
+                gsutil ls gs://secretflow/ | head -10
 
-            if [ ${GCS_CHECK_STATUS} -eq 0 ]; then
-              echo "[SUCCESS] Found cache entries uploaded today:"
-              cat /tmp/gcs_check_output.log | head -n 10
+                echo "Recent cache files (if any):"
+                gsutil ls -l gs://secretflow/ac/ 2>/dev/null | tail -5 || echo "No action cache found yet"
+                gsutil ls -l gs://secretflow/cas/ 2>/dev/null | tail -5 || echo "No content addressable storage found yet"
             else
-              echo "[FAILURE] No cache entries were found for today. This strongly suggests the upload failed."
+                echo "Failed to access gs://secretflow/"
+                echo "Available buckets for this service account:"
+                gsutil ls 2>/dev/null || echo "No accessible buckets found"
             fi
             echo "--- GCS Cache Check Finished ---"
 
