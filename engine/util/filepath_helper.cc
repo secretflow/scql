@@ -81,6 +81,18 @@ bool GetAndRemoveS3EndpointPrefix(std::string& endpoint) {
   return true;
 }
 
+bool GetS3EndpointPrefix(std::string& endpoint) {
+  const std::string http_prefix = "http://";
+  const std::string https_prefix = "https://";
+  if (absl::StartsWith(endpoint, http_prefix)) {
+    return false;
+  } else if (absl::StartsWith(endpoint, https_prefix)) {
+    return true;
+  }
+  // https by default
+  return true;
+}
+
 std::filesystem::path CreateDir(const std::filesystem::path& parent_dir,
                                 const std::string& dir_name) {
   auto dir = parent_dir / dir_name;
