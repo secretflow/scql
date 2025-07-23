@@ -585,7 +585,7 @@ Group = {0, 1, 1, 0, 1}
 			{opName: OpNameObliviousGroupMin, aggResult: `[{1, 3, 2, 2, 0}, {9, 8, 7, 6, 5}]`},
 			{opName: OpNameObliviousGroupAvg, aggResult: `[{1, 3, 2.5, 3, 0}, {9, 8, 7.5, 7, 5}]`},
 			{opName: OpNameObliviousPercentRank, aggResult: `[{1, 0.3333, 0.6666, 1, 1, 1}, {1, 0.3333, 0.6666, 1, 1, 1}]`},
-			{opName: OpNameObliviousRank, aggResult: `[{2, 2, 1, 3, 1}, {}]`},
+			{opName: OpNameObliviousRank, aggResult: `[{2, 2, 1, 3, 1}, {3, 2, 1, 2, 1}]`},
 		} {
 			opDef := &OperatorDef{}
 			opDef.SetName(t.opName)
@@ -1016,9 +1016,9 @@ Out = {0, 1, NULL}
 			opDef.AddInput("PartitionNum", "the partitioned num, e.g. [2]", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 			opDef.AddOutput("Out", fmt.Sprintf("%s output", decription), proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 			opDef.SetDefinition(fmt.Sprintf("Definition: return the %s in each partition", decription))
-			opDef.AddAttribute(ReverseAttr, `string array consits of "0" and "1", "0" means this input tensor sort by ascending, "1" means this tensor sort by descending.
+			opDef.AddAttribute(ReverseAttr, `string array consists of "0" and "1", "0" means this input tensor sort by ascending, "1" means this tensor sort by descending.
 		e.g. ["0","1"] means the first input key sort by ascending, the second sort by descending`)
-			opDef.SetParamTypeConstraint(T, statusPrivateOrSecretOrPublic)
+			opDef.SetParamTypeConstraint(T, statusPrivate)
 			check(opDef.err)
 			AllOpDef = append(AllOpDef, opDef)
 		}
