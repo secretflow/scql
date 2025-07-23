@@ -91,7 +91,7 @@ commands:
               lcov --remove bazel-out/_coverage/_coverage_report.dat '*.pb.h' '*.pb.cc' -o bazel-out/_coverage/_coverage_report_filtered.dat
             else
               echo "Running tests without coverage..."
-              bazelisk --host_jvm_args=-Xmx8g test //engine/... << parameters.extra_bazel_args >> --jobs=32 --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
+              bazelisk --host_jvm_args=-Xmx8g test //engine/... << parameters.extra_bazel_args >> --jobs=32 --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
             fi
 
             sh ../devtools/rename-junit-xml.sh
@@ -152,7 +152,7 @@ jobs:
       - checkout
       - setup_cpp_test
       - run_cpp_test:
-          extra_bazel_args: "-c opt"
+          extra_bazel_args: "-c opt --execution_log_json_file=/tmp/execution.log --verbose_failures"
           find_executable_flag: "-executable"
       - store_test_results:
           path: test-results
@@ -160,6 +160,8 @@ jobs:
           path: test_binary.tar.gz
       - store_artifacts:
           path: test_logs.tar.gz
+      - store_artifacts:
+          path: /tmp/execution.log
 
   linux_cpp_cov:
     docker:
@@ -179,7 +181,7 @@ jobs:
           command: apt-get update && apt-get install -y lcov
       - setup_cpp_test
       - run_cpp_test:
-          extra_bazel_args: "-c opt"
+          extra_bazel_args: "-c opt --remote_upload_local_results=false"
           find_executable_flag: "-executable"
           enable_coverage: true
       - coveralls/upload:
