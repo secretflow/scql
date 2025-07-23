@@ -31,10 +31,11 @@ const (
 	DefaultEngineClientTimeout          = 120 * time.Second // 120s
 	DefaultInterTimeout                 = 5 * time.Second   // 5s
 	DefaultBrokerIntraServerHost        = "127.0.0.1"       // default use localhost for safety
+	DefaultBrokerProtocol               = "http"
 	DefaultLogLevel                     = "info"
-	DefaultEngineProtocol               = "http"
 	DefaultExchangeJobInfoRetryTimes    = 3
 	DefaultExchangeJobInfoRetryInterval = 200 * time.Millisecond
+	DefaultEngineProtocol               = "http"
 	DefaultEngineClientMode             = "GRPC"
 )
 
@@ -197,7 +198,9 @@ func NewConfig(configPath string) (*Config, error) {
 
 func newDefaultConfig() *Config {
 	var config Config
+	config.IntraServer.Protocol = DefaultBrokerProtocol
 	config.IntraServer.Host = DefaultBrokerIntraServerHost
+	config.InterServer.Protocol = DefaultBrokerProtocol
 	config.InterTimeout = DefaultInterTimeout
 	config.LogLevel = DefaultLogLevel
 
