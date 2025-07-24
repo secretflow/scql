@@ -90,7 +90,6 @@ commands:
 
               # Capture the exit status of the Bazel command
               test_status=${PIPESTATUS[0]}
-
               if [ ${test_status} -eq 0 ]; then
                 echo "Processing coverage..."
                 lcov --remove bazel-out/_coverage/_coverage_report.dat '*.pb.h' '*.pb.cc' -o bazel-out/_coverage/_coverage_report_filtered.dat
@@ -107,7 +106,6 @@ commands:
 
               # Capture the exit status of the Bazel command
               test_status=${PIPESTATUS[0]}
-
             fi
 
             sh ../devtools/rename-junit-xml.sh
