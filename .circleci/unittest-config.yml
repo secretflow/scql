@@ -43,7 +43,7 @@ commands:
       #       ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
       - run:
           name: Setup BuildBuddy Cache
-          command: python3 ./scripts/bazel_cache_setup.py
+          command: python3 ./bazel_cache_setup.py
 
 
   run_go_test:
