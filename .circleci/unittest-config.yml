@@ -42,39 +42,6 @@ commands:
             echo ${gcs_content} > ../gcs.data
             ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
 
-            echo "--- Starting GCS Cache Check ---"
-
-            if ! command -v gcloud &> /dev/null
-            then
-                echo "Google Cloud SDK not found. Installing..."
-                apt-get update -y && apt-get install -y curl gnupg
-                echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-                curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
-                apt-get update -y && apt-get install -y google-cloud-sdk
-            else
-                echo "Google Cloud SDK is already installed."
-            fi
-
-            echo "Authenticating with gsutil..."
-            gcloud auth activate-service-account --key-file=../gcs.json
-
-            echo "Testing bucket access..."
-            if gsutil ls gs://secretflow/ > /dev/null 2>&1; then
-                echo "Successfully authenticated and can access gs://secretflow/"
-
-                echo "Cache directory structure:"
-                gsutil ls gs://secretflow/ | head -10
-
-                echo "Recent cache files (if any):"
-                gsutil ls -l gs://secretflow/ac/ 2>/dev/null | tail -5 || echo "No action cache found yet"
-                gsutil ls -l gs://secretflow/cas/ 2>/dev/null | tail -5 || echo "No content addressable storage found yet"
-            else
-                echo "Failed to access gs://secretflow/"
-                echo "Available buckets for this service account:"
-                gsutil ls 2>/dev/null || echo "No accessible buckets found"
-            fi
-            echo "--- GCS Cache Check Finished ---"
-
   run_go_test:
     description: "Run go tests"
     parameters:
@@ -118,13 +85,13 @@ commands:
 
             if << parameters.enable_coverage >>; then
               echo "Running tests with coverage..."
-              bazelisk --host_jvm_args=-Xmx8g coverage //engine/... << parameters.extra_bazel_args >> --combined_report=lcov --jobs=32 --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
+              bazelisk --host_jvm_args=-Xmx8g coverage //engine/util/... << parameters.extra_bazel_args >> --combined_report=lcov --jobs=32 --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
 
               echo "Processing coverage..."
               lcov --remove bazel-out/_coverage/_coverage_report.dat '*.pb.h' '*.pb.cc' -o bazel-out/_coverage/_coverage_report_filtered.dat
             else
               echo "Running tests without coverage..."
-              bazelisk --host_jvm_args=-Xmx8g test //engine/... << parameters.extra_bazel_args >> --jobs=32 --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
+              bazelisk --host_jvm_args=-Xmx8g test //engine/util/... << parameters.extra_bazel_args >> --jobs=32 --ui_event_filters=-info,-debug,-warning --test_output=errors | tee test_result.log; test_status=${PIPESTATUS[0]}
             fi
 
             sh ../devtools/rename-junit-xml.sh
@@ -184,8 +151,40 @@ jobs:
     steps:
       - checkout
       - setup_cpp_test
+      # - run:
+      #   name: GCS Cache Check
+      #   command: |
+      #     if ! command -v gcloud &> /dev/null
+      #     then
+      #         echo "Google Cloud SDK not found. Installing..."
+      #         apt-get update -y && apt-get install -y curl gnupg
+      #         echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+      #         curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+      #         apt-get update -y && apt-get install -y google-cloud-sdk
+      #     else
+      #         echo "Google Cloud SDK is already installed."
+      #     fi
+
+      #     echo "Authenticating with gsutil..."
+      #     gcloud auth activate-service-account --key-file=../gcs.json
+
+      #     echo "Testing bucket access..."
+      #     if gsutil ls gs://secretflow/ > /dev/null 2>&1; then
+      #         echo "Successfully authenticated and can access gs://secretflow/"
+
+      #         echo "Cache directory structure:"
+      #         gsutil ls gs://secretflow/ | head -10
+
+      #         echo "Recent cache files (if any):"
+      #         gsutil ls -l gs://secretflow/ac/ 2>/dev/null | tail -5 || echo "No action cache found yet"
+      #         gsutil ls -l gs://secretflow/cas/ 2>/dev/null | tail -5 || echo "No content addressable storage found yet"
+      #     else
+      #         echo "Failed to access gs://secretflow/"
+      #         echo "Available buckets for this service account:"
+      #         gsutil ls 2>/dev/null || echo "No accessible buckets found"
+      #     fi
       - run_cpp_test:
-          extra_bazel_args: "-c opt"
+          extra_bazel_args: "-c opt --execution_log_json_file=/tmp/execution.log"
           find_executable_flag: "-executable"
       - store_test_results:
           path: test-results
@@ -193,6 +192,8 @@ jobs:
           path: test_binary.tar.gz
       - store_artifacts:
           path: test_logs.tar.gz
+      - store_artifacts:
+          path: /tmp/execution.log
 
   linux_cpp_cov:
     docker:
