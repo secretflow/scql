@@ -33,14 +33,6 @@ parameters:
 commands:
   setup_cpp_test:
     steps:
-      # - run:
-      #     name: "Checkout devtools"
-      #     command: git clone https://github.com/secretflow/devtools.git ../devtools
-      # - run:
-      #     name: Setup GCS
-      #     command: |
-      #       echo ${gcs_content} > ../gcs.data
-      #       ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
       - run:
           name: Setup BuildBuddy Cache
           command: python3 ./bazel_cache_setup.py
