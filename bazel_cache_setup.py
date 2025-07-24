@@ -17,6 +17,7 @@
 import argparse
 import os
 
+
 def main():
     """
     Configures the .bazelrc file for BuildBuddy remote caching by reading
@@ -31,18 +32,20 @@ def main():
     # --- BuildBuddy Configuration ---
 
     # 1. Get the API key from the CircleCI environment variable.
-    api_key = os.getenv('BUILDBUDDY_API_KEY')
+    api_key = os.getenv("BUILDBUDDY_API_KEY")
 
     if not api_key:
-        print("Error: BUILDBUDDY_API_KEY environment variable is not set.")
-        print("Please ensure it is configured in your CircleCI project settings.")
-        exit(1)
+        print("Warning: BUILDBUDDY_API_KEY environment variable not found.")
+        print("Proceeding with the build without remote caching.")
+        return
 
     print("Found BUILDBUDDY_API_KEY. Configuring .bazelrc for BuildBuddy...")
 
     # 2. Append the required BuildBuddy flags to the .bazelrc file.
-    with open('.bazelrc', 'a') as f:
-        f.write("build --bes_results_url=https://secretflow.buildbuddy.io/invocation/\n")
+    with open(".bazelrc", "a") as f:
+        f.write(
+            "build --bes_results_url=https://secretflow.buildbuddy.io/invocation/\n"
+        )
         f.write("build --bes_backend=grpcs://secretflow.buildbuddy.io\n")
         f.write("build --remote_cache=grpcs://secretflow.buildbuddy.io\n")
         f.write("build --remote_timeout=10m\n")
