@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.9.4] - 2025-07-29
 
 ### Added
-- Added Achieve API to support project archiving.
+- Added Archive API to support project archiving.
 - Enhanced time-type data processing capability: support `STR_TO_DATE` function and implicit conversion from string to time types.
 - Supported richer expression of statements: `PERCENTILE_DISC`, `BETWEEN AND`, `REPLACE`, etc.
 
