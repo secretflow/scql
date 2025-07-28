@@ -1,6 +1,6 @@
 module github.com/secretflow/scql
 
-go 1.24
+go 1.24.5
 
 require (
 	github.com/apache/arrow/go/v17 v17.0.0
