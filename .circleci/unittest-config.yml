@@ -34,10 +34,8 @@ commands:
           name: "Checkout devtools"
           command: git clone https://github.com/secretflow/devtools.git ../devtools
       - run:
-          name: Setup GCS
-          command: |
-            echo ${gcs_content} > ../gcs.data
-            ../devtools/bazel_cache_setup.py --in_file=../gcs.data --out_file=../gcs.json --min_download
+          name: Setup BuildBuddy Cache
+          command: ../devtools/bazel_cache_setup.py
   run_go_test:
     description: "Run go tests"
     steps:
