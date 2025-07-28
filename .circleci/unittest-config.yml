@@ -34,9 +34,11 @@ commands:
   setup_cpp_test:
     steps:
       - run:
+          name: "Checkout devtools"
+          command: git clone https://github.com/secretflow/devtools.git ../devtools
+      - run:
           name: Setup BuildBuddy Cache
-          command: python3 ./bazel_cache_setup.py
-
+          command: ../devtools/bazel_cache_setup.py
 
   run_go_test:
     description: "Run go tests"
