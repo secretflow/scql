@@ -212,7 +212,7 @@ jobs:
   macOS_go_ut:
     macos:
       xcode: 16.0.0
-    resource_class: macos.m1.large.gen1
+    resource_class: m4pro.medium
     steps:
       - checkout
       - run:
@@ -224,7 +224,7 @@ jobs:
   macOS_cpp_ut:
     macos:
       xcode: 16.0.0
-    resource_class: macos.m1.large.gen1
+    resource_class: m4pro.medium
     steps:
       - run:
           name: Cancel build after set time
