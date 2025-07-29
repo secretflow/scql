@@ -321,7 +321,7 @@ func stripAsTbl(ctx *runSqlCtx) (*ast.TableSource, bool) {
 		return nil, false
 	}
 	from := ctx.selectStmt.From
-	if from == nil {
+	if from == nil || from.TableRefs == nil {
 		return nil, false
 	}
 	if from.TableRefs.Right != nil {
