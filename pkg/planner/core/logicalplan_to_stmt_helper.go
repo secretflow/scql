@@ -324,6 +324,9 @@ func stripAsTbl(ctx *runSqlCtx) (*ast.TableSource, bool) {
 	if from == nil {
 		return nil, false
 	}
+	if from.TableRefs.Right != nil {
+		return nil, false
+	}
 	if source, ok := from.TableRefs.Left.(*ast.TableSource); !ok {
 		return nil, false
 	} else {
@@ -334,12 +337,6 @@ func stripAsTbl(ctx *runSqlCtx) (*ast.TableSource, bool) {
 		}
 	}
 }
-
-// func StripFieldAsName(ss *ast.SelectStmt) {
-// 	for _, field := range ss.Fields.Fields {
-// 		field.AsName = model.NewCIStr("")
-// 	}
-// }
 
 func composeCNFCondition(conds []ast.ExprNode) ast.ExprNode {
 	var result ast.ExprNode
