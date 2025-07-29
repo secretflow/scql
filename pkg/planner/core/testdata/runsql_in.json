@@ -3,6 +3,11 @@
     "name": "TestRunSQL",
     "cases": [
       {
+        "sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2;",
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2"
+      },
+      {
         "sql": "SELECT tbl_1.plain_int_0, tbl_1.plain_float_0, ROW_NUMBER() OVER(PARTITION BY tbl_1.plain_int_0 ORDER BY tbl_1.plain_float_0) AS number from alice.tbl_1 as tbl_1;",
         "skip_projection": false,
         "rewritten_sql": "select tbl_1.plain_int_0,tbl_1.plain_float_0,row_number() over (partition by tbl_1.plain_int_0 order by tbl_1.plain_float_0) as number from alice.tbl_1 as tbl_1"

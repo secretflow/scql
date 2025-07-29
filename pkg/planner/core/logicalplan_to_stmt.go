@@ -129,7 +129,10 @@ func (p *LogicalJoin) SqlStmt(d Dialect) (*runSqlCtx, error) {
 	if err != nil {
 		return nil, err
 	}
-	joinStmt.On = &ast.OnCondition{Expr: composeCNFCondition(conds)}
+	// size of conds is zero means it's cross join
+	if len(conds) > 0 {
+		joinStmt.On = &ast.OnCondition{Expr: composeCNFCondition(conds)}
+	}
 	newCtx.setFrom(&ast.TableRefsClause{TableRefs: joinStmt})
 	return newCtx, nil
 }
