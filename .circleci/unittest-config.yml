@@ -34,9 +34,11 @@ commands:
   setup_cpp_test:
     steps:
       - run:
+          name: "Checkout devtools"
+          command: git clone https://github.com/secretflow/devtools.git ../devtools
+      - run:
           name: Setup BuildBuddy Cache
-          command: python3 ./bazel_cache_setup.py
-
+          command: ../devtools/bazel_cache_setup.py
 
   run_go_test:
     description: "Run go tests"
@@ -210,7 +212,7 @@ jobs:
   macOS_go_ut:
     macos:
       xcode: 16.0.0
-    resource_class: macos.m1.large.gen1
+    resource_class: m4pro.medium
     steps:
       - checkout
       - run:
@@ -222,7 +224,7 @@ jobs:
   macOS_cpp_ut:
     macos:
       xcode: 16.0.0
-    resource_class: macos.m1.large.gen1
+    resource_class: m4pro.medium
     steps:
       - run:
           name: Cancel build after set time
