@@ -57,6 +57,8 @@ enum class SessionState {
 
 pb::JobState ConvertSessionStateToJobState(SessionState state);
 
+std::string SessionStateToString(SessionState state);
+
 struct LinkConfig {
   uint32_t link_recv_timeout_ms = 30 * 1000;  // 30s
   size_t link_throttle_window_size = 0;

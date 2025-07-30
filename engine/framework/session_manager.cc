@@ -18,6 +18,8 @@
 #include <thread>
 #include <utility>
 
+#include "engine/framework/session.h"
+
 #ifndef DISABLE_TCMALLOC
 #include "gperftools/malloc_extension.h"
 #endif
@@ -216,7 +218,7 @@ void SessionManager::RemoveSession(const std::string& session_id) {
       YACL_THROW_LOGIC_ERROR(
           "session({}), status({}) not belong to FAILED/SUCCEEDED, so can't "
           "remove.",
-          session_id, static_cast<size_t>(session_state));
+          session_id, SessionStateToString(session_state));
     }
 
     auto node_handle = id_to_session_.extract(iter);
@@ -252,7 +254,7 @@ bool SessionManager::SetSessionState(const std::string& session_id,
 
   iter->second->SetState(state);
   SPDLOG_INFO("session({}), set state={}", session_id,
-              static_cast<size_t>(state));
+              SessionStateToString(state));
   return true;
 }
 
@@ -277,14 +279,14 @@ bool SessionManager::CompareAndSetState(const std::string& session_id,
 
   if (success) {
     SPDLOG_INFO("session({}), state transitioned from {} to {} successfully.",
-                session_id, static_cast<int>(expected_state),
-                static_cast<int>(desired_state));
+                session_id, SessionStateToString(expected_state),
+                SessionStateToString(desired_state));
   } else {
     SPDLOG_WARN(
         "session({}), failed to transition state from {} to {}. Current state "
         "was not the expected one.",
-        session_id, static_cast<int>(expected_state),
-        static_cast<int>(desired_state));
+        session_id, SessionStateToString(expected_state),
+        SessionStateToString(desired_state));
   }
 
   return success;

@@ -60,6 +60,25 @@ pb::JobState ConvertSessionStateToJobState(SessionState state) {
   }
 }
 
+std::string SessionStateToString(SessionState state) {
+  switch (state) {
+    case SessionState::INITIALIZED:
+      return "INITIALIZED";
+    case SessionState::RUNNING:
+      return "RUNNING";
+    case SessionState::CMP_FIN:
+      return "COMPUTATION_FINISHED";
+    case SessionState::SUCCEEDED:
+      return "SUCCEEDED";
+    case SessionState::FAILED:
+      return "FAILED";
+    case SessionState::ABORTING:
+      return "ABORTING";
+    default:
+      return "UNKNOWN_STATE_" + std::to_string(static_cast<int>(state));
+  }
+}
+
 bool Session::ValidateSPUContext() {
   YACL_ENFORCE(spu_ctx_ != nullptr,
                "SPU context is not initialized successfully.");
