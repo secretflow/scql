@@ -256,6 +256,40 @@ bool SessionManager::SetSessionState(const std::string& session_id,
   return true;
 }
 
+bool SessionManager::CompareAndSetState(const std::string& session_id,
+                                        SessionState expected_state,
+                                        SessionState desired_state) {
+  if (session_id.empty()) {
+    SPDLOG_WARN("session_id is empty, cannot perform CAS state.");
+    return false;
+  }
+
+  std::unique_lock<std::mutex> lock(mutex_);
+  auto iter = id_to_session_.find(session_id);
+  if (iter == id_to_session_.end()) {
+    SPDLOG_WARN("session({}) not exists, cannot perform CAS state.",
+                session_id);
+    return false;
+  }
+
+  Session* session = iter->second.get();
+  bool success = session->CASState(expected_state, desired_state);
+
+  if (success) {
+    SPDLOG_INFO("session({}), state transitioned from {} to {} successfully.",
+                session_id, static_cast<int>(expected_state),
+                static_cast<int>(desired_state));
+  } else {
+    SPDLOG_WARN(
+        "session({}), failed to transition state from {} to {}. Current state "
+        "was not the expected one.",
+        session_id, static_cast<int>(expected_state),
+        static_cast<int>(desired_state));
+  }
+
+  return success;
+}
+
 void SessionManager::WatchSessionTimeoutThread() {
   SPDLOG_INFO("WatchSessionTimeoutThread startup, session default timeout={}s",
               session_default_timeout_s_.count());
