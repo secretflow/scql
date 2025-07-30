@@ -355,10 +355,8 @@ void Join::Rr22PsiJoin(ExecContext* ctx) {
   // receiver should be the one who has more data
   if (peer_size > self_size) {
     is_sender = true;
-  }
-  if (target_rank != yacl::link::kAllRank) {
-    // receiver get result
-    is_sender = target_rank != psi_link->Rank();
+  } else if (self_size > peer_size) {
+    is_sender = false;
   }
   runner.ParallelRun(0, is_sender);
   size_t result_size = 0;
