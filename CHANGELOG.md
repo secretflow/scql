@@ -22,6 +22,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.9.4] - 2025-07-29
+
+### Added
+- Added Archive API to support project archiving.
+- Enhanced time-type data processing capability: support `STR_TO_DATE` function and implicit conversion from string to time types.
+- Supported richer expression of statements: `PERCENTILE_DISC`, `BETWEEN AND`, `REPLACE`, etc.
+
+### Changed
+- Optimized data source reading, improving streaming processing capabilities.
+- Optimized `JOIN` process to eliminate the need for additional `PLAINTEXT_AFTER_JOIN` CCL for non-result-receiving parties on join keys.
+
+### Fixed
+- Resolved the issue with compare subquery exceptions in aggregation scenarios.
+- Fixed column disorder issues in the project tables.
+- Resolved problems in LogicalOptimizer to prevent the removal of LogicalProjection nodes that could lead to performance and Tensor property inference issues.
+
 ## [0.9.3] - 2025-03-07
 
 ### Added
