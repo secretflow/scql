@@ -49,9 +49,10 @@ namespace scql::engine {
 enum class SessionState {
   INITIALIZED = 0,
   RUNNING = 1,
-  ABORTING = 2,
-  SUCCEEDED = 3,
-  FAILED = 4,
+  CMP_FIN = 2,
+  ABORTING = 3,
+  SUCCEEDED = 4,
+  FAILED = 5,
 };
 
 pb::JobState ConvertSessionStateToJobState(SessionState state);

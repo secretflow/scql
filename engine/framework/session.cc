@@ -47,6 +47,7 @@ pb::JobState ConvertSessionStateToJobState(SessionState state) {
     case SessionState::INITIALIZED:
       return pb::JOB_INITIALIZED;
     case SessionState::RUNNING:
+    case SessionState::CMP_FIN:
     // ABORTING job is treated as running
     case SessionState::ABORTING:
       return pb::JOB_RUNNING;
