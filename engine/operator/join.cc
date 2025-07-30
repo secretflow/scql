@@ -353,6 +353,8 @@ void Join::Rr22PsiJoin(ExecContext* ctx) {
       target_rank == yacl::link::kAllRank, pre_f, post_f);
   bool is_sender = is_left;
   // receiver should be the one who has more data
+  // It is more efficient to set the party with the larger data volume as the
+  // receiver.
   if (peer_size > self_size) {
     is_sender = true;
   } else if (self_size > peer_size) {
