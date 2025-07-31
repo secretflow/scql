@@ -1,7 +1,6 @@
 name: Trigger CircleCI Unit Test for Forked & Labeled PR
 
 on:
-  # This event runs in the context of your main repository, so it can safely access secrets.
   pull_request_target:
     types: [labeled, synchronize]
 
