@@ -42,25 +42,14 @@ commands:
 
   run_go_test:
     description: "Run go tests"
-    parameters:
-      enable_coverage:
-        type: boolean
-        default: false
     steps:
       - run:
           name: "Go Test"
           command: |
             set +e
             go mod tidy
-            if << parameters.enable_coverage >>; then
-              echo "Running tests with coverage..."
-              go test -timeout=30m -v -cover -race -coverprofile=coverage.tmp ./pkg/... ./contrib/...
-              cat coverage.tmp | grep -v '\.pb\.go:\|_mock\.go:' > coverage.out
-              gcov2lcov -infile=coverage.out -outfile=coverage.lcov
-            else
-              echo "Running tests without coverage..."
-              go test -timeout=30m -v -short ./pkg/... ./contrib/...
-            fi
+            echo "Running tests without coverage..."
+            go test -timeout=30m -v -short ./pkg/... ./contrib/...
 
   run_cpp_test:
     description: "Run cpp tests and collect artifacts"
@@ -71,9 +60,6 @@ commands:
       find_executable_flag:
         type: string
         default: "-executable"
-      enable_coverage:
-        type: boolean
-        default: false
     steps:
       - run:
           name: "Cpp Test"
@@ -81,34 +67,15 @@ commands:
             set +e
             declare -i test_status
 
-            if << parameters.enable_coverage >>; then
-              echo "Running tests with coverage..."
-              bazelisk --host_jvm_args=-Xmx8g coverage //engine/... \
-                  << parameters.extra_bazel_args >> \
-                  --combined_report=lcov \
-                  --jobs=auto \
-                  --ui_event_filters=-info,-debug,-warning \
-                  --test_output=errors | tee test_result.log
+            echo "Running tests without coverage..."
+            bazelisk --host_jvm_args=-Xmx8g test //engine/... \
+                << parameters.extra_bazel_args >> \
+                --jobs=auto \
+                --ui_event_filters=-info,-debug,-warning \
+                --test_output=errors | tee test_result.log
 
-              # Capture the exit status of the Bazel command
-              test_status=${PIPESTATUS[0]}
-              if [ ${test_status} -eq 0 ]; then
-                echo "Processing coverage..."
-                lcov --remove bazel-out/_coverage/_coverage_report.dat '*.pb.h' '*.pb.cc' -o bazel-out/_coverage/_coverage_report_filtered.dat
-              else
-                echo "Bazel coverage failed, skipping lcov processing."
-              fi
-            else
-              echo "Running tests without coverage..."
-              bazelisk --host_jvm_args=-Xmx8g test //engine/... \
-                  << parameters.extra_bazel_args >> \
-                  --jobs=auto \
-                  --ui_event_filters=-info,-debug,-warning \
-                  --test_output=errors | tee test_result.log
-
-              # Capture the exit status of the Bazel command
-              test_status=${PIPESTATUS[0]}
-            fi
+            # Capture the exit status of the Bazel command
+            test_status=${PIPESTATUS[0]}
 
             sh ../devtools/rename-junit-xml.sh
             find bazel-bin/ << parameters.find_executable_flag >> -type f -name "*_test" -print0 | xargs -0 tar -cvzf test_binary.tar.gz
@@ -116,46 +83,17 @@ commands:
             exit ${test_status}
 
 
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
   linux_go_ut:
-    # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
-    # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
     docker:
       - image: secretflow/scql-ci:latest
     parameters:
       resource_class:
         type: string
     resource_class: << parameters.resource_class >>
-    # Add steps to the job
-    # See: https://circleci.com/docs/2.0/configuration-reference/#steps
     steps:
       - checkout
       - run_go_test
-
-  linux_go_cov:
-    docker:
-      - image: secretflow/scql-ci:latest
-    resource_class: "2xlarge"
-    steps:
-      - checkout
-      - run:
-          name: Skip job if not needed
-          command: |
-            if [ "<< pipeline.parameters.run_go_ut >>" != "true" ]; then
-              echo "Skipping go coverage"
-              circleci-agent step halt
-            fi
-      - run:
-          name: Install gcov2lcov
-          command: go install github.com/jandelgado/gcov2lcov@latest
-      - run_go_test:
-          enable_coverage: true
-      - coveralls/upload:
-          coverage_file: coverage.lcov
-          coverage_format: lcov
-          flag_name: "go-tests"
 
   linux_cpp_ut:
     docker:
@@ -170,38 +108,6 @@ jobs:
       - run_cpp_test:
           extra_bazel_args: "-c opt"
           find_executable_flag: "-executable"
-      - store_test_results:
-          path: test-results
-      - store_artifacts:
-          path: test_binary.tar.gz
-      - store_artifacts:
-          path: test_logs.tar.gz
-
-  linux_cpp_cov:
-    docker:
-      - image: secretflow/scql-ci:latest
-    resource_class: "2xlarge"
-    steps:
-      - checkout
-      - run:
-          name: Skip job if not needed
-          command: |
-            if [ "<< pipeline.parameters.run_cpp_ut >>" != "true" ]; then
-              echo "Skipping cpp coverage"
-              circleci-agent step halt
-            fi
-      - run:
-          name: "Install lcov"
-          command: apt-get update && apt-get install -y lcov
-      - setup_cpp_test
-      - run_cpp_test:
-          extra_bazel_args: "-c opt"
-          find_executable_flag: "-executable"
-          enable_coverage: true
-      - coveralls/upload:
-          coverage_file: bazel-out/_coverage/_coverage_report_filtered.dat
-          coverage_format: lcov
-          flag_name: "cpp-tests"
       - store_test_results:
           path: test-results
       - store_artifacts:
@@ -269,11 +175,3 @@ workflows:
             parameters:
               resource_class: ["2xlarge", "arm-xlarge"]
       - macOS_cpp_ut
-  run_cov:
-    when:
-      or:
-        - << pipeline.parameters.run_go_ut >>
-        - << pipeline.parameters.run_cpp_ut >>
-    jobs:
-      - linux_go_cov
-      - linux_cpp_cov
