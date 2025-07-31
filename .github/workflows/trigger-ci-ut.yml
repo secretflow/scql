@@ -1,4 +1,4 @@
-name: Trigger CircleCI for Forked & Labeled PR
+name: Trigger CircleCI Unit Test for Forked & Labeled PR
 
 on:
   # This event runs in the context of your main repository, so it can safely access secrets.
@@ -10,17 +10,17 @@ jobs:
     runs-on: ubuntu-latest
     # This job only runs under two conditions:
     # 1. The PR is from a fork.
-    # 2. The label that was just added is exactly "run-ci".
+    # 2. The label that was just added is exactly "run-ci-ut".
     if: |
       github.event.pull_request.head.repo.full_name != github.repository &&
       (
-        (github.event.action == 'labeled' && github.event.label.name == 'run-ci') ||
-        (github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'run-ci'))
+        (github.event.action == 'labeled' && github.event.label.name == 'run-ci-ut') ||
+        (github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'run-ci-ut'))
       )
     steps:
       - name: Trigger CircleCI Pipeline
         run: |
-          echo "Forked PR #${{ github.event.pull_request.number }} has 'run-ci' label. Triggering CircleCI pipeline..."
+          echo "Forked PR #${{ github.event.pull_request.number }} has 'run-ci-ut' label. Triggering CircleCI pipeline..."
 
           curl -X POST \
             --url "https://circleci.com/api/v2/project/github/secretflow/scql/pipeline/run" \
