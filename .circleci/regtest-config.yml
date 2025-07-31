@@ -38,7 +38,7 @@ jobs:
       - checkout
       - run:
           name: "Checkout devtools"
-          command: git clone https://github.com/secretflow/devtools.git ../devtools
+          command: git clone --depth=1 https://github.com/secretflow/devtools.git ../devtools
       - run:
           name: Setup BuildBuddy Cache
           command: ../devtools/bazel_cache_setup.py
