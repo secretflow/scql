@@ -57,9 +57,11 @@ Create a file called ``config.yml`` in your workspace and paste the following co
 .. code-block:: yaml
 
   intra_server:
+    protocol: http
     host: 0.0.0.0
     port: 8080
   inter_server:
+    protocol: http
     port: 8081
   log_level: debug
   party_code: alice

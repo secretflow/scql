@@ -3,6 +3,11 @@
     "name": "TestRunSQL",
     "cases": [
       {
+        "sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2;",
+        "skip_projection": false,
+        "rewritten_sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2"
+      },
+      {
         "sql": "SELECT tbl_1.plain_int_0, tbl_1.plain_float_0, ROW_NUMBER() OVER(PARTITION BY tbl_1.plain_int_0 ORDER BY tbl_1.plain_float_0) AS number from alice.tbl_1 as tbl_1;",
         "skip_projection": false,
         "rewritten_sql": "select tbl_1.plain_int_0,tbl_1.plain_float_0,row_number() over (partition by tbl_1.plain_int_0 order by tbl_1.plain_float_0) as number from alice.tbl_1 as tbl_1"
@@ -609,6 +614,14 @@
         "sql": "select replace(plain_string_0, 'a', 'b') as res1 from alice.tbl_0;",
         "skip_projection": false,
         "rewritten_sql": "select replace(tbl_0.plain_string_0, 'a', 'b') as res1 from alice.tbl_0"
+      },
+      {
+        "sql": "SELECT a.SVC_NUM AS SVC_NUM, a.plain_string_2, IF((d.plain_int_1 <= 30) OR d.plain_int_1 IS NULL, '1', IF(d.plain_int_1 <= 100, '2', '3')) AS plain_int_1, IF(a.compare_string_0 = '1', '是', '否') AS compare_string_0, IF((a.compare_int_1 <= 21) OR a.compare_int_1 IS NULL, '1', '2') AS compare_int_1 FROM (SELECT a.plain_int_2 AS SVC_NUM, a.plain_string_2, c.compare_string_0, c.compare_int_1 FROM alice.tbl_2 AS a LEFT JOIN (SELECT plain_int_0, compare_string_0, compare_int_1 FROM alice.tbl_0 WHERE plain_string_1 = '202505') AS c ON a.plain_int_2 = c.plain_int_0) AS a LEFT JOIN (SELECT plain_int_0, plain_int_1 FROM alice.tbl_1 WHERE plain_string_1 = '202505') AS d ON a.SVC_NUM = d.plain_int_0;",
+        "skip_projection": false,
+        "rewritten_sql": "select a.plain_int_2 as SVC_NUM,a.plain_string_2,if(d.plain_int_1<=30 or d.plain_int_1 is null, '1', if(d.plain_int_1<=100, '2', '3')) as plain_int_1,if(a.compare_string_0='1', '是', '否') as compare_string_0,if(a.compare_int_1<=21 or a.compare_int_1 is null, '1', '2') as compare_int_1 from (select a.plain_int_2,a.plain_string_2,c.compare_int_1,c.compare_string_0 from (alice.tbl_2 as a left join (select tbl_0.compare_int_1,tbl_0.compare_string_0,tbl_0.plain_int_0 from alice.tbl_0 where tbl_0.plain_string_1='202505') as c on a.plain_int_2=c.plain_int_0)) as a left join (select tbl_1.plain_int_0,tbl_1.plain_int_1 from alice.tbl_1 where tbl_1.plain_string_1='202505') as d on a.plain_int_2=d.plain_int_0",
+        "rewritten_sql_pg": "select a.plain_int_2 as SVC_NUM,a.plain_string_2,if((d.plain_int_1<=30) or d.plain_int_1 is null, '1', if(d.plain_int_1<=100, '2', '3')) as plain_int_1,if(a.compare_string_0='1', '是', '否') as compare_string_0,if((a.compare_int_1<=21) or a.compare_int_1 is null, '1', '2') as compare_int_1 from (select a.plain_int_2,a.plain_string_2,c.compare_int_1,c.compare_string_0 from (alice.tbl_2 as a left join (select tbl_0.compare_int_1,tbl_0.compare_string_0,tbl_0.plain_int_0 from alice.tbl_0 where tbl_0.plain_string_1='202505') as c on a.plain_int_2=c.plain_int_0)) as a left join (select tbl_1.plain_int_0,tbl_1.plain_int_1 from alice.tbl_1 where tbl_1.plain_string_1='202505') as d on a.plain_int_2=d.plain_int_0",
+        "rewritten_sql_csv": "select a.plain_int_2 as SVC_NUM,a.plain_string_2,if((d.plain_int_1<=30) or d.plain_int_1 is null, '1', if(d.plain_int_1<=100, '2', '3')) as plain_int_1,if(a.compare_string_0='1', '是', '否') as compare_string_0,if((a.compare_int_1<=21) or a.compare_int_1 is null, '1', '2') as compare_int_1 from (select a.plain_int_2,a.plain_string_2,c.compare_int_1,c.compare_string_0 from (alice.tbl_2 as a left join (select tbl_0.compare_int_1,tbl_0.compare_string_0,tbl_0.plain_int_0 from alice.tbl_0 where tbl_0.plain_string_1='202505') as c on a.plain_int_2=c.plain_int_0)) as a left join (select tbl_1.plain_int_0,tbl_1.plain_int_1 from alice.tbl_1 where tbl_1.plain_string_1='202505') as d on a.plain_int_2=d.plain_int_0",
+        "rewritten_sql_odps": "select a.plain_int_2 as SVC_NUM,a.plain_string_2,if((d.plain_int_1<=30) or d.plain_int_1 is null, '1', if(d.plain_int_1<=100, '2', '3')) as plain_int_1,if(a.compare_string_0='1', '是', '否') as compare_string_0,if((a.compare_int_1<=21) or a.compare_int_1 is null, '1', '2') as compare_int_1 from (select a.plain_int_2,a.plain_string_2,c.compare_int_1,c.compare_string_0 from (alice.tbl_2 as a left join (select tbl_0.compare_int_1,tbl_0.compare_string_0,tbl_0.plain_int_0 from alice.tbl_0 where tbl_0.plain_string_1='202505') as c on a.plain_int_2=c.plain_int_0)) as a left join (select tbl_1.plain_int_0,tbl_1.plain_int_1 from alice.tbl_1 where tbl_1.plain_string_1='202505') as d on a.plain_int_2=d.plain_int_0"
       }
     ]
   }

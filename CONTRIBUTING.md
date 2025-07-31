@@ -81,9 +81,6 @@ go test ./pkg/...
 pip3 install -U -r docs/requirements.txt
 
 # Build HTML docs, and the result is placed in directory 'docs/_build/html'
-# Build documentation in English
+# Build documentation in English and Chinese
 make doc
-
-# Build documentation in Chinese
-make doc-cn
 ```

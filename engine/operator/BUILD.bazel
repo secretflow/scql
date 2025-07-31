@@ -505,6 +505,7 @@ cc_library(
 scql_cc_test(
     name = "reduce_test",
     srcs = ["reduce_test.cc"],
+    shard_count = 4,
     deps = [
         ":all_ops_register",
         ":reduce",
@@ -608,6 +609,7 @@ cc_library(
 scql_cc_test(
     name = "oblivious_group_agg_test",
     srcs = ["oblivious_group_agg_test.cc"],
+    shard_count = 4,
     deps = [
         ":all_ops_register",
         ":oblivious_group_agg",

@@ -45,11 +45,7 @@ vet:
 
 doc:
 	go run ./cmd/docgen/main.go
-	cd docs && rm -rf _build && PYTHONPATH=$PWD/../ bash build.sh -l en
-
-doc-cn:
-	go run ./cmd/docgen/main.go
-	cd docs && rm -rf _build && PYTHONPATH=$PWD/../ bash build.sh -l zh_CN
+	cd docs && rm -rf _build && make build
 
 lint: GOLINT-exists
 	-${TOOLBIN}/golangci-lint run --out-format=colored-line-number
