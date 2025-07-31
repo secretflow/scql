@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     # This job only runs if the label that was just added is exactly "run-ci-cov".
     if: github.event.label.name == 'run-ci-cov'
+    permissions:
+      pull-requests: write
     steps:
       - name: Trigger CircleCI Pipeline
         run: |
@@ -21,3 +23,11 @@ jobs:
             --header "Content-Type: application/json" \
             --header "Circle-Token: ${{ secrets.CCI_TOKEN }}" \
             --data '{"definition_id":"SHOULD-USE-GITHUB-APP-PIPELINE","config":{"branch":"main"},"checkout":{"branch":"pull/${{ github.event.pull_request.number }}/head"}}'
+      - name: Remove Label from PR
+        run: |
+          echo "Removing 'run-ci-cov' label from PR #${{ github.event.pull_request.number }}..."
+
+          curl -s -X DELETE \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels/run-ci-cov"
