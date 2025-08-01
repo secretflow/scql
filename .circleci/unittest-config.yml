@@ -14,15 +14,13 @@
 
 # Use the latest 2.1 version of CircleCI pipeline process engine.
 # See: https://circleci.com/docs/2.0/configuration-reference
+
 version: 2.1
 
 orbs:
   coveralls: coveralls/coveralls@2.2.5
 
 parameters:
-  enable_regtest:
-    type: boolean
-    default: false
   run_go_ut:
     type: boolean
     default: false
@@ -81,7 +79,6 @@ commands:
             find bazel-bin/ << parameters.find_executable_flag >> -type f -name "*_test" -print0 | xargs -0 tar -cvzf test_binary.tar.gz
             find bazel-testlogs/ -type f -name "test.log" -print0 | xargs -0 tar -cvzf test_logs.tar.gz
             exit ${test_status}
-
 
 jobs:
   linux_go_ut:
@@ -156,8 +153,6 @@ jobs:
       - store_artifacts:
           path: test_logs.tar.gz
 
-# Invoke jobs via workflows
-# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
   run_go_ut:
     when: << pipeline.parameters.run_go_ut >>
