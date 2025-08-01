@@ -17,11 +17,6 @@
 
 version: 2.1
 
-parameters:
-  run_regtest:
-    type: boolean
-    default: false
-
 jobs:
   linux_regtest:
     machine:
@@ -96,7 +91,6 @@ jobs:
 
 workflows:
   regtest:
-    when: << pipeline.parameters.run_regtest >>
     jobs:
       - linux_regtest:
           matrix:
