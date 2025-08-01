@@ -408,6 +408,58 @@ func TestMySQLDateFormatToGoLayout(t *testing.T) {
 	}
 }
 
+func TestIsPalindrome(t *testing.T) {
+	r := require.New(t)
+	testCases := []struct {
+		input    string
+		expected bool
+	}{
+		// Empty string
+		{"", true},
+		// Single character
+		{"a", true},
+		{"A", true},
+		{"1", true},
+		// Simple palindromes
+		{"aba", true},
+		{"racecar", true},
+		{"level", true},
+		{"noon", true},
+		// Mixed case palindromes
+		{"RaceCar", true},
+		{"Madam", true},
+		// Palindromes with spaces and punctuation
+		{"A man a plan a canal Panama", true},
+		{"Was it a car or a cat I saw", true},
+		{"No lemon no melon", true},
+		{"Never odd or even", true},
+		{"Madam, I'm Adam", true},
+		// Palindromes with numbers
+		{"A Santa at NASA", true},
+		{"12321", true},
+		{"1a2b3c3b2a1", true},
+		// Non-palindromes
+		{"Hello", false},
+		{"World", false},
+		{"abc", false},
+		{"abcd", false},
+		{"12345", false},
+		{"hello world", false},
+		// Special characters only (should be considered palindrome as they are ignored)
+		{"!@#$%^&*()", true},
+		{"  ", true},
+		// Mixed special characters and letters
+		{"A!!A", true},
+		{"A!B!A", true},
+		{"A!B!C", false},
+	}
+
+	for _, tc := range testCases {
+		got := IsPalindrome(tc.input)
+		r.Equal(tc.expected, got, "Input: %s", tc.input)
+	}
+}
+
 func TestMySQLDateFormatToArrowFormat(t *testing.T) {
 	r := require.New(t)
 

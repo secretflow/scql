@@ -502,3 +502,32 @@ func MySQLDateFormatToArrowFormat(mysqlFormat string) (string, error) {
 	}
 	return result.String(), nil
 }
+
+// IsPalindrome checks if a string is a palindrome (reads the same forwards and backwards).
+// It ignores case, spaces, and punctuation marks, only considering alphanumeric characters.
+func IsPalindrome(s string) bool {
+	if len(s) == 0 {
+		return true
+	}
+
+	// Convert to lowercase and keep only alphanumeric characters
+	var cleaned strings.Builder
+	for _, r := range strings.ToLower(s) {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+			cleaned.WriteRune(r)
+		}
+	}
+
+	cleanedStr := cleaned.String()
+	left, right := 0, len(cleanedStr)-1
+
+	for left < right {
+		if cleanedStr[left] != cleanedStr[right] {
+			return false
+		}
+		left++
+		right--
+	}
+
+	return true
+}
