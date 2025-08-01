@@ -1,0 +1,33 @@
+name: Trigger CircleCI Coverage Test
+
+on:
+  pull_request_target:
+    types: [labeled] # Only run when a label is added
+
+jobs:
+  trigger-circleci:
+    runs-on: ubuntu-latest
+    # This job only runs if the label that was just added is exactly "run-ci-cov".
+    if: github.event.label.name == 'run-ci-cov'
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Trigger CircleCI Pipeline
+        run: |
+          echo "Label 'run-ci-cov' was added to PR #${{ github.event.pull_request.number }}. Triggering CircleCI pipeline..."
+
+          # We use curl to directly call the CircleCI API v2.
+          # This is more flexible than the official trigger action.
+          curl -X POST \
+            --url "https://circleci.com/api/v2/project/github/secretflow/scql/pipeline/run" \
+            --header "Content-Type: application/json" \
+            --header "Circle-Token: ${{ secrets.CCI_TOKEN }}" \
+            --data '{"definition_id":"425b19a9-9f21-4d53-a4a6-c2e57939ddd0","config":{"branch":"main"},"checkout":{"branch":"pull/${{ github.event.pull_request.number }}/head"}}'
+      - name: Remove Label from PR
+        run: |
+          echo "Removing 'run-ci-cov' label from PR #${{ github.event.pull_request.number }}..."
+
+          curl -s -X DELETE \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels/run-ci-cov"

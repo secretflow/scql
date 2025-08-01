@@ -1,4 +1,4 @@
-# Copyright 2023 Ant Group Co., Ltd.
+# Copyright 2025 Ant Group Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,17 +19,6 @@ version: 2.1
 orbs:
   coveralls: coveralls/coveralls@2.2.5
 
-parameters:
-  enable_regtest:
-    type: boolean
-    default: false
-  run_go_ut:
-    type: boolean
-    default: false
-  run_cpp_ut:
-    type: boolean
-    default: false
-
 commands:
   setup_cpp_test:
     steps:
@@ -41,15 +30,17 @@ commands:
           command: ../devtools/bazel_cache_setup.py
 
   run_go_test:
-    description: "Run go tests"
+    description: "Run go cov tests"
     steps:
       - run:
-          name: "Go Test"
+          name: "Go Cov Test"
           command: |
             set +e
             go mod tidy
-            echo "Running tests without coverage..."
-            go test -timeout=30m -v -short ./pkg/... ./contrib/...
+            echo "Running tests with coverage..."
+            go test -timeout=30m -v -cover -race -coverprofile=coverage.tmp ./pkg/... ./contrib/...
+            cat coverage.tmp | grep -v '\.pb\.go:\|_mock\.go:' > coverage.out
+            gcov2lcov -infile=coverage.out -outfile=coverage.lcov
 
   run_cpp_test:
     description: "Run cpp tests and collect artifacts"
@@ -67,47 +58,61 @@ commands:
             set +e
             declare -i test_status
 
-            echo "Running tests without coverage..."
-            bazelisk --host_jvm_args=-Xmx8g test //engine/... \
+            echo "Running tests with coverage..."
+            bazelisk --host_jvm_args=-Xmx8g coverage //engine/... \
                 << parameters.extra_bazel_args >> \
+                --combined_report=lcov \
                 --jobs=auto \
                 --ui_event_filters=-info,-debug,-warning \
                 --test_output=errors | tee test_result.log
 
             # Capture the exit status of the Bazel command
             test_status=${PIPESTATUS[0]}
+            if [ ${test_status} -eq 0 ]; then
+              echo "Processing coverage..."
+              lcov --remove bazel-out/_coverage/_coverage_report.dat '*.pb.h' '*.pb.cc' -o bazel-out/_coverage/_coverage_report_filtered.dat
+            else
+              echo "Bazel coverage failed, skipping lcov processing."
+            fi
 
             sh ../devtools/rename-junit-xml.sh
             find bazel-bin/ << parameters.find_executable_flag >> -type f -name "*_test" -print0 | xargs -0 tar -cvzf test_binary.tar.gz
             find bazel-testlogs/ -type f -name "test.log" -print0 | xargs -0 tar -cvzf test_logs.tar.gz
             exit ${test_status}
 
-
 jobs:
-  linux_go_ut:
+  linux_go_cov:
     docker:
       - image: secretflow/scql-ci:latest
-    parameters:
-      resource_class:
-        type: string
-    resource_class: << parameters.resource_class >>
+    resource_class: "2xlarge"
     steps:
       - checkout
+      - run:
+          name: Install gcov2lcov
+          command: go install github.com/jandelgado/gcov2lcov@latest
       - run_go_test
+      - coveralls/upload:
+          coverage_file: coverage.lcov
+          coverage_format: lcov
+          flag_name: "go-tests"
 
-  linux_cpp_ut:
+  linux_cpp_cov:
     docker:
       - image: secretflow/scql-ci:latest
-    parameters:
-      resource_class:
-        type: string
-    resource_class: << parameters.resource_class >>
+    resource_class: "2xlarge"
     steps:
       - checkout
+      - run:
+          name: "Install lcov"
+          command: apt-get update && apt-get install -y lcov
       - setup_cpp_test
       - run_cpp_test:
           extra_bazel_args: "-c opt"
           find_executable_flag: "-executable"
+      - coveralls/upload:
+          coverage_file: bazel-out/_coverage/_coverage_report_filtered.dat
+          coverage_format: lcov
+          flag_name: "cpp-tests"
       - store_test_results:
           path: test-results
       - store_artifacts:
@@ -115,63 +120,8 @@ jobs:
       - store_artifacts:
           path: test_logs.tar.gz
 
-  macOS_go_ut:
-    macos:
-      xcode: 16.0.0
-    resource_class: m4pro.medium
-    steps:
-      - checkout
-      - run:
-          name: "Install homebrew dependencies"
-          command: |
-            brew install wget go
-      - run_go_test
-
-  macOS_cpp_ut:
-    macos:
-      xcode: 16.0.0
-    resource_class: m4pro.medium
-    steps:
-      - run:
-          name: Cancel build after set time
-          background: true
-          command: |
-            sleep 3600
-            echo "Canceling workflow as too much time has elapsed"
-            curl -X POST --header "Content-Type: application/json" "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/cancel?circle-token=${BUILD_TIMER_TOKEN}"
-      - checkout
-      - run:
-          name: "Install homebrew dependencies"
-          command: |
-            brew install bazelisk cmake ninja libomp wget go@1.24 md5sha1sum
-            brew link go@1.24
-      - setup_cpp_test
-      - run_cpp_test:
-          extra_bazel_args: ""
-          find_executable_flag: "-perm +111"
-      - store_test_results:
-          path: test-results
-      - store_artifacts:
-          path: test_binary.tar.gz
-      - store_artifacts:
-          path: test_logs.tar.gz
-
-# Invoke jobs via workflows
-# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  run_go_ut:
-    when: << pipeline.parameters.run_go_ut >>
+  run_cov:
     jobs:
-      - linux_go_ut:
-          matrix:
-            parameters:
-              resource_class: ["2xlarge", "arm-xlarge"]
-      - macOS_go_ut
-  run_cpp_ut:
-    when: << pipeline.parameters.run_cpp_ut >>
-    jobs:
-      - linux_cpp_ut:
-          matrix:
-            parameters:
-              resource_class: ["2xlarge", "arm-xlarge"]
-      - macOS_cpp_ut
+      - linux_go_cov
+      - linux_cpp_cov
