@@ -352,9 +352,13 @@ void Join::Rr22PsiJoin(ExecContext* ctx) {
       psi_link, psi::rr22::GenerateRr22PsiOptions(false), bucket_num,
       target_rank == yacl::link::kAllRank, pre_f, post_f);
   bool is_sender = is_left;
-  if (target_rank != yacl::link::kAllRank) {
-    // receiver get result
-    is_sender = target_rank != psi_link->Rank();
+  // receiver should be the one who has more data
+  // It is more efficient to set the party with the larger data volume as the
+  // receiver.
+  if (peer_size > self_size) {
+    is_sender = true;
+  } else if (self_size > peer_size) {
+    is_sender = false;
   }
   runner.ParallelRun(0, is_sender);
   size_t result_size = 0;
