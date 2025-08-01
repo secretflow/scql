@@ -17,6 +17,11 @@
 
 version: 2.1
 
+parameters:
+  enable_regtest:
+    type: boolean
+    default: false
+
 jobs:
   linux_regtest:
     machine:
