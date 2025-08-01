@@ -296,6 +296,10 @@ void EngineServiceImpl::RunExecutionPlan(
   } else {
     // run in sync mode
     RunPlanSync(request, session, response);
+    // Cannot directly set session status because the session may have already
+    // been removed
+    session_mgr_->CompareAndSetState(session_id, SessionState::COMP_FINISHED,
+                                     SessionState::SUCCEEDED);
 
     try {
       session_mgr_->RemoveSession(session_id);
@@ -394,14 +398,16 @@ void EngineServiceImpl::QueryJobStatus(::google::protobuf::RpcController* cntl,
       logger, "Finish to handle QueryJobStatus request, job_id={}", job_id);
 }
 
-void EngineServiceImpl::ReportResult(const std::string& session_id,
+void EngineServiceImpl::ReportResult(Session* session,
                                      const std::string& cb_url,
                                      const std::string& report_info_str) {
+  auto session_id = session->Id();
   auto logger = GetActiveLogger(session_id);
   try {
     auto rpc_channel =
         channel_manager_->Create(logger, cb_url, RemoteRole::Driver);
     if (!rpc_channel) {
+      session->SetState(SessionState::FAILED);
       SPDLOG_LOGGER_WARN(logger,
                          "create rpc channel failed for driver: session_id={}, "
                          "callback_url={}",
@@ -412,6 +418,7 @@ void EngineServiceImpl::ReportResult(const std::string& session_id,
     // do http report
     brpc::Controller cntl;
     if (cntl.http_request().uri().SetHttpURL(cb_url) != 0) {
+      session->SetState(SessionState::FAILED);
       const auto& st = cntl.http_request().uri().status();
       SPDLOG_LOGGER_WARN(logger, "failed to set request URL: {}",
                          st.error_str());
@@ -428,6 +435,7 @@ void EngineServiceImpl::ReportResult(const std::string& session_id,
     // the response comes back or error occurs(including timeout).
     rpc_channel->CallMethod(nullptr, &cntl, nullptr, nullptr, nullptr);
     if (cntl.Failed()) {
+      session->SetState(SessionState::FAILED);
       SPDLOG_LOGGER_WARN(
           logger, "session({}) report callback URL({}) failed with error({})",
           session_id, cb_url, cntl.ErrorText());
@@ -440,6 +448,7 @@ void EngineServiceImpl::ReportResult(const std::string& session_id,
         cntl.latency_us() / 1000);
 
   } catch (const std::exception& e) {
+    session->SetState(SessionState::FAILED);
     SPDLOG_LOGGER_WARN(logger,
                        "ReportResult({}) failed, catch std::exception={}",
                        session_id, e.what());
@@ -561,12 +570,11 @@ void EngineServiceImpl::RunPlanSync(const pb::RunExecutionPlanRequest* request,
       session->SetState(SessionState::RUNNING);
 
       RunPlanCore(*request, session, response);
-
-      session->SetState(SessionState::SUCCEEDED);
     });
     // wait until all peers finished, if any one of them broken, the
     // ::yacl::IoError will be throw in other peers after Channel::Recv timeout
     ::psi::SyncWait(session->GetLink(), &run_f);
+    session->SetState(SessionState::COMP_FINISHED);
 
     SPDLOG_LOGGER_INFO(logger, "RunExecutionPlan success, sessionID={}",
                        session_id);
@@ -595,6 +603,7 @@ void EngineServiceImpl::RunPlanAsync(const pb::RunExecutionPlanRequest& request,
   response.set_job_id(request.job_params().job_id());
   response.set_party_code(request.job_params().party_code());
 
+  auto session_id = session->Id();
   RunPlanSync(&request, session, &response);
 
   // prepare report info
@@ -605,8 +614,11 @@ void EngineServiceImpl::RunPlanAsync(const pb::RunExecutionPlanRequest& request,
   report.set_party_code(response.party_code());
   report.set_num_rows_affected(response.num_rows_affected());
 
-  ReportResult(request.job_params().job_id(), request.callback_url(),
-               MessageToJsonString(report));
+  ReportResult(session, request.callback_url(), MessageToJsonString(report));
+  // Cannot directly set session status because the session may have already
+  // been removed
+  session_mgr_->CompareAndSetState(session_id, SessionState::COMP_FINISHED,
+                                   SessionState::SUCCEEDED);
 
   // remove session.
   // NOTE: removing the session should be performed after ReportResult to

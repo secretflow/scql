@@ -54,6 +54,13 @@ class SessionManager {
   // return false if session not found
   bool SetSessionState(const std::string& session_id, SessionState dest_state);
 
+  // This method atomically transitions the session state from an expected state
+  // to a desired state. It will fail if the session's current state is not
+  // equal to the expected state.
+  bool CompareAndSetState(const std::string& session_id,
+                          SessionState expected_state,
+                          SessionState desired_state);
+
  private:
   void WatchSessionTimeoutThread();
 
