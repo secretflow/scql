@@ -43,7 +43,7 @@
 namespace scql::engine {
 
 // The normal state transition process is:
-//   INITIALIZED -> RUNNING -> CMP_FIN -> SUCCEEDED/FAILED
+//   INITIALIZED -> RUNNING -> COMP_FINISHED -> SUCCEEDED/FAILED
 // When the user manually terminates the query, the transition process will be:
 //   INITIALIZED -> RUNNING -> ABORTING -> FAILED
 enum class SessionState {
@@ -52,7 +52,7 @@ enum class SessionState {
   ABORTING = 3,
   SUCCEEDED = 4,
   FAILED = 5,
-  CMP_FIN = 2
+  COMP_FINISHED = 2
 };
 
 pb::JobState ConvertSessionStateToJobState(SessionState state);

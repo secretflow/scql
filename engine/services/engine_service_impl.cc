@@ -298,7 +298,7 @@ void EngineServiceImpl::RunExecutionPlan(
     RunPlanSync(request, session, response);
     // Cannot directly set session status because the session may have already
     // been removed
-    session_mgr_->CompareAndSetState(session_id, SessionState::CMP_FIN,
+    session_mgr_->CompareAndSetState(session_id, SessionState::COMP_FINISHED,
                                      SessionState::SUCCEEDED);
 
     try {
@@ -574,7 +574,7 @@ void EngineServiceImpl::RunPlanSync(const pb::RunExecutionPlanRequest* request,
     // wait until all peers finished, if any one of them broken, the
     // ::yacl::IoError will be throw in other peers after Channel::Recv timeout
     ::psi::SyncWait(session->GetLink(), &run_f);
-    session->SetState(SessionState::CMP_FIN);
+    session->SetState(SessionState::COMP_FINISHED);
 
     SPDLOG_LOGGER_INFO(logger, "RunExecutionPlan success, sessionID={}",
                        session_id);
@@ -617,7 +617,7 @@ void EngineServiceImpl::RunPlanAsync(const pb::RunExecutionPlanRequest& request,
   ReportResult(session, request.callback_url(), MessageToJsonString(report));
   // Cannot directly set session status because the session may have already
   // been removed
-  session_mgr_->CompareAndSetState(session_id, SessionState::CMP_FIN,
+  session_mgr_->CompareAndSetState(session_id, SessionState::COMP_FINISHED,
                                    SessionState::SUCCEEDED);
 
   // remove session.
