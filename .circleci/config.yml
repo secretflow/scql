@@ -32,7 +32,8 @@ parameters:
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
   run_ut:
-    when: << pipeline.parameters.enable_regtest >> == false
+    when:
+      not: << pipeline.parameters.enable_regtest >>
     jobs:
       - path-filtering/filter:
           base-revision: main

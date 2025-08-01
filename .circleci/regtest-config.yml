@@ -18,15 +18,10 @@
 version: 2.1
 
 parameters:
-  enable_regtest:
-    type: boolean
-    default: false
   run_regtest:
     type: boolean
     default: false
 
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
   linux_regtest:
     machine:
@@ -99,8 +94,6 @@ jobs:
             # env $snap_bin_path is empty, use hardcoded go path
             /snap/bin/go test ./cmd/regtest/... -v -count=1 -timeout=30m -args --conf=../../../.ci/docker-compose/regtest.yml
 
-# Invoke jobs via workflows
-# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
   regtest:
     when: << pipeline.parameters.run_regtest >>
