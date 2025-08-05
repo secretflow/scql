@@ -25,7 +25,7 @@ parameters:
 jobs:
   linux_regtest:
     machine:
-      image: ubuntu-2004:current
+      image: ubuntu-2204:current
     parameters:
       resource_class:
         type: string
