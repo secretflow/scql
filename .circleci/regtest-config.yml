@@ -91,12 +91,11 @@ jobs:
           name: "Run regtest"
           command: |
             set +e
-            sudo snap install go --channel=1.21/stable --classic
+            sudo apt-get update && sudo apt-get install -y golang-1.24
             sleep 1m
             export SKIP_CONCURRENT_TEST=true
             export $(grep -v '^#' .ci/docker-compose/.env | xargs)
-            # env $snap_bin_path is empty, use hardcoded go path
-            /snap/bin/go test ./cmd/regtest/... -v -count=1 -timeout=30m -args --conf=../../../.ci/docker-compose/regtest.yml
+            go test ./cmd/regtest/... -v -count=1 -timeout=30m -args --conf=../../../.ci/docker-compose/regtest.yml
 
 workflows:
   regtest:
