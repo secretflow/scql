@@ -99,8 +99,9 @@ type ConsulApiConf struct {
 }
 
 type KusciaDiscConf struct {
-	KusciaApiConf `yaml:",inline"`
-	ClusterDefine string `yaml:"cluster_define"`
+	KusciaApiConf    `yaml:",inline"`
+	ClusterDefine    string  `yaml:"cluster_define"`
+	PeerAppImageName *string `yaml:"peer_app_image_name"`
 }
 
 type KusciaApiConf struct {

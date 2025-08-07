@@ -127,7 +127,7 @@ func main() {
 		if err != nil {
 			logrus.Fatalf("Failed to create kuscia client connection: %v", err)
 		}
-		partyMgr, err = partymgr.NewKusciaPartyMgr(conn, kuscia.ClusterDefine)
+		partyMgr, err = partymgr.NewKusciaPartyMgr(conn, kuscia.ClusterDefine, kuscia.PeerAppImageName)
 		if err != nil {
 			logrus.Fatalf("Failed to create kuscia partyMgr: %v", err)
 		}
