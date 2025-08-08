@@ -31,18 +31,28 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - v2-go-modules-{{ checksum "go.sum" }}
-            - v2-go-modules-
+            - v3-go-modules-{{ checksum "go.sum" }}
+            - v3-go-modules-
 
       - run:
           name: "Download Go Modules"
           command: |
+            echo "================================================="
+            echo "DEBUG: The Go environment path (GOPATH) is: $(go env GOPATH)"
+            echo "================================================="
+
             go mod tidy
             go mod download
 
+            echo "================================================="
+            echo "DEBUG: Listing contents of the real module cache directory..."
+            ls -la "$(go env GOPATH)/pkg/mod"
+            echo "================================================="
+
       - save_cache:
-          key: v2-go-modules-{{ checksum "go.sum" }}
+          key: v3-go-modules-{{ checksum "go.sum" }}
           paths:
+            - "$(go env GOPATH)/pkg/mod"
             - /go/pkg/mod   # For Linux Docker executor
             - ~/go/pkg/mod  # For macOS executor
 
