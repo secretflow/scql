@@ -27,24 +27,28 @@ parameters:
 
 commands:
   setup_go_test:
-    description: "Restores Go module cache, downloads dependencies, and saves the cache for both Linux and macOS."
+    description: "Set up Go environment for a specific OS."
+    parameters:
+      os_identifier:
+        type: string
+        description: "An identifier for the OS, used in the cache key (e.g., 'linux', 'macos')."
+      cache_path:
+        type: string
+        description: "The absolute path to the Go module cache directory."
     steps:
       - restore_cache:
           keys:
-            - v4-go-modules-{{ checksum "go.sum" }}
-            - v4-go-modules-
-
+            - v1-<< parameters.os_identifier >>-go-modules-{{ checksum "go.sum" }}
+            - v1-<< parameters.os_identifier >>-go-modules-
       - run:
-          name: "Download Go Modules"
+          name: "Tidy and Download Go Modules"
           command: |
             go mod tidy
             go mod download
-
       - save_cache:
-          key: v4-go-modules-{{ checksum "go.sum" }}
+          key: v1-<< parameters.os_identifier >>-go-modules-{{ checksum "go.sum" }}
           paths:
-            - /usr/local/pkg/mod   # For Linux Docker executor
-            - /Users/distiller/go/pkg/mod  # For macOS executor
+            - << parameters.cache_path >>
 
   setup_cpp_test:
     steps:
@@ -110,7 +114,9 @@ jobs:
     resource_class: << parameters.resource_class >>
     steps:
       - checkout
-      - setup_go_test
+      - setup_go_test:
+          os_identifier: linux
+          cache_path: /usr/local/pkg/mod
       - run_go_test
 
   linux_cpp_ut:
@@ -145,7 +151,9 @@ jobs:
           name: "Install homebrew dependencies"
           command: |
             brew install wget go
-      - setup_go_test
+      - setup_go_test:
+          os_identifier: macos
+          cache_path: /Users/distiller/go/pkg/mod
       - run_go_test
 
   macOS_cpp_ut:
