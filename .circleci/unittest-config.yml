@@ -26,6 +26,24 @@ parameters:
     default: false
 
 commands:
+  setup_go_test:
+    description: "Restores Go module cache, downloads dependencies, and saves the cache for both Linux and macOS."
+    steps:
+      - restore_cache:
+          keys:
+            - v1-go-modules-{{ checksum "go.sum" }}
+            - v1-go-modules-
+
+      - run:
+          name: "Download Go Modules"
+          command: go mod download
+
+      - save_cache:
+          key: v1-go-modules-{{ checksum "go.sum" }}
+          paths:
+            - /go/pkg/mod   # For Linux Docker executor
+            - ~/go/pkg/mod  # For macOS executor
+
   setup_cpp_test:
     steps:
       - run:
@@ -87,6 +105,7 @@ jobs:
     resource_class: << parameters.resource_class >>
     steps:
       - checkout
+      - setup_go_test
       - run_go_test
 
   linux_cpp_ut:
@@ -119,6 +138,7 @@ jobs:
           name: "Install homebrew dependencies"
           command: |
             brew install wget go
+      - setup_go_test
       - run_go_test
 
   macOS_cpp_ut:
