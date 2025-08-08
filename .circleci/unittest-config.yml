@@ -31,8 +31,8 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - v1-go-modules-{{ checksum "go.sum" }}
-            - v1-go-modules-
+            - v2-go-modules-{{ checksum "go.sum" }}
+            - v2-go-modules-
 
       - run:
           name: "Download Go Modules"
@@ -41,7 +41,7 @@ commands:
             go mod download
 
       - save_cache:
-          key: v1-go-modules-{{ checksum "go.sum" }}
+          key: v2-go-modules-{{ checksum "go.sum" }}
           paths:
             - /go/pkg/mod   # For Linux Docker executor
             - ~/go/pkg/mod  # For macOS executor
