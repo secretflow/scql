@@ -17,14 +17,6 @@
 
 version: 2.1
 
-parameters:
-  run_go_ut:
-    type: boolean
-    default: false
-  run_cpp_ut:
-    type: boolean
-    default: false
-
 commands:
   setup_go_test:
     description: "Set up Go environment for a specific OS."
@@ -182,7 +174,6 @@ jobs:
 
 workflows:
   run_go_ut:
-    when: << pipeline.parameters.run_go_ut >>
     jobs:
       - linux_go_ut:
           matrix:
@@ -190,7 +181,6 @@ workflows:
               resource_class: ["large", "arm.large"]
       - macOS_go_ut
   run_cpp_ut:
-    when: << pipeline.parameters.run_cpp_ut >>
     jobs:
       - linux_cpp_ut:
           matrix:
