@@ -26,29 +26,29 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - v2-go-modules-{{ checksum "go.sum" }}
-            - v2-go-modules-
+            - v4-go-modules-{{ checksum "go.sum" }}
+            - v4-go-modules-
       - run:
           name: "Download Go Modules"
           command: |
             go mod tidy
             go mod download
       - save_cache:
-          key: v2-go-modules-{{ checksum "go.sum" }}
+          key: v4-go-modules-{{ checksum "go.sum" }}
           paths:
-            - /go/pkg/mod
+            - /usr/local/pkg/mod
 
       - restore_cache:
           keys:
-            - v2-go-bin-gcov2lcov
+            - v4-go-bin-gcov2lcov
       - run:
           name: Install gcov2lcov if not cached
           command: |
             which gcov2lcov || go install github.com/jandelgado/gcov2lcov@latest
       - save_cache:
-          key: v2-go-bin-gcov2lcov
+          key: v4-go-bin-gcov2lcov
           paths:
-            - /go/bin
+            - /usr/local/bin
 
   setup_cpp_test:
     steps:
