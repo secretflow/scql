@@ -60,6 +60,7 @@ jobs:
           paths:
             - amd64/*
             - arm64/*
+
   docker_image_publish:
     docker:
       - image: cimg/deploy:2023.06.1
@@ -73,49 +74,31 @@ jobs:
           command: |
             # login dockerhub & secretflow aliyun docker registry
             docker login -u secretflow -p ${DOCKER_DEPLOY_TOKEN}
-            docker login -u ${ALIYUN_DOCKER_USERNAME} -p ${ALIYUN_DOCKER_PASSWORD}  secretflow-registry.cn-hangzhou.cr.aliyuncs.com
+            docker login -u ${ALIYUN_DOCKER_USERNAME} -p ${ALIYUN_DOCKER_PASSWORD} secretflow-registry.cn-hangzhou.cr.aliyuncs.com
 
             ALIYUN_IMAGE="secretflow-registry.cn-hangzhou.cr.aliyuncs.com/secretflow/scql"
-
-            ls /tmp/binary/linux/amd64/
-            ls /tmp/binary/linux/arm64/
+            TAG=$(grep "version" ../version.txt | awk -F'"' '{print $2}')
+            echo "Building and pushing tag: $TAG"
 
             # Build image
             cd docker
-            mkdir -p linux/amd64
-            mkdir -p linux/arm64
-            cp /tmp/binary/linux/amd64/scqlengine linux/amd64/scqlengine
-            cp /tmp/binary/linux/amd64/scdbserver linux/amd64/scdbserver
-            cp /tmp/binary/linux/amd64/scdbclient linux/amd64/scdbclient
-            cp /tmp/binary/linux/amd64/broker     linux/amd64/broker
-            cp /tmp/binary/linux/amd64/brokerctl  linux/amd64/brokerctl
-            cp /tmp/binary/linux/amd64/agent      linux/amd64/agent
-
-            cp /tmp/binary/linux/arm64/scqlengine linux/arm64/scqlengine
-            cp /tmp/binary/linux/arm64/scdbserver linux/arm64/scdbserver
-            cp /tmp/binary/linux/arm64/scdbclient linux/arm64/scdbclient
-            cp /tmp/binary/linux/arm64/broker     linux/arm64/broker
-            cp /tmp/binary/linux/arm64/brokerctl  linux/arm64/brokerctl
-            cp /tmp/binary/linux/arm64/agent      linux/arm64/agent
-
-            # copy scripts
+            mkdir -p linux/amd64 linux/arm64
+            cp -r /tmp/binary/linux/amd64/* linux/amd64/
+            cp -r /tmp/binary/linux/arm64/* linux/arm64/
             cp -r ../scripts ./scripts
 
-            ls ./linux/amd64
-            ls ./linux/arm64
-            ls ./scripts
+            docker buildx create --name scql-image-builder --use
 
-            TAG=$(grep "version" ../version.txt | awk -F'"' '{print $2}')
-            echo $TAG
-            docker buildx create --name scql-image-builder --platform linux/arm64,linux/amd64 --use
-            docker buildx build --platform linux/arm64,linux/amd64 -f scql-ubuntu.Dockerfile -t secretflow/scql:$TAG --push .
-            docker buildx build --platform linux/arm64,linux/amd64 -f scql-ubuntu.Dockerfile -t secretflow/scql:latest --push .
-            docker buildx build --platform linux/arm64,linux/amd64 -f scql-ubuntu.Dockerfile -t secretflow/scql:stable --push .
-
-            # push to aliyun image repo
-            docker buildx build --platform linux/arm64,linux/amd64 -f scql-ubuntu.Dockerfile -t ${ALIYUN_IMAGE}:$TAG --push .
-            docker buildx build --platform linux/arm64,linux/amd64 -f scql-ubuntu.Dockerfile -t ${ALIYUN_IMAGE}:latest --push .
-            docker buildx build --platform linux/arm64,linux/amd64 -f scql-ubuntu.Dockerfile -t ${ALIYUN_IMAGE}:stable --push .
+            docker buildx build \
+              --platform linux/arm64,linux/amd64 \
+              -f scql-ubuntu.Dockerfile \
+              -t secretflow/scql:$TAG \
+              -t secretflow/scql:latest \
+              -t secretflow/scql:stable \
+              -t ${ALIYUN_IMAGE}:$TAG \
+              -t ${ALIYUN_IMAGE}:latest \
+              -t ${ALIYUN_IMAGE}:stable \
+              --push .
 
 workflows:
   publish:
