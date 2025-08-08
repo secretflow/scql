@@ -71,7 +71,7 @@ commands:
             gcov2lcov -infile=coverage.out -outfile=coverage.lcov
 
   run_cpp_test:
-    description: "Run cpp tests and collect artifacts"
+    description: "Run cpp cov tests and collect artifacts"
     parameters:
       extra_bazel_args:
         type: string
@@ -100,12 +100,12 @@ commands:
               echo "Processing coverage..."
               lcov --remove bazel-out/_coverage/_coverage_report.dat '*.pb.h' '*.pb.cc' -o bazel-out/_coverage/_coverage_report_filtered.dat
             else
-              echo "Bazel coverage failed, skipping lcov processing."
+              echo "Bazel coverage failed, skipping lcov processing. Archiving binaries and logs..."
+              find bazel-bin/ << parameters.find_executable_flag >> -type f -name "*_test" -print0 | xargs -0 tar -cvzf test_binary.tar.gz
+              find bazel-testlogs/ -type f -name "test.log" -print0 | xargs -0 tar -cvzf test_logs.tar.gz
             fi
 
             sh ../devtools/rename-junit-xml.sh
-            find bazel-bin/ << parameters.find_executable_flag >> -type f -name "*_test" -print0 | xargs -0 tar -cvzf test_binary.tar.gz
-            find bazel-testlogs/ -type f -name "test.log" -print0 | xargs -0 tar -cvzf test_logs.tar.gz
             exit ${test_status}
 
 jobs:
@@ -142,8 +142,10 @@ jobs:
       - store_test_results:
           path: test-results
       - store_artifacts:
+          when: on_fail
           path: test_binary.tar.gz
       - store_artifacts:
+          when: on_fail
           path: test_logs.tar.gz
 
 workflows:
