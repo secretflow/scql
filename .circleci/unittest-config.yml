@@ -185,7 +185,7 @@ workflows:
       - linux_go_ut:
           matrix:
             parameters:
-              resource_class: ["2xlarge", "arm-xlarge"]
+              resource_class: ["large", "arm.large"]
       - macOS_go_ut
   run_cpp_ut:
     when: << pipeline.parameters.run_cpp_ut >>
@@ -193,5 +193,5 @@ workflows:
       - linux_cpp_ut:
           matrix:
             parameters:
-              resource_class: ["2xlarge", "arm-xlarge"]
+              resource_class: ["2xlarge", "arm.2xlarge"]
       - macOS_cpp_ut

@@ -112,7 +112,7 @@ jobs:
   linux_go_cov:
     docker:
       - image: secretflow/scql-ci:latest
-    resource_class: "2xlarge"
+    resource_class: "large"
     steps:
       - checkout
       - setup_go_test
