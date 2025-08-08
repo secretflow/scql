@@ -30,7 +30,9 @@ commands:
             - v1-go-modules-
       - run:
           name: "Download Go Modules"
-          command: go mod download
+          command: |
+            go mod tidy
+            go mod download
       - save_cache:
           key: v1-go-modules-{{ checksum "go.sum" }}
           paths:
@@ -64,9 +66,8 @@ commands:
           name: "Go Cov Test"
           command: |
             set +e
-            go mod tidy
             echo "Running tests with coverage..."
-            go test -timeout=30m -v -cover -race -coverprofile=coverage.tmp ./pkg/... ./contrib/...
+            go test -mod=readonly -timeout=30m -v -cover -race -coverprofile=coverage.tmp ./pkg/... ./contrib/...
             cat coverage.tmp | grep -v '\.pb\.go:\|_mock\.go:' > coverage.out
             gcov2lcov -infile=coverage.out -outfile=coverage.lcov
 
