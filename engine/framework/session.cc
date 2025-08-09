@@ -47,6 +47,7 @@ pb::JobState ConvertSessionStateToJobState(SessionState state) {
     case SessionState::INITIALIZED:
       return pb::JOB_INITIALIZED;
     case SessionState::RUNNING:
+    case SessionState::COMP_FINISHED:
     // ABORTING job is treated as running
     case SessionState::ABORTING:
       return pb::JOB_RUNNING;
@@ -56,6 +57,25 @@ pb::JobState ConvertSessionStateToJobState(SessionState state) {
       return pb::JOB_FAILED;
     default:
       return pb::JOB_STATE_UNSPECIFIED;
+  }
+}
+
+std::string SessionStateToString(SessionState state) {
+  switch (state) {
+    case SessionState::INITIALIZED:
+      return "INITIALIZED";
+    case SessionState::RUNNING:
+      return "RUNNING";
+    case SessionState::COMP_FINISHED:
+      return "COMPUTATION_FINISHED";
+    case SessionState::SUCCEEDED:
+      return "SUCCEEDED";
+    case SessionState::FAILED:
+      return "FAILED";
+    case SessionState::ABORTING:
+      return "ABORTING";
+    default:
+      return "UNKNOWN_STATE_" + std::to_string(static_cast<int>(state));
   }
 }
 
