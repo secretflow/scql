@@ -96,6 +96,10 @@ func (app *App) submitAndGet(ctx context.Context, req *scql.SCDBQueryRequest) *s
 		return newErrorSCDBQueryResultResponse(scql.Code_UNAUTHENTICATED, err.Error())
 	}
 
+	if strings.HasPrefix(strings.ToUpper(req.Query), "EXPLAIN") {
+		return app.handleExplainQuery(ctx, session, req)
+	}
+
 	isDQL, err := isDQL(req.Query)
 	if err != nil {
 		return newErrorSCDBQueryResultResponse(scql.Code_SQL_PARSE_ERROR, err.Error())
@@ -107,6 +111,40 @@ func (app *App) submitAndGet(ctx context.Context, req *scql.SCDBQueryRequest) *s
 	}
 	app.runSQL(session)
 	return session.result
+}
+
+// handleExplainQuery
+func (app *App) handleExplainQuery(ctx context.Context, s *session, req *scql.SCDBQueryRequest) *scql.SCDBQueryResultResponse {
+	compileReq, err := app.buildCompileRequest(ctx, s)
+	if err != nil {
+		return newErrorSCDBQueryResultResponse(scql.Code_INTERNAL, err.Error())
+	}
+
+	intrpr := interpreter.NewInterpreter()
+	compiledPlan, err := intrpr.Compile(ctx, compileReq)
+	if err != nil {
+		return newErrorSCDBQueryResultResponse(scql.Code_INTERNAL, err.Error())
+	}
+
+	if compiledPlan.Explain == nil || compiledPlan.Explain.ExeGraphDot == "" {
+		return newErrorSCDBQueryResultResponse(scql.Code_INTERNAL, "no explain information available")
+	}
+
+	return &scql.SCDBQueryResultResponse{
+		Status: &scql.Status{
+			Code:    int32(scql.Code_OK),
+			Message: "success",
+		},
+		OutColumns: []*scql.Tensor{
+			{
+				Name:       "EXPLAIN",
+				ElemType:   scql.PrimitiveDataType_STRING,
+				StringData: []string{compiledPlan.Explain.ExeGraphDot},
+			},
+		},
+		ScdbSessionId: s.id,
+		AffectedRows:  0,
+	}
 }
 
 func (app *App) buildCompileRequest(ctx context.Context, s *session) (*scql.CompileQueryRequest, error) {
