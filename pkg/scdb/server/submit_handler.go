@@ -19,7 +19,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -192,16 +191,6 @@ func (app *App) runSQL(s *session) {
 		}
 	}()
 
-	if strings.HasPrefix(strings.ToUpper(s.request.Query), "EXPLAIN") {
-		req := &scql.SCDBQueryRequest{
-			Query:  s.request.Query,
-			User:   s.request.User,
-			DbName: s.request.DbName,
-		}
-		resp := app.handleExplainQuery(context.Background(), s, req)
-		s.result = resp
-		return
-	}
 	needSchema, err := isQueryNeedInfoSchema(s.request.Query)
 	if err != nil {
 		return
