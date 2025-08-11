@@ -96,10 +96,6 @@ func (app *App) submitAndGet(ctx context.Context, req *scql.SCDBQueryRequest) *s
 		return newErrorSCDBQueryResultResponse(scql.Code_UNAUTHENTICATED, err.Error())
 	}
 
-	if strings.HasPrefix(strings.ToUpper(req.Query), "EXPLAIN") {
-		return app.handleExplainQuery(ctx, session, req)
-	}
-
 	isDQL, err := isDQL(req.Query)
 	if err != nil {
 		return newErrorSCDBQueryResultResponse(scql.Code_SQL_PARSE_ERROR, err.Error())
