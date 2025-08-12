@@ -27,7 +27,6 @@ commands:
       - restore_cache:
           keys:
             - v1-linux-go-modules-{{ checksum "go.sum" }}
-            - v1-linux-go-modules-
       - run:
           name: "Tidy and Download Go Modules"
           command: |
@@ -37,18 +36,6 @@ commands:
           key: v1-linux-go-modules-{{ checksum "go.sum" }}
           paths:
             - /usr/local/pkg/mod
-
-      - restore_cache:
-          keys:
-            - v1-linux-go-bin-gcov2lcov
-      - run:
-          name: Install gcov2lcov if not cached
-          command: |
-            which gcov2lcov || go install github.com/jandelgado/gcov2lcov@latest
-      - save_cache:
-          key: v1-linux-go-bin-gcov2lcov
-          paths:
-            - /usr/local/bin
 
   setup_cpp_test:
     steps:
@@ -62,6 +49,10 @@ commands:
   run_go_test:
     description: "Run go cov tests"
     steps:
+      - run:
+          name: Install gcov2lcov
+          command: |
+            which gcov2lcov || go install github.com/jandelgado/gcov2lcov@latest
       - run:
           name: "Go Cov Test"
           command: |

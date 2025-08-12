@@ -31,7 +31,6 @@ commands:
       - restore_cache:
           keys:
             - v1-linux-go-modules-{{ checksum "go.sum" }}
-            - v1-linux-go-modules-
       - run:
           name: "Tidy and Download Go Modules"
           command: |
