@@ -96,10 +96,11 @@ jobs:
             python3 -m pip install -r requirements.txt
             python3 setup.py
             docker compose -p regtest-<< parameters.resource_class >> up -d
+      - go/install:
+          version: "1.24.0"
       - run:
           name: "Run Go regression tests"
           command: |
-            sudo apt-get update && sudo apt-get install -y golang-1.21
             sleep 60
             export SKIP_CONCURRENT_TEST=true
             export $(grep -v '^#' .ci/docker-compose/.env | xargs)
