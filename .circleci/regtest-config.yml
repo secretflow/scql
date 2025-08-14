@@ -26,10 +26,7 @@ jobs:
   build_binary:
     machine:
       image: ubuntu-2204:current
-    parameters:
-      resource_class:
-        type: string
-    resource_class: << parameters.resource_class >>
+    resource_class: xlarge
     steps:
       - checkout
       - run:
@@ -78,15 +75,12 @@ jobs:
             # Build multi-arch image
             cd docker_context
             docker buildx create --name scql-builder --use
-            docker buildx build --platform linux/amd64,linux/arm64 -f scql-ubuntu.Dockerfile -t scql:regtest .
+            docker buildx build --platform linux/amd64 -f scql-ubuntu.Dockerfile -t scql:regtest .
 
   run_regtest:
     machine:
       image: ubuntu-2204:current
-    parameters:
-      resource_class:
-        type: string
-    resource_class: << parameters.resource_class >>
+    resource_class: xlarge
     steps:
       - checkout
       - run:
@@ -95,7 +89,7 @@ jobs:
             cd .ci/docker-compose
             python3 -m pip install -r requirements.txt
             python3 setup.py
-            docker compose -p regtest-<< parameters.resource_class >> up -d
+            docker compose -p regtest-xlarge up -d
       - go/install:
           version: "1.24.0"
       - run:
@@ -110,16 +104,10 @@ workflows:
   regtest:
     when: << pipeline.parameters.enable_regtest >>
     jobs:
-      - build_binary:
-          matrix:
-            parameters:
-              resource_class: ["xlarge", "arm.xlarge"]
+      - build_binary
       - build_docker_image:
           requires:
             - build_binary
       - run_regtest:
           requires:
             - build_docker_image
-          matrix:
-            parameters:
-              resource_class: ["xlarge", "arm.xlarge"]
