@@ -62,12 +62,16 @@ jobs:
     machine:
       image: ubuntu-2204:current
     resource_class: large
+    parameters:
+      multi_arch:
+        type: boolean
+        default: false
     steps:
       - checkout
       - attach_workspace:
           at: /tmp/workspace
       - run:
-          name: "Build and push multi-arch image"
+          name: "Build Docker image"
           command: |
             # Prepare build context
             mkdir -p docker_context/linux
@@ -75,10 +79,16 @@ jobs:
             cp docker/scql-ubuntu.Dockerfile docker_context/
             cp -r scripts/ docker_context/
 
-            # Build multi-arch image
+            # Build image with conditional platform support
             cd docker_context
             docker buildx create --name scql-builder --use
-            docker buildx build --platform linux/amd64,linux/arm64 -f scql-ubuntu.Dockerfile -t scql:regtest .
+            if [ "<< parameters.multi_arch >>" = "true" ]; then
+              echo "Building multi-architecture image (amd64 + arm64)"
+              docker buildx build --platform linux/amd64,linux/arm64 -f scql-ubuntu.Dockerfile -t scql:regtest .
+            else
+              echo "Building single architecture image (amd64 only)"
+              docker buildx build --platform linux/amd64 -f scql-ubuntu.Dockerfile -t scql:regtest .
+            fi
 
   run_regtest:
     machine:
@@ -113,8 +123,9 @@ workflows:
       - build_binary:
           matrix:
             parameters:
-              resource_class: ["xlarge", "arm.xlarge"]
+              resource_class: ["xlarge"]
       - build_docker_image:
+          multi_arch: false
           requires:
             - build_binary
       - run_regtest:
@@ -122,4 +133,4 @@ workflows:
             - build_docker_image
           matrix:
             parameters:
-              resource_class: ["xlarge", "arm.xlarge"]
+              resource_class: ["xlarge"]
