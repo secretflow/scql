@@ -22,20 +22,11 @@ orbs:
 
 commands:
   setup_go_test:
-    description: "Restores Go module cache, downloads dependencies, and saves the cache."
     steps:
-      - restore_cache:
-          keys:
-            - v1-linux-go-modules-{{ checksum "go.sum" }}
       - run:
-          name: "Tidy and Download Go Modules"
+          name: Install gcov2lcov
           command: |
-            go mod tidy
-            go mod download
-      - save_cache:
-          key: v1-linux-go-modules-{{ checksum "go.sum" }}
-          paths:
-            - /usr/local/pkg/mod
+            which gcov2lcov || go install github.com/jandelgado/gcov2lcov@latest
 
   setup_cpp_test:
     steps:
@@ -50,13 +41,10 @@ commands:
     description: "Run go cov tests"
     steps:
       - run:
-          name: Install gcov2lcov
-          command: |
-            which gcov2lcov || go install github.com/jandelgado/gcov2lcov@latest
-      - run:
           name: "Go Cov Test"
           command: |
             set +e
+            go mod tidy
             echo "Running tests with coverage..."
             go test -mod=readonly -timeout=30m -v -cover -race -coverprofile=coverage.tmp ./pkg/... ./contrib/...
             cat coverage.tmp | grep -v '\.pb\.go:\|_mock\.go:' > coverage.out

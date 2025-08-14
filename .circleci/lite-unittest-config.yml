@@ -26,21 +26,6 @@ parameters:
     default: false
 
 commands:
-  setup_go_test:
-    steps:
-      - restore_cache:
-          keys:
-            - v1-linux-go-modules-{{ checksum "go.sum" }}
-      - run:
-          name: "Tidy and Download Go Modules"
-          command: |
-            go mod tidy
-            go mod download
-      - save_cache:
-          key: v1-linux-go-modules-{{ checksum "go.sum" }}
-          paths:
-            - /usr/local/pkg/mod
-
   setup_cpp_test:
     steps:
       - run:
@@ -57,6 +42,7 @@ commands:
           name: "Go Test"
           command: |
             set +e
+            go mod tidy
             echo "Running unit tests..."
             go test -mod=readonly -timeout=30m -v -short ./pkg/... ./contrib/...
 
@@ -95,7 +81,6 @@ jobs:
     resource_class: "large"
     steps:
       - checkout
-      - setup_go_test
       - run_go_test
 
   linux_cpp_ut:
