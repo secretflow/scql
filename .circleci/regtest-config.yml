@@ -23,7 +23,7 @@ parameters:
     default: false
 
 jobs:
-  linux_regtest:
+  build_binary:
     machine:
       image: ubuntu-2204:current
     parameters:
@@ -39,68 +39,87 @@ jobs:
           name: Setup BuildBuddy Cache
           command: ../devtools/bazel_cache_setup.py
       - run:
-          name: "Build binary"
+          name: "Build binaries in container"
           command: |
-            set +e
-            mkdir -p image
-            cp docker/scql-ubuntu.Dockerfile image
-            docker run -d -it --name scql-dev -v $(pwd):/home/admin/dev/ -w /home/admin/dev --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --cap-add=NET_ADMIN --privileged=true --entrypoint=bash secretflow/scql-ci:latest
-            docker exec -it scql-dev bash -c "make && bazelisk build //engine/exe:scqlengine -c opt --ui_event_filters=-info,-debug,-warning"
-
-            MACHINE_TYPE=$(arch)
-            if [ "${MACHINE_TYPE}" == 'x86_64' ]; then
-              TARGET_ARCH="amd64"
-            else
-              TARGET_ARCH="arm64"
-            fi
-
-            DEST_DIR="image/linux/${TARGET_ARCH}"
-            mkdir -p "${DEST_DIR}"
-
-            BINARIES_IN_BIN="scdbserver scdbclient broker brokerctl agent"
-            docker cp "scql-dev:/home/admin/dev/bazel-bin/engine/exe/scqlengine" "${DEST_DIR}/"
-            for binary in ${BINARIES_IN_BIN}; do
-              docker cp "scql-dev:/home/admin/dev/bin/${binary}" "${DEST_DIR}/"
+            docker run --rm -v $(pwd):/host secretflow/scql-ci:latest bash -c "cd /host && make && bazelisk build //engine/exe:scqlengine -c opt"
+      - run:
+          name: "Copy binaries to workspace"
+          command: |
+            TARGET_ARCH=$(if [ "$(arch)" = "x86_64" ]; then echo "amd64"; else echo "arm64"; fi)
+            DIR=/tmp/workspace/linux/${TARGET_ARCH}
+            mkdir -p "${DIR}"
+            BINARIES="engine/exe/scqlengine:scqlengine bin/scdbserver:scdbserver bin/scdbclient:scdbclient bin/broker:broker bin/brokerctl:brokerctl bin/agent:agent"
+            for item in $BINARIES; do
+              IFS=':' read -r src dest <<< "$item"
+              cp "bazel-bin/${src}" "${DIR}/${dest}"
             done
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - linux/*
 
-            docker stop scql-dev && docker rm scql-dev
+  build_docker_image:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
       - run:
-          name: "Prepare Docker build context"
+          name: "Build and push multi-arch image"
           command: |
-            cp -r scripts image/scripts
+            # Prepare build context
+            mkdir -p docker_context/linux
+            cp -r /tmp/workspace/linux/* docker_context/linux/
+            cp docker/scql-ubuntu.Dockerfile docker_context/
+            cp -r scripts/ docker_context/
+
+            # Build multi-arch image
+            cd docker_context
+            docker buildx create --name scql-builder --use
+            docker buildx build --platform linux/amd64,linux/arm64 -f scql-ubuntu.Dockerfile -t scql:regtest .
+
+  run_regtest:
+    machine:
+      image: ubuntu-2204:current
+    parameters:
+      resource_class:
+        type: string
+    resource_class: << parameters.resource_class >>
+    steps:
+      - checkout
       - run:
-          name: "Build image"
+          name: "Deploy services"
           command: |
-            cd image
-            MACHINE_TYPE=`arch`
-            if [ ${MACHINE_TYPE} == 'x86_64' ]; then
-              docker buildx build --platform linux/amd64 -f scql-ubuntu.Dockerfile -t scql:latest .
-            else
-              docker buildx build --platform linux/arm64 -f scql-ubuntu.Dockerfile -t scql:latest .
-            fi
-      - run:
-          name: "Deploy image"
-          command: |
-            set +e
             cd .ci/docker-compose
             python3 -m pip install -r requirements.txt
             python3 setup.py
-            docker compose -p regtest up -d
-            docker ps | grep regtest
+            docker compose -p regtest-<< parameters.resource_class >> up -d
+      - go/install:
+          version: "1.24.0"
       - run:
-          name: "Run regtest"
+          name: "Run Go regression tests"
           command: |
-            set +e
-            sudo apt-get update && sudo apt-get install -y golang-1.24
-            sleep 1m
+            sleep 60
             export SKIP_CONCURRENT_TEST=true
             export $(grep -v '^#' .ci/docker-compose/.env | xargs)
             go test ./cmd/regtest/... -v -count=1 -timeout=30m -args --conf=../../../.ci/docker-compose/regtest.yml
 
 workflows:
   regtest:
+    when: << pipeline.parameters.enable_regtest >>
     jobs:
-      - linux_regtest:
+      - build_binary:
           matrix:
             parameters:
-              resource_class: ["2xlarge", "arm-xlarge"]
+              resource_class: ["xlarge", "arm.xlarge"]
+      - build_docker_image:
+          requires:
+            - build_binary
+      - run_regtest:
+          requires:
+            - build_docker_image
+          matrix:
+            parameters:
+              resource_class: ["xlarge", "arm.xlarge"]
