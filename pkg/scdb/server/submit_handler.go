@@ -190,6 +190,7 @@ func (app *App) runSQL(s *session) {
 			s.setResult(rt)
 		}
 	}()
+
 	needSchema, err := isQueryNeedInfoSchema(s.request.Query)
 	if err != nil {
 		return
