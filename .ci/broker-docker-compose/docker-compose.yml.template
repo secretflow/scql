@@ -4,8 +4,12 @@ services:
       - /home/admin/bin/scqlengine
       - --flagfile=/home/admin/engine/conf/gflags.conf
     image: ${SCQL_IMAGE_TAG}
+    environment:
+      - GCOV_PREFIX=/home/admin/coverage
+      - GCOV_PREFIX_STRIP=3
     volumes:
       - ./engine/alice/conf/gflags.conf:/home/admin/engine/conf/gflags.conf
+      - ./coverage/engine:/home/admin/coverage
   engine-bob:
     command:
       - /home/admin/bin/scqlengine
@@ -23,6 +27,8 @@ services:
       - ./engine/carol/conf/gflags.conf:/home/admin/engine/conf/gflags.conf
   broker-alice:
     image: ${SCQL_IMAGE_TAG}
+    environment:
+      - GOCOVERDIR=/home/admin/coverage
     command:
       - /home/admin/bin/broker
       - -config=/home/admin/configs/config.yml
@@ -34,6 +40,7 @@ services:
         target: 8080
     volumes:
       - ./broker/conf/alice/:/home/admin/configs/
+      - ./coverage/broker:/home/admin/coverage
   broker-bob:
     image: ${SCQL_IMAGE_TAG}
     command:
