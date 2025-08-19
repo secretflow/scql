@@ -106,7 +106,9 @@ def bench_mock_str(column: map, row_num: int, cur_pos: int):
     if STRING_LEN in column:
         str_len = column[STRING_LEN]
     if mock_type == RANDOM_MOCK:
-        index = [random.randint(0, len(Default_STRING_POOL) - 1) for i in range(row_num)]
+        index = [
+            random.randint(0, len(Default_STRING_POOL) - 1) for i in range(row_num)
+        ]
         for i in index:
             result.append(Default_STRING_POOL[i])
     elif mock_type == RANDOM_POOL:
