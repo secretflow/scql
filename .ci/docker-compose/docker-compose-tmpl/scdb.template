@@ -4,6 +4,8 @@
       - /home/admin/bin/scdbserver
       - -config=/home/admin/configs/config.yml
     restart: always
+    environment:
+      - GOCOVERDIR=/home/admin/coverage
     ports:
       - mode: host
         protocol: tcp
@@ -11,3 +13,4 @@
         target: 8080
     volumes:
       - ./scdb/conf/${PROTOCOL}/:/home/admin/configs/
+      - ./coverage:/home/admin/coverage

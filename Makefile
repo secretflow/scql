@@ -33,6 +33,13 @@ binary: clean prepare fmt vet gogenerate
 	bazelisk --host_jvm_args=-Xmx8g build //engine/exe:scqlengine -c opt --jobs=32
 	bash ${PWD}/version_build.sh -r
 
+binary-cov: clean prepare fmt vet gogenerate
+	$(eval SCQL_VERSION := $(shell bash ${PWD}/version_build.sh))
+	echo "Binary version: ${SCQL_VERSION}"
+	GOBIN=${PWD}/bin go install -ldflags "-X main.version=${SCQL_VERSION}" -cover ./...
+	bazelisk --host_jvm_args=-Xmx8g build //engine/exe:scqlengine --jobs=32 --collect_code_coverage --instrumentation_filter=//engine/... --noremote_upload_local_results --copt=-DNDEBUG
+	bash ${PWD}/version_build.sh -r
+
 pb: clean
 	$(RM) -rf pkg/proto-gen/*
 	./api/generate_proto.sh && bash ./contrib/agent/proto/generate_proto.sh

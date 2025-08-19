@@ -20,7 +20,9 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	gormlog "gorm.io/gorm/logger"
@@ -58,6 +60,8 @@ const (
 var version = "scql version"
 
 func main() {
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 	confFile := flag.String("config", defaultConfigPath, "Path to broker configuration file")
 	showVersion := flag.Bool("version", false, "Print version information")
 	flag.Parse()
@@ -172,7 +176,8 @@ func main() {
 
 	go startService(intraSvr, cfg.IntraServer)
 
-	startService(interSvr, cfg.InterServer)
+	go startService(interSvr, cfg.InterServer)
+	<-shutdown
 }
 
 func startService(svr *http.Server, cfg config.ServerConfig) {

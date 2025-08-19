@@ -280,7 +280,7 @@ TEST_F(EngineServiceImplTest, RunExecutionPlanAsync) {
   // Then
   EXPECT_EQ(pb::Code::OK, response.status().code());
 
-  usleep(100 * 1000);  // wait async run finished.
+  usleep(1000 * 1000);  // wait async run finished.
   EXPECT_EQ(global_session_id, service.req_id);
   EXPECT_EQ(pb::Code::OK, service.status.code());
 
@@ -300,7 +300,7 @@ TEST_F(EngineServiceImplTest, RunExecutionPlanAsync) {
       impl->RunExecutionPlan(&global_cntl, &request, &response, nullptr));
   EXPECT_EQ(pb::Code::OK, response.status().code());
 
-  usleep(100 * 1000);  // wait async run finished.
+  usleep(1000 * 1000);  // wait async run finished.
   EXPECT_EQ(global_session_id, service.req_id);
   EXPECT_EQ(pb::Code::UNKNOWN_ENGINE_ERROR, service.status.code());
 

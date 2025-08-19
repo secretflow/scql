@@ -7,3 +7,4 @@ broker/conf/*/party_info.json
 broker/conf/*/config.yml
 broker/conf/*/private_key.pem
 regtest.yml
+coverage/*

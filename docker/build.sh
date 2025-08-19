@@ -23,9 +23,10 @@ ENABLE_CACHE=false
 TARGET_STAGE=image-prod
 TARGET_PLATFORM=""
 BASE_IMAGE=ubuntu
+ENABLE_COVERAGE=false
 
 usage() {
-  echo "Usage: $0 [-n Name] [-t Tag] [-p Platform] [-s Stage] [-c]"
+  echo "Usage: $0 [-n Name] [-t Tag] [-p Platform] [-s Stage] [-c] [-v]"
   echo ""
   echo "Options:"
   echo "  -n name, image name, default is \"scql\""
@@ -34,9 +35,10 @@ usage() {
   echo "  -p target platform, default is \"linux/amd64\", support \"linux/arm64\" and \"linux/amd64\"."
   echo "  -b base image, default is \"ubuntu\", support \"ubuntu\" and \"anolis\"."
   echo "  -c, enable host disk bazel cache to speedup build process"
+  echo "  -v, build with coverage"
 }
 
-while getopts "n:t:s:p:b:c" options; do
+while getopts "n:t:s:p:b:cv" options; do
   case "${options}" in
   n)
     SCQL_IMAGE=${OPTARG}
@@ -55,6 +57,9 @@ while getopts "n:t:s:p:b:c" options; do
     ;;
   b)
     BASE_IMAGE=${OPTARG}
+    ;;
+  v)
+    ENABLE_COVERAGE=true
     ;;
   *)
     usage
@@ -116,11 +121,15 @@ container_id=$(docker run -it --rm --detach \
 
 trap "docker stop ${container_id}" EXIT
 
-
 # prepare for git command
 docker exec -it ${container_id} bash -c "git config --global --add safe.directory /home/admin/dev"
+
+build_cmd="make binary"
+if $ENABLE_COVERAGE; then
+  build_cmd="make binary-cov"
+fi
 # build binary
-docker exec -it ${container_id} bash -c "cd /home/admin/dev && make binary"
+docker exec -it ${container_id} bash -c "cd /home/admin/dev && ${build_cmd}"
 
 # prepare temporary path $TMP_PATH for file copies
 TMP_PATH=$WORK_DIR/.buildtmp/$IMAGE_TAG

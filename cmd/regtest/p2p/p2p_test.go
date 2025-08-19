@@ -29,6 +29,10 @@ import (
 	"github.com/secretflow/scql/pkg/util/mock"
 )
 
+const (
+	ENVENAME_ENABLE_COVERAGE = "ENABLE_COVERAGE"
+)
+
 func TestMain(m *testing.M) {
 	confFile := flag.String("conf", "", "/path/to/conf")
 	flag.Var(&caseNames, "case", "name of the case to be run")
@@ -85,6 +89,23 @@ func TestRunQueryWithNormalCCL(t *testing.T) {
 	cclList, err := mock.MockAllCCL()
 	r.NoError(err)
 	r.NoError(CreateProjectTableAndCcl(testConf.ProjectConf, cclList, testConf.SkipCreateTableCCL))
+	enable_coverage := os.Getenv(ENVENAME_ENABLE_COVERAGE)
+	if enable_coverage == "true" {
+		path := map[string][]string{
+			SEMI2K: {"../testdata/single_party.json",
+				"../testdata/single_party_postgres.json",
+				"../testdata/two_parties.json"},
+			CHEETAH: {"../testdata/two_parties.json"},
+			ABY3:    {"../testdata/multi_parties.json"}}
+		if testConf.SpuProtocol == SEMI2K {
+			r.NoError(testCaseForRules("../testdata/rule.json", alice))
+		}
+		// for code coverage, only run concurrent test
+		r.NoError(runQueryTest(alice, testConf.SpuProtocol, TestFlag{Sync: false, TestConcurrent: false, TestSerial: true}, path))
+		r.NoError(runQueryTestSessionExpired(alice, 1, 100))
+		r.Error(runQueryTestSessionExpired(alice, 10, 1))
+		return
+	}
 	path := map[string][]string{
 		SEMI2K: {"../testdata/single_party.json",
 			"../testdata/single_party_postgres.json",

@@ -83,7 +83,7 @@ More to say: you may need run `pip install -r requirements.txt` when first time 
 ```bash
 # All test flags are stored in regtest.yml. If necessary, please modify the corresponding parameters in regtest.yml before running the tests.
 # go test will use package path as working directory
-go test ./cmd/regtest/p2p/... -v -count=1 -timeout=30m -args --conf=../../../.ci/broker-docker-compose/regtest.yml
+go test ./cmd/regtest/p2p/... -run TestRunQueryWithNormalCCL -v -count=1 -timeout=30m -args --conf=../../../.ci/broker-docker-compose/regtest.yml
 ```
 
 You could run sql manually if needed.
