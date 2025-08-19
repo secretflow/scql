@@ -50,14 +50,16 @@ static duckdb::LogicalTypeId ToLogicalTypeId(scql::api::v1::DataType type) {
     case scql::api::v1::DataType::INT16:
       return duckdb::LogicalTypeId::SMALLINT;
     case scql::api::v1::DataType::INT32:
+      return duckdb::LogicalTypeId::INTEGER;
+    // int -> int64, keep consistent with secretflow/spec
     case scql::api::v1::DataType::INT:
     case scql::api::v1::DataType::INTEGER:
-      return duckdb::LogicalTypeId::INTEGER;
     case scql::api::v1::DataType::INT64:
       return duckdb::LogicalTypeId::BIGINT;
     case scql::api::v1::DataType::FLOAT32:
-    case scql::api::v1::DataType::FLOAT:
       return duckdb::LogicalTypeId::FLOAT;
+    // float -> float64, keep consistent with secretflow/spec
+    case scql::api::v1::DataType::FLOAT:
     case scql::api::v1::DataType::FLOAT64:
     case scql::api::v1::DataType::DOUBLE:
       return duckdb::LogicalTypeId::DOUBLE;
@@ -65,9 +67,9 @@ static duckdb::LogicalTypeId ToLogicalTypeId(scql::api::v1::DataType type) {
     case scql::api::v1::DataType::STR:
       return duckdb::LogicalTypeId::VARCHAR;
     case scql::api::v1::DataType::DATETIME:
-      return duckdb::LogicalTypeId::DATE;
-    case scql::api::v1::DataType::TIMESTAMP:
       return duckdb::LogicalTypeId::TIMESTAMP_SEC;
+    case scql::api::v1::DataType::TIMESTAMP:
+      return duckdb::LogicalTypeId::TIMESTAMP_TZ;
     default:
       return duckdb::LogicalTypeId::INVALID;
   }
