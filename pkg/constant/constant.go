@@ -44,8 +44,8 @@ const (
 var StringTypeAlias = map[string]bool{"string": true, "str": true}
 
 var IntegerTypeAlias = map[string]bool{"int32": true, "int64": true, "integer": true, "int": true}
-var FloatTypeAlias = map[string]bool{"float": true, "float32": true}
-var DoubleTypeAlias = map[string]bool{"double": true, "float64": true}
+var FloatTypeAlias = map[string]bool{"float32": true}
+var DoubleTypeAlias = map[string]bool{"float": true, "double": true, "float64": true}
 var DateTimeTypeAlias = map[string]bool{"datetime": true}
 var TimeStampTypeAlias = map[string]bool{"timestamp": true}
 
