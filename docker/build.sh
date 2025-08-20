@@ -97,27 +97,23 @@ setup_environment() {
 # Configure Docker mount options and platform settings
 configure_docker_settings() {
   MOUNT_OPTIONS=""
-  if $ENABLE_CACHE; then
-    if [ "$BASE_IMAGE" == "ubuntu" ]; then
-      MOUNT_OPTIONS="--mount type=volume,source=scql-ubuntu-buildcache,target=/root/.cache --mount type=volume,source=scql-ubuntu-go-buildcache,target=/usr/local/pkg/mod"
-    else
-      MOUNT_OPTIONS="--mount type=volume,source=scql-anolis-buildcache,target=/root/.cache --mount type=volume,source=scql-ubuntu-go-buildcache,target=/usr/local/pkg/mod"
-    fi
+  if ${ENABLE_CACHE}; then
+    local cache_vol_name="scql-${BASE_IMAGE}-buildcache"
+    MOUNT_OPTIONS="--mount type=volume,source=${cache_vol_name},target=/root/.cache --mount type=volume,source=scql-go-buildcache,target=/usr/local/pkg/mod"
   fi
 
-  MACHINE_TYPE=$(arch)
   HOST_PLATFORM=""
-
-  if [ "$MACHINE_TYPE" == "x86_64" ]; then
-    HOST_PLATFORM=linux/amd64
-  else
-    HOST_PLATFORM=linux/arm64
-  fi
+  case "$(arch)" in
+    x86_64) HOST_PLATFORM="linux/amd64" ;;
+    aarch64 | arm64) HOST_PLATFORM="linux/arm64" ;;
+    *)
+      echo "Unsupported host architecture: $(arch)" >&2
+      exit 1
+      ;;
+  esac
 
   # If TargetPlatform is not set, set to host platform
-  if [ -z "$TARGET_PLATFORM" ]; then
-    TARGET_PLATFORM=$HOST_PLATFORM
-  fi
+  TARGET_PLATFORM=${TARGET_PLATFORM:-$HOST_PLATFORM}
 
   BUILDER=secretflow/scql-ci:latest
   if [ "$BASE_IMAGE" == "anolis" ]; then
@@ -146,8 +142,11 @@ create_docker_container() {
 backup_bazel_symlinks() {
   if [ "$PROTECT_DEV_ENV" = "true" ]; then
     echo "Development environment protection enabled - backing up existing Bazel symlinks..."
-    BACKUP_DIR="/tmp/bazel_symlinks_backup_$$"
-    mkdir -p "$BACKUP_DIR"
+    BACKUP_DIR=$(mktemp -d /tmp/bazel_symlinks_backup.XXXXXX)
+    echo "Backup directory created at: $BACKUP_DIR"
+
+    # Change to work directory to handle relative symlinks properly
+    cd "$WORK_DIR"
 
     # Get repository name dynamically
     REPO_NAME=$(basename "$WORK_DIR")
@@ -156,6 +155,8 @@ backup_bazel_symlinks() {
       if [ -L "$link" ]; then
         cp -P "$link" "$BACKUP_DIR/"
         echo "Backed up: $link -> $(readlink "$link")"
+      elif [ -e "$link" ]; then
+        echo "Warning: $link exists but is not a symlink, skipping backup"
       fi
     done
   else
@@ -181,15 +182,22 @@ build_binaries() {
 restore_bazel_symlinks() {
   if [ "$PROTECT_DEV_ENV" = "true" ]; then
     echo "Restoring original Bazel symlinks..."
-    if [ -d "$BACKUP_DIR" ]; then
-      # Remove any Docker-created symlinks first
-      for link in bazel-bin bazel-out bazel-testlogs bazel-dev external; do
-        if [ -L "$link" ]; then
-          rm -f "$link"
-        fi
-      done
+    # Change to work directory
+    cd "$WORK_DIR"
 
-      # Restore original symlinks
+    # Get repository name dynamically
+    REPO_NAME=$(basename "$WORK_DIR")
+
+    # Remove any Docker-created symlinks and directories first
+    for link in bazel-bin bazel-out bazel-testlogs bazel-dev bazel-$REPO_NAME external; do
+      if [ -L "$link" ] || [ -d "$link" ]; then
+        rm -rf "$link"
+        echo "Removed Docker-created: $link"
+      fi
+    done
+
+    # Restore original symlinks if backup directory exists
+    if [ -d "$BACKUP_DIR" ]; then
       for backup_link in "$BACKUP_DIR"/*; do
         if [ -L "$backup_link" ]; then
           link_name=$(basename "$backup_link")
@@ -200,12 +208,22 @@ restore_bazel_symlinks() {
 
       # Cleanup backup directory
       rm -rf "$BACKUP_DIR"
-      echo "Successfully restored development environment symlinks"
+      BACKUP_DIR=""
+      echo "Successfully restored development environment symlinks and cleaned up backup."
     else
-      echo "Warning: No backup directory found, symlinks may need manual restoration"
+      echo "No backup directory found - only cleaned up Docker-created symlinks"
     fi
   else
-    echo "Standard build mode - no symlink restoration needed"
+    echo "Standard build mode - cleaning up any Docker-created symlinks"
+    # Even in standard mode, clean up any Docker-created symlinks
+    cd "$WORK_DIR"
+    REPO_NAME=$(basename "$WORK_DIR")
+    for link in bazel-bin bazel-out bazel-testlogs bazel-dev bazel-$REPO_NAME external; do
+      if [ -L "$link" ] && [[ "$(readlink "$link")" == "/tmp/bazel_docker_build"* ]]; then
+        rm -rf "$link"
+        echo "Removed Docker-created symlink: $link"
+      fi
+    done
   fi
 }
 
@@ -290,13 +308,14 @@ build_docker_image() {
 cleanup_on_exit() {
   echo "Starting cleanup process..."
 
+  restore_bazel_symlinks
+
   # Stop Docker container if it exists
   if [ -n "${container_id}" ]; then
     echo "Stopping Docker container: ${container_id}"
     docker stop ${container_id} 2>/dev/null || true
   fi
 
-  # Clean up build artifacts and temporary files
   cleanup_build_artifacts
 }
 
@@ -305,7 +324,6 @@ cleanup_build_artifacts() {
   # Clean up root-owned directories created during build
   if [ "$PROTECT_DEV_ENV" = "true" ] && [ -n "${container_id}" ]; then
     echo "Cleaning up root-owned directories created during build..."
-    # Remove bin and tool-bin directories that may have root ownership
     docker exec -it ${container_id} bash -c "cd /home/admin/dev && rm -rf bin tool-bin" 2>/dev/null || true
   fi
 
@@ -320,7 +338,6 @@ cleanup_build_artifacts() {
   fi
 }
 
-# Main execution function
 main() {
   parse_arguments "$@"
   setup_environment
@@ -328,11 +345,9 @@ main() {
   create_docker_container
   backup_bazel_symlinks
   build_binaries
-  restore_bazel_symlinks
   prepare_build_files
   build_docker_image
   echo "Build completed successfully!"
 }
 
-# Execute main function with all arguments
 main "$@"
