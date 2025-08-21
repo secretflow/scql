@@ -25,15 +25,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.9.4] - 2025-07-29
 
 ### Added
+
 - Added Archive API to support project archiving.
 - Enhanced time-type data processing capability: support `STR_TO_DATE` function and implicit conversion from string to time types.
 - Supported richer expression of statements: `PERCENTILE_DISC`, `BETWEEN AND`, `REPLACE`, etc.
 
 ### Changed
+
 - Optimized data source reading, improving streaming processing capabilities.
 - Optimized `JOIN` process to eliminate the need for additional `PLAINTEXT_AFTER_JOIN` CCL for non-result-receiving parties on join keys.
 
 ### Fixed
+
 - Resolved the issue with compare subquery exceptions in aggregation scenarios.
 - Fixed column disorder issues in the project tables.
 - Resolved problems in LogicalOptimizer to prevent the removal of LogicalProjection nodes that could lead to performance and Tensor property inference issues.
@@ -41,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.9.3] - 2025-03-07
 
 ### Added
+
 - Support for datasource `Doris 2.1.7`.
 - Support `PERCENT_RANK` window function.
 - Support various string-related single-party operators, including `UPPER`, `LOWER`, `SUBSTRING`, `TRIM`, `CONCAT` and others.
@@ -48,11 +52,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support `Compare Subquery`, allows comparison with ANY or ALL of the subquery results, e.g. SELECT * FROM ta JOIN tb ON ta.ID = tb.ID WHERE ta.salary > ANY(SELECT ta.salary FROM ta), However, comparisons using = or != are not supported in the HAVING clause. For instance, HAVING SUM(ta.salary) = ANY(SELECT salary FROM ta) is not supported.
 
 ### Changed
+
 - Improved `JOIN` and `IN` performance in streaming mode.
 - Implemented a more reliable `secret join algorithm`(only works in SEMI2K protocol) inspired by [Scape](https://ieeexplore.ieee.org/document/9835540/).
 - Optimized the column pruning rule for Join, Selection, and Window nodes in the Logical Optimizer to more effectively remove redundant columns.
 
 ### Fixed
+
 - Restricted access to SCQLEngine metrics using additional paths like "engine_ip:engine_port/metrics/additional/path".
 - Prevented creation of tables with the same ref_table name but different db_type
 - Fixed job creation error when selecting 'OPRF-PSI' but 'server hint' was missing.
@@ -60,6 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.9.2] - 2024-12-23
 
 ### Added
+
 - Enhancement: Support `JOIN` after `UNION` operation.
 - Add SCQL Agent to facilitate running SCQL query tasks in Kuscia, making it easier to integrate into SecretPad.
 - Support writing results into multi-parties via `SELECT INTO OUTFILE` syntax.
@@ -68,16 +75,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support a lot of single-party operators, such as `ABS`, `ASIN`, `EXP`, `FLOOR`, `SQRT` etc.
 
 ### Changed
+
 - Improve the `JOIN` and `IN` performance via integrating [RR22 PSI](https://github.com/secretflow/psi/blob/v0.5.0b0/psi/proto/psi_v2.proto#L62).
 - Improve the aggregation with group by performance if `reveal_group_count` enabled.
 
 ### Fixed
+
 - Fixed an occasional crash issue when canceling query job.
 - Fixed `select now()` is not supported issue.
 
 ## [0.9.1] - 2024-10-16
 
 ### Added
+
 - Support window function `ROW_NUMBER()` with PARTITION BY clause and ORDER BY clause.
 - Add new CCL constraint `REVAL_RANK`.
 - Add ExplainQuery API with path `/intra/query/explain`.
@@ -88,20 +98,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Improved the job watcher to work better in broker clustered mode.
 
-
 ## [0.9.0] - 2024-08-01
 
 ### Added
+
 - Support write outfile to OSS/MINIO via `select into` query.
 - Support `sin`, `cos`, `acos` function.
 - Support `geodist` function.
 - Broker support using postgres as metadata storage.
 
 ### Changed
+
 - Reduce the memory peak of large-scale intersection tasks through streaming execution.
 - Link tcmalloc to solve the problem of memory increase.
 
 ### Fixed
+
 - Fix crashes when dumpfile exceeds 2GB string column.
 - Reduce the probability of graph checksum inconsistency issues.
 
