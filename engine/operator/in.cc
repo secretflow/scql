@@ -516,7 +516,7 @@ void In::Rr22PsiIn(ExecContext* ctx) {
       psi_link, psi::rr22::GenerateRr22PsiOptions(FLAGS_use_rr22_low_comm_mode),
       bucket_num, false, pre_f, post_f);
   // reveal party as receiver
-  runner.ParallelRun(0, reveal_to != my_party_code);
+  runner.AsyncRun(0, reveal_to != my_party_code);
   // reveal to me
   int64_t result_size = 0;
   if (reveal_to == my_party_code) {
