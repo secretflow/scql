@@ -37,6 +37,7 @@
 #include "engine/core/primitive_builder.h"
 #include "engine/core/tensor.h"
 #include "engine/core/tensor_constructor.h"
+#include "engine/exe/flags.h"
 #include "engine/framework/exec.h"
 #include "engine/util/psi/common.h"
 #include "engine/util/tensor_util.h"
@@ -511,9 +512,9 @@ void In::Rr22PsiIn(ExecContext* ctx) {
         }
         provider.CleanBucket(bucket_idx);
       };
-  psi::rr22::Rr22Runner runner(psi_link,
-                               psi::rr22::GenerateRr22PsiOptions(false),
-                               bucket_num, false, pre_f, post_f);
+  psi::rr22::Rr22Runner runner(
+      psi_link, psi::rr22::GenerateRr22PsiOptions(FLAGS_use_rr22_low_comm_mode),
+      bucket_num, false, pre_f, post_f);
   // reveal party as receiver
   runner.ParallelRun(0, reveal_to != my_party_code);
   // reveal to me
