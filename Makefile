@@ -33,12 +33,12 @@ binary: clean prepare fmt vet gogenerate
 	bazelisk --host_jvm_args=-Xmx8g build //engine/exe:scqlengine -c opt --jobs=32
 	bash ${PWD}/version_build.sh -r
 
-# Development environment protected binary target that uses isolated output_base
+# Development environment protected binary target that uses isolated build environment
 binary-dev: clean prepare fmt vet gogenerate
 	$(eval SCQL_VERSION := $(shell bash ${PWD}/version_build.sh))
 	echo "Binary version: ${SCQL_VERSION}"
 	GOBIN=${PWD}/bin go install -ldflags "-X main.version=${SCQL_VERSION}" ./cmd/...
-	bazelisk --output_base=/tmp/bazel_docker_build --host_jvm_args=-Xmx8g build //engine/exe:scqlengine -c opt --jobs=32
+	bazelisk --output_base=/tmp/bazel_docker_build --host_jvm_args=-Xmx8g build --symlink_prefix=/tmp/bazel_isolated_build/ //engine/exe:scqlengine -c opt --jobs=32
 	bash ${PWD}/version_build.sh -r
 
 pb: clean

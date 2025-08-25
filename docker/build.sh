@@ -26,7 +26,6 @@ TARGET_PLATFORM=""
 BASE_IMAGE=ubuntu
 PROTECT_DEV_ENV=false
 container_id=""
-BACKUP_DIR=""
 TMP_PATH=""
 
 # Display usage information
@@ -99,7 +98,8 @@ configure_docker_settings() {
   MOUNT_OPTIONS=""
   if ${ENABLE_CACHE}; then
     local cache_vol_name="scql-${BASE_IMAGE}-buildcache"
-    MOUNT_OPTIONS="--mount type=volume,source=${cache_vol_name},target=/root/.cache --mount type=volume,source=scql-go-buildcache,target=/usr/local/pkg/mod"
+    local go_cache_vol_name="scql-${BASE_IMAGE}-go-buildcache"
+    MOUNT_OPTIONS="--mount type=volume,source=${cache_vol_name},target=/root/.cache --mount type=volume,source=${go_cache_vol_name},target=/usr/local/pkg/mod"
   fi
 
   HOST_PLATFORM=""
@@ -138,32 +138,6 @@ create_docker_container() {
   docker exec -it ${container_id} bash -c "git config --global --add safe.directory /home/admin/dev"
 }
 
-# Backup existing bazel symlinks to preserve host development environment
-backup_bazel_symlinks() {
-  if [ "$PROTECT_DEV_ENV" = "true" ]; then
-    echo "Development environment protection enabled - backing up existing Bazel symlinks..."
-    BACKUP_DIR=$(mktemp -d /tmp/bazel_symlinks_backup.XXXXXX)
-    echo "Backup directory created at: $BACKUP_DIR"
-
-    # Change to work directory to handle relative symlinks properly
-    cd "$WORK_DIR"
-
-    # Get repository name dynamically
-    REPO_NAME=$(basename "$WORK_DIR")
-
-    for link in bazel-bin bazel-out bazel-testlogs bazel-$REPO_NAME external; do
-      if [ -L "$link" ]; then
-        cp -P "$link" "$BACKUP_DIR/"
-        echo "Backed up: $link -> $(readlink "$link")"
-      elif [ -e "$link" ]; then
-        echo "Warning: $link exists but is not a symlink, skipping backup"
-      fi
-    done
-  else
-    echo "Using standard build mode (development environment protection disabled)"
-  fi
-}
-
 # Build binaries inside Docker container
 build_binaries() {
   # Select build command based on protection mode
@@ -176,55 +150,6 @@ build_binaries() {
 
   echo "Building binaries with command: ${build_cmd}"
   docker exec -it ${container_id} bash -c "cd /home/admin/dev && ${build_cmd}"
-}
-
-# Restore the original Bazel symlinks after build
-restore_bazel_symlinks() {
-  if [ "$PROTECT_DEV_ENV" = "true" ]; then
-    echo "Restoring original Bazel symlinks..."
-    # Change to work directory
-    cd "$WORK_DIR"
-
-    # Get repository name dynamically
-    REPO_NAME=$(basename "$WORK_DIR")
-
-    # Remove any Docker-created symlinks and directories first
-    for link in bazel-bin bazel-out bazel-testlogs bazel-dev bazel-$REPO_NAME external; do
-      if [ -L "$link" ] || [ -d "$link" ]; then
-        rm -rf "$link"
-        echo "Removed Docker-created: $link"
-      fi
-    done
-
-    # Restore original symlinks if backup directory exists
-    if [ -d "$BACKUP_DIR" ]; then
-      for backup_link in "$BACKUP_DIR"/*; do
-        if [ -L "$backup_link" ]; then
-          link_name=$(basename "$backup_link")
-          cp -P "$backup_link" "./"
-          echo "Restored: $link_name -> $(readlink "$link_name")"
-        fi
-      done
-
-      # Cleanup backup directory
-      rm -rf "$BACKUP_DIR"
-      BACKUP_DIR=""
-      echo "Successfully restored development environment symlinks and cleaned up backup."
-    else
-      echo "No backup directory found - only cleaned up Docker-created symlinks"
-    fi
-  else
-    echo "Standard build mode - cleaning up any Docker-created symlinks"
-    # Even in standard mode, clean up any Docker-created symlinks
-    cd "$WORK_DIR"
-    REPO_NAME=$(basename "$WORK_DIR")
-    for link in bazel-bin bazel-out bazel-testlogs bazel-dev bazel-$REPO_NAME external; do
-      if [ -L "$link" ] && [[ "$(readlink "$link")" == "/tmp/bazel_docker_build"* ]]; then
-        rm -rf "$link"
-        echo "Removed Docker-created symlink: $link"
-      fi
-    done
-  fi
 }
 
 # Prepare temporary directory and copy all build files
@@ -258,20 +183,17 @@ copy_scqlengine_binary() {
 
   local source_paths=()
   if [ "$PROTECT_DEV_ENV" = "true" ]; then
-    echo "In development protection mode, searching isolated build locations..."
+    echo "In development protection mode, using isolated symlink location..."
+    # With --symlink_prefix=/tmp/bazel_isolated_build/, the symlink is created there
+    source_paths+=(
+      "/tmp/bazel_isolated_build/bin/engine/exe/scqlengine"
+    )
+
+    # Fallback to output_base locations if symlink doesn't exist
     source_paths+=(
       "/tmp/bazel_docker_build/execroot/_main/bazel-out/k8-opt/bin/engine/exe/scqlengine"
       "/tmp/bazel_docker_build/execroot/_main/bazel-out/k8-fastbuild/bin/engine/exe/scqlengine"
     )
-
-    echo "Searching dynamically as a fallback..."
-    local dynamic_path
-    dynamic_path=$(docker exec "${container_id}" find /tmp/bazel_docker_build -name 'scqlengine' -type f 2>/dev/null | head -1)
-
-    if [ -n "$dynamic_path" ]; then
-      source_paths+=("$dynamic_path")
-      echo "Found a candidate path: $dynamic_path"
-    fi
   else
     echo "In standard mode, using the default build location..."
     source_paths+=(
@@ -308,7 +230,11 @@ build_docker_image() {
 cleanup_on_exit() {
   echo "Starting cleanup process..."
 
-  restore_bazel_symlinks
+  # Clean up root-owned directories BEFORE stopping container
+  if [ "$PROTECT_DEV_ENV" = "true" ] && [ -n "${container_id}" ]; then
+    echo "Cleaning up root-owned directories created during build..."
+    docker exec -it ${container_id} bash -c "cd /home/admin/dev && rm -rf bin tool-bin" 2>/dev/null || true
+  fi
 
   # Stop Docker container if it exists
   if [ -n "${container_id}" ]; then
@@ -316,25 +242,11 @@ cleanup_on_exit() {
     docker stop ${container_id} 2>/dev/null || true
   fi
 
-  cleanup_build_artifacts
-}
-
-# Clean up build artifacts and temporary files
-cleanup_build_artifacts() {
-  # Clean up root-owned directories created during build
-  if [ "$PROTECT_DEV_ENV" = "true" ] && [ -n "${container_id}" ]; then
-    echo "Cleaning up root-owned directories created during build..."
-    docker exec -it ${container_id} bash -c "cd /home/admin/dev && rm -rf bin tool-bin" 2>/dev/null || true
-  fi
-
-  # Clean up .buildtmp directory - this should always happen
+  # Clean up .buildtmp directory
   local buildtmp_dir="$WORK_DIR/.buildtmp"
   if [ -d "$buildtmp_dir" ]; then
-    echo "Removing .buildtmp directory: $buildtmp_dir"
     rm -rf "$buildtmp_dir"
     echo "Successfully cleaned up .buildtmp directory"
-  else
-    echo "No .buildtmp directory found to clean up"
   fi
 }
 
@@ -343,7 +255,6 @@ main() {
   setup_environment
   configure_docker_settings
   create_docker_container
-  backup_bazel_symlinks
   build_binaries
   prepare_build_files
   build_docker_image
