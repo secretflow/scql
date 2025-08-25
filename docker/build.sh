@@ -25,7 +25,10 @@ TARGET_STAGE=image-prod
 TARGET_PLATFORM=""
 BASE_IMAGE=ubuntu
 PROTECT_DEV_ENV=false
-container_id=""
+CONTAINER_ID=""
+OVERLAY_VOLUME=""
+WORKSPACE_MOUNT_ARGS=""
+CACHE_MOUNT_ARGS=""
 TMP_PATH=""
 
 # Display usage information
@@ -39,7 +42,7 @@ usage() {
   echo "  -p target platform, default is \"linux/amd64\", support \"linux/arm64\" and \"linux/amd64\"."
   echo "  -b base image, default is \"ubuntu\", support \"ubuntu\" and \"anolis\"."
   echo "  -c, enable host disk bazel cache to speedup build process"
-  echo "  -d, protect development environment (use isolated build and preserve symlinks)"
+  echo "  -d, protect development environment (use isolated build)"
 }
 
 # Parse command line arguments
@@ -95,13 +98,41 @@ setup_environment() {
 
 # Configure Docker mount options and platform settings
 configure_docker_settings() {
-  MOUNT_OPTIONS=""
+  # Configure cache mount options
+  CACHE_MOUNT_ARGS=""
   if ${ENABLE_CACHE}; then
     local cache_vol_name="scql-${BASE_IMAGE}-buildcache"
     local go_cache_vol_name="scql-${BASE_IMAGE}-go-buildcache"
-    MOUNT_OPTIONS="--mount type=volume,source=${cache_vol_name},target=/root/.cache --mount type=volume,source=${go_cache_vol_name},target=/usr/local/pkg/mod"
+    CACHE_MOUNT_ARGS="--mount type=volume,source=${cache_vol_name},target=/root/.cache --mount type=volume,source=${go_cache_vol_name},target=/usr/local/pkg/mod"
   fi
 
+  # Configure workspace mount strategy based on protection mode
+  if [ "$PROTECT_DEV_ENV" = "true" ]; then
+    # Use overlay volume for complete isolation with direct mount
+    local overlay_volume="scql-build-overlay-$(date +%s)"
+    local changes_dir="$WORK_DIR/.build_changes"
+    echo "Creating overlay volume with direct mount: $overlay_volume"
+
+    # Create overlay directories in workspace
+    mkdir -p "$changes_dir/upper" "$changes_dir/work"
+
+    # Create overlay volume with workspace-relative paths
+    docker volume create "${overlay_volume}" \
+      --driver local \
+      --opt type=overlay \
+      --opt device=overlay \
+      --opt "o=lowerdir=${WORK_DIR},upperdir=${changes_dir}/upper,workdir=${changes_dir}/work" \
+      >/dev/null
+
+    OVERLAY_VOLUME="$overlay_volume"
+
+    WORKSPACE_MOUNT_ARGS="--mount type=volume,source=${overlay_volume},target=/home/admin/dev/"
+  else
+    # Standard bind mount for non-protected builds
+    WORKSPACE_MOUNT_ARGS="--mount type=bind,source=${WORK_DIR},target=/home/admin/dev/"
+  fi
+
+  # Configure platform settings
   HOST_PLATFORM=""
   case "$(arch)" in
     x86_64) HOST_PLATFORM="linux/amd64" ;;
@@ -115,6 +146,7 @@ configure_docker_settings() {
   # If TargetPlatform is not set, set to host platform
   TARGET_PLATFORM=${TARGET_PLATFORM:-$HOST_PLATFORM}
 
+  # Configure builder image
   BUILDER=secretflow/scql-ci:latest
   if [ "$BASE_IMAGE" == "anolis" ]; then
     BUILDER=secretflow/release-ci:latest
@@ -124,32 +156,24 @@ configure_docker_settings() {
   fi
 }
 
-# Create and configure Docker container
-create_docker_container() {
-  container_id=$(docker run -it --rm --detach \
-    --mount type=bind,source="${WORK_DIR}",target=/home/admin/dev/ \
-    -w /home/admin/dev ${MOUNT_OPTIONS} \
+# Create Docker container and build binaries
+create_container_and_build() {
+  echo "Creating Docker container and building binaries..."
+
+  # Create and start the container
+  CONTAINER_ID=$(docker run -it --rm --detach \
+    ${WORKSPACE_MOUNT_ARGS} \
+    -w /home/admin/dev ${CACHE_MOUNT_ARGS} \
     $BUILDER tail -f /dev/null)
 
   # Setup cleanup trap for both container and build artifacts
   trap 'cleanup_on_exit' EXIT
 
-  # prepare for git command
-  docker exec -it ${container_id} bash -c "git config --global --add safe.directory /home/admin/dev"
-}
+  # Prepare git configuration
+  docker exec -it ${CONTAINER_ID} bash -c "git config --global --add safe.directory /home/admin/dev"
 
-# Build binaries inside Docker container
-build_binaries() {
-  # Select build command based on protection mode
-  local build_cmd
-  if [ "$PROTECT_DEV_ENV" = "true" ]; then
-    build_cmd="make binary-dev"
-  else
-    build_cmd="make binary"
-  fi
-
-  echo "Building binaries with command: ${build_cmd}"
-  docker exec -it ${container_id} bash -c "cd /home/admin/dev && ${build_cmd}"
+  # Build binaries
+  docker exec -it ${CONTAINER_ID} bash -c "cd /home/admin/dev && make binary"
 }
 
 # Prepare temporary directory and copy all build files
@@ -162,55 +186,16 @@ prepare_build_files() {
   echo "copy files to dir: $TMP_PATH"
 
   # Copy standard binaries
-  docker cp ${container_id}:/home/admin/dev/bin/. $TMP_PATH/$TARGET_PLATFORM
+  docker cp ${CONTAINER_ID}:/home/admin/dev/bin/. $TMP_PATH/$TARGET_PLATFORM
 
   # Copy scqlengine binary
-  copy_scqlengine_binary
+  docker cp ${CONTAINER_ID}:/home/admin/dev/bazel-bin/engine/exe/scqlengine $TMP_PATH/$TARGET_PLATFORM
 
   # copy dockerfile
   cp ${SCRIPT_DIR}/scql-${BASE_IMAGE}.Dockerfile $TMP_PATH/Dockerfile
 
   # copy scripts
   cp -r ${WORK_DIR}/scripts $TMP_PATH/scripts
-}
-
-# Copy scqlengine binary based on build mode
-copy_scqlengine_binary() {
-  echo "Copying scqlengine binary..."
-
-  local dest_path="$TMP_PATH/$TARGET_PLATFORM"
-  mkdir -p "$dest_path"
-
-  local source_paths=()
-  if [ "$PROTECT_DEV_ENV" = "true" ]; then
-    echo "In development protection mode, using isolated symlink location..."
-    # With --symlink_prefix=/tmp/bazel_isolated_build/, the symlink is created there
-    source_paths+=(
-      "/tmp/bazel_isolated_build/bin/engine/exe/scqlengine"
-    )
-
-    # Fallback to output_base locations if symlink doesn't exist
-    source_paths+=(
-      "/tmp/bazel_docker_build/execroot/_main/bazel-out/k8-opt/bin/engine/exe/scqlengine"
-      "/tmp/bazel_docker_build/execroot/_main/bazel-out/k8-fastbuild/bin/engine/exe/scqlengine"
-    )
-  else
-    echo "In standard mode, using the default build location..."
-    source_paths+=(
-      "/home/admin/dev/bazel-bin/engine/exe/scqlengine"
-    )
-  fi
-
-  for src_path in "${source_paths[@]}"; do
-    echo "Attempting to copy from: ${container_id}:${src_path}"
-    if docker cp "${container_id}:${src_path}" "$dest_path/scqlengine" 2>/dev/null; then
-      echo "Success! Copied scqlengine to $dest_path"
-      return 0
-    fi
-  done
-
-  echo "Error: Could not find scqlengine binary after trying all candidate locations."
-  exit 1
 }
 
 # Build Docker image
@@ -230,16 +215,29 @@ build_docker_image() {
 cleanup_on_exit() {
   echo "Starting cleanup process..."
 
-  # Clean up root-owned directories BEFORE stopping container
-  if [ "$PROTECT_DEV_ENV" = "true" ] && [ -n "${container_id}" ]; then
-    echo "Cleaning up root-owned directories created during build..."
-    docker exec -it ${container_id} bash -c "cd /home/admin/dev && rm -rf bin tool-bin" 2>/dev/null || true
+  # Clean up root-owned directories
+  if [ "$PROTECT_DEV_ENV" = "true" ] && [ -n "${OVERLAY_VOLUME:-}" ]; then
+    local changes_dir="$WORK_DIR/.build_changes"
+    if [ -d "$changes_dir" ]; then
+      # Use a separate container to clean up root-owned files by mounting the changes directory
+      docker run --rm --mount type=bind,source="$changes_dir",target=/cleanup alpine sh -c "rm -rf /cleanup/*" 2>/dev/null || true
+    fi
   fi
 
   # Stop Docker container if it exists
-  if [ -n "${container_id}" ]; then
-    echo "Stopping Docker container: ${container_id}"
-    docker stop ${container_id} 2>/dev/null || true
+  if [ -n "${CONTAINER_ID}" ]; then
+    echo "Stopping Docker container: ${CONTAINER_ID}"
+    docker stop ${CONTAINER_ID} 2>/dev/null || true
+  fi
+
+  # Clean up overlay volume if it was created
+  if [ "$PROTECT_DEV_ENV" = "true" ] && [ -n "${OVERLAY_VOLUME:-}" ]; then
+    docker volume rm "${OVERLAY_VOLUME}" 2>/dev/null || true
+
+    local changes_dir="$WORK_DIR/.build_changes"
+    if [ -d "$changes_dir" ]; then
+      rm -rf "$changes_dir" 2>/dev/null || true
+    fi
   fi
 
   # Clean up .buildtmp directory
@@ -254,8 +252,7 @@ main() {
   parse_arguments "$@"
   setup_environment
   configure_docker_settings
-  create_docker_container
-  build_binaries
+  create_container_and_build
   prepare_build_files
   build_docker_image
   echo "Build completed successfully!"
