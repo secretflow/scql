@@ -63,7 +63,7 @@ def bench_mock_int(column: map, row_num: int, cur_pos: int):
     elif mock_type == INCREMENT_MOCK:
         result = [str(i + cur_pos) for i in range(row_num)]
     else:
-        raise Exception("unknown mock type for int")
+        raise Exception("unknown mock type for int: " + mock_type)
     return result
 
 
@@ -93,7 +93,7 @@ def bench_mock_float(column: map, row_num: int, cur_pos: int):
         for i in index:
             result.append(str(column[RANDOM_POOL_KEY][i]))
     else:
-        raise Exception("unknown mock type for float")
+        raise Exception("unknown mock type for float: " + mock_type)
     return result
 
 
@@ -106,9 +106,11 @@ def bench_mock_str(column: map, row_num: int, cur_pos: int):
     if STRING_LEN in column:
         str_len = column[STRING_LEN]
     if mock_type == RANDOM_MOCK:
-        index = [random.randint(0, len(Default_STRING_POOL)) for i in range(row_num)]
+        index = [
+            random.randint(0, len(Default_STRING_POOL) - 1) for i in range(row_num)
+        ]
         for i in index:
-            result.append(column[Default_STRING_POOL][i])
+            result.append(Default_STRING_POOL[i])
     elif mock_type == RANDOM_POOL:
         assert RANDOM_POOL_KEY in column
         assert len(column[RANDOM_POOL_KEY]) > 1
@@ -120,7 +122,7 @@ def bench_mock_str(column: map, row_num: int, cur_pos: int):
     elif mock_type == INCREMENT_MOCK:
         result = [str(i + cur_pos).zfill(str_len) for i in range(row_num)]
     else:
-        raise Exception("unknown mock type for string")
+        raise Exception("unknown mock type for string: " + mock_type)
     return result
 
 
@@ -128,7 +130,7 @@ def create_bench_data(column: map, row_num: int, cur_pos: int):
     data_type = column["dtype"]
     if data_type == "int":
         return bench_mock_int(column, row_num, cur_pos)
-    elif data_type == "float":
+    elif data_type == "float" or data_type == "float64":
         return bench_mock_float(column, row_num, cur_pos)
     elif data_type == "string":
         return bench_mock_str(column, row_num, cur_pos)
