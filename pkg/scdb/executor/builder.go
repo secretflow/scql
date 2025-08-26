@@ -52,8 +52,6 @@ func (b *executorBuilder) build(p core.Plan) Executor {
 		return b.buildShow(v)
 	case *core.Set:
 		return b.buildSet(v)
-	case *core.Explain:
-		return b.buildExplain(v)
 	default:
 		b.err = ErrUnknownPlan.GenWithStack("unsupported Plan %T", p)
 		return nil
@@ -149,18 +147,6 @@ func (b *executorBuilder) buildSet(v *core.Set) Executor {
 	e := &SetExecutor{
 		baseExecutor: base,
 		vars:         v.VarAssigns,
-	}
-	return e
-}
-
-func (b *executorBuilder) buildExplain(v *core.Explain) Executor {
-	base := newBaseExecutor(b.ctx, v.Schema(), v.ExplainID())
-	base.initCap = chunk.ZeroCapacity
-	e := &ExplainExec{
-		baseExecutor: base,
-		TargetPlan:   v.TargetPlan,
-		Format:       v.Format,
-		Analyze:      v.Analyze,
 	}
 	return e
 }
