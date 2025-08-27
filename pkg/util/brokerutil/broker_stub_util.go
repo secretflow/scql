@@ -134,6 +134,22 @@ func (c *Command) ArchiveProject(projectID string) (string, error) {
 	}
 }
 
+func (c *Command) DeleteProject(projectID string) error {
+	if projectID == "" {
+		return fmt.Errorf("DeleteProject: projectId must not be empty")
+	}
+
+	req := &pb.DeleteProjectRequest{ProjectId: projectID}
+	response := &pb.DeleteProjectResponse{}
+	err := c.intraStub.DeleteProject(c.host, req, response)
+	if err != nil {
+		return fmt.Errorf("DeleteProject: failed to call deleting project service: %v", err)
+	}
+
+	wrapper := NewResponseWrapper(response)
+	return handleResponse(wrapper, "DeleteProject")
+}
+
 func (c *Command) CreateView(projectId, viewName, body string) error {
 	if projectId == "" {
 		return fmt.Errorf("CreateView: projectId must not be empty")

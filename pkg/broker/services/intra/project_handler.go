@@ -274,6 +274,62 @@ func (svc *grpcIntraSvc) ArchiveProject(c context.Context, req *pb.ArchiveProjec
 	}, nil
 }
 
+func (svc *grpcIntraSvc) DeleteProject(ctx context.Context, req *pb.DeleteProjectRequest) (resp *pb.DeleteProjectResponse, err error) {
+	if req == nil {
+		return nil, status.New(pb.Code_BAD_REQUEST, "DeleteProject: illegal empty request")
+	}
+	if req.GetProjectId() == "" {
+		return nil, status.New(pb.Code_BAD_REQUEST, "DeleteProject: project_id cannot be empty")
+	}
+
+	app := svc.app
+	txn := app.MetaMgr.CreateMetaTransaction()
+	defer func() {
+		finishErr := txn.Finish(err)
+		if finishErr != nil {
+			logrus.Errorf("DeleteProject: failed to finish transaction: %v", finishErr)
+			if err == nil {
+				err = finishErr
+			}
+		}
+	}()
+
+	project, err := txn.GetProject(req.GetProjectId())
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &pb.DeleteProjectResponse{
+				Status: &pb.Status{
+					Code:    int32(pb.Code_NOT_FOUND),
+					Message: "project not found",
+				},
+			}, nil
+		}
+		return nil, fmt.Errorf("DeleteProject: failed to get project info in meta database: %v", err)
+	}
+
+	if !project.Archived {
+		return &pb.DeleteProjectResponse{
+			Status: &pb.Status{
+				Code:    int32(pb.Code_BAD_REQUEST),
+				Message: "project must be archived before deletion",
+			},
+		}, nil
+	}
+
+	// Delete the project and all its related data
+	err = txn.DeleteProject(req.GetProjectId())
+	if err != nil {
+		return nil, fmt.Errorf("DeleteProject: failed to delete project: %v", err)
+	}
+
+	return &pb.DeleteProjectResponse{
+		Status: &pb.Status{
+			Code:    int32(pb.Code_OK),
+			Message: "delete project succeed",
+		},
+	}, nil
+}
+
 func (svc *grpcIntraSvc) InviteMember(c context.Context, req *pb.InviteMemberRequest) (resp *pb.InviteMemberResponse, err error) {
 	if req.GetMethod() != pb.InviteMemberRequest_PUSH {
 		return nil, status.New(pb.Code_BAD_REQUEST, fmt.Sprintf("InviteMember: not support invite method %v", req.GetMethod()))
