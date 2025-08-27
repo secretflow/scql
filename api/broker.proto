@@ -126,7 +126,7 @@ service IntraBrokerService {
       post: "/intra/project/delete"
       body: "*"
     };
-  };
+  }
 
   // InviteMember
   //
