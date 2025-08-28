@@ -105,6 +105,7 @@ cc_library(
     hdrs = ["join.h"],
     deps = [
         "//engine/core:tensor_slice",
+        "//engine/exe:flags",
         "//engine/framework:operator",
         "//engine/util:communicate_helper",
         "//engine/util/psi:batch_provider",
@@ -386,6 +387,7 @@ cc_library(
     srcs = ["in.cc"],
     hdrs = ["in.h"],
     deps = [
+        "//engine/exe:flags",
         "//engine/framework:operator",
         "//engine/util/psi:batch_provider",
         "//engine/util/psi:cipher_intersection",
