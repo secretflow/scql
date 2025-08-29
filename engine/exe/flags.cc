@@ -124,3 +124,5 @@ DEFINE_string(authorized_profile_path, "",
               "path to authorized profile, in json format");
 DEFINE_bool(enable_psi_detail_logger, false, "whether enable detail log");
 DEFINE_string(psi_detail_logger_dir, "logs/detail", "log dir");
+DEFINE_bool(use_rr22_low_comm_mode, false,
+            "use rr22 low comm mode when the network bandwidth is limited");
