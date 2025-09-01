@@ -87,3 +87,4 @@ DECLARE_bool(enable_peer_auth);
 DECLARE_string(authorized_profile_path);
 DECLARE_bool(enable_psi_detail_logger);
 DECLARE_string(psi_detail_logger_dir);
+DECLARE_bool(use_rr22_low_comm_mode);

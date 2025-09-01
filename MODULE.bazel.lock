@@ -889,7 +889,7 @@
     "//bazel:defs.bzl%non_module_dependencies": {
       "general": {
         "bzlTransitiveDigest": "klEmpjNC1WHT/ZVR9b9FjhZRsul/OS1ZYICoaOjJTZU=",
-        "usagesDigest": "SB2dpOKMD6a6rN4I33N74ys2cWVdaTrm2V4kqyPv1KA=",
+        "usagesDigest": "vBXKVqtlSxvdHzob/mZXuLxycd10yCCC4x/AizZPBNU=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},

@@ -75,6 +75,7 @@ def create_csv_conn_str(source_file: str, party: str):
     data_type_map = {
         "int": "INT64",
         "float": "FLOAT",
+        "float64": "FLOAT64",
         "string": "STRING",
     }
     result["tables"] = []
