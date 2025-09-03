@@ -289,3 +289,130 @@ func TestBootstrap(t *testing.T) {
 	}
 	transaction.Finish(nil)
 }
+
+func TestDeleteProject(t *testing.T) {
+	r := require.New(t)
+	id, err := uuid.NewUUID()
+	r.NoError(err)
+	connStr := fmt.Sprintf("file:%s?mode=memory&cache=shared", id)
+	db, err := gorm.Open(sqlite.Open(connStr),
+		&gorm.Config{
+			SkipDefaultTransaction: true,
+			Logger: gormlog.New(
+				logrus.StandardLogger(),
+				gormlog.Config{
+					SlowThreshold: 200 * time.Millisecond,
+					Colorful:      false,
+					LogLevel:      gormlog.Info,
+				}),
+		})
+
+	r.NoError(err)
+	manager := NewMetaManager(db)
+	err = manager.Bootstrap()
+	r.NoError(err)
+	transaction := manager.CreateMetaTransaction()
+
+	// Create a project
+	projectID := "test-project"
+	projectName := "Test Project"
+	projectConf, err := message.ProtoMarshal(&pb.ProjectConfig{})
+	r.NoError(err)
+
+	alice := "alice"
+	bob := "bob"
+
+	// Create project
+	err = transaction.CreateProject(Project{ID: projectID, Name: projectName, ProjectConf: string(projectConf), Creator: alice})
+	r.NoError(err)
+
+	// Add another member
+	err = transaction.AddProjectMembers([]Member{{ProjectID: projectID, Member: bob}})
+	r.NoError(err)
+
+	// Create tables for the project
+	tableName1 := "table1"
+	tableName2 := "table2"
+
+	table1Meta := TableMeta{
+		Table: Table{TableIdentifier: TableIdentifier{ProjectID: projectID, TableName: tableName1}, RefTable: "real.table1", Owner: alice},
+		Columns: []ColumnMeta{
+			{ColumnName: "col1", DType: "string"},
+			{ColumnName: "col2", DType: "int"},
+		},
+	}
+
+	table2Meta := TableMeta{
+		Table: Table{TableIdentifier: TableIdentifier{ProjectID: projectID, TableName: tableName2}, RefTable: "real.table2", Owner: bob},
+		Columns: []ColumnMeta{
+			{ColumnName: "col1", DType: "float"},
+			{ColumnName: "col2", DType: "bool"},
+		},
+	}
+
+	err = transaction.AddTable(table1Meta)
+	r.NoError(err)
+	err = transaction.AddTable(table2Meta)
+	r.NoError(err)
+
+	// Add column privileges
+	privs := []ColumnPriv{
+		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: projectID, TableName: tableName1, ColumnName: "col1", DestParty: alice}, Priv: "plain"},
+		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: projectID, TableName: tableName1, ColumnName: "col1", DestParty: bob}, Priv: "encrypt"},
+		{ColumnPrivIdentifier: ColumnPrivIdentifier{ProjectID: projectID, TableName: tableName2, ColumnName: "col2", DestParty: alice}, Priv: "plain"},
+	}
+	err = transaction.GrantColumnConstraints(privs)
+	r.NoError(err)
+
+	// Add invitations
+	invite := Invitation{
+		ProjectID:   projectID,
+		ProjectConf: string(projectConf),
+		Member:      fmt.Sprintf("%s;%s", alice, bob),
+		InviteTime:  time.Now(),
+		Inviter:     alice,
+		Invitee:     "carol",
+	}
+	err = transaction.AddInvitations([]Invitation{invite})
+	r.NoError(err)
+
+	// Try to delete project without archiving first (should fail)
+	err = transaction.DeleteProject(projectID)
+	r.Error(err)
+	r.Contains(err.Error(), "must be archived before deletion")
+
+	// Archive the project
+	err = transaction.ArchiveProject(projectID)
+	r.NoError(err)
+
+	// Now delete the project (should succeed)
+	err = transaction.DeleteProject(projectID)
+	r.NoError(err)
+
+	// Verify that the project and all related data have been deleted
+	// Try to get the project (should fail)
+	_, err = transaction.GetProject(projectID)
+	r.Error(err)
+
+	// Try to get project members (should return empty)
+	members, err := transaction.GetProjectMembers(projectID)
+	r.NoError(err)
+	r.Equal(0, len(members))
+
+	// Try to get tables (should return empty)
+	tables, err := transaction.GetAllTables(projectID)
+	r.NoError(err)
+	r.Equal(0, len(tables))
+
+	// Try to get column privileges (should return empty)
+	ccls, err := transaction.ListColumnConstraints(projectID, []string{}, []string{})
+	r.NoError(err)
+	r.Equal(0, len(ccls))
+
+	// Try to get invitations for the project (should return empty)
+	invitations, err := transaction.GetInvitationsBy(Invitation{ProjectID: projectID}, false)
+	r.NoError(err)
+	r.Equal(0, len(invitations))
+
+	transaction.Finish(nil)
+}

@@ -22,15 +22,26 @@ import (
 
 var (
 	deleteCmd = &cobra.Command{
-		Use:   "delete table <name>",
-		Short: "Delete table in project, the relevant ccls will be cleared too",
-		Args:  cobra.MatchAll(cobra.ExactArgs(2)),
+		Use:   "delete {table|view|project} [name]",
+		Short: "Delete table, view, or project. Tables/views will be deleted from project, projects must be archived first",
+		Args:  cobra.MatchAll(cobra.MinimumNArgs(1)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			switch args[0] {
 			case Table:
+				if len(args) != 2 {
+					return fmt.Errorf("missing <name> for deleting table")
+				}
 				return deleteTable(args[1])
 			case View:
+				if len(args) != 2 {
+					return fmt.Errorf("missing <name> for deleting view")
+				}
 				return deleteView(args[1])
+			case Project:
+				if len(args) != 1 {
+					return fmt.Errorf("delete project does not require additional arguments")
+				}
+				return deleteProject()
 			default:
 				return fmt.Errorf("not support delete %v", args[0])
 			}
@@ -59,5 +70,17 @@ func deleteTable(name string) error {
 		return err
 	}
 	fmt.Printf("delete table '%s' in '%s' succeeded\n", name, projectID)
+	return nil
+}
+
+func deleteProject() error {
+	if projectID == "" {
+		return fmt.Errorf("flags project-id must not be empty")
+	}
+	err := brokerCommand.DeleteProject(projectID)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("delete project '%s' succeeded\n", projectID)
 	return nil
 }

@@ -71,6 +71,10 @@ func (stub *IntraStub) ArchiveProject(url string, req *pb.ArchiveProjectRequest,
 	return stub.baseCall(url, constant.ArchiveProjectPath, req, response)
 }
 
+func (stub *IntraStub) DeleteProject(url string, req *pb.DeleteProjectRequest, response *pb.DeleteProjectResponse) (err error) {
+	return stub.baseCall(url, constant.DeleteProjectPath, req, response)
+}
+
 func (stub *IntraStub) ListProjects(url string, req *pb.ListProjectsRequest, response *pb.ListProjectsResponse) (err error) {
 	return stub.baseCall(url, constant.ListProjectsPath, req, response)
 }

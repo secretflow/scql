@@ -108,7 +108,25 @@ service IntraBrokerService {
       body: "*"
     };
   }
-  rpc ArchiveProject(ArchiveProjectRequest) returns (ArchiveProjectResponse);
+  // ArchiveProject
+  //
+  // Archive a Project
+  rpc ArchiveProject(ArchiveProjectRequest) returns (ArchiveProjectResponse) {
+    option (google.api.http) = {
+      post: "/intra/project/archive"
+      body: "*"
+    };
+  }
+
+  // DeleteProject
+  //
+  // Delete an archived Project locally
+  rpc DeleteProject(DeleteProjectRequest) returns (DeleteProjectResponse) {
+    option (google.api.http) = {
+      post: "/intra/project/delete"
+      body: "*"
+    };
+  }
 
   // InviteMember
   //
@@ -382,7 +400,17 @@ message ArchiveProjectRequest {
   string project_id = 1;
   string comment = 2;
 }
+
 message ArchiveProjectResponse {
+  Status status = 1;
+}
+
+message DeleteProjectRequest {
+  string project_id = 1;
+  string comment = 2;
+}
+
+message DeleteProjectResponse {
   Status status = 1;
 }
 
