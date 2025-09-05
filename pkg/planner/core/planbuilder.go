@@ -842,11 +842,25 @@ func collectVisitInfoFromGrantStmt(sctx sessionctx.Context, vi []visitInfo, stmt
 }
 
 func (b *PlanBuilder) buildExplain(ctx context.Context, explain *ast.ExplainStmt) (Plan, error) {
-	show, ok := explain.Stmt.(*ast.ShowStmt)
-	if !ok {
+	switch stmt := explain.Stmt.(type) {
+	case *ast.ShowStmt:
+		return b.buildShow(ctx, stmt)
+	case *ast.SelectStmt:
+		targetPlan, err := b.buildSelect(ctx, stmt)
+		if err != nil {
+			return nil, err
+		}
+		// 创建 Explain 计划包装目标计划
+		return &Explain{TargetPlan: targetPlan, Format: explain.Format, Analyze: explain.Analyze}, nil
+	case *ast.UnionStmt:
+		targetPlan, err := b.buildUnion(ctx, stmt)
+		if err != nil {
+			return nil, err
+		}
+		return &Explain{TargetPlan: targetPlan, Format: explain.Format, Analyze: explain.Analyze}, nil
+	default:
 		return nil, ErrUnsupportedType.GenWithStack("Unsupported explain stmt %T", explain.Stmt)
 	}
-	return b.buildShow(ctx, show)
 }
 
 func (b *PlanBuilder) buildInsert(ctx context.Context, insert *ast.InsertStmt) (Plan, error) {

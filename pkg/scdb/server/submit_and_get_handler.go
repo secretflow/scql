@@ -96,6 +96,16 @@ func (app *App) submitAndGet(ctx context.Context, req *scql.SCDBQueryRequest) *s
 		return newErrorSCDBQueryResultResponse(scql.Code_UNAUTHENTICATED, err.Error())
 	}
 
+	isExplain, err := isExplainQuery(req.Query)
+	if err != nil {
+		return newErrorSCDBQueryResultResponse(scql.Code_SQL_PARSE_ERROR, err.Error())
+	}
+	session.isDQLRequest = isExplain
+
+	if isExplain {
+		return app.submitAndGetDQL(ctx, session)
+	}
+
 	isDQL, err := isDQL(req.Query)
 	if err != nil {
 		return newErrorSCDBQueryResultResponse(scql.Code_SQL_PARSE_ERROR, err.Error())
@@ -369,6 +379,24 @@ func (app *App) runDQL(ctx context.Context, s *session, async bool) (*scql.SCDBQ
 			CallbackUrl:   cbURL.String(),
 			GraphChecksum: &scql.GraphChecksum{CheckGraphChecksum: false},
 		}
+	}
+
+	isExplain, err := isExplainQuery(s.request.GetQuery())
+	if err != nil {
+		return nil, err
+	}
+
+	if isExplain {
+		return &scql.SCDBQueryResultResponse{
+			Status: &scql.Status{
+				Code:    int32(scql.Code_OK),
+				Message: compiledPlan.GetExplain().GetExeGraphDot(),
+			},
+			OutColumns:    nil,
+			ScdbSessionId: s.id,
+			AffectedRows:  0,
+			Warnings:      nil,
+		}, nil
 	}
 
 	engineClient := executor.NewEngineClient(
