@@ -139,7 +139,7 @@ func isDQL(sql string) (bool, error) {
 	}
 
 	switch stmt.(type) {
-	case *ast.SelectStmt, *ast.UnionStmt:
+	case *ast.SelectStmt, *ast.UnionStmt, *ast.ExplainStmt:
 		return true, nil
 	}
 

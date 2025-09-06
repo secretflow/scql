@@ -846,18 +846,9 @@ func (b *PlanBuilder) buildExplain(ctx context.Context, explain *ast.ExplainStmt
 	case *ast.ShowStmt:
 		return b.buildShow(ctx, stmt)
 	case *ast.SelectStmt:
-		targetPlan, err := b.buildSelect(ctx, stmt)
-		if err != nil {
-			return nil, err
-		}
-		// 创建 Explain 计划包装目标计划
-		return &Explain{TargetPlan: targetPlan, Format: explain.Format, Analyze: explain.Analyze}, nil
+		return b.buildSelect(ctx, stmt)
 	case *ast.UnionStmt:
-		targetPlan, err := b.buildUnion(ctx, stmt)
-		if err != nil {
-			return nil, err
-		}
-		return &Explain{TargetPlan: targetPlan, Format: explain.Format, Analyze: explain.Analyze}, nil
+		return b.buildUnion(ctx, stmt)
 	default:
 		return nil, ErrUnsupportedType.GenWithStack("Unsupported explain stmt %T", explain.Stmt)
 	}

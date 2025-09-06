@@ -96,16 +96,6 @@ func (app *App) submitAndGet(ctx context.Context, req *scql.SCDBQueryRequest) *s
 		return newErrorSCDBQueryResultResponse(scql.Code_UNAUTHENTICATED, err.Error())
 	}
 
-	isExplain, err := isExplainQuery(req.Query)
-	if err != nil {
-		return newErrorSCDBQueryResultResponse(scql.Code_SQL_PARSE_ERROR, err.Error())
-	}
-	session.isDQLRequest = isExplain
-
-	if isExplain {
-		return app.submitAndGetDQL(ctx, session)
-	}
-
 	isDQL, err := isDQL(req.Query)
 	if err != nil {
 		return newErrorSCDBQueryResultResponse(scql.Code_SQL_PARSE_ERROR, err.Error())
