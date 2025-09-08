@@ -538,9 +538,7 @@ class MockWaitReportServiceImpl : public services::pb::MockReportService {
     brpc::ClosureGuard done_guard(done);
     // push to alice and bob
     output_chan.Push(1);
-    output_chan.Push(1);
     // pull from alice and bob
-    input_chan.Pop();
     input_chan.Pop();
   }
 
@@ -601,14 +599,14 @@ TEST_P(EngineServiceImpl2PartiesTest, SessionNegotiation) {
   bob_psi_conf->set_unbalance_psi_larger_party_rows_count_threshold(100000);
   auto future_bob =
       std::async(proc, engine_svcs[1].get(), &request_bob, &response_bob);
+  service.output_chan.Pop();  // alice wait async run finished.
+  service.output_chan.Pop();  // bob wait async run finished.
   // Then
   EXPECT_NO_THROW(future_alice.get());
   SPDLOG_INFO("out: \n{}", response_alice.DebugString());
 
   EXPECT_NO_THROW(future_bob.get());
   SPDLOG_INFO("out: \n{}", response_bob.DebugString());
-  service.output_chan.Pop();  // alice wait async run finished.
-  service.output_chan.Pop();  // bob wait async run finished.
   auto* session_alice = engine_svcs[0]->GetSessionManager()->GetSession(
       request_alice.job_params().job_id());
   EXPECT_EQ(session_alice->GetSessionOptions().psi_config.psi_curve_type,
