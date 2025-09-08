@@ -20,7 +20,6 @@
 #include <string>
 #include <vector>
 
-#include "algorithm"
 #include "arrow/visit_array_inline.h"
 #include "google/protobuf/util/json_util.h"
 #include "libspu/core/config.h"
@@ -220,41 +219,28 @@ void Session::Negotiate() {
     if (!negotiation_options.psi_options().use_rr22_low_comm_mode()) {
       session_opt_.psi_config.low_comm_mode = false;
     }
-    SPDLOG_INFO(
-        "session_opt_: {}, {}",
+    // choose max unbalance_psi_larger_party_rows_count_threshold
+    session_opt_.psi_config
+        .unbalance_psi_larger_party_rows_count_threshold = std::max(
         session_opt_.psi_config.unbalance_psi_larger_party_rows_count_threshold,
         negotiation_options.psi_options()
             .unbalance_psi_larger_party_rows_count_threshold());
-    // choose max unbalance_psi_larger_party_rows_count_threshold
-    if (session_opt_.psi_config
-            .unbalance_psi_larger_party_rows_count_threshold <
-        negotiation_options.psi_options()
-            .unbalance_psi_larger_party_rows_count_threshold()) {
-      session_opt_.psi_config.unbalance_psi_larger_party_rows_count_threshold =
-          negotiation_options.psi_options()
-              .unbalance_psi_larger_party_rows_count_threshold();
-    }
     // choose max unbalance_psi_ratio_threshold
-    if (session_opt_.psi_config.unbalance_psi_ratio_threshold <
-        negotiation_options.psi_options().unbalance_psi_ratio_threshold()) {
-      session_opt_.psi_config.unbalance_psi_ratio_threshold =
-          negotiation_options.psi_options().unbalance_psi_ratio_threshold();
-    }
+    session_opt_.psi_config.unbalance_psi_ratio_threshold = std::max(
+        session_opt_.psi_config.unbalance_psi_ratio_threshold,
+        negotiation_options.psi_options().unbalance_psi_ratio_threshold());
     curve_types.push_back(static_cast<psi::CurveType>(
         negotiation_options.psi_options().psi_curve_type()));
     // choose min streaming_row_num_threshold
-    if (static_cast<int64_t>(
-            session_opt_.streaming_options.streaming_row_num_threshold) >
-        negotiation_options.streaming_options().streaming_row_num_threshold()) {
-      session_opt_.streaming_options.streaming_row_num_threshold =
-          negotiation_options.streaming_options().streaming_row_num_threshold();
-    }
+    session_opt_.streaming_options.streaming_row_num_threshold =
+        std::min(session_opt_.streaming_options.streaming_row_num_threshold,
+                 static_cast<size_t>(negotiation_options.streaming_options()
+                                         .streaming_row_num_threshold()));
     // choose min batch_row_num
-    if (static_cast<int64_t>(session_opt_.streaming_options.batch_row_num) >
-        negotiation_options.streaming_options().batch_row_num()) {
-      session_opt_.streaming_options.batch_row_num =
-          negotiation_options.streaming_options().batch_row_num();
-    }
+    session_opt_.streaming_options.batch_row_num =
+        std::min(session_opt_.streaming_options.batch_row_num,
+                 static_cast<size_t>(
+                     negotiation_options.streaming_options().batch_row_num()));
   }
   // if the curve type between parties differ, it is considered invalid.
   if (!std::all_of(curve_types.begin(), curve_types.end(), [&](int curve_type) {
@@ -302,21 +288,9 @@ void Session::MergeDeviceSymbolsFrom(const spu::device::SymbolTable& other) {
   }
 }
 
+// set batched true and create tmp dir for streaming
 void Session::EnableStreamingBatched() {
   session_opt_.streaming_options.batched = true;
-  size_t data[2] = {session_opt_.streaming_options.batch_row_num,
-                    session_opt_.streaming_options.streaming_row_num_threshold};
-  // get checksum from other parties
-  auto bufs = yacl::link::AllGather(
-      GetLink(), yacl::ByteContainerView(data, 2 * sizeof(size_t)),
-      "streaming_options");
-  for (const auto& buf : bufs) {
-    session_opt_.streaming_options.batch_row_num = std::min(
-        session_opt_.streaming_options.batch_row_num, buf.data<size_t>()[0]);
-    session_opt_.streaming_options.streaming_row_num_threshold =
-        std::min(session_opt_.streaming_options.streaming_row_num_threshold,
-                 buf.data<size_t>()[1]);
-  }
   if (session_opt_.streaming_options.dump_file_dir.empty()) {
     session_opt_.streaming_options.dump_file_dir =
         util::CreateDirWithRandSuffix(FLAGS_tmp_file_path, id_);
