@@ -34,6 +34,7 @@
 #include "engine/operator/publish.h"
 #include "engine/operator/run_sql.h"
 #include "engine/operator/test_util.h"
+#include "engine/util/concurrent_queue.h"
 
 #include "api/status_code.pb.h"
 #include "engine/services/mock_report_service.pb.h"
@@ -525,6 +526,107 @@ TEST_P(EngineServiceImpl2PartiesTest, RunExecutionPlan) {
     recv_server.Stop(1000);
     recv_server.Join();
   }
+}
+
+// control the time returned by the Report
+class MockWaitReportServiceImpl : public services::pb::MockReportService {
+ public:
+  void Report(::google::protobuf::RpcController* controller,
+              const pb::ReportRequest* request,
+              services::pb::MockResponse* response,
+              ::google::protobuf::Closure* done) override {
+    brpc::ClosureGuard done_guard(done);
+    // push to alice and bob
+    output_chan.Push(1);
+    output_chan.Push(1);
+    // pull from alice and bob
+    input_chan.Pop();
+    input_chan.Pop();
+  }
+
+ public:
+  util::SimpleChannel<size_t> input_chan{1};
+  util::SimpleChannel<size_t> output_chan{1};
+};
+
+// run the case: find persons who both exist in ta(Table A) and tb(Table B).
+TEST_P(EngineServiceImpl2PartiesTest, SessionNegotiation) {
+  // Given
+  auto test_case = GetParam();
+  auto session = PrepareTableInMemory(
+      test_case, "file:runsql_test?mode=memory&cache=shared");
+
+  // When
+  auto proc = [&](EngineServiceImpl* svc, pb::RunExecutionPlanRequest* request,
+                  pb::RunExecutionPlanResponse* response) {
+    EXPECT_NO_THROW(
+        svc->RunExecutionPlan(&global_cntl, request, response, nullptr));
+    EXPECT_EQ(pb::Code::OK, response->status().code());
+  };
+
+  // start mock report service.
+  brpc::Server recv_server;
+  MockWaitReportServiceImpl service;
+  ASSERT_EQ(0,
+            recv_server.AddService(&service, brpc::SERVER_DOESNT_OWN_SERVICE));
+  brpc::ServerOptions recv_options;
+  ASSERT_EQ(0, recv_server.Start("127.0.0.1:0", &recv_options));
+
+  pb::RunExecutionPlanResponse response_alice;
+  pb::RunExecutionPlanRequest request_alice = ConstructRequestForAlice(servers);
+  // modify request
+  request_alice.set_async(true);
+  request_alice.set_callback_url(
+      fmt::format("{}/MockReportService/Report",
+                  butil::endpoint2str(recv_server.listen_address()).c_str()));
+  auto* alice_job_params = request_alice.mutable_job_params();
+  auto* alice_psi_conf = alice_job_params->mutable_psi_cfg();
+  alice_psi_conf->set_psi_curve_type(
+      static_cast<int32_t>(psi::CurveType::CURVE_25519));
+  alice_psi_conf->set_unbalance_psi_larger_party_rows_count_threshold(10000);
+  auto future_alice =
+      std::async(proc, engine_svcs[0].get(), &request_alice, &response_alice);
+
+  pb::RunExecutionPlanResponse response_bob;
+  pb::RunExecutionPlanRequest request_bob = ConstructRequestForBob(servers);
+  request_bob.set_async(true);
+  // only check alice result
+  request_bob.set_callback_url(
+      fmt::format("{}/MockReportService/Report",
+                  butil::endpoint2str(recv_server.listen_address()).c_str()));
+  auto* bob_job_params = request_bob.mutable_job_params();
+  auto* bob_psi_conf = bob_job_params->mutable_psi_cfg();
+  bob_psi_conf->set_psi_curve_type(
+      static_cast<int32_t>(psi::CurveType::CURVE_FOURQ));
+  bob_psi_conf->set_unbalance_psi_larger_party_rows_count_threshold(100000);
+  auto future_bob =
+      std::async(proc, engine_svcs[1].get(), &request_bob, &response_bob);
+  // Then
+  EXPECT_NO_THROW(future_alice.get());
+  SPDLOG_INFO("out: \n{}", response_alice.DebugString());
+
+  EXPECT_NO_THROW(future_bob.get());
+  SPDLOG_INFO("out: \n{}", response_bob.DebugString());
+  service.output_chan.Pop();  // alice wait async run finished.
+  service.output_chan.Pop();  // bob wait async run finished.
+  auto* session_alice = engine_svcs[0]->GetSessionManager()->GetSession(
+      request_alice.job_params().job_id());
+  EXPECT_EQ(session_alice->GetSessionOptions().psi_config.psi_curve_type,
+            psi::CurveType::CURVE_INVALID_TYPE);
+  EXPECT_EQ(session_alice->GetSessionOptions()
+                .psi_config.unbalance_psi_larger_party_rows_count_threshold,
+            100000);
+  auto* session_bob = engine_svcs[1]->GetSessionManager()->GetSession(
+      request_alice.job_params().job_id());
+  EXPECT_EQ(session_bob->GetSessionOptions().psi_config.psi_curve_type,
+            psi::CurveType::CURVE_INVALID_TYPE);
+  EXPECT_EQ(session_bob->GetSessionOptions()
+                .psi_config.unbalance_psi_larger_party_rows_count_threshold,
+            100000);
+  service.input_chan.Push(1);
+  service.input_chan.Push(1);
+  recv_server.Stop(1000);
+  recv_server.Join();
 }
 
 /// ===========================

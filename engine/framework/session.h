@@ -72,10 +72,21 @@ struct PsiConfig {
   int64_t unbalance_psi_ratio_threshold = 0;
   int64_t unbalance_psi_larger_party_rows_count_threshold = 0;
   int32_t psi_curve_type = 0;
+  bool low_comm_mode = false;
 };
 
 struct LogConfig {
   bool enable_session_logger_separation = false;
+};
+
+struct StreamingOptions {
+  std::filesystem::path dump_file_dir;
+  bool batched = false;
+  // if row num is less than this threshold, close streaming mode and keep all
+  // data in memory
+  size_t streaming_row_num_threshold = 0;
+  // if working in streaming mode, max row num in one batch
+  size_t batch_row_num = 0;
 };
 
 struct SessionOptions {
@@ -83,16 +94,7 @@ struct SessionOptions {
   LinkConfig link_config;
   PsiConfig psi_config;
   LogConfig log_config;
-};
-
-struct StreamingOptions {
-  std::filesystem::path dump_file_dir;
-  bool batched;
-  // if row num is less than this threshold, close streaming mode and keep all
-  // data in memory
-  size_t streaming_row_num_threshold;
-  // if working in streaming mode, max row num in one batch
-  size_t batch_row_num;
+  StreamingOptions streaming_options;
 };
 
 /// @brief Session holds everything needed to run the execution plan.
@@ -230,18 +232,21 @@ class Session {
 
   const SessionOptions& GetSessionOptions() const { return session_opt_; }
 
-  StreamingOptions GetStreamingOptions() { return streaming_options_; }
+  StreamingOptions GetStreamingOptions() const {
+    return session_opt_.streaming_options;
+  }
   void SetStreamingOptions(const StreamingOptions& streaming_options) {
-    streaming_options_ = streaming_options;
+    session_opt_.streaming_options = streaming_options;
   }
   void EnableStreamingBatched();
+  void Negotiate();
 
  private:
   void InitLink();
   bool ValidateSPUContext();
 
   const std::string id_;
-  const SessionOptions session_opt_;
+  SessionOptions session_opt_;
   const std::string time_zone_;
   PartyInfo parties_;
   std::atomic<SessionState> state_;
@@ -281,8 +286,6 @@ class Session {
   std::string current_node_name_;
   std::chrono::time_point<std::chrono::system_clock> node_start_time_;
   std::shared_ptr<engine::util::ProgressStats> progres_stats_;
-  // for streaming
-  StreamingOptions streaming_options_;
 };
 
 std::shared_ptr<spdlog::logger> ActiveLogger(const Session* session);

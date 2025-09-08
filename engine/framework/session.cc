@@ -14,11 +14,15 @@
 
 #include "engine/framework/session.h"
 
+#include <algorithm>
 #include <memory>
 #include <mutex>
+#include <string>
+#include <vector>
 
 #include "algorithm"
 #include "arrow/visit_array_inline.h"
+#include "google/protobuf/util/json_util.h"
 #include "libspu/core/config.h"
 #include "libspu/mpc/factory.h"
 #include "openssl/sha.h"
@@ -31,6 +35,8 @@
 #include "engine/util/logging.h"
 #include "engine/util/prometheus_monitor.h"
 #include "engine/util/psi/detail_logger.h"
+
+#include "engine/framework/session_negotiation.pb.h"
 
 DEFINE_string(tmp_file_path, "/tmp", "dir to out tmp files");
 DEFINE_uint64(
@@ -148,21 +154,115 @@ Session::Session(const SessionOptions& session_opt,
 
   util::PrometheusMonitor::GetInstance()->IncSessionNumberTotal();
   // default not streaming
-  streaming_options_.batched = false;
-  streaming_options_.streaming_row_num_threshold =
+  session_opt_.streaming_options.batched = false;
+  session_opt_.streaming_options.streaming_row_num_threshold =
       FLAGS_streaming_row_num_threshold;
-  streaming_options_.batch_row_num = FLAGS_batch_row_num;
+  session_opt_.streaming_options.batch_row_num = FLAGS_batch_row_num;
+  // negotiate session options
+  Negotiate();
 }
 
 Session::~Session() {
   util::PrometheusMonitor::GetInstance()->DecSessionNumberTotal();
-  if (streaming_options_.batched) {
+  if (session_opt_.streaming_options.batched) {
     std::error_code ec;
-    std::filesystem::remove_all(streaming_options_.dump_file_dir, ec);
+    std::filesystem::remove_all(session_opt_.streaming_options.dump_file_dir,
+                                ec);
     if (ec.value() != 0) {
       SPDLOG_WARN("can not remove tmp dir: {}, msg: {}",
-                  streaming_options_.dump_file_dir.string(), ec.message());
+                  session_opt_.streaming_options.dump_file_dir.string(),
+                  ec.message());
     }
+  }
+}
+
+void Session::Negotiate() {
+  negotiate::NegotiationOptions options;
+  // fill options from flag
+  auto* psi_options = options.mutable_psi_options();
+  psi_options->set_psi_curve_type(session_opt_.psi_config.psi_curve_type);
+  psi_options->set_unbalance_psi_larger_party_rows_count_threshold(
+      session_opt_.psi_config.unbalance_psi_larger_party_rows_count_threshold);
+  psi_options->set_unbalance_psi_ratio_threshold(
+      session_opt_.psi_config.unbalance_psi_ratio_threshold);
+  psi_options->set_use_rr22_low_comm_mode(
+      session_opt_.psi_config.low_comm_mode);
+  auto* streaming_options = options.mutable_streaming_options();
+  streaming_options->set_streaming_row_num_threshold(
+      session_opt_.streaming_options.streaming_row_num_threshold);
+  streaming_options->set_batch_row_num(
+      session_opt_.streaming_options.batch_row_num);
+  // negotiation
+  std::vector<negotiate::NegotiationOptions> negotiation_options_v;
+  if (lctx_->WorldSize() > 1) {
+    std::string option_str;
+    auto status =
+        google::protobuf::util::MessageToJsonString(options, &option_str);
+    YACL_ENFORCE(status.ok(), status.message());
+    yacl::ByteContainerView buffer(option_str);
+    auto buffers = yacl::link::AllGather(lctx_, buffer, "negotiate");
+    // parse
+    for (const auto& value : buffers) {
+      negotiate::NegotiationOptions tmp_options;
+      status = google::protobuf::util::JsonStringToMessage(value, &tmp_options);
+      YACL_ENFORCE(status.ok(), status.message());
+      negotiation_options_v.push_back(std::move(tmp_options));
+    }
+  } else {
+    negotiation_options_v.push_back(options);
+  }
+
+  // resolution
+  session_opt_.psi_config.low_comm_mode = true;
+  std::vector<psi::CurveType> curve_types;
+  for (auto& negotiation_options : negotiation_options_v) {
+    // use fast mode if any party set use_rr22_low_comm_mode to false
+    if (!negotiation_options.psi_options().use_rr22_low_comm_mode()) {
+      session_opt_.psi_config.low_comm_mode = false;
+    }
+    SPDLOG_INFO(
+        "session_opt_: {}, {}",
+        session_opt_.psi_config.unbalance_psi_larger_party_rows_count_threshold,
+        negotiation_options.psi_options()
+            .unbalance_psi_larger_party_rows_count_threshold());
+    // choose max unbalance_psi_larger_party_rows_count_threshold
+    if (session_opt_.psi_config
+            .unbalance_psi_larger_party_rows_count_threshold <
+        negotiation_options.psi_options()
+            .unbalance_psi_larger_party_rows_count_threshold()) {
+      session_opt_.psi_config.unbalance_psi_larger_party_rows_count_threshold =
+          negotiation_options.psi_options()
+              .unbalance_psi_larger_party_rows_count_threshold();
+    }
+    // choose max unbalance_psi_ratio_threshold
+    if (session_opt_.psi_config.unbalance_psi_ratio_threshold <
+        negotiation_options.psi_options().unbalance_psi_ratio_threshold()) {
+      session_opt_.psi_config.unbalance_psi_ratio_threshold =
+          negotiation_options.psi_options().unbalance_psi_ratio_threshold();
+    }
+    curve_types.push_back(static_cast<psi::CurveType>(
+        negotiation_options.psi_options().psi_curve_type()));
+    // choose min streaming_row_num_threshold
+    if (static_cast<int64_t>(
+            session_opt_.streaming_options.streaming_row_num_threshold) >
+        negotiation_options.streaming_options().streaming_row_num_threshold()) {
+      session_opt_.streaming_options.streaming_row_num_threshold =
+          negotiation_options.streaming_options().streaming_row_num_threshold();
+    }
+    // choose min batch_row_num
+    if (static_cast<int64_t>(session_opt_.streaming_options.batch_row_num) >
+        negotiation_options.streaming_options().batch_row_num()) {
+      session_opt_.streaming_options.batch_row_num =
+          negotiation_options.streaming_options().batch_row_num();
+    }
+  }
+  // if the curve type between parties differ, it is considered invalid.
+  if (!std::all_of(curve_types.begin(), curve_types.end(), [&](int curve_type) {
+        return curve_type == curve_types[0];
+      })) {
+    session_opt_.psi_config.psi_curve_type = psi::CurveType::CURVE_INVALID_TYPE;
+  } else {
+    session_opt_.psi_config.psi_curve_type = curve_types[0];
   }
 }
 
@@ -203,21 +303,22 @@ void Session::MergeDeviceSymbolsFrom(const spu::device::SymbolTable& other) {
 }
 
 void Session::EnableStreamingBatched() {
-  streaming_options_.batched = true;
-  size_t data[2] = {streaming_options_.batch_row_num,
-                    streaming_options_.streaming_row_num_threshold};
+  session_opt_.streaming_options.batched = true;
+  size_t data[2] = {session_opt_.streaming_options.batch_row_num,
+                    session_opt_.streaming_options.streaming_row_num_threshold};
   // get checksum from other parties
   auto bufs = yacl::link::AllGather(
       GetLink(), yacl::ByteContainerView(data, 2 * sizeof(size_t)),
       "streaming_options");
   for (const auto& buf : bufs) {
-    streaming_options_.batch_row_num =
-        std::min(streaming_options_.batch_row_num, buf.data<size_t>()[0]);
-    streaming_options_.streaming_row_num_threshold = std::min(
-        streaming_options_.streaming_row_num_threshold, buf.data<size_t>()[1]);
+    session_opt_.streaming_options.batch_row_num = std::min(
+        session_opt_.streaming_options.batch_row_num, buf.data<size_t>()[0]);
+    session_opt_.streaming_options.streaming_row_num_threshold =
+        std::min(session_opt_.streaming_options.streaming_row_num_threshold,
+                 buf.data<size_t>()[1]);
   }
-  if (streaming_options_.dump_file_dir.empty()) {
-    streaming_options_.dump_file_dir =
+  if (session_opt_.streaming_options.dump_file_dir.empty()) {
+    session_opt_.streaming_options.dump_file_dir =
         util::CreateDirWithRandSuffix(FLAGS_tmp_file_path, id_);
   }
 }
@@ -394,7 +495,7 @@ void Session::UpdateRefName(const std::vector<std::string>& input_ref_names,
         continue;
       }
       auto iter = tensor_ref_nums_.find(name);
-      if (!streaming_options_.batched) {
+      if (!session_opt_.streaming_options.batched) {
         YACL_ENFORCE(iter == tensor_ref_nums_.end(),
                      "ref num of {} was set before created", name);
       }
