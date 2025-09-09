@@ -377,12 +377,20 @@ func (app *App) runDQL(ctx context.Context, s *session, async bool) (*scql.SCDBQ
 	}
 
 	if isExplain {
+		explainTensor := &scql.Tensor{
+			Name:     "explain_result",
+			ElemType: scql.PrimitiveDataType_STRING,
+			Option:   scql.TensorOptions_VALUE,
+		}
+
+		explainTensor.StringData = []string{compiledPlan.GetExplain().GetExeGraphDot()}
+
 		return &scql.SCDBQueryResultResponse{
 			Status: &scql.Status{
 				Code:    int32(scql.Code_OK),
-				Message: compiledPlan.GetExplain().GetExeGraphDot(),
+				Message: "ok",
 			},
-			OutColumns:    nil,
+			OutColumns:    []*scql.Tensor{explainTensor},
 			ScdbSessionId: s.id,
 			AffectedRows:  0,
 			Warnings:      nil,
