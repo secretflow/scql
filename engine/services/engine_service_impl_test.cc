@@ -547,7 +547,6 @@ class MockWaitReportServiceImpl : public services::pb::MockReportService {
   util::SimpleChannel<size_t> output_chan{1};
 };
 
-// run the case: find persons who both exist in ta(Table A) and tb(Table B).
 TEST_P(EngineServiceImpl2PartiesTest, SessionNegotiation) {
   // Given
   auto test_case = GetParam();
@@ -588,7 +587,6 @@ TEST_P(EngineServiceImpl2PartiesTest, SessionNegotiation) {
   pb::RunExecutionPlanResponse response_bob;
   pb::RunExecutionPlanRequest request_bob = ConstructRequestForBob(servers);
   request_bob.set_async(true);
-  // only check alice result
   request_bob.set_callback_url(
       fmt::format("{}/MockReportService/Report",
                   butil::endpoint2str(recv_server.listen_address()).c_str()));
