@@ -156,16 +156,19 @@ arrow::ChunkedArrayVector DatasourceAdaptor::ConvertDataTypeToExpected(
   arrow::ChunkedArrayVector result_chunked_arrs;
   for (size_t i = 0; i < chunked_arrs.size(); ++i) {
     auto chunked_arr = chunked_arrs[i];
-    if ((expected_outputs[i].dtype != pb::PrimitiveDataType::DATETIME &&
-         expected_outputs[i].dtype != pb::PrimitiveDataType::TIMESTAMP &&
-         FromArrowDataType(chunked_arr->type()) != expected_outputs[i].dtype) ||
-        // scql don't support utf8, which limits size < 2G, so should be
-        // converted to large_utf8() to support large scale
-        chunked_arr->type() == arrow::utf8()) {
-      YACL_ENFORCE(chunked_arr, "get column(idx={}) from table failed", i);
-      auto to_type = ToArrowDataType(expected_outputs[i].dtype);
-      YACL_ENFORCE(to_type, "unsupported column data type {}",
-                   fmt::underlying(expected_outputs[i].dtype));
+    YACL_ENFORCE(chunked_arr, "get column(idx={}) from table failed", i);
+    auto to_type = ToArrowDataType(expected_outputs[i].dtype);
+    YACL_ENFORCE(to_type, "unsupported column data type {}",
+                 fmt::underlying(expected_outputs[i].dtype));
+    if (arrow::is_temporal(chunked_arr->type()->id())) {
+      // CSV data source returns temporal types that must be converted to int64
+      // seconds.
+      // Since Arrow's cast function cannot control time units, special
+      // handling is required.
+      auto tensor = util::ConvertDateTimeToInt64(chunked_arr);
+      chunked_arr = tensor->ToArrowChunkedArray();
+    }
+    if (chunked_arr->type() != to_type) {
       SPDLOG_LOGGER_WARN(logger, "arrow type mismatch, convert from {} to {}",
                          chunked_arr->type()->ToString(), to_type->ToString());
       arrow::Datum cast_result;
@@ -173,10 +176,7 @@ arrow::ChunkedArrayVector DatasourceAdaptor::ConvertDataTypeToExpected(
                                    arrow::compute::Cast(chunked_arr, to_type));
       chunked_arr = cast_result.chunked_array();
     }
-    if (arrow::is_temporal(chunked_arr->type()->id())) {
-      auto tensor = util::ConvertDateTimeToInt64(chunked_arr);
-      chunked_arr = tensor->ToArrowChunkedArray();
-    }
+
     result_chunked_arrs.push_back(std::move(chunked_arr));
   }
   return result_chunked_arrs;
