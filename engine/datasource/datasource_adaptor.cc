@@ -168,7 +168,7 @@ arrow::ChunkedArrayVector DatasourceAdaptor::ConvertDataTypeToExpected(
       auto tensor = util::ConvertDateTimeToInt64(chunked_arr);
       chunked_arr = tensor->ToArrowChunkedArray();
     }
-    if (chunked_arr->type() != to_type) {
+    if (!chunked_arr->type()->Equals(to_type)) {
       SPDLOG_LOGGER_WARN(logger, "arrow type mismatch, convert from {} to {}",
                          chunked_arr->type()->ToString(), to_type->ToString());
       arrow::Datum cast_result;
