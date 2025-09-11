@@ -513,7 +513,9 @@ void In::Rr22PsiIn(ExecContext* ctx) {
         provider.CleanBucket(bucket_idx);
       };
   psi::rr22::Rr22Runner runner(
-      psi_link, psi::rr22::GenerateRr22PsiOptions(FLAGS_use_rr22_low_comm_mode),
+      psi_link,
+      psi::rr22::GenerateRr22PsiOptions(
+          ctx->GetSession()->GetSessionOptions().psi_config.low_comm_mode),
       bucket_num, false, pre_f, post_f);
   // reveal party as receiver
   runner.AsyncRun(0, reveal_to != my_party_code);

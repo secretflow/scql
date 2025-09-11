@@ -73,6 +73,7 @@ cc_library(
     hdrs = ["session.h"],
     deps = [
         ":party_info",
+        ":session_negotiation_cc_proto",
         ":tensor_table",
         "//api:common_cc_proto",
         "//api:engine_cc_proto",
@@ -140,4 +141,15 @@ scql_cc_test(
         ":party_info",
         "//engine/operator:test_util",
     ],
+)
+
+proto_library(
+    name = "session_negotiation_proto",
+    srcs = ["session_negotiation.proto"],
+    deps = ["//api:engine_proto"],
+)
+
+cc_proto_library(
+    name = "session_negotiation_cc_proto",
+    deps = [":session_negotiation_proto"],
 )
