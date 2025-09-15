@@ -139,22 +139,11 @@ func isDQL(sql string) (bool, error) {
 	}
 
 	switch stmt.(type) {
-	case *ast.SelectStmt, *ast.UnionStmt, *ast.ExplainStmt:
+	case *ast.SelectStmt, *ast.UnionStmt:
 		return true, nil
 	}
 
 	return false, nil
-}
-
-func isExplainQuery(sql string) (bool, error) {
-	p := parser.New()
-	stmt, err := p.ParseOneStmt(sql, "", "")
-	if err != nil {
-		return false, err
-	}
-
-	_, ok := stmt.(*ast.ExplainStmt)
-	return ok, nil
 }
 
 // compile and run dql
