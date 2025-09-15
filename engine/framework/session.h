@@ -69,8 +69,6 @@ struct LinkConfig {
 
 struct PsiConfig {
   // if the value here is 0, it would use the gflags config instead
-  int64_t unbalance_psi_ratio_threshold = 0;
-  int64_t unbalance_psi_larger_party_rows_count_threshold = 0;
   int32_t psi_curve_type = 0;
 };
 

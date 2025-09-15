@@ -583,18 +583,16 @@ message ProjectConfig {
   // The spu runtime configuration.
   spu.pb.RuntimeConfig spu_runtime_cfg = 1;
   int64 session_expire_seconds = 2;
-  int64 unbalance_psi_ratio_threshold = 3;
-  int64 unbalance_psi_larger_party_rows_count_threshold = 4;
-  int32 psi_curve_type = 5;
-  int64 http_max_payload_size = 6;
-  int64 link_recv_timeout_sec = 7;
-  int64 link_throttle_window_size = 8;
-  int64 link_chunked_send_parallel_size = 9;
+  int32 psi_curve_type = 3;
+  int64 http_max_payload_size = 4;
+  int64 link_recv_timeout_sec = 5;
+  int64 link_throttle_window_size = 6;
+  int64 link_chunked_send_parallel_size = 7;
   // use value in config file if not set
-  optional uint64 group_by_threshold = 10;
-  optional bool reveal_group_mark = 11;
+  optional uint64 group_by_threshold = 8;
+  optional bool reveal_group_mark = 9;
   // reveal the number of elements in each group
-  optional bool reveal_group_count = 12;
+  optional bool reveal_group_count = 10;
 }
 
 message JobConfig {
@@ -604,15 +602,13 @@ message JobConfig {
   // job's time_zone for session, default is empty which means use engine's
   // default time_zone
   string time_zone = 2;
-  int64 unbalance_psi_ratio_threshold = 3;
-  int64 unbalance_psi_larger_party_rows_count_threshold = 4;
-  int32 psi_curve_type = 5;
-  int64 http_max_payload_size = 6;
-  int64 link_recv_timeout_sec = 7;
-  int64 link_throttle_window_size = 8;
-  int64 link_chunked_send_parallel_size = 9;
-  bool enable_session_logger_separation = 10;
-  PsiAlgorithmType psi_type = 11;
+  int32 psi_curve_type = 3;
+  int64 http_max_payload_size = 4;
+  int64 link_recv_timeout_sec = 5;
+  int64 link_throttle_window_size = 6;
+  int64 link_chunked_send_parallel_size = 7;
+  bool enable_session_logger_separation = 8;
+  PsiAlgorithmType psi_type = 9;
 }
 
 message InviteMemberRequest {

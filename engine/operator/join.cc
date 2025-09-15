@@ -77,7 +77,7 @@ void Join::Execute(ExecContext* ctx) {
         return OprfPsiJoin(ctx,
                            IsOprfServerAccordToHint(ctx, server_hint.value()));
       }
-      auto psi_plan = util::CoordinatePsiPlan(ctx, true);
+      auto psi_plan = util::CoordinatePsiPlan(ctx);
       return OprfPsiJoin(ctx, psi_plan.is_server, psi_plan.psi_size_info);
     }
     case static_cast<int64_t>(util::PsiAlgo::kEcdhPsi):

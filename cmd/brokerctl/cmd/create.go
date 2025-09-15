@@ -72,8 +72,6 @@ func init() {
 		"link_recv_timeout_sec": 30, // Duration in seconds after which a link receive operation times out
 		"link_throttle_window_size": 100, // Size of the throttle window for link operations
 		"link_chunked_send_parallel_size": 10, // Number of parallel chunks for chunked link sends
-		"unbalance_psi_ratio_threshold": 80, // Threshold ratio for unbalanced PSI
-		"unbalance_psi_larger_party_rows_count_threshold": 1000, // Threshold rows count for unbalanced PSI in larger party
 		"psi_curve_type": 1, // Type of curve used in PSI calculations
 		"http_max_payload_size": 1048576 // Maximum payload size for HTTP requests
 	  }`)

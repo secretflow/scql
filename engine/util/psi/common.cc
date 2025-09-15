@@ -23,27 +23,6 @@
 #include "psi/utils/serialize.h"
 
 namespace scql::engine::util {
-PsiPlan GetPsiPlan(int64_t self_length, int64_t peer_length,
-                   int64_t unbalance_psi_ratio_threshold,
-                   int64_t unbalance_psi_larger_party_rows_count_threshold) {
-  util::PsiPlan psi_plan;
-  int64_t small_length = std::min(self_length, peer_length);
-  int64_t big_length = std::max(self_length, peer_length);
-  YACL_ENFORCE(unbalance_psi_ratio_threshold > 1,
-               "Invalid unbalance PSI ratio threshold");
-  if (small_length > 0 &&
-      big_length / small_length >= unbalance_psi_ratio_threshold &&
-      big_length > unbalance_psi_larger_party_rows_count_threshold) {
-    psi_plan.unbalanced = true;
-    // the side with bigger tensor length should be oprf server
-    psi_plan.is_server = small_length != self_length;
-  }
-
-  psi_plan.psi_size_info.self_size = self_length;
-  psi_plan.psi_size_info.peer_size = peer_length;
-
-  return psi_plan;
-}
 
 PsiPlan GetOprfPsiPlan(int64_t self_length, int64_t peer_length) {
   util::PsiPlan psi_plan;
@@ -78,16 +57,10 @@ size_t ExchangeSetSize(const std::shared_ptr<yacl::link::Context>& link_ctx,
   return psi::utils::DeserializeSize(result[link_ctx->NextRank()]);
 }
 
-PsiPlan CoordinatePsiPlan(ExecContext* ctx, bool force_unbalanced) {
+PsiPlan CoordinatePsiPlan(ExecContext* ctx) {
   auto logger = ctx->GetActiveLogger();
-  if (force_unbalanced) {
-    SPDLOG_LOGGER_INFO(logger,
-                       "coordinate between engines to determine OprfPsi plan");
-  } else {
-    SPDLOG_LOGGER_INFO(logger,
-                       "coordinate between engines to determine Psi plan "
-                       "(OprfPsi or EcdhPsi, Oprf for unbalanced senario)");
-  }
+  SPDLOG_LOGGER_INFO(logger,
+                     "coordinate between engines to determine OprfPsi plan");
   // get related party codes and ranks
   const auto& my_party_code = ctx->GetSession()->SelfPartyCode();
   std::vector<std::string> input_party_codes =
@@ -125,15 +98,7 @@ PsiPlan CoordinatePsiPlan(ExecContext* ctx, bool force_unbalanced) {
   }
   auto peer_length = ExchangeSetSize(psi_link, tensor_length);
 
-  const auto& session_opts = ctx->GetSession()->GetSessionOptions();
-
-  if (force_unbalanced) {
-    return util::GetOprfPsiPlan(tensor_length, peer_length);
-  }
-  return util::GetPsiPlan(
-      tensor_length, peer_length,
-      session_opts.psi_config.unbalance_psi_ratio_threshold,
-      session_opts.psi_config.unbalance_psi_larger_party_rows_count_threshold);
+  return util::GetOprfPsiPlan(tensor_length, peer_length);
 }
 
 BatchFinishedCb::BatchFinishedCb(std::shared_ptr<spdlog::logger> logger,
