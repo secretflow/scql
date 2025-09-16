@@ -100,8 +100,6 @@ std::vector<std::shared_ptr<Session>> MakeMultiPCSession(
 
   std::vector<std::future<std::shared_ptr<Session>>> futures;
   SessionOptions options;
-  options.psi_config.unbalance_psi_ratio_threshold = 5;
-  options.psi_config.unbalance_psi_larger_party_rows_count_threshold = 81920;
   options.psi_config.psi_curve_type = psi::CURVE_FOURQ;
   auto create_session = [&](const pb::JobStartParams& params) {
     pb::DebugOptions debug_opts;

@@ -57,13 +57,9 @@ struct PsiExecutionInfoTable {
   int64_t result_size;
 };
 
-PsiPlan GetPsiPlan(int64_t self_length, int64_t peer_length,
-                   int64_t unbalance_psi_ratio_threshold,
-                   int64_t unbalance_psi_larger_party_rows_count_threshold);
-
 PsiPlan GetOprfPsiPlan(int64_t self_length, int64_t peer_length);
 
-PsiPlan CoordinatePsiPlan(ExecContext* ctx, bool force_unbalanced);
+PsiPlan CoordinatePsiPlan(ExecContext* ctx);
 
 class BatchFinishedCb {
  public:

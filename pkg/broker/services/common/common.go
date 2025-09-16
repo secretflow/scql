@@ -217,10 +217,8 @@ func GenSessionOpts(jobConfig *pb.JobConfig, projConf *pb.ProjectConfig) *applic
 	}
 
 	psiCfg := &pb.PsiConfig{
-		PsiCurveType:                              jobConfig.PsiCurveType,
-		UnbalancePsiRatioThreshold:                jobConfig.UnbalancePsiRatioThreshold,
-		UnbalancePsiLargerPartyRowsCountThreshold: jobConfig.UnbalancePsiLargerPartyRowsCountThreshold,
-		PsiType: jobConfig.GetPsiType(),
+		PsiCurveType: jobConfig.PsiCurveType,
+		PsiType:      jobConfig.GetPsiType(),
 	}
 
 	logCfg := &pb.LogConfig{

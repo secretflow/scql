@@ -25,14 +25,10 @@
 #endif
 
 DEFINE_int32(psi_curve_type, psi::CURVE_FOURQ, "curve type used in PSI");
-DEFINE_int64(unbalance_psi_ratio_threshold, 5,
-             "minimum LargePartySize/SmallPartySize ratio to choose unbalanced "
-             "PSI, LargePartySize means the rows count of the larger party");
-DEFINE_int64(unbalance_psi_larger_party_rows_count_threshold, 81920,
-             "minimum rows count of the larger party to choose unbalanced PSI");
-DEFINE_bool(
-    disable_release_mem_to_sys_actively, false,
-    "default false, release memory to system when no session is running");
+DEFINE_bool(disable_release_mem_to_sys_actively, false,
+            "default false, release memory to "
+            "system when no session is "
+            "running");
 namespace scql::engine {
 SessionManager::SessionManager(
     SessionOptions session_opt, ListenerManager* listener_manager,
@@ -92,23 +88,6 @@ scql::engine::SessionOptions SessionManager::GenerateUpdatedSessionOptions(
   if (job_params.link_cfg().http_max_payload_size() > 0) {
     session_opt.link_config.http_max_payload_size =
         job_params.link_cfg().http_max_payload_size();
-  }
-
-  if (job_params.psi_cfg().unbalance_psi_larger_party_rows_count_threshold() >
-      0) {
-    session_opt.psi_config.unbalance_psi_larger_party_rows_count_threshold =
-        job_params.psi_cfg().unbalance_psi_larger_party_rows_count_threshold();
-  } else {
-    session_opt.psi_config.unbalance_psi_larger_party_rows_count_threshold =
-        FLAGS_unbalance_psi_larger_party_rows_count_threshold;
-  }
-
-  if (job_params.psi_cfg().unbalance_psi_ratio_threshold() > 0) {
-    session_opt.psi_config.unbalance_psi_ratio_threshold =
-        job_params.psi_cfg().unbalance_psi_ratio_threshold();
-  } else {
-    session_opt.psi_config.unbalance_psi_ratio_threshold =
-        FLAGS_unbalance_psi_ratio_threshold;
   }
 
   if (job_params.psi_cfg().psi_curve_type() > 0) {
