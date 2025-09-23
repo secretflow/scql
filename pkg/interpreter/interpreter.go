@@ -65,6 +65,7 @@ func (intr *Interpreter) Compile(ctx context.Context, req *pb.CompileQueryReques
 	sctx.GetSessionVars().PlanID = 0
 	sctx.GetSessionVars().PlanColumnID = 0
 	sctx.GetSessionVars().CurrentDB = req.GetDbName()
+	sctx.GetSessionVars().CreatedAt = req.GetCreatedAt().AsTime()
 
 	lp, _, err := core.BuildLogicalPlanWithOptimization(ctx, sctx, stmts[0], is)
 	if err != nil {

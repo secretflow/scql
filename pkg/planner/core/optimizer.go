@@ -42,6 +42,7 @@ const (
 	flagPushDownTopN
 	flagJoinReOrder
 	flagDoubleCheckEliminateProjection
+	flagPatchTimeZone
 )
 
 var optRuleList = []logicalOptRule{
@@ -59,6 +60,7 @@ var optRuleList = []logicalOptRule{
 	&optPlaceHolder{},
 	&optPlaceHolder{},
 	&projectionEliminator{},
+	&timeZonePatcher{},
 }
 
 // logicalOptRule means a logical optimizing rule, which contains decorrelate, ppd, column pruning, etc.
@@ -120,7 +122,7 @@ func BuildLogicalPlanWithOptimization(ctx context.Context, sctx sessionctx.Conte
 		return nil, nil, err
 	}
 
-	lp, err := logicalOptimize(ctx, builder.optFlag|flagDoubleCheckEliminateProjection|flagPrunColumnsDouble, p.(LogicalPlan))
+	lp, err := logicalOptimize(ctx, builder.optFlag|flagDoubleCheckEliminateProjection|flagPrunColumnsDouble|flagPatchTimeZone, p.(LogicalPlan))
 	if err != nil {
 		return nil, nil, err
 	}
