@@ -1,0 +1,26 @@
+diff --git a/dss.h b/dss.h
+index d9394f1..52bf10d 100644
+--- a/dss.h
++++ b/dss.h
+@@ -453,7 +453,7 @@ extern tdef tdefs[];
+
+ /******* output macros ********/
+ #ifndef SEPARATOR
+-#define SEPARATOR '|' /* field spearator for generated flat files */
++#define SEPARATOR ',' /* field spearator for generated flat files */
+ #endif
+ /* Data type flags for a single print routine */
+ #define DT_STR		0
+diff --git a/print.c b/print.c
+index 95b4511..db91ddf 100644
+--- a/print.c
++++ b/print.c
+@@ -108,7 +108,7 @@ dbg_print(int format, FILE *target, void *data, int len, int sep)
+ 	switch(format)
+ 	{
+ 	case DT_STR:
+-		fprintf(target, "%s", (char *)data);
++		fprintf(target, "\"%s\"", (char *)data);
+ 		break;
+ #ifdef MVS
+ 	case DT_VSTR:
