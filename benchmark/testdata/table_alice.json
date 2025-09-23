@@ -30,5 +30,170 @@
         "ccl": ["compare"]
       }
     ]
+  },
+  "nation": {
+    "db_name": "alice",
+    "columns": [
+      {
+        "column_name": "n_nationkey",
+        "dtype": "int",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "n_name",
+        "dtype": "string",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "n_regionkey",
+        "dtype": "int",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "n_comment",
+        "dtype": "string",
+        "ccl": ["plain"]
+      }
+    ]
+  },
+  "region": {
+    "db_name": "alice",
+    "columns": [
+      {
+        "column_name": "r_regionkey",
+        "dtype": "int",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "r_name",
+        "dtype": "string",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "r_comment",
+        "dtype": "string",
+        "ccl": ["plain"]
+      }
+    ]
+  },
+  "part": {
+    "db_name": "alice",
+    "columns": [
+      {
+        "column_name": "p_partkey",
+        "dtype": "int",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "p_name",
+        "dtype": "string",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "p_mfgr",
+        "dtype": "string",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "p_brand",
+        "dtype": "string",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "p_type",
+        "dtype": "string",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "p_size",
+        "dtype": "int",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "p_container",
+        "dtype": "string",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "p_retailprice",
+        "dtype": "double",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "p_comment",
+        "dtype": "string",
+        "ccl": ["plain"]
+      }
+    ]
+  },
+  "supplier": {
+    "db_name": "alice",
+    "columns": [
+      {
+        "column_name": "s_suppkey",
+        "dtype": "int",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "s_name",
+        "dtype": "string",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "s_address",
+        "dtype": "string",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "s_nationkey",
+        "dtype": "int",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "s_phone",
+        "dtype": "string",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "s_acctbal",
+        "dtype": "double",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "s_comment",
+        "dtype": "string",
+        "ccl": ["plain"]
+      }
+    ]
+  },
+  "partsupp": {
+    "db_name": "alice",
+    "columns": [
+      {
+        "column_name": "ps_partkey",
+        "dtype": "int",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "ps_suppkey",
+        "dtype": "int",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "ps_availqty",
+        "dtype": "int",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "ps_supplycost",
+        "dtype": "double",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "ps_comment",
+        "dtype": "string",
+        "ccl": ["plain"]
+      }
+    ]
   }
 }

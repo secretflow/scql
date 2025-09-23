@@ -76,7 +76,9 @@ def create_csv_conn_str(source_file: str, party: str):
         "int": "INT64",
         "float": "FLOAT",
         "float64": "FLOAT64",
+        "double": "FLOAT64",
         "string": "STRING",
+        "datetime": "DATETIME",
     }
     result["tables"] = []
     for table_file in info.get("table_files"):

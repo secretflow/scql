@@ -232,3 +232,39 @@ func BenchmarkRunQuery(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkRunTPCH(b *testing.B) {
+	r := require.New(b)
+	r.NoError(p2p.ClearData(&testDataSource))
+	content, err := os.ReadFile("testdata/query_tpch.json")
+	r.NoError(err)
+	queries := &QueryInfos{}
+	err = yaml.Unmarshal(content, queries)
+	r.NoError(err)
+	curDir, err := os.Getwd()
+	r.NoError(err)
+	mock.MockDBPath = filepath.Join(curDir, "testdata/db.json")
+	mockTables, err := mock.MockAllTables()
+	r.NoError(err)
+	regtest.FillTableToPartyCodeMap(mockTables)
+	cclList, err := mock.MockAllCCL()
+	r.NoError(err)
+	if !testConf.SkipCreateTableCCL {
+		r.NoError(p2p.CreateProjectTableAndCcl(testConf.ProjectConf, cclList, testConf.SkipCreateTableCCL))
+	}
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		fmt.Println("run query")
+		for i, query := range queries.Queries {
+			fmt.Printf("run query: %d \n", i)
+			// test rr22
+			jobConf := scql.JobConfig{
+				PsiType: psiType,
+			}
+			jobConfStr, err := message.ProtoMarshal(&jobConf)
+			r.NoError(err)
+			_, err = p2p.RunSql(query.Issuer, query.Query, string(jobConfStr), p2p.NewFetchConf(100000, time.Second))
+			r.NoError(err)
+		}
+	}
+}

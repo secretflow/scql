@@ -25,7 +25,7 @@ all: clean mock-data start-docker set-wan test analysis plot
 
 test:
 	@[ ! -d "$(PWD)/logs" ] && mkdir -p "$(PWD)/logs" && echo "Directory created." || echo "Directory already exists."
-	go test -bench . -v -timeout=300m -args --conf=$(PWD)/docker-compose/regtest.yml --output_dir=$(PWD)/logs --container_names="${DOCKER_PROJ_NAME}-engine-alice-1,${DOCKER_PROJ_NAME}-engine-bob-1,${DOCKER_PROJ_NAME}-engine-carol-1"
+	go test -bench BenchmarkRunQuery -v -timeout=300m -args --conf=$(PWD)/docker-compose/regtest.yml --output_dir=$(PWD)/logs --container_names="${DOCKER_PROJ_NAME}-engine-alice-1,${DOCKER_PROJ_NAME}-engine-bob-1,${DOCKER_PROJ_NAME}-engine-carol-1"
 
 analysis:
 	@bash $(PWD)/scripts/analysis.sh ${DOCKER_PROJ_NAME}
@@ -39,3 +39,13 @@ plot:
 	@python $(PWD)/scripts/plot_csv_data.py $(PWD)/logs alice alice_op.csv ${DOCKER_PROJ_NAME}-engine-alice-1.csv
 	@python $(PWD)/scripts/plot_csv_data.py $(PWD)/logs bob bob_op.csv ${DOCKER_PROJ_NAME}-engine-bob-1.csv
 	@python $(PWD)/scripts/plot_csv_data.py $(PWD)/logs carol carol_op.csv ${DOCKER_PROJ_NAME}-engine-carol-1.csv
+
+mock_tpch_data:
+	bash $(PWD)/scripts/tpc-h/mock_data.sh
+
+tpch_test:
+	@[ ! -d "$(PWD)/logs" ] && mkdir -p "$(PWD)/logs" && echo "Directory created." || echo "Directory already exists."
+	go test -bench BenchmarkRunTPCH -v -timeout=300m -args --conf=$(PWD)/docker-compose/regtest.yml --output_dir=$(PWD)/logs --container_names="${DOCKER_PROJ_NAME}-engine-alice-1,${DOCKER_PROJ_NAME}-engine-bob-1,${DOCKER_PROJ_NAME}-engine-carol-1"
+
+tpch: clean mock_tpch_data start-docker tpch_test
+	@echo "tpch done!"
