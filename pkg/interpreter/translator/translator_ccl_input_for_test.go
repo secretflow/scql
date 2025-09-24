@@ -252,6 +252,12 @@ FROM alice.tbl_0 as ta JOIN bob.tbl_0 as tb ON ta.join_int_0 = tb.join_int_0`, `
 9 -> 10 [label = "t_14:{plain_datetime_0:PRIVATE:DATETIME}"]
 }`, ``, testConf{groupThreshold: 0, batched: false},
 	},
+	{`SELECT ta.plain_timestamp_0 from alice.tbl_0 as ta where ta.plain_timestamp_0 > '2025-04-23 12:25:42'`, `digraph G {
+0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select ta.plain_timestamp_0 from alice.tbl_0 as ta where ta.plain_timestamp_0>'2025-04-23 12:25:42+08:00';,table_refs:[alice.tbl_0],],party:[alice,]}"]
+1 [label="publish:{in:[In:{t_0,},],out:[Out:{t_1,},],attr:[],party:[alice,]}"]
+0 -> 1 [label = "t_0:{plain_timestamp_0:PRIVATE:TIMESTAMP}"]
+}`, ``, testConf{groupThreshold: 0, batched: false},
+	},
 	{`SELECT ta.join_int_0, ta.plain_datetime_0 from alice.tbl_0 as ta right join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0 where ta.plain_datetime_0 > str_to_date('2025-06-05', '%Y-%m-%d')`, `digraph G {
 0 [label="runsql:{in:[],out:[Out:{t_0,t_1,},],attr:[sql:select ta.join_int_0,ta.plain_datetime_0 from alice.tbl_0 as ta;,table_refs:[alice.tbl_0],],party:[alice,]}"]
 1 [label="runsql:{in:[],out:[Out:{t_2,},],attr:[sql:select tb.join_int_0 from bob.tbl_0 as tb;,table_refs:[bob.tbl_0],],party:[bob,]}"]
