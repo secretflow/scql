@@ -140,7 +140,7 @@ void Copy::Execute(ExecContext* ctx) {
 
       if (!merged_table) {
         merged_table = table;
-      } else {
+      } else if (table->num_rows() > 0) {
         auto result = arrow::ConcatenateTables({merged_table, table});
         YACL_ENFORCE(result.ok(), "concatenate table failed");
         merged_table = result.ValueOrDie();
