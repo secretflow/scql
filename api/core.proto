@@ -50,6 +50,7 @@ enum PrimitiveDataType {
   // DATETIME and TIMESTAMP
   DATETIME = 9;    // https://dev.mysql.com/doc/refman/8.0/en/datetime.html
   TIMESTAMP = 10;  // seconds since '1970-01-01 00:00:00' UTC
+  DECIMAL = 11;
 }
 
 // Tensor options.

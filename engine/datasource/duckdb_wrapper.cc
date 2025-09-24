@@ -15,6 +15,7 @@
 #include "engine/datasource/duckdb_wrapper.h"
 
 #include "absl/strings/ascii.h"
+#include "absl/strings/match.h"
 #include "duckdb/function/replacement_scan.hpp"
 #include "duckdb/function/table/read_csv.hpp"
 #include "duckdb/parser/expression/constant_expression.hpp"
@@ -70,6 +71,8 @@ static duckdb::LogicalTypeId ToLogicalTypeId(scql::api::v1::DataType type) {
       return duckdb::LogicalTypeId::TIMESTAMP_SEC;
     case scql::api::v1::DataType::TIMESTAMP:
       return duckdb::LogicalTypeId::TIMESTAMP_TZ;
+    case scql::api::v1::DataType::DECIMAL:
+      return duckdb::LogicalTypeId::DECIMAL;
     default:
       return duckdb::LogicalTypeId::INVALID;
   }
@@ -77,7 +80,10 @@ static duckdb::LogicalTypeId ToLogicalTypeId(scql::api::v1::DataType type) {
 
 std::string ToDuckDBDataType(const std::string &type) {
   duckdb::LogicalTypeId ret = duckdb::LogicalTypeId::INVALID;
-
+  auto upper_type = absl::AsciiStrToUpper(type);
+  if (absl::StartsWith(upper_type, "DECIMAL")) {
+    return upper_type;
+  }
   scql::api::v1::DataType dtype;
   if (scql::api::v1::DataType_Parse(absl::AsciiStrToUpper(type), &dtype)) {
     ret = ToLogicalTypeId(dtype);
@@ -141,6 +147,8 @@ static duckdb::unique_ptr<duckdb::TableRef> CSVTableReplacementScan(
     std::vector<duckdb::Value> names;
     std::vector<duckdb::Value> types;
     for (const auto &col : csv_tbl->columns()) {
+      SPDLOG_INFO("name: {}, type :{}", col.column_name(),
+                  ToDuckDBDataType(col.column_type()));
       names.emplace_back(col.column_name());
       types.emplace_back(ToDuckDBDataType(col.column_type()));
     }
@@ -173,6 +181,8 @@ static duckdb::unique_ptr<duckdb::FunctionData> CSVScanBind(
           "csv_scan requires a column name & type specification as "
           "string");
     }
+    SPDLOG_INFO("name: {}, type :{}", duckdb::StringValue::Get(name_list[i]),
+                duckdb::StringValue::Get(type_list[i]));
     columns.emplace_back(
         std::make_pair(duckdb::StringValue::Get(name_list[i]),
                        duckdb::StringValue::Get(type_list[i])));

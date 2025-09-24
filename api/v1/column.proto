@@ -39,4 +39,5 @@ enum DataType {
   STR = 13;  // alias for STRING
   DATETIME = 14;
   TIMESTAMP = 15;
+  DECIMAL = 16;
 }

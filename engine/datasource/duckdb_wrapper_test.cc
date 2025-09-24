@@ -67,7 +67,7 @@ class DuckdbWrapperTest : public ::testing::Test {
       // test auto_detection feature in NormalQuery
       column = table->add_columns();
       column->set_column_name("income");
-      column->set_column_type("double");
+      column->set_column_type("decimal(20,5)");
       column = table->add_columns();
       column->set_column_name("name");
       column->set_column_type("string");
@@ -114,7 +114,8 @@ TEST_F(DuckdbWrapperTest, NormalQuery) {
   // column "income"
   EXPECT_TRUE(ColumnEquals(*conn.context, *data_chunk, 3,
                            {25000.1, 48000, 98000, 118000}));
-  EXPECT_TRUE(data_chunk->data[3].GetType() == duckdb::LogicalType::DOUBLE);
+  EXPECT_TRUE(data_chunk->data[3].GetType() ==
+              duckdb::LogicalType::DECIMAL(20, 5));
 }
 
 TEST_F(DuckdbWrapperTest, QueryWithPredicate) {
