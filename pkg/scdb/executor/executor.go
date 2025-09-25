@@ -23,13 +23,10 @@ import (
 
 	"github.com/secretflow/scql/pkg/expression"
 	"github.com/secretflow/scql/pkg/infoschema"
-	"github.com/secretflow/scql/pkg/interpreter"
 	"github.com/secretflow/scql/pkg/parser"
-	parserAst "github.com/secretflow/scql/pkg/parser/ast"
 	"github.com/secretflow/scql/pkg/parser/mysql"
 	"github.com/secretflow/scql/pkg/planner/core"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
-	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/sessionctx"
 	"github.com/secretflow/scql/pkg/types"
 	"github.com/secretflow/scql/pkg/util/chunk"
@@ -52,30 +49,6 @@ func Run(ctx sessionctx.Context, stmt string, is infoschema.InfoSchema) ([]*scql
 	}
 	if err := core.Preprocess(ctx, ast, is); err != nil {
 		return nil, err
-	}
-	if _, ok := ast.(*parserAst.ExplainStmt); ok {
-		compiledReq := &pb.CompileQueryRequest{
-			Query:  stmt,
-			DbName: ctx.GetSessionVars().CurrentDB,
-		}
-
-		intrpr := interpreter.NewInterpreter()
-		compiledPlan, err := intrpr.Compile(context.Background(), compiledReq)
-		if err != nil {
-			return nil, err
-		}
-
-		dotGraph := compiledPlan.GetExplain().GetExeGraphDot()
-		return []*scql.Tensor{{
-			Name:       "explain_result",
-			ElemType:   scql.PrimitiveDataType_STRING,
-			StringData: []string{dotGraph},
-			Shape: &scql.TensorShape{
-				Dim: []*scql.TensorShape_Dimension{{
-					Value: &scql.TensorShape_Dimension_DimValue{DimValue: 1},
-				}},
-			},
-		}}, nil
 	}
 
 	// Step 2: Planning
