@@ -34,7 +34,7 @@ const (
 // results in a join group {a, b, LeftJoin(c, d)}.
 func extractJoinGroup(p LogicalPlan) (group []LogicalPlan, eqEdges []*expression.ScalarFunction, otherConds []expression.Expression) {
 	join, isJoin := p.(*LogicalJoin)
-	if !isJoin {
+	if !isJoin || join.JoinType != InnerJoin {
 		return []LogicalPlan{p}, nil, nil
 	}
 
