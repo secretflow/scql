@@ -5,7 +5,6 @@ intra_server:
 inter_server:
   protocol: http
   port: 8081
-log_level: debug
 party_code: bob
 party_info_file: "/home/admin/configs/party_info.json"
 private_key_path: "/home/admin/configs/private_key.pem"

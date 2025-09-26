@@ -195,5 +195,90 @@
         "ccl": ["plain"]
       }
     ]
+  },
+  "lineitem": {
+    "db_name": "alice",
+    "columns": [
+      {
+        "column_name": "l_orderkey",
+        "dtype": "int",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "l_partkey",
+        "dtype": "int",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "l_suppkey",
+        "dtype": "int",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "l_linenumber",
+        "dtype": "int",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "l_quantity",
+        "dtype": "double",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "l_extendedprice",
+        "dtype": "double",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "l_discount",
+        "dtype": "double",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "l_tax",
+        "dtype": "double",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "l_returnflag",
+        "dtype": "string",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "l_linestatus",
+        "dtype": "string",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "l_shipdate",
+        "dtype": "datetime",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "l_commitdate",
+        "dtype": "datetime",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "l_receiptdate",
+        "dtype": "datetime",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "l_shipinstruct",
+        "dtype": "string",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "l_shipmode",
+        "dtype": "string",
+        "ccl": ["plain"]
+      },
+      {
+        "column_name": "l_comment",
+        "dtype": "string",
+        "ccl": ["plain"]
+      }
+    ]
   }
 }
