@@ -315,3 +315,16 @@ func GetUint64FromConstant(expr Expression) (uint64, bool, bool) {
 func ConstructPositionExpr(p *driver.ParamMarkerExpr) *ast.PositionExpr {
 	return &ast.PositionExpr{P: p}
 }
+
+// FilterOutInPlace do the filtering out in place.
+// The remained are the ones who doesn't match the filter, storing in the original slice.
+// The filteredOut are the ones match the filter, storing in a new slice.
+func FilterOutInPlace(input []Expression, filter func(Expression) bool) (remained, filteredOut []Expression) {
+	for i := len(input) - 1; i >= 0; i-- {
+		if filter(input[i]) {
+			filteredOut = append(filteredOut, input[i])
+			input = append(input[:i], input[i+1:]...)
+		}
+	}
+	return input, filteredOut
+}
