@@ -28,8 +28,8 @@ import (
 )
 
 const (
-	flagJoinReOrder uint64 = 1 << iota
-	flagPrunColumns
+	flagPrunColumns uint64 = 1 << iota
+	flagJoinReOrder
 	flagBuildKeyInfo
 	flagDecorrelate
 	flagEliminateAgg
@@ -46,8 +46,8 @@ const (
 )
 
 var optRuleList = []logicalOptRule{
-	&joinReOrderSolver{},
 	&columnPruner{},
+	&joinReOrderSolver{},
 	&optPlaceHolder{},
 	&optPlaceHolder{},
 	&optPlaceHolder{},
