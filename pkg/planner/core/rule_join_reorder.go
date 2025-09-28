@@ -68,7 +68,8 @@ func (s *joinReOrderSolver) optimize(ctx context.Context, p LogicalPlan) (Logica
 func (s *joinReOrderSolver) optimizeRecursive(ctx sessionctx.Context, p LogicalPlan) (LogicalPlan, error) {
 	var err error
 	curJoinGroup, eqEdges, otherConds := extractJoinGroup(p)
-	if len(curJoinGroup) > 1 {
+	// Note: for scql, SCQL only optimizes scenarios involving joins of more than two tables.
+	if len(curJoinGroup) > 2 {
 		for i := range curJoinGroup {
 			curJoinGroup[i], err = s.optimizeRecursive(ctx, curJoinGroup[i])
 			if err != nil {
@@ -117,11 +118,7 @@ type baseSingleGroupJoinOrderSolver struct {
 
 // baseNodeCumCost calculate the cumulative cost of the node in the join group.
 func (s *baseSingleGroupJoinOrderSolver) baseNodeCumCost(groupNode LogicalPlan) float64 {
-	cost := 0.0
-	for _, child := range groupNode.Children() {
-		cost += s.baseNodeCumCost(child)
-	}
-	return cost
+	return 0.0
 }
 
 // makeBushyJoin build bushy tree for the nodes which have no equal condition to connect them.

@@ -50,7 +50,7 @@ func (s *joinReorderGreedySolver) solve(joinNodePlans []LogicalPlan) (LogicalPla
 		})
 	}
 	sort.SliceStable(s.curJoinGroup, func(i, j int) bool {
-		return s.curJoinGroup[i].cumCost < s.curJoinGroup[j].cumCost
+		return s.curJoinGroup[i].p.Schema().PartyCode < s.curJoinGroup[j].p.Schema().PartyCode
 	})
 
 	var cartesianGroup []LogicalPlan
@@ -78,7 +78,7 @@ func (s *joinReorderGreedySolver) constructConnectedJoinTree() (*jrNode, error) 
 			if newJoin == nil {
 				continue
 			}
-			// didn't work for scql
+			// NOTE: didn't work for scql
 			// _, err := newJoin.recursiveDeriveStats()
 			// if err != nil {
 			// 	return nil, err
