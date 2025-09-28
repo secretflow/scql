@@ -6,9 +6,19 @@
       "mysql_query": "select ta.plain_int_0, percent_rank() over(partition by ta.plain_int_0 order by ta.plain_float_0) as num from alice.tbl_0 as ta;"
     },
     {
+      "name": "explain percent_rank",
+      "query": "explain select ta.plain_int_0, percent_rank() over(partition by ta.plain_int_0 order by ta.plain_float_0) as num from alice_tbl_0 as ta;",
+      "mysql_query": "select ta.plain_int_0, percent_rank() over(partition by ta.plain_int_0 order by ta.plain_float_0) as num from alice.tbl_0 as ta;"
+    },
+    {
       "name": "rank",
       "query": "select ta.plain_int_0, rank() over(partition by ta.plain_int_0 order by ta.plain_float_0) as num from alice_tbl_0 as ta;",
       "mysql_query": "select ta.plain_int_0, rank() over(partition by ta.plain_int_0 order by ta.plain_float_0) as num from alice.tbl_0 as ta;"
+    },
+    {
+      "name": "explain percent_rank",
+      "query": "explain select ta.plain_int_0, percent_rank() over(partition by ta.plain_int_0 order by ta.plain_float_0) as num from alice_tbl_0 as ta;",
+      "mysql_query": "select ta.plain_int_0, percent_rank() over(partition by ta.plain_int_0 order by ta.plain_float_0) as num from alice.tbl_0 as ta;"
     },
     {
       "name": "row_number multi partition by/order by",
@@ -36,8 +46,18 @@
       "mysql_query": "select plain_int_0, plain_datetime_0, plain_timestamp_0 from alice.tbl_1"
     },
     {
+      "name": "explain plain select",
+      "query": "explain select plain_int_0, plain_datetime_0, plain_timestamp_0 from alice_tbl_1;",
+      "mysql_query": "select plain_int_0, plain_datetime_0, plain_timestamp_0 from alice.tbl_1"
+    },
+    {
       "name": "left join",
       "query": "select ta.plain_int_0 from alice_tbl_1 as ta left join alice_tbl_2 as tb on ta.plain_int_0 = tb.plain_int_0;",
+      "mysql_query": "select ta.plain_int_0 from alice.tbl_1 as ta left join alice.tbl_2 as tb on ta.plain_int_0 = tb.plain_int_0;"
+    },
+    {
+      "name": "explain left join",
+      "query": "explain select ta.plain_int_0 from alice_tbl_1 as ta left join alice_tbl_2 as tb on ta.plain_int_0 = tb.plain_int_0;",
       "mysql_query": "select ta.plain_int_0 from alice.tbl_1 as ta left join alice.tbl_2 as tb on ta.plain_int_0 = tb.plain_int_0;"
     },
     {
