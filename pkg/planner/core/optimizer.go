@@ -29,13 +29,13 @@ import (
 
 const (
 	flagPrunColumns uint64 = 1 << iota
-	flagJoinReOrder
 	flagBuildKeyInfo
 	flagDecorrelate
 	flagEliminateAgg
 	flagEliminateProjection
 	flagMaxMinEliminate
 	flagPredicatePushDown
+	flagJoinReOrder
 	flagPrunColumnsDouble // eliminate unused columns added by predicate push down
 	flagEliminateOuterJoin
 	flagPartitionProcessor
@@ -47,13 +47,13 @@ const (
 
 var optRuleList = []logicalOptRule{
 	&columnPruner{},
-	&joinReOrderSolver{},
 	&optPlaceHolder{},
 	&optPlaceHolder{},
 	&optPlaceHolder{},
 	&projectionEliminator{},
 	&optPlaceHolder{},
 	&ppdSolver{},
+	&joinReOrderSolver{},
 	&columnPruner{},
 	&optPlaceHolder{},
 	&optPlaceHolder{},

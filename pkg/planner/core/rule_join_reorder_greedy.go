@@ -15,7 +15,6 @@ package core
 
 import (
 	"math"
-	"sort"
 
 	"github.com/secretflow/scql/pkg/expression"
 	"github.com/secretflow/scql/pkg/parser/ast"
@@ -49,9 +48,17 @@ func (s *joinReorderGreedySolver) solve(joinNodePlans []LogicalPlan) (LogicalPla
 			cumCost: s.baseNodeCumCost(node),
 		})
 	}
-	sort.SliceStable(s.curJoinGroup, func(i, j int) bool {
-		return s.curJoinGroup[i].p.Schema().PartyCode < s.curJoinGroup[j].p.Schema().PartyCode
-	})
+	var optimizedCurJoinGroup []*jrNode
+	for {
+		if len(s.curJoinGroup) == 0 {
+			break
+		}
+		newNode := s.constructConnectedJoinTreeFroSamePartyCode()
+		if newNode != nil {
+			optimizedCurJoinGroup = append(optimizedCurJoinGroup, newNode)
+		}
+	}
+	s.curJoinGroup = optimizedCurJoinGroup
 
 	var cartesianGroup []LogicalPlan
 	for len(s.curJoinGroup) > 0 {
@@ -65,9 +72,50 @@ func (s *joinReorderGreedySolver) solve(joinNodePlans []LogicalPlan) (LogicalPla
 	return s.makeBushyJoin(cartesianGroup), nil
 }
 
+func (s *joinReorderGreedySolver) constructConnectedJoinTreeFroSamePartyCode() *jrNode {
+	curJoinTree := s.curJoinGroup[0]
+
+	bestCost := math.MaxFloat64
+	bestIdx := -1
+	var finalRemainOthers []expression.Expression
+	var bestJoin LogicalPlan
+	// only merging plans with same party code
+	for i, node := range s.curJoinGroup[1:] {
+		if node.p.Schema().PartyCode == "" || (curJoinTree.p.Schema().PartyCode != node.p.Schema().PartyCode) {
+			continue
+		}
+		newJoin, remainOthers := s.checkConnectionAndMakeJoin(curJoinTree.p, node.p)
+		if newJoin == nil {
+			continue
+		}
+		curCost := s.calcJoinCumCost(newJoin, curJoinTree, node)
+		if bestCost > curCost {
+			bestCost = curCost
+			bestJoin = newJoin
+			// i start from 1, but bestIdx start from 0
+			bestIdx = i + 1
+			finalRemainOthers = remainOthers
+		}
+	}
+	// If we could find more join node, meaning that the sub connected graph have been totally explored.
+	if bestJoin == nil {
+		s.curJoinGroup = s.curJoinGroup[1:]
+		return curJoinTree
+	}
+	curJoinTree = &jrNode{
+		p:       bestJoin,
+		cumCost: bestCost,
+	}
+	s.curJoinGroup = append(s.curJoinGroup[:bestIdx], s.curJoinGroup[bestIdx+1:]...)
+	s.otherConds = finalRemainOthers
+	s.curJoinGroup[0] = curJoinTree
+	return nil
+}
+
 func (s *joinReorderGreedySolver) constructConnectedJoinTree() (*jrNode, error) {
 	curJoinTree := s.curJoinGroup[0]
 	s.curJoinGroup = s.curJoinGroup[1:]
+
 	for {
 		bestCost := math.MaxFloat64
 		bestIdx := -1

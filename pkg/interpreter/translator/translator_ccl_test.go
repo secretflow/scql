@@ -68,11 +68,11 @@ func (s *testTranslatorSuite) TestTranslateWithCCL(c *C) {
 
 		graphStr := ep.DumpGraphviz()
 		// if you want to copy the graph created by DumpGraphviz, uncomment this line
-		c.Log(graphStr)
+		// c.Log(graphStr)
 		actualPipe := ""
 		if conf.batched {
 			actualPipe = ep.DumpBriefPipeline()
-			c.Log(actualPipe)
+			// c.Log(actualPipe)
 		} else {
 			c.Assert(len(ep.Pipelines), Equals, 1, Commentf("for %s", sql))
 			c.Assert(ep.Pipelines[0].Batched, Equals, false, Commentf("for %s", sql))
