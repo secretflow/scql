@@ -29,7 +29,6 @@ import (
 
 const (
 	flagPrunColumns uint64 = 1 << iota
-	flagJoinReOrder
 	flagBuildKeyInfo
 	flagDecorrelate
 	flagEliminateAgg
@@ -41,13 +40,13 @@ const (
 	flagPartitionProcessor
 	flagPushDownAgg
 	flagPushDownTopN
+	flagJoinReOrder
 	flagDoubleCheckEliminateProjection
 	flagPatchTimeZone
 )
 
 var optRuleList = []logicalOptRule{
 	&columnPruner{},
-	&joinReOrderSolver{},
 	&optPlaceHolder{},
 	&optPlaceHolder{},
 	&optPlaceHolder{},
@@ -58,6 +57,7 @@ var optRuleList = []logicalOptRule{
 	&optPlaceHolder{},
 	&optPlaceHolder{},
 	&aggregationPushDownSolver{},
+	&optPlaceHolder{},
 	&optPlaceHolder{},
 	&projectionEliminator{},
 	&timeZonePatcher{},

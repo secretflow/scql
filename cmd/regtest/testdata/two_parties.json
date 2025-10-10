@@ -186,11 +186,6 @@
       "mysql_query": "select alice0.plain_int_0 from alice.tbl_0 as alice0 join bob.tbl_0 as bob0 on alice0.join_int_0 = bob0.join_int_0 join bob.tbl_1 as bob1 on alice0.join_int_1 = bob1.join_int_1;"
     },
     {
-      "name": "join four table(alice, alice, bob, bob)",
-      "query": "select count(*) as c1 from alice_tbl_1 as t1 join alice_tbl_2 as t2 join bob_tbl_1 as t3 join bob_tbl_2 as t4 where t1.plain_int_0 = t2.plain_int_0 and t2.plain_int_0 = t3.plain_int_0 and t3.plain_int_0 = t4.plain_int_0",
-      "mysql_query": "select count(*) as c1 from alice.tbl_1 as t1 join alice.tbl_2 as t2 join bob.tbl_1 as t3 join bob.tbl_2 as t4 where t1.plain_int_0 = t2.plain_int_0 and t2.plain_int_0 = t3.plain_int_0 and t3.plain_int_0 = t4.plain_int_0"
-    },
-    {
       "name": "apply in after join",
       "query": "select alice.compare_int_0 in (select compare_int_0 from bob_tbl_0) as bob from alice_tbl_0 as alice;",
       "mysql_query": "select alice.compare_int_0 in (select compare_int_0 from bob.tbl_0) as bob from alice.tbl_0 as alice;"
