@@ -17,17 +17,15 @@
 
 version: 2.1
 
-orbs:
-  coveralls: coveralls/coveralls@2.2.5
+parameters:
+  run_go_ut:
+    type: boolean
+    default: false
+  run_cpp_ut:
+    type: boolean
+    default: false
 
 commands:
-  setup_go_test:
-    steps:
-      - run:
-          name: Install gcov2lcov
-          command: |
-            which gcov2lcov || go install github.com/jandelgado/gcov2lcov@latest
-
   setup_cpp_test:
     steps:
       - run:
@@ -38,27 +36,18 @@ commands:
           command: ../devtools/bazel_cache_setup.py
 
   run_go_test:
-    description: "Run go cov tests"
+    description: "Run go tests"
     steps:
       - run:
-          name: "Go Cov Test"
+          name: "Go Test"
           command: |
             set +e
             go mod tidy
-            echo "Running tests with coverage..."
-            go test -mod=readonly -timeout=30m -v -cover -race -coverprofile=coverage.tmp ./pkg/... ./contrib/...
-            cat coverage.tmp | grep -v '\.pb\.go:\|_mock\.go:' > coverage.out
-            gcov2lcov -infile=coverage.out -outfile=coverage.lcov
+            echo "Running unit tests..."
+            go test -mod=readonly -timeout=30m -v -short ./pkg/... ./contrib/...
 
   run_cpp_test:
-    description: "Run cpp cov tests and collect artifacts"
-    parameters:
-      extra_bazel_args:
-        type: string
-        default: ""
-      find_executable_flag:
-        type: string
-        default: "-executable"
+    description: "Run cpp tests and collect artifacts on fail"
     steps:
       - run:
           name: "Cpp Test"
@@ -66,26 +55,23 @@ commands:
             set +e
             declare -i test_status
 
-            echo "Running tests with coverage..."
-            bazelisk --host_jvm_args=-Xmx8g coverage //engine/... \
-                << parameters.extra_bazel_args >> \
-                --combined_report=lcov \
+            echo "Running unit tests..."
+            bazelisk --host_jvm_args=-Xmx8g test //engine/... \
+                -c opt \
                 --jobs=auto \
                 --ui_event_filters=-info,-debug,-warning \
                 --test_output=errors | tee test_result.log
 
             # Capture the exit status of the Bazel command
             test_status=${PIPESTATUS[0]}
-            if [ ${test_status} -eq 0 ]; then
-              echo "Processing coverage..."
-              lcov --remove bazel-out/_coverage/_coverage_report.dat '*.pb.h' '*.pb.cc' -o bazel-out/_coverage/_coverage_report_filtered.dat
-            else
-              echo "Bazel coverage failed, skipping lcov processing. Archiving binaries and logs..."
-              find bazel-bin/ << parameters.find_executable_flag >> -type f -name "*_test" -print0 | xargs -0 tar -cvzf test_binary.tar.gz
+
+            sh ../devtools/rename-junit-xml.sh
+            if [ ${test_status} -ne 0 ]; then
+              echo "Tests failed. Archiving binaries and logs..."
+              find bazel-bin/ -executable -type f -name "*_test" -print0 | xargs -0 tar -cvzf test_binary.tar.gz
               find bazel-testlogs/ -type f -name "test.log" -print0 | xargs -0 tar -cvzf test_logs.tar.gz
             fi
 
-            sh ../devtools/rename-junit-xml.sh
             exit ${test_status}
 
   # ref: https://support.circleci.com/hc/en-us/articles/14114124583195-How-to-set-a-custom-maximum-job-duration
@@ -106,40 +92,26 @@ commands:
             --header "Circle-Token: $CIRCLECI_API_TOKEN"
 
 jobs:
-  linux_go_cov:
+  linux_go_ut:
     docker:
       - image: secretflow/scql-ci:latest
     resource_class: "large"
     steps:
       - cancel_after_timeout:
-          timeout: "30m"
+          timeout: "20m"
       - checkout
-      - setup_go_test
       - run_go_test
-      - coveralls/upload:
-          coverage_file: coverage.lcov
-          coverage_format: lcov
-          flag_name: "go-tests"
 
-  linux_cpp_cov:
+  linux_cpp_ut:
     docker:
       - image: secretflow/scql-ci:latest
     resource_class: "2xlarge"
     steps:
       - cancel_after_timeout:
-          timeout: "90m"
+          timeout: "60m"
       - checkout
-      - run:
-          name: "Install lcov"
-          command: apt-get update && apt-get install -y lcov
       - setup_cpp_test
-      - run_cpp_test:
-          extra_bazel_args: "-c opt"
-          find_executable_flag: "-executable"
-      - coveralls/upload:
-          coverage_file: bazel-out/_coverage/_coverage_report_filtered.dat
-          coverage_format: lcov
-          flag_name: "cpp-tests"
+      - run_cpp_test
       - store_test_results:
           path: test-results
       - store_artifacts:
@@ -150,7 +122,12 @@ jobs:
           path: test_logs.tar.gz
 
 workflows:
-  run_cov:
+  run_go_ut:
+    when: << pipeline.parameters.run_go_ut >>
     jobs:
-      - linux_go_cov
-      - linux_cpp_cov
+      - linux_go_ut
+
+  run_cpp_ut:
+    when: << pipeline.parameters.run_cpp_ut >>
+    jobs:
+      - linux_cpp_ut

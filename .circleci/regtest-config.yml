@@ -31,6 +31,14 @@ jobs:
         type: string
     resource_class: << parameters.resource_class >>
     steps:
+      - run:
+          name: Set maximum job duration to 120m
+          background: true
+          command: |
+            sleep 120m
+            curl --request POST \
+            --url https://circleci.com/api/v2/project/gh/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/job/$CIRCLE_BUILD_NUM/cancel \
+            --header "Circle-Token: $CIRCLECI_API_TOKEN"
       - checkout
       - run:
           name: "Checkout devtools"
