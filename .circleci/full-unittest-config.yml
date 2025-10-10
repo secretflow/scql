@@ -73,6 +73,23 @@ commands:
 
             exit ${test_status}
 
+  # ref: https://support.circleci.com/hc/en-us/articles/14114124583195-How-to-set-a-custom-maximum-job-duration
+  cancel_after_timeout:
+    description: "Cancel job if it takes too long"
+    parameters:
+      timeout:
+        type: string
+        default: "60m"
+    steps:
+      - run:
+          name: Set maximum job duration to << parameters.timeout >>
+          background: true
+          command: |
+            sleep << parameters.timeout >>
+            curl --request POST \
+            --url https://circleci.com/api/v2/project/gh/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/job/$CIRCLE_BUILD_NUM/cancel \
+            --header "Circle-Token: $CIRCLECI_API_TOKEN"
+
 jobs:
   linux_go_ut:
     docker:
@@ -82,6 +99,8 @@ jobs:
         type: string
     resource_class: << parameters.resource_class >>
     steps:
+      - cancel_after_timeout:
+          timeout: "20m"
       - checkout
       - run_go_test
 
@@ -93,6 +112,8 @@ jobs:
         type: string
     resource_class: << parameters.resource_class >>
     steps:
+      - cancel_after_timeout:
+          timeout: "60m"
       - checkout
       - setup_cpp_test
       - run_cpp_test:
@@ -112,6 +133,8 @@ jobs:
       xcode: 16.0.0
     resource_class: m4pro.medium
     steps:
+      - cancel_after_timeout:
+          timeout: "20m"
       - checkout
       - run:
           name: "Install homebrew dependencies"
@@ -124,6 +147,8 @@ jobs:
       xcode: 16.0.0
     resource_class: m4pro.medium
     steps:
+      - cancel_after_timeout:
+          timeout: "60m"
       - checkout
       - run:
           name: "Install homebrew dependencies"
