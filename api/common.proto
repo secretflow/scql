@@ -101,10 +101,8 @@ enum PsiAlgorithmType {
 }
 
 message PsiConfig {
-  int64 unbalance_psi_ratio_threshold = 1;
-  int64 unbalance_psi_larger_party_rows_count_threshold = 2;
-  int32 psi_curve_type = 3;
-  PsiAlgorithmType psi_type = 4;
+  int32 psi_curve_type = 1;
+  PsiAlgorithmType psi_type = 2;
 }
 
 message LogConfig {

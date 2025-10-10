@@ -493,3 +493,59 @@ func (s *intraTestSuite) TestCheckAndUpdateStatusNormal() {
 	s.Equal(priv.ColumnPrivIdentifier, ccls[0].ColumnPrivIdentifier)
 	s.Equal(priv.DestParty, ccls[0].DestParty)
 }
+
+func (s *intraTestSuite) TestDeleteProject() {
+	// Create a project for testing
+	_, err := s.svcAlice.CreateProject(s.ctx, &pb.CreateProjectRequest{ProjectId: "test_delete_project", Name: "test delete project", Conf: &pb.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}}})
+	s.NoError(err)
+
+	// Test 1: Delete non-archived project should fail
+	deleteReq := &pb.DeleteProjectRequest{
+		ProjectId: "test_delete_project",
+	}
+	resp, err := s.svcAlice.DeleteProject(s.ctx, deleteReq)
+	s.NoError(err)
+	s.Equal(int32(pb.Code_BAD_REQUEST), resp.Status.Code)
+	s.Equal("project must be archived before deletion", resp.Status.Message)
+
+	// Test 2: Archive the project first
+	archiveReq := &pb.ArchiveProjectRequest{
+		ProjectId: "test_delete_project",
+	}
+	archiveResp, err := s.svcAlice.ArchiveProject(s.ctx, archiveReq)
+	s.NoError(err)
+	s.Equal(int32(pb.Code_OK), archiveResp.Status.Code)
+
+	// Test 3: Delete archived project should succeed
+	resp, err = s.svcAlice.DeleteProject(s.ctx, deleteReq)
+	s.NoError(err)
+	s.Equal(int32(pb.Code_OK), resp.Status.Code)
+	s.Equal("delete project succeed", resp.Status.Message)
+
+	// Test 4: Verify project is deleted
+	_, err = s.svcAlice.ListProjects(s.ctx, &pb.ListProjectsRequest{Ids: []string{"test_delete_project"}})
+	s.Error(err)
+
+	// Test 5: Delete non-existent project should return not found
+	deleteReq = &pb.DeleteProjectRequest{
+		ProjectId: "non_existent_project",
+	}
+	resp, err = s.svcAlice.DeleteProject(s.ctx, deleteReq)
+	s.NoError(err)
+	s.Equal(int32(pb.Code_NOT_FOUND), resp.Status.Code)
+	s.Equal("project not found", resp.Status.Message)
+
+	// Test 6: Delete with empty project id should fail
+	deleteReq = &pb.DeleteProjectRequest{
+		ProjectId: "",
+	}
+	_, err = s.svcAlice.DeleteProject(s.ctx, deleteReq)
+	s.Error(err)
+	s.Contains(err.Error(), "project_id cannot be empty")
+
+	// Test 7: Delete with nil request should fail
+	_, err = s.svcAlice.DeleteProject(s.ctx, nil)
+	s.Error(err)
+	s.Contains(err.Error(), "illegal empty request")
+	fmt.Print("Success")
+}

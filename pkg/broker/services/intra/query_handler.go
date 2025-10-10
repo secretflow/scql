@@ -451,10 +451,8 @@ func distributeQueryToOtherParty(session *application.Session, enginesInfo *grap
 		DryRun:         session.DryRun,
 		TimeZone:       session.ExecuteInfo.SessionOptions.TimeZone,
 		JobConfig: &pb.JobConfig{
-			SessionExpireSeconds:       session.ExecuteInfo.SessionOptions.SessionExpireSeconds,
-			TimeZone:                   session.ExecuteInfo.SessionOptions.TimeZone,
-			UnbalancePsiRatioThreshold: session.ExecuteInfo.SessionOptions.PsiConfig.UnbalancePsiRatioThreshold,
-			UnbalancePsiLargerPartyRowsCountThreshold: session.ExecuteInfo.SessionOptions.PsiConfig.UnbalancePsiLargerPartyRowsCountThreshold,
+			SessionExpireSeconds:        session.ExecuteInfo.SessionOptions.SessionExpireSeconds,
+			TimeZone:                    session.ExecuteInfo.SessionOptions.TimeZone,
 			PsiCurveType:                session.ExecuteInfo.SessionOptions.PsiConfig.PsiCurveType,
 			HttpMaxPayloadSize:          session.ExecuteInfo.SessionOptions.LinkConfig.HttpMaxPayloadSize,
 			LinkRecvTimeoutSec:          session.ExecuteInfo.SessionOptions.LinkConfig.LinkRecvTimeoutSec,

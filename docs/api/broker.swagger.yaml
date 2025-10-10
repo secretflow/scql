@@ -171,6 +171,50 @@ paths:
             $ref: '#/definitions/scql.pb.ListProjectsRequest'
       tags:
         - IntraBrokerService
+  /intra/project/archive:
+    post:
+      summary: ArchiveProject
+      description: Archive a Project
+      operationId: IntraBrokerService_ArchiveProject
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/scql.pb.ArchiveProjectResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/google.rpc.Status'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/scql.pb.ArchiveProjectRequest'
+      tags:
+        - IntraBrokerService
+  /intra/project/delete:
+    post:
+      summary: DeleteProject
+      description: Delete an archived Project locally
+      operationId: IntraBrokerService_DeleteProject
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/scql.pb.DeleteProjectResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/google.rpc.Status'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/scql.pb.DeleteProjectRequest'
+      tags:
+        - IntraBrokerService
   /intra/member/invite:
     post:
       summary: InviteMember
@@ -596,6 +640,13 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/google.protobuf.Any'
+  scql.pb.ArchiveProjectRequest:
+    type: object
+    properties:
+      project_id:
+        type: string
+      comment:
+        type: string
   scql.pb.ArchiveProjectResponse:
     type: object
     properties:
@@ -876,6 +927,18 @@ definitions:
     properties:
       enable_psi_detail_log:
         type: boolean
+  scql.pb.DeleteProjectRequest:
+    type: object
+    properties:
+      project_id:
+        type: string
+      comment:
+        type: string
+  scql.pb.DeleteProjectResponse:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/scql.pb.Status'
   scql.pb.DistributeQueryResponse:
     type: object
     properties:
@@ -1060,8 +1123,8 @@ definitions:
         type: string
         format: uint64
     description: |-
-      IOStats contains input/output statistics for a job, including bytes sent and received,
-      as well as the number of send and receive actions performed.
+      IOStats contains input/output statistics for a job, including bytes sent and
+      received, as well as the number of send and receive actions performed.
   scql.pb.InvitationRespond:
     type: string
     enum:
@@ -1139,12 +1202,6 @@ definitions:
         title: |-
           job's time_zone for session, default is empty which means use engine's
           default time_zone
-      unbalance_psi_ratio_threshold:
-        type: string
-        format: int64
-      unbalance_psi_larger_party_rows_count_threshold:
-        type: string
-        format: int64
       psi_curve_type:
         type: integer
         format: int32
@@ -1186,8 +1243,12 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/scql.pb.StageInfo'
-        description: A list of currently running stages, providing insight into which parts of the job are active.
-    description: JobProgress provides detailed information about the progress of a running job.
+        description: |-
+          A list of currently running stages, providing insight into which parts of
+          the job are active.
+    description: |-
+      JobProgress provides detailed information about the progress of a running
+      job.
   scql.pb.JobStatus:
     type: object
     properties:
@@ -1252,8 +1313,6 @@ definitions:
           members:
             - alice
           project_id: proj_id
-          created_at: YYYY-MM-DD hh:mm:ss
-          archived: false
       status:
         code: 0
         message: list projects succeed
@@ -1397,12 +1456,6 @@ definitions:
         $ref: '#/definitions/spu.pb.RuntimeConfig'
         description: The spu runtime configuration.
       session_expire_seconds:
-        type: string
-        format: int64
-      unbalance_psi_ratio_threshold:
-        type: string
-        format: int64
-      unbalance_psi_larger_party_rows_count_threshold:
         type: string
         format: int64
       psi_curve_type:
@@ -1718,8 +1771,12 @@ definitions:
         title: Stage start time
       details:
         $ref: '#/definitions/google.protobuf.Any'
-        description: Personalized details that may have different structures depending on the stage type.
-    description: StageInfo provides information about an individual stage within a running job.
+        description: |-
+          Personalized details that may have different structures depending on the
+          stage type.
+    description: |-
+      StageInfo provides information about an individual stage within a running
+      job.
   scql.pb.Status:
     type: object
     properties:

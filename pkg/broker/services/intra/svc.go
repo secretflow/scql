@@ -76,6 +76,17 @@ func (svc *IntraSvc) ArchiveProjectHandler(c *gin.Context) {
 		})
 }
 
+func (svc *IntraSvc) DeleteProjectHandler(c *gin.Context) {
+	handlerWrapper(c,
+		&pb.DeleteProjectRequest{},
+		&pb.DeleteProjectResponse{},
+		func(ctx context.Context, req *pb.DeleteProjectRequest, logEntry *logutil.BrokerMonitorLogEntry) (*pb.DeleteProjectResponse, error) {
+			logEntry.RawRequest = req.String()
+			logEntry.ActionName = fmt.Sprintf("%v@%v", "Intra", "DeleteProject")
+			return svc.DeleteProject(ctx, req)
+		})
+}
+
 func (svc *IntraSvc) ListProjectsHandler(c *gin.Context) {
 	handlerWrapper(c,
 		&pb.ListProjectsRequest{},

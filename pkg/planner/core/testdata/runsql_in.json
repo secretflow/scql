@@ -325,6 +325,14 @@
         "rewritten_sql_odps": "select cast(alice.compare_float_0 as decimal) as m from alice.tbl_0 as alice"
       },
       {
+        "sql": "select cast(alice.compare_string_0 as datetime) as m from alice.tbl_0 as alice;;",
+        "skip_projection": false,
+        "rewritten_sql": "select cast(alice.compare_string_0 as datetime) as m from alice.tbl_0 as alice",
+        "rewritten_sql_pg": "select cast(alice.compare_string_0 as timestamp) as m from alice.tbl_0 as alice",
+        "rewritten_sql_csv": "select cast(alice.compare_string_0 as timestamp) as m from alice.tbl_0 as alice",
+        "rewritten_sql_odps": "select cast(alice.compare_string_0 as datetime) as m from alice.tbl_0 as alice"
+      },
+      {
         "sql": "select cast(alice.compare_string_0 as CHAR(100)) as m from alice.tbl_0 as alice;;",
         "skip_projection": false,
         "rewritten_sql": "select cast(alice.compare_string_0 as char(100)) as m from alice.tbl_0 as alice",

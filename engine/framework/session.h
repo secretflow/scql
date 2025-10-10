@@ -43,18 +43,21 @@
 namespace scql::engine {
 
 // The normal state transition process is:
-//   INITIALIZED -> RUNNING -> SUCCEEDED/FAILED
+//   INITIALIZED -> RUNNING -> COMP_FINISHED -> SUCCEEDED/FAILED
 // When the user manually terminates the query, the transition process will be:
 //   INITIALIZED -> RUNNING -> ABORTING -> FAILED
 enum class SessionState {
   INITIALIZED = 0,
   RUNNING = 1,
-  ABORTING = 2,
-  SUCCEEDED = 3,
-  FAILED = 4,
+  COMP_FINISHED = 2,
+  ABORTING = 3,
+  SUCCEEDED = 4,
+  FAILED = 5
 };
 
 pb::JobState ConvertSessionStateToJobState(SessionState state);
+
+std::string SessionStateToString(SessionState state);
 
 struct LinkConfig {
   uint32_t link_recv_timeout_ms = 30 * 1000;  // 30s
@@ -66,8 +69,6 @@ struct LinkConfig {
 
 struct PsiConfig {
   // if the value here is 0, it would use the gflags config instead
-  int64_t unbalance_psi_ratio_threshold = 0;
-  int64_t unbalance_psi_larger_party_rows_count_threshold = 0;
   int32_t psi_curve_type = 0;
 };
 

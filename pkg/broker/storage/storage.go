@@ -250,6 +250,58 @@ func (t *MetaTransaction) ArchiveProject(projectID string) error {
 	return nil
 }
 
+// DeleteProject deletes a project and all its related data (tables, columns, CCLs, members, invitations)
+// The project must be archived before deletion
+func (t *MetaTransaction) DeleteProject(projectID string) error {
+	// First check if project exists and is archived
+	var project Project
+	result := t.db.Model(&Project{}).Where(&Project{ID: projectID}).First(&project)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if !project.Archived {
+		return fmt.Errorf("project %s must be archived before deletion", projectID)
+	}
+
+	// Delete all tables and their related data for this project
+	tables, err := t.GetAllTables(projectID)
+	if err != nil {
+		return fmt.Errorf("failed to get tables for project %s: %v", projectID, err)
+	}
+
+	for _, table := range tables {
+		err = t.DropTable(TableIdentifier{ProjectID: projectID, TableName: table.TableName})
+		if err != nil {
+			return fmt.Errorf("failed to drop table %s in project %s: %v", table.TableName, projectID, err)
+		}
+	}
+
+	// Delete project members
+	result = t.db.Where("project_id = ?", projectID).Delete(&Member{})
+	if result.Error != nil {
+		return fmt.Errorf("failed to delete members for project %s: %v", projectID, result.Error)
+	}
+
+	// Delete invitations related to this project
+	result = t.db.Where("project_id = ?", projectID).Delete(&Invitation{})
+	if result.Error != nil {
+		return fmt.Errorf("failed to delete invitations for project %s: %v", projectID, result.Error)
+	}
+
+	// Finally, delete the project itself
+	result = t.db.Where("id = ?", projectID).Delete(&Project{})
+	if result.Error != nil {
+		return fmt.Errorf("failed to delete project %s: %v", projectID, result.Error)
+	}
+
+	if result.RowsAffected != 1 {
+		return fmt.Errorf("failed to delete project %s, with affected rows num %d", projectID, result.RowsAffected)
+	}
+
+	return nil
+}
+
 // duplicated invitations are permitted
 func (t *MetaTransaction) AddInvitations(invitations []Invitation) error {
 	result := t.db.CreateInBatches(&invitations, InsertBatchSize)

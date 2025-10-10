@@ -39,6 +39,7 @@
 #include "engine/core/tensor.h"
 #include "engine/core/tensor_constructor.h"
 #include "engine/core/tensor_slice.h"
+#include "engine/exe/flags.h"
 #include "engine/framework/exec.h"
 #include "engine/util/communicate_helper.h"
 #include "engine/util/filepath_helper.h"
@@ -76,7 +77,7 @@ void Join::Execute(ExecContext* ctx) {
         return OprfPsiJoin(ctx,
                            IsOprfServerAccordToHint(ctx, server_hint.value()));
       }
-      auto psi_plan = util::CoordinatePsiPlan(ctx, true);
+      auto psi_plan = util::CoordinatePsiPlan(ctx);
       return OprfPsiJoin(ctx, psi_plan.is_server, psi_plan.psi_size_info);
     }
     case static_cast<int64_t>(util::PsiAlgo::kEcdhPsi):
@@ -349,18 +350,21 @@ void Join::Rr22PsiJoin(ExecContext* ctx) {
         provider.CleanBucket(bucket_idx);
       };
   psi::rr22::Rr22Runner runner(
-      psi_link, psi::rr22::GenerateRr22PsiOptions(false), bucket_num,
-      target_rank == yacl::link::kAllRank, pre_f, post_f);
+      psi_link, psi::rr22::GenerateRr22PsiOptions(FLAGS_use_rr22_low_comm_mode),
+      bucket_num, target_rank == yacl::link::kAllRank, pre_f, post_f);
   bool is_sender = is_left;
   // receiver should be the one who has more data
   // It is more efficient to set the party with the larger data volume as the
   // receiver.
-  if (peer_size > self_size) {
+  if (target_rank != yacl::link::kAllRank) {
+    // receiver get result
+    is_sender = !touch_result;
+  } else if (peer_size > self_size) {
     is_sender = true;
   } else if (self_size > peer_size) {
     is_sender = false;
   }
-  runner.ParallelRun(0, is_sender);
+  runner.AsyncRun(0, is_sender);
   size_t result_size = 0;
   if (touch_result) {
     YACL_ENFORCE(tensor_constructor != nullptr);

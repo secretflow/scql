@@ -35,14 +35,6 @@ func UpdateJobConfig(jobConfig *pb.JobConfig, projectConfig *pb.ProjectConfig) *
 	}
 
 	// psi part
-	if jobConfig.UnbalancePsiRatioThreshold == 0 {
-		jobConfig.UnbalancePsiRatioThreshold = projectConfig.UnbalancePsiRatioThreshold
-	}
-
-	if jobConfig.UnbalancePsiLargerPartyRowsCountThreshold == 0 {
-		jobConfig.UnbalancePsiLargerPartyRowsCountThreshold = projectConfig.UnbalancePsiLargerPartyRowsCountThreshold
-	}
-
 	if jobConfig.PsiCurveType == 0 {
 		jobConfig.PsiCurveType = projectConfig.PsiCurveType
 	}

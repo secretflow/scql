@@ -89,10 +89,12 @@ std::shared_ptr<arrow::DataType> ToArrowDataType(pb::PrimitiveDataType dtype) {
       dt = arrow::float64();
       break;
     case pb::PrimitiveDataType::STRING:
+      // scql use large_utf8 to support large scale string
       dt = arrow::large_utf8();
       break;
     case pb::PrimitiveDataType::DATETIME:
     case pb::PrimitiveDataType::TIMESTAMP:
+      // scql using int64 seconds to represent datetime/timestamp
       dt = arrow::int64();
       break;
     default:

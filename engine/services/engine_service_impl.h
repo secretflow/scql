@@ -58,7 +58,7 @@ class EngineServiceImpl : public pb::SCQLEngineService {
   SessionManager* GetSessionManager() { return session_mgr_.get(); }
 
  private:
-  void ReportResult(const std::string& session_id, const std::string& cb_url,
+  void ReportResult(Session* session, const std::string& cb_url,
                     const std::string& report_info_str);
 
   static void RunPlanCore(const pb::RunExecutionPlanRequest& request,

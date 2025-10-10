@@ -7,14 +7,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-13 17:21+0800\n"
+"POT-Creation-Date: 2025-09-16 11:10+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.14.0\n"
+"Generated-By: Babel 2.17.0\n"
 
 #: ../../reference/p2p-deploy-config.rst:2
 msgid "SCQL P2P Deployment Configuration"
@@ -38,40 +38,40 @@ msgstr "SCQLBroker 使用 YAML 作为配置文件格式"
 msgid "Example configuration for SCQLBroker"
 msgstr "SCQLBroker 配置示例"
 
-#: ../../reference/p2p-deploy-config.rst:51
+#: ../../reference/p2p-deploy-config.rst:52
 msgid "Configuration Options of SCQLBroker"
 msgstr "SCQLBroker 配置项"
 
 #: ../../reference/engine-config.rst:27
-#: ../../reference/p2p-deploy-config.rst:54
+#: ../../reference/p2p-deploy-config.rst:55
 msgid "Name"
 msgstr "名称"
 
 #: ../../reference/engine-config.rst:27
-#: ../../reference/p2p-deploy-config.rst:54
+#: ../../reference/p2p-deploy-config.rst:55
 msgid "Default"
 msgstr "默认值"
 
 #: ../../reference/engine-config.rst:27
-#: ../../reference/p2p-deploy-config.rst:54
+#: ../../reference/p2p-deploy-config.rst:55
 msgid "Description"
 msgstr "描述"
 
-#: ../../reference/p2p-deploy-config.rst:56
+#: ../../reference/p2p-deploy-config.rst:57
 msgid "intra_server.host"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:56
+#: ../../reference/p2p-deploy-config.rst:57
 msgid "127.0.0.1"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:56
+#: ../../reference/p2p-deploy-config.rst:57
 msgid ""
 "The host where SCQLBroker listens for IntraServer requests, default "
 "localhost for safety"
 msgstr "SCQLBroker 监听 IntraServer 请求的 host，为了安全起见，默认 localhost"
 
-#: ../../reference/p2p-deploy-config.rst:58
+#: ../../reference/p2p-deploy-config.rst:59
 msgid "intra_server.port"
 msgstr ""
 
@@ -85,230 +85,230 @@ msgstr ""
 #: ../../reference/engine-config.rst:127 ../../reference/engine-config.rst:131
 #: ../../reference/engine-config.rst:149 ../../reference/engine-config.rst:151
 #: ../../reference/engine-config.rst:153 ../../reference/engine-config.rst:161
-#: ../../reference/engine-config.rst:163 ../../reference/engine-config.rst:181
-#: ../../reference/engine-config.rst:183 ../../reference/engine-config.rst:185
-#: ../../reference/p2p-deploy-config.rst:58
-#: ../../reference/p2p-deploy-config.rst:62
-#: ../../reference/p2p-deploy-config.rst:64
-#: ../../reference/p2p-deploy-config.rst:66
-#: ../../reference/p2p-deploy-config.rst:68
-#: ../../reference/p2p-deploy-config.rst:72
-#: ../../reference/p2p-deploy-config.rst:74
-#: ../../reference/p2p-deploy-config.rst:80
-#: ../../reference/p2p-deploy-config.rst:82
-#: ../../reference/p2p-deploy-config.rst:84
-#: ../../reference/p2p-deploy-config.rst:86
-#: ../../reference/p2p-deploy-config.rst:88
-#: ../../reference/p2p-deploy-config.rst:90
-#: ../../reference/p2p-deploy-config.rst:92
-#: ../../reference/p2p-deploy-config.rst:94
-#: ../../reference/p2p-deploy-config.rst:96
-#: ../../reference/p2p-deploy-config.rst:98
-#: ../../reference/p2p-deploy-config.rst:100
-#: ../../reference/p2p-deploy-config.rst:102
-#: ../../reference/p2p-deploy-config.rst:106
-#: ../../reference/p2p-deploy-config.rst:110
-#: ../../reference/p2p-deploy-config.rst:112
-#: ../../reference/p2p-deploy-config.rst:114
-#: ../../reference/p2p-deploy-config.rst:116
-#: ../../reference/p2p-deploy-config.rst:118
-#: ../../reference/p2p-deploy-config.rst:120
-#: ../../reference/p2p-deploy-config.rst:122
-#: ../../reference/p2p-deploy-config.rst:139
-#: ../../reference/p2p-deploy-config.rst:141
-#: ../../reference/p2p-deploy-config.rst:143
-#: ../../reference/p2p-deploy-config.rst:145
-#: ../../reference/p2p-deploy-config.rst:147
-#: ../../reference/p2p-deploy-config.rst:149
-#: ../../reference/p2p-deploy-config.rst:151
-#: ../../reference/p2p-deploy-config.rst:153
-#: ../../reference/p2p-deploy-config.rst:155
-#: ../../reference/p2p-deploy-config.rst:157
-#: ../../reference/p2p-deploy-config.rst:159
-#: ../../reference/p2p-deploy-config.rst:161
-#: ../../reference/p2p-deploy-config.rst:163
-#: ../../reference/p2p-deploy-config.rst:165
-#: ../../reference/p2p-deploy-config.rst:167
-#: ../../reference/p2p-deploy-config.rst:169
-#: ../../reference/p2p-deploy-config.rst:192
+#: ../../reference/engine-config.rst:163 ../../reference/engine-config.rst:177
+#: ../../reference/engine-config.rst:179 ../../reference/engine-config.rst:181
+#: ../../reference/p2p-deploy-config.rst:59
+#: ../../reference/p2p-deploy-config.rst:63
+#: ../../reference/p2p-deploy-config.rst:65
+#: ../../reference/p2p-deploy-config.rst:67
+#: ../../reference/p2p-deploy-config.rst:69
+#: ../../reference/p2p-deploy-config.rst:73
+#: ../../reference/p2p-deploy-config.rst:75
+#: ../../reference/p2p-deploy-config.rst:81
+#: ../../reference/p2p-deploy-config.rst:83
+#: ../../reference/p2p-deploy-config.rst:85
+#: ../../reference/p2p-deploy-config.rst:87
+#: ../../reference/p2p-deploy-config.rst:89
+#: ../../reference/p2p-deploy-config.rst:91
+#: ../../reference/p2p-deploy-config.rst:93
+#: ../../reference/p2p-deploy-config.rst:95
+#: ../../reference/p2p-deploy-config.rst:97
+#: ../../reference/p2p-deploy-config.rst:99
+#: ../../reference/p2p-deploy-config.rst:101
+#: ../../reference/p2p-deploy-config.rst:103
+#: ../../reference/p2p-deploy-config.rst:107
+#: ../../reference/p2p-deploy-config.rst:111
+#: ../../reference/p2p-deploy-config.rst:113
+#: ../../reference/p2p-deploy-config.rst:115
+#: ../../reference/p2p-deploy-config.rst:117
+#: ../../reference/p2p-deploy-config.rst:119
+#: ../../reference/p2p-deploy-config.rst:121
+#: ../../reference/p2p-deploy-config.rst:123
+#: ../../reference/p2p-deploy-config.rst:140
+#: ../../reference/p2p-deploy-config.rst:142
+#: ../../reference/p2p-deploy-config.rst:144
+#: ../../reference/p2p-deploy-config.rst:146
+#: ../../reference/p2p-deploy-config.rst:148
+#: ../../reference/p2p-deploy-config.rst:150
+#: ../../reference/p2p-deploy-config.rst:152
+#: ../../reference/p2p-deploy-config.rst:154
+#: ../../reference/p2p-deploy-config.rst:156
+#: ../../reference/p2p-deploy-config.rst:158
+#: ../../reference/p2p-deploy-config.rst:160
+#: ../../reference/p2p-deploy-config.rst:162
+#: ../../reference/p2p-deploy-config.rst:164
+#: ../../reference/p2p-deploy-config.rst:166
+#: ../../reference/p2p-deploy-config.rst:168
+#: ../../reference/p2p-deploy-config.rst:170
+#: ../../reference/p2p-deploy-config.rst:193
 msgid "none"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:58
+#: ../../reference/p2p-deploy-config.rst:59
 msgid "The port on which SCQLBroker listens for IntraServer requests"
 msgstr "SCQLBroker 监听 IntraServer 请求的端口"
 
-#: ../../reference/p2p-deploy-config.rst:60
+#: ../../reference/p2p-deploy-config.rst:61
 msgid "intra_server.protocol"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:60
-#: ../../reference/p2p-deploy-config.rst:70
-#: ../../reference/p2p-deploy-config.rst:104
+#: ../../reference/p2p-deploy-config.rst:61
+#: ../../reference/p2p-deploy-config.rst:71
+#: ../../reference/p2p-deploy-config.rst:105
 msgid "http"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:60
+#: ../../reference/p2p-deploy-config.rst:61
 msgid "The transfer protocol of IntraServer, supports HTTP/HTTPS"
 msgstr "IntraServer 传输协议，支持 HTTP/HTTPS"
 
-#: ../../reference/p2p-deploy-config.rst:62
+#: ../../reference/p2p-deploy-config.rst:63
 msgid "intra_server.cert_file"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:62
+#: ../../reference/p2p-deploy-config.rst:63
 msgid ""
 "Certificate file path for IntraServer to enable HTTPS, supports crt/pem "
 "type"
 msgstr "启用 IntraServer HTTPS 的证书文件路径，支持 crt/pem 类型"
 
-#: ../../reference/p2p-deploy-config.rst:64
+#: ../../reference/p2p-deploy-config.rst:65
 msgid "intra_server.key_file"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:64
+#: ../../reference/p2p-deploy-config.rst:65
 msgid ""
 "Private key file path for IntraServer to enable HTTPS, supports key/pem "
 "type"
 msgstr "启用 IntraServer HTTPS 的私钥文件路径，支持 key/pem 类型"
 
-#: ../../reference/p2p-deploy-config.rst:66
+#: ../../reference/p2p-deploy-config.rst:67
 msgid "inter_server.host"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:66
+#: ../../reference/p2p-deploy-config.rst:67
 msgid "The host where SCQLBroker listens for InterServer requests"
 msgstr "SCQLBroker 监听 InterServer 请求的 host"
 
-#: ../../reference/p2p-deploy-config.rst:68
+#: ../../reference/p2p-deploy-config.rst:69
 msgid "inter_server.port"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:68
+#: ../../reference/p2p-deploy-config.rst:69
 msgid "The port on which SCQLBroker listens for InterServer requests"
 msgstr "SCQLBroker 监听 InterServer 请求的端口"
 
-#: ../../reference/p2p-deploy-config.rst:70
+#: ../../reference/p2p-deploy-config.rst:71
 msgid "inter_server.protocol"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:70
+#: ../../reference/p2p-deploy-config.rst:71
 msgid "The transfer protocol of InterServer, supports HTTP/HTTPS"
 msgstr "InterServer 的传输协议，支持 HTTP/HTTPS"
 
-#: ../../reference/p2p-deploy-config.rst:72
+#: ../../reference/p2p-deploy-config.rst:73
 msgid "inter_server.cert_file"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:72
+#: ../../reference/p2p-deploy-config.rst:73
 msgid ""
 "Certificate file path for InterServer to enable HTTPS, supports crt/pem "
 "type"
 msgstr "启用 InterServer HTTPS 的证书文件路径，支持 crt/pem 类型"
 
-#: ../../reference/p2p-deploy-config.rst:74
+#: ../../reference/p2p-deploy-config.rst:75
 msgid "inter_server.key_file"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:74
+#: ../../reference/p2p-deploy-config.rst:75
 msgid ""
 "Private key file path for InterServer to enable HTTPS, supports key/pem "
 "type"
 msgstr "启用 InterServer HTTPS 的私钥文件路径，支持 key/pem 类型"
 
-#: ../../reference/p2p-deploy-config.rst:76
+#: ../../reference/p2p-deploy-config.rst:77
 msgid "inter_timeout"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:76
+#: ../../reference/p2p-deploy-config.rst:77
 msgid "5s"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:76
+#: ../../reference/p2p-deploy-config.rst:77
 msgid "Timeout for requesting InterServe"
 msgstr "InterServer 的请求超时时间"
 
 #: ../../reference/engine-config.rst:35
-#: ../../reference/p2p-deploy-config.rst:78
+#: ../../reference/p2p-deploy-config.rst:79
 msgid "log_level"
 msgstr ""
 
 #: ../../reference/engine-config.rst:35
-#: ../../reference/p2p-deploy-config.rst:78
+#: ../../reference/p2p-deploy-config.rst:79
 msgid "info"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:78
+#: ../../reference/p2p-deploy-config.rst:79
 msgid "The type and severity of a logged event"
 msgstr "日志等级"
 
-#: ../../reference/p2p-deploy-config.rst:80
+#: ../../reference/p2p-deploy-config.rst:81
 msgid "party_code"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:80
+#: ../../reference/p2p-deploy-config.rst:81
 msgid "Unique identifier used to identify the party"
 msgstr "用于识别参与方的唯一标识"
 
-#: ../../reference/p2p-deploy-config.rst:82
+#: ../../reference/p2p-deploy-config.rst:83
 msgid "party_info_file"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:82
+#: ../../reference/p2p-deploy-config.rst:83
 msgid ""
 "File path that stores information of each party, including party code, "
 "public key and InterServer's URL"
 msgstr "存储参与方信息的文件路径，包括各参与方的 party code 、公钥和 InterServer 的 URL"
 
-#: ../../reference/p2p-deploy-config.rst:84
+#: ../../reference/p2p-deploy-config.rst:85
 msgid "private_key_path"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:84
+#: ../../reference/p2p-deploy-config.rst:85
 msgid ""
 "Private key file path for party_code, which will be used to sign requests"
 " to other SCQLBrokers"
 msgstr "party_code 的私钥文件路径，将用于签署对其他 SCQLBrokers 的请求"
 
-#: ../../reference/p2p-deploy-config.rst:86
+#: ../../reference/p2p-deploy-config.rst:87
 msgid "private_key_data"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:86
+#: ../../reference/p2p-deploy-config.rst:87
 msgid ""
 "The base64 encoded PEM-encoded private key for party_code, only valid if "
 "private_key_path is empty"
 msgstr "参与方的 base64 编码的 PEM 编码格式的私钥，仅当 private_key_path 为空时有效"
 
-#: ../../reference/p2p-deploy-config.rst:88
+#: ../../reference/p2p-deploy-config.rst:89
 msgid "intra_host"
 msgstr "intra_host"
 
-#: ../../reference/p2p-deploy-config.rst:88
+#: ../../reference/p2p-deploy-config.rst:89
 msgid "The callback URL for the local SCQLEngine to notify SCQLBroker"
 msgstr "SCQLEngine 通知 SCQLBroker 的回调 URL"
 
-#: ../../reference/p2p-deploy-config.rst:90
+#: ../../reference/p2p-deploy-config.rst:91
 msgid "inter_host"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:90
+#: ../../reference/p2p-deploy-config.rst:91
 msgid "The InterServer's URL"
 msgstr "其他参与方 SCQLBroker 访问本 SCQLBroker 所需的 URL"
 
-#: ../../reference/p2p-deploy-config.rst:92
+#: ../../reference/p2p-deploy-config.rst:93
 msgid "engine.timeout"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:92
+#: ../../reference/p2p-deploy-config.rst:93
 msgid "Timeout for SCQLBroker to send message to SCQLEngine"
 msgstr "SCQLBroker 向 SCQLEngine 发送消息的响应超时时间"
 
-#: ../../reference/p2p-deploy-config.rst:94
+#: ../../reference/p2p-deploy-config.rst:95
 msgid "engine.mode"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:94
+#: ../../reference/p2p-deploy-config.rst:95
 msgid ""
 "Engine client mode, supports GRPC and HTTP/HTTPS. In GRPC mode, tls_cfg "
 "is required. In HTTP/HTTPS mode, protocol and content_type are necessary"
@@ -316,77 +316,77 @@ msgstr ""
 "engine 客户端模式，支持 GRPC 和 HTTP/HTTPS。在 GRPC 模式下，需要配置 tls_cfg。在 HTTP/HTTPS "
 "模式下，需要配置 protocol 和 content_type。"
 
-#: ../../reference/p2p-deploy-config.rst:96
+#: ../../reference/p2p-deploy-config.rst:97
 msgid "engine.tls_cfg.mode"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:96
+#: ../../reference/p2p-deploy-config.rst:97
 msgid "Tls mode for engine client: *NOTLS*/TLS/MTLS."
 msgstr "engine 客户端的 TLS 模式，支持的模式：*NOTLS*/TLS/MTLS"
 
-#: ../../reference/p2p-deploy-config.rst:98
+#: ../../reference/p2p-deploy-config.rst:99
 msgid "engine.tls_cfg.cert"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:98
+#: ../../reference/p2p-deploy-config.rst:99
 msgid ""
 "The path to the file containing informations about the certificate for "
 "engine client"
 msgstr "包含 TLS 相关证书信息的文件路径"
 
-#: ../../reference/p2p-deploy-config.rst:100
+#: ../../reference/p2p-deploy-config.rst:101
 msgid "engine.tls_cfg.key"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:100
+#: ../../reference/p2p-deploy-config.rst:101
 msgid ""
 "The path to the file containing informations about the private key for "
 "engine client"
 msgstr "包含 TLS 相关私钥信息的文件路径"
 
-#: ../../reference/p2p-deploy-config.rst:102
+#: ../../reference/p2p-deploy-config.rst:103
 msgid "engine.tls_cfg.cacert"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:102
+#: ../../reference/p2p-deploy-config.rst:103
 msgid ""
 "The path to the file containing informations about the ca certificate for"
 " engine client"
 msgstr "包含 TLS 相关 CA 证书信息的文件路径"
 
-#: ../../reference/p2p-deploy-config.rst:104
+#: ../../reference/p2p-deploy-config.rst:105
 msgid "engine.protocol"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:104
+#: ../../reference/p2p-deploy-config.rst:105
 msgid "The transfer protocol of SCQLEngine, support http/https"
 msgstr "SCQLEngine 传输协议，支持 http/https"
 
-#: ../../reference/p2p-deploy-config.rst:106
+#: ../../reference/p2p-deploy-config.rst:107
 msgid "engine.content_type"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:106
+#: ../../reference/p2p-deploy-config.rst:107
 msgid "The original media type in post body from SCQLBroker to SCQLEngine"
 msgstr "从 SCQLBroker 向 SCQLEngine 实际发送的数据类型"
 
-#: ../../reference/p2p-deploy-config.rst:108
+#: ../../reference/p2p-deploy-config.rst:109
 msgid "engine.scheduler"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:108
+#: ../../reference/p2p-deploy-config.rst:109
 msgid "naive"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:108
+#: ../../reference/p2p-deploy-config.rst:109
 msgid "The Scheduler to sechedule SCQLEngine, supported schedulers: kuscia/naive"
 msgstr "用于调度 SCQLEngine 的调度器，支持：kuscia/naive"
 
-#: ../../reference/p2p-deploy-config.rst:110
+#: ../../reference/p2p-deploy-config.rst:111
 msgid "engine.uris"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:110
+#: ../../reference/p2p-deploy-config.rst:111
 msgid ""
 "The URIs for local SCQLEngines, which using **for_peer** to serve peer "
 "engines and **for_self** to serve the SCQLBroker,if **for_self** is "
@@ -395,101 +395,101 @@ msgstr ""
 "本地 SCQLEngines 的 URI，其中 **for_peer** 为其它参与方的 SCQLEngines "
 "提供服务，**for_self** 则为 SCQLBroker 提供服务，"
 
-#: ../../reference/p2p-deploy-config.rst:112
+#: ../../reference/p2p-deploy-config.rst:113
 msgid "engine.kuscia_scheduler.endpoint"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:112
+#: ../../reference/p2p-deploy-config.rst:113
 msgid "Grpc endpoint for kuscia scheduler to connect to the kuscia server"
 msgstr "Kuscia 调度器的 grpc 端点，用于连接 kuscia 服务器"
 
-#: ../../reference/p2p-deploy-config.rst:114
+#: ../../reference/p2p-deploy-config.rst:115
 msgid "engine.kuscia_scheduler.tls_mode"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:114
+#: ../../reference/p2p-deploy-config.rst:115
 #, fuzzy
 msgid ""
 "Tls mode for kuscia scheduler, supported mode: NOTLS/TLS/MTLS, token is "
 "need when mode is TLS or MTLS"
 msgstr "Kuscia 调度器的 tls 模式，支持：*NOTLS*/TLS/MTLS ，当模式为 TLS/MTLS 时需要提供 token"
 
-#: ../../reference/p2p-deploy-config.rst:116
+#: ../../reference/p2p-deploy-config.rst:117
 msgid "engine.kuscia_scheduler.cert"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:116
+#: ../../reference/p2p-deploy-config.rst:117
 msgid "Certificate for kuscia scheduler"
 msgstr "Kuscia 调度器的证书"
 
-#: ../../reference/p2p-deploy-config.rst:118
+#: ../../reference/p2p-deploy-config.rst:119
 msgid "engine.kuscia_scheduler.key"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:118
+#: ../../reference/p2p-deploy-config.rst:119
 msgid "Private key for kuscia scheduler"
 msgstr "Kuscia 调度器的私钥"
 
-#: ../../reference/p2p-deploy-config.rst:120
+#: ../../reference/p2p-deploy-config.rst:121
 msgid "engine.kuscia_scheduler.cacert"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:120
+#: ../../reference/p2p-deploy-config.rst:121
 msgid "CA certificate for kuscia scheduler"
 msgstr "Kuscia 调度器的 CA 证书"
 
-#: ../../reference/p2p-deploy-config.rst:122
+#: ../../reference/p2p-deploy-config.rst:123
 msgid "engine.kuscia_scheduler.token"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:122
+#: ../../reference/p2p-deploy-config.rst:123
 msgid "Token for kuscia scheduler, needed when tls_mode is TLS or MTLS"
 msgstr "Kuscia 调度器的 token ，当 tls 模式为 TLS/MTLS 时需要提供"
 
-#: ../../reference/p2p-deploy-config.rst:124
+#: ../../reference/p2p-deploy-config.rst:125
 msgid "engine.kuscia_scheduler.max_poll_times"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:124
+#: ../../reference/p2p-deploy-config.rst:125
 msgid "20"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:124
+#: ../../reference/p2p-deploy-config.rst:125
 msgid ""
 "The maximum poll times for kuscia scheduler to poll whether kuscia job is"
 " running"
 msgstr "Kuscia 调度器轮询 kuscia 作业是否正在运行的最大轮询次数"
 
-#: ../../reference/p2p-deploy-config.rst:126
+#: ../../reference/p2p-deploy-config.rst:127
 msgid "engine.kuscia_scheduler.poll_interval"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:126
+#: ../../reference/p2p-deploy-config.rst:127
 msgid "1s"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:126
+#: ../../reference/p2p-deploy-config.rst:127
 msgid ""
 "The time interval between two consecutive polls of the kuscia scheduler, "
 "default 1 second"
 msgstr "Kuscia 调度器连续两次轮询之间的时间间隔，默认1秒"
 
-#: ../../reference/p2p-deploy-config.rst:128
+#: ../../reference/p2p-deploy-config.rst:129
 msgid "engine.kuscia_scheduler.max_wait_time"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:128
-#: ../../reference/p2p-deploy-config.rst:181
+#: ../../reference/p2p-deploy-config.rst:129
+#: ../../reference/p2p-deploy-config.rst:182
 msgid "1m"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:128
+#: ../../reference/p2p-deploy-config.rst:129
 msgid ""
 "The maximum timeout that the kuscia scheduler will wait for a job to be "
 "scheduled, default 1 miniute"
 msgstr "kuscia 调度程序等待作业被调度的最大超时时间，默认 1 分钟"
 
-#: ../../reference/p2p-deploy-config.rst:130
+#: ../../reference/p2p-deploy-config.rst:131
 msgid "engine.kuscia_scheduler.keep_job_alive_for_debug"
 msgstr ""
 
@@ -497,24 +497,24 @@ msgstr ""
 #: ../../reference/engine-config.rst:73 ../../reference/engine-config.rst:79
 #: ../../reference/engine-config.rst:83 ../../reference/engine-config.rst:95
 #: ../../reference/engine-config.rst:99 ../../reference/engine-config.rst:123
-#: ../../reference/engine-config.rst:133 ../../reference/engine-config.rst:179
+#: ../../reference/engine-config.rst:133 ../../reference/engine-config.rst:175
 #: ../../reference/p2p-deploy-config.rst
-#: ../../reference/p2p-deploy-config.rst:130
-#: ../../reference/p2p-deploy-config.rst:132
+#: ../../reference/p2p-deploy-config.rst:131
+#: ../../reference/p2p-deploy-config.rst:133
 msgid "false"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:130
+#: ../../reference/p2p-deploy-config.rst:131
 msgid ""
 "Whether keep job alive for debug perpose, by default, the job is "
 "terminated when it completes"
 msgstr "是否保持 job 存活以便于调试，默认情况下 job 将在完成后自动终止"
 
-#: ../../reference/p2p-deploy-config.rst:132
+#: ../../reference/p2p-deploy-config.rst:133
 msgid "security_compromise.reveal_group_mark"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:132
+#: ../../reference/p2p-deploy-config.rst:133
 msgid "Whether to reveal group_mark directly for group by"
 msgstr "是否在计算 group by 的时候泄露分组标记信息"
 
@@ -538,103 +538,103 @@ msgid ""
 "will not impact existing projects."
 msgstr "**Warning**：这个参数是项目相关的，修改不会影响现有的项目。"
 
-#: ../../reference/p2p-deploy-config.rst:137
+#: ../../reference/p2p-deploy-config.rst:138
 msgid "discovery.type"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:137
+#: ../../reference/p2p-deploy-config.rst:138
 msgid "file"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:137
+#: ../../reference/p2p-deploy-config.rst:138
 msgid "The discovery type for finding peers, support file/consul/kuscia"
 msgstr "用于找到其他参与方的发现类型，支持文件/consul/kuscia"
 
-#: ../../reference/p2p-deploy-config.rst:139
+#: ../../reference/p2p-deploy-config.rst:140
 msgid "discovery.file"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:139
+#: ../../reference/p2p-deploy-config.rst:140
 msgid "The path to the file containing informations about other parties"
 msgstr "包含其他参与方信息的文件路径"
 
-#: ../../reference/p2p-deploy-config.rst:141
+#: ../../reference/p2p-deploy-config.rst:142
 msgid "discovery.consul.address"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:141
+#: ../../reference/p2p-deploy-config.rst:142
 msgid "The address for consul discovery to connect to the consul server"
 msgstr "用于连接到 consul 服务器的 ip 地址"
 
-#: ../../reference/p2p-deploy-config.rst:143
+#: ../../reference/p2p-deploy-config.rst:144
 msgid "discovery.consul.token"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:143
+#: ../../reference/p2p-deploy-config.rst:144
 msgid ""
 "The ACL token that should be presented when registering the service(party"
 " info) if ACLs are enabled."
 msgstr "如果启用 ACL 功能，注册服务（party info）时应提交的 ACL token"
 
-#: ../../reference/p2p-deploy-config.rst:145
+#: ../../reference/p2p-deploy-config.rst:146
 msgid "discovery.conusl.tls.mode"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:145
+#: ../../reference/p2p-deploy-config.rst:146
 msgid "Tls mode for consul discovery, supported mode: *NOTLS*/TLS/MTLS"
 msgstr "Consul Discovery 的 TLS 模式，支持的模式：*NOTLS*/TLS/MTLS"
 
-#: ../../reference/p2p-deploy-config.rst:147
+#: ../../reference/p2p-deploy-config.rst:148
 msgid "discovery.conusl.tls.cert"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:147
+#: ../../reference/p2p-deploy-config.rst:148
 msgid ""
 "The path to the file containing informations about the certificate for "
 "consul discovery"
 msgstr "包含 TLS 相关证书信息的文件路径"
 
-#: ../../reference/p2p-deploy-config.rst:149
+#: ../../reference/p2p-deploy-config.rst:150
 msgid "discovery.conusl.tls.key"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:149
+#: ../../reference/p2p-deploy-config.rst:150
 msgid ""
 "The path to the file containing informations about the private key for "
 "consul discovery"
 msgstr "包含 TLS 相关私钥信息的文件路径"
 
-#: ../../reference/p2p-deploy-config.rst:151
+#: ../../reference/p2p-deploy-config.rst:152
 msgid "discovery.conusl.tls.cacert"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:151
+#: ../../reference/p2p-deploy-config.rst:152
 msgid ""
 "The path to the file containing informations about the ca certificate for"
 " consul discovery"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:153
+#: ../../reference/p2p-deploy-config.rst:154
 msgid "discovery.conusl.datacenter"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:153
+#: ../../reference/p2p-deploy-config.rst:154
 msgid "The datacenter specifies a logical grouping of nodes"
 msgstr "指定 consul 客户端连接的数据中心"
 
-#: ../../reference/p2p-deploy-config.rst:155
+#: ../../reference/p2p-deploy-config.rst:156
 msgid "discovery.kuscia.endpoint"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:155
+#: ../../reference/p2p-deploy-config.rst:156
 msgid "Grpc endpoint for kuscia discovery to connect to the kuscia server"
 msgstr "kuscia Discovery 的 grpc 端点，用于连接到 kuscia 服务器"
 
-#: ../../reference/p2p-deploy-config.rst:157
+#: ../../reference/p2p-deploy-config.rst:158
 msgid "discovery.kuscia.tls_mode"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:157
+#: ../../reference/p2p-deploy-config.rst:158
 msgid ""
 "Tls mode for kuscia discovery, supported mode: *NOTLS*/TLS/MTLS, token is"
 " need when mode is TLS or MTLS"
@@ -642,120 +642,120 @@ msgstr ""
 "kuscia Discovery 的 TLS 模式，支持的模式：*NOTLS*/TLS/MTLS ，当模式为 TLS/MTLS 时需要提供 "
 "token"
 
-#: ../../reference/p2p-deploy-config.rst:159
+#: ../../reference/p2p-deploy-config.rst:160
 msgid "discovery.kuscia.cert"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:159
+#: ../../reference/p2p-deploy-config.rst:160
 msgid "Certificate for kuscia discovery"
 msgstr "kuscia Discovery 的证书"
 
-#: ../../reference/p2p-deploy-config.rst:161
+#: ../../reference/p2p-deploy-config.rst:162
 msgid "discovery.kuscia.key"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:161
+#: ../../reference/p2p-deploy-config.rst:162
 msgid "Private key for kuscia discovery"
 msgstr "kuscia Discovery 的私钥"
 
-#: ../../reference/p2p-deploy-config.rst:163
+#: ../../reference/p2p-deploy-config.rst:164
 msgid "discovery.kuscia.cacert"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:163
+#: ../../reference/p2p-deploy-config.rst:164
 msgid "CA certificate for kuscia discovery"
 msgstr "kuscia Discovery 的 CA 证书"
 
-#: ../../reference/p2p-deploy-config.rst:165
+#: ../../reference/p2p-deploy-config.rst:166
 msgid "discovery.kuscia.token"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:165
+#: ../../reference/p2p-deploy-config.rst:166
 msgid "Token for kuscia discovery, needed when tls_mode is TLS or MTLS"
 msgstr "kuscia Discovery 的 token ， 当 tls_mode 为 TLS/MTLS 时需要"
 
-#: ../../reference/p2p-deploy-config.rst:167
+#: ../../reference/p2p-deploy-config.rst:168
 msgid "storage.type"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:167
+#: ../../reference/p2p-deploy-config.rst:168
 msgid ""
 "Database kind in SCQLBroker, supports MYSQL/SQLite3, MYSQL is "
 "recommended, SQLite3 may have problems with concurrency"
 msgstr "SCQLBroker 使用的数据库类型， 支持 MYSQL/SQLite3，推荐使用 MYSQL，SQLite3在并发下可能出问题"
 
-#: ../../reference/p2p-deploy-config.rst:169
+#: ../../reference/p2p-deploy-config.rst:170
 msgid "storage.conn_str"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:169
+#: ../../reference/p2p-deploy-config.rst:170
 msgid "Used to connect to a database"
 msgstr "数据库连接串"
 
-#: ../../reference/p2p-deploy-config.rst:171
+#: ../../reference/p2p-deploy-config.rst:172
 msgid "storage.max_idle_conns"
 msgstr ""
 
 #: ../../reference/engine-config.rst:57
-#: ../../reference/p2p-deploy-config.rst:171
-#: ../../reference/p2p-deploy-config.rst:173
+#: ../../reference/p2p-deploy-config.rst:172
+#: ../../reference/p2p-deploy-config.rst:174
 msgid "1"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:171
+#: ../../reference/p2p-deploy-config.rst:172
 msgid "Maximum number of connections in idle connection pool"
 msgstr "空闲连接池最大连接数"
 
-#: ../../reference/p2p-deploy-config.rst:173
+#: ../../reference/p2p-deploy-config.rst:174
 msgid "storage.max_open_conns"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:173
+#: ../../reference/p2p-deploy-config.rst:174
 msgid "Maximum number of open connections to the database"
 msgstr "数据库最大连接数"
 
-#: ../../reference/p2p-deploy-config.rst:175
+#: ../../reference/p2p-deploy-config.rst:176
 msgid "storage.conn_max_idle_time"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:175
-#: ../../reference/p2p-deploy-config.rst:177
+#: ../../reference/p2p-deploy-config.rst:176
+#: ../../reference/p2p-deploy-config.rst:178
 msgid "-1s"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:175
+#: ../../reference/p2p-deploy-config.rst:176
 msgid "Maximum amount of time a connection may be idle"
 msgstr "连接处于空闲状态的最长时间"
 
-#: ../../reference/p2p-deploy-config.rst:177
+#: ../../reference/p2p-deploy-config.rst:178
 msgid "storage.conn_max_lifetime"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:177
+#: ../../reference/p2p-deploy-config.rst:178
 msgid "Maximum amount of time a connection may be reused"
 msgstr "可重复连接使用的最长时间"
 
-#: ../../reference/p2p-deploy-config.rst:179
+#: ../../reference/p2p-deploy-config.rst:180
 msgid "session_expire_time"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:179
+#: ../../reference/p2p-deploy-config.rst:180
 msgid "24h"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:179
+#: ../../reference/p2p-deploy-config.rst:180
 msgid "Maximum lifespan of a job"
 msgstr "任务的超时时间"
 
-#: ../../reference/p2p-deploy-config.rst:181
+#: ../../reference/p2p-deploy-config.rst:182
 msgid "session_expire_check_time"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:181
+#: ../../reference/p2p-deploy-config.rst:182
 msgid "The interval checking whether session is timeout"
 msgstr "检查会话是否超时的间隔"
 
-#: ../../reference/p2p-deploy-config.rst:183
+#: ../../reference/p2p-deploy-config.rst:184
 msgid "persist_session"
 msgstr ""
 
@@ -764,37 +764,37 @@ msgstr ""
 #: ../../reference/engine-config.rst:125 ../../reference/engine-config.rst:129
 #: ../../reference/engine-config.rst:137 ../../reference/engine-config.rst:143
 #: ../../reference/engine-config.rst:155 ../../reference/engine-config.rst:159
-#: ../../reference/engine-config.rst:177
-#: ../../reference/p2p-deploy-config.rst:183
+#: ../../reference/engine-config.rst:173
+#: ../../reference/p2p-deploy-config.rst:184
 msgid "true"
 msgstr "true"
 
-#: ../../reference/p2p-deploy-config.rst:183
+#: ../../reference/p2p-deploy-config.rst:184
 msgid "Whether persist session to storage to support cluster mode"
 msgstr "是否将 session 持久化到存储中去，以支持集群模式"
 
-#: ../../reference/p2p-deploy-config.rst:185
+#: ../../reference/p2p-deploy-config.rst:186
 msgid "exchange_job_info_retry_times"
 msgstr ""
 
 #: ../../reference/engine-config.rst:45 ../../reference/engine-config.rst:69
-#: ../../reference/p2p-deploy-config.rst:185
+#: ../../reference/p2p-deploy-config.rst:186
 msgid "3"
 msgstr "3"
 
-#: ../../reference/p2p-deploy-config.rst:185
+#: ../../reference/p2p-deploy-config.rst:186
 msgid "Retry times when exchange job infomation between parties"
 msgstr "参与方间交换 job 信息时的重试次数"
 
-#: ../../reference/p2p-deploy-config.rst:187
+#: ../../reference/p2p-deploy-config.rst:188
 msgid "exchange_job_info_retry_interval"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:187
+#: ../../reference/p2p-deploy-config.rst:188
 msgid "200ms"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:187
+#: ../../reference/p2p-deploy-config.rst:188
 msgid ""
 "The retry interval when exchange job infomation between parties, default "
 "200 millisecond"
@@ -812,27 +812,27 @@ msgstr "是否在 streaming 模式下运行以减少内存消耗"
 msgid "**Warning**: Experimental feature; do not use in production."
 msgstr "**Warning**: 实验特性请勿在生产中使用"
 
-#: ../../reference/p2p-deploy-config.rst:192
+#: ../../reference/p2p-deploy-config.rst:193
 msgid "authorized_writable_parties"
 msgstr ""
 
-#: ../../reference/p2p-deploy-config.rst:192
+#: ../../reference/p2p-deploy-config.rst:193
 msgid ""
 "List of parties authorized to write files, the party authorized can "
 "SELECT result into your files"
 msgstr "被授权写文件权限的参与方列表，授权后相关参与方可以通过 SELECT INTO 将产出写到您的文件中"
 
-#: ../../reference/p2p-deploy-config.rst:197
+#: ../../reference/p2p-deploy-config.rst:198
 msgid "Config for ServerConfig"
 msgstr "ServerConfig 配置"
 
-#: ../../reference/p2p-deploy-config.rst:198
+#: ../../reference/p2p-deploy-config.rst:199
 msgid ""
 "SCQLBroker accept intra-domain requests through IntraServer, while accept"
 " requests between different SCQLBrokers through InterServer."
 msgstr "SCQLBroker 通过IntraServer 接收域内请求，而通过 InterServer 接收不同 SCQLBroker 之间的请求。"
 
-#: ../../reference/p2p-deploy-config.rst:200
+#: ../../reference/p2p-deploy-config.rst:201
 msgid ""
 "IntraServer is recommended to use localhost host or LAN address to avoid "
 "external attacks, while InterServer is recommended to enable HTTPS to "
@@ -841,13 +841,13 @@ msgstr ""
 "IntraServer 建议使用 localhost 或 LAN 地址以避免外部攻击，而 InterServer 建议启用 HTTPS "
 "以提高安全性。"
 
-#: ../../reference/p2p-deploy-config.rst:204
+#: ../../reference/p2p-deploy-config.rst:205
 msgid ""
 "Please refer to the following configuration to enable HTTPS for "
 "InterServer: (similar to IntraServer)"
 msgstr "请参考以下配置为 InterServer 启用 HTTPS ：（IntraServer 类似）"
 
-#: ../../reference/p2p-deploy-config.rst:217
+#: ../../reference/p2p-deploy-config.rst:218
 msgid ""
 "Self-signed CA files may not be trusted by default, please refer to "
 "`Trouble shooting <https://github.com/secretflow/scql/tree/main/test-"
@@ -857,11 +857,11 @@ msgstr ""
 "<https://github.com/secretflow/scql/tree/main/test-tools#trouble-"
 "shooting>`_ 获取帮助。"
 
-#: ../../reference/p2p-deploy-config.rst:219
+#: ../../reference/p2p-deploy-config.rst:220
 msgid "Please change the endpoints in **party_info.json** from http to https."
 msgstr "请将 **party_info.json** 中的 endpoints 从 http 更改为 https"
 
-#: ../../reference/p2p-deploy-config.rst:221
+#: ../../reference/p2p-deploy-config.rst:222
 msgid ""
 "We have enabled HTTPS in the `p2p examples "
 "<https://github.com/secretflow/scql/blob/main/examples/p2p-"
@@ -871,7 +871,7 @@ msgstr ""
 "我们在 `p2p examples <https://github.com/secretflow/scql/blob/main/examples"
 "/p2p-tutorial/README.md>`_ 中启用了 HTTPS，相关配置的初始化过程也许能提供一些帮助"
 
-#: ../../reference/p2p-deploy-config.rst:223
+#: ../../reference/p2p-deploy-config.rst:224
 msgid ""
 "For SCQLEngine to work with SSL, please refer :ref:`Config for SSL in "
 "SCQLEngine <scqlengine-tls>`."
@@ -879,11 +879,11 @@ msgstr ""
 "除此之外，用户还需要设置 :ref:`SCQLEngine 的 SSL 配置 <scqlengine-tls>`，以保证 SCQLEngine "
 "能正常工作。"
 
-#: ../../reference/p2p-deploy-config.rst:226
+#: ../../reference/p2p-deploy-config.rst:227
 msgid "Reused Config"
 msgstr "复用的配置"
 
-#: ../../reference/p2p-deploy-config.rst:228
+#: ../../reference/p2p-deploy-config.rst:229
 msgid ""
 "For more about SecurityCompromise, see :ref:`Config for "
 "SecurityCompromise <config_security_compromise_options>`"
@@ -891,7 +891,7 @@ msgstr ""
 "有关 SecurityCompromise 的更多信息，请参阅 :ref:`安全退让配置 "
 "<config_security_compromise_options>`"
 
-#: ../../reference/p2p-deploy-config.rst:230
+#: ../../reference/p2p-deploy-config.rst:231
 msgid ""
 "For more about Storage, see :ref:`Config for storage "
 "<config_storage_options>`"
@@ -1577,156 +1577,130 @@ msgid ""
 msgstr "PSI 里使用的曲线类型， 默认值为 2: CURVE_FOURQ ，更多参考 `psi curve type`_"
 
 #: ../../reference/engine-config.rst:167
-msgid "unbalance_psi_ratio_threshold"
-msgstr ""
-
-#: ../../reference/engine-config.rst:167
-msgid "5"
-msgstr ""
-
-#: ../../reference/engine-config.rst:167
-msgid ""
-"Mininum ratio (larger party's rows count / smaller's) to trigger "
-"unbalanced PSI"
-msgstr "触发 unbalanced PSI 的最小比例 (数据量较大的参与方的行数 / 数据较少方的行数)"
-
-#: ../../reference/engine-config.rst:169
-msgid "unbalance_psi_larger_party_rows_count_threshold"
-msgstr ""
-
-#: ../../reference/engine-config.rst:169
-msgid "81920"
-msgstr ""
-
-#: ../../reference/engine-config.rst:169
-msgid "Minimum rows count of the larger party to choose unbalanced PSI"
-msgstr "触发 unbalanced PSI 的数据量较大参与方的数据最小行数"
-
-#: ../../reference/engine-config.rst:171
 msgid "provider_batch_size"
 msgstr ""
 
-#: ../../reference/engine-config.rst:171
+#: ../../reference/engine-config.rst:167
 msgid "8192"
 msgstr ""
 
-#: ../../reference/engine-config.rst:171
+#: ../../reference/engine-config.rst:167
 msgid "Batch size used in PSI Provider"
 msgstr "PSI Provider 使用的 batch size"
 
-#: ../../reference/engine-config.rst:173
+#: ../../reference/engine-config.rst:169
 msgid "detail_logger_sample_num"
 msgstr ""
 
-#: ../../reference/engine-config.rst:173
+#: ../../reference/engine-config.rst:169
 msgid "0"
 msgstr ""
 
-#: ../../reference/engine-config.rst:173
+#: ../../reference/engine-config.rst:169
 msgid "Sample number for detail logger, 0 means print all, default 0"
 msgstr "详细日志的采样行数，0 表示打印全部，默认值为 0"
 
-#: ../../reference/engine-config.rst:175
+#: ../../reference/engine-config.rst:171
 msgid "max_chunk_size"
 msgstr ""
 
-#: ../../reference/engine-config.rst:175
+#: ../../reference/engine-config.rst:171
 msgid "134217728"
 msgstr ""
 
-#: ../../reference/engine-config.rst:175
+#: ../../reference/engine-config.rst:171
 msgid "Max chunk size for spu value proto, default 128MB"
 msgstr "spu value proto 的单个 chunk 的体积限制，默认值为 128MB"
 
-#: ../../reference/engine-config.rst:177
+#: ../../reference/engine-config.rst:173
 msgid "enable_tensor_life_cycle_manage"
 msgstr ""
 
-#: ../../reference/engine-config.rst:177
+#: ../../reference/engine-config.rst:173
 msgid "Whether tensor life cycle manage is enable/disable"
 msgstr "是否启用 tensor 的生命周期管理"
 
-#: ../../reference/engine-config.rst:179
+#: ../../reference/engine-config.rst:175
 msgid "arrow_client_disable_server_verification"
 msgstr ""
 
-#: ../../reference/engine-config.rst:179
+#: ../../reference/engine-config.rst:175
 msgid "Whether disable server verification for ArrowSQL adaptor"
 msgstr "是否禁用 ArrowSQL adaptor 服务端的认证"
 
-#: ../../reference/engine-config.rst:181
+#: ../../reference/engine-config.rst:177
 msgid "arrow_cert_pem_path"
 msgstr ""
 
-#: ../../reference/engine-config.rst:181
+#: ../../reference/engine-config.rst:177
 msgid ""
 "Certificate file path for server verification when "
 "arrow_client_disable_server_verification is false"
 msgstr ""
 
-#: ../../reference/engine-config.rst:183
+#: ../../reference/engine-config.rst:179
 msgid "arrow_client_key_pem_path"
 msgstr ""
 
-#: ../../reference/engine-config.rst:183
+#: ../../reference/engine-config.rst:179
 msgid "Private key file path for ArrowSQL client to work in mtls"
 msgstr "ArrowSQL client 启用 mtls 时使用的 private key 文件路径"
 
-#: ../../reference/engine-config.rst:185
+#: ../../reference/engine-config.rst:181
 msgid "arrow_client_cert_pem_path"
 msgstr ""
 
-#: ../../reference/engine-config.rst:185
+#: ../../reference/engine-config.rst:181
 msgid "Certificate file path for ArrowSQL client to work in mtls"
 msgstr "ArrowSQL client 启用 mtls 时使用的证书文件路径"
 
-#: ../../reference/engine-config.rst:187
+#: ../../reference/engine-config.rst:183
 msgid "tmp_file_path"
 msgstr ""
 
-#: ../../reference/engine-config.rst:187
+#: ../../reference/engine-config.rst:183
 msgid "/tmp"
 msgstr ""
 
-#: ../../reference/engine-config.rst:187
+#: ../../reference/engine-config.rst:183
 msgid "The path for temporarily storing local data in streaming mode."
 msgstr "streaming 模式下存储临时文件的路径"
 
-#: ../../reference/engine-config.rst:189
+#: ../../reference/engine-config.rst:185
 msgid "streaming_row_num_threshold"
 msgstr ""
 
-#: ../../reference/engine-config.rst:189
+#: ../../reference/engine-config.rst:185
 msgid "30000000"
 msgstr ""
 
-#: ../../reference/engine-config.rst:189
+#: ../../reference/engine-config.rst:185
 msgid "Minimum row num to use streaming mode"
 msgstr "触发 streaming 模式的最小数据量"
 
-#: ../../reference/engine-config.rst:191
+#: ../../reference/engine-config.rst:187
 msgid "batch_row_num"
 msgstr ""
 
-#: ../../reference/engine-config.rst:191
+#: ../../reference/engine-config.rst:187
 msgid "10000000"
 msgstr ""
 
-#: ../../reference/engine-config.rst:191
+#: ../../reference/engine-config.rst:187
 msgid "Max row num in one batch"
 msgstr "每个 batch 的最大数据量"
 
-#: ../../reference/engine-config.rst:197
+#: ../../reference/engine-config.rst:193
 msgid "Config for datasource"
 msgstr "数据源配置"
 
-#: ../../reference/engine-config.rst:198
+#: ../../reference/engine-config.rst:194
 msgid ""
 "datasources(MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL) are where the "
 "SCQLEngine gets its data from."
 msgstr "SCQLEngine 支持多种数据源，包括 MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL 。"
 
-#: ../../reference/engine-config.rst:200
+#: ../../reference/engine-config.rst:196
 msgid ""
 "``datasource_router`` is design to support multi datasources, currently "
 "only supported: embed, which is initialized with ``embed_router_conf`` "
@@ -1736,7 +1710,7 @@ msgstr ""
 "``embed_router_conf`` 来初始化，``embed_router_conf`` 是一个 json "
 "类型的字符串，一个典型的配置项如下所示："
 
-#: ../../reference/engine-config.rst:218
+#: ../../reference/engine-config.rst:214
 msgid ""
 "if ``embed_router_conf`` is empty, embed_router will try to initialized "
 "with ``db_connection_info``."
@@ -1744,11 +1718,11 @@ msgstr ""
 "如果 ``embed_router_conf`` 为空， `embed_router` 则会尝试通过 ``db_connection_info``"
 " 来初始化。"
 
-#: ../../reference/engine-config.rst:221
+#: ../../reference/engine-config.rst:217
 msgid "Embed router"
 msgstr "Embed router"
 
-#: ../../reference/engine-config.rst:222
+#: ../../reference/engine-config.rst:218
 msgid ""
 "datasources in embed_router_conf contain information for connecting "
 "MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL:"
@@ -1756,101 +1730,103 @@ msgstr ""
 "embed_router_conf 中的 datasources 包含用于连接 "
 "MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL 数据源的信息:"
 
-#: ../../reference/engine-config.rst:224
+#: ../../reference/engine-config.rst:220
 msgid "id: unique id of datasource."
 msgstr "id：数据源的唯一ID。"
 
-#: ../../reference/engine-config.rst:226
+#: ../../reference/engine-config.rst:222
 msgid "name: custom description help to distinguish datasources."
 msgstr "name：自定义描述，有助于区分数据源。"
 
-#: ../../reference/engine-config.rst:228
+#: ../../reference/engine-config.rst:224
 msgid ""
 "kind: datasource type, currently support "
 "MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL."
 msgstr "kind：数据源类型，目前支持 MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL 。"
 
-#: ../../reference/engine-config.rst:230
+#: ../../reference/engine-config.rst:226
 msgid ""
 "connection_str: string used to connect "
 "MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL."
 msgstr "connection_str：用于连接 MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL 数据库的连接串。"
 
-#: ../../reference/engine-config.rst:241
+#: ../../reference/engine-config.rst:230
 msgid "MySQL Connection string format:"
 msgstr "MySQL 连接串格式："
 
-#: ../../reference/engine-config.rst:235
+#: ../../reference/engine-config.rst:231
 msgid "<str> == <assignment> | <assignment> ';' <str>"
 msgstr ""
 
-#: ../../reference/engine-config.rst:237 ../../reference/engine-config.rst:255
+#: ../../reference/engine-config.rst:233 ../../reference/engine-config.rst:251
 msgid "<assignment> == <name> '=' <value>"
 msgstr ""
 
-#: ../../reference/engine-config.rst:239
+#: ../../reference/engine-config.rst:235
 msgid ""
 "<name> == 'host' | 'port' | 'user' | 'password' | 'db' | 'compress' | "
 "'auto-reconnect' | 'reset' | 'fail-readonly'"
 msgstr ""
 
-#: ../../reference/engine-config.rst:241 ../../reference/engine-config.rst:259
+#: ../../reference/engine-config.rst:237 ../../reference/engine-config.rst:255
 msgid "<value> == [~;]*"
 msgstr ""
 
-#: ../../reference/engine-config.rst:244
+#: ../../reference/engine-config.rst:239
 msgid "MySQL Connection string e.g:"
 msgstr "MySQL 连接串示例："
 
-#: ../../reference/engine-config.rst:244
+#: ../../reference/engine-config.rst:240
+#, python-brace-format
 msgid "``db=${db};user=${user};password=${password};host=${host}``"
 msgstr "``db=${db};user=${user};password=${password};host=${host}``"
 
-#: ../../reference/engine-config.rst:247
+#: ../../reference/engine-config.rst:242
 msgid "SQLite3 Connection string format:"
 msgstr "SQLite3 连接串格式："
 
-#: ../../reference/engine-config.rst:247
+#: ../../reference/engine-config.rst:243
 msgid "more infos: https://www.sqlite.org/c3ref/open.html"
 msgstr "参考：https://www.sqlite.org/c3ref/open.html"
 
-#: ../../reference/engine-config.rst:250
+#: ../../reference/engine-config.rst:245
 msgid "SQLite3 Connection string e.g:"
 msgstr "SQLite3 连接串示例"
 
-#: ../../reference/engine-config.rst:250
+#: ../../reference/engine-config.rst:246
 msgid "``file:/path/to/data.db``"
 msgstr ""
 
-#: ../../reference/engine-config.rst:259
+#: ../../reference/engine-config.rst:248
 msgid "PostgreSQL Connection string format:"
 msgstr "PostgreSQL 连接串格式："
 
-#: ../../reference/engine-config.rst:253
+#: ../../reference/engine-config.rst:249
 msgid "<str> == <assignment> | <assignment> ' ' <str>"
 msgstr ""
 
-#: ../../reference/engine-config.rst:257
+#: ../../reference/engine-config.rst:253
 msgid ""
 "<name> == 'host' | 'port' | 'user' | 'password' | 'dbname' | "
 "'connect_timeout'"
 msgstr ""
 
-#: ../../reference/engine-config.rst:262
+#: ../../reference/engine-config.rst:257
 msgid "PostgreSQL Connection string e.g:"
 msgstr "PostgreSQL 连接串示例："
 
-#: ../../reference/engine-config.rst:262
+#: ../../reference/engine-config.rst:258
+#, python-brace-format
 msgid ""
 "``dbname=${db} user=${user} password=${password} host=${host} "
 "port=${port}``"
 msgstr ""
 
-#: ../../reference/engine-config.rst:265
+#: ../../reference/engine-config.rst:260
 msgid "CSVDB Connection string format:"
 msgstr "CSVDB 连接串格式："
 
-#: ../../reference/engine-config.rst:265
+#: ../../reference/engine-config.rst:261
 msgid ""
 "CSVDB support read csv from local and OSS/MinIO, since connection_str is "
 "an object in another json object, the format is a converted json string "
@@ -1862,17 +1838,19 @@ msgstr ""
 "<https://github.com/secretflow/scql/tree/main/engine/datasource/csvdb_conf.proto>`_"
 " 结构体转换后的的json字符串 "
 
-#: ../../reference/engine-config.rst:270
+#: ../../reference/engine-config.rst:263
 msgid "CSVDB Connection string e.g:"
 msgstr "CSVDB连接语句示例:"
 
-#: ../../reference/engine-config.rst:268
+#: ../../reference/engine-config.rst:264
+#, python-brace-format
 msgid ""
 "local csv: "
 "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"string\\\\\\\"}]}]}\""
 msgstr ""
 
-#: ../../reference/engine-config.rst:270
+#: ../../reference/engine-config.rst:266
+#, python-brace-format
 msgid ""
 "OSS csv: "
 "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"s3_conf\\\\\\\":{\\\\\\\"endpoint\\\\\\\":\\\\\\\"test_endpoint\\\\\\\",\\\\\\\"access_key_id\\\\\\\":\\\\\\\"test_id\\\\\\\",\\\\\\\"secret_access_key\\\\\\\":\\\\\\\"test_key\\\\\\\",\\\\\\\"virtualhost\\\\\\\":"
@@ -1880,27 +1858,27 @@ msgid ""
 "},\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"oss://test_bucket/test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"string\\\\\\\"}]}]}\""
 msgstr ""
 
-#: ../../reference/engine-config.rst:275
+#: ../../reference/engine-config.rst:268
 msgid "ArrowSQL Connection string format:"
 msgstr "ArrowSQL 连接串格式："
 
-#: ../../reference/engine-config.rst:273
+#: ../../reference/engine-config.rst:269
 msgid "grpc+<scheme>://host:port"
 msgstr ""
 
-#: ../../reference/engine-config.rst:275
+#: ../../reference/engine-config.rst:271
 msgid "<scheme> == 'tcp' | 'tls'"
 msgstr ""
 
-#: ../../reference/engine-config.rst:281
+#: ../../reference/engine-config.rst:273
 msgid "ArrowSQL Connection string e.g:"
 msgstr "ArrowSQL 连接串示例："
 
-#: ../../reference/engine-config.rst:278
+#: ../../reference/engine-config.rst:274
 msgid "``grpc+tcp://127.0.0.1:6666``"
 msgstr ""
 
-#: ../../reference/engine-config.rst:281
+#: ../../reference/engine-config.rst:277
 msgid ""
 "As a datasource embedded in SCQLEngine, ArrowSQL requires an additional "
 "gRPC server which provides the corresponding interface for executing an "
@@ -1910,11 +1888,11 @@ msgstr ""
 "作为 SCQLEngine 内嵌的数据源，ArrowSQL 依赖额外的 gRPC 服务，该服务需要提供相应的接口，用于执行 `Arrow "
 "Flight SQL <https://arrow.apache.org/docs/format/FlightSql.html>`_ 即时查询"
 
-#: ../../reference/engine-config.rst:284
+#: ../../reference/engine-config.rst:280
 msgid "Routing rules"
 msgstr "路由规则"
 
-#: ../../reference/engine-config.rst:285
+#: ../../reference/engine-config.rst:281
 msgid ""
 "embed_router's rules support wildcard ``*`` , when given a table in "
 "format: *database_name:table_name*, embed_router will route to the "
@@ -1923,7 +1901,8 @@ msgstr ""
 "embed_router 的规则支持通配符 ``*`` ，当给定一个 *database_name:table_name* "
 "的数据表时，embed_router 将通过以下方式路由到对应的数据源："
 
-#: ../../reference/engine-config.rst:288
+#: ../../reference/engine-config.rst:284
+#, python-brace-format
 msgid ""
 "find the exact rules first, whose ``${db}:${table}`` equals to "
 "*database_name:table_name*;"
@@ -1931,15 +1910,15 @@ msgstr ""
 "在 `embed_router_conf` 的 `rules` 中查找 `${db}:${table}` 与 "
 "`database_name:table_name` 完全相等的 rule"
 
-#: ../../reference/engine-config.rst:289
+#: ../../reference/engine-config.rst:285
 msgid "try the database_name:\\* rules;"
 msgstr "在 `embed_router_conf` 的 `rules` 中查找 `${db}` 与 `database_name` 完全相等的 rule"
 
-#: ../../reference/engine-config.rst:290
+#: ../../reference/engine-config.rst:286
 msgid "try \\*:table_name in the end."
 msgstr "在 `embed_router_conf` 的 `rules` 中查找 `${table}` 与 `table_name` 完全相等的 rule"
 
-#: ../../reference/engine-config.rst:292
+#: ../../reference/engine-config.rst:288
 msgid ""
 "Once found, SCQLEngine will try to connect database with datasource's "
 "information correspond to the *datasource_id*."
@@ -1947,11 +1926,11 @@ msgstr ""
 "一旦找到对应的 rule ，SCQLEngine 将根据 rule 中 datasource_id 在 datasources 中找到 "
 "对应的数据源信息，并根据这些信息连接对应的数据库。"
 
-#: ../../reference/engine-config.rst:295
+#: ../../reference/engine-config.rst:291
 msgid "Config for Brpc server"
 msgstr "Brpc 服务器配置"
 
-#: ../../reference/engine-config.rst:296
+#: ../../reference/engine-config.rst:292
 msgid ""
 "SCQLEngine uses **Brpc** to communicate with Driver and other peer "
 "SCQLEngines, each SCQLEngine will start a Brpc service on *local-"
@@ -1961,11 +1940,11 @@ msgstr ""
 "SCQLEngine 使用 Brpc 与 Driver 以及其他的 SCQLEngine 进行通信，每个 SCQLEngine 都会在 "
 "local-host:listen_port 上启动 Brpc 服务以接收来自外部的数据。如果要启用 Brpc 内置服务，请添加 FLAGS："
 
-#: ../../reference/engine-config.rst:307
+#: ../../reference/engine-config.rst:303
 msgid "Config for SSL"
 msgstr "SSL配置"
 
-#: ../../reference/engine-config.rst:308
+#: ../../reference/engine-config.rst:304
 msgid ""
 "If you want to enable SSL in SCQLEngine, add FLAGS as follows. "
 "Additionally, it may be necessary to configure the Driver to work with "
@@ -1976,11 +1955,11 @@ msgstr ""
 ":ref:`SCDB 的 TLS 配置 <scdb-tls>` 或 :ref:`SCQLBroker 的 TLS 配置 <broker-tls>`"
 " 。"
 
-#: ../../reference/engine-config.rst:321
+#: ../../reference/engine-config.rst:317
 msgid "Config for party authentication"
 msgstr "参与方身份验证配置"
 
-#: ../../reference/engine-config.rst:322
+#: ../../reference/engine-config.rst:318
 msgid ""
 "For security, SCQLEngine enables party authentication by default. "
 "SCQLEngine will check it's public key in the Driver request matches the "
@@ -2098,3 +2077,24 @@ msgstr ""
 #~ "local csv: "
 #~ "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
 #~ msgstr ""
+
+#~ msgid "unbalance_psi_ratio_threshold"
+#~ msgstr ""
+
+#~ msgid "5"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Mininum ratio (larger party's rows count"
+#~ " / smaller's) to trigger unbalanced "
+#~ "PSI"
+#~ msgstr "触发 unbalanced PSI 的最小比例 (数据量较大的参与方的行数 / 数据较少方的行数)"
+
+#~ msgid "unbalance_psi_larger_party_rows_count_threshold"
+#~ msgstr ""
+
+#~ msgid "81920"
+#~ msgstr ""
+
+#~ msgid "Minimum rows count of the larger party to choose unbalanced PSI"
+#~ msgstr "触发 unbalanced PSI 的数据量较大参与方的数据最小行数"

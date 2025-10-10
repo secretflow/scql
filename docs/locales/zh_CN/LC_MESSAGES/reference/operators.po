@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-07-21 11:43+0800\n"
+"POT-Creation-Date: 2025-09-16 11:10+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -227,12 +227,10 @@ msgstr "**Tensor 类型约束：**"
 #: ../../reference/operators.md:1793 ../../reference/operators.md:1823
 #: ../../reference/operators.md:1937 ../../reference/operators.md:1967
 #: ../../reference/operators.md:1997 ../../reference/operators.md:2025
-#: ../../reference/operators.md:2051 ../../reference/operators.md:2404
-#: ../../reference/operators.md:2430 ../../reference/operators.md:2482
-#: ../../reference/operators.md:2517 ../../reference/operators.md:2783
-#: ../../reference/operators.md:2818 ../../reference/operators.md:2937
-#: ../../reference/operators.md:2994 ../../reference/operators.md:3065
-#: ../../reference/operators.md:3089
+#: ../../reference/operators.md:2051 ../../reference/operators.md:2430
+#: ../../reference/operators.md:2482 ../../reference/operators.md:2783
+#: ../../reference/operators.md:2937 ../../reference/operators.md:2994
+#: ../../reference/operators.md:3065 ../../reference/operators.md:3089
 msgid "`T`: public,private,secret"
 msgstr "``T`` ：公开，私有，密态"
 
@@ -388,9 +386,10 @@ msgstr "`func_name`:  arrow 内置函数名，例如：add/ifnull/..."
 #: ../../reference/operators.md:1186 ../../reference/operators.md:1230
 #: ../../reference/operators.md:1267 ../../reference/operators.md:1344
 #: ../../reference/operators.md:1400 ../../reference/operators.md:1434
-#: ../../reference/operators.md:1495 ../../reference/operators.md:2458
-#: ../../reference/operators.md:2759 ../../reference/operators.md:2850
-#: ../../reference/operators.md:3120
+#: ../../reference/operators.md:1495 ../../reference/operators.md:2404
+#: ../../reference/operators.md:2458 ../../reference/operators.md:2517
+#: ../../reference/operators.md:2759 ../../reference/operators.md:2818
+#: ../../reference/operators.md:2850 ../../reference/operators.md:3120
 msgid "`T`: private"
 msgstr "``T`` ：私有"
 
@@ -399,9 +398,10 @@ msgid "`BroadcastTo`"
 msgstr "`BroadcastTo`"
 
 #: ../../reference/operators.md:204
+#, fuzzy
 msgid ""
 "Definition: Broadcast Input tensor `In` to the same shape as "
-"`ShapeRefTensor`.  Example:"
+"`ShapeRefTensor`. Example:"
 msgstr "定义：根据参考 tensor ``ShapeRefTensor`` 的大小, 对输入的 tensor ``In`` 进行扩展。例如："
 
 #: ../../reference/operators.md:216
@@ -1499,8 +1499,9 @@ msgstr "``Out`` （单列数组，类型为 T ）：所占位置的百分比 。
 
 #: ../../reference/operators.md:2394 ../../reference/operators.md:2507
 #: ../../reference/operators.md:2808
+#, fuzzy
 msgid ""
-"`reverse`: string array consits of \"0\" and \"1\", \"0\" means this "
+"`reverse`: string array consists of \"0\" and \"1\", \"0\" means this "
 "input tensor sort by ascending, \"1\" means this tensor sort by "
 "descending.  \te.g. [\"0\",\"1\"] means the first input key sort by "
 "ascending, the second sort by descending"
