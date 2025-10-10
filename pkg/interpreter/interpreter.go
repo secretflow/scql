@@ -243,7 +243,6 @@ func buildInfoSchemaFromCatalogProto(catalog *pb.Catalog) (infoschema.InfoSchema
 			ForeignKeys: []*model.FKInfo{},
 			State:       model.StatePublic,
 			PKIsHandle:  false,
-			PartyCode:   tblEntry.GetOwner().GetCode(),
 		}
 
 		if tblEntry.GetIsView() {
