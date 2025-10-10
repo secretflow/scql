@@ -7,8 +7,7 @@ require (
 	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548
 	github.com/cznic/sortutil v0.0.0-20181122101858-f5f958428db8
 	github.com/cznic/strutil v0.0.0-20181122101858-275e90344537
-	github.com/docker/docker v27.1.2+incompatible
-	github.com/gin-contrib/cors v1.6.0
+	github.com/docker/docker v28.0.0+incompatible
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-co-op/gocron/v2 v2.7.1
 	github.com/golang/snappy v0.0.4
