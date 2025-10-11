@@ -277,8 +277,6 @@ github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529 h1:nn5Wsu0esKSJiIVhscUt
 github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529/go.mod h1:DxrIzT+xaE7yg65j358z/aeFdxmN0P9QXhEzd20vsDc=
 github.com/secretflow/kuscia v0.0.0-20240911072119-68280d4f3fd9 h1:hf9FSkLBSGf5NTQ5LcCMivHhWVJZV4pJv0PhRoNDAco=
 github.com/secretflow/kuscia v0.0.0-20240911072119-68280d4f3fd9/go.mod h1:CApz27T/TGeMwGE7W79yQV65aCMyMBaDpb8G1hCeTpk=
-github.com/secretflow/scql v0.0.0-20251010062140-4594f08ac729 h1:cNrOolkQF/hPxp+d0Qk7OUirVuSdHnpXZ9ItRH+Lvl4=
-github.com/secretflow/scql v0.0.0-20251010062140-4594f08ac729/go.mod h1:U3ePyctdq31bHrYtMiMv2JkdyjjX1C9Gvnvn6AqYKUY=
 github.com/sethvargo/go-password v0.2.0 h1:BTDl4CC/gjf/axHMaDQtw507ogrXLci6XRiLc7i/UHI=
 github.com/sethvargo/go-password v0.2.0/go.mod h1:Ym4Mr9JXLBycr02MFuVQ/0JHidNetSgbzutTr3zsYXE=
 github.com/sirupsen/logrus v1.2.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=
