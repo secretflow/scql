@@ -53,7 +53,7 @@ func (s *joinReorderGreedySolver) solve(joinNodePlans []LogicalPlan) (LogicalPla
 		if len(s.curJoinGroup) == 0 {
 			break
 		}
-		newNode := s.constructConnectedJoinTreeFroSamePartyCode()
+		newNode := s.constructConnectedJoinTreeForSamePartyCode()
 		if newNode != nil {
 			optimizedCurJoinGroup = append(optimizedCurJoinGroup, newNode)
 		}
@@ -72,7 +72,7 @@ func (s *joinReorderGreedySolver) solve(joinNodePlans []LogicalPlan) (LogicalPla
 	return s.makeBushyJoin(cartesianGroup), nil
 }
 
-func (s *joinReorderGreedySolver) constructConnectedJoinTreeFroSamePartyCode() *jrNode {
+func (s *joinReorderGreedySolver) constructConnectedJoinTreeForSamePartyCode() *jrNode {
 	curJoinTree := s.curJoinGroup[0]
 
 	bestCost := math.MaxFloat64
@@ -92,7 +92,7 @@ func (s *joinReorderGreedySolver) constructConnectedJoinTreeFroSamePartyCode() *
 		if bestCost > curCost {
 			bestCost = curCost
 			bestJoin = newJoin
-			// i start from 1, but bestIdx start from 0
+			// i is the index in s.curJoinGroup[1:], so the index in the full slice is i+1
 			bestIdx = i + 1
 			finalRemainOthers = remainOthers
 		}
