@@ -15,35 +15,12 @@ jobs:
   trigger-circleci-diff-coverage:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code to Read CircleCI Config File
-        uses: actions/checkout@v4
-        with:
-          # check out the head_commit to ensure reading the config file from that specific version
-          ref: ${{ github.event.inputs.head_commit }}
-
-      - name: "Prepare CircleCI API Payload"
-        id: prepare_payload
-        run: |
-          # Read the CircleCI config file content and convert it into a single-line JSON string.
-          # This is more robust than embedding a multi-line string directly in the curl command.
-          CONFIG_CONTENT=$(cat .circleci/diff-cover-config.yml | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
-
-          # Build the complete JSON payload.
-          # Note: head_commit is passed as the 'branch' parameter, and base_commit is passed via 'parameters'.
-          JSON_PAYLOAD=$(printf '{"definition_id":"f0835e5e-5836-4869-bcb6-f51ff967281d", "branch":"%s","parameters":{"base_commit":"%s"},"config":"%s"}' \
-            "${{ github.event.inputs.head_commit }}" \
-            "${{ github.event.inputs.base_commit }}" \
-            "$CONFIG_CONTENT")
-
-          # Set the payload as an output for subsequent steps
-          echo "payload=${JSON_PAYLOAD}" >> $GITHUB_OUTPUT
-
       - name: "Trigger CircleCI Incremental Coverage Pipeline via API"
         run: |
           echo "Triggering CircleCI pipeline for base=${{ github.event.inputs.base_commit }} and head=${{ github.event.inputs.head_commit }}..."
 
           curl --request POST \
-            --url "https://circleci.com/api/v2/project/github/secretflow/scql/pipeline" \
-            --header "Circle-Token: ${{ secrets.CCI_TOKEN }}" \
+            --url "https://circleci.com/api/v2/project/github/secretflow/scql/pipeline/run" \
             --header "Content-Type: application/json" \
-            --data '${{ steps.prepare_payload.outputs.payload }}'
+            --header "Circle-Token: ${{ secrets.CCI_TOKEN }}" \
+            --data '{"definition_id":"f0835e5e-5836-4869-bcb6-f51ff967281d","branch":"${{ github.event.inputs.head_commit }}","parameters":{"base_commit":"${{ github.event.inputs.base_commit }}"},"config":{"branch":"main"}}'
