@@ -1,0 +1,49 @@
+name: Manually Trigger Incremental Coverage Test
+
+# Use workflow_dispatch to allow manual triggering
+on:
+  workflow_dispatch:
+    inputs:
+      base_commit:
+        description: 'The base Commit SHA for comparison (the older one)'
+        required: true
+      head_commit:
+        description: 'The head Commit SHA to generate coverage for (the newer one)'
+        required: true
+
+jobs:
+  trigger-circleci-diff-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code to Read CircleCI Config File
+        uses: actions/checkout@v4
+        with:
+          # check out the head_commit to ensure reading the config file from that specific version
+          ref: ${{ github.event.inputs.head_commit }}
+
+      - name: "Prepare CircleCI API Payload"
+        id: prepare_payload
+        run: |
+          # Read the CircleCI config file content and convert it into a single-line JSON string.
+          # This is more robust than embedding a multi-line string directly in the curl command.
+          CONFIG_CONTENT=$(cat .circleci/diff-cover-config.yml | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+
+          # Build the complete JSON payload.
+          # Note: head_commit is passed as the 'branch' parameter, and base_commit is passed via 'parameters'.
+          JSON_PAYLOAD=$(printf '{"definition_id":"NEED_TO_REPLACE", "branch":"%s","parameters":{"base_commit":"%s"},"config":"%s"}' \
+            "${{ github.event.inputs.head_commit }}" \
+            "${{ github.event.inputs.base_commit }}" \
+            "$CONFIG_CONTENT")
+
+          # Set the payload as an output for subsequent steps
+          echo "payload=${JSON_PAYLOAD}" >> $GITHUB_OUTPUT
+
+      - name: "Trigger CircleCI Incremental Coverage Pipeline via API"
+        run: |
+          echo "Triggering CircleCI pipeline for base=${{ github.event.inputs.base_commit }} and head=${{ github.event.inputs.head_commit }}..."
+
+          curl --request POST \
+            --url "https://circleci.com/api/v2/project/github/secretflow/scql/pipeline" \
+            --header "Circle-Token: ${{ secrets.CCI_TOKEN }}" \
+            --header "Content-Type: application/json" \
+            --data '${{ steps.prepare_payload.outputs.payload }}'
