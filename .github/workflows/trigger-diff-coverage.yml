@@ -30,7 +30,7 @@ jobs:
 
           # Build the complete JSON payload.
           # Note: head_commit is passed as the 'branch' parameter, and base_commit is passed via 'parameters'.
-          JSON_PAYLOAD=$(printf '{"definition_id":"NEED_TO_REPLACE", "branch":"%s","parameters":{"base_commit":"%s"},"config":"%s"}' \
+          JSON_PAYLOAD=$(printf '{"definition_id":"f0835e5e-5836-4869-bcb6-f51ff967281d", "branch":"%s","parameters":{"base_commit":"%s"},"config":"%s"}' \
             "${{ github.event.inputs.head_commit }}" \
             "${{ github.event.inputs.base_commit }}" \
             "$CONFIG_CONTENT")
