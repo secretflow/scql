@@ -21,6 +21,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"slices"
 
@@ -65,7 +66,16 @@ func (intr *Interpreter) Compile(ctx context.Context, req *pb.CompileQueryReques
 	sctx.GetSessionVars().PlanID = 0
 	sctx.GetSessionVars().PlanColumnID = 0
 	sctx.GetSessionVars().CurrentDB = req.GetDbName()
-	sctx.GetSessionVars().CreatedAt = req.GetCreatedAt().AsTime()
+	// Convert UTC time to local timezone while preserving the actual moment in time
+	var localCreatedAt time.Time
+	if req.GetCreatedAt() != nil {
+		utcCreatedAt := req.GetCreatedAt().AsTime()
+		localCreatedAt = utcCreatedAt.Local()
+	} else {
+		localCreatedAt = time.Now()
+		logrus.Warn("Compile: req.CreatedAt is nil, using current time")
+	}
+	sctx.GetSessionVars().CreatedAt = localCreatedAt
 
 	lp, _, err := core.BuildLogicalPlanWithOptimization(ctx, sctx, stmts[0], is)
 	if err != nil {
@@ -97,8 +107,15 @@ func (intr *Interpreter) Compile(ctx context.Context, req *pb.CompileQueryReques
 	return plan, nil
 }
 
-func (*Interpreter) compileCore(enginesInfo *graph.EnginesInfo, req *pb.CompileQueryRequest, lp core.LogicalPlan, forceToUnBatched bool) (*pb.CompiledPlan, error) {
-	t, err := translator.NewTranslator(enginesInfo, req.GetSecurityConf(), req.GetIssuer().GetCode(), req.GetCompileOpts(), req.CreatedAt.AsTime())
+func (intr *Interpreter) compileCore(enginesInfo *graph.EnginesInfo, req *pb.CompileQueryRequest, lp core.LogicalPlan, forceToUnBatched bool) (*pb.CompiledPlan, error) {
+	var localCreatedAt time.Time
+	if req.GetCreatedAt() != nil {
+		utcCreatedAt := req.GetCreatedAt().AsTime()
+		localCreatedAt = utcCreatedAt.Local()
+	} else {
+		localCreatedAt = time.Now()
+	}
+	t, err := translator.NewTranslator(enginesInfo, req.GetSecurityConf(), req.GetIssuer().GetCode(), req.GetCompileOpts(), localCreatedAt)
 	if err != nil {
 		return nil, err
 	}
