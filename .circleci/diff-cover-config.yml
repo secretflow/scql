@@ -185,9 +185,12 @@ jobs:
             if [ -f "coverage.lcov" ]; then
               git diff << pipeline.parameters.base_commit >>..${CIRCLE_SHA1} -- '*.go' \
                 | diff-cover coverage.lcov \
+                  --diff-file=- \
                   --fail-under=80 \
-                  --exclude '*_test.go' '*.pb.go' '*_mock.go' \
-                  --html-report coverage-reports/go_diff_coverage.html  # <-- ADDED THIS LINE
+                  --exclude='*_test.go' \
+                  --exclude='*.pb.go' \
+                  --exclude='*_mock.go' \
+                  --format html --output-file coverage-reports/go_diff_coverage.html
             else
               echo "Go coverage file (coverage.lcov) not found. Skipping."
             fi
@@ -199,8 +202,11 @@ jobs:
             if [ -f "${CPP_COV_FILE}" ]; then
               git diff << pipeline.parameters.base_commit >>..${CIRCLE_SHA1} -- '*.cpp' '*.h' '*.cc' \
                 | diff-cover ${CPP_COV_FILE} \
+                  --diff-file=- \
                   --fail-under=80 \
-                  --html-report coverage-reports/cpp_diff_coverage.html # <-- ADDED THIS LINE
+                  --exclude='*.pb.h' \
+                  --exclude='*.pb.cc' \
+                  --format html --output-file coverage-reports/cpp_diff_coverage.html
             else
               echo "C++ coverage file (${CPP_COV_FILE}) not found. Skipping."
             fi
