@@ -55,6 +55,9 @@ class CsvdbAdaptorTest : public ::testing::Test {
       column = table->add_columns();
       column->set_column_name("salary");
       column->set_column_type("double");
+      column = table->add_columns();
+      column->set_column_name("join_date");
+      column->set_column_type("timestamp");
     }
     auto status = google::protobuf::util::MessageToJsonString(csvdb_conf_,
                                                               &csvdb_conf_str_);
@@ -78,11 +81,11 @@ class CsvdbAdaptorTest : public ::testing::Test {
   csv::CsvdbConf csvdb_conf_;
   std::string csvdb_conf_str_;
   std::unique_ptr<butil::TempFile> temp_file_;
-  std::string csv_content_ = R"csv(id, age, name, salary
-1,21,alice,2100.2
-2,42,bob,4500.8
-3,19,carol,1900.5
-4,NULL,NULL,NULL)csv";
+  std::string csv_content_ = R"csv(id, age, name, salary, join_date
+1,21,alice,2100.2,2023-01-15 09:30:00
+2,42,bob,4500.8,2022-05-20 14:45:30
+3,19,carol,1900.5,2023-03-10 11:15:00
+4,NULL,NULL,NULL,2021-12-01 08:00:00)csv";
 };
 
 TEST_F(CsvdbAdaptorTest, NormalQuery) {
@@ -90,15 +93,17 @@ TEST_F(CsvdbAdaptorTest, NormalQuery) {
   CsvdbAdaptor csvdb_adaptor(csvdb_conf_str_);
 
   const std::string query = "select * from csvdb.staff";
-  std::vector<ColumnDesc> outputs{{"id", pb::PrimitiveDataType::INT64},
-                                  {"age", pb::PrimitiveDataType::INT64},
-                                  {"name", pb::PrimitiveDataType::STRING},
-                                  {"salary", pb::PrimitiveDataType::FLOAT64}};
+  std::vector<ColumnDesc> outputs{
+      {"id", pb::PrimitiveDataType::INT64},
+      {"age", pb::PrimitiveDataType::INT64},
+      {"name", pb::PrimitiveDataType::STRING},
+      {"salary", pb::PrimitiveDataType::FLOAT64},
+      {"join_date", pb::PrimitiveDataType::TIMESTAMP}};
 
   // When
   auto results = csvdb_adaptor.ExecQuery(query, outputs);
   // Then
-  EXPECT_EQ(results.size(), 4);
+  EXPECT_EQ(results.size(), 5);
   CheckTensorEqual(results[0], TensorFrom(arrow::int64(), "[1,2,3,4]"));
   CheckTensorEqual(results[1], TensorFrom(arrow::int64(), "[21,42,19,null]"));
   CheckTensorEqual(results[2],
@@ -106,6 +111,9 @@ TEST_F(CsvdbAdaptorTest, NormalQuery) {
                               R"json(["alice","bob","carol",null])json"));
   CheckTensorEqual(results[3],
                    TensorFrom(arrow::float64(), "[2100.2,4500.8,1900.5,null]"));
+  CheckTensorEqual(results[4],
+                   TensorFrom(arrow::int64(),
+                              "[1673775000,1653057930,1678446900,1638345600]"));
 }
 
 TEST_F(CsvdbAdaptorTest, WriteToFile) {
@@ -113,10 +121,12 @@ TEST_F(CsvdbAdaptorTest, WriteToFile) {
   CsvdbAdaptor csvdb_adaptor(csvdb_conf_str_);
 
   const std::string query = "select * from csvdb.staff";
-  std::vector<ColumnDesc> outputs{{"id", pb::PrimitiveDataType::INT64},
-                                  {"age", pb::PrimitiveDataType::INT64},
-                                  {"name", pb::PrimitiveDataType::STRING},
-                                  {"salary", pb::PrimitiveDataType::FLOAT64}};
+  std::vector<ColumnDesc> outputs{
+      {"id", pb::PrimitiveDataType::INT64},
+      {"age", pb::PrimitiveDataType::INT64},
+      {"name", pb::PrimitiveDataType::STRING},
+      {"salary", pb::PrimitiveDataType::FLOAT64},
+      {"join_date", pb::PrimitiveDataType::TIMESTAMP}};
 
   // When
   auto results = csvdb_adaptor.ExecQuery(
@@ -126,7 +136,7 @@ TEST_F(CsvdbAdaptorTest, WriteToFile) {
                          .max_row_num_one_file = 2});
 
   // Then
-  EXPECT_EQ(results.size(), 4);
+  EXPECT_EQ(results.size(), 5);
   CheckTensorEqual(results[0], TensorFrom(arrow::int64(), "[1,2,3,4]"));
   CheckTensorEqual(results[1], TensorFrom(arrow::int64(), "[21,42,19,null]"));
   CheckTensorEqual(results[2],
@@ -134,6 +144,9 @@ TEST_F(CsvdbAdaptorTest, WriteToFile) {
                               R"json(["alice","bob","carol",null])json"));
   CheckTensorEqual(results[3],
                    TensorFrom(arrow::float64(), "[2100.2,4500.8,1900.5,null]"));
+  CheckTensorEqual(results[4],
+                   TensorFrom(arrow::int64(),
+                              "[1673775000,1653057930,1678446900,1638345600]"));
 }
 
 TEST_F(CsvdbAdaptorTest, QueryWithAggregation) {
@@ -192,18 +205,21 @@ TEST_F(CsvdbAdaptorTest, QueryWithDomainDataID) {
       R"str(select "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9"."ID",
                    "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9"."Age",
                    "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9"."name",
-                   "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9"."salarY"
+                   "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9"."salarY",
+                   "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9"."join_date"
             from "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9")str";
-  std::vector<ColumnDesc> outputs{{"id", pb::PrimitiveDataType::INT64},
-                                  {"age", pb::PrimitiveDataType::INT64},
-                                  {"name", pb::PrimitiveDataType::STRING},
-                                  {"salary", pb::PrimitiveDataType::FLOAT64}};
+  std::vector<ColumnDesc> outputs{
+      {"id", pb::PrimitiveDataType::INT64},
+      {"age", pb::PrimitiveDataType::INT64},
+      {"name", pb::PrimitiveDataType::STRING},
+      {"salary", pb::PrimitiveDataType::FLOAT64},
+      {"join_date", pb::PrimitiveDataType::TIMESTAMP}};
 
   // When
   auto results = csvdb_adaptor.ExecQuery(query, outputs);
 
   // Then
-  EXPECT_EQ(results.size(), 4);
+  EXPECT_EQ(results.size(), 5);
   CheckTensorEqual(results[0], TensorFrom(arrow::int64(), "[1,2,3,4]"));
   CheckTensorEqual(results[1], TensorFrom(arrow::int64(), "[21,42,19,null]"));
   CheckTensorEqual(results[2],
@@ -211,6 +227,9 @@ TEST_F(CsvdbAdaptorTest, QueryWithDomainDataID) {
                               R"json(["alice","bob","carol",null])json"));
   CheckTensorEqual(results[3],
                    TensorFrom(arrow::float64(), "[2100.2,4500.8,1900.5,null]"));
+  CheckTensorEqual(results[4],
+                   TensorFrom(arrow::int64(),
+                              "[1673775000,1653057930,1678446900,1638345600]"));
 }
 
 }  // namespace scql::engine
