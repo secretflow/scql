@@ -51,7 +51,8 @@ commands:
             echo "Running tests with coverage..."
             go test -mod=readonly -timeout=30m -v -cover -race -coverprofile=coverage.tmp ./pkg/... ./contrib/...
             cat coverage.tmp | grep -v '\.pb\.go:\|_mock\.go:' > coverage.out
-            gcov2lcov -infile=coverage.out -outfile=coverage.lcov
+            python ./test-tools/find_uncover_err.py coverage.out filtered_cover_no_err_branch.out
+            gcov2lcov -infile=filtered_cover_no_err_branch.out -outfile=coverage.lcov
 
   run_cpp_test:
     description: "Run cpp cov tests and collect artifacts"
