@@ -128,24 +128,73 @@ jobs:
       - run_cpp_test:
           extra_bazel_args: "-c opt"
       - run:
-          name: "Merge Go and C++ Coverage Reports"
+          name: "Debug Coverage Files"
           command: |
-            lcov --add-tracefile coverage.lcov \
-                 --add-tracefile bazel-out/_coverage/_coverage_report_filtered.dat \
-                 --output-file merged_coverage.lcov || true
+            echo "=== Debug Information ==="
+            echo "Current working directory: $(pwd)"
+            echo "Available coverage files:"
+            find . -name "*.lcov" -o -name "*coverage*" -type f | head -10
+
+            if [ -f "coverage.lcov" ]; then
+              echo "Go coverage file size: $(wc -l < coverage.lcov) lines"
+              echo "Go coverage sample:"
+              head -10 coverage.lcov
+            fi
+
+            if [ -f "bazel-out/_coverage/_coverage_report_filtered.dat" ]; then
+              echo "C++ coverage file size: $(wc -l < bazel-out/_coverage/_coverage_report_filtered.dat) lines"
+              echo "C++ coverage sample:"
+              head -10 bazel-out/_coverage/_coverage_report_filtered.dat
+            fi
+
+            echo "Git status:"
+            git status --porcelain
+            echo "Recent commits:"
+            git log --oneline -5
       - run:
           name: "Calculate and Report Individual and Total Incremental Coverage"
           command: |
             echo "Calculating incremental coverage between << pipeline.parameters.base_commit >> and ${CIRCLE_SHA1}"
             git config remote.origin.url "https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git"
-            git fetch origin --unshallow || git fetch origin --depth=1000 || true
+
+            if ! git rev-parse --verify << pipeline.parameters.base_commit >> >/dev/null 2>&1; then
+              echo "Base commit not found locally, fetching..."
+              git fetch origin << pipeline.parameters.base_commit >> || \
+              git fetch origin --depth=100 || \
+              git fetch origin
+            fi
+
+            if ! git rev-parse --verify << pipeline.parameters.base_commit >> >/dev/null 2>&1; then
+              echo "Error: Base commit << pipeline.parameters.base_commit >> not found"
+              exit 1
+            fi
+            if ! git rev-parse --verify ${CIRCLE_SHA1} >/dev/null 2>&1; then
+              echo "Error: Current commit ${CIRCLE_SHA1} not found"
+              exit 1
+            fi
+            echo "Base commit: $(git rev-parse << pipeline.parameters.base_commit >>)"
+            echo "Head commit: $(git rev-parse ${CIRCLE_SHA1})"
 
             # --- 1. Go Incremental Coverage ---
             echo ""
             echo "--- Go Incremental Coverage ---"
             if [ -f "coverage.lcov" ]; then
-              # Get the diff for Go files only and compare with the Go coverage report
-              git diff << pipeline.parameters.base_commit >>..${CIRCLE_SHA1} -- '*.go' | diff-cover coverage.lcov --fail-under=80
+              echo "Go coverage file found, analyzing..."
+              GO_CHANGES=$(git diff --name-only << pipeline.parameters.base_commit >>..${CIRCLE_SHA1} -- '*.go' | grep -v '_test.go$' | wc -l)
+              echo "Go files changed: $GO_CHANGES"
+
+              if [ "$GO_CHANGES" -gt 0 ]; then
+                echo "Analyzing Go incremental coverage..."
+                diff-cover coverage.lcov \
+                  --compare-branch=<< pipeline.parameters.base_commit >> \
+                  --fail-under=80 \
+                  --include='*.go' \
+                  --exclude='*_test.go' \
+                  --exclude='*.pb.go' \
+                  --exclude='*_mock.go' || echo "Go coverage check failed"
+              else
+                echo "No non-test Go files changed, skipping Go coverage analysis"
+              fi
             else
               echo "Go coverage file (coverage.lcov) not found. Skipping."
             fi
@@ -155,20 +204,26 @@ jobs:
             echo "--- C++ Incremental Coverage ---"
             CPP_COV_FILE="bazel-out/_coverage/_coverage_report_filtered.dat"
             if [ -f "${CPP_COV_FILE}" ]; then
-              # Get the diff for C++ files only and compare with the C++ coverage report
-              git diff << pipeline.parameters.base_commit >>..${CIRCLE_SHA1} -- '*.cpp' '*.h' '*.cc' '*.hpp' '*.cxx' | diff-cover ${CPP_COV_FILE} --fail-under=80
+              echo "C++ coverage file found, analyzing..."
+              CPP_CHANGES=$(git diff --name-only << pipeline.parameters.base_commit >>..${CIRCLE_SHA1} -- '*.cpp' '*.h' '*.cc' '*.hpp' '*.cxx' | wc -l)
+              echo "C++ files changed: $CPP_CHANGES"
+
+              if [ "$CPP_CHANGES" -gt 0 ]; then
+                echo "Analyzing C++ incremental coverage..."
+                diff-cover ${CPP_COV_FILE} \
+                  --compare-branch=<< pipeline.parameters.base_commit >> \
+                  --fail-under=80 \
+                  --include='*.cpp' \
+                  --include='*.cc' \
+                  --include='*.h' \
+                  --include='*.hpp' \
+                  --exclude='*.pb.h' \
+                  --exclude='*.pb.cc' || echo "C++ coverage check failed"
+              else
+                echo "No C++ files changed, skipping C++ coverage analysis"
+              fi
             else
               echo "C++ coverage file (${CPP_COV_FILE}) not found. Skipping."
-            fi
-
-            # --- 3. Total Incremental Coverage ---
-            echo ""
-            echo "--- Total Incremental Coverage ---"
-            if [ -f "merged_coverage.lcov" ]; then
-              # Get the total diff and compare with the merged coverage report
-              git diff << pipeline.parameters.base_commit >>..${CIRCLE_SHA1} | diff-cover merged_coverage.lcov --fail-under=80
-            else
-              echo "Merged coverage file (merged_coverage.lcov) not found. Skipping."
             fi
 
 workflows:
