@@ -20,6 +20,7 @@ import re
 
 PACKAGE_PREFIX = "github.com/secretflow/scql"
 
+
 def parse_cover_file(cover_file):
     """
     Parse go cover profile, extract all uncovered blocks.
@@ -61,6 +62,7 @@ def parse_cover_file(cover_file):
             result.append(line)
     return result
 
+
 def find_if_err_block(block):
     """
     Iterate over uncovered blocks, locate lines containing patterns like 'if xxxErr != nil {'
@@ -88,12 +90,14 @@ def find_if_err_block(block):
         return False
     return False
 
+
 def main():
     results = parse_cover_file(sys.argv[1])
     with open(sys.argv[2], "w", encoding="utf-8") as f:
         for line in results:
             f.write(line)
             f.write("\n")
+
 
 if __name__ == "__main__":
     main()
