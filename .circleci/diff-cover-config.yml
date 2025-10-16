@@ -178,20 +178,21 @@ jobs:
 
             # Create a directory to store the reports
             mkdir -p coverage-reports
+            FINAL_EXIT_CODE=0
 
             # --- 1. Go Incremental Coverage ---
             echo ""
             echo "--- Go Incremental Coverage ---"
             if [ -f "coverage.lcov" ]; then
               git diff << pipeline.parameters.base_commit >>..${CIRCLE_SHA1} -- '*.go' > go_diff.txt
-              cat go_diff.txt -n 5
               diff-cover coverage.lcov \
                 --diff-file=go_diff.txt \
                 --fail-under=80 \
                 --exclude='*_test.go' \
                 --exclude='*.pb.go' \
                 --exclude='*_mock.go' \
-                --format html:coverage-reports/go_diff_coverage.html
+                --format html:coverage-reports/go_diff_coverage.html \
+                || { echo "Go incremental coverage check FAILED."; FINAL_EXIT_CODE=1; }
             else
               echo "Go coverage file (coverage.lcov) not found. Skipping."
             fi
@@ -202,16 +203,18 @@ jobs:
             CPP_COV_FILE="bazel-out/_coverage/_coverage_report_filtered.dat"
             if [ -f "${CPP_COV_FILE}" ]; then
               git diff << pipeline.parameters.base_commit >>..${CIRCLE_SHA1} -- '*.cpp' '*.h' '*.cc' > cpp_diff.txt
-              cat cpp_diff.txt -n 5
               diff-cover ${CPP_COV_FILE} \
                 --diff-file=cpp_diff.txt \
                 --fail-under=80 \
                 --exclude='*.pb.h' \
                 --exclude='*.pb.cc' \
-                --format html:coverage-reports/cpp_diff_coverage.html
+                --format html:coverage-reports/cpp_diff_coverage.html \
+                || { echo "C++ incremental coverage check FAILED."; FINAL_EXIT_CODE=1; }
             else
               echo "C++ coverage file (${CPP_COV_FILE}) not found. Skipping."
             fi
+
+            exit ${FINAL_EXIT_CODE}
       - store_artifacts:
           path: coverage-reports
       - store_artifacts:
