@@ -152,10 +152,11 @@ jobs:
             echo "Recent commits:"
             git log --oneline -5
       - run:
-          name: "Calculate and Report Individual and Total Incremental Coverage"
+          name: "Calculate and Report Incremental Coverage"
           command: |
             echo "Calculating incremental coverage between << pipeline.parameters.base_commit >> and ${CIRCLE_SHA1}"
             git config remote.origin.url "https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git"
+            git config advice.objectNameWarning false
 
             if ! git rev-parse --verify << pipeline.parameters.base_commit >> >/dev/null 2>&1; then
               echo "Base commit not found locally, fetching..."
@@ -175,26 +176,18 @@ jobs:
             echo "Base commit: $(git rev-parse << pipeline.parameters.base_commit >>)"
             echo "Head commit: $(git rev-parse ${CIRCLE_SHA1})"
 
+            # Create a directory to store the reports
+            mkdir -p coverage-reports
+
             # --- 1. Go Incremental Coverage ---
             echo ""
             echo "--- Go Incremental Coverage ---"
             if [ -f "coverage.lcov" ]; then
-              echo "Go coverage file found, analyzing..."
-              GO_CHANGES=$(git diff --name-only << pipeline.parameters.base_commit >>..${CIRCLE_SHA1} -- '*.go' | grep -v '_test.go$' | wc -l)
-              echo "Go files changed: $GO_CHANGES"
-
-              if [ "$GO_CHANGES" -gt 0 ]; then
-                echo "Analyzing Go incremental coverage..."
-                diff-cover coverage.lcov \
-                  --compare-branch=<< pipeline.parameters.base_commit >> \
+              git diff << pipeline.parameters.base_commit >>..${CIRCLE_SHA1} -- '*.go' \
+                | diff-cover coverage.lcov \
                   --fail-under=80 \
-                  --include='*.go' \
-                  --exclude='*_test.go' \
-                  --exclude='*.pb.go' \
-                  --exclude='*_mock.go' || echo "Go coverage check failed"
-              else
-                echo "No non-test Go files changed, skipping Go coverage analysis"
-              fi
+                  --exclude '*_test.go' '*.pb.go' '*_mock.go' \
+                  --html-report coverage-reports/go_diff_coverage.html  # <-- ADDED THIS LINE
             else
               echo "Go coverage file (coverage.lcov) not found. Skipping."
             fi
@@ -204,27 +197,21 @@ jobs:
             echo "--- C++ Incremental Coverage ---"
             CPP_COV_FILE="bazel-out/_coverage/_coverage_report_filtered.dat"
             if [ -f "${CPP_COV_FILE}" ]; then
-              echo "C++ coverage file found, analyzing..."
-              CPP_CHANGES=$(git diff --name-only << pipeline.parameters.base_commit >>..${CIRCLE_SHA1} -- '*.cpp' '*.h' '*.cc' '*.hpp' '*.cxx' | wc -l)
-              echo "C++ files changed: $CPP_CHANGES"
-
-              if [ "$CPP_CHANGES" -gt 0 ]; then
-                echo "Analyzing C++ incremental coverage..."
-                diff-cover ${CPP_COV_FILE} \
-                  --compare-branch=<< pipeline.parameters.base_commit >> \
+              git diff << pipeline.parameters.base_commit >>..${CIRCLE_SHA1} -- '*.cpp' '*.h' '*.cc' \
+                | diff-cover ${CPP_COV_FILE} \
                   --fail-under=80 \
-                  --include='*.cpp' \
-                  --include='*.cc' \
-                  --include='*.h' \
-                  --include='*.hpp' \
-                  --exclude='*.pb.h' \
-                  --exclude='*.pb.cc' || echo "C++ coverage check failed"
-              else
-                echo "No C++ files changed, skipping C++ coverage analysis"
-              fi
+                  --html-report coverage-reports/cpp_diff_coverage.html # <-- ADDED THIS LINE
             else
               echo "C++ coverage file (${CPP_COV_FILE}) not found. Skipping."
             fi
+      - store_artifacts:
+          path: coverage-reports
+      - store_artifacts:
+          path: coverage.lcov
+          destination: go-coverage.lcov
+      - store_artifacts:
+          path: bazel-out/_coverage/_coverage_report_filtered.dat
+          destination: cpp-coverage.lcov
 
 workflows:
   run_diff_cov_workflow:
