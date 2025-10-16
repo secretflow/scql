@@ -23,4 +23,4 @@ jobs:
             --url "https://circleci.com/api/v2/project/github/secretflow/scql/pipeline/run" \
             --header "Content-Type: application/json" \
             --header "Circle-Token: ${{ secrets.CCI_TOKEN }}" \
-            --data '{"definition_id":"f0835e5e-5836-4869-bcb6-f51ff967281d","branch":"${{ github.event.inputs.head_commit }}","parameters":{"base_commit":"${{ github.event.inputs.base_commit }}"},"config":{"branch":"main"}}'
+            --data '{"definition_id":"f0835e5e-5836-4869-bcb6-f51ff967281d","checkout":{"branch":"${{ github.event.inputs.head_commit }}"},"parameters":{"base_commit":"${{ github.event.inputs.base_commit }}"},"config":{"branch":"main"}}'
