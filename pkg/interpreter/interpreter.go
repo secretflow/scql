@@ -21,10 +21,13 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"slices"
 
 	"github.com/sirupsen/logrus"
+
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/secretflow/scql/pkg/infoschema"
 	"github.com/secretflow/scql/pkg/interpreter/graph"
@@ -43,6 +46,21 @@ type Interpreter struct{}
 
 func NewInterpreter() *Interpreter {
 	return &Interpreter{}
+}
+
+// getLocalCreatedAt converts UTC time to local timezone while preserving the actual moment in time
+func (intr *Interpreter) getLocalCreatedAt(createdAt *timestamppb.Timestamp, warnMsg string) time.Time {
+	var localCreatedAt time.Time
+	if createdAt != nil {
+		utcCreatedAt := createdAt.AsTime()
+		localCreatedAt = utcCreatedAt.Local()
+	} else {
+		localCreatedAt = time.Now()
+		if warnMsg != "" {
+			logrus.Warn(warnMsg)
+		}
+	}
+	return localCreatedAt
 }
 
 func (intr *Interpreter) Compile(ctx context.Context, req *pb.CompileQueryRequest) (*pb.CompiledPlan, error) {
@@ -65,7 +83,9 @@ func (intr *Interpreter) Compile(ctx context.Context, req *pb.CompileQueryReques
 	sctx.GetSessionVars().PlanID = 0
 	sctx.GetSessionVars().PlanColumnID = 0
 	sctx.GetSessionVars().CurrentDB = req.GetDbName()
-	sctx.GetSessionVars().CreatedAt = req.GetCreatedAt().AsTime()
+	// Convert UTC time to local timezone while preserving the actual moment in time
+	localCreatedAt := intr.getLocalCreatedAt(req.GetCreatedAt(), "Compile: req.CreatedAt is nil, using current time")
+	sctx.GetSessionVars().CreatedAt = localCreatedAt
 
 	lp, _, err := core.BuildLogicalPlanWithOptimization(ctx, sctx, stmts[0], is)
 	if err != nil {
@@ -97,8 +117,9 @@ func (intr *Interpreter) Compile(ctx context.Context, req *pb.CompileQueryReques
 	return plan, nil
 }
 
-func (*Interpreter) compileCore(enginesInfo *graph.EnginesInfo, req *pb.CompileQueryRequest, lp core.LogicalPlan, forceToUnBatched bool) (*pb.CompiledPlan, error) {
-	t, err := translator.NewTranslator(enginesInfo, req.GetSecurityConf(), req.GetIssuer().GetCode(), req.GetCompileOpts(), req.CreatedAt.AsTime())
+func (intr *Interpreter) compileCore(enginesInfo *graph.EnginesInfo, req *pb.CompileQueryRequest, lp core.LogicalPlan, forceToUnBatched bool) (*pb.CompiledPlan, error) {
+	localCreatedAt := intr.getLocalCreatedAt(req.GetCreatedAt(), "compileCore: req.CreatedAt is nil, using current time")
+	t, err := translator.NewTranslator(enginesInfo, req.GetSecurityConf(), req.GetIssuer().GetCode(), req.GetCompileOpts(), localCreatedAt)
 	if err != nil {
 		return nil, err
 	}
