@@ -221,16 +221,18 @@ func (p *LogicalWindow) SqlStmt(d Dialect) (*runSqlCtx, error) {
 		partitionByItems = append(partitionByItems, &ast.ByItem{Expr: item})
 	}
 	var orderByCols []expression.Expression
+	var desc []bool
 	for _, item := range p.OrderBy {
 		orderByCols = append(orderByCols, item.Col)
+		desc = append(desc, item.Desc)
 	}
 	updatedOrderByItems, err := c.updateExprNodeFromExpressions(d, orderByCols, nil)
 	if err != nil {
 		return nil, err
 	}
 	var orderByItems []*ast.ByItem
-	for _, item := range updatedOrderByItems {
-		orderByItems = append(orderByItems, &ast.ByItem{Expr: item})
+	for i, item := range updatedOrderByItems {
+		orderByItems = append(orderByItems, &ast.ByItem{Expr: item, Desc: desc[i]})
 	}
 	if len(p.WindowFuncDescs) != 1 {
 		return nil, fmt.Errorf("expect 1 window spec but get %v", len(p.WindowFuncDescs))
