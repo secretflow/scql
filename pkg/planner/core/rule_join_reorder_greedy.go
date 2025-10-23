@@ -53,7 +53,7 @@ func (s *joinReorderGreedySolver) solve(joinNodePlans []LogicalPlan) (LogicalPla
 		if len(s.curJoinGroup) == 0 {
 			break
 		}
-		newNode := s.constructConnectedJoinTreeForSamePartyCode()
+		newNode := s.mergeJoinNodeWithSamePartyCode()
 		if newNode != nil {
 			optimizedCurJoinGroup = append(optimizedCurJoinGroup, newNode)
 		}
@@ -72,15 +72,11 @@ func (s *joinReorderGreedySolver) solve(joinNodePlans []LogicalPlan) (LogicalPla
 	return s.makeBushyJoin(cartesianGroup), nil
 }
 
-func (s *joinReorderGreedySolver) constructConnectedJoinTreeForSamePartyCode() *jrNode {
+func (s *joinReorderGreedySolver) mergeJoinNodeWithSamePartyCode() *jrNode {
 	curJoinTree := s.curJoinGroup[0]
-
-	bestCost := math.MaxFloat64
-	bestIdx := -1
-	var finalRemainOthers []expression.Expression
-	var bestJoin LogicalPlan
 	// only merging plans with same party code
 	for i, node := range s.curJoinGroup[1:] {
+		// skip join node which can't merge with curJoinTree
 		if node.p.Schema().PartyCode == "" || (curJoinTree.p.Schema().PartyCode != node.p.Schema().PartyCode) {
 			continue
 		}
@@ -89,27 +85,20 @@ func (s *joinReorderGreedySolver) constructConnectedJoinTreeForSamePartyCode() *
 			continue
 		}
 		curCost := s.calcJoinCumCost(newJoin, curJoinTree, node)
-		if bestCost > curCost {
-			bestCost = curCost
-			bestJoin = newJoin
-			// i is the index in s.curJoinGroup[1:], so the index in the full slice is i+1
-			bestIdx = i + 1
-			finalRemainOthers = remainOthers
+		mergedIdx := i + 1
+		// remove merged node
+		s.curJoinGroup = append(s.curJoinGroup[:mergedIdx], s.curJoinGroup[mergedIdx+1:]...)
+		s.otherConds = remainOthers
+		curJoinTree = &jrNode{
+			p:       newJoin,
+			cumCost: curCost,
 		}
+		s.curJoinGroup[0] = curJoinTree
+		return nil
 	}
 	// If we could find more join node, meaning that the sub connected graph have been totally explored.
-	if bestJoin == nil {
-		s.curJoinGroup = s.curJoinGroup[1:]
-		return curJoinTree
-	}
-	curJoinTree = &jrNode{
-		p:       bestJoin,
-		cumCost: bestCost,
-	}
-	s.curJoinGroup = append(s.curJoinGroup[:bestIdx], s.curJoinGroup[bestIdx+1:]...)
-	s.otherConds = finalRemainOthers
-	s.curJoinGroup[0] = curJoinTree
-	return nil
+	s.curJoinGroup = s.curJoinGroup[1:]
+	return curJoinTree
 }
 
 func (s *joinReorderGreedySolver) constructConnectedJoinTree() (*jrNode, error) {
