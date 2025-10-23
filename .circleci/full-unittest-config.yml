@@ -17,14 +17,6 @@
 
 version: 2.1
 
-parameters:
-  run_go_ut:
-    type: boolean
-    default: false
-  run_cpp_ut:
-    type: boolean
-    default: false
-
 commands:
   setup_cpp_test:
     steps:
@@ -43,11 +35,11 @@ commands:
           command: |
             set +e
             go mod tidy
-            echo "Running tests without coverage..."
-            go test -timeout=30m -v -short ./pkg/... ./contrib/...
+            echo "Running unit tests..."
+            go test -mod=readonly -timeout=30m -v -short ./pkg/... ./contrib/...
 
   run_cpp_test:
-    description: "Run cpp tests and collect artifacts"
+    description: "Run cpp tests and collect artifacts on fail"
     parameters:
       extra_bazel_args:
         type: string
@@ -62,7 +54,7 @@ commands:
             set +e
             declare -i test_status
 
-            echo "Running tests without coverage..."
+            echo "Running unit tests..."
             bazelisk --host_jvm_args=-Xmx8g test //engine/... \
                 << parameters.extra_bazel_args >> \
                 --jobs=auto \
@@ -73,9 +65,30 @@ commands:
             test_status=${PIPESTATUS[0]}
 
             sh ../devtools/rename-junit-xml.sh
-            find bazel-bin/ << parameters.find_executable_flag >> -type f -name "*_test" -print0 | xargs -0 tar -cvzf test_binary.tar.gz
-            find bazel-testlogs/ -type f -name "test.log" -print0 | xargs -0 tar -cvzf test_logs.tar.gz
+            if [ ${test_status} -ne 0 ]; then
+              echo "Tests failed. Archiving binaries and logs..."
+              find bazel-bin/ << parameters.find_executable_flag >> -type f -name "*_test" -print0 | xargs -0 tar -cvzf test_binary.tar.gz
+              find bazel-testlogs/ -type f -name "test.log" -print0 | xargs -0 tar -cvzf test_logs.tar.gz
+            fi
+
             exit ${test_status}
+
+  # ref: https://support.circleci.com/hc/en-us/articles/14114124583195-How-to-set-a-custom-maximum-job-duration
+  cancel_after_timeout:
+    description: "Cancel job if it takes too long"
+    parameters:
+      timeout:
+        type: string
+        default: "60m"
+    steps:
+      - run:
+          name: Set maximum job duration to << parameters.timeout >>
+          background: true
+          command: |
+            sleep << parameters.timeout >>
+            curl --request POST \
+            --url https://circleci.com/api/v2/project/gh/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/job/$CIRCLE_BUILD_NUM/cancel \
+            --header "Circle-Token: $CIRCLECI_API_TOKEN"
 
 jobs:
   linux_go_ut:
@@ -86,6 +99,8 @@ jobs:
         type: string
     resource_class: << parameters.resource_class >>
     steps:
+      - cancel_after_timeout:
+          timeout: "20m"
       - checkout
       - run_go_test
 
@@ -97,6 +112,8 @@ jobs:
         type: string
     resource_class: << parameters.resource_class >>
     steps:
+      - cancel_after_timeout:
+          timeout: "60m"
       - checkout
       - setup_cpp_test
       - run_cpp_test:
@@ -105,15 +122,19 @@ jobs:
       - store_test_results:
           path: test-results
       - store_artifacts:
+          when: on_fail
           path: test_binary.tar.gz
       - store_artifacts:
+          when: on_fail
           path: test_logs.tar.gz
 
   macOS_go_ut:
     macos:
-      xcode: 16.0.0
+      xcode: 16.4.0
     resource_class: m4pro.medium
     steps:
+      - cancel_after_timeout:
+          timeout: "20m"
       - checkout
       - run:
           name: "Install homebrew dependencies"
@@ -123,16 +144,11 @@ jobs:
 
   macOS_cpp_ut:
     macos:
-      xcode: 16.0.0
+      xcode: 16.4.0
     resource_class: m4pro.medium
     steps:
-      - run:
-          name: Cancel build after set time
-          background: true
-          command: |
-            sleep 3600
-            echo "Canceling workflow as too much time has elapsed"
-            curl -X POST --header "Content-Type: application/json" "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/cancel?circle-token=${BUILD_TIMER_TOKEN}"
+      - cancel_after_timeout:
+          timeout: "60m"
       - checkout
       - run:
           name: "Install homebrew dependencies"
@@ -146,24 +162,24 @@ jobs:
       - store_test_results:
           path: test-results
       - store_artifacts:
+          when: on_fail
           path: test_binary.tar.gz
       - store_artifacts:
+          when: on_fail
           path: test_logs.tar.gz
 
 workflows:
   run_go_ut:
-    when: << pipeline.parameters.run_go_ut >>
     jobs:
       - linux_go_ut:
           matrix:
             parameters:
-              resource_class: ["2xlarge", "arm-xlarge"]
+              resource_class: ["large", "arm.large"]
       - macOS_go_ut
   run_cpp_ut:
-    when: << pipeline.parameters.run_cpp_ut >>
     jobs:
       - linux_cpp_ut:
           matrix:
             parameters:
-              resource_class: ["2xlarge", "arm-xlarge"]
+              resource_class: ["2xlarge", "arm.2xlarge"]
       - macOS_cpp_ut

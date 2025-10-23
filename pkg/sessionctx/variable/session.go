@@ -101,6 +101,9 @@ type SessionVars struct {
 
 	// GroupByThreshold applied to protect query results
 	GroupByThreshold uint64
+
+	// CreatedAt is the time when the session is created
+	CreatedAt time.Time
 }
 
 // PreparedParams contains the parameters of the current prepared statement when executing it.

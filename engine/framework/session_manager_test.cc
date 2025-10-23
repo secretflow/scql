@@ -153,4 +153,54 @@ TEST_F(SessionManagerTest, TestSessionCreation) {
   futures[1].get();
 }
 
+TEST_F(SessionManagerTest, CompareAndSetStateWorks) {
+  // Given
+  std::string session_id = "test_cas_session";
+  pb::JobStartParams params;
+  {
+    params.set_job_id(session_id);
+    params.set_party_code(op::test::kPartyAlice);
+    auto* alice = params.add_parties();
+    alice->CopyFrom(op::test::BuildParty(op::test::kPartyAlice, 0));
+    params.mutable_spu_runtime_cfg()->CopyFrom(
+        op::test::MakeSpuRuntimeConfigForTest(spu::ProtocolKind::SEMI2K)
+            .ToProto());
+  }
+  pb::DebugOptions debug_opts;
+
+  // Create session
+  mgr->CreateSession(params, debug_opts);
+  Session* session = mgr->GetSession(session_id);
+  ASSERT_NE(nullptr, session);
+
+  // Test 1: Successful CAS from INITIALIZED to RUNNING
+  EXPECT_TRUE(mgr->CompareAndSetState(session_id, SessionState::INITIALIZED,
+                                      SessionState::RUNNING));
+  EXPECT_EQ(SessionState::RUNNING, session->GetState());
+
+  // Test 2: Failed CAS - wrong expected state
+  EXPECT_FALSE(mgr->CompareAndSetState(session_id, SessionState::INITIALIZED,
+                                       SessionState::COMP_FINISHED));
+  EXPECT_EQ(SessionState::RUNNING, session->GetState());
+
+  // Test 3: Successful CAS from RUNNING to COMP_FINISHED
+  EXPECT_TRUE(mgr->CompareAndSetState(session_id, SessionState::RUNNING,
+                                      SessionState::COMP_FINISHED));
+  EXPECT_EQ(SessionState::COMP_FINISHED, session->GetState());
+
+  // Test 4: Successful CAS from COMP_FINISHED to SUCCEEDED
+  EXPECT_TRUE(mgr->CompareAndSetState(session_id, SessionState::COMP_FINISHED,
+                                      SessionState::SUCCEEDED));
+  EXPECT_EQ(SessionState::SUCCEEDED, session->GetState());
+
+  // Test 5: CAS with non-existent session
+  EXPECT_FALSE(mgr->CompareAndSetState("non_existent_session",
+                                       SessionState::INITIALIZED,
+                                       SessionState::RUNNING));
+
+  // Test 6: CAS with empty session_id
+  EXPECT_FALSE(mgr->CompareAndSetState("", SessionState::INITIALIZED,
+                                       SessionState::RUNNING));
+}
+
 }  // namespace scql::engine

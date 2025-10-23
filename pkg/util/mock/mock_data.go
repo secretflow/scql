@@ -23,6 +23,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -301,6 +302,7 @@ func MockAllTables() (map[string][]*model.TableInfo, error) {
 func MockContext() sessionctx.Context {
 	ctx := sessionctx.NewContext()
 	ctx.GetSessionVars().CurrentDB = "test"
+	ctx.GetSessionVars().CreatedAt = time.Date(2023, 10, 1, 8, 30, 0, 0, time.FixedZone("UTC+8", 8*3600))
 	return ctx
 }
 
