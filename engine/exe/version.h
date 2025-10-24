@@ -14,4 +14,4 @@
 
 #pragma once
 
-#define ENGINE_VERSION_STRING "0.9.5dev.20251023-03:08:23.3ee75ad"
+#define ENGINE_VERSION_STRING "SCQL_VERSION"
