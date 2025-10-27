@@ -207,7 +207,14 @@ std::shared_ptr<arrow::Array> RankWindowBase::GetSortedIndices(
     sort_keys.emplace_back(input->fields()[i]->name(), order);
   }
 
-  arrow::compute::SortOptions sort_options(sort_keys);
+  // FIXME: currently arrow only provides the global null placement, here only
+  // take the first one to decide the null placement
+  //  Follow the progress of https://github.com/apache/arrow/pull/46926, and
+  //  if it gets merged into Arrow, please use it to fix the issue
+  arrow::compute::NullPlacement null_placement =
+      reverse[0] == "0" ? arrow::compute::NullPlacement::AtStart
+                        : arrow::compute::NullPlacement::AtEnd;
+  arrow::compute::SortOptions sort_options(sort_keys, null_placement);
   auto status = arrow::compute::SortIndices(input, sort_options);
   YACL_ENFORCE(status.ok(), "failed to sort indices");
   return status.ValueOrDie();
