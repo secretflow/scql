@@ -22,6 +22,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [1.0.0] - 2025-10-29
+
+### Added
+
+- Added DeleteProject API to improve project lifecycle management
+- Enhanced window functions: Added support for `RANK` and updated `PERCENT_RANK` to align with standard SQL semantics
+- Added support for `CAST(strField AS DATETIME)` and automatic appending of a timezone to timezoneless timestamp literals in queries
+
+### Changed
+
+- Adjusted numeric type mappings: `float` now maps to `float64`, `int` maps to `int64` to improve default precision
+- Configuration standardization: Added configuration negotiation logic to Engine and cleaned up/adjusted some configuration items
+- PSI performance optimization: Under RR22 protocol, support adjusting sender/receiver roles in certain scenarios to reduce overall execution time
+
+### Fixed
+
+- Optimized Engine session state transition logic to prevent result reporting failures in timeout scenarios
+- Fixed improper default value setting issue in Broker server protocol, now supports empty default values
+- Fixed SQL parsing exceptions in single-party CROSS JOIN and NESTED JOIN scenarios
+
 ## [0.9.4] - 2025-07-29
 
 ### Added
