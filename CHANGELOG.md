@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added DeleteProject API to improve project lifecycle management
 - Enhanced window functions: Added support for `RANK` and updated `PERCENT_RANK` to align with standard SQL semantics
-- Added support for `CAST(strField AS DATETIME)` and automatically append timezone for timezoneless timestamp literals in queries
+- Added support for `CAST(strField AS DATETIME)` and automatic appending of a timezone to timezoneless timestamp literals in queries
 
 ### Changed
 
