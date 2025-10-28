@@ -364,7 +364,7 @@ void Join::Rr22PsiJoin(ExecContext* ctx) {
   } else if (self_size > peer_size) {
     is_sender = false;
   }
-  runner.AsyncRun(0, is_sender);
+  runner.ParallelRun(0, is_sender);
   size_t result_size = 0;
   if (touch_result) {
     YACL_ENFORCE(tensor_constructor != nullptr);
