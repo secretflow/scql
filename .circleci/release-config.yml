@@ -77,7 +77,7 @@ jobs:
             docker login -u ${ALIYUN_DOCKER_USERNAME} -p ${ALIYUN_DOCKER_PASSWORD} secretflow-registry.cn-hangzhou.cr.aliyuncs.com
 
             ALIYUN_IMAGE="secretflow-registry.cn-hangzhou.cr.aliyuncs.com/secretflow/scql"
-            TAG=$(grep "version" ../version.txt | awk -F'"' '{print $2}')
+            TAG=$(grep "version" ./version.txt | awk -F'"' '{print $2}')
             echo "Building and pushing tag: $TAG"
 
             # Build image
