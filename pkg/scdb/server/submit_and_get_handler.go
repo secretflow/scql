@@ -105,7 +105,7 @@ func (app *App) submitAndGet(ctx context.Context, req *scql.SCDBQueryRequest) *s
 	if isDQL {
 		return app.submitAndGetDQL(ctx, session)
 	}
-	app.runSQL(session)
+	app.runSQL(ctx, session)
 	return session.result
 }
 
