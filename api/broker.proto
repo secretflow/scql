@@ -593,8 +593,16 @@ message ProjectConfig {
   optional bool reveal_group_mark = 9;
   // reveal the number of elements in each group
   optional bool reveal_group_count = 10;
+  optional bool enable_session_logger_separation = 11;
+  PsiAlgorithmType psi_type = 12;
+  optional bool use_rr22_low_comm_mode = 13;
+  optional bool batched = 14;
+  // job's time_zone for session, default is empty which means use engine's
+  // default time_zone
+  string time_zone = 15;
 }
 
+// JobConfig is a subset of ProjectConfig.
 message JobConfig {
   // if the value is 0 which means user does not set it, it would fallback to
   // project default setting
@@ -607,8 +615,10 @@ message JobConfig {
   int64 link_recv_timeout_sec = 5;
   int64 link_throttle_window_size = 6;
   int64 link_chunked_send_parallel_size = 7;
-  bool enable_session_logger_separation = 8;
+  optional bool enable_session_logger_separation = 8;
   PsiAlgorithmType psi_type = 9;
+  optional bool use_rr22_low_comm_mode = 10;
+  optional bool batched = 11;
 }
 
 message InviteMemberRequest {
