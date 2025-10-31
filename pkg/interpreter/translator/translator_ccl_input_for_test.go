@@ -3885,4 +3885,85 @@ Inputs: [t_11 t_8]
 Outputs: []
 }
 `, testConf{groupThreshold: 0, batched: true, revealGroupCount: false}},
+	{`select count(*) from alice.tbl_1 as t1 join bob.tbl_1 as t3 join bob.tbl_2 as t4 where t1.plain_int_0 = t3.plain_int_0 and t3.plain_int_0 = t4.plain_int_0`, `digraph G {
+0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select t1.plain_int_0 from alice.tbl_1 as t1;,table_refs:[alice.tbl_1],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select t3.plain_int_0 from bob.tbl_1 as t3 join bob.tbl_2 as t4 on t3.plain_int_0=t4.plain_int_0;,table_refs:[bob.tbl_1 bob.tbl_2],],party:[bob,]}"]
+2 [label="bucket:{in:[In:{t_0,},Key:{t_0,},],out:[Out:{t_2,},],attr:[input_party_codes:[alice bob],],party:[alice,]}"]
+3 [label="bucket:{in:[In:{t_1,},Key:{t_1,},],out:[Out:{t_3,},],attr:[input_party_codes:[alice bob],],party:[bob,]}"]
+4 [label="join:{in:[Left:{t_2,},Right:{t_3,},],out:[LeftJoinIndex:{t_4,},RightJoinIndex:{},],attr:[input_party_codes:[alice bob],join_type:0,psi_algorithm:0,],party:[alice,bob,]}"]
+5 [label="filter_by_index:{in:[Data:{t_2,},RowsIndexFilter:{t_4,},],out:[Out:{t_5,},],attr:[],party:[alice,]}"]
+6 [label="shape:{in:[In:{t_5,},],out:[Out:{t_6,},],attr:[axis:0,],party:[alice,]}"]
+7 [label="publish:{in:[In:{t_6,},],out:[Out:{t_7,},],attr:[],party:[alice,]}"]
+0 -> 2 [label = "t_0:{plain_int_0:PRIVATE:INT64}"]
+0 -> 2 [label = "t_0:{plain_int_0:PRIVATE:INT64}"]
+1 -> 3 [label = "t_1:{plain_int_0:PRIVATE:INT64}"]
+1 -> 3 [label = "t_1:{plain_int_0:PRIVATE:INT64}"]
+2 -> 4 [label = "t_2:{plain_int_0:PRIVATE:INT64}"]
+2 -> 5 [label = "t_2:{plain_int_0:PRIVATE:INT64}"]
+3 -> 4 [label = "t_3:{plain_int_0:PRIVATE:INT64}"]
+4 -> 5 [label = "t_4:{plain_int_0:PRIVATE:INT64}"]
+5 -> 6 [label = "t_5:{plain_int_0:PRIVATE:INT64}"]
+6 -> 7 [label = "t_6:{plain_int_0:PRIVATE:INT64}"]
+}`, `
+pipeline 0 {
+Batched: false
+node: [runsql_0 runsql_1 bucket_2 bucket_3 join_4]
+Inputs: []
+Outputs: [t_2 t_4]
+}
+pipeline 1 {
+Batched: true
+node: [filter_by_index_5]
+Inputs: [t_2 t_4]
+Outputs: [t_5]
+}
+pipeline 2 {
+Batched: false
+node: [shape_6 publish_7]
+Inputs: [t_5]
+Outputs: []
+}
+`, testConf{groupThreshold: 0, batched: true, revealGroupCount: false}},
+	{`select count(*) from alice.tbl_1 as t1 join bob.tbl_1 as t2 join alice.tbl_2 as t3 join bob.tbl_2 as t4 where t1.plain_int_0 = t3.plain_int_0 and t2.plain_int_0 = t4.plain_int_0 and t2.plain_int_0 = t3.plain_int_0`, `digraph G {
+0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select t3.plain_int_0 from alice.tbl_1 as t1 join alice.tbl_2 as t3 on t1.plain_int_0=t3.plain_int_0;,table_refs:[alice.tbl_1 alice.tbl_2],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select t2.plain_int_0 from bob.tbl_1 as t2 join bob.tbl_2 as t4 on t2.plain_int_0=t4.plain_int_0;,table_refs:[bob.tbl_1 bob.tbl_2],],party:[bob,]}"]
+2 [label="join:{in:[Left:{t_0,},Right:{t_1,},],out:[LeftJoinIndex:{t_2,},RightJoinIndex:{},],attr:[input_party_codes:[alice bob],join_type:0,psi_algorithm:0,],party:[alice,bob,]}"]
+3 [label="filter_by_index:{in:[Data:{t_0,},RowsIndexFilter:{t_2,},],out:[Out:{t_3,},],attr:[],party:[alice,]}"]
+4 [label="shape:{in:[In:{t_3,},],out:[Out:{t_4,},],attr:[axis:0,],party:[alice,]}"]
+5 [label="publish:{in:[In:{t_4,},],out:[Out:{t_5,},],attr:[],party:[alice,]}"]
+0 -> 2 [label = "t_0:{plain_int_0:PRIVATE:INT64}"]
+0 -> 3 [label = "t_0:{plain_int_0:PRIVATE:INT64}"]
+1 -> 2 [label = "t_1:{plain_int_0:PRIVATE:INT64}"]
+2 -> 3 [label = "t_2:{plain_int_0:PRIVATE:INT64}"]
+3 -> 4 [label = "t_3:{plain_int_0:PRIVATE:INT64}"]
+4 -> 5 [label = "t_4:{plain_int_0:PRIVATE:INT64}"]
+}`, ``, testConf{groupThreshold: 0, batched: false, revealGroupCount: false}},
+	{`select count(*) from alice.tbl_1 as t1 join alice.tbl_2 as t2 join bob.tbl_1 as t3 join bob.tbl_2 as t4 where t1.plain_int_0 = t2.plain_int_0 and t2.plain_int_0 = t3.plain_int_0 and t3.plain_int_0 = t4.plain_int_0`, `digraph G {
+0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select t2.plain_int_0 from alice.tbl_1 as t1 join alice.tbl_2 as t2 on t1.plain_int_0=t2.plain_int_0;,table_refs:[alice.tbl_1 alice.tbl_2],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select t3.plain_int_0 from bob.tbl_1 as t3 join bob.tbl_2 as t4 on t3.plain_int_0=t4.plain_int_0;,table_refs:[bob.tbl_1 bob.tbl_2],],party:[bob,]}"]
+2 [label="join:{in:[Left:{t_0,},Right:{t_1,},],out:[LeftJoinIndex:{t_2,},RightJoinIndex:{},],attr:[input_party_codes:[alice bob],join_type:0,psi_algorithm:0,],party:[alice,bob,]}"]
+3 [label="filter_by_index:{in:[Data:{t_0,},RowsIndexFilter:{t_2,},],out:[Out:{t_3,},],attr:[],party:[alice,]}"]
+4 [label="shape:{in:[In:{t_3,},],out:[Out:{t_4,},],attr:[axis:0,],party:[alice,]}"]
+5 [label="publish:{in:[In:{t_4,},],out:[Out:{t_5,},],attr:[],party:[alice,]}"]
+0 -> 2 [label = "t_0:{plain_int_0:PRIVATE:INT64}"]
+0 -> 3 [label = "t_0:{plain_int_0:PRIVATE:INT64}"]
+1 -> 2 [label = "t_1:{plain_int_0:PRIVATE:INT64}"]
+2 -> 3 [label = "t_2:{plain_int_0:PRIVATE:INT64}"]
+3 -> 4 [label = "t_3:{plain_int_0:PRIVATE:INT64}"]
+4 -> 5 [label = "t_4:{plain_int_0:PRIVATE:INT64}"]
+}`, ``, testConf{groupThreshold: 0, batched: false, revealGroupCount: false}},
+	{`select count(*) from alice.tbl_1 as t1 join bob.tbl_0 as t2 join bob.tbl_1 as t3 join bob.tbl_2 as t4 where t1.plain_int_0 = t2.plain_int_0 and t2.plain_int_0 = t3.plain_int_0 and t3.plain_int_0 = t4.plain_int_0`, `digraph G {
+0 [label="runsql:{in:[],out:[Out:{t_0,},],attr:[sql:select t1.plain_int_0 from alice.tbl_1 as t1;,table_refs:[alice.tbl_1],],party:[alice,]}"]
+1 [label="runsql:{in:[],out:[Out:{t_1,},],attr:[sql:select t2.plain_int_0 from (select t2.plain_int_0,t3.plain_int_0 from (bob.tbl_0 as t2 join bob.tbl_1 as t3 on t2.plain_int_0=t3.plain_int_0)) as t2 join bob.tbl_2 as t4 on t2.plain_int_0=t4.plain_int_0;,table_refs:[bob.tbl_0 bob.tbl_1 bob.tbl_2],],party:[bob,]}"]
+2 [label="join:{in:[Left:{t_0,},Right:{t_1,},],out:[LeftJoinIndex:{t_2,},RightJoinIndex:{},],attr:[input_party_codes:[alice bob],join_type:0,psi_algorithm:0,],party:[alice,bob,]}"]
+3 [label="filter_by_index:{in:[Data:{t_0,},RowsIndexFilter:{t_2,},],out:[Out:{t_3,},],attr:[],party:[alice,]}"]
+4 [label="shape:{in:[In:{t_3,},],out:[Out:{t_4,},],attr:[axis:0,],party:[alice,]}"]
+5 [label="publish:{in:[In:{t_4,},],out:[Out:{t_5,},],attr:[],party:[alice,]}"]
+0 -> 2 [label = "t_0:{plain_int_0:PRIVATE:INT64}"]
+0 -> 3 [label = "t_0:{plain_int_0:PRIVATE:INT64}"]
+1 -> 2 [label = "t_1:{plain_int_0:PRIVATE:INT64}"]
+2 -> 3 [label = "t_2:{plain_int_0:PRIVATE:INT64}"]
+3 -> 4 [label = "t_3:{plain_int_0:PRIVATE:INT64}"]
+4 -> 5 [label = "t_4:{plain_int_0:PRIVATE:INT64}"]
+}`, ``, testConf{groupThreshold: 0, batched: false, revealGroupCount: false}},
 }

@@ -35,8 +35,9 @@ func (ki KeyInfo) Clone() KeyInfo {
 
 // Schema stands for the row schema and unique key information get from input.
 type Schema struct {
-	Columns []*Column
-	Keys    []KeyInfo
+	Columns   []*Column
+	Keys      []KeyInfo
+	PartyCode string
 }
 
 // String implements fmt.Stringer interface.
@@ -72,6 +73,7 @@ func (s *Schema) Clone() *Schema {
 	}
 	schema := NewSchema(cols...)
 	schema.SetUniqueKeys(keys)
+	schema.PartyCode = s.PartyCode
 	return schema
 }
 
@@ -184,6 +186,11 @@ func MergeSchema(lSchema, rSchema *Schema) *Schema {
 	tmpL := lSchema.Clone()
 	tmpR := rSchema.Clone()
 	ret := NewSchema(append(tmpL.Columns, tmpR.Columns...)...)
+	if lSchema.PartyCode == rSchema.PartyCode {
+		ret.PartyCode = lSchema.PartyCode
+	} else {
+		ret.PartyCode = ""
+	}
 	return ret
 }
 

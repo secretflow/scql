@@ -35,12 +35,12 @@ const (
 	flagEliminateProjection
 	flagMaxMinEliminate
 	flagPredicatePushDown
+	flagJoinReOrder
 	flagPrunColumnsDouble // eliminate unused columns added by predicate push down
 	flagEliminateOuterJoin
 	flagPartitionProcessor
 	flagPushDownAgg
 	flagPushDownTopN
-	flagJoinReOrder
 	flagDoubleCheckEliminateProjection
 	flagPatchTimeZone
 )
@@ -53,11 +53,11 @@ var optRuleList = []logicalOptRule{
 	&projectionEliminator{},
 	&optPlaceHolder{},
 	&ppdSolver{},
+	&joinReOrderSolver{},
 	&columnPruner{},
 	&optPlaceHolder{},
 	&optPlaceHolder{},
 	&aggregationPushDownSolver{},
-	&optPlaceHolder{},
 	&optPlaceHolder{},
 	&projectionEliminator{},
 	&timeZonePatcher{},

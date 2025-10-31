@@ -103,6 +103,7 @@ func (b *PlanBuilder) buildDataSource(ctx context.Context, tn *ast.TableName,
 		schema.Append(newCol)
 		ds.TblCols = append(ds.TblCols, newCol)
 	}
+	schema.PartyCode = tableInfo.PartyCode
 	ds.SetSchema(schema)
 	ds.names = names
 
@@ -1958,9 +1959,13 @@ func (b *PlanBuilder) buildProjection4Union(ctx context.Context, u *LogicalUnion
 	}
 	u.schema = expression.NewSchema(unionCols...)
 	u.names = names
+	partyCode := u.children[0].Schema().PartyCode
 	// Process each child and add a projection above original child.
 	// So the schema of `UnionAll` can be the same with its children's.
 	for childID, child := range u.children {
+		if child.Schema().PartyCode != partyCode {
+			partyCode = ""
+		}
 		exprs := make([]expression.Expression, len(child.Schema().Columns))
 		for i, srcCol := range child.Schema().Columns {
 			dstType := unionCols[i].RetType
@@ -1977,6 +1982,7 @@ func (b *PlanBuilder) buildProjection4Union(ctx context.Context, u *LogicalUnion
 		proj.SetChildren(child)
 		u.children[childID] = proj
 	}
+	u.schema.PartyCode = partyCode
 }
 
 func (b *PlanBuilder) buildUnion(ctx context.Context, union *ast.UnionStmt) (LogicalPlan, error) {
