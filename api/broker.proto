@@ -688,6 +688,7 @@ service InterBrokerService {
 }
 
 // part of compile options which are nothing to do with safety
+// deprecated
 message RunningOptions {
   bool batched = 1;
 }

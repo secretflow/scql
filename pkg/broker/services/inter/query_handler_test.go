@@ -143,6 +143,7 @@ func (s *interTestSuite) TearDownTest() {
 func (s *interTestSuite) TestDistributeQueryErrorQuery() {
 	serverAlice := s.testAppBuilder.ServerAlice
 	serverCarol := s.testAppBuilder.ServerCarol
+	batched := false
 	mockReq := &scql.DistributeQueryRequest{
 		ClientProtocol: application.Version,
 		ClientId:       &scql.PartyId{Code: "alice"},
@@ -151,8 +152,7 @@ func (s *interTestSuite) TestDistributeQueryErrorQuery() {
 		JobId:          "1",
 		ClientChecksum: &scql.Checksum{TableSchema: []byte{0x1}, Ccl: []byte{0x1}},
 		ServerChecksum: &scql.Checksum{TableSchema: []byte{0x1}, Ccl: []byte{0x1}},
-		JobConfig:      &scql.JobConfig{},
-		RunningOpts:    &scql.RunningOptions{Batched: true},
+		JobConfig:      &scql.JobConfig{Batched: &batched},
 		CreatedAt:      timestamppb.Now(),
 	}
 	// failed to parse query

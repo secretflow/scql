@@ -30,6 +30,7 @@ import (
 	"github.com/secretflow/scql/pkg/planner/core"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
+	"github.com/secretflow/scql/pkg/util/brokerutil"
 	"github.com/secretflow/scql/pkg/util/message"
 )
 
@@ -75,8 +76,8 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 	if err != nil {
 		return nil, err
 	}
-
-	sessionOptions := common.GenSessionOpts(req.GetJobConfig(), &projConf)
+	jobConfig := brokerutil.UpdateJobConfig(req.GetJobConfig(), &projConf)
+	sessionOptions := common.GenSessionOpts(jobConfig)
 	info := &application.ExecutionInfo{
 		ProjectID:      req.GetProjectId(),
 		JobID:          req.GetJobId(),
@@ -85,16 +86,14 @@ func (svc *grpcInterSvc) DistributeQuery(ctx context.Context, req *pb.Distribute
 		EngineClient:   app.EngineClient,
 		DebugOpts:      req.GetDebugOpts(),
 		SessionOptions: sessionOptions,
+		CompileOpts:    &pb.CompileOptions{Batched: jobConfig.GetBatched()},
 		CreatedAt:      req.CreatedAt.AsTime(),
 	}
-
 	session, err := application.NewSession(ctx, info, app, req.GetIsAsync(), req.GetDryRun())
 	if err != nil {
 		return
 	}
 	logrus.Infof("create session %s with query %s in project %s from %s", req.JobId, req.Query, req.ProjectId, req.GetClientId().GetCode())
-	// use running options from issuer party
-	session.ExecuteInfo.CompileOpts.Batched = req.GetRunningOpts().GetBatched()
 
 	// 3.1 parse query
 	r := executor.NewQueryRunner(session)
