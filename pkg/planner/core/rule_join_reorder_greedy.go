@@ -53,7 +53,7 @@ func (s *joinReorderGreedySolver) solve(joinNodePlans []LogicalPlan) (LogicalPla
 		if len(s.curJoinGroup) == 0 {
 			break
 		}
-		newNode := s.mergeJoinNodeWithSamePartyCode()
+		newNode := s.popIfFirstNodeCantBeMerged()
 		if newNode != nil {
 			optimizedCurJoinGroup = append(optimizedCurJoinGroup, newNode)
 		}
@@ -72,7 +72,7 @@ func (s *joinReorderGreedySolver) solve(joinNodePlans []LogicalPlan) (LogicalPla
 	return s.makeBushyJoin(cartesianGroup), nil
 }
 
-func (s *joinReorderGreedySolver) mergeJoinNodeWithSamePartyCode() *jrNode {
+func (s *joinReorderGreedySolver) popIfFirstNodeCantBeMerged() *jrNode {
 	curJoinTree := s.curJoinGroup[0]
 	// only merging plans with same party code
 	for i, node := range s.curJoinGroup[1:] {
