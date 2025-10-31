@@ -16,6 +16,7 @@
 package brokerutil
 
 import (
+	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 )
 
@@ -54,6 +55,26 @@ func UpdateJobConfig(jobConfig *pb.JobConfig, projectConfig *pb.ProjectConfig) *
 
 	if jobConfig.LinkChunkedSendParallelSize == 0 {
 		jobConfig.LinkChunkedSendParallelSize = projectConfig.LinkChunkedSendParallelSize
+	}
+
+	if jobConfig.Batched == nil {
+		jobConfig.Batched = projectConfig.Batched
+	}
+
+	if jobConfig.EnableSessionLoggerSeparation == nil {
+		jobConfig.EnableSessionLoggerSeparation = projectConfig.EnableSessionLoggerSeparation
+	}
+
+	if jobConfig.UseRr22LowCommMode == nil {
+		jobConfig.UseRr22LowCommMode = projectConfig.UseRr22LowCommMode
+	}
+
+	if jobConfig.PsiType == scql.PsiAlgorithmType_AUTO {
+		jobConfig.PsiType = projectConfig.PsiType
+	}
+
+	if jobConfig.TimeZone == "" {
+		jobConfig.TimeZone = projectConfig.TimeZone
 	}
 
 	return jobConfig

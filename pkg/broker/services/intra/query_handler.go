@@ -35,6 +35,7 @@ import (
 	"github.com/secretflow/scql/pkg/planner/core"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
+	"github.com/secretflow/scql/pkg/util/brokerutil"
 	"github.com/secretflow/scql/pkg/util/message"
 	"github.com/secretflow/scql/pkg/util/parallel"
 	"github.com/secretflow/scql/pkg/util/sliceutil"
@@ -80,7 +81,8 @@ func (svc *grpcIntraSvc) DoQuery(ctx context.Context, req *pb.QueryRequest) (res
 		return nil, fmt.Errorf("DoQuery: %v", err)
 	}
 
-	sessionOptions := common.GenSessionOpts(req.GetJobConfig(), projConf)
+	jobConfig := brokerutil.UpdateJobConfig(req.GetJobConfig(), projConf)
+	sessionOptions := common.GenSessionOpts(jobConfig)
 
 	info := &application.ExecutionInfo{
 		ProjectID: req.GetProjectId(),
@@ -92,6 +94,7 @@ func (svc *grpcIntraSvc) DoQuery(ctx context.Context, req *pb.QueryRequest) (res
 		EngineClient:   app.EngineClient,
 		DebugOpts:      req.GetDebugOpts(),
 		SessionOptions: sessionOptions,
+		CompileOpts:    &pb.CompileOptions{Batched: jobConfig.GetBatched()},
 		CreatedAt:      time.Now(),
 	}
 	session, err := application.NewSession(ctx, info, app, false, req.GetDryRun())
@@ -137,7 +140,8 @@ func (svc *grpcIntraSvc) SubmitQuery(ctx context.Context, req *pb.QueryRequest) 
 		}
 	}
 
-	sessionOptions := common.GenSessionOpts(req.GetJobConfig(), projConf)
+	jobConfig := brokerutil.UpdateJobConfig(req.GetJobConfig(), projConf)
+	sessionOptions := common.GenSessionOpts(jobConfig)
 
 	info := &application.ExecutionInfo{
 		ProjectID: req.GetProjectId(),
@@ -149,6 +153,7 @@ func (svc *grpcIntraSvc) SubmitQuery(ctx context.Context, req *pb.QueryRequest) 
 		EngineClient:   app.EngineClient,
 		DebugOpts:      req.GetDebugOpts(),
 		SessionOptions: sessionOptions,
+		CompileOpts:    &pb.CompileOptions{Batched: *jobConfig.Batched},
 		CreatedAt:      time.Now(),
 	}
 	session, err := application.NewSession(ctx, info, app, true /* async mode */, false)
@@ -337,7 +342,8 @@ func (svc *grpcIntraSvc) ExplainQuery(ctx context.Context, req *pb.ExplainQueryR
 		return nil, fmt.Errorf("DoQuery: %v", err)
 	}
 
-	sessionOptions := common.GenSessionOpts(req.GetJobConfig(), projConf)
+	jobConfig := brokerutil.UpdateJobConfig(req.GetJobConfig(), projConf)
+	sessionOptions := common.GenSessionOpts(jobConfig)
 
 	info := &application.ExecutionInfo{
 		ProjectID: req.GetProjectId(),
@@ -348,6 +354,7 @@ func (svc *grpcIntraSvc) ExplainQuery(ctx context.Context, req *pb.ExplainQueryR
 		},
 		EngineClient:   app.EngineClient,
 		SessionOptions: sessionOptions,
+		CompileOpts:    &pb.CompileOptions{Batched: *jobConfig.Batched},
 		CreatedAt:      time.Now(),
 	}
 
@@ -437,7 +444,10 @@ func distributeQueryToOtherParty(session *application.Session, enginesInfo *grap
 	if !session.DryRun {
 		selfEndpoint = session.Engine.GetEndpointForPeer()
 	}
-
+	batched := false
+	if session.ExecuteInfo.CompileOpts != nil {
+		batched = session.ExecuteInfo.CompileOpts.Batched
+	}
 	// distribute queries to other participants
 	distributeReq := &pb.DistributeQueryRequest{
 		ClientProtocol: application.Version,
@@ -451,17 +461,19 @@ func distributeQueryToOtherParty(session *application.Session, enginesInfo *grap
 		DryRun:         session.DryRun,
 		TimeZone:       session.ExecuteInfo.SessionOptions.TimeZone,
 		JobConfig: &pb.JobConfig{
-			SessionExpireSeconds:        session.ExecuteInfo.SessionOptions.SessionExpireSeconds,
-			TimeZone:                    session.ExecuteInfo.SessionOptions.TimeZone,
-			PsiCurveType:                session.ExecuteInfo.SessionOptions.PsiConfig.PsiCurveType,
-			HttpMaxPayloadSize:          session.ExecuteInfo.SessionOptions.LinkConfig.HttpMaxPayloadSize,
-			LinkRecvTimeoutSec:          session.ExecuteInfo.SessionOptions.LinkConfig.LinkRecvTimeoutSec,
-			LinkThrottleWindowSize:      session.ExecuteInfo.SessionOptions.LinkConfig.LinkThrottleWindowSize,
-			LinkChunkedSendParallelSize: session.ExecuteInfo.SessionOptions.LinkConfig.LinkChunkedSendParallelSize,
-			PsiType:                     session.ExecuteInfo.SessionOptions.PsiConfig.PsiType,
+			SessionExpireSeconds:          session.ExecuteInfo.SessionOptions.SessionExpireSeconds,
+			TimeZone:                      session.ExecuteInfo.SessionOptions.TimeZone,
+			PsiCurveType:                  session.ExecuteInfo.SessionOptions.PsiConfig.PsiCurveType,
+			HttpMaxPayloadSize:            session.ExecuteInfo.SessionOptions.LinkConfig.HttpMaxPayloadSize,
+			LinkRecvTimeoutSec:            session.ExecuteInfo.SessionOptions.LinkConfig.LinkRecvTimeoutSec,
+			LinkThrottleWindowSize:        session.ExecuteInfo.SessionOptions.LinkConfig.LinkThrottleWindowSize,
+			LinkChunkedSendParallelSize:   session.ExecuteInfo.SessionOptions.LinkConfig.LinkChunkedSendParallelSize,
+			PsiType:                       session.ExecuteInfo.SessionOptions.PsiConfig.PsiType,
+			UseRr22LowCommMode:            &session.ExecuteInfo.SessionOptions.PsiConfig.UseRr22LowCommMode,
+			EnableSessionLoggerSeparation: &session.ExecuteInfo.SessionOptions.LogConfig.EnableSessionLoggerSeparation,
+			Batched:                       &batched,
 		},
-		RunningOpts: &pb.RunningOptions{Batched: executionInfo.CompileOpts.Batched},
-		CreatedAt:   timestamppb.New(executionInfo.CreatedAt),
+		CreatedAt: timestamppb.New(executionInfo.CreatedAt),
 	}
 	if slices.Contains(executionInfo.DataParties, selfCode) {
 		selfInfoChecksum, err := session.GetSelfChecksum()

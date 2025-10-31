@@ -1221,6 +1221,11 @@ definitions:
         type: boolean
       psi_type:
         $ref: '#/definitions/scql.pb.PsiAlgorithmType'
+      use_rr22_low_comm_mode:
+        type: boolean
+      batched:
+        type: boolean
+    description: JobConfig is a subset of ProjectConfig.
   scql.pb.JobProgress:
     type: object
     properties:
@@ -1482,6 +1487,19 @@ definitions:
       reveal_group_count:
         type: boolean
         title: reveal the number of elements in each group
+      enable_session_logger_separation:
+        type: boolean
+      psi_type:
+        $ref: '#/definitions/scql.pb.PsiAlgorithmType'
+      use_rr22_low_comm_mode:
+        type: boolean
+      batched:
+        type: boolean
+      time_zone:
+        type: string
+        title: |-
+          job's time_zone for session, default is empty which means use engine's
+          default time_zone
   scql.pb.ProjectConflict:
     type: object
     properties:
@@ -1706,7 +1724,9 @@ definitions:
     properties:
       batched:
         type: boolean
-    title: part of compile options which are nothing to do with safety
+    title: |-
+      part of compile options which are nothing to do with safety
+      deprecated
   scql.pb.SQLWarning:
     type: object
     properties:

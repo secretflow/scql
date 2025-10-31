@@ -184,7 +184,7 @@ func NewSession(ctx context.Context, info *ExecutionInfo, app *App, asyncMode, d
 		OptimizerHints: &pb.OptimizerHints{
 			PsiAlgorithmType: info.SessionOptions.PsiConfig.GetPsiType(),
 		},
-		Batched: app.Conf.Batched,
+		Batched: info.CompileOpts.GetBatched(),
 	}
 	// NOTE(xiaoyuan): use ecdh psi when EnablePsiDetailLog is true
 	if info.DebugOpts != nil && info.DebugOpts.EnablePsiDetailLog {
