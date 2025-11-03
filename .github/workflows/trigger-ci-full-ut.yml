@@ -8,7 +8,7 @@ jobs:
   trigger-circleci:
     runs-on: ubuntu-latest
     # This job only runs if the label that was just added is exactly "run-ci-full".
-    if: github.event.label.name == 'run-ci-cov'
+    if: github.event.label.name == 'run-ci-full'
     permissions:
       pull-requests: write
     steps:
