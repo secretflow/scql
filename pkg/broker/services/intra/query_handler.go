@@ -153,7 +153,7 @@ func (svc *grpcIntraSvc) SubmitQuery(ctx context.Context, req *pb.QueryRequest) 
 		EngineClient:   app.EngineClient,
 		DebugOpts:      req.GetDebugOpts(),
 		SessionOptions: sessionOptions,
-		CompileOpts:    &pb.CompileOptions{Batched: *jobConfig.Batched},
+		CompileOpts:    &pb.CompileOptions{Batched: jobConfig.GetBatched()},
 		CreatedAt:      time.Now(),
 	}
 	session, err := application.NewSession(ctx, info, app, true /* async mode */, false)
@@ -354,7 +354,7 @@ func (svc *grpcIntraSvc) ExplainQuery(ctx context.Context, req *pb.ExplainQueryR
 		},
 		EngineClient:   app.EngineClient,
 		SessionOptions: sessionOptions,
-		CompileOpts:    &pb.CompileOptions{Batched: *jobConfig.Batched},
+		CompileOpts:    &pb.CompileOptions{Batched: jobConfig.GetBatched()},
 		CreatedAt:      time.Now(),
 	}
 

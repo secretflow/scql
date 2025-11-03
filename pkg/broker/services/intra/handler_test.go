@@ -227,16 +227,6 @@ func (s *intraTestSuite) TestCreateView() {
 	s.Error(err)
 }
 
-func (s *intraTestSuite) TestCreateTable() {
-	_, err := s.svcAlice.CreateProject(s.ctx, &pb.CreateProjectRequest{ProjectId: "test1", Name: "test", Conf: &pb.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}}})
-	s.NoError(err)
-	_, err = s.svcAlice.CreateTable(s.ctx, &pb.CreateTableRequest{ProjectId: "test1", TableName: "test_table", RefTable: "alice.table", DbType: "mysql", Columns: []*pb.CreateTableRequest_ColumnDesc{{Name: "a", Dtype: "int"}}})
-	s.NoError(err)
-	_, err = s.svcAlice.CreateTable(s.ctx, &pb.CreateTableRequest{ProjectId: "test1", TableName: "test_table_1", RefTable: "alice.table", DbType: "postgresql", Columns: []*pb.CreateTableRequest_ColumnDesc{&pb.CreateTableRequest_ColumnDesc{Name: "test", Dtype: "int"}}})
-	s.Error(err)
-	s.Equal("CreateTable: ref table alice.table conflicts, it already existed with db_type=mysql", err.Error())
-}
-
 func (s *intraTestSuite) TestCreateProject() {
 	_, err := s.svcAlice.CreateProject(s.ctx, &pb.CreateProjectRequest{ProjectId: "test1", Name: "test", Conf: &pb.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}}})
 	s.NoError(err)
@@ -245,6 +235,47 @@ func (s *intraTestSuite) TestCreateProject() {
 	s.Equal("CreateProject: failed to create table in meta database: CreateProject: project test1 already exists", err.Error())
 	_, err = s.svcAlice.CreateProject(s.ctx, &pb.CreateProjectRequest{ProjectId: "test2", Name: "test", Conf: &pb.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}}})
 	s.NoError(err)
+
+	// test default value
+	_, err = s.svcAlice.CreateProject(s.ctx, &pb.CreateProjectRequest{ProjectId: "test_t", Name: "test_t", Conf: &pb.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}}})
+	s.NoError(err)
+	projects, err := s.svcAlice.ListProjects(s.ctx, &pb.ListProjectsRequest{Ids: []string{"test_t"}})
+	s.NoError(err)
+	s.Equal(1, len(projects.Projects))
+	s.Equal(false, projects.Projects[0].Conf.GetBatched())
+	s.Equal(false, projects.Projects[0].Conf.GetEnableSessionLoggerSeparation())
+	s.Equal(false, projects.Projects[0].Conf.GetUseRr22LowCommMode())
+	// test nil value
+	_, err = s.svcAlice.CreateProject(s.ctx, &pb.CreateProjectRequest{ProjectId: "test_t1", Name: "test_t1", Conf: &pb.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}, Batched: nil, EnableSessionLoggerSeparation: nil, UseRr22LowCommMode: nil}})
+	s.NoError(err)
+	projects, err = s.svcAlice.ListProjects(s.ctx, &pb.ListProjectsRequest{Ids: []string{"test_t1"}})
+	s.NoError(err)
+	s.Equal(1, len(projects.Projects))
+	s.Equal(false, projects.Projects[0].Conf.GetBatched())
+	s.Equal(false, projects.Projects[0].Conf.GetEnableSessionLoggerSeparation())
+	s.Equal(false, projects.Projects[0].Conf.GetUseRr22LowCommMode())
+	// test true value
+	batched := true
+	enableSessionLoggerSeparation := true
+	useRr22LowCommMode := true
+	_, err = s.svcAlice.CreateProject(s.ctx, &pb.CreateProjectRequest{ProjectId: "test_t2", Name: "test_t2", Conf: &pb.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}, Batched: &batched, EnableSessionLoggerSeparation: &enableSessionLoggerSeparation, UseRr22LowCommMode: &useRr22LowCommMode}})
+	s.NoError(err)
+	projects, err = s.svcAlice.ListProjects(s.ctx, &pb.ListProjectsRequest{Ids: []string{"test_t2"}})
+	s.NoError(err)
+	s.Equal(1, len(projects.Projects))
+	s.Equal(true, projects.Projects[0].Conf.GetBatched())
+	s.Equal(true, projects.Projects[0].Conf.GetEnableSessionLoggerSeparation())
+	s.Equal(true, projects.Projects[0].Conf.GetUseRr22LowCommMode())
+}
+
+func (s *intraTestSuite) TestCreateTable() {
+	_, err := s.svcAlice.CreateProject(s.ctx, &pb.CreateProjectRequest{ProjectId: "test1", Name: "test", Conf: &pb.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}}})
+	s.NoError(err)
+	_, err = s.svcAlice.CreateTable(s.ctx, &pb.CreateTableRequest{ProjectId: "test1", TableName: "test_table", RefTable: "alice.table", DbType: "mysql", Columns: []*pb.CreateTableRequest_ColumnDesc{{Name: "a", Dtype: "int"}}})
+	s.NoError(err)
+	_, err = s.svcAlice.CreateTable(s.ctx, &pb.CreateTableRequest{ProjectId: "test1", TableName: "test_table_1", RefTable: "alice.table", DbType: "postgresql", Columns: []*pb.CreateTableRequest_ColumnDesc{&pb.CreateTableRequest_ColumnDesc{Name: "test", Dtype: "int"}}})
+	s.Error(err)
+	s.Equal("CreateTable: ref table alice.table conflicts, it already existed with db_type=mysql", err.Error())
 }
 
 func (s *intraTestSuite) TestProcessInvitationError() {
