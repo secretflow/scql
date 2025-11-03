@@ -17,6 +17,8 @@ type TableSchema struct {
 	DbName    string
 	TableName string
 	Columns   []ColumnDesc
+	// owner party code
+	PartyCode string
 }
 type ColumnDesc struct {
 	Name        string
