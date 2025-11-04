@@ -389,7 +389,7 @@ func TestGetSessionOpts(t *testing.T) {
 		projectConf.Batched = &batched
 		projectConf.UseRr22LowCommMode = &useRr22LowCommMode
 		projectConf.EnableSessionLoggerSeparation = &enableSessionLoggerSeparation
-		projectConf.TimeZone = "2025-09"
+		projectConf.TimeZone = "+08:00"
 		conf := brokerutil.UpdateJobConfig(jobConfig, projectConf)
 		sessionOptions := GenSessionOpts(conf)
 		r.Equal(sessionOptions.PsiConfig.GetUseRr22LowCommMode(), true)
