@@ -335,12 +335,12 @@ func TestGetSessionOpts(t *testing.T) {
 		projectConf.Batched = &batched
 		projectConf.UseRr22LowCommMode = &useRr22LowCommMode
 		projectConf.EnableSessionLoggerSeparation = &enableSessionLoggerSeparation
-		projectConf.TimeZone = "2025-08"
+		projectConf.TimeZone = "+08:00"
 		conf := brokerutil.UpdateJobConfig(jobConfig, projectConf)
 		sessionOptions := GenSessionOpts(conf)
 		r.Equal(sessionOptions.PsiConfig.GetUseRr22LowCommMode(), true)
 		r.Equal(sessionOptions.LogConfig.GetEnableSessionLoggerSeparation(), true)
-		r.Equal(sessionOptions.TimeZone, "2025-08")
+		r.Equal(sessionOptions.TimeZone, "+08:00")
 		r.Equal(conf.GetBatched(), true)
 	}
 
@@ -380,7 +380,7 @@ func TestGetSessionOpts(t *testing.T) {
 			Batched:                       &batchedJobConf,
 			UseRr22LowCommMode:            &useRr22LowCommModeJobConf,
 			EnableSessionLoggerSeparation: &enableSessionLoggerSeparationJobConf,
-			TimeZone:                      "2025-08",
+			TimeZone:                      "+08:00",
 		}
 		batched := true
 		useRr22LowCommMode := true
@@ -394,7 +394,7 @@ func TestGetSessionOpts(t *testing.T) {
 		sessionOptions := GenSessionOpts(conf)
 		r.Equal(sessionOptions.PsiConfig.GetUseRr22LowCommMode(), true)
 		r.Equal(sessionOptions.LogConfig.GetEnableSessionLoggerSeparation(), true)
-		r.Equal(sessionOptions.TimeZone, "2025-08")
+		r.Equal(sessionOptions.TimeZone, "+08:00")
 		r.Equal(conf.GetBatched(), true)
 	}
 }
