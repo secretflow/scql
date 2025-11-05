@@ -103,9 +103,9 @@ func (b *PlanBuilder) buildDataSource(ctx context.Context, tn *ast.TableName,
 		schema.Append(newCol)
 		ds.TblCols = append(ds.TblCols, newCol)
 	}
-	schema.PartyCode = tableInfo.PartyCode
 	ds.SetSchema(schema)
 	ds.names = names
+	ds.SetPartyCode(tableInfo.PartyCode)
 
 	return ds, nil
 }
@@ -550,7 +550,7 @@ func (b *PlanBuilder) unfoldWildStar(
 func (p *LogicalJoin) extractOnCondition(conditions []expression.Expression, deriveLeft bool,
 	deriveRight bool) (eqCond []*expression.ScalarFunction, leftCond []expression.Expression,
 	rightCond []expression.Expression, otherCond []expression.Expression) {
-	return p.ExtractOnCondition(conditions, p.children[0].Schema(), p.children[1].Schema(), deriveLeft, deriveRight)
+	return p.ExtractOnCondition(conditions, p.Children()[0].Schema(), p.Children()[1].Schema(), deriveLeft, deriveRight)
 }
 
 // ExtractOnCondition divide conditions in CNF of join node into 4 groups.
@@ -1941,17 +1941,17 @@ func unionJoinFieldType(a, b *types.FieldType) *types.FieldType {
 }
 
 func (b *PlanBuilder) buildProjection4Union(ctx context.Context, u *LogicalUnionAll) {
-	unionCols := make([]*expression.Column, 0, u.children[0].Schema().Len())
-	names := make([]*types.FieldName, 0, u.children[0].Schema().Len())
+	unionCols := make([]*expression.Column, 0, u.Children()[0].Schema().Len())
+	names := make([]*types.FieldName, 0, u.Children()[0].Schema().Len())
 
 	// Infer union result types by its children's schema.
-	for i, col := range u.children[0].Schema().Columns {
+	for i, col := range u.Children()[0].Schema().Columns {
 		resultTp := col.RetType
 		for j := 1; j < len(u.children); j++ {
 			childTp := u.children[j].Schema().Columns[i].RetType
 			resultTp = unionJoinFieldType(resultTp, childTp)
 		}
-		names = append(names, &types.FieldName{ColName: u.children[0].OutputNames()[i].ColName})
+		names = append(names, &types.FieldName{ColName: u.Children()[0].OutputNames()[i].ColName})
 		unionCols = append(unionCols, &expression.Column{
 			RetType:  resultTp,
 			UniqueID: b.ctx.GetSessionVars().AllocPlanColumnID(),
@@ -1959,13 +1959,9 @@ func (b *PlanBuilder) buildProjection4Union(ctx context.Context, u *LogicalUnion
 	}
 	u.schema = expression.NewSchema(unionCols...)
 	u.names = names
-	partyCode := u.children[0].Schema().PartyCode
 	// Process each child and add a projection above original child.
 	// So the schema of `UnionAll` can be the same with its children's.
 	for childID, child := range u.children {
-		if child.Schema().PartyCode != partyCode {
-			partyCode = ""
-		}
 		exprs := make([]expression.Expression, len(child.Schema().Columns))
 		for i, srcCol := range child.Schema().Columns {
 			dstType := unionCols[i].RetType
@@ -1982,7 +1978,6 @@ func (b *PlanBuilder) buildProjection4Union(ctx context.Context, u *LogicalUnion
 		proj.SetChildren(child)
 		u.children[childID] = proj
 	}
-	u.schema.PartyCode = partyCode
 }
 
 func (b *PlanBuilder) buildUnion(ctx context.Context, union *ast.UnionStmt) (LogicalPlan, error) {

@@ -77,7 +77,7 @@ func (s *joinReorderGreedySolver) popIfFirstNodeCantBeMerged() *jrNode {
 	// only merging plans with same party code
 	for i, node := range s.curJoinGroup[1:] {
 		// skip join node which can't merge with curJoinTree
-		if node.p.Schema().PartyCode == "" || (curJoinTree.p.Schema().PartyCode != node.p.Schema().PartyCode) {
+		if node.p.PartyCode() == "" || (curJoinTree.p.PartyCode() != node.p.PartyCode()) {
 			continue
 		}
 		newJoin, remainOthers := s.checkConnectionAndMakeJoin(curJoinTree.p, node.p)

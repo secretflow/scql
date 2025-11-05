@@ -52,6 +52,11 @@ type Plan interface {
 	SetOutputNames(names types.NameSlice)
 
 	SelectBlockOffset() int
+	// "" for multipaty plan
+	PartyCode() string
+
+	// "" for multipaty plan
+	SetPartyCode(partyCode string)
 }
 
 type InsertTableOption struct {
@@ -104,6 +109,7 @@ type basePlan struct {
 	blockOffset    int
 	intoOpt        *ast.SelectIntoOption
 	insertTableOpt *InsertTableOption
+	partyCode      string
 }
 
 func (p *basePlan) TP() string {
@@ -131,6 +137,14 @@ func (p *basePlan) SCtx() sessionctx.Context {
 
 func (p *basePlan) SelectBlockOffset() int {
 	return p.blockOffset
+}
+
+func (p *basePlan) PartyCode() string {
+	return p.partyCode
+}
+
+func (p *basePlan) SetPartyCode(partyCode string) {
+	p.partyCode = partyCode
 }
 
 func (p *baseLogicalPlan) extractCorrelatedCols() []*expression.CorrelatedColumn {

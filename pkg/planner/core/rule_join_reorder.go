@@ -61,7 +61,26 @@ type jrNode struct {
 }
 
 func (s *joinReOrderSolver) optimize(ctx context.Context, p LogicalPlan) (LogicalPlan, error) {
+	fillPartyCode(p)
 	return s.optimizeRecursive(p.SCtx(), p)
+}
+
+func fillPartyCode(p LogicalPlan) {
+	if len(p.Children()) == 0 {
+		return
+	}
+	// fill party code recursively
+	for _, child := range p.Children() {
+		fillPartyCode(child)
+	}
+	partyCode := p.Children()[0].PartyCode()
+	for _, child := range p.Children() {
+		if partyCode != child.PartyCode() {
+			partyCode = ""
+			break
+		}
+	}
+	p.SetPartyCode(partyCode)
 }
 
 // optimizeRecursive recursively collects join groups and applies join reorder algorithm for each group.
@@ -172,15 +191,20 @@ func (s *baseSingleGroupJoinOrderSolver) newJoinWithEdges(lChild, rChild Logical
 		newJoin.LeftJoinKeys = append(newJoin.LeftJoinKeys, eqCond.GetArgs()[0].(*expression.Column))
 		newJoin.RightJoinKeys = append(newJoin.RightJoinKeys, eqCond.GetArgs()[1].(*expression.Column))
 	}
+	if lChild.PartyCode() == rChild.PartyCode() {
+		newJoin.SetPartyCode(lChild.PartyCode())
+	} else {
+		newJoin.SetPartyCode("")
+	}
 	return newJoin
 }
 
 // calcJoinCumCost calculates the cumulative cost of the join node.
 func (s *baseSingleGroupJoinOrderSolver) calcJoinCumCost(join LogicalPlan, lNode, rNode *jrNode) float64 {
-	if lNode.p.Schema().PartyCode == rNode.p.Schema().PartyCode {
-		return LocalJoin + lNode.cumCost + rNode.cumCost
+	if lNode.p.PartyCode() == "" || lNode.p.PartyCode() != rNode.p.PartyCode() {
+		return NonLocalJoin + lNode.cumCost + rNode.cumCost
 	}
-	return NonLocalJoin + lNode.cumCost + rNode.cumCost
+	return LocalJoin + lNode.cumCost + rNode.cumCost
 }
 
 func (*joinReOrderSolver) name() string {
