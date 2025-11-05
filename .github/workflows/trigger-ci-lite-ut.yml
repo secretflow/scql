@@ -1,4 +1,4 @@
-name: Trigger CircleCI Unit Test for Forked & Labeled PR
+name: Trigger CircleCI Lite Unit Test for Forked & Labeled PR
 
 on:
   pull_request_target:

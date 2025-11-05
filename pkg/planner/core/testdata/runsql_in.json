@@ -33,6 +33,11 @@
         "rewritten_sql": "select tbl_1.aggregate_datetime_0,tbl_1.aggregate_datetime_1,tbl_1.aggregate_datetime_2,tbl_1.aggregate_float_0,tbl_1.aggregate_float_1,tbl_1.aggregate_float_2,tbl_1.aggregate_int_0,tbl_1.aggregate_int_1,tbl_1.aggregate_int_2,tbl_1.aggregate_string_0,tbl_1.aggregate_string_1,tbl_1.aggregate_string_2,tbl_1.aggregate_timestamp_0,tbl_1.aggregate_timestamp_1,tbl_1.aggregate_timestamp_2,tbl_1.compare_datetime_0,tbl_1.compare_datetime_1,tbl_1.compare_datetime_2,tbl_1.compare_float_0,tbl_1.compare_float_1,tbl_1.compare_float_2,tbl_1.compare_int_0,tbl_1.compare_int_1,tbl_1.compare_int_2,tbl_1.compare_string_0,tbl_1.compare_string_1,tbl_1.compare_string_2,tbl_1.compare_timestamp_0,tbl_1.compare_timestamp_1,tbl_1.compare_timestamp_2,tbl_1.encrypt_datetime_0,tbl_1.encrypt_datetime_1,tbl_1.encrypt_datetime_2,tbl_1.encrypt_float_0,tbl_1.encrypt_float_1,tbl_1.encrypt_float_2,tbl_1.encrypt_int_0,tbl_1.encrypt_int_1,tbl_1.encrypt_int_2,tbl_1.encrypt_string_0,tbl_1.encrypt_string_1,tbl_1.encrypt_string_2,tbl_1.encrypt_timestamp_0,tbl_1.encrypt_timestamp_1,tbl_1.encrypt_timestamp_2,tbl_1.groupby_datetime_0,tbl_1.groupby_datetime_1,tbl_1.groupby_datetime_2,tbl_1.groupby_float_0,tbl_1.groupby_float_1,tbl_1.groupby_float_2,tbl_1.groupby_int_0,tbl_1.groupby_int_1,tbl_1.groupby_int_2,tbl_1.groupby_string_0,tbl_1.groupby_string_1,tbl_1.groupby_string_2,tbl_1.groupby_timestamp_0,tbl_1.groupby_timestamp_1,tbl_1.groupby_timestamp_2,tbl_1.join_datetime_0,tbl_1.join_datetime_1,tbl_1.join_datetime_2,tbl_1.join_float_0,tbl_1.join_float_1,tbl_1.join_float_2,tbl_1.join_int_0,tbl_1.join_int_1,tbl_1.join_int_2,tbl_1.join_string_0,tbl_1.join_string_1,tbl_1.join_string_2,tbl_1.join_timestamp_0,tbl_1.join_timestamp_1,tbl_1.join_timestamp_2,tbl_1.joinpayload_datetime_0,tbl_1.joinpayload_datetime_1,tbl_1.joinpayload_datetime_2,tbl_1.joinpayload_float_0,tbl_1.joinpayload_float_1,tbl_1.joinpayload_float_2,tbl_1.joinpayload_int_0,tbl_1.joinpayload_int_1,tbl_1.joinpayload_int_2,tbl_1.joinpayload_string_0,tbl_1.joinpayload_string_1,tbl_1.joinpayload_string_2,tbl_1.joinpayload_timestamp_0,tbl_1.joinpayload_timestamp_1,tbl_1.joinpayload_timestamp_2,tbl_1.plain_datetime_0,tbl_1.plain_datetime_1,tbl_1.plain_datetime_2,tbl_1.plain_float_0,tbl_1.plain_float_1,tbl_1.plain_float_2,tbl_1.plain_int_0,tbl_1.plain_int_1,tbl_1.plain_int_2,tbl_1.plain_string_0,tbl_1.plain_string_1,tbl_1.plain_string_2,tbl_1.plain_timestamp_0,tbl_1.plain_timestamp_1,tbl_1.plain_timestamp_2,tbl_1.rank_datetime_0,tbl_1.rank_datetime_1,tbl_1.rank_datetime_2,tbl_1.rank_float_0,tbl_1.rank_float_1,tbl_1.rank_float_2,tbl_1.rank_int_0,tbl_1.rank_int_1,tbl_1.rank_int_2,tbl_1.rank_string_0,tbl_1.rank_string_1,tbl_1.rank_string_2,tbl_1.rank_timestamp_0,tbl_1.rank_timestamp_1,tbl_1.rank_timestamp_2 from alice.tbl_1"
       },
       {
+        "sql": "select count(*) from alice.tbl_1 as t1 join alice.tbl_2 as t2 join bob.tbl_1 as t3 join bob.tbl_2 as t4 where t1.plain_int_0 = t2.plain_int_0 and t2.plain_int_0 = t3.plain_int_0 and t3.plain_int_0 = t4.plain_int_0",
+        "skip_projection": false,
+        "rewritten_sql": "select count(1) as expr_481 from (select t2.plain_int_0 from (alice.tbl_1 as t1 join alice.tbl_2 as t2 on t1.plain_int_0=t2.plain_int_0)) as t1 join (select t3.plain_int_0 from (bob.tbl_1 as t3 join bob.tbl_2 as t4 on t3.plain_int_0=t4.plain_int_0)) as t4 on t1.plain_int_0=t4.plain_int_0"
+      },
+      {
         "sql": "select plain_float_0 from alice.tbl_1;",
         "skip_projection": false,
         "rewritten_sql": "select tbl_1.plain_float_0 from alice.tbl_1"
@@ -323,6 +328,14 @@
         "rewritten_sql_pg": "select cast(alice.compare_float_0 as numeric(11, 2)) as m from alice.tbl_0 as alice",
         "rewritten_sql_csv": "select cast(alice.compare_float_0 as numeric(11, 2)) as m from alice.tbl_0 as alice",
         "rewritten_sql_odps": "select cast(alice.compare_float_0 as decimal) as m from alice.tbl_0 as alice"
+      },
+      {
+        "sql": "select cast(alice.compare_string_0 as datetime) as m from alice.tbl_0 as alice;;",
+        "skip_projection": false,
+        "rewritten_sql": "select cast(alice.compare_string_0 as datetime) as m from alice.tbl_0 as alice",
+        "rewritten_sql_pg": "select cast(alice.compare_string_0 as timestamp) as m from alice.tbl_0 as alice",
+        "rewritten_sql_csv": "select cast(alice.compare_string_0 as timestamp) as m from alice.tbl_0 as alice",
+        "rewritten_sql_odps": "select cast(alice.compare_string_0 as datetime) as m from alice.tbl_0 as alice"
       },
       {
         "sql": "select cast(alice.compare_string_0 as CHAR(100)) as m from alice.tbl_0 as alice;;",

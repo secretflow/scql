@@ -225,8 +225,7 @@ func (d *PostgresDialect) ConvertCastTypeToString(asType byte, flen int, decimal
 		keyword = "VARCHAR"
 	case mysql.TypeDate:
 		keyword = "DATE"
-	// there is no datetime in pg
-	case mysql.TypeDatetime, mysql.TypeTimestamp:
+	case mysql.TypeDatetime:
 		keyword = "TIMESTAMP"
 	case mysql.TypeDuration:
 		keyword = "INTERVAL"

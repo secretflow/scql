@@ -1,0 +1,31 @@
+name: Trigger CircleCI Full Unit Test for Forked & Labeled PR
+
+on:
+  pull_request_target:
+    types: [labeled]
+
+jobs:
+  trigger-circleci:
+    runs-on: ubuntu-latest
+    # This job only runs if the label that was just added is exactly "run-ci-full".
+    if: github.event.label.name == 'run-ci-full'
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Trigger CircleCI Pipeline
+        run: |
+          echo "Label 'run-ci-full' was added to PR #${{ github.event.pull_request.number }}. Triggering CircleCI pipeline..."
+
+          curl -X POST \
+            --url "https://circleci.com/api/v2/project/github/secretflow/scql/pipeline/run" \
+            --header "Content-Type: application/json" \
+            --header "Circle-Token: ${{ secrets.CCI_TOKEN }}" \
+            --data '{"definition_id":"ee28d7c2-ef66-4a57-bc90-6895e2b55f14","config":{"branch":"main"},"checkout":{"branch":"pull/${{ github.event.pull_request.number }}/head"}}'
+      - name: Remove Label from PR
+        run: |
+          echo "Removing 'run-ci-full' label from PR #${{ github.event.pull_request.number }}..."
+
+          curl -s -X DELETE \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels/run-ci-full"

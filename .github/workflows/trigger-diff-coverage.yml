@@ -1,0 +1,26 @@
+name: Manually Trigger Incremental Coverage Test
+
+# Use workflow_dispatch to allow manual triggering
+on:
+  workflow_dispatch:
+    inputs:
+      base_commit:
+        description: 'The base Commit SHA for comparison (the older one)'
+        required: true
+      head_commit:
+        description: 'The head Commit SHA to generate coverage for (the newer one)'
+        required: true
+
+jobs:
+  trigger-circleci-diff-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Trigger CircleCI Incremental Coverage Pipeline via API"
+        run: |
+          echo "Triggering CircleCI pipeline for base=${{ github.event.inputs.base_commit }} and head=${{ github.event.inputs.head_commit }}..."
+
+          curl --request POST \
+            --url "https://circleci.com/api/v2/project/github/secretflow/scql/pipeline/run" \
+            --header "Content-Type: application/json" \
+            --header "Circle-Token: ${{ secrets.CCI_TOKEN }}" \
+            --data '{"definition_id":"f0835e5e-5836-4869-bcb6-f51ff967281d","checkout":{"branch":"${{ github.event.inputs.head_commit }}"},"parameters":{"base_commit":"${{ github.event.inputs.base_commit }}"},"config":{"branch":"main"}}'

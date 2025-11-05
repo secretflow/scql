@@ -1,0 +1,231 @@
+# Copyright 2025 Ant Group Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Use the latest 2.1 version of CircleCI pipeline process engine.
+# See: https://circleci.com/docs/2.0/configuration-reference
+
+version: 2.1
+
+parameters:
+  base_commit:
+    type: string
+    description: "The base commit SHA for the diff."
+    default: "origin/main"
+
+commands:
+  setup_go_test:
+    steps:
+      - run:
+          name: Install gcov2lcov
+          command: |
+            which gcov2lcov || go install github.com/jandelgado/gcov2lcov@latest
+
+  setup_cpp_test:
+    steps:
+      - run:
+          name: "Checkout devtools"
+          command: git clone --depth=1 https://github.com/secretflow/devtools.git ../devtools
+      - run:
+          name: Setup BuildBuddy Cache
+          command: ../devtools/bazel_cache_setup.py
+
+  run_go_test:
+    description: "Run go cov tests"
+    steps:
+      - run:
+          name: "Go Cov Test"
+          command: |
+            set +e
+            go mod tidy
+            echo "Running tests with coverage..."
+            go test -mod=readonly -timeout=30m -v -cover -race -coverprofile=coverage.tmp ./pkg/... ./contrib/...
+            cat coverage.tmp | grep -v '\.pb\.go:\|_mock\.go:' > coverage.out
+            python ./test-tools/find_uncover_err.py coverage.out filtered_cover_no_err_branch.out
+            gcov2lcov -infile=filtered_cover_no_err_branch.out -outfile=coverage.lcov
+
+  run_cpp_test:
+    description: "Run cpp cov tests and collect artifacts"
+    parameters:
+      extra_bazel_args:
+        type: string
+        default: ""
+      find_executable_flag:
+        type: string
+        default: "-executable"
+    steps:
+      - run:
+          name: "Cpp Test"
+          command: |
+            set +e
+            declare -i test_status
+
+            echo "Running tests with coverage..."
+            bazelisk --host_jvm_args=-Xmx8g coverage //engine/... \
+                << parameters.extra_bazel_args >> \
+                --combined_report=lcov \
+                --jobs=auto \
+                --ui_event_filters=-info,-debug,-warning \
+                --test_output=errors | tee test_result.log
+
+            # Capture the exit status of the Bazel command
+            test_status=${PIPESTATUS[0]}
+            if [ ${test_status} -eq 0 ]; then
+              echo "Processing coverage..."
+              lcov --remove bazel-out/_coverage/_coverage_report.dat '*.pb.h' '*.pb.cc' -o bazel-out/_coverage/_coverage_report_filtered.dat
+            else
+              echo "Bazel coverage failed, skipping lcov processing. Archiving binaries and logs..."
+              find bazel-bin/ << parameters.find_executable_flag >> -type f -name "*_test" -print0 | xargs -0 tar -cvzf test_binary.tar.gz
+              find bazel-testlogs/ -type f -name "test.log" -print0 | xargs -0 tar -cvzf test_logs.tar.gz
+            fi
+
+            sh ../devtools/rename-junit-xml.sh
+            exit ${test_status}
+
+  # ref: https://support.circleci.com/hc/en-us/articles/14114124583195-How-to-set-a-custom-maximum-job-duration
+  cancel_after_timeout:
+    description: "Cancel job if it takes too long"
+    parameters:
+      timeout:
+        type: string
+        default: "60m"
+    steps:
+      - run:
+          name: Set maximum job duration to << parameters.timeout >>
+          background: true
+          command: |
+            sleep << parameters.timeout >>
+            curl --request POST \
+            --url https://circleci.com/api/v2/project/gh/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/job/$CIRCLE_BUILD_NUM/cancel \
+            --header "Circle-Token: $CIRCLECI_API_TOKEN"
+
+jobs:
+  linux_diff_cov:
+    docker:
+      - image: secretflow/scql-ci:latest
+    resource_class: "2xlarge"
+    steps:
+      - cancel_after_timeout:
+          timeout: "90m"
+      - checkout
+      - run:
+          name: "Install Dependencies (lcov, diff-cover)"
+          command: |
+            apt-get update && apt-get install -y lcov
+            pip install diff-cover
+      - setup_go_test
+      - setup_cpp_test
+      - run_go_test
+      - run_cpp_test:
+          extra_bazel_args: "-c opt"
+      - run:
+          name: "Debug Coverage Files"
+          command: |
+            echo "=== Debug Information ==="
+            echo "Current working directory: $(pwd)"
+            echo "Available coverage files:"
+            find . -name "*.lcov" -o -name "*coverage*" -type f | head -10
+
+            if [ -f "coverage.lcov" ]; then
+              echo "Go coverage file size: $(wc -l < coverage.lcov) lines"
+              echo "Go coverage sample:"
+              head -10 coverage.lcov
+            fi
+
+            if [ -f "bazel-out/_coverage/_coverage_report_filtered.dat" ]; then
+              echo "C++ coverage file size: $(wc -l < bazel-out/_coverage/_coverage_report_filtered.dat) lines"
+              echo "C++ coverage sample:"
+              head -10 bazel-out/_coverage/_coverage_report_filtered.dat
+            fi
+
+            echo "Git status:"
+            git status --porcelain
+            echo "Recent commits:"
+            git log --oneline -5
+      - run:
+          name: "Calculate and Report Incremental Coverage"
+          command: |
+            echo "Calculating incremental coverage between << pipeline.parameters.base_commit >> and ${CIRCLE_SHA1}"
+            git config remote.origin.url "https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git"
+            git config advice.objectNameWarning false
+
+            if ! git rev-parse --verify << pipeline.parameters.base_commit >> >/dev/null 2>&1; then
+              echo "Base commit not found locally, fetching..."
+              git fetch origin << pipeline.parameters.base_commit >> || \
+              git fetch origin --depth=100 || \
+              git fetch origin
+            fi
+
+            if ! git rev-parse --verify << pipeline.parameters.base_commit >> >/dev/null 2>&1; then
+              echo "Error: Base commit << pipeline.parameters.base_commit >> not found"
+              exit 1
+            fi
+            if ! git rev-parse --verify ${CIRCLE_SHA1} >/dev/null 2>&1; then
+              echo "Error: Current commit ${CIRCLE_SHA1} not found"
+              exit 1
+            fi
+            echo "Base commit: $(git rev-parse << pipeline.parameters.base_commit >>)"
+            echo "Head commit: $(git rev-parse ${CIRCLE_SHA1})"
+
+            # Create a directory to store the reports
+            mkdir -p coverage-reports
+            FINAL_EXIT_CODE=0
+
+            # --- 1. Go Incremental Coverage ---
+            echo ""
+            echo "--- Go Incremental Coverage ---"
+            if [ -f "coverage.lcov" ]; then
+              git diff << pipeline.parameters.base_commit >>..${CIRCLE_SHA1} -- '*.go' > go_diff.txt
+              diff-cover coverage.lcov \
+                --diff-file=go_diff.txt \
+                --fail-under=80 \
+                --exclude='*_test.go' \
+                --exclude='*.pb.go' \
+                --exclude='*_mock.go' \
+                --format html:coverage-reports/go_diff_coverage.html \
+                || { echo "Go incremental coverage check FAILED."; FINAL_EXIT_CODE=1; }
+            else
+              echo "Go coverage file (coverage.lcov) not found. Skipping."
+            fi
+
+            # --- 2. C++ Incremental Coverage ---
+            echo ""
+            echo "--- C++ Incremental Coverage ---"
+            CPP_COV_FILE="bazel-out/_coverage/_coverage_report_filtered.dat"
+            if [ -f "${CPP_COV_FILE}" ]; then
+              git diff << pipeline.parameters.base_commit >>..${CIRCLE_SHA1} -- '*.cpp' '*.h' '*.cc' > cpp_diff.txt
+              diff-cover ${CPP_COV_FILE} \
+                --diff-file=cpp_diff.txt \
+                --fail-under=80 \
+                --exclude='*.pb.h' \
+                --exclude='*.pb.cc' \
+                --format html:coverage-reports/cpp_diff_coverage.html \
+                || { echo "C++ incremental coverage check FAILED."; FINAL_EXIT_CODE=1; }
+            else
+              echo "C++ coverage file (${CPP_COV_FILE}) not found. Skipping."
+            fi
+
+            exit ${FINAL_EXIT_CODE}
+      - store_artifacts:
+          path: coverage-reports
+      - store_artifacts:
+          path: coverage.lcov
+          destination: go-coverage.lcov
+      - store_artifacts:
+          path: bazel-out/_coverage/_coverage_report_filtered.dat
+          destination: cpp-coverage.lcov
+
+workflows:
+  run_diff_cov_workflow:
+    jobs:
+      - linux_diff_cov

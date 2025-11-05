@@ -355,6 +355,9 @@ func getOriginAsName(p *logicalSchemaProducer, colIndex int) (model.CIStr, bool)
 	if p == nil {
 		return model.CIStr{}, false
 	}
+	if colIndex >= len(p.names) || colIndex < 0 {
+		return model.CIStr{}, false
+	}
 	if p.names[colIndex].TblName.O != "" &&
 		p.names[colIndex].TblName.O != p.names[colIndex].OrigTblName.O {
 		return p.names[colIndex].TblName, true
