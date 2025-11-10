@@ -1719,14 +1719,6 @@ definitions:
     properties:
       status:
         $ref: '#/definitions/scql.pb.Status'
-  scql.pb.RunningOptions:
-    type: object
-    properties:
-      batched:
-        type: boolean
-    title: |-
-      part of compile options which are nothing to do with safety
-      deprecated
   scql.pb.SQLWarning:
     type: object
     properties:
