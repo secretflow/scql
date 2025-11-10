@@ -36,7 +36,6 @@ import (
 	"github.com/secretflow/scql/pkg/planner/core"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/status"
-	"github.com/secretflow/scql/pkg/util/brokerutil"
 	"github.com/secretflow/scql/pkg/util/logutil"
 	"github.com/secretflow/scql/pkg/util/message"
 	prom "github.com/secretflow/scql/pkg/util/prometheus"
@@ -206,9 +205,7 @@ func CheckMemberExistInProject(manager *storage.MetaManager, projectID string, m
 	})
 }
 
-func GenSessionOpts(jobConfig *pb.JobConfig, projConf *pb.ProjectConfig) *application.SessionOptions {
-	jobConfig = brokerutil.UpdateJobConfig(jobConfig, projConf)
-
+func GenSessionOpts(jobConfig *pb.JobConfig) *application.SessionOptions {
 	linkCfg := &pb.LinkConfig{
 		LinkRecvTimeoutSec:          jobConfig.LinkRecvTimeoutSec,
 		LinkThrottleWindowSize:      jobConfig.LinkThrottleWindowSize,
@@ -217,12 +214,14 @@ func GenSessionOpts(jobConfig *pb.JobConfig, projConf *pb.ProjectConfig) *applic
 	}
 
 	psiCfg := &pb.PsiConfig{
-		PsiCurveType: jobConfig.PsiCurveType,
-		PsiType:      jobConfig.GetPsiType(),
+		PsiCurveType:       jobConfig.PsiCurveType,
+		PsiType:            jobConfig.GetPsiType(),
+		UseRr22LowCommMode: jobConfig.GetUseRr22LowCommMode(),
 	}
 
-	logCfg := &pb.LogConfig{
-		EnableSessionLoggerSeparation: jobConfig.EnableSessionLoggerSeparation,
+	logCfg := &pb.LogConfig{}
+	if jobConfig.EnableSessionLoggerSeparation != nil {
+		logCfg.EnableSessionLoggerSeparation = *jobConfig.EnableSessionLoggerSeparation
 	}
 
 	sessionOptions := &application.SessionOptions{
@@ -232,7 +231,6 @@ func GenSessionOpts(jobConfig *pb.JobConfig, projConf *pb.ProjectConfig) *applic
 		LogConfig:            logCfg,
 		TimeZone:             jobConfig.GetTimeZone(),
 	}
-
 	return sessionOptions
 }
 
