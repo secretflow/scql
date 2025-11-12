@@ -147,6 +147,9 @@ Session::Session(const SessionOptions& session_opt,
     psi_logger_ = std::make_shared<util::PsiDetailLogger>(
         util::CreateDetailLogger(id_, id_ + ".log", session_opt.log_options));
   }
+  session_opt_.streaming_options.batch_row_num = FLAGS_batch_row_num;
+  session_opt_.streaming_options.dump_file_dir =
+      util::CreateDirWithRandSuffix(FLAGS_tmp_file_path, id_);
   Negotiate();
   util::PrometheusMonitor::GetInstance()->IncSessionNumberTotal();
 }
@@ -208,9 +211,6 @@ void Session::EnableStreamingBatched() {
   if (session_opt_.streaming_options.dump_file_dir.empty()) {
     session_opt_.streaming_options.streaming_row_num_threshold =
         FLAGS_streaming_row_num_threshold;
-    session_opt_.streaming_options.batch_row_num = FLAGS_batch_row_num;
-    session_opt_.streaming_options.dump_file_dir =
-        util::CreateDirWithRandSuffix(FLAGS_tmp_file_path, id_);
   }
 }
 
