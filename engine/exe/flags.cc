@@ -124,5 +124,11 @@ DEFINE_string(authorized_profile_path, "",
               "path to authorized profile, in json format");
 DEFINE_bool(enable_psi_detail_logger, false, "whether enable detail log");
 DEFINE_string(psi_detail_logger_dir, "logs/detail", "log dir");
-DEFINE_bool(use_rr22_low_comm_mode, false,
-            "use rr22 low comm mode when the network bandwidth is limited");
+DEFINE_int32(rr22_mode, 2, "rr22 comm mode, use fast mode by default");
+
+// clang-format off
+DEFINE_bool(
+    enable_he_schema_type_ou, false,
+    "whether to use OU to speed up HeSum, use ZPaillier by default for security,"
+    "see: https://www.secretflow.org.cn/docs/heu/latest/zh-Hans/getting_started/algo_choice#ou-paillier");
+// clang-format on

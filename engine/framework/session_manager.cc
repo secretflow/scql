@@ -18,6 +18,7 @@
 #include <thread>
 #include <utility>
 
+#include "engine/exe/flags.h"
 #include "engine/framework/session.h"
 
 #ifndef DISABLE_TCMALLOC
@@ -92,13 +93,27 @@ scql::engine::SessionOptions SessionManager::GenerateUpdatedSessionOptions(
 
   if (job_params.psi_cfg().psi_curve_type() > 0) {
     session_opt.psi_config.psi_curve_type =
-        job_params.psi_cfg().psi_curve_type();
+        static_cast<psi::CurveType>(job_params.psi_cfg().psi_curve_type());
   } else {
-    session_opt.psi_config.psi_curve_type = FLAGS_psi_curve_type;
+    session_opt.psi_config.psi_curve_type =
+        static_cast<psi::CurveType>(FLAGS_psi_curve_type);
   }
 
   session_opt.log_config.enable_session_logger_separation =
       job_params.log_cfg().enable_session_logger_separation();
+
+  if (job_params.psi_cfg().rr22_mode() > 0) {
+    session_opt.psi_config.rr22_mode = job_params.psi_cfg().rr22_mode();
+  } else {
+    session_opt.psi_config.rr22_mode =
+        static_cast<pb::Rr22Mode>(FLAGS_rr22_mode);
+  }
+  if (FLAGS_enable_he_schema_type_ou) {
+    session_opt.he_options.he_schema_type = heu::lib::phe::SchemaType::OU;
+  } else {
+    session_opt.he_options.he_schema_type =
+        heu::lib::phe::SchemaType::ZPaillier;
+  }
 
   return session_opt;
 }

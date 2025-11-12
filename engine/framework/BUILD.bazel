@@ -83,6 +83,7 @@ cc_library(
         "//engine/util:progress_util",
         "//engine/util:prometheus_monitor",
         "//engine/util/psi:detail_logger",
+        "@heu//heu/library/numpy",
         "@openssl",
         "@spulib//libspu/core:config",
         "@spulib//libspu/core:context",

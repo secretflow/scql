@@ -469,7 +469,7 @@ func distributeQueryToOtherParty(session *application.Session, enginesInfo *grap
 			LinkThrottleWindowSize:        session.ExecuteInfo.SessionOptions.LinkConfig.LinkThrottleWindowSize,
 			LinkChunkedSendParallelSize:   session.ExecuteInfo.SessionOptions.LinkConfig.LinkChunkedSendParallelSize,
 			PsiType:                       session.ExecuteInfo.SessionOptions.PsiConfig.PsiType,
-			UseRr22LowCommMode:            &session.ExecuteInfo.SessionOptions.PsiConfig.UseRr22LowCommMode,
+			Rr22Mode:                      session.ExecuteInfo.SessionOptions.PsiConfig.Rr22Mode,
 			EnableSessionLoggerSeparation: &session.ExecuteInfo.SessionOptions.LogConfig.EnableSessionLoggerSeparation,
 			Batched:                       &batched,
 		},

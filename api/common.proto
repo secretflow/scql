@@ -100,11 +100,17 @@ enum PsiAlgorithmType {
   RR22 = 3;
 }
 
+enum Rr22Mode {
+  UNDEFINED = 0;
+  LOW_MODE = 1;
+  FAST_MODE = 2;
+}
+
 message PsiConfig {
   int32 psi_curve_type = 1;
   PsiAlgorithmType psi_type = 2;
   // activated when psi_type is rr22
-  bool use_rr22_low_comm_mode = 3;
+  Rr22Mode rr22_mode = 3;
 }
 
 message LogConfig {

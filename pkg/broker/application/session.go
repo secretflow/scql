@@ -89,6 +89,7 @@ type SessionOptions struct {
 	LinkConfig           *pb.LinkConfig
 	PsiConfig            *pb.PsiConfig
 	LogConfig            *pb.LogConfig
+	HeSchemaType         int64
 	TimeZone             string
 }
 

@@ -1221,8 +1221,8 @@ definitions:
         type: boolean
       psi_type:
         $ref: '#/definitions/scql.pb.PsiAlgorithmType'
-      use_rr22_low_comm_mode:
-        type: boolean
+      rr22_mode:
+        $ref: '#/definitions/scql.pb.Rr22Mode'
       batched:
         type: boolean
     description: JobConfig is a subset of ProjectConfig.
@@ -1491,8 +1491,8 @@ definitions:
         type: boolean
       psi_type:
         $ref: '#/definitions/scql.pb.PsiAlgorithmType'
-      use_rr22_low_comm_mode:
-        type: boolean
+      rr22_mode:
+        $ref: '#/definitions/scql.pb.Rr22Mode'
       batched:
         type: boolean
       time_zone:
@@ -1719,6 +1719,13 @@ definitions:
     properties:
       status:
         $ref: '#/definitions/scql.pb.Status'
+  scql.pb.Rr22Mode:
+    type: string
+    enum:
+      - UNDEFINED
+      - LOW_MODE
+      - FAST_MODE
+    default: UNDEFINED
   scql.pb.RunningOptions:
     type: object
     properties:

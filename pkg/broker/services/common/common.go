@@ -214,9 +214,9 @@ func GenSessionOpts(jobConfig *pb.JobConfig) *application.SessionOptions {
 	}
 
 	psiCfg := &pb.PsiConfig{
-		PsiCurveType:       jobConfig.PsiCurveType,
-		PsiType:            jobConfig.GetPsiType(),
-		UseRr22LowCommMode: jobConfig.GetUseRr22LowCommMode(),
+		PsiCurveType: jobConfig.PsiCurveType,
+		PsiType:      jobConfig.GetPsiType(),
+		Rr22Mode:     jobConfig.GetRr22Mode(),
 	}
 
 	logCfg := &pb.LogConfig{}

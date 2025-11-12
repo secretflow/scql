@@ -595,7 +595,7 @@ message ProjectConfig {
   optional bool reveal_group_count = 10;
   optional bool enable_session_logger_separation = 11;
   PsiAlgorithmType psi_type = 12;
-  optional bool use_rr22_low_comm_mode = 13;
+  Rr22Mode rr22_mode = 13;
   optional bool batched = 14;
   // job's time_zone for session, default is empty which means use engine's
   // default time_zone
@@ -617,7 +617,7 @@ message JobConfig {
   int64 link_chunked_send_parallel_size = 7;
   optional bool enable_session_logger_separation = 8;
   PsiAlgorithmType psi_type = 9;
-  optional bool use_rr22_low_comm_mode = 10;
+  Rr22Mode rr22_mode = 10;
   optional bool batched = 11;
 }
 

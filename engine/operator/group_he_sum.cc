@@ -27,12 +27,6 @@
 #include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
 
-// clang-format off
-DEFINE_bool(
-    enable_he_schema_type_ou, false,
-    "whether to use OU to speed up HeSum, use ZPaillier by default for security,"
-    "see: https://www.secretflow.org.cn/docs/heu/latest/zh-Hans/getting_started/algo_choice#ou-paillier");
-// clang-format on
 namespace scql::engine::op {
 
 using heu::lib::numpy::CMatrix;
@@ -49,13 +43,6 @@ const std::string GroupHeSum::kOpType("GroupHeSum");
 const std::string& GroupHeSum::Type() const { return kOpType; }
 
 namespace {
-
-heu::lib::phe::SchemaType GetHeSchemaType() {
-  if (FLAGS_enable_he_schema_type_ou) {
-    return heu::lib::phe::SchemaType::OU;
-  }
-  return heu::lib::phe::SchemaType::ZPaillier;
-}
 
 #ifndef TENSOR_TO_PMATRIX_TYPE_IMPL
 #define TENSOR_TO_PMATRIX_TYPE_IMPL(arrow_type)                       \
@@ -240,10 +227,12 @@ void GroupHeSum::Execute(ExecContext* ctx) {
       ctx->GetTensorTable()->AddTensor(ctx->GetOutput(kOut)[0].name(), in_t);
       return;
     }
-    auto encoder = std::make_shared<PlainEncoder>(GetHeSchemaType());
+    auto he_schema_type =
+        ctx->GetSession()->GetSessionOptions().he_options.he_schema_type;
+    auto encoder = std::make_shared<PlainEncoder>(he_schema_type);
     auto in_p = Tensor2PMatrix(in_t, encoder);
 
-    auto he_kit = HeKit(heu::lib::phe::HeKit(GetHeSchemaType(), 2048));
+    auto he_kit = HeKit(heu::lib::phe::HeKit(he_schema_type, 2048));
     CMatrix encrypted_in = he_kit.GetEncryptor()->Encrypt(in_p);
 
     // send encrypted input to party_evaluate
