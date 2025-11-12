@@ -15,6 +15,7 @@
 #pragma once
 
 #include <optional>
+#include <vector>
 
 #include "engine/framework/session.h"
 
@@ -61,6 +62,8 @@ class ExecContext {
   std::string GetStringValueFromAttribute(const std::string& name) const;
   int64_t GetInt64ValueFromAttribute(const std::string& name) const;
   bool GetBooleanValueFromAttribute(const std::string& name) const;
+  std::vector<bool> GetBooleanValuesFromAttribute(
+      const std::string& name) const;
   double GetDoubleValueFromAttribute(const std::string& name) const;
   bool HasAttribute(const std::string& name) const {
     return node_.attributes().count(name) > 0;
