@@ -168,8 +168,8 @@ void Sort::SortInSecret(ExecContext* ctx) {
                     results.begin() + results.size() - payloads.size(),
                     results.end());
       // NOTE: use default performance hint for SimpleSort
-      auto results = spu::kernel::hlo::SimpleSort(
-          sctx, inputs, 0, sort_direction, waiting_sort_keys.size());
+      results = spu::kernel::hlo::SimpleSort(sctx, inputs, 0, sort_direction,
+                                             waiting_sort_keys.size());
       cur_reverse = reverses[cur_key_num];
       waiting_sort_keys.clear();
     }
