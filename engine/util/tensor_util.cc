@@ -115,7 +115,7 @@ bool GetBooleanValue(const pb::Tensor& t) {
 
 std::vector<bool> GetBooleanValues(const pb::Tensor& t) {
   if (t.option() != pb::TensorOptions::VALUE ||
-      t.elem_type() != pb::PrimitiveDataType::BOOL || t.bool_data_size() < 1) {
+      t.elem_type() != pb::PrimitiveDataType::BOOL) {
     YACL_THROW("tensor does not have boolean value");
   }
   std::vector<bool> result(t.bool_data_size());

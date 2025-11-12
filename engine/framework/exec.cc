@@ -95,7 +95,7 @@ bool ExecContext::GetBooleanValueFromAttribute(const std::string& name) const {
 std::vector<bool> ExecContext::GetBooleanValuesFromAttribute(
     const std::string& name) const {
   const auto& attr = GetAttribute(name);
-  return util::GetBooleanValue(attr.t());
+  return util::GetBooleanValues(attr.t());
 }
 
 double ExecContext::GetDoubleValueFromAttribute(const std::string& name) const {
