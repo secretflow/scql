@@ -14,6 +14,9 @@
 
 #include "engine/util/tensor_util.h"
 
+#include <cstddef>
+#include <vector>
+
 #include "arrow/visit_array_inline.h"
 #include "yacl/base/exception.h"
 
@@ -108,6 +111,18 @@ bool GetBooleanValue(const pb::Tensor& t) {
     YACL_THROW("tensor does not have boolean value");
   }
   return t.bool_data(0);
+}
+
+std::vector<bool> GetBooleanValues(const pb::Tensor& t) {
+  if (t.option() != pb::TensorOptions::VALUE ||
+      t.elem_type() != pb::PrimitiveDataType::BOOL || t.bool_data_size() < 1) {
+    YACL_THROW("tensor does not have boolean value");
+  }
+  std::vector<bool> result(t.bool_data_size());
+  for (int i = 0; i < t.bool_data_size(); i++) {
+    result[i] = t.bool_data(i);
+  }
+  return result;
 }
 
 void SetBooleanValues(pb::Tensor* t, const std::vector<bool>& values) {
