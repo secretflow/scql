@@ -37,6 +37,8 @@ void SetInt64Values(pb::Tensor* t, const std::vector<int64_t>& values);
 
 bool GetBooleanValue(const pb::Tensor& t);
 
+std::vector<bool> GetBooleanValues(const pb::Tensor& t);
+
 void SetDoubleValues(pb::Tensor* t, const std::vector<double>& values);
 
 double GetDoubleValue(const pb::Tensor& t);
