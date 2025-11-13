@@ -118,7 +118,8 @@ class ExecNodeBuilder {
                                   const std::vector<double>& value);
 
   ExecNodeBuilder& AddBooleanAttr(const std::string& name, bool value);
-
+  ExecNodeBuilder& AddBooleansAttr(const std::string& name,
+                                   const std::vector<bool>& values);
   ExecNodeBuilder& AddAttr(const std::string& name, const pb::Tensor& tensor);
 
  private:

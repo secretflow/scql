@@ -678,7 +678,7 @@ func (t *translator) buildAggregation(ln *AggregationNode) (err error) {
 					} else {
 						// 1. sort
 						keyTensor := []*graph.Tensor{colT}
-						sortedDistinctCol, err := t.addSortNode("count.sort", keyTensor, keyTensor, false)
+						sortedDistinctCol, err := t.addSortNode("count.sort", keyTensor, keyTensor, []bool{false})
 						if err != nil {
 							return fmt.Errorf("buildAggregation: %v", err)
 						}
@@ -1119,8 +1119,11 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 		// TODO(jingshi): remove duplicated payload
 		sortPayload = append(sortPayload, child.ResultTable()...)
 	}
-
-	out, err := t.addSortNode("sort", sortKeys, sortPayload, false)
+	var sortDirections []bool
+	for range sortKeys {
+		sortDirections = append(sortDirections, false)
+	}
+	out, err := t.addSortNode("sort", sortKeys, sortPayload, sortDirections)
 	if err != nil {
 		return fmt.Errorf("buildObliviousGroupAggregation: sort with groupIds err: %v", err)
 	}
@@ -1189,9 +1192,12 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 					var keyAndDistinct []*graph.Tensor
 					keyAndDistinct = append(keyAndDistinct, sortedKeys...)
 					keyAndDistinct = append(keyAndDistinct, colT)
-
+					var sortDirections []bool
+					for range keyAndDistinct {
+						sortDirections = append(sortDirections, false)
+					}
 					// TODO(jingshi): using free column to avoid sort if possible
-					sortedDistinctCol, err := t.addSortNode("sort", keyAndDistinct, []*graph.Tensor{colT}, false)
+					sortedDistinctCol, err := t.addSortNode("sort", keyAndDistinct, []*graph.Tensor{colT}, sortDirections)
 					if err != nil {
 						return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 					}
@@ -1239,7 +1245,11 @@ func (t *translator) buildObliviousGroupAggregation(ln *AggregationNode) (err er
 			var keysForPercentileSort []*graph.Tensor
 			keysForPercentileSort = append(keysForPercentileSort, sortedKeys...)
 			keysForPercentileSort = append(keysForPercentileSort, colT)
-			sortedCol, err := t.addSortNode("sort", keysForPercentileSort, []*graph.Tensor{colT}, false)
+			var sortDirections []bool
+			for range keysForPercentileSort {
+				sortDirections = append(sortDirections, false)
+			}
+			sortedCol, err := t.addSortNode("sort", keysForPercentileSort, []*graph.Tensor{colT}, sortDirections)
 			if err != nil {
 				return fmt.Errorf("buildObliviousGroupAggregation: %v", err)
 			}
@@ -1395,22 +1405,19 @@ func (t *translator) buildSort(ln *SortNode) (err error) {
 
 	childIdToTensor := t.getNodeResultTensor(ln.children[0])
 	var sortKeys []*graph.Tensor
+	var sortDirections []bool // true for descending, false for ascending
 
 	if len(sort.ByItems) == 0 {
 		return fmt.Errorf("buildSort: order by items are required in sort node")
 	}
 
-	desc := sort.ByItems[0].Desc
 	for _, col := range sort.ByItems {
-		if desc != col.Desc {
-			return fmt.Errorf("buildSort: sorting multiple columns in different order directions is not supported")
-		}
-
 		tensor, err := t.getTensorFromExpression(col.Expr, childIdToTensor)
 		if err != nil {
 			return fmt.Errorf("buildSort: failed to get tensor of col(%s): %v", col.Expr, err)
 		}
 		sortKeys = append(sortKeys, tensor)
+		sortDirections = append(sortDirections, col.Desc)
 		cc := tensor.CC
 		for _, p := range t.enginesInfo.GetParties() {
 			if !cc.IsVisibleFor(p) && cc.LevelFor(p) != ccl.Rank {
@@ -1429,7 +1436,8 @@ func (t *translator) buildSort(ln *SortNode) (err error) {
 		payload = append(payload, tensor)
 	}
 
-	output, err := t.addSortNode(operator.OpNameSort, sortKeys, payload, desc)
+	// Pass sortDirections to addSortNode instead of a single direction
+	output, err := t.addSortNode(operator.OpNameSort, sortKeys, payload, sortDirections)
 
 	if len(output) != len(payload) {
 		return fmt.Errorf("buildSort: input tensors' size(%v) not equal to output tensors' size(%v)", len(payload), len(output))
@@ -1558,8 +1566,11 @@ func (t *translator) buildObliviousRankWindow(ln *WindowNode) error {
 	}
 	sortKeys = append(sortKeys, partitionKeys...)
 	sortKeys = append(sortKeys, orderKeys...)
-
-	out, err := t.addSortNode("sort", sortKeys, sortPayloads, false)
+	var sortDirections []bool
+	for range sortKeys {
+		sortDirections = append(sortDirections, false)
+	}
+	out, err := t.addSortNode("sort", sortKeys, sortPayloads, sortDirections)
 	if err != nil {
 		return fmt.Errorf("builObliviousRankWindow: sort with partition ids err: %v", err)
 	}

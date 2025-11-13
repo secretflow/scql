@@ -261,7 +261,7 @@ var testCases = []compileTestCase{
 			CompileOpts:         &proto.CompileOptions{SecurityCompromise: &proto.SecurityCompromiseConfig{GroupByThreshold: 4}},
 			CreatedAt:           timestamppb.New(time.Now()),
 		},
-		ok:           false,
+		ok:           true,
 		workPartyNum: 2,
 	},
 	{

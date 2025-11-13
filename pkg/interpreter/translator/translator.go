@@ -1441,7 +1441,7 @@ func (t *translator) addUniqueNode(name string, input *graph.Tensor, partyCode s
 }
 
 // if inputs tensors include share data or private tensors coming from different party, make all tensor share
-func (t *translator) addSortNode(name string, key, in []*graph.Tensor, reverse bool) ([]*graph.Tensor, error) {
+func (t *translator) addSortNode(name string, key, in []*graph.Tensor, directions []bool) ([]*graph.Tensor, error) {
 	makeShareFlag := false
 	privatePartyCodes := make(map[string]bool)
 	for _, tensor := range append(in, key...) {
@@ -1498,9 +1498,10 @@ func (t *translator) addSortNode(name string, key, in []*graph.Tensor, reverse b
 	}
 
 	sortAttr := make(map[string]*graph.Attribute)
-	reverseAttr := &graph.Attribute{}
-	reverseAttr.SetBool(reverse)
-	sortAttr[operator.ReverseAttr] = reverseAttr
+	// Create attribute for sort directions
+	directionsAttr := &graph.Attribute{}
+	directionsAttr.SetBools(directions)
+	sortAttr[operator.ReverseAttr] = directionsAttr
 	if _, err := t.ep.AddExecutionNode(name, operator.OpNameSort,
 		map[string][]*graph.Tensor{"Key": keyA, "In": inA}, map[string][]*graph.Tensor{"Out": outA},
 		sortAttr, partyCodes); err != nil {
