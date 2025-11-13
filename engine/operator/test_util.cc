@@ -190,6 +190,13 @@ ExecNodeBuilder& ExecNodeBuilder::AddBooleanAttr(const std::string& name,
   return *this;
 }
 
+ExecNodeBuilder& ExecNodeBuilder::AddBooleansAttr(
+    const std::string& name, const std::vector<bool>& values) {
+  auto& attrs = *node_.mutable_attributes();
+  util::SetBooleanValues(attrs[name].mutable_t(), values);
+  return *this;
+}
+
 ExecNodeBuilder& ExecNodeBuilder::AddDoubleAttr(const std::string& name,
                                                 double value) {
   return AddDoubleAttrs(name, std::vector<double>{value});
