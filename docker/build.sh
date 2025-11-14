@@ -161,7 +161,7 @@ create_container_and_build() {
   echo "Creating Docker container and building binaries..."
 
   # Create and start the container
-  CONTAINER_ID=$(docker run -it --rm --detach \
+  CONTAINER_ID=$(docker run -it --rm --env GOPROXY=https://goproxy.cn,direct --detach \
     ${WORKSPACE_MOUNT_ARGS} \
     -w /home/admin/dev ${CACHE_MOUNT_ARGS} \
     $BUILDER tail -f /dev/null)
