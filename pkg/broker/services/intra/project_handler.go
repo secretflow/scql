@@ -96,7 +96,7 @@ func (svc *grpcIntraSvc) CreateProject(c context.Context, req *pb.CreateProjectR
 		Batched:                       &batched,
 		EnableSessionLoggerSeparation: projectConf.EnableSessionLoggerSeparation,
 		TimeZone:                      projectConf.TimeZone,
-		UseRr22LowCommMode:            projectConf.UseRr22LowCommMode,
+		Rr22Mode:                      projectConf.GetRr22Mode(),
 	})
 
 	if err != nil {
