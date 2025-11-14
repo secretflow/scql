@@ -91,7 +91,7 @@ func TestProjectConf(t *testing.T) {
 	}
 	marshalStr, err := message.ProtoMarshal(projecConf)
 	r.NoError(err)
-	r.JSONEq(`{"group_by_threshold":"0", "http_max_payload_size":"0", "link_chunked_send_parallel_size":"0", "link_recv_timeout_sec":"0", "link_throttle_window_size":"0", "psi_curve_type":0, "session_expire_seconds":"100", "spu_runtime_cfg":null}`, string(marshalStr))
+	r.JSONEq(`{"group_by_threshold":"0", "http_max_payload_size":"0", "link_chunked_send_parallel_size":"0", "link_recv_timeout_sec":"0", "link_throttle_window_size":"0", "psi_curve_type":0, "psi_type":"AUTO", "session_expire_seconds":"100", "spu_runtime_cfg":null, "time_zone":""}`, string(marshalStr))
 	unmarshalStruct := &pb.ProjectConfig{}
 	r.NoError(message.ProtoUnmarshal(marshalStr, unmarshalStruct))
 	r.Nil(unmarshalStruct.RevealGroupMark)

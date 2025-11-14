@@ -76,17 +76,27 @@ func (svc *grpcIntraSvc) CreateProject(c context.Context, req *pb.CreateProjectR
 	if projectConf.RevealGroupCount != nil {
 		revealGroupCount = projectConf.GetRevealGroupCount()
 	}
+
+	batched := app.Conf.Batched
+	if projectConf.Batched != nil {
+		batched = projectConf.GetBatched()
+	}
 	projConf, err := message.ProtoMarshal(&pb.ProjectConfig{
-		SpuRuntimeCfg:               projectConf.GetSpuRuntimeCfg(),
-		SessionExpireSeconds:        projectConf.GetSessionExpireSeconds(),
-		PsiCurveType:                projectConf.GetPsiCurveType(),
-		HttpMaxPayloadSize:          projectConf.GetHttpMaxPayloadSize(),
-		LinkRecvTimeoutSec:          projectConf.GetLinkRecvTimeoutSec(),
-		LinkThrottleWindowSize:      projectConf.GetLinkThrottleWindowSize(),
-		LinkChunkedSendParallelSize: projectConf.GetLinkChunkedSendParallelSize(),
-		GroupByThreshold:            &groupByThreshold,
-		RevealGroupMark:             &revealGroupMark,
-		RevealGroupCount:            &revealGroupCount,
+		SpuRuntimeCfg:                 projectConf.GetSpuRuntimeCfg(),
+		SessionExpireSeconds:          projectConf.GetSessionExpireSeconds(),
+		PsiType:                       projectConf.GetPsiType(),
+		PsiCurveType:                  projectConf.GetPsiCurveType(),
+		HttpMaxPayloadSize:            projectConf.GetHttpMaxPayloadSize(),
+		LinkRecvTimeoutSec:            projectConf.GetLinkRecvTimeoutSec(),
+		LinkThrottleWindowSize:        projectConf.GetLinkThrottleWindowSize(),
+		LinkChunkedSendParallelSize:   projectConf.GetLinkChunkedSendParallelSize(),
+		GroupByThreshold:              &groupByThreshold,
+		RevealGroupMark:               &revealGroupMark,
+		RevealGroupCount:              &revealGroupCount,
+		Batched:                       &batched,
+		EnableSessionLoggerSeparation: projectConf.EnableSessionLoggerSeparation,
+		TimeZone:                      projectConf.TimeZone,
+		UseRr22LowCommMode:            projectConf.UseRr22LowCommMode,
 	})
 
 	if err != nil {
