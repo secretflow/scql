@@ -687,12 +687,6 @@ service InterBrokerService {
   rpc ExchangeJobInfo(ExchangeJobInfoRequest) returns (ExchangeJobInfoResponse);
 }
 
-// part of compile options which are nothing to do with safety
-// deprecated
-message RunningOptions {
-  bool batched = 1;
-}
-
 message DistributeQueryRequest {
   RequestHeader header = 1;
   BrokerProtocolVersion client_protocol = 2;
@@ -711,7 +705,7 @@ message DistributeQueryRequest {
   bool dry_run = 13;
   string time_zone = 14;
   JobConfig job_config = 15;
-  RunningOptions running_opts = 16;
+  reserved 16;
   google.protobuf.Timestamp created_at = 17;
 }
 

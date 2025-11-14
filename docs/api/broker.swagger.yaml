@@ -1726,14 +1726,6 @@ definitions:
       - LOW_MODE
       - FAST_MODE
     default: UNDEFINED
-  scql.pb.RunningOptions:
-    type: object
-    properties:
-      batched:
-        type: boolean
-    title: |-
-      part of compile options which are nothing to do with safety
-      deprecated
   scql.pb.SQLWarning:
     type: object
     properties:
