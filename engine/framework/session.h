@@ -286,7 +286,7 @@ class Session {
   std::shared_ptr<util::PsiDetailLogger> psi_logger_ = nullptr;
   pb::DebugOptions debug_opts_;
 
-  std::vector<spu::ProtocolKind> allowed_spu_protocols_;
+  const std::vector<spu::ProtocolKind> allowed_spu_protocols_;
 
   // for progress exposure
   std::atomic_int32_t nodes_count_ = -1;
