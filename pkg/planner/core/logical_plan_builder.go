@@ -105,7 +105,7 @@ func (b *PlanBuilder) buildDataSource(ctx context.Context, tn *ast.TableName,
 	}
 	ds.SetSchema(schema)
 	ds.names = names
-	ds.SetPartyCode(tableInfo.PartyCode)
+	ds.SetOwnerPartyCodes([]string{tableInfo.PartyCode})
 
 	return ds, nil
 }

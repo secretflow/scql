@@ -18,6 +18,7 @@ import (
 
 	"github.com/secretflow/scql/pkg/expression"
 	"github.com/secretflow/scql/pkg/parser/ast"
+	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
 
 type joinReorderGreedySolver struct {
@@ -77,7 +78,7 @@ func (s *joinReorderGreedySolver) popIfFirstNodeCantBeMerged() *jrNode {
 	// only merging plans with same party code
 	for i, node := range s.curJoinGroup[1:] {
 		// skip join node which can't merge with curJoinTree
-		if node.p.PartyCode() == "" || (curJoinTree.p.PartyCode() != node.p.PartyCode()) {
+		if len(node.p.OwnerPartyCodes()) != 1 || !sliceutil.UnOrderedSliceEqual(curJoinTree.p.OwnerPartyCodes(), node.p.OwnerPartyCodes()) {
 			continue
 		}
 		newJoin, remainOthers := s.checkConnectionAndMakeJoin(curJoinTree.p, node.p)
