@@ -52,6 +52,10 @@ type Plan interface {
 	SetOutputNames(names types.NameSlice)
 
 	SelectBlockOffset() int
+
+	OwnerPartyCodes() []string
+
+	SetOwnerPartyCodes(partyCodes []string)
 }
 
 type InsertTableOption struct {
@@ -98,12 +102,13 @@ type LogicalPlan interface {
 }
 
 type basePlan struct {
-	tp             string
-	id             int
-	ctx            sessionctx.Context
-	blockOffset    int
-	intoOpt        *ast.SelectIntoOption
-	insertTableOpt *InsertTableOption
+	tp              string
+	id              int
+	ctx             sessionctx.Context
+	blockOffset     int
+	intoOpt         *ast.SelectIntoOption
+	insertTableOpt  *InsertTableOption
+	ownerPartyCodes []string
 }
 
 func (p *basePlan) TP() string {
@@ -131,6 +136,14 @@ func (p *basePlan) SCtx() sessionctx.Context {
 
 func (p *basePlan) SelectBlockOffset() int {
 	return p.blockOffset
+}
+
+func (p *basePlan) OwnerPartyCodes() []string {
+	return p.ownerPartyCodes
+}
+
+func (p *basePlan) SetOwnerPartyCodes(partyCodes []string) {
+	p.ownerPartyCodes = partyCodes
 }
 
 func (p *baseLogicalPlan) extractCorrelatedCols() []*expression.CorrelatedColumn {

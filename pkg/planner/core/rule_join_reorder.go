@@ -19,6 +19,7 @@ import (
 	"github.com/secretflow/scql/pkg/expression"
 	"github.com/secretflow/scql/pkg/sessionctx"
 	"github.com/secretflow/scql/pkg/types"
+	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
 
 const (
@@ -61,7 +62,23 @@ type jrNode struct {
 }
 
 func (s *joinReOrderSolver) optimize(ctx context.Context, p LogicalPlan) (LogicalPlan, error) {
+	fillPartyCode(p)
 	return s.optimizeRecursive(p.SCtx(), p)
+}
+
+func fillPartyCode(p LogicalPlan) {
+	if len(p.Children()) == 0 {
+		return
+	}
+	// fill party code recursively
+	for _, child := range p.Children() {
+		fillPartyCode(child)
+	}
+	partyCodes := p.Children()[0].OwnerPartyCodes()
+	for _, child := range p.Children() {
+		partyCodes = sliceutil.SliceDeDup(append(partyCodes, child.OwnerPartyCodes()...))
+	}
+	p.SetOwnerPartyCodes(partyCodes)
 }
 
 // optimizeRecursive recursively collects join groups and applies join reorder algorithm for each group.
@@ -172,12 +189,13 @@ func (s *baseSingleGroupJoinOrderSolver) newJoinWithEdges(lChild, rChild Logical
 		newJoin.LeftJoinKeys = append(newJoin.LeftJoinKeys, eqCond.GetArgs()[0].(*expression.Column))
 		newJoin.RightJoinKeys = append(newJoin.RightJoinKeys, eqCond.GetArgs()[1].(*expression.Column))
 	}
+	newJoin.SetOwnerPartyCodes(sliceutil.SliceDeDup(append(lChild.OwnerPartyCodes(), rChild.OwnerPartyCodes()...)))
 	return newJoin
 }
 
 // calcJoinCumCost calculates the cumulative cost of the join node.
 func (s *baseSingleGroupJoinOrderSolver) calcJoinCumCost(join LogicalPlan, lNode, rNode *jrNode) float64 {
-	if lNode.p.Schema().PartyCode == rNode.p.Schema().PartyCode {
+	if len(rNode.p.OwnerPartyCodes()) == 1 && sliceutil.UnOrderedSliceEqual(lNode.p.OwnerPartyCodes(), rNode.p.OwnerPartyCodes()) {
 		return LocalJoin + lNode.cumCost + rNode.cumCost
 	}
 	return NonLocalJoin + lNode.cumCost + rNode.cumCost
