@@ -229,26 +229,21 @@ void Session::Negotiate() {
       session_opt_.streaming_options.streaming_row_num_threshold);
   streaming_options->set_batch_row_num(
       session_opt_.streaming_options.batch_row_num);
-  auto* mpc_options = options.mutable_mpc_options();
-  for (auto protocol : allowed_spu_protocols_) {
-    mpc_options->mutable_spu_allowed_protocols()->Add(protocol);
-  }
   options.mutable_he_options()->set_he_schema_type(
       static_cast<int64_t>(session_opt_.he_options.he_schema_type));
   // negotiation
   std::vector<pb::NegotiationOptions> negotiation_options_v;
   {
     std::string option_str;
-    auto status =
-        google::protobuf::util::MessageToJsonString(options, &option_str);
-    YACL_ENFORCE(status.ok(), status.message());
+    YACL_ENFORCE(options.SerializeToString(&option_str),
+                 "failed to serialize NegotiationOptions to string");
     yacl::ByteContainerView buffer(option_str);
     auto buffers = yacl::link::AllGather(lctx_, buffer, "negotiate");
     // parse
     for (const auto& value : buffers) {
       pb::NegotiationOptions tmp_options;
-      status = google::protobuf::util::JsonStringToMessage(value, &tmp_options);
-      YACL_ENFORCE(status.ok(), status.message());
+      YACL_ENFORCE(tmp_options.ParseFromArray(value.data(), value.size()),
+                   "failed to parse NegotiationOptions from received buffer");
       negotiation_options_v.push_back(std::move(tmp_options));
     }
   }
@@ -289,19 +284,6 @@ void Session::Negotiate() {
     if (negotiation_options.psi_options().psi_curve_types()[0] != curve_type) {
       session_opt_.psi_config.psi_curve_type = psi::CURVE_INVALID_TYPE;
     }
-    // cal intersection of allowed spu protocols
-    std::vector<spu::ProtocolKind> temp;
-    SPDLOG_INFO(
-        "allowed_spu_protocols_ size {}, spu_allowed_protocols size {}",
-        allowed_spu_protocols_.size(),
-        negotiation_options.mpc_options().spu_allowed_protocols().size());
-    std::set_intersection(
-        allowed_spu_protocols_.begin(), allowed_spu_protocols_.end(),
-        negotiation_options.mpc_options().spu_allowed_protocols().begin(),
-        negotiation_options.mpc_options().spu_allowed_protocols().end(),
-        std::back_inserter(temp));
-    SPDLOG_INFO("temp size {},", temp.size());
-    allowed_spu_protocols_ = std::move(temp);
   }
 }
 

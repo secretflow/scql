@@ -719,8 +719,6 @@ TEST_P(EngineServiceImpl2PartiesTest, SessionNegotiationDiffConf) {
             pb::LOW_MODE);
   EXPECT_EQ(session_alice->GetSessionOptions().he_options.he_schema_type,
             heu::lib::phe::SchemaType::ZPaillier);
-  EXPECT_EQ(std::vector<spu::ProtocolKind>{spu::SEMI2K},
-            session_alice->GetAllowedSpuProtocols());
   auto* session_bob = svcs[1]->GetSessionManager()->GetSession(
       request_alice.job_params().job_id());
   EXPECT_EQ(session_bob->GetSessionOptions().psi_config.psi_curve_type,
@@ -729,8 +727,6 @@ TEST_P(EngineServiceImpl2PartiesTest, SessionNegotiationDiffConf) {
             pb::LOW_MODE);
   EXPECT_EQ(session_bob->GetSessionOptions().he_options.he_schema_type,
             heu::lib::phe::SchemaType::ZPaillier);
-  EXPECT_EQ(std::vector<spu::ProtocolKind>{spu::SEMI2K},
-            session_bob->GetAllowedSpuProtocols());
   service.input_chan.Push(1);
   service.input_chan.Push(1);
   recv_server.Stop(1000);

@@ -187,13 +187,8 @@ message HeOptions {
   int64 he_schema_type = 1;
 }
 
-message MpcOptions {
-  repeated spu.pb.ProtocolKind spu_allowed_protocols = 1;
-}
-
 message NegotiationOptions {
   StreamingOptions streaming_options = 1;
   PsiOptions psi_options = 2;
   HeOptions he_options = 3;
-  MpcOptions mpc_options = 4;
 }
