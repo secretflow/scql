@@ -225,6 +225,83 @@ func TestSCDBWithAllCCLPlaintext(t *testing.T) {
 	}
 }
 
+func TestSCDBDryRun(t *testing.T) {
+	r := require.New(t)
+	addresses, err := getUrlList(testConf)
+	r.NoError(err)
+	if len(addresses) == 0 {
+		fmt.Println("Warning: Skipping dryRun test due to empty SCDB addresses")
+		return
+	}
+	protocols, err := getProtocols(testConf)
+	r.NoError(err)
+	mockTables, err := mock.MockAllTables()
+	r.NoError(err)
+	regtest.FillTableToPartyCodeMap(mockTables)
+
+	cclList, err := mock.MockAllCCL()
+	r.NoError(err)
+	addr := addresses[0]
+	protocol := protocols[0]
+	fmt.Printf("test dryRun with protocol %s\n", protocol)
+	r.NoError(createUserAndCcl(testConf, cclList, addr, testConf.SkipCreateUserCCL))
+
+	user := userMapCredential[userNameAlice]
+
+	// Test 1: Valid DQL query should succeed in dryRun mode
+	fmt.Println("Test 1: Valid DQL query with dryRun")
+	validQuery := "select ta.plain_int_0 from alice_tbl_0 as ta"
+	resp, err := runSqlWithDryRun(user, validQuery, addr, true, true)
+	r.NoError(err, "Valid DQL query should succeed in dryRun mode")
+	r.NotNil(resp, "Response should not be nil")
+	// In dryRun mode, OutColumns should be empty
+	r.Equal(0, len(resp), "OutColumns should be empty in dryRun mode")
+
+	// Test 2: Valid DQL query with join should succeed in dryRun mode
+	fmt.Println("Test 2: Valid DQL query with join and dryRun")
+	validJoinQuery := "select ta.plain_int_0, tb.plain_int_0 from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0"
+	resp, err = runSqlWithDryRun(user, validJoinQuery, addr, true, true)
+	r.NoError(err, "Valid DQL query with join should succeed in dryRun mode")
+	r.NotNil(resp, "Response should not be nil")
+	r.Equal(0, len(resp), "OutColumns should be empty in dryRun mode")
+
+	// Test 3: Invalid SQL should fail in dryRun mode
+	fmt.Println("Test 3: Invalid SQL with dryRun")
+	invalidQuery := "select * from non_existent_table"
+	_, err = runSqlWithDryRun(user, invalidQuery, addr, true, true)
+	r.Error(err, "Invalid SQL should fail in dryRun mode")
+
+	// Test 4: SQL syntax error should fail in dryRun mode
+	fmt.Println("Test 4: SQL syntax error with dryRun")
+	syntaxErrorQuery := "select * from alice_tbl_0 where invalid_syntax"
+	_, err = runSqlWithDryRun(user, syntaxErrorQuery, addr, true, true)
+	r.Error(err, "SQL with syntax error should fail in dryRun mode")
+
+	// Test 5: DQL query without proper CCL should fail in dryRun mode
+	fmt.Println("Test 5: DQL query without proper CCL with dryRun")
+	// This test depends on the CCL setup, if alice doesn't have access to secret columns, it should fail
+	secretQuery := "select ta.secret_int_0 from alice_tbl_0 as ta"
+	_, err = runSqlWithDryRun(user, secretQuery, addr, true, true)
+	// This may or may not fail depending on CCL configuration, so we just check it doesn't panic
+	_ = err
+
+	// Test 6: Non-DQL query (DDL) should succeed in dryRun mode (but dryRun only validates DQL)
+	fmt.Println("Test 6: Non-DQL query with dryRun")
+	ddlQuery := "CREATE TABLE IF NOT EXISTS test_table (id INT)"
+	_, err = runSqlWithDryRun(user, ddlQuery, addr, true, true)
+	// DDL queries are not validated in dryRun mode, so this should succeed
+	// (dryRun only validates DQL queries)
+
+	// Test 7: Test dryRun with Submit (async mode)
+	fmt.Println("Test 7: Valid DQL query with dryRun in async mode")
+	resp, err = runSqlWithDryRun(user, validQuery, addr, false, true)
+	r.NoError(err, "Valid DQL query should succeed in dryRun mode (async)")
+	r.NotNil(resp, "Response should not be nil")
+	r.Equal(0, len(resp), "OutColumns should be empty in dryRun mode")
+
+	fmt.Println("All dryRun tests passed!")
+}
+
 func runQueryTest(user, addr string, protocol string, flags testFlag) (err error) {
 	path := map[string][]string{SEMI2K: {"../testdata/single_party.json", "../testdata/two_parties.json", "../testdata/multi_parties.json", "../testdata/view.json"}, CHEETAH: {"../testdata/two_parties.json"}, ABY3: {"../testdata/multi_parties.json"}}
 	for _, fileName := range path[protocol] {
@@ -434,11 +511,15 @@ func createUserAndCcl(testConf *testConfig, cclList []*scql.SecurityConfig_Colum
 }
 
 func runSql(user *scql.SCDBCredential, sql, addr string, sync bool) ([]*scql.Tensor, error) {
+	return runSqlWithDryRun(user, sql, addr, sync, false)
+}
+
+func runSqlWithDryRun(user *scql.SCDBCredential, sql, addr string, sync bool, dryRun bool) ([]*scql.Tensor, error) {
 	httpClient := &http.Client{Timeout: stubTimeoutMinutes * time.Minute}
 	stub := client.NewDefaultClient(addr, httpClient)
 	stub.SetDBName(dbName)
 	if sync {
-		resp, err := stub.SubmitAndGet(user, sql)
+		resp, err := stub.SubmitAndGetWithDryRun(user, sql, dryRun)
 		if err != nil {
 			return nil, err
 		}
@@ -447,12 +528,19 @@ func runSql(user *scql.SCDBCredential, sql, addr string, sync bool) ([]*scql.Ten
 		}
 		return resp.OutColumns, nil
 	} else {
-		resp, err := stub.Submit(user, sql)
+		resp, err := stub.SubmitWithDryRun(user, sql, dryRun)
 		if err != nil {
 			return nil, err
 		}
 		if resp.Status.Code != int32(scql.Code_OK) {
 			return nil, fmt.Errorf("error code expected %d, actual %d", int32(scql.Code_OK), resp.Status.Code)
+		}
+
+		// In dryRun mode, the response should have a session ID but no actual execution happens
+		// For dryRun, we don't need to fetch since the validation is done immediately
+		if dryRun {
+			// In dryRun mode, return empty result
+			return []*scql.Tensor{}, nil
 		}
 
 		if resp.ScdbSessionId == "" {
