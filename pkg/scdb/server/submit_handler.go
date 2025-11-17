@@ -120,6 +120,17 @@ func (app *App) submit(ctx context.Context, req *scql.SCDBQueryRequest) *scql.SC
 	}
 	session.isDQLRequest = isDQL
 
+	// Handle dry run mode
+	if req.GetDryRun() {
+		if isDQL {
+			if err := app.dryRunDQL(ctx, session); err != nil {
+				return newErrorSCDBSubmitResponse(scql.Code_INTERNAL, err.Error())
+			}
+		}
+
+		return newSuccessSCDBSubmitResponse(session.id)
+	}
+
 	app.sessions.SetDefault(session.id, session)
 	if isDQL {
 		return app.submitDQL(ctx, session)
