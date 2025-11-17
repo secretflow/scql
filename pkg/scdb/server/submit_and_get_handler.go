@@ -113,7 +113,7 @@ func (app *App) submitAndGet(ctx context.Context, req *scql.SCDBQueryRequest) *s
 		return &scql.SCDBQueryResultResponse{
 			Status: &scql.Status{
 				Code:    int32(scql.Code_OK),
-				Message: "dry run success",
+				Message: constant.DryRunSuccess,
 			},
 			ScdbSessionId: session.id,
 		}

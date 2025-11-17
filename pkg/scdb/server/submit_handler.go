@@ -56,6 +56,16 @@ func newSuccessSCDBSubmitResponse(sessionID string) *scql.SCDBSubmitResponse {
 	}
 }
 
+func newSuccessSCDBSubmitDryRunResponse(sessionID string) *scql.SCDBSubmitResponse {
+	return &scql.SCDBSubmitResponse{
+		Status: &scql.Status{
+			Code:    int32(scql.Code_OK),
+			Message: constant.DryRunSuccess,
+		},
+		ScdbSessionId: sessionID,
+	}
+}
+
 func setResponseContentType(c *gin.Context, encodingTp message.ContentEncodingType) {
 	switch encodingTp {
 	case message.EncodingTypeJson:
@@ -128,7 +138,7 @@ func (app *App) submit(ctx context.Context, req *scql.SCDBQueryRequest) *scql.SC
 			}
 		}
 
-		return newSuccessSCDBSubmitResponse(session.id)
+		return newSuccessSCDBSubmitDryRunResponse(session.id)
 	}
 
 	app.sessions.SetDefault(session.id, session)

@@ -282,8 +282,7 @@ func TestSCDBDryRun(t *testing.T) {
 	// This test depends on the CCL setup, if alice doesn't have access to secret columns, it should fail
 	secretQuery := "select ta.secret_int_0 from alice_tbl_0 as ta"
 	_, err = runSqlWithDryRun(user, secretQuery, addr, true, true)
-	// This may or may not fail depending on CCL configuration, so we just check it doesn't panic
-	_ = err
+	r.Error(err, "SQL with syntax error should fail in dryRun mode")
 
 	// Test 6: Non-DQL query (DDL) should succeed in dryRun mode (but dryRun only validates DQL)
 	fmt.Println("Test 6: Non-DQL query with dryRun")
@@ -291,6 +290,7 @@ func TestSCDBDryRun(t *testing.T) {
 	_, err = runSqlWithDryRun(user, ddlQuery, addr, true, true)
 	// DDL queries are not validated in dryRun mode, so this should succeed
 	// (dryRun only validates DQL queries)
+	r.NoError(err, "Valid DQL query with join should succeed in dryRun mode")
 
 	// Test 7: Test dryRun with Submit (async mode)
 	fmt.Println("Test 7: Valid DQL query with dryRun in async mode")
