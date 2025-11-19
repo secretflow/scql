@@ -58,7 +58,8 @@ commands:
             echo "Running unit tests..."
             bazelisk --host_jvm_args=-Xmx8g test //engine/... \
                 -c opt \
-                --jobs=auto \
+                --jobs=16 \
+                --local_ram_resources=20480 \
                 --ui_event_filters=-info,-debug,-warning \
                 --test_output=errors | tee test_result.log
 
