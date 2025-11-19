@@ -65,8 +65,8 @@ func UpdateJobConfig(jobConfig *pb.JobConfig, projectConfig *pb.ProjectConfig) *
 		jobConfig.EnableSessionLoggerSeparation = projectConfig.EnableSessionLoggerSeparation
 	}
 
-	if jobConfig.UseRr22LowCommMode == nil {
-		jobConfig.UseRr22LowCommMode = projectConfig.UseRr22LowCommMode
+	if jobConfig.GetRr22Mode() == scql.Rr22Mode_UNDEFINED {
+		jobConfig.Rr22Mode = projectConfig.Rr22Mode
 	}
 
 	if jobConfig.PsiType == scql.PsiAlgorithmType_AUTO {
