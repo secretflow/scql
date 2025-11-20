@@ -404,7 +404,7 @@ func (ds *TestDataSource) getQueryResultFromMySQL(query string, needConvertDateT
 		case "INT", "BIGINT", "MEDIUMINT":
 			var a sql.NullInt64
 			curRowColumns[i] = &a
-		case "VARCHAR", "TEXT", "NVARCHAR", "LONGTEXT", "DATETIME", "DURATION", "TIMESTAMP", "DATE":
+		case "VARCHAR", "TEXT", "NVARCHAR", "LONGTEXT", "MEDIUMTEXT", "DATETIME", "DURATION", "TIMESTAMP", "DATE":
 			var a sql.NullString
 			curRowColumns[i] = &a
 		case "BOOL":
