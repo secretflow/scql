@@ -90,6 +90,14 @@ func (attr *Attribute) SetBool(v bool) {
 	}
 }
 
+func (attr *Attribute) SetBools(v []bool) {
+	attr.TensorValue = &Tensor{
+		BooleanS: v,
+		DType:    proto.PrimitiveDataType_BOOL,
+		Shape:    []int{len(v)},
+	}
+}
+
 // GetAttrValue returns attr value
 func (attr *Attribute) GetAttrValue() interface{} {
 	if attr.TensorValue == nil {

@@ -14,6 +14,11 @@
 
 #include "engine/operator/sort.h"
 
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <vector>
+
 #include "arrow/api.h"
 #include "arrow/compute/api.h"
 #include "arrow/table.h"
@@ -63,16 +68,17 @@ void Sort::SortInPlain(ExecContext* ctx) {
 
   std::vector<arrow::compute::SortKey> sort_keys;
 
-  // TODO: sort the table by the keys with different direction
-  bool reverse = ctx->GetBooleanValueFromAttribute(kReverseAttr);
-  arrow::compute::SortOrder order = reverse
-                                        ? arrow::compute::SortOrder::Descending
-                                        : arrow::compute::SortOrder::Ascending;
-  sort_keys.reserve(sort_key_pbs.size());
-  for (const auto& sort_key_pb : sort_key_pbs) {
-    sort_keys.emplace_back(sort_key_pb.name(), order);
-  }
+  // Get sort directions - either a single bool or array of bools
+  std::vector<bool> reverses = ctx->GetBooleanValuesFromAttribute(kReverseAttr);
 
+  sort_keys.reserve(sort_key_pbs.size());
+  for (int64_t i = 0; i < sort_key_pbs.size(); i++) {
+    arrow::compute::SortOrder order =
+        reverses[i] ? arrow::compute::SortOrder::Descending
+                    : arrow::compute::SortOrder::Ascending;
+    sort_keys.emplace_back(sort_key_pbs[i].name(), order);
+  }
+  YACL_ENFORCE(reverses.size() == sort_keys.size());
   RepeatedPbTensor input_tensors;
 
   std::vector<std::string> fields;
@@ -133,37 +139,62 @@ void Sort::SortInSecret(ExecContext* ctx) {
   const auto& in_pbs = ctx->GetInput(kIn);
   const auto& out_pbs = ctx->GetOutput(kOut);
 
-  bool reverse = ctx->GetBooleanValueFromAttribute(kReverseAttr);
-
   auto* symbols = ctx->GetSession()->GetDeviceSymbols();
-  std::vector<spu::Value> inputs;
+  std::vector<spu::Value> keys;
   for (const auto& sort_key_pb : sort_key_pbs) {
     auto value = symbols->getVar(
         util::SpuVarNameEncoder::GetValueName(sort_key_pb.name()));
-    inputs.push_back(value);
+    keys.push_back(value);
   }
-
-  size_t sort_key_num = inputs.size();
-
+  std::vector<spu::Value> payloads;
   for (const auto& in_pb : in_pbs) {
     auto value =
         symbols->getVar(util::SpuVarNameEncoder::GetValueName(in_pb.name()));
-    inputs.push_back(value);
+    payloads.push_back(value);
   }
 
   auto* sctx = ctx->GetSession()->GetSpuContext();
-  auto sort_direction = spu::kernel::hal::SortDirection::Ascending;
-  if (reverse) {
-    sort_direction = spu::kernel::hal::SortDirection::Descending;
-  }
-  // NOTE: use default performance hint for SimpleSort
-  auto results = spu::kernel::hlo::SimpleSort(sctx, inputs, 0, sort_direction,
-                                              sort_key_num);
+  std::vector<bool> reverses = ctx->GetBooleanValuesFromAttribute(kReverseAttr);
+  YACL_ENFORCE(reverses.size() == keys.size());
+  // std::vector<std::pair<std::vector<spu::Value>, bool>> data_pairs;
+  int64_t cur_key_num = keys.size() - 1;
+  bool cur_reverse = reverses[cur_key_num];
+  std::vector<spu::Value> sub_sort_keys;
+  auto results = payloads;
+  SPDLOG_INFO("key num: {}, payload num: {}", keys.size(), payloads.size());
+  while (true) {
+    if (cur_key_num < 0 || cur_reverse != reverses[cur_key_num]) {
+      auto sort_direction = cur_reverse
+                                ? spu::kernel::hal::SortDirection::Descending
+                                : spu::kernel::hal::SortDirection::Ascending;
+      std::reverse(sub_sort_keys.begin(), sub_sort_keys.end());
+      auto inputs = sub_sort_keys;
+      for (int64_t i = cur_key_num; i >= 0; i--) {
+        inputs.push_back(keys[i]);
+      }
+      inputs.insert(inputs.end(), results.begin(), results.end());
+      // NOTE: use default performance hint for SimpleSort
+      auto sorted_results = spu::kernel::hlo::SimpleSort(
+          sctx, inputs, 0, sort_direction, sub_sort_keys.size());
+      results = std::vector<spu::Value>(
+          sorted_results.begin() + sorted_results.size() - payloads.size(),
+          sorted_results.end());
+      if (cur_key_num < 0) {
+        break;
+      }
+      keys = std::vector<spu::Value>(
+          sorted_results.begin() + sub_sort_keys.size(),
+          sorted_results.begin() + sub_sort_keys.size() + cur_key_num + 1);
 
+      sub_sort_keys.clear();
+      cur_reverse = reverses[cur_key_num];
+    }
+    sub_sort_keys.push_back(keys[cur_key_num]);
+    cur_key_num--;
+  }
   for (int i = 0; i < out_pbs.size(); ++i) {
-    auto idx = sort_key_num + i;
     symbols->setVar(util::SpuVarNameEncoder::GetValueName(out_pbs[i].name()),
-                    results[idx]);
+                    results[i]);
   }
 
   // TODO: sort validity too
