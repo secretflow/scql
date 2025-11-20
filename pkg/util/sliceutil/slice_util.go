@@ -129,3 +129,9 @@ func ValueSortedByMapKey[k cmp.Ordered, v any](m map[k]v) iter.Seq[v] {
 		}
 	}
 }
+
+func UnOrderedSliceEqual[S ~[]E, E cmp.Ordered](s1, s2 S) bool {
+	slices.Sort(s1)
+	slices.Sort(s2)
+	return slices.Equal(s1, s2)
+}
