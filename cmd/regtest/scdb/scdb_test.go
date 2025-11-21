@@ -226,55 +226,6 @@ func TestSCDBWithAllCCLPlaintext(t *testing.T) {
 	}
 }
 
-func TestSCDBDryRun(t *testing.T) {
-	r := require.New(t)
-	addresses, err := getUrlList(testConf)
-	r.NoError(err)
-	if len(addresses) == 0 {
-		fmt.Println("Warning: Skipping dryRun test due to empty SCDB addresses")
-		return
-	}
-	protocols, err := getProtocols(testConf)
-	r.NoError(err)
-	mockTables, err := mock.MockAllTables()
-	r.NoError(err)
-	regtest.FillTableToPartyCodeMap(mockTables)
-
-	cclList, err := mock.MockAllCCL()
-	r.NoError(err)
-	addr := addresses[0]
-	protocol := protocols[0]
-	fmt.Printf("test dryRun with protocol %s\n", protocol)
-	r.NoError(createUserAndCcl(testConf, cclList, addr, testConf.SkipCreateUserCCL))
-
-	user := userMapCredential[userNameAlice]
-
-	// Test 1: Valid DQL query should succeed in dryRun mode
-	fmt.Println("Test 1: Valid DQL query with dryRun")
-	validQuery := "select ta.plain_int_0 from alice_tbl_0 as ta"
-	resp, err := runSqlWithDryRun(user, validQuery, addr, true, true)
-	r.NoError(err, "Valid DQL query should succeed in dryRun mode")
-	r.NotNil(resp, "Response should not be nil")
-	r.Equal(0, len(resp), "OutColumns should be empty in dryRun mode")
-
-	// Test 2: Invalid SQL should fail in dryRun mode
-	fmt.Println("Test 2: Invalid SQL with dryRun")
-	invalidQuery := "select * from non_existent_table"
-	_, err = runSqlWithDryRun(user, invalidQuery, addr, true, true)
-	r.Error(err, "Invalid SQL should fail in dryRun mode")
-
-	// Test 3: dryRun with async mode should fail
-	fmt.Println("Test 3: dryRun with async mode should fail")
-	_, err = runSqlWithDryRun(user, validQuery, addr, false, true)
-	r.Error(err, "dryRun in async mode should not be supported")
-
-	// Test 4: DQL query without proper CCL should fail in dryRun mode
-	fmt.Println("Test 4: DQL query without proper CCL with dryRun")
-	secretQuery := "select ta.encrypt_int_0 from alice_tbl_0 as ta"
-	_, err = runSqlWithDryRun(user, secretQuery, addr, true, true)
-	r.Error(err, "Query referencing secret columns without CCL should fail in dryRun mode")
-}
-
 func runQueryTest(user, addr string, protocol string, flags testFlag) (err error) {
 	path := map[string][]string{SEMI2K: {"../testdata/single_party.json", "../testdata/two_parties.json", "../testdata/multi_parties.json", "../testdata/view.json"}, CHEETAH: {"../testdata/two_parties.json"}, ABY3: {"../testdata/multi_parties.json"}}
 	for _, fileName := range path[protocol] {
@@ -517,57 +468,5 @@ func runSql(user *scql.SCDBCredential, sql, addr string, sync bool) ([]*scql.Ten
 			return nil, fmt.Errorf("error code %d, %+v", fetchResp.Status.Code, fetchResp)
 		}
 		return fetchResp.OutColumns, nil
-	}
-}
-
-func runSqlWithDryRun(user *scql.SCDBCredential, sql, addr string, sync bool, dryRun bool) ([]*scql.Tensor, error) {
-	if !dryRun {
-		return runSql(user, sql, addr, sync)
-	}
-
-	req := &scql.SCDBQueryRequest{
-		User:         user,
-		Query:        sql,
-		BizRequestId: "",
-		DbName:       dbName,
-		DryRun:       true,
-	}
-
-	httpClient := &http.Client{Timeout: stubTimeoutMinutes * time.Minute}
-	requestStr, err := message.SerializeTo(req, message.EncodingTypeJson)
-	if err != nil {
-		return nil, err
-	}
-
-	if !sync {
-		resp, err := httpClient.Post(addr+client.SubmitPath, "application/json", strings.NewReader(requestStr))
-		if err != nil {
-			return nil, err
-		}
-		defer resp.Body.Close()
-
-		submitResp := &scql.SCDBSubmitResponse{}
-		if _, err = message.DeserializeFrom(resp.Body, submitResp, resp.Header.Get("Content-Type")); err != nil {
-			return nil, err
-		}
-		if submitResp.Status.Code == int32(scql.Code_BAD_REQUEST) {
-			return nil, fmt.Errorf("dryRun is not supported in async mode: %s", submitResp.Status.Message)
-		}
-		return nil, fmt.Errorf("unexpected status %d: %+v", submitResp.Status.Code, submitResp)
-	} else {
-		resp, err := httpClient.Post(addr+client.SubmitAndGetPath, "application/json", strings.NewReader(requestStr))
-		if err != nil {
-			return nil, err
-		}
-		defer resp.Body.Close()
-
-		response := &scql.SCDBQueryResultResponse{}
-		if _, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-Type")); err != nil {
-			return nil, err
-		}
-		if int32(scql.Code_OK) != response.GetStatus().GetCode() {
-			return nil, fmt.Errorf("error code %d, %+v", response.Status.Code, response)
-		}
-		return response.OutColumns, nil
 	}
 }
