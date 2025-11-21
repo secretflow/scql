@@ -120,6 +120,11 @@ func (app *App) submit(ctx context.Context, req *scql.SCDBQueryRequest) *scql.SC
 	}
 	session.isDQLRequest = isDQL
 
+	// Handle dry run mode - Consistent with broker implementation, asynchronous interfaces do not support dry run
+	if req.GetDryRun() {
+		return newErrorSCDBSubmitResponse(scql.Code_BAD_REQUEST, "dry_run is not supported in SubmitQuery, please use SubmitAndGet instead")
+	}
+
 	app.sessions.SetDefault(session.id, session)
 	if isDQL {
 		return app.submitDQL(ctx, session)
