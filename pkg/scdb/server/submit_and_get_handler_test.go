@@ -76,10 +76,11 @@ func TestSubmitAndGetDryRun(t *testing.T) {
 	app := newTestApp(t)
 
 	alice := newTestCredential("alice", "alice123")
+	bob := newTestCredential("bob", "bob123")
 
 	// Test 1: Valid DQL query should succeed in dryRun mode
 	t.Run("valid DQL dryRun", func(t *testing.T) {
-		resp := submitAndGetWithDryRun(t, app, alice, "select column1_1 from test.table_1", true)
+		resp := submitAndGetWithDryRun(t, app, bob, "select column1_1 from test.table_1", true)
 		r.NotNil(resp)
 		r.Equal(int32(scql.Code_OK), resp.GetStatus().GetCode())
 	})
@@ -104,7 +105,6 @@ func TestSubmitAndGetDryRun(t *testing.T) {
 
 	// Test 4: CCL violation should fail in dryRun mode (bob accessing alice column)
 	t.Run("dryRun CCL violation", func(t *testing.T) {
-		bob := newTestCredential("bob", "bob123")
 		resp := submitAndGetWithDryRun(t, app, bob, "select tb.column2_1 from test.table_2 as tb", true)
 		r.NotEqual(int32(scql.Code_OK), resp.GetStatus().GetCode())
 	})
