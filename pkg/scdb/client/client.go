@@ -73,22 +73,13 @@ func (c *Client) SetCallbackURL(callbackURL string) {
 }
 
 func (c *Client) Submit(user *scql.SCDBCredential, sql string) (*scql.SCDBSubmitResponse, error) {
-	return c.SubmitWithDryRun(user, sql, false)
-}
-
-func (c *Client) SubmitWithDryRun(user *scql.SCDBCredential, sql string, dryRun bool) (*scql.SCDBSubmitResponse, error) {
-	// Handle dry run mode - Consistent with broker implementation, asynchronous interfaces do not support dry run
-	if dryRun {
-		return nil, fmt.Errorf("dry_run is not supported in SubmitWithDryRun, please use SubmitAndGetWithDryRun instead")
-	}
-
 	req := &scql.SCDBQueryRequest{
 		User:                   user,
 		Query:                  sql,
 		QueryResultCallbackUrl: c.callbackURL,
 		BizRequestId:           "",
 		DbName:                 c.dbName,
-		DryRun:                 dryRun,
+		DryRun:                 false,
 	}
 	requestStr, err := message.SerializeTo(req, message.EncodingTypeJson)
 	if err != nil {
@@ -109,16 +100,12 @@ func (c *Client) SubmitWithDryRun(user *scql.SCDBCredential, sql string, dryRun 
 }
 
 func (c *Client) SubmitAndGet(user *scql.SCDBCredential, sql string) (*scql.SCDBQueryResultResponse, error) {
-	return c.SubmitAndGetWithDryRun(user, sql, false)
-}
-
-func (c *Client) SubmitAndGetWithDryRun(user *scql.SCDBCredential, sql string, dryRun bool) (*scql.SCDBQueryResultResponse, error) {
 	req := &scql.SCDBQueryRequest{
 		User:         user,
 		Query:        sql,
 		BizRequestId: "",
 		DbName:       c.dbName,
-		DryRun:       dryRun,
+		DryRun:       false,
 	}
 	requestStr, err := message.SerializeTo(req, message.EncodingTypeJson)
 	if err != nil {

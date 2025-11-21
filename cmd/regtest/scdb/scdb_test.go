@@ -31,6 +31,7 @@ import (
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/scdb/client"
 	"github.com/secretflow/scql/pkg/scdb/config"
+	"github.com/secretflow/scql/pkg/util/message"
 	"github.com/secretflow/scql/pkg/util/mock"
 	"github.com/secretflow/scql/pkg/util/sqlbuilder"
 )
@@ -254,52 +255,18 @@ func TestSCDBDryRun(t *testing.T) {
 	resp, err := runSqlWithDryRun(user, validQuery, addr, true, true)
 	r.NoError(err, "Valid DQL query should succeed in dryRun mode")
 	r.NotNil(resp, "Response should not be nil")
-	// In dryRun mode, OutColumns should be empty
 	r.Equal(0, len(resp), "OutColumns should be empty in dryRun mode")
 
-	// Test 2: Valid DQL query with join should succeed in dryRun mode
-	fmt.Println("Test 2: Valid DQL query with join and dryRun")
-	validJoinQuery := "select ta.plain_int_0, tb.plain_int_0 from alice_tbl_0 as ta join bob_tbl_0 as tb on ta.join_int_0 = tb.join_int_0"
-	resp, err = runSqlWithDryRun(user, validJoinQuery, addr, true, true)
-	r.NoError(err, "Valid DQL query with join should succeed in dryRun mode")
-	r.NotNil(resp, "Response should not be nil")
-	r.Equal(0, len(resp), "OutColumns should be empty in dryRun mode")
-
-	// Test 3: Invalid SQL should fail in dryRun mode
-	fmt.Println("Test 3: Invalid SQL with dryRun")
+	// Test 2: Invalid SQL should fail in dryRun mode
+	fmt.Println("Test 2: Invalid SQL with dryRun")
 	invalidQuery := "select * from non_existent_table"
 	_, err = runSqlWithDryRun(user, invalidQuery, addr, true, true)
 	r.Error(err, "Invalid SQL should fail in dryRun mode")
 
-	// Test 4: SQL syntax error should fail in dryRun mode
-	fmt.Println("Test 4: SQL syntax error with dryRun")
-	syntaxErrorQuery := "select * from alice_tbl_0 where invalid_syntax"
-	_, err = runSqlWithDryRun(user, syntaxErrorQuery, addr, true, true)
-	r.Error(err, "SQL with syntax error should fail in dryRun mode")
-
-	// Test 5: DQL query without proper CCL should fail in dryRun mode
-	fmt.Println("Test 5: DQL query without proper CCL with dryRun")
-	// This test depends on the CCL setup, if alice doesn't have access to secret columns, it should fail
-	secretQuery := "select ta.secret_int_0 from alice_tbl_0 as ta"
-	_, err = runSqlWithDryRun(user, secretQuery, addr, true, true)
-	r.Error(err, "SQL with syntax error should fail in dryRun mode")
-
-	// Test 6: Non-DQL query (DDL) should succeed in dryRun mode (but dryRun only validates DQL)
-	fmt.Println("Test 6: Non-DQL query with dryRun")
-	ddlQuery := "CREATE TABLE IF NOT EXISTS test_table (id INT)"
-	_, err = runSqlWithDryRun(user, ddlQuery, addr, true, true)
-	// DDL queries are not validated in dryRun mode, so this should succeed
-	// (dryRun only validates DQL queries)
-	r.NoError(err, "Valid DQL query with join should succeed in dryRun mode")
-
-	// Test 7: Test dryRun with Submit (async mode)
-	fmt.Println("Test 7: Valid DQL query with dryRun in async mode")
-	resp, err = runSqlWithDryRun(user, validQuery, addr, false, true)
-	r.NoError(err, "Valid DQL query should succeed in dryRun mode (async)")
-	r.NotNil(resp, "Response should not be nil")
-	r.Equal(0, len(resp), "OutColumns should be empty in dryRun mode")
-
-	fmt.Println("All dryRun tests passed!")
+	// Test 3: dryRun with async mode should fail
+	fmt.Println("Test 3: dryRun with async mode should fail")
+	_, err = runSqlWithDryRun(user, validQuery, addr, false, true)
+	r.Error(err, "dryRun in async mode should not be supported")
 }
 
 func runQueryTest(user, addr string, protocol string, flags testFlag) (err error) {
@@ -511,15 +478,11 @@ func createUserAndCcl(testConf *testConfig, cclList []*scql.SecurityConfig_Colum
 }
 
 func runSql(user *scql.SCDBCredential, sql, addr string, sync bool) ([]*scql.Tensor, error) {
-	return runSqlWithDryRun(user, sql, addr, sync, false)
-}
-
-func runSqlWithDryRun(user *scql.SCDBCredential, sql, addr string, sync bool, dryRun bool) ([]*scql.Tensor, error) {
 	httpClient := &http.Client{Timeout: stubTimeoutMinutes * time.Minute}
 	stub := client.NewDefaultClient(addr, httpClient)
 	stub.SetDBName(dbName)
 	if sync {
-		resp, err := stub.SubmitAndGetWithDryRun(user, sql, dryRun)
+		resp, err := stub.SubmitAndGet(user, sql)
 		if err != nil {
 			return nil, err
 		}
@@ -528,19 +491,12 @@ func runSqlWithDryRun(user *scql.SCDBCredential, sql, addr string, sync bool, dr
 		}
 		return resp.OutColumns, nil
 	} else {
-		resp, err := stub.SubmitWithDryRun(user, sql, dryRun)
+		resp, err := stub.Submit(user, sql)
 		if err != nil {
 			return nil, err
 		}
 		if resp.Status.Code != int32(scql.Code_OK) {
 			return nil, fmt.Errorf("error code expected %d, actual %d", int32(scql.Code_OK), resp.Status.Code)
-		}
-
-		// In dryRun mode, the response should have a session ID but no actual execution happens
-		// For dryRun, we don't need to fetch since the validation is done immediately
-		if dryRun {
-			// In dryRun mode, return empty result
-			return []*scql.Tensor{}, nil
 		}
 
 		if resp.ScdbSessionId == "" {
@@ -555,5 +511,57 @@ func runSqlWithDryRun(user *scql.SCDBCredential, sql, addr string, sync bool, dr
 			return nil, fmt.Errorf("error code %d, %+v", fetchResp.Status.Code, fetchResp)
 		}
 		return fetchResp.OutColumns, nil
+	}
+}
+
+func runSqlWithDryRun(user *scql.SCDBCredential, sql, addr string, sync bool, dryRun bool) ([]*scql.Tensor, error) {
+	if !dryRun {
+		return runSql(user, sql, addr, sync)
+	}
+
+	req := &scql.SCDBQueryRequest{
+		User:         user,
+		Query:        sql,
+		BizRequestId: "",
+		DbName:       dbName,
+		DryRun:       true,
+	}
+
+	httpClient := &http.Client{Timeout: stubTimeoutMinutes * time.Minute}
+	requestStr, err := message.SerializeTo(req, message.EncodingTypeJson)
+	if err != nil {
+		return nil, err
+	}
+
+	if !sync {
+		resp, err := httpClient.Post(addr+client.SubmitPath, "application/json", strings.NewReader(requestStr))
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+
+		submitResp := &scql.SCDBSubmitResponse{}
+		if _, err = message.DeserializeFrom(resp.Body, submitResp, resp.Header.Get("Content-Type")); err != nil {
+			return nil, err
+		}
+		if submitResp.Status.Code == int32(scql.Code_BAD_REQUEST) {
+			return nil, fmt.Errorf("dryRun is not supported in async mode: %s", submitResp.Status.Message)
+		}
+		return nil, fmt.Errorf("unexpected status %d: %+v", submitResp.Status.Code, submitResp)
+	} else {
+		resp, err := httpClient.Post(addr+client.SubmitAndGetPath, "application/json", strings.NewReader(requestStr))
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+
+		response := &scql.SCDBQueryResultResponse{}
+		if _, err = message.DeserializeFrom(resp.Body, response, resp.Header.Get("Content-Type")); err != nil {
+			return nil, err
+		}
+		if int32(scql.Code_OK) != response.GetStatus().GetCode() {
+			return nil, fmt.Errorf("error code %d, %+v", response.Status.Code, response)
+		}
+		return response.OutColumns, nil
 	}
 }

@@ -19,10 +19,6 @@ const (
 )
 
 const (
-	DryRunSuccess = "dry run success"
-)
-
-const (
 	StringElementPlaceHolder = `__null__`
 )
 
