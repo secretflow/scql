@@ -56,16 +56,6 @@ func newSuccessSCDBSubmitResponse(sessionID string) *scql.SCDBSubmitResponse {
 	}
 }
 
-func newSuccessSCDBSubmitDryRunResponse(sessionID string) *scql.SCDBSubmitResponse {
-	return &scql.SCDBSubmitResponse{
-		Status: &scql.Status{
-			Code:    int32(scql.Code_OK),
-			Message: constant.DryRunSuccess,
-		},
-		ScdbSessionId: sessionID,
-	}
-}
-
 func setResponseContentType(c *gin.Context, encodingTp message.ContentEncodingType) {
 	switch encodingTp {
 	case message.EncodingTypeJson:
@@ -130,15 +120,9 @@ func (app *App) submit(ctx context.Context, req *scql.SCDBQueryRequest) *scql.SC
 	}
 	session.isDQLRequest = isDQL
 
-	// Handle dry run mode
+	// Handle dry run mode - Consistent with broker implementation, asynchronous interfaces do not support dry run
 	if req.GetDryRun() {
-		if isDQL {
-			if err := app.dryRunDQL(ctx, session); err != nil {
-				return newErrorSCDBSubmitResponse(scql.Code_INTERNAL, err.Error())
-			}
-		}
-
-		return newSuccessSCDBSubmitDryRunResponse(session.id)
+		return newErrorSCDBSubmitResponse(scql.Code_BAD_REQUEST, "dry_run is not supported in SubmitQuery, please use SubmitAndGet instead")
 	}
 
 	app.sessions.SetDefault(session.id, session)

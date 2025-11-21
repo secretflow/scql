@@ -120,6 +120,19 @@ func (app *App) submitAndGet(ctx context.Context, req *scql.SCDBQueryRequest) *s
 	}
 
 	if isDQL {
+		// Handle dry run mode for DQL queries only
+		if req.GetDryRun() {
+			if err := app.dryRunDQL(ctx, session); err != nil {
+				return newErrorSCDBQueryResultResponse(scql.Code_INTERNAL, err.Error())
+			}
+			return &scql.SCDBQueryResultResponse{
+				Status: &scql.Status{
+					Code:    int32(scql.Code_OK),
+					Message: constant.DryRunSuccess,
+				},
+				ScdbSessionId: session.id,
+			}
+		}
 		return app.submitAndGetDQL(ctx, session)
 	}
 	app.runSQL(session)

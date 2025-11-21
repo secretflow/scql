@@ -77,6 +77,11 @@ func (c *Client) Submit(user *scql.SCDBCredential, sql string) (*scql.SCDBSubmit
 }
 
 func (c *Client) SubmitWithDryRun(user *scql.SCDBCredential, sql string, dryRun bool) (*scql.SCDBSubmitResponse, error) {
+	// Handle dry run mode - Consistent with broker implementation, asynchronous interfaces do not support dry run
+	if dryRun {
+		return nil, fmt.Errorf("dry_run is not supported in SubmitWithDryRun, please use SubmitAndGetWithDryRun instead")
+	}
+
 	req := &scql.SCDBQueryRequest{
 		User:                   user,
 		Query:                  sql,
