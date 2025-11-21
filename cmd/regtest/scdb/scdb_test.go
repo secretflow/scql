@@ -31,7 +31,6 @@ import (
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/scdb/client"
 	"github.com/secretflow/scql/pkg/scdb/config"
-	"github.com/secretflow/scql/pkg/util/message"
 	"github.com/secretflow/scql/pkg/util/mock"
 	"github.com/secretflow/scql/pkg/util/sqlbuilder"
 )
