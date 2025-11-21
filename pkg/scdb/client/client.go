@@ -79,7 +79,6 @@ func (c *Client) Submit(user *scql.SCDBCredential, sql string) (*scql.SCDBSubmit
 		QueryResultCallbackUrl: c.callbackURL,
 		BizRequestId:           "",
 		DbName:                 c.dbName,
-		DryRun:                 false,
 	}
 	requestStr, err := message.SerializeTo(req, message.EncodingTypeJson)
 	if err != nil {
@@ -105,7 +104,6 @@ func (c *Client) SubmitAndGet(user *scql.SCDBCredential, sql string) (*scql.SCDB
 		Query:        sql,
 		BizRequestId: "",
 		DbName:       c.dbName,
-		DryRun:       false,
 	}
 	requestStr, err := message.SerializeTo(req, message.EncodingTypeJson)
 	if err != nil {

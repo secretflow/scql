@@ -267,6 +267,12 @@ func TestSCDBDryRun(t *testing.T) {
 	fmt.Println("Test 3: dryRun with async mode should fail")
 	_, err = runSqlWithDryRun(user, validQuery, addr, false, true)
 	r.Error(err, "dryRun in async mode should not be supported")
+
+	// Test 4: DQL query without proper CCL should fail in dryRun mode
+	fmt.Println("Test 4: DQL query without proper CCL with dryRun")
+	secretQuery := "select ta.encrypt_int_0 from alice_tbl_0 as ta"
+	_, err = runSqlWithDryRun(user, secretQuery, addr, true, true)
+	r.Error(err, "Query referencing secret columns without CCL should fail in dryRun mode")
 }
 
 func runQueryTest(user, addr string, protocol string, flags testFlag) (err error) {
