@@ -23,6 +23,7 @@ import (
 	"github.com/patrickmn/go-cache"
 	"github.com/stretchr/testify/require"
 
+	"github.com/secretflow/scql/pkg/planner/core"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/scdb/auth"
 	"github.com/secretflow/scql/pkg/scdb/config"
@@ -38,6 +39,9 @@ func newTestApp(t *testing.T) *App {
 	store, err := storage.NewMemoryStorage()
 	require.NoError(t, err)
 	require.NoError(t, mock.MockStorage(store))
+	require.NoError(t, store.Model(&storage.Table{}).
+		Where("db = ? AND table_name IN ?", "test", []string{"table_1", "table_2", "table_3"}).
+		Update("db_type", int(core.DBTypeMySQL)).Error)
 
 	conf := config.NewDefaultConfig()
 	conf.Protocol = "http"
@@ -80,7 +84,7 @@ func TestSubmitAndGetDryRun(t *testing.T) {
 
 	// Test 1: Valid DQL query should succeed in dryRun mode
 	t.Run("valid DQL dryRun", func(t *testing.T) {
-		resp := submitAndGetWithDryRun(t, app, bob, "select column1_1 from test.table_1", true)
+		resp := submitAndGetWithDryRun(t, app, alice, "select column1_1 from test.table_1", true)
 		r.NotNil(resp)
 		r.Equal(int32(scql.Code_OK), resp.GetStatus().GetCode())
 	})
