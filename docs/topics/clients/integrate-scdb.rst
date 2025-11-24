@@ -35,13 +35,14 @@ In a word, the custom Client should construct HTTP request for user's SQL, post 
 Dry run mode
 ------------
 
-SCDB 提供 ``dry_run`` 标志仅用于做语法和 CCL 校验，而不真正触发执行。该模式具备以下特性：
+SCDB provides the "dry_run" flag solely for syntax and CCL validation purposes,
+without actually triggering execution. This mode possesses the following characteristics:
 
-* 仅对同步接口 ``SubmitAndGet`` 生效，异步 ``Submit`` 如果携带 ``dry_run=true`` 会返回 ``BAD_REQUEST``。
-* 仅支持 DQL 语句；DDL/DCL 会正常执行，即使 ``dry_run=true``。
-* 返回值与普通同步查询一致，但 `status.message` 会在校验通过时包含 ``"dry run success"``为空。
+* This only applies to the synchronous interface "SubmitAndGet". If the asynchronous "Submit" carries "dry_run=true", it will return "BAD_REQUEST".
+* Only DQL statements are supported; DDL/DCL will be executed normally, even if `dry_run=true`.
+* The return value is consistent with that of a regular synchronous query, but `status.message` will contain "dry run success" when the verification passes
 
-典型请求如下：
+A typical request is as follows:
 
 .. code-block:: json
 
@@ -59,7 +60,8 @@ SCDB 提供 ``dry_run`` 标志仅用于做语法和 CCL 校验，而不真正触
      "dry_run": true
    }
 
-客户端可先对关键 DQL 发送 dry-run 请求，确认通过后再移除 ``dry_run`` 执行正式查询，以避免长耗时或潜在 CCL 违规。
+The client can first send a dry-run request for the critical DQL, and after confirming its success,
+remove the 'dry_run' flag to execute the formal query, in order to avoid long execution time or potential CCL violations.
 
 
 SQL Syntax
