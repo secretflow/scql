@@ -64,7 +64,7 @@ do
 		echo "${dash} ${sha} ${etc}"
 		;;
 	esac
-done <<< "$(git diff --check "${baseCommit}" HEAD)"
+done <<< "$(git diff --check "${baseCommit}" HEAD -- . ':(exclude)*.patch')"
 
 if test ${#problems[*]} -gt 0
 then
