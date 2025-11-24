@@ -157,7 +157,7 @@ jobs:
             brew link go@1.24
       - setup_cpp_test
       - run_cpp_test:
-          extra_bazel_args: ""
+          extra_bazel_args: "-c opt"
           find_executable_flag: "-perm +111"
       - store_test_results:
           path: test-results
