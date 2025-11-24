@@ -32,6 +32,35 @@ Please refer to :doc:`/reference/scdb-api` for details.
 
 In a word, the custom Client should construct HTTP request for user's SQL, post to SCDB and parse the response from SCDB.
 
+Dry run mode
+------------
+
+SCDB 提供 ``dry_run`` 标志仅用于做语法和 CCL 校验，而不真正触发执行。该模式具备以下特性：
+
+* 仅对同步接口 ``SubmitAndGet`` 生效，异步 ``Submit`` 如果携带 ``dry_run=true`` 会返回 ``BAD_REQUEST``。
+* 仅支持 DQL 语句；DDL/DCL 会正常执行，即使 ``dry_run=true``。
+* 返回值与普通同步查询一致，但 `status.message` 会在校验通过时包含 ``"dry run success"``为空。
+
+典型请求如下：
+
+.. code-block:: json
+
+   {
+     "user": {
+       "user": {
+         "account_system_type": "NATIVE_USER",
+         "native_user": {
+           "name": "alice",
+           "password": "alice123"
+         }
+       }
+     },
+     "query": "select column1_1 from test.table_1",
+     "dry_run": true
+   }
+
+客户端可先对关键 DQL 发送 dry-run 请求，确认通过后再移除 ``dry_run`` 执行正式查询，以避免长耗时或潜在 CCL 违规。
+
 
 SQL Syntax
 ----------
