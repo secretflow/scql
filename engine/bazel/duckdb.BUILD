@@ -31,7 +31,7 @@ common_cache_entries = {
     "EXPORT_DLL_SYMBOLS": "OFF",
     "ENABLE_SANITIZER": "OFF",
     "ENABLE_UBSAN": "OFF",
-    "OPENSSL_ROOT_DIR": "$EXT_BUILD_DEPS/openssl",
+    "OPENSSL_ROOT_DIR": "$$EXT_BUILD_DEPS/openssl",
 }
 
 spu_cmake_external(
