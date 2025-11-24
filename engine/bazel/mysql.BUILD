@@ -44,7 +44,7 @@ spu_cmake_external(
         "libmysqlclient.a",
     ],
     # fix install_args can't specify directory to install
-    postfix_script = "cmake --install include --config Release --component Development --prefix $$INSTALLDIR$$ && cp -p archive_output_directory/libmysqlclient.a $$INSTALLDIR$$/lib/",
+    postfix_script = "cmake --install include --config Release --component Development --prefix $$INSTALLDIR && cp -p archive_output_directory/libmysqlclient.a $$INSTALLDIR/lib/",
     targets = [
         "mysqlclient",
     ],
