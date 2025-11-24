@@ -32,6 +32,37 @@ Please refer to :doc:`/reference/scdb-api` for details.
 
 In a word, the custom Client should construct HTTP request for user's SQL, post to SCDB and parse the response from SCDB.
 
+Dry run mode
+------------
+
+SCDB provides the "dry_run" flag solely for syntax and CCL validation purposes,
+without actually triggering execution. This mode possesses the following characteristics:
+
+* This only applies to the synchronous interface "SubmitAndGet". If the asynchronous "Submit" carries "dry_run=true", it will return "BAD_REQUEST".
+* Only DQL statements are supported; DDL/DCL will be executed normally, even if `dry_run=true`.
+* The return value is consistent with that of a regular synchronous query, but `status.message` will contain "dry run success" when the verification passes
+
+A typical request is as follows:
+
+.. code-block:: json
+
+   {
+     "user": {
+       "user": {
+         "account_system_type": "NATIVE_USER",
+         "native_user": {
+           "name": "alice",
+           "password": "alice123"
+         }
+       }
+     },
+     "query": "select column1_1 from test.table_1",
+     "dry_run": true
+   }
+
+The client can first send a dry-run request for the critical DQL, and after confirming its success,
+remove the 'dry_run' flag to execute the formal query, in order to avoid long execution time or potential CCL violations.
+
 
 SQL Syntax
 ----------
