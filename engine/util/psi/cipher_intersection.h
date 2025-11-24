@@ -19,10 +19,10 @@
 #include <string>
 #include <vector>
 
-#include "psi/algorithm/ecdh/ub_psi/ub_psi_cache.h"
 #include "psi/utils/batch_provider.h"
 #include "psi/utils/ec_point_store.h"
 #include "psi/utils/hash_bucket_cache.h"
+#include "psi/utils/ub_psi_cache.h"
 #include "yacl/link/link.h"
 
 #include "engine/core/tensor.h"
