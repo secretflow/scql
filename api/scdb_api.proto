@@ -97,7 +97,8 @@ message SCDBQueryRequest {
 
   // Current database name
   string db_name = 6;
-  // If true, only validate query syntax and CCL without actually executing the query
+  // If true, only validate query syntax and CCL
+  // without actually executing the query
   bool dry_run = 7;
 }
 
