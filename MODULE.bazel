@@ -24,14 +24,9 @@ bazel_dep(name = "spulib", version = "0.9.4.dev20250827")
 bazel_dep(name = "heu", version = "0.6.0b0")
 bazel_dep(name = "dataproxy_sdk_cc", version = "0.5.0.dev20250423")
 bazel_dep(name = "kuscia", version = "0.13.0b1")
-bazel_dep(name = "apple_support", version = "1.24.3")
+bazel_dep(name = "apple_support", version = "1.24.5")
 bazel_dep(name = "rules_cuda", version = "0.2.3")
 bazel_dep(name = "rules_cc", version = "0.0.12")
-single_version_override(
-    module_name = "rules_cc",
-    version = "0.0.12",
-)
-
 bazel_dep(name = "rules_proto", version = "6.0.2")
 
 # non module dependencies
