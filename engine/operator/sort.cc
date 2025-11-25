@@ -156,7 +156,22 @@ void Sort::SortInSecret(ExecContext* ctx) {
   auto* sctx = ctx->GetSession()->GetSpuContext();
   std::vector<bool> reverses = ctx->GetBooleanValuesFromAttribute(kReverseAttr);
   YACL_ENFORCE(reverses.size() == keys.size());
-  // std::vector<std::pair<std::vector<spu::Value>, bool>> data_pairs;
+  // sort by directions
+  // for example:
+  // sort keys [k1 k2 k3 k4 k5]
+  // reverse_directions [true true false false true]
+  // payloads [p1 p2 p3 p4]
+  // step 1: split sort keys by directions
+  // [k1 k2]     [k3 k4]       [k5]
+  // [true true] [false false] [true]
+  // step 2: sort by keys from most significant one
+  // [k1` k2` k3` k4` p1` p2` p3` p4`] = sort(key: k5, payload: k1 k2 k3 k4 p1
+  // p2 p3 p4, Descending: true)
+  // [k1`` k2`` p1`` p2`` p3`` p4``] = sort(key: k3` k4`, payload: k1` k2` k3 k4
+  // p1` p2` p3` p4`, Descending: false)
+  // [p1``` p2``` p3``` p4```] = sort(key: k1`` k2``, payload: p1`` p2`` p3``
+  // p4``, Descending: true)
+
   int64_t cur_key_num = keys.size() - 1;
   bool cur_reverse = reverses[cur_key_num];
   std::vector<spu::Value> sub_sort_keys;
