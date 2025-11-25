@@ -29,6 +29,7 @@ import (
 	"github.com/secretflow/scql/pkg/broker/constant"
 	"github.com/secretflow/scql/pkg/broker/services/intra"
 	"github.com/secretflow/scql/pkg/broker/storage"
+	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/proto-gen/spu"
 	"github.com/secretflow/scql/pkg/util/brokerutil"
@@ -244,28 +245,27 @@ func (s *intraTestSuite) TestCreateProject() {
 	s.Equal(1, len(projects.Projects))
 	s.Equal(false, projects.Projects[0].Conf.GetBatched())
 	s.Equal(false, projects.Projects[0].Conf.GetEnableSessionLoggerSeparation())
-	s.Equal(false, projects.Projects[0].Conf.GetUseRr22LowCommMode())
+	s.Equal(scql.Rr22Mode_UNDEFINED, projects.Projects[0].Conf.GetRr22Mode())
 	// test nil value
-	_, err = s.svcAlice.CreateProject(s.ctx, &pb.CreateProjectRequest{ProjectId: "test_t1", Name: "test_t1", Conf: &pb.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}, Batched: nil, EnableSessionLoggerSeparation: nil, UseRr22LowCommMode: nil}})
+	_, err = s.svcAlice.CreateProject(s.ctx, &pb.CreateProjectRequest{ProjectId: "test_t1", Name: "test_t1", Conf: &pb.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}, Batched: nil, EnableSessionLoggerSeparation: nil, Rr22Mode: scql.Rr22Mode_LOW_MODE}})
 	s.NoError(err)
 	projects, err = s.svcAlice.ListProjects(s.ctx, &pb.ListProjectsRequest{Ids: []string{"test_t1"}})
 	s.NoError(err)
 	s.Equal(1, len(projects.Projects))
 	s.Equal(false, projects.Projects[0].Conf.GetBatched())
 	s.Equal(false, projects.Projects[0].Conf.GetEnableSessionLoggerSeparation())
-	s.Equal(false, projects.Projects[0].Conf.GetUseRr22LowCommMode())
+	s.Equal(scql.Rr22Mode_LOW_MODE, projects.Projects[0].Conf.GetRr22Mode())
 	// test true value
 	batched := true
 	enableSessionLoggerSeparation := true
-	useRr22LowCommMode := true
-	_, err = s.svcAlice.CreateProject(s.ctx, &pb.CreateProjectRequest{ProjectId: "test_t2", Name: "test_t2", Conf: &pb.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}, Batched: &batched, EnableSessionLoggerSeparation: &enableSessionLoggerSeparation, UseRr22LowCommMode: &useRr22LowCommMode}})
+	_, err = s.svcAlice.CreateProject(s.ctx, &pb.CreateProjectRequest{ProjectId: "test_t2", Name: "test_t2", Conf: &pb.ProjectConfig{SpuRuntimeCfg: &spu.RuntimeConfig{Protocol: spu.ProtocolKind_SEMI2K, Field: spu.FieldType_FM64}, Batched: &batched, EnableSessionLoggerSeparation: &enableSessionLoggerSeparation, Rr22Mode: scql.Rr22Mode_FAST_MODE}})
 	s.NoError(err)
 	projects, err = s.svcAlice.ListProjects(s.ctx, &pb.ListProjectsRequest{Ids: []string{"test_t2"}})
 	s.NoError(err)
 	s.Equal(1, len(projects.Projects))
 	s.Equal(true, projects.Projects[0].Conf.GetBatched())
 	s.Equal(true, projects.Projects[0].Conf.GetEnableSessionLoggerSeparation())
-	s.Equal(true, projects.Projects[0].Conf.GetUseRr22LowCommMode())
+	s.Equal(scql.Rr22Mode_FAST_MODE, projects.Projects[0].Conf.GetRr22Mode())
 }
 
 func (s *intraTestSuite) TestCreateTable() {
