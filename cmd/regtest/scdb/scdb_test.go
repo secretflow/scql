@@ -225,8 +225,50 @@ func TestSCDBWithAllCCLPlaintext(t *testing.T) {
 	}
 }
 
+func TestSCDBWithExplain(t *testing.T) {
+	r := require.New(t)
+	addresses, err := getUrlList(testConf)
+	r.NoError(err)
+	protocols, err := getProtocols(testConf)
+	r.NoError(err)
+	mockTables, err := mock.MockAllTables()
+	r.NoError(err)
+	regtest.FillTableToPartyCodeMap(mockTables)
+
+	cclList, err := mock.MockAllCCL()
+	r.NoError(err)
+	for i, addr := range addresses {
+		fmt.Printf("test explain with protocol %s\n", protocols[i])
+		r.NoError(createUserAndCcl(testConf, cclList, addresses[i], testConf.SkipCreateUserCCL))
+		r.NoError(runExplainTest(userNameAlice, addr, protocols[i], testFlag{sync: true, testConcurrent: !testConf.SkipConcurrentTest, testSerial: true}))
+		r.NoError(runExplainTest(userNameAlice, addr, protocols[i], testFlag{sync: false, testConcurrent: !testConf.SkipConcurrentTest, testSerial: false}))
+	}
+}
+
 func runQueryTest(user, addr string, protocol string, flags testFlag) (err error) {
 	path := map[string][]string{SEMI2K: {"../testdata/single_party.json", "../testdata/two_parties.json", "../testdata/multi_parties.json", "../testdata/view.json"}, CHEETAH: {"../testdata/two_parties.json"}, ABY3: {"../testdata/multi_parties.json"}}
+	for _, fileName := range path[protocol] {
+		if flags.testSerial {
+			if err := testCaseForSerial(fileName, flags.sync, addr, user); err != nil {
+				return err
+			}
+		}
+		if flags.testConcurrent {
+			if err := testCaseForConcurrent(fileName, flags.sync, addr, user); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func runExplainTest(user, addr string, protocol string, flags testFlag) (err error) {
+	path := map[string][]string{
+		SEMI2K:  {"../testdata/explain_single_party.json", "../testdata/explain_two_parties.json", "../testdata/explain_multi_parties.json"},
+		CHEETAH: {"../testdata/explain_two_parties.json"},
+		ABY3:    {"../testdata/explain_multi_parties.json"},
+	}
+
 	for _, fileName := range path[protocol] {
 		if flags.testSerial {
 			if err := testCaseForSerial(fileName, flags.sync, addr, user); err != nil {

@@ -60,7 +60,7 @@ service SCDBService {
   // This interface is suitable for executing fast queries,
   // such as DDL, DCL, and simple DQL. However,
   // if the query takes a long time to run, it may result in a timeout.
-  // Therefore, it is recommended to use the synchronous query API to run
+  // Therefore, it is recommended to use the asynchronous query API to run
   // complex queries.
   rpc SubmitAndGet(SCDBQueryRequest) returns (SCDBQueryResultResponse) {
     option (google.api.http) = {

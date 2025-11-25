@@ -26,6 +26,7 @@ import (
 
 	"github.com/secretflow/scql/pkg/constant"
 	"github.com/secretflow/scql/pkg/infoschema"
+	"github.com/secretflow/scql/pkg/interpreter"
 	"github.com/secretflow/scql/pkg/parser"
 	"github.com/secretflow/scql/pkg/parser/ast"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
@@ -130,7 +131,7 @@ func (app *App) submit(ctx context.Context, req *scql.SCDBQueryRequest) *scql.SC
 		return app.submitDQL(ctx, session)
 	}
 	go func() {
-		app.runSQL(session)
+		app.runSQL(ctx, session)
 		app.notifyQueryJobDone(session.id)
 	}()
 	return newSuccessSCDBSubmitResponse(session.id)
@@ -149,6 +150,17 @@ func isDQL(sql string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func isExplainQuery(sql string) (bool, error) {
+	p := parser.New()
+	stmt, err := p.ParseOneStmt(sql, "", "")
+	if err != nil {
+		return false, err
+	}
+
+	_, ok := stmt.(*ast.ExplainStmt)
+	return ok, nil
 }
 
 // compile and run dql
@@ -179,7 +191,7 @@ func isQueryNeedInfoSchema(query string) (bool, error) {
 }
 
 // runSQL run DDL/DCL
-func (app *App) runSQL(s *session) {
+func (app *App) runSQL(ctx context.Context, s *session) {
 	var err error = nil
 	rt := []*scql.Tensor{}
 	defer func() {
@@ -207,8 +219,36 @@ func (app *App) runSQL(s *session) {
 			return
 		}
 	}
+	isExplain, err := isExplainQuery(s.request.GetQuery())
+	if err != nil {
+		return
+	}
+	if isExplain {
+		compileReq, err := app.buildCompileRequest(ctx, s)
+		if err != nil {
+			return
+		}
+		intrpr := interpreter.NewInterpreter()
+		compiledPlan, err := intrpr.Compile(ctx, compileReq)
 
-	rt, err = scdbexecutor.Run(s, s.request.Query, is)
+		if err != nil {
+			return
+		}
+
+		dotGraph := compiledPlan.GetExplain().GetExeGraphDot()
+		rt = []*scql.Tensor{{
+			Name:       "explain_result",
+			ElemType:   scql.PrimitiveDataType_STRING,
+			StringData: []string{dotGraph},
+			Shape: &scql.TensorShape{
+				Dim: []*scql.TensorShape_Dimension{{
+					Value: &scql.TensorShape_Dimension_DimValue{DimValue: 1},
+				}},
+			},
+		}}
+	} else {
+		rt, err = scdbexecutor.Run(s, s.request.Query, is)
+	}
 }
 
 func (s *session) setStatus(code int32, errMsg string) {
