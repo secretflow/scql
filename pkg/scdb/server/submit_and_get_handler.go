@@ -103,6 +103,19 @@ func (app *App) submitAndGet(ctx context.Context, req *scql.SCDBQueryRequest) *s
 	session.isDQLRequest = isDQL
 
 	if isDQL {
+		// Handle dry run mode for DQL queries only
+		if req.GetDryRun() {
+			if err := app.dryRunDQL(ctx, session); err != nil {
+				return newErrorSCDBQueryResultResponse(scql.Code_INTERNAL, err.Error())
+			}
+			return &scql.SCDBQueryResultResponse{
+				Status: &scql.Status{
+					Code:    int32(scql.Code_OK),
+					Message: "dry run success",
+				},
+				ScdbSessionId: session.id,
+			}
+		}
 		return app.submitAndGetDQL(ctx, session)
 	}
 	app.runSQL(session)
@@ -285,6 +298,20 @@ func queryTableSchemas(store *gorm.DB, dbName string, tableNames []string) ([]*s
 		tblEntries = append(tblEntries, &tblEntry)
 	}
 	return tblEntries, nil
+}
+
+// dryRunDQL validates query syntax and CCL without actually executing the query
+func (app *App) dryRunDQL(ctx context.Context, s *session) error {
+	compileReq, err := app.buildCompileRequest(ctx, s)
+	if err != nil {
+		return fmt.Errorf("failed to build compile request: %w", err)
+	}
+	intrpr := interpreter.NewInterpreter()
+	_, err = intrpr.Compile(ctx, compileReq)
+	if err != nil {
+		return fmt.Errorf("failed to compile query: %w", err)
+	}
+	return nil
 }
 
 // If parameter async is true, the query result will be notified by engine, this function will always return nil

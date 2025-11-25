@@ -24,13 +24,13 @@ spu_cmake_external(
     build_args = ["-j 8"],
     cache_entries = {
         "WITHOUT_SERVER": "ON",
-        "INSTALL_PRIV_LIBDIR": "$EXT_BUILD_DEPS",
-        "WITH_SSL": "$EXT_BUILD_DEPS/openssl",  # MySQL 8.0.30 and later could use OpenSSL3
+        "INSTALL_PRIV_LIBDIR": "$$EXT_BUILD_DEPS",
+        "WITH_SSL": "$$EXT_BUILD_DEPS/openssl",  # MySQL 8.0.30 and later could use OpenSSL3
         "WITH_UNIT_TESTS": "OFF",
         "WITH_PROTOBUF": "system",
-        "WITH_BOOST": "$EXT_BUILD_DEPS/include",
-        "CURSES_LIBRARY": "$EXT_BUILD_DEPS/ncurses/lib/libcurses.a",
-        "CURSES_INCLUDE_PATH": "$EXT_BUILD_DEPS/ncurses/include/",
+        "WITH_BOOST": "$$EXT_BUILD_DEPS/include",
+        "CURSES_LIBRARY": "$$EXT_BUILD_DEPS/ncurses/lib/libcurses.a",
+        "CURSES_INCLUDE_PATH": "$$EXT_BUILD_DEPS/ncurses/include/",
         "INSTALL_INCLUDEDIR": "include/mysql",  # poco data needs <mysql/mysql.h>
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++",
@@ -44,7 +44,7 @@ spu_cmake_external(
         "libmysqlclient.a",
     ],
     # fix install_args can't specify directory to install
-    postfix_script = "cmake --install include --config Release --component Development --prefix $$INSTALLDIR$$ && cp -p archive_output_directory/libmysqlclient.a $$INSTALLDIR$$/lib/",
+    postfix_script = "cmake --install include --config Release --component Development --prefix $$INSTALLDIR && cp -p archive_output_directory/libmysqlclient.a $$INSTALLDIR/lib/",
     targets = [
         "mysqlclient",
     ],

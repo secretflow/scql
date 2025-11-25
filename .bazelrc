@@ -37,6 +37,8 @@ test --test_timeout=1800
 build:macos --copt=-Xclang=-fopenmp
 build:macos --copt=-Wno-unused-command-line-argument
 build:macos --features=-supports_dynamic_linker
+# build:macos --cxxopt -Wno-error=missing-template-arg-list-after-template-kw
+# build:macos --cxxopt -Wno-error=vla-cxx-extension
 build:macos --macos_minimum_os=13.0
 build:macos --host_macos_minimum_os=13.0
 build:macos --action_env MACOSX_DEPLOYMENT_TARGET=13.0
