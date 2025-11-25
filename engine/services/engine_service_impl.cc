@@ -566,14 +566,12 @@ void EngineServiceImpl::RunPlanSync(const pb::RunExecutionPlanRequest* request,
   // 1. run jobs in plan and add result to response.
   const std::string session_id = request->job_params().job_id();
   try {
-    auto run_f = std::async([&] {
-      session->SetState(SessionState::RUNNING);
-
-      RunPlanCore(*request, session, response);
-    });
     // wait until all peers finished, if any one of them broken, the
     // ::yacl::IoError will be throw in other peers after Channel::Recv timeout
-    ::psi::SyncWait(session->GetLink(), &run_f);
+    ::psi::SyncWait(session->GetLink(), [&] {
+      session->SetState(SessionState::RUNNING);
+      RunPlanCore(*request, session, response);
+    });
     session->SetState(SessionState::COMP_FINISHED);
 
     SPDLOG_LOGGER_INFO(logger, "RunExecutionPlan success, sessionID={}",
