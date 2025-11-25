@@ -205,3 +205,26 @@ func TestValueSortedByMapKey(t *testing.T) {
 
 	r.Equal([]int{1, 2, 3}, values)
 }
+
+func TestUnorderedSlicesEqual(t *testing.T) {
+	r := require.New(t)
+
+	// dedup
+	s1 := []string{"a", "b", "c"}
+	s2 := []string{"b", "a", "c"}
+	r.Equal(true, UnOrderedSliceEqual(s1, s2))
+
+	// dup
+	s1 = []string{"a", "b", "c"}
+	s2 = []string{"b", "a", "c", "c"}
+	r.Equal(false, UnOrderedSliceEqual(s1, s2))
+
+	s1 = []string{"c", "a", "b", "c"}
+	s2 = []string{"b", "a", "c", "c"}
+	r.Equal(true, UnOrderedSliceEqual(s1, s2))
+
+	// empty
+	s1 = []string{}
+	s2 = []string{}
+	r.Equal(true, UnOrderedSliceEqual(s1, s2))
+}
