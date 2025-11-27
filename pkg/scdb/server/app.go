@@ -127,14 +127,14 @@ func (app *App) onQueryJobDone(sid string) {
 	logrus.Info(logEntry)
 }
 
-func (app *App) extractDataSourcesInDQL(ctx context.Context, s *session) ([]*core.DataSource, error) {
+func (app *App) extractDataSourcesInDQL(ctx context.Context, s *session, query string) ([]*core.DataSource, error) {
 	is, err := storage.QueryDBInfoSchema(s.GetSessionVars().Storage, s.request.GetDbName())
 	if err != nil {
 		return nil, err
 	}
 
 	// collect datasources which are referenced by the query via analyzing the logical plan
-	return datasourcesInDQL(s.request.GetQuery(), s.request.GetDbName(), is)
+	return datasourcesInDQL(query, s.request.GetDbName(), is)
 }
 
 func (app *App) buildCatalog(store *gorm.DB, dbName string, tableNames []string) (*scql.Catalog, error) {

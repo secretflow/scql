@@ -63,6 +63,27 @@ A typical request is as follows:
 The client can first send a dry-run request for the critical DQL, and after confirming its success,
 remove the 'dry_run' flag to execute the formal query, in order to avoid long execution time or potential CCL violations.
 
+Explain statement
+-----------------
+
+SCDB also supports MySQL-style ``EXPLAIN`` statements to inspect the execution graph of a DQL query. The behaviour is summarized below:
+
+* Only the synchronous ``SubmitAndGet`` API is supported; calling ``Submit`` with EXPLAIN will return ``BAD_REQUEST``.
+* The target statement must be DQL (``SELECT``/``UNION``). ``EXPLAIN ANALYZE`` is not supported yet.
+* Use ``FORMAT = 'dot'`` for clarity. When ``FORMAT`` is omitted, SCDB still returns a Graphviz DOT string. Other formats are rejected.
+* The response contains a single column named ``execution_graph_dot``. Save the string to a ``.dot`` file for visualization via Graphviz.
+
+Example:
+
+.. code-block:: SQL
+
+   -- With explicit FORMAT:
+   EXPLAIN FORMAT = 'dot'
+   SELECT column1_1 FROM test.table_1;
+
+   -- Without FORMAT (defaults to dot):
+   EXPLAIN SELECT column1_1 FROM test.table_1;
+
 
 SQL Syntax
 ----------

@@ -524,7 +524,7 @@ func MockStorage(db *gorm.DB) error {
 	// initialize column level privileges
 	colPrivs := []storage.ColumnPriv{
 		{Db: "test", TableName: "table_1", ColumnName: "column1_1", User: "alice", Host: "%", VisibilityPriv: mysql.PlaintextPriv},
-		{Db: "test", TableName: "table_1", ColumnName: "column1_2", User: "alice", Host: "%", VisibilityPriv: mysql.PlaintextAfterComparePriv},
+		{Db: "test", TableName: "table_1", ColumnName: "column1_2", User: "alice", Host: "%", VisibilityPriv: mysql.PlaintextPriv},
 		{Db: "test", TableName: "table_1", ColumnName: "column1_3", User: "bob", Host: "%", VisibilityPriv: mysql.PlaintextAfterComparePriv},
 	}
 	result = db.Create(&colPrivs)
