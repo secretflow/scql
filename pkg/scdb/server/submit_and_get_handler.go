@@ -326,6 +326,7 @@ func (app *App) dryRunDQL(ctx context.Context, s *session) error {
 }
 
 func (app *App) handleExplainDQL(ctx context.Context, s *session, info *queryClassification) *scql.SCDBQueryResultResponse {
+	// support row just for compatibility with the default format of tidb
 	if info.explainFormat != "" &&
 		!strings.EqualFold(info.explainFormat, "dot") &&
 		!strings.EqualFold(info.explainFormat, "row") {
