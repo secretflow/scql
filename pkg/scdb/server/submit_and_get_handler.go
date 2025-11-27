@@ -46,6 +46,10 @@ import (
 	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
 
+const (
+	explainResultColumnName = "execution_graph_dot"
+)
+
 func (app *App) SubmitAndGetHandler(c *gin.Context) {
 	timeStart := time.Now()
 	logEntry := &logutil.MonitorLogEntry{
@@ -96,13 +100,20 @@ func (app *App) submitAndGet(ctx context.Context, req *scql.SCDBQueryRequest) *s
 		return newErrorSCDBQueryResultResponse(scql.Code_UNAUTHENTICATED, err.Error())
 	}
 
-	isDQL, err := isDQL(req.Query)
+	queryInfo, err := classifyQuery(req.Query)
 	if err != nil {
 		return newErrorSCDBQueryResultResponse(scql.Code_SQL_PARSE_ERROR, err.Error())
 	}
-	session.isDQLRequest = isDQL
+	session.isDQLRequest = queryInfo.isDQL()
 
-	if isDQL {
+	if queryInfo.isExplainDQL() {
+		if req.GetDryRun() {
+			return newErrorSCDBQueryResultResponse(scql.Code_BAD_REQUEST, "dry_run is not supported for explain statement")
+		}
+		return app.handleExplainDQL(ctx, session, queryInfo)
+	}
+
+	if queryInfo.isDQL() {
 		// Handle dry run mode for DQL queries only
 		if req.GetDryRun() {
 			if err := app.dryRunDQL(ctx, session); err != nil {
@@ -122,7 +133,7 @@ func (app *App) submitAndGet(ctx context.Context, req *scql.SCDBQueryRequest) *s
 	return session.result
 }
 
-func (app *App) buildCompileRequest(ctx context.Context, s *session) (*scql.CompileQueryRequest, error) {
+func (app *App) buildCompileRequest(ctx context.Context, s *session, query string) (*scql.CompileQueryRequest, error) {
 	issuer := s.GetSessionVars().User
 	if issuer.Username == storage.DefaultRootName && issuer.Hostname == storage.DefaultHostName {
 		return nil, fmt.Errorf("user root has no privilege to execute dql")
@@ -132,7 +143,7 @@ func (app *App) buildCompileRequest(ctx context.Context, s *session) (*scql.Comp
 		return nil, fmt.Errorf("failed to query issuer party code: %v", err)
 	}
 
-	dsList, err := app.extractDataSourcesInDQL(ctx, s)
+	dsList, err := app.extractDataSourcesInDQL(ctx, s, query)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +182,7 @@ func (app *App) buildCompileRequest(ctx context.Context, s *session) (*scql.Comp
 		return nil, fmt.Errorf("failed to build catalog: %v", err)
 	}
 
-	intoParties, err := util.CollectIntoParties(s.request.GetQuery())
+	intoParties, err := util.CollectIntoParties(query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to collect select into parties from query: %v", err)
 	}
@@ -191,7 +202,7 @@ func (app *App) buildCompileRequest(ctx context.Context, s *session) (*scql.Comp
 	}
 
 	req := &scql.CompileQueryRequest{
-		Query:  s.request.GetQuery(),
+		Query:  query,
 		DbName: dbName,
 		Issuer: &scql.PartyId{
 			Code: issuerPartyCode,
@@ -302,7 +313,7 @@ func queryTableSchemas(store *gorm.DB, dbName string, tableNames []string) ([]*s
 
 // dryRunDQL validates query syntax and CCL without actually executing the query
 func (app *App) dryRunDQL(ctx context.Context, s *session) error {
-	compileReq, err := app.buildCompileRequest(ctx, s)
+	compileReq, err := app.buildCompileRequest(ctx, s, s.request.GetQuery())
 	if err != nil {
 		return fmt.Errorf("failed to build compile request: %w", err)
 	}
@@ -314,9 +325,43 @@ func (app *App) dryRunDQL(ctx context.Context, s *session) error {
 	return nil
 }
 
+func (app *App) handleExplainDQL(ctx context.Context, s *session, info *queryClassification) *scql.SCDBQueryResultResponse {
+	if info.explainFormat != "" &&
+		!strings.EqualFold(info.explainFormat, "dot") &&
+		!strings.EqualFold(info.explainFormat, "row") {
+		return newErrorSCDBQueryResultResponse(scql.Code_BAD_REQUEST, fmt.Sprintf("unsupported EXPLAIN FORMAT '%s', only 'dot' is supported", info.explainFormat))
+	}
+
+	query := info.explainSQL
+	if query == "" {
+		return newErrorSCDBQueryResultResponse(scql.Code_INTERNAL, "explain target query is empty")
+	}
+
+	compileReq, err := app.buildCompileRequest(ctx, s, query)
+	if err != nil {
+		return newErrorSCDBQueryResultResponse(scql.Code_INTERNAL, err.Error())
+	}
+	intrpr := interpreter.NewInterpreter()
+	compiledPlan, err := intrpr.Compile(ctx, compileReq)
+	if err != nil {
+		var st *status.Status
+		if errors.As(err, &st) {
+			return newErrorSCDBQueryResultResponse(st.Code(), st.Message())
+		}
+		return newErrorSCDBQueryResultResponse(scql.Code_INTERNAL, err.Error())
+	}
+	dot := compiledPlan.GetExplain().GetExeGraphDot()
+	if dot == "" {
+		return newErrorSCDBQueryResultResponse(scql.Code_INTERNAL, "execution graph is empty")
+	}
+
+	s.setResultWithOutputColumnsAndAffectedRows([]*scql.Tensor{newExplainResultTensor(dot)}, 0)
+	return s.result
+}
+
 // If parameter async is true, the query result will be notified by engine, this function will always return nil
 func (app *App) runDQL(ctx context.Context, s *session, async bool) (*scql.SCDBQueryResultResponse, error) {
-	compileReq, err := app.buildCompileRequest(ctx, s)
+	compileReq, err := app.buildCompileRequest(ctx, s, s.request.GetQuery())
 	if err != nil {
 		return nil, err
 	}
@@ -454,4 +499,18 @@ func (app *App) submitAndGetDQL(ctx context.Context, s *session) *scql.SCDBQuery
 	s.setResultWithOutputColumnsAndAffectedRows(resp.OutColumns, resp.AffectedRows)
 
 	return s.result
+}
+
+func newExplainResultTensor(dot string) *scql.Tensor {
+	return &scql.Tensor{
+		Name:       explainResultColumnName,
+		ElemType:   scql.PrimitiveDataType_STRING,
+		StringData: []string{dot},
+		Shape: &scql.TensorShape{
+			Dim: []*scql.TensorShape_Dimension{
+				{Value: &scql.TensorShape_Dimension_DimValue{DimValue: 1}},
+				{Value: &scql.TensorShape_Dimension_DimValue{DimValue: 1}},
+			},
+		},
+	}
 }
