@@ -127,6 +127,13 @@ func TestExplainStatement(t *testing.T) {
 		r.True(strings.Contains(resp.GetOutColumns()[0].GetStringData()[0], "digraph"))
 	})
 
+	t.Run("union query supported", func(t *testing.T) {
+		resp := submitAndGetWithDryRun(t, app, alice, "explain select column1_1 from test.table_1 union select column3_1 from test.table_3", false)
+		r.Equal(int32(scql.Code_OK), resp.GetStatus().GetCode())
+		r.Len(resp.GetOutColumns(), 1)
+		r.True(strings.Contains(resp.GetOutColumns()[0].GetStringData()[0], "digraph"))
+	})
+
 	t.Run("explicit dot format", func(t *testing.T) {
 		resp := submitAndGetWithDryRun(t, app, alice, "explain format = 'dot' select column1_1 from test.table_1", false)
 		r.Equal(int32(scql.Code_OK), resp.GetStatus().GetCode())
