@@ -114,11 +114,14 @@ func (app *App) submit(ctx context.Context, req *scql.SCDBQueryRequest) *scql.SC
 	}
 
 	// if DQL, submit to interpreter core
-	isDQL, err := isDQL(req.Query)
+	queryInfo, err := classifyQuery(req.Query)
 	if err != nil {
 		return newErrorSCDBSubmitResponse(scql.Code_SQL_PARSE_ERROR, err.Error())
 	}
-	session.isDQLRequest = isDQL
+	session.isDQLRequest = queryInfo.isDQL()
+	if queryInfo.isExplainDQL() {
+		return newErrorSCDBSubmitResponse(scql.Code_BAD_REQUEST, "explain statement is not supported in SubmitQuery, please use SubmitAndGet instead")
+	}
 
 	// Handle dry run mode - Consistent with broker implementation, asynchronous interfaces do not support dry run
 	if req.GetDryRun() {
@@ -126,7 +129,7 @@ func (app *App) submit(ctx context.Context, req *scql.SCDBQueryRequest) *scql.SC
 	}
 
 	app.sessions.SetDefault(session.id, session)
-	if isDQL {
+	if queryInfo.isDQL() {
 		return app.submitDQL(ctx, session)
 	}
 	go func() {
@@ -134,21 +137,6 @@ func (app *App) submit(ctx context.Context, req *scql.SCDBQueryRequest) *scql.SC
 		app.notifyQueryJobDone(session.id)
 	}()
 	return newSuccessSCDBSubmitResponse(session.id)
-}
-
-func isDQL(sql string) (bool, error) {
-	p := parser.New()
-	stmt, err := p.ParseOneStmt(sql, "", "")
-	if err != nil {
-		return false, err
-	}
-
-	switch stmt.(type) {
-	case *ast.SelectStmt, *ast.UnionStmt:
-		return true, nil
-	}
-
-	return false, nil
 }
 
 // compile and run dql

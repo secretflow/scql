@@ -17,6 +17,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -111,6 +112,51 @@ func TestSubmitAndGetDryRun(t *testing.T) {
 	t.Run("dryRun CCL violation", func(t *testing.T) {
 		resp := submitAndGetWithDryRun(t, app, bob, "select tb.column2_1 from test.table_2 as tb", true)
 		r.NotEqual(int32(scql.Code_OK), resp.GetStatus().GetCode())
+	})
+}
+
+func TestExplainStatement(t *testing.T) {
+	r := require.New(t)
+	app := newTestApp(t)
+	alice := newTestCredential("alice", "alice123")
+
+	t.Run("default format treated as dot", func(t *testing.T) {
+		resp := submitAndGetWithDryRun(t, app, alice, "explain select column1_1 from test.table_1", false)
+		r.Equal(int32(scql.Code_OK), resp.GetStatus().GetCode())
+		r.Len(resp.GetOutColumns(), 1)
+		r.True(strings.Contains(resp.GetOutColumns()[0].GetStringData()[0], "digraph"))
+	})
+
+	t.Run("union query supported", func(t *testing.T) {
+		resp := submitAndGetWithDryRun(t, app, alice, "explain select column1_1 from test.table_1 union select column1_2 from test.table_1", false)
+		r.Equal(int32(scql.Code_OK), resp.GetStatus().GetCode())
+		r.Len(resp.GetOutColumns(), 1)
+		r.True(strings.Contains(resp.GetOutColumns()[0].GetStringData()[0], "digraph"))
+	})
+
+	t.Run("explicit dot format", func(t *testing.T) {
+		resp := submitAndGetWithDryRun(t, app, alice, "explain format = 'dot' select column1_1 from test.table_1", false)
+		r.Equal(int32(scql.Code_OK), resp.GetStatus().GetCode())
+	})
+
+	t.Run("unsupported format", func(t *testing.T) {
+		resp := submitAndGetWithDryRun(t, app, alice, "explain format = 'json' select column1_1 from test.table_1", false)
+		r.Equal(int32(scql.Code_BAD_REQUEST), resp.GetStatus().GetCode())
+	})
+
+	t.Run("dry run not allowed", func(t *testing.T) {
+		resp := submitAndGetWithDryRun(t, app, alice, "explain select column1_1 from test.table_1", true)
+		r.Equal(int32(scql.Code_BAD_REQUEST), resp.GetStatus().GetCode())
+	})
+
+	t.Run("submit interface not allowed", func(t *testing.T) {
+		req := &scql.SCDBQueryRequest{
+			User:   alice,
+			Query:  "explain select column1_1 from test.table_1",
+			DbName: "test",
+		}
+		resp := app.submit(context.Background(), req)
+		r.Equal(int32(scql.Code_BAD_REQUEST), resp.GetStatus().GetCode())
 	})
 }
 
