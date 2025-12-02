@@ -501,7 +501,7 @@ func convertTensorToResultTable(ts []*scql.Tensor) (*ResultTable, error) {
 		case scql.PrimitiveDataType_INT64:
 			rc.Int64s = t.GetInt64Data()
 		case scql.PrimitiveDataType_TIMESTAMP:
-			// scql timestamp type is int64, for comparasion with mysql, convert to string
+			// scql timestamp type is int64, for comparison with mysql, convert to string
 			format_timestamp := make([]string, len(t.GetInt64Data()))
 			for i, v := range t.GetInt64Data() {
 				ts := time.Unix(int64(v), 0).UTC()

@@ -100,7 +100,7 @@ func main() {
 
 	if cfg.Protocol == "https" {
 		if cfg.TlsConfig.CertFile == "" || cfg.TlsConfig.KeyFile == "" {
-			log.Fatalf("Could't start https service without cert file")
+			log.Fatalf("Couldn't start https service without cert file")
 		}
 		log.Info("Starting to serve request with https...")
 		if err := svr.ListenAndServeTLS(cfg.TlsConfig.CertFile, cfg.TlsConfig.KeyFile); err != nil {

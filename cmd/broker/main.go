@@ -178,7 +178,7 @@ func main() {
 func startService(svr *http.Server, cfg config.ServerConfig) {
 	if cfg.Protocol == "https" {
 		if cfg.CertFile == "" || cfg.KeyFile == "" {
-			logrus.Fatal("Could't start https service without cert_file or key_file")
+			logrus.Fatal("Couldn't start https service without cert_file or key_file")
 		}
 		logrus.Infof("Starting to serve request on %v with https...", svr.Addr)
 		if err := svr.ListenAndServeTLS(cfg.CertFile, cfg.KeyFile); err != nil {

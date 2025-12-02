@@ -138,7 +138,7 @@ func getResult() error {
 	}
 
 	if response.GetStatus().GetCode() == int32(pb.Code_OK) {
-		fmt.Fprintln(os.Stdout, "GetResult successed:")
+		fmt.Fprintln(os.Stdout, "GetResult succeeded:")
 		printQueryResult(response.GetResult())
 	} else if response.GetStatus().GetCode() == int32(pb.Code_NOT_READY) {
 		if response.GetJobStatus() == nil {
