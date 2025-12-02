@@ -64,7 +64,7 @@ service IntraBrokerService {
   }
   // ExplainQuery
   //
-  // Get explaination of a query
+  // Get explanation of a query
   rpc ExplainQuery(ExplainQueryRequest) returns (ExplainQueryResponse) {
     option (google.api.http) = {
       post: "/intra/query/explain"
@@ -466,7 +466,7 @@ message CreateTableRequest {
   string project_id = 1 [(google.api.field_behavior) = REQUIRED];
   // Table name
   string table_name = 2 [(google.api.field_behavior) = REQUIRED];
-  // The refered physical table
+  // The referred physical table
   string ref_table = 3 [(google.api.field_behavior) = REQUIRED];
   // The db_type of ref_table, maybe 'MySQL/Postgres/csvdb/...'
   string db_type = 4;
@@ -476,7 +476,7 @@ message CreateTableRequest {
     // Column data type, see Enum DataType definition in "api/v1/column.proto"
     string dtype = 2;
   }
-  // Columns choosed to refer from physical table
+  // Columns chosen to refer from physical table
   repeated ColumnDesc columns = 5 [(google.api.field_behavior) = REQUIRED];
 }
 
@@ -523,7 +523,7 @@ message ListViewsResponse {
 message DropTableRequest {
   // Project id
   string project_id = 1 [(google.api.field_behavior) = REQUIRED];
-  // The name of Table to be droped
+  // The name of Table to be dropped
   string table_name = 2 [(google.api.field_behavior) = REQUIRED];
 }
 message DropTableResponse {
@@ -533,7 +533,7 @@ message DropTableResponse {
 message DropViewRequest {
   // Project id
   string project_id = 1 [(google.api.field_behavior) = REQUIRED];
-  // The name of view to be droped
+  // The name of view to be dropped
   string view_name = 2 [(google.api.field_behavior) = REQUIRED];
 }
 message DropViewResponse {

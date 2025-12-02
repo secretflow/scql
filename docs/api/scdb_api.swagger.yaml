@@ -71,10 +71,6 @@ paths:
         if the query takes a long time to run, it may result in a timeout.
         Therefore, it is recommended to use the synchronous query API to run
         complex queries.
-
-        Set `dry_run=true` in the request body to only validate DQL syntax and CCL
-        without executing engines. Asynchronous Submit interface does not
-        support dry run.
       operationId: SCDBService_SubmitAndGet
       responses:
         "200":
@@ -296,7 +292,6 @@ definitions:
     example:
       biz_request_id: "1234"
       query: show databases;
-      dry_run: false
       user:
         user:
           account_system_type: NATIVE_USER
@@ -328,10 +323,9 @@ definitions:
         title: Current database name
       dry_run:
         type: boolean
-        description: |-
-          Dry run query, only available in SubmitAndGet interface.
-          When set to true, SCDB only checks query syntax and CCL, and does not execute engines.
-          SubmitQuery interface will return BAD_REQUEST if dry_run is true.
+        title: |-
+          If true, only validate query syntax and CCL
+          without actually executing the query
     title: |-
       SCDBQueryRequest designed for Client(Biz Service) which allow callback url
       and traceid

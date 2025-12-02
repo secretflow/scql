@@ -46,7 +46,7 @@ func checkAndpdateStatus(ids []string) error {
 		fmt.Println("check and update status succeeded")
 		return nil
 	case int32(pb.Code_PROJECT_CONFLICT):
-		fmt.Println("skip update projcts, existing conflicts:")
+		fmt.Println("skip update projects, existing conflicts:")
 		for id, conflict := range response.GetConflicts() {
 			fmt.Println("project id: ", id)
 			for _, item := range conflict.Items {

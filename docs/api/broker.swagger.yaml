@@ -81,7 +81,7 @@ paths:
   /intra/query/explain:
     post:
       summary: ExplainQuery
-      description: Get explaination of a query
+      description: Get explanation of a query
       operationId: IntraBrokerService_ExplainQuery
       responses:
         "200":
@@ -867,7 +867,7 @@ definitions:
         title: Table name
       ref_table:
         type: string
-        title: The refered physical table
+        title: The referred physical table
       db_type:
         type: string
         title: The db_type of ref_table, maybe 'MySQL/Postgres/csvdb/...'
@@ -876,7 +876,7 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/scql.pb.CreateTableRequest.ColumnDesc'
-        title: Columns choosed to refer from physical table
+        title: Columns chosen to refer from physical table
     title: Import physical table `ref_table` in Project `project_id` as `table_name`
     required:
       - project_id
@@ -966,7 +966,7 @@ definitions:
         title: Project id
       table_name:
         type: string
-        title: The name of Table to be droped
+        title: The name of Table to be dropped
     required:
       - project_id
       - table_name
@@ -987,7 +987,7 @@ definitions:
         title: Project id
       view_name:
         type: string
-        title: The name of view to be droped
+        title: The name of view to be dropped
     required:
       - project_id
       - view_name
@@ -2055,6 +2055,7 @@ definitions:
       - ABY3
       - CHEETAH
       - SECURENN
+      - SWIFT
     default: PROT_INVALID
     description: |-
       The protocol kind.
@@ -2073,6 +2074,9 @@ definitions:
       fast 2PC protocol.
        - SECURENN: A semi-honest 3PC-protocol for Neural Network, P2 as the helper,
       (https://eprint.iacr.org/2018/442)
+       - SWIFT: The malicious 3PC-protocol version of swift
+      WARNING: This protocol is experimental only.
+      (https://eprint.iacr.org/2020/592)
   spu.pb.RuntimeConfig:
     type: object
     properties:
