@@ -39,7 +39,7 @@ class Listener {
   std::map<size_t, std::shared_ptr<yacl::link::transport::Channel>> channels_;
 };
 
-// thread safe, and will be used cocurrently.
+// thread safe, and will be used concurrently.
 class ListenerManager {
  public:
   ListenerManager() = default;

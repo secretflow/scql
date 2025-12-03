@@ -170,7 +170,7 @@ func (s *ScqlStub) WaitMemberReady() error {
 			for _, p := range resp.GetProjects() {
 				if p.GetProjectId() == s.taskConfig.ProjectId &&
 					len(p.GetMembers()) == len(s.clusterDefine.GetParties()) {
-					logrus.Infof("WaitMemberReady succeed: project '%s' cantains all memebers", s.taskConfig.ProjectId)
+					logrus.Infof("WaitMemberReady succeed: project '%s' contains all members", s.taskConfig.ProjectId)
 					return nil
 				}
 			}

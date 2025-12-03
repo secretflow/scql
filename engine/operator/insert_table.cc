@@ -98,7 +98,7 @@ class ValueVistor {
 
  private:
   std::string static QuotingString(std::string_view str) {
-    // FIXME(jingshi): the string may cantain "'", which should be escaped
+    // FIXME(jingshi): the string may contain "'", which should be escaped
     return absl::StrCat("'", str, "'");
   }
 

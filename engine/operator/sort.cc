@@ -78,7 +78,7 @@ void Sort::SortInPlain(ExecContext* ctx) {
   std::vector<std::string> fields;
   for (int i = 0; i < in_pbs.size(); i++) {
     // TODO: if the duplicate columns are unavoidable in some scenarios consider
-    // to maitain the mapping relationship and reconstruct the table after
+    // to maintain the mapping relationship and reconstruct the table after
     // sorting
     YACL_ENFORCE(std::find(fields.begin(), fields.end(), in_pbs[i].name()) ==
                      fields.end(),

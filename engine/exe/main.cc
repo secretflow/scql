@@ -373,14 +373,14 @@ int main(int argc, char* argv[]) {
       return -1;
     }
   } else {
-    SPDLOG_INFO("Adding MuxReceiverService into seperate link server...");
+    SPDLOG_INFO("Adding MuxReceiverService into separate link server...");
     if (link_svr.AddService(&rcv_svc, brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
-      SPDLOG_ERROR("Fail to add MuxReceiverService to seperate link server");
+      SPDLOG_ERROR("Fail to add MuxReceiverService to separate link server");
       return -1;
     }
-    SPDLOG_INFO("Adding ErrorCollectorService into seperate link server...");
+    SPDLOG_INFO("Adding ErrorCollectorService into separate link server...");
     if (link_svr.AddService(&err_svc, brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
-      SPDLOG_ERROR("Fail to add ErrorCollectorService to seperate link server");
+      SPDLOG_ERROR("Fail to add ErrorCollectorService to separate link server");
       return -1;
     }
   }

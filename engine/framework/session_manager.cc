@@ -69,7 +69,7 @@ scql::engine::SessionOptions SessionManager::GenerateUpdatedSessionOptions(
     const pb::JobStartParams& job_params) {
   struct SessionOptions session_opt = session_opt_;
   // to make the config unit consistent, here to use second instead of
-  // miliseconds
+  // milliseconds
   if (job_params.link_cfg().link_recv_timeout_sec() > 0) {
     session_opt.link_config.link_recv_timeout_ms =
         job_params.link_cfg().link_recv_timeout_sec() * 1000;

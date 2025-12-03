@@ -39,10 +39,10 @@ void ReduceBase::Validate(ExecContext* ctx) {
   const auto& outputs = ctx->GetOutput(kOut);
 
   YACL_ENFORCE(inputs.size() == 1,
-               "operator {} input size shoule be 1, but got={}", Type(),
+               "operator {} input size should be 1, but got={}", Type(),
                inputs.size());
   YACL_ENFORCE(outputs.size() == 1,
-               "operator {} output size shoule be 1, but got={}", Type(),
+               "operator {} output size should be 1, but got={}", Type(),
                outputs.size());
 
   const auto& input_status = util::GetTensorStatus(inputs[0]);
