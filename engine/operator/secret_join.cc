@@ -89,7 +89,7 @@ std::tuple<spu::Value, spu::Value> CountPosition(spu::SPUContext* sctx,
 }
 
 // Build a permutation index consisting of two parts:
-// 1. the first part is the input parmeter 'p'
+// 1. the first part is the input parameter 'p'
 // 2. the second part is the index which is not in 'p' but in 'pi'
 //
 // e.g: p = {2, 4, 5}, pi = {0, 1, 2, 3, 4, 5},
@@ -115,7 +115,7 @@ spu::Value BuildPerm(spu::SPUContext* sctx, const spu::Value& p,
   }
   YACL_ENFORCE(index.size() == pi.numel() - p.numel(),
                "size mismatch, index size: {}, expected: {}, collisions may "
-               "happended in SoPrf",
+               "happened in SoPrf",
                index.size(), pi.numel() - p.numel());
 
   return hlo::Concatenate(sctx, {p, hlo::LinearGather(sctx, tmp, index)}, 0);
@@ -481,7 +481,7 @@ SecretJoin::MergeInputs(ExecContext* ctx) {
 std::tuple<spu::Value, spu::Value, spu::Value> SecretJoin::CountKeyGroup(
     spu::SPUContext* sctx, const std::vector<spu::Value>& keys,
     const spu::Value& item_origin_mark) {
-  // 1. calculate key group mark, where '0' mark the begining of key group
+  // 1. calculate key group mark, where '0' mark the beginning of key group
   auto total_row = keys[0].numel();
   auto key_equal =
       hlo::Equal(sctx, hlo::Slice(sctx, keys[0], {0}, {total_row - 1}, {}),

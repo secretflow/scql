@@ -117,7 +117,7 @@ CREATE/DROP/ALTER USER Statement
 
     ALTER USER [IF EXISTS] user IDENTIFIED BY 'new_auth_string'
 
-    ALTER USER [IF EXISTS] user WITH ENDPOINT endpint (, endpoint)+
+    ALTER USER [IF EXISTS] user WITH ENDPOINT endpoint (, endpoint)+
 
 
 Examples:

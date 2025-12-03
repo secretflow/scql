@@ -67,7 +67,7 @@ DataSource MakeCSVDataSourceFromLocalfs(
   result.set_id(domaindata.domaindata_id());
   result.set_name(domaindata.name());
   result.set_kind(DataSourceKind::CSVDB);
-  // constuct connection str
+  // construct connection str
   {
     csv::CsvdbConf csv_conf;
     auto csv_tbl = csv_conf.add_tables();
@@ -101,7 +101,7 @@ DataSource MakeCSVDataSourceFromOSS(const std::string& datasource_id,
   result.set_id(domaindata.domaindata_id());
   result.set_name(domaindata.name());
   result.set_kind(DataSourceKind::CSVDB);
-  // constuct connection str
+  // construct connection str
   {
     csv::CsvdbConf csv_conf;
 

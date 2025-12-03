@@ -39,7 +39,7 @@ std::shared_ptr<google::protobuf::RpcChannel> ChannelManager::Create(
     options = iter->second;
   } else {
     SPDLOG_LOGGER_WARN(
-        logger, "not found options for role={}, default use http protocal",
+        logger, "not found options for role={}, default use http protocol",
         static_cast<int>(role));
     options.brpc_options.protocol = "http:proto";
   }

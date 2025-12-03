@@ -89,7 +89,7 @@ spu::Value ObliviousGroupMark::GetFullGroupMark(ExecContext* ctx) {
     int64_t cur_row_count =
         cur_value.shape().size() > 0 ? cur_value.shape()[0] : cur_value.numel();
     YACL_ENFORCE(cur_row_count == row_count,
-                 "intput tensor#{} row count not equal to the previous");
+                 "input tensor#{} row count not equal to the previous");
 
     auto from_top =
         spu::kernel::hal::slice(sctx, cur_value, {0}, {row_count - 1}, {});

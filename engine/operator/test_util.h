@@ -39,7 +39,7 @@
 
 namespace scql::engine::op::test {
 
-// predifined party codes for tests
+// predefined party codes for tests
 constexpr char kPartyAlice[] = "alice";
 constexpr char kPartyBob[] = "bob";
 constexpr char kPartyCarol[] = "carol";

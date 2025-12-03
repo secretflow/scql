@@ -288,7 +288,7 @@ INSTANTIATE_TEST_SUITE_P(
                                             TensorFrom(arrow::boolean(), "[]")),
                 .ub_server = 0},
 
-            // witout hint
+            // without hint
             InTestCase{
                 .left_input = test::NamedTensor(
                     "x",
