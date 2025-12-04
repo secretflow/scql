@@ -1007,15 +1007,15 @@ Out = {0, 1, NULL}
 			OpNameRank:        "rank",
 		}
 
-		for op, decription := range windowOp {
+		for op, description := range windowOp {
 			opDef := &OperatorDef{}
 			opDef.SetName(op)
 			opDef.SetStreamingType(SinkOp)
 			opDef.AddInput("Key", "the tensors which used for sorting in partition, e.g. [2,0,4,2,3,7]", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 			opDef.AddInput("PartitionId", "the partitioned id, e.g. [0,0,0,1,1,1], the first 3 in a group and the others are in another group", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 			opDef.AddInput("PartitionNum", "the partitioned num, e.g. [2]", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
-			opDef.AddOutput("Out", fmt.Sprintf("%s output", decription), proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
-			opDef.SetDefinition(fmt.Sprintf("Definition: return the %s in each partition", decription))
+			opDef.AddOutput("Out", fmt.Sprintf("%s output", description), proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+			opDef.SetDefinition(fmt.Sprintf("Definition: return the %s in each partition", description))
 			opDef.AddAttribute(ReverseAttr, `string array consists of "0" and "1", "0" means this input tensor sort by ascending, "1" means this tensor sort by descending.
 		e.g. ["0","1"] means the first input key sort by ascending, the second sort by descending`)
 			opDef.SetParamTypeConstraint(T, statusPrivate)

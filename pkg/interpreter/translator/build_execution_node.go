@@ -1464,7 +1464,7 @@ func (t *translator) buildWindow(ln *WindowNode) (err error) {
 		return fmt.Errorf("buildWindow: failed to convert to logical window")
 	}
 	if len(window.WindowFuncDescs) != 1 {
-		return fmt.Errorf("buildWindow: unsupported windowFuncDescs length 1(expected) != %v(actural)",
+		return fmt.Errorf("buildWindow: unsupported windowFuncDescs length 1(expected) != %v(actual)",
 			len(window.WindowFuncDescs))
 	}
 	desc := window.WindowFuncDescs[0]

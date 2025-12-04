@@ -70,7 +70,7 @@ var astName2NodeName = map[string]string{
 	ast.Cot:        operator.OpNameCot,
 	ast.Atan:       operator.OpNameATan,
 	ast.Atan2:      operator.OpNameATan2,
-	// tidb parser does not suport acot function
+	// tidb parser does not support acot function
 	// ast.Acot:       operator.OpNameACot,
 	ast.Abs:     operator.OpNameAbs,
 	ast.Ceil:    operator.OpNameCeil,
@@ -206,7 +206,7 @@ func (t *translator) Translate(lp core.LogicalPlan) (*graph.Graph, error) {
 			if !cc.IsVisibleFor(partyCode) {
 				return nil, status.New(
 					proto.Code_CCL_CHECK_FAILED,
-					fmt.Sprintf("ccl check failed: the %dth column %s in the result is not visibile (%s) to party %s", i+1, col.OrigName, cc.LevelFor(partyCode).String(), partyCode))
+					fmt.Sprintf("ccl check failed: the %dth column %s in the result is not visible (%s) to party %s", i+1, col.OrigName, cc.LevelFor(partyCode).String(), partyCode))
 			}
 		}
 	}
@@ -387,7 +387,7 @@ func (t *translator) buildRunSQL(ln logicalNode, partyCode string) error {
 	for i, col := range ln.Schema().Columns {
 		cc := ln.CCL()[col.UniqueID]
 		if !cc.IsVisibleFor(partyCode) {
-			return fmt.Errorf("ccl check failed: the %dth column %s in the result is not visibile (%s) to party %s", i+1, col.OrigName, cc.LevelFor(partyCode).String(), partyCode)
+			return fmt.Errorf("ccl check failed: the %dth column %s in the result is not visible (%s) to party %s", i+1, col.OrigName, cc.LevelFor(partyCode).String(), partyCode)
 		}
 	}
 	sql, newTableRefs, err := runSQLString(ln.LP(), t.enginesInfo)
@@ -1011,10 +1011,10 @@ func (t *translator) buildScalarFunction(f *expression.ScalarFunction, tensors m
 		formatStrConst, formatIsConst := formatStrExpr.(*expression.Constant)
 
 		if left.DType != proto.PrimitiveDataType_STRING {
-			return nil, fmt.Errorf("buildScalarFunction: invalid left argument type for the STR_TO_DATE function, exepecting string but got %s", proto.PrimitiveDataType_name[int32(left.DType)])
+			return nil, fmt.Errorf("buildScalarFunction: invalid left argument type for the STR_TO_DATE function, expecting string but got %s", proto.PrimitiveDataType_name[int32(left.DType)])
 		}
 		if right.DType != proto.PrimitiveDataType_STRING || !formatIsConst {
-			return nil, fmt.Errorf("buildScalarFunction: invalid right argument type for the STR_TO_DATE function, exepecting constant string but got %s", proto.PrimitiveDataType_name[int32(right.DType)])
+			return nil, fmt.Errorf("buildScalarFunction: invalid right argument type for the STR_TO_DATE function, expecting constant string but got %s", proto.PrimitiveDataType_name[int32(right.DType)])
 		}
 
 		formatStr := formatStrConst.Value.GetString()

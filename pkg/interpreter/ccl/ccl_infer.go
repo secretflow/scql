@@ -87,7 +87,7 @@ func InferExpressionCCL(expr expression.Expression, ccl map[int64]*CCL) (*CCL, e
 	switch x := expr.(type) {
 	case *expression.Constant:
 		if len(parties) == 0 {
-			return nil, fmt.Errorf("inferExpressionCCL: empty intput party codes")
+			return nil, fmt.Errorf("inferExpressionCCL: empty input party codes")
 		}
 		return CreateAllPlainCCL(parties), nil
 	case *expression.Column:
@@ -99,7 +99,7 @@ func InferExpressionCCL(expr expression.Expression, ccl map[int64]*CCL) (*CCL, e
 	case *expression.ScalarFunction:
 		if len(x.GetArgs()) == 0 {
 			if len(parties) == 0 {
-				return nil, fmt.Errorf("inferExpressionCCL: empty intput party codes")
+				return nil, fmt.Errorf("inferExpressionCCL: empty input party codes")
 			}
 			return CreateAllPlainCCL(parties), nil
 		}
