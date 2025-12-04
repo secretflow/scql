@@ -386,7 +386,7 @@ func (svc *grpcIntraSvc) ExplainQuery(ctx context.Context, req *pb.ExplainQueryR
 
 func (svc *grpcIntraSvc) CancelQuery(c context.Context, req *pb.CancelQueryRequest) (resp *pb.CancelQueryResponse, err error) {
 	if req == nil || req.GetJobId() == "" {
-		return nil, status.New(pb.Code_BAD_REQUEST, "request for CancelQeury is illegal: empty job id")
+		return nil, status.New(pb.Code_BAD_REQUEST, "request for CancelQuery is illegal: empty job id")
 	}
 
 	info, err := svc.app.GetSessionInfo(req.GetJobId())

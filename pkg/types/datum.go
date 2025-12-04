@@ -789,7 +789,7 @@ func (d *Datum) convertToInt(sc *stmtctx.StatementContext, target *FieldType) (D
 
 func (d *Datum) convertToUint(sc *stmtctx.StatementContext, target *FieldType) (Datum, error) {
 	tp := target.Tp
-	upperBound := IntergerUnsignedUpperBound(tp)
+	upperBound := IntegerUnsignedUpperBound(tp)
 	var (
 		val uint64
 		err error
@@ -1223,8 +1223,8 @@ func (d *Datum) ToInt64(sc *stmtctx.StatementContext) (int64, error) {
 }
 
 func (d *Datum) toSignedInteger(sc *stmtctx.StatementContext, tp byte) (int64, error) {
-	lowerBound := IntergerSignedLowerBound(tp)
-	upperBound := IntergerSignedUpperBound(tp)
+	lowerBound := IntegerSignedLowerBound(tp)
+	upperBound := IntegerSignedUpperBound(tp)
 	switch d.Kind() {
 	case KindInt64:
 		return ConvertIntToInt(d.GetInt64(), lowerBound, upperBound, tp)
@@ -1543,9 +1543,9 @@ func GetMaxValue(ft *FieldType) (max Datum) {
 	switch ft.Tp {
 	case mysql.TypeTiny, mysql.TypeShort, mysql.TypeInt24, mysql.TypeLong, mysql.TypeLonglong:
 		if mysql.HasUnsignedFlag(ft.Flag) {
-			max.SetUint64(IntergerUnsignedUpperBound(ft.Tp))
+			max.SetUint64(IntegerUnsignedUpperBound(ft.Tp))
 		} else {
-			max.SetInt64(IntergerSignedUpperBound(ft.Tp))
+			max.SetInt64(IntegerSignedUpperBound(ft.Tp))
 		}
 	case mysql.TypeFloat:
 		max.SetFloat32(float32(GetMaxFloat(ft.Flen, ft.Decimal)))
@@ -1576,7 +1576,7 @@ func GetMinValue(ft *FieldType) (min Datum) {
 		if mysql.HasUnsignedFlag(ft.Flag) {
 			min.SetUint64(0)
 		} else {
-			min.SetInt64(IntergerSignedLowerBound(ft.Tp))
+			min.SetInt64(IntegerSignedLowerBound(ft.Tp))
 		}
 	case mysql.TypeFloat:
 		min.SetFloat32(float32(-GetMaxFloat(ft.Flen, ft.Decimal)))

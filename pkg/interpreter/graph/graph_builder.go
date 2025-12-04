@@ -858,7 +858,7 @@ func (plan *GraphBuilder) AddCastNode(name string, outputDType pb.PrimitiveDataT
 func (plan *GraphBuilder) AddReduceAggNode(aggName string, in *Tensor, attr map[string]*Attribute) (*Tensor, error) {
 	opType, ok := operator.ReduceAggOp[aggName]
 	if !ok {
-		return nil, fmt.Errorf("AddReduceAggNode: unsupported aggregation fucntion %v", aggName)
+		return nil, fmt.Errorf("AddReduceAggNode: unsupported aggregation function %v", aggName)
 	}
 	partyCodes := plan.partyInfo.GetParties()
 	if in.Status() == pb.TensorStatus_TENSORSTATUS_PRIVATE {
