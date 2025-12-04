@@ -62,7 +62,7 @@ func isUserVarChar(ch rune) bool {
 }
 
 type trieNode struct {
-	childs [256]*trieNode
+	children [256]*trieNode
 	token  int
 	fn     func(s *Scanner) (int, Pos, string)
 }
@@ -70,19 +70,19 @@ type trieNode struct {
 var ruleTable trieNode
 
 func initTokenByte(c byte, tok int) {
-	if ruleTable.childs[c] == nil {
-		ruleTable.childs[c] = &trieNode{}
+	if ruleTable.children[c] == nil {
+		ruleTable.children[c] = &trieNode{}
 	}
-	ruleTable.childs[c].token = tok
+	ruleTable.children[c].token = tok
 }
 
 func initTokenString(str string, tok int) {
 	node := &ruleTable
 	for _, c := range str {
-		if node.childs[c] == nil {
-			node.childs[c] = &trieNode{}
+		if node.children[c] == nil {
+			node.children[c] = &trieNode{}
 		}
-		node = node.childs[c]
+		node = node.children[c]
 	}
 	node.token = tok
 }
@@ -90,10 +90,10 @@ func initTokenString(str string, tok int) {
 func initTokenFunc(str string, fn func(s *Scanner) (int, Pos, string)) {
 	for i := 0; i < len(str); i++ {
 		c := str[i]
-		if ruleTable.childs[c] == nil {
-			ruleTable.childs[c] = &trieNode{}
+		if ruleTable.children[c] == nil {
+			ruleTable.children[c] = &trieNode{}
 		}
-		ruleTable.childs[c].fn = fn
+		ruleTable.children[c].fn = fn
 	}
 	return
 }
