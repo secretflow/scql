@@ -174,7 +174,7 @@ const (
 	MutualTLS string = "mtls"
 )
 
-// NewConfig construsts Config from YAML file
+// NewConfig constructs Config from YAML file
 func NewConfig(configPath string) (*Config, error) {
 	content, err := os.ReadFile(configPath)
 	if err != nil {

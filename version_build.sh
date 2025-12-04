@@ -25,7 +25,7 @@ usage() {
   echo "Usage: $0 [-r]"
   echo "default build version info and change version.h in engine"
   echo "Options:"
-  echo "  -r, restore version changes in version.h, using after version builded."
+  echo "  -r, restore version changes in version.h, using after version built."
 }
 
 while getopts "r" options; do
