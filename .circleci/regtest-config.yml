@@ -58,7 +58,7 @@ jobs:
             mkdir -p "${DIR}"
             BINARIES="engine/exe/scqlengine:scqlengine bin/scdbserver:scdbserver bin/scdbclient:scdbclient bin/broker:broker bin/brokerctl:brokerctl bin/agent:agent"
             for item in $BINARIES; do
-              IFS=':' read -r src dest <<< "$item"
+              IFS=':' read -r src dest \<<< "$item"
               cp "bazel-bin/${src}" "${DIR}/${dest}"
             done
       - persist_to_workspace:
