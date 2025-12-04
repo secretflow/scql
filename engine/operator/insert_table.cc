@@ -33,11 +33,11 @@ namespace {
 
 constexpr int64_t kBatchSize = 1000;
 
-class ValueVistor {
+class ValueVisitor {
  public:
-  ValueVistor() = delete;
+  ValueVisitor() = delete;
 
-  explicit ValueVistor(std::vector<std::string>* result_vector, bool is_time)
+  explicit ValueVisitor(std::vector<std::string>* result_vector, bool is_time)
       : result_vector_(result_vector), is_time_(is_time) {
     YACL_ENFORCE(result_vector_, "result_vector_ can not be null");
     result_vector_->clear();
@@ -46,7 +46,7 @@ class ValueVistor {
   template <typename T>
   arrow::Status Visit(const T& array) {
     return arrow::Status::NotImplemented(fmt::format(
-        "type {} is not implemented in ValueVistor", array.type()->name()));
+        "type {} is not implemented in ValueVisitor", array.type()->name()));
   }
 
   template <typename TYPE>
@@ -194,10 +194,10 @@ void InsertTable::InsertInTransaction(
             tensors[i]->ToArrowChunkedArray()->Slice(offset, kBatchSize);
         auto array = util::ConcatenateChunkedArray(cur_chunk);
         std::vector<std::string> column;
-        ValueVistor vistor(
+        ValueVisitor visitor(
             &column, input_types[i] == pb::PrimitiveDataType::DATETIME ||
                          input_types[i] == pb::PrimitiveDataType::TIMESTAMP);
-        THROW_IF_ARROW_NOT_OK(arrow::VisitArrayInline(*array, &vistor));
+        THROW_IF_ARROW_NOT_OK(arrow::VisitArrayInline(*array, &visitor));
         columns.push_back(std::move(column));
       }
 
