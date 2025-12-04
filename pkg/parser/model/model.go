@@ -298,7 +298,7 @@ type TableLockState byte
 const (
 	// TableLockStateNone means this table lock is absent.
 	TableLockStateNone TableLockState = iota
-	// TableLockStatePreLock means this table lock is pre-lock state. Other session doesn't hold this lock should't do corresponding operation according to the lock type.
+	// TableLockStatePreLock means this table lock is pre-lock state. Other session doesn't hold this lock shouldn't do corresponding operation according to the lock type.
 	TableLockStatePreLock
 	// TableLockStatePublic means this table lock is public state.
 	TableLockStatePublic

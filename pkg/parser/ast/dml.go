@@ -2109,7 +2109,7 @@ func (n *ShowStmt) Restore(ctx *RestoreCtx) error {
 			// FROM or IN
 			ctx.WriteKeyWord("INDEX IN ")
 			if err := n.Table.Restore(ctx); err != nil {
-				return errors.Annotate(err, "An error occurred while resotre ShowStmt.Table")
+				return errors.Annotate(err, "An error occurred while restore ShowStmt.Table")
 			} // TODO: remember to check this case
 		case ShowColumns: // equivalent to SHOW FIELDS
 			if n.Extended {
@@ -2121,7 +2121,7 @@ func (n *ShowStmt) Restore(ctx *RestoreCtx) error {
 				// FROM or IN
 				ctx.WriteKeyWord(" IN ")
 				if err := n.Table.Restore(ctx); err != nil {
-					return errors.Annotate(err, "An error occurred while resotre ShowStmt.Table")
+					return errors.Annotate(err, "An error occurred while restore ShowStmt.Table")
 				}
 			}
 			restoreShowDatabaseNameOpt()

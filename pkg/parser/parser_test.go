@@ -2489,7 +2489,7 @@ func (s *testParserSuite) TestDDL(c *C) {
 		{"CREATE INDEX idx ON t ( a ) ALGORITHM = ident", false, ""},
 		{"CREATE INDEX idx ON t ( a ) ALGORITHM ident", false, ""},
 
-		//For dorp index statement
+		//For drop index statement
 		{"drop index a on t", true, "DROP INDEX `a` ON `t`"},
 		{"drop index a on db.t", true, "DROP INDEX `a` ON `db`.`t`"},
 		{"drop index a on db.`tb-ttb`", true, "DROP INDEX `a` ON `db`.`tb-ttb`"},

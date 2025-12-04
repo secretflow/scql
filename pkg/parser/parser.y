@@ -799,7 +799,7 @@ import (
 	TruncateTableStmt    "TRUNCATE TABLE statement"
 	UnlockTablesStmt     "Unlock tables statement"
 	UpdateStmt           "UPDATE statement"
-	UnionStmt            "Union select state ment"
+	UnionStmt            "Union select statement"
 	UseStmt              "USE statement"
 	ShutdownStmt         "SHUTDOWN statement"
 

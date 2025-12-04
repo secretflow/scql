@@ -41,7 +41,7 @@ class Publish : public Operator {
                            pb::PrimitiveDataType elem_type);
 
  private:
-  static constexpr int32_t kColumnNumInProto = 1;  // only cantain one column.
+  static constexpr int32_t kColumnNumInProto = 1;  // only contain one column.
 };
 
 }  // namespace scql::engine::op
