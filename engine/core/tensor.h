@@ -31,7 +31,7 @@ class MemTensorBatchReader;
 class DiskTensorSlice;
 class MemTensorSlice;
 
-/// @brief A Tensor reprensents a column of a relation
+/// @brief A Tensor represents a column of a relation
 class Tensor {
  public:
   Tensor(const Tensor&) = delete;

@@ -47,7 +47,7 @@ DEFINE_string(output_s3_access_key, "",
               "the access key id of output s3/minio/oss");
 DEFINE_string(output_s3_secret_key, "",
               "the secret access key of output s3/minio/oss");
-DEFINE_bool(output_s3_enalbe_ssl, true,
+DEFINE_bool(output_s3_enable_ssl, true,
             "default enable ssl, if s3 server not enable ssl, set to false");
 DEFINE_string(output_s3_ca_dir_path, "/etc/ssl/certs/",
               "directory where the certificates stored to verify s3 server");
@@ -83,7 +83,7 @@ std::shared_ptr<arrow::io::OutputStream> BuildStreamFromS3(
   options.force_virtual_addressing = FLAGS_output_s3_force_virtual_addressing;
   options.ConfigureAccessKey(FLAGS_output_s3_access_key,
                              FLAGS_output_s3_secret_key);
-  if (!use_ssl || !FLAGS_output_s3_enalbe_ssl) {
+  if (!use_ssl || !FLAGS_output_s3_enable_ssl) {
     options.scheme = "http";
   }
   std::shared_ptr<arrow::fs::S3FileSystem> fs;

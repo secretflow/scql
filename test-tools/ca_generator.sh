@@ -18,7 +18,7 @@
 # Example SCQL CA certificate generation script.
 # It is mainly modified from https://github.com/k3s-io/k3s/blob/master/contrib/util/generate-custom-ca-certs.sh
 #
-# This script will generate CA files certificate for SCQL to enalbe tls.
+# This script will generate CA files certificate for SCQL to enable tls.
 # The required files are default located under `./tls` directory.
 #
 # This script will also auto-generate certificates and keys for both root and intermediate
@@ -155,7 +155,7 @@ for TYPE in scdb engine_alice engine_bob engine_carol broker_alice broker_bob br
                  -cert intermediate-ca.pem \
                  -config .ca/config \
                  -extensions v3_ca
-      
+
   cat ${TYPE}-ca.pem \
       intermediate-ca.pem \
       root-ca.pem > ${TYPE}-ca.crt

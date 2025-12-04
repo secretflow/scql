@@ -1519,7 +1519,7 @@ msgid "The secret access key of output s3/minio/oss"
 msgstr "输出到 s3/minio/oss 时的 secret access key"
 
 #: ../../reference/engine-config.rst:155
-msgid "output_s3_enalbe_ssl"
+msgid "output_s3_enable_ssl"
 msgstr ""
 
 #: ../../reference/engine-config.rst:155

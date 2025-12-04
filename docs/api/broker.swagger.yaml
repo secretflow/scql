@@ -802,7 +802,7 @@ definitions:
        - REVEAL_RANK: The column is not able to be revealed at the party_code but the rank of
       this column can be revealed at party_code
       e.g.
-      SELECT ROW_NUMBER() OVER(PARTITITON BY department ORDER BY salary DESC)
+      SELECT ROW_NUMBER() OVER(PARTITION BY department ORDER BY salary DESC)
       AS rank in the query above the salary and department are not supposed
       to be revealed to the party_code, however the rank of salary in this
       department is visible

@@ -156,8 +156,8 @@ func (suite *KusciaTestSuit) TestInitiatorSetDomaindata() {
 	fmt.Println("TestInitiatorSetDomaindata end")
 }
 
-func (suite *KusciaTestSuit) TestParicipantsSetDomaindata() {
-	fmt.Println("TestParicipantsSetDomaindata begin")
+func (suite *KusciaTestSuit) TestParticipantsSetDomaindata() {
+	fmt.Println("TestParticipantsSetDomaindata begin")
 	suite.stub.selfParty = "bob"
 	result := &scql.QueryResult{
 		AffectedRows: 0,
@@ -165,7 +165,7 @@ func (suite *KusciaTestSuit) TestParicipantsSetDomaindata() {
 	}
 
 	suite.NoError(suite.stub.SetDomainData(result))
-	fmt.Println("TestParicipantsSetDomaindata end")
+	fmt.Println("TestParticipantsSetDomaindata end")
 }
 func TestServerSuit(t *testing.T) {
 	fmt.Println("test begin")

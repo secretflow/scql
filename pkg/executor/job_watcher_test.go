@@ -85,7 +85,7 @@ func TestJobWatcherBeforeEngineExecute(t *testing.T) {
 	r.NoError(err)
 	defer stopFn()
 
-	// job isn't watched because the statu is SessionSubmitted
+	// job isn't watched because the status is SessionSubmitted
 	time.Sleep(time.Second * 5)
 	r.False(jobDead.Load())
 
