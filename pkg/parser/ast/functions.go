@@ -434,7 +434,7 @@ func (n *FuncCallExpr) RestoreDateFuncWithPostgresDialect(ctx *RestoreCtx) (err 
 		ctx.WritePlain("'")
 	case DateDiff, LastDay, StrToDate, DateFormat:
 		// postgres donot support datediff op because Poco can not interpret the interval type result;
-		// postgres donot support last_day、str_to_date、date_format because postgres has not these func: https://m.runoob.com/postgresql/postgresql-datetime.html
+		// postgres do not support last_day、str_to_date、date_format because postgres has not these func: https://m.runoob.com/postgresql/postgresql-datetime.html
 		return fmt.Errorf("an error occurred while restore FuncCallExpr: %s", n.FnName.L)
 	default:
 		ctx.WriteKeyWord(n.FnName.O)
