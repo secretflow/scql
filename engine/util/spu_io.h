@@ -98,7 +98,7 @@ class SpuOutfeedHelper {
 
   TensorPtr DumpPublic(const std::string& name);
 
-  /// Reveal a secret value from spu deivce to party `rank`.
+  /// Reveal a secret value from spu device to party `rank`.
   /// @returns nullptr to other parties.
   TensorPtr RevealTo(const std::string& name, size_t rank);
 
