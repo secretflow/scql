@@ -51,13 +51,13 @@ func TestCollectCCLForParty(t *testing.T) {
 	r.Equal(len(ccl), 2)
 	r.Equal(ccl[0].PartyCode, "alice")
 	r.Equal(ccl[0].ColumnName, "column1_1")
-	// not found in column level, use table level
+	// use column level privilege
 	r.Equal(ccl[0].Visibility, scql.SecurityConfig_ColumnControl_PLAINTEXT)
 
 	r.Equal(ccl[1].PartyCode, "alice")
 	r.Equal(ccl[1].ColumnName, "column1_2")
-	// use column level
-	r.Equal(ccl[1].Visibility, scql.SecurityConfig_ColumnControl_PLAINTEXT_AFTER_COMPARE)
+	// use column level privilege
+	r.Equal(ccl[1].Visibility, scql.SecurityConfig_ColumnControl_PLAINTEXT)
 }
 
 func TestQueryTablesOwner(t *testing.T) {
