@@ -29,6 +29,7 @@ import (
 
 	"github.com/secretflow/scql/pkg/broker/application"
 	"github.com/secretflow/scql/pkg/broker/storage"
+	"github.com/secretflow/scql/pkg/proto-gen/scql"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/proto-gen/spu"
 	"github.com/secretflow/scql/pkg/status"
@@ -300,101 +301,93 @@ func TestGetSessionOpts(t *testing.T) {
 	{
 		jobConfig := &pb.JobConfig{
 			Batched:                       nil,
-			UseRr22LowCommMode:            nil,
+			Rr22Mode:                      scql.Rr22Mode_UNDEFINED,
 			EnableSessionLoggerSeparation: nil,
 			TimeZone:                      "",
 		}
 		batched := false
-		useRr22LowCommMode := false
 		enableSessionLoggerSeparation := false
 		projectConf := &pb.ProjectConfig{}
 		projectConf.Batched = &batched
-		projectConf.UseRr22LowCommMode = &useRr22LowCommMode
+		projectConf.Rr22Mode = scql.Rr22Mode_UNDEFINED
 		projectConf.EnableSessionLoggerSeparation = &enableSessionLoggerSeparation
 		projectConf.TimeZone = ""
 		conf := brokerutil.UpdateJobConfig(jobConfig, projectConf)
 		sessionOptions := GenSessionOpts(conf)
-		r.Equal(sessionOptions.PsiConfig.GetUseRr22LowCommMode(), false)
-		r.Equal(sessionOptions.LogConfig.GetEnableSessionLoggerSeparation(), false)
-		r.Equal(sessionOptions.TimeZone, "")
-		r.Equal(conf.GetBatched(), false)
+		r.Equal(scql.Rr22Mode_UNDEFINED, sessionOptions.PsiConfig.GetRr22Mode())
+		r.Equal(false, sessionOptions.LogConfig.GetEnableSessionLoggerSeparation())
+		r.Equal("", sessionOptions.TimeZone)
+		r.Equal(false, conf.GetBatched())
 	}
 
 	// case2: nil value in job config, true value in project config
 	{
 		jobConfig := &pb.JobConfig{
 			Batched:                       nil,
-			UseRr22LowCommMode:            nil,
 			EnableSessionLoggerSeparation: nil,
 			TimeZone:                      "",
 		}
 		batched := true
-		useRr22LowCommMode := true
 		enableSessionLoggerSeparation := true
 		projectConf := &pb.ProjectConfig{}
 		projectConf.Batched = &batched
-		projectConf.UseRr22LowCommMode = &useRr22LowCommMode
+		projectConf.Rr22Mode = scql.Rr22Mode_LOW_MODE
 		projectConf.EnableSessionLoggerSeparation = &enableSessionLoggerSeparation
 		projectConf.TimeZone = "+08:00"
 		conf := brokerutil.UpdateJobConfig(jobConfig, projectConf)
 		sessionOptions := GenSessionOpts(conf)
-		r.Equal(sessionOptions.PsiConfig.GetUseRr22LowCommMode(), true)
-		r.Equal(sessionOptions.LogConfig.GetEnableSessionLoggerSeparation(), true)
-		r.Equal(sessionOptions.TimeZone, "+08:00")
-		r.Equal(conf.GetBatched(), true)
+		r.Equal(scql.Rr22Mode_LOW_MODE, sessionOptions.PsiConfig.GetRr22Mode())
+		r.Equal(true, sessionOptions.LogConfig.GetEnableSessionLoggerSeparation())
+		r.Equal("+08:00", sessionOptions.TimeZone)
+		r.Equal(true, conf.GetBatched())
 	}
 
 	// case3: false value in job config, true value in project config
 	{
 		batchedJobConf := false
-		useRr22LowCommModeJobConf := false
 		enableSessionLoggerSeparationJobConf := false
 		jobConfig := &pb.JobConfig{
 			Batched:                       &batchedJobConf,
-			UseRr22LowCommMode:            &useRr22LowCommModeJobConf,
 			EnableSessionLoggerSeparation: &enableSessionLoggerSeparationJobConf,
 			TimeZone:                      "",
 		}
 		batched := true
-		useRr22LowCommMode := true
 		enableSessionLoggerSeparation := true
 		projectConf := &pb.ProjectConfig{}
 		projectConf.Batched = &batched
-		projectConf.UseRr22LowCommMode = &useRr22LowCommMode
+		projectConf.Rr22Mode = scql.Rr22Mode_FAST_MODE
 		projectConf.EnableSessionLoggerSeparation = &enableSessionLoggerSeparation
-		projectConf.TimeZone = ""
+		projectConf.TimeZone = "+08:00"
 		conf := brokerutil.UpdateJobConfig(jobConfig, projectConf)
 		sessionOptions := GenSessionOpts(conf)
-		r.Equal(sessionOptions.PsiConfig.GetUseRr22LowCommMode(), false)
-		r.Equal(sessionOptions.LogConfig.GetEnableSessionLoggerSeparation(), false)
-		r.Equal(sessionOptions.TimeZone, "")
-		r.Equal(conf.GetBatched(), false)
+		r.Equal(scql.Rr22Mode_FAST_MODE, sessionOptions.PsiConfig.GetRr22Mode())
+		r.Equal(false, sessionOptions.LogConfig.GetEnableSessionLoggerSeparation())
+		r.Equal("+08:00", sessionOptions.TimeZone)
+		r.Equal(false, conf.GetBatched())
 	}
 
 	// case4: true value in job config, true value in project config
 	{
 		batchedJobConf := true
-		useRr22LowCommModeJobConf := true
 		enableSessionLoggerSeparationJobConf := true
 		jobConfig := &pb.JobConfig{
 			Batched:                       &batchedJobConf,
-			UseRr22LowCommMode:            &useRr22LowCommModeJobConf,
+			Rr22Mode:                      pb.Rr22Mode_FAST_MODE,
 			EnableSessionLoggerSeparation: &enableSessionLoggerSeparationJobConf,
 			TimeZone:                      "+08:00",
 		}
 		batched := true
-		useRr22LowCommMode := true
 		enableSessionLoggerSeparation := true
 		projectConf := &pb.ProjectConfig{}
 		projectConf.Batched = &batched
-		projectConf.UseRr22LowCommMode = &useRr22LowCommMode
+		projectConf.Rr22Mode = scql.Rr22Mode_LOW_MODE
 		projectConf.EnableSessionLoggerSeparation = &enableSessionLoggerSeparation
-		projectConf.TimeZone = "+08:00"
+		projectConf.TimeZone = "+09:00"
 		conf := brokerutil.UpdateJobConfig(jobConfig, projectConf)
 		sessionOptions := GenSessionOpts(conf)
-		r.Equal(sessionOptions.PsiConfig.GetUseRr22LowCommMode(), true)
-		r.Equal(sessionOptions.LogConfig.GetEnableSessionLoggerSeparation(), true)
-		r.Equal(sessionOptions.TimeZone, "+08:00")
-		r.Equal(conf.GetBatched(), true)
+		r.Equal(scql.Rr22Mode_FAST_MODE, sessionOptions.PsiConfig.GetRr22Mode())
+		r.Equal(true, sessionOptions.LogConfig.GetEnableSessionLoggerSeparation())
+		r.Equal("+08:00", sessionOptions.TimeZone)
+		r.Equal(true, conf.GetBatched())
 	}
 }
