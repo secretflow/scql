@@ -151,6 +151,19 @@ INSTANTIATE_TEST_SUITE_P(
                                              TensorFrom(arrow::int64(), "[]"))},
                 .outputs = {test::NamedTensor("y1", TensorFrom(arrow::int64(),
                                                                "[]"))}},
+            // testcase: empty inputs
+            SortTestCase{
+                .reverse = {false},
+                .input_status = pb::TENSORSTATUS_SECRET,
+                .sort_keys = {test::NamedTensor(
+                    "k1", TensorFrom(arrow::boolean(),
+                                     "[true,false,false,true,true]"))},
+                .inputs = {test::NamedTensor(
+                    "x1", TensorFrom(arrow::boolean(),
+                                     "[true,false,false,true,true]"))},
+                .outputs = {test::NamedTensor(
+                    "y1", TensorFrom(arrow::boolean(),
+                                     "[false,false,true,true,true]"))}},
             // testcase: sort by directions
             SortTestCase{
                 .reverse = {false, true},
@@ -174,6 +187,35 @@ INSTANTIATE_TEST_SUITE_P(
                             test::NamedTensor("y3",
                                               TensorFrom(arrow::int64(),
                                                          "[11,10,13,12,14]"))}},
+            // testcase: sort by directions
+            // SortTestCase{
+            //     .reverse = {false, false},
+            //     .input_status = pb::TENSORSTATUS_SECRET,
+            //     .sort_keys =
+            //         {test::NamedTensor("k1", TensorFrom(arrow::int64(),
+            //                                             "[2,1,2,2,3]")),
+            //          test::NamedTensor(
+            //              "k2", TensorFrom(arrow::boolean(),
+            //                               "[true,false,false,true,true]"))},
+            //     .inputs = {test::NamedTensor("x1", TensorFrom(arrow::int64(),
+            //                                                   "[2,1,2,2,3]")),
+            //                test::NamedTensor(
+            //                    "x2",
+            //                    TensorFrom(arrow::boolean(),
+            //                               "[true,false,false,true,true]")),
+            //                test::NamedTensor("x3",
+            //                                  TensorFrom(arrow::int64(),
+            //                                             "[10,11,12,13,14]"))},
+            //     .outputs = {test::NamedTensor("y1",
+            //     TensorFrom(arrow::int64(),
+            //                                                    "[1,2,2,2,3]")),
+            //                 test::NamedTensor(
+            //                     "y2",
+            //                     TensorFrom(arrow::boolean(),
+            //                                "[true,false,false,true,true]")),
+            //                 test::NamedTensor("y3",
+            //                                   TensorFrom(arrow::int64(),
+            //                                              "[11,10,13,12,14]"))}},
             // testcase: sort by directions
             SortTestCase{
                 .reverse = {false, false, true, true},

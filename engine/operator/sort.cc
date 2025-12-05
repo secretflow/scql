@@ -14,14 +14,10 @@
 
 #include "engine/operator/sort.h"
 
-#include <algorithm>
-#include <cstddef>
-#include <cstdint>
-#include <vector>
-
 #include "arrow/api.h"
 #include "arrow/compute/api.h"
 #include "arrow/table.h"
+#include "libspu/kernel/hlo/basic_unary.h"
 #include "libspu/kernel/hlo/sort.h"
 
 #include "engine/core/tensor_constructor.h"
@@ -139,77 +135,46 @@ void Sort::SortInSecret(ExecContext* ctx) {
   const auto& in_pbs = ctx->GetInput(kIn);
   const auto& out_pbs = ctx->GetOutput(kOut);
 
+  // Get sort directions - either a single bool or array of bools
+  std::vector<bool> reverses = ctx->GetBooleanValuesFromAttribute(kReverseAttr);
+
   auto* symbols = ctx->GetSession()->GetDeviceSymbols();
-  std::vector<spu::Value> keys;
-  for (const auto& sort_key_pb : sort_key_pbs) {
+  std::vector<spu::Value> inputs;
+  auto* sctx = ctx->GetSession()->GetSpuContext();
+  auto reverse = reverses[0];
+  for (size_t i = 0; i < sort_key_pbs.size(); ++i) {
+    const auto& sort_key_pb = sort_key_pbs[i];
     auto value = symbols->getVar(
         util::SpuVarNameEncoder::GetValueName(sort_key_pb.name()));
-    keys.push_back(value);
+    if (reverses[i] != reverse) {
+      if (value.dtype() == spu::DT_I1) {
+        inputs.push_back(spu::kernel::hlo::Not(sctx, value));
+      } else {
+        inputs.push_back(spu::kernel::hlo::Neg(sctx, value));
+      }
+    } else {
+      inputs.push_back(value);
+    }
   }
-  std::vector<spu::Value> payloads;
+  size_t sort_key_num = inputs.size();
   for (const auto& in_pb : in_pbs) {
     auto value =
         symbols->getVar(util::SpuVarNameEncoder::GetValueName(in_pb.name()));
-    payloads.push_back(value);
+    inputs.push_back(value);
   }
 
-  auto* sctx = ctx->GetSession()->GetSpuContext();
-  std::vector<bool> reverses = ctx->GetBooleanValuesFromAttribute(kReverseAttr);
-  YACL_ENFORCE(reverses.size() == keys.size());
-  // sort by directions
-  // for example:
-  // sort keys [k1 k2 k3 k4 k5]
-  // reverse_directions [true true false false true]
-  // payloads [p1 p2 p3 p4]
-  // step 1: split sort keys by directions
-  // [k1 k2]     [k3 k4]       [k5]
-  // [true true] [false false] [true]
-  // step 2: sort by keys from most significant one
-  // [k1` k2` k3` k4` p1` p2` p3` p4`] = sort(key: k5, payload: k1 k2 k3 k4 p1
-  // p2 p3 p4, Descending: true)
-  // [k1`` k2`` p1`` p2`` p3`` p4``] = sort(key: k3` k4`, payload: k1` k2` k3 k4
-  // p1` p2` p3` p4`, Descending: false)
-  // [p1``` p2``` p3``` p4```] = sort(key: k1`` k2``, payload: p1`` p2`` p3``
-  // p4``, Descending: true)
-
-  int64_t cur_key_num = keys.size() - 1;
-  bool cur_reverse = reverses[cur_key_num];
-  std::vector<spu::Value> sub_sort_keys;
-  auto results = payloads;
-  SPDLOG_INFO("key num: {}, payload num: {}", keys.size(), payloads.size());
-  while (true) {
-    if (cur_key_num < 0 || cur_reverse != reverses[cur_key_num]) {
-      auto sort_direction = cur_reverse
-                                ? spu::kernel::hal::SortDirection::Descending
-                                : spu::kernel::hal::SortDirection::Ascending;
-      std::reverse(sub_sort_keys.begin(), sub_sort_keys.end());
-      auto inputs = sub_sort_keys;
-      for (int64_t i = cur_key_num; i >= 0; i--) {
-        inputs.push_back(keys[i]);
-      }
-      inputs.insert(inputs.end(), results.begin(), results.end());
-      // NOTE: use default performance hint for SimpleSort
-      auto sorted_results = spu::kernel::hlo::SimpleSort(
-          sctx, inputs, 0, sort_direction, sub_sort_keys.size());
-      results = std::vector<spu::Value>(
-          sorted_results.begin() + sorted_results.size() - payloads.size(),
-          sorted_results.end());
-      if (cur_key_num < 0) {
-        break;
-      }
-      keys = std::vector<spu::Value>(
-          sorted_results.begin() + sub_sort_keys.size(),
-          sorted_results.begin() + sub_sort_keys.size() + cur_key_num + 1);
-
-      sub_sort_keys.clear();
-      cur_reverse = reverses[cur_key_num];
-    }
-    sub_sort_keys.push_back(keys[cur_key_num]);
-    cur_key_num--;
+  auto sort_direction = spu::kernel::hal::SortDirection::Ascending;
+  if (reverse) {
+    sort_direction = spu::kernel::hal::SortDirection::Descending;
   }
+  // NOTE: use default performance hint for SimpleSort
+  auto results = spu::kernel::hlo::SimpleSort(sctx, inputs, 0, sort_direction,
+                                              sort_key_num);
+
   for (int i = 0; i < out_pbs.size(); ++i) {
+    auto idx = sort_key_num + i;
     symbols->setVar(util::SpuVarNameEncoder::GetValueName(out_pbs[i].name()),
-                    results[i]);
+                    results[idx]);
   }
 
   // TODO: sort validity too
