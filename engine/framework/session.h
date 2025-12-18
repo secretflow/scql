@@ -156,11 +156,11 @@ class Session {
   int64_t GetAffectedRows() const { return affected_rows_; }
 
   std::shared_ptr<engine::util::ProgressStats> GetProgressStats() {
-    if (progres_stats_ == nullptr) {
+    if (progress_stats_ == nullptr) {
       SPDLOG_WARN("progress stats is not initialized");
-      progres_stats_ = std::make_shared<engine::util::DefaultProgressStats>();
+      progress_stats_ = std::make_shared<engine::util::DefaultProgressStats>();
     }
-    return progres_stats_;
+    return progress_stats_;
   }
 
   void InitProgressStats(const ::scql::pb::SchedulingPolicy& policy) {
@@ -173,7 +173,7 @@ class Session {
           }
         }
       }
-      progres_stats_ =
+      progress_stats_ =
           std::make_shared<engine::util::NormalProgressStats>(total_nodes_cnt);
     } else {
       std::vector<size_t> pipeline_nodes_cnt;
@@ -186,7 +186,7 @@ class Session {
         }
         pipeline_nodes_cnt.push_back(nodes_cnt);
       }
-      progres_stats_ = std::make_shared<engine::util::BatchedProgressStats>(
+      progress_stats_ = std::make_shared<engine::util::BatchedProgressStats>(
           pipeline_nodes_cnt);
     }
   }
@@ -278,7 +278,7 @@ class Session {
   mutable std::mutex progress_mutex_;
   std::string current_node_name_;
   std::chrono::time_point<std::chrono::system_clock> node_start_time_;
-  std::shared_ptr<engine::util::ProgressStats> progres_stats_;
+  std::shared_ptr<engine::util::ProgressStats> progress_stats_;
   // for streaming
   StreamingOptions streaming_options_;
 };

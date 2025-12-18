@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
       std::cout << "Datasource: " << datasource.ShortDebugString() << std::endl;
     }
   } catch (const std::exception& e) {
-    std::cerr << "Something bad happend: " << e.what() << std::endl;
+    std::cerr << "Something bad happened: " << e.what() << std::endl;
   }
   return 0;
 }

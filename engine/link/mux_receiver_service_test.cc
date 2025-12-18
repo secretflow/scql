@@ -84,11 +84,11 @@ TEST_F(MuxReceiverServiceImplTest, Works) {
 
   std::vector<std::future<void>> futures(kWorldSize);
   ChannelManager channel_manager;
-  std::vector<std::unique_ptr<MuxLinkFactory>> mux_link_factorys;
+  std::vector<std::unique_ptr<MuxLinkFactory>> mux_link_factories;
   for (size_t rank = 0; rank < kWorldSize; rank++) {
-    mux_link_factorys.emplace_back(
+    mux_link_factories.emplace_back(
         new MuxLinkFactory(&channel_manager, listener_managers[rank].get()));
-    futures[rank] = std::async(proc, mux_link_factorys[rank].get(), rank);
+    futures[rank] = std::async(proc, mux_link_factories[rank].get(), rank);
   }
   for (size_t rank = 0; rank < kWorldSize; rank++) {
     futures[rank].get();

@@ -61,7 +61,7 @@ class MuxLink : public yacl::link::transport::TransportLink {
   void UnpackMonoRequest(const ::google::protobuf::Message& request,
                          std::string* key,
                          yacl::ByteContainerView* value) const override;
-  void UnpackChunckRequest(const ::google::protobuf::Message& request,
+  void UnpackChunkRequest(const ::google::protobuf::Message& request,
                            std::string* key, yacl::ByteContainerView* value,
                            size_t* offset, size_t* total_length) const override;
   void FillResponseOk(const ::google::protobuf::Message& request,

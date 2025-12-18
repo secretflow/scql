@@ -58,7 +58,7 @@ func TestErrorAsStatus(t *testing.T) {
 
 		// Wrapping errors with %w
 		// Reference: https://go.dev/blog/go1.13-errors
-		err3 := fmt.Errorf("some bad happend: %w", err2)
+		err3 := fmt.Errorf("some bad happened: %w", err2)
 
 		var status *Status
 		r.True(errors.As(err3, &status), "err3 must be status error")

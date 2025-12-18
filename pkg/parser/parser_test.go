@@ -2850,17 +2850,17 @@ func (s *testParserSuite) TestHintError(c *C) {
 	c.Assert(len(warns), Equals, 1)
 	c.Assert(warns[0], ErrorMatches, `.*Optimizer hint syntax error at line 1 column 23 near "tidb_unknown\(T1,t2\) \*/" `)
 	c.Assert(len(stmt[0].(*ast.SelectStmt).TableHints), Equals, 0)
-	stmt, warns, err = parser.Parse("select /*+ TIDB_INLJ(t1, T2) tidb_unknow(T1,t2, 1) */ c1, c2 from t1, t2 where t1.c1 = t2.c1", "", "")
+	stmt, warns, err = parser.Parse("select /*+ TIDB_INLJ(t1, T2) tidb_unknown(T1,t2, 1) */ c1, c2 from t1, t2 where t1.c1 = t2.c1", "", "")
 	c.Assert(len(stmt[0].(*ast.SelectStmt).TableHints), Equals, 0)
 	c.Assert(err, IsNil)
 	c.Assert(len(warns), Equals, 1)
-	c.Assert(warns[0], ErrorMatches, `.*Optimizer hint syntax error at line 1 column 40 near "tidb_unknow\(T1,t2, 1\) \*/" `)
-	stmt, _, err = parser.Parse("select c1, c2 from /*+ tidb_unknow(T1,t2) */ t1, t2 where t1.c1 = t2.c1", "", "")
+	c.Assert(warns[0], ErrorMatches, `.*Optimizer hint syntax error at line 1 column 40 near "tidb_unknown\(T1,t2, 1\) \*/" `)
+	stmt, _, err = parser.Parse("select c1, c2 from /*+ tidb_unknown(T1,t2) */ t1, t2 where t1.c1 = t2.c1", "", "")
 	c.Assert(err, IsNil) // Hints are ignored after the "FROM" keyword!
 	stmt, _, err = parser.Parse("select1 /*+ TIDB_INLJ(t1, T2) */ c1, c2 from t1, t2 where t1.c1 = t2.c1", "", "")
 	c.Assert(err, NotNil)
 	c.Assert(err.Error(), Equals, "line 1 column 7 near \"select1 /*+ TIDB_INLJ(t1, T2) */ c1, c2 from t1, t2 where t1.c1 = t2.c1\" ")
-	stmt, _, err = parser.Parse("select /*+ TIDB_INLJ(t1, T2) */ c1, c2 fromt t1, t2 where t1.c1 = t2.c1", "", "")
+	stmt, _, err = parser.Parse("select /*+ TIDB_INLJ(t1, T2) */ c1, c2 from t1, t2 where t1.c1 = t2.c1", "", "")
 	c.Assert(err, NotNil)
 	c.Assert(err.Error(), Equals, "line 1 column 47 near \"t1, t2 where t1.c1 = t2.c1\" ")
 	_, _, err = parser.Parse("SELECT 1 FROM DUAL WHERE 1 IN (SELECT /*+ DEBUG_HINT3 */ 1)", "", "")
@@ -3396,15 +3396,15 @@ func (s *testParserSuite) TestPrivilege(c *C) {
 		{"CREATE USER test.user", false, ""},
 		{"CREATE USER 'test.user'", true, "CREATE USER `test.user`@`%`"},
 		{"CREATE USER `test.user`", true, "CREATE USER `test.user`@`%`"},
-		{"CREATE USER uesr1@localhost", true, "CREATE USER `uesr1`@`localhost`"},
-		{"CREATE USER `uesr1`@localhost", true, "CREATE USER `uesr1`@`localhost`"},
-		{"CREATE USER uesr1@`localhost`", true, "CREATE USER `uesr1`@`localhost`"},
-		{"CREATE USER `uesr1`@`localhost`", true, "CREATE USER `uesr1`@`localhost`"},
-		{"CREATE USER 'uesr1'@localhost", true, "CREATE USER `uesr1`@`localhost`"},
-		{"CREATE USER uesr1@'localhost'", true, "CREATE USER `uesr1`@`localhost`"},
-		{"CREATE USER 'uesr1'@'localhost'", true, "CREATE USER `uesr1`@`localhost`"},
-		{"CREATE USER 'uesr1'@`localhost`", true, "CREATE USER `uesr1`@`localhost`"},
-		{"CREATE USER `uesr1`@'localhost'", true, "CREATE USER `uesr1`@`localhost`"},
+		{"CREATE USER user1@localhost", true, "CREATE USER `user1`@`localhost`"},
+		{"CREATE USER `user1`@localhost", true, "CREATE USER `user1`@`localhost`"},
+		{"CREATE USER user1@`localhost`", true, "CREATE USER `user1`@`localhost`"},
+		{"CREATE USER `user1`@`localhost`", true, "CREATE USER `user1`@`localhost`"},
+		{"CREATE USER 'user1'@localhost", true, "CREATE USER `user1`@`localhost`"},
+		{"CREATE USER user1@'localhost'", true, "CREATE USER `user1`@`localhost`"},
+		{"CREATE USER 'user1'@'localhost'", true, "CREATE USER `user1`@`localhost`"},
+		{"CREATE USER 'user1'@`localhost`", true, "CREATE USER `user1`@`localhost`"},
+		{"CREATE USER `user1`@'localhost'", true, "CREATE USER `user1`@`localhost`"},
 		// {"create user 'test@localhost' password expire;", true, "CREATE USER `test@localhost`@`%` PASSWORD EXPIRE"},
 		// {"create user 'test@localhost' password expire never;", true, "CREATE USER `test@localhost`@`%` PASSWORD EXPIRE NEVER"},
 		// {"create user 'test@localhost' password expire default;", true, "CREATE USER `test@localhost`@`%` PASSWORD EXPIRE DEFAULT"},

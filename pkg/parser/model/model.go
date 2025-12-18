@@ -686,7 +686,7 @@ type IndexColumn struct {
 	Offset int   `json:"offset"` // Index offset
 	// Length of prefix when using column prefix
 	// for indexing;
-	// UnspecifedLength if not using prefix indexing
+	// UnspecifiedLength if not using prefix indexing
 	Length int `json:"length"`
 }
 

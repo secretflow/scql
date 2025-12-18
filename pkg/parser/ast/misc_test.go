@@ -109,7 +109,7 @@ jobAbbr string not null
 	}
 }
 
-func (ts *testMiscSuite) TestDMLVistorCover(c *C) {
+func (ts *testMiscSuite) TestDMLVisitorCover(c *C) {
 	sql := `delete from somelog where user = 'jcole' order by timestamp_column limit 1;
 delete t1, t2 from t1 inner join t2 inner join t3 where t1.id=t2.id and t2.id=t3.id;
 select * from t where exists(select * from t k where t.c = k.c having sum(c) = 1);

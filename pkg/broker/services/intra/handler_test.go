@@ -220,7 +220,7 @@ func (s *intraTestSuite) TestCreateView() {
 	_, err = s.svcAlice.CreateView(s.ctx, &pb.CreateViewRequest{ProjectId: "test1", ViewName: "view2", Query: "SELECT * FROM view1"})
 	s.NoError(err)
 
-	_, err = s.svcAlice.CreateView(s.ctx, &pb.CreateViewRequest{ProjectId: "test1", ViewName: "not_exsit", Query: "SELECT * FROM not_exsit_table"})
+	_, err = s.svcAlice.CreateView(s.ctx, &pb.CreateViewRequest{ProjectId: "test1", ViewName: "not_exist", Query: "SELECT * FROM not_exist_table"})
 	s.Error(err)
 
 	_, err = s.svcAlice.CreateView(s.ctx, &pb.CreateViewRequest{ProjectId: "test1", ViewName: "invalid", Query: "SELECT * FROM test_table JOIN"})

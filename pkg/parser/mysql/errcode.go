@@ -596,7 +596,7 @@ const (
 	ErrEventRecursionForbidden                                      = 1576
 	ErrEventsDB                                                     = 1577
 	ErrOnlyIntegersAllowed                                          = 1578
-	ErrUnsuportedLogEngine                                          = 1579
+	ErrUnsupportedLogEngine                                         = 1579
 	ErrBadLogStatement                                              = 1580
 	ErrCantRenameLogTable                                           = 1581
 	ErrWrongParamcountToNativeFct                                   = 1582

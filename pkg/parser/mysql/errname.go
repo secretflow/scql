@@ -594,7 +594,7 @@ var MySQLErrName = map[uint16]string{
 	ErrEventRecursionForbidden:                  "Recursion of EVENT DDL statements is forbidden when body is present",
 	ErrEventsDB:                                 "Cannot proceed because system tables used by Event Scheduler were found damaged at server start",
 	ErrOnlyIntegersAllowed:                      "Only integers allowed as number here",
-	ErrUnsuportedLogEngine:                      "This storage engine cannot be used for log tables\"",
+	ErrUnsupportedLogEngine:                     "This storage engine cannot be used for log tables\"",
 	ErrBadLogStatement:                          "You cannot '%s' a log table if logging is enabled",
 	ErrCantRenameLogTable:                       "Cannot rename '%s'. When logging enabled, rename to/from log table must rename two tables: the log table to an archive table and another table back to '%s'",
 	ErrWrongParamcountToNativeFct:               "Incorrect parameter count in the call to native function '%-.192s'",

@@ -70,13 +70,13 @@ std::shared_ptr<Tensor> CompensateTimeZone(
   return TensorFrom(result.ValueOrDie().chunked_array());
 }
 
-ConvertDatetimeProtoVistor::ConvertDatetimeProtoVistor(pb::Tensor* to_tensor,
+ConvertDatetimeProtoVisitor::ConvertDatetimeProtoVisitor(pb::Tensor* to_tensor,
                                                        bool contain_null)
     : to_proto_(to_tensor), contain_null_(contain_null) {
   YACL_ENFORCE(to_proto_, "to_proto_ can not be null.");
 }
 
-arrow::Status ConvertDatetimeProtoVistor::Visit(
+arrow::Status ConvertDatetimeProtoVisitor::Visit(
     const arrow::NumericArray<arrow::Int64Type>& array) {
   for (int64_t i = 0; i < array.length(); i++) {
     to_proto_->add_string_data(

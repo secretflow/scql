@@ -1839,7 +1839,7 @@ func parseSingleTimeValue(unit string, format string, strictCheck bool) (int64, 
 		return riv, 0, 0, 0, err
 	}
 
-	return 0, 0, 0, 0, errors.Errorf("invalid singel timeunit - %s", unit)
+	return 0, 0, 0, 0, errors.Errorf("invalid single timeunit - %s", unit)
 }
 
 // parseTimeValue gets years, months, days, nanoseconds from a string

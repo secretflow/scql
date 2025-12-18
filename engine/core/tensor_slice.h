@@ -60,7 +60,7 @@ class MemTensorSlice : public TensorSlice {
     if (i == 0 && static_cast<size_t>(tensor_->Length()) < slice_size_) {
       return tensor_;
     }
-    YACL_THROW("unsupport get specific slice");
+    YACL_THROW("unsupported get specific slice");
   }
 
  private:
@@ -107,7 +107,7 @@ class DiskTensorSlice : public TensorSlice {
     if (i == 0 && static_cast<size_t>(tensor_->Length()) < slice_size_) {
       return tensor_;
     }
-    YACL_THROW("unsupport get specific slice");
+    YACL_THROW("unsupported get specific slice");
   }
 
  private:

@@ -290,7 +290,7 @@ func (c *Command) GetTable(projectID string, tableNames []string) (*pb.ListTable
 	response := &pb.ListTablesResponse{}
 	err := c.intraStub.ListTables(c.host, req, response)
 	if err != nil {
-		return nil, fmt.Errorf("GetTable: failed to call getting talbe info service: %v", err)
+		return nil, fmt.Errorf("GetTable: failed to call getting table info service: %v", err)
 	}
 	wrapper := NewResponseWrapper(response)
 	err = handleResponse(wrapper, "GetTable")

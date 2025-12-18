@@ -78,9 +78,9 @@ void MergePeerErrors(
   status->set_message(fmt::format("{}{}", status->message(), merged_error_msg));
 }
 
-class CredentialExpception : std::runtime_error {
+class CredentialException : std::runtime_error {
  public:
-  explicit CredentialExpception(const std::string& msg)
+  explicit CredentialException(const std::string& msg)
       : std::runtime_error(
             fmt::format("[Driver credential check failed] {}", msg)) {}
 };
@@ -115,11 +115,11 @@ void EngineServiceImpl::CheckDriverCredential(
   const std::string* credential = http_header.GetHeader("Credential");
 
   if (credential == nullptr || credential->empty()) {
-    throw CredentialExpception("credential in http header is empty");
+    throw CredentialException("credential in http header is empty");
   }
 
   if (*credential != service_options_.credential) {
-    throw CredentialExpception(
+    throw CredentialException(
         "driver authorization failed, unknown driver credential");
   }
 }

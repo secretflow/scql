@@ -95,7 +95,7 @@ func encode(sc *stmtctx.StatementContext, b []byte, vals []types.Datum, isCompar
 		case types.KindMaxValue:
 			b = append(b, maxFlag)
 		default:
-			return b, errors.Errorf("unsupport encode type %d", vals[i].Kind())
+			return b, errors.Errorf("unsupported encode type %d", vals[i].Kind())
 		}
 	}
 

@@ -19,7 +19,7 @@
 
 #include "engine/core/arrow_helper.h"
 #include "engine/core/tensor.h"
-#include "engine/util/copy_to_proto_vistor.h"
+#include "engine/util/copy_to_proto_visitor.h"
 #include "engine/util/spu_io.h"
 #include "engine/util/time_util.h"
 
@@ -176,11 +176,11 @@ bool AreTensorsStatusEqualAndOneOf(const RepeatedPbTensor& tensors,
 
 void CopyValuesToProto(const std::shared_ptr<Tensor>& from_tensor,
                        pb::Tensor* to_proto) {
-  CopyToProtoVistor copy_vistor(to_proto, from_tensor->GetNullCount() > 0);
+  CopyToProtoVisitor copy_visitor(to_proto, from_tensor->GetNullCount() > 0);
   const auto& chunked_arr = from_tensor->ToArrowChunkedArray();
   for (int i = 0; i < chunked_arr->num_chunks(); ++i) {
     THROW_IF_ARROW_NOT_OK(
-        arrow::VisitArrayInline(*(chunked_arr->chunk(i)), &copy_vistor));
+        arrow::VisitArrayInline(*(chunked_arr->chunk(i)), &copy_visitor));
   }
 }
 
@@ -203,12 +203,12 @@ std::shared_ptr<arrow::ChunkedArray> ConvertDateTimeToInt64(
 
 void ConvertDateTimeAndCopyValuesToProto(
     const std::shared_ptr<Tensor>& from_tensor, pb::Tensor* to_proto) {
-  ConvertDatetimeProtoVistor convert_copy_vistor(
+  ConvertDatetimeProtoVisitor convert_copy_visitor(
       to_proto, from_tensor->GetNullCount() != 0);
   const auto& chunked_arr = from_tensor->ToArrowChunkedArray();
   for (int i = 0; i < chunked_arr->num_chunks(); ++i) {
     THROW_IF_ARROW_NOT_OK(arrow::VisitArrayInline(*(chunked_arr->chunk(i)),
-                                                  &convert_copy_vistor));
+                                                  &convert_copy_visitor));
   }
 }
 

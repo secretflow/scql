@@ -83,7 +83,7 @@ type aggHintInfo struct {
 type clauseCode int
 
 const (
-	unknowClause clauseCode = iota + 1
+	unknownClause clauseCode = iota + 1
 	fieldList
 	havingClause
 	onClause
@@ -95,7 +95,7 @@ const (
 )
 
 var clauseMsg = map[clauseCode]string{
-	unknowClause:        "",
+	unknownClause:       "",
 	fieldList:           "field list",
 	havingClause:        "having clause",
 	onClause:            "on clause",

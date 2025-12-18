@@ -17,8 +17,8 @@ load("//engine/bazel:scql.bzl", "scql_cc_test")
 package(default_visibility = ["//visibility:public"])
 
 cc_library(
-    name = "copy_to_proto_vistor",
-    hdrs = ["copy_to_proto_vistor.h"],
+    name = "copy_to_proto_visitor",
+    hdrs = ["copy_to_proto_visitor.h"],
     deps = [
         "@org_apache_arrow//:arrow",
     ],
@@ -50,7 +50,7 @@ cc_library(
     srcs = ["tensor_util.cc"],
     hdrs = ["tensor_util.h"],
     deps = [
-        ":copy_to_proto_vistor",
+        ":copy_to_proto_visitor",
         "//engine/core:arrow_helper",
         "//engine/core:tensor",
         "//engine/util:spu_io",

@@ -21,12 +21,12 @@
 
 namespace scql::engine::util {
 
-/// @brief CopyToProtoVistor only copy array's value to pb::Tensor.
-class CopyToProtoVistor {
+/// @brief CopyToProtoVisitor only copy array's value to pb::Tensor.
+class CopyToProtoVisitor {
  public:
-  CopyToProtoVistor() = delete;
+  CopyToProtoVisitor() = delete;
 
-  explicit CopyToProtoVistor(pb::Tensor* to_tensor, bool contain_null)
+  explicit CopyToProtoVisitor(pb::Tensor* to_tensor, bool contain_null)
       : to_proto_(to_tensor), contain_null_(contain_null) {
     YACL_ENFORCE(to_proto_, "to_proto_ can not be null.");
   }
@@ -34,7 +34,7 @@ class CopyToProtoVistor {
   template <typename T>
   arrow::Status Visit(const T& array) {
     return arrow::Status::NotImplemented(
-        fmt::format("type {} is not implemented in CopyToProtoVistor",
+        fmt::format("type {} is not implemented in CopyToProtoVisitor",
                     array.type()->name()));
   }
 

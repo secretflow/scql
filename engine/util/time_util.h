@@ -40,18 +40,18 @@ std::shared_ptr<Tensor> CompensateTimeZone(
 
 // arrow has no func to convert timestamp to str:
 // https://arrow.apache.org/docs/cpp/compute.html#
-/// @brief ConvertDatetimeProtoVistor convert timestamp to str and copy array's
+/// @brief ConvertDatetimeProtoVisitor convert timestamp to str and copy array's
 /// value to pb::Tensor.
-class ConvertDatetimeProtoVistor {
+class ConvertDatetimeProtoVisitor {
  public:
-  ConvertDatetimeProtoVistor() = delete;
+  ConvertDatetimeProtoVisitor() = delete;
 
-  explicit ConvertDatetimeProtoVistor(pb::Tensor* to_tensor, bool contain_null);
+  explicit ConvertDatetimeProtoVisitor(pb::Tensor* to_tensor, bool contain_null);
 
   template <typename T>
   arrow::Status Visit(const T& array) {
     return arrow::Status::NotImplemented(
-        fmt::format("type {} is not implemented in ConvertDatetimeProtoVistor",
+        fmt::format("type {} is not implemented in ConvertDatetimeProtoVisitor",
                     array.type()->name()));
   }
 
