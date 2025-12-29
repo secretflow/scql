@@ -159,7 +159,7 @@ func isQueryNeedInfoSchema(query string) (bool, error) {
 		return false, err
 	}
 	switch stmt.(type) {
-	case *ast.CreateUserStmt, *ast.DropTableStmt:
+	case *ast.CreateUserStmt:
 		return false, nil
 	case *ast.GrantStmt, *ast.RevokeStmt:
 		// GRANT and REVOKE statements have their own validation logic
@@ -169,6 +169,10 @@ func isQueryNeedInfoSchema(query string) (bool, error) {
 	case *ast.CreateDatabaseStmt, *ast.DropDatabaseStmt:
 		// CREATE/DROP DATABASE only need to check database existence
 		// They use storage.CheckDatabaseExist() directly, no need for InfoSchema
+		return false, nil
+	case *ast.CreateTableStmt, *ast.DropTableStmt:
+		// CREATE/DROP TABLE only need to check existence
+		// They use CheckDatabaseExist() and CheckTableExist() directly, no need for InfoSchema
 		return false, nil
 	default:
 		return true, nil
