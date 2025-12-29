@@ -427,16 +427,17 @@ func getAllDatabaseNames(ctx sessionctx.Context) ([]string, error) {
 }
 
 func (e *ShowExec) fetchShowColumns(ctx context.Context) error {
-	tb, err := e.getTable()
-
-	if err != nil {
-		return errors.Trace(err)
+	if e.Table == nil {
+		return errors.New("table not found")
 	}
+
+	dbName := e.Table.Schema.O
+	tableName := e.Table.Name.O
 
 	// check database is visible
 	checker := privilege.GetPrivilegeManager(e.ctx)
 	if checker != nil && e.ctx.GetSessionVars().User != nil {
-		ok, err := checker.DBIsVisible(e.ctx.GetSessionVars().ActiveRoles, e.DBName.O, mysql.DescribePriv)
+		ok, err := checker.DBIsVisible(e.ctx.GetSessionVars().ActiveRoles, dbName, mysql.DescribePriv)
 		if err != nil {
 			return fmt.Errorf("showExec.fetchShowColumns: %v", err)
 		}
@@ -445,28 +446,38 @@ func (e *ShowExec) fetchShowColumns(ctx context.Context) error {
 		}
 	}
 
-	for _, col := range tb.Cols() {
-		if e.Column != nil && e.Column.Name.String() != col.Name.String() {
-			continue
-		}
+	// Query columns directly from storage instead of using InfoSchema
+	db := e.ctx.GetSessionVars().Storage
+	var columns []storage.Column
+	query := db.Model(&storage.Column{}).Where(&storage.Column{
+		Db:        dbName,
+		TableName: tableName,
+	})
 
-		tpStr, err := infoschema.FieldTypeString(col.FieldType)
-		if err != nil {
-			return fmt.Errorf("fail to convert mysql field type %v to scdb field type: %v", col.FieldType, err)
-		}
+	// If specific column is requested
+	if e.Column != nil {
+		query = query.Where("column_name = ?", e.Column.Name.String())
+	}
 
+	// Order by ordinal_position
+	err := query.Order("ordinal_position").Find(&columns).Error
+	if err != nil {
+		return fmt.Errorf("showExec.fetchShowColumns: failed to query columns: %v", err)
+	}
+
+	for _, col := range columns {
 		// The FULL keyword causes the output to include the column collation and comments,
 		// as well as the privileges you have for each column.
 		if e.Full {
 			e.appendRow([]interface{}{
-				col.Name.String(),
-				tpStr,
-				col.Comment,
+				col.ColumnName,
+				col.Type,
+				col.Description,
 			})
 		} else {
 			e.appendRow([]interface{}{
-				col.Name.String(),
-				tpStr,
+				col.ColumnName,
+				col.Type,
 			})
 		}
 	}
