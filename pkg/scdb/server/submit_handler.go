@@ -166,6 +166,10 @@ func isQueryNeedInfoSchema(query string) (bool, error) {
 		// They directly query storage to check existence of db/table/columns
 		// No need to load complete InfoSchema
 		return false, nil
+	case *ast.CreateDatabaseStmt, *ast.DropDatabaseStmt:
+		// CREATE/DROP DATABASE only need to check database existence
+		// They use storage.CheckDatabaseExist() directly, no need for InfoSchema
+		return false, nil
 	default:
 		return true, nil
 	}
