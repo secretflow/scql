@@ -161,6 +161,11 @@ func isQueryNeedInfoSchema(query string) (bool, error) {
 	switch stmt.(type) {
 	case *ast.CreateUserStmt, *ast.DropTableStmt:
 		return false, nil
+	case *ast.GrantStmt, *ast.RevokeStmt:
+		// GRANT and REVOKE statements have their own validation logic
+		// They directly query storage to check existence of db/table/columns
+		// No need to load complete InfoSchema
+		return false, nil
 	default:
 		return true, nil
 	}
