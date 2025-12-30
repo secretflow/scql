@@ -462,7 +462,7 @@ func (e *ShowExec) fetchShowColumns(ctx context.Context) error {
 	// Order by ordinal_position
 	err := query.Order("ordinal_position").Find(&columns).Error
 	if err != nil {
-		return fmt.Errorf("showExec.fetchShowColumns: failed to query columns: %v", err)
+return errors.Wrapf(err, "showExec.fetchShowColumns: failed to query columns")
 	}
 
 	for _, col := range columns {
