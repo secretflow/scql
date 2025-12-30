@@ -50,7 +50,7 @@ formatters:
     goimports:
       # put imports beginning with prefix after 3rd-party packages;
       # it's a comma-separated list of prefixes
-      local-prefixes: 
+      local-prefixes:
         - github.com/secretflow/scql
 
 linters:
@@ -68,7 +68,7 @@ linters:
         linters: [govet]
   settings:
     staticcheck:
-      # All supported checks can be enabled with "all". 
+      # All supported checks can be enabled with "all".
       # To disable checks, prefix them with a minus sign.
       # Example: [ "all", "-SA1000", "-SA1001"]
       checks: ["all", "-ST1000", "-ST1003", "-ST1016", "-ST1020", "-ST1021", "-ST1022", "-QF1003", "-QF1006", "-QF1008"]
