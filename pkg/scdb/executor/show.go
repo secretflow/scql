@@ -34,7 +34,6 @@ import (
 	"github.com/secretflow/scql/pkg/privilege"
 	"github.com/secretflow/scql/pkg/scdb/storage"
 	"github.com/secretflow/scql/pkg/sessionctx"
-	"github.com/secretflow/scql/pkg/table"
 	"github.com/secretflow/scql/pkg/types"
 	"github.com/secretflow/scql/pkg/util/chunk"
 	"github.com/secretflow/scql/pkg/util/mathutil"
@@ -462,7 +461,7 @@ func (e *ShowExec) fetchShowColumns(ctx context.Context) error {
 	// Order by ordinal_position
 	err := query.Order("ordinal_position").Find(&columns).Error
 	if err != nil {
-return errors.Wrapf(err, "showExec.fetchShowColumns: failed to query columns")
+		return errors.Wrapf(err, "showExec.fetchShowColumns: failed to query columns")
 	}
 
 	for _, col := range columns {
@@ -482,17 +481,6 @@ return errors.Wrapf(err, "showExec.fetchShowColumns: failed to query columns")
 		}
 	}
 	return nil
-}
-
-func (e *ShowExec) getTable() (table.Table, error) {
-	if e.Table == nil {
-		return nil, errors.New("table not found")
-	}
-	tb, err := e.is.TableByName(e.Table.Schema, e.Table.Name)
-	if err != nil {
-		return nil, err
-	}
-	return tb, nil
 }
 
 func (e *ShowExec) dbAccessDenied() error {
