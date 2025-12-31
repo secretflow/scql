@@ -130,9 +130,9 @@ void MuxLink::UnpackMonoRequest(const ::google::protobuf::Message& request,
 }
 
 void MuxLink::UnpackChunkRequest(const ::google::protobuf::Message& request,
-                                  std::string* key,
-                                  yacl::ByteContainerView* value,
-                                  size_t* offset, size_t* total_length) const {
+                                 std::string* key,
+                                 yacl::ByteContainerView* value, size_t* offset,
+                                 size_t* total_length) const {
   const auto* real_request =
       static_cast<const link::pb::MuxPushRequest*>(&request);
   *key = real_request->msg().key();
