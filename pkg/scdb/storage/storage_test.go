@@ -107,3 +107,60 @@ func batchInsert(db *gorm.DB, records []interface{}) error {
 	}
 	return nil
 }
+
+func createTestDB(t *testing.T, db *gorm.DB, dbName string) {
+	r := require.New(t)
+	records := []interface{}{
+		&Database{Db: dbName},
+		&Table{Db: dbName, Table: "t1", Owner: "root", Host: "%", RefDb: "ref", RefTable: "ref", DBType: 0},
+		&Column{Db: dbName, TableName: "t1", ColumnName: "c1", Type: "int"},
+	}
+	r.NoError(batchInsert(db, records))
+}
+
+func TestInfoSchemaCache(t *testing.T) {
+	r := require.New(t)
+	db, err := newDbStore()
+	r.NoError(err)
+
+	InvalidateInfoSchemaCache("")
+	ResetInfoSchemaCacheStats()
+
+	createTestDB(t, db, "db1")
+	createTestDB(t, db, "db2")
+
+	// Test cache miss and hit
+	_, err = QueryDBInfoSchema(db, "db1")
+	r.NoError(err)
+	hits, misses := GetInfoSchemaCacheStats()
+	r.Equal(int64(0), hits)
+	r.Equal(int64(1), misses)
+
+	_, err = QueryDBInfoSchema(db, "db1")
+	r.NoError(err)
+	hits, misses = GetInfoSchemaCacheStats()
+	r.Equal(int64(1), hits)
+	r.Equal(int64(1), misses)
+
+	// Test cache invalidation
+	InvalidateInfoSchemaCache("db1")
+	_, err = QueryDBInfoSchema(db, "db1")
+	r.NoError(err)
+	hits, misses = GetInfoSchemaCacheStats()
+	r.Equal(int64(1), hits)
+	r.Equal(int64(2), misses)
+
+	// Test multiple databases cache isolation
+	_, err = QueryDBInfoSchema(db, "db2")
+	r.NoError(err)
+	hits, misses = GetInfoSchemaCacheStats()
+	r.Equal(int64(1), hits)
+	r.Equal(int64(3), misses)
+
+	InvalidateInfoSchemaCache("db2")
+	_, err = QueryDBInfoSchema(db, "db1")
+	r.NoError(err)
+	hits, misses = GetInfoSchemaCacheStats()
+	r.Equal(int64(2), hits) // db1 still cached
+	r.Equal(int64(3), misses)
+}

@@ -56,10 +56,10 @@ var allTables = []interface{}{&User{}, &Database{}, &Table{}, &Column{}, &Databa
 
 // InfoSchema cache to avoid frequent database queries
 var (
-	infoSchemaCache     sync.Map // map[string]infoschema.InfoSchema, key is database name
-	infoCacheHitCount   int64
-	infoCacheMissCount  int64
-	infoCacheMutex      sync.RWMutex
+	infoSchemaCache    sync.Map // map[string]infoschema.InfoSchema, key is database name
+	infoCacheHitCount  int64
+	infoCacheMissCount int64
+	infoCacheMutex     sync.RWMutex
 )
 
 // NeedBootstrap checks if the store is empty
