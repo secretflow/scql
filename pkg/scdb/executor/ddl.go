@@ -113,6 +113,8 @@ func (e *DDLExec) executeCreateDatabase(s *ast.CreateDatabaseStmt) (err error) {
 	if result.Error != nil {
 		return fmt.Errorf("ddl.executeCreateDatabase: %v", result.Error)
 	}
+	// Invalidate cache after successful DDL operation
+	storage.InvalidateInfoSchemaCache(dbName)
 	return nil
 }
 
@@ -212,6 +214,8 @@ func (e *DDLExec) executeCreateTable(s *ast.CreateTableStmt) (err error) {
 		}
 	}
 
+	// Invalidate cache after successful DDL operation
+	storage.InvalidateInfoSchemaCache(dbName)
 	return nil
 }
 
@@ -321,6 +325,8 @@ func (e *DDLExec) executeCreateView(s *ast.CreateViewStmt) (err error) {
 			return fmt.Errorf("ddl.executeCreateView: %v", result.Error)
 		}
 	}
+	// Invalidate cache after successful DDL operation
+	storage.InvalidateInfoSchemaCache(dbName)
 	return nil
 }
 
@@ -346,6 +352,10 @@ func (e *DDLExec) executeDropDatabase(s *ast.DropDatabaseStmt) (err error) {
 		return fmt.Errorf("database %v not exists", dbName)
 	}
 	err = storage.NewDDLHandler(tx).DropSchema(model.NewCIStr(dbName))
+	if err == nil {
+		// Invalidate cache after successful DDL operation (in case not done in DropSchema)
+		storage.InvalidateInfoSchemaCache(dbName)
+	}
 	return err
 }
 
@@ -404,5 +414,9 @@ func (e *DDLExec) executeDropTableOrView(s *ast.DropTableStmt) (err error) {
 		return err
 	}
 	err = storage.NewDDLHandler(tx).DropTable(model.NewCIStr(dbName), model.NewCIStr(tblName))
+	if err == nil {
+		// Invalidate cache after successful DDL operation (in case not done in DropTable)
+		storage.InvalidateInfoSchemaCache(dbName)
+	}
 	return err
 }
