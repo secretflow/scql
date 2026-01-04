@@ -22,6 +22,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/sethvargo/go-password/password"
 	"gorm.io/gorm"
@@ -57,9 +58,8 @@ var allTables = []interface{}{&User{}, &Database{}, &Table{}, &Column{}, &Databa
 // InfoSchema cache to avoid frequent database queries
 var (
 	infoSchemaCache    sync.Map // map[string]infoschema.InfoSchema, key is database name
-	infoCacheHitCount  int64
-	infoCacheMissCount int64
-	infoCacheMutex     sync.RWMutex
+	infoCacheHitCount  int64    // accessed via atomic operations
+	infoCacheMissCount int64    // accessed via atomic operations
 )
 
 // NeedBootstrap checks if the store is empty
@@ -186,8 +186,11 @@ func FindUserByParty(store *gorm.DB, partyCode string) (*User, error) {
 // If dbName is empty, it invalidates all cached InfoSchemas
 func InvalidateInfoSchemaCache(dbName string) {
 	if dbName == "" {
-		// Clear all cache
-		infoSchemaCache = sync.Map{}
+		// Clear all cache by iterating and deleting each key to avoid race conditions
+		infoSchemaCache.Range(func(key, value interface{}) bool {
+			infoSchemaCache.Delete(key)
+			return true
+		})
 	} else {
 		// Clear specific database cache
 		infoSchemaCache.Delete(dbName)
@@ -196,17 +199,13 @@ func InvalidateInfoSchemaCache(dbName string) {
 
 // ResetInfoSchemaCacheStats resets cache statistics (for testing)
 func ResetInfoSchemaCacheStats() {
-	infoCacheMutex.Lock()
-	defer infoCacheMutex.Unlock()
-	infoCacheHitCount = 0
-	infoCacheMissCount = 0
+	atomic.StoreInt64(&infoCacheHitCount, 0)
+	atomic.StoreInt64(&infoCacheMissCount, 0)
 }
 
 // GetInfoSchemaCacheStats returns cache hit and miss statistics
 func GetInfoSchemaCacheStats() (hits, misses int64) {
-	infoCacheMutex.RLock()
-	defer infoCacheMutex.RUnlock()
-	return infoCacheHitCount, infoCacheMissCount
+	return atomic.LoadInt64(&infoCacheHitCount), atomic.LoadInt64(&infoCacheMissCount)
 }
 
 func QueryInfoSchema(store *gorm.DB) (result infoschema.InfoSchema, err error) {
@@ -282,16 +281,12 @@ func queryInfoSchema(store *gorm.DB) (infoschema.InfoSchema, error) {
 func QueryDBInfoSchema(store *gorm.DB, dbName string) (result infoschema.InfoSchema, err error) {
 	// Try to get from cache first
 	if cached, ok := infoSchemaCache.Load(dbName); ok {
-		infoCacheMutex.Lock()
-		infoCacheHitCount++
-		infoCacheMutex.Unlock()
+		atomic.AddInt64(&infoCacheHitCount, 1)
 		return cached.(infoschema.InfoSchema), nil
 	}
 
 	// Cache miss, query from database
-	infoCacheMutex.Lock()
-	infoCacheMissCount++
-	infoCacheMutex.Unlock()
+	atomic.AddInt64(&infoCacheMissCount, 1)
 
 	callFc := func(tx *gorm.DB) error {
 		result, err = queryDBInfoSchema(tx, dbName)

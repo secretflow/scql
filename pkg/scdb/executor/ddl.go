@@ -351,9 +351,6 @@ func (e *DDLExec) executeDropDatabase(s *ast.DropDatabaseStmt) (err error) {
 		return fmt.Errorf("database %v not exists", dbName)
 	}
 	err = storage.NewDDLHandler(tx).DropSchema(model.NewCIStr(dbName))
-	if err == nil {
-		storage.InvalidateInfoSchemaCache(dbName)
-	}
 	return err
 }
 
@@ -412,8 +409,5 @@ func (e *DDLExec) executeDropTableOrView(s *ast.DropTableStmt) (err error) {
 		return err
 	}
 	err = storage.NewDDLHandler(tx).DropTable(model.NewCIStr(dbName), model.NewCIStr(tblName))
-	if err == nil {
-		storage.InvalidateInfoSchemaCache(dbName)
-	}
 	return err
 }
