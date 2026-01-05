@@ -16,6 +16,7 @@ package storage
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/sqlite"
@@ -123,6 +124,8 @@ func TestInfoSchemaCache(t *testing.T) {
 	db, err := newDbStore()
 	r.NoError(err)
 
+	// Initialize cache with enabled=true and a reasonable TTL
+	InitInfoSchemaCache(true, 5*time.Minute)
 	InvalidateInfoSchemaCache("")
 	ResetInfoSchemaCacheStats()
 
@@ -163,4 +166,67 @@ func TestInfoSchemaCache(t *testing.T) {
 	hits, misses = GetInfoSchemaCacheStats()
 	r.Equal(int64(2), hits) // db1 still cached
 	r.Equal(int64(3), misses)
+}
+
+func TestInfoSchemaCacheTTL(t *testing.T) {
+	r := require.New(t)
+	db, err := newDbStore()
+	r.NoError(err)
+
+	// Initialize cache with a short TTL for testing
+	InitInfoSchemaCache(true, 100*time.Millisecond)
+	InvalidateInfoSchemaCache("")
+	ResetInfoSchemaCacheStats()
+
+	createTestDB(t, db, "db1")
+
+	// First query - cache miss
+	_, err = QueryDBInfoSchema(db, "db1")
+	r.NoError(err)
+	hits, misses := GetInfoSchemaCacheStats()
+	r.Equal(int64(0), hits)
+	r.Equal(int64(1), misses)
+
+	// Second query immediately - cache hit
+	_, err = QueryDBInfoSchema(db, "db1")
+	r.NoError(err)
+	hits, misses = GetInfoSchemaCacheStats()
+	r.Equal(int64(1), hits)
+	r.Equal(int64(1), misses)
+
+	// Wait for cache to expire
+	time.Sleep(150 * time.Millisecond)
+
+	// Query after TTL expired - should be cache miss
+	_, err = QueryDBInfoSchema(db, "db1")
+	r.NoError(err)
+	hits, misses = GetInfoSchemaCacheStats()
+	r.Equal(int64(1), hits)
+	r.Equal(int64(2), misses)
+}
+
+func TestInfoSchemaCacheDisabled(t *testing.T) {
+	r := require.New(t)
+	db, err := newDbStore()
+	r.NoError(err)
+
+	// Disable cache
+	InitInfoSchemaCache(false, 5*time.Minute)
+	InvalidateInfoSchemaCache("")
+	ResetInfoSchemaCacheStats()
+
+	createTestDB(t, db, "db1")
+
+	// All queries should be cache misses when disabled
+	_, err = QueryDBInfoSchema(db, "db1")
+	r.NoError(err)
+	hits, misses := GetInfoSchemaCacheStats()
+	r.Equal(int64(0), hits)
+	r.Equal(int64(1), misses)
+
+	_, err = QueryDBInfoSchema(db, "db1")
+	r.NoError(err)
+	hits, misses = GetInfoSchemaCacheStats()
+	r.Equal(int64(0), hits)
+	r.Equal(int64(2), misses)
 }
