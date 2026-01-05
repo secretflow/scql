@@ -20,7 +20,7 @@ jobs:
             --url "https://circleci.com/api/v2/project/github/secretflow/scql/pipeline/run" \
             --header "Content-Type: application/json" \
             --header "Circle-Token: ${{ secrets.CCI_TOKEN }}" \
-            --data '{"definition_id":"ee28d7c2-ef66-4a57-bc90-6895e2b55f14","config":{"branch":"main"},"checkout":{"branch":"pull/${{ github.event.pull_request.number }}/head"}}'
+            --data '{"definition_id":"ee28d7c2-ef66-4a57-bc90-6895e2b55f14","config":{"branch":"pull/${{ github.event.pull_request.number }}/head"},"checkout":{"branch":"pull/${{ github.event.pull_request.number }}/head"}}'
       - name: Remove Label from PR
         run: |
           echo "Removing 'run-ci-full' label from PR #${{ github.event.pull_request.number }}..."
