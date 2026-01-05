@@ -92,8 +92,6 @@ func (h *DDLHandler) DropSchema(schema model.CIStr) error {
 	if err := h.store.Transaction(callFc); err != nil {
 		return fmt.Errorf("dropSchema: %v", err)
 	}
-
-	InvalidateInfoSchemaCache(schema.String())
 	return nil
 }
 
@@ -104,8 +102,6 @@ func (h *DDLHandler) DropTable(schema, tblName model.CIStr) error {
 	if err := h.store.Transaction(callFc); err != nil {
 		return fmt.Errorf("dropTable: %v", err)
 	}
-
-	InvalidateInfoSchemaCache(schema.String())
 	return nil
 }
 
