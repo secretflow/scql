@@ -130,7 +130,7 @@ jobs:
 
   macOS_go_ut:
     macos:
-      xcode: 16.2.0
+      xcode: 16.3.0
     resource_class: m4pro.medium
     steps:
       - cancel_after_timeout:
@@ -144,7 +144,7 @@ jobs:
 
   macOS_cpp_ut:
     macos:
-      xcode: 16.2.0
+      xcode: 16.3.0
     resource_class: m4pro.medium
     steps:
       - cancel_after_timeout:
