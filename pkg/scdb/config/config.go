@@ -38,7 +38,7 @@ const (
 	DefaultProtocol             = "https"
 	DefaultLogLevel             = "info"
 	DefaultEngineClientMode     = "HTTP"
-	DefaultInfoSchemaCacheTTL   = 10 * time.Minute       // 10 minutes
+	DefaultInfoSchemaCacheTTL   = 10 * time.Minute // 10 minutes
 )
 
 type EngineConfig struct {
