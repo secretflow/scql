@@ -158,9 +158,39 @@ func isQueryNeedInfoSchema(query string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	switch stmt.(type) {
-	case *ast.CreateUserStmt, *ast.DropTableStmt:
+	switch s := stmt.(type) {
+	case *ast.CreateUserStmt, *ast.DropUserStmt, *ast.AlterUserStmt:
+		// User management statements only operate on users table
+		// They use storage.CheckUserExist() directly, no need for InfoSchema
 		return false, nil
+	case *ast.GrantStmt, *ast.RevokeStmt:
+		// GRANT and REVOKE statements have their own validation logic
+		// They directly query storage to check existence of db/table/columns
+		// No need to load complete InfoSchema
+		return false, nil
+	case *ast.CreateDatabaseStmt, *ast.DropDatabaseStmt:
+		// CREATE/DROP DATABASE only need to check database existence
+		// They use storage.CheckDatabaseExist() directly, no need for InfoSchema
+		return false, nil
+	case *ast.CreateTableStmt, *ast.DropTableStmt:
+		// CREATE/DROP TABLE only need to check existence
+		// They use CheckDatabaseExist() and CheckTableExist() directly, no need for InfoSchema
+		return false, nil
+	case *ast.ShowStmt:
+		// SHOW DATABASES, SHOW TABLES, SHOW GRANTS don't need InfoSchema
+		// SHOW COLUMNS can query storage.Column table directly
+		switch s.Tp {
+		case ast.ShowDatabases, ast.ShowTables, ast.ShowGrants, ast.ShowColumns:
+			return false, nil
+		default:
+			return true, nil
+		}
+	case *ast.ExplainStmt:
+		// DESCRIBE/DESC table is parsed as ExplainStmt with ShowStmt inside
+		if showStmt, ok := s.Stmt.(*ast.ShowStmt); ok && showStmt.Tp == ast.ShowColumns {
+			return false, nil
+		}
+		return true, nil
 	default:
 		return true, nil
 	}

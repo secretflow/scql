@@ -39,7 +39,6 @@ import (
 	"github.com/secretflow/scql/pkg/scdb/storage"
 	"github.com/secretflow/scql/pkg/sessionctx"
 	"github.com/secretflow/scql/pkg/sessionctx/stmtctx"
-	"github.com/secretflow/scql/pkg/types"
 )
 
 type userAuth struct {
@@ -1439,43 +1438,6 @@ func TestShow(t *testing.T) {
 }
 
 func TestDescribe(t *testing.T) {
-	is := infoschema.MockInfoSchema(
-		map[string][]*model.TableInfo{
-			"da": {
-				{
-					Name: model.NewCIStr("t1"),
-					Columns: []*model.ColumnInfo{
-						{
-							Name:      model.NewCIStr("c1"),
-							FieldType: *types.NewFieldType(mysql.TypeString),
-							Comment:   "string value",
-						},
-						{
-							Name:      model.NewCIStr("c2"),
-							FieldType: *types.NewFieldType(mysql.TypeLong),
-							Comment:   "long value",
-						},
-					},
-				},
-			},
-			"db": {
-				{
-					Name: model.NewCIStr("t1"),
-					Columns: []*model.ColumnInfo{
-						{
-							Name:      model.NewCIStr("c1"),
-							FieldType: *types.NewFieldType(mysql.TypeString),
-							Comment:   "string value",
-						},
-						{
-							Name:      model.NewCIStr("c2"),
-							FieldType: *types.NewFieldType(mysql.TypeLong),
-							Comment:   "long value",
-						},
-					},
-				},
-			},
-		})
 	r := require.New(t)
 	ctx := setupTestEnv(t)
 
@@ -1496,28 +1458,30 @@ func TestDescribe(t *testing.T) {
 	_, err = runSQL(ctx, `GRANT DESCRIBE ON db.* to bob`)
 	r.NoError(err)
 
+	// Root creates db.t1 for bob to describe later
+	_, err = runSQL(ctx, `CREATE TABLE db.t1 (c1 int, c2 int) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
+	r.NoError(err)
+
 	// switch to user alice
 	r.NoError(switchUser(ctx, userAlice))
 
 	_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 int, c2 int) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
 	r.NoError(err)
 
-	// alice>
-	rt, err := Run(ctx, `DESCRIBE da.t1`, is)
+	// alice> DESCRIBE uses storage directly, no need for InfoSchema
+	rt, err := runSQL(ctx, `DESCRIBE da.t1`)
 	r.NoError(err)
 	r.Equal(int64(2), rt[0].GetShape().GetDim()[0].GetDimValue())
-
-	_, err = Run(ctx, `DESCRIBE db.t1`, is)
-	r.Error(err)
 
 	// alice> (switch to user bob)
 	r.NoError(switchUser(ctx, userBob))
-	// bob>
-	rt, err = Run(ctx, `DESCRIBE db.t1`, is)
+	// bob> can describe db.t1
+	rt, err = runSQL(ctx, `DESCRIBE db.t1`)
 	r.NoError(err)
 	r.Equal(int64(2), rt[0].GetShape().GetDim()[0].GetDimValue())
 
-	_, err = Run(ctx, `DESCRIBE da.t1`, is)
+	// bob cannot describe da.t1 (no DESCRIBE privilege)
+	_, err = runSQL(ctx, `DESCRIBE da.t1`)
 	r.Error(err)
 }
 
@@ -1701,32 +1665,15 @@ func TestDescribeTable(t *testing.T) {
 	r := require.New(t)
 	ctx := setupTestEnv(t)
 
-	is := infoschema.MockInfoSchema(
-		map[string][]*model.TableInfo{
-			"da": {
-				{
-					Name: model.NewCIStr("t1"),
-					Columns: []*model.ColumnInfo{
-						{
-							Name:      model.NewCIStr("c1"),
-							FieldType: *types.NewFieldType(mysql.TypeString),
-							Comment:   "string value",
-						},
-						{
-							Name:      model.NewCIStr("c2"),
-							FieldType: *types.NewFieldType(mysql.TypeLong),
-							Comment:   "long value",
-						},
-					},
-				},
-			},
-		})
+	// Create database and table in storage
+	_, err := runSQL(ctx, `CREATE DATABASE da`)
+	r.NoError(err)
 
-	// fail due to scdb not support explain stmt
-	_, err := Run(ctx, "EXPLAIN SELECT * from da.t1", is)
-	r.Error(err)
+	_, err = runSQL(ctx, `CREATE TABLE da.t1 (c1 string, c2 int) REF_TABLE=d1.t1 DB_TYPE='mysql'`)
+	r.NoError(err)
 
-	result, err := Run(ctx, "DESCRIBE da.t1", is)
+	// DESCRIBE now queries storage directly, no need for InfoSchema
+	result, err := runSQL(ctx, "DESCRIBE da.t1")
 	r.NoError(err)
 	r.Equal(2, len(result))
 
@@ -1735,6 +1682,7 @@ func TestDescribeTable(t *testing.T) {
 
 	r.Equal("Type", result[1].GetName())
 	r.Equal(2, len(result[1].GetStringData()))
+	// Type should be lowercase as stored in storage
 	r.ElementsMatch([]string{"string", "int"}, result[1].GetStringData())
 }
 
