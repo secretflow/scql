@@ -114,6 +114,10 @@ security_compromise:
 			ValidityPeriod:       time.Minute * 3,
 		},
 		SecurityCompromise: SecurityCompromiseConf{GroupByThreshold: 3},
+		InfoSchemaCache: InfoSchemaCacheConf{
+			Enabled: true,
+			TTL:     DefaultInfoSchemaCacheTTL,
+		},
 	}
 	expectedCfg.Engine.SpuRuntimeCfg = strings.ReplaceAll(expectedCfg.Engine.SpuRuntimeCfg, "\t", " ")
 	r.Equal(expectedCfg, cfg)
@@ -205,6 +209,10 @@ party_auth:
 			Method:               "token",
 			EnableTimestampCheck: true,
 			ValidityPeriod:       time.Minute * 3,
+		},
+		InfoSchemaCache: InfoSchemaCacheConf{
+			Enabled: true,
+			TTL:     DefaultInfoSchemaCacheTTL,
 		},
 	}
 	expectedCfg.Engine.SpuRuntimeCfg = strings.ReplaceAll(expectedCfg.Engine.SpuRuntimeCfg, "\t", " ")

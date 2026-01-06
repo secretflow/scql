@@ -38,6 +38,7 @@ const (
 	DefaultProtocol             = "https"
 	DefaultLogLevel             = "info"
 	DefaultEngineClientMode     = "HTTP"
+	DefaultInfoSchemaCacheTTL   = 10 * time.Minute // 10 minutes
 )
 
 type EngineConfig struct {
@@ -62,6 +63,11 @@ type SecurityCompromiseConf struct {
 	RevealGroupCount bool   `yaml:"reveal_group_count"`
 }
 
+type InfoSchemaCacheConf struct {
+	Enabled bool          `yaml:"enabled"`
+	TTL     time.Duration `yaml:"ttl"`
+}
+
 // Config contains bootstrap configuration for SCDB
 type Config struct {
 	// SCDBHost is used as callback url for engine worked in async mode
@@ -79,6 +85,7 @@ type Config struct {
 	Engine               EngineConfig           `yaml:"engine"`
 	SecurityCompromise   SecurityCompromiseConf `yaml:"security_compromise"`
 	PartyAuth            PartyAuthConf          `yaml:"party_auth"`
+	InfoSchemaCache      InfoSchemaCacheConf    `yaml:"infoschema_cache"`
 }
 
 const (
@@ -163,6 +170,10 @@ func NewDefaultConfig() *Config {
 		Method:               PartyAuthMethodPubKey,
 		EnableTimestampCheck: true,
 		ValidityPeriod:       30 * time.Second, // 30s
+	}
+	config.InfoSchemaCache = InfoSchemaCacheConf{
+		Enabled: true,
+		TTL:     DefaultInfoSchemaCacheTTL,
 	}
 	return &config
 }

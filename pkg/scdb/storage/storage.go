@@ -21,6 +21,9 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/sethvargo/go-password/password"
 	"gorm.io/gorm"
@@ -52,6 +55,30 @@ var EnablePasswordCheck = false
 // allTables contains all scdb meta tables
 // keep creating order
 var allTables = []interface{}{&User{}, &Database{}, &Table{}, &Column{}, &DatabasePriv{}, &TablePriv{}, &ColumnPriv{}}
+
+// InfoSchema cache entry with TTL support
+type infoCacheEntry struct {
+	schema     infoschema.InfoSchema
+	createTime time.Time
+}
+
+// InfoSchema cache to avoid frequent database queries
+var (
+	infoSchemaCache    sync.Map // map[string]*infoCacheEntry, key is database name
+	infoCacheHitCount  int64    // accessed via atomic operations
+	infoCacheMissCount int64    // accessed via atomic operations
+	cacheEnabled       bool     // whether cache is enabled
+	cacheTTL           time.Duration
+)
+
+// InitInfoSchemaCache initializes the InfoSchema cache configuration
+func InitInfoSchemaCache(enabled bool, ttl time.Duration) {
+	cacheEnabled = enabled
+	cacheTTL = ttl
+	if ttl <= 0 {
+		ttl = 10 * time.Minute // default to 10 minutes
+	}
+}
 
 // NeedBootstrap checks if the store is empty
 func NeedBootstrap(store *gorm.DB) bool {
@@ -173,6 +200,32 @@ func FindUserByParty(store *gorm.DB, partyCode string) (*User, error) {
 	return &user, nil
 }
 
+// InvalidateInfoSchemaCache invalidates the InfoSchema cache for a specific database
+// If dbName is empty, it invalidates all cached InfoSchemas
+func InvalidateInfoSchemaCache(dbName string) {
+	if dbName == "" {
+		// Clear all cache by iterating and deleting each key to avoid race conditions
+		infoSchemaCache.Range(func(key, value interface{}) bool {
+			infoSchemaCache.Delete(key)
+			return true
+		})
+	} else {
+		// Clear specific database cache
+		infoSchemaCache.Delete(dbName)
+	}
+}
+
+// ResetInfoSchemaCacheStats resets cache statistics (for testing)
+func ResetInfoSchemaCacheStats() {
+	atomic.StoreInt64(&infoCacheHitCount, 0)
+	atomic.StoreInt64(&infoCacheMissCount, 0)
+}
+
+// GetInfoSchemaCacheStats returns cache hit and miss statistics
+func GetInfoSchemaCacheStats() (hits, misses int64) {
+	return atomic.LoadInt64(&infoCacheHitCount), atomic.LoadInt64(&infoCacheMissCount)
+}
+
 func QueryInfoSchema(store *gorm.DB) (result infoschema.InfoSchema, err error) {
 	callFc := func(tx *gorm.DB) error {
 		result, err = queryInfoSchema(tx)
@@ -244,6 +297,23 @@ func queryInfoSchema(store *gorm.DB) (infoschema.InfoSchema, error) {
 }
 
 func QueryDBInfoSchema(store *gorm.DB, dbName string) (result infoschema.InfoSchema, err error) {
+	// Try to get from cache first if enabled
+	if cacheEnabled {
+		if cached, ok := infoSchemaCache.Load(dbName); ok {
+			entry := cached.(*infoCacheEntry)
+			// Check if cache entry is still valid (not expired)
+			if time.Since(entry.createTime) < cacheTTL {
+				atomic.AddInt64(&infoCacheHitCount, 1)
+				return entry.schema, nil
+			}
+			// Cache expired, remove it
+			infoSchemaCache.Delete(dbName)
+		}
+	}
+
+	// Cache miss or disabled, query from database
+	atomic.AddInt64(&infoCacheMissCount, 1)
+
 	callFc := func(tx *gorm.DB) error {
 		result, err = queryDBInfoSchema(tx, dbName)
 		return err
@@ -251,6 +321,15 @@ func QueryDBInfoSchema(store *gorm.DB, dbName string) (result infoschema.InfoSch
 	if err := store.Transaction(callFc, &sql.TxOptions{ReadOnly: true}); err != nil {
 		return nil, fmt.Errorf("queryDBInfoSchema: %v", err)
 	}
+
+	// Store in cache if enabled
+	if cacheEnabled && result != nil {
+		infoSchemaCache.Store(dbName, &infoCacheEntry{
+			schema:     result,
+			createTime: time.Now(),
+		})
+	}
+
 	return result, nil
 }
 
