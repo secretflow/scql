@@ -7,7 +7,7 @@ session_expire_check_time: 1m
 log_level: debug
 storage:
   type: sqlite
-  conn_str: "/root/autodl-tmp/scql/examples/scdb-tutorial/scdb/scdb_hive.db"
+  conn_str: "./examples/scdb-tutorial/scdb/scdb_hive.db"
   max_idle_conns: 10
   max_open_conns: 100
   conn_max_idle_time: 2m

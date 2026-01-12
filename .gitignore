@@ -36,6 +36,8 @@ logs/scdbserver.log
 
 # ignore bazelrc for remote cache
 .remote.bazelrc
+# 本地bazel配置覆盖文件
+.bazelrc.user
 
 # scdb-tutorial 配置和日志文件
 examples/scdb-tutorial/scdb/conf/config.yml
@@ -43,6 +45,9 @@ examples/scdb-tutorial/scdb/conf/config_local.yml
 examples/scdb-tutorial/scdb/conf/config_hive.yml
 examples/scdb-tutorial/logs/
 examples/scdb-tutorial/hive/logs/
+
+# 本地配置文件（包含密码等敏感信息）
+examples/scdb-tutorial/engine/*/conf/gflags_local.conf
 
 # scdb-tutorial 数据库文件
 examples/scdb-tutorial/scdb/*.db
