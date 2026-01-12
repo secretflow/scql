@@ -64,3 +64,12 @@ examples/scdb-tutorial/scdb/*.db
 /create_*.sql
 /test_*.sh
 /setup_local_env.py
+
+# tutorial 本地配置和脚本文件
+examples/scdb-tutorial/client/users_local.json
+examples/scdb-tutorial/configure_local.py
+examples/scdb-tutorial/init_database_local.sh
+examples/scdb-tutorial/start_all.sh
+examples/scdb-tutorial/start_all_hive.sh
+examples/scdb-tutorial/stop_all.sh
+examples/scdb-tutorial/stop_all_hive.sh

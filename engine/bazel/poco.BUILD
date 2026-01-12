@@ -48,8 +48,6 @@ spu_cmake_external(
         "PostgreSQL_LIBRARY": "$EXT_BUILD_DEPS/postgres/lib",
         "PostgreSQL_INCLUDE_DIR": "$EXT_BUILD_DEPS/postgres/include",
         "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_CXX_STANDARD": "17",
-        "CMAKE_CXX_STANDARD_REQUIRED": "ON",
     },
     generate_crosstool_file = False,
     lib_source = ":all_srcs",
@@ -61,11 +59,11 @@ spu_cmake_external(
     }),
     out_lib_dir = "lib",
     out_static_libs = [
+        "libPocoFoundation.a",
+        "libPocoData.a",
         "libPocoDataMySQL.a",
         "libPocoDataSQLite.a",
         "libPocoDataPostgreSQL.a",
-        "libPocoData.a",
-        "libPocoFoundation.a",
     ],
     visibility = ["//visibility:public"],
     deps = [
