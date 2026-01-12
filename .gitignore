@@ -42,8 +42,20 @@ examples/scdb-tutorial/scdb/conf/config.yml
 examples/scdb-tutorial/scdb/conf/config_local.yml
 examples/scdb-tutorial/scdb/conf/config_hive.yml
 examples/scdb-tutorial/logs/
+examples/scdb-tutorial/hive/logs/
+
+# scdb-tutorial 数据库文件
+examples/scdb-tutorial/scdb/*.db
 
 # 根目录编译生成的可执行文件
 /scdbclient
 /scqltool
 /brokerctl
+
+# 根目录日志文件
+/logs/
+
+# 本地临时测试文件和脚本
+/create_*.sql
+/test_*.sh
+/setup_local_env.py
