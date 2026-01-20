@@ -39,6 +39,11 @@ import (
 var record bool
 var SkipOutJson bool
 
+// IsRecording returns true if the -record flag is set
+func IsRecording() bool {
+	return record
+}
+
 func init() {
 	flag.BoolVar(&record, "record", false, "to generate test result")
 	flag.BoolVar(&SkipOutJson, "SkipOutJson", false, "put in and out data in one json file (*_in.json)")
@@ -152,7 +157,9 @@ func (t *TestData) GetTestCases(c *check.C, in interface{}, out interface{}) {
 	t.output[casesIdx].decodedOut = out
 }
 
-// GetTestCases gets the test cases for a test function.
+// GetTestCasesWithoutOut gets the test cases for a test function without separate output.
+// This is used for tests where the test data includes both inputs and expected outputs
+// in the same structure (e.g., when using SkipOutJson mode).
 func (t *TestData) GetTestCasesWithoutOut(c *check.C, in interface{}) {
 	// Extract caller's name.
 	pc, _, _, ok := runtime.Caller(1)
@@ -164,6 +171,11 @@ func (t *TestData) GetTestCasesWithoutOut(c *check.C, in interface{}) {
 	c.Assert(ok, check.IsTrue, check.Commentf("Must get test %s", funcName))
 	err := json.Unmarshal(*t.input[casesIdx].Cases, in)
 	c.Assert(err, check.IsNil)
+	
+	// When in record mode, store the input as the decodedOut so it can be written back
+	if record {
+		t.output[casesIdx].decodedOut = in
+	}
 }
 
 // OnRecord execute the function to update result.

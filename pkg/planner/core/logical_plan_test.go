@@ -65,7 +65,7 @@ func (s *testPlanSuite) TearDownSuite(c *C) {
 	c.Assert(s.testData.GenerateOutputIfNeeded(), IsNil)
 }
 
-func (s *testPlanSuite) testPlanBuilder(c *C, ca string, output string) {
+func (s *testPlanSuite) testPlanBuilder(c *C, ca string, output string) string {
 	comment := Commentf("for %s", ca)
 	stmt, err := s.ParseOneStmt(ca, "", "")
 	c.Assert(err, IsNil, comment)
@@ -75,10 +75,14 @@ func (s *testPlanSuite) testPlanBuilder(c *C, ca string, output string) {
 	p, _, err := BuildLogicalPlan(context.Background(), s.ctx, stmt, s.is)
 	c.Assert(err, IsNil)
 
-	c.Assert(ToString(p), Equals, output, Commentf("for %s", ca))
+	result := ToString(p)
+	if !testutil.IsRecording() {
+		c.Assert(result, Equals, output, Commentf("for %s", ca))
+	}
+	return result
 }
 
-func (s *testPlanSuite) testPlanBuilderWithOptimization(c *C, ca string, output string) {
+func (s *testPlanSuite) testPlanBuilderWithOptimization(c *C, ca string, output string) string {
 	comment := Commentf("for %s", ca)
 	stmt, err := s.ParseOneStmt(ca, "", "")
 	c.Assert(err, IsNil, comment)
@@ -88,7 +92,11 @@ func (s *testPlanSuite) testPlanBuilderWithOptimization(c *C, ca string, output 
 	p, _, err := BuildLogicalPlanWithOptimization(context.Background(), s.ctx, stmt, s.is)
 	c.Assert(err, IsNil)
 
-	c.Assert(ToString(p), Equals, output, Commentf("for %s", ca))
+	result := ToString(p)
+	if !testutil.IsRecording() {
+		c.Assert(result, Equals, output, Commentf("for %s", ca))
+	}
+	return result
 }
 
 func (s *testPlanSuite) TestPlanBuilderSimple(c *C) {
@@ -96,7 +104,10 @@ func (s *testPlanSuite) TestPlanBuilderSimple(c *C) {
 	var input, output []string
 	s.testData.GetTestCases(c, &input, &output)
 	for i, ca := range input {
-		s.testPlanBuilder(c, ca, output[i])
+		result := s.testPlanBuilder(c, ca, output[i])
+		s.testData.OnRecord(func() {
+			output[i] = result
+		})
 	}
 }
 
@@ -105,7 +116,10 @@ func (s *testPlanSuite) TestPlanBuilderSelection(c *C) {
 	var input, output []string
 	s.testData.GetTestCases(c, &input, &output)
 	for i, ca := range input {
-		s.testPlanBuilder(c, ca, output[i])
+		result := s.testPlanBuilder(c, ca, output[i])
+		s.testData.OnRecord(func() {
+			output[i] = result
+		})
 	}
 }
 
@@ -114,7 +128,10 @@ func (s *testPlanSuite) TestPlanBuilderWindow(c *C) {
 	var input, output []string
 	s.testData.GetTestCases(c, &input, &output)
 	for i, ca := range input {
-		s.testPlanBuilder(c, ca, output[i])
+		result := s.testPlanBuilder(c, ca, output[i])
+		s.testData.OnRecord(func() {
+			output[i] = result
+		})
 	}
 }
 
@@ -123,7 +140,10 @@ func (s *testPlanSuite) TestPlanBuilderSubQuery(c *C) {
 	var input, output []string
 	s.testData.GetTestCases(c, &input, &output)
 	for i, ca := range input {
-		s.testPlanBuilder(c, ca, output[i])
+		result := s.testPlanBuilder(c, ca, output[i])
+		s.testData.OnRecord(func() {
+			output[i] = result
+		})
 	}
 }
 
@@ -132,7 +152,10 @@ func (s *testPlanSuite) TestPlanBuilderInOp(c *C) {
 	var input, output []string
 	s.testData.GetTestCases(c, &input, &output)
 	for i, ca := range input {
-		s.testPlanBuilder(c, ca, output[i])
+		result := s.testPlanBuilder(c, ca, output[i])
+		s.testData.OnRecord(func() {
+			output[i] = result
+		})
 	}
 }
 
@@ -141,7 +164,10 @@ func (s *testPlanSuite) TestPlanBuilderLowerUpperOp(c *C) {
 	var input, output []string
 	s.testData.GetTestCases(c, &input, &output)
 	for i, ca := range input {
-		s.testPlanBuilder(c, ca, output[i])
+		result := s.testPlanBuilder(c, ca, output[i])
+		s.testData.OnRecord(func() {
+			output[i] = result
+		})
 	}
 }
 
@@ -150,7 +176,10 @@ func (s *testPlanSuite) TestPlanBuilderCoalesceOp(c *C) {
 	var input, output []string
 	s.testData.GetTestCases(c, &input, &output)
 	for i, ca := range input {
-		s.testPlanBuilder(c, ca, output[i])
+		result := s.testPlanBuilder(c, ca, output[i])
+		s.testData.OnRecord(func() {
+			output[i] = result
+		})
 	}
 }
 
@@ -159,7 +188,10 @@ func (s *testPlanSuite) TestPlanBuilderLengthOp(c *C) {
 	var input, output []string
 	s.testData.GetTestCases(c, &input, &output)
 	for i, ca := range input {
-		s.testPlanBuilder(c, ca, output[i])
+		result := s.testPlanBuilder(c, ca, output[i])
+		s.testData.OnRecord(func() {
+			output[i] = result
+		})
 	}
 }
 
@@ -168,7 +200,10 @@ func (s *testPlanSuite) TestPlanBuilderReplaceOp(c *C) {
 	var input, output []string
 	s.testData.GetTestCases(c, &input, &output)
 	for i, ca := range input {
-		s.testPlanBuilder(c, ca, output[i])
+		result := s.testPlanBuilder(c, ca, output[i])
+		s.testData.OnRecord(func() {
+			output[i] = result
+		})
 	}
 }
 
@@ -177,7 +212,10 @@ func (s *testPlanSuite) TestPlanBuildeLikeRlikeOp(c *C) {
 	var input, output []string
 	s.testData.GetTestCases(c, &input, &output)
 	for i, ca := range input {
-		s.testPlanBuilder(c, ca, output[i])
+		result := s.testPlanBuilder(c, ca, output[i])
+		s.testData.OnRecord(func() {
+			output[i] = result
+		})
 	}
 }
 
@@ -186,7 +224,10 @@ func (s *testPlanSuite) TestPlanBuilderSubstringOp(c *C) {
 	var input, output []string
 	s.testData.GetTestCases(c, &input, &output)
 	for i, ca := range input {
-		s.testPlanBuilder(c, ca, output[i])
+		result := s.testPlanBuilder(c, ca, output[i])
+		s.testData.OnRecord(func() {
+			output[i] = result
+		})
 	}
 }
 
@@ -195,7 +236,10 @@ func (s *testPlanSuite) TestPlanBuilderTrimOp(c *C) {
 	var input, output []string
 	s.testData.GetTestCases(c, &input, &output)
 	for i, ca := range input {
-		s.testPlanBuilder(c, ca, output[i])
+		result := s.testPlanBuilder(c, ca, output[i])
+		s.testData.OnRecord(func() {
+			output[i] = result
+		})
 	}
 }
 
@@ -204,7 +248,10 @@ func (s *testPlanSuite) TestPlanBuildeLimitOp(c *C) {
 	var input, output []string
 	s.testData.GetTestCases(c, &input, &output)
 	for i, ca := range input {
-		s.testPlanBuilder(c, ca, output[i])
+		result := s.testPlanBuilder(c, ca, output[i])
+		s.testData.OnRecord(func() {
+			output[i] = result
+		})
 	}
 }
 
@@ -213,7 +260,10 @@ func (s *testPlanSuite) TestPlanBuilderInstrOp(c *C) {
 	var input, output []string
 	s.testData.GetTestCases(c, &input, &output)
 	for i, ca := range input {
-		s.testPlanBuilder(c, ca, output[i])
+		result := s.testPlanBuilder(c, ca, output[i])
+		s.testData.OnRecord(func() {
+			output[i] = result
+		})
 	}
 }
 
@@ -222,7 +272,10 @@ func (s *testPlanSuite) TestPlanBuilderGreatestLeastOp(c *C) {
 	var input, output []string
 	s.testData.GetTestCases(c, &input, &output)
 	for i, ca := range input {
-		s.testPlanBuilder(c, ca, output[i])
+		result := s.testPlanBuilder(c, ca, output[i])
+		s.testData.OnRecord(func() {
+			output[i] = result
+		})
 	}
 }
 
@@ -231,7 +284,10 @@ func (s *testPlanSuite) TestPlanBuilderLogicalOp(c *C) {
 	var input, output []string
 	s.testData.GetTestCases(c, &input, &output)
 	for i, ca := range input {
-		s.testPlanBuilder(c, ca, output[i])
+		result := s.testPlanBuilder(c, ca, output[i])
+		s.testData.OnRecord(func() {
+			output[i] = result
+		})
 	}
 }
 
@@ -240,7 +296,10 @@ func (s *testPlanSuite) TestPlanBuilderMathOp(c *C) {
 	var input, output []string
 	s.testData.GetTestCases(c, &input, &output)
 	for i, ca := range input {
-		s.testPlanBuilder(c, ca, output[i])
+		result := s.testPlanBuilder(c, ca, output[i])
+		s.testData.OnRecord(func() {
+			output[i] = result
+		})
 	}
 }
 
@@ -249,7 +308,10 @@ func (s *testPlanSuite) TestPlanBuilderCast(c *C) {
 	var input, output []string
 	s.testData.GetTestCases(c, &input, &output)
 	for i, ca := range input {
-		s.testPlanBuilder(c, ca, output[i])
+		result := s.testPlanBuilder(c, ca, output[i])
+		s.testData.OnRecord(func() {
+			output[i] = result
+		})
 	}
 }
 
@@ -285,7 +347,10 @@ func (s *testPlanSuite) TestPlanBuilderSimpleWithOptimization(c *C) {
 	var input, output []string
 	s.testData.GetTestCases(c, &input, &output)
 	for i, ca := range input {
-		s.testPlanBuilderWithOptimization(c, ca, output[i])
+		result := s.testPlanBuilderWithOptimization(c, ca, output[i])
+		s.testData.OnRecord(func() {
+			output[i] = result
+		})
 	}
 }
 
@@ -294,7 +359,10 @@ func (s *testPlanSuite) TestPlanBuilderSelectionWithOptimization(c *C) {
 	var input, output []string
 	s.testData.GetTestCases(c, &input, &output)
 	for i, ca := range input {
-		s.testPlanBuilderWithOptimization(c, ca, output[i])
+		result := s.testPlanBuilderWithOptimization(c, ca, output[i])
+		s.testData.OnRecord(func() {
+			output[i] = result
+		})
 	}
 }
 
@@ -303,7 +371,10 @@ func (s *testPlanSuite) TestPlanBuilderWindowWithOptimization(c *C) {
 	var input, output []string
 	s.testData.GetTestCases(c, &input, &output)
 	for i, ca := range input {
-		s.testPlanBuilderWithOptimization(c, ca, output[i])
+		result := s.testPlanBuilderWithOptimization(c, ca, output[i])
+		s.testData.OnRecord(func() {
+			output[i] = result
+		})
 	}
 }
 
@@ -312,7 +383,10 @@ func (s *testPlanSuite) TestPlanBuilderSubQueryWithOptimization(c *C) {
 	var input, output []string
 	s.testData.GetTestCases(c, &input, &output)
 	for i, ca := range input {
-		s.testPlanBuilderWithOptimization(c, ca, output[i])
+		result := s.testPlanBuilderWithOptimization(c, ca, output[i])
+		s.testData.OnRecord(func() {
+			output[i] = result
+		})
 	}
 }
 
@@ -321,6 +395,9 @@ func (s *testPlanSuite) TestPlanBuilderDateTimeWithOptimization(c *C) {
 	var input, output []string
 	s.testData.GetTestCases(c, &input, &output)
 	for i, ca := range input {
-		s.testPlanBuilderWithOptimization(c, ca, output[i])
+		result := s.testPlanBuilderWithOptimization(c, ca, output[i])
+		s.testData.OnRecord(func() {
+			output[i] = result
+		})
 	}
 }

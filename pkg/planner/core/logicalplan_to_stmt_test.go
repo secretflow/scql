@@ -96,8 +96,8 @@ func (s *testRunSQLSuite) TestRunSQL(c *C) {
 	defer testleak.AfterTest(c)()
 	var input []TestCaseSqlString
 	s.testData.GetTestCasesWithoutOut(c, &input)
-	for _, ca := range input {
-		s.testRunSQL(c, ca, true)
+	for i := range input {
+		s.testRunSQL(c, &input[i], true)
 	}
 }
 
@@ -183,20 +183,45 @@ func SkipTestFor(backEnd string, testCase TestCaseSqlString) bool {
 	return false
 }
 
-func (s *testRunSQLSuite) testRunSQL(c *C, testCase TestCaseSqlString, useV2 bool) {
+func (s *testRunSQLSuite) testRunSQL(c *C, testCase *TestCaseSqlString, useV2 bool) {
 	for _, backEnd := range testBackEnds {
-		if SkipTestFor(backEnd, testCase) {
+		if SkipTestFor(backEnd, *testCase) {
 			continue
 		}
-		expect := GetExpectSQL(backEnd, testCase)
+		expect := GetExpectSQL(backEnd, *testCase)
 		dbType, err := ParseDBType(backEnd)
 		c.Assert(err, IsNil)
 		// test mysql
-		sql, err := regenerateSql(testCase, s, DBDialectMap[dbType])
-		comment := Commentf("%s tests: for %+v", backEnd, testCase)
+		sql, err := regenerateSql(*testCase, s, DBDialectMap[dbType])
+		comment := Commentf("%s tests: for %+v", backEnd, *testCase)
 		log.Info(sql)
 		c.Assert(err, IsNil, comment)
-		c.Assert(expect == sql, IsTrue, comment)
+		
+		// When in record mode, update the expected SQL in the test case
+		if testutil.IsRecording() {
+			switch backEnd {
+			case MySQL:
+				if testCase.RewrittenSqlMysql != "" || testCase.RewrittenSql == "" {
+					testCase.RewrittenSqlMysql = sql
+				} else {
+					testCase.RewrittenSql = sql
+				}
+			case Postgres:
+				if testCase.RewrittenSqlPg != "" || (testCase.RewrittenSql != "" && testCase.RewrittenSqlMysql != "") {
+					testCase.RewrittenSqlPg = sql
+				}
+			case ODPS:
+				if testCase.RewrittenSqlODPS != "" || (testCase.RewrittenSql != "" && testCase.RewrittenSqlMysql != "") {
+					testCase.RewrittenSqlODPS = sql
+				}
+			case CSV:
+				if testCase.RewrittenSqlCSV != "" || (testCase.RewrittenSql != "" && testCase.RewrittenSqlMysql != "") {
+					testCase.RewrittenSqlCSV = sql
+				}
+			}
+		} else {
+			c.Assert(expect == sql, IsTrue, comment)
+		}
 	}
 }
 
