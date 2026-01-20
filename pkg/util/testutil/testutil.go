@@ -65,6 +65,10 @@ func LoadTestSuiteData(dir, suiteName string) (res TestData, err error) {
 	if err != nil {
 		return res, err
 	}
+	
+	// Save the original value of SkipOutJson
+	savedSkipOutJson := SkipOutJson
+	
 	if record {
 		res.output = make([]testCases, len(res.input))
 		for i := range res.input {
@@ -72,15 +76,23 @@ func LoadTestSuiteData(dir, suiteName string) (res TestData, err error) {
 		}
 	} else {
 		if !SkipOutJson {
-			res.output, err = loadTestSuiteCases(fmt.Sprintf("%s_out.json", res.filePathPrefix))
+			outFilePath := fmt.Sprintf("%s_out.json", res.filePathPrefix)
+			res.output, err = loadTestSuiteCases(outFilePath)
 			if err != nil {
-				return res, err
-			}
-			if len(res.input) != len(res.output) {
-				return res, errors.New(fmt.Sprintf("Number of test input cases %d does not match test output cases %d", len(res.input), len(res.output)))
+				// If the out file doesn't exist, automatically use SkipOutJson mode for this test suite
+				if os.IsNotExist(err) {
+					SkipOutJson = true
+				} else {
+					return res, err
+				}
+			} else {
+				if len(res.input) != len(res.output) {
+					return res, errors.New(fmt.Sprintf("Number of test input cases %d does not match test output cases %d", len(res.input), len(res.output)))
+				}
 			}
 		}
 	}
+	
 	res.funcMap = make(map[string]int, len(res.input))
 	for i, test := range res.input {
 		res.funcMap[test.Name] = i
@@ -88,6 +100,11 @@ func LoadTestSuiteData(dir, suiteName string) (res TestData, err error) {
 			return res, errors.New(fmt.Sprintf("Input name of the %d-case %s does not match output %s", i, test.Name, res.output[i].Name))
 		}
 	}
+	
+	// Restore the original value after loading
+	// This ensures that setting SkipOutJson for one test suite doesn't affect others
+	SkipOutJson = savedSkipOutJson
+	
 	return res, nil
 }
 
