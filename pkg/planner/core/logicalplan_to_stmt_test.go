@@ -17,6 +17,8 @@ package core
 import (
 	"bytes"
 	"context"
+	"flag"
+	"testing"
 
 	. "github.com/pingcap/check"
 	"github.com/pingcap/log"
@@ -35,6 +37,11 @@ import (
 
 	_ "github.com/secretflow/scql/pkg/types/parser_driver"
 )
+
+func TestRunSQLT(t *testing.T) {
+	flag.Parse()
+	TestingT(t)
+}
 
 var _ = Suite(&testRunSQLSuite{})
 var testBackEnds = []string{MySQL, Postgres, ODPS, CSV}
@@ -76,8 +83,6 @@ func (s *testRunSQLSuite) SetUpSuite(c *C) {
 	s.ctx = mock.MockContext()
 	s.Parser = parser.New()
 	c.Assert(err, IsNil)
-
-	testutil.SkipOutJson = true
 
 	s.testData, err = testutil.LoadTestSuiteData("testdata", "runsql")
 	c.Assert(err, IsNil)

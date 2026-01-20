@@ -169,22 +169,50 @@ func (t *TestData) GenerateOutputIfNeeded() error {
 	enc := json.NewEncoder(buf)
 	enc.SetEscapeHTML(false)
 	enc.SetIndent("", "  ")
-	for i, test := range t.output {
-		err := enc.Encode(test.decodedOut)
-		if err != nil {
-			return err
+	
+	// Determine which data to write based on SkipOutJson flag
+	var dataToWrite []testCases
+	var outputFile string
+	
+	if SkipOutJson {
+		// When SkipOutJson is true, write to *_in.json
+		dataToWrite = make([]testCases, len(t.input))
+		for i := range t.input {
+			dataToWrite[i].Name = t.input[i].Name
+			// Encode the decoded output data
+			err := enc.Encode(t.output[i].decodedOut)
+			if err != nil {
+				return err
+			}
+			res := make([]byte, len(buf.Bytes()))
+			copy(res, buf.Bytes())
+			buf.Reset()
+			rm := json.RawMessage(res)
+			dataToWrite[i].Cases = &rm
 		}
-		res := make([]byte, len(buf.Bytes()))
-		copy(res, buf.Bytes())
-		buf.Reset()
-		rm := json.RawMessage(res)
-		t.output[i].Cases = &rm
+		outputFile = fmt.Sprintf("%s_in.json", t.filePathPrefix)
+	} else {
+		// When SkipOutJson is false, write to *_out.json (original behavior)
+		for i, test := range t.output {
+			err := enc.Encode(test.decodedOut)
+			if err != nil {
+				return err
+			}
+			res := make([]byte, len(buf.Bytes()))
+			copy(res, buf.Bytes())
+			buf.Reset()
+			rm := json.RawMessage(res)
+			t.output[i].Cases = &rm
+		}
+		dataToWrite = t.output
+		outputFile = fmt.Sprintf("%s_out.json", t.filePathPrefix)
 	}
-	err := enc.Encode(t.output)
+	
+	err := enc.Encode(dataToWrite)
 	if err != nil {
 		return err
 	}
-	file, err := os.Create(fmt.Sprintf("%s_out.json", t.filePathPrefix))
+	file, err := os.Create(outputFile)
 	if err != nil {
 		return err
 	}

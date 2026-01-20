@@ -15,6 +15,7 @@ package core
 
 import (
 	"context"
+	"flag"
 	"testing"
 
 	. "github.com/pingcap/check"
@@ -35,6 +36,7 @@ import (
 var _ = Suite(&testPlanSuite{})
 
 func TestT(t *testing.T) {
+	flag.Parse()
 	CustomVerboseFlag = true
 	TestingT(t)
 }
