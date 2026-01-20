@@ -56,6 +56,7 @@ type TestData struct {
 	output         []testCases
 	filePathPrefix string
 	funcMap        map[string]int
+	skipOutJson    bool  // Store whether this test suite should skip out json
 }
 
 // LoadTestSuiteData loads test suite data from file.
@@ -66,8 +67,8 @@ func LoadTestSuiteData(dir, suiteName string) (res TestData, err error) {
 		return res, err
 	}
 	
-	// Save the original value of SkipOutJson
-	savedSkipOutJson := SkipOutJson
+	// Store the current SkipOutJson state for this test suite
+	res.skipOutJson = SkipOutJson
 	
 	if record {
 		res.output = make([]testCases, len(res.input))
@@ -75,13 +76,13 @@ func LoadTestSuiteData(dir, suiteName string) (res TestData, err error) {
 			res.output[i].Name = res.input[i].Name
 		}
 	} else {
-		if !SkipOutJson {
+		if !res.skipOutJson {
 			outFilePath := fmt.Sprintf("%s_out.json", res.filePathPrefix)
 			res.output, err = loadTestSuiteCases(outFilePath)
 			if err != nil {
 				// If the out file doesn't exist, automatically use SkipOutJson mode for this test suite
 				if os.IsNotExist(err) {
-					SkipOutJson = true
+					res.skipOutJson = true
 				} else {
 					return res, err
 				}
@@ -96,14 +97,10 @@ func LoadTestSuiteData(dir, suiteName string) (res TestData, err error) {
 	res.funcMap = make(map[string]int, len(res.input))
 	for i, test := range res.input {
 		res.funcMap[test.Name] = i
-		if !SkipOutJson && test.Name != res.output[i].Name {
+		if !res.skipOutJson && test.Name != res.output[i].Name {
 			return res, errors.New(fmt.Sprintf("Input name of the %d-case %s does not match output %s", i, test.Name, res.output[i].Name))
 		}
 	}
-	
-	// Restore the original value after loading
-	// This ensures that setting SkipOutJson for one test suite doesn't affect others
-	SkipOutJson = savedSkipOutJson
 	
 	return res, nil
 }
@@ -187,12 +184,12 @@ func (t *TestData) GenerateOutputIfNeeded() error {
 	enc.SetEscapeHTML(false)
 	enc.SetIndent("", "  ")
 	
-	// Determine which data to write based on SkipOutJson flag
+	// Determine which data to write based on this test suite's skipOutJson flag
 	var dataToWrite []testCases
 	var outputFile string
 	
-	if SkipOutJson {
-		// When SkipOutJson is true, write to *_in.json
+	if t.skipOutJson {
+		// When skipOutJson is true, write to *_in.json
 		dataToWrite = make([]testCases, len(t.input))
 		for i := range t.input {
 			dataToWrite[i].Name = t.input[i].Name
@@ -209,7 +206,7 @@ func (t *TestData) GenerateOutputIfNeeded() error {
 		}
 		outputFile = fmt.Sprintf("%s_in.json", t.filePathPrefix)
 	} else {
-		// When SkipOutJson is false, write to *_out.json (original behavior)
+		// When skipOutJson is false, write to *_out.json (original behavior)
 		for i, test := range t.output {
 			err := enc.Encode(test.decodedOut)
 			if err != nil {
