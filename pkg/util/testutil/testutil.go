@@ -50,8 +50,8 @@ func init() {
 }
 
 type testCases struct {
-	Name       string
-	Cases      *json.RawMessage // For delayed parse.
+	Name       string           `json:"name"`
+	Cases      *json.RawMessage `json:"cases"` // For delayed parse.
 	decodedOut interface{}      // For generate output.
 }
 

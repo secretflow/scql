@@ -65,13 +65,13 @@ type testRunSQLSuite struct {
 type TestCaseSqlString struct {
 	Sql               string `json:"sql"`
 	SkipProjection    bool   `json:"skip_projection"`
-	RewrittenSqlODPS  string `json:"rewritten_sql_odps"`
-	RewrittenSqlMysql string `json:"rewritten_sql_mysql"`
-	RewrittenSqlPg    string `json:"rewritten_sql_pg"`
-	RewrittenSqlCSV   string `json:"rewritten_sql_csv"`
-	SkipOdpsTest      bool   `json:"skip_odps_test"`
-	SkipPgTest        bool   `json:"skip_pg_test"`
-	SkipCSVTest       bool   `json:"skip_csv_test"`
+	RewrittenSqlODPS  string `json:"rewritten_sql_odps,omitempty"`
+	RewrittenSqlMysql string `json:"rewritten_sql_mysql,omitempty"`
+	RewrittenSqlPg    string `json:"rewritten_sql_pg,omitempty"`
+	RewrittenSqlCSV   string `json:"rewritten_sql_csv,omitempty"`
+	SkipOdpsTest      bool   `json:"skip_odps_test,omitempty"`
+	SkipPgTest        bool   `json:"skip_pg_test,omitempty"`
+	SkipCSVTest       bool   `json:"skip_csv_test,omitempty"`
 	// default; if RewrittenSql set, all back ends use this sql as default
 	RewrittenSql string `json:"rewritten_sql"`
 }
