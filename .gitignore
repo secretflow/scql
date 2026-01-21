@@ -35,4 +35,5 @@ logs/scdbserver.log
 *.DS_Store
 
 # ignore bazelrc for remote cache
-.remote.bazelrc
+.remote.bazelrcpkg/planner/core/_out.json
+pkg/planner/core/testdata/runsql_out.json
