@@ -190,6 +190,11 @@ func (t *TestData) GenerateOutputIfNeeded() error {
 	if !record {
 		return nil
 	}
+	
+	// Skip if testData was not initialized (filePathPrefix is empty)
+	if t.filePathPrefix == "" {
+		return nil
+	}
 
 	buf := new(bytes.Buffer)
 	enc := json.NewEncoder(buf)
