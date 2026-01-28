@@ -53,14 +53,41 @@ func (e *DDLExec) Next(ctx context.Context, req *chunk.Chunk) (err error) {
 	switch x := e.stmt.(type) {
 	case *ast.CreateDatabaseStmt:
 		err = e.executeCreateDatabase(x)
+		if err == nil {
+			storage.InvalidateInfoSchemaCache(strings.ToLower(x.Name))
+		}
 	case *ast.CreateTableStmt:
 		err = e.executeCreateTable(x)
+		if err == nil {
+			dbName := x.Table.Schema.O
+			if dbName == "" {
+				dbName = e.ctx.GetSessionVars().CurrentDB
+			}
+			storage.InvalidateInfoSchemaCache(dbName)
+		}
 	case *ast.DropDatabaseStmt:
 		err = e.executeDropDatabase(x)
+		if err == nil {
+			storage.InvalidateInfoSchemaCache(strings.ToLower(x.Name))
+		}
 	case *ast.DropTableStmt:
 		err = e.executeDropTableOrView(x)
+		if err == nil && len(x.Tables) > 0 {
+			dbName := x.Tables[0].Schema.L
+			if dbName == "" {
+				dbName = e.ctx.GetSessionVars().CurrentDB
+			}
+			storage.InvalidateInfoSchemaCache(dbName)
+		}
 	case *ast.CreateViewStmt:
 		err = e.executeCreateView(x)
+		if err == nil {
+			dbName := x.ViewName.Schema.L
+			if dbName == "" {
+				dbName = e.ctx.GetSessionVars().CurrentDB
+			}
+			storage.InvalidateInfoSchemaCache(dbName)
+		}
 	default:
 		err = fmt.Errorf("ddl.Next: Unsupported statement %v", x)
 

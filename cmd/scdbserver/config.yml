@@ -21,3 +21,6 @@ engine:
         "protocol": "SEMI2K",
         "field": "FM64"
     }
+  infoschema_cache:
+    enabled: true
+    ttl: 10m

@@ -87,6 +87,7 @@ func main() {
 
 	log.Info("Starting to connect to database and do bootstrap if necessary...")
 	storage.InitPasswordValidation(cfg.PasswordCheck)
+	storage.InitInfoSchemaCache(cfg.InfoSchemaCache.Enabled, cfg.InfoSchemaCache.TTL)
 	store, err := server.NewDbConnWithBootstrap(&cfg.Storage)
 	if err != nil {
 		log.Fatalf("Failed to connect to database and bootstrap it: %v", err)

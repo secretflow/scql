@@ -16,6 +16,7 @@ package storage
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/sqlite"
@@ -106,4 +107,126 @@ func batchInsert(db *gorm.DB, records []interface{}) error {
 		}
 	}
 	return nil
+}
+
+func createTestDB(t *testing.T, db *gorm.DB, dbName string) {
+	r := require.New(t)
+	records := []interface{}{
+		&Database{Db: dbName},
+		&Table{Db: dbName, Table: "t1", Owner: "root", Host: "%", RefDb: "ref", RefTable: "ref", DBType: 0},
+		&Column{Db: dbName, TableName: "t1", ColumnName: "c1", Type: "int"},
+	}
+	r.NoError(batchInsert(db, records))
+}
+
+func TestInfoSchemaCache(t *testing.T) {
+	r := require.New(t)
+	db, err := newDbStore()
+	r.NoError(err)
+
+	// Initialize cache with enabled=true and a reasonable TTL
+	InitInfoSchemaCache(true, 5*time.Minute)
+	InvalidateInfoSchemaCache("")
+	ResetInfoSchemaCacheStats()
+
+	createTestDB(t, db, "db1")
+	createTestDB(t, db, "db2")
+
+	// Test cache miss and hit
+	_, err = QueryDBInfoSchema(db, "db1")
+	r.NoError(err)
+	hits, misses := GetInfoSchemaCacheStats()
+	r.Equal(int64(0), hits)
+	r.Equal(int64(1), misses)
+
+	_, err = QueryDBInfoSchema(db, "db1")
+	r.NoError(err)
+	hits, misses = GetInfoSchemaCacheStats()
+	r.Equal(int64(1), hits)
+	r.Equal(int64(1), misses)
+
+	// Test cache invalidation
+	InvalidateInfoSchemaCache("db1")
+	_, err = QueryDBInfoSchema(db, "db1")
+	r.NoError(err)
+	hits, misses = GetInfoSchemaCacheStats()
+	r.Equal(int64(1), hits)
+	r.Equal(int64(2), misses)
+
+	// Test multiple databases cache isolation
+	_, err = QueryDBInfoSchema(db, "db2")
+	r.NoError(err)
+	hits, misses = GetInfoSchemaCacheStats()
+	r.Equal(int64(1), hits)
+	r.Equal(int64(3), misses)
+
+	InvalidateInfoSchemaCache("db2")
+	_, err = QueryDBInfoSchema(db, "db1")
+	r.NoError(err)
+	hits, misses = GetInfoSchemaCacheStats()
+	r.Equal(int64(2), hits) // db1 still cached
+	r.Equal(int64(3), misses)
+}
+
+func TestInfoSchemaCacheTTL(t *testing.T) {
+	r := require.New(t)
+	db, err := newDbStore()
+	r.NoError(err)
+
+	// Initialize cache with a short TTL for testing
+	InitInfoSchemaCache(true, 100*time.Millisecond)
+	InvalidateInfoSchemaCache("")
+	ResetInfoSchemaCacheStats()
+
+	createTestDB(t, db, "db1")
+
+	// First query - cache miss
+	_, err = QueryDBInfoSchema(db, "db1")
+	r.NoError(err)
+	hits, misses := GetInfoSchemaCacheStats()
+	r.Equal(int64(0), hits)
+	r.Equal(int64(1), misses)
+
+	// Second query immediately - cache hit
+	_, err = QueryDBInfoSchema(db, "db1")
+	r.NoError(err)
+	hits, misses = GetInfoSchemaCacheStats()
+	r.Equal(int64(1), hits)
+	r.Equal(int64(1), misses)
+
+	// Wait for cache to expire
+	time.Sleep(150 * time.Millisecond)
+
+	// Query after TTL expired - should be cache miss
+	_, err = QueryDBInfoSchema(db, "db1")
+	r.NoError(err)
+	hits, misses = GetInfoSchemaCacheStats()
+	r.Equal(int64(1), hits)
+	r.Equal(int64(2), misses)
+}
+
+func TestInfoSchemaCacheDisabled(t *testing.T) {
+	r := require.New(t)
+	db, err := newDbStore()
+	r.NoError(err)
+
+	// Disable cache
+	InitInfoSchemaCache(false, 5*time.Minute)
+	InvalidateInfoSchemaCache("")
+	ResetInfoSchemaCacheStats()
+
+	createTestDB(t, db, "db1")
+
+	// All queries should be cache misses when disabled
+	_, err = QueryDBInfoSchema(db, "db1")
+	r.NoError(err)
+	hits, misses := GetInfoSchemaCacheStats()
+	r.Equal(int64(0), hits)
+	r.Equal(int64(1), misses)
+
+	_, err = QueryDBInfoSchema(db, "db1")
+	r.NoError(err)
+	hits, misses = GetInfoSchemaCacheStats()
+	r.Equal(int64(0), hits)
+	r.Equal(int64(2), misses)
 }
