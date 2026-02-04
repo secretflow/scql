@@ -60,6 +60,8 @@ const (
 	parentIsJoin
 	// inRepairTable is set when visiting a repair table statement.
 	inRepairTable
+	// inShowColumns is set when visiting SHOW COLUMNS/DESCRIBE statement.
+	inShowColumns
 )
 
 // preprocessor is an ast.Visitor that preprocess
@@ -88,6 +90,9 @@ func (p *preprocessor) Enter(in ast.Node) (out ast.Node, skipChildren bool) {
 		p.flag |= inCreateOrDropTable
 		//p.checkDropTableGrammar(node)
 	case *ast.ShowStmt:
+		if node.Tp == ast.ShowColumns {
+			p.flag |= inShowColumns
+		}
 		p.resolveShowStmt(node)
 	case *ast.UnionSelectList:
 		p.checkUnionSelectList(node)
@@ -107,6 +112,10 @@ func (p *preprocessor) Leave(in ast.Node) (out ast.Node, ok bool) {
 		//p.checkContainDotColumn(x)
 	case *ast.DropTableStmt, *ast.AlterTableStmt, *ast.RenameTableStmt:
 		p.flag &= ^inCreateOrDropTable
+	case *ast.ShowStmt:
+		if x.Tp == ast.ShowColumns {
+			p.flag &= ^inShowColumns
+		}
 	case *ast.TableName:
 		p.handleTableName(x)
 	case *ast.Join:
@@ -146,8 +155,9 @@ func (p *preprocessor) handleTableName(tn *ast.TableName) {
 		}
 		tn.Schema = model.NewCIStr(currentDB)
 	}
-	if p.flag&inCreateOrDropTable > 0 {
-		// The table may not exist in create table or drop table statement.
+	if p.flag&(inCreateOrDropTable|inShowColumns) > 0 {
+		// The table may not exist in create/drop table statement.
+		// For SHOW COLUMNS, we don't need InfoSchema in preprocess, will query storage directly in executor.
 		return
 	}
 

@@ -199,13 +199,14 @@ func (e *DDLExec) executeCreateTable(s *ast.CreateTableStmt) (err error) {
 	if len(lowerColumnNames) != len(sliceutil.SliceDeDup(lowerColumnNames)) {
 		return fmt.Errorf("ddl.executeCreateTable: duplicate column names in table %s", tblName)
 	}
-	for _, c := range s.Cols {
+	for i, c := range s.Cols {
 		// TODO: fill description field
 		result = tx.Create(&storage.Column{
-			Db:         dbName,
-			TableName:  tblName,
-			ColumnName: c.Name.String(),
-			Type:       c.Type,
+			Db:              dbName,
+			TableName:       tblName,
+			ColumnName:      c.Name.String(),
+			OrdinalPosition: uint(i),
+			Type:            strings.ToLower(c.Type),
 		})
 		if result.Error != nil {
 			return fmt.Errorf("ddl.executeCreateTable: %v", result.Error)
