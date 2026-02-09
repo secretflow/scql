@@ -371,25 +371,39 @@ func loadConfig(filename string) (*Config, error) {
 
 	// Parse simple fields
 	if val, ok := tmpMap["sql"]; ok {
-		json.Unmarshal(val, &config.SQL)
+		if err := json.Unmarshal(val, &config.SQL); err != nil {
+			return nil, fmt.Errorf("failed to parse sql: %w", err)
+		}
 	}
 	if val, ok := tmpMap["issuer"]; ok {
-		json.Unmarshal(val, &config.Issuer)
+		if err := json.Unmarshal(val, &config.Issuer); err != nil {
+			return nil, fmt.Errorf("failed to parse issuer: %w", err)
+		}
 	}
 	if val, ok := tmpMap["engine_client_type"]; ok {
-		json.Unmarshal(val, &config.EngineClientType)
+		if err := json.Unmarshal(val, &config.EngineClientType); err != nil {
+			return nil, fmt.Errorf("failed to parse engine_client_type: %w", err)
+		}
 	}
 	if val, ok := tmpMap["engine_timeout"]; ok {
-		json.Unmarshal(val, &config.EngineTimeout)
+		if err := json.Unmarshal(val, &config.EngineTimeout); err != nil {
+			return nil, fmt.Errorf("failed to parse engine_timeout: %w", err)
+		}
 	}
 	if val, ok := tmpMap["tls_ca_cert"]; ok {
-		json.Unmarshal(val, &config.TLSCACert)
+		if err := json.Unmarshal(val, &config.TLSCACert); err != nil {
+			return nil, fmt.Errorf("failed to parse tls_ca_cert: %w", err)
+		}
 	}
 	if val, ok := tmpMap["engine_endpoints"]; ok {
-		json.Unmarshal(val, &config.EngineEndpoints)
+		if err := json.Unmarshal(val, &config.EngineEndpoints); err != nil {
+			return nil, fmt.Errorf("failed to parse engine_endpoints: %w", err)
+		}
 	}
 	if val, ok := tmpMap["engine_link_endpoints"]; ok {
-		json.Unmarshal(val, &config.EngineLinkEndpoints)
+		if err := json.Unmarshal(val, &config.EngineLinkEndpoints); err != nil {
+			return nil, fmt.Errorf("failed to parse engine_link_endpoints: %w", err)
+		}
 	}
 
 	// Parse protobuf fields using protojson
