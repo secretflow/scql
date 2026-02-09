@@ -44,7 +44,8 @@ message CompileOptions {
   bool batched = 2 [(google.api.field_behavior) = REQUIRED];
   // The PSI algorithm type to use
   // Default is auto, which means choosing PSI type by engine
-  PsiAlgorithmType psi_algorithm_type = 3 [(google.api.field_behavior) = OPTIONAL];
+  PsiAlgorithmType psi_algorithm_type = 3
+      [(google.api.field_behavior) = OPTIONAL];
 }
 
 message GlobalSecurityRelaxation {
@@ -56,15 +57,18 @@ message GlobalSecurityRelaxation {
   reserved 3 to 9;
 
   // Tensors can be revealed when used as join key
-  // e.g.: "select ta.c1, ta.c2, tb.c2 from ta join tb on ta.c1 = tb.c1", here ta.c1 and tb.c2 are join keys
-  // "after join", we get the "intersection of ta.c1 and tb.c1", which can be revealed
-  // Note that only the intersection of join keys(this is what "after join" means) can be revealed
-  // So in left outer join, only the right join key can be revealed, because left join key will contains values not exits in the intersection after join
+  // e.g.: "select ta.c1, ta.c2, tb.c2 from ta join tb on ta.c1 = tb.c1", here
+  // ta.c1 and tb.c2 are join keys "after join", we get the "intersection of
+  // ta.c1 and tb.c1", which can be revealed Note that only the intersection of
+  // join keys(this is what "after join" means) can be revealed So in left outer
+  // join, only the right join key can be revealed, because left join key will
+  // contains values not exits in the intersection after join
   bool reveal_key_after_join = 10 [(google.api.field_behavior) = OPTIONAL];
   // Tensors can be revealed when used as filter mask
-  // This security relaxation also requires the filter mask is result of a comparison,
-  // e.g.: "select ta.c1 from ta join tb on ta.c2 = tb.c2 where tb.c1 > ta.c3", here tb.c1 > ta.c3 is the comparison
-  // So result of tb.c1 > ta.c3 can be revealed and used as a filter mask
+  // This security relaxation also requires the filter mask is result of a
+  // comparison, e.g.: "select ta.c1 from ta join tb on ta.c2 = tb.c2 where
+  // tb.c1 > ta.c3", here tb.c1 > ta.c3 is the comparison So result of tb.c1 >
+  // ta.c3 can be revealed and used as a filter mask
   bool reveal_filter_mask = 11 [(google.api.field_behavior) = OPTIONAL];
 }
 
@@ -90,29 +94,40 @@ message ReverseInferenceConfig {
 // Security config that may affect the query result
 message ResultSecurityConfig {
   // The threshold for group by operation
-  // If the number of elements in a group is less than this threshold, the group will be filtered
+  // If the number of elements in a group is less than this threshold, the group
+  // will be filtered
   int64 groupby_threshold = 1 [(google.api.field_behavior) = OPTIONAL];
 }
 
 message CompilerSecurityConfig {
   // Global security config
-  GlobalSecurityRelaxation global_relaxation = 1 [(google.api.field_behavior) = REQUIRED];
+  GlobalSecurityRelaxation global_relaxation = 1
+      [(google.api.field_behavior) = REQUIRED];
   // Security relaxation that attaches to columns
   // Not every tensor in the OperatorGraph has a ColumnSecurityRelaxation:
-  // 1. Users do not need to specify ColumnSecurityRelaxation for every column used in the query,
+  // 1. Users do not need to specify ColumnSecurityRelaxation for every column
+  // used in the query,
   //    the missing ones will just be default value false.
-  // 2. Some tensors are in the OperatorGraph are the result of relation operations or expressions,
-  //    the security relaxation properties of these tensors can be inferred from their inputs' security relaxation properties.
-  repeated ColumnSecurityRelaxation column_relaxation_list = 2 [(google.api.field_behavior) = OPTIONAL];
+  // 2. Some tensors are in the OperatorGraph are the result of relation
+  // operations or expressions,
+  //    the security relaxation properties of these tensors can be inferred from
+  //    their inputs' security relaxation properties.
+  repeated ColumnSecurityRelaxation column_relaxation_list = 2
+      [(google.api.field_behavior) = OPTIONAL];
   // Config related to reverse inference
-  ReverseInferenceConfig reverse_inference_conf = 3 [(google.api.field_behavior) = REQUIRED];
+  ReverseInferenceConfig reverse_inference_conf = 3
+      [(google.api.field_behavior) = REQUIRED];
   // User-specified visibility of columns
   // Used to get the initial visibility of input tensors
-  // If a column's visibility is not specified, the visible party of corresponding tensor will be {column's owner}
-  // If specified, the visible party of corresponding tensor will be the union of {column's owner} and the specified visible parties
-  repeated ColumnVisibility column_visibility_list = 4 [(google.api.field_behavior) = OPTIONAL];
+  // If a column's visibility is not specified, the visible party of
+  // corresponding tensor will be {column's owner} If specified, the visible
+  // party of corresponding tensor will be the union of {column's owner} and the
+  // specified visible parties
+  repeated ColumnVisibility column_visibility_list = 4
+      [(google.api.field_behavior) = OPTIONAL];
   // Config that may affect the query result
-  ResultSecurityConfig result_security_conf = 5 [(google.api.field_behavior) = OPTIONAL];
+  ResultSecurityConfig result_security_conf = 5
+      [(google.api.field_behavior) = OPTIONAL];
 }
 
 message ColumnVisibility {
@@ -141,15 +156,18 @@ message CompileSQLRequest {
   // The compile options
   CompileOptions compile_opts = 5 [(google.api.field_behavior) = REQUIRED];
   // The issue time of the query, used for functions like now()
-  google.protobuf.Timestamp issue_time = 6 [(google.api.field_behavior) = REQUIRED];
+  google.protobuf.Timestamp issue_time = 6
+      [(google.api.field_behavior) = REQUIRED];
   // Contains the config related to data security
-  CompilerSecurityConfig security_config = 7 [(google.api.field_behavior) = REQUIRED];
+  CompilerSecurityConfig security_config = 7
+      [(google.api.field_behavior) = REQUIRED];
   // Placeholders used by rule
   Placeholders placeholders = 8 [(google.api.field_behavior) = OPTIONAL];
   // Variables used by rule
   repeated Variable variables = 9 [(google.api.field_behavior) = OPTIONAL];
   // Specifies what and how additional information are provided in the response
-  AdditionalInfoSpec additional_info = 10 [(google.api.field_behavior) = REQUIRED];
+  AdditionalInfoSpec additional_info = 10
+      [(google.api.field_behavior) = REQUIRED];
 }
 
 message CompileSQLResponse {
@@ -192,28 +210,35 @@ message Operator {
   string name = 2 [(google.api.field_behavior) = REQUIRED];
   // Operator type, such as "Limit", "Filter", "GroupAgg"
   string type = 3 [(google.api.field_behavior) = REQUIRED];
-  // Inputs of the operator, the key stands for the role of corresponding tensors, such as "payload", "mask", "leftKeys"
-  // Each entry maps to a list of tensor IDs that can be resolved from OperatorGraph.tensors
+  // Inputs of the operator, the key stands for the role of corresponding
+  // tensors, such as "payload", "mask", "leftKeys" Each entry maps to a list of
+  // tensor IDs that can be resolved from OperatorGraph.tensors
   map<string, TensorIdList> inputs = 4 [(google.api.field_behavior) = REQUIRED];
-  // Outputs of the operator, the key stands for the role of corresponding tensors, such as "rank", "leftOutputs"
-  // Each entry maps to a list of tensor IDs that can be resolved from OperatorGraph.tensors
-  map<string, TensorIdList> outputs = 5 [(google.api.field_behavior) = REQUIRED];
+  // Outputs of the operator, the key stands for the role of corresponding
+  // tensors, such as "rank", "leftOutputs" Each entry maps to a list of tensor
+  // IDs that can be resolved from OperatorGraph.tensors
+  map<string, TensorIdList> outputs = 5
+      [(google.api.field_behavior) = REQUIRED];
   // Attributes of the operator
-  map<string, google.protobuf.Any> attributes = 6 [(google.api.field_behavior) = REQUIRED];
-  // The kernel represents the concrete mechanism used to implement the functionality of this Operator
-  // Each query has a deterministic OperatorGraph structure.
-  // As long as the query remains unchanged, the types and arrangement of Operators in the plan will remain constant.
-  // However, the type of Kernel corresponding to each Operator may vary with changes in the SecurityConfig.
+  map<string, google.protobuf.Any> attributes = 6
+      [(google.api.field_behavior) = REQUIRED];
+  // The kernel represents the concrete mechanism used to implement the
+  // functionality of this Operator Each query has a deterministic OperatorGraph
+  // structure. As long as the query remains unchanged, the types and
+  // arrangement of Operators in the plan will remain constant. However, the
+  // type of Kernel corresponding to each Operator may vary with changes in the
+  // SecurityConfig.
   Kernel kernel = 7 [(google.api.field_behavior) = REQUIRED];
 }
 
 // (-- api-linter: core::0123::resource-annotation=disabled
 message Kernel {
   // The name of the kernel
-  // e.g. for GroupAgg, kernel name maybe "oblivious_group_agg", "private_group_agg"
+  // e.g. for GroupAgg, kernel name maybe "oblivious_group_agg",
+  // "private_group_agg"
   string name = 1 [(google.api.field_behavior) = REQUIRED];
   // The cost of the kernel for optimization purposes
-  // Note that comparing Cost values is only meaningful when the original Operator is identical
-  // range: [0, 1]
+  // Note that comparing Cost values is only meaningful when the original
+  // Operator is identical range: [0, 1]
   double cost = 2 [(google.api.field_behavior) = OPTIONAL];
 }

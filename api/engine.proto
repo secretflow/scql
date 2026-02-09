@@ -29,7 +29,8 @@ option go_package = "proto-gen/scql";
 
 service SCQLEngineService {
   // Run the whole execution plan
-  rpc RunExecutionPlan(RunExecutionPlanRequest) returns (RunExecutionPlanResponse);
+  rpc RunExecutionPlan(RunExecutionPlanRequest)
+      returns (RunExecutionPlanResponse);
 
   // Query Job Status
   rpc QueryJobStatus(QueryJobStatusRequest) returns (QueryJobStatusResponse);

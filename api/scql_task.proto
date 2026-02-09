@@ -53,12 +53,13 @@ message ScqlConfig {
   repeated string parties = 3;
 
   // Runtime configurations
-  spu.pb.RuntimeConfig spu_runtime_cfg = 10; // SPU protocol settings
-  string time_zone = 11; // Time zone for temporal operations
-  LinkConfig link_cfg = 12; // Network communication settings
-  PsiConfig psi_cfg = 13; // Private set intersection config
-  LogConfig log_cfg = 14; // Logging configuration
+  spu.pb.RuntimeConfig spu_runtime_cfg = 10;  // SPU protocol settings
+  string time_zone = 11;     // Time zone for temporal operations
+  LinkConfig link_cfg = 12;  // Network communication settings
+  PsiConfig psi_cfg = 13;    // Private set intersection config
+  LogConfig log_cfg = 14;    // Logging configuration
 
   // Configuration used by the Kpad only
-  string graph_checksum = 20; // Checksum of the overall execution graph, used by other parties to verify graph consistency
+  string graph_checksum = 20;  // Checksum of the overall execution graph, used
+                               // by other parties to verify graph consistency
 }
