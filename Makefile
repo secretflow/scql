@@ -42,7 +42,7 @@ binary-cov: clean prepare fmt vet gogenerate
 
 pb: clean
 	$(RM) -rf pkg/proto-gen/*
-	./api/generate_proto.sh && bash ./contrib/agent/proto/generate_proto.sh
+	./api/generate_proto.sh
 
 fmt:
 	go fmt ./pkg/...
