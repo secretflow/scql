@@ -17,15 +17,14 @@ syntax = "proto3";
 
 package scql.pb;
 
-option go_package = "proto-gen/scql";
-
-import "api/status.proto";
 import "api/common.proto";
 import "api/core.proto";
+import "api/status.proto";
 import "api/subgraph.proto";
-import "libspu/spu.proto";
 import "google/protobuf/timestamp.proto";
+import "libspu/spu.proto";
 
+option go_package = "proto-gen/scql";
 
 message CompiledPlan {
   // schema of query result

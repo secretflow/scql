@@ -79,4 +79,4 @@ enum Code {
 
   // Feature not supported
   NOT_SUPPORTED = 340;
-};
+}

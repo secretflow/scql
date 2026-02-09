@@ -17,28 +17,26 @@ syntax = "proto3";
 
 package scql.pb;
 
-option go_package = "proto-gen/scql";
-
-import "google/protobuf/empty.proto";
-import "libspu/spu.proto";
 import "api/common.proto";
 import "api/core.proto";
 import "api/status.proto";
 import "api/subgraph.proto";
+import "google/protobuf/empty.proto";
+import "libspu/spu.proto";
 
 option cc_generic_services = true;
+option go_package = "proto-gen/scql";
 
 service SCQLEngineService {
   // Run the whole execution plan
-  rpc RunExecutionPlan(RunExecutionPlanRequest)
-      returns (RunExecutionPlanResponse);
+  rpc RunExecutionPlan(RunExecutionPlanRequest) returns (RunExecutionPlanResponse);
 
   // Query Job Status
   rpc QueryJobStatus(QueryJobStatusRequest) returns (QueryJobStatusResponse);
 
   // Stop Job
   rpc StopJob(StopJobRequest) returns (Status);
-};
+}
 
 message StopJobRequest {
   string job_id = 1;

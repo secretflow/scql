@@ -17,9 +17,11 @@
 // https://github.com/grpc/grpc/blob/master/src/proto/grpc/status/status.proto
 
 syntax = "proto3";
-import "google/protobuf/any.proto";
 
 package scql.pb;
+
+import "google/protobuf/any.proto";
+
 option go_package = "proto-gen/scql";
 option java_package = "org.secretflow.scql";
 

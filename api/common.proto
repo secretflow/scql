@@ -16,11 +16,12 @@
 syntax = "proto3";
 
 package scql.pb;
+
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
 option go_package = "proto-gen/scql";
 option java_package = "org.secretflow.scql";
-
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/any.proto";
 
 // RequestHeader carries the user custom headers.
 message RequestHeader {
