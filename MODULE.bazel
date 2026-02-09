@@ -131,5 +131,4 @@ python.toolchain(
 # test
 bazel_dep(name = "googletest", version = "1.15.2", dev_dependency = True)
 bazel_dep(name = "google_benchmark", version = "1.8.5", dev_dependency = True)
-
 bazel_dep(name = "rules_buf", version = "0.4.0")
