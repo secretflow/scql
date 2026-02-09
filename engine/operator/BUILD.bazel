@@ -512,10 +512,10 @@ cc_library(
 
 scql_cc_test(
     name = "reduce_test",
+    # 60 min
+    timeout = "eternal",
     srcs = ["reduce_test.cc"],
     shard_count = 4,
-    # 60 min
-    timeout='eternal',
     deps = [
         ":all_ops_register",
         ":reduce",
