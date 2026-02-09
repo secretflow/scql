@@ -14,6 +14,8 @@
 
 #include "engine/operator/sort.h"
 
+#include <vector>
+
 #include "gtest/gtest.h"
 
 #include "engine/core/tensor_constructor.h"
@@ -22,7 +24,7 @@
 namespace scql::engine::op {
 
 struct SortTestCase {
-  bool reverse;
+  std::vector<bool> reverse;
   // input and output share the same status
   pb::TensorStatus input_status;
   std::vector<test::NamedTensor> sort_keys;
@@ -44,7 +46,7 @@ INSTANTIATE_TEST_SUITE_P(
         test::SpuTestValuesMultiPC,
         testing::Values(
             SortTestCase{
-                .reverse = true,
+                .reverse = {true},
                 .input_status = pb::TENSORSTATUS_PRIVATE,
                 .sort_keys = {test::NamedTensor(
                     "k1", TensorFrom(arrow::int64(), "[5,1,2,4,3]"))},
@@ -53,7 +55,7 @@ INSTANTIATE_TEST_SUITE_P(
                 .outputs = {test::NamedTensor(
                     "y1", TensorFrom(arrow::int64(), "[10,13,14,12,11]"))}},
             SortTestCase{
-                .reverse = false,
+                .reverse = {false, false},
                 .input_status = pb::TENSORSTATUS_PRIVATE,
                 .sort_keys =
                     {test::NamedTensor("k1", TensorFrom(arrow::int64(),
@@ -66,7 +68,7 @@ INSTANTIATE_TEST_SUITE_P(
                     "y1", TensorFrom(arrow::int64(), "[11,12,10,14,13]"))}},
             // testcase: SimpleSort can sort by multiple keys
             SortTestCase{
-                .reverse = false,
+                .reverse = {false, false},
                 .input_status = pb::TENSORSTATUS_PRIVATE,
                 .sort_keys =
                     {test::NamedTensor("k1", TensorFrom(arrow::int64(),
@@ -79,7 +81,7 @@ INSTANTIATE_TEST_SUITE_P(
                     "y1", TensorFrom(arrow::int64(), "[11,12,13,10,14]"))}},
             // testcase: empty inputs
             SortTestCase{
-                .reverse = false,
+                .reverse = {false},
                 .input_status = pb::TENSORSTATUS_PRIVATE,
                 .sort_keys = {test::NamedTensor("k1", TensorFrom(arrow::int64(),
                                                                  "[]"))},
@@ -88,7 +90,7 @@ INSTANTIATE_TEST_SUITE_P(
                 .outputs = {test::NamedTensor("y1", TensorFrom(arrow::int64(),
                                                                "[]"))}},
             SortTestCase{
-                .reverse = false,
+                .reverse = {false},
                 .input_status = pb::TENSORSTATUS_PRIVATE,
                 .sort_keys = {test::NamedTensor(
                     "k1", TensorFrom(arrow::int64(), "[5,1,2,4,3]"))},
@@ -97,7 +99,7 @@ INSTANTIATE_TEST_SUITE_P(
                 .outputs = {test::NamedTensor(
                     "y1", TensorFrom(arrow::int64(), "[11,12,14,13,10]"))}},
             SortTestCase{
-                .reverse = false,
+                .reverse = {false},
                 .input_status = pb::TENSORSTATUS_SECRET,
                 .sort_keys = {test::NamedTensor(
                     "k1", TensorFrom(arrow::int64(), "[5,1,2,4,3]"))},
@@ -106,7 +108,7 @@ INSTANTIATE_TEST_SUITE_P(
                 .outputs = {test::NamedTensor(
                     "y1", TensorFrom(arrow::int64(), "[11,12,14,13,10]"))}},
             SortTestCase{
-                .reverse = true,
+                .reverse = {true},
                 .input_status = pb::TENSORSTATUS_SECRET,
                 .sort_keys = {test::NamedTensor(
                     "k1", TensorFrom(arrow::int64(), "[5,1,2,4,3]"))},
@@ -115,7 +117,7 @@ INSTANTIATE_TEST_SUITE_P(
                 .outputs = {test::NamedTensor(
                     "y1", TensorFrom(arrow::int64(), "[10,13,14,12,11]"))}},
             SortTestCase{
-                .reverse = false,
+                .reverse = {false, false},
                 .input_status = pb::TENSORSTATUS_SECRET,
                 .sort_keys =
                     {test::NamedTensor("k1", TensorFrom(arrow::int64(),
@@ -128,7 +130,7 @@ INSTANTIATE_TEST_SUITE_P(
                     "y1", TensorFrom(arrow::int64(), "[11,12,10,14,13]"))}},
             // testcase: SimpleSort can sort by multiple keys
             SortTestCase{
-                .reverse = false,
+                .reverse = {false, false},
                 .input_status = pb::TENSORSTATUS_SECRET,
                 .sort_keys =
                     {test::NamedTensor("k1", TensorFrom(arrow::int64(),
@@ -141,14 +143,95 @@ INSTANTIATE_TEST_SUITE_P(
                     "y1", TensorFrom(arrow::int64(), "[11,12,13,10,14]"))}},
             // testcase: empty inputs
             SortTestCase{
-                .reverse = false,
+                .reverse = {false},
                 .input_status = pb::TENSORSTATUS_SECRET,
                 .sort_keys = {test::NamedTensor("k1", TensorFrom(arrow::int64(),
                                                                  "[]"))},
                 .inputs = {test::NamedTensor("x1",
                                              TensorFrom(arrow::int64(), "[]"))},
                 .outputs = {test::NamedTensor("y1", TensorFrom(arrow::int64(),
-                                                               "[]"))}})),
+                                                               "[]"))}},
+            // testcase: empty inputs
+            SortTestCase{
+                .reverse = {false},
+                .input_status = pb::TENSORSTATUS_SECRET,
+                .sort_keys = {test::NamedTensor(
+                    "k1", TensorFrom(arrow::boolean(),
+                                     "[true,false,false,true,true]"))},
+                .inputs = {test::NamedTensor(
+                    "x1", TensorFrom(arrow::boolean(),
+                                     "[true,false,false,true,true]"))},
+                .outputs = {test::NamedTensor(
+                    "y1", TensorFrom(arrow::boolean(),
+                                     "[false,false,true,true,true]"))}},
+            // testcase: sort by directions
+            SortTestCase{
+                .reverse = {false, true},
+                .input_status = pb::TENSORSTATUS_SECRET,
+                .sort_keys =
+                    {test::NamedTensor("k1", TensorFrom(arrow::int64(),
+                                                        "[2,1,2,2,3]")),
+                     test::NamedTensor("k2", TensorFrom(arrow::int64(),
+                                                        "[3,1,1,2,4]"))},
+                .inputs = {test::NamedTensor("x1", TensorFrom(arrow::int64(),
+                                                              "[2,1,2,2,3]")),
+                           test::NamedTensor("x2", TensorFrom(arrow::int64(),
+                                                              "[3,1,1,2,4]")),
+                           test::NamedTensor("x3",
+                                             TensorFrom(arrow::int64(),
+                                                        "[10,11,12,13,14]"))},
+                .outputs = {test::NamedTensor("y1", TensorFrom(arrow::int64(),
+                                                               "[1,2,2,2,3]")),
+                            test::NamedTensor("y2", TensorFrom(arrow::int64(),
+                                                               "[1,3,2,1,4]")),
+                            test::NamedTensor("y3",
+                                              TensorFrom(arrow::int64(),
+                                                         "[11,10,13,12,14]"))}},
+            // testcase: sort by directions
+            SortTestCase{
+                .reverse = {false, false},
+                .input_status = pb::TENSORSTATUS_SECRET,
+                .sort_keys =
+                    {test::NamedTensor("k1", TensorFrom(arrow::int64(),
+                                                        "[2,1,2,2,3]")),
+                     test::NamedTensor(
+                         "k2", TensorFrom(arrow::boolean(),
+                                          "[true,false,true,false,true]"))},
+                .inputs = {test::NamedTensor("x1", TensorFrom(arrow::int64(),
+                                                              "[2,1,2,2,3]")),
+                           test::NamedTensor(
+                               "x2",
+                               TensorFrom(arrow::boolean(),
+                                          "[true,false,true,false,true]")),
+                           test::NamedTensor("x3",
+                                             TensorFrom(arrow::int64(),
+                                                        "[10,11,12,13,14]"))},
+                .outputs = {test::NamedTensor("y1", TensorFrom(arrow::int64(),
+                                                               "[1,2,2,2,3]")),
+                            test::NamedTensor(
+                                "y2",
+                                TensorFrom(arrow::boolean(),
+                                           "[false,false,true,true,true]")),
+                            test::NamedTensor("y3",
+                                              TensorFrom(arrow::int64(),
+                                                         "[11,13,10,12,14]"))}},
+            // testcase: sort by directions
+            SortTestCase{
+                .reverse = {false, false, true, true},
+                .input_status = pb::TENSORSTATUS_SECRET,
+                .sort_keys =
+                    {test::NamedTensor("k1", TensorFrom(arrow::int64(),
+                                                        "[2,1,2,2,3]")),
+                     test::NamedTensor("k2", TensorFrom(arrow::int64(),
+                                                        "[3,1,1,2,4]")),
+                     test::NamedTensor("k3", TensorFrom(arrow::int64(),
+                                                        "[6,7,7,8,8]")),
+                     test::NamedTensor("k4", TensorFrom(arrow::int64(),
+                                                        "[-3,-3,-4,-4,-5]"))},
+                .inputs = {test::NamedTensor(
+                    "x1", TensorFrom(arrow::int64(), "[10,11,12,13,14]"))},
+                .outputs = {test::NamedTensor(
+                    "y1", TensorFrom(arrow::int64(), "[11,12,13,10,14]"))}})),
     TestParamNameGenerator(SortTest));
 
 TEST_P(SortTest, Works) {
@@ -225,7 +308,7 @@ pb::ExecNode SortTest::MakeExecNode(const SortTestCase& tc) {
   }
   builder.AddOutput(Sort::kOut, outputs);
 
-  builder.AddBooleanAttr(Sort::kReverseAttr, tc.reverse);
+  builder.AddBooleansAttr(Sort::kReverseAttr, tc.reverse);
 
   return builder.Build();
 }

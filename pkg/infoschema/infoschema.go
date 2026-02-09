@@ -129,6 +129,7 @@ func FromTableSchema(tableSchema []*TableSchema) (InfoSchema, error) {
 			Indices:     []*model.IndexInfo{},
 			ForeignKeys: []*model.FKInfo{},
 			State:       model.StatePublic,
+			PartyCode:   tbl.PartyCode,
 			PKIsHandle:  false,
 		}
 		for i, col := range tbl.Columns {
@@ -200,7 +201,7 @@ func TypeConversion(tp string) (types.FieldType, error) {
 	}
 }
 
-// FieldTypeString converts mysql FieldType to scdb type string
+// FieldTypeString converts mysql FieldType to scql type string
 func FieldTypeString(tp types.FieldType) (string, error) {
 	switch tp.EvalType() {
 	case types.ETString:

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@rules_buf//buf:defs.bzl", "buf_lint_test")
 load("@rules_cc//cc:defs.bzl", "cc_proto_library")
 load("@rules_go//proto:def.bzl", "go_proto_library")
 load("@rules_java//java:defs.bzl", "java_proto_library")
@@ -22,30 +23,15 @@ package(default_visibility = ["//visibility:public"])
 proto_library(
     name = "core_proto",
     srcs = ["core.proto"],
+    deps = [
+        ":common_proto",
+        ":status_proto",
+    ],
 )
 
 proto_library(
     name = "status_code_proto",
     srcs = ["status_code.proto"],
-)
-
-proto_library(
-    name = "ccl_proto",
-    srcs = ["ccl.proto"],
-)
-
-proto_library(
-    name = "scdb_api_proto",
-    srcs = ["scdb_api.proto"],
-    deps = [
-        ":common_proto",
-        ":core_proto",
-        ":engine_proto",
-        ":status_proto",
-        "@com_google_protobuf//:empty_proto",
-        "@googleapis//google/api:annotations_proto",
-        "@googleapis//google/api:field_behavior_proto",
-    ],
 )
 
 proto_library(
@@ -98,26 +84,9 @@ cc_proto_library(
     deps = [":status_code_proto"],
 )
 
-proto_library(
-    name = "broker_proto",
-    srcs = ["broker.proto"],
-    deps = [
-        ":common_proto",
-        ":core_proto",
-        ":interpreter_proto",
-        ":status_proto",
-        "@com_google_protobuf//:timestamp_proto",
-        "@googleapis//google/api:annotations_proto",
-        "@googleapis//google/api:field_behavior_proto",
-        "@spulib//libspu:spu_proto",
-    ],
-)
-
-java_proto_library(
-    name = "broker_java_proto",
-    deps = [
-        ":broker_proto",
-    ],
+cc_proto_library(
+    name = "interpreter_cc_proto",
+    deps = [":interpreter_proto"],
 )
 
 proto_library(
@@ -132,7 +101,6 @@ proto_library(
     name = "interpreter_proto",
     srcs = ["interpreter.proto"],
     deps = [
-        ":ccl_proto",
         ":common_proto",
         ":core_proto",
         ":status_proto",
@@ -140,6 +108,22 @@ proto_library(
         "@com_google_protobuf//:timestamp_proto",
         "@spulib//libspu:spu_proto",
     ],
+)
+
+proto_library(
+    name = "scql_task_proto",
+    srcs = ["scql_task.proto"],
+    deps = [
+        ":common_proto",
+        ":engine_proto",
+        ":subgraph_proto",
+        "@spulib//libspu:spu_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "scql_task_cc_proto",
+    deps = [":scql_task_proto"],
 )
 
 go_proto_library(
@@ -163,13 +147,11 @@ go_proto_library(
     compilers = ["@rules_go//proto:go_grpc"],
     importpath = "github.com/secretflow/scql/pkg/proto-gen/scql",
     protos = [
-        ":broker_proto",
-        ":ccl_proto",
         ":common_proto",
         ":core_proto",
         ":engine_proto",
         ":interpreter_proto",
-        ":scdb_api_proto",
+        ":scql_task_proto",
         ":status_code_proto",
         ":status_proto",
         ":subgraph_proto",
@@ -178,4 +160,48 @@ go_proto_library(
         ":googleapis_go_proto",
         ":spu_go_proto",
     ],
+)
+
+# lint
+
+buf_lint_test(
+    name = "core_proto_lint",
+    config = "buf.yaml",
+    targets = [":core_proto"],
+)
+
+buf_lint_test(
+    name = "status_code_proto_lint",
+    config = "buf.yaml",
+    targets = [":status_code_proto"],
+)
+
+buf_lint_test(
+    name = "engine_proto_lint",
+    config = "buf.yaml",
+    targets = [":engine_proto"],
+)
+
+buf_lint_test(
+    name = "status_proto_lint",
+    config = "buf.yaml",
+    targets = [":status_proto"],
+)
+
+buf_lint_test(
+    name = "common_proto_lint",
+    config = "buf.yaml",
+    targets = [":common_proto"],
+)
+
+buf_lint_test(
+    name = "subgraph_proto_lint",
+    config = "buf.yaml",
+    targets = [":subgraph_proto"],
+)
+
+buf_lint_test(
+    name = "interpreter_proto_lint",
+    config = "buf.yaml",
+    targets = [":interpreter_proto"],
 )

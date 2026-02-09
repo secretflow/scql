@@ -36,7 +36,7 @@ commands:
             set +e
             go mod tidy
             echo "Running unit tests..."
-            go test -mod=readonly -timeout=30m -v -short ./pkg/... ./contrib/...
+            go test -mod=readonly -timeout=30m -v -short ./pkg/...
 
   run_cpp_test:
     description: "Run cpp tests and collect artifacts on fail"

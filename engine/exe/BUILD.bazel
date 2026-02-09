@@ -39,6 +39,7 @@ cc_binary(
     }),
     linkopts = ["-pie"],
     deps = [
+        "//api:scql_task_cc_proto",
         "//engine/auth:authenticator",
         "//engine/datasource:http_router",
         "//engine/datasource:kuscia_datamesh_router",
@@ -49,8 +50,10 @@ cc_binary(
         "//engine/services:engine_service_impl",
         "//engine/services:error_collector_service_impl",
         "//engine/services:prometheus_service_impl",
+        "//engine/util:kpad_task_helper",
         "//engine/util:logging",
         "//engine/util:prometheus_monitor",
+        "//engine/util:ssl_helper",
         "@abseil-cpp//absl/debugging:failure_signal_handler",
         "@abseil-cpp//absl/debugging:symbolize",
         "@brpc",

@@ -16,7 +16,10 @@
 
 #include "absl/strings/str_split.h"
 #include "google/protobuf/util/json_util.h"
+#include "spdlog/spdlog.h"
 #include "yacl/base/exception.h"
+
+#include "engine/datasource/csvdb_conf.pb.h"
 
 namespace scql::engine {
 
@@ -86,18 +89,93 @@ std::unique_ptr<EmbedRouter> EmbedRouter::FromConnectionStr(
   EmbedRouterConf router_conf;
   const std::string kDefaultDatasourceId = "ds001";
   {
-    auto ds = router_conf.add_datasources();
+    auto* ds = router_conf.add_datasources();
     ds->set_id(kDefaultDatasourceId);
     ds->set_name("default db");
     ds->set_kind(DataSourceKind::MYSQL);
     ds->set_connection_str(connection_str);
   }
   {
-    auto rule = router_conf.add_rules();
+    auto* rule = router_conf.add_rules();
     rule->set_db("*");
     rule->set_table("*");
     rule->set_datasource_id(kDefaultDatasourceId);
   }
+
+  return FromProto(router_conf);
+}
+
+std::unique_ptr<EmbedRouter> EmbedRouter::FromFilePaths(
+    const google::protobuf::Map<std::string, std::string>& input_file_paths) {
+  EmbedRouterConf router_conf;
+
+  std::string db_name;
+  std::string datasource_id;
+  csv::CsvdbConf csv_conf;
+
+  for (const auto& [table_ref, file_path] : input_file_paths) {
+    // Parse table_ref to extract db and table
+    std::vector<absl::string_view> fields = absl::StrSplit(table_ref, '.');
+    std::string current_db_name;
+    std::string table_name;
+
+    YACL_ENFORCE(fields.size() == 2,
+                 "Invalid table_ref format: {}, expected 'db.table' format",
+                 table_ref);
+    current_db_name = std::string(fields[0]);
+    table_name = std::string(fields[1]);
+
+    if (db_name.empty()) {
+      db_name = current_db_name;
+      datasource_id = fmt::format("csvdb_{}", db_name);
+
+      auto* ds = router_conf.add_datasources();
+      ds->set_id(datasource_id);
+      ds->set_name(fmt::format("CSV database for {}", db_name));
+      ds->set_kind(DataSourceKind::CSVDB);
+
+      csv_conf.set_db_name(db_name);
+
+      SPDLOG_INFO("Creating datasource '{}' for db '{}'", datasource_id,
+                  db_name);
+    }
+
+    YACL_ENFORCE(db_name == current_db_name,
+                 "Multiple databases detected: '{}' and '{}'. Only one "
+                 "database is supported in FromFilePaths",
+                 db_name, current_db_name);
+
+    auto* csv_tbl = csv_conf.add_tables();
+    csv_tbl->set_table_name(table_name);
+    csv_tbl->set_data_path(file_path);
+
+    auto* rule = router_conf.add_rules();
+    rule->set_db(db_name);
+    rule->set_table(table_name);
+    rule->set_datasource_id(datasource_id);
+  }
+
+  YACL_ENFORCE(!db_name.empty(),
+               "No valid table references found in input_file_paths");
+
+  // Serialize CsvdbConf to JSON and set as connection string
+  std::string connection_str;
+  auto status =
+      google::protobuf::util::MessageToJsonString(csv_conf, &connection_str);
+  YACL_ENFORCE(status.ok(), "Failed to serialize CsvdbConf to JSON: {}",
+               status.ToString());
+
+  bool found_datasource = false;
+  for (auto& ds : *router_conf.mutable_datasources()) {
+    if (ds.id() == datasource_id) {
+      ds.set_connection_str(connection_str);
+      found_datasource = true;
+      break;
+    }
+  }
+
+  YACL_ENFORCE(found_datasource, "Failed to find datasource with id: {}",
+               datasource_id);
 
   return FromProto(router_conf);
 }

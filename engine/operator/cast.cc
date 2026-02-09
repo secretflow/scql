@@ -44,13 +44,10 @@ void Cast::Validate(ExecContext* ctx) {
 }
 
 void Cast::Execute(ExecContext* ctx) {
-  const auto& input_pb = ctx->GetInput(kIn)[0];
   const auto& output_pb = ctx->GetOutput(kOut)[0];
-  if (util::GetTensorStatus(input_pb) ==
-      pb::TensorStatus::TENSORSTATUS_PRIVATE) {
-    auto tensor = ctx->GetTensorTable()->GetTensor(input_pb.name());
-    YACL_ENFORCE(tensor != nullptr, "get tensor={} from tensor table failed",
-                 input_pb.name());
+  if (ctx->GetInputStatus(kIn) == pb::TensorStatus::TENSORSTATUS_PRIVATE) {
+    auto tensor = ctx->GetInputTensor(kIn);
+    YACL_ENFORCE(tensor != nullptr, "get tensor from tensor table failed");
 
     auto in_type = tensor->ArrowType();
     auto to_type = ToArrowDataType(output_pb.elem_type());
@@ -83,32 +80,28 @@ void Cast::Execute(ExecContext* ctx) {
                  result.status().ToString());
 
     auto t = TensorFrom(result.ValueOrDie().chunked_array());
-    ctx->GetTensorTable()->AddTensor(output_pb.name(), std::move(t));
+    ctx->SetOutputTensor(kOut, std::move(t));
     return;
   }
 
-  YACL_ENFORCE(input_pb.elem_type() != pb::PrimitiveDataType::STRING &&
-                   output_pb.elem_type() != pb::PrimitiveDataType::STRING,
-               "string in spu is hash, not support cast");
-  auto* symbols = ctx->GetSession()->GetDeviceSymbols();
+  YACL_ENFORCE(
+      ctx->GetInput(kIn)[0].elem_type() != pb::PrimitiveDataType::STRING &&
+          output_pb.elem_type() != pb::PrimitiveDataType::STRING,
+      "string in spu is hash, not support cast");
   auto* sctx = ctx->GetSession()->GetSpuContext();
   auto to_type = spu::getEncodeType(DataTypeToSpuPtType(output_pb.elem_type()));
 
-  auto value =
-      symbols->getVar(util::SpuVarNameEncoder::GetValueName(input_pb.name()));
+  auto value = ctx->GetInputValue(kIn);
 
   auto result_value =
       spu::kernel::hlo::Cast(sctx, value, value.vtype(), to_type);
 
-  symbols->setVar(util::SpuVarNameEncoder::GetValueName(output_pb.name()),
-                  result_value);
+  ctx->SetOutputValue(kOut, result_value);
 
 #ifdef SCQL_WITH_NULL
-  auto validity = symbols->getVar(
-      util::SpuVarNameEncoder::GetValidityName(input_pb.name()));
+  auto validity = ctx->GetInputValidity(kIn);
 
-  symbols->setVar(util::SpuVarNameEncoder::GetValidityName(output_pb.name()),
-                  validity);
+  ctx->SetOutputValidity(kOut, validity);
 #endif  // SCQL_WITH_NULL
 }
 

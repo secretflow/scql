@@ -28,6 +28,10 @@ func printPlanDetails(plan core.LogicalPlan, level int) {
 
 	fmt.Printf("%sPlan ID: %d\n", indent, plan.ID())
 	fmt.Printf("%sPlan Type: %s\n", indent, plan.TP())
+	for _, col := range plan.Schema().Columns {
+		fmt.Printf("%s Column: %d, %s\n", indent, col.UniqueID, col.OrigName)
+	}
+	fmt.Println()
 	fmt.Println(indent + "Children:")
 	for _, child := range plan.Children() {
 		printPlanDetails(child, level+1)

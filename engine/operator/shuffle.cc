@@ -40,25 +40,10 @@ void Shuffle::Validate(ExecContext* ctx) {
 }
 
 void Shuffle::Execute(ExecContext* ctx) {
-  auto* symbols = ctx->GetSession()->GetDeviceSymbols();
-  std::vector<spu::Value> inputs;
-
-  const auto& input_pbs = ctx->GetInput(kIn);
-  for (const auto& input_pb : input_pbs) {
-    auto val =
-        symbols->getVar(util::SpuVarNameEncoder::GetValueName(input_pb.name()));
-    inputs.push_back(std::move(val));
-  }
-
   auto* sctx = ctx->GetSession()->GetSpuContext();
+  auto inputs = ctx->GetInputValues(kIn);
   auto outputs = spu::kernel::hlo::Shuffle(sctx, inputs, 0);
-
-  const auto& output_pbs = ctx->GetOutput(kOut);
-  for (int i = 0; i < output_pbs.size(); ++i) {
-    const auto& val_name =
-        util::SpuVarNameEncoder::GetValueName(output_pbs[i].name());
-    symbols->setVar(val_name, outputs[i]);
-  }
+  ctx->SetOutputValues(kOut, outputs);
 }
 
 }  // namespace scql::engine::op

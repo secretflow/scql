@@ -123,6 +123,53 @@ type LogicalJoin struct {
 	redundantNames  types.NameSlice
 }
 
+func (p *LogicalJoin) columnSubstitute(schema *expression.Schema, exprs []expression.Expression) {
+	for i, cond := range p.LeftConditions {
+		p.LeftConditions[i] = expression.ColumnSubstitute(cond, schema, exprs)
+	}
+
+	for i, cond := range p.RightConditions {
+		p.RightConditions[i] = expression.ColumnSubstitute(cond, schema, exprs)
+	}
+
+	for i, cond := range p.OtherConditions {
+		p.OtherConditions[i] = expression.ColumnSubstitute(cond, schema, exprs)
+	}
+
+	for i := len(p.EqualConditions) - 1; i >= 0; i-- {
+		newCond := expression.ColumnSubstitute(p.EqualConditions[i], schema, exprs).(*expression.ScalarFunction)
+
+		// If the columns used in the new filter all come from the left child,
+		// we can push this filter to it.
+		if expression.ExprFromSchema(newCond, p.children[0].Schema()) {
+			p.LeftConditions = append(p.LeftConditions, newCond)
+			p.EqualConditions = append(p.EqualConditions[:i], p.EqualConditions[i+1:]...)
+			continue
+		}
+
+		// If the columns used in the new filter all come from the right
+		// child, we can push this filter to it.
+		if expression.ExprFromSchema(newCond, p.children[1].Schema()) {
+			p.RightConditions = append(p.RightConditions, newCond)
+			p.EqualConditions = append(p.EqualConditions[:i], p.EqualConditions[i+1:]...)
+			continue
+		}
+
+		_, lhsIsCol := newCond.GetArgs()[0].(*expression.Column)
+		_, rhsIsCol := newCond.GetArgs()[1].(*expression.Column)
+
+		// If the columns used in the new filter are not all expression.Column,
+		// we can not use it as join's equal condition.
+		if !(lhsIsCol && rhsIsCol) {
+			p.OtherConditions = append(p.OtherConditions, newCond)
+			p.EqualConditions = append(p.EqualConditions[:i], p.EqualConditions[i+1:]...)
+			continue
+		}
+
+		p.EqualConditions[i] = newCond
+	}
+}
+
 func (p *LogicalJoin) extractCorrelatedCols() []*expression.CorrelatedColumn {
 	corCols := p.baseLogicalPlan.extractCorrelatedCols()
 	for _, fun := range p.EqualConditions {
@@ -212,14 +259,13 @@ type LogicalProjection struct {
 	AvoidColumnEvaluator bool
 }
 
-/*
 func (p *LogicalProjection) extractCorrelatedCols() []*expression.CorrelatedColumn {
 	corCols := p.baseLogicalPlan.extractCorrelatedCols()
 	for _, expr := range p.Exprs {
 		corCols = append(corCols, expression.ExtractCorColumns(expr)...)
 	}
 	return corCols
-} */
+}
 
 // DataSource represents a tableScan without condition push down.
 type DataSource struct {
@@ -279,8 +325,15 @@ type LogicalSelection struct {
 	// Originally the WHERE or ON condition is parsed into a single expression,
 	// but after we converted to CNF(Conjunctive normal form), it can be
 	// split into a list of AND conditions.
-	Conditions               []expression.Expression
-	AffectedByGroupThreshold bool
+	Conditions []expression.Expression
+}
+
+func (p *LogicalSelection) extractCorrelatedCols() []*expression.CorrelatedColumn {
+	corCols := p.baseLogicalPlan.extractCorrelatedCols()
+	for _, cond := range p.Conditions {
+		corCols = append(corCols, expression.ExtractCorColumns(cond)...)
+	}
+	return corCols
 }
 
 // extractCorColumnsBySchema only extracts the correlated columns that match the specified schema.
@@ -319,6 +372,16 @@ type LogicalApply struct {
 	CorCols []*expression.CorrelatedColumn
 }
 
+func (la *LogicalApply) extractCorrelatedCols() []*expression.CorrelatedColumn {
+	corCols := la.LogicalJoin.extractCorrelatedCols()
+	for i := len(corCols) - 1; i >= 0; i-- {
+		if la.children[0].Schema().Contains(&corCols[i].Column) {
+			corCols = append(corCols[:i], corCols[i+1:]...)
+		}
+	}
+	return corCols
+}
+
 // LogicalAggregation represents an aggregate plan.
 type LogicalAggregation struct {
 	logicalSchemaProducer
@@ -346,6 +409,19 @@ func (la *LogicalAggregation) GetGroupByCols() []*expression.Column {
 		la.collectGroupByColumns()
 	}
 	return la.groupByCols
+}
+
+func (la *LogicalAggregation) extractCorrelatedCols() []*expression.CorrelatedColumn {
+	corCols := la.baseLogicalPlan.extractCorrelatedCols()
+	for _, expr := range la.GroupByItems {
+		corCols = append(corCols, expression.ExtractCorColumns(expr)...)
+	}
+	for _, fun := range la.AggFuncs {
+		for _, arg := range fun.Args {
+			corCols = append(corCols, expression.ExtractCorColumns(arg)...)
+		}
+	}
+	return corCols
 }
 
 // LogicalSort stands for the order by plan.

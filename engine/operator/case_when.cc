@@ -95,21 +95,19 @@ void CaseWhen::Validate(ExecContext* ctx) {
 }
 
 void CaseWhen::Execute(ExecContext* ctx) {
-  const auto& output = ctx->GetOutput(kOut);
-  auto out_status = util::GetTensorStatus(output[0]);
-  out_status == pb::TensorStatus::TENSORSTATUS_PRIVATE ? CaseWhenPrivate(ctx)
-                                                       : CaseWhenShare(ctx);
+  ctx->GetOutputStatus(kOut) == pb::TensorStatus::TENSORSTATUS_PRIVATE
+      ? CaseWhenPrivate(ctx)
+      : CaseWhenShare(ctx);
 }
 
 void CaseWhen::CaseWhenPrivate(ExecContext* ctx) {
   const auto& cond_pb = ctx->GetInput(kCond);
   const auto& value_pb = ctx->GetInput(kValue);
-  const auto& value_else_pb = ctx->GetInput(kValueElse);
   std::vector<arrow::Datum> conds_datum;
   std::vector<arrow::Datum> values_datum;
   std::vector<std::shared_ptr<arrow::ChunkedArray>> conds_array;
   for (int i = 0; i < cond_pb.size(); i++) {
-    auto cond = ctx->GetTensorTable()->GetTensor(cond_pb[i].name());
+    auto cond = ctx->GetInputTensor(kCond, i);
     YACL_ENFORCE(cond, "get tensor {} failed", cond_pb[i].name());
     auto cond_array = cond->ToArrowChunkedArray();
     if (cond->Type() != pb::BOOL) {
@@ -121,7 +119,7 @@ void CaseWhen::CaseWhenPrivate(ExecContext* ctx) {
       cond_array = cond_nqz.ValueOrDie().chunked_array();
     }
     conds_datum.emplace_back(cond_array);
-    auto value = ctx->GetTensorTable()->GetTensor(value_pb[i].name());
+    auto value = ctx->GetInputTensor(kValue, i);
     YACL_ENFORCE(value, "get tensor {} failed", value_pb[i].name());
     auto value_array = value->ToArrowChunkedArray();
     values_datum.emplace_back(value_array);
@@ -132,8 +130,8 @@ void CaseWhen::CaseWhenPrivate(ExecContext* ctx) {
                "caught error while invoking arrow make_struct function: {}",
                cond_struct.status().ToString());
   auto cond_array = cond_struct.ValueOrDie().chunked_array();
-  auto value_else = ctx->GetTensorTable()->GetTensor(value_else_pb[0].name());
-  YACL_ENFORCE(value_else, "get tensor {} failed", value_else_pb[0].name());
+  auto value_else = ctx->GetInputTensor(kValueElse);
+  YACL_ENFORCE(value_else, "get tensor {} failed", cond_pb[0].name());
   auto value_else_array = value_else->ToArrowChunkedArray();
 
   std::vector<arrow::Datum> inputs;
@@ -148,9 +146,7 @@ void CaseWhen::CaseWhenPrivate(ExecContext* ctx) {
                "invoking arrow case_when function failed: err_msg={}",
                result.status().ToString());
 
-  const auto& output = ctx->GetOutput(kOut);
-  ctx->GetTensorTable()->AddTensor(
-      output[0].name(), TensorFrom(result.ValueOrDie().chunked_array()));
+  ctx->SetOutputTensor(kOut, TensorFrom(result.ValueOrDie().chunked_array()));
 }
 
 // condition:
@@ -162,14 +158,13 @@ void CaseWhen::CaseWhenPrivate(ExecContext* ctx) {
 //   |0,  0,  0 , 0|     |0, 0, 0, 0, 1|
 std::vector<spu::Value> CaseWhen::TransformConditionData(ExecContext* ctx) {
   const auto& cond_pb = ctx->GetInput(kCond);
-  auto* device_symbols = ctx->GetSession()->GetDeviceSymbols();
   auto* sctx = ctx->GetSession()->GetSpuContext();
+  auto cond_values = ctx->GetInputValues(kCond);
   std::vector<spu::Value> result;
   result.reserve(cond_pb.size());
   spu::Value cond_pre;
   for (int i = 0; i < cond_pb.size(); i++) {
-    auto cond_cur = device_symbols->getVar(
-        util::SpuVarNameEncoder::GetValueName(cond_pb[i].name()));
+    auto cond_cur = cond_values[i];
     auto zero = spu::kernel::hlo::Constant(sctx, 0, {cond_cur.shape()});
     if (cond_pb[i].elem_type() != pb::BOOL) {
       cond_cur = spu::kernel::hlo::NotEqual(sctx, cond_cur, zero);
@@ -191,27 +186,19 @@ std::vector<spu::Value> CaseWhen::TransformConditionData(ExecContext* ctx) {
 }
 
 void CaseWhen::CaseWhenShare(ExecContext* ctx) {
-  const auto& value_pb = ctx->GetInput(kValue);
-  const auto& value_else_pb = ctx->GetInput(kValueElse);
-
-  auto* device_symbols = ctx->GetSession()->GetDeviceSymbols();
   auto* sctx = ctx->GetSession()->GetSpuContext();
   auto conds = TransformConditionData(ctx);
+  auto values = ctx->GetInputValues(kValue);
   spu::Value result_value =
       spu::kernel::hlo::Constant(sctx, 0, {conds[0].shape()});
-  for (int i = 0; i < value_pb.size(); i++) {
-    auto value = device_symbols->getVar(
-        util::SpuVarNameEncoder::GetValueName(value_pb[i].name()));
-    auto cur_value = spu::kernel::hlo::Mul(sctx, conds[i], value);
+  for (int i = 0; i < values.size(); i++) {
+    auto cur_value = spu::kernel::hlo::Mul(sctx, conds[i], values[i]);
     result_value = spu::kernel::hlo::Add(sctx, result_value, cur_value);
   }
-  auto value_else = device_symbols->getVar(
-      util::SpuVarNameEncoder::GetValueName(value_else_pb[0].name()));
+  auto value_else = ctx->GetInputValue(kValueElse);
   auto cur_value = spu::kernel::hlo::Mul(sctx, conds.back(), value_else);
   result_value = spu::kernel::hlo::Add(sctx, result_value, cur_value);
-  const auto& output = ctx->GetOutput(kOut);
-  device_symbols->setVar(
-      util::SpuVarNameEncoder::GetValueName(output[0].name()), result_value);
+  ctx->SetOutputValue(kOut, result_value);
 }
 
 }  // namespace scql::engine::op

@@ -32,7 +32,7 @@ const (
 	DBTypeODPS
 )
 
-var dbTypeMap = map[string]DBType{
+var DbTypeMap = map[string]DBType{
 	"mysql":      DBTypeMySQL,
 	"sqlite":     DBTypeSQLite,
 	"postgresql": DBTypePostgres,
@@ -40,7 +40,7 @@ var dbTypeMap = map[string]DBType{
 	"odps":       DBTypeODPS,
 }
 
-var dbTypeNameMap = map[DBType]string{
+var DbTypeNameMap = map[DBType]string{
 	DBTypeUnknown:  "unknown",
 	DBTypeMySQL:    "mysql",
 	DBTypeSQLite:   "sqlite",
@@ -50,14 +50,14 @@ var dbTypeNameMap = map[DBType]string{
 }
 
 func (t DBType) String() string {
-	if name, exists := dbTypeNameMap[t]; exists {
+	if name, exists := DbTypeNameMap[t]; exists {
 		return name
 	}
 	return "unknown"
 }
 
 func ParseDBType(tp string) (DBType, error) {
-	if v, ok := dbTypeMap[strings.ToLower(tp)]; ok {
+	if v, ok := DbTypeMap[strings.ToLower(tp)]; ok {
 		return v, nil
 	}
 	return DBTypeUnknown, fmt.Errorf("unknown db type: %s", tp)

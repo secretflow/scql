@@ -64,29 +64,17 @@ void If::Validate(ExecContext* ctx) {
 }
 
 void If::Execute(ExecContext* ctx) {
-  const auto& cond = ctx->GetInput(kCond);
-  const auto& valueFalse = ctx->GetInput(kValueFalse);
-  const auto& valueTrue = ctx->GetInput(kValueTrue);
-  const auto& output = ctx->GetOutput(kOut);
-  auto out_status = util::GetTensorStatus(output[0]);
-
-  if (out_status == pb::TensorStatus::TENSORSTATUS_PRIVATE) {
-    IfPrivate(ctx, cond[0], valueTrue[0], valueFalse[0], output[0].name());
+  if (ctx->GetOutputStatus(kOut) == pb::TensorStatus::TENSORSTATUS_PRIVATE) {
+    IfPrivate(ctx);
   } else {
-    IfSecret(ctx, cond[0], valueTrue[0], valueFalse[0], output[0].name());
+    IfSecret(ctx);
   }
 }
 
-void If::IfPrivate(ExecContext* ctx, const pb::Tensor& cond_pb,
-                   const pb::Tensor& value_true_pb,
-                   const pb::Tensor& value_false_pb,
-                   const std::string& output_name) {
-  auto cond = ctx->GetTensorTable()->GetTensor(cond_pb.name());
-  YACL_ENFORCE(cond, "get tensor {} failed", cond_pb.name());
-  auto value_true = ctx->GetTensorTable()->GetTensor(value_true_pb.name());
-  YACL_ENFORCE(value_true, "get tensor {} failed", value_true_pb.name());
-  auto value_false = ctx->GetTensorTable()->GetTensor(value_false_pb.name());
-  YACL_ENFORCE(value_false, "get tensor {} failed", value_false_pb.name());
+void If::IfPrivate(ExecContext* ctx) {
+  auto cond = ctx->GetInputTensor(kCond);
+  auto value_true = ctx->GetInputTensor(kValueTrue);
+  auto value_false = ctx->GetInputTensor(kValueFalse);
   auto cond_array = cond->ToArrowChunkedArray();
   if (cond->Type() != pb::BOOL) {
     cond_array =
@@ -101,23 +89,15 @@ void If::IfPrivate(ExecContext* ctx, const pb::Tensor& cond_pb,
   YACL_ENFORCE(result.ok(),
                "invoking arrow if_else function failed: err_msg={}",
                result.status().ToString());
-  ctx->GetTensorTable()->AddTensor(
-      output_name, TensorFrom(result.ValueOrDie().chunked_array()));
+  ctx->SetOutputTensor(kOut, TensorFrom(result.ValueOrDie().chunked_array()));
 }
 
-void If::IfSecret(ExecContext* ctx, const pb::Tensor& cond_pb,
-                  const pb::Tensor& value_true_pb,
-                  const pb::Tensor& value_false_pb,
-                  const std::string& output_name) {
-  auto* device_symbols = ctx->GetSession()->GetDeviceSymbols();
+void If::IfSecret(ExecContext* ctx) {
   auto* sctx = ctx->GetSession()->GetSpuContext();
 
-  auto cond = device_symbols->getVar(
-      util::SpuVarNameEncoder::GetValueName(cond_pb.name()));
-  auto value_true = device_symbols->getVar(
-      util::SpuVarNameEncoder::GetValueName(value_true_pb.name()));
-  auto value_false = device_symbols->getVar(
-      util::SpuVarNameEncoder::GetValueName(value_false_pb.name()));
+  auto cond = ctx->GetInputValue(kCond);
+  auto value_true = ctx->GetInputValue(kValueTrue);
+  auto value_false = ctx->GetInputValue(kValueFalse);
   auto zero = spu::kernel::hlo::Constant(sctx, 0, {cond.shape()});
   auto cond_equal_zero = spu::kernel::hlo::Equal(sctx, cond, zero);
   auto result_value = spu::kernel::hlo::Add(
@@ -126,8 +106,7 @@ void If::IfSecret(ExecContext* ctx, const pb::Tensor& cond_pb,
           sctx, spu::kernel::hlo::Sub(sctx, value_false, value_true),
           cond_equal_zero),
       value_true);
-  device_symbols->setVar(util::SpuVarNameEncoder::GetValueName(output_name),
-                         result_value);
+  ctx->SetOutputValue(kOut, result_value);
 }
 
 }  // namespace scql::engine::op

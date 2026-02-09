@@ -62,7 +62,7 @@ func isUserVarChar(ch rune) bool {
 }
 
 type trieNode struct {
-	children [256]*trieNode
+	childs [256]*trieNode
 	token  int
 	fn     func(s *Scanner) (int, Pos, string)
 }
@@ -70,19 +70,19 @@ type trieNode struct {
 var ruleTable trieNode
 
 func initTokenByte(c byte, tok int) {
-	if ruleTable.children[c] == nil {
-		ruleTable.children[c] = &trieNode{}
+	if ruleTable.childs[c] == nil {
+		ruleTable.childs[c] = &trieNode{}
 	}
-	ruleTable.children[c].token = tok
+	ruleTable.childs[c].token = tok
 }
 
 func initTokenString(str string, tok int) {
 	node := &ruleTable
 	for _, c := range str {
-		if node.children[c] == nil {
-			node.children[c] = &trieNode{}
+		if node.childs[c] == nil {
+			node.childs[c] = &trieNode{}
 		}
-		node = node.children[c]
+		node = node.childs[c]
 	}
 	node.token = tok
 }
@@ -90,10 +90,10 @@ func initTokenString(str string, tok int) {
 func initTokenFunc(str string, fn func(s *Scanner) (int, Pos, string)) {
 	for i := 0; i < len(str); i++ {
 		c := str[i]
-		if ruleTable.children[c] == nil {
-			ruleTable.children[c] = &trieNode{}
+		if ruleTable.childs[c] == nil {
+			ruleTable.childs[c] = &trieNode{}
 		}
-		ruleTable.children[c].fn = fn
+		ruleTable.childs[c].fn = fn
 	}
 	return
 }
@@ -122,11 +122,11 @@ func init() {
 	initTokenByte('^', int('^'))
 	initTokenByte('~', int('~'))
 	initTokenByte('\\', int('\\'))
-	initTokenByte('?', paramMarker)
 	initTokenByte('=', eq)
 	initTokenByte('{', int('{'))
 	initTokenByte('}', int('}'))
-
+	initTokenString("{{", leftMarker)
+	initTokenString("}}", rightMarker)
 	initTokenString("||", pipes)
 	initTokenString("&&", andand)
 	initTokenString("&^", andnot)
@@ -716,6 +716,8 @@ var tokenMap = map[string]int{
 	"ENDPOINT":                  endpoint,
 	"REF_TABLE":                 refTable,
 	"DB_TYPE":                   dbType,
+	"{{":                        leftMarker,
+	"}}":                        rightMarker,
 }
 
 // See https://dev.mysql.com/doc/refman/5.7/en/function-resolution.html for details

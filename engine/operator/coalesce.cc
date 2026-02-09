@@ -43,23 +43,17 @@ void Coalesce::Validate(ExecContext* ctx) {
 }
 
 void Coalesce::Execute(ExecContext* ctx) {
-  const auto& expr_pbs = ctx->GetInput(kExprs);
-  const auto& output_pb = ctx->GetOutput(kOut)[0];
-
-  std::vector<arrow::Datum> exprs;
-  for (const auto& expr_pb : expr_pbs) {
-    auto expr = ctx->GetTensorTable()->GetTensor(expr_pb.name());
-    YACL_ENFORCE(expr != nullptr, "get tensor={} from tensor table failed",
-                 expr_pb.name());
-    exprs.emplace_back(expr->ToArrowChunkedArray());
+  auto exprs = ctx->GetInputTensors(kExprs);
+  std::vector<arrow::Datum> datums;
+  for (const auto& expr : exprs) {
+    datums.emplace_back(expr->ToArrowChunkedArray());
   }
 
-  auto result = arrow::compute::CallFunction("coalesce", exprs);
+  auto result = arrow::compute::CallFunction("coalesce", datums);
   YACL_ENFORCE(result.ok(), "caught error while invoking arrow coalesce: {}",
                result.status().ToString());
 
-  auto t = TensorFrom(result.ValueOrDie().chunked_array());
-  ctx->GetTensorTable()->AddTensor(output_pb.name(), std::move(t));
+  ctx->SetOutputTensor(kOut, TensorFrom(result.ValueOrDie().chunked_array()));
 }
 
 }  // namespace scql::engine::op

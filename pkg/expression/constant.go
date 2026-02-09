@@ -65,12 +65,12 @@ type ParamMarker struct {
 	ctx   sessionctx.Context
 	order int
 	tp    types.FieldType
+	name  string
 }
 
-// GetUserVar returns the corresponding user variable presented in the `EXECUTE` statement or `COM_EXECUTE` command.
-func (d *ParamMarker) GetUserVar() types.Datum {
-	sessionVars := d.ctx.GetSessionVars()
-	return sessionVars.PreparedParams[d.order]
+// variable stored in constant directly
+func (d *ParamMarker) GetUserVar() (types.Datum, bool) {
+	return types.Datum{}, false
 }
 
 // GetType implements Expression interface.

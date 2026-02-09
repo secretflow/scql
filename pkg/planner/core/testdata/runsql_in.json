@@ -3,587 +3,808 @@
     "name": "TestRunSQL",
     "cases": [
       {
+        "sql": "SELECT  count(*) AS numwait FROM alice.tbl_0 l1, alice.tbl_1 as l2 WHERE l1.plain_int_0 = l2.plain_int_0 AND NOT EXISTS ( SELECT * FROM alice.tbl_2 l3 WHERE l3.plain_int_0 = l1.plain_int_0 AND l3.plain_int_0 != l1.plain_int_0 AND l3.plain_int_0 > l1.plain_int_0 ) GROUP BY l1.plain_string_0;",
+        "skip_projection": false,
+        "rewritten_sql": "select count(1) as numwait from alice.tbl_0 as l1 join alice.tbl_1 as l2 on l1.plain_int_0=l2.plain_int_0 where not exists (select l3.plain_int_0 from alice.tbl_2 as l3 where ((l1.plain_int_0=l3.plain_int_0) and (l3.plain_int_0!=l1.plain_int_0)) and (l3.plain_int_0>l1.plain_int_0)) group by l1.plain_string_0 having count(1)>=4"
+      },
+      {
         "sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2",
+        "rewritten_sql_pg": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2",
+        "rewritten_sql_csv": "select tbl_1.plain_float_0 as fl from alice.tbl_1 cross join alice.tbl_2",
         "rewritten_sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2"
       },
       {
         "sql": "SELECT tbl_1.plain_int_0, tbl_1.plain_float_0, ROW_NUMBER() OVER(PARTITION BY tbl_1.plain_int_0 ORDER BY tbl_1.plain_float_0) AS number from alice.tbl_1 as tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select tbl_1.plain_int_0,tbl_1.plain_float_0,row_number() over (partition by tbl_1.plain_int_0 order by tbl_1.plain_float_0) as number from alice.tbl_1 as tbl_1",
+        "rewritten_sql_pg": "select tbl_1.plain_int_0,tbl_1.plain_float_0,row_number() over (partition by tbl_1.plain_int_0 order by tbl_1.plain_float_0) as number from alice.tbl_1 as tbl_1",
+        "rewritten_sql_csv": "select tbl_1.plain_int_0,tbl_1.plain_float_0,row_number() over (partition by tbl_1.plain_int_0 order by tbl_1.plain_float_0) as number from alice.tbl_1 as tbl_1",
         "rewritten_sql": "select tbl_1.plain_int_0,tbl_1.plain_float_0,row_number() over (partition by tbl_1.plain_int_0 order by tbl_1.plain_float_0) as number from alice.tbl_1 as tbl_1"
       },
       {
         "sql": "SELECT geodist(plain_int_0, plain_float_0, plain_int_0, plain_float_0, 6300) from alice.tbl_1 as tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select 6300*acos(sin(radians(tbl_1.plain_float_0))*sin(radians(tbl_1.plain_float_0))+cos(radians(tbl_1.plain_float_0))*cos(radians(tbl_1.plain_float_0))*cos(radians(tbl_1.plain_int_0)-radians(tbl_1.plain_int_0))) as expr_121 from alice.tbl_1 as tbl_1",
+        "rewritten_sql_pg": "select 6300*acos(sin(radians(tbl_1.plain_float_0))*sin(radians(tbl_1.plain_float_0))+cos(radians(tbl_1.plain_float_0))*cos(radians(tbl_1.plain_float_0))*cos(radians(tbl_1.plain_int_0)-radians(tbl_1.plain_int_0))) as expr_121 from alice.tbl_1 as tbl_1",
+        "rewritten_sql_csv": "select 6300*acos(sin(radians(tbl_1.plain_float_0))*sin(radians(tbl_1.plain_float_0))+cos(radians(tbl_1.plain_float_0))*cos(radians(tbl_1.plain_float_0))*cos(radians(tbl_1.plain_int_0)-radians(tbl_1.plain_int_0))) as expr_121 from alice.tbl_1 as tbl_1",
         "rewritten_sql": "select 6300*acos(sin(radians(tbl_1.plain_float_0))*sin(radians(tbl_1.plain_float_0))+cos(radians(tbl_1.plain_float_0))*cos(radians(tbl_1.plain_float_0))*cos(radians(tbl_1.plain_int_0)-radians(tbl_1.plain_int_0))) as expr_121 from alice.tbl_1 as tbl_1"
       },
       {
         "sql": "SELECT geodist(plain_int_0, plain_float_0, plain_int_0, plain_float_0) from alice.tbl_1 as tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select 6371*acos(sin(radians(tbl_1.plain_float_0))*sin(radians(tbl_1.plain_float_0))+cos(radians(tbl_1.plain_float_0))*cos(radians(tbl_1.plain_float_0))*cos(radians(tbl_1.plain_int_0)-radians(tbl_1.plain_int_0))) as expr_121 from alice.tbl_1 as tbl_1",
+        "rewritten_sql_pg": "select 6371*acos(sin(radians(tbl_1.plain_float_0))*sin(radians(tbl_1.plain_float_0))+cos(radians(tbl_1.plain_float_0))*cos(radians(tbl_1.plain_float_0))*cos(radians(tbl_1.plain_int_0)-radians(tbl_1.plain_int_0))) as expr_121 from alice.tbl_1 as tbl_1",
+        "rewritten_sql_csv": "select 6371*acos(sin(radians(tbl_1.plain_float_0))*sin(radians(tbl_1.plain_float_0))+cos(radians(tbl_1.plain_float_0))*cos(radians(tbl_1.plain_float_0))*cos(radians(tbl_1.plain_int_0)-radians(tbl_1.plain_int_0))) as expr_121 from alice.tbl_1 as tbl_1",
         "rewritten_sql": "select 6371*acos(sin(radians(tbl_1.plain_float_0))*sin(radians(tbl_1.plain_float_0))+cos(radians(tbl_1.plain_float_0))*cos(radians(tbl_1.plain_float_0))*cos(radians(tbl_1.plain_int_0)-radians(tbl_1.plain_int_0))) as expr_121 from alice.tbl_1 as tbl_1"
       },
       {
         "sql": "select * from alice.tbl_1;",
         "skip_projection": true,
+        "rewritten_sql_odps": "select tbl_1.aggregate_datetime_0,tbl_1.aggregate_datetime_1,tbl_1.aggregate_datetime_2,tbl_1.aggregate_float_0,tbl_1.aggregate_float_1,tbl_1.aggregate_float_2,tbl_1.aggregate_int_0,tbl_1.aggregate_int_1,tbl_1.aggregate_int_2,tbl_1.aggregate_string_0,tbl_1.aggregate_string_1,tbl_1.aggregate_string_2,tbl_1.aggregate_timestamp_0,tbl_1.aggregate_timestamp_1,tbl_1.aggregate_timestamp_2,tbl_1.compare_datetime_0,tbl_1.compare_datetime_1,tbl_1.compare_datetime_2,tbl_1.compare_float_0,tbl_1.compare_float_1,tbl_1.compare_float_2,tbl_1.compare_int_0,tbl_1.compare_int_1,tbl_1.compare_int_2,tbl_1.compare_string_0,tbl_1.compare_string_1,tbl_1.compare_string_2,tbl_1.compare_timestamp_0,tbl_1.compare_timestamp_1,tbl_1.compare_timestamp_2,tbl_1.encrypt_datetime_0,tbl_1.encrypt_datetime_1,tbl_1.encrypt_datetime_2,tbl_1.encrypt_float_0,tbl_1.encrypt_float_1,tbl_1.encrypt_float_2,tbl_1.encrypt_int_0,tbl_1.encrypt_int_1,tbl_1.encrypt_int_2,tbl_1.encrypt_string_0,tbl_1.encrypt_string_1,tbl_1.encrypt_string_2,tbl_1.encrypt_timestamp_0,tbl_1.encrypt_timestamp_1,tbl_1.encrypt_timestamp_2,tbl_1.groupby_datetime_0,tbl_1.groupby_datetime_1,tbl_1.groupby_datetime_2,tbl_1.groupby_float_0,tbl_1.groupby_float_1,tbl_1.groupby_float_2,tbl_1.groupby_int_0,tbl_1.groupby_int_1,tbl_1.groupby_int_2,tbl_1.groupby_string_0,tbl_1.groupby_string_1,tbl_1.groupby_string_2,tbl_1.groupby_timestamp_0,tbl_1.groupby_timestamp_1,tbl_1.groupby_timestamp_2,tbl_1.join_datetime_0,tbl_1.join_datetime_1,tbl_1.join_datetime_2,tbl_1.join_float_0,tbl_1.join_float_1,tbl_1.join_float_2,tbl_1.join_int_0,tbl_1.join_int_1,tbl_1.join_int_2,tbl_1.join_string_0,tbl_1.join_string_1,tbl_1.join_string_2,tbl_1.join_timestamp_0,tbl_1.join_timestamp_1,tbl_1.join_timestamp_2,tbl_1.joinpayload_datetime_0,tbl_1.joinpayload_datetime_1,tbl_1.joinpayload_datetime_2,tbl_1.joinpayload_float_0,tbl_1.joinpayload_float_1,tbl_1.joinpayload_float_2,tbl_1.joinpayload_int_0,tbl_1.joinpayload_int_1,tbl_1.joinpayload_int_2,tbl_1.joinpayload_string_0,tbl_1.joinpayload_string_1,tbl_1.joinpayload_string_2,tbl_1.joinpayload_timestamp_0,tbl_1.joinpayload_timestamp_1,tbl_1.joinpayload_timestamp_2,tbl_1.plain_datetime_0,tbl_1.plain_datetime_1,tbl_1.plain_datetime_2,tbl_1.plain_float_0,tbl_1.plain_float_1,tbl_1.plain_float_2,tbl_1.plain_int_0,tbl_1.plain_int_1,tbl_1.plain_int_2,tbl_1.plain_string_0,tbl_1.plain_string_1,tbl_1.plain_string_2,tbl_1.plain_timestamp_0,tbl_1.plain_timestamp_1,tbl_1.plain_timestamp_2,tbl_1.rank_datetime_0,tbl_1.rank_datetime_1,tbl_1.rank_datetime_2,tbl_1.rank_float_0,tbl_1.rank_float_1,tbl_1.rank_float_2,tbl_1.rank_int_0,tbl_1.rank_int_1,tbl_1.rank_int_2,tbl_1.rank_string_0,tbl_1.rank_string_1,tbl_1.rank_string_2,tbl_1.rank_timestamp_0,tbl_1.rank_timestamp_1,tbl_1.rank_timestamp_2 from alice.tbl_1",
+        "rewritten_sql_pg": "select tbl_1.aggregate_datetime_0,tbl_1.aggregate_datetime_1,tbl_1.aggregate_datetime_2,tbl_1.aggregate_float_0,tbl_1.aggregate_float_1,tbl_1.aggregate_float_2,tbl_1.aggregate_int_0,tbl_1.aggregate_int_1,tbl_1.aggregate_int_2,tbl_1.aggregate_string_0,tbl_1.aggregate_string_1,tbl_1.aggregate_string_2,tbl_1.aggregate_timestamp_0,tbl_1.aggregate_timestamp_1,tbl_1.aggregate_timestamp_2,tbl_1.compare_datetime_0,tbl_1.compare_datetime_1,tbl_1.compare_datetime_2,tbl_1.compare_float_0,tbl_1.compare_float_1,tbl_1.compare_float_2,tbl_1.compare_int_0,tbl_1.compare_int_1,tbl_1.compare_int_2,tbl_1.compare_string_0,tbl_1.compare_string_1,tbl_1.compare_string_2,tbl_1.compare_timestamp_0,tbl_1.compare_timestamp_1,tbl_1.compare_timestamp_2,tbl_1.encrypt_datetime_0,tbl_1.encrypt_datetime_1,tbl_1.encrypt_datetime_2,tbl_1.encrypt_float_0,tbl_1.encrypt_float_1,tbl_1.encrypt_float_2,tbl_1.encrypt_int_0,tbl_1.encrypt_int_1,tbl_1.encrypt_int_2,tbl_1.encrypt_string_0,tbl_1.encrypt_string_1,tbl_1.encrypt_string_2,tbl_1.encrypt_timestamp_0,tbl_1.encrypt_timestamp_1,tbl_1.encrypt_timestamp_2,tbl_1.groupby_datetime_0,tbl_1.groupby_datetime_1,tbl_1.groupby_datetime_2,tbl_1.groupby_float_0,tbl_1.groupby_float_1,tbl_1.groupby_float_2,tbl_1.groupby_int_0,tbl_1.groupby_int_1,tbl_1.groupby_int_2,tbl_1.groupby_string_0,tbl_1.groupby_string_1,tbl_1.groupby_string_2,tbl_1.groupby_timestamp_0,tbl_1.groupby_timestamp_1,tbl_1.groupby_timestamp_2,tbl_1.join_datetime_0,tbl_1.join_datetime_1,tbl_1.join_datetime_2,tbl_1.join_float_0,tbl_1.join_float_1,tbl_1.join_float_2,tbl_1.join_int_0,tbl_1.join_int_1,tbl_1.join_int_2,tbl_1.join_string_0,tbl_1.join_string_1,tbl_1.join_string_2,tbl_1.join_timestamp_0,tbl_1.join_timestamp_1,tbl_1.join_timestamp_2,tbl_1.joinpayload_datetime_0,tbl_1.joinpayload_datetime_1,tbl_1.joinpayload_datetime_2,tbl_1.joinpayload_float_0,tbl_1.joinpayload_float_1,tbl_1.joinpayload_float_2,tbl_1.joinpayload_int_0,tbl_1.joinpayload_int_1,tbl_1.joinpayload_int_2,tbl_1.joinpayload_string_0,tbl_1.joinpayload_string_1,tbl_1.joinpayload_string_2,tbl_1.joinpayload_timestamp_0,tbl_1.joinpayload_timestamp_1,tbl_1.joinpayload_timestamp_2,tbl_1.plain_datetime_0,tbl_1.plain_datetime_1,tbl_1.plain_datetime_2,tbl_1.plain_float_0,tbl_1.plain_float_1,tbl_1.plain_float_2,tbl_1.plain_int_0,tbl_1.plain_int_1,tbl_1.plain_int_2,tbl_1.plain_string_0,tbl_1.plain_string_1,tbl_1.plain_string_2,tbl_1.plain_timestamp_0,tbl_1.plain_timestamp_1,tbl_1.plain_timestamp_2,tbl_1.rank_datetime_0,tbl_1.rank_datetime_1,tbl_1.rank_datetime_2,tbl_1.rank_float_0,tbl_1.rank_float_1,tbl_1.rank_float_2,tbl_1.rank_int_0,tbl_1.rank_int_1,tbl_1.rank_int_2,tbl_1.rank_string_0,tbl_1.rank_string_1,tbl_1.rank_string_2,tbl_1.rank_timestamp_0,tbl_1.rank_timestamp_1,tbl_1.rank_timestamp_2 from alice.tbl_1",
+        "rewritten_sql_csv": "select tbl_1.aggregate_datetime_0,tbl_1.aggregate_datetime_1,tbl_1.aggregate_datetime_2,tbl_1.aggregate_float_0,tbl_1.aggregate_float_1,tbl_1.aggregate_float_2,tbl_1.aggregate_int_0,tbl_1.aggregate_int_1,tbl_1.aggregate_int_2,tbl_1.aggregate_string_0,tbl_1.aggregate_string_1,tbl_1.aggregate_string_2,tbl_1.aggregate_timestamp_0,tbl_1.aggregate_timestamp_1,tbl_1.aggregate_timestamp_2,tbl_1.compare_datetime_0,tbl_1.compare_datetime_1,tbl_1.compare_datetime_2,tbl_1.compare_float_0,tbl_1.compare_float_1,tbl_1.compare_float_2,tbl_1.compare_int_0,tbl_1.compare_int_1,tbl_1.compare_int_2,tbl_1.compare_string_0,tbl_1.compare_string_1,tbl_1.compare_string_2,tbl_1.compare_timestamp_0,tbl_1.compare_timestamp_1,tbl_1.compare_timestamp_2,tbl_1.encrypt_datetime_0,tbl_1.encrypt_datetime_1,tbl_1.encrypt_datetime_2,tbl_1.encrypt_float_0,tbl_1.encrypt_float_1,tbl_1.encrypt_float_2,tbl_1.encrypt_int_0,tbl_1.encrypt_int_1,tbl_1.encrypt_int_2,tbl_1.encrypt_string_0,tbl_1.encrypt_string_1,tbl_1.encrypt_string_2,tbl_1.encrypt_timestamp_0,tbl_1.encrypt_timestamp_1,tbl_1.encrypt_timestamp_2,tbl_1.groupby_datetime_0,tbl_1.groupby_datetime_1,tbl_1.groupby_datetime_2,tbl_1.groupby_float_0,tbl_1.groupby_float_1,tbl_1.groupby_float_2,tbl_1.groupby_int_0,tbl_1.groupby_int_1,tbl_1.groupby_int_2,tbl_1.groupby_string_0,tbl_1.groupby_string_1,tbl_1.groupby_string_2,tbl_1.groupby_timestamp_0,tbl_1.groupby_timestamp_1,tbl_1.groupby_timestamp_2,tbl_1.join_datetime_0,tbl_1.join_datetime_1,tbl_1.join_datetime_2,tbl_1.join_float_0,tbl_1.join_float_1,tbl_1.join_float_2,tbl_1.join_int_0,tbl_1.join_int_1,tbl_1.join_int_2,tbl_1.join_string_0,tbl_1.join_string_1,tbl_1.join_string_2,tbl_1.join_timestamp_0,tbl_1.join_timestamp_1,tbl_1.join_timestamp_2,tbl_1.joinpayload_datetime_0,tbl_1.joinpayload_datetime_1,tbl_1.joinpayload_datetime_2,tbl_1.joinpayload_float_0,tbl_1.joinpayload_float_1,tbl_1.joinpayload_float_2,tbl_1.joinpayload_int_0,tbl_1.joinpayload_int_1,tbl_1.joinpayload_int_2,tbl_1.joinpayload_string_0,tbl_1.joinpayload_string_1,tbl_1.joinpayload_string_2,tbl_1.joinpayload_timestamp_0,tbl_1.joinpayload_timestamp_1,tbl_1.joinpayload_timestamp_2,tbl_1.plain_datetime_0,tbl_1.plain_datetime_1,tbl_1.plain_datetime_2,tbl_1.plain_float_0,tbl_1.plain_float_1,tbl_1.plain_float_2,tbl_1.plain_int_0,tbl_1.plain_int_1,tbl_1.plain_int_2,tbl_1.plain_string_0,tbl_1.plain_string_1,tbl_1.plain_string_2,tbl_1.plain_timestamp_0,tbl_1.plain_timestamp_1,tbl_1.plain_timestamp_2,tbl_1.rank_datetime_0,tbl_1.rank_datetime_1,tbl_1.rank_datetime_2,tbl_1.rank_float_0,tbl_1.rank_float_1,tbl_1.rank_float_2,tbl_1.rank_int_0,tbl_1.rank_int_1,tbl_1.rank_int_2,tbl_1.rank_string_0,tbl_1.rank_string_1,tbl_1.rank_string_2,tbl_1.rank_timestamp_0,tbl_1.rank_timestamp_1,tbl_1.rank_timestamp_2 from alice.tbl_1",
         "rewritten_sql": "select tbl_1.aggregate_datetime_0,tbl_1.aggregate_datetime_1,tbl_1.aggregate_datetime_2,tbl_1.aggregate_float_0,tbl_1.aggregate_float_1,tbl_1.aggregate_float_2,tbl_1.aggregate_int_0,tbl_1.aggregate_int_1,tbl_1.aggregate_int_2,tbl_1.aggregate_string_0,tbl_1.aggregate_string_1,tbl_1.aggregate_string_2,tbl_1.aggregate_timestamp_0,tbl_1.aggregate_timestamp_1,tbl_1.aggregate_timestamp_2,tbl_1.compare_datetime_0,tbl_1.compare_datetime_1,tbl_1.compare_datetime_2,tbl_1.compare_float_0,tbl_1.compare_float_1,tbl_1.compare_float_2,tbl_1.compare_int_0,tbl_1.compare_int_1,tbl_1.compare_int_2,tbl_1.compare_string_0,tbl_1.compare_string_1,tbl_1.compare_string_2,tbl_1.compare_timestamp_0,tbl_1.compare_timestamp_1,tbl_1.compare_timestamp_2,tbl_1.encrypt_datetime_0,tbl_1.encrypt_datetime_1,tbl_1.encrypt_datetime_2,tbl_1.encrypt_float_0,tbl_1.encrypt_float_1,tbl_1.encrypt_float_2,tbl_1.encrypt_int_0,tbl_1.encrypt_int_1,tbl_1.encrypt_int_2,tbl_1.encrypt_string_0,tbl_1.encrypt_string_1,tbl_1.encrypt_string_2,tbl_1.encrypt_timestamp_0,tbl_1.encrypt_timestamp_1,tbl_1.encrypt_timestamp_2,tbl_1.groupby_datetime_0,tbl_1.groupby_datetime_1,tbl_1.groupby_datetime_2,tbl_1.groupby_float_0,tbl_1.groupby_float_1,tbl_1.groupby_float_2,tbl_1.groupby_int_0,tbl_1.groupby_int_1,tbl_1.groupby_int_2,tbl_1.groupby_string_0,tbl_1.groupby_string_1,tbl_1.groupby_string_2,tbl_1.groupby_timestamp_0,tbl_1.groupby_timestamp_1,tbl_1.groupby_timestamp_2,tbl_1.join_datetime_0,tbl_1.join_datetime_1,tbl_1.join_datetime_2,tbl_1.join_float_0,tbl_1.join_float_1,tbl_1.join_float_2,tbl_1.join_int_0,tbl_1.join_int_1,tbl_1.join_int_2,tbl_1.join_string_0,tbl_1.join_string_1,tbl_1.join_string_2,tbl_1.join_timestamp_0,tbl_1.join_timestamp_1,tbl_1.join_timestamp_2,tbl_1.joinpayload_datetime_0,tbl_1.joinpayload_datetime_1,tbl_1.joinpayload_datetime_2,tbl_1.joinpayload_float_0,tbl_1.joinpayload_float_1,tbl_1.joinpayload_float_2,tbl_1.joinpayload_int_0,tbl_1.joinpayload_int_1,tbl_1.joinpayload_int_2,tbl_1.joinpayload_string_0,tbl_1.joinpayload_string_1,tbl_1.joinpayload_string_2,tbl_1.joinpayload_timestamp_0,tbl_1.joinpayload_timestamp_1,tbl_1.joinpayload_timestamp_2,tbl_1.plain_datetime_0,tbl_1.plain_datetime_1,tbl_1.plain_datetime_2,tbl_1.plain_float_0,tbl_1.plain_float_1,tbl_1.plain_float_2,tbl_1.plain_int_0,tbl_1.plain_int_1,tbl_1.plain_int_2,tbl_1.plain_string_0,tbl_1.plain_string_1,tbl_1.plain_string_2,tbl_1.plain_timestamp_0,tbl_1.plain_timestamp_1,tbl_1.plain_timestamp_2,tbl_1.rank_datetime_0,tbl_1.rank_datetime_1,tbl_1.rank_datetime_2,tbl_1.rank_float_0,tbl_1.rank_float_1,tbl_1.rank_float_2,tbl_1.rank_int_0,tbl_1.rank_int_1,tbl_1.rank_int_2,tbl_1.rank_string_0,tbl_1.rank_string_1,tbl_1.rank_string_2,tbl_1.rank_timestamp_0,tbl_1.rank_timestamp_1,tbl_1.rank_timestamp_2 from alice.tbl_1"
       },
       {
         "sql": "select * from alice.tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select tbl_1.aggregate_datetime_0,tbl_1.aggregate_datetime_1,tbl_1.aggregate_datetime_2,tbl_1.aggregate_float_0,tbl_1.aggregate_float_1,tbl_1.aggregate_float_2,tbl_1.aggregate_int_0,tbl_1.aggregate_int_1,tbl_1.aggregate_int_2,tbl_1.aggregate_string_0,tbl_1.aggregate_string_1,tbl_1.aggregate_string_2,tbl_1.aggregate_timestamp_0,tbl_1.aggregate_timestamp_1,tbl_1.aggregate_timestamp_2,tbl_1.compare_datetime_0,tbl_1.compare_datetime_1,tbl_1.compare_datetime_2,tbl_1.compare_float_0,tbl_1.compare_float_1,tbl_1.compare_float_2,tbl_1.compare_int_0,tbl_1.compare_int_1,tbl_1.compare_int_2,tbl_1.compare_string_0,tbl_1.compare_string_1,tbl_1.compare_string_2,tbl_1.compare_timestamp_0,tbl_1.compare_timestamp_1,tbl_1.compare_timestamp_2,tbl_1.encrypt_datetime_0,tbl_1.encrypt_datetime_1,tbl_1.encrypt_datetime_2,tbl_1.encrypt_float_0,tbl_1.encrypt_float_1,tbl_1.encrypt_float_2,tbl_1.encrypt_int_0,tbl_1.encrypt_int_1,tbl_1.encrypt_int_2,tbl_1.encrypt_string_0,tbl_1.encrypt_string_1,tbl_1.encrypt_string_2,tbl_1.encrypt_timestamp_0,tbl_1.encrypt_timestamp_1,tbl_1.encrypt_timestamp_2,tbl_1.groupby_datetime_0,tbl_1.groupby_datetime_1,tbl_1.groupby_datetime_2,tbl_1.groupby_float_0,tbl_1.groupby_float_1,tbl_1.groupby_float_2,tbl_1.groupby_int_0,tbl_1.groupby_int_1,tbl_1.groupby_int_2,tbl_1.groupby_string_0,tbl_1.groupby_string_1,tbl_1.groupby_string_2,tbl_1.groupby_timestamp_0,tbl_1.groupby_timestamp_1,tbl_1.groupby_timestamp_2,tbl_1.join_datetime_0,tbl_1.join_datetime_1,tbl_1.join_datetime_2,tbl_1.join_float_0,tbl_1.join_float_1,tbl_1.join_float_2,tbl_1.join_int_0,tbl_1.join_int_1,tbl_1.join_int_2,tbl_1.join_string_0,tbl_1.join_string_1,tbl_1.join_string_2,tbl_1.join_timestamp_0,tbl_1.join_timestamp_1,tbl_1.join_timestamp_2,tbl_1.joinpayload_datetime_0,tbl_1.joinpayload_datetime_1,tbl_1.joinpayload_datetime_2,tbl_1.joinpayload_float_0,tbl_1.joinpayload_float_1,tbl_1.joinpayload_float_2,tbl_1.joinpayload_int_0,tbl_1.joinpayload_int_1,tbl_1.joinpayload_int_2,tbl_1.joinpayload_string_0,tbl_1.joinpayload_string_1,tbl_1.joinpayload_string_2,tbl_1.joinpayload_timestamp_0,tbl_1.joinpayload_timestamp_1,tbl_1.joinpayload_timestamp_2,tbl_1.plain_datetime_0,tbl_1.plain_datetime_1,tbl_1.plain_datetime_2,tbl_1.plain_float_0,tbl_1.plain_float_1,tbl_1.plain_float_2,tbl_1.plain_int_0,tbl_1.plain_int_1,tbl_1.plain_int_2,tbl_1.plain_string_0,tbl_1.plain_string_1,tbl_1.plain_string_2,tbl_1.plain_timestamp_0,tbl_1.plain_timestamp_1,tbl_1.plain_timestamp_2,tbl_1.rank_datetime_0,tbl_1.rank_datetime_1,tbl_1.rank_datetime_2,tbl_1.rank_float_0,tbl_1.rank_float_1,tbl_1.rank_float_2,tbl_1.rank_int_0,tbl_1.rank_int_1,tbl_1.rank_int_2,tbl_1.rank_string_0,tbl_1.rank_string_1,tbl_1.rank_string_2,tbl_1.rank_timestamp_0,tbl_1.rank_timestamp_1,tbl_1.rank_timestamp_2 from alice.tbl_1",
+        "rewritten_sql_pg": "select tbl_1.aggregate_datetime_0,tbl_1.aggregate_datetime_1,tbl_1.aggregate_datetime_2,tbl_1.aggregate_float_0,tbl_1.aggregate_float_1,tbl_1.aggregate_float_2,tbl_1.aggregate_int_0,tbl_1.aggregate_int_1,tbl_1.aggregate_int_2,tbl_1.aggregate_string_0,tbl_1.aggregate_string_1,tbl_1.aggregate_string_2,tbl_1.aggregate_timestamp_0,tbl_1.aggregate_timestamp_1,tbl_1.aggregate_timestamp_2,tbl_1.compare_datetime_0,tbl_1.compare_datetime_1,tbl_1.compare_datetime_2,tbl_1.compare_float_0,tbl_1.compare_float_1,tbl_1.compare_float_2,tbl_1.compare_int_0,tbl_1.compare_int_1,tbl_1.compare_int_2,tbl_1.compare_string_0,tbl_1.compare_string_1,tbl_1.compare_string_2,tbl_1.compare_timestamp_0,tbl_1.compare_timestamp_1,tbl_1.compare_timestamp_2,tbl_1.encrypt_datetime_0,tbl_1.encrypt_datetime_1,tbl_1.encrypt_datetime_2,tbl_1.encrypt_float_0,tbl_1.encrypt_float_1,tbl_1.encrypt_float_2,tbl_1.encrypt_int_0,tbl_1.encrypt_int_1,tbl_1.encrypt_int_2,tbl_1.encrypt_string_0,tbl_1.encrypt_string_1,tbl_1.encrypt_string_2,tbl_1.encrypt_timestamp_0,tbl_1.encrypt_timestamp_1,tbl_1.encrypt_timestamp_2,tbl_1.groupby_datetime_0,tbl_1.groupby_datetime_1,tbl_1.groupby_datetime_2,tbl_1.groupby_float_0,tbl_1.groupby_float_1,tbl_1.groupby_float_2,tbl_1.groupby_int_0,tbl_1.groupby_int_1,tbl_1.groupby_int_2,tbl_1.groupby_string_0,tbl_1.groupby_string_1,tbl_1.groupby_string_2,tbl_1.groupby_timestamp_0,tbl_1.groupby_timestamp_1,tbl_1.groupby_timestamp_2,tbl_1.join_datetime_0,tbl_1.join_datetime_1,tbl_1.join_datetime_2,tbl_1.join_float_0,tbl_1.join_float_1,tbl_1.join_float_2,tbl_1.join_int_0,tbl_1.join_int_1,tbl_1.join_int_2,tbl_1.join_string_0,tbl_1.join_string_1,tbl_1.join_string_2,tbl_1.join_timestamp_0,tbl_1.join_timestamp_1,tbl_1.join_timestamp_2,tbl_1.joinpayload_datetime_0,tbl_1.joinpayload_datetime_1,tbl_1.joinpayload_datetime_2,tbl_1.joinpayload_float_0,tbl_1.joinpayload_float_1,tbl_1.joinpayload_float_2,tbl_1.joinpayload_int_0,tbl_1.joinpayload_int_1,tbl_1.joinpayload_int_2,tbl_1.joinpayload_string_0,tbl_1.joinpayload_string_1,tbl_1.joinpayload_string_2,tbl_1.joinpayload_timestamp_0,tbl_1.joinpayload_timestamp_1,tbl_1.joinpayload_timestamp_2,tbl_1.plain_datetime_0,tbl_1.plain_datetime_1,tbl_1.plain_datetime_2,tbl_1.plain_float_0,tbl_1.plain_float_1,tbl_1.plain_float_2,tbl_1.plain_int_0,tbl_1.plain_int_1,tbl_1.plain_int_2,tbl_1.plain_string_0,tbl_1.plain_string_1,tbl_1.plain_string_2,tbl_1.plain_timestamp_0,tbl_1.plain_timestamp_1,tbl_1.plain_timestamp_2,tbl_1.rank_datetime_0,tbl_1.rank_datetime_1,tbl_1.rank_datetime_2,tbl_1.rank_float_0,tbl_1.rank_float_1,tbl_1.rank_float_2,tbl_1.rank_int_0,tbl_1.rank_int_1,tbl_1.rank_int_2,tbl_1.rank_string_0,tbl_1.rank_string_1,tbl_1.rank_string_2,tbl_1.rank_timestamp_0,tbl_1.rank_timestamp_1,tbl_1.rank_timestamp_2 from alice.tbl_1",
+        "rewritten_sql_csv": "select tbl_1.aggregate_datetime_0,tbl_1.aggregate_datetime_1,tbl_1.aggregate_datetime_2,tbl_1.aggregate_float_0,tbl_1.aggregate_float_1,tbl_1.aggregate_float_2,tbl_1.aggregate_int_0,tbl_1.aggregate_int_1,tbl_1.aggregate_int_2,tbl_1.aggregate_string_0,tbl_1.aggregate_string_1,tbl_1.aggregate_string_2,tbl_1.aggregate_timestamp_0,tbl_1.aggregate_timestamp_1,tbl_1.aggregate_timestamp_2,tbl_1.compare_datetime_0,tbl_1.compare_datetime_1,tbl_1.compare_datetime_2,tbl_1.compare_float_0,tbl_1.compare_float_1,tbl_1.compare_float_2,tbl_1.compare_int_0,tbl_1.compare_int_1,tbl_1.compare_int_2,tbl_1.compare_string_0,tbl_1.compare_string_1,tbl_1.compare_string_2,tbl_1.compare_timestamp_0,tbl_1.compare_timestamp_1,tbl_1.compare_timestamp_2,tbl_1.encrypt_datetime_0,tbl_1.encrypt_datetime_1,tbl_1.encrypt_datetime_2,tbl_1.encrypt_float_0,tbl_1.encrypt_float_1,tbl_1.encrypt_float_2,tbl_1.encrypt_int_0,tbl_1.encrypt_int_1,tbl_1.encrypt_int_2,tbl_1.encrypt_string_0,tbl_1.encrypt_string_1,tbl_1.encrypt_string_2,tbl_1.encrypt_timestamp_0,tbl_1.encrypt_timestamp_1,tbl_1.encrypt_timestamp_2,tbl_1.groupby_datetime_0,tbl_1.groupby_datetime_1,tbl_1.groupby_datetime_2,tbl_1.groupby_float_0,tbl_1.groupby_float_1,tbl_1.groupby_float_2,tbl_1.groupby_int_0,tbl_1.groupby_int_1,tbl_1.groupby_int_2,tbl_1.groupby_string_0,tbl_1.groupby_string_1,tbl_1.groupby_string_2,tbl_1.groupby_timestamp_0,tbl_1.groupby_timestamp_1,tbl_1.groupby_timestamp_2,tbl_1.join_datetime_0,tbl_1.join_datetime_1,tbl_1.join_datetime_2,tbl_1.join_float_0,tbl_1.join_float_1,tbl_1.join_float_2,tbl_1.join_int_0,tbl_1.join_int_1,tbl_1.join_int_2,tbl_1.join_string_0,tbl_1.join_string_1,tbl_1.join_string_2,tbl_1.join_timestamp_0,tbl_1.join_timestamp_1,tbl_1.join_timestamp_2,tbl_1.joinpayload_datetime_0,tbl_1.joinpayload_datetime_1,tbl_1.joinpayload_datetime_2,tbl_1.joinpayload_float_0,tbl_1.joinpayload_float_1,tbl_1.joinpayload_float_2,tbl_1.joinpayload_int_0,tbl_1.joinpayload_int_1,tbl_1.joinpayload_int_2,tbl_1.joinpayload_string_0,tbl_1.joinpayload_string_1,tbl_1.joinpayload_string_2,tbl_1.joinpayload_timestamp_0,tbl_1.joinpayload_timestamp_1,tbl_1.joinpayload_timestamp_2,tbl_1.plain_datetime_0,tbl_1.plain_datetime_1,tbl_1.plain_datetime_2,tbl_1.plain_float_0,tbl_1.plain_float_1,tbl_1.plain_float_2,tbl_1.plain_int_0,tbl_1.plain_int_1,tbl_1.plain_int_2,tbl_1.plain_string_0,tbl_1.plain_string_1,tbl_1.plain_string_2,tbl_1.plain_timestamp_0,tbl_1.plain_timestamp_1,tbl_1.plain_timestamp_2,tbl_1.rank_datetime_0,tbl_1.rank_datetime_1,tbl_1.rank_datetime_2,tbl_1.rank_float_0,tbl_1.rank_float_1,tbl_1.rank_float_2,tbl_1.rank_int_0,tbl_1.rank_int_1,tbl_1.rank_int_2,tbl_1.rank_string_0,tbl_1.rank_string_1,tbl_1.rank_string_2,tbl_1.rank_timestamp_0,tbl_1.rank_timestamp_1,tbl_1.rank_timestamp_2 from alice.tbl_1",
         "rewritten_sql": "select tbl_1.aggregate_datetime_0,tbl_1.aggregate_datetime_1,tbl_1.aggregate_datetime_2,tbl_1.aggregate_float_0,tbl_1.aggregate_float_1,tbl_1.aggregate_float_2,tbl_1.aggregate_int_0,tbl_1.aggregate_int_1,tbl_1.aggregate_int_2,tbl_1.aggregate_string_0,tbl_1.aggregate_string_1,tbl_1.aggregate_string_2,tbl_1.aggregate_timestamp_0,tbl_1.aggregate_timestamp_1,tbl_1.aggregate_timestamp_2,tbl_1.compare_datetime_0,tbl_1.compare_datetime_1,tbl_1.compare_datetime_2,tbl_1.compare_float_0,tbl_1.compare_float_1,tbl_1.compare_float_2,tbl_1.compare_int_0,tbl_1.compare_int_1,tbl_1.compare_int_2,tbl_1.compare_string_0,tbl_1.compare_string_1,tbl_1.compare_string_2,tbl_1.compare_timestamp_0,tbl_1.compare_timestamp_1,tbl_1.compare_timestamp_2,tbl_1.encrypt_datetime_0,tbl_1.encrypt_datetime_1,tbl_1.encrypt_datetime_2,tbl_1.encrypt_float_0,tbl_1.encrypt_float_1,tbl_1.encrypt_float_2,tbl_1.encrypt_int_0,tbl_1.encrypt_int_1,tbl_1.encrypt_int_2,tbl_1.encrypt_string_0,tbl_1.encrypt_string_1,tbl_1.encrypt_string_2,tbl_1.encrypt_timestamp_0,tbl_1.encrypt_timestamp_1,tbl_1.encrypt_timestamp_2,tbl_1.groupby_datetime_0,tbl_1.groupby_datetime_1,tbl_1.groupby_datetime_2,tbl_1.groupby_float_0,tbl_1.groupby_float_1,tbl_1.groupby_float_2,tbl_1.groupby_int_0,tbl_1.groupby_int_1,tbl_1.groupby_int_2,tbl_1.groupby_string_0,tbl_1.groupby_string_1,tbl_1.groupby_string_2,tbl_1.groupby_timestamp_0,tbl_1.groupby_timestamp_1,tbl_1.groupby_timestamp_2,tbl_1.join_datetime_0,tbl_1.join_datetime_1,tbl_1.join_datetime_2,tbl_1.join_float_0,tbl_1.join_float_1,tbl_1.join_float_2,tbl_1.join_int_0,tbl_1.join_int_1,tbl_1.join_int_2,tbl_1.join_string_0,tbl_1.join_string_1,tbl_1.join_string_2,tbl_1.join_timestamp_0,tbl_1.join_timestamp_1,tbl_1.join_timestamp_2,tbl_1.joinpayload_datetime_0,tbl_1.joinpayload_datetime_1,tbl_1.joinpayload_datetime_2,tbl_1.joinpayload_float_0,tbl_1.joinpayload_float_1,tbl_1.joinpayload_float_2,tbl_1.joinpayload_int_0,tbl_1.joinpayload_int_1,tbl_1.joinpayload_int_2,tbl_1.joinpayload_string_0,tbl_1.joinpayload_string_1,tbl_1.joinpayload_string_2,tbl_1.joinpayload_timestamp_0,tbl_1.joinpayload_timestamp_1,tbl_1.joinpayload_timestamp_2,tbl_1.plain_datetime_0,tbl_1.plain_datetime_1,tbl_1.plain_datetime_2,tbl_1.plain_float_0,tbl_1.plain_float_1,tbl_1.plain_float_2,tbl_1.plain_int_0,tbl_1.plain_int_1,tbl_1.plain_int_2,tbl_1.plain_string_0,tbl_1.plain_string_1,tbl_1.plain_string_2,tbl_1.plain_timestamp_0,tbl_1.plain_timestamp_1,tbl_1.plain_timestamp_2,tbl_1.rank_datetime_0,tbl_1.rank_datetime_1,tbl_1.rank_datetime_2,tbl_1.rank_float_0,tbl_1.rank_float_1,tbl_1.rank_float_2,tbl_1.rank_int_0,tbl_1.rank_int_1,tbl_1.rank_int_2,tbl_1.rank_string_0,tbl_1.rank_string_1,tbl_1.rank_string_2,tbl_1.rank_timestamp_0,tbl_1.rank_timestamp_1,tbl_1.rank_timestamp_2 from alice.tbl_1"
       },
       {
         "sql": "select count(*) from alice.tbl_1 as t1 join alice.tbl_2 as t2 join bob.tbl_1 as t3 join bob.tbl_2 as t4 where t1.plain_int_0 = t2.plain_int_0 and t2.plain_int_0 = t3.plain_int_0 and t3.plain_int_0 = t4.plain_int_0",
         "skip_projection": false,
+        "rewritten_sql_odps": "select count(1) as expr_481 from (select t2.plain_int_0 from (alice.tbl_1 as t1 join alice.tbl_2 as t2 on t1.plain_int_0=t2.plain_int_0)) as t1 join (select t3.plain_int_0 from (bob.tbl_1 as t3 join bob.tbl_2 as t4 on t3.plain_int_0=t4.plain_int_0)) as t4 on t1.plain_int_0=t4.plain_int_0",
+        "rewritten_sql_pg": "select count(1) as expr_481 from (select t2.plain_int_0 from (alice.tbl_1 as t1 join alice.tbl_2 as t2 on t1.plain_int_0=t2.plain_int_0)) as t1 join (select t3.plain_int_0 from (bob.tbl_1 as t3 join bob.tbl_2 as t4 on t3.plain_int_0=t4.plain_int_0)) as t4 on t1.plain_int_0=t4.plain_int_0",
+        "rewritten_sql_csv": "select count(1) as expr_481 from (select t2.plain_int_0 from (alice.tbl_1 as t1 join alice.tbl_2 as t2 on t1.plain_int_0=t2.plain_int_0)) as t1 join (select t3.plain_int_0 from (bob.tbl_1 as t3 join bob.tbl_2 as t4 on t3.plain_int_0=t4.plain_int_0)) as t4 on t1.plain_int_0=t4.plain_int_0",
         "rewritten_sql": "select count(1) as expr_481 from (select t2.plain_int_0 from (alice.tbl_1 as t1 join alice.tbl_2 as t2 on t1.plain_int_0=t2.plain_int_0)) as t1 join (select t3.plain_int_0 from (bob.tbl_1 as t3 join bob.tbl_2 as t4 on t3.plain_int_0=t4.plain_int_0)) as t4 on t1.plain_int_0=t4.plain_int_0"
       },
       {
         "sql": "select plain_float_0 from alice.tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select tbl_1.plain_float_0 from alice.tbl_1",
+        "rewritten_sql_pg": "select tbl_1.plain_float_0 from alice.tbl_1",
+        "rewritten_sql_csv": "select tbl_1.plain_float_0 from alice.tbl_1",
         "rewritten_sql": "select tbl_1.plain_float_0 from alice.tbl_1"
       },
       {
         "sql": "select plain_float_0 from alice.tbl_1 as tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select tbl_1.plain_float_0 from alice.tbl_1 as tbl_1",
+        "rewritten_sql_pg": "select tbl_1.plain_float_0 from alice.tbl_1 as tbl_1",
+        "rewritten_sql_csv": "select tbl_1.plain_float_0 from alice.tbl_1 as tbl_1",
         "rewritten_sql": "select tbl_1.plain_float_0 from alice.tbl_1 as tbl_1"
       },
       {
         "sql": "select plain_float_0, Plain_float_1 from alice.tbl_1 as tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select tbl_1.plain_float_0,tbl_1.plain_float_1 as Plain_float_1 from alice.tbl_1 as tbl_1",
+        "rewritten_sql_pg": "select tbl_1.plain_float_0,tbl_1.plain_float_1 as Plain_float_1 from alice.tbl_1 as tbl_1",
+        "rewritten_sql_csv": "select tbl_1.plain_float_0,tbl_1.plain_float_1 as Plain_float_1 from alice.tbl_1 as tbl_1",
         "rewritten_sql": "select tbl_1.plain_float_0,tbl_1.plain_float_1 as Plain_float_1 from alice.tbl_1 as tbl_1"
       },
       {
         "sql": "select plain_float_0, Plain_float_1 + plain_float_0 from alice.tbl_1 as tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select tbl_1.plain_float_0,tbl_1.plain_float_1+tbl_1.plain_float_0 as expr_121 from alice.tbl_1 as tbl_1",
+        "rewritten_sql_pg": "select tbl_1.plain_float_0,tbl_1.plain_float_1+tbl_1.plain_float_0 as expr_121 from alice.tbl_1 as tbl_1",
+        "rewritten_sql_csv": "select tbl_1.plain_float_0,tbl_1.plain_float_1+tbl_1.plain_float_0 as expr_121 from alice.tbl_1 as tbl_1",
         "rewritten_sql": "select tbl_1.plain_float_0,tbl_1.plain_float_1+tbl_1.plain_float_0 as expr_121 from alice.tbl_1 as tbl_1"
       },
       {
         "sql": "select count(*) from (select plain_float_0, Plain_float_1 from alice.tbl_1) as tbl_1 join alice.tbl_2 on tbl_1.Plain_float_1 = tbl_2.plain_float_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select count(1) as expr_241 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_float_1=tbl_2.plain_float_1",
+        "rewritten_sql_pg": "select count(1) as expr_241 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_float_1=tbl_2.plain_float_1",
+        "rewritten_sql_csv": "select count(1) as expr_241 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_float_1=tbl_2.plain_float_1",
         "rewritten_sql": "select count(1) as expr_241 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_float_1=tbl_2.plain_float_1"
       },
       {
         "sql": "select plain_float_0, plain_float_0 from alice.tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select tbl_1.plain_float_0,tbl_1.plain_float_0 from alice.tbl_1",
+        "rewritten_sql_pg": "select tbl_1.plain_float_0,tbl_1.plain_float_0 from alice.tbl_1",
+        "rewritten_sql_csv": "select tbl_1.plain_float_0,tbl_1.plain_float_0 from alice.tbl_1",
         "rewritten_sql": "select tbl_1.plain_float_0,tbl_1.plain_float_0 from alice.tbl_1"
       },
       {
         "sql": "select fl, fl from (select plain_float_0 as fl, plain_float_0 as fl2 from alice.tbl_1 as alice1) as alice2;;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select alice1.plain_float_0 as fl,alice1.plain_float_0 as fl from alice.tbl_1 as alice1",
+        "rewritten_sql_pg": "select alice1.plain_float_0 as fl,alice1.plain_float_0 as fl from alice.tbl_1 as alice1",
+        "rewritten_sql_csv": "select alice1.plain_float_0 as fl,alice1.plain_float_0 as fl from alice.tbl_1 as alice1",
         "rewritten_sql": "select alice1.plain_float_0 as fl,alice1.plain_float_0 as fl from alice.tbl_1 as alice1"
       },
       {
         "sql": "select plain_float_0 as fl from alice.tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select tbl_1.plain_float_0 as fl from alice.tbl_1",
+        "rewritten_sql_pg": "select tbl_1.plain_float_0 as fl from alice.tbl_1",
+        "rewritten_sql_csv": "select tbl_1.plain_float_0 as fl from alice.tbl_1",
         "rewritten_sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1"
       },
       {
         "sql": "select plain_float_0 / plain_float_1, plain_float_0 div plain_float_1 from alice.tbl_1;",
         "skip_projection": false,
-        "rewritten_sql": "select tbl_1.plain_float_0/tbl_1.plain_float_1 as expr_121,tbl_1.plain_float_0 div tbl_1.plain_float_1 as expr_122 from alice.tbl_1",
+        "rewritten_sql_odps": "select tbl_1.plain_float_0/tbl_1.plain_float_1 as expr_121,tbl_1.plain_float_0 div tbl_1.plain_float_1 as expr_122 from alice.tbl_1",
         "rewritten_sql_pg": "select tbl_1.plain_float_0/tbl_1.plain_float_1 as expr_121,div(tbl_1.plain_float_0, tbl_1.plain_float_1) as expr_122 from alice.tbl_1",
-        "rewritten_sql_csv": "select tbl_1.plain_float_0/tbl_1.plain_float_1 as expr_121,tbl_1.plain_float_0 // tbl_1.plain_float_1 as expr_122 from alice.tbl_1"
+        "rewritten_sql_csv": "select tbl_1.plain_float_0/tbl_1.plain_float_1 as expr_121,tbl_1.plain_float_0 // tbl_1.plain_float_1 as expr_122 from alice.tbl_1",
+        "rewritten_sql": "select tbl_1.plain_float_0/tbl_1.plain_float_1 as expr_121,tbl_1.plain_float_0 div tbl_1.plain_float_1 as expr_122 from alice.tbl_1"
       },
       {
         "sql": "select plain_float_0 as fl from alice.tbl_1 as alice;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select alice.plain_float_0 as fl from alice.tbl_1 as alice",
+        "rewritten_sql_pg": "select alice.plain_float_0 as fl from alice.tbl_1 as alice",
+        "rewritten_sql_csv": "select alice.plain_float_0 as fl from alice.tbl_1 as alice",
         "rewritten_sql": "select alice.plain_float_0 as fl from alice.tbl_1 as alice"
       },
       {
         "sql": "select ifnull(plain_float_0, plain_float_1) as fl from alice.tbl_1 as alice;",
         "skip_projection": false,
-        "rewritten_sql": "select ifnull(alice.plain_float_0, alice.plain_float_1) as fl from alice.tbl_1 as alice",
-        "rewritten_sql_pg": "select coalesce(alice.plain_float_0, alice.plain_float_1) as fl from alice.tbl_1 as alice",
         "rewritten_sql_odps": "select nvl(alice.plain_float_0, alice.plain_float_1) as fl from alice.tbl_1 as alice",
-        "rewritten_sql_csv": "select coalesce(alice.plain_float_0, alice.plain_float_1) as fl from alice.tbl_1 as alice"
+        "rewritten_sql_pg": "select coalesce(alice.plain_float_0, alice.plain_float_1) as fl from alice.tbl_1 as alice",
+        "rewritten_sql_csv": "select coalesce(alice.plain_float_0, alice.plain_float_1) as fl from alice.tbl_1 as alice",
+        "rewritten_sql": "select ifnull(alice.plain_float_0, alice.plain_float_1) as fl from alice.tbl_1 as alice"
       },
       {
         "sql": "select plain_float_0 is null as fl from alice.tbl_1 where plain_float_1 is not null;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select tbl_1.plain_float_0 is null as fl from alice.tbl_1 where not(tbl_1.plain_float_1 is null)",
+        "rewritten_sql_pg": "select tbl_1.plain_float_0 is null as fl from alice.tbl_1 where not(tbl_1.plain_float_1 is null)",
+        "rewritten_sql_csv": "select tbl_1.plain_float_0 is null as fl from alice.tbl_1 where not(tbl_1.plain_float_1 is null)",
         "rewritten_sql": "select tbl_1.plain_float_0 is null as fl from alice.tbl_1 where not(tbl_1.plain_float_1 is null)"
       },
       {
         "sql": "select coalesce(plain_float_0, plain_float_1, plain_float_2) as fl from alice.tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select coalesce(tbl_1.plain_float_0, tbl_1.plain_float_1, tbl_1.plain_float_2) as fl from alice.tbl_1",
+        "rewritten_sql_pg": "select coalesce(tbl_1.plain_float_0, tbl_1.plain_float_1, tbl_1.plain_float_2) as fl from alice.tbl_1",
+        "rewritten_sql_csv": "select coalesce(tbl_1.plain_float_0, tbl_1.plain_float_1, tbl_1.plain_float_2) as fl from alice.tbl_1",
         "rewritten_sql": "select coalesce(tbl_1.plain_float_0, tbl_1.plain_float_1, tbl_1.plain_float_2) as fl from alice.tbl_1"
       },
       {
         "sql": "select if(plain_float_0 > 0, plain_float_0, plain_float_1) as fl from alice.tbl_1 as alice;",
         "skip_projection": false,
-        "rewritten_sql": "select if(alice.plain_float_0>0, alice.plain_float_0, alice.plain_float_1) as fl from alice.tbl_1 as alice",
-        "skip_pg_test": true
+        "rewritten_sql_odps": "select if(alice.plain_float_0>0, alice.plain_float_0, alice.plain_float_1) as fl from alice.tbl_1 as alice",
+        "rewritten_sql_csv": "select if(alice.plain_float_0>0, alice.plain_float_0, alice.plain_float_1) as fl from alice.tbl_1 as alice",
+        "skip_pg_test": true,
+        "rewritten_sql": "select if(alice.plain_float_0>0, alice.plain_float_0, alice.plain_float_1) as fl from alice.tbl_1 as alice"
       },
       {
         "sql": "select if(plain_float_0 > 0, -plain_float_0, -1) as fl from alice.tbl_1 as alice;",
         "skip_projection": false,
-        "rewritten_sql": "select if(alice.plain_float_0>0, -alice.plain_float_0, -1) as fl from alice.tbl_1 as alice",
-        "skip_pg_test": true
+        "rewritten_sql_odps": "select if(alice.plain_float_0>0, -alice.plain_float_0, -1) as fl from alice.tbl_1 as alice",
+        "rewritten_sql_csv": "select if(alice.plain_float_0>0, -alice.plain_float_0, -1) as fl from alice.tbl_1 as alice",
+        "skip_pg_test": true,
+        "rewritten_sql": "select if(alice.plain_float_0>0, -alice.plain_float_0, -1) as fl from alice.tbl_1 as alice"
       },
       {
         "sql": "select plain_float_0 + plain_float_1 as fl from alice.tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select tbl_1.plain_float_0+tbl_1.plain_float_1 as fl from alice.tbl_1",
+        "rewritten_sql_pg": "select tbl_1.plain_float_0+tbl_1.plain_float_1 as fl from alice.tbl_1",
+        "rewritten_sql_csv": "select tbl_1.plain_float_0+tbl_1.plain_float_1 as fl from alice.tbl_1",
         "rewritten_sql": "select tbl_1.plain_float_0+tbl_1.plain_float_1 as fl from alice.tbl_1"
       },
       {
         "sql": "select (plain_float_0 = plain_float_1) = 1 as fl from alice.tbl_1;",
         "skip_projection": false,
-        "rewritten_sql": "select tbl_1.plain_float_0=tbl_1.plain_float_1=1 as fl from alice.tbl_1",
-        // this not really work for pg, it is just for test, since pg can't compare int with boolean
+        "rewritten_sql_odps": "select (tbl_1.plain_float_0=tbl_1.plain_float_1)=1 as fl from alice.tbl_1",
         "rewritten_sql_pg": "select (tbl_1.plain_float_0=tbl_1.plain_float_1)=1 as fl from alice.tbl_1",
         "rewritten_sql_csv": "select (tbl_1.plain_float_0=tbl_1.plain_float_1)=1 as fl from alice.tbl_1",
-        "rewritten_sql_odps": "select (tbl_1.plain_float_0=tbl_1.plain_float_1)=1 as fl from alice.tbl_1"
+        "rewritten_sql": "select tbl_1.plain_float_0=tbl_1.plain_float_1=1 as fl from alice.tbl_1"
       },
       {
         "sql": "select plain_int_0 % plain_int_0 as fl from alice.tbl_1 where tbl_1.plain_int_0 != 0;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select tbl_1.plain_int_0%tbl_1.plain_int_0 as fl from alice.tbl_1 where tbl_1.plain_int_0!=0",
+        "rewritten_sql_pg": "select tbl_1.plain_int_0%tbl_1.plain_int_0 as fl from alice.tbl_1 where tbl_1.plain_int_0!=0",
+        "rewritten_sql_csv": "select tbl_1.plain_int_0%tbl_1.plain_int_0 as fl from alice.tbl_1 where tbl_1.plain_int_0!=0",
         "rewritten_sql": "select tbl_1.plain_int_0%tbl_1.plain_int_0 as fl from alice.tbl_1 where tbl_1.plain_int_0!=0"
       },
       {
         "sql": "select plain_float_0 + plain_float_1 as fl from alice.tbl_1 where plain_float_0 + plain_float_1 > 0;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select tbl_1.plain_float_0+tbl_1.plain_float_1 as fl from alice.tbl_1 where tbl_1.plain_float_0+tbl_1.plain_float_1>0",
+        "rewritten_sql_pg": "select tbl_1.plain_float_0+tbl_1.plain_float_1 as fl from alice.tbl_1 where tbl_1.plain_float_0+tbl_1.plain_float_1>0",
+        "rewritten_sql_csv": "select tbl_1.plain_float_0+tbl_1.plain_float_1 as fl from alice.tbl_1 where tbl_1.plain_float_0+tbl_1.plain_float_1>0",
         "rewritten_sql": "select tbl_1.plain_float_0+tbl_1.plain_float_1 as fl from alice.tbl_1 where tbl_1.plain_float_0+tbl_1.plain_float_1>0"
       },
       {
         "sql": "select plain_float_0 as fl from alice.tbl_1 where plain_string_0 = '{\"a\":\"b\"}';",
         "skip_projection": false,
+        "rewritten_sql_odps": "select tbl_1.plain_float_0 as fl from alice.tbl_1 where tbl_1.plain_string_0='{\"a\":\"b\"}'",
+        "rewritten_sql_pg": "select tbl_1.plain_float_0 as fl from alice.tbl_1 where tbl_1.plain_string_0='{\"a\":\"b\"}'",
+        "rewritten_sql_csv": "select tbl_1.plain_float_0 as fl from alice.tbl_1 where tbl_1.plain_string_0='{\"a\":\"b\"}'",
         "rewritten_sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1 where tbl_1.plain_string_0='{\"a\":\"b\"}'"
       },
       {
         "sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0 = tbl_2.plain_int_0;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0",
+        "rewritten_sql_pg": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0",
+        "rewritten_sql_csv": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0",
         "rewritten_sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0"
       },
       {
         "sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0 = tbl_2.plain_int_0;",
         "skip_projection": true,
+        "rewritten_sql_odps": "select tbl_1.plain_float_0 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0",
+        "rewritten_sql_pg": "select tbl_1.plain_float_0 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0",
+        "rewritten_sql_csv": "select tbl_1.plain_float_0 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0",
         "rewritten_sql": "select tbl_1.plain_float_0 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0"
       },
       {
         "sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0 = tbl_2.plain_int_0 limit 1,2;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 limit 2 offset 1",
+        "rewritten_sql_pg": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 limit 2 offset 1",
+        "rewritten_sql_csv": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 limit 2 offset 1",
         "rewritten_sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 limit 2 offset 1"
       },
       {
         "sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0 = tbl_2.plain_int_0 order by fl limit 1,2;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 order by tbl_1.plain_float_0 limit 2 offset 1",
+        "rewritten_sql_pg": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 order by tbl_1.plain_float_0 limit 2 offset 1",
+        "rewritten_sql_csv": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 order by tbl_1.plain_float_0 limit 2 offset 1",
         "rewritten_sql": "select tbl_1.plain_float_0 as fl from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 order by tbl_1.plain_float_0 limit 2 offset 1"
       },
       {
         "sql": "select count(*) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0 = tbl_2.plain_int_0 group by tbl_1.plain_float_0 having count(*) > 3;",
         "skip_projection": false,
-        "rewritten_sql": "select count(1) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having count(1)>3"
+        "rewritten_sql_odps": "select count(1) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having (count(1)>3) and (count(1)>=4)",
+        "rewritten_sql_pg": "select count(1) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having (count(1)>3) and (count(1)>=4)",
+        "rewritten_sql_csv": "select count(1) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having (count(1)>3) and (count(1)>=4)",
+        "rewritten_sql": "select count(1) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having (count(1)>3) and (count(1)>=4)"
       },
       {
         "sql": "select sum(tbl_1.plain_float_0) as ss, sum(tbl_1.plain_float_0 > 0) as bs from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0 = tbl_2.plain_int_0 group by tbl_1.plain_float_0 having count(*) > 3;",
         "skip_projection": false,
-        "rewritten_sql": "select sum(tbl_1.plain_float_0) as ss,sum(tbl_1.plain_float_0>0) as bs from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having count(1)>3",
-        "rewritten_sql_odps": "select sum(tbl_1.plain_float_0) as ss,sum(cast(tbl_1.plain_float_0>0 as bigint)) as bs from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having count(1)>3",
-        "skip_odps_test": true
+        "rewritten_sql_pg": "select sum(tbl_1.plain_float_0) as ss,sum(tbl_1.plain_float_0>0) as bs from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having (count(1)>3) and (count(1)>=4)",
+        "rewritten_sql_csv": "select sum(tbl_1.plain_float_0) as ss,sum(tbl_1.plain_float_0>0) as bs from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having (count(1)>3) and (count(1)>=4)",
+        "skip_odps_test": true,
+        "rewritten_sql": "select sum(tbl_1.plain_float_0) as ss,sum(tbl_1.plain_float_0>0) as bs from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having (count(1)>3) and (count(1)>=4)"
       },
       {
         "sql": "select sum(distinct(tbl_1.compare_float_0)) as ss, count(distinct(tbl_1.compare_float_0)) as ss from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0 = tbl_2.plain_int_0 group by tbl_1.plain_float_0;",
         "skip_projection": false,
-        "rewritten_sql": "select sum(distinct tbl_1.compare_float_0) as ss,count(distinct tbl_1.compare_float_0) as ss from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0"
+        "rewritten_sql_odps": "select sum(distinct tbl_1.compare_float_0) as ss,count(distinct tbl_1.compare_float_0) as ss from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having count(1)>=4",
+        "rewritten_sql_pg": "select sum(distinct tbl_1.compare_float_0) as ss,count(distinct tbl_1.compare_float_0) as ss from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having count(1)>=4",
+        "rewritten_sql_csv": "select sum(distinct tbl_1.compare_float_0) as ss,count(distinct tbl_1.compare_float_0) as ss from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having count(1)>=4",
+        "rewritten_sql": "select sum(distinct tbl_1.compare_float_0) as ss,count(distinct tbl_1.compare_float_0) as ss from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having count(1)>=4"
       },
       {
         "sql": "select tbl_1.plain_float_0 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0 = tbl_2.plain_int_0 group by tbl_1.plain_float_0 having count(*) > 0;",
         "skip_projection": false,
-        "rewritten_sql": "select any_value(tbl_1.plain_float_0) as expr_242 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having count(1)>0",
-        "rewritten_sql_pg": "select tbl_1.plain_float_0 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having count(1)>0",
-        "rewritten_sql_odps": "select tbl_1.plain_float_0 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having count(1)>0",
-        "rewritten_sql_csv": "select tbl_1.plain_float_0 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having count(1)>0"
+        "rewritten_sql_odps": "select tbl_1.plain_float_0 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having (count(1)>0) and (count(1)>=4)",
+        "rewritten_sql_pg": "select tbl_1.plain_float_0 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having (count(1)>0) and (count(1)>=4)",
+        "rewritten_sql_csv": "select tbl_1.plain_float_0 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having (count(1)>0) and (count(1)>=4)",
+        "rewritten_sql": "select any_value(tbl_1.plain_float_0) as expr_242 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having (count(1)>0) and (count(1)>=4)"
       },
       {
         "sql": "select tbl_1.plain_float_0 from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0 = tbl_2.plain_int_0 group by tbl_1.plain_float_0 having count(*) > 0 and sum(tbl_1.plain_float_0) > 100 and tbl_1.plain_float_0 > 3;",
         "skip_projection": false,
-        "rewritten_sql": "select any_value(t_0.plain_float_0) as expr_243 from (select tbl_1.plain_float_0,tbl_1.plain_int_0 from alice.tbl_1 where tbl_1.plain_float_0>3) as t_0 join alice.tbl_2 on t_0.plain_int_0=tbl_2.plain_int_0 group by t_0.plain_float_0 having (count(1)>0) and (sum(t_0.plain_float_0)>100)",
-        "rewritten_sql_pg": "select t_0.plain_float_0 from (select tbl_1.plain_float_0,tbl_1.plain_int_0 from alice.tbl_1 where tbl_1.plain_float_0>3) as t_0 join alice.tbl_2 on t_0.plain_int_0=tbl_2.plain_int_0 group by t_0.plain_float_0 having (count(1)>0) and (sum(t_0.plain_float_0)>100)",
-        "rewritten_sql_odps": "select t_0.plain_float_0 from (select tbl_1.plain_float_0,tbl_1.plain_int_0 from alice.tbl_1 where tbl_1.plain_float_0>3) as t_0 join alice.tbl_2 on t_0.plain_int_0=tbl_2.plain_int_0 group by t_0.plain_float_0 having (count(1)>0) and (sum(t_0.plain_float_0)>100)",
-        "rewritten_sql_csv": "select t_0.plain_float_0 from (select tbl_1.plain_float_0,tbl_1.plain_int_0 from alice.tbl_1 where tbl_1.plain_float_0>3) as t_0 join alice.tbl_2 on t_0.plain_int_0=tbl_2.plain_int_0 group by t_0.plain_float_0 having (count(1)>0) and (sum(t_0.plain_float_0)>100)"
+        "rewritten_sql_odps": "select t_0.plain_float_0 from (select tbl_1.plain_float_0,tbl_1.plain_int_0 from alice.tbl_1 where tbl_1.plain_float_0>3) as t_0 join alice.tbl_2 on t_0.plain_int_0=tbl_2.plain_int_0 group by t_0.plain_float_0 having ((count(1)>0) and (sum(t_0.plain_float_0)>100)) and (count(1)>=4)",
+        "rewritten_sql_pg": "select t_0.plain_float_0 from (select tbl_1.plain_float_0,tbl_1.plain_int_0 from alice.tbl_1 where tbl_1.plain_float_0>3) as t_0 join alice.tbl_2 on t_0.plain_int_0=tbl_2.plain_int_0 group by t_0.plain_float_0 having ((count(1)>0) and (sum(t_0.plain_float_0)>100)) and (count(1)>=4)",
+        "rewritten_sql_csv": "select t_0.plain_float_0 from (select tbl_1.plain_float_0,tbl_1.plain_int_0 from alice.tbl_1 where tbl_1.plain_float_0>3) as t_0 join alice.tbl_2 on t_0.plain_int_0=tbl_2.plain_int_0 group by t_0.plain_float_0 having ((count(1)>0) and (sum(t_0.plain_float_0)>100)) and (count(1)>=4)",
+        "rewritten_sql": "select any_value(t_0.plain_float_0) as expr_243 from (select tbl_1.plain_float_0,tbl_1.plain_int_0 from alice.tbl_1 where tbl_1.plain_float_0>3) as t_0 join alice.tbl_2 on t_0.plain_int_0=tbl_2.plain_int_0 group by t_0.plain_float_0 having ((count(1)>0) and (sum(t_0.plain_float_0)>100)) and (count(1)>=4)"
       },
       {
         "sql": "select count(*) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0 = tbl_2.plain_int_0 group by tbl_1.plain_float_0;",
         "skip_projection": false,
-        "rewritten_sql": "select count(1) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0"
+        "rewritten_sql_odps": "select count(1) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having count(1)>=4",
+        "rewritten_sql_pg": "select count(1) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having count(1)>=4",
+        "rewritten_sql_csv": "select count(1) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having count(1)>=4",
+        "rewritten_sql": "select count(1) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having count(1)>=4"
       },
       {
         "sql": "select count(*) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0 = tbl_2.plain_int_0 group by tbl_1.plain_float_0 having c > 1;",
         "skip_projection": false,
-        "rewritten_sql": "select count(1) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having count(1)>1"
+        "rewritten_sql_odps": "select count(1) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having (count(1)>1) and (count(1)>=4)",
+        "rewritten_sql_pg": "select count(1) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having (count(1)>1) and (count(1)>=4)",
+        "rewritten_sql_csv": "select count(1) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having (count(1)>1) and (count(1)>=4)",
+        "rewritten_sql": "select count(1) as c from alice.tbl_1 join alice.tbl_2 on tbl_1.plain_int_0=tbl_2.plain_int_0 group by tbl_1.plain_float_0 having (count(1)>1) and (count(1)>=4)"
       },
       {
         "sql": "select count(distinct (alice.tbl_1.plain_float_0)) as co,sum(distinct (alice.tbl_1.plain_int_0)) as su from alice.tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select count(distinct tbl_1.plain_float_0) as co,sum(distinct tbl_1.plain_int_0) as su from alice.tbl_1",
+        "rewritten_sql_pg": "select count(distinct tbl_1.plain_float_0) as co,sum(distinct tbl_1.plain_int_0) as su from alice.tbl_1",
+        "rewritten_sql_csv": "select count(distinct tbl_1.plain_float_0) as co,sum(distinct tbl_1.plain_int_0) as su from alice.tbl_1",
         "rewritten_sql": "select count(distinct tbl_1.plain_float_0) as co,sum(distinct tbl_1.plain_int_0) as su from alice.tbl_1"
       },
       {
         "sql": "select plain_int_0 from alice.tbl_1 union all select plain_int_0 from alice.tbl_2;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select t_0.plain_int_0 from ((select tbl_1.plain_int_0 from alice.tbl_1) union all (select tbl_2.plain_int_0 from alice.tbl_2)) as t_0",
+        "rewritten_sql_pg": "select t_0.plain_int_0 from ((select tbl_1.plain_int_0 from alice.tbl_1) union all (select tbl_2.plain_int_0 from alice.tbl_2)) as t_0",
+        "rewritten_sql_csv": "select t_0.plain_int_0 from ((select tbl_1.plain_int_0 from alice.tbl_1) union all (select tbl_2.plain_int_0 from alice.tbl_2)) as t_0",
         "rewritten_sql": "select t_0.plain_int_0 from ((select tbl_1.plain_int_0 from alice.tbl_1) union all (select tbl_2.plain_int_0 from alice.tbl_2)) as t_0"
       },
       {
         "sql": "select mm from (select plain_int_0 + plain_int_1 as mm from alice.tbl_1 union all select plain_int_0 + plain_int_1 as mm from alice.tbl_2) as tt;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select tt.expr_243 as mm from ((select tbl_1.plain_int_0+tbl_1.plain_int_1 as expr_243 from alice.tbl_1) union all (select tbl_2.plain_int_0+tbl_2.plain_int_1 as expr_243 from alice.tbl_2)) as tt",
+        "rewritten_sql_pg": "select tt.expr_243 as mm from ((select tbl_1.plain_int_0+tbl_1.plain_int_1 as expr_243 from alice.tbl_1) union all (select tbl_2.plain_int_0+tbl_2.plain_int_1 as expr_243 from alice.tbl_2)) as tt",
+        "rewritten_sql_csv": "select tt.expr_243 as mm from ((select tbl_1.plain_int_0+tbl_1.plain_int_1 as expr_243 from alice.tbl_1) union all (select tbl_2.plain_int_0+tbl_2.plain_int_1 as expr_243 from alice.tbl_2)) as tt",
         "rewritten_sql": "select tt.expr_243 as mm from ((select tbl_1.plain_int_0+tbl_1.plain_int_1 as expr_243 from alice.tbl_1) union all (select tbl_2.plain_int_0+tbl_2.plain_int_1 as expr_243 from alice.tbl_2)) as tt"
       },
       {
         "sql": "select plain_int_0 as p from alice.tbl_1 union all select plain_int_0 from alice.tbl_2;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select t_0.plain_int_0 as p from ((select tbl_1.plain_int_0 from alice.tbl_1) union all (select tbl_2.plain_int_0 from alice.tbl_2)) as t_0",
+        "rewritten_sql_pg": "select t_0.plain_int_0 as p from ((select tbl_1.plain_int_0 from alice.tbl_1) union all (select tbl_2.plain_int_0 from alice.tbl_2)) as t_0",
+        "rewritten_sql_csv": "select t_0.plain_int_0 as p from ((select tbl_1.plain_int_0 from alice.tbl_1) union all (select tbl_2.plain_int_0 from alice.tbl_2)) as t_0",
         "rewritten_sql": "select t_0.plain_int_0 as p from ((select tbl_1.plain_int_0 from alice.tbl_1) union all (select tbl_2.plain_int_0 from alice.tbl_2)) as t_0"
       },
       {
         "sql": "select plain_int_0 as l from alice.tbl_1 union all select plain_int_1 as l from alice.tbl_1 union all select plain_int_2 as l from alice.tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select t_0.plain_int_0 as l from ((select tbl_1.plain_int_0 from alice.tbl_1) union all (select tbl_1.plain_int_1 from alice.tbl_1) union all (select tbl_1.plain_int_2 from alice.tbl_1)) as t_0",
+        "rewritten_sql_pg": "select t_0.plain_int_0 as l from ((select tbl_1.plain_int_0 from alice.tbl_1) union all (select tbl_1.plain_int_1 from alice.tbl_1) union all (select tbl_1.plain_int_2 from alice.tbl_1)) as t_0",
+        "rewritten_sql_csv": "select t_0.plain_int_0 as l from ((select tbl_1.plain_int_0 from alice.tbl_1) union all (select tbl_1.plain_int_1 from alice.tbl_1) union all (select tbl_1.plain_int_2 from alice.tbl_1)) as t_0",
         "rewritten_sql": "select t_0.plain_int_0 as l from ((select tbl_1.plain_int_0 from alice.tbl_1) union all (select tbl_1.plain_int_1 from alice.tbl_1) union all (select tbl_1.plain_int_2 from alice.tbl_1)) as t_0"
       },
       {
         "sql": "select cnt from (select count(*) as cnt from alice.tbl_1 union all select count(*) as cnt from alice.tbl_2 union all select count(*) as cnt from alice.tbl_0) as a;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select a.expr_364 as cnt from ((select count(1) as expr_364 from alice.tbl_1) union all (select count(1) as expr_364 from alice.tbl_2) union all (select count(1) as expr_364 from alice.tbl_0)) as a",
+        "rewritten_sql_pg": "select a.expr_364 as cnt from ((select count(1) as expr_364 from alice.tbl_1) union all (select count(1) as expr_364 from alice.tbl_2) union all (select count(1) as expr_364 from alice.tbl_0)) as a",
+        "rewritten_sql_csv": "select a.expr_364 as cnt from ((select count(1) as expr_364 from alice.tbl_1) union all (select count(1) as expr_364 from alice.tbl_2) union all (select count(1) as expr_364 from alice.tbl_0)) as a",
         "rewritten_sql": "select a.expr_364 as cnt from ((select count(1) as expr_364 from alice.tbl_1) union all (select count(1) as expr_364 from alice.tbl_2) union all (select count(1) as expr_364 from alice.tbl_0)) as a"
       },
       {
         "sql": "select tbl_1.plain_int_0, '123' as constStr, 123 as constInt from alice.tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select tbl_1.plain_int_0,'123' as constStr,123 as constInt from alice.tbl_1",
+        "rewritten_sql_pg": "select tbl_1.plain_int_0,'123' as constStr,123 as constInt from alice.tbl_1",
+        "rewritten_sql_csv": "select tbl_1.plain_int_0,'123' as constStr,123 as constInt from alice.tbl_1",
         "rewritten_sql": "select tbl_1.plain_int_0,'123' as constStr,123 as constInt from alice.tbl_1"
       },
       {
         "sql": "select plain_int_0 in (select plain_int_0 from alice.tbl_1) from alice.tbl_0;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select tbl_0.plain_int_0 in (select tbl_1.plain_int_0 from alice.tbl_1) as expr_241 from alice.tbl_0",
+        "rewritten_sql_pg": "select tbl_0.plain_int_0 in (select tbl_1.plain_int_0 from alice.tbl_1) as expr_241 from alice.tbl_0",
+        "rewritten_sql_csv": "select tbl_0.plain_int_0 in (select tbl_1.plain_int_0 from alice.tbl_1) as expr_241 from alice.tbl_0",
         "rewritten_sql": "select tbl_0.plain_int_0 in (select tbl_1.plain_int_0 from alice.tbl_1) as expr_241 from alice.tbl_0"
       },
       {
         "sql": "select plain_int_1, plain_int_0 not in (select plain_int_0 from alice.tbl_1) as tt from alice.tbl_0;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select tbl_0.plain_int_1,tbl_0.plain_int_0 not in (select tbl_1.plain_int_0 from alice.tbl_1) as tt from alice.tbl_0",
+        "rewritten_sql_pg": "select tbl_0.plain_int_1,tbl_0.plain_int_0 not in (select tbl_1.plain_int_0 from alice.tbl_1) as tt from alice.tbl_0",
+        "rewritten_sql_csv": "select tbl_0.plain_int_1,tbl_0.plain_int_0 not in (select tbl_1.plain_int_0 from alice.tbl_1) as tt from alice.tbl_0",
         "rewritten_sql": "select tbl_0.plain_int_1,tbl_0.plain_int_0 not in (select tbl_1.plain_int_0 from alice.tbl_1) as tt from alice.tbl_0"
       },
       {
         "sql": "select plain_int_0 from alice.tbl_0 where plain_int_0 in (select plain_int_0 from alice.tbl_1);",
         "skip_projection": false,
-        "rewritten_sql": "select tbl_0.plain_int_0 from alice.tbl_0 where tbl_0.plain_int_0 in (select tbl_1.plain_int_0 from alice.tbl_1)"
+        "rewritten_sql_odps": "select tbl_0.plain_int_0 from alice.tbl_0 where exists (select tbl_1.plain_int_0 from alice.tbl_1 where tbl_0.plain_int_0=tbl_1.plain_int_0)",
+        "rewritten_sql_pg": "select tbl_0.plain_int_0 from alice.tbl_0 where exists (select tbl_1.plain_int_0 from alice.tbl_1 where tbl_0.plain_int_0=tbl_1.plain_int_0)",
+        "rewritten_sql_csv": "select tbl_0.plain_int_0 from alice.tbl_0 where exists (select tbl_1.plain_int_0 from alice.tbl_1 where tbl_0.plain_int_0=tbl_1.plain_int_0)",
+        "rewritten_sql": "select tbl_0.plain_int_0 from alice.tbl_0 where exists (select tbl_1.plain_int_0 from alice.tbl_1 where tbl_0.plain_int_0=tbl_1.plain_int_0)"
       },
       {
         "sql": "select plain_int_0 from alice.tbl_0 where (plain_int_0 in (select plain_int_0 from alice.tbl_1)) and plain_int_0 > 0;",
         "skip_projection": false,
-        "rewritten_sql": "select tbl_0.plain_int_0 from alice.tbl_0 where (tbl_0.plain_int_0>0) and (tbl_0.plain_int_0 in (select tbl_1.plain_int_0 from alice.tbl_1))"
+        "rewritten_sql_odps": "select tbl_0.plain_int_0 from alice.tbl_0 where (tbl_0.plain_int_0>0) and (exists (select tbl_1.plain_int_0 from alice.tbl_1 where tbl_0.plain_int_0=tbl_1.plain_int_0))",
+        "rewritten_sql_pg": "select tbl_0.plain_int_0 from alice.tbl_0 where (tbl_0.plain_int_0>0) and (exists (select tbl_1.plain_int_0 from alice.tbl_1 where tbl_0.plain_int_0=tbl_1.plain_int_0))",
+        "rewritten_sql_csv": "select tbl_0.plain_int_0 from alice.tbl_0 where (tbl_0.plain_int_0>0) and (exists (select tbl_1.plain_int_0 from alice.tbl_1 where tbl_0.plain_int_0=tbl_1.plain_int_0))",
+        "rewritten_sql": "select tbl_0.plain_int_0 from alice.tbl_0 where (tbl_0.plain_int_0>0) and (exists (select tbl_1.plain_int_0 from alice.tbl_1 where tbl_0.plain_int_0=tbl_1.plain_int_0))"
       },
       {
         "sql": "select plain_int_0 from alice.tbl_0 where plain_int_0 not in (select plain_int_0 from alice.tbl_1);",
         "skip_projection": false,
+        "rewritten_sql_odps": "select tbl_0.plain_int_0 from alice.tbl_0 where tbl_0.plain_int_0 not in (select tbl_1.plain_int_0 from alice.tbl_1)",
+        "rewritten_sql_pg": "select tbl_0.plain_int_0 from alice.tbl_0 where tbl_0.plain_int_0 not in (select tbl_1.plain_int_0 from alice.tbl_1)",
+        "rewritten_sql_csv": "select tbl_0.plain_int_0 from alice.tbl_0 where tbl_0.plain_int_0 not in (select tbl_1.plain_int_0 from alice.tbl_1)",
         "rewritten_sql": "select tbl_0.plain_int_0 from alice.tbl_0 where tbl_0.plain_int_0 not in (select tbl_1.plain_int_0 from alice.tbl_1)"
       },
       {
         "sql": "select t1.plain_int_0 from alice.tbl_0 as t1 join alice.tbl_1 as t2 on t1.plain_int_0 = t2.plain_int_0;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select t1.plain_int_0 from alice.tbl_0 as t1 join alice.tbl_1 as t2 on t1.plain_int_0=t2.plain_int_0",
+        "rewritten_sql_pg": "select t1.plain_int_0 from alice.tbl_0 as t1 join alice.tbl_1 as t2 on t1.plain_int_0=t2.plain_int_0",
+        "rewritten_sql_csv": "select t1.plain_int_0 from alice.tbl_0 as t1 join alice.tbl_1 as t2 on t1.plain_int_0=t2.plain_int_0",
         "rewritten_sql": "select t1.plain_int_0 from alice.tbl_0 as t1 join alice.tbl_1 as t2 on t1.plain_int_0=t2.plain_int_0"
       },
       {
         "sql": "select alice.tbl_0.plain_int_0 from alice.tbl_0 join alice.tbl_1 on alice.tbl_0.plain_int_0 = alice.tbl_1.plain_int_0;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select tbl_0.plain_int_0 from alice.tbl_0 join alice.tbl_1 on tbl_0.plain_int_0=tbl_1.plain_int_0",
+        "rewritten_sql_pg": "select tbl_0.plain_int_0 from alice.tbl_0 join alice.tbl_1 on tbl_0.plain_int_0=tbl_1.plain_int_0",
+        "rewritten_sql_csv": "select tbl_0.plain_int_0 from alice.tbl_0 join alice.tbl_1 on tbl_0.plain_int_0=tbl_1.plain_int_0",
         "rewritten_sql": "select tbl_0.plain_int_0 from alice.tbl_0 join alice.tbl_1 on tbl_0.plain_int_0=tbl_1.plain_int_0"
       },
       {
         "sql": "select concat(alice.tbl_0.plain_string_0, alice.tbl_0.plain_string_1) as tg, (alice.tbl_0.plain_int_0 + alice.tbl_1.plain_int_0) as tt from alice.tbl_0 join alice.tbl_1 on alice.tbl_0.plain_int_0 = alice.tbl_1.plain_int_0;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select concat(tbl_0.plain_string_0, tbl_0.plain_string_1) as tg,tbl_0.plain_int_0+tbl_1.plain_int_0 as tt from alice.tbl_0 join alice.tbl_1 on tbl_0.plain_int_0=tbl_1.plain_int_0",
+        "rewritten_sql_pg": "select concat(tbl_0.plain_string_0, tbl_0.plain_string_1) as tg,tbl_0.plain_int_0+tbl_1.plain_int_0 as tt from alice.tbl_0 join alice.tbl_1 on tbl_0.plain_int_0=tbl_1.plain_int_0",
+        "rewritten_sql_csv": "select concat(tbl_0.plain_string_0, tbl_0.plain_string_1) as tg,tbl_0.plain_int_0+tbl_1.plain_int_0 as tt from alice.tbl_0 join alice.tbl_1 on tbl_0.plain_int_0=tbl_1.plain_int_0",
         "rewritten_sql": "select concat(tbl_0.plain_string_0, tbl_0.plain_string_1) as tg,tbl_0.plain_int_0+tbl_1.plain_int_0 as tt from alice.tbl_0 join alice.tbl_1 on tbl_0.plain_int_0=tbl_1.plain_int_0"
       },
       {
         "sql": "select concat(alice.tbl_0.plain_string_0, alice.tbl_0.plain_string_1) as tt from alice.tbl_0;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select concat(tbl_0.plain_string_0, tbl_0.plain_string_1) as tt from alice.tbl_0",
+        "rewritten_sql_pg": "select concat(tbl_0.plain_string_0, tbl_0.plain_string_1) as tt from alice.tbl_0",
+        "rewritten_sql_csv": "select concat(tbl_0.plain_string_0, tbl_0.plain_string_1) as tt from alice.tbl_0",
         "rewritten_sql": "select concat(tbl_0.plain_string_0, tbl_0.plain_string_1) as tt from alice.tbl_0"
       },
       {
         "sql": "select concat(alice.tbl_0.plain_string_0, alice.tbl_0.plain_string_1) as tt from alice.tbl_0;",
         "skip_projection": true,
+        "rewritten_sql_odps": "select tbl_0.plain_string_0,tbl_0.plain_string_1 from alice.tbl_0",
+        "rewritten_sql_pg": "select tbl_0.plain_string_0,tbl_0.plain_string_1 from alice.tbl_0",
+        "rewritten_sql_csv": "select tbl_0.plain_string_0,tbl_0.plain_string_1 from alice.tbl_0",
         "rewritten_sql": "select tbl_0.plain_string_0,tbl_0.plain_string_1 from alice.tbl_0"
       },
       {
         "sql": "select lower(alice.tbl_0.plain_string_0) as tt from alice.tbl_0;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select lower(tbl_0.plain_string_0) as tt from alice.tbl_0",
+        "rewritten_sql_pg": "select lower(tbl_0.plain_string_0) as tt from alice.tbl_0",
+        "rewritten_sql_csv": "select lower(tbl_0.plain_string_0) as tt from alice.tbl_0",
         "rewritten_sql": "select lower(tbl_0.plain_string_0) as tt from alice.tbl_0"
       },
       {
         "sql": "select count(*), sum(sumId), max(minId), min(maxId) from (select t.plain_int_0, sum(t.plain_int_1) as sumId, max(t.plain_int_1) as maxId, min(t.plain_int_2) as minId from alice.tbl_0 as t group by t.plain_int_0) as hp;",
         "skip_projection": false,
-        "rewritten_sql": "select count(1) as expr_124,sum(t_0.expr_121) as expr_125,max(t_0.expr_123) as expr_126,min(t_0.expr_122) as expr_127 from (select sum(t.plain_int_1) as expr_121,max(t.plain_int_1) as expr_122,min(t.plain_int_2) as expr_123,count(1) as expr_128 from alice.tbl_0 as t group by t.plain_int_0) as t_0"
+        "rewritten_sql_odps": "select count(1) as expr_124,sum(t_0.expr_121) as expr_125,max(t_0.expr_123) as expr_126,min(t_0.expr_122) as expr_127 from (select sum(t.plain_int_1) as expr_121,max(t.plain_int_1) as expr_122,min(t.plain_int_2) as expr_123,count(1) as expr_128 from alice.tbl_0 as t group by t.plain_int_0 having count(1)>=4) as t_0",
+        "rewritten_sql_pg": "select count(1) as expr_124,sum(t_0.expr_121) as expr_125,max(t_0.expr_123) as expr_126,min(t_0.expr_122) as expr_127 from (select sum(t.plain_int_1) as expr_121,max(t.plain_int_1) as expr_122,min(t.plain_int_2) as expr_123,count(1) as expr_128 from alice.tbl_0 as t group by t.plain_int_0 having count(1)>=4) as t_0",
+        "rewritten_sql_csv": "select count(1) as expr_124,sum(t_0.expr_121) as expr_125,max(t_0.expr_123) as expr_126,min(t_0.expr_122) as expr_127 from (select sum(t.plain_int_1) as expr_121,max(t.plain_int_1) as expr_122,min(t.plain_int_2) as expr_123,count(1) as expr_128 from alice.tbl_0 as t group by t.plain_int_0 having count(1)>=4) as t_0",
+        "rewritten_sql": "select count(1) as expr_124,sum(t_0.expr_121) as expr_125,max(t_0.expr_123) as expr_126,min(t_0.expr_122) as expr_127 from (select sum(t.plain_int_1) as expr_121,max(t.plain_int_1) as expr_122,min(t.plain_int_2) as expr_123,count(1) as expr_128 from alice.tbl_0 as t group by t.plain_int_0 having count(1)>=4) as t_0"
       },
       {
         "sql": "select count(*) from (select encrypt_float_0, encrypt_float_1 from alice.tbl_1 as t union all select encrypt_float_0, encrypt_float_1 from alice.tbl_1 as t1) as tt group by tt.encrypt_float_0;",
         "skip_projection": false,
-        "rewritten_sql": "select count(tt.expr_244) as expr_243 from ((select count(1) as expr_244,any_value(t.encrypt_float_0) as expr_241 from alice.tbl_1 as t group by t.encrypt_float_0) union all (select count(1) as expr_244,any_value(t1.encrypt_float_0) as expr_241 from alice.tbl_1 as t1 group by t1.encrypt_float_0)) as tt group by tt.expr_241",
-        "rewritten_sql_pg": "select count(tt.expr_244) as expr_243 from ((select count(1) as expr_244,t.encrypt_float_0 from alice.tbl_1 as t group by t.encrypt_float_0) union all (select count(1) as expr_244,t1.encrypt_float_0 from alice.tbl_1 as t1 group by t1.encrypt_float_0)) as tt group by tt.encrypt_float_0",
-        "rewritten_sql_odps": "select count(tt.expr_244) as expr_243 from ((select count(1) as expr_244,t.encrypt_float_0 from alice.tbl_1 as t group by t.encrypt_float_0) union all (select count(1) as expr_244,t1.encrypt_float_0 from alice.tbl_1 as t1 group by t1.encrypt_float_0)) as tt group by tt.encrypt_float_0",
-        "rewritten_sql_csv": "select count(tt.expr_244) as expr_243 from ((select count(1) as expr_244,t.encrypt_float_0 from alice.tbl_1 as t group by t.encrypt_float_0) union all (select count(1) as expr_244,t1.encrypt_float_0 from alice.tbl_1 as t1 group by t1.encrypt_float_0)) as tt group by tt.encrypt_float_0"
+        "rewritten_sql_odps": "select count(tt.expr_244) as expr_243 from ((select count(1) as expr_244,t.encrypt_float_0 from alice.tbl_1 as t group by t.encrypt_float_0) union all (select count(1) as expr_244,t1.encrypt_float_0 from alice.tbl_1 as t1 group by t1.encrypt_float_0)) as tt group by tt.encrypt_float_0 having count(tt.expr_244)>=4",
+        "rewritten_sql_pg": "select count(tt.expr_244) as expr_243 from ((select count(1) as expr_244,t.encrypt_float_0 from alice.tbl_1 as t group by t.encrypt_float_0) union all (select count(1) as expr_244,t1.encrypt_float_0 from alice.tbl_1 as t1 group by t1.encrypt_float_0)) as tt group by tt.encrypt_float_0 having count(tt.expr_244)>=4",
+        "rewritten_sql_csv": "select count(tt.expr_244) as expr_243 from ((select count(1) as expr_244,t.encrypt_float_0 from alice.tbl_1 as t group by t.encrypt_float_0) union all (select count(1) as expr_244,t1.encrypt_float_0 from alice.tbl_1 as t1 group by t1.encrypt_float_0)) as tt group by tt.encrypt_float_0 having count(tt.expr_244)>=4",
+        "rewritten_sql": "select count(tt.expr_244) as expr_243 from ((select count(1) as expr_244,any_value(t.encrypt_float_0) as expr_241 from alice.tbl_1 as t group by t.encrypt_float_0) union all (select count(1) as expr_244,any_value(t1.encrypt_float_0) as expr_241 from alice.tbl_1 as t1 group by t1.encrypt_float_0)) as tt group by tt.expr_241 having count(tt.expr_244)>=4"
       },
       {
         "sql": "select min(alice.compare_float_0*alice.compare_float_1) as m from alice.tbl_0 as alice;;",
         "skip_projection": false,
-        "rewritten_sql": "select min(alice.compare_float_0*alice.compare_float_1) as m from alice.tbl_0 as alice",
+        "rewritten_sql_odps": "select min(alice.compare_float_0*alice.compare_float_1) as m from alice.tbl_0 as alice",
         "rewritten_sql_pg": "select min(alice.compare_float_0*alice.compare_float_1) as m from alice.tbl_0 as alice",
-        "rewritten_sql_csv": "select min(alice.compare_float_0*alice.compare_float_1) as m from alice.tbl_0 as alice"
+        "rewritten_sql_csv": "select min(alice.compare_float_0*alice.compare_float_1) as m from alice.tbl_0 as alice",
+        "rewritten_sql": "select min(alice.compare_float_0*alice.compare_float_1) as m from alice.tbl_0 as alice"
       },
       {
         "sql": "select cast(alice.compare_float_0 as decimal(11,2)) as m from alice.tbl_0 as alice;;",
         "skip_projection": false,
-        "rewritten_sql": "select cast(alice.compare_float_0 as decimal(11, 2)) as m from alice.tbl_0 as alice",
+        "rewritten_sql_odps": "select cast(alice.compare_float_0 as decimal) as m from alice.tbl_0 as alice",
         "rewritten_sql_pg": "select cast(alice.compare_float_0 as numeric(11, 2)) as m from alice.tbl_0 as alice",
         "rewritten_sql_csv": "select cast(alice.compare_float_0 as numeric(11, 2)) as m from alice.tbl_0 as alice",
-        "rewritten_sql_odps": "select cast(alice.compare_float_0 as decimal) as m from alice.tbl_0 as alice"
+        "rewritten_sql": "select cast(alice.compare_float_0 as decimal(11, 2)) as m from alice.tbl_0 as alice"
       },
       {
         "sql": "select cast(alice.compare_string_0 as datetime) as m from alice.tbl_0 as alice;;",
         "skip_projection": false,
-        "rewritten_sql": "select cast(alice.compare_string_0 as datetime) as m from alice.tbl_0 as alice",
+        "rewritten_sql_odps": "select cast(alice.compare_string_0 as datetime) as m from alice.tbl_0 as alice",
         "rewritten_sql_pg": "select cast(alice.compare_string_0 as timestamp) as m from alice.tbl_0 as alice",
         "rewritten_sql_csv": "select cast(alice.compare_string_0 as timestamp) as m from alice.tbl_0 as alice",
-        "rewritten_sql_odps": "select cast(alice.compare_string_0 as datetime) as m from alice.tbl_0 as alice"
+        "rewritten_sql": "select cast(alice.compare_string_0 as datetime) as m from alice.tbl_0 as alice"
       },
       {
         "sql": "select cast(alice.compare_string_0 as CHAR(100)) as m from alice.tbl_0 as alice;;",
         "skip_projection": false,
-        "rewritten_sql": "select cast(alice.compare_string_0 as char(100)) as m from alice.tbl_0 as alice",
         "rewritten_sql_odps": "select cast(alice.compare_string_0 as string) as m from alice.tbl_0 as alice",
         "rewritten_sql_pg": "select cast(alice.compare_string_0 as varchar) as m from alice.tbl_0 as alice",
-        "rewritten_sql_csv": "select cast(alice.compare_string_0 as varchar) as m from alice.tbl_0 as alice"
+        "rewritten_sql_csv": "select cast(alice.compare_string_0 as varchar) as m from alice.tbl_0 as alice",
+        "rewritten_sql": "select cast(alice.compare_string_0 as char(100)) as m from alice.tbl_0 as alice"
       },
       {
         "sql": "select cast(alice.compare_float_0 as double) as m from alice.tbl_0 as alice;;",
         "skip_projection": false,
-        "rewritten_sql": "select cast(alice.compare_float_0 as decimal(64,30)) as m from alice.tbl_0 as alice",
+        "rewritten_sql_odps": "select cast(alice.compare_float_0 as double) as m from alice.tbl_0 as alice",
         "rewritten_sql_pg": "select cast(alice.compare_float_0 as double precision) as m from alice.tbl_0 as alice",
         "rewritten_sql_csv": "select cast(alice.compare_float_0 as double precision) as m from alice.tbl_0 as alice",
-        "rewritten_sql_odps": "select cast(alice.compare_float_0 as double) as m from alice.tbl_0 as alice"
+        "rewritten_sql": "select cast(alice.compare_float_0 as decimal(64,30)) as m from alice.tbl_0 as alice"
       },
       {
         "sql": "select cast(alice.compare_float_0 as decimal(11)) as m from alice.tbl_0 as alice;;",
         "skip_projection": false,
-        "rewritten_sql": "select cast(alice.compare_float_0 as decimal(11)) as m from alice.tbl_0 as alice",
+        "rewritten_sql_odps": "select cast(alice.compare_float_0 as bigint) as m from alice.tbl_0 as alice",
         "rewritten_sql_pg": "select cast(alice.compare_float_0 as numeric(11)) as m from alice.tbl_0 as alice",
         "rewritten_sql_csv": "select cast(alice.compare_float_0 as numeric(11)) as m from alice.tbl_0 as alice",
-        "rewritten_sql_odps": "select cast(alice.compare_float_0 as bigint) as m from alice.tbl_0 as alice"
+        "rewritten_sql": "select cast(alice.compare_float_0 as decimal(11)) as m from alice.tbl_0 as alice"
       },
       {
         "sql": "select cast(alice.compare_float_0 as signed) as m from alice.tbl_0 as alice;;",
         "skip_projection": false,
-        "rewritten_sql": "select cast(alice.compare_float_0 as signed) as m from alice.tbl_0 as alice",
+        "rewritten_sql_odps": "select cast(alice.compare_float_0 as bigint) as m from alice.tbl_0 as alice",
         "rewritten_sql_pg": "select cast(alice.compare_float_0 as integer) as m from alice.tbl_0 as alice",
         "rewritten_sql_csv": "select cast(alice.compare_float_0 as integer) as m from alice.tbl_0 as alice",
-        "rewritten_sql_odps": "select cast(alice.compare_float_0 as bigint) as m from alice.tbl_0 as alice"
+        "rewritten_sql": "select cast(alice.compare_float_0 as signed) as m from alice.tbl_0 as alice"
       },
       {
         "sql": "select cast(alice.compare_float_0 as unsigned) as m from alice.tbl_0 as alice;;",
         "skip_projection": false,
+        "skip_odps_test": true,
         "skip_pg_test": true,
         "skip_csv_test": true,
-        "skip_odps_test": true,
         "rewritten_sql": "select cast(alice.compare_float_0 as unsigned) as m from alice.tbl_0 as alice"
       },
       {
         "sql": "select cast(alice.compare_datetime_0 as date) as m from alice.tbl_0 as alice;;",
         "skip_projection": false,
+        "rewritten_sql_pg": "select cast(alice.compare_datetime_0 as date) as m from alice.tbl_0 as alice",
+        "rewritten_sql_csv": "select cast(alice.compare_datetime_0 as date) as m from alice.tbl_0 as alice",
         "skip_odps_test": true,
         "rewritten_sql": "select cast(alice.compare_datetime_0 as date) as m from alice.tbl_0 as alice"
       },
       {
         "sql": "select cast(alice.compare_datetime_0 as datetime) as m from alice.tbl_0 as alice;;",
         "skip_projection": false,
-        "skip_odps_test": true,
-        "rewritten_sql": "select cast(alice.compare_datetime_0 as datetime) as m from alice.tbl_0 as alice",
         "rewritten_sql_pg": "select cast(alice.compare_datetime_0 as timestamp) as m from alice.tbl_0 as alice",
-        "rewritten_sql_csv": "select cast(alice.compare_datetime_0 as timestamp) as m from alice.tbl_0 as alice"
+        "rewritten_sql_csv": "select cast(alice.compare_datetime_0 as timestamp) as m from alice.tbl_0 as alice",
+        "skip_odps_test": true,
+        "rewritten_sql": "select cast(alice.compare_datetime_0 as datetime) as m from alice.tbl_0 as alice"
       },
       {
         "sql": "SELECT 'David!' LIKE 'David\\_' as tt from alice.tbl_0 as alice;;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select 'David!'='David_' as tt from alice.tbl_0 as alice",
+        "rewritten_sql_pg": "select 'David!'='David_' as tt from alice.tbl_0 as alice",
+        "rewritten_sql_csv": "select 'David!'='David_' as tt from alice.tbl_0 as alice",
         "rewritten_sql": "select 'David!'='David_' as tt from alice.tbl_0 as alice"
       },
       {
         "sql": "SELECT 'David_' LIKE 'David|_' ESCAPE '|' as  tt from alice.tbl_0 as alice;;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select 'David_'='David_' as tt from alice.tbl_0 as alice",
+        "rewritten_sql_pg": "select 'David_'='David_' as tt from alice.tbl_0 as alice",
+        "rewritten_sql_csv": "select 'David_'='David_' as tt from alice.tbl_0 as alice",
         "rewritten_sql": "select 'David_'='David_' as tt from alice.tbl_0 as alice"
       },
       {
         "sql": "SELECT alice.plain_string_0 LIKE '%str%' as tt from alice.tbl_0 as alice;;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select alice.plain_string_0 like '%str%' as tt from alice.tbl_0 as alice",
+        "rewritten_sql_pg": "select alice.plain_string_0 like '%str%' as tt from alice.tbl_0 as alice",
+        "rewritten_sql_csv": "select alice.plain_string_0 like '%str%' as tt from alice.tbl_0 as alice",
         "rewritten_sql": "select alice.plain_string_0 like '%str%' as tt from alice.tbl_0 as alice"
       },
       {
         "sql": "SELECT alice.plain_string_0 LIKE '%str#%' ESCAPE '#' as tt from alice.tbl_0 as alice;;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select alice.plain_string_0 like '%str#%' escape '#' as tt from alice.tbl_0 as alice",
+        "rewritten_sql_pg": "select alice.plain_string_0 like '%str#%' escape '#' as tt from alice.tbl_0 as alice",
+        "rewritten_sql_csv": "select alice.plain_string_0 like '%str#%' escape '#' as tt from alice.tbl_0 as alice",
         "rewritten_sql": "select alice.plain_string_0 like '%str#%' escape '#' as tt from alice.tbl_0 as alice"
       },
       {
         "sql": "SELECT (alice.plain_string_0 LIKE '%str%') * 10 as tt1, (alice.plain_string_0 LIKE '%str%') + 10 as tt2, alice.plain_string_0 LIKE '%str%' and alice.plain_string_1 LIKE '%str%' as tt3 from alice.tbl_0 as alice;;",
         "skip_projection": false,
-        "rewritten_sql": "select (alice.plain_string_0 like '%str%')*10 as tt1,(alice.plain_string_0 like '%str%')+10 as tt2,alice.plain_string_0 like '%str%' and alice.plain_string_1 like '%str%' as tt3 from alice.tbl_0 as alice",
-        "skip_odps_test": true
+        "rewritten_sql_pg": "select (alice.plain_string_0 like '%str%')*10 as tt1,(alice.plain_string_0 like '%str%')+10 as tt2,alice.plain_string_0 like '%str%' and alice.plain_string_1 like '%str%' as tt3 from alice.tbl_0 as alice",
+        "rewritten_sql_csv": "select (alice.plain_string_0 like '%str%')*10 as tt1,(alice.plain_string_0 like '%str%')+10 as tt2,alice.plain_string_0 like '%str%' and alice.plain_string_1 like '%str%' as tt3 from alice.tbl_0 as alice",
+        "skip_odps_test": true,
+        "rewritten_sql": "select (alice.plain_string_0 like '%str%')*10 as tt1,(alice.plain_string_0 like '%str%')+10 as tt2,alice.plain_string_0 like '%str%' and alice.plain_string_1 like '%str%' as tt3 from alice.tbl_0 as alice"
       },
       {
         "sql": "select plain_int_0, 3 + plain_int_1 in (2, 5, 15) as ee from alice.tbl_1 where plain_int_0 in (2, 5, 15) and plain_int_1 not in (2, 5, 15);;",
         "skip_projection": false,
-        "rewritten_sql": "select tbl_1.plain_int_0,3+tbl_1.plain_int_1=2 or 3+tbl_1.plain_int_1=5 or 3+tbl_1.plain_int_1=15 as ee from alice.tbl_1 where (tbl_1.plain_int_0=2 or tbl_1.plain_int_0=5 or tbl_1.plain_int_0=15) and (not(tbl_1.plain_int_1=2 or tbl_1.plain_int_1=5 or tbl_1.plain_int_1=15))",
+        "rewritten_sql_odps": "select tbl_1.plain_int_0,(3+tbl_1.plain_int_1=2) or (3+tbl_1.plain_int_1=5) or (3+tbl_1.plain_int_1=15) as ee from alice.tbl_1 where ((tbl_1.plain_int_0=2) or (tbl_1.plain_int_0=5) or (tbl_1.plain_int_0=15)) and (not((tbl_1.plain_int_1=2) or (tbl_1.plain_int_1=5) or (tbl_1.plain_int_1=15)))",
         "rewritten_sql_pg": "select tbl_1.plain_int_0,(3+tbl_1.plain_int_1=2) or (3+tbl_1.plain_int_1=5) or (3+tbl_1.plain_int_1=15) as ee from alice.tbl_1 where ((tbl_1.plain_int_0=2) or (tbl_1.plain_int_0=5) or (tbl_1.plain_int_0=15)) and (not((tbl_1.plain_int_1=2) or (tbl_1.plain_int_1=5) or (tbl_1.plain_int_1=15)))",
         "rewritten_sql_csv": "select tbl_1.plain_int_0,(3+tbl_1.plain_int_1=2) or (3+tbl_1.plain_int_1=5) or (3+tbl_1.plain_int_1=15) as ee from alice.tbl_1 where ((tbl_1.plain_int_0=2) or (tbl_1.plain_int_0=5) or (tbl_1.plain_int_0=15)) and (not((tbl_1.plain_int_1=2) or (tbl_1.plain_int_1=5) or (tbl_1.plain_int_1=15)))",
-        "rewritten_sql_odps": "select tbl_1.plain_int_0,(3+tbl_1.plain_int_1=2) or (3+tbl_1.plain_int_1=5) or (3+tbl_1.plain_int_1=15) as ee from alice.tbl_1 where ((tbl_1.plain_int_0=2) or (tbl_1.plain_int_0=5) or (tbl_1.plain_int_0=15)) and (not((tbl_1.plain_int_1=2) or (tbl_1.plain_int_1=5) or (tbl_1.plain_int_1=15)))"
+        "rewritten_sql": "select tbl_1.plain_int_0,3+tbl_1.plain_int_1=2 or 3+tbl_1.plain_int_1=5 or 3+tbl_1.plain_int_1=15 as ee from alice.tbl_1 where (tbl_1.plain_int_0=2 or tbl_1.plain_int_0=5 or tbl_1.plain_int_0=15) and (not(tbl_1.plain_int_1=2 or tbl_1.plain_int_1=5 or tbl_1.plain_int_1=15))"
       },
       {
         "sql": "select plain_int_0 + plain_int_0 + 5, (plain_int_1 + plain_int_2 + plain_int_0) > plain_int_1 and plain_int_1 > plain_int_0 and plain_int_1 < plain_int_0 from alice.tbl_1;;",
         "skip_projection": false,
-        "rewritten_sql": "select tbl_1.plain_int_0+tbl_1.plain_int_0+5 as expr_121,tbl_1.plain_int_1+tbl_1.plain_int_2+tbl_1.plain_int_0>tbl_1.plain_int_1 and tbl_1.plain_int_1>tbl_1.plain_int_0 and tbl_1.plain_int_1<tbl_1.plain_int_0 as expr_122 from alice.tbl_1",
+        "rewritten_sql_odps": "select tbl_1.plain_int_0+tbl_1.plain_int_0+5 as expr_121,(tbl_1.plain_int_1+tbl_1.plain_int_2+tbl_1.plain_int_0>tbl_1.plain_int_1) and (tbl_1.plain_int_1>tbl_1.plain_int_0) and (tbl_1.plain_int_1<tbl_1.plain_int_0) as expr_122 from alice.tbl_1",
         "rewritten_sql_pg": "select tbl_1.plain_int_0+tbl_1.plain_int_0+5 as expr_121,(tbl_1.plain_int_1+tbl_1.plain_int_2+tbl_1.plain_int_0>tbl_1.plain_int_1) and (tbl_1.plain_int_1>tbl_1.plain_int_0) and (tbl_1.plain_int_1<tbl_1.plain_int_0) as expr_122 from alice.tbl_1",
         "rewritten_sql_csv": "select tbl_1.plain_int_0+tbl_1.plain_int_0+5 as expr_121,(tbl_1.plain_int_1+tbl_1.plain_int_2+tbl_1.plain_int_0>tbl_1.plain_int_1) and (tbl_1.plain_int_1>tbl_1.plain_int_0) and (tbl_1.plain_int_1<tbl_1.plain_int_0) as expr_122 from alice.tbl_1",
-        "rewritten_sql_odps": "select tbl_1.plain_int_0+tbl_1.plain_int_0+5 as expr_121,(tbl_1.plain_int_1+tbl_1.plain_int_2+tbl_1.plain_int_0>tbl_1.plain_int_1) and (tbl_1.plain_int_1>tbl_1.plain_int_0) and (tbl_1.plain_int_1<tbl_1.plain_int_0) as expr_122 from alice.tbl_1"
+        "rewritten_sql": "select tbl_1.plain_int_0+tbl_1.plain_int_0+5 as expr_121,tbl_1.plain_int_1+tbl_1.plain_int_2+tbl_1.plain_int_0>tbl_1.plain_int_1 and tbl_1.plain_int_1>tbl_1.plain_int_0 and tbl_1.plain_int_1<tbl_1.plain_int_0 as expr_122 from alice.tbl_1"
       },
       {
         "sql": "select plain_int_0 > if(plain_int_0, plain_int_1, plain_int_2) as res from alice.tbl_1;;",
         "skip_projection": false,
-        "rewritten_sql": "select tbl_1.plain_int_0>if(tbl_1.plain_int_0, tbl_1.plain_int_1, tbl_1.plain_int_2) as res from alice.tbl_1",
-        "skip_odps_test": true
+        "rewritten_sql_pg": "select tbl_1.plain_int_0>if(tbl_1.plain_int_0, tbl_1.plain_int_1, tbl_1.plain_int_2) as res from alice.tbl_1",
+        "rewritten_sql_csv": "select tbl_1.plain_int_0>if(tbl_1.plain_int_0, tbl_1.plain_int_1, tbl_1.plain_int_2) as res from alice.tbl_1",
+        "skip_odps_test": true,
+        "rewritten_sql": "select tbl_1.plain_int_0>if(tbl_1.plain_int_0, tbl_1.plain_int_1, tbl_1.plain_int_2) as res from alice.tbl_1"
       },
       {
         "sql": "select plain_int_0, plain_int_0 > 1 and plain_int_0 >= 1 as and_log, not (plain_int_0 < 5) as not_log, (plain_int_0 <= 5) or (plain_int_0 <> 8) as or_log from carol.tbl_1;",
         "skip_projection": false,
-        "rewritten_sql": "select tbl_1.plain_int_0,tbl_1.plain_int_0>1 and tbl_1.plain_int_0>=1 as and_log,not(tbl_1.plain_int_0<5) as not_log,tbl_1.plain_int_0<=5 or tbl_1.plain_int_0!=8 as or_log from carol.tbl_1",
+        "rewritten_sql_odps": "select tbl_1.plain_int_0,(tbl_1.plain_int_0>1) and (tbl_1.plain_int_0>=1) as and_log,not(tbl_1.plain_int_0<5) as not_log,(tbl_1.plain_int_0<=5) or (tbl_1.plain_int_0!=8) as or_log from carol.tbl_1",
         "rewritten_sql_pg": "select tbl_1.plain_int_0,(tbl_1.plain_int_0>1) and (tbl_1.plain_int_0>=1) as and_log,not(tbl_1.plain_int_0<5) as not_log,(tbl_1.plain_int_0<=5) or (tbl_1.plain_int_0!=8) as or_log from carol.tbl_1",
         "rewritten_sql_csv": "select tbl_1.plain_int_0,(tbl_1.plain_int_0>1) and (tbl_1.plain_int_0>=1) as and_log,not(tbl_1.plain_int_0<5) as not_log,(tbl_1.plain_int_0<=5) or (tbl_1.plain_int_0!=8) as or_log from carol.tbl_1",
-        "rewritten_sql_odps": "select tbl_1.plain_int_0,(tbl_1.plain_int_0>1) and (tbl_1.plain_int_0>=1) as and_log,not(tbl_1.plain_int_0<5) as not_log,(tbl_1.plain_int_0<=5) or (tbl_1.plain_int_0!=8) as or_log from carol.tbl_1"
+        "rewritten_sql": "select tbl_1.plain_int_0,tbl_1.plain_int_0>1 and tbl_1.plain_int_0>=1 as and_log,not(tbl_1.plain_int_0<5) as not_log,tbl_1.plain_int_0<=5 or tbl_1.plain_int_0!=8 as or_log from carol.tbl_1"
       },
       {
         "sql": "select -(plain_int_0 + plain_int_2) * plain_int_1 as res from carol.tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select -(tbl_1.plain_int_0+tbl_1.plain_int_2)*tbl_1.plain_int_1 as res from carol.tbl_1",
+        "rewritten_sql_pg": "select -(tbl_1.plain_int_0+tbl_1.plain_int_2)*tbl_1.plain_int_1 as res from carol.tbl_1",
+        "rewritten_sql_csv": "select -(tbl_1.plain_int_0+tbl_1.plain_int_2)*tbl_1.plain_int_1 as res from carol.tbl_1",
         "rewritten_sql": "select -(tbl_1.plain_int_0+tbl_1.plain_int_2)*tbl_1.plain_int_1 as res from carol.tbl_1"
       },
       {
         "sql": "select cos(aggregate_float_0) as a from alice.tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select cos(tbl_1.aggregate_float_0) as a from alice.tbl_1",
+        "rewritten_sql_pg": "select cos(tbl_1.aggregate_float_0) as a from alice.tbl_1",
+        "rewritten_sql_csv": "select cos(tbl_1.aggregate_float_0) as a from alice.tbl_1",
         "rewritten_sql": "select cos(tbl_1.aggregate_float_0) as a from alice.tbl_1"
       },
       {
         "sql": "select truncate(plain_float_0, 2) as a, truncate(plain_float_0, 0) as b, truncate(3.1415926, 3) as c from alice.tbl_1;",
         "skip_projection": false,
-        "rewritten_sql": "select truncate(tbl_1.plain_float_0, 2) as a,truncate(tbl_1.plain_float_0, 0) as b,truncate(3.1415926, 3) as c from alice.tbl_1",
+        "rewritten_sql_odps": "select trunc(tbl_1.plain_float_0, 2) as a,trunc(tbl_1.plain_float_0, 0) as b,trunc(3.1415926, 3) as c from alice.tbl_1",
         "rewritten_sql_pg": "select trunc(tbl_1.plain_float_0, 2) as a,trunc(tbl_1.plain_float_0, 0) as b,trunc(3.1415926, 3) as c from alice.tbl_1",
         "rewritten_sql_csv": "select trunc(tbl_1.plain_float_0, 2) as a,trunc(tbl_1.plain_float_0, 0) as b,trunc(3.1415926, 3) as c from alice.tbl_1",
-        "rewritten_sql_odps": "select trunc(tbl_1.plain_float_0, 2) as a,trunc(tbl_1.plain_float_0, 0) as b,trunc(3.1415926, 3) as c from alice.tbl_1"
+        "rewritten_sql": "select truncate(tbl_1.plain_float_0, 2) as a,truncate(tbl_1.plain_float_0, 0) as b,truncate(3.1415926, 3) as c from alice.tbl_1"
       },
       {
         "sql": "select abs(aggregate_float_0) as a from alice.tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select abs(tbl_1.aggregate_float_0) as a from alice.tbl_1",
+        "rewritten_sql_pg": "select abs(tbl_1.aggregate_float_0) as a from alice.tbl_1",
+        "rewritten_sql_csv": "select abs(tbl_1.aggregate_float_0) as a from alice.tbl_1",
         "rewritten_sql": "select abs(tbl_1.aggregate_float_0) as a from alice.tbl_1"
       },
       {
         "sql": "select round(aggregate_float_0) as a from alice.tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select round(tbl_1.aggregate_float_0) as a from alice.tbl_1",
+        "rewritten_sql_pg": "select round(tbl_1.aggregate_float_0) as a from alice.tbl_1",
+        "rewritten_sql_csv": "select round(tbl_1.aggregate_float_0) as a from alice.tbl_1",
         "rewritten_sql": "select round(tbl_1.aggregate_float_0) as a from alice.tbl_1"
       },
       {
         "sql": "select log10(aggregate_float_0) as a from alice.tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select log10(tbl_1.aggregate_float_0) as a from alice.tbl_1",
+        "rewritten_sql_pg": "select log10(tbl_1.aggregate_float_0) as a from alice.tbl_1",
+        "rewritten_sql_csv": "select log10(tbl_1.aggregate_float_0) as a from alice.tbl_1",
         "rewritten_sql": "select log10(tbl_1.aggregate_float_0) as a from alice.tbl_1"
       },
       {
         "sql": "select ceil(aggregate_float_0) as a from alice.tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select ceil(tbl_1.aggregate_float_0) as a from alice.tbl_1",
+        "rewritten_sql_pg": "select ceil(tbl_1.aggregate_float_0) as a from alice.tbl_1",
+        "rewritten_sql_csv": "select ceil(tbl_1.aggregate_float_0) as a from alice.tbl_1",
         "rewritten_sql": "select ceil(tbl_1.aggregate_float_0) as a from alice.tbl_1"
       },
       {
         "sql": "select floor(aggregate_float_0) as a from alice.tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select floor(tbl_1.aggregate_float_0) as a from alice.tbl_1",
+        "rewritten_sql_pg": "select floor(tbl_1.aggregate_float_0) as a from alice.tbl_1",
+        "rewritten_sql_csv": "select floor(tbl_1.aggregate_float_0) as a from alice.tbl_1",
         "rewritten_sql": "select floor(tbl_1.aggregate_float_0) as a from alice.tbl_1"
       },
       {
         "sql": "select length(plain_string_0) as a from alice.tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select length(tbl_1.plain_string_0) as a from alice.tbl_1",
+        "rewritten_sql_pg": "select length(tbl_1.plain_string_0) as a from alice.tbl_1",
+        "rewritten_sql_csv": "select length(tbl_1.plain_string_0) as a from alice.tbl_1",
         "rewritten_sql": "select length(tbl_1.plain_string_0) as a from alice.tbl_1"
       },
       {
         "sql": "select trim(plain_string_0) as a from alice.tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select trim(tbl_1.plain_string_0) as a from alice.tbl_1",
+        "rewritten_sql_pg": "select trim(tbl_1.plain_string_0) as a from alice.tbl_1",
+        "rewritten_sql_csv": "select trim(tbl_1.plain_string_0) as a from alice.tbl_1",
         "rewritten_sql": "select trim(tbl_1.plain_string_0) as a from alice.tbl_1"
       },
       {
         "sql": "select instr(plain_string_0, 'teststr') as a from alice.tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select instr(tbl_1.plain_string_0, 'teststr') as a from alice.tbl_1",
+        "rewritten_sql_pg": "select instr(tbl_1.plain_string_0, 'teststr') as a from alice.tbl_1",
+        "rewritten_sql_csv": "select instr(tbl_1.plain_string_0, 'teststr') as a from alice.tbl_1",
         "rewritten_sql": "select instr(tbl_1.plain_string_0, 'teststr') as a from alice.tbl_1"
       },
       {
         "sql": "select plain_datetime_0 < now() as a from alice.tbl_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select tbl_1.plain_datetime_0<now() as a from alice.tbl_1",
+        "rewritten_sql_pg": "select tbl_1.plain_datetime_0<now() as a from alice.tbl_1",
+        "rewritten_sql_csv": "select tbl_1.plain_datetime_0<now() as a from alice.tbl_1",
         "rewritten_sql": "select tbl_1.plain_datetime_0<now() as a from alice.tbl_1"
       },
       {
         "sql": "select plain_datetime_0 < curdate() as a from alice.tbl_1;",
         "skip_projection": false,
-        "rewritten_sql": "select tbl_1.plain_datetime_0<curdate() as a from alice.tbl_1",
+        "rewritten_sql_odps": "select tbl_1.plain_datetime_0<curdate() as a from alice.tbl_1",
         "rewritten_sql_pg": "select tbl_1.plain_datetime_0<current_date as a from alice.tbl_1",
-        "rewritten_sql_csv": "select tbl_1.plain_datetime_0<current_date as a from alice.tbl_1"
+        "rewritten_sql_csv": "select tbl_1.plain_datetime_0<current_date as a from alice.tbl_1",
+        "rewritten_sql": "select tbl_1.plain_datetime_0<curdate() as a from alice.tbl_1"
       },
       {
         "sql": "select date_add(plain_datetime_0, INTERVAL 30 DAY) as a from alice.tbl_1;",
         "skip_projection": false,
-        "rewritten_sql": "select date_add(tbl_1.plain_datetime_0, interval 30 DAY) as a from alice.tbl_1",
+        "rewritten_sql_odps": "select date_add(tbl_1.plain_datetime_0, interval 30 DAY) as a from alice.tbl_1",
         "rewritten_sql_pg": "select tbl_1.plain_datetime_0+ interval '30 DAY' as a from alice.tbl_1",
-        "rewritten_sql_csv": "select tbl_1.plain_datetime_0+interval 30 DAY as a from alice.tbl_1"
+        "rewritten_sql_csv": "select tbl_1.plain_datetime_0+interval 30 DAY as a from alice.tbl_1",
+        "rewritten_sql": "select date_add(tbl_1.plain_datetime_0, interval 30 DAY) as a from alice.tbl_1"
       },
       {
         "sql": "select adddate(plain_datetime_0, INTERVAL 30 DAY) as a from alice.tbl_1;",
         "skip_projection": false,
-        "rewritten_sql": "select adddate(tbl_1.plain_datetime_0, interval 30 DAY) as a from alice.tbl_1",
+        "rewritten_sql_odps": "select adddate(tbl_1.plain_datetime_0, interval 30 DAY) as a from alice.tbl_1",
         "rewritten_sql_pg": "select tbl_1.plain_datetime_0+ interval '30 DAY' as a from alice.tbl_1",
-        "rewritten_sql_csv": "select tbl_1.plain_datetime_0+interval 30 DAY as a from alice.tbl_1"
+        "rewritten_sql_csv": "select tbl_1.plain_datetime_0+interval 30 DAY as a from alice.tbl_1",
+        "rewritten_sql": "select adddate(tbl_1.plain_datetime_0, interval 30 DAY) as a from alice.tbl_1"
       },
       {
         "sql": "select subdate(plain_datetime_0, INTERVAL 30 DAY) as a from alice.tbl_1;",
         "skip_projection": false,
-        "rewritten_sql": "select subdate(tbl_1.plain_datetime_0, interval 30 DAY) as a from alice.tbl_1",
+        "rewritten_sql_odps": "select subdate(tbl_1.plain_datetime_0, interval 30 DAY) as a from alice.tbl_1",
         "rewritten_sql_pg": "select tbl_1.plain_datetime_0- interval '30 DAY' as a from alice.tbl_1",
-        "rewritten_sql_csv": "select tbl_1.plain_datetime_0-interval 30 DAY as a from alice.tbl_1"
+        "rewritten_sql_csv": "select tbl_1.plain_datetime_0-interval 30 DAY as a from alice.tbl_1",
+        "rewritten_sql": "select subdate(tbl_1.plain_datetime_0, interval 30 DAY) as a from alice.tbl_1"
       },
       {
         "sql": "select datediff(plain_datetime_0, plain_datetime_1) as a from alice.tbl_1;",
         "skip_projection": false,
-        "rewritten_sql": "select datediff(tbl_1.plain_datetime_0, tbl_1.plain_datetime_1) as a from alice.tbl_1",
+        "rewritten_sql_odps": "select datediff(tbl_1.plain_datetime_0, tbl_1.plain_datetime_1) as a from alice.tbl_1",
         "skip_pg_test": true,
-        "skip_csv_test": true
+        "skip_csv_test": true,
+        "rewritten_sql": "select datediff(tbl_1.plain_datetime_0, tbl_1.plain_datetime_1) as a from alice.tbl_1"
       },
       {
         "sql": "select last_day(plain_datetime_0) as a from alice.tbl_1;",
         "skip_projection": false,
-        "rewritten_sql": "select last_day(tbl_1.plain_datetime_0) as a from alice.tbl_1",
-        "skip_pg_test": true
+        "rewritten_sql_odps": "select last_day(tbl_1.plain_datetime_0) as a from alice.tbl_1",
+        "rewritten_sql_csv": "select last_day(tbl_1.plain_datetime_0) as a from alice.tbl_1",
+        "skip_pg_test": true,
+        "rewritten_sql": "select last_day(tbl_1.plain_datetime_0) as a from alice.tbl_1"
       },
       {
         "sql": "select str_to_date('August 10 2017', '%M %d %Y') as a from alice.tbl_1;",
         "skip_projection": false,
-        "rewritten_sql": "select str_to_date('August 10 2017', '%M %d %Y') as a from alice.tbl_1",
+        "rewritten_sql_odps": "select str_to_date('August 10 2017', '%M %d %Y') as a from alice.tbl_1",
         "skip_pg_test": true,
-        "skip_csv_test": true
+        "skip_csv_test": true,
+        "rewritten_sql": "select str_to_date('August 10 2017', '%M %d %Y') as a from alice.tbl_1"
       },
       {
         "sql": "select date_format(plain_datetime_0, '%Y-%m-%d %H:%i:%S') as a from alice.tbl_1;",
         "skip_projection": false,
-        "rewritten_sql": "select date_format(tbl_1.plain_datetime_0, '%Y-%m-%d %H:%i:%S') as a from alice.tbl_1",
+        "rewritten_sql_odps": "select date_format(tbl_1.plain_datetime_0, '%Y-%m-%d %H:%i:%S') as a from alice.tbl_1",
         "skip_pg_test": true,
-        "skip_csv_test": true
+        "skip_csv_test": true,
+        "rewritten_sql": "select date_format(tbl_1.plain_datetime_0, '%Y-%m-%d %H:%i:%S') as a from alice.tbl_1"
       },
       {
         "sql": "SELECT t_0.b4 FROM  (SELECT tbl_1.plain_string_0 as b4 FROM alice.tbl_1 WHERE tbl_1.plain_string_0 = '123') AS t_0 GROUP BY t_0.b4 HAVING count(1)>=4;;",
         "skip_projection": false,
-        "rewritten_sql": "select any_value(tbl_1.plain_string_0) as b4 from alice.tbl_1 where tbl_1.plain_string_0='123' group by tbl_1.plain_string_0 having count(1)>=4",
-        "rewritten_sql_pg": "select tbl_1.plain_string_0 as b4 from alice.tbl_1 where tbl_1.plain_string_0='123' group by tbl_1.plain_string_0 having count(1)>=4",
-        "rewritten_sql_csv": "select tbl_1.plain_string_0 as b4 from alice.tbl_1 where tbl_1.plain_string_0='123' group by tbl_1.plain_string_0 having count(1)>=4",
-        "rewritten_sql_odps": "select tbl_1.plain_string_0 as b4 from alice.tbl_1 where tbl_1.plain_string_0='123' group by tbl_1.plain_string_0 having count(1)>=4"
+        "rewritten_sql_odps": "select tbl_1.plain_string_0 as b4 from alice.tbl_1 where tbl_1.plain_string_0='123' group by tbl_1.plain_string_0 having (count(1)>=4) and (count(1)>=4)",
+        "rewritten_sql_pg": "select tbl_1.plain_string_0 as b4 from alice.tbl_1 where tbl_1.plain_string_0='123' group by tbl_1.plain_string_0 having (count(1)>=4) and (count(1)>=4)",
+        "rewritten_sql_csv": "select tbl_1.plain_string_0 as b4 from alice.tbl_1 where tbl_1.plain_string_0='123' group by tbl_1.plain_string_0 having (count(1)>=4) and (count(1)>=4)",
+        "rewritten_sql": "select any_value(tbl_1.plain_string_0) as b4 from alice.tbl_1 where tbl_1.plain_string_0='123' group by tbl_1.plain_string_0 having (count(1)>=4) and (count(1)>=4)"
       },
       {
         "sql": "SELECT CASE WHEN (t_0.b4='1' OR t_0.b4='1' OR t_0.b4='2') THEN '3' ELSE '4' END AS bank_type, count(1) AS expr_24 FROM (SELECT str_to_date(plain_string_0, '%Y-%m-%d') AS p0, plain_string_1 as b4, plain_string_2 as b5 FROM alice.tbl_1 WHERE (str_to_date(plain_string_0, '%Y-%m-%d')=str_to_date('2023-01-10', '%Y-%m-%d'))) AS t_0 GROUP BY t_0.b4 HAVING count(1)>=4;;",
         "skip_projection": false,
         "skip_odps_test": true,
-        "skip_csv_test": true,
         "skip_pg_test": true,
-        "rewritten_sql": "select case when (any_value(tbl_1.plain_string_1)='1' or any_value(tbl_1.plain_string_1)='1' or any_value(tbl_1.plain_string_1)='2') then '3' else '4' end as bank_type,count(1) as expr_24 from alice.tbl_1 where str_to_date(tbl_1.plain_string_0, '%Y-%m-%d')=str_to_date('2023-01-10', '%Y-%m-%d') group by tbl_1.plain_string_1 having count(1)>=4"
+        "skip_csv_test": true,
+        "rewritten_sql": "select case when (any_value(tbl_1.plain_string_1)='1' or any_value(tbl_1.plain_string_1)='1' or any_value(tbl_1.plain_string_1)='2') then '3' else '4' end as bank_type,count(1) as expr_24 from alice.tbl_1 where str_to_date(tbl_1.plain_string_0, '%Y-%m-%d')=str_to_date('2023-01-10', '%Y-%m-%d') group by tbl_1.plain_string_1 having (count(1)>=4) and (count(1)>=4)"
       },
       {
         "sql": "select count(*) from (select plain_float_0 + plain_float_1 as f1 from alice.tbl_1) as ta join alice.tbl_2 on ta.f1 = tbl_2.plain_float_1;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select count(1) as expr_242 from (select tbl_1.plain_float_0+tbl_1.plain_float_1 as f1 from alice.tbl_1) as ta join alice.tbl_2 on ta.f1=tbl_2.plain_float_1",
+        "rewritten_sql_pg": "select count(1) as expr_242 from (select tbl_1.plain_float_0+tbl_1.plain_float_1 as f1 from alice.tbl_1) as ta join alice.tbl_2 on ta.f1=tbl_2.plain_float_1",
+        "rewritten_sql_csv": "select count(1) as expr_242 from (select tbl_1.plain_float_0+tbl_1.plain_float_1 as f1 from alice.tbl_1) as ta join alice.tbl_2 on ta.f1=tbl_2.plain_float_1",
         "rewritten_sql": "select count(1) as expr_242 from (select tbl_1.plain_float_0+tbl_1.plain_float_1 as f1 from alice.tbl_1) as ta join alice.tbl_2 on ta.f1=tbl_2.plain_float_1"
       },
       {
@@ -592,49 +813,87 @@
         "skip_odps_test": true,
         "skip_pg_test": true,
         "skip_csv_test": true,
-        "rewritten_sql": "select any_value(t_0.bank_type) as bank_type,count(1) as expr_123 from (select case when (tbl_1.plain_string_1='1' or tbl_1.plain_string_1='2' or tbl_1.plain_string_1='3') then '1' else '2' end as bank_type from alice.tbl_1 where str_to_date(tbl_1.plain_string_0, '%Y-%m-%d')='2022-02-02') as t_0 group by t_0.bank_type"
+        "rewritten_sql": "select any_value(t_0.bank_type) as bank_type,count(1) as expr_123 from (select case when (tbl_1.plain_string_1='1' or tbl_1.plain_string_1='2' or tbl_1.plain_string_1='3') then '1' else '2' end as bank_type from alice.tbl_1 where str_to_date(tbl_1.plain_string_0, '%Y-%m-%d')='2022-02-02') as t_0 group by t_0.bank_type having count(1)>=4"
       },
       {
         "sql": "select a.plain_int_0, b.plain_int_0 from alice.tbl_0 a left join (select distinct plain_int_0, plain_int_1 from alice.tbl_1) b on a.plain_int_0 = b.plain_int_0;",
         "skip_projection": false,
-        "rewritten_sql": "select a.plain_int_0,b.expr_217 from alice.tbl_0 as a left join (select any_value(tbl_1.plain_int_0) as expr_217 from alice.tbl_1 group by tbl_1.plain_int_0,tbl_1.plain_int_1) as b on a.plain_int_0=b.expr_217",
+        "rewritten_sql_odps": "select a.plain_int_0,b.plain_int_0 from alice.tbl_0 as a left join (select tbl_1.plain_int_0 from alice.tbl_1 group by tbl_1.plain_int_0,tbl_1.plain_int_1) as b on a.plain_int_0=b.plain_int_0",
         "rewritten_sql_pg": "select a.plain_int_0,b.plain_int_0 from alice.tbl_0 as a left join (select tbl_1.plain_int_0 from alice.tbl_1 group by tbl_1.plain_int_0,tbl_1.plain_int_1) as b on a.plain_int_0=b.plain_int_0",
         "rewritten_sql_csv": "select a.plain_int_0,b.plain_int_0 from alice.tbl_0 as a left join (select tbl_1.plain_int_0 from alice.tbl_1 group by tbl_1.plain_int_0,tbl_1.plain_int_1) as b on a.plain_int_0=b.plain_int_0",
-        "rewritten_sql_odps": "select a.plain_int_0,b.plain_int_0 from alice.tbl_0 as a left join (select tbl_1.plain_int_0 from alice.tbl_1 group by tbl_1.plain_int_0,tbl_1.plain_int_1) as b on a.plain_int_0=b.plain_int_0"
+        "rewritten_sql": "select a.plain_int_0,b.expr_217 from alice.tbl_0 as a left join (select any_value(tbl_1.plain_int_0) as expr_217 from alice.tbl_1 group by tbl_1.plain_int_0,tbl_1.plain_int_1) as b on a.plain_int_0=b.expr_217"
       },
       {
         "sql": "select a.plain_int_0 from alice.tbl_0 a left join (select distinct plain_int_0, plain_int_1 from alice.tbl_1) b on a.plain_int_0 = b.plain_int_0;",
         "skip_projection": false,
-        "rewritten_sql": "select a.plain_int_0 from alice.tbl_0 as a left join (select any_value(tbl_1.plain_int_0) as expr_217 from alice.tbl_1 group by tbl_1.plain_int_0,tbl_1.plain_int_1) as b on a.plain_int_0=b.expr_217",
+        "rewritten_sql_odps": "select a.plain_int_0 from alice.tbl_0 as a left join (select tbl_1.plain_int_0 from alice.tbl_1 group by tbl_1.plain_int_0,tbl_1.plain_int_1) as b on a.plain_int_0=b.plain_int_0",
         "rewritten_sql_pg": "select a.plain_int_0 from alice.tbl_0 as a left join (select tbl_1.plain_int_0 from alice.tbl_1 group by tbl_1.plain_int_0,tbl_1.plain_int_1) as b on a.plain_int_0=b.plain_int_0",
         "rewritten_sql_csv": "select a.plain_int_0 from alice.tbl_0 as a left join (select tbl_1.plain_int_0 from alice.tbl_1 group by tbl_1.plain_int_0,tbl_1.plain_int_1) as b on a.plain_int_0=b.plain_int_0",
-        "rewritten_sql_odps": "select a.plain_int_0 from alice.tbl_0 as a left join (select tbl_1.plain_int_0 from alice.tbl_1 group by tbl_1.plain_int_0,tbl_1.plain_int_1) as b on a.plain_int_0=b.plain_int_0"
+        "rewritten_sql": "select a.plain_int_0 from alice.tbl_0 as a left join (select any_value(tbl_1.plain_int_0) as expr_217 from alice.tbl_1 group by tbl_1.plain_int_0,tbl_1.plain_int_1) as b on a.plain_int_0=b.expr_217"
       },
       {
         "sql": "select plain_int_0, 'a' from alice.tbl_0 UNION ALL select plain_int_0, 'a' from alice.tbl_0;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select t_0.plain_int_0,t_0.expr_244 from ((select tbl_0.plain_int_0,'a' as expr_244 from alice.tbl_0) union all (select tbl_0.plain_int_0,'a' as expr_244 from alice.tbl_0)) as t_0",
+        "rewritten_sql_pg": "select t_0.plain_int_0,t_0.expr_244 from ((select tbl_0.plain_int_0,'a' as expr_244 from alice.tbl_0) union all (select tbl_0.plain_int_0,'a' as expr_244 from alice.tbl_0)) as t_0",
+        "rewritten_sql_csv": "select t_0.plain_int_0,t_0.expr_244 from ((select tbl_0.plain_int_0,'a' as expr_244 from alice.tbl_0) union all (select tbl_0.plain_int_0,'a' as expr_244 from alice.tbl_0)) as t_0",
         "rewritten_sql": "select t_0.plain_int_0,t_0.expr_244 from ((select tbl_0.plain_int_0,'a' as expr_244 from alice.tbl_0) union all (select tbl_0.plain_int_0,'a' as expr_244 from alice.tbl_0)) as t_0"
       },
       {
         "sql": "select avg(plain_int_0) from alice.tbl_0 union all select sum(plain_int_0) from alice.tbl_0;",
         "skip_projection": false,
-        "rewritten_sql": "select t_0.expr_243 from ((select avg(tbl_0.plain_int_0) as expr_243 from alice.tbl_0) union all (select cast(sum(tbl_0.plain_int_0) as decimal(65, 30)) as expr_243 from alice.tbl_0)) as t_0",
+        "rewritten_sql_odps": "select t_0.expr_243 from ((select avg(tbl_0.plain_int_0) as expr_243 from alice.tbl_0) union all (select cast(sum(tbl_0.plain_int_0) as decimal) as expr_243 from alice.tbl_0)) as t_0",
         "rewritten_sql_pg": "select t_0.expr_243 from ((select avg(tbl_0.plain_int_0) as expr_243 from alice.tbl_0) union all (select cast(sum(tbl_0.plain_int_0) as numeric(65, 30)) as expr_243 from alice.tbl_0)) as t_0",
         "rewritten_sql_csv": "select t_0.expr_243 from ((select avg(tbl_0.plain_int_0) as expr_243 from alice.tbl_0) union all (select cast(sum(tbl_0.plain_int_0) as numeric) as expr_243 from alice.tbl_0)) as t_0",
-        "rewritten_sql_odps": "select t_0.expr_243 from ((select avg(tbl_0.plain_int_0) as expr_243 from alice.tbl_0) union all (select cast(sum(tbl_0.plain_int_0) as decimal) as expr_243 from alice.tbl_0)) as t_0"
+        "rewritten_sql": "select t_0.expr_243 from ((select avg(tbl_0.plain_int_0) as expr_243 from alice.tbl_0) union all (select cast(sum(tbl_0.plain_int_0) as decimal(65, 30)) as expr_243 from alice.tbl_0)) as t_0"
       },
       {
         "sql": "select replace(plain_string_0, 'a', 'b') as res1 from alice.tbl_0;",
         "skip_projection": false,
+        "rewritten_sql_odps": "select replace(tbl_0.plain_string_0, 'a', 'b') as res1 from alice.tbl_0",
+        "rewritten_sql_pg": "select replace(tbl_0.plain_string_0, 'a', 'b') as res1 from alice.tbl_0",
+        "rewritten_sql_csv": "select replace(tbl_0.plain_string_0, 'a', 'b') as res1 from alice.tbl_0",
         "rewritten_sql": "select replace(tbl_0.plain_string_0, 'a', 'b') as res1 from alice.tbl_0"
       },
       {
         "sql": "SELECT a.SVC_NUM AS SVC_NUM, a.plain_string_2, IF((d.plain_int_1 <= 30) OR d.plain_int_1 IS NULL, '1', IF(d.plain_int_1 <= 100, '2', '3')) AS plain_int_1, IF(a.compare_string_0 = '1', '是', '否') AS compare_string_0, IF((a.compare_int_1 <= 21) OR a.compare_int_1 IS NULL, '1', '2') AS compare_int_1 FROM (SELECT a.plain_int_2 AS SVC_NUM, a.plain_string_2, c.compare_string_0, c.compare_int_1 FROM alice.tbl_2 AS a LEFT JOIN (SELECT plain_int_0, compare_string_0, compare_int_1 FROM alice.tbl_0 WHERE plain_string_1 = '202505') AS c ON a.plain_int_2 = c.plain_int_0) AS a LEFT JOIN (SELECT plain_int_0, plain_int_1 FROM alice.tbl_1 WHERE plain_string_1 = '202505') AS d ON a.SVC_NUM = d.plain_int_0;",
         "skip_projection": false,
-        "rewritten_sql": "select a.plain_int_2 as SVC_NUM,a.plain_string_2,if(d.plain_int_1<=30 or d.plain_int_1 is null, '1', if(d.plain_int_1<=100, '2', '3')) as plain_int_1,if(a.compare_string_0='1', '是', '否') as compare_string_0,if(a.compare_int_1<=21 or a.compare_int_1 is null, '1', '2') as compare_int_1 from (select a.plain_int_2,a.plain_string_2,c.compare_int_1,c.compare_string_0 from (alice.tbl_2 as a left join (select tbl_0.compare_int_1,tbl_0.compare_string_0,tbl_0.plain_int_0 from alice.tbl_0 where tbl_0.plain_string_1='202505') as c on a.plain_int_2=c.plain_int_0)) as a left join (select tbl_1.plain_int_0,tbl_1.plain_int_1 from alice.tbl_1 where tbl_1.plain_string_1='202505') as d on a.plain_int_2=d.plain_int_0",
+        "rewritten_sql_odps": "select a.plain_int_2 as SVC_NUM,a.plain_string_2,if((d.plain_int_1<=30) or d.plain_int_1 is null, '1', if(d.plain_int_1<=100, '2', '3')) as plain_int_1,if(a.compare_string_0='1', '是', '否') as compare_string_0,if((a.compare_int_1<=21) or a.compare_int_1 is null, '1', '2') as compare_int_1 from (select a.plain_int_2,a.plain_string_2,c.compare_int_1,c.compare_string_0 from (alice.tbl_2 as a left join (select tbl_0.compare_int_1,tbl_0.compare_string_0,tbl_0.plain_int_0 from alice.tbl_0 where tbl_0.plain_string_1='202505') as c on a.plain_int_2=c.plain_int_0)) as a left join (select tbl_1.plain_int_0,tbl_1.plain_int_1 from alice.tbl_1 where tbl_1.plain_string_1='202505') as d on a.plain_int_2=d.plain_int_0",
         "rewritten_sql_pg": "select a.plain_int_2 as SVC_NUM,a.plain_string_2,if((d.plain_int_1<=30) or d.plain_int_1 is null, '1', if(d.plain_int_1<=100, '2', '3')) as plain_int_1,if(a.compare_string_0='1', '是', '否') as compare_string_0,if((a.compare_int_1<=21) or a.compare_int_1 is null, '1', '2') as compare_int_1 from (select a.plain_int_2,a.plain_string_2,c.compare_int_1,c.compare_string_0 from (alice.tbl_2 as a left join (select tbl_0.compare_int_1,tbl_0.compare_string_0,tbl_0.plain_int_0 from alice.tbl_0 where tbl_0.plain_string_1='202505') as c on a.plain_int_2=c.plain_int_0)) as a left join (select tbl_1.plain_int_0,tbl_1.plain_int_1 from alice.tbl_1 where tbl_1.plain_string_1='202505') as d on a.plain_int_2=d.plain_int_0",
         "rewritten_sql_csv": "select a.plain_int_2 as SVC_NUM,a.plain_string_2,if((d.plain_int_1<=30) or d.plain_int_1 is null, '1', if(d.plain_int_1<=100, '2', '3')) as plain_int_1,if(a.compare_string_0='1', '是', '否') as compare_string_0,if((a.compare_int_1<=21) or a.compare_int_1 is null, '1', '2') as compare_int_1 from (select a.plain_int_2,a.plain_string_2,c.compare_int_1,c.compare_string_0 from (alice.tbl_2 as a left join (select tbl_0.compare_int_1,tbl_0.compare_string_0,tbl_0.plain_int_0 from alice.tbl_0 where tbl_0.plain_string_1='202505') as c on a.plain_int_2=c.plain_int_0)) as a left join (select tbl_1.plain_int_0,tbl_1.plain_int_1 from alice.tbl_1 where tbl_1.plain_string_1='202505') as d on a.plain_int_2=d.plain_int_0",
-        "rewritten_sql_odps": "select a.plain_int_2 as SVC_NUM,a.plain_string_2,if((d.plain_int_1<=30) or d.plain_int_1 is null, '1', if(d.plain_int_1<=100, '2', '3')) as plain_int_1,if(a.compare_string_0='1', '是', '否') as compare_string_0,if((a.compare_int_1<=21) or a.compare_int_1 is null, '1', '2') as compare_int_1 from (select a.plain_int_2,a.plain_string_2,c.compare_int_1,c.compare_string_0 from (alice.tbl_2 as a left join (select tbl_0.compare_int_1,tbl_0.compare_string_0,tbl_0.plain_int_0 from alice.tbl_0 where tbl_0.plain_string_1='202505') as c on a.plain_int_2=c.plain_int_0)) as a left join (select tbl_1.plain_int_0,tbl_1.plain_int_1 from alice.tbl_1 where tbl_1.plain_string_1='202505') as d on a.plain_int_2=d.plain_int_0"
+        "rewritten_sql": "select a.plain_int_2 as SVC_NUM,a.plain_string_2,if(d.plain_int_1<=30 or d.plain_int_1 is null, '1', if(d.plain_int_1<=100, '2', '3')) as plain_int_1,if(a.compare_string_0='1', '是', '否') as compare_string_0,if(a.compare_int_1<=21 or a.compare_int_1 is null, '1', '2') as compare_int_1 from (select a.plain_int_2,a.plain_string_2,c.compare_int_1,c.compare_string_0 from (alice.tbl_2 as a left join (select tbl_0.compare_int_1,tbl_0.compare_string_0,tbl_0.plain_int_0 from alice.tbl_0 where tbl_0.plain_string_1='202505') as c on a.plain_int_2=c.plain_int_0)) as a left join (select tbl_1.plain_int_0,tbl_1.plain_int_1 from alice.tbl_1 where tbl_1.plain_string_1='202505') as d on a.plain_int_2=d.plain_int_0"
+      },
+      {
+        "sql": "SELECT t0.plain_int_0 AS partkey, SUM(t0.plain_int_1 * t0.plain_int_0) AS value FROM alice.tbl_0 t0, alice.tbl_1 t1, alice.tbl_2 t2 WHERE t0.plain_int_1 = t1.plain_int_0 AND t1.plain_int_1 = t2.plain_int_0 AND t2.plain_string_0 = 'GERMANY' GROUP BY t0.plain_int_0 HAVING SUM(t0.plain_int_1 * t0.plain_int_0) > (SELECT SUM(t0_sub.plain_int_1 * t0_sub.plain_int_0) * 0.0000001000 FROM alice.tbl_0 t0_sub, alice.tbl_1 t1_sub, alice.tbl_2 t2_sub WHERE t0_sub.plain_int_1 = t1_sub.plain_int_0 AND t1_sub.plain_int_1 = t2_sub.plain_int_0 AND t2_sub.plain_string_0 = 'GERMANY') ORDER BY value DESC;",
+        "skip_projection": false,
+        "rewritten_sql_odps": "select t_0.partkey as partkey,t_0.expr_361 as value from (select t0.plain_int_0 as partkey,t0.expr_361 as value,t0.expr_361 from (select sum(t0.plain_int_1*t0.plain_int_0) as expr_361,t0.plain_int_0,count(1) as expr_726 from ((select t0.plain_int_0,t0.plain_int_1,t1.plain_int_1 from (alice.tbl_0 as t0 join alice.tbl_1 as t1 on t0.plain_int_1=t1.plain_int_0)) as t0 join (select t2.plain_int_0 from alice.tbl_2 as t2 where t2.plain_string_0='GERMANY') as t2 on t0.plain_int_1=t2.plain_int_0) group by t0.plain_int_0 having count(1)>=4) as t0 join (select sum(t0_sub.plain_int_1*t0_sub.plain_int_0)*0.0000001000 as expr_723 from ((select t0_sub.plain_int_0,t0_sub.plain_int_1,t1_sub.plain_int_1 from (alice.tbl_0 as t0_sub join alice.tbl_1 as t1_sub on t0_sub.plain_int_1=t1_sub.plain_int_0)) as t0_sub join (select t2_sub.plain_int_0 from alice.tbl_2 as t2_sub where t2_sub.plain_string_0='GERMANY') as t2_sub on t0_sub.plain_int_1=t2_sub.plain_int_0)) as t_1 where t0.expr_361>t_1.expr_723 order by t0.expr_361 desc) as t_0",
+        "rewritten_sql_pg": "select t_0.partkey as partkey,t_0.expr_361 as value from (select t0.plain_int_0 as partkey,t0.expr_361 as value,t0.expr_361 from (select sum(t0.plain_int_1*t0.plain_int_0) as expr_361,t0.plain_int_0,count(1) as expr_726 from ((select t0.plain_int_0,t0.plain_int_1,t1.plain_int_1 from (alice.tbl_0 as t0 join alice.tbl_1 as t1 on t0.plain_int_1=t1.plain_int_0)) as t0 join (select t2.plain_int_0 from alice.tbl_2 as t2 where t2.plain_string_0='GERMANY') as t2 on t0.plain_int_1=t2.plain_int_0) group by t0.plain_int_0 having count(1)>=4) as t0 join (select sum(t0_sub.plain_int_1*t0_sub.plain_int_0)*0.0000001000 as expr_723 from ((select t0_sub.plain_int_0,t0_sub.plain_int_1,t1_sub.plain_int_1 from (alice.tbl_0 as t0_sub join alice.tbl_1 as t1_sub on t0_sub.plain_int_1=t1_sub.plain_int_0)) as t0_sub join (select t2_sub.plain_int_0 from alice.tbl_2 as t2_sub where t2_sub.plain_string_0='GERMANY') as t2_sub on t0_sub.plain_int_1=t2_sub.plain_int_0)) as t_1 where t0.expr_361>t_1.expr_723 order by t0.expr_361 desc) as t_0",
+        "rewritten_sql_csv": "select t_0.partkey as partkey,t_0.expr_361 as value from (select t0.plain_int_0 as partkey,t0.expr_361 as value,t0.expr_361 from (select sum(t0.plain_int_1*t0.plain_int_0) as expr_361,t0.plain_int_0,count(1) as expr_726 from ((select t0.plain_int_0,t0.plain_int_1,t1.plain_int_1 from (alice.tbl_0 as t0 join alice.tbl_1 as t1 on t0.plain_int_1=t1.plain_int_0)) as t0 join (select t2.plain_int_0 from alice.tbl_2 as t2 where t2.plain_string_0='GERMANY') as t2 on t0.plain_int_1=t2.plain_int_0) group by t0.plain_int_0 having count(1)>=4) as t0 cross join (select sum(t0_sub.plain_int_1*t0_sub.plain_int_0)*0.0000001000 as expr_723 from ((select t0_sub.plain_int_0,t0_sub.plain_int_1,t1_sub.plain_int_1 from (alice.tbl_0 as t0_sub join alice.tbl_1 as t1_sub on t0_sub.plain_int_1=t1_sub.plain_int_0)) as t0_sub join (select t2_sub.plain_int_0 from alice.tbl_2 as t2_sub where t2_sub.plain_string_0='GERMANY') as t2_sub on t0_sub.plain_int_1=t2_sub.plain_int_0)) as t_1 where t0.expr_361>t_1.expr_723 order by t0.expr_361 desc) as t_0",
+        "rewritten_sql": "select t_0.partkey as partkey,t_0.expr_361 as value from (select t0.expr_97 as partkey,t0.expr_361 as value,t0.expr_361 from (select sum(t0.plain_int_1*t0.plain_int_0) as expr_361,any_value(t0.plain_int_0) as expr_97,count(1) as expr_726 from ((select t0.plain_int_0,t0.plain_int_1,t1.plain_int_1 from (alice.tbl_0 as t0 join alice.tbl_1 as t1 on t0.plain_int_1=t1.plain_int_0)) as t0 join (select t2.plain_int_0 from alice.tbl_2 as t2 where t2.plain_string_0='GERMANY') as t2 on t0.plain_int_1=t2.plain_int_0) group by t0.plain_int_0 having count(1)>=4) as t0 join (select sum(t0_sub.plain_int_1*t0_sub.plain_int_0)*0.0000001000 as expr_723 from ((select t0_sub.plain_int_0,t0_sub.plain_int_1,t1_sub.plain_int_1 from (alice.tbl_0 as t0_sub join alice.tbl_1 as t1_sub on t0_sub.plain_int_1=t1_sub.plain_int_0)) as t0_sub join (select t2_sub.plain_int_0 from alice.tbl_2 as t2_sub where t2_sub.plain_string_0='GERMANY') as t2_sub on t0_sub.plain_int_1=t2_sub.plain_int_0)) as t_1 where t0.expr_361>t_1.expr_723 order by t0.expr_361 desc) as t_0"
+      },
+      {
+        "sql": "select t0.plain_int_0, plain_int_1, plain_int_2 from alice.tbl_0 t0 where plain_int_1 = (select max(plain_int_1) from alice.tbl_0 t00 where t0.plain_int_2 = t00.plain_int_2);",
+        "skip_projection": false,
+        "rewritten_sql_odps": "select t0.plain_int_0,t0.plain_int_1,t0.plain_int_2 from alice.tbl_0 as t0 left join (select max(t00.plain_int_1) as expr_241,t00.plain_int_2,count(1) as expr_242 from alice.tbl_0 as t00 group by t00.plain_int_2 having count(1)>=4) as t_1 on t0.plain_int_2=t_1.plain_int_2 where t0.plain_int_1=t_1.expr_241",
+        "rewritten_sql_pg": "select t0.plain_int_0,t0.plain_int_1,t0.plain_int_2 from alice.tbl_0 as t0 left join (select max(t00.plain_int_1) as expr_241,t00.plain_int_2,count(1) as expr_242 from alice.tbl_0 as t00 group by t00.plain_int_2 having count(1)>=4) as t_1 on t0.plain_int_2=t_1.plain_int_2 where t0.plain_int_1=t_1.expr_241",
+        "rewritten_sql_csv": "select t0.plain_int_0,t0.plain_int_1,t0.plain_int_2 from alice.tbl_0 as t0 left join (select max(t00.plain_int_1) as expr_241,t00.plain_int_2,count(1) as expr_242 from alice.tbl_0 as t00 group by t00.plain_int_2 having count(1)>=4) as t_1 on t0.plain_int_2=t_1.plain_int_2 where t0.plain_int_1=t_1.expr_241",
+        "rewritten_sql": "select t0.plain_int_0,t0.plain_int_1,t0.plain_int_2 from alice.tbl_0 as t0 left join (select max(t00.plain_int_1) as expr_241,any_value(t00.plain_int_2) as expr_219,count(1) as expr_242 from alice.tbl_0 as t00 group by t00.plain_int_2 having count(1)>=4) as t_1 on t0.plain_int_2=t_1.expr_219 where t0.plain_int_1=t_1.expr_241"
+      },
+      {
+        "sql": "SELECT t1.plain_int_0,t1.plain_string_0,t3.gb_gb_gb_int_0,t2.plain_string_0,t2.plain_string_1,t1.plain_string_1,t1.plain_string_2,t1.join_string_0 FROM alice.tbl_2 t2,alice.tbl_1 t1,alice.tbl_0 t0,alice.tbl_3 t3,alice.UPPER_table t4 WHERE t2.groupby_int_0=t3.jn_jn_jn_int_0 AND t1.groupby_int_1=t3.cp_cp_cp_int_0 AND t2.plain_int_1=15 AND t2.groupby_string_0 LIKE '%BRASS' AND t1.groupby_int_2=t3.pl_jn_cp_int_0 AND t3.jn_jn_jn_int_0=t4.groupby_int_1 AND t4.JOIN_string_0='EUROPE' AND t3.pl_jn_cp_int_0=(SELECT MIN(t3.pl_jn_cp_int_0) FROM alice.tbl_0 t0,alice.tbl_1 t1,alice.tbl_3 t3,alice.UPPER_table t4 WHERE t2.groupby_int_0=t3.jn_jn_jn_int_0 AND t1.groupby_int_1=t3.cp_cp_cp_int_0 AND t1.groupby_int_2=t3.pl_jn_cp_int_0 AND t3.jn_jn_jn_int_0=t4.groupby_int_1 AND t4.JOIN_string_0='EUROPE') ORDER BY t1.plain_int_0 DESC,t3.gb_gb_gb_int_0,t1.plain_string_0,t2.plain_string_0;",
+        "skip_projection": false,
+        "rewritten_sql_odps": "select t2.plain_int_0,t2.plain_string_0,t2.gb_gb_gb_int_0,t2.plain_string_0,t2.plain_string_1,t2.plain_string_1,t2.plain_string_2,t2.join_string_0 from (select t2.groupby_int_0,t2.plain_string_0,t2.plain_string_1,t2.gb_gb_gb_int_0,t2.pl_jn_cp_int_0,t2.join_string_0,t2.plain_int_0,t2.plain_string_0,t2.plain_string_1,t2.plain_string_2 from ((select t2.groupby_int_0,t2.plain_string_0,t2.plain_string_1,t2.gb_gb_gb_int_0,t2.pl_jn_cp_int_0,t2.join_string_0,t2.plain_int_0,t2.plain_string_0,t2.plain_string_1,t2.plain_string_2 from ((select t2.groupby_int_0,t2.plain_string_0,t2.plain_string_1,t2.gb_gb_gb_int_0,t2.jn_jn_jn_int_0,t2.pl_jn_cp_int_0,t1.join_string_0,t1.plain_int_0,t1.plain_string_0,t1.plain_string_1,t1.plain_string_2 from ((select t2.groupby_int_0,t2.plain_string_0,t2.plain_string_1,t3.cp_cp_cp_int_0,t3.gb_gb_gb_int_0,t3.jn_jn_jn_int_0,t3.pl_jn_cp_int_0 from ((select t2.groupby_int_0,t2.plain_string_0,t2.plain_string_1 from alice.tbl_2 as t2 where (t2.plain_int_1=15) and (t2.groupby_string_0 like '%BRASS')) as t2 join alice.tbl_3 as t3 on t2.groupby_int_0=t3.jn_jn_jn_int_0)) as t2 join alice.tbl_1 as t1 on (t2.cp_cp_cp_int_0=t1.groupby_int_1) and (t2.pl_jn_cp_int_0=t1.groupby_int_2))) as t2 join (select t4.groupby_int_1 from alice.UPPER_table as t4 where t4.JOIN_string_0='EUROPE') as t4 on t2.jn_jn_jn_int_0=t4.groupby_int_1)) as t2 join alice.tbl_0 as t0)) as t2 left join (select min(t4.pl_jn_cp_int_0) as expr_621,t4.jn_jn_jn_int_0,count(1) as expr_622 from (alice.tbl_0 as t0 join (select t1.jn_jn_jn_int_0,t1.pl_jn_cp_int_0 from ((select t3.jn_jn_jn_int_0,t3.pl_jn_cp_int_0 from (alice.tbl_1 as t1 join alice.tbl_3 as t3 on (t1.groupby_int_1=t3.cp_cp_cp_int_0) and (t1.groupby_int_2=t3.pl_jn_cp_int_0))) as t1 join (select t4.groupby_int_1 from alice.UPPER_table as t4 where t4.JOIN_string_0='EUROPE') as t4 on t1.jn_jn_jn_int_0=t4.groupby_int_1)) as t4) group by t4.jn_jn_jn_int_0 having count(1)>=4) as t_1 on t2.groupby_int_0=t_1.jn_jn_jn_int_0 where t2.pl_jn_cp_int_0=t_1.expr_621 order by t2.plain_int_0 desc,t2.gb_gb_gb_int_0,t2.plain_string_0,t2.plain_string_0",
+        "rewritten_sql_pg": "select t2.plain_int_0,t2.plain_string_0,t2.gb_gb_gb_int_0,t2.plain_string_0,t2.plain_string_1,t2.plain_string_1,t2.plain_string_2,t2.join_string_0 from (select t2.groupby_int_0,t2.plain_string_0,t2.plain_string_1,t2.gb_gb_gb_int_0,t2.pl_jn_cp_int_0,t2.join_string_0,t2.plain_int_0,t2.plain_string_0,t2.plain_string_1,t2.plain_string_2 from ((select t2.groupby_int_0,t2.plain_string_0,t2.plain_string_1,t2.gb_gb_gb_int_0,t2.pl_jn_cp_int_0,t2.join_string_0,t2.plain_int_0,t2.plain_string_0,t2.plain_string_1,t2.plain_string_2 from ((select t2.groupby_int_0,t2.plain_string_0,t2.plain_string_1,t2.gb_gb_gb_int_0,t2.jn_jn_jn_int_0,t2.pl_jn_cp_int_0,t1.join_string_0,t1.plain_int_0,t1.plain_string_0,t1.plain_string_1,t1.plain_string_2 from ((select t2.groupby_int_0,t2.plain_string_0,t2.plain_string_1,t3.cp_cp_cp_int_0,t3.gb_gb_gb_int_0,t3.jn_jn_jn_int_0,t3.pl_jn_cp_int_0 from ((select t2.groupby_int_0,t2.plain_string_0,t2.plain_string_1 from alice.tbl_2 as t2 where (t2.plain_int_1=15) and (t2.groupby_string_0 like '%BRASS')) as t2 join alice.tbl_3 as t3 on t2.groupby_int_0=t3.jn_jn_jn_int_0)) as t2 join alice.tbl_1 as t1 on (t2.cp_cp_cp_int_0=t1.groupby_int_1) and (t2.pl_jn_cp_int_0=t1.groupby_int_2))) as t2 join (select t4.groupby_int_1 from alice.UPPER_table as t4 where t4.JOIN_string_0='EUROPE') as t4 on t2.jn_jn_jn_int_0=t4.groupby_int_1)) as t2 join alice.tbl_0 as t0)) as t2 left join (select min(t4.pl_jn_cp_int_0) as expr_621,t4.jn_jn_jn_int_0,count(1) as expr_622 from (alice.tbl_0 as t0 join (select t1.jn_jn_jn_int_0,t1.pl_jn_cp_int_0 from ((select t3.jn_jn_jn_int_0,t3.pl_jn_cp_int_0 from (alice.tbl_1 as t1 join alice.tbl_3 as t3 on (t1.groupby_int_1=t3.cp_cp_cp_int_0) and (t1.groupby_int_2=t3.pl_jn_cp_int_0))) as t1 join (select t4.groupby_int_1 from alice.UPPER_table as t4 where t4.JOIN_string_0='EUROPE') as t4 on t1.jn_jn_jn_int_0=t4.groupby_int_1)) as t4) group by t4.jn_jn_jn_int_0 having count(1)>=4) as t_1 on t2.groupby_int_0=t_1.jn_jn_jn_int_0 where t2.pl_jn_cp_int_0=t_1.expr_621 order by t2.plain_int_0 desc,t2.gb_gb_gb_int_0,t2.plain_string_0,t2.plain_string_0",
+        "rewritten_sql_csv": "select t2.plain_int_0,t2.plain_string_0,t2.gb_gb_gb_int_0,t2.plain_string_0,t2.plain_string_1,t2.plain_string_1,t2.plain_string_2,t2.join_string_0 from (select t2.groupby_int_0,t2.plain_string_0,t2.plain_string_1,t2.gb_gb_gb_int_0,t2.pl_jn_cp_int_0,t2.join_string_0,t2.plain_int_0,t2.plain_string_0,t2.plain_string_1,t2.plain_string_2 from ((select t2.groupby_int_0,t2.plain_string_0,t2.plain_string_1,t2.gb_gb_gb_int_0,t2.pl_jn_cp_int_0,t2.join_string_0,t2.plain_int_0,t2.plain_string_0,t2.plain_string_1,t2.plain_string_2 from ((select t2.groupby_int_0,t2.plain_string_0,t2.plain_string_1,t2.gb_gb_gb_int_0,t2.jn_jn_jn_int_0,t2.pl_jn_cp_int_0,t1.join_string_0,t1.plain_int_0,t1.plain_string_0,t1.plain_string_1,t1.plain_string_2 from ((select t2.groupby_int_0,t2.plain_string_0,t2.plain_string_1,t3.cp_cp_cp_int_0,t3.gb_gb_gb_int_0,t3.jn_jn_jn_int_0,t3.pl_jn_cp_int_0 from ((select t2.groupby_int_0,t2.plain_string_0,t2.plain_string_1 from alice.tbl_2 as t2 where (t2.plain_int_1=15) and (t2.groupby_string_0 like '%BRASS')) as t2 join alice.tbl_3 as t3 on t2.groupby_int_0=t3.jn_jn_jn_int_0)) as t2 join alice.tbl_1 as t1 on (t2.cp_cp_cp_int_0=t1.groupby_int_1) and (t2.pl_jn_cp_int_0=t1.groupby_int_2))) as t2 join (select t4.groupby_int_1 from alice.UPPER_table as t4 where t4.JOIN_string_0='EUROPE') as t4 on t2.jn_jn_jn_int_0=t4.groupby_int_1)) as t2 cross join alice.tbl_0 as t0)) as t2 left join (select min(t4.pl_jn_cp_int_0) as expr_621,t4.jn_jn_jn_int_0,count(1) as expr_622 from (alice.tbl_0 as t0 cross join (select t1.jn_jn_jn_int_0,t1.pl_jn_cp_int_0 from ((select t3.jn_jn_jn_int_0,t3.pl_jn_cp_int_0 from (alice.tbl_1 as t1 join alice.tbl_3 as t3 on (t1.groupby_int_1=t3.cp_cp_cp_int_0) and (t1.groupby_int_2=t3.pl_jn_cp_int_0))) as t1 join (select t4.groupby_int_1 from alice.UPPER_table as t4 where t4.JOIN_string_0='EUROPE') as t4 on t1.jn_jn_jn_int_0=t4.groupby_int_1)) as t4) group by t4.jn_jn_jn_int_0 having count(1)>=4) as t_1 on t2.groupby_int_0=t_1.jn_jn_jn_int_0 where t2.pl_jn_cp_int_0=t_1.expr_621 order by t2.plain_int_0 desc,t2.gb_gb_gb_int_0,t2.plain_string_0,t2.plain_string_0",
+        "rewritten_sql": "select t2.plain_int_0,t2.plain_string_0,t2.gb_gb_gb_int_0,t2.plain_string_0,t2.plain_string_1,t2.plain_string_1,t2.plain_string_2,t2.join_string_0 from (select t2.groupby_int_0,t2.plain_string_0,t2.plain_string_1,t2.gb_gb_gb_int_0,t2.pl_jn_cp_int_0,t2.join_string_0,t2.plain_int_0,t2.plain_string_0,t2.plain_string_1,t2.plain_string_2 from ((select t2.groupby_int_0,t2.plain_string_0,t2.plain_string_1,t2.gb_gb_gb_int_0,t2.pl_jn_cp_int_0,t2.join_string_0,t2.plain_int_0,t2.plain_string_0,t2.plain_string_1,t2.plain_string_2 from ((select t2.groupby_int_0,t2.plain_string_0,t2.plain_string_1,t2.gb_gb_gb_int_0,t2.jn_jn_jn_int_0,t2.pl_jn_cp_int_0,t1.join_string_0,t1.plain_int_0,t1.plain_string_0,t1.plain_string_1,t1.plain_string_2 from ((select t2.groupby_int_0,t2.plain_string_0,t2.plain_string_1,t3.cp_cp_cp_int_0,t3.gb_gb_gb_int_0,t3.jn_jn_jn_int_0,t3.pl_jn_cp_int_0 from ((select t2.groupby_int_0,t2.plain_string_0,t2.plain_string_1 from alice.tbl_2 as t2 where (t2.plain_int_1=15) and (t2.groupby_string_0 like '%BRASS')) as t2 join alice.tbl_3 as t3 on t2.groupby_int_0=t3.jn_jn_jn_int_0)) as t2 join alice.tbl_1 as t1 on (t2.cp_cp_cp_int_0=t1.groupby_int_1) and (t2.pl_jn_cp_int_0=t1.groupby_int_2))) as t2 join (select t4.groupby_int_1 from alice.UPPER_table as t4 where t4.JOIN_string_0='EUROPE') as t4 on t2.jn_jn_jn_int_0=t4.groupby_int_1)) as t2 join alice.tbl_0 as t0)) as t2 left join (select min(t4.pl_jn_cp_int_0) as expr_621,any_value(t4.jn_jn_jn_int_0) as expr_613,count(1) as expr_622 from (alice.tbl_0 as t0 join (select t1.jn_jn_jn_int_0,t1.pl_jn_cp_int_0 from ((select t3.jn_jn_jn_int_0,t3.pl_jn_cp_int_0 from (alice.tbl_1 as t1 join alice.tbl_3 as t3 on (t1.groupby_int_1=t3.cp_cp_cp_int_0) and (t1.groupby_int_2=t3.pl_jn_cp_int_0))) as t1 join (select t4.groupby_int_1 from alice.UPPER_table as t4 where t4.JOIN_string_0='EUROPE') as t4 on t1.jn_jn_jn_int_0=t4.groupby_int_1)) as t4) group by t4.jn_jn_jn_int_0 having count(1)>=4) as t_1 on t2.groupby_int_0=t_1.expr_613 where t2.pl_jn_cp_int_0=t_1.expr_621 order by t2.plain_int_0 desc,t2.gb_gb_gb_int_0,t2.plain_string_0,t2.plain_string_0"
+      },
+      {
+        "sql": "SELECT t1.plain_int_1 AS o_orderpriority,count(*) AS order_count FROM alice.tbl_0 t1 WHERE t1.plain_int_0>=3 AND t1.plain_int_0<7 AND EXISTS(SELECT * FROM alice.tbl_1 t0 WHERE t0.plain_string_0=t1.plain_string_0 AND t0.plain_int_0<t0.plain_int_1) GROUP BY o_orderpriority ORDER BY o_orderpriority;",
+        "skip_projection": false,
+        "rewritten_sql_odps": "select t1.plain_int_1 as o_orderpriority,count(1) as order_count from alice.tbl_0 as t1 where ((t1.plain_int_0>=3) and (t1.plain_int_0<7)) and (exists (select t0.plain_string_0 from alice.tbl_1 as t0 where (t0.plain_int_0<t0.plain_int_1) and (t1.plain_string_0=t0.plain_string_0))) group by t1.plain_int_1 having count(1)>=4 order by t1.plain_int_1",
+        "rewritten_sql_pg": "select t1.plain_int_1 as o_orderpriority,count(1) as order_count from alice.tbl_0 as t1 where ((t1.plain_int_0>=3) and (t1.plain_int_0<7)) and (exists (select t0.plain_string_0 from alice.tbl_1 as t0 where (t0.plain_int_0<t0.plain_int_1) and (t1.plain_string_0=t0.plain_string_0))) group by t1.plain_int_1 having count(1)>=4 order by t1.plain_int_1",
+        "rewritten_sql_csv": "select t1.plain_int_1 as o_orderpriority,count(1) as order_count from alice.tbl_0 as t1 where ((t1.plain_int_0>=3) and (t1.plain_int_0<7)) and (exists (select t0.plain_string_0 from alice.tbl_1 as t0 where (t0.plain_int_0<t0.plain_int_1) and (t1.plain_string_0=t0.plain_string_0))) group by t1.plain_int_1 having count(1)>=4 order by t1.plain_int_1",
+        "rewritten_sql": "select any_value(t1.plain_int_1) as o_orderpriority,count(1) as order_count from alice.tbl_0 as t1 where ((t1.plain_int_0>=3) and (t1.plain_int_0<7)) and (exists (select t0.plain_string_0 from alice.tbl_1 as t0 where (t0.plain_int_0<t0.plain_int_1) and (t1.plain_string_0=t0.plain_string_0))) group by t1.plain_int_1 having count(1)>=4 order by any_value(t1.plain_int_1)"
       }
     ]
   }

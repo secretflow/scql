@@ -15,10 +15,18 @@
 #pragma once
 
 #include <optional>
+#include <vector>
 
+#include "engine/core/tensor.h"
 #include "engine/framework/session.h"
 
 #include "api/core.pb.h"
+
+// Forward declarations
+namespace spu {
+class SPUContext;
+class Value;
+}  // namespace spu
 
 namespace scql::engine {
 
@@ -49,9 +57,9 @@ class ExecContext {
   const RepeatedPbTensor& GetOutput(const std::string& name) const;
 
   // Input/Output
-  RepeatedPbTensor GetInputTensors() const;
+  RepeatedPbTensor GetInputPbs() const;
 
-  RepeatedPbTensor GetOutputTensors() const;
+  RepeatedPbTensor GetOutputPbs() const;
 
   // attributes
   // get attribute value by name
@@ -61,6 +69,8 @@ class ExecContext {
   std::string GetStringValueFromAttribute(const std::string& name) const;
   int64_t GetInt64ValueFromAttribute(const std::string& name) const;
   bool GetBooleanValueFromAttribute(const std::string& name) const;
+  std::vector<bool> GetBooleanValuesFromAttribute(
+      const std::string& name) const;
   double GetDoubleValueFromAttribute(const std::string& name) const;
   bool HasAttribute(const std::string& name) const {
     return node_.attributes().count(name) > 0;
@@ -75,6 +85,43 @@ class ExecContext {
       const std::string& name) const;
   std::optional<double> TryGetDoubleValueFromAttribute(
       const std::string& name) const;
+
+  // Tensor access interfaces
+  std::shared_ptr<Tensor> GetInputTensor(const std::string& input_name,
+                                         size_t index = 0);
+  std::vector<std::shared_ptr<Tensor>> GetInputTensors(
+      const std::string& input_name);
+  void SetOutputTensor(const std::string& output_name,
+                       std::shared_ptr<Tensor> tensor, size_t index = 0);
+  void SetOutputTensors(const std::string& output_name,
+                        const std::vector<std::shared_ptr<Tensor>>& tensors);
+
+  // Get tensor for private/public status based on tensor status
+  std::shared_ptr<Tensor> GetPrivateOrPublicTensor(const pb::Tensor& t);
+
+  // SPU Value access interfaces (for public/secret status)
+  spu::Value GetInputValue(const std::string& input_name, size_t index = 0);
+  std::vector<spu::Value> GetInputValues(const std::string& input_name);
+  void SetOutputValue(const std::string& output_name, const spu::Value& value,
+                      size_t index = 0);
+  void SetOutputValues(const std::string& output_name,
+                       const std::vector<spu::Value>& values);
+
+#ifdef SCQL_WITH_NULL
+  // SPU Validity access interfaces
+  spu::Value GetInputValidity(const std::string& input_name, size_t index = 0);
+  std::vector<spu::Value> GetInputValidities(const std::string& input_name);
+  void SetOutputValidity(const std::string& output_name,
+                         const spu::Value& validity, size_t index = 0);
+  void SetOutputValidities(const std::string& output_name,
+                           const std::vector<spu::Value>& validities);
+#endif
+
+  // Status query interface
+  pb::TensorStatus GetInputStatus(const std::string& input_name,
+                                  size_t index = 0);
+  pb::TensorStatus GetOutputStatus(const std::string& output_name,
+                                   size_t index = 0);
 
  private:
   const pb::ExecNode& node_;

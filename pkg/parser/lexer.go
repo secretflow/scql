@@ -233,10 +233,10 @@ func (s *Scanner) scan() (tok int, pos Pos, lit string) {
 	// search a trie to get a token.
 	node := &ruleTable
 	for ch0 >= 0 && ch0 <= 255 {
-		if node.children[ch0] == nil || s.r.eof() {
+		if node.childs[ch0] == nil || s.r.eof() {
 			break
 		}
-		node = node.children[ch0]
+		node = node.childs[ch0]
 		if node.fn != nil {
 			return node.fn(s)
 		}

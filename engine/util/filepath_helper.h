@@ -69,4 +69,8 @@ std::filesystem::path CreateDir(const std::filesystem::path& parent_dir,
 std::filesystem::path CreateDirWithRandSuffix(
     const std::filesystem::path& parent_dir, const std::string& dir_name);
 
+std::string BuildFullPathForPad(const std::string& path_without_prefix,
+                                const std::string& prefix,
+                                const std::string& bucket_name);
+
 }  // namespace scql::engine::util

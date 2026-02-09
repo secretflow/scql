@@ -71,21 +71,15 @@
   },
   {
     "name": "TestPlanBuilderCoalesceOp",
-    "cases": [
-      "select coalesce(plain_int_0, plain_int_1) from alice.tbl_0"
-    ]
+    "cases": ["select coalesce(plain_int_0, plain_int_1) from alice.tbl_0"]
   },
   {
     "name": "TestPlanBuilderLengthOp",
-    "cases": [
-      "select length(plain_int_0) from alice.tbl_0"
-    ]
+    "cases": ["select length(plain_int_0) from alice.tbl_0"]
   },
   {
     "name": "TestPlanBuilderReplaceOp",
-    "cases": [
-      "select replace(plain_string_0, 'old', 'new') from alice.tbl_0"
-    ]
+    "cases": ["select replace(plain_string_0, 'old', 'new') from alice.tbl_0"]
   },
   {
     "name": "TestPlanBuildeLikeRlikeOp",
@@ -109,15 +103,11 @@
   },
   {
     "name": "TestPlanBuildeLimitOp",
-    "cases": [
-      "select plain_int_0 from alice.tbl_0 limit 5;"
-    ]
+    "cases": ["select plain_int_0 from alice.tbl_0 limit 5;"]
   },
   {
     "name": "TestPlanBuilderInstrOp",
-    "cases": [
-      "select instr(plain_string_0, plain_string_1) from alice.tbl_0"
-    ]
+    "cases": ["select instr(plain_string_0, plain_string_1) from alice.tbl_0"]
   },
   {
     "name": "TestPlanBuilderGreatestLeastOp",
@@ -169,9 +159,7 @@
   },
   {
     "name": "TestPlanBuilderCast",
-    "cases": [
-      "select cast(plain_int_0 as float) from alice.tbl_0;"
-    ]
+    "cases": ["select cast(plain_int_0 as float) from alice.tbl_0;"]
   },
   {
     "name": "TestPlanBuilderSimpleWithOptimization",
@@ -184,21 +172,17 @@
       "select case when plain_int_0 < 0 then -1 when plain_int_0 = 0 then 0 else 1 end from alice.tbl_0",
       "select plain_int_0 in (select plain_int_1 from alice.tbl_0 where plain_int_2 = 3) from alice.tbl_0",
       "select 1 from alice.tbl_0",
-      // selection
       "select alice.plain_int_0 from alice.tbl_0 alice join bob.tbl_0 bob on alice.plain_int_1 = bob.plain_int_1 where bob.plain_int_2",
-      // group by
       "select distinct plain_int_0, plain_int_1 from alice.tbl_0",
       "select count(plain_int_1) from alice.tbl_0 group by plain_int_1",
       "select sum(plain_int_1) from alice.tbl_0 group by plain_int_1",
       "select count(plain_int_0) div count(plain_int_0) from alice.tbl_0 group by plain_int_0",
       "select max(plain_int_0), min(plain_int_0), median(plain_int_0), percentile_disc(plain_int_0, 0.8) from alice.tbl_0 group by plain_int_1",
       "select t from (select (plain_int_0 + plain_int_1) as t from alice.tbl_0) as alice group by t",
-      // order by
       "select plain_int_0 from alice.tbl_0 order by plain_int_0",
       "select plain_int_0 from alice.tbl_0 order by plain_int_0 desc",
       "select plain_int_0 from alice.tbl_0 order by plain_int_0 desc, plain_int_1 asc",
       "select plain_int_0 from alice.tbl_0 limit 1",
-      // union
       "select plain_int_0 from alice.tbl_0 union select plain_int_1 from alice.tbl_1",
       "select plain_int_0 from alice.tbl_0 union all select plain_int_1 from alice.tbl_1",
       "select plain_int_0 from alice.tbl_0 union select plain_int_1 from alice.tbl_1 union all select plain_int_2 from alice.tbl_2",
@@ -241,7 +225,6 @@
   {
     "name": "TestPlanBuilderDateTimeWithOptimization",
     "cases": [
-      // date function
       "select plain_datetime_0 < now() from alice.tbl_0;",
       "select plain_timestamp_0 < curdate() from alice.tbl_0;",
       "select plain_datetime_0 < curtime() from alice.tbl_0;",
@@ -258,7 +241,6 @@
       "select last_day(plain_timestamp_0) from alice.tbl_0;",
       "select str_to_date('August 10 2017', '%M %d %Y') from alice.tbl_0;",
       "select date_format(plain_datetime_0, '%Y-%m-%d %H:%i:%S') from alice.tbl_0;",
-      // selection
       "select plain_datetime_0, plain_timestamp_0 from alice.tbl_0;",
       "select plain_datetime_0 < plain_datetime_1 from alice.tbl_0",
       "select plain_timestamp_0 < plain_timestamp_1 from alice.tbl_0",
@@ -267,11 +249,9 @@
       "select case when plain_datetime_0 < '2020-10-10' then 0 else 1 end from alice.tbl_0",
       "select case when plain_datetime_0 in (select plain_timestamp_1 from alice.tbl_1) then 0 else 1 end from alice.tbl_0",
       "select plain_datetime_0 in (select plain_datetime_1 from alice.tbl_0 where plain_datetime_1 = '2020-10-10 10:10:10') from alice.tbl_0",
-      // group by
       "select distinct plain_datetime_0, plain_timestamp_0 from alice.tbl_0",
       "select count(plain_int_1) from alice.tbl_0 group by plain_datetime_0",
       "select max(plain_timestamp_0), min(plain_timestamp_0), median(plain_timestamp_0) from alice.tbl_0 group by plain_datetime_0",
-      // order by
       "select plain_datetime_0 from alice.tbl_0 order by plain_datetime_0",
       "select plain_datetime_0 from alice.tbl_0 order by plain_datetime_0 desc",
       "select plain_datetime_0 from alice.tbl_0 order by plain_datetime_0 desc, plain_timestamp_0 asc",

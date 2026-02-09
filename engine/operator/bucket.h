@@ -19,6 +19,7 @@
 #include "arrow/array/array_base.h"
 #include "arrow/type_fwd.h"
 
+#include "engine/exe/flags.h"
 #include "engine/framework/operator.h"
 #include "engine/util/concurrent_queue.h"
 
@@ -53,9 +54,10 @@ class Bucket : public Operator {
           indice(std::move(indice)) {}
   };
   static constexpr int kBatchParallelism = 10;
-  util::SimpleChannel<ReadResult> read_queue_{kBatchParallelism};
+  util::SimpleChannel<ReadResult> read_queue_{kBatchParallelism,
+                                              FLAGS_queue_max_block_seconds};
   util::SimpleChannel<std::vector<arrow::ChunkedArrayVector>> write_queue_{
-      kBatchParallelism};
+      kBatchParallelism, FLAGS_queue_max_block_seconds};
 };
 
 }  // namespace scql::engine::op

@@ -19,6 +19,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "psi/utils/batch_provider.h"
@@ -27,12 +28,12 @@
 
 #include "engine/core/tensor.h"
 #include "engine/core/tensor_slice.h"
-#include "engine/util/stringify_visitor.h"
+#include "engine/util/stringifier.h"
 
 namespace scql::engine::util {
 
 using scql::engine::TensorPtr;
-using scql::engine::util::StringifyVisitor;
+using scql::engine::util::Stringifier;
 
 /// @brief BatchProvider combines multiple join keys into one
 class BatchProvider : public ::psi::IBasicBatchProvider,
@@ -53,7 +54,7 @@ class BatchProvider : public ::psi::IBasicBatchProvider,
 
  private:
   std::vector<TensorPtr> tensors_;
-  std::vector<std::unique_ptr<StringifyVisitor>> stringify_visitors_;
+  std::vector<std::unique_ptr<Stringifier>> stringifiers_;
   size_t idx_;
   size_t batch_size_;
 };
@@ -83,8 +84,10 @@ class BucketProvider {
   }
 
   void CleanBucket(size_t idx) {
-    bucket_items_[idx].clear();
-    bucket_dup_idx_[idx].clear();
+    // clear memory
+    std::vector<DataPair>().swap(bucket_items_[idx]);
+    std::unordered_map<std::string, std::vector<size_t>>().swap(
+        bucket_dup_idx_[idx]);
   }
 
  private:

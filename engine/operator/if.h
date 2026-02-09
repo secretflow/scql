@@ -36,14 +36,8 @@ class If : public Operator {
   void Execute(ExecContext* ctx) override;
 
  private:
-  static void IfPrivate(ExecContext* ctx, const pb::Tensor& cond,
-                        const pb::Tensor& value_true,
-                        const pb::Tensor& value_false,
-                        const std::string& output_name);
-  static void IfSecret(ExecContext* ctx, const pb::Tensor& cond,
-                       const pb::Tensor& value_true,
-                       const pb::Tensor& value_false,
-                       const std::string& output_name);
+  static void IfPrivate(ExecContext* ctx);
+  static void IfSecret(ExecContext* ctx);
 };
 
 }  // namespace scql::engine::op

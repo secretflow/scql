@@ -26,11 +26,14 @@
 #include "google/protobuf/util/json_util.h"
 #include "psi/utils/sync.h"
 
+#include "engine/exe/flags.h"
 #include "engine/framework/exec.h"
 #include "engine/framework/executor.h"
 #include "engine/framework/session.h"
 #include "engine/operator/all_ops_register.h"
 #include "engine/services/pipeline.h"
+#include "engine/util/kpad_task_helper.h"
+#include "engine/util/trace_categories.h"
 
 #include "engine/services/error_collector_service.pb.h"
 
@@ -128,6 +131,7 @@ void EngineServiceImpl::StopJob(::google::protobuf::RpcController* cntl,
                                 const pb::StopJobRequest* request,
                                 pb::Status* status,
                                 ::google::protobuf::Closure* done) {
+  TRACE_EVENT_DEFAULT_TRACK(RPCCALL_CATEGORY, "EngineServiceImpl::StopJob");
   brpc::ClosureGuard done_guard(done);
   // check illegal request.
   auto* controller = static_cast<brpc::Controller*>(cntl);
@@ -225,6 +229,8 @@ void EngineServiceImpl::RunExecutionPlan(
     ::google::protobuf::RpcController* cntl,
     const pb::RunExecutionPlanRequest* request,
     pb::RunExecutionPlanResponse* response, ::google::protobuf::Closure* done) {
+  TRACE_EVENT_DEFAULT_TRACK(RPCCALL_CATEGORY,
+                            "EngineServiceImpl::RunExecutionPlan");
   brpc::ClosureGuard done_guard(done);
   auto* controller = static_cast<brpc::Controller*>(cntl);
   std::string source_ip =
@@ -277,7 +283,8 @@ void EngineServiceImpl::RunExecutionPlan(
                        err_msg);
     return;
   }
-
+  // report communication data during initialization
+  COMMUNICATION_COUNTER(session->GetLinkStats());
   // 2. run plan in async or sync mode
   auto logger = ActiveLogger(session);
   SPDLOG_LOGGER_INFO(logger,
@@ -456,99 +463,10 @@ void EngineServiceImpl::ReportResult(Session* session,
   }
 }
 
-void EngineServiceImpl::RunPlanCore(const pb::RunExecutionPlanRequest& request,
-                                    Session* session,
-                                    pb::RunExecutionPlanResponse* response) {
-  auto logger = ActiveLogger(session);
-  const auto& graph = request.graph();
-  const auto& policy = graph.policy();
-  session->InitProgressStats(policy);
-  if (policy.pipelines().size() > 1) {
-    session->EnableStreamingBatched();
-  }
-  for (int pipe_index = 0; pipe_index < policy.pipelines().size();
-       pipe_index++) {
-    const auto& pipeline = policy.pipelines()[pipe_index];
-    PipelineExecutor pipe_executor(pipeline, session);
-    session->GetProgressStats()->SetBatchCntInPipeline(
-        pipe_executor.GetBatchNum());
-    for (size_t i = 0; i < pipe_executor.GetBatchNum(); i++) {
-      SPDLOG_LOGGER_INFO(logger,
-                         "session({}) start to execute pipeline({}) batch({})",
-                         session->Id(), pipe_index, i);
-      pipe_executor.UpdateTensorTable();
-      for (const auto& subdag : pipeline.subdags()) {
-        for (const auto& job : subdag.jobs()) {
-          const auto& node_ids = job.node_ids();
-          for (const auto& node_id : node_ids) {
-            const auto& iter = graph.nodes().find(node_id);
-            YACL_ENFORCE(iter != graph.nodes().cend(),
-                         "no node for node_id={} in node_ids", node_id);
-            const auto& node = iter->second;
-            SPDLOG_LOGGER_INFO(logger,
-                               "session({}) start to execute node({}) op({}) "
-                               "pipeline({}) batch({})",
-                               session->Id(), node.node_name(), node.op_type(),
-                               pipe_index, i);
-            auto start = std::chrono::system_clock::now();
-            session->GetProgressStats()->SetCurrentNodeInfo(start,
-                                                            node.node_name());
-
-            YACL_ENFORCE(session->GetState() == SessionState::RUNNING,
-                         "session status not equal to running");
-            ExecContext context(node, session);
-            Executor executor;
-            executor.RunExecNode(&context);
-
-            auto end = std::chrono::system_clock::now();
-            SPDLOG_LOGGER_INFO(
-                logger,
-                "session({}) finished executing node({}), op({}), cost({})ms",
-                session->Id(), node.node_name(), node.op_type(),
-                std::chrono::duration_cast<std::chrono::milliseconds>(end -
-                                                                      start)
-                    .count());
-            // TODO(xiaoyuan): fix progress in streaming mode later
-            session->GetProgressStats()->IncExecutedNodes();
-            if (!session->GetStreamingOptions().batched) {
-              YACL_ENFORCE(session->GetProgressStats()->GetExecutedNodes() <=
-                               session->GetProgressStats()->GetNodesCnt(),
-                           "executed nodes: {}, total nodes count: {}",
-                           session->GetProgressStats()->GetExecutedNodes(),
-                           session->GetProgressStats()->GetNodesCnt());
-            }
-            if (node.op_type() == "Publish") {
-              auto results = session->GetPublishResults();
-              for (const auto& result : results) {
-                pb::Tensor* out_column = response->add_out_columns();
-                out_column->CopyFrom(*result);
-              }
-            } else if (node.op_type() == "DumpFile" ||
-                       node.op_type() == "InsertTable") {
-              auto affected_rows = session->GetAffectedRows();
-              response->set_num_rows_affected(affected_rows);
-            }
-          }
-        }
-        if (subdag.need_call_barrier_after_jobs()) {
-          yacl::link::Barrier(session->GetLink(), session->Id());
-        }
-      }
-      pipe_executor.FetchOutputTensors();
-      session->GetProgressStats()->IncExecutedBatch();
-      SPDLOG_LOGGER_INFO(
-          logger, "session({}) finished executing pipeline({}) batch({})",
-          session->Id(), pipe_index, i);
-    }
-    pipe_executor.Finish();
-    session->GetProgressStats()->IncExecutedPipeline();
-  }
-  SPDLOG_LOGGER_INFO(logger, "session({}) run plan policy succ", session->Id());
-  response->mutable_status()->set_code(pb::Code::OK);
-}
-
 void EngineServiceImpl::VerifyPublicKeys(
     const pb::JobStartParams& start_params) {
+  TRACE_EVENT_DEFAULT_TRACK(OTHER_CATEGORY,
+                            "EngineServiceImpl::VerifyPublicKeys");
   if (!authenticator_) {
     return;
   }
@@ -562,6 +480,7 @@ void EngineServiceImpl::VerifyPublicKeys(
 void EngineServiceImpl::RunPlanSync(const pb::RunExecutionPlanRequest* request,
                                     Session* session,
                                     pb::RunExecutionPlanResponse* response) {
+  TRACE_EVENT_DEFAULT_TRACK(RPCCALL_CATEGORY, "EngineServiceImpl::RunPlanSync");
   auto logger = ActiveLogger(session);
   // 1. run jobs in plan and add result to response.
   const std::string session_id = request->job_params().job_id();
@@ -570,11 +489,11 @@ void EngineServiceImpl::RunPlanSync(const pb::RunExecutionPlanRequest* request,
     // ::yacl::IoError will be throw in other peers after Channel::Recv timeout
     ::psi::SyncWait(session->GetLink(), [&] {
       session->SetState(SessionState::RUNNING);
-      RunPlanCore(*request, session, response);
+      ::scql::engine::RunPlanCore(*request, session, response);
     });
     session->SetState(SessionState::COMP_FINISHED);
 
-    SPDLOG_LOGGER_INFO(logger, "RunExecutionPlan success, sessionID={}",
+    SPDLOG_LOGGER_INFO(logger, "RunExecutionPlan completed, sessionID={}",
                        session_id);
     auto lctx = session->GetLink();
     lctx->WaitLinkTaskFinish();
@@ -597,6 +516,8 @@ void EngineServiceImpl::RunPlanSync(const pb::RunExecutionPlanRequest* request,
 void EngineServiceImpl::RunPlanAsync(const pb::RunExecutionPlanRequest& request,
                                      Session* session,
                                      const std::string& source_ip) {
+  TRACE_EVENT_DEFAULT_TRACK(RPCCALL_CATEGORY,
+                            "EngineServiceImpl::RunPlanASync");
   pb::RunExecutionPlanResponse response;
   response.set_job_id(request.job_params().job_id());
   response.set_party_code(request.job_params().party_code());
@@ -635,6 +556,8 @@ void EngineServiceImpl::RunPlanAsync(const pb::RunExecutionPlanRequest& request,
 void EngineServiceImpl::ReportErrorToPeers(const pb::JobStartParams& params,
                                            const pb::Code err_code,
                                            const std::string& err_msg) {
+  TRACE_EVENT_DEFAULT_TRACK(RPCCALL_CATEGORY,
+                            "EngineServiceImpl::ReportErrorToPeers");
   auto logger = GetActiveLogger(params.job_id());
   try {
     PartyInfo parties(params);
@@ -683,6 +606,57 @@ std::shared_ptr<spdlog::logger> EngineServiceImpl::GetActiveLogger(
     const std::string& session_id) const {
   auto* session = session_mgr_->GetSession(session_id);
   return ActiveLogger(session);
+}
+
+void EngineServiceImpl::RunKpadTask(const util::ClusterDef& cluster_def) {
+  SPDLOG_INFO("Starting kpad task execution");
+
+  auto scql_config =
+      scql::engine::util::ParseScqlConfig(FLAGS_kpad_scql_config);
+  YACL_ENFORCE(scql_config,
+               "Failed to parse kpad_scql_config or kpad_scql_config is empty");
+
+  auto self_party = cluster_def.self_party;
+  auto sub_graph_iter = scql_config->all_sub_graphs().find(self_party);
+  YACL_ENFORCE(sub_graph_iter != scql_config->all_sub_graphs().end(),
+               "No subgraph found for self party: {}", self_party);
+
+  auto job_params = scql::engine::util::BuildJobStartParams(
+      cluster_def, *scql_config, FLAGS_kpad_job_id);
+  YACL_ENFORCE(job_params, "Failed to build job start parameters");
+
+  // Create session
+  session_mgr_->CreateSession(*job_params, pb::DebugOptions{});
+  Session* session = session_mgr_->GetSession(FLAGS_kpad_job_id);
+  YACL_ENFORCE(session, "Failed to get session");
+
+  // Report communication data during initialization
+  COMMUNICATION_COUNTER(session->GetLinkStats());
+
+  auto logger = ActiveLogger(session);
+  SPDLOG_LOGGER_INFO(logger,
+                     "[RunKpadTaskMode] Session created successfully, start "
+                     "to run kpad task, job_id={}",
+                     FLAGS_kpad_job_id);
+
+  // Build execution plan request
+  pb::RunExecutionPlanRequest request;
+  *request.mutable_job_params() = *job_params;
+  *request.mutable_graph() = sub_graph_iter->second;
+
+  // Run plan in sync mode
+  pb::RunExecutionPlanResponse response;
+  RunPlanSync(&request, session, &response);
+  session_mgr_->CompareAndSetState(
+      FLAGS_kpad_job_id, SessionState::COMP_FINISHED, SessionState::SUCCEEDED);
+
+  session_mgr_->RemoveSession(FLAGS_kpad_job_id);
+
+  YACL_ENFORCE(response.status().code() == pb::Code::OK,
+               "Kpad task execution failed with status: {} {}",
+               response.status().code(), response.status().message());
+
+  SPDLOG_INFO("Kpad task execution completed successfully");
 }
 
 }  // namespace scql::engine

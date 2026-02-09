@@ -135,7 +135,7 @@ TEST_F(DuckdbWrapperTest, QueryWithPredicate) {
   EXPECT_TRUE(ColumnEquals(*conn.context, *data_chunk, 0, {""}));
 }
 
-TEST_F(DuckdbWrapperTest, IgnoringColumnCase) {
+TEST_F(DuckdbWrapperTest, IngoringColumnCase) {
   duckdb::DuckDB db = DuckDBWrapper::CreateDB(&csvdb_conf_);
   duckdb::Connection conn(db);
 

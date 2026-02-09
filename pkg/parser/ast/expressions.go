@@ -67,7 +67,7 @@ type ValueExpr interface {
 var NewValueExpr func(interface{}) ValueExpr
 
 // NewParamMarkerExpr creates a ParamMarkerExpr.
-var NewParamMarkerExpr func(offset int) ParamMarkerExpr
+var NewParamMarkerExpr func(offset int, paramName string) ParamMarkerExpr
 
 // BetweenExpr is for "between and" or "not between and" expression.
 type BetweenExpr struct {

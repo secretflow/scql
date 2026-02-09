@@ -4,8 +4,14 @@
       "party_code": "alice",
       "db_type": "MYSQL"
     },
-    "bob": { "party_code": "bob", "db_type": "CSVDB" },
-    "carol": { "party_code": "carol", "db_type": "POSTGRESQL" }
+    "bob": {
+      "party_code": "bob",
+      "db_type": "CSVDB"
+    },
+    "carol": {
+      "party_code": "carol",
+      "db_type": "POSTGRESQL"
+    }
   },
   "table_files": [
     "generated_table_alice.json",

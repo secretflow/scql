@@ -43,10 +43,12 @@ enum Code {
 
   // General not found error
   NOT_FOUND = 140;
-  // SCDB session not found
+  // Driver session not found
   SESSION_NOT_FOUND = 141;
 
   // Query CCL check failed
+  // NOTE: CCL (Column Control Language) has been removed from SCQL,
+  // this error code is kept for backward compatibility only
   CCL_CHECK_FAILED = 160;
 
   // The P2P internal exchange error
@@ -60,7 +62,7 @@ enum Code {
   // 200-299 Dependence Error
   // =========================
 
-  // SCDB DB error
+  // Driver DB error
   STORAGE_ERROR = 201;
 
   // ==============================

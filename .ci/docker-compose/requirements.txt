@@ -1,3 +1,0 @@
-mako
-python-dotenv
-pyyaml

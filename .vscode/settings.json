@@ -13,5 +13,9 @@
         "**/external/**": true
     },
     "files.insertFinalNewline": true,
-    "files.trimTrailingWhitespace": true
+    "files.trimTrailingWhitespace": true,
+    "[proto]": {
+        "editor.defaultFormatter": "bufbuild.vscode-buf",
+        "editor.formatOnSave": true
+    }
 }

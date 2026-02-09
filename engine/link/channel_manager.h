@@ -24,7 +24,7 @@ namespace scql::engine {
 enum class RemoteRole {
   Invalid = 0,
   PeerEngine = 1,
-  Driver = 2,  // Driver could be SCDB, SCQLBroker...
+  Driver = 2,  // Driver could be SCQLBroker for now
 };
 
 // A wrapper for brpc channel options

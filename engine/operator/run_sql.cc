@@ -17,6 +17,8 @@
 #include "spdlog/spdlog.h"
 #include "yacl/base/exception.h"
 
+#include "engine/datasource/csvdb_adaptor.h"
+
 namespace scql::engine::op {
 
 const std::string RunSQL::kOpType("RunSQL");
@@ -37,19 +39,23 @@ void RunSQL::Execute(ExecContext* ctx) {
 
   YACL_ENFORCE(datasource_specs.size() == table_refs.size(),
                "the size of route result mismatch with table_refs size");
-
+  DataSource ds = datasource_specs[0];
   if (datasource_specs.size() > 1) {
     for (size_t i = 1; i < datasource_specs.size(); ++i) {
-      if (datasource_specs[i].id() != datasource_specs[0].id()) {
+      if (datasource_specs[i].id() != ds.id()) {
         YACL_THROW(
             "RunSQL operator could not handle query across datasource, "
             "table_refs=[{}]",
             fmt::join(table_refs, ","));
       }
     }
+
+    if (ds.kind() == DataSourceKind::CSVDB) {
+      // connection_strs are different for different table_ref, we need to merge
+      ds = MergeCsvdbDatasources(datasource_specs);
+    }
   }
-  auto adaptor =
-      ctx->GetDatasourceAdaptorMgr()->GetAdaptor(datasource_specs[0]);
+  auto adaptor = ctx->GetDatasourceAdaptorMgr()->GetAdaptor(ds);
   YACL_ENFORCE(adaptor, "get adaptor failed");
 
   const auto& outputs_pb = ctx->GetOutput(kOut);

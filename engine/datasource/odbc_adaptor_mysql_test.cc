@@ -19,6 +19,7 @@
 #include "gtest/gtest.h"
 
 #include "engine/datasource/odbc_adaptor.h"
+#include "engine/operator/test_util.h"
 
 ABSL_FLAG(
     std::string, connection_str, "",
@@ -37,14 +38,24 @@ class OdbcAdaptorMySQLTest : public ::testing::Test {
       session_ = std::make_unique<Poco::Data::Session>("mysql", connection_str);
 
       using Poco::Data::Keywords::now;
+      // set timezone
+      *session_ << "SET time_zone = '+08:00';", now;
       // create table
       *session_ << "DROP TABLE IF EXISTS person", now;
-      *session_ << "CREATE TABLE person(name VARCHAR(30), age INTEGER(3))", now;
+      *session_ << "CREATE TABLE person(name VARCHAR(30), age INTEGER(3), dt "
+                   "DATETIME, tt TIMESTAMP)",
+          now;
       // insert some rows
-      *session_ << "INSERT INTO person VALUES(\"alice\", 18)", now;
-      *session_ << "INSERT INTO person VALUES(\"bob\", 20)", now;
-      *session_ << "INSERT INTO person VALUES(\"carol\", NULL)", now;
-      *session_ << "INSERT INTO person VALUES(NULL, NULL)", now;
+      *session_ << "INSERT INTO person VALUES(\"alice\", 18, \"2025-06-06 "
+                   "13:00:00\", \"2025-06-06 13:00:00\")",
+          now;
+      *session_ << "INSERT INTO person VALUES(\"bob\", 20, \"2025-06-16 "
+                   "16:00:00\", \"2025-06-16 16:00:00\")",
+          now;
+      *session_ << "INSERT INTO person VALUES(\"carol\", NULL, \"2025-06-26 "
+                   "16:00:00\", \"2025-06-26 16:00:00\")",
+          now;
+      *session_ << "INSERT INTO person VALUES(NULL, NULL, NULL, NULL)", now;
     } catch (const Poco::Data::MySQL::MySQLException& e) {
       FAIL() << "catch MySQL exception: " << e.displayText();
     } catch (const Poco::Data::DataException& e) {
@@ -64,14 +75,16 @@ TEST_F(OdbcAdaptorMySQLTest, works) {
   OdbcAdaptor adaptor("mysql", getConnectionStr());
 
   // When
-  const std::string query = "SELECT name, age FROM person";
+  const std::string query = "SELECT name, age, dt, tt FROM person";
   std::vector<ColumnDesc> outputs{{"name", pb::PrimitiveDataType::STRING},
-                                  {"age", pb::PrimitiveDataType::INT32}};
+                                  {"age", pb::PrimitiveDataType::INT32},
+                                  {"dt", pb::PrimitiveDataType::DATETIME},
+                                  {"tt", pb::PrimitiveDataType::TIMESTAMP}};
 
   auto results = adaptor.ExecQuery(query, outputs);
 
   // Then
-  EXPECT_EQ(results.size(), 2);
+  EXPECT_EQ(results.size(), 4);
 
   // column name
   EXPECT_EQ(results[0]->Length(), 4);
@@ -80,6 +93,13 @@ TEST_F(OdbcAdaptorMySQLTest, works) {
   // column age
   EXPECT_EQ(results[1]->Length(), 4);
   EXPECT_EQ(results[1]->GetNullCount(), 2);
+
+  scql::engine::op::test::CheckTensorEqual(
+      results[2],
+      TensorFrom(arrow::int64(), "[1749214800,1750089600,1750953600,null]"));
+  scql::engine::op::test::CheckTensorEqual(
+      results[3],
+      TensorFrom(arrow::int64(), "[1749186000,1750060800,1750924800,null]"));
 }
 
 }  // namespace scql::engine

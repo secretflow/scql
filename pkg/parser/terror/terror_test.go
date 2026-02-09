@@ -91,7 +91,7 @@ func (s *testTErrorSuite) TestJson(c *C) {
 	c.Assert(isEqual, IsTrue)
 }
 
-var predefinedErr = ClassExecutor.New(ErrCode(123), "predefined error")
+var predefinedErr = ClassExecutor.New(ErrCode(123), "predefiend error")
 
 func example() error {
 	err := call()

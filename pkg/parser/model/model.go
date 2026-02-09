@@ -298,7 +298,7 @@ type TableLockState byte
 const (
 	// TableLockStateNone means this table lock is absent.
 	TableLockStateNone TableLockState = iota
-	// TableLockStatePreLock means this table lock is pre-lock state. Other session doesn't hold this lock shouldn't do corresponding operation according to the lock type.
+	// TableLockStatePreLock means this table lock is pre-lock state. Other session doesn't hold this lock should't do corresponding operation according to the lock type.
 	TableLockStatePreLock
 	// TableLockStatePublic means this table lock is public state.
 	TableLockStatePublic
@@ -385,7 +385,7 @@ func (t *TableInfo) Clone() *TableInfo {
 	nt.Columns = make([]*ColumnInfo, len(t.Columns))
 	nt.Indices = make([]*IndexInfo, len(t.Indices))
 	nt.ForeignKeys = make([]*FKInfo, len(t.ForeignKeys))
-
+	nt.PartyCode = t.PartyCode
 	for i := range t.Columns {
 		nt.Columns[i] = t.Columns[i].Clone()
 	}

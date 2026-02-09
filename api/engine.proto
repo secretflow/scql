@@ -153,12 +153,12 @@ message QueryJobStatusResponse {
 
 // EngineResultCallback
 service EngineResultCallback {
-  // Engine report the plan result to scdb/broker/...
+  // Engine report the plan result to driver(for example, broker)
   rpc Report(ReportRequest) returns (google.protobuf.Empty);
 }
 
 // After finishing running an execution plan, the Engine sends a ReportRequest
-// to result callback server (such as scdb/broker/...) to return the results.
+// to result callback server (for example, broker) to return the results.
 message ReportRequest {
   // Status including whether the plan run was handled successfully,
   // if not, error message and some more information included.
@@ -171,4 +171,19 @@ message ReportRequest {
   string party_code = 4;
   // The number of rows affected by a select into, update, insert, or delete.
   int64 num_rows_affected = 5;
+}
+
+message StreamingOptions {
+  int64 streaming_row_num_threshold = 1;
+  int64 batch_row_num = 2;
+}
+
+message PsiOptions {
+  repeated int64 psi_curve_types = 1;
+  Rr22Mode rr22_mode = 2;
+}
+
+message NegotiationOptions {
+  StreamingOptions streaming_options = 1;
+  PsiOptions psi_options = 2;
 }

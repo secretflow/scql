@@ -1,4 +1,4 @@
-// Copyright 2024 Ant Group Co., Ltd.
+// Copyright 2025 Ant Group Co., Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,36 +14,41 @@
 
 #pragma once
 
-#include <future>
 #include <utility>
 
+#include "arrow/flight/client.h"
 #include "arrow/type_fwd.h"
-#include "dataproxy_sdk/data_proxy_stream.h"
 
 #include "engine/datasource/datasource_adaptor.h"
 
-#include "engine/datasource/datasource.pb.h"
+#include "engine/util/dp/flight.pb.h"
 
 namespace scql::engine {
 
+using kuscia::proto::api::v1alpha1::datamesh::CommandDataMeshSqlQuery;
+
 class DpChunkedResult : public ChunkedResult {
  public:
-  DpChunkedResult(
-      std::unique_ptr<dataproxy_sdk::DataProxyStreamReader> stream_reader)
-      : stream_reader_(std::move(stream_reader)) {}
+  DpChunkedResult(std::shared_ptr<arrow::Schema> schema,
+                  std::unique_ptr<arrow::flight::FlightInfo> flight_info,
+                  arrow::flight::FlightClient* client_ptr)
+      : schema_(std::move(schema)),
+        flight_info_(std::move(flight_info)),
+        client_(client_ptr) {}
 
   std::optional<arrow::ChunkedArrayVector> Fetch() override;
-  std::shared_ptr<arrow::Schema> GetSchema() override {
-    return stream_reader_->Schema();
-  };
+  std::shared_ptr<arrow::Schema> GetSchema() override { return schema_; };
 
  private:
-  std::unique_ptr<dataproxy_sdk::DataProxyStreamReader> stream_reader_;
+  std::shared_ptr<arrow::Schema> schema_;
+  std::unique_ptr<arrow::flight::FlightInfo> flight_info_;
+  size_t endpoint_index_ = 0;
+  arrow::flight::FlightClient* client_ = nullptr;
 };
+
 class DpAdaptor : public DatasourceAdaptor {
  public:
-  explicit DpAdaptor(std::string datasource_id)
-      : datasource_id_(std::move(datasource_id)) {}
+  explicit DpAdaptor(std::string json_str);
 
   ~DpAdaptor() override = default;
 
@@ -51,7 +56,8 @@ class DpAdaptor : public DatasourceAdaptor {
   // Send query and return schema
   std::shared_ptr<ChunkedResult> SendQuery(const std::string& query) override;
 
-  std::string datasource_id_;
+  CommandDataMeshSqlQuery command_;
+  std::unique_ptr<arrow::flight::FlightClient> client_;
 };
 
 }  // namespace scql::engine

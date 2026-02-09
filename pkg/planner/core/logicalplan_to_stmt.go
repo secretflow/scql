@@ -82,6 +82,106 @@ func (p *LogicalSelection) SqlStmt(d Dialect) (*runSqlCtx, error) {
 }
 
 func (p *LogicalJoin) SqlStmt(d Dialect) (*runSqlCtx, error) {
+	switch p.JoinType {
+	case SemiJoin, AntiSemiJoin, AntiLeftOuterSemiJoin, LeftOuterSemiJoin:
+		return SemiJoinToSqlStmt(p, d)
+	case LeftOuterJoin, RightOuterJoin, InnerJoin:
+		return JoinSqlStmt(p, d)
+	}
+	return nil, fmt.Errorf("unsupported join type %d", p.JoinType)
+}
+
+// SemiJoinToSqlStmt converts a LogicalJoin of type
+// SemiJoin/AntiSemiJoin/AntiLeftOuterSemiJoin/LeftOuterSemiJoin to a SQL statement.
+func SemiJoinToSqlStmt(p *LogicalJoin, d Dialect) (*runSqlCtx, error) {
+	var result []*runSqlCtx
+	for _, child := range p.Children() {
+		c, err := BuildChildCtx(d, child)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, c)
+	}
+	ctx := result[0]
+	ctx.updateTableRefs(result[1].GetTableRefs())
+	columns := p.logicalSchemaProducer.Schema().Columns
+	err := ctx.updateExprNodeFromColumns(d, columns[:len(columns)-1])
+	if err != nil {
+		return nil, err
+	}
+	// If it's generated from an in operator, translate to in expression
+	// In other cases, translate to ExistsSubqueryExpr
+	inScalarFunc := []*expression.ScalarFunction{}
+	otherExprs := []expression.Expression{}
+
+	splitExpr := func(cond expression.Expression) {
+		if sfunc, ok := cond.(*expression.ScalarFunction); ok {
+			// If it's an eq function and both arguments are in operand columns, translate to in expression
+			if sfunc.FuncName.L == ast.EQ {
+				c1, ok1 := sfunc.GetArgs()[0].(*expression.Column)
+				c2, ok2 := sfunc.GetArgs()[1].(*expression.Column)
+				if ok1 && ok2 && (c1.InOperand || c2.InOperand) {
+					inScalarFunc = append(inScalarFunc, sfunc)
+					return
+				}
+			}
+		}
+		otherExprs = append(otherExprs, cond)
+	}
+
+	for _, condition := range p.EqualConditions {
+		splitExpr(condition)
+	}
+	for _, condition := range p.OtherConditions {
+		splitExpr(condition)
+	}
+	inExprNodes := []ast.ExprNode{}
+	for _, sfunc := range inScalarFunc {
+		args, err := ctx.updateExprNodeFromExpressions(d, []expression.Expression{sfunc.GetArgs()[0]}, nil)
+		if err != nil {
+			return nil, err
+		}
+		ss, err := result[1].GetSQLStmt()
+		if err != nil {
+			return nil, err
+		}
+		inExpr := &ast.PatternInExpr{Expr: args[0], Sel: &ast.SubqueryExpr{Query: ss}, Not: p.JoinType == AntiSemiJoin || p.JoinType == AntiLeftOuterSemiJoin}
+		inExprNodes = append(inExprNodes, inExpr)
+	}
+	if len(otherExprs) > 0 {
+		result[1].mergeFieldsName(result[0])
+		otherExprNodes, err := result[1].updateExprNodeFromExpressions(d, otherExprs, nil)
+		if err != nil {
+			return nil, err
+		}
+		condExpr := composeCNFCondition(otherExprNodes)
+		if slices.Contains(result[1].clauses, ClauseWhere) {
+			result[1].setWhere(composeCNFCondition([]ast.ExprNode{result[1].selectStmt.Where, condExpr}))
+		} else {
+			result[1].setWhere(condExpr)
+		}
+		ss, err := result[1].GetSQLStmt()
+		if err != nil {
+			return nil, err
+		}
+		condExpr = &ast.ExistsSubqueryExpr{Sel: &ast.SubqueryExpr{Query: ss}, Not: p.JoinType == AntiSemiJoin || p.JoinType == AntiLeftOuterSemiJoin}
+		inExprNodes = append(inExprNodes, condExpr)
+	}
+	condExpr := composeCNFCondition(inExprNodes)
+	switch p.JoinType {
+	case SemiJoin, AntiSemiJoin:
+		if slices.Contains(ctx.clauses, ClauseWhere) {
+			ctx.selectStmt.Where = composeCNFCondition([]ast.ExprNode{ctx.selectStmt.Where, condExpr})
+		} else {
+			ctx.setWhere(condExpr)
+		}
+	case AntiLeftOuterSemiJoin, LeftOuterSemiJoin:
+		ctx.colIdToExprNode[columns[len(columns)-1].UniqueID] = condExpr
+	}
+	return ctx, nil
+}
+
+func JoinSqlStmt(p *LogicalJoin, d Dialect) (*runSqlCtx, error) {
 	joinStmt := &ast.Join{}
 	switch p.JoinType {
 	case InnerJoin:
@@ -268,66 +368,6 @@ func (p *LogicalAggregation) SqlStmt(d Dialect) (*runSqlCtx, error) {
 	c.setGroupBY(byItems)
 	err = c.convertAggregateFunc(d, p)
 	return c, err
-}
-
-func (p *LogicalApply) SqlStmt(d Dialect) (*runSqlCtx, error) {
-	var result []*runSqlCtx
-	for _, child := range p.Children() {
-		c, err := BuildChildCtx(d, child)
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, c)
-	}
-	ctx := result[0]
-	ctx.updateTableRefs(result[1].GetTableRefs())
-	var sFunc *expression.ScalarFunction
-	if len(p.OtherConditions) > 0 {
-		conditions := p.OtherConditions
-		ok := false
-		sFunc, ok = p.OtherConditions[0].(*expression.ScalarFunction)
-		if !ok || sFunc.FuncName.L != ast.EQ {
-			return nil, fmt.Errorf("logicalApply.SqlStmt: failed to check conditions %s", conditions)
-		}
-	} else if len(p.EqualConditions) > 0 {
-		conditions := p.EqualConditions
-		sFunc = conditions[0]
-		if sFunc.FuncName.L != ast.EQ {
-			return nil, fmt.Errorf("logicalApply.SqlStmt: failed to check conditions %s", conditions)
-		}
-	} else {
-		return nil, fmt.Errorf("logicalApply.SqlStmt: unexpected conditions")
-	}
-	args, err := ctx.updateExprNodeFromExpressions(d, []expression.Expression{sFunc.GetArgs()[0]}, nil)
-	if err != nil {
-		return nil, err
-	}
-	columns := p.logicalSchemaProducer.Schema().Columns
-	err = ctx.updateExprNodeFromColumns(d, columns[:len(columns)-1])
-	if err != nil {
-		return nil, err
-	}
-	ss, err := result[1].GetSQLStmt()
-	if err != nil {
-		return nil, err
-	}
-	inExpr := &ast.PatternInExpr{Expr: args[0], Sel: &ast.SubqueryExpr{Query: ss}}
-	switch p.JoinType {
-	case AntiLeftOuterSemiJoin, AntiSemiJoin:
-		inExpr.Not = true
-	}
-
-	switch p.JoinType {
-	case SemiJoin, AntiSemiJoin:
-		if slices.Contains(ctx.clauses, ClauseWhere) {
-			ctx.selectStmt.Where = composeCNFCondition([]ast.ExprNode{ctx.selectStmt.Where, inExpr})
-		} else {
-			ctx.setWhere(inExpr)
-		}
-	case AntiLeftOuterSemiJoin, LeftOuterSemiJoin:
-		ctx.colIdToExprNode[columns[len(columns)-1].UniqueID] = inExpr
-	}
-	return ctx, nil
 }
 
 func (p *LogicalMaxOneRow) SqlStmt(d Dialect) (*runSqlCtx, error) {

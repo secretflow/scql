@@ -38,13 +38,23 @@ INSTANTIATE_TEST_SUITE_P(
     PublishPrivateTest, PublishTest,
     testing::Values(
         PublishTestCase{
-            .inputs = {test::NamedTensor("in0", TensorFrom(arrow::int64(),
-                                                           "[0,1,null,3]")),
-                       test::NamedTensor("in1", TensorFrom(arrow::int64(),
-                                                           "[0,10,null,1000]")),
-                       test::NamedTensor("in2",
-                                         TensorFrom(arrow::int64(),
-                                                    "[0,10,null,1000]"))},
+            // A simulation of User A in Los Angeles inserting records with
+            // TIMESTAMP and DATETIME columns
+            // (e.g., '2025-06-06 13:00:00', null, '2025-06-16 16:00:00',
+            // '2025-06-26 16:00:00') into MySQL
+            // followed by User B in Shanghai querying this data through the
+            // SCQL engine
+            .inputs =
+                {test::NamedTensor("in0",
+                                   TensorFrom(arrow::int64(), "[0,1,null,3]")),
+                 test::NamedTensor(
+                     "in1",
+                     TensorFrom(arrow::int64(),
+                                "[1749240000,1750114800,null,1750978800]")),
+                 test::NamedTensor(
+                     "in2",
+                     TensorFrom(arrow::int64(),
+                                "[1749214800,1750089600,null,1750953600]"))},
             .input_types =
                 {pb::PrimitiveDataType::INT64,
                  // affected by timezone, we use Beijing time in test_util
@@ -83,10 +93,10 @@ shape {
 elem_type: TIMESTAMP
 annotation {
 }
-int64_data: 28800
-int64_data: 28810
-int64_data: 28800
-int64_data: 29800
+int64_data: 1749240000
+int64_data: 1750114800
+int64_data: 0
+int64_data: 1750978800
 data_validity: true
 data_validity: true
 data_validity: false
@@ -104,10 +114,10 @@ shape {
 elem_type: DATETIME
 annotation {
 }
-string_data: "1970-01-01 08:00:00"
-string_data: "1970-01-01 08:00:10"
-string_data: "1970-01-01 08:00:00"
-string_data: "1970-01-01 08:16:40"
+string_data: "2025-06-06 13:00:00"
+string_data: "2025-06-16 16:00:00"
+string_data: "1970-01-01 00:00:00"
+string_data: "2025-06-26 16:00:00"
 data_validity: true
 data_validity: true
 data_validity: false

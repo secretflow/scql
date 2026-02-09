@@ -106,4 +106,38 @@ std::optional<arrow::ChunkedArrayVector> CsvdbChunkedResult::Fetch() {
   return chunked_arrs;
 }
 
+DataSource MergeCsvdbDatasources(const std::vector<DataSource>& dss) {
+  YACL_ENFORCE(!dss.empty(), "input datasources is empty");
+  DataSource result = dss[0];
+  csv::CsvdbConf merged_conf;
+  for (size_t i = 0; i < dss.size(); ++i) {
+    const auto& ds = dss[i];
+    YACL_ENFORCE(ds.kind() == DataSourceKind::CSVDB,
+                 "only CSVDB datasource can be merged");
+    YACL_ENFORCE(ds.id() == result.id(),
+                 "only datasource with same id can be merged");
+    csv::CsvdbConf conf;
+    auto status =
+        google::protobuf::util::JsonStringToMessage(ds.connection_str(), &conf);
+    YACL_ENFORCE(status.ok(),
+                 "failed to parse json to csvdb conf: json={}, error={}",
+                 ds.connection_str(), status.ToString());
+    if (i == 0) {
+      merged_conf = conf;
+    } else {
+      for (const auto& tbl : conf.tables()) {
+        auto new_tbl = merged_conf.add_tables();
+        *new_tbl = tbl;
+      }
+    }
+  }
+  std::string connection_str;
+  auto status =
+      google::protobuf::util::MessageToJsonString(merged_conf, &connection_str);
+  YACL_ENFORCE(status.ok(), "failed to convert CsvdbConf to json string: {}",
+               status.ToString());
+  result.set_connection_str(connection_str);
+  return result;
+}
+
 }  // namespace scql::engine

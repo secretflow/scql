@@ -20,6 +20,8 @@
 #include "libspu/device/io.h"
 #include "libspu/kernel/hal/public_helper.h"
 #include "libspu/kernel/hal/type_cast.h"
+#include "libspu/kernel/hlo/basic_unary.h"
+#include "libspu/kernel/hlo/const.h"
 #include "libspu/mpc/common/pv2k.h"
 
 #include "engine/core/arrow_helper.h"
@@ -97,6 +99,21 @@ spu::DataType GetWiderSpuType(const spu::DataType& t1,
   } else {
     return t2;
   }
+}
+
+spu::Value Invert(spu::SPUContext* sctx, const spu::Value& val) {
+  if (val.dtype() == spu::DT_I1) {
+    return spu::kernel::hlo::Not(sctx, val);
+  }
+  // revert all bits
+  if (val.dtype() == spu::DT_U8 || val.dtype() == spu::DT_U16 ||
+      val.dtype() == spu::DT_U32 || val.dtype() == spu::DT_U64) {
+    return spu::kernel::hlo::Sub(
+        sctx, spu::kernel::hlo::Neg(sctx, val),
+        spu::kernel::hlo::Constant(sctx, 1, {val.shape()}));
+  }
+
+  return spu::kernel::hlo::Neg(sctx, val);
 }
 
 std::vector<spu::Value> ExpandGroupValueReversely(

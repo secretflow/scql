@@ -21,7 +21,7 @@ option go_package = "github.com/secretflow/scql/proto-gen/api/v1;scql";
 
 // Column Data Type
 // Column DataType values are subset of [data types in secretflow
-// spec](https://github.com/secretflow/spec/blob/main/secretflow/spec/v1/data.proto#L116)
+// spec](https://github.com/secretflow/spec/blob/main/secretflow_spec/protos/secretflow_spec/v1/data.proto#L144)
 enum DataType {
   DataType_UNSPECIFIED = 0;
   BOOL = 1;   // reserved datatype, not supported yet, use INT32 instead
@@ -31,9 +31,9 @@ enum DataType {
   INT64 = 5;
   FLOAT32 = 6;
   FLOAT64 = 7;
-  INT = 8;      // alias for INT32
-  INTEGER = 9;  // alias for INT32
-  FLOAT = 10;   // alias for FLOAT32
+  INT = 8;      // alias for INT64
+  INTEGER = 9;  // alias for INT64
+  FLOAT = 10;   // alias for FLOAT64
   DOUBLE = 11;  // alias for FLOAT64
   STRING = 12;
   STR = 13;  // alias for STRING

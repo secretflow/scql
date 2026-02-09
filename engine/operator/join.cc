@@ -56,6 +56,8 @@ const std::string& Join::Type() const { return kOpType; }
 
 void Join::Validate(ExecContext* ctx) {
   ValidateJoinTypeAndAlgo(ctx);
+  // Currently, only support psi join algorithm.
+  ValidatePsiTensors(ctx);
 
   std::vector<std::string> input_party_codes =
       ctx->GetStringValuesFromAttribute(kInputPartyCodesAttr);
@@ -113,7 +115,7 @@ void Join::ValidateJoinTypeAndAlgo(ExecContext* ctx) {
                "Invalid join algorithm: {}", algorithm);
 }
 
-void Join::ValidatePsiVisibility(ExecContext* ctx) {
+void Join::ValidatePsiTensors(ExecContext* ctx) {
   const auto& left = ctx->GetInput(kInLeft);
   const auto& right = ctx->GetInput(kInRight);
   const auto& left_out = ctx->GetOutput(kOutLeftJoinIndex);
@@ -350,7 +352,10 @@ void Join::Rr22PsiJoin(ExecContext* ctx) {
         provider.CleanBucket(bucket_idx);
       };
   psi::rr22::Rr22Runner runner(
-      psi_link, psi::rr22::GenerateRr22PsiOptions(FLAGS_use_rr22_low_comm_mode),
+      psi_link,
+      psi::rr22::GenerateRr22PsiOptions(
+          ctx->GetSession()->GetSessionOptions().psi_config.rr22_mode ==
+          pb::LOW_MODE),
       bucket_num, target_rank == yacl::link::kAllRank, pre_f, post_f);
   bool is_sender = is_left;
   // receiver should be the one who has more data
@@ -364,7 +369,7 @@ void Join::Rr22PsiJoin(ExecContext* ctx) {
   } else if (self_size > peer_size) {
     is_sender = false;
   }
-  runner.AsyncRun(0, is_sender);
+  runner.ParallelRun(0, is_sender);
   size_t result_size = 0;
   if (touch_result) {
     YACL_ENFORCE(tensor_constructor != nullptr);

@@ -58,6 +58,11 @@ type Plan interface {
 	SetOwnerPartyCodes(partyCodes []string)
 }
 
+type IntoOpt struct {
+	PartyColumns map[string][]*expression.Column
+	Opt          *ast.SelectIntoOption
+}
+
 type InsertTableOption struct {
 	TableName string
 	Columns   []string
@@ -95,8 +100,8 @@ type LogicalPlan interface {
 	SqlStmt(Dialect) (*runSqlCtx, error)
 
 	// Added for SCQL
-	SetIntoOpt(option *ast.SelectIntoOption)
-	IntoOpt() *ast.SelectIntoOption
+	SetIntoOpt(option *ast.SelectIntoOption, partyColumns map[string][]*expression.Column)
+	IntoOpt() *IntoOpt
 	SetInsertTableOpt(option *InsertTableOption)
 	InsertTableOpt() *InsertTableOption
 }
@@ -106,7 +111,7 @@ type basePlan struct {
 	id              int
 	ctx             sessionctx.Context
 	blockOffset     int
-	intoOpt         *ast.SelectIntoOption
+	intoOpt         *IntoOpt
 	insertTableOpt  *InsertTableOption
 	ownerPartyCodes []string
 }
@@ -235,11 +240,14 @@ func (p *logicalSchemaProducer) BuildKeyInfo(selfSchema *expression.Schema, chil
 	p.baseLogicalPlan.BuildKeyInfo(selfSchema, childSchema)
 }
 
-func (p *basePlan) SetIntoOpt(option *ast.SelectIntoOption) {
-	p.intoOpt = option
+func (p *basePlan) SetIntoOpt(option *ast.SelectIntoOption, partyColumns map[string][]*expression.Column) {
+	p.intoOpt = &IntoOpt{
+		Opt:          option,
+		PartyColumns: partyColumns,
+	}
 }
 
-func (p *basePlan) IntoOpt() *ast.SelectIntoOption {
+func (p *basePlan) IntoOpt() *IntoOpt {
 	return p.intoOpt
 }
 

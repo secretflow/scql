@@ -37,7 +37,7 @@ cc_library(
         ":filter_by_index",
         ":group",
         ":group_agg",
-        ":group_he_sum",
+        ":group_secret_agg",
         ":if",
         ":if_null",
         ":in",
@@ -438,9 +438,15 @@ cc_library(
     srcs = ["dump_file.cc"],
     hdrs = ["dump_file.h"],
     deps = [
+        "//engine/exe:flags",
         "//engine/framework:operator",
+        "//engine/util:datamesh_helper",
         "//engine/util:filepath_helper",
+        "//engine/util:ssl_helper",
         "//engine/util:tensor_util",
+        "//engine/util:upload_info_helper",
+        "@brpc//:butil",
+        "@dataproxy_sdk_cc//dataproxy_sdk:data_proxy_file",
     ],
 )
 
@@ -508,6 +514,8 @@ scql_cc_test(
     name = "reduce_test",
     srcs = ["reduce_test.cc"],
     shard_count = 4,
+    # 60 min
+    timeout='eternal',
     deps = [
         ":all_ops_register",
         ":reduce",
@@ -753,30 +761,23 @@ scql_cc_test(
 )
 
 cc_library(
-    name = "group_he_sum",
-    srcs = ["group_he_sum.cc"],
-    hdrs = ["group_he_sum.h"],
-    copts = select({
-        "@platforms//cpu:x86_64": [
-            # HEU uses eigen...force avx on x64
-            "-mavx",
-        ],
-        "//conditions:default": [],
-    }),
+    name = "group_secret_agg",
+    srcs = ["group_secret_agg.cc"],
+    hdrs = ["group_secret_agg.h"],
     deps = [
         "//engine/framework:operator",
-        "//engine/util:spu_io",
         "//engine/util:tensor_util",
-        "@gflags",
-        "@heu//heu/library/numpy",
+        "@spulib//libspu/kernel/hal:public_helper",
+        "@spulib//libspu/kernel/hlo:geometrical",
+        "@spulib//libspu/kernel/hlo:group_by_agg",
     ],
 )
 
 scql_cc_test(
-    name = "group_he_sum_test",
-    srcs = ["group_he_sum_test.cc"],
+    name = "group_secret_agg_test",
+    srcs = ["group_secret_agg_test.cc"],
     deps = [
-        ":group_he_sum",
+        ":group_secret_agg",
         ":test_util",
         "//engine/core:tensor_constructor",
     ],

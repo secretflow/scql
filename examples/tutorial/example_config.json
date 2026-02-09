@@ -1,0 +1,86 @@
+{
+    "sql": "SELECT a.ID, a.credit_rank, a.age, b.order_amount, b.is_active FROM user_credit a JOIN user_stats b ON a.ID = b.ID WHERE a.age > 18",
+    "catalog": {
+        "tables": [
+            {
+                "table_name": "user_credit",
+                "columns": [
+                    {
+                        "name": "ID",
+                        "type": "string",
+                        "ordinal_position": 1
+                    },
+                    {
+                        "name": "credit_rank",
+                        "type": "int",
+                        "ordinal_position": 2
+                    },
+                    {
+                        "name": "income",
+                        "type": "int",
+                        "ordinal_position": 3
+                    },
+                    {
+                        "name": "age",
+                        "type": "int",
+                        "ordinal_position": 4
+                    }
+                ],
+                "ref_table": "alice.user_credit",
+                "db_type": "mysql",
+                "owner": {
+                    "code": "alice"
+                }
+            },
+            {
+                "table_name": "user_stats",
+                "columns": [
+                    {
+                        "name": "ID",
+                        "type": "string",
+                        "ordinal_position": 1
+                    },
+                    {
+                        "name": "order_amount",
+                        "type": "float",
+                        "ordinal_position": 2
+                    },
+                    {
+                        "name": "is_active",
+                        "type": "int",
+                        "ordinal_position": 3
+                    }
+                ],
+                "ref_table": "bob.user_stats",
+                "db_type": "mysql",
+                "owner": {
+                    "code": "bob"
+                }
+            }
+        ]
+    },
+    "security_conf": {
+        "reverse_inference_conf": {
+            "enable_reverse_inference": false
+        }
+    },
+    "engine_endpoints": {
+        "alice": "localhost:8003",
+        "bob": "localhost:8005"
+    },
+    "engine_link_endpoints": {
+        "alice": "tutorial-engine_alice-1:8004",
+        "bob": "tutorial-engine_bob-1:8004"
+    },
+    "engine_client_type": "GRPC",
+    "engine_timeout": 300,
+    "tls_ca_cert": "./tls/root-ca.crt",
+    "issuer": "alice",
+    "compile_opts": {
+        "spu_conf": {
+            "protocol": "SEMI2K",
+            "field": "FM64"
+        },
+        "batched": false
+    }
+}

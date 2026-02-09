@@ -661,7 +661,7 @@ Out = [{4, 3, 2, 1}, {6, 7, 8, 9}]
 		opDef.AddInput("In", "Input tensor", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.AddInput("ShapeRefTensor", "Shape reference tensor", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T1)
 		opDef.AddOutput("Out", "Result tensor", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T2)
-		opDef.SetDefinition("Definition: Broadcast Input tensor `In` to the same shape as `ShapeRefTensor`. \nExample:\n```Python" + `
+		opDef.SetDefinition("Definition: Broadcast Input tensor `In` to the same shape as `ShapeRefTensor`.\nExample:\n```Python" + `
 In = [1]
 ShapeRefTensor = [a, b, c]
 # ShapeRefTensor's shape is (3, 1), broadcast In to shape (3, 1)
@@ -849,18 +849,17 @@ Out = [{0, 1, 4}, {7, 6, 5}]`+"\n```\n"))
 
 	{
 		opDef := &OperatorDef{}
-		opDef.SetName(OpNameGroupHeSum)
+		opDef.SetName(OpNameGroupSecretSum)
 		opDef.SetStreamingType(SinkOp)
 		opDef.AddInput("GroupId", "Input group id vector(shape [M][1]).",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 		opDef.AddInput("GroupNum", "Input number of groups vector(shape [1][1]).",
-			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T1)
 		opDef.AddInput("In", "Input data tensor(shape [M][1]).",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 		opDef.AddOutput("Out", "Output data tensors(shape [K][1], K equals to number of groups), Out[i] is the agg result for i-th group.",
 			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
-		opDef.AddAttribute(InputPartyCodesAttr, "List of parties the inputs belong to([PartyCodeForGroupId/Num, PartyCodeForIn]).")
-		opDef.SetDefinition(`Definition: Using HE to sum 'In' for each group.
+		opDef.SetDefinition(`Definition: Calculate secret SUM for each group.
 Example:
 ` + "\n```python" + `
 GroupId = {0, 1, 0, 1, 2}
@@ -868,7 +867,34 @@ GroupNum = {3}
 In = {0, 1, 2, 3, 4}
 Out = {2, 4, 4}
 ` + "```\n")
-		opDef.SetParamTypeConstraint(T, statusPrivate)
+		opDef.SetParamTypeConstraint(T, statusSecret)
+		opDef.SetParamTypeConstraint(T1, statusPublic)
+		check(opDef.err)
+		AllOpDef = append(AllOpDef, opDef)
+	}
+
+	{
+		opDef := &OperatorDef{}
+		opDef.SetName(OpNameGroupSecretAvg)
+		opDef.SetStreamingType(SinkOp)
+		opDef.AddInput("GroupId", "Input group id vector(shape [M][1]).",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.AddInput("GroupNum", "Input number of groups vector(shape [1][1]).",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T1)
+		opDef.AddInput("In", "Input data tensor(shape [M][1]).",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.AddOutput("Out", "Output data tensors(shape [K][1], K equals to number of groups), Out[i] is the agg result for i-th group.",
+			proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+		opDef.SetDefinition(`Definition: Calculate secret AVG for each group.
+Example:
+` + "\n```python" + `
+GroupId = {0, 1, 0, 1, 2}
+GroupNum = {3}
+In = {0, 1, 2, 3, 4}
+Out = {1, 2, 4}
+` + "```\n")
+		opDef.SetParamTypeConstraint(T, statusSecret)
+		opDef.SetParamTypeConstraint(T1, statusPublic)
 		check(opDef.err)
 		AllOpDef = append(AllOpDef, opDef)
 	}
@@ -1007,15 +1033,15 @@ Out = {0, 1, NULL}
 			OpNameRank:        "rank",
 		}
 
-		for op, description := range windowOp {
+		for op, decription := range windowOp {
 			opDef := &OperatorDef{}
 			opDef.SetName(op)
 			opDef.SetStreamingType(SinkOp)
 			opDef.AddInput("Key", "the tensors which used for sorting in partition, e.g. [2,0,4,2,3,7]", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 			opDef.AddInput("PartitionId", "the partitioned id, e.g. [0,0,0,1,1,1], the first 3 in a group and the others are in another group", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
 			opDef.AddInput("PartitionNum", "the partitioned num, e.g. [2]", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
-			opDef.AddOutput("Out", fmt.Sprintf("%s output", description), proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
-			opDef.SetDefinition(fmt.Sprintf("Definition: return the %s in each partition", description))
+			opDef.AddOutput("Out", fmt.Sprintf("%s output", decription), proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_SINGLE, T)
+			opDef.SetDefinition(fmt.Sprintf("Definition: return the %s in each partition", decription))
 			opDef.AddAttribute(ReverseAttr, `string array consists of "0" and "1", "0" means this input tensor sort by ascending, "1" means this tensor sort by descending.
 		e.g. ["0","1"] means the first input key sort by ascending, the second sort by descending`)
 			opDef.SetParamTypeConstraint(T, statusPrivate)
@@ -1030,10 +1056,10 @@ Out = {0, 1, NULL}
 		opDef.SetStreamingType(SinkOp)
 		opDef.AddInput("LeftKey", "Left keys for join", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
 		opDef.AddInput("RightKey", "Right keys for join", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
-		opDef.AddInput("Left", "Left payloads for join", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
-		opDef.AddInput("Right", "Right payloads for join", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
-		opDef.AddOutput("LeftOutput", "Left payloads after join", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
-		opDef.AddOutput("RightOutput", "Right payloads after join", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_VARIADIC, T)
+		opDef.AddInput("Left", "Left payloads for join", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_OPTIONAL, T)
+		opDef.AddInput("Right", "Right payloads for join", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_OPTIONAL, T)
+		opDef.AddOutput("LeftOutput", "Left payloads after join", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_OPTIONAL, T)
+		opDef.AddOutput("RightOutput", "Right payloads after join", proto.FormalParameterOptions_FORMALPARAMETEROPTIONS_OPTIONAL, T)
 		opDef.SetDefinition(`Definition: inner join the left and right payloads based on the left and right keys.
 Example:
 ` + "\n```python" + `

@@ -32,6 +32,19 @@ class PartyInfo {
 
  public:
   explicit PartyInfo(const pb::JobStartParams& params);
+
+  // Only used in Python binding, host info is not needed
+  PartyInfo(const std::string& self_party_code,
+            const google::protobuf::RepeatedPtrField<pb::PartyId>& parties) {
+    my_party_code_ = self_party_code;
+    for (int i = 0; i < parties.size(); ++i) {
+      Party party;
+      party.id = parties.Get(i).code();
+      parties_.push_back(party);
+      code_rank_map_[party.id] = i;
+    }
+  }
+
   PartyInfo() = delete;
 
   size_t SelfRank() const;

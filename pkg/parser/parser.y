@@ -650,6 +650,8 @@ import (
 	width                 "WIDTH"
 	regions               "REGIONS"
 	region                "REGION"
+	leftMarker            "{{"
+	rightMarker           "}}"
 	builtinAddDate
 	builtinBitAnd
 	builtinBitOr
@@ -706,7 +708,6 @@ import (
 	neq          "!="
 	neqSynonym   "<>"
 	nulleq       "<=>"
-	paramMarker  "?"
 	rsh          ">>"
 
 %token not2
@@ -719,6 +720,7 @@ import (
 	SetExpr                "Set variable statement value's expression"
 	BitExpr                "bit expression"
 	SimpleExpr             "simple expression"
+	ParamMarker            "param marker expression"
 	SimpleIdent            "Simple Identifier expression"
 	SumExpr                "aggregate functions"
 	FunctionCallGeneric    "Function call with Identifier"
@@ -799,7 +801,7 @@ import (
 	TruncateTableStmt    "TRUNCATE TABLE statement"
 	UnlockTablesStmt     "Unlock tables statement"
 	UpdateStmt           "UPDATE statement"
-	UnionStmt            "Union select statement"
+	UnionStmt            "Union select state ment"
 	UseStmt              "USE statement"
 	ShutdownStmt         "SHUTDOWN statement"
 
@@ -1155,8 +1157,9 @@ import (
 	EngineOpt                              "SCQLEngine credential and endpoint information"
 	EndpointOpt                            "SCQLEngine endpoint information"
 	TypeName                               "Column Type Name"
-	PartyFile                              "party file"
-	PartyFileList                          "party file list"
+	PartyFile                              "Party file"
+	PartyFileList                          "Party file list"
+	PartySelectFieldList                   "Party file select field list"
 
 %type	<ident>
 	AsOpt             "AS or EmptyString"
@@ -4943,6 +4946,8 @@ TiDBKeyword:
 |	"WIDTH"
 |	"REGIONS"
 |	"REGION"
+|	"{{"
+|	"}}"
 
 NotKeywordToken:
 	"ADDDATE"
@@ -5420,6 +5425,12 @@ SimpleIdent:
 		}}
 	}
 
+ParamMarker:
+	"{{" StringName "}}"
+	{
+		$$ = ast.NewParamMarkerExpr(yyS[yypt].offset, $2.(string))
+	}
+
 SimpleExpr:
 	SimpleIdent
 |	FunctionCallKeyword
@@ -5435,9 +5446,9 @@ SimpleExpr:
 		$$ = $1.(*ast.WindowFuncExpr)
 	}
 |	Literal
-|	paramMarker
+|	ParamMarker
 	{
-		$$ = ast.NewParamMarkerExpr(yyS[yypt].offset)
+		$$ = $1
 	}
 |	Variable
 |	SumExpr
@@ -6806,9 +6817,9 @@ WindowFrameStart:
 	{
 		$$ = ast.FrameBound{Type: ast.Preceding, Expr: ast.NewValueExpr($1)}
 	}
-|	paramMarker "PRECEDING"
+|	ParamMarker "PRECEDING"
 	{
-		$$ = ast.FrameBound{Type: ast.Preceding, Expr: ast.NewParamMarkerExpr(yyS[yypt].offset)}
+		$$ = ast.FrameBound{Type: ast.Preceding, Expr: $1}
 	}
 |	"INTERVAL" Expression TimeUnit "PRECEDING"
 	{
@@ -6838,9 +6849,9 @@ WindowFrameBound:
 	{
 		$$ = ast.FrameBound{Type: ast.Following, Expr: ast.NewValueExpr($1)}
 	}
-|	paramMarker "FOLLOWING"
+|	ParamMarker "FOLLOWING"
 	{
-		$$ = ast.FrameBound{Type: ast.Following, Expr: ast.NewParamMarkerExpr(yyS[yypt].offset)}
+		$$ = ast.FrameBound{Type: ast.Following, Expr: $1}
 	}
 |	"INTERVAL" Expression TimeUnit "FOLLOWING"
 	{
@@ -6939,7 +6950,7 @@ OptLeadLagInfo:
 		}
 		$$ = args
 	}
-|	',' paramMarker OptLLDefault
+|	',' ParamMarker OptLLDefault
 	{
 		args := []ast.ExprNode{ast.NewValueExpr($2)}
 		if $3 != nil {
@@ -7240,9 +7251,9 @@ LimitOption:
 	{
 		$$ = ast.NewValueExpr($1)
 	}
-|	paramMarker
+|	ParamMarker
 	{
-		$$ = ast.NewParamMarkerExpr(yyS[yypt].offset)
+		$$ = $1
 	}
 
 SelectStmtLimit:
@@ -7427,12 +7438,23 @@ SelectStmtIntoOption:
 		$$ = x
 	}
 
+PartySelectFieldList:
+	/* Empty */
+	{
+		$$ = []*ast.SelectField{}
+	}
+|	'(' FieldList ')'
+	{
+		$$ = $2.([]*ast.SelectField)
+	}
+
 PartyFile:
-	"PARTY_CODE" stringLit stringLit
+	"PARTY_CODE" stringLit stringLit PartySelectFieldList
 	{
 		$$ = &ast.PartyFile{
 			PartyCode: $2,
 			FileName:  $3,
+			FieldList: $4.([]*ast.SelectField),
 		}
 	}
 

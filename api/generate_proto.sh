@@ -15,44 +15,23 @@
 # limitations under the License.
 #
 set -e
-bazelisk build --remote_cache="" //api:scql_go_proto //api:spu_go_proto
+bazelisk build --remote_cache="" //api:scql_go_proto //api:spu_go_proto //api/v1alpha1:compiler_go_proto
 mkdir -p pkg/proto-gen/scql
+mkdir -p pkg/proto-gen/scql/v1alpha1
 proto_gen_package=github.com/secretflow/scql/pkg/proto-gen
-# copy files except spu.pb.go
-find "bazel-bin/api/scql_go_proto_/${proto_gen_package}/scql/" -maxdepth 1 -mindepth 1 -not -name 'spu.*' -exec cp -r {} pkg/proto-gen/scql/ \;
+# copy files execpt spu.pb.go
+ls bazel-bin/api/scql_go_proto_/${proto_gen_package}/scql/ | grep -v spu.* | xargs -I {} cp -r bazel-bin/api/scql_go_proto_/${proto_gen_package}/scql/{} pkg/proto-gen/scql
 cp -r bazel-bin/api/spu_go_proto_/${proto_gen_package}/spu/. pkg/proto-gen/spu
+cp -r bazel-bin/api/v1alpha1/compiler_go_proto_/${proto_gen_package}/scql/v1alpha1/. pkg/proto-gen/scql/v1alpha1
 chmod -R -x+X pkg/proto-gen
 
-# generate openapi file for broker.proto/scdb_api.proto
+# generate openapi file for broker.proto
 trap "rm -rf libspu google" EXIT
 # note: temporary copy spu.proto to avoid external dependency
 # symlink for "bazel-<workspace-name>"
-BAZEL_EXEC_ROOT=bazel-$(basename "$(pwd)")
+BAZEL_EXEC_ROOT=bazel-$(basename $(pwd))
 mkdir -p libspu
-cp -f "${BAZEL_EXEC_ROOT}/external/spulib~/libspu/spu.proto" libspu/spu.proto
+cp -f ${BAZEL_EXEC_ROOT}/external/spulib~/libspu/spu.proto libspu/spu.proto
 # note: protoc need google api
 mkdir -p google/api
-cp -f "${BAZEL_EXEC_ROOT}"/external/googleapis~/google/api/*.proto google/api
-
-GOBIN=${PWD}/tool-bin go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest
-PATH=${GOBIN}:${PATH} protoc --proto_path . -I"${BAZEL_EXEC_ROOT}/external/protobuf~/src"\
-    --openapiv2_out ./docs \
-    --openapiv2_opt output_format=yaml \
-    --openapiv2_opt preserve_rpc_order=true \
-    --openapiv2_opt json_names_for_fields=false \
-    --openapiv2_opt remove_internal_comments=true \
-    --openapiv2_opt Mlibspu/spu.proto=spu.pb \
-    --openapiv2_opt openapi_naming_strategy=fqn \
-    --openapiv2_opt openapi_configuration=api/broker.config_openapi.yaml \
-    api/broker.proto
-
-PATH=${GOBIN}:${PATH} protoc --proto_path . -I"${BAZEL_EXEC_ROOT}/external/protobuf~/src"\
-    --openapiv2_out ./docs \
-    --openapiv2_opt output_format=yaml \
-    --openapiv2_opt preserve_rpc_order=true \
-    --openapiv2_opt json_names_for_fields=false \
-    --openapiv2_opt remove_internal_comments=true \
-    --openapiv2_opt Mlibspu/spu.proto=spu.pb \
-    --openapiv2_opt openapi_naming_strategy=fqn \
-    --openapiv2_opt openapi_configuration=api/scdb_api.config_openapi.yaml \
-    api/scdb_api.proto
+cp -f ${BAZEL_EXEC_ROOT}/external/googleapis~/google/api/*.proto google/api

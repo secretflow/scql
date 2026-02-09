@@ -26,7 +26,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/encoding/protojson"
 
-	"github.com/secretflow/scql/pkg/broker/config"
+	"github.com/secretflow/scql/pkg/config"
 	pb "github.com/secretflow/scql/pkg/proto-gen/scql"
 	"github.com/secretflow/scql/pkg/util/message"
 )

@@ -25,11 +25,10 @@
 #include "grpcpp/grpcpp.h"
 #include "yacl/base/exception.h"
 
+#include "engine/util/datamesh_helper.h"
 #include "engine/util/filepath_helper.h"
 
 #include "engine/datasource/csvdb_conf.pb.h"
-#include "kuscia/proto/api/v1alpha1/datamesh/domaindata.grpc.pb.h"
-#include "kuscia/proto/api/v1alpha1/datamesh/domaindatasource.grpc.pb.h"
 
 namespace scql::engine {
 
@@ -37,37 +36,14 @@ namespace dm = kuscia::proto::api::v1alpha1::datamesh;
 
 namespace {
 
-dm::DomainData QueryDomainData(std::shared_ptr<grpc::Channel> channel,
-                               const std::string& domain_data_id) {
-  dm::DomainDataService::Stub stub(channel);
-  grpc::ClientContext context;
-
-  dm::QueryDomainDataRequest request;
-  request.set_domaindata_id(domain_data_id);
-
-  dm::QueryDomainDataResponse resp;
-  auto status = stub.QueryDomainData(&context, request, &resp);
-  if (!status.ok()) {
-    YACL_THROW("issue grpc QueryDomainData failed, error_code={}, error_msg={}",
-               fmt::underlying(status.error_code()), status.error_message());
-  }
-
-  if (resp.status().code() != 0) {
-    YACL_THROW("QueryDomainData returns error: code={}, msg={}",
-               resp.status().code(), resp.status().message());
-  }
-
-  return resp.data();
-}
-
 DataSource MakeCSVDataSourceFromLocalfs(
     const std::string& datasource_id, const std::string& name,
     const dm::DomainData& domaindata, const dm::LocalDataSourceInfo& localfs) {
   DataSource result;
-  result.set_id(domaindata.domaindata_id());
+  result.set_id(datasource_id);
   result.set_name(domaindata.name());
   result.set_kind(DataSourceKind::CSVDB);
-  // construct connection str
+  // constuct connection str
   {
     csv::CsvdbConf csv_conf;
     auto csv_tbl = csv_conf.add_tables();
@@ -98,10 +74,10 @@ DataSource MakeCSVDataSourceFromOSS(const std::string& datasource_id,
                                     const dm::DomainData& domaindata,
                                     const dm::OssDataSourceInfo& oss) {
   DataSource result;
-  result.set_id(domaindata.domaindata_id());
+  result.set_id(datasource_id);
   result.set_name(domaindata.name());
   result.set_kind(DataSourceKind::CSVDB);
-  // construct connection str
+  // constuct connection str
   {
     csv::CsvdbConf csv_conf;
 
@@ -203,41 +179,17 @@ DataSource MakePgDataSource(const std::string& datasource_id,
   return result;
 }
 
-DataSource MakeDataProxyDataSource(
+DataSource MakeDataMeshDataSource(
     const std::string& datasource_id, const dm::DomainData& domaindata,
     const dm::DomainDataSource& domaindata_source) {
   DataSource result;
   // use datasource_id due to domaindata in same datasource must have same id
   result.set_id(datasource_id);
   result.set_name(domaindata.name());
-  result.set_kind(DataSourceKind::DATAPROXY);
+  result.set_kind(DataSourceKind::DATAMESH);
   // dataproxy use datasource_id to get ak/sk
   result.set_connection_str(datasource_id);
   return result;
-}
-
-dm::DomainDataSource QueryDomainDataSource(
-    std::shared_ptr<grpc::Channel> channel, const std::string& datasource_id) {
-  dm::DomainDataSourceService::Stub stub(channel);
-
-  grpc::ClientContext context;
-
-  dm::QueryDomainDataSourceRequest request;
-  request.set_datasource_id(datasource_id);
-
-  dm::QueryDomainDataSourceResponse resp;
-  auto status = stub.QueryDomainDataSource(&context, request, &resp);
-  if (!status.ok()) {
-    YACL_THROW(
-        "issue grpc QueryDomainDataSource failed, error_code={}, error_msg={}",
-        fmt::underlying(status.error_code()), status.error_message());
-  }
-  if (resp.status().code() != 0) {
-    YACL_THROW("QueryDomainDataSource returns error: code={}, msg={}",
-               resp.status().code(), resp.status().message());
-  }
-
-  return resp.data();
 }
 
 }  // namespace
@@ -260,13 +212,14 @@ std::vector<DataSource> KusciaDataMeshRouter::Route(
 
 DataSource KusciaDataMeshRouter::SingleRoute(
     std::shared_ptr<grpc::Channel> channel, const std::string& domaindata_id) {
-  auto domaindata = QueryDomainData(channel, domaindata_id);
+  auto domaindata = util::QueryDomainData(channel, domaindata_id);
   if (domaindata.datasource_id().empty()) {
     YACL_THROW("datasource_id is empty for domaindata_id={}", domaindata_id);
   }
 
   // TODO(optimization): use cache to speed-up
-  auto datasource = QueryDomainDataSource(channel, domaindata.datasource_id());
+  auto datasource =
+      util::QueryDomainDataSource(channel, domaindata.datasource_id());
   std::string lower_type = absl::AsciiStrToLower(datasource.type());
   // TODO(xiaoyuan): Determines whether to use access_directly to select the
   // data source type
@@ -284,8 +237,8 @@ DataSource KusciaDataMeshRouter::SingleRoute(
   } else if (lower_type == "postgresql" || lower_type == "postgres") {
     return MakePgDataSource(datasource.datasource_id(), domaindata, datasource);
   } else if (lower_type == "odps") {
-    return MakeDataProxyDataSource(datasource.datasource_id(), domaindata,
-                                   datasource);
+    return MakeDataMeshDataSource(datasource.datasource_id(), domaindata,
+                                  datasource);
   } else {
     YACL_THROW("unsupported datasource type: {}", datasource.type());
   }

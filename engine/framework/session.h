@@ -69,11 +69,22 @@ struct LinkConfig {
 
 struct PsiConfig {
   // if the value here is 0, it would use the gflags config instead
-  int32_t psi_curve_type = 0;
+  psi::CurveType psi_curve_type = psi::CURVE_INVALID_TYPE;
+  pb::Rr22Mode rr22_mode = pb::UNDEFINED;
 };
 
 struct LogConfig {
   bool enable_session_logger_separation = false;
+};
+
+struct StreamingOptions {
+  std::filesystem::path dump_file_dir;
+  bool batched = false;
+  // if row num is less than this threshold, close streaming mode and keep all
+  // data in memory
+  size_t streaming_row_num_threshold = 0;
+  // if working in streaming mode, max row num in one batch
+  size_t batch_row_num = 0;
 };
 
 struct SessionOptions {
@@ -81,16 +92,7 @@ struct SessionOptions {
   LinkConfig link_config;
   PsiConfig psi_config;
   LogConfig log_config;
-};
-
-struct StreamingOptions {
-  std::filesystem::path dump_file_dir;
-  bool batched;
-  // if row num is less than this threshold, close streaming mode and keep all
-  // data in memory
-  size_t streaming_row_num_threshold;
-  // if working in streaming mode, max row num in one batch
-  size_t batch_row_num;
+  StreamingOptions streaming_options;
 };
 
 /// @brief Session holds everything needed to run the execution plan.
@@ -102,6 +104,13 @@ class Session {
                    yacl::link::ILinkFactory* link_factory, Router* router,
                    DatasourceAdaptorMgr* ds_mgr,
                    const std::vector<spu::ProtocolKind>& allowed_spu_protocols);
+
+  // Used in Python binding, simplified version without link factory
+  explicit Session(const PartyInfo& party_info,
+                   const spu::pb::RuntimeConfig& spu_cfg, Router* router,
+                   DatasourceAdaptorMgr* ds_mgr,
+                   const std::shared_ptr<yacl::link::Context>& link_context);
+
   ~Session();
   /// @return session id
   std::string Id() const { return id_; }
@@ -228,18 +237,25 @@ class Session {
 
   const SessionOptions& GetSessionOptions() const { return session_opt_; }
 
-  StreamingOptions GetStreamingOptions() { return streaming_options_; }
+  StreamingOptions GetStreamingOptions() const {
+    return session_opt_.streaming_options;
+  }
   void SetStreamingOptions(const StreamingOptions& streaming_options) {
-    streaming_options_ = streaming_options;
+    session_opt_.streaming_options = streaming_options;
   }
   void EnableStreamingBatched();
+
+  std::vector<spu::ProtocolKind> GetAllowedSpuProtocols() const {
+    return allowed_spu_protocols_;
+  }
 
  private:
   void InitLink();
   bool ValidateSPUContext();
+  void Negotiate();
 
   const std::string id_;
-  const SessionOptions session_opt_;
+  SessionOptions session_opt_;
   const std::string time_zone_;
   PartyInfo parties_;
   std::atomic<SessionState> state_;
@@ -279,8 +295,6 @@ class Session {
   std::string current_node_name_;
   std::chrono::time_point<std::chrono::system_clock> node_start_time_;
   std::shared_ptr<engine::util::ProgressStats> progres_stats_;
-  // for streaming
-  StreamingOptions streaming_options_;
 };
 
 std::shared_ptr<spdlog::logger> ActiveLogger(const Session* session);

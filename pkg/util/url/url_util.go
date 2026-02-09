@@ -18,7 +18,7 @@ import (
 	"strings"
 )
 
-// JoinHostPath join host and path by concat them directly with only extra processing flows:
+// JoinHostPath join host and path by concat them directly with only extra proccessing flows:
 // 1. Add missig slash '/' between host and path
 // 2. Remove duplidate slash '/' between host and path
 func JoinHostPath(host, path string) string {

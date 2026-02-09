@@ -23,7 +23,6 @@ import (
 	"github.com/secretflow/scql/pkg/expression/aggregation"
 	"github.com/secretflow/scql/pkg/parser/model"
 	"github.com/secretflow/scql/pkg/parser/mysql"
-	"github.com/secretflow/scql/pkg/scdb/storage"
 	driver "github.com/secretflow/scql/pkg/types/parser_driver"
 
 	glog "github.com/sirupsen/logrus"
@@ -223,23 +222,9 @@ func (b *PlanBuilder) buildSimple(node ast.StmtNode) (Plan, error) {
 	switch raw := node.(type) {
 	case *ast.FlushStmt, *ast.GrantRoleStmt, *ast.RevokeRoleStmt,
 		*ast.KillStmt, *ast.UseStmt, *ast.ShutdownStmt:
-		// TODO(yang.y): the above nodes may need to be ported
 		return nil, fmt.Errorf("buildSimple: un-ported node %v", raw)
-	case *ast.CreateUserStmt, *ast.DropUserStmt:
-		// NOTE(shunde.csd): the CREATE USER privilege enables use of
-		//   ALTER USER, CREATE USER, DROP USER, RENAME USER,
-		//   and REVOKE ALL PRIVILEGES.
-		err := ErrSpecificAccessDenied.GenWithStackByArgs("CREATE USER")
-		b.visitInfo = appendVisitInfo(b.visitInfo, mysql.CreateUserPriv, "", "", "", err)
-	case *ast.GrantStmt:
-		if b.ctx.GetSessionVars().CurrentDB == "" && raw.Level.DBName == "" {
-			if raw.Level.Level == ast.GrantLevelTable {
-				return nil, ErrNoDB
-			}
-		}
-		b.visitInfo = collectVisitInfoFromGrantStmt(b.ctx, b.visitInfo, raw)
-	case *ast.RevokeStmt:
-		b.visitInfo = collectVisitInfoFromRevokeStmt(b.ctx, b.visitInfo, raw)
+	case *ast.CreateUserStmt, *ast.DropUserStmt, *ast.GrantStmt, *ast.RevokeStmt:
+		return nil, fmt.Errorf("CreateUserStmt/DropUserStmt/GrantStmt/RevokeStmt only valid in SCDB mode(removed)")
 	}
 
 	return p, nil
@@ -558,45 +543,6 @@ func (b *PlanBuilder) buildArgs4WindowFunc(ctx context.Context, p LogicalPlan, a
 	return newArgList, nil
 }
 
-func collectVisitInfoFromRevokeStmt(sctx sessionctx.Context, vi []visitInfo, stmt *ast.RevokeStmt) []visitInfo {
-	// To use REVOKE, you must have the GRANT OPTION privilege,
-	// and you must have the privileges that you are revoking.
-	dbName := stmt.Level.DBName
-	tableName := stmt.Level.TableName
-	if dbName == "" {
-		dbName = sctx.GetSessionVars().CurrentDB
-	}
-	vi = appendVisitInfo(vi, mysql.GrantPriv, dbName, tableName, "", nil)
-
-	var allPrivs []mysql.PrivilegeType
-	for _, item := range stmt.Privs {
-		// NOTE(yang.y): skip visibility privilege here
-		// it will be checked in revoke executor
-		if _, ok := storage.VisibilityPrivColName[item.Priv]; ok {
-			continue
-		}
-
-		if item.Priv == mysql.AllPriv {
-			switch stmt.Level.Level {
-			case ast.GrantLevelGlobal:
-				allPrivs = storage.AllGlobalPrivs
-			case ast.GrantLevelDB:
-				allPrivs = storage.AllDBPrivs
-			case ast.GrantLevelTable:
-				allPrivs = storage.AllTablePrivs
-			}
-			break
-		}
-		vi = appendVisitInfo(vi, item.Priv, dbName, tableName, "", nil)
-	}
-
-	for _, priv := range allPrivs {
-		vi = appendVisitInfo(vi, priv, dbName, tableName, "", nil)
-	}
-
-	return vi
-}
-
 func (b *PlanBuilder) buildDDL(ctx context.Context, node ast.DDLNode) (Plan, error) {
 	var authErr error
 	switch v := node.(type) {
@@ -800,45 +746,6 @@ func buildShowSchema(s *ast.ShowStmt, isView bool) (schema *expression.Schema, o
 		schema.Append(col)
 	}
 	return
-}
-
-func collectVisitInfoFromGrantStmt(sctx sessionctx.Context, vi []visitInfo, stmt *ast.GrantStmt) []visitInfo {
-	// To use GRANT, you must have the GRANT OPTION privilege,
-	// and you must have the privileges that you are granting.
-	dbName := stmt.Level.DBName
-	tableName := stmt.Level.TableName
-	if dbName == "" {
-		dbName = sctx.GetSessionVars().CurrentDB
-	}
-	vi = appendVisitInfo(vi, mysql.GrantPriv, dbName, tableName, "", nil)
-
-	var allPrivs []mysql.PrivilegeType
-	for _, item := range stmt.Privs {
-		// NOTE(shunde.csd): skip visibility privilege here
-		// it will be checked in grant executor
-		if _, ok := storage.VisibilityPrivColName[item.Priv]; ok {
-			continue
-		}
-
-		if item.Priv == mysql.AllPriv {
-			switch stmt.Level.Level {
-			case ast.GrantLevelGlobal:
-				allPrivs = storage.AllGlobalPrivs
-			case ast.GrantLevelDB:
-				allPrivs = storage.AllDBPrivs
-			case ast.GrantLevelTable:
-				allPrivs = storage.AllTablePrivs
-			}
-			break
-		}
-		vi = appendVisitInfo(vi, item.Priv, dbName, tableName, "", nil)
-	}
-
-	for _, priv := range allPrivs {
-		vi = appendVisitInfo(vi, priv, dbName, tableName, "", nil)
-	}
-
-	return vi
 }
 
 func (b *PlanBuilder) buildExplain(ctx context.Context, explain *ast.ExplainStmt) (Plan, error) {

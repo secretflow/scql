@@ -30,9 +30,7 @@
 
 namespace scql::engine::op {
 void TrigonometricFunction::Execute(ExecContext* ctx) {
-  const auto output_status = util::GetTensorStatus(ctx->GetOutput(kOut)[0]);
-
-  if (output_status == pb::TENSORSTATUS_PRIVATE) {
+  if (ctx->GetOutputStatus(kOut) == pb::TENSORSTATUS_PRIVATE) {
     ExecuteInPlain(ctx);
   } else {
     ExecuteInSecret(ctx);
@@ -56,44 +54,38 @@ void TrigonometricFunction::Validate(ExecContext* ctx) {
 }
 
 void TrigonometricFunction::ExecuteInSecret(ExecContext* ctx) {
-  const auto& input_pb = ctx->GetInput(kIn);
-  const auto& output_pb = ctx->GetOutput(kOut);
-
-  auto* device_symbols = ctx->GetSession()->GetDeviceSymbols();
   auto* sctx = ctx->GetSession()->GetSpuContext();
+  auto input_values = ctx->GetInputValues(kIn);
+  std::vector<spu::Value> results;
+  results.reserve(input_values.size());
 
-  for (int i = 0; i < input_pb.size(); i++) {
-    auto spu_value = device_symbols->getVar(
-        util::SpuVarNameEncoder::GetValueName(input_pb[i].name()));
-
+  for (auto& spu_value : input_values) {
     if (!spu_value.isFxp()) {
       auto to_type = spu::DataType::DT_F64;
       spu_value =
           spu::kernel::hlo::Cast(sctx, spu_value, spu_value.vtype(), to_type);
     }
 
-    auto result = ComputeOnSpu(sctx, spu_value);
-    device_symbols->setVar(
-        util::SpuVarNameEncoder::GetValueName(output_pb[i].name()), result);
+    results.push_back(ComputeOnSpu(sctx, spu_value));
   }
+
+  ctx->SetOutputValues(kOut, results);
 }
 
 void TrigonometricFunction::ExecuteTrigonometricFunction(
     ExecContext* ctx, const std::string& func) {
-  const auto& input_pbs = ctx->GetInput(kIn);
-  const auto& output_pbs = ctx->GetOutput(kOut);
+  auto input_tensors = ctx->GetInputTensors(kIn);
+  std::vector<std::shared_ptr<Tensor>> results;
+  results.reserve(input_tensors.size());
 
-  for (int i = 0; i < input_pbs.size(); i++) {
-    TensorPtr input_ptr = ctx->GetTensorTable()->GetTensor(input_pbs[i].name());
-    YACL_ENFORCE(input_ptr != nullptr, "input({}) is null for {} function",
-                 input_pbs[i].name(), func);
-    auto result =
-        arrow::compute::CallFunction(func, {input_ptr->ToArrowChunkedArray()});
+  for (const auto& input_tensor : input_tensors) {
+    auto result = arrow::compute::CallFunction(
+        func, {input_tensor->ToArrowChunkedArray()});
     YACL_ENFORCE(result.ok(), "failed to run '{}' function", func);
-    TensorPtr resultTensor = TensorFrom(result.ValueOrDie().chunked_array());
-    ctx->GetTensorTable()->AddTensor(output_pbs[i].name(),
-                                     std::move(resultTensor));
+    results.push_back(TensorFrom(result.ValueOrDie().chunked_array()));
   }
+
+  ctx->SetOutputTensors(kOut, results);
 }
 
 // ===========================

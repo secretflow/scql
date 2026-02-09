@@ -113,12 +113,20 @@ func (n *Join) Restore(ctx *RestoreCtx) error {
 	if n.NaturalJoin {
 		ctx.WriteKeyWord(" NATURAL")
 	}
-	switch n.Tp {
-	case LeftJoin:
-		ctx.WriteKeyWord(" LEFT")
-	case RightJoin:
-		ctx.WriteKeyWord(" RIGHT")
+
+	if n.On == nil && len(n.Using) == 0 {
+		if ctx.Dialect.ObviousCrossWhenCrossJoin() {
+			ctx.WriteKeyWord(" CROSS")
+		}
+	} else {
+		switch n.Tp {
+		case LeftJoin:
+			ctx.WriteKeyWord(" LEFT")
+		case RightJoin:
+			ctx.WriteKeyWord(" RIGHT")
+		}
 	}
+
 	if n.StraightJoin {
 		ctx.WriteKeyWord(" STRAIGHT_JOIN ")
 	} else {
@@ -2109,7 +2117,7 @@ func (n *ShowStmt) Restore(ctx *RestoreCtx) error {
 			// FROM or IN
 			ctx.WriteKeyWord("INDEX IN ")
 			if err := n.Table.Restore(ctx); err != nil {
-				return errors.Annotate(err, "An error occurred while restore ShowStmt.Table")
+				return errors.Annotate(err, "An error occurred while resotre ShowStmt.Table")
 			} // TODO: remember to check this case
 		case ShowColumns: // equivalent to SHOW FIELDS
 			if n.Extended {
@@ -2121,7 +2129,7 @@ func (n *ShowStmt) Restore(ctx *RestoreCtx) error {
 				// FROM or IN
 				ctx.WriteKeyWord(" IN ")
 				if err := n.Table.Restore(ctx); err != nil {
-					return errors.Annotate(err, "An error occurred while restore ShowStmt.Table")
+					return errors.Annotate(err, "An error occurred while resotre ShowStmt.Table")
 				}
 			}
 			restoreShowDatabaseNameOpt()
@@ -2376,6 +2384,7 @@ func (n *SelectIntoOption) Accept(v Visitor) (Node, bool) {
 type PartyFile struct {
 	PartyCode string
 	FileName  string
+	FieldList []*SelectField
 }
 
 // Restore implements Node interface.

@@ -1,0 +1,23 @@
+version: v2
+modules:
+  - path: .
+    name: buf.build/secretflow/scql-protos
+deps:
+  - buf.build/googleapis/googleapis
+  - buf.build/protocolbuffers/wellknowntypes
+lint:
+  use:
+    - DEFAULT
+    - PACKAGE_DIRECTORY_MATCH
+    - COMMENTS
+    - UNARY_RPC
+  except:
+    # Allow direct resource returns for Create/Get operations following Google AIP patterns
+    - RPC_RESPONSE_STANDARD_NAME
+    - RPC_REQUEST_RESPONSE_UNIQUE
+  ignore_only:
+    # You can ignore specific files or rules if needed
+    # - path/to/file.proto
+breaking:
+  use:
+    - FILE

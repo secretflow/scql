@@ -759,7 +759,7 @@ var CombinationSQLMode = map[string][]string{
 // FormatFunc is the locale format function signature.
 type FormatFunc func(string, string) (string, error)
 
-// GetLocaleFormatFunction get the format function for specific locale.
+// GetLocaleFormatFunction get the format function for sepcific locale.
 func GetLocaleFormatFunction(loc string) FormatFunc {
 	locale, exist := locale2FormatFunction[loc]
 	if !exist {

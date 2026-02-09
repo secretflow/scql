@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@rules_cc//cc:defs.bzl", "cc_proto_library")
+load("@rules_go//proto:def.bzl", "go_proto_library")
+load("@rules_proto//proto:defs.bzl", "proto_library")
 load("//engine/bazel:scql.bzl", "scql_cc_test")
 
 package(default_visibility = ["//visibility:public"])
@@ -60,13 +63,21 @@ cc_library(
 )
 
 cc_library(
-    name = "stringify_visitor",
-    srcs = ["stringify_visitor.cc"],
-    hdrs = ["stringify_visitor.h"],
+    name = "stringifier",
+    srcs = ["stringifier.cc"],
+    hdrs = ["stringifier.h"],
     deps = [
         "//engine/core:arrow_helper",
         "//engine/core:tensor",
         "//engine/core:tensor_constructor",
+    ],
+)
+
+scql_cc_test(
+    name = "stringifier_test",
+    srcs = ["stringifier_test.cc"],
+    deps = [
+        ":stringifier",
     ],
 )
 
@@ -190,4 +201,108 @@ cc_library(
 cc_library(
     name = "concurrent_queue",
     hdrs = ["concurrent_queue.h"],
+)
+
+cc_library(
+    name = "datamesh_helper",
+    srcs = ["datamesh_helper.cc"],
+    hdrs = ["datamesh_helper.h"],
+    deps = [
+        "@grpc//:grpc++",
+        "@kuscia//proto/api/v1alpha1/datamesh:domaindata_cpp_grpc",
+        "@kuscia//proto/api/v1alpha1/datamesh:domaindatasource_cpp_grpc",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+scql_cc_test(
+    name = "datamesh_helper_test",
+    srcs = ["datamesh_helper_test.cc"],
+    linkopts = [
+        "-lm",
+    ],
+    deps = [
+        ":datamesh_helper",
+        "@grpc//:grpc++",
+    ],
+)
+
+cc_library(
+    name = "ssl_helper",
+    srcs = ["ssl_helper.cc"],
+    hdrs = ["ssl_helper.h"],
+    deps = [
+        "@brpc//:butil",
+        "@grpc//:grpc++",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+scql_cc_test(
+    name = "ssl_helper_test",
+    srcs = ["ssl_helper_test.cc"],
+    linkopts = [
+        "-lm",
+    ],
+    deps = [
+        ":ssl_helper",
+    ],
+)
+
+cc_library(
+    name = "upload_info_helper",
+    srcs = ["upload_info_helper.cc"],
+    hdrs = ["upload_info_helper.h"],
+    deps = [
+        "@dataproxy_sdk_cc//dataproxy_sdk:data_proxy_stream",
+        "@dataproxy_sdk_cc//proto:data_proxy_cc_proto",
+        "@org_apache_arrow//:arrow",
+    ],
+)
+
+scql_cc_test(
+    name = "upload_info_helper_test",
+    srcs = ["upload_info_helper_test.cc"],
+    linkopts = [
+        "-lm",
+    ],
+    deps = [
+        ":upload_info_helper",
+    ],
+)
+
+cc_library(
+    name = "trace_categories",
+    srcs = ["trace_categories.cc"],
+    hdrs = ["trace_categories.h"],
+    deps = [
+        "@perfetto",
+        "@spdlog",
+    ],
+)
+
+cc_library(
+    name = "kpad_task_helper",
+    srcs = ["kpad_task_helper.cc"],
+    hdrs = ["kpad_task_helper.h"],
+    deps = [
+        "//api:engine_cc_proto",
+        "//api:scql_task_cc_proto",
+        "@brpc//:butil",
+        "@com_google_protobuf//:json_util",
+        "@spdlog",
+        "@spulib//libspu/core:config",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+scql_cc_test(
+    name = "kpad_task_helper_test",
+    srcs = ["kpad_task_helper_test.cc"],
+    linkopts = [
+        "-lm",
+    ],
+    deps = [
+        ":kpad_task_helper",
+    ],
 )

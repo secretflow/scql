@@ -51,7 +51,7 @@ DEFINE_int32(link_chunked_send_parallel_size, 1,
              "parallel size when send chunked value");
 DEFINE_int32(http_max_payload_size, 1024 * 1024,
              "max payload to decide whether to send value chunked, default 1M");
-// Brpc channel flags for driver(SCDB, SCQLBroker...)
+// Brpc channel flags for driver(for example, SCQLBroker)
 DEFINE_string(driver_protocol, "http:proto", "rpc protocol");
 DEFINE_string(driver_connection_type, "pooled", "connection type");
 DEFINE_string(driver_load_balancer, "", "load balancer: \"rr\" or empty");
@@ -97,6 +97,14 @@ DEFINE_int32(session_timeout_s, 1800,
              "the specific tasks.");
 DEFINE_string(spu_allowed_protocols, "SEMI2K,ABY3,CHEETAH",
               "spu allowed protocols");
+
+// Kpad task mode flags
+DEFINE_string(kpad_job_id, "", "job identifier for kpad task mode execution");
+DEFINE_string(kpad_scql_config, "",
+              "SCQL configuration in JSON format for kpad task mode");
+DEFINE_string(kpad_cluster_def, "",
+              "cluster definition in JSON format for kpad task mode");
+
 // DataSource connection flags.
 DEFINE_string(datasource_router, "embed",
               "datasource router type: embed | http | kusciadatamesh");
@@ -124,5 +132,7 @@ DEFINE_string(authorized_profile_path, "",
               "path to authorized profile, in json format");
 DEFINE_bool(enable_psi_detail_logger, false, "whether enable detail log");
 DEFINE_string(psi_detail_logger_dir, "logs/detail", "log dir");
-DEFINE_bool(use_rr22_low_comm_mode, false,
-            "use rr22 low comm mode when the network bandwidth is limited");
+DEFINE_bool(enable_trace, false, "whether enable tracing");
+DEFINE_string(trace_log_path, "logs/trace.trace", "trace log path");
+DEFINE_int32(rr22_mode, 2, "rr22 comm mode, use fast mode by default");
+DEFINE_int32(queue_max_block_seconds, 300, "max seconds for queue block wait");

@@ -87,7 +87,7 @@ func (ts *testFlagSuite) TestFlag(c *C) {
 			ast.FlagConstant,
 		},
 		{
-			"(1 + a) > ?",
+			"(1 + a) > {{param1}}",
 			ast.FlagHasReference | ast.FlagHasParamMarker,
 		},
 		{

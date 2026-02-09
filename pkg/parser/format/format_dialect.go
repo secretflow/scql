@@ -45,6 +45,8 @@ type Dialect interface {
 	// for mysql a = b = c
 	// for pg (a = b) = c
 	NeedParenthesesForCmpOperand() bool
+	// for cross join, whether to show the CROSS keyword obviously
+	ObviousCrossWhenCrossJoin() bool
 }
 
 func NewMySQLDialect() Dialect {
@@ -115,6 +117,10 @@ func (d *MySQLDialect) GetOperator(op string) string {
 }
 
 func (d *MySQLDialect) NeedParenthesesForCmpOperand() bool {
+	return false
+}
+
+func (d *MySQLDialect) ObviousCrossWhenCrossJoin() bool {
 	return false
 }
 
@@ -313,6 +319,11 @@ func (d *CVSDBDialect) GetOperator(originName string) string {
 		return res
 	}
 	return originName
+}
+
+// duckdb need cross keyword for cross join
+func (d *CVSDBDialect) ObviousCrossWhenCrossJoin() bool {
+	return true
 }
 
 type OdpsDialect struct {

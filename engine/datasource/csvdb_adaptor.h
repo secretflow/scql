@@ -51,4 +51,7 @@ class CsvdbAdaptor : public DatasourceAdaptor {
 
   csv::CsvdbConf csvdb_conf_;
 };
+
+DataSource MergeCsvdbDatasources(const std::vector<DataSource>& dss);
+
 }  // namespace scql::engine

@@ -43,19 +43,14 @@ void IsNull::Validate(ExecContext* ctx) {
 }
 
 void IsNull::Execute(ExecContext* ctx) {
-  const auto& input_pb = ctx->GetInput(kIn)[0];
-  const auto& output_pb = ctx->GetOutput(kOut)[0];
-  auto tensor = ctx->GetTensorTable()->GetTensor(input_pb.name());
-  YACL_ENFORCE(tensor != nullptr, "get tensor={} from tensor table failed",
-               input_pb.name());
+  auto tensor = ctx->GetInputTensor(kIn);
 
   arrow::compute::NullOptions options;
   auto result = arrow::compute::IsNull(tensor->ToArrowChunkedArray(), options);
   YACL_ENFORCE(result.ok(), "caught error while invoking arrow IsNull: {}",
                result.status().ToString());
 
-  auto t = TensorFrom(result.ValueOrDie().chunked_array());
-  ctx->GetTensorTable()->AddTensor(output_pb.name(), std::move(t));
+  ctx->SetOutputTensor(kOut, TensorFrom(result.ValueOrDie().chunked_array()));
 }
 
 }  // namespace scql::engine::op

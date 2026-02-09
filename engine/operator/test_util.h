@@ -39,7 +39,7 @@
 
 namespace scql::engine::op::test {
 
-// predefined party codes for tests
+// predifined party codes for tests
 constexpr char kPartyAlice[] = "alice";
 constexpr char kPartyBob[] = "bob";
 constexpr char kPartyCarol[] = "carol";
@@ -53,6 +53,14 @@ struct SpuRuntimeTestCase {
   bool enable_colocated_optimization;
 };
 
+#ifdef TEST_SEMI2K_ONLY
+static const auto SpuTestValues2PC = testing::Values(
+    test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 2, true});
+
+static const auto SpuTestValuesMultiPC = testing::Values(
+    test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 2, true},
+    test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 3, true});
+#else
 static const auto SpuTestValues2PC = testing::Values(
     test::SpuRuntimeTestCase{spu::ProtocolKind::CHEETAH, 2, true},
     test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 2, true},
@@ -68,12 +76,19 @@ static const auto SpuTestValuesMultiPC = testing::Values(
     test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 2, false},
     test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 3, false},
     test::SpuRuntimeTestCase{spu::ProtocolKind::ABY3, 3, false});
+#endif
 
 static const auto SpuTestValuesMultiPCDisableColocated = testing::Values(
     test::SpuRuntimeTestCase{spu::ProtocolKind::CHEETAH, 2, false},
     test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 2, false},
     test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 3, false},
     test::SpuRuntimeTestCase{spu::ProtocolKind::ABY3, 3, false});
+
+static const auto SpuTestValuesMultiPCEnableColocated = testing::Values(
+    test::SpuRuntimeTestCase{spu::ProtocolKind::CHEETAH, 2, true},
+    test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 2, true},
+    test::SpuRuntimeTestCase{spu::ProtocolKind::SEMI2K, 3, true},
+    test::SpuRuntimeTestCase{spu::ProtocolKind::ABY3, 3, true});
 
 pb::JobStartParams::Party BuildParty(const std::string& code, int32_t rank);
 
@@ -118,6 +133,8 @@ class ExecNodeBuilder {
                                   const std::vector<double>& value);
 
   ExecNodeBuilder& AddBooleanAttr(const std::string& name, bool value);
+  ExecNodeBuilder& AddBooleansAttr(const std::string& name,
+                                   const std::vector<bool>& values);
 
   ExecNodeBuilder& AddAttr(const std::string& name, const pb::Tensor& tensor);
 
@@ -173,5 +190,7 @@ template <class Op>
 void RunAsync(const std::vector<ExecContext*>& exec_ctxs) {
   RunOpAsync(exec_ctxs, []() { return std::make_unique<Op>(); });
 }
+
+void CheckTensorEqual(const TensorPtr& left, const TensorPtr& right);
 
 }  // namespace scql::engine::op::test

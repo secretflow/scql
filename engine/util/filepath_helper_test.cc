@@ -53,4 +53,26 @@ TEST(FilePathTest, CheckS3LikeUrl) {
                yacl::EnforceNotMet);
 }
 
+TEST(FilePathTest, BuildFullPathForPad) {
+  std::string path = "bucket_name/test.file";
+  EXPECT_EQ("bucket_name/data/test.file",
+            BuildFullPathForPad(path, "data/", "bucket_name"));
+
+  path = "bucket_name/test.file";
+  EXPECT_EQ("bucket_name/data/test.file",
+            BuildFullPathForPad(path, "data", "bucket_name"));
+
+  path = "bucket_name/test.file";
+  EXPECT_EQ("bucket_name/test.file",
+            BuildFullPathForPad(path, "", "bucket_name"));
+
+  path = "BUCKET_NAME/test.file";
+  EXPECT_EQ("bucket_name/test.file",
+            BuildFullPathForPad(path, "", "bucket_name"));
+
+  path = "test.file";
+  EXPECT_THROW(BuildFullPathForPad(path, "data/", "bucket_name"),
+               yacl::EnforceNotMet);
+}
+
 }  // namespace scql::engine::util

@@ -116,4 +116,29 @@ std::filesystem::path CreateDirWithRandSuffix(
   YACL_THROW("failed to create dir {}", dir_name);
 }
 
+// FIXME: Temporary solution for secretpad compatibility, which may miss oss
+// info in the path.
+std::string BuildFullPathForPad(const std::string& path_without_prefix,
+                                const std::string& prefix,
+                                const std::string& bucket_name) {
+  size_t slash_pos = path_without_prefix.find('/');
+  YACL_ENFORCE(slash_pos != std::string::npos,
+               "path={} must contain bucket name", path_without_prefix);
+
+  std::string cur_bucket_name = path_without_prefix.substr(0, slash_pos);
+  std::string remaining_path = path_without_prefix.substr(slash_pos + 1);
+
+  // Replace "BUCKET_NAME" in the path with the bucket name in
+  // oss_datasource_info.
+  if (cur_bucket_name == "BUCKET_NAME") {
+    cur_bucket_name = bucket_name;
+  }
+
+  std::filesystem::path new_path = std::filesystem::path(cur_bucket_name) /
+                                   std::filesystem::path(prefix) /
+                                   std::filesystem::path(remaining_path);
+
+  return new_path.generic_string();
+}
+
 };  // namespace scql::engine::util

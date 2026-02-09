@@ -25,6 +25,9 @@ type EnginesInfo struct {
 	partyToTables map[string][]core.DbTable
 	tableToParty  map[core.DbTable]string
 	tableToRefs   map[core.DbTable]core.DbTable
+	// Adds a party-level map layer in refToUris to prevent overwriting when refTblName is duplicated across parties.
+	// e.g. {"carol": {"project001.UPPER_table": "domain_id_for_carol_UPPER_table"}, "alice": {"project001.UPPER_table": "domain_id_for_alice_UPPER_table"}}
+	refToUris map[string]map[string]string
 }
 
 func (h *EnginesInfo) GetPartyInfo() *PartyInfo {
@@ -74,6 +77,29 @@ func (h *EnginesInfo) UpdateTableToRefs(tableToRefs map[core.DbTable]core.DbTabl
 	}
 }
 
+func (h *EnginesInfo) UpdateRefToUris(refs map[string]map[string]string) {
+	for party, refToUris := range refs {
+		if h.refToUris[party] == nil {
+			h.refToUris[party] = make(map[string]string)
+		}
+		for ref, uri := range refToUris {
+			h.refToUris[party][ref] = uri
+		}
+	}
+}
+
+func (h *EnginesInfo) GetUris(party string, refs []string) []string {
+	var result []string
+	for _, ref := range refs {
+		if id, ok := h.refToUris[party][ref]; ok {
+			result = append(result, id)
+		} else {
+			result = append(result, ref)
+		}
+	}
+	return result
+}
+
 func NewEnginesInfo(p *PartyInfo, party2Tables map[string][]core.DbTable) *EnginesInfo {
 	table2Party := make(map[core.DbTable]string)
 	for p, tables := range party2Tables {
@@ -86,6 +112,7 @@ func NewEnginesInfo(p *PartyInfo, party2Tables map[string][]core.DbTable) *Engin
 		partyToTables: party2Tables,
 		tableToParty:  table2Party,
 		tableToRefs:   make(map[core.DbTable]core.DbTable),
+		refToUris:     make(map[string]map[string]string),
 	}
 }
 

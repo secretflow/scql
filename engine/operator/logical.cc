@@ -60,64 +60,46 @@ void Not::Validate(ExecContext* ctx) {
 }
 
 void Not::Execute(ExecContext* ctx) {
-  const auto& input_pb = ctx->GetInput(kIn)[0];
-  auto input_status = util::GetTensorStatus(input_pb);
-  if (input_status == pb::TENSORSTATUS_PRIVATE) {
+  if (ctx->GetInputStatus(kIn) == pb::TENSORSTATUS_PRIVATE) {
     return ExecuteInPlain(ctx);
-  } else if (input_status == pb::TENSORSTATUS_SECRET) {
-    return ExecuteInSecret(ctx);
   } else {
-    YACL_THROW("unsupported input status: {}",
-               pb::TensorStatus_Name(input_status));
+    return ExecuteInSecret(ctx);
   }
 }
 
 void Not::ExecuteInPlain(ExecContext* ctx) {
-  const auto& input_pbs = ctx->GetInput(kIn);
-  const auto& output_pbs = ctx->GetOutput(kOut);
+  auto input_tensors = ctx->GetInputTensors(kIn);
+  std::vector<std::shared_ptr<Tensor>> results;
+  results.reserve(input_tensors.size());
 
-  auto* tensor_table = ctx->GetSession()->GetTensorTable();
-  for (int i = 0; i < input_pbs.size(); ++i) {
-    const auto input_pb = input_pbs[i];
-    const auto output_pb = output_pbs[i];
-
-    auto in_t = tensor_table->GetTensor(input_pb.name());
-    YACL_ENFORCE(in_t != nullptr, "input {} not found in tensor table",
-                 input_pb.name());
-    auto result =
-        arrow::compute::CallFunction("invert", {in_t->ToArrowChunkedArray()});
+  for (const auto& input_tensor : input_tensors) {
+    auto result = arrow::compute::CallFunction(
+        "invert", {input_tensor->ToArrowChunkedArray()});
     YACL_ENFORCE(result.ok(),
                  "caught error while invoking arrow invert function: {}",
                  result.status().ToString());
-    auto out_t = TensorFrom(result.ValueOrDie().chunked_array());
-    tensor_table->AddTensor(output_pb.name(), std::move(out_t));
+    results.push_back(TensorFrom(result.ValueOrDie().chunked_array()));
   }
+
+  ctx->SetOutputTensors(kOut, results);
 }
 
 void Not::ExecuteInSecret(ExecContext* ctx) {
-  const auto& input_pbs = ctx->GetInput(kIn);
-  const auto& output_pbs = ctx->GetOutput(kOut);
-
   auto* sctx = ctx->GetSession()->GetSpuContext();
-  auto* symbols = ctx->GetSession()->GetDeviceSymbols();
-  for (int i = 0; i < input_pbs.size(); ++i) {
-    const auto input_pb = input_pbs[i];
-    const auto output_pb = output_pbs[i];
+  auto input_values = ctx->GetInputValues(kIn);
+  std::vector<spu::Value> results;
+  results.reserve(input_values.size());
 
-    auto in_val =
-        symbols->getVar(util::SpuVarNameEncoder::GetValueName(input_pb.name()));
-
-    auto out_val = spu::kernel::hlo::Not(sctx, in_val);
-
-    symbols->setVar(util::SpuVarNameEncoder::GetValueName(output_pb.name()),
-                    out_val);
-#ifdef SCQL_WITH_NULL
-    auto out_validity = symbols->getVar(
-        util::SpuVarNameEncoder::GetValidityName(input_pb.name()));
-    symbols->setVar(util::SpuVarNameEncoder::GetValidityName(output_pb.name()),
-                    out_validity);
-#endif  // SCQL_WITH_NULL
+  for (const auto& input_value : input_values) {
+    results.push_back(spu::kernel::hlo::Not(sctx, input_value));
   }
+
+  ctx->SetOutputValues(kOut, results);
+
+#ifdef SCQL_WITH_NULL
+  auto input_validities = ctx->GetInputValidities(kIn);
+  ctx->SetOutputValidities(kOut, input_validities);
+#endif  // SCQL_WITH_NULL
 }
 
 void LogicalBase::ValidateIoDataTypes(ExecContext* ctx) {

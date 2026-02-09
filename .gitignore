@@ -17,9 +17,7 @@ tool-bin/*
 # clangd cache
 /external
 /.cache/
-scdb.db
 .vscode/launch.json
-logs/scdbserver.log
 
 # Translations
 *.mo
@@ -36,3 +34,7 @@ logs/scdbserver.log
 
 # ignore bazelrc for remote cache
 .remote.bazelrc
+
+# python binding build
+python/build/
+python/package/

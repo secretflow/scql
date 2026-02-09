@@ -18,7 +18,7 @@
 # Example SCQL CA certificate generation script.
 # It is mainly modified from https://github.com/k3s-io/k3s/blob/master/contrib/util/generate-custom-ca-certs.sh
 #
-# This script will generate CA files certificate for SCQL to enable tls.
+# This script will generate CA files certificate for SCQL to enalbe tls.
 # The required files are default located under `./tls` directory.
 #
 # This script will also auto-generate certificates and keys for both root and intermediate
@@ -85,13 +85,12 @@ keyUsage = critical, digitalSignature, keyEncipherment, keyCertSign
 subjectAltName = @sans
 [sans]
 DNS.1 = localhost
-DNS.2 = scdb
-DNS.3 = engine_alice
-DNS.4 = engine_bob
-DNS.5 = engine_carol
-DNS.6 = broker_alice
-DNS.7 = broker_bob
-DNS.8 = broker_carol
+DNS.2 = engine_alice
+DNS.3 = engine_bob
+DNS.4 = engine_carol
+DNS.5 = broker_alice
+DNS.6 = broker_bob
+DNS.7 = broker_carol
 IP.1 = 127.0.0.1
 EOF
 
@@ -139,8 +138,8 @@ if [[ ! -e intermediate-ca.key ]]; then
   exit 1
 fi
 
-# Generate new leaf CAs for SCDB and all SCQLEngines
-for TYPE in scdb engine_alice engine_bob engine_carol broker_alice broker_bob broker_carol; do
+# Generate new leaf CAs for all SCQLEngines and brokers
+for TYPE in engine_alice engine_bob engine_carol broker_alice broker_bob broker_carol; do
   CERT_NAME="${PRODUCT}-$(echo ${TYPE} | tr / -)-ca"
   echo "Generating ${CERT_NAME} leaf certificate authority EC key and certificate"
   ${OPENSSL} ecparam -name prime256v1 -genkey -noout -out ${TYPE}-ca.key

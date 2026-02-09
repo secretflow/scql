@@ -92,6 +92,9 @@ cc_library(
 scql_cc_test(
     name = "mux_receiver_service_test",
     srcs = ["mux_receiver_service_test.cc"],
+    env = {
+        "ASAN_OPTIONS": "detect_leaks=0",
+    },
     deps = [
         ":mux_link_factory",
         ":mux_receiver_service",

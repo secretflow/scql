@@ -35,8 +35,8 @@ func truncateStr(str string, flen int) string {
 	return str
 }
 
-// IntegerUnsignedUpperBound indicates the max uint64 values of different mysql types.
-func IntegerUnsignedUpperBound(intType byte) uint64 {
+// IntergerUnsignedUpperBound indicates the max uint64 values of different mysql types.
+func IntergerUnsignedUpperBound(intType byte) uint64 {
 	switch intType {
 	case mysql.TypeTiny:
 		return math.MaxUint8
@@ -59,8 +59,8 @@ func IntegerUnsignedUpperBound(intType byte) uint64 {
 	}
 }
 
-// IntegerSignedUpperBound indicates the max int64 values of different mysql types.
-func IntegerSignedUpperBound(intType byte) int64 {
+// IntergerSignedUpperBound indicates the max int64 values of different mysql types.
+func IntergerSignedUpperBound(intType byte) int64 {
 	switch intType {
 	case mysql.TypeTiny:
 		return math.MaxInt8
@@ -77,8 +77,8 @@ func IntegerSignedUpperBound(intType byte) int64 {
 	}
 }
 
-// IntegerSignedLowerBound indicates the min int64 values of different mysql types.
-func IntegerSignedLowerBound(intType byte) int64 {
+// IntergerSignedLowerBound indicates the min int64 values of different mysql types.
+func IntergerSignedLowerBound(intType byte) int64 {
 	switch intType {
 	case mysql.TypeTiny:
 		return math.MinInt8

@@ -20,35 +20,12 @@ package scql.pb;
 option go_package = "proto-gen/scql";
 
 import "api/status.proto";
-import "api/ccl.proto";
 import "api/common.proto";
 import "api/core.proto";
 import "api/subgraph.proto";
 import "libspu/spu.proto";
 import "google/protobuf/timestamp.proto";
 
-service InterpreterService {
-  rpc CompileQuery(CompileQueryRequest) returns (CompileQueryResponse);
-}
-
-message CompileQueryRequest {
-  string query = 1;
-  string db_name = 2;
-  // query issuer
-  PartyId issuer = 3;
-  // If issuer_as_participant is true, the query issuer must
-  // participate in MPC process.
-  bool issuer_as_participant = 4;
-  SecurityConfig security_conf = 5;
-  Catalog catalog = 6;
-  CompileOptions compile_opts = 7;
-  google.protobuf.Timestamp created_at = 8;
-}
-
-message CompileQueryResponse {
-  Status status = 1;
-  CompiledPlan plan = 2;
-}
 
 message CompiledPlan {
   // schema of query result
@@ -138,4 +115,7 @@ message TableEntry {
   // the db type of ref_table, maybe 'MySQL/PostgreSQL/csvdb/...'
   string db_type = 6;
   PartyId owner = 7;
+  // The ref_table_uri is utilized to route the ref_table, like domain_data_id
+  // in kuscia
+  string ref_table_uri = 8;
 }

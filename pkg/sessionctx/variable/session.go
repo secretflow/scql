@@ -14,6 +14,7 @@
 package variable
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -107,22 +108,34 @@ type SessionVars struct {
 }
 
 // PreparedParams contains the parameters of the current prepared statement when executing it.
-type PreparedParams []types.Datum
+type PreparedParams map[string]*types.Datum
 
 func (pps PreparedParams) String() (string, error) {
 	if len(pps) == 0 {
 		return "", nil
 	}
-	if datum_str, err := types.DatumsToString(pps, true); err != nil {
-		return " [arguments: " + datum_str + "]", nil
-	} else {
-		return "", nil
+	res := "[arguments: "
+	for name, data := range pps {
+		datum_str, err := types.DatumsToString([]types.Datum{*data}, true)
+		if err != nil {
+			return "", err
+		}
+		res += fmt.Sprintf("%s=%s, ", name, datum_str)
 	}
+	return res + "]", nil
+}
+
+func (pps PreparedParams) GetPreparedParam(name string) (*types.Datum, bool) {
+	data, ok := pps[name]
+	if !ok {
+		return nil, false
+	}
+	return data, true
 }
 
 // NewSessionVars creates a session vars object.
 func NewSessionVars() *SessionVars {
-	vars := &SessionVars{}
+	vars := &SessionVars{PreparedParams: make(PreparedParams)}
 	return vars
 }
 

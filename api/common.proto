@@ -100,13 +100,38 @@ enum PsiAlgorithmType {
   RR22 = 3;
 }
 
+enum Rr22Mode {
+  UNDEFINED = 0;
+  LOW_MODE = 1;
+  FAST_MODE = 2;
+}
+
 message PsiConfig {
   int32 psi_curve_type = 1;
   PsiAlgorithmType psi_type = 2;
   // activated when psi_type is rr22
-  bool use_rr22_low_comm_mode = 3;
+  Rr22Mode rr22_mode = 3;
 }
 
 message LogConfig {
   bool enable_session_logger_separation = 1;
+}
+
+message Placeholder {
+  // placeholder name
+  string name = 1;
+  // placeholder name, e.g. string, int64, float
+  string data_type = 2;
+}
+
+message Placeholders {
+  repeated Placeholder placeholders = 1;
+}
+
+message Variable {
+  string name = 1;
+  string string_data = 2;
+  int64 int64_data = 3;
+  float float_data = 4;
+  bool bool_data = 5;
 }

@@ -17,6 +17,7 @@
 #include <cstdio>
 #include <filesystem>
 
+#include "absl/strings/match.h"
 #include "butil/file_util.h"
 #include "gflags/gflags.h"
 #include "gtest/gtest.h"
@@ -28,6 +29,7 @@ namespace scql::engine::op {
 
 DECLARE_bool(enable_restricted_write_path);
 DECLARE_string(restricted_write_path);
+DECLARE_string(output_dataproxy_json);
 
 struct DumpFileTestCase {
   std::vector<test::NamedTensor> inputs;
@@ -136,6 +138,31 @@ NULL,NULL,NULL
 946656000,2000-01-01 00:00:00,1999-12-31 16:00:00
 NULL,NULL,NULL
 1722244717,2024-07-29 17:18:37,2024-07-29 09:18:37
+)csv"},
+        DumpFileTestCase{
+            .inputs =
+                {test::NamedTensor(
+                     "x1",
+                     TensorFrom(arrow::float64(),
+                                "[-3.1415, 0.1, 99.999, 1000, null]")),
+                 test::NamedTensor("x2",
+                                   TensorFrom(arrow::boolean(),
+                                              "[true,false,false,true, null]")),
+                 test::NamedTensor(
+                     "x3",
+                     TensorFrom(arrow::large_utf8(),
+                                R"json(["test str","","A","B", null])json"))},
+            .input_types = {pb::PrimitiveDataType::FLOAT64,
+                            pb::PrimitiveDataType::BOOL,
+                            pb::PrimitiveDataType::STRING},
+            .output_names = {"x1_dump", "x2_dump", "x3_dump"},
+            .output_file_path = "dataproxy://dumpfile_test",
+            .output_file_content = R"csv("x1_dump","x2_dump","x3_dump"
+-3.1415,true,"test str"
+0.1,false,""
+99.999,false,"A"
+1000,true,"B"
+NULL,NULL,NULL
 )csv"}));
 
 TEST_P(DumpFileTest, works) {
@@ -150,6 +177,12 @@ TEST_P(DumpFileTest, works) {
 
   // When
   DumpFile op;
+  if (absl::StartsWithIgnoreCase(tc.output_file_path, "dataproxy://")) {
+    FLAGS_output_dataproxy_json =
+        R"json({"dp_uri":"grpc+tcp://localhost:8989","datasource":{"type":"odps","info":{"odps":{"endpoint":"xxx","project":"xxx","accessKeyId":"xxx","accessKeySecret":"xxx"}}}})json";
+    ASSERT_THROW(op.Run(&ctx), yacl::RuntimeError);
+    return;
+  }
   ASSERT_NO_THROW(op.Run(&ctx));
 
   // Then

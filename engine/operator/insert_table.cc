@@ -33,11 +33,11 @@ namespace {
 
 constexpr int64_t kBatchSize = 1000;
 
-class ValueVisitor {
+class ValueVistor {
  public:
-  ValueVisitor() = delete;
+  ValueVistor() = delete;
 
-  explicit ValueVisitor(std::vector<std::string>* result_vector, bool is_time)
+  explicit ValueVistor(std::vector<std::string>* result_vector, bool is_time)
       : result_vector_(result_vector), is_time_(is_time) {
     YACL_ENFORCE(result_vector_, "result_vector_ can not be null");
     result_vector_->clear();
@@ -46,7 +46,7 @@ class ValueVisitor {
   template <typename T>
   arrow::Status Visit(const T& array) {
     return arrow::Status::NotImplemented(fmt::format(
-        "type {} is not implemented in ValueVisitor", array.type()->name()));
+        "type {} is not implemented in ValueVistor", array.type()->name()));
   }
 
   template <typename TYPE>
@@ -98,7 +98,7 @@ class ValueVisitor {
 
  private:
   std::string static QuotingString(std::string_view str) {
-    // FIXME(jingshi): the string may contain "'", which should be escaped
+    // FIXME(jingshi): the string may cantain "'", which should be escaped
     return absl::StrCat("'", str, "'");
   }
 
@@ -159,12 +159,6 @@ void InsertTable::Execute(ExecContext* ctx) {
                       from_tensor->Length(), num_rows);
     }
 
-    if (input_pb.elem_type() == pb::PrimitiveDataType::TIMESTAMP &&
-        !ctx->GetSession()->TimeZone().empty()) {
-      from_tensor =
-          util::CompensateTimeZone(from_tensor, ctx->GetSession()->TimeZone());
-    }
-
     tensors.push_back(from_tensor);
     input_types.push_back(input_pbs[i].elem_type());
   }
@@ -194,10 +188,10 @@ void InsertTable::InsertInTransaction(
             tensors[i]->ToArrowChunkedArray()->Slice(offset, kBatchSize);
         auto array = util::ConcatenateChunkedArray(cur_chunk);
         std::vector<std::string> column;
-        ValueVisitor visitor(
+        ValueVistor vistor(
             &column, input_types[i] == pb::PrimitiveDataType::DATETIME ||
                          input_types[i] == pb::PrimitiveDataType::TIMESTAMP);
-        THROW_IF_ARROW_NOT_OK(arrow::VisitArrayInline(*array, &visitor));
+        THROW_IF_ARROW_NOT_OK(arrow::VisitArrayInline(*array, &vistor));
         columns.push_back(std::move(column));
       }
 

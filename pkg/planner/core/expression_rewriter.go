@@ -330,9 +330,10 @@ func (er *expressionRewriter) Enter(inNode ast.Node) (ast.Node, bool) {
 		return er.handleScalarSubquery(er.ctx, v)
 	case *ast.CompareSubqueryExpr:
 		return er.handleCompareSubquery(er.ctx, v)
-	case *ast.ParenthesesExpr:
-	case *ast.ExistsSubqueryExpr,
-		*ast.ValuesExpr:
+	case *ast.ParenthesesExpr: // do nothing
+	case *ast.ExistsSubqueryExpr:
+		return er.handleExistSubquery(er.ctx, v)
+	case *ast.ValuesExpr:
 		er.err = fmt.Errorf("unsupported expression type %T", v)
 	default:
 		er.asScalar = true
@@ -397,6 +398,54 @@ func (er *expressionRewriter) handleScalarSubquery(ctx context.Context, v *ast.S
 	// 	}, types.EmptyName)
 	// }
 	// return v, true
+}
+
+func (er *expressionRewriter) handleExistSubquery(ctx context.Context, v *ast.ExistsSubqueryExpr) (ast.Node, bool) {
+	subq, ok := v.Sel.(*ast.SubqueryExpr)
+	if !ok {
+		er.err = errors.Errorf("Unknown exists type %T.", v.Sel)
+		return v, true
+	}
+	np, err := er.buildSubquery(ctx, subq)
+	if err != nil {
+		er.err = err
+		return v, true
+	}
+	np = er.popExistsSubPlan(np)
+	if len(np.extractCorrelatedCols()) > 0 {
+		er.p, er.err = er.b.buildSemiApply(er.p, np, nil, er.asScalar, v.Not)
+		if er.err != nil || !er.asScalar {
+			return v, true
+		}
+		er.ctxStackAppend(er.p.Schema().Columns[er.p.Schema().Len()-1], er.p.OutputNames()[er.p.Schema().Len()-1])
+	} else {
+		// NOTE: different from TiDB, temporarily return not supported error
+		er.err = errors.New("not supported exists subquery without correlated columns")
+	}
+	return v, true
+}
+
+// popExistsSubPlan will remove the useless plan in exist's child.
+// See comments inside the method for more details.
+func (er *expressionRewriter) popExistsSubPlan(p LogicalPlan) LogicalPlan {
+out:
+	for {
+		switch plan := p.(type) {
+		// This can be removed when in exists clause,
+		// e.g. exists(select count(*) from t order by a) is equal to exists t.
+		case *LogicalProjection, *LogicalSort:
+			p = p.Children()[0]
+		case *LogicalAggregation:
+			if len(plan.GroupByItems) == 0 {
+				p = LogicalTableDual{RowCount: 1}.Init(er.sctx, er.b.getSelectOffset())
+				break out
+			}
+			p = p.Children()[0]
+		default:
+			break out
+		}
+	}
+	return p
 }
 
 func (er *expressionRewriter) handleInSubquery(ctx context.Context, v *ast.PatternInExpr) (ast.Node, bool) {
@@ -469,6 +518,15 @@ func (er *expressionRewriter) handleInSubquery(ctx context.Context, v *ast.Patte
 	return v, true
 }
 
+func (er *expressionRewriter) toParamMarker(sctx sessionctx.Context, v *driver.ParamMarkerExpr) {
+	var value *expression.Constant
+	value, er.err = expression.ParamMarkerExpression(sctx, v)
+	if er.err != nil {
+		return
+	}
+	er.ctxStackAppend(value, types.EmptyName)
+}
+
 // Leave implements Visitor interface.
 func (er *expressionRewriter) Leave(originInNode ast.Node) (retNode ast.Node, ok bool) {
 	if er.err != nil {
@@ -476,7 +534,7 @@ func (er *expressionRewriter) Leave(originInNode ast.Node) (retNode ast.Node, ok
 	}
 	var inNode = originInNode
 	switch v := inNode.(type) {
-	case *ast.AggregateFuncExpr, *ast.ColumnNameExpr, *ast.ParenthesesExpr, *ast.SubqueryExpr, *ast.WhenClause, *ast.WindowFuncExpr, *ast.CompareSubqueryExpr: // do nothing
+	case *ast.AggregateFuncExpr, *ast.ColumnNameExpr, *ast.ParenthesesExpr, *ast.SubqueryExpr, *ast.WhenClause, *ast.WindowFuncExpr, *ast.CompareSubqueryExpr, *ast.ExistsSubqueryExpr: // do nothing
 	case *driver.ValueExpr:
 		value := &expression.Constant{Value: v.Datum, RetType: &v.Type}
 		er.ctxStackAppend(value, types.EmptyName)
@@ -529,6 +587,8 @@ func (er *expressionRewriter) Leave(originInNode ast.Node) (retNode ast.Node, ok
 			Value:   types.NewStringDatum(v.Unit.String()),
 			RetType: types.NewFieldType(mysql.TypeVarchar),
 		}, types.EmptyName)
+	case *driver.ParamMarkerExpr:
+		er.toParamMarker(er.sctx, v)
 	default:
 		er.err = errors.Errorf("UnknownType: %T", v)
 		return retNode, false
@@ -1029,7 +1089,7 @@ func (er *expressionRewriter) handleCompareSubquery(ctx context.Context, v *ast.
 			if v.All {
 				er.handleEQAll(lexpr, rexpr, np)
 			} else {
-				// `a = any(subq)` will be rewritten as `a in (subq)`.
+				// `a = any(subq)` will be rewriten as `a in (subq)`.
 				er.buildSemiApplyFromEqualSubq(np, lexpr, rexpr, false)
 				if er.err != nil {
 					return v, true
@@ -1037,7 +1097,7 @@ func (er *expressionRewriter) handleCompareSubquery(ctx context.Context, v *ast.
 			}
 		} else if v.Op == opcode.NE {
 			if v.All {
-				// `a != all(subq)` will be rewritten as `a not in (subq)`.
+				// `a != all(subq)` will be rewriten as `a not in (subq)`.
 				er.buildSemiApplyFromEqualSubq(np, lexpr, rexpr, true)
 				if er.err != nil {
 					return v, true

@@ -16,9 +16,12 @@ package sliceutil
 
 import (
 	"cmp"
+	"fmt"
 	"iter"
 	"maps"
 	"slices"
+	"sort"
+	"strings"
 )
 
 // SliceDeDup removes duplicate elements from a slice.
@@ -128,6 +131,73 @@ func ValueSortedByMapKey[k cmp.Ordered, v any](m map[k]v) iter.Seq[v] {
 			}
 		}
 	}
+}
+
+func CollectMapValues[K comparable, V any](m map[K]V) []V {
+	values := make([]V, 0, len(m))
+	for _, value := range m {
+		values = append(values, value)
+	}
+	return values
+}
+
+func Intersection[S ~[]E, E comparable](a S, b S) S {
+	var result []E
+	for _, element := range a {
+		if slices.Contains(b, element) {
+			result = append(result, element)
+		}
+	}
+	return result
+}
+
+func MergeSlices[T any](slices ...[]T) []T {
+	var merged []T
+	for _, slice := range slices {
+		merged = append(merged, slice...)
+	}
+	return merged
+}
+
+func MergeMaps[K comparable, V any](map1, map2 map[K]V) map[K]V {
+	result := make(map[K]V)
+	for k, v := range map1 {
+		result[k] = v
+	}
+	for k, v := range map2 {
+		result[k] = v
+	}
+	return result
+}
+
+func JoinStringers[T fmt.Stringer](elements []T, sep string) string {
+	stringValues := make([]string, len(elements))
+	for i, elem := range elements {
+		stringValues[i] = elem.String()
+	}
+	return strings.Join(stringValues, sep)
+}
+
+func TakeByIndices[T any](slice []T, indices []int) ([]T, error) {
+	var result []T
+	for _, index := range indices {
+		if index < 0 || index >= len(slice) {
+			return nil, fmt.Errorf("index %d is out of range", index)
+		}
+		result = append(result, slice[index])
+	}
+	return result, nil
+}
+
+func ArgSort[T any](slice []T, less func(a, b T) bool) []int {
+	indexes := make([]int, len(slice))
+	for i := range indexes {
+		indexes[i] = i
+	}
+	sort.Slice(indexes, func(i, j int) bool {
+		return less(slice[indexes[i]], slice[indexes[j]])
+	})
+	return indexes
 }
 
 func UnOrderedSliceEqual[S ~[]E, E cmp.Ordered](s1, s2 S) bool {

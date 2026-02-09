@@ -21,8 +21,6 @@ import (
 
 	"github.com/secretflow/scql/pkg/infoschema"
 	"github.com/secretflow/scql/pkg/parser/ast"
-	"github.com/secretflow/scql/pkg/parser/auth"
-	"github.com/secretflow/scql/pkg/privilege"
 	"github.com/secretflow/scql/pkg/sessionctx"
 	"github.com/secretflow/scql/pkg/types"
 )
@@ -39,16 +37,19 @@ const (
 	flagPrunColumnsDouble // eliminate unused columns added by predicate push down
 	flagEliminateOuterJoin
 	flagPartitionProcessor
+	flagApplyGroupbyThreshold
+	flagMergeSelection
 	flagPushDownAgg
 	flagPushDownTopN
 	flagDoubleCheckEliminateProjection
 	flagPatchTimeZone
 )
 
+// Warning: rules in this list should be consistent with the order of flags
 var optRuleList = []logicalOptRule{
 	&columnPruner{},
 	&optPlaceHolder{},
-	&optPlaceHolder{},
+	&decorrelateSolver{},
 	&optPlaceHolder{},
 	&projectionEliminator{},
 	&optPlaceHolder{},
@@ -57,6 +58,8 @@ var optRuleList = []logicalOptRule{
 	&columnPruner{},
 	&optPlaceHolder{},
 	&optPlaceHolder{},
+	&groupbyThresholdApplier{},
+	&selectionMerger{},
 	&aggregationPushDownSolver{},
 	&optPlaceHolder{},
 	&projectionEliminator{},
@@ -88,6 +91,7 @@ func (optPlaceHolder) optimize(_ context.Context, lp LogicalPlan) (LogicalPlan, 
 
 func (optPlaceHolder) name() string { return "opt_place_holder" }
 
+// TODO: move BuildLogicalPlan out of this file.
 // BuildLogicalPlan used to build logical plan from ast.Node.
 func BuildLogicalPlan(ctx context.Context, sctx sessionctx.Context, node ast.Node, is infoschema.InfoSchema) (Plan, types.NameSlice, error) {
 	sctx.GetSessionVars().PlanID = 0
@@ -96,17 +100,6 @@ func BuildLogicalPlan(ctx context.Context, sctx sessionctx.Context, node ast.Nod
 	p, err := builder.Build(ctx, node)
 	if err != nil {
 		return nil, nil, err
-	}
-
-	// QUESTION(shunde.csd): should we check privileges here
-	activeRoles := sctx.GetSessionVars().ActiveRoles
-	// Check privilege. Maybe it's better to move this to the Preprocess, but
-	// we need the table information to check privilege, which is collected
-	// into the visitInfo in the logical plan builder.
-	if pm := privilege.GetPrivilegeManager(sctx); pm != nil {
-		if err := CheckPrivilege(activeRoles, pm, builder.GetVisitInfo()); err != nil {
-			return nil, nil, err
-		}
 	}
 
 	return p, p.OutputNames(), err
@@ -122,12 +115,36 @@ func BuildLogicalPlanWithOptimization(ctx context.Context, sctx sessionctx.Conte
 		return nil, nil, err
 	}
 
-	lp, err := logicalOptimize(ctx, builder.optFlag|flagDoubleCheckEliminateProjection|flagPrunColumnsDouble|flagPatchTimeZone, p.(LogicalPlan))
+	lp, err := logicalOptimize(ctx, builder.optFlag|flagDoubleCheckEliminateProjection|flagPrunColumnsDouble|flagApplyGroupbyThreshold|flagMergeSelection|flagPatchTimeZone|flagDecorrelate, p.(LogicalPlan))
 	if err != nil {
 		return nil, nil, err
 	}
 
 	return lp, lp.OutputNames(), err
+}
+
+func BuildLogicalPlanWithBasicRules(ctx context.Context, sctx sessionctx.Context, node ast.Node, is infoschema.InfoSchema) (LogicalPlan, types.NameSlice, error) {
+	sctx.GetSessionVars().PlanID = 0
+	sctx.GetSessionVars().PlanColumnID = 0
+	builder := NewPlanBuilder(sctx, is)
+	p, err := builder.Build(ctx, node)
+	if err != nil {
+		return nil, nil, err
+	}
+	logic := p.(LogicalPlan)
+	rules := []logicalOptRule{
+		&columnPruner{},
+		&decorrelateSolver{},
+		&ppdSolver{},
+	}
+	for _, rule := range rules {
+		logic, err = rule.optimize(ctx, logic)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	return logic, logic.OutputNames(), err
 }
 
 func logicalOptimize(ctx context.Context, flag uint64, logic LogicalPlan) (LogicalPlan, error) {
@@ -157,23 +174,6 @@ func logicalOptimize(ctx context.Context, flag uint64, logic LogicalPlan) (Logic
 func isLogicalRuleDisabled(_ logicalOptRule) bool {
 	// TODO(yang.y): make this configurable
 	return false
-}
-
-// CheckPrivilege checks the privilege for a user.
-func CheckPrivilege(activeRoles []*auth.RoleIdentity, pm privilege.Manager, vs []visitInfo) error {
-	for _, v := range vs {
-		ok, err := pm.RequestVerification(activeRoles, v.db, v.table, v.column, v.privilege)
-		if err != nil {
-			return fmt.Errorf("checkPrivilege: %v", err)
-		}
-		if !ok {
-			if v.err == nil {
-				return ErrPrivilegeCheckFail
-			}
-			return v.err
-		}
-	}
-	return nil
 }
 
 type maxOneRowCheck struct{}

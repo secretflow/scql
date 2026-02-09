@@ -18,7 +18,9 @@
 #include <thread>
 #include <utility>
 
+#include "engine/exe/flags.h"
 #include "engine/framework/session.h"
+#include "engine/util/trace_categories.h"
 
 #ifndef DISABLE_TCMALLOC
 #include "gperftools/malloc_extension.h"
@@ -69,7 +71,7 @@ scql::engine::SessionOptions SessionManager::GenerateUpdatedSessionOptions(
     const pb::JobStartParams& job_params) {
   struct SessionOptions session_opt = session_opt_;
   // to make the config unit consistent, here to use second instead of
-  // milliseconds
+  // miliseconds
   if (job_params.link_cfg().link_recv_timeout_sec() > 0) {
     session_opt.link_config.link_recv_timeout_ms =
         job_params.link_cfg().link_recv_timeout_sec() * 1000;
@@ -92,13 +94,21 @@ scql::engine::SessionOptions SessionManager::GenerateUpdatedSessionOptions(
 
   if (job_params.psi_cfg().psi_curve_type() > 0) {
     session_opt.psi_config.psi_curve_type =
-        job_params.psi_cfg().psi_curve_type();
+        static_cast<psi::CurveType>(job_params.psi_cfg().psi_curve_type());
   } else {
-    session_opt.psi_config.psi_curve_type = FLAGS_psi_curve_type;
+    session_opt.psi_config.psi_curve_type =
+        static_cast<psi::CurveType>(FLAGS_psi_curve_type);
   }
 
   session_opt.log_config.enable_session_logger_separation =
       job_params.log_cfg().enable_session_logger_separation();
+
+  if (job_params.psi_cfg().rr22_mode() > 0) {
+    session_opt.psi_config.rr22_mode = job_params.psi_cfg().rr22_mode();
+  } else {
+    session_opt.psi_config.rr22_mode =
+        static_cast<pb::Rr22Mode>(FLAGS_rr22_mode);
+  }
 
   return session_opt;
 }
@@ -106,6 +116,9 @@ scql::engine::SessionOptions SessionManager::GenerateUpdatedSessionOptions(
 void SessionManager::CreateSession(const pb::JobStartParams& params,
                                    const pb::DebugOptions& debug_opts) {
   const std::string& job_id = params.job_id();
+  TRACE_EVENT_DEFAULT_TRACK(
+      OTHER_CATEGORY,
+      ::perfetto::DynamicString(fmt::format("CreateSession: {}", job_id)));
   YACL_ENFORCE(!job_id.empty(), "job_id is empty.");
 
   auto session_opt = GenerateUpdatedSessionOptions(params);
@@ -150,6 +163,9 @@ Session* SessionManager::GetSession(const std::string& session_id) {
 }
 
 void SessionManager::StopSession(const std::string& session_id) {
+  TRACE_EVENT_DEFAULT_TRACK(
+      OTHER_CATEGORY,
+      ::perfetto::DynamicString(fmt::format("StopSession: {}", session_id)));
   if (session_id.empty()) {
     SPDLOG_WARN("session_id is empty.");
     return;
@@ -176,6 +192,9 @@ void SessionManager::StopSession(const std::string& session_id) {
 }
 
 void SessionManager::RemoveSession(const std::string& session_id) {
+  TRACE_EVENT_DEFAULT_TRACK(
+      OTHER_CATEGORY,
+      ::perfetto::DynamicString(fmt::format("RemoveSession: {}", session_id)));
   if (session_id.empty()) {
     SPDLOG_WARN("session_id is empty.");
     return;

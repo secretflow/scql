@@ -108,6 +108,7 @@ cc_library(
     deps = [
         ":session",
         "//engine/link:listener",
+        "//engine/util:trace_categories",
     ] + select({
         "unset_tcmalloc": [],
         "//conditions:default": ["@com_github_gperftools_gperftools//:gperftools"],

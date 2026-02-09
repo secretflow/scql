@@ -20,6 +20,9 @@ package scql.pb;
 option go_package = "proto-gen/scql";
 option java_package = "org.secretflow.scql";
 
+import "api/status.proto";
+import "api/common.proto";
+
 // Defines a tensor shape. A dimension can be either an integer value
 // or a symbolic variable. A symbolic variable represents an unknown
 // dimension.
@@ -27,7 +30,7 @@ message TensorShape {
   message Dimension {
     oneof value {
       int64 dim_value = 1;
-      string dim_param = 2;  // shape is unknown.
+      string dim_param = 2; // shape is unknown.
     };
   };
   repeated Dimension dim = 1;
@@ -37,19 +40,20 @@ enum PrimitiveDataType {
   PrimitiveDataType_UNDEFINED = 0;
 
   // Numeric types
-  INT8 = 1;     // the 8-bit signed integer type
-  INT16 = 2;    // the 16-bit signed integer type
-  INT32 = 3;    // the 32-bit signed integer type
-  INT64 = 4;    // the 64-bit signed integer type
-  FLOAT32 = 5;  // the 32-bit binary floating point type
-  FLOAT64 = 6;  // the 64-bit binary floating point type
+  INT8 = 1; // the 8-bit signed integer type
+  INT16 = 2; // the 16-bit signed integer type
+  INT32 = 3; // the 32-bit signed integer type
+  INT64 = 4; // the 64-bit signed integer type
+  FLOAT32 = 5; // the 32-bit binary floating point type
+  FLOAT64 = 6; // the 64-bit binary floating point type
 
   // Other types
   BOOL = 7;
   STRING = 8;
   // DATETIME and TIMESTAMP
-  DATETIME = 9;    // https://dev.mysql.com/doc/refman/8.0/en/datetime.html
-  TIMESTAMP = 10;  // seconds since '1970-01-01 00:00:00' UTC
+  DATETIME = 9; // https://dev.mysql.com/doc/refman/8.0/en/datetime.html
+  TIMESTAMP = 10; // seconds since '1970-01-01 00:00:00' UTC
+  DECIMAL = 11;
 }
 
 // Tensor options.
@@ -94,7 +98,9 @@ message Tensor {
 
   // Tensor element type.
   PrimitiveDataType elem_type = 3;
-
+  // used by decimal type
+  int32 scale = 14;
+  int32 width = 15;
   // Tensor options.
   TensorOptions option = 4;
 
@@ -114,7 +120,7 @@ message Tensor {
   repeated double double_data = 9 [packed = true];
   // For bool data type
   repeated bool bool_data = 10 [packed = true];
-  // For string and datetime data types
+  // For string and datetime and decimal data types
   repeated string string_data = 11;
   // validity mask for data(int32_data/int64_data/...), size can be zero(all
   // data valid) or the same as data, where item false means NULL, true means
@@ -237,5 +243,20 @@ message OperatorDef {
 
 // TODO: move PartyId to a proper place.
 message PartyId {
-  string code = 1;  // party code
+  string code = 1; // party code
+}
+
+
+// QueryResult represents the result of an executed SQL query.
+message QueryResult {
+  int64 affected_rows = 1;
+  repeated SQLWarning warnings = 2;
+  double cost_time_s = 3;
+  // Output columns are used to store the result datas
+  repeated Tensor out_columns = 1000;
+}
+// QueryResponse represents the response for a query execution.
+message QueryResponse {
+  Status status = 1;
+  QueryResult result = 2;
 }

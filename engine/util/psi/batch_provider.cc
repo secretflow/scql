@@ -47,8 +47,8 @@ BatchProvider::BatchProvider(std::vector<TensorPtr> tensors, size_t batch_size)
       YACL_THROW("inputs must have the same size");
     }
 
-    stringify_visitors_.push_back(
-        std::make_unique<StringifyVisitor>(tensors_[i], batch_size_));
+    stringifiers_.push_back(
+        std::make_unique<Stringifier>(tensors_[i], batch_size_));
   }
 }
 
@@ -57,13 +57,13 @@ std::vector<std::string> BatchProvider::ReadNextBatch() {
     return std::vector<std::string>{};
   }
 
-  auto keys = stringify_visitors_[0]->StringifyBatch();
+  auto keys = stringifiers_[0]->StringifyBatch();
   if (keys.empty()) {
     return keys;
   }
 
   for (size_t i = 1; i < tensors_.size(); ++i) {
-    auto another_keys = stringify_visitors_[i]->StringifyBatch();
+    auto another_keys = stringifiers_[i]->StringifyBatch();
     YACL_ENFORCE(keys.size() == another_keys.size(),
                  "tensor #{} batch size not equals with previous", i);
 

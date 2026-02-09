@@ -385,8 +385,8 @@ func (c *addDateFunctionClass) getFunction(ctx sessionctx.Context, args []Expres
 	}
 
 	switch {
-	case (dateEvalTp == types.ETDatetime || dateEvalTp == types.ETTimestamp) && intervalEvalTp == types.ETInt:
-		// when expression rewrite to sql, do not need support different type args for adddate as tidb,
+	case (dateEvalTp == types.ETDatetime || dateEvalTp == types.ETTimestamp || dateEvalTp == types.ETString) && intervalEvalTp == types.ETInt:
+		// when expression rewrite to sql, do not need support diffrent type args for adddate as tidb,
 		// so here just support args type like: adddate(col_name, INTERVAL 30 day)
 		sig = &builtinAddDateDatetimeIntSig{
 			baseBuiltinFunc:      bf,
@@ -476,7 +476,7 @@ func (c *subDateFunctionClass) getFunction(ctx sessionctx.Context, args []Expres
 	}
 
 	switch {
-	case (dateEvalTp == types.ETDatetime || dateEvalTp == types.ETTimestamp) && intervalEvalTp == types.ETInt:
+	case (dateEvalTp == types.ETDatetime || dateEvalTp == types.ETTimestamp || dateEvalTp == types.ETString) && intervalEvalTp == types.ETInt:
 		sig = &builtinSubDateDatetimeIntSig{
 			baseBuiltinFunc:      bf,
 			baseDateArithmitical: newDateArighmeticalUtil(),

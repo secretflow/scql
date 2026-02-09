@@ -1,4 +1,0 @@
-services:
-${ENGINE}
-${SCDB}
-${DATASOURCE}

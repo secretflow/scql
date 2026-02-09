@@ -340,6 +340,7 @@ var funcs = map[string]functionClass{
 	ast.UnaryNot:   &unaryNotFunctionClass{baseFunctionClass{ast.UnaryNot, 1, 1}},
 	ast.UnaryMinus: &unaryMinusFunctionClass{baseFunctionClass{ast.UnaryMinus, 1, 1}},
 	ast.Case:       &caseWhenFunctionClass{baseFunctionClass{ast.Case, 1, -1}},
+	ast.RowFunc:    &rowFunctionClass{baseFunctionClass{ast.RowFunc, 2, -1}},
 	ast.Like:       &likeFunctionClass{baseFunctionClass{ast.Like, 3, 3}},
 	ast.Regexp:     &regexpFunctionClass{baseFunctionClass{ast.Regexp, 2, 2}},
 	ast.Plus:       &arithmeticPlusFunctionClass{baseFunctionClass{ast.Plus, 2, 2}},

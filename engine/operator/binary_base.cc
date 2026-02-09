@@ -69,46 +69,30 @@ void BinaryBase::Validate(ExecContext* ctx) {
 }
 
 void BinaryBase::Execute(ExecContext* ctx) {
-  const auto out_status = util::GetTensorStatus(ctx->GetOutput(kOut)[0]);
-
-  if (out_status == pb::TENSORSTATUS_PRIVATE) {
-    return ExecuteInPlain(ctx);
+  if (ctx->GetOutputStatus(kOut) == pb::TENSORSTATUS_PRIVATE) {
+    ExecuteInPlain(ctx);
   } else {
-    return ExecuteInSecret(ctx);
+    ExecuteInSecret(ctx);
   }
 }
 
 void BinaryBase::ExecuteInSecret(ExecContext* ctx) {
-  const auto& left_pbs = ctx->GetInput(kInLeft);
-  const auto& right_pbs = ctx->GetInput(kInRight);
-  const auto& out_pbs = ctx->GetOutput(kOut);
-
-  auto device_symbols = ctx->GetSession()->GetDeviceSymbols();
-  auto sctx = ctx->GetSession()->GetSpuContext();
+  const auto& left_inputs = ctx->GetInputValues(kInLeft);
+  const auto& right_inputs = ctx->GetInputValues(kInRight);
 
   // TODO(shunde.csd): possible optimization
   // maybe we should concatenate values together to reduce communication
   // round-trip
-  for (int i = 0; i < left_pbs.size(); ++i) {
-    const auto& left_param = left_pbs[i];
-    const auto& right_param = right_pbs[i];
-    const auto& out_param = out_pbs[i];
-
-    auto left_value = device_symbols->getVar(
-        util::SpuVarNameEncoder::GetValueName(left_param.name()));
-    auto right_value = device_symbols->getVar(
-        util::SpuVarNameEncoder::GetValueName(right_param.name()));
-    auto result_value = ComputeOnSpu(sctx, left_value, right_value);
-    device_symbols->setVar(
-        util::SpuVarNameEncoder::GetValueName(out_param.name()), result_value);
+  for (int i = 0; i < left_inputs.size(); ++i) {
+    auto result_value = ComputeOnSpu(ctx->GetSession()->GetSpuContext(),
+                                     left_inputs[i], right_inputs[i]);
+    ctx->SetOutputValue(kOut, result_value, i);
 
 #ifdef SCQL_WITH_NULL
-    auto left_validity = device_symbols->getVar(
-        SpuVarNameEncoder::GetValidityName(left_param.name()));
-    auto right_validity = device_symbols->getVar(
-        SpuVarNameEncoder::GetValidityName(right_param.name()));
+    auto left_validity = ctx->GetInputValidity(kInLeft, i);
+    auto right_validity = ctx->GetInputValidity(kInRight, i);
     auto result_validity = PropagateNulls(left_validity, right_validity);
-    device_symbols->setVar(SpuVarNameEncoder::GetValidityName(out_param.name(), result_validity);
+    ctx->SetOutputValidity(kOut, result_validity, i);
 #endif  // SCQL_WITH_NULL
   }
 }
@@ -123,13 +107,13 @@ void BinaryBase::ExecuteInPlain(ExecContext* ctx) {
     const auto& right_param = right_pbs[i];
     const auto& out_param = out_pbs[i];
 
-    TensorPtr left = util::GetPrivateOrPublicTensor(ctx, left_param);
-    TensorPtr right = util::GetPrivateOrPublicTensor(ctx, right_param);
+    TensorPtr left = ctx->GetPrivateOrPublicTensor(left_param);
+    TensorPtr right = ctx->GetPrivateOrPublicTensor(right_param);
     YACL_ENFORCE(left != nullptr);
     YACL_ENFORCE(right != nullptr);
 
     auto result = ComputeInPlain(*left, *right);
-    ctx->GetTensorTable()->AddTensor(out_param.name(), std::move(result));
+    ctx->SetOutputTensor(kOut, std::move(result), i);
   }
 }
 

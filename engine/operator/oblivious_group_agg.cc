@@ -45,33 +45,26 @@ void ObliviousGroupAggBase::Validate(ExecContext* ctx) {
 }
 
 void ObliviousGroupAggBase::Execute(ExecContext* ctx) {
-  const auto& input_pbs = ctx->GetInput(kIn);
-  const auto& output_pbs = ctx->GetOutput(kOut);
-
   InitAttribute(ctx);
 
-  auto* symbols = ctx->GetSession()->GetDeviceSymbols();
   auto* sctx = ctx->GetSession()->GetSpuContext();
+  auto group_value = TransferGroupMask(sctx, ctx->GetInputValue(kGroup));
 
-  const auto& group = ctx->GetInput(kGroup)[0];
-  auto group_value = TransferGroupMask(
-      sctx,
-      symbols->getVar(util::SpuVarNameEncoder::GetValueName(group.name())));
+  auto values = ctx->GetInputValues(kIn);
+  std::vector<spu::Value> results;
+  results.reserve(values.size());
 
-  for (int i = 0; i < input_pbs.size(); ++i) {
-    auto value = symbols->getVar(
-        util::SpuVarNameEncoder::GetValueName(input_pbs[i].name()));
-
+  for (const auto& value : values) {
     spu::Value result;
     if (RowCount(value) == 0) {
       result = HandleEmptyInput(value);
     } else {
       result = CalculateResult(sctx, value, group_value);
     }
-
-    symbols->setVar(util::SpuVarNameEncoder::GetValueName(output_pbs[i].name()),
-                    result);
+    results.push_back(std::move(result));
   }
+
+  ctx->SetOutputValues(kOut, results);
 }
 
 // ===========================

@@ -17,15 +17,18 @@ import (
 	"github.com/secretflow/scql/pkg/parser/mysql"
 	"github.com/secretflow/scql/pkg/sessionctx"
 	"github.com/secretflow/scql/pkg/types"
+	"github.com/secretflow/scql/pkg/util/chunk"
 )
 
 var (
 	_ functionClass = &inFunctionClass{}
+	_ functionClass = &rowFunctionClass{}
 )
 
 var (
 	_ builtinFunc = &builtinInIntSig{}
 	_ builtinFunc = &builtinInStringSig{}
+	_ builtinFunc = &builtinRowSig{}
 )
 
 type inFunctionClass struct {
@@ -101,4 +104,36 @@ func (c *builtinGeoDistFunctionClass) getFunction(ctx sessionctx.Context, args [
 
 	sig := &builtinGeoDist{bf}
 	return sig, nil
+}
+
+type rowFunctionClass struct {
+	baseFunctionClass
+}
+
+func (c *rowFunctionClass) getFunction(ctx sessionctx.Context, args []Expression) (sig builtinFunc, err error) {
+	if err = c.verifyArgs(args); err != nil {
+		return nil, err
+	}
+	argTps := make([]types.EvalType, len(args))
+	for i := range argTps {
+		argTps[i] = args[i].GetType().EvalType()
+	}
+	bf := newBaseBuiltinFuncWithTp(ctx, args, types.ETString, argTps...)
+	sig = &builtinRowSig{bf}
+	return sig, nil
+}
+
+type builtinRowSig struct {
+	baseBuiltinFunc
+}
+
+func (b *builtinRowSig) Clone() builtinFunc {
+	newSig := &builtinRowSig{}
+	newSig.cloneFrom(&b.baseBuiltinFunc)
+	return newSig
+}
+
+// evalString rowFunc should always be flattened in expression rewrite phrase.
+func (b *builtinRowSig) evalString(row chunk.Row) (string, bool, error) {
+	panic("builtinRowSig.evalString() should never be called.")
 }

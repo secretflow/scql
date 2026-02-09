@@ -676,12 +676,9 @@ TEST_P(JoinTest, works) {
     EXPECT_EQ(left_output->Length(), right_output->Length());
     EXPECT_EQ(left_output->Length(), test_case.join_indices.size());
 
-    auto left_join_result =
-        util::StringifyVisitor(left_output, left_output->Length())
-            .StringifyBatch();
+    auto left_join_result = util::Stringify(left_output->ToArrowChunkedArray());
     auto right_join_result =
-        util::StringifyVisitor(right_output, right_output->Length())
-            .StringifyBatch();
+        util::Stringify(right_output->ToArrowChunkedArray());
 
     auto indices_got = util::Combine(left_join_result, right_join_result);
 

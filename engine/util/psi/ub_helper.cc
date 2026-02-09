@@ -135,7 +135,7 @@ void OprfServerTransferShuffledClientItems(
   std::tie(*matched_indices, *self_item_count) =
       dh_oprf_psi_server->RecvIntersectionMaskedItems(cache_provider);
   SPDLOG_LOGGER_INFO(logger,
-                     "Oprf server finish transferring shuffled client items");
+                     "Oprf server finish transfering shuffled client items");
 }
 
 void OprfCLientTransferShuffledClientItems(
@@ -171,7 +171,7 @@ void OprfCLientTransferShuffledClientItems(
   ub_psi_client_shuffle_online->SendIntersectionMaskedItems(
       intersection_masked_provider);
   SPDLOG_LOGGER_INFO(logger,
-                     "Oprf client finish transferring shuffled client items");
+                     "Oprf client finish transfering shuffled client items");
 }
 
 }  // namespace scql::engine::util

@@ -17,6 +17,7 @@
 #include "yacl/base/exception.h"
 
 #include "engine/framework/session.h"
+#include "engine/util/spu_io.h"
 #include "engine/util/tensor_util.h"
 
 namespace scql::engine {
@@ -46,7 +47,7 @@ const RepeatedPbTensor& ExecContext::GetOutput(const std::string& name) const {
   return node_.outputs().at(name).tensors();
 }
 
-RepeatedPbTensor ExecContext::GetInputTensors() const {
+RepeatedPbTensor ExecContext::GetInputPbs() const {
   RepeatedPbTensor tensors;
   for (const auto& pair : node_.inputs()) {
     tensors.Add(pair.second.tensors().begin(), pair.second.tensors().end());
@@ -54,7 +55,7 @@ RepeatedPbTensor ExecContext::GetInputTensors() const {
   return tensors;
 }
 
-RepeatedPbTensor ExecContext::GetOutputTensors() const {
+RepeatedPbTensor ExecContext::GetOutputPbs() const {
   RepeatedPbTensor tensors;
   for (const auto& pair : node_.outputs()) {
     tensors.Add(pair.second.tensors().begin(), pair.second.tensors().end());
@@ -90,6 +91,12 @@ int64_t ExecContext::GetInt64ValueFromAttribute(const std::string& name) const {
 bool ExecContext::GetBooleanValueFromAttribute(const std::string& name) const {
   const auto& attr = GetAttribute(name);
   return util::GetBooleanValue(attr.t());
+}
+
+std::vector<bool> ExecContext::GetBooleanValuesFromAttribute(
+    const std::string& name) const {
+  const auto& attr = GetAttribute(name);
+  return util::GetBooleanValues(attr.t());
 }
 
 double ExecContext::GetDoubleValueFromAttribute(const std::string& name) const {
@@ -140,6 +147,200 @@ std::optional<double> ExecContext::TryGetDoubleValueFromAttribute(
   }
   const auto& attr = GetAttribute(name);
   return util::GetDoubleValue(attr.t());
+}
+
+// Tensor access implementations
+std::shared_ptr<Tensor> ExecContext::GetInputTensor(
+    const std::string& input_name, size_t index) {
+  const auto& input_pbs = GetInput(input_name);
+  YACL_ENFORCE(index < input_pbs.size(),
+               "input index out of range for input: {}", input_name);
+
+  auto tensor = GetTensorTable()->GetTensor(input_pbs[index].name());
+  YACL_ENFORCE(tensor, "get private tensor failed, name={}",
+               input_pbs[index].name());
+  return tensor;
+}
+
+std::vector<std::shared_ptr<Tensor>> ExecContext::GetInputTensors(
+    const std::string& input_name) {
+  const auto& input_pbs = GetInput(input_name);
+  std::vector<std::shared_ptr<Tensor>> tensors;
+  tensors.reserve(input_pbs.size());
+
+  for (const auto& input_pb : input_pbs) {
+    auto tensor = GetTensorTable()->GetTensor(input_pb.name());
+    YACL_ENFORCE(tensor, "get private tensor failed, name={}", input_pb.name());
+    tensors.push_back(tensor);
+  }
+  return tensors;
+}
+
+void ExecContext::SetOutputTensor(const std::string& output_name,
+                                  std::shared_ptr<Tensor> tensor,
+                                  size_t index) {
+  const auto& output_pbs = GetOutput(output_name);
+  YACL_ENFORCE(index < output_pbs.size(),
+               "output index out of range for output: {}", output_name);
+
+  GetTensorTable()->AddTensor(output_pbs[index].name(), std::move(tensor));
+}
+
+void ExecContext::SetOutputTensors(
+    const std::string& output_name,
+    const std::vector<std::shared_ptr<Tensor>>& tensors) {
+  const auto& output_pbs = GetOutput(output_name);
+  YACL_ENFORCE(tensors.size() == output_pbs.size(),
+               "tensor count {} doesn't match output count {} for output: {}",
+               tensors.size(), output_pbs.size(), output_name);
+
+  for (size_t i = 0; i < tensors.size(); ++i) {
+    GetTensorTable()->AddTensor(output_pbs[i].name(), tensors[i]);
+  }
+}
+
+// SPU Value access implementations
+spu::Value ExecContext::GetInputValue(const std::string& input_name,
+                                      size_t index) {
+  const auto& input_pbs = GetInput(input_name);
+  YACL_ENFORCE(index < input_pbs.size(),
+               "input index out of range for input: {}", input_name);
+
+  auto device_symbols = GetSession()->GetDeviceSymbols();
+  return device_symbols->getVar(
+      util::SpuVarNameEncoder::GetValueName(input_pbs[index].name()));
+}
+
+std::vector<spu::Value> ExecContext::GetInputValues(
+    const std::string& input_name) {
+  const auto& input_pbs = GetInput(input_name);
+  std::vector<spu::Value> values;
+  values.reserve(input_pbs.size());
+
+  auto device_symbols = GetSession()->GetDeviceSymbols();
+  for (const auto& input_pb : input_pbs) {
+    values.push_back(device_symbols->getVar(
+        util::SpuVarNameEncoder::GetValueName(input_pb.name())));
+  }
+  return values;
+}
+
+void ExecContext::SetOutputValue(const std::string& output_name,
+                                 const spu::Value& value, size_t index) {
+  const auto& output_pbs = GetOutput(output_name);
+  YACL_ENFORCE(index < output_pbs.size(),
+               "output index out of range for output: {}", output_name);
+
+  auto device_symbols = GetSession()->GetDeviceSymbols();
+  device_symbols->setVar(
+      util::SpuVarNameEncoder::GetValueName(output_pbs[index].name()), value);
+}
+
+void ExecContext::SetOutputValues(const std::string& output_name,
+                                  const std::vector<spu::Value>& values) {
+  const auto& output_pbs = GetOutput(output_name);
+  YACL_ENFORCE(values.size() == output_pbs.size(),
+               "value count {} doesn't match output count {} for output: {}",
+               values.size(), output_pbs.size(), output_name);
+
+  auto device_symbols = GetSession()->GetDeviceSymbols();
+  for (size_t i = 0; i < values.size(); ++i) {
+    device_symbols->setVar(
+        util::SpuVarNameEncoder::GetValueName(output_pbs[i].name()), values[i]);
+  }
+}
+
+#ifdef SCQL_WITH_NULL
+// SPU Validity access implementations
+spu::Value ExecContext::GetInputValidity(const std::string& input_name,
+                                         size_t index) {
+  const auto& input_pbs = GetInput(input_name);
+  YACL_ENFORCE(index < input_pbs.size(),
+               "input index out of range for input: {}", input_name);
+
+  auto device_symbols = GetSession()->GetDeviceSymbols();
+  return device_symbols->getVar(
+      util::SpuVarNameEncoder::GetValidityName(input_pbs[index].name()));
+}
+
+std::vector<spu::Value> ExecContext::GetInputValidities(
+    const std::string& input_name) {
+  const auto& input_pbs = GetInput(input_name);
+  std::vector<spu::Value> validities;
+  validities.reserve(input_pbs.size());
+
+  auto device_symbols = GetSession()->GetDeviceSymbols();
+  for (const auto& input_pb : input_pbs) {
+    validities.push_back(device_symbols->getVar(
+        util::SpuVarNameEncoder::GetValidityName(input_pb.name())));
+  }
+  return validities;
+}
+
+void ExecContext::SetOutputValidity(const std::string& output_name,
+                                    const spu::Value& validity, size_t index) {
+  const auto& output_pbs = GetOutput(output_name);
+  YACL_ENFORCE(index < output_pbs.size(),
+               "output index out of range for output: {}", output_name);
+
+  auto device_symbols = GetSession()->GetDeviceSymbols();
+  device_symbols->setVar(
+      util::SpuVarNameEncoder::GetValidityName(output_pbs[index].name()),
+      validity);
+}
+
+void ExecContext::SetOutputValidities(
+    const std::string& output_name, const std::vector<spu::Value>& validities) {
+  const auto& output_pbs = GetOutput(output_name);
+  YACL_ENFORCE(validities.size() == output_pbs.size(),
+               "validity count {} doesn't match output count {} for output: {}",
+               validities.size(), output_pbs.size(), output_name);
+
+  auto device_symbols = GetSession()->GetDeviceSymbols();
+  for (size_t i = 0; i < validities.size(); ++i) {
+    device_symbols->setVar(
+        util::SpuVarNameEncoder::GetValidityName(output_pbs[i].name()),
+        validities[i]);
+  }
+}
+#endif  // SCQL_WITH_NULL
+
+// Status query implementations
+pb::TensorStatus ExecContext::GetInputStatus(const std::string& input_name,
+                                             size_t index) {
+  const auto& input_pbs = GetInput(input_name);
+  YACL_ENFORCE(index < input_pbs.size(),
+               "input index out of range for input: {}", input_name);
+
+  return util::GetTensorStatus(input_pbs[index]);
+}
+
+pb::TensorStatus ExecContext::GetOutputStatus(const std::string& output_name,
+                                              size_t index) {
+  const auto& output_pbs = GetOutput(output_name);
+  YACL_ENFORCE(index < output_pbs.size(),
+               "output index out of range for output: {}", output_name);
+
+  return util::GetTensorStatus(output_pbs[index]);
+}
+
+std::shared_ptr<Tensor> ExecContext::GetPrivateOrPublicTensor(
+    const pb::Tensor& t) {
+  std::shared_ptr<Tensor> ret;
+  if (util::IsTensorStatusMatched(t, pb::TENSORSTATUS_PUBLIC)) {
+    // read public tensor from spu device symbol table
+    auto spu_io = util::SpuOutfeedHelper(GetSession()->GetSpuContext(),
+                                         GetSession()->GetDeviceSymbols());
+    ret = spu_io.DumpPublic(t.name());
+
+    if (t.elem_type() == pb::PrimitiveDataType::STRING) {
+      ret = GetSession()->HashToString(*ret);
+    }
+  } else {
+    ret = GetTensorTable()->GetTensor(t.name());
+    YACL_ENFORCE(ret, "get private tensor failed, name={}", t.name());
+  }
+  return ret;
 }
 
 }  // namespace scql::engine

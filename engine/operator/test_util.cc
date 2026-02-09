@@ -57,7 +57,6 @@ spu::RuntimeConfig MakeSpuRuntimeConfigForTest(
   config.sigmoid_mode = spu::RuntimeConfig::SIGMOID_REAL;
   config.experimental_enable_colocated_optimization =
       enable_colocated_optimization;
-
   spu::populateRuntimeConfig(config);
   return config;
 }
@@ -187,6 +186,13 @@ ExecNodeBuilder& ExecNodeBuilder::AddBooleanAttr(const std::string& name,
                                                  bool value) {
   auto& attrs = *node_.mutable_attributes();
   util::SetBooleanValues(attrs[name].mutable_t(), std::vector<bool>{value});
+  return *this;
+}
+
+ExecNodeBuilder& ExecNodeBuilder::AddBooleansAttr(
+    const std::string& name, const std::vector<bool>& values) {
+  auto& attrs = *node_.mutable_attributes();
+  util::SetBooleanValues(attrs[name].mutable_t(), values);
   return *this;
 }
 
@@ -338,6 +344,19 @@ void RunOpAsync(const std::vector<ExecContext*>& exec_ctxs,
   if (is_throw) {
     YACL_THROW("op async err");
   }
+}
+
+void CheckTensorEqual(const TensorPtr& left, const TensorPtr& right) {
+  auto left_arr = left->ToArrowChunkedArray();
+  auto right_arr = right->ToArrowChunkedArray();
+
+  EXPECT_EQ(left_arr->type(), right_arr->type())
+      << "left type = " << left_arr->type()
+      << ",right type = " << right_arr->type();
+
+  EXPECT_TRUE(left_arr->ApproxEquals(*right_arr))
+      << "left = " << left_arr->ToString()
+      << "\nright = " << right_arr->ToString();
 }
 
 }  // namespace scql::engine::op::test

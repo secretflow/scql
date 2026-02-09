@@ -85,7 +85,8 @@ const (
 	OpNameGroupMin            string = "GroupMin"
 	OpNameGroupMax            string = "GroupMax"
 	OpNameGroupFirstOf        string = "GroupFirstOf"
-	OpNameGroupHeSum          string = "GroupHeSum"
+	OpNameGroupSecretSum      string = "GroupSecretSum"
+	OpNameGroupSecretAvg      string = "GroupSecretAvg"
 	OpNameGroupPercentileDisc string = "GroupPercentileDisc"
 
 	OpNameUnique                  string = "Unique"
@@ -128,7 +129,7 @@ const (
 const (
 	// RevealToAttr, used by MakePrivateOp, PSI_In
 	RevealToAttr = `reveal_to`
-	// InputPartyCodesAttr, used by PSI_In/Join/Replicate/Copy/HeSum
+	// InputPartyCodesAttr, used by PSI_In/Join/Replicate/Copy
 	InputPartyCodesAttr = `input_party_codes`
 	// used by Copy
 	OutputPartyCodesAttr = `output_party_codes`
@@ -152,6 +153,7 @@ const (
 	LineTerminatorAttr   = `line_terminator`
 	AxisAttr             = `axis`
 	ReverseAttr          = `reverse`
+	PercentAttr          = `percent`
 
 	FuncNameAttr    = `func_name`
 	FuncOptAttr     = `func_options`
@@ -187,6 +189,11 @@ var GroupAggOp = map[string]string{
 	ast.AggFuncCount:      OpNameGroupCount,
 	ast.AggFuncFirstRow:   OpNameGroupFirstOf,
 	ast.AggPercentileDisc: OpNameGroupPercentileDisc,
+}
+
+var GroupSecretAggOp = map[string]string{
+	ast.AggFuncSum: OpNameGroupSecretSum,
+	ast.AggFuncAvg: OpNameGroupSecretAvg,
 }
 
 const (

@@ -16,6 +16,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -26,6 +27,7 @@
 #include "spdlog/spdlog.h"
 
 #include "engine/datasource/embed_router.h"
+#include "engine/exe/flags.h"
 #include "engine/framework/session.h"
 #include "engine/link/mux_link_factory.h"
 #include "engine/link/mux_receiver_service.h"
@@ -34,6 +36,7 @@
 #include "engine/operator/publish.h"
 #include "engine/operator/run_sql.h"
 #include "engine/operator/test_util.h"
+#include "engine/util/trace_categories.h"
 
 #include "api/status_code.pb.h"
 #include "engine/services/mock_report_service.pb.h"
@@ -280,7 +283,7 @@ TEST_F(EngineServiceImplTest, RunExecutionPlanAsync) {
   // Then
   EXPECT_EQ(pb::Code::OK, response.status().code());
 
-  usleep(100 * 1000);  // wait async run finished.
+  usleep(1000 * 1000);  // wait async run finished.
   EXPECT_EQ(global_session_id, service.req_id);
   EXPECT_EQ(pb::Code::OK, service.status.code());
 
@@ -300,7 +303,7 @@ TEST_F(EngineServiceImplTest, RunExecutionPlanAsync) {
       impl->RunExecutionPlan(&global_cntl, &request, &response, nullptr));
   EXPECT_EQ(pb::Code::OK, response.status().code());
 
-  usleep(100 * 1000);  // wait async run finished.
+  usleep(1000 * 1000);  // wait async run finished.
   EXPECT_EQ(global_session_id, service.req_id);
   EXPECT_EQ(pb::Code::UNKNOWN_ENGINE_ERROR, service.status.code());
 
@@ -438,6 +441,7 @@ TEST_P(EngineServiceImpl2PartiesTest, RunExecutionPlan) {
   auto session = PrepareTableInMemory(
       test_case, "file:runsql_test?mode=memory&cache=shared");
 
+  util::TracingSessionGuard guard(true, "scql", "/tmp/trace.trace");
   // When
   auto proc = [&](EngineServiceImpl* svc, pb::RunExecutionPlanRequest* request,
                   pb::RunExecutionPlanResponse* response) {
@@ -525,6 +529,201 @@ TEST_P(EngineServiceImpl2PartiesTest, RunExecutionPlan) {
     recv_server.Stop(1000);
     recv_server.Join();
   }
+}
+
+// control the time returned by the Report
+class MockWaitReportServiceImpl : public services::pb::MockReportService {
+ public:
+  void Report(::google::protobuf::RpcController* controller,
+              const pb::ReportRequest* request,
+              services::pb::MockResponse* response,
+              ::google::protobuf::Closure* done) override {
+    brpc::ClosureGuard done_guard(done);
+    // push to alice and bob
+    output_chan.Push(1);
+    // pull from alice and bob
+    input_chan.Pop();
+  }
+
+ public:
+  util::SimpleChannel<size_t> input_chan{1};
+  util::SimpleChannel<size_t> output_chan{1};
+};
+
+TEST_P(EngineServiceImpl2PartiesTest, SessionNegotiationSameConf) {
+  // Given
+  auto test_case = GetParam();
+  auto session = PrepareTableInMemory(
+      test_case, "file:runsql_test?mode=memory&cache=shared");
+
+  // When
+  auto proc = [&](EngineServiceImpl* svc, pb::RunExecutionPlanRequest* request,
+                  pb::RunExecutionPlanResponse* response) {
+    EXPECT_NO_THROW(
+        svc->RunExecutionPlan(&global_cntl, request, response, nullptr));
+    EXPECT_EQ(pb::Code::OK, response->status().code());
+  };
+
+  // start mock report service.
+  brpc::Server recv_server;
+  MockWaitReportServiceImpl service;
+  ASSERT_EQ(0,
+            recv_server.AddService(&service, brpc::SERVER_DOESNT_OWN_SERVICE));
+  brpc::ServerOptions recv_options;
+  ASSERT_EQ(0, recv_server.Start("127.0.0.1:0", &recv_options));
+
+  pb::RunExecutionPlanResponse response_alice;
+  pb::RunExecutionPlanRequest request_alice = ConstructRequestForAlice(servers);
+  // modify request
+  request_alice.set_async(true);
+  request_alice.set_callback_url(
+      fmt::format("{}/MockReportService/Report",
+                  butil::endpoint2str(recv_server.listen_address()).c_str()));
+  auto* alice_job_params = request_alice.mutable_job_params();
+  auto* alice_psi_conf = alice_job_params->mutable_psi_cfg();
+  alice_psi_conf->set_psi_curve_type(
+      static_cast<int32_t>(psi::CurveType::CURVE_25519));
+  alice_psi_conf->set_rr22_mode(pb::LOW_MODE);
+  auto future_alice =
+      std::async(proc, engine_svcs[0].get(), &request_alice, &response_alice);
+
+  pb::RunExecutionPlanResponse response_bob;
+  pb::RunExecutionPlanRequest request_bob = ConstructRequestForBob(servers);
+  request_bob.set_async(true);
+  request_bob.set_callback_url(
+      fmt::format("{}/MockReportService/Report",
+                  butil::endpoint2str(recv_server.listen_address()).c_str()));
+  auto* bob_job_params = request_bob.mutable_job_params();
+  auto* bob_psi_conf = bob_job_params->mutable_psi_cfg();
+  bob_psi_conf->set_psi_curve_type(
+      static_cast<int32_t>(psi::CurveType::CURVE_25519));
+  bob_psi_conf->set_rr22_mode(pb::LOW_MODE);
+  auto future_bob =
+      std::async(proc, engine_svcs[1].get(), &request_bob, &response_bob);
+  service.output_chan.Pop();  // alice wait async run finished.
+  service.output_chan.Pop();  // bob wait async run finished.
+  // Then
+  EXPECT_NO_THROW(future_alice.get());
+  SPDLOG_INFO("out: \n{}", response_alice.DebugString());
+
+  EXPECT_NO_THROW(future_bob.get());
+  SPDLOG_INFO("out: \n{}", response_bob.DebugString());
+  auto* session_alice = engine_svcs[0]->GetSessionManager()->GetSession(
+      request_alice.job_params().job_id());
+  EXPECT_EQ(session_alice->GetSessionOptions().psi_config.psi_curve_type,
+            psi::CurveType::CURVE_25519);
+  EXPECT_EQ(session_alice->GetSessionOptions().psi_config.rr22_mode,
+            pb::LOW_MODE);
+  auto* session_bob = engine_svcs[1]->GetSessionManager()->GetSession(
+      request_alice.job_params().job_id());
+  EXPECT_EQ(session_bob->GetSessionOptions().psi_config.psi_curve_type,
+            psi::CurveType::CURVE_25519);
+  EXPECT_EQ(session_bob->GetSessionOptions().psi_config.rr22_mode,
+            pb::LOW_MODE);
+  service.input_chan.Push(1);
+  service.input_chan.Push(1);
+  recv_server.Stop(1000);
+  recv_server.Join();
+}
+
+TEST_P(EngineServiceImpl2PartiesTest, SessionNegotiationDiffConf) {
+  // Given
+  auto test_case = GetParam();
+  auto session = PrepareTableInMemory(
+      test_case, "file:runsql_test?mode=memory&cache=shared");
+
+  // When
+  auto proc = [&](EngineServiceImpl* svc, pb::RunExecutionPlanRequest* request,
+                  pb::RunExecutionPlanResponse* response) {
+    EXPECT_NO_THROW(
+        svc->RunExecutionPlan(&global_cntl, request, response, nullptr));
+    EXPECT_EQ(pb::Code::OK, response->status().code());
+  };
+
+  // start mock report service.
+  brpc::Server recv_server;
+  MockWaitReportServiceImpl service;
+  ASSERT_EQ(0,
+            recv_server.AddService(&service, brpc::SERVER_DOESNT_OWN_SERVICE));
+  brpc::ServerOptions recv_options;
+  ASSERT_EQ(0, recv_server.Start("127.0.0.1:0", &recv_options));
+
+  pb::RunExecutionPlanResponse response_alice;
+  pb::RunExecutionPlanRequest request_alice = ConstructRequestForAlice(servers);
+  // modify request
+  request_alice.set_async(true);
+  request_alice.set_callback_url(
+      fmt::format("{}/MockReportService/Report",
+                  butil::endpoint2str(recv_server.listen_address()).c_str()));
+  auto* alice_job_params = request_alice.mutable_job_params();
+  auto* alice_psi_conf = alice_job_params->mutable_psi_cfg();
+  alice_psi_conf->set_psi_curve_type(
+      static_cast<int32_t>(psi::CurveType::CURVE_FOURQ));
+  alice_psi_conf->set_rr22_mode(pb::LOW_MODE);
+  std::vector<std::unique_ptr<EngineServiceImpl>> svcs;
+  std::vector<std::vector<spu::ProtocolKind>> allowed_protocols_v = {
+      {spu::ProtocolKind::SEMI2K, spu::ProtocolKind::ABY3},
+      {spu::ProtocolKind::SEMI2K, spu::ProtocolKind::CHEETAH}};
+  for (size_t rank = 0; rank < kWorldSize; rank++) {
+    auto factory = std::make_unique<MuxLinkFactory>(
+        &channel_manager, listener_managers[rank].get());
+    EngineServiceOptions service_options;
+    service_options.enable_authorization = true;
+    service_options.credential = "alice_credential";
+    SessionOptions session_options;
+    auto impl = std::make_unique<EngineServiceImpl>(
+        service_options,
+        std::make_unique<SessionManager>(
+            session_options, listener_managers[rank].get(), std::move(factory),
+            EmbedRouter::FromJsonStr(router_json_str),
+            std::make_unique<DatasourceAdaptorMgr>(), 10,
+            allowed_protocols_v[rank]),
+        &channel_manager, nullptr);
+    ASSERT_NE(nullptr, impl.get());
+    svcs.emplace_back(std::move(impl));
+  }
+  auto future_alice =
+      std::async(proc, svcs[0].get(), &request_alice, &response_alice);
+
+  pb::RunExecutionPlanResponse response_bob;
+  pb::RunExecutionPlanRequest request_bob = ConstructRequestForBob(servers);
+  request_bob.set_async(true);
+  request_bob.set_callback_url(
+      fmt::format("{}/MockReportService/Report",
+                  butil::endpoint2str(recv_server.listen_address()).c_str()));
+  auto* bob_job_params = request_bob.mutable_job_params();
+  auto* bob_psi_conf = bob_job_params->mutable_psi_cfg();
+  bob_psi_conf->set_psi_curve_type(
+      static_cast<int32_t>(psi::CurveType::CURVE_FOURQ));
+  bob_psi_conf->set_rr22_mode(pb::FAST_MODE);
+
+  // Construct EngineServiceImpl
+  auto future_bob =
+      std::async(proc, svcs[1].get(), &request_bob, &response_bob);
+  service.output_chan.Pop();  // alice wait async run finished.
+  service.output_chan.Pop();  // bob wait async run finished.
+  // Then
+  EXPECT_NO_THROW(future_alice.get());
+  SPDLOG_INFO("out: \n{}", response_alice.DebugString());
+
+  EXPECT_NO_THROW(future_bob.get());
+  SPDLOG_INFO("out: \n{}", response_bob.DebugString());
+  auto* session_alice = svcs[0]->GetSessionManager()->GetSession(
+      request_alice.job_params().job_id());
+  EXPECT_EQ(session_alice->GetSessionOptions().psi_config.psi_curve_type,
+            psi::CurveType::CURVE_FOURQ);
+  EXPECT_EQ(session_alice->GetSessionOptions().psi_config.rr22_mode,
+            pb::LOW_MODE);
+  auto* session_bob = svcs[1]->GetSessionManager()->GetSession(
+      request_alice.job_params().job_id());
+  EXPECT_EQ(session_bob->GetSessionOptions().psi_config.psi_curve_type,
+            psi::CurveType::CURVE_FOURQ);
+  EXPECT_EQ(session_bob->GetSessionOptions().psi_config.rr22_mode,
+            pb::LOW_MODE);
+  service.input_chan.Push(1);
+  service.input_chan.Push(1);
+  recv_server.Stop(1000);
+  recv_server.Join();
 }
 
 /// ===========================

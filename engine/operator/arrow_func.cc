@@ -42,16 +42,14 @@ void ArrowFunc::Validate(ExecContext* ctx) {
 }
 
 void ArrowFunc::Execute(ExecContext* ctx) {
-  const auto& in_pb = ctx->GetInput(kIn);
-  const auto& out_pb = ctx->GetOutput(kOut);
   auto func_name = ctx->GetStringValueFromAttribute(kFuncNameAttr);
   auto func_opt_type = ctx->TryGetStringValueFromAttribute(kFuncOptTypeAttr);
+
+  auto input_tensors = ctx->GetInputTensors(kIn);
   std::vector<arrow::Datum> inputs;
-  for (const auto& input_pb : in_pb) {
-    auto t = ctx->GetTensorTable()->GetTensor(input_pb.name());
-    YACL_ENFORCE(t != nullptr, "get tensor={} from tensor table failed",
-                 input_pb.name());
-    inputs.emplace_back(t->ToArrowChunkedArray());
+  inputs.reserve(input_tensors.size());
+  for (const auto& input_tensor : input_tensors) {
+    inputs.emplace_back(input_tensor->ToArrowChunkedArray());
   }
 
   arrow::Result<arrow::Datum> result;
@@ -78,17 +76,12 @@ void ArrowFunc::Execute(ExecContext* ctx) {
                "unsupported arrow func result type: {}, func_name: {}",
                arrow::ToString(val.kind()), func_name);
 
-  YACL_ENFORCE(out_pb.size() == 1,
-               "arrow func result is chunked array, output size {} != 1",
-               out_pb.size());
-
   const auto& arr = val.chunked_array();
 
   if (func_name == "strptime") {
-    auto resultTensor = util::ConvertDateTimeToInt64(arr);
-    ctx->GetTensorTable()->AddTensor(out_pb[0].name(), std::move(resultTensor));
+    ctx->SetOutputTensor(kOut, util::ConvertDateTimeToInt64(arr));
   } else {
-    ctx->GetTensorTable()->AddTensor(out_pb[0].name(), TensorFrom(arr));
+    ctx->SetOutputTensor(kOut, TensorFrom(arr));
   }
 }
 

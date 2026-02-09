@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "Poco/Data/RecordSet.h"
 #include "gflags/gflags.h"
 #include "gtest/gtest.h"
 
@@ -45,6 +46,28 @@ struct InsertMysqlOrPgTestCase {
 class InsertMysqlOrPgTest
     : public ::testing::TestWithParam<InsertMysqlOrPgTestCase> {
  protected:
+  static void AssertColumnContentEquals(
+      Poco::Data::RecordSet& rs, const std::string& column_name,
+      const std::vector<Poco::Dynamic::Var>& expected_values) {
+    ASSERT_EQ(rs.rowCount(), expected_values.size())
+        << "Mismatch in row count for column '" << column_name << "'.";
+
+    for (size_t i = 0; i < rs.rowCount(); ++i) {
+      const auto& actual_value = rs.value(column_name, i);
+      const auto& expected_value = expected_values[i];
+
+      ASSERT_EQ(actual_value.isEmpty(), expected_value.isEmpty())
+          << "Mismatch in NULL status at row " << i << " for column '"
+          << column_name << "'.";
+
+      if (!actual_value.isEmpty()) {
+        ASSERT_EQ(actual_value.convert<std::string>(),
+                  expected_value.convert<std::string>())
+            << "Mismatch in value at row " << i << " for column '"
+            << column_name << "'.";
+      }
+    }
+  }
   static pb::ExecNode MakeInsertTableExecNode(
       const InsertMysqlOrPgTestCase& tc);
 
@@ -55,21 +78,36 @@ INSTANTIATE_TEST_SUITE_P(
     InsertMysqlOrPgPrivateTest, InsertMysqlOrPgTest,
     testing::Values(InsertMysqlOrPgTestCase{
         .inputs =
-            {test::NamedTensor("c0",
-                               TensorFrom(arrow::int64(), "[0,1,null,3]")),
-             test::NamedTensor("c1",
-                               TensorFrom(arrow::int64(),
-                                          "[10,946656000,null,1722244717]")),
-             test::NamedTensor("c2", TensorFrom(arrow::int64(),
-                                                "[0,10,null,1722244717]")),
-             test::NamedTensor("c3",
-                               TensorFrom(arrow::large_utf8(),
-                                          R"json(["B","A","CCC","B"])json")),
-             test::NamedTensor(
-                 "c4", TensorFrom(arrow::float32(),
-                                  "[1.1025, 100.245, -10.2, 3.1415926]")),
-             test::NamedTensor("c5", TensorFrom(arrow::boolean(),
-                                                "[true, false, null, false]"))},
+            {
+                test::NamedTensor("c0",
+                                  TensorFrom(arrow::int64(), "[0,1,null,3]")),
+                test::NamedTensor(
+                    "c1",
+                    TensorFrom(arrow::int64(),
+                               "[1749186000, 1749186000, 1749186000, "
+                               "1749186000]")),  // user inserted "2025-06-06
+                                                 // 13:00:00"(timestamp) while
+                                                 // operating in the UTC+8 time
+                                                 // zone
+                test::NamedTensor(
+                    "c2",
+                    TensorFrom(arrow::int64(),
+                               "[1749214800, 1749214800, 1749214800, "
+                               "1749214800]")),  // user inserted "2025-06-06
+                                                 // 13:00:00"(datetime) while
+                                                 // operating in the UTC+8 time
+                                                 // zone
+                test::NamedTensor("c3",
+                                  TensorFrom(arrow::large_utf8(),
+                                             R"json(["B","A","CCC","B"])json")),
+                test::NamedTensor(
+                    "c4", TensorFrom(arrow::float32(),
+                                     "[1.1025, 100.245, -10.2, 3.1415926]")),
+                test::NamedTensor("c5",
+                                  TensorFrom(arrow::boolean(),
+                                             "[true, false, null, false]")),
+            },
+
         .input_types =
             {pb::PrimitiveDataType::INT64, pb::PrimitiveDataType::TIMESTAMP,
              pb::PrimitiveDataType::DATETIME, pb::PrimitiveDataType::STRING,
@@ -81,7 +119,7 @@ TEST_P(InsertMysqlOrPgTest, Works) {
   // Give
   auto tc = GetParam();
   auto node = MakeInsertTableExecNode(tc);
-  auto session = test::Make1PCSession();
+  auto session = test::Make1PCSession();  // execution time zone is UTC+8
   ExecContext ctx(node, session.get());
   FeedInputs(&ctx, tc);
 
@@ -91,11 +129,24 @@ TEST_P(InsertMysqlOrPgTest, Works) {
 
   // Then check output
   OdbcConnector connector(FLAGS_output_db_kind, FLAGS_output_db_connection_str);
-  auto sess = connector.CreateSession();
+  auto sess = connector.CreateSession();  // connection time zone is UTC
   Poco::Data::Statement select(sess);
   select << "select * from " << tc.tableName << ";", Poco::Data::Keywords::now;
-  EXPECT_EQ(select.columnsExtracted(), tc.inputs.size());
-  EXPECT_EQ(select.rowsExtracted(), tc.inputs[0].tensor->Length());
+
+  Poco::Data::RecordSet rs(select);
+  ASSERT_EQ(rs.columnCount(), tc.inputs.size());
+  ASSERT_EQ(rs.rowCount(), tc.inputs[0].tensor->Length());
+
+  // the result of timestamp should change according to the odbc connection time
+  // zone
+  std::vector<Poco::Dynamic::Var> expected_c1 = {
+      "2025-06-06T05:00:00Z", "2025-06-06T05:00:00Z", "2025-06-06T05:00:00Z",
+      "2025-06-06T05:00:00Z"};
+  AssertColumnContentEquals(rs, "c1", expected_c1);
+  std::vector<Poco::Dynamic::Var> expected_c2 = {
+      "2025-06-06T13:00:00Z", "2025-06-06T13:00:00Z", "2025-06-06T13:00:00Z",
+      "2025-06-06T13:00:00Z"};
+  AssertColumnContentEquals(rs, "c2", expected_c2);
 }
 
 /// ===========================

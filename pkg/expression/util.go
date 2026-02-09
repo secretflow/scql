@@ -287,9 +287,7 @@ func GetUint64FromConstant(expr Expression) (uint64, bool, bool) {
 		return 0, false, false
 	}
 	dt := con.Value
-	if con.ParamMarker != nil {
-		dt = con.ParamMarker.GetUserVar()
-	} else if con.DeferredExpr != nil {
+	if con.DeferredExpr != nil {
 		var err error
 		dt, err = con.DeferredExpr.Eval(chunk.Row{})
 		if err != nil {
@@ -314,6 +312,17 @@ func GetUint64FromConstant(expr Expression) (uint64, bool, bool) {
 // ConstructPositionExpr constructs PositionExpr with the given ParamMarkerExpr.
 func ConstructPositionExpr(p *driver.ParamMarkerExpr) *ast.PositionExpr {
 	return &ast.PositionExpr{P: p}
+}
+
+// ParamMarkerExpression generate a getparam function expression.
+func ParamMarkerExpression(sctx sessionctx.Context, v *driver.ParamMarkerExpr) (*Constant, error) {
+	value := &Constant{Value: v.Datum, RetType: v.Datum.GetFieldType()}
+	value.ParamMarker = &ParamMarker{
+		name:  v.ParamName,
+		order: v.Order,
+		tp:    *v.Datum.GetFieldType(),
+	}
+	return value, nil
 }
 
 // FilterOutInPlace do the filtering out in place.

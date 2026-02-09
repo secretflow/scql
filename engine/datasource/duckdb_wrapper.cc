@@ -75,7 +75,7 @@ static duckdb::LogicalTypeId ToLogicalTypeId(scql::api::v1::DataType type) {
   }
 }
 
-std::string ToDuckDBDataType(const std::string& type) {
+std::string ToDuckDBDataType(const std::string &type) {
   duckdb::LogicalTypeId ret = duckdb::LogicalTypeId::INVALID;
 
   scql::api::v1::DataType dtype;
@@ -87,20 +87,20 @@ std::string ToDuckDBDataType(const std::string& type) {
 }
 
 struct CSVTableReplacementScanData : public duckdb::ReplacementScanData {
-  const csv::CsvdbConf* csvdb_conf;
+  const csv::CsvdbConf *csvdb_conf;
 };
 
 static duckdb::unique_ptr<duckdb::TableRef> CSVTableReplacementScan(
-    duckdb::ClientContext& context, duckdb::ReplacementScanInput& input,
+    duckdb::ClientContext &context, duckdb::ReplacementScanInput &input,
     duckdb::optional_ptr<duckdb::ReplacementScanData> data) {
-  const std::string& table_name = input.table_name;
+  const std::string &table_name = input.table_name;
 
-  auto scan_data = dynamic_cast<CSVTableReplacementScanData*>(data.get());
+  auto scan_data = dynamic_cast<CSVTableReplacementScanData *>(data.get());
   if (!scan_data || !scan_data->csvdb_conf) {
     return nullptr;
   }
 
-  const csv::CsvTableConf* csv_tbl = nullptr;
+  const csv::CsvTableConf *csv_tbl = nullptr;
   for (int i = 0; i < scan_data->csvdb_conf->tables_size(); ++i) {
     std::string full_table_name;
     if (scan_data->csvdb_conf->db_name().empty()) {
@@ -128,7 +128,7 @@ static duckdb::unique_ptr<duckdb::TableRef> CSVTableReplacementScan(
   // if inherit from duckdb::S3FileSystem, we should rewrite the
   // S3UrlParse. so here just replace prefix here, such as from oss://
   // to s3://, then duckdb can parse the path url. When duckdb release
-  // next version, we can consider inherit from duckdb::S3FileSystem
+  // next version, we can considier inherit from duckdb::S3FileSystem
   // and make patch
   auto scheme = util::GetS3LikeScheme(data_path);
   if (!scheme.empty()) {
@@ -140,7 +140,7 @@ static duckdb::unique_ptr<duckdb::TableRef> CSVTableReplacementScan(
   {
     std::vector<duckdb::Value> names;
     std::vector<duckdb::Value> types;
-    for (const auto& col : csv_tbl->columns()) {
+    for (const auto &col : csv_tbl->columns()) {
       names.emplace_back(col.column_name());
       types.emplace_back(ToDuckDBDataType(col.column_type()));
     }
@@ -156,9 +156,9 @@ static duckdb::unique_ptr<duckdb::TableRef> CSVTableReplacementScan(
 }
 
 static duckdb::unique_ptr<duckdb::FunctionData> CSVScanBind(
-    duckdb::ClientContext& context, duckdb::TableFunctionBindInput& input,
-    duckdb::vector<duckdb::LogicalType>& return_types,
-    duckdb::vector<std::string>& names) {
+    duckdb::ClientContext &context, duckdb::TableFunctionBindInput &input,
+    duckdb::vector<duckdb::LogicalType> &return_types,
+    duckdb::vector<std::string> &names) {
   auto name_list = duckdb::ListValue::GetChildren(input.inputs[1]);
   auto type_list = duckdb::ListValue::GetChildren(input.inputs[2]);
   if (name_list.size() != type_list.size()) {
@@ -188,9 +188,9 @@ static duckdb::unique_ptr<duckdb::FunctionData> CSVScanBind(
 }
 
 static std::string CheckTablePathsAndGetPrefix(
-    const csv::CsvdbConf& csvdb_conf) {
+    const csv::CsvdbConf &csvdb_conf) {
   std::string path_prefix;
-  for (const auto& table_conf : csvdb_conf.tables()) {
+  for (const auto &table_conf : csvdb_conf.tables()) {
     // If path not s3 and not illegal, exception will be thrown.
     auto data_path = table_conf.data_path();
     auto scheme = util::GetS3LikeScheme(data_path);
@@ -213,7 +213,7 @@ static std::string CheckTablePathsAndGetPrefix(
 
 }  // namespace
 
-duckdb::DuckDB DuckDBWrapper::CreateDB(const csv::CsvdbConf* csvdb_conf) {
+duckdb::DuckDB DuckDBWrapper::CreateDB(const csv::CsvdbConf *csvdb_conf) {
   auto path_prefix = CheckTablePathsAndGetPrefix(*csvdb_conf);
   auto scan_data = duckdb::make_uniq<CSVTableReplacementScanData>();
   scan_data->csvdb_conf = csvdb_conf;
@@ -224,7 +224,7 @@ duckdb::DuckDB DuckDBWrapper::CreateDB(const csv::CsvdbConf* csvdb_conf) {
 
   duckdb::DuckDB db(nullptr, &config);
   if (!csvdb_conf->s3_conf().endpoint().empty()) {
-    auto& db_config = duckdb::DBConfig::GetConfig(*db.instance);
+    auto &db_config = duckdb::DBConfig::GetConfig(*db.instance);
 
     std::string endpoint = csvdb_conf->s3_conf().endpoint();
     bool use_ssl = util::GetAndRemoveS3EndpointPrefix(endpoint);
@@ -245,9 +245,9 @@ duckdb::DuckDB DuckDBWrapper::CreateDB(const csv::CsvdbConf* csvdb_conf) {
   return db;
 }
 
-void DuckDBWrapper::CreateCSVScanFunction(duckdb::Connection& conn) {
-  auto& context = *conn.context;
-  auto& catalog = duckdb::Catalog::GetSystemCatalog(context);
+void DuckDBWrapper::CreateCSVScanFunction(duckdb::Connection &conn) {
+  auto &context = *conn.context;
+  auto &catalog = duckdb::Catalog::GetSystemCatalog(context);
 
   duckdb::TableFunction read_csv = duckdb::ReadCSVTableFunction::GetFunction();
 

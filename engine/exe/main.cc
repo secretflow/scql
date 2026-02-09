@@ -14,13 +14,17 @@
 
 #include <signal.h>
 
+#include <atomic>
+#include <chrono>
+#include <future>
 #include <memory>
+#include <thread>
 
 #include "absl/debugging/failure_signal_handler.h"
 #include "absl/debugging/symbolize.h"
 #include "absl/strings/str_split.h"
-#include "absl/strings/strip.h"
 #include "arrow/filesystem/s3fs.h"
+#include "brpc/controller.h"
 #include "brpc/server.h"
 #include "butil/file_util.h"
 #include "flags.h"
@@ -39,8 +43,13 @@
 #include "engine/services/engine_service_impl.h"
 #include "engine/services/error_collector_service_impl.h"
 #include "engine/services/prometheus_service_impl.h"
+#include "engine/util/kpad_task_helper.h"
 #include "engine/util/logging.h"
 #include "engine/util/prometheus_monitor.h"
+#include "engine/util/ssl_helper.h"
+#include "engine/util/trace_categories.h"
+
+#include "api/scql_task.pb.h"
 
 namespace brpc {
 
@@ -118,6 +127,22 @@ std::unique_ptr<scql::engine::Router> BuildRouter() {
       return scql::engine::EmbedRouter::FromJsonStr(FLAGS_embed_router_conf);
     }
 
+    // Check for task mode with ScqlConfig input_file_paths
+    auto scql_config =
+        scql::engine::util::ParseScqlConfig(FLAGS_kpad_scql_config);
+    if (scql_config) {
+      if (scql_config->input_file_paths_size() > 0) {
+        SPDLOG_INFO("Building EmbedRouter from ScqlConfig input_file_paths");
+        return scql::engine::EmbedRouter::FromFilePaths(
+            scql_config->input_file_paths());
+      } else {
+        SPDLOG_ERROR(
+            "Fail to build embed router: No input_file_paths found in "
+            "ScqlConfig");
+        return nullptr;
+      }
+    }
+
     std::string db_connection_str = FLAGS_db_connection_info;
     if (char* env_p = std::getenv("DB_CONNECTION_INFO")) {
       if (strlen(env_p) != 0) {
@@ -134,17 +159,17 @@ std::unique_ptr<scql::engine::Router> BuildRouter() {
     SPDLOG_ERROR(
         "Fail to build embed router, set "
         "embed_router_conf/db_connection_info(gflags) or "
-        "DB_CONNECTION_INFO(ENV)");
+        "DB_CONNECTION_INFO(ENV) or provide input_file_paths in task mode");
     return nullptr;
   } else if (FLAGS_datasource_router == "http") {
     scql::engine::HttpRouterOptions options;
     options.endpoint = FLAGS_http_router_endpoint;
     return std::make_unique<scql::engine::HttpRouter>(options);
   } else if (FLAGS_datasource_router == "kusciadatamesh") {
-    auto ssl_opts =
-        LoadSslCredentialsOptions(FLAGS_kuscia_datamesh_client_key_path,
-                                  FLAGS_kuscia_datamesh_client_cert_path,
-                                  FLAGS_kuscia_datamesh_cacert_path);
+    auto ssl_opts = scql::engine::util::LoadSslCredentialsOptions(
+        FLAGS_kuscia_datamesh_client_key_path,
+        FLAGS_kuscia_datamesh_client_cert_path,
+        FLAGS_kuscia_datamesh_cacert_path);
     auto channel_creds = grpc::SslCredentials(ssl_opts);
     return std::make_unique<scql::engine::KusciaDataMeshRouter>(
         FLAGS_kuscia_datamesh_endpoint, channel_creds);
@@ -284,6 +309,47 @@ void termination_handler(int signum) {
   SPDLOG_WARN("Received signal: {}, shutting down", strsignal(signum));
 }
 
+// Run kpad task in background thread and wait for completion or signal
+// Returns true if task completed successfully, false otherwise
+bool ExecuteKpadTask(scql::engine::EngineServiceImpl* engine_svc,
+                     const scql::engine::util::ClusterDef& cluster_def,
+                     const std::string& job_id, brpc::Server& server) {
+  SPDLOG_INFO("Kpad task detected, executing task in background thread");
+
+  bool task_success = false;
+  std::atomic<bool> task_finished{false};
+
+  std::future<void> task_future = std::async(std::launch::async, [&]() {
+    try {
+      engine_svc->RunKpadTask(cluster_def);
+      task_success = true;
+    } catch (const std::exception& e) {
+      SPDLOG_ERROR("Kpad task failed: {}", e.what());
+    }
+    task_finished = true;
+  });
+
+  // Wait for task completion or signal (SIGTERM/SIGINT)
+  while (!task_finished && !brpc::IsAskedToQuit()) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  }
+
+  if (brpc::IsAskedToQuit() && !task_finished) {
+    // Signal received before task completion, stop the running session
+    SPDLOG_WARN("Kpad task interrupted by signal");
+    engine_svc->GetSessionManager()->StopSession(job_id);
+  }
+
+  // Wait for task thread to finish (either completed or interrupted)
+  task_future.get();
+
+  // Stop server after task completion
+  server.Stop(0);
+  server.Join();
+
+  return task_success;
+}
+
 int main(int argc, char* argv[]) {
   // Initialize the symbolizer to get a human-readable stack trace
   {
@@ -311,6 +377,19 @@ int main(int argc, char* argv[]) {
   }
   SPDLOG_INFO("Engine version: {}", ENGINE_VERSION_STRING);
 
+  // Validate kpad task parameters
+  if (!scql::engine::util::ValidateKpadTaskParams(
+          FLAGS_kpad_cluster_def, FLAGS_kpad_job_id, FLAGS_kpad_scql_config)) {
+    return -1;
+  }
+
+  auto cluster_def =
+      scql::engine::util::ParseClusterDef(FLAGS_kpad_cluster_def);
+  if (!cluster_def && !FLAGS_kpad_cluster_def.empty()) {
+    SPDLOG_ERROR("Failed to parse kpad_cluster_def");
+    return -1;
+  }
+
   // Set default authenticator for brpc channel.
   if (FLAGS_enable_client_authorization) {
     auto auth = std::make_unique<scql::engine::SimpleAuthenticator>(
@@ -331,6 +410,10 @@ int main(int argc, char* argv[]) {
     SPDLOG_ERROR("Fail to add channel options, msg={}", e.what());
     return -1;
   }
+
+  scql::engine::util::TracingSessionGuard tracing_guard(
+      FLAGS_enable_trace, "scql", FLAGS_trace_log_path);
+
   std::unique_ptr<scql::engine::EngineServiceImpl> engine_svc;
   try {
     engine_svc = BuildEngineService(&listener_manager, &channel_manager);
@@ -373,14 +456,14 @@ int main(int argc, char* argv[]) {
       return -1;
     }
   } else {
-    SPDLOG_INFO("Adding MuxReceiverService into separate link server...");
+    SPDLOG_INFO("Adding MuxReceiverService into seperate link server...");
     if (link_svr.AddService(&rcv_svc, brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
-      SPDLOG_ERROR("Fail to add MuxReceiverService to separate link server");
+      SPDLOG_ERROR("Fail to add MuxReceiverService to seperate link server");
       return -1;
     }
-    SPDLOG_INFO("Adding ErrorCollectorService into separate link server...");
+    SPDLOG_INFO("Adding ErrorCollectorService into seperate link server...");
     if (link_svr.AddService(&err_svc, brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
-      SPDLOG_ERROR("Fail to add ErrorCollectorService to separate link server");
+      SPDLOG_ERROR("Fail to add ErrorCollectorService to seperate link server");
       return -1;
     }
   }
@@ -426,9 +509,16 @@ int main(int argc, char* argv[]) {
     // enable graceful quit on SIGTERM in brpc
     brpc::FLAGS_graceful_quit_on_sigterm = true;
   }
-  // Wait until Ctrl-C is pressed or SIGTERM received, then Stop() and Join()
-  // the server.
-  server.RunUntilAskedToQuit();
+
+  bool kpad_task_success = false;
+  if (cluster_def) {
+    kpad_task_success = ExecuteKpadTask(engine_svc.get(), *cluster_def,
+                                        FLAGS_kpad_job_id, server);
+  } else {
+    // Wait until Ctrl-C is pressed or SIGTERM received, then Stop() and Join()
+    // the server.
+    server.RunUntilAskedToQuit();
+  }
 
   if (FLAGS_enable_separate_link_port) {
     link_svr.Stop(0);
@@ -444,6 +534,10 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  // Return appropriate result based on mode
+  if (cluster_def) {
+    return kpad_task_success ? 0 : -1;
+  }
   return 0;
 }
 

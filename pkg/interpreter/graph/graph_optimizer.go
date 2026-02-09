@@ -102,9 +102,9 @@ func (rule optConstantCast) optimize(graph *Graph) error {
 			}
 
 			// change tensor type
-			if castType == proto.PrimitiveDataType_DATETIME || castType == proto.PrimitiveDataType_TIMESTAMP {
-				node.Outputs["Out"][0].DType = proto.PrimitiveDataType_INT64
-				broadCastNode.Outputs["Out"][0].DType = proto.PrimitiveDataType_INT64
+			if castType.IsTimeType() {
+				node.Outputs["Out"][0].DType = NewPrimitiveDataType(proto.PrimitiveDataType_INT64)
+				broadCastNode.Outputs["Out"][0].DType = NewPrimitiveDataType(proto.PrimitiveDataType_INT64)
 			} else {
 				node.Outputs["Out"][0].DType = castType
 				broadCastNode.Outputs["Out"][0].DType = castType
@@ -136,7 +136,8 @@ func (rule optConstantCast) optimize(graph *Graph) error {
 	return nil
 }
 
-func isValidCast(originType, castType proto.PrimitiveDataType) bool {
+// TODO: support decimal
+func isValidCast(originType, castType *DataType) bool {
 	validCasts := map[proto.PrimitiveDataType]map[proto.PrimitiveDataType]bool{
 		proto.PrimitiveDataType_STRING: {
 			proto.PrimitiveDataType_INT64:     true,
@@ -168,14 +169,15 @@ func isValidCast(originType, castType proto.PrimitiveDataType) bool {
 		},
 	}
 
-	if validCastMap, ok := validCasts[originType]; ok {
-		return validCastMap[castType]
+	if validCastMap, ok := validCasts[originType.DType]; ok {
+		return validCastMap[castType.DType]
 	}
 
 	return originType == castType
 }
 
-func castValue(scalarAttr *Attribute, originType, castType proto.PrimitiveDataType) error {
+// TODO: support decimal
+func castValue(scalarAttr *Attribute, originType, castType *DataType) error {
 	if scalarAttr == nil {
 		return fmt.Errorf("constant node doesn't have scalar attribute")
 	}
@@ -185,27 +187,28 @@ func castValue(scalarAttr *Attribute, originType, castType proto.PrimitiveDataTy
 		return fmt.Errorf("constant node doesn't have value")
 	}
 
-	switch originType {
+	switch originType.DType {
 	case proto.PrimitiveDataType_STRING:
 		strVal, ok := originalValue.(string)
 		if !ok {
 			return fmt.Errorf("expected string value")
 		}
-		if castType == proto.PrimitiveDataType_INT64 {
+		switch castType.DType {
+		case proto.PrimitiveDataType_INT64:
 			castValue, err := strconv.ParseInt(strVal, 10, 64)
 			if err != nil {
 				return err
 			}
 			scalarAttr.SetInt64(castValue)
 			return nil
-		} else if castType == proto.PrimitiveDataType_FLOAT64 {
+		case proto.PrimitiveDataType_FLOAT64:
 			castValue, err := strconv.ParseFloat(strVal, 64)
 			if err != nil {
 				return err
 			}
 			scalarAttr.SetDouble(castValue)
 			return nil
-		} else if castType == proto.PrimitiveDataType_DATETIME { // return int64 value
+		case proto.PrimitiveDataType_DATETIME: // return int64 value
 			if stringutil.IsDateString(strVal) {
 				unixSec, err := stringutil.StringToUnixSec(strVal)
 				if err != nil {
@@ -215,7 +218,7 @@ func castValue(scalarAttr *Attribute, originType, castType proto.PrimitiveDataTy
 				return nil
 			}
 			return fmt.Errorf("datetime constant format should be 'YYYY-MM-DD hh:mm:ss', but got %s", strVal)
-		} else if castType == proto.PrimitiveDataType_TIMESTAMP {
+		case proto.PrimitiveDataType_TIMESTAMP:
 			unixSec, err := stringutil.StringToUnixSecWithTimezone(strVal)
 			if err != nil {
 				return fmt.Errorf("failed to parse timestamp constant %q: %v", strVal, err)
@@ -228,10 +231,11 @@ func castValue(scalarAttr *Attribute, originType, castType proto.PrimitiveDataTy
 		if !ok {
 			return fmt.Errorf("expected int64 value")
 		}
-		if castType == proto.PrimitiveDataType_FLOAT64 {
+		switch castType.DType {
+		case proto.PrimitiveDataType_FLOAT64:
 			scalarAttr.SetDouble(float64(intVal))
 			return nil
-		} else if castType == proto.PrimitiveDataType_STRING {
+		case proto.PrimitiveDataType_STRING:
 			scalarAttr.SetString(strconv.FormatInt(intVal, 10))
 			return nil
 		}
@@ -240,10 +244,11 @@ func castValue(scalarAttr *Attribute, originType, castType proto.PrimitiveDataTy
 		if !ok {
 			return fmt.Errorf("expected float64 value")
 		}
-		if castType == proto.PrimitiveDataType_INT64 {
+		switch castType.DType {
+		case proto.PrimitiveDataType_INT64:
 			scalarAttr.SetInt64(int64(floatVal))
 			return nil
-		} else if castType == proto.PrimitiveDataType_STRING {
+		case proto.PrimitiveDataType_STRING:
 			scalarAttr.SetString(fmt.Sprintf("%f", floatVal))
 			return nil
 		}
@@ -252,7 +257,8 @@ func castValue(scalarAttr *Attribute, originType, castType proto.PrimitiveDataTy
 		if !ok {
 			return fmt.Errorf("expected bool value")
 		}
-		if castType == proto.PrimitiveDataType_INT32 {
+		switch castType.DType {
+		case proto.PrimitiveDataType_INT32:
 			if boolVal {
 				scalarAttr.SetInt(1)
 				return nil
@@ -260,7 +266,7 @@ func castValue(scalarAttr *Attribute, originType, castType proto.PrimitiveDataTy
 				scalarAttr.SetInt(0)
 				return nil
 			}
-		} else if castType == proto.PrimitiveDataType_STRING {
+		case proto.PrimitiveDataType_STRING:
 			scalarAttr.SetString(strconv.FormatBool(boolVal))
 			return nil
 		}

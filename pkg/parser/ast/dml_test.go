@@ -224,8 +224,8 @@ func (tc *testDMLSuite) TestOnConditionRestore(c *C) {
 func (tc *testDMLSuite) TestJoinRestore(c *C) {
 	testCases := []NodeRestoreTestCase{
 		{"t1 natural join t2", "`t1` NATURAL JOIN `t2`"},
-		{"t1 natural left join t2", "`t1` NATURAL LEFT JOIN `t2`"},
-		{"t1 natural right outer join t2", "`t1` NATURAL RIGHT JOIN `t2`"},
+		{"t1 natural left join t2", "`t1` NATURAL JOIN `t2`"},
+		{"t1 natural right outer join t2", "`t1` NATURAL JOIN `t2`"},
 		{"t1 straight_join t2", "`t1` STRAIGHT_JOIN `t2`"},
 		{"t1 straight_join t2 on t1.a>t2.a", "`t1` STRAIGHT_JOIN `t2` ON `t1`.`a`>`t2`.`a`"},
 		{"t1 cross join t2", "`t1` JOIN `t2`"},
@@ -348,11 +348,11 @@ func (ts *testDMLSuite) TestFrameBoundRestore(c *C) {
 		{"CURRENT ROW", "CURRENT ROW"},
 		{"UNBOUNDED PRECEDING", "UNBOUNDED PRECEDING"},
 		{"1 PRECEDING", "1 PRECEDING"},
-		{"? PRECEDING", "? PRECEDING"},
+		{"{{param1}} PRECEDING", "NULL PRECEDING"},
 		{"INTERVAL 5 DAY PRECEDING", "INTERVAL 5 DAY PRECEDING"},
 		{"UNBOUNDED FOLLOWING", "UNBOUNDED FOLLOWING"},
 		{"1 FOLLOWING", "1 FOLLOWING"},
-		{"? FOLLOWING", "? FOLLOWING"},
+		{"{{param1}} FOLLOWING", "NULL FOLLOWING"},
 		{"INTERVAL '2:30' MINUTE_SECOND FOLLOWING", "INTERVAL '2:30' MINUTE_SECOND FOLLOWING"},
 	}
 	extractNodeFunc := func(node Node) Node {
@@ -366,7 +366,7 @@ func (ts *testDMLSuite) TestFrameClauseRestore(c *C) {
 		{"ROWS CURRENT ROW", "ROWS BETWEEN CURRENT ROW AND CURRENT ROW"},
 		{"ROWS UNBOUNDED PRECEDING", "ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW"},
 		{"ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING", "ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING"},
-		{"RANGE BETWEEN ? PRECEDING AND ? FOLLOWING", "RANGE BETWEEN ? PRECEDING AND ? FOLLOWING"},
+		{"RANGE BETWEEN {{param1}} PRECEDING AND {{param2}}  FOLLOWING", "RANGE BETWEEN NULL PRECEDING AND NULL FOLLOWING"},
 		{"RANGE BETWEEN INTERVAL 5 DAY PRECEDING AND INTERVAL '2:30' MINUTE_SECOND FOLLOWING", "RANGE BETWEEN INTERVAL 5 DAY PRECEDING AND INTERVAL '2:30' MINUTE_SECOND FOLLOWING"},
 	}
 	extractNodeFunc := func(node Node) Node {

@@ -23,19 +23,20 @@ In general, please use clang-format to format code, and follow clang-tidy tips.
 
 Most of the code style is derived from the [Google C++ style guidelines](https://google.github.io/styleguide/cppguide.html), except:
 
-* Exceptions are allowed and encouraged where appropriate.
-* Header guards should use `#pragma once`.
+- Exceptions are allowed and encouraged where appropriate.
+- Header guards should use `#pragma once`.
 
 ### Other tips
 
-* Git commit message should be meaningful, we suggest imperative [keywords](https://github.com/joelparkerhenderson/git_commit_message#summary-keywords).
-* Developer must write unit-test (line coverage must be greater than 80%), tests should be deterministic.
+- Git commit message should be meaningful, we suggest imperative [keywords](https://github.com/joelparkerhenderson/git_commit_message#summary-keywords).
+- Developer must write unit-test (line coverage must be greater than 80%), tests should be deterministic.
 
 ## Build
 
 ### Prerequisite
 
 #### Docker
+
 
 ```sh
 ## start dev container
@@ -67,10 +68,10 @@ bazelisk test //engine/...
 # build with address sanitizer
 bazelisk build --config=asan //engine/exe:scqlengine
 
-# build scdb code
+# build go code
 make
 
-# run scdb unit tests
+# run go unit tests
 go test ./pkg/...
 ```
 

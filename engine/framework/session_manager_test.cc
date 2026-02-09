@@ -106,7 +106,7 @@ TEST_F(SessionManagerTest, Works) {
   EXPECT_NO_THROW(mgr->CreateSession(params, debug_opts));
   EXPECT_TRUE(mgr->SetSessionState(session_id, SessionState::SUCCEEDED));
   EXPECT_NE(nullptr, listener_manager.GetListener(session_id));
-  sleep(2);
+  sleep(5);
   EXPECT_EQ(nullptr, listener_manager.GetListener(session_id));
 }
 

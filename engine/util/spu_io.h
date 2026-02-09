@@ -34,6 +34,9 @@ std::vector<spu::Value> ExpandGroupValueReversely(
 
 spu::DataType GetWiderSpuType(const spu::DataType& t1, const spu::DataType& t2);
 
+// Invert the data values
+spu::Value Invert(spu::SPUContext* sctx, const spu::Value& val);
+
 std::shared_ptr<arrow::Array> ConcatenateChunkedArray(
     const std::shared_ptr<arrow::ChunkedArray>& chunked_arr);
 
@@ -98,7 +101,7 @@ class SpuOutfeedHelper {
 
   TensorPtr DumpPublic(const std::string& name);
 
-  /// Reveal a secret value from spu device to party `rank`.
+  /// Reveal a secret value from spu deivce to party `rank`.
   /// @returns nullptr to other parties.
   TensorPtr RevealTo(const std::string& name, size_t rank);
 

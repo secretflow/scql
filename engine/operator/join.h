@@ -64,7 +64,7 @@ class Join : public Operator {
   void Execute(ExecContext* ctx) override;
 
  private:
-  static void ValidatePsiVisibility(ExecContext* ctx);
+  static void ValidatePsiTensors(ExecContext* ctx);
   static void ValidateJoinTypeAndAlgo(ExecContext* ctx);
 
   static void EcdhPsiJoin(ExecContext* ctx);

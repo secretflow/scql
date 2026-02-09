@@ -42,6 +42,10 @@ class EmbedRouter final : public Router {
   static std::unique_ptr<EmbedRouter> FromConnectionStr(
       const std::string& connection_str);
 
+  // Build router from input file paths for kpad task mode
+  static std::unique_ptr<EmbedRouter> FromFilePaths(
+      const google::protobuf::Map<std::string, std::string>& input_file_paths);
+
  private:
   static std::unique_ptr<EmbedRouter> FromProto(
       const EmbedRouterConf& router_conf);

@@ -3,13 +3,13 @@ mock router
 
 1. start mock router server
 
-```shell
-pip install -r ./requirements.txt
+    ```shell
+    pip install -r ./requirements.txt
 
-uvicorn --port 8000 mock_router_server:app
-```
+    uvicorn --port 8000 mock_router_server:app
+    ```
 
-2. open http://127.0.0.1:8000/ in browser to see the mock router
+2. open <http://127.0.0.1:8000/> in browser to see the mock router
 
 3. register datasource & add route rule
 

@@ -4,23 +4,19 @@
     "columns": [
       {
         "column_name": "gb_gb_gb_int_0",
-        "dtype": "int",
-        "ccl": ["groupby", "groupby", "groupby"]
+        "dtype": "int"
       },
       {
         "column_name": "cp_cp_cp_int_0",
-        "dtype": "int",
-        "ccl": ["compare", "compare", "compare"]
+        "dtype": "int"
       },
       {
         "column_name": "jn_jn_jn_int_0",
-        "dtype": "int",
-        "ccl": ["join", "join", "join"]
+        "dtype": "int"
       },
       {
         "column_name": "pl_jn_cp_int_0",
-        "dtype": "int",
-        "ccl": ["plain", "join", "compare"]
+        "dtype": "int"
       }
     ]
   },
@@ -29,33 +25,27 @@
     "columns": [
       {
         "column_name": "GROUPBY_int_0",
-        "dtype": "int",
-        "ccl": ["groupby"]
+        "dtype": "int"
       },
       {
         "column_name": "groupby_int_1",
-        "dtype": "int",
-        "ccl": ["groupby"]
+        "dtype": "int"
       },
       {
         "column_name": "JOIN_string_0",
-        "dtype": "string",
-        "ccl": ["join"]
+        "dtype": "string"
       },
       {
         "column_name": "join_string_1",
-        "dtype": "string",
-        "ccl": ["join"]
+        "dtype": "string"
       },
       {
         "column_name": "COMPARE_float_0",
-        "dtype": "float",
-        "ccl": ["compare"]
+        "dtype": "float"
       },
       {
         "column_name": "compare_float_1",
-        "dtype": "float",
-        "ccl": ["compare"]
+        "dtype": "float"
       }
     ]
   }

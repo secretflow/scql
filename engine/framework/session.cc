@@ -14,11 +14,13 @@
 
 #include "engine/framework/session.h"
 
+#include <cstdint>
 #include <memory>
 #include <mutex>
 
 #include "algorithm"
 #include "arrow/visit_array_inline.h"
+#include "google/protobuf/util/json_util.h"
 #include "libspu/core/config.h"
 #include "libspu/mpc/factory.h"
 #include "openssl/sha.h"
@@ -121,7 +123,6 @@ Session::Session(const SessionOptions& session_opt,
     auto config = spu::RuntimeConfig(params.spu_runtime_cfg());
     spu::populateRuntimeConfig(config);
     spu_ctx_ = std::make_unique<spu::SPUContext>(config, lctx_);
-
     YACL_ENFORCE(
         ValidateSPUContext(),
         "SPU runtime validation failed. Protocol {} is "
@@ -145,23 +146,64 @@ Session::Session(const SessionOptions& session_opt,
     psi_logger_ = std::make_shared<util::PsiDetailLogger>(
         util::CreateDetailLogger(id_, id_ + ".log", session_opt.log_options));
   }
-
+  session_opt_.streaming_options.batch_row_num = FLAGS_batch_row_num;
+  session_opt_.streaming_options.dump_file_dir =
+      util::CreateDirWithRandSuffix(FLAGS_tmp_file_path, id_);
+  Negotiate();
   util::PrometheusMonitor::GetInstance()->IncSessionNumberTotal();
-  // default not streaming
-  streaming_options_.batched = false;
-  streaming_options_.streaming_row_num_threshold =
-      FLAGS_streaming_row_num_threshold;
-  streaming_options_.batch_row_num = FLAGS_batch_row_num;
+}
+
+Session::Session(const PartyInfo& party_info,
+                 const spu::pb::RuntimeConfig& spu_cfg, Router* router,
+                 DatasourceAdaptorMgr* ds_mgr,
+                 const std::shared_ptr<yacl::link::Context>& link_context)
+    : id_(link_context->Id()),
+      session_opt_(SessionOptions{}),  // TODO: support SessionOptions
+      time_zone_("+08:00"),            // TODO: support timezone
+      parties_(party_info),
+      state_(SessionState::INITIALIZED),
+      link_factory_(nullptr),  // not used in this constructor
+      router_(router),
+      ds_mgr_(ds_mgr) {
+  start_time_ = std::chrono::system_clock::now();
+
+  // Create logger
+  std::string logger_name = "job(" + id_ + ")";
+  if (session_opt_.log_options.enable_session_logger_separation ||
+      session_opt_.log_config.enable_session_logger_separation) {
+    std::string logger_file_name = logger_name + ".log";
+    logger_ = util::CreateLogger(logger_name, logger_file_name,
+                                 session_opt_.log_options);
+  } else {
+    logger_ = util::DupDefaultLogger(logger_name);
+  }
+
+  // Create tensor table
+  tensor_table_ = std::make_unique<TensorTable>();
+
+  lctx_ = link_context;
+  if (lctx_->WorldSize() >= 2) {
+    // spu SPUContext valid only when world_size >= 2
+    auto config = spu::RuntimeConfig(spu_cfg);
+    spu::populateRuntimeConfig(config);
+    spu_ctx_ = std::make_unique<spu::SPUContext>(config, lctx_);
+    // TODO: check allowed_spu_protocols_
+    spu::mpc::Factory::RegisterProtocol(spu_ctx_.get(), lctx_);
+  }
+
+  session_opt_.streaming_options.batched = false;
 }
 
 Session::~Session() {
   util::PrometheusMonitor::GetInstance()->DecSessionNumberTotal();
-  if (streaming_options_.batched) {
+  if (session_opt_.streaming_options.batched) {
     std::error_code ec;
-    std::filesystem::remove_all(streaming_options_.dump_file_dir, ec);
+    std::filesystem::remove_all(session_opt_.streaming_options.dump_file_dir,
+                                ec);
     if (ec.value() != 0) {
       SPDLOG_WARN("can not remove tmp dir: {}, msg: {}",
-                  streaming_options_.dump_file_dir.string(), ec.message());
+                  session_opt_.streaming_options.dump_file_dir.string(),
+                  ec.message());
     }
   }
 }
@@ -183,9 +225,11 @@ void Session::InitLink() {
       yacl::link::ContextDesc::Party p;
       p.id = party.id;
       p.host = party.host;
+      SPDLOG_INFO("party-host: ({})-({})", p.id, p.host);
       ctx_desc.parties.push_back(std::move(p));
     }
   }
+  YACL_ENFORCE(link_factory_ != nullptr);
   lctx_ = link_factory_->CreateContext(ctx_desc, parties_.SelfRank());
   lctx_->SetThrottleWindowSize(
       session_opt_.link_config.link_throttle_window_size);
@@ -203,22 +247,66 @@ void Session::MergeDeviceSymbolsFrom(const spu::device::SymbolTable& other) {
 }
 
 void Session::EnableStreamingBatched() {
-  streaming_options_.batched = true;
-  size_t data[2] = {streaming_options_.batch_row_num,
-                    streaming_options_.streaming_row_num_threshold};
-  // get checksum from other parties
-  auto bufs = yacl::link::AllGather(
-      GetLink(), yacl::ByteContainerView(data, 2 * sizeof(size_t)),
-      "streaming_options");
-  for (const auto& buf : bufs) {
-    streaming_options_.batch_row_num =
-        std::min(streaming_options_.batch_row_num, buf.data<size_t>()[0]);
-    streaming_options_.streaming_row_num_threshold = std::min(
-        streaming_options_.streaming_row_num_threshold, buf.data<size_t>()[1]);
+  session_opt_.streaming_options.batched = true;
+}
+
+void Session::Negotiate() {
+  if (lctx_->WorldSize() <= 1) {
+    return;
   }
-  if (streaming_options_.dump_file_dir.empty()) {
-    streaming_options_.dump_file_dir =
-        util::CreateDirWithRandSuffix(FLAGS_tmp_file_path, id_);
+  pb::NegotiationOptions options;
+  auto* psi_options = options.mutable_psi_options();
+  psi_options->mutable_psi_curve_types()->Add(
+      session_opt_.psi_config.psi_curve_type);
+  psi_options->set_rr22_mode(session_opt_.psi_config.rr22_mode);
+  auto* streaming_options = options.mutable_streaming_options();
+  streaming_options->set_streaming_row_num_threshold(
+      session_opt_.streaming_options.streaming_row_num_threshold);
+  streaming_options->set_batch_row_num(
+      session_opt_.streaming_options.batch_row_num);
+  // negotiation
+  std::vector<pb::NegotiationOptions> negotiation_options_v;
+  {
+    std::string option_str;
+    YACL_ENFORCE(options.SerializeToString(&option_str),
+                 "failed to serialize NegotiationOptions to string");
+    yacl::ByteContainerView buffer(option_str);
+    auto buffers = yacl::link::AllGather(lctx_, buffer, "negotiate");
+    // parse
+    for (const auto& value : buffers) {
+      pb::NegotiationOptions tmp_options;
+      YACL_ENFORCE(tmp_options.ParseFromArray(value.data(), value.size()),
+                   "failed to parse NegotiationOptions from received buffer");
+      negotiation_options_v.push_back(std::move(tmp_options));
+    }
+  }
+
+  // set rr22_mode as default value
+  session_opt_.psi_config.rr22_mode = pb::FAST_MODE;
+  for (auto& negotiation_options : negotiation_options_v) {
+    // use low mode if any party set rr22_mode as low mode
+    if (negotiation_options.psi_options().rr22_mode() == pb::LOW_MODE) {
+      session_opt_.psi_config.rr22_mode = pb::LOW_MODE;
+    }
+    // choose min streaming_row_num_threshold
+    session_opt_.streaming_options.streaming_row_num_threshold =
+        std::min(session_opt_.streaming_options.streaming_row_num_threshold,
+                 static_cast<size_t>(negotiation_options.streaming_options()
+                                         .streaming_row_num_threshold()));
+    // choose min batch_row_num
+    session_opt_.streaming_options.batch_row_num =
+        std::min(session_opt_.streaming_options.batch_row_num,
+                 static_cast<size_t>(
+                     negotiation_options.streaming_options().batch_row_num()));
+    // TODO: support psi curve type list
+    YACL_ENFORCE(
+        negotiation_options.psi_options().psi_curve_types().size() == 1,
+        "only support one psi curve type but got {}",
+        negotiation_options.psi_options().psi_curve_types().size());
+    if (negotiation_options.psi_options().psi_curve_types()[0] !=
+        session_opt_.psi_config.psi_curve_type) {
+      session_opt_.psi_config.psi_curve_type = psi::CURVE_INVALID_TYPE;
+    }
   }
 }
 
@@ -394,7 +482,7 @@ void Session::UpdateRefName(const std::vector<std::string>& input_ref_names,
         continue;
       }
       auto iter = tensor_ref_nums_.find(name);
-      if (!streaming_options_.batched) {
+      if (!session_opt_.streaming_options.batched) {
         YACL_ENFORCE(iter == tensor_ref_nums_.end(),
                      "ref num of {} was set before created", name);
       }

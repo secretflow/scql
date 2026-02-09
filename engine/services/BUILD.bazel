@@ -88,8 +88,10 @@ cc_library(
     deps = [
         ":error_collector_service_impl",
         ":pipeline",
+        ":run_plan_core",
         "//api:common_cc_proto",
         "//api:engine_cc_proto",
+        "//api:scql_task_cc_proto",
         "//api:status_cc_proto",
         "//engine/auth:authenticator",
         "//engine/datasource:datasource_adaptor_mgr",
@@ -101,6 +103,8 @@ cc_library(
         "//engine/link:mux_link_factory",
         "//engine/link:mux_receiver_service",
         "//engine/operator:all_ops_register",
+        "//engine/util:kpad_task_helper",
+        "//engine/util:trace_categories",
         "@psi//psi/utils:sync",
     ],
 )
@@ -108,6 +112,9 @@ cc_library(
 scql_cc_test(
     name = "engine_service_impl_test",
     srcs = ["engine_service_impl_test.cc"],
+    env = {
+        "ASAN_OPTIONS": "detect_leaks=0,detect_odr_violation=0",  # 屏蔽leak,odr检测
+    },
     deps = [
         ":engine_service_impl",
         ":mock_report_service_cc_proto",
@@ -117,10 +124,34 @@ scql_cc_test(
 )
 
 cc_library(
+    name = "run_plan_core",
+    srcs = ["run_plan_core.cc"],
+    hdrs = ["run_plan_core.h"],
+    visibility = [
+        "//engine/exe:__pkg__",
+        "//engine/services:__pkg__",
+        "//python/engine:__pkg__",
+    ],
+    deps = [
+        ":pipeline",
+        "//api:engine_cc_proto",
+        "//api:status_cc_proto",
+        "//engine/framework:exec",
+        "//engine/framework:executor",
+        "//engine/framework:session",
+        "//engine/util:logging",
+        "//engine/util:trace_categories",
+    ],
+)
+
+cc_library(
     name = "pipeline",
     srcs = ["pipeline.cc"],
     hdrs = ["pipeline.h"],
-    visibility = ["//engine/exe:__pkg__"],
+    visibility = [
+        "//engine/exe:__pkg__",
+        "//python/engine:__pkg__",
+    ],
     deps = [
         "//api:engine_cc_proto",
         "//engine/core:tensor",

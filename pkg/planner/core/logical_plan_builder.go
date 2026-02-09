@@ -654,11 +654,24 @@ func (b *PlanBuilder) buildSelect(
 	b.pushSelectOffset(sel.QueryBlockOffset)
 	defer func() {
 		b.popSelectOffset()
-		if sel.SelectIntoOpt != nil && p != nil {
-			p.SetIntoOpt(sel.SelectIntoOpt)
+		if err == nil && sel.SelectIntoOpt != nil && p != nil {
+			partyColumns := make(map[string][]*expression.Column)
+			for _, partyFile := range sel.SelectIntoOpt.PartyFiles {
+				if len(partyFile.FieldList) == 0 {
+					continue // default empty list means select all columns in select field
+				}
+
+				columns, deferErr := b.resolveSelectIntoColumns(ctx, p, partyFile.FieldList)
+				if deferErr != nil {
+					err = deferErr // NOTE: set err with deferErr
+					return
+				}
+				partyColumns[partyFile.PartyCode] = columns
+			}
+
+			p.SetIntoOpt(sel.SelectIntoOpt, partyColumns)
 		}
 	}()
-
 	var (
 		aggFuncs                      []*ast.AggregateFuncExpr
 		havingMap, orderMap, totalMap map[*ast.AggregateFuncExpr]int
@@ -677,6 +690,17 @@ func (b *PlanBuilder) buildSelect(
 	sel.Fields.Fields, err = b.unfoldWildStar(p, sel.Fields.Fields)
 	if err != nil {
 		return nil, err
+	}
+	if sel.SelectIntoOpt != nil {
+		for _, partyFile := range sel.SelectIntoOpt.PartyFiles {
+			if len(partyFile.FieldList) == 0 {
+				continue // default empty list means select all columns in select field
+			}
+			partyFile.FieldList, err = b.unfoldWildStar(p, partyFile.FieldList)
+			if err != nil {
+				return nil, fmt.Errorf("buildSelect: %v", err)
+			}
+		}
 	}
 
 	if sel.GroupBy != nil {
@@ -1827,6 +1851,8 @@ func getUintFromNode(ctx sessionctx.Context, n ast.Node) (uVal uint64, isNull bo
 	switch v := n.(type) {
 	case *driver.ValueExpr:
 		val = v.GetValue()
+	case *driver.ParamMarkerExpr:
+		val = v.GetValue()
 	default:
 		return 0, false, false
 	}
@@ -2136,4 +2162,20 @@ func (b *PlanBuilder) TableHints() *tableHintInfo {
 		return nil
 	}
 	return &(b.tableHintInfo[len(b.tableHintInfo)-1])
+}
+
+func (b *PlanBuilder) resolveSelectIntoColumns(ctx context.Context, p LogicalPlan, customFields []*ast.SelectField) ([]*expression.Column, error) {
+	var columns []*expression.Column
+	for _, field := range customFields {
+		expr, _, err := b.rewrite(ctx, field.Expr, p, nil, true)
+		if err != nil {
+			return nil, fmt.Errorf("resolveSelectIntoColumns: rewrite expr{%v} err: %v", field.Expr, err)
+		}
+		column, ok := expr.(*expression.Column)
+		if !ok {
+			return nil, fmt.Errorf("resolveSelectIntoColumns: custom field {%v} must be a column", expr)
+		}
+		columns = append(columns, column)
+	}
+	return columns, nil
 }

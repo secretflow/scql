@@ -14,59 +14,81 @@
 
 #include "engine/datasource/dp_adaptor.h"
 
-#include <cstddef>
-#include <filesystem>
-#include <future>
 #include <memory>
 #include <optional>
-#include <vector>
 
-#include "absl/strings/ascii.h"
-#include "arrow/c/abi.h"
-#include "arrow/c/bridge.h"
-#include "arrow/compute/cast.h"
-#include "arrow/record_batch.h"
-#include "arrow/result.h"
-#include "arrow/status.h"
 #include "arrow/table.h"
-#include "dataproxy_sdk/data_proxy_stream.h"
-#include "gflags/gflags.h"
+#include "google/protobuf/util/json_util.h"
 
-#include "engine/exe/flags.h"
+#include "engine/core/arrow_helper.h"
 
+#include "engine/datasource/dataproxy_conf.pb.h"
+#include "google/protobuf/any.pb.h"
 namespace scql::engine {
 
+DpAdaptor::DpAdaptor(std::string json_str) {
+  datasource::DataProxyConf dp_conf;
+  auto status = google::protobuf::util::JsonStringToMessage(json_str, &dp_conf);
+  YACL_ENFORCE(status.ok(),
+               "failed to parse json to dataproxy conf: json={}, error={}",
+               json_str, status.ToString());
+
+  // construct command_ and client_
+  command_.mutable_datasource()->CopyFrom(dp_conf.datasource());
+
+  arrow::flight::Location location;
+  ASSIGN_OR_THROW_ARROW_STATUS(
+      location, arrow::flight::Location::Parse(dp_conf.dp_uri()));
+  arrow::flight::FlightClientOptions
+      options;  // TODO: support tls and more options
+  ASSIGN_OR_THROW_ARROW_STATUS(
+      client_, arrow::flight::FlightClient::Connect(location, options));
+}
+
 std::shared_ptr<ChunkedResult> DpAdaptor::SendQuery(const std::string& query) {
-  dataproxy_sdk::proto::DataProxyConfig config;
-  config.set_data_proxy_addr(FLAGS_kuscia_datamesh_endpoint);
-  config.mutable_tls_config()->set_certificate_path(
-      FLAGS_kuscia_datamesh_client_cert_path);
-  config.mutable_tls_config()->set_private_key_path(
-      FLAGS_kuscia_datamesh_client_key_path);
-  config.mutable_tls_config()->set_ca_file_path(
-      FLAGS_kuscia_datamesh_cacert_path);
-  auto stream = dataproxy_sdk::DataProxyStream::Make(config);
-  YACL_ENFORCE(stream != nullptr);
-  dataproxy_sdk::proto::SQLInfo sql_info;
-  sql_info.set_sql(query);
-  sql_info.set_datasource_id(datasource_id_);
-  auto stream_reader = stream->GetReader(sql_info);
-  YACL_ENFORCE(stream_reader != nullptr);
-  return std::make_shared<DpChunkedResult>(std::move(stream_reader));
+  command_.mutable_query()->set_sql(query);
+  google::protobuf::Any any_msg;
+  any_msg.PackFrom(command_);
+  std::string serialized_data;
+  YACL_ENFORCE(any_msg.SerializeToString(&serialized_data),
+               "failed to serialize the flight command");
+
+  std::unique_ptr<arrow::flight::FlightInfo> flight_info;
+  ASSIGN_OR_THROW_ARROW_STATUS(
+      flight_info,
+      client_->GetFlightInfo(
+          arrow::flight::FlightDescriptor::Command(serialized_data)));
+
+  arrow::ipc::DictionaryMemo memo;
+  std::shared_ptr<arrow::Schema> schema;
+  ASSIGN_OR_THROW_ARROW_STATUS(schema, flight_info->GetSchema(&memo));
+  return std::make_shared<DpChunkedResult>(schema, std::move(flight_info),
+                                           client_.get());
 }
 
 std::optional<arrow::ChunkedArrayVector> DpChunkedResult::Fetch() {
-  std::shared_ptr<arrow::RecordBatch> batch;
-  stream_reader_->Get(&batch);
-  if (batch == nullptr || batch->num_rows() == 0) {
+  if (endpoint_index_ >= flight_info_->endpoints().size()) {
     return std::nullopt;
   }
-  arrow::ChunkedArrayVector chunked_arrs;
-  for (int i = 0; i < batch->num_columns(); ++i) {
-    chunked_arrs.push_back(
-        arrow::ChunkedArray::Make({batch->column(i)}).ValueOrDie());
+
+  auto endpoint = flight_info_->endpoints()[endpoint_index_];
+  endpoint_index_++;
+
+  std::unique_ptr<arrow::flight::FlightStreamReader> stream;
+  YACL_ENFORCE(client_);
+  ASSIGN_OR_THROW_ARROW_STATUS(stream, client_->DoGet(endpoint.ticket));
+
+  std::shared_ptr<arrow::Table> table;
+  // TODO: maybe we should use stream.Next() to get data by batch
+  ASSIGN_OR_THROW_ARROW_STATUS(table, stream->ToTable());
+  THROW_IF_ARROW_NOT_OK(table->Validate());
+
+  arrow::ChunkedArrayVector arrs;
+  for (int i = 0; i < table->num_columns(); ++i) {
+    arrs.push_back(table->column(i));
   }
-  return chunked_arrs;
+
+  return arrs;
 }
 
 }  // namespace scql::engine

@@ -15,6 +15,7 @@
 #include "engine/datasource/embed_router.h"
 
 #include "gtest/gtest.h"
+#include "yacl/base/exception.h"
 
 namespace scql::engine {
 
@@ -125,6 +126,81 @@ TEST_F(EmbedRouterTest, FromConnectionStr) {
     EXPECT_EQ(datasources[i].id(), "ds001");
     EXPECT_EQ(datasources[i].kind(), DataSourceKind::MYSQL);
   }
+}
+
+TEST_F(EmbedRouterTest, FromFilePaths_SingleTableNames_ShouldThrow) {
+  // Given: Input with single table names
+  google::protobuf::Map<std::string, std::string> input_file_paths;
+  input_file_paths["table1"] = "/path/to/table1.csv";
+
+  // When & Then: Should throw exception for invalid format
+  std::unique_ptr<EmbedRouter> router;
+  EXPECT_THROW(
+      { router = EmbedRouter::FromFilePaths(input_file_paths); },
+      yacl::Exception);
+}
+
+TEST_F(EmbedRouterTest, FromFilePaths_SingleDbMultipleTables) {
+  // Given: Input with single database and multiple tables
+  google::protobuf::Map<std::string, std::string> input_file_paths;
+  input_file_paths["testdb.table1"] = "/path/to/table1.csv";
+  input_file_paths["testdb.table2"] = "/path/to/table2.csv";
+  input_file_paths["testdb.tbl_0"] = "/data/tbl_0.csv";
+
+  // When
+  std::unique_ptr<EmbedRouter> router;
+  EXPECT_NO_THROW({ router = EmbedRouter::FromFilePaths(input_file_paths); });
+
+  EXPECT_TRUE(router != nullptr);
+
+  // Then: Test routing for db.table format
+  std::vector<DataSource> datasources;
+  EXPECT_NO_THROW({
+    datasources = router->Route(std::vector<std::string>{
+        "testdb.table1", "testdb.table2", "testdb.tbl_0"});
+  });
+
+  EXPECT_EQ(datasources.size(), 3);
+  for (const auto& datasource : datasources) {
+    EXPECT_EQ(datasource.id(), "csvdb_testdb");
+    EXPECT_EQ(datasource.kind(), DataSourceKind::CSVDB);
+  }
+}
+
+TEST_F(EmbedRouterTest, FromFilePaths_MultipleDatabases_ShouldThrow) {
+  // Given: Input with multiple databases
+  google::protobuf::Map<std::string, std::string> input_file_paths;
+  input_file_paths["db1.table1"] = "/path/to/db1_table1.csv";
+  input_file_paths["db2.table2"] = "/path/to/db2_table2.csv";
+
+  // When & Then: Should throw exception for multiple databases
+  std::unique_ptr<EmbedRouter> router;
+  EXPECT_THROW(
+      { router = EmbedRouter::FromFilePaths(input_file_paths); },
+      yacl::Exception);
+}
+
+TEST_F(EmbedRouterTest, FromFilePaths_InvalidFormat) {
+  // Given: Invalid table reference format (too many dots)
+  google::protobuf::Map<std::string, std::string> input_file_paths;
+  input_file_paths["db.table.invalid"] = "/path/to/invalid.csv";
+
+  // When & Then: Should throw exception
+  std::unique_ptr<EmbedRouter> router;
+  EXPECT_THROW(
+      { router = EmbedRouter::FromFilePaths(input_file_paths); },
+      yacl::Exception);
+}
+
+TEST_F(EmbedRouterTest, FromFilePaths_EmptyInput_ShouldThrow) {
+  // Given: Empty input map
+  google::protobuf::Map<std::string, std::string> input_file_paths;
+
+  // When & Then: Should throw exception for empty input
+  std::unique_ptr<EmbedRouter> router;
+  EXPECT_THROW(
+      { router = EmbedRouter::FromFilePaths(input_file_paths); },
+      yacl::Exception);
 }
 
 }  // namespace scql::engine

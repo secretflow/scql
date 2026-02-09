@@ -45,10 +45,8 @@ void Concat::Validate(ExecContext* ctx) {
 }
 
 void Concat::Execute(ExecContext* ctx) {
-  const auto& input_pbs = ctx->GetInput(kIn);
   const auto& output_pb = ctx->GetOutput(kOut)[0];
   auto* sctx = ctx->GetSession()->GetSpuContext();
-  auto* symbols = ctx->GetSession()->GetDeviceSymbols();
 
   spu::DataType output_type = spu::DataType::DT_INVALID;
   if (output_pb.elem_type() != pb::PrimitiveDataType::STRING) {
@@ -56,40 +54,25 @@ void Concat::Execute(ExecContext* ctx) {
         spu::getEncodeType(DataTypeToSpuPtType(output_pb.elem_type()));
   }
 
-  std::vector<spu::Value> values;
-  values.reserve(input_pbs.size());
-  for (int i = 0; i < input_pbs.size(); ++i) {
-    auto value = symbols->getVar(
-        util::SpuVarNameEncoder::GetValueName(input_pbs[i].name()));
+  auto values = ctx->GetInputValues(kIn);
+  for (size_t i = 0; i < values.size(); ++i) {
     if (output_type != spu::DataType::DT_INVALID &&
-        output_type != value.dtype()) {
-      const auto cast_value =
-          spu::kernel::hlo::Cast(sctx, value, value.vtype(), output_type);
-      values.push_back(cast_value);
-    } else {
-      values.push_back(value);
+        output_type != values[i].dtype()) {
+      values[i] = spu::kernel::hlo::Cast(sctx, values[i], values[i].vtype(),
+                                         output_type);
     }
   }
 
   int64_t axis = ctx->GetInt64ValueFromAttribute(kAxis);
   auto result_value = spu::kernel::hlo::Concatenate(sctx, values, axis);
 
-  symbols->setVar(util::SpuVarNameEncoder::GetValueName(output_pb.name()),
-                  result_value);
+  ctx->SetOutputValue(kOut, result_value);
 
 #ifdef SCQL_WITH_NULL
-  std::vector<spu::Value> validities;
-  validities.reserve(input_pbs.size());
-  for (int i = 0; i < input_pbs.size(); ++i) {
-    auto validity = symbols->getVar(
-        util::SpuVarNameEncoder::GetValidityName(input_pbs[i].name()));
-    validities.push_back(validity);
-  }
-
+  auto validities = ctx->GetInputValidities(kIn);
   auto result_validity = spu::kernel::hlo::Concatenate(sctx, validities, axis);
 
-  symbols->setVar(util::SpuVarNameEncoder::GetValidityName(output_pb.name()),
-                  result_validity);
+  ctx->SetOutputValidity(kOut, result_validity);
 #endif  // SCQL_WITH_NULL
 }
 

@@ -37,6 +37,8 @@ void SetInt64Values(pb::Tensor* t, const std::vector<int64_t>& values);
 
 bool GetBooleanValue(const pb::Tensor& t);
 
+std::vector<bool> GetBooleanValues(const pb::Tensor& t);
+
 void SetDoubleValues(pb::Tensor* t, const std::vector<double>& values);
 
 double GetDoubleValue(const pb::Tensor& t);
@@ -78,4 +80,5 @@ void ConvertDateTimeAndCopyValuesToProto(
     const std::shared_ptr<Tensor>& from_tensor, pb::Tensor* to_proto);
 
 bool AreAllBucketTensor(const std::vector<TensorPtr>& tensors);
+
 }  // namespace scql::engine::util

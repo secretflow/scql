@@ -65,12 +65,6 @@ void Bucket::Validate(ExecContext* ctx) {
   YACL_ENFORCE(util::AreTensorsStatusMatched(
                    outputs, pb::TensorStatus::TENSORSTATUS_PRIVATE),
                "Bucket output tensors' status should all be private");
-
-  std::vector<std::string> input_party_codes =
-      ctx->GetStringValuesFromAttribute(kInputPartyCodesAttr);
-  YACL_ENFORCE(input_party_codes.size() == 2,
-               "Join operator attribute {} must have exactly 2 elements",
-               kInputPartyCodesAttr);
 }
 
 size_t GetMaxRowNum(ExecContext* ctx, size_t local_row_num,

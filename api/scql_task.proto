@@ -1,0 +1,64 @@
+// Copyright 2025 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+import "api/engine.proto";
+import "api/subgraph.proto";
+import "api/common.proto";
+import "libspu/spu.proto";
+
+package scql.pb;
+
+// Temporarily removed, may be reused in the future
+// message ClusterDef {
+//   string self_party = 1;
+//   repeated string parties = 2;
+//   map<string, ServiceMap> services = 3;
+// }
+
+// message ServiceMap {
+//   map<string, Service> services = 1;
+// }
+
+// message Service {
+//   string name = 1;
+//   string host = 2;
+//   string port = 3;
+//   string scope = 4;
+//   string protocol = 5;
+// }
+
+// SCQL job configuration containing execution plans and runtime settings
+message ScqlConfig {
+  // Table name to input file path mapping
+  map<string, string> input_file_paths = 1;
+
+  // Party code to execution graph mapping
+  map<string, SubGraph> all_sub_graphs = 2;
+
+  // Participating parties sorted by rank (starting from 0)
+  repeated string parties = 3;
+
+  // Runtime configurations
+  spu.pb.RuntimeConfig spu_runtime_cfg = 10;  // SPU protocol settings
+  string time_zone = 11;     // Time zone for temporal operations
+  LinkConfig link_cfg = 12;  // Network communication settings
+  PsiConfig psi_cfg = 13;    // Private set intersection config
+  LogConfig log_cfg = 14;    // Logging configuration
+
+  // Configuration used by the Kpad only
+  string graph_checksum = 20; // Checksum of the overall execution graph, used by other parties to verify graph consistency
+}

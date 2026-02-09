@@ -25,6 +25,8 @@ import (
 	"github.com/secretflow/scql/pkg/parser/ast"
 	"github.com/secretflow/scql/pkg/parser/format"
 	"github.com/secretflow/scql/pkg/parser/model"
+	"github.com/secretflow/scql/pkg/sessionctx/variable"
+	driver "github.com/secretflow/scql/pkg/types/parser_driver"
 )
 
 type DbTable struct {
@@ -159,7 +161,7 @@ func (r *DbTableRewriter) Error() error {
 	return r.err
 }
 
-// replace ref table name by local table name
+// retrieval all table used by logical plan
 type DbTableVisitor struct {
 	err    error
 	tables []DbTable
@@ -188,7 +190,7 @@ func (r *DbTableVisitor) Error() error {
 }
 
 func (r *DbTableVisitor) Tables() []DbTable {
-	return r.Tables()
+	return r.tables
 }
 
 // RewriteSQLFromLP create sql string from lp with dialect
@@ -280,4 +282,47 @@ func GetSourceTables(sql string) ([]DbTable, error) {
 		return nil, err
 	}
 	return r.tables, nil
+}
+
+type PreparedParamsVisitor struct {
+	err            error
+	preparedParams *variable.PreparedParams
+	// used params
+	usedParams map[string]struct{}
+}
+
+func NewPreparedParamsVisitor(params *variable.PreparedParams) *PreparedParamsVisitor {
+	return &PreparedParamsVisitor{preparedParams: params, usedParams: make(map[string]struct{})}
+}
+
+func (v *PreparedParamsVisitor) Enter(in ast.Node) (ast.Node, bool) {
+	if len(*v.preparedParams) == 0 {
+		return in, false
+	}
+	return in, v.err != nil
+}
+
+func (v *PreparedParamsVisitor) Leave(in ast.Node) (ast.Node, bool) {
+	switch x := in.(type) {
+	case *driver.ParamMarkerExpr:
+		if d, ok := v.preparedParams.GetPreparedParam(x.ParamName); ok {
+			x.Datum = *d
+		} else {
+			v.err = fmt.Errorf("param %s not found", x.ParamName)
+		}
+		v.usedParams[x.ParamName] = struct{}{}
+	}
+	return in, v.err == nil
+}
+
+func (v *PreparedParamsVisitor) Error() error {
+	if v.err != nil {
+		return v.err
+	}
+	for paramName := range *v.preparedParams {
+		if _, ok := v.usedParams[paramName]; !ok {
+			return fmt.Errorf("param %s not used", paramName)
+		}
+	}
+	return nil
 }

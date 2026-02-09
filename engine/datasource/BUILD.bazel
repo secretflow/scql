@@ -27,6 +27,7 @@ cc_library(
         "//engine/core:arrow_helper",
         "//engine/core:tensor",
         "//engine/core:tensor_constructor",
+        "//engine/exe:flags",
         "//engine/util:concurrent_queue",
         "//engine/util:filepath_helper",
         "//engine/util:tensor_util",
@@ -90,6 +91,7 @@ scql_cc_test(
     srcs = ["odbc_adaptor_sqlite_test.cc"],
     deps = [
         ":odbc_adaptor",
+        "//engine/operator:test_util",
     ],
 )
 
@@ -100,6 +102,7 @@ cc_binary(
     srcs = ["odbc_adaptor_mysql_test.cc"],
     deps = [
         ":odbc_adaptor",
+        "//engine/operator:test_util",
         "@abseil-cpp//absl/flags:flag",
         "@abseil-cpp//absl/flags:parse",
         "@googletest//:gtest",
@@ -138,6 +141,7 @@ cc_library(
     srcs = ["embed_router.cc"],
     hdrs = ["embed_router.h"],
     deps = [
+        ":csvdb_conf_cc_proto",
         ":embed_router_cc_proto",
         ":router",
         "@abseil-cpp//absl/container:flat_hash_map",
@@ -164,6 +168,7 @@ cc_library(
         ":csvdb_adaptor_factory",
         ":datasource_adaptor",
         ":datasource_cc_proto",
+        ":dm_adaptor_factory",
         ":dp_adaptor_factory",
         ":odbc_adaptor_factory",
         "@abseil-cpp//absl/container:flat_hash_map",
@@ -252,9 +257,9 @@ cc_library(
 )
 
 cc_library(
-    name = "dp_adaptor",
-    srcs = ["dp_adaptor.cc"],
-    hdrs = ["dp_adaptor.h"],
+    name = "dm_adaptor",
+    srcs = ["dm_adaptor.cc"],
+    hdrs = ["dm_adaptor.h"],
     deps = [
         ":datasource_adaptor",
         ":datasource_cc_proto",
@@ -271,10 +276,10 @@ cc_library(
 )
 
 cc_binary(
-    name = "dp_adaptor_kuscia_test",
-    srcs = ["dp_adaptor_kuscia_test.cc"],
+    name = "dm_adaptor_kuscia_test",
+    srcs = ["dm_adaptor_kuscia_test.cc"],
     deps = [
-        ":dp_adaptor",
+        ":dm_adaptor",
         "@abseil-cpp//absl/debugging:failure_signal_handler",
         "@abseil-cpp//absl/debugging:symbolize",
         "@abseil-cpp//absl/flags:flag",
@@ -284,12 +289,12 @@ cc_binary(
 )
 
 cc_library(
-    name = "dp_adaptor_factory",
-    srcs = ["dp_adaptor_factory.cc"],
-    hdrs = ["dp_adaptor_factory.h"],
+    name = "dm_adaptor_factory",
+    srcs = ["dm_adaptor_factory.cc"],
+    hdrs = ["dm_adaptor_factory.h"],
     deps = [
         ":datasource_adaptor_factory",
-        ":dp_adaptor",
+        ":dm_adaptor",
     ],
 )
 
@@ -299,6 +304,7 @@ scql_cc_test(
     deps = [
         ":csvdb_adaptor",
         "//engine/core:tensor_constructor",
+        "//engine/operator:test_util",
         "@brpc//:butil",
     ],
 )
@@ -350,6 +356,7 @@ cc_library(
     deps = [
         ":csvdb_conf_cc_proto",
         ":router",
+        "//engine/util:datamesh_helper",
         "//engine/util:filepath_helper",
         "@abseil-cpp//absl/strings",
         "@brpc//:bthread",
@@ -370,5 +377,56 @@ cc_binary(
         ":kuscia_datamesh_router",
         "@abseil-cpp//absl/debugging:failure_signal_handler",
         "@abseil-cpp//absl/debugging:symbolize",
+    ],
+)
+
+proto_library(
+    name = "dataproxy_conf_proto",
+    srcs = ["dataproxy_conf.proto"],
+    deps = [
+        "@kuscia//proto/api/v1alpha1/datamesh:domaindatasource_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "dataproxy_conf_cc_proto",
+    deps = [
+        ":dataproxy_conf_proto",
+    ],
+)
+
+cc_library(
+    name = "dp_adaptor",
+    srcs = ["dp_adaptor.cc"],
+    hdrs = ["dp_adaptor.h"],
+    deps = [
+        ":dataproxy_conf_cc_proto",
+        ":datasource_adaptor",
+        ":datasource_cc_proto",
+        "//engine/core:tensor_constructor",
+        "//engine/util:spu_io",
+        "//engine/util/dp:flight_cc_proto",
+        "@org_apache_arrow//:arrow",
+        "@org_apache_arrow//:arrow_flight",
+    ],
+)
+
+scql_cc_test(
+    name = "dp_adaptor_test",
+    srcs = [
+        "dp_adaptor_test.cc",
+    ],
+    deps = [
+        ":dp_adaptor",
+    ],
+)
+
+cc_library(
+    name = "dp_adaptor_factory",
+    srcs = ["dp_adaptor_factory.cc"],
+    hdrs = ["dp_adaptor_factory.h"],
+    deps = [
+        ":datasource_adaptor_factory",
+        ":dp_adaptor",
     ],
 )

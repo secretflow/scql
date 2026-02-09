@@ -194,41 +194,23 @@ void Variadic::Validate(ExecContext* ctx) {
 }
 
 void Variadic::ExecuteInPlain(ExecContext* ctx) {
-  auto inputs = ctx->GetInput(kIn);
-  std::vector<TensorPtr> input_ptrs;
-  for (auto& input : inputs) {
-    auto input_ptr = ctx->GetTensorTable()->GetTensor(input.name());
-    YACL_ENFORCE(input_ptr != nullptr, "input tensor {} not found",
-                 input.name());
-    input_ptrs.push_back(input_ptr);
-  }
+  auto inputs = ctx->GetInputTensors(kIn);
 
-  auto output_ptr = ComputeInPlain(input_ptrs);
-  auto output = ctx->GetOutput(kOut);
-  ctx->GetTensorTable()->AddTensor(output[0].name(), std::move(output_ptr));
+  auto output_ptr = ComputeInPlain(inputs);
+  ctx->SetOutputTensor(kOut, std::move(output_ptr));
 }
 
 void Variadic::ExecuteOnSpu(ExecContext* ctx) {
-  auto* device_symbols = ctx->GetSession()->GetDeviceSymbols();
-  YACL_ENFORCE(device_symbols != nullptr, "device_symbols is nullptr");
   auto* sctx = ctx->GetSession()->GetSpuContext();
   YACL_ENFORCE(sctx != nullptr, "spu context is nullptr");
-  const auto& in_pb = ctx->GetInput(kIn);
-  std::vector<spu::Value> input_values;
-  for (const auto& input : in_pb) {
-    input_values.push_back(device_symbols->getVar(
-        util::SpuVarNameEncoder::GetValueName(input.name())));
-  }
+
+  auto input_values = ctx->GetInputValues(kIn);
   auto output_value = ComputeOnSpu(sctx, input_values);
-  const auto& out_pb = ctx->GetOutput(kOut);
-  device_symbols->setVar(
-      util::SpuVarNameEncoder::GetValueName(out_pb[0].name()), output_value);
+  ctx->SetOutputValue(kOut, output_value);
 }
 
 void Variadic::Execute(ExecContext* ctx) {
-  auto inputs = ctx->GetInput(kIn);
-  auto outputs = ctx->GetOutput(kOut);
-  if (util::GetTensorStatus(outputs[0]) == pb::TENSORSTATUS_PRIVATE) {
+  if (ctx->GetOutputStatus(kOut) == pb::TENSORSTATUS_PRIVATE) {
     ExecuteInPlain(ctx);
   } else {
     ExecuteOnSpu(ctx);

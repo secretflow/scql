@@ -50,7 +50,7 @@ func (c ExprConverter) ConvertExpressionToExprNode(dialect format.Dialect, expr 
 	case *ScalarFunction:
 		return c.convertScalarFunction(dialect, x, prec, idToExpr)
 	default:
-		return nil, errors.Errorf("Unknown expression type: %v", expr)
+		return nil, errors.Errorf("Unknown expression {%v}, type: %s", expr, reflect.TypeOf(expr))
 	}
 }
 

@@ -246,6 +246,12 @@ func (c *runSqlCtx) UpdateFieldsName(oldCtx *runSqlCtx) {
 	}
 }
 
+func (c *runSqlCtx) mergeFieldsName(ctx *runSqlCtx) {
+	for _, col := range ctx.schemaProducer.Schema().Columns {
+		c.colIdToExprNode[col.UniqueID] = ctx.colIdToExprNode[col.UniqueID]
+	}
+}
+
 func (c *runSqlCtx) WorkAsSub() (*runSqlCtx, error) {
 	ss, err := c.GetSQLStmt()
 	if err != nil {

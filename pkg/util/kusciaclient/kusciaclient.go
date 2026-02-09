@@ -24,7 +24,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/secretflow/scql/pkg/broker/config"
+	"github.com/secretflow/scql/pkg/config"
 )
 
 const (
@@ -68,7 +68,7 @@ func NewKusciaClientConn(endpoint string, tlsMode string, certPath, keyPath, cac
 		return nil, fmt.Errorf("unknown kusciaapi tls_mode: %s", tlsMode)
 	}
 
-	return grpc.Dial(endpoint, grpcDialOpts...)
+	return grpc.NewClient(endpoint, grpcDialOpts...)
 }
 
 func grpcClientTokenInterceptor(tokenStr string) grpc.UnaryClientInterceptor {

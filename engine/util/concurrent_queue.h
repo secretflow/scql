@@ -15,7 +15,9 @@
 #pragma once
 
 #include <atomic>
+#include <chrono>
 #include <condition_variable>
+#include <cstdint>
 #include <mutex>
 #include <optional>
 #include <queue>
@@ -28,6 +30,9 @@ template <typename T>
 class SimpleChannel {
  public:
   explicit SimpleChannel(size_t capacity) : capacity_(capacity) {}
+  SimpleChannel(size_t capacity, int32_t queue_max_block_seconds)
+      : capacity_(capacity),
+        queue_max_block_seconds_(queue_max_block_seconds) {}
   ~SimpleChannel() {}
 
   void Push(T& item) {
@@ -38,7 +43,10 @@ class SimpleChannel {
         YACL_THROW("send data to a closed queue");
       }
       while (queue_.size() >= capacity_) {
-        cond_.wait(lock, [&] { return queue_.size() < capacity_; });
+        auto ok =
+            cond_.wait_for(lock, std::chrono::seconds(queue_max_block_seconds_),
+                           [&] { return queue_.size() < capacity_; });
+        YACL_ENFORCE(ok, "queue wait timeout");
       }
       queue_.push(item);
     }
@@ -53,7 +61,10 @@ class SimpleChannel {
         YACL_THROW("send data to a closed queue");
       }
       while (queue_.size() >= capacity_) {
-        cond_.wait(lock, [&] { return queue_.size() < capacity_; });
+        auto ok =
+            cond_.wait_for(lock, std::chrono::seconds(queue_max_block_seconds_),
+                           [&] { return queue_.size() < capacity_; });
+        YACL_ENFORCE(ok, "queue wait timeout");
       }
       queue_.push(std::forward<T>(item));
     }
@@ -66,7 +77,10 @@ class SimpleChannel {
     {
       std::unique_lock<std::mutex> lock(mutex_);
       while (queue_.empty() && !closed_) {
-        cond_.wait(lock, [&] { return !queue_.empty() || closed_; });
+        auto ok =
+            cond_.wait_for(lock, std::chrono::seconds(queue_max_block_seconds_),
+                           [&] { return !queue_.empty() || closed_; });
+        YACL_ENFORCE(ok, "queue wait timeout");
       }
       // return empty item if queue is closed and queue is empty
       if (closed_ && queue_.empty()) {
@@ -96,5 +110,7 @@ class SimpleChannel {
   std::condition_variable cond_;
   size_t capacity_;
   std::queue<T> queue_;
+  // default wait 60 seconds
+  int32_t queue_max_block_seconds_{60};
 };
 }  // namespace scql::engine::util

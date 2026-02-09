@@ -186,18 +186,14 @@ type ParamMarkerExpr struct {
 	ValueExpr
 	Offset    int
 	Order     int
+	ParamName string
 	InExecute bool
 }
 
-// Restore implements Node interface.
-func (n *ParamMarkerExpr) Restore(ctx *format.RestoreCtx) error {
-	ctx.WritePlain("?")
-	return nil
-}
-
-func newParamMarkerExpr(offset int) ast.ParamMarkerExpr {
+func newParamMarkerExpr(offset int, paramName string) ast.ParamMarkerExpr {
 	return &ParamMarkerExpr{
-		Offset: offset,
+		Offset:    offset,
+		ParamName: paramName,
 	}
 }
 

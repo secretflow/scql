@@ -4,13 +4,14 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//	http://www.apache.org/licenses/LICENSE-2.0
+//   http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 package core
 
 import (
@@ -34,16 +35,20 @@ func (t *timeZonePatcher) optimize(ctx context.Context, lp LogicalPlan) (Logical
 	if sctx == nil {
 		return lp, nil
 	}
+
 	// Get the createdAt time from the session context
 	createdAt := sctx.GetSessionVars().CreatedAt
 	if createdAt.IsZero() {
 		return lp, nil
 	}
+
 	// Create and apply the logical plan timestamp visitor
 	visitor := newLogicalPlanTimestampVisitor(createdAt)
 	visitor.visit(lp)
+
 	return lp, nil
 }
+
 func (t *timeZonePatcher) name() string {
 	return "time_zone_patch"
 }
@@ -66,6 +71,7 @@ func (lptv *logicalPlanTimestampVisitor) visit(lp LogicalPlan) {
 	for _, child := range lp.Children() {
 		lptv.visit(child)
 	}
+
 	lptv.processNode(lp)
 }
 
@@ -76,10 +82,12 @@ func (lptv *logicalPlanTimestampVisitor) processNode(lp LogicalPlan) {
 		for _, expr := range node.Conditions {
 			lptv.processExpression(expr, logicalPlanContextInfo{})
 		}
+
 	case *LogicalProjection:
 		for _, expr := range node.Exprs {
 			lptv.processExpression(expr, logicalPlanContextInfo{})
 		}
+
 	case *LogicalAggregation:
 		// Process aggregation function arguments and group by items
 		for _, aggFunc := range node.AggFuncs {
@@ -116,16 +124,19 @@ func (lptv *logicalPlanTimestampVisitor) processNode(lp LogicalPlan) {
 				}
 			}
 		}
+
 	case *LogicalSort:
 		// Process sort expressions
 		for _, item := range node.ByItems {
 			lptv.processExpression(item.Expr, logicalPlanContextInfo{})
 		}
+
 	case *LogicalApply:
 		// Process correlated columns
 		for _, col := range node.CorCols {
 			lptv.processExpression(&col.Column, logicalPlanContextInfo{})
 		}
+
 		if join, ok := lp.(*LogicalJoin); ok {
 			for _, eqCond := range join.EqualConditions {
 				lptv.processExpression(eqCond, logicalPlanContextInfo{})
@@ -140,6 +151,7 @@ func (lptv *logicalPlanTimestampVisitor) processNode(lp LogicalPlan) {
 				lptv.processExpression(otherCond, logicalPlanContextInfo{})
 			}
 		}
+
 		// In SCQL, join operations typically only involve column-to-column equality comparisons
 		// case *LogicalJoin:
 		// 	// Process all join conditions
@@ -164,12 +176,15 @@ func (lptv *logicalPlanTimestampVisitor) processExpression(expr expression.Expre
 	// and process its arguments with the appropriate context
 	if scalarFunc, ok := expr.(*expression.ScalarFunction); ok {
 		isTimestampComparison := lptv.isTimestampComparison(expr)
+
 		newCtx := logicalPlanContextInfo{
 			inTimestampComparison: isTimestampComparison,
 		}
+
 		lptv.processExpressions(scalarFunc.GetArgs(), newCtx)
 		return
 	}
+
 	// If this is a constant value expression, check if it's a timestamp literal we need to modify
 	if constant, ok := expr.(*expression.Constant); ok {
 		lptv.processConstant(constant, ctx)
@@ -222,8 +237,10 @@ func (lptv *logicalPlanTimestampVisitor) isTimestampColumn(expr expression.Expre
 func (lptv *logicalPlanTimestampVisitor) isTimestampWithoutTimezone(s string) bool {
 	// Check if it matches timestamp pattern like "2023-10-01 08:30:00" or "2023-10-01T08:30:00"
 	timestampPattern := regexp.MustCompile(`^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}$`)
+
 	// Check if it already has timezone information
 	hasTimezonePattern := regexp.MustCompile(`^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}([+-]\d{2}:\d{2}|Z)$`)
+
 	return timestampPattern.MatchString(s) && !hasTimezonePattern.MatchString(s)
 }
 
@@ -231,6 +248,7 @@ func (lptv *logicalPlanTimestampVisitor) isTimestampWithoutTimezone(s string) bo
 func (lptv *logicalPlanTimestampVisitor) processConstant(constant *expression.Constant, ctx logicalPlanContextInfo) {
 	if constant.Value.Kind() == types.KindString {
 		strValue := constant.Value.GetString()
+
 		if ctx.inTimestampComparison {
 			if lptv.isTimestampWithoutTimezone(strValue) {
 				// Add timezone from createdAt
@@ -239,6 +257,7 @@ func (lptv *logicalPlanTimestampVisitor) processConstant(constant *expression.Co
 					timezoneStr = "+" + timezoneStr
 				}
 				newValue := strValue + timezoneStr
+
 				// Update the constant with the new value
 				constant.Value.SetString(newValue)
 			}

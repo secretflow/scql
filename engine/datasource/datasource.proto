@@ -26,7 +26,8 @@ enum DataSourceKind {
   CSVDB = 4;
   ARROWSQL = 5;
   GRPC = 6;
-  DATAPROXY = 7;
+  DATAMESH = 7;
+  DATAPROXY = 8;
 }
 
 message DataSource {

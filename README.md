@@ -4,6 +4,8 @@
 
 Secure Collaborative Query Language (SCQL) is a system that translates SQL statements into Secure Multiparty Computation (SMC) primitives and executes them on a federation of database systems.
 
+> **Note**: If you are looking for SCQL 1.0, please check the [1.x branch](https://github.com/secretflow/scql/tree/release/1.x).
+
 ![SCQL Workflow](./docs/imgs/scql_workflow.png)
 
 ## Documentation

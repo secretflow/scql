@@ -335,12 +335,6 @@ func (a *aggregationPushDownSolver) pushAggCrossUnion(agg *LogicalAggregation, u
 }
 
 func (a *aggregationPushDownSolver) optimize(ctx context.Context, p LogicalPlan) (LogicalPlan, error) {
-	//if !p.SCtx().GetSessionVars().AllowAggPushDown {
-	//	return p, nil
-	//}
-	if err := a.MarkAggCountFunc(p); err != nil {
-		return nil, err
-	}
 	if err := CheckAggFuncArgInGroupByItems(p); err != nil {
 		return nil, err
 	}
@@ -403,43 +397,6 @@ func CheckAggFuncArgInGroupByItems(p LogicalPlan) error {
 	return nil
 }
 
-func (a *aggregationPushDownSolver) MarkAggCountFunc(p LogicalPlan) error {
-	for _, child := range p.Children() {
-		err := a.MarkAggCountFunc(child)
-		if err != nil {
-			return err
-		}
-	}
-	agg, ok := p.(*LogicalAggregation)
-	if !ok {
-		return nil
-	}
-	if len(agg.GroupByItems) == 0 || agg.ProducedByDistinct {
-		return nil
-	}
-	hasCount := false
-	for _, aggFunc := range agg.AggFuncs {
-		if aggFunc.Name == ast.AggFuncCount && !aggFunc.HasDistinct {
-			aggFunc.UseAsThreshold = true
-			hasCount = true
-			break
-		}
-	}
-	if !hasCount {
-		countFunc, err := aggregation.NewAggFuncDesc(agg.ctx, ast.AggFuncCount, []expression.Expression{expression.One}, false)
-		if err != nil {
-			return err
-		}
-		countFunc.UseAsThreshold = true
-		agg.AggFuncs = append(agg.AggFuncs, countFunc)
-		agg.schema.Append(&expression.Column{
-			UniqueID: agg.ctx.GetSessionVars().AllocPlanColumnID(),
-			RetType:  countFunc.RetTp,
-		})
-	}
-	return nil
-}
-
 // aggPushDown tries to push down aggregate functions to join paths.
 func (a *aggregationPushDownSolver) aggPushDown(p LogicalPlan) (_ LogicalPlan, err error) {
 	if agg, ok := p.(*LogicalAggregation); ok {
@@ -484,7 +441,7 @@ func (a *aggregationPushDownSolver) aggPushDown(p LogicalPlan) (_ LogicalPlan, e
 				//	}
 				//}
 			} else if proj, ok1 := child.(*LogicalProjection); ok1 {
-				/// WARNING: this optimization is disable when projection exprs contains scalar function. Because it does not make the engine plan more efficient.
+				/// WARNING: this optimization is disable when projection exprs contains scalar function. Because it does not make the execution graph more efficient.
 				/// On the contrary, it will bring more computation cost. e.g.: compute the same expression more than once.
 				// TODO: This optimization is not always reasonable. We have not supported pushing projection to kv layer yet,
 				// so we must do this optimization.

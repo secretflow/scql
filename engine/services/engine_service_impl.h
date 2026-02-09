@@ -20,8 +20,11 @@
 #include "engine/datasource/datasource_adaptor_mgr.h"
 #include "engine/framework/session_manager.h"
 #include "engine/link/channel_manager.h"
+#include "engine/services/run_plan_core.h"
+#include "engine/util/kpad_task_helper.h"
 
 #include "api/engine.pb.h"
+#include "api/scql_task.pb.h"
 #include "api/status.pb.h"
 #include "api/status_code.pb.h"
 
@@ -57,13 +60,12 @@ class EngineServiceImpl : public pb::SCQLEngineService {
 
   SessionManager* GetSessionManager() { return session_mgr_.get(); }
 
+  // Run kpad task execution, throws exception on failure
+  void RunKpadTask(const util::ClusterDef& cluster_def);
+
  private:
   void ReportResult(Session* session, const std::string& cb_url,
                     const std::string& report_info_str);
-
-  static void RunPlanCore(const pb::RunExecutionPlanRequest& request,
-                          Session* session,
-                          pb::RunExecutionPlanResponse* response);
 
   void RunPlanSync(const pb::RunExecutionPlanRequest* request, Session* session,
                    pb::RunExecutionPlanResponse* response);

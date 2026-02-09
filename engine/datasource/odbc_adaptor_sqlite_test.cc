@@ -16,6 +16,7 @@
 #include "gtest/gtest.h"
 
 #include "engine/datasource/odbc_adaptor.h"
+#include "engine/operator/test_util.h"
 
 namespace scql::engine {
 
@@ -29,14 +30,20 @@ class OdbcAdaptorSQLiteTest : public ::testing::Test {
 
     using Poco::Data::Keywords::now;
     // create table
-    *session_
-        << "CREATE TABLE person(name VARCHAR(30), age INTEGER(3), credit REAL)",
+    *session_ << "CREATE TABLE person(name VARCHAR(30), age INTEGER(3), credit "
+                 "REAL, dt datetime, tt timestamp)",
         now;
     // insert some rows
-    *session_ << "INSERT INTO person VALUES(\"alice\", 18, 675.0)", now;
-    *session_ << "INSERT INTO person VALUES(\"bob\", 20, 798.0)", now;
-    *session_ << "INSERT INTO person VALUES(\"carol\", NULL, 880)", now;
-    *session_ << "INSERT INTO person VALUES(NULL, NULL, NULL)", now;
+    *session_ << "INSERT INTO person VALUES(\"alice\", 18, 675.0, \"2025-06-06 "
+                 "13:00:00\", \"2025-06-06 13:00:00\")",
+        now;
+    *session_ << "INSERT INTO person VALUES(\"bob\", 20, 798.0, \"2025-06-16 "
+                 "16:00:00\", \"2025-06-16 16:00:00\")",
+        now;
+    *session_ << "INSERT INTO person VALUES(\"carol\", NULL, 880, \"2025-06-26 "
+                 "16:00:00\", \"2025-06-26 16:00:00\")",
+        now;
+    *session_ << "INSERT INTO person VALUES(NULL, NULL, NULL, NULL, NULL)", now;
   }
 
   // https://www.sqlite.org/inmemorydb.html
@@ -50,15 +57,17 @@ TEST_F(OdbcAdaptorSQLiteTest, works) {
   OdbcAdaptor adaptor("sqlite", db_connection_str_);
 
   // When
-  const std::string query = "SELECT name, age, credit FROM person";
+  const std::string query = "SELECT name, age, credit, dt, tt FROM person";
   std::vector<ColumnDesc> outputs{{"name", pb::PrimitiveDataType::STRING},
                                   {"age", pb::PrimitiveDataType::INT32},
-                                  {"credit", pb::PrimitiveDataType::FLOAT64}};
+                                  {"credit", pb::PrimitiveDataType::FLOAT64},
+                                  {"dt", pb::PrimitiveDataType::DATETIME},
+                                  {"tt", pb::PrimitiveDataType::TIMESTAMP}};
 
   auto results = adaptor.ExecQuery(query, outputs);
 
   // Then
-  EXPECT_EQ(results.size(), 3);
+  EXPECT_EQ(results.size(), 5);
 
   // column name
   EXPECT_EQ(results[0]->Length(), 4);
@@ -71,6 +80,14 @@ TEST_F(OdbcAdaptorSQLiteTest, works) {
   // column credit
   EXPECT_EQ(results[2]->Length(), 4);
   EXPECT_EQ(results[2]->GetNullCount(), 1);
+
+  scql::engine::op::test::CheckTensorEqual(
+      results[3],
+      TensorFrom(arrow::int64(), "[1749214800,1750089600,1750953600,null]"));
+  // sqlite treats timestamp as text
+  scql::engine::op::test::CheckTensorEqual(
+      results[4],
+      TensorFrom(arrow::int64(), "[1749214800,1750089600,1750953600,null]"));
 }
 
 }  // namespace scql::engine

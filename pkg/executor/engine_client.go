@@ -22,7 +22,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/secretflow/scql/pkg/broker/config"
+	"github.com/secretflow/scql/pkg/config"
 )
 
 const (

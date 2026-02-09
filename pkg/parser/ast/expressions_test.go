@@ -81,7 +81,7 @@ func (tc *testExpressionsSuite) TestExpresionsVisitorCover(c *C) {
 			{&ExistsSubqueryExpr{Sel: ce}, 1, 1},
 			{&IsNullExpr{Expr: ce}, 1, 1},
 			{&IsTruthExpr{Expr: ce}, 1, 1},
-			{NewParamMarkerExpr(0), 0, 0},
+			{NewParamMarkerExpr(0, "param1"), 0, 0},
 			{&ParenthesesExpr{Expr: ce}, 1, 1},
 			{&PatternInExpr{Expr: ce, List: []ExprNode{ce, ce, ce}, Sel: ce}, 5, 5},
 			{&PatternLikeExpr{Expr: ce, Pattern: ce}, 2, 2},

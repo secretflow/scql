@@ -1,0 +1,862 @@
+[
+  {
+    "name": "[single_party]row_number multi partition by/order by",
+    "query": "select u.* from (select ta.plain_int_0, row_number() over(partition by ta.plain_int_0, ta.plain_int_1 order by ta.plain_float_0, ta.plain_float_1) as num from alice.tbl_0 as ta) as u where u.num = 1;"
+  },
+  {
+    "name": "[single_party]row_number",
+    "query": "select ta.plain_int_0, row_number() over(partition by ta.plain_int_0 order by ta.plain_float_0) as num from alice.tbl_0 as ta;"
+  },
+  {
+    "name": "[single_party]geodist test, param order(longtitude1, latitude1, longtitude2, latitude2, radius)",
+    "query": "select ta.plain_int_0, ta.plain_float_0, 6300 * acos(sin(radians(ta.plain_int_0)) * sin(radians(ta.plain_float_0)) + cos(radians(ta.plain_int_0)) * cos(radians(ta.plain_float_0)) * cos(radians(ta.plain_int_0) - radians(ta.plain_float_0))) / 100 as distance from alice.tbl_0 as ta;"
+  },
+  {
+    "name": "[single_party]geodist test, param order(longtitude1, latitude1, longtitude2, latitude2)",
+    "query": "select ta.plain_int_0, ta.plain_float_0, 6371 * acos(sin(radians(ta.plain_int_0)) * sin(radians(ta.plain_float_0)) + cos(radians(ta.plain_int_0)) * cos(radians(ta.plain_float_0)) * cos(radians(ta.plain_int_0) - radians(ta.plain_float_0))) / 100 as distance from alice.tbl_0 as ta;"
+  },
+  {
+    "name": "[single_party]plain select",
+    "query": "select plain_int_0, plain_datetime_0, plain_timestamp_0 from alice.tbl_1"
+  },
+  {
+    "name": "[single_party]left join",
+    "query": "select ta.plain_int_0 from alice.tbl_1 as ta left join alice.tbl_2 as tb on ta.plain_int_0 = tb.plain_int_0;"
+  },
+  {
+    "name": "[single_party]compare (less)",
+    "query": "select plain_int_0 < 1 as res0, plain_int_0 < 1.5 as res1, plain_float_0 < 1.5 as res2, plain_int_0 < plain_int_1 as res3, plain_int_0 < plain_float_1 as res4, plain_float_0 < plain_float_1 as res5, plain_datetime_0 < now() as res6, plain_datetime_0 < plain_datetime_1 as res7, plain_datetime_0 < plain_timestamp_0 as res8 from alice.tbl_1;"
+  },
+  {
+    "name": "[single_party]compare (greater)",
+    "query": "select plain_int_0 > 1 as res0, plain_int_0 > 1.5 as res1, plain_float_0 > 1.5 as res2, plain_int_0 > plain_int_1 as res3, plain_int_0 > plain_float_1 as res4, plain_float_0 > plain_float_1 as res5, plain_datetime_0 > now() as res6, plain_datetime_0 > plain_datetime_1 as res7, plain_datetime_0 > plain_timestamp_0 as res8 from alice.tbl_1;"
+  },
+  {
+    "name": "[single_party]compare (less or equal)",
+    "query": "select plain_int_0 <= 1 as res0, plain_int_0 <= 1.5 as res1, plain_float_0 <= 1.5 as res2, plain_int_0 <= plain_int_1 as res3, plain_int_0 <= plain_float_1 as res4, plain_float_0 <= plain_float_1 as res5, plain_datetime_0 <= now() as res6, plain_datetime_0 <= plain_datetime_1 as res7, plain_datetime_0 <= plain_timestamp_0 as res8 from alice.tbl_1;"
+  },
+  {
+    "name": "[single_party]compare (greater or equal)",
+    "query": "select plain_int_0 >= 1 as res0, plain_int_0 >= 1.5 as res1, plain_float_0 >= 1.5 as res2, plain_int_0 >= plain_int_1 as res3, plain_int_0 >= plain_float_1 as res4, plain_float_0 >= plain_float_1 as res5, plain_datetime_0 >= now() as res6, plain_datetime_0 >= plain_datetime_1 as res7, plain_datetime_0 >= plain_timestamp_0 as res8 from alice.tbl_1;"
+  },
+  {
+    "name": "[single_party]compare (not equal)",
+    "query": "select plain_int_0 <> 1 as res0, plain_int_0 <> 1.5 as res1, plain_float_0 <> 1.5 as res2, plain_int_0 <> plain_int_1 as res3, plain_int_0 <> plain_float_1 as res4, plain_float_0 <> plain_float_1 as res5, plain_datetime_0 <> now() as res6, plain_datetime_0 <> plain_datetime_1 as res7, plain_datetime_0 <> plain_timestamp_0 as res8 from alice.tbl_1;"
+  },
+  {
+    "name": "[single_party]arithmetic (plus)",
+    "query": "select plain_int_0 + 1 as res0, plain_int_0 + 1.5 as res1, plain_float_0 + 1.5 as res2, plain_int_0 + plain_int_1 as res3, plain_int_0 + plain_float_0 as res4, plain_float_0 + plain_float_1 as res5 from alice.tbl_1;"
+  },
+  {
+    "name": "[single_party]arithmetic (subtract)",
+    "query": "select plain_int_0 - 1 as res0, plain_int_0 - 1.5 as res1, plain_float_0 - 1.5 as res2, plain_int_0 - plain_int_1 as res3, plain_int_0 - plain_float_0 as res4, plain_float_0 - plain_float_1 as res5, plain_datetime_0 - plain_datetime_1 as res6, plain_datetime_0 - plain_timestamp_0 as res7, plain_timestamp_0 - plain_timestamp_1 as res8  from alice.tbl_1;"
+  },
+  {
+    "name": "[single_party]arithmetic (multiply)",
+    "query": "select plain_int_0 * 1 as res0, plain_int_0 * 1.5 as res1, plain_float_0 * 1.5 as res2, plain_int_0 * plain_int_1 as res3, plain_int_0 * plain_float_0 as res4, plain_float_0 * plain_float_1 as res5 from alice.tbl_1;"
+  },
+  {
+    "name": "[single_party]arithmetic (divide)",
+    "query": "select plain_int_0 / 1 as res0, plain_int_0 / 1.5 as res1, plain_float_0 / 1.5 as res2, plain_int_0 / (case when plain_int_1 = 0 then 1 else plain_int_1 end) as res3, plain_int_0 / (case when plain_float_0 = 0 then 1.0 else plain_float_0 end) as res4, plain_float_0 / (case when plain_float_1 = 0 then 1.0 else plain_float_1 end) as res5 from alice.tbl_1;"
+  },
+  {
+    "name": "[single_party]arithmetic (model)",
+    "query": "select plain_int_0 % 1 as res0, plain_int_0 % (case when plain_int_1 = 0 then 1 else plain_int_1 end) as res1 from alice.tbl_1;"
+  },
+  {
+    "name": "[single_party]max",
+    "query": "select max(alice.plain_int_0) as res0, max(alice.plain_float_0) as res1 from alice.tbl_0 as alice;"
+  },
+  {
+    "name": "[single_party]max & arithmetic",
+    "query": "select max(alice.plain_int_0 + alice.plain_int_0) as res0, max(alice.plain_float_0 - alice.plain_float_1) as res1, max(alice.plain_float_0 * alice.plain_float_0) as res2, max(alice.plain_float_0 / alice.plain_float_0) as res3 from alice.tbl_0 as alice;"
+  },
+  {
+    "name": "[single_party]max & compare",
+    "query": "select max(alice.plain_int_0) > max(alice.plain_int_0) as res0, max(alice.plain_float_0) < max(alice.plain_float_1) as res1, max(alice.plain_int_0) >= max(alice.plain_float_0) as res2, max(alice.plain_float_0) <= max(alice.plain_float_0) as res3 from alice.tbl_0 as alice;"
+  },
+  {
+    "name": "[single_party]min",
+    "query": "select min(alice.plain_int_0) as res0, min(alice.plain_float_0) as res1 from alice.tbl_0 as alice;"
+  },
+  {
+    "name": "[single_party]min & arithmetic",
+    "query": "select min(alice.plain_int_0 + alice.plain_int_0) as res0, min(alice.plain_int_0 - alice.plain_float_1) as res1, min(alice.plain_float_0 * alice.plain_float_0) as res2, min(alice.plain_float_0 / alice.plain_float_0) as res3 from alice.tbl_0 as alice;"
+  },
+  {
+    "name": "[single_party]min & compare",
+    "query": "select min(alice.plain_int_0) > min(alice.plain_int_0) as res0, min(alice.plain_float_0) < min(alice.plain_float_1) as res1, min(alice.plain_int_0) >= min(alice.plain_float_0) as res2, min(alice.plain_float_0) <= min(alice.plain_float_0) as res3 from alice.tbl_0 as alice;"
+  },
+  {
+    "name": "[single_party]avg",
+    "query": "select avg(alice.plain_int_0) as res0, avg(alice.plain_float_0) as res1 from alice.tbl_0 as alice;"
+  },
+  {
+    "name": "[single_party]avg & arithmetic",
+    "query": "select avg(alice.plain_int_0 + alice.plain_int_0) as res0, avg(alice.plain_int_0 - alice.plain_float_1) as res1, avg(alice.plain_float_0 * alice.plain_float_0) as res2, avg(alice.plain_float_0 / alice.plain_float_0) as res3 from alice.tbl_0 as alice;"
+  },
+  {
+    "name": "[single_party]avg & compare",
+    "query": "select avg(alice.plain_int_0) > avg(alice.plain_int_0) as res0, avg(alice.plain_int_0) < avg(alice.plain_float_1) as res1, avg(alice.plain_int_0) >= avg(alice.plain_float_0) as res2, avg(alice.plain_float_0) <= avg(alice.plain_float_0) as res3 from alice.tbl_0 as alice;"
+  },
+  {
+    "name": "[single_party]sum",
+    "query": "select sum(alice.plain_int_0) as res0, sum(alice.plain_float_0) as res1 from alice.tbl_0 as alice;"
+  },
+  {
+    "name": "[single_party]sum bool",
+    "query": "select sum(alice.plain_int_0 > 0) as res0, sum(alice.plain_float_0 > 0) as res1 from alice.tbl_0 as alice;"
+  },
+  {
+    "name": "[single_party]sum & arithmetic",
+    "query": "select sum(alice.plain_int_0 + alice.plain_int_0) as res0, sum(alice.plain_int_0 - alice.plain_float_1) as res1, sum(alice.plain_float_0 * alice.plain_float_0) as res2, sum(alice.plain_float_0 / alice.plain_float_0) as res3 from alice.tbl_0 as alice;"
+  },
+  {
+    "name": "[single_party]sum & compare",
+    "query": "select sum(alice.plain_int_0) > sum(alice.plain_int_0) as res0, sum(alice.plain_int_0) < sum(alice.plain_float_1) as res1, sum(alice.plain_int_0) >= sum(alice.plain_float_0) as res2, sum(alice.plain_float_0) <= sum(alice.plain_float_0) as res3 from alice.tbl_0 as alice;"
+  },
+  {
+    "name": "[single_party]count",
+    "query": "select count(alice.plain_int_0) as res0, count(alice.plain_float_0) as res1, count(alice.plain_string_0) as res2 from alice.tbl_0 as alice;"
+  },
+  {
+    "name": "[single_party]count & distinct",
+    "query": "select count(distinct alice.plain_int_0) as res0, count(distinct alice.plain_float_0) as res1, count(distinct alice.plain_string_0) as res2 from alice.tbl_0 as alice;"
+  },
+  {
+    "name": "[single_party]ifnull & coalesce",
+    "query": "select plain_int_0, plain_int_1, ifnull(plain_int_0, plain_int_1) as ifnull, coalesce(plain_float_0, plain_float_1, 1.0) as cl from alice.tbl_1;"
+  },
+  {
+    "name": "[single_party]if",
+    "query": "select plain_int_0, if(plain_int_0 > 8, \"> 8\", \"<= 8\") as if_select from alice.tbl_1;"
+  },
+  {
+    "name": "[single_party]logic",
+    "query": "select plain_int_0, plain_int_0 > 1 and plain_int_0 >= 1 as and_log, not (plain_int_0 < 5) as not_log, (plain_int_0 <= 5) or (plain_int_0 <> 8) as or_log from alice.tbl_1;"
+  },
+  {
+    "name": "[single_party]in & not in",
+    "query": "select plain_int_0 in (2,4,6,8) as in_column, plain_int_0 not in (2,4,6,8) as not_in from alice.tbl_1;"
+  },
+  {
+    "name": "[single_party]apply",
+    "query": "select alice.plain_int_0 from (select plain_int_0 from alice.tbl_1) as alice;"
+  },
+  {
+    "name": "[single_party]where condition(arithmetic compare logical)",
+    "query": "select plain_int_0, plain_int_1 from alice.tbl_1  where plain_int_0 + plain_int_1 > 0 or plain_int_0 - plain_int_1 < 0 or plain_int_0 * plain_int_1 = 4 or plain_int_0 / plain_int_1 <> 1;"
+  },
+  {
+    "name": "[single_party]where condition(null, not null)",
+    "query": "select plain_string_0, plain_string_1 from alice.tbl_1 where plain_string_0 is null or plain_string_1 is not null;"
+  },
+  {
+    "name": "[single_party]where condition(in & not in)",
+    "query": "select plain_int_0 from alice.tbl_1 where plain_int_0 in (2, 5, 15) and plain_int_1 not in (2, 5, 15);"
+  },
+  {
+    "name": "[single_party]where(null)",
+    "query": "select alice.plain_int_0 from alice.tbl_0 as alice where alice.plain_int_0 > alice.plain_int_1;"
+  },
+  {
+    "name": "[single_party]compare (less) where(null)",
+    "query": "select plain_int_0 < 1 as res0, plain_int_0 < 1.5 as res1, plain_float_0 < 1.5 as res2, plain_int_0 < plain_int_1 as res3, plain_int_0 < plain_float_1 as res4, plain_float_0 < plain_float_1 as res5 from alice.tbl_1 as alice where alice.plain_int_0 > alice.plain_int_1;"
+  },
+  {
+    "name": "[single_party]compare (greater) where(null)",
+    "query": "select plain_int_0 > 1 as res0, plain_int_0 > 1.5 as res1, plain_float_0 > 1.5 as res2, plain_int_0 > plain_int_1 as res3, plain_int_0 > plain_float_1 as res4, plain_float_0 > plain_float_1 as res5 from alice.tbl_1 as alice where alice.plain_int_0 > alice.plain_int_1;"
+  },
+  {
+    "name": "[single_party]compare (less or equal) where(null)",
+    "query": "select plain_int_0 <= 1 as res0, plain_int_0 <= 1.5 as res1, plain_float_0 <= 1.5 as res2, plain_int_0 <= plain_int_1 as res3, plain_int_0 <= plain_float_1 as res4, plain_float_0 <= plain_float_1 as res5 from alice.tbl_1 as alice where alice.plain_int_0 > alice.plain_int_1;"
+  },
+  {
+    "name": "[single_party]compare (greater or equal) where(null)",
+    "query": "select plain_int_0 >= 1 as res0, plain_int_0 >= 1.5 as res1, plain_float_0 >= 1.5 as res2, plain_int_0 >= plain_int_1 as res3, plain_int_0 >= plain_float_1 as res4, plain_float_0 >= plain_float_1 as res5 from alice.tbl_1 as alice where alice.plain_int_0 > alice.plain_int_1;"
+  },
+  {
+    "name": "[single_party]compare (not equal) where(null)",
+    "query": "select plain_int_0 <> 1 as res0, plain_int_0 <> 1.5 as res1, plain_float_0 <> 1.5 as res2, plain_int_0 <> plain_int_1 as res3, plain_int_0 <> plain_float_1 as res4, plain_float_0 <> plain_float_1 as res5 from alice.tbl_1 as alice where alice.plain_int_0 > alice.plain_int_1;"
+  },
+  {
+    "name": "[single_party]arithmetic (plus) where(null)",
+    "query": "select plain_int_0 + 1 as res0, plain_int_0 + 1.5 as res1, plain_float_0 + 1.5 as res2, plain_int_0 + plain_int_1 as res3, plain_int_0 + plain_float_0 as res4, plain_float_0 + plain_float_1 as res5 from alice.tbl_1 as alice where alice.plain_int_0 > alice.plain_int_1;"
+  },
+  {
+    "name": "[single_party]arithmetic (subtract) where(null)",
+    "query": "select plain_int_0 - 1 as res0, plain_int_0 - 1.5 as res1, plain_float_0 - 1.5 as res2, plain_int_0 - plain_int_1 as res3, plain_int_0 - plain_float_0 as res4, plain_float_0 - plain_float_1 as res5 from alice.tbl_1 as alice where alice.plain_int_0 > alice.plain_int_1;"
+  },
+  {
+    "name": "[single_party]arithmetic (multiply) where(null)",
+    "query": "select plain_int_0 * 1 as res0, plain_int_0 * 1.5 as res1, plain_float_0 * 1.5 as res2, plain_int_0 * plain_int_1 as res3, plain_int_0 * plain_float_0 as res4, plain_float_0 * plain_float_1 as res5 from alice.tbl_1 as alice where alice.plain_int_0 > alice.plain_int_1;"
+  },
+  {
+    "name": "[single_party]arithmetic (divide) where(null)",
+    "query": "select plain_int_0 / 1 as res0, plain_int_0 / 1.5 as res1, plain_float_0 / 1.5 as res2, plain_int_0 / (case when plain_int_1 = 0 then 1 else plain_int_1 end) as res3, plain_int_0 / (case when plain_float_0 = 0 then 1 else plain_float_0 end) as res4, plain_float_0 / (case when plain_float_1 = 0 then 1 else plain_float_1 end) as res5 from alice.tbl_1 as alice where alice.plain_int_0 > alice.plain_int_1;"
+  },
+  {
+    "name": "[single_party]arithmetic (model) where(null)",
+    "query": "select plain_int_0 % 1 as res0,  plain_int_0 % (case when plain_int_1 = 0 then 1 else plain_int_1 end) as res1 from alice.tbl_1 as alice where alice.plain_int_0 > alice.plain_int_1;"
+  },
+  {
+    "name": "[single_party]case when",
+    "query": "select plain_int_0, plain_int_1, case when plain_int_0 >= 5  then -1 else plain_int_0 end as r from alice.tbl_1;"
+  },
+  {
+    "name": "[single_party]concat",
+    "query": "select concat(plain_string_0, plain_string_1) as concat_col from alice.tbl_1;"
+  },
+  {
+    "name": "[single_party]substring",
+    "query": "select substring(plain_string_0, 2, 3) as t from alice.tbl_1 where substring(plain_string_0, 2) != '';"
+  },
+  {
+    "name": "[single_party]trim",
+    "query": "select trim(plain_string_0) as t from alice.tbl_1 where trim(plain_string_0) != '';"
+  },
+  {
+    "name": "[single_party]apply in",
+    "query": "select plain_int_0 in (select plain_int_0 from alice.tbl_1) as tt, plain_int_0 not in (select plain_int_0 from alice.tbl_1) as ff from alice.tbl_0"
+  },
+  {
+    "name": "[single_party]where in subquery",
+    "query": "select plain_int_0 from alice.tbl_0 where plain_int_0 in (select plain_int_0 from alice.tbl_1)"
+  },
+  {
+    "name": "[single_party]where in subquery",
+    "query": "select plain_int_0 from alice.tbl_0 where (plain_int_0 in (select plain_int_0 from alice.tbl_1)) and plain_int_0 > 0"
+  },
+  {
+    "name": "[single_party]date func (now, curdate, last_day, str_to_date, date_format)",
+    "query": "select plain_datetime_0 < now() as res1, plain_timestamp_0 < now() as res2, plain_datetime_0 < curdate() as res3, plain_timestamp_0 < curdate() as res4, last_day(plain_datetime_0) as res5, last_day(plain_timestamp_0) as res6, str_to_date('August 10 2017', '%M %d %Y') as res7, date_format(plain_datetime_0, '%Y-%m-%d %H:%i:%S') as res8 from alice.tbl_1;"
+  },
+  {
+    "name": "[single_party]date func (adddate, subdate)",
+    "query": "select adddate(plain_datetime_0, interval 10 day) as res1, adddate(plain_timestamp_0, interval 10 day) as res2, subdate(plain_datetime_0, interval 10 day) as res3, subdate(plain_timestamp_0, interval 10 day) as res4 from alice.tbl_1;"
+  },
+  {
+    "name": "[single_party]date func (datediff)",
+    "query": "select datediff(plain_datetime_0, plain_datetime_1) as res1, datediff(plain_timestamp_0, plain_timestamp_1) as res2 from alice.tbl_1;"
+  },
+  {
+    "name": "[single_party]plain select (csv)",
+    "query": "select plain_int_0, plain_datetime_0, plain_timestamp_0 from bob.tbl_1"
+  },
+  {
+    "name": "[single_party]date func (now, curdate, last_day, str_to_date, date_format) (csv)",
+    "query": "select '2020-01-01 00:00:00' < curdate() as res1, last_day(plain_datetime_0) as res2, last_day(plain_timestamp_0) as res3, str_to_date('2017/08/10', '%Y/%m/%d') as res4, date_format(plain_datetime_0, '%Y-%m-%d %H:%i:%S') as res5 from bob.tbl_1;"
+  },
+  {
+    "name": "[single_party]naive trigonometric function on csv",
+    "query": "select plain_int_0, sin(plain_int_0) as sin_plain_int_0, cos(plain_int_0) as cos_plain_int_0, acos(plain_int_0 / 100000) as acos_plain_int_0 from bob.tbl_1"
+  },
+  {
+    "name": "[single_party]naive trigonometric function on mysql",
+    "query": "select plain_int_0, sin(plain_int_0) as sin_plain_int_0, cos(plain_int_0) as cos_plain_int_0, acos(plain_int_0 / 100000) as acos_plain_int_0 from alice.tbl_1"
+  },
+  {
+    "name": "[single_party]naive trigonometric function on postgres",
+    "query": "select plain_int_0, sin(plain_int_0) as sin_plain_int_0, cos(plain_int_0) as cos_plain_int_0, acos(plain_int_0 / 100000) as acos_plain_int_0 from carol.tbl_1"
+  },
+  {
+    "name": "[two_parties]select into",
+    "query": "select alice.plain_int_0, bob.joinpayload_int_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 into outfile party_code 'alice' '/tmp/output.txt' columns terminated BY '|';"
+  },
+  {
+    "name": "[two parties]compare subquery(lt)",
+    "query": "select ta.plain_int_0 from alice.tbl_0 as ta where ta.plain_int_0 < any(select ta.plain_int_0 + tb.plain_int_0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0)"
+  },
+  {
+    "name": "[two parties]compare subquery(gt)",
+    "query": "select ta.plain_int_0 from alice.tbl_0 as ta where ta.plain_int_0 > all(select ta.plain_int_0 + tb.plain_int_0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0)"
+  },
+  {
+    "name": "[two parties]compare subquery(ne)",
+    "query": "select ta.plain_int_0 from alice.tbl_0 as ta where ta.plain_int_0 != all(select ta.plain_int_0 + tb.plain_int_0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0)"
+  },
+  {
+    "name": "[two parties]compare subquery(eq)",
+    "query": "select ta.plain_int_0 from alice.tbl_0 as ta where ta.plain_int_0 = any(select ta.plain_int_0 + tb.plain_int_0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0)"
+  },
+  {
+    "name": "[two_parties]limit after join",
+    "query": "select alice.plain_int_0, bob.joinpayload_int_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 limit 10;"
+  },
+  {
+    "name": "[two_parties]sort after join",
+    "query": "select alice.plain_int_0, bob.joinpayload_int_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 order by alice.plain_float_0;"
+  },
+  {
+    "name": "[two_parties]greatest and least",
+    "query": "select greatest(alice.plain_int_0, alice.plain_int_1, bob.plain_int_0), least(alice.plain_int_0, alice.plain_int_1, bob.plain_int_0) from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]special funcs after join",
+    "query": "select +alice.plain_int_0, -bob.plain_int_0, cot(alice.plain_float_0) from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]percent_rank(secret)",
+    "query": "select ta.rank_int_0, percent_rank() over (partition by ta.rank_int_0 order by tb.rank_float_0, tb.rank_float_1) as num,percent_rank() over (partition by ta.rank_int_0 order by tb.rank_float_1) as num2 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0"
+  },
+  {
+    "name": "[two_parties]percent_rank(private)",
+    "query": "select ta.plain_int_0, percent_rank() over (partition by ta.plain_int_0 order by ta.plain_float_0 desc, ta.plain_float_1 asc) as num from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+  },
+  {
+    "name": "[two_parties]rank & row_number(secret)",
+    "query": "select ta.rank_int_0, rank() over (partition by ta.rank_int_0 order by tb.rank_float_0, tb.rank_float_1) as rank_num, row_number() over (partition by ta.rank_int_0 order by tb.rank_float_0, tb.rank_float_1) as row_number_num from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0"
+  },
+  {
+    "name": "[two_parties]rank(secret)",
+    "query": "select ta.plain_int_0, rank() over (partition by ta.rank_int_0 order by tb.rank_float_0, tb.rank_float_1) as num from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0"
+  },
+  {
+    "name": "[two_parties]row_number and rank(private)",
+    "query": "select ta.plain_int_0, rank() over (partition by ta.join_int_1, ta.plain_int_0 order by ta.plain_float_0 desc, ta.plain_float_1 asc) as rank_num, row_number() over (partition by ta.join_int_0, ta.plain_int_0 order by ta.plain_float_0 desc, ta.plain_float_1 asc) as row_number_num from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+  },
+  {
+    "name": "[two_parties]rank(private)",
+    "query": "select ta.plain_int_0, rank() over (partition by ta.join_int_0, ta.plain_int_0 order by ta.plain_float_0 desc, ta.plain_float_1 asc) as num from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+  },
+  {
+    "name": "[two_parties]row_number(secret) with filter",
+    "query": "select u.* from (select ta.plain_int_0, row_number() over (partition by ta.plain_int_0 order by tb.rank_float_0, tb.rank_float_1) as num from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0) as u where u.num = 1;"
+  },
+  {
+    "name": "[two_parties]row_number(secret)",
+    "query": "select ta.plain_int_0, row_number() over (partition by ta.plain_int_0 order by tb.rank_float_0, tb.rank_float_1) as num from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+  },
+  {
+    "name": "[two_parties]row_number(private) with filter",
+    "query": "select u.* from(select ta.plain_int_0, row_number() over (partition by ta.join_int_0, ta.plain_int_0 order by ta.plain_float_0 desc, ta.plain_float_1 asc) as num from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0) as u where u.num = 1;"
+  },
+  {
+    "name": "[two_parties]row_number(private)",
+    "query": "select ta.plain_int_0, row_number() over (partition by ta.join_int_0, ta.plain_int_0 order by ta.plain_float_0 desc, ta.plain_float_1 asc) as num from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+  },
+  {
+    "name": "[two_parties]select with constant",
+    "query": "select ta.plain_float_0, 1 as constant_value from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0"
+  },
+  {
+    "name": "[two_parties]geodist test, param order(longtitude1, latitude1, longtitude2, latitude2, radius)",
+    "query": "select ta.plain_int_0, geodist(ta.plain_float_0, ta.plain_float_0, tb.plain_float_0, tb.plain_float_0, 6300) / 100 as distance from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+  },
+  {
+    "name": "[two_parties]geodist test, param order(longtitude1, latitude1, longtitude2, latitude2)",
+    "query": "select ta.plain_int_0, geodist(ta.plain_float_0, ta.plain_float_0, tb.plain_float_0, tb.plain_float_0) / 100 as distance from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+  },
+  {
+    "name": "[two_parties]geodist test(secret), param order(longtitude1, latitude1, longtitude2, latitude2)",
+    "query": "select u.plain_int_0, u.plain_float_0, geodist(u.plain_int_0, u.plain_int_0, u.plain_float_0, u.plain_float_0) / 1000 as distance from (select ta.plain_int_0, ta.plain_float_0 from alice.tbl_0 as ta union all select tb.plain_int_0, tb.plain_float_0 from bob.tbl_0 as tb) as u;"
+  },
+  {
+    "name": "[two_parties]all trigono union(make secret)",
+    "query": "select u.plain_int_0, sin(u.plain_int_0) / 10 as sin_plain_int_0, cos(u.plain_int_0) as cos_plain_int_0, acos(u.plain_int_0 / 10000) as acos_plain_int_0 from (select ta.plain_int_0 from  alice.tbl_0 as ta union all select tb.plain_int_0 from bob.tbl_0 as tb) as u;"
+  },
+  {
+    "name": "[two_parties]sine union(make secret)",
+    "query": "select u.plain_int_0, sin(u.plain_int_0) as sin_plain_int_0 from (select ta.plain_int_0 from  alice.tbl_0 as ta union all select tb.plain_int_0 from bob.tbl_0 as tb) as u;"
+  },
+  {
+    "name": "[two_parties]cosine union(make secret)",
+    "query": "select u.plain_int_0, cos(u.plain_int_0) as cos_plain_int_0 from (select ta.plain_int_0 from  alice.tbl_0 as ta union all select tb.plain_int_0 from bob.tbl_0 as tb) as u;"
+  },
+  {
+    "name": "[two_parties]arc cosine union(make secret)",
+    "query": "select u.plain_int_0, acos(u.plain_int_0 / 10000) as acos_plain_int_0 from (select ta.plain_int_0 from  alice.tbl_0 as ta union all select tb.plain_int_0 from bob.tbl_0 as tb) as u;"
+  },
+  {
+    "name": "[two_parties]naive trigonometric",
+    "query": "select ta.plain_int_0, sin(ta.plain_float_0) as sin_plain_float_0, cos(ta.plain_float_0) as cos_plain_float_0, acos(ta.plain_float_0 / 10000) as acos_plain_float_0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+  },
+  {
+    "name": "[two_parties]naive trigonometric sin/cos/acos",
+    "query": "select ta.plain_int_0, sin(ta.plain_float_0 * 1.5) as sin_plain_float_0, cos(ta.plain_float_0) as cos_plain_float_0, acos(ta.plain_float_0 / 10000) as acos_plain_float_0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+  },
+  {
+    "name": "[two_parties]trigonometric add with constant integer value",
+    "query": "select ta.plain_float_0 + sin(1) as sin_plain_float_0, ta.plain_float_0 + cos(1) as cos_plain_float_0, ta.plain_float_0 + acos(1) as acos_plain_float_0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+  },
+  {
+    "name": "[two_parties]trigonometric add with constant float value",
+    "query": "select ta.plain_float_0 + sin(3.14) as sin_plain_float_0, ta.plain_float_0 + cos(3.14) as cos_plain_float_0, ta.plain_float_0 + acos(0.5) as acos_plain_float_0 from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+  },
+  {
+    "name": "[two_parties]if after inner join",
+    "query": "select if(alice.encrypt_int_0>1, -alice.plain_int_0, -1) as cd from alice.tbl_0 as alice inner join bob.tbl_0 as bob on alice.join_string_0=bob.join_string_0;"
+  },
+  {
+    "name": "[two_parties]join on",
+    "query": "select alice.plain_int_0, bob.joinpayload_int_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]left join on",
+    "query": "select alice.plain_int_0 from alice.tbl_0 as alice left join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]right join on",
+    "query": "select count(alice.plain_int_0) as t1 from alice.tbl_0 as alice right join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]join where",
+    "query": "select alice.plain_int_0 from alice.tbl_0 as alice, bob.tbl_0 as bob where alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]join on multi keys",
+    "query": "select alice.plain_int_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 and alice.join_string_0 = bob.join_string_0 and alice.plain_datetime_0 = bob.plain_datetime_0 and alice.plain_timestamp_0 = bob.plain_timestamp_0;"
+  },
+  {
+    "name": "[two_parties]left join on multi keys",
+    "query": "select alice.plain_int_0 from alice.tbl_0 as alice left join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 and alice.join_string_0 = bob.join_string_0 and alice.plain_datetime_0 = bob.plain_datetime_0 and alice.plain_timestamp_0 = bob.plain_timestamp_0;"
+  },
+  {
+    "name": "[two_parties]right join on multi keys",
+    "query": "select count(alice.plain_int_0) as t1 from alice.tbl_0 as alice right join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 and alice.join_string_0 = bob.join_string_0 and alice.plain_datetime_0 = bob.plain_datetime_0 and alice.plain_timestamp_0 = bob.plain_timestamp_0;"
+  },
+  {
+    "name": "[two_parties]join three table(alice, alice, bob)",
+    "query": "select alice0.plain_int_0 from alice.tbl_0 as alice0 join alice.tbl_1 as alice1 on alice0.encrypt_int_0 = alice1.encrypt_int_0 join bob.tbl_0 as bob0 on alice1.join_int_0 = bob0.join_int_0;"
+  },
+  {
+    "name": "[two_parties]join three table(alice, bob, alice)",
+    "query": "select alice0.plain_int_0 from alice.tbl_0 as alice0 join bob.tbl_0 as bob0 on alice0.join_int_0 = bob0.join_int_0 join alice.tbl_1 as alice1 on bob0.join_int_1 = alice1.join_int_1;"
+  },
+  {
+    "name": "[two_parties]join three table(alice, bob, bob)",
+    "query": "select alice0.plain_int_0 from alice.tbl_0 as alice0 join bob.tbl_0 as bob0 on alice0.join_int_0 = bob0.join_int_0 join bob.tbl_1 as bob1 on alice0.join_int_1 = bob1.join_int_1;"
+  },
+  {
+    "name": "[two_parties]apply in after join",
+    "query": "select alice.compare_int_0 in (select compare_int_0 from bob.tbl_0) as bob from alice.tbl_0 as alice;"
+  },
+  {
+    "name": "[two_parties]compare (less) after join",
+    "query": "select alice.compare_int_0 < bob.compare_int_0 as res0, alice.compare_int_0 < bob.compare_float_0 as res1, alice.compare_float_0 < bob.compare_float_0 as res2, alice.compare_datetime_0 < bob.compare_datetime_0 as res3, alice.compare_timestamp_0 < bob.compare_timestamp_0 as res4 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]compare (greater) after join",
+    "query": "select alice.compare_int_0 > bob.compare_int_0 as res0, alice.compare_int_0 > bob.compare_float_0 as res1, alice.compare_float_0 > bob.compare_float_0 as res2, alice.compare_datetime_0 > bob.compare_datetime_0 as res3, alice.compare_timestamp_0 > bob.compare_timestamp_0 as res4 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]compare (less or equal) after join",
+    "query": "select alice.compare_int_0 <= bob.compare_int_0 as res0, alice.compare_int_0 <= bob.compare_float_0 as res1, alice.compare_float_0 <= bob.compare_float_0 as res2, alice.compare_datetime_0 <= bob.compare_datetime_0 as res3, alice.compare_timestamp_0 <= bob.compare_timestamp_0 as res4 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]compare (greater or equal) after join",
+    "query": "select alice.compare_int_0 >= bob.compare_int_0 as res0, alice.compare_int_0 >= bob.compare_float_0 as res1, alice.compare_float_0 >= bob.compare_float_0 as res2, alice.compare_datetime_0 >= bob.compare_datetime_0 as res3, alice.compare_timestamp_0 >= bob.compare_timestamp_0 as res4 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]compare (not equal) after join",
+    "query": "select alice.compare_int_0 <> bob.compare_int_0 as res0, alice.compare_int_0 <> bob.compare_float_0 as res1, alice.compare_float_0 <> bob.compare_float_0 as res2, alice.compare_datetime_0 <> bob.compare_datetime_0 as res3, alice.compare_timestamp_0 <> bob.compare_timestamp_0 as res4 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]arithmetic (plus) after join",
+    "query": "select bob.plain_int_0 + alice.plain_int_0 as res0, alice.plain_int_0 + bob.plain_float_0 as res1, alice.plain_float_0 + bob.plain_float_0 as res2 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]arithmetic (subtract) after join",
+    "query": "select bob.plain_int_0 - alice.plain_int_0 as res0, alice.plain_int_0 - bob.plain_float_0 as res1, alice.plain_float_0 - bob.plain_float_0 as res2 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]arithmetic (multiply) after join",
+    "query": "select bob.plain_int_0 * alice.plain_int_0 as res0, alice.plain_int_0 * bob.plain_float_0 as res1, alice.plain_float_0 * bob.plain_float_0 as res2 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]arithmetic (divide) after join",
+    "query": "select bob.plain_int_0 / (alice.plain_int_0 * alice.plain_int_0 + 1) as res0, alice.plain_int_0 / (bob.plain_float_0 *  bob.plain_float_0 + 1) res1, alice.plain_float_0 / (bob.plain_float_0 * bob.plain_float_0 + 1) as res2 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]arithmetic (mod) after join",
+    "query": "select bob.plain_int_0 % (alice.plain_int_0 * alice.plain_int_0 + 1) as res0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]max after join",
+    "query": "select max(alice.aggregate_int_0) as res0, max(bob.aggregate_int_0) as res1, max(alice.aggregate_float_0) as res2, max(bob.aggregate_float_0) as res3 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]max & arithmetic after join",
+    "query": "select max(alice.aggregate_int_0 + bob.aggregate_int_0) as res0, max(alice.aggregate_float_0 - bob.aggregate_float_1) as res1, max(alice.aggregate_float_0 * bob.aggregate_float_0) as res2, max(alice.aggregate_float_0 /(bob.aggregate_float_0 * bob.aggregate_float_0 + 1)) as res3 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]max & compare after join",
+    "query": "select max(alice.aggregate_int_0) > max(bob.aggregate_int_0) as res0, max(alice.aggregate_float_0) < max(bob.aggregate_float_1) as res1, max(alice.aggregate_int_0) >= max(bob.aggregate_float_0) as res2, max(alice.aggregate_float_0) <= max(bob.aggregate_float_0) as res3 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]min after join",
+    "query": "select min(alice.aggregate_int_0) as res0, min(bob.aggregate_int_0) as res1, min(alice.aggregate_float_0) as res2, min(bob.aggregate_float_0) as res3 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]min & arithmetic after join",
+    "query": "select min(alice.aggregate_int_0 + bob.aggregate_int_0) as res0, min(alice.aggregate_float_0 - bob.aggregate_float_1) as res1, min(alice.aggregate_float_0 * bob.aggregate_float_0) as res2, min(alice.aggregate_float_0 / (bob.aggregate_float_0 * bob.aggregate_float_0 + 1)) as res3 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]min & compare after join",
+    "query": "select min(alice.aggregate_int_0) > min(bob.aggregate_int_0) as res0, min(alice.aggregate_float_0) < min(bob.aggregate_float_1) as res1, min(alice.aggregate_int_0) >= min(bob.aggregate_float_0) as res2, min(alice.aggregate_float_0) <= min(bob.aggregate_float_0) as res3 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]avg after join",
+    "query": "select avg(alice.aggregate_int_0) as res0, avg(bob.aggregate_int_0) as res1, avg(alice.aggregate_float_0) as res2, avg(bob.aggregate_float_0) as res3 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]avg & arithmetic after join",
+    "query": "select avg(alice.aggregate_int_0 + bob.aggregate_int_0) as res0, avg(alice.aggregate_float_0 - bob.aggregate_float_1) as res1, avg(alice.aggregate_float_0 * bob.aggregate_float_0) as res2, avg(alice.aggregate_float_0 / (bob.aggregate_float_0 * bob.aggregate_float_0 + 1)) as res3 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]avg & compare after join",
+    "query": "select avg(alice.aggregate_int_0) > avg(bob.aggregate_int_0) as res0, avg(alice.aggregate_float_0) < avg(bob.aggregate_float_1) as res1, avg(alice.aggregate_int_0) >= avg(bob.aggregate_float_0) as res2, avg(alice.aggregate_float_0) <= avg(bob.aggregate_float_0) as res3 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]sum after join",
+    "query": "select sum(alice.aggregate_int_0) as res0, sum(bob.aggregate_int_0) as res1, sum(alice.aggregate_float_0) as res2, sum(bob.aggregate_float_0) as res3 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]sum bool after join",
+    "query": "select sum(alice.aggregate_int_0 > 0) as res0, sum(bob.aggregate_int_0 > 0) as res1, sum(alice.aggregate_float_0 > 0) as res2, sum(bob.aggregate_float_0 > 0) as res3 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]sum & arithmetic after join",
+    "query": "select sum(alice.aggregate_int_0 + bob.aggregate_int_0) as res0, sum(alice.aggregate_float_0 - bob.aggregate_float_1) as res1, sum(alice.aggregate_float_0 * bob.aggregate_float_0) as res2, sum(alice.aggregate_float_0 /(bob.aggregate_float_0 * bob.aggregate_float_0 + 1)) as res3 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]sum & compare after join",
+    "query": "select sum(alice.aggregate_int_0) > sum(bob.aggregate_int_0) as res0, sum(alice.aggregate_float_0) < sum(bob.aggregate_float_1) as res1, sum(alice.aggregate_int_0) >= sum(bob.aggregate_float_0) as res2, sum(alice.aggregate_float_0) <= sum(bob.aggregate_float_0) as res3 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]count after join",
+    "query": "select count(alice.aggregate_int_0) as res0, count(bob.aggregate_int_0) as res1, count(alice.aggregate_float_0) as res2, count(bob.aggregate_float_0) as res3, count(alice.aggregate_string_0) as res4, count(bob.aggregate_string_0) as res5, count(alice.aggregate_datetime_0) as res6, count(bob.aggregate_datetime_0) as res7, count(alice.aggregate_timestamp_0) as res8, count(bob.aggregate_timestamp_0) as res9 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]count & distinct after join",
+    "query": "select count(distinct alice.aggregate_int_0) as res0, count(distinct bob.aggregate_int_0) as res1, count(distinct alice.aggregate_float_0) as res2, count(distinct bob.aggregate_float_0) as res3, count(distinct alice.aggregate_string_0) as res4, count(distinct bob.aggregate_string_0) as res5, count(distinct alice.aggregate_datetime_0) as res6, count(distinct bob.aggregate_datetime_0) as res7, count(distinct alice.aggregate_timestamp_0) as res8, count(distinct bob.aggregate_timestamp_0) as res9 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]count & distinct & if after join",
+    "query": "select count(distinct (if(alice.encrypt_int_0>1, bob.join_string_0, 'aaaaa'))) as cd from alice.tbl_0 as alice inner join bob.tbl_0 as bob on alice.join_string_0=bob.join_string_0 group by bob.groupby_int_0;"
+  },
+  {
+    "name": "[two_parties]logic after join",
+    "query": "select alice.plain_int_0 as res0, alice.plain_int_0 > bob.plain_int_0 and alice.plain_int_0 >= bob.plain_int_0 as and_log, (alice.plain_int_0 <= bob.plain_int_0) or (alice.plain_int_0 <> bob.plain_int_0) as or_log from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]cast(private) after join",
+    "query": "select cast(alice.plain_int_0 as decimal(64,30)) as df, cast(alice.plain_int_0 as char) as ds from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]in after join",
+    "query": "select  alice.compare_int_0 in (select compare_int_0 from bob.tbl_0) as in_column from alice.tbl_0 as alice;"
+  },
+  {
+    "name": "[two_parties]not in after join",
+    "query": "select alice.compare_int_0 not in (select compare_int_0 from bob.tbl_0) as not_in_column from alice.tbl_0 as alice;"
+  },
+  {
+    "name": "[two_parties]in list after join",
+    "query": "select alice.plain_int_0 in (100, 12.3, 10) as res from alice.tbl_0 as alice, bob.tbl_0 as bob where alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]null after join",
+    "query": "select bob.plain_int_0 is not null as c1, ifnull(bob.plain_string_0, 'null_str') as c2, coalesce(bob.plain_float_0, bob.plain_float_1, 1.0) as c3 from alice.tbl_0 as alice left join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]compare(less) before join",
+    "query": "select alice.plain_int_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_0 < bob.compare_int_1 and alice.compare_float_0 < bob.compare_int_1 and alice.compare_float_0 < bob.compare_float_1 and alice.compare_datetime_0 < bob.compare_datetime_0 and alice.compare_timestamp_0 < bob.compare_timestamp_0;"
+  },
+  {
+    "name": "[two_parties]compare(greater) before join",
+    "query": "select alice.plain_int_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_1 > bob.compare_int_0 and alice.compare_float_1 > bob.compare_int_0 and alice.compare_float_1 > bob.compare_float_0 and alice.compare_datetime_0 > bob.compare_datetime_0 and alice.compare_timestamp_0 > bob.compare_timestamp_0;"
+  },
+  {
+    "name": "[two_parties]compare(less or equal) before join",
+    "query": "select alice.plain_int_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_0 <= bob.compare_int_1 and alice.compare_float_0 <= bob.compare_int_1 and alice.compare_float_0 <= bob.compare_float_1 and alice.compare_datetime_0 <= bob.compare_datetime_0 and alice.compare_timestamp_0 <= bob.compare_timestamp_0;"
+  },
+  {
+    "name": "[two_parties]compare(greater or equal) before join",
+    "query": "select alice.plain_int_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_1 >= bob.compare_int_0 and alice.compare_float_1 >= bob.compare_int_0 and alice.compare_float_1 >= bob.compare_float_0 and alice.compare_datetime_0 >= bob.compare_datetime_0 and alice.compare_timestamp_0 >= bob.compare_timestamp_0;"
+  },
+  {
+    "name": "[two_parties]compare(not equal) before join",
+    "query": "select alice.plain_int_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_1 <> bob.compare_int_0 and alice.compare_float_1 <> bob.compare_int_0 and alice.compare_float_1 <> bob.compare_float_0 and alice.compare_datetime_0 <> bob.compare_datetime_0 and alice.compare_timestamp_0 <> bob.compare_timestamp_0;"
+  },
+  {
+    "name": "[two_parties]arithmetic(plus) before join ",
+    "query": "select alice.plain_int_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_0 + bob.compare_int_0 > bob.compare_int_0 and alice.compare_int_0 + bob.compare_float_0 > bob.compare_int_0 and alice.compare_float_0 + bob.compare_float_0 > bob.compare_int_0;"
+  },
+  {
+    "name": "[two_parties]arithmetic(subtract) before join ",
+    "query": "select alice.plain_int_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_0 - bob.compare_int_0 > bob.compare_int_0 or alice.compare_int_0 - bob.compare_float_0 > bob.compare_int_0 or alice.compare_float_0 - bob.compare_float_0 > bob.compare_int_0;"
+  },
+  {
+    "name": "[two_parties]arithmetic(multiply) before join ",
+    "query": "select alice.plain_int_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_0 * bob.compare_int_0 > bob.compare_int_0 and alice.compare_int_0 * bob.compare_float_0 > bob.compare_int_0 and alice.compare_float_0 * bob.compare_float_0 > bob.compare_int_0;"
+  },
+  {
+    "name": "[two_parties]arithmetic(divide) before join ",
+    "query": "select alice.plain_int_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_0 / (bob.compare_int_0 * bob.compare_int_0 + 1) > bob.compare_int_0 or alice.compare_int_0 /(bob.compare_float_0 * bob.compare_float_0 + 1) > bob.compare_int_0 or alice.compare_float_0 /(bob.compare_float_0 * bob.compare_float_0 + 1) > bob.compare_int_0;"
+  },
+  {
+    "name": "[two_parties]arithmetic(intdiv) before join ",
+    "query": "select alice.plain_int_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_0 div (bob.compare_int_0 + 200) > bob.compare_int_0;"
+  },
+  {
+    "name": "[two_parties]null before join",
+    "query": "select alice.plain_int_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.join_string_0 is null;"
+  },
+  {
+    "name": "[two_parties]not null before join",
+    "query": "select alice.plain_int_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where bob.plain_string_0 is not null;"
+  },
+  {
+    "name": "[two_parties]apply in before join",
+    "query": "select alice.plain_int_0 from alice.tbl_0 as alice where alice.compare_int_0 in (select bob.compare_int_0 from bob.tbl_0 as bob);"
+  },
+  {
+    "name": "[two_parties]apply not in before join",
+    "query": "select alice.plain_int_0 from alice.tbl_0 as alice where alice.compare_int_0 not in (select bob.compare_int_0 from bob.tbl_0 as bob);"
+  },
+  {
+    "name": "[two_parties]in list before join",
+    "query": "select alice.join_string_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.join_string_0 in (\"ejjepeki\", \"ma\");"
+  },
+  {
+    "name": "[two_parties]where(null)",
+    "query": "select alice.plain_int_0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_0 > bob.compare_int_0;"
+  },
+  {
+    "name": "[two_parties]compare (less) where(null)",
+    "query": "select alice.compare_int_0 < bob.compare_int_0 as res0 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_0 > bob.compare_int_0;"
+  },
+  {
+    "name": "[two_parties]compare (greater) where(null)",
+    "query": "select alice.compare_int_0 > bob.compare_int_0 as res0  from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_0 > bob.compare_int_0;"
+  },
+  {
+    "name": "[two_parties]compare (less or equal) where(null)",
+    "query": "select alice.compare_int_0 <= bob.compare_int_0 as res0, alice.compare_int_0 <= bob.compare_float_0 as res1, alice.compare_float_0 <= bob.compare_float_0 as res2 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_0 > bob.compare_int_0;"
+  },
+  {
+    "name": "[two_parties]compare (greater or equal) where(null)",
+    "query": "select alice.compare_int_0 >= bob.compare_int_0 as res0, alice.compare_int_0 >= bob.compare_float_0 as res1, alice.compare_float_0 >= bob.compare_float_0 as res2 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_0 > bob.compare_int_0;"
+  },
+  {
+    "name": "[two_parties]compare (not equal) where(null)",
+    "query": "select alice.compare_int_0 <> bob.compare_int_0 as res0, alice.compare_int_0 <> bob.compare_float_0 as res1, alice.compare_float_0 <> bob.compare_float_0 as res2 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_0 > bob.compare_int_0;"
+  },
+  {
+    "name": "[two_parties]arithmetic (plus) where(null)",
+    "query": "select bob.plain_int_0 + alice.plain_int_0 as res0, alice.plain_int_0 + bob.plain_float_0 as res1, alice.plain_float_0 + bob.plain_float_0 as res2 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_0 > bob.compare_int_0;"
+  },
+  {
+    "name": "[two_parties]arithmetic (subtract) where(null)",
+    "query": "select bob.plain_int_0 - alice.plain_int_0 as res0, alice.plain_int_0 - bob.plain_float_0 as res1, alice.plain_float_0 - bob.plain_float_0 as res2 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_0 > bob.compare_int_0;"
+  },
+  {
+    "name": "[two_parties]arithmetic (multiply) where(null)",
+    "query": "select bob.plain_int_0 * alice.plain_int_0 as res0, alice.plain_int_0 * bob.plain_float_0 as res1, alice.plain_float_0 * bob.plain_float_0 as res2 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_0 > bob.compare_int_0;"
+  },
+  {
+    "name": "[two_parties]arithmetic (divide) where(null)",
+    "query": "select bob.plain_int_0 / (alice.plain_int_0 * alice.plain_int_0 + 1) as res0, alice.plain_int_0 / (bob.plain_float_0 * bob.plain_float_0 + 1) as res1, alice.plain_float_0 / (bob.plain_float_0 * bob.plain_float_0 + 1) as res2 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_0 > bob.compare_int_0;"
+  },
+  {
+    "name": "[two_parties]logic where(null)",
+    "query": "select alice.plain_int_0 as res0, alice.plain_int_0 > bob.plain_int_0 and alice.plain_int_0 >= bob.plain_int_0 as and_log, (alice.plain_int_0 <= bob.plain_int_0) or (alice.plain_int_0 <> bob.plain_int_0) as or_log from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.compare_int_0 > bob.compare_int_0;"
+  },
+  {
+    "name": "[two_parties]in where(null)",
+    "query": "select  alice.compare_int_0 in (select compare_int_0 from bob.tbl_0) as in_column from alice.tbl_0 as alice where alice.compare_int_0 > 1000;"
+  },
+  {
+    "name": "[two_parties]not in where(null)",
+    "query": "select alice.compare_int_0 not in (select compare_int_0 from bob.tbl_0) as not_in_column from alice.tbl_0 as alice where alice.compare_int_0 > 1000;"
+  },
+  {
+    "name": "[two_parties]agg with group by(long), private group by",
+    "query": "select ta.groupby_int_0, sum(ta.aggregate_int_0) as b, max(ta.aggregate_int_0) as a, min(ta.aggregate_int_0) as d from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_int_0 = tb.plain_int_0 group by ta.groupby_int_0 having count(*) >= 4"
+  },
+  {
+    "name": "[two_parties]agg with group by(float), private group by",
+    "query": "select ta.groupby_int_0, sum(ta.aggregate_float_0) as b, max(ta.aggregate_float_0 + ta.aggregate_float_0) as a, min(ta.aggregate_float_0) as d from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_int_0 = tb.plain_int_0 group by ta.groupby_int_0 having count(*) >= 4"
+  },
+  {
+    "name": "[two_parties]agg with group by(string), private group by",
+    "query": "select ta.groupby_string_0, count(*) as c, count(distinct ta.aggregate_int_0) as cd, sum(ta.aggregate_int_0) as sum, min(ta.aggregate_int_0) as min, max(ta.aggregate_int_0) as max, avg(ta.aggregate_int_0) as avg from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_int_0 = tb.plain_int_0 group by ta.groupby_string_0 having count(*) >= 4"
+  },
+  {
+    "name": "[two_parties]agg with group by(datetime), private group by",
+    "query": "select ta.groupby_datetime_0, count(*) as c, count(distinct ta.aggregate_int_0) as cd, sum(ta.aggregate_int_0) as sum, min(ta.aggregate_int_0) as min, max(ta.aggregate_int_0) as max, avg(ta.aggregate_int_0) as avg from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_int_0 = tb.plain_int_0 group by ta.groupby_datetime_0 having count(*) >= 4"
+  },
+  {
+    "name": "[two_parties]agg with group by(string2), oblivious group by",
+    "query": "select ta.groupby_string_0,tb.groupby_string_0, count(*) as c, count(distinct ta.aggregate_int_0) as cd, sum(ta.aggregate_int_0) as sum, min(ta.aggregate_int_0) as min, max(ta.aggregate_int_0) as max, avg(ta.aggregate_int_0) as avg from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_int_0 = tb.plain_int_0 group by ta.groupby_string_0,tb.groupby_string_0"
+  },
+  {
+    "name": "[two_parties]key merge, oblivious group by",
+    "query": "select ta.groupby_int_0, ta.groupby_string_0, tb.groupby_string_0 as tbs, count(*) as c, count(distinct ta.aggregate_int_0) as cd, sum(ta.aggregate_int_0) as sum, min(ta.aggregate_int_0) as min, max(ta.aggregate_int_0) as max, avg(ta.aggregate_int_0) as avg from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.plain_int_0 = tb.plain_int_0 group by ta.groupby_int_0, ta.groupby_string_0, tb.groupby_string_0"
+  },
+  {
+    "name": "[two_parties]private group by with secret sum",
+    "query": "select ta.groupby_string_0, sum(tb.aggregate_int_0) as sl, sum(tb.aggregate_float_0) as sf, count(tb.encrypt_int_0) as c from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0 group by ta.groupby_string_0;"
+  },
+  {
+    "name": "[two_parties]select plain data from another party",
+    "query": "select plain_int_0, plain_string_0, plain_float_0, plain_datetime_0, plain_timestamp_0 from bob.tbl_0"
+  },
+  {
+    "name": "[two_parties]union all tests",
+    "query": "select ta.plain_int_0 from alice.tbl_0 as ta union all select tb.plain_int_0 from bob.tbl_0 as tb"
+  },
+  {
+    "name": "[two_parties]cast(secret) after union",
+    "query": "select cast(u.plain_int_0 as decimal) as fd from  (select ta.plain_int_0 from  alice.tbl_0 as ta union all select tb.plain_int_0 from bob.tbl_0 as tb) as u;"
+  },
+  {
+    "name": "[two_parties]union tests",
+    "query": "select ta.plain_int_0 from alice.tbl_0 as ta union select tb.plain_int_0 from bob.tbl_0 as tb"
+  },
+  {
+    "name": "[two_parties]distinct tests",
+    "query": "select distinct plain_int_0 from (select ta.plain_int_0 from alice.tbl_0 as ta union all select tb.plain_int_0 from bob.tbl_0 as tb) as u"
+  },
+  {
+    "name": "[two_parties]agg func after union all tests",
+    "query": "select count(*) as cc, max(aggregate_int_0) as mm from (select aggregate_int_0, groupby_int_0 from alice.tbl_0 union all select aggregate_int_0, groupby_int_0 from bob.tbl_1) as u"
+  },
+  {
+    "name": "[two_parties]group by/agg after union all tests",
+    "query": "select count(*) as cc, max(groupby_int_0) as mm from (select aggregate_int_0, groupby_int_0 from alice.tbl_0 union all select aggregate_int_0, groupby_int_0 from bob.tbl_1) as u group by u.groupby_int_0 having count(*) >= 4"
+  },
+  {
+    "name": "[two_parties]if after join",
+    "query": "select if(ta.plain_int_0, tb.plain_int_0, ta.plain_int_0) as res from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0"
+  },
+  {
+    "name": "[two_parties]if (compare) after join",
+    "query": "select if(ta.compare_int_0 > tb.compare_int_0, ta.plain_int_0, tb.plain_int_0) as res from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0"
+  },
+  {
+    "name": "[two_parties]case when after join",
+    "query": "select case when alice.compare_int_0 > bob.compare_int_0 then alice.plain_int_0 else bob.plain_int_0 end as case_when1, case when alice.compare_int_0 then 1 else 0 end as case_when2 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]case when(multi condition) after join",
+    "query": "select case when alice.compare_int_0 > bob.compare_int_0 then alice.plain_int_0 when alice.plain_int_0 > 50 then bob.plain_int_0 when alice.plain_int_0 then 1 else 0 end as res1 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0;"
+  },
+  {
+    "name": "[two_parties]date func (now, curdate)",
+    "query": "select alice.plain_datetime_0 < now() as res1, alice.plain_datetime_0 < curdate() as res2 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_datetime_0 = bob.join_datetime_0;"
+  },
+  {
+    "name": "[two_parties]date func (adddate, subdate)",
+    "query": "select adddate(alice.plain_datetime_0, interval 10 day) as res1, adddate(bob.plain_datetime_0, interval 10 day) as res2, subdate(alice.plain_datetime_0, interval 10 day) as res3, subdate(bob.plain_datetime_0, interval 10 day) as res4 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_datetime_0 = bob.join_datetime_0;"
+  },
+  {
+    "name": "[two_parties] date func (date_add, date_sub)",
+    "query": "select bob.plain_datetime_0 > DATE_ADD('2025-04-05', INTERVAL 1 DAY) from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 where alice.plain_datetime_0 < DATE_SUB('2025-04-05 10:10:10', INTERVAL 1 DAY);"
+  },
+  {
+    "name": "[two_parties]date func (datediff)",
+    "query": "select datediff(alice.plain_datetime_0, bob.plain_datetime_1) as res1 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_datetime_0 = bob.join_datetime_0;"
+  },
+  {
+    "name": "[two_parties]negative constant",
+    "query": "select if(ta.plain_float_0, -1.0, -ta.plain_float_0) as res from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+  },
+  {
+    "name": "[two_parties]arrow func (upper, lower, substring, trim, concat, strtodate)",
+    "query": "select upper(ta.plain_string_0) as up, lower(ta.plain_string_0) as lo, substring(ta.plain_string_0, 2, 3) as sl, trim(ta.plain_string_0) as tr, concat(ta.plain_string_0, ta.join_string_0) as co, str_to_date('2023-12-25', '%Y-%m-%d') as cd, str_to_date(ta.plain_string_0, '%Y-%m-%d') as sd from alice.tbl_0 as ta join bob.tbl_0 as tb on ta.join_int_0 = tb.join_int_0;"
+  },
+  {
+    "name": "[two_parties] exists subquery",
+    "query": "SELECT t1.plain_int_1 AS o_orderpriority,count(*) AS order_count FROM alice.tbl_0 t1 WHERE t1.plain_int_0>=3 AND t1.plain_int_0<7 AND EXISTS(SELECT * FROM bob.tbl_0 t0 WHERE t0.plain_string_0=t1.plain_string_0 AND t0.plain_int_0<t0.plain_int_1) GROUP BY o_orderpriority ORDER BY o_orderpriority;"
+  },
+  {
+    "name": "[multi_parties]join on",
+    "query": "select alice.encrypt_float_1 from alice.tbl_0 as alice join bob.tbl_0 as bob on alice.join_int_0 = bob.join_int_0 join carol.tbl_0 as carol on bob.join_int_1 = carol.join_int_1;"
+  },
+  {
+    "name": "[multi_parties]join where",
+    "query": "select alice.encrypt_float_1 from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_int_0 = bob.join_int_0 and bob.join_int_1 = carol.join_int_1;"
+  },
+  {
+    "name": "[multi_parties]join arithmetics",
+    "query": "select alice.plain_int_0 + bob.join_int_0 + carol.join_int_0 as add_res, alice.plain_int_0 - bob.join_int_0 - carol.join_int_0 as minus_res, alice.plain_int_0 * bob.join_int_0 * carol.join_int_0 as multi_res, alice.plain_int_0 / bob.join_int_0 / carol.join_int_0 as div_res from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_int_0 = bob.join_int_0 and bob.join_int_0 = carol.join_int_0 and bob.join_int_0 != 0 and carol.join_int_0 != 0;"
+  },
+  {
+    "name": "[multi_parties]join compare",
+    "query": "select alice.plain_int_0 > bob.join_int_0 as greater_res, alice.plain_int_0 < carol.join_int_0 as less_res, alice.plain_int_0 = carol.join_int_0 as equal_res, alice.plain_int_0 != carol.join_int_0 as unequal_res from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_int_0 = bob.join_int_0 and bob.join_int_0 = carol.join_int_0;"
+  },
+  {
+    "name": "[multi_parties]join arithmetics(share) compare",
+    "query": "select (alice.compare_int_0 + bob.compare_int_0) > (bob.compare_int_0 + carol.join_int_0) as add_res, (alice.compare_int_0 - bob.compare_int_0) < (bob.compare_int_0 - carol.compare_int_0) as minus_res, (alice.compare_int_0 * bob.compare_int_0) >= (bob.compare_int_0 * carol.compare_int_0) as multi_res, (alice.compare_int_0 div bob.compare_int_0) <= (bob.compare_int_0 div carol.compare_int_0) as div_res from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_int_0 = bob.join_int_0 and bob.join_int_0 = carol.join_int_0 and bob.compare_int_0 != 0 and carol.compare_int_0 != 0;"
+  },
+  {
+    "name": "[multi_parties]join arithmetics(share) equal/not equal",
+    "query": "select (alice.compare_int_0 + bob.compare_int_0) = (bob.compare_int_0 + carol.join_int_0) as add_res, (alice.compare_int_0 - bob.compare_int_0) != (bob.compare_int_0 - carol.join_int_0) as minus_res from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_int_0 = bob.join_int_0 and bob.join_int_0 = carol.join_int_0 and bob.compare_int_0 != 0 and carol.compare_int_0 != 0;"
+  },
+  {
+    "name": "[multi_parties]join cast",
+    "query": "select cast(alice.plain_int_0 as decimal) as cp, cast(alice.compare_int_0 > bob.compare_int_0 as decimal) as cs from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_int_0 = bob.join_int_0 and bob.join_int_0 = carol.join_int_0;"
+  },
+  {
+    "name": "[multi_parties]join oblivious group by",
+    "query": "select key1, key2, count(*) as c, count(distinct bob_encrypt) as cd, sum(bob_aggregate) as sb, max(carol_aggregate) as sc, min(carol_aggregate) as min_ca, avg(carol_aggregate) as avg_ca from (select bob.encrypt_int_0 as bob_encrypt, bob.aggregate_int_0 as bob_aggregate, carol.aggregate_int_0 as carol_aggregate, alice.join_int_0 as alice_join, bob.join_int_0 as bob_join, carol.join_int_0 as carol_join, alice.groupby_int_0 + bob.groupby_int_0 as key1, carol.groupby_int_0 + bob.groupby_int_0 as key2 from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol) as tt where alice_join = bob_join and bob_join = carol_join group by key1, key2;"
+  },
+  {
+    "name": "[multi_parties]join oblivious group by multi keys",
+    "query": "select count(*) as c, count(distinct bob.encrypt_int_0) as cd, sum(bob.aggregate_int_0) as sb, sum(carol.aggregate_int_0) as sc from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_int_0 = bob.join_int_0 and bob.join_int_0 = carol.join_int_0 group by alice.groupby_int_0, bob.groupby_int_0, carol.groupby_int_0, carol.groupby_string_0 having count(*) > 3;"
+  },
+  {
+    "name": "[multi_parties]join group by secret agg",
+    "query": "select count(*) as c, sum(bob.aggregate_int_0) as sb, avg(carol.aggregate_float_0) as ac from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_int_0 = bob.join_int_0 and bob.join_int_0 = carol.join_int_0 group by alice.groupby_int_0 having count(*) > 3;"
+  },
+  {
+    "name": "[multi_parties]union all group by string",
+    "query": "select count(*) as c, groupby_string_0 from (select aggregate_int_0, groupby_string_0 from alice.tbl_0 union all select aggregate_int_0, groupby_string_0 from bob.tbl_1 union all select aggregate_int_0, groupby_string_0 from carol.tbl_2) as u group by u.groupby_string_0 having count(*) > 3;"
+  },
+  {
+    "name": "[multi_parties]union all tests",
+    "query": "select ta.plain_int_0 from alice.tbl_0 as ta union all select tb.plain_int_0 from bob.tbl_0 as tb union all select tc.plain_int_0 from carol.tbl_0 as tc"
+  },
+  {
+    "name": "[multi_parties]agg after union all tests",
+    "query": "select count(*) as cc, max(aggregate_int_0) as mm from (select aggregate_int_0, groupby_int_0 from alice.tbl_0 union all select aggregate_int_0, groupby_int_0 from bob.tbl_1 union all select aggregate_int_0, groupby_int_0 from carol.tbl_2) as u"
+  },
+  {
+    "name": "[multi_parties]union tests",
+    "query": "select ta.plain_int_0 from alice.tbl_0 as ta union select tb.plain_int_0 from bob.tbl_0 as tb union select tc.plain_int_0 from carol.tbl_0 as tc"
+  },
+  {
+    "name": "[multi_parties]join compare",
+    "query": "select alice.plain_int_0 > bob.join_int_0 as greater_res, alice.plain_int_0 < carol.join_int_0 as less_res, alice.plain_int_0 = carol.join_int_0 as equal_res, alice.plain_int_0 != carol.join_int_0 as unequal_res from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_int_0 = bob.join_int_0 and bob.join_int_0 = carol.join_int_0;"
+  },
+  {
+    "name": "[multi_parties]agg after union all tests. agg(bool)",
+    "query": "select count(*) as cc, max(aggregate_int_0 > 0) as mm, min(aggregate_int_0 > 0) as mn, sum(aggregate_int_0 > 0) as su, avg(aggregate_int_0 > 0) as av from (select aggregate_int_0, groupby_int_0 from alice.tbl_0 union all select aggregate_int_0, groupby_int_0 from bob.tbl_1 union all select aggregate_int_0, groupby_int_0 from carol.tbl_2) as u"
+  },
+  {
+    "name": "[multi_parties]join in",
+    "query": "select (alice.compare_int_0 + bob.compare_int_0 + carol.compare_int_0) in (100, 12.3, 10) as res, alice.compare_int_0 not in (0, 10, 100) as res1  from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_int_0 = bob.join_int_0 and bob.join_int_0 = carol.join_int_0;"
+  },
+  {
+    "name": "[multi_parties]if (compare)",
+    "query": "select if(alice.compare_int_0 > bob.compare_int_0, alice.plain_int_0, bob.plain_int_0) as res1, if(bob.compare_int_0 > carol.compare_int_0, bob.plain_int_0, carol.plain_int_0) as res2 from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_int_0 = bob.join_int_0 and bob.join_int_0 = carol.join_int_0;"
+  },
+  {
+    "name": "[multi_parties]case when after join",
+    "query": "select case when alice.compare_int_0 > bob.compare_int_0 then alice.plain_int_0 else bob.plain_int_0 end as case_when1, case when bob.compare_int_0 > carol.compare_int_0 then 1 else 0 end as case_when2 from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_int_0 = bob.join_int_0 and bob.join_int_0 = carol.join_int_0;"
+  },
+  {
+    "name": "[multi_parties]case when(multi condition) after join",
+    "query": "select case when alice.compare_int_0 > bob.compare_int_0 then alice.plain_int_0 when carol.compare_int_0 > 100 then carol.plain_int_0 when carol.plain_int_0 then 1 else 0 end as res1 from alice.tbl_0 as alice, bob.tbl_0 as bob, carol.tbl_0 as carol where alice.join_int_0 = bob.join_int_0 and bob.join_int_0 = carol.join_int_0;"
+  },
+  {
+    "name": "[multi_parties]test case sensitive",
+    "query": "select alice.groupby_int_0 as r1, alice.GROUPBY_int_1 as r2, bob.join_string_0 as r3, bob.JOIN_STRING_0 as r4 from alice.UPPER_table as alice, bob.UPPER_table as bob, carol.UPPER_table as carol where alice.join_string_0 = bob.JOIN_string_0 and bob.join_string_1 = carol.JOIN_string_1 and carol.COMPARE_float_0 > 0 and carol.compare_float_1 > 0;"
+  },
+  {
+    "name": "[multi_parties]secret join with union all",
+    "query": "select ta.join_int_0, ta.groupby_string_0, tu.plain_float_0 from alice.tbl_0 as ta inner join (select tb.join_int_0, tb.plain_float_0 from bob.tbl_0 as tb union all select tc.join_int_0, tc.plain_float_0 from carol.tbl_0 as tc) as tu on ta.join_int_0=tu.join_int_0;"
+  }
+]

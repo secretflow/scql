@@ -8,7 +8,10 @@ common --nolegacy_important_outputs
 common --remote_download_regex='.*\/scqlengine$'
 common --registry=https://raw.githubusercontent.com/secretflow/bazel-registry/main
 common --registry=https://bcr.bazel.build
-common --registry=https://baidu.github.io/babylon/registry
+
+common --remote_download_outputs=all
+
+common --experimental_proto_descriptor_sets_include_source_info
 
 build --incompatible_new_actions_api=false
 build --copt=-fdiagnostics-color=always
@@ -26,6 +29,7 @@ build --copt=-fPIC
 build --host_copt=-fstack-protector-strong
 build:linux --host_copt=-Wl,-z,noexecstack
 build:macos --host_copt=-Wa,--noexecstack
+
 
 
 test --keep_going
@@ -59,3 +63,5 @@ build:asan --linkopt -fsanitize=address
 build:asan --define disable_tcmalloc=true
 build:asan --copt="-Wno-error=uninitialized"
 build:asan --copt="-Wno-error=maybe-uninitialized"
+build:asan --action_env=ASAN_OPTIONS=detect_odr_violation=0
+

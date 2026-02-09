@@ -25,8 +25,8 @@ void Operator::ManageTensorLifecycle(ExecContext *ctx) {
   if (!FLAGS_enable_tensor_life_cycle_manage) {
     return;
   }
-  auto in_tensors = ctx->GetInputTensors();
-  auto out_tensors = ctx->GetOutputTensors();
+  auto in_tensors = ctx->GetInputPbs();
+  auto out_tensors = ctx->GetOutputPbs();
   std::vector<std::string> in_tensor_names;
   for (const auto &tensor : in_tensors) {
     in_tensor_names.emplace_back(tensor.name());

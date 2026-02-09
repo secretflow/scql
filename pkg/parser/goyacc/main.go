@@ -55,7 +55,7 @@
 //
 // 2015-02-23: Added -xegen flag. It can be used to automagically generate a
 // skeleton errors by example file which can be, for example, edited and/or
-// submitted later as an argument of the -xe option.
+// submited later as an argument of the -xe option.
 //
 // 2014-12-18: Support %precedence for better bison compatibility[3]. The
 // actual changes are in packages goyacc is dependent on. Goyacc users should

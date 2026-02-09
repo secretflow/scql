@@ -50,22 +50,16 @@ void FilterByIndex::Validate(ExecContext* ctx) {
 }
 
 void FilterByIndex::Execute(ExecContext* ctx) {
-  const auto& indice_pb = ctx->GetInput(kInRowsIndexFilter)[0];
-  auto indice = ctx->GetTensorTable()->GetTensor(indice_pb.name());
-  YACL_ENFORCE(indice != nullptr,
-               "input {} tensor {} not found in symbol table",
-               kInRowsIndexFilter, indice_pb.name());
+  auto indice = ctx->GetInputTensor(kInRowsIndexFilter);
+  auto data_tensors = ctx->GetInputTensors(kInData);
 
-  const auto& data_pbs = ctx->GetInput(kInData);
-  const auto& out_pbs = ctx->GetOutput(kOut);
-  for (int i = 0; i < data_pbs.size(); ++i) {
-    auto value = ctx->GetTensorTable()->GetTensor(data_pbs[i].name());
-    YACL_ENFORCE(value != nullptr,
-                 "input {} tensor {} not found in symbol table", kInData,
-                 data_pbs[i].name());
-    auto result = Take(*value, *indice);
-    ctx->GetTensorTable()->AddTensor(out_pbs[i].name(), result);
+  std::vector<std::shared_ptr<Tensor>> results;
+  results.reserve(data_tensors.size());
+  for (const auto& data_tensor : data_tensors) {
+    results.push_back(Take(*data_tensor, *indice));
   }
+
+  ctx->SetOutputTensors(kOut, results);
 }
 
 TensorPtr FilterByIndex::Take(const Tensor& value, const Tensor& indice) {

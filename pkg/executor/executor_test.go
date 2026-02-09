@@ -22,7 +22,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/secretflow/scql/pkg/interpreter/graph"
-	"github.com/secretflow/scql/pkg/interpreter/graph/optimizer"
+	"github.com/secretflow/scql/pkg/interpreter/operator"
 	proto "github.com/secretflow/scql/pkg/proto-gen/scql"
 )
 
@@ -44,9 +44,9 @@ func (client *mockGrpcEngineStub) Post(ctx context.Context, url, credential, con
 	return "", errors.New("cannot use gRPC engine client to run HTTP method")
 }
 
-func TestSyncExecutor(t *testing.T) {
-	a := require.New(t)
-	partyInfo := graph.NewPartyInfo([]*graph.Participant{
+// Helper to create mock party info for tests
+func createMockPartyInfo() *graph.PartyInfo {
+	return graph.NewPartyInfo([]*graph.Participant{
 		{
 			PartyCode: "alice",
 			Endpoints: []string{"alice.url"},
@@ -58,29 +58,98 @@ func TestSyncExecutor(t *testing.T) {
 			Token:     "bob_credential",
 		},
 	})
-	plan := graph.NewGraphBuilder(partyInfo, false)
+}
 
-	t1 := plan.AddTensor("alice.t1")
+// Helper to create a simple test execution graph
+func createTestExecutionGraph(partyInfo *graph.PartyInfo, outputName string) *graph.Graph {
+	t1 := graph.NewTensor(0, "alice.t1")
 	t1.SetStatus(proto.TensorStatus_TENSORSTATUS_PRIVATE)
-	err := plan.AddRunSQLNode("RunSQLOp1", []*graph.Tensor{t1},
-		"select f1 from alice.t1", []string{"alice.t1"}, "alice")
-	a.NoError(err)
+	t1.OwnerPartyCode = "alice"
+	t1.DType = graph.NewPrimitiveDataType(proto.PrimitiveDataType_STRING)
 
-	t2 := plan.AddTensor("bob.t2")
+	t2 := graph.NewTensor(1, "bob.t2")
 	t2.SetStatus(proto.TensorStatus_TENSORSTATUS_PRIVATE)
-	err = plan.AddRunSQLNode("RunSQLOp2", []*graph.Tensor{t2},
-		"select * from bob.t2", []string{"bob.t2"}, "bob")
-	a.NoError(err)
+	t2.OwnerPartyCode = "bob"
+	t2.DType = graph.NewPrimitiveDataType(proto.PrimitiveDataType_STRING)
 
-	graph := plan.Build()
-	graph.OutputNames = []string{t1.Name}
+	// Create execution nodes
+	runSQLNode1 := &graph.ExecutionNode{
+		ID:         0,
+		Name:       "RunSQLOp1",
+		OpType:     operator.OpNameRunSQL,
+		Inputs:     make(map[string][]*graph.Tensor),
+		Outputs:    map[string][]*graph.Tensor{"output": {t1}},
+		Attributes: make(map[string]*graph.Attribute),
+		Edges:      make(map[*graph.Edge]bool),
+		Parties:    []string{"alice"},
+	}
 
-	p := optimizer.NewGraphPartitioner(graph)
+	runSQLNode2 := &graph.ExecutionNode{
+		ID:         1,
+		Name:       "RunSQLOp2",
+		OpType:     operator.OpNameRunSQL,
+		Inputs:     make(map[string][]*graph.Tensor),
+		Outputs:    map[string][]*graph.Tensor{"output": {t2}},
+		Attributes: make(map[string]*graph.Attribute),
+		Edges:      make(map[*graph.Edge]bool),
+		Parties:    []string{"bob"},
+	}
+
+	// Create pipeline with nodes
+	pipeline := &graph.Pipeline{
+		Batched:       false,
+		InputTensors:  []*graph.Tensor{},
+		OutputTensors: []*graph.Tensor{},
+		Nodes:         map[*graph.ExecutionNode]bool{runSQLNode1: true, runSQLNode2: true},
+	}
+
+	// Create graph
+	g := &graph.Graph{
+		Pipelines:   []*graph.Pipeline{pipeline},
+		NodeCnt:     2,
+		OutputNames: []string{outputName},
+		PartyInfo:   partyInfo,
+	}
+
+	return g
+}
+
+// Helper to create mock engine stub for testing
+func createMockEngineStub(sessionID string, outputName string, mockValue []string) *EngineStub {
+	stub := &EngineStub{}
+	stub.webClient = &mockGrpcEngineStub{
+		sessionId: sessionID,
+		responses: map[string][]*proto.Tensor{
+			"alice.url": {
+				{
+					Name:       outputName,
+					ElemType:   proto.PrimitiveDataType_STRING,
+					StringData: mockValue,
+					Shape: &proto.TensorShape{
+						Dim: []*proto.TensorShape_Dimension{{
+							Value: &proto.TensorShape_Dimension_DimValue{DimValue: int64(len(mockValue))},
+						}},
+					},
+				},
+			},
+		},
+	}
+	return stub
+}
+
+func TestSyncExecutor(t *testing.T) {
+	a := require.New(t)
+
+	// Use helper functions to create test components
+	partyInfo := createMockPartyInfo()
+	outputName := "alice.t1"
+	executionGraph := createTestExecutionGraph(partyInfo, outputName)
+
+	p := graph.NewGraphPartitioner(executionGraph)
 	p.NaivePartition()
 
-	m := optimizer.NewGraphMapper(p.Graph, p.Pipelines)
+	m := graph.NewGraphMapper(p.Graph, p.Pipelines)
 	m.Map()
-	a.NoError(err)
 
 	sessionId := "mock"
 	startParams := &proto.JobStartParams{
@@ -92,34 +161,15 @@ func TestSyncExecutor(t *testing.T) {
 	// only alice publish t1
 	{
 		mockValue := []string{"test"}
-
-		stub := &EngineStub{}
-		stub.webClient = &mockGrpcEngineStub{
-			sessionId: sessionId,
-			responses: map[string][]*proto.Tensor{
-				"alice.url": {
-					{
-						Name:       t1.Name,
-						ElemType:   proto.PrimitiveDataType_STRING,
-						StringData: mockValue,
-						Shape: &proto.TensorShape{
-							Dim: []*proto.TensorShape_Dimension{{
-								Value: &proto.TensorShape_Dimension_DimValue{DimValue: int64(len(mockValue))},
-							}},
-						},
-					},
-				},
-			},
-		}
+		stub := createMockEngineStub(sessionId, outputName, mockValue)
 
 		executor, err := NewExecutor(pbRequests, p.Graph.OutputNames, stub, sessionId, p.Graph.PartyInfo)
 		a.NoError(err)
 		resp, err := executor.RunExecutionPlan(context.Background(), false)
 		a.NoError(err)
-		a.Equal(sessionId, resp.ScdbSessionId)
-		a.Equal(len(p.Graph.OutputNames), len(resp.OutColumns))
+		a.Equal(len(p.Graph.OutputNames), len(resp.Result.OutColumns))
 		for i, name := range executor.OutputNames {
-			out := resp.OutColumns[i]
+			out := resp.Result.OutColumns[i]
 			a.Equal(name, out.Name)
 			a.Equal(mockValue, out.GetStringData())
 		}

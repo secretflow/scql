@@ -25,15 +25,11 @@ import (
 	"strings"
 	"time"
 
-	"gorm.io/gorm"
-
-	"github.com/secretflow/scql/pkg/interpreter/ccl"
-	"github.com/secretflow/scql/pkg/parser/auth"
 	"github.com/secretflow/scql/pkg/parser/model"
 	"github.com/secretflow/scql/pkg/parser/mysql"
 	"github.com/secretflow/scql/pkg/parser/types"
 	"github.com/secretflow/scql/pkg/proto-gen/scql"
-	"github.com/secretflow/scql/pkg/scdb/storage"
+	v1 "github.com/secretflow/scql/pkg/proto-gen/scql/v1alpha1"
 	"github.com/secretflow/scql/pkg/sessionctx"
 	"github.com/secretflow/scql/pkg/util/sliceutil"
 )
@@ -48,16 +44,7 @@ var dTypeString2FieldType = map[string]types.FieldType{
 	"timestamp": *(types.NewFieldType(mysql.TypeTimestamp)),
 }
 
-var cclString2CCLLevel = map[string]ccl.CCLLevel{
-	"plain":       ccl.Plain,
-	"join":        ccl.Join,
-	"joinpayload": ccl.AsJoinPayload,
-	"groupby":     ccl.GroupBy,
-	"aggregate":   ccl.Aggregate,
-	"compare":     ccl.Compare,
-	"encrypt":     ccl.Encrypt,
-	"rank":        ccl.Rank,
-}
+
 
 // TODO: rename PhysicalTableMeta
 type PhysicalTableMeta struct {
@@ -96,13 +83,6 @@ func (pt *PhysicalTableMeta) RefTable() string {
 	return fmt.Sprintf("%s.%s", pt.DBName, pt.TableName)
 }
 
-func (pt *PhysicalTableMeta) GetColumnDesc() []*scql.CreateTableRequest_ColumnDesc {
-	var result []*scql.CreateTableRequest_ColumnDesc
-	for _, col := range pt.Columns {
-		result = append(result, &scql.CreateTableRequest_ColumnDesc{Name: col.Name, Dtype: col.DType})
-	}
-	return result
-}
 
 type allDBData struct {
 	DbName    string
@@ -128,16 +108,10 @@ type tableInfo struct {
 type columnInfo struct {
 	ColumnName string   `json:"column_name"`
 	Dtype      string   `json:"dtype"`
-	CCL        []string `json:"ccl"`
+	OpenConds  []string `json:"open_conds"`
 }
 
-type MockCCLConfig struct {
-	dbName     string
-	tableName  string
-	columnName string
-	party      string
-	level      ccl.CCLLevel
-}
+
 
 func getByteArrayFromJson(filePath string) (res []byte, err error) {
 	jsonFile, err := os.Open(filePath)
@@ -306,90 +280,6 @@ func MockContext() sessionctx.Context {
 	return ctx
 }
 
-func GetCCLForParty(party, selfParty string, allPartyCodes []string, ccls []string) (ccl.CCLLevel, error) {
-	if len(ccls) != len(allPartyCodes) && len(ccls) != 1 {
-		return ccl.Unknown, fmt.Errorf("err ccl conf: ccls(%+v) for parties(%+v)", ccls, allPartyCodes)
-	}
-	if len(ccls) == 1 {
-		if party == selfParty {
-			return ccl.Plain, nil
-		}
-		return cclString2CCLLevel[ccls[0]], nil
-	}
-	for i, p := range allPartyCodes {
-		if p == party {
-			return cclString2CCLLevel[ccls[i]], nil
-		}
-	}
-	return ccl.Unknown, fmt.Errorf("bad party(%s) not in all party codes(%+v)", party, allPartyCodes)
-}
-
-func GetAllCCL() ([]*MockCCLConfig, error) {
-	data, allPartyCodes, err := getMockData()
-	if err != nil {
-		return nil, err
-	}
-	ccls := []*MockCCLConfig{}
-	for _, db := range data {
-		for tableName, table := range db.Tables {
-			for _, column := range table.Columns {
-				if len(column.CCL) == 0 {
-					continue
-				}
-				for _, p := range allPartyCodes {
-					level, err := GetCCLForParty(p, db.PartyCode, allPartyCodes, column.CCL)
-					if err != nil {
-						return nil, err
-					}
-					ccls = append(ccls, &MockCCLConfig{
-						dbName:     db.DbName,
-						tableName:  tableName,
-						columnName: column.ColumnName,
-						party:      p,
-						level:      level,
-					})
-				}
-			}
-		}
-	}
-	return ccls, nil
-}
-
-func ConstructCCLWithColumnName(ccls []*MockCCLConfig) ([]*scql.SecurityConfig_ColumnControl, error) {
-	result := []*scql.SecurityConfig_ColumnControl{}
-	for _, ccl := range ccls {
-		result = append(result, &scql.SecurityConfig_ColumnControl{
-			DatabaseName: ccl.dbName,
-			TableName:    ccl.tableName,
-			ColumnName:   ccl.columnName,
-			PartyCode:    ccl.party,
-			Visibility:   scql.SecurityConfig_ColumnControl_Visibility(ccl.level),
-		})
-	}
-	return result, nil
-}
-
-func MockAllCCL() ([]*scql.SecurityConfig_ColumnControl, error) {
-	ccls, err := GetAllCCL()
-	if err != nil {
-		return nil, err
-	}
-	return ConstructCCLWithColumnName(ccls)
-}
-
-func MockAllCCLPlaintext() ([]*scql.SecurityConfig_ColumnControl, error) {
-	ccls, err := GetAllCCL()
-	if err != nil {
-		return nil, err
-	}
-	plaintextCCL := []*MockCCLConfig{}
-	for _, cc := range ccls {
-		cc.level = ccl.Plain
-		plaintextCCL = append(plaintextCCL, cc)
-	}
-	return ConstructCCLWithColumnName(plaintextCCL)
-}
-
 type MockEnginesInfo struct {
 	PartyToUrls        map[string]string
 	PartyToCredentials map[string]string
@@ -447,89 +337,75 @@ func MockPhysicalTableMetas() (map[string]*PhysicalTableMeta, error) {
 	return result, nil
 }
 
-func MockStorage(db *gorm.DB) error {
-	// initialize users
-	users := []storage.User{
-		{User: "alice", Host: "%", PartyCode: "alice", Password: auth.EncodePassword("alice123"), EngineEndpoints: "engine.alice.com", EngineToken: "alice_credential"},
-		{User: "bob", Host: "%", PartyCode: "bob", Password: auth.EncodePassword("bob123"), EngineEndpoints: "engine.bob.com", EngineToken: "bob_credential"},
-	}
-	result := db.Create(&users)
-	if result.Error != nil || result.RowsAffected != 2 {
-		return fmt.Errorf("failed to initialize user table")
-	}
-	userRoot := storage.User{
-		Host:           "%",
-		User:           `root`,
-		Password:       auth.EncodePassword("root"),
-		CreatePriv:     true,
-		CreateUserPriv: true,
-		DropPriv:       true,
-		GrantPriv:      true,
-		DescribePriv:   true,
-		ShowPriv:       true,
-		CreateViewPriv: true,
-	}
-	result = db.FirstOrCreate(&storage.User{}, userRoot)
-	if result.Error != nil {
-		return fmt.Errorf("failed to initialize user root")
+func MockCatalog() (*scql.Catalog, error) {
+	data, _, err := getMockData()
+	if err != nil {
+		return nil, err
 	}
 
-	// initialize database
-	database := storage.Database{
-		Db: "test",
-	}
-	result = db.Create(&database)
-	if result.Error != nil || result.RowsAffected != 1 {
-		return fmt.Errorf("failed to initialize database table")
-	}
-
-	// initialize tables
-	tables := []storage.Table{
-		{Db: "test", Table: "table_1", Owner: "alice", Host: "%", RefTable: "table_1", RefDb: "test"},
-		{Db: "test", Table: "table_2", Owner: "bob", Host: "%", RefTable: "table_2", RefDb: "test"},
-		{Db: "test", Table: "table_3", Owner: "alice", Host: "%", RefTable: "table_3", RefDb: "test"},
-	}
-	result = db.Create(&tables)
-	if result.Error != nil || result.RowsAffected != 3 {
-		return fmt.Errorf("failed to initialize `table` table")
-	}
-
-	// initialize columns
-	columns := []storage.Column{
-		{Db: "test", TableName: "table_1", ColumnName: "column1_1", Type: "int"},
-		{Db: "test", TableName: "table_1", ColumnName: "column1_2", Type: "int"},
-		{Db: "test", TableName: "table_1", ColumnName: "column1_3", Type: "int"},
-		{Db: "test", TableName: "table_2", ColumnName: "column2_1", Type: "int"},
-		{Db: "test", TableName: "table_2", ColumnName: "column2_2", Type: "int"},
-		{Db: "test", TableName: "table_3", ColumnName: "column3_1", Type: "int"},
+	var tableEntries []*scql.TableEntry
+	for _, dbData := range data {
+		for tableName, tableInfo := range dbData.Tables {
+			tableEntry := &scql.TableEntry{
+				TableName:   fmt.Sprintf("%s.%s", dbData.DbName, tableName),
+				IsView:      false,
+				RefTable:    fmt.Sprintf("%s.%s", tableInfo.DbName, tableName),
+				RefTableUri: fmt.Sprintf("url_for_%s_%s", tableInfo.DbName, tableName),
+				DbType:      dbData.DBType,
+				Owner:       &scql.PartyId{Code: dbData.PartyCode},
+			}
+			for _, colInfo := range tableInfo.Columns {
+				col := &scql.TableEntry_Column{
+					Name: colInfo.ColumnName,
+					Type: colInfo.Dtype,
+				}
+				tableEntry.Columns = append(tableEntry.Columns, col)
+			}
+			tableEntries = append(tableEntries, tableEntry)
+		}
 	}
 
-	result = db.Create(&columns)
-	if result.Error != nil || result.RowsAffected != 6 {
-		return fmt.Errorf("failed to initialize column table")
-	}
-
-	// initialize table level privileges
-	tblPrivs := []storage.TablePriv{
-		{Db: "test", TableName: "table_1", User: "alice", Host: "%", VisibilityPriv: mysql.EncryptedOnlyPriv},
-		{Db: "test", TableName: "table_1", User: "bob", Host: "%", VisibilityPriv: mysql.PlaintextPriv},
-		{Db: "test", TableName: "table_2", User: "alice", Host: "%", VisibilityPriv: mysql.PlaintextPriv},
-		{Db: "test", TableName: "table_2", User: "bob", Host: "%", VisibilityPriv: mysql.EncryptedOnlyPriv},
-	}
-	result = db.Create(&tblPrivs)
-	if result.Error != nil || result.RowsAffected != 4 {
-		return fmt.Errorf("failed to initialize table privileges table")
-	}
-
-	// initialize column level privileges
-	colPrivs := []storage.ColumnPriv{
-		{Db: "test", TableName: "table_1", ColumnName: "column1_1", User: "alice", Host: "%", VisibilityPriv: mysql.PlaintextPriv},
-		{Db: "test", TableName: "table_1", ColumnName: "column1_2", User: "alice", Host: "%", VisibilityPriv: mysql.PlaintextPriv},
-		{Db: "test", TableName: "table_1", ColumnName: "column1_3", User: "bob", Host: "%", VisibilityPriv: mysql.PlaintextAfterComparePriv},
-	}
-	result = db.Create(&colPrivs)
-	if result.Error != nil || result.RowsAffected != 3 {
-		return fmt.Errorf("failed to initialize column privileges table")
-	}
-	return nil
+	return &scql.Catalog{
+		Tables: tableEntries,
+	}, nil
 }
+
+func MockColumnVisibility() ([]*v1.ColumnVisibility, error) {
+	data, _, err := getMockData()
+	if err != nil {
+		return nil, err
+	}
+
+	var allParties []*scql.PartyId
+	for _, dbData := range data {
+		allParties = append(allParties, &scql.PartyId{Code: dbData.PartyCode})
+	}
+
+	var result []*v1.ColumnVisibility
+	for _, dbData := range data {
+		for tableName, tableInfo := range dbData.Tables {
+			for _, colInfo := range tableInfo.Columns {
+				colName := strings.ToLower(colInfo.ColumnName)
+				if strings.Contains(colName, "plain_") {
+					result = append(result, &v1.ColumnVisibility{
+						Database:       dbData.DbName,
+						Table:          tableName,
+						Column:         colInfo.ColumnName,
+						VisibleParties: allParties,
+					})
+				}
+			}
+		}
+	}
+
+	return result, nil
+}
+
+
+
+
+
+
+
+
+

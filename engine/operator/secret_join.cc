@@ -89,7 +89,7 @@ std::tuple<spu::Value, spu::Value> CountPosition(spu::SPUContext* sctx,
 }
 
 // Build a permutation index consisting of two parts:
-// 1. the first part is the input parameter 'p'
+// 1. the first part is the input parmeter 'p'
 // 2. the second part is the index which is not in 'p' but in 'pi'
 //
 // e.g: p = {2, 4, 5}, pi = {0, 1, 2, 3, 4, 5},
@@ -115,7 +115,7 @@ spu::Value BuildPerm(spu::SPUContext* sctx, const spu::Value& p,
   }
   YACL_ENFORCE(index.size() == pi.numel() - p.numel(),
                "size mismatch, index size: {}, expected: {}, collisions may "
-               "happened in SoPrf",
+               "happended in SoPrf",
                index.size(), pi.numel() - p.numel());
 
   return hlo::Concatenate(sctx, {p, hlo::LinearGather(sctx, tmp, index)}, 0);
@@ -200,9 +200,10 @@ void SecretJoin::Execute(ExecContext* ctx) {
   sort_inputs.insert(sort_inputs.end(), merged_payload.begin(),
                      merged_payload.end());
   // sort_inputs: [keys, item_origin_mark, left_payloads, right_payloads]
-  auto results = hlo::SimpleSort(
-      sctx, sort_inputs, 0, hal::SortDirection::Ascending,
-      merged_key.size() + 1 /* num_keys */, -1 /* valid_bits */);
+  auto results =
+      hlo::SimpleSort(sctx, sort_inputs, 0, hal::SortDirection::Ascending,
+                      merged_key.size() + 1 /* num_keys */, -1 /* valid_bits */,
+                      true /* stable */);
   // accumulate count of left/right item in key group
   const auto [left_item_count, right_item_count, tmp_right_count] =
       CountKeyGroup(sctx,
@@ -225,7 +226,7 @@ void SecretJoin::Execute(ExecContext* ctx) {
   // TODO: using index to replace payloads to reduce communication
   auto sep_sorted =
       hlo::SimpleSort(sctx, sep_inputs, 0, hal::SortDirection::Ascending,
-                      1 /* num_keys */, 2 /* valid_bits */);
+                      1 /* num_keys */, 2 /* valid_bits */, true /* stable */);
   // eb = (left_item_count * right_item_count) > 0, marks whether rows are in
   // join result, add 0 to generate ashare
   auto result_mark =
@@ -481,7 +482,7 @@ SecretJoin::MergeInputs(ExecContext* ctx) {
 std::tuple<spu::Value, spu::Value, spu::Value> SecretJoin::CountKeyGroup(
     spu::SPUContext* sctx, const std::vector<spu::Value>& keys,
     const spu::Value& item_origin_mark) {
-  // 1. calculate key group mark, where '0' mark the beginning of key group
+  // 1. calculate key group mark, where '0' mark the begining of key group
   auto total_row = keys[0].numel();
   auto key_equal =
       hlo::Equal(sctx, hlo::Slice(sctx, keys[0], {0}, {total_row - 1}, {}),

@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/secretflow/scql/pkg/interpreter/ccl"
 	proto "github.com/secretflow/scql/pkg/proto-gen/scql"
 )
 
@@ -27,7 +26,7 @@ type Tensor struct {
 	ID     int
 	Name   string
 	Option proto.TensorOptions
-	DType  proto.PrimitiveDataType
+	DType  *DataType
 	status proto.TensorStatus
 	Shape  []int
 	// TODO add more data types
@@ -37,11 +36,6 @@ type Tensor struct {
 	Int32S   []int32
 	Int64S   []int64
 	BooleanS []bool
-	// control tensor related calculation
-	CC *ccl.CCL
-	// NOTE(yang.y): if SkipDTypeCheck = true, the tensor data type check with
-	// logical plan is skipped during the translation.
-	SkipDTypeCheck bool
 	// `OwnerPartyCode` make sense only when tensor is in private status
 	OwnerPartyCode string
 	// used to record parties who convert string into secret, they may need to participate revealing secret string later.
@@ -59,6 +53,12 @@ func (t *Tensor) ToString() string {
 	return t.ToBriefString()
 }
 
+func (t *Tensor) String() string {
+	var builder strings.Builder
+	fmt.Fprintf(&builder, "t_%d", t.ID)
+	return builder.String()
+}
+
 func (t Tensor) Status() proto.TensorStatus {
 	return t.status
 }
@@ -74,7 +74,7 @@ func (t *Tensor) ToBriefString() string {
 	fmt.Fprintf(&builder, "%s:%s:%s}",
 		shortName(t.Name),
 		ShortStatus(proto.TensorStatus_name[int32(t.Status())]),
-		proto.PrimitiveDataType_name[int32(t.DType)],
+		t.DType.String(),
 	)
 	return builder.String()
 }
@@ -94,7 +94,6 @@ func NewTensor(id int, name string) *Tensor {
 	return &Tensor{
 		ID:   id,
 		Name: name,
-		CC:   ccl.NewCCL(),
 	}
 }
 
@@ -107,11 +106,11 @@ func TensorNameFromUniqueName(uniqName string) string {
 	return strings.Join(ss[:len(ss)-1], ".")
 }
 
-func newTensorFromProto(pb *proto.Tensor) *Tensor {
+func NewTensorFromProto(pb *proto.Tensor) *Tensor {
 	t := &Tensor{
 		Name:   pb.Name,
 		Option: pb.Option,
-		DType:  pb.ElemType,
+		DType:  NewDataType(pb.ElemType, pb.Width, pb.Scale),
 		RefNum: pb.RefNum,
 	}
 
@@ -162,7 +161,9 @@ func (t *Tensor) ToProto() *proto.Tensor {
 	pb := &proto.Tensor{
 		Name:     t.UniqueName(),
 		Option:   t.Option,
-		ElemType: t.DType,
+		ElemType: t.DType.DType,
+		Width:    t.DType.Width,
+		Scale:    t.DType.Scale,
 		RefNum:   t.RefNum,
 	}
 	if t.Status() != proto.TensorStatus_TENSORSTATUS_UNKNOWN {

@@ -434,7 +434,7 @@ func (n *FuncCallExpr) RestoreDateFuncWithPostgresDialect(ctx *RestoreCtx) (err 
 		ctx.WritePlain("'")
 	case DateDiff, LastDay, StrToDate, DateFormat:
 		// postgres donot support datediff op because Poco can not interpret the interval type result;
-		// postgres do not support last_day、str_to_date、date_format because postgres has not these func: https://m.runoob.com/postgresql/postgresql-datetime.html
+		// postgres donot support last_day、str_to_date、date_format becase postgres has not these func: https://m.runoob.com/postgresql/postgresql-datetime.html
 		return fmt.Errorf("an error occurred while restore FuncCallExpr: %s", n.FnName.L)
 	default:
 		ctx.WriteKeyWord(n.FnName.O)
@@ -490,7 +490,7 @@ func (n *FuncCallExpr) RestoreDateFuncWithCSVDBDialect(ctx *RestoreCtx) (err err
 		}
 		ctx.WritePlain(")")
 	case DateFormat:
-		// csv'format specifiers are different from mysql
+		// csv'format specifiers are diffrent from mysql
 		// csv: https://duckdb.org/docs/archive/0.9.0/sql/functions/dateformat
 		// mysql: https://dev.mysql.com/doc/refman/5.7/en/date-and-time-functions.html#function_date-format
 		ctx.WriteKeyWord("strftime")

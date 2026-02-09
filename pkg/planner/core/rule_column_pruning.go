@@ -136,7 +136,15 @@ func (p *LogicalProjection) PruneColumns(parentUsedCols []*expression.Column) er
 
 	selfUsedCols := make([]*expression.Column, 0, len(p.Exprs))
 	selfUsedCols = expression.ExtractColumnsFromExpressions(selfUsedCols, p.Exprs, nil)
-	return child.PruneColumns(selfUsedCols)
+	err := child.PruneColumns(selfUsedCols)
+	if err != nil {
+		return err
+	}
+	if len(p.schema.Columns) == 0 {
+		p.schema.Columns = []*expression.Column{child.Schema().Columns[0]}
+		p.Exprs = []expression.Expression{child.Schema().Columns[0]}
+	}
+	return nil
 }
 
 // PruneColumns implements LogicalPlan interface.

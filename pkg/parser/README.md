@@ -9,28 +9,28 @@ TiDB SQL Parser
 
 ```go
 import (
-	"fmt"
-	"github.com/pingcap/parser"
-	_ "github.com/pingcap/tidb/types/parser_driver"
+ "fmt"
+ "github.com/pingcap/parser"
+ _ "github.com/pingcap/tidb/types/parser_driver"
 )
 
 // This example show how to parse a text sql into ast.
 func example() {
 
-	// 0. make sure import parser_driver implemented by TiDB(user also can implement own driver by self).
-	// and add `import _ "github.com/pingcap/tidb/types/parser_driver"` in the head of file.
+ // 0. make sure import parser_driver implemented by TiDB(user also can implement own driver by self).
+ // and add `import _ "github.com/pingcap/tidb/types/parser_driver"` in the head of file.
 
-	// 1. Create a parser. The parser is NOT goroutine safe and should
-	// not be shared among multiple goroutines. However, parser is also
-	// heavy, so each goroutine should reuse its own local instance if
-	// possible.
-	p := parser.New()
+ // 1. Create a parser. The parser is NOT goroutine safe and should
+ // not be shared among multiple goroutines. However, parser is also
+ // heavy, so each goroutine should reuse its own local instance if
+ // possible.
+ p := parser.New()
 
-	// 2. Parse a text SQL into AST([]ast.StmtNode).
-	stmtNodes, _, err := p.Parse("select * from tbl where id = 1", "", "")
+ // 2. Parse a text SQL into AST([]ast.StmtNode).
+ stmtNodes, _, err := p.Parse("select * from tbl where id = 1", "", "")
 
-	// 3. Use AST to do cool things.
-	fmt.Println(stmtNodes[0], err)
+ // 3. Use AST to do cool things.
+ fmt.Println(stmtNodes[0], err)
 }
 ```
 
@@ -55,7 +55,7 @@ Suppose the forked repository is `https://github.com/your-repo/parser`.
 
 1. In your TiDB repository, execute the `replace` instruction to make your parser changes take effect:
 
-    ```
+    ```bash
     GO111MODULE=on go mod edit -replace github.com/pingcap/parser=github.com/your-repo/parser@your-branch
     ```
 
@@ -73,7 +73,7 @@ This PR will be reviewed, and if everything goes well, it will be merged.
 
 In your TiDB pull request, modify the `go.mod` file manually or use this command:
 
-```
+```bash
 GO111MODULE=on go get -u github.com/pingcap/parser@master
 ```
 

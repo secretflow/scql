@@ -1,0 +1,48 @@
+services:
+  engine_alice:
+    cap_add:
+      - NET_ADMIN
+    command:
+      - /home/admin/bin/scqlengine
+      - --flagfile=/home/admin/engine/conf/gflags.conf
+    image: ${SCQL_IMAGE:-secretflow/scql:latest}
+    ports:
+      - "8003:8003"
+      - "8004:8004"
+    volumes:
+      - ./engine/alice/conf/gflags.conf:/home/admin/engine/conf/gflags.conf
+      - ./tls/engine_alice-ca.crt:/home/admin/engine/conf/cert.crt
+      - ./tls/engine_alice-ca.key:/home/admin/engine/conf/key.key
+  engine_bob:
+    cap_add:
+      - NET_ADMIN
+    command:
+      - /home/admin/bin/scqlengine
+      - --flagfile=/home/admin/engine/conf/gflags.conf
+    image: ${SCQL_IMAGE:-secretflow/scql:latest}
+    ports:
+      - "8005:8003"
+      - "8006:8004"
+    volumes:
+      - ./engine/bob/conf/gflags.conf:/home/admin/engine/conf/gflags.conf
+      - ./tls/engine_alice-ca.crt:/home/admin/engine/conf/cert.crt
+      - ./tls/engine_alice-ca.key:/home/admin/engine/conf/key.key
+  mysql:
+    image: mysql:8.0.39
+    environment:
+      - MYSQL_ROOT_PASSWORD=__MYSQL_ROOT_PASSWD__
+      - TZ=Asia/Shanghai
+    healthcheck:
+      retries: 10
+      test:
+        - CMD
+        - mysqladmin
+        - ping
+        - -h
+        - mysql
+      timeout: 20s
+    expose:
+      - "3306"
+    restart: always
+    volumes:
+      - ./mysql/initdb:/docker-entrypoint-initdb.d

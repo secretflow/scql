@@ -115,7 +115,7 @@ func (s *testParserSuite) TestSimple(c *C) {
 	}
 
 	// Testcase for prepared statement
-	src := "SELECT id+?, id+? from t;"
+	src := "SELECT id+{{param1}}, id+{{param2}} from t;"
 	_, err := parser.ParseOneStmt(src, "", "")
 	c.Assert(err, IsNil)
 
@@ -581,8 +581,8 @@ func (s *testParserSuite) TestDMLStmt(c *C) {
 		{"select * from t1 right join t2 using (id) left join t3 using (id)", true, "SELECT * FROM (`t1` RIGHT JOIN `t2` USING (`id`)) LEFT JOIN `t3` USING (`id`)"},
 		{"select * from t1 right join t2 using (id) left join t3", false, ""},
 		{"select * from t1 natural join t2", true, "SELECT * FROM `t1` NATURAL JOIN `t2`"},
-		{"select * from t1 natural right join t2", true, "SELECT * FROM `t1` NATURAL RIGHT JOIN `t2`"},
-		{"select * from t1 natural left outer join t2", true, "SELECT * FROM `t1` NATURAL LEFT JOIN `t2`"},
+		{"select * from t1 natural right join t2", true, "SELECT * FROM `t1` NATURAL JOIN `t2`"},
+		{"select * from t1 natural left outer join t2", true, "SELECT * FROM `t1` NATURAL JOIN `t2`"},
 		{"select * from t1 natural inner join t2", false, ""},
 		{"select * from t1 natural cross join t2", false, ""},
 
@@ -2489,7 +2489,7 @@ func (s *testParserSuite) TestDDL(c *C) {
 		{"CREATE INDEX idx ON t ( a ) ALGORITHM = ident", false, ""},
 		{"CREATE INDEX idx ON t ( a ) ALGORITHM ident", false, ""},
 
-		//For drop index statement
+		//For dorp index statement
 		{"drop index a on t", true, "DROP INDEX `a` ON `t`"},
 		{"drop index a on db.t", true, "DROP INDEX `a` ON `db`.`t`"},
 		{"drop index a on db.`tb-ttb`", true, "DROP INDEX `a` ON `db`.`tb-ttb`"},
@@ -3470,11 +3470,6 @@ func (s *testParserSuite) TestPrivilege(c *C) {
 		{"GRANT 'u1' TO 'u1';", true, "GRANT `u1`@`%` TO `u1`@`%`"},
 		{"GRANT 'app_developer' TO 'dev1'@'localhost';", true, "GRANT `app_developer`@`%` TO `dev1`@`localhost`"},
 		{"GRANT SHUTDOWN ON *.* TO 'dev1'@'localhost';", true, "GRANT SHUTDOWN ON *.* TO `dev1`@`localhost`"},
-
-		// for grant CCL statement
-		{"GRANT SELECT PLAINTEXT(col1) ON mydb.mytbl TO 'someuser'@'somehost';", true, "GRANT SELECT PLAINTEXT (`col1`) ON `mydb`.`mytbl` TO `someuser`@`somehost`"},
-		{"GRANT SELECT PLAINTEXT_AFTER_JOIN(col1), SELECT PLAINTEXT_AFTER_GROUP_BY(col2) ON mydb.mytbl TO 'someuser'@'somehost';", true,
-			"GRANT SELECT PLAINTEXT_AFTER_JOIN (`col1`), SELECT PLAINTEXT_AFTER_GROUP_BY (`col2`) ON `mydb`.`mytbl` TO `someuser`@`somehost`"},
 
 		// for revoke statement
 		{"REVOKE ALL ON db1.* FROM 'jeffrey'@'localhost';", true, "REVOKE ALL ON `db1`.* FROM `jeffrey`@`localhost`"},

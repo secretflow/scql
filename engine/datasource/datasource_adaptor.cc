@@ -25,6 +25,7 @@
 #include "engine/core/arrow_helper.h"
 #include "engine/core/tensor_constructor.h"
 #include "engine/core/type.h"
+#include "engine/exe/flags.h"
 #include "engine/util/filepath_helper.h"
 #include "engine/util/tensor_util.h"
 
@@ -116,7 +117,7 @@ std::vector<TensorPtr> DatasourceAdaptor::ExecQuery(
   std::vector<TensorPtr> tensors;
   constexpr size_t data_queue_capacity = 1;
   util::SimpleChannel<arrow::ChunkedArrayVector> data_queue(
-      data_queue_capacity);
+      data_queue_capacity, FLAGS_queue_max_block_seconds);
   auto result = SendQuery(query);
   auto f = std::async(std::launch::async, [&] {
     try {
@@ -134,13 +135,23 @@ std::vector<TensorPtr> DatasourceAdaptor::ExecQuery(
       throw e;
     }
   });
-  if (options.dump_to_disk) {
-    // write data to disk
-    tensors = CreateDiskTensor(logger, expected_outputs, options, data_queue);
-  } else {
-    // create in-memory tensor
-    tensors = CreateMemTensor(logger, expected_outputs, options, data_queue);
+  try {
+    if (options.dump_to_disk) {
+      // write data to disk
+      tensors = CreateDiskTensor(logger, expected_outputs, options, data_queue);
+    } else {
+      // create in-memory tensor
+      tensors = CreateMemTensor(logger, expected_outputs, options, data_queue);
+    }
+  } catch (const std::exception& e) {
+    SPDLOG_ERROR(
+        "exception caught in DatasourceAdaptor::ExecQuery "
+        "while pushing data: {}",
+        e.what());
+    data_queue.Close();
+    throw e;
   }
+
   f.get();
 
   return tensors;

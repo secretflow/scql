@@ -29,7 +29,7 @@
 #include "engine/framework/exec.h"
 #include "engine/util/psi/batch_provider.h"
 #include "engine/util/psi/cipher_intersection.h"
-#include "engine/util/stringify_visitor.h"
+#include "engine/util/stringifier.h"
 
 namespace scql::engine::util {
 

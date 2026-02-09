@@ -23,6 +23,7 @@
 #include "gtest/gtest.h"
 
 #include "engine/core/tensor_constructor.h"
+#include "engine/operator/test_util.h"
 
 #include "engine/datasource/csvdb_conf.pb.h"
 
@@ -56,7 +57,10 @@ class CsvdbAdaptorTest : public ::testing::Test {
       column->set_column_name("salary");
       column->set_column_type("double");
       column = table->add_columns();
-      column->set_column_name("join_date");
+      column->set_column_name("dt");
+      column->set_column_type("datetime");
+      column = table->add_columns();
+      column->set_column_name("tt");
       column->set_column_type("timestamp");
     }
     auto status = google::protobuf::util::MessageToJsonString(csvdb_conf_,
@@ -64,28 +68,15 @@ class CsvdbAdaptorTest : public ::testing::Test {
     EXPECT_TRUE(status.ok());
   }
 
-  void CheckTensorEqual(TensorPtr left, TensorPtr right) {
-    auto left_arr = left->ToArrowChunkedArray();
-    auto right_arr = right->ToArrowChunkedArray();
-
-    EXPECT_EQ(left_arr->type(), right_arr->type())
-        << "left type = " << left_arr->type()
-        << ",right type = " << right_arr->type();
-
-    EXPECT_TRUE(left_arr->ApproxEquals(*right_arr))
-        << "left = " << left_arr->ToString()
-        << "\nright = " << right_arr->ToString();
-  }
-
  public:
   csv::CsvdbConf csvdb_conf_;
   std::string csvdb_conf_str_;
   std::unique_ptr<butil::TempFile> temp_file_;
-  std::string csv_content_ = R"csv(id, age, name, salary, join_date
-1,21,alice,2100.2,2023-01-15 09:30:00
-2,42,bob,4500.8,2022-05-20 14:45:30
-3,19,carol,1900.5,2023-03-10 11:15:00
-4,NULL,NULL,NULL,2021-12-01 08:00:00)csv";
+  std::string csv_content_ = R"csv(id, age, name, salary, dt, tt
+1,21,alice,2100.2,2025-06-06 13:00:00,2025-06-06T13:00:00-07:00
+2,42,bob,4500.8,2025-06-16 16:00:00,2025-06-16T16:00:00-07:00
+3,19,carol,1900.5,2025-06-26 16:00:00,2025-06-26T16:00:00-07:00
+4,NULL,NULL,NULL,NULL,NULL)csv";
 };
 
 TEST_F(CsvdbAdaptorTest, NormalQuery) {
@@ -93,27 +84,32 @@ TEST_F(CsvdbAdaptorTest, NormalQuery) {
   CsvdbAdaptor csvdb_adaptor(csvdb_conf_str_);
 
   const std::string query = "select * from csvdb.staff";
-  std::vector<ColumnDesc> outputs{
-      {"id", pb::PrimitiveDataType::INT64},
-      {"age", pb::PrimitiveDataType::INT64},
-      {"name", pb::PrimitiveDataType::STRING},
-      {"salary", pb::PrimitiveDataType::FLOAT64},
-      {"join_date", pb::PrimitiveDataType::TIMESTAMP}};
+  std::vector<ColumnDesc> outputs{{"id", pb::PrimitiveDataType::INT64},
+                                  {"age", pb::PrimitiveDataType::INT64},
+                                  {"name", pb::PrimitiveDataType::STRING},
+                                  {"salary", pb::PrimitiveDataType::FLOAT64},
+                                  {"dt", pb::PrimitiveDataType::DATETIME},
+                                  {"tt", pb::PrimitiveDataType::TIMESTAMP}};
 
   // When
   auto results = csvdb_adaptor.ExecQuery(query, outputs);
   // Then
-  EXPECT_EQ(results.size(), 5);
-  CheckTensorEqual(results[0], TensorFrom(arrow::int64(), "[1,2,3,4]"));
-  CheckTensorEqual(results[1], TensorFrom(arrow::int64(), "[21,42,19,null]"));
-  CheckTensorEqual(results[2],
-                   TensorFrom(arrow::large_utf8(),
-                              R"json(["alice","bob","carol",null])json"));
-  CheckTensorEqual(results[3],
-                   TensorFrom(arrow::float64(), "[2100.2,4500.8,1900.5,null]"));
-  CheckTensorEqual(results[4],
-                   TensorFrom(arrow::int64(),
-                              "[1673775000,1653057930,1678446900,1638345600]"));
+  EXPECT_EQ(results.size(), 6);
+  scql::engine::op::test::CheckTensorEqual(
+      results[0], TensorFrom(arrow::int64(), "[1,2,3,4]"));
+  scql::engine::op::test::CheckTensorEqual(
+      results[1], TensorFrom(arrow::int64(), "[21,42,19,null]"));
+  scql::engine::op::test::CheckTensorEqual(
+      results[2], TensorFrom(arrow::large_utf8(),
+                             R"json(["alice","bob","carol",null])json"));
+  scql::engine::op::test::CheckTensorEqual(
+      results[3], TensorFrom(arrow::float64(), "[2100.2,4500.8,1900.5,null]"));
+  scql::engine::op::test::CheckTensorEqual(
+      results[4],
+      TensorFrom(arrow::int64(), "[1749214800,1750089600,1750953600,null]"));
+  scql::engine::op::test::CheckTensorEqual(
+      results[5],
+      TensorFrom(arrow::int64(), "[1749240000,1750114800,1750978800,null]"));
 }
 
 TEST_F(CsvdbAdaptorTest, WriteToFile) {
@@ -121,12 +117,12 @@ TEST_F(CsvdbAdaptorTest, WriteToFile) {
   CsvdbAdaptor csvdb_adaptor(csvdb_conf_str_);
 
   const std::string query = "select * from csvdb.staff";
-  std::vector<ColumnDesc> outputs{
-      {"id", pb::PrimitiveDataType::INT64},
-      {"age", pb::PrimitiveDataType::INT64},
-      {"name", pb::PrimitiveDataType::STRING},
-      {"salary", pb::PrimitiveDataType::FLOAT64},
-      {"join_date", pb::PrimitiveDataType::TIMESTAMP}};
+  std::vector<ColumnDesc> outputs{{"id", pb::PrimitiveDataType::INT64},
+                                  {"age", pb::PrimitiveDataType::INT64},
+                                  {"name", pb::PrimitiveDataType::STRING},
+                                  {"salary", pb::PrimitiveDataType::FLOAT64},
+                                  {"dt", pb::PrimitiveDataType::DATETIME},
+                                  {"tt", pb::PrimitiveDataType::TIMESTAMP}};
 
   // When
   auto results = csvdb_adaptor.ExecQuery(
@@ -136,17 +132,22 @@ TEST_F(CsvdbAdaptorTest, WriteToFile) {
                          .max_row_num_one_file = 2});
 
   // Then
-  EXPECT_EQ(results.size(), 5);
-  CheckTensorEqual(results[0], TensorFrom(arrow::int64(), "[1,2,3,4]"));
-  CheckTensorEqual(results[1], TensorFrom(arrow::int64(), "[21,42,19,null]"));
-  CheckTensorEqual(results[2],
-                   TensorFrom(arrow::large_utf8(),
-                              R"json(["alice","bob","carol",null])json"));
-  CheckTensorEqual(results[3],
-                   TensorFrom(arrow::float64(), "[2100.2,4500.8,1900.5,null]"));
-  CheckTensorEqual(results[4],
-                   TensorFrom(arrow::int64(),
-                              "[1673775000,1653057930,1678446900,1638345600]"));
+  EXPECT_EQ(results.size(), 6);
+  scql::engine::op::test::CheckTensorEqual(
+      results[0], TensorFrom(arrow::int64(), "[1,2,3,4]"));
+  scql::engine::op::test::CheckTensorEqual(
+      results[1], TensorFrom(arrow::int64(), "[21,42,19,null]"));
+  scql::engine::op::test::CheckTensorEqual(
+      results[2], TensorFrom(arrow::large_utf8(),
+                             R"json(["alice","bob","carol",null])json"));
+  scql::engine::op::test::CheckTensorEqual(
+      results[3], TensorFrom(arrow::float64(), "[2100.2,4500.8,1900.5,null]"));
+  scql::engine::op::test::CheckTensorEqual(
+      results[4],
+      TensorFrom(arrow::int64(), "[1749214800,1750089600,1750953600,null]"));
+  scql::engine::op::test::CheckTensorEqual(
+      results[5],
+      TensorFrom(arrow::int64(), "[1749240000,1750114800,1750978800,null]"));
 }
 
 TEST_F(CsvdbAdaptorTest, QueryWithAggregation) {
@@ -163,8 +164,10 @@ TEST_F(CsvdbAdaptorTest, QueryWithAggregation) {
 
   // Then
   EXPECT_EQ(results.size(), 2);
-  CheckTensorEqual(results[0], TensorFrom(arrow::int64(), "[82]"));
-  CheckTensorEqual(results[1], TensorFrom(arrow::float64(), "[8501.5]"));
+  scql::engine::op::test::CheckTensorEqual(results[0],
+                                           TensorFrom(arrow::int64(), "[82]"));
+  scql::engine::op::test::CheckTensorEqual(
+      results[1], TensorFrom(arrow::float64(), "[8501.5]"));
 }
 
 TEST_F(CsvdbAdaptorTest, QueryWithPredicate) {
@@ -183,10 +186,12 @@ TEST_F(CsvdbAdaptorTest, QueryWithPredicate) {
   // Then
   EXPECT_EQ(results.size(), 3);
 
-  CheckTensorEqual(results[0], TensorFrom(arrow::int64(), "[42]"));
-  CheckTensorEqual(results[1],
-                   TensorFrom(arrow::large_utf8(), R"json(["bob"])json"));
-  CheckTensorEqual(results[2], TensorFrom(arrow::float64(), "[4500.8]"));
+  scql::engine::op::test::CheckTensorEqual(results[0],
+                                           TensorFrom(arrow::int64(), "[42]"));
+  scql::engine::op::test::CheckTensorEqual(
+      results[1], TensorFrom(arrow::large_utf8(), R"json(["bob"])json"));
+  scql::engine::op::test::CheckTensorEqual(
+      results[2], TensorFrom(arrow::float64(), "[4500.8]"));
 }
 
 TEST_F(CsvdbAdaptorTest, QueryWithDomainDataID) {
@@ -205,31 +210,111 @@ TEST_F(CsvdbAdaptorTest, QueryWithDomainDataID) {
       R"str(select "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9"."ID",
                    "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9"."Age",
                    "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9"."name",
-                   "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9"."salarY",
-                   "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9"."join_date"
+                   "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9"."salarY"
             from "usercredit-0afb3b4c-d160-4050-b71a-c6674a11d2f9")str";
-  std::vector<ColumnDesc> outputs{
-      {"id", pb::PrimitiveDataType::INT64},
-      {"age", pb::PrimitiveDataType::INT64},
-      {"name", pb::PrimitiveDataType::STRING},
-      {"salary", pb::PrimitiveDataType::FLOAT64},
-      {"join_date", pb::PrimitiveDataType::TIMESTAMP}};
+  std::vector<ColumnDesc> outputs{{"id", pb::PrimitiveDataType::INT64},
+                                  {"age", pb::PrimitiveDataType::INT64},
+                                  {"name", pb::PrimitiveDataType::STRING},
+                                  {"salary", pb::PrimitiveDataType::FLOAT64}};
 
   // When
   auto results = csvdb_adaptor.ExecQuery(query, outputs);
 
   // Then
-  EXPECT_EQ(results.size(), 5);
-  CheckTensorEqual(results[0], TensorFrom(arrow::int64(), "[1,2,3,4]"));
-  CheckTensorEqual(results[1], TensorFrom(arrow::int64(), "[21,42,19,null]"));
-  CheckTensorEqual(results[2],
-                   TensorFrom(arrow::large_utf8(),
-                              R"json(["alice","bob","carol",null])json"));
-  CheckTensorEqual(results[3],
-                   TensorFrom(arrow::float64(), "[2100.2,4500.8,1900.5,null]"));
-  CheckTensorEqual(results[4],
-                   TensorFrom(arrow::int64(),
-                              "[1673775000,1653057930,1678446900,1638345600]"));
+  EXPECT_EQ(results.size(), 4);
+  scql::engine::op::test::CheckTensorEqual(
+      results[0], TensorFrom(arrow::int64(), "[1,2,3,4]"));
+  scql::engine::op::test::CheckTensorEqual(
+      results[1], TensorFrom(arrow::int64(), "[21,42,19,null]"));
+  scql::engine::op::test::CheckTensorEqual(
+      results[2], TensorFrom(arrow::large_utf8(),
+                             R"json(["alice","bob","carol",null])json"));
+  scql::engine::op::test::CheckTensorEqual(
+      results[3], TensorFrom(arrow::float64(), "[2100.2,4500.8,1900.5,null]"));
+}
+
+TEST_F(CsvdbAdaptorTest, MergeCsvdbDatasources) {
+  // Given
+  DataSource ds1;
+  ds1.set_id("test-datasource-1");
+  ds1.set_name("test-datasource-1");
+  ds1.set_kind(DataSourceKind::CSVDB);
+
+  csv::CsvdbConf conf1;
+  {
+    auto table = conf1.add_tables();
+    table->set_table_name("table1");
+    table->set_data_path("/path/to/table1.csv");
+
+    auto column = table->add_columns();
+    column->set_column_name("id");
+    column->set_column_type("int64");
+    column = table->add_columns();
+    column->set_column_name("name");
+    column->set_column_type("string");
+  }
+  std::string conf1_str;
+  auto status = google::protobuf::util::MessageToJsonString(conf1, &conf1_str);
+  EXPECT_TRUE(status.ok());
+  ds1.set_connection_str(conf1_str);
+
+  DataSource ds2;
+  ds2.set_id("test-datasource-1");
+  ds2.set_name("test-datasource-2");
+  ds2.set_kind(DataSourceKind::CSVDB);
+
+  csv::CsvdbConf conf2;
+  {
+    auto table = conf2.add_tables();
+    table->set_table_name("table2");
+    table->set_data_path("/path/to/table2.csv");
+
+    auto column = table->add_columns();
+    column->set_column_name("age");
+    column->set_column_type("int32");
+    column = table->add_columns();
+    column->set_column_name("salary");
+    column->set_column_type("double");
+  }
+  std::string conf2_str;
+  status = google::protobuf::util::MessageToJsonString(conf2, &conf2_str);
+  EXPECT_TRUE(status.ok());
+  ds2.set_connection_str(conf2_str);
+
+  std::vector<DataSource> datasources = {ds1, ds2};
+
+  // When
+  auto merged = MergeCsvdbDatasources(datasources);
+
+  // Then
+  EXPECT_EQ(merged.id(), "test-datasource-1");
+  EXPECT_EQ(merged.kind(), DataSourceKind::CSVDB);
+
+  csv::CsvdbConf merged_conf;
+  status = google::protobuf::util::JsonStringToMessage(merged.connection_str(),
+                                                       &merged_conf);
+  EXPECT_TRUE(status.ok());
+  EXPECT_EQ(merged_conf.tables_size(), 2);
+
+  // Check first table
+  const auto& merged_table1 = merged_conf.tables(0);
+  EXPECT_EQ(merged_table1.table_name(), "table1");
+  EXPECT_EQ(merged_table1.data_path(), "/path/to/table1.csv");
+  EXPECT_EQ(merged_table1.columns_size(), 2);
+  EXPECT_EQ(merged_table1.columns(0).column_name(), "id");
+  EXPECT_EQ(merged_table1.columns(0).column_type(), "int64");
+  EXPECT_EQ(merged_table1.columns(1).column_name(), "name");
+  EXPECT_EQ(merged_table1.columns(1).column_type(), "string");
+
+  // Check second table
+  const auto& merged_table2 = merged_conf.tables(1);
+  EXPECT_EQ(merged_table2.table_name(), "table2");
+  EXPECT_EQ(merged_table2.data_path(), "/path/to/table2.csv");
+  EXPECT_EQ(merged_table2.columns_size(), 2);
+  EXPECT_EQ(merged_table2.columns(0).column_name(), "age");
+  EXPECT_EQ(merged_table2.columns(0).column_type(), "int32");
+  EXPECT_EQ(merged_table2.columns(1).column_name(), "salary");
+  EXPECT_EQ(merged_table2.columns(1).column_type(), "double");
 }
 
 }  // namespace scql::engine

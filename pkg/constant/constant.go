@@ -35,9 +35,6 @@ const (
 	ReasonInvalidRequestFormat = "InvalidRequestFormat"
 	ReasonInvalidResponse      = "InvalidResponse"
 	ReasonCallEngineFail       = "CallEngineFail"
-
-	ActionNameSCDBQueryJobDone     = "SCDBQueryJobDone"
-	ActionNameSCDBCallbackFrontend = "SCDBCallbackFrontend"
 )
 
 // NOTE: the type values are defined by DataType Enum in "api/v1/column.proto"
@@ -65,3 +62,10 @@ const (
 	GMsm3Hash  = "GMSM3"
 	Sha256Hash = "SHA256"
 )
+
+func GetGroupByThreshold(val uint64) uint64 {
+	if val == 0 {
+		return DefaultGroupByThreshold
+	}
+	return val
+}

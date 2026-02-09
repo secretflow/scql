@@ -42,13 +42,9 @@ void ObliviousGroupMark::Validate(ExecContext* ctx) {
 }
 
 void ObliviousGroupMark::Execute(ExecContext* ctx) {
-  const auto& input_pbs = ctx->GetInput(kIn);
-
-  auto* symbols = ctx->GetSession()->GetDeviceSymbols();
   auto* sctx = ctx->GetSession()->GetSpuContext();
   // TODO(jingshi) : check and calculate validity
-  auto first_value = symbols->getVar(
-      util::SpuVarNameEncoder::GetValueName(input_pbs[0].name()));
+  auto first_value = ctx->GetInputValue(kIn, 0);
   int64_t row_count = first_value.shape().size() > 0 ? first_value.shape()[0]
                                                      : first_value.numel();
   spu::Value result;
@@ -59,9 +55,7 @@ void ObliviousGroupMark::Execute(ExecContext* ctx) {
     result = GetFullGroupMark(ctx);
   }
 
-  const auto& output_pbs = ctx->GetOutput(kOut);
-  symbols->setVar(util::SpuVarNameEncoder::GetValueName(output_pbs[0].name()),
-                  result);
+  ctx->SetOutputValue(kOut, result);
 }
 
 // get group for row count >= 2
@@ -69,11 +63,9 @@ void ObliviousGroupMark::Execute(ExecContext* ctx) {
 // from_top = {0, 1, 1, 1}, to_bottom = {1, 1, 1, 2}
 // result = {1, 0, 0, 1}, full_result need to add tail = {1}
 spu::Value ObliviousGroupMark::GetFullGroupMark(ExecContext* ctx) {
-  const auto& input_pbs = ctx->GetInput(kIn);
-  auto* symbols = ctx->GetSession()->GetDeviceSymbols();
   auto* sctx = ctx->GetSession()->GetSpuContext();
-  auto first_value = symbols->getVar(
-      util::SpuVarNameEncoder::GetValueName(input_pbs[0].name()));
+  auto values = ctx->GetInputValues(kIn);
+  auto first_value = values[0];
   int64_t row_count = first_value.shape().size() > 0 ? first_value.shape()[0]
                                                      : first_value.numel();
   auto from_top =
@@ -83,13 +75,12 @@ spu::Value ObliviousGroupMark::GetFullGroupMark(ExecContext* ctx) {
 
   auto result = spu::kernel::hlo::NotEqual(sctx, from_top, to_bottom);
 
-  for (int i = 1; i < input_pbs.size(); ++i) {
-    auto cur_value = symbols->getVar(
-        util::SpuVarNameEncoder::GetValueName(input_pbs[i].name()));
+  for (size_t i = 1; i < values.size(); ++i) {
+    auto cur_value = values[i];
     int64_t cur_row_count =
         cur_value.shape().size() > 0 ? cur_value.shape()[0] : cur_value.numel();
     YACL_ENFORCE(cur_row_count == row_count,
-                 "input tensor#{} row count not equal to the previous");
+                 "intput tensor#{} row count not equal to the previous");
 
     auto from_top =
         spu::kernel::hal::slice(sctx, cur_value, {0}, {row_count - 1}, {});

@@ -45,17 +45,14 @@ void Unique::Validate(ExecContext* ctx) {
 }
 
 void Unique::Execute(ExecContext* ctx) {
-  const auto& input_pb = ctx->GetInput(kIn)[0];
-  auto tensor = ctx->GetTensorTable()->GetTensor(input_pb.name());
-  YACL_ENFORCE(tensor, "get private tensor failed, name={}", input_pb.name());
+  auto tensor = ctx->GetInputTensor(kIn);
 
   std::shared_ptr<arrow::Array> array;
   ASSIGN_OR_THROW_ARROW_STATUS(
       array, arrow::compute::Unique(tensor->ToArrowChunkedArray()));
 
   auto chunked_arr = std::make_shared<arrow::ChunkedArray>(array);
-  const auto& output_pb = ctx->GetOutput(kOut)[0];
-  ctx->GetTensorTable()->AddTensor(output_pb.name(), TensorFrom(chunked_arr));
+  ctx->SetOutputTensor(kOut, TensorFrom(chunked_arr));
 }
 
 }  // namespace scql::engine::op

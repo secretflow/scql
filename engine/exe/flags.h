@@ -37,7 +37,7 @@ DECLARE_int32(link_throttle_window_size);
 DECLARE_int32(link_chunked_send_parallel_size);
 DECLARE_int32(http_max_payload_size);
 
-// Brpc channel flags for driver(SCDB, SCQLBroker...)
+// Brpc channel flags for driver(for example, SCQLBroker)
 DECLARE_string(driver_protocol);
 DECLARE_string(driver_connection_type);
 DECLARE_string(driver_load_balancer);
@@ -70,6 +70,11 @@ DECLARE_string(engine_credential);
 DECLARE_int32(session_timeout_s);
 DECLARE_string(spu_allowed_protocols);
 
+// Kpad task mode flags
+DECLARE_string(kpad_job_id);
+DECLARE_string(kpad_scql_config);
+DECLARE_string(kpad_cluster_def);
+
 // DataSource connection flags.
 DECLARE_string(datasource_router);
 DECLARE_string(embed_router_conf);
@@ -87,4 +92,7 @@ DECLARE_bool(enable_peer_auth);
 DECLARE_string(authorized_profile_path);
 DECLARE_bool(enable_psi_detail_logger);
 DECLARE_string(psi_detail_logger_dir);
-DECLARE_bool(use_rr22_low_comm_mode);
+DECLARE_bool(enable_trace);
+DECLARE_string(trace_log_path);
+DECLARE_int32(rr22_mode);
+DECLARE_int32(queue_max_block_seconds);

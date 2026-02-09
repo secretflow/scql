@@ -513,10 +513,13 @@ void In::Rr22PsiIn(ExecContext* ctx) {
         provider.CleanBucket(bucket_idx);
       };
   psi::rr22::Rr22Runner runner(
-      psi_link, psi::rr22::GenerateRr22PsiOptions(FLAGS_use_rr22_low_comm_mode),
+      psi_link,
+      psi::rr22::GenerateRr22PsiOptions(
+          ctx->GetSession()->GetSessionOptions().psi_config.rr22_mode ==
+          pb::LOW_MODE),
       bucket_num, false, pre_f, post_f);
   // reveal party as receiver
-  runner.AsyncRun(0, reveal_to != my_party_code);
+  runner.ParallelRun(0, reveal_to != my_party_code);
   // reveal to me
   int64_t result_size = 0;
   if (reveal_to == my_party_code) {
@@ -546,21 +549,14 @@ void In::LocalIn(ExecContext* ctx) {
   YACL_ENFORCE(input_party_codes[0] == input_party_codes[1],
                "input_party_codes must be same");
   if (input_party_codes[0] == my_party_code) {
-    auto left =
-        ctx->GetTensorTable()->GetTensor(ctx->GetInput(kInLeft)[0].name());
-    auto right =
-        ctx->GetTensorTable()->GetTensor(ctx->GetInput(kInRight)[0].name());
-    YACL_ENFORCE(left, "left tensor not found");
-    YACL_ENFORCE(right, "right tensor not found");
-    std::shared_ptr<arrow::ChunkedArray> result;
+    auto left = ctx->GetInputTensor(kInLeft);
+    auto right = ctx->GetInputTensor(kInRight);
     auto result_status = arrow::compute::IsIn(left->ToArrowChunkedArray(),
                                               right->ToArrowChunkedArray());
     YACL_ENFORCE(result_status.ok(), "failed to compute isin, error:{}",
                  result_status->ToString());
-    result = result_status.ValueOrDie().chunked_array();
-    auto output_pb = ctx->GetOutput(kOut)[0];
-    ctx->GetSession()->GetTensorTable()->AddTensor(output_pb.name(),
-                                                   TensorFrom(result));
+    ctx->SetOutputTensor(
+        kOut, TensorFrom(result_status.ValueOrDie().chunked_array()));
   } else {
     YACL_THROW("tensors are in {}'s side", my_party_code);
   }

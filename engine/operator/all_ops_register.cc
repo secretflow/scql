@@ -33,7 +33,7 @@
 #include "engine/operator/filter_by_index.h"
 #include "engine/operator/group.h"
 #include "engine/operator/group_agg.h"
-#include "engine/operator/group_he_sum.h"
+#include "engine/operator/group_secret_agg.h"
 #include "engine/operator/if.h"
 #include "engine/operator/if_null.h"
 #include "engine/operator/in.h"
@@ -141,7 +141,8 @@ void RegisterAllOpsImpl() {
   ADD_OPERATOR_TO_REGISTRY(GroupAvg);
   ADD_OPERATOR_TO_REGISTRY(GroupMin);
   ADD_OPERATOR_TO_REGISTRY(GroupMax);
-  ADD_OPERATOR_TO_REGISTRY(GroupHeSum);
+  ADD_OPERATOR_TO_REGISTRY(GroupSecretSum);
+  ADD_OPERATOR_TO_REGISTRY(GroupSecretAvg);
   ADD_OPERATOR_TO_REGISTRY(GroupPercentileDisc);
 
   // oblivious groupby

@@ -50,14 +50,8 @@ void IfNull::Validate(ExecContext* ctx) {
 }
 
 void IfNull::Execute(ExecContext* ctx) {
-  const auto& expr_pb = ctx->GetInput(kExpr)[0];
-  const auto& alt_pb = ctx->GetInput(kAltValue)[0];
-  const auto& output_pb = ctx->GetOutput(kOut)[0];
-  auto expr = ctx->GetTensorTable()->GetTensor(expr_pb.name());
-  YACL_ENFORCE(expr != nullptr, "get tensor={} from tensor table failed",
-               expr_pb.name());
-  auto alt_value = ctx->GetTensorTable()->GetTensor(alt_pb.name());
-  YACL_ENFORCE(alt_value != nullptr);
+  auto expr = ctx->GetInputTensor(kExpr);
+  auto alt_value = ctx->GetInputTensor(kAltValue);
 
   auto result = arrow::compute::CallFunction(
       "coalesce",
@@ -65,8 +59,7 @@ void IfNull::Execute(ExecContext* ctx) {
   YACL_ENFORCE(result.ok(), "caught error while invoking arrow coalesce: {}",
                result.status().ToString());
 
-  auto t = TensorFrom(result.ValueOrDie().chunked_array());
-  ctx->GetTensorTable()->AddTensor(output_pb.name(), std::move(t));
+  ctx->SetOutputTensor(kOut, TensorFrom(result.ValueOrDie().chunked_array()));
 }
 
 }  // namespace scql::engine::op

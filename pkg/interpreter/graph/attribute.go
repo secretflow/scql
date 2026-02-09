@@ -36,7 +36,7 @@ func (attr *Attribute) ToString() string {
 func (attr *Attribute) SetStrings(v []string) {
 	attr.TensorValue = &Tensor{
 		StringS: v,
-		DType:   proto.PrimitiveDataType_STRING,
+		DType:   NewPrimitiveDataType(proto.PrimitiveDataType_STRING),
 		Shape:   []int{len(v)},
 	}
 }
@@ -51,42 +51,50 @@ func (attr *Attribute) GetStrings() ([]string, error) {
 func (attr *Attribute) SetString(v string) {
 	attr.TensorValue = &Tensor{
 		StringS: []string{v},
-		DType:   proto.PrimitiveDataType_STRING,
+		DType:   NewPrimitiveDataType(proto.PrimitiveDataType_STRING),
 	}
 }
 
 func (attr *Attribute) SetInt(v int) {
 	attr.TensorValue = &Tensor{
 		Int32S: []int32{int32(v)},
-		DType:  proto.PrimitiveDataType_INT64,
+		DType:  NewPrimitiveDataType(proto.PrimitiveDataType_INT64),
 	}
 }
 
 func (attr *Attribute) SetInt64(v int64) {
 	attr.TensorValue = &Tensor{
 		Int64S: []int64{v},
-		DType:  proto.PrimitiveDataType_INT64,
+		DType:  NewPrimitiveDataType(proto.PrimitiveDataType_INT64),
 	}
 }
 
 func (attr *Attribute) SetFloat(v float32) {
 	attr.TensorValue = &Tensor{
 		FloatS: []float32{v},
-		DType:  proto.PrimitiveDataType_FLOAT32,
+		DType:  NewPrimitiveDataType(proto.PrimitiveDataType_FLOAT32),
 	}
 }
 
 func (attr *Attribute) SetDouble(v float64) {
 	attr.TensorValue = &Tensor{
 		DoubleS: []float64{v},
-		DType:   proto.PrimitiveDataType_FLOAT64,
+		DType:   NewPrimitiveDataType(proto.PrimitiveDataType_FLOAT64),
 	}
 }
 
 func (attr *Attribute) SetBool(v bool) {
 	attr.TensorValue = &Tensor{
 		BooleanS: []bool{v},
-		DType:    proto.PrimitiveDataType_BOOL,
+		DType:    NewPrimitiveDataType(proto.PrimitiveDataType_BOOL),
+	}
+}
+
+func (attr *Attribute) SetBools(v []bool) {
+	attr.TensorValue = &Tensor{
+		BooleanS: v,
+		DType:    NewPrimitiveDataType(proto.PrimitiveDataType_BOOL),
+		Shape:    []int{len(v)},
 	}
 }
 
@@ -138,5 +146,87 @@ func (attr *Attribute) ToProto() *proto.AttributeValue {
 	return &proto.AttributeValue{
 		Value: &proto.AttributeValue_T{
 			T: attr.TensorValue.ToProto()},
+	}
+}
+
+// NewStringAttr creates an Attribute with a string value
+func NewStringAttr(v string) *Attribute {
+	return &Attribute{
+		TensorValue: &Tensor{
+			StringS: []string{v},
+			DType:   NewPrimitiveDataType(proto.PrimitiveDataType_STRING),
+		},
+	}
+}
+
+// NewStringsAttr creates an Attribute with a string slice
+func NewStringsAttr(v []string) *Attribute {
+	return &Attribute{
+		TensorValue: &Tensor{
+			StringS: v,
+			DType:   NewPrimitiveDataType(proto.PrimitiveDataType_STRING),
+			Shape:   []int{len(v)},
+		},
+	}
+}
+
+// NewInt64Attr creates an Attribute with an int64 value
+func NewInt64Attr(v int64) *Attribute {
+	return &Attribute{
+		TensorValue: &Tensor{
+			Int64S: []int64{v},
+			DType:  NewPrimitiveDataType(proto.PrimitiveDataType_INT64),
+		},
+	}
+}
+
+// NewInt32Attr creates an Attribute with an int32 value
+func NewInt32Attr(v int32) *Attribute {
+	return &Attribute{
+		TensorValue: &Tensor{
+			Int32S: []int32{v},
+			DType:  NewPrimitiveDataType(proto.PrimitiveDataType_INT64),
+		},
+	}
+}
+
+// NewFloatAttr creates an Attribute with a float32 value
+func NewFloatAttr(v float32) *Attribute {
+	return &Attribute{
+		TensorValue: &Tensor{
+			FloatS: []float32{v},
+			DType:  NewPrimitiveDataType(proto.PrimitiveDataType_FLOAT32),
+		},
+	}
+}
+
+// NewDoubleAttr creates an Attribute with a float64 value
+func NewDoubleAttr(v float64) *Attribute {
+	return &Attribute{
+		TensorValue: &Tensor{
+			DoubleS: []float64{v},
+			DType:   NewPrimitiveDataType(proto.PrimitiveDataType_FLOAT64),
+		},
+	}
+}
+
+// NewBoolAttr creates an Attribute with a boolean value
+func NewBoolAttr(v bool) *Attribute {
+	return &Attribute{
+		TensorValue: &Tensor{
+			BooleanS: []bool{v},
+			DType:    NewPrimitiveDataType(proto.PrimitiveDataType_BOOL),
+		},
+	}
+}
+
+// NewBoolsAttr creates an Attribute with a boolean slice
+func NewBoolsAttr(v []bool) *Attribute {
+	return &Attribute{
+		TensorValue: &Tensor{
+			BooleanS: v,
+			DType:    NewPrimitiveDataType(proto.PrimitiveDataType_BOOL),
+			Shape:    []int{len(v)},
+		},
 	}
 }
