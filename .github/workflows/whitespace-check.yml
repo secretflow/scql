@@ -19,7 +19,7 @@ jobs:
 
       - name: Check for whitespace issues
         run: |
-          .ci/script/check-whitespace.sh \
+          ./scripts/check-whitespace.sh \
             "${{ github.event.pull_request.base.sha }}" \
             "$GITHUB_STEP_SUMMARY" \
             "https://github.com/${{ github.repository }}"
