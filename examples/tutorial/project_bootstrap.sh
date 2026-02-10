@@ -29,4 +29,3 @@ sleep 5
 echo ""
 echo "Setup complete! Please take a try with the following command:"
 echo "./opencore-demo --config=example_config.json"
-

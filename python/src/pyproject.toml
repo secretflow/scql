@@ -49,4 +49,3 @@ exclude = ["tests*"]
 
 [tool.setuptools.package-data]
 scql = ["*.so", "*.dll", "*.dylib"]
-

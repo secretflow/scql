@@ -44,8 +44,6 @@ var dTypeString2FieldType = map[string]types.FieldType{
 	"timestamp": *(types.NewFieldType(mysql.TypeTimestamp)),
 }
 
-
-
 // TODO: rename PhysicalTableMeta
 type PhysicalTableMeta struct {
 	DBName    string
@@ -83,7 +81,6 @@ func (pt *PhysicalTableMeta) RefTable() string {
 	return fmt.Sprintf("%s.%s", pt.DBName, pt.TableName)
 }
 
-
 type allDBData struct {
 	DbName    string
 	PartyCode string
@@ -110,8 +107,6 @@ type columnInfo struct {
 	Dtype      string   `json:"dtype"`
 	OpenConds  []string `json:"open_conds"`
 }
-
-
 
 func getByteArrayFromJson(filePath string) (res []byte, err error) {
 	jsonFile, err := os.Open(filePath)
@@ -400,12 +395,3 @@ func MockColumnVisibility() ([]*v1.ColumnVisibility, error) {
 
 	return result, nil
 }
-
-
-
-
-
-
-
-
-
