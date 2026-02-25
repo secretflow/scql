@@ -408,4 +408,3 @@ msgid ""
 "`SPU Documentation <https://github.com/secretflow/spu>`_ - SPU protocol "
 "details"
 msgstr "`SPU 文档 <https://github.com/secretflow/spu>`_ - SPU 协议详细信息"
-

@@ -126,4 +126,3 @@ msgstr "实现状态: :doc:`/reference/implementation-status`"
 #: ../../intro/opencore-quickstart.rst:227
 msgid "Examples: ``examples/opencore-demo/`` and ``examples/tutorial/``"
 msgstr "示例: ``examples/opencore-demo/`` 和 ``examples/tutorial/``"
-
