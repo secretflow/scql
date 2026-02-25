@@ -55,7 +55,7 @@ Errors Occurred During Execution
 
 **Q**: SCQL results from executing group by related syntax are incomplete or do not match the MySQL results?
 
-   SCQL, to protect data privacy and prevent the malicious theft of data within groups, hides groups where the number of data items within a group is less than the GroupByThreshold. For specific details, please refer to ``examples/opencore-demo/`` for configuration examples and :doc:`/reference/engine-config` for the security_compromise.group_by_threshold configuration option (by default, groups with fewer than 4 data items are not displayed). Setting this value to 1 will disable the group filtering operation.
+   SCQL, to protect data privacy and prevent the malicious theft of data within groups, hides groups where the number of data items within a group is less than the GroupByThreshold. For specific details, please refer to ``examples/opencore-demo/`` for configuration examples and :doc:`/reference/compiler-config` for the ``groupby_threshold`` configuration option (by default, groups with fewer than 4 data items are not displayed). Setting this value to 1 will disable the group filtering operation.
 
 **Q**: There are precision errors in the numerical calculations.
 
