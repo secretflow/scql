@@ -9,18 +9,11 @@ Reference
     lang/mysql-compatibility
 
 .. toctree::
-    :caption: System
+    :caption: Configuration
     :maxdepth: 1
 
-    p2p-deploy-config
-    centralized-deploy-config
-
-.. toctree::
-    :caption: Clients
-    :maxdepth: 1
-
-    broker-api
-    scdb-api
+    compiler-config
+    engine-config
 
 .. toctree::
     :caption: Internal Reference

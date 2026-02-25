@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  SCQL\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-14 14:40+0800\n"
+"POT-Creation-Date: 2026-02-24 19:19+0800\n"
 "PO-Revision-Date: 2023-10-11 20:47+0800\n"
 "Last-Translator: \n"
 "Language: zh_CN\n"
@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.14.0\n"
+"Generated-By: Babel 2.17.0\n"
 
 #: ../../index.rst:7
 msgid "SCQL Documentation"
@@ -29,139 +29,96 @@ msgid ""
 "them on a federation of database systems. The MPC framework is powered by"
 " `SPU <https://github.com/secretflow/spu>`_."
 msgstr ""
-"Secure Collaborative Query Language (SCQL) 是一种能够将 SQL "
-"语句转换为明密文混合执行图，并在联合数据库系统上执行的系统。该系统的 MPC 框架由 `SPU "
-"<https://github.com/secretflow/spu>`_ 提供支持。"
+"Secure Collaborative Query Language (SCQL) 是一种能够将 SQL 语句转换为明密文混合执行图, "
+"并在联合数据库系统上执行的系统. 该系统的 MPC 框架由 `SPU <https://github.com/secretflow/spu>`_ "
+"提供支持."
 
 #: ../../index.rst:13
-msgid "Getting started"
-msgstr "开始"
+msgid "**You are viewing SCQL 2.0 OpenCore documentation.**"
+msgstr "**您正在查看 SCQL 2.0 OpenCore 文档.**"
 
 #: ../../index.rst:15
 msgid ""
-"Follow the :doc:`tutorial </intro/p2p-tutorial>` and try out SCQL on your"
-" machine!"
-msgstr "按照 :doc:`快速教程 </intro/p2p-tutorial>` 在本地尝试 SCQL！"
+"SCQL 2.0 uses a native **Compiler + Engine** architecture. Previous "
+"components (SCDB, SCQLBroker, CCL) are no longer supported."
+msgstr ""
+"SCQL 2.0 采用原生的 **Compiler + Engine** 架构. 之前的组件 (SCDB, SCQLBroker, CCL) "
+"不再支持."
 
-#: ../../index.rst:19
+#: ../../index.rst:17
+msgid ""
+"Looking for SCQL 1.x documentation? Visit `SCQL 1.0.0b1 docs "
+"<https://www.secretflow.org.cn/en/docs/scql/1.0.0b1/>`_."
+msgstr ""
+"如果您正在寻找 SCQL 1.x 的文档, 请访问 `SCQL 1.0.0b1 文档 "
+"<https://www.secretflow.org.cn/en/docs/scql/1.0.0b1/>`_."
+
+#: ../../index.rst:21
+msgid "Getting started"
+msgstr "开始"
+
+#: ../../index.rst:23
+msgid ""
+"Follow the :doc:`OpenCore Quickstart </intro/opencore-quickstart>` to get"
+" started with SCQL's native compiler + engine architecture."
+msgstr ""
+"参考 :doc:`OpenCore 快速开始 </intro/opencore-quickstart>` 来开始使用 SCQL 的原生 "
+"compiler + engine 架构."
+
+#: ../../index.rst:27
 msgid "SCQL Systems"
 msgstr "SCQL 系统"
 
-#: ../../index.rst:21
+#: ../../index.rst:29
 #, fuzzy
-msgid ""
-"**Overview**: :doc:`System overview and architecture "
-"</topics/system/intro>` | :doc:`P2P vs. Centralized </topics/system"
-"/deploy-arch>`"
-msgstr ""
-"**概述**：:doc:`系统简介及架构设计 </topics/system/intro>` | :doc:`P2P vs 中心化 "
-"</topics/system/deploy-arch>`"
+msgid "**Overview**: :doc:`SCQL system overview </topics/system/intro>`"
+msgstr "**概述**: :doc:`系统简介及架构设计 </topics/system/intro>`"
 
-#: ../../index.rst:25
+#: ../../index.rst:32
 msgid "**Security**: :doc:`Security overview </topics/security/overview>`"
-msgstr "**安全性**：:doc:`安全性说明 </topics/security/overview>`"
+msgstr "**安全性**: :doc:`安全性说明 </topics/security/overview>`"
 
-#: ../../index.rst:28
+#: ../../index.rst:35
 msgid ""
 "**Reference**: :doc:`SCQL implementation status </reference"
 "/implementation-status>`"
-msgstr "**参考**：:doc:`SCQL 实现进度 </reference/implementation-status>`"
+msgstr "**参考**: :doc:`SCQL 实现进度 </reference/implementation-status>`"
 
-#: ../../index.rst:33
+#: ../../index.rst:40
 msgid "The SCQL Language"
 msgstr "SCQL 方言"
 
-#: ../../index.rst:35
+#: ../../index.rst:42
 msgid ""
 "**Reference**: :doc:`SCQL language manual </reference/lang/manual>` | "
 ":doc:`Compatibility with MySQL </reference/lang/mysql-compatibility>`"
 msgstr ""
-"**参考**：:doc:`SCQL 方言手册 </reference/lang/manual>` | :doc:`与 MySQL 兼容性 "
+"**参考**: :doc:`SCQL 方言手册 </reference/lang/manual>` | :doc:`与 MySQL 兼容性 "
 "</reference/lang/mysql-compatibility>`"
 
-#: ../../index.rst:41
-msgid "Column Control List (CCL)"
-msgstr ""
-
-#: ../../index.rst:43
-msgid "**Overview**: :doc:`Introduction to CCL </topics/ccl/intro>`"
-msgstr "**概述**：:doc:`CCL 机制简介 </topics/ccl/intro>`"
-
-#: ../../index.rst:46
-msgid "**Guides**: :doc:`Common usage and advice </topics/ccl/usage>`"
-msgstr "**指南**：:doc:`CCL 常见用法与建议 </topics/ccl/usage>`"
-
-#: ../../index.rst:49
-msgid ""
-"**Reference**: :ref:`GRANT and REVOKE <scql_grant_revoke>` | :ref:`How "
-"CCL works <how_ccl_works>`"
-msgstr ""
-"**参考**：:ref:`GRANT/REVOKE 语句 <scql_grant_revoke>` | :ref:`如何工作 "
-"<how_ccl_works>`"
-
-#: ../../index.rst:55
-msgid "Clients"
-msgstr "客户端"
-
-#: ../../index.rst:57 ../../index.rst:71
-msgid "**P2P**"
-msgstr ""
-
-#: ../../index.rst:59
-msgid ":doc:`Broker HTTP API reference </reference/broker-api>`"
-msgstr ":doc:`Broker HTTP API 参考 </reference/broker-api>`"
-
-#: ../../index.rst:62 ../../index.rst:76
-msgid "**Centralized**"
-msgstr "**中心化**"
-
-#: ../../index.rst:64
-msgid ":doc:`Overview of SCQL clients </topics/clients/integrate-scdb>`"
-msgstr ":doc:`SCQL 客户端 </topics/clients/integrate-scdb>`"
-
-#: ../../index.rst:65
-msgid ":doc:`SCDB HTTP API reference </reference/scdb-api>`"
-msgstr ":doc:`SCDB HTTP API 参考 </reference/scdb-api>`"
-
-#: ../../index.rst:69
+#: ../../index.rst:48
 msgid "Deployment"
 msgstr "部署"
 
-#: ../../index.rst:73
+#: ../../index.rst:51
 msgid ""
-"**Guides**: :doc:`P2P Deployment </topics/deployment/how-to-deploy-p2p-"
-"cluster>`"
-msgstr "**指南**: :doc:`P2P 部署 </topics/deployment/how-to-deploy-p2p-cluster>`"
+"The previous deployment modes (P2P, Centralized, and Kuscia) are "
+"**deprecated and no longer supported**."
+msgstr "之前的部署模式 (P2P, 中心化和 Kuscia) 已经 **废弃且不再支持**."
 
-#: ../../index.rst:74
-msgid "**Reference**: :doc:`P2P Configuration </reference/p2p-deploy-config>`"
-msgstr "**参考**：:doc:`P2P 配置 </reference/p2p-deploy-config>`"
+#: ../../index.rst:53
+msgid "**Recommended approach**: Use native compiler + engine integration."
+msgstr "**推荐方式**: 使用原生的 compiler + engine 集成方式."
 
-#: ../../index.rst:78
-msgid ""
-"**Guides:** :doc:`Centralized Deployment </topics/deployment/how-to-"
-"deploy-centralized-cluster>`"
-msgstr ""
-"**指南:** :doc:`中心化部署 </topics/deployment/how-to-deploy-centralized-"
-"cluster>`"
+#: ../../index.rst:55
+#, fuzzy
+msgid "See ``examples/opencore-demo/`` for integration examples"
+msgstr "查看 ``examples/opencore-demo/`` 了解集成示例"
 
-#: ../../index.rst:79
-msgid ""
-"**Reference**: :doc:`Centralized Configuration </reference/centralized-"
-"deploy-config>`"
-msgstr "**参考**：:doc:`中心化部署配置 </reference/centralized-deploy-config>`"
-
-#: ../../index.rst:82
-msgid ""
-"**With Kuscia**: :doc:`Run SCQL on Kuscia </topics/deployment/run-scql-"
-"on-kuscia>`"
-msgstr "**配合 Kuscia** ： :doc:`在 Kuscia 中运行 SCQL </topics/deployment/run-scql-on-kuscia>`"
-
-#: ../../index.rst:86
+#: ../../index.rst:59
 msgid "For contributors"
 msgstr "贡献者文档"
 
-#: ../../index.rst:88
+#: ../../index.rst:61
 msgid "**Reference**: :doc:`SCQL operators </reference/operators>`"
-msgstr "**参考**：:doc:`SCQL 算子规范 </reference/operators>`"
-
+msgstr "**参考**: :doc:`SCQL 算子规范 </reference/operators>`"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-16 11:10+0800\n"
+"POT-Creation-Date: 2026-02-11 19:32+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -36,12 +36,10 @@ msgstr "SCQLEngine 配置项"
 
 #: ../../reference/engine-config.rst:24
 msgid ""
-"SCQLEngine can cooperate with upper-layer modules such as SCDB and "
-"SCQLBroker according to the deployment mode. ``Driver`` is used in the "
-"configuration items to represent these upper-layer modules."
-msgstr ""
-"SCQLEngine 根据部署方式可以与 SCDB 、 SCQLBroker 等上层模块协作。配置项中使用 ``Driver`` "
-"来表示这些上层模块。"
+"SCQLEngine works with the native compiler to execute query plans. In the "
+"configuration, ``Driver`` refers to the module that sends execution plans"
+" to the engine."
+msgstr "SCQLEngine 与原生编译器配合执行查询计划。在配置中，``Driver`` 指的是向引擎发送执行计划的模块。"
 
 #: ../../reference/engine-config.rst:27
 msgid "Name"
@@ -61,10 +59,10 @@ msgstr "log_enable_console_logger"
 
 #: ../../reference/engine-config.rst:29 ../../reference/engine-config.rst:47
 #: ../../reference/engine-config.rst:71 ../../reference/engine-config.rst:89
-#: ../../reference/engine-config.rst:125 ../../reference/engine-config.rst:129
-#: ../../reference/engine-config.rst:137 ../../reference/engine-config.rst:143
-#: ../../reference/engine-config.rst:155 ../../reference/engine-config.rst:159
-#: ../../reference/engine-config.rst:173
+#: ../../reference/engine-config.rst:123 ../../reference/engine-config.rst:127
+#: ../../reference/engine-config.rst:135 ../../reference/engine-config.rst:141
+#: ../../reference/engine-config.rst:153 ../../reference/engine-config.rst:157
+#: ../../reference/engine-config.rst:171
 msgid "true"
 msgstr ""
 
@@ -79,8 +77,8 @@ msgstr ""
 #: ../../reference/engine-config.rst:31 ../../reference/engine-config.rst:49
 #: ../../reference/engine-config.rst:73 ../../reference/engine-config.rst:79
 #: ../../reference/engine-config.rst:83 ../../reference/engine-config.rst:95
-#: ../../reference/engine-config.rst:99 ../../reference/engine-config.rst:123
-#: ../../reference/engine-config.rst:133 ../../reference/engine-config.rst:175
+#: ../../reference/engine-config.rst:99 ../../reference/engine-config.rst:131
+#: ../../reference/engine-config.rst:173
 msgid "false"
 msgstr ""
 
@@ -147,11 +145,11 @@ msgstr ""
 #: ../../reference/engine-config.rst:109 ../../reference/engine-config.rst:111
 #: ../../reference/engine-config.rst:115 ../../reference/engine-config.rst:117
 #: ../../reference/engine-config.rst:119 ../../reference/engine-config.rst:121
-#: ../../reference/engine-config.rst:127 ../../reference/engine-config.rst:131
-#: ../../reference/engine-config.rst:149 ../../reference/engine-config.rst:151
-#: ../../reference/engine-config.rst:153 ../../reference/engine-config.rst:161
-#: ../../reference/engine-config.rst:163 ../../reference/engine-config.rst:177
-#: ../../reference/engine-config.rst:179 ../../reference/engine-config.rst:181
+#: ../../reference/engine-config.rst:125 ../../reference/engine-config.rst:129
+#: ../../reference/engine-config.rst:147 ../../reference/engine-config.rst:149
+#: ../../reference/engine-config.rst:151 ../../reference/engine-config.rst:159
+#: ../../reference/engine-config.rst:161 ../../reference/engine-config.rst:175
+#: ../../reference/engine-config.rst:177 ../../reference/engine-config.rst:179
 msgid "none"
 msgstr "无"
 
@@ -559,338 +557,334 @@ msgid "Connection string used to connect to mysql"
 msgstr "用于连接 MySQL 数据库的连接串"
 
 #: ../../reference/engine-config.rst:123
-msgid "enable_he_schema_type_ou"
-msgstr ""
-
-#: ../../reference/engine-config.rst:123
-msgid ""
-"Whether to use OU to speed up HeSum, use ZPaillier by default for "
-"security, see: `heu/ou`_"
-msgstr "是否使用OU算法来加速 HeSum, 考虑到更优的安全性，默认使用 ZPaillier, 参见: `heu/ou`_"
-
-#: ../../reference/engine-config.rst:125
 msgid "enable_self_auth"
 msgstr ""
 
-#: ../../reference/engine-config.rst:125
+#: ../../reference/engine-config.rst:123
 msgid "Whether enable self identity authentication"
 msgstr "是否启用自我身份认证"
 
-#: ../../reference/engine-config.rst:127
+#: ../../reference/engine-config.rst:125
 msgid "private_key_pem_path"
 msgstr ""
 
-#: ../../reference/engine-config.rst:127
+#: ../../reference/engine-config.rst:125
 msgid "Path to private key pem file"
 msgstr "私钥 pem 文件的路径"
 
-#: ../../reference/engine-config.rst:129
+#: ../../reference/engine-config.rst:127
 msgid "enable_peer_auth"
 msgstr ""
 
-#: ../../reference/engine-config.rst:129
+#: ../../reference/engine-config.rst:127
 msgid "Whether enable peer parties identity authentication"
 msgstr "是否启用对端身份认证"
 
-#: ../../reference/engine-config.rst:131
+#: ../../reference/engine-config.rst:129
 msgid "authorized_profile_path"
 msgstr ""
 
-#: ../../reference/engine-config.rst:131
+#: ../../reference/engine-config.rst:129
 msgid "Path to authorized profile, in json format"
 msgstr "数据源的路由配置，其类型为 json 字符串格式"
 
-#: ../../reference/engine-config.rst:133
+#: ../../reference/engine-config.rst:131
 msgid "enable_psi_detail_logger"
 msgstr ""
 
-#: ../../reference/engine-config.rst:133
+#: ../../reference/engine-config.rst:131
 msgid "Whether enable detail log"
 msgstr "是否记录算法详细日志"
 
-#: ../../reference/engine-config.rst:135
+#: ../../reference/engine-config.rst:133
 msgid "psi_detail_logger_dir"
 msgstr ""
 
-#: ../../reference/engine-config.rst:135
+#: ../../reference/engine-config.rst:133
 msgid "logs/detail"
 msgstr ""
 
-#: ../../reference/engine-config.rst:135
+#: ../../reference/engine-config.rst:133
 msgid "Detail log directory"
 msgstr "详细日志目录"
 
-#: ../../reference/engine-config.rst:137
+#: ../../reference/engine-config.rst:135
 msgid "enable_restricted_read_path"
 msgstr ""
 
-#: ../../reference/engine-config.rst:137
+#: ../../reference/engine-config.rst:135
 msgid "Whether restrict path for file to read"
 msgstr "是否限制读取文件的路径"
 
-#: ../../reference/engine-config.rst:139
+#: ../../reference/engine-config.rst:137
 msgid "restricted_read_path"
 msgstr ""
 
-#: ../../reference/engine-config.rst:139 ../../reference/engine-config.rst:145
+#: ../../reference/engine-config.rst:137 ../../reference/engine-config.rst:143
 msgid "./data"
 msgstr ""
 
-#: ../../reference/engine-config.rst:139
+#: ../../reference/engine-config.rst:137
 msgid "In where the file is allowed to read if enable restricted read path"
 msgstr "开启读取路径限制后，允许读取文件的路径"
 
-#: ../../reference/engine-config.rst:141
+#: ../../reference/engine-config.rst:139
 msgid "csv_null_str"
 msgstr ""
 
-#: ../../reference/engine-config.rst:141 ../../reference/engine-config.rst:147
+#: ../../reference/engine-config.rst:139 ../../reference/engine-config.rst:145
 msgid "NULL"
 msgstr ""
 
-#: ../../reference/engine-config.rst:141
+#: ../../reference/engine-config.rst:139
 msgid "Specifies the string that represents a NULL value when reading csv"
 msgstr "指定读取 csv 时表示 NULL 值的字符串"
 
-#: ../../reference/engine-config.rst:143
+#: ../../reference/engine-config.rst:141
 msgid "enable_restricted_write_path"
 msgstr ""
 
-#: ../../reference/engine-config.rst:143
+#: ../../reference/engine-config.rst:141
 msgid "Whether restrict path for file to write"
 msgstr "是否限制文件写入路径"
 
-#: ../../reference/engine-config.rst:145
+#: ../../reference/engine-config.rst:143
 msgid "restricted_write_path"
 msgstr ""
 
-#: ../../reference/engine-config.rst:145
+#: ../../reference/engine-config.rst:143
 msgid "In where the file is allowed to write if enable restricted write path"
 msgstr "开启文件写入路径限制后，允许写入的路径"
 
-#: ../../reference/engine-config.rst:147
+#: ../../reference/engine-config.rst:145
 msgid "null_string_to_write"
 msgstr ""
 
-#: ../../reference/engine-config.rst:147
+#: ../../reference/engine-config.rst:145
 msgid "The string to write for NULL values"
 msgstr "写入 NULL 值时使用的字符串"
 
-#: ../../reference/engine-config.rst:149
+#: ../../reference/engine-config.rst:147
 msgid "output_s3_endpoint"
 msgstr ""
 
-#: ../../reference/engine-config.rst:149
+#: ../../reference/engine-config.rst:147
 msgid "The endpoint of output s3/minio/oss"
 msgstr "输出到 s3/minio/oss 时 server 的 endpoint"
 
-#: ../../reference/engine-config.rst:151
+#: ../../reference/engine-config.rst:149
 msgid "output_s3_access_key"
 msgstr ""
 
-#: ../../reference/engine-config.rst:151
+#: ../../reference/engine-config.rst:149
 msgid "The access key id of output s3/minio/oss"
 msgstr "输出到 s3/minio/oss 时的 access key id"
 
-#: ../../reference/engine-config.rst:153
+#: ../../reference/engine-config.rst:151
 msgid "output_s3_secret_key"
 msgstr ""
 
-#: ../../reference/engine-config.rst:153
+#: ../../reference/engine-config.rst:151
 msgid "The secret access key of output s3/minio/oss"
 msgstr "输出到 s3/minio/oss 时的 secret access key"
 
-#: ../../reference/engine-config.rst:155
-msgid "output_s3_enable_ssl"
+#: ../../reference/engine-config.rst:153
+msgid "output_s3_enalbe_ssl"
 msgstr ""
 
-#: ../../reference/engine-config.rst:155
+#: ../../reference/engine-config.rst:153
 msgid "Default enable ssl, if s3 server not enable ssl, set to false"
 msgstr "默认启用 ssl，如果 s3 server 端未启用 ssl，请设置为 false"
 
-#: ../../reference/engine-config.rst:157
+#: ../../reference/engine-config.rst:155
 msgid "output_s3_ca_dir_path"
 msgstr ""
 
-#: ../../reference/engine-config.rst:157
+#: ../../reference/engine-config.rst:155
 msgid "/etc/ssl/certs/"
 msgstr ""
 
-#: ../../reference/engine-config.rst:157
+#: ../../reference/engine-config.rst:155
 msgid "Directory where the certificates stored to verify s3 server"
 msgstr "存储 ca 证书的目录，用于验证 s3 server 的证书"
 
-#: ../../reference/engine-config.rst:159
+#: ../../reference/engine-config.rst:157
 msgid "output_s3_force_virtual_addressing"
 msgstr ""
 
-#: ../../reference/engine-config.rst:159
+#: ../../reference/engine-config.rst:157
 msgid "Default set to true to work with oss, for minio please set to false"
 msgstr "默认为 true，以便写入 oss，对于 minio 请设置为 false"
 
-#: ../../reference/engine-config.rst:161
+#: ../../reference/engine-config.rst:159
 msgid "output_db_kind"
 msgstr ""
 
-#: ../../reference/engine-config.rst:161
+#: ../../reference/engine-config.rst:159
 msgid "The kind of output db, support mysql/sqlite/postgresql"
 msgstr "输出的数据库类型，支持 mysql/sqlite/postgresql"
 
-#: ../../reference/engine-config.rst:163
+#: ../../reference/engine-config.rst:161
 msgid "output_db_connection_str"
 msgstr ""
 
-#: ../../reference/engine-config.rst:163
+#: ../../reference/engine-config.rst:161
 msgid "The :ref:`connection string <connection_str>` to connect to output db"
 msgstr "用于连接输出数据库的 :ref:`连接串 <connection_str>`"
 
-#: ../../reference/engine-config.rst:165
+#: ../../reference/engine-config.rst:163
 msgid "psi_curve_type"
 msgstr ""
 
-#: ../../reference/engine-config.rst:165
+#: ../../reference/engine-config.rst:163
 msgid "2"
 msgstr ""
 
-#: ../../reference/engine-config.rst:165
+#: ../../reference/engine-config.rst:163
 msgid ""
 "Curve type used in PSI, default 2: CURVE_FOURQ, for more see `psi curve "
 "type`_"
 msgstr "PSI 里使用的曲线类型， 默认值为 2: CURVE_FOURQ ，更多参考 `psi curve type`_"
 
-#: ../../reference/engine-config.rst:167
+#: ../../reference/engine-config.rst:165
 msgid "provider_batch_size"
 msgstr ""
 
-#: ../../reference/engine-config.rst:167
+#: ../../reference/engine-config.rst:165
 msgid "8192"
 msgstr ""
 
-#: ../../reference/engine-config.rst:167
+#: ../../reference/engine-config.rst:165
 msgid "Batch size used in PSI Provider"
 msgstr "PSI Provider 使用的 batch size"
 
-#: ../../reference/engine-config.rst:169
+#: ../../reference/engine-config.rst:167
 msgid "detail_logger_sample_num"
 msgstr ""
 
-#: ../../reference/engine-config.rst:169
+#: ../../reference/engine-config.rst:167
 msgid "0"
 msgstr ""
 
-#: ../../reference/engine-config.rst:169
+#: ../../reference/engine-config.rst:167
 msgid "Sample number for detail logger, 0 means print all, default 0"
 msgstr "详细日志的采样行数，0 表示打印全部，默认值为 0"
 
-#: ../../reference/engine-config.rst:171
+#: ../../reference/engine-config.rst:169
 msgid "max_chunk_size"
 msgstr ""
 
-#: ../../reference/engine-config.rst:171
+#: ../../reference/engine-config.rst:169
 msgid "134217728"
 msgstr ""
 
-#: ../../reference/engine-config.rst:171
+#: ../../reference/engine-config.rst:169
 msgid "Max chunk size for spu value proto, default 128MB"
 msgstr "spu value proto 的单个 chunk 的体积限制，默认值为 128MB"
 
-#: ../../reference/engine-config.rst:173
+#: ../../reference/engine-config.rst:171
 msgid "enable_tensor_life_cycle_manage"
 msgstr ""
 
-#: ../../reference/engine-config.rst:173
+#: ../../reference/engine-config.rst:171
 msgid "Whether tensor life cycle manage is enable/disable"
 msgstr "是否启用 tensor 的生命周期管理"
 
-#: ../../reference/engine-config.rst:175
+#: ../../reference/engine-config.rst:173
 msgid "arrow_client_disable_server_verification"
 msgstr ""
 
-#: ../../reference/engine-config.rst:175
+#: ../../reference/engine-config.rst:173
 msgid "Whether disable server verification for ArrowSQL adaptor"
 msgstr "是否禁用 ArrowSQL adaptor 服务端的认证"
 
-#: ../../reference/engine-config.rst:177
+#: ../../reference/engine-config.rst:175
 msgid "arrow_cert_pem_path"
 msgstr ""
 
-#: ../../reference/engine-config.rst:177
+#: ../../reference/engine-config.rst:175
 msgid ""
 "Certificate file path for server verification when "
 "arrow_client_disable_server_verification is false"
 msgstr "当 arrow_client_disable_server_verification 设置为 false 的时候，server 认证的证书文件路径"
 
-#: ../../reference/engine-config.rst:179
+#: ../../reference/engine-config.rst:177
 msgid "arrow_client_key_pem_path"
 msgstr ""
 
-#: ../../reference/engine-config.rst:179
+#: ../../reference/engine-config.rst:177
 msgid "Private key file path for ArrowSQL client to work in mtls"
 msgstr "ArrowSQL client 启用 mtls 时使用的 private key 文件路径"
 
-#: ../../reference/engine-config.rst:181
+#: ../../reference/engine-config.rst:179
 msgid "arrow_client_cert_pem_path"
 msgstr ""
 
-#: ../../reference/engine-config.rst:181
+#: ../../reference/engine-config.rst:179
 msgid "Certificate file path for ArrowSQL client to work in mtls"
 msgstr "ArrowSQL client 启用 mtls 时使用的证书文件路径"
 
-#: ../../reference/engine-config.rst:183
+#: ../../reference/engine-config.rst:181
 msgid "tmp_file_path"
 msgstr ""
 
-#: ../../reference/engine-config.rst:183
+#: ../../reference/engine-config.rst:181
 msgid "/tmp"
 msgstr ""
 
-#: ../../reference/engine-config.rst:183
+#: ../../reference/engine-config.rst:181
 msgid "The path for temporarily storing local data in streaming mode."
 msgstr "streaming 模式下存储临时文件的路径"
 
-#: ../../reference/engine-config.rst:185
+#: ../../reference/engine-config.rst:183
 msgid "streaming_row_num_threshold"
 msgstr ""
 
-#: ../../reference/engine-config.rst:185
+#: ../../reference/engine-config.rst:183
 msgid "30000000"
 msgstr ""
 
-#: ../../reference/engine-config.rst:185
+#: ../../reference/engine-config.rst:183
 msgid "Minimum row num to use streaming mode"
 msgstr "触发 streaming 模式的最小数据量"
 
-#: ../../reference/engine-config.rst:187
+#: ../../reference/engine-config.rst:185
 msgid "batch_row_num"
 msgstr ""
 
-#: ../../reference/engine-config.rst:187
+#: ../../reference/engine-config.rst:185
 msgid "10000000"
 msgstr ""
 
-#: ../../reference/engine-config.rst:187
+#: ../../reference/engine-config.rst:185
 msgid "Max row num in one batch"
 msgstr "每个 batch 的最大数据量"
 
-#: ../../reference/engine-config.rst:193
+#: ../../reference/engine-config.rst:191
 msgid "Config for datasource"
 msgstr "数据源配置"
 
-#: ../../reference/engine-config.rst:194
+#: ../../reference/engine-config.rst:192
 msgid ""
 "datasources(MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL) are where the "
 "SCQLEngine gets its data from."
 msgstr "SCQLEngine 支持多种数据源，包括 MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL 。"
 
-#: ../../reference/engine-config.rst:196
+#: ../../reference/engine-config.rst:194
+#, fuzzy
 msgid ""
 "``datasource_router`` is design to support multi datasources, currently "
-"only supported: embed, which is initialized with ``embed_router_conf`` "
+"supported: ``embed`` and ``http``."
+msgstr "``datasource_router`` 是为了支持多数据源而设计的，目前支持 `embed` 和 `http`。"
+
+#: ../../reference/engine-config.rst:196
+#, fuzzy
+msgid ""
+"For ``embed`` type, which is initialized with ``embed_router_conf`` "
 "first, a json string like::"
 msgstr ""
-"``datasource_router`` 是为了支持多数据源而设计的，目前仅支持 `embed` 方式配值数据源，其首先通过 "
-"``embed_router_conf`` 来初始化，``embed_router_conf`` 是一个 json "
-"类型的字符串，一个典型的配置项如下所示："
+"对于 ``embed`` 模式，首先通过 ``embed_router_conf`` 来初始化，``embed_router_conf`` 是 "
+"json 类型的字符串，一个典型的配置项如下所示："
 
 #: ../../reference/engine-config.rst:214
 msgid ""
@@ -900,11 +894,21 @@ msgstr ""
 "如果 ``embed_router_conf`` 为空， `embed_router` 则会尝试通过 ``db_connection_info``"
 " 来初始化。"
 
-#: ../../reference/engine-config.rst:217
+#: ../../reference/engine-config.rst:216
+msgid ""
+"For ``http`` type, ``http_router_endpoint`` must be set and will be "
+"accessed to get database information."
+msgstr "对于 ``http`` 模式，``http_router_endpoint`` 必须被设置，会通过访问 endpoint 来获取数据库信息。"
+
+#: ../../reference/engine-config.rst:218
+msgid "Example of a mock http router server: `mock http router`_."
+msgstr "模拟 http router server 例子：`mock http router`_。"
+
+#: ../../reference/engine-config.rst:221
 msgid "Embed router"
 msgstr "Embed router"
 
-#: ../../reference/engine-config.rst:218
+#: ../../reference/engine-config.rst:222
 msgid ""
 "datasources in embed_router_conf contain information for connecting "
 "MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL:"
@@ -912,103 +916,103 @@ msgstr ""
 "embed_router_conf 中的 datasources 包含用于连接 "
 "MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL 数据源的信息:"
 
-#: ../../reference/engine-config.rst:220
+#: ../../reference/engine-config.rst:224
 msgid "id: unique id of datasource."
 msgstr "id：数据源的唯一ID。"
 
-#: ../../reference/engine-config.rst:222
+#: ../../reference/engine-config.rst:226
 msgid "name: custom description help to distinguish datasources."
 msgstr "name：自定义描述，有助于区分数据源。"
 
-#: ../../reference/engine-config.rst:224
+#: ../../reference/engine-config.rst:228
 msgid ""
 "kind: datasource type, currently support "
 "MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL."
 msgstr "kind：数据源类型，目前支持 MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL 。"
 
-#: ../../reference/engine-config.rst:226
+#: ../../reference/engine-config.rst:230
 msgid ""
 "connection_str: string used to connect "
 "MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL."
 msgstr "connection_str：用于连接 MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL 数据库的连接串。"
 
-#: ../../reference/engine-config.rst:230
+#: ../../reference/engine-config.rst:234
 msgid "MySQL Connection string format:"
 msgstr "MySQL 连接串格式："
 
-#: ../../reference/engine-config.rst:231
+#: ../../reference/engine-config.rst:235
 msgid "<str> == <assignment> | <assignment> ';' <str>"
 msgstr ""
 
-#: ../../reference/engine-config.rst:233 ../../reference/engine-config.rst:251
+#: ../../reference/engine-config.rst:237 ../../reference/engine-config.rst:255
 msgid "<assignment> == <name> '=' <value>"
 msgstr ""
 
-#: ../../reference/engine-config.rst:235
+#: ../../reference/engine-config.rst:239
 msgid ""
 "<name> == 'host' | 'port' | 'user' | 'password' | 'db' | 'compress' | "
 "'auto-reconnect' | 'reset' | 'fail-readonly'"
 msgstr ""
 
-#: ../../reference/engine-config.rst:237 ../../reference/engine-config.rst:255
+#: ../../reference/engine-config.rst:241 ../../reference/engine-config.rst:259
 msgid "<value> == [~;]*"
 msgstr ""
 
-#: ../../reference/engine-config.rst:239
+#: ../../reference/engine-config.rst:243
 msgid "MySQL Connection string e.g:"
 msgstr "MySQL 连接串示例："
 
-#: ../../reference/engine-config.rst:240
+#: ../../reference/engine-config.rst:244
 #, python-brace-format
 msgid "``db=${db};user=${user};password=${password};host=${host}``"
 msgstr "``db=${db};user=${user};password=${password};host=${host}``"
 
-#: ../../reference/engine-config.rst:242
+#: ../../reference/engine-config.rst:246
 msgid "SQLite3 Connection string format:"
 msgstr "SQLite3 连接串格式："
 
-#: ../../reference/engine-config.rst:243
+#: ../../reference/engine-config.rst:247
 msgid "more infos: https://www.sqlite.org/c3ref/open.html"
 msgstr "参考：https://www.sqlite.org/c3ref/open.html"
 
-#: ../../reference/engine-config.rst:245
+#: ../../reference/engine-config.rst:249
 msgid "SQLite3 Connection string e.g:"
 msgstr "SQLite3 连接串示例"
 
-#: ../../reference/engine-config.rst:246
+#: ../../reference/engine-config.rst:250
 msgid "``file:/path/to/data.db``"
 msgstr ""
 
-#: ../../reference/engine-config.rst:248
+#: ../../reference/engine-config.rst:252
 msgid "PostgreSQL Connection string format:"
 msgstr "PostgreSQL 连接串格式："
 
-#: ../../reference/engine-config.rst:249
+#: ../../reference/engine-config.rst:253
 msgid "<str> == <assignment> | <assignment> ' ' <str>"
 msgstr ""
 
-#: ../../reference/engine-config.rst:253
+#: ../../reference/engine-config.rst:257
 msgid ""
 "<name> == 'host' | 'port' | 'user' | 'password' | 'dbname' | "
 "'connect_timeout'"
 msgstr ""
 
-#: ../../reference/engine-config.rst:257
+#: ../../reference/engine-config.rst:261
 msgid "PostgreSQL Connection string e.g:"
 msgstr "PostgreSQL 连接串示例："
 
-#: ../../reference/engine-config.rst:258
+#: ../../reference/engine-config.rst:262
 #, python-brace-format
 msgid ""
 "``dbname=${db} user=${user} password=${password} host=${host} "
 "port=${port}``"
 msgstr ""
 
-#: ../../reference/engine-config.rst:260
+#: ../../reference/engine-config.rst:264
 msgid "CSVDB Connection string format:"
 msgstr "CSVDB 连接串格式："
 
-#: ../../reference/engine-config.rst:261
+#: ../../reference/engine-config.rst:265
 msgid ""
 "CSVDB support read csv from local and OSS/MinIO, since connection_str is "
 "an object in another json object, the format is a converted json string "
@@ -1020,18 +1024,18 @@ msgstr ""
 "<https://github.com/secretflow/scql/tree/main/engine/datasource/csvdb_conf.proto>`_"
 " 结构体转换后的的json字符串 "
 
-#: ../../reference/engine-config.rst:263
+#: ../../reference/engine-config.rst:267
 msgid "CSVDB Connection string e.g:"
 msgstr "CSVDB连接语句示例:"
 
-#: ../../reference/engine-config.rst:264
+#: ../../reference/engine-config.rst:268
 #, python-brace-format
 msgid ""
 "local csv: "
 "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"string\\\\\\\"}]}]}\""
 msgstr ""
 
-#: ../../reference/engine-config.rst:266
+#: ../../reference/engine-config.rst:270
 #, python-brace-format
 msgid ""
 "OSS csv: "
@@ -1040,27 +1044,27 @@ msgid ""
 "},\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"oss://test_bucket/test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"string\\\\\\\"}]}]}\""
 msgstr ""
 
-#: ../../reference/engine-config.rst:268
+#: ../../reference/engine-config.rst:272
 msgid "ArrowSQL Connection string format:"
 msgstr "ArrowSQL 连接串格式："
 
-#: ../../reference/engine-config.rst:269
+#: ../../reference/engine-config.rst:273
 msgid "grpc+<scheme>://host:port"
 msgstr ""
 
-#: ../../reference/engine-config.rst:271
+#: ../../reference/engine-config.rst:275
 msgid "<scheme> == 'tcp' | 'tls'"
 msgstr ""
 
-#: ../../reference/engine-config.rst:273
+#: ../../reference/engine-config.rst:277
 msgid "ArrowSQL Connection string e.g:"
 msgstr "ArrowSQL 连接串示例："
 
-#: ../../reference/engine-config.rst:274
+#: ../../reference/engine-config.rst:278
 msgid "``grpc+tcp://127.0.0.1:6666``"
 msgstr ""
 
-#: ../../reference/engine-config.rst:277
+#: ../../reference/engine-config.rst:281
 msgid ""
 "As a datasource embedded in SCQLEngine, ArrowSQL requires an additional "
 "gRPC server which provides the corresponding interface for executing an "
@@ -1070,11 +1074,11 @@ msgstr ""
 "作为 SCQLEngine 内嵌的数据源，ArrowSQL 依赖额外的 gRPC 服务，该服务需要提供相应的接口，用于执行 `Arrow "
 "Flight SQL <https://arrow.apache.org/docs/format/FlightSql.html>`_ 即时查询"
 
-#: ../../reference/engine-config.rst:280
+#: ../../reference/engine-config.rst:284
 msgid "Routing rules"
 msgstr "路由规则"
 
-#: ../../reference/engine-config.rst:281
+#: ../../reference/engine-config.rst:285
 msgid ""
 "embed_router's rules support wildcard ``*`` , when given a table in "
 "format: *database_name:table_name*, embed_router will route to the "
@@ -1083,7 +1087,7 @@ msgstr ""
 "embed_router 的规则支持通配符 ``*`` ，当给定一个 *database_name:table_name* "
 "的数据表时，embed_router 将通过以下方式路由到对应的数据源："
 
-#: ../../reference/engine-config.rst:284
+#: ../../reference/engine-config.rst:288
 #, python-brace-format
 msgid ""
 "find the exact rules first, whose ``${db}:${table}`` equals to "
@@ -1092,15 +1096,15 @@ msgstr ""
 "在 `embed_router_conf` 的 `rules` 中查找 `${db}:${table}` 与 "
 "`database_name:table_name` 完全相等的 rule"
 
-#: ../../reference/engine-config.rst:285
+#: ../../reference/engine-config.rst:289
 msgid "try the database_name:\\* rules;"
 msgstr "在 `embed_router_conf` 的 `rules` 中查找 `${db}` 与 `database_name` 完全相等的 rule"
 
-#: ../../reference/engine-config.rst:286
+#: ../../reference/engine-config.rst:290
 msgid "try \\*:table_name in the end."
 msgstr "在 `embed_router_conf` 的 `rules` 中查找 `${table}` 与 `table_name` 完全相等的 rule"
 
-#: ../../reference/engine-config.rst:288
+#: ../../reference/engine-config.rst:292
 msgid ""
 "Once found, SCQLEngine will try to connect database with datasource's "
 "information correspond to the *datasource_id*."
@@ -1108,11 +1112,11 @@ msgstr ""
 "一旦找到对应的 rule ，SCQLEngine 将根据 rule 中 datasource_id 在 datasources 中找到 "
 "对应的数据源信息，并根据这些信息连接对应的数据库。"
 
-#: ../../reference/engine-config.rst:291
+#: ../../reference/engine-config.rst:295
 msgid "Config for Brpc server"
 msgstr "Brpc 服务器配置"
 
-#: ../../reference/engine-config.rst:292
+#: ../../reference/engine-config.rst:296
 msgid ""
 "SCQLEngine uses **Brpc** to communicate with Driver and other peer "
 "SCQLEngines, each SCQLEngine will start a Brpc service on *local-"
@@ -1122,26 +1126,19 @@ msgstr ""
 "SCQLEngine 使用 Brpc 与 Driver 以及其他的 SCQLEngine 进行通信，每个 SCQLEngine 都会在 "
 "local-host:listen_port 上启动 Brpc 服务以接收来自外部的数据。如果要启用 Brpc 内置服务，请添加 FLAGS："
 
-#: ../../reference/engine-config.rst:303
+#: ../../reference/engine-config.rst:307
 msgid "Config for SSL"
 msgstr "SSL配置"
 
-#: ../../reference/engine-config.rst:304
-msgid ""
-"If you want to enable SSL in SCQLEngine, add FLAGS as follows. "
-"Additionally, it may be necessary to configure the Driver to work with "
-"TLS, please refer :ref:`TLS in SCDB <scdb-tls>` or :ref:`TLS in "
-"SCQLBroker <broker-tls>`."
+#: ../../reference/engine-config.rst:308
+msgid "If you want to enable SSL in SCQLEngine, add FLAGS as follows."
 msgstr ""
-"如果要在 SCQLEngine 中启用 SSL，请添加 FLAGS，如下所示。 此外，也可能需要配置 Driver 在 TLS 下运行，请参考 "
-":ref:`SCDB 的 TLS 配置 <scdb-tls>` 或 :ref:`SCQLBroker 的 TLS 配置 <broker-tls>`"
-" 。"
 
-#: ../../reference/engine-config.rst:317
+#: ../../reference/engine-config.rst:321
 msgid "Config for party authentication"
 msgstr "参与方身份验证配置"
 
-#: ../../reference/engine-config.rst:318
+#: ../../reference/engine-config.rst:322
 msgid ""
 "For security, SCQLEngine enables party authentication by default. "
 "SCQLEngine will check it's public key in the Driver request matches the "
@@ -1152,128 +1149,3 @@ msgstr ""
 "安全起见，SCQLEngine 默认启用参与方身份验证。 SCQLEngine 将检查 Driver 请求中自身的公钥是否与 "
 "``private_key_pem_path`` 中的本地公钥匹配，并且其他参与者的公钥也与 "
 "``authorized_profile_path`` 中的公钥匹配。"
-
-#~ msgid ""
-#~ "OSS csv: "
-#~ "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"S3Conf\\\\\\\":{\\\\\\\"endpoint\\\\\\\":\\\\\\\"test_endpoint\\\\\\\",\\\\\\\"access_key_id\\\\\\\":\\\\\\\"test_id\\\\\\\",\\\\\\\"secret_access_key\\\\\\\":\\\\\\\"test_key\\\\\\\",\\\\\\\"virtualhost\\\\\\\":"
-#~ " true "
-#~ "},\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"oss://test_bucket/test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
-#~ msgstr ""
-
-#~ msgid "enable_audit_logger"
-#~ msgstr ""
-
-#~ msgid "Whether to enable audit log"
-#~ msgstr "是否记录审计日志"
-
-#~ msgid "audit_log_file"
-#~ msgstr ""
-
-#~ msgid "audit/audit.log"
-#~ msgstr ""
-
-#~ msgid "The file to save basic information about a query"
-#~ msgstr "存储基础审计信息的日志文件"
-
-#~ msgid "audit_detail_file"
-#~ msgstr ""
-
-#~ msgid "audit/detail.log"
-#~ msgstr ""
-
-#~ msgid "The file to save more detailed information about a query"
-#~ msgstr "存储补充审计信息的日志文件"
-
-#~ msgid "audit_max_files"
-#~ msgstr ""
-
-#~ msgid "180"
-#~ msgstr ""
-
-#~ msgid "The maximum number of old audit log files to retain"
-#~ msgstr "系统中保留的审计日志文件的最大数量，0 表示保留所有的日志文件"
-
-#~ msgid "Config for audit"
-#~ msgstr "审计日志配置"
-
-#~ msgid ""
-#~ "The audit log in SCQLEngine is "
-#~ "used to record the SCQLEngine activities"
-#~ " during the execution of tasks from"
-#~ " Driver. Just like the audit in "
-#~ "Driver, it also can be divided "
-#~ "into two types: common audit log "
-#~ "and detail audit log."
-#~ msgstr ""
-#~ "SCQLEngine 的审计日志是用来记录 SCQLEngine 在执行 Driver"
-#~ " 下发任务过程中所产生的一系列事件，和 Driver 一样，它也有两种类型：基础审计日志和详补充审计日志"
-
-#~ msgid ""
-#~ "The common audit is used to record"
-#~ " some basic information about a task,"
-#~ " while the detail audit is used "
-#~ "to record more detailed information of"
-#~ " the task. See `engine_audit "
-#~ "<https://github.com/secretflow/scql/blob/main/engine/audit/audit.proto>`_"
-#~ " for more information"
-#~ msgstr ""
-#~ "基础审计日志是用来记录 SCQLEngine "
-#~ "在执行任务过程中所产生的一系列事件的基本信息。补充审计日志信息，则是用来记录这些事件一些额外的信息。更多信息请参考 "
-#~ "`engine_audit "
-#~ "<https://github.com/secretflow/scql/blob/main/engine/audit/audit.proto>`_"
-#~ " 。"
-
-#~ msgid ""
-#~ "The log file is rotated in every"
-#~ " 24:00:00 in local time, and the "
-#~ "filename is generated in the format "
-#~ "``name-date.ext``, where `name` is the"
-#~ " filename set in ``audit_log_file`` without"
-#~ " the extension, `date` is the time"
-#~ " at which the log was rotated "
-#~ "formatted with local time format of "
-#~ "`YYYY-MM-DD`, `ext` is the "
-#~ "extension set in ``audit_log_file``."
-#~ msgstr ""
-#~ "SCQLEngine 会在每天 24:00:00 对当天的审计日志进行归档，归档的审计日志文件命名格式为"
-#~ " ``name-date.ext`` ，其中 `name` 是在 "
-#~ "``audit_log_file`` 中设置的不带后缀的文件名， `date` 是当前的日期（格式为"
-#~ " `YYYY-MM-DD`）， `ext` 是在 "
-#~ "``audit_log_file`` 中设置的后缀名。"
-
-#~ msgid ""
-#~ "For example, if you set "
-#~ "``audit_log_file`` as `audit/audit.log`, a "
-#~ "backup created on Nov 11 2016 "
-#~ "would be saved to "
-#~ "`/audit/audit_2016-11-04.log`"
-#~ msgstr ""
-#~ "例如，通过设置 ``audit_log_file`` 为 "
-#~ "`audit/audit.log`，在2016年11月4日 24:00:00 归档的审计日志会保存至 "
-#~ "`./audit/audit_2016-11-04.log` 。"
-
-#~ msgid ""
-#~ "local csv: "
-#~ "\"{\\\\\\\"db_name\\\\\\\":\\\\\\\"csvdb\\\\\\\",\\\\\\\"tables\\\\\\\":[{\\\\\\\"table_name\\\\\\\":\\\\\\\"staff\\\\\\\",\\\\\\\"data_path\\\\\\\":\\\\\\\"test.csv\\\\\\\",\\\\\\\"columns\\\\\\\":[{\\\\\\\"column_name\\\\\\\":\\\\\\\"id\\\\\\\",\\\\\\\"column_type\\\\\\\":\\\\\\\"1\\\\\\\"}]}]}\""
-#~ msgstr ""
-
-#~ msgid "unbalance_psi_ratio_threshold"
-#~ msgstr ""
-
-#~ msgid "5"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Mininum ratio (larger party's rows count"
-#~ " / smaller's) to trigger unbalanced "
-#~ "PSI"
-#~ msgstr "触发 unbalanced PSI 的最小比例 (数据量较大的参与方的行数 / 数据较少方的行数)"
-
-#~ msgid "unbalance_psi_larger_party_rows_count_threshold"
-#~ msgstr ""
-
-#~ msgid "81920"
-#~ msgstr ""
-
-#~ msgid "Minimum rows count of the larger party to choose unbalanced PSI"
-#~ msgstr "触发 unbalanced PSI 的数据量较大参与方的数据最小行数"

@@ -3,5 +3,4 @@ Introduction
 
 .. toctree::
 
-   p2p-tutorial
-   tutorial
+   opencore-quickstart

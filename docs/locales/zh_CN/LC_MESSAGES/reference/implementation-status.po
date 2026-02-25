@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-03 11:35+0800\n"
+"POT-Creation-Date: 2026-02-11 19:17+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.16.0\n"
+"Generated-By: Babel 2.17.0\n"
 
 #: ../../reference/implementation-status.rst:2
 msgid "SCQL Implementation Status"
@@ -115,10 +115,6 @@ msgstr "limit 子句"
 #: ../../reference/implementation-status.rst:24
 msgid "order by clause"
 msgstr "order by 子句"
-
-#: ../../reference/implementation-status.rst:24
-msgid "`REVEAL_RANK` ccl could help with this"
-msgstr "可以配合`REVEAL_RANK` CCL一起使用"
 
 #: ../../reference/implementation-status.rst:26
 #, fuzzy
@@ -319,12 +315,6 @@ msgstr ""
 msgid "row_number, percent_rank"
 msgstr ""
 
-#: ../../reference/implementation-status.rst:75
-msgid ""
-"the order of `order by` key must be revealable, see the `REVEAL_RANK` ccl"
-" for detail"
-msgstr "涉及到的`order by`的key的顺序必须是可见的，可以参考`REVEAL_RANK` CCL的定义查看更多信息"
-
 #: ../../reference/implementation-status.rst:79
 msgid "Data Source"
 msgstr "数据源"
@@ -355,4 +345,3 @@ msgid ""
 "differences in the results due to data type differences built in "
 "databases. Please choose backend database with caution."
 msgstr "SCQL 支持不同的数据库作为数据源，但由于数据库内置的数据类型差异，结果可能会存在细微差异。请谨慎选择后端数据库。"
-

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SCQL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-16 11:10+0800\n"
+"POT-Creation-Date: 2026-02-24 16:33+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -57,43 +57,54 @@ msgid "``float``"
 msgstr "``float``"
 
 #: ../../reference/lang/manual.rst:17
-msgid "``float64``, ``double``"
+#, fuzzy
+msgid "``float32``"
+msgstr "``float``"
+
+#: ../../reference/lang/manual.rst:19
+#, fuzzy
+msgid "``double``"
 msgstr "``float64``, ``double``"
 
 #: ../../reference/lang/manual.rst:19
+#, fuzzy
+msgid "``float``, ``double``, ``float64``"
+msgstr "``float``, ``double``, ``float64``"
+
+#: ../../reference/lang/manual.rst:21
 msgid "``string``"
 msgstr "``string``"
 
-#: ../../reference/lang/manual.rst:19
+#: ../../reference/lang/manual.rst:21
 msgid "``str``"
 msgstr "``str``"
 
-#: ../../reference/lang/manual.rst:21
+#: ../../reference/lang/manual.rst:23
 msgid "``datetime``"
 msgstr "``datetime``"
 
-#: ../../reference/lang/manual.rst:21
+#: ../../reference/lang/manual.rst:23
 msgid ""
 "Used for values that contain both date and time parts. SCQL retrieves and"
 " displays in 'YYYY-MM-DD hh:mm:ss' format"
 msgstr "包含日期和时间两部分， SCQL 使用 'YYYY-MM-DD hh:mm:ss' 格式识别及表示"
 
-#: ../../reference/lang/manual.rst:23
+#: ../../reference/lang/manual.rst:25
 msgid "``timestamp``"
 msgstr "``timestamp``"
 
-#: ../../reference/lang/manual.rst:23
+#: ../../reference/lang/manual.rst:25
 msgid ""
 "Used for values that contain both date and time parts. SCQL retrieves in "
 "'YYYY-MM-DD hh:mm:ss' format and displays in int64 value affected by time"
 " zone"
 msgstr "包含日期和时间两部分， SCQL 使用 'YYYY-MM-DD hh:mm:ss' 格式识别，但表示为受时区影响的 int64 值"
 
-#: ../../reference/lang/manual.rst:30
+#: ../../reference/lang/manual.rst:32
 msgid "SCQL Query Syntax"
 msgstr "SCQL 查询语法"
 
-#: ../../reference/lang/manual.rst:32
+#: ../../reference/lang/manual.rst:34
 msgid ""
 "It is compatible with most MySQL DQL syntax. For syntax differences "
 "between SCQL and MySQL, please read :doc:`/reference/lang/mysql-"
@@ -102,7 +113,7 @@ msgstr ""
 "SCQL 兼容大多数 MySQL 语法。关于 SCQL 和 MySQL 之间的语法差异，请阅读 :doc:`/reference/lang"
 "/mysql-compatibility` 。"
 
-#: ../../reference/lang/manual.rst:105
+#: ../../reference/lang/manual.rst:107
 msgid ""
 "SCQL support ``export_options`` with limitations: only support '\"' or ''"
 " for **enclosing_character**; **ESCAPED BY** is not supported."
@@ -110,7 +121,7 @@ msgstr ""
 "SCQL 在一定限制下支持 ``export_options``: 目前只支持 '\"' 或者 '' 作为 "
 "**enclosing_character**；暂时不支持 **ESCAPED BY** 语法。"
 
-#: ../../reference/lang/manual.rst:106
+#: ../../reference/lang/manual.rst:108
 msgid ""
 "**OPTIONALLY** in ``export_options`` controls quoting of fields, if "
 "omitted all fields are enclosed by the **enclosing_character**, otherwise"
@@ -119,7 +130,7 @@ msgstr ""
 "``export_options`` 中的 **OPTIONALLY** 用于控制字段的引用行为，如果省略则所有类型的字段都会使用 "
 "**enclosing_character** 括起来，否则只有 string 类型的字段被括起来, 参考 `mysql load data`_"
 
-#: ../../reference/lang/manual.rst:107
+#: ../../reference/lang/manual.rst:109
 msgid ""
 "**file_path** in ``into_option`` can be local path like '/data/file.csv' "
 "or oss path like 'oss://bucket_name/path/to/file', flags for writing "
@@ -130,37 +141,18 @@ msgstr ""
 "路径： 'oss://bucket_name/path/to/file' ， write 相关的 flag 应该正确设置，参考 "
 ":ref:`Engine 配置项 <engine_config_options>`"
 
-#: ../../reference/lang/manual.rst:112
+#: ../../reference/lang/manual.rst:114
 msgid "Functions and Operators"
 msgstr "函数与操作符"
 
-#: ../../reference/lang/manual.rst:114
-msgid "Todo"
-msgstr "待办"
+#: ../../reference/lang/manual.rst:116
+msgid "待处理"
+msgstr ""
 
-#: ../../reference/lang/manual.rst:114
+#: ../../reference/lang/manual.rst:116
 msgid "this part is not ready, please check later"
 msgstr "该部分尚未准备好，请之后查看"
 
-#~ msgid ""
-#~ "SCQL support ``export_options`` with "
-#~ "limitations: only support '\"' or '' "
-#~ "for **enclosing_character**; **ESCAPED BY** is"
-#~ " not supported. **OPTIONALLY** in "
-#~ "``export_options`` controls quoting of fields,"
-#~ " if omitted all fields are enclosed"
-#~ " by the **enclosing_character**, otherwise "
-#~ "only string fields are enclosed. see "
-#~ "`mysql load data`_ **file_path** in "
-#~ "**into_option** can be local path like"
-#~ " '/data/file.csv' or s3 path like "
-#~ "'oss://bucket_name/path/to/file', flags for writing"
-#~ " should be set correctly, see `Engine"
-#~ " configuration options <engine_config_options>` "
-#~ "for more."
-#~ msgstr ""
-#~ "SCQL 在一定限制下支持 ``export_options``: 目前只支持 '\"'"
-#~ " 或者 '' 作为 **enclosing_character**；暂时不支持 "
-#~ "**ESCAPED BY** 语法。 ``export_options``中的 "
-#~ "**OPTIONALLY** 用于控制字段的引用行为，如果省略则所有类型的字段都会使用 "
-#~ "**enclosing_character** 括起来，否则只有 string 类型的字段被括起来。"
+#~ msgid "Todo"
+#~ msgstr "待办"
+
