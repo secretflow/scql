@@ -42,16 +42,17 @@ Functions different from MySQL
 | Aggregation Functions With Group BY | return groups which have greater or equal ``group_by_threshold`` elements | return all groups      | for safety |
 +-------------------------------------+---------------------------------------------------------------------------+------------------------+------------+
 
-.. note::
-    ``group_by_threshold`` can be configured in :ref:`p2p mode <config_broker_server_options>` or :ref:`central mode <scdb_config_options>`.
-
 DCL(Data Control Language)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 GRANT/REVOKE
 ````````````
 
-Except permissions same with mysql such as read/write/create/drop..., ccl settings are also required before executing a query. You can change CCL settings via GRANT/REVOKE. About GRANT/REVOKE in SCQL, please read :doc:`/reference/lang/manual`.
+.. note::
+
+   **CCL (Column Control List) is deprecated** and no longer used in the new architecture.
+
+   In previous versions, CCL settings were required before executing queries, and could be changed via GRANT/REVOKE. This is no longer applicable in the current version. Please refer to ``examples/opencore-demo/`` for the new access control mechanisms.
 
 Type Conversion Rule
 ~~~~~~~~~~~~~~~~~~~~

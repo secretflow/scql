@@ -10,156 +10,84 @@ This is a specification (not a kernel library) of SCQL operators, including oper
 Definition: return the value of arc cosine function
 
 **Inputs:**
-
 1. `In`(single, T): the expression pass to arc cosine function
 
-
 **Outputs:**
-
 1. `Out`(single, T): Result
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
-
 
 ### `ASin`
 
 Definition: return the value of arc sine function
 
 **Inputs:**
-
 1. `In`(single, T): the expression pass to arc sine function
 
-
 **Outputs:**
-
 1. `Out`(single, T): Result
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
-
 
 ### `ATan`
 
 Definition: return the value of arc tangent function
 
 **Inputs:**
-
 1. `In`(single, T): the expression pass to arc tangent function
 
-
 **Outputs:**
-
 1. `Out`(single, T): Result
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
-
 
 ### `ATan2`
 
 Definition: Out = Left `ATan2` Right
 
 **Inputs:**
-
 1. `Left`(variadic, T): First operand.
-
 1. `Right`(variadic, T1): Second operand.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T2): Output Tensor.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
 1. `T1`: public,private,secret
-
 1. `T2`: private,secret
-
-
 
 ### `Abs`
 
 Definition: return the value of Abs function
 
 **Inputs:**
-
 1. `In`(single, T): the expression pass to Abs function
 
-
 **Outputs:**
-
 1. `Out`(single, T): Result
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
-
 
 ### `Add`
 
 Definition: Out = Left `Add` Right
 
 **Inputs:**
-
 1. `Left`(variadic, T): First operand.
-
 1. `Right`(variadic, T1): Second operand.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T2): Output Tensor.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
 1. `T1`: public,private,secret
-
 1. `T2`: private,secret
-
-
 
 ### `ArrowFunc`
 
@@ -174,30 +102,16 @@ Out = {{false, false, true}}
 
 
 **Inputs:**
-
 1. `In`(variadic, T): Input tensors.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Output tensors.
 
-
-
 **Attributes:**
-
 1. `func_name`: the name of arrow function, e.g: add/ifnull/...
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
-
-
 
 ### `BroadcastTo`
 
@@ -212,62 +126,33 @@ Out = BroadcastTo(In, ShapeRefTensor) = [1, 1, 1]
 
 
 **Inputs:**
-
 1. `In`(variadic, T): Input tensor
-
 1. `ShapeRefTensor`(single, T1): Shape reference tensor
 
-
 **Outputs:**
-
 1. `Out`(variadic, T2): Result tensor
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public
-
 1. `T1`: public,private,secret
-
 1. `T2`: public,private
-
-
 
 ### `Bucket`
 
 Definition: Put the data into buckets based on the hash value of the join key.
 
 **Inputs:**
-
 1. `Key`(variadic, T): Join Key Tensors
-
 1. `In`(variadic, T): Input Tensors
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Result
 
-
-
 **Attributes:**
-
 1. `input_party_codes`: List of parties the inputs belong to([PartyCodeLeft, PartyCodeRight]).
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
-
-
 
 ### `CaseWhen`
 
@@ -284,82 +169,44 @@ Out = [0, 1, 2, 2]
 
 
 **Inputs:**
-
 1. `Condition`(variadic, T): Condition tensor.
-
 1. `Value`(variadic, T1): Value if condition tensor is true and all previous conditions are false.
-
 1. `ValueElse`(single, T2): Value if all condition tensors are false.
 
-
 **Outputs:**
-
 1. `Out`(single, T3): Result tensor.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
 1. `T1`: public,private,secret
-
 1. `T2`: public,private,secret
-
 1. `T3`: public,private,secret
-
-
 
 ### `Cast`
 
 Definition: Cast Input tensor's data type to Output tensor's.
 
 **Inputs:**
-
 1. `In`(single, T): Input tensor.
 
-
 **Outputs:**
-
 1. `Out`(single, T): Output tensor.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
-
 
 ### `Ceil`
 
 Definition: return the value of Ceil function
 
 **Inputs:**
-
 1. `In`(single, T): the expression pass to Ceil function
 
-
 **Outputs:**
-
 1. `Out`(single, T): Result
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
-
 
 ### `Coalesce`
 
@@ -374,24 +221,13 @@ Out = {0, 1, NULL}
 
 
 **Inputs:**
-
 1. `Exprs`(variadic, T): The expressions to coalesce
 
-
 **Outputs:**
-
 1. `Out`(single, T): Result
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
-
-
 
 ### `Concat`
 
@@ -405,37 +241,19 @@ Out = {1, 2, 2, 3, 4, 3, 4, 5, 6}
 
 
 **Inputs:**
-
 1. `In`(variadic, T): Tensors to be concat.
 
-
 **Outputs:**
-
 1. `Out`(single, T): Concated Tensor.
 
-
-
 **Attributes:**
-
 1. `axis`: Int64. Dimension along which to concatenate.
 
-
-
-
-
-
 **Default Attribute Values:**
-
 1. `axis`: 0
 
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: secret
-
-
 
 ### `Constant`
 
@@ -449,265 +267,141 @@ Out = [{"a", "b", "c"}]
 
 
 **Inputs:**
-
 No input parameter.
 
-
 **Outputs:**
-
 1. `Out`(single, T): output tensor(shape [M]) from constant.
 
-
-
 **Attributes:**
-
 1. `scalar`: scalar attribute(with shape [M])
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private
-
-
 
 ### `Copy`
 
 Definition: Copy source tensor "In" to new tensor "Out" on target party
 
 **Inputs:**
-
 1. `In`(single, T1): source tensor
 
-
 **Outputs:**
-
 1. `Out`(single, T1): target tensor
 
-
-
 **Attributes:**
-
 1. `input_party_codes`: Input tensor `In` belongs to
-
 1. `output_party_codes`: Output tensor `Out` belongs to
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T1`: private
-
-
 
 ### `Cos`
 
 Definition: return the value of cosine function
 
 **Inputs:**
-
 1. `In`(single, T): the expression pass to cosine function
 
-
 **Outputs:**
-
 1. `Out`(single, T): Result
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
-
 
 ### `Cot`
 
 Definition: return the value of cotangent function
 
 **Inputs:**
-
 1. `In`(single, T): the expression pass to cotangent function
 
-
 **Outputs:**
-
 1. `Out`(single, T): Result
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
-
 
 ### `Degrees`
 
 Definition: return the value of Degrees function
 
 **Inputs:**
-
 1. `In`(single, T): the expression pass to Degrees function
 
-
 **Outputs:**
-
 1. `Out`(single, T): Result
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
-
 
 ### `Div`
 
 Definition: Out = Left `Div` Right
 
 **Inputs:**
-
 1. `Left`(variadic, T): First operand.
-
 1. `Right`(variadic, T1): Second operand.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T2): Output Tensor.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
 1. `T1`: public,private,secret
-
 1. `T2`: private,secret
-
-
 
 ### `DumpFile`
 
 Definition: Dump the input tensor. Note: This op will change the affected rows in the session
 
 **Inputs:**
-
 1. `In`(variadic, T): Tensors to be dumped.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Tensors have been dumped.
 
-
-
 **Attributes:**
-
 1. `file_path`: String. Absolute file path to dump the tensors.
-
 1. `field_deliminator`: String. Column deliminator, e.g. `\t`
-
 1. `quoting_style`: Int64. Strategies for using quotes, 0: do not use quotes; 1: use quotes for strings; 2: use quotes for all valid data
-
 1. `line_terminator`: String. Line terminator, e.g. `\n`
 
-
-
-
-
-
 **Default Attribute Values:**
-
 1. `field_deliminator`: \t
-
 1. `line_terminator`: \n
-
 1. `quoting_style`: 0
 
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
-
-
 
 ### `Equal`
 
 Definition: Out = Left `Equal` Right
 
 **Inputs:**
-
 1. `Left`(variadic, T): First operand.
-
 1. `Right`(variadic, T1): Second operand.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T2): Output Tensor.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
 1. `T1`: public,private,secret
-
 1. `T2`: private,secret
-
-
 
 ### `Exp`
 
 Definition: return the value of Exp function
 
 **Inputs:**
-
 1. `In`(single, T): the expression pass to Exp function
 
-
 **Outputs:**
-
 1. `Out`(single, T): Result
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
-
 
 ### `Filter`
 
@@ -723,28 +417,15 @@ Out = {a, d}
 
 
 **Inputs:**
-
 1. `Filter`(single, T1): Filter tensor.
-
 1. `In`(variadic, T): Tensors to be filtered.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Output tensor.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private,secret
-
 1. `T1`: public,private
-
-
 
 ### `FilterByIndex`
 
@@ -759,134 +440,72 @@ Out = [{"d", "b", "a"}, {3, 1, 0}]
 
 
 **Inputs:**
-
 1. `RowsIndexFilter`(single, T): Rows index filter vector(shape [K][1]).
-
 1. `Data`(variadic, T): Input data tensor(shape [M][N]).
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Output data tensor(shape [X][N]).
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
-
-
 
 ### `Floor`
 
 Definition: return the value of Floor function
 
 **Inputs:**
-
 1. `In`(single, T): the expression pass to Floor function
 
-
 **Outputs:**
-
 1. `Out`(single, T): Result
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
-
 
 ### `Greater`
 
 Definition: Out = Left `Greater` Right
 
 **Inputs:**
-
 1. `Left`(variadic, T): First operand.
-
 1. `Right`(variadic, T1): Second operand.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T2): Output Tensor.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
 1. `T1`: public,private,secret
-
 1. `T2`: private,secret
-
-
 
 ### `GreaterEqual`
 
 Definition: Out = Left `GreaterEqual` Right
 
 **Inputs:**
-
 1. `Left`(variadic, T): First operand.
-
 1. `Right`(variadic, T1): Second operand.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T2): Output Tensor.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
 1. `T1`: public,private,secret
-
 1. `T2`: private,secret
-
-
 
 ### `Greatest`
 
 return the greatest value in the given expressions.
 
 **Inputs:**
-
 1. `In`(variadic, T): expressions passed for getting greatest value
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): greatest value
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
-
 
 ### `Group`
 
@@ -901,26 +520,14 @@ GroupNum = {3}
 
 
 **Inputs:**
-
 1. `Key`(variadic, T): input key tensors(shape [M][1]).
 
-
 **Outputs:**
-
 1. `GroupId`(single, T): group id vector(shape [M][1]).
-
 1. `GroupNum`(single, T): number of groups vector(shape [1][1])
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
-
-
 
 ### `GroupAvg`
 
@@ -936,28 +543,15 @@ Out = [{1, 2, 4}, {8, 7, 5}]
 
 
 **Inputs:**
-
 1. `GroupId`(single, T): Input group id vector(shape [M][1]).
-
 1. `GroupNum`(single, T): Input number of groups vector(shape [1][1]).
-
 1. `In`(variadic, T): Input data tensor(shape [M][1]).
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Output data tensors(shape [K][1], K equals to number of groups), Out[i] is the agg result for i-th group.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
-
-
 
 ### `GroupCount`
 
@@ -973,28 +567,15 @@ Out = [{2, 2, 1}, {2, 2, 1}]
 
 
 **Inputs:**
-
 1. `GroupId`(single, T): Input group id vector(shape [M][1]).
-
 1. `GroupNum`(single, T): Input number of groups vector(shape [1][1]).
-
 1. `In`(variadic, T): Input data tensor(shape [M][1]).
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Output data tensors(shape [K][1], K equals to number of groups), Out[i] is the agg result for i-th group.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
-
-
 
 ### `GroupCountDistinct`
 
@@ -1010,28 +591,15 @@ Out = [{2, 2, 1}, {2, 2, 1}]
 
 
 **Inputs:**
-
 1. `GroupId`(single, T): Input group id vector(shape [M][1]).
-
 1. `GroupNum`(single, T): Input number of groups vector(shape [1][1]).
-
 1. `In`(variadic, T): Input data tensor(shape [M][1]).
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Output data tensors(shape [K][1], K equals to number of groups), Out[i] is the agg result for i-th group.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
-
-
 
 ### `GroupFirstOf`
 
@@ -1047,71 +615,15 @@ Out = [{0, 1, 4}, {9, 8, 5}]
 
 
 **Inputs:**
-
 1. `GroupId`(single, T): Input group id vector(shape [M][1]).
-
 1. `GroupNum`(single, T): Input number of groups vector(shape [1][1]).
-
 1. `In`(variadic, T): Input data tensor(shape [M][1]).
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Output data tensors(shape [K][1], K equals to number of groups), Out[i] is the agg result for i-th group.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
-
-
-
-### `GroupHeSum`
-
-Definition: Using HE to sum 'In' for each group.
-Example:
-
-```python
-GroupId = {0, 1, 0, 1, 2}
-GroupNum = {3}
-In = {0, 1, 2, 3, 4}
-Out = {2, 4, 4}
-```
-
-
-**Inputs:**
-
-1. `GroupId`(single, T): Input group id vector(shape [M][1]).
-
-1. `GroupNum`(single, T): Input number of groups vector(shape [1][1]).
-
-1. `In`(single, T): Input data tensor(shape [M][1]).
-
-
-**Outputs:**
-
-1. `Out`(single, T): Output data tensors(shape [K][1], K equals to number of groups), Out[i] is the agg result for i-th group.
-
-
-
-**Attributes:**
-
-1. `input_party_codes`: List of parties the inputs belong to([PartyCodeForGroupId/Num, PartyCodeForIn]).
-
-
-
-
-
-
-**TensorStatus(ShareType) Constraints:**
-
-1. `T`: private
-
-
 
 ### `GroupMax`
 
@@ -1127,28 +639,15 @@ Out = [{2, 3, 4}, {9, 8, 5}]
 
 
 **Inputs:**
-
 1. `GroupId`(single, T): Input group id vector(shape [M][1]).
-
 1. `GroupNum`(single, T): Input number of groups vector(shape [1][1]).
-
 1. `In`(variadic, T): Input data tensor(shape [M][1]).
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Output data tensors(shape [K][1], K equals to number of groups), Out[i] is the agg result for i-th group.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
-
-
 
 ### `GroupMin`
 
@@ -1164,28 +663,15 @@ Out = [{0, 1, 4}, {7, 6, 5}]
 
 
 **Inputs:**
-
 1. `GroupId`(single, T): Input group id vector(shape [M][1]).
-
 1. `GroupNum`(single, T): Input number of groups vector(shape [1][1]).
-
 1. `In`(variadic, T): Input data tensor(shape [M][1]).
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Output data tensors(shape [K][1], K equals to number of groups), Out[i] is the agg result for i-th group.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
-
-
 
 ### `GroupPercentileDisc`
 
@@ -1202,34 +688,68 @@ Out = [{0, 1, 4}, {7, 6, 5}]
 
 
 **Inputs:**
-
 1. `GroupId`(single, T): Input group id vector(shape [M][1]).
-
 1. `GroupNum`(single, T): Input number of groups vector(shape [1][1]).
-
 1. `In`(variadic, T): Input data tensor(shape [M][1]).
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Output data tensors(shape [K][1], K equals to number of groups), Out[i] is the agg result for i-th group.
 
-
-
 **Attributes:**
-
 1. `percent`: Float. The percentile to calculate the range of which is [0, 1], 0 means the min one, 1 means the max one.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
 
+### `GroupSecretAvg`
 
+Definition: Calculate secret AVG for each group.
+Example:
+
+```python
+GroupId = {0, 1, 0, 1, 2}
+GroupNum = {3}
+In = {0, 1, 2, 3, 4}
+Out = {1, 2, 4}
+```
+
+
+**Inputs:**
+1. `GroupId`(single, T): Input group id vector(shape [M][1]).
+1. `GroupNum`(single, T1): Input number of groups vector(shape [1][1]).
+1. `In`(single, T): Input data tensor(shape [M][1]).
+
+**Outputs:**
+1. `Out`(single, T): Output data tensors(shape [K][1], K equals to number of groups), Out[i] is the agg result for i-th group.
+
+**TensorStatus(ShareType) Constraints:**
+1. `T`: secret
+1. `T1`: public
+
+### `GroupSecretSum`
+
+Definition: Calculate secret SUM for each group.
+Example:
+
+```python
+GroupId = {0, 1, 0, 1, 2}
+GroupNum = {3}
+In = {0, 1, 2, 3, 4}
+Out = {2, 4, 4}
+```
+
+
+**Inputs:**
+1. `GroupId`(single, T): Input group id vector(shape [M][1]).
+1. `GroupNum`(single, T1): Input number of groups vector(shape [1][1]).
+1. `In`(single, T): Input data tensor(shape [M][1]).
+
+**Outputs:**
+1. `Out`(single, T): Output data tensors(shape [K][1], K equals to number of groups), Out[i] is the agg result for i-th group.
+
+**TensorStatus(ShareType) Constraints:**
+1. `T`: secret
+1. `T1`: public
 
 ### `GroupSum`
 
@@ -1245,28 +765,15 @@ Out = [{2, 4, 4}, {16, 14, 5}]
 
 
 **Inputs:**
-
 1. `GroupId`(single, T): Input group id vector(shape [M][1]).
-
 1. `GroupNum`(single, T): Input number of groups vector(shape [1][1]).
-
 1. `In`(variadic, T): Input data tensor(shape [M][1]).
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Output data tensors(shape [K][1], K equals to number of groups), Out[i] is the agg result for i-th group.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
-
-
 
 ### `If`
 
@@ -1282,34 +789,18 @@ Out = [0, 1, 0, 0]
 
 
 **Inputs:**
-
 1. `Condition`(single, T): Condition tensor.
-
 1. `ValueIfTrue`(single, T1): Value if true tensor.
-
 1. `ValueIfFalse`(single, T2): Value if false tensor.
 
-
 **Outputs:**
-
 1. `Out`(single, T3): Result tensor.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
 1. `T1`: public,private,secret
-
 1. `T2`: public,private,secret
-
 1. `T3`: public,private,secret
-
-
 
 ### `IfNull`
 
@@ -1324,26 +815,14 @@ Out = {0, 1, 10}
 
 
 **Inputs:**
-
 1. `Expr`(single, T): The expression to test whether is NULL
-
 1. `AltValue`(single, T): The value to return if Expr is NULL
 
-
 **Outputs:**
-
 1. `Out`(single, T): Result
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
-
-
 
 ### `In`
 
@@ -1359,111 +838,58 @@ Out = {False, True, False, True}
 
 
 **Inputs:**
-
 1. `Left`(single, T): First operand.
-
 1. `Right`(single, T1): Second operand.
 
-
 **Outputs:**
-
 1. `Out`(single, T): Output Tensor.
 
-
-
 **Attributes:**
-
 1. `in_type`: Int64. 0: PSI In, 1: Share In, 2: Local In
-
 1. `psi_algorithm`: Int64. PSI Algorithm for In. 0: Auto, 1: Ecdh, 2: Oprf;
-
 1. `input_party_codes`: List of parties the inputs belong to. This attribute is required if algorithm = PSI.
-
 1. `reveal_to`: A party can see the result. This attribute is required if algorithm = PSI.
 
-
-
-
-
-
 **Default Attribute Values:**
-
 1. `in_type`: 0
-
 1. `psi_algorithm`: 0
 
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
-
 1. `T1`: private
-
-
 
 ### `InsertTable`
 
 Definition: Insert the input tensor to existing table in Database. Note: This op will change the affected rows in the session
 
 **Inputs:**
-
 1. `In`(variadic, T): Tensors to be inserted to DB table.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Tensors have been inserted to DB table.
 
-
-
 **Attributes:**
-
 1. `table_name`: String. table to insert the tensors.
-
 1. `column_names`: String array. column names of table.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
-
-
 
 ### `IntDiv`
 
 Definition: Out = Left `IntDiv` Right
 
 **Inputs:**
-
 1. `Left`(variadic, T): First operand.
-
 1. `Right`(variadic, T1): Second operand.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T2): Output Tensor.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
 1. `T1`: public,private,secret
-
 1. `T2`: private,secret
-
-
 
 ### `IsNull`
 
@@ -1477,24 +903,13 @@ Out = {false, false, true}
 
 
 **Inputs:**
-
 1. `In`(single, T): Input tensor.
 
-
 **Outputs:**
-
 1. `Out`(single, T): Output tensor.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
-
-
 
 ### `Join`
 
@@ -1527,133 +942,70 @@ RightJoinIndex = {0,1,2,2,3} // shape:[K=5], rows after applied filter eq-join-l
 
 
 **Inputs:**
-
 1. `Left`(single, T1): Left vector(shape [M][1])
-
 1. `Right`(single, T1): Right vector(shape [N][1])
 
-
 **Outputs:**
-
 1. `LeftJoinIndex`(optional, T2): Joined rows index for left vector(shape [K][1])
-
 1. `RightJoinIndex`(optional, T2): Joined rows index for right vector(shape [K][1])
 
-
-
 **Attributes:**
-
 1. `input_party_codes`: List of parties the inputs belong to([PartyCodeLeft, PartyCodeRight]).
-
 1. `join_type`: Int64. 0: inner join; 1: left join; 2: right join;
-
 1. `psi_algorithm`: Choose PSI join algorithm, Int64. 0: Auto; 1: Ecdh; 2: Oprf;
 
-
-
-
-
-
 **Default Attribute Values:**
-
 1. `join_type`: 0
-
 1. `psi_algorithm`: 0
 
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T1`: private
-
 1. `T2`: private
-
-
 
 ### `Least`
 
 return the least value in the given expressions.
 
 **Inputs:**
-
 1. `In`(variadic, T): expressions passed for getting least value
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): least value
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
-
 
 ### `Less`
 
 Definition: Out = Left `Less` Right
 
 **Inputs:**
-
 1. `Left`(variadic, T): First operand.
-
 1. `Right`(variadic, T1): Second operand.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T2): Output Tensor.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
 1. `T1`: public,private,secret
-
 1. `T2`: private,secret
-
-
 
 ### `LessEqual`
 
 Definition: Out = Left `LessEqual` Right
 
 **Inputs:**
-
 1. `Left`(variadic, T): First operand.
-
 1. `Right`(variadic, T1): Second operand.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T2): Output Tensor.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
 1. `T1`: public,private,secret
-
 1. `T2`: private,secret
-
-
 
 ### `Limit`
 
@@ -1669,392 +1021,210 @@ Out = {b, c}
 
 
 **Inputs:**
-
 1. `In`(variadic, T): Tensors to be limited.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Output tensor.
 
-
-
 **Attributes:**
-
 1. `offset`: offset in limit
-
 1. `count`: count in limit
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
-
 
 ### `Ln`
 
 Definition: return the value of Ln function
 
 **Inputs:**
-
 1. `In`(single, T): the expression pass to Ln function
 
-
 **Outputs:**
-
 1. `Out`(single, T): Result
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
-
 
 ### `Log10`
 
 Definition: return the value of Log10 function
 
 **Inputs:**
-
 1. `In`(single, T): the expression pass to Log10 function
 
-
 **Outputs:**
-
 1. `Out`(single, T): Result
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
-
 
 ### `Log2`
 
 Definition: return the value of Log2 function
 
 **Inputs:**
-
 1. `In`(single, T): the expression pass to Log2 function
 
-
 **Outputs:**
-
 1. `Out`(single, T): Result
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
-
 
 ### `LogicalAnd`
 
 Definition: Out = Left `LogicalAnd` Right
 
 **Inputs:**
-
 1. `Left`(variadic, T): First operand.
-
 1. `Right`(variadic, T1): Second operand.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T2): Output Tensor.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
 1. `T1`: public,private,secret
-
 1. `T2`: private,secret
-
-
 
 ### `LogicalOr`
 
 Definition: Out = Left `LogicalOr` Right
 
 **Inputs:**
-
 1. `Left`(variadic, T): First operand.
-
 1. `Right`(variadic, T1): Second operand.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T2): Output Tensor.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
 1. `T1`: public,private,secret
-
 1. `T2`: private,secret
-
-
 
 ### `MakePrivate`
 
 Definition: Convert In tensor from share status to private status.
 
 **Inputs:**
-
 1. `In`(variadic, T1): Input tensors.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T2): Output tensors.
 
-
-
 **Attributes:**
-
 1. `reveal_to`: List of parties to see the private data. If it is revealed to one party only, the other party also needs to run the op, but does not have an output. Only the reveal_to party gets the output.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T1`: secret,public
-
 1. `T2`: private
-
-
 
 ### `MakePublic`
 
 Definition: Convert In tensor from share/private status to public status.
 
 **Inputs:**
-
 1. `In`(variadic, T1): Input tensors.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T2): Output tensors.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T1`: private,secret
-
 1. `T2`: public
-
-
 
 ### `MakeShare`
 
 Definition: Convert In tensor from private status to share status.
 
 **Inputs:**
-
 1. `In`(variadic, T1): Input tensors.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T2): Output tensors.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T1`: private
-
 1. `T2`: secret
-
-
 
 ### `Minus`
 
 Definition: Out = Left `Minus` Right
 
 **Inputs:**
-
 1. `Left`(variadic, T): First operand.
-
 1. `Right`(variadic, T1): Second operand.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T2): Output Tensor.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
 1. `T1`: public,private,secret
-
 1. `T2`: private,secret
-
-
 
 ### `Mod`
 
 Definition: Out = Left `Mod` Right
 
 **Inputs:**
-
 1. `Left`(variadic, T): First operand.
-
 1. `Right`(variadic, T1): Second operand.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T2): Output Tensor.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
 1. `T1`: public,private,secret
-
 1. `T2`: private,secret
-
-
 
 ### `Mul`
 
 Definition: Out = Left `Mul` Right
 
 **Inputs:**
-
 1. `Left`(variadic, T): First operand.
-
 1. `Right`(variadic, T1): Second operand.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T2): Output Tensor.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
 1. `T1`: public,private,secret
-
 1. `T2`: private,secret
-
-
 
 ### `Not`
 
 Definition:  Out = Not In
 
 **Inputs:**
-
 1. `In`(single, T): Input tensor.
 
-
 **Outputs:**
-
 1. `Out`(single, T): Output tensor.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
-
 
 ### `NotEqual`
 
 Definition: Out = Left `NotEqual` Right
 
 **Inputs:**
-
 1. `Left`(variadic, T): First operand.
-
 1. `Right`(variadic, T1): Second operand.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T2): Output Tensor.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
 1. `T1`: public,private,secret
-
 1. `T2`: private,secret
-
-
 
 ### `ObliviousGroupAvg`
 
@@ -2069,26 +1239,14 @@ Out = [{1, 3, 2.5, 3, 0}, {9, 8, 7.5, 7, 5}]
 
 
 **Inputs:**
-
 1. `Group`(single, T): End of group indicator(shape [M][1]). Element 1 means the row is the last element of the group, 0 is not.
-
 1. `In`(variadic, T): Values to be aggregated (shape [M][1]).
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Partially aggregated values (shape [M][1]).
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: secret
-
-
 
 ### `ObliviousGroupCount`
 
@@ -2103,26 +1261,14 @@ Out = [{1, 1, 2, 3, 1}, {1, 1, 2, 3, 1}]
 
 
 **Inputs:**
-
 1. `Group`(single, T): End of group indicator(shape [M][1]). Element 1 means the row is the last element of the group, 0 is not.
-
 1. `In`(variadic, T): Values to be aggregated (shape [M][1]).
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Partially aggregated values (shape [M][1]).
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: secret
-
-
 
 ### `ObliviousGroupMark`
 
@@ -2139,24 +1285,13 @@ Group = {0, 1, 1, 0, 1}
 
 
 **Inputs:**
-
 1. `Key`(variadic, T): Pre-sorted group keys (shape [M][1]).
 
-
 **Outputs:**
-
 1. `Group`(single, T): End of group indicator(shape [M][1]). Element 1 means the row is the last element of the group, 0 is not.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private,secret
-
-
 
 ### `ObliviousGroupMax`
 
@@ -2171,26 +1306,14 @@ Out = [{1, 3, 3, 4, 0}, {9, 8, 8, 8, 5}]
 
 
 **Inputs:**
-
 1. `Group`(single, T): End of group indicator(shape [M][1]). Element 1 means the row is the last element of the group, 0 is not.
-
 1. `In`(variadic, T): Values to be aggregated (shape [M][1]).
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Partially aggregated values (shape [M][1]).
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: secret
-
-
 
 ### `ObliviousGroupMin`
 
@@ -2205,26 +1328,14 @@ Out = [{1, 3, 2, 2, 0}, {9, 8, 7, 6, 5}]
 
 
 **Inputs:**
-
 1. `Group`(single, T): End of group indicator(shape [M][1]). Element 1 means the row is the last element of the group, 0 is not.
-
 1. `In`(variadic, T): Values to be aggregated (shape [M][1]).
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Partially aggregated values (shape [M][1]).
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: secret
-
-
 
 ### `ObliviousGroupSum`
 
@@ -2239,26 +1350,14 @@ Out = [{1, 3, 5, 9, 0}, {9, 8, 15, 21, 5}]
 
 
 **Inputs:**
-
 1. `Group`(single, T): End of group indicator(shape [M][1]). Element 1 means the row is the last element of the group, 0 is not.
-
 1. `In`(variadic, T): Values to be aggregated (shape [M][1]).
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Partially aggregated values (shape [M][1]).
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: secret
-
-
 
 ### `ObliviousPercentRank`
 
@@ -2273,26 +1372,14 @@ Out = [{1, 0.3333, 0.6666, 1, 1, 1}, {1, 0.3333, 0.6666, 1, 1, 1}]
 
 
 **Inputs:**
-
 1. `Group`(single, T): End of group indicator(shape [M][1]). Element 1 means the row is the last element of the group, 0 is not.
-
 1. `In`(variadic, T): Values to be aggregated (shape [M][1]).
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Partially aggregated values (shape [M][1]).
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: secret
-
-
 
 ### `ObliviousPercentileDisc`
 
@@ -2309,32 +1396,17 @@ Out = [{0, 1, 4}, {7, 6, 5}]
 
 
 **Inputs:**
-
 1. `Group`(single, T): End of group indicator(shape [M][1]). Element 1 means the row is the last element of the group, 0 is not.
-
 1. `In`(variadic, T): Values to be aggregated (shape [M][1]).
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Partially aggregated values (shape [M][1]).
 
-
-
 **Attributes:**
-
 1. `percent`: Float. The percentile to calculate the range of which is [0, 1], 0 means the min one, 1 means the max one.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: secret
-
-
 
 ### `ObliviousRank`
 
@@ -2349,174 +1421,94 @@ Out = [{2, 2, 1, 3, 1}, {3, 2, 1, 2, 1}]
 
 
 **Inputs:**
-
 1. `Group`(single, T): End of group indicator(shape [M][1]). Element 1 means the row is the last element of the group, 0 is not.
-
 1. `In`(variadic, T): Values to be aggregated (shape [M][1]).
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Partially aggregated values (shape [M][1]).
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: secret
-
-
 
 ### `PercentRank`
 
 Definition: return the percent rank in each partition
 
 **Inputs:**
-
 1. `Key`(variadic, T): the tensors which used for sorting in partition, e.g. [2,0,4,2,3,7]
-
 1. `PartitionId`(single, T): the partitioned id, e.g. [0,0,0,1,1,1], the first 3 in a group and the others are in another group
-
 1. `PartitionNum`(single, T): the partitioned num, e.g. [2]
 
-
 **Outputs:**
-
 1. `Out`(single, T): percent rank output
 
-
-
 **Attributes:**
-
 1. `reverse`: string array consists of "0" and "1", "0" means this input tensor sort by ascending, "1" means this tensor sort by descending.
 		e.g. ["0","1"] means the first input key sort by ascending, the second sort by descending
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
-
-
 
 ### `Pow`
 
 Definition: Out = Left `Pow` Right
 
 **Inputs:**
-
 1. `Left`(variadic, T): First operand.
-
 1. `Right`(variadic, T1): Second operand.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T2): Output Tensor.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
 1. `T1`: public,private,secret
-
 1. `T2`: private,secret
-
-
 
 ### `Publish`
 
 Definition: This operator publishes the DAG results.
 
 **Inputs:**
-
 1. `In`(variadic, T): Tensors to be published.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Published name of input tensors. Tensors are in TensorOption VALUE.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
-
-
 
 ### `Radians`
 
 Definition: return the value of Radians function
 
 **Inputs:**
-
 1. `In`(single, T): the expression pass to Radians function
 
-
 **Outputs:**
-
 1. `Out`(single, T): Result
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
-
 
 ### `Rank`
 
 Definition: return the rank in each partition
 
 **Inputs:**
-
 1. `Key`(variadic, T): the tensors which used for sorting in partition, e.g. [2,0,4,2,3,7]
-
 1. `PartitionId`(single, T): the partitioned id, e.g. [0,0,0,1,1,1], the first 3 in a group and the others are in another group
-
 1. `PartitionNum`(single, T): the partitioned num, e.g. [2]
 
-
 **Outputs:**
-
 1. `Out`(single, T): rank output
 
-
-
 **Attributes:**
-
 1. `reverse`: string array consists of "0" and "1", "0" means this input tensor sort by ascending, "1" means this tensor sort by descending.
 		e.g. ["0","1"] means the first input key sort by ascending, the second sort by descending
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
-
-
 
 ### `ReduceAvg`
 
@@ -2533,24 +1525,13 @@ Out = {2.5}
 
 
 **Inputs:**
-
 1. `In`(single, T): Tensor to be reduced (shape [M]).
 
-
 **Outputs:**
-
 1. `Out`(single, T): The average Tensor (shape [1]).
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private,secret
-
-
 
 ### `ReduceCount`
 
@@ -2564,24 +1545,13 @@ Out = {6}
 
 
 **Inputs:**
-
 1. `In`(single, T): Tensor to be counted (shape [M]).
 
-
 **Outputs:**
-
 1. `Out`(single, T): The counted Tensor (shape [1]).
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private,secret
-
-
 
 ### `ReduceMax`
 
@@ -2595,24 +1565,13 @@ Out = {6}
 
 
 **Inputs:**
-
 1. `In`(single, T): Tensor to be maxed (shape [M]).
 
-
 **Outputs:**
-
 1. `Out`(single, T): The maxed Tensor (shape [1]).
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private,secret
-
-
 
 ### `ReduceMin`
 
@@ -2626,24 +1585,13 @@ Out = {1}
 
 
 **Inputs:**
-
 1. `In`(single, T): Tensor to be mined (shape [M]).
 
-
 **Outputs:**
-
 1. `Out`(single, T): The mined Tensor (shape [1]).
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private,secret
-
-
 
 ### `ReducePercentileDisc`
 
@@ -2658,30 +1606,16 @@ Out = {3}
 
 
 **Inputs:**
-
 1. `In`(single, T): Tensor to be reduced (shape [M]).
 
-
 **Outputs:**
-
 1. `Out`(single, T): The value of given percentile position(shape [1]).
 
-
-
 **Attributes:**
-
 1. `percent`: Float. The percentile to calculate the range of which is [0, 1], 0 means the min one, 1 means the max one.
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private,secret
-
-
 
 ### `ReduceSum`
 
@@ -2695,24 +1629,13 @@ Out = {21}
 
 
 **Inputs:**
-
 1. `In`(single, T): Tensor to be summed (shape [M]).
 
-
 **Outputs:**
-
 1. `Out`(single, T): The summed Tensor (shape [1]).
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private,secret
-
-
 
 ### `Replicate`
 
@@ -2731,125 +1654,67 @@ the other party:
 
 
 **Inputs:**
-
 1. `Left`(variadic, T): Left tensors to be replicated.
-
 1. `Right`(variadic, T): Right tensors to be replicated.
 
-
 **Outputs:**
-
 1. `LeftOut`(variadic, T): Left Output tensors.
-
 1. `RightOut`(variadic, T): Right Output tensors.
 
-
-
 **Attributes:**
-
 1. `input_party_codes`: List of parties the inputs belong to([PartyCodeLeft, PartyCodeRight])
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
-
-
 
 ### `Round`
 
 Definition: return the value of Round function
 
 **Inputs:**
-
 1. `In`(single, T): the expression pass to Round function
 
-
 **Outputs:**
-
 1. `Out`(single, T): Result
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
-
 
 ### `RowNumber`
 
 Definition: return the row number in each partition
 
 **Inputs:**
-
 1. `Key`(variadic, T): the tensors which used for sorting in partition, e.g. [2,0,4,2,3,7]
-
 1. `PartitionId`(single, T): the partitioned id, e.g. [0,0,0,1,1,1], the first 3 in a group and the others are in another group
-
 1. `PartitionNum`(single, T): the partitioned num, e.g. [2]
 
-
 **Outputs:**
-
 1. `Out`(single, T): row number output
 
-
-
 **Attributes:**
-
 1. `reverse`: string array consists of "0" and "1", "0" means this input tensor sort by ascending, "1" means this tensor sort by descending.
 		e.g. ["0","1"] means the first input key sort by ascending, the second sort by descending
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
-
-
 
 ### `RunSQL`
 
 Definition: Run a SQL statement and return a list of tensors in private status
 
 **Inputs:**
-
 No input parameter.
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Result tensors of the SQL statement.
 
-
-
 **Attributes:**
-
 1. `sql`: SQL statement
-
 1. `table_refs`: tables referenced by query
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
-
-
 
 ### `SecretJoin`
 
@@ -2867,32 +1732,17 @@ RightOutput = {0,2,0,2,1,3}
 
 
 **Inputs:**
-
 1. `LeftKey`(variadic, T): Left keys for join
-
 1. `RightKey`(variadic, T): Right keys for join
-
-1. `Left`(variadic, T): Left payloads for join
-
-1. `Right`(variadic, T): Right payloads for join
-
+1. `Left`(optional, T): Left payloads for join
+1. `Right`(optional, T): Right payloads for join
 
 **Outputs:**
-
-1. `LeftOutput`(variadic, T): Left payloads after join
-
-1. `RightOutput`(variadic, T): Right payloads after join
-
-
-
-
-
+1. `LeftOutput`(optional, T): Left payloads after join
+1. `RightOutput`(optional, T): Right payloads after join
 
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: secret
-
-
 
 ### `Shape`
 
@@ -2906,39 +1756,20 @@ Out = { {2, 1}, {2, 1}, {3, 1} }
 
 
 **Inputs:**
-
 1. `In`(variadic, T): Input Tensors
 
-
 **Outputs:**
-
 1. `Out`(variadic, T1): Shape Tensors
 
-
-
 **Attributes:**
-
 1. `axis`: Int64. Specific dimension of the shape.
 
-
-
-
-
-
 **Default Attribute Values:**
-
 1. `axis`: -1
 
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
 1. `T1`: private
-
-
 
 ### `Shuffle`
 
@@ -2952,48 +1783,26 @@ Out = [{4, 3, 2, 1}, {6, 7, 8, 9}]
 
 
 **Inputs:**
-
 1. `In`(variadic, T): Input Value(shape [M][1]).
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Output Value(shape [M][1])
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: secret
-
-
 
 ### `Sin`
 
 Definition: return the value of sine function
 
 **Inputs:**
-
 1. `In`(single, T): the expression pass to sine function
 
-
 **Outputs:**
-
 1. `Out`(single, T): Result
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
-
 
 ### `Sort`
 
@@ -3008,87 +1817,46 @@ Out = [{1, 2, 3, 4}, {2, 3, 1, 4}, {8, 7, 9, 6}]
 
 
 **Inputs:**
-
 1. `Key`(variadic, T): Sort Key(shape [M][1]).
-
 1. `In`(variadic, T): Sort Value(shape [M][1]).
 
-
 **Outputs:**
-
 1. `Out`(variadic, T): Sorted Value(shape [M][1])
 
-
-
 **Attributes:**
-
 1. `reverse`: Bool. If True, the sorted tensor in descending order.
 
-
-
-
-
-
 **Default Attribute Values:**
-
 1. `reverse`: false
 
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private,secret
-
-
 
 ### `Sqrt`
 
 Definition: return the value of Sqrt function
 
 **Inputs:**
-
 1. `In`(single, T): the expression pass to Sqrt function
 
-
 **Outputs:**
-
 1. `Out`(single, T): Result
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
-
 
 ### `Tan`
 
 Definition: return the value of tangent function
 
 **Inputs:**
-
 1. `In`(single, T): the expression pass to tangent function
 
-
 **Outputs:**
-
 1. `Out`(single, T): Result
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: public,private,secret
-
-
 
 ### `Unique`
 
@@ -3102,23 +1870,10 @@ UniqueKey = {"a", "b", "d"}
 
 
 **Inputs:**
-
 1. `Key`(single, T): Input key tensors(shape [M][1]).
 
-
 **Outputs:**
-
 1. `UniqueKey`(single, T): Output unique key tensor(shape [K][1]).
 
-
-
-
-
-
 **TensorStatus(ShareType) Constraints:**
-
 1. `T`: private
-
-
-
-

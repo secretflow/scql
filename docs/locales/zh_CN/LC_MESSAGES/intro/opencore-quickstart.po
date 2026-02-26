@@ -1,0 +1,128 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C)
+# This file is distributed under the same license as the SCQL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: SCQL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-02-24 17:24+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: ../../intro/opencore-quickstart.rst:2
+msgid "SCQL OpenCore Quickstart"
+msgstr "SCQL OpenCore 快速入门"
+
+#: ../../intro/opencore-quickstart.rst:4
+msgid "This guide shows how to use SCQL's native compiler + engine architecture."
+msgstr "本指南展示如何使用 SCQL 的原生编译器 + 引擎架构。"
+
+#: ../../intro/opencore-quickstart.rst:7
+msgid "Architecture Overview"
+msgstr "架构概览"
+
+#: ../../intro/opencore-quickstart.rst:9
+msgid "SCQL consists of two components:"
+msgstr "SCQL 由两个组件组成："
+
+#: ../../intro/opencore-quickstart.rst:11
+msgid "**Compiler**: Translates SQL queries into secure execution plans"
+msgstr "**编译器**: 将 SQL 查询转换为安全执行计划"
+
+#: ../../intro/opencore-quickstart.rst:12
+msgid "**Engine**: Executes plans using MPC protocols"
+msgstr "**引擎**: 使用 MPC 协议执行计划"
+
+#: ../../intro/opencore-quickstart.rst:14
+msgid "Workflow:"
+msgstr "工作流程："
+
+#: ../../intro/opencore-quickstart.rst:16
+msgid "Compile SQL to execution plan"
+msgstr "编译 SQL 为执行计划"
+
+#: ../../intro/opencore-quickstart.rst:17
+msgid "Send plan to engine nodes"
+msgstr "将计划发送到引擎节点"
+
+#: ../../intro/opencore-quickstart.rst:18
+msgid "Get query results"
+msgstr "获取查询结果"
+
+#: ../../intro/opencore-quickstart.rst:21
+msgid "Quick Start"
+msgstr "快速开始"
+
+#: ../../intro/opencore-quickstart.rst:24
+msgid "Setup"
+msgstr "环境设置"
+
+#: ../../intro/opencore-quickstart.rst:37
+msgid "Run Example"
+msgstr "运行示例"
+
+#: ../../intro/opencore-quickstart.rst:44
+msgid "This compiles a SQL query and executes it across Alice and Bob's engines."
+msgstr "这会编译一个 SQL 查询并在 Alice 和 Bob 的引擎上执行。"
+
+#: ../../intro/opencore-quickstart.rst:46
+msgid "**Output:**"
+msgstr "**输出:**"
+
+#: ../../intro/opencore-quickstart.rst:83
+msgid "Configuration"
+msgstr "配置"
+
+#: ../../intro/opencore-quickstart.rst:85
+msgid ""
+"This is the configuration for ``examples/opencore-demo``, containing the "
+"minimal configuration required when integrating compiler + engine. For "
+"more tutorial information, please refer to the ``examples/tutorial`` "
+"directory."
+msgstr "这是 ``examples/opencore-demo`` 的配置示例，包含了集成编译器 + 引擎时所需的最小配置。更多教程信息请参考 ``examples/tutorial`` 目录。"
+
+#: ../../intro/opencore-quickstart.rst:87
+msgid "**Minimal Example:**"
+msgstr "**最小示例:**"
+
+#: ../../intro/opencore-quickstart.rst:180
+msgid "Integration"
+msgstr "集成"
+
+#: ../../intro/opencore-quickstart.rst:183
+msgid "Basic Usage"
+msgstr "基本用法"
+
+#: ../../intro/opencore-quickstart.rst:219
+msgid "For complete code, see ``examples/opencore-demo/main.go``."
+msgstr "完整代码请参见 ``examples/opencore-demo/main.go``。"
+
+#: ../../intro/opencore-quickstart.rst:222
+msgid "Next Steps"
+msgstr "下一步"
+
+#: ../../intro/opencore-quickstart.rst:224
+msgid "Compiler configuration: :doc:`/reference/compiler-config`"
+msgstr "编译器配置: :doc:`/reference/compiler-config`"
+
+#: ../../intro/opencore-quickstart.rst:225
+msgid "Engine configuration: :doc:`/reference/engine-config`"
+msgstr "引擎配置: :doc:`/reference/engine-config`"
+
+#: ../../intro/opencore-quickstart.rst:226
+msgid "Implementation status: :doc:`/reference/implementation-status`"
+msgstr "实现状态: :doc:`/reference/implementation-status`"
+
+#: ../../intro/opencore-quickstart.rst:227
+msgid "Examples: ``examples/opencore-demo/`` and ``examples/tutorial/``"
+msgstr "示例: ``examples/opencore-demo/`` 和 ``examples/tutorial/``"

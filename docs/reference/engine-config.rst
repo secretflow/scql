@@ -21,7 +21,7 @@ Example configuration for SCQLEngine
 Configuration Options of SCQLEngine
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-SCQLEngine can cooperate with upper-layer modules such as SCDB and SCQLBroker according to the deployment mode. ``Driver`` is used in the configuration items to represent these upper-layer modules.
+SCQLEngine works with the native compiler to execute query plans. In the configuration, ``Driver`` refers to the module that sends execution plans to the engine.
 
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
 |                      Name                       |       Default       |                                                               Description                                                               |
@@ -120,8 +120,6 @@ SCQLEngine can cooperate with upper-layer modules such as SCDB and SCQLBroker ac
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
 | db_connection_info                              | none                | Connection string used to connect to mysql                                                                                              |
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
-| enable_he_schema_type_ou                        | false               | Whether to use OU to speed up HeSum, use ZPaillier by default for security, see: `heu/ou`_                                              |
-+-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
 | enable_self_auth                                | true                | Whether enable self identity authentication                                                                                             |
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
 | private_key_pem_path                            | none                | Path to private key pem file                                                                                                            |
@@ -152,7 +150,7 @@ SCQLEngine can cooperate with upper-layer modules such as SCDB and SCQLBroker ac
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
 | output_s3_secret_key                            | none                | The secret access key of output s3/minio/oss                                                                                            |
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
-| output_s3_enable_ssl                            | true                | Default enable ssl, if s3 server not enable ssl, set to false                                                                           |
+| output_s3_enalbe_ssl                            | true                | Default enable ssl, if s3 server not enable ssl, set to false                                                                           |
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
 | output_s3_ca_dir_path                           | /etc/ssl/certs/     | Directory where the certificates stored to verify s3 server                                                                             |
 +-------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
@@ -193,7 +191,9 @@ Config for datasource
 ^^^^^^^^^^^^^^^^^^^^^
 datasources(MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL) are where the SCQLEngine gets its data from.
 
-``datasource_router`` is design to support multi datasources, currently only supported: embed, which is initialized with ``embed_router_conf`` first, a json string like::
+``datasource_router`` is design to support multi datasources, currently supported: ``embed`` and ``http``.
+
+For ``embed`` type, which is initialized with ``embed_router_conf`` first, a json string like::
 
   "datasources": [
     {
@@ -212,6 +212,10 @@ datasources(MySQL/SQLite3/PostgreSQL/CSVDB/ArrowSQL) are where the SCQLEngine ge
   ]
 
 if ``embed_router_conf`` is empty, embed_router will try to initialized with ``db_connection_info``.
+
+For ``http`` type, ``http_router_endpoint`` must be set and will be accessed to get database information.
+
+Example of a mock http router server: `mock http router`_.
 
 Embed router
 """"""""""""
@@ -301,7 +305,7 @@ SCQLEngine uses **Brpc** to communicate with Driver and other peer SCQLEngines, 
 
 Config for SSL
 ^^^^^^^^^^^^^^
-If you want to enable SSL in SCQLEngine, add FLAGS as follows. Additionally, it may be necessary to configure the Driver to work with TLS, please refer :ref:`TLS in SCDB <scdb-tls>` or :ref:`TLS in SCQLBroker <broker-tls>`.
+If you want to enable SSL in SCQLEngine, add FLAGS as follows.
 
 .. code-block::
 
@@ -310,7 +314,7 @@ If you want to enable SSL in SCQLEngine, add FLAGS as follows. Additionally, it 
   --server_ssl_private_key=${file path of key}
   # set peer_engine_enable_ssl_as_client to true when peer SCQLEngine has https enabled
   --peer_engine_enable_ssl_as_client=true
-  # set driver_enable_ssl_as_client to true when the Driver has https enabled (SCDB or SCQLBroker's IntraServer)
+  # set driver_enable_ssl_as_client to true when the Driver has https enabled
   --driver_enable_ssl_as_client=true
 
 Config for party authentication
@@ -322,3 +326,5 @@ For security, SCQLEngine enables party authentication by default. SCQLEngine wil
 .. _psi curve type: https://www.secretflow.org.cn/en/docs/psi/main/reference/psi_config#curvetype
 
 .. _replay attacks: https://en.wikipedia.org/wiki/Replay_attack
+
+.. _mock http router: https://github.com/secretflow/scql/blob/main/engine/datasource/mock_router_readme.md

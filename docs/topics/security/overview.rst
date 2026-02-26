@@ -4,16 +4,16 @@ Security overview
 Security Guarantees and Threat Model
 ------------------------------------
 
-For a single query, SCQL protects the confidentiality of data that meets the CCL permission requirements during the computation process.
+For a single query, SCQL protects the confidentiality of data during the computation process according to the security configuration.
 
 SCQL does not protect queries as queries are designed to be public to all participants in SCQL. SCQL also does not protect the size (dimension) information of intermediate computation results.
 
-SCQL is built on top of the MPC framework `secretflow/spu`_, using a semi-honest security model. The SCQL semi-honest model assumes that all participants, including the query issuer, the data owner (SCQLEngine is deployed on the data owner) and SCDB server, strictly abide by the protocol, but may try to learn others' private data from its legitimately received messages.
+SCQL is built on top of the MPC framework `secretflow/spu`_, using a semi-honest security model. The SCQL semi-honest model assumes that all participants, including the query issuer and the data owners (SCQLEngine is deployed on each data owner), strictly abide by the protocol, but may try to learn others' private data from legitimately received messages.
 
 .. warning::
     If you select the SEMI2K as SCQL's underlying mpc protocol, it is recommended to use the `TrustedThirdParty beaver provider`_ [#f1]_. The other beaver provider mode `TrustedFirstParty beaver provider`_ should only be used for testing and debugging purposes.
 
-Like all cryptography-based privacy-preserving computing systems, SCQL at this stage cannot solve the problem of deducing original privacy data based on the results of legal queries. The current academic solution to this problem is generally to add noise into data through differential privacy mechanism. Although the CCL mechanism allows the data owners to restrict the use of their data, which can alleviate risks to a certain extent, it cannot completely eliminate the risks. SCQL also does not solve the problem of participants tampering with their original input to obtain other participants' private information.
+Like all cryptography-based privacy-preserving computing systems, SCQL at this stage cannot solve the problem of deducing original privacy data based on the results of legal queries. The current academic solution to this problem is generally to add noise into data through differential privacy mechanism. Although security configurations allow data owners to control data access, which can alleviate risks to a certain extent, it cannot completely eliminate the risks. SCQL also does not solve the problem of participants tampering with their original input to obtain other participants' private information.
 
 The following chapters will describe possible attack methods for inferring data from results, and give corresponding suggestions.
 
@@ -21,9 +21,7 @@ The following chapters will describe possible attack methods for inferring data 
 Suggestions on Deployment
 -------------------------
 
-The SCDB Server serves as a central coordination component in the SCQL system, responsible for translating the query into a hybrid MPC-plaintext execution graph, and then dispatching it to the SCQLEngines deployed on each individual participant for execution. The SCDB server is responsible for generating execution graphs, and it should not be evil. To dispel participants' concerns about the SCDB server potentially engaging in malicious behavior, it is recommended to deploy the SCDB server in a trusted third party.
-
-If the trusted third party is not exist, you are recommended to deploy SCQL system in P2P mode. refer to :doc:`/topics/system/intro-p2p` for details.
+In the current OpenCore architecture, the native compiler and engines work directly together. Please refer to ``examples/opencore-demo/`` for the recommended deployment approach and security configuration.
 
 
 Risk Statement and Suggestion for SCQL Result Inversion Attack
@@ -58,7 +56,7 @@ Suggestions
 System Security Configuration Instructions
 ------------------------------------------
 
-1. SCQL supports HTTPS protocol, it is recommended to enable HTTPS by default. Please see :ref:`SCDB TLS Configuration <scdb-tls>` and :ref:`SCQLEngine TLS Configuration <scqlengine-tls>` for details on how to enable HTTPS for SCDBServer and SCQLEngine.
+1. SCQL supports HTTPS protocol, it is recommended to enable HTTPS by default. Please see :ref:`SCQLEngine TLS Configuration <scqlengine-tls>` for details on how to enable HTTPS for SCQLEngine.
 
 
 Suggestions for upstream integrators
