@@ -48,14 +48,16 @@ type Config struct {
 	CompileOpts         *v1.CompileOptions         `json:"compile_opts"`          // Compile options
 }
 
-func main() {
-	var configFile string
-	var showHelp bool
-	var sql string
+var configFile string
+var showHelp bool
+var sql string
+var printGraph bool
 
+func main() {
 	flag.StringVar(&configFile, "config", "", "Path to config JSON file")
 	flag.BoolVar(&showHelp, "help", false, "Show help message")
 	flag.StringVar(&sql, "sql", "", "SQL query to execute (overrides config file SQL if provided)")
+	flag.BoolVar(&printGraph, "print", false, "Print the graph")
 	flag.Parse()
 
 	if showHelp || configFile == "" {
@@ -141,6 +143,14 @@ func compileSQL(ctx context.Context, config *Config) (*pb.CompiledPlan, error) {
 	compiledPlan, err := compiler.Compile(ctx, req)
 	if err != nil {
 		return nil, err
+	}
+
+	if printGraph {
+		graph, err := compiler.CompileToExecutionGraph(ctx, req)
+		if err != nil {
+			return nil, fmt.Errorf("failed to compile to execution graph: %w", err)
+		}
+		logrus.Info(graph.DumpGraphviz())
 	}
 
 	return compiledPlan, nil

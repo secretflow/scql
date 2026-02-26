@@ -1,5 +1,5 @@
 {
-    "sql": "SELECT a.ID, a.credit_rank, a.age, b.order_amount, b.is_active FROM user_credit a JOIN user_stats b ON a.ID = b.ID WHERE a.age > 18",
+    "sql": "SELECT a.credit_rank, COUNT(b.order_amount) FROM user_credit a JOIN user_stats b ON a.ID = b.ID GROUP BY a.credit_rank",
     "catalog": {
         "tables": [
             {
@@ -60,8 +60,79 @@
         ]
     },
     "security_conf": {
+        "global_relaxation": {
+            "reveal_group_count": true,
+            "reveal_group_mark": true,
+            "reveal_key_after_join": true,
+            "reveal_filter_mask": true
+        },
+        "column_visibility_list": [
+            {
+                "table": "user_credit",
+                "column": "ID",
+                "visible_parties": [
+                    {
+                        "code": "bob"
+                    }
+                ]
+            },
+            {
+                "table": "user_credit",
+                "column": "credit_rank",
+                "visible_parties": [
+                    {
+                        "code": "bob"
+                    }
+                ]
+            },
+            {
+                "table": "user_credit",
+                "column": "income",
+                "visible_parties": [
+                    {
+                        "code": "bob"
+                    }
+                ]
+            },
+            {
+                "table": "user_credit",
+                "column": "age",
+                "visible_parties": [
+                    {
+                        "code": "bob"
+                    }
+                ]
+            },
+            {
+                "table": "user_stats",
+                "column": "ID",
+                "visible_parties": [
+                    {
+                        "code": "alice"
+                    }
+                ]
+            },
+            {
+                "table": "user_stats",
+                "column": "order_amount",
+                "visible_parties": [
+                    {
+                        "code": "alice"
+                    }
+                ]
+            },
+            {
+                "table": "user_stats",
+                "column": "is_active",
+                "visible_parties": [
+                    {
+                        "code": "alice"
+                    }
+                ]
+            }
+        ],
         "reverse_inference_conf": {
-            "enable_reverse_inference": false
+            "enable_reverse_inference": true
         }
     },
     "engine_endpoints": {
