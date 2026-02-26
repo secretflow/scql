@@ -1132,7 +1132,7 @@ msgstr "SSL配置"
 
 #: ../../reference/engine-config.rst:308
 msgid "If you want to enable SSL in SCQLEngine, add FLAGS as follows."
-msgstr ""
+msgstr "如果你想在SCQLEngine中启用SSL，请添加以下FLAGS。"
 
 #: ../../reference/engine-config.rst:321
 msgid "Config for party authentication"
