@@ -52,10 +52,11 @@ func main() {
 	var configFile string
 	var showHelp bool
 	var sql string
-
+	var graphvizFile string
 	flag.StringVar(&configFile, "config", "", "Path to config JSON file")
 	flag.BoolVar(&showHelp, "help", false, "Show help message")
 	flag.StringVar(&sql, "sql", "", "SQL query to execute (overrides config file SQL if provided)")
+	flag.StringVar(&graphvizFile, "graphviz", "", "Output execution graph to specified .dot file")
 	flag.Parse()
 
 	if showHelp || configFile == "" {
@@ -74,20 +75,20 @@ func main() {
 	}
 
 	// Execute the workflow
-	if err := execute(config); err != nil {
+	if err := execute(config, graphvizFile); err != nil {
 		logrus.Fatalf("Execution failed: %v", err)
 	}
 
 	logrus.Info("Execution completed successfully")
 }
 
-func execute(config *Config) error {
+func execute(config *Config, graphvizFile string) error {
 	ctx := context.Background()
 
 	// Step 1: Compile SQL to execution plan
 	logrus.Info("Step 1: Compiling SQL to execution plan...")
 
-	compiledPlan, err := compileSQL(ctx, config)
+	compiledPlan, err := compileSQL(ctx, config, graphvizFile)
 	if err != nil {
 		return fmt.Errorf("compilation failed: %w", err)
 	}
@@ -109,7 +110,7 @@ func execute(config *Config) error {
 	return nil
 }
 
-func compileSQL(ctx context.Context, config *Config) (*pb.CompiledPlan, error) {
+func compileSQL(ctx context.Context, config *Config, graphvizFile string) (*pb.CompiledPlan, error) {
 	// Validate required fields
 	if config.Catalog == nil {
 		return nil, fmt.Errorf("catalog is required")
@@ -137,13 +138,20 @@ func compileSQL(ctx context.Context, config *Config) (*pb.CompiledPlan, error) {
 		},
 	}
 
-	// Compile
-	compiledPlan, err := compiler.Compile(ctx, req)
+	// Use DetailedCompile to get both ExecutionPlan and ExecutionGraph in one pass
+	details, err := compiler.DetailedCompile(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
-	return compiledPlan, nil
+	if graphvizFile != "" && details.ExecutionGraph != nil {
+		if err := os.WriteFile(graphvizFile, []byte(details.ExecutionGraph.DumpGraphviz()), 0644); err != nil {
+			return nil, fmt.Errorf("failed to write graphviz file: %w", err)
+		}
+		logrus.Infof("Execution graph written to %s", graphvizFile)
+	}
+
+	return details.ExecutionPlan, nil
 }
 
 func executePlan(ctx context.Context, conf *Config, compiledPlan *pb.CompiledPlan) (*pb.QueryResult, error) {
@@ -431,74 +439,36 @@ func loadConfig(filename string) (*Config, error) {
 	return &config, nil
 }
 
+// printHelp prints usage information for the opencore-demo tool.
+// For complete configuration documentation, see the Config struct definition above.
 func printHelp() {
-	fmt.Println(`opencore-demo - SCQL Compiler and Executor Tool
-
-Usage:
-  ./opencore-demo --config <config.json> --sql "SELECT * FROM my_table"(optional)
+	fmt.Println(`Usage: opencore-demo --config <file> [options]
 
 Description:
-  This tool compiles SCQL queries and executes them on SCQL engines in a multi-party setup.
-
-  The workflow:
-  1. Compile SQL query to execution graph
-  2. Distribute and execute the graph across multiple SCQL engines
-  3. Display query results
-
-Config File Format (JSON):
-  {
-    "sql": "SELECT * FROM my_table",
-    "catalog": {
-      "tables": [{
-        "table_name": "my_table",
-        "columns": [
-          {"name": "id", "type": "string", "ordinal_position": 1},
-          {"name": "value", "type": "int", "ordinal_position": 2}
-        ],
-        "ref_table": "alice.my_table",
-        "db_type": "mysql",
-        "owner": {"code": "alice"}
-      }]
-    },
-    "security_conf": {
-      "reverse_inference_conf": {
-        "enable_reverse_inference": false
-      }
-    },
-    "engine_endpoints": {
-      "alice": "localhost:8003",
-      "bob": "localhost:8005"
-    },
-    "engine_link_endpoints": {
-      "alice": "localhost:8004",
-      "bob": "localhost:8006"
-    },
-    "engine_client_type": "GRPC",
-    "engine_timeout": 300,
-    "tls_ca_cert": "/path/to/ca.crt",
-    "issuer": "alice",
-    "compile_opts": {
-      "spu_conf": {
-        "protocol": "SEMI2K",
-        "field": "FM64"
-      },
-      "batched": false
-    }
-  }
-
-  Field Details:
-    - catalog: Database catalog metadata (see api/interpreter.proto for Catalog message)
-    - security_conf: Security configuration (see api/v1alpha1/compiler.proto for CompilerSecurityConfig)
-    - compile_opts: Compilation options (see api/v1alpha1/compiler.proto for CompileOptions)
-
-Examples:
-  ./opencore-demo --config example_config.json
+  Compile and execute SCQL queries across multiple SCQL engines in a multi-party
+  computation setup. The tool compiles SQL into an execution graph, distributes
+  it to engines, and displays the results.
 
 Options:
-  --config string
-        Path to config JSON file (required)
-  --sql string
-        SQL query to execute, if provided will override the SQL in the config file (optional)
-  --help
-        Show this help message`)
+  --config string    Path to config JSON file (required)
+  --sql string       SQL query to execute (overrides config file)
+  --graphviz string  Output execution graph to specified .dot file
+  --help             Show this help message
+
+Config file fields:
+  sql                  Query string
+  catalog              Database metadata (api/interpreter.proto:Catalog)
+  security_conf        Security settings (api/v1alpha1/compiler.proto:CompilerSecurityConfig)
+  compile_opts         Compilation options (api/v1alpha1/compiler.proto:CompileOptions)
+  engine_endpoints     Map<party_code, endpoint> for client connections
+  engine_link_endpoints Map<party_code, endpoint> for engine-to-engine communication
+  engine_client_type   "HTTP" or "GRPC" (default: "HTTP")
+  engine_timeout       Timeout in seconds (default: 300)
+  tls_ca_cert          Path to CA certificate (required for GRPC)
+  issuer               Party code of the query issuer
+
+Examples:
+  opencore-demo --config example_config.json
+  opencore-demo --config example_config.json --sql "SELECT * FROM table"
+  opencore-demo --config example_config.json --graphviz graph.dot`)
 }
