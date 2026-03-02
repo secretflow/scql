@@ -441,74 +441,36 @@ func loadConfig(filename string) (*Config, error) {
 	return &config, nil
 }
 
+// printHelp prints usage information for the opencore-demo tool.
+// For complete configuration documentation, see the Config struct definition above.
 func printHelp() {
-	fmt.Println(`opencore-demo - SCQL Compiler and Executor Tool
-
-Usage:
-  ./opencore-demo --config <config.json> --sql "SELECT * FROM my_table"(optional)
+	fmt.Println(`Usage: opencore-demo --config <file> [options]
 
 Description:
-  This tool compiles SCQL queries and executes them on SCQL engines in a multi-party setup.
-
-  The workflow:
-  1. Compile SQL query to execution graph
-  2. Distribute and execute the graph across multiple SCQL engines
-  3. Display query results
-
-Config File Format (JSON):
-  {
-    "sql": "SELECT * FROM my_table",
-    "catalog": {
-      "tables": [{
-        "table_name": "my_table",
-        "columns": [
-          {"name": "id", "type": "string", "ordinal_position": 1},
-          {"name": "value", "type": "int", "ordinal_position": 2}
-        ],
-        "ref_table": "alice.my_table",
-        "db_type": "mysql",
-        "owner": {"code": "alice"}
-      }]
-    },
-    "security_conf": {
-      "reverse_inference_conf": {
-        "enable_reverse_inference": false
-      }
-    },
-    "engine_endpoints": {
-      "alice": "localhost:8003",
-      "bob": "localhost:8005"
-    },
-    "engine_link_endpoints": {
-      "alice": "localhost:8004",
-      "bob": "localhost:8006"
-    },
-    "engine_client_type": "GRPC",
-    "engine_timeout": 300,
-    "tls_ca_cert": "/path/to/ca.crt",
-    "issuer": "alice",
-    "compile_opts": {
-      "spu_conf": {
-        "protocol": "SEMI2K",
-        "field": "FM64"
-      },
-      "batched": false
-    }
-  }
-
-  Field Details:
-    - catalog: Database catalog metadata (see api/interpreter.proto for Catalog message)
-    - security_conf: Security configuration (see api/v1alpha1/compiler.proto for CompilerSecurityConfig)
-    - compile_opts: Compilation options (see api/v1alpha1/compiler.proto for CompileOptions)
-
-Examples:
-  ./opencore-demo --config example_config.json
+  Compile and execute SCQL queries across multiple SCQL engines in a multi-party
+  computation setup. The tool compiles SQL into an execution graph, distributes
+  it to engines, and displays the results.
 
 Options:
-  --config string
-        Path to config JSON file (required)
-  --sql string
-        SQL query to execute, if provided will override the SQL in the config file (optional)
-  --help
-        Show this help message`)
+  --config string    Path to config JSON file (required)
+  --sql string       SQL query to execute (overrides config file)
+  --print            Print the execution graphviz
+  --help             Show this help message
+
+Config file fields:
+  sql                  Query string
+  catalog              Database metadata (api/interpreter.proto:Catalog)
+  security_conf        Security settings (api/v1alpha1/compiler.proto:CompilerSecurityConfig)
+  compile_opts         Compilation options (api/v1alpha1/compiler.proto:CompileOptions)
+  engine_endpoints     Map<party_code, endpoint> for client connections
+  engine_link_endpoints Map<party_code, endpoint> for engine-to-engine communication
+  engine_client_type   "HTTP" or "GRPC" (default: "HTTP")
+  engine_timeout       Timeout in seconds (default: 300)
+  tls_ca_cert          Path to CA certificate (required for GRPC)
+  issuer               Party code of the query issuer
+
+Examples:
+  opencore-demo --config config.json
+  opencore-demo --config config.json --sql "SELECT * FROM table"
+  opencore-demo --config config.json --sql "SELECT * FROM table" --print`)
 }
