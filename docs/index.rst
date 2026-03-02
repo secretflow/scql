@@ -8,19 +8,26 @@ SCQL Documentation
 
 Secure Collaborative Query Language (SCQL) is a system that translates SQL statements into a hybrid MPC-plaintext execution graph and executes them on a federation of database systems. The MPC framework is powered by `SPU <https://github.com/secretflow/spu>`_.
 
+.. important::
+
+   **You are viewing SCQL 2.0 OpenCore documentation.**
+
+   SCQL 2.0 uses a native **Compiler + Engine** architecture. Previous components (SCDB, SCQLBroker, CCL) are no longer supported.
+
+   Looking for SCQL 1.x documentation? Visit `SCQL 1.0.0b1 docs <https://www.secretflow.org.cn/en/docs/scql/1.0.0b1/>`_.
+
 
 Getting started
 ---------------
 
-Follow the :doc:`tutorial </intro/p2p-tutorial>` and try out SCQL on your machine!
+Follow the :doc:`OpenCore Quickstart </intro/opencore-quickstart>` to get started with SCQL's native compiler + engine architecture.
 
 
 SCQL Systems
 ------------
 
 - **Overview**:
-  :doc:`System overview and architecture </topics/system/intro>` |
-  :doc:`P2P vs. Centralized </topics/system/deploy-arch>`
+  :doc:`SCQL system overview </topics/system/intro>`
 
 - **Security**:
   :doc:`Security overview </topics/security/overview>`
@@ -37,49 +44,15 @@ The SCQL Language
   :doc:`Compatibility with MySQL </reference/lang/mysql-compatibility>`
 
 
-Column Control List (CCL)
--------------------------
-
-- **Overview**:
-  :doc:`Introduction to CCL </topics/ccl/intro>`
-
-- **Guides**:
-  :doc:`Common usage and advice </topics/ccl/usage>`
-
-- **Reference**:
-  :ref:`GRANT and REVOKE <scql_grant_revoke>` |
-  :ref:`How CCL works <how_ccl_works>`
-
-
-Clients
--------
-
-* **P2P**
-
-  - :doc:`Broker HTTP API reference </reference/broker-api>`
-
-
-* **Centralized**
-
-  - :doc:`Overview of SCQL clients </topics/clients/integrate-scdb>`
-  - :doc:`SCDB HTTP API reference </reference/scdb-api>`
-
-
 Deployment
 ----------
 
-* **P2P**
+.. note::
+   The previous deployment modes (P2P, Centralized, and Kuscia) are **deprecated and no longer supported**.
 
-  - **Guides**: :doc:`P2P Deployment </topics/deployment/how-to-deploy-p2p-cluster>`
-  - **Reference**: :doc:`P2P Configuration </reference/p2p-deploy-config>`
+   **Recommended approach**: Use native compiler + engine integration.
 
-* **Centralized**
-
-  - **Guides:** :doc:`Centralized Deployment </topics/deployment/how-to-deploy-centralized-cluster>`
-  - **Reference**: :doc:`Centralized Configuration </reference/centralized-deploy-config>`
-
-
-* **With Kuscia**: :doc:`Run SCQL on Kuscia </topics/deployment/run-scql-on-kuscia>`
+   - See ``examples/opencore-demo/`` for integration examples
 
 
 For contributors

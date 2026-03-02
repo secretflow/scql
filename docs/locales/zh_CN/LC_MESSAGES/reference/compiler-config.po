@@ -1,0 +1,410 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C)
+# This file is distributed under the same license as the SCQL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: SCQL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-02-24 17:00+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: ../../reference/compiler-config.rst:4
+msgid "SCQL Compiler Configuration"
+msgstr "SCQL 编译器配置"
+
+#: ../../reference/compiler-config.rst:6
+msgid ""
+"The SCQL compiler translates SQL queries into secure execution plans. "
+"This document describes the configuration options for the compiler API."
+msgstr "SCQL 编译器将 SQL 查询转换为安全执行计划。本文档描述编译器 API 的配置选项。"
+
+#: ../../reference/compiler-config.rst:10
+msgid "CompileSQLRequest"
+msgstr "CompileSQLRequest 编译请求"
+
+#: ../../reference/compiler-config.rst:12
+msgid "The main request message for compiling SQL queries."
+msgstr "编译 SQL 查询的主要请求消息。"
+
+#: ../../reference/compiler-config.rst:14
+msgid "**query** (*required*): The SQL query string to compile"
+msgstr "**query** （*必需*）：要编译的 SQL 查询字符串"
+
+#: ../../reference/compiler-config.rst:15
+msgid "**db** (*optional*): Database name"
+msgstr "**db** （*可选*）：数据库名称"
+
+#: ../../reference/compiler-config.rst:16
+#, python-brace-format
+msgid ""
+"**issuer** (*required*): The party code of the query issuer (e.g., "
+"``{\"code\": \"alice\"}``)"
+msgstr "**issuer** （*必需*）：查询发起方的参与方代码（例如， ``{\"code\": \"alice\"}`` ）"
+
+#: ../../reference/compiler-config.rst:17
+msgid ""
+"**catalog** (*required*): Database catalog metadata describing tables and"
+" columns, see :ref:`catalog_config`"
+msgstr "**catalog** （*必需*）：描述表和列的数据库目录元数据，参见 :ref:`catalog_config`"
+
+#: ../../reference/compiler-config.rst:18
+msgid ""
+"**compile_opts** (*required*): Compilation options, see "
+":ref:`compile_options`"
+msgstr "**compile_opts** （*必需*）：编译选项，参见 :ref:`compile_options`"
+
+#: ../../reference/compiler-config.rst:19
+msgid ""
+"**issue_time** (*required*): Query issue timestamp, used for functions "
+"like ``NOW()``"
+msgstr "**issue_time** （*必需*）：查询发起时间戳，用于 ``NOW()`` 等函数"
+
+#: ../../reference/compiler-config.rst:20
+msgid ""
+"**security_config** (*required*): Security configuration, see "
+":ref:`security_config`"
+msgstr "**security_config** （*必需*）：安全配置，参见 :ref:`security_config`"
+
+#: ../../reference/compiler-config.rst:21
+msgid ""
+"**additional_info** (*required*): Specifies additional information in "
+"response, see :ref:`additional_info_spec`"
+msgstr "**additional_info** （*必需*）：指定响应中的附加信息，参见 :ref:`additional_info_spec`"
+
+#: ../../reference/compiler-config.rst:27
+msgid "CompileOptions"
+msgstr "CompileOptions 编译选项"
+
+#: ../../reference/compiler-config.rst:29
+msgid "Compilation options that control the execution strategy."
+msgstr "控制执行策略的编译选项。"
+
+#: ../../reference/compiler-config.rst:31
+msgid ""
+"**spu_conf** (*required*): SPU runtime configuration (protocol, field, "
+"etc.), see `SPU documentation`_"
+msgstr "**spu_conf** （*必需*）：SPU 运行时配置（协议、域等），参见 `SPU documentation`_"
+
+#: ../../reference/compiler-config.rst:32
+msgid "**batched** (*required*): Whether to run in streaming mode"
+msgstr "**batched** （*必需*）：是否以流式模式运行"
+
+#: ../../reference/compiler-config.rst:33
+msgid ""
+"**psi_algorithm_type** (*optional*): PSI algorithm type: ``UNSPECIFIED`` "
+"(auto), ``ECDH_PSI``, ``KKRT_PSI``, ``RR22``"
+msgstr ""
+"**psi_algorithm_type** （*可选*）：PSI 算法类型： ``UNSPECIFIED`` （自动）、 "
+"``ECDH_PSI`` 、 ``KKRT_PSI`` 、 ``RR22``"
+
+#: ../../reference/compiler-config.rst:35
+msgid "**SPU Configuration Example:**"
+msgstr "**SPU 配置示例：**"
+
+#: ../../reference/compiler-config.rst:47
+msgid "**Supported SPU Protocols:**"
+msgstr "**支持的 SPU 协议：**"
+
+#: ../../reference/compiler-config.rst:49
+msgid "``SEMI2K``: Semi-honest 2PC/MPC (supports N parties)"
+msgstr "``SEMI2K`` ：半诚实 2PC/MPC（支持 N 方）"
+
+#: ../../reference/compiler-config.rst:50
+msgid "``CHEETAH``: Semi-honest 2PC (2 parties only)"
+msgstr "``CHEETAH`` ：半诚实 2PC（仅支持 2 方）"
+
+#: ../../reference/compiler-config.rst:51
+msgid "``ABY3``: Semi-honest 3PC (3 parties only)"
+msgstr "``ABY3`` ：半诚实 3PC（仅支持 3 方）"
+
+#: ../../reference/compiler-config.rst:53
+msgid "**Supported Fields:**"
+msgstr "**支持的域：**"
+
+#: ../../reference/compiler-config.rst:55
+msgid "``FM32``: 32-bit finite field"
+msgstr "``FM32`` ：32 位有限域"
+
+#: ../../reference/compiler-config.rst:56
+msgid "``FM64``: 64-bit finite field"
+msgstr "``FM64`` ：64 位有限域"
+
+#: ../../reference/compiler-config.rst:57
+msgid "``FM128``: 128-bit finite field"
+msgstr "``FM128`` ：128 位有限域"
+
+#: ../../reference/compiler-config.rst:63
+msgid "CompilerSecurityConfig"
+msgstr "CompilerSecurityConfig 安全配置"
+
+#: ../../reference/compiler-config.rst:65
+msgid ""
+"Security configuration that controls data visibility and security "
+"relaxations."
+msgstr "控制数据可见性和安全放宽的安全配置。"
+
+#: ../../reference/compiler-config.rst:67
+msgid ""
+"**global_relaxation** (*required*): Global security relaxation settings, "
+"see :ref:`global_security_relaxation`"
+msgstr ""
+"**global_relaxation** （*必需*）：全局安全放宽设置，参见 "
+":ref:`global_security_relaxation`"
+
+#: ../../reference/compiler-config.rst:68
+msgid ""
+"**column_relaxation_list** (*optional*): Per-column security relaxations,"
+" see :ref:`column_security_relaxation`"
+msgstr ""
+"**column_relaxation_list** （*可选*）：按列的安全放宽设置，参见 "
+":ref:`column_security_relaxation`"
+
+#: ../../reference/compiler-config.rst:69
+msgid ""
+"**reverse_inference_conf** (*required*): Reverse inference detection "
+"config, see :ref:`reverse_inference_config`"
+msgstr ""
+"**reverse_inference_conf** （*必需*）：反向推理检测配置，参见 "
+":ref:`reverse_inference_config`"
+
+#: ../../reference/compiler-config.rst:70
+msgid ""
+"**column_visibility_list** (*optional*): User-specified column "
+"visibility, see :ref:`column_visibility`"
+msgstr "**column_visibility_list** （*可选*）：用户指定的列可见性，参见 :ref:`column_visibility`"
+
+#: ../../reference/compiler-config.rst:71
+msgid ""
+"**result_security_conf** (*optional*): Result-level security config, see "
+":ref:`result_security_config`"
+msgstr "**result_security_conf** （*可选*）：结果级安全配置，参见 :ref:`result_security_config`"
+
+#: ../../reference/compiler-config.rst:77
+msgid "GlobalSecurityRelaxation"
+msgstr "全局安全放松"
+
+#: ../../reference/compiler-config.rst:79
+msgid "Global security relaxation that applies to all data."
+msgstr "适用于所有数据的全局安全放松配置。"
+
+#: ../../reference/compiler-config.rst:81
+msgid ""
+"**reveal_group_count** (*optional*): Allow group counts to be visible in "
+"plaintext"
+msgstr "**reveal_group_count** （*可选*）：允许分组计数以明文可见"
+
+#: ../../reference/compiler-config.rst:82
+msgid ""
+"**reveal_group_mark** (*optional*): Allow group marks to be visible in "
+"plaintext"
+msgstr "**reveal_group_mark** （*可选*）：允许分组标记以明文可见"
+
+#: ../../reference/compiler-config.rst:83
+#: ../../reference/compiler-config.rst:110
+#, fuzzy
+msgid ""
+"**reveal_key_after_join** (*optional*): Allow join keys to be visible in "
+"plaintext after join (intersection only). When enabled, the compiler will"
+" prefer PSI join over secret join for better performance"
+msgstr ""
+"**reveal_key_after_join** （*可选*）：允许连接键明文可见。启用后，编译器将优先选择 "
+"PSI join 而非 secret join，以获得更好的性能"
+
+#: ../../reference/compiler-config.rst:84
+#: ../../reference/compiler-config.rst:111
+msgid ""
+"**reveal_filter_mask** (*optional*): Allow filter mask to be used in "
+"plaintext for subsequent computations"
+msgstr "**reveal_filter_mask** （*可选*）：允许过滤掩码可以在后续计算中当作明文使用"
+
+#: ../../reference/compiler-config.rst:86
+#: ../../reference/compiler-config.rst:116
+#: ../../reference/compiler-config.rst:143
+#: ../../reference/compiler-config.rst:168
+#: ../../reference/compiler-config.rst:197
+msgid "**Example:**"
+msgstr "**示例：**"
+
+#: ../../reference/compiler-config.rst:103
+msgid "ColumnSecurityRelaxation"
+msgstr "列级安全放松"
+
+#: ../../reference/compiler-config.rst:105
+msgid "Per-column security relaxation for fine-grained control."
+msgstr "用于细粒度控制的列级安全放松配置。"
+
+#: ../../reference/compiler-config.rst:107
+#: ../../reference/compiler-config.rst:161
+msgid "**database** (*required*): Database name"
+msgstr "**database** （*必需*）：数据库名称"
+
+#: ../../reference/compiler-config.rst:108
+#: ../../reference/compiler-config.rst:162
+msgid "**table** (*required*): Table name"
+msgstr "**table** （*必需*）：表名称"
+
+#: ../../reference/compiler-config.rst:109
+#: ../../reference/compiler-config.rst:163
+msgid "**column** (*required*): Column name"
+msgstr "**column** （*必需*）：列名称"
+
+#: ../../reference/compiler-config.rst:114
+msgid ""
+"Column-level settings use logical OR with global settings. If global "
+"``reveal_key_after_join`` is ``true`` and column-level is ``false``, the "
+"result is ``true``. If global is ``false`` and column-level is ``true``, "
+"the result is ``true``. Only when both are ``false`` is the final result "
+"``false``. The same logic applies to ``reveal_filter_mask``."
+msgstr ""
+"列级设置与全局设置使用逻辑或运算。如果全局 ``reveal_key_after_join`` 为 ``true`` 而列级为 "
+"``false`` ，结果为 ``true`` 。如果全局为 ``false`` 而列级为 ``true`` ，结果为 ``true`` 。"
+"只有当两者都为 ``false`` 时，最终结果才为 ``false`` 。 ``reveal_filter_mask`` 也适用相同的逻辑。"
+
+#: ../../reference/compiler-config.rst:135
+msgid "ReverseInferenceConfig"
+msgstr "结果反推配置"
+
+#: ../../reference/compiler-config.rst:137
+#, fuzzy
+msgid "Configuration for reverse inference."
+msgstr "用于结果反推的配置。"
+
+#: ../../reference/compiler-config.rst:139
+msgid ""
+"**enable_reverse_inference** (*required*): Infer intermediate visibility "
+"from result visibility to enable plaintext compute"
+msgstr "**enable_reverse_inference** （*必需*）：从结果可见性推断中间可见性以启用明文计算"
+
+#: ../../reference/compiler-config.rst:141
+msgid ""
+"When enabled, the compiler will infer the visibility of intermediate "
+"computation steps based on the final result visibility, increasing the "
+"possibility of plaintext computation and improving performance."
+msgstr "启用后，编译器将根据最终结果的可见性推断中间计算步骤的可见性，从而增加明文计算的可能性并提高性能。"
+
+#: ../../reference/compiler-config.rst:157
+msgid "ColumnVisibility"
+msgstr "列可见性"
+
+#: ../../reference/compiler-config.rst:159
+msgid "Specifies which parties can see specific columns."
+msgstr "指定哪些参与方可以查看特定列。"
+
+#: ../../reference/compiler-config.rst:164
+msgid ""
+"**visible_parties** (*required*): List of party codes that can see this "
+"column during computation (in addition to the owner)"
+msgstr "**visible_parties** （*必需*）：可在计算期间查看该列的参与方代码列表（除所有者之外）"
+
+#: ../../reference/compiler-config.rst:166
+msgid ""
+"By default, only the column owner can see the data. Use this to grant "
+"visibility to other parties. Adding column visibility will make the "
+"execution graph prefer plaintext operators, improving execution "
+"efficiency."
+msgstr "默认情况下，只有列所有者可以查看数据。使用此配置可以向其他参与方授予可见性。增加列可见性会使执行图更优先使用明文算子，提高执行效率。"
+
+#: ../../reference/compiler-config.rst:189
+msgid "ResultSecurityConfig"
+msgstr "结果安全配置"
+
+#: ../../reference/compiler-config.rst:191
+msgid "Security configuration that affects query results."
+msgstr "影响查询结果的安全配置。"
+
+#: ../../reference/compiler-config.rst:193
+msgid ""
+"**groupby_threshold** (*optional*): Minimum number of rows in a group for"
+" GROUP BY results (default: 4)"
+msgstr "**groupby_threshold** （*可选*）：GROUP BY 结果中一个分组的最小行数（默认值：4）"
+
+#: ../../reference/compiler-config.rst:195
+msgid ""
+"Groups with fewer rows than this threshold will be filtered out to "
+"prevent inference attacks."
+msgstr "行数少于此阈值的分组将被过滤掉，以防止推理攻击。"
+
+#: ../../reference/compiler-config.rst:211
+msgid "AdditionalInfoSpec"
+msgstr "附加信息规范"
+
+#: ../../reference/compiler-config.rst:213
+msgid "Specifies what additional information should be included in the response."
+msgstr "指定应在响应中包含哪些附加信息。"
+
+#: ../../reference/compiler-config.rst:215
+msgid ""
+"**need_operator_graph** (*optional*): Whether to return the operator "
+"graph for debugging (default: ``false``)"
+msgstr "**need_operator_graph** （*可选*）：是否返回用于调试的算子图（默认值： ``false`` ）"
+
+#: ../../reference/compiler-config.rst:221
+msgid "Catalog Configuration"
+msgstr "数据目录配置"
+
+#: ../../reference/compiler-config.rst:223
+msgid ""
+"The catalog defines the database schema. See ``api/interpreter.proto`` "
+"for the complete definition."
+msgstr "数据目录定义了数据库模式。完整定义请参见 ``api/interpreter.proto`` 。"
+
+#: ../../reference/compiler-config.rst:225
+msgid "**Basic Structure:**"
+msgstr "**基本结构：**"
+
+#: ../../reference/compiler-config.rst:254
+msgid "**Supported Column Types:**"
+msgstr "**支持的列类型：**"
+
+#: ../../reference/compiler-config.rst:256
+msgid "``int``, ``long``, ``string``, ``float``, ``double``"
+msgstr "``int`` 、 ``long`` 、 ``string`` 、 ``float`` 、 ``double``"
+
+#: ../../reference/compiler-config.rst:257
+msgid "``datetime``, ``timestamp``"
+msgstr "``datetime`` 、 ``timestamp``"
+
+#: ../../reference/compiler-config.rst:259
+msgid "**Supported Database Types:**"
+msgstr "**支持的数据库类型：**"
+
+#: ../../reference/compiler-config.rst:261
+msgid "``mysql``, ``postgres``, ``sqlite``"
+msgstr "``mysql`` 、 ``postgres`` 、 ``sqlite``"
+
+#: ../../reference/compiler-config.rst:262
+msgid "``csvdb`` (for CSV files)"
+msgstr "``csvdb`` （用于 CSV 文件）"
+
+#: ../../reference/compiler-config.rst:263
+msgid "``arrowsql`` (for Arrow Flight servers)"
+msgstr "``arrowsql`` （用于 Arrow Flight 服务器）"
+
+#: ../../reference/compiler-config.rst:266
+msgid "See Also"
+msgstr "另请参阅"
+
+#: ../../reference/compiler-config.rst:268
+msgid ":doc:`/reference/engine-config` - Engine configuration reference"
+msgstr ":doc:`/reference/engine-config` - 引擎配置参考"
+
+#: ../../reference/compiler-config.rst:269
+msgid ":doc:`/intro/opencore-quickstart` - Quick start guide"
+msgstr ":doc:`/intro/opencore-quickstart` - 快速入门指南"
+
+#: ../../reference/compiler-config.rst:270
+msgid ""
+"`SPU Documentation <https://github.com/secretflow/spu>`_ - SPU protocol "
+"details"
+msgstr "`SPU 文档 <https://github.com/secretflow/spu>`_ - SPU 协议详细信息"
