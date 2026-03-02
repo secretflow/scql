@@ -51,13 +51,13 @@ type Config struct {
 var configFile string
 var showHelp bool
 var sql string
-var printGraph bool
+var printGraphviz bool
 
 func main() {
 	flag.StringVar(&configFile, "config", "", "Path to config JSON file")
 	flag.BoolVar(&showHelp, "help", false, "Show help message")
 	flag.StringVar(&sql, "sql", "", "SQL query to execute (overrides config file SQL if provided)")
-	flag.BoolVar(&printGraph, "print", false, "Print the graph")
+	flag.BoolVar(&printGraphviz, "graphviz", false, "Print the execution graph in Graphviz format")
 	flag.Parse()
 
 	if showHelp || configFile == "" {
@@ -145,7 +145,7 @@ func compileSQL(ctx context.Context, config *Config) (*pb.CompiledPlan, error) {
 		return nil, err
 	}
 
-	if printGraph && details.ExecutionGraph != nil {
+	if printGraphviz && details.ExecutionGraph != nil {
 		logrus.Info(details.ExecutionGraph.DumpGraphviz())
 	}
 
@@ -450,7 +450,7 @@ Description:
 Options:
   --config string    Path to config JSON file (required)
   --sql string       SQL query to execute (overrides config file)
-  --print            Print the execution graphviz
+  --graphviz         Print the execution graph in Graphviz format
   --help             Show this help message
 
 Config file fields:
@@ -468,5 +468,5 @@ Config file fields:
 Examples:
   opencore-demo --config config.json
   opencore-demo --config config.json --sql "SELECT * FROM table"
-  opencore-demo --config config.json --sql "SELECT * FROM table" --print`)
+  opencore-demo --config config.json --graphviz`)
 }
