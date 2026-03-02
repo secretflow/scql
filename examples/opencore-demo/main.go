@@ -52,11 +52,11 @@ func main() {
 	var configFile string
 	var showHelp bool
 	var sql string
-	var printGraphviz bool
+	var graphvizFile string
 	flag.StringVar(&configFile, "config", "", "Path to config JSON file")
 	flag.BoolVar(&showHelp, "help", false, "Show help message")
 	flag.StringVar(&sql, "sql", "", "SQL query to execute (overrides config file SQL if provided)")
-	flag.BoolVar(&printGraphviz, "graphviz", false, "Print the execution graph in Graphviz format")
+	flag.StringVar(&graphvizFile, "graphviz", "", "Output execution graph to specified .dot file")
 	flag.Parse()
 
 	if showHelp || configFile == "" {
@@ -75,20 +75,20 @@ func main() {
 	}
 
 	// Execute the workflow
-	if err := execute(config, printGraphviz); err != nil {
+	if err := execute(config, graphvizFile); err != nil {
 		logrus.Fatalf("Execution failed: %v", err)
 	}
 
 	logrus.Info("Execution completed successfully")
 }
 
-func execute(config *Config, printGraphviz bool) error {
+func execute(config *Config, graphvizFile string) error {
 	ctx := context.Background()
 
 	// Step 1: Compile SQL to execution plan
 	logrus.Info("Step 1: Compiling SQL to execution plan...")
 
-	compiledPlan, err := compileSQL(ctx, config, printGraphviz)
+	compiledPlan, err := compileSQL(ctx, config, graphvizFile)
 	if err != nil {
 		return fmt.Errorf("compilation failed: %w", err)
 	}
@@ -110,7 +110,7 @@ func execute(config *Config, printGraphviz bool) error {
 	return nil
 }
 
-func compileSQL(ctx context.Context, config *Config, printGraphviz bool) (*pb.CompiledPlan, error) {
+func compileSQL(ctx context.Context, config *Config, graphvizFile string) (*pb.CompiledPlan, error) {
 	// Validate required fields
 	if config.Catalog == nil {
 		return nil, fmt.Errorf("catalog is required")
@@ -144,8 +144,11 @@ func compileSQL(ctx context.Context, config *Config, printGraphviz bool) (*pb.Co
 		return nil, err
 	}
 
-	if printGraphviz && details.ExecutionGraph != nil {
-		logrus.Info(details.ExecutionGraph.DumpGraphviz())
+	if graphvizFile != "" && details.ExecutionGraph != nil {
+		if err := os.WriteFile(graphvizFile, []byte(details.ExecutionGraph.DumpGraphviz()), 0644); err != nil {
+			return nil, fmt.Errorf("failed to write graphviz file: %w", err)
+		}
+		logrus.Infof("Execution graph written to %s", graphvizFile)
 	}
 
 	return details.ExecutionPlan, nil
@@ -449,7 +452,7 @@ Description:
 Options:
   --config string    Path to config JSON file (required)
   --sql string       SQL query to execute (overrides config file)
-  --graphviz         Print the execution graph in Graphviz format
+  --graphviz string  Output execution graph to specified .dot file
   --help             Show this help message
 
 Config file fields:
@@ -465,7 +468,7 @@ Config file fields:
   issuer               Party code of the query issuer
 
 Examples:
-  opencore-demo --config config.json
-  opencore-demo --config config.json --sql "SELECT * FROM table"
-  opencore-demo --config config.json --graphviz`)
+  opencore-demo --config example_config.json
+  opencore-demo --config example_config.json --sql "SELECT * FROM table"
+  opencore-demo --config example_config.json --graphviz graph.dot`)
 }
