@@ -139,21 +139,17 @@ func compileSQL(ctx context.Context, config *Config) (*pb.CompiledPlan, error) {
 		},
 	}
 
-	// Compile
-	compiledPlan, err := compiler.Compile(ctx, req)
+	// Use DetailedCompile to get both ExecutionPlan and ExecutionGraph in one pass
+	details, err := compiler.DetailedCompile(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
-	if printGraph {
-		graph, err := compiler.CompileToExecutionGraph(ctx, req)
-		if err != nil {
-			return nil, fmt.Errorf("failed to compile to execution graph: %w", err)
-		}
-		logrus.Info(graph.DumpGraphviz())
+	if printGraph && details.ExecutionGraph != nil {
+		logrus.Info(details.ExecutionGraph.DumpGraphviz())
 	}
 
-	return compiledPlan, nil
+	return details.ExecutionPlan, nil
 }
 
 func executePlan(ctx context.Context, conf *Config, compiledPlan *pb.CompiledPlan) (*pb.QueryResult, error) {
