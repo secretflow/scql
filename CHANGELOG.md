@@ -16,11 +16,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Staging
 
+## [2.0.0] - 2026-03-16
+
 ### Added
+
+- Introduced SCQL 2.0 OpenCore architecture based on native **Compiler + Engine** model, replacing the previous SCDB/SCQLBroker/CCL architecture.
+- Added `opencore-demo` example and quickstart documentation for getting started with the new architecture.
 
 ### Changed
 
-### Fixed
+- **breaking**: Redesigned system architecture from Broker-based (P2P/Centralized) to native Compiler + Engine integration. Users now directly call the compiler API and send execution plans to engines.
+- **breaking**: Removed CCL (Column Control List)
+- Updated documentation to reflect the OpenCore architecture.
+
+### Removed
+
+- Removed SCQLBroker, SCDB, CCL components and all related documentation.
+- Removed legacy deployment guides (P2P, Centralized, Kuscia), API references, and architecture docs.
 
 ## [0.9.4] - 2025-07-29
 
