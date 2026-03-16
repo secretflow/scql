@@ -32,3 +32,10 @@ PROJECT_ROOT=$(cd "${SCRIPT_DIR}/.." && pwd)
 
 cd "${PROJECT_ROOT}"
 go build -o "${SCRIPT_DIR}/opencore-demo" ./opencore-demo/main.go
+
+# check if secretflow/scql:latest image exists
+if ! docker image inspect secretflow/scql:latest >/dev/null 2>&1; then
+  echo "WARNING: Docker image secretflow/scql:latest not found."
+  echo "Please build the image first by running:"
+  echo "  bash ${SCRIPT_DIR}/docker/build.sh"
+fi
