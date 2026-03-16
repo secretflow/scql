@@ -16,8 +16,8 @@ fi
 
 COMPOSE_FILE="docker-compose.yml"
 
-docker-compose -f "${COMPOSE_FILE}" -p tutorial down 2>/dev/null || true
-docker-compose -f "${COMPOSE_FILE}" -p tutorial up -d
+docker compose -f "${COMPOSE_FILE}" -p tutorial down 2>/dev/null || true
+docker compose -f "${COMPOSE_FILE}" -p tutorial up -d
 
 if [ ! -f "example_config.json" ]; then
     echo "Error: example_config.json not found"

@@ -150,7 +150,8 @@
     "compile_opts": {
         "spu_conf": {
             "protocol": "SEMI2K",
-            "field": "FM64"
+            "field": "FM64",
+            "experimental_enable_colocated_optimization": true
         },
         "batched": false
     }
