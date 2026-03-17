@@ -23,8 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Introduced SCQL 2.0 OpenCore architecture: new `CompilerService` gRPC API (`api/v1alpha1/compiler.proto`) with `CompileSQL` endpoint, and a new Go compiler package (`pkg/interpreter/compiler/`) replacing the old interpreter pipeline.
 - Added Perfetto-based tracing support in engine, controlled by `--enable_trace` and `--trace_log_path` flags.
 - Added `GroupSecretSum` and `GroupSecretAvg` operators using SPU secret-sharing, replacing the old HE-based group aggregation. Benchmarks show the new algorithm is 5-10x faster.
-- Added DataMesh-based datasource adaptor (`DmAdaptor`) using `dataproxy_sdk` streaming API.
-- Added DumpFile support for uploading results via DataProxy Arrow Flight protocol.
 - Added planner optimization rules: correlated subquery decorrelation, group-by threshold enforcement, `JOIN` reorder by party code, and consecutive selection merging.
 - Added `Rr22Mode` (low/fast) for PSI algorithm negotiation.
 - Added `opencore-demo` example and quickstart documentation for getting started with the new architecture.
@@ -33,7 +31,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **breaking**: Redesigned system architecture from Broker-based (P2P/Centralized) to native Compiler + Engine integration.
 - **breaking**: `Executor.RunExecutionPlan()` now returns `*scql.QueryResponse` instead of `*scql.SCDBQueryResultResponse`.
-- Rewrote `DpAdaptor` to use Arrow Flight protocol directly instead of `dataproxy_sdk`.
 - Refactored engine operators to use typed `ExecContext` accessor methods (`GetInputTensor()`, `SetOutputTensor()`, etc.) instead of manual tensor table lookups.
 - Refactored session negotiation: new `Session::Negotiate()` method handles streaming options, PSI options, and curve types via protobuf-serialized `NegotiationOptions`.
 - Consolidated `StreamingOptions` into `SessionOptions`.
