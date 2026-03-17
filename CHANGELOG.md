@@ -27,7 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added DumpFile support for uploading results via DataProxy Arrow Flight protocol.
 - Added planner optimization rules: correlated subquery decorrelation, group-by threshold enforcement, `JOIN` reorder by party code, and consecutive selection merging.
 - Added `Rr22Mode` (low/fast) for PSI algorithm negotiation.
-- Added parameterized query support with `Placeholder` and `Variable` messages.
 - Added `opencore-demo` example and quickstart documentation for getting started with the new architecture.
 
 ### Changed
