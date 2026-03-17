@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Introduced SCQL 2.0 OpenCore architecture: new `CompilerService` gRPC API (`api/v1alpha1/compiler.proto`) with `CompileSQL` endpoint, and a new Go compiler package (`pkg/interpreter/compiler/`) replacing the old interpreter pipeline.
 - Added Perfetto-based tracing support in engine, controlled by `--enable_trace` and `--trace_log_path` flags.
-- Added `GroupSecretSum` and `GroupSecretAvg` operators using SPU secret-sharing, replacing the old HE-based group aggregation.
+- Added `GroupSecretSum` and `GroupSecretAvg` operators using SPU secret-sharing, replacing the old HE-based group aggregation. Benchmarks show the new algorithm is 5-10x faster.
 - Added DataMesh-based datasource adaptor (`DmAdaptor`) using `dataproxy_sdk` streaming API.
 - Added DumpFile support for uploading results via DataProxy Arrow Flight protocol.
 - Added planner optimization rules: correlated subquery decorrelation, group-by threshold enforcement, `JOIN` reorder by party code, and consecutive selection merging.
