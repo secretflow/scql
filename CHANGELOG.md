@@ -20,24 +20,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Introduced SCQL 2.0 OpenCore architecture based on native **Compiler + Engine** model, replacing the previous SCDB/SCQLBroker/CCL architecture.
-- Added `opencore-demo` example and quickstart documentation for getting started with the new architecture.
-
-### Changed
-
-- **breaking**: Redesigned system architecture from Broker-based (P2P/Centralized) to native Compiler + Engine integration. Users now directly call the compiler API and send execution plans to engines.
-- **breaking**: Removed CCL (Column Control List)
-- Updated documentation to reflect the OpenCore architecture.
-
-### Removed
-
-- Removed SCQLBroker, SCDB, CCL components and all related documentation.
-- Removed legacy deployment guides (P2P, Centralized, Kuscia), API references, and architecture docs.
-
-## [2.0.0] - 2026-03-16
-
-### Added
-
 - Introduced SCQL 2.0 OpenCore architecture: new `CompilerService` gRPC API (`api/v1alpha1/compiler.proto`) with `CompileSQL` endpoint, and a new Go compiler package (`pkg/interpreter/compiler/`) replacing the old interpreter pipeline.
 - Added Perfetto-based tracing support in engine, controlled by `--enable_trace` and `--trace_log_path` flags.
 - Added `GroupSecretSum` and `GroupSecretAvg` operators using SPU secret-sharing, replacing the old HE-based group aggregation.
