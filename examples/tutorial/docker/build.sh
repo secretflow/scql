@@ -146,16 +146,17 @@ create_container_and_build() {
   CONTAINER_ID=$(docker run -d --rm \
     ${WORKSPACE_MOUNT_ARGS} \
     -w /home/admin/dev ${CACHE_MOUNT_ARGS} \
+    --entrypoint "" \
     $BUILDER tail -f /dev/null)
 
   # Setup cleanup trap for both container and build artifacts
   trap 'cleanup_on_exit' EXIT
 
   # Prepare git configuration
-  docker exec -it ${CONTAINER_ID} bash -c "git config --global --add safe.directory /home/admin/dev"
+  docker exec ${CONTAINER_ID} bash -c "git config --global --add safe.directory /home/admin/dev"
 
   # Build engine binary only
-  docker exec -it ${CONTAINER_ID} bash -c "cd /home/admin/dev && bazelisk --host_jvm_args=-Xmx8g build //engine/exe:scqlengine -c opt --jobs=32"
+  docker exec ${CONTAINER_ID} bash -c "cd /home/admin/dev && bazelisk --host_jvm_args=-Xmx8g build //engine/exe:scqlengine -c opt --jobs=32"
 }
 
 # Prepare temporary directory and copy build files
