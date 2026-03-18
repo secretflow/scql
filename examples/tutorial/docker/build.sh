@@ -34,9 +34,9 @@ usage() {
   echo "Usage: $0 [-n Name] [-t Tag] [-p Platform] [-c] [-d]"
   echo ""
   echo "Options:"
-  echo "  -n name, image name, default is \"scql\""
+  echo "  -n name, image name, default is \"secretflow/scql\""
   echo "  -t tag, image tag, default is \"latest\""
-  echo "  -p target platform, default is \"linux/amd64\", support \"linux/arm64\" and \"linux/amd64\"."
+  echo "  -p target platform, default is host architecture, support \"linux/arm64\" and \"linux/amd64\"."
   echo "  -c, enable host disk bazel cache to speedup build process"
   echo "  -d, protect development environment (use isolated build)"
 }
