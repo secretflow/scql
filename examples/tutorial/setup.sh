@@ -31,4 +31,22 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 PROJECT_ROOT=$(cd "${SCRIPT_DIR}/.." && pwd)
 
 cd "${PROJECT_ROOT}"
+
+# load environment variables from .env if present (e.g., SCQL_IMAGE)
+if [ -f .env ]; then
+  set -a
+  . .env
+  set +a
+fi
+
 go build -o "${SCRIPT_DIR}/opencore-demo" ./opencore-demo/main.go
+
+# determine SCQL image name (default to secretflow/scql:latest if not set)
+IMAGE_NAME="${SCQL_IMAGE:-secretflow/scql:latest}"
+
+# check if the configured SCQL image exists
+if ! docker image inspect "${IMAGE_NAME}" >/dev/null 2>&1; then
+  echo "WARNING: Docker image ${IMAGE_NAME} not found."
+  echo "Please build the image first by running:"
+  echo "  bash ${SCRIPT_DIR}/docker/build.sh"
+fi
