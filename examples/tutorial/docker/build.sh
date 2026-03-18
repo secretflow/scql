@@ -183,7 +183,7 @@ build_docker_image() {
   if [ "$HOST_PLATFORM" == "$TARGET_PLATFORM" ]; then
     docker build --build-arg="TARGETPLATFORM=${TARGET_PLATFORM}" -f Dockerfile -t $SCQL_IMAGE:$IMAGE_TAG .
   else
-    docker buildx build --platform $TARGET_PLATFORM -f Dockerfile -t $SCQL_IMAGE:$IMAGE_TAG .
+    docker buildx build --platform $TARGET_PLATFORM --load -f Dockerfile -t $SCQL_IMAGE:$IMAGE_TAG .
   fi
 }
 
