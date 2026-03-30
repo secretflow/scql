@@ -63,12 +63,12 @@ func TestHiveDialectConversion(t *testing.T) {
 		{
 			name:        "NOW to CURRENT_TIMESTAMP conversion",
 			inputSQL:    "select plain_datetime_0 < now() from alice.tbl_1",
-			expectedSQL: "select tbl_1.plain_datetime_0<now() as expr_121 from alice.tbl_1",
+			expectedSQL: "select tbl_1.plain_datetime_0<current_timestamp() as expr_121 from alice.tbl_1",
 		},
 		{
 			name:        "CURDATE to CURRENT_DATE conversion",
 			inputSQL:    "select plain_datetime_0 < curdate() from alice.tbl_1",
-			expectedSQL: "select tbl_1.plain_datetime_0<curdate() as expr_121 from alice.tbl_1",
+			expectedSQL: "select tbl_1.plain_datetime_0<current_date() as expr_121 from alice.tbl_1",
 		},
 		{
 			name:        "CAST VARCHAR to STRING",
@@ -202,9 +202,9 @@ func TestHiveDialectConversion(t *testing.T) {
 			expectedSQL: "select length(tbl_0.plain_string_0) as expr_121 from alice.tbl_0",
 		},
 		{
-			name:        "REPLACE function (maps to regexp_replace in Hive)",
+			name:        "REPLACE function (Hive 3.x native replace)",
 			inputSQL:    "select replace(plain_string_0, 'a', 'b') from alice.tbl_0",
-			expectedSQL: "select regexp_replace(tbl_0.plain_string_0, 'a', 'b') as expr_121 from alice.tbl_0",
+			expectedSQL: "select replace(tbl_0.plain_string_0, 'a', 'b') as expr_121 from alice.tbl_0",
 		},
 		{
 			name:        "INSTR function",

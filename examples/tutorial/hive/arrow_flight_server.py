@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 """
-Arrow Flight SQL 服务器
-支持两种后端模式：
-1. DuckDB 模式（默认）- 用于本地测试，使用内存数据库模拟 Hive
-2. Hive 模式 - 连接真实的 HiveServer2
+Arrow Flight SQL Server
+Supports two backend modes:
+1. DuckDB mode (default) - for local testing with in-memory database
+2. Hive mode - connects to a real HiveServer2
 
-此服务器实现了 Arrow Flight SQL 协议的核心功能，包括:
-- GetFlightInfo: 处理 SQL 查询请求 (解析 CommandStatementQuery protobuf)
-- DoGet: 返回查询结果
+This server implements core Arrow Flight SQL protocol features:
+- GetFlightInfo: handles SQL query requests (parses CommandStatementQuery protobuf)
+- DoGet: returns query results
 
-使用方法:
-    # DuckDB 模式（测试用）
+Usage:
+    # DuckDB mode (for testing)
     python3 arrow_flight_server.py --party alice --port 8815
 
-    # Hive 模式（连接真实 Hive）
+    # Hive mode (real Hive backend)
     python3 arrow_flight_server.py --port 8815 --backend hive \
         --hive-host hive.example.com --hive-port 10000 \
         --hive-user hive --hive-database default
 
-依赖:
+Dependencies:
     pip install pyarrow duckdb
-    # Hive 模式额外需要:
+    # Hive mode additionally requires:
     pip install pyhive thrift thrift-sasl
 """
 
@@ -32,7 +32,7 @@ import pyarrow.flight as flight
 # === Hive SQL Dialect Converter ===
 class HiveDialectConverter:
     """Converts MySQL/standard SQL to Hive-compatible SQL.
-    
+
     Handles:
     - Trailing semicolons (Hive rejects them)
     - Database/party prefixes (strip when already connected to right DB)
@@ -41,7 +41,6 @@ class HiveDialectConverter:
     - CAST(x AS SIGNED/UNSIGNED) -> CAST(x AS BIGINT)
     - CAST(x AS VARCHAR/CHAR) -> CAST(x AS STRING)
     """
-    import re as _re
 
     def __init__(self, party: str = "", database: str = ""):
         import re
@@ -80,23 +79,23 @@ class HiveDialectConverter:
 
 
 # =============================================================================
-# 后端抽象层
+# Database backend abstraction
 # =============================================================================
 
 class DatabaseBackend:
-    """数据库后端抽象接口"""
+    """Abstract database backend interface."""
 
     def execute(self, query: str) -> pa.Table:
-        """执行 SQL 并返回 Arrow Table"""
+        """Execute SQL and return an Arrow Table."""
         raise NotImplementedError
 
     def close(self):
-        """关闭连接"""
+        """Close the connection."""
         pass
 
 
 class DuckDBBackend(DatabaseBackend):
-    """DuckDB 后端 - 用于本地测试"""
+    """DuckDB backend - for local testing."""
 
     def __init__(self, party: str = None, init_data: bool = True):
         import duckdb
@@ -106,7 +105,7 @@ class DuckDBBackend(DatabaseBackend):
             self._init_test_data()
 
     def _init_test_data(self):
-        """初始化测试数据"""
+        """Initialize test data matching SCQL tutorial examples."""
         self.conn.execute('CREATE SCHEMA IF NOT EXISTS "default"')
         self.conn.execute('SET search_path TO "default"')
 
@@ -141,7 +140,7 @@ class DuckDBBackend(DatabaseBackend):
                     ('id0019', 6, 30070, 25),
                     ('id0020', 5, 12070, 28)
             ''')
-            print(f"[DuckDB] 初始化 Alice user_credit 表 (19 行)")
+            print(f"[DuckDB] Initialized Alice user_credit table (19 rows)")
 
         elif self.party == "bob":
             self.conn.execute('''
@@ -173,7 +172,7 @@ class DuckDBBackend(DatabaseBackend):
                     ('id0019', 3200, 1),
                     ('id0020', 7500, 0)
             ''')
-            print(f"[DuckDB] 初始化 Bob user_stats 表 (19 行)")
+            print(f"[DuckDB] Initialized Bob user_stats table (19 rows)")
 
     def execute(self, query: str) -> pa.Table:
         return self.conn.execute(query).fetch_arrow_table()
@@ -183,34 +182,33 @@ class DuckDBBackend(DatabaseBackend):
 
 
 class HiveBackend(DatabaseBackend):
-    """Hive 后端 - 连接真实 HiveServer2"""
+    """Hive backend - connects to a real HiveServer2."""
 
     def __init__(self, host: str, port: int = 10000, username: str = None,
                  password: str = None, database: str = "default",
                  auth: str = "NONE"):
         """
-        初始化 Hive 连接
+        Initialize Hive connection.
 
         Args:
-            host: HiveServer2 主机地址
-            port: HiveServer2 端口（默认 10000）
-            username: 用户名
-            password: 密码（用于 LDAP 认证）
-            database: 默认数据库
-            auth: 认证方式 (NONE, LDAP, KERBEROS)
+            host: HiveServer2 hostname
+            port: HiveServer2 port (default 10000)
+            username: Username
+            password: Password (for LDAP auth)
+            database: Default database
+            auth: Auth method (NONE, LDAP, KERBEROS)
         """
         try:
             from pyhive import hive
         except ImportError:
             raise ImportError(
-                "Hive 后端需要安装 pyhive: pip install pyhive thrift thrift-sasl"
+                "Hive backend requires pyhive: pip install pyhive thrift thrift-sasl"
             )
 
         self.host = host
         self.port = port
         self.database = database
 
-        # 连接参数
         conn_kwargs = {
             "host": host,
             "port": port,
@@ -224,39 +222,37 @@ class HiveBackend(DatabaseBackend):
         if password and auth == "LDAP":
             conn_kwargs["password"] = password
 
-        print(f"[Hive] 连接到 {host}:{port}/{database} (auth={auth})")
+        print(f"[Hive] Connecting to {host}:{port}/{database} (auth={auth})")
         self.conn = hive.connect(**conn_kwargs)
         self.cursor = self.conn.cursor()
-        print(f"[Hive] 连接成功")
+        print(f"[Hive] Connected successfully")
 
     def execute(self, query: str) -> pa.Table:
-        """执行 Hive SQL 并返回 Arrow Table"""
-        print(f"[Hive] 执行: {query[:100]}...")
+        """Execute Hive SQL and return an Arrow Table."""
+        print(f"[Hive] Executing: {query[:100]}...")
 
         self.cursor.execute(query)
 
-        # 获取列信息
+        # Get column info
         columns = [desc[0] for desc in self.cursor.description]
         col_types = [desc[1] for desc in self.cursor.description]
 
-        # 获取所有数据
+        # Fetch all data
         rows = self.cursor.fetchall()
 
-        # 转换为 Arrow Table
+        # Convert to Arrow Table
         if not rows:
-            # 空结果，创建空 schema
             fields = [pa.field(name, self._hive_type_to_arrow(t))
                       for name, t in zip(columns, col_types)]
             schema = pa.schema(fields)
             return pa.table({name: [] for name in columns}, schema=schema)
 
-        # 按列组织数据
+        # Organize by columns
         col_data = {name: [] for name in columns}
         for row in rows:
             for i, value in enumerate(row):
                 col_data[columns[i]].append(value)
 
-        # 创建 Arrow Table
         arrays = {}
         for name, data in col_data.items():
             arrays[name] = pa.array(data)
@@ -264,7 +260,7 @@ class HiveBackend(DatabaseBackend):
         return pa.table(arrays)
 
     def _hive_type_to_arrow(self, hive_type: str) -> pa.DataType:
-        """将 Hive 类型映射到 Arrow 类型"""
+        """Map Hive types to Arrow types."""
         hive_type = hive_type.upper()
         type_map = {
             "STRING": pa.string(),
@@ -288,14 +284,14 @@ class HiveBackend(DatabaseBackend):
     def close(self):
         self.cursor.close()
         self.conn.close()
-        print("[Hive] 连接已关闭")
+        print("[Hive] Connection closed")
 
 
 def create_backend(args) -> DatabaseBackend:
-    """根据参数创建数据库后端"""
+    """Create database backend based on command-line arguments."""
     if args.backend == "hive":
         if not args.hive_host:
-            raise ValueError("Hive 模式需要指定 --hive-host")
+            raise ValueError("Hive mode requires --hive-host")
         return HiveBackend(
             host=args.hive_host,
             port=args.hive_port,
@@ -308,7 +304,6 @@ def create_backend(args) -> DatabaseBackend:
         return DuckDBBackend(party=args.party, init_data=True)
 
 
-# =============================================================================
 # =============================================================================
 # Protobuf parsing (using google.protobuf library)
 # =============================================================================
@@ -364,13 +359,13 @@ def parse_flight_sql_command(data: bytes) -> str:
 
 
 # =============================================================================
-# Arrow Flight SQL 服务器
+# Arrow Flight SQL Server
 # =============================================================================
 
 class FlightSqlServer(flight.FlightServerBase):
     """
-    Arrow Flight SQL 服务器实现
-    支持 DuckDB（测试）和 Hive（生产）两种后端
+    Arrow Flight SQL server implementation.
+    Supports DuckDB (testing) and Hive (production) backends.
     """
 
     def __init__(self, backend: DatabaseBackend, host="0.0.0.0", port=8815,
@@ -383,7 +378,7 @@ class FlightSqlServer(flight.FlightServerBase):
         self._host = host
         self._queries = {}  # ticket_id -> query
         self._ticket_counter = 0
-        print(f"[{party}] Arrow Flight SQL 服务器启动在端口 {port}")
+        print(f"[{party}] Arrow Flight SQL server started on port {port}")
 
     def _preprocess_query(self, query: str) -> str:
         """
@@ -395,7 +390,6 @@ class FlightSqlServer(flight.FlightServerBase):
         import re
 
         if isinstance(self.backend, HiveBackend):
-            # Full Hive dialect conversion
             if not hasattr(self, '_dialect'):
                 self._dialect = HiveDialectConverter(
                     party=self.party, database=self.backend.database
@@ -408,7 +402,7 @@ class FlightSqlServer(flight.FlightServerBase):
             return query
 
     def _generate_ticket(self, query: str) -> bytes:
-        """生成唯一的 ticket ID"""
+        """Generate a unique ticket ID."""
         self._ticket_counter += 1
         ticket_id = f"{self.party}_{self._ticket_counter}"
         self._queries[ticket_id] = query
@@ -416,8 +410,8 @@ class FlightSqlServer(flight.FlightServerBase):
 
     def get_flight_info(self, context, descriptor):
         """
-        处理 GetFlightInfo 请求
-        Arrow Flight SQL 客户端通过此方法发送 SQL 查询
+        Handle GetFlightInfo requests.
+        Arrow Flight SQL clients send SQL queries through this method.
         """
         if descriptor.descriptor_type == flight.DescriptorType.CMD:
             query = parse_flight_sql_command(descriptor.command)
@@ -456,11 +450,11 @@ class FlightSqlServer(flight.FlightServerBase):
             return info
 
         except Exception as e:
-            print(f"[{self.party}] 查询错误: {e}")
+            print(f"[{self.party}] Query error: {e}")
             raise flight.FlightServerError(f"Query execution failed: {e}")
 
     def do_get(self, context, ticket):
-        """处理 DoGet 请求，返回查询结果"""
+        """Handle DoGet requests, returning query results."""
         ticket_data = ticket.ticket.decode("utf-8")
 
         if ticket_data in self._queries:
@@ -473,14 +467,14 @@ class FlightSqlServer(flight.FlightServerBase):
 
         try:
             result = self.backend.execute(query)
-            print(f"[{self.party}] 返回 {result.num_rows} 行, {result.num_columns} 列")
+            print(f"[{self.party}] Returning {result.num_rows} rows, {result.num_columns} columns")
             return flight.RecordBatchStream(result)
         except Exception as e:
-            print(f"[{self.party}] 查询错误: {e}")
+            print(f"[{self.party}] Query error: {e}")
             raise flight.FlightServerError(f"Query execution failed: {e}")
 
     def do_action(self, context, action):
-        """处理 Action 请求"""
+        """Handle Action requests."""
         action_type = action.type
         print(f"[{self.party}] Action: {action_type}")
 
@@ -490,74 +484,74 @@ class FlightSqlServer(flight.FlightServerBase):
             yield flight.Result(b"")
 
     def list_actions(self, context):
-        """列出支持的 actions"""
+        """List supported actions."""
         return [("healthcheck", "Health check")]
 
     def shutdown(self):
-        """关闭服务器和后端连接"""
+        """Shut down the server and close backend connections."""
         self.backend.close()
         super().shutdown()
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Arrow Flight SQL 服务器 - 支持 DuckDB（测试）和 Hive（生产）后端",
+        description="Arrow Flight SQL Server - supports DuckDB (testing) and Hive (production) backends",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-示例:
-  # DuckDB 模式（本地测试）
+Examples:
+  # DuckDB mode (local testing)
   python3 arrow_flight_server.py --party alice --port 8815
 
-  # Hive 模式（连接真实 Hive）
+  # Hive mode (real Hive backend)
   python3 arrow_flight_server.py --port 8815 --backend hive \\
       --hive-host hive.example.com --hive-port 10000 \\
       --hive-user hive --hive-database default
         """
     )
 
-    # 基本参数
+    # Basic arguments
     parser.add_argument("--party", type=str, default="alice",
-                        help="参与方名称 (用于日志标识)")
+                        help="Party name (used for logging)")
     parser.add_argument("--port", type=int, default=8815,
-                        help="Arrow Flight 服务端口 (默认: 8815)")
+                        help="Arrow Flight server port (default: 8815)")
     parser.add_argument("--host", type=str, default="0.0.0.0",
-                        help="监听地址 (默认: 0.0.0.0)")
+                        help="Listen address (default: 0.0.0.0)")
 
-    # 后端选择
+    # Backend selection
     parser.add_argument("--backend", type=str, default="duckdb",
                         choices=["duckdb", "hive"],
-                        help="数据库后端 (默认: duckdb)")
+                        help="Database backend (default: duckdb)")
 
-    # Hive 连接参数
-    hive_group = parser.add_argument_group("Hive 连接参数")
+    # Hive connection arguments
+    hive_group = parser.add_argument_group("Hive connection arguments")
     hive_group.add_argument("--hive-host", type=str,
-                            help="HiveServer2 主机地址")
+                            help="HiveServer2 hostname")
     hive_group.add_argument("--hive-port", type=int, default=10000,
-                            help="HiveServer2 端口 (默认: 10000)")
+                            help="HiveServer2 port (default: 10000)")
     hive_group.add_argument("--hive-user", type=str,
-                            help="Hive 用户名")
+                            help="Hive username")
     hive_group.add_argument("--hive-password", type=str,
-                            help="Hive 密码 (LDAP 认证时使用)")
+                            help="Hive password (for LDAP auth)")
     hive_group.add_argument("--hive-database", type=str, default="default",
-                            help="Hive 数据库 (默认: default)")
+                            help="Hive database (default: default)")
     hive_group.add_argument("--hive-auth", type=str, default="NONE",
                             choices=["NONE", "LDAP", "KERBEROS"],
-                            help="Hive 认证方式 (默认: NONE)")
+                            help="Hive auth method (default: NONE)")
 
     args = parser.parse_args()
 
-    # 创建后端
+    # Create backend
     print("=" * 60)
-    print("Arrow Flight SQL 服务器")
+    print("Arrow Flight SQL Server")
     print("=" * 60)
 
     try:
         backend = create_backend(args)
     except Exception as e:
-        print(f"[错误] 创建后端失败: {e}")
+        print(f"[ERROR] Failed to create backend: {e}")
         return 1
 
-    # 创建并启动服务器
+    # Create and start server
     server = FlightSqlServer(
         backend=backend,
         host=args.host,
@@ -565,20 +559,20 @@ def main():
         party=args.party
     )
 
-    print(f"后端: {args.backend.upper()}")
+    print(f"Backend: {args.backend.upper()}")
     if args.backend == "hive":
         print(f"Hive: {args.hive_host}:{args.hive_port}/{args.hive_database}")
-    print(f"监听: grpc://{args.host}:{args.port}")
+    print(f"Listen: grpc://{args.host}:{args.port}")
     print("-" * 60)
-    print("按 Ctrl+C 停止服务器")
+    print("Press Ctrl+C to stop the server")
     print()
 
     try:
         server.serve()
     except KeyboardInterrupt:
-        print(f"\n[{args.party}] 正在关闭服务器...")
+        print(f"\n[{args.party}] Shutting down server...")
         server.shutdown()
-        print(f"[{args.party}] 服务器已停止")
+        print(f"[{args.party}] Server stopped")
 
     return 0
 

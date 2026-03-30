@@ -393,70 +393,29 @@ type HiveDialect struct {
 func NewHiveDialect() Dialect {
 	return &HiveDialect{
 		funcNameMap: map[string]string{
-			// NULL handling
+			// NULL handling: MySQL IFNULL → Hive NVL
 			"ifnull": "nvl",
 
-			// Date/Time functions
-			"now":            "current_timestamp",
-			"curdate":        "current_date",
-			"current_date":   "current_date",
-			"sysdate":        "current_timestamp",
-			"unix_timestamp": "unix_timestamp",
-			"from_unixtime":  "from_unixtime",
+			// Date/Time: handled by RestoreDateFuncWithHiveDialect for complex cases;
+			// simple renames go here
+			"now":    "current_timestamp",
+			"sysdate": "current_timestamp",
+			"curdate": "current_date",
 
-			// Math functions
+			// Math: only list functions that differ
 			"truncate": "trunc",
-			"ceil":     "ceil",
 			"ceiling":  "ceil",
-			"floor":    "floor",
-			"round":    "round",
-			"abs":      "abs",
-			"pow":      "pow",
-			"power":    "power",
-			"sqrt":     "sqrt",
-			"ln":       "ln",
-			"log":      "log",
-			"log10":    "log10",
-			"log2":     "log2",
-			"exp":      "exp",
-			"rand":     "rand",
-			"sign":     "sign",
 
-			// String functions
+			// String: only list functions that differ
 			"char_length":      "length",
 			"character_length": "length",
 			"octet_length":     "length",
 			"lcase":            "lower",
 			"ucase":            "upper",
-			"substr":           "substr",
 			"substring":        "substr",
-			"concat":           "concat",
-			"concat_ws":        "concat_ws",
-			"trim":             "trim",
-			"ltrim":            "ltrim",
-			"rtrim":            "rtrim",
-			"lpad":             "lpad",
-			"rpad":             "rpad",
-			"reverse":          "reverse",
-			"repeat":           "repeat",
-			"replace":          "regexp_replace", // Hive uses regexp_replace
-			"upper":            "upper",
-			"lower":            "lower",
-			"length":           "length",
-			"instr":            "instr",
-			"space":            "space",
-			"ascii":            "ascii",
-
-			// Conditional functions
-			"coalesce": "coalesce",
-			"nullif":   "nullif",
-			"greatest": "greatest",
-			"least":    "least",
 		},
 		operatorMap: map[string]string{
-			// Hive uses DIV for integer division (same as MySQL)
-			" DIV ": " DIV ",
-			// MOD operator
+			// Hive uses % for modulo
 			" MOD ": " % ",
 		},
 	}
