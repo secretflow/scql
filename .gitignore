@@ -38,3 +38,6 @@ tool-bin/*
 # python binding build
 python/build/
 python/package/
+
+# Hive tutorial logs
+examples/tutorial/hive/logs/

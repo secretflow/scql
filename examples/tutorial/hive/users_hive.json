@@ -1,0 +1,15 @@
+{
+    "_comment": "Example user config. Replace passwords before use. Never commit real credentials.",
+    "alice": {
+        "UserName": "alice",
+        "Password": "REPLACE_WITH_ALICE_PASSWORD"
+    },
+    "bob": {
+        "UserName": "bob",
+        "Password": "REPLACE_WITH_BOB_PASSWORD"
+    },
+    "root": {
+        "UserName": "root",
+        "Password": "REPLACE_WITH_ROOT_PASSWORD"
+    }
+}

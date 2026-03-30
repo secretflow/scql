@@ -14,6 +14,7 @@ Reference
 
     compiler-config
     engine-config
+    hive-datasource
 
 .. toctree::
     :caption: Internal Reference
