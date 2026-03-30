@@ -1,0 +1,89 @@
+# Copyright 2025 Ant Group Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Hive Dialect Test
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'pkg/parser/format/**'
+      - 'pkg/planner/core/**'
+      - 'pkg/parser/ast/**'
+      - '.github/workflows/hive-dialect-test.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'pkg/parser/format/**'
+      - 'pkg/planner/core/**'
+      - 'pkg/parser/ast/**'
+      - '.github/workflows/hive-dialect-test.yml'
+
+jobs:
+  hive-dialect-test:
+    name: Hive Dialect Conversion Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run Hive Dialect Tests
+        run: |
+          echo "=============================================="
+          echo "  Running Hive Dialect Conversion Tests"
+          echo "=============================================="
+          go test -v ./pkg/planner/core/... -run "TestHiveDialect" -timeout 120s
+
+      - name: Run Hive SQL Rewrite Tests
+        run: |
+          echo "=============================================="
+          echo "  Running Hive SQL Rewrite Tests"
+          echo "=============================================="
+          go test -v ./pkg/planner/core/... -run "TestRunSQL" -timeout 120s
+
+      - name: Run Format Dialect Tests
+        run: |
+          echo "=============================================="
+          echo "  Running Format Dialect Tests"
+          echo "=============================================="
+          go test -v ./pkg/parser/format/... -timeout 60s
+
+      - name: Test Summary
+        if: always()
+        run: |
+          echo "=============================================="
+          echo "  Hive Dialect Test Summary"
+          echo "=============================================="
+          echo "Tested components:"
+          echo "  - pkg/parser/format (Dialect definitions)"
+          echo "  - pkg/planner/core (SQL rewriting)"
+          echo "  - pkg/parser/ast (AST restoration)"
+          echo ""
+          echo "Hive-specific features tested:"
+          echo "  - Function mappings (IFNULL→NVL, NOW→CURRENT_TIMESTAMP, etc.)"
+          echo "  - CAST type conversions (CHAR→STRING, DATETIME→TIMESTAMP, etc.)"
+          echo "  - Operator mappings (DIV, MOD)"
+          echo "  - SQL syntax differences"

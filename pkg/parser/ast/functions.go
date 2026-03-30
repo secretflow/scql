@@ -452,6 +452,105 @@ func (n *FuncCallExpr) RestoreDateFuncWithPostgresDialect(ctx *RestoreCtx) (err 
 	return nil
 }
 
+func (n *FuncCallExpr) RestoreDateFuncWithHiveDialect(ctx *RestoreCtx) (err error) {
+	switch n.FnName.L {
+	case Now:
+		ctx.WriteKeyWord("current_timestamp")
+		ctx.WritePlain("()")
+	case Curdate:
+		ctx.WriteKeyWord("current_date")
+		ctx.WritePlain("()")
+	case AddDate, DateAdd:
+		// Hive: date_add(date, days_int)
+		// MySQL: adddate(date, INTERVAL n UNIT)
+		// Note: Hive date_add only supports DAY interval
+		ctx.WriteKeyWord("date_add")
+		ctx.WritePlain("(")
+		if err = n.Args[0].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[0]")
+		}
+		ctx.WritePlain(", ")
+		if err := n.Args[1].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[1]")
+		}
+		ctx.WritePlain(")")
+	case SubDate, DateSub:
+		// Hive: date_sub(date, days_int)
+		ctx.WriteKeyWord("date_sub")
+		ctx.WritePlain("(")
+		if err = n.Args[0].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[0]")
+		}
+		ctx.WritePlain(", ")
+		if err := n.Args[1].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[1]")
+		}
+		ctx.WritePlain(")")
+	case DateDiff:
+		// Hive supports datediff(date1, date2)
+		ctx.WriteKeyWord("datediff")
+		ctx.WritePlain("(")
+		for i, argv := range n.Args {
+			if i != 0 {
+				ctx.WritePlain(", ")
+			}
+			if err := argv.Restore(ctx); err != nil {
+				return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args %d", i)
+			}
+		}
+		ctx.WritePlain(")")
+	case LastDay:
+		// Hive supports last_day(date)
+		ctx.WriteKeyWord("last_day")
+		ctx.WritePlain("(")
+		if err = n.Args[0].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[0]")
+		}
+		ctx.WritePlain(")")
+	case StrToDate:
+		// Hive: from_unixtime(unix_timestamp(string, format), output_format)
+		// For simplicity, convert to: cast(from_unixtime(unix_timestamp(str, fmt)) as timestamp)
+		ctx.WriteKeyWord("from_unixtime")
+		ctx.WritePlain("(")
+		ctx.WriteKeyWord("unix_timestamp")
+		ctx.WritePlain("(")
+		if err = n.Args[0].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[0]")
+		}
+		ctx.WritePlain(", ")
+		if err := n.Args[1].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[1]")
+		}
+		ctx.WritePlain("))")
+	case DateFormat:
+		// Hive supports date_format(date, fmt)
+		// Note: format strings differ (MySQL %Y vs Hive yyyy) but Hive 3.x also accepts %Y
+		ctx.WriteKeyWord("date_format")
+		ctx.WritePlain("(")
+		if err = n.Args[0].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[0]")
+		}
+		ctx.WritePlain(", ")
+		if err := n.Args[1].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[1]")
+		}
+		ctx.WritePlain(")")
+	default:
+		ctx.WriteKeyWord(n.FnName.O)
+		ctx.WritePlain("(")
+		for i, argv := range n.Args {
+			if i != 0 {
+				ctx.WritePlain(", ")
+			}
+			if err := argv.Restore(ctx); err != nil {
+				return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args %d", i)
+			}
+		}
+		ctx.WritePlain(")")
+	}
+	return nil
+}
+
 func (n *FuncCallExpr) RestoreDateFuncWithCSVDBDialect(ctx *RestoreCtx) (err error) {
 	switch n.FnName.L {
 	case Curdate:
@@ -530,6 +629,8 @@ func (n *FuncCallExpr) Restore(ctx *RestoreCtx) error {
 			return n.RestoreDateFuncWithPostgresDialect(ctx)
 		case *CVSDBDialect:
 			return n.RestoreDateFuncWithCSVDBDialect(ctx)
+		case *HiveDialect:
+			return n.RestoreDateFuncWithHiveDialect(ctx)
 		default:
 			return n.RestoreDateFuncWithMysqlDialect(ctx)
 		}

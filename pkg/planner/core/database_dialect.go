@@ -30,6 +30,7 @@ const (
 	DBTypePostgres
 	DBTypeCSVDB
 	DBTypeODPS
+	DBTypeHive
 )
 
 var DbTypeMap = map[string]DBType{
@@ -38,6 +39,7 @@ var DbTypeMap = map[string]DBType{
 	"postgresql": DBTypePostgres,
 	"csvdb":      DBTypeCSVDB,
 	"odps":       DBTypeODPS,
+	"hive":       DBTypeHive,
 }
 
 var DbTypeNameMap = map[DBType]string{
@@ -47,6 +49,7 @@ var DbTypeNameMap = map[DBType]string{
 	DBTypePostgres: "postgresql",
 	DBTypeCSVDB:    "csvdb",
 	DBTypeODPS:     "odps",
+	DBTypeHive:     "hive",
 }
 
 func (t DBType) String() string {
@@ -68,6 +71,7 @@ var (
 	_ Dialect = &PostgresDialect{}
 	_ Dialect = &CVSDBDialect{}
 	_ Dialect = &OdpsDialect{}
+	_ Dialect = &HiveDialect{}
 )
 
 var (
@@ -78,6 +82,7 @@ var (
 		DBTypePostgres: NewPostgresDialect(),
 		DBTypeSQLite:   NewMySQLDialect(),
 		DBTypeODPS:     NewOdpsDialect(),
+		DBTypeHive:     NewHiveDialect(),
 	}
 )
 
@@ -174,5 +179,27 @@ func (d *OdpsDialect) GetFormatDialect() format.Dialect {
 }
 
 func (d *OdpsDialect) SupportAnyValue() bool {
+	return false
+}
+
+type HiveDialect struct {
+	MySQLDialect
+}
+
+func NewHiveDialect() *HiveDialect {
+	return &HiveDialect{
+		MySQLDialect{flags: format.RestoreStringSingleQuotes | format.RestoreKeyWordLowercase, formatDialect: format.NewHiveDialect()},
+	}
+}
+
+func (d *HiveDialect) GetRestoreFlags() format.RestoreFlags {
+	return d.flags
+}
+
+func (d *HiveDialect) GetFormatDialect() format.Dialect {
+	return d.formatDialect
+}
+
+func (d *HiveDialect) SupportAnyValue() bool {
 	return false
 }
