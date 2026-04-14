@@ -95,6 +95,12 @@ jobs:
           go-version: '1.21'
           cache: true
 
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -102,35 +108,73 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install pyarrow duckdb
+          pip install pyarrow
+
+      - name: Build Java Arrow Flight SQL Server
+        run: |
+          cd examples/tutorial/hive
+          SCQL_FORCE_REBUILD=1 bash run_java_arrow_server.sh --help >/dev/null
 
       - name: Start Arrow Flight SQL Server (DuckDB mock)
         run: |
-          cd examples/scdb-tutorial/hive
-          python3 arrow_flight_server.py --party alice --port 8815 &
-          sleep 5
-          # Verify server is running
+          cd examples/tutorial/hive
+          bash run_java_arrow_server.sh --party alice --port 8815 --backend duckdb > /tmp/scql-flight.log 2>&1 &
+          for i in $(seq 1 60); do
+            if ss -tlnp | grep -q 8815; then
+              break
+            fi
+            sleep 2
+          done
+          cat /tmp/scql-flight.log
           ss -tlnp | grep 8815 || exit 1
-          echo "Arrow Flight SQL server started on port 8815"
+          echo "Java Arrow Flight SQL server started on port 8815"
 
       - name: Run E2E Tests
         run: |
-          cd examples/scdb-tutorial/hive
+          cd examples/tutorial/hive
           python3 << 'EOF'
           import pyarrow.flight as pf
+
+          def encode_varint(value: int) -> bytes:
+              out = bytearray()
+              while True:
+                  to_write = value & 0x7F
+                  value >>= 7
+                  if value:
+                      out.append(to_write | 0x80)
+                  else:
+                      out.append(to_write)
+                      return bytes(out)
+
+          def protobuf_string_field(field_number: int, value: str) -> bytes:
+              payload = value.encode()
+              return bytes([(field_number << 3) | 2]) + encode_varint(len(payload)) + payload
+
+          def protobuf_bytes_field(field_number: int, payload: bytes) -> bytes:
+              return bytes([(field_number << 3) | 2]) + encode_varint(len(payload)) + payload
+
+          def command_statement_query(sql: str) -> bytes:
+              return protobuf_string_field(1, sql)
+
+          def any_wrap(type_url: str, payload: bytes) -> bytes:
+              return protobuf_string_field(1, type_url) + protobuf_bytes_field(2, payload)
 
           client = pf.FlightClient("grpc://localhost:8815")
 
           tests = [
               ("SELECT", "SELECT * FROM user_credit"),
-              ("WHERE", "SELECT * FROM user_credit WHERE income > 50000"),
-              ("JOIN", "SELECT c.id FROM user_credit c JOIN user_stats s ON c.id = s.id"),
+              ("WHERE", "SELECT ID, income FROM user_credit WHERE income > 50000"),
+              ("ORDER", "SELECT ID FROM user_credit ORDER BY ID LIMIT 3"),
           ]
 
           passed = 0
           for name, query in tests:
               try:
-                  descriptor = pf.FlightDescriptor.for_command(query.encode())
+                  command = any_wrap(
+                      "type.googleapis.com/arrow.flight.protocol.sql.CommandStatementQuery",
+                      command_statement_query(query),
+                  )
+                  descriptor = pf.FlightDescriptor.for_command(command)
                   info = client.get_flight_info(descriptor)
                   reader = client.do_get(info.endpoints[0].ticket)
                   table = reader.read_all()
@@ -147,4 +191,4 @@ jobs:
       - name: Cleanup
         if: always()
         run: |
-          pkill -f arrow_flight_server || true
+          pkill -f scql-hive-flight-sql-server.jar || true

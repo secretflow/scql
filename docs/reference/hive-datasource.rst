@@ -10,23 +10,23 @@ SCQL connects to Hive through an Arrow Flight SQL middleware layer:
 
 .. code-block:: text
 
-    SCDB/Broker ──> SCQLEngine ──(Arrow Flight SQL)──> Flight Server ──(pyhive)──> HiveServer2
+    SCDB/Broker ──> SCQLEngine ──(Arrow Flight SQL)──> Java Flight SQL Server ──(JDBC)──> HiveServer2
 
-The Arrow Flight SQL server (``arrow_flight_server.py``) acts as a protocol adapter:
+The Java Arrow Flight SQL server (``run_java_arrow_server.sh`` + ``java-flight-sql-server/``) acts as a protocol adapter:
 
 1. Receives SQL queries from SCQLEngine via gRPC (Arrow Flight SQL protocol)
-2. Forwards queries to HiveServer2 via pyhive (Thrift protocol)
+2. Forwards queries to HiveServer2 via JDBC
 3. Converts results to Apache Arrow format and streams back
 
-This approach avoids modifying the SCQLEngine C++ codebase and works with any Hive-compatible backend (HiveServer2, Spark Thrift Server, etc.).
+This keeps the Hive-specific protocol adaptation in the middleware layer and stays aligned with Arrow's Java Flight SQL implementation.
 
 Prerequisites
 -------------
 
 - Apache Hive with HiveServer2 running (tested with Hive 3.1.3)
-- Java JDK 8
+- Java JDK 8+
 - Hadoop (tested with 3.3.6, Local Mode is sufficient for testing)
-- Python 3 with packages: ``pyarrow``, ``pyhive``, ``thrift``
+- Maven 3.9+ (or allow ``run_java_arrow_server.sh`` to auto-download it)
 
 Setup Guide
 -----------
@@ -60,17 +60,19 @@ This creates sample tables in Hive:
 Step 3: Start Arrow Flight SQL Servers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Each participant runs their own Arrow Flight SQL server:
+Each participant runs their own Java Arrow Flight SQL server:
 
 .. code-block:: bash
 
     # Alice's Flight Server (port 8815)
-    python3 examples/tutorial/hive/arrow_flight_server.py \
+    # 默认会连接到与 party 同名的 Hive database, 即 alice
+    bash examples/tutorial/hive/run_java_arrow_server.sh \
         --party alice --port 8815 \
         --backend hive --hive-host localhost --hive-port 10000
 
     # Bob's Flight Server (port 8816)
-    python3 examples/tutorial/hive/arrow_flight_server.py \
+    # 默认会连接到与 party 同名的 Hive database, 即 bob
+    bash examples/tutorial/hive/run_java_arrow_server.sh \
         --party bob --port 8816 \
         --backend hive --hive-host localhost --hive-port 10000
 
@@ -78,7 +80,10 @@ Or use the convenience script:
 
 .. code-block:: bash
 
-    bash examples/tutorial/hive/start_arrow_servers.sh
+    SCQL_FLIGHT_BACKEND=hive bash examples/tutorial/hive/start_arrow_servers.sh
+
+If you need a custom database name instead of the party name, set ``SCQL_HIVE_DATABASE``
+or pass ``--hive-database`` explicitly.
 
 Step 4: Configure SCQLEngine
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -174,7 +179,7 @@ Performance Characteristics
 
 Based on testing with HiveServer2 in Hadoop Local Mode:
 
-- Arrow Flight SQL middleware overhead: ~20-50ms per query (1-5% of end-to-end latency)
+- Arrow Flight SQL middleware overhead: implementation-dependent, typically small compared with Hive query latency
 - Hive query latency: ~200ms (warm connection) to ~900ms (cold connection)
 - SCQL end-to-end single-party query: ~1s
 - SCQL end-to-end cross-party query: ~2s
@@ -194,6 +199,7 @@ Known Limitations
 5. Hive supports ``LIMIT count OFFSET offset`` syntax (not MySQL's ``LIMIT offset, count``).
 6. ``CAST(x AS UNSIGNED ...)`` is not supported by Hive. Use ``CAST(x AS BIGINT)`` instead.
 7. ``ANY_VALUE`` is not supported by Hive.
+8. Some date/time expressions still need extra validation, especially when Hive/JDBC returns ``DATETIME`` / ``TIMESTAMP`` values as strings.
 
 Testing
 -------
@@ -204,7 +210,7 @@ Run the official regression test suite against Hive:
 
     python3 regtest_hive.py
 
-This runs 68 queries from ``single_party.json`` against Hive tables. Current pass rate: **60/68 (88.2%)**.
+This runs 68 queries from ``single_party.json`` against Hive tables. Current pass rate: **61/68 (89.7%)**.
 
 Run Hive dialect unit tests:
 
