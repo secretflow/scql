@@ -28,6 +28,7 @@ var (
 	_ Dialect = &PostgresDialect{}
 	_ Dialect = &CVSDBDialect{}
 	_ Dialect = &OdpsDialect{}
+	_ Dialect = &HiveDialect{}
 )
 
 type Dialect interface {
@@ -380,4 +381,131 @@ func (d *OdpsDialect) ConvertCastTypeToString(asType byte, flen int, decimal int
 
 func (d *OdpsDialect) NeedParenthesesForCmpOperand() bool {
 	return true
+}
+
+// HiveDialect Hive SQL dialect
+type HiveDialect struct {
+	MySQLDialect
+	funcNameMap map[string]string
+	operatorMap map[string]string
+}
+
+func NewHiveDialect() Dialect {
+	return &HiveDialect{
+		funcNameMap: map[string]string{
+			// NULL handling: MySQL IFNULL → Hive NVL
+			"ifnull": "nvl",
+
+			// Date/Time: handled by RestoreDateFuncWithHiveDialect for complex cases;
+			// simple renames go here
+			"now":    "current_timestamp",
+			"sysdate": "current_timestamp",
+			"curdate": "current_date",
+
+			// Math: only list functions that differ
+			"truncate": "trunc",
+			"ceiling":  "ceil",
+
+			// String: only list functions that differ
+			"char_length":      "length",
+			"character_length": "length",
+			"octet_length":     "length",
+			"lcase":            "lower",
+			"ucase":            "upper",
+			"substring":        "substr",
+		},
+		operatorMap: map[string]string{
+			// Hive uses % for modulo
+			" MOD ": " % ",
+		},
+	}
+}
+
+func (d *HiveDialect) SkipSchemaInColName() bool {
+	return true
+}
+
+func (d *HiveDialect) GetSpecialFuncName(originName string) string {
+	if res, ok := d.funcNameMap[originName]; ok {
+		return res
+	}
+	return originName
+}
+
+func (d *HiveDialect) ConvertCastTypeToString(asType byte, flen int, decimal int, flag uint) (keyword string, plainWord string, err error) {
+	switch asType {
+	// String types -> STRING
+	case mysql.TypeVarString, mysql.TypeVarchar, mysql.TypeString:
+		keyword = "STRING"
+
+	// Decimal type
+	case mysql.TypeNewDecimal:
+		keyword = "DECIMAL"
+		if flen > 0 && decimal > 0 {
+			plainWord = fmt.Sprintf("(%d, %d)", flen, decimal)
+		} else if flen > 0 {
+			plainWord = fmt.Sprintf("(%d)", flen)
+		}
+
+	// Integer types
+	case mysql.TypeTiny:
+		if flag&mysql.IsBooleanFlag != 0 {
+			keyword = "BOOLEAN"
+		} else {
+			keyword = "TINYINT"
+		}
+	case mysql.TypeShort:
+		if flag&mysql.UnsignedFlag != 0 {
+			err = fmt.Errorf("unsupported cast as unsigned smallint in Hive")
+			return
+		}
+		keyword = "SMALLINT"
+	case mysql.TypeLong, mysql.TypeInt24:
+		if flag&mysql.UnsignedFlag != 0 {
+			err = fmt.Errorf("unsupported cast as unsigned int in Hive")
+			return
+		}
+		keyword = "INT"
+	case mysql.TypeLonglong:
+		if flag&mysql.UnsignedFlag != 0 {
+			err = fmt.Errorf("unsupported cast as unsigned bigint in Hive")
+			return
+		}
+		keyword = "BIGINT"
+
+	// Floating point types
+	case mysql.TypeFloat:
+		keyword = "FLOAT"
+	case mysql.TypeDouble:
+		keyword = "DOUBLE"
+
+	// Date/Time types
+	case mysql.TypeDate, mysql.TypeNewDate:
+		keyword = "DATE"
+	case mysql.TypeDatetime, mysql.TypeTimestamp:
+		keyword = "TIMESTAMP"
+
+	// Binary types -> BINARY
+	case mysql.TypeBlob, mysql.TypeTinyBlob, mysql.TypeMediumBlob, mysql.TypeLongBlob:
+		keyword = "BINARY"
+
+	default:
+		err = fmt.Errorf("unsupported cast as data type in Hive: %+v", asType)
+	}
+	return
+}
+
+func (d *HiveDialect) GetOperator(originName string) string {
+	if res, ok := d.operatorMap[originName]; ok {
+		return res
+	}
+	return originName
+}
+
+func (d *HiveDialect) NeedParenthesesForCmpOperand() bool {
+	return true
+}
+
+func (d *HiveDialect) ObviousCrossWhenCrossJoin() bool {
+	return false
 }

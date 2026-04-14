@@ -452,6 +452,161 @@ func (n *FuncCallExpr) RestoreDateFuncWithPostgresDialect(ctx *RestoreCtx) (err 
 	return nil
 }
 
+// mysqlToHiveDateFormat converts MySQL date format specifiers to Hive (Java SimpleDateFormat) patterns.
+// e.g., '%Y-%m-%d %H:%i:%S' → 'yyyy-MM-dd HH:mm:ss'
+func mysqlToHiveDateFormat(mysqlFmt string) string {
+	replacements := []struct {
+		from, to string
+	}{
+		// Order matters: longer patterns first to avoid partial matches
+		{"%Y", "yyyy"},
+		{"%y", "yy"},
+		{"%m", "MM"},
+		{"%c", "M"},
+		{"%d", "dd"},
+		{"%e", "d"},
+		{"%H", "HH"},
+		{"%k", "H"},
+		{"%h", "hh"},
+		{"%l", "h"},
+		{"%i", "mm"},
+		{"%S", "ss"},
+		{"%s", "ss"},
+		{"%T", "HH:mm:ss"},
+		{"%p", "a"},
+		{"%M", "MMMM"},
+		{"%b", "MMM"},
+		{"%W", "EEEE"},
+		{"%a", "EEE"},
+		{"%j", "DDD"},
+		{"%%", "%"},
+	}
+	result := mysqlFmt
+	for _, r := range replacements {
+		result = strings.Replace(result, r.from, r.to, -1)
+	}
+	return result
+}
+
+// restoreHiveDateFormatArg restores a date format argument, translating MySQL format specifiers
+// to Hive format if the argument is a string literal. Otherwise falls back to normal Restore.
+func restoreHiveDateFormatArg(arg ExprNode, ctx *RestoreCtx) error {
+	if ve, ok := arg.(ValueExpr); ok {
+		if val := ve.GetValue(); val != nil {
+			if fmtStr, ok := val.(string); ok {
+				hiveFmt := mysqlToHiveDateFormat(fmtStr)
+				ctx.WritePlain("'")
+				ctx.WritePlain(hiveFmt)
+				ctx.WritePlain("'")
+				return nil
+			}
+		}
+	}
+	// Fallback: not a string literal, restore as-is
+	return arg.Restore(ctx)
+}
+
+func (n *FuncCallExpr) RestoreDateFuncWithHiveDialect(ctx *RestoreCtx) (err error) {
+	switch n.FnName.L {
+	case Now:
+		ctx.WriteKeyWord("current_timestamp")
+		ctx.WritePlain("()")
+	case Curdate:
+		ctx.WriteKeyWord("current_date")
+		ctx.WritePlain("()")
+	case AddDate, DateAdd:
+		// Hive: date_add(date, days_int)
+		// MySQL: adddate(date, INTERVAL n UNIT)
+		// Note: Hive date_add only supports DAY interval
+		ctx.WriteKeyWord("date_add")
+		ctx.WritePlain("(")
+		if err = n.Args[0].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[0]")
+		}
+		ctx.WritePlain(", ")
+		if err := n.Args[1].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[1]")
+		}
+		ctx.WritePlain(")")
+	case SubDate, DateSub:
+		// Hive: date_sub(date, days_int)
+		ctx.WriteKeyWord("date_sub")
+		ctx.WritePlain("(")
+		if err = n.Args[0].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[0]")
+		}
+		ctx.WritePlain(", ")
+		if err := n.Args[1].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[1]")
+		}
+		ctx.WritePlain(")")
+	case DateDiff:
+		// Hive supports datediff(date1, date2)
+		ctx.WriteKeyWord("datediff")
+		ctx.WritePlain("(")
+		for i, argv := range n.Args {
+			if i != 0 {
+				ctx.WritePlain(", ")
+			}
+			if err := argv.Restore(ctx); err != nil {
+				return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args %d", i)
+			}
+		}
+		ctx.WritePlain(")")
+	case LastDay:
+		// Hive supports last_day(date)
+		ctx.WriteKeyWord("last_day")
+		ctx.WritePlain("(")
+		if err = n.Args[0].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[0]")
+		}
+		ctx.WritePlain(")")
+	case StrToDate:
+		// MySQL: str_to_date(str, '%Y-%m-%d %H:%i:%S')
+		// Hive:  from_unixtime(unix_timestamp(str, 'yyyy-MM-dd HH:mm:ss'))
+		// Format specifiers are translated from MySQL to Hive (Java SimpleDateFormat).
+		ctx.WriteKeyWord("from_unixtime")
+		ctx.WritePlain("(")
+		ctx.WriteKeyWord("unix_timestamp")
+		ctx.WritePlain("(")
+		if err = n.Args[0].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[0]")
+		}
+		ctx.WritePlain(", ")
+		if err := restoreHiveDateFormatArg(n.Args[1], ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[1]")
+		}
+		ctx.WritePlain("))")
+	case DateFormat:
+		// MySQL: date_format(date, '%Y-%m-%d')
+		// Hive:  date_format(date, 'yyyy-MM-dd')
+		// Format specifiers are translated from MySQL to Hive (Java SimpleDateFormat).
+		ctx.WriteKeyWord("date_format")
+		ctx.WritePlain("(")
+		if err = n.Args[0].Restore(ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[0]")
+		}
+		ctx.WritePlain(", ")
+		if err := restoreHiveDateFormatArg(n.Args[1], ctx); err != nil {
+			return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args[1]")
+		}
+		ctx.WritePlain(")")
+	default:
+		ctx.WriteKeyWord(n.FnName.O)
+		ctx.WritePlain("(")
+		for i, argv := range n.Args {
+			if i != 0 {
+				ctx.WritePlain(", ")
+			}
+			if err := argv.Restore(ctx); err != nil {
+				return errors.Annotatef(err, "An error occurred while restore FuncCallExpr.Args %d", i)
+			}
+		}
+		ctx.WritePlain(")")
+	}
+	return nil
+}
+
 func (n *FuncCallExpr) RestoreDateFuncWithCSVDBDialect(ctx *RestoreCtx) (err error) {
 	switch n.FnName.L {
 	case Curdate:
@@ -530,6 +685,8 @@ func (n *FuncCallExpr) Restore(ctx *RestoreCtx) error {
 			return n.RestoreDateFuncWithPostgresDialect(ctx)
 		case *CVSDBDialect:
 			return n.RestoreDateFuncWithCSVDBDialect(ctx)
+		case *HiveDialect:
+			return n.RestoreDateFuncWithHiveDialect(ctx)
 		default:
 			return n.RestoreDateFuncWithMysqlDialect(ctx)
 		}

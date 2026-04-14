@@ -38,3 +38,17 @@ tool-bin/*
 # python binding build
 python/build/
 python/package/
+
+# Hive tutorial logs
+examples/tutorial/hive/logs/
+
+# tutorial generated files
+/derby.log
+/logs/
+/examples/tutorial/hive/derby.log
+/examples/tutorial/hive/logs/
+/examples/tutorial/scdb/data/
+/examples/tutorial/engine/alice/conf/ed25519key.pem
+/examples/tutorial/engine/alice/conf/ed25519key.pub
+/examples/tutorial/engine/bob/conf/ed25519key.pem
+/examples/tutorial/engine/bob/conf/ed25519key.pub
